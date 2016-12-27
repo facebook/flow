@@ -4859,6 +4859,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, UseT (Internal _, _) ->
       ()
 
+    | _, UseT (PropertyCompatibility _ as use_op, u) ->
+      add_output cx ~trace (FlowError.EIncompatibleObject (
+        reason_of_t l, reason_of_t u, use_op
+      ))
+
     | _ ->
       add_output cx ~trace (FlowError.EIncompatible (l, u))
   )
@@ -5018,10 +5023,23 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
         (Field (lv, lpolarity), Field (uv, upolarity))
     | _ -> ());
 
+  let rec is_cycle (s, lreason, ureason) haystack =
+    match haystack with
+    | PropertyCompatibility (s', lreason', ureason', use_op') ->
+        if s = s' && lreason = lreason' && ureason = ureason' then true
+        else is_cycle (s, lreason, ureason) use_op'
+    | _ -> false
+  in
+
   (* Properties in u must either exist in l, or match l's indexer. *)
   iter_real_props cx uflds (fun s up ->
     let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
     let propref = Named (reason_prop, s) in
+    let use_op =
+      let use_op =
+        if is_cycle (s, lreason, ureason) use_op then UnknownUse else use_op
+      in PropertyCompatibility (s, lreason, ureason, use_op)
+    in
     match Context.get_prop cx lflds s, ldict with
     | Some lp, _ ->
       if lit then (

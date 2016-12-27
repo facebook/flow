@@ -3546,13 +3546,10 @@ and jsx_title cx openingElement children = Ast.JSX.(
     match !spread with
       | None -> o
       | Some ex_t ->
-          let reason_prop = replace_reason (fun desc ->
-            RSpreadOf desc
-          ) (reason_of_t ex_t) in
           let ignored_attributes =
             if is_react then react_ignored_attributes else [] in
           clone_object_with_excludes cx
-            reason_prop o ex_t ignored_attributes
+            reason_props o ex_t ignored_attributes
   in
 
   match (name, facebook_fbt) with

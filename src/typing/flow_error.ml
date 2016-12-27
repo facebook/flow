@@ -109,6 +109,7 @@ type error_message =
   | EObjectComputedPropertyAccess of (reason * reason)
   | EObjectComputedPropertyAssign of (reason * reason)
   | EInvalidLHSInAssignment of Loc.t
+  | EIncompatibleObject of reason * reason * use_op
 
 and binding_error =
   | ENameAlreadyBound
@@ -953,3 +954,44 @@ let rec error_of_msg cx ~trace_reasons =
   | EInvalidLHSInAssignment loc ->
       let msg = "Invalid left-hand side in assignment expression" in
       mk_error ~trace_infos [loc, [msg]]
+
+  | EIncompatibleObject (l_reason, u_reason, use_op) ->
+      let rec handle (l_reason, u_reason, nested_extra) = function
+      | PropertyCompatibility (
+          prop_name,
+          lower_obj_reason, upper_obj_reason,
+          use_op
+        ) ->
+        let infos = [
+          mk_info l_reason ["This type is incompatible with"];
+          mk_info u_reason []
+        ] in
+        let extra = [
+          InfoNode (
+            [Loc.none, [spf "Property `%s` is incompatible:" prop_name]],
+            [
+              if nested_extra = []
+              then InfoLeaf infos
+              else InfoNode (infos, nested_extra)
+            ]
+          )
+        ] in
+        handle (lower_obj_reason, upper_obj_reason, extra) use_op
+      | FunReturn ->
+        let msg =
+          "This type is incompatible with the expected return type of" in
+        (l_reason, u_reason), nested_extra, msg
+      | FunCallParam ->
+        let r1, r2, msg = if is_lib_reason l_reason then
+          u_reason, l_reason, "This type is incompatible with an argument type of"
+        else
+          l_reason, u_reason,
+            "This type is incompatible with the expected param type of"
+        in
+        (r1, r2), nested_extra, msg
+      | _ ->
+        let msg = "This type is incompatible with" in
+        (l_reason, u_reason), nested_extra, msg
+      in
+      let reasons, extra, msg = handle (l_reason, u_reason, []) use_op in
+      typecheck_error ~extra ~suppress_op:true msg reasons

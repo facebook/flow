@@ -394,11 +394,16 @@ incompatible.js:55
  55:   (x.foo: string); // error
                ^^^^^^ string
 
-test.js:6
-  6:     return params.count; // error, number ~/~ string
-                ^^^^^^^^^^^^ number. This type is incompatible with
-  2: type QueryFunction = (params: Params) => string;
-                                              ^^^^^^ string
+test.js:4
+  4: var o: { foo: QueryFunction } = {
+                                     ^ object literal. This type is incompatible with
+  4: var o: { foo: QueryFunction } = {
+            ^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+      6:     return params.count; // error, number ~/~ string
+                    ^^^^^^^^^^^^ number. This type is incompatible with
+      2: type QueryFunction = (params: Params) => string;
+                                                  ^^^^^^ string
 
 test_client.js:4
   4:   return params.count; // error, number ~/~ string

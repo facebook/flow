@@ -16,9 +16,14 @@ child_process/execSync.js:8
                                   ^ function type. See lib: <BUILTINS>/node.js:266
   Error:
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
-                                 ^^^^^ string. This type is incompatible with the expected param type of
-  150:   timeout?: number;
-                   ^^^^^^ number. See lib: <BUILTINS>/node.js:150
+                       ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
+  268:     options?: child_process$execSyncOpts
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/node.js:268
+    Property `timeout` is incompatible:
+        8: (execSync('ls', {timeout: '250'})); // error, no signatures match
+                                     ^^^^^ string. This type is incompatible with
+      150:   timeout?: number;
+                       ^^^^^^ number. See lib: <BUILTINS>/node.js:150
 
 crypto/crypto.js:12
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer

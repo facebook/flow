@@ -14,19 +14,25 @@ import_react.js:7
 
 jsx_spread.js:11
  11: var blah = <Foo {...props} />; // error bar, number given string expected
-                ^^^^^^^^^^^^^^^^^^ React element `Foo`
- 10: var props = {bar: 42};
-                       ^^ number. This type is incompatible with
-  6:     bar: React.PropTypes.string.isRequired,
-              ^^^^^^^^^^^^^^^^^^^^^^ string
+                ^^^^^^^^^^^^^^^^^^ props of React element `Foo`. This type is incompatible with
+  5:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `bar` is incompatible:
+     10: var props = {bar: 42};
+                           ^^ number. This type is incompatible with
+      6:     bar: React.PropTypes.string.isRequired,
+                  ^^^^^^^^^^^^^^^^^^^^^^ string
 
 proptype_arrayOf.js:13
  13: var fail_not_array = <Example arr={2} />
-                          ^^^^^^^^^^^^^^^^^^^ React element `Example`
- 13: var fail_not_array = <Example arr={2} />
-                                        ^ number. This type is incompatible with
-  6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ arrayOf
+                          ^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+  5:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `arr` is incompatible:
+     13: var fail_not_array = <Example arr={2} />
+                                            ^ number. This type is incompatible with
+      6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ arrayOf
 
 proptype_arrayOf.js:14
  14: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
@@ -38,35 +44,47 @@ proptype_arrayOf.js:14
 
 proptype_func.js:14
  14: var fail_mistyped = <Example func={2} />
-                         ^^^^^^^^^^^^^^^^^^^^ React element `Example`
- 14: var fail_mistyped = <Example func={2} />
-                                        ^ number. This type is incompatible with
-  6:     func: React.PropTypes.func.isRequired
-               ^^^^^^^^^^^^^^^^^^^^ func
+                         ^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+  5:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `func` is incompatible:
+     14: var fail_mistyped = <Example func={2} />
+                                            ^ number. This type is incompatible with
+      6:     func: React.PropTypes.func.isRequired
+                   ^^^^^^^^^^^^^^^^^^^^ func
 
 proptype_object.js:13
  13: var fail_mistyped = <Example object={2} />
-                         ^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
- 13: var fail_mistyped = <Example object={2} />
-                                          ^ number. This type is incompatible with
-  6:     object: React.PropTypes.object.isRequired
-                 ^^^^^^^^^^^^^^^^^^^^^^ object
+                         ^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+  5:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `object` is incompatible:
+     13: var fail_mistyped = <Example object={2} />
+                                              ^ number. This type is incompatible with
+      6:     object: React.PropTypes.object.isRequired
+                     ^^^^^^^^^^^^^^^^^^^^^^ object
 
 proptype_objectOf.js:13
  13: var fail_not_object = <Example obj={2} />
-                           ^^^^^^^^^^^^^^^^^^^ React element `Example`
- 13: var fail_not_object = <Example obj={2} />
-                                         ^ number. This type is incompatible with
-  6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ objectOf
+                           ^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+  5:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `obj` is incompatible:
+     13: var fail_not_object = <Example obj={2} />
+                                             ^ number. This type is incompatible with
+      6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ objectOf
 
 proptype_objectOf.js:14
  14: var fail_mistyped_props = <Example obj={{foo: "foo"}} />
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
- 14: var fail_mistyped_props = <Example obj={{foo: "foo"}} />
-                                                   ^^^^^ string. This type is incompatible with
-  6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-                                       ^^^^^^^^^^^^^^^^^^^^^^ number
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+  5:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `obj` is incompatible:
+     14: var fail_mistyped_props = <Example obj={{foo: "foo"}} />
+                                                       ^^^^^ string. This type is incompatible with
+      6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
+                                           ^^^^^^^^^^^^^^^^^^^^^^ number
 
 proptype_oneOf.js:11
  11: var ex2 = <Example literal="bar" />;

@@ -724,9 +724,14 @@ MutationObserver.js:22
 
 MutationObserver.js:23
  23: o.observe(div, { attributes: true, attributeFilter: true }); // incorrect
-                                                         ^^^^ boolean. This type is incompatible with the expected param type of
-335:     attributeFilter?: Array<string>;
-                           ^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/bom.js:335
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
+331: declare type MutationObserverInit = MutationObserverInitRequired & {
+                                                                        ^ object type. See lib: <BUILTINS>/bom.js:331
+  Property `attributeFilter` is incompatible:
+     23: o.observe(div, { attributes: true, attributeFilter: true }); // incorrect
+                                                             ^^^^ boolean. This type is incompatible with
+    335:     attributeFilter?: Array<string>;
+                               ^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/bom.js:335
 
 
 Found 53 errors

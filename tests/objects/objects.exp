@@ -64,11 +64,16 @@ objects.js:18
  18: (y['hasOwnProperty']: string); // error, prototype method is not a string
                            ^^^^^^ string
 
-unaliased_assign.js:18
- 18:   var obj: { x: string | number };
-                              ^^^^^^ number. This type is incompatible with
+unaliased_assign.js:20
+ 20:   glob = obj;    // error: subsequent assignment might make glob.x a number
+              ^^^ object literal. This type is incompatible with
  15: var glob: { x: string } = { x: "hey" };
-                    ^^^^^^ string
+               ^^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     18:   var obj: { x: string | number };
+                                  ^^^^^^ number. This type is incompatible with
+     15: var glob: { x: string } = { x: "hey" };
+                        ^^^^^^ string
 
 
 Found 12 errors

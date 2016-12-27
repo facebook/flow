@@ -96,17 +96,27 @@ overload.js:28
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
   Error:
    28: a.bar({ a: true }); // error, function cannot be called on intersection type
-                  ^^^^ boolean. This type is incompatible with the expected param type of
+             ^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
    16:     bar(x: { a: number }): number;
-                       ^^^^^^ number
+                  ^^^^^^^^^^^^^ object type
+    Property `a` is incompatible:
+       28: a.bar({ a: true }); // error, function cannot be called on intersection type
+                      ^^^^ boolean. This type is incompatible with
+       16:     bar(x: { a: number }): number;
+                           ^^^^^^ number
   Member 2:
    17:     bar(x: { a: string }): string;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
   Error:
    28: a.bar({ a: true }); // error, function cannot be called on intersection type
-                  ^^^^ boolean. This type is incompatible with the expected param type of
+             ^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
    17:     bar(x: { a: string }): string;
-                       ^^^^^^ string
+                  ^^^^^^^^^^^^^ object type
+    Property `a` is incompatible:
+       28: a.bar({ a: true }); // error, function cannot be called on intersection type
+                      ^^^^ boolean. This type is incompatible with
+       17:     bar(x: { a: string }): string;
+                           ^^^^^^ string
 
 overload.js:32
  32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)

@@ -357,11 +357,16 @@ request.js:30
   774: type HeadersInit = Headers | {[key: string]: string};
                                     ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:774
 
-request.js:38
- 38:   method: 'CONNECT',
-               ^^^^^^^^^ string. This type is incompatible with the expected param type of
-824:     method?: ?MethodType;
-                   ^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:824
+request.js:37
+ 37: const k: Request = new Request('http://example.org', {
+                                                          ^ object literal. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `method` is incompatible:
+     38:   method: 'CONNECT',
+                   ^^^^^^^^^ string. This type is incompatible with
+    824:     method?: ?MethodType;
+                       ^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:824
 
 request.js:49
  49: h.text().then((t: Buffer) => t); // incorrect
@@ -377,11 +382,16 @@ request.js:51
 881:     arrayBuffer(): Promise<ArrayBuffer>;
                                 ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/bom.js:881
 
-response.js:11
- 11:     status: "404"
-                 ^^^^^ string. This type is incompatible with the expected param type of
-832:     status?: ?number;
-                   ^^^^^^ number. See lib: <BUILTINS>/bom.js:832
+response.js:10
+ 10: const e: Response = new Response("responsebody", {
+                                                      ^ object literal. This type is incompatible with the expected param type of
+838:     constructor(input?: string | URLSearchParams | FormData | Blob, init?: ResponseOptions): void;
+                                                                                ^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:838
+  Property `status` is incompatible:
+     11:     status: "404"
+                     ^^^^^ string. This type is incompatible with
+    832:     status?: ?number;
+                       ^^^^^^ number. See lib: <BUILTINS>/bom.js:832
 
 response.js:14
  14: const f: Response = new Response("responsebody", {
