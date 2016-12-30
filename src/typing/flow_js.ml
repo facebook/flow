@@ -8041,7 +8041,7 @@ and ok_unify = function
   | AnyWithUpperBoundT _ | AnyWithLowerBoundT _ -> false
   | _ -> true
 
-and __unify cx t1 t2 trace =
+and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
   begin match Context.verbose cx with
   | Some { Verbose.indent; depth } ->
     let indent = String.make ((Trace.trace_depth trace - 1) * indent) ' ' in
@@ -8161,7 +8161,7 @@ and __unify cx t1 t2 trace =
     rec_unify cx trace t1 t2
 
   | _ ->
-    naive_unify cx trace t1 t2
+    naive_unify cx trace ~use_op t1 t2
   )
 
 and unify_props cx trace x r1 r2 p1 p2 =
@@ -8206,8 +8206,8 @@ and unify_prop_with_dict cx trace x p prop_reason dict_reason dict =
    bidirectional flows. This means that the destructuring work is duplicated,
    and we're missing some opportunities for nested unification. *)
 
-and naive_unify cx trace t1 t2 =
-  rec_flow_t cx trace (t1,t2); rec_flow_t cx trace (t2,t1)
+and naive_unify cx trace ?(use_op=UnknownUse) t1 t2 =
+  rec_flow_t cx trace ~use_op (t1,t2); rec_flow_t cx trace ~use_op (t2,t1)
 
 (* mutable sites on parent values (i.e. object properties,
    array elements) must be typed invariantly when a value
@@ -8594,14 +8594,14 @@ and rec_flow cx trace (t1, t2) =
   let max = Context.max_trace_depth cx in
   __flow cx (t1, t2) (Trace.rec_trace ~max t1 t2 trace)
 
-and rec_flow_t cx trace (t1, t2) =
-  rec_flow cx trace (t1, UseT (UnknownUse, t2))
+and rec_flow_t cx trace ?(use_op=UnknownUse) (t1, t2) =
+  rec_flow cx trace (t1, UseT (use_op, t2))
 
 and rec_flow_p cx trace ?(use_op=UnknownUse) lreason ureason propref = function
   (* unification cases *)
   | Field (lt, Neutral),
     Field (ut, Neutral) ->
-    rec_unify cx trace lt ut
+    rec_unify cx trace ~use_op lt ut
   (* directional cases *)
   | lp, up ->
     let x = match propref with Named (_, x) -> Some x | Computed _ -> None in
@@ -8669,9 +8669,9 @@ and tvar_with_constraint cx ?trace ?(derivable=false) u =
 (* Wrapper functions around __unify that manage traces. Use these functions for
    all recursive calls in the implementation of __unify. *)
 
-and rec_unify cx trace t1 t2 =
+and rec_unify cx trace ?(use_op=UnknownUse) t1 t2 =
   let max = Context.max_trace_depth cx in
-  __unify cx t1 t2 (Trace.rec_trace ~max t1 (UseT (UnknownUse, t2)) trace)
+  __unify cx ~use_op t1 t2 (Trace.rec_trace ~max t1 (UseT (use_op, t2)) trace)
 
 and unify_opt cx ?trace t1 t2 =
   let trace = match trace with

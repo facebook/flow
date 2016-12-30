@@ -277,11 +277,14 @@ let rec error_of_msg cx ~trace_reasons =
     (* Since pointing to endpoints in the library without any information on
        the code that uses those endpoints inconsistently is useless, we point
        to the file containing that code instead. Ideally, improvements in
-       error reporting would cause this case to never arise. *)
-    let lib_infos = if is_lib_reason r1 && is_lib_reason r2 then
+       error reporting would cause this case to never arise.
+
+       Additionally, we never suppress ops when this happens, because that is
+       our last chance at relevant context. *)
+    let lib_infos, suppress_op = if is_lib_reason r1 && is_lib_reason r2 then
         let loc = Loc.({ none with source = Some (Context.file cx) }) in
-        [loc, ["inconsistent use of library definitions"]]
-      else []
+        [loc, ["inconsistent use of library definitions"]], false
+      else [], suppress_op
     in
     (* NOTE: We include the operation's reason in the error message, unless it
        overlaps *both* endpoints, exactly matches r1, or overlaps r1's origin *)

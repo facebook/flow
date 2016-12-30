@@ -136,9 +136,14 @@ overload.js:32
                         ^^^^^^^^^^^^^^^ object type
     Error:
      30: declare var x: { a: boolean; } & { b: string };
-                             ^^^^^^^ boolean. This type is incompatible with
+                        ^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
      16:     bar(x: { a: number }): number;
-                         ^^^^^^ number
+                    ^^^^^^^^^^^^^ object type
+      Property `a` is incompatible:
+         30: declare var x: { a: boolean; } & { b: string };
+                                 ^^^^^^^ boolean. This type is incompatible with
+         16:     bar(x: { a: number }): number;
+                             ^^^^^^ number
     Member 2:
      30: declare var x: { a: boolean; } & { b: string };
                                           ^^^^^^^^^^^^^ object type
@@ -160,9 +165,14 @@ overload.js:32
                         ^^^^^^^^^^^^^^^ object type
     Error:
      30: declare var x: { a: boolean; } & { b: string };
-                             ^^^^^^^ boolean. This type is incompatible with
+                        ^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
      17:     bar(x: { a: string }): string;
-                         ^^^^^^ string
+                    ^^^^^^^^^^^^^ object type
+      Property `a` is incompatible:
+         30: declare var x: { a: boolean; } & { b: string };
+                                 ^^^^^^^ boolean. This type is incompatible with
+         17:     bar(x: { a: string }): string;
+                             ^^^^^^ string
     Member 2:
      30: declare var x: { a: boolean; } & { b: string };
                                           ^^^^^^^^^^^^^ object type
