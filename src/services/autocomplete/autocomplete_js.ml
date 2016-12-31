@@ -12,7 +12,8 @@ type autocomplete_type =
 | Acid of Scope.Entry.t SMap.t
 | Acmem of Type.t
 | Acjsx of Type.t
-| Acgql of Type.t
+| Acgql_fld of Graphql_schema.t * string
+| Acgql_type of Graphql_schema.t * string option
 
 type autocomplete_state = {
   ac_name: string;
@@ -63,13 +64,25 @@ let autocomplete_jsx state _cx ac_name ac_loc class_t =
   ) else
     false
 
-let autocomplete_graphql_field state _cx ac_name ac_loc selection_t =
+let autocomplete_graphql_field state schema ac_name ac_loc type_name =
   if is_autocomplete ac_name
   then (
     state := Some ({
       ac_name;
       ac_loc;
-      ac_type = Acgql (selection_t);
+      ac_type = Acgql_fld (schema, type_name);
+    });
+    true
+  ) else
+    false
+
+let autocomplete_graphql_type state schema ac_name ac_loc parent_type =
+  if is_autocomplete ac_name
+  then (
+    state := Some ({
+      ac_name;
+      ac_loc;
+      ac_type = Acgql_type (schema, parent_type);
     });
     true
   ) else
@@ -81,6 +94,7 @@ let autocomplete_set_hooks () =
   Type_inference_hooks_js.set_member_hook (autocomplete_member state);
   Type_inference_hooks_js.set_jsx_hook (autocomplete_jsx state);
   Type_inference_hooks_js.set_graphql_field_hook (autocomplete_graphql_field state);
+  Type_inference_hooks_js.set_graphql_type_hook (autocomplete_graphql_type state);
   state
 
 let autocomplete_unset_hooks () =

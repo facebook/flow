@@ -30,6 +30,12 @@ let rec doc cx doc =
 and do_definition cx schema def =
   match def with
   | Ast.Definition.Fragment { Ast.FragmentDef.
+      typeCondition = (loc, cond_type);
+      _;
+    } when Type_inference_hooks_js.dispatch_graphql_type_hook
+      schema cond_type loc None
+    -> VoidT.at loc
+  | Ast.Definition.Fragment { Ast.FragmentDef.
       typeCondition = (type_loc, type_name);
       selectionSet;
       loc;
@@ -177,7 +183,8 @@ and select cx gcx schema selection type_name selections =
         selectionSet;
         _
       } ->
-      if Type_inference_hooks_js.dispatch_graphql_field_hook cx fname floc selection
+      if Type_inference_hooks_js.dispatch_graphql_field_hook
+        schema fname floc type_name
       then selection
       else begin
         (* TODO *)
@@ -212,6 +219,13 @@ and select cx gcx schema selection type_name selections =
           selection
         )
       end
+    | Ast.Selection.InlineFragment { Ast.InlineFragment.
+        typeCondition = Some (loc, cond_type);
+        _;
+      } when Type_inference_hooks_js.dispatch_graphql_type_hook
+        schema cond_type loc (Some type_name)
+      ->
+      selection
     | Ast.Selection.InlineFragment { Ast.InlineFragment.
         typeCondition;
         selectionSet;

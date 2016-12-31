@@ -226,21 +226,43 @@ let autocomplete_jsx
       parse_result
   )
 
-let autocomplete_graphql_field cx selection loc = Type.(
-  match Type_normalizer.normalize_type cx selection with
-  | GraphqlSelectionT (_, {Graphql.s_schema = s; s_on = type_name; _}) ->
-    let fields = Graphql_schema.obj_field_types s type_name in
-    let fields = List.sort (fun (a, _) (b, _) -> compare a b) fields in
-    let result = List.map (fun (name, type_) ->
-      {
-        res_loc = loc;
-        res_name = name;
-        res_ty = Graphql_schema.print_type s type_;
-        func_details = None
-      }
-    ) fields in
-    OK result
-  | _ -> OK []
+let autocomplete_graphql_field schema type_name loc = Type.(
+  let fields = Graphql_schema.obj_field_types schema type_name in
+  let fields = List.sort (fun (a, _) (b, _) -> compare a b) fields in
+  let result = List.map (fun (name, type_) ->
+    {
+      res_loc = loc;
+      res_name = name;
+      res_ty = Graphql_schema.print_type schema type_;
+      func_details = None
+    }
+  ) fields in
+  OK result
+)
+
+let autocomplete_graphql_type schema parent_type loc = Type.(
+  let types = match parent_type with
+  | Some parent -> Graphql_schema.get_possible_types schema parent
+  | None ->
+    SMap.fold (fun name t acc ->
+      match t with
+      | Graphql_schema.Type.Obj _
+      | Graphql_schema.Type.Interface _
+      | Graphql_schema.Type.Union _ ->
+        name :: acc
+      | _ -> acc
+    ) schema.Graphql_schema.type_map []
+  in
+  let types = List.sort compare types in
+  let result = List.map (fun name ->
+    {
+      res_loc = loc;
+      res_name = name;
+      res_ty = "";
+      func_details = None
+    }
+  ) types in
+  OK result
 )
 
 let autocomplete_get_results
@@ -257,6 +279,8 @@ let autocomplete_get_results
   | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
       autocomplete_jsx
         profiling client_logging_context cx cls ac_name ac_loc parse_result
-  | Some { ac_name = _; ac_loc; ac_type = Acgql (selection); } ->
-      autocomplete_graphql_field cx selection ac_loc
+  | Some { ac_name = _; ac_loc; ac_type = Acgql_fld (schema, type_name); } ->
+      autocomplete_graphql_field schema type_name ac_loc
+  | Some { ac_name = _; ac_loc; ac_type = Acgql_type (schema, parent_type); } ->
+      autocomplete_graphql_type schema parent_type ac_loc
   | None -> OK []
