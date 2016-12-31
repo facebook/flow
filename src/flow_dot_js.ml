@@ -224,6 +224,27 @@ let infer_type filename content line col =
       (None, Some (loc, ty, raw_type, reasons))
     | _, _ -> failwith "parse error"
 
+let dump_types js_file js_content =
+    let filename = Loc.SourceFile (Js.to_string js_file) in
+    let root = Path.dummy_path in
+    let content = Js.to_string js_content in
+    match parse_content filename content with
+    | ast, [] ->
+      (* defaults *)
+      let metadata = stub_metadata ~root ~checked:true in
+
+      Flow_js.Cache.clear();
+
+      let cx = Type_inference_js.infer_ast
+        ~metadata ~filename ~module_name:(Modulename.String "-") ast
+      in
+      let printer = Type_printer.string_of_t in
+      let raw_printer _ _ = None in
+
+      Query_types.dump_types printer raw_printer cx
+      |> List.map (fun (loc, _, str, _, _) ->
+        Reason.string_of_loc loc, str)
+    | _, _ -> failwith "parse error"
 
 let handle_inferred_result (_, inferred, _, _) =
   inferred
@@ -255,6 +276,8 @@ let () = Js.Unsafe.set exports
   "check" (Js.wrap_callback check_js)
 let () = Js.Unsafe.set exports
   "checkContent" (Js.wrap_callback check_content_js)
+let () = Js.Unsafe.set exports
+  "dumpTypes" (Js.wrap_callback dump_types)
 let () = Js.Unsafe.set exports
   "jsOfOcamlVersion" (Js.string Sys_js.js_of_ocaml_version)
 let () = Js.Unsafe.set exports
