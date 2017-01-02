@@ -55,23 +55,23 @@ crypto/crypto.js:16
  16:     hmac.write(123); // 2 errors: not a string or a Buffer
                     ^^^ number. This type is incompatible with
 1286:     chunk: Buffer | string,
-                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1286
+                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1287
   Member 1:
   1286:     chunk: Buffer | string,
-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1286
+                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1287
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
   1286:     chunk: Buffer | string,
-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1286
+                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1287
   Member 2:
   1286:     chunk: Buffer | string,
-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1286
+                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1287
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
   1286:     chunk: Buffer | string,
-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1286
+                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1287
 
 crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error
