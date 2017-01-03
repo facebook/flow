@@ -593,12 +593,12 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "split",
-               "type": "(separator: string | RegExp, limit?: number) => Array<string>",
+               "type": "(separator?: string | RegExp, limit?: number) => Array<string>",
                "func_details": {
                  "return_type": "Array<string>",
                  "params": [
                    {
-                     "name": "separator",
+                     "name": "separator?",
                      "type": "string | RegExp"
                    },
                    {
@@ -611,7 +611,7 @@ export default suite(({addFile, flowCmd}) => [
                "line": 306,
                "endline": 306,
                "start": 5,
-               "end": 68
+               "end": 69
              },
              {
                "name": "startsWith",
