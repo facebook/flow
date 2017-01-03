@@ -88,7 +88,7 @@ where `DidOpenFileParams` is defined as:
     /**
      * Contents of opened file.
      */
-    contents : string;
+    text : string;
   }
 
 #### Change file notification
@@ -173,4 +173,65 @@ where DiagnosticsParams is defined as:
   {
     message : string;
     position : FilePosition;
+  }
+
+### Autocomplete request
+
+*Client request:*
+
+    method : "autocomplete"
+    params : FilePosition
+
+*Server response:*
+
+  AutocompleteItem[]
+
+`AutocompleteItem:`
+
+  {
+    /**
+     * The text to be inserted when selecting this completion item.
+     *
+     * The text includes the prefix which is already typed out in the
+     * file. For example:
+     *
+     * $x = new Fo<autocomplete here>
+     *
+     * can include "Foo" as text to complete.
+     */
+    text : string;
+
+    /**
+     * Additional information about completion type, e.g:
+     * "abstract class", "function"
+     */
+    type : string;
+
+    /**
+     * For callable completions (functions, methods), additional
+     * information about it.
+     */
+    callable_details? : {
+      /**
+       * Callable return type.
+       */
+      return_type : string;
+      /**
+       * Informations about all of the callable parameters.
+       */
+      params: CallableParam[]
+    }  
+  }
+
+`CallableParam:`
+
+  {
+    /**
+     * Argument name, as specified in callable declaration.
+     */
+    name : string;
+    /**
+     * Expected type of callable argument.
+     */
+    type : string;
   }
