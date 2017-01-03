@@ -19,3 +19,5 @@ val parse:
   result_t
 
 val error_t_to_string: error_t -> string
+
+val error_t_to_code: error_t -> int

@@ -8,13 +8,9 @@
  *
  *)
 
-(* Constructs just the "result" part of the message *)
-val to_json :
-  response:Ide_message.response ->
-  Hh_json.json
+open Ide_rpc_protocol_parser_types
 
-(* Constructs the entire response message, ready to be sent to client *)
-val to_message_json :
-  id:int option ->
-  response:Ide_message.response ->
-  Hh_json.json
+val parse:
+  method_name:method_name ->
+  params:Hh_json.json option ->
+  (Ide_message.request, error_t) Result.t

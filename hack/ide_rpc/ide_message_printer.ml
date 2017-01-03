@@ -10,11 +10,16 @@
 
 open Ide_rpc_protocol_parser_types
 
+let response_to_json_rpc id version response =
+  let result = match version with
+    | V0 -> Ide_rpc_V0_message_printer.to_json ~id ~response
+  in
+  Json_rpc_message_printer.response_to_json ~id ~result:(`Result result)
+
 (* Delegate to the right printing module based on protocol and version *)
-let get_print_fun version protocol =
-  match version, protocol with
-  | _, Nuclide_rpc -> Nuclide_rpc_message_printer.to_json
-  | V0, JSON_RPC2 -> raise @@ Failure "not implemented"
+let get_print_fun version = function
+  | Nuclide_rpc -> Nuclide_rpc_message_printer.to_message_json
+  | JSON_RPC2 -> fun ~id ~response -> response_to_json_rpc id version response
 
 let to_json ~id ~protocol ~version ~response =
   (get_print_fun version protocol) ~id ~response

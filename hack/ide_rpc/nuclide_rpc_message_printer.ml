@@ -70,9 +70,13 @@ let subscription_to_json id result=
     ("value", result);
   ]
 
-let to_json ~id ~response =
+let to_json ~response = match response with
+  | Autocomplete_response x -> autocomplete_response_to_json x
+  | Diagnostics_notification x -> diagnostics_to_json x
+
+let to_message_json ~id ~response =
+  to_json ~response |>
   match response with
-  | Autocomplete_response x ->
-    response_to_json id (autocomplete_response_to_json x)
-  | Diagnostics_notification x ->
-    subscription_to_json x.subscription_id (diagnostics_to_json x)
+  (* Subscriptions are special snowflakes with different output format *)
+  | Diagnostics_notification x -> subscription_to_json x.subscription_id
+  | _ -> response_to_json id

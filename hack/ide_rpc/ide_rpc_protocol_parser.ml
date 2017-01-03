@@ -24,8 +24,18 @@ let check_service_framework3_rpc_protocol = function
   | x ->
     Result.Error (Invalid_request (Printf.sprintf "Unknown protocol: %s" x))
 
+let check_jsonrpc_protocol = function
+  | "2.0" -> Result.Ok JSON_RPC2
+  | x -> Result.Error
+    (Invalid_request (Printf.sprintf "Unknown JSON RPC protocol version: %s" x))
+
 let get_protocol message =
-  get_string_field "protocol" message >>= check_service_framework3_rpc_protocol
+  match get_string_field "jsonrpc" message with
+  | Result.Ok protocol ->
+    check_jsonrpc_protocol protocol
+  | Result.Error _ ->
+    get_string_field "protocol" message >>=
+    check_service_framework3_rpc_protocol
 
 let get_id message =
   maybe_get_int_field "id" message
@@ -45,11 +55,13 @@ let check_type_field message = function
 let get_method_name message = function
   | Nuclide_rpc ->
     get_string_field "type" message >>= check_type_field message
-  | JSON_RPC2 -> not_implemented
+  | JSON_RPC2 ->
+    get_method message >>= fun s ->
+    Result.Ok (Method_name s)
 
 let get_params message = function
   | Nuclide_rpc -> maybe_get_obj_field "args" message
-  | JSON_RPC2 -> not_implemented
+  | JSON_RPC2 -> maybe_get_obj_field "params" message
 
 let result_of_error e = {
   protocol = Result.Error e;
@@ -77,3 +89,10 @@ let error_t_to_string = function
   | Method_not_found s -> Printf.sprintf "Method not found: %s" s
   | Internal_error s -> Printf.sprintf "Internal error: %s" s
   | Invalid_params s -> Printf.sprintf "Invalid params: %s" s
+
+let error_t_to_code = function
+  | Parse_error _ -> -32700
+  | Invalid_request _ -> -32600
+  | Method_not_found _ -> -32601
+  | Invalid_params _ -> -32602
+  | Internal_error _ -> -32603
