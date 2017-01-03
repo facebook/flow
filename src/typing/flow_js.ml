@@ -1090,7 +1090,8 @@ let add_output cx ?trace msg =
       if max_trace_depth = 0 then [] else
         Trace.reasons_of_trace ~level:max_trace_depth trace
     in
-    let error = FlowError.error_of_msg cx ~trace_reasons msg in
+    let error = FlowError.error_of_msg
+      ~trace_reasons ~op:(Ops.peek ()) ~source_file:(Context.file cx) msg in
     if Context.is_verbose cx
     then prerr_endlinef "\nadd_output cx.file %S loc %s"
       (string_of_filename (Context.file cx))
@@ -1418,7 +1419,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*************)
 
     | (_, DebugPrintT (reason)) ->
-      add_output cx ~trace (FlowError.EDebugPrint (reason, l))
+      let str = Debug_js.jstr_of_t cx l in
+      add_output cx ~trace (FlowError.EDebugPrint (reason, str))
 
     (************)
     (* tainting *)
