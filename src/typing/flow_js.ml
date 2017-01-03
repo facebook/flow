@@ -1081,6 +1081,12 @@ let add_output cx ?trace msg =
   if Speculation.speculating ()
   then raise (SpeculativeError msg)
   else begin
+    begin match Context.verbose cx with
+    | Some { Verbose.depth; _ } ->
+      prerr_endlinef "\nadd_output: %s" (Debug_js.dump_flow_error ~depth cx msg)
+    | _ -> ()
+    end;
+
     let trace_reasons = match trace with
     | None -> []
     | Some trace ->
@@ -1092,10 +1098,6 @@ let add_output cx ?trace msg =
     in
     let error = FlowError.error_of_msg
       ~trace_reasons ~op:(Ops.peek ()) ~source_file:(Context.file cx) msg in
-    if Context.is_verbose cx
-    then prerr_endlinef "\nadd_output cx.file %S loc %s"
-      (string_of_filename (Context.file cx))
-      (string_of_loc (Errors.loc_of_error error));
 
     (* catch no-loc errors early, before they get into error map *)
     Errors.(
