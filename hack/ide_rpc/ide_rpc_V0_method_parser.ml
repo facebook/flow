@@ -9,6 +9,7 @@
  *)
 
 open Ide_message
+open Ide_parser_utils
 open Ide_rpc_method_parser_utils
 open Ide_rpc_protocol_parser_types
 open Result.Monad_infix
@@ -17,6 +18,20 @@ let delegate_to_previous_version method_name params =
   Nuclide_rpc_method_parser.parse
     ~method_name:(Method_name method_name)
     ~params
+
+let get_client_name_field = get_string_field "client_name"
+
+let get_client_api_version_field = get_int_field "client_api_version"
+
+let parse_init_params params =
+  get_client_name_field params >>= fun client_name ->
+  get_client_api_version_field params >>= fun client_api_version ->
+  Result.Ok { client_name; client_api_version; }
+
+let parse_init method_name params =
+  assert_params_required method_name params >>=
+  parse_init_params >>= fun params ->
+  Result.Ok (Init params)
 
 let parse_did_open_file_params params =
   get_filename_filed params >>= fun did_open_file_filename ->
@@ -29,6 +44,7 @@ let parse_did_open_file method_name params =
   Result.Ok (Did_open_file params)
 
 let parse_method method_name params = match method_name with
+  | "init" -> parse_init method_name params
   | "didOpenFile" -> parse_did_open_file method_name params
   | "autocomplete" -> delegate_to_previous_version "getCompletions" params
   | _ -> delegate_to_previous_version method_name params

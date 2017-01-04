@@ -89,6 +89,7 @@ let error_t_to_string = function
   | Method_not_found s -> Printf.sprintf "Method not found: %s" s
   | Internal_error s -> Printf.sprintf "Internal error: %s" s
   | Invalid_params s -> Printf.sprintf "Invalid params: %s" s
+  | Server_error s -> Printf.sprintf "Server error: %s" s
 
 let error_t_to_code = function
   | Parse_error _ -> -32700
@@ -96,3 +97,7 @@ let error_t_to_code = function
   | Method_not_found _ -> -32601
   | Invalid_params _ -> -32602
   | Internal_error _ -> -32603
+  | Server_error _ -> -32000
+
+let version_to_int = function
+  | V0 -> 0

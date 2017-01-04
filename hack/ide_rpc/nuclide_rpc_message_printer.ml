@@ -18,6 +18,11 @@ let deprecated_pos_field = Pos.json (Pos.to_absolute Pos.none)
 let deprecated_int_field = Hh_json.int_ 0
 let deprecated_bool_field = JSON_Bool false
 
+(* Instead of "assert false" *)
+let should_not_happen = JSON_Object [
+  ("this_should", JSON_String "not_happen");
+]
+
 let autocomplete_response_to_json x =
   let param_to_json x = JSON_Object [
     ("name", JSON_String x.name);
@@ -71,6 +76,8 @@ let subscription_to_json id result=
   ]
 
 let to_json ~response = match response with
+  (* Init request is not part of Nuclide protocol *)
+  | Init_response _ -> should_not_happen
   | Autocomplete_response x -> autocomplete_response_to_json x
   | Diagnostics_notification x -> diagnostics_to_json x
 

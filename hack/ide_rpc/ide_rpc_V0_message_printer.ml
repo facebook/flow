@@ -12,6 +12,10 @@ open Core
 open Ide_message
 open Hh_json
 
+let init_respose_to_json { server_api_version } = JSON_Object [
+  ("server_api_version", int_ server_api_version);
+]
+
 let autocomplete_response_to_json x =
   let param_to_json x = JSON_Object [
     ("name", JSON_String x.name);
@@ -36,6 +40,7 @@ let autocomplete_response_to_json x =
 
 let to_json ~id:_ ~response =
   match response with
+  | Init_response x -> init_respose_to_json x
   | Autocomplete_response x -> autocomplete_response_to_json x
   (* Delegate unhandled messages to previous version of API *)
   | _ -> Nuclide_rpc_message_printer.to_json ~response

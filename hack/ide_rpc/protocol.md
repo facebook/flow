@@ -65,6 +65,40 @@ All of the string typed members are intended only to be displayed in editor - th
 
 ## Requests and notifications
 
+### Initialization request
+
+This request **must** be the first request sent by the client after establishing the connection, before any other requests.
+
+*Client request:*
+
+  method : "init"
+  params : InitParams
+
+where `InitParams` is defined as:
+
+  {
+    /**
+     * Arbitrary name identifying the client, provided for
+     * statistics purposes. Example: "Nuclide 0.182"
+     */
+    client_name : string;
+    /**
+     * The version of this API that client supports.
+     */
+    client_api_version : integer;
+  }
+
+*Server response:*
+
+  {
+    /**
+     * The most recent version of this API that server supports.
+     */
+    server_api_version : integer;
+  }
+
+`client_api_version` is just a suggestion for the server to ease introducing breaking changes: the server might try to match the behavior of `client_api_version` < `server_api_version` version of the API, but it's not required to do so in all of the cases - the decision is left to the server on per-feature basis, subject to individual judgment on how long do we want to wait before stopping support for older versions / features. Move fast!
+
 ### File synchronization
 
 Hack server watches all disk files in a project and uses their contents as a source of truth. But the files open in editor might have changes that are not saved yet - using disk versions for those files could lead to inconsistent / outdated results. To avoid this, editor can use file synchronization commands described in this section to always provide the server with most recent version of the file. It's still valid to issue commands referring to files that were not synchronized, but there are no hard guarantees about when their disk contents are reflected in server state when they change on disk, so it can lead to race conditions.
