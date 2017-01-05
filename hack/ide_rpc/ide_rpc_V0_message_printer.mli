@@ -8,18 +8,7 @@
  *
  *)
 
-open Ide_rpc_protocol_parser_types
-
-(**
- * Parse the protocol-specific part of the client message
- *)
-val parse:
-  message:string ->
-  version:version ->
-  result_t
-
-val error_t_to_string: error_t -> string
-
-val error_t_to_code: error_t -> int
-
-val version_to_int: version -> int
+val to_json :
+  id:int option ->
+  response:Ide_message.response ->
+  Hh_json.json

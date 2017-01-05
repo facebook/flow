@@ -24,6 +24,7 @@ type file_position = {
 }
 
 type request =
+  | Init of init_params
   | Autocomplete of file_position
   | Did_open_file of did_open_file_params
   | Did_close_file of did_close_file_params
@@ -34,6 +35,10 @@ type request =
   | Sleep_for_test (* TODO: port the tests that use it to integration_ml
                       framework and remove it*)
 
+and init_params = {
+  client_name : string;
+  client_api_version : int;
+}
 
 and did_open_file_params = {
   did_open_file_filename : string;
@@ -50,8 +55,13 @@ and did_change_file_params = {
 }
 
 type response =
+  | Init_response of init_response
   | Autocomplete_response of autocomplete_response
   | Diagnostics_notification of diagnostics_notification
+
+and init_response = {
+  server_api_version : int;
+}
 
 and autocomplete_response = autocomplete_item list
 

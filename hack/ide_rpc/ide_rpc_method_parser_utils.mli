@@ -9,17 +9,13 @@
  *)
 
 open Ide_rpc_protocol_parser_types
+open Hh_json
 
-(**
- * Parse the protocol-specific part of the client message
- *)
-val parse:
-  message:string ->
-  version:version ->
-  result_t
+val assert_params_required :
+  string -> 'a option -> ('a, error_t) Result.t
 
-val error_t_to_string: error_t -> string
+val get_text_field :
+  json -> (string, error_t) Result.t
 
-val error_t_to_code: error_t -> int
-
-val version_to_int: version -> int
+val get_filename_filed :
+  json -> (string, error_t) Result.t

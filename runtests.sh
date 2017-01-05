@@ -192,9 +192,11 @@ runtest() {
         cp -R "$dir/." "$OUT_DIR"
 
         out_file="$name.out"
+        log_file="$name.log"
         err_file="$name.err"
         diff_file="$name.diff"
         abs_out_file="$OUT_DIR/$name.out"
+        abs_log_file="$OUT_DIR/$name.log"
         abs_err_file="$OUT_DIR/$name.err"
         abs_diff_file="$OUT_DIR/$name.diff"
 
@@ -276,7 +278,7 @@ runtest() {
             trap "kill_server -TERM" SIGTERM
 
             # start server and wait
-            "$FLOW" start . $all --wait > /dev/null 2>&1
+            "$FLOW" start . $all --wait --log-file "$abs_log_file" > /dev/null 2>&1
             if [ "$shell" != "" ]
             then
                 # run test script
@@ -311,12 +313,14 @@ runtest() {
         if [ -s "$OUT_DIR/$diff_file" ]
         then
             mv "$OUT_DIR/$out_file" "$dir"
+            mv "$OUT_DIR/$log_file" "$dir"
             mv "$OUT_DIR/$err_file" "$dir"
             mv "$OUT_DIR/$diff_file" "$dir"
             return_status=$RUNTEST_FAILURE
         else
             rm -rf "$OUT_DIR"
             rm -f "$dir/$out_file"
+            rm -f "$dir/$log_file"
             rm -f "$dir/$err_file"
             rm -f "$dir/$diff_file"
             return_status=$RUNTEST_SUCCESS

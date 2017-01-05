@@ -166,7 +166,15 @@ let update_status env monitor_config =
      | Died_unexpectedly ((Unix.WEXITED c), _)
         when c = Exit_status.(exit_code File_heap_stale) -> true
      | _ -> false in
+   let sql_assertion_failure _ status = match status with
+     | Died_unexpectedly ((Unix.WEXITED c), _)
+        when c = Exit_status.(exit_code Sql_assertion_failure) ||
+             c = Exit_status.(exit_code Sql_cantopen) ||
+             c = Exit_status.(exit_code Sql_corrupt) ||
+             c = Exit_status.(exit_code Sql_misuse) -> true
+     | _ -> false in
    let max_watchman_retries = 3 in
+   let max_sql_retries = 3 in
    if (SMap.exists watchman_failed servers
      || SMap.exists watchman_fresh_instance servers)
      && (env.retries < max_watchman_retries) then begin
@@ -181,6 +189,11 @@ let update_status env monitor_config =
      Hh_logger.log
       "Several large rebases caused FileHeap to be stale. Restarting";
      restart_servers env
+  end else if SMap.exists sql_assertion_failure servers
+    && (env.retries < max_sql_retries) then begin
+    Hh_logger.log "Sql failed. Restarting hh_server (attempt: %d)"
+      (env.retries + 1);
+    restart_servers env
   end
    else
      { env with servers = servers }

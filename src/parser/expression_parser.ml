@@ -909,13 +909,9 @@ module Expression
         let expr = assignment env in
         sequence env (expr::acc)
     | _ ->
-      let last_loc = (match acc with
-        | (loc, _)::_ -> loc
-        | _ -> Loc.none) in
+      let (last_loc, _) = List.hd acc in
       let expressions = List.rev acc in
-      let first_loc = (match expressions with
-        | (loc, _)::_ -> loc
-        | _ -> Loc.none) in
+      let (first_loc, _) = List.hd expressions in
       Loc.btwn first_loc last_loc, Expression.(Sequence Sequence.({
         expressions;
       }))

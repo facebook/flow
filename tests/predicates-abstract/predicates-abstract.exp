@@ -19,10 +19,10 @@ sanity-filter-union.js:14
    17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
                                                              ^ A
   Error:
-   17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
-                                                             ^ property `u`. Property not found in
-   14: declare var ab: Array<A|B|C>;
-                               ^ object type
+    9: type B = { kind: 'B', v: string }
+                        ^^^ string literal `B`. Expected string literal `A`, got `B` instead
+    8: type A = { kind: 'A', u: number }
+                        ^^^ string literal `A`
   Member 2:
    17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
                                                                ^ C

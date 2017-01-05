@@ -8,18 +8,14 @@
  *
  *)
 
+open Ide_parser_utils
 open Ide_rpc_protocol_parser_types
 
-(**
- * Parse the protocol-specific part of the client message
- *)
-val parse:
-  message:string ->
-  version:version ->
-  result_t
+let assert_params_required method_name params =
+  Result.of_option params
+    ~error:(Invalid_params
+      (Printf.sprintf "%s request requires params" method_name))
 
-val error_t_to_string: error_t -> string
+let get_text_field = get_string_field "text"
 
-val error_t_to_code: error_t -> int
-
-val version_to_int: version -> int
+let get_filename_filed = get_string_field "filename"

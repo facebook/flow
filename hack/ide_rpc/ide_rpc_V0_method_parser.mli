@@ -10,16 +10,7 @@
 
 open Ide_rpc_protocol_parser_types
 
-(**
- * Parse the protocol-specific part of the client message
- *)
 val parse:
-  message:string ->
-  version:version ->
-  result_t
-
-val error_t_to_string: error_t -> string
-
-val error_t_to_code: error_t -> int
-
-val version_to_int: version -> int
+  method_name:method_name ->
+  params:Hh_json.json option ->
+  (Ide_message.request, error_t) Result.t

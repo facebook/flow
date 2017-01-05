@@ -1632,3 +1632,282 @@ let string_of_default = Default.fold
 let string_of_errors errors =
   Errors.(Hh_json.json_to_string ~pretty:true
     (Json_output.json_of_errors ~strip_root:None (to_list errors)))
+
+let dump_flow_error =
+  let open Flow_error in
+  let dump_internal_error = function
+  | PackageHeapNotFound _ -> "PackageHeapNotFound"
+  | AbnormalControlFlow -> "AbnormalControlFlow"
+  | UncaughtException _ -> "UncaughtException"
+  | MethodNotAFunction -> "MethodNotAFunction"
+  | OptionalMethod -> "OptionalMethod"
+  | OpenPredWithoutSubst -> "OpenPredWithoutSubst"
+  | PredFunWithoutParamNames -> "PredFunWithoutParamNames"
+  | UnsupportedGuardPredicate _ -> "UnsupportedGuardPredicate"
+  | BreakEnvMissingForCase -> "BreakEnvMissingForCase"
+  | PropertyDescriptorPropertyCannotBeRead ->
+      "PropertyDescriptorPropertyCannotBeRead"
+  | ForInLHS -> "ForInLHS"
+  | ForOfLHS -> "ForOfLHS"
+  | InstanceLookupComputed -> "InstanceLookupComputed"
+  | PropRefComputedOpen -> "PropRefComputedOpen"
+  | PropRefComputedLiteral -> "PropRefComputedLiteral"
+  | ShadowReadComputed -> "ShadowReadComputed"
+  | ShadowWriteComputed -> "ShadowWriteComputed"
+  | RestArgumentNotIdentifierPattern -> "RestArgumentNotIdentifierPattern"
+  | InterfaceTypeSpread -> "InterfaceTypeSpread"
+  in
+  fun ?(depth=3) cx err ->
+    match err with
+    | EIncompatible (l, u) ->
+        spf "EIncompatible (%s, %s)"
+          (dump_t ~depth cx l)
+          (dump_use_t ~depth cx u)
+    | EIncompatibleProp (l, u, reason_prop) ->
+        spf "EIncompatibleProp (%s, %s, %s)"
+          (dump_t ~depth cx l)
+          (dump_use_t ~depth cx u)
+          (dump_reason cx reason_prop)
+    | EDebugPrint (reason, _) ->
+        spf "EDebugPrint (%s, _)" (dump_reason cx reason)
+    | EImportValueAsType (reason, str) ->
+        spf "EImportValueAsType (%s, %s)" (dump_reason cx reason) str
+    | EImportTypeAsTypeof (reason, str) ->
+        spf "EImportTypeAsTypeof (%s, %s)" (dump_reason cx reason) str
+    | EImportTypeAsValue (reason, str) ->
+        spf "EImportTypeAsValue (%s, %s)" (dump_reason cx reason) str
+    | EImportTypeofNamespace (reason, local_name, module_name) ->
+        spf "EImportTypeofNamespace (%s, %s, %s)"
+          (dump_reason cx reason) local_name module_name
+    | ENoDefaultExport (reason, module_name, _) ->
+        spf "ENoDefaultExport (%s, %s)" (dump_reason cx reason) module_name
+    | EOnlyDefaultExport (reason, export_name) ->
+        spf "EOnlyDefaultExport (%s, %s)" (dump_reason cx reason) export_name
+    | ENoNamedExport (reason, export_name, _) ->
+        spf "ENoNamedExport (%s, %s)" (dump_reason cx reason) export_name
+    | EMissingTypeArgs (reason, _) ->
+        spf "EMissingTypeArgs (%s, _)" (dump_reason cx reason)
+    | EValueUsedAsType (reason1, reason2) ->
+        spf "EValueUsedAsType (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EMutationNotAllowed (reason1, reason2) ->
+        spf "EMutationNotAllowed (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EExpectedStringLit ((reason1, reason2), expected, literal) ->
+        let literal = match literal with
+        | Literal str -> spf "%S" str
+        | Truthy -> "truthy"
+        | AnyLiteral -> "any"
+        in
+        spf "EExpectedStringLit ((%s, %s), %S, %S)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+          expected
+          literal
+    | EExpectedNumberLit ((reason1, reason2), (_, expected), literal) ->
+        let literal = match literal with
+        | Literal (_, raw) -> spf "%S" raw
+        | Truthy -> "truthy"
+        | AnyLiteral -> "any"
+        in
+        spf "EExpectedNumberLit ((%s, %s), %s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+          expected
+          literal
+    | EExpectedBooleanLit ((reason1, reason2), expected, literal) ->
+        let literal = match literal with
+        | Some b -> spf "%b" b
+        | None -> "any"
+        in
+        spf "EExpectedBooleanLit ((%s, %s), %b, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+          expected
+          literal
+    | EPropNotFound (prop_reason, obj_reason) ->
+        spf "EPropNotFound (%s, %s)"
+          (dump_reason cx prop_reason)
+          (dump_reason cx obj_reason)
+    | EPropAccess ((reason1, reason2), x, _, _) ->
+        spf "EPropAccess ((%s, %s), %s, _, _)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+          (match x with Some x -> spf "%S" x | None -> "(computed)")
+    | EPropPolarityMismatch ((reason1, reason2), x, _) ->
+        spf "EPropPolarityMismatch ((%s, %s), %s, _)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+          (match x with Some x -> spf "%S" x | None -> "(computed)")
+    | EPolarityMismatch (tp, p) ->
+        spf "EPolarityMismatch (%s %S, %s)"
+          (Polarity.string tp.polarity)
+          tp.name
+          (Polarity.string p)
+    | EStrictLookupFailed ((reason1, reason2), reason, x) ->
+        spf "EStrictLookupFailed ((%s, %s), %s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+          (dump_reason cx reason)
+          (match x with Some x -> spf "Some %S" x | None -> "None")
+    | EFunCallParam (reason1, reason2) ->
+        spf "EFunCallParam (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EFunCallThis (reason1, reason2, reason_call) ->
+        spf "EFunCallThis (%s, %s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+          (dump_reason cx reason_call)
+    | EFunReturn (reason1, reason2) ->
+        spf "EFunReturn (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EFunImplicitReturn (reason1, reason2) ->
+        spf "EFunImplicitReturn (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EAddition (reason1, reason2) ->
+        spf "EAddition (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EAdditionMixed reason ->
+        spf "EAdditionMixed (%s)" (dump_reason cx reason)
+    | ECoercion (reason1, reason2) ->
+        spf "ECoercion (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EComparison (reason1, reason2) ->
+        spf "EComparison (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | ETupleArityMismatch ((reason1, reason2), arity1, arity2) ->
+        spf "ETupleArityMismatch (%s, %s, %d, %d)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+          arity1 arity2
+    | ENonLitArrayToTuple (reason1, reason2) ->
+        spf "ENonLitArrayToTuple (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | ETupleOutOfBounds ((reason1, reason2), arity1, arity2) ->
+        spf "ETupleOutOfBounds (%s, %s, %d, %d)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+          arity1 arity2
+    | ESpeculationFailed (l, u, _) ->
+        spf "ESpeculationFailed (%s, %s)"
+          (dump_t ~depth cx l)
+          (dump_use_t ~depth cx u)
+    | ESpeculationAmbiguous ((reason1, reason2), _, _, _) ->
+        spf "ESpeculationAmbiguous ((%s, %s), _, _, _)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EIncompatibleWithExact (reason1, reason2) ->
+        spf "EIncompatibleWithExact (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EUnsupportedExact (reason1, reason2) ->
+        spf "EUnsupportedExact (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EIdxArity reason ->
+        spf "EIdxArity (%s)" (dump_reason cx reason)
+    | EIdxUse1 reason ->
+        spf "EIdxUse1 (%s)" (dump_reason cx reason)
+    | EIdxUse2 reason ->
+        spf "EIdxUse2 (%s)" (dump_reason cx reason)
+    | EUnexpectedThisType loc ->
+        spf "EUnexpectedThisType (%s)" (string_of_loc loc)
+    | EInvalidRestParam reason ->
+        spf "EInvalidRestParam (%s)" (dump_reason cx reason)
+    | ETypeParamArity (loc, expected) ->
+        spf "ETypeParamArity (%s, %d)" (string_of_loc loc) expected
+    | ETypeParamMinArity (loc, expected) ->
+        spf "ETypeParamMinArity (%s, %d)" (string_of_loc loc) expected
+    | ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity) ->
+        spf "ETooManyTypeArgs (%s, %s, %d)"
+          (dump_reason cx reason_tapp)
+          (dump_reason cx reason_arity)
+          maximum_arity
+    | ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity) ->
+        spf "ETooFewTypeArgs (%s, %s, %d)"
+          (dump_reason cx reason_tapp)
+          (dump_reason cx reason_arity)
+          minimum_arity
+    | EPropertyTypeAnnot loc ->
+        spf "EPropertyTypeAnnot (%s)" (string_of_loc loc)
+    | EExportsAnnot loc ->
+        spf "EExportsAnnot (%s)" (string_of_loc loc)
+    | EUnsupportedKeyInObjectType loc ->
+        spf "EUnsupportedKeyInObjectType (%s)" (string_of_loc loc)
+    | EPredAnnot loc ->
+        spf "EPredAnnot (%s)" (string_of_loc loc)
+    | ERefineAnnot loc ->
+        spf "ERefineAnnot (%s)" (string_of_loc loc)
+    | EUnexpectedTypeof loc ->
+        spf "EUnexpectedTypeof (%s)" (string_of_loc loc)
+    | ECustom ((reason1, reason2), msg) ->
+        spf "ECustom (%s, %s, %S)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+          msg
+    | EInternal (loc, err) ->
+        spf "EInternal (%s, %s)" (string_of_loc loc) (dump_internal_error err)
+    | EUnsupportedSyntax (loc, _) ->
+        spf "EUnsupportedSyntax (%s, _)" (string_of_loc loc)
+    | EIllegalName loc ->
+        spf "EIllegalName (%s)" (string_of_loc loc)
+    | EUseArrayLiteral loc ->
+        spf "EUseArrayLiteral (%s)" (string_of_loc loc)
+    | EMissingAnnotation reason ->
+        spf "EMissingAnnotation (%s)" (dump_reason cx reason)
+    | EBindingError (_binding_error, reason, x, entry) ->
+        spf "EBindingError (_, %s, %s, %s)"
+          (dump_reason cx reason)
+          x
+          (Scope.Entry.string_of_kind entry)
+    | ERecursionLimit (reason1, reason2) ->
+        spf "ERecursionLimit (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EModuleOutsideRoot (loc, name) ->
+        spf "EModuleOutsideRoot (%s, %S)" (string_of_loc loc) name
+    | EExperimentalDecorators loc ->
+        spf "EExperimentalDecorators (%s)" (string_of_loc loc)
+    | EExperimentalClassProperties (loc, static) ->
+        spf "EExperimentalClassProperties (%s, %b)" (string_of_loc loc) static
+    | EUnsafeGetSet loc ->
+        spf "EUnsafeGetSet (%s)" (string_of_loc loc)
+    | EExperimentalExportStarAs loc ->
+        spf "EExperimentalExportStarAs (%s)" (string_of_loc loc)
+    | EIndeterminateModuleType reason ->
+        spf "EIndeterminateModuleType (%s)" (dump_reason cx reason)
+    | EUnreachable loc ->
+        spf "EUnreachable (%s)" (string_of_loc loc)
+    | EInvalidTypeof (loc, name) ->
+        spf "EInvalidTypeof (%s, %S)" (string_of_loc loc) name
+    | EBinaryInLHS reason ->
+        spf "EBinaryInLHS (%s)" (dump_reason cx reason)
+    | EBinaryInRHS reason ->
+        spf "EBinaryInRHS (%s)" (dump_reason cx reason)
+    | EArithmeticOperand reason ->
+        spf "EArithmeticOperand (%s)" (dump_reason cx reason)
+    | EForInRHS reason ->
+        spf "EForInRHS (%s)" (dump_reason cx reason)
+    | EObjectComputedPropertyAccess (reason1, reason2) ->
+        spf "EObjectComputedPropertyAccess (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EObjectComputedPropertyAssign (reason1, reason2) ->
+        spf "EObjectComputedPropertyAssign (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EInvalidLHSInAssignment loc ->
+        spf "EInvalidLHSInAssignment (%s)" (string_of_loc loc)
+    | EIncompatibleObject (reason1, reason2, _) ->
+        spf "EIncompatibleObject (%s, %s, _)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
