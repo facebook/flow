@@ -342,6 +342,11 @@ let builder = object (this)
                 this#add_always_empty_chunk ();
               this#check_range ();
               newlines + 1, false
+            | TriviaKind.Unsafe
+            | TriviaKind.UnsafeExpression
+            | TriviaKind.FallThrough
+            | TriviaKind.FixMe
+            | TriviaKind.IgnoreError
             | TriviaKind.SingleLineComment
             | TriviaKind.DelimitedComment ->
               handle_newlines ~is_trivia:true newlines;
@@ -379,6 +384,9 @@ let builder = object (this)
     let new_line_regex = Str.regexp "\n" in
     List.concat_map trivia ~f:(fun triv ->
       match Trivia.kind triv with
+        | TriviaKind.UnsafeExpression
+        | TriviaKind.FixMe
+        | TriviaKind.IgnoreError
         | TriviaKind.DelimitedComment ->
           let delimited_lines =
             Str.split new_line_regex @@ Trivia.text triv in
