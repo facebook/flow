@@ -8,7 +8,11 @@
  *
  *)
 
-module type S = sig
-  type 'a t
-  val get : 'a t -> 'a
-end
+(** Uttilities to deal with subprocesses. *)
+
+(** exec program ?env args
+ *
+ * Shells out the program with the given args. *)
+val exec : string -> ?env:string list -> string list -> Process_types.t
+
+val read_and_close_pid : Process_types.t -> string

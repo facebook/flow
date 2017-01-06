@@ -8,7 +8,13 @@
  *
  *)
 
-module type S = sig
-  type 'a t
-  val get : 'a t -> 'a
-end
+exception Process_exited_with_error of (Unix.process_status * string)
+
+exception Select_timed_out
+
+type t = {
+  stdin_fd : Unix.file_descr;
+  stdout_fd : Unix.file_descr;
+  stderr_fd : Unix.file_descr;
+  pid : int;
+}
