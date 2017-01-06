@@ -718,7 +718,9 @@ let server_init genv =
   let get_next_raw =
     Files.make_next_files ~all:false ~subdir:None ~options ~libs in
   let get_next = fun () ->
-    get_next_raw () |> List.map (Files.filename_from_string ~options)
+    get_next_raw ()
+    |> List.map (Files.filename_from_string ~options)
+    |> Bucket.of_list
   in
   let (profiling, parsed) =
     full_check genv.ServerEnv.workers ~ordered_libs get_next options in

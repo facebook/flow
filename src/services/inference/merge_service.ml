@@ -248,7 +248,7 @@ let merge_strict ~options ~workers ~save_errors
     (fun t -> spf "merged (strict) in %f" t)
     (fun () ->
       (* returns parallel lists of filenames and errorsets *)
-      let files, errsets, _ = MultiWorker.call_dynamic
+      let files, errsets, _ = MultiWorker.call
         workers
         ~job: (merge_strict_job ~options)
         ~neutral: ([], [], [])
