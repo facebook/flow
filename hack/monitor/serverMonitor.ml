@@ -107,8 +107,8 @@ let update_status_ (server: ServerProcess.server_process) monitor_config =
         Died_unexpectedly (proc_stat, was_oom))
   | _ -> server
 
-let start_server monitor_starter =
-  let server_process = monitor_starter () in
+let start_server monitor_starter exit_status =
+  let server_process = monitor_starter exit_status in
   setup_autokill_server_on_exit server_process;
   Alive server_process
 
@@ -123,11 +123,11 @@ let wait_for_server_exit_with_check server kill_signal_time =
       wait_for_server_exit server kill_signal_time
     | _ -> ()
 
-let restart_server env =
+let restart_server env exit_status =
   kill_server_with_check env.server;
   let kill_signal_time = Unix.gettimeofday () in
   wait_for_server_exit_with_check env.server kill_signal_time;
-  let new_server = start_server env.starter in
+  let new_server = start_server env.starter exit_status in
   { env with
     server = new_server;
     retries = env.retries + 1;
@@ -136,24 +136,23 @@ let restart_server env =
 let update_status env monitor_config =
    let server = update_status_ env.server monitor_config in
    let env = { env with server = server } in
-   let watchman_fresh_instance status = match status with
-     | Died_unexpectedly ((Unix.WEXITED c), _)
-         when c = Exit_status.(exit_code Watchman_fresh_instance) -> true
+   let exit_status = match server with
+     | Died_unexpectedly ((Unix.WEXITED c), _) -> Some c
+     | _ -> None in
+   let is_watchman_fresh_instance = match exit_status with
+     | Some c when c = Exit_status.(exit_code Watchman_fresh_instance) -> true
      | _ -> false in
-   let watchman_failed status = match status with
-     | Died_unexpectedly ((Unix.WEXITED c), _)
-        when c = Exit_status.(exit_code Watchman_failed) -> true
+   let is_watchman_failed = match exit_status with
+     | Some c when c = Exit_status.(exit_code Watchman_failed) -> true
      | _ -> false in
-   let config_changed status = match status with
-     | Died_unexpectedly ((Unix.WEXITED c), _)
-        when c = Exit_status.(exit_code Hhconfig_changed) -> true
+   let is_config_changed = match exit_status with
+     | Some c when c = Exit_status.(exit_code Hhconfig_changed) -> true
      | _ -> false in
-   let file_heap_stale status = match status with
-     | Died_unexpectedly ((Unix.WEXITED c), _)
-        when c = Exit_status.(exit_code File_heap_stale) -> true
+   let is_file_heap_stale = match exit_status with
+     | Some c when c = Exit_status.(exit_code File_heap_stale) -> true
      | _ -> false in
-   let sql_assertion_failure status = match status with
-     | Died_unexpectedly ((Unix.WEXITED c), _)
+   let is_sql_assertion_failure = match exit_status with
+     | Some c
         when c = Exit_status.(exit_code Sql_assertion_failure) ||
              c = Exit_status.(exit_code Sql_cantopen) ||
              c = Exit_status.(exit_code Sql_corrupt) ||
@@ -161,24 +160,24 @@ let update_status env monitor_config =
      | _ -> false in
    let max_watchman_retries = 3 in
    let max_sql_retries = 3 in
-   if (watchman_failed server || watchman_fresh_instance server)
+   if (is_watchman_failed || is_watchman_fresh_instance)
      && (env.retries < max_watchman_retries) then begin
      Hh_logger.log "Watchman died. Restarting hh_server (attempt: %d)"
        (env.retries + 1);
-     restart_server env
+     restart_server env exit_status
    end
-   else if config_changed server then begin
+   else if is_config_changed then begin
      Hh_logger.log "hh_server died from hh config change. Restarting";
-     restart_server env
-   end else if file_heap_stale server then begin
+     restart_server env exit_status
+   end else if is_file_heap_stale then begin
      Hh_logger.log
       "Several large rebases caused FileHeap to be stale. Restarting";
-     restart_server env
-  end else if sql_assertion_failure server
-    && (env.retries < max_sql_retries) then begin
-    Hh_logger.log "Sql failed. Restarting hh_server (attempt: %d)"
+     restart_server env exit_status
+  end else if is_sql_assertion_failure
+  && (env.retries < max_sql_retries) then begin
+    Hh_logger.log "Sql failed. Restarting hh_server in fresh mode (attempt: %d)"
       (env.retries + 1);
-    restart_server env
+    restart_server env exit_status
   end
    else
      { env with server = server }
@@ -370,7 +369,7 @@ let start_monitoring ~waiting_client monitor_config monitor_starter =
       Printf.eprintf "Caught exception while waking client: %s\n%!"
         (Printexc.to_string e)
   end;
-  let server_process = start_server monitor_starter in
+  let server_process = start_server monitor_starter None in
   let env = {
     server = server_process;
     starter = monitor_starter;

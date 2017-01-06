@@ -26,9 +26,11 @@ type monitor_config =
 
 (**
  * Function that initializes the common state and returns the process starter.
+ * Takes an exit code option to act differently based on how the previous server
+ * exited
  *)
 type monitor_starter =
-   (unit -> ServerProcess.process_data)
+   (int option -> ServerProcess.process_data)
 
 type connection_error =
   | Server_missing
