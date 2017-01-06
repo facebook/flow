@@ -2178,35 +2178,61 @@ and object_prop cx map = Ast.Expression.Object.(function
    *)
 
   (* unsafe getter property *)
-  | Property (_, {
+  | Property (loc, {
       Property.kind = Property.Get;
       key = Property.Identifier (_, name);
       value = (vloc, Ast.Expression.Function func);
-      _ })
-    when Context.enable_unsafe_getters_and_setters cx ->
+      _ }) ->
+    if Context.enable_unsafe_getters_and_setters cx then
       let reason = mk_reason RGetterFunction vloc in
       let function_type = mk_function None cx reason func in
       let return_t = extract_getter_type function_type in
       Properties.add_getter name return_t map
+    else begin
+      Flow_js.add_output cx
+        Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
+      map
+    end
 
   (* unsafe setter property *)
-  | Property (_, {
+  | Property (loc, {
     Property.kind = Property.Set;
       key = Property.Identifier (_, name);
       value = (vloc, Ast.Expression.Function func);
-      _ })
-    when Context.enable_unsafe_getters_and_setters cx ->
+      _ }) ->
+    if Context.enable_unsafe_getters_and_setters cx then
       let reason = mk_reason RSetterFunction vloc in
       let function_type = mk_function None cx reason func in
       let param_t = extract_setter_type function_type in
       Properties.add_setter name param_t map
+    else begin
+      Flow_js.add_output cx
+        Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
+      map
+    end
 
-  | Property (loc, { Property.kind = Property.Get | Property.Set; _ }) ->
+  (* getters and setters that are not functions should be parse errors *)
+  | Property (loc, { Property.
+      kind = Property.Get | Property.Set;
+      key = Property.Identifier _;
+      _
+    }) ->
     Flow_js.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
     map
 
-  (* computed LHS *)
+  (* computed getters and setters aren't supported yet regardless of the
+     `enable_getters_and_setters` config option *)
+  | Property (loc, { Property.
+      kind = Property.Get | Property.Set;
+      key = Property.Computed _;
+      _
+    }) ->
+    Flow_js.add_output cx
+      Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyComputedGetSet));
+    map
+
+  (* computed LHS silently ignored for now *)
   | Property (_, { Property.key = Property.Computed _; _ }) ->
     map
 
@@ -2263,7 +2289,12 @@ and object_ cx reason ?(allow_sealed=true) props =
         let obj = eval_object (map, result) in
         let result = mk_spread spread obj in
         false, SMap.empty, Some result
-    | Property (_, { Property.key = Property.Computed k; value = v; _ }) ->
+    | Property (_, { Property.
+        key = Property.Computed k;
+        value = v;
+        kind = Property.Init;
+        _method = _; shorthand = _;
+      }) ->
         let k = expression cx k in
         let v = expression cx v in
         let obj = eval_object (map, result) in
