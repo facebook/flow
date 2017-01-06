@@ -109,6 +109,22 @@ let exec_read_lines ?(reverse=false) cmd =
   assert (Unix.close_process_in ic = Unix.WEXITED 0);
   if not reverse then List.rev !result else !result
 
+(** Deletes the file given by "path". If it is a directory, recursively
+ * deletes all its contents then removes the directory itself. *)
+let rec rm_dir_tree path =
+  try begin
+  if Sys.is_directory path then
+    let contents = Sys.readdir path in
+    List.iter (Array.to_list contents) ~f:(fun name ->
+      let name = Filename.concat path name in
+      rm_dir_tree name)
+  else
+    Sys.remove path
+  end with
+  (** Path has been deleted out from under us - can ignore it. *)
+  | Sys_error(s) when s = Printf.sprintf "%s: No such file or directory" path ->
+    ()
+
 let restart () =
   let cmd = Sys.argv.(0) in
   let argv = Sys.argv in
