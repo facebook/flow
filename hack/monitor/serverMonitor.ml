@@ -27,11 +27,10 @@ open ServerProcessTools
 open ServerMonitorUtils
 
 exception Malformed_build_id
-exception Misconfigured_monitor
 exception Send_fd_failure of int
 
 type env = {
-  servers: ServerProcess.server_process SMap.t;
+  server: ServerProcess.server_process;
   (** Invoke this to re-launch the processes. *)
   starter: ServerMonitorUtils.monitor_starter;
   (** How many times have we tried to relaunch it? *)
@@ -72,11 +71,11 @@ let setup_handler_for_signals handler signals =
     Sys_utils.set_signal signal (Sys.Signal_handle handler)
   end
 
-let setup_autokill_servers_on_exit processes =
+let setup_autokill_server_on_exit process =
   try
     setup_handler_for_signals begin fun _ ->
       Hh_logger.log "Got an exit signal. Killing server and exiting.";
-      List.iter processes ~f:kill_server;
+      kill_server process;
       Exit_status.exit Exit_status.Interrupted
     end [Sys.sigint; Sys.sigquit; Sys.sigterm; Sys.sighup];
   with
@@ -108,65 +107,52 @@ let update_status_ (server: ServerProcess.server_process) monitor_config =
         Died_unexpectedly (proc_stat, was_oom))
   | _ -> server
 
-let start_servers monitor_starter =
-  let server_processes = monitor_starter () in
-  setup_autokill_servers_on_exit server_processes;
-  List.fold_left server_processes ~init:SMap.empty
-    ~f:begin fun acc x -> match SMap.get x.name acc with
-      | None -> SMap.add x.name (Alive x) acc
-      | Some _ ->
-        Hh_logger.log
-          "Monitored server names must be unique. Got %s more than once."
-          x.name;
-        raise Misconfigured_monitor
-    end
+let start_server monitor_starter =
+  let server_process = monitor_starter () in
+  setup_autokill_server_on_exit server_process;
+  Alive server_process
 
-let kill_servers servers =
-  SMap.iter begin fun _ server -> match server with
+let kill_server_with_check = function
     | Alive server ->
       kill_server server
     | _ -> ()
-  end servers
 
-let wait_for_servers_exit servers kill_signal_time =
-  SMap.iter begin fun _ server -> match server with
+let wait_for_server_exit_with_check server kill_signal_time =
+  match server with
     | Alive server ->
       wait_for_server_exit server kill_signal_time
     | _ -> ()
-  end servers
 
-let restart_servers env =
-  kill_servers env.servers;
+let restart_server env =
+  kill_server_with_check env.server;
   let kill_signal_time = Unix.gettimeofday () in
-  wait_for_servers_exit env.servers kill_signal_time;
-  let new_servers = start_servers env.starter in
+  wait_for_server_exit_with_check env.server kill_signal_time;
+  let new_server = start_server env.starter in
   { env with
-    servers = new_servers;
+    server = new_server;
     retries = env.retries + 1;
   }
 
 let update_status env monitor_config =
-   let servers = SMap.map
-    (fun server -> update_status_ server monitor_config)
-    env.servers in
-   let env = { env with servers = servers } in
-   let watchman_fresh_instance _ status = match status with
+   let server = update_status_ env.server monitor_config in
+   let env = { env with server = server } in
+   let watchman_fresh_instance status = match status with
      | Died_unexpectedly ((Unix.WEXITED c), _)
          when c = Exit_status.(exit_code Watchman_fresh_instance) -> true
      | _ -> false in
-   let watchman_failed _ status = match status with
+   let watchman_failed status = match status with
      | Died_unexpectedly ((Unix.WEXITED c), _)
         when c = Exit_status.(exit_code Watchman_failed) -> true
      | _ -> false in
-   let config_changed _ status = match status with
+   let config_changed status = match status with
      | Died_unexpectedly ((Unix.WEXITED c), _)
         when c = Exit_status.(exit_code Hhconfig_changed) -> true
      | _ -> false in
-   let file_heap_stale _ status = match status with
+   let file_heap_stale status = match status with
      | Died_unexpectedly ((Unix.WEXITED c), _)
         when c = Exit_status.(exit_code File_heap_stale) -> true
      | _ -> false in
-   let sql_assertion_failure _ status = match status with
+   let sql_assertion_failure status = match status with
      | Died_unexpectedly ((Unix.WEXITED c), _)
         when c = Exit_status.(exit_code Sql_assertion_failure) ||
              c = Exit_status.(exit_code Sql_cantopen) ||
@@ -175,28 +161,27 @@ let update_status env monitor_config =
      | _ -> false in
    let max_watchman_retries = 3 in
    let max_sql_retries = 3 in
-   if (SMap.exists watchman_failed servers
-     || SMap.exists watchman_fresh_instance servers)
+   if (watchman_failed server || watchman_fresh_instance server)
      && (env.retries < max_watchman_retries) then begin
      Hh_logger.log "Watchman died. Restarting hh_server (attempt: %d)"
        (env.retries + 1);
-     restart_servers env
+     restart_server env
    end
-   else if SMap.exists config_changed servers then begin
+   else if config_changed server then begin
      Hh_logger.log "hh_server died from hh config change. Restarting";
-     restart_servers env
-   end else if SMap.exists file_heap_stale servers then begin
+     restart_server env
+   end else if file_heap_stale server then begin
      Hh_logger.log
       "Several large rebases caused FileHeap to be stale. Restarting";
-     restart_servers env
-  end else if SMap.exists sql_assertion_failure servers
+     restart_server env
+  end else if sql_assertion_failure server
     && (env.retries < max_sql_retries) then begin
     Hh_logger.log "Sql failed. Restarting hh_server (attempt: %d)"
       (env.retries + 1);
-    restart_servers env
+    restart_server env
   end
    else
-     { env with servers = servers }
+     { env with server = server }
 
 let read_version fd =
   let client_build_id: string = Marshal_tools.from_fd_with_preamble fd in
@@ -216,8 +201,8 @@ let rec handle_monitor_rpc env client_fd =
   | MonitorRpc.SHUT_DOWN ->
     Hh_logger.log "Got shutdown RPC. Shutting down.";
     let kill_signal_time = Unix.gettimeofday () in
-    kill_servers env.servers;
-    wait_for_servers_exit env.servers kill_signal_time;
+    kill_server_with_check env.server;
+    wait_for_server_exit_with_check env.server kill_signal_time;
     Exit_status.(exit No_error)
 
 and hand_off_client_connection server client_fd =
@@ -265,25 +250,22 @@ and client_out_of_date_ client_fd =
  * and server have exited.
 *)
 and client_out_of_date env client_fd =
-  kill_servers env.servers;
+  kill_server_with_check env.server;
   let kill_signal_time = Unix.gettimeofday () in
   (** If we detect out of date client, should always kill server and exit
    * monitor, even if messaging to channel or event logger fails. *)
   (try client_out_of_date_ client_fd with
    | e -> Hh_logger.log
        "Handling client_out_of_date threw with: %s" (Printexc.to_string e));
-  wait_for_servers_exit env.servers kill_signal_time;
+  wait_for_server_exit_with_check env.server kill_signal_time;
   Exit_status.exit Exit_status.Build_id_mismatch
 
 (** Send (possibly empty) sequences of messages before handing off to
  * server. *)
 and client_prehandoff env server_name client_fd =
   let module PH = Prehandoff in
-  match SMap.get server_name env.servers with
-  | None ->
-    msg_to_channel client_fd PH.Server_name_not_found;
-    env
-  | Some (Alive server) ->
+  match env.server with
+  | Alive server when server.name = server_name ->
     let since_last_request =
       (Unix.time ()) -. !(server.last_request_handoff) in
     (** TODO: Send this to client so it is visible. *)
@@ -293,12 +275,15 @@ and client_prehandoff env server_name client_fd =
     hand_off_client_connection_with_retries server 8 client_fd;
     HackEventLogger.client_connection_sent ();
     server.last_request_handoff := Unix.time ();
-    { env with servers = SMap.add server_name (Alive server) env.servers }
-  | Some (Died_unexpectedly (status, was_oom)) ->
+    { env with server = (Alive server) }
+  | Died_unexpectedly (status, was_oom) ->
     (** Server has died; notify the client *)
     msg_to_channel client_fd (PH.Server_died {PH.status; PH.was_oom});
     (** Next client to connect starts a new server. *)
     Exit_status.exit Exit_status.No_error
+  | _ ->
+    msg_to_channel client_fd PH.Server_name_not_found;
+    env
 
 and ack_and_handoff_client env client_fd =
   try
@@ -385,9 +370,9 @@ let start_monitoring ~waiting_client monitor_config monitor_starter =
       Printf.eprintf "Caught exception while waking client: %s\n%!"
         (Printexc.to_string e)
   end;
-  let server_processes = start_servers monitor_starter in
+  let server_process = start_server monitor_starter in
   let env = {
-    servers = server_processes;
+    server = server_process;
     starter = monitor_starter;
     retries = 0;
   } in
