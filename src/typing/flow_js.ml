@@ -4533,7 +4533,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             rec_flow_t cx trace (l, result)
         end
 
-    | (StrT _ | NumT _ | BoolT _),
+    | NullT _,
+      SentinelPropTestT (l, sense, SentinelNull, result) ->
+        if not sense
+        then () (* provably unreachable, so prune *)
+        else rec_flow_t cx trace (l, result)
+
+    | VoidT _,
+      SentinelPropTestT (l, sense, SentinelVoid, result) ->
+        if not sense
+        then () (* provably unreachable, so prune *)
+        else rec_flow_t cx trace (l, result)
+
+    | (StrT _ | NumT _ | BoolT _ | NullT _ | VoidT _),
       SentinelPropTestT (l, sense, _, result) ->
         (* types don't match (would've been matched above) *)
         (* we don't prune other types like objects or instances, even though
@@ -6697,10 +6709,14 @@ and guess_and_record_sentinel_prop cx ts =
     | AnnotT (OpenT (_, id)) ->
       let constraints = find_graph cx id in
       begin match constraints with
-      | Resolved (SingletonStrT _ | SingletonNumT _ | SingletonBoolT _) -> true
+      | Resolved (
+          SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ |
+          NullT _ | VoidT _
+        ) -> true
       | _ -> false
       end
     | SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ -> true
+    | NullT _ | VoidT _ -> true
     | _ -> false in
 
   (* Compute the intersection of properties of objects *)
@@ -7717,6 +7733,8 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
     | StrT (_, Literal value) -> Some (SentinelStr value)
     | NumT (_, Literal value) -> Some (SentinelNum value)
     | BoolT (_, Some value) -> Some (SentinelBool value)
+    | VoidT _ -> Some SentinelVoid
+    | NullT _ -> Some SentinelNull
     | _ -> None
   in
   fun (sense, obj, t) -> match sentinel_of_literal t with

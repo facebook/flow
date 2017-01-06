@@ -787,6 +787,8 @@ module rec TypeTerm : sig
   | SentinelStr of string
   | SentinelNum of number_literal
   | SentinelBool of bool
+  | SentinelNull
+  | SentinelVoid
 
   and choice_tool =
   | Trigger

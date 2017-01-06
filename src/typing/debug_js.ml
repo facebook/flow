@@ -635,7 +635,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "sentinel", (match sentinel with
       | SentinelStr s -> JSON_String s
       | SentinelNum (_, raw) -> JSON_String raw
-      | SentinelBool b -> JSON_Bool b);
+      | SentinelBool b -> JSON_Bool b
+      | SentinelNull -> JSON_Null
+      | SentinelVoid -> JSON_Null (* hmm, undefined doesn't exist in JSON *)
+      );
       "result", _json_of_t json_cx result;
     ]
   | IdxUnwrap (_, t_out) -> [
@@ -1467,7 +1470,9 @@ and dump_use_t_ (depth, tvars) cx t =
         (match sentinel with
         | SentinelStr x -> spf "string %s" x
         | SentinelNum (_,x) -> spf "number %s" x
-        | SentinelBool x -> spf "boolean %b" x)
+        | SentinelBool x -> spf "boolean %b" x
+        | SentinelNull -> "null"
+        | SentinelVoid -> "void")
         (kid result))
       t
   | SubstOnPredT _ -> p t
