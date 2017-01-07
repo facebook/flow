@@ -366,17 +366,17 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | BindT (_, funtype)
   | CallT (_, funtype) -> [
-      "funType", json_of_funtype json_cx funtype
+      "funType", json_of_funcalltype json_cx funtype
     ]
 
   | ApplyT (_, l, funtype) -> [
       "lower", _json_of_t json_cx l;
-      "funType", json_of_funtype json_cx funtype
+      "funType", json_of_funcalltype json_cx funtype
     ]
 
   | MethodT (_, _, propref, funtype) -> [
       "propRef", json_of_propref json_cx propref;
-      "funType", json_of_funtype json_cx funtype
+      "funType", json_of_funcalltype json_cx funtype
     ]
 
   | ReposLowerT (_, use_t) -> [
@@ -403,7 +403,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | CallElemT (_, _, indext, funtype) -> [
       "indexType", _json_of_t json_cx indext;
-      "funType", json_of_funtype json_cx funtype
+      "funType", json_of_funcalltype json_cx funtype
     ]
 
   | GetStaticsT (_, t) -> [
@@ -557,7 +557,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       match action with
       | ReadElem t -> "readElem", _json_of_t json_cx t
       | WriteElem t -> "writeElem", _json_of_t json_cx t
-      | CallElem (_, funtype) -> "callElem", json_of_funtype json_cx funtype
+      | CallElem (_, funtype) -> "callElem", json_of_funcalltype json_cx funtype
     ]
 
   | MakeExactT (_, cont) -> _json_of_cont json_cx cont
@@ -778,6 +778,7 @@ and json_of_funtype_impl json_cx {
   this_t;
   params_tlist;
   params_names;
+  rest_param;
   return_t;
   is_predicate;
   closure_t;
@@ -793,10 +794,33 @@ and json_of_funtype_impl json_cx {
         JSON_Array (List.map (fun s -> JSON_String s) names)
       ]
   ) @ [
+    "restParam", (match rest_param with
+    | None -> JSON_Null
+    | Some (name, t) -> JSON_Object (
+      [
+        "restParamType", _json_of_t json_cx t;
+      ] @ (match name with
+        | None -> []
+        | Some name -> ["restParamName", JSON_String name])));
     "returnType", _json_of_t json_cx return_t;
     "isPredicate", JSON_Bool is_predicate;
     "closureIndex", int_ closure_t;
     "changeset", json_of_changeset json_cx changeset;
+  ])
+)
+
+and json_of_funcalltype json_cx = check_depth json_of_funcalltype_impl json_cx
+and json_of_funcalltype_impl json_cx {
+  call_this_t;
+  call_args_tlist;
+  call_tout;
+  call_closure_t;
+} = Hh_json.(
+  JSON_Object ([
+    "thisType", _json_of_t json_cx call_this_t;
+    "argTypes", JSON_Array (List.map (_json_of_t json_cx) call_args_tlist);
+    "tout", _json_of_t json_cx call_tout;
+    "closureIndex", int_ call_closure_t;
   ])
 )
 
@@ -1404,11 +1428,11 @@ and dump_use_t_ (depth, tvars) cx t =
   | BecomeT (_, arg) -> p ~extra:(kid arg) t
   | BindT _ -> p t
   | CallElemT (_, _, ix, _) -> p ~extra:(kid ix) t
-  | CallT (_,{params_tlist;return_t;this_t;_}) -> p
+  | CallT (_,{call_args_tlist;call_tout;call_this_t;_}) -> p
       ~extra:(spf "<this: %s>(%s) => %s"
-        (kid this_t)
-        (String.concat "; " (List.map kid params_tlist))
-        (kid return_t)) t
+        (kid call_this_t)
+        (String.concat "; " (List.map kid call_args_tlist))
+        (kid call_tout)) t
   | CallLatentPredT _ -> p t
   | CallOpenPredT _ -> p t
   | ChoiceKitUseT (_, TryFlow (_, spec)) ->

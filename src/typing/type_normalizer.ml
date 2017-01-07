@@ -13,13 +13,13 @@ open Utils_js
 
 let suggested_type_cache = ref IMap.empty
 
-let fake_fun params_names param_ts ret_t =
+let fake_fun params_names param_ts rest_param ret_t =
   let reason = locationless_reason (RFunction RNormal) in
   FunT (
     reason,
     Flow_js.dummy_static reason,
     Flow_js.dummy_prototype,
-    Flow_js.mk_functiontype param_ts ?params_names ret_t
+    Flow_js.mk_functiontype param_ts ~rest_param ?params_names ret_t
   )
 
 let fake_instance name =
@@ -70,6 +70,9 @@ let rec normalize_type_impl cx ids t = match t with
 
   | FunT (_, _, _, ft) ->
       let tins = List.map (normalize_type_impl cx ids) ft.params_tlist in
+      let rest_param = Option.map
+        ~f:(fun (name, t) -> name, normalize_type_impl cx ids t)
+        ft.rest_param in
       let params_names = ft.params_names in
       let tout = normalize_type_impl cx ids ft.return_t in
       let reason = locationless_reason (RFunction RNormal) in
@@ -78,7 +81,8 @@ let rec normalize_type_impl cx ids t = match t with
         reason,
         Flow_js.dummy_static reason,
         Flow_js.dummy_prototype,
-        Flow_js.mk_functiontype tins ?params_names ?is_predicate tout
+        Flow_js.mk_functiontype
+          tins ~rest_param ?params_names ?is_predicate tout
       )
 
   (* Fake the signature of Function.prototype.apply: *)
@@ -87,23 +91,25 @@ let rec normalize_type_impl cx ids t = match t with
       let any = AnyT (locationless_reason RAny) in
       let tins = [any; OptionalT any] in
       let params_names = Some ["thisArg"; "argArray"] in
-      fake_fun params_names tins any
+      fake_fun params_names tins None any
 
   (* Fake the signature of Function.prototype.bind: *)
   (* (thisArg: any, ...argArray: Array<any>): any *)
   | FunProtoBindT _ ->
       let any = AnyT (locationless_reason RAny) in
-      let tins = [any; RestT any] in
-      let params_names = Some ["thisArg"; "argArray"] in
-      fake_fun params_names tins any
+      let tins = [any] in
+      let rest_param = Some (Some "argArray", RestT any) in
+      let params_names = Some ["thisArg"] in
+      fake_fun params_names tins rest_param any
 
   (* Fake the signature of Function.prototype.call: *)
   (* (thisArg: any, ...argArray: Array<any>): any *)
   | FunProtoCallT _ ->
       let any = AnyT (locationless_reason RAny) in
-      let tins = [any; RestT any] in
-      let params_names = Some ["thisArg"; "argArray"] in
-      fake_fun params_names tins any
+      let tins = [any] in
+      let rest_param = Some (Some "argArray", RestT any) in
+      let params_names = Some ["thisArg"] in
+      fake_fun params_names tins rest_param any
 
   | ChoiceKitT (_, _) ->
       AnyT.t
@@ -112,44 +118,49 @@ let rec normalize_type_impl cx ids t = match t with
   (* (...objects: Array<Object>): Object *)
   | CustomFunT (_, Merge) ->
       let obj = AnyObjT (locationless_reason RObjectType) in
-      let tins = [RestT obj] in
-      let params_names = Some ["objects"] in
-      fake_fun params_names tins obj
+      let tins = [] in
+      let rest_param = Some (Some "objects", RestT obj) in
+      let params_names = Some [] in
+      fake_fun params_names tins rest_param obj
 
   (* Fake the signature of $Facebookism$MergeDeepInto: *)
   (* (target: Object, ...objects: Array<Object>): void *)
   | CustomFunT (_, MergeDeepInto) ->
       let obj = AnyObjT (locationless_reason RObjectType) in
       let void = VoidT (locationless_reason RVoid) in
-      let tins = [obj; RestT obj] in
-      let params_names = Some ["target"; "objects"] in
-      fake_fun params_names tins void
+      let tins = [obj] in
+      let rest_param = Some (Some "objects", RestT obj) in
+      let params_names = Some ["target"] in
+      fake_fun params_names tins rest_param void
 
   (* Fake the signature of $Facebookism$MergeInto: *)
   (* (target: Object, ...objects: Array<Object>): void *)
   | CustomFunT (_, MergeInto) ->
       let obj = AnyObjT (locationless_reason RObjectType) in
       let void = VoidT (locationless_reason RVoid) in
-      let tins = [obj; RestT obj] in
-      let params_names = Some ["target"; "objects"] in
-      fake_fun params_names tins void
+      let tins = [obj] in
+      let rest_param = Some (Some "objects", RestT obj) in
+      let params_names = Some ["target"] in
+      fake_fun params_names tins rest_param void
 
   (* Fake the signature of $Facebookism$Mixin: *)
   (* (...objects: Array<Object>): Class *)
   | CustomFunT (_, Mixin) ->
       let obj = AnyObjT (locationless_reason RObjectType) in
       let tout = ClassT obj in
-      let tins = [RestT obj] in
-      let params_names = Some ["objects"] in
-      fake_fun params_names tins tout
+      let tins = [] in
+      let rest_param = Some (Some "objects", RestT obj) in
+      let params_names = Some [] in
+      fake_fun params_names tins rest_param tout
 
   (* Fake the signature of Object.assign:
      (target: any, ...sources: Array<any>): any *)
   | CustomFunT (_, ObjectAssign) ->
       let any = AnyT (locationless_reason RAny) in
-      let tins = [any; RestT any] in
-      let params_names = Some ["target"; "sources"] in
-      fake_fun params_names tins any
+      let tins = [any] in
+      let rest_param = Some (Some "sources", RestT any) in
+      let params_names = Some ["target"] in
+      fake_fun params_names tins rest_param any
 
   (* Fake the signature of Object.getPrototypeOf:
      (o: any): any *)
@@ -157,7 +168,7 @@ let rec normalize_type_impl cx ids t = match t with
       let any = AnyT (locationless_reason RAny) in
       let tins = [any] in
       let params_names = Some ["o"] in
-      fake_fun params_names tins any
+      fake_fun params_names tins None any
 
   | CustomFunT (reason, Idx) ->
       let obj_param = (
@@ -186,12 +197,12 @@ let rec normalize_type_impl cx ids t = match t with
 
       let cb_param = (
         let cb_param = IdxWrapper (reason, obj_param) in
-        fake_fun (Some ["demaybifiedObj"]) [cb_param] cb_ret
+        fake_fun (Some ["demaybifiedObj"]) [cb_param] None cb_ret
       ) in
 
       let tins = [obj_param; cb_param] in
       let param_names = Some ["obj"; "pathCallback"] in
-      fake_fun param_names tins (MaybeT cb_ret)
+      fake_fun param_names tins None (MaybeT cb_ret)
 
   (* Fake the signature of React.createElement (overloaded)
      1. Component class
@@ -226,17 +237,17 @@ let rec normalize_type_impl cx ids t = match t with
       let stateless_functional_component =
         let params_names = Some ["config"; "context"] in
         let param_ts = [config; any] in
-        fake_fun params_names param_ts react_element
+        fake_fun params_names param_ts None react_element
       in
       let t1 =
         let params_names = Some ["name"; "config"; "children"] in
         let param_ts = [component_class; config; any] in
-        PolyT ([config_tp], fake_fun params_names param_ts react_element)
+        PolyT ([config_tp], fake_fun params_names param_ts None react_element)
       in
       let t2 =
         let params_names = Some ["fn"; "config"; "children"] in
         let param_ts = [stateless_functional_component; config; any] in
-        PolyT ([config_tp], fake_fun params_names param_ts react_element)
+        PolyT ([config_tp], fake_fun params_names param_ts None react_element)
       in
       IntersectionT (
         locationless_reason RIntersectionType,

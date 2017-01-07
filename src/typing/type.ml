@@ -288,16 +288,16 @@ module rec TypeTerm : sig
     | SummarizeT of reason * t
 
     (* operations on runtime values, such as functions, objects, and arrays *)
-    | ApplyT of reason * t * funtype
-    | BindT of reason * funtype
-    | CallT of reason * funtype
-    | MethodT of (* call *) reason * (* lookup *) reason * propref * funtype
+    | ApplyT of reason * t * funcalltype
+    | BindT of reason * funcalltype
+    | CallT of reason * funcalltype
+    | MethodT of (* call *) reason * (* lookup *) reason * propref * funcalltype
     | SetPropT of reason * propref * t
     | GetPropT of reason * propref * t
     | TestPropT of reason * propref * t
     | SetElemT of reason * t * t
     | GetElemT of reason * t * t
-    | CallElemT of (* call *) reason * (* lookup *) reason * t * funtype
+    | CallElemT of (* call *) reason * (* lookup *) reason * t * funcalltype
     | GetStaticsT of reason * t_out
 
     (* repositioning *)
@@ -585,15 +585,24 @@ module rec TypeTerm : sig
     | Mixed_non_void
     | Empty_intersection
 
-  (* used by FunT and CallT *)
+  (* used by FunT *)
   and funtype = {
     this_t: t;
     params_tlist: t list;
     params_names: string list option;
+    rest_param: (string option * t) option;
     return_t: t;
     closure_t: int;
     is_predicate: bool;
     changeset: Changeset.t
+  }
+
+  (* Used by CallT and similar constructors *)
+  and funcalltype = {
+    call_this_t: t;
+    call_args_tlist: t list;
+    call_tout: t;
+    call_closure_t: int;
   }
 
   and arrtype =
@@ -662,7 +671,7 @@ module rec TypeTerm : sig
   and elem_action =
     | ReadElem of t
     | WriteElem of t
-    | CallElem of reason (* call *) * funtype
+    | CallElem of reason (* call *) * funcalltype
 
   and propref =
     | Named of reason * name

@@ -922,7 +922,7 @@ and statement cx = Ast.Statement.(
         Flow.get_builtin_typeapp cx reason "Promise" [
           Flow.mk_tvar_derivable_where cx reason (fun tvar ->
             let funt = Flow.get_builtin cx "$await" reason in
-            let callt = Flow.mk_functiontype [t] tvar in
+            let callt = Flow.mk_functioncalltype [t] tvar in
             let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
             Flow.flow cx (funt, CallT (reason, callt))
           )
@@ -2711,7 +2711,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         reason,
         Flow.dummy_static reason,
         Flow.dummy_prototype,
-        Flow.mk_functiontype [] ~params_names:[] proto
+        Flow.mk_functiontype [] ~rest_param:None ~params_names:[] proto
       )
     )
 
@@ -2778,7 +2778,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let argts = List.map (expression_or_spread cx) arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Flow.mk_tvar_where cx reason (fun t ->
-        let funtype = Flow.mk_methodtype super argts t in
+        let funtype = Flow.mk_methodcalltype super argts t in
         Flow.flow cx (
           super,
           MethodT (reason, reason_lookup, Named (reason_prop, name), funtype)
@@ -2805,7 +2805,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         Flow.mk_tvar_where cx reason_call (fun t ->
           let elem_t = expression cx expr in
           let frame = Env.peek_frame () in
-          let funtype = Flow.mk_methodtype ot argts t ~frame in
+          let funtype = Flow.mk_methodcalltype ot argts t ~frame in
           Flow.flow cx (ot,
             CallElemT (reason_call, reason_lookup, elem_t, funtype))
         ))
@@ -2825,7 +2825,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let this = this_ cx reason in
       let super = super_ cx super_reason in
       Flow.mk_tvar_where cx reason (fun t ->
-        let funtype = Flow.mk_methodtype this argts t in
+        let funtype = Flow.mk_methodcalltype this argts t in
         let propref = Named (super_reason, "constructor") in
         Flow.flow cx (super, MethodT(reason, super_reason, propref, funtype)))
 
@@ -2959,7 +2959,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason = mk_reason (RCustom "encaps tag") loc in
       let reason_array = replace_reason_const RArray reason in
       let ret = Flow.mk_tvar cx reason in
-      let ft = Flow.mk_functiontype
+      let ft = Flow.mk_functioncalltype
         [ ArrT (reason_array, ArrayAT (StrT.why reason, None));
           RestT (AnyT.why reason) ]
         ret
@@ -3119,7 +3119,7 @@ and func_call cx reason func_t argts =
   Env.havoc_heap_refinements ();
   Flow.mk_tvar_where cx reason (fun t ->
     let frame = Env.peek_frame () in
-    let app = Flow.mk_functiontype argts t ~frame in
+    let app = Flow.mk_functioncalltype argts t ~frame in
     Flow.flow cx (func_t, CallT(reason, app))
   )
 
@@ -3136,7 +3136,7 @@ and method_call cx reason prop_loc (expr, obj_t, name) argts =
       Env.havoc_heap_refinements ();
       Flow.mk_tvar_where cx reason (fun t ->
         let frame = Env.peek_frame () in
-        let app = Flow.mk_methodtype obj_t argts t ~frame in
+        let app = Flow.mk_methodcalltype obj_t argts t ~frame in
         Flow.flow cx (f, CallT (reason, app));
       )
   | None ->
@@ -3146,7 +3146,7 @@ and method_call cx reason prop_loc (expr, obj_t, name) argts =
         let expr_loc, _ = expr in
         let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
         let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
-        let app = Flow.mk_methodtype obj_t argts t ~frame in
+        let app = Flow.mk_methodcalltype obj_t argts t ~frame in
         let propref = Named (reason_prop, name) in
         Flow.flow cx (obj_t, MethodT(reason, reason_expr, propref, app))
       )
@@ -3676,7 +3676,7 @@ and jsx_desugar cx name component_t props attributes children eloc =
           reason,
           reason_createElement,
           Named (reason_createElement, "createElement"),
-          Flow.mk_methodtype react [component_t;props] tvar
+          Flow.mk_methodcalltype react [component_t;props] tvar
         ))
       )
   | Some (raw_jsx_expr, jsx_expr) ->
@@ -4072,7 +4072,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
           default := default_tvar;
           Flow.flow cx (t,
             CallT (reason,
-              Flow.mk_functiontype [] override_default));
+              Flow.mk_functioncalltype [] override_default));
           fmap, mmap
 
       (* getInitialState *)
@@ -4094,7 +4094,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
           state := state_tvar;
           Flow.flow cx (t,
             CallT (ret_reason,
-              Flow.mk_functiontype [] override_state));
+              Flow.mk_functioncalltype [] override_state));
           fmap, mmap
 
       (* name = function expr *)

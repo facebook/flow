@@ -21,6 +21,9 @@ val names: t -> string list
 (* type of each param in the param list *)
 val tlist: t -> Type.t list
 
+(* The rest param *)
+val rest: t -> (string option * Type.t) option
+
 (* iterates over all bindings, traversing through any destructued
    bindings as well, in source order of declaration *)
 val iter: (string * Type.t * Loc.t -> unit) -> t -> unit

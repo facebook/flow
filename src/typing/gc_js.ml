@@ -172,8 +172,15 @@ and gc_defer_use cx state = function
 and gc_funtype cx state funtype =
   gc cx state funtype.this_t;
   funtype.params_tlist |> List.iter (gc cx state);
+  Option.iter
+    ~f:(fun (_, t) -> gc cx state t)
+    funtype.rest_param;
   gc cx state funtype.return_t
 
+and gc_funcalltype cx state funcalltype =
+  gc cx state funcalltype.call_this_t;
+  funcalltype.call_args_tlist |> List.iter (gc cx state);
+  gc cx state funcalltype.call_tout;
 
 and gc_use cx state = function
 
@@ -184,7 +191,8 @@ and gc_use cx state = function
 
   | AdderT(_, t1, t2) -> gc cx state t1; gc cx state t2
   | AndT (_, t1, t2) -> gc cx state t1; gc cx state t2
-  | ApplyT(_, l, funtype) -> gc cx state l; gc_funtype cx state funtype
+  | ApplyT(_, l, funcalltype) ->
+      gc cx state l; gc_funcalltype cx state funcalltype
   | ArrRestT (_, _, t) -> gc cx state t
   | AssertArithmeticOperandT _ -> ()
   | AssertBinaryInLHST _ -> ()
@@ -192,11 +200,11 @@ and gc_use cx state = function
   | AssertForInRHST _ -> ()
   | AssertImportIsValueT _ -> ()
   | BecomeT (_, t) -> gc cx state t
-  | BindT(_, funtype) -> gc_funtype cx state funtype
+  | BindT(_, funcalltype) -> gc_funcalltype cx state funcalltype
   | CallLatentPredT (_, _, _, t1, t2) -> gc cx state t1; gc cx state t2
   | CallOpenPredT (_, _, _, t1, t2) -> gc cx state t1; gc cx state t2
-  | CallElemT (_, _, i, ft) -> gc cx state i; gc_funtype cx state ft
-  | CallT(_, funtype) -> gc_funtype cx state funtype
+  | CallElemT (_, _, i, fct) -> gc cx state i; gc_funcalltype cx state fct
+  | CallT(_, funcalltype) -> gc_funcalltype cx state funcalltype
   | ChoiceKitUseT (_, choice_use_tool) ->
       gc_choice_use_tool cx state choice_use_tool
   | CJSExtractNamedExportsT (_, (_, exporttypes), t_out) ->
@@ -246,7 +254,7 @@ and gc_use cx state = function
         Property.iter_t (gc cx state) p)
   | MakeExactT (_, k) -> gc_cont cx state k
   | MapTypeT (_, _, t, k) -> gc cx state t; gc_cont cx state k
-  | MethodT(_, _, _, funtype) -> gc_funtype cx state funtype
+  | MethodT(_, _, _, funcalltype) -> gc_funcalltype cx state funcalltype
   | MixinT (_, t) -> gc cx state t
   | NotT (_, t) -> gc cx state t
   | ObjAssignT (_, t1, t2, _, _) -> gc cx state t1; gc cx state t2
@@ -393,7 +401,7 @@ and gc_exporttypes cx state
 
 and gc_elem_action cx state = function
   | ReadElem t | WriteElem t -> gc cx state t
-  | CallElem (_, ft) -> gc_funtype cx state ft
+  | CallElem (_, fct) -> gc_funcalltype cx state fct
 
 (* Keep a reachable type variable around. *)
 let live cx state id =

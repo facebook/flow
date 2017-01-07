@@ -153,6 +153,7 @@ let functiontype cx this_t {reason; kind; tparams; params; return_t; _} =
     this_t;
     params_tlist = Func_params.tlist params;
     params_names = Some (Func_params.names params);
+    rest_param = Func_params.rest params;
     return_t;
     is_predicate = kind = Predicate;
     closure_t = Env.peek_frame ();
@@ -166,11 +167,12 @@ let functiontype cx this_t {reason; kind; tparams; params; return_t; _} =
 let methodtype {reason; tparams; params; return_t; _} =
   let params_tlist = Func_params.tlist params in
   let params_names = Func_params.names params in
+  let rest_param = Func_params.rest params in
   let t = FunT (
     reason,
     Flow.dummy_static reason,
     Flow.dummy_prototype,
-    Flow.mk_boundfunctiontype params_tlist ~params_names return_t
+    Flow.mk_boundfunctiontype params_tlist ~rest_param ~params_names return_t
   ) in
   if tparams = []
   then t
@@ -179,12 +181,13 @@ let methodtype {reason; tparams; params; return_t; _} =
 let methodtype_DEPRECATED {reason; params; return_t; _} =
   let params_tlist = Func_params.tlist params in
   let params_names = Func_params.names params in
+  let rest_param = Func_params.rest params in
   let frame = Env.peek_frame () in
   FunT (
     reason,
     Flow.dummy_static reason,
     Flow.dummy_prototype,
-    Flow.mk_functiontype params_tlist ~params_names return_t ~frame
+    Flow.mk_functiontype params_tlist ~rest_param ~params_names return_t ~frame
   )
 
 let gettertype ({return_t; _}: t) = return_t
