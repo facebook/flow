@@ -15,11 +15,15 @@ import RunQueue from './RunQueue';
 import type Suite from './Suite';
 import type {Args} from './testCommand';
 
-/* We potentially have a ton of info to dump into stdout. Let's handle drain
- * events properly */
-async function write(fmt: string, ...args: Array<mixed>): Promise<void> {
-  if (false == process.stdout.write(format(fmt, ...args))) {
-    await drain(process.stdout);
+/* We potentially have a ton of info to dump into stdout/stderr. Let's handle
+ * drain events properly */
+async function write(
+  writer: stream$Writable | tty$WriteStream,
+  fmt: string,
+  ...args: Array<mixed>
+): Promise<void> {
+  if (false == writer.write(format(fmt, ...args))) {
+    await drain(writer);
   }
 }
 
@@ -223,6 +227,7 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
     if (suiteResult.type === 'exceptional') {
       exitCode = 2;
       await write(
+        process.stdout,
         colors.bgRed(colors.white.bold("ERRORED"))+
           colors.grey(": suite ")+
           colors.blue("%s") + "\n" +
@@ -239,6 +244,7 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
           if(!result.passed) {
             exitCode = 1;
             await write(
+              process.stdout,
               colors.red.bold("FAILED")+
                 colors.grey(": suite ")+
                 colors.blue("%s")+
@@ -262,7 +268,7 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
               }
             }
             for (const message of messages) {
-              await write("%s\n", message);
+              await write(process.stdout, "%s\n", message);
             }
           }
         }
@@ -293,13 +299,13 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
     );
   };
 
-  process.stderr.write("Possible next steps:");
+  await write(process.stderr, "Possible next steps:");
   for (const [descr, cmd] of nextSteps) {
-    process.stderr.write(`
+    await write(process.stderr, `
   ${descr}
     ${cmd}`);
   }
-  process.stderr.write("\n\n");
+  await write(process.stderr, "\n\n");
 
   return [exitCode, runID];
 }
