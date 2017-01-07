@@ -976,8 +976,14 @@ offending text is '%s'." (text node)));
   | PrefixUnaryExpression x ->
     let (operator, operand) = get_prefix_unary_expression_children x in
     t operator;
-    (* TODO: remove space for some unary expressions *)
-    add_space ();
+    (* TODO: should this just live in transform's Token case?
+      long term is to make await it's own syntax kind *)
+    (match syntax operator with
+      | Token x ->
+        if EditableToken.kind x = EditableToken.TokenKind.Await then
+          pending_space ();
+      | _ -> ();
+    );
     t operand;
   | PostfixUnaryExpression x ->
     let (operand, operator) = get_postfix_unary_expression_children x in

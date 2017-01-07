@@ -147,6 +147,7 @@ and unsupported_syntax =
   | MetaPropertyExpression
   | ObjectPropertyLiteralNonString
   | ObjectPropertyGetSet
+  | ObjectPropertyComputedGetSet
   | InvariantSpreadArgument
   | Implements
   | ClassPropertyLiteral
@@ -754,6 +755,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             "non-string literal property keys not supported"
         | ObjectPropertyGetSet ->
             "get/set properties not yet supported"
+        | ObjectPropertyComputedGetSet ->
+            "computed getters and setters are not yet supported"
         | InvariantSpreadArgument ->
             "unsupported arguments in call to invariant()"
         | Implements ->

@@ -305,9 +305,13 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc bound in
     self#opt (self#type_ cx) acc default
 
-  method fun_type cx acc { this_t; params_tlist; return_t; _ } =
+  method fun_type cx acc { this_t; params_tlist; rest_param; return_t; _ } =
     let acc = self#type_ cx acc this_t in
     let acc = self#list (self#type_ cx) acc params_tlist in
+    let acc = Option.value_map
+      ~f:(fun (_, t) -> self#type_ cx acc t)
+      ~default:acc
+      rest_param in
     let acc = self#type_ cx acc return_t in
     acc
 

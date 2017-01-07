@@ -451,7 +451,7 @@ let rec convert cx tparams_map = Ast.Type.(function
           fun_reason,
           Flow_js.dummy_static static_reason,
           AnyT (mk_reason RPrototype loc),
-          Flow_js.mk_functiontype tins ~params_names:key_strs
+          Flow_js.mk_functiontype tins ~rest_param:None ~params_names:key_strs
             ~is_predicate:true tout
         )
 
@@ -484,21 +484,20 @@ let rec convert cx tparams_map = Ast.Type.(function
     mk_type_param_declarations cx ~tparams_map typeParameters in
 
   let rev_params_tlist, rev_params_names =
-    let rev_tlist, rev_pnames =
-      List.fold_left (fun (tlist, pnames) (_, param) ->
-        let { Function.Param.name; typeAnnotation; optional } = param in
-        let t = convert cx tparams_map typeAnnotation in
-        let t = if optional then OptionalT t else t in
-        (t :: tlist, optional_ident_name name :: pnames)
+    List.fold_left (fun (tlist, pnames) (_, param) ->
+      let { Function.Param.name; typeAnnotation; optional } = param in
+      let t = convert cx tparams_map typeAnnotation in
+      let t = if optional then OptionalT t else t in
+      (t :: tlist, optional_ident_name name :: pnames)
     ) ([], []) params in
-    match rest with
-      | Some (_, { Function.RestParam.argument = (_, param) }) ->
-        let { Function.Param.name; typeAnnotation; _ } = param in
-        let rest = mk_rest cx (convert cx tparams_map typeAnnotation) in
-        (rest :: rev_tlist, (optional_ident_name name) :: rev_pnames)
-      | None ->
-        rev_tlist, rev_pnames
-    in
+
+  let rest_param = match rest with
+  | Some (_, { Function.RestParam.argument = (_, param) }) ->
+    let { Function.Param.name; typeAnnotation; _ } = param in
+    let rest = mk_rest cx (convert cx tparams_map typeAnnotation) in
+    Some (Option.map ~f:ident_name name, rest)
+  | None -> None in
+
   let reason = mk_reason RFunctionType loc in
   let params_names = List.rev rev_params_names in
   let return_t = convert cx tparams_map returnType in
@@ -511,6 +510,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         this_t = Flow_js.mk_tvar cx (mk_reason RThis loc);
         params_tlist = (List.rev rev_params_tlist);
         params_names = Some params_names;
+        rest_param;
         return_t;
         is_predicate = false;
         closure_t = 0;

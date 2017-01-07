@@ -132,17 +132,29 @@ let rec type_printer_impl ~size override enclosure cx t =
        For parsable types we need to use "void" though, thus overwrite it. *)
     | VoidT _ -> "void"
 
-    | FunT (_,_,_,{params_tlist = ts; params_names = pns; return_t = t; _}) ->
+    | FunT (_,_,_,ft) ->
+        let {
+          params_tlist = ts;
+          params_names = pns;
+          rest_param;
+          return_t = t;
+          _;
+        } = ft in
         let pns =
           match pns with
           | Some pns -> pns
           | None -> List.map (fun _ -> "_") ts in
+        let params = List.map2 (fun n t ->
+          (parameter_name cx n t) ^ ": " ^ (pp EnclosureParam cx t))
+          pns ts in
+        let params = match rest_param with
+        | None -> params
+        | Some (name, t) ->
+          let name = Option.value ~default:"_" name in
+          params @ [parameter_name cx name t ^ ": " ^ (pp EnclosureParam cx t)]
+        in
         let type_s = spf "(%s) => %s"
-          (List.map2 (fun n t ->
-             (parameter_name cx n t) ^ ": " ^ (pp EnclosureParam cx t))
-             pns ts
-           |> String.concat ", "
-          )
+          (params |> String.concat ", ")
           (pp EnclosureNone cx t) in
         parenthesize type_s enclosure [EnclosureUnion; EnclosureIntersect]
 
@@ -388,10 +400,13 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
 
   | VoidT _ -> true
 
-  | FunT (_, _, _, { params_tlist; return_t; _ })
+  | FunT (_, _, _, { params_tlist; rest_param; return_t; _ })
     ->
       (is_printed_type_parsable_impl weak cx EnclosureRet return_t) &&
-      (is_printed_type_list_parsable weak cx EnclosureParam params_tlist)
+      (is_printed_type_list_parsable weak cx EnclosureParam params_tlist) &&
+      (match rest_param with
+       | Some (_, t) -> is_printed_type_parsable_impl weak cx EnclosureParam t
+       | None -> true)
 
   | ObjT (_, { props_tmap; dict_t; _ })
     ->
