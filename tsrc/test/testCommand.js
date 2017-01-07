@@ -40,7 +40,7 @@ export default class TestCommand extends Base<Args> {
   }
 
   static async run(args: Args): Promise<void> {
-    require('./testRunner').default(args);
+    await require('./testRunner').default(args);
   }
 
   static description(): string {

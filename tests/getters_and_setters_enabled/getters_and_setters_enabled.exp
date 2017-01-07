@@ -58,46 +58,54 @@ object.js:15
   5: var z: number = 123;
             ^^^^^^ number
 
-object.js:41
- 41: var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
+object.js:34
+ 34:   set [z](x: string) {},
+       ^^^^^^^^^^^^^^^^^^^^^ computed getters and setters are not yet supported
+
+object.js:35
+ 35:   get [z](): string { return string; },
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ computed getters and setters are not yet supported
+
+object.js:44
+ 44: var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 41: var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
+ 44: var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
                                ^^^^^^ string
 
-object.js:42
- 42: var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
+object.js:45
+ 45: var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 42: var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
+ 45: var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
                                ^^^^^^ string
 
-object.js:49
- 49: obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
+object.js:52
+ 52: obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
                                     ^^^^^^^ string. This type is incompatible with
  16:   set goodSetterWithAnnotation(x: number) { z = x; },
                                        ^^^^^^ number
 
-object.js:51
- 51: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+object.js:54
+ 54: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
- 51: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+ 54: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                        ^^^^^^ number
 
-object.js:51
- 51: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+object.js:54
+ 54: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
- 51: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+ 54: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                        ^^^^^^ number
 
-object.js:56
- 56: obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
+object.js:59
+ 59: obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
                                            ^^^^^^^ C. This type is incompatible with
  29:   set exampleOfOrderOfGetterAndSetter(x: B) {},
                                               ^ B
 
-object.js:60
- 60:   obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
+object.js:63
+ 63:   obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ A. This type is incompatible with
- 59: var testExampleOrOrderOfGetterAndSetterReordered: number =
+ 62: var testExampleOrOrderOfGetterAndSetterReordered: number =
                                                        ^^^^^^ number
 
 react.js:7
@@ -133,4 +141,4 @@ variance.js:47
                     ^^^^ Base
 
 
-Found 22 errors
+Found 24 errors

@@ -205,10 +205,11 @@ let rec gen_type t env = Type.(
   | FunProtoApplyT _ -> add_str "typeof Function.prototype.apply" env
   | FunProtoBindT _ -> add_str "typeof Function.prototype.bind" env
   | FunProtoCallT _ -> add_str "typeof Function.prototype.call" env
-  | FunT (_, _static, _prototype, {params_tlist; params_names; return_t; _;}) ->
+  | FunT (_, _static, _prototype, ft) ->
+    let {params_tlist; params_names; rest_param; return_t; _;} = ft in
     gen_tparams_list env
       |> add_str "("
-      |> gen_func_params params_names params_tlist
+      |> gen_func_params params_names params_tlist rest_param
       |> add_str ") => "
       |> gen_type return_t
   | InstanceT (_, _static, _super, {class_id; _;}) -> (
@@ -363,7 +364,7 @@ and gen_prop k p env =
   | GetSet (t1, t2) ->
     gen_getter k t1 env |> gen_setter k t2
 
-and gen_func_params params_names params_tlist env =
+and gen_func_params params_names params_tlist rest_param env =
   let params =
     match params_names with
     | Some params_names ->
@@ -373,6 +374,9 @@ and gen_func_params params_names params_tlist env =
     | None ->
       List.mapi (fun idx t -> (spf "p%d" idx, t)) params_tlist
   in
+  let params = match rest_param with
+  | None -> params
+  | Some (name, t) -> params @ [Option.value ~default:"rest" name, t] in
   gen_separated_list params ", " (fun (name, t) env ->
     gen_func_param name t env
   ) env

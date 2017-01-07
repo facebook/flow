@@ -135,7 +135,8 @@ let gen_class_body =
     | AnnotT t ->
       let p = Field (t, Positive) in
       gen_method ~static method_name p env
-    | FunT (_, _static, _super, {params_tlist; params_names; return_t; _;}) ->
+    | FunT (_, _static, _super, ft) ->
+      let {params_tlist; params_names; rest_param; return_t; _;} = ft in
       let is_empty_constructor =
         method_name = "constructor"
         && (not static)
@@ -148,7 +149,7 @@ let gen_class_body =
           |> add_str method_name
           |> gen_tparams_list
           |> add_str "("
-          |> gen_func_params params_names params_tlist
+          |> gen_func_params params_names params_tlist rest_param
           |> add_str "): "
           |> gen_type return_t
           |> add_str ";\n"
@@ -319,6 +320,7 @@ let gen_named_exports =
       | FunT (_, _static, _prototype, {
           params_tlist;
           params_names;
+          rest_param;
           return_t;
           _;
         }) ->
@@ -329,7 +331,7 @@ let gen_named_exports =
         in
         gen_tparams_list env
           |> add_str "("
-          |> gen_func_params params_names params_tlist
+          |> gen_func_params params_names params_tlist rest_param
           |> add_str "): "
           |> gen_type return_t
           |> add_str ";"

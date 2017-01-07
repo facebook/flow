@@ -231,12 +231,21 @@ and parts_of_t cx = function
 | UnionT (_, rep) -> list_parts (UnionRep.members rep)
 | VoidT _ -> []
 
-and parts_of_funtype { params_tlist; params_names; return_t; _ } =
+and parts_of_funtype { params_tlist; params_names; rest_param; return_t; _ } =
   (* OMITTED: static, prototype, this_t *)
   ("return_t", Def return_t) ::
+  (match rest_param with
+  | None -> []
+  | Some (Some name, t) -> [name, Def t]
+  | Some (None, t) -> ["restParam", Def t]) @
   match params_names with
   | Some ns -> List.map2 (fun n t -> n, Def t) ns params_tlist
   | None -> list_parts params_tlist
+
+and parts_of_funcalltype { call_args_tlist; call_tout; _; } =
+  (* OMITTED: this_t *)
+  ("call_tout", Def call_tout) ::
+  (list_parts call_args_tlist)
 
 and parts_of_exporttypes cx { exports_tmap; cjs_export; _ } =
   map_parts (Context.find_exports cx exports_tmap) @
@@ -258,7 +267,7 @@ and parts_of_use_t cx = function
 | UseT (_, t) -> ["t", Def t]
 | AdderT (_, r, out) -> ["right", Def r; "out", Def out]
 | AndT (_, r, out) -> ["right", Def r; "out", Def out]
-| ApplyT (_, f, funtype) -> ("f", Def f) :: parts_of_funtype funtype
+| ApplyT (_, f, funcalltype) -> ("f", Def f) :: parts_of_funcalltype funcalltype
 | ArrRestT (_, _, out) -> ["out", Def out]
 | AssertArithmeticOperandT _ -> []
 | AssertBinaryInLHST _ -> []
@@ -266,11 +275,11 @@ and parts_of_use_t cx = function
 | AssertForInRHST _ -> []
 | AssertImportIsValueT _ -> []
 | BecomeT (_, t) -> ["t", Def t]
-| BindT (_, funtype) -> parts_of_funtype funtype
-| CallElemT (_, _, ix, ft) -> ("ix", Def ix) :: parts_of_funtype ft
+| BindT (_, funcalltype) -> parts_of_funcalltype funcalltype
+| CallElemT (_, _, ix, fct) -> ("ix", Def ix) :: parts_of_funcalltype fct
 | CallLatentPredT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
 | CallOpenPredT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
-| CallT (_, funtype) -> parts_of_funtype funtype
+| CallT (_, funcalltype) -> parts_of_funcalltype funcalltype
 | ChoiceKitUseT _-> []
 | CJSExtractNamedExportsT (_, (_, exporttypes), out) ->
     ("out", Def out) :: parts_of_exporttypes cx exporttypes
@@ -281,7 +290,7 @@ and parts_of_use_t cx = function
 | DebugPrintT _ -> []
 | ElemT (_, l, ReadElem t) -> ["l", Def l; "read", Def t]
 | ElemT (_, l, WriteElem t) -> ["l", Def l; "write", Def t]
-| ElemT (_, l, CallElem (_, ft)) -> ("l", Def l) :: parts_of_funtype ft
+| ElemT (_, l, CallElem (_, fct)) -> ("l", Def l) :: parts_of_funcalltype fct
 | EqT (_, arg) -> ["arg", Def arg]
 | ExportNamedT (_, map, out) -> ("out", Def out) :: map_parts map
 | GetElemT (_, ix, out) -> ["ix", Def ix; "out", Def out]
@@ -302,7 +311,7 @@ and parts_of_use_t cx = function
     lookup_action_parts action @ list_parts nexts
 | MakeExactT (_, k) -> ["cont", node_of_cont k]
 | MapTypeT (_, _, t, k) -> ["t", Def t; "cont", node_of_cont k]
-| MethodT (_, _, _, funtype) -> parts_of_funtype funtype
+| MethodT (_, _, _, funcalltype) -> parts_of_funcalltype funcalltype
 | MixinT (_, t) -> ["t", Def t]
 | NotT (_, out) -> ["out", Def out]
 | ObjAssignT (_, p, t, _, _) -> ["proto", Def p; "t", Def t]
