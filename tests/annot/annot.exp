@@ -18,9 +18,14 @@ annot.js:8
 
 annot.js:8
   8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                                                                  ^^^^^ string. This type is incompatible with
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
   8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
-                             ^^^^^^ number
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `i` is incompatible:
+      8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
+                                                                      ^^^^^ string. This type is incompatible with
+      8: var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
+                                 ^^^^^^ number
 
 annot.js:10
  10: var arr: Array<number> = [1,2,"..."];

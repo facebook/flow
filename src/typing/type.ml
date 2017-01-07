@@ -272,6 +272,7 @@ module rec TypeTerm : sig
     | FunReturn
     | Internal of internal_use_op
     | MissingTupleElement of int
+    | PropertyCompatibility of string * reason * reason * use_op
     | TypeRefinement
     | UnknownUse
 
@@ -786,6 +787,8 @@ module rec TypeTerm : sig
   | SentinelStr of string
   | SentinelNum of number_literal
   | SentinelBool of bool
+  | SentinelNull
+  | SentinelVoid
 
   and choice_tool =
   | Trigger
@@ -1840,6 +1843,7 @@ let string_of_use_op = function
   | FunReturn -> "FunReturn"
   | Internal op -> spf "Internal %s" (string_of_internal_use_op op)
   | MissingTupleElement _ -> "MissingTupleElement"
+  | PropertyCompatibility _ -> "PropertyCompatibility"
   | TypeRefinement -> "TypeRefinement"
   | UnknownUse -> "UnknownUse"
 

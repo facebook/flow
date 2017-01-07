@@ -146,6 +146,19 @@ let hash_of_ctor = Type.(function
   | VoidT _ -> VoidH
 )
 
+type prop_hash =
+  | FieldH of Type.polarity
+  | GetH
+  | SetH
+  | GetSetH
+
+let hash_of_prop = Type.(function
+  | Field (_, polarity) -> FieldH polarity
+  | Get _ -> GetH
+  | Set _ -> SetH
+  | GetSet _ -> GetSetH
+)
+
 type t = Digest.t
 let empty = Digest.string ""
 
@@ -156,7 +169,7 @@ let add_type type_ =
   add (hash_of_ctor type_)
 
 let add_props_map pmap =
-  add (SMap.keys pmap)
+  SMap.fold (fun k p h -> h |> add k |>  add (hash_of_prop p)) pmap
 
 let add_exports_map tmap =
   add (SMap.keys tmap)

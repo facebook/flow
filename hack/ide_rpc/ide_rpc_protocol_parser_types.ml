@@ -37,6 +37,7 @@ type error_t =
   | Method_not_found of string
   | Invalid_params of string
   | Internal_error of string
+  | Server_error of string
 
 type 'a return_t = {
   protocol : (protocol, error_t) Result.t;

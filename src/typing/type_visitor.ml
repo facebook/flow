@@ -48,7 +48,7 @@ class ['a] t = object(self)
     acc
 
   | ObjT (_, { dict_t; props_tmap; proto_t; _ }) ->
-    let acc = self#opt (self#dict_ cx) acc dict_t in
+    let acc = self#opt (self#dict_type cx) acc dict_t in
     let acc = self#props cx acc props_tmap in
     let acc = self#type_ cx acc proto_t in
     acc
@@ -280,7 +280,7 @@ class ['a] t = object(self)
      handle Resolved and Unresolved cases, etc. *)
   method tvar _cx acc _r _id = acc
 
-  method private dict_ cx acc { key; value; _ } =
+  method dict_type cx acc { key; value; _ } =
     let acc = self#type_ cx acc key in
     let acc = self#type_ cx acc value in
     acc

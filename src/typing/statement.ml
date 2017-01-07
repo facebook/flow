@@ -3546,13 +3546,10 @@ and jsx_title cx openingElement children = Ast.JSX.(
     match !spread with
       | None -> o
       | Some ex_t ->
-          let reason_prop = replace_reason (fun desc ->
-            RSpreadOf desc
-          ) (reason_of_t ex_t) in
           let ignored_attributes =
             if is_react then react_ignored_attributes else [] in
           clone_object_with_excludes cx
-            reason_prop o ex_t ignored_attributes
+            reason_props o ex_t ignored_attributes
   in
 
   match (name, facebook_fbt) with
@@ -4203,40 +4200,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
     empty_result test_t |> add_predicate key unrefined_t pred sense
   in
 
-  (* inspect a null equality test *)
-  let null_test loc ~sense ~strict e null_t =
-    let t, refinement = match refinable_lvalue e with
-    | None, t -> t, None
-    | Some name, t ->
-        let pred = if strict then NullP else MaybeP in
-        t, Some (name, t, pred, sense)
-    in
-    flow_eqt ~strict loc (t, null_t);
-    match refinement with
-    | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
-    | None -> empty_result (BoolT.at loc)
-  in
-
-  let void_test loc ~sense ~strict e void_t =
-    let t, refinement = match refinable_lvalue e with
-    | None, t -> t, None
-    | Some name, t ->
-        let pred = if strict then VoidP else MaybeP in
-        t, Some (name, t, pred, sense)
-    in
-    flow_eqt ~strict loc (t, void_t);
-    match refinement with
-    | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
-    | None -> empty_result (BoolT.at loc)
-  in
-
-  (* inspect an undefined equality test *)
-  let undef_test loc ~sense ~strict e void_t =
-    if Env.is_global_var cx "undefined"
-    then void_test loc ~sense ~strict e void_t
-    else empty_result (BoolT.at loc)
-  in
-
   (* a wrapper around `condition` (which is a wrapper around `expression`) that
      evaluates `expr`. if this is a sentinel property check (determined by
      a strict equality check against a member expression `_object.prop_name`),
@@ -4283,6 +4246,52 @@ and predicates_of_condition cx e = Ast.(Expression.(
       prop_t, refinement
     | _ ->
       condition cx expr, None
+  in
+
+  (* inspect a null equality test *)
+  let null_test loc ~sense ~strict e null_t =
+    let t, sentinel_refinement = condition_of_maybe_sentinel cx
+      ~sense ~strict e null_t in
+    flow_eqt ~strict loc (t, null_t);
+    let out = match Refinement.key e with
+    | None -> empty_result (BoolT.at loc)
+    | Some name ->
+        let pred = if strict then NullP else MaybeP in
+        result (BoolT.at loc) name t pred sense
+    in
+    match sentinel_refinement with
+    | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+    | None -> out
+  in
+
+  let void_test loc ~sense ~strict e void_t =
+    (* if `void_t` is not a VoidT, make it one so that the sentinel test has a
+       literal type to test against. It's not appropriate to call `void_test`
+       with a `void_t` that you don't want to treat like an actual `void`! *)
+    let void_t = match void_t with
+    | VoidT _ -> void_t
+    | _ -> VoidT.why (reason_of_t void_t)
+    in
+    let t, sentinel_refinement = condition_of_maybe_sentinel cx
+      ~sense ~strict e void_t in
+    flow_eqt ~strict loc (t, void_t);
+    let out = match Refinement.key e with
+    | None -> empty_result (BoolT.at loc)
+    | Some name ->
+        let pred = if strict then VoidP else MaybeP in
+        result (BoolT.at loc) name t pred sense
+    in
+    match sentinel_refinement with
+    | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+    | None -> out
+  in
+
+  (* inspect an undefined equality test *)
+  let undef_test loc ~sense ~strict e void_t =
+    (* if `undefined` isn't redefined in scope, then we assume it is `void` *)
+    if Env.is_global_var cx "undefined"
+    then void_test loc ~sense ~strict e void_t
+    else empty_result (BoolT.at loc)
   in
 
   let literal_test loc ~strict ~sense expr val_t pred =

@@ -266,6 +266,11 @@ module ContextOptimizer = struct
         let reduced_envs = IMap.add id closure reduced_envs in
         super#fun_type cx { quotient with reduced_envs } funtype
 
+    method! dict_type cx quotient dicttype =
+      let { sig_hash; _ } = quotient in
+      let sig_hash = SigHash.add dicttype.dict_polarity sig_hash in
+      super#dict_type cx { quotient with sig_hash } dicttype
+
     method! type_ cx quotient t = match t with
     | OpenT _ -> super#type_ cx quotient t
     | InstanceT (_, _, _, { class_id; _ }) ->

@@ -285,13 +285,9 @@ module Declaration
         Expect.token env T_COMMA;
         helper env decls errs
       end else
-        let end_loc = match decls with
-        | (loc, _)::_ -> loc
-        | _ -> Loc.none in
+        let (end_loc, _) = List.hd decls in
         let declarations = List.rev decls in
-        let start_loc = match decls with
-        | (loc, _)::_ -> loc
-        | _ -> Loc.none in
+        let (start_loc, _) = List.hd decls in
         Loc.btwn start_loc end_loc, declarations, List.rev errs
 
     in fun env -> helper env [] []

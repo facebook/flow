@@ -1081,6 +1081,12 @@ let add_output cx ?trace msg =
   if Speculation.speculating ()
   then raise (SpeculativeError msg)
   else begin
+    begin match Context.verbose cx with
+    | Some { Verbose.depth; _ } ->
+      prerr_endlinef "\nadd_output: %s" (Debug_js.dump_flow_error ~depth cx msg)
+    | _ -> ()
+    end;
+
     let trace_reasons = match trace with
     | None -> []
     | Some trace ->
@@ -1090,11 +1096,8 @@ let add_output cx ?trace msg =
       if max_trace_depth = 0 then [] else
         Trace.reasons_of_trace ~level:max_trace_depth trace
     in
-    let error = FlowError.error_of_msg cx ~trace_reasons msg in
-    if Context.is_verbose cx
-    then prerr_endlinef "\nadd_output cx.file %S loc %s"
-      (string_of_filename (Context.file cx))
-      (string_of_loc (Errors.loc_of_error error));
+    let error = FlowError.error_of_msg
+      ~trace_reasons ~op:(Ops.peek ()) ~source_file:(Context.file cx) msg in
 
     (* catch no-loc errors early, before they get into error map *)
     Errors.(
@@ -1418,7 +1421,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*************)
 
     | (_, DebugPrintT (reason)) ->
-      add_output cx ~trace (FlowError.EDebugPrint (reason, l))
+      let str = Debug_js.jstr_of_t cx l in
+      add_output cx ~trace (FlowError.EDebugPrint (reason, str))
 
     (************)
     (* tainting *)
@@ -4529,7 +4533,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             rec_flow_t cx trace (l, result)
         end
 
-    | (StrT _ | NumT _ | BoolT _),
+    | NullT _,
+      SentinelPropTestT (l, sense, SentinelNull, result) ->
+        if not sense
+        then () (* provably unreachable, so prune *)
+        else rec_flow_t cx trace (l, result)
+
+    | VoidT _,
+      SentinelPropTestT (l, sense, SentinelVoid, result) ->
+        if not sense
+        then () (* provably unreachable, so prune *)
+        else rec_flow_t cx trace (l, result)
+
+    | (StrT _ | NumT _ | BoolT _ | NullT _ | VoidT _),
       SentinelPropTestT (l, sense, _, result) ->
         (* types don't match (would've been matched above) *)
         (* we don't prune other types like objects or instances, even though
@@ -4859,6 +4875,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, UseT (Internal _, _) ->
       ()
 
+    | _, UseT (PropertyCompatibility _ as use_op, u) ->
+      add_output cx ~trace (FlowError.EIncompatibleObject (
+        reason_of_t l, reason_of_t u, use_op
+      ))
+
     | _ ->
       add_output cx ~trace (FlowError.EIncompatible (l, u))
   )
@@ -5018,10 +5039,23 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
         (Field (lv, lpolarity), Field (uv, upolarity))
     | _ -> ());
 
+  let rec is_cycle (s, lreason, ureason) haystack =
+    match haystack with
+    | PropertyCompatibility (s', lreason', ureason', use_op') ->
+        if s = s' && lreason = lreason' && ureason = ureason' then true
+        else is_cycle (s, lreason, ureason) use_op'
+    | _ -> false
+  in
+
   (* Properties in u must either exist in l, or match l's indexer. *)
   iter_real_props cx uflds (fun s up ->
     let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
     let propref = Named (reason_prop, s) in
+    let use_op =
+      let use_op =
+        if is_cycle (s, lreason, ureason) use_op then UnknownUse else use_op
+      in PropertyCompatibility (s, lreason, ureason, use_op)
+    in
     match Context.get_prop cx lflds s, ldict with
     | Some lp, _ ->
       if lit then (
@@ -6675,10 +6709,14 @@ and guess_and_record_sentinel_prop cx ts =
     | AnnotT (OpenT (_, id)) ->
       let constraints = find_graph cx id in
       begin match constraints with
-      | Resolved (SingletonStrT _ | SingletonNumT _ | SingletonBoolT _) -> true
+      | Resolved (
+          SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ |
+          NullT _ | VoidT _
+        ) -> true
       | _ -> false
       end
     | SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ -> true
+    | NullT _ | VoidT _ -> true
     | _ -> false in
 
   (* Compute the intersection of properties of objects *)
@@ -7695,6 +7733,8 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
     | StrT (_, Literal value) -> Some (SentinelStr value)
     | NumT (_, Literal value) -> Some (SentinelNum value)
     | BoolT (_, Some value) -> Some (SentinelBool value)
+    | VoidT _ -> Some SentinelVoid
+    | NullT _ -> Some SentinelNull
     | _ -> None
   in
   fun (sense, obj, t) -> match sentinel_of_literal t with
@@ -8023,7 +8063,7 @@ and ok_unify = function
   | AnyWithUpperBoundT _ | AnyWithLowerBoundT _ -> false
   | _ -> true
 
-and __unify cx t1 t2 trace =
+and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
   begin match Context.verbose cx with
   | Some { Verbose.indent; depth } ->
     let indent = String.make ((Trace.trace_depth trace - 1) * indent) ' ' in
@@ -8143,7 +8183,7 @@ and __unify cx t1 t2 trace =
     rec_unify cx trace t1 t2
 
   | _ ->
-    naive_unify cx trace t1 t2
+    naive_unify cx trace ~use_op t1 t2
   )
 
 and unify_props cx trace x r1 r2 p1 p2 =
@@ -8188,8 +8228,8 @@ and unify_prop_with_dict cx trace x p prop_reason dict_reason dict =
    bidirectional flows. This means that the destructuring work is duplicated,
    and we're missing some opportunities for nested unification. *)
 
-and naive_unify cx trace t1 t2 =
-  rec_flow_t cx trace (t1,t2); rec_flow_t cx trace (t2,t1)
+and naive_unify cx trace ?(use_op=UnknownUse) t1 t2 =
+  rec_flow_t cx trace ~use_op (t1,t2); rec_flow_t cx trace ~use_op (t2,t1)
 
 (* mutable sites on parent values (i.e. object properties,
    array elements) must be typed invariantly when a value
@@ -8576,14 +8616,14 @@ and rec_flow cx trace (t1, t2) =
   let max = Context.max_trace_depth cx in
   __flow cx (t1, t2) (Trace.rec_trace ~max t1 t2 trace)
 
-and rec_flow_t cx trace (t1, t2) =
-  rec_flow cx trace (t1, UseT (UnknownUse, t2))
+and rec_flow_t cx trace ?(use_op=UnknownUse) (t1, t2) =
+  rec_flow cx trace (t1, UseT (use_op, t2))
 
 and rec_flow_p cx trace ?(use_op=UnknownUse) lreason ureason propref = function
   (* unification cases *)
   | Field (lt, Neutral),
     Field (ut, Neutral) ->
-    rec_unify cx trace lt ut
+    rec_unify cx trace ~use_op lt ut
   (* directional cases *)
   | lp, up ->
     let x = match propref with Named (_, x) -> Some x | Computed _ -> None in
@@ -8651,9 +8691,9 @@ and tvar_with_constraint cx ?trace ?(derivable=false) u =
 (* Wrapper functions around __unify that manage traces. Use these functions for
    all recursive calls in the implementation of __unify. *)
 
-and rec_unify cx trace t1 t2 =
+and rec_unify cx trace ?(use_op=UnknownUse) t1 t2 =
   let max = Context.max_trace_depth cx in
-  __unify cx t1 t2 (Trace.rec_trace ~max t1 (UseT (UnknownUse, t2)) trace)
+  __unify cx ~use_op t1 t2 (Trace.rec_trace ~max t1 (UseT (use_op, t2)) trace)
 
 and unify_opt cx ?trace t1 t2 =
   let trace = match trace with

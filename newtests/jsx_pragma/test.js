@@ -140,11 +140,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8:       <Bar x={123} />;
-                     ^^^^^^^^^^^^^^^ JSX desugared to \`Foo(...)\`
-            8:       <Bar x={123} />;
-                             ^^^ number. This type is incompatible with the expected param type of
+                     ^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
             5:       function Foo(elem: number, props: { x: string }) {}
-                                                            ^^^^^^ string
+                                                       ^^^^^^^^^^^^^ object type
+            Property \`x\` is incompatible:
+                8:       <Bar x={123} />;
+                                 ^^^ number. This type is incompatible with
+                5:       function Foo(elem: number, props: { x: string }) {}
+                                                                ^^^^^^ string
         `,
       ),
   ]),
@@ -203,19 +206,25 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       <Bar key="hi" ref="bye" />;
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ JSX desugared to \`Foo(...)\`
-            7:       <Bar key="hi" ref="bye" />;
-                              ^^^^ string. This type is incompatible with the expected param type of
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
             5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
-                                                             ^^^^^^^ boolean
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+            Property \`key\` is incompatible:
+                7:       <Bar key="hi" ref="bye" />;
+                                  ^^^^ string. This type is incompatible with
+                5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
+                                                                 ^^^^^^^ boolean
 
           test.js:7
             7:       <Bar key="hi" ref="bye" />;
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ JSX desugared to \`Foo(...)\`
-            7:       <Bar key="hi" ref="bye" />;
-                                       ^^^^^ string. This type is incompatible with the expected param type of
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
             5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
-                                                                           ^^^^^^ number
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+            Property \`ref\` is incompatible:
+                7:       <Bar key="hi" ref="bye" />;
+                                           ^^^^^ string. This type is incompatible with
+                5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
+                                                                               ^^^^^^ number
         `,
       ),
   ]),
@@ -296,7 +305,7 @@ export default suite(({addFile, addFiles, addCode}) => [
             9:       <Bar {...props} />;
                      ^^^^^^^^^^^^^^^^^^ JSX desugared to \`Foo(...)\`
             9:       <Bar {...props} />;
-                              ^^^^^ spread of object literal. Inexact type is incompatible with exact type
+                     ^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. Inexact type is incompatible with exact type
             5:       function Foo(elem: number, props: {| x: string |}) {}
                                                        ^^^^^^^^^^^^^^^ exact type: object type
         `,

@@ -11,15 +11,9 @@
 open Core
 open Ide_message
 open Ide_parser_utils
+open Ide_rpc_method_parser_utils
 open Ide_rpc_protocol_parser_types
 open Result.Monad_infix
-
-let assert_params_required method_name params =
-  Result.of_option params
-    ~error:(Invalid_params
-      (Printf.sprintf "%s request requires params" method_name))
-
-let get_filename_filed = get_string_field "filename"
 
 let get_position_filed = get_obj_field "position"
 
@@ -28,8 +22,6 @@ let get_line_field = get_int_field "line"
 let get_column_field = get_int_field "column"
 
 let get_contents_field = get_string_field "contents"
-
-let get_text_field = get_string_field "text"
 
 let get_start_field = get_obj_field "start"
 

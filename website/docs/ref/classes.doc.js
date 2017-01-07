@@ -162,7 +162,7 @@ var n: number = takesAnXY(c);
 class PolyC<X> {
   x: X;
   y: number;
-  constructor(x) { this.x = x; }
+  constructor(x: X) { this.x = x; }
   foo() { return this.x; }
   bar(y) { this.y = y; }
 }

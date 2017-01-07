@@ -15,4 +15,5 @@ class ['a] t: object
   method props : Context.t -> 'a -> Type.Properties.id -> 'a
   method exports : Context.t -> 'a -> Type.Exports.id -> 'a
   method fun_type : Context.t -> 'a -> Type.funtype -> 'a
+  method dict_type : Context.t -> 'a -> Type.dicttype -> 'a
 end

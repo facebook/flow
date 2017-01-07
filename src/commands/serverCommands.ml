@@ -82,7 +82,8 @@ module OptionParser(Config : CONFIG) = struct
       empty
       |> dummy Options.default_error_flags (* error_flags *)
       |> dummy false (* json *)
-      |> dummy false (* profile *)
+      |> flag "--profile" no_arg
+          ~doc:"Output profiling information"
       |> dummy None  (* log-file *)
       |> dummy false (* wait *)
       |> common_args
@@ -92,7 +93,8 @@ module OptionParser(Config : CONFIG) = struct
       |> dummy Options.default_error_flags (* error_flags *)
       |> flag "--json" no_arg
           ~doc:"Respond in JSON format"
-      |> dummy false (* profile *)
+      |> flag "--profile" no_arg
+          ~doc:"Output profiling information"
       |> flag "--log-file" string
           ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
       |> flag "--wait" no_arg

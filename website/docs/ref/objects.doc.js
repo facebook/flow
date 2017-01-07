@@ -286,7 +286,7 @@ This type describes "any object" and you can think of it like an
 `any`-flavored version of an object type.
 
 In JavaScript, everything is an object. Flow is a bit stricter and does not
-consider primitive types to be subtypes of `Object`.)
+consider primitive types to be subtypes of `Object`.
 */
 
 // $ExpectError
