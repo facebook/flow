@@ -372,8 +372,8 @@ and statement_decl cx = Ast.Statement.(
       ) in
 
       import_decl.specifiers |> List.iter (fun specifier ->
-        let (local_name, reason) = (match specifier with
-          | ImportNamedSpecifier {local; remote;} ->
+        let (local_name, reason, isType) = (match specifier with
+          | ImportNamedSpecifier {local; remote; kind;} ->
             let remote_name = ident_name remote in
             let (local_name, reason) = (
               match local with
@@ -388,21 +388,28 @@ and statement_decl cx = Ast.Statement.(
                 let reason_str = spf "%s { %s }" import_str remote_name in
                 (remote_name, mk_reason (RCustom reason_str) (fst remote))
             ) in
-            (local_name, reason)
+            let isType = isType || (
+              match kind with
+              | None -> isType
+              | Some kind ->
+                kind = ImportDeclaration.ImportType
+              || kind = ImportDeclaration.ImportTypeof
+            ) in
+            (local_name, reason, isType)
           | ImportDefaultSpecifier local ->
             let local_name = ident_name local in
             let reason_str =
               spf "%s %s from %S" import_str local_name module_name
             in
             let reason = mk_reason (RCustom reason_str) (fst local) in
-            (local_name, reason)
+            (local_name, reason, isType)
           | ImportNamespaceSpecifier (_, local) ->
             let local_name = ident_name local in
             let reason_str =
               spf "%s * as %s from %S" import_str local_name module_name
             in
             let reason = mk_reason (RCustom reason_str) (fst local) in
-            (local_name, reason)
+            (local_name, reason, isType)
         ) in
         let tvar = Flow.mk_tvar cx reason in
         let state = Scope.State.Initialized in
@@ -1775,7 +1782,7 @@ and statement cx = Ast.Statement.(
 
     let module_t = import cx module_name (fst import_decl.source) in
 
-    let get_imported_t get_reason remote_export_name local_name =
+    let get_imported_t get_reason import_kind remote_export_name local_name =
       Flow.mk_tvar_where cx get_reason (fun t ->
         let import_type =
           if remote_export_name = "default"
@@ -1790,9 +1797,9 @@ and statement cx = Ast.Statement.(
     in
 
     import_decl.specifiers |> List.iter (fun specifier ->
-      let (reason, local_name, t) = (
+      let (reason, local_name, t, specifier_kind) = (
         match specifier with
-        | ImportNamedSpecifier {local; remote;} ->
+        | ImportNamedSpecifier {local; remote; kind;} ->
           let remote_name = ident_name remote in
 
           let import_reason_str =
@@ -1832,9 +1839,18 @@ and statement cx = Ast.Statement.(
             if Type_inference_hooks_js.dispatch_member_hook
               cx remote_name loc module_t
             then AnyT.why import_reason
-            else get_imported_t import_reason remote_name local_name
+            else (
+              let import_kind =
+                match kind with
+                | Some ImportDeclaration.ImportType -> Type.ImportType
+                | Some ImportDeclaration.ImportTypeof -> Type.ImportTypeof
+                | Some ImportDeclaration.ImportValue -> Type.ImportValue
+                | None -> import_kind
+              in
+              get_imported_t import_reason import_kind remote_name local_name
+            )
           in
-          (bind_reason, local_name, imported_t)
+          (bind_reason, local_name, imported_t, kind)
 
         | ImportDefaultSpecifier local ->
           let local_name = ident_name local in
@@ -1854,9 +1870,9 @@ and statement cx = Ast.Statement.(
             if Type_inference_hooks_js.dispatch_member_hook
               cx "default" loc module_t
             then AnyT.why import_reason
-            else get_imported_t import_reason "default" local_name
+            else get_imported_t import_reason import_kind "default" local_name
           in
-          (bind_reason, local_name, imported_t)
+          (bind_reason, local_name, imported_t, None)
 
         | ImportNamespaceSpecifier (ns_loc, local) ->
           let local_name = ident_name local in
@@ -1871,7 +1887,7 @@ and statement cx = Ast.Statement.(
             | Type.ImportType ->
               Flow_js.add_output cx Flow_error.(EImportTypeofNamespace
                 (import_reason, local_name, module_name));
-              (import_reason, local_name, AnyT.why import_reason)
+              (import_reason, local_name, AnyT.why import_reason, None)
             | Type.ImportTypeof ->
               let bind_reason = repos_reason (fst local) import_reason in
               let module_ns_t =
@@ -1884,7 +1900,7 @@ and statement cx = Ast.Statement.(
                     ImportTypeofT (bind_reason, "*", t))
                 )
               in
-              (import_reason, local_name, module_ns_typeof)
+              (import_reason, local_name, module_ns_typeof, None)
             | Type.ImportValue ->
               let reason =
                 mk_reason (RCustom (spf "exports of %S" module_name)) import_loc
@@ -1895,9 +1911,17 @@ and statement cx = Ast.Statement.(
               Context.add_imported_t cx local_name module_ns_t;
               let bind_reason =
                 mk_reason (RCustom import_reason_str) (fst local) in
-              (bind_reason, local_name, module_ns_t)
+              (bind_reason, local_name, module_ns_t, None)
           )
       ) in
+
+      let import_kind =
+        match specifier_kind with
+        | Some ImportDeclaration.ImportType -> Type.ImportType
+        | Some ImportDeclaration.ImportTypeof -> Type.ImportTypeof
+        | Some ImportDeclaration.ImportValue -> Type.ImportValue
+        | None -> import_kind
+      in
 
       let t_generic =
         let lookup_mode =
@@ -3522,13 +3546,10 @@ and jsx_title cx openingElement children = Ast.JSX.(
     match !spread with
       | None -> o
       | Some ex_t ->
-          let reason_prop = replace_reason (fun desc ->
-            RSpreadOf desc
-          ) (reason_of_t ex_t) in
           let ignored_attributes =
             if is_react then react_ignored_attributes else [] in
           clone_object_with_excludes cx
-            reason_prop o ex_t ignored_attributes
+            reason_props o ex_t ignored_attributes
   in
 
   match (name, facebook_fbt) with
@@ -4179,40 +4200,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
     empty_result test_t |> add_predicate key unrefined_t pred sense
   in
 
-  (* inspect a null equality test *)
-  let null_test loc ~sense ~strict e null_t =
-    let t, refinement = match refinable_lvalue e with
-    | None, t -> t, None
-    | Some name, t ->
-        let pred = if strict then NullP else MaybeP in
-        t, Some (name, t, pred, sense)
-    in
-    flow_eqt ~strict loc (t, null_t);
-    match refinement with
-    | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
-    | None -> empty_result (BoolT.at loc)
-  in
-
-  let void_test loc ~sense ~strict e void_t =
-    let t, refinement = match refinable_lvalue e with
-    | None, t -> t, None
-    | Some name, t ->
-        let pred = if strict then VoidP else MaybeP in
-        t, Some (name, t, pred, sense)
-    in
-    flow_eqt ~strict loc (t, void_t);
-    match refinement with
-    | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
-    | None -> empty_result (BoolT.at loc)
-  in
-
-  (* inspect an undefined equality test *)
-  let undef_test loc ~sense ~strict e void_t =
-    if Env.is_global_var cx "undefined"
-    then void_test loc ~sense ~strict e void_t
-    else empty_result (BoolT.at loc)
-  in
-
   (* a wrapper around `condition` (which is a wrapper around `expression`) that
      evaluates `expr`. if this is a sentinel property check (determined by
      a strict equality check against a member expression `_object.prop_name`),
@@ -4259,6 +4246,52 @@ and predicates_of_condition cx e = Ast.(Expression.(
       prop_t, refinement
     | _ ->
       condition cx expr, None
+  in
+
+  (* inspect a null equality test *)
+  let null_test loc ~sense ~strict e null_t =
+    let t, sentinel_refinement = condition_of_maybe_sentinel cx
+      ~sense ~strict e null_t in
+    flow_eqt ~strict loc (t, null_t);
+    let out = match Refinement.key e with
+    | None -> empty_result (BoolT.at loc)
+    | Some name ->
+        let pred = if strict then NullP else MaybeP in
+        result (BoolT.at loc) name t pred sense
+    in
+    match sentinel_refinement with
+    | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+    | None -> out
+  in
+
+  let void_test loc ~sense ~strict e void_t =
+    (* if `void_t` is not a VoidT, make it one so that the sentinel test has a
+       literal type to test against. It's not appropriate to call `void_test`
+       with a `void_t` that you don't want to treat like an actual `void`! *)
+    let void_t = match void_t with
+    | VoidT _ -> void_t
+    | _ -> VoidT.why (reason_of_t void_t)
+    in
+    let t, sentinel_refinement = condition_of_maybe_sentinel cx
+      ~sense ~strict e void_t in
+    flow_eqt ~strict loc (t, void_t);
+    let out = match Refinement.key e with
+    | None -> empty_result (BoolT.at loc)
+    | Some name ->
+        let pred = if strict then VoidP else MaybeP in
+        result (BoolT.at loc) name t pred sense
+    in
+    match sentinel_refinement with
+    | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+    | None -> out
+  in
+
+  (* inspect an undefined equality test *)
+  let undef_test loc ~sense ~strict e void_t =
+    (* if `undefined` isn't redefined in scope, then we assume it is `void` *)
+    if Env.is_global_var cx "undefined"
+    then void_test loc ~sense ~strict e void_t
+    else empty_result (BoolT.at loc)
   in
 
   let literal_test loc ~strict ~sense expr val_t pred =

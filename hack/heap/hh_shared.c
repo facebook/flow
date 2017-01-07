@@ -1805,7 +1805,7 @@ static void assert_sql_with_line(
           result);
   static value *exn = NULL;
   if (!exn) exn = caml_named_value("sql_assertion_failure");
-  caml_raise_constant(*exn);
+  caml_raise_with_arg(*exn, Val_long(result));
 }
 
 // Expects the database to be open

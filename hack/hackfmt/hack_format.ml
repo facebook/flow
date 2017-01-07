@@ -342,6 +342,11 @@ let builder = object (this)
                 this#add_always_empty_chunk ();
               this#check_range ();
               newlines + 1, false
+            | TriviaKind.Unsafe
+            | TriviaKind.UnsafeExpression
+            | TriviaKind.FallThrough
+            | TriviaKind.FixMe
+            | TriviaKind.IgnoreError
             | TriviaKind.SingleLineComment
             | TriviaKind.DelimitedComment ->
               handle_newlines ~is_trivia:true newlines;
@@ -379,6 +384,9 @@ let builder = object (this)
     let new_line_regex = Str.regexp "\n" in
     List.concat_map trivia ~f:(fun triv ->
       match Trivia.kind triv with
+        | TriviaKind.UnsafeExpression
+        | TriviaKind.FixMe
+        | TriviaKind.IgnoreError
         | TriviaKind.DelimitedComment ->
           let delimited_lines =
             Str.split new_line_regex @@ Trivia.text triv in
@@ -433,7 +441,9 @@ let rec transform node =
     token x;
     ()
   | SyntaxList _ ->
-    raise (Failure "Error: SyntaxList should never be handled directly");
+    raise (Failure (Printf.sprintf
+"Error: SyntaxList should never be handled directly;
+offending text is '%s'." (text node)));
   | ScriptHeader x ->
     let (lt, q, lang_kw) = get_script_header_children x in
     t lt;
@@ -797,13 +807,13 @@ let rec transform node =
     tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
       split ();
       tl_with ~nest ~f:(fun () ->
-        t init;
+        handle_possible_list init;
         t semi1;
         split ~space ();
-        t control;
+        handle_possible_list control;
         t semi2;
         split ~space ();
-        t after_iter;
+        handle_possible_list after_iter;
       ) ();
       split ();
       t right_p;

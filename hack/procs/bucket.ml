@@ -23,7 +23,7 @@ type 'a bucket =
   | Wait
   | Done
 
-type 'a nextbucket_dynamic =
+type 'a next =
   unit -> 'a bucket
 
 let make_ bucket_size jobs =
@@ -34,7 +34,7 @@ let make_ bucket_size jobs =
     i := bucket_size + !i;
     Array.to_list result
 
-let make ~num_workers ?(max_size=500) jobs =
+let make_list ~num_workers ?(max_size=500) jobs =
   let jobs = Array.of_list jobs in
   let bucket_size =
     if Array.length jobs < num_workers * max_size
@@ -43,12 +43,13 @@ let make ~num_workers ?(max_size=500) jobs =
   in
   make_ bucket_size jobs
 
-let make_bucket ~num_workers ?(max_size=500) jobs =
-  let make_list = make ~num_workers ~max_size jobs
-  in
-  fun () -> match make_list () with
-    | [] -> Done
-    | wl -> Job wl
+let of_list = function
+  | [] -> Done
+  | wl -> Job wl
+
+let make ~num_workers ?(max_size=500) jobs =
+  let maker = make_list ~num_workers ~max_size jobs in
+  fun () -> of_list (maker ())
 
 type 'a of_n = { work: 'a; bucket: int; total: int }
 

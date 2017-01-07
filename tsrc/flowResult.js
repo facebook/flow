@@ -107,8 +107,7 @@ export function mergedMessagesOfError(error: FlowError): Array<FlowMessage> {
   const { level, kind, message, operation, trace, extra } = error;
   let mainLoc = mainLocOfError(error);
   let messages = [].concat(
-    getHeader(mainLoc),
-    getKindMessage(kind, level, message),
+    getHeader(mainLoc, kind, level),
     getOpReason(operation),
     message,
     getExtraMessages(extra),
@@ -145,7 +144,11 @@ function mkComment(descr: string): FlowMessage {
   return { descr, type: "Comment" };
 }
 
-function getHeader(mainLoc: ?FlowLoc): Array<FlowMessage> {
+function getHeader(
+  mainLoc: ?FlowLoc,
+  kind: string,
+  level: string,
+): Array<FlowMessage> {
   let line = -1;
   let filename = "[No file]";
   if (mainLoc != null) {
@@ -155,33 +158,19 @@ function getHeader(mainLoc: ?FlowLoc): Array<FlowMessage> {
       filename = source;
     }
   }
-  return [mkComment(format("%s:%d", filename, line))];
-}
 
-function getKindMessage(
-  kind: string,
-  level: string,
-  message: Array<FlowMessage>,
-): Array<FlowMessage> {
-  const internal_error_prefix = "Internal error (see logs): ";
-  if (message.length > 0) {
-    let {context, loc} = message[0];
-    let descr = null;
-    if (kind == "internal" && level == "error") {
-      descr = internal_error_prefix;
-    } else if (loc != null && loc.type == "LibFile") {
-      if (kind == "parse" && level == "error") {
-        descr = "Library parse error:";
-      } else if (kind == "infer") {
-        descr = "Library type error:"
-      }
-    }
-
-    if (descr != null) {
-      return [{ context, loc, descr, type: "Blame" }];
+  let prefix = "";
+  if (kind == "internal" && level == "error") {
+    prefix = "Internal error (see logs):\n";
+  } else if (mainLoc != null && mainLoc.type == "LibFile") {
+    if (kind == "parse" && level == "error") {
+      prefix = "Library parse error:\n";
+    } else if (kind == "infer") {
+      prefix = "Library type error:\n";
     }
   }
-  return [];
+
+  return [mkComment(format("%s%s:%d", prefix, filename, line))];
 }
 
 function getOpReason(op: ?FlowMessage): Array<FlowMessage> {
@@ -252,7 +241,12 @@ function prettyPrintMessage(
     }
     let see_another_file = loc.source == mainFile ?
       "" :
-      format(". See: %s:%d", loc.source, loc.start.line);
+      format(
+        ". See%s: %s:%d",
+        loc.type === "LibFile" ? " lib" : "",
+        loc.source,
+        loc.start.line,
+      );
     return format("%s%s%s", contextStr, descr, see_another_file);
   }
   return indentation+descr;

@@ -68,6 +68,9 @@ type t =
   | Heap_full
   | Sql_assertion_failure
   | Local_type_env_stale
+  | Sql_cantopen
+  | Sql_corrupt
+  | Sql_misuse
 
 exception Exit_with of t
 
@@ -126,6 +129,9 @@ let exit_code = function
   | File_heap_stale ->              211
   | Sql_assertion_failure ->        212
   | Local_type_env_stale ->         213
+  | Sql_cantopen ->                 214
+  | Sql_corrupt ->                  215
+  | Sql_misuse ->                   216
 
 
 let exit t =
@@ -187,6 +193,9 @@ let to_string = function
   | File_heap_stale -> "File_heap_stale"
   | Sql_assertion_failure -> "Sql_assertion_failure"
   | Local_type_env_stale -> "Local_type_env_stale"
+  | Sql_cantopen -> "Sql_cantopen"
+  | Sql_corrupt -> "Sql_corrupt"
+  | Sql_misuse -> "Sql_misuse"
 
 
 let unpack = function

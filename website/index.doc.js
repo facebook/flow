@@ -96,7 +96,7 @@ Flow also powers advanced features for editors, including [Vim][flow-vim],
 [Emacs][flow-emacs], and [Nuclide][flow-nuclide].
 
 [flow-vim]: https://github.com/flowtype/vim-flow
-[flow-emacs]: https://github.com/facebook/flow/blob/master/flow-types.el
+[flow-emacs]: https://github.com/flowtype/flow-for-emacs
 [flow-nuclide]: http://nuclide.io/docs/languages/flow/
 
 <header class='hero'><div class="width">

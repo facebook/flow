@@ -10,12 +10,14 @@
 
 open Core
 
+type 'a nextlist = 'a list Bucket.next
+
 type 'a bucket = 'a Bucket.bucket =
   | Job of 'a
   | Wait
   | Done
 
-let single_threaded_call_dynamic job merge neutral next =
+let single_threaded_call job merge neutral next =
   let x = ref (next()) in
   let acc = ref neutral in
   (* This is a just a sanity check that the job is serializable and so
@@ -37,12 +39,12 @@ let single_threaded_call_dynamic job merge neutral next =
   done;
   !acc
 
-let multi_threaded_call_dynamic
+let multi_threaded_call
   (type a) (type b) (type c)
   workers (job: c -> a -> b)
   (merge: b -> c -> c)
   (neutral: c)
-  (next: a Bucket.nextbucket_dynamic) =
+  (next: a Bucket.next) =
   let rec dispatch workers handles acc =
     (* 'worker' represents available workers. *)
     (* 'handles' represents pendings jobs. *)
@@ -79,19 +81,10 @@ let multi_threaded_call_dynamic
     dispatch workers waiters acc in
   dispatch workers [] neutral
 
-let call_dynamic workers ~job ~merge ~neutral ~next =
-  match workers with
-  | None -> single_threaded_call_dynamic job merge neutral next
-  | Some workers -> multi_threaded_call_dynamic workers job merge neutral next
-
-(* special case of call_dynamic with no waiting, useful for static worklists *)
-type 'a nextlist =
-  unit -> 'a list
-
 let call workers ~job ~merge ~neutral ~next =
-  let next () = match next() with [] -> Done | wl -> Job wl
-  in
-  call_dynamic workers ~job ~merge ~neutral ~next
+  match workers with
+  | None -> single_threaded_call job merge neutral next
+  | Some workers -> multi_threaded_call workers job merge neutral next
 
 let next ?max_size workers =
   Bucket.make

@@ -192,9 +192,11 @@ runtest() {
         cp -R "$dir/." "$OUT_DIR"
 
         out_file="$name.out"
+        log_file="$name.log"
         err_file="$name.err"
         diff_file="$name.diff"
         abs_out_file="$OUT_DIR/$name.out"
+        abs_log_file="$OUT_DIR/$name.log"
         abs_err_file="$OUT_DIR/$name.err"
         abs_diff_file="$OUT_DIR/$name.diff"
 
@@ -224,6 +226,7 @@ runtest() {
         # stop the server after the script exits.
         #
         all=" --all"
+        flowlib=" --no-flowlib"
         shell=""
         cmd="check"
         stdin=""
@@ -264,11 +267,18 @@ runtest() {
             pushd "$cwd" >/dev/null
         fi
 
+        # if .flowconfig sets no_flowlib, don't pass the cli flag
+        if grep -q "no_flowlib" .flowconfig; then
+            flowlib=""
+        fi
+
         # run test
         if [ "$cmd" == "check" ]
         then
-            # default command is check with configurable --all
-            "$FLOW" check . $all --strip-root --show-all-errors 1> "$abs_out_file" 2> "$stderr_dest"
+            # default command is check with configurable --all and --no-flowlib
+            "$FLOW" check . \
+              $all $flowlib --strip-root --show-all-errors \
+               1> "$abs_out_file" 2> "$stderr_dest"
         else
             # otherwise, run specified flow command, then kill the server
 
@@ -276,7 +286,8 @@ runtest() {
             trap "kill_server -TERM" SIGTERM
 
             # start server and wait
-            "$FLOW" start . $all --wait > /dev/null 2>&1
+            "$FLOW" start . \
+              $all $flowlib --wait --log-file "$abs_log_file" > /dev/null 2>&1
             if [ "$shell" != "" ]
             then
                 # run test script
@@ -311,12 +322,14 @@ runtest() {
         if [ -s "$OUT_DIR/$diff_file" ]
         then
             mv "$OUT_DIR/$out_file" "$dir"
+            mv "$OUT_DIR/$log_file" "$dir"
             mv "$OUT_DIR/$err_file" "$dir"
             mv "$OUT_DIR/$diff_file" "$dir"
             return_status=$RUNTEST_FAILURE
         else
             rm -rf "$OUT_DIR"
             rm -f "$dir/$out_file"
+            rm -f "$dir/$log_file"
             rm -f "$dir/$err_file"
             rm -f "$dir/$diff_file"
             return_status=$RUNTEST_SUCCESS

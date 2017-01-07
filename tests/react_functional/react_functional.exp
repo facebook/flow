@@ -8,11 +8,14 @@ test.js:4
 
 test.js:5
   5: <F foo={0} />; // error: number ~> string
-     ^^^^^^^^^^^^^ React element `F`
-  5: <F foo={0} />; // error: number ~> string
-             ^ number. This type is incompatible with the expected param type of
+     ^^^^^^^^^^^^^ props of React element `F`. This type is incompatible with the expected param type of
   3: function F(props: { foo: string }) {}
-                              ^^^^^^ string
+                       ^^^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+      5: <F foo={0} />; // error: number ~> string
+                 ^ number. This type is incompatible with
+      3: function F(props: { foo: string }) {}
+                                  ^^^^^^ string
 
 test.js:9
   9: function G(props: { foo: string|numner }) {}

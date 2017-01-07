@@ -36,6 +36,7 @@ module Opts : sig
     log_file: Path.t option;
     max_header_tokens: int;
     max_workers: int;
+    no_flowlib: bool;
     temp_dir: string;
     shm_global_size: int;
     shm_heap_size: int;

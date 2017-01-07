@@ -41,7 +41,7 @@ val parse:
   profile: bool ->
   max_header_tokens: int ->
   Worker.t list option ->       (* Some=parallel, None=serial *)
-  (unit -> filename list) ->    (* delivers buckets of filenames *)
+  filename list Bucket.next ->  (* delivers buckets of filenames *)
   results                       (* job results, not asts *)
 
 (* Use default values for the various settings that parse takes. Each one can be overridden
@@ -51,7 +51,7 @@ val parse_with_defaults:
   ?use_strict: bool ->
   Options.t ->
   Worker.t list option ->
-  (unit -> filename list) ->
+  filename list Bucket.next ->
   results
 
 (* for non-initial passes: updates asts for passed file set. *)
@@ -111,4 +111,4 @@ val do_parse:
 val next_of_filename_set:
   Worker.t list option ->
   FilenameSet.t ->
-  (unit -> filename list)
+  filename list Bucket.next

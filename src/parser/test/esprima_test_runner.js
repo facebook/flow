@@ -353,6 +353,8 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       case 'DeclareFunction':
         delete flow.predicate;
         break;
+      case 'ImportSpecifier':
+        delete flow.importKind;
     }
   }
 }

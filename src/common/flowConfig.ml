@@ -67,6 +67,7 @@ module Opts = struct
     log_file: Path.t option;
     max_header_tokens: int;
     max_workers: int;
+    no_flowlib: bool;
     temp_dir: string;
     shm_global_size: int;
     shm_heap_size: int;
@@ -163,6 +164,7 @@ module Opts = struct
     log_file = None;
     max_header_tokens = 10;
     max_workers = Sys_utils.nbr_procs;
+    no_flowlib = false;
     temp_dir = default_temp_dir;
     shm_global_size = 1024 * 1024 * 1024; (* 1 gig *)
     shm_heap_size = 1024 * 1024 * 1024 * 25; (* 25 gigs *)
@@ -717,6 +719,15 @@ let parse_options config lines =
       optparser = optparse_boolean;
       setter = (fun opts v ->
         {opts with enforce_strict_type_args = v;}
+      );
+    }
+
+    |> define_opt "no_flowlib" {
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        {opts with no_flowlib = v;}
       );
     }
 

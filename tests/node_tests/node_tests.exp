@@ -16,9 +16,14 @@ child_process/execSync.js:8
                                   ^ function type. See lib: <BUILTINS>/node.js:266
   Error:
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
-                                 ^^^^^ string. This type is incompatible with the expected param type of
-  150:   timeout?: number;
-                   ^^^^^^ number. See lib: <BUILTINS>/node.js:150
+                       ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
+  268:     options?: child_process$execSyncOpts
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/node.js:268
+    Property `timeout` is incompatible:
+        8: (execSync('ls', {timeout: '250'})); // error, no signatures match
+                                     ^^^^^ string. This type is incompatible with
+      150:   timeout?: number;
+                       ^^^^^^ number. See lib: <BUILTINS>/node.js:150
 
 crypto/crypto.js:12
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
@@ -49,24 +54,24 @@ crypto/crypto.js:16
          ^^^^^^^^^^^^^^^ call of method `write`
  16:     hmac.write(123); // 2 errors: not a string or a Buffer
                     ^^^ number. This type is incompatible with
-1286:     chunk: Buffer | string,
-                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1286
+1287:     chunk: Buffer | string,
+                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1287
   Member 1:
-  1286:     chunk: Buffer | string,
-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1286
+  1287:     chunk: Buffer | string,
+                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1287
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  1286:     chunk: Buffer | string,
-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1286
+  1287:     chunk: Buffer | string,
+                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1287
   Member 2:
-  1286:     chunk: Buffer | string,
-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1286
+  1287:     chunk: Buffer | string,
+                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1287
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  1286:     chunk: Buffer | string,
-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1286
+  1287:     chunk: Buffer | string,
+                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1287
 
 crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error

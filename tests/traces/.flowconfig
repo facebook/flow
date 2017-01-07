@@ -2,3 +2,4 @@
 module.system=haste
 traces=3
 strip_root=true
+no_flowlib=false

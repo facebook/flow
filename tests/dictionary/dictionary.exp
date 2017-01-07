@@ -364,17 +364,27 @@ incompatible.js:24
  25: ): Array<{[key: string]: mixed, fooBar: string}> {
                                              ^^^^^^ string
 
-incompatible.js:36
+incompatible.js:37
+ 37:   return x;
+              ^ object type. This type is incompatible with the expected return type of
  36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
-                                      ^^^^^^ number. This type is incompatible with
- 36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
-                                                                             ^^^^^^ string
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+     36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
+                                          ^^^^^^ number. This type is incompatible with
+     36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
+                                                                                 ^^^^^^ string
 
-incompatible.js:36
+incompatible.js:37
+ 37:   return x;
+              ^ object type. This type is incompatible with the expected return type of
  36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
-                                                                             ^^^^^^ string. This type is incompatible with
- 36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
-                                      ^^^^^^ number
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+     36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
+                                                                                 ^^^^^^ string. This type is incompatible with
+     36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
+                                          ^^^^^^ number
 
 incompatible.js:41
  41: function foo5(x: Array<{[key: string]: number}>): Array<{foo: number}> {
@@ -394,11 +404,16 @@ incompatible.js:55
  55:   (x.foo: string); // error
                ^^^^^^ string
 
-test.js:6
-  6:     return params.count; // error, number ~/~ string
-                ^^^^^^^^^^^^ number. This type is incompatible with
-  2: type QueryFunction = (params: Params) => string;
-                                              ^^^^^^ string
+test.js:4
+  4: var o: { foo: QueryFunction } = {
+                                     ^ object literal. This type is incompatible with
+  4: var o: { foo: QueryFunction } = {
+            ^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+      6:     return params.count; // error, number ~/~ string
+                    ^^^^^^^^^^^^ number. This type is incompatible with
+      2: type QueryFunction = (params: Params) => string;
+                                                  ^^^^^^ string
 
 test_client.js:4
   4:   return params.count; // error, number ~/~ string
