@@ -221,7 +221,7 @@ let get_package_keys filename ast =
   let extract_property map = function
     | Property(_, {
         Property.key = Property.Literal(_, {Literal.raw; _;});
-        value;
+        value = Property.Init value;
         _;
       }) ->
         let key = trim_quotes raw in

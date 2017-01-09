@@ -310,8 +310,7 @@ end = struct
           key = Object.Property.Literal (_, {
             Ast.Literal.value = Ast.Literal.String name; raw = _
           });
-          value;
-          kind = Object.Property.Init;
+          value = Object.Property.Init value;
           _method = false; shorthand = false;
         }) ->
           SMap.add name value acc
@@ -415,8 +414,7 @@ end = struct
         key = Object.Property.Literal (_, {
           Ast.Literal.value = Ast.Literal.String name; raw = _
         });
-        value;
-        kind = Object.Property.Init;
+        value = Object.Property.Init value;
         _method = false; shorthand = false;
       } -> name, value
     | _ -> failwith "Invalid JSON"
@@ -450,7 +448,7 @@ end = struct
                   match apply_diff diff_value exp_value with
                   | Some value ->
                     let prop = Object.Property (exp_loc, { exp_prop with
-                      Object.Property.value = value;
+                      Object.Property.value = Object.Property.Init value;
                     }) in
                     prop::acc
                   | None ->

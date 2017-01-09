@@ -617,7 +617,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       x
         |> add_field ~static "$key" (k, polarity, None)
         |> add_field ~static "$value" (v, polarity, None)
-    | Property (loc, { Property.key; value; static; _method; optional; variance; _ }) ->
+    | Property (loc, { Property.key; value; static; _method; optional; variance; }) ->
       if optional && _method
       then Flow_js.add_output cx Flow_error.(EInternal (loc, OptionalMethod));
       let polarity = Anno.polarity variance in

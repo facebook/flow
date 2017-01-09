@@ -391,8 +391,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     }))
 
   and _object =
-    let methodish env start_loc =
-      let typeParameters = type_parameter_declaration ~allow_default:false env in
+    let methodish env start_loc type_params =
       let params = function_param_list env in
       Expect.token env T_COLON;
       let returnType = _type env in
@@ -400,11 +399,12 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       loc, Type.Function.({
         params;
         returnType;
-        typeParameters;
+        typeParameters = type_params;
       })
 
     in let method_property env start_loc static key =
-      let value = methodish env start_loc in
+      let type_params = type_parameter_declaration ~allow_default:false env in
+      let value = methodish env start_loc type_params in
       let value = fst value, Type.Function (snd value) in
       Type.Object.(Property (fst value, Property.({
         key;
@@ -416,7 +416,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       })))
 
     in let call_property env start_loc static =
-      let value = methodish env (Peek.loc env) in
+      let type_params = type_parameter_declaration ~allow_default:false env in
+      let value = methodish env (Peek.loc env) type_params in
       Type.Object.(CallProperty (Loc.btwn start_loc (fst value), CallProperty.({
         value;
         static;
@@ -501,28 +502,38 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         semicolon exact env;
         properties ~allow_static ~allow_spread ~exact env (property::acc)
       | token ->
-        let static, (_, key) = match static, variance, token with
+        let property = match static, variance, token with
         | true, None, T_COLON ->
             strict_error_at env (start_loc, Error.StrictReservedWord);
-            let static_key =
-              start_loc, Expression.Object.Property.Identifier (
-                start_loc,
-                "static"
-              ) in
-            false, static_key
+            let key = Expression.Object.Property.Identifier (
+              start_loc,
+              "static"
+            ) in
+            let static = false in
+            begin match Peek.token env with
+            | T_LESS_THAN
+            | T_LPAREN ->
+              error_unsupported_variance env variance;
+              method_property env start_loc static key
+            | _ ->
+              property env start_loc static variance key
+            end
         | _ ->
-            Eat.push_lex_mode env Lex_mode.NORMAL;
-            let key = Parse.object_key env in
-            Eat.pop_lex_mode env;
-            static, key
-        in
-        let property = match Peek.token env with
-        | T_LESS_THAN
-        | T_LPAREN ->
-          error_unsupported_variance env variance;
-          method_property env start_loc static key
-        | _ ->
-          property env start_loc static variance key
+            let object_key env =
+              Eat.push_lex_mode env Lex_mode.NORMAL;
+              let (_, result) = Parse.object_key env in
+              Eat.pop_lex_mode env;
+              result
+            in
+            let key = object_key env in
+            begin match Peek.token env with
+            | T_LESS_THAN
+            | T_LPAREN ->
+              error_unsupported_variance env variance;
+              method_property env start_loc static key
+            | _ ->
+              property env start_loc static variance key
+            end
         in
         semicolon exact env;
         properties ~allow_static ~allow_spread ~exact env (property::acc)

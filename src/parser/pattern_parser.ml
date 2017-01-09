@@ -31,7 +31,14 @@ module Pattern
         | Literal lit -> Pattern.Object.Property.Literal lit
         | Identifier id -> Pattern.Object.Property.Identifier id
         | Computed expr -> Pattern.Object.Property.Computed expr) in
-        let pattern = Parse.pattern_from_expr env value in
+        let pattern = Property.(match value with
+        | Init t -> Parse.pattern_from_expr env t
+        | Get (loc, f)
+        | Set (loc, f) ->
+          (* these should never happen *)
+          error_at env (loc, Error.UnexpectedIdentifier);
+          loc, Pattern.Expression (loc, Ast.Expression.Function f)
+        ) in
         Pattern.(Object.Property (loc, Object.Property.({
           key;
           pattern;

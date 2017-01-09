@@ -2140,9 +2140,8 @@ and export_statement cx loc
 and object_prop cx map = Ast.Expression.Object.(function
   (* name = function expr *)
   | Property (_, { Property.
-      kind = Property.Init;
       key = Property.Identifier (_, name);
-      value = (vloc, Ast.Expression.Function func);
+      value = Property.Init (vloc, Ast.Expression.Function func);
       _method;
       _
     }) ->
@@ -2155,14 +2154,14 @@ and object_prop cx map = Ast.Expression.Object.(function
     Properties.add_field name polarity ft map
 
   (* name = non-function expr *)
-  | Property (_, { Property.kind = Property.Init;
+  | Property (_, { Property.
       key =
         Property.Identifier (_, name) |
         Property.Literal (_, {
           Ast.Literal.value = Ast.Literal.String name;
           _;
         });
-      value = v; _ }) ->
+      value = Property.Init v; _ }) ->
     let t = expression cx v in
     Properties.add_field name Neutral t map
 
@@ -2178,10 +2177,9 @@ and object_prop cx map = Ast.Expression.Object.(function
    *)
 
   (* unsafe getter property *)
-  | Property (loc, {
-      Property.kind = Property.Get;
+  | Property (loc, { Property.
       key = Property.Identifier (_, name);
-      value = (vloc, Ast.Expression.Function func);
+      value = Property.Get (vloc, func);
       _ }) ->
     if Context.enable_unsafe_getters_and_setters cx then
       let reason = mk_reason RGetterFunction vloc in
@@ -2195,10 +2193,9 @@ and object_prop cx map = Ast.Expression.Object.(function
     end
 
   (* unsafe setter property *)
-  | Property (loc, {
-    Property.kind = Property.Set;
+  | Property (loc, { Property.
       key = Property.Identifier (_, name);
-      value = (vloc, Ast.Expression.Function func);
+      value = Property.Set (vloc, func);
       _ }) ->
     if Context.enable_unsafe_getters_and_setters cx then
       let reason = mk_reason RSetterFunction vloc in
@@ -2211,21 +2208,11 @@ and object_prop cx map = Ast.Expression.Object.(function
       map
     end
 
-  (* getters and setters that are not functions should be parse errors *)
-  | Property (loc, { Property.
-      kind = Property.Get | Property.Set;
-      key = Property.Identifier _;
-      _
-    }) ->
-    Flow_js.add_output cx
-      Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
-    map
-
   (* computed getters and setters aren't supported yet regardless of the
      `enable_getters_and_setters` config option *)
   | Property (loc, { Property.
-      kind = Property.Get | Property.Set;
       key = Property.Computed _;
+      value = Property.Get _ | Property.Set _;
       _
     }) ->
     Flow_js.add_output cx
@@ -2291,8 +2278,7 @@ and object_ cx reason ?(allow_sealed=true) props =
         false, SMap.empty, Some result
     | Property (_, { Property.
         key = Property.Computed k;
-        value = v;
-        kind = Property.Init;
+        value = Property.Init v;
         _method = _; shorthand = _;
       }) ->
         let k = expression cx k in
@@ -3934,9 +3920,8 @@ and mk_proptypes cx props = Ast.Expression.Object.(
 
     (* required prop *)
     | Property (_, { Property.
-        kind = Property.Init;
         key = Property.Identifier (_, name);
-        value = (_, Ast.Expression.Member {
+        value = Property.Init (_, Ast.Expression.Member {
           Ast.Expression.Member.
           property = Ast.Expression.Member.PropertyIdentifier (_, "isRequired");
           _object = e;
@@ -3949,14 +3934,14 @@ and mk_proptypes cx props = Ast.Expression.Object.(
         dict
 
     (* other prop *)
-    | Property (_, { Property.kind = Property.Init;
+    | Property (_, { Property.
         key =
           Property.Identifier (_, name) |
           Property.Literal (_, {
             Ast.Literal.value = Ast.Literal.String name;
             _;
           });
-        value = v;
+        value = Property.Init v;
         _ }) ->
         let p = Field (mk_proptype cx v, Neutral) in
         amap,
@@ -3987,7 +3972,7 @@ and mk_proptypes cx props = Ast.Expression.Object.(
       amap, omap, dict
 
     (* get/set kind *)
-    | Property (loc, { Property.kind = Property.Get | Property.Set; _ }) ->
+    | Property (loc, { Property.value = Property.Get _ | Property.Set _; _ }) ->
       Flow_js.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, ReactPropTypesPropertyGetSet));
       amap, omap, dict
@@ -4024,18 +4009,17 @@ and react_create_class cx loc class_props = Ast.Expression.(
     List.fold_left Ast.Expression.Object.(fun (fmap, mmap) -> function
 
       (* mixins *)
-      | Property (_, { Property.kind = Property.Init;
-          key =
-            Property.Identifier (_, "mixins");
-          value = aloc, Array { Array.elements };
+      | Property (_, { Property.
+          key = Property.Identifier (_, "mixins");
+          value = Property.Init (aloc, Array { Array.elements });
           _ }) ->
         mixins := List.map (array_element cx aloc) elements;
         fmap, mmap
 
       (* statics *)
-      | Property (_, { Property.kind = Property.Init;
-            key = Property.Identifier (nloc, "statics");
-          value = _, Object { Object.properties };
+      | Property (_, { Property.
+          key = Property.Identifier (nloc, "statics");
+          value = Property.Init (_, Object { Object.properties });
           _ }) ->
         let reason = mk_reason RReactStatics nloc in
         static :=
@@ -4043,9 +4027,9 @@ and react_create_class cx loc class_props = Ast.Expression.(
         fmap, mmap
 
       (* propTypes *)
-      | Property (_, { Property.kind = Property.Init;
+      | Property (_, { Property.
           key = Property.Identifier (nloc, "propTypes");
-          value = _, Object { Object.properties } as value;
+          value = Property.Init (_, Object { Object.properties } as value);
           _ }) ->
         ignore (expression cx value);
         let reason = mk_reason RReactPropTypes nloc in
@@ -4057,9 +4041,9 @@ and react_create_class cx loc class_props = Ast.Expression.(
         fmap, mmap
 
       (* getDefaultProps *)
-      | Property (_, { Property.kind = Property.Init;
+      | Property (_, { Property.
           key = Property.Identifier (_, "getDefaultProps");
-          value = (vloc, Ast.Expression.Function func);
+          value = Property.Init (vloc, Ast.Expression.Function func);
           _
         }) ->
           let reason = mk_reason RReactDefaultProps vloc in
@@ -4076,9 +4060,9 @@ and react_create_class cx loc class_props = Ast.Expression.(
           fmap, mmap
 
       (* getInitialState *)
-      | Property (_, { Property.kind = Property.Init;
+      | Property (_, { Property.
           key = Property.Identifier (_, "getInitialState");
-          value = (vloc, Ast.Expression.Function func);
+          value = Property.Init (vloc, Ast.Expression.Function func);
           _
         }) ->
           let reason = mk_reason RReactState vloc in
@@ -4098,9 +4082,9 @@ and react_create_class cx loc class_props = Ast.Expression.(
           fmap, mmap
 
       (* name = function expr *)
-      | Property (_, { Property.kind = Property.Init;
+      | Property (_, { Property.
           key = Property.Identifier (_, name);
-          value = (vloc, Ast.Expression.Function func);
+          value = Property.Init (vloc, Ast.Expression.Function func);
           _
         }) ->
           let {Ast.Function.async; generator; _ } = func in
@@ -4111,13 +4095,13 @@ and react_create_class cx loc class_props = Ast.Expression.(
           fmap, SMap.add name p mmap
 
       (* name = non-function expr *)
-      | Property (_, { Property.kind = Property.Init;
+      | Property (_, { Property.
           key =
             Property.Identifier (_, name) |
             Property.Literal (_, {
               Ast.Literal.value = Ast.Literal.String name; _;
             });
-          value = v;
+          value = Property.Init v;
           _ }) ->
         let t = expression cx v in
         let p = Field (t, Neutral) in

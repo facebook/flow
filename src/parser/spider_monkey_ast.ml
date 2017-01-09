@@ -559,15 +559,14 @@ and Expression : sig
         | Literal of (Loc.t * Literal.t)
         | Identifier of Identifier.t
         | Computed of Expression.t
-      type kind =
-        | Init
-        | Get
-        | Set
+      type value =
+        | Init of Expression.t
+        | Get of (Loc.t * Function.t)
+        | Set of (Loc.t * Function.t)
       type t = Loc.t * t'
       and t' = {
         key: key;
-        value: Expression.t;
-        kind: kind;
+        value: value;
         _method: bool;
         shorthand: bool;
       }
