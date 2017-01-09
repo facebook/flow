@@ -2009,22 +2009,23 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
 
   result = Val_int(0); // The empty list
 
-  // Make sure db connection is made
-  if(db == NULL) {
-    assert(db_filename != NULL);
-    // First lets figure out whether we are in sql mode or not
-    if (*db_filename == '\0') {
-      // This means we are not in sql, return empty list
-      CAMLreturn(result);
-    } else {
-      // We are in sql, hence we shouldn't be in the master process,
-      // since we are not connected yet, soo.. try to connect
-      assert_not_master();
-      // SQLITE_OPEN_READONLY makes sure that we throw if the db doesn't exist
-      assert_sql(sqlite3_open_v2(db_filename, &db, SQLITE_OPEN_READONLY, NULL),
-        SQLITE_OK);
-    }
-    // By now, we either set the db or returned an empty list (not sql case)
+  assert(db_filename != NULL);
+
+  // Check whether we are in SQL mode
+  if (*db_filename == '\0') {
+    // We are not in SQL mode, return empty list
+    CAMLreturn(result);
+  }
+
+  // Now that we know we are in SQL mode, make sure db connection is made
+  if (db == NULL) {
+    assert(*db_filename != '\0');
+    // We are in sql, hence we shouldn't be in the master process,
+    // since we are not connected yet, soo.. try to connect
+    assert_not_master();
+    // SQLITE_OPEN_READONLY makes sure that we throw if the db doesn't exist
+    assert_sql(sqlite3_open_v2(db_filename, &db, SQLITE_OPEN_READONLY, NULL),
+      SQLITE_OK);
     assert(db != NULL);
   }
 
