@@ -74,6 +74,12 @@ let lstrip s prefix =
   then String.sub s prefix_length (String.length s - prefix_length)
   else s
 
+let rstrip s suffix =
+  let result_length = String.length s - String.length suffix in
+  if string_ends_with s suffix
+  then String.sub s 0 result_length
+  else s
+
 let rpartition s c =
   let sep_idx = String.rindex s c in
   let first = String.sub s 0 sep_idx in
