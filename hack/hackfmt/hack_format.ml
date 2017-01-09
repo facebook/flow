@@ -1018,6 +1018,18 @@ offending text is '%s'." (text node)));
     ()
   | FunctionCallExpression x ->
     handle_function_call_expression x
+  | EvalExpression x ->
+    let (kw, left_p, args, right_p) = get_eval_expression_children x in
+    t kw;
+    transform_argish left_p args right_p;
+  | EmptyExpression x ->
+    let (kw, left_p, args, right_p) = get_empty_expression_children x in
+    t kw;
+    transform_argish left_p args right_p;
+  | IssetExpression x ->
+    let (kw, left_p, args, right_p) = get_isset_expression_children x in
+    t kw;
+    transform_argish left_p args right_p;
   | ParenthesizedExpression x ->
     let (left_p, expr, right_p) = get_parenthesized_expression_children x in
     t left_p;
