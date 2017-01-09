@@ -17,22 +17,14 @@ let usage = Printf.sprintf
 
 let parse_and_print (source_text, start_char, end_char, debug) =
   let syntax_tree = SyntaxTree.make source_text in
-
-  if debug then begin
-    let s = String.sub
-      source_text.SourceText.text start_char (end_char - start_char) in
-    Printf.printf "Subrange passed:\n%s\n" s;
-    let str = Debug.dump_full_fidelity syntax_tree in
-    Printf.printf "%s\n" (SourceText.get_text source_text);
-    Printf.printf "%s\n" str;
-  end;
   let editable = Full_fidelity_editable_syntax.from_tree syntax_tree in
 
-  let chunk_groups = Hack_format.format_node
-    ~debug editable start_char end_char in
-  let formatted_string = Line_splitter.solve chunk_groups in
-  Printf.printf "%s" formatted_string;
-  ()
+  let chunk_groups = Hack_format.format_node editable start_char end_char in
+  if debug
+  then Hackfmt_debug.debug_chunk_groups chunk_groups
+  else
+    let formatted_string = Line_splitter.solve chunk_groups in
+    Printf.printf "%s" formatted_string
 
 let read_stdin () =
   let buf = Buffer.create 256 in
@@ -51,9 +43,11 @@ let parse_options () =
   let end_char = ref None in
   let debug = ref false in
 
-  let options = [
+  let rec options = ref [
     "--debug",
-      Arg.Unit (fun () -> debug := true),
+      Arg.Unit (fun () ->
+        debug := true;
+        options := Hackfmt_debug.init_with_options (); ),
       " Print debug statements";
     "--range",
       Arg.Tuple ([
@@ -62,7 +56,7 @@ let parse_options () =
       ]),
       "<start end> Range of character positions to be formatted, (1 indexed)";
   ] in
-  Arg.parse options (fun fn -> filename := Some fn) usage;
+  Arg.parse_dynamic options (fun fn -> filename := Some fn) usage;
   let source_text = match !filename with
     | Some fn ->
       SourceText.from_file @@ Relative_path.create Relative_path.Dummy fn

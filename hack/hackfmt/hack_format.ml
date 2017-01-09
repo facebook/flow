@@ -258,16 +258,6 @@ let builder = object (this)
     List.rev_filter
       chunk_groups ~f:(fun cg -> Chunk_group.(cg.print_range <> No))
 
-  method __debug chunks =
-    let d_chunks = chunks in
-    List.iter d_chunks ~f:(fun c ->
-      Printf.printf
-        "Span count:%d\t Rule:%s\t Text:%s\n"
-        (List.length c.Chunk.spans)
-        "Todo" (*TODO: refactor (Rule.to_string c.Chunk.rule) *)
-        c.Chunk.text
-    )
-
   (* TODO: move the partial formatting logic to it's own module somehow *)
   method advance n =
     seen_chars <- seen_chars + n;
@@ -1683,43 +1673,10 @@ and transform_binary_expression ~is_nested expr =
         raise (Failure "Expected non empty list of binary expression pieces")
   end
 
-let debug_chunk_groups chunk_groups =
-  let get_range cg =
-    let chunks = cg.Chunk_group.chunks in
-    let a, b, c = Chunk_group.(match cg.print_range with
-      | No -> "No", -1, -1
-      | All -> "All", 0, List.length chunks
-      | Range (s, e) ->  "Range", s, e
-      | StartAt s -> "StartAt", s, List.length chunks
-      | EndAt e -> "EndAt", 0, e
-    ) in
-    Printf.sprintf "%s %d %d" a b c
-  in
-  Printf.printf "%d\n" (List.length chunk_groups);
-  List.iteri chunk_groups ~f:(fun i cg ->
-    Printf.printf "%d\n" i;
-    Printf.printf "Indentation: %d\n" cg.Chunk_group.block_indentation;
-    Printf.printf "Chunk count:%d\n" (List.length cg.Chunk_group.chunks);
-    Printf.printf "%s\n" @@ get_range cg;
-    List.iteri cg.Chunk_group.chunks ~f:(fun i c ->
-      Printf.printf "\t%d - %s - Nesting:%d Pending:%d\n"
-        i (Chunk.to_string c) (Chunk.get_nesting_id c)
-        (Option.value ~default:(-1) c.Chunk.comma_rule)
-    );
-    Printf.printf "Rule count %d\n"
-      (IMap.cardinal cg.Chunk_group.rule_map);
-    IMap.iter (fun k v ->
-      Printf.printf "\t%d - %s\n" k (Rule.to_string v);
-    ) cg.Chunk_group.rule_map;
-  );
-  ()
-
 let format_node ?(debug=false) node start_char end_char =
   builder#reset start_char end_char;
   transform node;
-  (* split (); *)
   let chunk_groups = builder#_end () in
-  if debug then debug_chunk_groups chunk_groups;
   chunk_groups
 
 let format_content content =
