@@ -21,7 +21,7 @@ let parse_and_print (source_text, start_char, end_char, debug) =
 
   let chunk_groups = Hack_format.format_node editable start_char end_char in
   if debug
-  then Hackfmt_debug.debug_chunk_groups chunk_groups
+  then Hackfmt_debug.debug source_text syntax_tree chunk_groups
   else
     let formatted_string = Line_splitter.solve chunk_groups in
     Printf.printf "%s" formatted_string

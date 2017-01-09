@@ -33,3 +33,9 @@ let get_indent nesting nesting_set =
       | Some p -> amount + (aux p)
   in
   aux nesting
+
+let get_self_and_parent_list nesting =
+  let rec aux acc n =
+    Option.value_map n ~default:acc ~f:(fun n -> aux (n.id :: acc) n.parent)
+  in
+  aux [] nesting
