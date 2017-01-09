@@ -9,6 +9,8 @@ import type Builder from './builder';
 import type Suite from './Suite';
 import type {SuiteResult} from './runTestSuite';
 
+import invariant from 'invariant';
+
 /* Cool little thingy that runs tests in parallel and prints out a multiline
  * status view of what is running and what is done */
 export default class RunQueue {
@@ -188,7 +190,7 @@ export default class RunQueue {
       this.almostDone = this.almostDone.sort();
       while (this.almostDone.length > 0 && (this.running.length == 0 || this.almostDone[0] <= this.running[0])) {
         const suiteName = this.almostDone.shift();
-        this.done.push(suiteName);
+        invariant(suiteName !== undefined, 'We just did a length check');
         if (this.isTTY) {
           // $FlowFixMe Add to lib
           process.stdout.moveCursor(0, -this.fancyStatusSize);
