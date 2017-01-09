@@ -950,19 +950,13 @@ offending text is '%s'." (text node)));
     t name;
     ()
   | MemberSelectionExpression x ->
-    let (obj, op, name) = get_member_selection_expression_children x in
-    t obj;
-    builder#simple_split ();
-    t op;
-    t name;
-    ()
+    handle_possible_chaining
+      (get_member_selection_expression_children x)
+      None
   | SafeMemberSelectionExpression x ->
-    (* TODO: unify code with member_selection_expression, and fix chaining *)
-    let (obj, op, name) = get_safe_member_selection_expression_children x in
-    t obj;
-    builder#simple_split ();
-    t op;
-    t name;
+    handle_possible_chaining
+      (get_safe_member_selection_expression_children x)
+      None
   | YieldExpression x ->
     let (kw, operand) = get_yield_expression_children x in
     t kw;
@@ -1421,26 +1415,44 @@ and handle_function_call_expression fce =
   let (receiver, lp, args, rp) = get_function_call_expression_children fce in
   match syntax receiver with
     | MemberSelectionExpression mse ->
-      handle_possible_method_chaining mse (Some (lp, args, rp))
+      handle_possible_chaining
+        (get_member_selection_expression_children mse)
+        (Some (lp, args, rp))
+    | SafeMemberSelectionExpression smse ->
+      handle_possible_chaining
+        (get_safe_member_selection_expression_children smse)
+        (Some (lp, args, rp))
     | _ ->
       transform receiver;
       transform_argish lp args rp
 
-and handle_possible_method_chaining mse argish =
-  let (obj, arrow1, member1) = get_member_selection_expression_children mse in
+and handle_possible_chaining (obj, arrow1, member1) argish =
   let rec handle_chaining obj =
+    let handle_mse_or_smse (obj, arrow, member) fun_paren_args =
+      let (obj, l) = handle_chaining obj in
+      obj, l @ [(arrow, member, fun_paren_args)]
+    in
     match syntax obj with
       | FunctionCallExpression x ->
         let (receiver, lp, args, rp) =
           get_function_call_expression_children x in
         (match syntax receiver with
           | MemberSelectionExpression mse ->
-            let (obj, arrow, member) =
-              get_member_selection_expression_children mse in
-            let (obj, l) = handle_chaining obj in
-            obj, l @ [(arrow, member, Some (lp, args, rp))]
+            handle_mse_or_smse
+              (get_member_selection_expression_children mse)
+              (Some (lp, args, rp))
+          | SafeMemberSelectionExpression smse ->
+            handle_mse_or_smse
+              (get_safe_member_selection_expression_children smse)
+              (Some (lp, args, rp))
           | _ -> obj, []
         )
+      | MemberSelectionExpression mse ->
+        handle_mse_or_smse
+          (get_member_selection_expression_children mse) None
+      | SafeMemberSelectionExpression smse ->
+        handle_mse_or_smse
+          (get_safe_member_selection_expression_children smse) None
       | _ -> obj, []
   in
 
