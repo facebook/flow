@@ -1223,6 +1223,18 @@ offending text is '%s'." (text node)));
     t kw;
     transform_argish left_a vec_type right_a;
     ()
+  | VectorTypeSpecifier x ->
+    let (kw, left_a, vec_type, right_a) =
+      get_vector_type_specifier_children x in
+    t kw;
+    transform_argish left_a vec_type right_a;
+    ()
+  | KeysetTypeSpecifier x ->
+    let (kw, left_a, vec_type, right_a) =
+      get_keyset_type_specifier_children x in
+    t kw;
+    transform_argish left_a vec_type right_a;
+    ()
   | TypeParameter x ->
     let (variance, name, constraints) = get_type_parameter_children x in
     t variance;
@@ -1237,6 +1249,14 @@ offending text is '%s'." (text node)));
   | MapArrayTypeSpecifier x ->
     let (kw, left_a, key, comma_kw, value, right_a) =
       get_map_array_type_specifier_children x in
+    t kw;
+    let key_list_item = make_list_item key comma_kw in
+    let val_list_item = make_list_item value (make_missing ()) in
+    let args = make_list [key_list_item; val_list_item] in
+    transform_argish left_a args right_a;
+  | DictionaryTypeSpecifier x ->
+    let (kw, left_a, key, comma_kw, value, right_a) =
+      get_dictionary_type_specifier_children x in
     t kw;
     let key_list_item = make_list_item key comma_kw in
     let val_list_item = make_list_item value (make_missing ()) in
