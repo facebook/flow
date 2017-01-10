@@ -504,7 +504,6 @@ let recheck genv env modified =
     Parsing_service_js.parse_ok = freshparsed;
                        parse_skips = freshparse_skips;
                        parse_fails = freshparse_fail;
-                       parse_errors = freshparse_errors;
                        parse_resource_files = freshparse_resource_files;
   } = freshparse_results in
 
@@ -514,8 +513,9 @@ let recheck genv env modified =
   clear_errors ~debug (FilenameSet.elements deleted);
 
   (* record reparse errors *)
-  let failed_filenames = List.map (fun (file, _) -> file) freshparse_fail in
-  save_errors errors_by_file failed_filenames freshparse_errors;
+  List.iter (fun (file, _, errset) ->
+    save_errset errors_by_file file errset
+  ) freshparse_fail;
 
   (* get old (unmodified, undeleted) files that were parsed successfully *)
   let old_parsed = env.ServerEnv.files in
@@ -541,6 +541,10 @@ let recheck genv env modified =
   Context.remove_all_errors master_cx;
 
   let dependent_file_count = ref 0 in
+
+  let unparsed = List.fold_left (fun unparsed (file, info, _) ->
+    (file, info) :: unparsed
+  ) freshparse_skips freshparse_fail in
 
   (* recheck *)
   let profiling = typecheck
@@ -589,7 +593,7 @@ let recheck genv env modified =
     )
     ~files:freshparsed
     ~removed:removed_modules
-    ~unparsed:(List.rev_append freshparse_fail freshparse_skips)
+    ~unparsed
     ~resource_files:freshparse_resource_files
   in
 
@@ -633,11 +637,12 @@ let full_check workers ~ordered_libs parse_next options =
     Parsing_service_js.parse_ok = parsed;
                        parse_skips = skipped_files;
                        parse_fails = error_files;
-                       parse_errors = errors;
                        parse_resource_files = resource_files;
   } = parse_results in
-  let error_filenames = List.map (fun (file, _) -> file) error_files in
-  save_errors errors_by_file error_filenames errors;
+
+  List.iter (fun (file, _, errset) ->
+    save_errset errors_by_file file errset
+  ) error_files;
 
   Flow_logger.log "Building package heap";
   let profiling, () = with_timer ~options "PackageHeap" profiling (fun () ->
@@ -663,6 +668,10 @@ let full_check workers ~ordered_libs parse_next options =
     List.exists (fun (_, ok) -> not ok) lib_files
   ) in
 
+  let unparsed = List.fold_left (fun unparsed (file, info, _) ->
+    (file, info) :: unparsed
+  ) skipped_files error_files in
+
   (* typecheck client files *)
   let profiling = typecheck
     ~options
@@ -677,7 +686,7 @@ let full_check workers ~ordered_libs parse_next options =
     )
     ~files:parsed
     ~removed:Module_js.NameSet.empty
-    ~unparsed:(List.rev_append error_files skipped_files)
+    ~unparsed
     ~resource_files
   in
 

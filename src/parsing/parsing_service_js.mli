@@ -26,11 +26,17 @@ and parse_skip_reason =
 
 (* results of parse job, returned by parse and reparse *)
 type results = {
-  parse_ok: FilenameSet.t;                   (* successfully parsed files *)
-  parse_skips: (filename * Docblock.t) list; (* list of skipped files *)
-  parse_fails: (filename * Docblock.t) list; (* list of failed files *)
-  parse_errors: Errors.ErrorSet.t list;      (* parallel list of error sets *)
-  parse_resource_files: FilenameSet.t;       (* resource files *)
+  (* successfully parsed files *)
+  parse_ok: FilenameSet.t;
+
+  (* list of skipped files *)
+  parse_skips: (filename * Docblock.t) list;
+
+  (* list of failed files *)
+  parse_fails: (filename * Docblock.t * Errors.ErrorSet.t) list;
+
+  (* resource files *)
+  parse_resource_files: FilenameSet.t;
 }
 
 (* initial parsing pass: success/failure info is returned,

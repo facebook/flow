@@ -61,8 +61,9 @@ let parse_lib_file options file =
     in
     if not (FilenameSet.is_empty results.Parsing.parse_ok) then
       Parsing.Parse_ok (Parsing.get_ast_unsafe lib_file)
-    else if List.length results.Parsing.parse_errors > 0 then
-      Parsing.Parse_err (List.hd results.Parsing.parse_errors)
+    else if List.length results.Parsing.parse_fails > 0 then
+      let _, _, parse_errors = List.hd results.Parsing.parse_fails in
+      Parsing.Parse_err parse_errors
     else if List.length results.Parsing.parse_skips > 0 then
       Parsing.Parse_skip Parsing.Skip_non_flow_file
     else if not (FilenameSet.is_empty results.Parsing.parse_resource_files) then

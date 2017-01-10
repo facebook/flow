@@ -23,18 +23,23 @@ and parse_skip_reason =
 
 (* results of parse job, returned by parse and reparse *)
 type results = {
-  parse_ok: FilenameSet.t;                   (* successfully parsed files *)
-  parse_skips: (filename * Docblock.t) list; (* list of skipped files *)
-  parse_fails: (filename * Docblock.t) list; (* list of failed files *)
-  parse_errors: Errors.ErrorSet.t list;      (* parallel list of error sets *)
-  parse_resource_files: FilenameSet.t;       (* resource files *)
+  (* successfully parsed files *)
+  parse_ok: FilenameSet.t;
+
+  (* list of skipped files *)
+  parse_skips: (filename * Docblock.t) list;
+
+  (* list of failed files *)
+  parse_fails: (filename * Docblock.t * Errors.ErrorSet.t) list;
+
+  (* resource files *)
+  parse_resource_files: FilenameSet.t;
 }
 
 let empty_result = {
   parse_ok = FilenameSet.empty;
   parse_skips = [];
   parse_fails = [];
-  parse_errors = [];
   parse_resource_files = FilenameSet.empty;
 }
 
@@ -238,9 +243,9 @@ let reducer
             end
         | Parse_err converted ->
             execute_hook file None;
-            let parse_fails = (file, info) :: parse_results.parse_fails in
-            let parse_errors = converted :: parse_results.parse_errors in
-            { parse_results with parse_fails; parse_errors; }
+            let fail = (file, info, converted) in
+            let parse_fails = fail :: parse_results.parse_fails in
+            { parse_results with parse_fails; }
         | Parse_skip Skip_non_flow_file ->
             execute_hook file None;
             let parse_skips = (file, info) :: parse_results.parse_skips in
@@ -253,9 +258,9 @@ let reducer
         end
       | Some docblock_errors, info ->
         execute_hook file None;
-        let parse_fails = (file, info) :: parse_results.parse_fails in
-        let parse_errors = docblock_errors :: parse_results.parse_errors in
-        { parse_results with parse_fails; parse_errors; }
+        let fail = (file, info, docblock_errors) in
+        let parse_fails = fail :: parse_results.parse_fails in
+        { parse_results with parse_fails; }
       end
   | None ->
       execute_hook file None;
@@ -269,7 +274,6 @@ let merge r1 r2 =
     parse_ok = FilenameSet.union r1.parse_ok r2.parse_ok;
     parse_skips = r1.parse_skips @ r2.parse_skips;
     parse_fails = r1.parse_fails @ r2.parse_fails;
-    parse_errors = r1.parse_errors @ r2.parse_errors;
     parse_resource_files =
       FilenameSet.union r1.parse_resource_files r2.parse_resource_files;
   }
@@ -336,7 +340,7 @@ let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~options workers
     parse ~types_mode ~use_strict ~profile ~max_header_tokens workers next in
   let modified =
     FilenameSet.union results.parse_ok results.parse_resource_files in
-  let modified = List.fold_left (fun acc (fail, _) ->
+  let modified = List.fold_left (fun acc (fail, _, _) ->
     FilenameSet.add fail acc
   ) modified results.parse_fails in
   let modified = List.fold_left (fun acc (skip, _) ->
