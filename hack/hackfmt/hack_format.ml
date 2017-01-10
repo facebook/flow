@@ -1217,9 +1217,9 @@ offending text is '%s'." (text node)));
     t left_type;
     t separator;
     t right_type;
-  | VectorTypeSpecifier x ->
+  | VectorArrayTypeSpecifier x ->
     let (kw, left_a, vec_type, right_a) =
-      get_vector_type_specifier_children x in
+      get_vector_array_type_specifier_children x in
     t kw;
     transform_argish left_a vec_type right_a;
     ()
@@ -1234,9 +1234,9 @@ offending text is '%s'." (text node)));
     t kw;
     pending_space ();
     t constraint_type;
-  | MapTypeSpecifier x ->
+  | MapArrayTypeSpecifier x ->
     let (kw, left_a, key, comma_kw, value, right_a) =
-      get_map_type_specifier_children x in
+      get_map_array_type_specifier_children x in
     t kw;
     let key_list_item = make_list_item key comma_kw in
     let val_list_item = make_list_item value (make_missing ()) in
