@@ -2184,7 +2184,7 @@ and object_prop cx map = Ast.Expression.Object.(function
     if Context.enable_unsafe_getters_and_setters cx then
       let reason = mk_reason RGetterFunction vloc in
       let function_type = mk_function None cx reason func in
-      let return_t = extract_getter_type function_type in
+      let return_t = Type.extract_getter_type function_type in
       Properties.add_getter name return_t map
     else begin
       Flow_js.add_output cx
@@ -2200,7 +2200,7 @@ and object_prop cx map = Ast.Expression.Object.(function
     if Context.enable_unsafe_getters_and_setters cx then
       let reason = mk_reason RSetterFunction vloc in
       let function_type = mk_function None cx reason func in
-      let param_t = extract_setter_type function_type in
+      let param_t = Type.extract_setter_type function_type in
       Properties.add_setter name param_t map
     else begin
       Flow_js.add_output cx
@@ -4798,14 +4798,6 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
     let argts = List.map (expression_or_spread cx) args in
     let reason = mk_reason (RMethodCall (Some m)) loc in
     method_call cx reason prop_loc (expr, obj_t, m) argts
-
-and extract_setter_type = function
-  | FunT (_, _, _, { params_tlist = [param_t]; _; }) -> param_t
-  | _ ->  failwith "Setter property with unexpected type"
-
-and extract_getter_type = function
-  | FunT (_, _, _, { return_t; _; }) -> return_t
-  | _ -> failwith "Getter property with unexpected type"
 
 and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
   match id with

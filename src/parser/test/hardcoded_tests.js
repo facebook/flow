@@ -366,6 +366,92 @@ module.exports = {
           }
         ]
       },
+      'var a: { get foo(): number; }': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation.properties': [
+          {
+            'key.name': 'foo',
+            'value': {
+              'type': 'FunctionTypeAnnotation',
+              'params': [],
+              'returnType.type': 'NumberTypeAnnotation',
+              'rest': null,
+            },
+            'kind': 'get',
+          }
+        ]
+      },
+      'var a: { set foo(x: number): void; }': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation.properties': [
+          {
+            'key.name': 'foo',
+            'value': {
+              'type': 'FunctionTypeAnnotation',
+              'params': [
+                {
+                  'name.name': 'x',
+                  'typeAnnotation.type': 'NumberTypeAnnotation',
+                }
+              ],
+              'returnType.type': 'VoidTypeAnnotation',
+              'rest': null,
+            },
+            'kind': 'set',
+          }
+        ]
+      },
+      'var a: { get foo(): number; set foo(x: number): void; }': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation.properties': [
+          {
+            'key.name': 'foo',
+            'value': {
+              'type': 'FunctionTypeAnnotation',
+              'params': [],
+              'returnType.type': 'NumberTypeAnnotation',
+              'rest': null,
+            },
+            'kind': 'get',
+          },
+          {
+            'key.name': 'foo',
+            'value': {
+              'type': 'FunctionTypeAnnotation',
+              'params': [
+                {
+                  'name.name': 'x',
+                  'typeAnnotation.type': 'NumberTypeAnnotation',
+                }
+              ],
+              'returnType.type': 'VoidTypeAnnotation',
+              'rest': null,
+            },
+            'kind': 'set',
+          }
+        ]
+      },
+      'var a: {get?: number; set?: string}': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+          'properties.0.optional': true,
+          'properties.1.optional': true,
+        }
+      },
+      'var a: { get foo(x: string): number; }': {
+        'errors': {
+          '0': {
+            'message': 'Getter should have zero parameters',
+            'loc.start': { 'line': 1, 'column': 13 },
+            'loc.end': { 'line': 1, 'column': 16 },
+          }
+        }
+      },
+      'var a: { set foo(): void; }': {
+        'errors': {
+          '0': {
+            'message': 'Setter should have exactly one parameter',
+            'loc.start': { 'line': 1, 'column': 13 },
+            'loc.end': { 'line': 1, 'column': 16 },
+          }
+        }
+      },
       'var a:(...rest:Array<number>) => number': {
         'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
           'type': 'FunctionTypeAnnotation',
@@ -1602,6 +1688,22 @@ module.exports = {
             }
           ]
         }
+      },
+      'declare class A { get foo(): number; }': {
+        'body.0.body.properties.0': {
+          'static': false,
+          'kind': 'get',
+        }
+      },
+      'declare class A { set foo(x: number): void; }': {
+        'body.0.body.properties.0': {
+          'static': false,
+          'kind': 'set',
+        }
+      },
+      'declare class A { get foo(): number; set foo(x: string): void; }': {
+        'body.0.body.properties.0.kind': 'get',
+        'body.0.body.properties.1.kind': 'set'
       },
     },
     'Declare Export': {

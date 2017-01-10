@@ -621,28 +621,52 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       if optional && _method
       then Flow_js.add_output cx Flow_error.(EInternal (loc, OptionalMethod));
       let polarity = Anno.polarity variance in
-      Ast.Expression.Object.(match _method, key with
-      | _, Property.Literal (loc, _)
-      | _, Property.Computed (loc, _) ->
+      Ast.Expression.Object.(match _method, key, value with
+      | _, Property.Literal (loc, _), _
+      | _, Property.Computed (loc, _), _ ->
           Flow_js.add_output cx (Flow_error.EIllegalName loc);
           x
-      | true, Property.Identifier (_, name) ->
-          (match value with
-          | _, Ast.Type.Function func ->
-            let fsig = Func_sig.convert cx tparams_map loc func in
-            let append_method = match static, name with
-            | false, "constructor" -> append_constructor
-            | _ -> append_method ~static name
-            in
-            append_method fsig x
-          | _ ->
-            Flow_js.add_output cx
-              Flow_error.(EInternal (loc, MethodNotAFunction));
-            x)
-      | false, Property.Identifier (_, name) ->
+      | true, Property.Identifier (_, name),
+          Ast.Type.Object.Property.Init (_, Ast.Type.Function func) ->
+          let fsig = Func_sig.convert cx tparams_map loc func in
+          let append_method = match static, name with
+          | false, "constructor" -> append_constructor
+          | _ -> append_method ~static name
+          in
+          append_method fsig x
+
+      | true, Property.Identifier _, _ ->
+          Flow_js.add_output cx
+            Flow_error.(EInternal (loc, MethodNotAFunction));
+          x
+
+      | false, Property.Identifier (_, name),
+          Ast.Type.Object.Property.Init value ->
           let t = Anno.convert cx tparams_map value in
           let t = if optional then Type.OptionalT t else t in
-          add_field ~static name (t, polarity, None) x)
+          add_field ~static name (t, polarity, None) x
+
+      (* unsafe getter property *)
+      | _, Property.Identifier (_, name),
+          Ast.Type.Object.Property.Get (_, func)
+            when Context.enable_unsafe_getters_and_setters cx ->
+          let fsig = Func_sig.convert cx tparams_map loc func in
+          add_getter ~static name fsig x
+
+      (* unsafe setter property *)
+      | _, Property.Identifier (_, name),
+          Ast.Type.Object.Property.Set (_, func)
+            when Context.enable_unsafe_getters_and_setters cx ->
+          let fsig = Func_sig.convert cx tparams_map loc func in
+          add_setter ~static name fsig x
+
+      | _, _, Ast.Type.Object.Property.Get _
+      | _, _, Ast.Type.Object.Property.Set _ ->
+          Flow_js.add_output cx
+            Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
+          x
+      )
+
     | SpreadProperty (loc, _) ->
       Flow_js.add_output cx Flow_error.(EInternal (loc, InterfaceTypeSpread));
       x

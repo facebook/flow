@@ -85,9 +85,13 @@ and Type : sig
 
   module Object : sig
     module Property : sig
+      type value =
+        | Init of Type.t
+        | Get of (Loc.t * Function.t)
+        | Set of (Loc.t * Function.t)
       type t' = {
         key: Expression.Object.Property.key;
-        value: Type.t;
+        value: value;
         optional: bool;
         static: bool;
         _method: bool;

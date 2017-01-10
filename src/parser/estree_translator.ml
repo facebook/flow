@@ -1023,12 +1023,18 @@ end with type t = Impl.t) = struct
     | Expression.Object.Property.Computed _ ->
       failwith "There should not be computed object type property keys"
     in
+    let value, kind = match prop.value with
+    | Init value -> _type value, "init"
+    | Get (loc, f) -> function_type (loc, f), "get"
+    | Set (loc, f) -> function_type (loc, f), "set"
+    in
     node "ObjectTypeProperty" loc [|
       "key", key;
-      "value", _type prop.value;
+      "value", value;
       "optional", bool prop.optional;
       "static", bool prop.static;
       "variance", option variance prop.variance;
+      "kind", string kind;
     |]
   )
 

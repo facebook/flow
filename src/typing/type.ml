@@ -2001,3 +2001,11 @@ let name_of_propref = function
 let reason_of_propref = function
   | Named (r, _) -> r
   | Computed t -> reason_of_t t
+
+and extract_setter_type = function
+  | FunT (_, _, _, { params_tlist = [param_t]; _; }) -> param_t
+  | _ ->  failwith "Setter property with unexpected type"
+
+and extract_getter_type = function
+  | FunT (_, _, _, { return_t; _; }) -> return_t
+  | _ -> failwith "Getter property with unexpected type"

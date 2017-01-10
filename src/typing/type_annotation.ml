@@ -521,18 +521,50 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, Object { Object.exact; properties } ->
   let property loc prop props =
-    let { Object.Property.key; value; optional; variance; _method; _ } = prop in
-    match key with
-    | Ast.Expression.Object.Property.Literal
-        (_, { Ast.Literal.value = Ast.Literal.String name; _ })
-    | Ast.Expression.Object.Property.Identifier (_, name) ->
-        let t = convert cx tparams_map value in
-        let t = if optional then OptionalT t else t in
-        let polarity = if _method then Positive else polarity variance in
-        SMap.add name (Field (t, polarity)) props
-    | _ ->
-      Flow_js.add_output cx (FlowError.EUnsupportedKeyInObjectType loc);
+    match prop with
+    | { Object.Property.
+        key; value = Object.Property.Init value; optional; variance; _method;
+        static = _; (* object types don't have static props *)
+      } ->
+      begin match key with
+      | Ast.Expression.Object.Property.Literal
+          (_, { Ast.Literal.value = Ast.Literal.String name; _ })
+      | Ast.Expression.Object.Property.Identifier (_, name) ->
+          let t = convert cx tparams_map value in
+          let t = if optional then OptionalT t else t in
+          let polarity = if _method then Positive else polarity variance in
+          SMap.add name (Field (t, polarity)) props
+      | _ ->
+        Flow_js.add_output cx (FlowError.EUnsupportedKeyInObjectType loc);
+        props
+      end
+
+    (* unsafe getter property *)
+    | { Object.Property.
+        key = Ast.Expression.Object.Property.Identifier (_, name);
+        value = Object.Property.Get (loc, f);
+        _ } when Context.enable_unsafe_getters_and_setters cx ->
+      let function_type = convert cx tparams_map (loc, Ast.Type.Function f) in
+      let return_t = Type.extract_getter_type function_type in
+      Properties.add_getter name return_t props
+
+    (* unsafe setter property *)
+    | { Object.Property.
+        key = Ast.Expression.Object.Property.Identifier (_, name);
+        value = Object.Property.Set (loc, f);
+        _ } when Context.enable_unsafe_getters_and_setters cx ->
+      let function_type = convert cx tparams_map (loc, Ast.Type.Function f) in
+      let param_t = Type.extract_setter_type function_type in
+      Properties.add_setter name param_t props
+
+    | { Object.Property.
+        value = Object.Property.Get _ | Object.Property.Set _;
+        _
+      } ->
+      Flow_js.add_output cx
+        Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
       props
+
   in
   let call_props, dict, props_map = List.fold_left (
     fun (calls, dict, props) -> function
