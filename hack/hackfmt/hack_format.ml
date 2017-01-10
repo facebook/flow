@@ -440,6 +440,9 @@ offending text is '%s'." (text node)));
     t q;
     t lang_kw;
     builder#end_chunks ();
+  | EndOfFile x ->
+    let token = get_end_of_file_children x in
+    t token;
   | Script x ->
     let (header, declarations) = get_script_children x in
     t header;
