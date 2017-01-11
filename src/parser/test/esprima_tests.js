@@ -4650,8 +4650,8 @@ module.exports = {
         'import * as namespace from "MyModule";',
         'import {} from "MyModule";',
         'import defaultbinding, {} from "MyModule";',
-        /* TODO Esprima should support these
         'import {x,} from "MyModule";',
+        /* TODO Esprima should support these
         'import defaultbinding, {x,} from "MyModule";',
         */
         'import {x} from "MyModule";',
