@@ -4346,36 +4346,36 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           rec_flow cx trace (t, u)
 
     (* TODO: similar concern as above *)
-    | (FunT (reason, statics, _, _) ,
-       UseT (_, InstanceT (reason_inst, _, super, {
-         fields_tmap;
-         methods_tmap;
-         structural = true;
-         _;
-       })))
-      ->
-        if not
-          (quick_error_fun_as_obj cx trace reason statics reason_inst
-            (SMap.filter (fun x _ -> x = "constructor")
-              (Context.find_props cx fields_tmap)))
-        then
-          structural_subtype cx trace l reason_inst
-            (super, fields_tmap, methods_tmap)
+    | FunT (reason, statics, _, _) ,
+      UseT (use_op, InstanceT (reason_inst, _, super, {
+        fields_tmap;
+        methods_tmap;
+        structural = true;
+        _;
+      })) ->
+      if not
+        (quick_error_fun_as_obj cx trace reason statics reason_inst
+          (SMap.filter (fun x _ -> x = "constructor")
+            (Context.find_props cx fields_tmap)))
+      then (
+        structural_subtype cx trace l reason_inst (fields_tmap, methods_tmap);
+        rec_flow cx trace (l, UseT (use_op, super))
+      )
 
     (***************************************************************)
     (* Enable structural subtyping for upperbounds like interfaces *)
     (***************************************************************)
 
-    | (_,
-       UseT (_, InstanceT (reason_inst, _, super, {
-         fields_tmap;
-         methods_tmap;
-         structural = true;
-         _;
-       })))
-      ->
-      structural_subtype cx trace l reason_inst
-        (super, fields_tmap, methods_tmap)
+    | _,
+      UseT (use_op, InstanceT (reason_inst, _, super, {
+        fields_tmap;
+        methods_tmap;
+        structural = true;
+        _;
+      })) ->
+      structural_subtype cx trace l reason_inst (fields_tmap, methods_tmap);
+      rec_flow cx trace (l, UseT (use_op, super))
+
 
     (*********************************************************************)
     (* class A is a base class of class B iff                            *)
@@ -4848,15 +4848,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (next, UseT (use_op, ExtendsT (try_ts_on_failure, l, u)))
 
     | ObjProtoT _,
-      UseT (_, ExtendsT ([], l, InstanceT (reason_inst, _, super, {
-         fields_tmap;
-         methods_tmap;
-         structural = true;
-         _;
-       })))
-      ->
-      structural_subtype cx trace l reason_inst
-        (super, fields_tmap, methods_tmap)
+      UseT (use_op, ExtendsT ([], l, InstanceT (reason_inst, _, super, {
+        fields_tmap;
+        methods_tmap;
+        structural = true;
+        _;
+      }))) ->
+      structural_subtype cx trace l reason_inst (fields_tmap, methods_tmap);
+      rec_flow cx trace (l, UseT (use_op, super))
 
     | (ObjProtoT _, UseT (_, ExtendsT ([], t, tc))) ->
       let msg = "This type is incompatible with" in
@@ -5450,8 +5449,7 @@ and sealed_in_op reason_op = function
 
 (* dispatch checks to verify that lower satisfies the structural
    requirements given in the tuple. *)
-and structural_subtype cx trace lower reason_struct
-  (super, fields_pmap, methods_pmap) =
+and structural_subtype cx trace lower reason_struct (fields_pmap, methods_pmap) =
   let lreason = reason_of_t lower in
   let fields_pmap = Context.find_props cx fields_pmap in
   let methods_pmap = Context.find_props cx methods_pmap in
@@ -5482,8 +5480,6 @@ and structural_subtype cx trace lower reason_struct
       rec_flow cx trace (lower,
         LookupT (reason_prop, Strict lreason, [], propref, LookupProp p))
   );
-  rec_flow_t cx trace (lower, super)
-
 
 (*****************)
 (* substitutions *)
