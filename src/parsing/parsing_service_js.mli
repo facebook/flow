@@ -17,12 +17,16 @@ type types_mode =
 (* result of individual parse *)
 type result =
   | Parse_ok of Spider_monkey_ast.program
-  | Parse_err of Errors.ErrorSet.t
+  | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
 and parse_skip_reason =
   | Skip_resource_file
   | Skip_non_flow_file
+
+and parse_failure =
+  | Docblock_errors of Docblock.error list
+  | Parse_error of (Loc.t * Parse_error.t)
 
 (* results of parse job, returned by parse and reparse *)
 type results = {
@@ -33,7 +37,7 @@ type results = {
   parse_skips: (filename * Docblock.t) list;
 
   (* list of failed files *)
-  parse_fails: (filename * Docblock.t * Errors.ErrorSet.t) list;
+  parse_fails: (filename * Docblock.t * parse_failure) list;
 
   (* resource files *)
   parse_resource_files: FilenameSet.t;
@@ -101,7 +105,7 @@ val get_docblock:
   max_tokens:int -> (* how many tokens to check in the beginning of the file *)
   filename ->
   string ->
-  Errors.ErrorSet.t option * Docblock.t
+  Docblock.error list * Docblock.t
 
 (* parse contents of a file *)
 val do_parse:
@@ -118,3 +122,8 @@ val next_of_filename_set:
   Worker.t list option ->
   FilenameSet.t ->
   filename list Bucket.next
+
+val error_of_docblock_error: Docblock.error -> Errors.error
+val set_of_docblock_errors: Docblock.error list -> Errors.ErrorSet.t
+val error_of_parse_error : Loc.t * Parse_error.t -> Errors.error
+val set_of_parse_error: Loc.t * Parse_error.t -> Errors.ErrorSet.t

@@ -14,12 +14,16 @@ module Ast = Spider_monkey_ast
 
 type result =
   | Parse_ok of Spider_monkey_ast.program
-  | Parse_err of Errors.ErrorSet.t
+  | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
 and parse_skip_reason =
   | Skip_resource_file
   | Skip_non_flow_file
+
+and parse_failure =
+  | Docblock_errors of Docblock.error list
+  | Parse_error of (Loc.t * Parse_error.t)
 
 (* results of parse job, returned by parse and reparse *)
 type results = {
@@ -30,7 +34,7 @@ type results = {
   parse_skips: (filename * Docblock.t) list;
 
   (* list of failed files *)
-  parse_fails: (filename * Docblock.t * Errors.ErrorSet.t) list;
+  parse_fails: (filename * Docblock.t * parse_failure) list;
 
   (* resource files *)
   parse_resource_files: FilenameSet.t;
@@ -144,24 +148,27 @@ let string_of_docblock_error = function
     | None -> ""
     | Some first_error -> spf " Parse error: %s" first_error)
 
+let error_of_docblock_error (loc, err) =
+  Errors.mk_error ~kind:Errors.ParseError [loc, [string_of_docblock_error err]]
+
+let set_of_docblock_errors errors =
+  List.fold_left (fun acc err ->
+    Errors.ErrorSet.add (error_of_docblock_error err) acc
+  ) Errors.ErrorSet.empty errors
+
+let error_of_parse_error (loc, err) =
+  Errors.mk_error ~kind:Errors.ParseError [loc, [Parse_error.PP.error err]]
+
+let set_of_parse_error error =
+  Errors.ErrorSet.singleton (error_of_parse_error error)
+
 let get_docblock
   ~max_tokens file content
-: Errors.ErrorSet.t option * Docblock.t =
+: Docblock.error list * Docblock.t =
   match file with
   | Loc.ResourceFile _
-  | Loc.JsonFile _ -> None, Docblock.default_info
-  | _ ->
-    let errors, docblock = Docblock.extract ~max_tokens file content in
-    if errors = [] then None, docblock
-    else
-      let errs = List.fold_left (fun acc (loc, err) ->
-        let err = Errors.mk_error
-          ~kind:Errors.ParseError
-          [loc, [string_of_docblock_error err]]
-        in
-        Errors.ErrorSet.add err acc
-      ) Errors.ErrorSet.empty errors in
-      Some errs, docblock
+  | Loc.JsonFile _ -> [], Docblock.default_info
+  | _ -> Docblock.extract ~max_tokens file content
 
 let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
   try (
@@ -191,14 +198,12 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
   )
   with
   | Parse_error.Error (first_parse_error::_) ->
-    let err = Errors.parse_error_to_flow_error first_parse_error in
-    Parse_err (Errors.ErrorSet.singleton err)
+    Parse_fail (Parse_error first_parse_error)
   | e ->
     let s = Printexc.to_string e in
-    let msg = spf "unexpected parsing exception: %s" s in
     let loc = Loc.({ none with source = Some file }) in
-    let err = Errors.(simple_error ~kind:ParseError loc msg) in
-    Parse_err (Errors.ErrorSet.singleton err)
+    let err = loc, Parse_error.Assertion s in
+    Parse_fail (Parse_error err)
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
@@ -224,7 +229,7 @@ let reducer
   match content with
   | Some content ->
       begin match get_docblock ~max_tokens:max_header_tokens file content with
-      | None, info ->
+      | [], info ->
         begin match (do_parse ~types_mode ~use_strict ~info content file) with
         | Parse_ok ast ->
             (* Consider the file unchanged if its reparsing info is the same as
@@ -241,7 +246,7 @@ let reducer
               let parse_ok = FilenameSet.add file parse_results.parse_ok in
               { parse_results with parse_ok; }
             end
-        | Parse_err converted ->
+        | Parse_fail converted ->
             execute_hook file None;
             let fail = (file, info, converted) in
             let parse_fails = fail :: parse_results.parse_fails in
@@ -256,9 +261,9 @@ let reducer
               FilenameSet.add file parse_results.parse_resource_files in
             { parse_results with parse_resource_files; }
         end
-      | Some docblock_errors, info ->
+      | docblock_errors, info ->
         execute_hook file None;
-        let fail = (file, info, docblock_errors) in
+        let fail = (file, info, Docblock_errors docblock_errors) in
         let parse_fails = fail :: parse_results.parse_fails in
         { parse_results with parse_fails; }
       end

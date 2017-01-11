@@ -62,8 +62,8 @@ let parse_lib_file options file =
     if not (FilenameSet.is_empty results.Parsing.parse_ok) then
       Parsing.Parse_ok (Parsing.get_ast_unsafe lib_file)
     else if List.length results.Parsing.parse_fails > 0 then
-      let _, _, parse_errors = List.hd results.Parsing.parse_fails in
-      Parsing.Parse_err parse_errors
+      let _, _, parse_fails = List.hd results.Parsing.parse_fails in
+      Parsing.Parse_fail parse_fails
     else if List.length results.Parsing.parse_skips > 0 then
       Parsing.Parse_skip Parsing.Skip_non_flow_file
     else if not (FilenameSet.is_empty results.Parsing.parse_resource_files) then
@@ -120,7 +120,11 @@ let load_lib_files files ~options save_errors save_suppressions =
         let result = (lib_file, true) :: result in
         exclude_syms, result
 
-      | Parsing.Parse_err errors ->
+      | Parsing.Parse_fail fail ->
+        let errors = match fail with
+        | Parsing.Parse_error error -> Parsing.set_of_parse_error error
+        | Parsing.Docblock_errors errs -> Parsing.set_of_docblock_errors errs
+        in
         save_errors lib_file errors;
         exclude_syms, ((lib_file, false) :: result)
 

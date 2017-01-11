@@ -159,7 +159,7 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
   let types_mode = Parsing_service_js.TypesAllowed in
   let use_strict = Options.modules_are_use_strict options in
   let max_tokens = Options.max_header_tokens options in
-  let profiling, (errors, parse_result, info) =
+  let profiling, (docblock_errors, parse_result, info) =
     with_timer "Parsing" profiling (fun () ->
       let docblock_errors, info =
         Parsing_service_js.get_docblock ~max_tokens filename contents in
@@ -167,13 +167,11 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
         ~fail:check_syntax ~types_mode ~use_strict ~info
         contents filename
       in
-      let errors = match docblock_errors with
-        | None -> Errors.ErrorSet.empty
-        | Some errs -> errs
-      in
-      errors, parse_result, info
+      docblock_errors, parse_result, info
     )
   in
+
+  let errors = Parsing_service_js.set_of_docblock_errors docblock_errors in
 
   match parse_result with
   | Parsing_service_js.Parse_ok ast ->
@@ -221,8 +219,16 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
 
       profiling, Some cx, errors, info
 
-  | Parsing_service_js.Parse_err parse_errors ->
-      profiling, None, Errors.ErrorSet.union parse_errors errors, info
+  | Parsing_service_js.Parse_fail fails ->
+      let errors = Parsing_service_js.(match fails with
+      | Parse_error err ->
+          Errors.ErrorSet.add (error_of_parse_error err) errors
+      | Docblock_errors errs ->
+          List.fold_left (fun errors err ->
+            Errors.ErrorSet.add (error_of_docblock_error err) errors
+          ) errors errs
+      ) in
+      profiling, None, errors, info
 
   | Parsing_service_js.Parse_skip
      (Parsing_service_js.Skip_non_flow_file
@@ -507,7 +513,11 @@ let recheck genv env modified =
   clear_errors ~debug (FilenameSet.elements deleted);
 
   (* record reparse errors *)
-  List.iter (fun (file, _, errset) ->
+  List.iter (fun (file, _, fail) ->
+    let errset = Parsing_service_js.(match fail with
+    | Parse_error err -> set_of_parse_error err
+    | Docblock_errors errs -> set_of_docblock_errors errs
+    ) in
     save_errset errors_by_file file errset
   ) freshparse_fail;
 
@@ -634,7 +644,11 @@ let full_check workers ~ordered_libs parse_next options =
                        parse_resource_files = resource_files;
   } = parse_results in
 
-  List.iter (fun (file, _, errset) ->
+  List.iter (fun (file, _, fail) ->
+    let errset = Parsing_service_js.(match fail with
+    | Parse_error err -> set_of_parse_error err
+    | Docblock_errors errs -> set_of_docblock_errors errs
+    ) in
     save_errset errors_by_file file errset
   ) error_files;
 

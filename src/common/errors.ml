@@ -404,14 +404,6 @@ module ErrorSuppressions = struct
     SpanMap.is_empty suppressions && SpanMap.is_empty unused
 end
 
-let parse_error_to_flow_error (loc, err) = {
-  kind = ParseError;
-  messages = [BlameM (loc, Parse_error.PP.error err)];
-  op = None;
-  trace = [];
-  extra = []
-}
-
 let to_list errors = ErrorSet.elements errors
 
 (* Human readable output *)
