@@ -37,7 +37,7 @@ end
 type error_message =
   | EIncompatible of Type.t * Type.use_t
   | EIncompatibleProp of Type.t * Type.use_t * reason
-  | EDebugPrint of reason * Type.t
+  | EDebugPrint of reason * string
   | EImportValueAsType of reason * string
   | EImportTypeAsTypeof of reason * string
   | EImportTypeAsValue of reason * string
@@ -110,6 +110,7 @@ type error_message =
   | EObjectComputedPropertyAssign of (reason * reason)
   | EInvalidLHSInAssignment of Loc.t
   | EIncompatibleObject of reason * reason * use_op
+  | EUnsupportedImplements of reason
 
 and binding_error =
   | ENameAlreadyBound
@@ -147,8 +148,8 @@ and unsupported_syntax =
   | MetaPropertyExpression
   | ObjectPropertyLiteralNonString
   | ObjectPropertyGetSet
+  | ObjectPropertyComputedGetSet
   | InvariantSpreadArgument
-  | Implements
   | ClassPropertyLiteral
   | ClassPropertyComputed
   | ClassExtendsMultiple
@@ -170,12 +171,6 @@ and unsupported_syntax =
   | MultipleIndexers
   | ObjectTypeSpread (* TODO *)
 
-(** error services for typecheck pipeline -
-    API for building and adding errors to context during
-    typechecking, subject to speculation state.
-  *)
-
-
 (* decide reason order based on UB's flavor and blamability *)
 let ordered_reasons l u =
   let rl = reason_of_t l in
@@ -184,7 +179,7 @@ let ordered_reasons l u =
   then ru, rl
   else rl, ru
 
-let rec error_of_msg cx ~trace_reasons =
+let rec error_of_msg ~trace_reasons ~op ~source_file =
   let open Errors in
 
   let mk_info reason extras =
@@ -282,14 +277,14 @@ let rec error_of_msg cx ~trace_reasons =
        Additionally, we never suppress ops when this happens, because that is
        our last chance at relevant context. *)
     let lib_infos, suppress_op = if is_lib_reason r1 && is_lib_reason r2 then
-        let loc = Loc.({ none with source = Some (Context.file cx) }) in
+        let loc = Loc.({ none with source = Some source_file }) in
         [loc, ["inconsistent use of library definitions"]], false
       else [], suppress_op
     in
     (* NOTE: We include the operation's reason in the error message, unless it
        overlaps *both* endpoints, exactly matches r1, or overlaps r1's origin *)
     let op_info = if suppress_op then None else
-      match Ops.peek () with
+      match op with
       | Some r ->
         if r = r1 then None
         else if reasons_overlap r r1 && reasons_overlap r r2 then None
@@ -329,8 +324,8 @@ let rec error_of_msg cx ~trace_reasons =
       let reasons = reason_prop, reason_of_t l in
       typecheck_error (err_msg l u) reasons
 
-  | EDebugPrint (r, t) ->
-      mk_error ~trace_infos [mk_info r [Debug_js.jstr_of_t cx t]]
+  | EDebugPrint (r, str) ->
+      mk_error ~trace_infos [mk_info r [str]]
 
   | EImportValueAsType (r, export_name) ->
       mk_error ~trace_infos [mk_info r [spf
@@ -497,7 +492,7 @@ let rec error_of_msg cx ~trace_reasons =
       in
       (* Ops telling us that we're in the middle of a function call are
          redundant when we already know that an arg didn't match a param. *)
-      let suppress_op = match Ops.peek () with
+      let suppress_op = match op with
       | Some r ->
         begin match desc_of_reason r with
         | RFunctionCall
@@ -566,7 +561,7 @@ let rec error_of_msg cx ~trace_reasons =
       let reasons = ordered_reasons l u in
       let msg = err_msg l u in
       let extra = List.mapi (fun i (r, msg) ->
-        let err = error_of_msg cx ~trace_reasons:[] msg in
+        let err = error_of_msg ~trace_reasons:[] ~op ~source_file msg in
         let header_infos = [
           Loc.none, [spf "Member %d:" (i + 1)];
           info_of_reason r;
@@ -760,10 +755,10 @@ let rec error_of_msg cx ~trace_reasons =
             "non-string literal property keys not supported"
         | ObjectPropertyGetSet ->
             "get/set properties not yet supported"
+        | ObjectPropertyComputedGetSet ->
+            "computed getters and setters are not yet supported"
         | InvariantSpreadArgument ->
             "unsupported arguments in call to invariant()"
-        | Implements ->
-            "implements not supported"
         | ClassPropertyLiteral ->
             "literal properties not yet supported"
         | ClassPropertyComputed ->
@@ -998,3 +993,7 @@ let rec error_of_msg cx ~trace_reasons =
       in
       let reasons, extra, msg = handle (l_reason, u_reason, []) use_op in
       typecheck_error ~extra ~suppress_op:true msg reasons
+
+  | EUnsupportedImplements reason ->
+      mk_error ~trace_infos [mk_info reason [
+        "Argument to implements clause must be an interface"]]

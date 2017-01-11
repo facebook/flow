@@ -70,7 +70,7 @@ module Object
         let id, _ = Expression.identifier_or_reserved_keyword env in
         fst id, Identifier id)
 
-  let _method env kind =
+  let getter_or_setter env is_getter =
     (* this is a getter or setter, it cannot be async *)
     let async = false in
     let generator = Declaration.generator env in
@@ -79,19 +79,17 @@ module Object
     (* It's not clear how type params on getters & setters would make sense
      * in Flow's type system. Since this is a Flow syntax extension, we might
      * as well disallow it until we need it *)
-    let typeParameters = Ast.Expression.Object.Property.(match kind with
-    | Get | Set -> None
-    | _ -> Type.type_parameter_declaration env) in
+    let typeParameters = None in
     let params = Declaration.function_params env in
-    Ast.Expression.Object.Property.(match kind, params with
-    | Get, ([], None) -> ()
-    | Set, (_, Some _rest) ->
+    begin match is_getter, params with
+    | true, ([], None) -> ()
+    | false, (_, Some _rest) ->
         (* rest params don't make sense on a setter *)
         error_at env (key_loc, Error.SetterArity)
-    | Set, ([_], _) -> ()
-    | Get, _ -> error_at env (key_loc, Error.GetterArity)
-    | Set, _ -> error_at env (key_loc, Error.SetterArity)
-    | Init, _ -> ());
+    | false, ([_], _) -> ()
+    | true, _ -> error_at env (key_loc, Error.GetterArity)
+    | false, _ -> error_at env (key_loc, Error.SetterArity)
+    end;
     let returnType = Type.annotation_opt env in
     let _, body, strict = Declaration.function_body env ~async ~generator in
     let simple = Declaration.is_simple_function_params params in
@@ -154,25 +152,19 @@ module Object
     )
 
     and get env start_loc =
-      let key, (end_loc, fn) =
-        _method env Ast.Expression.Object.Property.Get in
-      let value = end_loc, Ast.Expression.Function fn in
+      let key, (end_loc, fn) = getter_or_setter env true in
       Loc.btwn start_loc end_loc, Ast.Expression.Object.Property.({
         key;
-        value;
-        kind = Get;
+        value = Get (end_loc, fn);
         _method = false;
         shorthand = false;
       })
 
     and set env start_loc =
-      let key, (end_loc, fn) =
-        _method env Ast.Expression.Object.Property.Set in
-      let value = end_loc, Ast.Expression.Function fn in
+      let key, (end_loc, fn) = getter_or_setter env false in
       Loc.btwn start_loc end_loc, Ast.Expression.Object.Property.({
         key;
-        value;
-        kind = Set;
+        value = Set (end_loc, fn);
         _method = false;
         shorthand = false;
       })
@@ -220,8 +212,7 @@ module Object
             Parse.assignment env, false, false in
         Loc.btwn start_loc (fst value), {
           key;
-          value;
-          kind = Init;
+          value = Init value;
           _method;
           shorthand;
         }
@@ -310,7 +301,7 @@ module Object
   and class_element =
     let get env start_loc decorators static =
       let key, (end_loc, _ as value) =
-        _method env Ast.Expression.Object.Property.Get in
+        getter_or_setter env true in
       Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
         key;
         value;
@@ -321,7 +312,7 @@ module Object
 
     in let set env start_loc decorators static =
       let key, (end_loc, _ as value) =
-        _method env Ast.Expression.Object.Property.Set in
+        getter_or_setter env false in
       Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
         key;
         value;

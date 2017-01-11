@@ -64,6 +64,7 @@ let rec autocomplete_create_result cx name type_ loc =
   Type.(match type_ with
   | FunT (_, _, _, {params_tlist = params;
                     params_names = pnames;
+                    rest_param;
                     return_t = return; _}) ->
       let pnames =
         match pnames with
@@ -78,6 +79,17 @@ let rec autocomplete_create_result cx name type_ loc =
         in
         { param_name; param_ty }
       ) pnames params in
+      let params = match rest_param with
+      | None -> params
+      | Some (name, t) ->
+          let param_name =
+            parameter_name cx (Option.value ~default:"_" name) t in
+          let param_ty =
+            if is_printed_param_type_parsable ~weak:true cx t
+            then string_of_param_t cx t
+            else ""
+          in
+          params @ [ { param_name; param_ty; }] in
       let return = print_type cx return in
       { res_loc = loc;
         res_name = name;

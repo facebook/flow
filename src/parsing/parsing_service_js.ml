@@ -14,27 +14,36 @@ module Ast = Spider_monkey_ast
 
 type result =
   | Parse_ok of Spider_monkey_ast.program
-  | Parse_err of Errors.ErrorSet.t
+  | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
 and parse_skip_reason =
   | Skip_resource_file
   | Skip_non_flow_file
 
+and parse_failure =
+  | Docblock_errors of Docblock.error list
+  | Parse_error of (Loc.t * Parse_error.t)
+
 (* results of parse job, returned by parse and reparse *)
 type results = {
-  parse_ok: FilenameSet.t;                   (* successfully parsed files *)
-  parse_skips: (filename * Docblock.t) list; (* list of skipped files *)
-  parse_fails: (filename * Docblock.t) list; (* list of failed files *)
-  parse_errors: Errors.ErrorSet.t list;      (* parallel list of error sets *)
-  parse_resource_files: FilenameSet.t;       (* resource files *)
+  (* successfully parsed files *)
+  parse_ok: FilenameSet.t;
+
+  (* list of skipped files *)
+  parse_skips: (filename * Docblock.t) list;
+
+  (* list of failed files *)
+  parse_fails: (filename * Docblock.t * parse_failure) list;
+
+  (* resource files *)
+  parse_resource_files: FilenameSet.t;
 }
 
 let empty_result = {
   parse_ok = FilenameSet.empty;
   parse_skips = [];
   parse_fails = [];
-  parse_errors = [];
   parse_resource_files = FilenameSet.empty;
 }
 
@@ -139,24 +148,27 @@ let string_of_docblock_error = function
     | None -> ""
     | Some first_error -> spf " Parse error: %s" first_error)
 
+let error_of_docblock_error (loc, err) =
+  Errors.mk_error ~kind:Errors.ParseError [loc, [string_of_docblock_error err]]
+
+let set_of_docblock_errors errors =
+  List.fold_left (fun acc err ->
+    Errors.ErrorSet.add (error_of_docblock_error err) acc
+  ) Errors.ErrorSet.empty errors
+
+let error_of_parse_error (loc, err) =
+  Errors.mk_error ~kind:Errors.ParseError [loc, [Parse_error.PP.error err]]
+
+let set_of_parse_error error =
+  Errors.ErrorSet.singleton (error_of_parse_error error)
+
 let get_docblock
   ~max_tokens file content
-: Errors.ErrorSet.t option * Docblock.t =
+: Docblock.error list * Docblock.t =
   match file with
   | Loc.ResourceFile _
-  | Loc.JsonFile _ -> None, Docblock.default_info
-  | _ ->
-    let errors, docblock = Docblock.extract ~max_tokens file content in
-    if errors = [] then None, docblock
-    else
-      let errs = List.fold_left (fun acc (loc, err) ->
-        let err = Errors.mk_error
-          ~kind:Errors.ParseError
-          [loc, [string_of_docblock_error err]]
-        in
-        Errors.ErrorSet.add err acc
-      ) Errors.ErrorSet.empty errors in
-      Some errs, docblock
+  | Loc.JsonFile _ -> [], Docblock.default_info
+  | _ -> Docblock.extract ~max_tokens file content
 
 let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
   try (
@@ -186,14 +198,12 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
   )
   with
   | Parse_error.Error (first_parse_error::_) ->
-    let err = Errors.parse_error_to_flow_error first_parse_error in
-    Parse_err (Errors.ErrorSet.singleton err)
+    Parse_fail (Parse_error first_parse_error)
   | e ->
     let s = Printexc.to_string e in
-    let msg = spf "unexpected parsing exception: %s" s in
     let loc = Loc.({ none with source = Some file }) in
-    let err = Errors.(simple_error ~kind:ParseError loc msg) in
-    Parse_err (Errors.ErrorSet.singleton err)
+    let err = loc, Parse_error.Assertion s in
+    Parse_fail (Parse_error err)
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
@@ -219,7 +229,7 @@ let reducer
   match content with
   | Some content ->
       begin match get_docblock ~max_tokens:max_header_tokens file content with
-      | None, info ->
+      | [], info ->
         begin match (do_parse ~types_mode ~use_strict ~info content file) with
         | Parse_ok ast ->
             (* Consider the file unchanged if its reparsing info is the same as
@@ -236,11 +246,11 @@ let reducer
               let parse_ok = FilenameSet.add file parse_results.parse_ok in
               { parse_results with parse_ok; }
             end
-        | Parse_err converted ->
+        | Parse_fail converted ->
             execute_hook file None;
-            let parse_fails = (file, info) :: parse_results.parse_fails in
-            let parse_errors = converted :: parse_results.parse_errors in
-            { parse_results with parse_fails; parse_errors; }
+            let fail = (file, info, converted) in
+            let parse_fails = fail :: parse_results.parse_fails in
+            { parse_results with parse_fails; }
         | Parse_skip Skip_non_flow_file ->
             execute_hook file None;
             let parse_skips = (file, info) :: parse_results.parse_skips in
@@ -251,11 +261,11 @@ let reducer
               FilenameSet.add file parse_results.parse_resource_files in
             { parse_results with parse_resource_files; }
         end
-      | Some docblock_errors, info ->
+      | docblock_errors, info ->
         execute_hook file None;
-        let parse_fails = (file, info) :: parse_results.parse_fails in
-        let parse_errors = docblock_errors :: parse_results.parse_errors in
-        { parse_results with parse_fails; parse_errors; }
+        let fail = (file, info, Docblock_errors docblock_errors) in
+        let parse_fails = fail :: parse_results.parse_fails in
+        { parse_results with parse_fails; }
       end
   | None ->
       execute_hook file None;
@@ -269,7 +279,6 @@ let merge r1 r2 =
     parse_ok = FilenameSet.union r1.parse_ok r2.parse_ok;
     parse_skips = r1.parse_skips @ r2.parse_skips;
     parse_fails = r1.parse_fails @ r2.parse_fails;
-    parse_errors = r1.parse_errors @ r2.parse_errors;
     parse_resource_files =
       FilenameSet.union r1.parse_resource_files r2.parse_resource_files;
   }
@@ -336,7 +345,7 @@ let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~options workers
     parse ~types_mode ~use_strict ~profile ~max_header_tokens workers next in
   let modified =
     FilenameSet.union results.parse_ok results.parse_resource_files in
-  let modified = List.fold_left (fun acc (fail, _) ->
+  let modified = List.fold_left (fun acc (fail, _, _) ->
     FilenameSet.add fail acc
   ) modified results.parse_fails in
   let modified = List.fold_left (fun acc (skip, _) ->

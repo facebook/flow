@@ -143,20 +143,19 @@ let convert cx type_params_map func = Ast.Type.Function.(
 )
 
 let names params =
-  let ret = params.list |> List.map (function
+  params.list |> List.map (function
     | Simple (_, (name, _, _)) -> name
-    | Complex _ -> "_") in
-  match params.rest with
-  | None -> ret
-  | Some (_, (name, _, _)) -> ret @ [name]
+    | Complex _ -> "_")
 
 let tlist params =
-  let ret = params.list |> List.map (function
+  params.list |> List.map (function
     | Simple (t, _)
-    | Complex (t, _) -> t) in
+    | Complex (t, _) -> t)
+
+let rest params =
   match params.rest with
-  | None -> ret
-  | Some (t, _) -> ret @ [t]
+  | None -> None
+  | Some (t, (name, _, _)) -> Some (Some name, t)
 
 let iter f params =
   params.list |> List.iter (function

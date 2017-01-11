@@ -58,19 +58,31 @@ val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
 (* object/method types *)
 
 val mk_methodtype :
-  Type.t -> Type.t list ->
+  Type.t -> Type.t list -> rest_param:(string option * Type.t) option ->
   ?frame:int -> ?params_names:string list -> ?is_predicate:bool ->
   Type.t -> Type.funtype
 
+val mk_methodcalltype :
+  Type.t -> Type.t list ->
+  ?frame:int ->
+  Type.t -> Type.funcalltype
+
 val mk_boundfunctiontype :
   Type.t list ->
+  rest_param:(string option * Type.t) option ->
   ?frame:int -> ?params_names:string list -> ?is_predicate:bool ->
   Type.t -> Type.funtype
 
 val mk_functiontype :
   Type.t list ->
+  rest_param:(string option * Type.t) option ->
   ?frame:int -> ?params_names:string list -> ?is_predicate:bool ->
   Type.t -> Type.funtype
+
+val mk_functioncalltype :
+  Type.t list ->
+  ?frame:int ->
+  Type.t -> Type.funcalltype
 
 val dummy_this : Type.t
 val dummy_static : reason -> Type.t

@@ -16,16 +16,19 @@ type 'a bucket =
   | Wait
   | Done
 
-type 'a nextbucket_dynamic =
+type 'a next =
   unit -> 'a bucket
 
-val make_bucket : num_workers:int -> ?max_size:int -> 'a list ->
-  'a list nextbucket_dynamic
+(* Makes a bucket out of a list, without regard for number of workers or the
+   size of the list.  *)
+val of_list : 'a list -> 'a list bucket
+
+val make : num_workers:int -> ?max_size:int -> 'a list -> 'a list next
 
 type 'a of_n = { work: 'a; bucket: int; total: int }
 
 val make_n_buckets : buckets:int -> split:(bucket:int -> 'a) ->
-  'a of_n nextbucket_dynamic
+  'a of_n next
 
 (* Specialized version to split into lists only. *)
-val make : num_workers:int -> ?max_size:int -> 'a list -> (unit -> 'a list)
+val make_list : num_workers:int -> ?max_size:int -> 'a list -> (unit -> 'a list)

@@ -922,7 +922,7 @@ and statement cx = Ast.Statement.(
         Flow.get_builtin_typeapp cx reason "Promise" [
           Flow.mk_tvar_derivable_where cx reason (fun tvar ->
             let funt = Flow.get_builtin cx "$await" reason in
-            let callt = Flow.mk_functiontype [t] tvar in
+            let callt = Flow.mk_functioncalltype [t] tvar in
             let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
             Flow.flow cx (funt, CallT (reason, callt))
           )
@@ -2140,9 +2140,8 @@ and export_statement cx loc
 and object_prop cx map = Ast.Expression.Object.(function
   (* name = function expr *)
   | Property (_, { Property.
-      kind = Property.Init;
       key = Property.Identifier (_, name);
-      value = (vloc, Ast.Expression.Function func);
+      value = Property.Init (vloc, Ast.Expression.Function func);
       _method;
       _
     }) ->
@@ -2155,14 +2154,14 @@ and object_prop cx map = Ast.Expression.Object.(function
     Properties.add_field name polarity ft map
 
   (* name = non-function expr *)
-  | Property (_, { Property.kind = Property.Init;
+  | Property (_, { Property.
       key =
         Property.Identifier (_, name) |
         Property.Literal (_, {
           Ast.Literal.value = Ast.Literal.String name;
           _;
         });
-      value = v; _ }) ->
+      value = Property.Init v; _ }) ->
     let t = expression cx v in
     Properties.add_field name Neutral t map
 
@@ -2178,35 +2177,49 @@ and object_prop cx map = Ast.Expression.Object.(function
    *)
 
   (* unsafe getter property *)
-  | Property (_, {
-      Property.kind = Property.Get;
+  | Property (loc, { Property.
       key = Property.Identifier (_, name);
-      value = (vloc, Ast.Expression.Function func);
-      _ })
-    when Context.enable_unsafe_getters_and_setters cx ->
+      value = Property.Get (vloc, func);
+      _ }) ->
+    if Context.enable_unsafe_getters_and_setters cx then
       let reason = mk_reason RGetterFunction vloc in
       let function_type = mk_function None cx reason func in
-      let return_t = extract_getter_type function_type in
+      let return_t = Type.extract_getter_type function_type in
       Properties.add_getter name return_t map
+    else begin
+      Flow_js.add_output cx
+        Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
+      map
+    end
 
   (* unsafe setter property *)
-  | Property (_, {
-    Property.kind = Property.Set;
+  | Property (loc, { Property.
       key = Property.Identifier (_, name);
-      value = (vloc, Ast.Expression.Function func);
-      _ })
-    when Context.enable_unsafe_getters_and_setters cx ->
+      value = Property.Set (vloc, func);
+      _ }) ->
+    if Context.enable_unsafe_getters_and_setters cx then
       let reason = mk_reason RSetterFunction vloc in
       let function_type = mk_function None cx reason func in
-      let param_t = extract_setter_type function_type in
+      let param_t = Type.extract_setter_type function_type in
       Properties.add_setter name param_t map
+    else begin
+      Flow_js.add_output cx
+        Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
+      map
+    end
 
-  | Property (loc, { Property.kind = Property.Get | Property.Set; _ }) ->
+  (* computed getters and setters aren't supported yet regardless of the
+     `enable_getters_and_setters` config option *)
+  | Property (loc, { Property.
+      key = Property.Computed _;
+      value = Property.Get _ | Property.Set _;
+      _
+    }) ->
     Flow_js.add_output cx
-      Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
+      Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyComputedGetSet));
     map
 
-  (* computed LHS *)
+  (* computed LHS silently ignored for now *)
   | Property (_, { Property.key = Property.Computed _; _ }) ->
     map
 
@@ -2263,7 +2276,11 @@ and object_ cx reason ?(allow_sealed=true) props =
         let obj = eval_object (map, result) in
         let result = mk_spread spread obj in
         false, SMap.empty, Some result
-    | Property (_, { Property.key = Property.Computed k; value = v; _ }) ->
+    | Property (_, { Property.
+        key = Property.Computed k;
+        value = Property.Init v;
+        _method = _; shorthand = _;
+      }) ->
         let k = expression cx k in
         let v = expression cx v in
         let obj = eval_object (map, result) in
@@ -2680,7 +2697,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         reason,
         Flow.dummy_static reason,
         Flow.dummy_prototype,
-        Flow.mk_functiontype [] ~params_names:[] proto
+        Flow.mk_functiontype [] ~rest_param:None ~params_names:[] proto
       )
     )
 
@@ -2747,7 +2764,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let argts = List.map (expression_or_spread cx) arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Flow.mk_tvar_where cx reason (fun t ->
-        let funtype = Flow.mk_methodtype super argts t in
+        let funtype = Flow.mk_methodcalltype super argts t in
         Flow.flow cx (
           super,
           MethodT (reason, reason_lookup, Named (reason_prop, name), funtype)
@@ -2774,7 +2791,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         Flow.mk_tvar_where cx reason_call (fun t ->
           let elem_t = expression cx expr in
           let frame = Env.peek_frame () in
-          let funtype = Flow.mk_methodtype ot argts t ~frame in
+          let funtype = Flow.mk_methodcalltype ot argts t ~frame in
           Flow.flow cx (ot,
             CallElemT (reason_call, reason_lookup, elem_t, funtype))
         ))
@@ -2794,7 +2811,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let this = this_ cx reason in
       let super = super_ cx super_reason in
       Flow.mk_tvar_where cx reason (fun t ->
-        let funtype = Flow.mk_methodtype this argts t in
+        let funtype = Flow.mk_methodcalltype this argts t in
         let propref = Named (super_reason, "constructor") in
         Flow.flow cx (super, MethodT(reason, super_reason, propref, funtype)))
 
@@ -2928,7 +2945,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason = mk_reason (RCustom "encaps tag") loc in
       let reason_array = replace_reason_const RArray reason in
       let ret = Flow.mk_tvar cx reason in
-      let ft = Flow.mk_functiontype
+      let ft = Flow.mk_functioncalltype
         [ ArrT (reason_array, ArrayAT (StrT.why reason, None));
           RestT (AnyT.why reason) ]
         ret
@@ -3088,7 +3105,7 @@ and func_call cx reason func_t argts =
   Env.havoc_heap_refinements ();
   Flow.mk_tvar_where cx reason (fun t ->
     let frame = Env.peek_frame () in
-    let app = Flow.mk_functiontype argts t ~frame in
+    let app = Flow.mk_functioncalltype argts t ~frame in
     Flow.flow cx (func_t, CallT(reason, app))
   )
 
@@ -3105,7 +3122,7 @@ and method_call cx reason prop_loc (expr, obj_t, name) argts =
       Env.havoc_heap_refinements ();
       Flow.mk_tvar_where cx reason (fun t ->
         let frame = Env.peek_frame () in
-        let app = Flow.mk_methodtype obj_t argts t ~frame in
+        let app = Flow.mk_methodcalltype obj_t argts t ~frame in
         Flow.flow cx (f, CallT (reason, app));
       )
   | None ->
@@ -3115,7 +3132,7 @@ and method_call cx reason prop_loc (expr, obj_t, name) argts =
         let expr_loc, _ = expr in
         let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
         let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
-        let app = Flow.mk_methodtype obj_t argts t ~frame in
+        let app = Flow.mk_methodcalltype obj_t argts t ~frame in
         let propref = Named (reason_prop, name) in
         Flow.flow cx (obj_t, MethodT(reason, reason_expr, propref, app))
       )
@@ -3645,7 +3662,7 @@ and jsx_desugar cx name component_t props attributes children eloc =
           reason,
           reason_createElement,
           Named (reason_createElement, "createElement"),
-          Flow.mk_methodtype react [component_t;props] tvar
+          Flow.mk_methodcalltype react [component_t;props] tvar
         ))
       )
   | Some (raw_jsx_expr, jsx_expr) ->
@@ -3903,9 +3920,8 @@ and mk_proptypes cx props = Ast.Expression.Object.(
 
     (* required prop *)
     | Property (_, { Property.
-        kind = Property.Init;
         key = Property.Identifier (_, name);
-        value = (_, Ast.Expression.Member {
+        value = Property.Init (_, Ast.Expression.Member {
           Ast.Expression.Member.
           property = Ast.Expression.Member.PropertyIdentifier (_, "isRequired");
           _object = e;
@@ -3918,14 +3934,14 @@ and mk_proptypes cx props = Ast.Expression.Object.(
         dict
 
     (* other prop *)
-    | Property (_, { Property.kind = Property.Init;
+    | Property (_, { Property.
         key =
           Property.Identifier (_, name) |
           Property.Literal (_, {
             Ast.Literal.value = Ast.Literal.String name;
             _;
           });
-        value = v;
+        value = Property.Init v;
         _ }) ->
         let p = Field (mk_proptype cx v, Neutral) in
         amap,
@@ -3956,7 +3972,7 @@ and mk_proptypes cx props = Ast.Expression.Object.(
       amap, omap, dict
 
     (* get/set kind *)
-    | Property (loc, { Property.kind = Property.Get | Property.Set; _ }) ->
+    | Property (loc, { Property.value = Property.Get _ | Property.Set _; _ }) ->
       Flow_js.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, ReactPropTypesPropertyGetSet));
       amap, omap, dict
@@ -3993,18 +4009,17 @@ and react_create_class cx loc class_props = Ast.Expression.(
     List.fold_left Ast.Expression.Object.(fun (fmap, mmap) -> function
 
       (* mixins *)
-      | Property (_, { Property.kind = Property.Init;
-          key =
-            Property.Identifier (_, "mixins");
-          value = aloc, Array { Array.elements };
+      | Property (_, { Property.
+          key = Property.Identifier (_, "mixins");
+          value = Property.Init (aloc, Array { Array.elements });
           _ }) ->
         mixins := List.map (array_element cx aloc) elements;
         fmap, mmap
 
       (* statics *)
-      | Property (_, { Property.kind = Property.Init;
-            key = Property.Identifier (nloc, "statics");
-          value = _, Object { Object.properties };
+      | Property (_, { Property.
+          key = Property.Identifier (nloc, "statics");
+          value = Property.Init (_, Object { Object.properties });
           _ }) ->
         let reason = mk_reason RReactStatics nloc in
         static :=
@@ -4012,9 +4027,9 @@ and react_create_class cx loc class_props = Ast.Expression.(
         fmap, mmap
 
       (* propTypes *)
-      | Property (_, { Property.kind = Property.Init;
+      | Property (_, { Property.
           key = Property.Identifier (nloc, "propTypes");
-          value = _, Object { Object.properties } as value;
+          value = Property.Init (_, Object { Object.properties } as value);
           _ }) ->
         ignore (expression cx value);
         let reason = mk_reason RReactPropTypes nloc in
@@ -4026,9 +4041,9 @@ and react_create_class cx loc class_props = Ast.Expression.(
         fmap, mmap
 
       (* getDefaultProps *)
-      | Property (_, { Property.kind = Property.Init;
+      | Property (_, { Property.
           key = Property.Identifier (_, "getDefaultProps");
-          value = (vloc, Ast.Expression.Function func);
+          value = Property.Init (vloc, Ast.Expression.Function func);
           _
         }) ->
           let reason = mk_reason RReactDefaultProps vloc in
@@ -4041,13 +4056,13 @@ and react_create_class cx loc class_props = Ast.Expression.(
           default := default_tvar;
           Flow.flow cx (t,
             CallT (reason,
-              Flow.mk_functiontype [] override_default));
+              Flow.mk_functioncalltype [] override_default));
           fmap, mmap
 
       (* getInitialState *)
-      | Property (_, { Property.kind = Property.Init;
+      | Property (_, { Property.
           key = Property.Identifier (_, "getInitialState");
-          value = (vloc, Ast.Expression.Function func);
+          value = Property.Init (vloc, Ast.Expression.Function func);
           _
         }) ->
           let reason = mk_reason RReactState vloc in
@@ -4063,13 +4078,13 @@ and react_create_class cx loc class_props = Ast.Expression.(
           state := state_tvar;
           Flow.flow cx (t,
             CallT (ret_reason,
-              Flow.mk_functiontype [] override_state));
+              Flow.mk_functioncalltype [] override_state));
           fmap, mmap
 
       (* name = function expr *)
-      | Property (_, { Property.kind = Property.Init;
+      | Property (_, { Property.
           key = Property.Identifier (_, name);
-          value = (vloc, Ast.Expression.Function func);
+          value = Property.Init (vloc, Ast.Expression.Function func);
           _
         }) ->
           let {Ast.Function.async; generator; _ } = func in
@@ -4080,13 +4095,13 @@ and react_create_class cx loc class_props = Ast.Expression.(
           fmap, SMap.add name p mmap
 
       (* name = non-function expr *)
-      | Property (_, { Property.kind = Property.Init;
+      | Property (_, { Property.
           key =
             Property.Identifier (_, name) |
             Property.Literal (_, {
               Ast.Literal.value = Ast.Literal.String name; _;
             });
-          value = v;
+          value = Property.Init v;
           _ }) ->
         let t = expression cx v in
         let p = Field (t, Neutral) in
@@ -4150,7 +4165,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
     Flow.flow cx (mixin, SuperT (super_reason, itype))
   );
 
-  let instance = InstanceT (reason_component,!static,super,itype) in
+  let instance = InstanceT (reason_component,!static,super,[],itype) in
   Flow.flow_t cx (instance, this);
 
   ClassT(instance)
@@ -4200,40 +4215,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
     empty_result test_t |> add_predicate key unrefined_t pred sense
   in
 
-  (* inspect a null equality test *)
-  let null_test loc ~sense ~strict e null_t =
-    let t, refinement = match refinable_lvalue e with
-    | None, t -> t, None
-    | Some name, t ->
-        let pred = if strict then NullP else MaybeP in
-        t, Some (name, t, pred, sense)
-    in
-    flow_eqt ~strict loc (t, null_t);
-    match refinement with
-    | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
-    | None -> empty_result (BoolT.at loc)
-  in
-
-  let void_test loc ~sense ~strict e void_t =
-    let t, refinement = match refinable_lvalue e with
-    | None, t -> t, None
-    | Some name, t ->
-        let pred = if strict then VoidP else MaybeP in
-        t, Some (name, t, pred, sense)
-    in
-    flow_eqt ~strict loc (t, void_t);
-    match refinement with
-    | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
-    | None -> empty_result (BoolT.at loc)
-  in
-
-  (* inspect an undefined equality test *)
-  let undef_test loc ~sense ~strict e void_t =
-    if Env.is_global_var cx "undefined"
-    then void_test loc ~sense ~strict e void_t
-    else empty_result (BoolT.at loc)
-  in
-
   (* a wrapper around `condition` (which is a wrapper around `expression`) that
      evaluates `expr`. if this is a sentinel property check (determined by
      a strict equality check against a member expression `_object.prop_name`),
@@ -4280,6 +4261,52 @@ and predicates_of_condition cx e = Ast.(Expression.(
       prop_t, refinement
     | _ ->
       condition cx expr, None
+  in
+
+  (* inspect a null equality test *)
+  let null_test loc ~sense ~strict e null_t =
+    let t, sentinel_refinement = condition_of_maybe_sentinel cx
+      ~sense ~strict e null_t in
+    flow_eqt ~strict loc (t, null_t);
+    let out = match Refinement.key e with
+    | None -> empty_result (BoolT.at loc)
+    | Some name ->
+        let pred = if strict then NullP else MaybeP in
+        result (BoolT.at loc) name t pred sense
+    in
+    match sentinel_refinement with
+    | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+    | None -> out
+  in
+
+  let void_test loc ~sense ~strict e void_t =
+    (* if `void_t` is not a VoidT, make it one so that the sentinel test has a
+       literal type to test against. It's not appropriate to call `void_test`
+       with a `void_t` that you don't want to treat like an actual `void`! *)
+    let void_t = match void_t with
+    | VoidT _ -> void_t
+    | _ -> VoidT.why (reason_of_t void_t)
+    in
+    let t, sentinel_refinement = condition_of_maybe_sentinel cx
+      ~sense ~strict e void_t in
+    flow_eqt ~strict loc (t, void_t);
+    let out = match Refinement.key e with
+    | None -> empty_result (BoolT.at loc)
+    | Some name ->
+        let pred = if strict then VoidP else MaybeP in
+        result (BoolT.at loc) name t pred sense
+    in
+    match sentinel_refinement with
+    | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+    | None -> out
+  in
+
+  (* inspect an undefined equality test *)
+  let undef_test loc ~sense ~strict e void_t =
+    (* if `undefined` isn't redefined in scope, then we assume it is `void` *)
+    if Env.is_global_var cx "undefined"
+    then void_test loc ~sense ~strict e void_t
+    else empty_result (BoolT.at loc)
   in
 
   let literal_test loc ~strict ~sense expr val_t pred =
@@ -4772,14 +4799,6 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
     let reason = mk_reason (RMethodCall (Some m)) loc in
     method_call cx reason prop_loc (expr, obj_t, m) argts
 
-and extract_setter_type = function
-  | FunT (_, _, _, { params_tlist = [param_t]; _; }) -> param_t
-  | _ ->  failwith "Setter property with unexpected type"
-
-and extract_getter_type = function
-  | FunT (_, _, _, { return_t; _; }) -> return_t
-  | _ -> failwith "Getter property with unexpected type"
-
 and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
   match id with
   | Some(name_loc, name) -> (name_loc, name)
@@ -4793,6 +4812,7 @@ and mk_class cx loc reason c =
   in
   class_sig |> Class_sig.generate_tests cx (fun class_sig ->
     Class_sig.check_super cx class_sig;
+    Class_sig.check_implements cx class_sig;
     Class_sig.toplevels cx class_sig
       ~decls:toplevel_decls
       ~stmts:toplevels

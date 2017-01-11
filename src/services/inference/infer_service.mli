@@ -13,10 +13,8 @@ open Utils_js
 val infer:
   options: Options.t ->
   workers: Worker.t list option ->
-  save_errors: (filename list -> Errors.ErrorSet.t list -> unit) ->
-  save_suppressions: (filename list -> Errors.ErrorSuppressions.t list -> unit) ->
   FilenameSet.t ->
-  filename list
+  (filename * Errors.ErrorSet.t * Errors.ErrorSuppressions.t) list
 
 val apply_docblock_overrides:
  Context.metadata ->

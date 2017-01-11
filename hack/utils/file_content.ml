@@ -36,37 +36,63 @@ let of_content ~content = {
 
 let get_content t = t.content
 
-let get_line_lengths text limit =
-  let text = text ^ "\n" in (* sentinel to make things easier *)
-  Str.bounded_split_delim (Str.regexp_string "\n") text (limit+1) |>
-    List.map ~f:String.length
+(* UTF-8 encoding character lengths.
+ *
+ * NOTE: at the moment, edit commands are the only place where we count
+ * UTF-8 encoded characters as opposed to ASCII bytes - in all of the other
+ * places (column numbers in errors, positions in IDE commands) we still use the
+ * latter.
+ *
+ * We make an exception here because that's the way Nuclide counts characters,
+ * and the consequences of mishandling it are much more dire than in other
+ * places - we'll not only fail the current single request, but diverge
+ * the synchronized state forever.
+ *)
+let get_char_length c =
+  let c = Char.code c in
+  if c lsr 7 = 0b0 then 1
+  else if c lsr 5 = 0b110 then 2
+  else if c lsr 4 = 0b1110 then 3
+  else if c lsr 3 = 0b11110 then 4
+  else raise (Failure (Printf.sprintf "Invalid UTF-8 leading byte: %d" c))
 
-let get_offset line column line_lengths =
+let is_target t line column = t.line = line && t.column = column
 
-  let line = line - 1 in
-  let column = column -1 in
+let get_char content offset =
+  (* sentinel newline to make things easier *)
+  if offset = String.length content then '\n'
+  else content.[offset]
 
-  assert (line < (List.length line_lengths));
-  List.foldi line_lengths
-    ~init:0
-    ~f:begin fun i acc len ->
-      if i < line then acc + len + 1
-      else if i > line then acc
-      else begin
-        assert (column <= len);
-        acc + column
-      end
-    end
+let rec get_offsets content queries line column offset acc =
+  match acc with
+  | (Some _, Some _) -> acc
+  | (None, r2) when is_target (fst queries) line column ->
+    get_offsets content queries line column offset (Some offset, r2)
+  | (Some _ as r1, None) when is_target (snd queries) line column ->
+    get_offsets content queries line column offset (r1, Some offset)
+  | acc ->
+    let line, column, offset = match get_char content offset with
+      | '\n' -> line + 1, 1, offset + 1
+      | c -> line, column + 1, offset + (get_char_length c)
+    in
+    get_offsets content queries line column offset acc
+
+let invalid_position p =
+  raise (Failure (Printf.sprintf
+    "Invalid position: {line: %d; column: %d}" p.line p.column))
+
+let get_offsets content queries =
+  match get_offsets content queries 1 1 0 (None, None) with
+  | Some r1, Some r2 -> r1, r2
+  | None, _ -> invalid_position (fst queries)
+  | _, None -> invalid_position (snd queries)
 
 let apply_edit = fun fc {range; text} ->
   match range with
   | None -> of_content text
   | Some {st; ed} ->
     let content = get_content fc in
-    let line_lengths = get_line_lengths content (ed.line+1) in
-    let start_offset = get_offset st.line st.column  line_lengths in
-    let end_offset = get_offset ed.line ed.column line_lengths in
-
+    let start_offset, end_offset = get_offsets content (st, ed) in
     let prefix = Str.string_before content start_offset in
     let suffix = Str.string_after content end_offset in
     of_content ~content:(prefix ^ text ^ suffix)

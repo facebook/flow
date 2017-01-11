@@ -2,6 +2,7 @@ FLOW=$1
 mkdir tmp
 cp *.js tmp/
 
+printf "\nTest A:\n"
 # Rename A1.js to A2.js
 mv A1.js A2.js
 $FLOW force-recheck A1.js A2.js
@@ -16,7 +17,27 @@ $FLOW force-recheck A3.js
 
 $FLOW status
 
+# clean up
 rm A2.js
+cp tmp/A1.js A1.js
+cp tmp/A3.js A3.js
+# Done A
+
+printf "\nTest B:\n"
+# set up
+cp -R dir1B tmp/
+
+# mv dir1B/B2.js to dir2B/B2.js
+mv dir1B dir2B
+$FLOW force-recheck dir1B/B2.js dir2B/B2.js
+
+$FLOW status
+
+# clean up
+mv dir2B dir1B
+mv tmp/dir1B/*.js dir1B/
+rmdir tmp/dir1B
+# Done B
 
 mv tmp/*.js ./
 rmdir tmp

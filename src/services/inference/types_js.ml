@@ -61,30 +61,16 @@ let filter_duplicate_provider mapref file =
     mapref := FilenameMap.add file new_errset !mapref
   | None -> ()
 
-(* given a reference to a error map (files to errorsets), and
-   two parallel lists of such, save the latter into the former. *)
-let save_errors mapref files errsets =
-  List.iter2 (save_errset mapref) files errsets
-
-let save_new_errors mapref =
-  List.iter2 (fun file errors ->
-    if Errors.ErrorSet.cardinal errors > 0
-    then mapref := FilenameMap.add file errors !mapref
-    else mapref := FilenameMap.remove file !mapref
-  )
-
 let save_errormap mapref errmap =
   FilenameMap.iter (save_errset mapref) errmap
 
 (* given a reference to a error suppression map (files to
    error suppressions), and two parallel lists of such,
    save the latter into the former. *)
-let save_suppressions mapref files errsups = Errors.(
-  List.iter2 (fun file errsup ->
-    mapref := if ErrorSuppressions.is_empty errsup
-      then FilenameMap.remove file !mapref
-      else FilenameMap.add file errsup !mapref
-  ) files errsups
+let save_suppressions mapref file errsup = Errors.(
+  mapref := if ErrorSuppressions.is_empty errsup
+    then FilenameMap.remove file !mapref
+    else FilenameMap.add file errsup !mapref
 )
 
 (* Given all the errors as a map from file => errorset
@@ -173,7 +159,7 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
   let types_mode = Parsing_service_js.TypesAllowed in
   let use_strict = Options.modules_are_use_strict options in
   let max_tokens = Options.max_header_tokens options in
-  let profiling, (errors, parse_result, info) =
+  let profiling, (docblock_errors, parse_result, info) =
     with_timer "Parsing" profiling (fun () ->
       let docblock_errors, info =
         Parsing_service_js.get_docblock ~max_tokens filename contents in
@@ -181,13 +167,11 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
         ~fail:check_syntax ~types_mode ~use_strict ~info
         contents filename
       in
-      let errors = match docblock_errors with
-        | None -> Errors.ErrorSet.empty
-        | Some errs -> errs
-      in
-      errors, parse_result, info
+      docblock_errors, parse_result, info
     )
   in
+
+  let errors = Parsing_service_js.set_of_docblock_errors docblock_errors in
 
   match parse_result with
   | Parsing_service_js.Parse_ok ast ->
@@ -225,18 +209,19 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
         Merge_service.merge_strict_context ~options cache [cx]
       ) in
 
-      (* Filter out suppressed errors *)
-      let error_suppressions = Context.error_suppressions cx in
-      let errors = Errors.ErrorSet.fold (fun err errors ->
-        if not (fst (Errors.ErrorSuppressions.check err error_suppressions))
-        then Errors.ErrorSet.add err errors
-        else errors
-      ) (Context.errors cx) errors in
-
+      let errors = Errors.ErrorSet.union (Context.errors cx) errors in
       profiling, Some cx, errors, info
 
-  | Parsing_service_js.Parse_err parse_errors ->
-      profiling, None, Errors.ErrorSet.union parse_errors errors, info
+  | Parsing_service_js.Parse_fail fails ->
+      let errors = Parsing_service_js.(match fails with
+      | Parse_error err ->
+          Errors.ErrorSet.add (error_of_parse_error err) errors
+      | Docblock_errors errs ->
+          List.fold_left (fun errors err ->
+            Errors.ErrorSet.add (error_of_docblock_error err) errors
+          ) errors errs
+      ) in
+      profiling, None, errors, info
 
   | Parsing_service_js.Parse_skip
      (Parsing_service_js.Skip_non_flow_file
@@ -301,13 +286,16 @@ let typecheck
   Module_js.clear_filename_cache ();
   (* local inference populates context heap, module info heap *)
   Flow_logger.log "Running local inference";
-  let profiling, inferred =
+  let profiling, infer_results =
     with_timer ~options "Infer" profiling (fun () ->
-      Infer_service.infer ~options ~workers
-        ~save_errors:(save_errors errors_by_file)
-        ~save_suppressions:(save_suppressions error_suppressions)
-        files
+      Infer_service.infer ~options ~workers files
     ) in
+
+  let inferred = List.fold_left (fun acc (file, errors, suppressions) ->
+    save_errset errors_by_file file errors;
+    save_suppressions error_suppressions file suppressions;
+    file::acc
+  ) [] infer_results |> List.rev in
 
   (* Resource files are treated just like unchecked files, which are already in
      unparsed. TODO: This suggestes that we can remove ~resource_files and merge
@@ -414,9 +402,14 @@ let typecheck
     let profiling = try
       Flow_logger.log "Merging";
       let profiling, () = with_timer ~options "Merge" profiling (fun () ->
-        Merge_service.merge_strict
-          ~options ~workers ~save_errors:(save_new_errors merge_errors)
-          dependency_graph partition recheck_map
+        let merged = Merge_service.merge_strict
+          ~options ~workers dependency_graph partition recheck_map
+        in
+        List.iter (fun (file, errors) ->
+          merge_errors := if Errors.ErrorSet.is_empty errors
+            then FilenameMap.remove file !merge_errors
+            else FilenameMap.add file errors !merge_errors
+        ) merged
       ) in
       let master_cx = Init_js.get_master_cx options in
       save_errset merge_errors (Context.file master_cx) (Context.errors master_cx);
@@ -504,7 +497,6 @@ let recheck genv env modified =
     Parsing_service_js.parse_ok = freshparsed;
                        parse_skips = freshparse_skips;
                        parse_fails = freshparse_fail;
-                       parse_errors = freshparse_errors;
                        parse_resource_files = freshparse_resource_files;
   } = freshparse_results in
 
@@ -514,8 +506,13 @@ let recheck genv env modified =
   clear_errors ~debug (FilenameSet.elements deleted);
 
   (* record reparse errors *)
-  let failed_filenames = List.map (fun (file, _) -> file) freshparse_fail in
-  save_errors errors_by_file failed_filenames freshparse_errors;
+  List.iter (fun (file, _, fail) ->
+    let errset = Parsing_service_js.(match fail with
+    | Parse_error err -> set_of_parse_error err
+    | Docblock_errors errs -> set_of_docblock_errors errs
+    ) in
+    save_errset errors_by_file file errset
+  ) freshparse_fail;
 
   (* get old (unmodified, undeleted) files that were parsed successfully *)
   let old_parsed = env.ServerEnv.files in
@@ -541,6 +538,10 @@ let recheck genv env modified =
   Context.remove_all_errors master_cx;
 
   let dependent_file_count = ref 0 in
+
+  let unparsed = List.fold_left (fun unparsed (file, info, _) ->
+    (file, info) :: unparsed
+  ) freshparse_skips freshparse_fail in
 
   (* recheck *)
   let profiling = typecheck
@@ -589,7 +590,7 @@ let recheck genv env modified =
     )
     ~files:freshparsed
     ~removed:removed_modules
-    ~unparsed:(List.rev_append freshparse_fail freshparse_skips)
+    ~unparsed
     ~resource_files:freshparse_resource_files
   in
 
@@ -633,11 +634,16 @@ let full_check workers ~ordered_libs parse_next options =
     Parsing_service_js.parse_ok = parsed;
                        parse_skips = skipped_files;
                        parse_fails = error_files;
-                       parse_errors = errors;
                        parse_resource_files = resource_files;
   } = parse_results in
-  let error_filenames = List.map (fun (file, _) -> file) error_files in
-  save_errors errors_by_file error_filenames errors;
+
+  List.iter (fun (file, _, fail) ->
+    let errset = Parsing_service_js.(match fail with
+    | Parse_error err -> set_of_parse_error err
+    | Docblock_errors errs -> set_of_docblock_errors errs
+    ) in
+    save_errset errors_by_file file errset
+  ) error_files;
 
   Flow_logger.log "Building package heap";
   let profiling, () = with_timer ~options "PackageHeap" profiling (fun () ->
@@ -653,15 +659,18 @@ let full_check workers ~ordered_libs parse_next options =
   (* load library code *)
   (* if anything errors, we'll infer but not merge client code *)
   Flow_logger.log "Loading libraries";
-  let profiling, lib_error = with_timer ~options "InitLibs" profiling (fun () ->
-    let lib_files = Init_js.init
-      ~options
-      ordered_libs
-      (fun file errs -> save_errors errors_by_file [file] [errs])
-      (fun file sups -> save_suppressions error_suppressions [file] [sups])
-    in
-    List.exists (fun (_, ok) -> not ok) lib_files
+  let profiling, libs_ok = with_timer ~options "InitLibs" profiling (fun () ->
+    let lib_files = Init_js.init ~options ordered_libs in
+    List.fold_left (fun all_ok (lib_file, ok, errs, suppressions) ->
+      save_errset errors_by_file lib_file errs;
+      save_suppressions error_suppressions lib_file suppressions;
+      if ok then all_ok else false
+    ) true lib_files
   ) in
+
+  let unparsed = List.fold_left (fun unparsed (file, info, _) ->
+    (file, info) :: unparsed
+  ) skipped_files error_files in
 
   (* typecheck client files *)
   let profiling = typecheck
@@ -669,7 +678,7 @@ let full_check workers ~ordered_libs parse_next options =
     ~profiling
     ~workers
     ~make_merge_input:(fun inferred ->
-      if lib_error then None
+      if not libs_ok then None
       (* TODO: the third entry should ideally be inferred to seed linking work,
          but it doesn't matter since the initial stream always contains the
          first entry. *)
@@ -677,7 +686,7 @@ let full_check workers ~ordered_libs parse_next options =
     )
     ~files:parsed
     ~removed:Module_js.NameSet.empty
-    ~unparsed:(List.rev_append error_files skipped_files)
+    ~unparsed
     ~resource_files
   in
 
@@ -718,7 +727,9 @@ let server_init genv =
   let get_next_raw =
     Files.make_next_files ~all:false ~subdir:None ~options ~libs in
   let get_next = fun () ->
-    get_next_raw () |> List.map (Files.filename_from_string ~options)
+    get_next_raw ()
+    |> List.map (Files.filename_from_string ~options)
+    |> Bucket.of_list
   in
   let (profiling, parsed) =
     full_check genv.ServerEnv.workers ~ordered_libs get_next options in

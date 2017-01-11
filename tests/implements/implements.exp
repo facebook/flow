@@ -1,0 +1,54 @@
+test.js:3
+  3: interface IFoo { foo: string }
+                           ^^^^^^ string. This type is incompatible with
+  6: class C2 implements IFoo { foo: number } // error: number <~> string
+                                     ^^^^^^ number
+
+test.js:5
+  5: class C1 implements IFoo {} // error: property `foo` not found
+                         ^^^^ property `foo` of IFoo. Property not found in
+  5: class C1 implements IFoo {} // error: property `foo` not found
+           ^^ C1
+
+test.js:6
+  6: class C2 implements IFoo { foo: number } // error: number <~> string
+                                     ^^^^^^ number. This type is incompatible with
+  3: interface IFoo { foo: string }
+                           ^^^^^^ string
+
+test.js:13
+ 13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+                         ^^^^ property `foo` of IFoo. Property not found in
+ 13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+           ^^ C4
+
+test.js:13
+ 13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+                               ^^^^ property `bar` of IBar. Property not found in
+ 13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+           ^^ C4
+
+test.js:16
+ 16: interface IFooBar extends IFoo { bar: number }
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo` of IFoo. Property not found in
+ 18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
+           ^^ C5
+
+test.js:18
+ 18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
+                         ^^^^^^^ property `bar` of IFooBar. Property not found in
+ 18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
+           ^^ C5
+
+test.js:21
+ 21: (new C5: IBar); // error: property `bar` not found (despite IBar < IFooBar)
+              ^^^^ property `bar` of IBar. Property not found in
+ 21: (new C5: IBar); // error: property `bar` not found (despite IBar < IFooBar)
+      ^^^^^^ C5
+
+test.js:26
+ 26: class C7 implements C1 {} // error: C1 is a class, expected an interface
+                         ^^ C1. Argument to implements clause must be an interface
+
+
+Found 9 errors

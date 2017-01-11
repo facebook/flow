@@ -109,7 +109,7 @@ let gen_builtin_class_type t env = Type.(
    *)
   let classid =
     match t with
-    | InstanceT (_, _, _, {class_id; _;}) -> class_id
+    | InstanceT (_, _, _, _, {class_id; _;}) -> class_id
     | t -> failwith (
       spf
         ("Internal error: Expected an InstanceT while looking up a builtin " ^^
@@ -121,9 +121,9 @@ let gen_builtin_class_type t env = Type.(
   let builtin_t = Flow_js.get_builtin env.flow_cx builtin_name reason in
   let builtin_classid =
     match resolve_type builtin_t env with
-    | ThisClassT(InstanceT(_, _, _, {class_id; _;})) ->
+    | ThisClassT(InstanceT(_, _, _, _, {class_id; _;})) ->
       class_id
-    | PolyT(_, ThisClassT(InstanceT(_, _, _, {class_id; _;}))) ->
+    | PolyT(_, ThisClassT(InstanceT(_, _, _, _, {class_id; _;}))) ->
       class_id
     | builtin_t -> failwith (spf "Unexpected global type: %s" (string_of_ctor builtin_t))
   in
@@ -205,13 +205,14 @@ let rec gen_type t env = Type.(
   | FunProtoApplyT _ -> add_str "typeof Function.prototype.apply" env
   | FunProtoBindT _ -> add_str "typeof Function.prototype.bind" env
   | FunProtoCallT _ -> add_str "typeof Function.prototype.call" env
-  | FunT (_, _static, _prototype, {params_tlist; params_names; return_t; _;}) ->
+  | FunT (_, _static, _prototype, ft) ->
+    let {params_tlist; params_names; rest_param; return_t; _;} = ft in
     gen_tparams_list env
       |> add_str "("
-      |> gen_func_params params_names params_tlist
+      |> gen_func_params params_names params_tlist rest_param
       |> add_str ") => "
       |> gen_type return_t
-  | InstanceT (_, _static, _super, {class_id; _;}) -> (
+  | InstanceT (_, _static, _super, _, {class_id; _;}) -> (
     (* TODO: See if we can preserve class names *)
     let env =
       match IMap.get class_id env.class_names with
@@ -363,7 +364,7 @@ and gen_prop k p env =
   | GetSet (t1, t2) ->
     gen_getter k t1 env |> gen_setter k t2
 
-and gen_func_params params_names params_tlist env =
+and gen_func_params params_names params_tlist rest_param env =
   let params =
     match params_names with
     | Some params_names ->
@@ -373,6 +374,9 @@ and gen_func_params params_names params_tlist env =
     | None ->
       List.mapi (fun idx t -> (spf "p%d" idx, t)) params_tlist
   in
+  let params = match rest_param with
+  | None -> params
+  | Some (name, t) -> params @ [Option.value ~default:"rest" name, t] in
   gen_separated_list params ", " (fun (name, t) env ->
     gen_func_param name t env
   ) env

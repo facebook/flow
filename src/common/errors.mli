@@ -45,8 +45,6 @@ val simple_error: ?kind: error_kind -> Loc.t -> string -> error
 val internal_error: Loc.filename -> string -> error
 val is_duplicate_provider_error: error -> bool
 
-val parse_error_to_flow_error : (Loc.t * Parse_error.t) -> error
-
 val loc_of_error: error -> Loc.t
 val infos_of_error: error -> info list
 val extra_of_error: error -> info_tree list

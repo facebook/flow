@@ -32,6 +32,7 @@ type t = {
   structural: bool;
   tparams: Type.typeparam list;
   tparams_map: Type.t SMap.t;
+  implements: Type.t list;
   (* Multiple function signatures indicates an overloaded constructor. Note that
      function signatures are stored in reverse definition order. *)
   constructor: Func_sig.t list;
@@ -39,7 +40,7 @@ type t = {
   instance: signature;
 }
 
-let empty ?(structural=false) id reason tparams tparams_map super =
+let empty ?(structural=false) id reason tparams tparams_map super implements =
   let empty_sig reason super = {
     reason; super;
     fields = SMap.empty;
@@ -54,7 +55,8 @@ let empty ?(structural=false) id reason tparams tparams_map super =
     empty_sig reason super
   in
   let instance = empty_sig reason super in
-  { id; structural; tparams; tparams_map; constructor; static; instance }
+  { id; structural; tparams; tparams_map; constructor; static; instance;
+    implements }
 
 let map_sig ~static f s =
   if static
@@ -266,6 +268,25 @@ let remove_this x =
     tparams_map = SMap.remove "this" x.tparams_map;
   }
 
+let thistype cx x =
+  let x = remove_this x in
+  let {
+    implements;
+    static = {reason = sreason; super = ssuper; _};
+    instance = {reason; super; _};
+    _;
+  } = x in
+  let open Type in
+  let sinsttype, insttype = mutually (insttype cx x) in
+  let static = InstanceT (sreason, ObjProtoT.t, ssuper, [], sinsttype) in
+  InstanceT (reason, static, super, implements, insttype)
+
+let check_implements cx x =
+  let this = thistype cx x in
+  List.iter (fun i ->
+    Flow.flow cx (i, Type.ImplementsT this)
+  ) x.implements
+
 let check_super cx x =
   let x = remove_this x in
   let reason = x.instance.reason in
@@ -278,18 +299,9 @@ let check_super cx x =
 (* TODO: Ideally we should check polarity for all class types, but this flag is
    flipped off for interface/declare class currently. *)
 let classtype cx ?(check_polarity=true) x =
-  let x = remove_this x in
-  let {
-    structural;
-    tparams;
-    static = {reason = sreason; super = ssuper; _};
-    instance = {reason; super; _};
-    _;
-  } = x in
+  let this = thistype cx x in
+  let { structural; tparams; _ } = remove_this x in
   let open Type in
-  let sinsttype, insttype = mutually (insttype cx x) in
-  let static = InstanceT (sreason, ObjProtoT.t, ssuper, sinsttype) in
-  let this = InstanceT (reason, static, super, insttype) in
   (if check_polarity then Flow.check_polarity cx Positive this);
   let t = if structural then ClassT this else ThisClassT this in
   if tparams = [] then t else PolyT (tparams, t)
@@ -392,9 +404,9 @@ let warn_unsafe_getters_setters cx loc =
    static members. The static members can be thought of as instance members of a
    "metaclass": thus, the static type is itself implemented as an instance
    type. *)
-let mk cx loc reason self ~expr = Ast.Class.(
-  fun {
-    body = (_, { Body.body = elements });
+let mk cx _loc reason self ~expr =
+  fun { Ast.Class.
+    body = (_, { Ast.Class.Body.body = elements });
     superClass;
     typeParameters;
     superTypeParameters;
@@ -404,11 +416,6 @@ let mk cx loc reason self ~expr = Ast.Class.(
   } ->
 
   warn_or_ignore_decorators cx classDecorators;
-
-  (* TODO *)
-  if implements <> []
-  then Flow_js.add_output cx Flow_error.(EUnsupportedSyntax (loc, Implements))
-  else ();
 
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx typeParameters
@@ -422,8 +429,15 @@ let mk cx loc reason self ~expr = Ast.Class.(
     let super =
       mk_extends cx tparams_map ~expr (superClass, superTypeParameters)
     in
+    let implements = List.map (fun (_, i) ->
+      let { Ast.Class.Implements.id = (loc, name); typeParameters } = i in
+      let reason = mk_reason (RCustom "implements") loc in
+      let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name reason in
+      let params = Anno.extract_type_param_instantiations typeParameters in
+      Anno.mk_nominal_type cx reason tparams_map (c, params)
+    ) implements in
     let id = Flow.mk_nominal cx in
-    empty id reason tparams tparams_map super
+    empty id reason tparams tparams_map super implements
   in
 
   (* In case there is no constructor, pick up a default one. *)
@@ -454,7 +468,7 @@ let mk cx loc reason self ~expr = Ast.Class.(
      to be redeclared if they were assigned in the constructor. So we don't do
      it. In the future, we could do it again, but only for private fields. *)
 
-  List.fold_left (fun c -> function
+  List.fold_left Ast.Class.(fun c -> function
     (* instance and static methods *)
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Identifier (_, name);
@@ -531,7 +545,6 @@ let mk cx loc reason self ~expr = Ast.Class.(
           Flow_error.(EUnsupportedSyntax (loc, ClassPropertyComputed));
         c
   ) class_sig elements
-)
 
 let rec extract_extends cx structural = function
   | [] -> [None,None]
@@ -593,7 +606,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       | [t] -> t
       | t0::t1::ts -> IntersectionT (super_reason, InterRep.make t0 t1 ts)
     ) in
-    empty ~structural id reason tparams tparams_map super
+    empty ~structural id reason tparams tparams_map super []
   in
 
   let iface_sig =
@@ -617,32 +630,56 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       x
         |> add_field ~static "$key" (k, polarity, None)
         |> add_field ~static "$value" (v, polarity, None)
-    | Property (loc, { Property.key; value; static; _method; optional; variance; _ }) ->
+    | Property (loc, { Property.key; value; static; _method; optional; variance; }) ->
       if optional && _method
       then Flow_js.add_output cx Flow_error.(EInternal (loc, OptionalMethod));
       let polarity = Anno.polarity variance in
-      Ast.Expression.Object.(match _method, key with
-      | _, Property.Literal (loc, _)
-      | _, Property.Computed (loc, _) ->
+      Ast.Expression.Object.(match _method, key, value with
+      | _, Property.Literal (loc, _), _
+      | _, Property.Computed (loc, _), _ ->
           Flow_js.add_output cx (Flow_error.EIllegalName loc);
           x
-      | true, Property.Identifier (_, name) ->
-          (match value with
-          | _, Ast.Type.Function func ->
-            let fsig = Func_sig.convert cx tparams_map loc func in
-            let append_method = match static, name with
-            | false, "constructor" -> append_constructor
-            | _ -> append_method ~static name
-            in
-            append_method fsig x
-          | _ ->
-            Flow_js.add_output cx
-              Flow_error.(EInternal (loc, MethodNotAFunction));
-            x)
-      | false, Property.Identifier (_, name) ->
+      | true, Property.Identifier (_, name),
+          Ast.Type.Object.Property.Init (_, Ast.Type.Function func) ->
+          let fsig = Func_sig.convert cx tparams_map loc func in
+          let append_method = match static, name with
+          | false, "constructor" -> append_constructor
+          | _ -> append_method ~static name
+          in
+          append_method fsig x
+
+      | true, Property.Identifier _, _ ->
+          Flow_js.add_output cx
+            Flow_error.(EInternal (loc, MethodNotAFunction));
+          x
+
+      | false, Property.Identifier (_, name),
+          Ast.Type.Object.Property.Init value ->
           let t = Anno.convert cx tparams_map value in
           let t = if optional then Type.OptionalT t else t in
-          add_field ~static name (t, polarity, None) x)
+          add_field ~static name (t, polarity, None) x
+
+      (* unsafe getter property *)
+      | _, Property.Identifier (_, name),
+          Ast.Type.Object.Property.Get (_, func)
+            when Context.enable_unsafe_getters_and_setters cx ->
+          let fsig = Func_sig.convert cx tparams_map loc func in
+          add_getter ~static name fsig x
+
+      (* unsafe setter property *)
+      | _, Property.Identifier (_, name),
+          Ast.Type.Object.Property.Set (_, func)
+            when Context.enable_unsafe_getters_and_setters cx ->
+          let fsig = Func_sig.convert cx tparams_map loc func in
+          add_setter ~static name fsig x
+
+      | _, _, Ast.Type.Object.Property.Get _
+      | _, _, Ast.Type.Object.Property.Set _ ->
+          Flow_js.add_output cx
+            Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
+          x
+      )
+
     | SpreadProperty (loc, _) ->
       Flow_js.add_output cx Flow_error.(EInternal (loc, InterfaceTypeSpread));
       x

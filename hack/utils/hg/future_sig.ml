@@ -9,7 +9,6 @@
  *)
 
 module type S = sig
-  type pid = int
   type 'a t
   val get : 'a t -> 'a
 end

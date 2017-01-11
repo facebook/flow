@@ -226,6 +226,7 @@ runtest() {
         # stop the server after the script exits.
         #
         all=" --all"
+        flowlib=" --no-flowlib"
         shell=""
         cmd="check"
         stdin=""
@@ -266,11 +267,18 @@ runtest() {
             pushd "$cwd" >/dev/null
         fi
 
+        # if .flowconfig sets no_flowlib, don't pass the cli flag
+        if grep -q "no_flowlib" .flowconfig; then
+            flowlib=""
+        fi
+
         # run test
         if [ "$cmd" == "check" ]
         then
-            # default command is check with configurable --all
-            "$FLOW" check . $all --strip-root --show-all-errors 1> "$abs_out_file" 2> "$stderr_dest"
+            # default command is check with configurable --all and --no-flowlib
+            "$FLOW" check . \
+              $all $flowlib --strip-root --show-all-errors \
+               1> "$abs_out_file" 2> "$stderr_dest"
         else
             # otherwise, run specified flow command, then kill the server
 
@@ -278,7 +286,8 @@ runtest() {
             trap "kill_server -TERM" SIGTERM
 
             # start server and wait
-            "$FLOW" start . $all --wait --log-file "$abs_log_file" > /dev/null 2>&1
+            "$FLOW" start . \
+              $all $flowlib --wait --log-file "$abs_log_file" > /dev/null 2>&1
             if [ "$shell" != "" ]
             then
                 # run test script

@@ -788,14 +788,14 @@ end with type t = Impl.t) = struct
       | Literal lit -> literal lit, false
       | Identifier id -> identifier id, false
       | Computed expr -> expression expr, true)  in
-      let kind = match prop.kind with
-      | Init -> "init"
-      | Get -> "get"
-      | Set -> "set"
+      let value, kind = match prop.value with
+      | Init value -> expression value, "init"
+      | Get value -> function_expression value, "get"
+      | Set value -> function_expression value, "set"
       in
       node "Property" loc [|
         "key", key;
-        "value", expression prop.value;
+        "value", value;
         "kind", string kind;
         "method", bool prop._method;
         "shorthand", bool prop.shorthand;
@@ -1023,12 +1023,18 @@ end with type t = Impl.t) = struct
     | Expression.Object.Property.Computed _ ->
       failwith "There should not be computed object type property keys"
     in
+    let value, kind = match prop.value with
+    | Init value -> _type value, "init"
+    | Get (loc, f) -> function_type (loc, f), "get"
+    | Set (loc, f) -> function_type (loc, f), "set"
+    in
     node "ObjectTypeProperty" loc [|
       "key", key;
-      "value", _type prop.value;
+      "value", value;
       "optional", bool prop.optional;
       "static", bool prop.static;
       "variance", option variance prop.variance;
+      "kind", string kind;
     |]
   )
 

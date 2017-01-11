@@ -105,13 +105,12 @@ end = struct
   and parse_spec = Ast.Expression.Object.(function
     | Property (_, {
         Property.
-        kind = Property.Init;
         key =
           Property.Literal (_, {
             Ast.Literal.value = Ast.Literal.String name;
             _;
           });
-        value;
+        value = Property.Init value;
         _
       }) ->
         let child = parse_spec_value value in
@@ -136,12 +135,11 @@ end = struct
   let extract_obj_property err_context = Ast.Expression.Object.(function
     | Property(_, {
         Property.
-        kind = Property.Init;
         key = Property.Literal (_, {
           Ast.Literal.value = Ast.Literal.String key;
           _;
         });
-        value;
+        value = Property.Init value;
         _;
       }) -> (key, value)
     | _ ->
@@ -220,13 +218,14 @@ end = struct
   let parse_section = Ast.Expression.Object.(function
     | Property (_, {
         Property.
-        kind = Property.Init;
         key =
           Property.Literal (_, {
             Ast.Literal.value = Ast.Literal.String name;
             _;
           });
-        value = (_, Ast.Expression.Object { Ast.Expression.Object.properties });
+        value = Property.Init (_, Ast.Expression.Object {
+          Ast.Expression.Object.properties
+        });
         _
       }) -> (name, List.map parse_test properties)
     | _ -> prerr_endline "ERROR: unexpected section format"; exit 1
@@ -239,18 +238,17 @@ end = struct
           let open Property in
           let sections = List.find (function
             | Property (_, {
-                kind = Init;
                 key =
                   Property.Literal (_, {
                     Ast.Literal.value = Ast.Literal.String "sections";
                     _;
                   });
-                value = (_, Object _);
+                value = Init (_, Object _);
                   _;
               }) -> true
             | _ -> false) properties in
           (match sections with
-          | Property (_, { value = (_, Object { properties }); _; }) ->
+          | Property (_, { value = Init (_, Object { properties }); _; }) ->
               List.map parse_section properties
           | _ -> assert false)
         with Not_found ->

@@ -175,8 +175,8 @@ let merge_strict_component ~options = function
   )
   else file, Errors.ErrorSet.empty, Some true
 
-let merge_strict_job ~options (merged, errsets, unchanged) elements =
-  List.fold_left (fun (merged, errsets, unchanged) element ->
+let merge_strict_job ~options (merged, unchanged) elements =
+  List.fold_left (fun (merged, unchanged) element ->
     let component = Merge_stream.(match element with
       | Component component -> component
       | Skip file -> [file]
@@ -193,11 +193,11 @@ let merge_strict_job ~options (merged, errsets, unchanged) elements =
         match diff with
         | Some diff ->
           (* file was rechecked; diff says whether its signature was changed *)
-          file :: merged, errors :: errsets,
+          (file, errors) :: merged,
           if diff then unchanged else file :: unchanged
         | None ->
           (* file was skipped, so its signature is definitely unchanged *)
-          merged, errsets,
+          merged,
           file :: unchanged
       )
     with
@@ -213,10 +213,10 @@ let merge_strict_job ~options (merged, errsets, unchanged) elements =
         (Errors.internal_error file msg) in
       prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
         (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
-      file :: merged, errorset::errsets, unchanged
-  ) (merged, errsets, unchanged) elements
+      (file, errorset) :: merged, unchanged
+  ) (merged, unchanged) elements
 
-let merge_strict ~options ~workers ~save_errors
+let merge_strict ~options ~workers
     dependency_graph partition recheck_map =
   (* NOTE: master_cx will only be saved once per server lifetime *)
   let master_cx = Init_js.get_master_cx options in
@@ -248,13 +248,12 @@ let merge_strict ~options ~workers ~save_errors
     (fun t -> spf "merged (strict) in %f" t)
     (fun () ->
       (* returns parallel lists of filenames and errorsets *)
-      let files, errsets, _ = MultiWorker.call_dynamic
+      let merged, _ = MultiWorker.call
         workers
         ~job: (merge_strict_job ~options)
-        ~neutral: ([], [], [])
+        ~neutral: ([], [])
         ~merge: Merge_stream.join
         ~next: (Merge_stream.make
                   dependency_graph leader_map component_map recheck_leader_map) in
-      (* save *)
-      save_errors files errsets
+      merged
     )

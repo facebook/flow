@@ -866,6 +866,54 @@ tagged_union.js:229
 229:       x.z; // error
            ^ object type
 
+tagged_union.js:237
+237:       x.z; // error
+             ^ property `z`. Property not found in
+237:       x.z; // error
+           ^ object type
+
+tagged_union.js:240
+240:       x.y; // error
+             ^ property `y`. Property not found in
+240:       x.y; // error
+           ^ object type
+
+tagged_union.js:244
+244:       x.y; // error
+             ^ property `y`. Property not found in
+244:       x.y; // error
+           ^ object type
+
+tagged_union.js:247
+247:       x.z; // error
+             ^ property `z`. Property not found in
+247:       x.z; // error
+           ^ object type
+
+tagged_union.js:255
+255:       x.z; // error
+             ^ property `z`. Property not found in
+255:       x.z; // error
+           ^ object type
+
+tagged_union.js:258
+258:       x.y; // error
+             ^ property `y`. Property not found in
+258:       x.y; // error
+           ^ object type
+
+tagged_union.js:262
+262:       x.y; // error
+             ^ property `y`. Property not found in
+262:       x.y; // error
+           ^ object type
+
+tagged_union.js:265
+265:       x.z; // error
+             ^ property `z`. Property not found in
+265:       x.z; // error
+           ^ object type
+
 typeof.js:5
   5:     x[0]; // error for boolean, not number
          ^^^^ access of computed property/element. Computed property/element cannot be accessed on
@@ -1001,4 +1049,4 @@ void.js:85
            ^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 172 errors
+Found 180 errors

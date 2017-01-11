@@ -50,7 +50,9 @@ let load_lib_files ~master_cx ~metadata files
           lib_file statements comments
         in
 
-        Merge_js.merge_lib_file cx master_cx save_infer_errors save_suppressions;
+        let errs, suppressions = Merge_js.merge_lib_file cx master_cx in
+        save_infer_errors lib_file errs;
+        save_suppressions lib_file suppressions;
 
         (* symbols loaded from this file are suppressed
            if found in later ones *)
@@ -59,8 +61,10 @@ let load_lib_files ~master_cx ~metadata files
         exclude_syms, result
 
       | _, parse_errors ->
-        let converted = List.fold_left (fun acc err ->
-          Errors.(ErrorSet.add (parse_error_to_flow_error err) acc)
+        let converted = List.fold_left (fun acc (loc, err) ->
+          let error = Errors.mk_error
+            ~kind:Errors.ParseError [loc, [Parse_error.PP.error err]] in
+          Errors.ErrorSet.add error acc
         ) Errors.ErrorSet.empty parse_errors in
         save_parse_errors lib_file converted;
         exclude_syms, ((lib_file, false) :: result)
@@ -152,8 +156,10 @@ let check_content ~filename ~content =
 
     Context.errors cx
   | _, parse_errors ->
-    List.fold_left (fun acc err ->
-      Errors.(ErrorSet.add (parse_error_to_flow_error err) acc)
+    List.fold_left (fun acc (loc, err) ->
+      let error = Errors.mk_error
+        ~kind:Errors.ParseError [loc, [Parse_error.PP.error err]] in
+      Errors.ErrorSet.add error acc
     ) Errors.ErrorSet.empty parse_errors
   in
   let strip_root = Some root in

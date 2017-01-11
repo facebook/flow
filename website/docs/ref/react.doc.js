@@ -141,7 +141,7 @@ class Button extends React.Component {
   props: Props;
 
   state: {
-    display: 'static' | 'hover' | 'active';
+    display: 'static' | 'hover' | 'active',
   };
 
   static defaultProps: { visited: boolean };

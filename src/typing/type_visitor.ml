@@ -61,9 +61,10 @@ class ['a] t = object(self)
 
   | ClassT t -> self#type_ cx acc t
 
-  | InstanceT (_, static, super, insttype) ->
+  | InstanceT (_, static, super, implements, insttype) ->
     let acc = self#type_ cx acc static in
     let acc = self#type_ cx acc super in
+    let acc = self#list (self#type_ cx) acc implements in
     let acc = self#inst_type cx acc insttype in
     acc
 
@@ -238,6 +239,7 @@ class ['a] t = object(self)
   | HasOwnPropT (_, _)
   | IdxUnMaybeifyT _
   | IdxUnwrap _
+  | ImplementsT _
   | ImportDefaultT (_, _, _, _)
   | ImportModuleNsT (_, _)
   | ImportNamedT (_, _, _, _)
@@ -305,9 +307,13 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc bound in
     self#opt (self#type_ cx) acc default
 
-  method fun_type cx acc { this_t; params_tlist; return_t; _ } =
+  method fun_type cx acc { this_t; params_tlist; rest_param; return_t; _ } =
     let acc = self#type_ cx acc this_t in
     let acc = self#list (self#type_ cx) acc params_tlist in
+    let acc = Option.value_map
+      ~f:(fun (_, t) -> self#type_ cx acc t)
+      ~default:acc
+      rest_param in
     let acc = self#type_ cx acc return_t in
     acc
 

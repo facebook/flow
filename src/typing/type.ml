@@ -80,7 +80,7 @@ module rec TypeTerm : sig
     (* type of a class *)
     | ClassT of t
     (* type of an instance of a class *)
-    | InstanceT of reason * static * super * insttype
+    | InstanceT of reason * static * super * implements * insttype
 
     (* type of an optional parameter *)
     | OptionalT of t
@@ -288,16 +288,16 @@ module rec TypeTerm : sig
     | SummarizeT of reason * t
 
     (* operations on runtime values, such as functions, objects, and arrays *)
-    | ApplyT of reason * t * funtype
-    | BindT of reason * funtype
-    | CallT of reason * funtype
-    | MethodT of (* call *) reason * (* lookup *) reason * propref * funtype
+    | ApplyT of reason * t * funcalltype
+    | BindT of reason * funcalltype
+    | CallT of reason * funcalltype
+    | MethodT of (* call *) reason * (* lookup *) reason * propref * funcalltype
     | SetPropT of reason * propref * t
     | GetPropT of reason * propref * t
     | TestPropT of reason * propref * t
     | SetElemT of reason * t * t
     | GetElemT of reason * t * t
-    | CallElemT of (* call *) reason * (* lookup *) reason * t * funtype
+    | CallElemT of (* call *) reason * (* lookup *) reason * t * funcalltype
     | GetStaticsT of reason * t_out
 
     (* repositioning *)
@@ -307,6 +307,7 @@ module rec TypeTerm : sig
     (* operations on runtime types, such as classes and functions *)
     | ConstructorT of reason * t list * t
     | SuperT of reason * insttype
+    | ImplementsT of t
     | MixinT of reason * t
 
     (* overloaded +, could be subsumed by general overloading *)
@@ -585,15 +586,24 @@ module rec TypeTerm : sig
     | Mixed_non_void
     | Empty_intersection
 
-  (* used by FunT and CallT *)
+  (* used by FunT *)
   and funtype = {
     this_t: t;
     params_tlist: t list;
     params_names: string list option;
+    rest_param: (string option * t) option;
     return_t: t;
     closure_t: int;
     is_predicate: bool;
     changeset: Changeset.t
+  }
+
+  (* Used by CallT and similar constructors *)
+  and funcalltype = {
+    call_this_t: t;
+    call_args_tlist: t list;
+    call_tout: t;
+    call_closure_t: int;
   }
 
   and arrtype =
@@ -662,7 +672,7 @@ module rec TypeTerm : sig
   and elem_action =
     | ReadElem of t
     | WriteElem of t
-    | CallElem of reason (* call *) * funtype
+    | CallElem of reason (* call *) * funcalltype
 
   and propref =
     | Named of reason * name
@@ -766,6 +776,8 @@ module rec TypeTerm : sig
 
   and static = t
 
+  and implements = t list
+
   and t_out = t
 
   and custom_fun_kind =
@@ -787,6 +799,8 @@ module rec TypeTerm : sig
   | SentinelStr of string
   | SentinelNum of number_literal
   | SentinelBool of bool
+  | SentinelNull
+  | SentinelVoid
 
   and choice_tool =
   | Trigger
@@ -1454,7 +1468,7 @@ let rec reason_of_t = function
   | FunProtoT reason -> reason
   | FunT (reason,_,_,_) -> reason
   | IdxWrapper (reason, _) -> reason
-  | InstanceT (reason,_,_,_) -> reason
+  | InstanceT (reason,_,_,_,_) -> reason
   | IntersectionT (reason, _) -> reason
   | KeysT (reason, _) -> reason
   | MaybeT t -> replace_reason (fun desc -> RMaybe desc) (reason_of_t t)
@@ -1525,6 +1539,7 @@ and reason_of_use_t = function
   | HasOwnPropT (reason, _) -> reason
   | IdxUnMaybeifyT (reason, _) -> reason
   | IdxUnwrap (reason, _) -> reason
+  | ImplementsT t -> reason_of_t t
   | ImportDefaultT (reason, _, _, _) -> reason
   | ImportModuleNsT (reason, _) -> reason
   | ImportNamedT (reason, _, _, _) -> reason
@@ -1608,7 +1623,8 @@ let rec mod_reason_of_t f = function
   | FunProtoT (reason) -> FunProtoT (f reason)
   | FunT (reason, s, p, ft) -> FunT (f reason, s, p, ft)
   | IdxWrapper (reason, t) -> IdxWrapper (f reason, t)
-  | InstanceT (reason, st, su, inst) -> InstanceT (f reason, st, su, inst)
+  | InstanceT (reason, st, su, impls, inst) ->
+      InstanceT (f reason, st, su, impls, inst)
   | IntersectionT (reason, ts) -> IntersectionT (f reason, ts)
   | KeysT (reason, t) -> KeysT (f reason, t)
   | MaybeT t -> MaybeT (mod_reason_of_t f t)
@@ -1682,6 +1698,7 @@ and mod_reason_of_use_t f = function
   | HasOwnPropT (reason, prop) -> HasOwnPropT (f reason, prop)
   | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
   | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
+  | ImplementsT t -> ImplementsT (mod_reason_of_t f t)
   | ImportDefaultT (reason, import_kind, name, t) ->
       ImportDefaultT (f reason, import_kind, name, t)
   | ImportModuleNsT (reason, t) -> ImportModuleNsT (f reason, t)
@@ -1885,6 +1902,7 @@ let string_of_use_ctor = function
   | HasOwnPropT _ -> "HasOwnPropT"
   | IdxUnMaybeifyT _ -> "IdxUnMaybeifyT"
   | IdxUnwrap _ -> "IdxUnwrap"
+  | ImplementsT _ -> "ImplementsT"
   | ImportDefaultT _ -> "ImportDefaultT"
   | ImportModuleNsT _ -> "ImportModuleNsT"
   | ImportNamedT _ -> "ImportNamedT"
@@ -1990,3 +2008,11 @@ let name_of_propref = function
 let reason_of_propref = function
   | Named (r, _) -> r
   | Computed t -> reason_of_t t
+
+and extract_setter_type = function
+  | FunT (_, _, _, { params_tlist = [param_t]; _; }) -> param_t
+  | _ ->  failwith "Setter property with unexpected type"
+
+and extract_getter_type = function
+  | FunT (_, _, _, { return_t; _; }) -> return_t
+  | _ -> failwith "Getter property with unexpected type"

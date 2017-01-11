@@ -28,7 +28,7 @@ let exports_map cx module_name =
 
 let rec mark_declared_classes name t env = Codegen.(Type.(
   match resolve_type t env with
-  | ThisClassT (InstanceT (_, _, _, {class_id; _;})) ->
+  | ThisClassT (InstanceT (_, _, _, _, {class_id; _;})) ->
     set_class_name class_id name env
   | PolyT (_, t) ->
     mark_declared_classes name t env
@@ -135,7 +135,8 @@ let gen_class_body =
     | AnnotT t ->
       let p = Field (t, Positive) in
       gen_method ~static method_name p env
-    | FunT (_, _static, _super, {params_tlist; params_names; return_t; _;}) ->
+    | FunT (_, _static, _super, ft) ->
+      let {params_tlist; params_names; rest_param; return_t; _;} = ft in
       let is_empty_constructor =
         method_name = "constructor"
         && (not static)
@@ -148,7 +149,7 @@ let gen_class_body =
           |> add_str method_name
           |> gen_tparams_list
           |> add_str "("
-          |> gen_func_params params_names params_tlist
+          |> gen_func_params params_names params_tlist rest_param
           |> add_str "): "
           |> gen_type return_t
           |> add_str ";\n"
@@ -186,7 +187,7 @@ let gen_class_body =
   fun static fields methods env -> Codegen.(
     let (static_fields, static_methods) = Type.(
       match static with
-      | InstanceT (_, _, _, {fields_tmap; methods_tmap; _;}) ->
+      | InstanceT (_, _, _, _, {fields_tmap; methods_tmap; _;}) ->
         (find_props fields_tmap env, find_props methods_tmap env)
       | t -> failwith (
         spf
@@ -227,15 +228,16 @@ class unexported_class_visitor = object(self)
       let seen = TypeSet.add t seen in
       match t with
       (* class_id = 0 is top of the inheritance chain *)
-      | InstanceT (_, _, _, {class_id; _;})
+      | InstanceT (_, _, _, _, {class_id; _;})
         when class_id = 0 || ISet.mem class_id imported_classids ->
         (env, seen, imported_classids)
 
-      | InstanceT (r, static, extends, {
+      | InstanceT (r, static, extends, implements, {
           class_id;
           fields_tmap;
           methods_tmap;
-          _;
+          structural;
+          _
         }) when not (has_class_name class_id env || Reason.is_lib_reason r) ->
         let class_name = next_class_name env in
 
@@ -246,7 +248,11 @@ class unexported_class_visitor = object(self)
         let env = set_class_name class_id class_name env in
         let (env, seen, imported_classids) = super#type_ cx (env, seen, imported_classids) t in
 
-        let env = add_str "declare class " env |> add_str class_name in
+        let env = env
+          |> add_str "declare "
+          |> add_str (if structural then "interface " else "class ")
+          |> add_str class_name
+        in
 
         let env =
           match resolve_type extends env with
@@ -261,6 +267,13 @@ class unexported_class_visitor = object(self)
               |> gen_separated_list ts ", " gen_type
               |> add_str ">"
           | extends -> add_str " extends " env |> gen_type extends
+        in
+
+        let env = match implements with
+        | [] -> env
+        | ts -> env
+          |> add_str " implements "
+          |> gen_separated_list ts ", " gen_type
         in
 
         let fields = find_props fields_tmap env in
@@ -302,7 +315,7 @@ let gen_local_classes =
     in
     let rec fold_imported_classid _name t set = Type.(
       match Codegen.resolve_type t env with
-      | ThisClassT (InstanceT (_, _, _, {class_id; _;})) ->
+      | ThisClassT (InstanceT (_, _, _, _, {class_id; _;})) ->
         ISet.add class_id set
       | PolyT (_, t) -> fold_imported_classid _name t set
       | _ -> set
@@ -319,6 +332,7 @@ let gen_named_exports =
       | FunT (_, _static, _prototype, {
           params_tlist;
           params_names;
+          rest_param;
           return_t;
           _;
         }) ->
@@ -329,7 +343,7 @@ let gen_named_exports =
         in
         gen_tparams_list env
           |> add_str "("
-          |> gen_func_params params_names params_tlist
+          |> gen_func_params params_names params_tlist rest_param
           |> add_str "): "
           |> gen_type return_t
           |> add_str ";"
@@ -337,7 +351,7 @@ let gen_named_exports =
       | PolyT (tparams, t) ->
         add_tparams tparams env |> fold_named_export name t
 
-      | ThisClassT (InstanceT (_, static, super, {
+      | ThisClassT (InstanceT (_, static, super, implements, {
           fields_tmap;
           methods_tmap;
           (* TODO: The only way to express `mixins` right now is with a
@@ -346,24 +360,32 @@ let gen_named_exports =
            *       now.
            *)
           mixins = _;
+          structural;
           _;
         })) ->
         let fields = Codegen.find_props fields_tmap env in
         let methods = Codegen.find_props methods_tmap env in
-        let env =
-          if name = "default"
-          then add_str "declare export default class" env
-          else add_str "declare export class " env |> add_str name
-        in
+        let env = add_str "declare export " env in
+        let env = add_str (
+          if structural then "interface"
+          else if name = "default" then "default class"
+          else spf "class %s" name
+        ) env in
         let env = gen_tparams_list env in
-        let env = (
+        let env =
           match Codegen.resolve_type super env with
           | ObjProtoT _ -> env
           | (ThisTypeAppT _) as t -> add_str " extends " env |> gen_type t
           | _ -> failwith (
             spf "Unexpected super type for class: %s" (string_of_ctor super)
           )
-        ) in
+        in
+        let env = match implements with
+        | [] -> env
+        | ts -> env
+          |> add_str " implements "
+          |> gen_separated_list ts ", " gen_type
+        in
         gen_class_body static fields methods env
 
       | TypeT (_, t) ->

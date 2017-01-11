@@ -11,6 +11,7 @@
 module Opts : sig
   type moduleSystem = Node | Haste
   type t = {
+    emoji: bool;
     enable_const_params: bool;
     enable_unsafe_getters_and_setters: bool;
     enforce_strict_type_args: bool;
