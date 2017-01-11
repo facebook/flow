@@ -4056,16 +4056,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | None -> value
           | Some ts ->
               let index = int_of_float float_value in
-              begin try List.nth ts index
-              with _ ->
+              begin
+                try List.nth ts index
+                with _ ->
                 if is_tuple then begin
                   let reasons = (reason, reason_tup) in
-                  add_output
-                    cx
-                    ~trace
-                    (FlowError.ETupleOutOfBounds (reasons, List.length ts, index));
-                end;
-                value
+                  let error =
+                    FlowError.ETupleOutOfBounds (reasons, List.length ts, index)
+                  in
+                  add_output cx ~trace error;
+                  VoidT (mk_reason RTupleOutOfBoundsAccess (loc_of_reason reason))
+                end else value
               end
           end
       | _ -> value

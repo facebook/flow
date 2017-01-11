@@ -73,6 +73,7 @@ type reason_desc =
   | RArrayType
   | RTupleType
   | RTupleElement
+  | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
   | RArrowFunction of reason_desc_function
   | RFunctionType
@@ -364,6 +365,7 @@ let rec string_of_desc = function
   | RArrayType -> "array type"
   | RTupleType -> "tuple type"
   | RTupleElement -> "tuple element"
+  | RTupleOutOfBoundsAccess -> "undefined (out of bounds tuple access)"
   | RFunction func -> spf "%sfunction" (function_desc_prefix func)
   | RArrowFunction func -> spf "%sarrow function" (function_desc_prefix func)
   | RFunctionType -> "function type"
