@@ -169,6 +169,8 @@ let rec type_printer_impl ~size override enclosure cx t =
 
     | ArrT (_, ArrayAT (t, None)) ->
         spf "Array<%s>" (pp EnclosureNone cx t)
+    | ArrT (_, ROArrayAT (t)) ->
+        spf "$ReadOnlyArray<%s>" (pp EnclosureNone cx t)
     | ArrT (_, ArrayAT (_, Some ts))
     | ArrT (_, TupleAT (_, ts)) ->
         ts

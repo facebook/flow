@@ -52,7 +52,7 @@ class ['a] t = object(self)
     let acc = self#props cx acc props_tmap in
     let acc = self#type_ cx acc proto_t in
     acc
-  | ArrT (_, ArrayAT (elemt, None)) ->
+  | ArrT (_, (ArrayAT (elemt, None) | ROArrayAT (elemt))) ->
     self#type_ cx acc elemt
   | ArrT (_, ArrayAT (elemt, Some tuple_types))
   | ArrT (_, TupleAT (elemt, tuple_types)) ->

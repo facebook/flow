@@ -197,12 +197,12 @@ let rec convert cx tparams_map = Ast.Type.(function
     | _ ->
       error_type cx loc (FlowError.ETypeParamMinArity (loc, 2)))
 
-  (* $Tuple<...T> is the tuple of types ...T *)
-  | "$Tuple" ->
-    (* TODO - get a better elemt *)
-    let tuple_types = convert_type_params () in
-    let elemt = AnyT.t in
-    ArrT (mk_reason RTupleType loc, TupleAT (elemt, tuple_types))
+  (* $ReadOnlyArray<T> is the supertype of all tuples and all arrays *)
+  | "$ReadOnlyArray" ->
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      let elemt = convert_type_params () |> List.hd in
+      ArrT (mk_reason RROArrayType loc, ROArrayAT (elemt))
+    )
 
   (* $Supertype<T> acts as any over supertypes of T *)
   | "$Supertype" ->

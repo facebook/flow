@@ -342,7 +342,8 @@ and parts_of_use_t cx = function
 | TypeAppVarianceCheckT _ -> []
 
 and parts_of_arrtype = function
-| ArrayAT (elemt, None) -> [("elem"), Def elemt]
+| ArrayAT (elemt, None)
+| ROArrayAT (elemt) -> [("elem"), Def elemt]
 | ArrayAT (elemt, Some tuple_types)
 | TupleAT (elemt, tuple_types) ->
   ("elem", Def elemt)::(list_parts tuple_types)

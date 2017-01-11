@@ -23,6 +23,7 @@ type reason_desc =
   | RArrayLit
   | REmptyArrayLit
   | RArrayType
+  | RROArrayType
   | RTupleType
   | RTupleElement
   | RTupleOutOfBoundsAccess

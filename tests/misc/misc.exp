@@ -67,8 +67,8 @@ G.js:6
      ^^^^^^^^ assignment of property `length`
   6: b.length = "duck";
                 ^^^^^^ string. This type is incompatible with
-  6: b.length = "duck";
-     ^^^^^^^^ number
+222:     length: number;
+                 ^^^^^^ number. See lib: <BUILTINS>/core.js:222
 
 G.js:7
   7: b.length();

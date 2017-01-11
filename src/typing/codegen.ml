@@ -163,6 +163,10 @@ let rec gen_type t env = Type.(
       add_str "Array<" env
         |> gen_type elemt
         |> add_str ">"
+    | ROArrayAT (elemt) ->
+      add_str "$ReadOnlyArray<" env
+        |> gen_type elemt
+        |> add_str ">"
     | ArrayAT (_, Some tuple_types)
     | TupleAT (_, tuple_types) ->
       env

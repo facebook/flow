@@ -187,8 +187,8 @@ object_prototype.js:150
 object_prototype.js:151
 151: var xToLocaleString2 : () => number = x.toLocaleString; // error
                                   ^^^^^^ number. This type is incompatible with
-457:     toLocaleString(): string;
-                           ^^^^^^ string. See lib: <BUILTINS>/core.js:457
+445:     toLocaleString(): string;
+                           ^^^^^^ string. See lib: <BUILTINS>/core.js:445
 
 object_prototype.js:155
 155: var yToLocaleString : number = y.toLocaleString; // error

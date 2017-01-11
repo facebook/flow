@@ -299,6 +299,14 @@ let rec normalize_type_impl cx ids t = match t with
         )
       )
 
+  | ArrT (_, ROArrayAT (elemt)) ->
+      ArrT (
+        locationless_reason RTupleType,
+        ROArrayAT (
+          normalize_type_impl cx ids elemt
+        )
+      )
+
   | ExactT (reason, t) ->
     ExactT (reason, normalize_type_impl cx ids t)
 

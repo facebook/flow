@@ -141,7 +141,7 @@ function mutate_tuple(tup: [number]): void {
 3:   tup.push(123); // Error
          ^ property `push`. Property not found in
 3:   tup.push(123); // Error
-     ^ Array$Tuple
+     ^ $ReadOnlyArray
 
 Found 1 errors
 ```

@@ -67,6 +67,7 @@ type error_message =
   | ETupleArityMismatch of (reason * reason) * int * int
   | ENonLitArrayToTuple of (reason * reason)
   | ETupleOutOfBounds of (reason * reason) * int * int
+  | ETupleUnsafeWrite of (reason * reason)
   | ESpeculationFailed of Type.t * Type.use_t * (reason * error_message) list
   | ESpeculationAmbiguous of (reason * reason) * (int * reason) * (int * reason) * reason list
   | EIncompatibleWithExact of (reason * reason)
@@ -555,6 +556,12 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         access index %d of"
         length
         index in
+      typecheck_error msg reasons
+
+  | ETupleUnsafeWrite (reasons) ->
+      let msg = spf
+        "Flow will only let you modify a tuple if it knows exactly which \
+        element of the tuple you are mutating. Unsafe mutation of" in
       typecheck_error msg reasons
 
   | ESpeculationFailed (l, u, branches) ->

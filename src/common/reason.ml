@@ -71,6 +71,7 @@ type reason_desc =
   | RArrayLit
   | REmptyArrayLit
   | RArrayType
+  | RROArrayType
   | RTupleType
   | RTupleElement
   | RTupleOutOfBoundsAccess
@@ -363,6 +364,7 @@ let rec string_of_desc = function
   | RArrayLit -> "array literal"
   | REmptyArrayLit -> "empty array literal"
   | RArrayType -> "array type"
+  | RROArrayType -> "read-only array type"
   | RTupleType -> "tuple type"
   | RTupleElement -> "tuple element"
   | RTupleOutOfBoundsAccess -> "undefined (out of bounds tuple access)"

@@ -296,7 +296,8 @@ and gc_insttype cx state instance =
     Property.iter_t (gc cx state))
 
 and gc_arraytype cx state = function
-| ArrayAT (elemt, None) ->
+| ArrayAT (elemt, None)
+| ROArrayAT (elemt) ->
     gc cx state elemt;
 | ArrayAT (elemt, Some tuple_types)
 | TupleAT (elemt, tuple_types) ->

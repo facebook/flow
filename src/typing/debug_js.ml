@@ -136,6 +136,11 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "tupleType", JSON_Array (List.map (_json_of_t json_cx) tuple_types);
     ]
 
+  | ArrT (_, ROArrayAT (elemt)) -> [
+      "kind", JSON_String "SuperTuple";
+      "elemType", _json_of_t json_cx elemt;
+    ]
+
   | ClassT t -> [
       "type", _json_of_t json_cx t
     ]
@@ -1325,6 +1330,8 @@ and dump_t_ (depth, tvars) cx t =
         (spf "[%s]" (String.concat "; " (List.map kid tup)))) t
   | ArrT (_, TupleAT (_, tup)) -> p
       ~extra:(spf "Tuple [%s]" (String.concat ", " (List.map kid tup))) t
+  | ArrT (_, ROArrayAT (elemt)) -> p
+      ~extra:(spf "SuperTuple %s" (kid elemt)) t
   | ClassT inst -> p ~reason:false ~extra:(kid inst) t
   | InstanceT (_, _, _, _, { class_id; _ }) -> p ~extra:(spf "#%d" class_id) t
   | TypeT (_, arg) -> p ~extra:(kid arg) t
@@ -1832,6 +1839,10 @@ let dump_flow_error =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           arity1 arity2
+    | ETupleUnsafeWrite (reason1, reason2) ->
+        spf "ETupleUnsafeWrite (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
     | ESpeculationFailed (l, u, _) ->
         spf "ESpeculationFailed (%s, %s)"
           (dump_t ~depth cx l)

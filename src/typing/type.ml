@@ -613,6 +613,9 @@ module rec TypeTerm : sig
    * myTuple[expr]
    *)
   | TupleAT of t * t list
+  (* ROArrayAT(elemt) is the super ype for all tuples for which elemt is a
+   * supertype of every element type *)
+  | ROArrayAT of t
 
   and objtype = {
     flags: flags;

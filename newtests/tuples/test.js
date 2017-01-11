@@ -4,7 +4,62 @@
 import {suite, test} from '../../tsrc/test/Tester';
 
 export default suite(({addFile, addFiles, addCode}) => [
-  test('You can use the Array$Tuple functions', [
+  test('$ReadOnlyArray<T> is the supertype for all tuples', [
+    addCode(`
+      function tupleLength(tup: $ReadOnlyArray<mixed>): number {
+        // $ReadOnlyArray can use Array.prototype properties that don't mutate
+        // it
+        return tup.length;
+      }
+      // Array literals with known types can flow to $ReadOnlyArray
+      tupleLength([1,2,3]);
+      tupleLength(["a", "b", "c"]);
+      // Arrays can flow to $ReadOnlyArray
+      tupleLength(([1, 2, 3]: Array<number>));
+      // Tuple types can flow to $ReadOnlyArray
+      tupleLength(([1,2,3]: [1,2,3]));
+      // $ReadOnlyArray can flow to $ReadOnlyArray
+      tupleLength(([1,2,3]: $ReadOnlyArray<number>));
+    `).noNewErrors(),
+
+    addCode(`
+      const elemCheck =
+        (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
+    `).newErrors(
+        `
+          test.js:22
+           22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
+                                            ^^^^^^ number. This type is incompatible with
+           22:         (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup;
+                                                                     ^^^^^^ string
+        `,
+      ),
+
+    addCode(`
+      const tupleToArray = (tup: $ReadOnlyArray<number>): Array<number> => tup;
+    `).newErrors(
+        `
+          test.js:26
+           26:       const tupleToArray = (tup: $ReadOnlyArray<number>): Array<number> => tup;
+                                                                                          ^^^ read-only array type. This type is incompatible with the expected return type of
+           26:       const tupleToArray = (tup: $ReadOnlyArray<number>): Array<number> => tup;
+                                                                         ^^^^^^^^^^^^^ array type
+        `,
+      ),
+
+    addCode(`
+      const arrayMethods = (tup: $ReadOnlyArray<number>): void => tup.push(123);
+    `).newErrors(
+        `
+          test.js:30
+           30:       const arrayMethods = (tup: $ReadOnlyArray<number>): void => tup.push(123);
+                                                                                     ^^^^ property \`push\`. Property not found in
+           30:       const arrayMethods = (tup: $ReadOnlyArray<number>): void => tup.push(123);
+                                                                                 ^^^ $ReadOnlyArray
+        `,
+      ),
+  ]),
+  test('You can use the $ReadOnlyArray functions', [
     addCode(
       `function foo(x: [1,2]): string { return x.length; }`
     ).newErrors(
@@ -17,6 +72,36 @@ export default suite(({addFile, addFiles, addCode}) => [
        `,
      ),
   ]),
+  test('The ref that $ReadOnlyArray functions provide is a $ReadOnlyArray', [
+    addCode(`
+      function foo(tup: [1,2], arr: Array<number>): void {
+        tup.forEach((value, index, readOnlyRef) => {
+          readOnlyRef.push(123);
+          (readOnlyRef[0]: 1);
+        });
+
+        arr.forEach((value, index, writeableRef) => {
+          writeableRef.push(123);
+        });
+      }
+    `).newErrors(
+        `
+          test.js:5
+            5:         tup.forEach((value, index, readOnlyRef) => {
+                       ^ call of method \`forEach\`
+            4:       function foo(tup: [1,2], arr: Array<number>): void {
+                                          ^ number literal \`2\`. Expected number literal \`1\`, got \`2\` instead
+            7:           (readOnlyRef[0]: 1);
+                                          ^ number literal \`1\`
+
+          test.js:6
+            6:           readOnlyRef.push(123);
+                                     ^^^^ property \`push\`. Property not found in
+            6:           readOnlyRef.push(123);
+                         ^^^^^^^^^^^ $ReadOnlyArray
+        `,
+      ),
+  ]),
   test('You can\'t use Array functions', [
     addCode(
       `function foo(x: [1,2]): number { return x.unshift(); }`
@@ -26,7 +111,7 @@ export default suite(({addFile, addFiles, addCode}) => [
            3: function foo(x: [1,2]): number { return x.unshift(); }
                                                         ^^^^^^^ property \`unshift\`. Property not found in
            3: function foo(x: [1,2]): number { return x.unshift(); }
-                                                      ^ Array\$Tuple
+                                                      ^ $ReadOnlyArray
        `,
      ),
   ]),
@@ -224,13 +309,13 @@ export default suite(({addFile, addFiles, addCode}) => [
           test.js:5
             5:         return arr;
                               ^^^ string. This type is incompatible with
-            4:       function foo(arr: \$TupleMap<[number, number], number => string>): [1, 2] {
+            4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
                                                                                         ^ number literal \`1\`
 
           test.js:5
             5:         return arr;
                               ^^^ string. This type is incompatible with
-            4:       function foo(arr: \$TupleMap<[number, number], number => string>): [1, 2] {
+            4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
                                                                                            ^ number literal \`2\`
         `,
       ),
@@ -243,15 +328,15 @@ export default suite(({addFile, addFiles, addCode}) => [
     `).newErrors(
         `
           test.js:4
-            4:       function foo(arr: [number, number]): \$TupleMap<[number, number], number => string> {
+            4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-            4:       function foo(arr: [number, number]): \$TupleMap<[number, number], number => string> {
+            4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
                                         ^^^^^^ number
 
           test.js:4
-            4:       function foo(arr: [number, number]): \$TupleMap<[number, number], number => string> {
+            4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-            4:       function foo(arr: [number, number]): \$TupleMap<[number, number], number => string> {
+            4:       function foo(arr: [number, number]): $TupleMap<[number, number], number => string> {
                                                 ^^^^^^ number
         `,
       ),
