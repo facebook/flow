@@ -293,9 +293,10 @@ module ContextOptimizer = struct
   (* walk a context from a list of exports *)
   let reduce_context cx exports =
     let reducer = new context_optimizer in
-    List.fold_left (fun quotient (m, t) ->
+    List.fold_left (fun quotient (f, m, t) ->
       let quotient = {
-        quotient with sig_hash = SigHash.add m quotient.sig_hash
+        quotient with sig_hash = quotient.sig_hash
+          |> SigHash.add f |> SigHash.add m
       } in
       reducer#type_ cx quotient t
     ) empty exports
@@ -304,11 +305,11 @@ module ContextOptimizer = struct
      context hosts its own exports *)
   let export cx =
     let m = Modulename.to_string (Context.module_name cx) in
-    m, Flow_js.lookup_module cx m
+    Context.file cx, m, Flow_js.lookup_module cx m
 
   (* reduce a context to a "signature context" *)
   let sig_context component_cxs =
-    let cx, other_cxs = List.hd component_cxs, List.tl component_cxs in
+    let cx = List.hd component_cxs in
     let exports = List.map export component_cxs in
     let quotient = reduce_context cx exports in
     Context.set_graph cx quotient.reduced_graph;
@@ -319,8 +320,7 @@ module ContextOptimizer = struct
       Graph_explorer.new_graph
         (IMap.fold (fun k _ -> ISet.add k) quotient.reduced_graph ISet.empty)
     );
-    other_cxs |> List.iter (fun other_cx ->
-      let other_m, other_t = export other_cx in
+    List.tl exports |> List.iter (fun (_, other_m, other_t) ->
       Context.add_module cx other_m other_t
     );
     quotient.sig_hash
