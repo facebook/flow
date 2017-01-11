@@ -24,6 +24,7 @@ type env = {
   shm_log_level : int option;
   log_file : string;
   ignore_version : bool;
+  emoji : bool;
   quiet : bool;
 }
 
@@ -57,20 +58,27 @@ let is_valid_line s =
   List.exists (fun re -> matches_re re s) re_list
 
 
-let msg_of_tail tail_env =
+let msg_of_tail env tail_env =
   let line = Tail.last_line tail_env in
+  let use_emoji = env.emoji && Utils_js.can_emoji in
   if matches_re parsing_re line then
-    "[parsing]"
+    Printf.sprintf "[%sparsing]"
+      (if use_emoji then (* Ghost *) "\xf0\x9f\x91\xbb  " else "")
   else if matches_re infer_re line then
-    "[local inference]"
+    Printf.sprintf "[%slocal inference]"
+      (if use_emoji then (* Turtle *) "\xf0\x9f\x90\xa2  " else "")
   else if matches_re calc_deps_re line then
-    "[calculating dependencies]"
+    Printf.sprintf "[%scalculating dependencies]"
+      (if use_emoji then (* Taco *) "\xf0\x9f\x8c\xae  " else "")
   else if matches_re merging_re line then
-    "[merging inference]"
+    Printf.sprintf "[%smerging inference]"
+      (if use_emoji then (* Snail *) "\xf0\x9f\x90\x8c  " else "")
   else if matches_re server_ready_re line then
-    "[server is ready]"
+    Printf.sprintf "[%sserver is ready]"
+      (if use_emoji then (* Unicorn Face *) "\xf0\x9f\xa6\x84  " else "")
   else
-    "[processing]"
+    Printf.sprintf "[%sprocessing]"
+      (if use_emoji then (* Panda Face *) "\xf0\x9f\x90\xbc  " else "")
 
 let arg name value arr = match value with
 | None -> arr
@@ -181,7 +189,7 @@ let rec connect env retries start_time tail_env =
   end;
   Tail.update_env is_valid_line tail_env;
   Tail.set_lines tail_env [];
-  let tail_msg = msg_of_tail tail_env in
+  let tail_msg = msg_of_tail env tail_env in
 
   if Tty.spinner_used () then Tty.print_clear_line stderr;
   let retries = reset_retries_if_necessary retries conn in

@@ -372,6 +372,7 @@ let connect server_flags root =
     shm_log_level = server_flags.shm_log_level;
     log_file;
     ignore_version = server_flags.ignore_version;
+    emoji = config_options.FlowConfig.Opts.emoji;
     quiet = server_flags.quiet;
   } in
   CommandConnect.connect env

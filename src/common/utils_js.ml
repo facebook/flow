@@ -14,6 +14,12 @@ let spf = Printf.sprintf
 let print_endlinef fmt = Printf.ksprintf print_endline fmt
 let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 
+(* See https://github.com/yarnpkg/yarn/issues/405. *)
+let can_emoji =
+  Sys.os_type <> "Win32" &&
+  Unix.isatty Unix.stdout &&
+  Sys.getenv "TERM" <> "dumb"
+
 (* JSON numbers must not end in a `.`, but string_of_float returns things like
    `1.` instead of `1.0`, so we want to truncate the `.` *)
 (* TODO: ocaml's string_of_float in general differs from JavaScript's. once

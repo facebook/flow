@@ -110,6 +110,9 @@ pairs. Any options that are omitted will use their default values. Some options
 can be overridden with command line flags.
 
 - `log.file` (string): the path to the log file (defaults to `/tmp/flow/<escaped root path>.log`)
+
+- `emoji` (boolean): set this to `true` and Flow will use emoji in server status messages. The default value is `false`.
+
 - `module.name_mapper` (regex -> string): specify a regular expression to match against module names, and a replacement pattern, separated by a `->`.
 
   For example:
