@@ -666,14 +666,13 @@ let full_check workers ~ordered_libs parse_next options =
   (* load library code *)
   (* if anything errors, we'll infer but not merge client code *)
   Flow_logger.log "Loading libraries";
-  let profiling, lib_error = with_timer ~options "InitLibs" profiling (fun () ->
-    let lib_files = Init_js.init
-      ~options
-      ordered_libs
-      (save_errset errors_by_file)
-      (save_suppressions error_suppressions)
-    in
-    List.exists (fun (_, ok) -> not ok) lib_files
+  let profiling, libs_ok = with_timer ~options "InitLibs" profiling (fun () ->
+    let lib_files = Init_js.init ~options ordered_libs in
+    List.fold_left (fun all_ok (lib_file, ok, errs, suppressions) ->
+      save_errset errors_by_file lib_file errs;
+      save_suppressions error_suppressions lib_file suppressions;
+      if ok then all_ok else false
+    ) true lib_files
   ) in
 
   let unparsed = List.fold_left (fun unparsed (file, info, _) ->
@@ -686,7 +685,7 @@ let full_check workers ~ordered_libs parse_next options =
     ~profiling
     ~workers
     ~make_merge_input:(fun inferred ->
-      if lib_error then None
+      if not libs_ok then None
       (* TODO: the third entry should ideally be inferred to seed linking work,
          but it doesn't matter since the initial stream always contains the
          first entry. *)

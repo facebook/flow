@@ -132,16 +132,14 @@ let restore cx dep_cxs master_cx =
   Context.merge_into cx master_cx
 
 
-let merge_lib_file cx master_cx save_errors save_suppressions =
+let merge_lib_file cx master_cx =
   Context.merge_into master_cx cx;
   implicit_require_strict master_cx master_cx cx;
 
   let errs = Context.errors cx in
   Context.remove_all_errors cx;
-  save_errors (Context.file cx) errs;
-  save_suppressions (Context.file cx) (Context.error_suppressions cx);
 
-  ()
+  errs, Context.error_suppressions cx
 
 
 (****************** signature contexts *********************)

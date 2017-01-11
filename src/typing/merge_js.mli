@@ -7,8 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open Utils_js
-
 val merge_component_strict: Context.t list -> Context.t list ->
   (Context.t * string * Modulename.t * Context.t) list ->
   (string * string * Context.t) list ->
@@ -22,9 +20,7 @@ val restore: Context.t ->
 val merge_lib_file:
   Context.t ->
   Context.t ->
-  (filename -> Errors.ErrorSet.t -> unit) ->
-  (filename -> Errors.ErrorSuppressions.t -> unit) ->
-  unit
+  Errors.ErrorSet.t * Errors.ErrorSuppressions.t
 
 module ContextOptimizer: sig
   val sig_context : Context.t list -> SigHash.t

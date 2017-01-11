@@ -50,7 +50,9 @@ let load_lib_files ~master_cx ~metadata files
           lib_file statements comments
         in
 
-        Merge_js.merge_lib_file cx master_cx save_infer_errors save_suppressions;
+        let errs, suppressions = Merge_js.merge_lib_file cx master_cx in
+        save_infer_errors lib_file errs;
+        save_suppressions lib_file suppressions;
 
         (* symbols loaded from this file are suppressed
            if found in later ones *)
