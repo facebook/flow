@@ -19,7 +19,6 @@
 open Utils_js
 
 module Ast = Spider_monkey_ast
-module ErrorSet = Errors.ErrorSet
 module FlowError = Flow_error
 
 module NameSet = Set.Make(Modulename)
@@ -57,6 +56,15 @@ type info = {
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
+type error =
+  | ModuleDuplicateProviderError of duplicate_provider_error
+
+and duplicate_provider_error = {
+  module_name: string;
+  provider: Loc.filename;
+  conflict: Loc.filename;
+}
+
 let relevant_package_keys = ["name"; "main"]
 let is_relevant_key key = List.mem key relevant_package_keys
 
@@ -65,16 +73,14 @@ let choose_provider_and_warn_about_duplicates =
 
   let warn_duplicate_providers m current modules errmap =
     List.fold_left (fun acc f ->
-      let w = Errors.(mk_error ~kind:DuplicateProviderError [
-          Loc.({ none with source = Some f }), [
-            m; "Duplicate module provider"];
-          Loc.({ none with source = Some current }), [
-            "current provider"]
-        ])
-      in
+      let w = ModuleDuplicateProviderError {
+        module_name = m;
+        provider = current;
+        conflict = f;
+      } in
       FilenameMap.add f (match FilenameMap.get f acc with
-        | Some errset -> ErrorSet.add w errset
-        | None -> ErrorSet.singleton w
+        | Some errset -> w::errset
+        | None -> [w]
       ) acc
     ) errmap modules in
 
@@ -272,9 +278,9 @@ module type MODULE_SYSTEM = sig
     string ->   (* module name *)
     FilenameSet.t ->   (* set of candidate provider files *)
     (* map from files to error sets (accumulator) *)
-    Errors.ErrorSet.t FilenameMap.t ->
+    error list FilenameMap.t ->
     (* file, error map (accumulator) *)
-    (filename * Errors.ErrorSet.t FilenameMap.t)
+    (filename * error list FilenameMap.t)
 
 end
 
@@ -946,7 +952,7 @@ let commit_modules workers ~options inferred removed =
       let errmap = FilenameSet.fold (fun f acc ->
         match FilenameMap.get f acc with
         | Some _ -> acc
-        | None -> FilenameMap.add f ErrorSet.empty acc
+        | None -> FilenameMap.add f [] acc
       ) ps errmap in
       (* now choose provider for m *)
       let p, errmap = choose_provider

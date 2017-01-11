@@ -61,9 +61,6 @@ let filter_duplicate_provider mapref file =
     mapref := FilenameMap.add file new_errset !mapref
   | None -> ()
 
-let save_errormap mapref errmap =
-  FilenameMap.iter (save_errset mapref) errmap
-
 (* given a reference to a error suppression map (files to
    error suppressions), and two parallel lists of such,
    save the latter into the former. *)
@@ -242,7 +239,22 @@ let commit_modules workers ~options inferred removed =
      that case they are rechecked and *all* their errors are cleared. But we
      don't care about optimizing that case for now.) *)
   List.iter (filter_duplicate_provider errors_by_file) providers;
-  save_errormap errors_by_file errmap
+  FilenameMap.iter (fun file errors ->
+    let errset = List.fold_left (fun acc err ->
+      match err with
+      | Module_js.ModuleDuplicateProviderError { Module_js.
+          module_name; provider; conflict;
+        } ->
+        let error = Errors.mk_error ~kind:Errors.DuplicateProviderError [
+          Loc.({ none with source = Some conflict }), [
+            module_name; "Duplicate module provider"];
+          Loc.({ none with source = Some provider }), [
+            "current provider"]
+        ] in
+        Errors.ErrorSet.add error acc
+    ) Errors.ErrorSet.empty errors in
+    save_errset errors_by_file file errset
+  ) errmap
 
 (* Sanity checks on InfoHeap and NameHeap. Since this is performance-intensive
    (although it probably doesn't need to be), it is only done under --debug. *)

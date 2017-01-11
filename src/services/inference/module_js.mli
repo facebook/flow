@@ -25,6 +25,15 @@ type info = {
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
+type error =
+  | ModuleDuplicateProviderError of duplicate_provider_error
+
+and duplicate_provider_error = {
+  module_name: string;
+  provider: Loc.filename;
+  conflict: Loc.filename;
+}
+
 (* export and import functions for the module system *)
 val exported_module:
   options: Options.t ->
@@ -60,7 +69,7 @@ val commit_modules:
   filename list ->                    (* inferred modules *)
   NameSet.t ->                        (* removed files *)
   Utils_js.filename list *            (* providers *)
-    Errors.ErrorSet.t FilenameMap.t   (* filenames to error sets *)
+    error list FilenameMap.t          (* filenames to error sets *)
 
 (* add file represented by context to module info store *)
 val add_module_info: (options:Options.t -> Context.t -> unit) Expensive.t
