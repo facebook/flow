@@ -18,8 +18,7 @@ val merge_strict_context:
 val merge_strict:
   options: Options.t ->
   workers: Worker.t list option ->
-  save_errors: (filename list -> Errors.ErrorSet.t list -> unit) ->
   FilenameSet.t FilenameMap.t ->
   filename list list IMap.t ->
   bool FilenameMap.t ->
-  unit
+  (filename * Errors.ErrorSet.t) list

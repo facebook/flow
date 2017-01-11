@@ -61,30 +61,16 @@ let filter_duplicate_provider mapref file =
     mapref := FilenameMap.add file new_errset !mapref
   | None -> ()
 
-(* given a reference to a error map (files to errorsets), and
-   two parallel lists of such, save the latter into the former. *)
-let save_errors mapref files errsets =
-  List.iter2 (save_errset mapref) files errsets
-
-let save_new_errors mapref =
-  List.iter2 (fun file errors ->
-    if Errors.ErrorSet.cardinal errors > 0
-    then mapref := FilenameMap.add file errors !mapref
-    else mapref := FilenameMap.remove file !mapref
-  )
-
 let save_errormap mapref errmap =
   FilenameMap.iter (save_errset mapref) errmap
 
 (* given a reference to a error suppression map (files to
    error suppressions), and two parallel lists of such,
    save the latter into the former. *)
-let save_suppressions mapref files errsups = Errors.(
-  List.iter2 (fun file errsup ->
-    mapref := if ErrorSuppressions.is_empty errsup
-      then FilenameMap.remove file !mapref
-      else FilenameMap.add file errsup !mapref
-  ) files errsups
+let save_suppressions mapref file errsup = Errors.(
+  mapref := if ErrorSuppressions.is_empty errsup
+    then FilenameMap.remove file !mapref
+    else FilenameMap.add file errsup !mapref
 )
 
 (* Given all the errors as a map from file => errorset
@@ -301,13 +287,16 @@ let typecheck
   Module_js.clear_filename_cache ();
   (* local inference populates context heap, module info heap *)
   Flow_logger.log "Running local inference";
-  let profiling, inferred =
+  let profiling, infer_results =
     with_timer ~options "Infer" profiling (fun () ->
-      Infer_service.infer ~options ~workers
-        ~save_errors:(save_errors errors_by_file)
-        ~save_suppressions:(save_suppressions error_suppressions)
-        files
+      Infer_service.infer ~options ~workers files
     ) in
+
+  let inferred = List.fold_left (fun acc (file, errors, suppressions) ->
+    save_errset errors_by_file file errors;
+    save_suppressions error_suppressions file suppressions;
+    file::acc
+  ) [] infer_results |> List.rev in
 
   (* Resource files are treated just like unchecked files, which are already in
      unparsed. TODO: This suggestes that we can remove ~resource_files and merge
@@ -414,9 +403,14 @@ let typecheck
     let profiling = try
       Flow_logger.log "Merging";
       let profiling, () = with_timer ~options "Merge" profiling (fun () ->
-        Merge_service.merge_strict
-          ~options ~workers ~save_errors:(save_new_errors merge_errors)
-          dependency_graph partition recheck_map
+        let merged = Merge_service.merge_strict
+          ~options ~workers dependency_graph partition recheck_map
+        in
+        List.iter (fun (file, errors) ->
+          merge_errors := if Errors.ErrorSet.is_empty errors
+            then FilenameMap.remove file !merge_errors
+            else FilenameMap.add file errors !merge_errors
+        ) merged
       ) in
       let master_cx = Init_js.get_master_cx options in
       save_errset merge_errors (Context.file master_cx) (Context.errors master_cx);
@@ -662,8 +656,8 @@ let full_check workers ~ordered_libs parse_next options =
     let lib_files = Init_js.init
       ~options
       ordered_libs
-      (fun file errs -> save_errors errors_by_file [file] [errs])
-      (fun file sups -> save_suppressions error_suppressions [file] [sups])
+      (save_errset errors_by_file)
+      (save_suppressions error_suppressions)
     in
     List.exists (fun (_, ok) -> not ok) lib_files
   ) in
