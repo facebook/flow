@@ -176,7 +176,7 @@ let rec type_printer_impl ~size override enclosure cx t =
         |> String.concat ", "
         |> spf "[%s]"
 
-    | InstanceT (reason, _, _, _) ->
+    | InstanceT (reason, _, _, _, _) ->
         DescFormat.name_of_instance_reason reason
 
     | TypeAppT (c,ts) ->

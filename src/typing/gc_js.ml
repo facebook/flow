@@ -103,12 +103,13 @@ let rec gc cx state = function
       gc cx state prototype;
       gc cx state static  | MixedT _ -> ()
   | IdxWrapper (_, t) -> gc cx state t
-  | InstanceT(_, static, super, instance) ->
+  | InstanceT(_, static, super, implements, instance) ->
       instance.type_args |> SMap.iter (fun _ -> gc cx state);
       Context.iter_props cx instance.fields_tmap (fun _ ->
         Property.iter_t (gc cx state));
       Context.iter_props cx instance.methods_tmap (fun _ ->
         Property.iter_t (gc cx state));
+      implements |> List.iter (gc cx state);
       gc cx state static;
       gc cx state super
   | IntersectionT (_, rep) -> InterRep.members rep |> List.iter (gc cx state)
@@ -237,6 +238,7 @@ and gc_use cx state = function
   | HasOwnPropT _ -> ()
   | IdxUnMaybeifyT (_, t_out) -> gc cx state t_out
   | IdxUnwrap (_, t_out) -> gc cx state t_out
+  | ImplementsT t -> gc cx state t
   | ImportDefaultT (_, _, _, t) -> gc cx state t
   | ImportModuleNsT (_, t) -> gc cx state t
   | ImportNamedT (_, _, _, t) -> gc cx state t
@@ -274,12 +276,7 @@ and gc_use cx state = function
   | SpecializeT (_, _, _, ts, t) -> List.iter (gc cx state) ts; gc cx state t
   | SubstOnPredT (_, _, t) -> gc cx state t
   | SummarizeT (_, t) -> gc cx state t
-  | SuperT(_, instance) ->
-      instance.type_args |> SMap.iter (fun _ -> gc cx state);
-      Context.iter_props cx instance.fields_tmap (fun _ ->
-        Property.iter_t (gc cx state));
-      Context.iter_props cx instance.methods_tmap (fun _ ->
-        Property.iter_t (gc cx state))
+  | SuperT (_, instance) -> gc_insttype cx state instance
   | TestPropT(_, _, t) -> gc cx state t
   | ThisSpecializeT (_, this, t) -> gc cx state this; gc cx state t
   | UnaryMinusT (_, t) -> gc cx state t
@@ -291,6 +288,12 @@ and gc_use cx state = function
       gc cx state t2
     ) targs
 
+and gc_insttype cx state instance =
+  instance.type_args |> SMap.iter (fun _ -> gc cx state);
+  Context.iter_props cx instance.fields_tmap (fun _ ->
+    Property.iter_t (gc cx state));
+  Context.iter_props cx instance.methods_tmap (fun _ ->
+    Property.iter_t (gc cx state))
 
 and gc_arraytype cx state = function
 | ArrayAT (elemt, None) ->

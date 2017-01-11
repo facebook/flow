@@ -110,6 +110,7 @@ type error_message =
   | EObjectComputedPropertyAssign of (reason * reason)
   | EInvalidLHSInAssignment of Loc.t
   | EIncompatibleObject of reason * reason * use_op
+  | EUnsupportedImplements of reason
 
 and binding_error =
   | ENameAlreadyBound
@@ -149,7 +150,6 @@ and unsupported_syntax =
   | ObjectPropertyGetSet
   | ObjectPropertyComputedGetSet
   | InvariantSpreadArgument
-  | Implements
   | ClassPropertyLiteral
   | ClassPropertyComputed
   | ClassExtendsMultiple
@@ -759,8 +759,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             "computed getters and setters are not yet supported"
         | InvariantSpreadArgument ->
             "unsupported arguments in call to invariant()"
-        | Implements ->
-            "implements not supported"
         | ClassPropertyLiteral ->
             "literal properties not yet supported"
         | ClassPropertyComputed ->
@@ -995,3 +993,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       in
       let reasons, extra, msg = handle (l_reason, u_reason, []) use_op in
       typecheck_error ~extra ~suppress_op:true msg reasons
+
+  | EUnsupportedImplements reason ->
+      mk_error ~trace_infos [mk_info reason [
+        "Argument to implements clause must be an interface"]]

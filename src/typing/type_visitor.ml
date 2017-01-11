@@ -61,9 +61,10 @@ class ['a] t = object(self)
 
   | ClassT t -> self#type_ cx acc t
 
-  | InstanceT (_, static, super, insttype) ->
+  | InstanceT (_, static, super, implements, insttype) ->
     let acc = self#type_ cx acc static in
     let acc = self#type_ cx acc super in
+    let acc = self#list (self#type_ cx) acc implements in
     let acc = self#inst_type cx acc insttype in
     acc
 
@@ -238,6 +239,7 @@ class ['a] t = object(self)
   | HasOwnPropT (_, _)
   | IdxUnMaybeifyT _
   | IdxUnwrap _
+  | ImplementsT _
   | ImportDefaultT (_, _, _, _)
   | ImportModuleNsT (_, _)
   | ImportNamedT (_, _, _, _)

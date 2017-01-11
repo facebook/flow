@@ -189,11 +189,12 @@ and parts_of_t cx = function
 | FunProtoT _ -> []
 | FunT (_, _, _, funtype) -> parts_of_funtype funtype
 | IdxWrapper (_, inner) -> ["inner", Def inner]
-| InstanceT (_, static, super,
+| InstanceT (_, static, super, implements,
   { type_args; fields_tmap; methods_tmap; _ }) ->
   map_parts type_args @
   map_props (Context.find_props cx fields_tmap) @
   map_props (Context.find_props cx methods_tmap) @
+  list_parts implements @
   ["static", Def static; "super", Def super]
 | IntersectionT (_, rep) -> list_parts (InterRep.members rep)
 | KeysT (_, t) -> ["t", Def t]
@@ -301,6 +302,7 @@ and parts_of_use_t cx = function
 | HasOwnPropT _ -> []
 | IdxUnMaybeifyT (_, out) -> ["out", Def out]
 | IdxUnwrap (_, out) -> ["out", Def out]
+| ImplementsT t -> ["instance", Def t]
 | ImportDefaultT (_, _, _, out) -> ["out", Def out]
 | ImportModuleNsT (_, out) -> ["out", Def out]
 | ImportNamedT (_, _, _, out) -> ["out", Def out]

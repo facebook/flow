@@ -4165,7 +4165,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
     Flow.flow cx (mixin, SuperT (super_reason, itype))
   );
 
-  let instance = InstanceT (reason_component,!static,super,itype) in
+  let instance = InstanceT (reason_component,!static,super,[],itype) in
   Flow.flow_t cx (instance, this);
 
   ClassT(instance)
@@ -4812,6 +4812,7 @@ and mk_class cx loc reason c =
   in
   class_sig |> Class_sig.generate_tests cx (fun class_sig ->
     Class_sig.check_super cx class_sig;
+    Class_sig.check_implements cx class_sig;
     Class_sig.toplevels cx class_sig
       ~decls:toplevel_decls
       ~stmts:toplevels

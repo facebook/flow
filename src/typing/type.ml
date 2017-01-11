@@ -80,7 +80,7 @@ module rec TypeTerm : sig
     (* type of a class *)
     | ClassT of t
     (* type of an instance of a class *)
-    | InstanceT of reason * static * super * insttype
+    | InstanceT of reason * static * super * implements * insttype
 
     (* type of an optional parameter *)
     | OptionalT of t
@@ -307,6 +307,7 @@ module rec TypeTerm : sig
     (* operations on runtime types, such as classes and functions *)
     | ConstructorT of reason * t list * t
     | SuperT of reason * insttype
+    | ImplementsT of t
     | MixinT of reason * t
 
     (* overloaded +, could be subsumed by general overloading *)
@@ -774,6 +775,8 @@ module rec TypeTerm : sig
   and super = t
 
   and static = t
+
+  and implements = t list
 
   and t_out = t
 
@@ -1465,7 +1468,7 @@ let rec reason_of_t = function
   | FunProtoT reason -> reason
   | FunT (reason,_,_,_) -> reason
   | IdxWrapper (reason, _) -> reason
-  | InstanceT (reason,_,_,_) -> reason
+  | InstanceT (reason,_,_,_,_) -> reason
   | IntersectionT (reason, _) -> reason
   | KeysT (reason, _) -> reason
   | MaybeT t -> replace_reason (fun desc -> RMaybe desc) (reason_of_t t)
@@ -1536,6 +1539,7 @@ and reason_of_use_t = function
   | HasOwnPropT (reason, _) -> reason
   | IdxUnMaybeifyT (reason, _) -> reason
   | IdxUnwrap (reason, _) -> reason
+  | ImplementsT t -> reason_of_t t
   | ImportDefaultT (reason, _, _, _) -> reason
   | ImportModuleNsT (reason, _) -> reason
   | ImportNamedT (reason, _, _, _) -> reason
@@ -1619,7 +1623,8 @@ let rec mod_reason_of_t f = function
   | FunProtoT (reason) -> FunProtoT (f reason)
   | FunT (reason, s, p, ft) -> FunT (f reason, s, p, ft)
   | IdxWrapper (reason, t) -> IdxWrapper (f reason, t)
-  | InstanceT (reason, st, su, inst) -> InstanceT (f reason, st, su, inst)
+  | InstanceT (reason, st, su, impls, inst) ->
+      InstanceT (f reason, st, su, impls, inst)
   | IntersectionT (reason, ts) -> IntersectionT (f reason, ts)
   | KeysT (reason, t) -> KeysT (f reason, t)
   | MaybeT t -> MaybeT (mod_reason_of_t f t)
@@ -1693,6 +1698,7 @@ and mod_reason_of_use_t f = function
   | HasOwnPropT (reason, prop) -> HasOwnPropT (f reason, prop)
   | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
   | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
+  | ImplementsT t -> ImplementsT (mod_reason_of_t f t)
   | ImportDefaultT (reason, import_kind, name, t) ->
       ImportDefaultT (f reason, import_kind, name, t)
   | ImportModuleNsT (reason, t) -> ImportModuleNsT (f reason, t)
@@ -1896,6 +1902,7 @@ let string_of_use_ctor = function
   | HasOwnPropT _ -> "HasOwnPropT"
   | IdxUnMaybeifyT _ -> "IdxUnMaybeifyT"
   | IdxUnwrap _ -> "IdxUnwrap"
+  | ImplementsT _ -> "ImplementsT"
   | ImportDefaultT _ -> "ImportDefaultT"
   | ImportModuleNsT _ -> "ImportModuleNsT"
   | ImportNamedT _ -> "ImportNamedT"

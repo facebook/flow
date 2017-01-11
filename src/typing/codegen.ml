@@ -109,7 +109,7 @@ let gen_builtin_class_type t env = Type.(
    *)
   let classid =
     match t with
-    | InstanceT (_, _, _, {class_id; _;}) -> class_id
+    | InstanceT (_, _, _, _, {class_id; _;}) -> class_id
     | t -> failwith (
       spf
         ("Internal error: Expected an InstanceT while looking up a builtin " ^^
@@ -121,9 +121,9 @@ let gen_builtin_class_type t env = Type.(
   let builtin_t = Flow_js.get_builtin env.flow_cx builtin_name reason in
   let builtin_classid =
     match resolve_type builtin_t env with
-    | ThisClassT(InstanceT(_, _, _, {class_id; _;})) ->
+    | ThisClassT(InstanceT(_, _, _, _, {class_id; _;})) ->
       class_id
-    | PolyT(_, ThisClassT(InstanceT(_, _, _, {class_id; _;}))) ->
+    | PolyT(_, ThisClassT(InstanceT(_, _, _, _, {class_id; _;}))) ->
       class_id
     | builtin_t -> failwith (spf "Unexpected global type: %s" (string_of_ctor builtin_t))
   in
@@ -212,7 +212,7 @@ let rec gen_type t env = Type.(
       |> gen_func_params params_names params_tlist rest_param
       |> add_str ") => "
       |> gen_type return_t
-  | InstanceT (_, _static, _super, {class_id; _;}) -> (
+  | InstanceT (_, _static, _super, _, {class_id; _;}) -> (
     (* TODO: See if we can preserve class names *)
     let env =
       match IMap.get class_id env.class_names with

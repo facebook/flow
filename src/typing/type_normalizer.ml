@@ -37,6 +37,7 @@ let fake_instance name =
     locationless_reason (RCustom name),
     ObjProtoT (locationless_reason (RCustom "dummy static")),
     ObjProtoT (locationless_reason (RCustom "dummy super")),
+    [],
     insttype
   )
 

@@ -10,7 +10,12 @@ export default suite(({addFile, addFiles, flowCmd}) => [
       // @flow
 
       declare class Class0 {
+
         map<U>(f: (x: T) => U): Class0<U>;
+      }
+      declare interface Class1 {
+
+        foo: string;
       }
       declare export class Base<A, B, C> {
         static baseStaticMethod(a: number, b: string): number;
@@ -21,12 +26,20 @@ export default suite(({addFile, addFiles, flowCmd}) => [
         baseMethod(a: number, b: string): number;
         overriddenMethod(a: {b: number, c: number}): number;
       }
+
       declare export class Child<A, B> extends Base<A, B, mixed> {
         static overriddenStaticMethod(a: {b: number}): number;
 
         notExported: Class0<number>;
         overriddenMethod(a: {b: number}): number;
       }
+
+      declare export class Foo implements Class1 {
+
+        foo: string;
+      }
+
+
     `)
     .stderr('')
   ]),
@@ -97,11 +110,17 @@ export default suite(({addFile, addFiles, flowCmd}) => [
         `
           // @flow
 
+          declare interface Class0 {
+
+          }
+          declare interface Class1 {
+
+          }
           declare export class Base<A, B, C> {
 
           }
 
-          declare export default class<A, B> extends Base<A, B, mixed> {
+          declare export default class<A, B> extends Base<A, B, mixed> implements Class0, Class1 {
 
             p: number;
           }

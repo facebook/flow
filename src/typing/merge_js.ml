@@ -271,7 +271,7 @@ module ContextOptimizer = struct
 
     method! type_ cx quotient t = match t with
     | OpenT _ -> super#type_ cx quotient t
-    | InstanceT (_, _, _, { class_id; _ }) ->
+    | InstanceT (_, _, _, _, { class_id; _ }) ->
       let { sig_hash; _ } = quotient in
       let id =
         if Context.mem_nominal_id cx class_id

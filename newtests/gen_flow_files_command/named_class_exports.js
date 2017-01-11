@@ -27,3 +27,7 @@ class NotExportedUsed<T> {
   };
 }
 class NotExportedNotUsed {}
+
+interface IFoo { foo: string }
+
+export class Foo implements IFoo { foo: string }

@@ -14,6 +14,7 @@ val empty:
   Type.typeparam list ->
   Type.t SMap.t -> (* tparams_map *)
   Type.t -> (* super *)
+  Type.t list -> (* implements *)
   t
 
 (** Add constructor to signature.
@@ -72,6 +73,10 @@ val mk_interface: Context.t ->
   t
 
 (** 1. Manipulation *)
+
+(** Emits constraints to ensure the signature is compatible with its declared
+    interface implementations (classes) *)
+val check_implements: Context.t -> t -> unit
 
 (** Emits constraints to ensure the signature is compatible with its declared
     superclass (classes) or extends/mixins (interfaces) *)

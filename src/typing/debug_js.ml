@@ -140,9 +140,10 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | InstanceT (_, static, super, instance) -> [
+  | InstanceT (_, static, super, implements, instance) -> [
       "static", _json_of_t json_cx static;
       "super", _json_of_t json_cx super;
+      "implements", JSON_Array (List.map (_json_of_t json_cx) implements);
       "instance", json_of_insttype json_cx instance
     ]
 
@@ -417,6 +418,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | SuperT (_, instance) -> [
       "instance", json_of_insttype json_cx instance
+    ]
+
+  | ImplementsT t -> [
+      "instance", _json_of_t json_cx t;
     ]
 
   | MixinT (_, t) -> [
@@ -1321,7 +1326,7 @@ and dump_t_ (depth, tvars) cx t =
   | ArrT (_, TupleAT (_, tup)) -> p
       ~extra:(spf "Tuple [%s]" (String.concat ", " (List.map kid tup))) t
   | ClassT inst -> p ~reason:false ~extra:(kid inst) t
-  | InstanceT (_, _, _, { class_id; _ }) -> p ~extra:(spf "#%d" class_id) t
+  | InstanceT (_, _, _, _, { class_id; _ }) -> p ~extra:(spf "#%d" class_id) t
   | TypeT (_, arg) -> p ~extra:(kid arg) t
   | AnnotT source -> p ~reason:false
       ~extra:(spf "%s" (kid source)) t
@@ -1502,6 +1507,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | SubstOnPredT _ -> p t
   | SummarizeT (_, arg) -> p ~extra:(kid arg) t
   | SuperT _ -> p t
+  | ImplementsT arg -> p ~reason:false ~extra:(kid arg) t
   | SetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | SetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
@@ -1940,3 +1946,5 @@ let dump_flow_error =
         spf "EIncompatibleObject (%s, %s, _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
+    | EUnsupportedImplements reason ->
+        spf "EUnsupportedImplements (%s)" (dump_reason cx reason)

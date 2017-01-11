@@ -989,9 +989,9 @@ module ResolvableTypeJob = struct
       collect_of_types ?log_unresolved cx reason acc ts
     | ArrT (_, TupleAT (elemt, tuple_types)) ->
       collect_of_types ?log_unresolved cx reason acc (elemt::tuple_types)
-    | InstanceT (_, static, super,
+    | InstanceT (_, static, super, _,
                  { class_id; type_args; fields_tmap; methods_tmap; _ }) ->
-      let ts = if class_id = 0 then [] else [super; static] in
+                   let ts = if class_id = 0 then [] else [super; static] in
       let ts = SMap.fold (fun _ t ts -> t::ts) type_args ts in
       let props_tmap = SMap.union
         (Context.find_props cx fields_tmap)
@@ -1733,7 +1733,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * InstanceT CommonJS export values have their properties turned into named
      * exports
      *)
-    | InstanceT(_, _, _, {fields_tmap; methods_tmap; _;}),
+    | InstanceT(_, _, _, _, {fields_tmap; methods_tmap; _;}),
       CJSExtractNamedExportsT(
         reason, (module_t_reason, exporttypes), t_out
       ) ->
@@ -2455,7 +2455,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | _ ->
         add_output cx ~trace (FlowError.EPropNotFound (reason_op, reason_o)))
 
-    | InstanceT (reason_o, _, _, instance), HasOwnPropT(reason_op, Literal x) ->
+    | InstanceT (reason_o, _, _, _, instance), HasOwnPropT(reason_op, Literal x) ->
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       let methods_tmap = Context.find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
@@ -2464,7 +2464,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | None ->
         add_output cx ~trace (FlowError.EPropNotFound (reason_op, reason_o)))
 
-    | (InstanceT (reason_o, _, _, _), HasOwnPropT(reason_op, _)) ->
+    | (InstanceT (reason_o, _, _, _, _), HasOwnPropT(reason_op, _)) ->
         let msg = "Expected string literal" in
         add_output cx ~trace (FlowError.ECustom ((reason_op, reason_o), msg))
 
@@ -2484,7 +2484,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow_t cx trace (StrT.why reason_op, keys)
       end
 
-    | InstanceT (_, _, _, instance), GetKeysT (reason_op, keys) ->
+    | InstanceT (_, _, _, _, instance), GetKeysT (reason_op, keys) ->
       (* methods are not enumerable, so only walk fields *)
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       fields_tmap |> SMap.iter (fun x _ ->
@@ -2906,20 +2906,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* A class can be viewed as a mixin by extracting its immediate properties,
        and "erasing" its static and super *)
 
-    | ThisClassT (InstanceT (_, _, _, instance)), MixinT (r, tvar) ->
+    | ThisClassT (InstanceT (_, _, _, _, instance)), MixinT (r, tvar) ->
       let static = ObjProtoT r in
       let super = ObjProtoT r in
       rec_flow cx trace (
-        ThisClassT (InstanceT (r, static, super, instance)),
+        ThisClassT (InstanceT (r, static, super, [], instance)),
         UseT (UnknownUse, tvar)
       )
 
-    | PolyT (xs, ThisClassT (InstanceT (_, _, _, instance))),
+    | PolyT (xs, ThisClassT (InstanceT (_, _, _, _, instance))),
       MixinT (r, tvar) ->
       let static = ObjProtoT r in
       let super = ObjProtoT r in
       rec_flow cx trace (
-        PolyT (xs, ThisClassT (InstanceT (r, static, super, instance))),
+        PolyT (xs, ThisClassT (InstanceT (r, static, super, [], instance))),
         UseT (UnknownUse, tvar)
       )
 
@@ -3277,7 +3277,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* InstanceT -> ObjT *)
 
-    | InstanceT (lreason, _, super, {
+    | InstanceT (lreason, _, super, _, {
         fields_tmap = lflds;
         methods_tmap = lmethods; _ }),
       UseT (use_op, ObjT (ureason, {
@@ -3313,13 +3313,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* For some object `x` and constructor `C`, if `x instanceof C`, then the
        object is a subtype. *)
     | ObjT (lreason, { proto_t; _ }),
-      UseT (_, InstanceT (_, _, _, { structural = false; _ })) ->
+      UseT (_, InstanceT (_, _, _, _, { structural = false; _ })) ->
       rec_flow cx trace (reposition cx ~trace lreason proto_t, u)
 
     (****************************************)
     (* You can cast an object to a function *)
     (****************************************)
-    | (ObjT (reason, _) | InstanceT (reason, _, _, _)),
+
+    | (ObjT (reason, _) | InstanceT (reason, _, _, _, _)),
       (UseT (_, FunT (reason_op, _, _, _)) |
        UseT (_, AnyFunT reason_op) |
        CallT (reason_op, _)) ->
@@ -3421,13 +3422,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (InstanceT _, UseT (use_op, (InstanceT _ as u))) ->
       rec_flow cx trace (l, UseT (use_op, ExtendsT([],l,u)))
 
-    | (InstanceT (_,_,super,instance),
-       UseT (_, ExtendsT(_, _, InstanceT (_,_,_,instance_super)))) ->
+    | InstanceT (_, _, super, implements, instance),
+      UseT (use_op, ExtendsT (try_ts_on_failure, l,
+        (InstanceT (_, _, _, _, instance_super) as u))) ->
       if instance.class_id = instance_super.class_id
       then
         flow_type_args cx trace instance instance_super
       else
-        rec_flow cx trace (super, u)
+        (* If this instance type has declared implementations, any structural
+           tests have already been performed at the declaration site. We can
+           then use the ExtendsT use type to search for a nominally matching
+           implementation, thereby short-circuiting a potentially expensive
+           structural test at the use site. *)
+        rec_flow cx trace (super, UseT (use_op,
+          ExtendsT (try_ts_on_failure @ implements, l, u)))
 
     (********************************************************)
     (* runtime types derive static types through annotation *)
@@ -3456,8 +3464,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ClassT(l), UseT (use_op, ClassT(u))) ->
       rec_flow cx trace (l, UseT (use_op, u))
 
-    | FunT (_,static1,prototype,_),
-      UseT (_, ClassT (InstanceT (_,static2,_, _) as u_)) ->
+    | FunT (_, static1, prototype, _),
+      UseT (_, ClassT (InstanceT (_, static2, _, _, _) as u_)) ->
       rec_unify cx trace static1 static2;
       rec_unify cx trace prototype u_
 
@@ -3526,7 +3534,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* statics can be read   *)
     (*************************)
 
-    | InstanceT (_, static, _, _), GetStaticsT (_, t) ->
+    | InstanceT (_, static, _, _, _), GetStaticsT (_, t) ->
       rec_flow_t cx trace (static, t)
 
     (* GetStaticsT is only ever called on the instance type of a ClassT. There
@@ -3549,7 +3557,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* instances of classes may have their fields looked up *)
     (********************************************************)
 
-    | InstanceT (lreason, _, super, instance),
+    | InstanceT (lreason, _, super, _, instance),
       LookupT (reason_op, kind, try_ts_on_failure, (Named (_, x) as propref), action) ->
       let fields_pmap = Context.find_props cx instance.fields_tmap in
       let methods_pmap = Context.find_props cx instance.methods_tmap in
@@ -3615,7 +3623,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ... and their fields written *)
     (********************************)
 
-    | InstanceT (reason_c, _, super, instance),
+    | InstanceT (reason_c, _, super, _, instance),
       SetPropT (reason_op, Named (reason_prop, x), tin) ->
       Ops.push reason_op;
       let fields_tmap = Context.find_props cx instance.fields_tmap in
@@ -3636,13 +3644,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ... and their fields read *)
     (*****************************)
 
-    | InstanceT (_, _, super, _), GetPropT (_, Named (_, "__proto__"), t) ->
+    | InstanceT (_, _, super, _, _), GetPropT (_, Named (_, "__proto__"), t) ->
       rec_flow_t cx trace (super, t)
 
     | InstanceT _ as instance, GetPropT (_, Named (_, "constructor"), t) ->
       rec_flow_t cx trace (ClassT instance, t)
 
-    | InstanceT (reason_c, _, super, instance),
+    | InstanceT (reason_c, _, super, _, instance),
       GetPropT (reason_op, Named (reason_prop, x), tout) ->
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       let methods_tmap = Context.find_props cx instance.methods_tmap in
@@ -3664,7 +3672,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ... and their methods called *)
     (********************************)
 
-    | InstanceT (reason_c, _, super, instance),
+    | InstanceT (reason_c, _, super, _, instance),
       MethodT (reason_call, reason_lookup, Named (reason_prop, x), funtype)
       -> (* TODO: closure *)
       let fields_tmap = Context.find_props cx instance.fields_tmap in
@@ -3787,7 +3795,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       Ops.pop ();
       rec_flow_t cx trace (proto, t)
 
-    | (InstanceT (lreason, _, _, { fields_tmap; methods_tmap; _ }),
+    | (InstanceT (lreason, _, _, _, { fields_tmap; methods_tmap; _ }),
        ObjAssignT (reason_op, proto, t, props_to_skip, false)) ->
       let fields_pmap = Context.find_props cx fields_tmap in
       let methods_pmap = Context.find_props cx methods_tmap in
@@ -3836,7 +3844,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let o = mk_object_with_map_proto cx reason map proto in
       rec_flow_t cx trace (o, t)
 
-    | (InstanceT (_, _, super, insttype), ObjRestT (reason, xs, t)) ->
+    | InstanceT (_, _, super, _, insttype),
+      ObjRestT (reason, xs, t) ->
       (* Spread fields from super into an object *)
       let obj_super = mk_tvar_where cx reason (fun tvar ->
         rec_flow cx trace (super, ObjRestT (reason, xs, tvar))
@@ -4347,7 +4356,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* TODO: similar concern as above *)
     | FunT (reason, statics, _, _) ,
-      UseT (use_op, InstanceT (reason_inst, _, super, {
+      UseT (use_op, InstanceT (reason_inst, _, super, _, {
         fields_tmap;
         methods_tmap;
         structural = true;
@@ -4367,7 +4376,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***************************************************************)
 
     | _,
-      UseT (use_op, InstanceT (reason_inst, _, super, {
+      UseT (use_op, InstanceT (reason_inst, _, super, _, {
         fields_tmap;
         methods_tmap;
         structural = true;
@@ -4376,6 +4385,24 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       structural_subtype cx trace l reason_inst (fields_tmap, methods_tmap);
       rec_flow cx trace (l, UseT (use_op, super))
 
+    (***************************************************************)
+    (* Implements                                                  *)
+    (***************************************************************)
+
+    | ObjProtoT _, ImplementsT _ -> ()
+
+    | InstanceT (reason_inst, _, super, _, {
+        fields_tmap;
+        methods_tmap;
+        structural = true;
+        _;
+      }),
+      ImplementsT t ->
+      structural_subtype cx trace t reason_inst (fields_tmap, methods_tmap);
+      rec_flow cx trace (super, ImplementsT t)
+
+    | _, ImplementsT _ ->
+      add_output cx ~trace (FlowError.EUnsupportedImplements (reason_of_t l))
 
     (*********************************************************************)
     (* class A is a base class of class B iff                            *)
@@ -4388,7 +4415,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         for the inherited properties are non-strict: they are not required to
         exist. **)
 
-    | (InstanceT (_,_,_,instance_super),
+    | (InstanceT (_,_,_,_,instance_super),
        SuperT (reason,instance))
       ->
         Context.iter_props cx instance_super.fields_tmap (fun x p ->
@@ -4848,7 +4875,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (next, UseT (use_op, ExtendsT (try_ts_on_failure, l, u)))
 
     | ObjProtoT _,
-      UseT (use_op, ExtendsT ([], l, InstanceT (reason_inst, _, super, {
+      UseT (use_op, ExtendsT ([], l, InstanceT (reason_inst, _, super, _, {
         fields_tmap;
         methods_tmap;
         structural = true;
@@ -5268,7 +5295,7 @@ and numeric = function
   | NumT _ -> true
   | SingletonNumT _ -> true
 
-  | InstanceT (reason, _, _, _) ->
+  | InstanceT (reason, _, _, _, _) ->
     string_of_desc (desc_of_reason reason) = "Date"
 
   | _ -> false
@@ -5656,14 +5683,16 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     if source_t_ == source_t then t
     else AnnotT source_t_
 
-  | InstanceT (reason, static, super, instance) ->
+  | InstanceT (reason, static, super, implements, instance) ->
     let static_ = subst cx ~force map static in
     let super_ = subst cx ~force map super in
+    let implements_ = ident_map (subst cx ~force map) implements in
     let type_args_ = ident_smap (subst cx ~force map) instance.type_args in
     let fields_tmap_ = subst_propmap cx force map instance.fields_tmap in
     let methods_tmap_ = subst_propmap cx force map instance.methods_tmap in
     if static_ == static &&
        super_ == super &&
+       implements_ == implements &&
        type_args_ == instance.type_args &&
        fields_tmap_ == instance.fields_tmap &&
        methods_tmap_ == instance.methods_tmap
@@ -5673,6 +5702,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
         reason,
         static_,
         super_,
+        implements_,
         { instance with
           type_args = type_args_;
           fields_tmap = fields_tmap_;
@@ -5901,7 +5931,7 @@ and check_polarity cx ?trace polarity = function
   | TypeT (_, t)
     -> check_polarity cx ?trace Neutral t
 
-  | InstanceT (_, _, _, instance) ->
+  | InstanceT (_, _, _, _, instance) ->
     check_polarity_propmap cx ?trace instance.fields_tmap;
     check_polarity_propmap cx ?trace instance.methods_tmap
 
@@ -7066,7 +7096,7 @@ and filter_not_exists t = match t with
   | StrT (r, (Literal _ | Truthy))
   | ArrT (r, _)
   | ObjT (r, _)
-  | InstanceT (r, _, _, _)
+  | InstanceT (r, _, _, _, _)
   | AnyObjT r
   | FunT (r, _, _, _)
   | AnyFunT r
@@ -7658,8 +7688,8 @@ and instanceof_test cx trace result = function
   (** If C is a subclass of A, then don't refine the type of x. Otherwise,
       refine the type of x to A. (In general, the type of x should be refined to
       C & A, but that's hard to compute.) **)
-  | (true, InstanceT (_,_,super_c,instance_c),
-     (ClassT(ExtendsT(_, c, InstanceT (_,_,_,instance_a))) as right))
+  | (true, InstanceT (_,_,super_c,_,instance_c),
+     (ClassT(ExtendsT(_, c, InstanceT (_,_,_,_,instance_a))) as right))
     -> (* TODO: intersection *)
 
     if instance_a.class_id = instance_c.class_id
@@ -7694,8 +7724,8 @@ and instanceof_test cx trace result = function
 
   (** If C is a subclass of A, then do nothing, since this check cannot
       succeed. Otherwise, don't refine the type of x. **)
-  | (false, InstanceT (_,_,super_c,instance_c),
-     (ClassT(ExtendsT(_, _, InstanceT (_,_,_,instance_a))) as right))
+  | (false, InstanceT (_,_,super_c,_,instance_c),
+     (ClassT(ExtendsT(_, _, InstanceT (_,_,_,_,instance_a))) as right))
     ->
 
     if instance_a.class_id = instance_c.class_id
@@ -7785,7 +7815,8 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
         flow_sentinel sense props_tmap obj s
 
       (* instance.key ===/!== literal value *)
-      | InstanceT (_, _, _, { fields_tmap; _}) ->
+      | InstanceT (_, _, _, _, { fields_tmap; _}) ->
+        (* TODO: add test for sentinel test on implements *)
         flow_sentinel sense fields_tmap obj s
 
       | IntersectionT (_, rep) ->
@@ -8853,7 +8884,7 @@ end = struct
     | AnnotT source ->
         let source_t = resolve_type cx source in
         extract_members cx source_t
-    | InstanceT (_, _, super,
+    | InstanceT (_, _, super, _,
                 {fields_tmap = fields;
                 methods_tmap = methods;
                 _}) ->
@@ -8909,8 +8940,8 @@ end = struct
     | PolyT (_, sub_type) ->
         (* TODO: replace type parameters with stable/proper names? *)
         extract_members cx sub_type
-    | ThisClassT (InstanceT (_, static, _, _))
-    | ClassT (InstanceT (_, static, _, _)) ->
+    | ThisClassT (InstanceT (_, static, _, _, _))
+    | ClassT (InstanceT (_, static, _, _, _)) ->
         let static_t = resolve_type cx static in
         extract_members cx static_t
     | FunT (_, static, proto, _) ->
@@ -9085,7 +9116,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | TypeT (_, t) ->
     recurse t
 
-  | InstanceT (_, static, super, instance) ->
+  | InstanceT (_, static, super, _, instance) ->
     let process_element ?(is_field=false) name t =
       let munged = is_munged_prop_name cx name in
       let initialized = SSet.mem name instance.initialized_field_names in
