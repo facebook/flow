@@ -269,25 +269,29 @@ module ContextOptimizer = struct
       let sig_hash = SigHash.add dicttype.dict_polarity sig_hash in
       super#dict_type cx { quotient with sig_hash } dicttype
 
-    method! type_ cx quotient t = match t with
-    | OpenT _ -> super#type_ cx quotient t
-    | InstanceT (_, _, _, _, { class_id; _ }) ->
-      let { sig_hash; _ } = quotient in
-      let id =
-        if Context.mem_nominal_id cx class_id
-        then match IMap.get class_id stable_nominal_ids with
-        | None ->
-          let id = self#fresh_stable_id in
-          stable_nominal_ids <- IMap.add class_id id stable_nominal_ids;
-          id
-        | Some id -> id
-        else class_id in
-      let sig_hash = SigHash.add id sig_hash in
-      super#type_ cx { quotient with sig_hash } t
-    | _ ->
-      let { sig_hash; _ } = quotient in
-      let sig_hash = SigHash.add_type t sig_hash in
-      super#type_ cx { quotient with sig_hash } t
+    method! type_ cx quotient t =
+      let quotient = { quotient with
+        sig_hash = SigHash.add (reason_of_t t) quotient.sig_hash
+      } in
+      match t with
+      | OpenT _ -> super#type_ cx quotient t
+      | InstanceT (_, _, _, _, { class_id; _ }) ->
+        let { sig_hash; _ } = quotient in
+        let id =
+          if Context.mem_nominal_id cx class_id
+          then match IMap.get class_id stable_nominal_ids with
+          | None ->
+            let id = self#fresh_stable_id in
+            stable_nominal_ids <- IMap.add class_id id stable_nominal_ids;
+            id
+          | Some id -> id
+          else class_id in
+        let sig_hash = SigHash.add id sig_hash in
+        super#type_ cx { quotient with sig_hash } t
+      | _ ->
+        let { sig_hash; _ } = quotient in
+        let sig_hash = SigHash.add_type t sig_hash in
+        super#type_ cx { quotient with sig_hash } t
   end
 
   (* walk a context from a list of exports *)
