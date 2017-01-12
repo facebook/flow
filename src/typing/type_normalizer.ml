@@ -205,6 +205,10 @@ let rec normalize_type_impl cx ids t = match t with
       let param_names = Some ["obj"; "pathCallback"] in
       fake_fun param_names tins None (MaybeT cb_ret)
 
+  | CustomFunT (_, DebugPrint) ->
+      let rest_param = Some (None, AnyT.t) in
+      fake_fun None [] rest_param VoidT.t
+
   (* Fake the signature of React.createElement (overloaded)
      1. Component class
        <T>(name: ReactClass<T>, config: T, children?: any) => React$Element<T>

@@ -294,6 +294,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       | MergeInto -> "mergeInto"
       | Mixin -> "mixin"
       | Idx -> "idx"
+      | DebugPrint -> "$Flow$DebugPrint"
       );
     ]
 

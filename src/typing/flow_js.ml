@@ -1455,7 +1455,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Debugging *)
     (*************)
 
-    | (_, DebugPrintT (reason)) ->
+    | _, DebugPrintT reason ->
       let str = Debug_js.jstr_of_t cx l in
       add_output cx ~trace (FlowError.EDebugPrint (reason, str))
 
@@ -3268,6 +3268,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       CallT (reason_op, { call_args_tlist; call_tout; _ }) ->
       let t = ClassT (spread_objects cx reason_op call_args_tlist) in
       rec_flow_t cx trace (t, call_tout)
+
+    | CustomFunT (_, DebugPrint),
+      CallT (reason_op, { call_args_tlist; call_tout; _ }) ->
+      List.iter (fun t ->
+        rec_flow cx trace (t, DebugPrintT reason_op)
+      ) call_args_tlist;
+      rec_flow_t cx trace (VoidT.why reason_op, call_tout);
 
     | CustomFunT (reason, _), _ when function_like_op u ->
       rec_flow cx trace (AnyFunT reason, u)

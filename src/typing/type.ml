@@ -798,6 +798,9 @@ module rec TypeTerm : sig
   | Mixin
   | Idx
 
+  (* Internal tools *)
+  | DebugPrint
+
   and sentinel_value =
   | SentinelStr of string
   | SentinelNum of number_literal

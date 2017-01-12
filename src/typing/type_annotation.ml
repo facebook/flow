@@ -403,6 +403,9 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$Facebookism$Idx" ->
       mk_custom_fun cx loc typeParameters Idx
 
+  | "$Flow$DebugPrint" ->
+      mk_custom_fun cx loc typeParameters DebugPrint
+
 
   (* You can specify in the .flowconfig the names of types that should be
    * treated like any<actualType>. So if you have
