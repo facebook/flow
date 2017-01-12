@@ -27,19 +27,25 @@ main.js:15
 
 main.js:17
  17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                                          ^^^^^^^^^^^^^^^^^ React element `div`
+                                          ^^^^^^^^^^^^^^^^^ props of React element `div`. This type is incompatible with
  17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                               ^^^^^^ number. This type is incompatible with
- 17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                                                  ^^^^^^ string
+                          ^^^^^^^^^^^^ object type
+  Property `id` is incompatible:
+     17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
+                                   ^^^^^^ number. This type is incompatible with
+     17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
+                                                      ^^^^^^ string
 
 main.js:17
  17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                                          ^^^^^^^^^^^^^^^^^ React element `div`
+                                          ^^^^^^^^^^^^^^^^^ props of React element `div`. This type is incompatible with
  17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                                                  ^^^^^^ string. This type is incompatible with
- 17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                               ^^^^^^ number
+                          ^^^^^^^^^^^^ object type
+  Property `id` is incompatible:
+     17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
+                                                      ^^^^^^ string. This type is incompatible with
+     17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
+                                   ^^^^^^ number
 
 strings.js:10
  10: <Bad />; // Error: 'bad' not in JSXIntrinsics

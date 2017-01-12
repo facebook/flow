@@ -8299,7 +8299,7 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
       if not (is_internal_name x || is_dictionary_exempt x)
       then (match lp, up with
       | Some p1, Some p2 ->
-          unify_props cx trace x lreason ureason p1 p2
+          unify_props cx trace ~use_op x lreason ureason p1 p2
       | Some p1, None ->
           unify_prop_with_dict cx trace ~use_op x p1 lreason ureason udict
       | None, Some p2 ->
@@ -8327,21 +8327,23 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
     naive_unify cx trace ~use_op t1 t2
   )
 
-and unify_props cx trace x r1 r2 p1 p2 =
+and unify_props cx trace ~use_op x r1 r2 p1 p2 =
+  let use_op = PropertyCompatibility (x, r1, r2, use_op) in
+
   (* If both sides are neutral fields, we can just unify once *)
   match p1, p2 with
   | Field (t1, Neutral),
     Field (t2, Neutral) ->
-    rec_unify cx trace t1 t2;
+    rec_unify cx trace ~use_op t1 t2;
   | _ ->
     (* Otherwise, unify read/write sides separately. *)
     (match Property.read_t p1, Property.read_t p2 with
     | Some t1, Some t2 ->
-        rec_unify cx trace t1 t2;
+        rec_unify cx trace ~use_op t1 t2;
     | _ -> ());
     (match Property.write_t p1, Property.write_t p2 with
     | Some t1, Some t2 ->
-        rec_unify cx trace t1 t2;
+        rec_unify cx trace ~use_op t1 t2;
     | _ -> ());
     (* Error if polarity is not compatible both ways. *)
     let polarity1 = Property.polarity p1 in
@@ -8355,13 +8357,16 @@ and unify_props cx trace x r1 r2 p1 p2 =
 
 (* If some property `x` exists in one object but not another, ensure the
    property is compatible with a dictionary, or error if none. *)
-and unify_prop_with_dict cx trace ~use_op x p prop_reason dict_reason dict =
-  let prop_reason = replace_reason_const (RProperty (Some x)) prop_reason in
+and unify_prop_with_dict cx trace ~use_op x p prop_obj_reason dict_reason dict =
+  (* prop_obj_reason: reason of the object containing the prop
+     dict_reason: reason of the object potentially containing a dictionary
+     prop_reason: reason of the prop itself *)
+  let prop_reason = replace_reason_const (RProperty (Some x)) prop_obj_reason in
   match dict with
   | Some { key; value; dict_polarity; _ } ->
     rec_flow_t cx trace (string_key x prop_reason, key);
     let p2 = Field (value, dict_polarity) in
-    unify_props cx trace x prop_reason dict_reason p p2
+    unify_props cx trace ~use_op x prop_obj_reason dict_reason p p2
   | None ->
     let err = FlowError.EPropNotFound ((prop_reason, dict_reason), use_op) in
     add_output cx ~trace err

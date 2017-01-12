@@ -1,24 +1,164 @@
 compatibility.js:3
-  3: x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
-         ^ object type. This type is incompatible with
-  1: declare var x: { x: { foo: string } };
-                    ^^^^^^^^^^^^^^^^^^^^^^ object type
+  3:     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
+             ^ object type. This type is incompatible with
+  2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                   ^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `x` is incompatible:
-      1: declare var x: { x: { foo: string } };
-                             ^^^^^^^^^^^^^^^ property `foo`. Property not found in
-      2: declare var y: { x: { bar: number } };
-                             ^^^^^^^^^^^^^^^ object type
+      2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                            ^^^^^^^^^^^^^^^ property `foo`. Property not found in
+      2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                                                       ^^^^^^^^^^^^^^^ object type
 
 compatibility.js:3
-  3: x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
-         ^ object type. This type is incompatible with
-  1: declare var x: { x: { foo: string } };
-                    ^^^^^^^^^^^^^^^^^^^^^^ object type
+  3:     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
+             ^ object type. This type is incompatible with
+  2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                   ^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `x` is incompatible:
-      2: declare var y: { x: { bar: number } };
-                             ^^^^^^^^^^^^^^^ property `bar`. Property not found in
-      1: declare var x: { x: { foo: string } };
-                             ^^^^^^^^^^^^^^^ object type
+      2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                                                       ^^^^^^^^^^^^^^^ property `bar`. Property not found in
+      2:   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                            ^^^^^^^^^^^^^^^ object type
+
+compatibility.js:7
+  7:     x = y; // 2 errors: string !~> number; number !~> string
+             ^ object type. This type is incompatible with
+  6:   function(x: { foo: string }, y: { foo: number }) {
+                   ^^^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+      6:   function(x: { foo: string }, y: { foo: number }) {
+                              ^^^^^^ string. This type is incompatible with
+      6:   function(x: { foo: string }, y: { foo: number }) {
+                                                  ^^^^^^ number
+
+compatibility.js:7
+  7:     x = y; // 2 errors: string !~> number; number !~> string
+             ^ object type. This type is incompatible with
+  6:   function(x: { foo: string }, y: { foo: number }) {
+                   ^^^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+      6:   function(x: { foo: string }, y: { foo: number }) {
+                                                  ^^^^^^ number. This type is incompatible with
+      6:   function(x: { foo: string }, y: { foo: number }) {
+                              ^^^^^^ string
+
+compatibility.js:11
+ 11:     x = y; // 2 errors: string !~> number; number !~> string
+             ^ object type. This type is incompatible with
+ 10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
+                   ^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
+                                                       ^^^^^^^^^^^^^^^ object type. This type is incompatible with
+     10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
+                            ^^^^^^^^^^^^^^^ object type
+      Property `foo` is incompatible:
+         10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
+                                       ^^^^^^ string. This type is incompatible with
+         10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
+                                                                  ^^^^^^ number
+
+compatibility.js:11
+ 11:     x = y; // 2 errors: string !~> number; number !~> string
+             ^ object type. This type is incompatible with
+ 10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
+                   ^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
+                                                       ^^^^^^^^^^^^^^^ object type. This type is incompatible with
+     10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
+                            ^^^^^^^^^^^^^^^ object type
+      Property `foo` is incompatible:
+         10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
+                                                                  ^^^^^^ number. This type is incompatible with
+         10:   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
+                                       ^^^^^^ string
+
+compatibility.js:15
+ 15:     x = y; // 1 error: number !~> string
+             ^ object type. This type is incompatible with
+ 14:   function(x: { +foo: string }, y: { +foo: number }) {
+                   ^^^^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+     14:   function(x: { +foo: string }, y: { +foo: number }) {
+                                                    ^^^^^^ number. This type is incompatible with
+     14:   function(x: { +foo: string }, y: { +foo: number }) {
+                               ^^^^^^ string
+
+compatibility.js:19
+ 19:     x = y; // 2 errors: string !~> number; number !~> string
+             ^ object type. This type is incompatible with
+ 18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
+                   ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
+                                                        ^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+     18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
+                            ^^^^^^^^^^^^^^^^ object type
+      Property `foo` is incompatible:
+         18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
+                                        ^^^^^^ string. This type is incompatible with
+         18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
+                                                                    ^^^^^^ number
+
+compatibility.js:19
+ 19:     x = y; // 2 errors: string !~> number; number !~> string
+             ^ object type. This type is incompatible with
+ 18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
+                   ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
+                                                        ^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+     18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
+                            ^^^^^^^^^^^^^^^^ object type
+      Property `foo` is incompatible:
+         18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
+                                                                    ^^^^^^ number. This type is incompatible with
+         18:   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
+                                        ^^^^^^ string
+
+compatibility.js:23
+ 23:     x = y; // 1 error: string !~> number
+             ^ object type. This type is incompatible with
+ 22:   function(x: { -foo: string }, y: { -foo: number }) {
+                   ^^^^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+     22:   function(x: { -foo: string }, y: { -foo: number }) {
+                               ^^^^^^ string. This type is incompatible with
+     22:   function(x: { -foo: string }, y: { -foo: number }) {
+                                                    ^^^^^^ number
+
+compatibility.js:27
+ 27:     x = y; // 2 errors: string !~> number; number !~> string
+             ^ object type. This type is incompatible with
+ 26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
+                   ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
+                                                        ^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+     26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
+                            ^^^^^^^^^^^^^^^^ object type
+      Property `foo` is incompatible:
+         26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
+                                        ^^^^^^ string. This type is incompatible with
+         26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
+                                                                    ^^^^^^ number
+
+compatibility.js:27
+ 27:     x = y; // 2 errors: string !~> number; number !~> string
+             ^ object type. This type is incompatible with
+ 26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
+                   ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
+                                                        ^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+     26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
+                            ^^^^^^^^^^^^^^^^ object type
+      Property `foo` is incompatible:
+         26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
+                                                                    ^^^^^^ number. This type is incompatible with
+         26:   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
+                                        ^^^^^^ string
 
 conversion.js:10
  10: (Object(undefined): Number); // error
@@ -98,4 +238,4 @@ unaliased_assign.js:20
                         ^^^^^^ string
 
 
-Found 14 errors
+Found 24 errors

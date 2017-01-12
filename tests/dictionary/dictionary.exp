@@ -346,23 +346,38 @@ incompatible.js:12
  12: function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
                                             ^^^^^^ number
 
-incompatible.js:18
- 18:   x: Array<{[key: string]: number}>
-                                ^^^^^^ number. This type is incompatible with
+incompatible.js:19
  19: ): Array<{[key: string]: number, fooBar: string}> {
-                                              ^^^^^^ string
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+ 18:   x: Array<{[key: string]: number}>
+                ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `fooBar` is incompatible:
+     18:   x: Array<{[key: string]: number}>
+                                    ^^^^^^ number. This type is incompatible with
+     19: ): Array<{[key: string]: number, fooBar: string}> {
+                                                  ^^^^^^ string
 
 incompatible.js:19
  19: ): Array<{[key: string]: number, fooBar: string}> {
-                                              ^^^^^^ string. This type is incompatible with
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
  18:   x: Array<{[key: string]: number}>
-                                ^^^^^^ number
+                ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `fooBar` is incompatible:
+     19: ): Array<{[key: string]: number, fooBar: string}> {
+                                                  ^^^^^^ string. This type is incompatible with
+     18:   x: Array<{[key: string]: number}>
+                                    ^^^^^^ number
 
-incompatible.js:24
- 24:   x: Array<{[key: string]: mixed}>
-                                ^^^^^ mixed. This type is incompatible with
+incompatible.js:25
  25: ): Array<{[key: string]: mixed, fooBar: string}> {
-                                             ^^^^^^ string
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+ 24:   x: Array<{[key: string]: mixed}>
+                ^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `fooBar` is incompatible:
+     24:   x: Array<{[key: string]: mixed}>
+                                    ^^^^^ mixed. This type is incompatible with
+     25: ): Array<{[key: string]: mixed, fooBar: string}> {
+                                                 ^^^^^^ string
 
 incompatible.js:37
  37:   return x;
