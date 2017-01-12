@@ -1017,6 +1017,10 @@ offending text is '%s'." (text node)));
     let (kw, left_p, args, right_p) = get_isset_expression_children x in
     t kw;
     transform_argish left_p args right_p;
+  | DefineExpression x ->
+    let (kw, left_p, args, right_p) = get_define_expression_children x in
+    t kw;
+    transform_argish left_p args right_p;
   | ParenthesizedExpression x ->
     let (left_p, expr, right_p) = get_parenthesized_expression_children x in
     t left_p;
