@@ -2463,7 +2463,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* If we have a dictionary, try that next *)
       | _, Some { key; _ } -> rec_flow_t cx trace (StrT (reason_op, x), key)
       | _ ->
-        add_output cx ~trace (FlowError.EPropNotFound (reason_op, reason_o)))
+        let err = FlowError.EPropNotFound ((reason_op, reason_o), UnknownUse) in
+        add_output cx ~trace err)
 
     | InstanceT (reason_o, _, _, _, instance), HasOwnPropT(reason_op, Literal x) ->
       let fields_tmap = Context.find_props cx instance.fields_tmap in
@@ -2472,7 +2473,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (match SMap.get x fields with
       | Some _ -> ()
       | None ->
-        add_output cx ~trace (FlowError.EPropNotFound (reason_op, reason_o)))
+        let err = FlowError.EPropNotFound ((reason_op, reason_o), UnknownUse) in
+        add_output cx ~trace err)
 
     | (InstanceT (reason_o, _, _, _, _), HasOwnPropT(reason_op, _)) ->
         let msg = "Expected string literal" in
@@ -2738,7 +2740,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if not (Context.has_prop cx obj_u.props_tmap prop_name)
         then
           let rl = replace_reason_const (RProperty (Some prop_name)) rl in
-          add_output cx ~trace (FlowError.EPropNotFound (rl, ru))
+          let err = FlowError.EPropNotFound ((rl, ru), UnknownUse) in
+          add_output cx ~trace err
       );
       rec_flow_t cx trace (ObjT (rl, xl), ObjT (ru, xu))
 
@@ -5298,7 +5301,8 @@ and quick_error_fun_as_obj cx trace reason statics reason_o props =
     SMap.iter (fun x _ ->
       let reason_prop =
         replace_reason (fun desc -> RPropertyOf (x, desc)) reason_o in
-      add_output cx ~trace (FlowError.EPropNotFound (reason_prop, reason))
+      let err = FlowError.EPropNotFound ((reason_prop, reason), UnknownUse) in
+      add_output cx ~trace err
     ) props_not_found;
     not (SMap.is_empty props_not_found)
   | None -> false
@@ -7013,7 +7017,9 @@ and write_obj_prop cx trace o propref reason_obj reason_op tin =
     | Named (reason_prop, _) ->
       if sealed_in_op reason_op o.flags.sealed
       then
-        add_output cx ~trace (FlowError.EPropNotFound (reason_prop, reason_obj))
+        let err =
+          FlowError.EPropNotFound ((reason_prop, reason_obj), UnknownUse) in
+        add_output cx ~trace err
       else
         let strict = ShadowWrite (Nel.one o.props_tmap) in
         rec_flow cx trace (o.proto_t,
@@ -8278,10 +8284,12 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
         rec_unify cx trace lv uv
     | Some _, None ->
         let lreason = replace_reason_const RSomeProperty lreason in
-        add_output cx ~trace (FlowError.EPropNotFound (lreason, ureason))
+        let err = FlowError.EPropNotFound ((lreason, ureason), use_op) in
+        add_output cx ~trace err
     | None, Some _ ->
         let ureason = replace_reason_const RSomeProperty ureason in
-        add_output cx ~trace (FlowError.EPropNotFound (ureason, lreason))
+        let err = FlowError.EPropNotFound ((ureason, lreason), use_op) in
+        add_output cx ~trace err
     | None, None -> ()
     end;
 
@@ -8293,9 +8301,9 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
       | Some p1, Some p2 ->
           unify_props cx trace x lreason ureason p1 p2
       | Some p1, None ->
-          unify_prop_with_dict cx trace x p1 lreason ureason udict
+          unify_prop_with_dict cx trace ~use_op x p1 lreason ureason udict
       | None, Some p2 ->
-          unify_prop_with_dict cx trace x p2 ureason lreason ldict
+          unify_prop_with_dict cx trace ~use_op x p2 ureason lreason ldict
       | None, None -> ());
       None
     ) lpmap upmap |> ignore
@@ -8347,7 +8355,7 @@ and unify_props cx trace x r1 r2 p1 p2 =
 
 (* If some property `x` exists in one object but not another, ensure the
    property is compatible with a dictionary, or error if none. *)
-and unify_prop_with_dict cx trace x p prop_reason dict_reason dict =
+and unify_prop_with_dict cx trace ~use_op x p prop_reason dict_reason dict =
   let prop_reason = replace_reason_const (RProperty (Some x)) prop_reason in
   match dict with
   | Some { key; value; dict_polarity; _ } ->
@@ -8355,7 +8363,8 @@ and unify_prop_with_dict cx trace x p prop_reason dict_reason dict =
     let p2 = Field (value, dict_polarity) in
     unify_props cx trace x prop_reason dict_reason p p2
   | None ->
-    add_output cx ~trace (FlowError.EPropNotFound (prop_reason, dict_reason))
+    let err = FlowError.EPropNotFound ((prop_reason, dict_reason), use_op) in
+    add_output cx ~trace err
 
 (* TODO: Unification between concrete types is still implemented as
    bidirectional flows. This means that the destructuring work is duplicated,

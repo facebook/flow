@@ -1,3 +1,25 @@
+compatibility.js:3
+  3: x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
+         ^ object type. This type is incompatible with
+  1: declare var x: { x: { foo: string } };
+                    ^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+      1: declare var x: { x: { foo: string } };
+                             ^^^^^^^^^^^^^^^ property `foo`. Property not found in
+      2: declare var y: { x: { bar: number } };
+                             ^^^^^^^^^^^^^^^ object type
+
+compatibility.js:3
+  3: x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
+         ^ object type. This type is incompatible with
+  1: declare var x: { x: { foo: string } };
+                    ^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+      2: declare var y: { x: { bar: number } };
+                             ^^^^^^^^^^^^^^^ property `bar`. Property not found in
+      1: declare var x: { x: { foo: string } };
+                             ^^^^^^^^^^^^^^^ object type
+
 conversion.js:10
  10: (Object(undefined): Number); // error
       ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
@@ -76,4 +98,4 @@ unaliased_assign.js:20
                         ^^^^^^ string
 
 
-Found 12 errors
+Found 14 errors

@@ -1770,7 +1770,7 @@ let dump_flow_error =
           (dump_reason cx reason2)
           expected
           literal
-    | EPropNotFound (prop_reason, obj_reason) ->
+    | EPropNotFound ((prop_reason, obj_reason), _use_op) ->
         spf "EPropNotFound (%s, %s)"
           (dump_reason cx prop_reason)
           (dump_reason cx obj_reason)

@@ -51,7 +51,7 @@ type error_message =
   | EExpectedStringLit of (reason * reason) * string * string Type.literal
   | EExpectedNumberLit of (reason * reason) * Type.number_literal * Type.number_literal Type.literal
   | EExpectedBooleanLit of (reason * reason) * bool * bool option
-  | EPropNotFound of (reason * reason)
+  | EPropNotFound of (reason * reason) * use_op
   | EPropAccess of (reason * reason) * string option * Type.property * Type.rw
   | EPropPolarityMismatch of (reason * reason) * string option * (Type.polarity * Type.polarity)
   | EPolarityMismatch of Type.typeparam * Type.polarity
@@ -314,6 +314,44 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     typecheck_error msg reasons
   in
 
+  let rec unwrap_use_ops ((l_reason, u_reason), nested_extra, msg) = function
+  | PropertyCompatibility (
+      prop_name,
+      lower_obj_reason, upper_obj_reason,
+      use_op
+    ) ->
+    let infos = [
+      mk_info l_reason [msg];
+      mk_info u_reason []
+    ] in
+    let extra = [
+      InfoNode (
+        [Loc.none, [spf "Property `%s` is incompatible:" prop_name]],
+        [
+          if nested_extra = []
+          then InfoLeaf infos
+          else InfoNode (infos, nested_extra)
+        ]
+      )
+    ] in
+    let msg = "This type is incompatible with" in
+    unwrap_use_ops ((lower_obj_reason, upper_obj_reason), extra, msg) use_op
+  | FunReturn ->
+    let msg =
+      "This type is incompatible with the expected return type of" in
+    (l_reason, u_reason), nested_extra, msg
+  | FunCallParam ->
+    let r1, r2, msg = if is_lib_reason l_reason then
+      u_reason, l_reason, "This type is incompatible with an argument type of"
+    else
+      l_reason, u_reason,
+        "This type is incompatible with the expected param type of"
+    in
+    (r1, r2), nested_extra, msg
+  | _ ->
+    (l_reason, u_reason), nested_extra, msg
+  in
+
   function
   | EIncompatible (l, u) ->
       typecheck_error (err_msg l u) (ordered_reasons l u)
@@ -431,8 +469,10 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       in
       typecheck_error msg reasons
 
-  | EPropNotFound reasons ->
-      typecheck_error "Property not found in" reasons
+  | EPropNotFound (reasons, use_op) ->
+      let reasons, extra, msg =
+        unwrap_use_ops (reasons, [], "Property not found in") use_op in
+      typecheck_error ~extra msg reasons
 
   | EPropAccess (reasons, x, prop, rw) ->
       prop_polarity_error reasons x
@@ -961,44 +1001,9 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       mk_error ~trace_infos [loc, [msg]]
 
   | EIncompatibleObject (l_reason, u_reason, use_op) ->
-      let rec handle (l_reason, u_reason, nested_extra) = function
-      | PropertyCompatibility (
-          prop_name,
-          lower_obj_reason, upper_obj_reason,
-          use_op
-        ) ->
-        let infos = [
-          mk_info l_reason ["This type is incompatible with"];
-          mk_info u_reason []
-        ] in
-        let extra = [
-          InfoNode (
-            [Loc.none, [spf "Property `%s` is incompatible:" prop_name]],
-            [
-              if nested_extra = []
-              then InfoLeaf infos
-              else InfoNode (infos, nested_extra)
-            ]
-          )
-        ] in
-        handle (lower_obj_reason, upper_obj_reason, extra) use_op
-      | FunReturn ->
-        let msg =
-          "This type is incompatible with the expected return type of" in
-        (l_reason, u_reason), nested_extra, msg
-      | FunCallParam ->
-        let r1, r2, msg = if is_lib_reason l_reason then
-          u_reason, l_reason, "This type is incompatible with an argument type of"
-        else
-          l_reason, u_reason,
-            "This type is incompatible with the expected param type of"
-        in
-        (r1, r2), nested_extra, msg
-      | _ ->
+      let reasons, extra, msg =
         let msg = "This type is incompatible with" in
-        (l_reason, u_reason), nested_extra, msg
-      in
-      let reasons, extra, msg = handle (l_reason, u_reason, []) use_op in
+        unwrap_use_ops ((l_reason, u_reason), [], msg) use_op in
       typecheck_error ~extra ~suppress_op:true msg reasons
 
   | EUnsupportedImplements reason ->
