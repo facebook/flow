@@ -341,7 +341,7 @@ class Timely extends React.Component<void, TimelyProps, void> {
   provides the date
 */
 declare function injectDate<Props, C: React.Component<*, Props, *>>(
-  Komponent: Class<C>
+  Component: Class<C>
 ): Class<React.Component<void, $Diff<Props, {date: Date}>, void>>;
 
 const Timeless = injectDate(Timely);
