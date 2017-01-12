@@ -29,7 +29,10 @@ async function newTest(bin: string, suiteName: string): Promise<void> {
 
   await writeFile(
     join(dest, 'test.js'),
-`/* @flow */
+`/*
+ * @flow
+ * @lint-ignore-every LINE_WRAP1
+ */
 
 
 import {suite, test} from '${testerLoc}';

@@ -1,4 +1,7 @@
-/* @flow */
+/*
+ * @flow
+ * @lint-ignore-every LINE_WRAP1
+ */
 
 
 import {suite, test} from '../../tsrc/test/Tester';

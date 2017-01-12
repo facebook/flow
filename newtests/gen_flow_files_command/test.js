@@ -1,11 +1,14 @@
-/* @flow */
+/*
+ * @flow
+ * @lint-ignore-every LINE_WRAP1
+ */
 
 
 import {suite, test} from '../../tsrc/test/Tester';
 
 export default suite(({addFile, addFiles, flowCmd}) => [
   test('named class exports', [
-    addFile('named_class_exports.js'),
+    addFile('named_class_exports', 'named_class_exports.js'),
     flowCmd(['gen-flow-files', '--quiet', 'named_class_exports.js']).stdout(`
       // @flow
 
@@ -103,7 +106,7 @@ export default suite(({addFile, addFiles, flowCmd}) => [
   ]),
 
   test('default class exports', [
-    addFile('default_class_export.js'),
+    addFile('default_class_export', 'default_class_export.js'),
     flowCmd(['gen-flow-files', '--quiet', 'default_class_export.js'])
       .stderr('')
       .stdout(
@@ -190,8 +193,8 @@ export default suite(({addFile, addFiles, flowCmd}) => [
   ]),
 
   test('imported class types arent redefined', [
-    addFile('named_class_exports.js'),
-    addFile('export_imported_type.js'),
+    addFile('named_class_exports', 'named_class_exports.js'),
+    addFile('export_imported_type', 'export_imported_type.js'),
     flowCmd(['gen-flow-files', '--quiet', 'export_imported_type.js'])
       .stderr('')
       .stdout(
