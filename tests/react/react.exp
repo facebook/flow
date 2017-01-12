@@ -21,7 +21,7 @@ jsx_spread.js:11
      10: var props = {bar: 42};
                            ^^ number. This type is incompatible with
       6:     bar: React.PropTypes.string.isRequired,
-                  ^^^^^^^^^^^^^^^^^^^^^^ string
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
 proptype_arrayOf.js:13
  13: var fail_not_array = <Example arr={2} />
@@ -32,7 +32,7 @@ proptype_arrayOf.js:13
      13: var fail_not_array = <Example arr={2} />
                                             ^ number. This type is incompatible with
       6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ arrayOf
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ arrayOf
 
 proptype_arrayOf.js:14
  14: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
@@ -51,7 +51,7 @@ proptype_func.js:14
      14: var fail_mistyped = <Example func={2} />
                                             ^ number. This type is incompatible with
       6:     func: React.PropTypes.func.isRequired
-                   ^^^^^^^^^^^^^^^^^^^^ func
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ func
 
 proptype_object.js:13
  13: var fail_mistyped = <Example object={2} />
@@ -62,7 +62,7 @@ proptype_object.js:13
      13: var fail_mistyped = <Example object={2} />
                                               ^ number. This type is incompatible with
       6:     object: React.PropTypes.object.isRequired
-                     ^^^^^^^^^^^^^^^^^^^^^^ object
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object
 
 proptype_objectOf.js:13
  13: var fail_not_object = <Example obj={2} />
@@ -73,7 +73,7 @@ proptype_objectOf.js:13
      13: var fail_not_object = <Example obj={2} />
                                              ^ number. This type is incompatible with
       6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ objectOf
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ objectOf
 
 proptype_objectOf.js:14
  14: var fail_mistyped_props = <Example obj={{foo: "foo"}} />
@@ -92,7 +92,7 @@ proptype_oneOf.js:11
  11: var ex2 = <Example literal="bar" />;
                                 ^^^^^ string. Expected string literal `foo`, got `bar` instead
   6:     literal: React.PropTypes.oneOf(["foo"]).isRequired
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string literal `foo`
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string literal `foo`
 
 proptype_oneOfType.js:23
  23: var fail_bool = <Example prop={true} />

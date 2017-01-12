@@ -3921,14 +3921,16 @@ and mk_proptypes cx props = Ast.Expression.Object.(
     (* required prop *)
     | Property (_, { Property.
         key = Property.Identifier (_, name);
-        value = Property.Init (_, Ast.Expression.Member {
+        value = Property.Init (loc, Ast.Expression.Member {
           Ast.Expression.Member.
           property = Ast.Expression.Member.PropertyIdentifier (_, "isRequired");
           _object = e;
           _
         });
         _ }) ->
-        let p = Field (mk_proptype cx e, Neutral) in
+        let t = mk_proptype cx e in
+        let t = mod_reason_of_t (repos_reason loc) t in
+        let p = Field (t, Neutral) in
         SMap.add name p amap,
         omap,
         dict

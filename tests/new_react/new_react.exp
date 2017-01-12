@@ -153,7 +153,7 @@ new_react.js:29
      29: var element = <C x = {0}/>;
                                ^ number. This type is incompatible with
       6:         x: React.PropTypes.string.isRequired,
-                    ^^^^^^^^^^^^^^^^^^^^^^ string
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
 new_react.js:30
  30: var element_ = <C/>;
@@ -257,7 +257,7 @@ props2.js:15
       9:     getInitialState: function(): { bar: number } {
                                                  ^^^^^^ number. This type is incompatible with
       5:         bar: React.PropTypes.string.isRequired,
-                      ^^^^^^^^^^^^^^^^^^^^^^ string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
 props2.js:15
  15:         return <C {...this.state} foo = {0} />;
@@ -268,7 +268,7 @@ props2.js:15
      15:         return <C {...this.state} foo = {0} />;
                                                   ^ number. This type is incompatible with
       4:         foo: React.PropTypes.string.isRequired,
-                      ^^^^^^^^^^^^^^^^^^^^^^ string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
 props3.js:49
  49:       bad_one: React.PropTypes.imaginaryType,
