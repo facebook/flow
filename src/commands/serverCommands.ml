@@ -70,6 +70,8 @@ module OptionParser(Config : CONFIG) = struct
   | Check -> CommandSpec.ArgSpec.(
       empty
       |> error_flags
+      |> flag "--no-suppressions" no_arg
+        ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
       |> flag "--json" no_arg
           ~doc:"Output errors in JSON format"
       |> flag "--profile" no_arg
@@ -81,6 +83,7 @@ module OptionParser(Config : CONFIG) = struct
   | Server -> CommandSpec.ArgSpec.(
       empty
       |> dummy Options.default_error_flags (* error_flags *)
+      |> dummy false (* no_suppressions *)
       |> dummy false (* json *)
       |> flag "--profile" no_arg
           ~doc:"Output profiling information"
@@ -91,6 +94,7 @@ module OptionParser(Config : CONFIG) = struct
   | Detach -> CommandSpec.ArgSpec.(
       empty
       |> dummy Options.default_error_flags (* error_flags *)
+      |> dummy false (* no_suppressions *)
       |> flag "--json" no_arg
           ~doc:"Respond in JSON format"
       |> flag "--profile" no_arg
@@ -165,6 +169,7 @@ module OptionParser(Config : CONFIG) = struct
 
   let main
       error_flags
+      no_suppressions
       json
       profile
       log_file
@@ -318,7 +323,7 @@ module OptionParser(Config : CONFIG) = struct
       opt_max_workers;
       opt_ignores;
       opt_includes;
-      opt_suppress_comments = FlowConfig.(
+      opt_suppress_comments = if no_suppressions then [] else FlowConfig.(
         flowconfig.options.Opts.suppress_comments
       );
       opt_suppress_types = FlowConfig.(

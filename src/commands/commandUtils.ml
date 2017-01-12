@@ -218,10 +218,10 @@ let list_of_string_arg = function
 | Some arg_str -> Str.split (Str.regexp ",") arg_str
 
 let collect_flowconfig_flags main ignores_str includes_str lib_str =
-    let ignores = list_of_string_arg ignores_str in
-    let includes = list_of_string_arg includes_str in
-    let libs = list_of_string_arg lib_str in
-    main { ignores; includes; libs; }
+  let ignores = list_of_string_arg ignores_str in
+  let includes = list_of_string_arg includes_str in
+  let libs = list_of_string_arg lib_str in
+  main { ignores; includes; libs; }
 
 let ignore_flag prev = CommandSpec.ArgSpec.(
   prev
