@@ -3843,6 +3843,15 @@ module.exports = {
           'message': 'Unexpected token ?',
         }]
       },
+      'class X {f = 4 \n x; }': {
+        '%parse_options%': {
+          'esproposal_class_instance_fields': true,
+        },
+        'body.0.body.body.0': {
+          'type': 'ClassProperty',
+          'range': [9, 14],
+        }
+      },
     },
     'Comments': {
       // Regression test: "/*" should be allowed inside block comments
