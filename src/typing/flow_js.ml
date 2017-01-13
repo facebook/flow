@@ -2265,12 +2265,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         )
       )
 
-    | (_, ObjTestT(reason_op, default, u)) ->
-      let u = ReposLowerT(reason_op, UseT (UnknownUse, u)) in
-      if object_like l
-      then rec_flow cx trace (l, u)
-      else rec_flow cx trace (default, u)
-
     (*****************************)
     (* upper and lower any types *)
     (*****************************)
@@ -3439,6 +3433,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let t2 = mk_tvar cx reason in
         rec_flow cx trace (o2, ObjRestT (reason, [], t2));
         rec_flow cx trace (t2, ObjAssignT(reason, l, o1, [], true))
+
+    | (_, ObjTestT(reason_op, default, u)) ->
+      let u = ReposLowerT(reason_op, UseT (UnknownUse, u)) in
+      if object_like l
+      then rec_flow cx trace (l, u)
+      else rec_flow cx trace (default, u)
 
     (********************************************)
     (* array types deconstruct into their parts *)
