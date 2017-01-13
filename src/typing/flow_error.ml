@@ -171,6 +171,7 @@ and unsupported_syntax =
   | PredicateVoidReturn
   | MultipleIndexers
   | ObjectTypeSpread (* TODO *)
+  | SpreadArgument
 
 (* decide reason order based on UB's flavor and blamability *)
 let ordered_reasons l u =
@@ -851,6 +852,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             "multiple indexers are not supported"
         | ObjectTypeSpread ->
             "object type spread is not supported"
+        | SpreadArgument ->
+            "A spread argument is unsupported here"
       in
       mk_error ~trace_infos [loc, [msg]]
 

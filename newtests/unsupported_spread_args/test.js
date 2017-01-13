@@ -16,9 +16,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:8
             8: idx(...arr, obj => obj.foo)
-                                      ^^^ property \`foo\`. Property cannot be accessed on
-            8: idx(...arr, obj => obj.foo)
-                                  ^^^ rest array of spread operand
+                      ^^^ A spread argument is unsupported here
         `,
       ),
     addCode('idx({}, ...arr)')
@@ -26,9 +24,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:10
            10: idx({}, ...arr)
-               ^^^^^^^^^^^^^^^ function call. Function cannot be called on
-           10: idx({}, ...arr)
-                          ^^^ rest array of spread operand
+                          ^^^ A spread argument is unsupported here
         `,
       ),
     addCode('idx(...arr, ...arr)')
@@ -36,9 +32,11 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:12
            12: idx(...arr, ...arr)
-               ^^^^^^^^^^^^^^^^^^^ function call. Function cannot be called on
+                      ^^^ A spread argument is unsupported here
+
+          test.js:12
            12: idx(...arr, ...arr)
-                              ^^^ rest array of spread operand
+                              ^^^ A spread argument is unsupported here
         `,
       ),
   ]),
@@ -50,21 +48,27 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7: React.createElement(...arr, {})
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`. Expected React component instead of
-            7: React.createElement(...arr, {})
-                                      ^^^ rest array of spread operand
+                                      ^^^ A spread argument is unsupported here
         `,
       ),
     addCode('React.createElement(({}: any), ...arr)')
-      .noNewErrors(),
+      .newErrors(
+        `
+          test.js:9
+            9: React.createElement(({}: any), ...arr)
+                                                 ^^^ A spread argument is unsupported here
+        `,
+      ),
     addCode('React.createElement(...arr, ...arr)')
       .newErrors(
         `
           test.js:11
            11: React.createElement(...arr, ...arr)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`createElement\`. Expected React component instead of
+                                      ^^^ A spread argument is unsupported here
+
+          test.js:11
            11: React.createElement(...arr, ...arr)
-                                      ^^^ rest array of spread operand
+                                              ^^^ A spread argument is unsupported here
         `,
       ),
   ]),
@@ -75,9 +79,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (function () { return this.bar; }).call(...arr);
-                                          ^^^ property \`bar\`. Property cannot be accessed on
-            5: (function () { return this.bar; }).call(...arr);
-                                     ^^^^ rest array of spread operand
+                                                          ^^^ A spread argument is unsupported here
         `,
       ),
   ]),
@@ -88,9 +90,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (function () { return this.bar; }).apply(...arr);
-                                          ^^^ property \`bar\`. Property cannot be accessed on
-            5: (function () { return this.bar; }).apply(...arr);
-                                     ^^^^ rest array of spread operand
+                                                           ^^^ A spread argument is unsupported here
         `,
       ),
     addCode('(function () { return this.bar; }).apply(({}: any), ...arr);')
@@ -98,9 +98,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7: (function () { return this.bar; }).apply(({}: any), ...arr);
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`apply\`. Expected array of arguments instead of
-            7: (function () { return this.bar; }).apply(({}: any), ...arr);
-                                                                      ^^^ rest array of spread operand
+                                                                      ^^^ A spread argument is unsupported here
         `,
       ),
     addCode('(function () { return this.bar; }).apply(...arr, ...arr);')
@@ -108,9 +106,11 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: (function () { return this.bar; }).apply(...arr, ...arr);
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`apply\`. Expected array of arguments instead of
+                                                           ^^^ A spread argument is unsupported here
+
+          test.js:9
             9: (function () { return this.bar; }).apply(...arr, ...arr);
-                                                                   ^^^ rest array of spread operand
+                                                                   ^^^ A spread argument is unsupported here
         `,
       ),
   ]),
@@ -120,9 +120,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: Object.getPrototypeOf(...arr)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`getPrototypeOf\`. Property cannot be accessed on
-            5: Object.getPrototypeOf(...arr)
-                                        ^^^ rest array of spread operand
+                                        ^^^ A spread argument is unsupported here
         `,
       ),
   ]),
@@ -134,11 +132,9 @@ export default suite(({addFile, addFiles, addCode}) => [
     `)
       .newErrors(
         `
-          test.js:9
-            9:       o1.x;
-                        ^ property \`x\`. Property cannot be accessed on
-            9:       o1.x;
-                     ^^ rest array of spread operand
+          test.js:8
+            8:       const o1 = Object.assign(...objArr);
+                                                 ^^^^^^ A spread argument is unsupported here
         `,
       ),
     addCode(`
@@ -166,21 +162,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7: mergeInto(...arr, ...arr)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ function call. Expected object instead of
-            3: const arr = [1,2,3];
-                            ^ number
-
-          test.js:7
-            7: mergeInto(...arr, ...arr)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ function call. Expected object instead of
-            3: const arr = [1,2,3];
-                              ^ number
-
-          test.js:7
-            7: mergeInto(...arr, ...arr)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ function call. Expected object instead of
-            3: const arr = [1,2,3];
-                                ^ number
+                            ^^^ A spread argument is unsupported here
         `,
       )
       .because('First arg cant be a spread, second can'),

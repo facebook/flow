@@ -245,8 +245,10 @@ and parts_of_funtype { params_tlist; params_names; rest_param; return_t; _ } =
 
 and parts_of_funcalltype { call_args_tlist; call_tout; _; } =
   (* OMITTED: this_t *)
+  let call_args =
+    List.map (function Arg t | SpreadArg t -> t) call_args_tlist in
   ("call_tout", Def call_tout) ::
-  (list_parts call_args_tlist)
+  (list_parts call_args)
 
 and parts_of_exporttypes cx { exports_tmap; cjs_export; _ } =
   map_parts (Context.find_exports cx exports_tmap) @
@@ -286,7 +288,9 @@ and parts_of_use_t cx = function
     ("out", Def out) :: parts_of_exporttypes cx exporttypes
 | CJSRequireT (_, out) -> ["out", Def out]
 | ComparatorT (_, arg) -> ["arg", Def arg]
-| ConstructorT (_, args, out) -> ("out", Def out) :: list_parts args
+| ConstructorT (_, args, out) ->
+  let args = List.map (function Arg t | SpreadArg t -> t) args in
+  ("out", Def out) :: list_parts args
 | CopyNamedExportsT (_, target, out) -> ["target", Def target; "out", Def out]
 | DebugPrintT _ -> []
 | ElemT (_, l, ReadElem t) -> ["l", Def l; "read", Def t]

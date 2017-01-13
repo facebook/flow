@@ -417,8 +417,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | ConstructorT (_, tparams, t) -> [
-      "typeParams", JSON_Array (List.map (_json_of_t json_cx) tparams);
+  | ConstructorT (_, args, t) -> [
+      "argTypes", JSON_Array (List.map (json_of_funcallarg json_cx) args);
       "type", _json_of_t json_cx t
     ]
 
@@ -827,13 +827,26 @@ and json_of_funcalltype_impl json_cx {
   call_tout;
   call_closure_t;
 } = Hh_json.(
+  let arg_types = List.map (json_of_funcallarg json_cx) call_args_tlist in
   JSON_Object ([
     "thisType", _json_of_t json_cx call_this_t;
-    "argTypes", JSON_Array (List.map (_json_of_t json_cx) call_args_tlist);
+    "argTypes", JSON_Array arg_types;
     "tout", _json_of_t json_cx call_tout;
     "closureIndex", int_ call_closure_t;
   ])
 )
+
+and json_of_funcallarg json_cx = check_depth json_of_funcallarg_impl json_cx
+and json_of_funcallarg_impl json_cx arg =
+  let kind, t = match arg with
+  | Arg t -> "argument", t
+  | SpreadArg t -> "spread", t
+  in
+
+  Hh_json.(JSON_Object ([
+    "argKind", JSON_String kind;
+    "argType", _json_of_t json_cx t;
+  ]))
 
 and json_of_insttype json_cx = check_depth json_of_insttype_impl json_cx
 and json_of_insttype_impl json_cx insttype = Hh_json.(
@@ -1397,6 +1410,11 @@ and dump_use_t_ (depth, tvars) cx t =
   let tvar id = dump_tvar_ (depth-1, tvars) cx id in
   let prop p = dump_prop_ (depth-1, tvars) cx p in
 
+  let call_arg_kid = function
+  | Arg t -> kid t
+  | SpreadArg t -> spf "...%s" (kid t)
+  in
+
   let propref = function
     | Named (r, x) -> spf "%S %s" (dump_reason cx r) x
     | Computed t -> kid t
@@ -1444,7 +1462,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | CallT (_,{call_args_tlist;call_tout;call_this_t;_}) -> p
       ~extra:(spf "<this: %s>(%s) => %s"
         (kid call_this_t)
-        (String.concat "; " (List.map kid call_args_tlist))
+        (String.concat "; " (List.map call_arg_kid call_args_tlist))
         (kid call_tout)) t
   | CallLatentPredT _ -> p t
   | CallOpenPredT _ -> p t

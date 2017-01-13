@@ -180,7 +180,8 @@ and gc_funtype cx state funtype =
 
 and gc_funcalltype cx state funcalltype =
   gc cx state funcalltype.call_this_t;
-  funcalltype.call_args_tlist |> List.iter (gc cx state);
+  funcalltype.call_args_tlist
+    |> List.iter (function Arg t | SpreadArg t -> gc cx state t);
   gc cx state funcalltype.call_tout;
 
 and gc_use cx state = function
@@ -214,7 +215,7 @@ and gc_use cx state = function
   | CJSRequireT (_, t) -> gc cx state t
   | ComparatorT(_, t) -> gc cx state t
   | ConstructorT(_, params, t) ->
-      params |> List.iter (gc cx state);
+      List.iter (function Arg t | SpreadArg t -> gc cx state t) params;
       gc cx state t
   | CopyNamedExportsT (_, target_module, t_out) ->
       gc cx state target_module;

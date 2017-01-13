@@ -922,7 +922,7 @@ and statement cx = Ast.Statement.(
         Flow.get_builtin_typeapp cx reason "Promise" [
           Flow.mk_tvar_derivable_where cx reason (fun tvar ->
             let funt = Flow.get_builtin cx "$await" reason in
-            let callt = Flow.mk_functioncalltype [t] tvar in
+            let callt = Flow.mk_functioncalltype [Arg t] tvar in
             let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
             Flow.flow cx (funt, CallT (reason, callt))
           )
@@ -2402,8 +2402,8 @@ and array_element cx undef_loc el = Ast.Expression.(
 )
 
 and expression_or_spread cx = Ast.Expression.(function
-  | Expression e -> expression cx e
-  | Spread (_, { SpreadElement.argument }) -> spread cx argument
+  | Expression e -> Arg (expression cx e)
+  | Spread (_, { SpreadElement.argument }) -> SpreadArg (spread cx argument)
 )
 
 and array_element_spread cx (loc, e) =
@@ -2668,8 +2668,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
               );
               tvars
         ) in
-        let module_tvars = List.fold_left element_to_module_tvar [] elements in
-        let module_tvars = List.rev module_tvars in
+        let module_tvars = elements
+          |> List.fold_left element_to_module_tvar []
+          |> List.rev_map (fun e -> Arg e) in
 
         let callback_expr_t = expression cx callback_expr in
         let reason = mk_reason (RCustom "requireLazy() callback") loc in
@@ -2688,7 +2689,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       arguments
     } -> (
       let argts = List.map (expression_or_spread cx) arguments in
-      List.iter (fun t ->
+      List.iter (function Arg t | SpreadArg t ->
         Flow.flow_t cx (t, StrT.at loc)
       ) argts;
       let reason = mk_reason (RCustom "new Function(..)") loc in
@@ -2707,7 +2708,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
     } -> (
       let argts = List.map (expression_or_spread cx) arguments in
       (match argts with
-      | [argt] ->
+      | [Arg argt] ->
         let reason = mk_reason (RCustom "new Array(..)") loc in
         let length_reason =
           replace_reason_const (RCustom "array length") reason in
@@ -2946,8 +2947,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason_array = replace_reason_const RArray reason in
       let ret = Flow.mk_tvar cx reason in
       let ft = Flow.mk_functioncalltype
-        [ ArrT (reason_array, ArrayAT (StrT.why reason, None));
-          RestT (AnyT.why reason) ]
+        [ Arg (ArrT (reason_array, ArrayAT (StrT.why reason, None)));
+          SpreadArg (RestT (AnyT.why reason)) ]
         ret
       in
       Flow.flow cx (t, CallT (reason, ft));
@@ -3086,7 +3087,7 @@ and predicated_call_expression_ cx loc callee arguments =
   let reason = mk_reason RFunctionCall loc in
   let argts = List.map (expression cx) arguments in
   let argks = List.map Refinement.key arguments in
-  let t = func_call cx reason f argts in
+  let t = func_call cx reason f (List.map (fun e -> Arg e) argts) in
   (f, argks, argts, t)
 
 (* We assume that constructor functions return void
@@ -3214,7 +3215,7 @@ and unary cx loc = Ast.Expression.Unary.(function
     let reason = mk_reason (RCustom "await") loc in
     let await = Flow.get_builtin cx "$await" reason in
     let arg = expression cx argument in
-    func_call cx reason await [arg]
+    func_call cx reason await [Arg arg]
 )
 
 (* numeric pre/post inc/dec *)
@@ -3662,7 +3663,7 @@ and jsx_desugar cx name component_t props attributes children eloc =
           reason,
           reason_createElement,
           Named (reason_createElement, "createElement"),
-          Flow.mk_methodcalltype react [component_t;props] tvar
+          Flow.mk_methodcalltype react [Arg component_t; Arg props] tvar
         ))
       )
   | Some (raw_jsx_expr, jsx_expr) ->
@@ -3673,7 +3674,9 @@ and jsx_desugar cx name component_t props attributes children eloc =
       let props = match attributes with
       | [] -> NullT.at eloc
       | _ -> props in
-      let argts = [component_t;props] @ children in
+      let argts =
+        [Arg component_t; Arg props] @
+        (List.map (fun c -> Arg c) children) in
       Ast.Expression.(match jsx_expr with
       | _, Member {
         Member._object;
@@ -4793,7 +4796,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
     ) in
 
     let reason = mk_reason (RMethodCall (Some m)) loc in
-    method_call cx reason prop_loc (expr, obj_t, m) [arg_t]
+    method_call cx reason prop_loc (expr, obj_t, m) [Arg arg_t]
 
   (* TODO *)
   | (_, args) ->

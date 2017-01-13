@@ -1102,8 +1102,9 @@ module ResolvableTypeJob = struct
   | UseT (_, t) ->
     collect_of_type ~log_unresolved cx reason acc t
   | CallT (_, fct) ->
-    collect_of_types ~log_unresolved cx reason acc
-      (fct.call_args_tlist @ [fct.call_tout])
+    let arg_types =
+      List.map (function Arg t | SpreadArg t -> t) fct.call_args_tlist in
+    collect_of_types ~log_unresolved cx reason acc (arg_types @ [fct.call_tout])
   | _ -> acc
 
 end
@@ -2072,12 +2073,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         call_closure_t;
       }) ->
       (match call_args_tlist with
-        | obj::cb::[] ->
+        | (Arg obj)::(Arg cb)::[] ->
           let wrapped_obj = IdxWrapper (reason_op, obj) in
           let callback_result = mk_tvar_where cx reason_op (fun t ->
             rec_flow cx trace (cb, CallT (reason_op, {
               call_this_t;
-              call_args_tlist = [wrapped_obj];
+              call_args_tlist = [Arg wrapped_obj];
               call_tout = t;
               call_closure_t;
             }))
@@ -2086,6 +2087,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             rec_flow cx trace (callback_result, IdxUnwrap(reason_op, t))
           ) in
           rec_flow_t cx trace (MaybeT unwrapped_t, call_tout)
+        | (SpreadArg t1)::(SpreadArg t2)::_ ->
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (loc_of_t t1, SpreadArgument)));
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (loc_of_t t2, SpreadArgument)))
+        | (SpreadArg t)::_
+        | _::(SpreadArg t)::_ ->
+          let spread_loc = loc_of_t t in
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (spread_loc, SpreadArgument)))
         | _ ->
           (* Why is idx strict about arity? No other functions are. *)
           add_output cx ~trace (FlowError.EIdxArity reason_op)
@@ -3110,9 +3121,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           rest_param = rest2; is_predicate = ip2; return_t = t2; _ }))
       ->
       rec_flow cx trace (o2, UseT (use_op, o1));
-      let args = match rest2 with
-      | Some (_, rest) -> tins2 @ [ rest ]
-      | None -> tins2 in
+      let args = List.rev_map (fun t -> Arg t) tins2 in
+      let args = List.rev (match rest2 with
+      | Some (_, rest) -> (SpreadArg rest) :: args
+      | None -> args) in
       multiflow cx trace reason ~rest_param:rest1 (args, tins1);
 
       (* Well-formedness adjustment: If this is predicate function subtyping,
@@ -3191,30 +3203,52 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       CallT (reason_op, { call_this_t; call_args_tlist; call_tout; call_closure_t=_;}) ->
       let any = AnyT.why reason_fundef in
       rec_flow_t cx trace (call_this_t, any);
-      List.iter (fun t -> rec_flow_t cx trace (t, any)) call_args_tlist;
+      call_args_iter (fun t -> rec_flow_t cx trace (t, any)) call_args_tlist;
       rec_flow_t cx trace (AnyT.why reason_op, call_tout)
 
     (* Special handlers for builtin functions *)
 
     | CustomFunT (_, ObjectAssign),
       CallT (reason_op, { call_args_tlist = dest_t::ts; call_tout; _ }) ->
+      let dest_t = extract_non_spread cx ~trace dest_t in
       let t = chain_objects cx ~trace reason_op dest_t ts in
       rec_flow_t cx trace (t, call_tout)
 
     | CustomFunT (_, ObjectGetPrototypeOf),
-      CallT (reason_op, { call_args_tlist = obj::_; call_tout; _ }) ->
-      rec_flow cx trace (
-        obj,
-        GetPropT(reason_op, Named (reason_op, "__proto__"), call_tout)
+      CallT (reason_op, { call_args_tlist = arg::_; call_tout; _ }) ->
+      (match arg with
+      | Arg obj ->
+        rec_flow cx trace (
+          obj,
+          GetPropT(reason_op, Named (reason_op, "__proto__"), call_tout)
+        )
+      | SpreadArg t ->
+        add_output cx ~trace
+          (FlowError.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)))
       );
+
 
     (* If you haven't heard, React is a pretty big deal. *)
 
     | CustomFunT (_, ReactCreateElement),
-      CallT (reason_op, { call_args_tlist = c::o::_; call_tout; _ }) ->
-      Ops.push reason_op;
-      rec_flow cx trace (c, ReactCreateElementT (reason_op, o, call_tout));
-      Ops.pop ()
+      CallT (reason_op, { call_args_tlist = arg1::arg2::_; call_tout; _ }) ->
+      (match arg1, arg2 with
+      | Arg c, Arg o ->
+        Ops.push reason_op;
+        rec_flow cx trace (c, ReactCreateElementT (reason_op, o, call_tout));
+        Ops.pop ()
+      | _ ->
+        (match arg1 with
+        | SpreadArg t ->
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)))
+        | Arg _ -> ());
+        (match arg2 with
+        | SpreadArg t ->
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)))
+        | Arg _ -> ())
+      )
 
     | _, ReactCreateElementT (reason_op, config, tout) ->
       let elem_reason = replace_reason_const (RReactElement None) reason_op in
@@ -3230,9 +3264,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         in
         let return_t = MaybeT return_t in
         let context_t = AnyT.t in
-        let call_t =
-          CallT (reason_op, mk_functioncalltype [config; context_t] return_t)
-        in
+        let call_t = CallT (
+          reason_op,
+          mk_functioncalltype [Arg config; Arg context_t] return_t
+        ) in
         rec_flow cx trace (l, call_t)
       | StrT _
       | SingletonStrT _ ->
@@ -3255,6 +3290,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | CustomFunT (_, MergeInto),
       CallT (reason_op, { call_args_tlist = dest_t::ts; call_tout; _ }) ->
+      let dest_t = extract_non_spread cx ~trace dest_t in
       ignore (chain_objects cx ~trace reason_op dest_t ts);
       rec_flow_t cx trace (VoidT.why reason_op, call_tout)
 
@@ -3274,8 +3310,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | CustomFunT (_, DebugPrint),
       CallT (reason_op, { call_args_tlist; call_tout; _ }) ->
-      List.iter (fun t ->
-        rec_flow cx trace (t, DebugPrintT reason_op)
+      List.iter (fun arg -> match arg with
+        | Arg t -> rec_flow cx trace (t, DebugPrintT reason_op)
+        | SpreadArg t ->
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)));
       ) call_args_tlist;
       rec_flow_t cx trace (VoidT.why reason_op, call_tout);
 
@@ -3545,14 +3584,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | AnyFunT reason_fundef, ConstructorT (reason_op, args, t) ->
       let reason_o = replace_reason_const RConstructorReturn reason_fundef in
-      List.iter (fun t -> rec_flow_t cx trace (t, AnyT.why reason_op)) args;
+      call_args_iter
+        (fun t -> rec_flow_t cx trace (t, AnyT.why reason_op))
+        args;
       rec_flow_t cx trace (AnyObjT reason_o, t);
 
     (* Since we don't know the signature of a method on AnyFunT, assume every
        parameter is an AnyT. *)
     | (AnyFunT _, MethodT (reason_op, _, _, { call_args_tlist; call_tout; _})) ->
       let any = AnyT.why reason_op in
-      List.iter (fun t -> rec_flow_t cx trace (t, any)) call_args_tlist;
+      call_args_iter (fun t -> rec_flow_t cx trace (t, any)) call_args_tlist;
       rec_flow_t cx trace (any, call_tout)
 
     (*************************)
@@ -4015,7 +4056,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (AnyObjT _ | AnyT _),
       MethodT (reason_op, _, _, { call_args_tlist; call_tout; _}) ->
       let any = AnyT.why reason_op in
-      List.iter (fun t -> rec_flow_t cx trace (t, any)) call_args_tlist;
+      call_args_iter (fun t -> rec_flow_t cx trace (t, any)) call_args_tlist;
       rec_flow_t cx trace (any, call_tout)
 
     (******************************************)
@@ -4146,7 +4187,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | ArrT (_, arrtype), MapTypeT (reason_op, TupleMap, funt, k) ->
       let f x = mk_tvar_where cx reason_op (fun t ->
-        rec_flow cx trace (funt, CallT (reason_op, mk_functioncalltype [x] t))
+        let callt = CallT (reason_op, mk_functioncalltype [Arg x] t) in
+        rec_flow cx trace (funt, callt)
       ) in
 
       let arrtype = match arrtype with
@@ -4163,14 +4205,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, MapTypeT (reason, TupleMap, funt, k) ->
       let iter = get_builtin cx ~trace "$iterate" reason in
       let elemt = mk_tvar_where cx reason (fun t ->
-        rec_flow cx trace (iter, CallT (reason, mk_functioncalltype [l] t))
+        let callt = CallT (reason, mk_functioncalltype [Arg l] t) in
+        rec_flow cx trace (iter, callt)
       ) in
       let t = ArrT (reason, ArrayAT (elemt, None)) in
       rec_flow cx trace (t, MapTypeT (reason, TupleMap, funt, k))
 
     | ObjT (_, o), MapTypeT (reason_op, ObjectMap, funt, k) ->
       let map_t t = mk_tvar_where cx reason_op (fun t' ->
-        let funtype = mk_functioncalltype [t] t' in
+        let funtype = mk_functioncalltype [Arg t] t' in
         rec_flow cx trace (funt, CallT (reason_op, funtype))
       ) in
       let props_tmap =
@@ -4190,7 +4233,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | ObjT (_, o), MapTypeT (reason_op, ObjectMapi, funt, k) ->
       let mapi_t key t = mk_tvar_where cx reason_op (fun t' ->
-        let funtype = mk_functioncalltype [key; t] t' in
+        let funtype = mk_functioncalltype [Arg key; Arg t] t' in
         rec_flow cx trace (funt, CallT (reason_op, funtype))
       ) in
       let mapi_field key t =
@@ -4267,8 +4310,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (func, CallT (reason_op, funtype))
 
       (* func.call(this_t, ...call_args_tlist) *)
-      | call_this_t::call_args_tlist ->
+      | (Arg call_this_t)::call_args_tlist ->
         let funtype = { funtype with call_this_t; call_args_tlist } in
+        rec_flow cx trace (func, CallT (reason_op, funtype))
+
+      (* func.call(...call_args_tlist) *)
+      | (SpreadArg _ as first_arg)::_ ->
+        let call_this_t = extract_non_spread cx ~trace first_arg in
+
+        let funtype = { funtype with call_this_t; } in
         rec_flow cx trace (func, CallT (reason_op, funtype))
       end
 
@@ -4289,29 +4339,46 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           rec_flow cx trace (func, CallT (reason_op, funtype))
 
       (* func.apply(this_arg) *)
-      | this_arg::[] ->
+      | (Arg this_arg)::[] ->
           let funtype = { funtype with call_this_t = this_arg; call_args_tlist = [] } in
           rec_flow cx trace (func, CallT (reason_op, funtype))
 
       (* func.apply(this_arg, ts) *)
-      | _::ts::_ ->
+      | (Arg _)::(Arg ts)::_ ->
           (* the first param will be extracted later by ApplyT; extra args are
              allowed but ignored, as with all function calls in Flow. *)
           rec_flow cx trace (ts, ApplyT (reason_op, func, funtype))
+      | (SpreadArg t1)::(SpreadArg t2)::_ ->
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (loc_of_t t1, SpreadArgument)));
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (loc_of_t t2, SpreadArgument)))
+      | (SpreadArg t)::_
+      | (Arg _)::(SpreadArg t)::_ ->
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)))
       end
 
     (* ... then calls the function *)
     | (ArrT (_, arrtype),
-       ApplyT (r, func, ({call_args_tlist=call_this_t::_; _} as funtype))) ->
+       ApplyT (r, func, ({call_args_tlist=first_arg::_; _} as funtype))) ->
+      let call_this_t = extract_non_spread cx ~trace first_arg in
       let call_args_tlist = match arrtype with
-      | ArrayAT (t, ts) -> (Option.value ~default:[] ts) @ [RestT t]
-      | ROArrayAT (t) -> [RestT t]
-      | TupleAT (_, ts) -> ts in
+      | ArrayAT (t, ts) ->
+        let args = List.rev_map
+          (fun t -> Arg t)
+          (Option.value ~default:[] ts) in
+        List.rev ((SpreadArg (RestT t))::args)
+      | ROArrayAT (t) -> [ SpreadArg (RestT t)]
+      | TupleAT (_, ts) ->
+        List.map (fun t -> Arg t) ts
+      in
       let funtype = { funtype with call_this_t; call_args_tlist; } in
       rec_flow cx trace (func, CallT (r, funtype))
 
     | (NullT _ | VoidT _),
-      ApplyT (r, func, ({call_args_tlist=call_this_t::_; _} as funtype)) ->
+      ApplyT (r, func, ({call_args_tlist=first_arg::_; _} as funtype)) ->
+      let call_this_t = extract_non_spread cx ~trace first_arg in
       let funtype = { funtype with call_this_t; call_args_tlist = [] } in
       rec_flow cx trace (func, CallT (r, funtype))
 
@@ -4322,9 +4389,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | FunProtoBindT _,
       CallT (reason_op, ({
         call_this_t = func;
-        call_args_tlist = call_this_t::call_args_tlist;
+        call_args_tlist = first_arg::call_args_tlist;
         _
       } as funtype)) ->
+      let call_this_t = extract_non_spread cx ~trace first_arg in
       let funtype = { funtype with call_this_t; call_args_tlist } in
       rec_flow cx trace (func, BindT (reason_op, funtype))
 
@@ -4360,9 +4428,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         _;
       })) ->
       rec_flow_t cx trace (AnyT.why reason, call_this_t);
-      call_args_tlist |> List.iter (fun param_t ->
+      call_args_iter (fun param_t ->
         rec_flow_t cx trace (AnyT.why reason, param_t)
-      );
+      ) call_args_tlist;
       rec_flow_t cx trace (l, call_tout)
 
     (***********************************************)
@@ -6227,6 +6295,13 @@ and spread_objects cx reason those =
 
 and chain_objects cx ?trace reason this those =
   List.fold_left (fun result that ->
+    let that = match that with
+    | Arg t -> t
+    | SpreadArg t ->
+        (* If someone does Object.assign({}, ...Array<obj>) we can treat it like
+           Object.assign({}, obj). *)
+        t
+    in
     mk_tvar_where cx reason (fun t ->
       flow_opt cx ?trace (result, ObjAssignT(reason, that, t, [], true));
     )
@@ -6405,6 +6480,19 @@ and concretize_patt replace patt =
     else replace, result@[t]
   ) (replace, []) patt)
 
+and concretize_call_args replace call_args =
+  snd (List.fold_left (fun (replace, result) call_arg ->
+    match call_arg with
+    | Arg t ->
+      if patt_that_needs_concretization t
+      then List.tl replace, result@[Arg (List.hd replace)]
+      else replace, result@[call_arg]
+    | SpreadArg t ->
+      if patt_that_needs_concretization t
+      then List.tl replace, result@[SpreadArg (List.hd replace)]
+      else replace, result@[call_arg]
+  ) (replace, []) call_args)
+
 (* for now, we only care about concretizating parts of functions and calls *)
 and parts_to_replace = function
   | UseT (_, FunT (_, _, _, callt)) ->
@@ -6413,7 +6501,9 @@ and parts_to_replace = function
     | Some (_, rest) -> rest::callt.params_tlist in
     List.filter patt_that_needs_concretization params
   | CallT (_, callt) ->
-    List.filter patt_that_needs_concretization callt.call_args_tlist
+    callt.call_args_tlist
+      |> List.map (function Arg t | SpreadArg t -> t)
+      |> List.filter patt_that_needs_concretization
   | _ -> []
 
 and replace_parts replace = function
@@ -6431,7 +6521,7 @@ and replace_parts replace = function
     }))
   | CallT (r, callt) ->
     CallT (r, { callt with
-      call_args_tlist = concretize_patt replace callt.call_args_tlist;
+      call_args_tlist = concretize_call_args replace callt.call_args_tlist;
     })
   | u -> u
 
@@ -8495,15 +8585,22 @@ and multiflow_partial cx trace ?strict ~rest_param (arglist, parlist) =
   *)
   | (_, [], None) -> []
 
-  | ([RestT tin], [], Some (_, RestT tout)) ->
+  (* TODO - Spread arguments are kind of broken. First they're only processed
+     when they're the last argument. Second, if we don't know the arity of the
+     spread array, then we basically need to make sure that every remaining
+     argument can flow to every remaining parameter
+
+     Gabe the Goodlooking plans to address this soon! *)
+
+  | ([SpreadArg (RestT tin)], [], Some (_, RestT tout)) ->
     rec_flow_t cx trace (tin, tout);
     []
 
-  | ([RestT tin], tout::touts, _) ->
+  | ([SpreadArg (RestT tin)], tout::touts, _) ->
     rec_flow_t cx trace (tin, tout);
-    multiflow_partial cx trace ?strict ~rest_param ([RestT tin], touts)
+    multiflow_partial cx trace ?strict ~rest_param (arglist, touts)
 
-  | (tin::tins, [], Some (_, RestT tout)) ->
+  | ((SpreadArg tin | Arg tin)::tins, [], Some (_, RestT tout)) ->
     rec_flow_t cx trace (tin, tout);
     multiflow_partial cx trace ?strict ~rest_param (tins, [])
 
@@ -8524,7 +8621,7 @@ and multiflow_partial cx trace ?strict ~rest_param (arglist, parlist) =
         tout::touts
     );
 
-  | (tin::tins, tout::touts, _) ->
+  | ((SpreadArg tin | Arg tin)::tins, tout::touts, _) ->
     (* flow `tin` (argument) to `tout` (param). normally, `tin` is passed
        through a `ReposLowerT` to make sure that the concrete type points at
        the arg's location. however, if `tin` is an implicit type argument
@@ -8721,6 +8818,19 @@ and instantiate_type t =
   match t with
   | ThisClassT t | ClassT t -> t
   | _ -> AnyT.why (reason_of_t t) (* ideally, assert false *)
+
+and call_args_iter f = List.iter (function Arg t | SpreadArg t -> f t)
+
+(* There's a lot of code that looks at a call argument list and tries to do
+ * something with one or two arguments. Usually this code assumes that the
+ * argument is not a spread argument. This utility function helps with that *)
+and extract_non_spread cx ~trace = function
+| Arg t -> t
+| SpreadArg arr ->
+    let reason = reason_of_t arr in
+    let loc = loc_of_t arr in
+    add_output cx ~trace (FlowError.(EUnsupportedSyntax (loc, SpreadArgument)));
+    AnyT.why reason
 
 (** TODO: this should rather be moved close to ground_type_impl/resolve_type
     etc. but Ocaml name resolution rules make that require a lot more moving

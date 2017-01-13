@@ -305,7 +305,7 @@ module rec TypeTerm : sig
     | ReposUseT of reason * use_op * t
 
     (* operations on runtime types, such as classes and functions *)
-    | ConstructorT of reason * t list * t
+    | ConstructorT of reason * call_arg list * t
     | SuperT of reason * insttype
     | ImplementsT of t
     | MixinT of reason * t
@@ -601,10 +601,14 @@ module rec TypeTerm : sig
   (* Used by CallT and similar constructors *)
   and funcalltype = {
     call_this_t: t;
-    call_args_tlist: t list;
+    call_args_tlist: call_arg list;
     call_tout: t;
     call_closure_t: int;
   }
+
+  and call_arg =
+  | Arg of t
+  | SpreadArg of t
 
   and arrtype =
   | ArrayAT of t * t list option

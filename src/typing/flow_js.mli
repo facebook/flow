@@ -63,7 +63,7 @@ val mk_methodtype :
   Type.t -> Type.funtype
 
 val mk_methodcalltype :
-  Type.t -> Type.t list ->
+  Type.t -> Type.call_arg list ->
   ?frame:int ->
   Type.t -> Type.funcalltype
 
@@ -80,7 +80,7 @@ val mk_functiontype :
   Type.t -> Type.funtype
 
 val mk_functioncalltype :
-  Type.t list ->
+  Type.call_arg list ->
   ?frame:int ->
   Type.t -> Type.funcalltype
 
