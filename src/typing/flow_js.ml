@@ -3274,8 +3274,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let jsx_intrinsics =
           get_builtin_type cx ~trace reason_op "$JSXIntrinsics" in
         rec_flow_t cx trace (l, KeysT (reason_op, jsx_intrinsics))
-      | AnyFunT _ -> ()
-      | AnyObjT _ -> ()
+      | AnyT _ | AnyFunT _ | AnyObjT _ -> ()
       | _ ->
         add_output cx ~trace (FlowError.EIncompatible (l, u))
       );

@@ -1433,6 +1433,7 @@ let any_propagating_use_t = function
   | ImportNamedT _
   | CJSExtractNamedExportsT _
   | CopyNamedExportsT _
+  | ReactCreateElementT _
     -> true
 
   (* These types have no t_out, so can't propagate anything *)
