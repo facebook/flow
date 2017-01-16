@@ -322,7 +322,7 @@ runtest() {
         if [ -s "$OUT_DIR/$diff_file" ]
         then
             mv "$OUT_DIR/$out_file" "$dir"
-            mv "$OUT_DIR/$log_file" "$dir"
+            [ -s "$OUT_DIR/$log_file" ] && mv "$OUT_DIR/$log_file" "$dir"
             mv "$OUT_DIR/$err_file" "$dir"
             mv "$OUT_DIR/$diff_file" "$dir"
             return_status=$RUNTEST_FAILURE
