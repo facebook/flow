@@ -263,12 +263,12 @@ class ['a] t = object(self)
   | RefineT _
   | ReposLowerT (_, _)
   | ReposUseT (_, _, _)
+  | ResolveRestT _
   | SentinelPropTestT _
   | SetElemT (_, _, _)
   | SetPropT (_, _, _)
   | SpecializeT (_,_, _, _, _)
   | SubstOnPredT _
-  | SummarizeT (_, _)
   | SuperT (_, _)
   | TestPropT (_, _, _)
   | ThisSpecializeT (_, _, _)

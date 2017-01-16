@@ -623,3 +623,8 @@ let repos_reason loc reason =
 
 let update_origin_of_reason origin reason =
   { reason with origin = origin }
+
+module ReasonSet = Set.Make(struct
+  type t = reason
+  let compare = Pervasives.compare
+end)

@@ -331,12 +331,32 @@ and parts_of_use_t cx = function
 | RefineT (_, _, t) -> ["t", Def t]
 | ReposLowerT (_, u) -> ["upper", Use u]
 | ReposUseT (_, _, l) ->  ["lower", Def l]
+| ResolveRestT (_, {
+    rrt_id = _;
+    rrt_resolved;
+    rrt_unresolved;
+    rrt_resolve_to;
+    rrt_tout;
+  }) ->
+    let parts_of_resolved = List.mapi (fun i -> function
+      | ResolvedParam t -> [spf "resolved param #%d" i, Def t]
+      | ResolvedRestParam (arrtype) -> parts_of_arrtype arrtype
+      | ResolvedAnyRestParam -> []
+    ) rrt_resolved
+    |> List.flatten in
+    let parts_of_unresolved = List.mapi (fun i -> function
+      | UnresolvedParam t -> spf "unresolved param #%d" i, Def t
+      | UnresolvedRestParam t -> spf "unresolved rest param #%d" i, Def t
+    ) rrt_unresolved in
+    let parts_of_resolve_to = parts_of_rest_resolve rrt_resolve_to in
+    parts_of_resolved @ parts_of_unresolved @ parts_of_resolve_to @ [
+      "out", Def rrt_tout
+    ]
 | SentinelPropTestT (t, _, _, out) -> ["t", Def t; "out", Def out]
 | SetElemT (_, ix, t) -> ["ix", Def ix; "t", Def t]
 | SetPropT (_, _, t) -> ["t", Def t]
 | SpecializeT (_, _, _, args, out) -> ("out", Def out) :: list_parts args
 | SubstOnPredT (_, _, t) -> ["t", Def t]
-| SummarizeT (_, t) -> ["t", Def t]
 | SuperT _ -> []
 | TestPropT (_, _, out) -> ["out", Def out]
 | ThisSpecializeT (_, t, out) -> ["t", Def t; "out", Def out]
@@ -351,6 +371,11 @@ and parts_of_arrtype = function
 | ArrayAT (elemt, Some tuple_types)
 | TupleAT (elemt, tuple_types) ->
   ("elem", Def elemt)::(list_parts tuple_types)
+
+and parts_of_rest_resolve = function
+| ResolveSpreadsToTuple
+| ResolveSpreadsToArrayLiteral
+| ResolveSpreadsToArray -> []
 
 and parts_of_inter_preprocess_tool = function
 | ConcretizeTypes (unresolved, resolved, it, u) ->

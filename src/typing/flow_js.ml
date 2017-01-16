@@ -29,6 +29,13 @@ open Type
 module FlowError = Flow_error
 module Ops = FlowError.Ops
 
+
+(* type exemplar set - reasons are not considered in compare *)
+module TypeExSet = Set.Make(struct
+  include Type
+  let compare = reasonless_compare
+end)
+
 (* The following functions are used as constructors for function types and
    object types, which unfortunately have many fields, not all of which are
    meaningful in all contexts. This part of the design should be revisited:
@@ -1179,6 +1186,33 @@ end = struct
     then raise (LimitExceeded trace)
 end
 
+(* The main problem with constant folding is infinite recursion. Consider a loop
+ * that keeps adding 1 to a variable x, which is initialized to 0. If we
+ * constant fold x naively, we'll recurse forever, inferring that x has the type
+ * (0 | 1 | 2 | 3 | 4 | etc). What we need to do is recognize loops and stop
+ * doing constant folding.
+ *
+ * One solution is for constant-folding-location to keep a set of reasons that
+ * it has seen. As soon as it sees a duplicate reason, it knows that it may be
+ * in some sort of loop (though not necessarily) and can act more
+ * conservatively.
+ *)
+module ConstFoldExpansion = struct
+  let rsets: ReasonSet.t SMap.t ref = ref SMap.empty
+
+  let push_unless_loop id reason =
+    let reason_set = match SMap.get id !rsets with
+    | None -> ReasonSet.empty
+    | Some set -> set in
+    not (ReasonSet.mem reason reason_set) && (
+      rsets := SMap.add id (ReasonSet.add reason reason_set) !rsets;
+      true
+    )
+
+  let pop id =
+    rsets := SMap.remove id !rsets
+end
+
 (* Sometimes we don't expect to see type parameters, e.g. when they should have
    been substituted away. *)
 let not_expect_bound t = match t with
@@ -1444,6 +1478,92 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | t, IntersectionPreprocessKitT (reason,
         ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)) ->
       prep_try_intersection cx trace reason unresolved (resolved @ [t]) u r rep
+
+    (*************************)
+    (* Resolving rest params *)
+    (*************************)
+
+    | AnyT _,
+      ResolveRestT (reason_op, {
+        rrt_id = _;
+        rrt_resolved;
+        rrt_unresolved;
+        rrt_resolve_to;
+        rrt_tout;
+      }) ->
+
+      let rrt_resolved = ResolvedAnyRestParam::rrt_resolved in
+      resolve_spread_list_rec
+        cx ~trace ~reason_op
+        (rrt_resolved, rrt_unresolved) rrt_resolve_to rrt_tout
+
+    | ArrT (_, arrtype),
+      ResolveRestT (reason_op, {
+        rrt_id;
+        rrt_resolved;
+        rrt_unresolved;
+        rrt_resolve_to;
+        rrt_tout;
+      }) ->
+
+      let elemt = match arrtype with
+      | ArrayAT (elemt, _)
+      | TupleAT (elemt, _)
+      | ROArrayAT (elemt) -> elemt in
+
+      let id = match rrt_resolve_to with
+      | ResolveSpreadsToTuple -> spf "ToTuple #%d" rrt_id
+      | ResolveSpreadsToArrayLiteral -> spf "ToArrayLiteral #%d" rrt_id
+      | ResolveSpreadsToArray -> spf "ToArray #%d" rrt_id
+      in
+
+      (* You might come across code like
+       *
+       * for (let x = 1; x < 3; x++) { foo = [...foo, x]; }
+       *
+       * where every time you spread foo, you flow another type into foo. So
+       * each time `l ~> ResolveRestT` is processed, it might produce a new
+       * `l ~> ResolveRestT` with a new `l`.
+       *
+       * Here is how we avoid this:
+       *
+       * 1. We use ConstFoldExpansion to detect when we see a ResolveRestT
+       *    upper bound multiple times
+       * 2. When a ResolveRestT upper bound multiple times, we change it into
+       *    a ResolveRestT upper bound that resolves to a more general type.
+       *    This should prevent more distinct lower bounds from flowing in
+       * 3. rec_flow caches (l,u) pairs.
+       *)
+      if ConstFoldExpansion.push_unless_loop id (reason_of_t elemt)
+      then begin
+        (* We haven't seen this ArrT yet, so no need to worry about loops *)
+        let rrt_resolved = ResolvedRestParam(arrtype)::rrt_resolved in
+        resolve_spread_list_rec
+          cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to rrt_tout;
+        ConstFoldExpansion.pop id
+      end else begin
+        (* We think we've seen this ArrT before, so we might be in a loop. *)
+        match rrt_resolve_to with
+        | ResolveSpreadsToTuple
+        | ResolveSpreadsToArrayLiteral ->
+            (* To avoid infinite recursion, let's deconstruct to a simplier case
+             * where we no longer resolve to a tuple but instead just resolve to
+             * an array. The rrt_id is the same so that we avoid creating many
+             * distinct upper bounds, which would sabotage the (l,u) pair
+             * caching that rec_flow does. *)
+            rec_flow cx trace (l, ResolveRestT (reason_op, {
+              rrt_id;
+              rrt_resolved;
+              rrt_unresolved;
+              rrt_resolve_to = ResolveSpreadsToArray;
+              rrt_tout;
+            }))
+        | ResolveSpreadsToArray ->
+            (* If we've already resolved to an array before, then there's no
+             * point in doing any more work, since we'd just resolve to the
+             * same array. *)
+             ()
+      end
 
     (*****************************)
     (* Refinement type subtyping *)
@@ -1972,19 +2092,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx ~trace (FlowError.EImportTypeAsValue (reason, name))
 
     | (_, AssertImportIsValueT(_, _)) -> ()
-
-    (********************************************)
-    (* summary types forget literal information *)
-    (********************************************)
-
-    | (StrT (_, (Literal _ | Truthy)), SummarizeT (reason, t)) ->
-      rec_unify cx trace (StrT.why reason) t
-
-    | (NumT (_, (Literal _ | Truthy)), SummarizeT (reason, t)) ->
-      rec_unify cx trace (NumT.why reason) t
-
-    | (_, SummarizeT (_, t)) ->
-      rec_unify cx trace l t
 
     (*******************************)
     (* common implicit conversions *)
@@ -8637,6 +8744,173 @@ and multiflow_partial cx trace ?strict ~rest_param (arglist, parlist) =
     rec_flow cx trace (tin, tout);
     multiflow_partial cx trace ?strict ~rest_param (tins,touts)
 
+(* This function goes through the unresolved elements to find the next rest
+ * element to resolve *)
+and resolve_spread_list_rec
+  cx ?trace ~reason_op (resolved, unresolved) resolve_to tout =
+  match resolved, unresolved with
+  | resolved, [] ->
+      finish_resolve_spread_list
+        cx ?trace ~reason_op (List.rev resolved) resolve_to tout
+  | resolved, UnresolvedParam(next)::unresolved ->
+      resolve_spread_list_rec
+        cx
+        ?trace
+        ~reason_op
+        (ResolvedParam(next)::resolved, unresolved)
+        resolve_to
+        tout
+  | resolved, UnresolvedRestParam(next)::unresolved ->
+      flow_opt cx ?trace (next, ResolveRestT (reason_op, {
+        rrt_id = mk_id();
+        rrt_resolved = resolved;
+        rrt_unresolved = unresolved;
+        rrt_resolve_to = resolve_to;
+        rrt_tout = tout;
+      }))
+
+(* Now that everything is resolved, we can construct whatever type we're trying
+ * to resolve to. *)
+and finish_resolve_spread_list =
+  (* Turn tuple rest params into single params *)
+  let flatten_rest_params list =
+    list
+    |> List.fold_left (fun acc param -> match param with
+      | ResolvedRestParam (arrtype) ->
+          begin match arrtype with
+          | ArrayAT (_, Some tuple_types)
+          | TupleAT (_, tuple_types) ->
+              List.fold_left
+                (fun acc elem -> ResolvedParam(elem)::acc)
+                acc
+                tuple_types
+          | ArrayAT (_, None)
+          | ROArrayAT (_) -> param::acc
+          end
+      | ResolvedParam _ -> param::acc
+      | ResolvedAnyRestParam -> failwith "Should not be hit"
+      ) []
+    |> List.rev
+
+  in
+
+  let rest_resolved_to_any = List.exists (function
+    | ResolvedAnyRestParam -> true
+    | ResolvedParam _ | ResolvedRestParam _ -> false)
+
+  in
+
+  let finish_array cx ?trace ~reason_op ~resolve_to resolved tout =
+    (* Did `any` flow to one of the rest parameters? If so, we need to resolve
+     * to a type that is both a subtype and supertype of the desired type. *)
+    let result = if rest_resolved_to_any resolved
+    then match resolve_to with
+      (* Array<any> is a good enough any type for arrays *)
+      | `Array -> ArrT (reason_op, ArrayAT (AnyT.why reason_op, None))
+      (* Array literals can flow to a tuple. Arrays can't. So if the presence
+       * of an `any` forces us to degrade an array literal to Array<any> then
+       * we might get a new error. Since introducing `any`'s shouldn't cause
+       * errors, this is bad. Instead, let's degrade array literals to `any` *)
+      | `Literal
+      (* There is no AnyTupleT type, so let's degrade to `any`. *)
+      | `Tuple -> AnyT.why reason_op
+    else begin
+      (* Spreads that resolve to tuples are flattened *)
+      let elems = flatten_rest_params resolved in
+
+      let tuple_types = match resolve_to with
+      | `Literal
+      | `Tuple ->
+          elems
+          (* If no spreads are left, then this is a tuple too! *)
+          |> List.fold_left (fun acc elem ->
+              match (acc, elem) with
+              | None, _ -> None
+              | _, ResolvedRestParam _ -> None
+              | Some tuple_types, ResolvedParam t -> Some (t::tuple_types)
+              | _, ResolvedAnyRestParam -> failwith "Should not be hit"
+            ) (Some [])
+          |> Option.map ~f:List.rev
+      | `Array -> None in
+
+      (* We infer the array's general element type by looking at the type of
+       * every element in the array *)
+      let tset = List.fold_left (fun tset elem ->
+        let elemt = match elem with
+        | ResolvedRestParam (
+            (ArrayAT (elemt,_) | TupleAT (elemt,_) | ROArrayAT elemt )
+          ) ->
+            elemt
+        | ResolvedParam elemt -> elemt
+        | ResolvedAnyRestParam -> failwith "Should not be hit"
+        in
+
+        TypeExSet.add elemt tset
+      ) TypeExSet.empty elems in
+
+      (* composite elem type is an upper bound of all element types *)
+      let elemt =
+        let element_reason =
+          let desc = RCustom (
+            "inferred union of array element types \
+             (alternatively, provide an annotation to summarize the array \
+               element type)") in
+          replace_reason_const desc reason_op
+        in
+        (* Should the element type of the array be the union of its element
+           types?
+
+           No. Instead of using a union, we use an unresolved tvar to
+           represent the least upper bound of each element type. Effectively,
+           this keeps the element type "open," at least locally.[*]
+
+           Using a union pins down the element type prematurely, and moreover,
+           might lead to speculative matching when setting elements or caling
+           contravariant methods (`push`, `concat`, etc.) on the array.
+
+           In any case, using a union doesn't quite work as intended today
+           when the element types themselves could be unresolved tvars. For
+           example, the following code would work even with unions:
+
+           declare var o: { x: number; }
+           var a = ["hey", o.x]; // no error, but is an error if 42 replaces o.x
+           declare var i: number;
+           a[i] = false;
+
+           [*] Eventually, the element type does get pinned down to a union
+           when it is part of the module's exports. In the future we might
+           have to do that pinning more carefully, and using an unresolved
+           tvar instead of a union here doesn't conflict with those plans.
+        *)
+        mk_tvar_where cx element_reason (fun tvar ->
+          TypeExSet.elements tset |> List.iter (fun t ->
+            flow cx (t, UseT (UnknownUse, tvar)))
+        )
+      in
+      match tuple_types, resolve_to with
+      | _, `Array ->
+          ArrT (reason_op, ArrayAT (elemt, None))
+      | _, `Literal ->
+          ArrT (reason_op, ArrayAT (elemt, tuple_types))
+      | Some tuple_types, `Tuple ->
+          ArrT (reason_op, TupleAT (elemt, tuple_types))
+      | None, `Tuple ->
+          ArrT (reason_op, ArrayAT (elemt, None))
+    end in
+
+    flow_opt_t cx ?trace (result, tout)
+  in
+
+  fun cx ?trace ~reason_op resolved resolve_to tout -> (
+    match resolve_to with
+    | ResolveSpreadsToTuple ->
+      finish_array cx ?trace ~reason_op ~resolve_to:`Tuple resolved tout
+    | ResolveSpreadsToArrayLiteral ->
+      finish_array cx ?trace ~reason_op ~resolve_to:`Literal resolved tout
+    | ResolveSpreadsToArray ->
+      finish_array cx ?trace ~reason_op ~resolve_to:`Array resolved tout
+  )
+
 and perform_lookup_action cx trace propref p lreason ureason = function
   | LookupProp up ->
     rec_flow_p cx trace lreason ureason propref (p, up)
@@ -9458,3 +9732,6 @@ let mk_default cx reason ~expr = Default.fold
   ~selector:(fun r t sel ->
     let id = mk_id () in
     eval_selector cx r t sel id)
+
+let resolve_spread_list cx ~reason_op list resolve_to tout =
+  resolve_spread_list_rec cx ~reason_op ([], list) resolve_to tout

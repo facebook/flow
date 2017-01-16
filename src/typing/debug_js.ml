@@ -367,10 +367,6 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "result", _json_of_t json_cx t
     ]
 
-  | SummarizeT (_, t) -> [
-      "type", _json_of_t json_cx t
-    ]
-
   | BindT (_, funtype)
   | CallT (_, funtype) -> [
       "funType", json_of_funcalltype json_cx funtype
@@ -687,6 +683,45 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
         ("pred_t", json_of_pred json_cx p);
         ("refined_t", _json_of_t_impl json_cx t)
       ]
+    ]
+  | ResolveRestT (_, {
+    rrt_id;
+    rrt_resolved;
+    rrt_unresolved;
+    rrt_resolve_to;
+    rrt_tout;
+  }) -> [
+      "id", JSON_Number (string_of_int rrt_id);
+      "resolved", JSON_Array (List.map (fun param ->
+        let kind, t = match param with
+        | ResolvedParam t -> "ResolvedParam", t
+        | ResolvedRestParam (at) ->
+          "ResolvedRestParam", ArrT (locationless_reason (RCustom "array"), at)
+        | ResolvedAnyRestParam ->
+          "ResolvedAnyRestParam", AnyT (locationless_reason (RAny))
+        in
+        JSON_Object [
+          "kind", JSON_String kind;
+          "type", _json_of_t_impl json_cx t;
+        ]
+      ) rrt_resolved);
+      "unresolved", JSON_Array (List.map (fun param ->
+        let kind, t = match param with
+        | UnresolvedParam t -> "UnresolvedParam", t
+        | UnresolvedRestParam t -> "UnresolvedRestParam", t in
+        JSON_Object [
+          "kind", JSON_String kind;
+          "type", _json_of_t_impl json_cx t;
+        ]
+      ) rrt_unresolved);
+      "resolve_to", JSON_Object (
+        let kind = match rrt_resolve_to with
+        | ResolveSpreadsToTuple -> "ResolveSpreadsToTuple"
+        | ResolveSpreadsToArray -> "ResolveSpreadsToArray"
+        | ResolveSpreadsToArrayLiteral -> "ResolveSpreadsToArrayLiteral" in
+        [ "kind", JSON_String kind ]
+      );
+      "t_out", _json_of_t json_cx rrt_tout;
     ]
   )
 )
@@ -1518,6 +1553,12 @@ and dump_use_t_ (depth, tvars) cx t =
   | RefineT _ -> p t
   | ReposLowerT (_, arg) -> p ~extra:(use_kid arg) t
   | ReposUseT (_, _, arg) -> p ~extra:(kid arg) t
+  | ResolveRestT (_, {rrt_resolve_to; rrt_tout; _;}) ->
+      p ~extra:(spf "%s, %s" (match rrt_resolve_to with
+      | ResolveSpreadsToTuple -> "ResolveSpreadsToTuple"
+      | ResolveSpreadsToArrayLiteral -> "ResolveSpreadsToArrayLiteral"
+      | ResolveSpreadsToArray -> "ResolveSpreadsToArray")
+      (kid rrt_tout)) t
   | SentinelPropTestT (l, sense, sentinel, result) -> p ~reason:false
       ~extra:(spf "%s, %b, %s, %s"
         (kid l)
@@ -1531,7 +1572,6 @@ and dump_use_t_ (depth, tvars) cx t =
         (kid result))
       t
   | SubstOnPredT _ -> p t
-  | SummarizeT (_, arg) -> p ~extra:(kid arg) t
   | SuperT _ -> p t
   | ImplementsT arg -> p ~reason:false ~extra:(kid arg) t
   | SetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t

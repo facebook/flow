@@ -284,9 +284,6 @@ module rec TypeTerm : sig
     (* use types *)
     (*************)
 
-    (* operation on literals *)
-    | SummarizeT of reason * t
-
     (* operations on runtime values, such as functions, objects, and arrays *)
     | ApplyT of reason * t * funcalltype
     | BindT of reason * funcalltype
@@ -529,6 +526,14 @@ module rec TypeTerm : sig
      * which is expected to be a type variable.
      *)
     | RefineT of reason * predicate * t
+
+    (* Rest elements show up in a bunch of places: array literals, function
+     * parameters, function call arguments, method arguments. constructor
+     * arguments, etc. Often we have logic that depends on what the rest
+     * elements resolve to. ResolveRestT is a use type that waits for a list of
+     * rest and non-rest elements to resolve, and then constructs whatever
+     * type it resolves to *)
+    | ResolveRestT of reason * resolve_rest_type
 
   and predicate =
     | AndP of predicate * predicate
@@ -836,6 +841,43 @@ module rec TypeTerm : sig
   *)
   and dep_preds =
     t * predicate Key_map.t * predicate Key_map.t
+
+  and resolve_rest_type = {
+    (* This is a form of constant folding, so this id can be used to avoid
+     * infinite recursion *)
+    rrt_id: int;
+    (* This is the list of elements that are already resolved (that is have no
+     * more unresolved rest elements *)
+    rrt_resolved: resolved_param list;
+    (* This is the list of elements that we have yet to resolve *)
+    rrt_unresolved: unresolved_param list;
+    (* Once all the elements have been resolved, this tells us what type to
+     * construct *)
+    rrt_resolve_to: rest_resolve;
+    (* Once we've resolved all the elements and constructed a type, we flow it
+    * to this type *)
+    rrt_tout: t;
+  }
+
+  and unresolved_param =
+  | UnresolvedParam of t
+  | UnresolvedRestParam of t
+
+  and resolved_param =
+  | ResolvedParam of t
+  | ResolvedRestParam of arrtype
+  | ResolvedAnyRestParam
+
+  and rest_resolve =
+  (* Once we've finished resolving spreads, try to construct a tuple *)
+  | ResolveSpreadsToTuple
+  (* Once we've finished resolving spreads, try to construct an array with
+   * known element types *)
+  | ResolveSpreadsToArrayLiteral
+  (* Once we've finished resolving spreads, try to construct a non-tuple array
+   *)
+  | ResolveSpreadsToArray
+
 end = TypeTerm
 
 and Polarity : sig
@@ -1434,6 +1476,7 @@ let any_propagating_use_t = function
   | CJSExtractNamedExportsT _
   | CopyNamedExportsT _
   | ReactCreateElementT _
+  | ResolveRestT _
     -> true
 
   (* These types have no t_out, so can't propagate anything *)
@@ -1441,8 +1484,58 @@ let any_propagating_use_t = function
   | ComparatorT _
     -> false
 
-  (* TODO: remove wildcard, decide which should be true *)
-  | _ -> false
+  (* TODO: Figure out if these should be true or false *)
+  | ApplyT _
+  | ArrRestT _
+  | AssertBinaryInLHST _
+  | AssertBinaryInRHST _
+  | AssertForInRHST _
+  | AssertImportIsValueT _
+  | BecomeT _
+  | BindT _
+  | CallElemT _
+  | ChoiceKitUseT _
+  | ConstructorT _
+  | DebugPrintT _
+  | ElemT _
+  | EqT _
+  | ExportNamedT _
+  | GetElemT _
+  | GetKeysT _
+  | GetStaticsT _
+  | HasOwnPropT _
+  | IdxUnMaybeifyT _
+  | IdxUnwrap _
+  | ImplementsT _
+  | ImportTypeT _
+  | ImportTypeofT _
+  | LookupT _
+  | MakeExactT _
+  | MapTypeT _
+  | MixinT _
+  | NotT _
+  | ObjAssignT _
+  | ObjFreezeT _
+  | ObjRestT _
+  | ObjSealT _
+  | ObjTestT _
+  | RefineT _
+  | ReposUseT _
+  | SentinelPropTestT _
+  | SetElemT _
+  | SetPropT _
+  | SpecializeT _
+  | SubstOnPredT _
+  | SuperT _
+  | TestPropT _
+  | ThisSpecializeT _
+  | TypeAppVarianceCheckT _
+  | UnaryMinusT _
+  | UnifyT _
+  | UseT _
+  | VarianceCheckT _
+    -> false
+
 
 (* Usually types carry enough information about the "reason" for their
    existence (e.g., position in code, introduction/elimination rules in
@@ -1574,12 +1667,12 @@ and reason_of_use_t = function
   | RefineT (reason, _, _) -> reason
   | ReposLowerT (reason, _) -> reason
   | ReposUseT (reason, _, _) -> reason
+  | ResolveRestT (reason, _) -> reason
   | SentinelPropTestT (_, _, _, result) -> reason_of_t result
   | SetElemT (reason,_,_) -> reason
   | SetPropT (reason,_,_) -> reason
   | SpecializeT(reason,_,_,_,_) -> reason
   | SubstOnPredT (reason, _, _) -> reason
-  | SummarizeT (reason, _) -> reason
   | SuperT (reason,_) -> reason
   | TestPropT (reason, _, _) -> reason
   | ThisSpecializeT(reason,_,_) -> reason
@@ -1739,6 +1832,10 @@ and mod_reason_of_use_t f = function
   | RefineT (reason, p, t) -> RefineT (f reason, p, t)
   | ReposLowerT (reason, t) -> ReposLowerT (f reason, t)
   | ReposUseT (reason, use_op, t) -> ReposUseT (f reason, use_op, t)
+  | ResolveRestT (reason_op, resolve) -> ResolveRestT (f reason_op, {
+    resolve with
+      rrt_resolve_to = mod_reason_of_rest_resolve f resolve.rrt_resolve_to;
+  })
   | SentinelPropTestT (l, sense, sentinel, result) ->
       SentinelPropTestT (l, sense, sentinel, mod_reason_of_t f result)
   | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
@@ -1746,7 +1843,6 @@ and mod_reason_of_use_t f = function
   | SpecializeT(reason_op, reason_tapp, cache, ts, t) ->
       SpecializeT (f reason_op, reason_tapp, cache, ts, t)
   | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
-  | SummarizeT (reason, t) -> SummarizeT (f reason, t)
   | SuperT (reason, inst) -> SuperT (f reason, inst)
   | TestPropT (reason, n, t) -> TestPropT (f reason, n, t)
   | ThisSpecializeT(reason, this, t) -> ThisSpecializeT (f reason, this, t)
@@ -1756,6 +1852,11 @@ and mod_reason_of_use_t f = function
       VarianceCheckT (f reason, ts, polarity)
   | TypeAppVarianceCheckT (reason_op, reason_tapp, targs) ->
       TypeAppVarianceCheckT (f reason_op, reason_tapp, targs)
+
+and mod_reason_of_rest_resolve _f = function
+| ResolveSpreadsToArray -> ResolveSpreadsToArray
+| ResolveSpreadsToArrayLiteral -> ResolveSpreadsToArrayLiteral
+| ResolveSpreadsToTuple -> ResolveSpreadsToTuple
 
 (* type comparison mod reason *)
 let reasonless_compare =
@@ -1942,12 +2043,17 @@ let string_of_use_ctor = function
   | RefineT _ -> "RefineT"
   | ReposLowerT _ -> "ReposLowerT"
   | ReposUseT _ -> "ReposUseT"
+  | ResolveRestT (_, {rrt_resolve_to; _;})->
+    spf "ResolveRestT(%s)" begin match rrt_resolve_to with
+    | ResolveSpreadsToTuple -> "ResolveSpreadsToTuple"
+    | ResolveSpreadsToArray -> "ResolveSpreadsToArray"
+    | ResolveSpreadsToArrayLiteral -> "ResolveSpreadsToArrayLiteral"
+    end
   | SentinelPropTestT _ -> "SentinelPropTestT"
   | SetElemT _ -> "SetElemT"
   | SetPropT _ -> "SetPropT"
   | SpecializeT _ -> "SpecializeT"
   | SubstOnPredT _ -> "SubstOnPredT"
-  | SummarizeT _ -> "SummarizeT"
   | SuperT _ -> "SuperT"
   | TestPropT _ -> "TestPropT"
   | ThisSpecializeT _ -> "ThisSpecializeT"

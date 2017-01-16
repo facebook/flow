@@ -211,3 +211,5 @@ val repos_reason: Loc.t -> reason -> reason
 val update_origin_of_reason: reason option -> reason -> reason
 
 val do_patch: string list -> (int * int * string) list -> string
+
+module ReasonSet: Set.S with type elt = reason

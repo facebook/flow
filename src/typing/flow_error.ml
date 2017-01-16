@@ -229,6 +229,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | ObjectMapi -> "Expected object instead of")
     | ReactCreateElementT _ -> "Expected React component instead of"
     | CallLatentPredT _ -> "Expected predicated function instead of"
+    | ResolveRestT _ ->
+        "Expected rest element to be an array or tuple instead of"
     | TypeAppVarianceCheckT _ -> "Expected polymorphic type instead of"
     (* unreachable or unclassified use-types. until we have a mechanical way
        to verify that all legit use types are listed above, we can't afford

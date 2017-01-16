@@ -33,29 +33,7 @@ open Import_export
 (* Utilities *)
 (*************)
 
-(* type exemplar set - reasons are not considered in compare *)
-module TypeExSet = Set.Make(struct
-  include Type
-  let compare = reasonless_compare
-end)
-
 let ident_name (_, name) = name
-
-let summarize cx t = match t with
-  | OpenT _ ->
-      let reason = reason_of_t t in
-      Flow.mk_tvar_where cx reason (fun tvar ->
-        Flow.flow cx (t, SummarizeT (reason, tvar))
-      )
-  (* These remaining cases simulate SummarizeT semantics, and are a slight
-     optimization in that they avoid creation of fresh type
-     variables. Semantically, we could have the above case fire unconditionally,
-     since the fresh type variable is unified in all cases. *)
-  | StrT (_, AnyLiteral) -> t
-  | StrT (reason, _) -> StrT.why reason
-  | NumT (_, AnyLiteral) -> t
-  | NumT (reason, _) -> NumT.why reason
-  | _ -> t
 
 (* AST helpers *)
 
@@ -2395,15 +2373,27 @@ and variable cx kind
 
 and array_element cx undef_loc el = Ast.Expression.(
   match el with
-  | Some (Expression e) -> expression cx e
-  | Some (Spread (_, { SpreadElement.argument })) ->
-      array_element_spread cx argument
+  | Some (Expression e) ->
+      let t = expression cx e in
+      Flow.reposition cx (repos_reason (fst e) (reason_of_t t)) t
+  | Some (Spread (loc, { SpreadElement.argument })) ->
+      let t = array_element_spread cx argument in
+      Flow.reposition cx (repos_reason loc (reason_of_t t)) t
   | None -> EmptyT.at undef_loc
 )
 
 and expression_or_spread cx = Ast.Expression.(function
   | Expression e -> Arg (expression cx e)
   | Spread (_, { SpreadElement.argument }) -> SpreadArg (spread cx argument)
+)
+
+and expression_or_spread_list cx undef_loc = Ast.Expression.(
+  List.map (function
+  | Some (Expression e) -> UnresolvedParam (expression cx e)
+  | None -> UnresolvedParam (EmptyT.at undef_loc)
+  | Some (Spread (_, { SpreadElement.argument })) ->
+      UnresolvedRestParam (expression cx argument)
+  )
 )
 
 and array_element_spread cx (loc, e) =
@@ -2557,58 +2547,11 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         let reason = replace_reason_const REmptyArrayLit reason in
         ArrT (reason, ArrayAT (elemt, Some []))
     | elems ->
-        (* tup is true if no spreads *)
-        (* tset is set of distinct (mod reason) elem types *)
-        (* tlist is reverse list of element types if tup, else [] *)
-        let _, tset, tlist = List.fold_left (fun (tup, tset, tlist) elem ->
-          let elemt = array_element cx loc elem in
-
-          let tup = match elem with Some (Spread _) -> false | _ -> tup in
-          let elemt = if tup then elemt else summarize cx elemt in
-          tup,
-          TypeExSet.add elemt tset,
-          if tup then elemt :: tlist else []
-        ) (true, TypeExSet.empty, []) elems
-        in
-        (* composite elem type is an upper bound of all element types *)
-        let elemt =
-          let element_reason =
-            let desc = RCustom ("inferred union of array element types \
-(alternatively, provide an annotation to summarize the array element type)") in
-            mk_reason desc loc
-          in
-          (* Should the element type of the array be the union of its element
-             types?
-
-             No. Instead of using a union, we use an unresolved tvar to
-             represent the least upper bound of each element type. Effectively,
-             this keeps the element type "open," at least locally.[*]
-
-             Using a union pins down the element type prematurely, and moreover,
-             might lead to speculative matching when setting elements or caling
-             contravariant methods (`push`, `concat`, etc.) on the array.
-
-             In any case, using a union doesn't quite work as intended today
-             when the element types themselves could be unresolved tvars. For
-             example, the following code would work even with unions:
-
-             declare var o: { x: number; }
-             // no error, but is an error if o.x is replaced by 42
-             var a = ["hey", o.x];
-             declare var i: number;
-             a[i] = false;
-
-             [*] Eventually, the element type does get pinned down to a union
-             when it is part of the module's exports. In the future we might
-             have to do that pinning more carefully, and using an unresolved
-             tvar instead of a union here doesn't conflict with those plans.
-          *)
-          Flow_js.mk_tvar_where cx element_reason (fun tvar ->
-            TypeExSet.elements tset |> List.iter (fun t ->
-              Flow_js.flow cx (t, UseT (UnknownUse, tvar)))
-          )
-        in
-        ArrT (reason, ArrayAT(elemt, Some (List.rev tlist)))
+        let elem_spread_list = expression_or_spread_list cx loc elems in
+        Flow_js.mk_tvar_where cx reason (fun tout ->
+          Flow.resolve_spread_list
+            cx reason elem_spread_list ResolveSpreadsToArrayLiteral tout
+        )
     )
 
   | Call {
