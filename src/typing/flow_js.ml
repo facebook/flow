@@ -343,36 +343,46 @@ let rec merge_type cx =
   | (VoidT _, (MaybeT _ as t)) | ((MaybeT _ as t), VoidT _) ->
       t
 
-  | (FunT (_,_,_,ft1), FunT (_,_,_,ft2)) ->
-      let tins =
-        try
-          List.map2 (fun t1 t2 -> merge_type cx (t1,t2))
-            ft1.params_tlist ft2.params_tlist
-        with _ ->
-          [AnyT.t] (* TODO *)
-      in
-      let rest_param = match ft1.rest_param, ft2.rest_param with
-      | None, None -> None
-      | Some _, None
-      | None, Some _ ->
-          Some (None, AnyT.t) (* TODO *)
-      | Some (name1, rest_t1), Some (name2, rest_t2) ->
-          (* TODO: How to merge rest names? *)
-          let name = match name1, name2 with
-          | None, None -> None
-          | Some name, _
-          | _, Some name -> Some name in
-          Some (name, merge_type cx (rest_t1, rest_t2)) in
+  | ((FunT (_,_,_,ft1) as fun1), (FunT (_,_,_,ft2) as fun2)) ->
+      (* Functions with different number of parameters cannot be merged into a
+       * single function type. Instead, we should turn them into a union *)
+      let params =
+        if List.length ft1.params_tlist <> List.length ft2.params_tlist
+        then None
+        else
+          let params_tlists =  List.map2 (fun t1 t2 -> (t1, t2))
+            ft1.params_tlist ft2.params_tlist in
+          match ft1.rest_param, ft2.rest_param with
+          | None, Some _
+          | Some _, None -> None
+          | None, None -> Some (params_tlists, None)
+          | Some r1, Some r2 -> Some (params_tlists, Some (r1, r2)) in
 
-      let tout = merge_type cx (ft1.return_t, ft2.return_t) in
-      (* TODO: How to merge parameter names? *)
-      let reason = locationless_reason (RCustom "function") in
-      FunT (
-        reason,
-        dummy_static reason,
-        dummy_prototype,
-        mk_functiontype tins ~rest_param tout
-      )
+      begin match params with
+      | None -> create_union (UnionRep.make fun1 fun2 [])
+      | Some (params_tlists, rest_params) ->
+          let tins = List.map (merge_type cx) params_tlists in
+
+          let rest_param = match rest_params with
+          | None -> None
+          | Some ((name1, rest_t1), (name2, rest_t2)) ->
+              (* TODO: How to merge rest names? *)
+              let name = match name1, name2 with
+              | None, None -> None
+              | Some name, _
+              | _, Some name -> Some name in
+              Some (name, merge_type cx (rest_t1, rest_t2)) in
+
+          let tout = merge_type cx (ft1.return_t, ft2.return_t) in
+          (* TODO: How to merge parameter names? *)
+          let reason = locationless_reason (RCustom "function") in
+          FunT (
+            reason,
+            dummy_static reason,
+            dummy_prototype,
+            mk_functiontype tins ~rest_param tout
+          )
+      end
 
   | (ObjT (_,o1) as t1), (ObjT (_,o2) as t2) ->
     let map1 = Context.find_props cx o1.props_tmap in
