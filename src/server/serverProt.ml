@@ -58,6 +58,7 @@ type command =
 | STATUS of Path.t
 | FORCE_RECHECK of string list
 | SUGGEST of string list
+| CONNECT
 
 type command_with_context = {
   client_logging_context: FlowEventLogger.logging_context;
@@ -142,3 +143,11 @@ let response_from_channel (ic:Timeout.in_channel): response =
   if s <> build_revision
   then SERVER_OUT_OF_DATE
   else Timeout.input_value ic
+
+module Persistent_connection_prot = struct
+  type request =
+    | Subscribe
+
+  type response =
+    | Errors of Errors.ErrorSet.t
+end

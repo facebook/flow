@@ -756,4 +756,5 @@ let server_init genv =
     libs;
     errorl;
     errors;
+    connections = Persistent_connection.empty;
   }

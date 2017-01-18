@@ -695,13 +695,20 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         print_status genv !env client_root oc
     | ServerProt.SUGGEST (files) ->
         suggest ~options files oc
+    | ServerProt.CONNECT ->
+        let new_connections = Persistent_connection.add_client !env.connections client in
+        env := {!env with connections = new_connections}
     end;
     !env
+
+  let should_close = function
+    | { ServerProt.command = ServerProt.CONNECT; _ } -> false
+    | _ -> true
 
   let handle_client genv env client =
     let msg = ServerProt.cmd_from_channel client.ic in
     let env = respond genv env ~client ~msg in
-    client.close ();
+    if should_close msg then client.close ();
     env
 
 end
