@@ -2615,5 +2615,121 @@ export default suite(({addFile, flowCmd}) => [
         }
       `,
     ).exitCodes([0]),
+
+     addFile("generic_alias.js"),
+   flowCmd(
+     ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'generic_alias.js', '7', '5'],
+     'generic_alias.js',
+   ).stdout(
+      `
+        {
+          "result": [
+            {
+              "name": "hasOwnProperty",
+              "type": "(prop: any) => boolean",
+              "func_details": {
+                "return_type": "boolean",
+                "params": [
+                  {
+                    "name": "prop",
+                    "type": "any"
+                  }
+                ]
+              },
+              "path": "[LIB] core.js",
+              "line": 53,
+              "endline": 53,
+              "start": 5,
+              "end": 38
+            },
+            {
+              "name": "isPrototypeOf",
+              "type": "(o: any) => boolean",
+              "func_details": {
+                "return_type": "boolean",
+                "params": [
+                  {
+                    "name": "o",
+                    "type": "any"
+                  }
+                ]
+              },
+              "path": "[LIB] core.js",
+              "line": 54,
+              "endline": 54,
+              "start": 5,
+              "end": 34
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "func_details": null,
+              "path": "generic_alias.js",
+              "line": 5,
+              "endline": 5,
+              "start": 25,
+              "end": 30
+            },
+            {
+              "name": "propertyIsEnumerable",
+              "type": "(prop: any) => boolean",
+              "func_details": {
+                "return_type": "boolean",
+                "params": [
+                  {
+                    "name": "prop",
+                    "type": "any"
+                  }
+                ]
+              },
+              "path": "[LIB] core.js",
+              "line": 55,
+              "endline": 55,
+              "start": 5,
+              "end": 44
+            },
+            {
+              "name": "toLocaleString",
+              "type": "() => string",
+              "func_details": {
+                "return_type": "string",
+                "params": []
+              },
+              "path": "[LIB] core.js",
+              "line": 56,
+              "endline": 56,
+              "start": 5,
+              "end": 28
+            },
+            {
+              "name": "toString",
+              "type": "() => string",
+              "func_details": {
+                "return_type": "string",
+                "params": []
+              },
+              "path": "[LIB] core.js",
+              "line": 57,
+              "endline": 57,
+              "start": 5,
+              "end": 22
+            },
+            {
+              "name": "valueOf",
+              "type": "() => Object",
+              "func_details": {
+                "return_type": "Object",
+                "params": []
+              },
+              "path": "[LIB] core.js",
+              "line": 58,
+              "endline": 58,
+              "start": 5,
+              "end": 21
+            }
+          ]
+        }
+      `,
+    ).exitCodes([0]),
   ]),
 ]);

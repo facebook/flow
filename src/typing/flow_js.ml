@@ -9406,7 +9406,9 @@ end = struct
     | TypeAppT (c, ts) ->
         let c = resolve_type cx c in
         let inst_t = instantiate_poly_t cx c ts in
-        let inst_t = instantiate_type inst_t in
+        let inst_t = match inst_t with
+          | TypeT (_, t) -> t
+          | _ -> instantiate_type inst_t in
         extract_members cx inst_t
     | PolyT (_, sub_type) ->
         (* TODO: replace type parameters with stable/proper names? *)
