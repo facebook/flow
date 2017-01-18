@@ -1,3 +1,47 @@
+###v0.38.0
+Likely to cause new Flow errors:
+* There are some error-position improvements in this release. This means that if you use `// $FlowFixMe` (or any kind of `suppress_comment`), there's a chance the error may have moved out from under the suppression comment. You may see some unused error suppressions and some previously suppressed errors.
+* The behavior for tuples has changed to strictly enforce arity. This might cause errors depending on how you use tuples.
+
+New Features:
+* `implements` - classes can now implement one or more interfaces and Flow will verify that the class properly implements the interfaces.
+* Local find references command: `flow find-refs file line column` - if there is a variable `x` at `file:line:column`, then this command returns the location of `x`'s definition and the location of all reads and writes to `x`.
+* New shorthand for importing types in the same declaration that imports values: `import {someValue, type someType, typeof someOtherValue} from 'foo'`
+* Autocomplete now works with exact object types (thanks [@vkurchatkin](https://github.com/vkurchatkin)!)
+* Tuple types have been revamped. They now strictly enforce arity ([docs](https://flowtype.org/docs/arrays.html#tuples)). This will enable a bunch of future features around spreads and rest parameters. Stay tuned!
+* `$ReadOnlyArray<T>` is the common supertype of arrays and tuples. It's basically an array without stuff like `push()`, `pop()`, etc
+* A lot of tweaks to error messages to make them easier to understand.
+* You can declare getters/setters in `declare class`, `interface`'s, object types, etc. They're still not safely checked, though.
+* Set `emoji=true` in the `.flowconfig` options and `flow status` will put emoji in the connection status messages (thanks [@zertosh](https://github.com/zertosh)!)
+
+Notable bug fixes:
+* You can now use template strings with `require()`, (e.g. ```require(`foo`)```)
+* `Object.keys` no longer returns methods since they are not enumerable
+* We've relaxed sentinel checks to allow you to check unknown properties. This is consistent with other conditionals
+* Flow recognizes type mismatches between the LHS and RHS of a sentinel check as always failing
+* Flow recognizes null and undefined checks as sentinel checks too
+* Flow used to assume that an array literal with a single element of type `T` had the type `Array<T>`. Now it's `Array<*>`, which lets you add elements of other types to the array.
+* Fixed `$Shape` to ignore "shadow properties", which are properties that don't really exist, but which have been referenced somewhere.
+* A few recheck bug fixes. The optimization from 0.37.0 wasn't properly rechecking when property variance changed, when certain locations changed, or when certain files are renamed.
+* Fixed mistake where computed getters and setters weren't erroring with `unsafe.enable_getters_and_setters=false`
+
+Misc:
+* Lots of updates to the builtin flow libs! Many thanks to all our contributors!
+* `make` no longer complains if `js_of_ocaml` is not installed
+* `flow check --profile` now includes CPU time
+* `flow server --profile` and `flow start --profile` now print profiling info to the logs
+* Some optimizations for huge dependency cycles.
+* `tests/` which run a flow server now save the `.log` file when they fail
+* Many tests now run with `--no-flowlib`, which make them much faster
+
+Parser:
+* Parsing support for object spread properties
+* Fixed `kind` of a static method named `constructor` to be `"method"` rather than `"constructor"`
+* Support for new `import type` shorthand
+* OCaml AST for getters and setters is a little cleaner now
+* We now support defaults in setters
+* The bug fix for trailing commas in array lists was accidentally reverted and has been re-committed.
+
 ###v0.37.4
 
 Notable bug fixes:
