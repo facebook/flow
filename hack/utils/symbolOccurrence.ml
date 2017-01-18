@@ -30,11 +30,11 @@ let to_absolute x = { x with
 }
 
 let kind_to_string = function
-  | Class -> "class"
+  | Class -> "type_id"
   | Method _ -> "method"
   | Function -> "function"
   | LocalVar -> "local"
   | Property _ -> "property"
-  | ClassConst _ -> "class_const"
+  | ClassConst _ -> "member_const"
   | Typeconst _ -> "typeconst"
   | GConst -> "global_const"
