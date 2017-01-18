@@ -28,3 +28,13 @@ type 'a t = {
 let to_absolute x = { x with
   pos = Pos.to_absolute x.pos;
 }
+
+let kind_to_string = function
+  | Class -> "class"
+  | Method _ -> "method"
+  | Function -> "function"
+  | LocalVar -> "local"
+  | Property _ -> "property"
+  | ClassConst _ -> "class_const"
+  | Typeconst _ -> "typeconst"
+  | GConst -> "global_const"
