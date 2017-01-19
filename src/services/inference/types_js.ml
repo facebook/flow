@@ -704,32 +704,6 @@ let full_check workers ~ordered_libs parse_next options =
 
   (profiling, parsed)
 
-(* helper - print errors. used in check-and-die runs *)
-let print_errors ~profiling options errors =
-  let strip_root =
-    if Options.should_strip_root options
-    then Some (Options.root options)
-    else None
-  in
-
-  if Options.should_output_json options
-  then begin
-    let profiling =
-      if options.Options.opt_profile
-      then Some profiling
-      else None in
-    Errors.Json_output.print_errors
-      ~out_channel:stdout
-      ~strip_root
-      ~profiling
-      errors
-  end else
-    Errors.Cli_output.print_errors
-      ~out_channel:stdout
-      ~flags:(Options.error_flags options)
-      ~strip_root
-      errors
-
 (* initialize flow server state, including full check *)
 let server_init genv =
   let options = genv.ServerEnv.options in
@@ -768,8 +742,6 @@ let server_init genv =
   ) in
 
   let errors = get_errors () in
-  if Options.is_check_mode options
-  then print_errors ~profiling options errors;
 
   SharedMem_js.init_done();
 

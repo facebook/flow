@@ -19,7 +19,7 @@ exception State_not_found
 module type SERVER_PROGRAM = sig
   val preinit : Options.t -> unit
   val init : genv -> (Profiling_js.t * env)
-  val run_once_and_exit : env -> unit
+  val run_once_and_exit : profiling:Profiling_js.t -> genv -> env -> unit
   (* filter and relativize updated file paths *)
   val process_updates : genv -> env -> SSet.t -> FilenameSet.t
   val recheck: genv -> env -> FilenameSet.t -> env
@@ -45,7 +45,7 @@ type daemon_msg =
 module MainInit : sig
   val go:
     Options.t ->
-    (unit -> env) ->    (* init function to run while we have init lock *)
+    (unit -> Profiling_js.t * env) -> (* init function to run while we have init lock *)
     daemon_msg Daemon.out_channel option ->
     env
 end = struct
@@ -90,7 +90,7 @@ end = struct
     grab_init_lock ~tmp_dir root;
     wakeup_client waiting_channel Starting;
     ServerPeriodical.init options;
-    let env = init_fun () in
+    let _profiling, env = init_fun () in
     release_init_lock ~tmp_dir root;
     wakeup_client waiting_channel Ready;
     Flow_logger.log "Server is READY";
@@ -201,10 +201,10 @@ end = struct
       EventLogger.flush ();
     done
 
-  let create_program_init genv = fun () ->
+  let create_program_init genv () =
     let profiling, env = Program.init genv in
     FlowEventLogger.init_done ~profiling;
-    env
+    profiling, env
 
   let open_log_file options =
     (* When opening a new foo.log file, if foo.log already exists, we move it to
@@ -281,8 +281,8 @@ end = struct
       ServerEnvBuild.make_genv options watch_paths handle in
     let program_init = create_program_init genv in
     if is_check_mode then
-      let env = program_init () in
-      Program.run_once_and_exit env
+      let profiling, env = program_init () in
+      Program.run_once_and_exit ~profiling genv env
     else
       (* Open up a server on the socket before we go into MainInit -- the client
       * will try to connect to the socket as soon as we lock the init lock. We

@@ -36,11 +36,6 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Types_js.server_init genv
     |> Dumper.init merge_component genv
 
-  let run_once_and_exit env =
-    match env.ServerEnv.errorl with
-      | [] -> FlowExitStatus.(exit No_error)
-      | _ -> FlowExitStatus.(exit Type_error)
-
   let incorrect_hash oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_OUT_OF_DATE;
     FlowEventLogger.out_of_date ();
@@ -88,6 +83,39 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     FlowEventLogger.status_response
       (Errors.Json_output.json_of_errors ~strip_root:None errors);
     send_errorl errors oc
+
+  (* helper - print errors. used in check-and-die runs *)
+  let print_errors ~profiling options errors =
+    let strip_root =
+      if Options.should_strip_root options
+      then Some (Options.root options)
+      else None
+    in
+
+    if Options.should_output_json options
+    then begin
+      let profiling =
+        if options.Options.opt_profile
+        then Some profiling
+        else None in
+      Errors.Json_output.print_errors
+        ~out_channel:stdout
+        ~strip_root
+        ~profiling
+        errors
+    end else
+      Errors.Cli_output.print_errors
+        ~out_channel:stdout
+        ~flags:(Options.error_flags options)
+        ~strip_root
+        errors
+
+  let run_once_and_exit ~profiling genv env =
+    let errors = env.ServerEnv.errorl in
+    print_errors ~profiling genv.ServerEnv.options errors;
+    match errors with
+      | [] -> FlowExitStatus.(exit No_error)
+      | _ -> FlowExitStatus.(exit Type_error)
 
   let die_nicely genv oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_DYING;
