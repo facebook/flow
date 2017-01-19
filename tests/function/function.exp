@@ -66,11 +66,35 @@ apply.js:37
   1: function test(a: string, b: number): number {
                       ^^^^^^ string
 
+apply.js:47
+ 47:   x.apply(x, ['foo', 123]); // error, number !~> string
+                          ^^^ number. This type is incompatible with the expected param type of
+ 45: function test3(x: { (a: string, b: string): void }) {
+                                        ^^^^^^ string
+
 bind.js:7
   7:     y(123); // error, number !~> string
            ^^^ number. This type is incompatible with the expected param type of
   4:   function(x: (a: string, b: string) => void) {
                                   ^^^^^^ string
+
+bind.js:14
+ 14:     y(123); // error, number !~> string
+           ^^^ number. This type is incompatible with the expected param type of
+ 11:   function(x: { (a: string, b: string): void }) {
+                                    ^^^^^^ string
+
+bind.js:19
+ 19:     x.bind(x, 'foo'); // error
+           ^^^^ property `bind`. Property not found in
+ 19:     x.bind(x, 'foo'); // error
+         ^ object type
+
+bind.js:25
+ 25:     (x.bind(123): void); // error, number !~> string
+                 ^^^ number. This type is incompatible with the expected param type of
+ 23:   function(x: {(a: string, b: string): void, bind(a: string): void}) {
+                                                          ^^^^^^ string
 
 call.js:4
   4:   return this.length; // expect []/"" this
@@ -121,6 +145,12 @@ call.js:30
                                    ^^^^^ string. This type is incompatible with the expected param type of
   3: function test(a: string, b: number): number {
                                  ^^^^^^ number
+
+call.js:40
+ 40:   x.call(x, 'foo', 123); // error, number !~> string
+                        ^^^ number. This type is incompatible with the expected param type of
+ 38: function test3(x: { (a: string, b: string): void }) {
+                                        ^^^^^^ string
 
 function.js:29
  29:   var a: number = x; // Error
@@ -229,4 +259,4 @@ rest.js:17
                                             ^ T. rest parameter should have an explicit array type (or type `any`)
 
 
-Found 37 errors
+Found 42 errors

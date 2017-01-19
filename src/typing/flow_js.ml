@@ -3493,6 +3493,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ObjT (reason, _) | InstanceT (reason, _, _, _, _)),
       (UseT (_, FunT (reason_op, _, _, _)) |
        UseT (_, AnyFunT reason_op) |
+       BindT (reason_op, _) |
        CallT (reason_op, _)) ->
       let tvar = mk_tvar cx (
         replace_reason (fun desc ->

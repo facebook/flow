@@ -33,3 +33,9 @@ f([0, 0]); // error: number ~> string (1st arg)
 function test2(): number { return 0; }
 (test2.call(): number);
 (test2.call(""): number);
+
+// callable objects
+function test3(x: { (a: string, b: string): void }) {
+  x.call(x, 'foo', 'bar'); // ok
+  x.call(x, 'foo', 123); // error, number !~> string
+}
