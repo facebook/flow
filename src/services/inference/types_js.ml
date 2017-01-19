@@ -20,10 +20,6 @@ let errors_by_file = ref FilenameMap.empty
 let merge_errors = ref FilenameMap.empty
 (* error suppressions in the code *)
 let error_suppressions = ref FilenameMap.empty
-(* aggregate error map, built after check or recheck
-   by collate_errors
- *)
-let all_errors = ref Errors.ErrorSet.empty
 
 (****************** typecheck job helpers *********************)
 
@@ -36,8 +32,7 @@ let clear_errors ?(debug=false) (files: filename list) =
     errors_by_file := FilenameMap.remove file !errors_by_file;
     merge_errors := FilenameMap.remove file !merge_errors;
     error_suppressions := FilenameMap.remove file !error_suppressions;
-  ) files;
-  all_errors := Errors.ErrorSet.empty
+  ) files
 
 (* helper - save an error set into a global error map.
    clear mapping if errorset is empty *)
@@ -104,27 +99,17 @@ let filter_suppressed_errors errors = Errors.(
     errors
 )
 
-(* retrieve a full error list.
-   Library errors are forced to the top of the list.
-   Note: in-place conversion using an array is to avoid
-   memory pressure on pathologically huge error sets, but
-   this may no longer be necessary
- *)
-let get_errors () =
-  !all_errors
-  |> filter_suppressed_errors
-  |> Errors.ErrorSet.elements
-
 (* relocate errors to their reported positions,
    combine in single error map *)
 let collate_errors =
   let open Errors in
   let collate _ errset acc = ErrorSet.union acc errset in
   fun () ->
-    all_errors :=
-      ErrorSet.empty
-      |> FilenameMap.fold collate !errors_by_file
-      |> FilenameMap.fold collate !merge_errors
+    ErrorSet.empty
+    |> FilenameMap.fold collate !errors_by_file
+    |> FilenameMap.fold collate !merge_errors
+    |> filter_suppressed_errors
+    |> Errors.ErrorSet.elements
 
 let with_timer ?options timer profiling f =
   let profiling = Profiling_js.start_timer ~timer profiling in
@@ -439,13 +424,13 @@ let typecheck
         prerr_endline (Printexc.to_string exc);
         profiling in
     (* collate errors by origin *)
-    collate_errors ();
-    profiling
+    let errors = collate_errors () in
+    profiling, errors
 
   | None ->
     (* collate errors by origin *)
-    collate_errors ();
-    profiling
+    let errors = collate_errors () in
+    profiling, errors
 
 
 (* We maintain the following invariant across rechecks: The set of
@@ -556,7 +541,7 @@ let recheck genv env modified =
   ) freshparse_skips freshparse_fail in
 
   (* recheck *)
-  let profiling = typecheck
+  let profiling, errors = typecheck
     ~options
     ~profiling
     ~workers
@@ -617,7 +602,7 @@ let recheck genv env modified =
   (* NOTE: unused fields are left in their initial empty state *)
   { env with ServerEnv.
     files = parsed;
-    errorl = get_errors ();
+    errorl = errors;
   }
 
 (* full typecheck *)
@@ -685,7 +670,7 @@ let full_check workers ~ordered_libs parse_next options =
   ) skipped_files error_files in
 
   (* typecheck client files *)
-  let profiling = typecheck
+  let profiling, errors = typecheck
     ~options
     ~profiling
     ~workers
@@ -702,7 +687,7 @@ let full_check workers ~ordered_libs parse_next options =
     ~resource_files
   in
 
-  (profiling, parsed)
+  (profiling, parsed, errors)
 
 (* initialize flow server state, including full check *)
 let server_init genv =
@@ -717,7 +702,7 @@ let server_init genv =
     |> List.map (Files.filename_from_string ~options)
     |> Bucket.of_list
   in
-  let (profiling, parsed) =
+  let (profiling, parsed, errors) =
     full_check genv.ServerEnv.workers ~ordered_libs get_next options in
 
   let profiling = SharedMem.(
@@ -740,8 +725,6 @@ let server_init genv =
          profiling
     ) profiling memory_metrics
   ) in
-
-  let errors = get_errors () in
 
   SharedMem_js.init_done();
 
