@@ -240,10 +240,12 @@ let dump_types js_file js_content =
       in
       let printer = Type_printer.string_of_t in
       let raw_printer _ _ = None in
+      let types = Query_types.dump_types printer raw_printer cx in
 
-      Query_types.dump_types printer raw_printer cx
-      |> List.map (fun (loc, _, str, _, _) ->
-        Reason.string_of_loc loc, str)
+      let strip_root = None in
+      let types_json = DumpTypesCommand.types_to_json types ~strip_root in
+
+      js_of_json types_json
     | _, _ -> failwith "parse error"
 
 let handle_inferred_result (_, inferred, _, _) =
