@@ -178,6 +178,18 @@ generators.js:128
 128:   (multiple_return_result.value: void); // error: number|string ~> void
                                       ^^^^ undefined
 
+refi.js:5
+  5:   (x.a: string); // error
+        ^^^ undefined. This type is incompatible with
+  5:   (x.a: string); // error
+             ^^^^^^ string
+
+refi.js:22
+ 22:   (x.a: string); // error
+        ^^^ undefined. This type is incompatible with
+ 22:   (x.a: string); // error
+             ^^^^^^ string
+
 return.js:5
   5:   (ret.value: void); // error: string | number ~> void
         ^^^^^^^^^ number. This type is incompatible with
@@ -215,4 +227,4 @@ throw.js:24
                             ^^^^^^ string
 
 
-Found 35 errors
+Found 37 errors

@@ -2952,6 +2952,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let t = match argument with
       | Some expr -> expression cx expr
       | None -> VoidT.at loc in
+      Env.havoc_heap_refinements ();
       Flow.flow_t cx (t, yield);
       Env.get_internal_var cx "next" reason
 
@@ -2987,6 +2988,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
             (mk_reason (RCustom "iteration expected on Iterable") loc)
             "$Iterable" targs
       in
+      Env.havoc_heap_refinements ();
       Flow.flow_t cx (t, iterable);
 
       ret
