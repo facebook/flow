@@ -44,14 +44,13 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     FlowExitStatus.(exit Server_out_of_date)
 
   let status_log errors =
-    begin match errors with
-    | [] -> Flow_logger.log "Status: OK"
-    | _ -> Flow_logger.log "Status: Error"
-    end;
+    if Errors.ErrorSet.is_empty errors
+      then Flow_logger.log "Status: OK"
+      else Flow_logger.log "Status: Error";
     flush stdout
 
   let send_errorl el oc =
-    if el = []
+    if Errors.ErrorSet.is_empty el
     then
       ServerProt.response_to_channel oc ServerProt.NO_ERRORS
     else begin
@@ -113,9 +112,9 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
   let run_once_and_exit ~profiling genv env =
     let errors = env.ServerEnv.errorl in
     print_errors ~profiling genv.ServerEnv.options errors;
-    match errors with
-      | [] -> FlowExitStatus.(exit No_error)
-      | _ -> FlowExitStatus.(exit Type_error)
+    if Errors.ErrorSet.is_empty errors
+      then FlowExitStatus.(exit No_error)
+      else FlowExitStatus.(exit Type_error)
 
   let die_nicely genv oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_DYING;
@@ -181,7 +180,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           let errors = match checked with
           | _, _, errors, _ -> errors
           in
-          send_errorl (Errors.to_list errors) oc
+          send_errorl errors oc
         else
           ServerProt.response_to_channel oc ServerProt.NOT_COVERED
 
@@ -368,8 +367,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
   let gen_flow_files ~options env files oc =
     let errors = env.ServerEnv.errorl in
-    let result = match errors with
-      | [] ->
+    let result = if Errors.ErrorSet.is_empty errors
+      then begin
         let cache = new Context_cache.context_cache in
         let (flow_files, flow_file_cxs, non_flow_files, error) =
           List.fold_left (fun (flow_files, cxs, non_flow_files, error) file ->
@@ -426,11 +425,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
             ServerProt.GenFlowFile_UnexpectedError (Printexc.to_string exn)
           )
         end
-      | _ ->
-        let error_set = List.fold_left (fun set err ->
-          Errors.ErrorSet.add err set
-        ) Errors.ErrorSet.empty errors in
-        Utils_js.Err (ServerProt.GenFlowFile_TypecheckError error_set)
+      end else
+        Utils_js.Err (ServerProt.GenFlowFile_TypecheckError errors)
     in
     Marshal.to_channel oc result [];
     flush oc

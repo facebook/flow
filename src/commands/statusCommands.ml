@@ -132,7 +132,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       FlowExitStatus.(exit Type_error)
     | ServerProt.NO_ERRORS ->
       if args.output_json
-      then print_json []
+      then print_json Errors.ErrorSet.empty
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
     | ServerProt.NOT_COVERED ->

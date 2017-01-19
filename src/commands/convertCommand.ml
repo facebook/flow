@@ -42,9 +42,10 @@ let convert_file error_flags outpath file =
   ) else (
     let n = List.length errors in
     Printf.printf "%d errors:\n" n;
-    let flow_errors = List.map (fun (loc, err) ->
-      Errors.mk_error ~kind:Errors.ParseError [loc, [Parse_error.PP.error err]]
-    ) errors in
+    let flow_errors = List.fold_left (fun acc (loc, err) ->
+      let msgs = [loc, [Parse_error.PP.error err]] in
+      Errors.ErrorSet.add (Errors.mk_error ~kind:Errors.ParseError msgs) acc
+    ) Errors.ErrorSet.empty errors in
     Errors.Cli_output.print_errors
       ~out_channel:stdout
       ~flags:error_flags

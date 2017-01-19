@@ -49,51 +49,45 @@ let update_suppressions map file errsup =
     then FilenameMap.remove file map
     else FilenameMap.add file errsup map
 
-(* Given all the errors as a map from file => errorset
- * 1) Filter out the suppressed errors from the error sets
- * 2) Remove files with empty errorsets from the map
- * 3) Add errors for unused suppressions
- * 4) Properly distribute the new errors
- *)
-let filter_suppressed_errors all_suppressions errors = Errors.(
-  let suppressions = ref ErrorSuppressions.empty in
-
-  let filter_suppressed_error error =
-    let (suppressed, sups) = ErrorSuppressions.check error !suppressions in
-    suppressions := sups;
-    not suppressed
-  in
-
-  suppressions := FilenameMap.fold
-    (fun _key -> ErrorSuppressions.union)
-    all_suppressions
-    ErrorSuppressions.empty;
-
-  let errors = ErrorSet.filter filter_suppressed_error errors in
-
-  (* For each unused suppression, create an error *)
-  ErrorSuppressions.unused !suppressions
-  |> List.fold_left
-    (fun errset loc ->
-      let err = Errors.mk_error [
-        loc, ["Error suppressing comment"; "Unused suppression"]
-      ] in
-      ErrorSet.add err errset
-    )
-    errors
-)
-
-(* relocate errors to their reported positions,
-   combine in single error map *)
+(* combine error maps into a single error list *)
 let collate_errors =
   let open Errors in
-  let collate _ errset acc = ErrorSet.union acc errset in
+  let collate errset acc =
+    FilenameMap.fold (fun _key -> ErrorSet.union) errset acc
+  in
+  let filter_suppressed_errors suppressions errors =
+    (* Filter out suppressed errors. also track which suppressions are used. *)
+    let errors, suppressions = ErrorSet.fold (fun error (errors, supp_acc) ->
+      let (suppressed, supp_acc) = ErrorSuppressions.check error supp_acc in
+      let errors = if not suppressed
+        then ErrorSet.add error errors
+        else errors in
+      errors, supp_acc
+    ) errors (ErrorSet.empty, suppressions) in
+
+    (* For each unused suppression, create an error *)
+    ErrorSuppressions.unused suppressions
+    |> List.fold_left
+      (fun errset loc ->
+        let err = Errors.mk_error [
+          loc, ["Error suppressing comment"; "Unused suppression"]
+        ] in
+        ErrorSet.add err errset
+      )
+      errors
+  in
   fun { ServerEnv.local_errors; merge_errors; suppressions; } ->
+    (* union suppressions from all files together *)
+    let suppressions = FilenameMap.fold
+      (fun _key -> ErrorSuppressions.union)
+      suppressions
+      ErrorSuppressions.empty in
+
+    (* union the errors from all files together, filtering suppressed errors *)
     ErrorSet.empty
-    |> FilenameMap.fold collate local_errors
-    |> FilenameMap.fold collate merge_errors
+    |> collate local_errors
+    |> collate merge_errors
     |> filter_suppressed_errors suppressions
-    |> Errors.ErrorSet.elements
 
 let with_timer ?options timer profiling f =
   let profiling = Profiling_js.start_timer ~timer profiling in

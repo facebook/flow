@@ -53,8 +53,6 @@ val extra_of_error: error -> info_tree list
    traces may share endpoints, and produce the same error *)
 module ErrorSet : Set.S with type elt = error
 
-val to_list : ErrorSet.t -> error list
-
 module ErrorSuppressions : sig
   type t
 
@@ -83,19 +81,19 @@ module Cli_output : sig
     flags:Options.error_flags ->
     ?stdin_file:stdin_file ->
     strip_root: Path.t option ->
-    error list ->
+    ErrorSet.t ->
     unit
 end
 
 module Json_output : sig
   val json_of_errors :
     strip_root: Path.t option ->
-    error list ->
+    ErrorSet.t ->
     Hh_json.json
   val json_of_errors_with_context :
     strip_root: Path.t option ->
     stdin_file: stdin_file ->
-    error list ->
+    ErrorSet.t ->
     Hh_json.json
 
   val print_errors:
@@ -104,7 +102,7 @@ module Json_output : sig
     ?pretty:bool ->
     ?profiling:Profiling_js.t option ->
     ?stdin_file:stdin_file ->
-    error list ->
+    ErrorSet.t ->
     unit
 end
 
@@ -114,5 +112,5 @@ module Vim_emacs_output : sig
     Loc.t -> string
   val print_errors:
     strip_root: Path.t option ->
-    out_channel -> error list -> unit
+    out_channel -> ErrorSet.t -> unit
 end

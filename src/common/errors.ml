@@ -404,8 +404,6 @@ module ErrorSuppressions = struct
     SpanMap.is_empty suppressions && SpanMap.is_empty unused
 end
 
-let to_list errors = ErrorSet.elements errors
-
 (* Human readable output *)
 module Cli_output = struct
   let print_file_at_location ~strip_root stdin_file main_file loc s = Loc.(
@@ -610,15 +608,13 @@ module Cli_output = struct
     let truncate = not (flags.Options.show_all_errors) in
     let one_line = flags.Options.one_line in
     let color = flags.Options.color in
-    let print_error_if_not_truncated curr e =
+    let print_error_if_not_truncated e curr =
       if not(truncate) || curr < 50 then print_error_color
         ~stdin_file ~strip_root ~one_line ~color ~out_channel e;
 
       curr + 1
     in
-    let total =
-      List.fold_left print_error_if_not_truncated 0 errors
-    in
+    let total = ErrorSet.fold print_error_if_not_truncated errors 0 in
     if total > 0 then print_newline ();
     if truncate && total > 50 then (
       Printf.fprintf
@@ -729,11 +725,12 @@ module Json_output = struct
     Hh_json.JSON_Object (json_of_error_props ~json_of_message error)
 
   let json_of_errors ~strip_root errors =
-    Hh_json.JSON_Array (List.map (json_of_error ~strip_root) errors)
+    let f = json_of_error ~strip_root in
+    Hh_json.JSON_Array (List.map f (ErrorSet.elements errors))
 
   let json_of_errors_with_context ~strip_root ~stdin_file errors =
     let f = json_of_error_with_context ~strip_root ~stdin_file in
-    Hh_json.JSON_Array (List.map f errors)
+    Hh_json.JSON_Array (List.map f (ErrorSet.elements errors))
 
   let print_errors
       ~out_channel
@@ -744,7 +741,7 @@ module Json_output = struct
     let props = [
       "flowVersion", JSON_String FlowConfig.version;
       "errors", json_of_errors_with_context ~strip_root ~stdin_file el;
-      "passed", JSON_Bool (el = []);
+      "passed", JSON_Bool (ErrorSet.is_empty el);
     ] in
     let props = match profiling with
     | None -> props
@@ -796,7 +793,9 @@ module Vim_emacs_output = struct
       Buffer.contents buf
     in
     fun ~strip_root oc el ->
-      let sl = List.map (to_string ~strip_root) el in
+      let sl = ErrorSet.fold (fun err acc ->
+        (to_string ~strip_root err)::acc
+      ) el [] in
       let sl = ListUtils.uniq (List.sort String.compare sl) in
       List.iter begin fun s ->
         output_string oc s;

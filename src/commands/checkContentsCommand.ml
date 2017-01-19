@@ -101,12 +101,12 @@ let main option_values root error_flags strip_root json pretty verbose
       )
   | ServerProt.NO_ERRORS ->
       if json
-      then print_json []
+      then print_json Errors.ErrorSet.empty
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
   | ServerProt.NOT_COVERED ->
       if json
-      then print_json []
+      then print_json Errors.ErrorSet.empty
       else Printf.printf "File is not @flow!\n%!";
       FlowExitStatus.(exit No_error)
   | _ ->

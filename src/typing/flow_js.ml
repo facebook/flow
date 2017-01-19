@@ -1158,7 +1158,8 @@ let add_output cx ?trace msg =
         let strip_root = if Context.should_strip_root cx
           then Some (Context.root cx)
           else None in
-        let json = Json_output.json_of_errors ~strip_root [error] in
+        let errset = ErrorSet.singleton error in
+        let json = Json_output.json_of_errors ~strip_root errset in
         assert_false (
           spf "add_output: no source for error: %s"
           (Hh_json.json_to_multiline json))

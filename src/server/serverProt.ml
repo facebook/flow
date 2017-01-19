@@ -115,7 +115,7 @@ type directory_mismatch = {
 
 type response =
 | DIRECTORY_MISMATCH of directory_mismatch
-| ERRORS of Errors.error list
+| ERRORS of Errors.ErrorSet.t
 | NO_ERRORS
 | PONG (* CAREFUL! changing the order of this constructor will make clients
           error when checking the server's version across an upgrade. *)
