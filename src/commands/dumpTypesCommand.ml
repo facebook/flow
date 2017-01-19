@@ -63,7 +63,7 @@ let types_to_json types ~strip_root =
     in
     JSON_Object json_assoc
   ) in
-  (JSON_Array types_json)
+  JSON_Array types_json
 
 let handle_response types ~json ~pretty ~strip_root =
   if json
