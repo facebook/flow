@@ -10,7 +10,7 @@ next: nullable-types.html
 */
 
 /*
-Defining the subtype relationship between types is a core resposibility of Flow
+Defining the subtype relationship between types is a core responsibility of Flow
 as a type system. These relationships are determined either directly for
 simple types or, for complex types, defined in terms of their parts.
 
