@@ -8,7 +8,6 @@
  *
  *)
 
-exception Process_exited_with_error of (Unix.process_status * string)
 
 exception Select_timed_out
 

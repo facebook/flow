@@ -13,6 +13,7 @@
 open Core
 
 exception Malformed_result
+exception Process_failure of Unix.process_status * (** Stderr *) string
 
 type hg_rev = string
 type svn_rev = string
@@ -32,10 +33,14 @@ module Future = struct
   let get : 'a t -> 'a = fun promise -> match !promise with
     | Complete v -> v
     | Incomplete (process, transformer) ->
-      let result = Process.read_and_close_pid process in
-      let result = transformer result in
-      promise := Complete result;
-      result
+      let status, result, err = Process.read_and_close_pid process in
+      match status with
+      | Unix.WEXITED 0 ->
+        let result = transformer result in
+        let () = promise := Complete result in
+        result
+      | _ ->
+        raise (Process_failure (status, err))
 end
 
 (** Returns the closest SVN ancestor to the hg revision.

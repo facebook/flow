@@ -55,27 +55,22 @@ let rec read_and_close_pid fd err_fd fds pid acc acc_err =
     let () = Unix.close fd in
     let () = Unix.close err_fd in
     match Unix.waitpid [] pid with
-    | _, Unix.WEXITED 0 ->
-      let result = String.concat "" (List.rev acc) in
-      result
     | _, status ->
+      let result = String.concat "" (List.rev acc) in
       let err = String.concat "" (List.rev acc_err) in
-      raise (Process_types.Process_exited_with_error (status, err))
+      status, result, err
   else
     let ready_fds, _, _ = Unix.select fds [] [] 0.1 in
     if ready_fds = [] then begin
       (** Here's where we switch from attempting to read from pipe to
        * attempting a non-blocking waitpid. *)
       match Unix.waitpid [Unix.WNOHANG] pid with
-      | i, Unix.WEXITED 0 when i = pid ->
-        (** Process has exited but there might still be unconsumed content
-         * in the pipe. *)
-        let acc = maybe_consume fd acc in
-        String.concat "" (List.rev acc)
       | i, status when i = pid ->
+        let acc = maybe_consume fd acc in
+        let out = String.concat "" (List.rev acc) in
         let acc_err = maybe_consume err_fd acc_err in
         let err = String.concat "" (List.rev acc_err) in
-        raise (Process_types.Process_exited_with_error (status, err))
+        status, out, err
       | _ ->
         (** Process has not exited. Keep going. *)
         read_and_close_pid fd err_fd fds pid acc acc_err
@@ -102,15 +97,7 @@ let rec read_and_close_pid fd err_fd fds pid acc acc_err =
    stdout_fd;
    stderr_fd;
    pid; } =
-   try read_and_close_pid
-     stdout_fd stderr_fd [stdout_fd; stderr_fd] pid [] [] with
-     | Process_types.Process_exited_with_error (_, stderr) as e ->
-       let user = Option.value (Sys_utils.getenv_user ()) ~default:"" in
-       let home = Option.value (Sys_utils.getenv_home ()) ~default:"" in
-       let () = Printf.eprintf
-         "Process failed. See also env USER=%s. HOME=%s\n" user home in
-       let () = Printf.eprintf "Stderr:%s\n" stderr in
-       raise e
+     read_and_close_pid stdout_fd stderr_fd [stdout_fd; stderr_fd] pid [] []
 
 let exec prog ?env args =
   let args = Array.of_list (prog :: args) in
