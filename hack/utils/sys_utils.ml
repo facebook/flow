@@ -92,6 +92,12 @@ let cat_no_fail filename =
 let nl_regexp = Str.regexp "[\r\n]"
 let split_lines = Str.split nl_regexp
 
+(** Returns true if substring occurs somewhere inside str. *)
+let string_contains str substring =
+  (** regexp_string matches only this string and nothing else. *)
+  let re = Str.regexp_string substring in
+  try (Str.search_forward re str 0) >= 0 with Not_found -> false
+
 let exec_read cmd =
   let ic = Unix.open_process_in cmd in
   let result = input_line ic in
