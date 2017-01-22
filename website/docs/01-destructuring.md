@@ -57,7 +57,7 @@ Found 1 error
 
 ```js +line_numbers
 /* @flow */
-var {x, y, ...o} = {x: '', y: 3, o: {z: false} }
+var {x, y, o} = {x: '', y: 3, o: {z: false} }
 // x: string, y: number, o: {z: boolean}
 var z: number = o;
 ```
