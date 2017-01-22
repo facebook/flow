@@ -97,3 +97,33 @@ Iteration using `for-in` should be performed only on objects even though it may 
 Non-strict equality `==` should be performed only on values that have the same type (otherwise, some sequence of type conversions are tried).
 
 Flow will error on many of these operations because they tend to be hazardous. Usually there is a safer way to express the intent of the code in these cases: e.g., use `Array.forEach` and `===` in the latter two cases or use `Number(...)` in the former case).
+
+### Flow appears to hang while initializing
+
+If Flow is taking an unexpectedly long amount of time at the initialization phase:
+
+```
+flow is still initializing; this can take some time. [local inference]
+```
+
+This can be due to Flow attempting to check the contents of the ```node_modules``` directory. For example,
+using the `--all` option without ignoring ```node_modules``` could take a very very long time.
+Here is an example of ignoring ```node_modules``` in your ```.flowconfig``` file:
+
+```
+[ignore]
+.*/node_modules/.*
+```
+
+See [advanced configuration](https://flowtype.org/docs/advanced-configuration.html#ignore) for more information
+on ignoring directories.
+
+If you have allowed Flow to run for a long time you may find that it continues to take a long time to initialize
+even after the scope of your configuration has been reduced.  Removing Flow's cache can remedy this situation:
+
+```
+rm -rf /tmp/flow
+```
+
+See the entry for ```temp_dir``` in [advanced configuration](https://flowtype.org/docs/advanced-configuration.html#options).
+
