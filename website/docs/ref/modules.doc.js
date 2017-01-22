@@ -347,7 +347,7 @@ import type {UserID, User} from "./User.js";
 
   If you have a value that you'd like to import the type *of*, the most
   straightforward option would be to import the value and then use `typeof` to
-  get it's type:
+  get its type:
 */
 
 import {jimiguitar} from "./User.js";
