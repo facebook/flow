@@ -266,8 +266,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   ) in
 
   let typecheck_error msg ?(suppress_op=false) ?extra (r1, r2) =
-    let origin_r1 = origin_of_reason r1 in
-    let origin_infos = opt_map_default (fun r -> [mk_info r []]) [] origin_r1 in
     (* make core info from reasons, message, and optional extra infos *)
     let core_infos = [
       mk_info r1 [msg];
@@ -292,15 +290,12 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | Some r ->
         if r = r1 then None
         else if reasons_overlap r r1 && reasons_overlap r r2 then None
-        else begin match origin_r1 with
-        | Some or1 when reasons_overlap r or1 -> None
-        | _ -> Some (info_of_reason r)
-        end
+        else Some (info_of_reason r)
       | _ -> None
     in
     (* main info is core info with optional lib line prepended, and optional
        extra info appended. ops/trace info is held separately in error *)
-    let msg_infos = lib_infos @ origin_infos @ core_infos in
+    let msg_infos = lib_infos @ core_infos in
     mk_error ?op_info ~trace_infos ?extra msg_infos
   in
 

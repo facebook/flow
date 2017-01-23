@@ -199,16 +199,12 @@ val loc_of_reason: reason -> Loc.t
 
 val desc_of_reason: reason -> reason_desc
 
-val origin_of_reason: reason -> reason option
-
 (* simple way to get derived reasons whose descriptions are
    simple replacements of the original *)
 val replace_reason: (reason_desc -> reason_desc) -> reason -> reason
 val replace_reason_const: reason_desc -> reason -> reason
 
 val repos_reason: Loc.t -> reason -> reason
-
-val update_origin_of_reason: reason option -> reason -> reason
 
 val do_patch: string list -> (int * int * string) list -> string
 

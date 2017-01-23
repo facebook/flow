@@ -193,8 +193,6 @@ type reason = {
   derivable: bool;
   desc: reason_desc;
   loc: Loc.t;
-  (* origin is a persistent reason, immune to repos_reason *)
-  origin: reason option;
 }
 
 type t = reason
@@ -320,12 +318,11 @@ let json_of_loc ?(strip_root=None) loc = Hh_json.(Loc.(
 
 (* reason constructors, accessors, etc. *)
 
-let mk_reason_with_test_id test_id desc loc ?(origin=None) () = {
+let mk_reason_with_test_id test_id desc loc () = {
   test_id;
   derivable = false;
   desc;
   loc;
-  origin;
 }
 
 (* The current test_id is included in every new reason. *)
@@ -519,9 +516,6 @@ let dump_reason ?(strip_root=None) r =
 let desc_of_reason r =
   r.desc
 
-let origin_of_reason r =
-  r.origin
-
 let internal_name name =
   spf ".%s" name
 
@@ -618,11 +612,7 @@ let replace_reason_const desc r =
 
 (* returns reason with new location and description of original *)
 let repos_reason loc reason =
-  mk_reason_with_test_id reason.test_id (desc_of_reason reason) loc
-    ~origin:(origin_of_reason reason) ()
-
-let update_origin_of_reason origin reason =
-  { reason with origin = origin }
+  mk_reason_with_test_id reason.test_id (desc_of_reason reason) loc ()
 
 module ReasonSet = Set.Make(struct
   type t = reason
