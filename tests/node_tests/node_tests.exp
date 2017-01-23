@@ -274,5 +274,71 @@ os/userInfo.js:14
  14: (u3.username: string); // error
                    ^^^^^^ string
 
+process/process.js:10
+ 10: process.emitWarning(); // error
+     ^^^^^^^^^^^^^^^^^^^^^ call of method `emitWarning`
+ 10: process.emitWarning(); // error
+     ^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+1624:   emitWarning(warning : string | Error, name? : string, ctor? : Function) : void;
+                              ^^^^^^^^^^^^^^ union: string | Error. See lib: <BUILTINS>/node.js:1624
+  Member 1:
+  1624:   emitWarning(warning : string | Error, name? : string, ctor? : Function) : void;
+                                ^^^^^^ string. See lib: <BUILTINS>/node.js:1624
+  Error:
+   10: process.emitWarning(); // error
+       ^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+  1624:   emitWarning(warning : string | Error, name? : string, ctor? : Function) : void;
+                                ^^^^^^ string. See lib: <BUILTINS>/node.js:1624
+  Member 2:
+  1624:   emitWarning(warning : string | Error, name? : string, ctor? : Function) : void;
+                                         ^^^^^ Error. See lib: <BUILTINS>/node.js:1624
+  Error:
+   10: process.emitWarning(); // error
+       ^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+  1624:   emitWarning(warning : string | Error, name? : string, ctor? : Function) : void;
+                                         ^^^^^ Error. See lib: <BUILTINS>/node.js:1624
 
-Found 33 errors
+process/process.js:11
+ 11: process.emitWarning(42); // error
+     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `emitWarning`
+ 11: process.emitWarning(42); // error
+                         ^^ number. This type is incompatible with
+1624:   emitWarning(warning : string | Error, name? : string, ctor? : Function) : void;
+                              ^^^^^^^^^^^^^^ union: string | Error. See lib: <BUILTINS>/node.js:1624
+  Member 1:
+  1624:   emitWarning(warning : string | Error, name? : string, ctor? : Function) : void;
+                                ^^^^^^ string. See lib: <BUILTINS>/node.js:1624
+  Error:
+   11: process.emitWarning(42); // error
+                           ^^ number. This type is incompatible with
+  1624:   emitWarning(warning : string | Error, name? : string, ctor? : Function) : void;
+                                ^^^^^^ string. See lib: <BUILTINS>/node.js:1624
+  Member 2:
+  1624:   emitWarning(warning : string | Error, name? : string, ctor? : Function) : void;
+                                         ^^^^^ Error. See lib: <BUILTINS>/node.js:1624
+  Error:
+   11: process.emitWarning(42); // error
+                           ^^ number. This type is incompatible with
+  1624:   emitWarning(warning : string | Error, name? : string, ctor? : Function) : void;
+                                         ^^^^^ Error. See lib: <BUILTINS>/node.js:1624
+
+process/process.js:12
+ 12: process.emitWarning("blah", 42); // error
+                                 ^^ number. This type is incompatible with the expected param type of
+1624:   emitWarning(warning : string | Error, name? : string, ctor? : Function) : void;
+                                                      ^^^^^^ string. See lib: <BUILTINS>/node.js:1624
+
+process/process.js:13
+ 13: process.emitWarning("blah", "blah", 42); // error
+                                         ^^ number. This type is incompatible with the expected param type of
+1624:   emitWarning(warning : string | Error, name? : string, ctor? : Function) : void;
+                                                                      ^^^^^^^^ function type. See lib: <BUILTINS>/node.js:1624
+
+process/process.js:14
+ 14: (process.emitWarning("blah"): string); // error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+ 14: (process.emitWarning("blah"): string); // error
+                                   ^^^^^^ string
+
+
+Found 38 errors
