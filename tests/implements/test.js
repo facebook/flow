@@ -24,3 +24,7 @@ class C6 extends C1 {}
 (new C6: IFoo); // ok, C1 implements IFoo
 
 class C7 implements C1 {} // error: C1 is a class, expected an interface
+
+// ensure BoundT substituted appropriately
+interface IPoly<T> { x: T }
+class C8<T> implements IPoly<T> { x: T }

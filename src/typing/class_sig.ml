@@ -144,13 +144,15 @@ let subst_sig cx map s = {
 }
 
 let generate_tests cx f x =
-  let {tparams_map; constructor; static; instance; _} = x in
   Flow.generate_tests cx x.instance.reason x.tparams (fun map -> f {
-    x with
-    tparams_map = SMap.map (Flow.subst cx map) tparams_map;
-    constructor = List.map (Func_sig.subst cx map) constructor;
-    static = subst_sig cx map static;
-    instance = subst_sig cx map instance;
+    id = x.id;
+    structural = x.structural;
+    tparams = x.tparams;
+    tparams_map = SMap.map (Flow.subst cx map) x.tparams_map;
+    implements = List.map (Flow.subst cx map) x.implements;
+    constructor = List.map (Func_sig.subst cx map) x.constructor;
+    static = subst_sig cx map x.static;
+    instance = subst_sig cx map x.instance;
   })
 
 let elements ?constructor = with_sig (fun s ->
