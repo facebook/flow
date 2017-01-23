@@ -1,6 +1,6 @@
 {% unless page.custom_footer %}
 <footer><div class='width'>
-    &copy; Copyright 2014 - 2017, Facebook Inc.
+    &copy; Copyright 2014 - {{ site.time | date: '%Y' }}, Facebook Inc.
 </div></footer>
 {% endunless %}
 <script>require(['{% asset_name 'default.js' %}']);</script>
