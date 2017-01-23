@@ -654,10 +654,10 @@ end
     (* convert singleton number type into a float *)
     let value = match number_type with
     | LEGACY_OCTAL ->
-      float (int_of_string ("0o"^num))
+      Int64.to_float (Int64.of_string ("0o"^num))
     | BINARY
     | OCTAL ->
-      float (int_of_string num)
+      Int64.to_float (Int64.of_string num)
     | NORMAL ->
       FloatOfString.float_of_string num
     in

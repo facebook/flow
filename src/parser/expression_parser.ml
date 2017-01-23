@@ -623,10 +623,10 @@ module Expression
     let value = match number_type with
     | LEGACY_OCTAL ->
       strict_error env Error.StrictOctalLiteral;
-      float (int_of_string ("0o"^value))
+      Int64.to_float (Int64.of_string ("0o"^value))
     | BINARY
     | OCTAL ->
-      float (int_of_string value)
+      Int64.to_float (Int64.of_string value)
     | NORMAL ->
       try Lexer_flow.FloatOfString.float_of_string value
       with _ when Sys.win32 ->

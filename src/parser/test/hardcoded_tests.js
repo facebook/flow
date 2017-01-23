@@ -2590,6 +2590,27 @@ module.exports = {
           'raw': '- 123',
         }
       },
+      'var a: 25257156155': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+          'type': 'NumberLiteralTypeAnnotation',
+          'value': 25257156155,
+          'raw': '25257156155',
+        }
+      },
+      'var a: 0x5E1719E3B': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+          'type': 'NumberLiteralTypeAnnotation',
+          'value': 25257156155,
+          'raw': '0x5E1719E3B',
+        }
+      },
+      'var a: 0o274134317073': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+          'type': 'NumberLiteralTypeAnnotation',
+          'value': 25257156155,
+          'raw': '0o274134317073',
+        }
+      },
     },
     'Invalid Number Literal Types': {
       'var a: 0173': {
@@ -5318,5 +5339,37 @@ module.exports = {
         'errors.0.message': 'Missing comma between import specifiers'
       },
     },
+    'Large numbers (ints are 32-bit in js_of_ocaml)': {
+      '25257156155': {
+        'body.0.expression': {
+          'value': 25257156155,
+          'raw':'25257156155',
+        },
+      },
+      '0274134317073': {
+        'body.0.expression': {
+          'value': 25257156155,
+          'raw':'0274134317073',
+        },
+      },
+      '0o274134317073': {
+        'body.0.expression': {
+          'value': 25257156155,
+          'raw':'0o274134317073',
+        },
+      },
+      '0x5E1719E3B': {
+        'body.0.expression': {
+          'value': 25257156155,
+          'raw':'0x5E1719E3B',
+        },
+      },
+      '0b10111100001011100011001111000111011': {
+        'body.0.expression': {
+          'value': 25257156155,
+          'raw':'0b10111100001011100011001111000111011',
+        },
+      },
+    }
   }
 };
