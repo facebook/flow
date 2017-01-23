@@ -452,6 +452,20 @@ module.exports = {
           }
         }
       },
+      'var a: { +get foo(): number }': {
+        'errors.0': {
+          'message': 'Unexpected variance sigil',
+          'loc.start.column': 9,
+          'loc.end.column': 10,
+        }
+      },
+      'var a: { +set foo(x: number): void }': {
+        'errors.0': {
+          'message': 'Unexpected variance sigil',
+          'loc.start.column': 9,
+          'loc.end.column': 10,
+        }
+      },
       'var a:(...rest:Array<number>) => number': {
         'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
           'type': 'FunctionTypeAnnotation',

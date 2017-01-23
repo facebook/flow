@@ -438,7 +438,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         variance;
       })))
 
-    in let getter_or_setter ~is_getter env start_loc static variance key =
+    in let getter_or_setter ~is_getter env start_loc static key =
       let value = methodish env start_loc None in
       let (key_loc, key) = key in
       let (_, { Type.Function.params; _ }) = value in
@@ -457,7 +457,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         optional = false;
         static;
         _method = false;
-        variance;
+        variance = None;
       })))
 
     in let indexer_property env start_loc static variance =
@@ -561,7 +561,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
                 | _ ->
                   let key = object_key env in
                   let is_getter = name = "get" in
-                  getter_or_setter ~is_getter env start_loc static variance key
+                  error_unsupported_variance env variance;
+                  getter_or_setter ~is_getter env start_loc static key
                 end
             | _, key ->
                 begin match Peek.token env with
