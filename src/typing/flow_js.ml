@@ -2769,10 +2769,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | IntersectionT _, GuardT (pred, result, tout) ->
       guard cx trace l pred result tout
 
-    (** ObjAssignT copies multiple properties from its incoming LB.
+    (** ObjAssignFromT copies multiple properties from its incoming LB.
         Here we simulate a merged object type by iterating over the
         entire intersection. *)
-    | IntersectionT (_, rep), ObjAssignT (_, _, _, _, false) ->
+    | IntersectionT (_, rep), ObjAssignFromT (_, _, _, _, _) ->
       InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
 
     (** This duplicates the (_, ReposLowerT u) near the end of this pattern
@@ -3519,9 +3519,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if t is a subtype of x's type in o. Otherwise, the property should be
         assignable to o.
 
-        TODO: The type constructors ShapeT, DiffT, ObjAssignT, ObjRestT express
-        related meta-operations on objects. Consolidate these meta-operations
-        and ensure consistency of their semantics. **)
+        TODO: The type constructors ShapeT, DiffT, ObjAssignToT/ObjAssignFromT,
+        ObjRestT express related meta-operations on objects. Consolidate these
+        meta-operations and ensure consistency of their semantics. **)
 
     | (ShapeT (o), _) ->
         rec_flow cx trace (o, u)
@@ -3545,13 +3545,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (_, UseT (_, ShapeT (o))) ->
         let reason = reason_of_t o in
-        rec_flow cx trace (l, ObjAssignT(reason, o, AnyT.t, [], false))
+        rec_flow cx trace (l, ObjAssignFromT(reason, o, AnyT.t, [], ObjAssign))
 
     | (_, UseT (_, DiffT (o1, o2))) ->
         let reason = reason_of_t l in
         let t2 = mk_tvar cx reason in
         rec_flow cx trace (o2, ObjRestT (reason, [], t2));
-        rec_flow cx trace (t2, ObjAssignT(reason, l, o1, [], true))
+        rec_flow cx trace (t2, ObjAssignToT(reason, l, o1, [], ObjAssign))
 
     | (_, ObjTestT(reason_op, default, u)) ->
       let u = ReposLowerT(reason_op, UseT (UnknownUse, u)) in
@@ -3942,19 +3942,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects can be assigned, i.e., their properties can be set in bulk *)
     (**********************************************************************)
 
-    (** When some object-like type O1 flows to ObjAssignT(_,O2,X,_,false), the
-        properties of O1 are copied to O2, and O2 is linked to X to signal that
-        the copying is done; the intention is that when those properties are
-        read through X, they should be found (whereas this cannot be guaranteed
-        when those properties are read through O2). However, there is an
-        additional twist: this scheme may not work when O2 is unresolved. In
-        particular, when O2 is unresolved, the constraints that copy the
-        properties from O1 may race with reads of those properties through X as
-        soon as O2 is resolved. To avoid this race, we make O2 flow to
-        ObjAssignT(_,O1,X,_,true); when O2 is resolved, we make the switch. **)
+    (** When some object-like type O1 flows to
+        ObjAssignFromT(_,O2,X,_,ObjAssign), the properties of O1 are copied to
+        O2, and O2 is linked to X to signal that the copying is done; the
+        intention is that when those properties are read through X, they should
+        be found (whereas this cannot be guaranteed when those properties are
+        read through O2). However, there is an additional twist: this scheme
+        may not work when O2 is unresolved. In particular, when O2 is
+        unresolved, the constraints that copy the properties from O1 may race
+        with reads of those properties through X as soon as O2 is resolved. To
+        avoid this race, we make O2 flow to ObjAssignToT(_,O1,X,_,ObjAssign);
+        when O2 is resolved, we make the switch. **)
 
     | (ObjT (lreason, { props_tmap = mapr; _ }),
-       ObjAssignT (reason_op, proto, t, props_to_skip, false)) ->
+       ObjAssignFromT (reason_op, proto, t, props_to_skip, ObjAssign)) ->
       Ops.push reason_op;
       Context.iter_props cx mapr (fun x p ->
         if not (List.mem x props_to_skip) then (
@@ -3980,7 +3981,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (proto, t)
 
     | (InstanceT (lreason, _, _, _, { fields_tmap; methods_tmap; _ }),
-       ObjAssignT (reason_op, proto, t, props_to_skip, false)) ->
+       ObjAssignFromT (reason_op, proto, t, props_to_skip, ObjAssign)) ->
       let fields_pmap = Context.find_props cx fields_tmap in
       let methods_pmap = Context.find_props cx methods_tmap in
       let pmap = SMap.union fields_pmap methods_pmap in
@@ -4001,21 +4002,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        existing object destroys all of the keys, turning the result into an
        AnyObjT as well. TODO: wait for `proto` to be resolved, and then call
        `SetPropT (_, _, AnyT)` on all of its props. *)
-    | AnyObjT _, ObjAssignT (reason, _, t, _, false) ->
+    | AnyObjT _, ObjAssignFromT (reason, _, t, _, ObjAssign) ->
       rec_flow_t cx trace (AnyObjT reason, t)
 
-    | (ObjProtoT _, ObjAssignT (_, proto, t, _, false)) ->
+    | (ObjProtoT _, ObjAssignFromT (_, proto, t, _, ObjAssign)) ->
       rec_flow_t cx trace (proto, t)
 
     (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
-    | RestT l, ObjAssignT (_, _, _, _, false) ->
-      rec_flow cx trace (l, u)
+    | RestT l, ObjAssignFromT (r, o, t, xs, ObjSpreadAssign) ->
+      rec_flow cx trace (l, ObjAssignFromT (r, o, t, xs, ObjAssign))
 
-    | (_, ObjAssignT(reason, o, t, xs, true)) ->
-      rec_flow cx trace (o, ObjAssignT(reason, l, t, xs, false))
+    | (proto, ObjAssignToT(reason, from, t, xs, kind)) ->
+      rec_flow cx trace (from, ObjAssignFromT(reason, proto, t, xs, kind))
 
     (* Object.assign semantics *)
-    | ((NullT _ | VoidT _), ObjAssignT _) -> ()
+    | ((NullT _ | VoidT _), ObjAssignFromT _) -> ()
 
     (*************************)
     (* objects can be copied *)
@@ -4045,7 +4046,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let o = mk_tvar_where cx reason (fun tvar ->
         rec_flow cx trace (
           obj_inst,
-          ObjAssignT(reason, obj_super, tvar, [], false)
+          ObjAssignFromT(reason, obj_super, tvar, [], ObjAssign)
         )
       ) in
 
@@ -4378,7 +4379,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************************************)
 
     | (FunT (_, _, t, _), SetPropT(reason_op, Named (_, "prototype"), tin)) ->
-      rec_flow cx trace (tin, ObjAssignT(reason_op, t, AnyT.t, [], false))
+      rec_flow cx trace (tin, ObjAssignFromT(reason_op, t, AnyT.t, [], ObjAssign))
 
     (*********************************)
     (* ... and their prototypes read *)
@@ -4586,7 +4587,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let function_proto = FunProtoT reason in
           let obj = mk_object_with_map_proto cx reason map function_proto in
           let t = mk_tvar_where cx reason (fun t ->
-            rec_flow cx trace (statics, ObjAssignT (reason, obj, t, [], false))
+            rec_flow cx trace (statics, ObjAssignFromT (reason, obj, t, [], ObjAssign))
           ) in
           rec_flow cx trace (t, u)
 
@@ -5549,7 +5550,7 @@ and object_like_op = function
   | SetPropT _ | GetPropT _ | MethodT _ | LookupT _
   | SuperT _
   | GetKeysT _ | HasOwnPropT _
-  | ObjAssignT _ | ObjRestT _
+  | ObjAssignToT _ | ObjAssignFromT _ | ObjRestT _
   | SetElemT _ | GetElemT _
   | UseT (_, AnyObjT _) -> true
   | _ -> false
@@ -6413,15 +6414,15 @@ and spread_objects cx reason those =
 
 and chain_objects cx ?trace reason this those =
   List.fold_left (fun result that ->
-    let that = match that with
-    | Arg t -> t
+    let that, kind = match that with
+    | Arg t -> t, ObjAssign
     | SpreadArg t ->
         (* If someone does Object.assign({}, ...Array<obj>) we can treat it like
            Object.assign({}, obj). *)
-        t
+        t, ObjSpreadAssign
     in
     mk_tvar_where cx reason (fun t ->
-      flow_opt cx ?trace (result, ObjAssignT(reason, that, t, [], true));
+      flow_opt cx ?trace (result, ObjAssignToT(reason, that, t, [], kind));
     )
   ) this those
 

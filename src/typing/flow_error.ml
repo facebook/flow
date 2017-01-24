@@ -209,7 +209,10 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     | ElemT (_, _, ReadElem _) -> "Element cannot be accessed with"
     | ElemT (_, _, WriteElem _) -> "Element cannot be assigned with"
     | ElemT (_, _, CallElem _) -> "Element cannot be called with"
-    | ObjAssignT _ -> "Expected object instead of"
+    | ObjAssignFromT (_, _, _, _, ObjSpreadAssign) ->
+      "Expected array instead of"
+    | ObjAssignToT _
+    | ObjAssignFromT _ -> "Expected object instead of"
     | ObjRestT _ -> "Expected object instead of"
     | ObjSealT _ -> "Expected object instead of"
     | ArrRestT _ -> "Expected array instead of"

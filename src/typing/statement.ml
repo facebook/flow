@@ -2222,7 +2222,7 @@ and object_ cx reason ?(allow_sealed=true) props =
      not sealed. *)
   let mk_spread from_obj to_obj =
     Flow.mk_tvar_where cx reason (fun t ->
-      Flow.flow cx (to_obj, ObjAssignT(reason, from_obj, t, [], true));
+      Flow.flow cx (to_obj, ObjAssignToT(reason, from_obj, t, [], ObjAssign));
     )
   in
   (* When there's no result, return a new object with specified sealing. When
@@ -3438,7 +3438,7 @@ and clone_object_with_excludes cx reason this that excludes =
     let t = Flow.tvar_with_constraint cx u in
     Flow.flow cx (
       this,
-      ObjAssignT(reason, that, t, [], true)
+      ObjAssignToT(reason, that, t, [], ObjAssign)
     )
   )
 

@@ -516,12 +516,19 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "action", json_of_lookup_action json_cx action
     ]
 
-  | ObjAssignT (_, assignee, tvar, prop_names, flag) -> [
-      "assigneeType", _json_of_t json_cx assignee;
+  | ObjAssignFromT (_, proto, tvar, prop_names, kind) -> [
+      "target", _json_of_t json_cx proto;
       "resultType", _json_of_t json_cx tvar;
       "propNames", JSON_Array (List.map (fun s -> JSON_String s) prop_names);
-      "flag", JSON_Bool flag
-    ]
+      "kind", json_of_obj_assign_kind json_cx kind;
+  ]
+
+  | ObjAssignToT (_, from, tvar, prop_names, kind) -> [
+      "source", _json_of_t json_cx from;
+      "resultType", _json_of_t json_cx tvar;
+      "propNames", JSON_Array (List.map (fun s -> JSON_String s) prop_names);
+      "kind", json_of_obj_assign_kind json_cx kind;
+  ]
 
   | ObjFreezeT (_, t) -> [
       "type", _json_of_t json_cx t
@@ -1151,6 +1158,15 @@ and json_of_lookup_action_impl json_cx action = Hh_json.(
   )
 )
 
+and json_of_obj_assign_kind json_cx =
+  check_depth json_of_obj_assign_kind_impl json_cx
+
+and json_of_obj_assign_kind_impl _json_cx kind = Hh_json.JSON_String (
+  match kind with
+  | ObjAssign -> "normal"
+  | ObjSpreadAssign -> "spread"
+)
+
 let json_of_t ?(size=5000) ?(depth=1000) ?(strip_root=None) cx t =
   let json_cx = {
     cx;
@@ -1541,7 +1557,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | MethodT (_, _, prop, _) -> p ~extra:(spf "(%s)" (propref prop)) t
   | MixinT (_, arg) -> p ~extra:(kid arg) t
   | NotT (_, arg) -> p ~extra:(kid arg) t
-  | ObjAssignT _ -> p t
+  | ObjAssignToT _ -> p t
+  | ObjAssignFromT _ -> p t
   | ObjFreezeT _ -> p t
   | ObjRestT _ -> p t
   | ObjSealT _ -> p t

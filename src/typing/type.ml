@@ -372,7 +372,11 @@ module rec TypeTerm : sig
     | LookupT of reason * lookup_kind * t list * propref * lookup_action
 
     (* operations on objects *)
-    | ObjAssignT of reason * t * t * string list * bool
+
+    (* Resolves the object into which the properties are assigned *)
+    | ObjAssignToT of reason * t * t * string list * obj_assign_kind
+    (* Resolves the object from which the properties are assigned *)
+    | ObjAssignFromT of reason * t * t * string list * obj_assign_kind
     | ObjFreezeT of reason * t
     | ObjRestT of reason * string list * t
     | ObjSealT of reason * t
@@ -632,6 +636,14 @@ module rec TypeTerm : sig
     props_tmap: Properties.id;
     proto_t: prototype;
   }
+
+  (* Object.assign(target, source1, ...source2) first resolves target then the
+     sources. *)
+  and obj_assign_kind =
+  (* Obj.assign(target, source) *)
+  | ObjAssign
+  (* Obj.assign(target, ...source) *)
+  | ObjSpreadAssign
 
   and cont = Lower of t | Upper of use_t
 
@@ -1514,7 +1526,8 @@ let any_propagating_use_t = function
   | MapTypeT _
   | MixinT _
   | NotT _
-  | ObjAssignT _
+  | ObjAssignFromT _
+  | ObjAssignToT _
   | ObjFreezeT _
   | ObjRestT _
   | ObjSealT _
@@ -1656,7 +1669,8 @@ and reason_of_use_t = function
   | MethodT (reason,_,_,_) -> reason
   | MixinT (reason, _) -> reason
   | NotT (reason, _) -> reason
-  | ObjAssignT (reason, _, _, _, _) -> reason
+  | ObjAssignToT (reason, _, _, _, _) -> reason
+  | ObjAssignFromT (reason, _, _, _, _) -> reason
   | ObjFreezeT (reason, _) -> reason
   | ObjRestT (reason, _, _) -> reason
   | ObjSealT (reason, _) -> reason
@@ -1819,8 +1833,10 @@ and mod_reason_of_use_t f = function
       MethodT (f reason_call, reason_lookup, name, ft)
   | MixinT (reason, inst) -> MixinT (f reason, inst)
   | NotT (reason, t) -> NotT (f reason, t)
-  | ObjAssignT (reason, t, t2, filter, resolve) ->
-      ObjAssignT (f reason, t, t2, filter, resolve)
+  | ObjAssignToT (reason, t, t2, filter, kind) ->
+      ObjAssignToT (f reason, t, t2, filter, kind)
+  | ObjAssignFromT (reason, t, t2, filter, kind) ->
+      ObjAssignFromT (f reason, t, t2, filter, kind)
   | ObjFreezeT (reason, t) -> ObjFreezeT (f reason, t)
   | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
   | ObjSealT (reason, t) -> ObjSealT (f reason, t)
@@ -2032,7 +2048,8 @@ let string_of_use_ctor = function
   | MethodT _ -> "MethodT"
   | MixinT _ -> "MixinT"
   | NotT _ -> "NotT"
-  | ObjAssignT _ -> "ObjAssignT"
+  | ObjAssignToT _ -> "ObjAssignToT"
+  | ObjAssignFromT _ -> "ObjAssignFromT"
   | ObjFreezeT _ -> "ObjFreezeT"
   | ObjRestT _ -> "ObjRestT"
   | ObjSealT _ -> "ObjSealT"
