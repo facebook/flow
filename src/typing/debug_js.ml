@@ -2029,9 +2029,10 @@ let dump_flow_error =
           (dump_reason cx reason2)
     | EInvalidLHSInAssignment loc ->
         spf "EInvalidLHSInAssignment (%s)" (string_of_loc loc)
-    | EIncompatibleObject (reason1, reason2, _) ->
-        spf "EIncompatibleObject (%s, %s, _)"
+    | EIncompatibleWithUseOp (reason1, reason2, use_op) ->
+        spf "EIncompatibleWithUseOp (%s, %s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
+          (string_of_use_op use_op)
     | EUnsupportedImplements reason ->
         spf "EUnsupportedImplements (%s)" (dump_reason cx reason)

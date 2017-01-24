@@ -110,7 +110,7 @@ type error_message =
   | EObjectComputedPropertyAccess of (reason * reason)
   | EObjectComputedPropertyAssign of (reason * reason)
   | EInvalidLHSInAssignment of Loc.t
-  | EIncompatibleObject of reason * reason * use_op
+  | EIncompatibleWithUseOp of reason * reason * use_op
   | EUnsupportedImplements of reason
 
 and binding_error =
@@ -315,26 +315,30 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     typecheck_error msg reasons
   in
 
-  let rec unwrap_use_ops ((l_reason, u_reason), nested_extra, msg) = function
-  | PropertyCompatibility (
-      prop_name,
-      lower_obj_reason, upper_obj_reason,
-      use_op
-    ) ->
+  let extra_info_of_use_op l_reason u_reason nested_extra msg wrapper_msg =
     let infos = [
       mk_info l_reason [msg];
       mk_info u_reason []
     ] in
-    let extra = [
+    [
       InfoNode (
-        [Loc.none, [spf "Property `%s` is incompatible:" prop_name]],
+        [Loc.none, [wrapper_msg]],
         [
           if nested_extra = []
           then InfoLeaf infos
           else InfoNode (infos, nested_extra)
         ]
       )
-    ] in
+    ]
+  in
+
+  let rec unwrap_use_ops ((l_reason, u_reason), nested_extra, msg) = function
+  | PropertyCompatibility
+      (prop_name, lower_obj_reason, upper_obj_reason, use_op) ->
+    let extra = extra_info_of_use_op
+      l_reason u_reason nested_extra msg
+      (spf "Property `%s` is incompatible:" prop_name)
+    in
     let msg = "This type is incompatible with" in
     unwrap_use_ops ((lower_obj_reason, upper_obj_reason), extra, msg) use_op
   | FunReturn ->
@@ -1003,7 +1007,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       let msg = "Invalid left-hand side in assignment expression" in
       mk_error ~trace_infos [loc, [msg]]
 
-  | EIncompatibleObject (l_reason, u_reason, use_op) ->
+  | EIncompatibleWithUseOp (l_reason, u_reason, use_op) ->
       let reasons, extra, msg =
         let msg = "This type is incompatible with" in
         unwrap_use_ops ((l_reason, u_reason), [], msg) use_op in

@@ -52,8 +52,6 @@ Found 3 errors
 Test b:
 b3.js:5
   5: (new D: C);
-      ^^^^^ constructor call
-  5: (new D: C);
       ^^^^^ D. This type is incompatible with
   5: (new D: C);
              ^ C

@@ -106,17 +106,27 @@ dictionary.js:167
 165:   x: {[k:B]:any},
               ^ B
 
-dictionary.js:173
-173:   x: Array<{[k:string]:B}>,
-                            ^ B. This type is incompatible with
-180:   let c: Array<{[k:string]:B, p:C}> = x; // error
-                                     ^ C
-
 dictionary.js:175
 175:   let a: Array<{[k:string]:B, p:A}> = x; // error: A ~> B
-                                     ^ A. This type is incompatible with
+                    ^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
 173:   x: Array<{[k:string]:B}>,
-                            ^ B
+                ^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+    175:   let a: Array<{[k:string]:B, p:A}> = x; // error: A ~> B
+                                         ^ A. This type is incompatible with
+    173:   x: Array<{[k:string]:B}>,
+                                ^ B
+
+dictionary.js:180
+180:   let c: Array<{[k:string]:B, p:C}> = x; // error
+                    ^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+173:   x: Array<{[k:string]:B}>,
+                ^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+    173:   x: Array<{[k:string]:B}>,
+                                ^ B. This type is incompatible with
+    180:   let c: Array<{[k:string]:B, p:C}> = x; // error
+                                         ^ C
 
 dictionary.js:181
 181:   (x[0].p: C); // not true
@@ -124,17 +134,27 @@ dictionary.js:181
 181:   (x[0].p: C); // not true
                 ^ C
 
+dictionary.js:185
+185:   xa: Array<{[k:string]:A, p:B}>,
+                 ^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+189:   let a: Array<{[k:string]:A}> = xa; // error
+                    ^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+    189:   let a: Array<{[k:string]:A}> = xa; // error
+                                    ^ A. This type is incompatible with
+    185:   xa: Array<{[k:string]:A, p:B}>,
+                                      ^ B
+
 dictionary.js:187
 187:   xc: Array<{[k:string]:C, p:B}>,
-                                  ^ B. This type is incompatible with
+                 ^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
 194:   let c: Array<{[k:string]:C}> = xc; // error
-                                ^ C
-
-dictionary.js:189
-189:   let a: Array<{[k:string]:A}> = xa; // error
-                                ^ A. This type is incompatible with
-185:   xa: Array<{[k:string]:A, p:B}>,
-                                  ^ B
+                    ^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+    187:   xc: Array<{[k:string]:C, p:B}>,
+                                      ^ B. This type is incompatible with
+    194:   let c: Array<{[k:string]:C}> = xc; // error
+                                    ^ C
 
 dictionary.js:195
 195:   (xc[0].p: C); // not true
@@ -142,17 +162,27 @@ dictionary.js:195
 195:   (xc[0].p: C); // not true
                  ^ C
 
-dictionary.js:199
-199:   x: {[k:string]:B},
-                      ^ B. This type is incompatible with
-206:   let c: {[k:string]:B, p:C} = x; // error
-                               ^ C
-
 dictionary.js:201
 201:   let a: {[k:string]:B, p:A} = x; // error: A ~> B
-                               ^ A. This type is incompatible with
-199:   x: {[k:string]:B},
-                      ^ B
+                                    ^ object type. This type is incompatible with
+201:   let a: {[k:string]:B, p:A} = x; // error: A ~> B
+              ^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+    201:   let a: {[k:string]:B, p:A} = x; // error: A ~> B
+                                   ^ A. This type is incompatible with
+    199:   x: {[k:string]:B},
+                          ^ B
+
+dictionary.js:206
+206:   let c: {[k:string]:B, p:C} = x; // error
+                                    ^ object type. This type is incompatible with
+206:   let c: {[k:string]:B, p:C} = x; // error
+              ^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+    199:   x: {[k:string]:B},
+                          ^ B. This type is incompatible with
+    206:   let c: {[k:string]:B, p:C} = x; // error
+                                   ^ C
 
 dictionary.js:207
 207:   (x.p: C); // not true
@@ -190,17 +220,27 @@ dictionary.js:232
 231:   x: Array<{p:X}>,
                 ^^^^^ object type
 
-dictionary.js:237
-237:   x: {[k:string]:B},
-                      ^ B. This type is incompatible with
-244:   let c: {p:C} = x; // error
-                 ^ C
-
 dictionary.js:239
 239:   let a: {p:A} = x; // error
-                 ^ A. This type is incompatible with
-237:   x: {[k:string]:B},
-                      ^ B
+                      ^ object type. This type is incompatible with
+239:   let a: {p:A} = x; // error
+              ^^^^^ object type
+  Property `p` is incompatible:
+    239:   let a: {p:A} = x; // error
+                     ^ A. This type is incompatible with
+    237:   x: {[k:string]:B},
+                          ^ B
+
+dictionary.js:244
+244:   let c: {p:C} = x; // error
+                      ^ object type. This type is incompatible with
+244:   let c: {p:C} = x; // error
+              ^^^^^ object type
+  Property `p` is incompatible:
+    237:   x: {[k:string]:B},
+                          ^ B. This type is incompatible with
+    244:   let c: {p:C} = x; // error
+                     ^ C
 
 dictionary.js:245
 245:   (x.p: C); // not true
@@ -238,51 +278,81 @@ dictionary.js:265
 263:   x: {p:B, x:X},
              ^ B
 
-dictionary.js:271
-271:   x: Array<{[k:string]:B}>,
-                            ^ B. This type is incompatible with
-275:   let c: Array<{[k:string]:B, p:C}> = x; // error
-                                     ^ C
-
 dictionary.js:273
 273:   let a: Array<{[k:string]:B, p:A}> = x; // error
-                                     ^ A. This type is incompatible with
+                    ^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
 271:   x: Array<{[k:string]:B}>,
-                            ^ B
+                ^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+    273:   let a: Array<{[k:string]:B, p:A}> = x; // error
+                                         ^ A. This type is incompatible with
+    271:   x: Array<{[k:string]:B}>,
+                                ^ B
 
-dictionary.js:279
-279:   x: {[k:string]:B},
-                      ^ B. This type is incompatible with
-283:   let c: {[k:string]:B, p:C} = x; // error
-                               ^ C
+dictionary.js:275
+275:   let c: Array<{[k:string]:B, p:C}> = x; // error
+                    ^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+271:   x: Array<{[k:string]:B}>,
+                ^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+    271:   x: Array<{[k:string]:B}>,
+                                ^ B. This type is incompatible with
+    275:   let c: Array<{[k:string]:B, p:C}> = x; // error
+                                         ^ C
 
 dictionary.js:281
 281:   let a: {[k:string]:B, p:A} = x; // error
-                               ^ A. This type is incompatible with
-279:   x: {[k:string]:B},
-                      ^ B
+                                    ^ object type. This type is incompatible with
+281:   let a: {[k:string]:B, p:A} = x; // error
+              ^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+    281:   let a: {[k:string]:B, p:A} = x; // error
+                                   ^ A. This type is incompatible with
+    279:   x: {[k:string]:B},
+                          ^ B
+
+dictionary.js:283
+283:   let c: {[k:string]:B, p:C} = x; // error
+                                    ^ object type. This type is incompatible with
+283:   let c: {[k:string]:B, p:C} = x; // error
+              ^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+    279:   x: {[k:string]:B},
+                          ^ B. This type is incompatible with
+    283:   let c: {[k:string]:B, p:C} = x; // error
+                                   ^ C
 
 dictionary.js:289
 289:   let a: {p?:A} = x; // error
-                  ^ A. This type is incompatible with
-287:   x: {[k:string]:B},
-                      ^ B
+                       ^ object type. This type is incompatible with
+289:   let a: {p?:A} = x; // error
+              ^^^^^^ object type
+  Property `p` is incompatible:
+    289:   let a: {p?:A} = x; // error
+                      ^ A. This type is incompatible with
+    287:   x: {[k:string]:B},
+                          ^ B
 
-dictionary.js:299
-299:   x: {[k:string]:B},
-                      ^ B. This type is incompatible with
+dictionary.js:301
 301:   let c: {p?:C} = x; // error
-                  ^ C
+                       ^ object type. This type is incompatible with
+301:   let c: {p?:C} = x; // error
+              ^^^^^^ object type
+  Property `p` is incompatible:
+    299:   x: {[k:string]:B},
+                          ^ B. This type is incompatible with
+    301:   let c: {p?:C} = x; // error
+                      ^ C
 
 dictionary.js:305
 305:   x: {p?:A},
-              ^ A. This type is incompatible with
+              ^ A. This type is incompatible with the expected return type of
 306: ): {[k:string]:B} { // error: A ~> B
                     ^ B
 
 dictionary.js:318
 318: ): {[k:string]:B} { // error: C ~> B
-                    ^ B. This type is incompatible with
+                    ^ B. This type is incompatible with the expected return type of
 317:   x: {p?:C},
               ^ C
 

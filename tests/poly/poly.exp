@@ -14,8 +14,6 @@ implicit_bounded_instantiation.js:19
 
 implicit_bounded_instantiation.js:20
  20: a.meth(new Base()); // Error: Base ~> Middle
-     ^^^^^^^^^^^^^^^^^^ call of method `meth`
- 20: a.meth(new Base()); // Error: Base ~> Middle
             ^^^^^^^^^^ Base. This type is incompatible with
   7: class C<T: Middle> {
                 ^^^^^^ Middle

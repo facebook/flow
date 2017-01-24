@@ -6,7 +6,7 @@ FormData.js:5
 
 FormData.js:6
   6: new FormData(document.createElement('input')); // incorrect
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ HTMLInputElement. This type is incompatible with
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ HTMLInputElement. This type is incompatible with the expected param type of
 293:     constructor(form?: HTMLFormElement): void;
                             ^^^^^^^^^^^^^^^ HTMLFormElement. See lib: <BUILTINS>/bom.js:293
 
@@ -218,7 +218,7 @@ FormData.js:35
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:301
   Error:
    35: a.set('bar', new Blob, 2) // incorrect
-                    ^^^^^^^^ Blob. This type is incompatible with
+                    ^^^^^^^^ Blob. This type is incompatible with the expected param type of
   301:     set(name: string, value: File, filename?: string): void;
                                     ^^^^ File. See lib: <BUILTINS>/bom.js:301
 
@@ -338,7 +338,7 @@ FormData.js:48
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:305
   Error:
    48: a.append('bar', new Blob, 2) // incorrect
-                       ^^^^^^^^ Blob. This type is incompatible with
+                       ^^^^^^^^ Blob. This type is incompatible with the expected param type of
   305:     append(name: string, value: File, filename?: string): void;
                                        ^^^^ File. See lib: <BUILTINS>/bom.js:305
 

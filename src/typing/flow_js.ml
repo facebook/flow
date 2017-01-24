@@ -1132,8 +1132,15 @@ exception SpeculativeError of FlowError.error_message
 
 let add_output cx ?trace msg =
   if Speculation.speculating ()
-  then raise (SpeculativeError msg)
-  else begin
+  then begin
+    begin match Context.verbose cx with
+    | Some { Verbose.depth; _ } ->
+      prerr_endlinef "\nspeculative_error: %s"
+        (Debug_js.dump_flow_error ~depth cx msg)
+    | _ -> ()
+    end;
+    raise (SpeculativeError msg)
+  end else begin
     begin match Context.verbose cx with
     | Some { Verbose.depth; _ } ->
       prerr_endlinef "\nadd_output: %s" (Debug_js.dump_flow_error ~depth cx msg)
@@ -5132,10 +5139,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       structural_subtype cx trace l reason_inst (fields_tmap, methods_tmap);
       rec_flow cx trace (l, UseT (use_op, super))
 
-    | (ObjProtoT _, UseT (_, ExtendsT ([], t, tc))) ->
-      let msg = "This type is incompatible with" in
-      let reasons = Flow_error.ordered_reasons t (UseT (UnknownUse, tc)) in
-      add_output cx ~trace (FlowError.ECustom (reasons, msg))
+    | (ObjProtoT _, UseT (use_op, ExtendsT ([], t, tc))) ->
+      let reason_l, reason_u =
+        Flow_error.ordered_reasons t (UseT (UnknownUse, tc)) in
+      add_output cx ~trace (FlowError.EIncompatibleWithUseOp
+        (reason_l, reason_u, use_op))
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
@@ -5174,7 +5182,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ()
 
     | _, UseT (PropertyCompatibility _ as use_op, u) ->
-      add_output cx ~trace (FlowError.EIncompatibleObject (
+      add_output cx ~trace (FlowError.EIncompatibleWithUseOp (
         reason_of_t l, reason_of_t u, use_op
       ))
 
