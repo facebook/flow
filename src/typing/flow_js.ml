@@ -3465,6 +3465,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let propref = Named (reason_prop, s) in
         match SMap.get s lflds with
         | Some lp ->
+          let use_op =
+            let use_op = if use_op_is_cycle (s, lreason, ureason) use_op
+              then UnknownUse
+              else use_op
+            in PropertyCompatibility (s, lreason, ureason, use_op)
+          in
           rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
         | _ ->
           match up with
@@ -5326,21 +5332,14 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
         (Field (lv, lpolarity), Field (uv, upolarity))
     | _ -> ());
 
-  let rec is_cycle (s, lreason, ureason) haystack =
-    match haystack with
-    | PropertyCompatibility (s', lreason', ureason', use_op') ->
-        if s = s' && lreason = lreason' && ureason = ureason' then true
-        else is_cycle (s, lreason, ureason) use_op'
-    | _ -> false
-  in
-
   (* Properties in u must either exist in l, or match l's indexer. *)
   iter_real_props cx uflds (fun s up ->
     let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
     let propref = Named (reason_prop, s) in
     let use_op =
-      let use_op =
-        if is_cycle (s, lreason, ureason) use_op then UnknownUse else use_op
+      let use_op = if use_op_is_cycle (s, lreason, ureason) use_op
+        then UnknownUse
+        else use_op
       in PropertyCompatibility (s, lreason, ureason, use_op)
     in
     match Context.get_prop cx lflds s, ldict with
@@ -5429,6 +5428,15 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
       )));
 
   rec_flow cx trace (ObjT (lreason, l_obj), UseT (use_op, uproto))
+
+and use_op_is_cycle (s, lreason, ureason) use_op =
+  let rec helper = function
+    | PropertyCompatibility (s', lreason', ureason', use_op') ->
+        if s = s' && lreason = lreason' && ureason = ureason' then true
+        else helper use_op'
+    | _ -> false
+  in
+  helper use_op
 
 and is_object_prototype_method = function
   | "isPrototypeOf"

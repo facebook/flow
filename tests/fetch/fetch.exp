@@ -140,174 +140,212 @@ request.js:2
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-868:     cache: CacheType;
-                ^^^^^^^^^ string enum. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:868
-820:     cache?: ?CacheType;
-                  ^^^^^^^^^ null. See lib: <BUILTINS>/bom.js:820
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `cache` is incompatible:
+    820:     cache?: ?CacheType;
+                      ^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:820
+    868:     cache: CacheType;
+                    ^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:868
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-868:     cache: CacheType;
-                ^^^^^^^^^ string enum. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:868
-820:     cache?: ?CacheType;
-                  ^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:820
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `cache` is incompatible:
+    820:     cache?: ?CacheType;
+                      ^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:820
+    868:     cache: CacheType;
+                    ^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:868
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-869:     credentials: CredentialsType;
-                      ^^^^^^^^^^^^^^^ string enum. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:869
-821:     credentials?: ?CredentialsType;
-                        ^^^^^^^^^^^^^^^ null. See lib: <BUILTINS>/bom.js:821
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `credentials` is incompatible:
+    821:     credentials?: ?CredentialsType;
+                            ^^^^^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:821
+    869:     credentials: CredentialsType;
+                          ^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:869
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-869:     credentials: CredentialsType;
-                      ^^^^^^^^^^^^^^^ string enum. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:869
-821:     credentials?: ?CredentialsType;
-                        ^^^^^^^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:821
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `credentials` is incompatible:
+    821:     credentials?: ?CredentialsType;
+                            ^^^^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:821
+    869:     credentials: CredentialsType;
+                          ^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:869
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-870:     headers: Headers;
-                  ^^^^^^^ Headers. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:870
-822:     headers?: ?HeadersInit;
-                    ^^^^^^^^^^^ null. See lib: <BUILTINS>/bom.js:822
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `headers` is incompatible:
+    822:     headers?: ?HeadersInit;
+                        ^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:822
+    870:     headers: Headers;
+                      ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:870
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-870:     headers: Headers;
-                  ^^^^^^^ Headers. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:870
-822:     headers?: ?HeadersInit;
-                    ^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:822
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `headers` is incompatible:
+    822:     headers?: ?HeadersInit;
+                        ^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/bom.js:822
+    870:     headers: Headers;
+                      ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:870
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-870:     headers: Headers;
-                  ^^^^^^^ Headers. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:870
-822:     headers?: ?HeadersInit;
-                    ^^^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:822
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `headers` is incompatible:
+    822:     headers?: ?HeadersInit;
+                        ^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:822
+    870:     headers: Headers;
+                      ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:870
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-871:     integrity: string;
-                    ^^^^^^ string. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:871
-823:     integrity?: ?string;
-                      ^^^^^^ null. See lib: <BUILTINS>/bom.js:823
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `integrity` is incompatible:
+    823:     integrity?: ?string;
+                          ^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:823
+    871:     integrity: string;
+                        ^^^^^^ string. See lib: <BUILTINS>/bom.js:871
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-871:     integrity: string;
-                    ^^^^^^ string. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:871
-823:     integrity?: ?string;
-                      ^^^^^^ undefined. See lib: <BUILTINS>/bom.js:823
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `integrity` is incompatible:
+    823:     integrity?: ?string;
+                          ^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:823
+    871:     integrity: string;
+                        ^^^^^^ string. See lib: <BUILTINS>/bom.js:871
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-872:     method: MethodType;
-                 ^^^^^^^^^^ string enum. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:872
-824:     method?: ?MethodType;
-                   ^^^^^^^^^^ null. See lib: <BUILTINS>/bom.js:824
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `method` is incompatible:
+    824:     method?: ?MethodType;
+                       ^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:824
+    872:     method: MethodType;
+                     ^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:872
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-872:     method: MethodType;
-                 ^^^^^^^^^^ string enum. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:872
-824:     method?: ?MethodType;
-                   ^^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:824
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `method` is incompatible:
+    824:     method?: ?MethodType;
+                       ^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:824
+    872:     method: MethodType;
+                     ^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:872
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-873:     mode: ModeType;
-               ^^^^^^^^ string enum. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:873
-825:     mode?: ?ModeType;
-                 ^^^^^^^^ null. See lib: <BUILTINS>/bom.js:825
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `mode` is incompatible:
+    825:     mode?: ?ModeType;
+                     ^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:825
+    873:     mode: ModeType;
+                   ^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:873
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-873:     mode: ModeType;
-               ^^^^^^^^ string enum. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:873
-825:     mode?: ?ModeType;
-                 ^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:825
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `mode` is incompatible:
+    825:     mode?: ?ModeType;
+                     ^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:825
+    873:     mode: ModeType;
+                   ^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:873
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-874:     redirect: RedirectType;
-                   ^^^^^^^^^^^^ string enum. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:874
-826:     redirect?: ?RedirectType;
-                     ^^^^^^^^^^^^ null. See lib: <BUILTINS>/bom.js:826
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `redirect` is incompatible:
+    826:     redirect?: ?RedirectType;
+                         ^^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:826
+    874:     redirect: RedirectType;
+                       ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:874
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-874:     redirect: RedirectType;
-                   ^^^^^^^^^^^^ string enum. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:874
-826:     redirect?: ?RedirectType;
-                     ^^^^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:826
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `redirect` is incompatible:
+    826:     redirect?: ?RedirectType;
+                         ^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:826
+    874:     redirect: RedirectType;
+                       ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:874
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-875:     referrer: string;
-                   ^^^^^^ string. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:875
-827:     referrer?: ?string;
-                     ^^^^^^ null. See lib: <BUILTINS>/bom.js:827
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `referrerPolicy` is incompatible:
+    828:     referrerPolicy?: ?ReferrerPolicyType;
+                               ^^^^^^^^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:828
+    876:     referrerPolicy: ReferrerPolicyType;
+                             ^^^^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:876
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-875:     referrer: string;
-                   ^^^^^^ string. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:875
-827:     referrer?: ?string;
-                     ^^^^^^ undefined. See lib: <BUILTINS>/bom.js:827
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `referrerPolicy` is incompatible:
+    828:     referrerPolicy?: ?ReferrerPolicyType;
+                               ^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:828
+    876:     referrerPolicy: ReferrerPolicyType;
+                             ^^^^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:876
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-876:     referrerPolicy: ReferrerPolicyType;
-                         ^^^^^^^^^^^^^^^^^^ string enum. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:876
-828:     referrerPolicy?: ?ReferrerPolicyType;
-                           ^^^^^^^^^^^^^^^^^^ null. See lib: <BUILTINS>/bom.js:828
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `referrer` is incompatible:
+    827:     referrer?: ?string;
+                         ^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:827
+    875:     referrer: string;
+                       ^^^^^^ string. See lib: <BUILTINS>/bom.js:875
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
-876:     referrerPolicy: ReferrerPolicyType;
-                         ^^^^^^^^^^^^^^^^^^ string enum. This type is incompatible with an argument type of. See lib: <BUILTINS>/bom.js:876
-828:     referrerPolicy?: ?ReferrerPolicyType;
-                           ^^^^^^^^^^^^^^^^^^ undefined. See lib: <BUILTINS>/bom.js:828
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `referrer` is incompatible:
+    827:     referrer?: ?string;
+                         ^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:827
+    875:     referrer: string;
+                       ^^^^^^ string. See lib: <BUILTINS>/bom.js:875
 
 request.js:8
   8: const f: Request = new Request({}) // incorrect
