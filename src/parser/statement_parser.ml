@@ -359,10 +359,11 @@ module Statement
         let start_loc = Peek.loc env in
         Expect.token env T_CATCH;
         Expect.token env T_LPAREN;
-        let id = Parse.identifier ~restricted_error:Error.StrictCatchVariable env in
-        let param = fst id, Pattern.Identifier {
-          Pattern.Identifier.name=id;
-                             typeAnnotation=None;
+        let loc, { Pattern.Identifier.name; typeAnnotation; _; } =
+          Parse.identifier_with_type env ~no_optional:false Error.StrictCatchVariable  in
+        let param = loc, Pattern.Identifier {
+          Pattern.Identifier.name=name;
+                             typeAnnotation;
                              optional=false;
         } in
         Expect.token env T_RPAREN;

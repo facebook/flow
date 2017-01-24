@@ -476,10 +476,10 @@ and statement cx = Ast.Statement.(
   let catch_clause cx { Try.CatchClause.param; body = (_, b) } =
     Ast.Pattern.(match param with
       | loc, Identifier {
-          Identifier.name = (_, name); typeAnnotation = None; _;
+          Identifier.name = (_, name); typeAnnotation = annot; _;
         } ->
           let r = mk_reason (RCustom "catch") loc in
-          let t = Flow.mk_tvar cx r in
+          let t = Anno.mk_type_annotation cx SMap.empty r annot in
 
           Hashtbl.replace (Context.type_table cx) loc t;
 
@@ -495,10 +495,6 @@ and statement cx = Ast.Statement.(
           | Some exn -> Abnormal.throw_control_flow_exception exn
           | None -> ()
           )
-
-      | loc, Identifier _ ->
-          Flow_js.add_output cx
-            Flow_error.(EUnsupportedSyntax (loc, CatchParameterAnnotation))
 
       | loc, _ ->
           Flow_js.add_output cx
