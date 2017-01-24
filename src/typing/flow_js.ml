@@ -3464,8 +3464,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
 
       iter_real_props cx uflds (fun s up ->
-        let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
-        let propref = Named (reason_prop, s) in
+        let propref =
+          let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
+          Named (reason_prop, s)
+        in
         match SMap.get s lflds with
         | Some lp ->
           let use_op =
@@ -3479,11 +3481,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           match up with
           | Field (OptionalT ut, upolarity) ->
             rec_flow cx trace (l,
-              LookupT (reason_prop, NonstrictReturning None, [], propref,
+              LookupT (ureason, NonstrictReturning None, [], propref,
                 LookupProp (Field (ut, upolarity))))
           | _ ->
             rec_flow cx trace (super,
-              LookupT (reason_prop, Strict lreason, [], propref,
+              LookupT (ureason, Strict lreason, [], propref,
                 LookupProp up))
       );
 
@@ -5732,29 +5734,35 @@ and structural_subtype cx trace lower reason_struct (fields_pmap, methods_pmap) 
   fields_pmap |> SMap.iter (fun s p ->
     match p with
     | Field (OptionalT t, polarity) ->
-      let reason_prop = replace_reason (fun desc ->
-        ROptional (RPropertyOf (s, desc))
-      ) reason_struct in
-      let propref = Named (reason_prop, s) in
+      let propref =
+        let reason_prop = replace_reason (fun desc ->
+          ROptional (RPropertyOf (s, desc))
+        ) reason_struct in
+        Named (reason_prop, s)
+      in
       rec_flow cx trace (lower,
-        LookupT (reason_prop, NonstrictReturning None, [], propref,
+        LookupT (reason_struct, NonstrictReturning None, [], propref,
           LookupProp (Field (t, polarity))))
     | _ ->
-      let reason_prop = replace_reason (fun desc ->
-        RPropertyOf (s, desc)
-      ) reason_struct in
-      let propref = Named (reason_prop, s) in
+      let propref =
+        let reason_prop = replace_reason (fun desc ->
+          RPropertyOf (s, desc)
+        ) reason_struct in
+        Named (reason_prop, s)
+      in
       rec_flow cx trace (lower,
-        LookupT (reason_prop, Strict lreason, [], propref, LookupProp p))
+        LookupT (reason_struct, Strict lreason, [], propref, LookupProp p))
   );
   methods_pmap |> SMap.iter (fun s p ->
     if inherited_method s then
-      let reason_prop = replace_reason (fun desc ->
-        RPropertyOf (s, desc)
-      ) reason_struct in
-      let propref = Named (reason_prop, s) in
+      let propref =
+        let reason_prop = replace_reason (fun desc ->
+          RPropertyOf (s, desc)
+        ) reason_struct in
+        Named (reason_prop, s)
+      in
       rec_flow cx trace (lower,
-        LookupT (reason_prop, Strict lreason, [], propref, LookupProp p))
+        LookupT (reason_struct, Strict lreason, [], propref, LookupProp p))
   );
 
 (*****************)
