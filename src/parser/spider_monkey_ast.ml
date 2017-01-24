@@ -471,6 +471,7 @@ and Statement : sig
   module Expression : sig
     type t = {
       expression: Expression.t;
+      directive: string option;
     }
   end
 

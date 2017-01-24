@@ -216,7 +216,8 @@ let get_package_keys filename ast =
        operator = Expression.Assignment.Assign;
        left = _;
        right = obj;
-     }
+     };
+     directive = _;
    } -> obj
   | _ -> assert_false (spf "Expected %s to be an assignment" filename)
   in

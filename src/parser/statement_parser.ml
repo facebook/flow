@@ -471,6 +471,7 @@ module Statement
         Eat.semicolon env;
         Loc.btwn (fst expression) end_loc, Statement.(Expression Expression.({
           expression;
+          directive = None;
         }))
 
   and expression env =
@@ -479,8 +480,19 @@ module Statement
     | Some semicolon_loc -> Loc.btwn loc semicolon_loc
     | None -> loc in
     Eat.semicolon env;
+    let directive = if allow_directive env
+      then match expression with
+      | _, Ast.Expression.Literal { Ast.Literal.
+          value = Ast.Literal.String _;
+          raw;
+          _
+        } -> Some (String.sub raw 1 (String.length raw - 2))
+      | _ -> None
+      else None
+    in
     loc, Statement.(Expression Expression.({
       expression;
+      directive;
     }))
 
   and type_alias_helper env =

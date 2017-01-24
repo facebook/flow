@@ -270,7 +270,7 @@ end = struct
   let parse_ast content =
     let (ast, _) = Parser_flow.program ~fail:true content in
     let expr = Ast.Statement.(match ast with
-      | (_, [(_, Expression({Expression.expression;}))], _) -> expression
+      | (_, [(_, Expression({Expression.expression; _}))], _) -> expression
       | _ -> prerr_endline "ERROR: Unable to parse test file\n"; exit 1
     ) in
     let obj = Ast.Expression.(match expr with

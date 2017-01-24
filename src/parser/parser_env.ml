@@ -192,6 +192,7 @@ type env = {
   no_new                : bool;
   allow_yield           : bool;
   allow_await           : bool;
+  allow_directive       : bool;
   error_callback        : (env -> Error.t -> unit) option;
   lex_mode_stack        : Lex_mode.t list ref;
   (* lex_env is the lex_env after the single lookahead has been lexed *)
@@ -242,6 +243,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     no_new = false;
     allow_yield = true;
     allow_await = false;
+    allow_directive = false;
     error_callback = None;
     lex_mode_stack = ref [Lex_mode.NORMAL];
     lex_env = ref lex_env;
@@ -262,6 +264,7 @@ let in_switch env = env.in_switch
 let in_function env = env.in_function
 let allow_yield env = env.allow_yield
 let allow_await env = env.allow_await
+let allow_directive env = env.allow_directive
 let no_in env = env.no_in
 let no_call env = env.no_call
 let no_let env = env.no_let
@@ -296,6 +299,7 @@ let with_strict in_strict_mode env = { env with in_strict_mode }
 let with_in_function in_function env = { env with in_function }
 let with_allow_yield allow_yield env = { env with allow_yield }
 let with_allow_await allow_await env = { env with allow_await }
+let with_allow_directive allow_directive env = { env with allow_directive }
 let with_no_let no_let env = { env with no_let }
 let with_in_loop in_loop env = { env with in_loop }
 let with_no_in no_in env = { env with no_in }

@@ -56,9 +56,9 @@ module rec Parse : PARSER = struct
     loc, stmts, comments
 
   and directives =
-      let check env (loc, token) =
+      let check env token =
         match token with
-        | T_STRING (_, _, _, octal) ->
+        | T_STRING (loc, _, _, octal) ->
             if octal then strict_error_at env (loc, Error.StrictOctalLiteral)
         | _ -> failwith ("Nooo: "^(token_to_string token)^"\n")
 
@@ -66,28 +66,16 @@ module rec Parse : PARSER = struct
         match Peek.token env with
         | T_EOF -> env, string_tokens, stmts
         | t when term_fn t -> env, string_tokens, stmts
-        | _ ->
-            let string_token = Peek.loc env, Peek.token env in
+        | T_STRING _ as string_token ->
             let possible_directive = item_fn env in
             let stmts = possible_directive::stmts in
             (match possible_directive with
             | _, Ast.Statement.Expression {
-                Ast.Statement.Expression.expression = loc, Ast.Expression.Literal {
-                  Ast.Literal.value = Ast.Literal.String str;
-                  _;
-                }
+                Ast.Statement.Expression.directive = Some raw; _
               } ->
                 (* 14.1.1 says that it has to be "use strict" without any
-                  * escapes, so "use\x20strict" is disallowed. We could in theory
-                  * keep the raw string around, but that's a pain. This is a hack
-                  * that actually seems to work pretty well (make sure the string
-                  * has the right length)
-                  *)
-                let len = Loc.(loc._end.column - loc.start.column) in
-                let strict =
-                  (in_strict_mode env) ||
-                  (str = "use strict" && len = 12)
-                in
+                   escapes, so "use\x20strict" is disallowed. *)
+                let strict = (in_strict_mode env) || (raw = "use strict") in
                 let string_tokens = string_token::string_tokens in
                 statement_list
                   (env |> with_strict strict)
@@ -96,9 +84,13 @@ module rec Parse : PARSER = struct
                   (string_tokens, stmts)
             | _ ->
                 env, string_tokens, stmts)
+        | _ ->
+          env, string_tokens, stmts
 
       in fun env term_fn item_fn ->
+        let env = with_allow_directive true env in
         let env, string_tokens, stmts = statement_list env term_fn item_fn ([], []) in
+        let env = with_allow_directive false env in
         List.iter (check env) (List.rev string_tokens);
         env, stmts
 

@@ -128,7 +128,8 @@ let parse_json_file ~fail content file =
         operator = Expression.Assignment.Assign;
         left = loc_none, Pattern.Expression module_exports;
         right = expr;
-      }
+      };
+      directive = None;
     }
   in
   let comments = ([]: Comment.t list) in

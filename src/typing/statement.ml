@@ -516,7 +516,7 @@ and statement cx = Ast.Statement.(
         toplevels cx body
       )
 
-  | (_, Expression { Expression.expression = e }) ->
+  | (_, Expression { Expression.expression = e; directive = _ }) ->
       ignore (expression cx e)
 
   (* Refinements for `if` are derived by the following Hoare logic rule:

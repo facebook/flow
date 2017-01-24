@@ -275,13 +275,6 @@ end = struct
     (* TODO: enable this in tests *)
     | [], Some "tokens", None
 
-    (* TODO: this hasn't been standardized yet. Esprima adds a "directive" field
-       to ExpressionStatement to distinguish `"use strict"` from
-       `("use strict")` or one with escaped characters.
-        See https://github.com/jquery/esprima/issues/1006 and
-        https://github.com/estree/estree/issues/6 *)
-    | _, Some "directive", None
-
     (* Flow doesn't support this *)
     | _, Some "leadingComments", None
     | _, Some "trailingComments", None
@@ -395,6 +388,12 @@ end = struct
     if SMap.mem name expected_map then
       let expected_value = SMap.find name expected_map in
       test_tree ((Prop name)::path) value expected_value acc
+    else if value = JSON_Null then
+      (* allow Flow to have extra properties when their values are null. this is
+         a narrower exception than `expected_different_property`; that function
+         allows the field to have any value, but sometimes we want to allow Flow
+         to return consistent shapes, without allowing arbitrary differences. *)
+      acc
     else if expected_different_property path None (Some name) then
       acc
     else

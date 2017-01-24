@@ -96,6 +96,7 @@ end with type t = Impl.t) = struct
   | loc, Expression expr ->
       node "ExpressionStatement" loc [|
         "expression", expression expr.Expression.expression;
+        "directive", option string expr.Expression.directive;
       |]
   | loc, If _if -> If.(
       node "IfStatement" loc [|

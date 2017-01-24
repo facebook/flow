@@ -285,7 +285,7 @@ and meta_statement cmap = Ast.Statement.(function
   | _, VariableDeclaration { VariableDeclaration.declarations; _ } ->
       concat_fold meta_variable cmap declarations
 
-  | _, Expression { Expression.expression = e } ->
+  | _, Expression { Expression.expression = e; _ } ->
       meta_expression cmap e
 
   | _, ClassDeclaration { Ast.Class.body; _ } ->

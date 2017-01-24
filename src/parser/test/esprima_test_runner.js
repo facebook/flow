@@ -358,6 +358,11 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         break;
       case 'ImportSpecifier':
         delete flow.importKind;
+        break;
+      case 'ExpressionStatement':
+        // esprima-fb doesn't support directives yet
+        delete flow.directive;
+        break;
     }
   }
 }

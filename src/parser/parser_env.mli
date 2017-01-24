@@ -62,6 +62,7 @@ val in_switch : env -> bool
 val in_function : env -> bool
 val allow_yield : env -> bool
 val allow_await: env -> bool
+val allow_directive : env -> bool
 val no_in : env -> bool
 val no_call : env -> bool
 val no_let : env -> bool
@@ -90,6 +91,7 @@ val with_strict : bool -> env -> env
 val with_in_function : bool -> env -> env
 val with_allow_yield : bool -> env -> env
 val with_allow_await : bool -> env -> env
+val with_allow_directive : bool -> env -> env
 val with_no_let : bool -> env -> env
 val with_in_loop : bool -> env -> env
 val with_no_in : bool -> env -> env
