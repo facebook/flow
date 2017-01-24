@@ -192,7 +192,7 @@ let rec type_printer_impl ~size override enclosure cx t =
         in
         parenthesize type_s enclosure [EnclosureMaybe]
 
-    | MaybeT t ->
+    | MaybeT (_, t) ->
         spf "?%s" (pp EnclosureMaybe cx t)
 
     | PolyT (xs,t) ->
@@ -378,7 +378,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
       is_printed_type_parsable_impl weak cx enclosure t
 
   (* Composed types *)
-  | MaybeT t
+  | MaybeT (_, t)
     ->
       is_printed_type_parsable_impl weak cx EnclosureMaybe t
   | TaintT (_)

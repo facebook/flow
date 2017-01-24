@@ -485,12 +485,12 @@ let rec merge_type cx =
        ROArrayAT (merge_type cx (elemt1, elemt2))
      )
 
-  | (MaybeT t1, MaybeT t2) ->
-      MaybeT (merge_type cx (t1, t2))
-
-  | (MaybeT t1, t2)
-  | (t1, MaybeT t2) ->
-      MaybeT (merge_type cx (t1, t2))
+  | (MaybeT (_, t1), MaybeT (_, t2))
+  | (MaybeT (_, t1), t2)
+  | (t1, MaybeT (_, t2)) ->
+      let t = merge_type cx (t1, t2) in
+      let reason = locationless_reason (RMaybe (desc_of_t t)) in
+      MaybeT (reason, t)
 
   | UnionT (_, rep1), UnionT (_, rep2) ->
       create_union (UnionRep.rev_append rep1 rep2)
@@ -1049,7 +1049,7 @@ module ResolvableTypeJob = struct
        virtualization of calls to this function doesn't lead to perf
        degradation: this function is expected to be quite hot). *)
 
-    | OptionalT t | MaybeT t | RestT t ->
+    | OptionalT t | MaybeT (_, t) | RestT t ->
       collect_of_type ?log_unresolved cx reason acc t
     | UnionT (_, rep) ->
       let ts = UnionRep.members rep in
@@ -1472,8 +1472,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (t, u)
       )
 
-    | MaybeT t, IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
-      let lreason = reason_of_t t in
+    | MaybeT (lreason, t), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
       rec_flow cx trace (NullT.why lreason, u);
       rec_flow cx trace (VoidT.why lreason, u);
       rec_flow cx trace (t, u);
@@ -2204,7 +2203,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let unwrapped_t = mk_tvar_where cx reason_op (fun t ->
             rec_flow cx trace (callback_result, IdxUnwrap(reason_op, t))
           ) in
-          rec_flow_t cx trace (MaybeT unwrapped_t, call_tout)
+          let maybe_r = replace_reason (fun desc -> RMaybe desc) reason_op in
+          let maybe = MaybeT (maybe_r, unwrapped_t) in
+          rec_flow_t cx trace (maybe, call_tout)
         | (SpreadArg t1)::(SpreadArg t2)::_ ->
           add_output cx ~trace
             (FlowError.(EUnsupportedSyntax (loc_of_t t1, SpreadArgument)));
@@ -2225,7 +2226,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (_, IdxUnwrap (_, t)) -> rec_flow_t cx trace (l, t)
 
     (* De-maybe-ify an idx() property access *)
-    | (MaybeT inner_t, IdxUnMaybeifyT _)
+    | (MaybeT (_, inner_t), IdxUnMaybeifyT _)
     | (OptionalT inner_t, IdxUnMaybeifyT _)
       -> rec_flow cx trace (inner_t, u)
     | (NullT _, IdxUnMaybeifyT _) -> ()
@@ -2275,7 +2276,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (** The type maybe(T) is the same as null | undefined | UseT *)
 
-    | (NullT r | VoidT r), UseT (use_op, MaybeT tout) ->
+    | (NullT r | VoidT r), UseT (use_op, MaybeT (_, tout)) ->
       rec_flow cx trace (EmptyT.why r, UseT (use_op, tout))
 
     | MaybeT _, ReposLowerT (reason_op, u) ->
@@ -2283,11 +2284,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          reposition the entire maybe type. *)
       rec_flow cx trace (reposition cx ~trace reason_op l, u)
 
-    | MaybeT t1, UseT (_, MaybeT _) ->
-      rec_flow cx trace (t1, u)
+    | MaybeT (_, t), UseT (_, MaybeT _) ->
+      rec_flow cx trace (t, u)
 
-    | (MaybeT(t), _) ->
-      let reason = reason_of_t t in
+    | (MaybeT (reason, t), _) ->
       rec_flow cx trace (NullT.why reason, u);
       rec_flow cx trace (VoidT.why reason, u);
       rec_flow cx trace (t, u)
@@ -2699,7 +2699,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* maybe and optional types are just special union types *)
 
-    | (t1, UseT (use_op, MaybeT(t2))) ->
+    | (t1, UseT (use_op, MaybeT (_, t2))) ->
       rec_flow cx trace (t1, UseT (use_op, t2))
 
     | (t1, UseT (use_op, OptionalT(t2))) ->
@@ -3374,7 +3374,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let return_t =
           get_builtin_typeapp cx ~trace elem_reason "React$Element" [AnyT.t]
         in
-        let return_t = MaybeT return_t in
+        let maybe_r = replace_reason (fun desc ->
+          RMaybe desc
+        ) (reason_of_t return_t) in
+        let return_t = MaybeT (maybe_r, return_t) in
         let context_t = AnyT.t in
         let call_t = CallT (
           reason_op,
@@ -5992,9 +5995,9 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     if c_ == c && this_ == this && ts_ == ts then t
     else ThisTypeAppT (c_, this_, ts_)
 
-  | MaybeT maybe_t ->
+  | MaybeT (reason, maybe_t) ->
     let maybe_t_ = subst cx ~force map maybe_t in
-    if maybe_t_ == maybe_t then t else MaybeT maybe_t_
+    if maybe_t_ == maybe_t then t else MaybeT (reason, maybe_t_)
 
   | IntersectionT (reason, rep) ->
     let rep_ = InterRep.ident_map (subst cx ~force map) rep in
@@ -6100,7 +6103,9 @@ and eval_destructor cx ~trace reason curr_t s i =
         )), tvar)
       | _ ->
         rec_flow cx trace (curr_t, match s with
-        | NonMaybeType -> UseT (UnknownUse, MaybeT (tvar))
+        | NonMaybeType ->
+            let maybe_r = replace_reason (fun desc -> RMaybe desc) reason in
+            UseT (UnknownUse, MaybeT (maybe_r, tvar))
         | PropertyType x -> GetPropT(reason, Named (reason, x), tvar)
         )
     )
@@ -6166,7 +6171,7 @@ and check_polarity cx ?trace polarity = function
   | RestT t
   | AbstractT t
   | ExactT (_, t)
-  | MaybeT t
+  | MaybeT (_, t)
   | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t
   | ReposT (_, t)
@@ -7343,7 +7348,7 @@ and filter_exists = function
   | NumT (r, Literal (0., _)) -> EmptyT r
 
   (* unknown things become truthy *)
-  | MaybeT t -> t
+  | MaybeT (_, t) -> t
   | OptionalT t -> filter_exists t
   | BoolT (r, None) -> BoolT (r, Some true)
   | StrT (r, AnyLiteral) -> StrT (r, Truthy)
@@ -7383,9 +7388,8 @@ and filter_not_exists t = match t with
   | ClassT t -> EmptyT (reason_of_t t)
 
   (* unknown boolies become falsy *)
-  | MaybeT t ->
-    let reason = reason_of_t t in
-    UnionT (reason, UnionRep.make (NullT.why reason) (VoidT.why reason) [])
+  | MaybeT (r, _) ->
+    UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [])
   | BoolT (r, None) -> BoolT (r, Some false)
   | StrT (r, AnyLiteral) -> StrT (r, Literal "")
   | NumT (r, AnyLiteral) -> NumT (r, Literal (0., "0"))
@@ -7394,9 +7398,8 @@ and filter_not_exists t = match t with
   | t -> t
 
 and filter_maybe = function
-  | MaybeT t ->
-    let reason = reason_of_t t in
-    UnionT (reason, UnionRep.make (NullT.why reason) (VoidT.why reason) [])
+  | MaybeT (r, _) ->
+    UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [])
   | MixedT (r, Mixed_everything) ->
     UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [])
   | MixedT (r, Mixed_truthy) -> EmptyT.why r
@@ -7414,7 +7417,7 @@ and filter_maybe = function
     EmptyT.why reason
 
 and filter_not_maybe = function
-  | MaybeT t -> t
+  | MaybeT (_, t) -> t
   | OptionalT t -> filter_not_maybe t
   | NullT r | VoidT r -> EmptyT r
   | MixedT (r, Mixed_truthy) -> MixedT (r, Mixed_truthy)
@@ -7425,8 +7428,8 @@ and filter_not_maybe = function
   | t -> t
 
 and filter_null = function
-  | OptionalT (MaybeT t)
-  | MaybeT t -> NullT.why (reason_of_t t)
+  | OptionalT (MaybeT (r, _))
+  | MaybeT (r, _) -> NullT.why r
   | NullT _ as t -> t
   | MixedT (r, Mixed_everything)
   | MixedT (r, Mixed_non_void) -> NullT.why r
@@ -7436,9 +7439,8 @@ and filter_null = function
     EmptyT.why reason
 
 and filter_not_null = function
-  | MaybeT t ->
-    let reason = reason_of_t t in
-    UnionT (reason, UnionRep.make (VoidT.why reason) t [])
+  | MaybeT (r, t) ->
+    UnionT (r, UnionRep.make (VoidT.why r) t [])
   | OptionalT t -> OptionalT (filter_not_null t)
   | UnionT (r, rep) ->
     recurse_into_union filter_not_null (r, UnionRep.members rep)
@@ -7448,7 +7450,7 @@ and filter_not_null = function
   | t -> t
 
 and filter_undefined = function
-  | MaybeT t -> VoidT.why (reason_of_t t)
+  | MaybeT (r, _) -> VoidT.why r
   | VoidT _ as t -> t
   | OptionalT t ->
     let reason = reason_of_t t in
@@ -7461,9 +7463,8 @@ and filter_undefined = function
     EmptyT.why reason
 
 and filter_not_undefined = function
-  | MaybeT t ->
-    let reason = reason_of_t t in
-    UnionT (reason, UnionRep.make (NullT.why reason) t [])
+  | MaybeT (r, t) ->
+    UnionT (r, UnionRep.make (NullT.why r) t [])
   | OptionalT t -> filter_not_undefined t
   | UnionT (r, rep) ->
     recurse_into_union filter_not_undefined (r, UnionRep.members rep)
@@ -9070,8 +9071,14 @@ and reposition cx ?trace reason t =
       mk_tvar_where cx reason (fun tvar ->
         flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
       )
-  | MaybeT t ->
-      MaybeT (recurse seen t)
+  | MaybeT (r, t) ->
+      (* repositions both the MaybeT and the nested type. MaybeT represets `?T`.
+         elsewhere, when we decompose into T | NullT | VoidT, we use the reason
+         of the MaybeT for NullT and VoidT but don't reposition `t`, so that any
+         errors on the NullT or VoidT point at ?T, but errors on the T point at
+         T. *)
+      let r = repos_reason (loc_of_reason reason) r in
+      MaybeT (r, recurse seen t)
   | OptionalT t ->
       OptionalT (recurse seen t)
   | UnionT (r, rep) ->
@@ -9634,7 +9641,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     List.iter recurse ts
 
   | ExactT (_, t)
-  | MaybeT t ->
+  | MaybeT (_, t) ->
     recurse t
 
   | IntersectionT (_, rep) ->

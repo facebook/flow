@@ -131,7 +131,7 @@ module rec TypeTerm : sig
     | ExactT of reason * t
 
     (* ? types *)
-    | MaybeT of t
+    | MaybeT of reason * t
 
     | TaintT of reason
 
@@ -1588,7 +1588,7 @@ let rec reason_of_t = function
   | InstanceT (reason,_,_,_,_) -> reason
   | IntersectionT (reason, _) -> reason
   | KeysT (reason, _) -> reason
-  | MaybeT t -> replace_reason (fun desc -> RMaybe desc) (reason_of_t t)
+  | MaybeT (reason, _) -> reason
   | MixedT (reason, _) -> reason
   | ModuleT (reason, _) -> reason
   | NullT reason -> reason
@@ -1745,7 +1745,7 @@ let rec mod_reason_of_t f = function
       InstanceT (f reason, st, su, impls, inst)
   | IntersectionT (reason, ts) -> IntersectionT (f reason, ts)
   | KeysT (reason, t) -> KeysT (f reason, t)
-  | MaybeT t -> MaybeT (mod_reason_of_t f t)
+  | MaybeT (reason, t) -> MaybeT (f reason, t)
   | MixedT (reason, t) -> MixedT (f reason, t)
   | ModuleT (reason, exports) -> ModuleT (f reason, exports)
   | NullT reason -> NullT (f reason)

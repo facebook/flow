@@ -203,7 +203,12 @@ let rec normalize_type_impl cx ids t = match t with
 
       let tins = [obj_param; cb_param] in
       let param_names = Some ["obj"; "pathCallback"] in
-      fake_fun param_names tins None (MaybeT cb_ret)
+      let maybe_ret =
+        let reason = reason_of_t cb_ret in
+        let reason = replace_reason (fun desc -> RMaybe desc) reason in
+        MaybeT (reason, cb_ret)
+      in
+      fake_fun param_names tins None maybe_ret
 
   | CustomFunT (_, DebugPrint) ->
       let rest_param = Some (None, AnyT.t) in
@@ -312,13 +317,15 @@ let rec normalize_type_impl cx ids t = match t with
       )
 
   | ExactT (reason, t) ->
-    ExactT (reason, normalize_type_impl cx ids t)
+      let reason = locationless_reason (desc_of_reason reason) in
+      ExactT (reason, normalize_type_impl cx ids t)
 
-  | MaybeT t ->
+  | MaybeT (reason, t) ->
+      let reason = locationless_reason (desc_of_reason reason) in
       let t = normalize_type_impl cx ids t in
       (match t with
       | MaybeT _ -> t
-      | _ -> MaybeT t)
+      | _ -> MaybeT (reason, t))
 
   | PolyT (xs, t) ->
       PolyT (xs, normalize_type_impl cx ids t)
@@ -470,11 +477,11 @@ and normalize_union r rep =
   let (ts, has_void, has_null) =
     TypeSet.fold (fun t (ts, has_void, has_null) ->
       match t with
-      | MaybeT (UnionT (_, rep)) ->
+      | MaybeT (_, UnionT (_, rep)) ->
           let tlist = UnionRep.members rep in
           let ts = List.fold_left (fun acc t -> TypeSet.add t acc) ts tlist in
           (ts, true, true)
-      | MaybeT t -> (TypeSet.add t ts, true, true)
+      | MaybeT (_, t) -> (TypeSet.add t ts, true, true)
       | VoidT _ -> (ts, true, has_null)
       | NullT _ -> (ts, has_void, true)
       (* TODO: We should only get EmptyT here when a completely open type
@@ -503,7 +510,9 @@ and normalize_union r rep =
     | t0::t1::ts -> UnionT (r, UnionRep.make t0 t1 ts)
   in
   if has_void && has_null
-  then MaybeT t
+  then
+    let r = replace_reason (fun desc -> RMaybe desc) r in
+    MaybeT (r, t)
   else t
 
 and collect_union_members ts =

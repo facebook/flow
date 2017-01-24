@@ -199,7 +199,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | MaybeT t -> [
+  | MaybeT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -1413,7 +1413,7 @@ and dump_t_ (depth, tvars) cx t =
       ~extra:(spf "%s, %s, [%s]" (kid base) (kid this)
         (String.concat "; " (List.map kid args))) t
   | ExactT (_, arg) -> p ~extra:(kid arg) t
-  | MaybeT arg -> p ~reason:false ~extra:(kid arg) t
+  | MaybeT (_, arg) -> p ~extra:(kid arg) t
   | TaintT _ -> p t
   | IntersectionT (_, rep) -> p ~extra:(spf "[%s]"
       (String.concat "; " (List.map kid (InterRep.members rep)))) t

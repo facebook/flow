@@ -104,7 +104,7 @@ class ['a] t = object(self)
 
   | ExactT (_, t) -> self#type_ cx acc t
 
-  | MaybeT t -> self#type_ cx acc t
+  | MaybeT (_, t) -> self#type_ cx acc t
 
   | IntersectionT (_, rep) ->
     self#list (self#type_ cx) acc (InterRep.members rep)

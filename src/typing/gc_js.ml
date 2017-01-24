@@ -114,7 +114,7 @@ let rec gc cx state = function
       gc cx state super
   | IntersectionT (_, rep) -> InterRep.members rep |> List.iter (gc cx state)
   | KeysT (_, t) -> gc cx state t
-  | MaybeT t -> gc cx state t
+  | MaybeT (_, t) -> gc cx state t
   | ModuleT (_, exporttypes) -> gc_exporttypes cx state exporttypes
   | NullT _ -> ()
   | NumT _ -> ()

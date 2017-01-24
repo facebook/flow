@@ -312,25 +312,25 @@ incompatible.js:5
 
 incompatible.js:7
   7: var a : {[key: string]: ?string} = {};
-                              ^^^^^^ null. This type is incompatible with
+                             ^^^^^^^ null. This type is incompatible with
   8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
                              ^^^^^^ string
 
 incompatible.js:7
   7: var a : {[key: string]: ?string} = {};
-                              ^^^^^^ undefined. This type is incompatible with
+                             ^^^^^^^ undefined. This type is incompatible with
   8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
                              ^^^^^^ string
 
 incompatible.js:9
   9: var c : {[key: string]: ?string} = b; // 2 errors, since c['x'] = null updates b
-                              ^^^^^^ null. This type is incompatible with
+                             ^^^^^^^ null. This type is incompatible with
   8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
                              ^^^^^^ string
 
 incompatible.js:9
   9: var c : {[key: string]: ?string} = b; // 2 errors, since c['x'] = null updates b
-                              ^^^^^^ undefined. This type is incompatible with
+                             ^^^^^^^ undefined. This type is incompatible with
   8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
                              ^^^^^^ string
 

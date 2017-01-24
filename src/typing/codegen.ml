@@ -228,7 +228,7 @@ let rec gen_type t env = Type.(
   )
   | IntersectionT (_, intersection) -> gen_intersection_list intersection env
   | KeysT (_, t) -> add_str "$Keys<" env |> gen_type t |> add_str ">"
-  | MaybeT t -> add_str "?" env |> gen_type t
+  | MaybeT (_, t) -> add_str "?" env |> gen_type t
   | MixedT _ -> add_str "mixed" env
   | NumT (_, Literal _) ->
     (* TODO: Consider polarity and print the literal type when appropriate *)

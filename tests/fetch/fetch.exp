@@ -145,7 +145,7 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `cache` is incompatible:
     820:     cache?: ?CacheType;
-                      ^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:820
+                     ^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:820
     868:     cache: CacheType;
                     ^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:868
 
@@ -156,7 +156,7 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `cache` is incompatible:
     820:     cache?: ?CacheType;
-                      ^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:820
+                     ^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:820
     868:     cache: CacheType;
                     ^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:868
 
@@ -167,7 +167,7 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `credentials` is incompatible:
     821:     credentials?: ?CredentialsType;
-                            ^^^^^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:821
+                           ^^^^^^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:821
     869:     credentials: CredentialsType;
                           ^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:869
 
@@ -178,7 +178,7 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `credentials` is incompatible:
     821:     credentials?: ?CredentialsType;
-                            ^^^^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:821
+                           ^^^^^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:821
     869:     credentials: CredentialsType;
                           ^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:869
 
@@ -189,7 +189,18 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `headers` is incompatible:
     822:     headers?: ?HeadersInit;
-                        ^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:822
+                       ^^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:822
+    870:     headers: Headers;
+                      ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:870
+
+request.js:6
+  6: const e: Request = new Request(b, c); // incorrect
+                                       ^ Request. This type is incompatible with the expected param type of
+863:     constructor(input: string | Request, init?: RequestOptions): void;
+                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
+  Property `headers` is incompatible:
+    822:     headers?: ?HeadersInit;
+                       ^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:822
     870:     headers: Headers;
                       ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:870
 
@@ -209,20 +220,9 @@ request.js:6
                                        ^ Request. This type is incompatible with the expected param type of
 863:     constructor(input: string | Request, init?: RequestOptions): void;
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
-  Property `headers` is incompatible:
-    822:     headers?: ?HeadersInit;
-                        ^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:822
-    870:     headers: Headers;
-                      ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:870
-
-request.js:6
-  6: const e: Request = new Request(b, c); // incorrect
-                                       ^ Request. This type is incompatible with the expected param type of
-863:     constructor(input: string | Request, init?: RequestOptions): void;
-                                                     ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `integrity` is incompatible:
     823:     integrity?: ?string;
-                          ^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:823
+                         ^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:823
     871:     integrity: string;
                         ^^^^^^ string. See lib: <BUILTINS>/bom.js:871
 
@@ -233,7 +233,7 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `integrity` is incompatible:
     823:     integrity?: ?string;
-                          ^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:823
+                         ^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:823
     871:     integrity: string;
                         ^^^^^^ string. See lib: <BUILTINS>/bom.js:871
 
@@ -244,7 +244,7 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `method` is incompatible:
     824:     method?: ?MethodType;
-                       ^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:824
+                      ^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:824
     872:     method: MethodType;
                      ^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:872
 
@@ -255,7 +255,7 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `method` is incompatible:
     824:     method?: ?MethodType;
-                       ^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:824
+                      ^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:824
     872:     method: MethodType;
                      ^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:872
 
@@ -266,7 +266,7 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `mode` is incompatible:
     825:     mode?: ?ModeType;
-                     ^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:825
+                    ^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:825
     873:     mode: ModeType;
                    ^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:873
 
@@ -277,7 +277,7 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `mode` is incompatible:
     825:     mode?: ?ModeType;
-                     ^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:825
+                    ^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:825
     873:     mode: ModeType;
                    ^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:873
 
@@ -288,7 +288,7 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `redirect` is incompatible:
     826:     redirect?: ?RedirectType;
-                         ^^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:826
+                        ^^^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:826
     874:     redirect: RedirectType;
                        ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:874
 
@@ -299,7 +299,7 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `redirect` is incompatible:
     826:     redirect?: ?RedirectType;
-                         ^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:826
+                        ^^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:826
     874:     redirect: RedirectType;
                        ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:874
 
@@ -310,7 +310,7 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `referrerPolicy` is incompatible:
     828:     referrerPolicy?: ?ReferrerPolicyType;
-                               ^^^^^^^^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:828
+                              ^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:828
     876:     referrerPolicy: ReferrerPolicyType;
                              ^^^^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:876
 
@@ -321,7 +321,7 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `referrerPolicy` is incompatible:
     828:     referrerPolicy?: ?ReferrerPolicyType;
-                               ^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:828
+                              ^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:828
     876:     referrerPolicy: ReferrerPolicyType;
                              ^^^^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:876
 
@@ -332,7 +332,7 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `referrer` is incompatible:
     827:     referrer?: ?string;
-                         ^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:827
+                        ^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:827
     875:     referrer: string;
                        ^^^^^^ string. See lib: <BUILTINS>/bom.js:875
 
@@ -343,7 +343,7 @@ request.js:6
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:863
   Property `referrer` is incompatible:
     827:     referrer?: ?string;
-                         ^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:827
+                        ^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:827
     875:     referrer: string;
                        ^^^^^^ string. See lib: <BUILTINS>/bom.js:875
 

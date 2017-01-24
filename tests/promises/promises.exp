@@ -229,7 +229,7 @@ promise.js:206
                                       ^^^^^^^^^^^^^^^ union: ?type application of identifier `Promise` | type parameter `U` of call of method `catch`. See lib: <BUILTINS>/core.js:640
   Member 1:
   640:       onReject?: (error: any) => ?Promise<U> | U
-                                         ^^^^^^^^^^ ?type application of identifier `Promise`. See lib: <BUILTINS>/core.js:640
+                                        ^^^^^^^^^^^ ?type application of identifier `Promise`. See lib: <BUILTINS>/core.js:640
   Error:
   209:     var b: number = str; // Error: string ~> number
                            ^^^ string. This type is incompatible with

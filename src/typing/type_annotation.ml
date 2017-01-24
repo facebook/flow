@@ -69,7 +69,10 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, Boolean -> BoolT.at loc
 
-| _, Nullable t -> MaybeT (convert cx tparams_map t)
+| loc, Nullable t ->
+    let t = convert cx tparams_map t in
+    let reason = mk_reason (RMaybe (desc_of_t t)) loc in
+    MaybeT (reason, t)
 
 | loc, Union (t0, t1, ts) ->
   let t0 = convert cx tparams_map t0 in

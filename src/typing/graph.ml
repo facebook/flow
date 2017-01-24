@@ -198,7 +198,7 @@ and parts_of_t cx = function
   ["static", Def static; "super", Def super]
 | IntersectionT (_, rep) -> list_parts (InterRep.members rep)
 | KeysT (_, t) -> ["t", Def t]
-| MaybeT t -> ["t", Def t]
+| MaybeT (_, t) -> ["t", Def t]
 | MixedT _ -> []
 | ModuleT (_, exporttypes) -> parts_of_exporttypes cx exporttypes
 | NullT _ -> []
