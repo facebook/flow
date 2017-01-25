@@ -3774,8 +3774,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | true, Strict _ -> NonstrictReturning None
         | _ -> kind
         in
-        rec_flow cx trace (super,
-          LookupT (reason_op, kind, try_ts_on_failure, propref, action))
+        let u = LookupT (reason_op, kind, try_ts_on_failure, propref, action) in
+        rec_flow cx trace (super, ReposLowerT (lreason, u))
       | Some p ->
         (* TODO: Replace AbstractT with abstract fields, then reuse
            perform_lookup_action here. *)
@@ -3846,8 +3846,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ... and their fields read *)
     (*****************************)
 
-    | InstanceT (_, _, super, _, _), GetPropT (_, Named (_, "__proto__"), t) ->
-      rec_flow_t cx trace (super, t)
+    | InstanceT (reason, _, super, _, _),
+      GetPropT (_, Named (_, "__proto__"), t) ->
+      rec_flow cx trace (super, ReposLowerT (reason, UseT (UnknownUse, t)))
 
     | InstanceT _ as instance, GetPropT (_, Named (_, "constructor"), t) ->
       rec_flow_t cx trace (ClassT instance, t)
@@ -4047,24 +4048,25 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let o = mk_object_with_map_proto cx reason map proto in
       rec_flow_t cx trace (o, t)
 
-    | InstanceT (_, _, super, _, insttype),
-      ObjRestT (reason, xs, t) ->
+    | InstanceT (reason, _, super, _, insttype),
+      ObjRestT (reason_op, xs, t) ->
       (* Spread fields from super into an object *)
-      let obj_super = mk_tvar_where cx reason (fun tvar ->
-        rec_flow cx trace (super, ObjRestT (reason, xs, tvar))
+      let obj_super = mk_tvar_where cx reason_op (fun tvar ->
+        let u = ObjRestT (reason_op, xs, tvar) in
+        rec_flow cx trace (super, ReposLowerT (reason, u))
       ) in
 
       (* Spread fields from the instance into another object *)
       let map = Context.find_props cx insttype.fields_tmap in
       let map = List.fold_left (fun map x -> SMap.remove x map) map xs in
-      let proto = ObjProtoT reason in
-      let obj_inst = mk_object_with_map_proto cx reason map proto in
+      let proto = ObjProtoT reason_op in
+      let obj_inst = mk_object_with_map_proto cx reason_op map proto in
 
       (* ObjAssign the inst-generated obj into the super-generated obj *)
-      let o = mk_tvar_where cx reason (fun tvar ->
+      let o = mk_tvar_where cx reason_op (fun tvar ->
         rec_flow cx trace (
           obj_inst,
-          ObjAssignFromT(reason, obj_super, tvar, [], ObjAssign)
+          ObjAssignFromT(reason_op, obj_super, tvar, [], ObjAssign)
         )
       ) in
 
@@ -4654,7 +4656,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       }),
       ImplementsT t ->
       structural_subtype cx trace t reason_inst (fields_tmap, methods_tmap);
-      rec_flow cx trace (super, ImplementsT t)
+      rec_flow cx trace (super, ReposLowerT (reason_inst, ImplementsT t))
 
     | _, ImplementsT _ ->
       add_output cx ~trace (FlowError.EUnsupportedImplements (reason_of_t l))
@@ -7990,7 +7992,7 @@ and instanceof_test cx trace result = function
   (** If C is a subclass of A, then don't refine the type of x. Otherwise,
       refine the type of x to A. (In general, the type of x should be refined to
       C & A, but that's hard to compute.) **)
-  | (true, InstanceT (_,_,super_c,_,instance_c),
+  | (true, InstanceT (reason,_,super_c,_,instance_c),
      (ClassT(ExtendsT(_, c, InstanceT (_,_,_,_,instance_a))) as right))
     -> (* TODO: intersection *)
 
@@ -7999,7 +8001,8 @@ and instanceof_test cx trace result = function
     else
       (** Recursively check whether super(C) extends A, with enough context. **)
       let pred = LeftP(InstanceofTest, right) in
-      rec_flow cx trace (super_c, PredicateT(pred, result))
+      let u = PredicateT(pred, result) in
+      rec_flow cx trace (super_c, ReposLowerT (reason, u))
 
   | (true, ObjProtoT _, ClassT(ExtendsT (_, _, a)))
     ->
@@ -8026,14 +8029,15 @@ and instanceof_test cx trace result = function
 
   (** If C is a subclass of A, then do nothing, since this check cannot
       succeed. Otherwise, don't refine the type of x. **)
-  | (false, InstanceT (_,_,super_c,_,instance_c),
+  | (false, InstanceT (reason, _, super_c, _, instance_c),
      (ClassT(ExtendsT(_, _, InstanceT (_,_,_,_,instance_a))) as right))
     ->
 
     if instance_a.class_id = instance_c.class_id
     then ()
-    else rec_flow cx trace
-      (super_c, PredicateT(NotP(LeftP(InstanceofTest, right)), result))
+    else
+      let u = PredicateT(NotP(LeftP(InstanceofTest, right)), result) in
+      rec_flow cx trace (super_c, ReposLowerT (reason, u))
 
   | (false, ObjProtoT _, ClassT(ExtendsT(_, c, _)))
     ->

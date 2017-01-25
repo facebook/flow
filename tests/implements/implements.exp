@@ -28,15 +28,15 @@ test.js:13
  13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
            ^^ C4
 
-test.js:16
- 16: interface IFooBar extends IFoo { bar: number }
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo` of IFoo. Property not found in
+test.js:18
+ 18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
+                         ^^^^^^^ property `bar` of IFooBar. Property not found in
  18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
            ^^ C5
 
 test.js:18
  18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
-                         ^^^^^^^ property `bar` of IFooBar. Property not found in
+                         ^^^^^^^ property `foo` of IFoo. Property not found in
  18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
            ^^ C5
 
