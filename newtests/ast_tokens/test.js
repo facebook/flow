@@ -849,7 +849,8 @@ export default suite(({addFile, flowCmd}) => [
                     "pattern": "asdf",
                     "flags": "g"
                   }
-                }
+                },
+                "directive": null
               },
               {
                 "type": "ExpressionStatement",
@@ -1116,7 +1117,8 @@ export default suite(({addFile, flowCmd}) => [
                       "raw": "asdf"
                     }
                   ]
-                }
+                },
+                "directive": null
               },
               {
                 "type": "VariableDeclaration",
@@ -1437,7 +1439,8 @@ export default suite(({addFile, flowCmd}) => [
                   "name": "a",
                   "typeAnnotation": null,
                   "optional": false
-                }
+                },
+                "directive": null
               }
             ],
             "comments": [
