@@ -1,14 +1,14 @@
-array.js:8
-  8: var arrayTest4: Iterable<number> = ["hi"];
-                                         ^^^^ string. This type is incompatible with
-  8: var arrayTest4: Iterable<number> = ["hi"];
-                              ^^^^^^ number
+array.js:7
+  7: (["hi"]: Iterable<number>); // Error string ~> number
+       ^^^^ string. This type is incompatible with
+  7: (["hi"]: Iterable<number>); // Error string ~> number
+                       ^^^^^^ number
 
-array.js:10
- 10: var arrayTest5: Iterable<string> = ["hi", 1];
-                                               ^ number. This type is incompatible with
- 10: var arrayTest5: Iterable<string> = ["hi", 1];
-                              ^^^^^^ string
+array.js:8
+  8: (["hi", 1]: Iterable<string>); // Error number ~> string
+             ^ number. This type is incompatible with
+  8: (["hi", 1]: Iterable<string>); // Error number ~> string
+                          ^^^^^^ string
 
 caching_bug.js:21
  21: function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
@@ -41,8 +41,8 @@ set.js:13
                                                    ^^^^^^ number
 
 string.js:5
-  5: var stringTest3: Iterable<number> = "hi"; // Error - string is a Iterable<string>
-                               ^^^^^^ number. This type is incompatible with
+  5: ("hi": Iterable<number>); // Error - string is a Iterable<string>
+                     ^^^^^^ number. This type is incompatible with
 274:     @@iterator(): Iterator<string>;
                                 ^^^^^^ string. See lib: <BUILTINS>/core.js:274
 
