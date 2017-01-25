@@ -302,7 +302,8 @@
         "value":null,
         "raw":"/asdf/g",
         "regex":{"pattern":"asdf","flags":"g"}
-      }
+      },
+      "directive":null
     },
     {
       "type":"ExpressionStatement",
@@ -387,7 +388,8 @@
             "raw":"asdf"
           }
         ]
-      }
+      },
+      "directive":null
     },
     {
       "type":"VariableDeclaration",
@@ -500,7 +502,8 @@
         "name":"a",
         "typeAnnotation":null,
         "optional":false
-      }
+      },
+      "directive":null
     }
   ],
   "comments":[
