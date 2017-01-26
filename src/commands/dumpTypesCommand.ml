@@ -40,32 +40,36 @@ let spec = {
   )
 }
 
+let types_to_json types ~strip_root =
+  let open Hh_json in
+  let open Reason in
+  let types_json = types |> List.map (fun (loc, _ctor, str, raw_t, reasons) ->
+    let json_assoc = (
+      ("type", JSON_String str) ::
+      ("reasons", JSON_Array (List.map (fun r ->
+        let r_loc = loc_of_reason r in
+        JSON_Object (
+          ("desc", JSON_String (string_of_desc (desc_of_reason r))) ::
+          ("loc", json_of_loc ~strip_root r_loc) ::
+          (Errors.deprecated_json_props_of_loc ~strip_root r_loc)
+        )
+      ) reasons)) ::
+      ("loc", json_of_loc ~strip_root loc) ::
+      (Errors.deprecated_json_props_of_loc ~strip_root loc)
+    ) in
+    let json_assoc = match raw_t with
+      | None -> json_assoc
+      | Some raw_t -> ("raw_type", JSON_String raw_t) :: json_assoc
+    in
+    JSON_Object json_assoc
+  ) in
+  JSON_Array types_json
+
 let handle_response types ~json ~pretty ~strip_root =
   if json
   then (
-    let open Hh_json in
-    let open Reason in
-    let types_json = types |> List.map (fun (loc, _ctor, str, raw_t, reasons) ->
-      let json_assoc = (
-        ("type", JSON_String str) ::
-        ("reasons", JSON_Array (List.map (fun r ->
-          let r_loc = loc_of_reason r in
-          JSON_Object (
-            ("desc", JSON_String (string_of_desc (desc_of_reason r))) ::
-            ("loc", json_of_loc ~strip_root r_loc) ::
-            (Errors.deprecated_json_props_of_loc ~strip_root r_loc)
-          )
-        ) reasons)) ::
-        ("loc", json_of_loc ~strip_root loc) ::
-        (Errors.deprecated_json_props_of_loc ~strip_root loc)
-      ) in
-      let json_assoc = match raw_t with
-        | None -> json_assoc
-        | Some raw_t -> ("raw_type", JSON_String raw_t) :: json_assoc
-      in
-      JSON_Object json_assoc
-    ) in
-    print_endline (json_to_string ~pretty (JSON_Array types_json))
+    let types_json = types_to_json types ~strip_root in
+    print_endline (Hh_json.json_to_string ~pretty types_json)
   ) else (
     let out = types
       |> List.map (fun (loc, _, str, _, _) ->
