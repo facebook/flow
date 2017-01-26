@@ -1,24 +1,30 @@
-foo/bar/nested_test.js:9
-  9: var unreachable = require('annotation');
+foo/bar/nested_test.js:10
+ 10: var unreachable = require('annotation');
                        ^^^^^^^^^^^^^^^^^^^^^ annotation. Required module not found
 
-foo/bar/nested_test.js:11
- 11: (docblock.fun(): string);
+foo/bar/nested_test.js:12
+ 12: (docblock.fun(): string);
       ^^^^^^^^^^^^^^ number. This type is incompatible with
- 11: (docblock.fun(): string);
+ 12: (docblock.fun(): string);
                       ^^^^^^ string
 
-foo/bar/nested_test.js:12
- 12: (min.fun(): string);
+foo/bar/nested_test.js:13
+ 13: (min.fun(): string);
       ^^^^^^^^^ number. This type is incompatible with
- 12: (min.fun(): string);
+ 13: (min.fun(): string);
                  ^^^^^^ string
 
-foo/bar/nested_test.js:13
- 13: (corge.fun(): string);
+foo/bar/nested_test.js:14
+ 14: (corge.fun(): string);
       ^^^^^^^^^^^ number. This type is incompatible with
- 13: (corge.fun(): string);
+ 14: (corge.fun(): string);
                    ^^^^^^ string
+
+foo/bar/nested_test.js:15
+ 15: (SomeOtherModule.fun(): string);
+      ^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 15: (SomeOtherModule.fun(): string);
+                             ^^^^^^ string
 
 test.js:4
   4: (Implicit.fun(): string);
@@ -39,4 +45,4 @@ test.js:10
                                    ^^^^^^ string
 
 
-Found 7 errors
+Found 8 errors

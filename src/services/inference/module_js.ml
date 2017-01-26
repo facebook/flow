@@ -922,6 +922,13 @@ let commit_modules workers ~options inferred removed =
   let repick = List.fold_left (fun acc (f, m) ->
     let f_module = Modulename.Filename f in
     add_provider f m; add_provider f f_module;
+    (* foo.js.flow ALWAYS also provides foo.js *)
+    if Loc.check_suffix f Files.flow_ext
+    then begin
+      let f_decl_module =
+        Modulename.Filename (Loc.chop_suffix f Files.flow_ext) in
+      add_provider f f_decl_module
+    end;
     acc |> NameSet.add m |> NameSet.add f_module
   ) removed file_module_assoc in
 
