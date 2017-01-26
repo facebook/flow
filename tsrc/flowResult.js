@@ -39,11 +39,23 @@ type FlowPos = {
   column: number,
   offset: number,
 }
+type FlowTimer = {
+  start_age: number,
+  duration: number,
+}
 type FlowTiming = {
   results: {
     [key: string]: {
+      // Legacy fields
       start_wall_age: number,
       wall_duration: number,
+
+      // New hotness
+      wall: FlowTimer;
+      user: FlowTimer;
+      system: FlowTimer;
+      worker_user: FlowTimer;
+      worker_system: FlowTimer;
     }
   }
 }
