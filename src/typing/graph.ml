@@ -332,7 +332,7 @@ and parts_of_use_t cx = function
 | RefineT (_, _, t) -> ["t", Def t]
 | ReposLowerT (_, u) -> ["upper", Use u]
 | ReposUseT (_, _, l) ->  ["lower", Def l]
-| ResolveRestT (_, {
+| ResolveSpreadT (_, {
     rrt_id = _;
     rrt_resolved;
     rrt_unresolved;
@@ -340,16 +340,16 @@ and parts_of_use_t cx = function
     rrt_tout;
   }) ->
     let parts_of_resolved = List.mapi (fun i -> function
-      | ResolvedParam t -> [spf "resolved param #%d" i, Def t]
-      | ResolvedRestParam (arrtype) -> parts_of_arrtype arrtype
-      | ResolvedAnyRestParam -> []
+      | ResolvedArg t -> [spf "resolved param #%d" i, Def t]
+      | ResolvedSpreadArg (arrtype) -> parts_of_arrtype arrtype
+      | ResolvedAnySpreadArg -> []
     ) rrt_resolved
     |> List.flatten in
     let parts_of_unresolved = List.mapi (fun i -> function
-      | UnresolvedParam t -> spf "unresolved param #%d" i, Def t
-      | UnresolvedRestParam t -> spf "unresolved rest param #%d" i, Def t
+      | UnresolvedArg t -> spf "unresolved param #%d" i, Def t
+      | UnresolvedSpreadArg t -> spf "unresolved rest param #%d" i, Def t
     ) rrt_unresolved in
-    let parts_of_resolve_to = parts_of_rest_resolve rrt_resolve_to in
+    let parts_of_resolve_to = parts_of_spread_resolve rrt_resolve_to in
     parts_of_resolved @ parts_of_unresolved @ parts_of_resolve_to @ [
       "out", Def rrt_tout
     ]
@@ -373,7 +373,7 @@ and parts_of_arrtype = function
 | TupleAT (elemt, tuple_types) ->
   ("elem", Def elemt)::(list_parts tuple_types)
 
-and parts_of_rest_resolve = function
+and parts_of_spread_resolve = function
 | ResolveSpreadsToTuple
 | ResolveSpreadsToArrayLiteral
 | ResolveSpreadsToArray -> []

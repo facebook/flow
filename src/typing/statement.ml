@@ -2389,10 +2389,10 @@ and expression_or_spread cx = Ast.Expression.(function
 
 and expression_or_spread_list cx undef_loc = Ast.Expression.(
   List.map (function
-  | Some (Expression e) -> UnresolvedParam (expression cx e)
-  | None -> UnresolvedParam (EmptyT.at undef_loc)
+  | Some (Expression e) -> UnresolvedArg (expression cx e)
+  | None -> UnresolvedArg (EmptyT.at undef_loc)
   | Some (Spread (_, { SpreadElement.argument })) ->
-      UnresolvedRestParam (expression cx argument)
+      UnresolvedSpreadArg (expression cx argument)
   )
 )
 
