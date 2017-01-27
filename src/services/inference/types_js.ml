@@ -169,7 +169,14 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
         Merge_service.merge_strict_context ~options cache [cx]
       ) in
 
-      let errors = Errors.ErrorSet.union (Context.errors cx) errors in
+      (* Filter out suppressed errors *)
+      let error_suppressions = Context.error_suppressions cx in
+      let errors = Errors.ErrorSet.fold (fun err errors ->
+        if not (fst (Errors.ErrorSuppressions.check err error_suppressions))
+        then Errors.ErrorSet.add err errors
+        else errors
+      ) (Context.errors cx) errors in
+
       profiling, Some cx, errors, info
 
   | Parsing_service_js.Parse_fail fails ->
