@@ -32,7 +32,6 @@ let get_master_cx, restore_master_cx =
   | None ->
     let metadata = Context.({ (metadata_of_options options) with
       checked = false;
-      weak = false;
     }) in
     let cx = Flow.fresh_context
       metadata Loc.Builtins (Modulename.String Files.lib_module) in
@@ -99,7 +98,6 @@ let load_lib_files ~options files =
 
         let metadata = Context.({ (metadata_of_options options) with
           checked = false;
-          weak = false;
         }) in
 
         let cx, syms = Infer.infer_lib_file
