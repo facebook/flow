@@ -3513,9 +3513,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               LookupT (ureason, NonstrictReturning None, [], propref,
                 LookupProp (Field (ut, upolarity))))
           | _ ->
-            rec_flow cx trace (super,
-              LookupT (ureason, Strict lreason, [], propref,
-                LookupProp up))
+            let u =
+              LookupT (ureason, Strict lreason, [], propref, LookupProp up) in
+            rec_flow cx trace (super, ReposLowerT (lreason, u))
       );
 
       rec_flow cx trace (l, UseT (use_op, uproto))
@@ -3644,7 +3644,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (InstanceT _, UseT (use_op, (InstanceT _ as u))) ->
       rec_flow cx trace (l, UseT (use_op, ExtendsT([],l,u)))
 
-    | InstanceT (_, _, super, implements, instance),
+    | InstanceT (reason, _, super, implements, instance),
       UseT (use_op, ExtendsT (try_ts_on_failure, l,
         (InstanceT (_, _, _, _, instance_super) as u))) ->
       if instance.class_id = instance_super.class_id
@@ -3656,8 +3656,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
            then use the ExtendsT use type to search for a nominally matching
            implementation, thereby short-circuiting a potentially expensive
            structural test at the use site. *)
-        rec_flow cx trace (super, UseT (use_op,
-          ExtendsT (try_ts_on_failure @ implements, l, u)))
+        let u = UseT (use_op,
+          ExtendsT (try_ts_on_failure @ implements, l, u)) in
+        rec_flow cx trace (super, ReposLowerT (reason, u))
 
     (********************************************************)
     (* runtime types derive static types through annotation *)
