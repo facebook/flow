@@ -44,6 +44,18 @@ test3.js:54
  54:         this.x.b = 'hello';
              ^^^^^^ object literal
 
+test3_exact_annot.js:5
+  5: const b: { a: number, b?: number } = a; // error: property `b` not found
+              ^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in
+  4: const a: {| a: number |} = { a: 1 };
+              ^^^^^^^^^^^^^^^ object type
+
+test3_exact_annot.js:7
+  7: (a.b: number); // error: property `b` not found
+        ^ property `b`. Property not found in
+  4: const a: {| a: number |} = { a: 1 };
+              ^^^^^^^^^^^^^^^ object type
+
 test3_failure.js:7
   7:     this.o.x.b = 'hello'; // this is a spurious error (see test3.js for details)
                   ^ property `b`. Property not found in
@@ -51,4 +63,4 @@ test3_failure.js:7
          ^^^^^^^^ object literal
 
 
-Found 7 errors
+Found 9 errors

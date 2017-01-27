@@ -5416,9 +5416,9 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     | _ ->
       (* property doesn't exist in inflowing type *)
       match up with
-      | Field (OptionalT _, _) when lflags.exact ->
+      | Field (OptionalT _, _) when lit ->
         (* if property is marked optional or otherwise has a maybe type,
-           and if inflowing type is exact (i.e., it is not an
+           and if inflowing type is a literal (i.e., it is not an
            annotation), then we add it to the inflowing type as
            an optional property *)
         (* Band-aid to avoid side effect in speculation mode. Even in
