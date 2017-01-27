@@ -8,19 +8,6 @@
  *
 *)
 
-(**
- * This module is needed because Unix.select doesn't play well with
- * input_line on Ocaml channels.. i.e., when a buffered read into an
- * Ocaml channel consumes two complete lines from the file descriptor, the next
- * select will say there is nothing to read when in fact there is
- * something in the channel. This wouldn't be a problem if Ocaml channel's API
- * supported a "has buffered content" call, so you could check if the
- * buffer contains something as well as doing a Unix select to know for real if
- * there is content coming.
- *
- * The "has_buffered_content" method below does exactly that.
- *)
-
 open Core
 
 (** Our Unix systems only allow reading 64KB chunks at a time.
