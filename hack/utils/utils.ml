@@ -120,10 +120,10 @@ let try_with_channel oc f1 f2 =
 
 let iter_n_acc n f acc =
   let acc = ref acc in
-  for i = 1 to n do
-    acc := f !acc
+  for i = 1 to n-1 do
+    acc := fst (f !acc)
   done;
-  !acc
+  f !acc
 
 let map_of_list list =
   List.fold_left ~f:(fun m (k, v) -> SMap.add k v m) ~init:SMap.empty list
