@@ -495,6 +495,7 @@ module type Access = sig
   val return : 'a -> 'a m
 
   val (>>=) : 'a m -> (('a * keytrace) -> 'b m) -> 'b m
+  val project : ('a -> 'b) -> (access_failure -> 'b) -> 'a m -> 'b
   val get_obj : string -> json * keytrace -> json m
   val get_bool : string -> json * keytrace -> bool m
   val get_string : string -> json * keytrace -> string m
@@ -529,6 +530,12 @@ module Access = struct
   let return v = Result.Ok (v, [])
 
   let (>>=) m f = Result.bind m f
+
+  let project f g m = match m with
+    | Result.Ok (v, _) ->
+      f v
+    | Result.Error e ->
+      g e
 
   let catch_type_error exp f (v, keytrace) =
     try Result.Ok (f v, keytrace) with
