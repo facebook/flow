@@ -1,4 +1,3 @@
-module Token = Lexer_flow.Token
 open Parser_env
 open Spider_monkey_ast
 module Error = Parse_error

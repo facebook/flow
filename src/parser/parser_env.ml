@@ -152,7 +152,7 @@ end
 
 type token_sink_result = {
   token_loc: Loc.t;
-  token: Lexer_flow.Token.t;
+  token: Token.t;
   token_context: Lex_mode.t;
   token_value: string;
 }
@@ -351,7 +351,7 @@ let is_restricted = function
 (* Answer questions about what comes next *)
 module Peek = struct
   open Loc
-  open Lexer_flow.Token
+  open Token
 
   let token ?(i=0) env = Lex_result.token (lookahead ~i env)
   let value ?(i=0) env = Lex_result.value (lookahead ~i env)
@@ -423,7 +423,7 @@ let error env e =
   let loc = Peek.loc env in
   error_at env (loc, e)
 
-let get_unexpected_error = Lexer_flow.Token.(function
+let get_unexpected_error = Token.(function
   | T_EOF, _ -> Error.UnexpectedEOS
   | T_NUMBER _, _ -> Error.UnexpectedNumber
   | T_JSX_TEXT _, _
@@ -513,7 +513,7 @@ module Eat = struct
   let semicolon env =
     if not (Peek.is_implicit_semicolon env)
     then
-      if Peek.token env = Lexer_flow.Token.T_SEMICOLON
+      if Peek.token env = Token.T_SEMICOLON
       then token env
       else error_unexpected env
 end
