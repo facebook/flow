@@ -8,7 +8,13 @@
  *
  *)
 
+(** Fully-defined types go outside the module type. *)
+exception Process_failure of Unix.process_status * (** Stderr *) string
+(** Deserializes the byte sequence. *)
+type 'a deserializer = string -> 'a
+
 module type S = sig
   type 'a t
   val get : 'a t -> 'a
+  val make : Process_types.t -> 'a deserializer -> 'a t
 end

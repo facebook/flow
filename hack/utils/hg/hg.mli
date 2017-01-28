@@ -10,8 +10,6 @@
 
 exception Malformed_result
 
-module Future : Future_sig.S
-
 type hg_rev = string
 type svn_rev = string
 

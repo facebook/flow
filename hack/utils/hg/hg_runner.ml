@@ -44,13 +44,13 @@ let () =
     exit 0));
   let args = Args.parse () in
   let current_hg_rev = Hg.current_working_copy_hg_rev @@ Args.root args in
-  let current_hg_rev, _ = Hg.Future.get current_hg_rev in
+  let current_hg_rev, _ = Future.get current_hg_rev in
   Printf.eprintf "Current HG rev: %s\n" current_hg_rev;
   let svn_ancestor = Hg.get_closest_svn_ancestor
     current_hg_rev @@ Args.root args in
-  let svn_ancestor = Hg.Future.get svn_ancestor in
+  let svn_ancestor = Future.get svn_ancestor in
   Printf.eprintf "SVN ancestor: %s\n" svn_ancestor;
   let changes = Hg.files_changed_since_svn_rev
     current_hg_rev svn_ancestor @@ Args.root args in
-  let changes = Hg.Future.get changes in
+  let changes = Future.get changes in
   Printf.eprintf "Changes: %s\n" changes

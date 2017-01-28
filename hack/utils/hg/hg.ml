@@ -13,35 +13,9 @@
 open Core
 
 exception Malformed_result
-exception Process_failure of Unix.process_status * (** Stderr *) string
 
 type hg_rev = string
 type svn_rev = string
-
-
-(** We shell out hg commands, so its computation is out-of-process, and
- * return a Future for the result. *)
-module Future = struct
-  type 'a promise =
-    | Complete : 'a -> 'a promise
-    | Incomplete of Process_types.t * (string -> 'a)
-  type 'a t = 'a promise ref
-
-  let make process transformer =
-    ref (Incomplete (process, transformer))
-
-  let get : 'a t -> 'a = fun promise -> match !promise with
-    | Complete v -> v
-    | Incomplete (process, transformer) ->
-      let status, result, err = Process.read_and_close_pid process in
-      match status with
-      | Unix.WEXITED 0 ->
-        let result = transformer result in
-        let () = promise := Complete result in
-        result
-      | _ ->
-        raise (Process_failure (status, err))
-end
 
 (** Returns the closest SVN ancestor to the hg revision.
  *
