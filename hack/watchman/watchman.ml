@@ -196,12 +196,16 @@ let since_query env =
                 "empty_on_fresh_instance", Hh_json.JSON_Bool true]
     Query env
 
-let subscribe env = request_json
-                      ~extra_kv:["since", Hh_json.JSON_String env.clockspec ;
-                                 "defer", J.strlist ["hg.update"] ;
-                                 "empty_on_fresh_instance",
-                                 Hh_json.JSON_Bool true]
-                      Subscribe env
+let subscribe mode env =
+  let mode = match mode with
+  | Defer_changes -> "defer"
+  | Drop_changes -> "drop" in
+  request_json
+    ~extra_kv:["since", Hh_json.JSON_String env.clockspec ;
+               mode, J.strlist ["hg.update"] ;
+               "empty_on_fresh_instance",
+               Hh_json.JSON_Bool true]
+    Subscribe env
 
 let watch_project root = J.strlist ["watch-project"; root]
 
@@ -339,7 +343,7 @@ let with_crash_record_opt root source f =
   Option.try_with (fun () -> with_crash_record_exn root source f)
 
 let re_init ?prior_clockspec
-  { init_timeout; subscribe_to_changes; sync_directory; root } =
+  { init_timeout; subscribe_mode; sync_directory; root } =
   with_crash_record_opt root "init" @@ fun () ->
   let root_s = Path.to_string root in
   let sockname = get_sockname init_timeout in
@@ -359,7 +363,7 @@ let re_init ?prior_clockspec
   let env = {
     settings = {
       init_timeout;
-      subscribe_to_changes;
+      subscribe_mode;
       sync_directory;
       root;
     };
@@ -368,8 +372,11 @@ let re_init ?prior_clockspec
     relative_path;
     clockspec;
   } in
-  if subscribe_to_changes then (ignore @@ exec env.socket (subscribe env)) ;
-  env
+  match subscribe_mode with
+  | None -> env
+  | Some subscribe_mode ->
+    (ignore @@ exec env.socket (subscribe subscribe_mode env));
+    env
 
 let init settings = re_init settings
 
@@ -548,7 +555,7 @@ let get_changes ?deadline instance =
     max timeout 0.0
   ) in
   call_on_instance instance "get_changes" @@ fun env ->
-    if env.settings.subscribe_to_changes
+    if env.settings.subscribe_mode <> None
     then
       let env, result = transform_asynchronous_get_changes_response
         env (poll_for_updates ?timeout env) in
@@ -645,7 +652,7 @@ end
 
 module Testing = struct
   let test_settings = {
-    subscribe_to_changes = true;
+    subscribe_mode = Some Defer_changes;
     init_timeout = 0;
     sync_directory = "";
     root = Path.dummy_path;

@@ -12,8 +12,18 @@ module Types = struct
 
   exception Timeout
 
+  type subscribe_mode =
+    | Defer_changes
+    (** See also Watchman docs on drop. This means the subscriber will not
+     * get a list of files changed during a repo update. Practically, this
+     * is not useful for the typechecker process which needs to actually
+     * know which files were changed. This is useful for the monitor to
+     * aggressively kill the server. *)
+    | Drop_changes
+
   type init_settings = {
-    subscribe_to_changes: bool;
+    (** None for query mode, otherwise specify subscriptions mode. *)
+    subscribe_mode: subscribe_mode option;
     (** Seconds used for init timeout - will be reused for reinitialization. *)
     init_timeout: int;
     sync_directory: string;
