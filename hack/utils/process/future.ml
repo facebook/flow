@@ -22,7 +22,7 @@ let make process transformer =
 let get : 'a t -> 'a = fun promise -> match !promise with
   | Complete v -> v
   | Incomplete (process, transformer) ->
-    let status, result, err = Process.read_and_close_pid process in
+    let status, result, err = Process.read_and_wait_pid process in
     match status with
     | Unix.WEXITED 0 ->
       let result = transformer result in
@@ -30,3 +30,8 @@ let get : 'a t -> 'a = fun promise -> match !promise with
       result
     | _ ->
       raise (Future_sig.Process_failure (status, err))
+
+let is_ready promise = match !promise with
+  | Complete _ -> true
+  | Incomplete (process, _) ->
+    Process.is_ready process

@@ -15,6 +15,9 @@ type 'a deserializer = string -> 'a
 
 module type S = sig
   type 'a t
+  (** Blocking. Returns the value from the underlying process. *)
   val get : 'a t -> 'a
   val make : Process_types.t -> 'a deserializer -> 'a t
+  (** Returns true if "get" will not block. *)
+  val is_ready : 'a t -> bool
 end

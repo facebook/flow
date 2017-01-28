@@ -16,8 +16,15 @@
  * Shells out the program with the given args. *)
 val exec : string -> ?env:string list -> string list -> Process_types.t
 
-(** Read data from stdout and stderr until EOF is reached. Waits for
+(**
+ * Read data from stdout and stderr until EOF is reached. Waits for
  * process to terminate, and returns the process status, the stdout
- * and stderr. *)
-val read_and_close_pid :
+ * and stderr.
+ *
+ * Idempotent.
+ *)
+val read_and_wait_pid :
   Process_types.t -> Unix.process_status * string * string
+
+(** Returns true if read_and_close_pid would be nonblocking. *)
+val is_ready : Process_types.t -> bool
