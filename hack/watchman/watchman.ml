@@ -22,7 +22,6 @@ open Utils
  *)
 
 exception Watchman_error of string
-exception Timeout
 
 (** Throw this exception when we know there is something to read from
  * the watchman channel, but reading took too long. *)
@@ -39,13 +38,7 @@ let crash_marker_path root =
   let root_name = Path.slash_escaped_string_of_path root in
   Filename.concat GlobalConfig.tmp_dir (spf ".%s.watchman_failed" root_name)
 
-type init_settings = {
-  subscribe_to_changes: bool;
-  (** Seconds used for init timeout - will be reused for reinitialization. *)
-  init_timeout: int;
-  sync_directory: string;
-  root: Path.t;
-}
+include Watchman_sig.Types
 
 type dead_env = {
   (** Will reuse original settings to reinitializing watchman subscription. *)
@@ -81,17 +74,6 @@ let dead_env_from_alive env =
      * "since" response. *)
     prior_clockspec = env.clockspec;
   }
-
-type pushed_changes =
-  (** State name and metadata. *)
-  | State_enter of string * Hh_json.json option
-  | State_leave of string * Hh_json.json option
-  | Files_changed of SSet.t
-
-type changes =
-  | Watchman_unavailable
-  | Watchman_pushed of pushed_changes
-  | Watchman_synchronous of SSet.t
 
 type watchman_instance =
   (** Indicates a dead watchman instance (most likely due to chef upgrading,
