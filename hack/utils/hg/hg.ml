@@ -59,6 +59,19 @@ let current_working_copy_hg_rev repo =
       else
         result, false
 
+(** hg log -r 'ancestor(master,.)' -T '{svnrev}\n' *)
+let current_working_copy_base_rev repo =
+  let process = Process.exec "hg" [
+    "log";
+    "-r";
+    "ancestor(master,.)";
+    "-T";
+    "{svnrev}\n";
+    {|--cwd|};
+    repo;
+  ] in
+  Future.make process String.trim
+
 (** Returns the files changed between the hg_rev and the ancestor
  * SVN revision.
  *
