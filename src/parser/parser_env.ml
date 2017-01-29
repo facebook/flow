@@ -9,8 +9,6 @@
  *)
 
 module Ast = Spider_monkey_ast
-module Lex_env = Lexer_flow.Lex_env
-module Lex_result = Lexer_flow.Lex_result
 open Ast
 module Error = Parse_error
 module SSet = Set.Make(String)
@@ -68,7 +66,7 @@ end = struct
     (* lex_buffer has type bytes, which is itself mutable, but the lexer
      * promises not to change it so a shallow copy should be fine *)
     (* I don't know how to do a copy without an update *)
-    let lexbuf = Lexing.({ lexbuf with lex_buffer = lexbuf.lex_buffer }) in
+    let lexbuf = lexbuf |> Obj.repr |> Obj.dup |> Obj.obj in
     let lex_env = Lex_env.with_lexbuf ~lexbuf lex_env in
     {
       la_results = [||];
@@ -103,17 +101,19 @@ end = struct
     let lex_env = t.la_lex_env in
     let lex_env, lex_result =
       match t.la_lex_mode with
-      | Lex_mode.NORMAL -> Lexer_flow.token lex_env
-      | Lex_mode.TYPE -> Lexer_flow.type_token lex_env
-      | Lex_mode.JSX_TAG -> Lexer_flow.jsx_tag lex_env
-      | Lex_mode.JSX_CHILD -> Lexer_flow.jsx_child lex_env
-      | Lex_mode.TEMPLATE -> Lexer_flow.template_tail lex_env
-      | Lex_mode.REGEXP -> Lexer_flow.regexp lex_env
+      | Lex_mode.NORMAL -> Lexer.token lex_env
+      | Lex_mode.TYPE -> Lexer.type_token lex_env
+      | Lex_mode.JSX_TAG -> Lexer.jsx_tag lex_env
+      | Lex_mode.JSX_CHILD -> Lexer.jsx_child lex_env
+      | Lex_mode.TEMPLATE -> Lexer.template_tail lex_env
+      | Lex_mode.REGEXP -> Lexer.regexp lex_env
     in
     let cloned_env =
       let lexbuf =
-        let lexbuf = Lex_env.lexbuf lex_env in
-        Lexing.({ lexbuf with lex_buffer = lexbuf.lex_buffer })
+        Lex_env.lexbuf lex_env
+        |> Obj.repr
+        |> Obj.dup
+        |> Obj.obj
       in
       Lex_env.with_lexbuf ~lexbuf lex_env
     in
@@ -206,17 +206,9 @@ type env = {
 
 (* constructor *)
 let init_env ?(token_sink=None) ?(parse_options=None) source content =
-  let lb = Lexing.from_string content in
-  (match source with
-    | None
-    | Some Loc.Builtins -> ()
-    | Some Loc.LibFile fn
-    | Some Loc.SourceFile fn
-    | Some Loc.JsonFile fn
-    | Some Loc.ResourceFile fn ->
-      lb.Lexing.lex_curr_p <- {
-        lb.Lexing.lex_curr_p with Lexing.pos_fname = fn
-      });
+  (* let lb = Sedlexing.Utf16.from_string
+    content (Some Sedlexing.Utf16.Little_endian) in *)
+  let lb = Sedlexing.Utf8.from_string content in
 
   let parse_options =
     match parse_options with
