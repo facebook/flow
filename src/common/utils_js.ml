@@ -18,7 +18,7 @@ let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 let can_emoji =
   Sys.os_type <> "Win32" &&
   Unix.isatty Unix.stdout &&
-  Sys.getenv "TERM" <> "dumb"
+  (try Sys.getenv "TERM" with Not_found -> "dumb") <> "dumb"
 
 (* JSON numbers must not end in a `.`, but string_of_float returns things like
    `1.` instead of `1.0`, so we want to truncate the `.` *)
