@@ -247,6 +247,7 @@ let rec type_printer_impl ~size override enclosure cx t =
     (* The following types are not syntax-supported in all cases *)
     | AnnotT t -> pp EnclosureNone cx t
     | KeysT (_, t) -> spf "$Keys<%s>" (pp EnclosureNone cx t)
+    | ReadOnlyT (_, t) -> spf "$ReadOnly<%s>" (pp EnclosureNone cx t)
     | ShapeT t -> spf "$Shape<%s>" (pp EnclosureNone cx t)
     | TaintT (_) -> spf "$Tainted<any>"
 

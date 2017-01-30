@@ -1,0 +1,38 @@
+readonly.js:14
+ 14:   obj.name = 'bar'; // error
+           ^^^^ property `name`. Property cannot be assigned on
+ 14:   obj.name = 'bar'; // error
+       ^^^ read-only object type
+
+readonly.js:16
+ 16:   Object.assign(obj, {
+       ^ property `name` of object literal. Property cannot be assigned on
+ 16:   Object.assign(obj, {
+                     ^^^ read-only object type
+
+readonly.js:22
+ 22:   obj.name = 'foo'; // error
+           ^^^^ property `name`. Property cannot be assigned on
+ 22:   obj.name = 'foo'; // error
+       ^^^ read-only NormalObject
+
+readonly.js:26
+ 26:   arr.push(''); // error
+       ^^^^^^^^^^^^ call of method `push`. Method cannot be called on
+ 26:   arr.push(''); // error
+       ^^^ read-only array type
+
+readonly.js:27
+ 27:   arr.pop(); // error
+       ^^^^^^^^^ call of method `pop`. Method cannot be called on
+ 27:   arr.pop(); // error
+       ^^^ read-only array type
+
+readonly.js:28
+ 28:   arr[0] = ''; // error
+       ^^^^^^ assignment of computed property/element. Computed property/element cannot be assigned on
+ 28:   arr[0] = ''; // error
+       ^^^ read-only array type
+
+
+Found 6 errors

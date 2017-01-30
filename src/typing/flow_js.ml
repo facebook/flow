@@ -1083,6 +1083,9 @@ module ResolvableTypeJob = struct
     | KeysT (_, t) ->
       collect_of_type ?log_unresolved cx reason acc t
 
+    | ReadOnlyT (_, t) ->
+      collect_of_type ?log_unresolved cx reason acc t
+
     | ShapeT (t) ->
       collect_of_type ?log_unresolved cx reason acc t
 
@@ -4236,6 +4239,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let new_obj = ObjT (reason, {objtype with flags}) in
       rec_flow_t cx trace (new_obj, t)
 
+    (*********************************************************)
+    (* objects can be marked as read-only using $ReadOnly<T> *)
+    (*********************************************************)
+
+    | (ObjT (reason_o, objtype), UseT(_, ReadOnlyT (reason_op, t))) ->
+      let desc = RReadOnly (desc_of_reason reason_o) in
+      let reason = replace_reason_const desc reason_op in
+
+      let flags = {frozen = true; sealed = Sealed; exact = true;} in
+      let new_obj = ObjT (reason, {objtype with flags}) in
+      rec_flow_t cx trace (new_obj, t)
+
     (*******************************************)
     (* objects may have their fields looked up *)
     (*******************************************)
@@ -6166,6 +6181,10 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     let keys_t_ = subst cx ~force map keys_t in
     if keys_t_ == keys_t then t else KeysT (reason, keys_t_)
 
+  | ReadOnlyT (reason, readonly_t) ->
+    let readonly_t_ = subst cx ~force map readonly_t in
+    if readonly_t_ == readonly_t then t else ReadOnlyT (reason, readonly_t_)
+
   | SingletonNumT _
   | SingletonBoolT _
   | SingletonStrT _ -> t
@@ -6369,6 +6388,7 @@ and check_polarity cx ?trace polarity = function
   | ShapeT _
   | DiffT _
   | KeysT _
+  | ReadOnlyT _
   | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
@@ -9817,6 +9837,7 @@ end = struct
     | FunProtoT _
     | IdxWrapper (_, _)
     | KeysT (_, _)
+    | ReadOnlyT (_, _)
     | MixedT _
     | ObjProtoT _
     | OpenPredT (_, _, _, _)
@@ -9988,6 +10009,9 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     recurse t2
 
   | KeysT (_, t) ->
+    recurse t
+
+  | ReadOnlyT (_, t) ->
     recurse t
 
   | SingletonStrT _

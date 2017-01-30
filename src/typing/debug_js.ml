@@ -238,6 +238,10 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
+  | ReadOnlyT (_, t) -> [
+      "type", _json_of_t json_cx t
+    ]
+
   | SingletonStrT (_, s) -> [
       "literal", JSON_String s
     ]
@@ -1461,6 +1465,7 @@ and dump_t_ (depth, tvars) cx t =
   | ShapeT arg -> p ~reason:false ~extra:(kid arg) t
   | DiffT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | KeysT (_, arg) -> p ~extra:(kid arg) t
+  | ReadOnlyT (_, arg) -> p ~extra:(kid arg) t
   | SingletonStrT (_, s) -> p ~extra:(spf "%S" s) t
   | SingletonNumT (_, (_, s)) -> p ~extra:s t
   | SingletonBoolT (_, b) -> p ~extra:(spf "%B" b) t

@@ -94,6 +94,7 @@ let rec gc cx state = function
       ts |> List.iter (gc cx state);
       gc cx state t1;
       gc cx state t2
+  | ReadOnlyT (_, t) -> gc cx state t
   | FunProtoApplyT _ -> ()
   | FunProtoBindT _ -> ()
   | FunProtoCallT _ -> ()

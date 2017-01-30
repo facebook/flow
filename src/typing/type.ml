@@ -153,6 +153,10 @@ module rec TypeTerm : sig
 
     (* collects the keys of an object *)
     | KeysT of reason * t
+
+    (* describes a type as being frozen *)
+    | ReadOnlyT of reason * t
+
     (* singleton string, matches exactly a given string literal *)
     | SingletonStrT of reason * string
     (* matches exactly a given number literal, for some definition of "exactly"
@@ -1613,6 +1617,7 @@ let rec reason_of_t = function
   | ExistsT reason -> reason
   | ExtendsT (_,_,t) ->
       replace_reason (fun desc -> RExtends desc) (reason_of_t t)
+  | ReadOnlyT (reason, _) -> reason
   | FunProtoApplyT reason -> reason
   | FunProtoBindT reason -> reason
   | FunProtoCallT reason -> reason
@@ -1768,6 +1773,7 @@ let rec mod_reason_of_t f = function
   | ExactT (reason, t) -> ExactT (f reason, t)
   | ExistsT reason -> ExistsT (f reason)
   | ExtendsT (ts, t, tc) -> ExtendsT (ts, t, mod_reason_of_t f tc)
+  | ReadOnlyT (reason, t) -> ReadOnlyT (f reason, t)
   | FunProtoApplyT (reason) -> FunProtoApplyT (f reason)
   | FunProtoBindT (reason) -> FunProtoBindT (f reason)
   | FunProtoCallT (reason) -> FunProtoCallT (f reason)
@@ -1962,6 +1968,7 @@ let string_of_ctor = function
   | ExactT _ -> "ExactT"
   | ExistsT _ -> "ExistsT"
   | ExtendsT _ -> "ExtendsT"
+  | ReadOnlyT _ -> "ReadOnlyT"
   | FunProtoApplyT _ -> "FunProtoApplyT"
   | FunProtoBindT _ -> "FunProtoBindT"
   | FunProtoCallT _ -> "FunProtoCallT"

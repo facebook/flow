@@ -184,6 +184,7 @@ and parts_of_t cx = function
 | ExactT (_, t) -> ["t", Def t]
 | ExistsT _ -> []
 | ExtendsT (nexts, l, u) -> ("l", Def l) :: ("u", Def u) :: list_parts nexts
+| ReadOnlyT (_, t) -> ["t", Def t]
 | FunProtoApplyT _ -> []
 | FunProtoBindT _ -> []
 | FunProtoCallT _ -> []

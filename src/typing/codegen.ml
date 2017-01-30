@@ -209,6 +209,7 @@ let rec gen_type t env = Type.(
       |> add_str ">"
   | ExactT (_, t) -> add_str "$Exact<" env |> gen_type t |> add_str ">"
   | ObjProtoT _ -> add_str "typeof Object.prototype" env
+  | ReadOnlyT (_, t) -> add_str "$ReadOnly<" env |> gen_type t |> add_str ">"
   | FunProtoT _ -> add_str "typeof Function.prototype" env
   | FunProtoApplyT _ -> add_str "typeof Function.prototype.apply" env
   | FunProtoBindT _ -> add_str "typeof Function.prototype.bind" env
