@@ -1363,9 +1363,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | EvalT (t, DestructuringT (reason, s), i), _ ->
       rec_flow cx trace (eval_selector cx ~trace reason t s i, u)
 
-    | _, UseT (use_op, EvalT (t, DestructuringT (reason, s), i)) ->
-      rec_flow cx trace (l, UseT (use_op, eval_selector cx ~trace reason t s i))
-
+    (** NOTE: the rule with EvalT (_, DestructuringT _, _) as upper bound is
+        moved below the OpenT rules, so that we can take advantage of the
+        caching inherent in those rules (in particular, when OpenT is a lower
+        bound). This caching seems necessary to avoid non-termination. There
+        could be other, better ways of achieving the same effect. **)
 
     (******************)
     (* process X ~> Y *)
@@ -1420,6 +1422,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Resolved t2 ->
           rec_flow cx trace (t1, UseT (use_op, t2))
       );
+
+    (****************)
+    (* eval, contd. *)
+    (****************)
+
+    | _, UseT (use_op, EvalT (t, DestructuringT (reason, s), i)) ->
+      rec_flow cx trace (l, UseT (use_op, eval_selector cx ~trace reason t s i))
+
 
     (************************)
     (* Full type resolution *)
