@@ -555,7 +555,7 @@
   "end":10
 }
 function_expression.js:9:5 = {
-  "type":"{+bar: () => void}",
+  "type":"{bar(): void}",
   "reasons":[],
   "loc":{
     "source":"function_expressions.js",
@@ -583,6 +583,51 @@ function_expression.js:9:7 = {
   "endline":9,
   "start":6,
   "end":16
+}
+function_expression.js:13:5 = {
+  "type":"{bar: () => void}",
+  "reasons":[],
+  "loc":{
+    "source":"function_expressions.js",
+    "type":"SourceFile",
+    "start":{"line":12,"column":11,"offset":151},
+    "end":{"line":14,"column":1,"offset":182}
+  },
+  "path":"function_expressions.js",
+  "line":12,
+  "endline":14,
+  "start":11,
+  "end":1
+}
+function_expression.js:17:3 = {
+  "type":"{m<T>(x: T): T}",
+  "reasons":[],
+  "loc":{
+    "source":"function_expressions.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":11,"offset":195},
+    "end":{"line":18,"column":1,"offset":228}
+  },
+  "path":"function_expressions.js",
+  "line":16,
+  "endline":18,
+  "start":11,
+  "end":1
+}
+function_expression.js:21:3 = {
+  "type":"{m: <T>(x: T) => T}",
+  "reasons":[],
+  "loc":{
+    "source":"function_expressions.js",
+    "type":"SourceFile",
+    "start":{"line":20,"column":11,"offset":241},
+    "end":{"line":22,"column":1,"offset":284}
+  },
+  "path":"function_expressions.js",
+  "line":20,
+  "endline":22,
+  "start":11,
+  "end":1
 }
 predicates.js - null: {
   "type":"null",

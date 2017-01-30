@@ -1013,6 +1013,9 @@ and json_of_prop_impl json_cx p = Hh_json.(
       "getter", _json_of_t json_cx t1;
       "setter", _json_of_t json_cx t2;
     ]
+  | Method t -> [
+      "method", _json_of_t json_cx t;
+    ]
 ))
 
 and json_of_type_binding json_cx = check_depth json_of_type_binding_impl json_cx
@@ -1645,6 +1648,8 @@ and dump_prop_ (depth, tvars) cx p =
     spf "Set %s" (kid t)
   | GetSet (t1, t2) ->
     spf "Get %s Set %s" (kid t1) (kid t2)
+  | Method t ->
+    spf "Method %s" (kid t)
 
 (*****************************************************)
 

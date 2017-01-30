@@ -726,6 +726,7 @@ module rec TypeTerm : sig
     | Get of t
     | Set of t
     | GetSet of t * t
+    | Method of t
 
   and insttype = {
     class_id: ident;
@@ -973,6 +974,7 @@ end = struct
     | Get _ -> Positive
     | Set _ -> Negative
     | GetSet _ -> Neutral
+    | Method _ -> Positive
 
   let read_t = function
     | Field (t, polarity) ->
@@ -982,6 +984,7 @@ end = struct
     | Get t -> Some t
     | Set _ -> None
     | GetSet (t, _) -> Some t
+    | Method t -> Some t
 
   let write_t = function
     | Field (t, polarity) ->
@@ -991,6 +994,7 @@ end = struct
     | Get _ -> None
     | Set t -> Some t
     | GetSet (_, t) -> Some t
+    | Method _ -> None
 
   let access = function
     | Read -> read_t
@@ -999,7 +1003,8 @@ end = struct
   let iter_t f = function
     | Field (t, _)
     | Get t
-    | Set t ->
+    | Set t
+    | Method t ->
       f t
     | GetSet (t1, t2) ->
       f t1;
@@ -1008,7 +1013,8 @@ end = struct
   let fold_t f acc = function
     | Field (t, _)
     | Get t
-    | Set t ->
+    | Set t
+    | Method t ->
       f acc t
     | GetSet (t1, t2) ->
       f (f acc t1) t2
@@ -1018,6 +1024,7 @@ end = struct
     | Get t -> Get (f t)
     | Set t -> Set (f t)
     | GetSet (t1, t2) -> GetSet (f t1, f t2)
+    | Method t -> Method (f t)
 
   let ident_map_t f p =
     match p with
@@ -1034,6 +1041,9 @@ end = struct
       let t1_ = f t1 in
       let t2_ = f t2 in
       if t1_ == t1 && t2_ == t2 then p else GetSet (t1_, t2_)
+    | Method t ->
+      let t_ = f t in
+      if t_ == t then p else Method t_
 
   let forall_t f = fold_t (fun acc t -> acc && f t) true
 
@@ -1052,6 +1062,7 @@ and Properties : sig
   val add_field: string -> Polarity.t -> TypeTerm.t -> t -> t
   val add_getter: string -> TypeTerm.t -> t -> t
   val add_setter: string -> TypeTerm.t -> t -> t
+  val add_method: string -> TypeTerm.t -> t -> t
 
   val mk_id: unit -> id
   val fake_id: id
@@ -1090,6 +1101,9 @@ end = struct
     | _ -> Set set_t
     in
     SMap.add x p map
+
+  let add_method x t =
+    SMap.add x (Method t)
 
   let mk_id = Reason.mk_id
   let fake_id = 0

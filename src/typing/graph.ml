@@ -133,6 +133,7 @@ let prop (n, p) =
   | Get t -> ["get "^n, Def t]
   | Set t -> ["set "^n, Def t]
   | GetSet (t1, t2) -> ["get "^n, Def t1; "set "^n, Def t2]
+  | Method t -> ["+"^n, Def t]
 
 let map_props m = SMap.bindings m |> List.map prop |> List.flatten
 

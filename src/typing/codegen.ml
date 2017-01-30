@@ -352,6 +352,20 @@ and gen_prop k p env =
       |> add_str "): void"
   in
 
+  let rec gen_method k t env =
+    match t with
+    | FunT (_, _static, _prototype, ft) ->
+      let {params_tlist; params_names; rest_param; return_t; _;} = ft in
+      add_str k env
+        |> gen_tparams_list
+        |> add_str "("
+        |> gen_func_params params_names params_tlist rest_param
+        |> add_str "): "
+        |> gen_type return_t
+    | PolyT (tparams, t) -> gen_method k t (add_tparams tparams env)
+    | _ -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
+  in
+
   match p with
   | Field (t, polarity) ->
     let sigil = Polarity.sigil polarity in
@@ -368,6 +382,7 @@ and gen_prop k p env =
   | Set t -> gen_setter k t env
   | GetSet (t1, t2) ->
     gen_getter k t1 env |> gen_setter k t2
+  | Method t -> gen_method k t env
 
 and gen_func_params params_names params_tlist rest_param env =
   let params =

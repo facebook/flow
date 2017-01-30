@@ -41,6 +41,7 @@ type enclosure_t =
   | EnclosureAppT
   | EnclosureRet
   | EnclosureProp
+  | EnclosureMethod
 
 let parenthesize t_str enclosure triggers =
   if List.mem enclosure triggers
@@ -68,6 +69,9 @@ let rec type_printer_impl ~size override enclosure cx t =
         prop x (Get t1);
         prop x (Set t2);
       ]
+    | Method t -> spf "%s%s"
+      (prop_name cx x t)
+      (pp EnclosureMethod cx t)
   in
 
   let string_of_obj flds dict_t ~exact =
@@ -153,9 +157,14 @@ let rec type_printer_impl ~size override enclosure cx t =
           let name = Option.value ~default:"_" name in
           params @ [parameter_name cx name t ^ ": " ^ (pp EnclosureParam cx t)]
         in
-        let type_s = spf "(%s) => %s"
-          (params |> String.concat ", ")
-          (pp EnclosureNone cx t) in
+        let type_s = match enclosure with
+          | EnclosureMethod -> spf "(%s): %s"
+            (params |> String.concat ", ")
+            (pp EnclosureNone cx t)
+          | _ -> spf "(%s) => %s"
+            (params |> String.concat ", ")
+            (pp EnclosureNone cx t)
+        in
         parenthesize type_s enclosure [EnclosureUnion; EnclosureIntersect]
 
     | ObjT (_, {props_tmap = flds; dict_t; _}) ->
@@ -206,7 +215,12 @@ let rec type_printer_impl ~size override enclosure cx t =
         | ThisClassT u ->
           spf "%s<%s>" (pp EnclosureNone cx u) xs_str
         | _ ->
-          spf "<%s>%s" xs_str (pp EnclosureNone cx t)
+          spf "<%s>%s" xs_str (pp
+            begin match enclosure with
+            | EnclosureMethod -> EnclosureMethod
+            | _ -> EnclosureNone
+            end
+            cx t)
         in
         parenthesize type_s enclosure [EnclosureAppT; EnclosureMaybe]
 

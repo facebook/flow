@@ -6308,6 +6308,7 @@ and check_polarity_prop cx ?trace = function
   | GetSet (t1, t2) ->
     check_polarity cx ?trace Positive t1;
     check_polarity cx ?trace Negative t2
+  | Method t -> check_polarity cx ?trace Positive t
 
 and check_polarity_typeparam cx ?trace polarity tp =
   check_polarity cx ?trace polarity tp.bound
@@ -9435,7 +9436,7 @@ end = struct
            * property in autocomplete, so for now we just return the getter
            * type. *)
           let t = match p with
-          | Field (t, _) | Get t | Set t | GetSet (t, _) -> t
+          | Field (t, _) | Get t | Set t | GetSet (t, _) | Method t -> t
           in
           SMap.add x t acc
         ) (find_props cx fields) SMap.empty in

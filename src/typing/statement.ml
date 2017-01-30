@@ -2128,8 +2128,11 @@ and object_prop cx map = Ast.Expression.Object.(function
     let reason = mk_reason desc vloc in
     let ft = mk_function id cx reason func in
     Hashtbl.replace (Context.type_table cx) vloc ft;
-    let polarity = if _method then Positive else Neutral in
-    Properties.add_field name polarity ft map
+    if _method then
+      Properties.add_method name ft map
+    else begin
+      Properties.add_field name Neutral ft map
+    end
 
   (* name = non-function expr *)
   | Property (_, { Property.

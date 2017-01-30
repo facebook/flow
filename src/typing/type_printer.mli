@@ -31,6 +31,7 @@ type enclosure_t =
   | EnclosureAppT
   | EnclosureRet
   | EnclosureProp
+  | EnclosureMethod
 
 val type_printer:
   ?size:int ->

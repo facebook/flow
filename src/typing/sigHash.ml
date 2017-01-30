@@ -151,12 +151,14 @@ type prop_hash =
   | GetH
   | SetH
   | GetSetH
+  | MethodH
 
 let hash_of_prop = Type.(function
   | Field (_, polarity) -> FieldH polarity
   | Get _ -> GetH
   | Set _ -> SetH
   | GetSet _ -> GetSetH
+  | Method _ -> MethodH
 )
 
 type t = Digest.t
