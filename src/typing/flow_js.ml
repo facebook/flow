@@ -365,13 +365,13 @@ let rec merge_type cx =
 
           let rest_param = match rest_params with
           | None -> None
-          | Some ((name1, rest_t1), (name2, rest_t2)) ->
-              (* TODO: How to merge rest names? *)
+          | Some ((name1, loc, rest_t1), (name2, _, rest_t2)) ->
+              (* TODO: How to merge rest names and locs? *)
               let name = match name1, name2 with
               | None, None -> None
               | Some name, _
               | _, Some name -> Some name in
-              Some (name, merge_type cx (rest_t1, rest_t2)) in
+              Some (name, loc, merge_type cx (rest_t1, rest_t2)) in
 
           let tout = merge_type cx (ft1.return_t, ft2.return_t) in
           (* TODO: How to merge parameter names? *)
@@ -481,9 +481,17 @@ let rec merge_type cx =
      ArrT (_, ROArrayAT elemt2)) ->
 
      ArrT (
-       locationless_reason (RCustom "tuple"),
+       locationless_reason (RCustom "read only array"),
        ROArrayAT (merge_type cx (elemt1, elemt2))
      )
+
+ | (ArrT (_, EmptyAT),
+    ArrT (_, EmptyAT)) ->
+
+    ArrT (
+      locationless_reason (RCustom "empty array"),
+      EmptyAT
+    )
 
   | (MaybeT (_, t1), MaybeT (_, t2))
   | (MaybeT (_, t1), t2)
@@ -1016,6 +1024,7 @@ module ResolvableTypeJob = struct
       collect_of_types ?log_unresolved cx reason acc (elemt::tuple_types)
     | ArrT (_, ROArrayAT (elemt)) ->
       collect_of_type ?log_unresolved cx reason acc elemt
+    | ArrT (_, EmptyAT) -> acc
     | InstanceT (_, static, super, _,
                  { class_id; type_args; fields_tmap; methods_tmap; _ }) ->
                    let ts = if class_id = 0 then [] else [super; static] in
@@ -1049,7 +1058,7 @@ module ResolvableTypeJob = struct
        virtualization of calls to this function doesn't lead to perf
        degradation: this function is expected to be quite hot). *)
 
-    | OptionalT t | MaybeT (_, t) | RestT t ->
+    | OptionalT t | MaybeT (_, t) ->
       collect_of_type ?log_unresolved cx reason acc t
     | UnionT (_, rep) ->
       let ts = UnionRep.members rep in
@@ -1210,25 +1219,49 @@ end
  * (0 | 1 | 2 | 3 | 4 | etc). What we need to do is recognize loops and stop
  * doing constant folding.
  *
- * One solution is for constant-folding-location to keep a set of reasons that
- * it has seen. As soon as it sees a duplicate reason, it knows that it may be
- * in some sort of loop (though not necessarily) and can act more
- * conservatively.
+ * One solution is for constant-folding-location to keep count of how many times
+ * we have seen a reason. Then, when we've seen it multiple times, we can decide
+ * to stop doing constant folding.
  *)
-module ConstFoldExpansion = struct
-  let rsets: ReasonSet.t SMap.t ref = ref SMap.empty
+module ConstFoldExpansion : sig
+  val guard: int -> reason -> (int -> 't) -> 't
+end = struct
+  let rmaps: int ReasonMap.t IMap.t ref = ref IMap.empty
 
-  let push_unless_loop id reason =
-    let reason_set = match SMap.get id !rsets with
-    | None -> ReasonSet.empty
-    | Some set -> set in
-    not (ReasonSet.mem reason reason_set) && (
-      rsets := SMap.add id (ReasonSet.add reason reason_set) !rsets;
-      true
-    )
+  let get_rmap id = Option.value ~default:ReasonMap.empty (IMap.get id !rmaps)
 
-  let pop id =
-    rsets := SMap.remove id !rsets
+  let increment reason rmap =
+    match ReasonMap.get reason rmap with
+    | None -> 0, ReasonMap.add reason 1 rmap
+    | Some count -> count, ReasonMap.add reason (count + 1) rmap
+
+  let decrement reason rmap =
+    match ReasonMap.get reason rmap with
+    | Some count ->
+      if count > 1
+      then ReasonMap.add reason (count - 1) rmap
+      else ReasonMap.remove reason rmap
+    | None -> rmap
+
+  let push id reason =
+    let rmap = get_rmap id in
+    let old_value, new_reason_map = increment reason rmap in
+    rmaps := IMap.add id new_reason_map !rmaps;
+    old_value
+
+  let pop id reason =
+    let rmap =
+      get_rmap id
+      |> decrement reason in
+    if ReasonMap.is_empty rmap
+    then rmaps := IMap.remove id !rmaps
+    else rmaps := IMap.add id rmap !rmaps
+
+  let guard id reason f =
+    let count = push id reason in
+    let ret = f count in
+    pop id reason;
+    ret
 end
 
 (* Sometimes we don't expect to see type parameters, e.g. when they should have
@@ -2725,41 +2758,37 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       prep_try_intersection cx trace
         (reason_of_use_t u) (parts_to_replace u) [] u r rep
 
-
     (*************************)
-    (* Resolving spread args *)
+    (* Resolving rest params *)
     (*************************)
 
     (* `any` is obviously fine as a spread element. `Object` is fine because
      * any Iterable can be spread, and `Object` is the any type that covers
      * iterable objects. *)
-    | (AnyT _ | AnyObjT _),
+    | (AnyT r | AnyObjT r),
       ResolveSpreadT (reason_op, {
-        rrt_id = _;
         rrt_resolved;
         rrt_unresolved;
         rrt_resolve_to;
-        rrt_tout;
       }) ->
 
-      let rrt_resolved = ResolvedAnySpreadArg::rrt_resolved in
+      let rrt_resolved = (ResolvedAnySpreadArg r)::rrt_resolved in
       resolve_spread_list_rec
         cx ~trace ~reason_op
-        (rrt_resolved, rrt_unresolved) rrt_resolve_to rrt_tout
+        (rrt_resolved, rrt_unresolved) rrt_resolve_to
 
     | _,
       ResolveSpreadT (reason_op, {
-        rrt_id;
         rrt_resolved;
         rrt_unresolved;
         rrt_resolve_to;
-        rrt_tout;
       }) ->
+      let reason = reason_of_t l in
 
-      let arrtype = match l with
-      | ArrT (_, arrtype) ->
+      let r, arrtype = match l with
+      | ArrT (r, arrtype) ->
         (* Arrays *)
-        arrtype
+        r, arrtype
       | _ ->
         (* Non-array non-any iterables *)
         let reason = reason_of_t l in
@@ -2771,66 +2800,63 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             "$Iterable" targs
         in
         flow_t cx (l, iterable);
-        ArrayAT (element_tvar, None)
+        reason, ArrayAT (element_tvar, None)
       in
 
-      let elemt = match arrtype with
-      | ArrayAT (elemt, _)
-      | TupleAT (elemt, _)
-      | ROArrayAT (elemt) -> elemt in
+      let elemt = elemt_of_arrtype r arrtype in
 
-      let id = match rrt_resolve_to with
-      | ResolveSpreadsToTuple -> spf "ToTuple #%d" rrt_id
-      | ResolveSpreadsToArrayLiteral -> spf "ToArrayLiteral #%d" rrt_id
-      | ResolveSpreadsToArray -> spf "ToArray #%d" rrt_id
-      in
+      begin match rrt_resolve_to with
+      (* Any ResolveSpreadsTo* which does some sort of constant folding needs to
+       * carry an id around to break the infinite recursion that constant
+       * constant folding can trigger *)
+      | ResolveSpreadsToTuple (id, tout)
+      | ResolveSpreadsToArrayLiteral (id, tout) ->
+        (* You might come across code like
+         *
+         * for (let x = 1; x < 3; x++) { foo = [...foo, x]; }
+         *
+         * where every time you spread foo, you flow another type into foo. So
+         * each time `l ~> ResolveSpreadT` is processed, it might produce a new
+         * `l ~> ResolveSpreadT` with a new `l`.
+         *
+         * Here is how we avoid this:
+         *
+         * 1. We use ConstFoldExpansion to detect when we see a ResolveSpreadT
+         *    upper bound multiple times
+         * 2. When a ResolveSpreadT upper bound multiple times, we change it into
+         *    a ResolveSpreadT upper bound that resolves to a more general type.
+         *    This should prevent more distinct lower bounds from flowing in
+         * 3. rec_flow caches (l,u) pairs.
+         *)
 
-      (* You might come across code like
-       *
-       * for (let x = 1; x < 3; x++) { foo = [...foo, x]; }
-       *
-       * where every time you spread foo, you flow another type into foo. So
-       * each time `l ~> ResolveSpreadT` is processed, it might produce a new
-       * `l ~> ResolveSpreadT` with a new `l`.
-       *
-       * Here is how we avoid this:
-       *
-       * 1. We use ConstFoldExpansion to detect when we see a ResolveSpreadT
-       *    upper bound multiple times
-       * 2. When a ResolveSpreadT upper bound multiple times, we change it into
-       *    a ResolveSpreadT upper bound that resolves to a more general type.
-       *    This should prevent more distinct lower bounds from flowing in
-       * 3. rec_flow caches (l,u) pairs.
-       *)
-      if ConstFoldExpansion.push_unless_loop id (reason_of_t elemt)
-      then begin
-        (* We haven't seen this ArrT yet, so no need to worry about loops *)
-        let rrt_resolved = ResolvedSpreadArg(arrtype)::rrt_resolved in
-        resolve_spread_list_rec
-          cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to rrt_tout;
-        ConstFoldExpansion.pop id
-      end else begin
-        (* We think we've seen this ArrT before, so we might be in a loop. *)
-        match rrt_resolve_to with
-        | ResolveSpreadsToTuple
-        | ResolveSpreadsToArrayLiteral ->
+
+        let reason_elemt = reason_of_t elemt in
+        ConstFoldExpansion.guard id reason_elemt (fun recursion_depth ->
+          match recursion_depth with
+          | 0 ->
+            (* The first time we see this, we process it normally *)
+            let rrt_resolved =
+              ResolvedSpreadArg(reason, arrtype)::rrt_resolved in
+            resolve_spread_list_rec
+              cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to
+          | 1 ->
             (* To avoid infinite recursion, let's deconstruct to a simplier case
              * where we no longer resolve to a tuple but instead just resolve to
-             * an array. The rrt_id is the same so that we avoid creating many
-             * distinct upper bounds, which would sabotage the (l,u) pair
-             * caching that rec_flow does. *)
+             * an array. *)
             rec_flow cx trace (l, ResolveSpreadT (reason_op, {
-              rrt_id;
               rrt_resolved;
               rrt_unresolved;
-              rrt_resolve_to = ResolveSpreadsToArray;
-              rrt_tout;
+              rrt_resolve_to = ResolveSpreadsToArray (tout);
             }))
-        | ResolveSpreadsToArray ->
-            (* If we've already resolved to an array before, then there's no
-             * point in doing any more work, since we'd just resolve to the
-             * same array. *)
-             ()
+          | _ ->
+            (* We've already deconstructed, so there's nothing left to do *)
+            ()
+        )
+
+      | _ ->
+        let rrt_resolved = ResolvedSpreadArg(reason, arrtype)::rrt_resolved in
+        resolve_spread_list_rec
+          cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to
       end
 
     (* singleton lower bounds are equivalent to the corresponding
@@ -3265,8 +3291,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************************************)
 
     | FunT (_, _, _,
-        { this_t = o1; params_tlist = tins1; params_names = p1;
-          rest_param = rest1; is_predicate = ip1; return_t = t1; _ }),
+        ({ this_t = o1; params_tlist = _; params_names = p1;
+          rest_param = _; is_predicate = ip1; return_t = t1; _ } as ft)),
       UseT (use_op, FunT (reason, _, _,
         { this_t = o2; params_tlist = tins2; params_names = p2;
           rest_param = rest2; is_predicate = ip2; return_t = t2; _ }))
@@ -3274,9 +3300,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (o2, UseT (use_op, o1));
       let args = List.rev_map (fun t -> Arg t) tins2 in
       let args = List.rev (match rest2 with
-      | Some (_, rest) -> (SpreadArg rest) :: args
+      | Some (_, _, rest) -> (SpreadArg rest) :: args
       | None -> args) in
-      multiflow cx trace reason ~rest_param:rest1 (args, tins1);
+      multiflow cx trace reason args ft;
 
       (* Well-formedness adjustment: If this is predicate function subtyping,
          make sure to apply a latent substitution on the right-hand use to
@@ -3325,15 +3351,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (t1, UseT (use_op, t2))
 
     | FunT (reason_fundef, _, _,
-        { this_t = o1; params_tlist = tins1; rest_param; return_t = t1;
-          closure_t = func_scope_id; changeset; _ }),
+        ({ this_t = o1; params_tlist = _; rest_param = _; return_t = t1;
+          closure_t = func_scope_id; changeset; _ } as ft)),
       CallT (reason_callsite,
         { call_this_t = o2; call_args_tlist = tins2; call_tout = t2;
           call_closure_t = call_scope_id;})
       ->
       Ops.push reason_callsite;
       rec_flow cx trace (o2, UseT (FunCallThis reason_callsite, o1));
-      multiflow cx trace reason_callsite ~rest_param (tins2, tins1);
+      multiflow cx trace reason_callsite tins2 ft;
       Ops.pop ();
 
       (* flow return type of function to the tvar holding the return type of the
@@ -3642,6 +3668,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           rec_flow cx trace (ArrT (r1, TupleAT (t1, ts1)), u)
       end
 
+    (* EmptyAT arrays are the subtype of all arrays *)
+    | ArrT (_, EmptyAT), UseT (_, ArrT _) -> ()
+
     (* Read only arrays are the super type of all tuples and arrays *)
     | ArrT (_, (ArrayAT (t1, _) | TupleAT (t1, _) | ROArrayAT (t1))),
       UseT (_, ArrT (_, ROArrayAT (t2))) ->
@@ -3728,12 +3757,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* function types derive objects through explicit instantiation *)
     (****************************************************************)
 
-    | FunT (reason, _, proto, {
+    | FunT (reason, _, proto, ({
         this_t = this;
-        params_tlist = params;
-        rest_param;
         return_t = ret;
-        _ }),
+        _ } as ft)),
       ConstructorT (reason_op, args, t) ->
       (* TODO: closure *)
       (** create new object **)
@@ -3746,7 +3773,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let new_obj = ObjT (reason_c, mk_objecttype ~flags dict pmap proto) in
       (** call function with this = new_obj, params = args **)
       rec_flow_t cx trace (new_obj, this);
-      multiflow cx trace reason_op ~rest_param (args, params);
+      multiflow cx trace reason_op args ft;
       (** if ret is object-like, return ret; otherwise return new_obj **)
       let reason_o = replace_reason_const RConstructorReturn reason in
       rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
@@ -4060,9 +4087,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ObjProtoT _, ObjAssignFromT (_, proto, t, _, ObjAssign)) ->
       rec_flow_t cx trace (proto, t)
 
-    (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
-    | RestT l, ObjAssignFromT (r, o, t, xs, ObjSpreadAssign) ->
-      rec_flow cx trace (l, ObjAssignFromT (r, o, t, xs, ObjAssign))
+    | ArrT (arr_r, arrtype), ObjAssignFromT (r, o, t, xs, ObjSpreadAssign) ->
+      begin match arrtype with
+      | ArrayAT (elemt, None)
+      | ROArrayAT (elemt) ->
+        (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
+        rec_flow cx trace (elemt, ObjAssignFromT (r, o, t, xs, ObjAssign))
+      | TupleAT (_, ts)
+      | ArrayAT (_, Some ts) ->
+        (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
+        List.iter (fun from ->
+          rec_flow cx trace (from, ObjAssignFromT (r, o, t, xs, ObjAssign))
+        ) ts
+      | EmptyAT ->
+        (* Object.assign(o, ...EmptyAT) -> Object.assign(o, empty) *)
+        rec_flow cx trace (EmptyT arr_r, ObjAssignFromT (r, o, t, xs, ObjAssign))
+      end
 
     | (proto, ObjAssignToT(reason, from, t, xs, kind)) ->
       rec_flow cx trace (from, ObjAssignFromT(reason, proto, t, xs, kind))
@@ -4283,11 +4323,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * a source of unsoundness, so that's ok. `tup[(0: any)] = 123` should not
      * error when `tup[0] = 123` does not. *)
     | AnyT _,
-      ElemT (_, ArrT (_, arrtype), action) ->
-      let value = match arrtype with
-      | ArrayAT (value, _)
-      | TupleAT (value, _)
-      | ROArrayAT (value) -> value in
+      ElemT (_, ArrT (r, arrtype), action) ->
+      let value = elemt_of_arrtype r arrtype in
       perform_elem_action cx trace value action
 
     | l, ElemT (reason, ArrT (reason_tup, arrtype), action) when numeric l ->
@@ -4295,6 +4332,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | ArrayAT(value, ts) -> value, ts, false
       | TupleAT(value, ts) -> value, Some ts, true
       | ROArrayAT (value) -> value, None, true
+      | EmptyAT -> EmptyT reason_tup, None, true
       end in
       let exact_index, value = match l with
       | NumT (_, Literal (float_value, _)) ->
@@ -4347,7 +4385,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ArrT (_, arrtype), ArrRestT (reason, i, tout)) ->
       let arrtype = match arrtype with
       | ArrayAT (_, None)
-      | ROArrayAT _ -> arrtype
+      | ROArrayAT _
+      | EmptyAT -> arrtype
       | ArrayAT (elemt, Some ts) -> ArrayAT (elemt, Some (Core_list.drop ts i))
       | TupleAT (elemt, ts) -> TupleAT (elemt, Core_list.drop ts i) in
       let a = ArrT (reason, arrtype) in
@@ -4366,7 +4405,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let arrtype = match arrtype with
       | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Option.map ~f:(List.map f) ts)
       | TupleAT (elemt, ts) -> TupleAT (f elemt, List.map f ts)
-      | ROArrayAT (elemt) -> ROArrayAT (f elemt) in
+      | ROArrayAT (elemt) -> ROArrayAT (f elemt)
+      | EmptyAT -> EmptyAT in
 
       let t =
         let reason = replace_reason_const RArrayType reason_op in
@@ -4516,10 +4556,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           rec_flow cx trace (func, CallT (reason_op, funtype))
 
       (* func.apply(this_arg, ts) *)
-      | (Arg _)::(Arg ts)::_ ->
-          (* the first param will be extracted later by ApplyT; extra args are
-             allowed but ignored, as with all function calls in Flow. *)
-          rec_flow cx trace (ts, ApplyT (reason_op, func, funtype))
+      | first_arg::(Arg ts)::_ ->
+        let call_this_t = extract_non_spread cx ~trace first_arg in
+        let call_args_tlist = [ SpreadArg ts ] in
+        let funtype = { funtype with call_this_t; call_args_tlist; } in
+        (* Ignoring `this_arg`, we're basically doing func(...ts). Normally
+         * spread arguments are resolved for the multiflow application, however
+         * there are a bunch of special-cased functions like bind(), call(),
+         * apply, etc which look at the arguments a little earlier. If we delay
+         * resolving the spread argument, then we sabotage them. So we resolve
+         * it early *)
+        let t = mk_tvar_where cx reason_op (fun t ->
+          let resolve_to = ResolveSpreadsToCallT (funtype, t) in
+          resolve_call_list cx ~trace reason_op call_args_tlist resolve_to
+        ) in
+        rec_flow_t cx trace (func, t)
+
       | (SpreadArg t1)::(SpreadArg t2)::_ ->
           add_output cx ~trace
             (FlowError.(EUnsupportedSyntax (loc_of_t t1, SpreadArgument)));
@@ -4530,29 +4582,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           add_output cx ~trace
             (FlowError.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)))
       end
-
-    (* ... then calls the function *)
-    | (ArrT (_, arrtype),
-       ApplyT (r, func, ({call_args_tlist=first_arg::_; _} as funtype))) ->
-      let call_this_t = extract_non_spread cx ~trace first_arg in
-      let call_args_tlist = match arrtype with
-      | ArrayAT (t, ts) ->
-        let args = List.rev_map
-          (fun t -> Arg t)
-          (Option.value ~default:[] ts) in
-        List.rev ((SpreadArg (RestT t))::args)
-      | ROArrayAT (t) -> [ SpreadArg (RestT t)]
-      | TupleAT (_, ts) ->
-        List.map (fun t -> Arg t) ts
-      in
-      let funtype = { funtype with call_this_t; call_args_tlist; } in
-      rec_flow cx trace (func, CallT (r, funtype))
-
-    | (NullT _ | VoidT _),
-      ApplyT (r, func, ({call_args_tlist=first_arg::_; _} as funtype)) ->
-      let call_this_t = extract_non_spread cx ~trace first_arg in
-      let funtype = { funtype with call_this_t; call_args_tlist = [] } in
-      rec_flow cx trace (func, CallT (r, funtype))
 
     (************************************************************************)
     (* functions may be bound by passing a receiver and (partial) arguments *)
@@ -4568,30 +4597,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let funtype = { funtype with call_this_t; call_args_tlist } in
       rec_flow cx trace (func, BindT (reason_op, funtype))
 
-    | (FunT (reason,_,_,
-             {this_t = o1; params_tlist = tins1; rest_param; return_t = tout1; _}),
+    | (FunT (reason,_,_, ({this_t = o1; _} as ft)),
        BindT (reason_op,
-             {call_this_t = o2; call_args_tlist = tins2; call_tout = tout2; call_closure_t=_;}))
+             {call_this_t = o2; call_args_tlist = tins2; call_tout; call_closure_t=_;}))
       -> (* TODO: closure *)
 
         rec_flow_t cx trace (o2,o1);
 
-        let tins1 = multiflow_partial cx trace ~rest_param (tins2,tins1) in
-
-        (* e.g. "bound function type", positioned at reason_op *)
-        let bound_reason =
-          let desc = RBound (desc_of_reason reason) in
-          replace_reason_const desc reason_op
-        in
-
-        rec_flow_t cx trace (
-          FunT(
-            reason_op,
-            dummy_static bound_reason,
-            dummy_prototype,
-            mk_boundfunctiontype tins1 ~rest_param tout1
-          ),
-          tout2);
+        let resolve_to =
+          ResolveSpreadsToMultiflowPartial (ft, reason_op, call_tout) in
+        resolve_call_list cx ~trace reason tins2 resolve_to
 
     | (AnyFunT _, BindT (reason, {
         call_this_t;
@@ -4764,6 +4779,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, AssertArithmeticOperandT _ ->
       add_output cx ~trace (FlowError.EArithmeticOperand (reason_of_t l))
 
+    (***********************************************************************)
+    (* Rest param annotations must be super types of the array bottom type *)
+    (***********************************************************************)
+
+    | rest, AssertRestParamT r ->
+      (* This allows rest to be things like Iterable<T>, mixed, Array<T>, [1,2]
+         but disallows things like number, string, boolean *)
+      rec_flow_t cx trace (ArrT (r, EmptyAT), rest)
+
     (***********************************************************)
     (* coercion                                                *)
     (***********************************************************)
@@ -4908,8 +4932,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_typeapp cx ~trace reason "Array" [t], u)
 
-    | (ArrT (reason, (TupleAT(t, _) | ROArrayAT(t))),
+    | (ArrT (reason, (TupleAT _ | ROArrayAT _ | EmptyAT as arrtype)),
        (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
+      let t = elemt_of_arrtype reason arrtype in
       rec_flow
         cx trace (get_builtin_typeapp cx ~trace reason "$ReadOnlyArray" [t], u)
 
@@ -5887,9 +5912,9 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     let params_ = ident_map (subst cx ~force map) params in
     let rest_param_ = match rest_param with
     | None -> rest_param
-    | Some (name, t) ->
+    | Some (name, loc, t) ->
         let t_ = subst cx ~force map t in
-        if t_ = t then rest_param else Some (name, t_)
+        if t_ = t then rest_param else Some (name, loc, t_)
     in
     let return_t_ = subst cx ~force map return_t in
     if static_ == static &&
@@ -5972,6 +5997,8 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | ArrT (reason, ROArrayAT (elemt)) ->
     let elemt_ = subst cx ~force map elemt in
     if elemt_ = elemt then t else ArrT (reason, ROArrayAT (elemt_))
+  | ArrT (_, EmptyAT) ->
+    t
   | ClassT cls ->
     let cls_ = subst cx ~force map cls in
     if cls_ == cls then t else ClassT cls_
@@ -6015,10 +6042,6 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | OptionalT opt_t ->
     let opt_t_ = subst cx ~force map opt_t in
     if opt_t_ == opt_t then t else OptionalT opt_t_
-
-  | RestT rest_t ->
-    let rest_t_ = subst cx ~force map rest_t in
-    if rest_t_ == rest_t then t else RestT rest_t_
 
   | AbstractT abstract_t ->
     let abstract_t_ = subst cx ~force map abstract_t in
@@ -6219,7 +6242,6 @@ and check_polarity cx ?trace polarity = function
     -> ()
 
   | OptionalT t
-  | RestT t
   | AbstractT t
   | ExactT (_, t)
   | MaybeT (_, t)
@@ -6252,6 +6274,8 @@ and check_polarity cx ?trace polarity = function
 
   | ArrT (_, ROArrayAT (elemt)) ->
     check_polarity cx Neutral elemt
+
+  | ArrT (_, EmptyAT) -> ()
 
   | ObjT (_, obj) ->
     check_polarity_propmap cx ?trace obj.props_tmap;
@@ -6682,7 +6706,7 @@ and parts_to_replace = function
   | UseT (_, FunT (_, _, _, callt)) ->
     let params = match callt.rest_param with
     | None -> callt.params_tlist
-    | Some (_, rest) -> rest::callt.params_tlist in
+    | Some (_, _, rest) -> rest::callt.params_tlist in
     List.filter patt_that_needs_concretization params
   | CallT (_, callt) ->
     callt.call_args_tlist
@@ -6694,9 +6718,9 @@ and replace_parts replace = function
   | UseT (op, FunT (r, t1, t2, callt)) ->
     let rest_param, params_tlist = match callt.rest_param with
     | None -> None, concretize_patt replace callt.params_tlist
-    | Some (name, rest) ->
+    | Some (name, loc, rest) ->
         (match concretize_patt replace (rest::callt.params_tlist) with
-        | rest::params -> Some (name, rest), params
+        | rest::params -> Some (name, loc, rest), params
         | [] -> failwith "By construction, this list should be non-empty") in
 
     UseT (op, FunT (r, t1, t2, { callt with
@@ -7976,10 +8000,7 @@ and instanceof_test cx trace result = function
     (ArrT (reason, arrtype) as arr),
     ClassT(InstanceT _ as a)) ->
 
-    let elemt = match arrtype with
-    | ArrayAT (elemt, _)
-    | TupleAT (elemt, _)
-    | ROArrayAT (elemt) -> elemt in
+    let elemt = elemt_of_arrtype reason arrtype in
 
     let right = ClassT(ExtendsT([], arr, a)) in
     let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
@@ -7989,10 +8010,7 @@ and instanceof_test cx trace result = function
     (ArrT (reason, arrtype) as arr),
     ClassT(InstanceT _ as a)) ->
 
-    let elemt = match arrtype with
-    | ArrayAT (elemt, _)
-    | TupleAT (elemt, _)
-    | ROArrayAT (elemt) -> elemt in
+    let elemt = elemt_of_arrtype reason arrtype in
 
     let right = ClassT(ExtendsT([], arr, a)) in
     let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
@@ -8591,10 +8609,6 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
     when c1 = c2 && List.length ts1 = List.length ts2 ->
     List.iter2 (rec_unify cx trace) ts1 ts2
 
-  | RestT t1, RestT t2
-  | RestT t1, t2 | t1, RestT t2 ->
-    rec_unify cx trace t1 t2
-
   | _ ->
     naive_unify cx trace ~use_op t1 t2
   )
@@ -8749,85 +8763,148 @@ and array_unify cx trace = function
 (* subtyping a sequence of arguments with a sequence of parameters *)
 (*******************************************************************)
 
-and multiflow cx trace reason_op ~rest_param (arglist, parlist) =
-  multiflow_partial cx trace ~strict:reason_op ~rest_param (arglist, parlist) |> ignore
+(* Process spread arguments and then apply the arguments to the parameters *)
+and multiflow cx trace reason_op args ft =
+  let resolve_to = ResolveSpreadsToMultiflowFull (ft) in
+  resolve_call_list cx ~trace reason_op args resolve_to
 
-(* Match arguments to parameters, taking an optional parameter 'strict':
-   - when strict=None, missing arguments (and unmatched parameters) are
-   expected. This is used, e.g., when processing Function.prototype.bind.
-   - when strict=Some reason_op, missing arguments are treated as undefined,
-   whose types are given a reason derived from reason_op when passing to
-   unmatched parameters.
-*)
-and multiflow_partial cx trace ?strict ~rest_param (arglist, parlist) =
-  match (arglist, parlist, rest_param) with
-  (* Do not complain on too many arguments.
-     This pattern is ubiqutous and causes a lot of noise when complained about.
-     Note: optional/rest parameters do not provide a workaround in this case.
-  *)
-  | (_, [], None) -> []
+(* Like multiflow_partial, but if there is no spread argument, it flows VoidT to
+ * all unused parameters *)
+and multiflow_full
+  cx ~trace reason_op ~spread_arg ~rest_param (arglist, parlist) =
 
-  (* TODO - Spread arguments are kind of broken. First they're only processed
-     when they're the last argument. Second, if we don't know the arity of the
-     spread array, then we basically need to make sure that every remaining
-     argument can flow to every remaining parameter
+  let unused_parameters, _ = multiflow_partial
+    cx ~trace reason_op ~spread_arg ~rest_param (arglist, parlist) in
 
-     Gabe the Goodlooking plans to address this soon! *)
+  List.iter (fun param ->
+    let reason = replace_reason_const RTooFewArgsExpectedRest reason_op in
+    rec_flow_t cx trace (VoidT reason, param);
+  ) unused_parameters
 
-  | ([SpreadArg (RestT tin)], [], Some (_, RestT tout)) ->
-    rec_flow_t cx trace (tin, tout);
-    []
+(* This is a tricky function. The simple description is that it flows all the
+ * arguments to all the parameters. This function is used by
+ * Function.prototype.apply, so after the arguments are applied, it returns the
+ * unused parameters.
+ *
+ * It is a little trickier in that there may be a single spread argument after
+ * all the regular arguments. There may also be a rest parameter.
+ *)
+and multiflow_partial =
+  let rec multiflow_non_spreads cx ~trace (arglist, parlist) =
+    match (arglist, parlist) with
+    (* Do not complain on too many arguments.
+       This pattern is ubiqutous and causes a lot of noise when complained about.
+       Note: optional/rest parameters do not provide a workaround in this case.
+    *)
+    | (_, [])
+    (* No more arguments *)
+    | ([], _) -> arglist, parlist
 
-  | ([SpreadArg (RestT tin)], tout::touts, _) ->
-    rec_flow_t cx trace (tin, tout);
-    multiflow_partial cx trace ?strict ~rest_param (arglist, touts)
+    | (tin::tins, tout::touts) ->
+      (* flow `tin` (argument) to `tout` (param). normally, `tin` is passed
+         through a `ReposLowerT` to make sure that the concrete type points at
+         the arg's location. however, if `tin` is an implicit type argument
+         (e.g. the `x` in `function foo<T>(x: T)`), then don't reposition it
+         because implicit type args have no explicit location to point at.
+         instead, let it flow through transparently, so that we point at the
+         place that constrained the type arg. this is pretty hacky. *)
+      let tout =
+        let u = UseT (FunCallParam, tout) in
+        match desc_of_t tin with
+        | RTypeParam _ -> u
+        | _ -> ReposLowerT (reason_of_t tin, u)
+      in
+      flow_opt cx ~trace (tin, tout);
+      multiflow_non_spreads cx ~trace (tins,touts)
 
-  | ((SpreadArg tin | Arg tin)::tins, [], Some (_, RestT tout)) ->
-    rec_flow_t cx trace (tin, tout);
-    multiflow_partial cx trace ?strict ~rest_param (tins, [])
 
-  | ([], [], _) -> []
+  in
+  fun cx ~trace reason_op ~spread_arg ~rest_param (arglist, parlist) ->
+    (* Handle all the non-spread arguments and all the non-rest parameters *)
+    let unused_arglist, unused_parlist =
+      multiflow_non_spreads cx ~trace (arglist, parlist) in
 
-  | (_::_, [], Some (_, _)) -> []
-    (* This case is due to the unchecked invariant that the rest_param is always
-       a RestT (if it exists). A following refactor will unwrap the rest_param
-       and remove this catch all case *)
+    (* If there is a spread argument, it will consume all the unused parameters *)
+    let unused_parlist = match spread_arg with
+    | None -> unused_parlist
+    | Some spread_arg_elemt ->
+      (* The spread argument may be an empty array and to be 100% correct, we
+       * should flow VoidT to every remaining parameter, however we don't. This
+       * is consistent with how we treat arrays almost everywhere else *)
+      List.iter
+        (fun param -> rec_flow_t cx trace (spread_arg_elemt, param))
+        unused_parlist;
+      []
 
-  | ([], tout::touts, _) ->
-    (match strict with
-    | Some reason_op ->
-        let reason = replace_reason_const RTooFewArgsExpectedRest reason_op in
-        rec_flow_t cx trace (VoidT reason, tout);
-        multiflow_partial cx trace ?strict ~rest_param ([], touts)
-    | None ->
-        tout::touts
-    );
-
-  | ((SpreadArg tin | Arg tin)::tins, tout::touts, _) ->
-    (* flow `tin` (argument) to `tout` (param). normally, `tin` is passed
-       through a `ReposLowerT` to make sure that the concrete type points at
-       the arg's location. however, if `tin` is an implicit type argument
-       (e.g. the `x` in `function foo<T>(x: T)`), then don't reposition it
-       because implicit type args have no explicit location to point at.
-       instead, let it flow through transparently, so that we point at the
-       place that constrained the type arg. this is pretty hacky. *)
-    let tout =
-      let u = UseT (FunCallParam, tout) in
-      match desc_of_t tin with
-      | RTypeParam _ -> u
-      | _ -> ReposLowerT (reason_of_t tin, u)
     in
-    rec_flow cx trace (tin, tout);
-    multiflow_partial cx trace ?strict ~rest_param (tins,touts)
+
+    (* If there is a rest parameter, it will consume all the unused arguments *)
+    begin match rest_param with
+    | None -> unused_parlist, rest_param
+    | Some (name, loc, rest_param) ->
+      let orig_rest_reason = repos_reason loc (reason_of_t rest_param) in
+
+      (* We're going to build an array literal with all the unused arguments
+       * (and the spread argument if it exists). Then we're going to flow that
+       * to the rest parameter *)
+      let rev_elems =
+        List.rev_map (fun arg -> UnresolvedArg arg) unused_arglist in
+
+      let unused_rest_param = match spread_arg with
+      | None ->
+        (* If the rest parameter is consuming N elements, then drop N elements
+         * from the rest parameter *)
+        let rest_reason = reason_of_t rest_param in
+        mk_tvar_where cx rest_reason (fun tout ->
+          let i = List.length rev_elems in
+          rec_flow cx trace (rest_param, ArrRestT (orig_rest_reason, i, tout))
+        )
+      | Some _ ->
+        (* If there is a spread argument, then a tuple rest parameter will error
+         * anyway. So let's assume that the rest param is an array with unknown
+         * arity. Dropping elements from it isn't worth doing *)
+        rest_param
+      in
+
+      let elems = match spread_arg with
+      | None -> List.rev rev_elems
+      | Some spread_arg_elemt ->
+        let reason = reason_of_t spread_arg_elemt in
+        let spread_array = ArrT (reason, ArrayAT (spread_arg_elemt, None)) in
+        List.rev_append rev_elems [ UnresolvedSpreadArg (spread_array) ]
+      in
+
+      let arg_array_reason = replace_reason_const
+        (RRestArray (desc_of_reason reason_op)) reason_op in
+
+      let arg_array = mk_tvar_where cx arg_array_reason (fun tout ->
+        let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), tout)) in
+        resolve_spread_list cx ~reason_op:arg_array_reason elems resolve_to
+      ) in
+      rec_flow_t cx trace (arg_array, rest_param);
+
+      [], Some (name, loc, unused_rest_param)
+    end
+
+and resolve_call_list cx ~trace reason_op args resolve_to =
+  let unresolved = List.map
+    (function
+    | Arg t -> UnresolvedArg t
+    | SpreadArg t -> UnresolvedSpreadArg t)
+    args in
+  resolve_spread_list_rec cx ~trace ~reason_op ([], unresolved) resolve_to
+
+and resolve_spread_list cx ~reason_op list resolve_to =
+  resolve_spread_list_rec cx ~reason_op ([], list) resolve_to
 
 (* This function goes through the unresolved elements to find the next rest
  * element to resolve *)
 and resolve_spread_list_rec
-  cx ?trace ~reason_op (resolved, unresolved) resolve_to tout =
+  cx ?trace ~reason_op (resolved, unresolved) resolve_to =
   match resolved, unresolved with
   | resolved, [] ->
       finish_resolve_spread_list
-        cx ?trace ~reason_op (List.rev resolved) resolve_to tout
+        cx ?trace ~reason_op (List.rev resolved) resolve_to
   | resolved, UnresolvedArg(next)::unresolved ->
       resolve_spread_list_rec
         cx
@@ -8835,14 +8912,11 @@ and resolve_spread_list_rec
         ~reason_op
         (ResolvedArg(next)::resolved, unresolved)
         resolve_to
-        tout
   | resolved, UnresolvedSpreadArg(next)::unresolved ->
       flow_opt cx ?trace (next, ResolveSpreadT (reason_op, {
-        rrt_id = mk_id();
         rrt_resolved = resolved;
         rrt_unresolved = unresolved;
         rrt_resolve_to = resolve_to;
-        rrt_tout = tout;
       }))
 
 (* Now that everything is resolved, we can construct whatever type we're trying
@@ -8852,7 +8926,7 @@ and finish_resolve_spread_list =
   let flatten_spread_args list =
     list
     |> List.fold_left (fun acc param -> match param with
-      | ResolvedSpreadArg (arrtype) ->
+      | ResolvedSpreadArg (_, arrtype) ->
           begin match arrtype with
           | ArrayAT (_, Some tuple_types)
           | TupleAT (_, tuple_types) ->
@@ -8861,17 +8935,19 @@ and finish_resolve_spread_list =
                 acc
                 tuple_types
           | ArrayAT (_, None)
-          | ROArrayAT (_) -> param::acc
+          | ROArrayAT (_)
+          | EmptyAT
+            -> param::acc
           end
+      | ResolvedAnySpreadArg _
       | ResolvedArg _ -> param::acc
-      | ResolvedAnySpreadArg -> failwith "Should not be hit"
       ) []
     |> List.rev
 
   in
 
   let spread_resolved_to_any = List.exists (function
-    | ResolvedAnySpreadArg -> true
+    | ResolvedAnySpreadArg _ -> true
     | ResolvedArg _ | ResolvedSpreadArg _ -> false)
 
   in
@@ -8904,7 +8980,7 @@ and finish_resolve_spread_list =
               | None, _ -> None
               | _, ResolvedSpreadArg _ -> None
               | Some tuple_types, ResolvedArg t -> Some (t::tuple_types)
-              | _, ResolvedAnySpreadArg -> failwith "Should not be hit"
+              | _, ResolvedAnySpreadArg _ -> failwith "Should not be hit"
             ) (Some [])
           |> Option.map ~f:List.rev
       | `Array -> None in
@@ -8913,12 +8989,9 @@ and finish_resolve_spread_list =
        * every element in the array *)
       let tset = List.fold_left (fun tset elem ->
         let elemt = match elem with
-        | ResolvedSpreadArg (
-            (ArrayAT (elemt,_) | TupleAT (elemt,_) | ROArrayAT elemt )
-          ) ->
-            elemt
+        | ResolvedSpreadArg (r, arrtype) -> elemt_of_arrtype r arrtype
         | ResolvedArg elemt -> elemt
-        | ResolvedAnySpreadArg -> failwith "Should not be hit"
+        | ResolvedAnySpreadArg _ -> failwith "Should not be hit"
         in
 
         TypeExSet.add elemt tset
@@ -8977,14 +9050,144 @@ and finish_resolve_spread_list =
     flow_opt_t cx ?trace (result, tout)
   in
 
-  fun cx ?trace ~reason_op resolved resolve_to tout -> (
+  (* If there are no spread elements or if all the spread elements resolved to
+   * tuples or array literals, then this is easy. We just flatten them all.
+   *
+   * However, if we have a spread that resolved to any or to an array of
+   * unknown length, then we're in trouble. Basically, any remaining argument
+   * might flow to any remaining parameter.
+   *)
+  let flatten_call_arg =
+    let rec flatten r args spread resolved =
+      if resolved = []
+      then args, spread
+      else match spread with
+      | None ->
+        (match resolved with
+        | (ResolvedArg t)::rest ->
+          flatten r (t::args) spread rest
+        | (ResolvedSpreadArg
+            (_, (ArrayAT (_, Some ts) | TupleAT (_, ts))))::rest ->
+          let args = List.rev_append ts args in
+          flatten r args spread rest
+        | ResolvedSpreadArg (r, _)::_
+        | ResolvedAnySpreadArg r :: _ ->
+          (* We weren't able to flatten the call argument list to remove all
+           * spreads. This means we need to build a spread argument, with
+           * unknown arity. *)
+          let tset = TypeExSet.empty in
+          flatten r args (Some (Nel.one r, tset)) resolved
+        | [] -> failwith "Empty list already handled"
+        )
+      | Some (spread_reasons, tset) ->
+        let spread_reason, elemt, rest = (match resolved with
+        | (ResolvedArg t)::rest ->
+          reason_of_t t, t, rest
+        | (ResolvedSpreadArg (r, arrtype))::rest ->
+          r, elemt_of_arrtype r arrtype, rest
+        | (ResolvedAnySpreadArg reason)::rest ->
+          reason, AnyT.why reason, rest
+        | [] -> failwith "Empty list already handled")
+        in
+        let spread_reasons = Nel.cons spread_reason spread_reasons in
+        let tset = TypeExSet.add elemt tset in
+        flatten r args (Some (spread_reasons, tset)) rest
+
+    in
+    fun cx r resolved ->
+      let args, spread = flatten r [] None resolved in
+      let spread = Option.map
+        ~f:(fun (spread_reasons, tset) ->
+          let last = Nel.hd spread_reasons in
+          let first = Nel.(hd (rev spread_reasons)) in
+          let loc = Loc.btwn (loc_of_reason first) (loc_of_reason last) in
+          let r = mk_reason RArray loc in
+          mk_tvar_where cx r (fun tvar ->
+            TypeExSet.elements tset
+            |> List.iter (fun t -> flow cx (t, UseT (UnknownUse, tvar)))
+          )
+        )
+        spread
+      in
+      List.rev args, spread
+
+  in
+
+  (* This is used for things like Function.prototype.bind, which partially
+   * apply arguments and then return the new function. *)
+  let finish_multiflow_partial
+    cx ?trace ~reason_op ft call_reason resolved tout =
+    (* Multiflows always come out of a flow *)
+    let trace = match trace with
+    | Some trace -> trace
+    | None -> failwith "All multiflows show have a trace" in
+
+    let {params_tlist; rest_param; return_t; _} = ft in
+
+    let args, spread_arg = flatten_call_arg cx reason_op resolved in
+
+    let params_tlist, rest_param = multiflow_partial
+      cx ~trace reason_op ~spread_arg ~rest_param (args, params_tlist) in
+
+    (* e.g. "bound function type", positioned at reason_op *)
+    let bound_reason =
+      let desc = RBound (desc_of_reason reason_op) in
+      replace_reason_const desc call_reason
+    in
+
+    let funt = FunT(
+      reason_op,
+      dummy_static bound_reason,
+      dummy_prototype,
+      mk_boundfunctiontype params_tlist ~rest_param return_t
+    ) in
+    rec_flow_t cx trace (funt, tout)
+
+  in
+
+  (* This is used for things like function application, where all the arguments
+   * are applied to a function *)
+  let finish_multiflow_full cx ?trace ~reason_op ft resolved =
+    (* Multiflows always come out of a flow *)
+    let trace = match trace with
+    | Some trace -> trace
+    | None -> failwith "All multiflows show have a trace" in
+
+    let {params_tlist; rest_param; _} = ft in
+
+    let args, spread_arg = flatten_call_arg cx reason_op resolved in
+
+    multiflow_full
+      cx ~trace reason_op ~spread_arg ~rest_param (args, params_tlist)
+
+  in
+
+  (* This is used for things like Function.prototype.apply, whose second arg is
+   * basically a spread argument that we'd like to resolve *)
+  let finish_call_t cx ?trace ~reason_op funcalltype resolved tin =
+    let flattened = flatten_spread_args resolved in
+    let call_args_tlist = List.map (function
+      | ResolvedArg t -> Arg t
+      | ResolvedSpreadArg (r, arrtype) -> SpreadArg (ArrT (r, arrtype))
+      | ResolvedAnySpreadArg r -> SpreadArg (AnyT.why r)) flattened in
+    let call_t = CallT (reason_op, { funcalltype with call_args_tlist; }) in
+    flow_opt cx ?trace (tin, call_t)
+
+  in
+  fun cx ?trace ~reason_op resolved resolve_to -> (
     match resolve_to with
-    | ResolveSpreadsToTuple ->
+    | ResolveSpreadsToTuple (_, tout)->
       finish_array cx ?trace ~reason_op ~resolve_to:`Tuple resolved tout
-    | ResolveSpreadsToArrayLiteral ->
+    | ResolveSpreadsToArrayLiteral (_, tout) ->
       finish_array cx ?trace ~reason_op ~resolve_to:`Literal resolved tout
-    | ResolveSpreadsToArray ->
+    | ResolveSpreadsToArray (tout) ->
       finish_array cx ?trace ~reason_op ~resolve_to:`Array resolved tout
+    | ResolveSpreadsToMultiflowPartial (ft, call_reason, tout) ->
+      finish_multiflow_partial cx ?trace ~reason_op ft call_reason resolved tout
+    | ResolveSpreadsToMultiflowFull (ft) ->
+      finish_multiflow_full cx ?trace ~reason_op ft resolved
+    | ResolveSpreadsToCallT (funcalltype, tin) ->
+      finish_call_t cx ?trace ~reason_op funcalltype resolved tin
   )
 
 and perform_lookup_action cx trace propref p lreason ureason = function
@@ -9205,6 +9408,7 @@ and resolve_builtin_class cx ?trace = function
     | ArrayAT (elemt, _) -> get_builtin cx ?trace "Array" reason, elemt
     | TupleAT (elemt, _)
     | ROArrayAT (elemt) -> get_builtin cx ?trace "$ReadOnlyArray" reason, elemt
+    | EmptyAT -> get_builtin cx ?trace "$ReadOnlyArray" reason, (EmptyT reason)
     in
     let array_t = resolve_type cx builtin in
     let array_t = instantiate_poly_t cx array_t [elemt] in
@@ -9553,7 +9757,6 @@ end = struct
     | OpenPredT (_, _, _, _)
     | OpenT _
     | OptionalT _
-    | RestT _
     | ShapeT _
     | TaintT _
     | ThisClassT _
@@ -9633,7 +9836,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     unify_opt cx this_t AnyT.t;
     List.iter (recurse ~infer:(is_derivable_reason reason)) params_tlist;
     Option.iter
-      ~f:(fun (_, t) -> recurse ~infer:(is_derivable_reason reason) t)
+      ~f:(fun (_, _, t) -> recurse ~infer:(is_derivable_reason reason) t)
       rest_param;
     recurse ~infer:true return_t
 
@@ -9647,12 +9850,13 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
 
   | IdxWrapper (_, obj) -> recurse ~infer obj
 
-  | ArrT (_, arrtype) ->
+  | ArrT (r, arrtype) ->
     let elemt, tuple_types = match arrtype with
     | ArrayAT (elemt, None) -> elemt, []
     | ArrayAT (elemt, Some tuple_types)
     | TupleAT (elemt, tuple_types) -> elemt, tuple_types
-    | ROArrayAT (elemt) -> elemt, [] in
+    | ROArrayAT (elemt) -> elemt, []
+    | EmptyAT -> EmptyT r, [] in
     recurse ~infer:true elemt;
     List.iter (recurse ~infer:true) tuple_types
 
@@ -9681,7 +9885,6 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     unify_opt cx static AnyT.t;
     recurse super
 
-  | RestT t
   | OptionalT t ->
     recurse t
 
@@ -9814,6 +10017,3 @@ let mk_default cx reason ~expr = Default.fold
   ~selector:(fun r t sel ->
     let id = mk_id () in
     eval_selector cx r t sel id)
-
-let resolve_spread_list cx ~reason_op list resolve_to tout =
-  resolve_spread_list_rec cx ~reason_op ([], list) resolve_to tout

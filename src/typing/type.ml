@@ -84,8 +84,6 @@ module rec TypeTerm : sig
 
     (* type of an optional parameter *)
     | OptionalT of t
-    (* type of a rest parameter *)
-    | RestT of t
     | AbstractT of t
 
     (* type expression whose evaluation is deferred *)
@@ -285,7 +283,6 @@ module rec TypeTerm : sig
     (*************)
 
     (* operations on runtime values, such as functions, objects, and arrays *)
-    | ApplyT of reason * t * funcalltype
     | BindT of reason * funcalltype
     | CallT of reason * funcalltype
     | MethodT of (* call *) reason * (* lookup *) reason * propref * funcalltype
@@ -319,6 +316,7 @@ module rec TypeTerm : sig
     | AssertBinaryInLHST of reason
     | AssertBinaryInRHST of reason
     | AssertForInRHST of reason
+    | AssertRestParamT of reason
 
     (* operation specifying a type refinement via a predicate *)
     | PredicateT of predicate * t
@@ -600,7 +598,7 @@ module rec TypeTerm : sig
     this_t: t;
     params_tlist: t list;
     params_names: string list option;
-    rest_param: (string option * t) option;
+    rest_param: (string option * Loc.t * t) option;
     return_t: t;
     closure_t: int;
     is_predicate: bool;
@@ -626,9 +624,11 @@ module rec TypeTerm : sig
    * myTuple[expr]
    *)
   | TupleAT of t * t list
-  (* ROArrayAT(elemt) is the super ype for all tuples for which elemt is a
-   * supertype of every element type *)
+  (* ROArrayAT(elemt) is the super type for all tuples and arrays for which
+   * elemt is a supertype of every element type *)
   | ROArrayAT of t
+  (* EmptyAT is the bottom type for all arrays and tuples *)
+  | EmptyAT
 
   and objtype = {
     flags: flags;
@@ -856,9 +856,6 @@ module rec TypeTerm : sig
     t * predicate Key_map.t * predicate Key_map.t
 
   and resolve_spread_type = {
-    (* This is a form of constant folding, so this id can be used to avoid
-     * infinite recursion *)
-    rrt_id: int;
     (* This is the list of elements that are already resolved (that is have no
      * more unresolved spread elements *)
     rrt_resolved: resolved_param list;
@@ -867,9 +864,6 @@ module rec TypeTerm : sig
     (* Once all the elements have been resolved, this tells us what type to
      * construct *)
     rrt_resolve_to: spread_resolve;
-    (* Once we've resolved all the elements and constructed a type, we flow it
-    * to this type *)
-    rrt_tout: t;
   }
 
   and unresolved_param =
@@ -878,18 +872,29 @@ module rec TypeTerm : sig
 
   and resolved_param =
   | ResolvedArg of t
-  | ResolvedSpreadArg of arrtype
-  | ResolvedAnySpreadArg
+  | ResolvedSpreadArg of reason * arrtype
+  | ResolvedAnySpreadArg of reason
 
   and spread_resolve =
   (* Once we've finished resolving spreads, try to construct a tuple *)
-  | ResolveSpreadsToTuple
+  | ResolveSpreadsToTuple of int * t
   (* Once we've finished resolving spreads, try to construct an array with
    * known element types *)
-  | ResolveSpreadsToArrayLiteral
+  | ResolveSpreadsToArrayLiteral of int * t
   (* Once we've finished resolving spreads, try to construct a non-tuple array
    *)
-  | ResolveSpreadsToArray
+  | ResolveSpreadsToArray of t
+
+  (* Once we've finished resolving spreads for a function's arguments, call the
+   * function with those arguments *)
+  | ResolveSpreadsToMultiflowFull of funtype
+
+  (* Once we've finished resolving spreads for a function's arguments,
+   * partially apply the arguments to the function and return the resulting
+   * function (basically what func.bind(that, ...args) does) *)
+  | ResolveSpreadsToMultiflowPartial of funtype * reason * t
+
+  | ResolveSpreadsToCallT of funcalltype * t
 
 end = TypeTerm
 
@@ -1508,10 +1513,10 @@ let any_propagating_use_t = function
   (* These types have no t_out, so can't propagate anything *)
   | AssertArithmeticOperandT _
   | ComparatorT _
+  | AssertRestParamT _
     -> false
 
   (* TODO: Figure out if these should be true or false *)
-  | ApplyT _
   | ArrRestT _
   | AssertBinaryInLHST _
   | AssertBinaryInRHST _
@@ -1614,7 +1619,6 @@ let rec reason_of_t = function
   | PolyT (_,t) -> replace_reason (fun desc -> RPolyType desc) (reason_of_t t)
   | ReposT (reason, _) -> reason
   | ReposUpperT (reason, _) -> reason
-  | RestT t -> replace_reason (fun desc -> RRestArray desc) (reason_of_t t)
   | ShapeT (t) -> reason_of_t t
   | SingletonBoolT (reason, _) -> reason
   | SingletonNumT (reason, _) -> reason
@@ -1639,12 +1643,12 @@ and reason_of_use_t = function
   | UseT (_, t) -> reason_of_t t
   | AdderT (reason,_,_) -> reason
   | AndT (reason, _, _) -> reason
-  | ApplyT (reason, _, _) -> reason
   | ArrRestT (reason, _, _) -> reason
   | AssertArithmeticOperandT reason -> reason
   | AssertBinaryInLHST reason -> reason
   | AssertBinaryInRHST reason -> reason
   | AssertForInRHST reason -> reason
+  | AssertRestParamT reason -> reason
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT (reason, _) -> reason
   | BindT (reason, _) -> reason
@@ -1771,7 +1775,6 @@ let rec mod_reason_of_t f = function
   | PolyT (plist, t) -> PolyT (plist, mod_reason_of_t f t)
   | ReposT (reason, t) -> ReposT (f reason, t)
   | ReposUpperT (reason, t) -> ReposUpperT (reason, mod_reason_of_t f t)
-  | RestT t -> RestT (mod_reason_of_t f t)
   | ShapeT t -> ShapeT (mod_reason_of_t f t)
   | SingletonBoolT (reason, t) -> SingletonBoolT (f reason, t)
   | SingletonNumT (reason, t) -> SingletonNumT (f reason, t)
@@ -1794,12 +1797,12 @@ and mod_reason_of_use_t f = function
   | UseT (_, t) -> UseT (UnknownUse, mod_reason_of_t f t)
   | AdderT (reason, rt, lt) -> AdderT (f reason, rt, lt)
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
-  | ApplyT (reason, l, ft) -> ApplyT (f reason, l, ft)
   | ArrRestT (reason, i, t) -> ArrRestT (f reason, i, t)
   | AssertArithmeticOperandT reason -> AssertArithmeticOperandT (f reason)
   | AssertBinaryInLHST reason -> AssertBinaryInLHST (f reason)
   | AssertBinaryInRHST reason -> AssertBinaryInRHST (f reason)
   | AssertForInRHST reason -> AssertForInRHST (f reason)
+  | AssertRestParamT reason -> AssertRestParamT (f reason)
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
   | BecomeT (reason, t) -> BecomeT (f reason, t)
   | BindT (reason, ft) -> BindT (f reason, ft)
@@ -1862,10 +1865,7 @@ and mod_reason_of_use_t f = function
   | RefineT (reason, p, t) -> RefineT (f reason, p, t)
   | ReposLowerT (reason, t) -> ReposLowerT (f reason, t)
   | ReposUseT (reason, use_op, t) -> ReposUseT (f reason, use_op, t)
-  | ResolveSpreadT (reason_op, resolve) -> ResolveSpreadT (f reason_op, {
-    resolve with
-      rrt_resolve_to = mod_reason_of_spread_resolve f resolve.rrt_resolve_to;
-  })
+  | ResolveSpreadT (reason_op, resolve) -> ResolveSpreadT (f reason_op, resolve)
   | SentinelPropTestT (l, sense, sentinel, result) ->
       SentinelPropTestT (l, sense, sentinel, mod_reason_of_t f result)
   | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
@@ -1882,11 +1882,6 @@ and mod_reason_of_use_t f = function
       VarianceCheckT (f reason, ts, polarity)
   | TypeAppVarianceCheckT (reason_op, reason_tapp, targs) ->
       TypeAppVarianceCheckT (f reason_op, reason_tapp, targs)
-
-and mod_reason_of_spread_resolve _f = function
-| ResolveSpreadsToArray -> ResolveSpreadsToArray
-| ResolveSpreadsToArrayLiteral -> ResolveSpreadsToArrayLiteral
-| ResolveSpreadsToTuple -> ResolveSpreadsToTuple
 
 (* type comparison mod reason *)
 let reasonless_compare =
@@ -1970,7 +1965,6 @@ let string_of_ctor = function
   | PolyT _ -> "PolyT"
   | ReposT _ -> "ReposT"
   | ReposUpperT _ -> "ReposUpperT"
-  | RestT _ -> "RestT"
   | ShapeT _ -> "ShapeT"
   | SingletonBoolT _ -> "SingletonBoolT"
   | SingletonNumT _ -> "SingletonNumT"
@@ -2009,13 +2003,13 @@ let string_of_use_ctor = function
 
   | AdderT _ -> "AdderT"
   | AndT _ -> "AndT"
-  | ApplyT _ -> "ApplyT"
   | ArrRestT _ -> "ArrRestT"
   | AssertArithmeticOperandT _ -> "AssertArithmeticOperandT"
   | AssertBinaryInLHST _ -> "AssertBinaryInLHST"
   | AssertBinaryInRHST _ -> "AssertBinaryInRHST"
   | AssertForInRHST _ -> "AssertForInRHST"
   | AssertImportIsValueT _ -> "AssertImportIsValueT"
+  | AssertRestParamT _ -> "AssertRestParamT"
   | BecomeT _ -> "BecomeT"
   | BindT _ -> "BindT"
   | CallElemT _ -> "CallElemT"
@@ -2076,9 +2070,12 @@ let string_of_use_ctor = function
   | ReposUseT _ -> "ReposUseT"
   | ResolveSpreadT (_, {rrt_resolve_to; _;})->
     spf "ResolveSpreadT(%s)" begin match rrt_resolve_to with
-    | ResolveSpreadsToTuple -> "ResolveSpreadsToTuple"
-    | ResolveSpreadsToArray -> "ResolveSpreadsToArray"
-    | ResolveSpreadsToArrayLiteral -> "ResolveSpreadsToArrayLiteral"
+    | ResolveSpreadsToTuple _ -> "ResolveSpreadsToTuple"
+    | ResolveSpreadsToArray _ -> "ResolveSpreadsToArray"
+    | ResolveSpreadsToArrayLiteral _ -> "ResolveSpreadsToArrayLiteral"
+    | ResolveSpreadsToMultiflowFull _ -> "ResolveSpreadsToMultiflowFull"
+    | ResolveSpreadsToMultiflowPartial _ -> "ResolveSpreadsToMultiflowPartial"
+    | ResolveSpreadsToCallT _ -> "ResolveSpreadsToCallT"
     end
   | SentinelPropTestT _ -> "SentinelPropTestT"
   | SetElemT _ -> "SetElemT"
@@ -2164,3 +2161,9 @@ and extract_setter_type = function
 and extract_getter_type = function
   | FunT (_, _, _, { return_t; _; }) -> return_t
   | _ -> failwith "Getter property with unexpected type"
+
+and elemt_of_arrtype reason = function
+| ArrayAT (elemt, _)
+| ROArrayAT (elemt)
+| TupleAT (elemt, _) -> elemt
+| EmptyAT -> EmptyT reason

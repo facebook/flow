@@ -145,7 +145,6 @@ let rec gc cx state = function
   | StrT _ -> ()
   | ReposT (_, t) -> gc cx state t
   | ReposUpperT (_, t) -> gc cx state t
-  | RestT t -> gc cx state t
   | TaintT _ -> ()
   | ThisClassT t -> gc cx state t
   | ThisTypeAppT (t, this, ts) ->
@@ -174,7 +173,7 @@ and gc_funtype cx state funtype =
   gc cx state funtype.this_t;
   funtype.params_tlist |> List.iter (gc cx state);
   Option.iter
-    ~f:(fun (_, t) -> gc cx state t)
+    ~f:(fun (_, _, t) -> gc cx state t)
     funtype.rest_param;
   gc cx state funtype.return_t
 
@@ -193,14 +192,13 @@ and gc_use cx state = function
 
   | AdderT(_, t1, t2) -> gc cx state t1; gc cx state t2
   | AndT (_, t1, t2) -> gc cx state t1; gc cx state t2
-  | ApplyT(_, l, funcalltype) ->
-      gc cx state l; gc_funcalltype cx state funcalltype
   | ArrRestT (_, _, t) -> gc cx state t
   | AssertArithmeticOperandT _ -> ()
   | AssertBinaryInLHST _ -> ()
   | AssertBinaryInRHST _ -> ()
   | AssertForInRHST _ -> ()
   | AssertImportIsValueT _ -> ()
+  | AssertRestParamT _ -> ()
   | BecomeT (_, t) -> gc cx state t
   | BindT(_, funcalltype) -> gc_funcalltype cx state funcalltype
   | CallLatentPredT (_, _, _, t1, t2) -> gc cx state t1; gc cx state t2
@@ -290,24 +288,21 @@ and gc_use cx state = function
     ) targs
 
   | ResolveSpreadT (_, {
-    rrt_id=_;
     rrt_resolved;
     rrt_unresolved;
     rrt_resolve_to;
-    rrt_tout;
   }) ->
       List.iter (function
         | ResolvedArg t -> gc cx state t
-        | ResolvedSpreadArg (arraytype) ->
+        | ResolvedSpreadArg (_, arraytype) ->
             gc_arraytype cx state arraytype
-        | ResolvedAnySpreadArg -> ()
+        | ResolvedAnySpreadArg _ -> ()
       ) rrt_resolved;
       List.iter (function
         | UnresolvedArg t
         | UnresolvedSpreadArg t -> gc cx state t
       ) rrt_unresolved;
-      gc_spread_resolve cx state rrt_resolve_to;
-      gc cx state rrt_tout
+      gc_spread_resolve cx state rrt_resolve_to
 
 
 and gc_insttype cx state instance =
@@ -325,6 +320,7 @@ and gc_arraytype cx state = function
 | TupleAT (elemt, tuple_types) ->
     gc cx state elemt;
     List.iter (gc cx state) tuple_types;
+| EmptyAT -> ()
 
 and gc_id cx state id =
   let root_id, constraints = Flow_js.find_constraints cx id in (
@@ -429,10 +425,19 @@ and gc_elem_action cx state = function
   | ReadElem t | WriteElem t -> gc cx state t
   | CallElem (_, fct) -> gc_funcalltype cx state fct
 
-and gc_spread_resolve _cx _state = function
-| ResolveSpreadsToArray
-| ResolveSpreadsToArrayLiteral
-| ResolveSpreadsToTuple -> ()
+and gc_spread_resolve cx state = function
+| ResolveSpreadsToArray (tout)
+| ResolveSpreadsToArrayLiteral (_, tout)
+| ResolveSpreadsToTuple (_, tout) ->
+  gc cx state tout
+| ResolveSpreadsToMultiflowFull (ft) ->
+  gc_funtype cx state ft
+| ResolveSpreadsToMultiflowPartial (ft, _, tout) ->
+  gc_funtype cx state ft;
+  gc cx state tout
+| ResolveSpreadsToCallT (fct, tin) ->
+  gc_funcalltype cx state fct;
+  gc cx state tin
 
 (* Keep a reachable type variable around. *)
 let live cx state id =

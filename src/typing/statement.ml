@@ -2374,20 +2374,20 @@ and variable cx kind
         ) t init None id
 )
 
-and array_element cx undef_loc el = Ast.Expression.(
+and mixin_element cx undef_loc el = Ast.Expression.(
   match el with
   | Some (Expression e) ->
       let t = expression cx e in
       Flow.reposition cx (repos_reason (fst e) (reason_of_t t)) t
   | Some (Spread (loc, { SpreadElement.argument })) ->
-      let t = array_element_spread cx argument in
+      let t = mixin_element_spread cx argument in
       Flow.reposition cx (repos_reason loc (reason_of_t t)) t
   | None -> EmptyT.at undef_loc
 )
 
 and expression_or_spread cx = Ast.Expression.(function
   | Expression e -> Arg (expression cx e)
-  | Spread (_, { SpreadElement.argument }) -> SpreadArg (spread cx argument)
+  | Spread (_, { SpreadElement.argument }) -> SpreadArg (expression cx argument)
 )
 
 and expression_or_spread_list cx undef_loc = Ast.Expression.(
@@ -2399,15 +2399,12 @@ and expression_or_spread_list cx undef_loc = Ast.Expression.(
   )
 )
 
-and array_element_spread cx (loc, e) =
+and mixin_element_spread cx (loc, e) =
   let arr = expression cx (loc, e) in
   let reason = mk_reason (RCustom "spread operand") loc in
   Flow.mk_tvar_where cx reason (fun tvar ->
     Flow.flow_t cx (arr, ArrT (reason, ArrayAT(tvar, None)));
   )
-
-and spread cx (loc, e) =
-  RestT (array_element_spread cx (loc, e))
 
 and expression ?(is_cond=false) cx (loc, e) =
   let t = expression_ ~is_cond cx loc e in
@@ -2552,8 +2549,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
     | elems ->
         let elem_spread_list = expression_or_spread_list cx loc elems in
         Flow_js.mk_tvar_where cx reason (fun tout ->
-          Flow.resolve_spread_list
-            cx reason elem_spread_list ResolveSpreadsToArrayLiteral tout
+          let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), tout)) in
+          let reason_op = reason in
+          Flow.resolve_spread_list cx ~reason_op elem_spread_list resolve_to
         )
     )
 
@@ -2894,7 +2892,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let ret = Flow.mk_tvar cx reason in
       let ft = Flow.mk_functioncalltype
         [ Arg (ArrT (reason_array, ArrayAT (StrT.why reason, None)));
-          SpreadArg (RestT (AnyT.why reason)) ]
+          SpreadArg (AnyT.why reason) ]
         ret
       in
       Flow.flow cx (t, CallT (reason, ft));
@@ -4089,7 +4087,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
           key = Property.Identifier (_, "mixins");
           value = Property.Init (aloc, Array { Array.elements });
           _ }) ->
-        mixins := List.map (array_element cx aloc) elements;
+        mixins := List.map (mixin_element cx aloc) elements;
         fmap, mmap
 
       (* statics *)

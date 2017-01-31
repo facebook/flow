@@ -137,8 +137,12 @@ and _json_of_t_impl json_cx t = Hh_json.(
     ]
 
   | ArrT (_, ROArrayAT (elemt)) -> [
-      "kind", JSON_String "SuperTuple";
+      "kind", JSON_String "ReadOnlyArray";
       "elemType", _json_of_t json_cx elemt;
+    ]
+
+  | ArrT (_, EmptyAT) -> [
+      "kind", JSON_String "EmptyArray";
     ]
 
   | ClassT t -> [
@@ -153,7 +157,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
     ]
 
   | OptionalT t
-  | RestT t
   | AbstractT t -> [
       "type", _json_of_t json_cx t
     ]
@@ -369,11 +372,6 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | BindT (_, funtype)
   | CallT (_, funtype) -> [
-      "funType", json_of_funcalltype json_cx funtype
-    ]
-
-  | ApplyT (_, l, funtype) -> [
-      "lower", _json_of_t json_cx l;
       "funType", json_of_funcalltype json_cx funtype
     ]
 
@@ -603,6 +601,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "name", JSON_String name;
     ]
 
+  | AssertRestParamT _ -> []
+
   | CJSExtractNamedExportsT (_, (module_t_reason, exporttypes), t_out) -> [
       "module", _json_of_t json_cx (ModuleT (module_t_reason, exporttypes));
       "t_out", _json_of_t json_cx t_out;
@@ -692,20 +692,17 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       ]
     ]
   | ResolveSpreadT (_, {
-    rrt_id;
     rrt_resolved;
     rrt_unresolved;
     rrt_resolve_to;
-    rrt_tout;
   }) -> [
-      "id", JSON_Number (string_of_int rrt_id);
       "resolved", JSON_Array (List.map (fun param ->
         let kind, t = match param with
         | ResolvedArg t -> "ResolvedArg", t
-        | ResolvedSpreadArg (at) ->
-          "ResolvedSpreadArg", ArrT (locationless_reason (RCustom "array"), at)
-        | ResolvedAnySpreadArg ->
-          "ResolvedAnySpreadArg", AnyT (locationless_reason (RAny))
+        | ResolvedSpreadArg (r, at) ->
+          "ResolvedSpreadArg", ArrT (r, at)
+        | ResolvedAnySpreadArg r ->
+          "ResolvedAnySpreadArg", AnyT (r)
         in
         JSON_Object [
           "kind", JSON_String kind;
@@ -721,17 +718,38 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
           "type", _json_of_t_impl json_cx t;
         ]
       ) rrt_unresolved);
-      "resolve_to", JSON_Object (
-        let kind = match rrt_resolve_to with
-        | ResolveSpreadsToTuple -> "ResolveSpreadsToTuple"
-        | ResolveSpreadsToArray -> "ResolveSpreadsToArray"
-        | ResolveSpreadsToArrayLiteral -> "ResolveSpreadsToArrayLiteral" in
-        [ "kind", JSON_String kind ]
-      );
-      "t_out", _json_of_t json_cx rrt_tout;
+      "resolve_to", json_of_resolve_to json_cx rrt_resolve_to;
     ]
   )
 )
+
+and json_of_resolve_to json_cx = check_depth json_of_resolve_to_impl json_cx
+and json_of_resolve_to_impl json_cx resolve_to = Hh_json.(JSON_Object (
+  match resolve_to with
+  | ResolveSpreadsToTuple (id, tout) -> [
+    "id", JSON_Number (string_of_int id);
+    "t_out", _json_of_t json_cx tout;
+  ]
+  | ResolveSpreadsToArrayLiteral (id, tout) -> [
+    "id", JSON_Number (string_of_int id);
+    "t_out", _json_of_t json_cx tout;
+  ]
+  | ResolveSpreadsToArray (tout) -> [
+    "t_out", _json_of_t json_cx tout;
+  ]
+  | ResolveSpreadsToMultiflowFull (ft) -> [
+    "funtype", json_of_funtype json_cx ft;
+  ]
+  | ResolveSpreadsToMultiflowPartial (ft, call_reason, tout) -> [
+    "funtype", json_of_funtype json_cx ft;
+    "callReason", json_of_reason ~strip_root:json_cx.strip_root call_reason;
+    "t_out", _json_of_t json_cx tout;
+  ]
+  | ResolveSpreadsToCallT (fct, tin) -> [
+    "funcalltype", json_of_funcalltype json_cx fct;
+    "t_in", _json_of_t json_cx tin;
+  ]
+))
 
 and json_of_polarity json_cx = check_depth json_of_polarity_impl json_cx
 and json_of_polarity_impl _json_cx polarity =
@@ -849,7 +867,7 @@ and json_of_funtype_impl json_cx {
   ) @ [
     "restParam", (match rest_param with
     | None -> JSON_Null
-    | Some (name, t) -> JSON_Object (
+    | Some (name, _, t) -> JSON_Object (
       [
         "restParamType", _json_of_t json_cx t;
       ] @ (match name with
@@ -1399,14 +1417,14 @@ and dump_t_ (depth, tvars) cx t =
   | ArrT (_, TupleAT (_, tup)) -> p
       ~extra:(spf "Tuple [%s]" (String.concat ", " (List.map kid tup))) t
   | ArrT (_, ROArrayAT (elemt)) -> p
-      ~extra:(spf "SuperTuple %s" (kid elemt)) t
+      ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
+  | ArrT (_, EmptyAT) -> p ~extra:("EmptyArray") t
   | ClassT inst -> p ~reason:false ~extra:(kid inst) t
   | InstanceT (_, _, _, _, { class_id; _ }) -> p ~extra:(spf "#%d" class_id) t
   | TypeT (_, arg) -> p ~extra:(kid arg) t
   | AnnotT source -> p ~reason:false
       ~extra:(spf "%s" (kid source)) t
   | OptionalT arg
-  | RestT arg
   | AbstractT arg -> p ~reason:false ~extra:(kid arg) t
   | EvalT (arg, expr, id) -> p
       ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
@@ -1503,13 +1521,13 @@ and dump_use_t_ (depth, tvars) cx t =
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
   | AdderT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
-  | ApplyT (_, f, _) -> p ~extra:(kid f) t
   | ArrRestT _ -> p t
   | AssertArithmeticOperandT _ -> p t
   | AssertBinaryInLHST _ -> p t
   | AssertBinaryInRHST _ -> p t
   | AssertForInRHST _ -> p t
   | AssertImportIsValueT _ -> p t
+  | AssertRestParamT _ -> p t
   | BecomeT (_, arg) -> p ~extra:(kid arg) t
   | BindT _ -> p t
   | CallElemT (_, _, ix, _) -> p ~extra:(kid ix) t
@@ -1573,12 +1591,16 @@ and dump_use_t_ (depth, tvars) cx t =
   | RefineT _ -> p t
   | ReposLowerT (_, arg) -> p ~extra:(use_kid arg) t
   | ReposUseT (_, _, arg) -> p ~extra:(kid arg) t
-  | ResolveSpreadT (_, {rrt_resolve_to; rrt_tout; _;}) ->
-      p ~extra:(spf "%s, %s" (match rrt_resolve_to with
-      | ResolveSpreadsToTuple -> "ResolveSpreadsToTuple"
-      | ResolveSpreadsToArrayLiteral -> "ResolveSpreadsToArrayLiteral"
-      | ResolveSpreadsToArray -> "ResolveSpreadsToArray")
-      (kid rrt_tout)) t
+  | ResolveSpreadT (_, {rrt_resolve_to; _;}) ->
+      (match rrt_resolve_to with
+      | ResolveSpreadsToTuple (_, tout)
+      | ResolveSpreadsToArrayLiteral (_, tout)
+      | ResolveSpreadsToArray (tout)
+      | ResolveSpreadsToMultiflowPartial (_, _, tout) ->
+        p ~extra:(kid tout) t
+      | ResolveSpreadsToCallT (_, tin) ->
+        p ~extra:(kid tin) t
+      | ResolveSpreadsToMultiflowFull _ -> p t)
   | SentinelPropTestT (l, sense, sentinel, result) -> p ~reason:false
       ~extra:(spf "%s, %b, %s, %s"
         (kid l)
@@ -1777,7 +1799,7 @@ let dump_flow_error =
   | PropRefComputedLiteral -> "PropRefComputedLiteral"
   | ShadowReadComputed -> "ShadowReadComputed"
   | ShadowWriteComputed -> "ShadowWriteComputed"
-  | RestArgumentNotIdentifierPattern -> "RestArgumentNotIdentifierPattern"
+  | RestParameterNotIdentifierPattern -> "RestParameterNotIdentifierPattern"
   | InterfaceTypeSpread -> "InterfaceTypeSpread"
   in
   fun ?(depth=3) cx err ->

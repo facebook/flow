@@ -140,7 +140,7 @@ and internal_error =
   | PropRefComputedLiteral
   | ShadowReadComputed
   | ShadowWriteComputed
-  | RestArgumentNotIdentifierPattern
+  | RestParameterNotIdentifierPattern
   | InterfaceTypeSpread
 
 and unsupported_syntax =
@@ -201,7 +201,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     | SetPropT _ -> "Property cannot be assigned on"
     | MethodT _ -> "Method cannot be called on"
     | CallT _ -> "Function cannot be called on"
-    | ApplyT _ -> "Expected array of arguments instead of"
     | ConstructorT _ -> "Constructor cannot be called on"
     | GetElemT _ -> "Computed property/element cannot be accessed on"
     | SetElemT _ -> "Computed property/element cannot be assigned on"
@@ -232,8 +231,17 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | ObjectMapi -> "Expected object instead of")
     | ReactCreateElementT _ -> "Expected React component instead of"
     | CallLatentPredT _ -> "Expected predicated function instead of"
-    | ResolveSpreadT _ ->
-        "Expected rest element to be an array or tuple instead of"
+    | ResolveSpreadT (_, {rrt_resolve_to; _}) ->
+      begin match rrt_resolve_to with
+      | ResolveSpreadsToTuple _
+      | ResolveSpreadsToArray _
+      | ResolveSpreadsToArrayLiteral _
+        -> "Expected spread element to be an iterable instead of"
+      | ResolveSpreadsToMultiflowFull _
+      | ResolveSpreadsToMultiflowPartial _
+      | ResolveSpreadsToCallT _
+        -> "Expected spread argument to be an iterable instead of"
+      end
     | TypeAppVarianceCheckT _ -> "Expected polymorphic type instead of"
     (* unreachable or unclassified use-types. until we have a mechanical way
        to verify that all legit use types are listed above, we can't afford
@@ -685,7 +693,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
 
   | EInvalidRestParam reason ->
       mk_error ~trace_infos ~kind:InferWarning [mk_info reason [
-        "rest parameter should have an explicit array type (or type `any`)"
+        "rest parameter should have an array type"
       ]]
 
   | ETypeParamArity (loc, n) ->
@@ -788,8 +796,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
           "unexpected shadow read on computed property"
       | ShadowWriteComputed ->
           "unexpected shadow write on computed property"
-      | RestArgumentNotIdentifierPattern ->
-          "unexpected rest argument, expected an identifier pattern"
+      | RestParameterNotIdentifierPattern ->
+          "unexpected rest parameter, expected an identifier pattern"
       | InterfaceTypeSpread ->
           "unexpected spread property in interface"
       in

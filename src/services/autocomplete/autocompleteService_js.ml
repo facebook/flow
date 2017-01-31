@@ -81,9 +81,9 @@ let rec autocomplete_create_result cx name type_ loc =
       ) pnames params in
       let params = match rest_param with
       | None -> params
-      | Some (name, t) ->
-          let param_name =
-            parameter_name cx (Option.value ~default:"_" name) t in
+      | Some (name, _, t) ->
+          let name = Option.value ~default:"_" name in
+          let param_name = rest_parameter_name cx name t in
           let param_ty =
             if is_printed_param_type_parsable ~weak:true cx t
             then string_of_param_t cx t

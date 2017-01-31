@@ -42,7 +42,7 @@ val mk_tvar_derivable_where: Context.t -> reason -> (Type.t -> unit) -> Type.t
 
 val get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
 
-val resolve_spread_list: Context.t -> reason_op:Reason.t -> Type.unresolved_param list -> Type.spread_resolve -> Type.t -> unit
+val resolve_spread_list: Context.t -> reason_op:Reason.t -> Type.unresolved_param list -> Type.spread_resolve -> unit
 
 (* polymorphism *)
 
@@ -60,7 +60,8 @@ val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
 (* object/method types *)
 
 val mk_methodtype :
-  Type.t -> Type.t list -> rest_param:(string option * Type.t) option ->
+  Type.t -> Type.t list ->
+  rest_param:(string option * Loc.t * Type.t) option ->
   ?frame:int -> ?params_names:string list -> ?is_predicate:bool ->
   Type.t -> Type.funtype
 
@@ -71,13 +72,13 @@ val mk_methodcalltype :
 
 val mk_boundfunctiontype :
   Type.t list ->
-  rest_param:(string option * Type.t) option ->
+  rest_param:(string option * Loc.t * Type.t) option ->
   ?frame:int -> ?params_names:string list -> ?is_predicate:bool ->
   Type.t -> Type.funtype
 
 val mk_functiontype :
   Type.t list ->
-  rest_param:(string option * Type.t) option ->
+  rest_param:(string option * Loc.t * Type.t) option ->
   ?frame:int -> ?params_names:string list -> ?is_predicate:bool ->
   Type.t -> Type.funtype
 

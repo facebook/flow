@@ -52,12 +52,14 @@ class ['a] t = object(self)
     let acc = self#props cx acc props_tmap in
     let acc = self#type_ cx acc proto_t in
     acc
+
   | ArrT (_, (ArrayAT (elemt, None) | ROArrayAT (elemt))) ->
     self#type_ cx acc elemt
   | ArrT (_, ArrayAT (elemt, Some tuple_types))
   | ArrT (_, TupleAT (elemt, tuple_types)) ->
     let acc = self#type_ cx acc elemt in
     self#list (self#type_ cx) acc tuple_types
+  | ArrT (_, EmptyAT) -> acc
 
   | ClassT t -> self#type_ cx acc t
 
@@ -69,8 +71,6 @@ class ['a] t = object(self)
     acc
 
   | OptionalT t -> self#type_ cx acc t
-
-  | RestT t -> self#type_ cx acc t
 
   | AbstractT t -> self#type_ cx acc t
 
@@ -208,13 +208,13 @@ class ['a] t = object(self)
   (* Currently not walking use types. This will change in an upcoming diff. *)
   | AdderT (_, _, _)
   | AndT (_, _, _)
-  | ApplyT (_, _, _)
   | ArrRestT (_, _, _)
   | AssertArithmeticOperandT _
   | AssertBinaryInLHST _
   | AssertBinaryInRHST _
   | AssertForInRHST _
   | AssertImportIsValueT (_, _)
+  | AssertRestParamT _
   | BecomeT (_, _)
   | BindT (_, _)
   | CallElemT _
@@ -312,7 +312,7 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc this_t in
     let acc = self#list (self#type_ cx) acc params_tlist in
     let acc = Option.value_map
-      ~f:(fun (_, t) -> self#type_ cx acc t)
+      ~f:(fun (_, _, t) -> self#type_ cx acc t)
       ~default:acc
       rest_param in
     let acc = self#type_ cx acc return_t in
