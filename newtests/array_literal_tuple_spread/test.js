@@ -224,20 +224,6 @@ export default suite(({addFile, addFiles, addCode}) => [
       )
       .because('Flow infers the return type to [2,1] | [3,1]'),
   ]),
-  test('Flowing a non-array to a rest element', [
-    addCode(`
-      const num = 123;
-      const tuple = [...num];
-    `).newErrors(
-        `
-          test.js:5
-            5:       const tuple = [...num];
-                                   ^^^^^^^^ array literal. Expected rest element to be an array or tuple instead of
-            5:       const tuple = [...num];
-                                       ^^^ number
-        `,
-      ),
-  ]),
   test('Spreading an Array<T> should result in a non-tuple array', [
     addCode(`
       const tup: Array<number> = [1,2,3];
@@ -267,5 +253,62 @@ export default suite(({addFile, addFiles, addCode}) => [
                               ^^^^^^^ tuple type
         `,
       )
+  ]),
+  test('Spreading a string', [
+    addCode('const arr: Array<number> = [..."hello"];')
+      .newErrors(
+        `
+          test.js:3
+            3: const arr: Array<number> = [..."hello"];
+                                ^^^^^^ number. This type is incompatible with
+          274:     @@iterator(): Iterator<string>;
+                                          ^^^^^^ string. See lib: [LIB] core.js:274
+        `,
+      )
+      .because('String is an Iterable<string>'),
+  ]),
+  test('Spreading a generator', [
+    addCode(`
+      function *foo(): Generator<string, void, void> {
+        yield "hello";
+      }
+      const arr: Array<number> = [...foo()];
+    `).newErrors(
+        `
+          test.js:4
+            4:       function *foo(): Generator<string, void, void> {
+                                                ^^^^^^ string. This type is incompatible with
+            7:       const arr: Array<number> = [...foo()];
+                                      ^^^^^^ number
+        `,
+      )
+      .because('Generators are iterables too!'),
+  ]),
+  test('Spreading an iterator', [
+    addCode(`
+      function test(iter: Iterable<string>): Array<number> {
+        return [...iter];
+      }
+    `).newErrors(
+        `
+          test.js:4
+            4:       function test(iter: Iterable<string>): Array<number> {
+                                                  ^^^^^^ string. This type is incompatible with
+            4:       function test(iter: Iterable<string>): Array<number> {
+                                                                  ^^^^^^ number
+        `,
+      )
+      .because('Spec says you can spread iterables')
+  ]),
+  test('Spreading Object', [
+    addCode(`
+      function test(iter: Object): string {
+        return [...iter];
+      }
+    `).noNewErrors()
+      .because(
+        'You can spread Object since it might be an Iterable. It is treated ' +
+          'like spreading any, which results in any'
+      ),
   ]),
 ]);

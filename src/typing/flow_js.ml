@@ -1506,92 +1506,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)) ->
       prep_try_intersection cx trace reason unresolved (resolved @ [t]) u r rep
 
-    (*************************)
-    (* Resolving spread args *)
-    (*************************)
-
-    | AnyT _,
-      ResolveSpreadT (reason_op, {
-        rrt_id = _;
-        rrt_resolved;
-        rrt_unresolved;
-        rrt_resolve_to;
-        rrt_tout;
-      }) ->
-
-      let rrt_resolved = ResolvedAnySpreadArg::rrt_resolved in
-      resolve_spread_list_rec
-        cx ~trace ~reason_op
-        (rrt_resolved, rrt_unresolved) rrt_resolve_to rrt_tout
-
-    | ArrT (_, arrtype),
-      ResolveSpreadT (reason_op, {
-        rrt_id;
-        rrt_resolved;
-        rrt_unresolved;
-        rrt_resolve_to;
-        rrt_tout;
-      }) ->
-
-      let elemt = match arrtype with
-      | ArrayAT (elemt, _)
-      | TupleAT (elemt, _)
-      | ROArrayAT (elemt) -> elemt in
-
-      let id = match rrt_resolve_to with
-      | ResolveSpreadsToTuple -> spf "ToTuple #%d" rrt_id
-      | ResolveSpreadsToArrayLiteral -> spf "ToArrayLiteral #%d" rrt_id
-      | ResolveSpreadsToArray -> spf "ToArray #%d" rrt_id
-      in
-
-      (* You might come across code like
-       *
-       * for (let x = 1; x < 3; x++) { foo = [...foo, x]; }
-       *
-       * where every time you spread foo, you flow another type into foo. So
-       * each time `l ~> ResolveSpreadT` is processed, it might produce a new
-       * `l ~> ResolveSpreadT` with a new `l`.
-       *
-       * Here is how we avoid this:
-       *
-       * 1. We use ConstFoldExpansion to detect when we see a ResolveSpreadT
-       *    upper bound multiple times
-       * 2. When a ResolveSpreadT upper bound multiple times, we change it into
-       *    a ResolveSpreadT upper bound that resolves to a more general type.
-       *    This should prevent more distinct lower bounds from flowing in
-       * 3. rec_flow caches (l,u) pairs.
-       *)
-      if ConstFoldExpansion.push_unless_loop id (reason_of_t elemt)
-      then begin
-        (* We haven't seen this ArrT yet, so no need to worry about loops *)
-        let rrt_resolved = ResolvedSpreadArg(arrtype)::rrt_resolved in
-        resolve_spread_list_rec
-          cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to rrt_tout;
-        ConstFoldExpansion.pop id
-      end else begin
-        (* We think we've seen this ArrT before, so we might be in a loop. *)
-        match rrt_resolve_to with
-        | ResolveSpreadsToTuple
-        | ResolveSpreadsToArrayLiteral ->
-            (* To avoid infinite recursion, let's deconstruct to a simplier case
-             * where we no longer resolve to a tuple but instead just resolve to
-             * an array. The rrt_id is the same so that we avoid creating many
-             * distinct upper bounds, which would sabotage the (l,u) pair
-             * caching that rec_flow does. *)
-            rec_flow cx trace (l, ResolveSpreadT (reason_op, {
-              rrt_id;
-              rrt_resolved;
-              rrt_unresolved;
-              rrt_resolve_to = ResolveSpreadsToArray;
-              rrt_tout;
-            }))
-        | ResolveSpreadsToArray ->
-            (* If we've already resolved to an array before, then there's no
-             * point in doing any more work, since we'd just resolve to the
-             * same array. *)
-             ()
-      end
-
     (*****************************)
     (* Refinement type subtyping *)
     (*****************************)
@@ -2810,6 +2724,114 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | IntersectionT (r, rep), u ->
       prep_try_intersection cx trace
         (reason_of_use_t u) (parts_to_replace u) [] u r rep
+
+
+    (*************************)
+    (* Resolving spread args *)
+    (*************************)
+
+    (* `any` is obviously fine as a spread element. `Object` is fine because
+     * any Iterable can be spread, and `Object` is the any type that covers
+     * iterable objects. *)
+    | (AnyT _ | AnyObjT _),
+      ResolveSpreadT (reason_op, {
+        rrt_id = _;
+        rrt_resolved;
+        rrt_unresolved;
+        rrt_resolve_to;
+        rrt_tout;
+      }) ->
+
+      let rrt_resolved = ResolvedAnySpreadArg::rrt_resolved in
+      resolve_spread_list_rec
+        cx ~trace ~reason_op
+        (rrt_resolved, rrt_unresolved) rrt_resolve_to rrt_tout
+
+    | _,
+      ResolveSpreadT (reason_op, {
+        rrt_id;
+        rrt_resolved;
+        rrt_unresolved;
+        rrt_resolve_to;
+        rrt_tout;
+      }) ->
+
+      let arrtype = match l with
+      | ArrT (_, arrtype) ->
+        (* Arrays *)
+        arrtype
+      | _ ->
+        (* Non-array non-any iterables *)
+        let reason = reason_of_t l in
+        let element_tvar = mk_tvar cx reason in
+        let iterable =
+          let targs = [element_tvar; AnyT.why reason; AnyT.why reason] in
+          get_builtin_typeapp cx
+            (replace_reason_const (RCustom "Iterable expected for spread") reason)
+            "$Iterable" targs
+        in
+        flow_t cx (l, iterable);
+        ArrayAT (element_tvar, None)
+      in
+
+      let elemt = match arrtype with
+      | ArrayAT (elemt, _)
+      | TupleAT (elemt, _)
+      | ROArrayAT (elemt) -> elemt in
+
+      let id = match rrt_resolve_to with
+      | ResolveSpreadsToTuple -> spf "ToTuple #%d" rrt_id
+      | ResolveSpreadsToArrayLiteral -> spf "ToArrayLiteral #%d" rrt_id
+      | ResolveSpreadsToArray -> spf "ToArray #%d" rrt_id
+      in
+
+      (* You might come across code like
+       *
+       * for (let x = 1; x < 3; x++) { foo = [...foo, x]; }
+       *
+       * where every time you spread foo, you flow another type into foo. So
+       * each time `l ~> ResolveSpreadT` is processed, it might produce a new
+       * `l ~> ResolveSpreadT` with a new `l`.
+       *
+       * Here is how we avoid this:
+       *
+       * 1. We use ConstFoldExpansion to detect when we see a ResolveSpreadT
+       *    upper bound multiple times
+       * 2. When a ResolveSpreadT upper bound multiple times, we change it into
+       *    a ResolveSpreadT upper bound that resolves to a more general type.
+       *    This should prevent more distinct lower bounds from flowing in
+       * 3. rec_flow caches (l,u) pairs.
+       *)
+      if ConstFoldExpansion.push_unless_loop id (reason_of_t elemt)
+      then begin
+        (* We haven't seen this ArrT yet, so no need to worry about loops *)
+        let rrt_resolved = ResolvedSpreadArg(arrtype)::rrt_resolved in
+        resolve_spread_list_rec
+          cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to rrt_tout;
+        ConstFoldExpansion.pop id
+      end else begin
+        (* We think we've seen this ArrT before, so we might be in a loop. *)
+        match rrt_resolve_to with
+        | ResolveSpreadsToTuple
+        | ResolveSpreadsToArrayLiteral ->
+            (* To avoid infinite recursion, let's deconstruct to a simplier case
+             * where we no longer resolve to a tuple but instead just resolve to
+             * an array. The rrt_id is the same so that we avoid creating many
+             * distinct upper bounds, which would sabotage the (l,u) pair
+             * caching that rec_flow does. *)
+            rec_flow cx trace (l, ResolveSpreadT (reason_op, {
+              rrt_id;
+              rrt_resolved;
+              rrt_unresolved;
+              rrt_resolve_to = ResolveSpreadsToArray;
+              rrt_tout;
+            }))
+        | ResolveSpreadsToArray ->
+            (* If we've already resolved to an array before, then there's no
+             * point in doing any more work, since we'd just resolve to the
+             * same array. *)
+             ()
+      end
 
     (* singleton lower bounds are equivalent to the corresponding
        primitive with a literal constraint. These conversions are
