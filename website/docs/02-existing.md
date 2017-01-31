@@ -17,30 +17,25 @@ Why is typechecking existing code so hard? Libraries not written with types in m
 
 It is typically a much larger effort, and requires much more programmer annotation, to get such code to typecheck. On the other hand, if you own a library and would like to benefit from Flow typechecking within the library itself, this guide is for you.
 
-## Weak mode
+## Dealing with a large number of type errors
 
-Flow has a special mode, known as *weak mode*, to get started with complex library code without having to pay the full cost up front. The difference between weak mode and regular mode is how Flow deals with missing type annotations. In regular mode Flow will infer types for all missing annotations, and produce errors whenever it detects a mismatch. In weak mode, Flow will do much less type inference. It will still infer types within functions, but will otherwise treat unannotated variables as having the [`any`](quick-reference.html#any) type - meaning no typechecking happens on them.
+If you encounter too many type errors after running Flow and don't know how to
+proceed, you could quickly cut down the number of type errors by adding the
+[`any`](quick-reference.html#any) type to parameters and returns of selected
+functions in your code. This will have the effect of isolating type errors to
+smaller regions of code - for example, within function bodies but not across
+function calls - and making them more manageable and easier to fix.
 
-A good first step towards typechecking existing library code is to use weak mode, rather than regular mode. Simply change the header declaration in the file you want to typecheck:
-
-```js +line_numbers
-/* @flow weak */
-```
-
-Weak mode can still point out type problems, and likely will, but there will be far fewer and they will be easier to fix. This should give you some benefit straight away without too much work. The typical errors you are likely to run into are:
+This strategy should give you some benefit straight away without too much
+work. The typical errors you are likely to run into are:
 
 * Potentially `null` or `undefined` values, easily fixed by adding conditional checks.
 * Primitive type issues, like `true + 3`. Fixing these requires more knowledge of the code but is usually a small, local fix.
 * In cases where Flow just doesn't understand the code as written, [explicitly annotating values with `any`](/blog/2015/02/18/Typecasts.html) can help the typechecker.
 
-Weak mode typically produces a manageable number of errors, so you can get down to zero errors in weak mode with moderate effort.
-
 ## Next steps
 
-Once your code typechecks with Flow's weak mode, you can start adding type annotations incrementally. Each type annotation you add will allow Flow to validate more code, and you can gradually increase Flow's coverage of your code.
-
-Once your code has more type annotations, you can consider switching it over to regular flow mode by switching the comment at the top of the file to
-
-```js +line_numbers
-/* @flow */
-```
+Once your code typechecks after sufficient fixes and uses of the `any` type, you
+can start replacing `any` with better type annotations incrementally. Each type
+annotation you add will allow Flow to validate more code, and you can gradually
+increase Flow's coverage of your code.
