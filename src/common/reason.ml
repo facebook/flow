@@ -84,6 +84,7 @@ type reason_desc =
   | RJSXIdentifier of string * string
   | RJSXElementProps of string
   | RJSXElement of string option
+  | RJSXText
   | RAnyObject
   | RAnyFunction
   | RUnknownString
@@ -378,6 +379,7 @@ let rec string_of_desc = function
     | Some x -> spf "JSX element `%s`" x
     | None -> "JSX element")
   | RJSXElementProps x -> spf "props of JSX element `%s`" x
+  | RJSXText -> spf "JSX text"
   | RAnyObject -> "any object"
   | RAnyFunction -> "any function"
   | RUnknownString -> "some string with unknown value"
