@@ -4401,6 +4401,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
 
   (* inspect a typeof equality test *)
   let typeof_test loc sense arg typename str_loc =
+    let bool = BoolT.at loc in
     match refinable_lvalue arg with
     | Some name, t ->
         let pred = match typename with
@@ -4413,12 +4414,12 @@ and predicates_of_condition cx e = Ast.(Expression.(
         | _ -> None
         in
         begin match pred with
-        | Some pred -> result BoolT.t name t pred sense
+        | Some pred -> result bool name t pred sense
         | None ->
           Flow_js.add_output cx Flow_error.(EInvalidTypeof (str_loc, typename));
-          empty_result (BoolT.at loc)
+          empty_result bool
         end
-    | None, _ -> empty_result (BoolT.at loc)
+    | None, _ -> empty_result bool
   in
 
   let sentinel_prop_test loc ~sense ~strict expr val_t =
@@ -4635,7 +4636,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       eq_test loc ~sense:false ~strict:true left right
 
   (* Array.isArray(expr) *)
-  | _, Call {
+  | loc, Call {
       Call.callee = callee_loc, Member {
         Member._object = (_, Identifier (_, "Array") as o);
         property = Member.PropertyIdentifier (prop_loc, "isArray");
@@ -4654,12 +4655,13 @@ and predicates_of_condition cx e = Ast.(Expression.(
         Flow.flow cx (obj_t, GetPropT (reason, Named (prop_reason, "isArray"), t))
       ) in
       Hashtbl.replace (Context.type_table cx) prop_loc fn_t;
+      let bool = BoolT.at loc in
 
       match refinable_lvalue arg with
       | Some name, t ->
-          result BoolT.t name t ArrP true
+          result bool name t ArrP true
       | None, _ ->
-          empty_result BoolT.t
+          empty_result bool
     )
 
   (* test1 && test2 *)
