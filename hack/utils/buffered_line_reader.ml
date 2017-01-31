@@ -98,9 +98,17 @@ let create fd = {
   unconsumed_buffer = ref None;
   }
 
-let null_reader = {
-  fd = Unix.openfile "/dev/null" [Unix.O_RDONLY] 0o440;
-  unconsumed_buffer = ref None;
-  }
+let null_reader_ref = ref None
+
+let get_null_reader () =
+  match !null_reader_ref with
+    | Some x -> x
+    | None ->
+        let null_reader = {
+          fd = Unix.openfile "/dev/null" [Unix.O_RDONLY] 0o440;
+          unconsumed_buffer = ref None;
+        } in
+        null_reader_ref := Some null_reader;
+        null_reader
 
 let get_fd r = r.fd

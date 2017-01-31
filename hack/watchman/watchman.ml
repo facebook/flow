@@ -660,7 +660,7 @@ module Testing = struct
 
   let test_env = {
     settings = test_settings;
-    socket = (Buffered_line_reader.null_reader, open_out "/dev/null");
+    socket = (Buffered_line_reader.get_null_reader (), open_out "/dev/null");
     watch_root = "";
     relative_path = "";
     clockspec = "";
