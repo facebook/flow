@@ -264,7 +264,7 @@ class ['a] t = object(self)
   | RefineT _
   | ReposLowerT (_, _)
   | ReposUseT (_, _, _)
-  | ResolveRestT _
+  | ResolveSpreadT _
   | SentinelPropTestT _
   | SetElemT (_, _, _)
   | SetPropT (_, _, _)

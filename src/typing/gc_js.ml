@@ -289,7 +289,7 @@ and gc_use cx state = function
       gc cx state t2
     ) targs
 
-  | ResolveRestT (_, {
+  | ResolveSpreadT (_, {
     rrt_id=_;
     rrt_resolved;
     rrt_unresolved;
@@ -297,16 +297,16 @@ and gc_use cx state = function
     rrt_tout;
   }) ->
       List.iter (function
-        | ResolvedParam t -> gc cx state t
-        | ResolvedRestParam (arraytype) ->
+        | ResolvedArg t -> gc cx state t
+        | ResolvedSpreadArg (arraytype) ->
             gc_arraytype cx state arraytype
-        | ResolvedAnyRestParam -> ()
+        | ResolvedAnySpreadArg -> ()
       ) rrt_resolved;
       List.iter (function
-        | UnresolvedParam t
-        | UnresolvedRestParam t -> gc cx state t
+        | UnresolvedArg t
+        | UnresolvedSpreadArg t -> gc cx state t
       ) rrt_unresolved;
-      gc_rest_resolve cx state rrt_resolve_to;
+      gc_spread_resolve cx state rrt_resolve_to;
       gc cx state rrt_tout
 
 
@@ -429,7 +429,7 @@ and gc_elem_action cx state = function
   | ReadElem t | WriteElem t -> gc cx state t
   | CallElem (_, fct) -> gc_funcalltype cx state fct
 
-and gc_rest_resolve _cx _state = function
+and gc_spread_resolve _cx _state = function
 | ResolveSpreadsToArray
 | ResolveSpreadsToArrayLiteral
 | ResolveSpreadsToTuple -> ()

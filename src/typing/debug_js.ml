@@ -691,7 +691,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
         ("refined_t", _json_of_t_impl json_cx t)
       ]
     ]
-  | ResolveRestT (_, {
+  | ResolveSpreadT (_, {
     rrt_id;
     rrt_resolved;
     rrt_unresolved;
@@ -701,11 +701,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "id", JSON_Number (string_of_int rrt_id);
       "resolved", JSON_Array (List.map (fun param ->
         let kind, t = match param with
-        | ResolvedParam t -> "ResolvedParam", t
-        | ResolvedRestParam (at) ->
-          "ResolvedRestParam", ArrT (locationless_reason (RCustom "array"), at)
-        | ResolvedAnyRestParam ->
-          "ResolvedAnyRestParam", AnyT (locationless_reason (RAny))
+        | ResolvedArg t -> "ResolvedArg", t
+        | ResolvedSpreadArg (at) ->
+          "ResolvedSpreadArg", ArrT (locationless_reason (RCustom "array"), at)
+        | ResolvedAnySpreadArg ->
+          "ResolvedAnySpreadArg", AnyT (locationless_reason (RAny))
         in
         JSON_Object [
           "kind", JSON_String kind;
@@ -714,8 +714,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       ) rrt_resolved);
       "unresolved", JSON_Array (List.map (fun param ->
         let kind, t = match param with
-        | UnresolvedParam t -> "UnresolvedParam", t
-        | UnresolvedRestParam t -> "UnresolvedRestParam", t in
+        | UnresolvedArg t -> "UnresolvedArg", t
+        | UnresolvedSpreadArg t -> "UnresolvedSpreadArg", t in
         JSON_Object [
           "kind", JSON_String kind;
           "type", _json_of_t_impl json_cx t;
@@ -1570,7 +1570,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | RefineT _ -> p t
   | ReposLowerT (_, arg) -> p ~extra:(use_kid arg) t
   | ReposUseT (_, _, arg) -> p ~extra:(kid arg) t
-  | ResolveRestT (_, {rrt_resolve_to; rrt_tout; _;}) ->
+  | ResolveSpreadT (_, {rrt_resolve_to; rrt_tout; _;}) ->
       p ~extra:(spf "%s, %s" (match rrt_resolve_to with
       | ResolveSpreadsToTuple -> "ResolveSpreadsToTuple"
       | ResolveSpreadsToArrayLiteral -> "ResolveSpreadsToArrayLiteral"

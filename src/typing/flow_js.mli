@@ -42,7 +42,7 @@ val mk_tvar_derivable_where: Context.t -> reason -> (Type.t -> unit) -> Type.t
 
 val get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
 
-val resolve_spread_list: Context.t -> reason_op:Reason.t -> Type.unresolved_param list -> Type.rest_resolve -> Type.t -> unit
+val resolve_spread_list: Context.t -> reason_op:Reason.t -> Type.unresolved_param list -> Type.spread_resolve -> Type.t -> unit
 
 (* polymorphism *)
 

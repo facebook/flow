@@ -531,13 +531,13 @@ module rec TypeTerm : sig
      *)
     | RefineT of reason * predicate * t
 
-    (* Rest elements show up in a bunch of places: array literals, function
+    (* Spread elements show up in a bunch of places: array literals, function
      * parameters, function call arguments, method arguments. constructor
-     * arguments, etc. Often we have logic that depends on what the rest
-     * elements resolve to. ResolveRestT is a use type that waits for a list of
-     * rest and non-rest elements to resolve, and then constructs whatever
-     * type it resolves to *)
-    | ResolveRestT of reason * resolve_rest_type
+     * arguments, etc. Often we have logic that depends on what the spread
+     * elements resolve to. ResolveSpreadT is a use type that waits for a list
+     * of spread and non-spread elements to resolve, and then constructs
+     * whatever type it resolves to *)
+    | ResolveSpreadT of reason * resolve_spread_type
 
   and predicate =
     | AndP of predicate * predicate
@@ -854,33 +854,33 @@ module rec TypeTerm : sig
   and dep_preds =
     t * predicate Key_map.t * predicate Key_map.t
 
-  and resolve_rest_type = {
+  and resolve_spread_type = {
     (* This is a form of constant folding, so this id can be used to avoid
      * infinite recursion *)
     rrt_id: int;
     (* This is the list of elements that are already resolved (that is have no
-     * more unresolved rest elements *)
+     * more unresolved spread elements *)
     rrt_resolved: resolved_param list;
     (* This is the list of elements that we have yet to resolve *)
     rrt_unresolved: unresolved_param list;
     (* Once all the elements have been resolved, this tells us what type to
      * construct *)
-    rrt_resolve_to: rest_resolve;
+    rrt_resolve_to: spread_resolve;
     (* Once we've resolved all the elements and constructed a type, we flow it
     * to this type *)
     rrt_tout: t;
   }
 
   and unresolved_param =
-  | UnresolvedParam of t
-  | UnresolvedRestParam of t
+  | UnresolvedArg of t
+  | UnresolvedSpreadArg of t
 
   and resolved_param =
-  | ResolvedParam of t
-  | ResolvedRestParam of arrtype
-  | ResolvedAnyRestParam
+  | ResolvedArg of t
+  | ResolvedSpreadArg of arrtype
+  | ResolvedAnySpreadArg
 
-  and rest_resolve =
+  and spread_resolve =
   (* Once we've finished resolving spreads, try to construct a tuple *)
   | ResolveSpreadsToTuple
   (* Once we've finished resolving spreads, try to construct an array with
@@ -1488,7 +1488,7 @@ let any_propagating_use_t = function
   | CJSExtractNamedExportsT _
   | CopyNamedExportsT _
   | ReactCreateElementT _
-  | ResolveRestT _
+  | ResolveSpreadT _
     -> true
 
   (* These types have no t_out, so can't propagate anything *)
@@ -1681,7 +1681,7 @@ and reason_of_use_t = function
   | RefineT (reason, _, _) -> reason
   | ReposLowerT (reason, _) -> reason
   | ReposUseT (reason, _, _) -> reason
-  | ResolveRestT (reason, _) -> reason
+  | ResolveSpreadT (reason, _) -> reason
   | SentinelPropTestT (_, _, _, result) -> reason_of_t result
   | SetElemT (reason,_,_) -> reason
   | SetPropT (reason,_,_) -> reason
@@ -1848,9 +1848,9 @@ and mod_reason_of_use_t f = function
   | RefineT (reason, p, t) -> RefineT (f reason, p, t)
   | ReposLowerT (reason, t) -> ReposLowerT (f reason, t)
   | ReposUseT (reason, use_op, t) -> ReposUseT (f reason, use_op, t)
-  | ResolveRestT (reason_op, resolve) -> ResolveRestT (f reason_op, {
+  | ResolveSpreadT (reason_op, resolve) -> ResolveSpreadT (f reason_op, {
     resolve with
-      rrt_resolve_to = mod_reason_of_rest_resolve f resolve.rrt_resolve_to;
+      rrt_resolve_to = mod_reason_of_spread_resolve f resolve.rrt_resolve_to;
   })
   | SentinelPropTestT (l, sense, sentinel, result) ->
       SentinelPropTestT (l, sense, sentinel, mod_reason_of_t f result)
@@ -1869,7 +1869,7 @@ and mod_reason_of_use_t f = function
   | TypeAppVarianceCheckT (reason_op, reason_tapp, targs) ->
       TypeAppVarianceCheckT (f reason_op, reason_tapp, targs)
 
-and mod_reason_of_rest_resolve _f = function
+and mod_reason_of_spread_resolve _f = function
 | ResolveSpreadsToArray -> ResolveSpreadsToArray
 | ResolveSpreadsToArrayLiteral -> ResolveSpreadsToArrayLiteral
 | ResolveSpreadsToTuple -> ResolveSpreadsToTuple
@@ -2060,8 +2060,8 @@ let string_of_use_ctor = function
   | RefineT _ -> "RefineT"
   | ReposLowerT _ -> "ReposLowerT"
   | ReposUseT _ -> "ReposUseT"
-  | ResolveRestT (_, {rrt_resolve_to; _;})->
-    spf "ResolveRestT(%s)" begin match rrt_resolve_to with
+  | ResolveSpreadT (_, {rrt_resolve_to; _;})->
+    spf "ResolveSpreadT(%s)" begin match rrt_resolve_to with
     | ResolveSpreadsToTuple -> "ResolveSpreadsToTuple"
     | ResolveSpreadsToArray -> "ResolveSpreadsToArray"
     | ResolveSpreadsToArrayLiteral -> "ResolveSpreadsToArrayLiteral"
