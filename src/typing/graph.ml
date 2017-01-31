@@ -216,7 +216,6 @@ and parts_of_t cx = function
 | PolyT (_, t) -> ["t", Def t]
 | ReposT (_, t) -> ["t", Def t]
 | ReposUpperT (_, t) -> ["t", Def t]
-| RestT t
 | ShapeT t -> ["t", Def t]
 | SingletonBoolT _ -> []
 | SingletonNumT _ -> []
@@ -237,8 +236,8 @@ and parts_of_funtype { params_tlist; params_names; rest_param; return_t; _ } =
   ("return_t", Def return_t) ::
   (match rest_param with
   | None -> []
-  | Some (Some name, t) -> [name, Def t]
-  | Some (None, t) -> ["restParam", Def t]) @
+  | Some (Some name, _, t) -> [name, Def t]
+  | Some (None, _, t) -> ["restParam", Def t]) @
   match params_names with
   | Some ns -> List.map2 (fun n t -> n, Def t) ns params_tlist
   | None -> list_parts params_tlist
@@ -270,13 +269,13 @@ and parts_of_use_t cx = function
 | UseT (_, t) -> ["t", Def t]
 | AdderT (_, r, out) -> ["right", Def r; "out", Def out]
 | AndT (_, r, out) -> ["right", Def r; "out", Def out]
-| ApplyT (_, f, funcalltype) -> ("f", Def f) :: parts_of_funcalltype funcalltype
 | ArrRestT (_, _, out) -> ["out", Def out]
 | AssertArithmeticOperandT _ -> []
 | AssertBinaryInLHST _ -> []
 | AssertBinaryInRHST _ -> []
 | AssertForInRHST _ -> []
 | AssertImportIsValueT _ -> []
+| AssertRestParamT _ -> []
 | BecomeT (_, t) -> ["t", Def t]
 | BindT (_, funcalltype) -> parts_of_funcalltype funcalltype
 | CallElemT (_, _, ix, fct) -> ("ix", Def ix) :: parts_of_funcalltype fct
@@ -333,16 +332,14 @@ and parts_of_use_t cx = function
 | ReposLowerT (_, u) -> ["upper", Use u]
 | ReposUseT (_, _, l) ->  ["lower", Def l]
 | ResolveSpreadT (_, {
-    rrt_id = _;
     rrt_resolved;
     rrt_unresolved;
     rrt_resolve_to;
-    rrt_tout;
   }) ->
     let parts_of_resolved = List.mapi (fun i -> function
       | ResolvedArg t -> [spf "resolved param #%d" i, Def t]
-      | ResolvedSpreadArg (arrtype) -> parts_of_arrtype arrtype
-      | ResolvedAnySpreadArg -> []
+      | ResolvedSpreadArg (_, arrtype) -> parts_of_arrtype arrtype
+      | ResolvedAnySpreadArg _ -> []
     ) rrt_resolved
     |> List.flatten in
     let parts_of_unresolved = List.mapi (fun i -> function
@@ -350,9 +347,7 @@ and parts_of_use_t cx = function
       | UnresolvedSpreadArg t -> spf "unresolved rest param #%d" i, Def t
     ) rrt_unresolved in
     let parts_of_resolve_to = parts_of_spread_resolve rrt_resolve_to in
-    parts_of_resolved @ parts_of_unresolved @ parts_of_resolve_to @ [
-      "out", Def rrt_tout
-    ]
+    parts_of_resolved @ parts_of_unresolved @ parts_of_resolve_to
 | SentinelPropTestT (t, _, _, out) -> ["t", Def t; "out", Def out]
 | SetElemT (_, ix, t) -> ["ix", Def ix; "t", Def t]
 | SetPropT (_, _, t) -> ["t", Def t]
@@ -372,11 +367,19 @@ and parts_of_arrtype = function
 | ArrayAT (elemt, Some tuple_types)
 | TupleAT (elemt, tuple_types) ->
   ("elem", Def elemt)::(list_parts tuple_types)
+| EmptyAT -> []
 
 and parts_of_spread_resolve = function
-| ResolveSpreadsToTuple
-| ResolveSpreadsToArrayLiteral
-| ResolveSpreadsToArray -> []
+| ResolveSpreadsToTuple (_, tout)
+| ResolveSpreadsToArrayLiteral (_, tout)
+| ResolveSpreadsToArray (tout) ->
+  [ "out", Def tout ]
+| ResolveSpreadsToMultiflowFull (ft) ->
+  parts_of_funtype ft
+| ResolveSpreadsToMultiflowPartial (ft, _, tout) ->
+  (parts_of_funtype ft) @ [ "out", Def tout ]
+| ResolveSpreadsToCallT (fct, tin) ->
+  (parts_of_funcalltype fct) @ [ "out", Def tin ]
 
 and parts_of_inter_preprocess_tool = function
 | ConcretizeTypes (unresolved, resolved, it, u) ->

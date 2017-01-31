@@ -12,7 +12,7 @@ type param =
   | Complex of Type.t * binding list
 type t = {
   list: param list;
-  rest: (Type.t * binding) option;
+  rest: binding option;
   defaults: Ast.Expression.t Default.t SMap.t;
 }
 
@@ -93,10 +93,10 @@ let mk cx type_params_map ~expr func =
       let t =
         Anno.mk_type_annotation cx type_params_map reason typeAnnotation
       in
-      { params with rest = Some (Anno.mk_rest cx t, (name, t, loc)) }
+      { params with rest = Some (name, t, loc) }
     | loc, _ ->
       Flow_js.add_output cx
-        Flow_error.(EInternal (loc, RestArgumentNotIdentifierPattern));
+        Flow_error.(EInternal (loc, RestParameterNotIdentifierPattern));
       params
   in
   let add_param params pattern =
@@ -131,7 +131,9 @@ let convert cx type_params_map func = Ast.Type.Function.(
     | None -> "_"
     | Some (_, name) -> name in
     let t = Anno.convert cx type_params_map typeAnnotation in
-    { params with rest = Some (Anno.mk_rest cx t, (name, t, loc)) }
+    let reason = mk_reason (RRestParameter name) (loc_of_t t) in
+    Flow.flow cx (t, AssertRestParamT reason);
+    { params with rest = Some (name, t, loc) }
   in
   let (params, rest) = func.params in
   let params = List.fold_left add_param empty params in
@@ -155,13 +157,13 @@ let tlist params =
 let rest params =
   match params.rest with
   | None -> None
-  | Some (t, (name, _, _)) -> Some (Some name, t)
+  | Some (name, t, loc) -> Some (Some name, loc, t)
 
 let iter f params =
   params.list |> List.iter (function
     | Simple (_, b) -> f b
     | Complex (_, bs) -> List.iter f bs);
-  params.rest |> Option.iter ~f:(fun (_, b) -> f b)
+  params.rest |> Option.iter ~f
 
 let with_default name f params =
   match SMap.get name params.defaults with
@@ -176,8 +178,5 @@ let subst cx map params =
       Simple (Flow.subst cx map t, subst_binding cx map b)
     | Complex (t, bs) ->
       Complex (Flow.subst cx map t, List.map (subst_binding cx map) bs)) in
-  let rest = match params.rest with
-  | Some (rest_t, rest_binding) ->
-      Some (Flow.subst cx map rest_t, subst_binding cx map rest_binding)
-  | None -> None in
+  let rest = Option.map ~f:(subst_binding cx map) params.rest in
   { params with list; rest; }

@@ -23,8 +23,6 @@ val convert_qualification: ?lookup_mode:Env.LookupMode.t ->
   Spider_monkey_ast.Type.Generic.Identifier.t ->
   Type.t
 
-val mk_rest: Context.t -> Type.t -> Type.t
-
 val mk_type_annotation: Context.t ->
   Type.t SMap.t ->
   Reason.t ->

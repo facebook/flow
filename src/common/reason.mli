@@ -208,4 +208,4 @@ val repos_reason: Loc.t -> reason -> reason
 
 val do_patch: string list -> (int * int * string) list -> string
 
-module ReasonSet: Set.S with type elt = reason
+module ReasonMap : MyMap.S with type key = reason

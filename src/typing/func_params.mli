@@ -22,7 +22,7 @@ val names: t -> string list
 val tlist: t -> Type.t list
 
 (* The rest param *)
-val rest: t -> (string option * Type.t) option
+val rest: t -> (string option * Loc.t * Type.t) option
 
 (* iterates over all bindings, traversing through any destructued
    bindings as well, in source order of declaration *)

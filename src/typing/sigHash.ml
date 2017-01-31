@@ -51,7 +51,6 @@ type hash =
   | ArrH
   | ClassH
   | OptionalH
-  | RestH
   | AbstractH
   | EvalH
   | PolyH
@@ -130,7 +129,6 @@ let hash_of_ctor = Type.(function
   | PolyT _ -> PolyH
   | ReposT _ -> ReposH
   | ReposUpperT _ -> ReposUpperH
-  | RestT _ -> RestH
   | ShapeT _ -> ShapeH
   | SingletonBoolT (_, b) -> SingletonBoolH b
   | SingletonNumT (_, n) -> SingletonNumH n

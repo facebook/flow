@@ -444,7 +444,7 @@ let rec string_of_desc = function
   | RExactType d -> spf "exact type: %s" (string_of_desc d)
   | ROptional d -> spf "optional %s" (string_of_desc d)
   | RMaybe d -> spf "?%s" (string_of_desc d)
-  | RRestArray d -> spf "rest array of %s" (string_of_desc d)
+  | RRestArray d -> spf "rest parameter array of %s" (string_of_desc d)
   | RAbstract d -> spf "abstract %s" (string_of_desc d)
   | RTypeApp d -> spf "type application of %s" (string_of_desc d)
   | RThisTypeApp d -> spf "this instantiation of %s" (string_of_desc d)
@@ -614,7 +614,7 @@ let replace_reason_const desc r =
 let repos_reason loc reason =
   mk_reason_with_test_id reason.test_id (desc_of_reason reason) loc ()
 
-module ReasonSet = Set.Make(struct
+module ReasonMap = MyMap.Make(struct
   type t = reason
   let compare = Pervasives.compare
 end)

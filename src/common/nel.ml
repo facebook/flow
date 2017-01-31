@@ -23,3 +23,5 @@ let rev_map f (x, xs) =
   match List.rev_map f (x::xs) with
   | [] -> failwith "impossible"
   | x::xs -> (x, xs)
+
+let hd (x, _) = x

@@ -15,6 +15,9 @@ let suggested_type_cache = ref IMap.empty
 
 let fake_fun params_names param_ts rest_param ret_t =
   let reason = locationless_reason (RFunction RNormal) in
+  let rest_param = Option.map
+    ~f:(fun (name, t) -> Some name, Loc.none, t)
+    rest_param in
   FunT (
     reason,
     Flow_js.dummy_static reason,
@@ -72,7 +75,7 @@ let rec normalize_type_impl cx ids t = match t with
   | FunT (_, _, _, ft) ->
       let tins = List.map (normalize_type_impl cx ids) ft.params_tlist in
       let rest_param = Option.map
-        ~f:(fun (name, t) -> name, normalize_type_impl cx ids t)
+        ~f:(fun (name, loc, t) -> name, loc, normalize_type_impl cx ids t)
         ft.rest_param in
       let params_names = ft.params_names in
       let tout = normalize_type_impl cx ids ft.return_t in
@@ -98,8 +101,9 @@ let rec normalize_type_impl cx ids t = match t with
   (* (thisArg: any, ...argArray: Array<any>): any *)
   | FunProtoBindT _ ->
       let any = AnyT (locationless_reason RAny) in
+      let arr = ArrT (locationless_reason RArray, ArrayAT(any, None)) in
       let tins = [any] in
-      let rest_param = Some (Some "argArray", RestT any) in
+      let rest_param = Some ("argArray", arr) in
       let params_names = Some ["thisArg"] in
       fake_fun params_names tins rest_param any
 
@@ -107,8 +111,9 @@ let rec normalize_type_impl cx ids t = match t with
   (* (thisArg: any, ...argArray: Array<any>): any *)
   | FunProtoCallT _ ->
       let any = AnyT (locationless_reason RAny) in
+      let arr = ArrT (locationless_reason RArray, ArrayAT(any, None)) in
       let tins = [any] in
-      let rest_param = Some (Some "argArray", RestT any) in
+      let rest_param = Some ("argArray", arr) in
       let params_names = Some ["thisArg"] in
       fake_fun params_names tins rest_param any
 
@@ -119,8 +124,9 @@ let rec normalize_type_impl cx ids t = match t with
   (* (...objects: Array<Object>): Object *)
   | CustomFunT (_, Merge) ->
       let obj = AnyObjT (locationless_reason RObjectType) in
+      let arr = ArrT (locationless_reason RArray, ArrayAT(obj, None)) in
       let tins = [] in
-      let rest_param = Some (Some "objects", RestT obj) in
+      let rest_param = Some ("objects", arr) in
       let params_names = Some [] in
       fake_fun params_names tins rest_param obj
 
@@ -128,9 +134,10 @@ let rec normalize_type_impl cx ids t = match t with
   (* (target: Object, ...objects: Array<Object>): void *)
   | CustomFunT (_, MergeDeepInto) ->
       let obj = AnyObjT (locationless_reason RObjectType) in
+      let arr = ArrT (locationless_reason RArray, ArrayAT(obj, None)) in
       let void = VoidT (locationless_reason RVoid) in
       let tins = [obj] in
-      let rest_param = Some (Some "objects", RestT obj) in
+      let rest_param = Some ("objects", arr) in
       let params_names = Some ["target"] in
       fake_fun params_names tins rest_param void
 
@@ -138,9 +145,10 @@ let rec normalize_type_impl cx ids t = match t with
   (* (target: Object, ...objects: Array<Object>): void *)
   | CustomFunT (_, MergeInto) ->
       let obj = AnyObjT (locationless_reason RObjectType) in
+      let arr = ArrT (locationless_reason RArray, ArrayAT(obj, None)) in
       let void = VoidT (locationless_reason RVoid) in
       let tins = [obj] in
-      let rest_param = Some (Some "objects", RestT obj) in
+      let rest_param = Some ("objects", arr) in
       let params_names = Some ["target"] in
       fake_fun params_names tins rest_param void
 
@@ -148,9 +156,10 @@ let rec normalize_type_impl cx ids t = match t with
   (* (...objects: Array<Object>): Class *)
   | CustomFunT (_, Mixin) ->
       let obj = AnyObjT (locationless_reason RObjectType) in
+      let arr = ArrT (locationless_reason RArray, ArrayAT(obj, None)) in
       let tout = ClassT obj in
       let tins = [] in
-      let rest_param = Some (Some "objects", RestT obj) in
+      let rest_param = Some ("objects", arr) in
       let params_names = Some [] in
       fake_fun params_names tins rest_param tout
 
@@ -158,8 +167,9 @@ let rec normalize_type_impl cx ids t = match t with
      (target: any, ...sources: Array<any>): any *)
   | CustomFunT (_, ObjectAssign) ->
       let any = AnyT (locationless_reason RAny) in
+      let arr = ArrT (locationless_reason RArray, ArrayAT(any, None)) in
       let tins = [any] in
-      let rest_param = Some (Some "sources", RestT any) in
+      let rest_param = Some ("sources", arr) in
       let params_names = Some ["target"] in
       fake_fun params_names tins rest_param any
 
@@ -211,7 +221,10 @@ let rec normalize_type_impl cx ids t = match t with
       fake_fun param_names tins None maybe_ret
 
   | CustomFunT (_, DebugPrint) ->
-      let rest_param = Some (None, AnyT.t) in
+      let rest_param = Some (
+        "_",
+        ArrT (locationless_reason RArray, ArrayAT(AnyT.t, None))
+      ) in
       fake_fun None [] rest_param VoidT.t
 
   (* Fake the signature of React.createElement (overloaded)
@@ -310,11 +323,14 @@ let rec normalize_type_impl cx ids t = match t with
 
   | ArrT (_, ROArrayAT (elemt)) ->
       ArrT (
-        locationless_reason RTupleType,
+        locationless_reason RROArrayType,
         ROArrayAT (
           normalize_type_impl cx ids elemt
         )
       )
+
+  | ArrT (_, EmptyAT) ->
+      ArrT(locationless_reason RArray, EmptyAT)
 
   | ExactT (reason, t) ->
       let reason = locationless_reason (desc_of_reason reason) in
@@ -342,9 +358,6 @@ let rec normalize_type_impl cx ids t = match t with
 
   | InstanceT _ ->
       t (* nominal type *)
-
-  | RestT t ->
-      RestT (normalize_type_impl cx ids t)
 
   | OptionalT t ->
       OptionalT (normalize_type_impl cx ids t)

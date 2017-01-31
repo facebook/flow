@@ -10,6 +10,7 @@
 
 val string_of_t: ?size:int -> Context.t -> Type.t -> string
 
+val rest_parameter_name: Context.t -> string -> Type.t -> string
 val parameter_name: Context.t -> string -> Type.t -> string
 val string_of_param_t: Context.t -> Type.t -> string
 

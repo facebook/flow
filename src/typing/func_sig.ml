@@ -75,6 +75,7 @@ let mk cx tparams_map ~expr reason func =
         );
         Anno.mk_type_annotation cx tparams_map reason None
   ) in
+
   {reason; kind; tparams; tparams_map; params; body; return_t}
 
 let empty_body =
@@ -92,6 +93,7 @@ let convert cx tparams_map loc func =
   let params = Func_params.convert cx tparams_map func in
   let body = empty_body in
   let return_t = Anno.convert cx tparams_map returnType in
+
   {reason; kind; tparams; tparams_map; params; body; return_t}
 
 let default_constructor reason = {
@@ -237,6 +239,15 @@ let toplevels id cx this super ~decls ~stmts ~expr
     Env.bind_type cx name (TypeT (r, t)) r
       ~state:Scope.State.Initialized
   ) tparams_map;
+
+  (* Check the rest parameter annotation *)
+  Option.iter
+    ~f:(fun (_, loc, t) ->
+      let rest_reason =
+        mk_reason (RCustom "Rest params are always arrays") loc in
+      Flow_js.flow cx (t, AssertRestParamT rest_reason)
+    )
+    (Func_params.rest params);
 
   (* add param bindings *)
   let const_params = Context.enable_const_params cx in
