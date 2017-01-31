@@ -66,13 +66,13 @@ let msg_of_tail env tail_env =
       (if use_emoji then (* Ghost *) "\xf0\x9f\x91\xbb  " else "")
   else if matches_re infer_re line then
     Printf.sprintf "[%slocal inference]"
-      (if use_emoji then (* Turtle *) "\xf0\x9f\x90\xa2  " else "")
+      (if use_emoji then (* Surfer *) "\xf0\x9f\x8f\x84  " else "")
   else if matches_re calc_deps_re line then
     Printf.sprintf "[%scalculating dependencies]"
       (if use_emoji then (* Taco *) "\xf0\x9f\x8c\xae  " else "")
   else if matches_re merging_re line then
     Printf.sprintf "[%smerging inference]"
-      (if use_emoji then (* Snail *) "\xf0\x9f\x90\x8c  " else "")
+      (if use_emoji then (* Cyclist *) "\xf0\x9f\x9a\xb4  " else "")
   else if matches_re server_ready_re line then
     Printf.sprintf "[%sserver is ready]"
       (if use_emoji then (* Unicorn Face *) "\xf0\x9f\xa6\x84  " else "")
