@@ -36,6 +36,7 @@ type reason_desc =
   | RJSXIdentifier of string * string
   | RJSXElementProps of string
   | RJSXElement of string option
+  | RJSXText
   | RAnyObject
   | RAnyFunction
   | RUnknownString
