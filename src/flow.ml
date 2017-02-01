@@ -41,7 +41,7 @@ end = struct
     SuggestCommand.command;
     TypeAtPosCommand.command;
     VersionCommand.command;
-  ]
+  ] @ (Extra_commands.extra_commands ())
 
   (* status commands, which need a list of other commands *)
   module StatusCommand = StatusCommands.Status(struct
