@@ -1,5 +1,5 @@
 declare var $React: $Exports<'react'>; // fake import
-type $JSXIntrinsic<T> = Class<$React.Component<void,T,mixed>>;
+type $JSXIntrinsic<T> = Class<$React.Component<void,T,mixed,mixed>>;
 
 type $JSXIntrinsics = {
   div: $JSXIntrinsic<{id: string}>,

@@ -121,9 +121,11 @@ type reason_desc =
   | RReactStatics
   | RReactDefaultProps
   | RReactState
+  | RReactContext
   | RReactComponentProps
   | RReactElementProps of string
   | RReactPropTypes
+  | RReactContextTypes
   | RPropTypeArray
   | RPropTypeFunc
   | RPropTypeObject

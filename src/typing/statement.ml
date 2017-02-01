@@ -4073,6 +4073,8 @@ and react_create_class cx loc class_props = Ast.Expression.(
   let default = ref (Flow.mk_object cx default_reason) in
   let reason_state = replace_reason_const RReactState reason_component in
   let state = ref (Flow.mk_object cx reason_state) in
+  let reason_context = replace_reason_const RReactContext reason_component in
+  let context = ref (Flow.mk_object cx reason_context) in
 
   let props_reason =
     replace_reason_const RReactComponentProps reason_component in
@@ -4112,6 +4114,20 @@ and react_create_class cx loc class_props = Ast.Expression.(
         let map = SMap.union amap omap in
         let proto = ObjProtoT reason in
         props := Flow.mk_object_with_map_proto cx reason ?dict map proto;
+        fmap, mmap
+
+      (* contextTypes *)
+      | Property (_, { Property.
+          key = Property.Identifier (nloc, "contextTypes");
+          value = Property.Init (_, Object { Object.properties } as value);
+          _ }) ->
+        ignore (expression cx value);
+        let reason = mk_reason RReactContextTypes nloc in
+        let amap, omap, dict = mk_proptypes cx properties in
+        let omap = Properties.map_t (fun t -> OptionalT t) omap in
+        let map = SMap.union amap omap in
+        let proto = ObjProtoT reason in
+        context := Flow.mk_object_with_map_proto cx reason ?dict map proto;
         fmap, mmap
 
       (* getDefaultProps *)
@@ -4189,7 +4205,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
 
     ) (SMap.empty, SMap.empty) class_props in
 
-  let type_args = [!default; !props; !state] in
+  let type_args = [!default; !props; !state; !context] in
   let super_reason =
     replace_reason (fun desc -> RSuperOf desc) reason_component in
   let super =
@@ -4207,7 +4223,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
     SMap.add "state" p fmap in
   let fmap, smap =
     List.fold_left extract_map (fmap, SMap.empty)
-      ["contextTypes";"childContextTypes";"displayName"]
+      ["childContextTypes";"displayName"]
   in
   let override_statics =
     Flow.mk_object_with_map_proto cx

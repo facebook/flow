@@ -1,25 +1,25 @@
 bad_default_props.js:7
-  7: class C1 extends React.Component<T1, T2, any> { // error
+  7: class C1 extends React.Component<T1, T2, any, any> { // error
                                       ^^ object type. This type is incompatible with
-  7: class C1 extends React.Component<T1, T2, any> { // error
+  7: class C1 extends React.Component<T1, T2, any, any> { // error
                                       ^^ undefined. Did you forget to declare T1?
 
 bad_default_props.js:7
-  7: class C1 extends React.Component<T1, T2, any> { // error
+  7: class C1 extends React.Component<T1, T2, any, any> { // error
                                       ^^ undefined. Did you forget to declare T1?. This type is incompatible with
-  7: class C1 extends React.Component<T1, T2, any> { // error
+  7: class C1 extends React.Component<T1, T2, any, any> { // error
                                       ^^ object type
 
 bad_default_props.js:24
- 24: class C5 extends React.Component<T2, T3, any> { // error
+ 24: class C5 extends React.Component<T2, T3, any, any> { // error
                                       ^^ object type. This type is incompatible with
- 24: class C5 extends React.Component<T2, T3, any> { // error
+ 24: class C5 extends React.Component<T2, T3, any, any> { // error
                                       ^^ undefined. Did you forget to declare T2?
 
 bad_default_props.js:24
- 24: class C5 extends React.Component<T2, T3, any> { // error
+ 24: class C5 extends React.Component<T2, T3, any, any> { // error
                                       ^^ undefined. Did you forget to declare T2?. This type is incompatible with
- 24: class C5 extends React.Component<T2, T3, any> { // error
+ 24: class C5 extends React.Component<T2, T3, any, any> { // error
                                       ^^ object type
 
 classes.js:17
@@ -66,8 +66,8 @@ classes.js:41
                              ^^^^^^ React element `Foo`
  41: var foo: $jsx<number> = <Foo/>;
                    ^^^^^^ number. This type is incompatible with
-  5: type _ReactElement<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: $React.Component<DefaultProps, Props, any>> = $React.Element<Config>;
-                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See lib: fakelib/type_aliases.js:5
+  5: type _ReactElement<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: $React.Component<DefaultProps, Props, any, any>> = $React.Element<Config>;
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See lib: fakelib/type_aliases.js:5
 
 classes.js:59
  59:     var _: string = this.props.x;
@@ -94,8 +94,8 @@ classes.js:81
                                     ^^^^^^^^^^^^ React element `FooLegacy`
  81: var foo_legacy: $jsx<number> = <FooLegacy/>;
                           ^^^^^^ number. This type is incompatible with
-  5: type _ReactElement<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: $React.Component<DefaultProps, Props, any>> = $React.Element<Config>;
-                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See lib: fakelib/type_aliases.js:5
+  5: type _ReactElement<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: $React.Component<DefaultProps, Props, any, any>> = $React.Element<Config>;
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See lib: fakelib/type_aliases.js:5
 
 import-react.js:18
  18: <HelloMessage name={007} />; // number ~/~> string error

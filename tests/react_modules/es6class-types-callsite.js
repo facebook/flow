@@ -4,7 +4,7 @@ import Hello from './es6class-types-module';
 
 type Props = {name: string};
 
-class HelloLocal extends React.Component<void, Props, void> {
+class HelloLocal extends React.Component<void, Props, void, void> {
   props: Props;
 
   render(): React.Element<*> {
@@ -12,7 +12,7 @@ class HelloLocal extends React.Component<void, Props, void> {
   }
 }
 
-class Callsite extends React.Component<void, Props, void> {
+class Callsite extends React.Component<void, Props, void, void> {
   render(): React.Element<*> {
     return (
       <div>

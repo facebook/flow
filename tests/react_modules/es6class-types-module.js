@@ -3,7 +3,7 @@ import React from 'react';
 
 type Props = {name: string};
 
-class Hello extends React.Component<{}, Props, void>{
+class Hello extends React.Component<{}, Props, void, void> {
   props: Props;
   static defaultProps: {};
 
