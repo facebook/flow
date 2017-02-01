@@ -52,7 +52,7 @@ optional.js:7
 
 optional.js:7
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
-                               ^ element of rest parameter `y`. Missing annotation
+                               ^ rest parameter `y`. Missing annotation
 
 optional.js:7
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
@@ -61,18 +61,18 @@ optional.js:7
                  ^^^^^^ number
 
 optional.js:9
-  9: qux(0,0);
+  9: qux(0,0); // Error, number ~> string
      ^^^^^^^^ function call
-  9: qux(0,0);
+  9: qux(0,0); // Error, number ~> string
            ^ number. This type is incompatible with the expected return type of
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
                                   ^^^^^^ string
 
 optional.js:10
- 10: qux(0,...["",42]);
-     ^^^^^^^^^^^^^^^^^ function call
- 10: qux(0,...["",42]);
-                  ^^ number. This type is incompatible with the expected return type of
+ 10: qux(0,...[42, ""]); // Error, number ~> string
+     ^^^^^^^^^^^^^^^^^^ function call
+ 10: qux(0,...[42, ""]); // Error, number ~> string
+               ^^ number. This type is incompatible with the expected return type of
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
                                   ^^^^^^ string
 

@@ -18,16 +18,15 @@ let dedup_strlist list =
   ) (SSet.empty, []) list
   in List.rev rlist
 
-let name_prefix_of_t = function
-  | RestT _ -> "..."
-  | _ -> ""
-
 let name_suffix_of_t = function
   | OptionalT _ -> "?"
   | _ -> ""
 
 let parameter_name _cx n t =
-  (name_prefix_of_t t) ^ n ^ (name_suffix_of_t t)
+  n ^ (name_suffix_of_t t)
+
+let rest_parameter_name cx n t =
+  "..." ^ (parameter_name cx n t)
 
 let prop_name _cx n t =
   n ^ (name_suffix_of_t t)
@@ -41,6 +40,7 @@ type enclosure_t =
   | EnclosureAppT
   | EnclosureRet
   | EnclosureProp
+  | EnclosureMethod
 
 let parenthesize t_str enclosure triggers =
   if List.mem enclosure triggers
@@ -68,6 +68,9 @@ let rec type_printer_impl ~size override enclosure cx t =
         prop x (Get t1);
         prop x (Set t2);
       ]
+    | Method t -> spf "%s%s"
+      (prop_name cx x t)
+      (pp EnclosureMethod cx t)
   in
 
   let string_of_obj flds dict_t ~exact =
@@ -149,13 +152,19 @@ let rec type_printer_impl ~size override enclosure cx t =
           pns ts in
         let params = match rest_param with
         | None -> params
-        | Some (name, t) ->
+        | Some (name, _, t) ->
           let name = Option.value ~default:"_" name in
-          params @ [parameter_name cx name t ^ ": " ^ (pp EnclosureParam cx t)]
+          let param_name = rest_parameter_name cx name t in
+          params @ [param_name ^ ": " ^ (pp EnclosureParam cx t)]
         in
-        let type_s = spf "(%s) => %s"
-          (params |> String.concat ", ")
-          (pp EnclosureNone cx t) in
+        let type_s = match enclosure with
+          | EnclosureMethod -> spf "(%s): %s"
+            (params |> String.concat ", ")
+            (pp EnclosureNone cx t)
+          | _ -> spf "(%s) => %s"
+            (params |> String.concat ", ")
+            (pp EnclosureNone cx t)
+        in
         parenthesize type_s enclosure [EnclosureUnion; EnclosureIntersect]
 
     | ObjT (_, {props_tmap = flds; dict_t; _}) ->
@@ -177,6 +186,7 @@ let rec type_printer_impl ~size override enclosure cx t =
         |> List.map (pp EnclosureNone cx)
         |> String.concat ", "
         |> spf "[%s]"
+    | ArrT (_, EmptyAT) -> "$EmptyArray"
 
     | InstanceT (reason, _, _, _, _) ->
         DescFormat.name_of_instance_reason reason
@@ -206,7 +216,12 @@ let rec type_printer_impl ~size override enclosure cx t =
         | ThisClassT u ->
           spf "%s<%s>" (pp EnclosureNone cx u) xs_str
         | _ ->
-          spf "<%s>%s" xs_str (pp EnclosureNone cx t)
+          spf "<%s>%s" xs_str (pp
+            begin match enclosure with
+            | EnclosureMethod -> EnclosureMethod
+            | _ -> EnclosureNone
+            end
+            cx t)
         in
         parenthesize type_s enclosure [EnclosureAppT; EnclosureMaybe]
 
@@ -230,13 +245,6 @@ let rec type_printer_impl ~size override enclosure cx t =
         end
 
     (* The following types are not syntax-supported in all cases *)
-    | RestT t ->
-        let type_s =
-          spf "Array<%s>" (pp EnclosureNone cx t) in
-        if enclosure == EnclosureParam
-        then type_s
-        else "..." ^ type_s
-
     | AnnotT t -> pp EnclosureNone cx t
     | KeysT (_, t) -> spf "$Keys<%s>" (pp EnclosureNone cx t)
     | ShapeT t -> spf "$Shape<%s>" (pp EnclosureNone cx t)
@@ -392,11 +400,6 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     ->
       is_printed_type_list_parsable weak cx EnclosureNone ts
 
-  | RestT t
-    when (enclosure == EnclosureParam)
-    ->
-      is_printed_type_parsable_impl weak cx EnclosureNone t
-
   | OptionalT t ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
 
@@ -407,7 +410,8 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
       (is_printed_type_parsable_impl weak cx EnclosureRet return_t) &&
       (is_printed_type_list_parsable weak cx EnclosureParam params_tlist) &&
       (match rest_param with
-       | Some (_, t) -> is_printed_type_parsable_impl weak cx EnclosureParam t
+       | Some (_, _, t) ->
+           is_printed_type_parsable_impl weak cx EnclosureParam t
        | None -> true)
 
   | ObjT (_, { props_tmap; dict_t; _ })
@@ -472,7 +476,6 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
 
   (* these are types which are not really parsable, but they make sense to a
      human user in cases of autocompletion *)
-  | RestT t
   | TypeT (_, t)
   | AnyWithUpperBoundT t
   | AnyWithLowerBoundT t

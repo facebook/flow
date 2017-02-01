@@ -10,8 +10,8 @@ test.call("", "", 0);
 // wrong this is an error
 test.call(0, "", 0); // error: lookup `length` on Number
 
-// not enough arguments is an error (via incompatible RestT)
-test.call("", ""); // error: string ~> number
+// not enough arguments is an error
+test.call("", ""); // error: void ~> number
 
 // mistyped arguments is an error
 test.call("", "", ""); // error: string ~> number (2nd arg)

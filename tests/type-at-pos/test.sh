@@ -29,6 +29,12 @@ printf "function_expression.js:9:5 = "
 "$FLOW" type-at-pos function_expressions.js 9 5 --strip-root --pretty
 printf "function_expression.js:9:7 = "
 "$FLOW" type-at-pos function_expressions.js 9 7 --strip-root --pretty
+printf "function_expression.js:13:5 = "
+"$FLOW" type-at-pos function_expressions.js 13 5 --strip-root --pretty
+printf "function_expression.js:17:3 = "
+"$FLOW" type-at-pos function_expressions.js 17 3 --strip-root --pretty
+printf "function_expression.js:21:3 = "
+"$FLOW" type-at-pos function_expressions.js 21 3 --strip-root --pretty
 printf "predicates.js - null: "
 "$FLOW" type-at-pos predicates.js 4 12 --strip-root --pretty
 printf "predicates.js - undefined: "

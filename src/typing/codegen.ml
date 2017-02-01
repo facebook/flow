@@ -173,6 +173,9 @@ let rec gen_type t env = Type.(
       |> add_str "["
       |> gen_separated_list tuple_types ", " gen_type
       |> add_str "]"
+    | EmptyAT ->
+      (* There isn't any real way to write this type at the moment *)
+      add_str "Array<empty>" env
     )
 
   | BoolT (_, Some _) ->
@@ -277,7 +280,6 @@ let rec gen_type t env = Type.(
   | PolyT (tparams, t) -> gen_type t (add_tparams tparams env)
   | ReposT (_, t) -> gen_type t env
   | ReposUpperT (_, t) -> gen_type t env
-  | RestT rest -> gen_type rest env
   | ShapeT t -> add_str "$Shape<" env |> gen_type t |> add_str ">"
   | SingletonBoolT (_, v) -> add_str (spf "%b" v) env
   | SingletonNumT (_, (_, v)) -> add_str (spf "%s" v) env
@@ -352,6 +354,20 @@ and gen_prop k p env =
       |> add_str "): void"
   in
 
+  let rec gen_method k t env =
+    match t with
+    | FunT (_, _static, _prototype, ft) ->
+      let {params_tlist; params_names; rest_param; return_t; _;} = ft in
+      add_str k env
+        |> gen_tparams_list
+        |> add_str "("
+        |> gen_func_params params_names params_tlist rest_param
+        |> add_str "): "
+        |> gen_type return_t
+    | PolyT (tparams, t) -> gen_method k t (add_tparams tparams env)
+    | _ -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
+  in
+
   match p with
   | Field (t, polarity) ->
     let sigil = Polarity.sigil polarity in
@@ -368,33 +384,37 @@ and gen_prop k p env =
   | Set t -> gen_setter k t env
   | GetSet (t1, t2) ->
     gen_getter k t1 env |> gen_setter k t2
+  | Method t -> gen_method k t env
 
 and gen_func_params params_names params_tlist rest_param env =
   let params =
     match params_names with
     | Some params_names ->
       List.rev (List.fold_left2 (fun params name t ->
-        (name, t):: params
+        (name, t, false):: params
       ) [] params_names params_tlist)
     | None ->
-      List.mapi (fun idx t -> (spf "p%d" idx, t)) params_tlist
+      List.mapi (fun idx t -> (spf "p%d" idx, t, false)) params_tlist
   in
   let params = match rest_param with
   | None -> params
-  | Some (name, t) -> params @ [Option.value ~default:"rest" name, t] in
-  gen_separated_list params ", " (fun (name, t) env ->
-    gen_func_param name t env
+  | Some (name, _, t) ->
+    params @ [Option.value ~default:"rest" name, t, true] in
+  gen_separated_list params ", " (fun (name, t, is_rest) env ->
+    if is_rest
+    then gen_func_rest_param name t env
+    else gen_func_param name t env
   ) env
+
+and gen_func_rest_param name t env =
+  add_str "..." env
+  |> add_str name
+  |> add_str ": "
+  |> gen_type t
 
 and gen_func_param name t env =
   let open Type in
   match t with
-  | RestT t ->
-    add_str "..." env
-    |> add_str name
-    |> add_str ": Array<"
-    |> gen_type t
-    |> add_str ">"
   | OptionalT t ->
     add_str name env
     |> add_str "?: "

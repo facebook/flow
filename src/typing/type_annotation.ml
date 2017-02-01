@@ -497,14 +497,24 @@ let rec convert cx tparams_map = Ast.Type.(function
       (t :: tlist, optional_ident_name name :: pnames)
     ) ([], []) params in
 
+  let reason = mk_reason RFunctionType loc in
+
   let rest_param = match rest with
   | Some (_, { Function.RestParam.argument = (_, param) }) ->
     let { Function.Param.name; typeAnnotation; _ } = param in
-    let rest = mk_rest cx (convert cx tparams_map typeAnnotation) in
-    Some (Option.map ~f:ident_name name, rest)
+    let rest = convert cx tparams_map typeAnnotation in
+    (* TODO - Use AssertRestParamT here. The big problem is that, at this
+     * point, there might be some unsubstituted type parameters in the rest
+     * type. Unlike expressions, which know all type parameters have been
+     * substituted thanks to generate_tests, we visit types outside of
+     * generate_tests.
+     *
+     * One solution might be to build a type visitor that runs during
+     * generate_tests and does the various subst and tests then
+     *)
+    Some (Option.map ~f:ident_name name, loc_of_t rest, rest)
   | None -> None in
 
-  let reason = mk_reason RFunctionType loc in
   let params_names = List.rev rev_params_names in
   let return_t = convert cx tparams_map returnType in
   let ft =
@@ -659,28 +669,6 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
     Env.get_var ~lookup_mode cx name reason
 )
 
-(** Like `destructuring`, the following function operates on types that might
-    contain unsubstituted type parameters, so we must be careful not to emit
-    constraints in the general case. In fact, there does not seem to be any need
-    at all to allow general types to appear as annotations of a rest parameter,
-    we can make our lives simpler by disallowing them. **)
-and mk_rest cx = function
-  | ArrT (_, ArrayAT (elemt, None)) -> RestT elemt
-  | AnyT _ as t -> RestT t
-  | OpenT _ as t ->
-      (* unify t with Array<e>, return (RestT e) *)
-      let reason = replace_reason (fun desc ->
-        RCustom (spf "element of %s" (string_of_desc desc))
-      ) (reason_of_t t) in
-      let tvar = Flow_js.mk_tvar cx reason in
-      let arrt = ArrT(reason, ArrayAT (tvar, None)) in
-      Flow_js.unify cx t arrt;
-      RestT tvar
-  | t ->
-      let r = reason_of_t t in
-      Flow_js.add_output cx (FlowError.EInvalidRestParam r);
-      RestT (AnyT.why r)
-
 and mk_type cx tparams_map reason = function
   | None ->
       let t = Flow_js.mk_tvar cx reason in
@@ -755,7 +743,8 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) typeParameters =
      SMap.add name (BoundT tparam) tparams_map,
      SMap.add name (Flow_js.subst cx bounds_map bound) bounds_map)
   in
-  let tparams, tparams_map, _ = extract_type_param_declarations typeParameters
+  let tparams, tparams_map, _ =
+    extract_type_param_declarations typeParameters
     |> List.fold_left add_type_param ([], tparams_map, SMap.empty)
   in
   List.rev tparams, tparams_map

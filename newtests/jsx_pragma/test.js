@@ -197,7 +197,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                                                      ^^^^^^ string
         `,
       ),
-  ]),
+  ]).flowConfig("_flowconfig_with_flowlib"),
   test('React ignores certain props, but @jsx shouldnt', [
     addCode(`
       // @jsx Foo
@@ -249,7 +249,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                         ^^^^^ string literal \`bar\`
         `,
       ),
-  ]),
+  ]).flowConfig("_flowconfig_with_flowlib"),
   test('JSX element missing property should error', [
     addCode(`
       // @jsx Foo
@@ -313,5 +313,152 @@ export default suite(({addFile, addFiles, addCode}) => [
                                                        ^^^^^^^^^^^^^^^ exact type: object type
         `,
       ),
+  ]),
+  test('Whitespace trimming', [
+    addCode(`
+      // @jsx Foo
+      function Foo(
+        elem: number,
+        props: null,
+        child1: 'hello',
+        child2: boolean,
+        child3: 'bye',
+        ...rest: Array<void>
+      ) {}
+      const Bar = 123;
+      <Bar>
+
+        hi
+        {true}
+        bye
+        there
+
+      </Bar>;
+    `).newErrors(
+        `
+          test.js:14
+           14:       <Bar>
+                     ^^^^^ JSX desugared to \`Foo(...)\`
+           16:         hi
+                       ^^ JSX text. Expected string literal \`hello\`, got \`hi\` instead
+            8:         child1: 'hello',
+                               ^^^^^^^ string literal \`hello\`
+
+          test.js:14
+           14:       <Bar>
+                     ^^^^^ JSX desugared to \`Foo(...)\`
+           18:         bye
+                       ^ JSX text. Expected string literal \`bye\`, got \`bye there\` instead
+           10:         child3: 'bye',
+                               ^^^^^ string literal \`bye\`
+        `,
+      ),
+  ]),
+  test('Empty JSXText children are stripped out', [
+    addCode(`
+      // @jsx Foo
+      function Foo(
+        elem: number,
+        props: null,
+        child1: "should be single space",
+        child2: "should be true",
+        child3: "should be empty string",
+        child4: "should be single space",
+        ...rest: Array<void>
+      ) {}
+      const Bar = 123;
+
+      <Bar> {true}
+      {''} </Bar>;
+    `)
+      .newErrors(
+        `
+          test.js:16
+           16:       <Bar> {true}
+                     ^^^^^ JSX desugared to \`Foo(...)\`
+           16:       <Bar> {true}
+                          ^ JSX text. Expected string literal \`should be single space\`, got \` \` instead
+            8:         child1: "should be single space",
+                               ^^^^^^^^^^^^^^^^^^^^^^^^ string literal \`should be single space\`
+
+          test.js:16
+           16:       <Bar> {true}
+                     ^^^^^ JSX desugared to \`Foo(...)\`
+           16:       <Bar> {true}
+                            ^^^^ boolean. This type is incompatible with the expected param type of
+            9:         child2: "should be true",
+                               ^^^^^^^^^^^^^^^^ string literal \`should be true\`
+
+          test.js:16
+           16:       <Bar> {true}
+                     ^^^^^ JSX desugared to \`Foo(...)\`
+           17:       {''} </Bar>;
+                      ^^ string. Expected string literal \`should be empty string\`, got \`\` instead
+           10:         child3: "should be empty string",
+                               ^^^^^^^^^^^^^^^^^^^^^^^^ string literal \`should be empty string\`
+
+          test.js:16
+           16:       <Bar> {true}
+                     ^^^^^ JSX desugared to \`Foo(...)\`
+           17:       {''} </Bar>;
+                         ^ JSX text. Expected string literal \`should be single space\`, got \` \` instead
+           11:         child4: "should be single space",
+                               ^^^^^^^^^^^^^^^^^^^^^^^^ string literal \`should be single space\`
+        `,
+      )
+      .because('JSXText children with only whitespace or newlines are ignored'),
+  ]),
+  test('JSXText trimming', [
+    addCode("// @jsx Foo"),
+    addCode("const Bar = 123;"),
+    addCode(`
+      let Foo = (elem: any, props: any, c1: "First Middle Last") => {};
+      (<Bar>    First${"     "}
+           Middle${"     "}
+                Last     </Bar>);
+    `)
+      .newErrors(
+        `
+          test.js:9
+            9:       (<Bar>    First
+                      ^^^^^ JSX desugared to \`Foo(...)\`
+            9:       (<Bar>    First
+                           ^ JSX text. Expected string literal \`First Middle Last\`, got \`    First Middle Last     \` instead
+            8:       let Foo = (elem: any, props: any, c1: "First Middle Last") => {};
+                                                           ^^^^^^^^^^^^^^^^^^^ string literal \`First Middle Last\`
+        `,
+      )
+      .because(
+        "Leading whitespace on the first line and trailing whiteline on the "+
+        "last line is not trimmed",
+      ),
+
+    addCode(`
+      (<Bar>First
+
+        Middle
+
+      Last</Bar>);
+    `)
+      .noNewErrors()
+      .because('Empty lines are filtered out'),
+
+    addCode("(<Bar>First\tMiddle\tLast</Bar>);")
+      .noNewErrors()
+      .because("Tabs are turned into spaces"),
+
+    addCode("(<Bar>First    Middle\t \t Last</Bar>)")
+      .newErrors(
+        `
+          test.js:24
+           24: (<Bar>First    Middle    Last</Bar>)
+                ^^^^^ JSX desugared to \`Foo(...)\`
+           24: (<Bar>First    Middle    Last</Bar>)
+                     ^^^^^^^^^^^^^^^^^^^^^^^ JSX text. Expected string literal \`First Middle Last\`, got \`First    Middle    Last\` instead
+            8:       let Foo = (elem: any, props: any, c1: "First Middle Last") => {};
+                                                           ^^^^^^^^^^^^^^^^^^^ string literal \`First Middle Last\`
+        `,
+      )
+      .because("Multiple spaces midline stay as multiple spaces"),
   ]),
 ]);

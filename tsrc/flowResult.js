@@ -228,6 +228,8 @@ function prettyPrintMessage(
     if (context != null) {
       // On Windows this might have \r
       context = context.trimRight();
+      // Replace tabs with spaces
+      context = context.replace(/\t/g, " ");
       let lineStr = String(loc.start.line);
       if (lineStr.length < 3) {
         lineStr = ("   "+lineStr).slice(-3);
@@ -241,6 +243,7 @@ function prettyPrintMessage(
         Math.max(1, loc.end.column - startCol) :
         1;
       const underline = Array(underline_size+1).join("^");
+
       contextStr = format(
         "%s%s%s\n%s%s%s ",
         indentation,

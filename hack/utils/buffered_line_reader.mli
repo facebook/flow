@@ -25,7 +25,7 @@ type t
 
 val create: Unix.file_descr -> t
 
-val null_reader: t
+val get_null_reader: unit -> t
 
 val has_buffered_content: t -> bool
 

@@ -2128,8 +2128,11 @@ and object_prop cx map = Ast.Expression.Object.(function
     let reason = mk_reason desc vloc in
     let ft = mk_function id cx reason func in
     Hashtbl.replace (Context.type_table cx) vloc ft;
-    let polarity = if _method then Positive else Neutral in
-    Properties.add_field name polarity ft map
+    if _method then
+      Properties.add_method name ft map
+    else begin
+      Properties.add_field name Neutral ft map
+    end
 
   (* name = non-function expr *)
   | Property (_, { Property.
@@ -2371,20 +2374,20 @@ and variable cx kind
         ) t init None id
 )
 
-and array_element cx undef_loc el = Ast.Expression.(
+and mixin_element cx undef_loc el = Ast.Expression.(
   match el with
   | Some (Expression e) ->
       let t = expression cx e in
       Flow.reposition cx (repos_reason (fst e) (reason_of_t t)) t
   | Some (Spread (loc, { SpreadElement.argument })) ->
-      let t = array_element_spread cx argument in
+      let t = mixin_element_spread cx argument in
       Flow.reposition cx (repos_reason loc (reason_of_t t)) t
   | None -> EmptyT.at undef_loc
 )
 
 and expression_or_spread cx = Ast.Expression.(function
   | Expression e -> Arg (expression cx e)
-  | Spread (_, { SpreadElement.argument }) -> SpreadArg (spread cx argument)
+  | Spread (_, { SpreadElement.argument }) -> SpreadArg (expression cx argument)
 )
 
 and expression_or_spread_list cx undef_loc = Ast.Expression.(
@@ -2396,15 +2399,12 @@ and expression_or_spread_list cx undef_loc = Ast.Expression.(
   )
 )
 
-and array_element_spread cx (loc, e) =
+and mixin_element_spread cx (loc, e) =
   let arr = expression cx (loc, e) in
   let reason = mk_reason (RCustom "spread operand") loc in
   Flow.mk_tvar_where cx reason (fun tvar ->
     Flow.flow_t cx (arr, ArrT (reason, ArrayAT(tvar, None)));
   )
-
-and spread cx (loc, e) =
-  RestT (array_element_spread cx (loc, e))
 
 and expression ?(is_cond=false) cx (loc, e) =
   let t = expression_ ~is_cond cx loc e in
@@ -2549,8 +2549,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
     | elems ->
         let elem_spread_list = expression_or_spread_list cx loc elems in
         Flow_js.mk_tvar_where cx reason (fun tout ->
-          Flow.resolve_spread_list
-            cx reason elem_spread_list ResolveSpreadsToArrayLiteral tout
+          let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), tout)) in
+          let reason_op = reason in
+          Flow.resolve_spread_list cx ~reason_op elem_spread_list resolve_to
         )
     )
 
@@ -2891,7 +2892,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let ret = Flow.mk_tvar cx reason in
       let ft = Flow.mk_functioncalltype
         [ Arg (ArrT (reason_array, ArrayAT (StrT.why reason, None)));
-          SpreadArg (RestT (AnyT.why reason)) ]
+          SpreadArg (AnyT.why reason) ]
         ret
       in
       Flow.flow cx (t, CallT (reason, ft));
@@ -3453,7 +3454,15 @@ and react_ignore_attribute aname =
 
 and jsx cx = Ast.JSX.(
   function { openingElement; children; _ } ->
-  jsx_title cx openingElement (List.map (jsx_body cx) children)
+  let children =
+    children
+    |> List.map (jsx_body cx)
+    |> List.fold_left (fun children -> function
+      | None -> children
+      | Some child -> child::children) []
+    |> List.rev in
+
+  jsx_title cx openingElement children
 )
 
 and jsx_title cx openingElement children = Ast.JSX.(
@@ -3660,17 +3669,132 @@ and jsx_pragma_expression cx raw_jsx_expr loc = Ast.Expression.(function
 )
 
 and jsx_body cx = Ast.JSX.(function
-  | _, Element e -> jsx cx e
+  | _, Element e -> Some (jsx cx e)
   | _, ExpressionContainer ec -> (
       let open ExpressionContainer in
       let { expression = ex } = ec in
-      match ex with
+      Some (match ex with
         | Expression (loc, e) -> expression cx (loc, e)
         | EmptyExpression loc ->
-          EmptyT (mk_reason (RCustom "empty jsx body") loc)
+          EmptyT (mk_reason (RCustom "empty jsx body") loc))
     )
-  | loc, Text _ -> StrT.at loc (* TODO: create StrT (..., Literal ...)) *)
+  | loc, Text { Text.value; raw=_; } -> jsx_trim_text loc value
 )
+
+(* This is hard for two main reasons:
+ *  1. We can't use Str
+ *  2. It's not enough to trim the text, we also need to figure out the line and
+ *     column for the start and end of the text
+*)
+and jsx_trim_text =
+  (* Removes all the spaces from the beginning of the string *)
+  let prefix_trim =
+    let rec trimmer str len idx =
+      if idx >= len
+      then ""
+      else if String.get str idx = ' '
+      then trimmer str len (idx+1)
+      else String.sub str idx (len - idx)
+
+    in fun str -> trimmer str (String.length str) 0
+  in
+
+  (* Removes all the spaces from the end of the string *)
+  let suffix_trim =
+    let rec trimmer str idx =
+      if idx < 0
+      then ""
+      else if String.get str idx = ' '
+      then trimmer str (idx-1)
+      else String.sub str 0 (idx+1)
+
+    in fun str -> trimmer str (String.length str - 1)
+  in
+
+  fun loc value ->
+    (* Tabs get turned into spaces *)
+    let value = String_utils.replace_char '\t' ' ' value in
+
+    (* The algorithm is line based, so split the string into lines *)
+    let lines = String_utils.split_into_lines value in
+    let last_line = List.length lines - 1 in
+
+    let trimmed_lines = List.mapi (fun idx line ->
+      (* Remove the leading whitespace from every line but the first *)
+      let line = if idx <> 0 then prefix_trim line else line in
+      (* Remove the trailing whitespace from every line but the last *)
+      if idx <> last_line then suffix_trim line else line
+    ) lines in
+
+    (* Figure out the first and last non-empty line, if there are any *)
+    let _, first_and_last_non_empty =
+      List.fold_left
+        (fun (idx, first_and_last) line ->
+          let first_and_last =
+            if line <> ""
+            then match first_and_last with
+            | None -> Some (idx, idx)
+            | Some (first, _) -> Some (first, idx)
+            else first_and_last in
+          idx+1, first_and_last)
+        (0, None)
+        trimmed_lines in
+
+    match first_and_last_non_empty with
+    | None -> None
+    | Some (first_line, last_line) ->
+      (* Filter out empty lines and turn newlines into spaces *)
+      let trimmed =
+        trimmed_lines
+        |> List.filter (fun line -> line <> "")
+        |> String.concat " " in
+
+      let open Loc in
+      let start_line = loc.start.line + first_line in
+      let end_line = loc.start.line + last_line in
+
+      (* We want to know the column and offset for the first and last
+       * non-whitespace characters. We can do that by figuring out what those
+       * characters are and using String.index and String.rindex to search for
+       * them *)
+      let first_trimmed_line = List.nth trimmed_lines first_line in
+      let last_trimmed_line = List.nth trimmed_lines last_line in
+      let first_char = String.get first_trimmed_line 0 in
+      let last_char =
+        String.get last_trimmed_line (String.length last_trimmed_line - 1) in
+
+      (* For column we just do a search within the line *)
+      let start_column = String.index (List.nth lines first_line) first_char in
+      let end_column = String.rindex (List.nth lines last_line) last_char + 1 in
+
+      (* If we're on the first line, then we need to see on whic column the line
+         starts *)
+      let start_column =
+        if first_line = 0
+        then start_column + loc.start.column
+        else start_column in
+      let end_column =
+        if last_line = 0
+        then end_column + loc.start.column
+        else end_column in
+
+      (* For offset, we do a search in the whole JSXText string *)
+      let start_offset = loc.start.offset + (String.index value first_char) in
+      let end_offset = loc.start.offset + (String.rindex value last_char) + 1 in
+
+      let loc = { loc with
+        start = {
+          line = start_line;
+          column = start_column;
+          offset = start_offset;
+        };
+        _end = {
+          line = end_line;
+          column = end_column;
+          offset = end_offset;
+        };
+      } in
+      Some (StrT (mk_reason RJSXText loc, Type.Literal trimmed))
 
 (* Native support for React.PropTypes validation functions, which are
    interpreted as type annotations for React props. This strategy is reasonable
@@ -3963,7 +4087,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
           key = Property.Identifier (_, "mixins");
           value = Property.Init (aloc, Array { Array.elements });
           _ }) ->
-        mixins := List.map (array_element cx aloc) elements;
+        mixins := List.map (mixin_element cx aloc) elements;
         fmap, mmap
 
       (* statics *)
@@ -4275,6 +4399,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
 
   (* inspect a typeof equality test *)
   let typeof_test loc sense arg typename str_loc =
+    let bool = BoolT.at loc in
     match refinable_lvalue arg with
     | Some name, t ->
         let pred = match typename with
@@ -4287,12 +4412,12 @@ and predicates_of_condition cx e = Ast.(Expression.(
         | _ -> None
         in
         begin match pred with
-        | Some pred -> result BoolT.t name t pred sense
+        | Some pred -> result bool name t pred sense
         | None ->
           Flow_js.add_output cx Flow_error.(EInvalidTypeof (str_loc, typename));
-          empty_result (BoolT.at loc)
+          empty_result bool
         end
-    | None, _ -> empty_result (BoolT.at loc)
+    | None, _ -> empty_result bool
   in
 
   let sentinel_prop_test loc ~sense ~strict expr val_t =
@@ -4509,7 +4634,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       eq_test loc ~sense:false ~strict:true left right
 
   (* Array.isArray(expr) *)
-  | _, Call {
+  | loc, Call {
       Call.callee = callee_loc, Member {
         Member._object = (_, Identifier (_, "Array") as o);
         property = Member.PropertyIdentifier (prop_loc, "isArray");
@@ -4528,12 +4653,13 @@ and predicates_of_condition cx e = Ast.(Expression.(
         Flow.flow cx (obj_t, GetPropT (reason, Named (prop_reason, "isArray"), t))
       ) in
       Hashtbl.replace (Context.type_table cx) prop_loc fn_t;
+      let bool = BoolT.at loc in
 
       match refinable_lvalue arg with
       | Some name, t ->
-          result BoolT.t name t ArrP true
+          result bool name t ArrP true
       | None, _ ->
-          empty_result BoolT.t
+          empty_result bool
     )
 
   (* test1 && test2 *)
