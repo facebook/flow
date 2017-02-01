@@ -29,7 +29,7 @@ let force_annotations cx =
   let after = Errors.ErrorSet.cardinal (Context.errors cx) in
   if (after > before) then
     Context.add_tvar cx id Constraint.(Root {
-      rank = 0; constraints = Resolved Type.AnyT.t
+      rank = 0; constraints = Resolved Type.Locationless.AnyT.t
     })
 
 (* core inference, assuming setup and teardown happens elsewhere *)
@@ -145,7 +145,7 @@ let infer_ast ~metadata ~filename ~module_name ast =
     ) in
     Flow_js.flow_t cx (module_t, initial_module_t)
   ) else (
-    Flow_js.unify cx initial_module_t Type.AnyT.t
+    Flow_js.unify cx initial_module_t Type.Locationless.AnyT.t
   );
 
   (* insist that whatever type flows into exports is fully annotated *)

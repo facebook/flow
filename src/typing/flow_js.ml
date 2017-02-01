@@ -529,7 +529,7 @@ and resolve_type cx = function
          improve failure tolerance.  *)
       List.fold_left (fun u t ->
         merge_type cx (t, u)
-      ) AnyT.t ts
+      ) Locationless.AnyT.t ts
   | t -> t
 
 (** The following functions do "shallow" walks over types, respectively from
@@ -1948,7 +1948,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (ns_obj, t)
 
     (* import [type] X from 'SomeModule'; *)
-    | ModuleT(_, exports),
+    | ModuleT(module_reason, exports),
       ImportDefaultT(reason, import_kind, (local_name, module_name), t) ->
       let export_t = match exports.cjs_export with
         | Some t -> t
@@ -1974,7 +1974,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                 let suggestion = typo_suggestion known_exports local_name in
                 add_output cx ~trace (FlowError.ENoDefaultExport
                   (reason, module_name, suggestion));
-                AnyT.t
+                AnyT.why module_reason
       in
 
       let import_t = (
@@ -2719,7 +2719,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       iter_real_props cx props_tmap (fun x p ->
         let pmap = SMap.singleton x p in
         let id = Context.make_property_map cx pmap in
-        let obj = mk_objecttype ~flags dict_t id ObjProtoT.t in
+        let obj = mk_objecttype ~flags dict_t id dummy_prototype in
         rec_flow cx trace (l, UseT (use_op, ObjT (r, obj)))
       );
       rec_flow cx trace (l, UseT (use_op, proto_t))
@@ -3437,13 +3437,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow_t cx trace (l, react_class)
       | FunT _ ->
         let return_t =
-          get_builtin_typeapp cx ~trace elem_reason "React$Element" [AnyT.t]
+          get_builtin_typeapp cx ~trace elem_reason "React$Element" [Locationless.AnyT.t]
         in
         let maybe_r = replace_reason (fun desc ->
           RMaybe desc
         ) (reason_of_t return_t) in
         let return_t = MaybeT (maybe_r, return_t) in
-        let context_t = AnyT.t in
+        let context_t = Locationless.AnyT.t in
         let call_t = CallT (
           reason_op,
           mk_functioncalltype [Arg config; Arg context_t] return_t
@@ -3621,7 +3621,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (_, UseT (_, ShapeT (o))) ->
         let reason = reason_of_t o in
-        rec_flow cx trace (l, ObjAssignFromT(reason, o, AnyT.t, [], ObjAssign))
+        rec_flow cx trace (l, ObjAssignFromT(reason, o, Locationless.AnyT.t, [], ObjAssign))
 
     | (_, UseT (_, DiffT (o1, o2))) ->
         let reason = reason_of_t l in
@@ -4472,7 +4472,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************************************)
 
     | (FunT (_, _, t, _), SetPropT(reason_op, Named (_, "prototype"), tin)) ->
-      rec_flow cx trace (tin, ObjAssignFromT(reason_op, t, AnyT.t, [], ObjAssign))
+      rec_flow cx trace (tin, ObjAssignFromT(reason_op, t, Locationless.AnyT.t, [], ObjAssign))
 
     (*********************************)
     (* ... and their prototypes read *)
@@ -6767,7 +6767,7 @@ and bindings_of_jobs cx trace jobs =
     | Some speculation_id ->
       Speculation.add_unresolved_to_speculation cx speculation_id t
     | None ->
-      rec_unify cx trace t AnyT.t
+      rec_unify cx trace t Locationless.AnyT.t
     end;
     bindings
   ) jobs []
@@ -7076,7 +7076,7 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
 *)
 and blame_unresolved cx trace prev_i i cases case_r r ts =
   let rs = ts |> List.map (fun t ->
-    rec_unify cx trace t AnyT.t;
+    rec_unify cx trace t Locationless.AnyT.t;
     reason_of_t t
   ) in
   let prev_case = reason_of_t (List.nth cases prev_i) in
@@ -9564,7 +9564,7 @@ let intersect_members cx members =
         ) map (List.tl members) in
       SMap.map (List.fold_left (fun acc x ->
           merge_type cx (acc, x)
-        ) EmptyT.t) map
+      ) Locationless.EmptyT.t) map
 
 (* It's kind of lame that Autocomplete is in this module, but it uses a bunch
  * of internal APIs so for now it's easier to keep it here than to expose those
@@ -9815,7 +9815,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     assert_ground_id cx ~depth:(depth + 1) skip ids id
 
   | OpenT (reason_open, id) ->
-    unify_opt cx (OpenT (reason_open, id)) AnyT.t;
+    unify_opt cx (OpenT (reason_open, id)) Locationless.AnyT.t;
     add_output cx (FlowError.EMissingAnnotation reason_open)
 
   | NumT _
@@ -9831,9 +9831,9 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
 
   | FunT (reason, static, prototype, ft) ->
     let { this_t; params_tlist; return_t; rest_param; _ } = ft in
-    unify_opt cx static AnyT.t;
-    unify_opt cx prototype AnyT.t;
-    unify_opt cx this_t AnyT.t;
+    unify_opt cx static Locationless.AnyT.t;
+    unify_opt cx prototype Locationless.AnyT.t;
+    unify_opt cx this_t Locationless.AnyT.t;
     List.iter (recurse ~infer:(is_derivable_reason reason)) params_tlist;
     Option.iter
       ~f:(fun (_, _, t) -> recurse ~infer:(is_derivable_reason reason) t)
@@ -9845,7 +9845,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     recurse t
 
   | ObjT (_, { props_tmap = id; proto_t; _ }) ->
-    unify_opt cx proto_t AnyT.t;
+    unify_opt cx proto_t Locationless.AnyT.t;
     Context.iter_props cx id (fun _ -> Property.iter_t (recurse ~infer:true))
 
   | IdxWrapper (_, obj) -> recurse ~infer obj
@@ -9882,7 +9882,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
       (fun x -> Property.iter_t (process_element ~is_field:true x));
     Context.iter_props cx instance.methods_tmap
       (fun x -> Property.iter_t (process_element x));
-    unify_opt cx static AnyT.t;
+    unify_opt cx static Locationless.AnyT.t;
     recurse super
 
   | OptionalT t ->

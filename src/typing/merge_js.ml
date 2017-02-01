@@ -219,7 +219,7 @@ module ContextOptimizer = struct
       else
         let types = Flow_js.possible_types cx id in
         let t = match types with
-          | [] -> AnyT.t
+          | [] -> Locationless.AnyT.t
           | [t] -> t
           | t0::t1::ts -> UnionT (r, UnionRep.make t0 t1 ts)
         in

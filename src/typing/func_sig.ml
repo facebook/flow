@@ -103,7 +103,7 @@ let default_constructor reason = {
   tparams_map = SMap.empty;
   params = Func_params.empty;
   body = empty_body;
-  return_t = VoidT.t;
+  return_t = VoidT.why reason;
 }
 
 let field_initializer tparams_map reason expr return_t = {

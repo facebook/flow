@@ -52,14 +52,14 @@ let rec normalize_type_impl cx ids t = match t with
   | OpenT (_, id) ->
       lookup_type cx ids id
 
-  | NumT _ -> NumT.t
-  | StrT _ -> StrT.t
-  | BoolT _ -> BoolT.t
-  | EmptyT _ -> EmptyT.t
-  | NullT _ -> NullT.t
-  | VoidT _ -> VoidT.t
-  | MixedT _ -> MixedT.t
-  | AnyT _ -> AnyT.t
+  | NumT _ -> Locationless.NumT.t
+  | StrT _ -> Locationless.StrT.t
+  | BoolT _ -> Locationless.BoolT.t
+  | EmptyT _ -> Locationless.EmptyT.t
+  | NullT _ -> Locationless.NullT.t
+  | VoidT _ -> Locationless.VoidT.t
+  | MixedT _ -> Locationless.MixedT.t
+  | AnyT _ -> Locationless.AnyT.t
 
   | TaintT _ -> TaintT (locationless_reason (RCustom "taint"))
 
@@ -118,7 +118,7 @@ let rec normalize_type_impl cx ids t = match t with
       fake_fun params_names tins rest_param any
 
   | ChoiceKitT (_, _) ->
-      AnyT.t
+      Locationless.AnyT.t
 
   (* Fake the signature of $Facebookism$Merge: *)
   (* (...objects: Array<Object>): Object *)
@@ -223,9 +223,9 @@ let rec normalize_type_impl cx ids t = match t with
   | CustomFunT (_, DebugPrint) ->
       let rest_param = Some (
         "_",
-        ArrT (locationless_reason RArray, ArrayAT(AnyT.t, None))
+        ArrT (locationless_reason RArray, ArrayAT(Locationless.AnyT.t, None))
       ) in
-      fake_fun None [] rest_param VoidT.t
+      fake_fun None [] rest_param Locationless.VoidT.t
 
   (* Fake the signature of React.createElement (overloaded)
      1. Component class
@@ -295,7 +295,7 @@ let rec normalize_type_impl cx ids t = match t with
         |> Properties.map_t (normalize_type_impl cx ids)
         |> Context.make_property_map cx
       in
-      let proto = AnyT.t in
+      let proto = Locationless.AnyT.t in
       ObjT (
         locationless_reason RObject,
         Flow_js.mk_objecttype dict pmap proto
@@ -414,7 +414,7 @@ let rec normalize_type_impl cx ids t = match t with
         (* this happens when, for example, the RHS of a destructuring is
            unconstrained, so we never evaluate the destructuring. so, make the
            destructured value also unconstrained... *)
-        EmptyT.t
+        Locationless.EmptyT.t
       end
 
   | OpenPredT (_, t, _, _) ->
@@ -467,9 +467,9 @@ and lookup_type_ cx ids id =
     try
       List.fold_left
         (fun u t -> Flow_js.merge_type cx (normalize_type_impl cx ids t, u))
-        EmptyT.t types
+        Locationless.EmptyT.t types
     with _ ->
-      AnyT.t
+      Locationless.AnyT.t
 
 and lookup_type cx ids id =
   match IMap.get id !suggested_type_cache with
@@ -506,13 +506,13 @@ and normalize_union r rep =
     ) ts (TypeSet.empty, false, false) in
   let ts =
     match (has_void, has_null) with
-    | (true, false) -> TypeSet.add VoidT.t ts
-    | (false, true) -> TypeSet.add NullT.t ts
+    | (true, false) -> TypeSet.add Locationless.VoidT.t ts
+    | (false, true) -> TypeSet.add Locationless.NullT.t ts
     | _ ->
         (* We should never get an empty set at this point but better safe than
            sorry. Stripping out EmptyT above might be unsafe. *)
         if TypeSet.is_empty ts
-        then TypeSet.singleton EmptyT.t
+        then TypeSet.singleton Locationless.EmptyT.t
         else ts
   in
   let ts = TypeSet.elements ts in

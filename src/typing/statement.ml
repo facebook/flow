@@ -86,7 +86,7 @@ let rec variable_decl cx entry = Ast.Statement.(
         (* TODO: delay resolution of type annotation like above? *)
         Anno.mk_type_annotation cx SMap.empty r in
       bind cx pattern_name t r;
-      let expr _ _ = EmptyT.t in (* don't eval computed property keys *)
+      let expr _ _ = EmptyT.at loc in (* don't eval computed property keys *)
       destructuring cx ~expr t None None p ~f:(fun loc name _default t ->
         let r = repos_reason loc r in
         let t = match typeAnnotation with
@@ -3909,7 +3909,7 @@ and mk_proptype cx = Ast.Expression.(function
       } in
       let dict = Some {
         dict_name = None;
-        key = AnyT.t;
+        key = Locationless.AnyT.t;
         value = mk_proptype cx e;
         dict_polarity = Neutral;
       } in
@@ -4023,7 +4023,7 @@ and mk_proptypes cx props = Ast.Expression.Object.(
         dict
 
     (* spread prop *)
-    | SpreadProperty _ ->
+    | SpreadProperty (loc, _) ->
       (* Instead of modeling the spread precisely, we instead make the propTypes
          extensible. This has the effect of loosening the check for properties
          added by the spread, while leaving the checking of other properties as
@@ -4033,8 +4033,8 @@ and mk_proptypes cx props = Ast.Expression.Object.(
          that world, it may not be worth it to spend time on this right now. *)
       amap, omap, Some {
         dict_name = None;
-        key = StrT.t;
-        value = AnyT.t;
+        key = StrT.at loc;
+        value = Locationless.AnyT.t;
         dict_polarity = Neutral;
       }
 
@@ -4616,14 +4616,15 @@ and predicates_of_condition cx e = Ast.(Expression.(
     )
 
   (* expr instanceof t *)
-  | _, Binary { Binary.operator = Binary.Instanceof; left; right } -> (
+  | loc, Binary { Binary.operator = Binary.Instanceof; left; right } -> (
+      let bool = BoolT.at loc in
       match refinable_lvalue left with
       | Some name, t ->
           let right_t = expression cx right in
           let pred = LeftP (InstanceofTest, right_t) in
-          result BoolT.t name t pred true
+          result bool name t pred true
       | None, _ ->
-          empty_result BoolT.t
+          empty_result bool
     )
 
   (* expr op expr *)

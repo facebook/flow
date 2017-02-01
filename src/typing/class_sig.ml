@@ -280,7 +280,7 @@ let thistype cx x =
   } = x in
   let open Type in
   let sinsttype, insttype = mutually (insttype cx x) in
-  let static = InstanceT (sreason, ObjProtoT.t, ssuper, [], sinsttype) in
+  let static = InstanceT (sreason, Flow.dummy_prototype, ssuper, [], sinsttype) in
   InstanceT (reason, static, super, implements, insttype)
 
 let check_implements cx x =
@@ -604,7 +604,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       then Type.FunProtoT (locationless_reason RObjectClassName) :: interface_supers
       else interface_supers in
     let super = Type.(match interface_supers with
-      | [] -> AnyT.t
+      | [] -> AnyT.why super_reason
       | [t] -> t
       | t0::t1::ts -> IntersectionT (super_reason, InterRep.make t0 t1 ts)
     ) in

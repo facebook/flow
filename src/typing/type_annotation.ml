@@ -341,7 +341,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       )
     else (
       Flow_js.add_output cx (FlowError.EUnexpectedThisType loc);
-      AnyT.t
+      Locationless.AnyT.t
     )
 
   (* Class<T> is the type of the class whose instances are of type T *)
@@ -452,7 +452,7 @@ let rec convert cx tparams_map = Ast.Type.(function
           List.map (fun i -> "x_" ^ Pervasives.string_of_int i) in
         let emp = Key_map.empty in
         let tins = Utils_js.repeat n (AnyT.at loc) in
-        let tout = OpenPredT (out_reason, MixedT.t, emp, emp) in
+        let tout = OpenPredT (out_reason, MixedT.at loc, emp, emp) in
         FunT (
           fun_reason,
           Flow_js.dummy_static static_reason,
