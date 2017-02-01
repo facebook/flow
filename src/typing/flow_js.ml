@@ -9791,8 +9791,8 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | Some { Verbose.depth = verbose_depth; indent; } ->
     let pid = Context.pid_prefix cx in
     let indent = String.make ((depth - 1) * indent) ' ' in
-    prerr_endlinef "\n%s%sassert_ground: %s"
-      indent pid (Debug_js.dump_t cx ~depth:verbose_depth t)
+    prerr_endlinef "\n%s%sassert_ground (infer=%b): %s"
+      indent pid infer (Debug_js.dump_t cx ~depth:verbose_depth t)
   | None -> ()
   end;
   let recurse ?infer = assert_ground ?infer ~depth:(depth + 1) cx skip ids in

@@ -4219,12 +4219,15 @@ and react_create_class cx loc class_props = Ast.Expression.(
   Flow.flow_t cx (super_static, override_statics);
   static := clone_object cx static_reason !static super_static;
 
+  let initialized_field_names =
+    SMap.fold (fun key _ set -> SSet.add key set) fmap SSet.empty in
+
   let itype = {
     class_id = 0;
     type_args = SMap.empty;
     arg_polarities = SMap.empty;
     fields_tmap = Context.make_property_map cx fmap;
-    initialized_field_names = SSet.empty;
+    initialized_field_names;
     methods_tmap = Context.make_property_map cx mmap;
     mixins = !mixins <> [];
     structural = false;
