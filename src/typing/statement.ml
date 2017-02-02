@@ -333,38 +333,23 @@ and statement_decl cx = Ast.Statement.(
   | (_, ImportDeclaration import_decl) ->
       let open ImportDeclaration in
 
-      let module_name = (
-        let (_, source_literal) = import_decl.source in
-        match source_literal.Ast.Literal.value with
-        | Ast.Literal.String(value) -> value
-        | _ -> failwith  (
-            "Parser error: Invalid source type! Must be a string literal."
-          )
-      ) in
-
-      let (import_str, isType) = (
+      let isType =
         match import_decl.importKind with
-        | ImportDeclaration.ImportType -> "import type", true
-        | ImportDeclaration.ImportTypeof -> "import typeof", true
-        | ImportDeclaration.ImportValue -> "import", false
-      ) in
+        | ImportDeclaration.ImportType -> true
+        | ImportDeclaration.ImportTypeof -> true
+        | ImportDeclaration.ImportValue -> false
+      in
 
       import_decl.specifiers |> List.iter (fun specifier ->
-        let (local_name, reason, isType) = (match specifier with
+        let (local_name, loc, isType) = (match specifier with
           | ImportNamedSpecifier {local; remote; kind;} ->
             let remote_name = ident_name remote in
-            let (local_name, reason) = (
+            let (local_name, loc) = (
               match local with
               | Some local ->
-                let local_name = ident_name local in
-                let reason_str =
-                  spf "%s { %s as %s }" import_str remote_name local_name
-                in
-                let loc = Loc.btwn (fst remote) (fst local) in
-                (local_name, mk_reason (RCustom reason_str) loc)
+                (ident_name local, Loc.btwn (fst remote) (fst local))
               | None ->
-                let reason_str = spf "%s { %s }" import_str remote_name in
-                (remote_name, mk_reason (RCustom reason_str) (fst remote))
+                (remote_name, fst remote)
             ) in
             let isType = isType || (
               match kind with
@@ -373,22 +358,15 @@ and statement_decl cx = Ast.Statement.(
                 kind = ImportDeclaration.ImportType
               || kind = ImportDeclaration.ImportTypeof
             ) in
-            (local_name, reason, isType)
+            (local_name, loc, isType)
           | ImportDefaultSpecifier local ->
-            let local_name = ident_name local in
-            let reason_str =
-              spf "%s %s from %S" import_str local_name module_name
-            in
-            let reason = mk_reason (RCustom reason_str) (fst local) in
-            (local_name, reason, isType)
+            (ident_name local, fst local, isType)
           | ImportNamespaceSpecifier (_, local) ->
-            let local_name = ident_name local in
-            let reason_str =
-              spf "%s * as %s from %S" import_str local_name module_name
-            in
-            let reason = mk_reason (RCustom reason_str) (fst local) in
-            (local_name, reason, isType)
+            (ident_name local, fst local, isType)
         ) in
+        let reason = if isType
+          then DescFormat.type_reason local_name loc
+          else mk_reason (RCustom (spf "identifier `%s`" local_name)) loc in
         let tvar = Flow.mk_tvar cx reason in
         let state = Scope.State.Initialized in
         if isType
@@ -1775,45 +1753,24 @@ and statement cx = Ast.Statement.(
     in
 
     import_decl.specifiers |> List.iter (fun specifier ->
-      let (reason, local_name, t, specifier_kind) = (
+      let (loc, local_name, t, specifier_kind) = (
         match specifier with
         | ImportNamedSpecifier {local; remote; kind;} ->
           let remote_name = ident_name remote in
-
-          let import_reason_str =
-            spf "Named import from module `%s`" module_name
-          in
-
-          let (loc, local_name, import_reason, bind_reason) = (
+          let (loc, local_name) = (
             match local with
             | Some local ->
-              let local_name = ident_name local in
-              let import_reason =
-                mk_reason (RCustom import_reason_str) (fst remote) in
-              let bind_reason_str =
-                spf "%s { %s as %s } from %S"
-                  import_str
-                  remote_name
-                  local_name
-                  module_name
-              in
-              let bind_loc = Loc.btwn (fst remote) (fst local) in
-              let bind_reason = mk_reason (RCustom bind_reason_str) bind_loc in
-              (bind_loc, local_name, import_reason, bind_reason)
+              (Loc.btwn (fst remote) (fst local), ident_name local)
             | None ->
-              let import_reason =
-                mk_reason (RCustom import_reason_str) (fst remote) in
-              let bind_reason_str =
-                spf "%s { %s } from %S"
-                  import_str
-                  remote_name
-                  module_name
-              in
-              let bind_reason =
-                mk_reason (RCustom bind_reason_str) (fst remote) in
-              (fst remote, remote_name, import_reason, bind_reason)
+              (fst remote, remote_name)
           ) in
           let imported_t =
+            let import_reason =
+              let import_reason_str =
+                spf "Named import from module `%s`" module_name
+              in
+              mk_reason (RCustom import_reason_str) (fst remote)
+            in
             if Type_inference_hooks_js.dispatch_member_hook
               cx remote_name loc module_t
             then AnyT.why import_reason
@@ -1828,7 +1785,7 @@ and statement cx = Ast.Statement.(
               get_imported_t import_reason import_kind remote_name local_name
             )
           in
-          (bind_reason, local_name, imported_t, kind)
+          (loc, local_name, imported_t, kind)
 
         | ImportDefaultSpecifier local ->
           let local_name = ident_name local in
@@ -1839,18 +1796,13 @@ and statement cx = Ast.Statement.(
           in
           let import_reason = mk_reason (RCustom import_reason_str) loc in
 
-          let bind_reason_str =
-            spf "%s %s from %S" import_str local_name module_name
-          in
-          let bind_reason = mk_reason (RCustom bind_reason_str) loc in
-
           let imported_t =
             if Type_inference_hooks_js.dispatch_member_hook
               cx "default" loc module_t
             then AnyT.why import_reason
             else get_imported_t import_reason import_kind "default" local_name
           in
-          (bind_reason, local_name, imported_t, None)
+          (loc, local_name, imported_t, None)
 
         | ImportNamespaceSpecifier (ns_loc, local) ->
           let local_name = ident_name local in
@@ -1865,7 +1817,7 @@ and statement cx = Ast.Statement.(
             | Type.ImportType ->
               Flow_js.add_output cx Flow_error.(EImportTypeofNamespace
                 (import_reason, local_name, module_name));
-              (import_reason, local_name, AnyT.why import_reason, None)
+              (import_loc, local_name, AnyT.why import_reason, None)
             | Type.ImportTypeof ->
               let bind_reason = repos_reason (fst local) import_reason in
               let module_ns_t =
@@ -1878,7 +1830,7 @@ and statement cx = Ast.Statement.(
                     ImportTypeofT (bind_reason, "*", t))
                 )
               in
-              (import_reason, local_name, module_ns_typeof, None)
+              (import_loc, local_name, module_ns_typeof, None)
             | Type.ImportValue ->
               let reason =
                 mk_reason (RCustom (spf "exports of %S" module_name)) import_loc
@@ -1887,9 +1839,7 @@ and statement cx = Ast.Statement.(
                 import_ns cx reason module_name (fst import_decl.source)
               in
               Context.add_imported_t cx local_name module_ns_t;
-              let bind_reason =
-                mk_reason (RCustom import_reason_str) (fst local) in
-              (bind_reason, local_name, module_ns_t, None)
+              (fst local, local_name, module_ns_t, None)
           )
       ) in
 
@@ -1902,10 +1852,13 @@ and statement cx = Ast.Statement.(
       in
 
       let t_generic =
-        let lookup_mode =
+        let lookup_mode, reason =
           match import_kind with
-          | Type.ImportType | Type.ImportTypeof -> ForType
-          | Type.ImportValue -> ForValue
+          | Type.ImportType | Type.ImportTypeof ->
+            ForType, DescFormat.type_reason local_name loc
+          | Type.ImportValue ->
+            let desc = RCustom (spf "identifier `%s`" local_name) in
+            ForValue, mk_reason desc loc
         in
         Env.get_var_declared_type ~lookup_mode cx local_name reason
       in
