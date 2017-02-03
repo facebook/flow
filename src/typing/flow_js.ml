@@ -4672,7 +4672,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (SMap.filter (fun x _ -> x = "constructor")
             (Context.find_props cx fields_tmap)))
       then (
-        structural_subtype cx trace l reason_inst (fields_tmap, methods_tmap);
+        structural_subtype cx trace ~use_op l reason_inst
+          (fields_tmap, methods_tmap);
         rec_flow cx trace (l, UseT (use_op, super))
       )
 
@@ -4687,7 +4688,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         structural = true;
         _;
       })) ->
-      structural_subtype cx trace l reason_inst (fields_tmap, methods_tmap);
+      structural_subtype cx trace ~use_op l reason_inst
+        (fields_tmap, methods_tmap);
       rec_flow cx trace (l, UseT (use_op, super))
 
     (***************************************************************)
@@ -5196,7 +5198,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         structural = true;
         _;
       }))) ->
-      structural_subtype cx trace l reason_inst (fields_tmap, methods_tmap);
+      structural_subtype cx trace ~use_op l reason_inst
+        (fields_tmap, methods_tmap);
       rec_flow cx trace (l, UseT (use_op, super))
 
     | (ObjProtoT _, UseT (use_op, ExtendsT ([], t, tc))) ->
@@ -5795,7 +5798,9 @@ and sealed_in_op reason_op = function
 
 (* dispatch checks to verify that lower satisfies the structural
    requirements given in the tuple. *)
-and structural_subtype cx trace lower reason_struct (fields_pmap, methods_pmap) =
+and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
+  (fields_pmap, methods_pmap) =
+  ignore use_op; (* TODO: thread use_op through lookups *)
   let lreason = reason_of_t lower in
   let fields_pmap = Context.find_props cx fields_pmap in
   let methods_pmap = Context.find_props cx methods_pmap in
