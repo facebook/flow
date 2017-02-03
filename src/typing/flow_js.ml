@@ -3547,10 +3547,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | Field (OptionalT ut, upolarity) ->
             rec_flow cx trace (l,
               LookupT (ureason, NonstrictReturning None, [], propref,
-                LookupProp (Field (ut, upolarity))))
+                LookupProp (use_op, Field (ut, upolarity))))
           | _ ->
             let u =
-              LookupT (ureason, Strict lreason, [], propref, LookupProp up) in
+              LookupT (ureason, Strict lreason, [], propref,
+                LookupProp (use_op, up)) in
             rec_flow cx trace (super, ReposLowerT (lreason, u))
       );
 
@@ -3855,7 +3856,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | _, None ->
             add_output cx ~trace
               (FlowError.EPropAccess ((lreason, reason_op), Some x, p, rw)))
-        | LookupProp up ->
+        | LookupProp (use_op, up) ->
           let p, up = match p, up with
           | Field (AbstractT t, polarity), Field (AbstractT ut, upolarity) ->
             Field (t, polarity), Field (ut, upolarity)
@@ -3863,7 +3864,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             Field (t, polarity), up
           | _ -> p, up
           in
-          rec_flow_p cx trace lreason reason_op propref (p, up)
+          rec_flow_p cx trace ~use_op lreason reason_op propref (p, up)
         | SuperProp lp ->
           let p, lp = match p, lp with
           | Field (AbstractT t, polarity), Field (AbstractT lt, lpolarity) ->
@@ -5473,7 +5474,8 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
         | _ -> NonstrictReturning None
         in
         rec_flow cx trace (lproto,
-          LookupT (ureason, strict, [], propref, LookupProp up))
+          LookupT (ureason, strict, [], propref,
+            LookupProp (use_op, up)))
         (* TODO: instead, consider extending inflowing type with s:t2 when it
            is not sealed *)
   );
@@ -5800,7 +5802,6 @@ and sealed_in_op reason_op = function
    requirements given in the tuple. *)
 and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
   (fields_pmap, methods_pmap) =
-  ignore use_op; (* TODO: thread use_op through lookups *)
   let lreason = reason_of_t lower in
   let fields_pmap = Context.find_props cx fields_pmap in
   let methods_pmap = Context.find_props cx methods_pmap in
@@ -5815,7 +5816,7 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
       in
       rec_flow cx trace (lower,
         LookupT (reason_struct, NonstrictReturning None, [], propref,
-          LookupProp (Field (t, polarity))))
+          LookupProp (use_op, Field (t, polarity))))
     | _ ->
       let propref =
         let reason_prop = replace_reason (fun desc ->
@@ -5824,7 +5825,8 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
         Named (reason_prop, s)
       in
       rec_flow cx trace (lower,
-        LookupT (reason_struct, Strict lreason, [], propref, LookupProp p))
+        LookupT (reason_struct, Strict lreason, [], propref,
+          LookupProp (use_op, p)))
   );
   methods_pmap |> SMap.iter (fun s p ->
     if inherited_method s then
@@ -5835,7 +5837,8 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
         Named (reason_prop, s)
       in
       rec_flow cx trace (lower,
-        LookupT (reason_struct, Strict lreason, [], propref, LookupProp p))
+        LookupT (reason_struct, Strict lreason, [], propref,
+          LookupProp (use_op, p)))
   );
 
 (*****************)
@@ -9196,8 +9199,8 @@ and finish_resolve_spread_list =
   )
 
 and perform_lookup_action cx trace propref p lreason ureason = function
-  | LookupProp up ->
-    rec_flow_p cx trace lreason ureason propref (p, up)
+  | LookupProp (use_op, up) ->
+    rec_flow_p cx trace ~use_op lreason ureason propref (p, up)
   | SuperProp lp ->
     rec_flow_p cx trace ureason lreason propref (lp, p)
   | RWProp (tout, rw) ->

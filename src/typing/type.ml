@@ -688,7 +688,7 @@ module rec TypeTerm : sig
 
   and lookup_action =
   | RWProp of t_out * rw
-  | LookupProp of Property.t
+  | LookupProp of use_op * Property.t
   | SuperProp of Property.t
 
   and rw = Read | Write

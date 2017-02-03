@@ -250,7 +250,7 @@ and gc_use cx state = function
       (match action with
       | RWProp (t, _) ->
         gc cx state t
-      | LookupProp p
+      | LookupProp (_, p)
       | SuperProp p ->
         Property.iter_t (gc cx state) p)
   | MakeExactT (_, k) -> gc_cont cx state k

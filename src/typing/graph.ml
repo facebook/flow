@@ -140,7 +140,7 @@ let map_props m = SMap.bindings m |> List.map prop |> List.flatten
 let lookup_action_parts = function
   | RWProp (t, Read) -> [("read", Def t)]
   | RWProp (t, Write) -> [("write", Def t)]
-  | LookupProp p -> prop ("lookup", p)
+  | LookupProp (_, p) -> prop ("lookup", p)
   | SuperProp p -> prop ("super", p)
 
 let rec add_t cx t (ts, nodes, edges) =

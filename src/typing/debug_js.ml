@@ -1168,8 +1168,9 @@ and json_of_lookup_action_impl json_cx action = Hh_json.(
         "rw", JSON_String (string_of_rw rw);
         "t", _json_of_t json_cx t
       ]
-    | LookupProp p -> [
+    | LookupProp (op, p) -> [
         "kind", JSON_String "LookupProp";
+        "use", JSON_String (string_of_use_op op);
         "prop", json_of_prop json_cx p;
       ]
     | SuperProp p -> [
@@ -1505,7 +1506,7 @@ and dump_use_t_ (depth, tvars) cx t =
   let lookup_action = function
   | RWProp (t, Read) -> spf "Read %s" (kid t)
   | RWProp (t, Write) -> spf "Write %s" (kid t)
-  | LookupProp p -> spf "Lookup %s" (prop p)
+  | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (prop p)
   | SuperProp p -> spf "Super %s" (prop p)
   in
 
