@@ -1,0 +1,8 @@
+class_method_default_parameters.js:17
+ 17:     h(i: number = this.b) { // error
+                       ^^^^^^ string. This type is incompatible with
+ 17:     h(i: number = this.b) { // error
+              ^^^^^^ number
+
+
+Found 1 error
