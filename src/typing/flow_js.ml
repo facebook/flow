@@ -8419,7 +8419,7 @@ and add_lower_edges cx trace ?(opt=false) (id1, bounds1) (id2, bounds2) =
    connections necessary when two non-unifiers flow to each other. If one or
    both of the roots are resolved, they effectively act like the corresponding
    concrete types. *)
-and goto cx trace (id1, root1) (id2, root2) =
+and goto cx trace ~use_op (id1, root1) (id2, root2) =
   (match root1.constraints, root2.constraints with
 
   | Unresolved bounds1, Unresolved bounds2 ->
@@ -8439,45 +8439,47 @@ and goto cx trace (id1, root1) (id2, root2) =
     );
 
   | Unresolved bounds1, Resolved t2 ->
-    let t2_use = UseT (UnknownUse, t2) in
+    let t2_use = UseT (use_op, t2) in
     edges_and_flows_to_t cx trace ~opt:true (id1, bounds1) t2_use;
     edges_and_flows_from_t cx trace ~opt:true t2 (id1, bounds1);
 
   | Resolved t1, Unresolved bounds2 ->
-    let t1_use = UseT (UnknownUse, t1) in
+    let t1_use = UseT (use_op, t1) in
     replace_node cx id2 (Root { root2 with constraints = Resolved t1 });
     edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1_use;
     edges_and_flows_from_t cx trace ~opt:true t1 (id2, bounds2);
 
   | Resolved t1, Resolved t2 ->
-    rec_unify cx trace t1 t2;
+    rec_unify cx trace ~use_op t1 t2;
   );
   replace_node cx id1 (Goto id2)
 
 (* Unify two type variables. This involves finding their roots, and making one
    point to the other. Ranks are used to keep chains short. *)
-and merge_ids cx trace id1 id2 =
+and merge_ids cx trace ~use_op id1 id2 =
   let (id1, root1), (id2, root2) = find_root cx id1, find_root cx id2 in
   if id1 = id2 then ()
-  else if root1.rank < root2.rank then goto cx trace (id1, root1) (id2, root2)
-  else if root2.rank < root1.rank then goto cx trace (id2, root2) (id1, root1)
+  else if root1.rank < root2.rank
+  then goto cx trace ~use_op (id1, root1) (id2, root2)
+  else if root2.rank < root1.rank
+  then goto cx trace ~use_op (id2, root2) (id1, root1)
   else (
     replace_node cx id2 (Root { root2 with rank = root1.rank+1; });
-    goto cx trace (id1, root1) (id2, root2);
+    goto cx trace ~use_op (id1, root1) (id2, root2);
   )
 
 (* Resolve a type variable to a type. This involves finding its root, and
    resolving to that type. *)
-and resolve_id cx trace id t =
+and resolve_id cx trace ~use_op id t =
   let id, root = find_root cx id in
   match root.constraints with
   | Unresolved bounds ->
     replace_node cx id (Root { root with constraints = Resolved t });
-    edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (UnknownUse, t));
+    edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (use_op, t));
     edges_and_flows_from_t cx trace ~opt:true t (id, bounds);
 
   | Resolved t_ ->
-    rec_unify cx trace t_ t
+    rec_unify cx trace ~use_op t_ t
 
 (******************)
 
@@ -8533,12 +8535,12 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
   match t1, t2 with
 
   | OpenT (_, id1), OpenT (_, id2) ->
-    merge_ids cx trace id1 id2
+    merge_ids cx trace ~use_op id1 id2
 
   | OpenT (_, id), t when ok_unify t ->
-    resolve_id cx trace id t
+    resolve_id cx trace ~use_op id t
   | t, OpenT (_, id) when ok_unify t ->
-    resolve_id cx trace id t
+    resolve_id cx trace ~use_op id t
 
   | PolyT (params1, t1), PolyT (params2, t2)
     when List.length params1 = List.length params2 ->

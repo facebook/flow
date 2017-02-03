@@ -6,11 +6,16 @@ constructors.js:3
   3:   this.x = 0; // constructs objects with property x
        ^^^^^^ boolean
 
-constructors.js:5
-  5: Foo.y = 0; // has static property y
-             ^ number. This type is incompatible with
- 19:   static y: boolean; // error, should have declared static y: number instead
-                 ^^^^^^^ boolean
+constructors.js:16
+ 16: interface IFoo extends IFooPrototype {
+     ^ statics of IFoo. This type is incompatible with
+  2: function Foo() {
+     ^ statics of function
+  Property `y` is incompatible:
+      5: Foo.y = 0; // has static property y
+                 ^ number. This type is incompatible with
+     19:   static y: boolean; // error, should have declared static y: number instead
+                     ^^^^^^^ boolean
 
 test.js:2
   2: var x: string = new Foo().x; // error, found number instead of string
