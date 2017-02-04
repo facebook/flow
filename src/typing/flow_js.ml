@@ -3797,8 +3797,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* statics can be read   *)
     (*************************)
 
-    | InstanceT (_, static, _, _, _), GetStaticsT (_, t) ->
-      rec_flow_t cx trace (static, t)
+    | InstanceT (lreason, static, _, _, _), GetStaticsT (ureason, t) ->
+      rec_flow_t cx trace (ReposT (lreason, static), ReposT (ureason, t))
 
     (* GetStaticsT is only ever called on the instance type of a ClassT. There
      * is exactly one place where we create a ClassT with an ObjT instance type:

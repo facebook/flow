@@ -6,11 +6,11 @@ constructors.js:3
   3:   this.x = 0; // constructs objects with property x
        ^^^^^^ boolean
 
-constructors.js:16
- 16: interface IFoo extends IFooPrototype {
-     ^ statics of IFoo. This type is incompatible with
-  2: function Foo() {
-     ^ statics of function
+constructors.js:21
+ 21: exports.Foo2 = (Foo: Class<IFoo>);
+                                ^^^^ statics of IFoo. This type is incompatible with
+ 21: exports.Foo2 = (Foo: Class<IFoo>);
+                     ^^^ statics of function
   Property `y` is incompatible:
       5: Foo.y = 0; // has static property y
                  ^ number. This type is incompatible with
