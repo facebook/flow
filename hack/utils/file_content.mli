@@ -10,12 +10,6 @@
 
 open Ide_api_types
 
-type t = {time : float; content : string}
+val edit_file : string -> text_edit list -> (string, string) Result.t
 
-val of_content : content:string -> t
-
-val get_content : t -> string
-
-val edit_file : t -> text_edit list -> (t, string) Result.t
-
-val edit_file_unsafe : t -> text_edit list -> t
+val edit_file_unsafe : string -> text_edit list -> string
