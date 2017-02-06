@@ -8,25 +8,14 @@
  *
  *)
 
+open Ide_api_types
+
 type t = {time : float; content : string}
-
-(* 1-based position is used here *)
-type content_pos = {line : int; column : int}
-
-type content_range = {
-  st : content_pos;
-  ed : content_pos;
-}
-
-type code_edit = {
-  range : content_range option;
-  text : string;
-}
 
 val of_content : content:string -> t
 
 val get_content : t -> string
 
-val edit_file : t -> code_edit list -> (t, string) Result.t
+val edit_file : t -> text_edit list -> (t, string) Result.t
 
-val edit_file_unsafe : t -> code_edit list -> t
+val edit_file_unsafe : t -> text_edit list -> t

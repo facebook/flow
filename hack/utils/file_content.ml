@@ -8,25 +8,11 @@
  *
  *)
 open Core
+open Ide_api_types
 
 type t = {
   time : float;
   content : string;
-}
-
-type content_pos = {
-  line : int;
-  column : int;
-}
-
-type content_range = {
-  st : content_pos;
-  ed : content_pos;
-}
-
-type code_edit = {
-  range : content_range option;
-  text : string;
 }
 
 let of_content ~content = {
@@ -105,7 +91,7 @@ let print_edit b edit =
   in
   Printf.bprintf b "range = %s\n text = \n%s\n" range edit.text
 
-let edit_file fc (edits: code_edit list) =
+let edit_file fc (edits: text_edit list) =
   try
     Result.Ok (List.fold ~init:fc ~f:apply_edit edits)
   with e ->
