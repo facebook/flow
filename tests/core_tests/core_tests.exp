@@ -65,32 +65,32 @@ weakset.js:19
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                             ^ number. This type is incompatible with
-617: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:617
+616: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:616
 
 weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                ^ number. This type is incompatible with
-617: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:617
+616: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:616
 
 weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                   ^ number. This type is incompatible with
-617: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:617
+616: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:616
 
 weakset.js:36
  36: let ws5 = new WeakSet(numbers()); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  29: function* numbers(): Iterable<number> {
                                    ^^^^^^ number. This type is incompatible with
-617: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:617
+616: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:616
 
 
 Found 13 errors
