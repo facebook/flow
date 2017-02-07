@@ -570,9 +570,11 @@ let is_constant_property_reason r =
     else is_not_lowercase x 0 (len - 1)
   | _ -> false
 
-let is_method_call_reason x r =
+let is_typemap_reason r =
   match desc_of_reason r with
-  | RMethodCall (Some y) -> x = y
+  | RTupleMap
+  | RObjectMap
+  | RObjectMapi -> true
   | _ -> false
 
 let is_derivable_reason r =

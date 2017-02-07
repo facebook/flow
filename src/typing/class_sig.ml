@@ -322,7 +322,7 @@ let mk_super cx tparams_map c targs = Type.(
          this-specialize `c`. *)
       let reason = reason_of_t c in
       let c = Flow.mk_tvar_derivable_where cx reason (fun tvar ->
-        Flow.flow cx (c, SpecializeT (reason, reason, false, [], tvar))
+        Flow.flow cx (c, SpecializeT (reason, reason, None, [], tvar))
       ) in
       ThisTypeAppT (c, this, [])
   | Some params ->
