@@ -91,9 +91,8 @@ module type Access = sig
 
   val (>>=) : 'a m -> (('a * keytrace) -> 'b m) -> 'b m
 
-  (** Kind of the opposite of "return". Projects down from the monad (so we
-   * exit the monad). *)
-  val project : ('a -> 'b) -> (access_failure -> 'b) -> 'a m -> 'b
+  (** This is a comonad, but we need a little help to deal with failure *)
+  val counit_with : (access_failure -> 'a) -> 'a m -> 'a
 
   (**
    * The following getters operate on a JSON_Object by accessing keys on it,
