@@ -2923,9 +2923,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (ObjT (r, exactobj), u)
 
     (* exactify incoming UB object type, flow to LB *)
-    | ObjT (ru, obj_u), MakeExactT (_, Lower ObjT (rl, obj_l)) ->
+    | ObjT (ru, obj_u), MakeExactT (reason_op, Lower ObjT (rl, obj_l)) ->
       (* check for extra props in LB, then forward to standard obj ~> obj *)
       let xl = { obj_l with flags = { obj_l.flags with exact = true } } in
+      let ru = repos_reason (loc_of_reason reason_op) ru in
       let xu = { obj_u with flags = { obj_u.flags with exact = true } } in
       iter_real_props cx obj_l.props_tmap (fun prop_name _ ->
         if not (Context.has_prop cx obj_u.props_tmap prop_name)
