@@ -659,7 +659,7 @@ module ImplicitTypeArgument = struct
      polymorphic types need to be implicitly instantiated, because there was no
      explicit instantiation (via a type application), or when we want to cache a
      unique instantiation and unify it with other explicit instantiations. *)
-  let mk_targ cx (typeparam, reason_op) =
+  let mk_targ cx typeparam reason_op =
     let reason = replace_reason (fun desc ->
       RTypeParam (typeparam.name, desc)
     ) reason_op in
@@ -819,20 +819,23 @@ module Cache = struct
   (* Cache that limits instantiation of polymorphic definitions. Intuitively,
      for each operation on a polymorphic definition, we remember the type
      arguments we use to specialize the type parameters. An operation is
-     identified by its reason: we don't use the entire operation for caching
-     since it may contain the very type variables we are trying to limit the
-     creation of with the cache. In other words, the cache would be useless if
-     we considered those type variables as part of the identity of the
-     operation. *)
+     identified by its reason, and possibly the reasons of its arguments. We
+     don't use the entire operation for caching since it may contain the very
+     type variables we are trying to limit the creation of with the cache (e.g.,
+     those representing the result): the cache would be useless if we considered
+     those type variables as part of the identity of the operation. *)
   module PolyInstantiation = struct
-    let cache = Hashtbl.create 0
+    type cache_key = reason * op_reason
+    and op_reason = reason Nel.t
 
-    let find cx (typeparam, reason_op) =
+    let cache: (cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
+
+    let find cx typeparam op_reason =
       try
-        Hashtbl.find cache (typeparam.reason, reason_op)
+        Hashtbl.find cache (typeparam.reason, op_reason)
       with _ ->
-        let t = ImplicitTypeArgument.mk_targ cx (typeparam, reason_op) in
-        Hashtbl.add cache (typeparam.reason, reason_op) t;
+        let t = ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) in
+        Hashtbl.add cache (typeparam.reason, op_reason) t;
         t
   end
 
@@ -2418,7 +2421,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let reason_op = reason_of_use_t u in
         let reason_tapp = reason_of_t l in
         let t = mk_typeapp_instance cx
-          ~trace ~reason_op ~reason_tapp ~cache:true c ts in
+          ~trace ~reason_op ~reason_tapp ~cache:[] c ts in
         rec_flow cx trace (t, u)
 
     | (TypeAppT (c1, ts1), UseT (_, TypeAppT (c2, ts2)))
@@ -3144,7 +3147,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (PolyT (ids,t), SpecializeT(reason_op,reason_tapp,cache,ts,tvar))
         when ts <> [] || (poly_minimum_arity ids < List.length ids) ->
       let t_ = instantiate_poly_with_targs cx trace
-        ~reason_op ~reason_tapp ~cache (ids,t) ts in
+        ~reason_op ~reason_tapp ?cache (ids,t) ts in
       rec_flow_t cx trace (t_, tvar)
 
     | PolyT (tps, _), VarianceCheckT(_, ts, polarity) ->
@@ -3264,17 +3267,38 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let inst = instantiate_poly_default_args
             cx trace ~reason_op ~reason_tapp (ids, t) in
           rec_flow cx trace (inst, u)
-      (* Special case for <fun>.apply and <fun>.call, which could be used to
-         simulate method calls on instances of generic classes, thereby
-         bypassing the specialization cache that is used in TypeAppT ~> MethodT
-         to avoid non-termination. So, we must use the specialization cache
-         here, too. *)
-      | CallT _ when
-          is_method_call_reason "apply" reason_op ||
-          is_method_call_reason "call" reason_op
-          ->
+      (* Calls to polymorphic functions may cause non-termination, e.g. when the
+         results of the calls feed back as subtle variations of the original
+         arguments. This is similar to how we may have non-termination with
+         method calls on type applications. Thus, it makes sense to replicate
+         the specialization caching mechanism used in TypeAppT ~> MethodT to
+         avoid non-termination in PolyT ~> CallT.
+
+         As it turns out, we need a bit more work here. A call may invoke
+         different cases of an overloaded polymorphic function on different
+         arguments, so we use the reasons of arguments in addition to the reason
+         of the call as keys for caching instantiations.
+
+         On the other hand, even the reasons of arguments may not offer sufficient
+         distinguishing power when the arguments have not been concretized:
+         differently typed arguments could be incorrectly summarized by common
+         type variables they flow to, causing spurious errors. In particular, we
+         don't cache calls involved in the execution of TypeMapT operations
+         ($TupleMap, $ObjectMap, $ObjectMapi) to avoid this problem.
+
+         NOTE: This is probably not the final word on non-termination with
+         generics. We need to separate the double duty of reasons in the current
+         implementation as error positions and as caching keys. As error
+         positions we should be able to subject reasons to arbitrary tweaking,
+         without fearing regressions in termination guarantees.
+      *)
+      | CallT (_, calltype) when not (is_typemap_reason reason_op) ->
+        let arg_reasons = List.map (function
+          | Arg t -> reason_of_t t
+          | SpreadArg t -> reason_of_t t
+        ) calltype.call_args_tlist in
         let t_ = instantiate_poly cx trace
-          ~reason_op ~reason_tapp ~cache:true (ids,t) in
+          ~reason_op ~reason_tapp ~cache:arg_reasons (ids,t) in
         rec_flow cx trace (t_, u)
       | _ ->
         let t_ = instantiate_poly cx trace ~reason_op ~reason_tapp (ids,t) in
@@ -6362,7 +6386,7 @@ and instantiate_poly_with_targs
   trace
   ~reason_op
   ~reason_tapp
-  ?(cache=false)
+  ?cache
   (xs,t)
   ts
   =
@@ -6388,7 +6412,7 @@ and instantiate_poly_with_targs
           AnyT reason_op, []
       | _, t::ts ->
           t, ts in
-      let t_ = cache_instantiate cx trace cache (typeparam, reason_op) t in
+      let t_ = cache_instantiate cx trace ?cache typeparam reason_op t in
       rec_flow_t cx trace (t_, subst cx map typeparam.bound);
       SMap.add typeparam.name t_ map, ts
     )
@@ -6400,12 +6424,13 @@ and instantiate_poly_with_targs
    reason for specialization, either return the type argument or, when directed,
    look up the instantiation cache for an existing type argument for the same
    purpose and unify it with the supplied type argument. *)
-and cache_instantiate cx trace cache (typeparam, reason_op) t =
-  if cache then
-    let t_ = Cache.PolyInstantiation.find cx (typeparam, reason_op) in
+and cache_instantiate cx trace ?cache typeparam reason_op t =
+  match cache with
+  | None -> t
+  | Some rs ->
+    let t_ = Cache.PolyInstantiation.find cx typeparam (reason_op, rs) in
     rec_unify cx trace t t_;
     t_
-  else t
 
 (* Instantiate a polymorphic definition with stated bound or 'any' for args *)
 (* Needed only for experimental.enforce_strict_type_args=false killswitch *)
@@ -6423,11 +6448,11 @@ and instantiate_poly_default_args cx trace ~reason_op ~reason_tapp (xs,t) =
   instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp (xs,t) ts
 
 (* Instantiate a polymorphic definition by creating fresh type arguments. *)
-and instantiate_poly cx trace ~reason_op ~reason_tapp ?(cache=false) (xs,t) =
+and instantiate_poly cx trace ~reason_op ~reason_tapp ?cache (xs,t) =
   let ts = xs |> List.map (fun typeparam ->
-    ImplicitTypeArgument.mk_targ cx (typeparam, reason_op)
+    ImplicitTypeArgument.mk_targ cx typeparam reason_op
   ) in
-  instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp ~cache (xs,t) ts
+  instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp ?cache (xs,t) ts
 
 (* instantiate each param of a polymorphic type with its upper bound *)
 and instantiate_poly_param_upper_bounds cx typeparams =
@@ -6460,7 +6485,7 @@ and instantiate_this_class cx trace reason tc this =
 and specialize_class cx trace ~reason_op ~reason_tapp c ts =
   if ts = [] then c
   else mk_tvar_where cx reason_op (fun tvar ->
-    rec_flow cx trace (c, SpecializeT (reason_op, reason_tapp, false, ts, tvar))
+    rec_flow cx trace (c, SpecializeT (reason_op, reason_tapp, None, ts, tvar))
   )
 
 and mk_object_with_proto cx reason ?dict proto =
@@ -9229,9 +9254,9 @@ and get_builtin_typeapp cx ?trace reason x ts =
   TypeAppT(get_builtin cx ?trace x reason, ts)
 
 (* Specialize a polymorphic class, make an instance of the specialized class. *)
-and mk_typeapp_instance cx ?trace ~reason_op ~reason_tapp ?(cache=false) c ts =
+and mk_typeapp_instance cx ?trace ~reason_op ~reason_tapp ?cache c ts =
   let t = mk_tvar cx reason_op in
-  flow_opt cx ?trace (c, SpecializeT(reason_op,reason_tapp,cache,ts,t));
+  flow_opt cx ?trace (c, SpecializeT(reason_op,reason_tapp, cache, ts, t));
   mk_instance cx ?trace (reason_of_t c) t
 
 (* NOTE: the for_type flag is true when expecting a type (e.g., when processing

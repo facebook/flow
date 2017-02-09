@@ -345,7 +345,7 @@ module rec TypeTerm : sig
         The first reason is the reason why we're specializing. The second
         reason points to the type application itself
     **)
-    | SpecializeT of reason * reason * bool * t list * t
+    | SpecializeT of reason * reason * specialize_cache * t list * t
     (* operation on this-abstracted classes *)
     | ThisSpecializeT of reason * t * t
     (* variance check on polymorphic types *)
@@ -536,6 +536,8 @@ module rec TypeTerm : sig
      * of spread and non-spread elements to resolve, and then constructs
      * whatever type it resolves to *)
     | ResolveSpreadT of reason * resolve_spread_type
+
+  and specialize_cache = reason list option
 
   and predicate =
     | AndP of predicate * predicate
