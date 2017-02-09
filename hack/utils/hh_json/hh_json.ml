@@ -466,6 +466,14 @@ let get_bool_exn = function
   | JSON_Bool b -> b
   | _ -> assert false
 
+let opt_string_to_json = function
+  | Some x -> JSON_String x
+  | None -> JSON_Null
+
+let opt_int_to_json = function
+  | Some x -> JSON_Number (string_of_int x)
+  | None -> JSON_Null
+
 type json_type =
   | Object_t
   | Array_t

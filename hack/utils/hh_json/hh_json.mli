@@ -34,6 +34,9 @@ val get_string_exn : json -> string
 val get_number_exn : json -> string
 val get_bool_exn : json -> bool
 
+val opt_string_to_json : string option -> json
+val opt_int_to_json : int option -> json
+
 val int_ : int -> json
 
 (** Types and functions for monadic API for traversing a JSON object. *)
