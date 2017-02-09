@@ -103,7 +103,7 @@ let default_constructor reason = {
   tparams_map = SMap.empty;
   params = Func_params.empty;
   body = empty_body;
-  return_t = VoidT.t;
+  return_t = VoidT.why reason;
 }
 
 let field_initializer tparams_map reason expr return_t = {
@@ -233,6 +233,13 @@ let toplevels id cx this super ~decls ~stmts ~expr
   (* push the scope early so default exprs can reference earlier params *)
   Env.push_var_scope cx function_scope;
 
+  (* add `this` and `super` before looking at parameter bindings as when using
+   * `this` in default parameter values it refers to the function scope and
+   * `super` should resolve to the method's [[HomeObject]]
+  *)
+  Scope.add_entry (internal_name "this") this function_scope;
+  Scope.add_entry (internal_name "super") super function_scope;
+
   (* bind type params *)
   SMap.iter (fun name t ->
     let r = reason_of_t t in
@@ -290,8 +297,6 @@ let toplevels id cx this super ~decls ~stmts ~expr
     new_entry yield_t, new_entry next_t, new_entry return_t
   ) in
 
-  Scope.add_entry (internal_name "this") this function_scope;
-  Scope.add_entry (internal_name "super") super function_scope;
   Scope.add_entry (internal_name "yield") yield function_scope;
   Scope.add_entry (internal_name "next") next function_scope;
   Scope.add_entry (internal_name "return") return function_scope;

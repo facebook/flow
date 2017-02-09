@@ -529,7 +529,7 @@ and resolve_type cx = function
          improve failure tolerance.  *)
       List.fold_left (fun u t ->
         merge_type cx (t, u)
-      ) AnyT.t ts
+      ) Locationless.AnyT.t ts
   | t -> t
 
 (** The following functions do "shallow" walks over types, respectively from
@@ -659,7 +659,7 @@ module ImplicitTypeArgument = struct
      polymorphic types need to be implicitly instantiated, because there was no
      explicit instantiation (via a type application), or when we want to cache a
      unique instantiation and unify it with other explicit instantiations. *)
-  let mk_targ cx (typeparam, reason_op) =
+  let mk_targ cx typeparam reason_op =
     let reason = replace_reason (fun desc ->
       RTypeParam (typeparam.name, desc)
     ) reason_op in
@@ -819,20 +819,23 @@ module Cache = struct
   (* Cache that limits instantiation of polymorphic definitions. Intuitively,
      for each operation on a polymorphic definition, we remember the type
      arguments we use to specialize the type parameters. An operation is
-     identified by its reason: we don't use the entire operation for caching
-     since it may contain the very type variables we are trying to limit the
-     creation of with the cache. In other words, the cache would be useless if
-     we considered those type variables as part of the identity of the
-     operation. *)
+     identified by its reason, and possibly the reasons of its arguments. We
+     don't use the entire operation for caching since it may contain the very
+     type variables we are trying to limit the creation of with the cache (e.g.,
+     those representing the result): the cache would be useless if we considered
+     those type variables as part of the identity of the operation. *)
   module PolyInstantiation = struct
-    let cache = Hashtbl.create 0
+    type cache_key = reason * op_reason
+    and op_reason = reason Nel.t
 
-    let find cx (typeparam, reason_op) =
+    let cache: (cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
+
+    let find cx typeparam op_reason =
       try
-        Hashtbl.find cache (typeparam.reason, reason_op)
+        Hashtbl.find cache (typeparam.reason, op_reason)
       with _ ->
-        let t = ImplicitTypeArgument.mk_targ cx (typeparam, reason_op) in
-        Hashtbl.add cache (typeparam.reason, reason_op) t;
+        let t = ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) in
+        Hashtbl.add cache (typeparam.reason, op_reason) t;
         t
   end
 
@@ -1948,7 +1951,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (ns_obj, t)
 
     (* import [type] X from 'SomeModule'; *)
-    | ModuleT(_, exports),
+    | ModuleT(module_reason, exports),
       ImportDefaultT(reason, import_kind, (local_name, module_name), t) ->
       let export_t = match exports.cjs_export with
         | Some t -> t
@@ -1974,7 +1977,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                 let suggestion = typo_suggestion known_exports local_name in
                 add_output cx ~trace (FlowError.ENoDefaultExport
                   (reason, module_name, suggestion));
-                AnyT.t
+                AnyT.why module_reason
       in
 
       let import_t = (
@@ -2418,7 +2421,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let reason_op = reason_of_use_t u in
         let reason_tapp = reason_of_t l in
         let t = mk_typeapp_instance cx
-          ~trace ~reason_op ~reason_tapp ~cache:true c ts in
+          ~trace ~reason_op ~reason_tapp ~cache:[] c ts in
         rec_flow cx trace (t, u)
 
     | (TypeAppT (c1, ts1), UseT (_, TypeAppT (c2, ts2)))
@@ -2719,7 +2722,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       iter_real_props cx props_tmap (fun x p ->
         let pmap = SMap.singleton x p in
         let id = Context.make_property_map cx pmap in
-        let obj = mk_objecttype ~flags dict_t id ObjProtoT.t in
+        let obj = mk_objecttype ~flags dict_t id dummy_prototype in
         rec_flow cx trace (l, UseT (use_op, ObjT (r, obj)))
       );
       rec_flow cx trace (l, UseT (use_op, proto_t))
@@ -3144,7 +3147,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (PolyT (ids,t), SpecializeT(reason_op,reason_tapp,cache,ts,tvar))
         when ts <> [] || (poly_minimum_arity ids < List.length ids) ->
       let t_ = instantiate_poly_with_targs cx trace
-        ~reason_op ~reason_tapp ~cache (ids,t) ts in
+        ~reason_op ~reason_tapp ?cache (ids,t) ts in
       rec_flow_t cx trace (t_, tvar)
 
     | PolyT (tps, _), VarianceCheckT(_, ts, polarity) ->
@@ -3264,17 +3267,38 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let inst = instantiate_poly_default_args
             cx trace ~reason_op ~reason_tapp (ids, t) in
           rec_flow cx trace (inst, u)
-      (* Special case for <fun>.apply and <fun>.call, which could be used to
-         simulate method calls on instances of generic classes, thereby
-         bypassing the specialization cache that is used in TypeAppT ~> MethodT
-         to avoid non-termination. So, we must use the specialization cache
-         here, too. *)
-      | CallT _ when
-          is_method_call_reason "apply" reason_op ||
-          is_method_call_reason "call" reason_op
-          ->
+      (* Calls to polymorphic functions may cause non-termination, e.g. when the
+         results of the calls feed back as subtle variations of the original
+         arguments. This is similar to how we may have non-termination with
+         method calls on type applications. Thus, it makes sense to replicate
+         the specialization caching mechanism used in TypeAppT ~> MethodT to
+         avoid non-termination in PolyT ~> CallT.
+
+         As it turns out, we need a bit more work here. A call may invoke
+         different cases of an overloaded polymorphic function on different
+         arguments, so we use the reasons of arguments in addition to the reason
+         of the call as keys for caching instantiations.
+
+         On the other hand, even the reasons of arguments may not offer sufficient
+         distinguishing power when the arguments have not been concretized:
+         differently typed arguments could be incorrectly summarized by common
+         type variables they flow to, causing spurious errors. In particular, we
+         don't cache calls involved in the execution of TypeMapT operations
+         ($TupleMap, $ObjectMap, $ObjectMapi) to avoid this problem.
+
+         NOTE: This is probably not the final word on non-termination with
+         generics. We need to separate the double duty of reasons in the current
+         implementation as error positions and as caching keys. As error
+         positions we should be able to subject reasons to arbitrary tweaking,
+         without fearing regressions in termination guarantees.
+      *)
+      | CallT (_, calltype) when not (is_typemap_reason reason_op) ->
+        let arg_reasons = List.map (function
+          | Arg t -> reason_of_t t
+          | SpreadArg t -> reason_of_t t
+        ) calltype.call_args_tlist in
         let t_ = instantiate_poly cx trace
-          ~reason_op ~reason_tapp ~cache:true (ids,t) in
+          ~reason_op ~reason_tapp ~cache:arg_reasons (ids,t) in
         rec_flow cx trace (t_, u)
       | _ ->
         let t_ = instantiate_poly cx trace ~reason_op ~reason_tapp (ids,t) in
@@ -3437,13 +3461,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow_t cx trace (l, react_class)
       | FunT _ ->
         let return_t =
-          get_builtin_typeapp cx ~trace elem_reason "React$Element" [AnyT.t]
+          get_builtin_typeapp cx ~trace elem_reason "React$Element" [Locationless.AnyT.t]
         in
         let maybe_r = replace_reason (fun desc ->
           RMaybe desc
         ) (reason_of_t return_t) in
         let return_t = MaybeT (maybe_r, return_t) in
-        let context_t = AnyT.t in
+        let context_t = Locationless.AnyT.t in
         let call_t = CallT (
           reason_op,
           mk_functioncalltype [Arg config; Arg context_t] return_t
@@ -3547,10 +3571,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | Field (OptionalT ut, upolarity) ->
             rec_flow cx trace (l,
               LookupT (ureason, NonstrictReturning None, [], propref,
-                LookupProp (Field (ut, upolarity))))
+                LookupProp (use_op, Field (ut, upolarity))))
           | _ ->
             let u =
-              LookupT (ureason, Strict lreason, [], propref, LookupProp up) in
+              LookupT (ureason, Strict lreason, [], propref,
+                LookupProp (use_op, up)) in
             rec_flow cx trace (super, ReposLowerT (lreason, u))
       );
 
@@ -3621,7 +3646,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (_, UseT (_, ShapeT (o))) ->
         let reason = reason_of_t o in
-        rec_flow cx trace (l, ObjAssignFromT(reason, o, AnyT.t, [], ObjAssign))
+        rec_flow cx trace (l, ObjAssignFromT(reason, o, Locationless.AnyT.t, [], ObjAssign))
 
     | (_, UseT (_, DiffT (o1, o2))) ->
         let reason = reason_of_t l in
@@ -3796,8 +3821,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* statics can be read   *)
     (*************************)
 
-    | InstanceT (_, static, _, _, _), GetStaticsT (_, t) ->
-      rec_flow_t cx trace (static, t)
+    | InstanceT (lreason, static, _, _, _), GetStaticsT (ureason, t) ->
+      rec_flow_t cx trace (ReposT (lreason, static), ReposT (ureason, t))
 
     (* GetStaticsT is only ever called on the instance type of a ClassT. There
      * is exactly one place where we create a ClassT with an ObjT instance type:
@@ -3855,7 +3880,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | _, None ->
             add_output cx ~trace
               (FlowError.EPropAccess ((lreason, reason_op), Some x, p, rw)))
-        | LookupProp up ->
+        | LookupProp (use_op, up) ->
           let p, up = match p, up with
           | Field (AbstractT t, polarity), Field (AbstractT ut, upolarity) ->
             Field (t, polarity), Field (ut, upolarity)
@@ -3863,7 +3888,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             Field (t, polarity), up
           | _ -> p, up
           in
-          rec_flow_p cx trace lreason reason_op propref (p, up)
+          rec_flow_p cx trace ~use_op lreason reason_op propref (p, up)
         | SuperProp lp ->
           let p, lp = match p, lp with
           | Field (AbstractT t, polarity), Field (AbstractT lt, lpolarity) ->
@@ -4472,7 +4497,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************************************)
 
     | (FunT (_, _, t, _), SetPropT(reason_op, Named (_, "prototype"), tin)) ->
-      rec_flow cx trace (tin, ObjAssignFromT(reason_op, t, AnyT.t, [], ObjAssign))
+      rec_flow cx trace (tin, ObjAssignFromT(reason_op, t, Locationless.AnyT.t, [], ObjAssign))
 
     (*********************************)
     (* ... and their prototypes read *)
@@ -4672,7 +4697,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (SMap.filter (fun x _ -> x = "constructor")
             (Context.find_props cx fields_tmap)))
       then (
-        structural_subtype cx trace l reason_inst (fields_tmap, methods_tmap);
+        structural_subtype cx trace ~use_op l reason_inst
+          (fields_tmap, methods_tmap);
         rec_flow cx trace (l, UseT (use_op, super))
       )
 
@@ -4687,7 +4713,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         structural = true;
         _;
       })) ->
-      structural_subtype cx trace l reason_inst (fields_tmap, methods_tmap);
+      structural_subtype cx trace ~use_op l reason_inst
+        (fields_tmap, methods_tmap);
       rec_flow cx trace (l, UseT (use_op, super))
 
     (***************************************************************)
@@ -5196,7 +5223,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         structural = true;
         _;
       }))) ->
-      structural_subtype cx trace l reason_inst (fields_tmap, methods_tmap);
+      structural_subtype cx trace ~use_op l reason_inst
+        (fields_tmap, methods_tmap);
       rec_flow cx trace (l, UseT (use_op, super))
 
     | (ObjProtoT _, UseT (use_op, ExtendsT ([], t, tc))) ->
@@ -5470,7 +5498,8 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
         | _ -> NonstrictReturning None
         in
         rec_flow cx trace (lproto,
-          LookupT (ureason, strict, [], propref, LookupProp up))
+          LookupT (ureason, strict, [], propref,
+            LookupProp (use_op, up)))
         (* TODO: instead, consider extending inflowing type with s:t2 when it
            is not sealed *)
   );
@@ -5795,7 +5824,8 @@ and sealed_in_op reason_op = function
 
 (* dispatch checks to verify that lower satisfies the structural
    requirements given in the tuple. *)
-and structural_subtype cx trace lower reason_struct (fields_pmap, methods_pmap) =
+and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
+  (fields_pmap, methods_pmap) =
   let lreason = reason_of_t lower in
   let fields_pmap = Context.find_props cx fields_pmap in
   let methods_pmap = Context.find_props cx methods_pmap in
@@ -5810,7 +5840,7 @@ and structural_subtype cx trace lower reason_struct (fields_pmap, methods_pmap) 
       in
       rec_flow cx trace (lower,
         LookupT (reason_struct, NonstrictReturning None, [], propref,
-          LookupProp (Field (t, polarity))))
+          LookupProp (use_op, Field (t, polarity))))
     | _ ->
       let propref =
         let reason_prop = replace_reason (fun desc ->
@@ -5819,7 +5849,8 @@ and structural_subtype cx trace lower reason_struct (fields_pmap, methods_pmap) 
         Named (reason_prop, s)
       in
       rec_flow cx trace (lower,
-        LookupT (reason_struct, Strict lreason, [], propref, LookupProp p))
+        LookupT (reason_struct, Strict lreason, [], propref,
+          LookupProp (use_op, p)))
   );
   methods_pmap |> SMap.iter (fun s p ->
     if inherited_method s then
@@ -5830,7 +5861,8 @@ and structural_subtype cx trace lower reason_struct (fields_pmap, methods_pmap) 
         Named (reason_prop, s)
       in
       rec_flow cx trace (lower,
-        LookupT (reason_struct, Strict lreason, [], propref, LookupProp p))
+        LookupT (reason_struct, Strict lreason, [], propref,
+          LookupProp (use_op, p)))
   );
 
 (*****************)
@@ -6364,7 +6396,7 @@ and instantiate_poly_with_targs
   trace
   ~reason_op
   ~reason_tapp
-  ?(cache=false)
+  ?cache
   (xs,t)
   ts
   =
@@ -6390,7 +6422,7 @@ and instantiate_poly_with_targs
           AnyT reason_op, []
       | _, t::ts ->
           t, ts in
-      let t_ = cache_instantiate cx trace cache (typeparam, reason_op) t in
+      let t_ = cache_instantiate cx trace ?cache typeparam reason_op t in
       rec_flow_t cx trace (t_, subst cx map typeparam.bound);
       SMap.add typeparam.name t_ map, ts
     )
@@ -6402,12 +6434,13 @@ and instantiate_poly_with_targs
    reason for specialization, either return the type argument or, when directed,
    look up the instantiation cache for an existing type argument for the same
    purpose and unify it with the supplied type argument. *)
-and cache_instantiate cx trace cache (typeparam, reason_op) t =
-  if cache then
-    let t_ = Cache.PolyInstantiation.find cx (typeparam, reason_op) in
+and cache_instantiate cx trace ?cache typeparam reason_op t =
+  match cache with
+  | None -> t
+  | Some rs ->
+    let t_ = Cache.PolyInstantiation.find cx typeparam (reason_op, rs) in
     rec_unify cx trace t t_;
     t_
-  else t
 
 (* Instantiate a polymorphic definition with stated bound or 'any' for args *)
 (* Needed only for experimental.enforce_strict_type_args=false killswitch *)
@@ -6425,11 +6458,11 @@ and instantiate_poly_default_args cx trace ~reason_op ~reason_tapp (xs,t) =
   instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp (xs,t) ts
 
 (* Instantiate a polymorphic definition by creating fresh type arguments. *)
-and instantiate_poly cx trace ~reason_op ~reason_tapp ?(cache=false) (xs,t) =
+and instantiate_poly cx trace ~reason_op ~reason_tapp ?cache (xs,t) =
   let ts = xs |> List.map (fun typeparam ->
-    ImplicitTypeArgument.mk_targ cx (typeparam, reason_op)
+    ImplicitTypeArgument.mk_targ cx typeparam reason_op
   ) in
-  instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp ~cache (xs,t) ts
+  instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp ?cache (xs,t) ts
 
 (* instantiate each param of a polymorphic type with its upper bound *)
 and instantiate_poly_param_upper_bounds cx typeparams =
@@ -6462,7 +6495,7 @@ and instantiate_this_class cx trace reason tc this =
 and specialize_class cx trace ~reason_op ~reason_tapp c ts =
   if ts = [] then c
   else mk_tvar_where cx reason_op (fun tvar ->
-    rec_flow cx trace (c, SpecializeT (reason_op, reason_tapp, false, ts, tvar))
+    rec_flow cx trace (c, SpecializeT (reason_op, reason_tapp, None, ts, tvar))
   )
 
 and mk_object_with_proto cx reason ?dict proto =
@@ -6767,7 +6800,7 @@ and bindings_of_jobs cx trace jobs =
     | Some speculation_id ->
       Speculation.add_unresolved_to_speculation cx speculation_id t
     | None ->
-      rec_unify cx trace t AnyT.t
+      rec_unify cx trace t Locationless.AnyT.t
     end;
     bindings
   ) jobs []
@@ -7076,7 +7109,7 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
 *)
 and blame_unresolved cx trace prev_i i cases case_r r ts =
   let rs = ts |> List.map (fun t ->
-    rec_unify cx trace t AnyT.t;
+    rec_unify cx trace t Locationless.AnyT.t;
     reason_of_t t
   ) in
   let prev_case = reason_of_t (List.nth cases prev_i) in
@@ -8411,7 +8444,7 @@ and add_lower_edges cx trace ?(opt=false) (id1, bounds1) (id2, bounds2) =
    connections necessary when two non-unifiers flow to each other. If one or
    both of the roots are resolved, they effectively act like the corresponding
    concrete types. *)
-and goto cx trace (id1, root1) (id2, root2) =
+and goto cx trace ~use_op (id1, root1) (id2, root2) =
   (match root1.constraints, root2.constraints with
 
   | Unresolved bounds1, Unresolved bounds2 ->
@@ -8431,45 +8464,47 @@ and goto cx trace (id1, root1) (id2, root2) =
     );
 
   | Unresolved bounds1, Resolved t2 ->
-    let t2_use = UseT (UnknownUse, t2) in
+    let t2_use = UseT (use_op, t2) in
     edges_and_flows_to_t cx trace ~opt:true (id1, bounds1) t2_use;
     edges_and_flows_from_t cx trace ~opt:true t2 (id1, bounds1);
 
   | Resolved t1, Unresolved bounds2 ->
-    let t1_use = UseT (UnknownUse, t1) in
+    let t1_use = UseT (use_op, t1) in
     replace_node cx id2 (Root { root2 with constraints = Resolved t1 });
     edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1_use;
     edges_and_flows_from_t cx trace ~opt:true t1 (id2, bounds2);
 
   | Resolved t1, Resolved t2 ->
-    rec_unify cx trace t1 t2;
+    rec_unify cx trace ~use_op t1 t2;
   );
   replace_node cx id1 (Goto id2)
 
 (* Unify two type variables. This involves finding their roots, and making one
    point to the other. Ranks are used to keep chains short. *)
-and merge_ids cx trace id1 id2 =
+and merge_ids cx trace ~use_op id1 id2 =
   let (id1, root1), (id2, root2) = find_root cx id1, find_root cx id2 in
   if id1 = id2 then ()
-  else if root1.rank < root2.rank then goto cx trace (id1, root1) (id2, root2)
-  else if root2.rank < root1.rank then goto cx trace (id2, root2) (id1, root1)
+  else if root1.rank < root2.rank
+  then goto cx trace ~use_op (id1, root1) (id2, root2)
+  else if root2.rank < root1.rank
+  then goto cx trace ~use_op (id2, root2) (id1, root1)
   else (
     replace_node cx id2 (Root { root2 with rank = root1.rank+1; });
-    goto cx trace (id1, root1) (id2, root2);
+    goto cx trace ~use_op (id1, root1) (id2, root2);
   )
 
 (* Resolve a type variable to a type. This involves finding its root, and
    resolving to that type. *)
-and resolve_id cx trace id t =
+and resolve_id cx trace ~use_op id t =
   let id, root = find_root cx id in
   match root.constraints with
   | Unresolved bounds ->
     replace_node cx id (Root { root with constraints = Resolved t });
-    edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (UnknownUse, t));
+    edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (use_op, t));
     edges_and_flows_from_t cx trace ~opt:true t (id, bounds);
 
   | Resolved t_ ->
-    rec_unify cx trace t_ t
+    rec_unify cx trace ~use_op t_ t
 
 (******************)
 
@@ -8525,12 +8560,12 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
   match t1, t2 with
 
   | OpenT (_, id1), OpenT (_, id2) ->
-    merge_ids cx trace id1 id2
+    merge_ids cx trace ~use_op id1 id2
 
   | OpenT (_, id), t when ok_unify t ->
-    resolve_id cx trace id t
+    resolve_id cx trace ~use_op id t
   | t, OpenT (_, id) when ok_unify t ->
-    resolve_id cx trace id t
+    resolve_id cx trace ~use_op id t
 
   | PolyT (params1, t1), PolyT (params2, t2)
     when List.length params1 = List.length params2 ->
@@ -9191,8 +9226,8 @@ and finish_resolve_spread_list =
   )
 
 and perform_lookup_action cx trace propref p lreason ureason = function
-  | LookupProp up ->
-    rec_flow_p cx trace lreason ureason propref (p, up)
+  | LookupProp (use_op, up) ->
+    rec_flow_p cx trace ~use_op lreason ureason propref (p, up)
   | SuperProp lp ->
     rec_flow_p cx trace ureason lreason propref (lp, p)
   | RWProp (tout, rw) ->
@@ -9231,9 +9266,9 @@ and get_builtin_typeapp cx ?trace reason x ts =
   TypeAppT(get_builtin cx ?trace x reason, ts)
 
 (* Specialize a polymorphic class, make an instance of the specialized class. *)
-and mk_typeapp_instance cx ?trace ~reason_op ~reason_tapp ?(cache=false) c ts =
+and mk_typeapp_instance cx ?trace ~reason_op ~reason_tapp ?cache c ts =
   let t = mk_tvar cx reason_op in
-  flow_opt cx ?trace (c, SpecializeT(reason_op,reason_tapp,cache,ts,t));
+  flow_opt cx ?trace (c, SpecializeT(reason_op,reason_tapp, cache, ts, t));
   mk_instance cx ?trace (reason_of_t c) t
 
 (* NOTE: the for_type flag is true when expecting a type (e.g., when processing
@@ -9564,7 +9599,7 @@ let intersect_members cx members =
         ) map (List.tl members) in
       SMap.map (List.fold_left (fun acc x ->
           merge_type cx (acc, x)
-        ) EmptyT.t) map
+      ) Locationless.EmptyT.t) map
 
 (* It's kind of lame that Autocomplete is in this module, but it uses a bunch
  * of internal APIs so for now it's easier to keep it here than to expose those
@@ -9791,8 +9826,8 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | Some { Verbose.depth = verbose_depth; indent; } ->
     let pid = Context.pid_prefix cx in
     let indent = String.make ((depth - 1) * indent) ' ' in
-    prerr_endlinef "\n%s%sassert_ground: %s"
-      indent pid (Debug_js.dump_t cx ~depth:verbose_depth t)
+    prerr_endlinef "\n%s%sassert_ground (infer=%b): %s"
+      indent pid infer (Debug_js.dump_t cx ~depth:verbose_depth t)
   | None -> ()
   end;
   let recurse ?infer = assert_ground ?infer ~depth:(depth + 1) cx skip ids in
@@ -9815,7 +9850,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     assert_ground_id cx ~depth:(depth + 1) skip ids id
 
   | OpenT (reason_open, id) ->
-    unify_opt cx (OpenT (reason_open, id)) AnyT.t;
+    unify_opt cx (OpenT (reason_open, id)) Locationless.AnyT.t;
     add_output cx (FlowError.EMissingAnnotation reason_open)
 
   | NumT _
@@ -9831,9 +9866,9 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
 
   | FunT (reason, static, prototype, ft) ->
     let { this_t; params_tlist; return_t; rest_param; _ } = ft in
-    unify_opt cx static AnyT.t;
-    unify_opt cx prototype AnyT.t;
-    unify_opt cx this_t AnyT.t;
+    unify_opt cx static Locationless.AnyT.t;
+    unify_opt cx prototype Locationless.AnyT.t;
+    unify_opt cx this_t Locationless.AnyT.t;
     List.iter (recurse ~infer:(is_derivable_reason reason)) params_tlist;
     Option.iter
       ~f:(fun (_, _, t) -> recurse ~infer:(is_derivable_reason reason) t)
@@ -9845,7 +9880,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     recurse t
 
   | ObjT (_, { props_tmap = id; proto_t; _ }) ->
-    unify_opt cx proto_t AnyT.t;
+    unify_opt cx proto_t Locationless.AnyT.t;
     Context.iter_props cx id (fun _ -> Property.iter_t (recurse ~infer:true))
 
   | IdxWrapper (_, obj) -> recurse ~infer obj
@@ -9882,7 +9917,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
       (fun x -> Property.iter_t (process_element ~is_field:true x));
     Context.iter_props cx instance.methods_tmap
       (fun x -> Property.iter_t (process_element x));
-    unify_opt cx static AnyT.t;
+    unify_opt cx static Locationless.AnyT.t;
     recurse super
 
   | OptionalT t ->

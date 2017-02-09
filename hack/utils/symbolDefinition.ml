@@ -35,6 +35,7 @@ and modifier =
 and 'a t = {
   kind : kind;
   name : string;
+  full_name : string;
   id : string option;
   pos : 'a Pos.pos;
   span : 'a Pos.pos;
@@ -47,6 +48,7 @@ and 'a t = {
 let rec to_absolute x = {
   kind = x.kind;
   name = x.name;
+  full_name = x.full_name;
   id = x.id;
   pos = Pos.to_absolute x.pos;
   span = Pos.to_absolute x.span;

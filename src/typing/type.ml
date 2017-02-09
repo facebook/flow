@@ -345,7 +345,7 @@ module rec TypeTerm : sig
         The first reason is the reason why we're specializing. The second
         reason points to the type application itself
     **)
-    | SpecializeT of reason * reason * bool * t list * t
+    | SpecializeT of reason * reason * specialize_cache * t list * t
     (* operation on this-abstracted classes *)
     | ThisSpecializeT of reason * t * t
     (* variance check on polymorphic types *)
@@ -537,6 +537,8 @@ module rec TypeTerm : sig
      * whatever type it resolves to *)
     | ResolveSpreadT of reason * resolve_spread_type
 
+  and specialize_cache = reason list option
+
   and predicate =
     | AndP of predicate * predicate
     | OrP of predicate * predicate
@@ -688,7 +690,7 @@ module rec TypeTerm : sig
 
   and lookup_action =
   | RWProp of t_out * rw
-  | LookupProp of Property.t
+  | LookupProp of use_op * Property.t
   | SuperProp of Property.t
 
   and rw = Read | Write
@@ -1397,16 +1399,8 @@ module type PrimitiveType = sig
   val make: reason -> t
 end
 
-module type PrimitiveT = sig
-  val desc: reason_desc
-  val t: t
-  val at: Loc.t -> t
-  val why: reason -> t
-end
-
 module Primitive (P: PrimitiveType) = struct
   let desc = P.desc
-  let t = P.make (locationless_reason desc)
   let at tok = P.make (mk_reason desc tok)
   let why reason = P.make (replace_reason_const desc reason)
   let make = P.make
@@ -1456,6 +1450,26 @@ module ObjProtoT = Primitive (struct
   let desc = RDummyPrototype
   let make r = ObjProtoT r
 end)
+
+(* USE WITH CAUTION!!! Locationless types should not leak to errors, otherwise
+   they will cause error printing to crash.
+
+   We use locationless reasons legitimately for normalizing. Also, because `any`
+   doesn't cause errors, locationless `AnyT` is OK.
+*)
+module Locationless = struct
+  module LocationLess (P: PrimitiveType) = struct
+    let t = P.make (locationless_reason P.desc)
+  end
+  module NumT = LocationLess (NumT)
+  module StrT = LocationLess (StrT)
+  module BoolT = LocationLess (BoolT)
+  module MixedT = LocationLess (MixedT)
+  module EmptyT = LocationLess (EmptyT)
+  module AnyT = LocationLess (AnyT)
+  module VoidT = LocationLess (VoidT)
+  module NullT = LocationLess (NullT)
+end
 
 (* lift an operation on Type.t to an operation on Type.use_t *)
 let lift_to_use f = function

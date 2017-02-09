@@ -467,7 +467,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
 
   | SpecializeT (_, _, cache, targs, tvar) -> [
-      "cache", JSON_Bool cache;
+      "cache", json_of_specialize_cache json_cx cache;
       "types", JSON_Array (List.map (_json_of_t json_cx) targs);
       "tvar", _json_of_t json_cx tvar
     ]
@@ -1168,13 +1168,27 @@ and json_of_lookup_action_impl json_cx action = Hh_json.(
         "rw", JSON_String (string_of_rw rw);
         "t", _json_of_t json_cx t
       ]
-    | LookupProp p -> [
+    | LookupProp (op, p) -> [
         "kind", JSON_String "LookupProp";
+        "use", JSON_String (string_of_use_op op);
         "prop", json_of_prop json_cx p;
       ]
     | SuperProp p -> [
         "kind", JSON_String "SuperProp";
         "prop", json_of_prop json_cx p;
+      ]
+  )
+)
+
+and json_of_specialize_cache json_cx =
+  check_depth json_of_specialize_cache_impl json_cx
+and json_of_specialize_cache_impl json_cx cache = Hh_json.(
+  JSON_Object (
+    match cache with
+    | None -> []
+    | Some rs -> [
+        "reasons", JSON_Array
+          (List.map (json_of_reason ~strip_root:json_cx.strip_root) rs);
       ]
   )
 )
@@ -1505,8 +1519,14 @@ and dump_use_t_ (depth, tvars) cx t =
   let lookup_action = function
   | RWProp (t, Read) -> spf "Read %s" (kid t)
   | RWProp (t, Write) -> spf "Write %s" (kid t)
-  | LookupProp p -> spf "Lookup %s" (prop p)
+  | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (prop p)
   | SuperProp p -> spf "Super %s" (prop p)
+  in
+
+  let specialize_cache = function
+    | None -> "None"
+    | Some rs -> spf "Some [%s]"
+        (String.concat "; " @@ List.map (dump_reason cx) rs)
   in
 
   let try_flow = function
@@ -1620,8 +1640,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | SetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t
-  | SpecializeT (_, _, b, args, ret) -> p ~extra:(spf "%b, [%s], %s"
-      b (String.concat "; " (List.map kid args)) (kid ret)) t
+  | SpecializeT (_, _, cache, args, ret) -> p ~extra:(spf "%s, [%s], %s"
+      (specialize_cache cache) (String.concat "; " (List.map kid args)) (kid ret)) t
   | TestPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t

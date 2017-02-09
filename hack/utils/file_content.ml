@@ -8,33 +8,7 @@
  *
  *)
 open Core
-
-type t = {
-  time : float;
-  content : string;
-}
-
-type content_pos = {
-  line : int;
-  column : int;
-}
-
-type content_range = {
-  st : content_pos;
-  ed : content_pos;
-}
-
-type code_edit = {
-  range : content_range option;
-  text : string;
-}
-
-let of_content ~content = {
-  time = Unix.gettimeofday ();
-  content;
-}
-
-let get_content t = t.content
+open Ide_api_types
 
 (* UTF-8 encoding character lengths.
  *
@@ -87,15 +61,14 @@ let get_offsets content queries =
   | None, _ -> invalid_position (fst queries)
   | _, None -> invalid_position (snd queries)
 
-let apply_edit = fun fc {range; text} ->
+let apply_edit = fun content {range; text} ->
   match range with
-  | None -> of_content text
+  | None -> text
   | Some {st; ed} ->
-    let content = get_content fc in
     let start_offset, end_offset = get_offsets content (st, ed) in
     let prefix = Str.string_before content start_offset in
     let suffix = Str.string_after content end_offset in
-    of_content ~content:(prefix ^ text ^ suffix)
+    prefix ^ text ^ suffix
 
 let print_edit b edit =
   let range = match edit.range with
@@ -105,13 +78,13 @@ let print_edit b edit =
   in
   Printf.bprintf b "range = %s\n text = \n%s\n" range edit.text
 
-let edit_file fc (edits: code_edit list) =
+let edit_file content (edits: text_edit list) =
   try
-    Result.Ok (List.fold ~init:fc ~f:apply_edit edits)
+    Result.Ok (List.fold ~init:content ~f:apply_edit edits)
   with e ->
     let b = Buffer.create 1024 in
     Printf.bprintf b "Invalid edit: %s\n" (Printexc.to_string e);
-    Printf.bprintf b "Original content:\n%s\n" fc.content;
+    Printf.bprintf b "Original content:\n%s\n" content;
     Printf.bprintf b "Edits:\n";
     List.iter edits ~f:(print_edit b);
     Result.Error (Buffer.contents b)
