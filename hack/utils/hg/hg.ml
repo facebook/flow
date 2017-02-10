@@ -29,13 +29,13 @@ type svn_rev = string
 let get_closest_svn_ancestor hg_rev repo =
   let process = Process.exec "hg" [
     "log";
-    {|-r|};
-    {|reverse(::|} ^ hg_rev ^ {|)|};
-    {|-T|};
-    {|{svnrev}\n|};
-    {|-l|};
-    {|150|};
-    {|--cwd|};
+    "-r";
+    Printf.sprintf "reverse(::%s)" hg_rev;
+    "-T";
+    "{svnrev}\n";
+    "-l";
+    "150";
+    "--cwd";
     repo;
   ]
   in
@@ -59,6 +59,19 @@ let current_working_copy_hg_rev repo =
       else
         result, false
 
+(** hg log -r 'ancestor(master,.)' -T '{svnrev}\n' *)
+let current_working_copy_base_rev repo =
+  let process = Process.exec "hg" [
+    "log";
+    "-r";
+    "ancestor(master,.)";
+    "-T";
+    "{svnrev}\n";
+    "--cwd";
+    repo;
+  ] in
+  Future.make process String.trim
+
 (** Returns the files changed between the hg_rev and the ancestor
  * SVN revision.
  *
@@ -66,11 +79,11 @@ let current_working_copy_hg_rev repo =
 let files_changed_since_svn_rev hg_rev svn_rev repo =
   let process = Process.exec "hg" [
     "status";
-    {|--rev|};
-    ("r" ^ svn_rev);
-    {|--rev|};
+    "--rev";
+    Printf.sprintf "r%s" svn_rev;
+    "--rev";
     hg_rev;
-    {|--cwd|};
+    "--cwd";
     repo;
   ] in
   Future.make process String.trim

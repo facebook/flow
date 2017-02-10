@@ -31,7 +31,21 @@ module Types = struct
   }
 
   type pushed_changes =
-    (** State name and metadata. *)
+    (**
+     * State name and metadata.
+     *
+     * For example:
+     *   State name: "hg.update"
+     * Metadata:
+     *   {
+     *    "partial":false,
+     *    "rev":"780dab9ff0a01691c9b18a5ee1194810e555c78b",
+     *    "distance":2,
+     *    "status":"ok"
+     *   }
+     *
+     * Note: The distance is HG Revision distance, not SVN revision distance.
+     *)
     | State_enter of string * Hh_json.json option
     | State_leave of string * Hh_json.json option
     | Files_changed of SSet.t
