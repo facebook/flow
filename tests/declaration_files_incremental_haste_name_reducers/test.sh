@@ -25,7 +25,7 @@ use_files "$DECL_FILES"
 "$FLOW" force-recheck --no-auto-start $IMPL_FILES $DECL_FILES
 "$FLOW" status --no-auto-start --strip-root .
 ignore_files "$DECL_FILES"
-"$FLOW" force-recheck $DECL_FILES
+"$FLOW" force-recheck --no-auto-start $IMPL_FILES $DECL_FILES
 "$FLOW" status --no-auto-start --strip-root .
 
 printf "\n\n======Start off with the .js files and the .flow file======\n"
