@@ -1,3 +1,33 @@
+###v0.39.0
+
+Likely to cause new Flow errors:
+* Previous usage of `ReactElement<*>` as a return type for render functions in React may now cause new errors now that a type propogation bug has been fixed. The general solution for this is to remove the return type for functions that return a React element (return types can be inferred by Flow, and Flow has never had a good way to express the type of a *specific* React element)
+* Several significant improvements to the locations Flow points to in error messages about objects and property accesses may move errors that were previously suppressed with a [suppression comment](https://flowtype.org/docs/advanced-configuration.html#options) to a new location
+
+New Features:
+* You can now pass `--no-suppressions` to `flow check` in order to see what errors would show up in your codebase if you deleted all the error suppressions
+* New advanced debugging feature: You can now use the special `$Flow$DebugPrint` type to make Flow print a JSON representation of a type. Example usage: `declare var flowDebug: $Flow$DebugPrint; flowDebug(someVariable);`
+* Flow now supports constant-folding of tuple types. In general this means that Flow can now better understand rest elements and array-spreads when tuples are involved.
+* Flow now supports spreading types that are iterable (other than just Arrays)
+
+Notable bug fixes:
+* Fixed several issues where Flow might not terminate while typechecking complex code patterns
+* Fixed an issue where a return type on a class constructor wouldn't properly define the type of objects the class generates if the type was too complex
+* Fixed an issue where [Flow wasn't properly invalidating refinements after a `yield` expression](https://github.com/facebook/flow/issues/2778)
+* Fixed an issue where `Function.prototype.bind()` wasn't working properly on variables typed as "callable objects" in Flow
+* Fixed [some issues where `implements` could cause a `"Did not expect BoundT"` error](https://github.com/facebook/flow/issues/3243) 
+* Fixed an issue where [Flow would previously give a cryptic error if the `TERM` environment variable wasn't set](https://github.com/facebook/flow/pull/3305) (Thanks @SamirTalwar!)
+
+Parser:
+* Fixed an issue where [the parser previously couldn't handle numbers greater than 2^32-1](https://github.com/facebook/flow/issues/3238)
+* The parser now errors on invalid variance `+` tokens in object types (like it already did for object literals)
+* Fixed an issue where [the parser was incorrectly parsing JS directives (like `"use strict"`)](https://github.com/facebook/flow/issues/3234)
+
+
+Misc:
+* A few improvements to error messages relating to React PropTypes
+* Various core libdef updates
+
 ###v0.38.0
 Likely to cause new Flow errors:
 * There are some error-position improvements in this release. This means that if you use `// $FlowFixMe` (or any kind of `suppress_comment`), there's a chance the error may have moved out from under the suppression comment. You may see some unused error suppressions and some previously suppressed errors.
