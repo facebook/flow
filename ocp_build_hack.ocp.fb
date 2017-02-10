@@ -113,6 +113,7 @@ begin library "hh-utils"
   dirname = "hack/utils"
   sort = true
   files = [
+    "buffered_line_reader.ml"
     "config_file.ml"
     "file_pos.ml"
     "findUtils.ml"

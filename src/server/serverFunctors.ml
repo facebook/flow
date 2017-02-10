@@ -13,6 +13,7 @@ open ServerUtils
 open Utils_js
 module List = Core_list
 module Server_files = Server_files_js
+module Persistent_connection_prot = ServerProt.Persistent_connection_prot
 
 exception State_not_found
 
@@ -112,9 +113,22 @@ let new_entry_point =
 module ServerMain (Program : SERVER_PROGRAM) : sig
   val start : Options.t -> unit
 end = struct
-  let sleep_and_check socket =
-    let ready_socket_l, _, _ = Unix.select [socket] [] [] (1.0) in
-    ready_socket_l <> []
+  type ready_socket =
+    | New_client of Unix.file_descr
+    | Existing_client of Persistent_connection.single_client
+
+  let sleep_and_check socket persistent_connections =
+    let client_fds = Persistent_connection.client_fd_list persistent_connections in
+    let ready_socket_l, _, _ = Unix.select (socket::client_fds) [] [] (1.0) in
+    List.map ready_socket_l (fun ready_socket ->
+      if ready_socket = socket then
+        New_client socket
+      else if List.mem client_fds ready_socket then
+        let client = Persistent_connection.client_of_fd persistent_connections ready_socket in
+        Existing_client client
+      else
+        failwith "Internal server error: select returned an unknown fd"
+    )
 
   let handle_connection_ genv env socket =
     let cli, _ = Unix.accept socket in
@@ -159,6 +173,24 @@ end = struct
         flush stderr;
         env
 
+  let respond_to_client env client =
+    let msg, env =
+      try
+        Some (Persistent_connection.input_value client), env
+      with
+        | End_of_file ->
+            print_endline "Lost connection to client";
+            let new_connections = Persistent_connection.remove_client env.connections client in
+            None, {env with connections = new_connections}
+    in
+    match msg with
+      | Some Persistent_connection_prot.Subscribe ->
+          let new_connections =
+            Persistent_connection.subscribe_client env.connections client env.errorl
+          in
+          { env with connections = new_connections }
+      | None -> env
+
   (* When a rebase occurs, dfind takes a while to give us the full list of
    * updates, and it often comes in batches. To get an accurate measurement
    * of rebase time, we use the heuristic that any changes that come in
@@ -173,7 +205,10 @@ end = struct
     let raw_updates = DfindLib.get_changes dfind in
     if SSet.is_empty raw_updates then env else begin
       let updates = Program.process_updates genv env raw_updates in
+      (* This will result in some false positives *)
+      let did_change = not (FilenameSet.is_empty updates) in
       let env = Program.recheck genv env updates in
+      if did_change then Persistent_connection.update_clients env.connections env.errorl;
       recheck_loop genv env
     end
 
@@ -193,10 +228,15 @@ end = struct
           die()
       end;
       ServerPeriodical.call_before_sleeping();
-      let has_client = sleep_and_check socket in
+      let ready_sockets = sleep_and_check socket !env.connections in
       env := recheck_loop genv !env;
-      if has_client
-      then env := handle_connection genv !env socket;
+      List.iter ready_sockets (function
+        | New_client fd ->
+            env := handle_connection genv !env fd;
+        (* TODO handle other cases *)
+        | Existing_client client ->
+            env := respond_to_client !env client;
+      );
       ServerEnv.invoke_async_queue ();
       EventLogger.flush ();
     done

@@ -38,6 +38,7 @@ type env = {
     libs: SSet.t; (* a subset of `files` *)
     errorl: Errors.ErrorSet.t;
     errors: errors;
+    connections: Persistent_connection.t;
 }
 
 let async_queue : (unit -> unit) list ref = ref []
