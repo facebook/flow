@@ -38,7 +38,7 @@ For more information about writing interface files, see [this guide](third-party
 
 ### Operation not allowed on `null` / `undefined`
 
-Flow considers types to be incompatible with `null` / `undefined` in general (the only compatible types are "nullable" types, denoted `?<type>`. Thus, it will complain if it finds that an operation may happen on `null` / `undefined` that couldn't normally happen on the type as well as null.
+Flow considers types to be incompatible with `null` / `undefined` in general (the only compatible types are "nullable" types, denoted `?<type>`). Thus, it will complain if it finds that an operation may happen on `null` / `undefined` that couldn't normally happen on the type as well as null.
 
 The general way to deal with this is to store the value in a local variable, and guard the operation with a dynamic check on the local variable.
 
