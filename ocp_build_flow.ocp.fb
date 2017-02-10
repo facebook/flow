@@ -182,6 +182,9 @@ begin library "flow-server"
   files = begin fb-glob "src/server"
     excludes = [ 
       "serverEnv.ml" 
+      "serverUtils.ml"
+      "serverProt.ml"
+      "persistent_connection.ml"
       "server_files_js.ml" 
       "server_files_js.mli"  
       "sharedMem_js.ml"
@@ -219,11 +222,28 @@ begin library "flow-server-env"
     "serverEnv.ml"
   ]
   requires = [
+    "flow-persistent-connection"
     "flow-common"
     "flow-common-utils"
     "hh-dfind"
     "hh-procs"
     "hh-utils-collections"
+  ]
+end
+
+begin library "flow-persistent-connection"
+  sort = true
+  dirname = "src/server"
+  files = [
+    "persistent_connection.ml"
+    "serverProt.ml"
+    "serverUtils.ml"
+  ]
+  requires = [
+    "flow-common"
+    "flow-common-utils"
+    "flow-services-autocomplete"
+    "hh-utils"
   ]
 end
 

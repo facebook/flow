@@ -32,6 +32,7 @@ end = struct
     GetDefCommand.command;
     GetImportersCommand.command;
     GetImportsCommand.command;
+    IdeCommand.command;
     LsCommand.command;
     PortCommand.command;
     ServerCommands.CheckCommand.command;
