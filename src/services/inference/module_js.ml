@@ -261,7 +261,7 @@ let package_incompatible package ast =
    model both Haste and Node, but should be further generalized. *)
 module type MODULE_SYSTEM = sig
   (* Given a file and docblock info, make the name of the module it exports. *)
-  val exported_module: filename -> Docblock.t -> Modulename.t
+  val exported_module: Options.t -> filename -> Docblock.t -> Modulename.t
 
   (* Given a file and a reference in it to an imported module, make the name of
      the module it refers to. If given an optional reference to an accumulator,
@@ -354,7 +354,7 @@ let lazy_seq: 'a option Lazy.t list -> 'a option =
 (*******************************)
 
 module Node = struct
-  let exported_module file _ =
+  let exported_module _ file _ =
     if Loc.check_suffix file Files.flow_ext
     then Modulename.Filename (Loc.chop_suffix file Files.flow_ext)
     else Modulename.Filename file
@@ -520,27 +520,61 @@ module Haste: MODULE_SYSTEM = struct
     | Loc.ResourceFile file ->
         Str.string_match mock_path file 0
 
-  let rec exported_module file info =
+  let expand_project_root_token options str =
+    let root = Path.to_string (Options.root options)
+      |> Sys_utils.normalize_filename_dir_sep in
+    str
+      |> Str.split_delim FlowConfig.project_root_token
+      |> String.concat root
+      |> Str.regexp
+
+  let is_haste_file options file =
+    let matched_haste_paths_whitelist file = List.exists
+      (fun r -> Str.string_match (expand_project_root_token options r) (string_of_filename file) 0)
+      (Options.haste_paths_whitelist options) in
+    let matched_haste_paths_blacklist file = List.exists
+      (fun r -> Str.string_match (expand_project_root_token options r) (string_of_filename file) 0)
+      (Options.haste_paths_blacklist options) in
+    (matched_haste_paths_whitelist file) && not (matched_haste_paths_blacklist file)
+
+  let haste_name options file =
+    let reduce_name name (regexp, template) =
+      Str.global_replace regexp template name
+    in
+    List.fold_left
+      reduce_name
+      (string_of_filename file)
+      (Options.haste_name_reducers options)
+
+  let rec exported_module options file info =
     if is_mock file
     then Modulename.String (short_module_name_of file)
+    else if Options.haste_use_name_reducers options
+    then
+      if is_haste_file options file
+      then Modulename.String (haste_name options file)
+      else exported_non_haste_module options file
     else match Docblock.providesModule info with
       | Some m -> Modulename.String m
       | None ->
           (* If foo.js.flow doesn't have a @providesModule, then look at foo.js
            * and use its @providesModule instead *)
-          if Loc.check_suffix file Files.flow_ext
-          then
-            let file_without_flow_ext = Loc.chop_suffix file Files.flow_ext in
-            if Parsing_service_js.has_ast file_without_flow_ext
-            then
-              (** TODO [perf]: mark as expensive and investigate! **)
-              let _, info =
-                Parsing_service_js.get_ast_and_info_unsafe file_without_flow_ext in
-              exported_module file_without_flow_ext info
-            else
-              Modulename.Filename (file_without_flow_ext)
-          else
-            Modulename.Filename file
+          exported_non_haste_module options file
+
+  and exported_non_haste_module options file =
+    if Loc.check_suffix file Files.flow_ext
+    then
+      let file_without_flow_ext = Loc.chop_suffix file Files.flow_ext in
+      if Parsing_service_js.has_ast file_without_flow_ext
+      then
+        (** TODO [perf]: mark as expensive and investigate! **)
+        let _, info =
+          Parsing_service_js.get_ast_and_info_unsafe file_without_flow_ext in
+        exported_module options file_without_flow_ext info
+      else
+        Modulename.Filename (file_without_flow_ext)
+    else
+      Modulename.Filename file
 
   let expanded_name r =
     match Str.split_delim (Str.regexp_string "/") r with
@@ -624,7 +658,7 @@ let get_module_system opts =
 
 let exported_module ~options file info =
   let module M = (val (get_module_system options)) in
-  M.exported_module file info
+  M.exported_module options file info
 
 let imported_module ~options cx loc ?path_acc r =
   let module M = (val (get_module_system options)) in

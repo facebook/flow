@@ -1,0 +1,12 @@
+index.js:3
+  3: (require('Module1'): boolean);
+      ^^^^^^^^^^^^^^^^^^ Decl. This type is incompatible with
+  3: (require('Module1'): boolean);
+                          ^^^^^^^ boolean
+
+index.js:6
+  6: require('Module4');
+     ^^^^^^^^^^^^^^^^^^ Module4. Required module not found
+
+
+Found 2 errors

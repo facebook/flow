@@ -37,6 +37,10 @@ type t = {
   opt_esproposal_decorators: esproposal_feature_mode;
   opt_esproposal_export_star_as: esproposal_feature_mode;
   opt_facebook_fbt: string option;
+  opt_haste_name_reducers: (Str.regexp * string) list;
+  opt_haste_paths_blacklist: string list;
+  opt_haste_paths_whitelist: string list;
+  opt_haste_use_name_reducers: bool;
   opt_ignore_non_literal_requires: bool;
   opt_ignores: (string * Str.regexp) list;
   opt_includes: Path_matcher.t;
@@ -94,6 +98,10 @@ let esproposal_class_instance_fields opts =
   opts.opt_esproposal_class_instance_fields
 let esproposal_decorators opts = opts.opt_esproposal_decorators
 let esproposal_export_star_as opts = opts.opt_esproposal_export_star_as
+let haste_name_reducers opts = opts.opt_haste_name_reducers
+let haste_paths_blacklist opts = opts.opt_haste_paths_blacklist
+let haste_paths_whitelist opts = opts.opt_haste_paths_whitelist
+let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
 let ignores opts = opts.opt_ignores
 let includes opts = opts.opt_includes
 let is_check_mode opts = opts.opt_check_mode

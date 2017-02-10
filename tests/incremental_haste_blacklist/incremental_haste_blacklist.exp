@@ -1,0 +1,16 @@
+
+Initial status:
+No errors!
+
+Move A.js to B.js (blacklisted):
+index.js:2
+  2: require('A');
+     ^^^^^^^^^^^^ A. Required module not found
+
+
+Found 1 error
+
+Move B.js to A.js:
+No errors!
+
+Done!

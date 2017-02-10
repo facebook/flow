@@ -216,6 +216,18 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_ignore_non_literal_requires = false;
     opt_max_header_tokens = FlowConfig.(
       flowconfig.options.Opts.max_header_tokens
+    );
+    opt_haste_name_reducers = FlowConfig.(
+      flowconfig.options.Opts.haste_name_reducers
+    );
+    opt_haste_paths_blacklist = FlowConfig.(
+      flowconfig.options.Opts.haste_paths_blacklist
+    );
+    opt_haste_paths_whitelist = FlowConfig.(
+      flowconfig.options.Opts.haste_paths_whitelist
+    );
+    opt_haste_use_name_reducers = FlowConfig.(
+      flowconfig.options.Opts.haste_use_name_reducers
     )
   }
 

@@ -20,6 +20,10 @@ module Opts : sig
     esproposal_decorators: Options.esproposal_feature_mode;
     esproposal_export_star_as: Options.esproposal_feature_mode;
     facebook_fbt: string option;
+    haste_name_reducers: (Str.regexp * string) list;
+    haste_paths_blacklist: string list;
+    haste_paths_whitelist: string list;
+    haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     moduleSystem: moduleSystem;
     module_name_mappers: (Str.regexp * string) list;

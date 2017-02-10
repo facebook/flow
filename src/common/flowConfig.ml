@@ -51,6 +51,10 @@ module Opts = struct
     esproposal_decorators: Options.esproposal_feature_mode;
     esproposal_export_star_as: Options.esproposal_feature_mode;
     facebook_fbt: string option;
+    haste_name_reducers: (Str.regexp * string) list;
+    haste_paths_blacklist: string list;
+    haste_paths_whitelist: string list;
+    haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     moduleSystem: moduleSystem;
     module_name_mappers: (Str.regexp * string) list;
@@ -149,6 +153,10 @@ module Opts = struct
     esproposal_decorators = Options.ESPROPOSAL_WARN;
     esproposal_export_star_as = Options.ESPROPOSAL_WARN;
     facebook_fbt = None;
+    haste_name_reducers = [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
+    haste_paths_blacklist = ["\\(.*\\)?/node_modules/.*"];
+    haste_paths_whitelist = ["<PROJECT_ROOT>/.*"];
+    haste_use_name_reducers = false;
     ignore_non_literal_requires = false;
     moduleSystem = Node;
     module_name_mappers = [];
@@ -286,6 +294,18 @@ module Opts = struct
 
   let optparse_filepath str =
     Path.make str
+
+  let optparse_mapping str =
+    let regexp_str = "^'\\([^']*\\)'[ \t]*->[ \t]*'\\([^']*\\)'$" in
+    let regexp = Str.regexp regexp_str in
+    (if not (Str.string_match regexp str 0) then
+      raise (UserError (
+        "Expected a mapping of form: " ^
+        "'single-quoted-string' -> 'single-quoted-string'"
+      ))
+    );
+    (Str.matched_group 1 str, Str.matched_group 2 str)
+
 end
 
 type config = {
@@ -448,6 +468,53 @@ let parse_options config lines =
       });
     }
 
+    |> define_opt "module.system.haste.name_reducers" {
+      _initializer = INIT_FN (fun opts -> {
+        opts with haste_name_reducers = [];
+      });
+      flags = [ALLOW_DUPLICATE];
+      optparser = (fun str ->
+        let (pattern, template) = optparse_mapping str in
+        (Str.regexp pattern, template)
+      );
+      setter = (fun opts v -> {
+        opts with haste_name_reducers = v::(opts.haste_name_reducers);
+      });
+    }
+
+    |> define_opt "module.system.haste.paths.blacklist" {
+      _initializer = INIT_FN (fun opts -> {
+        opts with haste_paths_blacklist = [];
+      });
+      flags = [ALLOW_DUPLICATE];
+      optparser = optparse_string;
+      setter = (fun opts v -> {
+        opts with haste_paths_blacklist = v::(opts.haste_paths_blacklist);
+      });
+    }
+
+    |> define_opt "module.system.haste.paths.whitelist" {
+      _initializer = INIT_FN (fun opts -> {
+        opts with haste_paths_whitelist = [];
+      });
+      flags = [ALLOW_DUPLICATE];
+      optparser = optparse_string;
+      setter = (fun opts v -> {
+        opts with haste_paths_whitelist = v::(opts.haste_paths_whitelist);
+      });
+    }
+
+    |> define_opt "module.system.haste.use_name_reducers" {
+      _initializer = INIT_FN (fun opts -> {
+        opts with haste_use_name_reducers = false;
+      });
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        {opts with haste_use_name_reducers = v;}
+      );
+    }
+
     |> define_opt "log.file" {
       _initializer = USE_DEFAULT;
       flags = [];
@@ -499,18 +566,7 @@ let parse_options config lines =
       _initializer = USE_DEFAULT;
       flags = [ALLOW_DUPLICATE];
       optparser = (fun str ->
-        let regexp_str = "^'\\([^']*\\)'[ \t]*->[ \t]*'\\([^']*\\)'$" in
-        let regexp = Str.regexp regexp_str in
-        (if not (Str.string_match regexp str 0) then
-          raise (Opts.UserError (
-            "Expected a mapping of form: " ^
-            "'single-quoted-string' -> 'single-quoted-string'"
-          ))
-        );
-
-        let pattern = Str.matched_group 1 str in
-        let template = Str.matched_group 2 str in
-
+        let (pattern, template) = optparse_mapping str in
         (Str.regexp pattern, template)
       );
       setter = (fun opts v ->
@@ -523,18 +579,7 @@ let parse_options config lines =
       _initializer = USE_DEFAULT;
       flags = [ALLOW_DUPLICATE];
       optparser = (fun str ->
-        let regexp_str = "^'\\([^']*\\)'[ \t]*->[ \t]*'\\([^']*\\)'$" in
-        let regexp = Str.regexp regexp_str in
-        (if not (Str.string_match regexp str 0) then
-          raise (Opts.UserError (
-            "Expected a mapping of form: " ^
-            "'single-quoted-string' -> 'single-quoted-string'"
-          ))
-        );
-
-        let file_ext = Str.matched_group 1 str in
-        let template = Str.matched_group 2 str in
-
+        let (file_ext, template) = optparse_mapping str in
         (Str.regexp ("^\\(.*\\)\\." ^ (Str.quote file_ext) ^ "$"), template)
       );
       setter = (fun opts v ->
