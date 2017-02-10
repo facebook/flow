@@ -106,6 +106,8 @@ let fold_left ~f ~acc str =
   String.iter (fun c -> acc := f (!acc) c) str;
   !acc
 
+let split c = Str.split (Str.regexp @@ Char.escaped c)
+
 (* Replaces all instances of the needle character with the replacement character
  *)
 let replace_char needle replacement =

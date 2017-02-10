@@ -14,6 +14,7 @@ module type S = sig
   type applied_fixme = Pos.t * int
   type error_flags
 
+  val set_ignored_fixmes : Relative_path.t list option -> unit
   val is_hh_fixme : (Pos.t -> int -> bool) ref
   val to_list : 'a error_ -> ('a * string) list
   val get_code : 'a error_ -> int
