@@ -2619,6 +2619,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* cases where there is no loss of precision *)
 
+    (** Optimization where an union is a subset of another. Equality modulo
+        reasons is important for this optimization to be effective, since types
+        are repositioned everywhere.
+
+        TODO: (1) Define a more general partial equality, that takes into
+        account unified type variables. (2) Get rid of UnionRep.quick_mem. **)
+    | UnionT (_, rep1), UseT (_, UnionT (_, rep2)) when
+        let l1, l2 = UnionRep.members rep1, UnionRep.members rep2 in
+        l1 |> List.for_all (fun t1 ->
+          l2 |> List.exists (fun t2 ->
+            reasonless_eq t1 t2)) ->
+      ()
+
     | UnionT (_, rep), _ ->
       UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
 
