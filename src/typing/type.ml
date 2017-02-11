@@ -1522,6 +1522,9 @@ let any_propagating_use_t = function
   | CopyNamedExportsT _
   | ReactCreateElementT _
   | ResolveSpreadT _
+  | SpecializeT _
+  | ThisSpecializeT _
+  | UseT (_, ClassT _) (* mk_instance ~for_type:false *)
     -> true
 
   (* These types have no t_out, so can't propagate anything *)
@@ -1570,11 +1573,9 @@ let any_propagating_use_t = function
   | SentinelPropTestT _
   | SetElemT _
   | SetPropT _
-  | SpecializeT _
   | SubstOnPredT _
   | SuperT _
   | TestPropT _
-  | ThisSpecializeT _
   | TypeAppVarianceCheckT _
   | UnaryMinusT _
   | UnifyT _

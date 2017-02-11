@@ -3198,6 +3198,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ClassT _ | ThisClassT _), SpecializeT(_,_,_,[],tvar) ->
       rec_flow_t cx trace (l, tvar)
 
+    | AnyT _, SpecializeT (_, _, _, _, tvar) ->
+      rec_flow_t cx trace (l, tvar)
+
     (* this-specialize a this-abstracted class by substituting This *)
     | ThisClassT i, ThisSpecializeT(_, this, tvar) ->
       let i = subst cx (SMap.singleton "this" this) i in
@@ -3207,6 +3210,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | ClassT i, ThisSpecializeT(_, _this, tvar) ->
       (* TODO: check that this is a subtype of i? *)
       rec_flow_t cx trace (ClassT i, tvar)
+
+    | AnyT _, ThisSpecializeT (_, _, tvar) ->
+      rec_flow_t cx trace (l, tvar)
 
     (* PolyT doesn't have a position since it takes on the position of the upper
        bound, so it doesn't need to be repositioned. This case is necessary to
@@ -3769,6 +3775,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       UseT (_, ClassT (InstanceT (_, static2, _, _, _) as u_)) ->
       rec_unify cx trace static1 static2;
       rec_unify cx trace prototype u_
+
+    | AnyT _, UseT (use_op, ClassT u) ->
+      rec_flow cx trace (l, UseT (use_op, u))
 
     (*********************************************************)
     (* class types derive instance types (with constructors) *)
