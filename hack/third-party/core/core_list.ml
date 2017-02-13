@@ -145,6 +145,8 @@ let filter t ~f = rev (rev_filter t ~f)
 
 let sort = List.sort
 let stable_sort = List.stable_sort
+let fast_sort = List.fast_sort
+let sort_uniq = List.sort_uniq
 
 let find_map t ~f =
   let rec loop = function
