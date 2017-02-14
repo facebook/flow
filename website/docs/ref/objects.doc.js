@@ -347,4 +347,16 @@ type StrictUser = {| name: string, age: number |};
  properties. For this reason, Flow won't error if it sees an access of a
  property called, say, `nname` because there's no guarantee that the object
  doesn't actually have a `nname` property on it!
+
+Exact objects types are not supported with the spread operator:
 */
+var user = { name: "Foo", age: 27 };
+// $ExpectError
+({ ...user }: StrictUser);
+ 
+/*
+ So, as workaround it is recommended to define a helper type like `type Exact<T> = T & $Shape<T>`, and use it
+ like this:
+*/
+ ({ ...user }: Exact<User>);
+
