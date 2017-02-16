@@ -453,18 +453,24 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     FindRefs_js.unset_hooks ();
     flush oc
 
-  let get_def ~options (file_input, line, col) oc =
+  let get_def ~options command_context (file_input, line, col) oc =
     let filename = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile filename in
     let loc = mk_loc file line col in
     let state = GetDef_js.getdef_set_hooks loc in
     (try
       let content = ServerProt.file_input_get_content file_input in
-      let cx = match Types_js.typecheck_contents ~options content file with
-        | _, Some cx, _, _ -> cx
+      let profiling, cx = match Types_js.typecheck_contents ~options content file with
+        | profiling, Some cx, _, _ -> profiling, cx
         | _  -> failwith "Couldn't parse file"
       in
-      let result = GetDef_js.getdef_get_result ~options cx state in
+      let result = GetDef_js.getdef_get_result
+        profiling
+        command_context
+        ~options
+        cx
+        state
+      in
       Marshal.to_channel oc result []
     with exn ->
       Flow_logger.log
@@ -678,7 +684,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     | ServerProt.GEN_FLOW_FILES files ->
         gen_flow_files ~options !env files oc
     | ServerProt.GET_DEF (fn, line, char) ->
-        get_def ~options (fn, line, char) oc
+        get_def ~options client_logging_context (fn, line, char) oc
     | ServerProt.GET_IMPORTERS module_names ->
         get_importers ~options module_names oc
     | ServerProt.GET_IMPORTS module_names ->

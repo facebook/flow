@@ -57,12 +57,30 @@ let getdef_require (state, user_requested_loc) _cx name require_loc =
     state := Some (Gdrequire (name, require_loc))
   )
 
-let getdef_get_result ~options cx state =
+let getdef_get_result profiling client_logging_context ~options cx state =
   match !state with
   | Some Gdloc loc -> loc
   | Some Gdmem (name, this) ->
       let this_t = Flow_js.resolve_type cx this in
       let member_result = Flow_js.Autocomplete.extract_members cx this_t in
+
+      let result_str, t = Flow_js.Autocomplete.(match member_result with
+        | Success _ -> "SUCCESS", this
+        | SuccessModule _ -> "SUCCESS", this
+        | FailureMaybeType -> "FAILURE_NULLABLE", this
+        | FailureAnyType -> "FAILURE_NO_COVERAGE", this
+        | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", t) in
+
+      let json_data = Hh_json.(JSON_Object [
+        "type", Debug_js.json_of_t ~depth:3 cx t;
+        "gd_name", JSON_String name
+      ]) in
+      FlowEventLogger.get_def_member_result
+        ~client_context:client_logging_context
+        ~result_str
+        ~json_data
+        ~profiling;
+
       let command_result =
         Flow_js.Autocomplete.command_result_of_member_result member_result in
       begin match command_result with
