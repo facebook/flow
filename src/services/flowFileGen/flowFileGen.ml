@@ -17,8 +17,8 @@ let exports_map cx module_name =
   match SMap.get module_name module_map with
   | Some module_t -> (
     let module_t = Flow_js.resolve_type cx module_t in
-    match Flow_js.Autocomplete.extract_members cx module_t with
-    | Flow_js.Autocomplete.SuccessModule (named, cjs) -> (named, cjs)
+    match Flow_js.Members.extract cx module_t with
+    | Flow_js.Members.SuccessModule (named, cjs) -> (named, cjs)
     | _ -> failwith (
       spf "Failed to extract the exports of %s" (Type.string_of_ctor module_t)
     )

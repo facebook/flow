@@ -9624,32 +9624,32 @@ let intersect_members cx members =
           merge_type cx (acc, x)
       ) Locationless.EmptyT.t) map
 
-(* It's kind of lame that Autocomplete is in this module, but it uses a bunch
- * of internal APIs so for now it's easier to keep it here than to expose those
- * APIs *)
-module Autocomplete : sig
-  type member_result =
+(* It's kind of lame that Members is in this module, but it uses a bunch of
+   internal APIs so for now it's easier to keep it here than to expose those
+   APIs *)
+module Members : sig
+  type t =
     | Success of Type.t SMap.t
     | SuccessModule of Type.t SMap.t * (Type.t option)
     | FailureMaybeType
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
-  val command_result_of_member_result: member_result ->
+  val to_command_result: t ->
     (Type.t SMap.t, string) ok_or_err
 
-  val extract_members: Context.t -> Type.t -> member_result
+  val extract: Context.t -> Type.t -> t
 
 end = struct
 
-  type member_result =
+  type t =
     | Success of Type.t SMap.t
     | SuccessModule of Type.t SMap.t * (Type.t option)
     | FailureMaybeType
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
-  let command_result_of_member_result = function
+  let to_command_result = function
     | Success map
     | SuccessModule (map, None) ->
         OK map
@@ -9671,24 +9671,24 @@ end = struct
     ) (Context.find_props cx fields)
 
   (* TODO: Think of a better place to put this *)
-  let rec extract_members cx this_t =
+  let rec extract cx this_t =
     match this_t with
     | MaybeT _ | NullT _ | VoidT _ ->
         FailureMaybeType
     | AnyT _ ->
         FailureAnyType
     | AnyObjT reason ->
-        extract_members cx (get_builtin_type cx reason "Object")
+        extract cx (get_builtin_type cx reason "Object")
     | AnyFunT reason ->
         let rep = InterRep.make
           (get_builtin_type cx reason "Function")
           (get_builtin_type cx reason "Object")
           []
         in
-        extract_members cx (IntersectionT (reason, rep))
+        extract cx (IntersectionT (reason, rep))
     | AnnotT source ->
         let source_t = resolve_type cx source in
-        extract_members cx source_t
+        extract cx source_t
     | InstanceT (_, _, super, _,
                 {fields_tmap = fields;
                 methods_tmap = methods;
@@ -9727,7 +9727,7 @@ end = struct
         Success (AugmentableSMap.augment prot_members ~with_bindings:members)
     | ExactT (_, t) ->
         let t = resolve_type cx t in
-        extract_members cx t
+        extract cx t
     | ModuleT (_, {exports_tmap; cjs_export; has_every_named_export = _;}) ->
         let named_exports = Context.find_exports cx exports_tmap in
         let cjs_export =
@@ -9741,14 +9741,14 @@ end = struct
         let c = resolve_type cx c in
         let inst_t = instantiate_poly_t cx c ts in
         let inst_t = instantiate_type inst_t in
-        extract_members cx inst_t
+        extract cx inst_t
     | PolyT (_, sub_type) ->
         (* TODO: replace type parameters with stable/proper names? *)
-        extract_members cx sub_type
+        extract cx sub_type
     | ThisClassT (InstanceT (_, static, _, _, _))
     | ClassT (InstanceT (_, static, _, _, _)) ->
         let static_t = resolve_type cx static in
-        extract_members cx static_t
+        extract cx static_t
     | FunT (_, static, proto, _) ->
         let static_t = resolve_type cx static in
         let proto_t = resolve_type cx proto in
@@ -9779,17 +9779,17 @@ end = struct
         Success members
     | SingletonStrT (reason, _)
     | StrT (reason, _) ->
-        extract_members cx (get_builtin_type cx reason "String")
+        extract cx (get_builtin_type cx reason "String")
     | SingletonNumT (reason, _)
     | NumT (reason, _) ->
-        extract_members cx (get_builtin_type cx reason "Number")
+        extract cx (get_builtin_type cx reason "Number")
     | SingletonBoolT (reason, _)
     | BoolT (reason, _) ->
-        extract_members cx (get_builtin_type cx reason "Boolean")
+        extract cx (get_builtin_type cx reason "Boolean")
 
     | ReposT (_, t)
     | ReposUpperT (_, t) ->
-        extract_members cx t
+        extract cx t
 
     | AbstractT _
     | AnyWithLowerBoundT _
@@ -9824,8 +9824,8 @@ end = struct
         FailureUnhandledType this_t
 
   and extract_members_as_map cx this_t =
-    let member_result = extract_members cx this_t in
-    match command_result_of_member_result member_result with
+    let members = extract cx this_t in
+    match to_command_result members with
     | OK map -> map
     | Err _ -> SMap.empty
 
