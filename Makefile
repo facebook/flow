@@ -42,6 +42,11 @@ endif
 MODULES=\
   src/commands\
   src/common\
+  src/common/audit\
+  src/common/config\
+  src/common/errors\
+  src/common/profiling\
+  src/common/utils\
   src/dts\
   src/embedded\
   src/parser\

@@ -500,7 +500,7 @@ module Cli_output = struct
         match lines with
         | [] -> []
         | (style, str) :: lines ->
-          let nonterm_newline_plus_indent = Utils.spf "\n%s\\1" indent in
+          let nonterm_newline_plus_indent = Utils_js.spf "\n%s\\1" indent in
           (style, indent ^ str) :: (List.map (
             fun (style, s) ->
               style,
