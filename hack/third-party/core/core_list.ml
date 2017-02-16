@@ -1,3 +1,4 @@
+module UnlabeledList = List
 module List = StdLabels.List
 module String = StdLabels.String
 
@@ -146,7 +147,11 @@ let filter t ~f = rev (rev_filter t ~f)
 let sort = List.sort
 let stable_sort = List.stable_sort
 let fast_sort = List.fast_sort
-let sort_uniq = List.sort_uniq
+
+(* 4.02 forgot to add sort_uniq to ListLabels, but it was added in 4.03:
+   https://github.com/ocaml/ocaml/commit/512d128918544ae1da0c808e811f3a7f177524d2 *)
+let sort_uniq ~(cmp:'a -> 'a -> int) (lst:'a list) =
+  UnlabeledList.sort_uniq cmp lst
 
 let find_map t ~f =
   let rec loop = function
