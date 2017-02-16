@@ -453,4 +453,4 @@ let range_string_of_loc ~strip_root loc = Loc.(
   spf "%s:%d:%d,%d:%d" file l0 c0 l1 c1
 )
 
-let exe_name = Filename.basename Sys.executable_name
+let exe_name = Utils_js.exe_name

@@ -14,6 +14,8 @@ let spf = Printf.sprintf
 let print_endlinef fmt = Printf.ksprintf print_endline fmt
 let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 
+let exe_name = Filename.basename Sys.executable_name
+
 (* See https://github.com/yarnpkg/yarn/issues/405. *)
 let can_emoji =
   Sys.os_type <> "Win32" &&
