@@ -350,10 +350,10 @@ import type {UserID, User} from "./User.js";
   get its type:
 */
 
-import {jimiguitar} from "./User.js";
+import {jimiGuitar} from "./User.js";
 
 // $DocIssue
-type GuitarT = typeof jimiguitar;
+type GuitarT = typeof jimiGuitar;
 
 var myGuitar: GuitarT = {
   type: "Gibson",
@@ -366,7 +366,7 @@ var myGuitar: GuitarT = {
 */
 
 // $DocIssue
-import typeof {jimiguitar as GuitarT} from "./User.js";
+import typeof {jimiGuitar as GuitarT} from "./User.js";
 
 var myGuitar: GuitarT = {
   type: "Gibson",
