@@ -44,7 +44,6 @@ type command =
 | FIND_REFS of file_input * int * int (* filename, line, char *)
 | GEN_FLOW_FILES of file_input list
 | GET_DEF of file_input * int * int (* filename, line, char *)
-| GET_IMPORTERS of string list
 | GET_IMPORTS of string list
 | INFER_TYPE of
     file_input * (* filename|content *)

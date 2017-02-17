@@ -695,58 +695,6 @@ let choose_provider ~options m files errmap =
   let module M = (val (get_module_system options)) in
   M.choose_provider m files errmap
 
-(****************** reverse import utils *********************)
-
-(* map from module name to modules which import it. *)
-(* note: this is outside InfoHeap because InfoHeap gets changed concurrently
-   by the infer jobs, we cannot simply build the information up there *)
-(** TODO [perf]: investigate whether this takes too much memory **)
-let reverse_imports_map = Hashtbl.create 0
-
-let reverse_imports_clear module_name =
-  Hashtbl.remove reverse_imports_map module_name
-
-let reverse_imports_get module_name =
-  try Some (Hashtbl.find reverse_imports_map module_name)
-  with Not_found -> None
-
-let reverse_imports_track importer_name requires =
-  let add_requires module_name =
-    let reverse_imports = match reverse_imports_get module_name with
-    | Some reverse_imports ->
-        reverse_imports
-    | None ->
-        NameSet.empty
-    in
-    let new_reverse_imports =
-      NameSet.add importer_name reverse_imports in
-    Hashtbl.replace reverse_imports_map module_name new_reverse_imports
-  in
-  NameSet.iter add_requires requires
-
-let reverse_imports_untrack importer_name requires =
-  let remove_requires module_name =
-    match reverse_imports_get module_name with
-    | Some reverse_imports ->
-        let new_reverse_imports =
-          NameSet.remove importer_name reverse_imports in
-        if not (NameSet.is_empty new_reverse_imports)
-        then Hashtbl.replace reverse_imports_map module_name new_reverse_imports
-        else begin
-          (* in case the reverse import map is empty we might have hit a case
-             where the module we keep track of exists but is not imported by
-             anything anymore. in this case we do not clear the tracking
-             information but simply set it to empty. this makes sure that
-             the information returned by get-imported-by is never confusing
-             for exisitng, but not imported modules *)
-          if NameHeap.mem module_name
-          then Hashtbl.replace reverse_imports_map module_name NameSet.empty
-          else reverse_imports_clear module_name
-        end
-    | None ->
-        ()
-  in NameSet.iter remove_requires requires
-
 (******************)
 (***** public *****)
 (******************)
@@ -772,38 +720,6 @@ let get_module_names ~audit f =
     [_module]
   | _ ->
     [Modulename.Filename f; _module]
-
-let add_reverse_imports workers filenames =
-  let calc_module_reqs_assoc =
-    List.fold_left (fun module_reqs_assoc filename ->
-      let { _module = name; required = req; _ } =
-        get_module_info ~audit:Expensive.ok filename in
-      (* we only add requriements from actual module providers. this avoids
-         strange states when two files provide the same module. *)
-      match get_module_file Expensive.ok name with
-      | Some file when file = filename -> (name, req) :: module_reqs_assoc
-      | _ -> module_reqs_assoc
-    ) in
-  let module_reqs_assoc = MultiWorker.call
-    workers
-    ~job: calc_module_reqs_assoc
-    ~neutral: []
-    ~merge: List.rev_append
-    ~next: (MultiWorker.next workers filenames) in
-  List.iter (fun (name, req) ->
-    (* we need to make sure we are in the reverse import heap to avoid
-       confusing behavior when querying it *)
-    if not (Hashtbl.mem reverse_imports_map name)
-    then Hashtbl.add reverse_imports_map name NameSet.empty;
-    reverse_imports_track name req
-  ) module_reqs_assoc
-
-let get_reverse_imports ~audit module_name =
-  match module_name, reverse_imports_get module_name with
-  | Modulename.Filename filename, None ->
-      let { _module = name; _ } = get_module_info ~audit filename in
-      reverse_imports_get name
-  | _, result -> result
 
 (* TODO [perf]: measure size and possibly optimize *)
 (* Extract and process information from context. In particular, resolve
@@ -1041,9 +957,6 @@ let commit_modules workers ~options inferred removed =
     ~merge: (fun () () -> ())
     ~next: (MultiWorker.next workers replace);
 
-  (* now that providers are updated, update reverse dependency info *)
-  add_reverse_imports workers inferred;
-
   if debug then prerr_endlinef "*** done committing modules ***";
   let providers = replace |> List.split |> snd in
   providers, errmap
@@ -1064,12 +977,12 @@ let rec remove_files options workers files =
     ~job: (List.fold_left (fun acc file ->
       match get_info ~audit:Expensive.ok file with
       | Some info ->
-        let { _module; required; _ } = info in
-        let required_opt = match get_module_file ~audit:Expensive.ok _module with
-        | Some f when f = file -> Some required
-        | _ -> None
+        let { _module; _ } = info in
+        let current_provider = match get_module_file ~audit:Expensive.ok _module with
+        | Some f when f = file -> true
+        | _ -> false
         in
-        FilenameMap.add file (_module, required_opt) acc
+        FilenameMap.add file (_module, current_provider) acc
       | None -> acc
     ))
     ~neutral: FilenameMap.empty
@@ -1081,31 +994,13 @@ and remove_files_with_data options data files =
   (* files may or may not be registered as module providers.
      when they are, we need to clear their registrations *)
   let names = FilenameMap.fold (fun file datum names ->
-    let _module, required_opt = datum in
+    let _module, current_provider = datum in
     remove_provider file _module;
-    match required_opt with
-    | Some required ->
-      (* untrack all imports from this file. we only do this for
-         module providers to avoid inconsistencies when there are
-         multiple providers. *)
-      reverse_imports_untrack _module required;
-      (* when we delete a module and it was never referenced we need
-         to delete it from the reverse import heap. Otherwise, it can
-         still be looked up by using get-imported-by and that is
-         inconsistent. However, we only do so when we are the actual
-         module provider. This makes sure that exsiting modules won't
-         get erased when a duplicate is removed.
-      *)
-      begin match reverse_imports_get _module with
-      | Some reverse_imports ->
-        if NameSet.is_empty reverse_imports
-        then reverse_imports_clear _module
-      | None -> ()
-      end;
+    if current_provider then
       names
       |> NameSet.add _module
       |> NameSet.add (Modulename.Filename file)
-    | _ -> names
+    else names
   ) data NameSet.empty in
   (* clear any registrations that point to infos we're about to clear *)
   (* for infos, remove_batch will ignore missing entries, no need to filter *)
@@ -1114,44 +1009,3 @@ and remove_files_with_data options data files =
   SharedMem_js.collect options `gentle;
   (* note: only return names of modules actually removed *)
   names
-
-(*****************************************************************************)
-(* The following code used to output the dependency graph in GraphML format. *)
-(*****************************************************************************)
-
-(*
-  let oc = open_out "flow.graphml" in
-  output_string oc "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns/graphml\"
-  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
-         xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns/graphml
-  http://www.yworks.com/xml/schema/graphml/1.0/ygraphml.xsd\"
-         xmlns:y=\"http://www.yworks.com/xml/graphml\">
-  <key id=\"D0\" for=\"node\" yfiles.type=\"nodegraphics\"/>
-  <graph id=\"G0\" edgedefault=\"directed\">
-";
-  !dependencies |> SMap.iter (fun m (_,requires) ->
-    output_string oc ("
-<node id=\"" ^ m ^ "\">
-      <data key=\"D0\">
-        <y:ShapeNode>
-          <y:NodeLabel>" ^ m ^ "</y:NodeLabel>
-        </y:ShapeNode>
-      </data>
-    </node>
-");
-    requires |> SSet.iter (fun r ->
-      if (SMap.mem r !dependencies) then
-        output_string oc ("
-<edge source=\"" ^ m ^ "\" target=\"" ^ r ^ "\"/>
-")
-      else ()
-    )
-  );
-  output_string oc "
-  </graph>
-</graphml>
-";
-  close_out oc
-
-*)

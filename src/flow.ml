@@ -30,7 +30,6 @@ end = struct
     ForceRecheckCommand.command;
     GenFlowFilesCommand.command;
     GetDefCommand.command;
-    GetImportersCommand.command;
     GetImportsCommand.command;
     IdeCommand.command;
     LsCommand.command;

@@ -508,20 +508,6 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     then Modulename.Filename (Loc.SourceFile path)
     else Modulename.String module_name_str
 
-  let get_importers ~options module_names oc =
-    let add_to_results map module_name_str =
-      let module_name = module_name_of_string ~options module_name_str in
-      match Module_js.get_reverse_imports ~audit:Expensive.warn
-        module_name with
-      | Some references ->
-          SMap.add module_name_str references map
-      | None -> map
-    in
-    let results = List.fold_left add_to_results
-                  SMap.empty module_names in
-    Marshal.to_channel oc results [];
-    flush oc
-
   let get_imports ~options module_names oc =
     let add_to_results (map, non_flow) module_name_str =
       let module_name = module_name_of_string ~options module_name_str in
@@ -706,8 +692,6 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         gen_flow_files ~options !env files oc
     | ServerProt.GET_DEF (fn, line, char) ->
         get_def ~options client_logging_context (fn, line, char) oc
-    | ServerProt.GET_IMPORTERS module_names ->
-        get_importers ~options module_names oc
     | ServerProt.GET_IMPORTS module_names ->
         get_imports ~options module_names oc
     | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
