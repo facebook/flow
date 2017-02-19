@@ -58,7 +58,8 @@ let collate_errors =
   let filter_suppressed_errors suppressions errors =
     (* Filter out suppressed errors. also track which suppressions are used. *)
     let errors, suppressions = ErrorSet.fold (fun error (errors, supp_acc) ->
-      let (suppressed, supp_acc) = ErrorSuppressions.check error supp_acc in
+      let locs = Errors.locs_of_error error in
+      let (suppressed, supp_acc) = ErrorSuppressions.check locs supp_acc in
       let errors = if not suppressed
         then ErrorSet.add error errors
         else errors in
@@ -172,7 +173,8 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
       (* Filter out suppressed errors *)
       let error_suppressions = Context.error_suppressions cx in
       let errors = Errors.ErrorSet.fold (fun err errors ->
-        if not (fst (Errors.ErrorSuppressions.check err error_suppressions))
+        let locs = Errors.locs_of_error err in
+        if not (fst (Errors.ErrorSuppressions.check locs error_suppressions))
         then Errors.ErrorSet.add err errors
         else errors
       ) (Context.errors cx) errors in

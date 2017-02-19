@@ -46,6 +46,7 @@ val internal_error: Loc.filename -> string -> error
 val is_duplicate_provider_error: error -> bool
 
 val loc_of_error: error -> Loc.t
+val locs_of_error: error -> Loc.t list
 val infos_of_error: error -> info list
 val extra_of_error: error -> info_tree list
 
@@ -60,7 +61,7 @@ module ErrorSuppressions : sig
   val is_empty : t -> bool
   val add : Loc.t -> t -> t
   val union : t -> t -> t
-  val check : error -> t -> (bool * t)
+  val check : Loc.t list -> t -> (bool * t)
   val unused : t -> Loc.t list
   val cardinal : t -> int
 end
