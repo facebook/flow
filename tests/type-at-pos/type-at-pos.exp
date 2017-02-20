@@ -213,7 +213,7 @@
   "type":"C<number>",
   "reasons":[
     {
-      "desc":"type application of identifier `D`",
+      "desc":"type application of function call",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",

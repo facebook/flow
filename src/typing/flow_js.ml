@@ -1576,7 +1576,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* if a ReposT is used as a lower bound, `reposition` can reposition it *)
     | ReposT (reason, l), _ ->
-      rec_flow cx trace (reposition cx ~trace reason l, u)
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason) l, u)
 
     (* if a ReposT is used as an upper bound, wrap the now-concrete lower bound
        in a `ReposUpperT`, which will repos `u` when `u` becomes concrete. *)
@@ -1586,7 +1586,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | ReposUpperT (reason, l), UseT (use_op, u) ->
       (* since this guarantees that `u` is not an OpenT, it's safe to use
          `reposition` on the upper bound here. *)
-      rec_flow cx trace (l, UseT (use_op, reposition cx ~trace reason u))
+      let u = reposition cx ~trace (loc_of_reason reason) u in
+      rec_flow cx trace (l, UseT (use_op, u))
 
     | ReposUpperT (_, l), _ ->
       rec_flow cx trace (l, u)
@@ -1605,7 +1606,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, UseT (use_op, u_def))
 
     | (u_def, ReposUseT (reason, use_op, l)) ->
-      rec_flow cx trace (l, UseT (use_op, reposition cx ~trace reason u_def))
+      let u = reposition cx ~trace (loc_of_reason reason) u_def in
+      rec_flow cx trace (l, UseT (use_op, u))
 
     (***************)
     (* annotations *)
@@ -1622,14 +1624,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        site to downstream uses. *)
 
     | AnnotT source_t, u ->
-      let reason = reason_of_t source_t in
-      rec_flow cx trace (reposition ~trace cx reason source_t, u)
+      let loc = loc_of_t source_t in
+      rec_flow cx trace (reposition ~trace cx loc source_t, u)
 
     (****************************************************************)
     (* BecomeT unifies a tvar with an incoming concrete lower bound *)
     (****************************************************************)
     | _, BecomeT (reason, t) ->
-      rec_unify cx trace (reposition ~trace cx reason l) t
+      rec_unify cx trace (reposition ~trace cx (loc_of_reason reason) l) t
 
     (***********************)
     (* guarded unification *)
@@ -1915,7 +1917,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | Some t ->
           (* reposition the export to point at the require(), like the object
              we create below for non-CommonJS exports *)
-          reposition ~trace cx reason t
+          reposition ~trace cx (loc_of_reason reason) t
         | None ->
           (* convert ES module's named exports to an object *)
           let proto = ObjProtoT reason in
@@ -2249,7 +2251,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | MaybeT _, ReposLowerT (reason_op, u) ->
       (* Don't split the maybe type into its constituent members. Instead,
          reposition the entire maybe type. *)
-      rec_flow cx trace (reposition cx ~trace reason_op l, u)
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
     | MaybeT (_, t), UseT (_, MaybeT _) ->
       rec_flow cx trace (t, u)
@@ -2270,7 +2272,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | OptionalT _, ReposLowerT (reason_op, u) ->
       (* Don't split the optional type into its constituent members. Instead,
          reposition the entire optional type. *)
-      rec_flow cx trace (reposition cx ~trace reason_op l, u)
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
     | (OptionalT(t), _) ->
       let reason = reason_of_t t in
@@ -2415,7 +2417,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, UseT (use_op, t_out))
 
     | TypeAppT _, ReposLowerT (reason_op, u) ->
-        rec_flow cx trace (reposition cx ~trace reason_op l, u)
+        rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
     | (TypeAppT(c,ts), MethodT _) ->
         let reason_op = reason_of_use_t u in
@@ -2615,7 +2617,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | UnionT _, ReposLowerT (reason_op, u) ->
       (* Don't split the union type into its constituent members. Instead,
          reposition the entire union type. *)
-      rec_flow cx trace (reposition cx ~trace reason_op l, u)
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
     (* cases where there is no loss of precision *)
 
@@ -2759,7 +2761,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         match but has to appear here to preempt the (IntersectionT, _) in
         between so that we reposition the entire intersection. *)
     | IntersectionT _, ReposLowerT (reason_op, u) ->
-      rec_flow cx trace (reposition cx ~trace reason_op l, u)
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
     (** All other pairs with an intersection lower bound come here. Before
         further processing, we ensure that the upper bound is concretized. See
@@ -3223,7 +3225,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* get this out of the way too, as above, except that repositioning does
        make sense *)
     | (ThisClassT _, ReposLowerT (reason_op, u)) ->
-      rec_flow cx trace (reposition cx ~trace reason_op l, u)
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
     (* When do we consider a polymorphic type <X:U> T to be a subtype of another
        polymorphic type <X:U'> T'? This is the subject of a long line of
@@ -3410,7 +3412,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          call. clears the op stack because the result of the call is not the
          call itself. *)
       let ops = Ops.clear () in
-      rec_flow_t cx trace (reposition cx ~trace reason_callsite t1, t2);
+      rec_flow_t cx trace (
+        reposition cx ~trace (loc_of_reason reason_callsite) t1,
+        t2
+      );
       Ops.set ops;
 
       (if Context.is_verbose cx then
@@ -3605,7 +3610,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        object is a subtype. *)
     | ObjT (lreason, { proto_t; _ }),
       UseT (_, InstanceT (_, _, _, _, { structural = false; _ })) ->
-      rec_flow cx trace (reposition cx ~trace lreason proto_t, u)
+      let l = reposition cx ~trace (loc_of_reason lreason) proto_t in
+      rec_flow cx trace (l, u)
 
     (****************************************)
     (* You can cast an object to a function *)
@@ -5084,7 +5090,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        where that lower bound was used; the lower bound's location (which is
        being overwritten) is where it was defined. *)
     | (_, ReposLowerT (reason_op, u)) ->
-      rec_flow cx trace (reposition cx ~trace reason_op l, u)
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
     (***************)
     (* unsupported *)
@@ -9331,10 +9337,11 @@ and become cx ?trace r t = match t with
       flow_opt cx ?trace (t, BecomeT (r, tvar)))
   | _ ->
     (* optimization: if t is already concrete, become t immediately :) *)
-    reposition cx ?trace r t
+    reposition cx ?trace (loc_of_reason r) t
 
 (* set the position of the given def type from a reason *)
-and reposition cx ?trace reason t =
+and reposition cx ?trace loc t =
+  let reason = repos_reason loc (reason_of_t t) in
   let rec recurse seen = function
   | OpenT (r, id) as t ->
     let constraints = find_graph cx id in
@@ -9392,16 +9399,16 @@ and reposition cx ?trace reason t =
          of the MaybeT for NullT and VoidT but don't reposition `t`, so that any
          errors on the NullT or VoidT point at ?T, but errors on the T point at
          T. *)
-      let r = repos_reason (loc_of_reason reason) r in
+      let r = repos_reason loc r in
       MaybeT (r, recurse seen t)
   | OptionalT t ->
       OptionalT (recurse seen t)
   | UnionT (r, rep) ->
-      let r = repos_reason (loc_of_reason reason) r in
+      let r = repos_reason loc r in
       let rep = UnionRep.map (recurse seen) rep in
       UnionT (r, rep)
   | t ->
-      mod_reason_of_t (repos_reason (loc_of_reason reason)) t
+      mod_reason_of_t (repos_reason loc) t
   in
   recurse IMap.empty t
 

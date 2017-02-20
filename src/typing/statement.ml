@@ -1376,7 +1376,7 @@ and statement cx = Ast.Statement.(
               kind; declarations = [vdecl]
             } as decl)) ->
               let repos_tvar loc =
-                Flow.reposition cx (repos_reason loc reason) element_tvar
+                Flow.reposition cx loc element_tvar
               in
               variable_decl cx decl;
               variable cx kind ~if_uninitialized:repos_tvar vdecl
@@ -2260,10 +2260,6 @@ and variable cx kind
         let has_anno = not (typeAnnotation = None) in
         (match init with
           | Some ((rhs_loc, _) as expr) ->
-            let rhs_reason =
-              let desc = RCustom (spf "assignment of var `%s`" name) in
-              mk_reason desc rhs_loc
-            in
             let rhs = expression cx expr in
             (**
              * Const and let variables are not declared during evaluation of
@@ -2288,7 +2284,7 @@ and variable cx kind
             ) in
             Type_inference_hooks_js.(
               dispatch_lval_hook cx name loc (RHSLoc hook_loc));
-            let rhs = Flow.reposition cx rhs_reason rhs in
+            let rhs = Flow.reposition cx rhs_loc rhs in
             init_var cx name ~has_anno rhs reason
           | None ->
             Type_inference_hooks_js.(
@@ -2329,12 +2325,12 @@ and variable cx kind
 
 and mixin_element cx undef_loc el = Ast.Expression.(
   match el with
-  | Some (Expression e) ->
-      let t = expression cx e in
-      Flow.reposition cx (repos_reason (fst e) (reason_of_t t)) t
+  | Some (Expression (loc, expr)) ->
+      let t = expression cx (loc, expr) in
+      Flow.reposition cx loc t
   | Some (Spread (loc, { SpreadElement.argument })) ->
       let t = mixin_element_spread cx argument in
-      Flow.reposition cx (repos_reason loc (reason_of_t t)) t
+      Flow.reposition cx loc t
   | None -> EmptyT.at undef_loc
 )
 

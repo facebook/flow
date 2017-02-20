@@ -336,8 +336,7 @@ let rec convert cx tparams_map = Ast.Type.(function
          environment. Currently, we only support this types in a class
          environment: a this type in class C is bounded by C. *)
       check_type_param_arity cx loc typeParameters 0 (fun () ->
-        let reason = mk_reason RThisType loc in
-        Flow_js.reposition cx reason (SMap.find_unsafe "this" tparams_map)
+        Flow_js.reposition cx loc (SMap.find_unsafe "this" tparams_map)
       )
     else (
       Flow_js.add_output cx (FlowError.EUnexpectedThisType loc);
@@ -434,8 +433,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   (* in-scope type vars *)
   | _ when SMap.mem name tparams_map ->
     check_type_param_arity cx loc typeParameters 0 (fun () ->
-      Flow_js.reposition cx (mk_reason (RCustom name) loc)
-        (SMap.find_unsafe name tparams_map)
+      Flow_js.reposition cx loc (SMap.find_unsafe name tparams_map)
     )
 
   | "$Pred" ->

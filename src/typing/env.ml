@@ -800,12 +800,13 @@ let is_global_var _cx name =
 (* get var type, with location of given reason used in type's reason *)
 let var_ref ?(lookup_mode=ForValue) cx name reason =
   let t = query_var ~track_ref:true ~lookup_mode cx name reason in
-  Flow_js.reposition cx reason t
+  Flow_js.reposition cx (loc_of_reason reason) t
 
 (* get refinement entry *)
 let get_refinement cx key reason =
   match find_refi_in_var_scope key with
-  | Some (_, { refined; _ }) -> Some (Flow_js.reposition cx reason refined)
+  | Some (_, { refined; _ }) ->
+      Some (Flow_js.reposition cx (loc_of_reason reason) refined)
   | _ -> None
 
 (* helper: update let or var entry *)
