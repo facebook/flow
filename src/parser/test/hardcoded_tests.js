@@ -3908,7 +3908,13 @@ module.exports = {
           { 'type': 'Block', 'value': ' comment '}
         ],
         'body.0.right.typeParameters.params.0.type': 'ExistsTypeAnnotation'
-      }
+      },
+      'type Foo =\n| string // a\n| number // b': {
+        'comments': [
+          { 'type': 'Line', 'value': ' a' },
+          { 'type': 'Line', 'value': ' b' },
+        ],
+      },
     },
     'Decorators (experimental/early)': {
       'function Bar() { @myDecorator2 @myDecorator1\nclass Foo { myMethod() {} } }': {
