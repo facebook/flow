@@ -52,8 +52,8 @@ let read_and_wait_pid_nonblocking process =
   acc;
   acc_err; } = process in
   match !process_status with
-  | Process_exited status ->
-    process_status := Process_exited status
+  | Process_exited _ ->
+    ()
   | Process_running pid ->
     maybe_consume stdout_fd acc;
     maybe_consume stderr_fd acc_err;
@@ -113,9 +113,6 @@ let rec read_and_wait_pid process =
   then
     (** EOF reached for all FDs. Blocking wait. *)
     let _, status = Unix.waitpid [] pid in
-    (** Process has exited. Non-blockingly consume residual output. *)
-    let () = maybe_consume stdout_fd acc in
-    let () = maybe_consume stderr_fd acc_err in
     let () = process_status := Process_exited status in
     status, (Stack.merge_bytes acc), (Stack.merge_bytes acc_err)
   else

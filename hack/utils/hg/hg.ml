@@ -87,3 +87,14 @@ let files_changed_since_svn_rev hg_rev svn_rev repo =
     repo;
   ] in
   Future.make process String.trim
+
+(** hg update --rev r<svn_rev> --cwd <repo> *)
+let update_to_base_rev svn_rev repo =
+  let process = Process.exec "hg" [
+    "update";
+    "--rev";
+    Printf.sprintf "r%s" svn_rev;
+    "--cwd";
+    repo;
+  ] in
+  Future.make process ignore

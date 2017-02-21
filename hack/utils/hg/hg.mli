@@ -30,3 +30,6 @@ val files_changed_since_svn_rev :
   (** repository path. *)
   string ->
   string Future.t
+
+(** hg update to the base svn revision. *)
+val update_to_base_rev : svn_rev -> string -> unit Future.t
