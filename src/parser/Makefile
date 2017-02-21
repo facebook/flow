@@ -25,7 +25,7 @@ RUNNER_DEPS=\
 	hack/utils/disk\
 	hack/utils/hh_json\
 	hack/third-party/core\
-	src/common\
+	src/common/utils\
 	src/parser
 
 all: build-parser
