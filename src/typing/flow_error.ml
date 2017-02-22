@@ -1020,13 +1020,13 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       let expected_prop_type = "Expected a React PropType instead of" in
       let resolve_object prop = function
       | ResolveObject -> "Expected an object instead of"
+      | ResolveDict _ -> prop
       | ResolveProp _ -> prop
       in
       let resolve_array elem = function
       | ResolveArray -> "Expected an array instead of"
       | ResolveElem _ -> elem
       in
-      let resolve_prop_types = resolve_object expected_prop_type in
       let simplify_prop_type = SimplifyPropType.(function
       | ArrayOf -> expected_prop_type
       | InstanceOf -> "Expected a class type instead of"
@@ -1035,9 +1035,23 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | OneOfType tool -> resolve_array expected_prop_type tool
       | Shape tool -> resolve_object expected_prop_type tool
       ) in
+      let create_class = CreateClass.(function
+      | Spec _ ->
+        "Expected an object instead of"
+      | Mixins _ ->
+        "`mixins` should be a tuple instead of"
+      | Statics _ ->
+        "`statics` should be an object instead of"
+      | PropTypes (_, tool) ->
+        resolve_object expected_prop_type tool
+      | DefaultProps _ ->
+        "`defaultProps` should be an object instead of"
+      | InitialState _ ->
+        "`initialState` should be an object or null instead of"
+      ) in
       let msg = match tool with
-      | ResolvePropTypes (tool, _) -> resolve_prop_types tool
       | SimplifyPropType (tool, _) -> simplify_prop_type tool
       | CreateElement _ -> "Expected React component instead of"
+      | CreateClass (tool, _, _) -> create_class tool
       in
       typecheck_error msg reasons

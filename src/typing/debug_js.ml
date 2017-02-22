@@ -292,6 +292,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       | ObjectAssign -> "Object.assign"
       | ObjectGetPrototypeOf -> "Object.getPrototypeOf"
       | ReactPropType _ -> "ReactPropsCheckType"
+      | ReactCreateClass -> "React.createClass"
       | ReactCreateElement -> "React.createElement"
       | Merge -> "merge"
       | MergeDeepInto -> "mergeDeepInto"
@@ -1419,6 +1420,7 @@ and dump_t_ (depth, tvars) cx t =
     | ObjectGetPrototypeOf -> "ObjectGetPrototypeOf"
     | ReactPropType p -> spf "ReactPropType (%s)" (react_prop_type p)
     | ReactCreateElement -> "ReactCreateElement"
+    | ReactCreateClass -> "ReactCreateClass"
     | Merge -> "Merge"
     | MergeDeepInto -> "MergeDeepInto"
     | MergeInto -> "MergeInto"
@@ -1585,6 +1587,7 @@ and dump_use_t_ (depth, tvars) cx t =
 
   let react_kit =
     let open React in
+    let resolved_object (_, pmap, _) = props pmap in
     let resolve_array = function
       | ResolveArray -> "ResolveArray"
       | ResolveElem (todo, done_rev) ->
@@ -1592,8 +1595,10 @@ and dump_use_t_ (depth, tvars) cx t =
     in
     let resolve_object = function
       | ResolveObject -> "ResolveObject"
-      | ResolveProp (_, k, todo, acc) ->
-        spf "ResolveProp (%s, %s, %s)" k (props todo) (props acc)
+      | ResolveDict (_, todo, acc) ->
+        spf "ResolveDict (%s, %s)" (props todo) (resolved_object acc)
+      | ResolveProp (k, todo, acc) ->
+        spf "ResolveProp (%s, %s, %s)" k (props todo) (resolved_object acc)
     in
     let simplify_prop_type = SimplifyPropType.(function
       | ArrayOf -> "ArrayOf"
@@ -1603,13 +1608,32 @@ and dump_use_t_ (depth, tvars) cx t =
       | OneOfType tool -> spf "OneOfType (%s)" (resolve_array tool)
       | Shape tool -> spf "Shape (%s)" (resolve_object tool)
     ) in
+    let create_class = CreateClass.(
+      let tool = function
+        | Spec _ -> "Spec"
+        | Mixins _ -> "Mixins"
+        | Statics _ -> "Statics"
+        | PropTypes (_, tool) ->
+          spf "PropTypes (%s)" (resolve_object tool)
+        | DefaultProps _ -> "DefaultProps"
+        | InitialState _ -> "InitialState"
+      in
+      let knot {this; static; state_t; default_t} =
+        spf "{this = %s; static = %s; state = %s; default = %s}"
+          (kid this)
+          (kid static)
+          (kid state_t)
+          (kid default_t)
+      in
+      fun t k -> spf "%s, %s" (tool t) (knot k)
+    ) in
     function
     | CreateElement (config, tout) ->
       spf "CreateElement (%s, %s)" (kid config) (kid tout)
-    | ResolvePropTypes (tool, tout) ->
-      spf "ResolvePropTypes (%s, %s)" (resolve_object tool) (kid tout)
     | SimplifyPropType (tool, tout) ->
       spf "SimplifyPropType (%s, %s)" (simplify_prop_type tool) (kid tout)
+    | CreateClass (tool, knot, tout) ->
+      spf "CreateClass (%s, %s)" (create_class tool knot) (kid tout)
   in
 
   if depth = 0 then string_of_use_ctor t

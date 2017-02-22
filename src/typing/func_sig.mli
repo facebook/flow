@@ -97,8 +97,6 @@ val gettertype: t -> Type.t
     setter, this function will raise an exception. *)
 val settertype: t -> Type.t
 
-val methodtype_DEPRECATED: t -> Type.t
-
 (** 1. Util *)
 
 (** The location of the return type for a function. *)

@@ -3502,6 +3502,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       when object_use u || function_use u || function_like_op u ->
       rec_flow cx trace (get_builtin_prop_type cx ~trace reason kind, u)
 
+    | CustomFunT (_, ReactCreateClass),
+      CallT (reason_op, { call_args_tlist = arg1::_; call_tout; _ }) ->
+      Ops.push reason_op;
+      let spec = extract_non_spread cx ~trace arg1 in
+      let knot = { React.CreateClass.
+        this = mk_tvar cx reason_op;
+        static = mk_tvar cx reason_op;
+        state_t = mk_tvar cx reason_op;
+        default_t = mk_tvar cx reason_op;
+      } in
+      rec_flow cx trace (spec, ReactKitT (reason_op,
+        React.CreateClass (React.CreateClass.Spec [], knot, call_tout)));
+      Ops.pop ()
+
     (* When evaluating React.createElement, it's useful to know if the `type`
        argument is a class, function, or an intrinsic. *)
 
@@ -9678,8 +9692,8 @@ and react_kit cx trace reason_op l u =
      erroring. This is best-effort, after all. *)
 
   let coerce_object = function
-    | ObjT (reason, { props_tmap; _ }) ->
-      OK (reason, Context.find_props cx props_tmap)
+    | ObjT (reason, { props_tmap; dict_t; _ }) ->
+      OK (reason, Context.find_props cx props_tmap, dict_t)
     | AnyT reason | AnyObjT reason ->
       Err reason
     | _ ->
@@ -9765,46 +9779,6 @@ and react_kit cx trace reason_op l u =
       get_builtin_typeapp cx ~trace elem_reason "React$Element" [config],
       tout
     )
-  in
-
-  (* Resolve the `propTypes` property from a React component specification
-     object. First we wait for the object itself, then for each property in
-     turn. *)
-
-  let resolve_prop_types tout =
-    let resolve t = rec_flow_t cx trace (t, tout) in
-
-    let rec next reason todo acc =
-      match SMap.choose todo with
-      | None ->
-        let proto = ObjProtoT reason in
-        let t = mk_object_with_map_proto cx reason acc proto
-          ~sealed:true ~exact:false in
-        resolve t
-      | Some (k, p) ->
-        let todo = SMap.remove k todo in
-        match Property.read_t p with
-        | None -> next reason todo acc
-        | Some t ->
-          rec_flow cx trace (t, ReactKitT (reason_op,
-            ResolvePropTypes (ResolveProp (reason, k, todo, acc), tout)))
-    in
-
-    function
-    | ResolveObject ->
-      (match coerce_object l with
-      | OK (reason, todo) ->
-        let reason = replace_reason_const RReactPropTypes reason in
-        next reason todo (SMap.empty)
-      | Err _ -> resolve (AnyT reason_op))
-
-    | ResolveProp (reason, k, todo, acc) ->
-      let t = match coerce_prop_type l with
-        | OK (required, t) -> if required then t else OptionalT t
-        | Err reason -> OptionalT (AnyT reason)
-      in
-      let prop = Field (t, Neutral) in
-      next reason todo (SMap.add k prop acc)
   in
 
   (* In order to create a useful type from the `propTypes` property of a React
@@ -9904,48 +9878,487 @@ and react_kit cx trace reason_op l u =
         | Err _ -> resolve (AnyT reason_op)))
 
     | Shape tool ->
-      (* TODO: This is _very_ similar to `resolve_prop_types` above, except for
-         reasons descriptions/locations, recursive ReactKit constraints, and
+      (* TODO: This is _very_ similar to `CreateClass.PropTypes` below, except
+         for reasons descriptions/locations, recursive ReactKit constraints, and
          `resolve` behavior. *)
-      let next reason todo shape =
+      let add_prop k t (reason, props, dict) =
+        let props = SMap.add k (Field (t, Neutral)) props in
+        reason, props, dict
+      in
+      let add_dict dict (reason, props, _) =
+        reason, props, Some dict
+      in
+      let rec next todo shape =
         match SMap.choose todo with
         | None ->
           let reason = replace_reason_const RObjectType reason_op in
           let proto = ObjProtoT (locationless_reason RObjectClassName) in
-          let t = mk_object_with_map_proto cx reason shape proto
-            ~sealed:true ~exact:false
+          let _, props, dict = shape in
+          let t = mk_object_with_map_proto cx reason props proto
+            ?dict ~sealed:true ~exact:false
           in
           resolve t
         | Some (k, p) ->
           let todo = SMap.remove k todo in
           match Property.read_t p with
-          | None ->
-            add_output cx ~trace (FlowError.EPropAccess
-              ((reason, reason_op), Some k, p, Read))
+          | None -> next todo shape
           | Some t ->
             rec_flow cx trace (t, ReactKitT (reason_op,
               SimplifyPropType (Shape
-                (ResolveProp (reason, k, todo, shape)), tout)))
+                (ResolveProp (k, todo, shape)), tout)))
       in
       (match tool with
       | ResolveObject ->
         (match coerce_object l with
-        | OK (reason, todo) -> next reason todo SMap.empty
+        | OK (reason, todo, dict) ->
+          let shape = reason, SMap.empty, None in
+          (match dict with
+          | None -> next todo shape
+          | Some dicttype ->
+            rec_flow cx trace (dicttype.value, ReactKitT (reason_op,
+              SimplifyPropType (Shape
+                (ResolveDict (dicttype, todo, shape)), tout))))
         | Err _ -> resolve (AnyT reason_op))
-      | ResolveProp (reason, k, todo, shape) ->
+      | ResolveDict (dicttype, todo, shape) ->
+        let dict = match coerce_prop_type l with
+        | OK (_, t) -> {dicttype with value = t}
+        | Err reason -> {dicttype with value = AnyT reason}
+        in
+        next todo (add_dict dict shape)
+      | ResolveProp (k, todo, shape) ->
         let t = match coerce_prop_type l with
         | OK (required, t) -> if required then t else OptionalT t
         | Err _ -> OptionalT (AnyT (reason_op))
         in
-        let p = Field (t, Neutral) in
-        let shape = SMap.add k p shape in
-        next reason todo shape)
+        next todo (add_prop k t shape))
+  in
+
+  let create_class knot tout =
+    let open CreateClass in
+
+    let maybe_known_of_result = function
+      | OK x -> Known x
+      | Err e -> Unknown e
+    in
+
+    let map_known f = function
+      | Known x -> Known (f x)
+      | Unknown e -> Unknown e
+    in
+
+    let get_prop x (_, props, dict) =
+      match SMap.get x props with
+      | Some _ as p -> p
+      | None ->
+        Option.map dict (fun { key; value; dict_polarity; _ } ->
+          rec_flow_t cx trace (string_key x reason_op, key);
+          Field (value, dict_polarity))
+    in
+
+    let read_prop x obj = Option.bind (get_prop x obj) Property.read_t in
+
+    let read_stack x ((obj, _), _) = read_prop x obj in
+
+    let map_spec f ((obj, spec), tail) = ((obj, f spec), tail) in
+
+    (* This tool recursively resolves types until the spec is resolved enough to
+     * compute the instance type. `resolve` and `resolve_call` actually emit the
+     * recursive constaints. The latter is for `getInitialState` and
+     * `getDefaultProps`, where the type we want to resolve is the return type
+     * of the bound function call *)
+
+    let resolve tool t =
+      rec_flow cx trace (t, ReactKitT (reason_op,
+        CreateClass (tool, knot, tout)))
+    in
+
+    let resolve_call this tool t =
+      let reason = reason_of_t t in
+      let return_t = mk_tvar cx reason in
+      let funcall = mk_methodcalltype this [] return_t in
+      rec_flow cx trace (t, CallT (reason, funcall));
+      resolve tool return_t
+    in
+
+    let merge_nullable f a b =
+      match a, b with
+      | NotNull a, NotNull b -> NotNull (f a b)
+      | Null _, x | x, Null _ -> x
+    in
+
+    let merge_unknown f a b =
+      match a, b with
+      | Known a, Known b -> Known (f a b)
+      | Unknown r, _ | _, Unknown r -> Unknown r
+    in
+
+    let merge_objs (r1, ps1, dict1) (_, ps2, dict2) =
+      (r1, SMap.union ps1 ps2, Option.first_some dict1 dict2)
+    in
+
+    (* When a type is resolved, we move on to the next field. If the field is
+     * not found on the spec, we skip ahead. Otherwise we emit a constraint to
+     * resolve the property type. *)
+
+    let rec on_resolve_spec stack =
+      match read_stack "mixins" stack with
+      | None -> on_resolve_mixins stack
+      | Some t -> resolve (Mixins stack) t
+
+    and on_resolve_mixins stack =
+      match read_stack "statics" stack with
+      | None -> on_resolve_statics stack
+      | Some t -> resolve (Statics stack) t
+
+    and on_resolve_statics stack =
+      match read_stack "propTypes" stack with
+      | None -> on_resolve_prop_types stack
+      | Some t -> resolve (PropTypes (stack, ResolveObject)) t
+
+    and on_resolve_prop_types stack =
+      match stack with
+      | (_, spec), [] ->
+        (* Done resolving class spec and mixin specs. *)
+        on_resolve_default_props None spec.get_default_props;
+        on_resolve_initial_state None spec.get_initial_state;
+        mk_class spec
+      | (_, mixin), ((obj, spec), todo, mixins_rev)::stack' ->
+        (* Done resolving a mixin *)
+        let mixins_rev = Known mixin :: mixins_rev in
+        match todo with
+        | [] ->
+          (* No more mixins, resume parent stack with accumulated mixins *)
+          let stack = (obj, flatten_mixins mixins_rev spec), stack' in
+          on_resolve_mixins stack
+        | t::todo ->
+          (* Resolve next mixin in parent's mixin list *)
+          let stack' = ((obj, spec), todo, mixins_rev)::stack' in
+          resolve (Spec stack') t
+
+    and on_resolve_default_props acc = function
+      | [] ->
+        let t = match acc with
+        | None ->
+          let reason = replace_reason_const RReactDefaultProps reason_op in
+          mk_object cx reason
+        | Some (Unknown reason) -> AnyObjT reason
+        | Some (Known (reason, props, dict)) ->
+          mk_object_with_map_proto cx reason props (ObjProtoT reason)
+            ?dict ~sealed:true ~exact:false
+        in
+        rec_flow_t cx trace (t, knot.default_t)
+      | t::todo ->
+        let tool = DefaultProps (todo, acc) in
+        resolve_call knot.static tool t
+
+    and on_resolve_initial_state acc = function
+      | [] ->
+        let t = match acc with
+        | None ->
+          let reason = replace_reason_const RReactState reason_op in
+          mk_object cx reason
+        | Some (Unknown reason) -> AnyObjT reason
+        | Some (Known (Null reason)) -> NullT reason
+        | Some (Known (NotNull (reason, props, dict))) ->
+          mk_object_with_map_proto cx reason props (ObjProtoT reason)
+            ?dict ~sealed:true ~exact:false
+        in
+        rec_flow_t cx trace (t, knot.state_t)
+      | t::todo ->
+        let tool = InitialState (todo, acc) in
+        resolve_call knot.this tool t
+
+    and flatten_mixins mixins_rev spec =
+      List.fold_right (fun mixin acc ->
+        match mixin with
+        | Known spec ->
+          merge_specs acc spec
+        | Unknown reason ->
+          {acc with unknown_mixins = reason::acc.unknown_mixins}
+      ) mixins_rev spec
+
+    and merge_statics =
+      Option.merge ~f:(merge_unknown merge_objs)
+
+    and merge_prop_types =
+      Option.merge ~f:(merge_unknown merge_objs)
+
+    and merge_default_props =
+      Option.merge ~f:(merge_unknown merge_objs)
+
+    and merge_initial_state =
+      Option.merge ~f:(merge_unknown (merge_nullable merge_objs))
+
+    and merge_specs a b = {
+      obj = merge_objs a.obj b.obj;
+      statics = merge_statics a.statics b.statics;
+      prop_types = merge_prop_types a.prop_types b.prop_types;
+      get_default_props = a.get_default_props @ b.get_default_props;
+      get_initial_state = a.get_initial_state @ b.get_initial_state;
+      unknown_mixins = a.unknown_mixins @ b.unknown_mixins;
+    }
+
+    and mk_class spec =
+      (* If the component doesn't specify propTypes, allow anything. To be
+         stricter, we could use an empty object type, but that would require all
+         components to specify propTypes *)
+      let props_t = match spec.prop_types with
+      | None -> AnyObjT reason_op
+      | Some (Unknown reason) -> AnyObjT reason
+      | Some (Known (reason, props, dict)) ->
+        mk_object_with_map_proto cx reason props (ObjProtoT reason)
+          ?dict ~sealed:true ~exact:false
+      in
+      let props_t =
+        mod_reason_of_t (replace_reason_const RReactPropTypes) props_t
+      in
+
+      (* Some spec fields are used to create the instance type, but are not
+         present on the resulting prototype or statics. Other spec fields should
+         become static props. Everything else should be on the prototype. *)
+      let _, spec_props, _ = spec.obj in
+      let props, static_props = SMap.fold (fun k v (props, static_props) ->
+        match k with
+        | "autobind"
+        | "mixins"
+        | "statics" ->
+          props, static_props
+
+        | "childContextTypes"
+        | "contextTypes"
+        | "displayName"
+        | "getDefaultProps"
+        | "propTypes" ->
+          props, SMap.add k v static_props
+
+        (* Don't autobind ReactClassInterface props, like getInitialState.
+           Instead, call with the correct this when resolving types. *)
+        | "getInitialState"
+        | "getChildContext"
+        | "render"
+        | "componentWillMount"
+        | "componentDidMount"
+        | "componentWillReceiveProps"
+        | "shouldComponentUpdate"
+        | "componentWillUpdate"
+        | "componentDidUpdate"
+        | "componentWillUnmount"
+        | "updateComponent" ->
+          (* Tie the `this` knot with BindT *)
+          Property.read_t v |> Option.iter ~f:(fun t ->
+            let dummy_return = AnyT reason_op in
+            let calltype = mk_methodcalltype knot.this [] dummy_return in
+            rec_flow cx trace (t, BindT (reason_op, calltype, true))
+          );
+          SMap.add k v props, static_props
+
+        | _ ->
+          let bound_v = Property.map_t (fun t ->
+            let destructor = Bind knot.this in
+            let id = mk_id () in
+            ignore (eval_destructor cx ~trace reason_op t destructor id);
+            EvalT (t, TypeDestructorT (reason_op, destructor), id)
+          ) v in
+          SMap.add k bound_v props, static_props
+      ) spec_props (SMap.empty, SMap.empty) in
+
+      let static_props = static_props
+        |> SMap.add "defaultProps" (Field (knot.default_t, Neutral))
+      in
+
+      let reason_component = replace_reason_const RReactComponent reason_op in
+
+      let super =
+        let reason = replace_reason (fun x -> RSuperOf x) reason_component in
+        get_builtin_typeapp cx reason "LegacyReactComponent"
+          [knot.default_t; props_t; knot.state_t]
+      in
+
+      let static =
+        let reason, props = match spec.statics with
+        | None -> reason_op, static_props
+        | Some (Unknown reason) ->
+          let static_props =
+            static_props
+            |> Properties.add_field "$key" Neutral (StrT.why reason)
+            |> Properties.add_field "$value" Neutral (AnyT.why reason)
+          in
+          reason, static_props
+        | Some (Known (reason, props, dict)) ->
+          let static_props = SMap.union props static_props in
+          let static_props = match dict with
+          | None -> static_props
+          | Some { key; value; dict_polarity; _ } ->
+            static_props
+            |> Properties.add_field "$key" dict_polarity key
+            |> Properties.add_field "$value" dict_polarity value
+          in
+          reason, static_props
+        in
+        let reason = replace_reason_const RReactStatics reason in
+        let insttype = {
+          class_id = 0;
+          type_args = SMap.empty;
+          arg_polarities = SMap.empty;
+          fields_tmap = Context.make_property_map cx props;
+          initialized_field_names = SSet.empty;
+          methods_tmap = Context.make_property_map cx SMap.empty;
+          mixins = spec.unknown_mixins <> [];
+          structural = false;
+        } in
+        InstanceT (reason, dummy_prototype, ClassT super, [], insttype)
+      in
+
+      let insttype = {
+        class_id = 0;
+        type_args = SMap.empty;
+        arg_polarities = SMap.empty;
+        fields_tmap = Context.make_property_map cx props;
+        initialized_field_names = SSet.empty;
+        methods_tmap = Context.make_property_map cx SMap.empty;
+        mixins = spec.unknown_mixins <> [];
+        structural = false;
+      } in
+      rec_flow cx trace (super, SuperT (reason_op, insttype));
+
+      let instance = InstanceT (reason_component, static, super, [], insttype) in
+      rec_flow_t cx trace (instance, knot.this);
+      rec_flow_t cx trace (static, knot.static);
+      rec_flow_t cx trace (ClassT instance, tout)
+    in
+
+    let empty_spec obj = {
+      obj;
+      statics = None;
+      prop_types = None;
+      get_default_props = Option.to_list (read_prop "getDefaultProps" obj);
+      get_initial_state = Option.to_list (read_prop "getInitialState" obj);
+      unknown_mixins = [];
+    } in
+
+    function
+    | Spec stack' ->
+      (match coerce_object l with
+      | OK obj ->
+        on_resolve_spec ((obj, empty_spec obj), stack')
+      | Err reason ->
+        (match stack' with
+        | [] ->
+          (* The root spec is unknown *)
+          rec_flow_t cx trace (AnyT.why reason_op, tout)
+        | ((obj, spec), todo, mixins_rev)::stack' ->
+          (* A mixin is unknown *)
+          let mixins_rev = Unknown reason :: mixins_rev in
+          (match todo with
+          | [] ->
+            (* No more mixins, resume parent stack with accumulated mixin *)
+            let stack = (obj, flatten_mixins mixins_rev spec), stack' in
+            on_resolve_mixins stack
+          | t::todo ->
+            (* Resolve next mixin in parent's mixin list *)
+            let stack' = ((obj, spec), todo, mixins_rev)::stack' in
+            resolve (Spec stack') t)))
+
+    | Mixins stack ->
+      (match coerce_array l with
+      | Err reason ->
+        let stack = map_spec (fun spec -> {
+          spec with
+          unknown_mixins = reason::spec.unknown_mixins
+        }) stack in
+        on_resolve_mixins stack
+      | OK [] -> on_resolve_mixins stack
+      | OK (t::todo) ->
+        (* We need to resolve every mixin before we can continue resolving this
+         * spec. Push the stack and start resolving the first mixin. Once the
+         * mixins are done, we'll pop the stack and continue. *)
+        let head, tail = stack in
+        let tail = (head, todo, [])::tail in
+        resolve (Spec tail) t)
+
+    | Statics stack ->
+      let statics = Some (maybe_known_of_result (coerce_object l)) in
+      map_spec (fun spec -> {
+        spec with
+        statics = merge_statics statics spec.statics
+      }) stack |> on_resolve_statics
+
+    | PropTypes (stack, tool) ->
+      let add_prop k t (reason, props, dict) =
+        let props = SMap.add k (Field (t, Neutral)) props in
+        reason, props, dict
+      in
+      let add_dict dict (reason, props, _) =
+        reason, props, Some dict
+      in
+      let rec next todo prop_types =
+        match SMap.choose todo with
+        | None ->
+          let prop_types = Some (Known prop_types) in
+          map_spec (fun spec -> {
+            spec with
+            prop_types = merge_prop_types prop_types spec.prop_types
+          }) stack |> on_resolve_prop_types
+        | Some (k, p) ->
+          let todo = SMap.remove k todo in
+          match Property.read_t p with
+          | None -> next todo prop_types
+          | Some t ->
+            let tool = PropTypes (stack,
+              ResolveProp (k, todo, prop_types)) in
+            resolve tool t
+      in
+      (match tool with
+      | ResolveObject ->
+        (match coerce_object l with
+        | OK (reason, todo, dict) ->
+          let prop_types = reason, SMap.empty, None in
+          (match dict with
+          | None -> next todo prop_types
+          | Some dicttype ->
+            let tool = PropTypes (stack,
+              ResolveDict (dicttype, todo, prop_types)) in
+            resolve tool dicttype.value)
+        | Err reason ->
+          let prop_types = Some (Unknown reason) in
+          map_spec (fun spec -> {
+            spec with
+            prop_types = merge_prop_types prop_types spec.prop_types
+          }) stack |> on_resolve_prop_types)
+      | ResolveDict (dicttype, todo, prop_types) ->
+        let dict = match coerce_prop_type l with
+        | OK (_, t) -> {dicttype with value = t}
+        | Err reason -> {dicttype with value = AnyT reason}
+        in
+        next todo (add_dict dict prop_types)
+      | ResolveProp (k, todo, prop_types) ->
+        let t = match coerce_prop_type l with
+        | OK (required, t) -> if required then t else OptionalT t
+        | Err reason -> OptionalT (AnyT reason)
+        in
+        next todo (add_prop k t prop_types))
+
+    | DefaultProps (todo, acc) ->
+      let default_props = Some (maybe_known_of_result (coerce_object l)) in
+      let acc = merge_default_props default_props acc in
+      on_resolve_default_props acc todo
+
+    | InitialState (todo, acc) ->
+      let initial_state = Some (match l with
+      | NullT reason -> Known (Null reason)
+      | _ ->
+        coerce_object l
+        |> maybe_known_of_result
+        |> map_known (fun x -> NotNull x)
+      ) in
+      let acc = merge_initial_state initial_state acc in
+      on_resolve_initial_state acc todo
   in
 
   match u with
   | CreateElement (config, tout) -> create_element config tout
-  | ResolvePropTypes (tool, tout) -> resolve_prop_types tout tool
   | SimplifyPropType (tool, tout) -> simplify_prop_type tout tool
+  | CreateClass (tool, knot, tout) -> create_class knot tout tool
 
 (************* end of slab **************************************************)
 

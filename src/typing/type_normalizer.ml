@@ -230,6 +230,14 @@ let rec normalize_type_impl cx ids t = match t with
   | CustomFunT (_, ReactPropType _) ->
     Locationless.AnyT.t (* TODO *)
 
+  (* (spec: any) => ReactClass<any> *)
+  | CustomFunT (_, ReactCreateClass) ->
+      let component_class =
+        let instance = fake_instance "ReactClass" in
+        TypeAppT (ClassT instance, [Locationless.AnyT.t])
+      in
+      fake_fun (Some ["spec"]) [Locationless.AnyT.t] None component_class
+
   (* Fake the signature of React.createElement (overloaded)
      1. Component class
        <T>(name: ReactClass<T>, config: T, children?: any) => React$Element<T>

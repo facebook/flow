@@ -123,12 +123,7 @@ let rec gc cx state = function
       let id = objtype.props_tmap in
       Context.iter_props cx id (fun _ ->
         Property.iter_t (gc cx state));
-      (match objtype.dict_t with
-        | None -> ()
-        | Some { key; value; _ } ->
-          gc cx state key;
-          gc cx state value;
-      );
+      Option.iter objtype.dict_t (gc_dicttype cx state);
       gc cx state objtype.proto_t
   | OpenPredT (_, t, p_map, n_map) ->
       gc cx state t;
@@ -168,6 +163,10 @@ and gc_defer_use cx state = function
 
   | TypeDestructorT (_, d) ->
     gc_destructor cx state d
+
+and gc_dicttype cx state dicttype =
+  gc cx state dicttype.key;
+  gc cx state dicttype.value
 
 and gc_funtype cx state funtype =
   gc cx state funtype.this_t;
@@ -446,32 +445,91 @@ and gc_spread_resolve cx state = function
 
 and gc_react_kit cx state =
   let open React in
-  let resolve_array = function
+  let gc_tlist = List.iter (gc cx state) in
+  let gc_resolved_object (_, props, dict) =
+    Properties.iter_t (gc cx state) props;
+    Option.iter dict (gc_dicttype cx state)
+  in
+  let gc_resolve_array = function
   | ResolveArray -> ()
   | ResolveElem (todo, done_rev) ->
-    List.iter (gc cx state) todo;
-    List.iter (gc cx state) done_rev
+    gc_tlist todo;
+    gc_tlist done_rev
   in
-  let resolve_object = function
+  let gc_resolve_object = function
   | ResolveObject -> ()
-  | ResolveProp (_, _, todo, props) ->
+  | ResolveDict (dicttype, todo, acc) ->
+    gc_dicttype cx state dicttype;
     Properties.iter_t (gc cx state) todo;
-    Properties.iter_t (gc cx state) props
+    gc_resolved_object acc
+  | ResolveProp (_, todo, acc) ->
+    Properties.iter_t (gc cx state) todo;
+    gc_resolved_object acc
   in
-  let simplify_prop_type = SimplifyPropType.(function
+  let gc_simplify_prop_type = SimplifyPropType.(function
   | ArrayOf | InstanceOf | ObjectOf -> ()
-  | OneOf tool | OneOfType tool -> resolve_array tool
-  | Shape tool -> resolve_object tool
+  | OneOf tool | OneOfType tool -> gc_resolve_array tool
+  | Shape tool -> gc_resolve_object tool
+  ) in
+  let gc_create_class = CreateClass.(
+    let iter_known f = function Known x -> f x | Unknown _ -> () in
+    let iter_nullable f = function NotNull x -> f x | Null _ -> () in
+    let gc_spec spec =
+      let {
+        obj; statics; prop_types;
+        get_default_props; get_initial_state;
+        unknown_mixins = _;
+      } = spec in
+      gc_resolved_object obj;
+      Option.iter statics (iter_known gc_resolved_object);
+      Option.iter prop_types (iter_known gc_resolved_object);
+      gc_tlist get_default_props;
+      gc_tlist get_initial_state
+    in
+    let gc_stack_head (obj, spec) =
+      gc_resolved_object obj;
+      gc_spec spec;
+    in
+    let gc_stack_tail = List.iter (fun (head, todo, mixins) ->
+      gc_stack_head head;
+      gc_tlist todo;
+      List.iter (iter_known gc_spec) mixins
+    ) in
+    let gc_stack (head, tail) =
+      gc_stack_head head;
+      gc_stack_tail tail
+    in
+    let tool = function
+    | Spec stack' -> gc_stack_tail stack'
+    | Mixins stack -> gc_stack stack
+    | Statics stack -> gc_stack stack
+    | PropTypes (stack, tool) ->
+      gc_stack stack;
+      gc_resolve_object tool
+    | DefaultProps (todo, default_props) ->
+      gc_tlist todo;
+      Option.iter default_props (iter_known gc_resolved_object)
+    | InitialState (todo, initial_state) ->
+      gc_tlist todo;
+      Option.iter initial_state (iter_known (iter_nullable gc_resolved_object))
+    in
+    let knot {this; static; state_t; default_t} =
+      gc cx state this;
+      gc cx state static;
+      gc cx state state_t;
+      gc cx state default_t
+    in
+    fun t k -> tool t; knot k
   ) in
   function
   | CreateElement (t, t_out) ->
       gc cx state t;
       gc cx state t_out
   | SimplifyPropType (tool, t_out) ->
-      simplify_prop_type tool;
+      gc_simplify_prop_type tool;
       gc cx state t_out
-  | ResolvePropTypes (tool, t_out) ->
-      resolve_object tool;
+  | CreateClass (tool, knot, t_out) ->
+      gc_create_class tool knot;
       gc cx state t_out
 
 (* Keep a reachable type variable around. *)

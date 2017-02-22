@@ -24,3 +24,12 @@ React.createClass({
     this.props.foo.baz = 0;
   }
 });
+
+React.createClass({
+  propTypes: {
+    foo: React.PropTypes.shape(({}: {[string]: any})).isRequired,
+  },
+  f() {
+    (this.props.foo.bar: empty); // OK
+  },
+});

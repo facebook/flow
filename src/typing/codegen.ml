@@ -203,6 +203,7 @@ let rec gen_type t env = Type.(
     | OneOfType -> "React$PropType$OneOfType"
     | Shape -> "React$PropType$Shape"
     ) env
+  | CustomFunT (_, ReactCreateClass) -> add_str "React$CreateClass" env
   | CustomFunT (_, ReactCreateElement) -> add_str "React$CreateElement" env
   | CustomFunT (_, Merge) -> add_str "$Facebookism$Merge" env
   | CustomFunT (_, MergeDeepInto) -> add_str "$Facebookism$MergeDeepInto" env

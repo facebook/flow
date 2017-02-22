@@ -412,6 +412,8 @@ let rec convert cx tparams_map = Ast.Type.(function
       mk_react_prop_type cx loc typeParameters React.PropType.OneOfType
   | "React$PropType$Shape" ->
       mk_react_prop_type cx loc typeParameters React.PropType.Shape
+  | "React$CreateClass" ->
+      mk_custom_fun cx loc typeParameters ReactCreateClass
   | "React$CreateElement" ->
       mk_custom_fun cx loc typeParameters ReactCreateElement
   | "$Facebookism$Merge" ->

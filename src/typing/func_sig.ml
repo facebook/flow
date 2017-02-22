@@ -180,18 +180,6 @@ let methodtype {reason; tparams; params; return_t; _} =
   then t
   else PolyT (tparams, t)
 
-let methodtype_DEPRECATED {reason; params; return_t; _} =
-  let params_tlist = Func_params.tlist params in
-  let params_names = Func_params.names params in
-  let rest_param = Func_params.rest params in
-  let frame = Env.peek_frame () in
-  FunT (
-    reason,
-    Flow.dummy_static reason,
-    Flow.dummy_prototype,
-    Flow.mk_functiontype params_tlist ~rest_param ~params_names return_t ~frame
-  )
-
 let gettertype ({return_t; _}: t) = return_t
 
 let settertype {params; _} =

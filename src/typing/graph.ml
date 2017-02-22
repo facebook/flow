@@ -399,8 +399,9 @@ and parts_of_react_kit =
   in
   let resolve_object out = function
   | ResolveObject -> ["out", Def out]
-  | ResolveProp (_, _, todo, props) ->
-    ("out", Def out) :: map_props todo @ map_props props
+  | ResolveDict (_, todo, _)
+  | ResolveProp (_, todo, _) ->
+    ("out", Def out) :: map_props todo
   in
   let simplify_prop_type out = SimplifyPropType.(function
   | ArrayOf | InstanceOf | ObjectOf -> ["out", Def out]
@@ -410,7 +411,7 @@ and parts_of_react_kit =
   function
   | CreateElement (t, out) -> ["t", Def t; "out", Def out]
   | SimplifyPropType (tool, out) -> simplify_prop_type out tool
-  | ResolvePropTypes (tool, out) -> resolve_object out tool
+  | CreateClass (_, _, out) -> ["out", Def out]
 
 and add_bounds cx id { lower; upper; lowertvars; uppertvars } (ts, ns, es) =
   (* NOTE: filtering out non-immediate LB/UBs for readability, but this
