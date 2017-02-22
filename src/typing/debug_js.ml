@@ -371,7 +371,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "result", _json_of_t json_cx t
     ]
 
-  | BindT (_, funtype)
+  | BindT (_, funtype, pass) -> [
+      "funType", json_of_funcalltype json_cx funtype;
+      "passThrough", JSON_Bool pass
+    ]
+
   | CallT (_, funtype) -> [
       "funType", json_of_funcalltype json_cx funtype
     ]

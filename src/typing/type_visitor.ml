@@ -220,7 +220,7 @@ class ['a] t = object(self)
   | AssertImportIsValueT (_, _)
   | AssertRestParamT _
   | BecomeT (_, _)
-  | BindT (_, _)
+  | BindT (_, _, _)
   | CallElemT _
   | CallLatentPredT _
   | CallOpenPredT _

@@ -278,7 +278,7 @@ and parts_of_use_t cx = function
 | AssertImportIsValueT _ -> []
 | AssertRestParamT _ -> []
 | BecomeT (_, t) -> ["t", Def t]
-| BindT (_, funcalltype) -> parts_of_funcalltype funcalltype
+| BindT (_, funcalltype, _) -> parts_of_funcalltype funcalltype
 | CallElemT (_, _, ix, fct) -> ("ix", Def ix) :: parts_of_funcalltype fct
 | CallLatentPredT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
 | CallOpenPredT (_, _, _, t, out) -> ["t", Def t; "out", Def out]

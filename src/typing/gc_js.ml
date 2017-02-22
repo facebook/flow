@@ -200,7 +200,7 @@ and gc_use cx state = function
   | AssertImportIsValueT _ -> ()
   | AssertRestParamT _ -> ()
   | BecomeT (_, t) -> gc cx state t
-  | BindT(_, funcalltype) -> gc_funcalltype cx state funcalltype
+  | BindT(_, funcalltype, _) -> gc_funcalltype cx state funcalltype
   | CallLatentPredT (_, _, _, t1, t2) -> gc cx state t1; gc cx state t2
   | CallOpenPredT (_, _, _, t1, t2) -> gc cx state t1; gc cx state t2
   | CallElemT (_, _, i, fct) -> gc cx state i; gc_funcalltype cx state fct

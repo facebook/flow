@@ -283,7 +283,7 @@ module rec TypeTerm : sig
     (*************)
 
     (* operations on runtime values, such as functions, objects, and arrays *)
-    | BindT of reason * funcalltype
+    | BindT of reason * funcalltype * bool (* pass-through *)
     | CallT of reason * funcalltype
     | MethodT of (* call *) reason * (* lookup *) reason * propref * funcalltype
     | SetPropT of reason * propref * t
@@ -1703,7 +1703,7 @@ and reason_of_use_t = function
   | AssertRestParamT reason -> reason
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT (reason, _) -> reason
-  | BindT (reason, _) -> reason
+  | BindT (reason, _, _) -> reason
   | CallElemT (reason, _, _, _) -> reason
   | CallLatentPredT (reason, _, _, _, _) -> reason
   | CallOpenPredT (reason, _, _, _, _) -> reason
@@ -1857,7 +1857,7 @@ and mod_reason_of_use_t f = function
   | AssertRestParamT reason -> AssertRestParamT (f reason)
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
   | BecomeT (reason, t) -> BecomeT (f reason, t)
-  | BindT (reason, ft) -> BindT (f reason, ft)
+  | BindT (reason, ft, pass) -> BindT (f reason, ft, pass)
   | CallElemT (reason_call, reason_lookup, t, ft) ->
       CallElemT (f reason_call, reason_lookup, t, ft)
   | CallLatentPredT (reason, b, k, l, t) ->

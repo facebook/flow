@@ -3627,15 +3627,27 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (ObjT (reason, _) | InstanceT (reason, _, _, _, _)),
       (UseT (_, FunT (reason_op, _, _, _)) |
+       BindT (reason_op, _, _) |
        UseT (_, AnyFunT reason_op) |
-       BindT (reason_op, _) |
        CallT (reason_op, _)) ->
       let tvar = mk_tvar cx (
         replace_reason (fun desc ->
           RCustom (spf "%s used as a function" (string_of_desc desc))
         ) reason
       ) in
-      lookup_prop cx trace l reason_op reason_op (Strict reason) "$call"
+      let strict = match u with
+        | BindT (reason_op, {call_tout; _}, true) ->
+          (* Pass-through binding an object should not error if the object lacks
+             a callable property. Instead, we should flow the object to the
+             output tvar. This nonstrict lookup will unify the object with
+             `pass`, which flows to the output tvar. *)
+          let pass = mk_tvar_where cx reason_op (fun t ->
+            rec_flow_t cx trace (t, call_tout)
+          ) in
+          NonstrictReturning (Some (l, pass))
+        | _ -> Strict reason
+      in
+      lookup_prop cx trace l reason_op reason_op strict "$call"
         (RWProp (tvar, Read));
       rec_flow cx trace (tvar, u)
 
@@ -4657,12 +4669,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       } as funtype)) ->
       let call_this_t = extract_non_spread cx ~trace first_arg in
       let funtype = { funtype with call_this_t; call_args_tlist } in
-      rec_flow cx trace (func, BindT (reason_op, funtype))
+      rec_flow cx trace (func, BindT (reason_op, funtype, false))
 
-    | (FunT (reason,_,_, ({this_t = o1; _} as ft)),
-       BindT (reason_op,
-             {call_this_t = o2; call_args_tlist = tins2; call_tout; call_closure_t=_;}))
-      -> (* TODO: closure *)
+    | FunT (reason,_,_, ({this_t = o1; _} as ft)),
+      BindT (reason_op, {
+        call_this_t = o2;
+        call_args_tlist = tins2;
+        call_tout; call_closure_t=_
+      }, _) ->
+        (* TODO: closure *)
 
         rec_flow_t cx trace (o2,o1);
 
@@ -4670,16 +4685,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           ResolveSpreadsToMultiflowPartial (ft, reason_op, call_tout) in
         resolve_call_list cx ~trace reason tins2 resolve_to
 
-    | (AnyFunT _, BindT (reason, {
+    | AnyFunT _,
+      BindT (reason, {
         call_this_t;
         call_args_tlist;
         call_tout;
         _;
-      })) ->
+      }, _) ->
       rec_flow_t cx trace (AnyT.why reason, call_this_t);
       call_args_iter (fun param_t ->
         rec_flow_t cx trace (AnyT.why reason, param_t)
       ) call_args_tlist;
+      rec_flow_t cx trace (l, call_tout)
+
+    | _, BindT (_, { call_tout; _ }, true) ->
       rec_flow_t cx trace (l, call_tout)
 
     (***********************************************)
