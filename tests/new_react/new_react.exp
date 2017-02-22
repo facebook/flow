@@ -79,7 +79,7 @@ classes.js:66
  66:   setState(o: { y_: string }): void { },
                    ^^^^^^^^^^^^^^ property `y_`. Property not found in
  62:   getInitialState(): { y: string } {
-                          ^^^^^^^^^^^^^ object type
+                      ^ object type
 
 classes.js:81
  81: var foo_legacy: $jsx<number> = <FooLegacy/>;
@@ -339,7 +339,7 @@ state4.js:9
   9:     this.setState({ y: 0 });
                        ^^^^^^^^ property `y` of object literal. Property not found in
   4:   getInitialState: function() {
-                                  ^ object literal
+                        ^ object literal
 
 state4.js:10
  10:     return <div>{this.state.z}</div>

@@ -3827,17 +3827,12 @@ and react_create_class cx loc class_props = Ast.Expression.(
         }) ->
           let reason = mk_reason RReactState vloc in
           let t = mk_method cx reason func this in
-          (* since the call to getInitialState happens internally, we need to
-             fake a location to pretend the call happened. using the position
-             of the return type makes it act like an IIFE. *)
-          let ret_loc = Func_sig.return_loc func in
-          let ret_reason = repos_reason ret_loc reason in
-          let state_tvar = Flow.mk_tvar cx (derivable_reason ret_reason) in
+          let state_tvar = Flow.mk_tvar cx (derivable_reason reason) in
           let override_state = Flow.tvar_with_constraint cx
-            (BecomeT (ret_reason, state_tvar)) in
+            (BecomeT (reason, state_tvar)) in
           state := state_tvar;
           Flow.flow cx (t,
-            CallT (ret_reason,
+            CallT (reason,
               Flow.mk_functioncalltype [] override_state));
           fmap, mmap
 
