@@ -15,7 +15,7 @@ To handle this, Flow supports the concept of a "Library Definition"
 Often you will want to use libraries and code that you didn't write -- such as
 npm packages. For these circumstances, Flow supports the concept of a 
 "libdef" which allows you to describe the interface and types of the library 
-seperate from the library and without needing to add types to or change the 
+separate from the library and without needing to add types to or change the 
 library itself. 
 
 It's always possible to write a libdef file yourself if you need to, but for 
