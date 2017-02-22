@@ -166,8 +166,8 @@ and gc_defer_use cx state = function
   | DestructuringT (_, s) ->
     gc_selector cx state s
 
-  | TypeDestructorT _ ->
-    ()
+  | TypeDestructorT (_, d) ->
+    gc_destructor cx state d
 
 and gc_funtype cx state funtype =
   gc cx state funtype.this_t;
@@ -345,6 +345,11 @@ and gc_selector cx state = function
   | Default -> ()
   | Become -> ()
   | Refine _ -> ()
+
+and gc_destructor cx state = function
+  | NonMaybeType -> ()
+  | PropertyType _ -> ()
+  | Bind t -> gc cx state t
 
 and gc_pred cx state = function
 

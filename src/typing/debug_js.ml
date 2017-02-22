@@ -956,12 +956,15 @@ and json_of_selector_impl json_cx = Hh_json.(function
 )
 
 and json_of_destructor json_cx = check_depth json_of_destructor_impl json_cx
-and json_of_destructor_impl _json_cx = Hh_json.(function
+and json_of_destructor_impl json_cx = Hh_json.(function
   | NonMaybeType -> JSON_Object [
       "non null/void", JSON_Bool true;
     ]
   | PropertyType x -> JSON_Object [
       "propName", JSON_String x;
+    ]
+  | Bind t -> JSON_Object [
+      "thisType", _json_of_t json_cx t
     ]
 )
 
@@ -1377,6 +1380,7 @@ and dump_t_ (depth, tvars) cx t =
     let string_of_destructor = function
     | NonMaybeType -> "non-maybe type"
     | PropertyType x -> spf "property type `%s`" x
+    | Bind _ -> "bind"
     in
     fun expr t -> match expr with
     | DestructuringT (_, selector) ->
@@ -1857,6 +1861,7 @@ let string_of_selector = function
 let string_of_destructor = function
   | NonMaybeType -> "NonMaybeType"
   | PropertyType x -> spf "PropertyType %s" x
+  | Bind _ -> "Bind"
 
 let string_of_default = Default.fold
   ~expr:(fun (loc, _) ->

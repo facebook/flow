@@ -782,6 +782,7 @@ module rec TypeTerm : sig
   and destructor =
   | NonMaybeType
   | PropertyType of string
+  | Bind of t
 
   and type_map =
   | TupleMap
