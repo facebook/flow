@@ -188,7 +188,8 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
             begin match Docblock.flow info with
             | None
             | Some Docblock.OptOut -> false
-            | Some Docblock.OptIn -> true
+            | Some Docblock.OptIn
+            | Some Docblock.OptInWeak -> true
             end
       in
       (* don't bother to parse if types are disabled *)

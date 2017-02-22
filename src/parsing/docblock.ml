@@ -11,7 +11,7 @@
 module Ast = Spider_monkey_ast
 module Lex_result = Lexer_flow.Lex_result
 
-type flow_mode = OptIn | OptOut
+type flow_mode = OptIn | OptInWeak | OptOut
 
 type t = {
   flow: flow_mode option;
@@ -44,6 +44,11 @@ let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
      if @flow or @providesModule is found more than once, the first one is used
      and an error is returned. *)
   let rec parse_attributes (errors, info) = function
+    | (loc, "@flow") :: (_, "weak") :: xs ->
+        let acc =
+          if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
+          else errors, { info with flow = Some OptInWeak } in
+        parse_attributes acc xs
     | (loc, "@flow") :: xs ->
         let acc =
           if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
@@ -196,7 +201,8 @@ let isDeclarationFile info = info.isDeclarationFile
 let jsx info = info.jsx
 
 let is_flow info = match info.flow with
-  | Some OptIn -> true
+  | Some OptIn
+  | Some OptInWeak -> true
   | Some OptOut
   | None -> false
 
@@ -205,6 +211,7 @@ let json_of_docblock info =
   let open Hh_json in
   let flow = match flow info with
   | Some OptIn -> JSON_String "OptIn"
+  | Some OptInWeak -> JSON_String "OptInWeak"
   | Some OptOut -> JSON_String "OptOut"
   | None -> JSON_Null in
 

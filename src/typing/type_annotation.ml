@@ -671,7 +671,11 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
 
 and mk_type cx tparams_map reason = function
   | None ->
-      let t = Flow_js.mk_tvar cx reason in
+      let t =
+        if Context.is_weak cx
+        then AnyT.why reason
+        else Flow_js.mk_tvar cx reason
+      in
       Hashtbl.replace (Context.annot_table cx) (loc_of_reason reason) t;
       t
 

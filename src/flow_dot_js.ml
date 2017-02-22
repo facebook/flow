@@ -93,6 +93,7 @@ let stub_metadata ~root ~checked = { Context.
   suppress_comments = [];
   suppress_types = SSet.empty;
   verbose = None;
+  weak = false;
   jsx = None;
 }
 
