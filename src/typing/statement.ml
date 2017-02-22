@@ -4064,7 +4064,8 @@ and react_create_class cx loc class_props = Ast.Expression.(
         let omap = Properties.map_t (fun t -> OptionalT t) omap in
         let map = SMap.union amap omap in
         let proto = ObjProtoT reason in
-        props := Flow.mk_object_with_map_proto cx reason ?dict map proto;
+        props := Flow.mk_object_with_map_proto cx reason
+          ~sealed:true ~exact:false ?dict map proto;
         fmap, mmap
 
       (* getDefaultProps *)

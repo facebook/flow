@@ -152,5 +152,17 @@ proptype_shape.js:24
  24:     this.props.foo.baz = 0;
          ^^^^^^^^^^^^^^ object type
 
+proptypes_sealed.js:18
+ 18:     (this.props.baz: string);
+                     ^^^ property `baz`. Property not found in
+ 18:     (this.props.baz: string);
+          ^^^^^^^^^^ propTypes of React component
 
-Found 15 errors
+proptypes_sealed.js:22
+ 22:     this.props.baz = 0;
+                    ^^^ property `baz`. Property not found in
+ 22:     this.props.baz = 0;
+         ^^^^^^^^^^ propTypes of React component
+
+
+Found 17 errors
