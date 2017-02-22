@@ -126,7 +126,7 @@ foo('Hello', 42);
 }); // $DocHide
 
 /*
-  Here we have annotated the `foo` function to say that it's two parameters are
+  Here we have annotated the `foo` function to say that its two parameters are
   of type `string` and `number` and that it returns a `string`.
 
   With these annotations in place, if we run `flow check` we'll see an error:
