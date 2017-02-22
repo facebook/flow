@@ -222,6 +222,58 @@ create_class.js:169
  39:   componentWillUnmount(): void;
                                ^^^^ undefined. See lib: <BUILTINS>/react.js:39
 
+create_class_initial_state_sealed.js:9
+  9:     (this.state.q: empty); // number ~> empty
+          ^^^^^^^^^^^^ number. This type is incompatible with
+  9:     (this.state.q: empty); // number ~> empty
+                        ^^^^^ empty
+
+create_class_initial_state_sealed.js:22
+ 22:     (this.state.q: empty); // number ~> empty
+          ^^^^^^^^^^^^ number. This type is incompatible with
+ 22:     (this.state.q: empty); // number ~> empty
+                        ^^^^^ empty
+
+create_class_initial_state_sealed.js:35
+ 35:     (this.state.q: empty); // number ~> empty
+          ^^^^^^^^^^^^ number. This type is incompatible with
+ 35:     (this.state.q: empty); // number ~> empty
+                        ^^^^^ empty
+
+create_class_initial_state_sealed.js:45
+ 45:     this.setState({ q: 0 }); // property `q` not found
+         ^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
+ 45:     this.setState({ q: 0 }); // property `q` not found
+                       ^^^^^^^^ property `q` of object literal. Property not found in
+ 41:   getInitialState(): { p: number } {
+                      ^ object type
+
+create_class_initial_state_sealed.js:48
+ 48:     (this.state.q: empty); // property `q` not found
+                     ^ property `q`. Property not found in
+ 48:     (this.state.q: empty); // property `q` not found
+          ^^^^^^^^^^ object type
+
+create_class_initial_state_sealed.js:66
+ 66:     (this.state.baz: empty); // number ~> empty
+          ^^^^^^^^^^^^^^ number. This type is incompatible with
+ 66:     (this.state.baz: empty); // number ~> empty
+                          ^^^^^ empty
+
+create_class_initial_state_sealed.js:81
+ 81:     this.setState({ baz: 0 }); // property `baz`  not found
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
+ 81:     this.setState({ baz: 0 }); // property `baz`  not found
+                       ^^^^^^^^^^ property `baz` of object literal. Property not found in
+ 73:     getInitialState(): { foo: number } {
+                        ^ object type
+
+create_class_initial_state_sealed.js:84
+ 84:     (this.state.baz: empty); // property `baz` not found
+                     ^^^ property `baz`. Property not found in
+ 84:     (this.state.baz: empty); // property `baz` not found
+          ^^^^^^^^^^ object type
+
 create_class_statics_sealed.js:4
   4: const A = React.createClass({});
                ^^^^^^^^^^^^^^^^^^^^^ call of method `createClass`
@@ -828,4 +880,4 @@ proptypes_sealed.js:22
          ^^^^^^^^^^ propTypes of React component
 
 
-Found 108 errors
+Found 116 errors

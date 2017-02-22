@@ -435,10 +435,10 @@ let run cx trace reason_op l u
           mk_object cx reason
         | Some (Unknown reason) -> AnyObjT reason
         | Some (Known (Null reason)) -> NullT reason
-        | Some (Known (NotNull (reason, props, dict, flags))) ->
-          ignore flags; (* TODO *)
+        | Some (Known (NotNull (reason, props, dict, { exact; sealed; _ }))) ->
+          let sealed = not (exact && sealed_in_op reason_op sealed) in
           mk_object_with_map_proto cx reason props (ObjProtoT reason)
-            ?dict ~sealed:true ~exact:false
+            ?dict ~sealed ~exact
         in
         rec_flow_t cx trace (t, knot.state_t)
       | t::todo ->

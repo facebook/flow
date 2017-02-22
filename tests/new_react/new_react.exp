@@ -346,14 +346,14 @@ state4.js:9
          ^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
   9:     this.setState({ y: 0 });
                        ^^^^^^^^ property `y` of object literal. Property not found in
-  4:   getInitialState: function() {
-                        ^ object literal
+  4:   getInitialState: function(): { x: number } {
+                        ^ object type
 
 state4.js:10
  10:     return <div>{this.state.z}</div>
                                  ^ property `z`. Property not found in
  10:     return <div>{this.state.z}</div>
-                      ^^^^^^^^^^ object literal
+                      ^^^^^^^^^^ object type
 
 state5.js:5
   5:     return this.state.x; // error: need to declare type of state
