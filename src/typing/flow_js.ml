@@ -6267,6 +6267,14 @@ and eval_destructor cx ~trace reason curr_t s i =
         rec_flow_t cx trace (UnionT (r, rep |> UnionRep.map (fun t ->
           EvalT (t, TypeDestructorT (reason, s), mk_id ())
         )), tvar)
+      | MaybeT (r, t) ->
+        let destructor = TypeDestructorT (reason, s) in
+        let rep = UnionRep.make
+          (EvalT (NullT.why r, destructor, mk_id ()))
+          (EvalT (VoidT.why r, destructor, mk_id ()))
+          [EvalT (t, destructor, mk_id ())]
+        in
+        rec_flow_t cx trace (UnionT (r, rep), tvar)
       | _ ->
         rec_flow cx trace (curr_t, match s with
         | NonMaybeType ->

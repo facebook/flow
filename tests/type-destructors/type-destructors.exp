@@ -1,8 +1,32 @@
 non_maybe_type.js:5
   5:   else return 0; // this should be an error
-                   ^ number. This type is incompatible with the expected return type of
+                   ^ number. This type is incompatible with
   3: function foo(x: ?string): $NonMaybeType<?string> {
-                               ^^^^^^^^^^^^^^^^^^^^^^ string
+                               ^^^^^^^^^^^^^^^^^^^^^^ union: non-maybe type(s)
+  Member 1:
+    3: function foo(x: ?string): $NonMaybeType<?string> {
+                                 ^^^^^^^^^^^^^^^^^^^^^^ non-maybe type
+  Error:
+    5:   else return 0; // this should be an error
+                     ^ number. This type is incompatible with
+    3: function foo(x: ?string): $NonMaybeType<?string> {
+                                 ^^^^^^^^^^^^^^^^^^^^^^ empty
+  Member 2:
+    3: function foo(x: ?string): $NonMaybeType<?string> {
+                                 ^^^^^^^^^^^^^^^^^^^^^^ non-maybe type
+  Error:
+    5:   else return 0; // this should be an error
+                     ^ number. This type is incompatible with
+    3: function foo(x: ?string): $NonMaybeType<?string> {
+                                 ^^^^^^^^^^^^^^^^^^^^^^ empty
+  Member 3:
+    3: function foo(x: ?string): $NonMaybeType<?string> {
+                                 ^^^^^^^^^^^^^^^^^^^^^^ non-maybe type
+  Error:
+    5:   else return 0; // this should be an error
+                     ^ number. This type is incompatible with
+    3: function foo(x: ?string): $NonMaybeType<?string> {
+                                 ^^^^^^^^^^^^^^^^^^^^^^ string
 
 non_maybe_type.js:10
  10: (0: $NonMaybeType<null>); // error
