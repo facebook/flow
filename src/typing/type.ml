@@ -1904,6 +1904,9 @@ let reasonless_compare =
     if t == t' then 0 else
     compare t (swap_reason t' (reason_of_t t))
 
+let reasonless_eq t1 t2 =
+  reasonless_compare t1 t2 = 0
+
 (* Printing some types in parseable form relies on particular formats in
    corresponding reason descriptions. The following module formalizes the
    relevant conventions.
