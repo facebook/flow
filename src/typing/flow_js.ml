@@ -6495,16 +6495,13 @@ and specialize_class cx trace ~reason_op ~reason_tapp c ts =
 and mk_object_with_proto cx reason ?dict proto =
   mk_object_with_map_proto cx reason ?dict SMap.empty proto
 
-and mk_object_with_map_proto cx reason ?(sealed=false) ?frozen ?dict map proto =
+and mk_object_with_map_proto cx reason
+  ?(sealed=false) ?(exact=true) ?(frozen=false) ?dict map proto =
   let sealed =
     if sealed then Sealed
     else UnsealedInFile (Loc.source (loc_of_reason reason))
   in
-  let flags = { default_flags with sealed } in
-  let flags = match frozen with
-  | Some frozen -> { flags with frozen }
-  | None -> flags
-  in
+  let flags = { sealed; exact; frozen } in
   let pmap = Context.make_property_map cx map in
   ObjT (reason, mk_objecttype ~flags dict pmap proto)
 

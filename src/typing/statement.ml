@@ -3923,7 +3923,8 @@ and mk_proptype cx = Ast.Expression.(function
       let omap = Properties.map_t (fun t -> OptionalT t) omap in
       let map = SMap.union amap omap in
       let proto = ObjProtoT reason in
-      Flow.mk_object_with_map_proto cx reason ?dict map proto
+      Flow.mk_object_with_map_proto cx reason
+        ~sealed:true ~exact:false ?dict map proto
 
   (* Support for FB-specific ReactPropTypes validators. *)
   (** TODO: instead, route to custom lib defs, somehow...details of which have

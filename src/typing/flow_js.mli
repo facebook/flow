@@ -97,9 +97,9 @@ val mk_objecttype : ?flags:Type.flags ->
 val mk_object_with_proto : Context.t -> reason ->
   ?dict:Type.dicttype ->
   Type.t -> Type.t
+
 val mk_object_with_map_proto : Context.t -> reason ->
-  ?sealed:bool ->
-  ?frozen:bool ->
+  ?sealed:bool -> ?exact:bool -> ?frozen:bool ->
   ?dict:Type.dicttype -> Type.Properties.t -> Type.t -> Type.t
 
 val mk_object: Context.t -> reason -> Type.t

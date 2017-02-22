@@ -140,5 +140,17 @@ proptype_oneOfType.js:23
     7:       React.PropTypes.string,
              ^^^^^^^^^^^^^^^^^^^^^^ string
 
+proptype_shape.js:20
+ 20:     (this.props.foo.baz: string);
+                         ^^^ property `baz`. Property not found in
+ 20:     (this.props.foo.baz: string);
+          ^^^^^^^^^^^^^^ object type
 
-Found 13 errors
+proptype_shape.js:24
+ 24:     this.props.foo.baz = 0;
+                        ^^^ property `baz`. Property not found in
+ 24:     this.props.foo.baz = 0;
+         ^^^^^^^^^^^^^^ object type
+
+
+Found 15 errors
