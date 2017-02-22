@@ -206,7 +206,11 @@ let infer_type filename content line col =
         ~metadata ~filename ~module_name:(Modulename.String "-") ast
       in
       let loc = mk_loc filename line col in
-      let (loc, ground_t, possible_ts) = Query_types.query_type cx loc in
+      let loc, ground_t, possible_ts = Query_types.(match query_type cx loc with
+        | FailureNoMatch -> Loc.none, None, []
+        | FailureUnparseable (loc, _, possible_ts) -> loc, None, possible_ts
+        | Success (loc, gt, possible_ts) -> loc, Some gt, possible_ts
+      ) in
       let ty, raw_type = match ground_t with
         | None -> None, None
         | Some t ->

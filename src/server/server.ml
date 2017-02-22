@@ -192,16 +192,37 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       _end = { Loc.line; column = col + 1; offset = 0; };
     }
 
-  let infer_type ~options (file_input, line, col, verbose, include_raw) oc =
+  let infer_type ~options client_context (file_input, line, col, verbose, include_raw) oc =
     let file = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile file in
     let response = (try
       let content = ServerProt.file_input_get_content file_input in
-      let cx = match Types_js.typecheck_contents ?verbose ~options content file with
-      | _, Some cx, _, _ -> cx
+      let profiling, cx = match Types_js.typecheck_contents ?verbose ~options content file with
+      | profiling, Some cx, _, _ -> profiling, cx
       | _  -> failwith "Couldn't parse file" in
       let loc = mk_loc file line col in
-      let (loc, ground_t, possible_ts) = Query_types.query_type cx loc in
+      let result_str, data, loc, ground_t, possible_ts =
+        let mk_data loc ty = [
+          "loc", Reason.json_of_loc loc;
+          "type", Debug_js.json_of_t ~depth:3 cx ty
+        ] in
+        Query_types.(match query_type cx loc with
+        | FailureNoMatch ->
+          "FAILURE_NO_MATCH", [],
+          Loc.none, None, []
+        | FailureUnparseable (loc, gt, possible_ts) ->
+          "FAILURE_UNPARSEABLE", mk_data loc gt,
+          loc, None, possible_ts
+        | Success (loc, gt, possible_ts) ->
+          "SUCCESS", mk_data loc gt,
+          loc, Some gt, possible_ts
+      ) in
+      FlowEventLogger.type_at_pos_result
+        ~client_context
+        ~result_str
+        ~json_data:(Hh_json.JSON_Object data)
+        ~profiling;
+
       let ty, raw_type = match ground_t with
         | None -> None, None
         | Some t ->
@@ -690,7 +711,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     | ServerProt.GET_IMPORTS module_names ->
         get_imports ~options module_names oc
     | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
-        infer_type ~options (fn, line, char, verbose, include_raw) oc
+        infer_type ~options client_logging_context (fn, line, char, verbose, include_raw) oc
     | ServerProt.KILL ->
         die_nicely genv oc
     | ServerProt.PING ->
