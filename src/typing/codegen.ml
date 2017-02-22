@@ -190,6 +190,19 @@ let rec gen_type t env = Type.(
       |> add_str ">"
   | CustomFunT (_, ObjectAssign) -> add_str "Object$Assign" env
   | CustomFunT (_, ObjectGetPrototypeOf) -> add_str "Object$GetPrototypeOf" env
+  | CustomFunT (_, ReactPropType (React.PropType.Primitive (_, t))) ->
+    add_str "React$PropType$Primitive<" env
+      |> gen_type t
+      |> add_str ">"
+  | CustomFunT (_, ReactPropType (React.PropType.Complex kind)) ->
+    add_str React.PropType.(match kind with
+    | ArrayOf -> "React$PropType$ArrayOf"
+    | InstanceOf -> "React$PropType$InstanceOf"
+    | ObjectOf -> "React$PropType$ObjectOf"
+    | OneOf -> "React$PropType$OneOf"
+    | OneOfType -> "React$PropType$OneOfType"
+    | Shape -> "React$PropType$Shape"
+    ) env
   | CustomFunT (_, ReactCreateElement) -> add_str "React$CreateElement" env
   | CustomFunT (_, Merge) -> add_str "$Facebookism$Merge" env
   | CustomFunT (_, MergeDeepInto) -> add_str "$Facebookism$MergeDeepInto" env

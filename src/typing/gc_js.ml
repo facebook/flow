@@ -105,10 +105,10 @@ let rec gc cx state = function
   | IdxWrapper (_, t) -> gc cx state t
   | InstanceT(_, static, super, implements, instance) ->
       instance.type_args |> SMap.iter (fun _ -> gc cx state);
-      Context.iter_props cx instance.fields_tmap (fun _ ->
-        Property.iter_t (gc cx state));
-      Context.iter_props cx instance.methods_tmap (fun _ ->
-        Property.iter_t (gc cx state));
+      Context.find_props cx instance.fields_tmap
+        |> Properties.iter_t (gc cx state);
+      Context.find_props cx instance.methods_tmap
+        |> Properties.iter_t (gc cx state);
       implements |> List.iter (gc cx state);
       gc cx state static;
       gc cx state super
@@ -441,11 +441,32 @@ and gc_spread_resolve cx state = function
 
 and gc_react_kit cx state =
   let open React in
+  let resolve_array = function
+  | ResolveArray -> ()
+  | ResolveElem (todo, done_rev) ->
+    List.iter (gc cx state) todo;
+    List.iter (gc cx state) done_rev
+  in
+  let resolve_object = function
+  | ResolveObject -> ()
+  | ResolveProp (_, _, todo, props) ->
+    Properties.iter_t (gc cx state) todo;
+    Properties.iter_t (gc cx state) props
+  in
+  let simplify_prop_type = SimplifyPropType.(function
+  | ArrayOf | InstanceOf | ObjectOf -> ()
+  | OneOf tool | OneOfType tool -> resolve_array tool
+  | Shape tool -> resolve_object tool
+  ) in
   function
   | CreateElement (t, t_out) ->
       gc cx state t;
       gc cx state t_out
-  | InstanceOf t_out ->
+  | SimplifyPropType (tool, t_out) ->
+      simplify_prop_type tool;
+      gc cx state t_out
+  | ResolvePropTypes (tool, t_out) ->
+      resolve_object tool;
       gc cx state t_out
 
 (* Keep a reachable type variable around. *)

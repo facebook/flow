@@ -38,8 +38,12 @@ class ['a] t = object(self)
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _
-  | CustomFunT _
     -> acc
+
+  | CustomFunT (_, ReactPropType (React.PropType.Primitive (_, t))) ->
+    self#type_ cx acc t
+
+  | CustomFunT _ -> acc
 
   | FunT (_, static, prototype, funtype) ->
     let acc = self#type_ cx acc static in

@@ -29,8 +29,6 @@ val mk_type_annotation: Context.t ->
   (Loc.t * Spider_monkey_ast.Type.t) option ->
   Type.t
 
-val mk_keys_type: Loc.t -> string list -> Type.t
-
 val mk_nominal_type: ?for_type:bool ->
   Context.t ->
   Reason.t ->

@@ -291,6 +291,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "kind", JSON_String (match kind with
       | ObjectAssign -> "Object.assign"
       | ObjectGetPrototypeOf -> "Object.getPrototypeOf"
+      | ReactPropType _ -> "ReactPropsCheckType"
       | ReactCreateElement -> "React.createElement"
       | Merge -> "merge"
       | MergeDeepInto -> "mergeDeepInto"
@@ -628,9 +629,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "returnType", _json_of_t json_cx t_out;
     ]
 
-  | ReactKitT (_, React.InstanceOf t_out) -> [
-      "returnType", _json_of_t json_cx t_out;
-    ]
+  | ReactKitT _ -> [] (* TODO *)
 
   | ChoiceKitUseT (_, tool) -> [
       "tool", JSON_String (match tool with
@@ -1391,6 +1390,35 @@ and dump_t_ (depth, tvars) cx t =
     | Empty_intersection -> "Empty_intersection"
   in
 
+  let custom_fun =
+    let react_prop_type =
+      let open React.PropType in
+      let complex = function
+        | ArrayOf -> "ArrayOf"
+        | InstanceOf -> "InstanceOf"
+        | ObjectOf -> "ObjectOf"
+        | OneOf -> "OneOf"
+        | OneOfType -> "OneOfType"
+        | Shape -> "Shape"
+      in
+      function
+      | Primitive (is_required, t) ->
+        spf "Primitive (%b, %s)" is_required (kid t)
+      | Complex kind -> complex kind
+    in
+    function
+    | ObjectAssign -> "ObjectAssign"
+    | ObjectGetPrototypeOf -> "ObjectGetPrototypeOf"
+    | ReactPropType p -> spf "ReactPropType (%s)" (react_prop_type p)
+    | ReactCreateElement -> "ReactCreateElement"
+    | Merge -> "Merge"
+    | MergeDeepInto -> "MergeDeepInto"
+    | MergeInto -> "MergeInto"
+    | Mixin -> "Mixin"
+    | Idx -> "Idx"
+    | DebugPrint -> "DebugPrint"
+  in
+
   if depth = 0 then string_of_ctor t
   else match t with
   | OpenT (_, id) -> p ~extra:(tvar id) t
@@ -1471,7 +1499,7 @@ and dump_t_ (depth, tvars) cx t =
   | ModuleT _ -> p t
   | ExtendsT (nexts, l, u) -> p ~reason:false ~extra:(spf "[%s], %s, %s"
     (String.concat "; " (List.map kid nexts)) (kid l) (kid u)) t
-  | CustomFunT _ -> p t
+  | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
   | ChoiceKitT _ -> p t
   | IdxWrapper (_, inner_obj) -> p ~extra:(kid inner_obj) t
   | OpenPredT (_, inner_type, _, _) -> p ~extra:(kid inner_type) t
@@ -1504,6 +1532,13 @@ and dump_use_t_ (depth, tvars) cx t =
   | Arg t -> kid t
   | SpreadArg t -> spf "...%s" (kid t)
   in
+
+  let tlist ts = spf "[%s]" (String.concat "; " (List.map kid ts)) in
+  let props map = spf "{%s}" (String.concat "; " (
+    SMap.fold (fun k p acc ->
+      spf "%s = %s" k (prop p) :: acc
+    ) map []
+  )) in
 
   let propref = function
     | Named (r, x) -> spf "%S %s" (dump_reason cx r) x
@@ -1542,11 +1577,31 @@ and dump_use_t_ (depth, tvars) cx t =
 
   let react_kit =
     let open React in
+    let resolve_array = function
+      | ResolveArray -> "ResolveArray"
+      | ResolveElem (todo, done_rev) ->
+        spf "ResolveElem (%s, %s)" (tlist todo) (tlist done_rev)
+    in
+    let resolve_object = function
+      | ResolveObject -> "ResolveObject"
+      | ResolveProp (_, k, todo, acc) ->
+        spf "ResolveProp (%s, %s, %s)" k (props todo) (props acc)
+    in
+    let simplify_prop_type = SimplifyPropType.(function
+      | ArrayOf -> "ArrayOf"
+      | InstanceOf -> "InstanceOf"
+      | ObjectOf -> "ObjectOf"
+      | OneOf tool -> spf "OneOf (%s)" (resolve_array tool)
+      | OneOfType tool -> spf "OneOfType (%s)" (resolve_array tool)
+      | Shape tool -> spf "Shape (%s)" (resolve_object tool)
+    ) in
     function
-      | CreateElement (config, tout) ->
-        spf "CreateElement (%s, %s)" (kid config) (kid tout)
-      | InstanceOf (tout) ->
-        spf "InstanceOf (%s)" (kid tout)
+    | CreateElement (config, tout) ->
+      spf "CreateElement (%s, %s)" (kid config) (kid tout)
+    | ResolvePropTypes (tool, tout) ->
+      spf "ResolvePropTypes (%s, %s)" (resolve_object tool) (kid tout)
+    | SimplifyPropType (tool, tout) ->
+      spf "SimplifyPropType (%s, %s)" (simplify_prop_type tool) (kid tout)
   in
 
   if depth = 0 then string_of_use_ctor t
@@ -2096,3 +2151,7 @@ let dump_flow_error =
           (string_of_use_op use_op)
     | EUnsupportedImplements reason ->
         spf "EUnsupportedImplements (%s)" (dump_reason cx reason)
+    | EReactKit ((reason1, reason2), _) ->
+        spf "EReactKit (%s, %s, _)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)

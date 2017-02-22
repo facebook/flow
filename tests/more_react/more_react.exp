@@ -24,13 +24,5 @@ JSX.js:8
  14:   getDefaultProps: function(): { y: string } {
                                          ^^^^^^ string. See: App.react.js:14
 
-propTypes.js:15
- 15: <D
-     ^ React element `D`
-  9:   propTypes: {
-       ^^^^^^^^^ property `name`. Property not found in
- 15: <D
-     ^ props of React element `D`
 
-
-Found 5 errors
+Found 4 errors

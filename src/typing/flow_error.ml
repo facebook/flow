@@ -112,6 +112,7 @@ type error_message =
   | EInvalidLHSInAssignment of Loc.t
   | EIncompatibleWithUseOp of reason * reason * use_op
   | EUnsupportedImplements of reason
+  | EReactKit of (reason * reason) * React.tool
 
 and binding_error =
   | ENameAlreadyBound
@@ -154,9 +155,6 @@ and unsupported_syntax =
   | ClassPropertyLiteral
   | ClassPropertyComputed
   | ClassExtendsMultiple
-  | ReactPropTypesPropertyLiteralNonString
-  | ReactPropTypesPropertyGetSet
-  | ReactPropTypesPropertyComputed
   | ReactCreateClassPropertyNonInit
   | RequireDynamicArgument
   | RequireLazyDynamicArgument
@@ -229,8 +227,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | TupleMap -> "Expected Iterable instead of"
       | ObjectMap
       | ObjectMapi -> "Expected object instead of")
-    | ReactKitT (_, React.CreateElement _) ->
-      "Expected React component instead of"
     | CallLatentPredT _ -> "Expected predicated function instead of"
     | ResolveSpreadT (_, {rrt_resolve_to; _}) ->
       begin match rrt_resolve_to with
@@ -826,13 +822,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             "computed property keys not supported"
         | ClassExtendsMultiple ->
             "A class cannot extend multiple classes!"
-        | ReactPropTypesPropertyLiteralNonString ->
-            "non-string literal property keys not supported for React \
-             propTypes"
-        | ReactPropTypesPropertyGetSet ->
-            "get/set properties not supported for React propTypes"
-        | ReactPropTypesPropertyComputed ->
-            "computed property keys not supported for React propTypes"
         | ReactCreateClassPropertyNonInit ->
             "unsupported property specification in createClass"
         | RequireDynamicArgument ->
@@ -1025,3 +1014,30 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | EUnsupportedImplements reason ->
       mk_error ~trace_infos [mk_info reason [
         "Argument to implements clause must be an interface"]]
+
+  | EReactKit (reasons, tool) ->
+      let open React in
+      let expected_prop_type = "Expected a React PropType instead of" in
+      let resolve_object prop = function
+      | ResolveObject -> "Expected an object instead of"
+      | ResolveProp _ -> prop
+      in
+      let resolve_array elem = function
+      | ResolveArray -> "Expected an array instead of"
+      | ResolveElem _ -> elem
+      in
+      let resolve_prop_types = resolve_object expected_prop_type in
+      let simplify_prop_type = SimplifyPropType.(function
+      | ArrayOf -> expected_prop_type
+      | InstanceOf -> "Expected a class type instead of"
+      | ObjectOf -> expected_prop_type
+      | OneOf tool -> resolve_array "Expected a literal type instead of" tool
+      | OneOfType tool -> resolve_array expected_prop_type tool
+      | Shape tool -> resolve_object expected_prop_type tool
+      ) in
+      let msg = match tool with
+      | ResolvePropTypes (tool, _) -> resolve_prop_types tool
+      | SimplifyPropType (tool, _) -> simplify_prop_type tool
+      | CreateElement _ -> "Expected React component instead of"
+      in
+      typecheck_error msg reasons

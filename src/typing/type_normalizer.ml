@@ -227,6 +227,9 @@ let rec normalize_type_impl cx ids t = match t with
       ) in
       fake_fun None [] rest_param Locationless.VoidT.t
 
+  | CustomFunT (_, ReactPropType _) ->
+    Locationless.AnyT.t (* TODO *)
+
   (* Fake the signature of React.createElement (overloaded)
      1. Component class
        <T>(name: ReactClass<T>, config: T, children?: any) => React$Element<T>

@@ -3292,7 +3292,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Special case for React.PropTypes.instanceOf arguments, which are an
          exception to type arg arity strictness, because it's not possible to
          provide args and we need to interpret the value as a type. *)
-      | ReactKitT (reason_op, (React.InstanceOf _ as tool)) ->
+      | ReactKitT (reason_op, (React.SimplifyPropType
+          (React.SimplifyPropType.InstanceOf, _) as tool)) ->
         let l = instantiate_poly_default_args cx trace
           ~reason_op ~reason_tapp (ids, t) in
         react_kit cx trace reason_op l tool
@@ -3460,7 +3461,49 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (FlowError.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)))
       );
 
-    (* React *)
+    (* React prop type functions are modeled as a custom function type in Flow,
+       so that Flow can exploit the extra information to gratuitously hardcode
+       best-effort static checking of dynamic prop type validation.
+
+       A prop type is either a primitive or some complex type, which is a
+       function that simplifies to a primitive prop type when called. *)
+
+    | CustomFunT (_, ReactPropType (React.PropType.Primitive (false, t))),
+      GetPropT (reason_op, Named (_, "isRequired"), tout) ->
+      let prop_type = React.PropType.Primitive (true, t) in
+      rec_flow_t cx trace (CustomFunT (reason_op, ReactPropType prop_type), tout)
+
+    | CustomFunT (reason, ReactPropType (React.PropType.Primitive (req, _))), _
+      when object_use u || function_use u || function_like_op u ->
+      let builtin_name =
+        if req
+        then "ReactPropsCheckType"
+        else "ReactPropsChainableTypeChecker"
+      in
+      let l = get_builtin_type cx ~trace reason builtin_name in
+      rec_flow cx trace (l, u)
+
+    | CustomFunT (_, ReactPropType React.PropType.Complex kind),
+      CallT (reason_op, { call_args_tlist = arg1::_; call_tout; _ }) ->
+      let open React in
+      let tool = match kind with
+      | PropType.ArrayOf -> SimplifyPropType.ArrayOf
+      | PropType.InstanceOf -> SimplifyPropType.InstanceOf
+      | PropType.ObjectOf -> SimplifyPropType.ObjectOf
+      | PropType.OneOf -> SimplifyPropType.OneOf ResolveArray
+      | PropType.OneOfType -> SimplifyPropType.OneOfType ResolveArray
+      | PropType.Shape -> SimplifyPropType.Shape ResolveObject
+      in
+      let t = extract_non_spread cx ~trace arg1 in
+      rec_flow cx trace (t, ReactKitT (reason_op,
+        SimplifyPropType (tool, call_tout)))
+
+    | CustomFunT (reason, ReactPropType React.PropType.Complex kind), _
+      when object_use u || function_use u || function_like_op u ->
+      rec_flow cx trace (get_builtin_prop_type cx ~trace reason kind, u)
+
+    (* When evaluating React.createElement, it's useful to know if the `type`
+       argument is a class, function, or an intrinsic. *)
 
     | CustomFunT (_, ReactCreateElement),
       CallT (reason_op, { call_args_tlist = arg1::arg2::_; call_tout; _ }) ->
@@ -5657,6 +5700,10 @@ and object_like_op = function
   | ObjAssignToT _ | ObjAssignFromT _ | ObjRestT _
   | SetElemT _ | GetElemT _
   | UseT (_, AnyObjT _) -> true
+  | _ -> false
+
+and function_use = function
+  | UseT (_, FunT _) -> true
   | _ -> false
 
 (* TODO: why is AnyFunT missing? *)
@@ -9383,6 +9430,17 @@ and get_builtin_type cx ?trace reason x =
   let t = get_builtin cx ?trace x reason in
   mk_instance cx ?trace reason t
 
+and get_builtin_prop_type cx ?trace reason tool =
+  let x = React.PropType.(match tool with
+  | ArrayOf -> "React$PropTypes$arrayOf"
+  | InstanceOf -> "React$PropTypes$instanceOf"
+  | ObjectOf -> "React$PropTypes$objectOf"
+  | OneOf -> "React$PropTypes$oneOf"
+  | OneOfType -> "React$PropTypes$oneOfType"
+  | Shape -> "React$PropTypes$shape"
+  ) in
+  get_builtin_type cx ?trace reason x
+
 and instantiate_poly_t cx t types =
   if types = [] then (* nothing to do *) t else
   match t with
@@ -9576,6 +9634,76 @@ and continue cx trace t = function
 and react_kit cx trace reason_op l u =
   let open React in
 
+  let err_incompatible reason =
+    add_output cx ~trace (FlowError.EReactKit
+      ((reason_op, reason), u))
+  in
+
+  (* ReactKit can't stall, so even if `l` is an unexpected type, we must produce
+     some outflow, usually some flavor of `any`, along with an error. However,
+     not every unexpected inflow should cause an error. For example, `any`
+     inflows shouldn't cause additional errors. Also, if we expect an array, but
+     we get one without any static information, we should fall back without
+     erroring. This is best-effort, after all. *)
+
+  let coerce_object = function
+    | ObjT (reason, { props_tmap; _ }) ->
+      OK (reason, Context.find_props cx props_tmap)
+    | AnyT reason | AnyObjT reason ->
+      Err reason
+    | _ ->
+      let reason = reason_of_t l in
+      err_incompatible reason;
+      Err reason
+  in
+
+  let coerce_prop_type = function
+    | CustomFunT (reason, ReactPropType (PropType.Primitive (required, t))) ->
+      let loc = loc_of_reason reason in
+      OK (required, reposition cx ~trace loc t)
+    | FunT (reason, _, _, _) as t ->
+      rec_flow_t cx trace (t,
+        get_builtin_type cx reason_op "ReactPropsCheckType");
+      Err reason
+    | AnyT reason | AnyFunT reason ->
+      Err reason
+    | t ->
+      let reason = reason_of_t t in
+      err_incompatible reason;
+      Err reason
+  in
+
+  let coerce_array = function
+    | ArrT (_, (ArrayAT (_, Some ts) | TupleAT (_, ts))) ->
+      OK ts
+    | ArrT (reason, _) | AnyT reason ->
+      Err reason
+    | t ->
+      let reason = reason_of_t t in
+      err_incompatible reason;
+      Err reason
+  in
+
+  let coerce_singleton = function
+    | StrT (reason, Literal x) ->
+      let reason = replace_reason_const (RStringLit x) reason in
+      OK (SingletonStrT (reason, x))
+    | NumT (reason, Literal x) ->
+      let reason = replace_reason_const (RNumberLit (snd x)) reason in
+      OK (SingletonNumT (reason, x))
+    | BoolT (reason, Some x) ->
+      let reason = replace_reason_const (RBooleanLit x) reason in
+      OK (SingletonBoolT (reason, x))
+    | NullT _ | VoidT _ as t ->
+      OK t
+    | StrT (reason, _) | NumT (reason, _) | BoolT (reason, _) | AnyT reason ->
+      Err reason
+    | t ->
+      let reason = reason_of_t t in
+      err_incompatible reason;
+      Err reason
+  in
+
   let create_element config tout =
     let elem_reason = replace_reason_const (RReactElement None) reason_op in
     (match l with
@@ -9600,8 +9728,7 @@ and react_kit cx trace reason_op l u =
         get_builtin_type cx ~trace reason_op "$JSXIntrinsics" in
       rec_flow_t cx trace (l, KeysT (reason_op, jsx_intrinsics))
     | AnyT _ | AnyFunT _ | AnyObjT _ -> ()
-    | _ ->
-      add_output cx ~trace (FlowError.EIncompatible (l, ReactKitT (reason_op, u)))
+    | _ -> err_incompatible (reason_of_t l);
     );
     rec_flow_t cx trace (
       get_builtin_typeapp cx ~trace elem_reason "React$Element" [config],
@@ -9609,13 +9736,185 @@ and react_kit cx trace reason_op l u =
     )
   in
 
-  let instance_of tout =
-    rec_flow_t cx trace (l, TypeT (reason_op, tout))
+  (* Resolve the `propTypes` property from a React component specification
+     object. First we wait for the object itself, then for each property in
+     turn. *)
+
+  let resolve_prop_types tout =
+    let resolve t = rec_flow_t cx trace (t, tout) in
+
+    let rec next reason todo acc =
+      match SMap.choose todo with
+      | None ->
+        let proto = ObjProtoT reason in
+        let t = mk_object_with_map_proto cx reason acc proto
+          ~sealed:true ~exact:false in
+        resolve t
+      | Some (k, p) ->
+        let todo = SMap.remove k todo in
+        match Property.read_t p with
+        | None -> next reason todo acc
+        | Some t ->
+          rec_flow cx trace (t, ReactKitT (reason_op,
+            ResolvePropTypes (ResolveProp (reason, k, todo, acc), tout)))
+    in
+
+    function
+    | ResolveObject ->
+      (match coerce_object l with
+      | OK (reason, todo) ->
+        let reason = replace_reason_const RReactPropTypes reason in
+        next reason todo (SMap.empty)
+      | Err _ -> resolve (AnyT reason_op))
+
+    | ResolveProp (reason, k, todo, acc) ->
+      let t = match coerce_prop_type l with
+        | OK (required, t) -> if required then t else OptionalT t
+        | Err reason -> OptionalT (AnyT reason)
+      in
+      let prop = Field (t, Neutral) in
+      next reason todo (SMap.add k prop acc)
+  in
+
+  (* In order to create a useful type from the `propTypes` property of a React
+     class specification, Flow needs the ReactPropType CustomFunT type. This
+     tool evaluates a complex prop type such that a specific CustomFunT is
+     returned when there is enough static information. *)
+
+  let simplify_prop_type tout =
+    let resolve t = rec_flow_t cx trace (
+      CustomFunT (reason_op, ReactPropType (PropType.Primitive (false, t))),
+      tout
+    ) in
+
+    let mk_union reason = function
+      | [] -> EmptyT (replace_reason_const REmpty reason)
+      | [t] -> t
+      | t0::t1::ts ->
+        let reason = replace_reason_const RUnionType reason in
+        UnionT (reason, UnionRep.make t0 t1 ts)
+    in
+
+    let open SimplifyPropType in
+    function
+    | ArrayOf ->
+      (* TODO: Don't ignore the required flag. *)
+      let elem_t = match coerce_prop_type l with
+        | OK (_required, t) -> t
+        | Err reason -> AnyT reason
+      in
+      let reason = replace_reason_const RArrayType reason_op in
+      let t = ArrT (reason, ArrayAT (elem_t, None)) in
+      resolve t
+
+    | InstanceOf ->
+      let t = mk_instance cx reason_op l in
+      resolve t
+
+    | ObjectOf ->
+      (* TODO: Don't ignore the required flag. *)
+      let value = match coerce_prop_type l with
+        | OK (_required, t) -> t
+        | Err reason -> AnyT reason
+      in
+      let props = SMap.empty in
+      let dict = {
+        dict_name = None;
+        key = Locationless.AnyT.t;
+        value;
+        dict_polarity = Neutral;
+      } in
+      let proto = ObjProtoT (locationless_reason RObjectClassName) in
+      let reason = replace_reason_const RObjectType reason_op in
+      let t = mk_object_with_map_proto cx reason props proto
+        ~dict ~sealed:true ~exact:false in
+      resolve t
+
+    | OneOf tool ->
+      let next todo done_rev = match todo with
+        | [] ->
+          let t = mk_union reason_op (List.rev done_rev) in
+          resolve t
+        | t::todo ->
+          rec_flow cx trace (t, ReactKitT (reason_op,
+            SimplifyPropType (OneOf
+              (ResolveElem (todo, done_rev)), tout)))
+      in
+      (match tool with
+      | ResolveArray ->
+        (match coerce_array l with
+        | OK todo -> next todo []
+        | Err _ -> resolve (AnyT reason_op))
+      | ResolveElem (todo, done_rev) ->
+        (match coerce_singleton l with
+        | OK t -> next todo (t::done_rev)
+        | Err _ -> resolve (AnyT reason_op)))
+
+    | OneOfType tool ->
+      (* TODO: This is _very_ similar to `one_of` above. *)
+      let next todo done_rev = match todo with
+        | [] ->
+          let t = mk_union reason_op (List.rev done_rev) in
+          resolve t
+        | t::todo ->
+          rec_flow cx trace (t, ReactKitT (reason_op,
+            SimplifyPropType (OneOfType
+              (ResolveElem (todo, done_rev)), tout)))
+      in
+      (match tool with
+      | ResolveArray ->
+        (match coerce_array l with
+        | OK todo -> next todo []
+        | Err _ -> resolve (AnyT reason_op))
+      | ResolveElem (todo, done_rev) ->
+        (* TODO: Don't ignore the required flag. *)
+        (match coerce_prop_type l with
+        | OK (_required, t) -> next todo (t::done_rev)
+        | Err _ -> resolve (AnyT reason_op)))
+
+    | Shape tool ->
+      (* TODO: This is _very_ similar to `resolve_prop_types` above, except for
+         reasons descriptions/locations, recursive ReactKit constraints, and
+         `resolve` behavior. *)
+      let next reason todo shape =
+        match SMap.choose todo with
+        | None ->
+          let reason = replace_reason_const RObjectType reason_op in
+          let proto = ObjProtoT (locationless_reason RObjectClassName) in
+          let t = mk_object_with_map_proto cx reason shape proto
+            ~sealed:true ~exact:false
+          in
+          resolve t
+        | Some (k, p) ->
+          let todo = SMap.remove k todo in
+          match Property.read_t p with
+          | None ->
+            add_output cx ~trace (FlowError.EPropAccess
+              ((reason, reason_op), Some k, p, Read))
+          | Some t ->
+            rec_flow cx trace (t, ReactKitT (reason_op,
+              SimplifyPropType (Shape
+                (ResolveProp (reason, k, todo, shape)), tout)))
+      in
+      (match tool with
+      | ResolveObject ->
+        (match coerce_object l with
+        | OK (reason, todo) -> next reason todo SMap.empty
+        | Err _ -> resolve (AnyT reason_op))
+      | ResolveProp (reason, k, todo, shape) ->
+        let t = match coerce_prop_type l with
+        | OK (required, t) -> if required then t else OptionalT t
+        | Err _ -> OptionalT (AnyT (reason_op))
+        in
+        let p = Field (t, Neutral) in
+        let shape = SMap.add k p shape in
+        next reason todo shape)
   in
 
   match u with
   | CreateElement (config, tout) -> create_element config tout
-  | InstanceOf tout -> instance_of tout
+  | ResolvePropTypes (tool, tout) -> resolve_prop_types tout tool
+  | SimplifyPropType (tool, tout) -> simplify_prop_type tout tool
 
 (************* end of slab **************************************************)
 

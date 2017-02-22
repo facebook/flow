@@ -804,6 +804,7 @@ module rec TypeTerm : sig
   | ObjectGetPrototypeOf
 
   (* 3rd party libs *)
+  | ReactPropType of React.PropType.t
   | ReactCreateElement
 
   (* Facebookisms *)
@@ -1067,6 +1068,8 @@ and Properties : sig
   val string_of_id: id -> string
   val extract_named_exports: t -> Exports.t
 
+  val iter_t: (TypeTerm.t -> unit) -> t -> unit
+
   val map_t: (TypeTerm.t -> TypeTerm.t) -> t -> t
   val map_fields: (TypeTerm.t -> TypeTerm.t) -> t -> t
   val mapi_fields: (string -> TypeTerm.t -> TypeTerm.t) -> t -> t
@@ -1113,6 +1116,8 @@ end = struct
       | Some t -> SMap.add x t tmap
       | None -> tmap
     ) pmap SMap.empty
+
+  let iter_t f = SMap.iter (fun _ -> Property.iter_t f)
 
   let map_t f = SMap.map (Property.map_t f)
 
@@ -1375,9 +1380,44 @@ and UseTypeMap : MyMap.S with type key = TypeTerm.use_t = MyMap.Make (struct
 end)
 
 and React : sig
+  module PropType : sig
+    type t =
+    | Primitive of (is_required * TypeTerm.t)
+    | Complex of complex
+
+    and is_required = bool
+
+    and complex =
+    | ArrayOf
+    | InstanceOf
+    | ObjectOf
+    | OneOf
+    | OneOfType
+    | Shape
+  end
+
+  type resolve_object =
+  | ResolveObject
+  | ResolveProp of reason * string * Properties.t * Properties.t
+
+  type resolve_array =
+  | ResolveArray
+  | ResolveElem of TypeTerm.t list * TypeTerm.t list
+
+  module SimplifyPropType : sig
+    type tool =
+    | ArrayOf
+    | InstanceOf
+    | ObjectOf
+    | OneOf of resolve_array
+    | OneOfType of resolve_array
+    | Shape of resolve_object
+  end
+
   type tool =
   | CreateElement of TypeTerm.t * TypeTerm.t_out
-  | InstanceOf of TypeTerm.t_out
+  | SimplifyPropType of SimplifyPropType.tool * TypeTerm.t_out
+  | ResolvePropTypes of resolve_object * TypeTerm.t_out
 end = React
 
 include TypeTerm

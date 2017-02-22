@@ -392,9 +392,25 @@ and parts_of_inter_preprocess_tool = function
 
 and parts_of_react_kit =
   let open React in
+  let resolve_array out = function
+  | ResolveArray -> ["out", Def out]
+  | ResolveElem (todo, done_rev) ->
+    ("out", Def out) :: list_parts todo @ list_parts done_rev
+  in
+  let resolve_object out = function
+  | ResolveObject -> ["out", Def out]
+  | ResolveProp (_, _, todo, props) ->
+    ("out", Def out) :: map_props todo @ map_props props
+  in
+  let simplify_prop_type out = SimplifyPropType.(function
+  | ArrayOf | InstanceOf | ObjectOf -> ["out", Def out]
+  | OneOf tool | OneOfType tool -> resolve_array out tool
+  | Shape tool -> resolve_object out tool
+  ) in
   function
   | CreateElement (t, out) -> ["t", Def t; "out", Def out]
-  | InstanceOf (out) -> ["out", Def out]
+  | SimplifyPropType (tool, out) -> simplify_prop_type out tool
+  | ResolvePropTypes (tool, out) -> resolve_object out tool
 
 and add_bounds cx id { lower; upper; lowertvars; uppertvars } (ts, ns, es) =
   (* NOTE: filtering out non-immediate LB/UBs for readability, but this

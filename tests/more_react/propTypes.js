@@ -16,3 +16,6 @@ var D = React.createClass({
   namee='foo' // error (as usual)
   titlee='bar' // OK (error ignored when spread is used)
 />;
+
+/* TODO: Sam has temporarily regressed the above test, but is going to fix it
+   real soon, and make it much better! */

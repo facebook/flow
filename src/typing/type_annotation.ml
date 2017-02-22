@@ -46,6 +46,10 @@ let mk_custom_fun cx loc typeParameters kind =
     CustomFunT (reason, kind)
   )
 
+let mk_react_prop_type cx loc typeParameters kind =
+  mk_custom_fun cx loc typeParameters
+    (ReactPropType (React.PropType.Complex kind))
+
 (**********************************)
 (* Transform annotations to types *)
 (**********************************)
@@ -389,6 +393,25 @@ let rec convert cx tparams_map = Ast.Type.(function
       mk_custom_fun cx loc typeParameters ObjectAssign
   | "Object$GetPrototypeOf" ->
       mk_custom_fun cx loc typeParameters ObjectGetPrototypeOf
+
+  | "React$PropType$Primitive" ->
+      check_type_param_arity cx loc typeParameters 1 (fun () ->
+        let t = convert_type_params () |> List.hd in
+        let prop_type = (ReactPropType (React.PropType.Primitive (false, t))) in
+        mk_custom_fun cx loc None prop_type
+      )
+  | "React$PropType$ArrayOf" ->
+      mk_react_prop_type cx loc typeParameters React.PropType.ArrayOf
+  | "React$PropType$InstanceOf" ->
+      mk_react_prop_type cx loc typeParameters React.PropType.InstanceOf
+  | "React$PropType$ObjectOf" ->
+      mk_react_prop_type cx loc typeParameters React.PropType.ObjectOf
+  | "React$PropType$OneOf" ->
+      mk_react_prop_type cx loc typeParameters React.PropType.OneOf
+  | "React$PropType$OneOfType" ->
+      mk_react_prop_type cx loc typeParameters React.PropType.OneOfType
+  | "React$PropType$Shape" ->
+      mk_react_prop_type cx loc typeParameters React.PropType.Shape
   | "React$CreateElement" ->
       mk_custom_fun cx loc typeParameters ReactCreateElement
   | "$Facebookism$Merge" ->
@@ -682,17 +705,6 @@ and mk_type_annotation cx tparams_map reason = function
   mk_type cx tparams_map reason None
 | Some (_, typeAnnotation) ->
   mk_type cx tparams_map reason (Some typeAnnotation)
-
-(* Model a set of keys as the union of their singleton types. *)
-and mk_keys_type loc = function
-| [] -> EmptyT (mk_reason REmpty loc)
-| [k] -> mk_singleton_string loc k
-| k0::k1::ks ->
-  let t0 = mk_singleton_string loc k0 in
-  let t1 = mk_singleton_string loc k1 in
-  let ts = List.map (mk_singleton_string loc) ks in
-  let rep = UnionRep.make t0 t1 ts in
-  UnionT (mk_reason RUnionType loc, rep)
 
 and mk_singleton_string loc key =
   let reason = mk_reason (RStringLit key) loc in

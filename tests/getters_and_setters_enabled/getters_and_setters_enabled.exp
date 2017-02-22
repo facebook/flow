@@ -192,13 +192,33 @@ object_type.js:52
  51:   var testExampleOrOrderOfGetterAndSetterReordered: number =
                                                          ^^^^^^ number
 
-react.js:7
-  7:     get a() { return 4; },
-         ^^^^^^^^^^^^^^^^^^^^^ get/set properties not supported for React propTypes
-
 react.js:8
-  8:     set b(x: number) { this.c = x; },
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ get/set properties not supported for React propTypes
+  8:   propTypes: {
+       ^^^^^^^^^ property `a`. Property not found in
+ 15: (<Example />); // error: property `a` not found
+      ^^^^^^^^^^^ props of React element `Example`
+
+react.js:17
+ 17: (<Example a="bad" />); // error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+  8:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `a` is incompatible:
+     17: (<Example a="bad" />); // error: number ~> string
+                     ^^^^^ string. This type is incompatible with
+      9:     get a() { return React.PropTypes.number.isRequired; },
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
+
+react.js:18
+ 18: (<Example a={0} c={0} />); // error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+  8:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `c` is incompatible:
+     18: (<Example a={0} c={0} />); // error: number ~> string
+                            ^ number. This type is incompatible with
+     11:     c: React.PropTypes.string,
+                ^^^^^^^^^^^^^^^^^^^^^^ string
 
 variance.js:21
  21: (class extends Base {
@@ -225,4 +245,4 @@ variance.js:47
                     ^^^^ Base
 
 
-Found 38 errors
+Found 39 errors

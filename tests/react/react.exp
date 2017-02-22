@@ -24,23 +24,94 @@ jsx_spread.js:11
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
 proptype_arrayOf.js:13
- 13: var fail_not_array = <Example arr={2} />
+ 13: var fail_missing = <Example />
+                        ^^^^^^^^^^^ React element `Example`
+  5:   propTypes: {
+       ^^^^^^^^^ property `arr`. Property not found in
+ 13: var fail_missing = <Example />
+                        ^^^^^^^^^^^ props of React element `Example`
+
+proptype_arrayOf.js:14
+ 14: var fail_not_array = <Example arr={2} />
                           ^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
   5:   propTypes: {
        ^^^^^^^^^ propTypes of React component
   Property `arr` is incompatible:
-     13: var fail_not_array = <Example arr={2} />
+     14: var fail_not_array = <Example arr={2} />
                                             ^ number. This type is incompatible with
-      6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired
+      6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
 
-proptype_arrayOf.js:14
- 14: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
+proptype_arrayOf.js:15
+ 15: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
- 14: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
+ 15: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
                                                  ^^^^^ string. This type is incompatible with
-  6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired
+  6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
                                       ^^^^^^^^^^^^^^^^^^^^^^ number
+
+proptype_arrayOf.js:20
+ 20: var todo_required = <Example arr={[null]} />
+                         ^^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
+ 20: var todo_required = <Example arr={[null]} />
+                                        ^^^^ null. This type is incompatible with
+  6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
+                                      ^^^^^^^^^^^^^^^^^^^^^^ number
+
+proptype_arrayOf.js:30
+ 30: (<OptionalExample arr={[""]} />); // error: string ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `OptionalExample`
+ 30: (<OptionalExample arr={[""]} />); // error: string ~> number
+                             ^^ string. This type is incompatible with
+ 24:     arr: React.PropTypes.arrayOf(React.PropTypes.number),
+                                      ^^^^^^^^^^^^^^^^^^^^^^ number
+
+proptype_arrayOf.js:38
+ 38: (<AnyExample arr={0} />); // error: still needs to be an array
+      ^^^^^^^^^^^^^^^^^^^^^^ props of React element `AnyExample`. This type is incompatible with
+ 33:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `arr` is incompatible:
+     38: (<AnyExample arr={0} />); // error: still needs to be an array
+                           ^ number. This type is incompatible with
+     34:     arr: React.PropTypes.arrayOf((0:any)), // OK
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+
+proptype_arrayOf.js:43
+ 43:     arr: React.PropTypes.arrayOf(0), // error: number not a prop type
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `arrayOf`. Expected a React PropType instead of
+ 43:     arr: React.PropTypes.arrayOf(0), // error: number not a prop type
+                                      ^ number
+
+proptype_custom_validator.js:8
+  8:       (propName: empty); // error: propName is a string
+            ^^^^^^^^ string. This type is incompatible with
+  8:       (propName: empty); // error: propName is a string
+                      ^^^^^ empty
+
+proptype_custom_validator.js:9
+  9:       (componentName: empty); // error: componentName is a string
+            ^^^^^^^^^^^^^ string. This type is incompatible with
+  9:       (componentName: empty); // error: componentName is a string
+                           ^^^^^ empty
+
+proptype_custom_validator.js:10
+ 10:       (href: empty); // error: href is an optional string
+            ^^^^ string. This type is incompatible with
+ 10:       (href: empty); // error: href is an optional string
+                  ^^^^^ empty
+
+proptype_custom_validator.js:10
+ 10:       (href: empty); // error: href is an optional string
+            ^^^^ undefined. This type is incompatible with
+ 10:       (href: empty); // error: href is an optional string
+                  ^^^^^ empty
+
+proptype_custom_validator.js:11
+ 11:       return (0: mixed); // error: should return ?Error
+                      ^^^^^ mixed. This type is incompatible with
+132:   href?: string) => ?Error;
+                          ^^^^^ Error. See lib: <BUILTINS>/react.js:132
 
 proptype_func.js:14
  14: var fail_mistyped = <Example func={2} />
@@ -52,6 +123,12 @@ proptype_func.js:14
                                             ^ number. This type is incompatible with
       6:     func: React.PropTypes.func.isRequired
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+
+proptype_incompatible.js:4
+  4:   propTypes: {
+       ^^^^^^^^^ propTypes of React component. Expected a React PropType instead of
+  5:     foo: 0, // error: `0` is not a prop type
+              ^ number
 
 proptype_instanceOf.js:14
  14: (<Example x={new A} />); // error: A ~> B
@@ -87,58 +164,256 @@ proptype_object.js:13
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
 proptype_objectOf.js:13
- 13: var fail_not_object = <Example obj={2} />
+ 13: var fail_missing = <Example />
+                        ^^^^^^^^^^^ React element `Example`
+  5:   propTypes: {
+       ^^^^^^^^^ property `obj`. Property not found in
+ 13: var fail_missing = <Example />
+                        ^^^^^^^^^^^ props of React element `Example`
+
+proptype_objectOf.js:14
+ 14: var fail_not_object = <Example obj={2} />
                            ^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
   5:   propTypes: {
        ^^^^^^^^^ propTypes of React component
   Property `obj` is incompatible:
-     13: var fail_not_object = <Example obj={2} />
+     14: var fail_not_object = <Example obj={2} />
                                              ^ number. This type is incompatible with
       6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
-proptype_objectOf.js:14
- 14: var fail_mistyped_props = <Example obj={{foo: "foo"}} />
+proptype_objectOf.js:15
+ 15: var fail_mistyped_props = <Example obj={{foo: "foo"}} />
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
   5:   propTypes: {
        ^^^^^^^^^ propTypes of React component
   Property `obj` is incompatible:
-     14: var fail_mistyped_props = <Example obj={{foo: "foo"}} />
+     15: var fail_mistyped_props = <Example obj={{foo: "foo"}} />
                                                        ^^^^^ string. This type is incompatible with
       6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
                                            ^^^^^^^^^^^^^^^^^^^^^^ number
 
-proptype_oneOf.js:11
- 11: var ex2 = <Example literal="bar" />;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
- 11: var ex2 = <Example literal="bar" />;
-                                ^^^^^ string. Expected string literal `foo`, got `bar` instead
-  6:     literal: React.PropTypes.oneOf(["foo"]).isRequired
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string literal `foo`
+proptype_objectOf.js:20
+ 20: var todo_required = <Example obj={{p:null}} />
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+  5:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `obj` is incompatible:
+     20: var todo_required = <Example obj={{p:null}} />
+                                              ^^^^ null. This type is incompatible with
+      6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
+                                           ^^^^^^^^^^^^^^^^^^^^^^ number
+
+proptype_objectOf.js:30
+ 30: (<OptionalExample obj={{p:""}} />); // error: string ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `OptionalExample`. This type is incompatible with
+ 23:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `obj` is incompatible:
+     30: (<OptionalExample obj={{p:""}} />); // error: string ~> number
+                                   ^^ string. This type is incompatible with
+     24:     obj: React.PropTypes.objectOf(React.PropTypes.number),
+                                           ^^^^^^^^^^^^^^^^^^^^^^ number
+
+proptype_objectOf.js:38
+ 38: (<AnyExample obj={0} />); // error: still needs to be an object
+      ^^^^^^^^^^^^^^^^^^^^^^ props of React element `AnyExample`. This type is incompatible with
+ 33:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `obj` is incompatible:
+     38: (<AnyExample obj={0} />); // error: still needs to be an object
+                           ^ number. This type is incompatible with
+     34:     obj: React.PropTypes.objectOf((0:any)), // OK
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+
+proptype_objectOf.js:43
+ 43:     obj: React.PropTypes.objectOf(0), // error: number not a prop type
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `objectOf`. Expected a React PropType instead of
+ 43:     obj: React.PropTypes.objectOf(0), // error: number not a prop type
+                                       ^ number
+
+proptype_oneOf.js:14
+ 14: (<Example str="baz" />); // error: 'baz' not in enum
+      ^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+  5:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `str` is incompatible:
+     14: (<Example str="baz" />); // error: 'baz' not in enum
+                       ^^^^^ string. This type is incompatible with
+      6:     str: React.PropTypes.oneOf(["foo", "bar"]),
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string enum
+
+proptype_oneOf.js:17
+ 17: (<Example num={3} />); // error: 3 not in enum
+      ^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+  5:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `num` is incompatible:
+     17: (<Example num={3} />); // error: 3 not in enum
+                        ^ number. This type is incompatible with
+      7:     num: React.PropTypes.oneOf([0, 1, 2]),
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number enum
+
+proptype_oneOf.js:20
+ 20: (<Example bool={false} />); // error: false ~> true
+      ^^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
+ 20: (<Example bool={false} />); // error: false ~> true
+                     ^^^^^ boolean. Expected boolean literal `true`, got `false` instead
+  8:     bool: React.PropTypes.oneOf([true]),
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ boolean literal `true`
+
+proptype_oneOf.js:24
+ 24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
+      ^^^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
+ 24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
+                      ^^^^^ string. This type is incompatible with
+  9:     mixed: React.PropTypes.oneOf(["foo", 0, true]),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: string literal `foo` | number literal `0` | boolean literal `true`
+  Member 1:
+    9:     mixed: React.PropTypes.oneOf(["foo", 0, true]),
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string literal `foo`
+  Error:
+   24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
+                        ^^^^^ string. Expected string literal `foo`, got `baz` instead
+    9:     mixed: React.PropTypes.oneOf(["foo", 0, true]),
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string literal `foo`
+  Member 2:
+    9:     mixed: React.PropTypes.oneOf(["foo", 0, true]),
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `0`
+  Error:
+   24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
+                        ^^^^^ string. This type is incompatible with
+    9:     mixed: React.PropTypes.oneOf(["foo", 0, true]),
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `0`
+  Member 3:
+    9:     mixed: React.PropTypes.oneOf(["foo", 0, true]),
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ boolean literal `true`
+  Error:
+   24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
+                        ^^^^^ string. This type is incompatible with
+    9:     mixed: React.PropTypes.oneOf(["foo", 0, true]),
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ boolean literal `true`
+
+proptype_oneOf.js:32
+ 32: (<RequiredExample />); // error: `p` not found
+      ^^^^^^^^^^^^^^^^^^^ React element `RequiredExample`
+ 27:   propTypes: {
+       ^^^^^^^^^ property `p`. Property not found in
+ 32: (<RequiredExample />); // error: `p` not found
+      ^^^^^^^^^^^^^^^^^^^ props of React element `RequiredExample`
+
+proptype_oneOf.js:40
+ 40: (<EmptyExample nil={0} />); // number ~> empty
+      ^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `EmptyExample`. This type is incompatible with
+ 35:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `nil` is incompatible:
+     40: (<EmptyExample nil={0} />); // number ~> empty
+                             ^ number. This type is incompatible with
+     36:     nil: React.PropTypes.oneOf([]), // i.e., `empty`
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^ empty
+
+proptype_oneOf.js:76
+ 76:     p: React.PropTypes.oneOf(0), // error: expected array, got 0
+            ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `oneOf`. Expected an array instead of
+ 76:     p: React.PropTypes.oneOf(0), // error: expected array, got 0
+                                  ^ number
+
+proptype_oneOf.js:84
+ 84:     p: React.PropTypes.oneOf([{}]), // error: expected literal, got {}
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `oneOf`. Expected a literal type instead of
+ 84:     p: React.PropTypes.oneOf([{}]), // error: expected literal, got {}
+                                   ^^ object literal
 
 proptype_oneOfType.js:23
- 23: var fail_bool = <Example prop={true} />
+ 23: var fail_missing = <Example />;
+                        ^^^^^^^^^^^ React element `Example`
+  5:   propTypes: {
+       ^^^^^^^^^ property `prop`. Property not found in
+ 23: var fail_missing = <Example />;
+                        ^^^^^^^^^^^ props of React element `Example`
+
+proptype_oneOfType.js:24
+ 24: var fail_bool = <Example prop={true} />;
                      ^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
- 23: var fail_bool = <Example prop={true} />
+ 24: var fail_bool = <Example prop={true} />;
                                     ^^^^ boolean. This type is incompatible with
   6:     prop: React.PropTypes.oneOfType([
-               ^ union: number | string
+               ^ union: string | number
   Member 1:
-    8:       React.PropTypes.number
-             ^^^^^^^^^^^^^^^^^^^^^^ number
+    6:     prop: React.PropTypes.oneOfType([
+                 ^ string
   Error:
-   23: var fail_bool = <Example prop={true} />
+   24: var fail_bool = <Example prop={true} />;
                                       ^^^^ boolean. This type is incompatible with
-    8:       React.PropTypes.number
-             ^^^^^^^^^^^^^^^^^^^^^^ number
+    6:     prop: React.PropTypes.oneOfType([
+                 ^ string
   Member 2:
-    7:       React.PropTypes.string,
-             ^^^^^^^^^^^^^^^^^^^^^^ string
+    6:     prop: React.PropTypes.oneOfType([
+                 ^ number
   Error:
-   23: var fail_bool = <Example prop={true} />
+   24: var fail_bool = <Example prop={true} />;
                                       ^^^^ boolean. This type is incompatible with
-    7:       React.PropTypes.string,
-             ^^^^^^^^^^^^^^^^^^^^^^ string
+    6:     prop: React.PropTypes.oneOfType([
+                 ^ number
+
+proptype_oneOfType.js:29
+ 29: var todo_required = <Example prop={null} />;
+                         ^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
+ 29: var todo_required = <Example prop={null} />;
+                                        ^^^^ null. This type is incompatible with
+  6:     prop: React.PropTypes.oneOfType([
+               ^ union: string | number
+  Member 1:
+    6:     prop: React.PropTypes.oneOfType([
+                 ^ string
+  Error:
+   29: var todo_required = <Example prop={null} />;
+                                          ^^^^ null. This type is incompatible with
+    6:     prop: React.PropTypes.oneOfType([
+                 ^ string
+  Member 2:
+    6:     prop: React.PropTypes.oneOfType([
+                 ^ number
+  Error:
+   29: var todo_required = <Example prop={null} />;
+                                          ^^^^ null. This type is incompatible with
+    6:     prop: React.PropTypes.oneOfType([
+                 ^ number
+
+proptype_oneOfType.js:41
+ 41: (<OptionalExample p={0} />); // error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `OptionalExample`. This type is incompatible with
+ 32:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `p` is incompatible:
+     41: (<OptionalExample p={0} />); // error: number ~> string
+                              ^ number. This type is incompatible with
+     33:     p: React.PropTypes.oneOfType([
+                ^ string
+
+proptype_oneOfType.js:49
+ 49: (<EmptyExample nil={0} />); // number ~> empty
+      ^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `EmptyExample`. This type is incompatible with
+ 44:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `nil` is incompatible:
+     49: (<EmptyExample nil={0} />); // number ~> empty
+                             ^ number. This type is incompatible with
+     45:     nil: React.PropTypes.oneOfType([]), // i.e., `empty`
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ empty
+
+proptype_oneOfType.js:91
+ 91:     p: React.PropTypes.oneOfType(0), // error: expected array, got 0
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `oneOfType`. Expected an array instead of
+ 91:     p: React.PropTypes.oneOfType(0), // error: expected array, got 0
+                                      ^ number
+
+proptype_oneOfType.js:99
+ 99:     p: React.PropTypes.oneOfType([{}]), // error: expected prop type, got {}
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `oneOfType`. Expected a React PropType instead of
+ 99:     p: React.PropTypes.oneOfType([{}]), // error: expected prop type, got {}
+                                       ^^ object literal
 
 proptype_shape.js:20
  20:     (this.props.foo.baz: string);
@@ -151,6 +426,72 @@ proptype_shape.js:24
                         ^^^ property `baz`. Property not found in
  24:     this.props.foo.baz = 0;
          ^^^^^^^^^^^^^^ object type
+
+proptypes_builtins.js:3
+  3: type NoFun = mixed => empty;
+                  ^^^^^ mixed. This type is incompatible with the expected param type of
+139: type React$PropTypes$arrayOf = (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                                  ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:139
+
+proptypes_builtins.js:3
+  3: type NoFun = mixed => empty;
+                  ^^^^^ mixed. This type is incompatible with the expected param type of
+141: type React$PropTypes$objectOf = (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                                   ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:141
+
+proptypes_builtins.js:3
+  3: type NoFun = mixed => empty;
+                  ^^^^^ mixed. This type is incompatible with the expected param type of
+142: type React$PropTypes$oneOf = (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+                                                   ^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:142
+
+proptypes_builtins.js:3
+  3: type NoFun = mixed => empty;
+                  ^^^^^ mixed. This type is incompatible with the expected param type of
+143: type React$PropTypes$oneOfType = (arrayOfTypeCheckers: Array<ReactPropsCheckType>) => ReactPropsChainableTypeChecker;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:143
+
+proptypes_builtins.js:3
+  3: type NoFun = mixed => empty;
+                  ^^^^^ mixed. This type is incompatible with the expected param type of
+144: type React$PropTypes$shape = (shapeTypes: { [key: string]: ReactPropsCheckType }) => ReactPropsChainableTypeChecker;
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:144
+
+proptypes_builtins.js:3
+  3: type NoFun = mixed => empty;
+                           ^^^^^ empty. This type is incompatible with
+139: type React$PropTypes$arrayOf = (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:139
+
+proptypes_builtins.js:3
+  3: type NoFun = mixed => empty;
+                           ^^^^^ empty. This type is incompatible with
+140: type React$PropTypes$instanceOf = (expectedClass: any) => ReactPropsChainableTypeChecker;
+                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:140
+
+proptypes_builtins.js:3
+  3: type NoFun = mixed => empty;
+                           ^^^^^ empty. This type is incompatible with
+141: type React$PropTypes$objectOf = (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:141
+
+proptypes_builtins.js:3
+  3: type NoFun = mixed => empty;
+                           ^^^^^ empty. This type is incompatible with
+142: type React$PropTypes$oneOf = (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:142
+
+proptypes_builtins.js:3
+  3: type NoFun = mixed => empty;
+                           ^^^^^ empty. This type is incompatible with
+143: type React$PropTypes$oneOfType = (arrayOfTypeCheckers: Array<ReactPropsCheckType>) => ReactPropsChainableTypeChecker;
+                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:143
+
+proptypes_builtins.js:3
+  3: type NoFun = mixed => empty;
+                           ^^^^^ empty. This type is incompatible with
+144: type React$PropTypes$shape = (shapeTypes: { [key: string]: ReactPropsCheckType }) => ReactPropsChainableTypeChecker;
+                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:144
 
 proptypes_sealed.js:18
  18:     (this.props.baz: string);
@@ -165,4 +506,4 @@ proptypes_sealed.js:22
          ^^^^^^^^^^ propTypes of React component
 
 
-Found 17 errors
+Found 57 errors
