@@ -1033,7 +1033,7 @@ and type_token env = parse
                          let start = loc_of_lexbuf env lexbuf in
                          let buf = Buffer.create 127 in
                          let env, _end = line_comment env buf lexbuf in
-                         let env = save_comment env start _end buf true in
+                         let env = save_comment env start _end buf false in
                          type_token env lexbuf
                        }
   | ("'"|'"') as quote {
@@ -1300,7 +1300,7 @@ and regexp env = parse
   | "//"              { let start = loc_of_lexbuf env lexbuf in
                         let buf = Buffer.create 127 in
                         let env, _end = line_comment env buf lexbuf in
-                        let env = save_comment env start _end buf true in
+                        let env = save_comment env start _end buf false in
                         regexp env lexbuf }
   | "/*"              { let start = loc_of_lexbuf env lexbuf in
                         let buf = Buffer.create 127 in
@@ -1359,7 +1359,7 @@ and jsx_tag env = parse
   | "//"              { let start = loc_of_lexbuf env lexbuf in
                         let buf = Buffer.create 127 in
                         let env, _end = line_comment env buf lexbuf in
-                        let env = save_comment env start _end buf true in
+                        let env = save_comment env start _end buf false in
                         jsx_tag env lexbuf }
   | "/*"              { let start = loc_of_lexbuf env lexbuf in
                         let buf = Buffer.create 127 in
@@ -1734,7 +1734,7 @@ and template_tail env = parse
   | "//"              { let start = loc_of_lexbuf env lexbuf in
                         let buf = Buffer.create 127 in
                         let env, _end = line_comment env buf lexbuf in
-                        let env = save_comment env start _end buf true in
+                        let env = save_comment env start _end buf false in
                         template_tail env lexbuf }
   | "/*"              { let start = loc_of_lexbuf env lexbuf in
                         let buf = Buffer.create 127 in
