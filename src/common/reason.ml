@@ -169,9 +169,11 @@ type reason_desc =
   | RReactStatics
   | RReactDefaultProps
   | RReactState
+  | RReactContext
   | RReactComponentProps
   | RReactElementProps of string
   | RReactPropTypes
+  | RReactContextTypes
   | RPropTypeArray
   | RPropTypeFunc
   | RPropTypeObject
@@ -474,9 +476,11 @@ let rec string_of_desc = function
   | RReactStatics -> "statics of React class"
   | RReactDefaultProps -> "default props of React component"
   | RReactState -> "state of React component"
+  | RReactContext -> "inherited context of React component"
   | RReactComponentProps -> "props of React component"
   | RReactElementProps x -> spf "props of React element `%s`" x
   | RReactPropTypes -> "propTypes of React component"
+  | RReactContextTypes -> "contextTypes of React component"
   | RPropTypeArray -> "array"
   | RPropTypeFunc -> "func"
   | RPropTypeObject -> "object"
