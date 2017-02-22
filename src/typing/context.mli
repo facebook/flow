@@ -30,6 +30,7 @@ type metadata = {
   suppress_comments: Str.regexp list;
   suppress_types: SSet.t;
   verbose: Verbose.t option;
+  weak: bool;
   max_workers: int;
   jsx: (string * Spider_monkey_ast.Expression.t) option;
 }
@@ -67,6 +68,7 @@ val import_stmts: t -> Spider_monkey_ast.Statement.ImportDeclaration.t list
 val imported_ts: t -> Type.t SMap.t
 val is_checked: t -> bool
 val is_verbose: t -> bool
+val is_weak: t -> bool
 val max_trace_depth: t -> int
 val module_kind: t -> module_kind
 val module_map: t -> Type.t SMap.t

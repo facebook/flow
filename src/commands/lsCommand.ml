@@ -156,6 +156,7 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_debug = false;
     opt_verbose = None;
     opt_all = false;
+    opt_weak = false;
     opt_traces = 0;
     opt_json = false;
     opt_quiet = false;

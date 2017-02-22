@@ -68,6 +68,7 @@ type t = {
   opt_temp_dir: string;
   opt_traces : int;
   opt_verbose : Verbose.t option;
+  opt_weak : bool;
   opt_shm_global_size: int;
   opt_shm_heap_size: int;
   opt_shm_dirs: string list;
@@ -140,3 +141,4 @@ let shm_dep_table_pow opts = opts.opt_shm_dep_table_pow
 let shm_hash_table_pow opts = opts.opt_shm_hash_table_pow
 let shm_log_level opts = opts.opt_shm_log_level
 let verbose opts = opts.opt_verbose
+let weak_by_default opts = opts.opt_weak

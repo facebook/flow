@@ -31,6 +31,7 @@ type metadata = {
   suppress_comments: Str.regexp list;
   suppress_types: SSet.t;
   verbose: Verbose.t option;
+  weak: bool;
   max_workers: int;
   jsx: (string * Spider_monkey_ast.Expression.t) option;
 }
@@ -125,6 +126,7 @@ let metadata_of_options options = {
   suppress_comments = Options.suppress_comments options;
   suppress_types = Options.suppress_types options;
   verbose = Options.verbose options;
+  weak = Options.weak_by_default options;
   max_workers = Options.max_workers options;
   jsx = None;
 }
@@ -197,6 +199,7 @@ let import_stmts cx = cx.import_stmts
 let imported_ts cx = cx.imported_ts
 let is_checked cx = cx.metadata.checked
 let is_verbose cx = cx.metadata.verbose <> None
+let is_weak cx = cx.metadata.weak
 let max_trace_depth cx = cx.metadata.max_trace_depth
 let module_kind cx = cx.module_kind
 let module_map cx = cx.modulemap

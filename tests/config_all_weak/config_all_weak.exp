@@ -1,0 +1,8 @@
+no_at_flow.js:3
+  3: x.length;
+       ^^^^^^ property `length`. Property cannot be accessed on possibly undefined value
+  3: x.length;
+     ^ uninitialized variable
+
+
+Found 1 error

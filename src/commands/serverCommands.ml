@@ -39,6 +39,8 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Print debug info during typecheck"
     |> flag "--all" no_arg
         ~doc:"Typecheck all files, not just @flow"
+    |> flag "--weak" no_arg
+        ~doc:"Typecheck with weak inference, assuming dynamic types by default"
     |> flag "--traces" (optional int)
         ~doc:"Outline an error path up to a specified level"
     |> flag "--lib" (optional string)
@@ -174,6 +176,7 @@ module OptionParser(Config : CONFIG) = struct
       wait
       debug
       all
+      weak
       traces
       lib
       no_flowlib
@@ -265,6 +268,7 @@ module OptionParser(Config : CONFIG) = struct
     | None -> FlowConfig.(flowconfig.options.Opts.max_workers)
     in
     let all = all || FlowConfig.(flowconfig.options.Opts.all) in
+    let weak = weak || FlowConfig.(flowconfig.options.Opts.weak) in
     let opt_max_workers = min opt_max_workers Sys_utils.nbr_procs in
 
     let options = { Options.
@@ -278,6 +282,7 @@ module OptionParser(Config : CONFIG) = struct
       opt_debug = debug;
       opt_verbose = verbose;
       opt_all = all;
+      opt_weak = weak;
       opt_traces;
       opt_json = json;
       opt_quiet = quiet || json;
