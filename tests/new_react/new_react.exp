@@ -85,7 +85,7 @@ classes.js:81
  81: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ React element `FooLegacy`
  48:   propTypes: {
-       ^^^^^^^^^ property `x`. Property not found in
+                  ^ property `x`. Property not found in
  81: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ props of React element `FooLegacy`
 
@@ -148,7 +148,7 @@ new_react.js:29
  29: var element = <C x = {0}/>;
                    ^^^^^^^^^^^^ props of React element `C`. This type is incompatible with
   5:     propTypes: {
-         ^^^^^^^^^ propTypes of React component
+                    ^ propTypes of React component
   Property `x` is incompatible:
      29: var element = <C x = {0}/>;
                                ^ number. This type is incompatible with
@@ -159,7 +159,7 @@ new_react.js:30
  30: var element_ = <C/>;
                     ^^^^ React element `C`
   5:     propTypes: {
-         ^^^^^^^^^ property `x`. Property not found in
+                    ^ property `x`. Property not found in
  30: var element_ = <C/>;
                     ^^^^ props of React element `C`
 
@@ -217,7 +217,7 @@ props.js:20
  20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `TestProps`
  25:     propTypes: { w: React.PropTypes.string.isRequired }
-         ^^^^^^^^^ property `w`. Property not found in
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `w`. Property not found in
  20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
 
@@ -225,7 +225,7 @@ props.js:20
  20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`. This type is incompatible with
   4:     propTypes: {
-         ^^^^^^^^^ propTypes of React component
+                    ^ propTypes of React component
   Property `z` is incompatible:
      20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                                                          ^^^^^ boolean. This type is incompatible with
@@ -258,7 +258,7 @@ props2.js:15
  15:         return <C {...this.state} foo = {0} />;
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `C`. This type is incompatible with
   3:     propTypes: {
-         ^^^^^^^^^ propTypes of React component
+                    ^ propTypes of React component
   Property `bar` is incompatible:
       9:     getInitialState: function(): { bar: number } {
                                                  ^^^^^^ number. This type is incompatible with
@@ -269,7 +269,7 @@ props2.js:15
  15:         return <C {...this.state} foo = {0} />;
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `C`. This type is incompatible with
   3:     propTypes: {
-         ^^^^^^^^^ propTypes of React component
+                    ^ propTypes of React component
   Property `foo` is incompatible:
      15:         return <C {...this.state} foo = {0} />;
                                                   ^ number. This type is incompatible with

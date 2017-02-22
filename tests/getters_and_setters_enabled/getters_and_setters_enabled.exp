@@ -194,7 +194,7 @@ object_type.js:52
 
 react.js:8
   8:   propTypes: {
-       ^^^^^^^^^ property `a`. Property not found in
+                  ^ property `a`. Property not found in
  15: (<Example />); // error: property `a` not found
       ^^^^^^^^^^^ props of React element `Example`
 
@@ -202,7 +202,7 @@ react.js:17
  17: (<Example a="bad" />); // error: number ~> string
       ^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
   8:   propTypes: {
-       ^^^^^^^^^ propTypes of React component
+                  ^ propTypes of React component
   Property `a` is incompatible:
      17: (<Example a="bad" />); // error: number ~> string
                      ^^^^^ string. This type is incompatible with
@@ -213,7 +213,7 @@ react.js:18
  18: (<Example a={0} c={0} />); // error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
   8:   propTypes: {
-       ^^^^^^^^^ propTypes of React component
+                  ^ propTypes of React component
   Property `c` is incompatible:
      18: (<Example a={0} c={0} />); // error: number ~> string
                             ^ number. This type is incompatible with

@@ -3787,11 +3787,11 @@ and react_create_class cx loc class_props = Ast.Expression.(
 
       (* propTypes *)
       | Property (_, { Property.
-          key = Property.Identifier (nloc, "propTypes");
+          key = Property.Identifier (_, "propTypes");
           value = Property.Init value;
           _ }) ->
         let t = expression cx value in
-        let reason = mk_reason RReactPropTypes nloc in
+        let reason = replace_reason_const RReactPropTypes (reason_of_t t) in
         let props_tvar = Flow.mk_tvar cx (derivable_reason reason) in
         let override_props = Flow.tvar_with_constraint cx
           (BecomeT (reason, props_tvar)) in
