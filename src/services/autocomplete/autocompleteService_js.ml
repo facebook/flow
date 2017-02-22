@@ -136,7 +136,7 @@ let autocomplete_member
   (* Resolve primitive types to their internal class type. We do this to allow
      autocompletion on these too. *)
   let this_t = resolve_builtin_class cx this_t in
-  let result = Autocomplete.extract_members cx this_t in
+  let result = Members.extract cx this_t in
 
   let open Hh_json in
 
@@ -149,7 +149,7 @@ let autocomplete_member
     "docblock", Docblock.json_of_docblock docblock;
   ] in
 
-  let result_str, t = Autocomplete.(match result with
+  let result_str, t = Members.(match result with
     | Success _ -> "SUCCESS", this
     | SuccessModule _ -> "SUCCESS", this
     | FailureMaybeType -> "FAILURE_NULLABLE", this
@@ -165,7 +165,7 @@ let autocomplete_member
     ~json_data
     ~profiling;
 
-  match Autocomplete.command_result_of_member_result result with
+  match Members.to_command_result result with
   | Err error -> Err error
   | OK result_map ->
     OK (

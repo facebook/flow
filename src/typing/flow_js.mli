@@ -139,16 +139,16 @@ val resolve_type: Context.t -> Type.t -> Type.t
 val possible_types: Context.t -> Constraint.ident -> Type.t list
 val possible_types_of_type: Context.t -> Type.t -> Type.t list
 
-module Autocomplete : sig
-  type member_result =
+module Members : sig
+  type t =
     | Success of Type.t SMap.t
     | SuccessModule of Type.t SMap.t * (Type.t option)
     | FailureMaybeType
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
-  val command_result_of_member_result: member_result ->
+  val to_command_result: t ->
     (Type.t SMap.t, string) Utils_js.ok_or_err
 
-  val extract_members: Context.t -> Type.t -> member_result
+  val extract: Context.t -> Type.t -> t
 end

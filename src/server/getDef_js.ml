@@ -62,9 +62,9 @@ let getdef_get_result profiling client_logging_context ~options cx state =
   | Some Gdloc loc -> loc
   | Some Gdmem (name, this) ->
       let this_t = Flow_js.resolve_type cx this in
-      let member_result = Flow_js.Autocomplete.extract_members cx this_t in
+      let member_result = Flow_js.Members.extract cx this_t in
 
-      let result_str, t = Flow_js.Autocomplete.(match member_result with
+      let result_str, t = Flow_js.Members.(match member_result with
         | Success _ -> "SUCCESS", this
         | SuccessModule _ -> "SUCCESS", this
         | FailureMaybeType -> "FAILURE_NULLABLE", this
@@ -81,8 +81,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
         ~json_data
         ~profiling;
 
-      let command_result =
-        Flow_js.Autocomplete.command_result_of_member_result member_result in
+      let command_result = Flow_js.Members.to_command_result member_result in
       begin match command_result with
       | Err _ -> Loc.none
       | OK result_map ->
