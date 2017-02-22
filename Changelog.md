@@ -1,3 +1,23 @@
+###v0.40.0
+
+Notable bug fixes:
+* Fixed an edge case when moving .flow files around in a haste project
+* Fixed bug which allowed you to add extra properties to exact objects
+* Fixed pretty printing of methods in type-at-pos and gen-flow-files
+* Fixed the @jsx pragma support's handling of trimming whitespace and filtering empty children. It now matches the behavior of the babel transform
+* Fixed some merge_strict_job exceptions
+* Fixed bug where Flow would ask for annotations in the object passed to `React.createClass()` even when they were not needed.
+* Fix so now you can use `this` and `super` in class method parameter defaults.
+* Optimization around union types
+
+Parser:
+* Fixed a bug where line comments in certain positions were parsed as block comments
+
+Misc:
+* Lots of updates to the builtin flow libs! Many thanks to all our contributors!
+* Some tweaks to error messages to make them easier to understand.
+* We are NOT removing weak mode in this release. See the discussion on [#3316](https://github.com/facebook/flow/issues/3316)
+
 ###v0.39.0
 
 Likely to cause new Flow errors:
@@ -15,7 +35,7 @@ Notable bug fixes:
 * Fixed an issue where a return type on a class constructor wouldn't properly define the type of objects the class generates if the type was too complex
 * Fixed an issue where [Flow wasn't properly invalidating refinements after a `yield` expression](https://github.com/facebook/flow/issues/2778)
 * Fixed an issue where `Function.prototype.bind()` wasn't working properly on variables typed as "callable objects" in Flow
-* Fixed [some issues where `implements` could cause a `"Did not expect BoundT"` error](https://github.com/facebook/flow/issues/3243) 
+* Fixed [some issues where `implements` could cause a `"Did not expect BoundT"` error](https://github.com/facebook/flow/issues/3243)
 * Fixed an issue where [Flow would previously give a cryptic error if the `TERM` environment variable wasn't set](https://github.com/facebook/flow/pull/3305) (Thanks @SamirTalwar!)
 
 Parser:
