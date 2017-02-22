@@ -169,3 +169,6 @@ const L = React.createClass({
     return 0; // number ~> void
   },
 });
+
+React.createClass({}); // error: spec must be [x] exact and [ ] sealed
+React.createClass(({}: {})); // error: spec must be [ ] exact and [x] sealed

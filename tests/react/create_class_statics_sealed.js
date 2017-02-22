@@ -1,7 +1,7 @@
 import React from "react";
 
 // statics = None
-const A = React.createClass({});
+const A = React.createClass({ p: 0 });
 (A.bar: empty); // number ~> empty (inflow below)
 A.bar = 0;
 

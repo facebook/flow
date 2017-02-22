@@ -481,8 +481,7 @@ let run cx trace reason_op l u
       let props_t = match spec.prop_types with
       | None -> AnyObjT reason_op
       | Some (Unknown reason) -> AnyObjT reason
-      | Some (Known (reason, props, dict, flags)) ->
-        ignore flags; (* TODO *)
+      | Some (Known (reason, props, dict, _)) ->
         mk_object_with_map_proto cx reason props (ObjProtoT reason)
           ?dict ~sealed:true ~exact:false
       in
@@ -602,7 +601,14 @@ let run cx trace reason_op l u
 
     function
     | Spec stack' ->
-      (match coerce_object l with
+      let result = match coerce_object l with
+      | OK (reason, _, _, { exact; sealed; _ })
+        when not (exact && sealed_in_op reason_op sealed) ->
+        err_incompatible reason;
+        Err reason
+      | result -> result
+      in
+      (match result with
       | OK obj ->
         on_resolve_spec ((obj, empty_spec obj), stack')
       | Err reason ->

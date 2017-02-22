@@ -222,6 +222,18 @@ create_class.js:169
  39:   componentWillUnmount(): void;
                                ^^^^ undefined. See lib: <BUILTINS>/react.js:39
 
+create_class.js:173
+173: React.createClass({}); // error: spec must be [x] exact and [ ] sealed
+     ^^^^^^^^^^^^^^^^^^^^^ call of method `createClass`. Expected an exact object instead of
+173: React.createClass({}); // error: spec must be [x] exact and [ ] sealed
+                       ^^ object literal
+
+create_class.js:174
+174: React.createClass(({}: {})); // error: spec must be [ ] exact and [x] sealed
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createClass`. Expected an exact object instead of
+174: React.createClass(({}: {})); // error: spec must be [ ] exact and [x] sealed
+                            ^^ object type
+
 create_class_initial_state_sealed.js:9
   9:     (this.state.q: empty); // number ~> empty
           ^^^^^^^^^^^^ number. This type is incompatible with
@@ -275,8 +287,8 @@ create_class_initial_state_sealed.js:84
           ^^^^^^^^^^ object type
 
 create_class_statics_sealed.js:4
-  4: const A = React.createClass({});
-               ^^^^^^^^^^^^^^^^^^^^^ call of method `createClass`
+  4: const A = React.createClass({ p: 0 });
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createClass`
   5: (A.bar: empty); // number ~> empty (inflow below)
       ^^^^^ number. This type is incompatible with
   5: (A.bar: empty); // number ~> empty (inflow below)
@@ -880,4 +892,4 @@ proptypes_sealed.js:22
          ^^^^^^^^^^ propTypes of React component
 
 
-Found 116 errors
+Found 118 errors

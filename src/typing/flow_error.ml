@@ -1037,7 +1037,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       ) in
       let create_class = CreateClass.(function
       | Spec _ ->
-        "Expected an object instead of"
+        "Expected an exact object instead of"
       | Mixins _ ->
         "`mixins` should be a tuple instead of"
       | Statics _ ->
