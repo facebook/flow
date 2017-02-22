@@ -121,7 +121,6 @@ type reason_desc =
   | RReactStatics
   | RReactDefaultProps
   | RReactState
-  | RReactComponentProps
   | RReactElementProps of string
   | RReactPropTypes
 

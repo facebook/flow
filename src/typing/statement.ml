@@ -3760,7 +3760,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
   let state = ref (Flow.mk_object cx reason_state) in
 
   let props_reason =
-    replace_reason_const RReactComponentProps reason_component in
+    replace_reason_const RReactPropTypes reason_component in
   (* TODO - this probably should be the empty object AND we should enforce it *)
   let props = ref (AnyObjT props_reason) in
 
