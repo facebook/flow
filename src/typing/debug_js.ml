@@ -628,6 +628,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "returnType", _json_of_t json_cx t_out;
     ]
 
+  | ReactKitT (_, React.InstanceOf t_out) -> [
+      "returnType", _json_of_t json_cx t_out;
+    ]
+
   | ChoiceKitUseT (_, tool) -> [
       "tool", JSON_String (match tool with
       | FullyResolveType _ -> "fullyResolveType"
@@ -1541,6 +1545,8 @@ and dump_use_t_ (depth, tvars) cx t =
     function
       | CreateElement (config, tout) ->
         spf "CreateElement (%s, %s)" (kid config) (kid tout)
+      | InstanceOf (tout) ->
+        spf "InstanceOf (%s)" (kid tout)
   in
 
   if depth = 0 then string_of_use_ctor t

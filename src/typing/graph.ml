@@ -328,7 +328,7 @@ and parts_of_use_t cx = function
 | ObjTestT (_, d, t) -> ["default", Def d; "out", Def t]
 | OrT (_, r, out) -> ["right", Def r; "out", Def out]
 | PredicateT (_, out) -> ["out", Def out]
-| ReactKitT (_, React.CreateElement (t, out)) -> ["t", Def t; "out", Def out]
+| ReactKitT (_, tool) -> parts_of_react_kit tool
 | RefineT (_, _, t) -> ["t", Def t]
 | ReposLowerT (_, u) -> ["upper", Use u]
 | ReposUseT (_, _, l) ->  ["lower", Def l]
@@ -389,6 +389,12 @@ and parts_of_inter_preprocess_tool = function
   ["t", Def t; "it", Def it; "out", Def out]
 | PropExistsTest (_, _, it, out) ->
   ["it", Def it; "out", Def out]
+
+and parts_of_react_kit =
+  let open React in
+  function
+  | CreateElement (t, out) -> ["t", Def t; "out", Def out]
+  | InstanceOf (out) -> ["out", Def out]
 
 and add_bounds cx id { lower; upper; lowertvars; uppertvars } (ts, ns, es) =
   (* NOTE: filtering out non-immediate LB/UBs for readability, but this

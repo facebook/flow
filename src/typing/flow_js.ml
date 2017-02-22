@@ -3289,6 +3289,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let inst = instantiate_poly_default_args
             cx trace ~reason_op ~reason_tapp (ids, t) in
           rec_flow cx trace (inst, u)
+      (* Special case for React.PropTypes.instanceOf arguments, which are an
+         exception to type arg arity strictness, because it's not possible to
+         provide args and we need to interpret the value as a type. *)
+      | ReactKitT (reason_op, (React.InstanceOf _ as tool)) ->
+        let l = instantiate_poly_default_args cx trace
+          ~reason_op ~reason_tapp (ids, t) in
+        react_kit cx trace reason_op l tool
       (* Calls to polymorphic functions may cause non-termination, e.g. when the
          results of the calls feed back as subtle variations of the original
          arguments. This is similar to how we may have non-termination with
@@ -3467,7 +3474,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ignore (extract_non_spread cx ~trace arg1);
         ignore (extract_non_spread cx ~trace arg2))
 
-    | _, ReactKitT (reason_op, (React.CreateElement _ as tool)) ->
+    | _, ReactKitT (reason_op, tool) ->
       react_kit cx trace reason_op l tool
 
     (* Facebookisms are special Facebook-specific functions that are not
@@ -9605,8 +9612,13 @@ and react_kit cx trace reason_op l u =
     )
   in
 
+  let instance_of tout =
+    rec_flow_t cx trace (l, TypeT (reason_op, tout))
+  in
+
   match u with
   | CreateElement (config, tout) -> create_element config tout
+  | InstanceOf tout -> instance_of tout
 
 (************* end of slab **************************************************)
 

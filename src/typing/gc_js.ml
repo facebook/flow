@@ -266,9 +266,7 @@ and gc_use cx state = function
   | ObjTestT (_, t1, t2) -> gc cx state t1; gc cx state t2
   | OrT (_, t1, t2) -> gc cx state t1; gc cx state t2
   | PredicateT (pred, t) -> gc_pred cx state pred; gc cx state t
-  | ReactKitT (_, React.CreateElement (t, t_out)) ->
-      gc cx state t;
-      gc cx state t_out
+  | ReactKitT (_, tool) -> gc_react_kit cx state tool
   | RefineT (_, pred, t) -> gc_pred cx state pred; gc cx state t
   | ReposLowerT (_, u) -> gc_use cx state u
   | ReposUseT (_, _, t) -> gc cx state t
@@ -440,6 +438,15 @@ and gc_spread_resolve cx state = function
 | ResolveSpreadsToCallT (fct, tin) ->
   gc_funcalltype cx state fct;
   gc cx state tin
+
+and gc_react_kit cx state =
+  let open React in
+  function
+  | CreateElement (t, t_out) ->
+      gc cx state t;
+      gc cx state t_out
+  | InstanceOf t_out ->
+      gc cx state t_out
 
 (* Keep a reachable type variable around. *)
 let live cx state id =

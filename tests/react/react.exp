@@ -53,6 +53,28 @@ proptype_func.js:14
       6:     func: React.PropTypes.func.isRequired
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
 
+proptype_instanceOf.js:14
+ 14: (<Example x={new A} />); // error: A ~> B
+      ^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+  9:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `x` is incompatible:
+     14: (<Example x={new A} />); // error: A ~> B
+                      ^^^^^ A. This type is incompatible with
+     10:     x: React.PropTypes.instanceOf(B),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B
+
+proptype_instanceOf.js:17
+ 17: (<Example x="wrong" />); // error: string ~> B
+      ^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+  9:   propTypes: {
+       ^^^^^^^^^ propTypes of React component
+  Property `x` is incompatible:
+     17: (<Example x="wrong" />); // error: string ~> B
+                     ^^^^^^^ string. This type is incompatible with
+     10:     x: React.PropTypes.instanceOf(B),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B
+
 proptype_object.js:13
  13: var fail_mistyped = <Example object={2} />
                          ^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
@@ -119,4 +141,4 @@ proptype_oneOfType.js:23
              ^^^^^^^^^^^^^^^^^^^^^^ string
 
 
-Found 11 errors
+Found 13 errors

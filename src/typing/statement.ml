@@ -3842,7 +3842,9 @@ and mk_proptype cx = Ast.Expression.(function
     } ->
       let t = expression cx e in
       let reason = repos_reason vloc (reason_of_t t) in
-      Flow.mk_instance cx ~for_type:false reason t
+      AnnotT Flow.(mk_tvar_where cx reason (fun tout ->
+        flow cx (t, ReactKitT (reason, React.InstanceOf tout))
+      ))
 
   | vloc, Call { Call.
       callee = _, Member { Member.

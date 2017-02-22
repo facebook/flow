@@ -1377,6 +1377,7 @@ end)
 and React : sig
   type tool =
   | CreateElement of TypeTerm.t * TypeTerm.t_out
+  | InstanceOf of TypeTerm.t_out
 end = React
 
 include TypeTerm
