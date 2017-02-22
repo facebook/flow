@@ -245,11 +245,10 @@ let run cx trace reason_op l u
         | None ->
           let reason = replace_reason_const RObjectType reason_op in
           let proto = ObjProtoT (locationless_reason RObjectClassName) in
-          let _, props, dict, flags = shape in
+          let _, props, dict, _ = shape in
           let t = mk_object_with_map_proto cx reason props proto
             ?dict ~sealed:true ~exact:false
           in
-          ignore flags; (* TODO *)
           resolve t
         | Some (k, p) ->
           let todo = SMap.remove k todo in
@@ -263,6 +262,11 @@ let run cx trace reason_op l u
       (match tool with
       | ResolveObject ->
         (match coerce_object l with
+        (* TODO: If the resolved object is not exact and sealed, or if it does
+         * not have a dictionary -- that is, it may be wider in an unknown way,
+         * we should error and resolve to any. However, since all object spreads
+         * are currently unsealed, we must wait for precise spread support.
+         * Otherwise, we will cause too many spurious errors. *)
         | OK (reason, todo, dict, flags) ->
           let shape = reason, SMap.empty, None, flags in
           (match dict with
@@ -672,6 +676,11 @@ let run cx trace reason_op l u
       (match tool with
       | ResolveObject ->
         (match coerce_object l with
+        (* TODO: If the resolved object is not exact and sealed, or if it does
+         * not have a dictionary -- that is, it may be wider in an unknown way,
+         * we should error and resolve to any. However, since all object spreads
+         * are currently unsealed, we must wait for precise spread support.
+         * Otherwise, we will cause too many spurious errors. *)
         | OK (reason, todo, dict, flags) ->
           let prop_types = reason, SMap.empty, None, flags in
           (match dict with
