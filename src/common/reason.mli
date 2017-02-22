@@ -124,16 +124,6 @@ type reason_desc =
   | RReactComponentProps
   | RReactElementProps of string
   | RReactPropTypes
-  | RPropTypeArray
-  | RPropTypeFunc
-  | RPropTypeObject
-  | RPropTypeArrayOf
-  | RPropTypeInstanceOf
-  | RPropTypeObjectOf
-  | RPropTypeOneOf
-  | RPropTypeOneOfType
-  | RPropTypeShape
-  | RPropTypeFbt
 
 and reason_desc_function =
   | RAsync

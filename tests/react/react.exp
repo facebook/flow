@@ -32,7 +32,7 @@ proptype_arrayOf.js:13
      13: var fail_not_array = <Example arr={2} />
                                             ^ number. This type is incompatible with
       6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ arrayOf
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
 
 proptype_arrayOf.js:14
  14: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
@@ -51,7 +51,7 @@ proptype_func.js:14
      14: var fail_mistyped = <Example func={2} />
                                             ^ number. This type is incompatible with
       6:     func: React.PropTypes.func.isRequired
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ func
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
 
 proptype_object.js:13
  13: var fail_mistyped = <Example object={2} />
@@ -62,7 +62,7 @@ proptype_object.js:13
      13: var fail_mistyped = <Example object={2} />
                                               ^ number. This type is incompatible with
       6:     object: React.PropTypes.object.isRequired
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
 proptype_objectOf.js:13
  13: var fail_not_object = <Example obj={2} />
@@ -73,7 +73,7 @@ proptype_objectOf.js:13
      13: var fail_not_object = <Example obj={2} />
                                              ^ number. This type is incompatible with
       6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ objectOf
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
 proptype_objectOf.js:14
  14: var fail_mistyped_props = <Example obj={{foo: "foo"}} />

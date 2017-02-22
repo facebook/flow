@@ -136,16 +136,13 @@ let rec convert cx tparams_map = Ast.Type.(function
   ArrT (r, ArrayAT (elemt, None))
 
 | loc, StringLiteral { StringLiteral.value; _ }  ->
-  let reason = mk_reason (RStringLit value) loc in
-  mk_singleton_string reason value
+  mk_singleton_string loc value
 
 | loc, NumberLiteral { NumberLiteral.value; raw; _ }  ->
-  let reason = mk_reason (RNumberLit raw) loc in
-  mk_singleton_number reason value raw
+  mk_singleton_number loc value raw
 
 | loc, BooleanLiteral { BooleanLiteral.value; _ }  ->
-  let reason = mk_reason (RBooleanLit value) loc in
-  mk_singleton_boolean reason value
+  mk_singleton_boolean loc value
 
 (* TODO *)
 | loc, Generic { Generic.id = Generic.Identifier.Qualified (_,
@@ -687,26 +684,26 @@ and mk_type_annotation cx tparams_map reason = function
   mk_type cx tparams_map reason (Some typeAnnotation)
 
 (* Model a set of keys as the union of their singleton types. *)
-and mk_keys_type reason = function
-| [] -> EmptyT reason
-| [k] -> mk_singleton_string reason k
+and mk_keys_type loc = function
+| [] -> EmptyT (mk_reason REmpty loc)
+| [k] -> mk_singleton_string loc k
 | k0::k1::ks ->
-  let t0 = mk_singleton_string reason k0 in
-  let t1 = mk_singleton_string reason k1 in
-  let ts = List.map (mk_singleton_string reason) ks in
+  let t0 = mk_singleton_string loc k0 in
+  let t1 = mk_singleton_string loc k1 in
+  let ts = List.map (mk_singleton_string loc) ks in
   let rep = UnionRep.make t0 t1 ts in
-  UnionT (reason, rep)
+  UnionT (mk_reason RUnionType loc, rep)
 
-and mk_singleton_string reason key =
-  let reason = replace_reason_const (RStringLit key) reason in
+and mk_singleton_string loc key =
+  let reason = mk_reason (RStringLit key) loc in
   SingletonStrT (reason, key)
 
-and mk_singleton_number reason num raw =
-  let reason = replace_reason_const (RNumberLit raw) reason in
+and mk_singleton_number loc num raw =
+  let reason = mk_reason (RNumberLit raw) loc in
   SingletonNumT (reason, (num, raw))
 
-and mk_singleton_boolean reason b =
-  let reason = replace_reason_const (RBooleanLit b) reason in
+and mk_singleton_boolean loc b =
+  let reason = mk_reason (RBooleanLit b) loc in
   SingletonBoolT (reason, b)
 
 (* Given the type of expression C and type arguments T1...Tn, return the type of

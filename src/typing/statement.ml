@@ -3787,7 +3787,7 @@ and mk_proptype cx = Ast.Expression.(function
       _
     } ->
       ArrT (
-        mk_reason RPropTypeArray vloc,
+        mk_reason RArrayType vloc,
         ArrayAT (AnyT.at vloc, None)
       )
 
@@ -3796,14 +3796,14 @@ and mk_proptype cx = Ast.Expression.(function
         (_, "func");
       _
     } ->
-      AnyFunT (mk_reason RPropTypeFunc vloc)
+      AnyFunT (mk_reason RFunctionType vloc)
 
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
         (_, "object");
       _
     } ->
-      AnyObjT (mk_reason RPropTypeObject vloc)
+      AnyObjT (mk_reason RObjectType vloc)
 
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
@@ -3828,7 +3828,7 @@ and mk_proptype cx = Ast.Expression.(function
       arguments = [Expression e];
     } ->
       ArrT (
-        mk_reason RPropTypeArrayOf vloc,
+        mk_reason RArrayType vloc,
         ArrayAT (mk_proptype cx e, None)
       )
 
@@ -3840,8 +3840,9 @@ and mk_proptype cx = Ast.Expression.(function
       };
       arguments = [Expression e];
     } ->
-      Flow.mk_instance cx ~for_type:false (mk_reason RPropTypeInstanceOf vloc)
-        (expression cx e)
+      let t = expression cx e in
+      let reason = repos_reason vloc (reason_of_t t) in
+      Flow.mk_instance cx ~for_type:false reason t
 
   | vloc, Call { Call.
       callee = _, Member { Member.
@@ -3864,7 +3865,7 @@ and mk_proptype cx = Ast.Expression.(function
       } in
       let pmap = Context.make_property_map cx SMap.empty in
       let proto = ObjProtoT (locationless_reason RObjectClassName) in
-      let reason = mk_reason RPropTypeObjectOf vloc in
+      let reason = mk_reason RObjectType vloc in
       ObjT (reason, Flow.mk_objecttype ~flags dict pmap proto)
 
   | vloc, Call { Call.
@@ -3883,10 +3884,9 @@ and mk_proptype cx = Ast.Expression.(function
         | [] -> Some acc
         | _ -> None
       in
-      let reason = mk_reason RPropTypeOneOf vloc in
       (match string_literals [] elements with
-      | Some keys -> Anno.mk_keys_type reason keys
-      | None -> AnyT reason)
+      | Some keys -> Anno.mk_keys_type vloc keys
+      | None -> AnyT.at vloc)
 
   | vloc, Call { Call.
       callee = _, Member { Member.
@@ -3901,11 +3901,12 @@ and mk_proptype cx = Ast.Expression.(function
             proptype_elements (mk_proptype cx e :: acc) tl
         | _ -> acc
       in
-      let reason = mk_reason RPropTypeOneOfType vloc in
       (match proptype_elements [] elements with
-      | [] -> EmptyT reason
+      | [] -> EmptyT (mk_reason REmpty vloc)
       | [t] -> t
-      | t0::t1::ts -> UnionT (reason, UnionRep.make t0 t1 ts))
+      | t0::t1::ts ->
+        let reason = mk_reason RUnionType vloc in
+        UnionT (reason, UnionRep.make t0 t1 ts))
 
   | vloc, Call { Call.
       callee = _, Member { Member.
@@ -3915,7 +3916,7 @@ and mk_proptype cx = Ast.Expression.(function
       };
       arguments = [Expression (_, Object { Object.properties })];
     } ->
-      let reason = mk_reason RPropTypeShape vloc in
+      let reason = mk_reason RObjectType vloc in
       let amap, omap, dict = mk_proptypes cx properties in
       let omap = Properties.map_t (fun t -> OptionalT t) omap in
       let map = SMap.union amap omap in
@@ -3931,7 +3932,7 @@ and mk_proptype cx = Ast.Expression.(function
       _
     } ->
       (* We assume that there is a Fbt type defined in the global scope. *)
-      Flow.get_builtin_type cx (mk_reason RPropTypeFbt vloc) "Fbt"
+      Flow.get_builtin_type cx (mk_reason (RCustom "Fbt") vloc) "Fbt"
 
   | vloc, _ -> AnyT.at vloc
 )

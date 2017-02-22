@@ -172,16 +172,6 @@ type reason_desc =
   | RReactComponentProps
   | RReactElementProps of string
   | RReactPropTypes
-  | RPropTypeArray
-  | RPropTypeFunc
-  | RPropTypeObject
-  | RPropTypeArrayOf
-  | RPropTypeInstanceOf
-  | RPropTypeObjectOf
-  | RPropTypeOneOf
-  | RPropTypeOneOfType
-  | RPropTypeShape
-  | RPropTypeFbt
 
 and reason_desc_function =
   | RAsync
@@ -477,16 +467,6 @@ let rec string_of_desc = function
   | RReactComponentProps -> "props of React component"
   | RReactElementProps x -> spf "props of React element `%s`" x
   | RReactPropTypes -> "propTypes of React component"
-  | RPropTypeArray -> "array"
-  | RPropTypeFunc -> "func"
-  | RPropTypeObject -> "object"
-  | RPropTypeArrayOf -> "arrayOf"
-  | RPropTypeInstanceOf -> "instanceOf"
-  | RPropTypeObjectOf -> "objectOf"
-  | RPropTypeOneOf -> "oneOf"
-  | RPropTypeOneOfType -> "oneOfType"
-  | RPropTypeShape -> "shape"
-  | RPropTypeFbt -> "Fbd"
 
 let string_of_reason ?(strip_root=None) r =
   let spos = string_of_loc ~strip_root (loc_of_reason r) in
