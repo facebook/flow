@@ -28,7 +28,7 @@ let run cx trace reason_op l u
   ~(string_key: string -> reason -> Type.t)
   ~(mk_tvar: Context.t -> reason -> Type.t)
   ~(eval_destructor: Context.t -> trace:Trace.t -> reason -> t -> Type.destructor -> int -> Type.t)
-  ~(dummy_prototype: Type.t)
+  ~(sealed_in_op: reason -> Type.sealtype -> bool)
   =
 
   let err_incompatible reason =
@@ -44,8 +44,8 @@ let run cx trace reason_op l u
      erroring. This is best-effort, after all. *)
 
   let coerce_object = function
-    | ObjT (reason, { props_tmap; dict_t; _ }) ->
-      OK (reason, Context.find_props cx props_tmap, dict_t)
+    | ObjT (reason, { props_tmap; dict_t; flags; _ }) ->
+      OK (reason, Context.find_props cx props_tmap, dict_t, flags)
     | AnyT reason | AnyObjT reason ->
       Err reason
     | _ ->
@@ -233,22 +233,23 @@ let run cx trace reason_op l u
       (* TODO: This is _very_ similar to `CreateClass.PropTypes` below, except
          for reasons descriptions/locations, recursive ReactKit constraints, and
          `resolve` behavior. *)
-      let add_prop k t (reason, props, dict) =
+      let add_prop k t (reason, props, dict, flags) =
         let props = SMap.add k (Field (t, Neutral)) props in
-        reason, props, dict
+        reason, props, dict, flags
       in
-      let add_dict dict (reason, props, _) =
-        reason, props, Some dict
+      let add_dict dict (reason, props, _, flags) =
+        reason, props, Some dict, flags
       in
       let rec next todo shape =
         match SMap.choose todo with
         | None ->
           let reason = replace_reason_const RObjectType reason_op in
           let proto = ObjProtoT (locationless_reason RObjectClassName) in
-          let _, props, dict = shape in
+          let _, props, dict, flags = shape in
           let t = mk_object_with_map_proto cx reason props proto
             ?dict ~sealed:true ~exact:false
           in
+          ignore flags; (* TODO *)
           resolve t
         | Some (k, p) ->
           let todo = SMap.remove k todo in
@@ -262,8 +263,8 @@ let run cx trace reason_op l u
       (match tool with
       | ResolveObject ->
         (match coerce_object l with
-        | OK (reason, todo, dict) ->
-          let shape = reason, SMap.empty, None in
+        | OK (reason, todo, dict, flags) ->
+          let shape = reason, SMap.empty, None, flags in
           (match dict with
           | None -> next todo shape
           | Some dicttype ->
@@ -298,7 +299,7 @@ let run cx trace reason_op l u
       | Unknown e -> Unknown e
     in
 
-    let get_prop x (_, props, dict) =
+    let get_prop x (_, props, dict, _) =
       match SMap.get x props with
       | Some _ as p -> p
       | None ->
@@ -344,8 +345,26 @@ let run cx trace reason_op l u
       | Unknown r, _ | _, Unknown r -> Unknown r
     in
 
-    let merge_objs (r1, ps1, dict1) (_, ps2, dict2) =
-      (r1, SMap.union ps1 ps2, Option.first_some dict1 dict2)
+    let merge_flags a b =
+      let { frozen = f1; sealed = s1; exact = e1 } = a in
+      let { frozen = f2; sealed = s2; exact = e2 } = b in
+      let frozen = f1 && f2 in
+      let exact = e1 && e2 in
+      let sealed =
+        let s1 = sealed_in_op reason_op s1 in
+        let s2 = sealed_in_op reason_op s2 in
+        if exact && not (s1 || s2)
+        then UnsealedInFile (Loc.source (loc_of_reason reason_op))
+        else Sealed
+      in
+      { frozen; exact; sealed }
+    in
+
+    let merge_objs (r1, ps1, dict1, flags1) (_, ps2, dict2, flags2) =
+      let props = SMap.union ps1 ps2 in
+      let dict = Option.first_some dict1 dict2 in
+      let flags = merge_flags flags1 flags2 in
+      (r1, props, dict, flags)
     in
 
     (* When a type is resolved, we move on to the next field. If the field is
@@ -394,7 +413,8 @@ let run cx trace reason_op l u
           let reason = replace_reason_const RReactDefaultProps reason_op in
           mk_object cx reason
         | Some (Unknown reason) -> AnyObjT reason
-        | Some (Known (reason, props, dict)) ->
+        | Some (Known (reason, props, dict, flags)) ->
+          ignore flags; (* TODO *)
           mk_object_with_map_proto cx reason props (ObjProtoT reason)
             ?dict ~sealed:true ~exact:false
         in
@@ -411,7 +431,8 @@ let run cx trace reason_op l u
           mk_object cx reason
         | Some (Unknown reason) -> AnyObjT reason
         | Some (Known (Null reason)) -> NullT reason
-        | Some (Known (NotNull (reason, props, dict))) ->
+        | Some (Known (NotNull (reason, props, dict, flags))) ->
+          ignore flags; (* TODO *)
           mk_object_with_map_proto cx reason props (ObjProtoT reason)
             ?dict ~sealed:true ~exact:false
         in
@@ -457,7 +478,8 @@ let run cx trace reason_op l u
       let props_t = match spec.prop_types with
       | None -> AnyObjT reason_op
       | Some (Unknown reason) -> AnyObjT reason
-      | Some (Known (reason, props, dict)) ->
+      | Some (Known (reason, props, dict, flags)) ->
+        ignore flags; (* TODO *)
         mk_object_with_map_proto cx reason props (ObjProtoT reason)
           ?dict ~sealed:true ~exact:false
       in
@@ -468,7 +490,7 @@ let run cx trace reason_op l u
       (* Some spec fields are used to create the instance type, but are not
          present on the resulting prototype or statics. Other spec fields should
          become static props. Everything else should be on the prototype. *)
-      let _, spec_props, _ = spec.obj in
+      let _, spec_props, _, _ = spec.obj in
       let props, static_props = SMap.fold (fun k v (props, static_props) ->
         match k with
         | "autobind"
@@ -527,38 +549,25 @@ let run cx trace reason_op l u
       in
 
       let static =
-        let reason, props = match spec.statics with
-        | None -> reason_op, static_props
+        let reason, props, dict, exact, sealed = match spec.statics with
+        | None ->
+          reason_op, static_props, None, true, false
         | Some (Unknown reason) ->
-          let static_props =
-            static_props
-            |> Properties.add_field "$key" Neutral (StrT.why reason)
-            |> Properties.add_field "$value" Neutral (AnyT.why reason)
-          in
-          reason, static_props
-        | Some (Known (reason, props, dict)) ->
+          let dict = Some {
+            dict_name = None;
+            key = StrT.why reason;
+            value = AnyT.why reason;
+            dict_polarity = Neutral;
+          } in
+          reason, static_props, dict, false, true
+        | Some (Known (reason, props, dict, { exact; sealed; _ })) ->
           let static_props = SMap.union props static_props in
-          let static_props = match dict with
-          | None -> static_props
-          | Some { key; value; dict_polarity; _ } ->
-            static_props
-            |> Properties.add_field "$key" dict_polarity key
-            |> Properties.add_field "$value" dict_polarity value
-          in
-          reason, static_props
+          let sealed = not (exact && sealed_in_op reason_op sealed) in
+          reason, static_props, dict, exact, sealed
         in
         let reason = replace_reason_const RReactStatics reason in
-        let insttype = {
-          class_id = 0;
-          type_args = SMap.empty;
-          arg_polarities = SMap.empty;
-          fields_tmap = Context.make_property_map cx props;
-          initialized_field_names = SSet.empty;
-          methods_tmap = Context.make_property_map cx SMap.empty;
-          mixins = spec.unknown_mixins <> [];
-          structural = false;
-        } in
-        InstanceT (reason, dummy_prototype, ClassT super, [], insttype)
+        mk_object_with_map_proto cx reason props (ClassT super)
+          ?dict ~exact ~sealed
       in
 
       let insttype = {
@@ -636,12 +645,12 @@ let run cx trace reason_op l u
       }) stack |> on_resolve_statics
 
     | PropTypes (stack, tool) ->
-      let add_prop k t (reason, props, dict) =
+      let add_prop k t (reason, props, dict, flags) =
         let props = SMap.add k (Field (t, Neutral)) props in
-        reason, props, dict
+        reason, props, dict, flags
       in
-      let add_dict dict (reason, props, _) =
-        reason, props, Some dict
+      let add_dict dict (reason, props, _, flags) =
+        reason, props, Some dict, flags
       in
       let rec next todo prop_types =
         match SMap.choose todo with
@@ -663,8 +672,8 @@ let run cx trace reason_op l u
       (match tool with
       | ResolveObject ->
         (match coerce_object l with
-        | OK (reason, todo, dict) ->
-          let prop_types = reason, SMap.empty, None in
+        | OK (reason, todo, dict, flags) ->
+          let prop_types = reason, SMap.empty, None, flags in
           (match dict with
           | None -> next todo prop_types
           | Some dicttype ->

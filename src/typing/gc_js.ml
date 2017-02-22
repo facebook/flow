@@ -446,7 +446,7 @@ and gc_spread_resolve cx state = function
 and gc_react_kit cx state =
   let open React in
   let gc_tlist = List.iter (gc cx state) in
-  let gc_resolved_object (_, props, dict) =
+  let gc_resolved_object (_, props, dict, _) =
     Properties.iter_t (gc cx state) props;
     Option.iter dict (gc_dicttype cx state)
   in

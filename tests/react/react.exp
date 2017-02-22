@@ -222,6 +222,108 @@ create_class.js:169
  39:   componentWillUnmount(): void;
                                ^^^^ undefined. See lib: <BUILTINS>/react.js:39
 
+create_class_statics_sealed.js:4
+  4: const A = React.createClass({});
+               ^^^^^^^^^^^^^^^^^^^^^ call of method `createClass`
+  5: (A.bar: empty); // number ~> empty (inflow below)
+      ^^^^^ number. This type is incompatible with
+  5: (A.bar: empty); // number ~> empty (inflow below)
+             ^^^^^ empty
+
+create_class_statics_sealed.js:9
+  9: const B = React.createClass({
+               ^ call of method `createClass`
+ 13: (B.bar: empty); // number ~> empty (inflow below)
+      ^^^^^ number. This type is incompatible with
+ 13: (B.bar: empty); // number ~> empty (inflow below)
+             ^^^^^ empty
+
+create_class_statics_sealed.js:12
+ 12: (B.foo: empty); // number ~> empty
+      ^^^^^ number. This type is incompatible with
+ 12: (B.foo: empty); // number ~> empty
+             ^^^^^ empty
+
+create_class_statics_sealed.js:17
+ 17: const C = React.createClass({
+               ^ call of method `createClass`
+ 21: (C.bar: empty); // number ~> empty (inflow below)
+      ^^^^^ number. This type is incompatible with
+ 21: (C.bar: empty); // number ~> empty (inflow below)
+             ^^^^^ empty
+
+create_class_statics_sealed.js:20
+ 20: (C.foo: empty); // number ~> empty
+      ^^^^^ number. This type is incompatible with
+ 20: (C.foo: empty); // number ~> empty
+             ^^^^^ empty
+
+create_class_statics_sealed.js:25
+ 25: const D = React.createClass({
+               ^ call of method `createClass`
+ 30: D.bar = 0; // property `bar` not found
+       ^^^ property `bar`. Property not found in
+ 30: D.bar = 0; // property `bar` not found
+     ^ statics of React class
+
+create_class_statics_sealed.js:28
+ 28: (D.foo: empty); // number ~> empty
+      ^^^^^ number. This type is incompatible with
+ 28: (D.foo: empty); // number ~> empty
+             ^^^^^ empty
+
+create_class_statics_sealed.js:29
+ 29: (D.bar: empty); // property `bar` not found
+        ^^^ property `bar`. Property not found in
+ 29: (D.bar: empty); // property `bar` not found
+      ^ statics of React class
+
+create_class_statics_sealed.js:33
+ 33: const E = React.createClass({
+               ^ call of method `createClass`
+ 41: (E.baz: empty); // number ~> empty (inflow below)
+      ^^^^^ number. This type is incompatible with
+ 41: (E.baz: empty); // number ~> empty (inflow below)
+             ^^^^^ empty
+
+create_class_statics_sealed.js:39
+ 39: (E.foo: empty); // number ~> empty
+      ^^^^^ number. This type is incompatible with
+ 39: (E.foo: empty); // number ~> empty
+             ^^^^^ empty
+
+create_class_statics_sealed.js:40
+ 40: (E.bar: empty); // number ~> empty
+      ^^^^^ number. This type is incompatible with
+ 40: (E.bar: empty); // number ~> empty
+             ^^^^^ empty
+
+create_class_statics_sealed.js:45
+ 45: const F = React.createClass({
+               ^ call of method `createClass`
+ 54: F.baz = 0;
+       ^^^ property `baz`. Property not found in
+ 54: F.baz = 0;
+     ^ statics of React class
+
+create_class_statics_sealed.js:51
+ 51: (F.foo: empty); // number ~> empty
+      ^^^^^ number. This type is incompatible with
+ 51: (F.foo: empty); // number ~> empty
+             ^^^^^ empty
+
+create_class_statics_sealed.js:52
+ 52: (F.bar: empty); // number ~> empty
+      ^^^^^ number. This type is incompatible with
+ 52: (F.bar: empty); // number ~> empty
+             ^^^^^ empty
+
+create_class_statics_sealed.js:53
+ 53: (F.baz: empty); // number ~> empty (inflow below)
+        ^^^ property `baz`. Property not found in
+ 53: (F.baz: empty); // number ~> empty (inflow below)
+      ^ statics of React class
+
 import_react.js:7
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
                      ^^^^^^^^^^^^^^^^^^^^^ constructor call
@@ -726,4 +828,4 @@ proptypes_sealed.js:22
          ^^^^^^^^^^ propTypes of React component
 
 
-Found 93 errors
+Found 108 errors

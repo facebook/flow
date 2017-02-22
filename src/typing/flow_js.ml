@@ -9692,7 +9692,7 @@ and react_kit =
     ~string_key
     ~mk_tvar
     ~eval_destructor
-    ~dummy_prototype
+    ~sealed_in_op
 
 (************* end of slab **************************************************)
 

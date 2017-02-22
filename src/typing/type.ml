@@ -1398,7 +1398,8 @@ and React : sig
     | Shape
   end
 
-  type resolved_object = reason * Properties.t * TypeTerm.dicttype option
+  type resolved_object =
+    reason * Properties.t * TypeTerm.dicttype option * TypeTerm.flags
 
   type resolve_object =
   | ResolveObject

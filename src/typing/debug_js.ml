@@ -1587,7 +1587,7 @@ and dump_use_t_ (depth, tvars) cx t =
 
   let react_kit =
     let open React in
-    let resolved_object (_, pmap, _) = props pmap in
+    let resolved_object (_, pmap, _, _) = props pmap in
     let resolve_array = function
       | ResolveArray -> "ResolveArray"
       | ResolveElem (todo, done_rev) ->
