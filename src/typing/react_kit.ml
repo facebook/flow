@@ -417,8 +417,7 @@ let run cx trace reason_op l u
           let reason = replace_reason_const RReactDefaultProps reason_op in
           mk_object cx reason
         | Some (Unknown reason) -> AnyObjT reason
-        | Some (Known (reason, props, dict, flags)) ->
-          ignore flags; (* TODO *)
+        | Some (Known (reason, props, dict, _)) ->
           mk_object_with_map_proto cx reason props (ObjProtoT reason)
             ?dict ~sealed:true ~exact:false
         in
