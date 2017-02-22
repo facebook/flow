@@ -266,7 +266,9 @@ and gc_use cx state = function
   | ObjTestT (_, t1, t2) -> gc cx state t1; gc cx state t2
   | OrT (_, t1, t2) -> gc cx state t1; gc cx state t2
   | PredicateT (pred, t) -> gc_pred cx state pred; gc cx state t
-  | ReactCreateElementT (_, t, t_out) -> gc cx state t; gc cx state t_out
+  | ReactKitT (_, React.CreateElement (t, t_out)) ->
+      gc cx state t;
+      gc cx state t_out
   | RefineT (_, pred, t) -> gc_pred cx state pred; gc cx state t
   | ReposLowerT (_, u) -> gc_use cx state u
   | ReposUseT (_, _, t) -> gc cx state t

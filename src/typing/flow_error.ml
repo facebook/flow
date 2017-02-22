@@ -229,7 +229,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | TupleMap -> "Expected Iterable instead of"
       | ObjectMap
       | ObjectMapi -> "Expected object instead of")
-    | ReactCreateElementT _ -> "Expected React component instead of"
+    | ReactKitT (_, React.CreateElement _) ->
+      "Expected React component instead of"
     | CallLatentPredT _ -> "Expected predicated function instead of"
     | ResolveSpreadT (_, {rrt_resolve_to; _}) ->
       begin match rrt_resolve_to with

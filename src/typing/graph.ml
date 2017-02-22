@@ -328,7 +328,7 @@ and parts_of_use_t cx = function
 | ObjTestT (_, d, t) -> ["default", Def d; "out", Def t]
 | OrT (_, r, out) -> ["right", Def r; "out", Def out]
 | PredicateT (_, out) -> ["out", Def out]
-| ReactCreateElementT (_, t, out) -> ["t", Def t; "out", Def out]
+| ReactKitT (_, React.CreateElement (t, out)) -> ["t", Def t; "out", Def out]
 | RefineT (_, _, t) -> ["t", Def t]
 | ReposLowerT (_, u) -> ["upper", Use u]
 | ReposUseT (_, _, l) ->  ["lower", Def l]

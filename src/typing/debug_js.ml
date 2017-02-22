@@ -623,10 +623,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "cont", JSON_Object (_json_of_cont json_cx cont);
     ]
 
-  | ReactCreateElementT (_, t, t_out) -> [
+  | ReactKitT (_, React.CreateElement (t, t_out)) -> [
       "config", _json_of_t json_cx t;
       "returnType", _json_of_t json_cx t_out;
-  ]
+    ]
 
   | ChoiceKitUseT (_, tool) -> [
       "tool", JSON_String (match tool with
@@ -1536,6 +1536,13 @@ and dump_use_t_ (depth, tvars) cx t =
         spf "([%s], %s)" (String.concat "; " (List.map kid ts)) (use_kid use_t)
   in
 
+  let react_kit =
+    let open React in
+    function
+      | CreateElement (config, tout) ->
+        spf "CreateElement (%s, %s)" (kid config) (kid tout)
+  in
+
   if depth = 0 then string_of_use_ctor t
   else match t with
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
@@ -1607,7 +1614,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | PredicateT (pred, arg) -> p ~reason:false
       ~extra:(spf "%s, %s" (string_of_predicate pred) (kid arg)) t
-  | ReactCreateElementT _ -> p t
+  | ReactKitT (_, tool) -> p ~extra:(react_kit tool) t
   | RefineT _ -> p t
   | ReposLowerT (_, arg) -> p ~extra:(use_kid arg) t
   | ReposUseT (_, _, arg) -> p ~extra:(kid arg) t

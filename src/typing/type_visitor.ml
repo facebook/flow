@@ -260,7 +260,7 @@ class ['a] t = object(self)
   | ObjTestT (_, _, _)
   | OrT (_, _, _)
   | PredicateT (_, _)
-  | ReactCreateElementT _
+  | ReactKitT _
   | RefineT _
   | ReposLowerT (_, _)
   | ReposUseT (_, _, _)

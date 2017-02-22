@@ -420,16 +420,7 @@ module rec TypeTerm : sig
     (* Map a FunT over a structure *)
     | MapTypeT of reason * type_map * t * cont
 
-    (**
-     * An internal-only type to evaluate JSX expression. This type exists to
-     * wait for the first parameter of a React.createElement call in order to
-     * properly dispatch. That is, given a ReactClass, a stateless functional
-     * component, or a string, do the right thing.
-     *
-     * This type shouldn't exist, but is a temporary measure until the type of
-     * React.createElement can be represented by an intersection without running
-     * into intersection bugs. *)
-    | ReactCreateElementT of reason * t * t_out
+    | ReactKitT of reason * React.tool
 
     (* toolkit for making choices, contd. (appearing only as upper bounds) *)
     | ChoiceKitUseT of reason * choice_use_tool
@@ -1383,6 +1374,11 @@ and UseTypeMap : MyMap.S with type key = TypeTerm.use_t = MyMap.Make (struct
   let compare = Pervasives.compare
 end)
 
+and React : sig
+  type tool =
+  | CreateElement of TypeTerm.t * TypeTerm.t_out
+end = React
+
 include TypeTerm
 
 (*********************************************************)
@@ -1520,7 +1516,7 @@ let any_propagating_use_t = function
   | ImportNamedT _
   | CJSExtractNamedExportsT _
   | CopyNamedExportsT _
-  | ReactCreateElementT _
+  | ReactKitT _
   | ResolveSpreadT _
   | SpecializeT _
   | ThisSpecializeT _
@@ -1710,7 +1706,7 @@ and reason_of_use_t = function
   | ObjTestT (reason, _, _) -> reason
   | OrT (reason, _, _) -> reason
   | PredicateT (_, t) -> reason_of_t t
-  | ReactCreateElementT (reason, _, _) -> reason
+  | ReactKitT (reason, _) -> reason
   | RefineT (reason, _, _) -> reason
   | ReposLowerT (reason, _) -> reason
   | ReposUseT (reason, _, _) -> reason
@@ -1875,8 +1871,7 @@ and mod_reason_of_use_t f = function
   | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
   | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
-  | ReactCreateElementT (reason, t, tout) ->
-      ReactCreateElementT (f reason, t, tout)
+  | ReactKitT (reason, tool) -> ReactKitT (f reason, tool)
   | RefineT (reason, p, t) -> RefineT (f reason, p, t)
   | ReposLowerT (reason, t) -> ReposLowerT (f reason, t)
   | ReposUseT (reason, use_op, t) -> ReposUseT (f reason, use_op, t)
@@ -2082,7 +2077,7 @@ let string_of_use_ctor = function
   | ObjTestT _ -> "ObjTestT"
   | OrT _ -> "OrT"
   | PredicateT _ -> "PredicateT"
-  | ReactCreateElementT _ -> "ReactCreateElementT"
+  | ReactKitT _ -> "ReactKitT"
   | RefineT _ -> "RefineT"
   | ReposLowerT _ -> "ReposLowerT"
   | ReposUseT _ -> "ReposUseT"

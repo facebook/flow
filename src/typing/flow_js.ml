@@ -3453,64 +3453,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (FlowError.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)))
       );
 
-
-    (* If you haven't heard, React is a pretty big deal. *)
+    (* React *)
 
     | CustomFunT (_, ReactCreateElement),
       CallT (reason_op, { call_args_tlist = arg1::arg2::_; call_tout; _ }) ->
       (match arg1, arg2 with
       | Arg c, Arg o ->
         Ops.push reason_op;
-        rec_flow cx trace (c, ReactCreateElementT (reason_op, o, call_tout));
+        rec_flow cx trace (c, ReactKitT (reason_op,
+          React.CreateElement (o, call_tout)));
         Ops.pop ()
       | _ ->
-        (match arg1 with
-        | SpreadArg t ->
-          add_output cx ~trace
-            (FlowError.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)))
-        | Arg _ -> ());
-        (match arg2 with
-        | SpreadArg t ->
-          add_output cx ~trace
-            (FlowError.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)))
-        | Arg _ -> ())
-      )
+        ignore (extract_non_spread cx ~trace arg1);
+        ignore (extract_non_spread cx ~trace arg2))
 
-    | _, ReactCreateElementT (reason_op, config, tout) ->
-      let elem_reason = replace_reason_const (RReactElement None) reason_op in
-      (match l with
-      | ClassT _ ->
-        let react_class =
-          get_builtin_typeapp cx ~trace reason_op "ReactClass" [config]
-        in
-        rec_flow_t cx trace (l, react_class)
-      | FunT _ ->
-        let return_t =
-          get_builtin_typeapp cx ~trace elem_reason "React$Element" [Locationless.AnyT.t]
-        in
-        let maybe_r = replace_reason (fun desc ->
-          RMaybe desc
-        ) (reason_of_t return_t) in
-        let return_t = MaybeT (maybe_r, return_t) in
-        let context_t = Locationless.AnyT.t in
-        let call_t = CallT (
-          reason_op,
-          mk_functioncalltype [Arg config; Arg context_t] return_t
-        ) in
-        rec_flow cx trace (l, call_t)
-      | StrT _
-      | SingletonStrT _ ->
-        let jsx_intrinsics =
-          get_builtin_type cx ~trace reason_op "$JSXIntrinsics" in
-        rec_flow_t cx trace (l, KeysT (reason_op, jsx_intrinsics))
-      | AnyT _ | AnyFunT _ | AnyObjT _ -> ()
-      | _ ->
-        add_output cx ~trace (FlowError.EIncompatible (l, u))
-      );
-      rec_flow_t cx trace (
-        get_builtin_typeapp cx ~trace elem_reason "React$Element" [config],
-        tout
-      )
+    | _, ReactKitT (reason_op, (React.CreateElement _ as tool)) ->
+      react_kit cx trace reason_op l tool
 
     (* Facebookisms are special Facebook-specific functions that are not
        expressable with our current type syntax, so we've hacked in special
@@ -9610,6 +9568,45 @@ and unify cx t1 t2 =
 and continue cx trace t = function
   | Upper u -> rec_flow cx trace (t, u)
   | Lower l -> rec_flow_t cx trace (l, t)
+
+and react_kit cx trace reason_op l u =
+  let open React in
+
+  let create_element config tout =
+    let elem_reason = replace_reason_const (RReactElement None) reason_op in
+    (match l with
+    | ClassT _ ->
+      let react_class =
+        get_builtin_typeapp cx ~trace reason_op "ReactClass" [config]
+      in
+      rec_flow_t cx trace (l, react_class)
+    | FunT _ ->
+      let return_t =
+        get_builtin_typeapp cx ~trace elem_reason "React$Element"
+          [Locationless.AnyT.t]
+      in
+      let return_t = MaybeT (elem_reason, return_t) in
+      let context_t = Locationless.AnyT.t in
+      let args = [Arg config; Arg context_t] in
+      let call_t = CallT (reason_op, mk_functioncalltype args return_t) in
+      rec_flow cx trace (l, call_t)
+    | StrT _
+    | SingletonStrT _ ->
+      let jsx_intrinsics =
+        get_builtin_type cx ~trace reason_op "$JSXIntrinsics" in
+      rec_flow_t cx trace (l, KeysT (reason_op, jsx_intrinsics))
+    | AnyT _ | AnyFunT _ | AnyObjT _ -> ()
+    | _ ->
+      add_output cx ~trace (FlowError.EIncompatible (l, ReactKitT (reason_op, u)))
+    );
+    rec_flow_t cx trace (
+      get_builtin_typeapp cx ~trace elem_reason "React$Element" [config],
+      tout
+    )
+  in
+
+  match u with
+  | CreateElement (config, tout) -> create_element config tout
 
 (************* end of slab **************************************************)
 
