@@ -265,7 +265,6 @@ let typecheck
   ~files
   ~removed
   ~unparsed
-  ~resource_files
   ~errors =
   (* TODO remove after lookup overhaul *)
   Module_js.clear_filename_cache ();
@@ -285,13 +284,6 @@ let typecheck
     ) ([], local_errors, suppressions) infer_results
   in
   let inferred = List.rev rev_inferred in
-
-  (* Resource files are treated just like unchecked files, which are already in
-     unparsed. TODO: This suggestes that we can remove ~resource_files and merge
-     them into ~unparsed upstream. *)
-  let unparsed = FilenameSet.fold
-    (fun fn acc -> (fn, Docblock.default_info)::acc)
-    resource_files unparsed in
 
   (** TODO [correctness]: check whether these have been cleared **)
   (* add tracking modules for unparsed files *)
@@ -449,11 +441,10 @@ let recheck genv env modified =
   let profiling = Profiling_js.empty in
 
   (* track deleted files, remove from modified set *)
-  let deleted = FilenameSet.filter (fun f ->
-    not (Sys.file_exists (string_of_filename f))
+  let modified, deleted = FilenameSet.partition (fun f ->
+    Sys.file_exists (string_of_filename f)
   ) modified in
   let deleted_count = FilenameSet.cardinal deleted in
-  let modified = FilenameSet.diff modified deleted in
   let modified_count = FilenameSet.cardinal modified in
 
   (* log modified and deleted files *)
@@ -488,7 +479,6 @@ let recheck genv env modified =
     Parsing_service_js.parse_ok = freshparsed;
                        parse_skips = freshparse_skips;
                        parse_fails = freshparse_fail;
-                       parse_resource_files = freshparse_resource_files;
   } = freshparse_results in
 
   (* clear errors for modified files, deleted files and master *)
@@ -589,7 +579,6 @@ let recheck genv env modified =
     ~files:freshparsed
     ~removed:removed_modules
     ~unparsed
-    ~resource_files:freshparse_resource_files
     ~errors
   in
 
@@ -641,7 +630,6 @@ let full_check workers ~ordered_libs parse_next options =
     Parsing_service_js.parse_ok = parsed;
                        parse_skips = skipped_files;
                        parse_fails = error_files;
-                       parse_resource_files = resource_files;
   } = parse_results in
 
   let local_errors = List.fold_left (fun errors (file, _, fail) ->
@@ -701,7 +689,6 @@ let full_check workers ~ordered_libs parse_next options =
     ~files:parsed
     ~removed:Module_js.NameSet.empty
     ~unparsed
-    ~resource_files
     ~errors
   in
 

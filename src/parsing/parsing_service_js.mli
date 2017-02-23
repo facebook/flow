@@ -38,9 +38,6 @@ type results = {
 
   (* list of failed files *)
   parse_fails: (filename * Docblock.t * parse_failure) list;
-
-  (* resource files *)
-  parse_resource_files: FilenameSet.t;
 }
 
 (* initial parsing pass: success/failure info is returned,

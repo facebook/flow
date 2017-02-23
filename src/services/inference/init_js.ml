@@ -66,8 +66,6 @@ let parse_lib_file options file =
       Parsing.Parse_fail parse_fails
     else if List.length results.Parsing.parse_skips > 0 then
       Parsing.Parse_skip Parsing.Skip_non_flow_file
-    else if not (FilenameSet.is_empty results.Parsing.parse_resource_files) then
-      Parsing.Parse_skip Parsing.Skip_resource_file
     else
       failwith "Internal error: no parse results found"
   with _ -> failwith (

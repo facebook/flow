@@ -35,16 +35,12 @@ type results = {
 
   (* list of failed files *)
   parse_fails: (filename * Docblock.t * parse_failure) list;
-
-  (* resource files *)
-  parse_resource_files: FilenameSet.t;
 }
 
 let empty_result = {
   parse_ok = FilenameSet.empty;
   parse_skips = [];
   parse_fails = [];
-  parse_resource_files = FilenameSet.empty;
 }
 
 (**************************** internal *********************************)
@@ -252,15 +248,11 @@ let reducer
             let fail = (file, info, converted) in
             let parse_fails = fail :: parse_results.parse_fails in
             { parse_results with parse_fails; }
-        | Parse_skip Skip_non_flow_file ->
+        | Parse_skip Skip_non_flow_file
+        | Parse_skip Skip_resource_file ->
             execute_hook file None;
             let parse_skips = (file, info) :: parse_results.parse_skips in
             { parse_results with parse_skips; }
-        | Parse_skip Skip_resource_file ->
-            execute_hook file None;
-            let parse_resource_files =
-              FilenameSet.add file parse_results.parse_resource_files in
-            { parse_results with parse_resource_files; }
         end
       | docblock_errors, info ->
         execute_hook file None;
@@ -280,8 +272,6 @@ let merge r1 r2 =
     parse_ok = FilenameSet.union r1.parse_ok r2.parse_ok;
     parse_skips = r1.parse_skips @ r2.parse_skips;
     parse_fails = r1.parse_fails @ r2.parse_fails;
-    parse_resource_files =
-      FilenameSet.union r1.parse_resource_files r2.parse_resource_files;
   }
 
 let opt_or_alternate opt alternate =
@@ -328,11 +318,9 @@ let parse
     let ok_count = FilenameSet.cardinal results.parse_ok in
     let skip_count = List.length results.parse_skips in
     let fail_count = List.length results.parse_fails in
-    let resource_file_count =
-      FilenameSet.cardinal results.parse_resource_files in
-    prerr_endlinef "parsed %d files (%d ok, %d skipped, %d failed, %d resource files) in %f"
+    prerr_endlinef "parsed %d files (%d ok, %d skipped, %d failed) in %f"
       (ok_count + skip_count + fail_count)
-      ok_count skip_count fail_count resource_file_count
+      ok_count skip_count fail_count
       (t2 -. t)
   else ();
 
@@ -344,8 +332,7 @@ let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~options workers
   let next = next_of_filename_set workers files in
   let results =
     parse ~types_mode ~use_strict ~profile ~max_header_tokens workers next in
-  let modified =
-    FilenameSet.union results.parse_ok results.parse_resource_files in
+  let modified = results.parse_ok in
   let modified = List.fold_left (fun acc (fail, _, _) ->
     FilenameSet.add fail acc
   ) modified results.parse_fails in
