@@ -579,9 +579,7 @@ module Haste: MODULE_SYSTEM = struct
       let file_without_flow_ext = Loc.chop_suffix file Files.flow_ext in
       if Parsing_service_js.has_ast file_without_flow_ext
       then
-        (** TODO [perf]: mark as expensive and investigate! **)
-        let _, info =
-          Parsing_service_js.get_ast_and_info_unsafe file_without_flow_ext in
+        let info = Parsing_service_js.get_docblock_unsafe file_without_flow_ext in
         exported_module options file_without_flow_ext info
       else
         Modulename.Filename (file_without_flow_ext)

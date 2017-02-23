@@ -46,11 +46,17 @@ let empty_result = {
 (**************************** internal *********************************)
 
 (* shared heap for parsed ASTs by filename *)
-module ParserHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
-    type t = (Spider_monkey_ast.program * Docblock.t)
+module ASTHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
+    type t = Spider_monkey_ast.program
     let prefix = Prefix.make()
-    let description = "Parser"
-  end)
+    let description = "AST"
+end)
+
+module DocblockHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
+    type t = Docblock.t
+    let prefix = Prefix.make()
+    let description = "Docblock"
+end)
 
 let (parser_hook: (filename -> Ast.program option -> unit) list ref) = ref []
 let register_hook f = parser_hook := f :: !parser_hook
@@ -235,10 +241,11 @@ let reducer
              * been added to the modified set simply because a corresponding
              * implementation file was also added. *)
             if not (Loc.check_suffix file Files.flow_ext)
-              && ParserHeap.get_old file = Some (ast, info)
+              && ASTHeap.get_old file = Some ast
             then parse_results
             else begin
-              ParserHeap.add file (ast, info);
+              ASTHeap.add file ast;
+              DocblockHeap.add file info;
               execute_hook file (Some ast);
               let parse_ok = FilenameSet.add file parse_results.parse_ok in
               { parse_results with parse_ok; }
@@ -328,7 +335,8 @@ let parse
 
 let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~options workers files =
   (* save old parsing info for files *)
-  ParserHeap.oldify_batch files;
+  ASTHeap.oldify_batch files;
+  DocblockHeap.oldify_batch files;
   let next = next_of_filename_set workers files in
   let results =
     parse ~types_mode ~use_strict ~profile ~max_header_tokens workers next in
@@ -340,10 +348,12 @@ let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~options workers
     FilenameSet.add skip acc
   ) modified results.parse_skips in
   (* discard old parsing info for modified files *)
-  ParserHeap.remove_old_batch modified;
+  ASTHeap.remove_old_batch modified;
+  DocblockHeap.remove_old_batch modified;
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
-  ParserHeap.revive_batch unchanged;
+  ASTHeap.revive_batch unchanged;
+  DocblockHeap.revive_batch unchanged;
   SharedMem_js.collect options `gentle;
   modified, results
 
@@ -359,22 +369,15 @@ let reparse_with_defaults options workers files =
   in
   reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~options workers files
 
-let has_ast file =
-  ParserHeap.mem file
+let has_ast = ASTHeap.mem
 
-let get_ast_unsafe file =
-  let ast, _ = ParserHeap.find_unsafe file in
-  ast
+let get_ast = ASTHeap.get
 
-let get_ast file =
-  if has_ast file then
-    Some (get_ast_unsafe file)
-  else
-    None
+let get_ast_unsafe = ASTHeap.find_unsafe
 
-let get_ast_and_info_unsafe file =
-  ParserHeap.find_unsafe file
+let get_docblock_unsafe = DocblockHeap.find_unsafe
 
-let remove_asts files =
-  ParserHeap.remove_batch files;
+let remove_batch files =
+  ASTHeap.remove_batch files;
+  DocblockHeap.remove_batch files;
   FilenameSet.iter delete_file files

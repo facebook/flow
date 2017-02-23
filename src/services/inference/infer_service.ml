@@ -36,7 +36,8 @@ let apply_docblock_overrides metadata docblock_info =
    and invoke the local (infer) pass. This will build and return a
    fresh context object for the module. *)
 let infer_module ~options ~metadata filename =
-  let ast, info = Parsing_service_js.get_ast_and_info_unsafe filename in
+  let ast = Parsing_service_js.get_ast_unsafe filename in
+  let info = Parsing_service_js.get_docblock_unsafe filename in
   let module_name = Module_js.exported_module ~options filename info in
   let metadata = apply_docblock_overrides metadata info in
   Type_inference_js.infer_ast ~metadata ~filename ~module_name ast
