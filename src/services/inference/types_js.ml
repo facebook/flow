@@ -198,10 +198,10 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
       (* should never happen *)
       profiling, None, errors, info
 
-(* commit newly inferred and removed modules, collect errors. *)
-let commit_modules workers ~options errors inferred removed =
+(* commit newly parsed / unparsed files and removed modules, collect errors. *)
+let commit_modules workers ~options errors inferred_unparsed removed_modules =
   let providers, errmap =
-    Module_js.commit_modules workers ~options inferred removed in
+    Module_js.commit_modules workers ~options inferred_unparsed removed_modules in
   (* Providers might be new but not modified. This typically happens when old
      providers are deleted, and previously duplicate providers become new
      providers. In such cases, we must clear the old duplicate provider errors
@@ -235,7 +235,7 @@ let typecheck
   ~workers
   ~make_merge_input
   ~files
-  ~removed
+  ~removed_modules
   ~unparsed
   ~errors =
   (* TODO remove after lookup overhaul *)
@@ -275,10 +275,10 @@ let typecheck
   (* create module dependency graph, warn on dupes etc. *)
   let profiling, local_errors =
     with_timer ~options "CommitModules" profiling (fun () ->
-      let filenames = List.fold_left (fun acc (filename, _) ->
+      let inferred_unparsed = List.fold_left (fun acc (filename, _) ->
         filename::acc
       ) inferred unparsed in
-      commit_modules workers ~options local_errors filenames removed
+      commit_modules workers ~options local_errors inferred_unparsed removed_modules
     )
   in
 
@@ -545,7 +545,7 @@ let recheck genv env modified =
       Some (FilenameSet.elements to_merge, direct_deps, modified_files)
     )
     ~files:freshparsed
-    ~removed:removed_modules
+    ~removed_modules
     ~unparsed
     ~errors
   in
@@ -655,7 +655,7 @@ let full_check workers ~ordered_libs parse_next options =
       else Some (inferred, FilenameSet.empty, FilenameSet.empty)
     )
     ~files:parsed
-    ~removed:Module_js.NameSet.empty
+    ~removed_modules:Module_js.NameSet.empty
     ~unparsed
     ~errors
   in
