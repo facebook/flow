@@ -126,7 +126,7 @@ join the community, and give us feedback!
 
   </div>
   <div class="copyright">
-    &copy; Copyright 2014 - 2016, Facebook Inc.
+    &copy; Copyright 2014 - {{ site.time | date: '%Y' }}, Facebook Inc.
   </div>
 </div></footer>
 */
