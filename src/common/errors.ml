@@ -374,25 +374,32 @@ module ErrorSuppressions = struct
     then true, { suppressions; unused = SpanMap.remove loc unused}
     else acc
 
-  (* We need to check every reason in the error message in order to figure out
-   * which suppressions are really unused...that's why we don't shortcircuit as
-   * soon as we find a matching error suppression
-   *)
-  let rec check_error_messages acc = function
-    | [] -> acc
-    | message::errors ->
-        let loc, _ = to_pp message in
-        let acc = check_loc acc loc in
-        check_error_messages acc errors
+  let locs_of_error =
+    let locs_of_info_list = List.fold_left (fun acc (loc, _) -> loc::acc)
 
-  (* Checks if an error should be suppressed. *)
+    in let rec locs_of_info_tree acc = function
+    | InfoLeaf infos -> locs_of_info_list acc infos
+    | InfoNode (infos, branches) -> locs_of_extra (locs_of_info_list acc infos) branches
+
+    and locs_of_extra acc tree = List.fold_left locs_of_info_tree acc tree
+
+    in fun (err: error) ->
+      let { messages; op; extra; _ } = err in
+      let messages = prepend_op_reason messages op in
+      let extra_locs = locs_of_extra [] extra in
+      List.fold_left (fun acc message ->
+        let loc, _ = to_pp message in
+        loc::acc
+      ) extra_locs messages
+
+
+  (* Checks if any of the given locations should be suppressed. *)
   let check (err: error) suppressions =
-    let {messages; op; _} = err in
-    (* We also check the op message *)
-    let messages = match op with
-    | None -> messages
-    | Some op -> op::messages in
-    check_error_messages (false, suppressions) messages
+    let locs = locs_of_error err in
+    (* We need to check every location in order to figure out which suppressions
+       are really unused...that's why we don't shortcircuit as soon as we find a
+       matching error suppression *)
+    List.fold_left check_loc (false, suppressions) locs
 
   (* Get's the locations of the suppression comments that are yet unused *)
   let unused { unused; _; } = SpanMap.values unused
