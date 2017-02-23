@@ -919,14 +919,21 @@ let commit_modules workers ~options inferred removed =
     ~merge: List.rev_append
     ~next: (MultiWorker.next workers (NameSet.elements repick)) in
   (* prep for registering new mappings in NameHeap *)
-  let remove, replace, errmap = List.fold_left
-    (fun (rem, rep, errmap) (m, f_opt) ->
+  let mapping m p module_file_assoc =
+    (m, p)::(
+      let p_module = Modulename.Filename p in
+      if p_module <> m
+      then (p_module, p)::module_file_assoc
+      else module_file_assoc
+    ) in
+  let remove, providers, replace, errmap = List.fold_left
+    (fun (rem, prov, rep, errmap) (m, f_opt) ->
     match get_providers m with
     | ps when FilenameSet.is_empty ps ->
         if debug then prerr_endlinef
           "no remaining providers: %S"
           (Modulename.to_string m);
-        (NameSet.add m rem), rep, errmap
+        (NameSet.add m rem), prov, rep, errmap
     | ps ->
       (* incremental: install empty error sets here for provider candidates.
          this will have the effect of resetting downstream errors for these
@@ -950,7 +957,7 @@ let commit_modules workers ~options inferred removed =
             "unchanged provider: %S -> %s"
             (Modulename.to_string m)
             (string_of_filename p);
-          rem, rep, errmap
+          rem, prov, rep, errmap
       | Some f ->
           (* TODO: Can this happen? Is there any essential difference between
              this case and the next? *)
@@ -959,26 +966,26 @@ let commit_modules workers ~options inferred removed =
             (Modulename.to_string m)
             (string_of_filename p)
             (string_of_filename f);
-          (NameSet.add m rem), ((m, p) :: rep), errmap
+          (NameSet.add m rem), p::prov, (mapping m p rep), errmap
       | None ->
           if debug then prerr_endlinef
             "initial provider %S -> %s"
             (Modulename.to_string m)
             (string_of_filename p);
-          rem, ((m, p) :: rep), errmap
-  ) (NameSet.empty, [], FilenameMap.empty) module_files in
+          rem, p::prov, (mapping m p rep), errmap
+  ) (NameSet.empty, [], [], FilenameMap.empty) module_files in
 
   (* update NameHeap *)
   if not (NameSet.is_empty remove) then begin
     NameHeap.remove_batch remove;
     SharedMem_js.collect options `gentle;
   end;
+
   MultiWorker.call
     workers
     ~job: (fun () replace ->
-      List.iter (fun (m, p) ->
-        add_module_file Expensive.ok m p;
-        add_module_file Expensive.ok (Modulename.Filename p) p
+      List.iter (fun (m, f) ->
+        add_module_file Expensive.ok m f
       ) replace;
     )
     ~neutral: ()
@@ -986,7 +993,6 @@ let commit_modules workers ~options inferred removed =
     ~next: (MultiWorker.next workers replace);
 
   if debug then prerr_endlinef "*** done committing modules ***";
-  let providers = replace |> List.split |> snd in
   providers, errmap
 
 let clear_records files =
