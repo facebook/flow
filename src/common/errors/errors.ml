@@ -217,13 +217,23 @@ let loc_of_error (err: error) =
       loc
   | _ -> Loc.none
 
-let locs_of_error (err: error) =
-  let { messages; op; _ } = err in
-  let messages = prepend_op_reason messages op in
-  List.map (fun message ->
-    let loc, _ = to_pp message in
-    loc
-  ) messages
+let locs_of_error =
+  let locs_of_info_list = List.fold_left (fun acc (loc, _) -> loc::acc)
+
+  in let rec locs_of_info_tree acc = function
+  | InfoLeaf infos -> locs_of_info_list acc infos
+  | InfoNode (infos, branches) -> locs_of_extra (locs_of_info_list acc infos) branches
+
+  and locs_of_extra acc tree = List.fold_left locs_of_info_tree acc tree
+
+  in fun (err: error) ->
+    let { messages; op; extra; _ } = err in
+    let messages = prepend_op_reason messages op in
+    let extra_locs = locs_of_extra [] extra in
+    List.fold_left (fun acc message ->
+      let loc, _ = to_pp message in
+      loc::acc
+    ) extra_locs messages
 
 let infos_of_error { messages; _ } =
   let rev_infos = List.fold_left (
