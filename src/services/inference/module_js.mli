@@ -51,18 +51,18 @@ val find_resolved_module:
 
 val module_exists: Modulename.t -> bool
 
-val get_file: (Modulename.t -> filename) Expensive.t
+val get_file_unsafe: (Modulename.t -> filename) Expensive.t
 
 (* given a module name, returns either (Some filename) or None *)
-val get_module_file: (Modulename.t -> filename option) Expensive.t
+val get_file: (Modulename.t -> filename option) Expensive.t
 
 (* given a filename, returns resolved requires. unsafe *)
-val get_module_resolved_requires: (filename -> resolved_requires) Expensive.t
+val get_resolved_requires_unsafe: (filename -> resolved_requires) Expensive.t
 (* given a filename, returns module info. unsafe *)
-val get_module_info: (filename -> info) Expensive.t
+val get_info_unsafe: (filename -> info) Expensive.t
 
 (* given a filename, returns module name *)
-val get_module_names: (filename -> Modulename.t list) Expensive.t
+val get_module_names_unsafe: (filename -> Modulename.t list) Expensive.t
 
 (* commit new and removed modules, after local inference *)
 val commit_modules:

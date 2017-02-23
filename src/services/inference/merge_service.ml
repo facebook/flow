@@ -78,12 +78,12 @@ let merge_strict_context ~options cache component_cxs =
   let orig_sig_cxs, sig_cxs, impls, res, decls =
     List.fold_left (fun (orig_sig_cxs, sig_cxs, impls, res, decls) req ->
       let r, resolved_r, cx_to = req in
-      Module_js.(match get_module_file Expensive.ok resolved_r with
+      Module_js.(match get_file Expensive.ok resolved_r with
       | Some (Loc.ResourceFile f) ->
           orig_sig_cxs, sig_cxs,
           impls, (r, f, cx_to) :: res, decls
       | Some file ->
-          let info = get_module_info ~audit:Expensive.ok file in
+          let info = get_info_unsafe ~audit:Expensive.ok file in
           if info.checked && info.parsed then
             (* checked implementation exists *)
             let impl sig_cx = sig_cx, r, info._module, cx_to in
@@ -155,7 +155,7 @@ let merge_strict_component ~options = function
 
      It also follows when file is checked, other_files must be checked too!
   *)
-  let info = Module_js.get_module_info ~audit:Expensive.ok file in
+  let info = Module_js.get_info_unsafe ~audit:Expensive.ok file in
   if info.Module_js.checked then (
     let cache = new Context_cache.context_cache in
     let component_cxs =

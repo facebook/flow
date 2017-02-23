@@ -382,7 +382,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let loc = {Loc.none with Loc.source = Some file;} in
     let module_name = Module_js.imported_module ~options cx loc moduleref in
     let response: filename option =
-      Module_js.get_module_file ~audit:Expensive.warn module_name in
+      Module_js.get_file ~audit:Expensive.warn module_name in
     Marshal.to_channel oc response [];
     flush oc
 
@@ -511,7 +511,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
   let get_imports ~options module_names oc =
     let add_to_results (map, non_flow) module_name_str =
       let module_name = module_name_of_string ~options module_name_str in
-      match Module_js.get_module_file ~audit:Expensive.warn module_name with
+      match Module_js.get_file ~audit:Expensive.warn module_name with
       | Some file ->
         (* We do not process all modules which are stored in our module
          * database. In case we do not process a module its requirements
@@ -519,13 +519,13 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
          * client that these modules have not been processed.
          *)
         let { Module_js.checked; _ } =
-          Module_js.get_module_info ~audit:Expensive.warn file in
+          Module_js.get_info_unsafe ~audit:Expensive.warn file in
         if checked then
           let { Module_js.
               required = requirements;
               require_loc = req_locs;
               _ } =
-          Module_js.get_module_resolved_requires ~audit:Expensive.warn file in
+          Module_js.get_resolved_requires_unsafe ~audit:Expensive.warn file in
           (SMap.add module_name_str (requirements, req_locs) map, non_flow)
         else
           (map, SSet.add module_name_str non_flow)
