@@ -1031,11 +1031,14 @@ and remove_files_with_data options data files =
   let names = FilenameMap.fold (fun file datum names ->
     let _module, current_provider = datum in
     remove_provider file _module;
+    remove_provider file (Modulename.Filename file);
     if current_provider then
       names
       |> NameSet.add _module
       |> NameSet.add (Modulename.Filename file)
-    else names
+    else
+      names
+      |> NameSet.add (Modulename.Filename file)
   ) data NameSet.empty in
   (* clear any registrations that point to records we're about to clear *)
   (* for records, remove_batch will ignore missing entries, no need to filter *)
