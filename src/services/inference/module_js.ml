@@ -26,22 +26,20 @@ module NameMap = MyMap.Make(Modulename)
 
 (* Subset of a file's context, with the important distinction that module
    references in the file have been resolved to module names. *)
-(** TODO [perf] Make info tighter or split it.
-    (1) file can go away
-
-    (2) required and resolved_modules have a lot of redundancy; required is the
+(** TODO [perf] Make resolved_requires tighter.
+    (1) required and resolved_modules have a lot of redundancy; required is the
     value set of resolved_modules.
 
-    (3) require_loc, too? Indexed by required.
+    (2) require_loc, too? Indexed by required.
 
-    (4) checked? We know that requires and phantom dependents for unchecked
+    Also, for info:
+    (1) checked? We know that requires and phantom dependents for unchecked
     files are empty.
 
-    (5) parsed? We only care about the module provided by an unparsed file, but
+    (2) parsed? We only care about the module provided by an unparsed file, but
     that's probably guessable.
 **)
-type info = {
-  _module: Modulename.t; (* module name *)
+type resolved_requires = {
   required: NameSet.t; (* required module names *)
   require_loc: Loc.t SMap.t; (* statement locations *)
   resolved_modules: Modulename.t SMap.t; (* map from module references in file
@@ -50,6 +48,10 @@ type info = {
                                  when resolving module references in the file:
                                  when the paths come into existence, the module
                                  references need to be re-resolved. *)
+}
+
+type info = {
+  _module: Modulename.t; (* module name *)
   checked: bool; (* in flow? *)
   parsed: bool; (* if false, it's a tracking record only *)
 }
@@ -150,7 +152,17 @@ end)
 let get_module_file = Expensive.wrap NameHeap.get
 let add_module_file = Expensive.wrap NameHeap.add
 
-(* map from filename to module info *)
+(* map from filename to resolved requires *)
+module ResolvedRequiresHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
+  type t = resolved_requires
+  let prefix = Prefix.make()
+  let description = "ResolvedRequires"
+end)
+
+let get_resolved_requires = Expensive.wrap ResolvedRequiresHeap.get
+let add_resolved_requires = Expensive.wrap ResolvedRequiresHeap.add
+
+(* map from filename to module name *)
 (* note: currently we may have many files for one module name.
    this is an issue. *)
 module InfoHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
@@ -680,7 +692,7 @@ let imported_modules ~options cx =
 
 (* Look up cached resolved module. *)
 let cached_resolved_module ~audit file r =
-  match get_info ~audit file with
+  match get_resolved_requires ~audit file with
   | Some { resolved_modules; _ } -> SMap.get r resolved_modules
   | None -> None
 
@@ -707,6 +719,12 @@ let get_file ~audit m =
   | None -> failwith
       (spf "file name not found for module %s" (Modulename.to_string m))
 
+let get_module_resolved_requires ~audit f =
+  match get_resolved_requires ~audit f with
+  | Some resolved_requires -> resolved_requires
+  | None -> failwith
+      (spf "resolved requires not found for file %s" (string_of_filename f))
+
 let get_module_info ~audit f =
   match get_info ~audit f with
   | Some info -> info
@@ -724,7 +742,7 @@ let get_module_names ~audit f =
 (* TODO [perf]: measure size and possibly optimize *)
 (* Extract and process information from context. In particular, resolve
    references to required modules in a file, and record the results.  *)
-let info_of ~options cx =
+let resolved_requires_of ~options cx =
   let required, resolved_modules, phantom_dependents =
     imported_modules ~options cx in
   let require_loc = SMap.fold
@@ -733,21 +751,24 @@ let info_of ~options cx =
       SMap.add (Modulename.to_string resolved_r) loc require_loc)
     (Context.require_loc cx) SMap.empty in
   {
-    _module = Context.module_name cx;
     required;
     require_loc;
     resolved_modules;
     phantom_dependents;
+  }
+
+(* during inference, we add per-file module record to the shared heap
+   from worker processes.
+   Note that we wait to choose providers until inference is complete. *)
+let add_module_record ~audit ~options cx =
+  let resolved_requires = resolved_requires_of ~options cx in
+  let file = Context.file cx in
+  add_resolved_requires ~audit file resolved_requires;
+  add_info ~audit file {
+    _module = Context.module_name cx;
     checked = Context.is_checked cx;
     parsed = true;
   }
-
-(* during inference, we add per-file module info to the shared heap
-   from worker processes.
-   Note that we wait to choose providers until inference is complete. *)
-let add_module_info ~audit ~options cx =
-  let info = info_of ~options cx in
-  add_info ~audit (Context.file cx) info
 
 (* We need to track files that have failed to parse. This begins with
    adding tracking records for unparsed files to InfoHeap. They never
@@ -756,7 +777,7 @@ let add_module_info ~audit ~options cx =
    the module names of unparsed files, we're able to tell whether an
    unparsed file has been required/imported.
  *)
-let add_unparsed_info ~audit ~options file docblock =
+let add_unparsed_record ~audit ~options file docblock =
   let force_check = Options.all options in
   let _module = exported_module ~options file docblock in
   let checked =
@@ -765,13 +786,18 @@ let add_unparsed_info ~audit ~options file docblock =
     Docblock.is_flow docblock ||
     Docblock.isDeclarationFile docblock
   in
-  let info = { _module; checked; parsed = false;
+  let resolved_requires = {
     required = NameSet.empty;
     require_loc = SMap.empty;
     resolved_modules = SMap.empty;
     phantom_dependents = SSet.empty;
   } in
-  add_info ~audit file info
+  add_resolved_requires ~audit file resolved_requires;
+  add_info ~audit file {
+    _module;
+    checked;
+    parsed = false;
+  }
 
 (* Note that the module provided by a file is always accessible via its full
    path, so that it may be imported by specifying (a part of) that path in any
@@ -823,7 +849,7 @@ let get_providers = Hashtbl.find all_providers
 
    Preconditions:
    1. all files in inferred have entries in InfoHeap (true if
-   infer is properly calling add_module_info for every file
+   infer is properly calling add_module_record for every file
    successfully inferred)
    2. all modules not mentioned in removed, but provided by one or more
    files in InfoHeap, have some provider registered in NameHeap.
@@ -855,8 +881,7 @@ let commit_modules workers ~options inferred removed =
     "*** committing modules inferred %d removed %d ***"
     (List.length inferred) (NameSet.cardinal removed);
 
-  (* all removed modules must be repicked *)
-  (* all modules provided by newly inferred files must be repicked *)
+  (* recall the exported module for each inferred file *)
   let calc_file_module_assoc =
     List.fold_left (fun file_module_assoc f ->
       let { _module = m; _ } = get_module_info ~audit:Expensive.ok f in
@@ -869,6 +894,9 @@ let commit_modules workers ~options inferred removed =
     ~neutral: []
     ~merge: List.rev_append
     ~next: (MultiWorker.next workers inferred) in
+
+  (* all removed modules must be repicked *)
+  (* all modules provided by newly inferred files must be repicked *)
   let repick = List.fold_left (fun acc (f, m) ->
     let f_module = Modulename.Filename f in
     add_provider f m; add_provider f f_module;
@@ -961,12 +989,13 @@ let commit_modules workers ~options inferred removed =
   let providers = replace |> List.split |> snd in
   providers, errmap
 
-let clear_infos files =
+let clear_records files =
+  ResolvedRequiresHeap.remove_batch files;
   InfoHeap.remove_batch files
 
 (* remove module mappings for given files, if they exist. Possibilities:
    1. file is current registered module provider for a given module name
-   2. file is not current provider, but info is still registered
+   2. file is not current provider, but record is still registered
    3. file isn't in the map at all. This is an error.
    We return the set of module names whose current providers have been
    removed (#1). This is the set commit_module expects as its second
@@ -1002,10 +1031,10 @@ and remove_files_with_data options data files =
       |> NameSet.add (Modulename.Filename file)
     else names
   ) data NameSet.empty in
-  (* clear any registrations that point to infos we're about to clear *)
-  (* for infos, remove_batch will ignore missing entries, no need to filter *)
+  (* clear any registrations that point to records we're about to clear *)
+  (* for records, remove_batch will ignore missing entries, no need to filter *)
   NameHeap.remove_batch names;
-  clear_infos files;
+  clear_records files;
   SharedMem_js.collect options `gentle;
   (* note: only return names of modules actually removed *)
   names

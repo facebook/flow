@@ -228,34 +228,6 @@ let commit_modules workers ~options errors inferred removed =
     update_errset acc file errset
   ) errmap errors
 
-(* Sanity checks on InfoHeap and NameHeap. Since this is performance-intensive
-   (although it probably doesn't need to be), it is only done under --debug. *)
-let heap_check ~audit files = Module_js.(
-  let ih = Hashtbl.create 0 in
-  let nh = Hashtbl.create 0 in
-  files |> List.iter (fun file ->
-    let m_file = get_file ~audit (Modulename.Filename file) in
-    if not (Loc.check_suffix m_file Files.flow_ext)
-    then assert (m_file = file);
-    let info = get_module_info ~audit file in
-    Hashtbl.add ih file info;
-    let m = info.Module_js._module in
-    let f = get_file ~audit m in
-    Hashtbl.add nh m f;
-  );
-  nh |> Hashtbl.iter (fun m f ->
-    let names = get_module_names ~audit f in
-    assert (List.exists (fun name -> name = m) names);
-  );
-  ih |> Hashtbl.iter (fun _ info ->
-    let parsed = info.Module_js.parsed in
-    let checked = info.Module_js.checked in
-    let required = info.Module_js.required in
-    assert (parsed);
-    assert (checked || (NameSet.is_empty required));
-  );
-)
-
 (* helper *)
 let typecheck
   ~options
@@ -268,7 +240,7 @@ let typecheck
   ~errors =
   (* TODO remove after lookup overhaul *)
   Module_js.clear_filename_cache ();
-  (* local inference populates context heap, module info heap *)
+  (* local inference populates context heap, module records heaps *)
   Flow_logger.log "Running local inference";
   let profiling, infer_results =
     with_timer ~options "Infer" profiling (fun () ->
@@ -290,7 +262,7 @@ let typecheck
   MultiWorker.call workers
     ~job: (fun () ->
       List.iter (fun (filename, docblock) ->
-        Module_js.add_unparsed_info ~audit:Expensive.ok
+        Module_js.add_unparsed_record ~audit:Expensive.ok
           ~options filename docblock
       )
     )
@@ -329,7 +301,7 @@ let typecheck
        before merging. in contrast, dependencies on imported types themselves
        are transitive along chains of imports, hence the need to re-merge the
        transitive closure contained in to_merge.
-       - residue of module import resolution is held in Module_js.InfoHeap.
+       - residue of module import resolution is held in Module_js.ResolvedRequiresHeap.
        residue of type merging is held in SigContextHeap.
        - since to_merge is the transitive closure of dependencies of inferred,
        and direct_deps are dependencies of inferred, all dependencies of
@@ -351,18 +323,18 @@ let typecheck
       with_timer ~options "ResolveDirectDeps" profiling (fun () ->
         if not (FilenameSet.is_empty direct_deps) then begin
           (** TODO [perf] Consider oldifying **)
-          Module_js.clear_infos direct_deps;
+          Module_js.clear_records direct_deps;
           SharedMem_js.collect options `gentle;
 
           MultiWorker.call workers
             ~job: (fun () files ->
               let cache = new Context_cache.context_cache in
               List.iter (fun f ->
-                (** TODO [perf]
-                    Instead of reading the ContextHeap, could read the InfoHeap
-                  **)
+                (** TODO [perf] Instead of reading the ContextHeap, could read
+                    the InfoHeap and ResolvedRequiresHeap. Suspect don't need to
+                    update both. **)
                 let cx = cache#read ~audit:Expensive.ok f in
-                Module_js.add_module_info ~audit:Expensive.ok ~options cx
+                Module_js.add_module_record ~audit:Expensive.ok ~options cx
               ) files
             )
             ~neutral: ()
@@ -370,10 +342,6 @@ let typecheck
             ~next:(MultiWorker.next workers (FilenameSet.elements direct_deps));
         end
       ) in
-
-    (* TODO [correctness]: This seems to have rotted :( *)
-    if Options.is_debug_mode options
-    then heap_check ~audit:Expensive.warn to_merge;
 
     Flow_logger.log "Calculating dependencies";
     let profiling, dependency_graph =
@@ -519,7 +487,7 @@ let recheck genv env modified =
   (* remember deleted modules *)
   let to_clear = FilenameSet.union modified deleted in
   Context_cache.remove_batch to_clear;
-  (* clear out infos of files, and names of modules provided by those files *)
+  (* clear out records of files, and names of modules provided by those files *)
   let removed_modules = Module_js.remove_files options workers to_clear in
 
   (* TODO elsewhere or delete *)
