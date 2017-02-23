@@ -755,18 +755,26 @@ let resolved_requires_of ~options cx =
     phantom_dependents;
   }
 
-(* during inference, we add per-file module record to the shared heap
-   from worker processes.
-   Note that we wait to choose providers until inference is complete. *)
-let add_module_record ~audit ~options cx =
-  let resolved_requires = resolved_requires_of ~options cx in
-  let file = Context.file cx in
-  add_resolved_requires ~audit file resolved_requires;
+(* Before and after inference, we add per-file module info and resolved requires
+   to the shared heap from worker processes. Note that we wait to choose
+   providers until inference is complete. *)
+let add_parsed_info ~audit ~options file docblock =
+  let force_check = Options.all options in
+  let _module = exported_module ~options file docblock in
+  let checked =
+    force_check ||
+    Docblock.is_flow docblock
+  in
   add_info ~audit file {
-    _module = Context.module_name cx;
-    checked = Context.is_checked cx;
+    _module;
+    checked;
     parsed = true;
   }
+
+let add_parsed_resolved_requires ~audit ~options cx =
+  let resolved_requires = resolved_requires_of ~options cx in
+  let file = Context.file cx in
+  add_resolved_requires ~audit file resolved_requires
 
 (* We need to track files that have failed to parse. This begins with
    adding tracking records for unparsed files to InfoHeap. They never
@@ -775,7 +783,7 @@ let add_module_record ~audit ~options cx =
    the module names of unparsed files, we're able to tell whether an
    unparsed file has been required/imported.
  *)
-let add_unparsed_record ~audit ~options file docblock =
+let add_unparsed_info ~audit ~options file docblock =
   let force_check = Options.all options in
   let _module = exported_module ~options file docblock in
   let checked =
@@ -784,18 +792,20 @@ let add_unparsed_record ~audit ~options file docblock =
     Docblock.is_flow docblock ||
     Docblock.isDeclarationFile docblock
   in
+  add_info ~audit file {
+    _module;
+    checked;
+    parsed = false;
+  }
+
+let add_unparsed_resolved_requires ~audit file =
   let resolved_requires = {
     required = NameSet.empty;
     require_loc = SMap.empty;
     resolved_modules = SMap.empty;
     phantom_dependents = SSet.empty;
   } in
-  add_resolved_requires ~audit file resolved_requires;
-  add_info ~audit file {
-    _module;
-    checked;
-    parsed = false;
-  }
+  add_resolved_requires ~audit file resolved_requires
 
 (* Note that the module provided by a file is always accessible via its full
    path, so that it may be imported by specifying (a part of) that path in any
@@ -840,18 +850,19 @@ let remove_provider f m =
 
 let get_providers = Hashtbl.find all_providers
 
-(* inferred_unparsed is a list of inferred / unparsed file names.
+(* parsed_unparsed is a list of parsed / unparsed file names.
    removed_modules is a set of removed module names.
-   modules provided by inferred / unparsed files may or may not have a provider.
+   modules provided by parsed / unparsed files may or may not have a provider.
    modules named in removed_modules definitely do not have a provider.
 
    Preconditions:
-   1. all files in inferred_unparsed have entries in InfoHeap (true if
-   infer is properly calling add_module_record for every inferred / unparsed file)
+   1. all files in parsed_unparsed have entries in InfoHeap (true if
+   we're properly calling add_parsed_info and add_unparsed_info for every
+   parsed / unparsed file before calling commit_modules)
    2. all modules not mentioned in removed_modules, but provided by one or more
    files in InfoHeap, have some provider registered in NameHeap.
    (However, the current provider may not be the one we now want,
-   given newly inferred_unparsed files.)
+   given newly parsed / unparsed files.)
    3. conversely all modules in removed_modules lack a provider in NameHeap.
 
    Postconditions:
@@ -866,20 +877,20 @@ let get_providers = Hashtbl.find all_providers
 
    Algorithm here:
    1. add all removed modules to the set of modules to repick a provider for.
-   2. add the modules provided by all inferred / unparsed files to the repick set.
+   2. add the modules provided by all parsed / unparsed files to the repick set.
    3. for each module in the repick set, pick a winner from its available
    providers. if it's different than the current provider, or if there is no
    current provider, add the new provider to the list to be registered.
    4. remove the unregistered modules from NameHeap
    5. register the new providers in NameHeap
  *)
-let commit_modules workers ~options inferred_unparsed removed_modules =
+let commit_modules workers ~options parsed_unparsed removed_modules =
   let debug = Options.is_debug_mode options in
   if debug then prerr_endlinef
-    "*** committing modules: inferred / unparsed files %d removed modules %d ***"
-    (List.length inferred_unparsed) (NameSet.cardinal removed_modules);
+    "*** committing modules: parsed / unparsed files %d removed modules %d ***"
+    (List.length parsed_unparsed) (NameSet.cardinal removed_modules);
 
-  (* recall the exported module for each inferred_unparsed file *)
+  (* recall the exported module for each parsed / unparsed file *)
   let calc_file_module_assoc =
     List.fold_left (fun file_module_assoc f ->
       let { _module = m; _ } = get_info_unsafe ~audit:Expensive.ok f in
@@ -891,10 +902,10 @@ let commit_modules workers ~options inferred_unparsed removed_modules =
     ~job: calc_file_module_assoc
     ~neutral: []
     ~merge: List.rev_append
-    ~next: (MultiWorker.next workers inferred_unparsed) in
+    ~next: (MultiWorker.next workers parsed_unparsed) in
 
   (* all removed modules must be repicked *)
-  (* all modules provided by newly inferred_unparsed files must be repicked *)
+  (* all modules provided by newly parsed / unparsed files must be repicked *)
   let repick = List.fold_left (fun acc (f, m) ->
     let f_module = Modulename.Filename f in
     add_provider f m; add_provider f f_module;
@@ -950,22 +961,31 @@ let commit_modules workers ~options inferred_unparsed removed_modules =
         ~options (Modulename.to_string m) ps errmap in
       (* register chosen provider in NameHeap *)
       match f_opt with
-      | Some f when f = p ->
+      | Some f ->
+        if f = p then begin
+          (* When can this happen? Say m pointed to f before, a different file
+             f' that provides m changed (so m is not in removed_modules), but f
+             continues to be the chosen provider = p (winning over f'). *)
           if debug then prerr_endlinef
             "unchanged provider: %S -> %s"
             (Modulename.to_string m)
             (string_of_filename p);
           rem, prov, rep, errmap
-      | Some f ->
-          (* TODO: Can this happen? Is there any essential difference between
-             this case and the next? *)
+        end else begin
+          (* When can this happen? Say m pointed to f before, a different file
+             f' that provides m changed (so m is not in removed_modules), and
+             now f' becomes the chosen provider = p (winning over f). *)
           if debug then prerr_endlinef
             "new provider: %S -> %s replaces %s"
             (Modulename.to_string m)
             (string_of_filename p)
             (string_of_filename f);
           (NameSet.add m rem), p::prov, (mapping m p rep), errmap
+        end
       | None ->
+          (* When can this happen? Either m pointed to a file that used to
+             provide m and changed or got deleted (causing m to be in
+             removed_modules), or m didn't have a provider before. *)
           if debug then prerr_endlinef
             "initial provider %S -> %s"
             (Modulename.to_string m)
@@ -993,9 +1013,8 @@ let commit_modules workers ~options inferred_unparsed removed_modules =
   if debug then prerr_endlinef "*** done committing modules ***";
   providers, errmap
 
-let clear_records files =
-  ResolvedRequiresHeap.remove_batch files;
-  InfoHeap.remove_batch files
+let remove_batch_resolved_requires files =
+  ResolvedRequiresHeap.remove_batch files
 
 (* remove module mappings for given files, if they exist. Possibilities:
    1. file is current registered module provider for a given module name
@@ -1047,7 +1066,8 @@ and remove_files_with_data options data files =
   (* clear any registrations that point to records we're about to clear *)
   (* for records, remove_batch will ignore missing entries, no need to filter *)
   NameHeap.remove_batch names;
-  clear_records files;
+  InfoHeap.remove_batch files;
+  ResolvedRequiresHeap.remove_batch files;
   SharedMem_js.collect options `gentle;
   (* note: only return names of modules actually removed *)
   names

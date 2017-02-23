@@ -199,9 +199,9 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
       profiling, None, errors, info
 
 (* commit newly parsed / unparsed files and removed modules, collect errors. *)
-let commit_modules workers ~options errors inferred_unparsed removed_modules =
+let commit_modules workers ~options errors parsed_unparsed removed_modules =
   let providers, errmap =
-    Module_js.commit_modules workers ~options inferred_unparsed removed_modules in
+    Module_js.commit_modules workers ~options parsed_unparsed removed_modules in
   (* Providers might be new but not modified. This typically happens when old
      providers are deleted, and previously duplicate providers become new
      providers. In such cases, we must clear the old duplicate provider errors
@@ -234,20 +234,62 @@ let typecheck
   ~profiling
   ~workers
   ~make_merge_input
-  ~files
+  ~parsed
   ~removed_modules
   ~unparsed
   ~errors =
   (* TODO remove after lookup overhaul *)
   Module_js.clear_filename_cache ();
-  (* local inference populates context heap, module records heaps *)
+
+  (* add tracking modules for unparsed files *)
+  MultiWorker.call workers
+    ~job: (fun () ->
+      List.iter (fun (filename, docblock) ->
+        Module_js.add_unparsed_info ~audit:Expensive.ok
+          ~options filename docblock;
+        (* TODO: The following step could be moved later (after committing
+           modules). Actually, we might be able to get rid of this step
+           altogether, since it only involves dummy entries. *)
+        Module_js.add_unparsed_resolved_requires ~audit:Expensive.ok filename;
+      )
+    )
+    ~neutral: ()
+    ~merge: (fun () () -> ())
+    ~next: (MultiWorker.next workers unparsed);
+
+  let parsed = FilenameSet.elements parsed in
+  (* create info for parsed files *)
+  MultiWorker.call workers
+    ~job: (fun () ->
+      List.iter (fun filename ->
+        let info = Parsing_service_js.get_docblock_unsafe filename in
+        Module_js.add_parsed_info ~audit:Expensive.ok
+          ~options filename info
+      )
+    )
+    ~neutral: ()
+    ~merge: (fun () () -> ())
+    ~next: (MultiWorker.next workers parsed);
+
+  let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
+
+  (* create module dependency graph, warn on dupes etc. *)
+  let profiling, local_errors =
+    with_timer ~options "CommitModules" profiling (fun () ->
+      let parsed_unparsed = List.fold_left (fun acc (filename, _) ->
+        filename::acc
+      ) parsed unparsed in
+      commit_modules workers ~options local_errors parsed_unparsed removed_modules
+    )
+  in
+
+  (* local inference populates context heap, resolved requires heap *)
   Flow_logger.log "Running local inference";
   let profiling, infer_results =
     with_timer ~options "Infer" profiling (fun () ->
-      Infer_service.infer ~options ~workers files
+      Infer_service.infer ~options ~workers parsed
     ) in
 
-  let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
   let rev_inferred, local_errors, suppressions =
     List.fold_left (fun (inferred, errset, suppressions) (file, errs, supps) ->
       let errset = update_errset errset file errs in
@@ -256,31 +298,6 @@ let typecheck
     ) ([], local_errors, suppressions) infer_results
   in
   let inferred = List.rev rev_inferred in
-
-  (** TODO [correctness]: check whether these have been cleared **)
-  (* add tracking modules for unparsed files *)
-  MultiWorker.call workers
-    ~job: (fun () ->
-      List.iter (fun (filename, docblock) ->
-        Module_js.add_unparsed_record ~audit:Expensive.ok
-          ~options filename docblock
-      )
-    )
-    ~neutral: ()
-    ~merge: (fun () () -> ())
-    ~next: (MultiWorker.next workers unparsed);
-
-  (** TODO [correctness]:
-      move CommitModules after MakeMergeInput + ResolveDirectDeps **)
-  (* create module dependency graph, warn on dupes etc. *)
-  let profiling, local_errors =
-    with_timer ~options "CommitModules" profiling (fun () ->
-      let inferred_unparsed = List.fold_left (fun acc (filename, _) ->
-        filename::acc
-      ) inferred unparsed in
-      commit_modules workers ~options local_errors inferred_unparsed removed_modules
-    )
-  in
 
   (* call supplied function to calculate closure of modules to merge *)
   let profiling, merge_input =
@@ -323,7 +340,7 @@ let typecheck
       with_timer ~options "ResolveDirectDeps" profiling (fun () ->
         if not (FilenameSet.is_empty direct_deps) then begin
           (** TODO [perf] Consider oldifying **)
-          Module_js.clear_records direct_deps;
+          Module_js.remove_batch_resolved_requires direct_deps;
           SharedMem_js.collect options `gentle;
 
           MultiWorker.call workers
@@ -334,7 +351,7 @@ let typecheck
                     the InfoHeap and ResolvedRequiresHeap. Suspect don't need to
                     update both. **)
                 let cx = cache#read ~audit:Expensive.ok f in
-                Module_js.add_module_record ~audit:Expensive.ok ~options cx
+                Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options cx
               ) files
             )
             ~neutral: ()
@@ -544,7 +561,7 @@ let recheck genv env modified =
 
       Some (FilenameSet.elements to_merge, direct_deps, modified_files)
     )
-    ~files:freshparsed
+    ~parsed:freshparsed
     ~removed_modules
     ~unparsed
     ~errors
@@ -654,7 +671,7 @@ let full_check workers ~ordered_libs parse_next options =
          first entry. *)
       else Some (inferred, FilenameSet.empty, FilenameSet.empty)
     )
-    ~files:parsed
+    ~parsed
     ~removed_modules:Module_js.NameSet.empty
     ~unparsed
     ~errors
