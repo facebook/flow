@@ -264,6 +264,9 @@ exports.createEditor = function createEditor(
 
     resultsNode.className += " show-errors";
 
+    const cursorPositionNode = document.querySelector('footer .cursor-position');
+    const typeAtPosNode = document.querySelector('footer .type-at-pos');
+
     const editor = CodeMirror(domNode, {
       value: getHashedValue(location.hash) || defaultValue,
       autofocus: true,
@@ -278,6 +281,23 @@ exports.createEditor = function createEditor(
       const encoded = LZString.compressToEncodedURIComponent(value);
       history.replaceState(undefined, undefined, `#0${encoded}`);
       localStorage.setItem('tryFlowLastContent', location.hash);
+    });
+
+    editor.on('cursorActivity', () => {
+      const cursor = editor.getCursor();
+      const value = editor.getValue();
+      cursorPositionNode.innerHTML = `${cursor.line + 1}:${cursor.ch + 1}`;
+      flowReady.then(flow => {
+        let typeAtPos;
+        try {
+          typeAtPos = flow.typeAtPos('-', value, cursor.line + 1, cursor.ch);
+        } catch (err) {
+          // ...
+        } finally {
+          typeAtPosNode.title = typeAtPos ? typeAtPos[1].c : '';
+          typeAtPosNode.innerHTML = typeAtPos ? typeAtPos[1].c : '';
+        }
+      });
     });
 
     editor.on('flowErrors', errors => {
