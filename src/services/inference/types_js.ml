@@ -567,6 +567,11 @@ let recheck genv env modified =
     ~errors
   in
 
+  (* collate errors by origin *)
+  let profiling, errorl = with_timer ~options "CollateErrors" profiling (fun () ->
+    collate_errors errors
+  ) in
+
   FlowEventLogger.recheck
     ~modified_count
     ~deleted_count
@@ -574,9 +579,6 @@ let recheck genv env modified =
     ~profiling;
 
   let parsed = FilenameSet.union freshparsed unmodified_parsed in
-
-  (* collate errors by origin *)
-  let errorl = collate_errors errors in
 
   (* NOTE: unused fields are left in their initial empty state *)
   { env with ServerEnv.
@@ -697,7 +699,9 @@ let server_init genv =
     genv.ServerEnv.workers ~ordered_libs get_next options in
 
   (* collate errors by origin *)
-  let errorl = collate_errors errors in
+  let profiling, errorl = with_timer ~options "CollateErrors" profiling (fun () ->
+    collate_errors errors
+  ) in
 
   let profiling = SharedMem.(
     let dep_stats = dep_stats () in
