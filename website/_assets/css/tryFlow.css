@@ -11,6 +11,8 @@
 }
 
 #try footer {
+  display: flex;
+  justify-content: space-between;
   position: absolute;
   height: 30px;
   left: 0;
@@ -19,6 +21,20 @@
   border-top: 1px solid #ddd;
   padding: 4px 7px;
   font-size: 12px;
+  text-align: initial;
+}
+
+#try footer .cursor-position {}
+
+#try footer .type-at-pos {
+  margin: 0 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+#try footer .copyright {
+  flex-shrink: 0;
 }
 
 .editor {
