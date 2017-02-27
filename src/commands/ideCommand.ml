@@ -42,10 +42,9 @@ let handle_server_message fd =
       exit 1
   in
   let Prot.Errors errors = message in
-  let error_count = Errors.ErrorSet.cardinal errors in
   (* TODO we will use JSON RPC at some point in the near future. this simple message format is just
   for ease of prototyping *)
-  Printf.printf "Error count: %d" error_count;
+  Errors.Json_output.print_errors ~out_channel:stdout ~strip_root:None errors;
   print_newline ()
 
 let send_server_request fd msg =
