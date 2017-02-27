@@ -352,4 +352,5 @@ module type S = sig
   val from_error_list : error list -> t
   val iter_error_list : (error -> unit) -> t -> unit
   val get_applied_fixmes : t -> applied_fixme list
+  val optional_shape_fields_not_supported : Pos.t -> unit
 end
