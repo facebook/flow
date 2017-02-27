@@ -322,7 +322,7 @@ module type S = sig
     -> (Pos.t * string) list -> unit
   val instanceof_always_false : Pos.t -> unit
   val instanceof_always_true : Pos.t -> unit
-  val instanceof_generic_classname : Pos.t -> unit
+  val instanceof_generic_classname : Pos.t -> string -> unit
 
 
   val to_json : Pos.absolute error_ -> Hh_json.json
