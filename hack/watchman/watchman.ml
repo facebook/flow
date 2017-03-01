@@ -583,7 +583,8 @@ let get_changes ?deadline instance =
 let flush_request ~(timeout:int) watch_root =
   let open Hh_json in
   let directive = JSON_Object [
-    ("sync_timeout", (JSON_Number (string_of_int timeout))) ] in
+    (** Watchman expects timeout milliseconds. *)
+    ("sync_timeout", (JSON_Number (string_of_int @@ timeout * 1000))) ] in
   JSON_Array [
     JSON_String "flush-subscriptions";
     JSON_String watch_root;
