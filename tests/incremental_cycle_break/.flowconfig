@@ -1,0 +1,7 @@
+[ignore]
+<PROJECT_ROOT>/tmp*
+
+[options]
+strip_root=true
+
+module.system=haste

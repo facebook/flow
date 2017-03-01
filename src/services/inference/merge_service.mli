@@ -19,6 +19,6 @@ val merge_strict:
   options: Options.t ->
   workers: Worker.t list option ->
   FilenameSet.t FilenameMap.t ->
-  filename list list IMap.t ->
+  (filename list) FilenameMap.t ->
   bool FilenameMap.t ->
   (filename * Errors.ErrorSet.t) list

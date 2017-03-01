@@ -367,17 +367,20 @@ let typecheck
       ) in
     let partition = Sort_js.topsort dependency_graph in
     if Options.should_profile options then Sort_js.log partition;
+    let component_map = Sort_js.component_map partition in
     let profiling, merge_errors = try
       Flow_logger.log "Merging";
       let profiling, merge_errors =
         with_timer ~options "Merge" profiling (fun () ->
           let merged = Merge_service.merge_strict
-            ~options ~workers dependency_graph partition recheck_map
+            ~options ~workers dependency_graph component_map recheck_map
           in
           List.fold_left (fun merge_errors (file, errors) ->
-            if Errors.ErrorSet.is_empty errors
-              then FilenameMap.remove file merge_errors
-              else FilenameMap.add file errors merge_errors
+            let merge_errors = List.fold_left (fun merge_errors file ->
+              FilenameMap.remove file merge_errors
+            ) merge_errors (FilenameMap.find_unsafe file component_map) in
+            if Errors.ErrorSet.is_empty errors then merge_errors
+            else FilenameMap.add file errors merge_errors
           ) merge_errors merged
         )
       in
