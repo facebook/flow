@@ -172,3 +172,10 @@ let log =
         prerr_endlinef "cycle detected among the following files:\n\t%s" files
     ) mcs;
   )
+
+let component_map partition =
+  IMap.fold (fun _ components acc ->
+    List.fold_left (fun acc component ->
+      FilenameMap.add (List.hd component) component acc
+    ) acc components
+  ) partition FilenameMap.empty

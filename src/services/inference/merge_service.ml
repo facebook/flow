@@ -216,22 +216,15 @@ let merge_strict_job ~options (merged, unchanged) elements =
       (file, errorset) :: merged, unchanged
   ) (merged, unchanged) elements
 
+(* make a map from component leaders to components *)
 let merge_strict ~options ~workers
-    dependency_graph partition recheck_map =
+    dependency_graph component_map recheck_map =
   (* NOTE: master_cx will only be saved once per server lifetime *)
   let master_cx = Init_js.get_master_cx options in
   (* TODO: we probably don't need to save master_cx in ContextHeap *)
   Context_cache.add ~audit:Expensive.ok master_cx;
   (* store master signature context to heap *)
   Context_cache.add_sig ~audit:Expensive.ok master_cx;
-  (* make a map from component leaders to components *)
-  let component_map =
-    IMap.fold (fun _ components acc ->
-      List.fold_left (fun acc component ->
-        FilenameMap.add (List.hd component) component acc
-      ) acc components
-    ) partition FilenameMap.empty
-  in
   (* make a map from files to their component leaders *)
   let leader_map =
     FilenameMap.fold (fun file component acc ->
