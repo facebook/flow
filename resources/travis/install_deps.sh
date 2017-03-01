@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-OPAM_DEPENDS="ocp-build"
+OPAM_DEPENDS="ocamlfind ocp-build"
 
 # js_of_ocaml 2.7 is  <  ocaml 4.03
 # js_of_ocaml 2.8 is  >= ocaml 4.02
@@ -80,6 +80,10 @@ esac
 
 echo "Installing dependencies..."
 "$OPAM" install --yes ${OPAM_DEPENDS}
+
+eval "$(opam config env)"
+echo "Installed packages:"
+ocamlfind list
 
 printf "travis_fold:end:opam_installer\n"
 
