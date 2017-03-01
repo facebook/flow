@@ -55,7 +55,7 @@ let dummy_this =
   AnyT reason
 
 let global_this =
-  let reason = locationless_reason (RCustom "global object") in
+  let reason = builtin_reason (RCustom "global object") in
   ObjProtoT reason
 
 (* A method type is a function type with `this` specified. *)
