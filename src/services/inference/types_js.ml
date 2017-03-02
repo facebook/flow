@@ -306,60 +306,13 @@ let typecheck
     ) in
 
   match merge_input with
-  | Some (to_merge, direct_deps, inferred) ->
+  | Some (to_merge, recheck_map) ->
     (* to_merge is the union of inferred (newly inferred files) and the
-       transitive closure of all dependents. direct_deps is the subset of
-       to_merge which depend on inferred files directly, or whose import
-       resolution paths overlap with them. imports within these files must
-       be re-resolved before merging.
-       Notes:
-       - since the dependencies created by module import statements are only
-       one level deep, only imports in direct deps need to be re-resolved
-       before merging. in contrast, dependencies on imported types themselves
-       are transitive along chains of imports, hence the need to re-merge the
-       transitive closure contained in to_merge.
-       - residue of module import resolution is held in Module_js.ResolvedRequiresHeap.
-       residue of type merging is held in SigContextHeap.
-       - since to_merge is the transitive closure of dependencies of inferred,
-       and direct_deps are dependencies of inferred, all dependencies of
-       direct_deps are included in to_merge
+       transitive closure of all dependents.
+
+       recheck_map maps each file in to_merge to whether it should be rechecked
+       initially.
     *)
-
-    (* Definitely recheck inferred and direct_deps. As merging proceeds, other
-       files in to_merge may or may not be rechecked. *)
-    let recheck_map = to_merge |> List.fold_left (
-      let roots = FilenameSet.union inferred direct_deps in
-      fun recheck_map file ->
-        FilenameMap.add file (FilenameSet.mem file roots) recheck_map
-    ) FilenameMap.empty in
-
-    (** TODO [simplification]:
-        Move ResolveDirectDeps into MakeMergeInput **)
-    Flow_logger.log "Re-resolving directly dependent files";
-    let profiling, _ =
-      with_timer ~options "ResolveDirectDeps" profiling (fun () ->
-        if not (FilenameSet.is_empty direct_deps) then begin
-          (** TODO [perf] Consider oldifying **)
-          Module_js.remove_batch_resolved_requires direct_deps;
-          SharedMem_js.collect options `gentle;
-
-          MultiWorker.call workers
-            ~job: (fun () files ->
-              let cache = new Context_cache.context_cache in
-              List.iter (fun f ->
-                (** TODO [perf] Instead of reading the ContextHeap, could read
-                    the InfoHeap and ResolvedRequiresHeap. Suspect don't need to
-                    update both. **)
-                let cx = cache#read ~audit:Expensive.ok f in
-                Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options cx
-              ) files
-            )
-            ~neutral: ()
-            ~merge: (fun () () -> ())
-            ~next:(MultiWorker.next workers (FilenameSet.elements direct_deps));
-        end
-      ) in
-
     Flow_logger.log "Calculating dependencies";
     let profiling, dependency_graph =
       with_timer ~options "CalcDeps" profiling (fun () ->
@@ -543,6 +496,24 @@ let recheck genv env modified =
         removed_modules
       in
 
+      Flow_logger.log "Re-resolving directly dependent files";
+      (** TODO [perf] Consider oldifying **)
+      Module_js.remove_batch_resolved_requires direct_deps;
+      SharedMem_js.collect options `gentle;
+
+      (* requires in direct_deps must be re-resolved before merging. *)
+      MultiWorker.call workers
+        ~job: (fun () files ->
+          let cache = new Context_cache.context_cache in
+          List.iter (fun f ->
+            let cx = cache#read ~audit:Expensive.ok f in
+            Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options cx
+          ) files
+        )
+        ~neutral: ()
+        ~merge: (fun () () -> ())
+        ~next:(MultiWorker.next workers (FilenameSet.elements direct_deps));
+
       let n = FilenameSet.cardinal all_deps in
       if n > 0
       then Flow_logger.log "remerge %d dependent files:" n;
@@ -562,7 +533,17 @@ let recheck genv env modified =
       (** TODO [perf]: Consider `aggressive **)
       SharedMem_js.collect genv.ServerEnv.options `gentle;
 
-      Some (FilenameSet.elements to_merge, direct_deps, modified_files)
+      let to_merge = FilenameSet.elements to_merge in
+
+      (* Definitely recheck inferred and direct_deps. As merging proceeds, other
+         files in to_merge may or may not be rechecked. *)
+      let recheck_map = to_merge |> List.fold_left (
+        let roots = FilenameSet.union modified_files direct_deps in
+        fun recheck_map file ->
+          FilenameMap.add file (FilenameSet.mem file roots) recheck_map
+      ) FilenameMap.empty in
+
+      Some (to_merge, recheck_map)
     )
     ~parsed:freshparsed
     ~removed_modules
@@ -671,10 +652,10 @@ let full_check workers ~ordered_libs parse_next options =
     ~workers
     ~make_merge_input:(fun inferred ->
       if not libs_ok then None
-      (* TODO: the third entry should ideally be inferred to seed linking work,
-         but it doesn't matter since the initial stream always contains the
-         first entry. *)
-      else Some (inferred, FilenameSet.empty, FilenameSet.empty)
+      else Some (inferred,
+        inferred |> List.fold_left (fun map f ->
+          FilenameMap.add f true map
+        ) FilenameMap.empty)
     )
     ~parsed
     ~removed_modules:Module_js.NameSet.empty
