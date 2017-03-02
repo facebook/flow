@@ -90,11 +90,6 @@ val add_unparsed_info:
    Docblock.t ->
    unit) Expensive.t
 
-(* add dummy resolved requires for unparsed file to store *)
-val add_unparsed_resolved_requires:
-  (filename ->
-   unit) Expensive.t
-
 (* remove module record being tracked for given file set;
    returns the set of modules removed
 *)
