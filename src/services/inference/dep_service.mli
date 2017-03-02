@@ -14,7 +14,7 @@ val dependent_files:
   Worker.t list option -> (* workers *)
   unchanged_parsed:FilenameSet.t ->
   new_or_changed:FilenameSet.t ->
-  cleared_modules:Module_js.NameSet.t ->
+  dirty_modules:Module_js.NameSet.t ->
   FilenameSet.t * FilenameSet.t
 
 val calc_dependencies:
