@@ -149,8 +149,8 @@ module NameHeap = SharedMem_js.WithCache (Modulename) (struct
   let description = "Name"
 end)
 
-let get_module_file = Expensive.wrap NameHeap.get
-let add_module_file = Expensive.wrap NameHeap.add
+let get_file = Expensive.wrap NameHeap.get
+let add_file = Expensive.wrap NameHeap.add
 
 (* map from filename to resolved requires *)
 module ResolvedRequiresHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
@@ -713,26 +713,26 @@ let choose_provider ~options m files errmap =
 
 let module_exists = NameHeap.mem
 
-let get_file ~audit m =
-  match get_module_file ~audit m with
+let get_file_unsafe ~audit m =
+  match get_file ~audit m with
   | Some file -> file
   | None -> failwith
       (spf "file name not found for module %s" (Modulename.to_string m))
 
-let get_module_resolved_requires ~audit f =
+let get_resolved_requires_unsafe ~audit f =
   match get_resolved_requires ~audit f with
   | Some resolved_requires -> resolved_requires
   | None -> failwith
       (spf "resolved requires not found for file %s" (string_of_filename f))
 
-let get_module_info ~audit f =
+let get_info_unsafe ~audit f =
   match get_info ~audit f with
   | Some info -> info
   | None -> failwith
       (spf "module info not found for file %s" (string_of_filename f))
 
-let get_module_names ~audit f =
-  let { _module; _ } = get_module_info ~audit f in
+let get_module_names_unsafe ~audit f =
+  let { _module; _ } = get_info_unsafe ~audit f in
   match _module with
   | Modulename.Filename file when file = f ->
     [_module]
@@ -884,7 +884,7 @@ let commit_modules workers ~options inferred removed =
   (* recall the exported module for each inferred file *)
   let calc_file_module_assoc =
     List.fold_left (fun file_module_assoc f ->
-      let { _module = m; _ } = get_module_info ~audit:Expensive.ok f in
+      let { _module = m; _ } = get_info_unsafe ~audit:Expensive.ok f in
       (* [perf] using a list instead of a map *)
       (f, m) :: file_module_assoc
     ) in
@@ -913,7 +913,7 @@ let commit_modules workers ~options inferred removed =
   let module_files = MultiWorker.call
     workers
     ~job: (List.fold_left (fun acc m ->
-      (m, get_module_file ~audit:Expensive.ok m)::acc
+      (m, get_file ~audit:Expensive.ok m)::acc
     ))
     ~neutral: []
     ~merge: List.rev_append
@@ -985,7 +985,7 @@ let commit_modules workers ~options inferred removed =
     workers
     ~job: (fun () replace ->
       List.iter (fun (m, f) ->
-        add_module_file Expensive.ok m f
+        add_file Expensive.ok m f
       ) replace;
     )
     ~neutral: ()
@@ -1013,7 +1013,7 @@ let rec remove_files options workers files =
       match get_info ~audit:Expensive.ok file with
       | Some info ->
         let { _module; _ } = info in
-        let current_provider = match get_module_file ~audit:Expensive.ok _module with
+        let current_provider = match get_file ~audit:Expensive.ok _module with
         | Some f when f = file -> true
         | _ -> false
         in

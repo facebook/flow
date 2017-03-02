@@ -43,8 +43,8 @@ open Utils_js
 let calc_dep_utils workers fileset root_fileset = Module_js.(
   (* Distribute work, looking up InfoHeap and ResolvedRequiresHeap once per file. *)
   let job = List.fold_left (fun (modules, rdmap, resolution_path_files) f ->
-    let resolved_requires = get_module_resolved_requires ~audit:Expensive.ok f in
-    let info = get_module_info ~audit:Expensive.ok f in
+    let resolved_requires = get_resolved_requires_unsafe ~audit:Expensive.ok f in
+    let info = get_info_unsafe ~audit:Expensive.ok f in
     (* Add f |-> info._module to the `modules` map. This will be used downstream
        in dep_closure.
 
@@ -106,7 +106,7 @@ let calc_dep_utils workers fileset root_fileset = Module_js.(
 
 (* given a reverse dependency map (from modules to the files which
    require them), generate the closure of the dependencies of a
-   given fileset, using get_module_info to map files to modules
+   given fileset, using get_info_unsafe to map files to modules
  *)
 let dep_closure modules rdmap fileset =
   let deps_of_module m = Module_js.NameMap.get m rdmap in
@@ -168,7 +168,7 @@ let dependent_files workers unmodified_files inferred_files removed_modules =
   let touched_modules = Module_js.(NameSet.union removed_modules (
     MultiWorker.call workers
       ~job: (List.fold_left (fun mods file ->
-        let file_mods = get_module_names ~audit:Expensive.ok file in
+        let file_mods = get_module_names_unsafe ~audit:Expensive.ok file in
         (* Add all module names exported by file *)
         List.fold_left (fun acc m -> NameSet.add m acc) mods file_mods
       ))
@@ -197,7 +197,7 @@ let dependent_files workers unmodified_files inferred_files removed_modules =
 
 
 let checked ~audit m = Module_js.(
-  let info = m |> get_file ~audit |> get_module_info ~audit in
+  let info = m |> get_file_unsafe ~audit |> get_info_unsafe ~audit in
   info.checked
 )
 
@@ -207,7 +207,7 @@ let checked ~audit m = Module_js.(
    to a dependency ordering among files for merging. *)
 let implementation_file ~audit r = Module_js.(
   if module_exists r && checked ~audit r
-  then Some (get_file ~audit r)
+  then Some (get_file_unsafe ~audit r)
   else None
 )
 
@@ -216,7 +216,7 @@ let calc_dependencies workers files =
     workers
     ~job: (List.fold_left (fun deps file ->
       let { Module_js.required; _ } =
-        Module_js.get_module_resolved_requires ~audit:Expensive.ok file in
+        Module_js.get_resolved_requires_unsafe ~audit:Expensive.ok file in
       let files = Module_js.NameSet.fold (fun r files ->
         match implementation_file ~audit:Expensive.ok r with
         | Some f -> FilenameSet.add f files
