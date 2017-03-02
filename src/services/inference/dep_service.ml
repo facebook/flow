@@ -133,39 +133,42 @@ let dep_closure modules rdmap fileset =
   in expand rdmap fileset (ref FilenameSet.empty)
 
 (* Files that must be rechecked include those that immediately or recursively
-   depend on modules that were added, deleted, or modified as a consequence of
-   the files that were directly added, deleted, or modified. In general, the map
-   from files to modules may not be preserved: deleting files may delete
-   modules, adding files may add modules, and modifying files may do both.
+   depended on modules whose providers were affected by new, changed, or deleted
+   files.
 
-   Identify the direct and transitive dependents of re-inferred files and
-   removed modules.
+   Providers are affected only in those cases already considered by
+   commit_modules: as such, the arguments to dependent_files are similar to
+   those of commit_modules.
 
-   - unmodified_files is all unmodified files in the current state
-   - inferred_files is all files that have just been through local inference
-   - removed_modules is all modules whose records have just been cleared
+   Identify the direct and transitive dependents of new or changed files and
+   cleared modules.
 
-   Note that while removed_modules and (the modules provided by) inferred_files
-   usually overlap, inferred_files will include providers of new modules, and
-   removed_modules will include modules provided by deleted files.
+   - unchanged_parsed is all unchanged files in the current state
+   - new_or_changed is all files that have just been through local inference and
+     all skipped files that were also new or unchanged
+   - cleared_modules is all modules whose records have just been cleared.
 
-   Return the subset of unmodified_files transitively dependent on changes,
-   and the subset directly dependent on them.
+   Note that while cleared_modules and (the modules provided by) new_or_changed
+   usually overlap, new_or_changed will include providers of new modules, and
+   cleared_modules will include modules provided by deleted files.
+
+   Return the subset of unchanged_parsed transitively dependent on updates, and
+   the subset directly dependent on them.
 *)
-let dependent_files workers unmodified_files inferred_files removed_modules =
-  (* Get the modules provided by unmodified files, the reverse dependency map
-     for unmodified files, and the subset of unmodified files whose resolution
-     paths may encounter newly inferred modules. *)
-  (** [shared mem access] InfoHeap.get and ResolvedRequiresHeap.get on unmodified_files for
+let dependent_files workers ~unchanged_parsed ~new_or_changed ~cleared_modules =
+  (* Get the modules provided by unchanged files, the reverse dependency map
+     for unchanged files, and the subset of unchanged files whose resolution
+     paths may encounter new or changed modules. *)
+  (** [shared mem access] InfoHeap.get and ResolvedRequiresHeap.get on unchanged_files for
       ._module, .required, .phantom_dependents **)
   let modules,
     reverse_deps,
     resolution_path_files
-    = calc_dep_utils workers unmodified_files inferred_files in
+    = calc_dep_utils workers unchanged_parsed new_or_changed in
 
-  (* touched_modules includes removed modules and those provided by new files *)
-  (** [shared mem access] InfoHeap.get on inferred_files for ._module **)
-  let touched_modules = Module_js.(NameSet.union removed_modules (
+  (* touched_modules includes cleared modules and those provided by new files *)
+  (** [shared mem access] InfoHeap.get on new_or_changed for ._module **)
+  let touched_modules = Module_js.(NameSet.union cleared_modules (
     MultiWorker.call workers
       ~job: (List.fold_left (fun mods file ->
         let file_mods = get_module_names_unsafe ~audit:Expensive.ok file in
@@ -174,11 +177,11 @@ let dependent_files workers unmodified_files inferred_files removed_modules =
       ))
       ~neutral: NameSet.empty
       ~merge: NameSet.union
-      ~next: (MultiWorker.next workers (FilenameSet.elements inferred_files))
+      ~next: (MultiWorker.next workers (FilenameSet.elements new_or_changed))
   )) in
 
   (* files that require touched modules directly, or may resolve to
-     modules provided by newly inferred files *)
+     modules provided by changed files *)
   let direct_deps = Module_js.(NameSet.fold (fun m acc ->
     match NameMap.get m reverse_deps with
     | Some files -> FilenameSet.union acc files

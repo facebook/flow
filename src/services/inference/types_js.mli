@@ -11,7 +11,7 @@
 open Utils_js
 
 (* incremental typecheck entry point *)
-val recheck: ServerEnv.genv -> ServerEnv.env -> FilenameSet.t -> ServerEnv.env
+val recheck: ServerEnv.genv -> ServerEnv.env -> updates:FilenameSet.t -> ServerEnv.env
 
 (* hh_server initial (full) check *)
 val server_init:

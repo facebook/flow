@@ -658,7 +658,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let root = Options.root genv.ServerEnv.options in
       let tmp_dir = Options.temp_dir genv.ServerEnv.options in
       ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
-      let env = Types_js.recheck genv env updates in
+      let env = Types_js.recheck genv env ~updates in
       ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
       env
     end

@@ -12,9 +12,9 @@ open Utils_js
 
 val dependent_files:
   Worker.t list option -> (* workers *)
-  FilenameSet.t -> (* unmodified_files *)
-  FilenameSet.t -> (* inferred_files *)
-  Module_js.NameSet.t -> (* touched_modules *)
+  unchanged_parsed:FilenameSet.t ->
+  new_or_changed:FilenameSet.t ->
+  cleared_modules:Module_js.NameSet.t ->
   FilenameSet.t * FilenameSet.t
 
 val calc_dependencies:
