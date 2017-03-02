@@ -93,7 +93,7 @@ val add_unparsed_info:
 (* remove module record being tracked for given file set;
    returns the set of modules removed
 *)
-val remove_files:
+val clear_files:
   Options.t -> Worker.t list option -> FilenameSet.t -> NameSet.t
 val remove_batch_resolved_requires: FilenameSet.t -> unit
 

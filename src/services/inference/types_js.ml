@@ -198,16 +198,16 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
       (* should never happen *)
       profiling, None, errors, info
 
-(* commit newly parsed / unparsed files and removed modules, collect errors. *)
-let commit_modules workers ~options errors parsed_unparsed removed_modules =
+(* commit newly parsed / unparsed files and cleared modules, collect errors. *)
+let commit_modules workers ~options errors parsed_unparsed cleared_modules =
   let providers, errmap =
-    Module_js.commit_modules workers ~options parsed_unparsed removed_modules in
-  (* Providers might be new but not modified. This typically happens when old
+    Module_js.commit_modules workers ~options parsed_unparsed cleared_modules in
+  (* Providers might be new but not changed. This typically happens when old
      providers are deleted, and previously duplicate providers become new
      providers. In such cases, we must clear the old duplicate provider errors
      for the new providers.
 
-     (Note that this is unncessary when the providers are modified, because in
+     (Note that this is unncessary when the providers are changed, because in
      that case they are rechecked and *all* their errors are cleared. But we
      don't care about optimizing that case for now.) *)
   let errors = List.fold_left filter_duplicate_provider errors providers in
@@ -235,7 +235,7 @@ let typecheck
   ~workers
   ~make_merge_input
   ~parsed
-  ~removed_modules
+  ~cleared_modules
   ~unparsed
   ~errors =
   (* TODO remove after lookup overhaul *)
@@ -275,7 +275,7 @@ let typecheck
       let parsed_unparsed = List.fold_left (fun acc (filename, _) ->
         filename::acc
       ) parsed unparsed in
-      commit_modules workers ~options local_errors parsed_unparsed removed_modules
+      commit_modules workers ~options local_errors parsed_unparsed cleared_modules
     )
   in
 
@@ -359,28 +359,32 @@ let typecheck
    `files` contains files that parsed successfully in the previous
    phase (which could be the init phase or a previous recheck phase)
 *)
-let recheck genv env modified =
+let recheck genv env ~updates =
   let workers = genv.ServerEnv.workers in
   let options = genv.ServerEnv.options in
   let errors = env.ServerEnv.errors in
   let debug = Options.is_debug_mode options in
 
-  (* If foo.js is modified and foo.js.flow exists, then mark foo.js.flow as
-   * modified too. This is because sometimes we decide what foo.js.flow
+  (* If foo.js is updated and foo.js.flow exists, then mark foo.js.flow as
+   * updated too. This is because sometimes we decide what foo.js.flow
    * provides based on the existence of foo.js *)
-  let modified = FilenameSet.fold (fun file modified ->
+  let updates = FilenameSet.fold (fun file updates ->
     if not (Loc.check_suffix file Files.flow_ext) &&
       Parsing_service_js.has_ast (Loc.with_suffix file Files.flow_ext)
-    then FilenameSet.add (Loc.with_suffix file Files.flow_ext) modified
-    else modified
-  ) modified modified in
+    then FilenameSet.add (Loc.with_suffix file Files.flow_ext) updates
+    else updates
+  ) updates updates in
 
   let profiling = Profiling_js.empty in
 
-  (* track deleted files, remove from modified set *)
+  (* split updates into deleted files and modified files *)
+  (** NOTE: We use the term "modified" in the same sense as the underlying file
+      system: a modified file exists, and in relation to an old file system
+      state, a modified file could be any of "new," "changed," or "unchanged."
+  **)
   let modified, deleted = FilenameSet.partition (fun f ->
     Sys.file_exists (string_of_filename f)
-  ) modified in
+  ) updates in
   let deleted_count = FilenameSet.cardinal deleted in
   let modified_count = FilenameSet.cardinal modified in
 
@@ -405,25 +409,25 @@ let recheck genv env modified =
   SharedMem_js.collect options `gentle;
 
   Flow_logger.log "Parsing";
-  (* reparse modified and added files, updating modified to reflect removal of
-     unchanged files *)
-  let profiling, (modified, freshparse_results) =
+  (* reparse modified files, updating modified to new_or_changed to reflect
+     removal of unchanged files *)
+  let profiling, (new_or_changed, freshparse_results) =
     with_timer ~options "Parsing" profiling (fun () ->
       Parsing_service_js.reparse_with_defaults options workers modified
     ) in
-  let modified_count = FilenameSet.cardinal modified in
+  let new_or_changed_count = FilenameSet.cardinal new_or_changed in
   let {
     Parsing_service_js.parse_ok = freshparsed;
                        parse_skips = freshparse_skips;
                        parse_fails = freshparse_fail;
   } = freshparse_results in
 
-  (* clear errors for modified files, deleted files and master *)
+  (* clear errors for new_or_changed files, deleted files and master *)
   let master_cx = Init_js.get_master_cx options in
   let errors =
     errors
     |> clear_errors ~debug ([Context.file master_cx])
-    |> clear_errors ~debug (FilenameSet.elements modified)
+    |> clear_errors ~debug (FilenameSet.elements new_or_changed)
     |> clear_errors ~debug (FilenameSet.elements deleted)
   in
 
@@ -439,10 +443,10 @@ let recheck genv env modified =
     { errors with ServerEnv.local_errors }
   in
 
-  (* get old (unmodified, undeleted) files that were parsed successfully *)
+  (* get old (unchanged, undeleted) files that were parsed successfully *)
   let old_parsed = env.ServerEnv.files in
   let undeleted_parsed = FilenameSet.diff old_parsed deleted in
-  let unmodified_parsed = FilenameSet.diff undeleted_parsed modified in
+  let unchanged_parsed = FilenameSet.diff undeleted_parsed new_or_changed in
 
   if debug then prerr_endlinef
     "recheck: old = %d, del = %d, undel = %d, fresh = %d, unmod = %d"
@@ -450,14 +454,74 @@ let recheck genv env modified =
     (FilenameSet.cardinal deleted)
     (FilenameSet.cardinal undeleted_parsed)
     (FilenameSet.cardinal freshparsed)
-    (FilenameSet.cardinal unmodified_parsed);
+    (FilenameSet.cardinal unchanged_parsed);
 
-  (* clear contexts and module registrations for modified and deleted files *)
-  (* remember deleted modules *)
-  let to_clear = FilenameSet.union modified deleted in
+  (** Here's where the interesting part of rechecking begins. Before diving into
+      code, let's think through the problem independently.
+
+      Note that changing a file can be conceptually thought of as deleting the
+      file and then adding it back as a new file. While such a reduction might
+      miss optimization opportunities (so we don't actually implement it), it
+      simplifies thinking about correctness.
+
+      We focus on dependency management. Specifically, we discuss how to
+      correctly update InfoHeap and NameHeap, and calculate the set of unchanged
+      files whose imports might resolve to different files. (With these results,
+      the remaining part of rechecking is relatively simple.)
+
+      Recall that InfoHeap maps file names in FS to module names in MS, where
+      each file name in FS must exist, different file names may map to the same
+      module name, and every module name in MS is mapped to by at least one file
+      name; and NameHeap maps module names in MS to file names in FS, where the
+      file name mapped to by a module name must map back to the same module name
+      in InfoHeap. A file's imports might resolve to different files if the
+      corresponding modules map to different files in NameHeap.
+
+      Suppose that a file D is deleted. Let D |-> m in InfoHeap, and m |-> F in
+      NameHeap.
+
+      Remove D |-> m from InfoHeap.
+
+      If F = D, then remove m |-> F from NameHeap and mark m "dirty": any file
+      importing m will be affected. If other files map to m in InfoHeap, map m
+      to one of those files in NameHeap.
+
+      Suppose that a new file N is added.
+
+      Map N to some module name, say m, in InfoHeap. If m is not mapped to any
+      file in NameHeap, add m |-> N to NameHeap and mark m "dirty." Otherwise,
+      decide whether to replace the existing mapping to m |-> N in NameHeap, and
+      pessimistically assuming it might be, mark m "dirty."
+
+      What happens when a file C is changed? Suppose that C |-> m in InfoHeap,
+      and m |-> F in NameHeap.
+
+      Optimistically, C continues to map to m in InfoHeap and we do nothing.
+
+      However, let's pessimistically assume that C maps to a different m' in
+      InfoHeap. Considering C deleted and added back as new, we must remove C
+      |-> m from InfoHeap and add C |-> m' to InfoHeap. If F = C, then remove m
+      |-> F from NameHeap and mark m "dirty." If other files map to m in
+      InfoHeap, map m to one of those files in NameHeap. If m' is not mapped to
+      any file in NameHeap, add m' |-> C to NameHeap and mark m' "dirty."
+      Otherwise, decide whether to replace the existing mapping to m' |-> C in
+      NameHeap, and mark m' "dirty."
+
+      Summarizing, if an existing file F1 is changed or deleted, and F1 |-> m in
+      InfoHeap and m |-> F in NameHeap, and F1 = F, then mark m "dirty." And if
+      a new file or a changed file F2 now maps to m' in InfoHeap, mark m' "dirty."
+
+      Ideally, any module name that does not map to a different file in NameHeap
+      should not be considered "dirty."
+
+  **)
+
+  (* clear contexts and module registrations for new, changed, and deleted files *)
+  (* remember cleared modules *)
+  let to_clear = FilenameSet.union new_or_changed deleted in
   Context_cache.remove_batch to_clear;
   (* clear out records of files, and names of modules provided by those files *)
-  let removed_modules = Module_js.remove_files options workers to_clear in
+  let cleared_modules = Module_js.clear_files options workers to_clear in
 
   (* TODO elsewhere or delete *)
   Context.remove_all_errors master_cx;
@@ -481,20 +545,20 @@ let recheck genv env modified =
          don't add then to the set of files to merge! Only inferred files (along
          with dependents) should be merged: see below. *)
       let inferred = FilenameSet.of_list inferred in
-      let modified_files = List.fold_left
-        (fun modified_files (f, _) -> FilenameSet.add f modified_files)
+      let new_or_changed = List.fold_left
+        (fun new_or_changed (f, _) -> FilenameSet.add f new_or_changed)
         inferred freshparse_skips in
 
       (* need to merge the closure of inferred files and their deps *)
 
-      (* direct_deps are unmodified files which directly depend on
-         inferred files or removed modules. all_deps are direct_deps
-         plus their dependents (transitive closure) *)
+      (* direct_deps are unchanged files which directly depend on inferred
+         files or cleared modules. all_deps are direct_deps plus their
+         dependents (transitive closure) *)
       let all_deps, direct_deps = Dep_service.dependent_files
         workers
-        unmodified_parsed
-        modified_files
-        removed_modules
+        ~unchanged_parsed
+        ~new_or_changed
+        ~cleared_modules
       in
 
       Flow_logger.log "Re-resolving directly dependent files";
@@ -526,7 +590,7 @@ let recheck genv env modified =
       ) all_deps 1 in
       Flow_logger.log "Merge prep";
 
-      (* merge errors for unmodified dependents will be cleared lazily *)
+      (* merge errors for unchanged dependents will be cleared lazily *)
 
       (* to_merge is inferred files plus all dependents. prep for re-merge *)
       let to_merge = FilenameSet.union all_deps inferred in
@@ -539,7 +603,7 @@ let recheck genv env modified =
       (* Definitely recheck inferred and direct_deps. As merging proceeds, other
          files in to_merge may or may not be rechecked. *)
       let recheck_map = to_merge |> List.fold_left (
-        let roots = FilenameSet.union modified_files direct_deps in
+        let roots = FilenameSet.union new_or_changed direct_deps in
         fun recheck_map file ->
           FilenameMap.add file (FilenameSet.mem file roots) recheck_map
       ) FilenameMap.empty in
@@ -547,7 +611,7 @@ let recheck genv env modified =
       Some (to_merge, recheck_map)
     )
     ~parsed:freshparsed
-    ~removed_modules
+    ~cleared_modules
     ~unparsed
     ~errors
   in
@@ -558,12 +622,13 @@ let recheck genv env modified =
   ) in
 
   FlowEventLogger.recheck
-    ~modified_count
+    (** TODO: update log to reflect current terminology **)
+    ~modified_count:new_or_changed_count
     ~deleted_count
     ~dependent_file_count:!dependent_file_count
     ~profiling;
 
-  let parsed = FilenameSet.union freshparsed unmodified_parsed in
+  let parsed = FilenameSet.union freshparsed unchanged_parsed in
 
   (* NOTE: unused fields are left in their initial empty state *)
   { env with ServerEnv.
@@ -659,7 +724,7 @@ let full_check workers ~ordered_libs parse_next options =
         ) FilenameMap.empty)
     )
     ~parsed
-    ~removed_modules:Module_js.NameSet.empty
+    ~cleared_modules:Module_js.NameSet.empty
     ~unparsed
     ~errors
   in

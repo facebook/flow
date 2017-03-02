@@ -841,7 +841,21 @@ let remove_provider f m =
 
 let get_providers = Hashtbl.find all_providers
 
-(* parsed_unparsed is a list of parsed / unparsed file names.
+(* Pick providers for modules exported by new files and for cleared modules
+   (which cover changed and deleted files).
+
+   For deleted files, their exported modules, if in cleared modules, will pick a
+   new provider, or be left with no provider.
+
+   For changed files, their exported modules, if in cleared modules, may pick
+   the same provider (i.e., the changed file) or a new provider (a different
+   file). If not in cleared modules, they may pick a new provider (i.e., the
+   changed file) or the same provider (a different file).
+
+   For new files, their exported modules may pick a new provider (i.e., the new
+   file) or the same provider (a different file).
+
+   parsed_unparsed is a list of parsed / unparsed file names.
    removed_modules is a set of removed module names.
    modules provided by parsed / unparsed files may or may not have a provider.
    modules named in removed_modules definitely do not have a provider.
@@ -857,9 +871,9 @@ let get_providers = Hashtbl.find all_providers
    3. conversely all modules in removed_modules lack a provider in NameHeap.
 
    Postconditions:
-   1. all modules provided by at least 1 file
-   in InfoHeap have a provider registered in NameHeap, and it's the
-   provider we want according to our precedence and scoping rules.
+   1. all modules provided by at least 1 file in InfoHeap have a provider
+   registered in NameHeap, and it's the provider we want according to our
+   precedence and scoping rules.
 
    We make use of a shadow map in the master process which maintains
    a view of what's going on in NameHeap and InfoHeap, mapping module
@@ -874,7 +888,7 @@ let get_providers = Hashtbl.find all_providers
    current provider, add the new provider to the list to be registered.
    4. remove the unregistered modules from NameHeap
    5. register the new providers in NameHeap
- *)
+*)
 let commit_modules workers ~options parsed_unparsed removed_modules =
   let debug = Options.is_debug_mode options in
   if debug then prerr_endlinef
@@ -1007,12 +1021,22 @@ let commit_modules workers ~options parsed_unparsed removed_modules =
 let remove_batch_resolved_requires files =
   ResolvedRequiresHeap.remove_batch files
 
-(* remove module mappings for given files, if they exist. Possibilities:
+(* Clear module mappings for given files, if they exist.
+
+   This has no effect on new files. The set of modules returned are those whose
+   current providers are changed or deleted files.
+
+   As a side effect, we delete entries for the given files from InfoHeap and
+   NameHeap, and moreover, clear the returned modules from NameHeap. Entries
+   corresponding new and changed files are (re)populated in InfoHeap and
+   NameHeap later.
+
+   Possibilities:
    1. file is current registered module provider for a given module name
    2. file is not current provider, but record is still registered
    3. file isn't in the map at all. This means file is new.
    We return the set of module names whose current providers have been
-   removed (#1). This is the set commit_module expects as its second
+   cleared (#1). This is the set commit_modules expects as its second
    argument.
 
    NOTE: The notion of "current provider" is murky, since every file at least
@@ -1021,8 +1045,8 @@ let remove_batch_resolved_requires files =
    TODO: Does a .flow file also provide its eponymous module? Or does it provide
    the eponymous module of the file it shadows?
 *)
-let rec remove_files options workers files =
-  let data = MultiWorker.call workers
+let clear_files options workers to_clear =
+  let existing_file_module_current_provider_assoc = MultiWorker.call workers
     ~job: (List.fold_left (fun acc file ->
       match get_info ~audit:Expensive.ok file with
       | Some info ->
@@ -1036,10 +1060,8 @@ let rec remove_files options workers files =
     ))
     ~neutral: FilenameMap.empty
     ~merge: FilenameMap.union
-    ~next: (MultiWorker.next workers (FilenameSet.elements files)) in
-  remove_files_with_data options data files
+    ~next: (MultiWorker.next workers (FilenameSet.elements to_clear)) in
 
-and remove_files_with_data options data files =
   (* files may or may not be registered as module providers.
      when they are, we need to clear their registrations *)
   let names = FilenameMap.fold (fun file datum names ->
@@ -1053,12 +1075,12 @@ and remove_files_with_data options data files =
     else
       names
       |> NameSet.add (Modulename.Filename file)
-  ) data NameSet.empty in
+  ) existing_file_module_current_provider_assoc NameSet.empty in
   (* clear any registrations that point to records we're about to clear *)
   (* for records, remove_batch will ignore missing entries, no need to filter *)
   NameHeap.remove_batch names;
-  InfoHeap.remove_batch files;
-  ResolvedRequiresHeap.remove_batch files;
+  InfoHeap.remove_batch to_clear;
+  ResolvedRequiresHeap.remove_batch to_clear;
   SharedMem_js.collect options `gentle;
   (* note: only return names of modules actually removed *)
   names
