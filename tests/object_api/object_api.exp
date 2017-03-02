@@ -29,15 +29,15 @@ object_keys.js:5
                            ^^^^ undefined
 
 object_keys.js:9
-  9:   (k : number) // error: number ~> string
+  9:   (k : number) // error: string ~> number
         ^ string. This type is incompatible with
-  9:   (k : number) // error: number ~> string
+  9:   (k : number) // error: string ~> number
             ^^^^^^ number
 
 object_keys.js:14
- 14:   (k : number) // error: number ~> string
+ 14:   (k : number) // error: string ~> number
         ^ string. This type is incompatible with
- 14:   (k : number) // error: number ~> string
+ 14:   (k : number) // error: string ~> number
             ^^^^^^ number
 
 object_keys.js:18

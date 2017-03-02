@@ -2561,14 +2561,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* AnyObjT has every prop *)
     | AnyObjT _, HasOwnPropT _ -> ()
 
-    | ObjT (_, { flags; props_tmap = mapr; _ }), GetKeysT (reason_op, keys) ->
+    | ObjT (_, { flags; props_tmap; dict_t; _ }), GetKeysT (reason_op, keys) ->
       begin match flags.sealed with
       | Sealed ->
         (* flow each key of l to keys *)
-        Context.iter_props cx mapr (fun x _ ->
+        Context.iter_props cx props_tmap (fun x _ ->
           let reason = replace_reason_const (RStringLit x) reason_op in
           let t = StrT (reason, Literal x) in
           rec_flow_t cx trace (t, keys)
+        );
+        Option.iter dict_t (fun _ ->
+          rec_flow_t cx trace (StrT.why reason_op, keys)
         );
       | _ ->
         rec_flow_t cx trace (StrT.why reason_op, keys)

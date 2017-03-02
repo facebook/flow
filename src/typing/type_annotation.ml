@@ -638,8 +638,6 @@ let rec convert cx tparams_map = Ast.Type.(function
       let p = Field (t, Positive) in
       SMap.add "$call" p props_map
   in
-  (* Seal an object type unless it specifies an indexer. *)
-  let sealed = dict = None in
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
   let reason_desc = RObjectType in
@@ -652,8 +650,8 @@ let rec convert cx tparams_map = Ast.Type.(function
     then FunProtoT (locationless_reason reason_desc)
     else ObjProtoT (locationless_reason reason_desc) in
   let flags = {
-    sealed = if sealed then Sealed else UnsealedInFile (Loc.source loc);
-    exact = not sealed || exact;
+    sealed = Sealed;
+    exact;
     frozen = false;
   } in
   let t = ObjT (mk_reason reason_desc loc,
