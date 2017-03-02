@@ -13,12 +13,15 @@ open Utils_js
 module NameSet: Set.S with type elt = Modulename.t
 module NameMap: MyMap.S with type key = Modulename.t
 
-type info = {
-  _module: Modulename.t;    (* module name *)
+type resolved_requires = {
   required: NameSet.t;      (* required module names *)
   require_loc: Loc.t SMap.t;  (* statement locations *)
   resolved_modules: Modulename.t SMap.t;
   phantom_dependents: SSet.t;
+}
+
+type info = {
+  _module: Modulename.t;    (* module name *)
   checked: bool;            (* in flow? *)
   parsed: bool;             (* if false, it's a tracking record only *)
 }
@@ -53,6 +56,8 @@ val get_file: (Modulename.t -> filename) Expensive.t
 (* given a module name, returns either (Some filename) or None *)
 val get_module_file: (Modulename.t -> filename option) Expensive.t
 
+(* given a filename, returns resolved requires. unsafe *)
+val get_module_resolved_requires: (filename -> resolved_requires) Expensive.t
 (* given a filename, returns module info. unsafe *)
 val get_module_info: (filename -> info) Expensive.t
 
@@ -68,22 +73,22 @@ val commit_modules:
   Utils_js.filename list *            (* providers *)
     error list FilenameMap.t          (* filenames to error sets *)
 
-(* add file represented by context to module info store *)
-val add_module_info: (options:Options.t -> Context.t -> unit) Expensive.t
+(* add file represented by context to module record store *)
+val add_module_record: (options:Options.t -> Context.t -> unit) Expensive.t
 
-(* add info for unparsed file to module info store *)
-val add_unparsed_info:
+(* add record for unparsed file to module record store *)
+val add_unparsed_record:
   (options:Options.t ->
    filename ->
    Docblock.t ->
    unit) Expensive.t
 
-(* remove module info being tracked for given file set;
+(* remove module record being tracked for given file set;
    returns the set of modules removed
 *)
 val remove_files:
   Options.t -> Worker.t list option -> FilenameSet.t -> NameSet.t
-val clear_infos: FilenameSet.t -> unit
+val clear_records: FilenameSet.t -> unit
 
 val add_package: string -> Spider_monkey_ast.program -> unit
 

@@ -518,13 +518,14 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
          * are not kept track of. To avoid confusing results we notify the
          * client that these modules have not been processed.
          *)
-        let { Module_js.
+        let { Module_js.checked; _ } =
+          Module_js.get_module_info ~audit:Expensive.warn file in
+        if checked then
+          let { Module_js.
               required = requirements;
               require_loc = req_locs;
-              checked; _ } =
-          Module_js.get_module_info ~audit:Expensive.warn file in
-        if checked
-        then
+              _ } =
+          Module_js.get_module_resolved_requires ~audit:Expensive.warn file in
           (SMap.add module_name_str (requirements, req_locs) map, non_flow)
         else
           (map, SSet.add module_name_str non_flow)

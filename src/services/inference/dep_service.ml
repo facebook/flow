@@ -41,24 +41,28 @@ open Utils_js
    (3) a subset of those files that phantom depend on root_fileset
  *)
 let calc_dep_utils workers fileset root_fileset = Module_js.(
-  (* Distribute work, looking up InfoHeap once per file. *)
+  (* Distribute work, looking up InfoHeap and ResolvedRequiresHeap once per file. *)
   let job = List.fold_left (fun (modules, rdmap, resolution_path_files) f ->
+    let resolved_requires = get_module_resolved_requires ~audit:Expensive.ok f in
     let info = get_module_info ~audit:Expensive.ok f in
     (* Add f |-> info._module to the `modules` map. This will be used downstream
-       in dep_closure. Why do we this here rather than there? Just as an
-       optimization, since we're reading InfoHeap here any way.
+       in dep_closure.
+
+       TODO: Why do we this here rather than there? This used to be an
+       optimization, since InfoHeap and ResolvedRequiresHeap were
+       together. Will clean up later.
 
        TODO: explore whether we can avoid creating this map on every recheck,
        instead maintaining the map incrementally and hopefully reusing large
        parts of it.
     *)
     let modules = FilenameMap.add f info._module modules in
-    (* For every r in info.required, add f to the reverse dependency list for r,
+    (* For every r in resolved_requires.required, add f to the reverse dependency list for r,
        stored in `rdmap`. This will be used downstream when computing
        direct_deps, and also in dep_closure.
 
        TODO: should generate this map once on startup, keep required_by in
-       module infos and update incrementally on recheck.
+       module records and update incrementally on recheck.
     *)
 
     let rdmap = NameSet.fold (fun r rdmap ->
@@ -67,12 +71,12 @@ let calc_dep_utils workers fileset root_fileset = Module_js.(
         | None -> singleton f
         | Some files -> add f files
       ) rdmap
-    ) info.required rdmap in
+    ) resolved_requires.required rdmap in
     (* If f's phantom dependents are in root_fileset, then add f to
        `resolution_path_files`. These are considered direct dependencies (in
        addition to others computed by direct_deps downstream). *)
     let resolution_path_files =
-      if info.phantom_dependents |> SSet.exists (fun f ->
+      if resolved_requires.phantom_dependents |> SSet.exists (fun f ->
         FilenameSet.mem (Loc.SourceFile f) root_fileset ||
         FilenameSet.mem (Loc.JsonFile f) root_fileset ||
         FilenameSet.mem (Loc.ResourceFile f) root_fileset
@@ -139,7 +143,7 @@ let dep_closure modules rdmap fileset =
 
    - unmodified_files is all unmodified files in the current state
    - inferred_files is all files that have just been through local inference
-   - removed_modules is all modules whose infos have just been cleared
+   - removed_modules is all modules whose records have just been cleared
 
    Note that while removed_modules and (the modules provided by) inferred_files
    usually overlap, inferred_files will include providers of new modules, and
@@ -152,7 +156,7 @@ let dependent_files workers unmodified_files inferred_files removed_modules =
   (* Get the modules provided by unmodified files, the reverse dependency map
      for unmodified files, and the subset of unmodified files whose resolution
      paths may encounter newly inferred modules. *)
-  (** [shared mem access] InfoHeap.get on unmodified_files for
+  (** [shared mem access] InfoHeap.get and ResolvedRequiresHeap.get on unmodified_files for
       ._module, .required, .phantom_dependents **)
   let modules,
     reverse_deps,
@@ -212,7 +216,7 @@ let calc_dependencies workers files =
     workers
     ~job: (List.fold_left (fun deps file ->
       let { Module_js.required; _ } =
-        Module_js.get_module_info ~audit:Expensive.ok file in
+        Module_js.get_module_resolved_requires ~audit:Expensive.ok file in
       let files = Module_js.NameSet.fold (fun r files ->
         match implementation_file ~audit:Expensive.ok r with
         | Some f -> FilenameSet.add f files

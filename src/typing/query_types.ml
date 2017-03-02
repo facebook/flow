@@ -16,7 +16,7 @@
    query_type/fill_types: in general those types may not be ground (the only
    non-ground parts should be strict_requires).
 
-   1. Look up InfoHeap(Context.file cx) to get strict_reqs.
+   1. Look up ResolvedRequiresHeap(Context.file cx) to get strict_reqs.
 
    2. Look up ContextHeap(NameHeap(strict_req)) to get strict_cxs that cx
    depends on, and so on.
