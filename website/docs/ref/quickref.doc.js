@@ -14,7 +14,7 @@ next: syntax.html
   Flow has types for all of the JavaScript **primitive types**.
 
   * [boolean](builtins.html#boolean)
-  * [number](builtins.html#mixed)
+  * [number](builtins.html#number)
   * [string](builtins.html#string)
   * [null](builtins.html#null-and-void)
   * [void](builtins.html#null-and-void)
