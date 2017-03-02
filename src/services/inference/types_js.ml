@@ -435,7 +435,7 @@ let recheck genv env modified =
   );
 
   (* clear errors, asts for deleted files *)
-  Parsing_service_js.remove_asts deleted;
+  Parsing_service_js.remove_batch deleted;
   SharedMem_js.collect options `gentle;
 
   Flow_logger.log "Parsing";

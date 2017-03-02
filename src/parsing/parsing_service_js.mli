@@ -80,15 +80,14 @@ val reparse_with_defaults:
 
 val has_ast: filename -> bool
 
-(* after parsing, retrieves ast by filename (unsafe) *)
-val get_ast_unsafe: filename -> Spider_monkey_ast.program
-val get_ast_and_info_unsafe:
-  filename -> Spider_monkey_ast.program * Docblock.t
-
 val get_ast: filename -> Spider_monkey_ast.program option
 
-(* remove asts for given file set. *)
-val remove_asts: FilenameSet.t -> unit
+(* after parsing, retrieves ast and docblock by filename (unsafe) *)
+val get_ast_unsafe: filename -> Spider_monkey_ast.program
+val get_docblock_unsafe: filename -> Docblock.t
+
+(* remove asts and docblocks for given file set. *)
+val remove_batch: FilenameSet.t -> unit
 
 (* Adds a hook that is called every time a file has been processed.
  * When a file fails to parse, is deleted or is skipped because it isn't a Flow
