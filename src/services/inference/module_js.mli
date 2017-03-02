@@ -73,14 +73,26 @@ val commit_modules:
   Utils_js.filename list *            (* providers *)
     error list FilenameMap.t          (* filenames to error sets *)
 
-(* add file represented by context to module record store *)
-val add_module_record: (options:Options.t -> Context.t -> unit) Expensive.t
-
-(* add record for unparsed file to module record store *)
-val add_unparsed_record:
+(* add info for parsed file to store *)
+val add_parsed_info:
   (options:Options.t ->
    filename ->
    Docblock.t ->
+   unit) Expensive.t
+
+(* resolve and add requires from context to store *)
+val add_parsed_resolved_requires: (options:Options.t -> Context.t -> unit) Expensive.t
+
+(* add info for unparsed file to store *)
+val add_unparsed_info:
+  (options:Options.t ->
+   filename ->
+   Docblock.t ->
+   unit) Expensive.t
+
+(* add dummy resolved requires for unparsed file to store *)
+val add_unparsed_resolved_requires:
+  (filename ->
    unit) Expensive.t
 
 (* remove module record being tracked for given file set;
@@ -88,7 +100,7 @@ val add_unparsed_record:
 *)
 val remove_files:
   Options.t -> Worker.t list option -> FilenameSet.t -> NameSet.t
-val clear_records: FilenameSet.t -> unit
+val remove_batch_resolved_requires: FilenameSet.t -> unit
 
 val add_package: string -> Spider_monkey_ast.program -> unit
 

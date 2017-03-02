@@ -57,7 +57,7 @@ let infer_job ~options acc files =
         (* infer produces a context for this module *)
         let cx = infer_module ~options ~metadata file in
         (* register module info *)
-        Module_js.add_module_record ~audit:Expensive.ok ~options cx;
+        Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options cx;
         (* note: save and clear errors and error suppressions before storing
          * cx to shared heap *)
         let errs = Context.errors cx in
@@ -90,7 +90,6 @@ let infer_job ~options acc files =
    Returns a set of successfully inferred files.
    Creates contexts for inferred files, with errors in cx.errors *)
 let infer ~options ~workers files =
-  let files = FilenameSet.elements files in
   Profile_utils.logtime ~options
     (fun t -> spf "inferred %d files in %f" (List.length files) t)
     (fun () ->
