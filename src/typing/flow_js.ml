@@ -664,16 +664,6 @@ module ImplicitTypeArgument = struct
       RTypeParam (typeparam.name, desc)
     ) reason_op in
     mk_tvar cx reason
-
-  (* Abstract a type argument that is created by implicit instantiation
-     above. Sometimes, these type arguments are involved in type expansion
-     loops, so we abstract them to detect such loops. *)
-  let abstract_targ tvar =
-    let reason, _ = open_tvar tvar in
-    let desc = desc_of_reason reason in
-    match desc with
-    | RTypeParam _ -> Some (OpenT (locationless_reason desc, 0))
-    | _ -> None
 end
 
 (* We maintain a stack of entries representing type applications processed
@@ -706,10 +696,6 @@ end = struct
 
     method! type_ cx acc t = match t with
     | TypeAppT (c, _) -> super#type_ cx (TypeSet.add c acc) t
-    | OpenT _ -> (match ImplicitTypeArgument.abstract_targ t with
-      | None -> acc
-      | Some t -> TypeSet.add t acc
-      )
     | _ -> super#type_ cx acc t
   end
   let collect_roots cx = (new roots_collector)#type_ cx TypeSet.empty
