@@ -61,17 +61,21 @@ val get_resolved_requires_unsafe: (filename -> resolved_requires) Expensive.t
 (* given a filename, returns module info. unsafe *)
 val get_info_unsafe: (filename -> info) Expensive.t
 
-(* given a filename, returns module name *)
-val get_module_names_unsafe: (filename -> Modulename.t list) Expensive.t
+(* calculate modules that might have new providers *)
+val calc_dirty_modules:
+  Worker.t list option ->
+  options: Options.t ->
+  filename list ->                    (* parsed / unparsed files *)
+  NameSet.t ->                        (* cleared modules *)
+    NameSet.t                           (* dirty modules *)
 
-(* commit new and removed modules, after local inference *)
+(* commit providers for dirty modules *)
 val commit_modules:
   Worker.t list option ->
   options: Options.t ->
-  filename list ->                    (* inferred modules *)
-  NameSet.t ->                        (* removed files *)
-  Utils_js.filename list *            (* providers *)
-    error list FilenameMap.t          (* filenames to error sets *)
+  NameSet.t ->                        (* dirty modules *)
+    Utils_js.filename list *            (* providers *)
+    error list FilenameMap.t            (* filenames to error sets *)
 
 (* add info for parsed file to store *)
 val add_parsed_info:

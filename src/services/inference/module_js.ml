@@ -729,14 +729,6 @@ let get_info_unsafe ~audit f =
   | None -> failwith
       (spf "module info not found for file %s" (string_of_filename f))
 
-let get_module_names_unsafe ~audit f =
-  let { _module; _ } = get_info_unsafe ~audit f in
-  match _module with
-  | Modulename.Filename file when file = f ->
-    [_module]
-  | _ ->
-    [Modulename.Filename f; _module]
-
 (* TODO [perf]: measure size and possibly optimize *)
 (* Extract and process information from context. In particular, resolve
    references to required modules in a file, and record the results.  *)
@@ -841,8 +833,8 @@ let remove_provider f m =
 
 let get_providers = Hashtbl.find all_providers
 
-(* Pick providers for modules exported by new files and for cleared modules
-   (which cover changed and deleted files).
+(* Pick providers for modules exported by new and changed files and for cleared
+   modules (which cover changed and deleted files).
 
    For deleted files, their exported modules, if in cleared modules, will pick a
    new provider, or be left with no provider.
@@ -856,19 +848,22 @@ let get_providers = Hashtbl.find all_providers
    file) or the same provider (a different file).
 
    parsed_unparsed is a list of parsed / unparsed file names.
-   removed_modules is a set of removed module names.
-   modules provided by parsed / unparsed files may or may not have a provider.
-   modules named in removed_modules definitely do not have a provider.
+   cleared_modules is a set of removed module names.
+
+   Modules provided by parsed / unparsed files may or may not have a
+   provider. Modules named in cleared_modules definitely do not have a
+   provider. Together, they are considered "dirty" modules. Files that require
+   dirty modules will be rechecked.
 
    Preconditions:
    1. all files in parsed_unparsed have entries in InfoHeap (true if
    we're properly calling add_parsed_info and add_unparsed_info for every
    parsed / unparsed file before calling commit_modules)
-   2. all modules not mentioned in removed_modules, but provided by one or more
+   2. all modules not mentioned in cleared_modules, but provided by one or more
    files in InfoHeap, have some provider registered in NameHeap.
    (However, the current provider may not be the one we now want,
    given newly parsed / unparsed files.)
-   3. conversely all modules in removed_modules lack a provider in NameHeap.
+   3. conversely all modules in cleared_modules lack a provider in NameHeap.
 
    Postconditions:
    1. all modules provided by at least 1 file in InfoHeap have a provider
@@ -881,19 +876,23 @@ let get_providers = Hashtbl.find all_providers
    TODO: this shadow map is probably a perf bottleneck, get rid of it.
 
    Algorithm here:
-   1. add all removed modules to the set of modules to repick a provider for.
-   2. add the modules provided by all parsed / unparsed files to the repick set.
-   3. for each module in the repick set, pick a winner from its available
+
+   1. Calculate repick set:
+   (a) add all removed modules to the set of modules to repick a provider for.
+   (b) add the modules provided by all parsed / unparsed files to the repick set.
+
+   2. Commit providers for dirty modules:
+   (a) For each module in the repick set, pick a winner from its available
    providers. if it's different than the current provider, or if there is no
    current provider, add the new provider to the list to be registered.
-   4. remove the unregistered modules from NameHeap
-   5. register the new providers in NameHeap
+   (b) remove the unregistered modules from NameHeap
+   (c) register the new providers in NameHeap
 *)
-let commit_modules workers ~options parsed_unparsed removed_modules =
+let calc_dirty_modules workers ~options parsed_unparsed cleared_modules =
   let debug = Options.is_debug_mode options in
   if debug then prerr_endlinef
     "*** committing modules: parsed / unparsed files %d removed modules %d ***"
-    (List.length parsed_unparsed) (NameSet.cardinal removed_modules);
+    (List.length parsed_unparsed) (NameSet.cardinal cleared_modules);
 
   (* recall the exported module for each parsed / unparsed file *)
   let calc_file_module_assoc =
@@ -911,7 +910,7 @@ let commit_modules workers ~options parsed_unparsed removed_modules =
 
   (* all removed modules must be repicked *)
   (* all modules provided by newly parsed / unparsed files must be repicked *)
-  let repick = List.fold_left (fun acc (f, m) ->
+  List.fold_left (fun acc (f, m) ->
     let f_module = Modulename.Filename f in
     add_provider f m; add_provider f f_module;
     (* foo.js.flow ALWAYS also provides foo.js *)
@@ -922,8 +921,10 @@ let commit_modules workers ~options parsed_unparsed removed_modules =
       add_provider f f_decl_module
     end;
     acc |> NameSet.add m |> NameSet.add f_module
-  ) removed_modules file_module_assoc in
+  ) cleared_modules file_module_assoc
 
+let commit_modules workers ~options dirty_modules =
+  let debug = Options.is_debug_mode options in
   let module_files = MultiWorker.call
     workers
     ~job: (List.fold_left (fun acc m ->
@@ -931,7 +932,7 @@ let commit_modules workers ~options parsed_unparsed removed_modules =
     ))
     ~neutral: []
     ~merge: List.rev_append
-    ~next: (MultiWorker.next workers (NameSet.elements repick)) in
+    ~next: (MultiWorker.next workers (NameSet.elements dirty_modules)) in
   (* prep for registering new mappings in NameHeap *)
   let mapping m p module_file_assoc =
     (m, p)::(
@@ -969,7 +970,7 @@ let commit_modules workers ~options parsed_unparsed removed_modules =
       | Some f ->
         if f = p then begin
           (* When can this happen? Say m pointed to f before, a different file
-             f' that provides m changed (so m is not in removed_modules), but f
+             f' that provides m changed (so m is not in cleared_modules), but f
              continues to be the chosen provider = p (winning over f'). *)
           if debug then prerr_endlinef
             "unchanged provider: %S -> %s"
@@ -978,7 +979,7 @@ let commit_modules workers ~options parsed_unparsed removed_modules =
           rem, prov, rep, errmap
         end else begin
           (* When can this happen? Say m pointed to f before, a different file
-             f' that provides m changed (so m is not in removed_modules), and
+             f' that provides m changed (so m is not in cleared_modules), and
              now f' becomes the chosen provider = p (winning over f). *)
           if debug then prerr_endlinef
             "new provider: %S -> %s replaces %s"
@@ -990,7 +991,7 @@ let commit_modules workers ~options parsed_unparsed removed_modules =
       | None ->
           (* When can this happen? Either m pointed to a file that used to
              provide m and changed or got deleted (causing m to be in
-             removed_modules), or m didn't have a provider before. *)
+             cleared_modules), or m didn't have a provider before. *)
           if debug then prerr_endlinef
             "initial provider %S -> %s"
             (Modulename.to_string m)

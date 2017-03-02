@@ -198,10 +198,10 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
       (* should never happen *)
       profiling, None, errors, info
 
-(* commit newly parsed / unparsed files and cleared modules, collect errors. *)
-let commit_modules workers ~options errors parsed_unparsed cleared_modules =
+(* commit providers for dirty modules, collect errors. *)
+let commit_modules workers ~options errors dirty_modules =
   let providers, errmap =
-    Module_js.commit_modules workers ~options parsed_unparsed cleared_modules in
+    Module_js.commit_modules workers ~options dirty_modules in
   (* Providers might be new but not changed. This typically happens when old
      providers are deleted, and previously duplicate providers become new
      providers. In such cases, we must clear the old duplicate provider errors
@@ -269,13 +269,17 @@ let typecheck
 
   let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
 
-  (* create module dependency graph, warn on dupes etc. *)
+  (* conservatively approximate set of modules whose providers will change *)
+  let dirty_modules =
+    let parsed_unparsed = List.fold_left (fun acc (filename, _) ->
+      filename::acc
+    ) parsed unparsed in
+    Module_js.calc_dirty_modules workers ~options parsed_unparsed cleared_modules in
+
+  (* register providers for modules, warn on dupes etc. *)
   let profiling, local_errors =
     with_timer ~options "CommitModules" profiling (fun () ->
-      let parsed_unparsed = List.fold_left (fun acc (filename, _) ->
-        filename::acc
-      ) parsed unparsed in
-      commit_modules workers ~options local_errors parsed_unparsed cleared_modules
+      commit_modules workers ~options local_errors dirty_modules
     )
   in
 
@@ -298,7 +302,7 @@ let typecheck
   (* call supplied function to calculate closure of modules to merge *)
   let profiling, merge_input =
     with_timer ~options "MakeMergeInput" profiling (fun () ->
-      make_merge_input inferred
+      make_merge_input dirty_modules inferred
     ) in
 
   match merge_input with
@@ -537,28 +541,17 @@ let recheck genv env ~updates =
     ~options
     ~profiling
     ~workers
-    ~make_merge_input:(fun inferred ->
-      (* Add non-@flow files to the list of inferred files, so that their
-         dependencies are also considered for rechecking.
-
-         NOTE: Non-@flow files don't have entries in ResolvedRequiresHeap, so
-         don't add then to the set of files to merge! Only inferred files (along
-         with dependents) should be merged: see below. *)
-      let inferred = FilenameSet.of_list inferred in
-      let new_or_changed = List.fold_left
-        (fun new_or_changed (f, _) -> FilenameSet.add f new_or_changed)
-        inferred freshparse_skips in
-
+    ~make_merge_input:(fun dirty_modules inferred ->
       (* need to merge the closure of inferred files and their deps *)
 
-      (* direct_deps are unchanged files which directly depend on inferred
-         files or cleared modules. all_deps are direct_deps plus their
-         dependents (transitive closure) *)
+      (* direct_deps are unchanged files which directly depend on dirty modules
+         or new files that are phantom dependents. all_deps are direct_deps plus
+         their dependents (transitive closure) *)
       let all_deps, direct_deps = Dep_service.dependent_files
         workers
         ~unchanged_parsed
-        ~new_or_changed
-        ~cleared_modules
+        ~new_or_changed (* TODO: actually, only need to pass new files *)
+        ~dirty_modules
       in
 
       Flow_logger.log "Re-resolving directly dependent files";
@@ -593,7 +586,10 @@ let recheck genv env ~updates =
       (* merge errors for unchanged dependents will be cleared lazily *)
 
       (* to_merge is inferred files plus all dependents. prep for re-merge *)
-      let to_merge = FilenameSet.union all_deps inferred in
+      (* NOTE: Non-@flow files don't have entries in ResolvedRequiresHeap, so
+         don't add then to the set of files to merge! Only inferred files (along
+         with dependents) should be merged: see below. *)
+      let to_merge = FilenameSet.union all_deps (FilenameSet.of_list inferred) in
       Context_cache.oldify_merge_batch to_merge;
       (** TODO [perf]: Consider `aggressive **)
       SharedMem_js.collect genv.ServerEnv.options `gentle;
@@ -716,7 +712,7 @@ let full_check workers ~ordered_libs parse_next options =
     ~options
     ~profiling
     ~workers
-    ~make_merge_input:(fun inferred ->
+    ~make_merge_input:(fun _ inferred ->
       if not libs_ok then None
       else Some (inferred,
         inferred |> List.fold_left (fun map f ->

@@ -132,61 +132,38 @@ let dep_closure modules rdmap fileset =
     ) fileset FilenameSet.empty
   in expand rdmap fileset (ref FilenameSet.empty)
 
-(* Files that must be rechecked include those that immediately or recursively
-   depended on modules whose providers were affected by new, changed, or deleted
-   files.
-
-   Providers are affected only in those cases already considered by
-   commit_modules: as such, the arguments to dependent_files are similar to
-   those of commit_modules.
-
-   Identify the direct and transitive dependents of new or changed files and
+(* Identify the direct and transitive dependents of new or changed files and
    cleared modules.
+
+   Files that must be rechecked include those that immediately or recursively
+   depended on modules whose providers were affected by new, changed, or deleted
+   files. The latter modules, marked "dirty," are calculated earlier when
+   picking providers.
 
    - unchanged_parsed is all unchanged files in the current state
    - new_or_changed is all files that have just been through local inference and
      all skipped files that were also new or unchanged
-   - cleared_modules is all modules whose records have just been cleared.
-
-   Note that while cleared_modules and (the modules provided by) new_or_changed
-   usually overlap, new_or_changed will include providers of new modules, and
-   cleared_modules will include modules provided by deleted files.
+   - dirty_modules is a conservative approximation of modules that no longer have
+     the same providers
 
    Return the subset of unchanged_parsed transitively dependent on updates, and
    the subset directly dependent on them.
 *)
-let dependent_files workers ~unchanged_parsed ~new_or_changed ~cleared_modules =
+let dependent_files workers ~unchanged_parsed ~new_or_changed ~dirty_modules =
   (* Get the modules provided by unchanged files, the reverse dependency map
      for unchanged files, and the subset of unchanged files whose resolution
      paths may encounter new or changed modules. *)
-  (** [shared mem access] InfoHeap.get and ResolvedRequiresHeap.get on unchanged_files for
-      ._module, .required, .phantom_dependents **)
   let modules,
     reverse_deps,
     resolution_path_files
     = calc_dep_utils workers unchanged_parsed new_or_changed in
 
-  (* touched_modules includes cleared modules and those provided by new files *)
-  (** [shared mem access] InfoHeap.get on new_or_changed for ._module **)
-  let touched_modules = Module_js.(NameSet.union cleared_modules (
-    MultiWorker.call workers
-      ~job: (List.fold_left (fun mods file ->
-        let file_mods = get_module_names_unsafe ~audit:Expensive.ok file in
-        (* Add all module names exported by file *)
-        List.fold_left (fun acc m -> NameSet.add m acc) mods file_mods
-      ))
-      ~neutral: NameSet.empty
-      ~merge: NameSet.union
-      ~next: (MultiWorker.next workers (FilenameSet.elements new_or_changed))
-  )) in
-
-  (* files that require touched modules directly, or may resolve to
-     modules provided by changed files *)
+  (* files that require dirty modules *)
   let direct_deps = Module_js.(NameSet.fold (fun m acc ->
     match NameMap.get m reverse_deps with
     | Some files -> FilenameSet.union acc files
     | None -> acc
-    ) touched_modules resolution_path_files
+    ) dirty_modules resolution_path_files
   ) in
 
   (* (transitive dependents are re-merged, directs are also re-resolved) *)
