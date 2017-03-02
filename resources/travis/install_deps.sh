@@ -81,6 +81,10 @@ esac
 echo "Installing dependencies..."
 "$OPAM" install --yes ${OPAM_DEPENDS}
 
+echo "opam config:"
+echo "INSTALL_DIR=$INSTALL_DIR"
+opam config env # print for the logs
+
 eval "$(opam config env)"
 echo "Installed packages:"
 ocamlfind list
