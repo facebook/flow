@@ -842,20 +842,19 @@ let remove_provider f m =
 
 let get_providers = Hashtbl.find all_providers
 
-(* inferred is a list of inferred file names.
-   removed is a set of removed module names.
-   modules provided by inferred files may or may not have a provider.
-   modules named in removed definitely do not have a provider.
+(* inferred_unparsed is a list of inferred / unparsed file names.
+   removed_modules is a set of removed module names.
+   modules provided by inferred / unparsed files may or may not have a provider.
+   modules named in removed_modules definitely do not have a provider.
 
    Preconditions:
-   1. all files in inferred have entries in InfoHeap (true if
-   infer is properly calling add_module_record for every file
-   successfully inferred)
-   2. all modules not mentioned in removed, but provided by one or more
+   1. all files in inferred_unparsed have entries in InfoHeap (true if
+   infer is properly calling add_module_record for every inferred / unparsed file)
+   2. all modules not mentioned in removed_modules, but provided by one or more
    files in InfoHeap, have some provider registered in NameHeap.
    (However, the current provider may not be the one we now want,
-   given newly inferred files.)
-   3. conversely all modules in removed lack a provider in NameHeap.
+   given newly inferred_unparsed files.)
+   3. conversely all modules in removed_modules lack a provider in NameHeap.
 
    Postconditions:
    1. all modules provided by at least 1 file
@@ -865,23 +864,24 @@ let get_providers = Hashtbl.find all_providers
    We make use of a shadow map in the master process which maintains
    a view of what's going on in NameHeap and InfoHeap, mapping module
    names to sets of filenames of providers.
+   TODO: this shadow map is probably a perf bottleneck, get rid of it.
 
    Algorithm here:
    1. add all removed modules to the set of modules to repick a provider for.
-   2. add the modules provided by all inferred files to the repick set.
+   2. add the modules provided by all inferred / unparsed files to the repick set.
    3. for each module in the repick set, pick a winner from its available
    providers. if it's different than the current provider, or if there is no
    current provider, add the new provider to the list to be registered.
    4. remove the unregistered modules from NameHeap
    5. register the new providers in NameHeap
  *)
-let commit_modules workers ~options inferred removed =
+let commit_modules workers ~options inferred_unparsed removed_modules =
   let debug = Options.is_debug_mode options in
   if debug then prerr_endlinef
-    "*** committing modules inferred %d removed %d ***"
-    (List.length inferred) (NameSet.cardinal removed);
+    "*** committing modules: inferred / unparsed files %d removed modules %d ***"
+    (List.length inferred_unparsed) (NameSet.cardinal removed_modules);
 
-  (* recall the exported module for each inferred file *)
+  (* recall the exported module for each inferred_unparsed file *)
   let calc_file_module_assoc =
     List.fold_left (fun file_module_assoc f ->
       let { _module = m; _ } = get_info_unsafe ~audit:Expensive.ok f in
@@ -893,10 +893,10 @@ let commit_modules workers ~options inferred removed =
     ~job: calc_file_module_assoc
     ~neutral: []
     ~merge: List.rev_append
-    ~next: (MultiWorker.next workers inferred) in
+    ~next: (MultiWorker.next workers inferred_unparsed) in
 
   (* all removed modules must be repicked *)
-  (* all modules provided by newly inferred files must be repicked *)
+  (* all modules provided by newly inferred_unparsed files must be repicked *)
   let repick = List.fold_left (fun acc (f, m) ->
     let f_module = Modulename.Filename f in
     add_provider f m; add_provider f f_module;
@@ -908,7 +908,7 @@ let commit_modules workers ~options inferred removed =
       add_provider f f_decl_module
     end;
     acc |> NameSet.add m |> NameSet.add f_module
-  ) removed file_module_assoc in
+  ) removed_modules file_module_assoc in
 
   let module_files = MultiWorker.call
     workers
@@ -1002,10 +1002,16 @@ let clear_records files =
 (* remove module mappings for given files, if they exist. Possibilities:
    1. file is current registered module provider for a given module name
    2. file is not current provider, but record is still registered
-   3. file isn't in the map at all. This is an error.
+   3. file isn't in the map at all. This means file is new.
    We return the set of module names whose current providers have been
    removed (#1). This is the set commit_module expects as its second
    argument.
+
+   NOTE: The notion of "current provider" is murky, since every file at least
+   provides its eponymous module. So we also include it in the returned set.
+
+   TODO: Does a .flow file also provide its eponymous module? Or does it provide
+   the eponymous module of the file it shadows?
 *)
 let rec remove_files options workers files =
   let data = MultiWorker.call workers
