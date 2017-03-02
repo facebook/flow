@@ -246,11 +246,7 @@ let typecheck
     ~job: (fun () ->
       List.iter (fun (filename, docblock) ->
         Module_js.add_unparsed_info ~audit:Expensive.ok
-          ~options filename docblock;
-        (* TODO: The following step could be moved later (after committing
-           modules). Actually, we might be able to get rid of this step
-           altogether, since it only involves dummy entries. *)
-        Module_js.add_unparsed_resolved_requires ~audit:Expensive.ok filename;
+          ~options filename docblock
       )
     )
     ~neutral: ()
@@ -479,10 +475,15 @@ let recheck genv env modified =
     ~workers
     ~make_merge_input:(fun inferred ->
       (* Add non-@flow files to the list of inferred files, so that their
-         dependencies are also considered for rechecking. *)
+         dependencies are also considered for rechecking.
+
+         NOTE: Non-@flow files don't have entries in ResolvedRequiresHeap, so
+         don't add then to the set of files to merge! Only inferred files (along
+         with dependents) should be merged: see below. *)
+      let inferred = FilenameSet.of_list inferred in
       let modified_files = List.fold_left
         (fun modified_files (f, _) -> FilenameSet.add f modified_files)
-        (FilenameSet.of_list inferred) freshparse_skips in
+        inferred freshparse_skips in
 
       (* need to merge the closure of inferred files and their deps *)
 
@@ -528,7 +529,7 @@ let recheck genv env modified =
       (* merge errors for unmodified dependents will be cleared lazily *)
 
       (* to_merge is inferred files plus all dependents. prep for re-merge *)
-      let to_merge = FilenameSet.union all_deps modified_files in
+      let to_merge = FilenameSet.union all_deps inferred in
       Context_cache.oldify_merge_batch to_merge;
       (** TODO [perf]: Consider `aggressive **)
       SharedMem_js.collect genv.ServerEnv.options `gentle;

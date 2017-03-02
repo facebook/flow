@@ -798,15 +798,6 @@ let add_unparsed_info ~audit ~options file docblock =
     parsed = false;
   }
 
-let add_unparsed_resolved_requires ~audit file =
-  let resolved_requires = {
-    required = NameSet.empty;
-    require_loc = SMap.empty;
-    resolved_modules = SMap.empty;
-    phantom_dependents = SSet.empty;
-  } in
-  add_resolved_requires ~audit file resolved_requires
-
 (* Note that the module provided by a file is always accessible via its full
    path, so that it may be imported by specifying (a part of) that path in any
    module system. So, e.g., a file whose full path is /foo/bar.js is considered
