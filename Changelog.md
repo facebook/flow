@@ -1,3 +1,14 @@
+###v0.41.0
+
+Notable bug fixes:
+* Lots of improvements to typing React components (which may uncover previously missed errors). This release primarily focused on these tweaks to React typing
+* Previously Flow did not track much about mixins from `React.createClass` components (including mixed in proptypes). This has been fix and may uncover new proptypes errors in createClass components
+* The internal React libdef for `findDOMNode` has been updated to include `null` in its return-type now (since this function can, indeed, return `null`)
+
+Misc: 
+* `flow get-importers` has been removed. It was rarely used and added an incredible amount of complexity to the codebase
+* Lots of updates to builtin flow libs
+
 ###v0.40.0
 
 Notable bug fixes:
