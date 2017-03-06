@@ -705,12 +705,6 @@ proptype_oneOf.js:76
  76:     p: React.PropTypes.oneOf(0), // error: expected array, got 0
                                   ^ number
 
-proptype_oneOf.js:84
- 84:     p: React.PropTypes.oneOf([{}]), // error: expected literal, got {}
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `oneOf`. Expected a literal type instead of
- 84:     p: React.PropTypes.oneOf([{}]), // error: expected literal, got {}
-                                   ^^ object literal
-
 proptype_oneOfType.js:23
  23: var fail_missing = <Example />;
                         ^^^^^^^^^^^ React element `Example`
@@ -892,4 +886,4 @@ proptypes_sealed.js:22
          ^^^^^^^^^^ propTypes of React component
 
 
-Found 118 errors
+Found 117 errors

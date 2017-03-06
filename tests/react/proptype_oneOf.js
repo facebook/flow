@@ -79,10 +79,9 @@ var InvalidArrayExample = React.createClass({
 
 (<InvalidArrayExample p={0} />); // OK, don't cascade errors
 
-var InvalidElemExample = React.createClass({
+var NonLiteralElemExample = React.createClass({
   propTypes: {
-    p: React.PropTypes.oneOf([{}]), // error: expected literal, got {}
+    p: React.PropTypes.oneOf([{}]), // OK: allow non-literals
   },
 });
-
-(<InvalidElemExample p={0} />); // OK, don't cascade errors
+(<NonLiteralElemExample p={0} />); // OK, result is unknown/any

@@ -81,6 +81,8 @@ let run cx trace reason_op l u
       Err reason
   in
 
+  (* Unlike other coercions, don't add a Flow error if the incoming type doesn't
+     have a singleton type representation. *)
   let coerce_singleton = function
     | StrT (reason, Literal x) ->
       let reason = replace_reason_const (RStringLit x) reason in
@@ -93,12 +95,8 @@ let run cx trace reason_op l u
       OK (SingletonBoolT (reason, x))
     | NullT _ | VoidT _ as t ->
       OK t
-    | StrT (reason, _) | NumT (reason, _) | BoolT (reason, _) | AnyT reason ->
-      Err reason
     | t ->
-      let reason = reason_of_t t in
-      err_incompatible reason;
-      Err reason
+      Err (reason_of_t t)
   in
 
   let create_element config tout =
