@@ -737,21 +737,25 @@ module Json_output = struct
     let f = json_of_error_with_context ~strip_root ~stdin_file in
     Hh_json.JSON_Array (List.map f (ErrorSet.elements errors))
 
+  let full_status_json_of_errors ~strip_root ?(profiling=None) ?(stdin_file=None) errors =
+    let open Hh_json in
+
+    let props = [
+      "flowVersion", JSON_String FlowConfig.version;
+      "errors", json_of_errors_with_context ~strip_root ~stdin_file errors;
+      "passed", JSON_Bool (ErrorSet.is_empty errors);
+    ] in
+    let props = match profiling with
+    | None -> props
+    | Some profiling -> props @ Profiling_js.to_json_properties profiling in
+    JSON_Object props
+
   let print_errors
       ~out_channel
       ~strip_root ?(pretty=false) ?(profiling=None) ?(stdin_file=None)
       el =
     let open Hh_json in
-
-    let props = [
-      "flowVersion", JSON_String FlowConfig.version;
-      "errors", json_of_errors_with_context ~strip_root ~stdin_file el;
-      "passed", JSON_Bool (ErrorSet.is_empty el);
-    ] in
-    let props = match profiling with
-    | None -> props
-    | Some profiling -> props @ Profiling_js.to_json_properties profiling in
-    let res = JSON_Object props in
+    let res = full_status_json_of_errors ~strip_root ~profiling ~stdin_file el in
     output_string out_channel (json_to_string ~pretty res);
     flush out_channel
 end

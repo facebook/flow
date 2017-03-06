@@ -97,6 +97,13 @@ module Json_output : sig
     ErrorSet.t ->
     Hh_json.json
 
+  val full_status_json_of_errors :
+    strip_root: Path.t option ->
+    ?profiling:Profiling_js.t option ->
+    ?stdin_file:stdin_file ->
+    ErrorSet.t ->
+    Hh_json.json
+
   val print_errors:
     out_channel:out_channel ->
     strip_root: Path.t option ->
