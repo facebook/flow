@@ -556,6 +556,41 @@ let rec convert cx tparams_map = Ast.Type.(function
   if (tparams = []) then ft else PolyT(tparams, ft)
 
 | loc, Object { Object.exact; properties } ->
+  let mk_object (call_props, dict, props_map) =
+    let props_map = match List.rev call_props with
+      | [] -> props_map
+      | [t] ->
+        let p = Field (t, Positive) in
+        SMap.add "$call" p props_map
+      | t0::t1::ts ->
+        let callable_reason = mk_reason (RCustom "callable object type") loc in
+        let rep = InterRep.make t0 t1 ts in
+        let t = IntersectionT (callable_reason, rep) in
+        let p = Field (t, Positive) in
+        SMap.add "$call" p props_map
+    in
+    (* Use the same reason for proto and the ObjT so we can walk the proto chain
+       and use the root proto reason to build an error. *)
+    let reason_desc = RObjectType in
+    let pmap = Context.make_property_map cx props_map in
+    let callable = List.exists (function
+      | Object.CallProperty (_, { Object.CallProperty.static; _ }) -> not static
+      | _ -> false
+    ) properties in
+    let proto = if callable
+      then FunProtoT (locationless_reason reason_desc)
+      else ObjProtoT (locationless_reason reason_desc) in
+    let flags = {
+      sealed = Sealed;
+      exact;
+      frozen = false;
+    } in
+    let t = ObjT (mk_reason reason_desc loc,
+      Flow_js.mk_objecttype ~flags dict pmap proto) in
+    if exact
+    then ExactT (mk_reason (RExactType reason_desc) loc, t)
+    else t
+  in
   let property loc prop props =
     match prop with
     | { Object.Property.
@@ -600,65 +635,62 @@ let rec convert cx tparams_map = Ast.Type.(function
       Flow_js.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
       props
-
   in
-  let call_props, dict, props_map = List.fold_left (
-    fun (calls, dict, props) -> function
-    | Object.CallProperty (loc, { Object.CallProperty.value = (_, ft); _ }) ->
-      let t = convert cx tparams_map (loc, Ast.Type.Function ft) in
-      t::calls, dict, props
-    | Object.Indexer (loc, _) when dict <> None ->
+  let add_call c = function
+    | None -> Some ([c], None, SMap.empty)
+    | Some (cs, d, pmap) -> Some (c::cs, d, pmap)
+  in
+  let make_dict { Object.Indexer.id; key; value; variance; _ } =
+    Some { Type.
+      dict_name = Option.map id snd;
+      key = convert cx tparams_map key;
+      value = convert cx tparams_map value;
+      dict_polarity = polarity variance;
+    }
+  in
+  let add_dict loc indexer = function
+    | None -> Some ([], make_dict indexer, SMap.empty)
+    | Some (cs, None, pmap) -> Some (cs, make_dict indexer, pmap)
+    | Some (_, Some _, _) as o ->
       Flow_js.add_output cx
         FlowError.(EUnsupportedSyntax (loc, MultipleIndexers));
-      calls, dict, props
-    | Object.Indexer (_, { Object.Indexer.id; key; value; variance; _ }) ->
-      let dict = Some { Type.
-        dict_name = Option.map id snd;
-        key = convert cx tparams_map key;
-        value = convert cx tparams_map value;
-        dict_polarity = polarity variance;
-      } in
-      calls, dict, props
-    | Object.Property (loc, prop) ->
-      calls, dict, property loc prop props
-    | Object.SpreadProperty (loc, _) ->
-      Flow_js.add_output cx
-        FlowError.(EUnsupportedSyntax (loc, ObjectTypeSpread));
-      calls, dict, props
-  ) ([], None, SMap.empty) properties in
-  let props_map = match List.rev call_props with
-    | [] -> props_map
-    | [t] ->
-      let p = Field (t, Positive) in
-      SMap.add "$call" p props_map
-    | t0::t1::ts ->
-      let callable_reason = mk_reason (RCustom "callable object type") loc in
-      let rep = InterRep.make t0 t1 ts in
-      let t = IntersectionT (callable_reason, rep) in
-      let p = Field (t, Positive) in
-      SMap.add "$call" p props_map
+      o
   in
-  (* Use the same reason for proto and the ObjT so we can walk the proto chain
-     and use the root proto reason to build an error. *)
-  let reason_desc = RObjectType in
-  let pmap = Context.make_property_map cx props_map in
-  let callable = List.exists (function
-    | Object.CallProperty (_, { Object.CallProperty.static; _ }) -> not static
-    | _ -> false
-  ) properties in
-  let proto = if callable
-    then FunProtoT (locationless_reason reason_desc)
-    else ObjProtoT (locationless_reason reason_desc) in
-  let flags = {
-    sealed = Sealed;
-    exact;
-    frozen = false;
-  } in
-  let t = ObjT (mk_reason reason_desc loc,
-    Flow_js.mk_objecttype ~flags dict pmap proto) in
-  if exact
-  then ExactT (mk_reason (RExactType reason_desc) loc, t)
-  else t
+  let add_prop loc p = function
+    | None -> Some ([], None, property loc p SMap.empty)
+    | Some (cs, d, pmap) -> Some (cs, d, property loc p pmap)
+  in
+  let o, ts, spread = List.fold_left (
+    fun (o, ts, spread) -> function
+    | Object.CallProperty (loc, { Object.CallProperty.value = (_, ft); _ }) ->
+      let t = convert cx tparams_map (loc, Ast.Type.Function ft) in
+      add_call t o, ts, spread
+    | Object.Indexer (loc, i) ->
+      add_dict loc i o, ts, spread
+    | Object.Property (loc, p) ->
+      add_prop loc p o, ts, spread
+    | Object.SpreadProperty (_, { Object.SpreadProperty.argument }) ->
+      let ts = match o with
+      | None -> ts
+      | Some o -> (mk_object o)::ts
+      in
+      let o = convert cx tparams_map argument in
+      None, o::ts, true
+  ) (None, [], false) properties in
+  let ts = match o with
+  | None -> ts
+  | Some o -> mk_object o::ts
+  in
+  (match ts with
+  | [] -> mk_object ([], None, SMap.empty)
+  | [t] when not spread -> t
+  | t::todo_rev ->
+    let open ObjectSpread in
+    let reason = mk_reason RObjectType loc in
+    let tool = Resolve Next in
+    let state = { todo_rev; acc = []; make_exact = exact } in
+    AnnotT (Flow_js.mk_tvar_where cx reason (fun tout ->
+      Flow_js.flow cx (t, ObjSpreadT (reason, tool, state, tout)))))
 
 | loc, Exists ->
   (* Do not evaluate existential type variables when map is non-empty. This

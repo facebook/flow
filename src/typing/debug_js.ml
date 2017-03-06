@@ -629,6 +629,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "cont", JSON_Object (_json_of_cont json_cx cont);
     ]
 
+  | ObjSpreadT (_, _, _, tout) -> [
+      "t_out", _json_of_t json_cx tout;
+    ]
+
   | ReactKitT (_, React.CreateElement (t, t_out)) -> [
       "config", _json_of_t json_cx t;
       "returnType", _json_of_t json_cx t_out;
@@ -1636,6 +1640,53 @@ and dump_use_t_ (depth, tvars) cx t =
       spf "CreateClass (%s, %s)" (create_class tool knot) (kid tout)
   in
 
+  let slice (_, props, dict, {exact; _}) =
+    let xs = match dict with
+    | Some {dict_polarity=p; _} -> [(Polarity.sigil p)^"[]"]
+    | None -> []
+    in
+    let xs = SMap.fold (fun k (t,_) xs ->
+      let opt = match t with OptionalT _ -> "?" | _ -> "" in
+      (k^opt)::xs
+    ) props xs in
+    let xs = String.concat "; " xs in
+    if exact
+    then spf "{|%s|}" xs
+    else spf "{%s}" xs
+  in
+
+  let object_spread =
+    let open ObjectSpread in
+    let join = function And -> "And" | Or -> "Or" in
+    let resolved xs =
+      spf "[%s]" (String.concat "; " (List.map slice (Nel.to_list xs)))
+    in
+    let resolve = function
+      | Next -> "Next"
+      | List0 (todo, j) ->
+        spf "List0 ([%s], %s)"
+          (String.concat "; " (List.map kid (Nel.to_list todo)))
+          (join j)
+      | List (todo, done_rev, j) ->
+        spf "List ([%s], [%s], %s)"
+          (String.concat "; " (List.map kid todo))
+          (String.concat "; " (List.map resolved (Nel.to_list done_rev)))
+          (join j)
+    in
+    let tool = function
+      | Resolve tool -> spf "Resolve %s" (resolve tool)
+      | Super (s, tool) -> spf "Super (%s, %s)" (slice s) (resolve tool)
+    in
+    let state {todo_rev; acc; make_exact} =
+      spf "{todo_rev=[%s]; acc=[%s]; make_exact=%b}"
+        (String.concat "; " (List.map kid todo_rev))
+        (String.concat "; " (List.map resolved acc))
+        make_exact
+    in
+    fun t s ->
+      spf "(%s, %s)" (tool t) (state s)
+  in
+
   if depth = 0 then string_of_use_ctor t
   else match t with
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
@@ -1742,6 +1793,9 @@ and dump_use_t_ (depth, tvars) cx t =
       (kid ptype)) t
   | SpecializeT (_, _, cache, args, ret) -> p ~extra:(spf "%s, [%s], %s"
       (specialize_cache cache) (String.concat "; " (List.map kid args)) (kid ret)) t
+  | ObjSpreadT (_, tool, state, arg) -> p ~extra:(spf "%s, %s"
+      (object_spread tool state)
+      (kid arg)) t
   | TestPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t

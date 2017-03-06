@@ -422,7 +422,8 @@ module rec TypeTerm : sig
 
     | ReactKitT of reason * React.tool
 
-    (* toolkit for making choices, contd. (appearing only as upper bounds) *)
+    | ObjSpreadT of reason * ObjectSpread.tool * ObjectSpread.state * t_out
+
     | ChoiceKitUseT of reason * choice_use_tool
 
     (* tools for preprocessing intersections *)
@@ -1181,6 +1182,7 @@ and UnionRep : sig
 
   (** members in declaration order *)
   val members: t -> TypeTerm.t list
+  val members_nel: t -> TypeTerm.t * TypeTerm.t Nel.t
 
   val cons: TypeTerm.t -> t -> t
 
@@ -1264,6 +1266,7 @@ end = struct
     | Some (base, _) -> Some base
 
   let members (t0, t1, ts, _) = t0::t1::ts
+  let members_nel (t0, t1, ts, _) = t0, (t1, ts)
 
   let cons t0 (t1, t2, ts, _) =
     make t0 t1 (t2::ts)
@@ -1314,6 +1317,7 @@ and InterRep : sig
 
   (** member list in declaration order *)
   val members: t -> TypeTerm.t list
+  val members_nel: t -> TypeTerm.t * TypeTerm.t Nel.t
 
   (** map rep r to rep r' along type mapping f. drops history *)
   val map: (TypeTerm.t -> TypeTerm.t) -> t -> t
@@ -1334,6 +1338,7 @@ end = struct
   let make t0 t1 ts = (t0, t1, ts)
 
   let members (t0, t1, ts) = t0::t1::ts
+  let members_nel (t0, t1, ts) = t0, (t1, ts)
 
   let map f (t0, t1, ts) = make (f t0) (f t1) (List.map f ts)
 
@@ -1473,6 +1478,39 @@ and React : sig
   | SimplifyPropType of SimplifyPropType.tool * TypeTerm.t_out
   | CreateClass of CreateClass.tool * CreateClass.knot * TypeTerm.t_out
 end = React
+
+and ObjectSpread : sig
+  type tool =
+    (* Each part of a spread must be resolved in order to compute the result *)
+    | Resolve of resolve
+    (* In order to resolve an InstanceT, all supers must also be resolved to
+       collect class properties, which are own. *)
+    | Super of slice * resolve
+
+  and resolve =
+    | Next
+    (* Resolve each element of a union or intersection *)
+    | List0 of TypeTerm.t Nel.t * join
+    | List of TypeTerm.t list * resolved Nel.t * join
+
+  and join = And | Or
+
+  and state = {
+    todo_rev: TypeTerm.t list;
+    acc: resolved list;
+    make_exact: bool;
+  }
+
+  (* A union type resolves to a resolved spread with more than one element *)
+  and resolved = slice Nel.t
+
+  and slice = reason * props * dict * TypeTerm.flags
+
+  and props = prop SMap.t
+  and prop = TypeTerm.t * bool (* own *)
+
+  and dict = TypeTerm.dicttype option
+end = ObjectSpread
 
 include TypeTerm
 
@@ -1616,6 +1654,7 @@ let any_propagating_use_t = function
   | SpecializeT _
   | ThisSpecializeT _
   | UseT (_, ClassT _) (* mk_instance ~for_type:false *)
+  | ObjSpreadT _
     -> true
 
   (* These types have no t_out, so can't propagate anything *)
@@ -1810,6 +1849,7 @@ and reason_of_use_t = function
   | SetElemT (reason,_,_) -> reason
   | SetPropT (reason,_,_) -> reason
   | SpecializeT(reason,_,_,_,_) -> reason
+  | ObjSpreadT (reason, _, _, _) -> reason
   | SubstOnPredT (reason, _, _) -> reason
   | SuperT (reason,_) -> reason
   | TestPropT (reason, _, _) -> reason
@@ -1977,6 +2017,7 @@ and mod_reason_of_use_t f = function
   | SetPropT (reason, n, t) -> SetPropT (f reason, n, t)
   | SpecializeT(reason_op, reason_tapp, cache, ts, t) ->
       SpecializeT (f reason_op, reason_tapp, cache, ts, t)
+  | ObjSpreadT (reason, tool, state, k) -> ObjSpreadT (f reason, tool, state, k)
   | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
   | SuperT (reason, inst) -> SuperT (f reason, inst)
   | TestPropT (reason, n, t) -> TestPropT (f reason, n, t)
@@ -2189,6 +2230,7 @@ let string_of_use_ctor = function
   | SetElemT _ -> "SetElemT"
   | SetPropT _ -> "SetPropT"
   | SpecializeT _ -> "SpecializeT"
+  | ObjSpreadT _ -> "ObjSpreadT"
   | SubstOnPredT _ -> "SubstOnPredT"
   | SuperT _ -> "SuperT"
   | TestPropT _ -> "TestPropT"

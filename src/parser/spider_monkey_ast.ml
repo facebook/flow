@@ -102,7 +102,7 @@ and Type : sig
     module SpreadProperty : sig
       type t = Loc.t * t'
       and t' = {
-        argument: Loc.t * Generic.t;
+        argument: Type.t;
       }
     end
     module Indexer: sig

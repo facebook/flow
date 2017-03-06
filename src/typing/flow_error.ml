@@ -168,7 +168,6 @@ and unsupported_syntax =
   | PredicateInvalidBody
   | PredicateVoidReturn
   | MultipleIndexers
-  | ObjectTypeSpread (* TODO *)
   | SpreadArgument
 
 (* decide reason order based on UB's flavor and blamability *)
@@ -240,6 +239,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         -> "Expected spread argument to be an iterable instead of"
       end
     | TypeAppVarianceCheckT _ -> "Expected polymorphic type instead of"
+    | ObjSpreadT _ -> "Cannot spread properties from"
     (* unreachable or unclassified use-types. until we have a mechanical way
        to verify that all legit use types are listed above, we can't afford
        to throw on a use type, so mark the error instead *)
@@ -852,8 +852,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             "Predicate functions need to return non-void."
         | MultipleIndexers ->
             "multiple indexers are not supported"
-        | ObjectTypeSpread ->
-            "object type spread is not supported"
         | SpreadArgument ->
             "A spread argument is unsupported here"
       in

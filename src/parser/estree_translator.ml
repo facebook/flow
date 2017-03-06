@@ -1041,7 +1041,7 @@ end with type t = Impl.t) = struct
 
   and object_type_spread_property (loc, prop) = Type.Object.SpreadProperty.(
     node "ObjectTypeSpreadProperty" loc [|
-      "argument", generic_type prop.argument;
+      "argument", _type prop.argument;
     |]
   )
 

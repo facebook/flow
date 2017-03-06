@@ -2608,6 +2608,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          reposition the entire union type. *)
       rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
+    | UnionT _, ObjSpreadT (reason_op, tool, state, tout) ->
+      object_spread cx trace reason_op tool state tout l
+
     (* cases where there is no loss of precision *)
 
     (** Optimization where an union is a subset of another. Equality modulo
@@ -2751,6 +2754,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         between so that we reposition the entire intersection. *)
     | IntersectionT _, ReposLowerT (reason_op, u) ->
       rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+
+    | IntersectionT _, ObjSpreadT (reason_op, tool, state, tout) ->
+      object_spread cx trace reason_op tool state tout l
 
     (** All other pairs with an intersection lower bound come here. Before
         further processing, we ensure that the upper bound is concretized. See
@@ -4468,6 +4474,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | TupleAT (elemt, ts) -> TupleAT (elemt, Core_list.drop ts i) in
       let a = ArrT (reason, arrtype) in
       rec_flow_t cx trace (a, tout)
+
+    (**********************)
+    (* object type spread *)
+    (**********************)
+
+    | _, ObjSpreadT (reason_op, tool, state, tout) ->
+      object_spread cx trace reason_op tool state tout l
 
     (**************************************************)
     (* function types can be mapped over a structure  *)
@@ -9665,6 +9678,7 @@ and continue cx trace t = function
   | Upper u -> rec_flow cx trace (t, u)
   | Lower l -> rec_flow_t cx trace (l, t)
 
+
 and react_kit =
   React_kit.run
     ~add_output
@@ -9682,6 +9696,299 @@ and react_kit =
     ~mk_tvar
     ~eval_destructor
     ~sealed_in_op
+
+and object_spread =
+  let open ObjectSpread in
+
+  let read_prop r flags x p =
+    let t = match Property.read_t p with
+    | Some t -> t
+    | None ->
+      let reason = replace_reason_const (RUnknownProperty (Some x)) r in
+      let t = MixedT (reason, Mixed_everything) in
+      t
+    in
+    t, flags.exact
+  in
+
+  let read_dict r {value; dict_polarity; _} =
+    if Polarity.compat (dict_polarity, Positive)
+    then value
+    else
+      let reason = replace_reason_const (RUnknownProperty None) r in
+      MixedT (reason, Mixed_everything)
+  in
+
+  (* Lift a pairwise function like spread2 to a function over a resolved list *)
+  let merge (f: slice -> slice -> slice) =
+    let f' (x0: resolved) (x1: resolved) =
+      Nel.map_concat (fun slice1 ->
+        Nel.map (f slice1) x0
+      ) x1
+    in
+    let rec loop x0 = function
+      | [] -> x0
+      | x1::xs -> loop (f' x0 x1) xs
+    in
+    fun x0 (x1,xs) -> loop (f' x0 x1) xs
+  in
+
+  (* Compute spread result: slice * slice -> slice *)
+  let spread2 reason (r1,props1,dict1,flags1) (r2,props2,dict2,flags2) =
+    let union t1 t2 = UnionT (reason, UnionRep.make t1 t2 []) in
+    let merge_props (t1, own1) (t2, own2) =
+      let t1, opt1 = match t1 with OptionalT t -> t, true | _ -> t1, false in
+      let t2, opt2 = match t2 with OptionalT t -> t, true | _ -> t2, false in
+      (* An own, non-optional property definitely overwrites earlier properties.
+         Otherwise, the type might come from either side. *)
+      let t, own =
+        if own2 && not opt2 then t2, own2
+        else union t1 t2, own1 || own2
+      in
+      (* If either property is own, the result is non-optional unless the own
+         property is itself optional. Non-own implies optional (see mk_object),
+         so we don't need to handle those cases here. *)
+      let opt =
+        if own1 && own2 then opt1 && opt2
+        else own1 && opt1 || own2 && opt2
+      in
+      let t = if opt then OptionalT t else t in
+      t, own
+    in
+    let props = SMap.merge (fun x p1 p2 ->
+      (* Treat dictionaries as optional, own properties. Dictionary reads should
+       * be exact. TODO: Forbid writes to indexers through the photo chain.
+       * Property accesses which read from dictionaries normally result in a
+       * non-optional result, but that leads to confusing spread results. For
+       * example, `p` in `{...{|p:T|},...{[]:U}` should `T|U`, not `U`. *)
+      let read_dict r d = OptionalT (read_dict r d), true in
+      (* Due to width subtyping, failing to read from an inexact object does not
+         imply non-existence, but rather an unknown result. *)
+      let unknown r =
+        let r = replace_reason_const (RUnknownProperty (Some x)) r in
+        MixedT (r, Mixed_everything), false
+      in
+      match p1, p2 with
+      | None, None -> None
+      | Some p1, Some p2 -> Some (merge_props p1 p2)
+      | Some p1, None ->
+        (match dict2 with
+        | Some d2 -> Some (merge_props p1 (read_dict r2 d2))
+        | None ->
+          if flags2.exact
+          then Some p1
+          else Some (merge_props p1 (unknown r2)))
+      | None, Some p2 ->
+        (match dict1 with
+        | Some d1 -> Some (merge_props (read_dict r1 d1) p2)
+        | None ->
+          if flags1.exact
+          then Some p2
+          else Some (merge_props (unknown r1) p2))
+    ) props1 props2 in
+    let dict = Option.merge dict1 dict2 (fun d1 d2 -> {
+      dict_name = None;
+      key = union d1.key d2.key;
+      value = union (read_dict r1 d1) (read_dict r2 d2);
+      dict_polarity = Neutral
+    }) in
+    let flags = {
+      frozen = flags1.frozen && flags2.frozen;
+      sealed = Sealed;
+      exact =
+        flags1.exact && flags2.exact &&
+        sealed_in_op reason flags1.sealed &&
+        sealed_in_op reason flags2.sealed;
+    } in
+    reason, props, dict, flags
+  in
+
+  (* Intersect two object slices: slice * slice -> slice
+   *
+   * In general it is unsound to combine intersection types, but since spread
+   * makes a copy and only reads from its arguments, it is safe in this specific
+   * case.
+   *
+   * {...{p:T}&{q:U}} = {...{p:T,q:U}}
+   * {...{p:T}&{p:U}} = {...{p:T&U}}
+   * {...A&(B|C)} = {...{A&B)|(A&C)}
+   * {...(A|B)&C} = {...{A&C)|(B&C)}
+   *)
+  let intersect2 reason (r1,props1,dict1,flags1) (r2,props2,dict2,flags2) =
+    let intersection t1 t2 = IntersectionT (reason, InterRep.make t1 t2 []) in
+    let merge_props (t1, own1) (t2, own2) =
+      let t1, t2, opt = match t1, t2 with
+      | OptionalT t1, OptionalT t2 -> t1, t2, true
+      | OptionalT t1, t2 | t1, OptionalT t2 | t1, t2 -> t1, t2, false
+      in
+      let t = intersection t1 t2 in
+      let t = if opt then OptionalT t else t in
+      t, own1 || own2
+    in
+    let r =
+      let loc = Loc.btwn (loc_of_reason r1) (loc_of_reason r2) in
+      mk_reason RObjectType loc
+    in
+    let props = SMap.merge (fun _ p1 p2 ->
+      let read_dict r d = OptionalT (read_dict r d), true in
+      match p1, p2 with
+      | None, None -> None
+      | Some p1, Some p2 -> Some (merge_props p1 p2)
+      | Some p1, None ->
+        (match dict2 with
+        | Some d2 -> Some (merge_props p1 (read_dict r2 d2))
+        | None -> Some p1)
+      | None, Some p2 ->
+        (match dict1 with
+        | Some d1 -> Some (merge_props (read_dict r1 d1) p2)
+        | None -> Some p2)
+    ) props1 props2 in
+    let dict = Option.merge dict1 dict2 (fun d1 d2 -> {
+      dict_name = None;
+      key = intersection d1.key d2.key;
+      value = intersection (read_dict r1 d1) (read_dict r2 d2);
+      dict_polarity = Neutral;
+    }) in
+    let flags = {
+      frozen = flags1.frozen || flags2.frozen;
+      sealed = Sealed;
+      exact = flags1.exact || flags2.exact;
+    } in
+    r, props, dict, flags
+  in
+
+  let spread reason = function
+    | x,[] -> x
+    | x0,x1::xs -> merge (spread2 reason) x0 (x1,xs)
+  in
+
+  let mk_object cx reason ~make_exact (r, props, dict, flags) =
+    let props = SMap.map (fun (t, own) ->
+      (* Spread only copies over own properties. If `not own`, then the property
+         might be on a proto object instead, so make the result optional. *)
+      let t = match t with
+      | OptionalT _ -> t
+      | _ -> if own then t else OptionalT t
+      in
+      Field (t, Neutral)
+    ) props in
+    let id = Context.make_property_map cx props in
+    let proto = ObjProtoT reason in
+    let t = ObjT (r, mk_objecttype ~flags dict id proto) in
+    if make_exact then ExactT (reason, t) else t
+  in
+
+  let next cx trace reason {todo_rev; acc; make_exact} tout x =
+    Nel.iter (fun (r,_,_,{exact;_}) ->
+      if make_exact && not exact
+      then add_output cx ~trace (FlowError.EIncompatibleWithExact (r, reason));
+    ) x;
+    match todo_rev with
+    | [] ->
+      let t = match spread reason (Nel.rev (x, acc)) with
+      | x,[] -> mk_object cx reason ~make_exact x
+      | x0,x1::xs ->
+        UnionT (reason, UnionRep.make
+          (mk_object cx reason ~make_exact x0)
+          (mk_object cx reason ~make_exact x1)
+          (List.map (mk_object cx reason ~make_exact) xs))
+      in
+      rec_flow_t cx trace (t, tout)
+    | t::todo_rev ->
+      let tool = Resolve Next in
+      let state = {todo_rev; acc = x::acc; make_exact} in
+      rec_flow cx trace (t, ObjSpreadT (reason, tool, state, tout))
+  in
+
+  let resolved cx trace reason tool state tout x =
+    match tool with
+    | Next -> next cx trace reason state tout x
+    | List0 ((t, todo), join) ->
+      let tool = Resolve (List (todo, Nel.one x, join)) in
+      rec_flow cx trace (t, ObjSpreadT (reason, tool, state, tout))
+    | List (todo, done_rev, join) ->
+      match todo with
+      | [] ->
+        let x = match join with
+        | Or -> Nel.cons x done_rev |> Nel.concat
+        | And -> merge (intersect2 reason) x done_rev
+        in
+        next cx trace reason state tout x
+      | t::todo ->
+        let done_rev = Nel.cons x done_rev in
+        let tool = Resolve (List (todo, done_rev, join)) in
+        rec_flow cx trace (t, ObjSpreadT (reason, tool, state, tout))
+  in
+
+  let object_slice cx r id dict flags =
+    let props = Context.find_props cx id in
+    let props = SMap.mapi (read_prop r flags) props in
+    let dict = Option.map dict (fun d -> {
+      dict_name = None;
+      key = d.key;
+      value = read_dict r d;
+      dict_polarity = Neutral;
+    }) in
+    (r, props, dict, flags)
+  in
+
+  let interface_slice cx r id =
+    let flags = {frozen=false; exact=false; sealed=Sealed} in
+    let id, dict =
+      let props = Context.find_props cx id in
+      match SMap.get "$key" props, SMap.get "$value" props with
+      | Some (Field (key, polarity)), Some (Field (value, polarity'))
+        when polarity = polarity' ->
+        let props = props |> SMap.remove "$key" |> SMap.remove "$value" in
+        let id = Context.make_property_map cx props in
+        let dict = {dict_name = None; key; value; dict_polarity = polarity} in
+        id, Some dict
+      | _ -> id, None
+    in
+    object_slice cx r id dict flags
+  in
+
+  let resolve cx trace reason state tout tool = function
+    | ObjT (r, {props_tmap; dict_t; flags; _}) ->
+      let x = Nel.one (object_slice cx r props_tmap dict_t flags) in
+      resolved cx trace reason tool state tout x
+    | InstanceT (r, _, super, _, {fields_tmap; _}) ->
+      let tool = Super (interface_slice cx r fields_tmap, tool) in
+      rec_flow cx trace (super, ObjSpreadT (reason, tool, state, tout))
+    | UnionT (_, rep) ->
+      let t, todo = UnionRep.members_nel rep in
+      let tool = Resolve (List0 (todo, Or)) in
+      rec_flow cx trace (t, ObjSpreadT (reason, tool, state, tout))
+    | IntersectionT (_, rep) ->
+      let t, todo = InterRep.members_nel rep in
+      let tool = Resolve (List0 (todo, And)) in
+      rec_flow cx trace (t, ObjSpreadT (reason, tool, state, tout))
+    | AnyT _ | AnyObjT _ ->
+      rec_flow_t cx trace (AnyT.why reason, tout)
+    (* Other types have reasonable spread implementations, like FunT, which
+       would spread its statics. Since spread is currently limited to types, an
+       arbitrary subset of possible types are implemented. *)
+    | t ->
+      add_output cx ~trace (FlowError.EIncompatible
+        (t, ObjSpreadT (reason, Resolve tool, state, tout)))
+  in
+
+  let super cx trace reason state tout acc tool = function
+    | InstanceT (r, _, super, _, {fields_tmap; _}) ->
+      let slice = interface_slice cx r fields_tmap in
+      let acc = intersect2 reason acc slice in
+      let tool = Super (acc, tool) in
+      rec_flow cx trace (super, ObjSpreadT (reason, tool, state, tout))
+    | AnyT _ | AnyObjT _ ->
+      rec_flow_t cx trace (AnyT.why reason, tout)
+    | _ ->
+      next cx trace reason state tout (Nel.one acc)
+  in
+
+  fun cx trace reason tool state tout l ->
+    match tool with
+    | Resolve tool -> resolve cx trace reason state tout tool l
+    | Super (acc, tool) -> super cx trace reason state tout acc tool l
 
 (************* end of slab **************************************************)
 

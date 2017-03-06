@@ -1,0 +1,179 @@
+type.js:13
+ 13: (o1: {p:T}); // error: o1.p is optional
+      ^^ object type. This type is incompatible with
+ 13: (o1: {p:T}); // error: o1.p is optional
+          ^^^^^ object type
+  Property `p` is incompatible:
+     10: type O1 = {...{p:T}};
+                          ^ undefined. This type is incompatible with
+     13: (o1: {p:T}); // error: o1.p is optional
+                 ^ T
+
+type.js:16
+ 16: ({p:y}: O1); // error: y ~> T
+      ^^^^^ object literal. This type is incompatible with
+ 16: ({p:y}: O1); // error: y ~> T
+             ^^ object type
+  Property `p` is incompatible:
+     16: ({p:y}: O1); // error: y ~> T
+             ^ U. This type is incompatible with
+     10: type O1 = {...{p:T}};
+                          ^ T
+
+type.js:23
+ 23: (o2: {p:T}); // error: o2.p is optional
+      ^^ object type. This type is incompatible with
+ 23: (o2: {p:T}); // error: o2.p is optional
+          ^^^^^ object type
+  Property `p` is incompatible:
+     20: type O2 = {...{p?:T}};
+                           ^ undefined. This type is incompatible with
+     23: (o2: {p:T}); // error: o2.p is optional
+                 ^ T
+
+type.js:26
+ 26: ({p:y}: O2); // error: y ~> T
+      ^^^^^ object literal. This type is incompatible with
+ 26: ({p:y}: O2); // error: y ~> T
+             ^^ object type
+  Property `p` is incompatible:
+     26: ({p:y}: O2); // error: y ~> T
+             ^ U. This type is incompatible with
+     20: type O2 = {...{p?:T}};
+                           ^ T
+
+type.js:30
+ 30: type O3 = {|...{p:T}|}; // error: spread result is not exact
+                    ^^^^^ object type. Inexact type is incompatible with exact type
+ 30: type O3 = {|...{p:T}|}; // error: spread result is not exact
+               ^^^^^^^^^^^^ object type
+
+type.js:37
+ 37: ({}: O4); // error: property `p` not found
+          ^^ property `p`. Property not found in
+ 37: ({}: O4); // error: property `p` not found
+      ^^ object literal
+
+type.js:39
+ 39: ({p:y}: O4); // error: y ~> T
+      ^^^^^ object literal. This type is incompatible with
+ 39: ({p:y}: O4); // error: y ~> T
+             ^^ object type
+  Property `p` is incompatible:
+     39: ({p:y}: O4); // error: y ~> T
+             ^ U. This type is incompatible with
+     33: type O4 = {...{|p:T|}};
+                           ^ T
+
+type.js:47
+ 47: (nil: O5); // error: property `p` not found
+           ^^ property `p`. Property not found in
+  7: declare var nil: {||};
+                      ^^^^ object type
+
+type.js:49
+ 49: ({p:y}: O5); // error: y ~> T
+      ^^^^^ object literal. This type is incompatible with
+ 49: ({p:y}: O5); // error: y ~> T
+             ^^ object type
+  Property `p` is incompatible:
+     49: ({p:y}: O5); // error: y ~> T
+             ^ U. This type is incompatible with
+     43: type O5 = {|...{|p:T|}|};
+                            ^ T
+
+type.js:50
+ 50: ({p:x,q:y}: O5); // error: additional property `q` found
+      ^^^^^^^^^ property `q`. Property not found in
+ 50: ({p:x,q:y}: O5); // error: additional property `q` found
+                 ^^ object type
+
+type.js:56
+ 56: ({}: O6); // error: property `p` not found
+          ^^ property `p`. Property not found in
+ 56: ({}: O6); // error: property `p` not found
+      ^^ object literal
+
+type.js:57
+ 57: ({p:x}: O6); // error: x ~> U
+      ^^^^^ object literal. This type is incompatible with
+ 57: ({p:x}: O6); // error: x ~> U
+             ^^ object type
+  Property `p` is incompatible:
+     57: ({p:x}: O6); // error: x ~> U
+             ^ T. This type is incompatible with
+     53: type O6 = {...{p:T},...{|p:U|}};
+                                    ^ U
+
+type.js:62
+ 62: type O7 = {|...{p:T},...{|p:U|}|}; // error: spread result is not exact
+                    ^^^^^ object type. Inexact type is incompatible with exact type
+ 62: type O7 = {|...{p:T},...{|p:U|}|}; // error: spread result is not exact
+               ^^^^^^^^^^^^^^^^^^^^^^^ object type
+
+type.js:68
+ 68: (o8.p: T); // error: U ~> T
+      ^^^^ U. This type is incompatible with
+ 68: (o8.p: T); // error: U ~> T
+            ^ T
+
+type.js:69
+ 69: (o8.p: U); // error: T ~> U
+      ^^^^ T. This type is incompatible with
+ 69: (o8.p: U); // error: T ~> U
+            ^ U
+
+type.js:75
+ 75: (o9.p: T); // error: o9.p is optional
+      ^^^^ undefined. This type is incompatible with
+ 75: (o9.p: T); // error: o9.p is optional
+            ^ T
+
+type_contra.js:6
+  6: (o1: {p?:T}); // error: unknown ~> T
+      ^^ object type. This type is incompatible with
+  6: (o1: {p?:T}); // error: unknown ~> T
+          ^^^^^^ object type
+  Property `p` is incompatible:
+      3: type O1 = {...{-p:T}};
+                       ^^^^^^ property `p` of unknown type. This type is incompatible with
+      6: (o1: {p?:T}); // error: unknown ~> T
+                  ^ T
+
+type_contra.js:7
+  7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
+      ^^^^ property `p` of unknown type. This type is incompatible with
+  7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
+            ^ T
+
+type_contra.js:7
+  7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
+      ^^^^ undefined. This type is incompatible with
+  7: (o1.p: T); // errors: undefined ~> T, unknown ~> T
+            ^ T
+
+type_contra.js:9
+  9: type O2 = {...{-[string]:T}};
+                   ^^^^^^^^^^^^^ computed property of unknown type. This type is incompatible with
+ 12: (o2: {[string]:T}); // error: unknown ~> T
+                    ^ T
+
+type_contra.js:13
+ 13: (o2.p: T); // errors: unknown ~> T
+      ^^^^ computed property of unknown type. This type is incompatible with
+ 13: (o2.p: T); // errors: unknown ~> T
+            ^ T
+
+type_intersection.js:15
+ 15: ({p: new A}: O2); // error: A ~> B
+      ^^^^^^^^^^ object literal. This type is incompatible with
+ 15: ({p: new A}: O2); // error: A ~> B
+                  ^^ object type
+  Property `p` is incompatible:
+     15: ({p: new A}: O2); // error: A ~> B
+              ^^^^^ A. This type is incompatible with
+     11: type O2 = {...{p:A}&{p:B}};
+                                ^ B
+
+
+Found 22 errors

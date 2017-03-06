@@ -274,6 +274,7 @@ class ['a] t = object(self)
   | SetElemT (_, _, _)
   | SetPropT (_, _, _)
   | SpecializeT (_,_, _, _, _)
+  | ObjSpreadT _
   | SubstOnPredT _
   | SuperT (_, _)
   | TestPropT (_, _, _)

@@ -516,7 +516,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         properties ~allow_static ~allow_spread ~exact env (call_prop::acc)
       | T_ELLIPSIS when allow_spread ->
         Eat.token env;
-        let (arg_loc, _) as argument = generic env in
+        let (arg_loc, _) as argument = _type env in
         let loc = Loc.btwn start_loc arg_loc in
         let property = Type.Object.(SpreadProperty (loc, { SpreadProperty.
           argument;

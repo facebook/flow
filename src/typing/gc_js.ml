@@ -273,6 +273,9 @@ and gc_use cx state = function
   | SetElemT(_, i, t) -> gc cx state i; gc cx state t
   | SetPropT(_, _, t) -> gc cx state t
   | SpecializeT (_, _, _, ts, t) -> List.iter (gc cx state) ts; gc cx state t
+  | ObjSpreadT (_, tool, state', t) ->
+      gc_object_spread cx state tool state';
+      gc cx state t
   | SubstOnPredT (_, _, t) -> gc cx state t
   | SuperT (_, instance) -> gc_insttype cx state instance
   | TestPropT(_, _, t) -> gc cx state t
@@ -385,6 +388,34 @@ and gc_pred cx state = function
 
 and gc_pred_map cx state pred_map =
   Key_map.iter (fun _ p -> gc_pred cx state p) pred_map
+
+and gc_object_spread =
+  let open ObjectSpread in
+  let gc_slice cx state (_, props, dict, _) =
+    SMap.iter (fun _ (t, _) -> gc cx state t) props;
+    Option.iter dict (gc_dicttype cx state)
+  in
+  let gc_resolved cx state xs =
+    Nel.iter (gc_slice cx state) xs
+  in
+  let gc_resolve cx state = function
+    | Next -> ()
+    | List0 (todo, _) ->
+      Nel.iter (gc cx state) todo
+    | List (todo, acc, _) ->
+      List.iter (gc cx state) todo;
+      Nel.iter (gc_resolved cx state) acc
+  in
+  let gc_tool cx state = function
+    | Resolve tool -> gc_resolve cx state tool
+    | Super (slice, tool) ->
+      gc_slice cx state slice;
+      gc_resolve cx state tool
+  in
+  fun cx state tool {todo_rev; acc; make_exact=_} ->
+    gc_tool cx state tool;
+    List.iter (gc cx state) todo_rev;
+    List.iter (gc_resolved cx state) acc
 
 and gc_cont cx state = function
   | Lower t -> gc cx state t
