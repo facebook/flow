@@ -140,3 +140,15 @@ let split_into_lines str =
     (fun lines (start, len) -> (String.sub str start len)::lines)
     []
     ((last_start, String.length str - last_start)::lines)
+
+(* Splits a string into a list of strings using only "\n" as a delimiter.
+ * If the string ends with a delimiter, an empty string representing the
+ * contents after the final delimiter is NOT included (unlike Str.split_delim).
+ *)
+let split_on_newlines content =
+  let re = Str.regexp "[\n]" in
+  let lines = Str.split_delim re content in
+  (* don't create a list entry for the line after a trailing newline *)
+  match List.rev lines with
+  | "" :: rest -> List.rev rest
+  | _ -> lines
