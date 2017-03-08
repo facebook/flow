@@ -42,22 +42,50 @@ let handle_server_message fd =
       exit 1
   in
   let Prot.Errors errors = message in
-  (* TODO we will use JSON RPC at some point in the near future. this simple message format is just
-  for ease of prototyping *)
-  Errors.Json_output.print_errors ~out_channel:stdout ~strip_root:None errors;
-  print_newline ()
+  let json_errors = Errors.Json_output.full_status_json_of_errors ~strip_root:None errors in
+  let json_message = Hh_json.(
+    JSON_Object [
+      ("jsonrpc", JSON_String "2.0");
+      ("method", JSON_String "diagnosticsNotification");
+      ("params", json_errors);
+    ])
+  in
+  let json_string = Hh_json.json_to_string json_message in
+  print_endline ("Content-Length: " ^ (string_of_int (String.length json_string)) ^ "\r");
+  print_endline "\r";
+  print_string json_string;
+  flush stdout
 
 let send_server_request fd msg =
   Marshal_tools.to_fd_with_preamble fd (msg: Prot.request)
 
 let handle_stdin_message buffered_stdin server_fd =
   let line = Buffered_line_reader.get_next_line buffered_stdin in
-  (* TODO we will use JSON RPC at some point in the near future. this simple message format is just
-  for ease of prototyping *)
-  match line with
-    | "subscribe" ->
-        send_server_request server_fd Prot.Subscribe
-    | _ -> print_endline ("not recognized: " ^ line)
+  (* This is just a quick and dirty implementation that works with something very similar to
+  vscode-jsonrpc. The only catch is that in this implementation we expect a line break after each
+  message, which requires a small modification to the client code. This was done for expedience,
+  since Buffered_line_reader operates, obviously, on lines.
+
+  We will replace it with a full-fledged ocaml implementation of vscode-jsonrpc when it
+  becomes available. *)
+  (* Mostly used to trim off \r (vscode-jsonrpc is an MS thing so they use CRLF line endings) *)
+  let line = String.trim line in
+  if String.length line = 0 then
+    (* Some lines are empty, ignore them *)
+    ()
+  else if String.length line > 14 && String.sub line 0 14 = "Content-Length" then
+    (* Some lines are html-style headers. ignore them too *)
+    ()
+  else
+    (* other lines hopefully actually have JSON *)
+    let parsed = Hh_json.json_of_string line in
+    let props = Hh_json.get_object_exn parsed in
+    let _, method_json = List.find (function key, _ -> key = "method") props in
+    let method_name = Hh_json.get_string_exn method_json in
+    if method_name = "subscribeToDiagnostics" then
+      send_server_request server_fd Prot.Subscribe
+    else
+      prerr_endline ("unrecognized method: " ^ method_name)
 
 let rec handle_all_stdin_messages buffered_stdin server_fd =
   handle_stdin_message buffered_stdin server_fd;
