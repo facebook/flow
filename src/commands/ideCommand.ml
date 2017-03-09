@@ -15,6 +15,10 @@
 open CommandUtils
 module Prot = ServerProt.Persistent_connection_prot
 
+let protocol_options = ["very-unstable"]
+
+let protocol_options_string = String.concat ", " protocol_options
+
 let spec = {
   CommandSpec.
   name = "ide";
@@ -27,6 +31,8 @@ let spec = {
     empty
     |> server_flags
     |> root_flag
+    |> flag "--protocol" (required (enum protocol_options))
+        ~doc:("Indicates the protocol to be used. One of: " ^ protocol_options_string)
     (* TODO consider using strip_root |> strip_root_flag *)
     (* TODO use this somehow? |> verbose_flags *)
   )
@@ -92,7 +98,9 @@ let rec handle_all_stdin_messages buffered_stdin server_fd =
   if Buffered_line_reader.has_buffered_content buffered_stdin then
     handle_all_stdin_messages buffered_stdin server_fd
 
-let main option_values root () =
+let main option_values root protocol () =
+  (* Currently there is only one option, enforced by the argument parser *)
+  ignore protocol;
   let root = CommandUtils.guess_root root in
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc ServerProt.CONNECT;
