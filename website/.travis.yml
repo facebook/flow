@@ -1,0 +1,5 @@
+language: ruby
+script:
+  - make crowdin-sync
+  - git add -A
+  - git push origin master:gh-pages

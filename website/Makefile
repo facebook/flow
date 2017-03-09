@@ -1,41 +1,52 @@
-# Copyright (c) 2013-present, Facebook, Inc.
-# All rights reserved.
+.PHONY: start install serve build i18n-upload i18n-download
 
-all:
+.DEFAULT_GOAL := start
+start:
+	@make install
+	@make serve
 
-clean:
-	@rm -rf _assets/gen static/master _build _site node_modules .asset-cache
+install: test-bundler
+	@git submodule update --init --recursive
+	@bundle install
 
-_build/ruby_deps_installed: Gemfile Gemfile.lock
-	bundle install
-	@mkdir -p _build
-	@touch $@
+serve: test-jekyll
+	@bundle exec jekyll serve
 
-_build/js_deps_installed: package.json yarn.lock
-	yarn install --pure-lockfile
-	@mkdir -p _build
-	@touch $@
+build: test-jekyll
+	@bundle exec jekyll build
 
-_assets/gen/master/flow.js:
-	mkdir -p $(dir $@)
-	ln -sf "../../../../bin/flow.js" $@
+serve-production: test-jekyll
+	@JEKYLL_ENV=production bundle exec jekyll serve
 
-static/master/flowlib:
-	mkdir -p $(dir $@)
-	ln -sf "../../../lib" $@
+build-production: test-jekyll
+	@JEKYLL_ENV=production bundle exec jekyll build
 
-deps: _build/ruby_deps_installed _build/js_deps_installed
+crowdin-sync: test-crowdin
+	@crowdin-cli upload sources --auto-update -b master
+	@crowdin-cli download -b master
 
-symlinks: _assets/gen/master/flow.js static/master/flowlib
+###
+# Misc stuff:
+###
 
-js:
-	(cd ..; make js)
+BUNDLE_EXISTS := $(shell command -v bundle 2> /dev/null)
+JEKYLL_EXISTS := $(shell command -v jekyll 2> /dev/null)
+CROWDIN_EXISTS := $(shell command -v crowdin-cli 2> /dev/null)
 
-serve: deps symlinks js
-	bundle exec jekyll serve
+test-bundler:
+ifndef BUNDLE_EXISTS
+	$(error bundler is not installed. Run `gem install bundler`)
+endif
 
-watch: deps symlinks js
-	bundle exec jekyll serve -w
+test-jekyll:
+ifndef JEKYLL_EXISTS
+	$(error Jekyll is not installed. Run `make install`)
+endif
 
-.SUFFIXES:
-.PHONY: all clean deps js symlinks serve watch
+test-crowdin:
+ifndef CROWDIN_EXISTS
+	$(error Crowdin is not installed. Run `make install`)
+endif
+ifndef CROWDIN_API_KEY
+	$(error CROWDIN_API_KEY is undefined)
+endif
