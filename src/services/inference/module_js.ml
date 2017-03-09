@@ -747,52 +747,10 @@ let resolved_requires_of ~options cx =
     phantom_dependents;
   }
 
-(* Before and after inference, we add per-file module info and resolved requires
-   to the shared heap from worker processes. Note that we wait to choose
-   providers until inference is complete. *)
-let add_parsed_info ~audit ~options file docblock =
-  let force_check = Options.all options in
-  let _module = exported_module ~options file docblock in
-  let checked =
-    force_check ||
-    Docblock.is_flow docblock
-  in
-  let info = {
-    _module;
-    checked;
-    parsed = true;
-  } in
-  add_info ~audit file info;
-  _module
-
 let add_parsed_resolved_requires ~audit ~options cx =
   let resolved_requires = resolved_requires_of ~options cx in
   let file = Context.file cx in
   add_resolved_requires ~audit file resolved_requires
-
-(* We need to track files that have failed to parse. This begins with
-   adding tracking records for unparsed files to InfoHeap. They never
-   become providers - the process of committing modules happens after
-   parsed files are finished with local inference. But since we guess
-   the module names of unparsed files, we're able to tell whether an
-   unparsed file has been required/imported.
- *)
-let add_unparsed_info ~audit ~options file docblock =
-  let force_check = Options.all options in
-  let _module = exported_module ~options file docblock in
-  let checked =
-    force_check ||
-    Loc.source_is_lib_file file ||
-    Docblock.is_flow docblock ||
-    Docblock.isDeclarationFile docblock
-  in
-  let info = {
-    _module;
-    checked;
-    parsed = false;
-  } in
-  add_info ~audit file info;
-  _module
 
 (* Note that the module provided by a file is always accessible via its full
    path, so that it may be imported by specifying (a part of) that path in any
@@ -896,30 +854,6 @@ let get_providers = Hashtbl.find all_providers
    (b) remove the unregistered modules from NameHeap
    (c) register the new providers in NameHeap
 *)
-let calc_new_modules ~options file_module_assoc =
-  (* all modules provided by newly parsed / unparsed files must be repicked *)
-  let new_modules = List.fold_left (fun new_modules (f, m, mp, fp) ->
-    let f_module = Modulename.Filename f in
-    add_provider f m; add_provider f f_module;
-    (* foo.js.flow ALWAYS also provides foo.js *)
-    if Loc.check_suffix f Files.flow_ext
-    then begin
-      let f_decl_module =
-        Modulename.Filename (Loc.chop_suffix f Files.flow_ext) in
-      add_provider f f_decl_module
-    end;
-    (m, mp) ::
-    if m = f_module then new_modules
-    else (f_module, fp) :: new_modules
-  ) [] file_module_assoc in
-
-  let debug = Options.is_debug_mode options in
-  if debug then prerr_endlinef
-    "*** new modules (new and changed files) %d ***"
-    (List.length new_modules);
-
-  new_modules
-
 let commit_modules workers ~options new_or_changed dirty_modules =
   let debug = Options.is_debug_mode options in
   (* prep for registering new mappings in NameHeap *)
@@ -1013,6 +947,14 @@ let commit_modules workers ~options new_or_changed dirty_modules =
 let remove_batch_resolved_requires files =
   ResolvedRequiresHeap.remove_batch files
 
+let get_files ~audit filename _module =
+  let m_provider = get_file ~audit _module in
+  let f_module = Modulename.Filename filename in
+  let f_provider = if f_module = _module
+    then m_provider
+    else get_file ~audit f_module in
+  m_provider, f_provider
+
 (* Clear module mappings for given files, if they exist.
 
    This has no effect on new files. The set of modules returned are those whose
@@ -1037,40 +979,23 @@ let remove_batch_resolved_requires files =
    TODO: Does a .flow file also provide its eponymous module? Or does it provide
    the eponymous module of the file it shadows?
 *)
-let clear_files options workers to_clear =
-  let existing_file_module_current_provider_assoc = MultiWorker.call workers
-    ~job: (List.fold_left (fun acc file ->
-      match get_info ~audit:Expensive.ok file with
-      | Some info ->
-        let { _module; _ } = info in
-        (file, _module,
-         get_file ~audit:Expensive.ok _module,
-         get_file ~audit:Expensive.ok (Modulename.Filename file)) :: acc
-      | None -> acc
-    ))
-    ~neutral: []
-    ~merge: List.rev_append
-    ~next: (MultiWorker.next workers (FilenameSet.elements to_clear)) in
-
-  (* clear files *)
-  InfoHeap.remove_batch to_clear;
-  ResolvedRequiresHeap.remove_batch to_clear;
-  SharedMem_js.collect options `gentle;
-
+let calc_old_modules ~options old_file_module_assoc =
   (* files may or may not be registered as module providers.
      when they are, we need to clear their registrations *)
-  let old_modules = List.fold_left (fun old_modules (file, _module, mp, fp) ->
+  let old_modules = List.fold_left (fun old_modules (file, _module, (mp, fp)) ->
     let f_module = Modulename.Filename file in
     remove_provider file _module;
     remove_provider file f_module;
-    match mp with
-    | Some f when f = file ->
+    if mp = Some file then
       (_module, mp) ::
       if _module = f_module then old_modules
       else (f_module, fp) :: old_modules
-    | _ ->
+    else
+      (* The module provider is some other file, e.g. file A.js exports module A
+         whose provider is A.js.flow. (But what is the file provider? Also
+         A.js.flow?) *)
       (f_module, fp) :: old_modules
-  ) [] existing_file_module_current_provider_assoc in
+  ) [] old_file_module_assoc in
 
   let debug = Options.is_debug_mode options in
   if debug then prerr_endlinef
@@ -1079,3 +1004,121 @@ let clear_files options workers to_clear =
 
   (* return *)
   old_modules
+
+let clear_files workers ~options new_or_changed_or_deleted =
+  let old_file_module_assoc = MultiWorker.call workers
+    ~job: (List.fold_left (fun acc file ->
+      match get_info ~audit:Expensive.ok file with
+      | Some info ->
+        let { _module; _ } = info in
+        (file, _module,
+         get_files ~audit:Expensive.ok file _module) :: acc
+      | None -> acc
+    ))
+    ~neutral: []
+    ~merge: List.rev_append
+    ~next: (MultiWorker.next workers (FilenameSet.elements new_or_changed_or_deleted)) in
+
+  (* clear files *)
+  InfoHeap.remove_batch new_or_changed_or_deleted;
+  ResolvedRequiresHeap.remove_batch new_or_changed_or_deleted;
+  SharedMem_js.collect options `gentle;
+
+  calc_old_modules ~options old_file_module_assoc
+
+(* Before and after inference, we add per-file module info to the shared heap
+   from worker processes. Note that we wait to choose providers until inference
+   is complete. *)
+let add_parsed_info ~audit ~options file docblock =
+  let force_check = Options.all options in
+  let _module = exported_module ~options file docblock in
+  let checked =
+    force_check ||
+    Docblock.is_flow docblock
+  in
+  let info = {
+    _module;
+    checked;
+    parsed = true;
+  } in
+  add_info ~audit file info;
+  _module
+
+(* We need to track files that have failed to parse. This begins with
+   adding tracking records for unparsed files to InfoHeap. They never
+   become providers - the process of committing modules happens after
+   parsed files are finished with local inference. But since we guess
+   the module names of unparsed files, we're able to tell whether an
+   unparsed file has been required/imported.
+ *)
+let add_unparsed_info ~audit ~options file docblock =
+  let force_check = Options.all options in
+  let _module = exported_module ~options file docblock in
+  let checked =
+    force_check ||
+    Loc.source_is_lib_file file ||
+    Docblock.is_flow docblock ||
+    Docblock.isDeclarationFile docblock
+  in
+  let info = {
+    _module;
+    checked;
+    parsed = false;
+  } in
+  add_info ~audit file info;
+  _module
+
+let calc_new_modules ~options file_module_assoc =
+  (* all modules provided by newly parsed / unparsed files must be repicked *)
+  let new_modules = List.fold_left (fun new_modules (f, m, (mp, fp)) ->
+    let f_module = Modulename.Filename f in
+    add_provider f m; add_provider f f_module;
+    (* foo.js.flow ALWAYS also provides foo.js *)
+    if Loc.check_suffix f Files.flow_ext
+    then begin
+      let f_decl_module =
+        Modulename.Filename (Loc.chop_suffix f Files.flow_ext) in
+      add_provider f f_decl_module
+    end;
+    (m, mp) ::
+    if m = f_module then new_modules
+    else (f_module, fp) :: new_modules
+  ) [] file_module_assoc in
+
+  let debug = Options.is_debug_mode options in
+  if debug then prerr_endlinef
+    "*** new modules (new and changed files) %d ***"
+    (List.length new_modules);
+
+  new_modules
+
+let introduce_files workers ~options parsed unparsed =
+  (* add tracking modules for unparsed files *)
+  let unparsed_file_module_assoc = MultiWorker.call workers
+    ~job: (List.fold_left (fun file_module_assoc (filename, docblock) ->
+      let m = add_unparsed_info ~audit:Expensive.ok
+        ~options filename docblock in
+      (filename, m,
+       get_files ~audit:Expensive.ok filename m) :: file_module_assoc
+    ))
+    ~neutral: []
+    ~merge: List.rev_append
+    ~next: (MultiWorker.next workers unparsed) in
+
+  (* create info for parsed files *)
+  let parsed_file_module_assoc = MultiWorker.call workers
+    ~job: (List.fold_left (fun file_module_assoc filename ->
+      let docblock = Parsing_service_js.get_docblock_unsafe filename in
+      let m = add_parsed_info ~audit:Expensive.ok
+        ~options filename docblock in
+      (filename, m,
+       get_files ~audit:Expensive.ok filename m) :: file_module_assoc
+    ))
+    ~neutral: []
+    ~merge: List.rev_append
+    ~next: (MultiWorker.next workers parsed) in
+
+  let new_file_module_assoc =
+    List.rev_append parsed_file_module_assoc unparsed_file_module_assoc in
+
+  calc_new_modules ~options new_file_module_assoc

@@ -241,46 +241,16 @@ let typecheck
   ~errors =
   (* TODO remove after lookup overhaul *)
   Module_js.clear_filename_cache ();
-
-  (* add tracking modules for unparsed files *)
-  let unparsed_file_module_assoc = MultiWorker.call workers
-    ~job: (List.fold_left (fun file_module_assoc (filename, docblock) ->
-      let m = Module_js.add_unparsed_info ~audit:Expensive.ok
-        ~options filename docblock in
-      let f_module = Modulename.Filename filename in
-      (filename, m,
-       Module_js.get_file ~audit:Expensive.ok m,
-       Module_js.get_file ~audit:Expensive.ok f_module) :: file_module_assoc
-    ))
-    ~neutral: []
-    ~merge: List.rev_append
-    ~next: (MultiWorker.next workers unparsed) in
-
   let parsed = FilenameSet.elements parsed in
-  (* create info for parsed files *)
-  let parsed_file_module_assoc = MultiWorker.call workers
-    ~job: (List.fold_left (fun file_module_assoc filename ->
-      let docblock = Parsing_service_js.get_docblock_unsafe filename in
-      let m = Module_js.add_parsed_info ~audit:Expensive.ok
-        ~options filename docblock in
-      let f_module = Modulename.Filename filename in
-      (filename, m,
-       Module_js.get_file ~audit:Expensive.ok m,
-       Module_js.get_file ~audit:Expensive.ok f_module) :: file_module_assoc
-    ))
-    ~neutral: []
-    ~merge: List.rev_append
-    ~next: (MultiWorker.next workers parsed) in
 
-  let file_module_assoc =
-    List.rev_append parsed_file_module_assoc unparsed_file_module_assoc in
+  let new_modules = Module_js.introduce_files workers ~options parsed unparsed in
+
   let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
 
   (* conservatively approximate set of modules whose providers will change *)
   (* register providers for modules, warn on dupes etc. *)
   let profiling, (changed_modules, local_errors) =
     with_timer ~options "CommitModules" profiling (fun () ->
-      let new_modules = Module_js.calc_new_modules ~options file_module_assoc in
       let dirty_modules = List.rev_append old_modules new_modules in
       commit_modules workers ~options local_errors new_or_changed dirty_modules
     )
@@ -584,7 +554,7 @@ let recheck genv env ~updates =
   (* remember old modules *)
   Context_cache.remove_batch new_or_changed_or_deleted;
   (* clear out records of files, and names of modules provided by those files *)
-  let old_modules = Module_js.clear_files options workers new_or_changed_or_deleted in
+  let old_modules = Module_js.clear_files workers ~options new_or_changed_or_deleted in
 
   (* TODO elsewhere or delete *)
   Context.remove_all_errors master_cx;

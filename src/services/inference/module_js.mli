@@ -61,9 +61,23 @@ val get_resolved_requires_unsafe: (filename -> resolved_requires) Expensive.t
 (* given a filename, returns module info. unsafe *)
 val get_info_unsafe: (filename -> info) Expensive.t
 
-val calc_new_modules:
+(* add module records for given files;
+   returns the set of modules added
+*)
+val introduce_files:
+  Worker.t list option ->
   options: Options.t ->
-  (filename * Modulename.t * filename option * filename option) list ->
+  filename list ->
+  (filename * Docblock.t) list ->
+    (Modulename.t * filename option) list
+
+(* remove module records being tracked for given files;
+   returns the set of modules removed
+*)
+val clear_files:
+  Worker.t list option ->
+  options:Options.t ->
+  FilenameSet.t ->
     (Modulename.t * filename option) list
 
 (* repick providers for old and new modules *)
@@ -76,28 +90,9 @@ val commit_modules:
     NameSet.t *                         (* changed modules *)
     error list FilenameMap.t            (* filenames to error sets *)
 
-(* add info for parsed file to store *)
-val add_parsed_info:
-  (options:Options.t ->
-   filename ->
-   Docblock.t ->
-   Modulename.t) Expensive.t
-
 (* resolve and add requires from context to store *)
 val add_parsed_resolved_requires: (options:Options.t -> Context.t -> unit) Expensive.t
-
-(* add info for unparsed file to store *)
-val add_unparsed_info:
-  (options:Options.t ->
-   filename ->
-   Docblock.t ->
-   Modulename.t) Expensive.t
-
-(* remove module record being tracked for given file set;
-   returns the set of modules removed
-*)
-val clear_files:
-  Options.t -> Worker.t list option -> FilenameSet.t -> (Modulename.t * filename option) list
+(* remove resolved requires from store *)
 val remove_batch_resolved_requires: FilenameSet.t -> unit
 
 val add_package: string -> Spider_monkey_ast.program -> unit
