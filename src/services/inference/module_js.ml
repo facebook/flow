@@ -71,8 +71,6 @@ let relevant_package_keys = ["name"; "main"]
 let is_relevant_key key = List.mem key relevant_package_keys
 
 let choose_provider_and_warn_about_duplicates =
-  let is_flow_ext file = Loc.check_suffix file Files.flow_ext in
-
   let warn_duplicate_providers m current modules errmap =
     List.fold_left (fun acc f ->
       let w = ModuleDuplicateProviderError {
@@ -88,7 +86,7 @@ let choose_provider_and_warn_about_duplicates =
 
   fun m errmap providers fallback ->
     let definitions, implementations =
-      List.partition is_flow_ext providers in
+      List.partition Files.has_flow_ext providers in
     match implementations, definitions with
     (* If there are no definitions or implementations, use the fallback *)
     | [], [] -> fallback (), errmap
@@ -363,13 +361,20 @@ let lazy_seq: 'a option Lazy.t list -> 'a option =
     | Some _ -> acc
   ) None
 
+(* Every <file>.js can be imported by its path, so it effectively exports a
+   module by the name <file>.js. Every <file>.js.flow shadows the corresponding
+   <file>.js, so it effectively exports a module by the name <file>.js. *)
+let eponymous_module file =
+  Modulename.Filename (match Files.chop_flow_ext file with
+  | Some file -> file
+  | None -> file
+  )
+
 (*******************************)
 
 module Node = struct
   let exported_module _ file _ =
-    if Loc.check_suffix file Files.flow_ext
-    then Modulename.Filename (Loc.chop_suffix file Files.flow_ext)
-    else Modulename.Filename file
+    eponymous_module file
 
   let record_path path = function
     | None -> ()
@@ -574,16 +579,15 @@ module Haste: MODULE_SYSTEM = struct
           exported_non_haste_module options file
 
   and exported_non_haste_module options file =
-    if Loc.check_suffix file Files.flow_ext
-    then
-      let file_without_flow_ext = Loc.chop_suffix file Files.flow_ext in
+    match Files.chop_flow_ext file with
+    | Some file_without_flow_ext ->
       if Parsing_service_js.has_ast file_without_flow_ext
       then
         let info = Parsing_service_js.get_docblock_unsafe file_without_flow_ext in
         exported_module options file_without_flow_ext info
       else
         Modulename.Filename (file_without_flow_ext)
-    else
+    | None ->
       Modulename.Filename file
 
   let expanded_name r =
@@ -1082,11 +1086,11 @@ let calc_new_modules ~options file_module_assoc =
     let f_module = Modulename.Filename f in
     add_provider f m; add_provider f f_module;
     (* foo.js.flow ALWAYS also provides foo.js *)
-    if Loc.check_suffix f Files.flow_ext
-    then begin
-      let f_decl_module =
-        Modulename.Filename (Loc.chop_suffix f Files.flow_ext) in
+    begin match Files.chop_flow_ext f with
+    | Some f_without_flow_ext ->
+      let f_decl_module = Modulename.Filename f_without_flow_ext in
       add_provider f f_decl_module
+    | None -> ()
     end;
     (m, mp_opt) ::
     if m = f_module then new_modules

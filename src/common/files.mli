@@ -13,6 +13,9 @@
 val global_file_name: string
 val flow_ext: string
 
+val has_flow_ext: Loc.filename -> bool
+val chop_flow_ext: Loc.filename -> Loc.filename option
+
 val is_json_file: string -> bool
 val is_flow_file: options: Options.t -> string -> bool
 

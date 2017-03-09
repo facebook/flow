@@ -13,6 +13,14 @@
 let global_file_name = "(global)"
 let flow_ext = ".flow"
 
+let has_flow_ext file =
+  Loc.check_suffix file flow_ext
+
+let chop_flow_ext file =
+  if has_flow_ext file
+  then Some (Loc.chop_suffix file flow_ext)
+  else None
+
 let is_directory path = try Sys.is_directory path with Sys_error _ -> false
 
 let is_dot_file path =
