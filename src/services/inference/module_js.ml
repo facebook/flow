@@ -945,20 +945,16 @@ let remove_batch_resolved_requires files =
   ResolvedRequiresHeap.remove_batch files
 
 let get_files ~audit filename _module =
-  let m_provider = get_file ~audit _module in
-  let f_module = eponymous_module filename in
-  let f_provider = if f_module = _module
-    then m_provider
-    else get_file ~audit f_module in
-  m_provider, f_provider
+  (_module, get_file ~audit _module)::
+    let f_module = eponymous_module filename in
+    if f_module = _module then []
+    else [f_module, get_file ~audit f_module]
 
 let get_files_unsafe ~audit filename _module =
-  let m_provider = get_file_unsafe ~audit _module in
-  let f_module = eponymous_module filename in
-  let f_provider = if f_module = _module
-    then m_provider
-    else get_file_unsafe ~audit f_module in
-  m_provider, f_provider
+  (_module, get_file_unsafe ~audit _module)::
+    let f_module = eponymous_module filename in
+    if f_module = _module then []
+    else [f_module, get_file_unsafe ~audit f_module]
 
 (* Clear module mappings for given files, if they exist.
 
@@ -987,19 +983,13 @@ let get_files_unsafe ~audit filename _module =
 let calc_old_modules ~options old_file_module_assoc =
   (* files may or may not be registered as module providers.
      when they are, we need to clear their registrations *)
-  let old_modules = List.fold_left (fun old_modules (file, _module, (mp, fp)) ->
-    let f_module = eponymous_module file in
-    remove_provider file _module;
-    remove_provider file f_module;
-    if mp = file then
-      (_module, Some mp) ::
-      if _module = f_module then old_modules
-      else (f_module, Some fp) :: old_modules
-    else
-      (* The module provider is some other file, e.g. file A.js exports module A
-         whose provider is A.js.flow. (But what is the file provider? Also
-         A.js.flow?) *)
-      (f_module, Some fp) :: old_modules
+  let old_modules = List.fold_left (fun old_modules (file, module_provider_assoc) ->
+    List.fold_left (fun old_modules (_module, provider) ->
+      remove_provider file _module;
+      if provider = file
+      then (_module, Some provider)::old_modules
+      else old_modules
+    ) old_modules module_provider_assoc
   ) [] old_file_module_assoc in
 
   let debug = Options.is_debug_mode options in
@@ -1016,7 +1006,7 @@ let clear_files workers ~options new_or_changed_or_deleted =
       match get_info ~audit:Expensive.ok file with
       | Some info ->
         let { _module; _ } = info in
-        (file, _module,
+        (file,
          get_files_unsafe ~audit:Expensive.ok file _module) :: acc
       | None -> acc
     ))
@@ -1075,12 +1065,11 @@ let add_unparsed_info ~audit ~options file docblock =
 
 let calc_new_modules ~options file_module_assoc =
   (* all modules provided by newly parsed / unparsed files must be repicked *)
-  let new_modules = List.fold_left (fun new_modules (f, m, (mp_opt, fp_opt)) ->
-    let f_module = eponymous_module f in
-    add_provider f m; add_provider f f_module;
-    (m, mp_opt) ::
-    if m = f_module then new_modules
-    else (f_module, fp_opt) :: new_modules
+  let new_modules = List.fold_left (fun new_modules (file, module_opt_provider_assoc) ->
+    List.fold_left (fun new_modules (_module, opt_provider) ->
+      add_provider file _module;
+      (_module, opt_provider)::new_modules
+    ) new_modules module_opt_provider_assoc
   ) [] file_module_assoc in
 
   let debug = Options.is_debug_mode options in
@@ -1096,7 +1085,7 @@ let introduce_files workers ~options parsed unparsed =
     ~job: (List.fold_left (fun file_module_assoc (filename, docblock) ->
       let m = add_unparsed_info ~audit:Expensive.ok
         ~options filename docblock in
-      (filename, m,
+      (filename,
        get_files ~audit:Expensive.ok filename m) :: file_module_assoc
     ))
     ~neutral: []
@@ -1109,7 +1098,7 @@ let introduce_files workers ~options parsed unparsed =
       let docblock = Parsing_service_js.get_docblock_unsafe filename in
       let m = add_parsed_info ~audit:Expensive.ok
         ~options filename docblock in
-      (filename, m,
+      (filename,
        get_files ~audit:Expensive.ok filename m) :: file_module_assoc
     ))
     ~neutral: []
