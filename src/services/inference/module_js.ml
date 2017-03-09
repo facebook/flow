@@ -955,6 +955,14 @@ let get_files ~audit filename _module =
     else get_file ~audit f_module in
   m_provider, f_provider
 
+let get_files_unsafe ~audit filename _module =
+  let m_provider = get_file_unsafe ~audit _module in
+  let f_module = Modulename.Filename filename in
+  let f_provider = if f_module = _module
+    then m_provider
+    else get_file_unsafe ~audit f_module in
+  m_provider, f_provider
+
 (* Clear module mappings for given files, if they exist.
 
    This has no effect on new files. The set of modules returned are those whose
@@ -986,15 +994,15 @@ let calc_old_modules ~options old_file_module_assoc =
     let f_module = Modulename.Filename file in
     remove_provider file _module;
     remove_provider file f_module;
-    if mp = Some file then
-      (_module, mp) ::
+    if mp = file then
+      (_module, Some mp) ::
       if _module = f_module then old_modules
-      else (f_module, fp) :: old_modules
+      else (f_module, Some fp) :: old_modules
     else
       (* The module provider is some other file, e.g. file A.js exports module A
          whose provider is A.js.flow. (But what is the file provider? Also
          A.js.flow?) *)
-      (f_module, fp) :: old_modules
+      (f_module, Some fp) :: old_modules
   ) [] old_file_module_assoc in
 
   let debug = Options.is_debug_mode options in
@@ -1012,7 +1020,7 @@ let clear_files workers ~options new_or_changed_or_deleted =
       | Some info ->
         let { _module; _ } = info in
         (file, _module,
-         get_files ~audit:Expensive.ok file _module) :: acc
+         get_files_unsafe ~audit:Expensive.ok file _module) :: acc
       | None -> acc
     ))
     ~neutral: []
@@ -1070,7 +1078,7 @@ let add_unparsed_info ~audit ~options file docblock =
 
 let calc_new_modules ~options file_module_assoc =
   (* all modules provided by newly parsed / unparsed files must be repicked *)
-  let new_modules = List.fold_left (fun new_modules (f, m, (mp, fp)) ->
+  let new_modules = List.fold_left (fun new_modules (f, m, (mp_opt, fp_opt)) ->
     let f_module = Modulename.Filename f in
     add_provider f m; add_provider f f_module;
     (* foo.js.flow ALWAYS also provides foo.js *)
@@ -1080,9 +1088,9 @@ let calc_new_modules ~options file_module_assoc =
         Modulename.Filename (Loc.chop_suffix f Files.flow_ext) in
       add_provider f f_decl_module
     end;
-    (m, mp) ::
+    (m, mp_opt) ::
     if m = f_module then new_modules
-    else (f_module, fp) :: new_modules
+    else (f_module, fp_opt) :: new_modules
   ) [] file_module_assoc in
 
   let debug = Options.is_debug_mode options in
