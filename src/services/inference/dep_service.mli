@@ -12,7 +12,7 @@ open Utils_js
 
 val dependent_files:
   Worker.t list option -> (* workers *)
-  unchanged_parsed:FilenameSet.t ->
+  unchanged:FilenameSet.t ->
   new_or_changed:FilenameSet.t ->
   changed_modules:Module_js.NameSet.t ->
   FilenameSet.t * FilenameSet.t

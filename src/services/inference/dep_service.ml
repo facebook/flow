@@ -140,23 +140,23 @@ let dep_closure modules rdmap fileset =
    files. The latter modules, marked "changed," are calculated earlier when
    picking providers.
 
-   - unchanged_parsed is all unchanged files in the current state
+   - unchanged is all unchanged files in the current state
    - new_or_changed is all files that have just been through local inference and
    all skipped files that were also new or unchanged
    - changed_modules is a conservative approximation of modules that no longer have
    the same providers, or whose providers are changed files
 
-   Return the subset of unchanged_parsed transitively dependent on updates, and
+   Return the subset of unchanged transitively dependent on updates, and
    the subset directly dependent on them.
 *)
-let dependent_files workers ~unchanged_parsed ~new_or_changed ~changed_modules =
+let dependent_files workers ~unchanged ~new_or_changed ~changed_modules =
   (* Get the modules provided by unchanged files, the reverse dependency map
      for unchanged files, and the subset of unchanged files whose resolution
      paths may encounter new or changed modules. *)
   let modules,
     reverse_deps,
     resolution_path_files
-    = calc_dep_utils workers unchanged_parsed new_or_changed in
+    = calc_dep_utils workers unchanged new_or_changed in
 
   (* resolution_path_files, plus files that require changed_modules *)
   let direct_deps = Module_js.(NameSet.fold (fun m acc ->

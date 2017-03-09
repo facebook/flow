@@ -848,7 +848,7 @@ let get_providers = Hashtbl.find all_providers
    file) or the same provider (a different file).
 
    Suppose that:
-   parsed_unparsed is a list of parsed / unparsed file names.
+   new_or_changed is a list of parsed / unparsed file names.
    old_modules is a set of removed module names.
 
    Modules provided by parsed / unparsed files may or may not have a
@@ -860,7 +860,7 @@ let get_providers = Hashtbl.find all_providers
    providers or are provided by changed files will be rechecked.
 
    Preconditions:
-   1. all files in parsed_unparsed have entries in InfoHeap (true if
+   1. all files in new_or_changed have entries in InfoHeap (true if
    we're properly calling add_parsed_info and add_unparsed_info for every
    parsed / unparsed file before calling commit_modules)
    2. all modules not mentioned in old_modules, but provided by one or more
@@ -892,7 +892,7 @@ let get_providers = Hashtbl.find all_providers
    (b) remove the unregistered modules from NameHeap
    (c) register the new providers in NameHeap
 *)
-let calc_new_modules workers ~options parsed_unparsed =
+let calc_new_modules workers ~options new_or_changed =
   (* recall the exported module for each parsed / unparsed file *)
   let calc_file_module_assoc =
     List.fold_left (fun file_module_assoc f ->
@@ -905,7 +905,7 @@ let calc_new_modules workers ~options parsed_unparsed =
     ~job: calc_file_module_assoc
     ~neutral: []
     ~merge: List.rev_append
-    ~next: (MultiWorker.next workers parsed_unparsed) in
+    ~next: (MultiWorker.next workers new_or_changed) in
 
   (* all modules provided by newly parsed / unparsed files must be repicked *)
   let new_modules = List.fold_left (fun acc (f, m) ->
@@ -928,8 +928,8 @@ let calc_new_modules workers ~options parsed_unparsed =
 
   new_modules
 
-let commit_modules workers ~options parsed_unparsed old_modules =
-  let new_modules = calc_new_modules workers ~options parsed_unparsed in
+let commit_modules workers ~options new_or_changed old_modules =
+  let new_modules = calc_new_modules workers ~options new_or_changed in
   let dirty_modules = NameSet.union old_modules new_modules in
 
   let debug = Options.is_debug_mode options in
@@ -949,7 +949,7 @@ let commit_modules workers ~options parsed_unparsed old_modules =
       then (p_module, p)::module_file_assoc
       else module_file_assoc
     ) in
-  let parsed_unparsed = FilenameSet.of_list parsed_unparsed in
+  let new_or_changed = FilenameSet.of_list new_or_changed in
   let remove, providers, replace, errmap, changed_modules = List.fold_left
     (fun (rem, prov, rep, errmap, diff) (m, f_opt) ->
     match get_providers m with
@@ -986,7 +986,7 @@ let commit_modules workers ~options parsed_unparsed old_modules =
             (Modulename.to_string m)
             (string_of_filename p);
           rem, prov, rep, errmap,
-            (if FilenameSet.mem p parsed_unparsed then NameSet.add m diff else diff)
+            (if FilenameSet.mem p new_or_changed then NameSet.add m diff else diff)
         end else begin
           (* When can this happen? Say m pointed to f before, a different file
              f' that provides m changed (so m is not in old_modules), and

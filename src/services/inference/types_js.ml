@@ -199,9 +199,9 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
       profiling, None, errors, info
 
 (* commit providers for old and new modules, collect errors. *)
-let commit_modules workers ~options errors parsed_unparsed old_modules =
+let commit_modules workers ~options errors new_or_changed old_modules =
   let providers, changed_modules, errmap =
-    Module_js.commit_modules workers ~options parsed_unparsed old_modules in
+    Module_js.commit_modules workers ~options new_or_changed old_modules in
   (* Providers might be new but not changed. This typically happens when old
      providers are deleted, and previously duplicate providers become new
      providers. In such cases, we must clear the old duplicate provider errors
@@ -269,7 +269,7 @@ let typecheck
 
   let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
 
-  let parsed_unparsed = List.fold_left (fun acc (filename, _) ->
+  let new_or_changed = List.fold_left (fun acc (filename, _) ->
     filename::acc
   ) parsed unparsed in
 
@@ -277,7 +277,7 @@ let typecheck
   (* register providers for modules, warn on dupes etc. *)
   let profiling, (changed_modules, local_errors) =
     with_timer ~options "CommitModules" profiling (fun () ->
-      commit_modules workers ~options local_errors parsed_unparsed old_modules
+      commit_modules workers ~options local_errors new_or_changed old_modules
     )
   in
 
@@ -447,16 +447,15 @@ let recheck genv env ~updates =
 
   (* get old (unchanged, undeleted) files that were parsed successfully *)
   let old_parsed = env.ServerEnv.files in
-  let undeleted_parsed = FilenameSet.diff old_parsed deleted in
-  let unchanged_parsed = FilenameSet.diff undeleted_parsed new_or_changed in
+  let new_or_changed_or_deleted = FilenameSet.union new_or_changed deleted in
+  let unchanged = FilenameSet.diff old_parsed new_or_changed_or_deleted in
 
   if debug then prerr_endlinef
-    "recheck: old = %d, del = %d, undel = %d, fresh = %d, unmod = %d"
+    "recheck: old = %d, del = %d, fresh = %d, unmod = %d"
     (FilenameSet.cardinal old_parsed)
     (FilenameSet.cardinal deleted)
-    (FilenameSet.cardinal undeleted_parsed)
     (FilenameSet.cardinal freshparsed)
-    (FilenameSet.cardinal unchanged_parsed);
+    (FilenameSet.cardinal unchanged);
 
   (** Here's where the interesting part of rechecking begins. Before diving into
       code, let's think through the problem independently.
@@ -578,10 +577,9 @@ let recheck genv env ~updates =
 
   (* clear contexts and module registrations for new, changed, and deleted files *)
   (* remember old modules *)
-  let to_clear = FilenameSet.union new_or_changed deleted in
-  Context_cache.remove_batch to_clear;
+  Context_cache.remove_batch new_or_changed_or_deleted;
   (* clear out records of files, and names of modules provided by those files *)
-  let old_modules = Module_js.clear_files options workers to_clear in
+  let old_modules = Module_js.clear_files options workers new_or_changed_or_deleted in
 
   (* TODO elsewhere or delete *)
   Context.remove_all_errors master_cx;
@@ -605,7 +603,7 @@ let recheck genv env ~updates =
          direct_deps plus their dependents (transitive closure) *)
       let all_deps, direct_deps = Dep_service.dependent_files
         workers
-        ~unchanged_parsed
+        ~unchanged
         ~new_or_changed
         ~changed_modules
       in
@@ -680,7 +678,7 @@ let recheck genv env ~updates =
     ~dependent_file_count:!dependent_file_count
     ~profiling;
 
-  let parsed = FilenameSet.union freshparsed unchanged_parsed in
+  let parsed = FilenameSet.union freshparsed unchanged in
 
   (* NOTE: unused fields are left in their initial empty state *)
   { env with ServerEnv.
