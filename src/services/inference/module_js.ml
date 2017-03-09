@@ -502,7 +502,7 @@ module Node = struct
         | Some _ as result -> result
     in
     match choose_candidate candidates with
-    | Some str -> Modulename.Filename (Files.filename_from_string ~options str)
+    | Some str -> eponymous_module (Files.filename_from_string ~options str)
     | None -> Modulename.String import_str
 
   (* in node, file names are module names, as guaranteed by
@@ -627,7 +627,7 @@ module Haste: MODULE_SYSTEM = struct
 
     match resolve_import ~options cx loc ?path_acc chosen_candidate with
     | Some name ->
-        Modulename.Filename (Files.filename_from_string ~options name)
+        eponymous_module (Files.filename_from_string ~options name)
     | None -> Modulename.String chosen_candidate
 
   (* in haste, many files may provide the same module. here we're also
@@ -861,13 +861,6 @@ let get_providers = Hashtbl.find all_providers
 let commit_modules workers ~options new_or_changed dirty_modules =
   let debug = Options.is_debug_mode options in
   (* prep for registering new mappings in NameHeap *)
-  let mapping m p module_file_assoc =
-    (m, p)::(
-      let p_module = Modulename.Filename p in
-      if p_module <> m
-      then (p_module, p)::module_file_assoc
-      else module_file_assoc
-    ) in
   let new_or_changed = FilenameSet.of_list new_or_changed in
   let remove, providers, replace, errmap, changed_modules = List.fold_left
     (fun (rem, prov, rep, errmap, diff) (m, f_opt) ->
@@ -915,7 +908,7 @@ let commit_modules workers ~options new_or_changed dirty_modules =
             (Modulename.to_string m)
             (string_of_filename p)
             (string_of_filename f);
-          (NameSet.add m rem), p::prov, (mapping m p rep), errmap, (NameSet.add m diff)
+          (NameSet.add m rem), p::prov, (m, p)::rep, errmap, (NameSet.add m diff)
         end
       | None ->
           (* When can this happen? Either m pointed to a file that used to
@@ -925,7 +918,7 @@ let commit_modules workers ~options new_or_changed dirty_modules =
             "initial provider %S -> %s"
             (Modulename.to_string m)
             (string_of_filename p);
-          rem, p::prov, (mapping m p rep), errmap, (NameSet.add m diff)
+          rem, p::prov, (m,p)::rep, errmap, (NameSet.add m diff)
   ) (NameSet.empty, [], [], FilenameMap.empty, NameSet.empty) dirty_modules in
 
   (* update NameHeap *)
@@ -953,7 +946,7 @@ let remove_batch_resolved_requires files =
 
 let get_files ~audit filename _module =
   let m_provider = get_file ~audit _module in
-  let f_module = Modulename.Filename filename in
+  let f_module = eponymous_module filename in
   let f_provider = if f_module = _module
     then m_provider
     else get_file ~audit f_module in
@@ -961,7 +954,7 @@ let get_files ~audit filename _module =
 
 let get_files_unsafe ~audit filename _module =
   let m_provider = get_file_unsafe ~audit _module in
-  let f_module = Modulename.Filename filename in
+  let f_module = eponymous_module filename in
   let f_provider = if f_module = _module
     then m_provider
     else get_file_unsafe ~audit f_module in
@@ -995,7 +988,7 @@ let calc_old_modules ~options old_file_module_assoc =
   (* files may or may not be registered as module providers.
      when they are, we need to clear their registrations *)
   let old_modules = List.fold_left (fun old_modules (file, _module, (mp, fp)) ->
-    let f_module = Modulename.Filename file in
+    let f_module = eponymous_module file in
     remove_provider file _module;
     remove_provider file f_module;
     if mp = file then
@@ -1083,15 +1076,8 @@ let add_unparsed_info ~audit ~options file docblock =
 let calc_new_modules ~options file_module_assoc =
   (* all modules provided by newly parsed / unparsed files must be repicked *)
   let new_modules = List.fold_left (fun new_modules (f, m, (mp_opt, fp_opt)) ->
-    let f_module = Modulename.Filename f in
+    let f_module = eponymous_module f in
     add_provider f m; add_provider f f_module;
-    (* foo.js.flow ALWAYS also provides foo.js *)
-    begin match Files.chop_flow_ext f with
-    | Some f_without_flow_ext ->
-      let f_decl_module = Modulename.Filename f_without_flow_ext in
-      add_provider f f_decl_module
-    | None -> ()
-    end;
     (m, mp_opt) ::
     if m = f_module then new_modules
     else (f_module, fp_opt) :: new_modules

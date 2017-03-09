@@ -112,7 +112,7 @@ let dep_closure modules rdmap fileset =
   let deps_of_module m = Module_js.NameMap.get m rdmap in
   let deps_of_file f =
     let m = FilenameMap.find_unsafe f modules in
-    let f_module = Modulename.Filename f in
+    let f_module = Module_js.eponymous_module f in
     (* In general, a file exports its module via two names. See Modulename for
        details. It suffices to note here that dependents of the file can use
        either of those names to import the module. *)

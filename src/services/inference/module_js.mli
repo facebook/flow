@@ -37,6 +37,8 @@ and duplicate_provider_error = {
   conflict: Loc.filename;
 }
 
+val eponymous_module: filename -> Modulename.t
+
 (* export and import functions for the module system *)
 val exported_module:
   options: Options.t ->
