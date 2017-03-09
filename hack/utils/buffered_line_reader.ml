@@ -16,7 +16,7 @@ let chunk_size = 65536
 
 type t = {
   fd: Unix.file_descr;
-  (** The bytes left after the last newline that haven't been consumed yet. *)
+  (** The bytes left after the last content that haven't been consumed yet. *)
   unconsumed_buffer: string option ref;
 }
 
@@ -32,18 +32,25 @@ let index s c =
   with
   | Not_found -> `No_appearance
 
+let trim_trailing_cr = function
+  | "" -> ""
+  | s ->
+    let len = String.length s in
+    if s.[len - 1] = '\r' then String.sub s 0 (len - 1) else s
+
 let merge_chunks last_chunk chunks_rev =
   let chunks_rev = last_chunk :: chunks_rev in
   let chunks = List.rev chunks_rev in
   String.concat "" chunks
 
-(** Recursively read a chunk from the file descriptor until we see a newline
+(** This function reads a line, delimited by LF (unix) or CRLF (internet)...
+ * Recursively read a chunk from the file descriptor until we see a newline
  * character, building up the chunks accumulator along the way.
  * Any remaining bytes not consumed (bytes past the newline) are placed in the
  * reader's unconsumed_buffer which will be consumed on the next
- * get_next_line call .*)
-let rec read_message chunks r =
-  let b = String.create chunk_size in
+ * call to get_next_line or get_next_bytes. *)
+let rec read_line chunks r =
+  let b = Bytes.create chunk_size in
 
   let bytes_read = Unix.read r.fd b 0 chunk_size in
   assert (bytes_read > 0);
@@ -51,7 +58,7 @@ let rec read_message chunks r =
 
   match index b '\n' with
   | `No_appearance ->
-    read_message (b :: chunks) r
+    read_line (b :: chunks) r
   | `First_appearance i ->
     let tail = String.sub b 0 i in
     let result = merge_chunks tail chunks in
@@ -66,16 +73,16 @@ let rec read_message chunks r =
       (** We didn't read any bytes beyond the first newline character. *)
       set_buffer r None
     in
-    result
+    trim_trailing_cr result
 
 let get_next_line ?approx_size r =
   match !(r.unconsumed_buffer) with
-  | None -> read_message [] r
+  | None -> read_line [] r
   | Some remainder -> begin
     match index remainder '\n' with
     | `No_appearance ->
       let () = set_buffer r None in
-      read_message [remainder] r
+      read_line [remainder] r
     | `First_appearance i ->
       let result = String.sub remainder 0 i in
       let () = if (i + 1) < (String.length remainder)
@@ -85,11 +92,41 @@ let get_next_line ?approx_size r =
         let remainder = String.sub remainder (i + 1) length in
         set_buffer r (Some remainder)
       else
-        (** No bytes beyond the firstt newline character. *)
+        (** No bytes beyond the first newline character. *)
         set_buffer r None
       in
-      result
+      trim_trailing_cr result
   end
+
+let rec read_bytes r size chunks =
+  let bytes_desired = min chunk_size size in
+  let b = Bytes.create bytes_desired in
+  let bytes_read = Unix.read r.fd b 0 bytes_desired in
+  assert (bytes_read > 0);
+  if bytes_read < size then
+    let b = String.sub b 0 bytes_read in
+    read_bytes r (size - bytes_read) (b :: chunks)
+  else
+    let () = set_buffer r None in
+    merge_chunks b chunks
+
+let get_next_bytes r size =
+  assert (size > 0);
+  match !(r.unconsumed_buffer) with
+  | None -> read_bytes r size []
+  | Some remainder -> begin
+    let remainder_length = String.length remainder in
+    if remainder_length < size then
+      let () = set_buffer r None in
+      read_bytes r (size - remainder_length) [remainder]
+    else if remainder_length = size then
+      let () = set_buffer r None in
+      remainder
+    else
+      let extra = String.sub remainder size (remainder_length - size) in
+      let () = set_buffer r (Some extra) in
+      String.sub remainder 0 size
+    end
 
 let has_buffered_content r = !(r.unconsumed_buffer) <> None
 

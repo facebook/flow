@@ -32,3 +32,5 @@ val has_buffered_content: t -> bool
 val get_fd: t -> Unix.file_descr
 
 val get_next_line: ?approx_size: int -> t -> string
+
+val get_next_bytes: t -> int -> string
