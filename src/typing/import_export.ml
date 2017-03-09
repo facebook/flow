@@ -68,7 +68,7 @@ let mk_resource_module_t cx loc f =
 
 (* given a module name, return associated tvar if already
  * present in module map, or create and add *)
-let module_t_of_name cx m reason =
+let module_t_of_ref cx m reason =
   match Context.declare_module_t cx with
   (**
    * TODO: Imports within `declare module`s can only reference other
@@ -85,35 +85,35 @@ let module_t_of_name cx m reason =
         Flow.mk_tvar_where cx reason (fun t -> Context.add_module cx m t)
     )
 
-let require cx ?(internal=false) m_name loc =
-  Context.add_require cx m_name loc;
+let require cx ?(internal=false) module_ref loc =
+  Context.add_require cx module_ref loc;
   if not internal
-  then Type_inference_hooks_js.dispatch_require_hook cx m_name loc;
-  let desc = RCustom (spf "CommonJS exports of \"%s\"" m_name) in
+  then Type_inference_hooks_js.dispatch_require_hook cx module_ref loc;
+  let desc = RCustom (spf "CommonJS exports of \"%s\"" module_ref) in
   let reason = mk_reason desc loc in
   Flow.mk_tvar_where cx reason (fun t ->
     Flow.flow cx (
-      module_t_of_name cx m_name (mk_reason (RCustom m_name) loc),
+      module_t_of_ref cx module_ref (mk_reason (RCustom module_ref) loc),
       CJSRequireT(reason, t)
     )
   )
 
-let import ?reason cx m_name loc =
-  Context.add_require cx m_name loc;
-  Type_inference_hooks_js.dispatch_import_hook cx m_name loc;
+let import ?reason cx module_ref loc =
+  Context.add_require cx module_ref loc;
+  Type_inference_hooks_js.dispatch_import_hook cx module_ref loc;
   let reason =
     match reason with
     | Some r -> r
-    | None -> mk_reason (RCustom m_name) loc
+    | None -> mk_reason (RCustom module_ref) loc
   in
-  module_t_of_name cx m_name reason
+  module_t_of_ref cx module_ref reason
 
-let import_ns cx reason module_name loc =
-  Context.add_require cx module_name loc;
-  Type_inference_hooks_js.dispatch_import_hook cx module_name loc;
+let import_ns cx reason module_ref loc =
+  Context.add_require cx module_ref loc;
+  Type_inference_hooks_js.dispatch_import_hook cx module_ref loc;
   Flow.mk_tvar_where cx reason (fun t ->
     Flow.flow cx (
-      module_t_of_name cx module_name (mk_reason (RCustom module_name) loc),
+      module_t_of_ref cx module_ref (mk_reason (RCustom module_ref) loc),
       ImportModuleNsT(reason, t)
     )
   )
@@ -121,16 +121,16 @@ let import_ns cx reason module_name loc =
 let module_t_of_cx cx =
   match Context.declare_module_t cx with
   | None ->
-    let m = Modulename.to_string (Context.module_name cx) in
+    let m = Context.module_ref cx in
     let loc = Loc.({ none with source = Some (Context.file cx) }) in
-    module_t_of_name cx m (Reason.mk_reason (RCustom "exports") loc)
+    module_t_of_ref cx m (Reason.mk_reason (RCustom "exports") loc)
   | Some t -> t
 
 let set_module_t cx reason f =
   match Context.declare_module_t cx with
   | None -> (
-    let module_name = Modulename.to_string (Context.module_name cx) in
-    Context.add_module cx module_name (Flow.mk_tvar_where cx reason f)
+    let module_ref = Context.module_ref cx in
+    Context.add_module cx module_ref (Flow.mk_tvar_where cx reason f)
   )
   | Some _ ->
     Context.set_declare_module_t cx (Some (Flow.mk_tvar_where cx reason f))

@@ -34,8 +34,7 @@ let get_master_cx, restore_master_cx =
       checked = false;
       weak = false;
     }) in
-    let cx = Flow.fresh_context
-      metadata Loc.Builtins (Modulename.String Files.lib_module) in
+    let cx = Flow.fresh_context metadata Loc.Builtins Files.lib_module_ref in
     cx_ := Some cx;
     cx
   | Some cx -> cx in

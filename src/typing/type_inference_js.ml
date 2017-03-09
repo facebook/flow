@@ -21,7 +21,7 @@ module Utils = Utils_js
 (**********)
 
 let force_annotations cx =
-  let m = Modulename.to_string (Context.module_name cx) in
+  let m = Context.module_ref cx in
   let tvar = Flow_js.lookup_module cx m in
   let _, id = Type.open_tvar tvar in
   let before = Errors.ErrorSet.cardinal (Context.errors cx) in
@@ -69,20 +69,18 @@ let scan_for_suppressions =
       | _ -> ()) comments
 
 (* build module graph *)
-let infer_ast ~metadata ~filename ~module_name ast =
+let infer_ast ~metadata ~filename ast =
   Flow_js.Cache.clear();
 
   let _, statements, comments = ast in
 
-  let cx =
-    Flow_js.fresh_context metadata filename module_name
-  in
+  let module_ref = Files.module_ref filename in
+  let cx = Flow_js.fresh_context metadata filename module_ref in
   let checked = Context.is_checked cx in
 
-  let exported_module_name = Modulename.to_string module_name in
   let reason_exports_module =
     let desc = Reason.RCustom (
-      Utils.spf "exports of module `%s`" exported_module_name
+      Utils.spf "exports of file `%s`" module_ref
     ) in
     Reason.locationless_reason desc
   in
@@ -162,8 +160,7 @@ let infer_ast ~metadata ~filename ~module_name ast =
 let infer_lib_file ~metadata ~exclude_syms file statements comments =
   Flow_js.Cache.clear();
 
-  let cx = Flow_js.fresh_context
-    metadata file (Modulename.String Files.lib_module) in
+  let cx = Flow_js.fresh_context metadata file Files.lib_module_ref in
 
   let module_scope = Scope.fresh () in
   Env.init_env ~exclude_syms cx module_scope;

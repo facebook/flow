@@ -378,7 +378,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let metadata = Context.({ (metadata_of_options options) with
       checked = false;
     }) in
-    let cx = Context.make metadata file (Modulename.Filename file) in
+    let cx = Context.make metadata file (Files.module_ref file) in
     let loc = {Loc.none with Loc.source = Some file;} in
     let module_name = Module_js.imported_module ~options cx loc moduleref in
     let response: filename option =

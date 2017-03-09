@@ -146,11 +146,7 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
 
       (* infer *)
       let profiling, cx = with_timer "Infer" profiling (fun () ->
-        Type_inference_js.infer_ast
-          ~metadata
-          ~filename
-          ~module_name:(Modulename.String "-")
-          ast
+        Type_inference_js.infer_ast ~metadata ~filename ast
       ) in
 
       (* write graphml of (unmerged) types, if requested *)

@@ -10,15 +10,14 @@
 (* Connect the builtins object in master_cx to the builtins reference in some
    arbitrary cx. *)
 let implicit_require_strict cx master_cx cx_to =
-  let from_t = Flow_js.lookup_module master_cx Files.lib_module in
-  let to_t = Flow_js.lookup_module cx_to Files.lib_module in
+  let from_t = Flow_js.lookup_module master_cx Files.lib_module_ref in
+  let to_t = Flow_js.lookup_module cx_to Files.lib_module_ref in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Connect the export of cx_from to its import in cx_to. This happens in some
    arbitrary cx, so cx_from and cx_to should have already been copied to cx. *)
-let explicit_impl_require_strict cx (cx_from, r, resolved_r, cx_to) =
-  let resolved_r = Modulename.to_string resolved_r in
-  let from_t = Flow_js.lookup_module cx_from resolved_r in
+let explicit_impl_require_strict cx (cx_from, m, r, cx_to) =
+  let from_t = Flow_js.lookup_module cx_from m in
   let to_t = Flow_js.lookup_module cx_to r in
   Flow_js.flow_t cx (from_t, to_t)
 
@@ -298,6 +297,8 @@ module ContextOptimizer = struct
   let reduce_context cx exports =
     let reducer = new context_optimizer in
     List.fold_left (fun quotient (f, m, t) ->
+      (* TODO: The hashing of f, m is probably unnecessary at this point. The
+         tests that needed it ('recheck-haste') now pass without it. *)
       let quotient = {
         quotient with sig_hash = quotient.sig_hash
           |> SigHash.add f |> SigHash.add m
@@ -308,7 +309,7 @@ module ContextOptimizer = struct
   (* string form of a context's own module name paired with the tvar on which a
      context hosts its own exports *)
   let export cx =
-    let m = Modulename.to_string (Context.module_name cx) in
+    let m = Context.module_ref cx in
     Context.file cx, m, Flow_js.lookup_module cx m
 
   (* reduce a context to a "signature context" *)

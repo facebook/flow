@@ -630,21 +630,21 @@ and assume_ground_id cx ~depth ids id =
    required by it, the module it provides, and so on). *)
 let mk_builtins cx =
   let builtins = mk_tvar cx (builtin_reason (RCustom "module")) in
-  Context.add_module cx Files.lib_module builtins
+  Context.add_module cx Files.lib_module_ref builtins
 
 (* Local references to modules can be looked up. *)
 let lookup_module cx m = Context.find_module cx m
 
 (* The builtins reference is accessed just like references to other modules. *)
 let builtins cx =
-  lookup_module cx Files.lib_module
+  lookup_module cx Files.lib_module_ref
 
 let restore_builtins cx b =
-  Context.add_module cx Files.lib_module b
+  Context.add_module cx Files.lib_module_ref b
 
 (* new contexts are prepared here, so we can install shared tvars *)
-let fresh_context metadata file module_name =
-  let cx = Context.make metadata file module_name in
+let fresh_context metadata file module_ref =
+  let cx = Context.make metadata file module_ref in
   (* add types for pervasive builtins *)
   mk_builtins cx;
   cx

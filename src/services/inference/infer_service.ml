@@ -35,12 +35,11 @@ let apply_docblock_overrides metadata docblock_info =
 (* Given a filename, retrieve the parsed AST, derive a module name,
    and invoke the local (infer) pass. This will build and return a
    fresh context object for the module. *)
-let infer_module ~options ~metadata filename =
+let infer_module ~metadata filename =
   let ast = Parsing_service_js.get_ast_unsafe filename in
   let info = Parsing_service_js.get_docblock_unsafe filename in
-  let module_name = Module_js.exported_module ~options filename info in
   let metadata = apply_docblock_overrides metadata info in
-  Type_inference_js.infer_ast ~metadata ~filename ~module_name ast
+  Type_inference_js.infer_ast ~metadata ~filename ast
 
 (* local inference job:
    takes list of filenames, accumulates into parallel lists of
@@ -55,7 +54,7 @@ let infer_job ~options acc files =
         (* prerr_endlinef "[%d] INFER: %s" (Unix.getpid()) file_str; *)
 
         (* infer produces a context for this module *)
-        let cx = infer_module ~options ~metadata file in
+        let cx = infer_module ~metadata file in
         (* register module info *)
         Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options cx;
         (* note: save and clear errors and error suppressions before storing

@@ -39,7 +39,7 @@ type metadata = {
 (* TODO this has a bunch of stuff in it that should be localized *)
 type t = {
   file: Loc.filename;
-  module_name: Modulename.t;
+  module_ref: string;
   metadata: metadata;
 
   (* required modules, and map to their locations *)
@@ -134,9 +134,9 @@ let metadata_of_options options = {
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
  *)
-let make metadata file module_name = {
+let make metadata file module_ref = {
   file;
-  module_name;
+  module_ref;
   metadata;
 
   required = SSet.empty;
@@ -203,7 +203,7 @@ let is_weak cx = cx.metadata.weak
 let max_trace_depth cx = cx.metadata.max_trace_depth
 let module_kind cx = cx.module_kind
 let module_map cx = cx.modulemap
-let module_name cx = cx.module_name
+let module_ref cx = cx.module_ref
 let output_graphml cx = cx.metadata.output_graphml
 let property_maps cx = cx.property_maps
 let refs_table cx = cx.refs_table

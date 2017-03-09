@@ -106,7 +106,7 @@ let get_master_cx =
       let cx = Flow_js.fresh_context
         (stub_metadata ~root ~checked:false)
         Loc.Builtins
-        (Modulename.String Files.lib_module) in
+        Files.lib_module_ref in
       master_cx := Some (root, cx);
       cx
 
@@ -139,9 +139,7 @@ let check_content ~filename ~content =
 
     Flow_js.Cache.clear();
 
-    let cx = Type_inference_js.infer_ast
-      ~metadata ~filename ~module_name:(Modulename.String "-") ast
-    in
+    let cx = Type_inference_js.infer_ast ~metadata ~filename ast in
 
     (* this is a VERY pared-down version of Merge_service.merge_strict_context.
        it relies on the JS version only supporting libs + 1 file, so every
@@ -203,9 +201,7 @@ let infer_type filename content line col =
 
       Flow_js.Cache.clear();
 
-      let cx = Type_inference_js.infer_ast
-        ~metadata ~filename ~module_name:(Modulename.String "-") ast
-      in
+      let cx = Type_inference_js.infer_ast ~metadata ~filename ast in
       let loc = mk_loc filename line col in
       let loc, ground_t, possible_ts = Query_types.(match query_type cx loc with
         | FailureNoMatch -> Loc.none, None, []
@@ -238,9 +234,7 @@ let dump_types js_file js_content =
 
       Flow_js.Cache.clear();
 
-      let cx = Type_inference_js.infer_ast
-        ~metadata ~filename ~module_name:(Modulename.String "-") ast
-      in
+      let cx = Type_inference_js.infer_ast ~metadata ~filename ast in
       let printer = Type_printer.string_of_t in
       let raw_printer _ _ = None in
       let types = Query_types.dump_types printer raw_printer cx in

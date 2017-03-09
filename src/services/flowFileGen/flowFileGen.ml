@@ -424,8 +424,8 @@ let gen_exports named_exports cjs_export env =
       |> Codegen.add_str ";"
 
 let flow_file cx =
-  let module_name = Modulename.to_string (Context.module_name cx) in
-  let (named_exports, cjs_export) = exports_map cx module_name in
+  let module_ref = Context.module_ref cx in
+  let (named_exports, cjs_export) = exports_map cx module_ref in
 
   Codegen.mk_env cx
     |> Codegen.add_str "// @flow\n\n"

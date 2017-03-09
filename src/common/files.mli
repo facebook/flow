@@ -26,7 +26,8 @@ val is_included: Options.t -> string -> bool
 
 val init: Options.t -> string list * SSet.t
 
-val lib_module: string
+val module_ref: Loc.filename -> string
+val lib_module_ref: string
 
 (* regexp for Filename constants *)
 val dir_sep: Str.regexp

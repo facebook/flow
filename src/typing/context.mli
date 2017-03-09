@@ -38,7 +38,7 @@ type module_kind =
   | CommonJSModule of Loc.t option
   | ESModule
 
-val make: metadata -> Loc.filename -> Modulename.t -> t
+val make: metadata -> Loc.filename -> string -> t
 val metadata_of_options: Options.t -> metadata
 
 (* accessors *)
@@ -72,7 +72,7 @@ val is_weak: t -> bool
 val max_trace_depth: t -> int
 val module_kind: t -> module_kind
 val module_map: t -> Type.t SMap.t
-val module_name: t -> Modulename.t
+val module_ref: t -> string
 val output_graphml: t -> bool
 val property_maps: t -> Type.Properties.map
 val refs_table: t -> (Loc.t, Loc.t) Hashtbl.t

@@ -243,8 +243,12 @@ let init options =
   in
   (libs, Utils_js.set_of_list libs)
 
+(* Local reference to the module exported by a file. Like other local references
+   to modules imported by the file, it is a member of Context.module_map. *)
+let module_ref file =
+  Loc.string_of_filename file
 
-let lib_module = ""
+let lib_module_ref = ""
 
 let dir_sep = Str.regexp "[/\\\\]"
 let current_dir_name = Str.regexp_string Filename.current_dir_name

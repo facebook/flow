@@ -11,7 +11,6 @@
 val infer_ast:
   metadata: Context.metadata ->
   filename: Loc.filename ->
-  module_name: Modulename.t ->
   Spider_monkey_ast.program ->
   Context.t
 
