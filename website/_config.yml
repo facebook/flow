@@ -27,4 +27,26 @@ include:
 
 flow_version_stable: "0.38.0"
 
+flow:
+  path: 'flow'
+
 # highlighter: pygments
+
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - vendor
+  - s3_website.yml
+  - package.json
+  - node_modules
+  - .asset-cache
+
+assets:
+  sources:
+    - _assets/css
+    - _assets/js
+    - _assets/images
+    - _assets/third-party
+    - _assets/gen
+    - node_modules
