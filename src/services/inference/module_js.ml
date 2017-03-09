@@ -833,37 +833,41 @@ let remove_provider f m =
 
 let get_providers = Hashtbl.find all_providers
 
-(* Pick providers for modules exported by new and changed files and for cleared
-   modules (which cover changed and deleted files).
+(* Repick providers for modules that are exported by new and changed files, or
+   were provided by changed and deleted files.
 
-   For deleted files, their exported modules, if in cleared modules, will pick a
+   For deleted files, their exported modules, if in old modules, will pick a
    new provider, or be left with no provider.
 
-   For changed files, their exported modules, if in cleared modules, may pick
+   For changed files, their exported modules, if in old modules, may pick
    the same provider (i.e., the changed file) or a new provider (a different
-   file). If not in cleared modules, they may pick a new provider (i.e., the
+   file). If not in old modules, they may pick a new provider (i.e., the
    changed file) or the same provider (a different file).
 
    For new files, their exported modules may pick a new provider (i.e., the new
    file) or the same provider (a different file).
 
+   Suppose that:
    parsed_unparsed is a list of parsed / unparsed file names.
-   cleared_modules is a set of removed module names.
+   old_modules is a set of removed module names.
 
    Modules provided by parsed / unparsed files may or may not have a
-   provider. Modules named in cleared_modules definitely do not have a
-   provider. Together, they are considered "dirty" modules. Files that require
-   dirty modules will be rechecked.
+   provider. Modules named in old_modules definitely do not have a
+   provider. Together, they are considered "dirty" modules. Providers for dirty
+   modules must be repicked.
+
+   Files that depend on the subset of dirty modules that either have changed
+   providers or are provided by changed files will be rechecked.
 
    Preconditions:
    1. all files in parsed_unparsed have entries in InfoHeap (true if
    we're properly calling add_parsed_info and add_unparsed_info for every
    parsed / unparsed file before calling commit_modules)
-   2. all modules not mentioned in cleared_modules, but provided by one or more
+   2. all modules not mentioned in old_modules, but provided by one or more
    files in InfoHeap, have some provider registered in NameHeap.
    (However, the current provider may not be the one we now want,
    given newly parsed / unparsed files.)
-   3. conversely all modules in cleared_modules lack a provider in NameHeap.
+   3. conversely all modules in old_modules lack a provider in NameHeap.
 
    Postconditions:
    1. all modules provided by at least 1 file in InfoHeap have a provider
@@ -888,12 +892,7 @@ let get_providers = Hashtbl.find all_providers
    (b) remove the unregistered modules from NameHeap
    (c) register the new providers in NameHeap
 *)
-let calc_dirty_modules workers ~options parsed_unparsed cleared_modules =
-  let debug = Options.is_debug_mode options in
-  if debug then prerr_endlinef
-    "*** committing modules: parsed / unparsed files %d removed modules %d ***"
-    (List.length parsed_unparsed) (NameSet.cardinal cleared_modules);
-
+let calc_new_modules workers ~options parsed_unparsed =
   (* recall the exported module for each parsed / unparsed file *)
   let calc_file_module_assoc =
     List.fold_left (fun file_module_assoc f ->
@@ -908,9 +907,8 @@ let calc_dirty_modules workers ~options parsed_unparsed cleared_modules =
     ~merge: List.rev_append
     ~next: (MultiWorker.next workers parsed_unparsed) in
 
-  (* all removed modules must be repicked *)
   (* all modules provided by newly parsed / unparsed files must be repicked *)
-  List.fold_left (fun acc (f, m) ->
+  let new_modules = List.fold_left (fun acc (f, m) ->
     let f_module = Modulename.Filename f in
     add_provider f m; add_provider f f_module;
     (* foo.js.flow ALWAYS also provides foo.js *)
@@ -921,9 +919,19 @@ let calc_dirty_modules workers ~options parsed_unparsed cleared_modules =
       add_provider f f_decl_module
     end;
     acc |> NameSet.add m |> NameSet.add f_module
-  ) cleared_modules file_module_assoc
+  ) NameSet.empty file_module_assoc in
 
-let commit_modules workers ~options dirty_modules =
+  let debug = Options.is_debug_mode options in
+  if debug then prerr_endlinef
+    "*** new modules (new and changed files) %d ***"
+    (NameSet.cardinal new_modules);
+
+  new_modules
+
+let commit_modules workers ~options parsed_unparsed old_modules =
+  let new_modules = calc_new_modules workers ~options parsed_unparsed in
+  let dirty_modules = NameSet.union old_modules new_modules in
+
   let debug = Options.is_debug_mode options in
   let module_files = MultiWorker.call
     workers
@@ -941,14 +949,15 @@ let commit_modules workers ~options dirty_modules =
       then (p_module, p)::module_file_assoc
       else module_file_assoc
     ) in
-  let remove, providers, replace, errmap = List.fold_left
-    (fun (rem, prov, rep, errmap) (m, f_opt) ->
+  let parsed_unparsed = FilenameSet.of_list parsed_unparsed in
+  let remove, providers, replace, errmap, changed_modules = List.fold_left
+    (fun (rem, prov, rep, errmap, diff) (m, f_opt) ->
     match get_providers m with
     | ps when FilenameSet.is_empty ps ->
         if debug then prerr_endlinef
           "no remaining providers: %S"
           (Modulename.to_string m);
-        (NameSet.add m rem), prov, rep, errmap
+        (NameSet.add m rem), prov, rep, errmap, (NameSet.add m diff)
     | ps ->
       (* incremental: install empty error sets here for provider candidates.
          this will have the effect of resetting downstream errors for these
@@ -970,34 +979,35 @@ let commit_modules workers ~options dirty_modules =
       | Some f ->
         if f = p then begin
           (* When can this happen? Say m pointed to f before, a different file
-             f' that provides m changed (so m is not in cleared_modules), but f
+             f' that provides m changed (so m is not in old_modules), but f
              continues to be the chosen provider = p (winning over f'). *)
           if debug then prerr_endlinef
             "unchanged provider: %S -> %s"
             (Modulename.to_string m)
             (string_of_filename p);
-          rem, prov, rep, errmap
+          rem, prov, rep, errmap,
+            (if FilenameSet.mem p parsed_unparsed then NameSet.add m diff else diff)
         end else begin
           (* When can this happen? Say m pointed to f before, a different file
-             f' that provides m changed (so m is not in cleared_modules), and
+             f' that provides m changed (so m is not in old_modules), and
              now f' becomes the chosen provider = p (winning over f). *)
           if debug then prerr_endlinef
             "new provider: %S -> %s replaces %s"
             (Modulename.to_string m)
             (string_of_filename p)
             (string_of_filename f);
-          (NameSet.add m rem), p::prov, (mapping m p rep), errmap
+          (NameSet.add m rem), p::prov, (mapping m p rep), errmap, (NameSet.add m diff)
         end
       | None ->
           (* When can this happen? Either m pointed to a file that used to
              provide m and changed or got deleted (causing m to be in
-             cleared_modules), or m didn't have a provider before. *)
+             old_modules), or m didn't have a provider before. *)
           if debug then prerr_endlinef
             "initial provider %S -> %s"
             (Modulename.to_string m)
             (string_of_filename p);
-          rem, p::prov, (mapping m p rep), errmap
-  ) (NameSet.empty, [], [], FilenameMap.empty) module_files in
+          rem, p::prov, (mapping m p rep), errmap, (NameSet.add m diff)
+  ) (NameSet.empty, [], [], FilenameMap.empty, NameSet.empty) module_files in
 
   (* update NameHeap *)
   if not (NameSet.is_empty remove) then begin
@@ -1017,7 +1027,7 @@ let commit_modules workers ~options dirty_modules =
     ~next: (MultiWorker.next workers replace);
 
   if debug then prerr_endlinef "*** done committing modules ***";
-  providers, errmap
+  providers, changed_modules, errmap
 
 let remove_batch_resolved_requires files =
   ResolvedRequiresHeap.remove_batch files
@@ -1036,8 +1046,8 @@ let remove_batch_resolved_requires files =
    1. file is current registered module provider for a given module name
    2. file is not current provider, but record is still registered
    3. file isn't in the map at all. This means file is new.
-   We return the set of module names whose current providers have been
-   cleared (#1). This is the set commit_modules expects as its second
+   We return the set of module names whose current providers are the same as the
+   given files (#1). This is the set commit_modules expects as its second
    argument.
 
    NOTE: The notion of "current provider" is murky, since every file at least
@@ -1063,25 +1073,30 @@ let clear_files options workers to_clear =
     ~merge: FilenameMap.union
     ~next: (MultiWorker.next workers (FilenameSet.elements to_clear)) in
 
+  (* clear files *)
+  InfoHeap.remove_batch to_clear;
+  ResolvedRequiresHeap.remove_batch to_clear;
+  SharedMem_js.collect options `gentle;
+
   (* files may or may not be registered as module providers.
      when they are, we need to clear their registrations *)
-  let names = FilenameMap.fold (fun file datum names ->
+  let old_modules = FilenameMap.fold (fun file datum old_modules ->
     let _module, current_provider = datum in
     remove_provider file _module;
     remove_provider file (Modulename.Filename file);
     if current_provider then
-      names
+      old_modules
       |> NameSet.add _module
       |> NameSet.add (Modulename.Filename file)
     else
-      names
+      old_modules
       |> NameSet.add (Modulename.Filename file)
   ) existing_file_module_current_provider_assoc NameSet.empty in
-  (* clear any registrations that point to records we're about to clear *)
-  (* for records, remove_batch will ignore missing entries, no need to filter *)
-  NameHeap.remove_batch names;
-  InfoHeap.remove_batch to_clear;
-  ResolvedRequiresHeap.remove_batch to_clear;
-  SharedMem_js.collect options `gentle;
-  (* note: only return names of modules actually removed *)
-  names
+
+  let debug = Options.is_debug_mode options in
+  if debug then prerr_endlinef
+    "*** old modules (changed and deleted files) %d ***"
+    (NameSet.cardinal old_modules);
+
+  (* return *)
+  old_modules

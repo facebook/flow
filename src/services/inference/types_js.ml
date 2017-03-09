@@ -198,10 +198,10 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
       (* should never happen *)
       profiling, None, errors, info
 
-(* commit providers for dirty modules, collect errors. *)
-let commit_modules workers ~options errors dirty_modules =
-  let providers, errmap =
-    Module_js.commit_modules workers ~options dirty_modules in
+(* commit providers for old and new modules, collect errors. *)
+let commit_modules workers ~options errors parsed_unparsed old_modules =
+  let providers, changed_modules, errmap =
+    Module_js.commit_modules workers ~options parsed_unparsed old_modules in
   (* Providers might be new but not changed. This typically happens when old
      providers are deleted, and previously duplicate providers become new
      providers. In such cases, we must clear the old duplicate provider errors
@@ -211,7 +211,7 @@ let commit_modules workers ~options errors dirty_modules =
      that case they are rechecked and *all* their errors are cleared. But we
      don't care about optimizing that case for now.) *)
   let errors = List.fold_left filter_duplicate_provider errors providers in
-  FilenameMap.fold (fun file errors acc ->
+  changed_modules, FilenameMap.fold (fun file errors acc ->
     let errset = List.fold_left (fun acc err ->
       match err with
       | Module_js.ModuleDuplicateProviderError { Module_js.
@@ -235,7 +235,7 @@ let typecheck
   ~workers
   ~make_merge_input
   ~parsed
-  ~cleared_modules
+  ~old_modules
   ~unparsed
   ~errors =
   (* TODO remove after lookup overhaul *)
@@ -269,17 +269,15 @@ let typecheck
 
   let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
 
-  (* conservatively approximate set of modules whose providers will change *)
-  let dirty_modules =
-    let parsed_unparsed = List.fold_left (fun acc (filename, _) ->
-      filename::acc
-    ) parsed unparsed in
-    Module_js.calc_dirty_modules workers ~options parsed_unparsed cleared_modules in
+  let parsed_unparsed = List.fold_left (fun acc (filename, _) ->
+    filename::acc
+  ) parsed unparsed in
 
+  (* conservatively approximate set of modules whose providers will change *)
   (* register providers for modules, warn on dupes etc. *)
-  let profiling, local_errors =
+  let profiling, (changed_modules, local_errors) =
     with_timer ~options "CommitModules" profiling (fun () ->
-      commit_modules workers ~options local_errors dirty_modules
+      commit_modules workers ~options local_errors parsed_unparsed old_modules
     )
   in
 
@@ -302,7 +300,7 @@ let typecheck
   (* call supplied function to calculate closure of modules to merge *)
   let profiling, merge_input =
     with_timer ~options "MakeMergeInput" profiling (fun () ->
-      make_merge_input dirty_modules inferred
+      make_merge_input changed_modules inferred
     ) in
 
   match merge_input with
@@ -481,6 +479,9 @@ let recheck genv env ~updates =
       in InfoHeap. A file's imports might resolve to different files if the
       corresponding modules map to different files in NameHeap.
 
+      Deleting a file
+      ===============
+
       Suppose that a file D is deleted. Let D |-> m in InfoHeap, and m |-> F in
       NameHeap.
 
@@ -490,12 +491,18 @@ let recheck genv env ~updates =
       importing m will be affected. If other files map to m in InfoHeap, map m
       to one of those files in NameHeap.
 
+      Adding a file
+      =============
+
       Suppose that a new file N is added.
 
       Map N to some module name, say m, in InfoHeap. If m is not mapped to any
       file in NameHeap, add m |-> N to NameHeap and mark m "dirty." Otherwise,
       decide whether to replace the existing mapping to m |-> N in NameHeap, and
       pessimistically assuming it might be, mark m "dirty."
+
+      Adding a file
+      =============
 
       What happens when a file C is changed? Suppose that C |-> m in InfoHeap,
       and m |-> F in NameHeap.
@@ -511,6 +518,9 @@ let recheck genv env ~updates =
       Otherwise, decide whether to replace the existing mapping to m' |-> C in
       NameHeap, and mark m' "dirty."
 
+      Summary
+      =======
+
       Summarizing, if an existing file F1 is changed or deleted, and F1 |-> m in
       InfoHeap and m |-> F in NameHeap, and F1 = F, then mark m "dirty." And if
       a new file or a changed file F2 now maps to m' in InfoHeap, mark m' "dirty."
@@ -518,14 +528,60 @@ let recheck genv env ~updates =
       Ideally, any module name that does not map to a different file in NameHeap
       should not be considered "dirty."
 
-  **)
+      In terms of implementation:
+
+      Deleted file
+      ============
+
+      Say it pointed to module OLD_M
+
+      1. need to repick a provider for OLD_M *if OLD_M's current provider is this
+      file*
+      2. files that depend on OLD_M need to be rechecked if:
+        a. the provider for OLD_M is **replaced** or **removed**; or
+        b. the provider for OLD_M is **unchanged**, but is a _changed file_
+
+      New file
+      ========
+
+      Say it points to module NEW_M
+
+      1. need to repick a provider for NEW_M
+      2. files that depend on NEW_M need to be rechecked if:
+        a. the provider for NEW_M is **added** or **replaced**; or
+        b. the provider for NEW_M is **unchanged**, but is a _changed file_
+
+      Changed file
+      ============
+
+      Say it pointed to module OLD_M, now points to module NEW_M
+
+      * Is OLD_M the same as NEW_M? *(= delete the file, then add it back)*
+
+      1. need to repick providers for OLD_M *if OLD_M's current provider is this
+      file*.
+      2. files that depend on OLD_M need to be rechecked if:
+        a. the provider for OLD_M is **replaced** or **removed**; or
+        b. the provider for OLD_M is **unchanged**, but is a _changed file_
+      3. need to repick a provider for NEW_M
+      4. files that depend on NEW_M need to be rechecked if:
+        a. the provider for NEW_M is **added** or **replaced**; or
+        b. the provider for NEW_M is **unchanged**, but is a _changed file_
+
+      * TODO: Is OLD_M the same as NEW_M?
+
+      1. *don't repick a provider!*
+      2. files that depend on OLD_M need to be rechecked if: OLD_M's current provider
+      is a _changed file_
+
+**)
 
   (* clear contexts and module registrations for new, changed, and deleted files *)
-  (* remember cleared modules *)
+  (* remember old modules *)
   let to_clear = FilenameSet.union new_or_changed deleted in
   Context_cache.remove_batch to_clear;
   (* clear out records of files, and names of modules provided by those files *)
-  let cleared_modules = Module_js.clear_files options workers to_clear in
+  let old_modules = Module_js.clear_files options workers to_clear in
 
   (* TODO elsewhere or delete *)
   Context.remove_all_errors master_cx;
@@ -541,17 +597,17 @@ let recheck genv env ~updates =
     ~options
     ~profiling
     ~workers
-    ~make_merge_input:(fun dirty_modules inferred ->
+    ~make_merge_input:(fun changed_modules inferred ->
       (* need to merge the closure of inferred files and their deps *)
 
-      (* direct_deps are unchanged files which directly depend on dirty modules
-         or new files that are phantom dependents. all_deps are direct_deps plus
-         their dependents (transitive closure) *)
+      (* direct_deps are unchanged files which directly depend on changed modules,
+         or are new / changed files that are phantom dependents. all_deps are
+         direct_deps plus their dependents (transitive closure) *)
       let all_deps, direct_deps = Dep_service.dependent_files
         workers
         ~unchanged_parsed
-        ~new_or_changed (* TODO: actually, only need to pass new files *)
-        ~dirty_modules
+        ~new_or_changed
+        ~changed_modules
       in
 
       Flow_logger.log "Re-resolving directly dependent files";
@@ -607,7 +663,7 @@ let recheck genv env ~updates =
       Some (to_merge, recheck_map)
     )
     ~parsed:freshparsed
-    ~cleared_modules
+    ~old_modules
     ~unparsed
     ~errors
   in
@@ -720,7 +776,7 @@ let full_check workers ~ordered_libs parse_next options =
         ) FilenameMap.empty)
     )
     ~parsed
-    ~cleared_modules:Module_js.NameSet.empty
+    ~old_modules:Module_js.NameSet.empty
     ~unparsed
     ~errors
   in

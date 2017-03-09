@@ -132,24 +132,24 @@ let dep_closure modules rdmap fileset =
     ) fileset FilenameSet.empty
   in expand rdmap fileset (ref FilenameSet.empty)
 
-(* Identify the direct and transitive dependents of new or changed files and
-   cleared modules.
+(* Identify the direct and transitive dependents of new, changed, and deleted
+   files.
 
    Files that must be rechecked include those that immediately or recursively
    depended on modules whose providers were affected by new, changed, or deleted
-   files. The latter modules, marked "dirty," are calculated earlier when
+   files. The latter modules, marked "changed," are calculated earlier when
    picking providers.
 
    - unchanged_parsed is all unchanged files in the current state
    - new_or_changed is all files that have just been through local inference and
-     all skipped files that were also new or unchanged
-   - dirty_modules is a conservative approximation of modules that no longer have
-     the same providers
+   all skipped files that were also new or unchanged
+   - changed_modules is a conservative approximation of modules that no longer have
+   the same providers, or whose providers are changed files
 
    Return the subset of unchanged_parsed transitively dependent on updates, and
    the subset directly dependent on them.
 *)
-let dependent_files workers ~unchanged_parsed ~new_or_changed ~dirty_modules =
+let dependent_files workers ~unchanged_parsed ~new_or_changed ~changed_modules =
   (* Get the modules provided by unchanged files, the reverse dependency map
      for unchanged files, and the subset of unchanged files whose resolution
      paths may encounter new or changed modules. *)
@@ -158,12 +158,12 @@ let dependent_files workers ~unchanged_parsed ~new_or_changed ~dirty_modules =
     resolution_path_files
     = calc_dep_utils workers unchanged_parsed new_or_changed in
 
-  (* files that require dirty modules *)
+  (* resolution_path_files, plus files that require changed_modules *)
   let direct_deps = Module_js.(NameSet.fold (fun m acc ->
     match NameMap.get m reverse_deps with
     | Some files -> FilenameSet.union acc files
     | None -> acc
-    ) dirty_modules resolution_path_files
+    ) changed_modules resolution_path_files
   ) in
 
   (* (transitive dependents are re-merged, directs are also re-resolved) *)
