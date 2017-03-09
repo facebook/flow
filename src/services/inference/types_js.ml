@@ -199,9 +199,9 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
       profiling, None, errors, info
 
 (* commit providers for old and new modules, collect errors. *)
-let commit_modules workers ~options errors new_or_changed old_modules =
+let commit_modules workers ~options errors new_or_changed dirty_modules =
   let providers, changed_modules, errmap =
-    Module_js.commit_modules workers ~options new_or_changed old_modules in
+    Module_js.commit_modules workers ~options new_or_changed dirty_modules in
   (* Providers might be new but not changed. This typically happens when old
      providers are deleted, and previously duplicate providers become new
      providers. In such cases, we must clear the old duplicate provider errors
@@ -234,50 +234,49 @@ let typecheck
   ~profiling
   ~workers
   ~make_merge_input
-  ~parsed
   ~old_modules
+  ~parsed
   ~unparsed
+  ~new_or_changed
   ~errors =
   (* TODO remove after lookup overhaul *)
   Module_js.clear_filename_cache ();
 
   (* add tracking modules for unparsed files *)
-  MultiWorker.call workers
-    ~job: (fun () ->
-      List.iter (fun (filename, docblock) ->
-        Module_js.add_unparsed_info ~audit:Expensive.ok
-          ~options filename docblock
-      )
-    )
-    ~neutral: ()
-    ~merge: (fun () () -> ())
-    ~next: (MultiWorker.next workers unparsed);
+  let unparsed_file_module_assoc = MultiWorker.call workers
+    ~job: (List.fold_left (fun file_module_assoc (filename, docblock) ->
+      let info = Module_js.add_unparsed_info ~audit:Expensive.ok
+        ~options filename docblock in
+      (filename, info.Module_js._module) :: file_module_assoc
+    ))
+    ~neutral: []
+    ~merge: List.rev_append
+    ~next: (MultiWorker.next workers unparsed) in
 
   let parsed = FilenameSet.elements parsed in
   (* create info for parsed files *)
-  MultiWorker.call workers
-    ~job: (fun () ->
-      List.iter (fun filename ->
-        let info = Parsing_service_js.get_docblock_unsafe filename in
-        Module_js.add_parsed_info ~audit:Expensive.ok
-          ~options filename info
-      )
-    )
-    ~neutral: ()
-    ~merge: (fun () () -> ())
-    ~next: (MultiWorker.next workers parsed);
+  let parsed_file_module_assoc = MultiWorker.call workers
+    ~job: (List.fold_left (fun file_module_assoc filename ->
+      let docblock = Parsing_service_js.get_docblock_unsafe filename in
+      let info = Module_js.add_parsed_info ~audit:Expensive.ok
+        ~options filename docblock in
+      (filename, info.Module_js._module) :: file_module_assoc
+    ))
+    ~neutral: []
+    ~merge: List.rev_append
+    ~next: (MultiWorker.next workers parsed) in
 
+  let file_module_assoc =
+    List.rev_append parsed_file_module_assoc unparsed_file_module_assoc in
   let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
-
-  let new_or_changed = List.fold_left (fun acc (filename, _) ->
-    filename::acc
-  ) parsed unparsed in
 
   (* conservatively approximate set of modules whose providers will change *)
   (* register providers for modules, warn on dupes etc. *)
   let profiling, (changed_modules, local_errors) =
     with_timer ~options "CommitModules" profiling (fun () ->
-      commit_modules workers ~options local_errors new_or_changed old_modules
+      let new_modules = Module_js.calc_new_modules ~options file_module_assoc in
+      let dirty_modules = Module_js.NameSet.union old_modules new_modules in
+      commit_modules workers ~options local_errors new_or_changed dirty_modules
     )
   in
 
@@ -660,9 +659,10 @@ let recheck genv env ~updates =
 
       Some (to_merge, recheck_map)
     )
-    ~parsed:freshparsed
     ~old_modules
+    ~parsed:freshparsed
     ~unparsed
+    ~new_or_changed:(FilenameSet.elements new_or_changed)
     ~errors
   in
 
@@ -761,6 +761,10 @@ let full_check workers ~ordered_libs parse_next options =
 
   let errors = { ServerEnv.local_errors; merge_errors; suppressions } in
 
+  let all_files = List.fold_left (fun acc (filename, _) ->
+    filename::acc
+  ) (FilenameSet.elements parsed) unparsed in
+
   (* typecheck client files *)
   let profiling, errors = typecheck
     ~options
@@ -773,9 +777,10 @@ let full_check workers ~ordered_libs parse_next options =
           FilenameMap.add f true map
         ) FilenameMap.empty)
     )
-    ~parsed
     ~old_modules:Module_js.NameSet.empty
+    ~parsed
     ~unparsed
+    ~new_or_changed:all_files
     ~errors
   in
 

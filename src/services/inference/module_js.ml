@@ -757,11 +757,13 @@ let add_parsed_info ~audit ~options file docblock =
     force_check ||
     Docblock.is_flow docblock
   in
-  add_info ~audit file {
+  let info = {
     _module;
     checked;
     parsed = true;
-  }
+  } in
+  add_info ~audit file info;
+  info
 
 let add_parsed_resolved_requires ~audit ~options cx =
   let resolved_requires = resolved_requires_of ~options cx in
@@ -784,11 +786,13 @@ let add_unparsed_info ~audit ~options file docblock =
     Docblock.is_flow docblock ||
     Docblock.isDeclarationFile docblock
   in
-  add_info ~audit file {
+  let info = {
     _module;
     checked;
     parsed = false;
-  }
+  } in
+  add_info ~audit file info;
+  info
 
 (* Note that the module provided by a file is always accessible via its full
    path, so that it may be imported by specifying (a part of) that path in any
@@ -892,21 +896,7 @@ let get_providers = Hashtbl.find all_providers
    (b) remove the unregistered modules from NameHeap
    (c) register the new providers in NameHeap
 *)
-let calc_new_modules workers ~options new_or_changed =
-  (* recall the exported module for each parsed / unparsed file *)
-  let calc_file_module_assoc =
-    List.fold_left (fun file_module_assoc f ->
-      let { _module = m; _ } = get_info_unsafe ~audit:Expensive.ok f in
-      (* [perf] using a list instead of a map *)
-      (f, m) :: file_module_assoc
-    ) in
-  let file_module_assoc = MultiWorker.call
-    workers
-    ~job: calc_file_module_assoc
-    ~neutral: []
-    ~merge: List.rev_append
-    ~next: (MultiWorker.next workers new_or_changed) in
-
+let calc_new_modules ~options file_module_assoc =
   (* all modules provided by newly parsed / unparsed files must be repicked *)
   let new_modules = List.fold_left (fun acc (f, m) ->
     let f_module = Modulename.Filename f in
@@ -928,10 +918,7 @@ let calc_new_modules workers ~options new_or_changed =
 
   new_modules
 
-let commit_modules workers ~options new_or_changed old_modules =
-  let new_modules = calc_new_modules workers ~options new_or_changed in
-  let dirty_modules = NameSet.union old_modules new_modules in
-
+let commit_modules workers ~options new_or_changed dirty_modules =
   let debug = Options.is_debug_mode options in
   let module_files = MultiWorker.call
     workers

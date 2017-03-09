@@ -61,12 +61,17 @@ val get_resolved_requires_unsafe: (filename -> resolved_requires) Expensive.t
 (* given a filename, returns module info. unsafe *)
 val get_info_unsafe: (filename -> info) Expensive.t
 
+val calc_new_modules:
+  options: Options.t ->
+  (filename * Modulename.t) list ->
+    NameSet.t
+
 (* repick providers for old and new modules *)
 val commit_modules:
   Worker.t list option ->
   options: Options.t ->
   filename list ->                    (* parsed / unparsed files *)
-  NameSet.t ->                        (* old modules *)
+  NameSet.t ->                        (* dirty modules *)
     Utils_js.filename list *            (* providers *)
     NameSet.t *                         (* changed modules *)
     error list FilenameMap.t            (* filenames to error sets *)
@@ -76,7 +81,7 @@ val add_parsed_info:
   (options:Options.t ->
    filename ->
    Docblock.t ->
-   unit) Expensive.t
+   info) Expensive.t
 
 (* resolve and add requires from context to store *)
 val add_parsed_resolved_requires: (options:Options.t -> Context.t -> unit) Expensive.t
@@ -86,7 +91,7 @@ val add_unparsed_info:
   (options:Options.t ->
    filename ->
    Docblock.t ->
-   unit) Expensive.t
+   info) Expensive.t
 
 (* remove module record being tracked for given file set;
    returns the set of modules removed
