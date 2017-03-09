@@ -245,9 +245,12 @@ let typecheck
   (* add tracking modules for unparsed files *)
   let unparsed_file_module_assoc = MultiWorker.call workers
     ~job: (List.fold_left (fun file_module_assoc (filename, docblock) ->
-      let info = Module_js.add_unparsed_info ~audit:Expensive.ok
+      let m = Module_js.add_unparsed_info ~audit:Expensive.ok
         ~options filename docblock in
-      (filename, info.Module_js._module) :: file_module_assoc
+      let f_module = Modulename.Filename filename in
+      (filename, m,
+       Module_js.get_file ~audit:Expensive.ok m,
+       Module_js.get_file ~audit:Expensive.ok f_module) :: file_module_assoc
     ))
     ~neutral: []
     ~merge: List.rev_append
@@ -258,9 +261,12 @@ let typecheck
   let parsed_file_module_assoc = MultiWorker.call workers
     ~job: (List.fold_left (fun file_module_assoc filename ->
       let docblock = Parsing_service_js.get_docblock_unsafe filename in
-      let info = Module_js.add_parsed_info ~audit:Expensive.ok
+      let m = Module_js.add_parsed_info ~audit:Expensive.ok
         ~options filename docblock in
-      (filename, info.Module_js._module) :: file_module_assoc
+      let f_module = Modulename.Filename filename in
+      (filename, m,
+       Module_js.get_file ~audit:Expensive.ok m,
+       Module_js.get_file ~audit:Expensive.ok f_module) :: file_module_assoc
     ))
     ~neutral: []
     ~merge: List.rev_append
@@ -275,7 +281,7 @@ let typecheck
   let profiling, (changed_modules, local_errors) =
     with_timer ~options "CommitModules" profiling (fun () ->
       let new_modules = Module_js.calc_new_modules ~options file_module_assoc in
-      let dirty_modules = Module_js.NameSet.union old_modules new_modules in
+      let dirty_modules = List.rev_append old_modules new_modules in
       commit_modules workers ~options local_errors new_or_changed dirty_modules
     )
   in
@@ -777,7 +783,7 @@ let full_check workers ~ordered_libs parse_next options =
           FilenameMap.add f true map
         ) FilenameMap.empty)
     )
-    ~old_modules:Module_js.NameSet.empty
+    ~old_modules:[]
     ~parsed
     ~unparsed
     ~new_or_changed:all_files

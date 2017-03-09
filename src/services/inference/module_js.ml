@@ -763,7 +763,7 @@ let add_parsed_info ~audit ~options file docblock =
     parsed = true;
   } in
   add_info ~audit file info;
-  info
+  _module
 
 let add_parsed_resolved_requires ~audit ~options cx =
   let resolved_requires = resolved_requires_of ~options cx in
@@ -792,7 +792,7 @@ let add_unparsed_info ~audit ~options file docblock =
     parsed = false;
   } in
   add_info ~audit file info;
-  info
+  _module
 
 (* Note that the module provided by a file is always accessible via its full
    path, so that it may be imported by specifying (a part of) that path in any
@@ -898,7 +898,7 @@ let get_providers = Hashtbl.find all_providers
 *)
 let calc_new_modules ~options file_module_assoc =
   (* all modules provided by newly parsed / unparsed files must be repicked *)
-  let new_modules = List.fold_left (fun acc (f, m) ->
+  let new_modules = List.fold_left (fun new_modules (f, m, mp, fp) ->
     let f_module = Modulename.Filename f in
     add_provider f m; add_provider f f_module;
     (* foo.js.flow ALWAYS also provides foo.js *)
@@ -908,26 +908,20 @@ let calc_new_modules ~options file_module_assoc =
         Modulename.Filename (Loc.chop_suffix f Files.flow_ext) in
       add_provider f f_decl_module
     end;
-    acc |> NameSet.add m |> NameSet.add f_module
-  ) NameSet.empty file_module_assoc in
+    (m, mp) ::
+    if m = f_module then new_modules
+    else (f_module, fp) :: new_modules
+  ) [] file_module_assoc in
 
   let debug = Options.is_debug_mode options in
   if debug then prerr_endlinef
     "*** new modules (new and changed files) %d ***"
-    (NameSet.cardinal new_modules);
+    (List.length new_modules);
 
   new_modules
 
 let commit_modules workers ~options new_or_changed dirty_modules =
   let debug = Options.is_debug_mode options in
-  let module_files = MultiWorker.call
-    workers
-    ~job: (List.fold_left (fun acc m ->
-      (m, get_file ~audit:Expensive.ok m)::acc
-    ))
-    ~neutral: []
-    ~merge: List.rev_append
-    ~next: (MultiWorker.next workers (NameSet.elements dirty_modules)) in
   (* prep for registering new mappings in NameHeap *)
   let mapping m p module_file_assoc =
     (m, p)::(
@@ -994,7 +988,7 @@ let commit_modules workers ~options new_or_changed dirty_modules =
             (Modulename.to_string m)
             (string_of_filename p);
           rem, p::prov, (mapping m p rep), errmap, (NameSet.add m diff)
-  ) (NameSet.empty, [], [], FilenameMap.empty, NameSet.empty) module_files in
+  ) (NameSet.empty, [], [], FilenameMap.empty, NameSet.empty) dirty_modules in
 
   (* update NameHeap *)
   if not (NameSet.is_empty remove) then begin
@@ -1049,15 +1043,13 @@ let clear_files options workers to_clear =
       match get_info ~audit:Expensive.ok file with
       | Some info ->
         let { _module; _ } = info in
-        let current_provider = match get_file ~audit:Expensive.ok _module with
-        | Some f when f = file -> true
-        | _ -> false
-        in
-        FilenameMap.add file (_module, current_provider) acc
+        (file, _module,
+         get_file ~audit:Expensive.ok _module,
+         get_file ~audit:Expensive.ok (Modulename.Filename file)) :: acc
       | None -> acc
     ))
-    ~neutral: FilenameMap.empty
-    ~merge: FilenameMap.union
+    ~neutral: []
+    ~merge: List.rev_append
     ~next: (MultiWorker.next workers (FilenameSet.elements to_clear)) in
 
   (* clear files *)
@@ -1067,23 +1059,23 @@ let clear_files options workers to_clear =
 
   (* files may or may not be registered as module providers.
      when they are, we need to clear their registrations *)
-  let old_modules = FilenameMap.fold (fun file datum old_modules ->
-    let _module, current_provider = datum in
+  let old_modules = List.fold_left (fun old_modules (file, _module, mp, fp) ->
+    let f_module = Modulename.Filename file in
     remove_provider file _module;
-    remove_provider file (Modulename.Filename file);
-    if current_provider then
-      old_modules
-      |> NameSet.add _module
-      |> NameSet.add (Modulename.Filename file)
-    else
-      old_modules
-      |> NameSet.add (Modulename.Filename file)
-  ) existing_file_module_current_provider_assoc NameSet.empty in
+    remove_provider file f_module;
+    match mp with
+    | Some f when f = file ->
+      (_module, mp) ::
+      if _module = f_module then old_modules
+      else (f_module, fp) :: old_modules
+    | _ ->
+      (f_module, fp) :: old_modules
+  ) [] existing_file_module_current_provider_assoc in
 
   let debug = Options.is_debug_mode options in
   if debug then prerr_endlinef
     "*** old modules (changed and deleted files) %d ***"
-    (NameSet.cardinal old_modules);
+    (List.length old_modules);
 
   (* return *)
   old_modules
