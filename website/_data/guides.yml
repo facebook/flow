@@ -4,7 +4,6 @@
     - path: "/docs/install/"
     - path: "/docs/usage/"
       additional_reading:
-        - guide: learning_flow
         - guide: types
         - guide: lang
 
