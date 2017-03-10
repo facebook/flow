@@ -9,16 +9,29 @@ install: test-bundler
 	@git submodule update --init --recursive
 	@bundle install
 
-serve: test-jekyll
+flow_js:
+	(cd ..; make js)
+
+_assets/gen/master/flow.js:
+	mkdir -p $(dir $@)
+	(cd $(dir $@); ln -sf "../../../../bin/flow.js" "flow.js")
+
+static/master/flowlib:
+	mkdir -p $(dir $@)
+	(cd $(dir $@); ln -sf "../../../lib" "flowlib")
+
+symlinks: _assets/gen/master/flow.js static/master/flowlib
+
+serve: test-jekyll symlinks
 	@bundle exec jekyll serve
 
-build: test-jekyll
+build: test-jekyll symlinks
 	@bundle exec jekyll build
 
-serve-production: test-jekyll
+serve-production: test-jekyll flow_js symlinks
 	@JEKYLL_ENV=production bundle exec jekyll serve
 
-build-production: test-jekyll
+build-production: test-jekyll flow_js symlinks
 	@JEKYLL_ENV=production bundle exec jekyll build
 
 crowdin-sync: test-crowdin

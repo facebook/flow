@@ -3,3 +3,8 @@ _site
 .jekyll-metadata
 .DS_Store
 .asset-cache
+
+# Flow build artifacts are copied here:
+/_assets/gen
+/static/master
+/_data/flow_dot_js_versions.csv

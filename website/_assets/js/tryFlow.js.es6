@@ -94,8 +94,8 @@ function removeChildren(node) {
 
 function getAnnotations(text, callback, options, editor) {
   const flow = editor.getOption('flow');
-  Promise.resolve(flow).then(flow => {
-    var errors = flow.checkContent('-', text);
+  Promise.resolve(flow).then(() => {
+    var errors = window.flow.checkContent('-', text);
 
     CodeMirror.signal(editor, 'flowErrors', errors);
 
@@ -160,16 +160,16 @@ function initFlow(version) {
     `/static/${version}/flowlib/node.js`,
     `/static/${version}/flowlib/react.js`,
   ];
-  const flow = new Promise(function(resolve) {
+  const flowLoader = new Promise(function(resolve) {
     require([`${version}/flow`], resolve);
   });
-  return Promise.all([flow, ...libs.map(get)])
-    .then(function([flow, ...contents]) {
+  return Promise.all([flowLoader, ...libs.map(get)])
+    .then(function([_flow, ...contents]) {
       contents.forEach(function(nameAndContent) {
-        flow.registerFile(nameAndContent[0], nameAndContent[1]);
+        window.flow.registerFile(nameAndContent[0], nameAndContent[1]);
       });
-      flow.setLibs(libs);
-      versionCache[version] = flow;
+      window.flow.setLibs(libs);
+      versionCache[version] = window.flow;
       return flow;
     });
 }
@@ -284,10 +284,10 @@ function createEditor(
       const cursor = editor.getCursor();
       const value = editor.getValue();
       cursorPositionNode.innerHTML = `${cursor.line + 1}:${cursor.ch + 1}`;
-      flowReady.then(flow => {
+      flowReady.then(() => {
         let typeAtPos;
         try {
-          typeAtPos = flow.typeAtPos('-', value, cursor.line + 1, cursor.ch);
+          typeAtPos = window.flow.typeAtPos('-', value, cursor.line + 1, cursor.ch);
         } catch (err) {
           // ...
         } finally {
@@ -311,9 +311,9 @@ function createEditor(
       }
 
       if (astNode) {
-        flowReady.then(flow => {
-          if (flow.parse) {
-            let ast = flow.parse(editor.getValue(), {});
+        flowReady.then(() => {
+          if (window.flow.parse) {
+            let ast = window.flow.parse(editor.getValue(), {});
             removeChildren(astNode);
             astNode.appendChild(
               document.createTextNode(JSON.stringify(ast, null, 2))
