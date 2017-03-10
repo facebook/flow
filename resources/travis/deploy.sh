@@ -24,7 +24,7 @@ gem install --no-rdoc --no-ri bundler
 printf "travis_fold:end:installing_ruby\n"
 
 printf "travis_fold:start:website_deps\nInstalling website deps\n"
-(cd website && make deps)
+(cd website && make install)
 printf "travis_fold:end:website_deps\n"
 
 printf "travis_fold:start:jekyll_build\nBuilding Jekyll site\n"
@@ -41,6 +41,7 @@ git ls-remote --tags | awk '{print $2}' | cut -d/ -f3 | \
   head -n 5 >> "website/_data/flow_dot_js_versions.csv"
 env \
   PATH="${TRAVIS_BUILD_DIR}/bin:$PATH" \
+  (cd website && build-production)
   bundle exec jekyll build -s website/ -d "$PAGES_CHECKOUT" --verbose
 printf "travis_fold:end:jekyll_build\n"
 

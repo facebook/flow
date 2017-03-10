@@ -34,9 +34,9 @@ serve-production: test-jekyll flow_js symlinks
 build-production: test-jekyll flow_js symlinks
 	@JEKYLL_ENV=production bundle exec jekyll build
 
-crowdin-sync: test-crowdin
-	@crowdin-cli upload sources --auto-update -b master
-	@crowdin-cli download -b master
+# crowdin-sync: test-crowdin
+# 	@crowdin-cli upload sources --auto-update -b master
+# 	@crowdin-cli download -b master
 
 ###
 # Misc stuff:
@@ -44,7 +44,7 @@ crowdin-sync: test-crowdin
 
 BUNDLE_EXISTS := $(shell command -v bundle 2> /dev/null)
 JEKYLL_EXISTS := $(shell command -v jekyll 2> /dev/null)
-CROWDIN_EXISTS := $(shell command -v crowdin-cli 2> /dev/null)
+# CROWDIN_EXISTS := $(shell command -v crowdin-cli 2> /dev/null)
 
 test-bundler:
 ifndef BUNDLE_EXISTS
@@ -56,10 +56,10 @@ ifndef JEKYLL_EXISTS
 	$(error Jekyll is not installed. Run `make install`)
 endif
 
-test-crowdin:
-ifndef CROWDIN_EXISTS
-	$(error Crowdin is not installed. Run `make install`)
-endif
-ifndef CROWDIN_API_KEY
-	$(error CROWDIN_API_KEY is undefined)
-endif
+# test-crowdin:
+# ifndef CROWDIN_EXISTS
+# 	$(error Crowdin is not installed. Run `make install`)
+# endif
+# ifndef CROWDIN_API_KEY
+# 	$(error CROWDIN_API_KEY is undefined)
+# endif
