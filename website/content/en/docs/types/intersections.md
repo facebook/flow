@@ -2,9 +2,9 @@
 layout: guide
 ---
 
-Sometimes it is useful to create a type which is *all of* a set of other types.
-For example, you might want to write a function which accepts an object which
-is the combination of other object types. For this Flow supports
+Sometimes it is useful to create a type which is ***all of*** a set of other
+types. For example, you might want to write a function which accepts an object
+which is the combination of other object types. For this Flow supports
 **intersection types**.
 
 ```js

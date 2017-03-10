@@ -2,7 +2,8 @@
 layout: guide
 ---
 
-Create React App already supports Flow out of the box. All you need to do is
+[Create React App](https://github.com/facebookincubator/create-react-app)
+already supports Flow by default. All you need to do is
 [install Flow](../../install/) and create a `.flowconfig` file by running
 `flow init`.
 

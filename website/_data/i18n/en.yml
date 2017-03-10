@@ -211,27 +211,21 @@ docs_additional_reading: "Additional Reading"
 "/docs/modules/":
   title: "Modules"
   description: ""
-"/docs/more-resources/":
-  title: "More Resources"
-  description: "Videos, research papers, and other useful resources for learning about how the Flow typechecking system works and how you can use it in your projects."
-"/docs/react/":
-  title: "React"
-  description: ""
+"/docs/resources/":
+  title: "Resources"
+  description: "Additional resources on Flow and type-checking"
 "/docs/types/aliases/":
   title: "Type Aliases"
-  description: ""
-"/docs/types/any/":
-  title: "Any Types"
-  description: ""
+  description: "Aliasing types for reuse"
 "/docs/types/arrays/":
   title: "Array Types"
   description: "Typing arrays and the elements inside of them"
 "/docs/types/casting/":
   title: "Type Casting Expressions"
-  description: ""
+  description: "Asserting and casting values to different types"
 "/docs/types/classes/":
   title: "Class Types"
-  description: ""
+  description: "Typing classes and using classes as types"
 "/docs/types/functions/":
   title: "Function Types"
   description: "Typing function declarations and values"
@@ -243,7 +237,7 @@ docs_additional_reading: "Additional Reading"
   description: ""
 "/docs/types/intersections/":
   title: "Intersection Types"
-  description: ""
+  description: "Typing values that are all of many different types"
 "/docs/types/":
   title: "Type Annotations"
   description: "Learn how to add type annotations to your code"
@@ -253,30 +247,24 @@ docs_additional_reading: "Additional Reading"
 "/docs/types/maybe/":
   title: "Maybe Types"
   description: "Typing values that may or may not exist"
-"/docs/types/mixed/":
-  title: "Mixed Types"
-  description: ""
 "/docs/types/objects/":
   title: "Object Types"
-  description: ""
-"/docs/types/destructuring/":
-  title: "Destructuring"
-  description: ""
+  description: "Typing different kinds of objects"
 "/docs/types/primitives/":
   title: "Primitive Types"
   description: "Types for JavaScript's primitive values"
 "/docs/types/tuples/":
   title: "Tuple Types"
-  description: ""
+  description: "Typing tuple-like array values"
 "/docs/types/typeof/":
   title: "Typeof Types"
-  description: ""
+  description: "Getting the internal type of a value"
 "/docs/types/unions/":
   title: "Union Types"
-  description: ""
+  description: "Typing values that may be one of many different types"
 "/docs/types/utilities/":
   title: "Utility Types"
-  description: ""
+  description: "Creating complex types with utility types"
 "/docs/types/mixed/":
   title: "Mixed Types"
   description: "Typing unknown types with mixed"
@@ -296,32 +284,28 @@ docs_additional_reading: "Additional Reading"
   title: "Comment Types"
   description: "Flow with plain JavaScript code by using a special comment syntax"
 
-"/docs/learn/":
-  title: "Learning Flow"
-  description: ""
-
 "/docs/frameworks/":
   title: "Frameworks"
-  description: ""
+  description: "Learn how to use Flow with various frameworks"
 "/docs/frameworks/react/":
   title: "Flow + React"
-  description: ""
+  description: "Learn how to use Flow with React"
 "/docs/frameworks/redux/":
   title: "Flow + Redux"
-  description: ""
+  description: "Learn how to use Flow with Redux"
 
 "/docs/tools/":
   title: "Tools"
-  description: ""
+  description: "Learn how to use Flow with various tools"
 "/docs/tools/babel/":
   title: "Babel"
-  description: ""
+  description: "Learn how to use Flow with Babel"
 "/docs/tools/flow-remove-types/":
   title: "flow-remove-types"
-  description: ""
+  description: "Learn how to use Flow with flow-remove-types"
 "/docs/tools/create-react-app/":
   title: "Create React App"
-  description: ""
+  description: "Learn how to use Flow with Create React App"
 
 "/docs/editors/":
   title: "Editors"
@@ -374,8 +358,8 @@ guides:
   libdefs:
     title: "Library Definitions"
     description: >
-      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore.
+      Learn how to create and use library definitions for the third-party code
+      your code depends on.
   # errors:
   #   title: "Debugging Errors"
   #   description: >
@@ -384,15 +368,15 @@ guides:
   frameworks:
     title: "Frameworks"
     description: >
-      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore.
+      Detailed guides, tips, and resources on how to use Flow with popular
+      JavaScript frameworks.
   tools:
     title: "Tools"
     description: >
-      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore.
+      Detailed guides, tips, and resources on how to integrate Flow with
+      different JavaScript tools.
   editors:
     title: "Editors"
     description: >
-      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore.
+      Detailed guides, tips, and resources on how to integrate Flow with
+      different code editors.
