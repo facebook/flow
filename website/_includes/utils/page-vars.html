@@ -4,7 +4,7 @@
 {% assign page_url_relative = include.page.url %}
 
 {% for _lang in site.data.languages %}
-  {% assign _page_url_lang_match = "/content/" | append: _lang.tag %}
+  {% assign _page_url_lang_match = "/" | append: _lang.tag %}
   {% assign _page_url_lang_match_size = _page_url_lang_match | size %}
   {% assign _page_url_starts_with = include.page.url | slice: 0, _page_url_lang_match_size %}
 
@@ -19,7 +19,7 @@
 {% assign page_i18n = site.data.i18n[page_lang.tag] %}
 
 {% if jekyll.environment == "development" %}
-  {% assign page_url_base = site.baseurl | append: "/content" | append: page_url_lang %}
+  {% assign page_url_base = site.baseurl | append: page_url_lang %}
 {% else %}
   {% assign page_url_base = site.baseurl | append: page_url_lang %}
 {% endif %}
