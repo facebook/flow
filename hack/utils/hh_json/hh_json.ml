@@ -509,6 +509,7 @@ module type Access = sig
   val get_string : string -> json * keytrace -> string m
   val get_number : string -> json * keytrace -> string m
   val get_array: string -> json * keytrace -> (json list) m
+  val get_val: string -> json * keytrace -> json m
 end
 
 module Access = struct
