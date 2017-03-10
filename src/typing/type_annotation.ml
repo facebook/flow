@@ -556,7 +556,17 @@ let rec convert cx tparams_map = Ast.Type.(function
   if (tparams = []) then ft else PolyT(tparams, ft)
 
 | loc, Object { Object.exact; properties } ->
-  let mk_object (call_props, dict, props_map) =
+  let reason_desc = RObjectType in
+  let callable = List.exists (function
+    | Object.CallProperty (_, { Object.CallProperty.static; _ }) -> not static
+    | _ -> false
+  ) properties in
+  let proto =
+    if callable
+    then FunProtoT (locationless_reason reason_desc)
+    else ObjProtoT (locationless_reason reason_desc)
+  in
+  let mk_object ~exact (call_props, dict, props_map) =
     let props_map = match List.rev call_props with
       | [] -> props_map
       | [t] ->
@@ -571,25 +581,14 @@ let rec convert cx tparams_map = Ast.Type.(function
     in
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
-    let reason_desc = RObjectType in
     let pmap = Context.make_property_map cx props_map in
-    let callable = List.exists (function
-      | Object.CallProperty (_, { Object.CallProperty.static; _ }) -> not static
-      | _ -> false
-    ) properties in
-    let proto = if callable
-      then FunProtoT (locationless_reason reason_desc)
-      else ObjProtoT (locationless_reason reason_desc) in
     let flags = {
       sealed = Sealed;
       exact;
-      frozen = false;
+      frozen = false
     } in
-    let t = ObjT (mk_reason reason_desc loc,
-      Flow_js.mk_objecttype ~flags dict pmap proto) in
-    if exact
-    then ExactT (mk_reason (RExactType reason_desc) loc, t)
-    else t
+    ObjT (mk_reason reason_desc loc,
+      Flow_js.mk_objecttype ~flags dict pmap proto)
   in
   let property loc prop props =
     match prop with
@@ -672,18 +671,25 @@ let rec convert cx tparams_map = Ast.Type.(function
     | Object.SpreadProperty (_, { Object.SpreadProperty.argument }) ->
       let ts = match o with
       | None -> ts
-      | Some o -> (mk_object o)::ts
+      | Some o -> (mk_object ~exact:true o)::ts
       in
       let o = convert cx tparams_map argument in
       None, o::ts, true
   ) (None, [], false) properties in
   let ts = match o with
   | None -> ts
-  | Some o -> mk_object o::ts
+  | Some o -> mk_object ~exact:spread o::ts
   in
   (match ts with
-  | [] -> mk_object ([], None, SMap.empty)
-  | [t] when not spread -> t
+  | [] ->
+    let t = mk_object ~exact ([], None, SMap.empty) in
+    if exact
+    then ExactT (mk_reason (RExactType reason_desc) loc, t)
+    else t
+  | [t] when not spread ->
+    if exact
+    then ExactT (mk_reason (RExactType reason_desc) loc, t)
+    else t
   | t::todo_rev ->
     let open ObjectSpread in
     let reason = mk_reason RObjectType loc in

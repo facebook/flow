@@ -89,3 +89,8 @@ declare var o11: O11;
 type O12 = {...{|p:T|},...{|q:U|}};
 declare var o12: O12;
 (o12: {p:T,q:U}); // ok
+
+// inline properties are exact
+type O13 = {...{p:T},p:U};
+declare var o13: O13;
+(o13: {p:U});
