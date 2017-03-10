@@ -1,3 +1,5 @@
+import * as $ from 'jquery';
+
 var toggles = $('.install-toggle');
 var inputs = toggles.find('input');
 var buttons = toggles.find('.btn');

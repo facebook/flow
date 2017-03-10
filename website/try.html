@@ -1,0 +1,26 @@
+---
+permalink: /try/
+layout: default
+fullscreen: true
+codemirror: true
+scripts:
+  - "tryFlow.js.es6"
+---
+
+<div class="try-editor">
+  <div class="code" id="code">
+  </div>
+  <div class="results show-loading" id="results">
+    <div class="loading">
+      <div class="loader">
+        <div class="bounce1"></div>
+        <div class="bounce2"></div>
+        <div class="bounce3"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  window.FLOW_DATA = {{site.flow | jsonify}};
+</script>

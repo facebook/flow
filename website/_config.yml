@@ -49,4 +49,4 @@ assets:
     - _assets/images
     - _assets/third-party
     - _assets/gen
-    - node_modules
+    # - node_modules

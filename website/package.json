@@ -1,9 +1,0 @@
-{
-  "name": "flow-website",
-  "version": "1.0.0",
-  "dependencies": {
-    "codemirror": "^5.24.2",
-    "jquery": "^3.1.1",
-    "requirejs": "^2.3.3"
-  }
-}
