@@ -1,9 +1,0 @@
-[ignore]
-<PROJECT_ROOT>/node_modules/bower
-
-[options]
-suppress_comment=^\\( \\|\n\\)*\\$ExpectError\\(([^)]*)\\)?$
-suppress_comment=^\\( \\|\n\\)*\\$DocIssue\\(([^)]*)\\)?$
-esproposal.class_static_fields=enable
-esproposal.class_instance_fields=enable
-max_header_tokens=1
