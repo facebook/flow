@@ -11,7 +11,7 @@
     <link rel="canonical" href="{{meta_canonical}}">
     <link rel="alternate" type="application/rss+xml" title="{{site.title}}" href="{{site.url}}{{site.baseurl}}/feed.xml" />
     <link rel="icon" href="{{site.baseurl}}/favicon.ico?t={{site.time | date_to_xmlschema}}" type="image/x-icon">
-    <link rel="stylesheet" href="{% asset_path 'main.css' %}?t={{site.time | date_to_xmlschema}}">
+    <link rel="stylesheet" href="{% asset_path 'main.scss' %}?t={{site.time | date_to_xmlschema}}">
     {% if page.search or layout.search %}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/docsearch.js/2.1.8/docsearch.min.css" integrity="sha256-qtayAfor6DgK7swJ/RmRl5Cbo9XUAhuJzGjNfqQLHDU=" crossorigin="anonymous"/>
     {% endif %}
@@ -48,7 +48,7 @@
         }
       });
 
-      // {% asset_name "prelude.js" %}
+      // {% asset_name "prelude.js.es6" %}
 
       require([
         'jquery',

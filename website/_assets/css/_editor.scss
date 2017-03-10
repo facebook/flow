@@ -3,9 +3,17 @@
 
 .language-sh pre {
   background: $gray-dark;
-  color: white;
+  color: white !important;
   -webkit-font-smoothing: antialiased;
   border-left: 4px solid $editor-accent-alt;
+
+  span {
+    color: inherit !important;
+  }
+
+  span.c {
+    color: lighten($gray-light, 15%) !important;
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
