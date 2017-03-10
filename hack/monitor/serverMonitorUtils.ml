@@ -20,17 +20,20 @@ type monitor_config =
     monitor_log_file: string;
     (** The path to the load script log file *)
     load_script_log_file: string;
-    (** Callback to run when server exits *)
-    on_server_exit: monitor_config -> unit;
   }
 
-(**
- * Function that initializes the common state and returns the process starter.
- * Takes an exit code option to act differently based on how the previous server
- * exited
- *)
-type monitor_starter =
-   (int option -> ServerProcess.process_data)
+module type Server_config = sig
+
+  type server_start_options
+
+  (** Start the server. Optionally takes in the exit code of the previously
+   * running server that exited. *)
+  val start_server : server_start_options -> int option ->
+    ServerProcess.process_data
+
+  (** Callback to run when server exits *)
+  val on_server_exit : monitor_config -> unit
+end
 
 type connection_error =
   | Server_missing

@@ -29,12 +29,12 @@ open ServerMonitorUtils
 exception Malformed_build_id
 exception Send_fd_failure of int
 
-module Make_monitor (Informant : Informant_sig.S) = struct
+module Make_monitor (SC : ServerMonitorUtils.Server_config)
+(Informant : Informant_sig.S) = struct
   type env = {
     informant: Informant.t;
     server: ServerProcess.server_process;
-    (** Invoke this to re-launch the processes. *)
-    starter: ServerMonitorUtils.monitor_starter;
+    server_start_options: SC.server_start_options;
     (** How many times have we tried to relaunch it? *)
     retries: int;
   }
@@ -105,13 +105,13 @@ module Make_monitor (Informant : Informant_sig.S) = struct
           let was_oom = match proc_stat with
           | Unix.WEXITED code when code = oom_code -> true
           | _ -> check_dmesg_for_oom process in
-          monitor_config.on_server_exit monitor_config;
+          SC.on_server_exit monitor_config;
           ServerProcessTools.check_exit_status proc_stat process monitor_config;
           Died_unexpectedly (proc_stat, was_oom))
     | _ -> server
 
-  let start_server monitor_starter exit_status =
-    let server_process = monitor_starter exit_status in
+  let start_server options exit_status =
+    let server_process = SC.start_server options exit_status in
     setup_autokill_server_on_exit server_process;
     Alive server_process
 
@@ -130,7 +130,7 @@ module Make_monitor (Informant : Informant_sig.S) = struct
     kill_server_with_check env.server;
     let kill_signal_time = Unix.gettimeofday () in
     wait_for_server_exit_with_check env.server kill_signal_time;
-    let new_server = start_server env.starter exit_status in
+    let new_server = start_server env.server_start_options exit_status in
     { env with
       server = new_server;
       retries = env.retries + 1;
@@ -363,8 +363,8 @@ module Make_monitor (Informant : Informant_sig.S) = struct
          "Accepting on socket failed. Ignoring client connection attempt.";
          env)
 
-  let start_monitoring ~waiting_client informant_init_env
-    monitor_config monitor_starter =
+  let start_monitoring ~waiting_client server_start_options informant_init_env
+    monitor_config =
     let socket = Socket.init_unix_socket monitor_config.socket_file in
     (* If the client started the server, it opened an FD before forking, so it
      * can be notified when the monitor socket is ready. The FD number was
@@ -380,12 +380,12 @@ module Make_monitor (Informant : Informant_sig.S) = struct
         Printf.eprintf "Caught exception while waking client: %s\n%!"
           (Printexc.to_string e)
     end;
-    let server_process = start_server monitor_starter None in
+    let server_process = start_server server_start_options None in
     let informant = Informant.init informant_init_env in
     let env = {
       informant;
       server = server_process;
-      starter = monitor_starter;
+      server_start_options;
       retries = 0;
     } in
     check_and_run_loop env monitor_config socket

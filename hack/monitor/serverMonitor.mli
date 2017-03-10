@@ -9,11 +9,14 @@
 *)
 
 module Make_monitor :
-  functor (Informant : Informant_sig.S) ->
+  functor
+  (SC : ServerMonitorUtils.Server_config)
+  (Informant : Informant_sig.S) ->
     sig
       val start_monitoring:
         waiting_client:Unix.file_descr option ->
+        SC.server_start_options ->
         Informant.init_env ->
         ServerMonitorUtils.monitor_config ->
-        ServerMonitorUtils.monitor_starter -> 'a
+        'a
     end
