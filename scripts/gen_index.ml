@@ -8,7 +8,7 @@
  *
  *)
 
-#use "scripts/utils.ml"
+#use "utils.ml"
 
 let get_idx =
   let idx = ref 100 in

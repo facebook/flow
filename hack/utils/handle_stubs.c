@@ -38,7 +38,7 @@ value caml_hh_worker_create_handle(value x) {
 
 #ifdef _WIN32
 static void win_handle_serialize(value h, uintnat *wsize_32, uintnat *wsize_64) {
-  serialize_int_8((int64)Handle_val(h));
+  serialize_int_8((int64_t)Handle_val(h));
   serialize_int_1(Descr_kind_val(h));
   serialize_int_1(CRT_fd_val(h));
   serialize_int_1(Flags_fd_val(h));
@@ -67,4 +67,3 @@ value win_setup_handle_serialization(value unit) {
 #endif
   return Val_unit;
 }
-

@@ -146,8 +146,8 @@ begin library "flow-embedded"
     "hh-find"
   ]
   if (os_type = "Win32") then {
-    flow_source = ".\flowlib.rc"
-    flow_target = "%{flow-embedded_FULL_DST_DIR}%/flow_res.o"
+    flow_source = "./flowlib.rc"
+    flow_target = "%{flow-embedded_DST_DIR}%/flow_res.o"
     cclib = [ flow_target ]
     build_rules = [
       flow_target (
