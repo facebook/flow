@@ -17,15 +17,11 @@ title: Flow
 description: A static type checker for JavaScript
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://flowtype.org" # the base hostname & protocol for your site
-twitter_username: jekyllrb
-github_username:  jekyll
 
 permalink: pretty
 
 include:
   - _redirects
-
-flow_version_stable: "0.38.0"
 
 flow:
   path: 'flow'

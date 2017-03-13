@@ -1,3 +1,6 @@
+# Copyright (c) 2013-present, Facebook, Inc.
+# All rights reserved.
+
 .PHONY: start install serve build i18n-upload i18n-download
 
 .DEFAULT_GOAL := start

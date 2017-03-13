@@ -10,7 +10,7 @@ of it.
 Start by cloning the website recursively to pull in all submodules:
 
 ```sh
-git clone git@github.com:thejameskyle/flow-website.git
+git clone git@github.com:facebook/flow.git
 ```
 
 ### Dependencies
@@ -34,7 +34,7 @@ Once you have RubyGems and installed Bundler (via `gem install bundler`), use
 it to install the dependencies:
 
 ```sh
-$ cd flow-website
+$ cd website
 $ bundle install
 ```
 
@@ -44,7 +44,7 @@ Use Jekyll to serve the website locally (by default, at
 `http://localhost:4000`):
 
 ```sh
-$ cd flow-website
+$ cd website
 $ make
 $ open http://127.0.0.1:4000/
 ```
