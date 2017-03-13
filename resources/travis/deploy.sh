@@ -41,8 +41,7 @@ git ls-remote --tags | awk '{print $2}' | cut -d/ -f3 | \
   head -n 5 >> "website/_data/flow_dot_js_versions.csv"
 env \
   PATH="${TRAVIS_BUILD_DIR}/bin:$PATH" \
-  (cd website && build-production)
-  bundle exec jekyll build -s website/ -d "$PAGES_CHECKOUT" --verbose
+  (cd website && make build-production)
 printf "travis_fold:end:jekyll_build\n"
 
 printf "travis_fold:start:push_s3\nPushing to S3\n"
