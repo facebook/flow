@@ -39,6 +39,9 @@ type connection_error =
   | Server_missing
   | Server_busy
   | Server_died
+  (** Server dormant and can't join the (now full) queue of connections
+   * waiting for the next server. *)
+  | Server_dormant
   | Build_id_mismatched
   | Monitor_connection_failure
 

@@ -31,12 +31,21 @@ exception Send_fd_failure of int
 
 module Make_monitor (SC : ServerMonitorUtils.Server_config)
 (Informant : Informant_sig.S) = struct
+  let max_purgatory_clients = 50;
+
   type env = {
     informant: Informant.t;
     server: ServerProcess.server_process;
     server_start_options: SC.server_start_options;
     (** How many times have we tried to relaunch it? *)
     retries: int;
+    (** After sending a Server_not_alive_dormant during Prehandoff,
+     * clients are put here waiting for a server to come alive, at
+     * which point they get pushed through the rest of prehandoff and
+     * then sent to the living server.
+     *
+     * String is the server name it wants to connect to. *)
+    purgatory_clients : (MonitorRpc.handoff_options * Unix.file_descr) list;
   }
 
   let fd_to_int (x: Unix.file_descr) : int = Obj.magic x
@@ -126,10 +135,13 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
         wait_for_server_exit server kill_signal_time
       | _ -> ()
 
-  let restart_server env exit_status =
+  let kill_server_and_wait_for_exit env =
     kill_server_with_check env.server;
     let kill_signal_time = Unix.gettimeofday () in
-    wait_for_server_exit_with_check env.server kill_signal_time;
+    wait_for_server_exit_with_check env.server kill_signal_time
+
+  let restart_server env exit_status =
+    kill_server_and_wait_for_exit env;
     let new_server = start_server env.server_start_options exit_status in
     { env with
       server = new_server;
@@ -170,6 +182,15 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
          (env.retries + 1);
        restart_server env exit_status
      end
+     else if informant_report = Informant_sig.Kill_server then begin
+       Hh_logger.log "Informant directed server kill. Killing server.";
+       HackEventLogger.informant_induced_kill ();
+       kill_server_and_wait_for_exit env;
+       {
+         env with
+         server = Informant_killed;
+       }
+     end
      else if informant_report = Informant_sig.Restart_server then begin
        Hh_logger.log "Informant directed server restart. Restarting server.";
        HackEventLogger.informant_induced_restart ();
@@ -205,8 +226,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     let cmd : MonitorRpc.command =
       Marshal_tools.from_fd_with_preamble client_fd in
     match cmd with
-    | MonitorRpc.HANDOFF_TO_SERVER server_name ->
-      client_prehandoff env server_name client_fd
+    | MonitorRpc.HANDOFF_TO_SERVER handoff_options ->
+      client_prehandoff env handoff_options client_fd
     | MonitorRpc.SHUT_DOWN ->
       Hh_logger.log "Got shutdown RPC. Shutting down.";
       let kill_signal_time = Unix.gettimeofday () in
@@ -271,8 +292,9 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
 
   (** Send (possibly empty) sequences of messages before handing off to
    * server. *)
-  and client_prehandoff env server_name client_fd =
+  and client_prehandoff env handoff_options client_fd =
     let module PH = Prehandoff in
+    let server_name = handoff_options.MonitorRpc.server_name in
     match env.server with
     | Alive server when server.name = server_name ->
       let since_last_request =
@@ -290,6 +312,23 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       msg_to_channel client_fd (PH.Server_died {PH.status; PH.was_oom});
       (** Next client to connect starts a new server. *)
       Exit_status.exit Exit_status.No_error
+    | Informant_killed ->
+      if handoff_options.MonitorRpc.force_dormant_start then
+        msg_to_channel client_fd (PH.Server_not_alive_dormant
+          "Warning - starting a server by force-dormant-start option...")
+      else
+        msg_to_channel client_fd (PH.Server_not_alive_dormant
+          "Server killed by informant. Waiting for next server...");
+      if (List.length env.purgatory_clients) >= max_purgatory_clients then
+        let () = msg_to_channel
+          client_fd PH.Server_dormant_connections_limit_reached in
+        env
+      else
+        {
+          env with
+          purgatory_clients =
+            (handoff_options, client_fd) :: env.purgatory_clients;
+        }
     | _ ->
       msg_to_channel client_fd PH.Server_name_not_found;
       env
@@ -316,6 +355,24 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       Hh_logger.log "Malformed Build ID";
       raise e
 
+  and push_purgatory_clients env =
+    let clients = env.purgatory_clients in
+    let env = { env with purgatory_clients = [] ; } in
+    let env = List.fold_left clients ~init:env ~f:begin
+      fun env (handoff_options, client_fd) ->
+        client_prehandoff env handoff_options client_fd
+    end in
+    env
+
+  and maybe_push_purgatory_clients env =
+    match env.server, env.purgatory_clients with
+    | Alive _, [] ->
+      env
+    | Alive _, _ ->
+      push_purgatory_clients env
+    | Informant_killed, _ | Died_unexpectedly _, _ ->
+      env
+
   let rec check_and_run_loop env monitor_config
       (socket: Unix.file_descr) =
     let env = try check_and_run_loop_ env monitor_config socket with
@@ -337,6 +394,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       (Hh_logger.log "Lost lock; terminating.\n%!";
        HackEventLogger.lock_stolen lock_file;
        Exit_status.(exit Lock_stolen));
+    let env = maybe_push_purgatory_clients env in
     let has_client = sleep_and_check socket in
     let env = update_status env monitor_config in
     if (not has_client) then
@@ -384,6 +442,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     let informant = Informant.init informant_init_env in
     let env = {
       informant;
+      purgatory_clients = [];
       server = server_process;
       server_start_options;
       retries = 0;

@@ -12,7 +12,9 @@
 type report =
   (** Nothing to see here. *)
   | Move_along
-  (** Kill the server daemon and restart it. *)
+  (** Kill the server. *)
+  | Kill_server
+  (** Kill the server (if one is running) and start a new one. *)
   | Restart_server
 
 (** The informant collects information to tell the monitor when to
