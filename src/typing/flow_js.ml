@@ -9371,30 +9371,6 @@ and mk_instance cx ?trace instance_reason ?(for_type=true) c =
       flow_opt_t cx ?trace (c, ClassT(t))
     )
 
-(* We want to match against some t, which may either be a concrete
-   type, or a tvar that will be concretized by a single incoming
-   lower bound (for instance, a tvar representing an externally
-   defined type - the concrete definition will appear as a lower
-   bound to that tvar at merge time).
-
-   Given such a t, `become` will return
-   * t itself, if it is concrete already, or
-   * a new tvar which will behave exactly like the first concrete
-    lower bound that flows into t, whenever that happens.
- *)
-and become cx ?trace r t = match t with
-  | OpenT _ ->
-    (* if t is not concrete, create a new tvar within a BecomeT
-       operation and add it to t's uppertvars. When a concrete
-       lower bound flows to t, it will also flow to this BecomeT,
-       and the rule for BecomeT in __flow will unify the new tvar
-       with it. *)
-    mk_tvar_derivable_where cx r (fun tvar ->
-      flow_opt cx ?trace (t, BecomeT (r, tvar)))
-  | _ ->
-    (* optimization: if t is already concrete, become t immediately :) *)
-    reposition cx ?trace (loc_of_reason r) t
-
 (* set the position of the given def type from a reason *)
 and reposition cx ?trace loc t =
   let reason = repos_reason loc (reason_of_t t) in
@@ -9471,7 +9447,15 @@ and reposition cx ?trace loc t =
 (* given the type of a value v, return the type term
    representing the `typeof v` annotation expression *)
 and mk_typeof_annotation cx ?trace reason t =
-  become cx ?trace reason t
+  match t with
+  | OpenT _ ->
+    let source = mk_tvar_where cx reason (fun t' ->
+      flow_opt cx ?trace (t, BecomeT (reason, t'))
+    ) in
+    AnnotT source
+  | _ ->
+    let loc = loc_of_reason reason in
+    reposition cx ?trace loc t
 
 and get_builtin_type cx ?trace reason x =
   let t = get_builtin cx ?trace x reason in
