@@ -9373,9 +9373,9 @@ and mk_instance cx ?trace instance_reason ?(for_type=true) c =
 
 (* set the position of the given def type from a reason *)
 and reposition cx ?trace loc t =
-  let reason = repos_reason loc (reason_of_t t) in
   let rec recurse seen = function
   | OpenT (r, id) as t ->
+    let reason = repos_reason loc (reason_of_t t) in
     let constraints = find_graph cx id in
     begin match constraints with
     | Resolved t ->
@@ -9422,6 +9422,7 @@ and reposition cx ?trace loc t =
          resulting tvar, i.e., flowing repositioned *lower bounds* to the
          resulting tvar. (Another way of thinking about this is that a `EvalT`
          is just as transparent as its resulting tvar.) *)
+      let reason = repos_reason loc (reason_of_t t) in
       mk_tvar_where cx reason (fun tvar ->
         flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
       )
