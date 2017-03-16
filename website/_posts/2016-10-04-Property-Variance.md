@@ -16,7 +16,7 @@ types:
 
 ## What is Variance?
 
-Defining the subtype relationship between types is a core resposibility of Flow
+Defining the subtype relationship between types is a core responsibility of Flow
 as a type system. These relationships are determined either directly for
 simple types or, for complex types, defined in terms of their parts.
 
@@ -24,12 +24,12 @@ Variance describes the subtyping relationship for complex types as it relates to
 the subtyping relationships of their parts.
 
 For example, Flow directly encodes the knowledge that `string` is a subtype of
-`?string`. Intuitively, a `string` type contains string values while a `?string`
-type contains `null`, `undefined`, and also string values, so membership in the
-former naturally implies membership in the later.
+`?string`. A `string` type contains only string values, whereas the `?string`
+type additionally contains `null` and `undefined` values. All values that are
+in valid for the `string` type also belong in `?string`.
 
-The subtype relationships between two function types is not as direct. Rather,
-it is derived from the subtype relationships between the functions' parameter
+The subtype relationships between function types are more complex. Instead,
+they are derived from the subtype relationships between the functions' parameter
 and return types.
 
 Let's see how this works for two simple function types:
@@ -40,7 +40,7 @@ type F2 = (x: P2) => R2;
 ```
 
 Whether `F2` is a subtype of `F1` depends on the relationships between `P1` and
-`P2` and `R1` and `R2`. Let's use the notation `B <: A` to mean `B` is a subtype
+`P2`, and between `R1` and `R2`. Let's use the notation `B <: A` to mean `B` is a subtype
 of `A`.
 
 It turns out that `F2 <: F1` if `P1 <: P2` and `R2 <: R1`. Notice that the
@@ -57,7 +57,7 @@ function f(callback: (x: string) => ?number): number {
 ```
 
 What kinds of functions can we pass to `f`? Based on the subtyping rule above,
-then we can pass a function whose parameter type is a supertype of `string` and
+we can pass a function whose parameter type is a supertype of `string` and
 whose return type is a subtype of `?number`.
 
 ```js
@@ -100,7 +100,7 @@ type O1 = {p: T1};
 type O2 = {p: T2};
 ```
 
-As with function types, whether `O2` is a subtype of `O1` depends on the
+Like function types, whether `O2` is a subtype of `O1` depends on the
 relationship between its parts, `T1` and `T2`.
 
 Here it turns out that `O2 <: O1` if `T2 <: T1` *and* `T1 <: T2`. In technical
@@ -208,7 +208,7 @@ o.p = null;
 ^ assignment of property `p`
 ```
 
-Conversely, if a function only ever writes to a property, we can annotate the
+Conversely, if a function only ever writes to a property, we can mark the
 property as contravariant. This might come up in a function that initializes an
 object with default values, for example.
 
