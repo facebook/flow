@@ -21,8 +21,8 @@ var x: T = 0;
 ```
 
 We declare the new type `T` is an alias for the built-in type `number`.
-Anywhere we use `T`, we are asserting that `T` will have an underlying
-type of `number`.
+Type aliases are in scope throughout your project. Anywhere we use `T`,
+we are asserting that `T` will have an underlying type of `number`.
 
 ## Type Checking Aliases
 
