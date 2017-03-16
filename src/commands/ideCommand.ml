@@ -60,7 +60,8 @@ let handle_server_message fd =
   print_endline ("Content-Length: " ^ (string_of_int (String.length json_string)) ^ "\r");
   print_endline "\r";
   print_string json_string;
-  flush stdout
+  flush stdout;
+  prerr_endline "sent diagnostics notification"
 
 let send_server_request fd msg =
   Marshal_tools.to_fd_with_preamble fd (msg: Prot.request)
@@ -88,9 +89,10 @@ let handle_stdin_message buffered_stdin server_fd =
     let props = Hh_json.get_object_exn parsed in
     let _, method_json = List.find (function key, _ -> key = "method") props in
     let method_name = Hh_json.get_string_exn method_json in
-    if method_name = "subscribeToDiagnostics" then
+    if method_name = "subscribeToDiagnostics" then begin
+      prerr_endline "received subscribe request";
       send_server_request server_fd Prot.Subscribe
-    else
+    end else
       prerr_endline ("unrecognized method: " ^ method_name)
 
 let rec handle_all_stdin_messages buffered_stdin server_fd =
