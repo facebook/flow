@@ -10,6 +10,12 @@ generic.js:4
   4:   x<T>(x: T = 0) {}
        ^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
 
+loop.js:5
+  5: function f<T:*>(x:T,y?:T) { x = y }
+                                     ^ undefined. This type is incompatible with
+  5: function f<T:*>(x:T,y?:T) { x = y }
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
+
 nullable.js:17
  17:     x.y++; // should error
          ^^^ null. The operand of an arithmetic operation must be a number.
@@ -109,4 +115,4 @@ undefined2.js:8
                 ^ undefined
 
 
-Found 21 errors
+Found 22 errors
