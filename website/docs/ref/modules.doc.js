@@ -262,6 +262,7 @@ ES_DefaultExport.default();
   ```
   [options]
   module.name_mapper='^\(.*\)\.css$' -> '<PROJECT_ROOT>/CSSModule.js.flow'
+  module.system=haste
   ```
 
   **NOTE: You do not need to manually substitute anything for
