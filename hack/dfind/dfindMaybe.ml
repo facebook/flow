@@ -33,12 +33,12 @@ let (>>=) x f =
 let return x = Some x
 
 let handle_file_exn path = function
-  | Fsnotify.Error (reason, 2) -> ()
+  | Fsnotify.Error (reason, Unix.ENOENT) -> ()
       (* The file got deleted in the mean time ... we don't care *)
-  | Fsnotify.Error (reason, errno) -> 
+  | Fsnotify.Error (reason, errno) ->
       (* This is bad ... *)
-      Printf.fprintf !log 
-        "Error: could not add watch to %s [%s, %d]\n" path reason errno
+      Printf.fprintf !log
+        "Error: could not add watch to %s [%s]\n" path reason
   | e when Sys.file_exists path ->
       (* Logging this makes the system very noisy. There are too many
        * cases where a file has been removed etc ...
@@ -47,7 +47,7 @@ let handle_file_exn path = function
   | _ -> ()
 
 (* Calls (f path), never fails, logs the nasty exceptions *)
-let call f path = 
+let call f path =
   try f path
   with e -> handle_file_exn path e; None
 
