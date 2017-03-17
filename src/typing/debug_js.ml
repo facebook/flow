@@ -749,10 +749,12 @@ and json_of_resolve_to_impl json_cx resolve_to = Hh_json.(JSON_Object (
   | ResolveSpreadsToArray (tout) -> [
     "t_out", _json_of_t json_cx tout;
   ]
-  | ResolveSpreadsToMultiflowFull (ft) -> [
+  | ResolveSpreadsToMultiflowFull (id, ft) -> [
+    "id", JSON_Number (string_of_int id);
     "funtype", json_of_funtype json_cx ft;
   ]
-  | ResolveSpreadsToMultiflowPartial (ft, call_reason, tout) -> [
+  | ResolveSpreadsToMultiflowPartial (id, ft, call_reason, tout) -> [
+    "id", JSON_Number (string_of_int id);
     "funtype", json_of_funtype json_cx ft;
     "callReason", json_of_reason ~strip_root:json_cx.strip_root call_reason;
     "t_out", _json_of_t json_cx tout;
@@ -1767,11 +1769,11 @@ and dump_use_t_ (depth, tvars) cx t =
       | ResolveSpreadsToTuple (_, tout)
       | ResolveSpreadsToArrayLiteral (_, tout)
       | ResolveSpreadsToArray (tout)
-      | ResolveSpreadsToMultiflowPartial (_, _, tout) ->
+      | ResolveSpreadsToMultiflowPartial (_, _, _, tout) ->
         p ~extra:(kid tout) t
       | ResolveSpreadsToCallT (_, tin) ->
         p ~extra:(kid tin) t
-      | ResolveSpreadsToMultiflowFull _ -> p t)
+      | ResolveSpreadsToMultiflowFull (_, _) -> p t)
   | SentinelPropTestT (l, sense, sentinel, result) -> p ~reason:false
       ~extra:(spf "%s, %b, %s, %s"
         (kid l)

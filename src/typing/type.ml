@@ -884,12 +884,12 @@ module rec TypeTerm : sig
 
   (* Once we've finished resolving spreads for a function's arguments, call the
    * function with those arguments *)
-  | ResolveSpreadsToMultiflowFull of funtype
+  | ResolveSpreadsToMultiflowFull of int * funtype
 
   (* Once we've finished resolving spreads for a function's arguments,
    * partially apply the arguments to the function and return the resulting
    * function (basically what func.bind(that, ...args) does) *)
-  | ResolveSpreadsToMultiflowPartial of funtype * reason * t
+  | ResolveSpreadsToMultiflowPartial of int * funtype * reason * t
 
   | ResolveSpreadsToCallT of funcalltype * t
 

@@ -376,9 +376,9 @@ and parts_of_spread_resolve = function
 | ResolveSpreadsToArrayLiteral (_, tout)
 | ResolveSpreadsToArray (tout) ->
   [ "out", Def tout ]
-| ResolveSpreadsToMultiflowFull (ft) ->
+| ResolveSpreadsToMultiflowFull (_, ft) ->
   parts_of_funtype ft
-| ResolveSpreadsToMultiflowPartial (ft, _, tout) ->
+| ResolveSpreadsToMultiflowPartial (_, ft, _, tout) ->
   (parts_of_funtype ft) @ [ "out", Def tout ]
 | ResolveSpreadsToCallT (fct, tin) ->
   (parts_of_funcalltype fct) @ [ "out", Def tin ]
