@@ -114,6 +114,14 @@ declare function foo(a: number, ...rest: Array<void>): string;
 declare function foo(a: number, b: number, ...rest: Array<void>): string;
 ```
 
+If you want flow to complain when too many arguments are given you can use the
+following type declaration:
+{% highlight javascript linenos=table %}
+/* @flow */
+declare class NoMoreArgs {};
+declare type FunctionWithOneArgument = (arg: any, ...rest: Array<NoMoreArgs>) => any;
+{% endhighlight %}
+
 ## Function-based type annotations
 
 Since functions are first-class values in JavaScript (meaning they can be
