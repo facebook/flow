@@ -1,15 +1,34 @@
-###v0.41.0
+### v0.42.0
+
+Likely to cause new Flow errors:
+
+New Features:
+* Object type spread (`type TypeB = { ...TypeA };`). You can now spread one object type into another! It is designed to mimic the behavior of spreading an object value in an object initializer, where only own properties are copied over.
+* Experimental new `flow ide` command, through which an IDE can establish a permanent connection with Flow. The IDE can send commands through this connection and Flow can push changes to the IDE.
+
+Notable bug fixes:
+* Fixed a bug that would cause Flow's recheck to never terminate
+
+Parser:
+* Support for object type spreads.
+
+Misc:
+* Lots of updates to the builtin flow libs! Many thanks to all our contributors!
+* Object types with dictionaries are now considered sealed (you cannot add new properties to them). This is a minor change, since you can still write to the dictionary.
+* We've relaxed the restriction that `React.PropTypes.oneOf` must take an array of literals. You can now put non-literal values in the array.
+
+### v0.41.0
 
 Notable bug fixes:
 * Lots of improvements to typing React components (which may uncover previously missed errors). This release primarily focused on these tweaks to React typing
 * Previously Flow did not track much about mixins from `React.createClass` components (including mixed in proptypes). This has been fix and may uncover new proptypes errors in createClass components
 * The internal React libdef for `findDOMNode` has been updated to include `null` in its return-type now (since this function can, indeed, return `null`)
 
-Misc: 
+Misc:
 * `flow get-importers` has been removed. It was rarely used and added an incredible amount of complexity to the codebase
 * Lots of updates to builtin flow libs
 
-###v0.40.0
+### v0.40.0
 
 Notable bug fixes:
 * Fixed an edge case when moving .flow files around in a haste project
@@ -29,7 +48,7 @@ Misc:
 * Some tweaks to error messages to make them easier to understand.
 * We are NOT removing weak mode in this release. See the discussion on [#3316](https://github.com/facebook/flow/issues/3316)
 
-###v0.39.0
+### v0.39.0
 
 Likely to cause new Flow errors:
 * Previous usage of `ReactElement<*>` as a return type for render functions in React may now cause new errors now that a type propogation bug has been fixed. The general solution for this is to remove the return type for functions that return a React element (return types can be inferred by Flow, and Flow has never had a good way to express the type of a *specific* React element)
@@ -59,7 +78,7 @@ Misc:
 * A few improvements to error messages relating to React PropTypes
 * Various core libdef updates
 
-###v0.38.0
+### v0.38.0
 Likely to cause new Flow errors:
 * There are some error-position improvements in this release. This means that if you use `// $FlowFixMe` (or any kind of `suppress_comment`), there's a chance the error may have moved out from under the suppression comment. You may see some unused error suppressions and some previously suppressed errors.
 * The behavior for tuples has changed to strictly enforce arity. This might cause errors depending on how you use tuples.
@@ -103,29 +122,29 @@ Parser:
 * We now support defaults in setters
 * The bug fix for trailing commas in array lists was accidentally reverted and has been re-committed.
 
-###v0.37.4
+### v0.37.4
 
 Notable bug fixes:
 * 1 more server recheck fix... Fourth time's a charm!
 
-###v0.37.3
+### v0.37.3
 
 Notable bug fixes:
 * 1 more server recheck fix... Third time's a charm!
 
-###v0.37.2
+### v0.37.2
 
 Notable bug fixes:
 * Fix more issues in the server with rechecking changed files
 
-###v0.37.1
+### v0.37.1
 
 Notable bug fixes:
 * Fixed an issue in /try where Flow was using an ocaml regex API that couldn't compile to JS
 * Fixed an issue where a changed "literal" type in a module signature wouldn't cause the Flow server to recheck
 * Fixed an issue where an update of a module in a cycle may not properly recheck all of its dependencies in the Flow server
 
-###v0.37.0
+### v0.37.0
 
 Likely to cause new Flow errors:
 * There are some error-position improvements in this release, which means that if you use `// $FlowFixMe` (or any kind of `suppress_comment`), there's a chance the error may have moved out from under the suppression comment to a different location that's more indicative of the error position.
@@ -146,7 +165,7 @@ Misc:
 * The `parse()` function in the `flow-parser` NPM module now takes either 1 or 2 arguments. Previously it would require both arguments in order to work.
 * Things typed as "callable objects" now inherit from Function.prototype rather than Object.prototype.
 
-###v0.36.0
+### v0.36.0
 
 Likely to cause new Flow errors:
 * We've been working on improving error messages, which often involves moving the errors closer to where the error is likely triggered. If you use error suppressing comments, some of your comments now appear unused, since the error moved.
@@ -171,7 +190,7 @@ Misc:
 Parser:
 * Fixed a bug where `[...rest, 123]` was incorrectly parsed
 
-###v0.35.0
+### v0.35.0
 
 Likely to cause new Flow errors:
 * Flow now knows that calling `addEventListener()` with `'click' and 'dblclick'` will pass a `MouseEvent` to the listener. This means you might need to update `foo.addEventListener('click', (e) => bar())` to `foo.addEventListener('click', (e: MouseEvent) => bar())`.
@@ -194,7 +213,7 @@ Parser:
 * Better error message if you try to make a class property optional (currently unsupported)
 * Dropped support for `let` statements, which never made it into the spec (thanks [@andreypopp](https://github.com/andreypopp))
 
-###v0.34.0
+### v0.34.0
 
 Likely to cause new Flow errors:
 * Dictionary types (i.e. `{[key: string]: ValueType}`) were previously covariant which proved to be a significant source of unsoundness. Dictionary types are now invariant by default in order to fall into consistency with other collection types. It is possible to opt in to explicit covariance with new syntax: `{+[key: string]: ValueType}`, but note that this is now *enforced* covariance -- which means the dictionary can no longer be written into (only read from). For mutable collections, consider using `Map`/`Set`/etc. Please see this [blog post](https://flowtype.org/blog/2016/10/04/Property-Variance.html) for more information on variance.
@@ -234,7 +253,7 @@ Parser breaking changes:
 * The `mixed` type annotation is now represented with a special `MixedTypeAnnotation` node (same as Babylon has been for a while).
 * The `NullTypeAnnotation` annotation node is now called `NullLiteralTypeAnnotation` in order to match Babylon.
 
-###v0.33.0
+### v0.33.0
 
 Likely to cause new Flow errors:
 * Its now an error to add `mixed` to `number`
@@ -279,12 +298,12 @@ Parser breaking changes:
 * Fixed the location info for `ExpressionStatement`
 * Fixed the location info for `CallExpression` and `MemberExpression`
 
-###v0.32.1
+### v0.32.1
 
 Notable bug fixes:
 * If Flow runs out of heap space, it now throws an exception instead of segfaulting.
 
-###v0.32.0
+### v0.32.0
 
 Likely to cause new Flow errors:
 * If you check that an object `obj` has a property `foo` that Flow doesn't know about, Flow will now refine `obj.foo` to the type `mixed`. If you then try to use `obj.foo` in an unsafe way (like as a function), you might start seeing errors mentioning `` property `foo` of unknown type ``. The fix is to either fix the type of `obj` to include an optional property `foo`, or to rewrite code like `obj.foo && obj.foo(x)` to `typeof obj.foo === "function" && obj.foo(x)`
@@ -307,7 +326,7 @@ Notable bug fixes:
 Misc:
 * Lots of improvements to the builtin libdefs! Thanks for all the pull requests!
 
-###v0.31.0
+### v0.31.0
 
 Likely to cause new Flow errors:
 - Fixed an issue where an `any` type could actually prevent errors from showing up in places that actually should surface errors
@@ -334,7 +353,7 @@ Notable bug fixes:
 - Printed types in some circumstances (autocomplete, type-at-pos, etc) are now capped on size to prevent overflows in tools that consume them. When the size overflows the cap, `...` will be printed as an overflow placeholder
 - Various built-in libdef updates
 
-###v0.30.0
+### v0.30.0
 
 Likely to cause new Flow errors:
 - Fixed `React.PureComponent`'s definition, so previously missed errors are now reported
@@ -364,7 +383,7 @@ Misc:
 - Various built-in libdef improvements
 - Nifty PR from [@nmn](https://github.com/nmn) which teaches flow that `nullableArr.filter(Boolean)` is non-nullable
 
-###v0.29.0
+### v0.29.0
 
 New features:
 - Tagged unions of interfaces should now work in the same way that tagged unions of type aliases work.
@@ -385,7 +404,7 @@ Misc:
 - `flow check --json --profile` now includes profiling info in the JSON
   response
 
-###v0.28.0
+### v0.28.0
 
 Likely to cause new Flow errors:
 - [Significant fix](https://github.com/facebook/flow/commit/2df7671e7bda770b95e6b1eaede96d7a8ab1f2ac) to matching members of union types. This fix very likely surfaces typechecking issues that were missed before. [Check out the blog post for more details](https://flowtype.org/blog/2016/07/01/New-Unions-Intersections.html)
@@ -406,7 +425,7 @@ Misc:
 - Various built-in libdef improvements
 - Performance improvements for the `flow coverage` command
 
-###v0.27.0
+### v0.27.0
 
 Notable bug fixes:
 - Fixed a filesystem race condition where Flow would note that a directory exists just before it is deleted, then try to read the directory
@@ -418,7 +437,7 @@ Notable bug fixes:
 - `--strip-root` is now applied to the output of `--verbose`
 - Fixed an issue where duplicate method declarations weren't understood correctly
 
-###v0.26.0
+### v0.26.0
 ([@gabelevi](https://github.com/gabelevi) mistakingly listed a few v0.26.0 changes as being in v0.25.0. The Changelog has been updated to reflect reality. Sorry!)
 
 Likely to cause new Flow errors:
@@ -440,7 +459,7 @@ Misc:
 - Fixed up parser tests and further integrated them into CI.
 - Lots of refactoring!
 
-###v0.25.0
+### v0.25.0
 Likely to cause new Flow errors:
 - [@marudor](https://github.com/marudor) made a tremendous effort to clean up the builtin flowlib definitions, adding missing things, fixing annotations, and removing non-standard and deprecated features. If you're relying on these things, then you may have new errors.
 - In the past, generic types could leave off the type arguments. Flow is moving towards making these required. Applying type arguments to a polymorphic type (e.g. `Map<string, number>`) is like calling a function. If writing `my_function` was the same thing as writing `my_function()`, it would be really difficult to pass functions as values. Similarly, by making type arguments required, it frees us up to do more with our polymorphic types. If you have a polymorphic type with default types, like `type Foo<T = number>`, you can now write `Foo<>` to apply 0 type arguments to the polymorphic type `Foo`.
@@ -455,15 +474,15 @@ Misc:
 - Fixed up the parser tests (thanks for the help [@marudor](https://github.com/marudor)!) and have started running those in CI
 - A ton of refactoring and clean up
 
-###v0.24.2
+### v0.24.2
 
 - Fixed a bug where Flow might run out of memory in a repository with a lot of non-flow files
 
-###v0.24.1
+### v0.24.1
 
 - Fixed a bug where `autocomplete` can show internal variable names for files that use destructuring
 
-###v0.24.0
+### v0.24.0
 
 New features:
 - Many common errors now have more contextual error messages. [Check out the test file changes](https://github.com/facebook/flow/commit/7b8c3aed5d852ad9b8290076508658168d0d5fde#diff-839cf9ce7d26ef86255e179b8a539fc7) to see what this looks like!
@@ -489,11 +508,11 @@ Misc:
   - Sorts lib file errors before source file errors
 - Perf improvements for some comparisons of polymorphic types
 
-###v0.23.1
+### v0.23.1
 
 - Fixed parsing of JSON files with duplicate object keys
 
-###v0.23.0
+### v0.23.0
 
 Likely to cause new Flow errors:
 - When you refine a `mixed` variable with `typeof myVar === 'object'`, we used to refine the type of `myVar` to `null | Object`. Now it is refined to `null | {[key: string]: mixed}`. This means `myVar.prop` has the type `mixed` rather than `any`.
@@ -535,11 +554,11 @@ Misc:
 - Some improvements to pretty printing errors
 - `Object.values()` and `Object.entries` return `Array<mixed>` and `Array<[string, mixed]>` respectively, since Flow currently is never sure that it knows about every property in an object.
 
-###v0.22.1
+### v0.22.1
 
 - Patch release to fix some JSON parsing issues that went out in v0.22.0
 
-###v0.22.0
+### v0.22.0
 
 Likely to cause new Flow errors:
 - Overhaul of Flow's understanding of React APIs. Some of these updates remove old/deprecated React APIs. Check out the [new React docs](http://flowtype.org/docs/react.html) for an overview of how things work.
@@ -572,7 +591,7 @@ Bug fixes:
 - Fixed an issue where Flow would not give a parse error if multiple ES exports with the same name are exported from a single ES module
 - `declare class` declarations now properly define a built-in `name` property (like real class declarations do)
 
-###v0.21.0
+### v0.21.0
 
 Likely to cause new Flow errors:
 - ES6 react classes without state should now `extends React.Component<DefaultProps, Props, void>` (previously it was `extends React.Component<DefaultProps, Props, {}>)`
@@ -601,7 +620,7 @@ Misc:
 - Various sentinel improvements, including boolean sentinels
 - Various improvements to the buildin flow libraries (thanks everyone for the pull requests!)
 
-###v0.20.1
+### v0.20.1
 
 Bug fixes:
 - Ironed out some issues with the `this` type
@@ -609,7 +628,7 @@ Bug fixes:
 Misc:
 - find package.json using normal parsing phase
 
-###v0.20.0
+### v0.20.0
 
 New features:
 - Initial support for a `this` return type for class methods
@@ -639,7 +658,7 @@ Misc:
 - Objects with a `callable` signature can now be passed in to type positions that expect a function with a matching signature
 - Significant improvements to efficiency/perf when recalculating types based on a change to a file with an already-running Flow server
 
-###v0.19.0
+### v0.19.0
 
 Likely to cause new Flow errors:
 - Flow syntax is now disallowed in non-`@flow` files. Use `@noflow` to work around this
@@ -681,7 +700,7 @@ Misc:
 - Better autocomplete results for primitives, objects, functions and unions
 - `flow server` will write to log file in addition to stdout/stderr
 
-###v0.18.1
+### v0.18.1
 
 Likely to cause new Flow errors:
 
@@ -713,7 +732,7 @@ Misc:
 - The "server starting" output now gives more insight into progress.
 - `flow --version` is now deprecated in favor of `flow version`.
 
-###v0.17.0
+### v0.17.0
 
 New Features:
 
@@ -744,7 +763,7 @@ Misc:
 - We've tried to standardize the error codes with which Flow exits. Some exit codes have changed, but the ones you probably use should be the same. At the moment they're [only documented in the code](https://github.com/facebook/flow/blob/b352b4c41283c1cb109ee2e8f6ef604ad4ac381b/src/common/flowExitStatus.ml#L63-L86)
 - Flow understands the value of a negated number literal
 
-###v0.16.0
+### v0.16.0
 
 Likely to cause new Flow errors:
 
@@ -765,7 +784,7 @@ Misc:
 - *Significant* performance improvements (both for initial start-up time and running re-calculation time)
 - Improved `--traces` output
 
-###v0.15.0
+### v0.15.0
 
 Likely to cause new Flow errors:
 
@@ -804,7 +823,7 @@ Misc:
 - Some perf work
 - Test output is colorized
 
-###v0.14.0
+### v0.14.0
 
 Likely to cause new Flow errors:
 
@@ -825,7 +844,7 @@ Misc:
 - Type annotations are now opaque - other types will not flow through them
 - You can configure the tmp dir that Flow uses
 
-###v0.13.1
+### v0.13.1
 
 Likely to cause new Flow errors:
 
@@ -848,7 +867,7 @@ Misc:
 - Fixed return-type tracking for tagged template usage
 - Fixed an issue where library parse errors would cause the flow server to continuously restart upon initialization without giving an error
 
-###v0.12.0
+### v0.12.0
 
 Likely to cause new Flow errors:
 
@@ -881,7 +900,7 @@ Misc:
 - Added a new config option `log.file` which overrides the default log file path
 
 
-###v0.11.0
+### v0.11.0
 
 - We are now syncing Flow's [commit history](https://github.com/facebook/flow/commits/master) to GitHub. No more huge updating diffs. We'll also filter the changelog to the most important things.
 - Big React refactoring to support ES6 React classes
@@ -893,7 +912,7 @@ Misc:
 - Assorted fixes and updates to the flow libs
 - We're trying to be better about commenting the code
 
-###v0.10.0
+### v0.10.0
 
 - Bump version to 0.10.0
 - Support import/export type
@@ -910,16 +929,16 @@ Misc:
 - Fix issues with optional properties during InstanceT ~> ObjT
 - Fix abnormals in catch blocks
 
-###v0.9.2
+### v0.9.2
 
 - Fix lowercasing issue where "flow Path/To/Root" became "flow path/to/root"
 - Fix "My Path/To Flow/flow path/to/root" not autostarting server due to spaces
 
-###v0.9.1
+### v0.9.1
 
 - Unbreak the command line for "flow path/to/root" (thanks samwgoldman for the report!)
 
-###v0.9.0
+### v0.9.0
 
 - Bump version to 0.9.0
 - Add Video-, Audio and TextTrackList (+ dependencies)
@@ -946,7 +965,7 @@ Misc:
 - clear module errors properly
 - add verbose mode
 
-###v0.8.0
+### v0.8.0
 
 - Bump version to 0.8.0
 - [PR #356] Add React.version to lib/react.js
@@ -968,7 +987,7 @@ Misc:
 - [PR #321] Support for React.cloneElement in 0.13
 - Refine simple assignments (things like while (x = x.parent) { x.doStuff(); })
 
-###v0.7.0
+### v0.7.0
 
 - Bump version to 0.7.0
 - Initial support for ES6 import/export (with CommonJS interop)
@@ -980,7 +999,7 @@ Misc:
 - Use Object.prototype.hasOwnProperty() calls as a refinement
 - Updates to Element and HTMLElement interface definitions
 
-###v0.6.0
+### v0.6.0
 
 - Bump version to 0.6.0
 - Also watch for changes in include paths
@@ -993,7 +1012,7 @@ Misc:
 - Update componentWillReceive spec
 - Unsuppress library errors
 
-###v0.5.0
+### v0.5.0
 
 - Bump version to 0.5.0
 - Add HTMLAnchorElement
@@ -1014,7 +1033,7 @@ Misc:
 - node haste module support
 - add Abnormal.string
 
-###v0.4.0
+### v0.4.0
 
 ** Flow comments should be ready for use **
 
@@ -1037,7 +1056,7 @@ Misc:
 - work around false positive conflict markers
 - Better dumping types for debugging
 
-###v0.3.0
+### v0.3.0
 
 ** Type casts and import type should be ready for use **
 
@@ -1053,7 +1072,7 @@ Misc:
 - [PR #247] Resubmit #113 this fixes #155
 - [PR #246] Fixes #195
 
-###v0.2.0
+### v0.2.0
 
 - Bump version to 0.2.0
 - Fix refinement of optional nullable types
@@ -1067,7 +1086,7 @@ Misc:
 - Add Number.isNaN and Number.isSafeInteger type annotations
 - Optional properties in objects & optional type revamp
 
-###v0.1.6
+### v0.1.6
 
 - Bump version to 0.1.6
 - declare modules that redefine exports instead of exporting multiple things
@@ -1079,7 +1098,7 @@ Misc:
 - Add MAX_SAFE_INTEGER and MIN_SAFE_INTEGER to Number
 - make param annotations strict upper bounds
 
-###v0.1.5
+### v0.1.5
 
 - Bump version to 0.1.5
 - [PR #223] from commonlisp/master
@@ -1102,7 +1121,7 @@ Misc:
 - Add missing constructors to TypedArray declarations
 - [Parser] Update Flow's test suite to match updated esprima
 
-###v0.1.4
+### v0.1.4
 
 - Bump Flow version to 0.1.4
 - [Flow] Unbreak the open source build
@@ -1114,7 +1133,7 @@ Misc:
 - missing annotation errors for type aliases
 - Type refinement fixes for early return
 
-###v0.1.3
+### v0.1.3
 
 - Handle strict undefined checks.
 - Add theoretical support to print tuple types properly.
@@ -1154,7 +1173,7 @@ Misc:
 - Add ES6 String.prototype.contains
 - Add Promise.prototype.done() to Flow lib
 
-###v0.1.2
+### v0.1.2
 
 - [#78] Fallback to index.js if no main attribute in package.json
 - [#82] Added ES6 functions to the Math object
@@ -1170,7 +1189,7 @@ Misc:
 - Improvements to type printing in flow suggest and other commands
 - Fixes to various issues where parser errors were being suppressed
 
-###v0.1.1
+### v0.1.1
 
 - [Issue #4] Typecheck .jsx files
 - [Issue #22] Return a nonzero exit code from 'flow check' if there are errors
@@ -1184,6 +1203,6 @@ Misc:
 - [PR #65] Fix dependencies in flux-chat example
 - [PR #66] Add type definitions for HTMLCanvasElement
 
-###v0.1.0
+### v0.1.0
 
 Initial release
