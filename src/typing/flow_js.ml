@@ -2866,6 +2866,51 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             ()
         )
 
+      | ResolveSpreadsToMultiflowFull (id, _)
+      | ResolveSpreadsToMultiflowPartial (id, _, _, _) ->
+        let reason_elemt = reason_of_t elemt in
+        ConstFoldExpansion.guard id reason_elemt (fun recursion_depth ->
+          match recursion_depth with
+          | 0 ->
+            (* The first time we see this, we process it normally *)
+            let rrt_resolved =
+              ResolvedSpreadArg(reason, arrtype)::rrt_resolved in
+            resolve_spread_list_rec
+              cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to
+          | 1 ->
+            (* Consider
+             *
+             * function foo(...args) { foo(1, ...args); }
+             * foo();
+             *
+             * Because args is unannotated, we try to infer it. However, due to
+             * the constant folding we do with spread arguments, we'll first
+             * infer that it is [], then [] | [1], then [] | [1] | [1,1] ...etc
+             *
+             * We can recognize that we're stuck in a constant folding loop. But
+             * how to break it?
+             *
+             * In this case, we are constant folding by recognizing when args is
+             * a tuple or an array literal. We can break the loop by turning
+             * tuples or array literals into simple arrays.
+             *)
+
+            let new_arrtype = match arrtype with
+            (* These can get us into constant folding loops *)
+            | ArrayAT (elemt, Some _)
+            | TupleAT (elemt, _) -> ArrayAT (elemt, None)
+            (* These cannot *)
+            | ArrayAT (_, None)
+            | ROArrayAT _
+            | EmptyAT -> arrtype in
+
+            let rrt_resolved =
+             ResolvedSpreadArg(reason, new_arrtype)::rrt_resolved in
+            resolve_spread_list_rec
+             cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to
+          | _ -> ()
+        )
+
       | _ ->
         let rrt_resolved = ResolvedSpreadArg(reason, arrtype)::rrt_resolved in
         resolve_spread_list_rec
@@ -4698,7 +4743,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow_t cx trace (o2,o1);
 
         let resolve_to =
-          ResolveSpreadsToMultiflowPartial (ft, reason_op, call_tout) in
+          ResolveSpreadsToMultiflowPartial (mk_id (), ft, reason_op, call_tout) in
         resolve_call_list cx ~trace reason tins2 resolve_to
 
     | AnyFunT _,
@@ -8885,7 +8930,7 @@ and array_unify cx trace = function
 
 (* Process spread arguments and then apply the arguments to the parameters *)
 and multiflow cx trace reason_op args ft =
-  let resolve_to = ResolveSpreadsToMultiflowFull (ft) in
+  let resolve_to = ResolveSpreadsToMultiflowFull (mk_id (), ft) in
   resolve_call_list cx ~trace reason_op args resolve_to
 
 (* Like multiflow_partial, but if there is no spread argument, it flows VoidT to
@@ -9302,9 +9347,9 @@ and finish_resolve_spread_list =
       finish_array cx ?trace ~reason_op ~resolve_to:`Literal resolved tout
     | ResolveSpreadsToArray (tout) ->
       finish_array cx ?trace ~reason_op ~resolve_to:`Array resolved tout
-    | ResolveSpreadsToMultiflowPartial (ft, call_reason, tout) ->
+    | ResolveSpreadsToMultiflowPartial (_, ft, call_reason, tout) ->
       finish_multiflow_partial cx ?trace ~reason_op ft call_reason resolved tout
-    | ResolveSpreadsToMultiflowFull (ft) ->
+    | ResolveSpreadsToMultiflowFull (_, ft) ->
       finish_multiflow_full cx ?trace ~reason_op ft resolved
     | ResolveSpreadsToCallT (funcalltype, tin) ->
       finish_call_t cx ?trace ~reason_op funcalltype resolved tin

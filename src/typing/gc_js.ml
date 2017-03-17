@@ -465,9 +465,9 @@ and gc_spread_resolve cx state = function
 | ResolveSpreadsToArrayLiteral (_, tout)
 | ResolveSpreadsToTuple (_, tout) ->
   gc cx state tout
-| ResolveSpreadsToMultiflowFull (ft) ->
+| ResolveSpreadsToMultiflowFull (_, ft) ->
   gc_funtype cx state ft
-| ResolveSpreadsToMultiflowPartial (ft, _, tout) ->
+| ResolveSpreadsToMultiflowPartial (_, ft, _, tout) ->
   gc_funtype cx state ft;
   gc cx state tout
 | ResolveSpreadsToCallT (fct, tin) ->
