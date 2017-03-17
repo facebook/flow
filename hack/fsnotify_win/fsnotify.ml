@@ -124,4 +124,4 @@ let select env ?(read_fdl=[]) ?(write_fdl=[]) ~timeout callback =
 (** Unused, for compatibility with `fsnotify_linux/fsnotify.mli` only. *)
 
 type watch = unit
-exception Error of string * int
+exception Error of string * Unix.error

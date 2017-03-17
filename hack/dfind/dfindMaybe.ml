@@ -35,7 +35,7 @@ let return x = Some x
 let handle_file_exn path = function
   | Fsnotify.Error (reason, Unix.ENOENT) -> ()
       (* The file got deleted in the mean time ... we don't care *)
-  | Fsnotify.Error (reason, errno) ->
+  | Fsnotify.Error (reason, _) ->
       (* This is bad ... *)
       Printf.fprintf !log
         "Error: could not add watch to %s [%s]\n" path reason
