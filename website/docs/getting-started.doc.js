@@ -33,7 +33,6 @@ next: five-simple-examples.html
 
 // @flow
 
-// $DocIssue
 var str = 'hello world!';
 console.log(str);
 
