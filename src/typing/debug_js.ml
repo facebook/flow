@@ -87,7 +87,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
 
   | NumT (_, lit) ->
     begin match lit with
-    | Literal (_, raw) -> ["literal", JSON_String raw]
+    | Literal (_, (_, raw)) -> ["literal", JSON_String raw]
     | Truthy -> ["refinement", JSON_String "Truthy"]
     | AnyLiteral -> []
     end
@@ -335,7 +335,7 @@ and _json_of_import_kind = Hh_json.(function
 )
 
 and _json_of_string_literal = Hh_json.(function
-  | Literal s -> ["literal", JSON_String s]
+  | Literal (_, s) -> ["literal", JSON_String s]
   | Truthy -> ["refinement", JSON_String "Truthy"]
   | AnyLiteral -> []
 )
@@ -1078,8 +1078,8 @@ and json_of_pred_impl json_cx p = Hh_json.(
     ]
 
   | SingletonBoolP value -> ["value", JSON_Bool value]
-  | SingletonStrP (_, str) -> ["value", JSON_String str]
-  | SingletonNumP (_, (_,raw)) -> ["value", JSON_String raw]
+  | SingletonStrP (_, _, str) -> ["value", JSON_String str]
+  | SingletonNumP (_, _, (_,raw)) -> ["value", JSON_String raw]
 
   | PropExistsP (_, key) -> ["propName", JSON_String key]
 
@@ -1439,11 +1439,11 @@ and dump_t_ (depth, tvars) cx t =
   else match t with
   | OpenT (_, id) -> p ~extra:(tvar id) t
   | NumT (_, lit) -> p ~extra:(match lit with
-    | Literal (_, raw) -> raw
+    | Literal (_, (_, raw)) -> raw
     | Truthy -> "truthy"
     | AnyLiteral -> "") t
   | StrT (_, c) -> p ~extra:(match c with
-    | Literal s -> spf "%S" s
+    | Literal (_, s) -> spf "%S" s
     | Truthy -> "truthy"
     | AnyLiteral -> "") t
   | BoolT (_, c) -> p ~extra:(match c with
@@ -2019,7 +2019,7 @@ let dump_flow_error =
           (dump_reason cx reason2)
     | EExpectedStringLit ((reason1, reason2), expected, literal) ->
         let literal = match literal with
-        | Literal str -> spf "%S" str
+        | Literal (_, str) -> spf "%S" str
         | Truthy -> "truthy"
         | AnyLiteral -> "any"
         in
@@ -2030,7 +2030,7 @@ let dump_flow_error =
           literal
     | EExpectedNumberLit ((reason1, reason2), (_, expected), literal) ->
         let literal = match literal with
-        | Literal (_, raw) -> spf "%S" raw
+        | Literal (_, (_, raw)) -> spf "%S" raw
         | Truthy -> "truthy"
         | AnyLiteral -> "any"
         in

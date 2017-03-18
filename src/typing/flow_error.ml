@@ -452,21 +452,33 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
 
   | EExpectedStringLit (reasons, expected, actual) ->
       let msg = match actual with
-      | Literal actual ->
+      | Literal (None, actual) ->
           spf "Expected string literal `%s`, got `%s` instead"
             expected actual
       | Truthy | AnyLiteral ->
           spf "Expected string literal `%s`" expected
+      | Literal (Some sense, actual) ->
+          spf "This %s check always %s because `%s` is not the same string as `%s`"
+            (if sense then "===" else "!==")
+            (if sense then "fails" else "succeeds")
+            actual
+            expected
       in
       typecheck_error msg reasons
 
   | EExpectedNumberLit (reasons, (expected, _), actual) ->
       let msg = match actual with
-      | Literal (actual, _) ->
+      | Literal (None, (actual, _)) ->
           spf "Expected number literal `%.16g`, got `%.16g` instead"
             expected actual
       | Truthy | AnyLiteral ->
           spf "Expected number literal `%.16g`" expected
+      | Literal (Some sense, (actual, _)) ->
+          spf "This %s check always %s because `%.16g` is not the same number as `%.16g`"
+            (if sense then "===" else "!==")
+            (if sense then "fails" else "succeeds")
+            actual
+            expected
       in
       typecheck_error msg reasons
 

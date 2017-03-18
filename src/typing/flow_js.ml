@@ -2278,9 +2278,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* !x when x is falsy *)
     | BoolT (_, Some false), NotT (reason, tout)
     | SingletonBoolT (_, false), NotT (reason, tout)
-    | StrT (_, Literal ""), NotT (reason, tout)
+    | StrT (_, Literal (_, "")), NotT (reason, tout)
     | SingletonStrT (_, ""), NotT (reason, tout)
-    | NumT (_, Literal (0., _)), NotT (reason, tout)
+    | NumT (_, Literal (_, (0., _))), NotT (reason, tout)
     | SingletonNumT (_, (0., _)), NotT (reason, tout)
     | NullT _, NotT (reason, tout)
     | VoidT _, NotT (reason, tout) ->
@@ -2517,7 +2517,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (StrT (reason_s, literal), UseT (_, KeysT (reason_op, o))) ->
       let reason_next = match literal with
-      | Literal x -> replace_reason_const (RProperty (Some x)) reason_s
+      | Literal (_, x) -> replace_reason_const (RProperty (Some x)) reason_s
       | _ -> replace_reason_const RUnknownString reason_s in
       (* check that o has key x *)
       let u = HasOwnPropT(reason_next, literal) in
@@ -2537,14 +2537,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       HasOwnPropT (reason_op, x) ->
       (match x, dict_t with
       (* If we have a literal string and that property exists *)
-      | Literal x, _ when Context.has_prop cx mapr x -> ()
+      | Literal (_, x), _ when Context.has_prop cx mapr x -> ()
       (* If we have a dictionary, try that next *)
       | _, Some { key; _ } -> rec_flow_t cx trace (StrT (reason_op, x), key)
       | _ ->
         let err = FlowError.EPropNotFound ((reason_op, reason_o), UnknownUse) in
         add_output cx ~trace err)
 
-    | InstanceT (reason_o, _, _, _, instance), HasOwnPropT(reason_op, Literal x) ->
+    | InstanceT (reason_o, _, _, _, instance), HasOwnPropT(reason_op, Literal (_, x)) ->
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       let methods_tmap = Context.find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
@@ -2567,7 +2567,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* flow each key of l to keys *)
         Context.iter_props cx props_tmap (fun x _ ->
           let reason = replace_reason_const (RStringLit x) reason_op in
-          let t = StrT (reason, Literal x) in
+          let t = StrT (reason, Literal (None, x)) in
           rec_flow_t cx trace (t, keys)
         );
         Option.iter dict_t (fun _ ->
@@ -2582,7 +2582,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       fields_tmap |> SMap.iter (fun x _ ->
         let reason = replace_reason_const (RStringLit x) reason_op in
-        let t = StrT (reason, Literal x) in
+        let t = StrT (reason, Literal (None, x)) in
         rec_flow_t cx trace (t, keys)
       )
 
@@ -2932,10 +2932,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      *)
 
     | SingletonStrT (reason, key), _ ->
-      rec_flow cx trace (StrT (reason, Literal key), u)
+      rec_flow cx trace (StrT (reason, Literal (None, key)), u)
 
     | SingletonNumT (reason, lit), _ ->
-      rec_flow cx trace (NumT (reason, Literal lit), u)
+      rec_flow cx trace (NumT (reason, Literal (None, lit)), u)
 
     | SingletonBoolT (reason, b), _ ->
       rec_flow cx trace (BoolT (reason, Some b), u)
@@ -4430,7 +4430,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, ElemT (reason_op, (ObjT _ as o), action) ->
       let propref = match l with
-      | StrT (reason_x, Literal x) ->
+      | StrT (reason_x, Literal (_, x)) ->
           let reason_prop = replace_reason_const (RProperty (Some x)) reason_x in
           Named (reason_prop, x)
       | _ -> Computed l
@@ -4463,7 +4463,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | EmptyAT -> EmptyT reason_tup, None, true
       end in
       let exact_index, value = match l with
-      | NumT (_, Literal (float_value, _)) ->
+      | NumT (_, Literal (_, (float_value, _))) ->
           begin match ts with
           | None -> false, value
           | Some ts ->
@@ -4960,13 +4960,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (NumT (_, lit), UnaryMinusT (reason_op, t_out)) ->
       let num = match lit with
-      | Literal (value, raw) ->
+      | Literal (_, (value, raw)) ->
         let raw_len = String.length raw in
         let raw = if raw_len > 0 && raw.[0] = '-'
           then String.sub raw 1 (raw_len - 1)
           else "-" ^ raw
         in
-        NumT (replace_reason_const RNumber reason_op, Literal (~-. value, raw))
+        NumT (replace_reason_const RNumber reason_op, Literal (None, (~-. value, raw)))
       | AnyLiteral
       | Truthy ->
         l
@@ -5018,7 +5018,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | StrT (_, lit),
       SentinelPropTestT (l, sense, SentinelStr sentinel, result) ->
         begin match lit with
-        | Literal value when (value = sentinel) != sense ->
+        | Literal (_, value) when (value = sentinel) != sense ->
             () (* provably unreachable, so prune *)
         | _ ->
             rec_flow_t cx trace (l, result)
@@ -5027,7 +5027,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | NumT (_, lit),
       SentinelPropTestT (l, sense, SentinelNum (sentinel, _), result) ->
         begin match lit with
-        | Literal (value, _) when (value = sentinel) != sense ->
+        | Literal (_, (value, _)) when (value = sentinel) != sense ->
             () (* provably unreachable, so prune *)
         | _ ->
             rec_flow_t cx trace (l, result)
@@ -7579,9 +7579,9 @@ and filter_exists = function
   | SingletonBoolT (r, false)
   | BoolT (r, Some false)
   | SingletonStrT (r, "")
-  | StrT (r, Literal "")
+  | StrT (r, Literal (_, ""))
   | SingletonNumT (r, (0., _))
-  | NumT (r, Literal (0., _)) -> EmptyT r
+  | NumT (r, Literal (_, (0., _))) -> EmptyT r
 
   (* unknown things become truthy *)
   | MaybeT (_, t) -> t
@@ -7601,9 +7601,9 @@ and filter_not_exists t = match t with
   | SingletonBoolT (_, false)
   | BoolT (_, Some false)
   | SingletonStrT (_, "")
-  | StrT (_, Literal "")
+  | StrT (_, Literal (_, ""))
   | SingletonNumT (_, (0., _))
-  | NumT (_, Literal (0., _)) -> t
+  | NumT (_, Literal (_, (0., _))) -> t
 
   (* truthy things get removed *)
   | SingletonBoolT (r, _)
@@ -7627,8 +7627,8 @@ and filter_not_exists t = match t with
   | MaybeT (r, _) ->
     UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [])
   | BoolT (r, None) -> BoolT (r, Some false)
-  | StrT (r, AnyLiteral) -> StrT (r, Literal "")
-  | NumT (r, AnyLiteral) -> NumT (r, Literal (0., "0"))
+  | StrT (r, AnyLiteral) -> StrT (r, Literal (None, ""))
+  | NumT (r, AnyLiteral) -> NumT (r, Literal (None, (0., "0")))
 
   (* things that don't track truthiness pass through *)
   | t -> t
@@ -7709,45 +7709,45 @@ and filter_not_undefined = function
   | MixedT (r, Mixed_non_null) -> MixedT (r, Mixed_non_maybe)
   | t -> t
 
-and filter_string_literal expected_loc expected t =
+and filter_string_literal expected_loc sense expected t =
   let expected_desc = RStringLit expected in
   let lit_reason = replace_reason_const expected_desc in
   match t with
-  | StrT (_, Literal actual) ->
+  | StrT (_, Literal (_, actual)) ->
     if actual = expected then t
-    else StrT (mk_reason expected_desc expected_loc, Literal expected)
+    else StrT (mk_reason expected_desc expected_loc, Literal (Some sense, expected))
   | StrT (r, Truthy) when expected <> "" ->
-    StrT (lit_reason r, Literal expected)
+    StrT (lit_reason r, Literal (None, expected))
   | StrT (r, AnyLiteral) ->
-    StrT (lit_reason r, Literal expected)
+    StrT (lit_reason r, Literal (None, expected))
   | MixedT (r, _) ->
-    StrT (lit_reason r, Literal expected)
+    StrT (lit_reason r, Literal (None, expected))
   | AnyT _ as t -> t
   | _ -> EmptyT (reason_of_t t)
 
 and filter_not_string_literal expected = function
-  | StrT (r, Literal actual) when actual = expected -> EmptyT r
+  | StrT (r, Literal (_, actual)) when actual = expected -> EmptyT r
   | t -> t
 
-and filter_number_literal expected_loc expected t =
+and filter_number_literal expected_loc sense expected t =
   let _, expected_raw = expected in
   let expected_desc = RNumberLit expected_raw in
   let lit_reason = replace_reason_const expected_desc in
   match t with
-  | NumT (_, Literal (_, actual_raw)) ->
+  | NumT (_, Literal (_, (_, actual_raw))) ->
     if actual_raw = expected_raw then t
-    else NumT (mk_reason expected_desc expected_loc, Literal expected)
+    else NumT (mk_reason expected_desc expected_loc, Literal (Some sense, expected))
   | NumT (r, Truthy) when snd expected <> "0" ->
-    NumT (lit_reason r, Literal expected)
+    NumT (lit_reason r, Literal (None, expected))
   | NumT (r, AnyLiteral) ->
-    NumT (lit_reason r, Literal expected)
+    NumT (lit_reason r, Literal (None, expected))
   | MixedT (r, _) ->
-    NumT (lit_reason r, Literal expected)
+    NumT (lit_reason r, Literal (None, expected))
   | AnyT _ as t -> t
   | _ -> EmptyT (reason_of_t t)
 
 and filter_not_number_literal expected = function
-  | NumT (r, Literal actual) when snd actual = snd expected -> EmptyT r
+  | NumT (r, Literal (_, actual)) when snd actual = snd expected -> EmptyT r
   | t -> t
 
 and filter_true t =
@@ -7904,20 +7904,20 @@ and predicate cx trace t l p = match p with
   (* _ ~ "some string" *)
   (*********************)
 
-  | SingletonStrP (expected_loc, lit) ->
-    rec_flow_t cx trace (filter_string_literal expected_loc lit l, t)
+  | SingletonStrP (expected_loc, sense, lit) ->
+    rec_flow_t cx trace (filter_string_literal expected_loc sense lit l, t)
 
-  | NotP SingletonStrP (_, lit) ->
+  | NotP SingletonStrP (_, _, lit) ->
     rec_flow_t cx trace (filter_not_string_literal lit l, t)
 
   (*********************)
   (* _ ~ some number n *)
   (*********************)
 
-  | SingletonNumP (expected_loc, lit) ->
-    rec_flow_t cx trace (filter_number_literal expected_loc lit l, t)
+  | SingletonNumP (expected_loc, sense, lit) ->
+    rec_flow_t cx trace (filter_number_literal expected_loc sense lit l, t)
 
-  | NotP SingletonNumP (_, lit) ->
+  | NotP SingletonNumP (_, _, lit) ->
     rec_flow_t cx trace (filter_not_number_literal lit l, t)
 
   (***********************)
@@ -8325,8 +8325,8 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
   in
   let sentinel_of_literal = function
-    | StrT (_, Literal value) -> Some (SentinelStr value)
-    | NumT (_, Literal value) -> Some (SentinelNum value)
+    | StrT (_, Literal (_, value)) -> Some (SentinelStr value)
+    | NumT (_, Literal (_, value)) -> Some (SentinelNum value)
     | BoolT (_, Some value) -> Some (SentinelBool value)
     | VoidT _ -> Some SentinelVoid
     | NullT _ -> Some SentinelNull
@@ -9381,7 +9381,7 @@ and perform_elem_action cx trace value = function
 
 and string_key s reason =
   let key_reason = replace_reason_const (RPropertyIsAString s) reason in
-  StrT (key_reason, Literal s)
+  StrT (key_reason, Literal (None, s))
 
 (* builtins, contd. *)
 

@@ -450,19 +450,19 @@ number.js:17
 
 number.js:21
  21:     if (x === 0) {
-                   ^ number literal `0`. Expected number literal `1`, got `0` instead
+                   ^ number literal `0`. This === check always fails because `0` is not the same number as `1`
  20:   function(x: 1): 0 {
                    ^ number literal `1`
 
 number.js:28
  28:     if (x === 1) {
-                   ^ number literal `1`. Expected number literal `0`, got `1` instead
+                   ^ number literal `1`. This === check always fails because `1` is not the same number as `0`
  27:   function(x: 0): number {
                    ^ number literal `0`
 
 number.js:35
  35:     if (x !== 1) {
-                   ^ number literal `1`. Expected number literal `0`, got `1` instead
+                   ^ number literal `1`. This !== check always succeeds because `1` is not the same number as `0`
  34:   function(x: 0) {
                    ^ number literal `0`
 
@@ -606,19 +606,19 @@ string.js:17
 
 string.js:21
  21:     if (x === 'foo') {
-                   ^^^^^ string literal `foo`. Expected string literal `bar`, got `foo` instead
+                   ^^^^^ string literal `foo`. This === check always fails because `foo` is not the same string as `bar`
  20:   function(x: 'bar'): 'foo' {
                    ^^^^^ string literal `bar`
 
 string.js:28
  28:     if (x === 'bar') {
-                   ^^^^^ string literal `bar`. Expected string literal `foo`, got `bar` instead
+                   ^^^^^ string literal `bar`. This === check always fails because `bar` is not the same string as `foo`
  27:   function(x: 'foo'): string {
                    ^^^^^ string literal `foo`
 
 string.js:35
  35:     if (x !== 'bar') {
-                   ^^^^^ string literal `bar`. Expected string literal `foo`, got `bar` instead
+                   ^^^^^ string literal `bar`. This !== check always succeeds because `bar` is not the same string as `foo`
  34:   function(x: 'foo') {
                    ^^^^^ string literal `foo`
 

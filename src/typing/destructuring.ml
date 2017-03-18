@@ -80,7 +80,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
         | Some (Element ((loc, _) as p)) ->
             let key = NumT (
               mk_reason RNumber loc,
-              Literal (float i, string_of_int i)
+              Literal (None, (float i, string_of_int i))
             ) in
             let reason = mk_reason (RCustom (spf "element %d" i)) loc in
             let init = Option.map init (fun init ->

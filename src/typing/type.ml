@@ -545,8 +545,8 @@ module rec TypeTerm : sig
     | MaybeP (* null or undefined *)
 
     | SingletonBoolP of bool (* true or false *)
-    | SingletonStrP of Loc.t * string (* string literal *)
-    | SingletonNumP of Loc.t * number_literal
+    | SingletonStrP of Loc.t * bool * string (* string literal *)
+    | SingletonNumP of Loc.t * bool * number_literal
 
     | BoolP (* boolean *)
     | FunP (* function *)
@@ -573,7 +573,7 @@ module rec TypeTerm : sig
     | SentinelProp of string
 
   and 'a literal =
-    | Literal of 'a
+    | Literal of bool option * 'a
     | Truthy
     | AnyLiteral
 
@@ -1204,9 +1204,9 @@ end = struct
   let canon t = TypeTerm.(
     match t with
     | SingletonStrT _ -> t
-    | StrT (r, Literal s) -> SingletonStrT (r, s)
+    | StrT (r, Literal (_, s)) -> SingletonStrT (r, s)
     | SingletonNumT _ -> t
-    | NumT (r, Literal lit) -> SingletonNumT (r, lit)
+    | NumT (r, Literal (_, lit)) -> SingletonNumT (r, lit)
     | _ -> t
   )
 
@@ -2263,8 +2263,8 @@ let rec string_of_predicate = function
 
   | SingletonBoolP false -> "false"
   | SingletonBoolP true -> "true"
-  | SingletonStrP (_, str) -> spf "string `%s`" str
-  | SingletonNumP (_, (_,raw)) -> spf "number `%s`" raw
+  | SingletonStrP (_, _, str) -> spf "string `%s`" str
+  | SingletonNumP (_, _, (_,raw)) -> spf "number `%s`" raw
 
   (* typeof *)
   | VoidP -> "undefined"
@@ -2283,12 +2283,12 @@ let rec string_of_predicate = function
   | LatentP (t,i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
 
 let literal_eq x = function
-  | Literal y -> x = y
+  | Literal (_, y) -> x = y
   | Truthy -> false
   | AnyLiteral -> false
 
 let number_literal_eq (x, _) = function
-  | Literal (y, _) -> x = y
+  | Literal (_, (y, _)) -> x = y
   | Truthy -> false
   | AnyLiteral -> false
 

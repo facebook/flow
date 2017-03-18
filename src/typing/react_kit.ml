@@ -84,10 +84,10 @@ let run cx trace reason_op l u
   (* Unlike other coercions, don't add a Flow error if the incoming type doesn't
      have a singleton type representation. *)
   let coerce_singleton = function
-    | StrT (reason, Literal x) ->
+    | StrT (reason, Literal (_, x)) ->
       let reason = replace_reason_const (RStringLit x) reason in
       OK (SingletonStrT (reason, x))
-    | NumT (reason, Literal x) ->
+    | NumT (reason, Literal (_, x)) ->
       let reason = replace_reason_const (RNumberLit (snd x)) reason in
       OK (SingletonNumT (reason, x))
     | BoolT (reason, Some x) ->

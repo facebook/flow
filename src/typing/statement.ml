@@ -2848,7 +2848,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
             _
           };
           _
-        }) -> StrT (mk_reason RString elem_loc, Type.Literal cooked)
+        }) -> StrT (mk_reason RString elem_loc, Type.Literal (None, cooked))
       in
       begin match quasis with
       | head::[] ->
@@ -3035,7 +3035,7 @@ and identifier cx name loc =
 (* traverse a literal expression, return result type *)
 and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
   | String s ->
-      StrT (mk_reason RString loc, Literal s)
+      StrT (mk_reason RString loc, Literal (None, s))
 
   | Boolean b ->
       BoolT (mk_reason RBoolean loc, Some b)
@@ -3044,7 +3044,7 @@ and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
       NullT.at loc
 
   | Number f ->
-      NumT (mk_reason RNumber loc, Literal (f, lit.raw))
+      NumT (mk_reason RNumber loc, Literal (None, (f, lit.raw)))
 
   | RegExp _ ->
       Flow.get_builtin_type cx (mk_reason RRegExp loc) "RegExp"
@@ -3534,7 +3534,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
         in
         Flow.flow_t cx (prop_t, t)
       )
-      else StrT (component_t_reason, Literal name) in
+      else StrT (component_t_reason, Literal (None, name)) in
       let o = mk_props component_t_reason component_t name in
       jsx_desugar cx name component_t o attributes children eloc
 
@@ -3733,7 +3733,7 @@ and jsx_trim_text =
           offset = end_offset;
         };
       } in
-      Some (StrT (mk_reason RJSXText loc, Type.Literal trimmed))
+      Some (StrT (mk_reason RJSXText loc, Type.Literal (None, trimmed)))
 
 (* Given an expression found in a test position, notices certain
    type refinements which follow from the test's success or failure,
@@ -3978,7 +3978,8 @@ and predicates_of_condition cx e = Ast.(Expression.(
       }) as value), expr
       ->
         let val_t = expression cx value in
-        literal_test loc ~sense ~strict expr val_t (SingletonStrP (lit_loc, lit))
+        literal_test loc ~sense ~strict expr val_t
+          (SingletonStrP (lit_loc, sense, lit))
 
     (* special case equality relations involving numbers *)
     | ((lit_loc, Expression.Literal { Literal.value = Literal.Number lit; raw })
@@ -3987,7 +3988,8 @@ and predicates_of_condition cx e = Ast.(Expression.(
       as value)
       ->
         let val_t = expression cx value in
-        literal_test loc ~sense ~strict expr val_t (SingletonNumP (lit_loc, (lit, raw)))
+        literal_test loc ~sense ~strict expr val_t
+          (SingletonNumP (lit_loc, sense, (lit, raw)))
 
     (* TODO: add Type.predicate variant that tests number equality *)
 
