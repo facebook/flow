@@ -1,0 +1,32 @@
+{% if include.package_manager == "yarn" %}
+  {% assign install_command = "yarn add --dev" %}
+  {% assign run_command = "yarn run " %}
+{% elsif include.package_manager == "npm" %}
+  {% assign install_command = "npm install --save-dev" %}
+  {% assign run_command = "./node_modules/.bin/" %}
+{% endif %}
+
+{% capture compiler_intro %}{% include_relative _install/compiler-intro.md %}{% endcapture %}
+{% capture setup_intro %}{% include_relative _install/setup-intro.md %}{% endcapture %}
+
+{% capture babel %}{% include_relative _install/compiler-babel.md install_command=install_command run_command=run_command %}{% endcapture %}
+{% capture flowRemoveTypes %}{% include_relative _install/compiler-flow-remove-types.md install_command=install_command run_command=run_command %}{% endcapture %}
+
+{% capture yarn %}{% include_relative _install/setup-yarn.md %}{% endcapture %}
+{% capture npm %}{% include_relative _install/setup-npm.md %}{% endcapture %}
+
+{{compiler_intro | markdownify}}
+
+{% if include.compiler == "babel" %}
+  {{babel | markdownify}}
+{% elsif include.compiler == "flow-remove-types" %}
+  {{flowRemoveTypes | markdownify}}
+{% endif %}
+
+{{setup_intro | markdownify}}
+
+{% if include.package_manager == "yarn" %}
+  {{yarn | markdownify}}
+{% elsif include.package_manager == "npm" %}
+  {{npm | markdownify}}
+{% endif %}

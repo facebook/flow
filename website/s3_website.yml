@@ -1,3 +1,6 @@
+---
+---
+
 s3_id: <%= ENV['AWS_ACCESS_KEY_ID'] %>
 s3_secret: <%= ENV['AWS_SECRET_ACCESS_KEY'] %>
 s3_bucket: flowtype.org
@@ -54,10 +57,11 @@ ignore_on_server:
 
 # concurrency_level: 5
 
-# redirects:
-#   index.php: /
-#   about.php: about.html
-#   music-files/promo.mp4: http://www.youtube.com/watch?v=dQw4w9WgXcQ
+redirects:
+  /: /en/
+  # index.php: /
+  # about.php: about.html
+  # music-files/promo.mp4: http://www.youtube.com/watch?v=dQw4w9WgXcQ
 
 # routing_rules:
 #   - condition:

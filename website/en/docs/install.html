@@ -1,0 +1,65 @@
+---
+layout: guide
+scripts:
+  - "install.js.es6"
+---
+
+<div class="row">
+  <div class="col-lg-6">
+    <label><strong>Package Managers</strong></label>
+    <div class="btn-group install-toggle" data-toggle="buttons" style="width: 100%">
+      <label class="btn btn-secondary active" style="width: 50%">
+        <input type="radio" name="packagemanager" value="yarn" autocomplete="off" checked>
+        Yarn
+      </label>
+
+      <label class="btn btn-secondary" style="width: 50%">
+        <input type="radio" name="packagemanager" value="npm" autocomplete="off">
+        npm
+      </label>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <label><strong>Compilers</strong></label>
+    <div class="btn-group install-toggle" data-toggle="buttons" style="width: 100%">
+      <label class="btn btn-secondary active" style="width: 50%">
+        <input type="radio" name="compiler" value="babel" autocomplete="off" checked>
+        Babel
+      </label>
+
+      <label class="btn btn-secondary" style="width: 50%">
+        <input type="radio" name="compiler" value="flow-remove-types" autocomplete="off">
+        flow-remove-types
+      </label>
+    </div>
+  </div>
+
+  <div class="col-lg-12">
+    <p class="text-muted my-1 text-xs-center">
+      There are a few different ways to setup Flow depending on what tools
+      you're already using.
+      <br class="hidden-md-down">
+      You can select a different guide from the different tools above.
+    </p>
+  </div>
+</div>
+
+<hr>
+
+<div class="tab-content">
+  <div class="install-guide tab-pane active" role="tabpanel" data-packagemanager="yarn" data-compiler="babel">
+    {% include_relative _install/include.html package_manager="yarn" compiler="babel" %}
+  </div>
+
+  <div class="install-guide tab-pane" role="tabpanel" data-packagemanager="npm" data-compiler="babel">
+    {% include_relative _install/include.html package_manager="npm"  compiler="babel" %}
+  </div>
+
+  <div class="install-guide tab-pane" role="tabpanel" data-packagemanager="yarn" data-compiler="flow-remove-types">
+    {% include_relative _install/include.html package_manager="yarn" compiler="flow-remove-types" %}
+  </div>
+
+  <div class="install-guide tab-pane" role="tabpanel" data-packagemanager="npm" data-compiler="flow-remove-types">
+    {% include_relative _install/include.html package_manager="npm"  compiler="flow-remove-types" %}
+  </div>
+</div>

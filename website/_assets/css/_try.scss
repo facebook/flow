@@ -1,0 +1,169 @@
+html.site-fullscreen,
+html.site-fullscreen body,
+html.site-fullscreen .content {
+  height: 100%;
+}
+
+.try-editor {
+  position: relative;
+  height: 100%;
+
+  .code,
+  .results {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+  }
+
+  .code {
+    left: 0;
+    right: 50%;
+    background: #fff;
+  }
+
+  .results {
+    right: 0;
+    left: 50%;
+    font-size: 12px;
+    background: #f7f7f7;
+    border-left: 1px solid #ddd;
+    overflow: auto;
+  }
+
+  .CodeMirror {
+    height: 100%;
+
+    pre {
+      font-family: "Roboto Mono", Menlo, monospace;
+      font-size: 13px;
+      -webkit-font-smoothing: subpixel-antialiased;
+    }
+  }
+}
+
+.try-editor .results {
+  .loading {
+    display: none;
+  }
+
+  .toolbar {
+    position: relative;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    &:after {
+      content: "";
+      display: block;
+      clear: both;
+    }
+
+    .tab {
+      border-right: 1px solid #ddd;
+      cursor: pointer;
+      float: left;
+      font-size: 14px;
+      font-weight: bold;
+      padding: 7px 15px;
+    }
+
+    .version {
+      position: absolute;
+      right: 5px;
+      top: 0px;
+      line-height: 36px;
+    }
+  }
+
+  &.show-errors .toolbar .tab.errors-tab,
+  &.show-json .toolbar .tab.json-tab,
+  &.show-ast .toolbar .tab.ast-tab {
+    background: #f7f7f7;
+    border-bottom: 1px solid #f7f7f7;
+    margin-bottom: -1px;
+  }
+
+  .errors,
+  .json,
+  .ast {
+    display: none;
+    padding: 7px 10px;
+  }
+
+  &.show-errors .errors,
+  &.show-json .json,
+  &.show-ast .ast,
+  &.show-loading .loading {
+    display: block;
+  }
+}
+
+.try-editor .errors {
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li + li {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: solid #eee 1px;
+  }
+
+  .msgHighlight,
+  .msgType {
+    cursor: pointer;
+  }
+}
+
+.try-editor .loading {
+  position: absolute;
+  width: 100%;
+}
+
+/* https://github.com/tobiasahlin/SpinKit */
+.try-editor .loader {
+  position: relative;
+  margin: 150px auto 0;
+  width: 70px;
+  text-align: center;
+
+  > div {
+    width: 18px;
+    height: 18px;
+    background-color: #ddd;
+
+    border-radius: 100%;
+    display: inline-block;
+    -webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+    animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+  }
+
+  .bounce1 {
+    -webkit-animation-delay: -0.32s;
+    animation-delay: -0.32s;
+  }
+
+  .bounce2 {
+    -webkit-animation-delay: -0.16s;
+    animation-delay: -0.16s;
+  }
+}
+
+@-webkit-keyframes sk-bouncedelay {
+  0%, 80%, 100% { -webkit-transform: scale(0) }
+  40% { -webkit-transform: scale(1.0) }
+}
+
+@keyframes sk-bouncedelay {
+  0%, 80%, 100% {
+    -webkit-transform: scale(0);
+    transform: scale(0);
+  } 40% {
+    -webkit-transform: scale(1.0);
+    transform: scale(1.0);
+  }
+}
