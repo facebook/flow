@@ -8,7 +8,7 @@
  *
  *)
 
-exception Error of string * int
+exception Error of string * Unix.error
 
 (* Contains all the fsevents context *)
 type env
