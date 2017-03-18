@@ -5383,9 +5383,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, UseT (FunReturn, u) ->
       add_output cx ~trace (FlowError.EFunReturn (reason_of_t l, reason_of_t u))
 
-    | _, UseT (Internal _, _) ->
-      ()
-
     | _, UseT (PropertyCompatibility _ as use_op, u) ->
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (
         reason_of_t l, reason_of_t u, use_op
@@ -7712,10 +7709,13 @@ and filter_not_undefined = function
   | MixedT (r, Mixed_non_null) -> MixedT (r, Mixed_non_maybe)
   | t -> t
 
-and filter_string_literal expected t =
-  let lit_reason = replace_reason_const (RStringLit expected) in
+and filter_string_literal expected_loc expected t =
+  let expected_desc = RStringLit expected in
+  let lit_reason = replace_reason_const expected_desc in
   match t with
-  | StrT (_, Literal actual) when actual = expected -> t
+  | StrT (_, Literal actual) ->
+    if actual = expected then t
+    else StrT (mk_reason expected_desc expected_loc, Literal expected)
   | StrT (r, Truthy) when expected <> "" ->
     StrT (lit_reason r, Literal expected)
   | StrT (r, AnyLiteral) ->
@@ -7729,10 +7729,14 @@ and filter_not_string_literal expected = function
   | StrT (r, Literal actual) when actual = expected -> EmptyT r
   | t -> t
 
-and filter_number_literal expected t =
-  let lit_reason = replace_reason_const (RNumberLit (snd expected)) in
+and filter_number_literal expected_loc expected t =
+  let _, expected_raw = expected in
+  let expected_desc = RNumberLit expected_raw in
+  let lit_reason = replace_reason_const expected_desc in
   match t with
-  | NumT (_, Literal actual) when snd actual = snd expected -> t
+  | NumT (_, Literal (_, actual_raw)) ->
+    if actual_raw = expected_raw then t
+    else NumT (mk_reason expected_desc expected_loc, Literal expected)
   | NumT (r, Truthy) when snd expected <> "0" ->
     NumT (lit_reason r, Literal expected)
   | NumT (r, AnyLiteral) ->
@@ -7900,20 +7904,20 @@ and predicate cx trace t l p = match p with
   (* _ ~ "some string" *)
   (*********************)
 
-  | SingletonStrP lit ->
-    rec_flow_t cx trace (filter_string_literal lit l, t)
+  | SingletonStrP (expected_loc, lit) ->
+    rec_flow_t cx trace (filter_string_literal expected_loc lit l, t)
 
-  | NotP SingletonStrP lit ->
+  | NotP SingletonStrP (_, lit) ->
     rec_flow_t cx trace (filter_not_string_literal lit l, t)
 
   (*********************)
   (* _ ~ some number n *)
   (*********************)
 
-  | SingletonNumP lit ->
-    rec_flow_t cx trace (filter_number_literal lit l, t)
+  | SingletonNumP (expected_loc, lit) ->
+    rec_flow_t cx trace (filter_number_literal expected_loc lit l, t)
 
-  | NotP SingletonNumP lit ->
+  | NotP SingletonNumP (_, lit) ->
     rec_flow_t cx trace (filter_not_number_literal lit l, t)
 
   (***********************)

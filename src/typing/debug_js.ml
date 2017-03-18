@@ -1078,8 +1078,8 @@ and json_of_pred_impl json_cx p = Hh_json.(
     ]
 
   | SingletonBoolP value -> ["value", JSON_Bool value]
-  | SingletonStrP str -> ["value", JSON_String str]
-  | SingletonNumP (_,raw) -> ["value", JSON_String raw]
+  | SingletonStrP (_, str) -> ["value", JSON_String str]
+  | SingletonNumP (_, (_,raw)) -> ["value", JSON_String raw]
 
   | PropExistsP (_, key) -> ["propName", JSON_String key]
 

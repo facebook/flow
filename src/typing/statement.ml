@@ -3958,19 +3958,19 @@ and predicates_of_condition cx e = Ast.(Expression.(
         literal_test loc ~sense ~strict expr val_t (SingletonBoolP lit)
 
     (* special case equality relations involving strings *)
-    | (_, Expression.Literal { Literal.value = Literal.String lit; _})
-      as value, expr
-    | expr, ((_, Expression.Literal { Literal.value = Literal.String lit; _})
+    | ((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _})
+      as value), expr
+    | expr, ((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _})
       as value)
     | expr, ((_, Expression.TemplateLiteral {
-        TemplateLiteral.quasis = [_, {
+        TemplateLiteral.quasis = [lit_loc, {
           TemplateLiteral.Element.value = {
             TemplateLiteral.Element.cooked = lit; _
           }; _
         }]; _
       }) as value)
     | ((_, Expression.TemplateLiteral {
-        TemplateLiteral.quasis = [_, {
+        TemplateLiteral.quasis = [lit_loc, {
           TemplateLiteral.Element.value = {
             TemplateLiteral.Element.cooked = lit; _
           }; _
@@ -3978,16 +3978,16 @@ and predicates_of_condition cx e = Ast.(Expression.(
       }) as value), expr
       ->
         let val_t = expression cx value in
-        literal_test loc ~sense ~strict expr val_t (SingletonStrP lit)
+        literal_test loc ~sense ~strict expr val_t (SingletonStrP (lit_loc, lit))
 
     (* special case equality relations involving numbers *)
-    | (_, Expression.Literal { Literal.value = Literal.Number lit; raw })
-      as value, expr
-    | expr, ((_, Expression.Literal { Literal.value = Literal.Number lit; raw })
+    | ((lit_loc, Expression.Literal { Literal.value = Literal.Number lit; raw })
+      as value), expr
+    | expr, ((lit_loc, Expression.Literal { Literal.value = Literal.Number lit; raw })
       as value)
       ->
         let val_t = expression cx value in
-        literal_test loc ~sense ~strict expr val_t (SingletonNumP (lit, raw))
+        literal_test loc ~sense ~strict expr val_t (SingletonNumP (lit_loc, (lit, raw)))
 
     (* TODO: add Type.predicate variant that tests number equality *)
 
