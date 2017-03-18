@@ -355,4 +355,5 @@ module type S = sig
   val optional_shape_fields_not_supported : Pos.t -> unit
   val darray_not_supported : Pos.t -> unit
   val varray_not_supported : Pos.t -> unit
+  val too_few_type_arguments : Pos.t -> unit
 end
