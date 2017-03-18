@@ -144,7 +144,7 @@ class Button extends React.Component {
     display: 'static' | 'hover' | 'active',
   };
 
-  static defaultProps: { visited: boolean };
+  static defaultProps = { visited: false };
 
   onMouseEnter: () => void;
   onMouseLeave: () => void;
@@ -180,7 +180,6 @@ class Button extends React.Component {
     );
   }
 }
-Button.defaultProps = { visited: false };
 
 function renderButton(container: HTMLElement, visited?: boolean) {
   const element = (
