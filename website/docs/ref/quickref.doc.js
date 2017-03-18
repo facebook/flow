@@ -53,16 +53,16 @@ next: syntax.html
   This type describes JavaScript array objects and the type of the elements
   contained within the array.
 
-  Indexing into an array with type `Array<T>` will always yield a value with
+  Indexing into an array with type `Array<T>`, or the shorthand `T[]`, will always yield a value with
   type `T`. That is, Flow assumes arrays are dense and does not do bounds
   checking.
 */
 
-let array: number[] = [1, 2, 3.14, 42];
+let array: Array<number> = [1, 2, 3.14, 42];
 let theAnswer: number = array[3]; // 42
 let offTheEnd: number = array[100]; // No error
 
-let array2: Array<string> = ["an alternate", "syntax", "for arrays"];
+let array2: string[] = ["shorthand", "syntax", "for arrays"];
 
 /*
   ### Tuples
