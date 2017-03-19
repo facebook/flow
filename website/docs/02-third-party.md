@@ -135,7 +135,7 @@ a libdef file for lodash -- so let's write one ourselves:
 
 ```js
 declare module "lodash" {
-  declare module.exports: {
+  declare var exports: {
     find<T>(list: Array<T>, properties: Object): T;
   };
 }
@@ -146,11 +146,11 @@ Here we've written a file that contains a `declare module` statement.
 module of the given name.
 
 Within the body of this statement, we have another statement: 
-`declare module.exports: ...`. This is how we explain to Flow what the type of
+`declare var exports: ...`. This is how we explain to Flow what the type of
 the `module.exports` object inside this module should be. In this case, we say
 that it is an object type with one `find` method.
 
-Everything after the `:` in "`declare module.exports: ...`" is just a normal type
+Everything after the `:` in "`declare var exports: ...`" is just a normal type
 annotation, so you can read more about type annotations 
 [here](type-annotations.html).
 
