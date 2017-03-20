@@ -39,9 +39,9 @@ git ls-remote --tags | awk '{print $2}' | cut -d/ -f3 | \
   grep -e '^v[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}$' | \
   sort -s -t. -k 1,1nr -k 2,2nr -k 3,3nr | \
   head -n 5 >> "website/_data/flow_dot_js_versions.csv"
-env \
+(cd website && env \
   PATH="${TRAVIS_BUILD_DIR}/bin:$PATH" \
-  (cd website && make build-production DEST="$PAGES_CHECKOUT")
+  make build-production DEST="$PAGES_CHECKOUT")
 printf "travis_fold:end:jekyll_build\n"
 
 printf "travis_fold:start:push_s3\nPushing to S3\n"
