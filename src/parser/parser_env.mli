@@ -36,6 +36,7 @@ type parse_options = {
   esproposal_class_static_fields: bool;
   esproposal_decorators: bool;
   esproposal_export_star_as: bool;
+  esproposal_dynamic_import: bool;
   types: bool;
   use_strict: bool;
 }

@@ -77,6 +77,11 @@ let parse_options jsopts = Parser_env.(
     then { opts with types = Js.to_bool types; }
     else opts in
 
+  let dynamic_import = Js.Unsafe.get jsopts "esproposal_dynamic_import" in
+  let opts = if Js.Optdef.test dynamic_import
+    then { opts with esproposal_dynamic_import = Js.to_bool dynamic_import}
+    else opts in
+
   opts
 )
 

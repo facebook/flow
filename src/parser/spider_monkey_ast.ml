@@ -468,6 +468,12 @@ and Statement : sig
       specifiers: specifier list;
     }
   end
+  module Import : sig
+    type t = {
+      expression: Expression.t;
+      directive: string;
+    }
+  end
   module Expression : sig
     type t = {
       expression: Expression.t;
