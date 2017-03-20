@@ -759,6 +759,7 @@ and Expression : sig
   and t' =
     | This
     | Super
+    | Import
     | Array of Array.t
     | Object of Object.t
     | Function of Function.t
