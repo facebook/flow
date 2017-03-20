@@ -1,7 +1,7 @@
 ---
 title: Announcing Typecasts
 short-title: Typecasts
-author: bhosmer
+author: Basil Hosmer
 ---
 
 As of version 0.3.0, Flow supports typecast expression.

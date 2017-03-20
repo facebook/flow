@@ -1,7 +1,7 @@
 ---
 title: Announcing Bounded Polymorphism
 short-title: Bounded Polymorphism
-author: avik
+author: Avik Chaudhuri
 ---
 
 As of Flow 0.5.0, you can define polymorphic functions and classes with bounds on their type parameters. This is extremely useful for writing functions and classes that need some constraints on their type parameters. Flow's bounded polymorphism syntax looks like

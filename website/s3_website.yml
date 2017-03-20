@@ -1,6 +1,9 @@
+---
+---
+
 s3_id: <%= ENV['AWS_ACCESS_KEY_ID'] %>
 s3_secret: <%= ENV['AWS_SECRET_ACCESS_KEY'] %>
-s3_bucket: flowtype.org
+s3_bucket: <%= ENV['S3_BUCKET'] %>
 
 exclude_from_upload:
   - .git
@@ -11,7 +14,38 @@ cloudfront_invalidate_root: true
 cloudfront_wildcard_invalidation: true
 
 redirects:
-  docs/about-flow.html: about/
+  index.html: en/
+  about/: en/docs/lang/
+  docs/about-flow.html: en/docs/lang/
+  docs/getting-started.html: en/docs/getting-started/
+  # docs/five-simple-examples.html: ??
+  docs/new-project.html: en/docs/usage/
+  docs/existing.html: en/docs/usage/
+  docs/type-annotations.html: en/docs/types/
+  docs/third-party.html: en/docs/libdefs/
+  docs/running.html: en/docs/tools/
+  # docs/troubleshooting.html:
+  docs/cli.html: en/docs/cli/
+  docs/advanced-configuration.html: en/docs/config/
+  docs/quick-reference.html: en/docs/types/
+  docs/syntax.html: en/docs/types/
+  docs/builtins.html: en/docs/types/primitives/
+  docs/arrays.html: en/docs/types/arrays/
+  docs/classes.html: en/docs/types/classes/
+  docs/objects.html: en/docs/types/objects/
+  docs/functions.html: en/docs/types/functions/
+  docs/variance.html: en/docs/lang/variance/
+  docs/nullable-types.html: en/docs/types/maybe/
+  docs/destructuring.html: en/docs/lang/types-and-expressions/
+  docs/type-aliases.html: en/docs/types/aliases/
+  docs/union-intersection-types.html: en/docs/types/unions/
+  docs/typeof.html: en/docs/types/typeof/
+  docs/dynamic-type-tests.html: en/docs/lang/refinements/
+  docs/disjoint-unions.html: en/docs/types/unions/
+  docs/modules.html: en/docs/types/modules/
+  docs/declarations.html: en/docs/libdefs/
+  docs/utility-types.html: en/docs/types/utilities/
+  docs/react.html: en/docs/frameworks/react/
 
 ignore_on_server:
   - assets/v.*

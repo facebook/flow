@@ -1,7 +1,7 @@
 ---
 title: Announcing Import Type
 short-title: Import Type
-author: jeffmo
+author: Jeff Morrison
 ---
 
 As of Flow 0.3.0, it's now possible to import types from another module. So, for example, if you're only importing a class for purposes of referencing it in a type annotation, you can now use the new `import type` syntax to do this.
