@@ -224,23 +224,6 @@ begin library "hh-utils-sys"
   ]
 end
 
-begin library "hh-utils-errors"
-  dirname = "hack/utils"
-  sort = true
-  files = [
-    "errors_sig.ml"
-  ]
-  requires = [
-    "hh-utils-collections"
-    "hh-utils-core"
-    "hh-utils-json"
-    "hh-utils-pos"
-    "hh-utils-relative-path"
-    "hh-utils-string"
-    "tp-core"
-  ]
-end
-
 begin library "hh-utils-collections"
   sort = true
   files = begin fb-glob "hack/utils/collections"
