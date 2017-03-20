@@ -7,12 +7,16 @@
 
 EXTRA_INCLUDE_PATHS=
 EXTRA_LIB_PATHS=
+INTERNAL_MODULES=hack/stubs src/stubs
+INTERNAL_NATIVE_C_FILES=
+
+OS=$(shell uname -s)
+
+-include facebook/Makefile
 
 ################################################################################
 #                              OS-dependent stuff                              #
 ################################################################################
-
-OS=$(shell uname -s)
 
 FLOWLIB=bin/flowlib.tar.gz
 
@@ -56,7 +60,6 @@ MODULES=\
   src/services/inference\
   src/services/flowFileGen\
   src/services/port\
-  src/stubs\
   src/third-party/lz4\
   src/typing\
   hack/dfind\
@@ -68,7 +71,6 @@ MODULES=\
   hack/procs\
   hack/search\
   hack/socket\
-  hack/stubs\
   hack/third-party/avl\
   hack/third-party/core\
   hack/utils\
@@ -76,7 +78,8 @@ MODULES=\
   hack/utils/disk\
   hack/utils/hh_json\
   hack/$(INOTIFY)\
-  hack/$(FSNOTIFY)
+  hack/$(FSNOTIFY)\
+  $(INTERNAL_MODULES)
 
 NATIVE_C_FILES=\
   hack/$(INOTIFY_STUBS)\
@@ -92,7 +95,8 @@ NATIVE_C_FILES=\
   hack/utils/win32_support.c\
   hack/hhi/hhi_win32res_stubs.c\
   src/embedded/flowlib_elf.c\
-  $(sort $(wildcard src/third-party/lz4/*.c))
+  $(sort $(wildcard src/third-party/lz4/*.c))\
+  $(INTERNAL_NATIVE_C_FILES)
 
 OCAML_LIBRARIES=\
   unix\
