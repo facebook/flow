@@ -1737,9 +1737,7 @@ let rec reason_of_t = function
   | DiffT (t, _) -> reason_of_t t
   | EmptyT reason -> reason
   | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
-  | ExactT (reason, t) ->
-      let desc = desc_of_reason (reason_of_t t) in
-      replace_reason_const (RExactType desc) reason
+  | ExactT (reason, _) -> reason
   | ExistsT reason -> reason
   | ExtendsT (_,_,t) ->
       replace_reason (fun desc -> RExtends desc) (reason_of_t t)
