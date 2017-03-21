@@ -289,7 +289,7 @@ let rec gen_type t env = Type.(
 
     add_str "}" env
   )
-  | OptionalT t -> add_str "void | " env |> gen_type t
+  | OptionalT (_, t) -> add_str "void | " env |> gen_type t
   | OpenT _ -> gen_type (resolve_type t env) env
   | PolyT (tparams, t) -> gen_type t (add_tparams tparams env)
   | ReposT (_, t) -> gen_type t env
@@ -387,7 +387,7 @@ and gen_prop k p env =
     let sigil = Polarity.sigil polarity in
     let (sep, t) =
       match resolve_type t env with
-      | OptionalT t -> ("?: ", resolve_type t env)
+      | OptionalT (_, t) -> ("?: ", resolve_type t env)
       | t -> (": ", t)
     in
     add_str sigil env
@@ -429,7 +429,7 @@ and gen_func_rest_param name t env =
 and gen_func_param name t env =
   let open Type in
   match t with
-  | OptionalT t ->
+  | OptionalT (_, t) ->
     add_str name env
     |> add_str "?: "
     |> gen_type t

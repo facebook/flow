@@ -513,7 +513,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     List.fold_left (fun (tlist, pnames) (_, param) ->
       let { Function.Param.name; typeAnnotation; optional } = param in
       let t = convert cx tparams_map typeAnnotation in
-      let t = if optional then OptionalT t else t in
+      let t = if optional then Type.optional t else t in
       (t :: tlist, optional_ident_name name :: pnames)
     ) ([], []) params in
 
@@ -601,7 +601,7 @@ let rec convert cx tparams_map = Ast.Type.(function
           (_, { Ast.Literal.value = Ast.Literal.String name; _ })
       | Ast.Expression.Object.Property.Identifier (_, name) ->
           let t = convert cx tparams_map value in
-          let t = if optional then OptionalT t else t in
+          let t = if optional then Type.optional t else t in
           let polarity = if _method then Positive else polarity variance in
           SMap.add name (Field (t, polarity)) props
       | _ ->

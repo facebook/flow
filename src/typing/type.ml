@@ -83,7 +83,7 @@ module rec TypeTerm : sig
     | InstanceT of reason * static * super * implements * insttype
 
     (* type of an optional parameter *)
-    | OptionalT of t
+    | OptionalT of reason * t
     | AbstractT of t
 
     (* type expression whose evaluation is deferred *)
@@ -1760,7 +1760,7 @@ let rec reason_of_t = function
   | ObjProtoT reason -> reason
   | ObjT (reason,_) -> reason
   | OpenPredT (reason, _, _, _) -> reason
-  | OptionalT t -> replace_reason (fun desc -> ROptional desc) (reason_of_t t)
+  | OptionalT (reason, _) -> reason
   | PolyT (_,t) -> replace_reason (fun desc -> RPolyType desc) (reason_of_t t)
   | ReposT (reason, _) -> reason
   | ReposUpperT (reason, _) -> reason
@@ -1917,7 +1917,7 @@ let rec mod_reason_of_t f = function
   | ObjProtoT reason -> ObjProtoT (f reason)
   | ObjT (reason, ot) -> ObjT (f reason, ot)
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
-  | OptionalT t -> OptionalT (mod_reason_of_t f t)
+  | OptionalT (reason, t) -> OptionalT (f reason, t)
   | PolyT (plist, t) -> PolyT (plist, mod_reason_of_t f t)
   | ReposT (reason, t) -> ReposT (f reason, t)
   | ReposUpperT (reason, t) -> ReposUpperT (reason, mod_reason_of_t f t)
@@ -2317,3 +2317,7 @@ and elemt_of_arrtype reason = function
 | ROArrayAT (elemt)
 | TupleAT (elemt, _) -> elemt
 | EmptyAT -> EmptyT reason
+
+let optional t =
+  let reason = replace_reason (fun desc -> ROptional desc) (reason_of_t t) in
+  OptionalT (reason, t)

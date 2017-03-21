@@ -237,7 +237,7 @@ let rec type_printer_impl ~size override enclosure cx t =
         let type_s = String.concat " | " mems in
         parenthesize type_s enclosure [EnclosureIntersect; EnclosureMaybe]
 
-    | OptionalT t ->
+    | OptionalT (_, t) ->
         let type_s = pp EnclosureNone cx t in
         begin match enclosure with
         | EnclosureParam | EnclosureProp -> type_s
@@ -400,7 +400,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     ->
       is_printed_type_list_parsable weak cx EnclosureNone ts
 
-  | OptionalT t ->
+  | OptionalT (_, t) ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
 
   | VoidT _ -> true

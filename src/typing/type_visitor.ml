@@ -74,7 +74,7 @@ class ['a] t = object(self)
     let acc = self#inst_type cx acc insttype in
     acc
 
-  | OptionalT t -> self#type_ cx acc t
+  | OptionalT (_, t) -> self#type_ cx acc t
 
   | AbstractT t -> self#type_ cx acc t
 

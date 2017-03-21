@@ -93,7 +93,7 @@ let rec normalize_type_impl cx ids t = match t with
   (* (thisArg: any, argArray?: any): any *)
   | FunProtoApplyT _ ->
       let any = AnyT (locationless_reason RAny) in
-      let tins = [any; OptionalT any] in
+      let tins = [any; optional any] in
       let params_names = Some ["thisArg"; "argArray"] in
       fake_fun params_names tins None any
 
@@ -370,8 +370,9 @@ let rec normalize_type_impl cx ids t = match t with
   | InstanceT _ ->
       t (* nominal type *)
 
-  | OptionalT t ->
-      OptionalT (normalize_type_impl cx ids t)
+  | OptionalT (reason, t) ->
+      let reason = locationless_reason (desc_of_reason reason) in
+      OptionalT (reason, normalize_type_impl cx ids t)
 
   | TypeAppT (c, ts) ->
       let c = normalize_type_impl cx ids c in

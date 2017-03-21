@@ -658,7 +658,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       | false, Property.Identifier (_, name),
           Ast.Type.Object.Property.Init value ->
           let t = Anno.convert cx tparams_map value in
-          let t = if optional then Type.OptionalT t else t in
+          let t = if optional then Type.optional t else t in
           add_field ~static name (t, polarity, None) x
 
       (* unsafe getter property *)
@@ -752,7 +752,7 @@ let toplevels cx ~decls ~stmts ~expr x =
           let specific =
             VoidT (replace_reason_const RUninitializedThis (reason_of_t this))
           in
-          Scope.Entry.new_var ~loc:(loc_of_t t) ~specific (OptionalT t)
+          Scope.Entry.new_var ~loc:(loc_of_t t) ~specific (Type.optional t)
         else
           new_entry t
       in

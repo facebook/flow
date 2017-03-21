@@ -156,7 +156,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "instance", json_of_insttype json_cx instance
     ]
 
-  | OptionalT t
+  | OptionalT (_, t)
   | AbstractT t -> [
       "type", _json_of_t json_cx t
     ]
@@ -1486,7 +1486,7 @@ and dump_t_ (depth, tvars) cx t =
   | TypeT (_, arg) -> p ~extra:(kid arg) t
   | AnnotT source -> p ~reason:false
       ~extra:(spf "%s" (kid source)) t
-  | OptionalT arg
+  | OptionalT (_, arg) -> p ~extra:(kid arg) t
   | AbstractT arg -> p ~reason:false ~extra:(kid arg) t
   | EvalT (arg, expr, id) -> p
       ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t

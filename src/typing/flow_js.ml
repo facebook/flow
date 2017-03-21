@@ -1047,7 +1047,7 @@ module ResolvableTypeJob = struct
        virtualization of calls to this function doesn't lead to perf
        degradation: this function is expected to be quite hot). *)
 
-    | OptionalT t | MaybeT (_, t) ->
+    | OptionalT (_, t) | MaybeT (_, t) ->
       collect_of_type ?log_unresolved cx reason acc t
     | UnionT (_, rep) ->
       let ts = UnionRep.members rep in
@@ -1516,9 +1516,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (VoidT.why lreason, u);
       rec_flow cx trace (t, u);
 
-    | OptionalT t, IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
-      let lreason = reason_of_t t in
-      rec_flow cx trace (VoidT.why lreason, u);
+    | OptionalT (r, t), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
+      rec_flow cx trace (VoidT.why r, u);
       rec_flow cx trace (t, u);
 
     | AnnotT source_t, IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
@@ -2182,7 +2181,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* De-maybe-ify an idx() property access *)
     | (MaybeT (_, inner_t), IdxUnMaybeifyT _)
-    | (OptionalT inner_t, IdxUnMaybeifyT _)
+    | (OptionalT (_, inner_t), IdxUnMaybeifyT _)
       -> rec_flow cx trace (inner_t, u)
     | (NullT _, IdxUnMaybeifyT _) -> ()
     | (VoidT _, IdxUnMaybeifyT _) -> ()
@@ -2260,9 +2259,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          reposition the entire optional type. *)
       rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
-    | (OptionalT(t), _) ->
-      let reason = reason_of_t t in
-      rec_flow cx trace (VoidT.why reason, u);
+    | OptionalT (r, t), _ ->
+      rec_flow cx trace (VoidT.why r, u);
       rec_flow cx trace (t, u)
 
     (*****************)
@@ -2676,7 +2674,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (t1, UseT (use_op, MaybeT (_, t2))) ->
       rec_flow cx trace (t1, UseT (use_op, t2))
 
-    | (t1, UseT (use_op, OptionalT(t2))) ->
+    | (t1, UseT (use_op, OptionalT (_, t2))) ->
       rec_flow cx trace (t1, UseT (use_op, t2))
 
     (** special treatment for some operations on intersections: these
@@ -3655,7 +3653,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
         | _ ->
           match up with
-          | Field (OptionalT ut, upolarity) ->
+          | Field (OptionalT (_, ut), upolarity) ->
             rec_flow cx trace (l,
               LookupT (ureason, NonstrictReturning None, [], propref,
                 LookupProp (use_op, Field (ut, upolarity))))
@@ -5579,7 +5577,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
       rec_flow_t cx trace (string_key s reason_prop, key);
       let lp = Field (value, dict_polarity) in
       let up = match up with
-      | Field (OptionalT ut, upolarity) ->
+      | Field (OptionalT (_, ut), upolarity) ->
         Field (ut, upolarity)
       | _ -> up
       in
@@ -5627,7 +5625,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
       then (
         rec_flow_t cx trace (string_key s lreason, key);
         let lp = match lp with
-        | Field (OptionalT lt, lpolarity) ->
+        | Field (OptionalT (_, lt), lpolarity) ->
           Field (lt, lpolarity)
         | _ -> lp
         in
@@ -5949,7 +5947,7 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
   let methods_pmap = Context.find_props cx methods_pmap in
   fields_pmap |> SMap.iter (fun s p ->
     match p with
-    | Field (OptionalT t, polarity) ->
+    | Field (OptionalT (_, t), polarity) ->
       let propref =
         let reason_prop = replace_reason (fun desc ->
           ROptional (RPropertyOf (s, desc))
@@ -6189,9 +6187,9 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
         }
     )
 
-  | OptionalT opt_t ->
+  | OptionalT (reason, opt_t) ->
     let opt_t_ = subst cx ~force map opt_t in
-    if opt_t_ == opt_t then t else OptionalT opt_t_
+    if opt_t_ == opt_t then t else OptionalT (reason, opt_t_)
 
   | AbstractT abstract_t ->
     let abstract_t_ = subst cx ~force map abstract_t in
@@ -6403,7 +6401,7 @@ and check_polarity cx ?trace polarity = function
   | SingletonBoolT _
     -> ()
 
-  | OptionalT t
+  | OptionalT (_, t)
   | AbstractT t
   | ExactT (_, t)
   | MaybeT (_, t)
@@ -7585,7 +7583,7 @@ and filter_exists = function
 
   (* unknown things become truthy *)
   | MaybeT (_, t) -> t
-  | OptionalT t -> filter_exists t
+  | OptionalT (_, t) -> filter_exists t
   | BoolT (r, None) -> BoolT (r, Some true)
   | StrT (r, AnyLiteral) -> StrT (r, Truthy)
   | NumT (r, AnyLiteral) -> NumT (r, Truthy)
@@ -7644,9 +7642,7 @@ and filter_maybe = function
   | MixedT (r, Mixed_non_null) -> VoidT r
   | NullT _ as t -> t
   | VoidT _ as t -> t
-  | OptionalT t ->
-    let reason = reason_of_t t in
-    VoidT.why reason
+  | OptionalT (r, _) -> VoidT.why r
   | AnyT _ as t -> t
   | t ->
     let reason = reason_of_t t in
@@ -7654,7 +7650,7 @@ and filter_maybe = function
 
 and filter_not_maybe = function
   | MaybeT (_, t) -> t
-  | OptionalT t -> filter_not_maybe t
+  | OptionalT (_, t) -> filter_not_maybe t
   | NullT r | VoidT r -> EmptyT r
   | MixedT (r, Mixed_truthy) -> MixedT (r, Mixed_truthy)
   | MixedT (r, Mixed_everything)
@@ -7664,7 +7660,7 @@ and filter_not_maybe = function
   | t -> t
 
 and filter_null = function
-  | OptionalT (MaybeT (r, _))
+  | OptionalT (_, (MaybeT (r, _)))
   | MaybeT (r, _) -> NullT.why r
   | NullT _ as t -> t
   | MixedT (r, Mixed_everything)
@@ -7677,7 +7673,7 @@ and filter_null = function
 and filter_not_null = function
   | MaybeT (r, t) ->
     UnionT (r, UnionRep.make (VoidT.why r) t [])
-  | OptionalT t -> OptionalT (filter_not_null t)
+  | OptionalT (r, t) -> OptionalT (r, filter_not_null t)
   | UnionT (r, rep) ->
     recurse_into_union filter_not_null (r, UnionRep.members rep)
   | NullT r -> EmptyT r
@@ -7688,9 +7684,7 @@ and filter_not_null = function
 and filter_undefined = function
   | MaybeT (r, _) -> VoidT.why r
   | VoidT _ as t -> t
-  | OptionalT t ->
-    let reason = reason_of_t t in
-    VoidT.why reason
+  | OptionalT (r, _) -> VoidT.why r
   | MixedT (r, Mixed_everything)
   | MixedT (r, Mixed_non_null) -> VoidT.why r
   | AnyT _ as t -> t
@@ -7701,7 +7695,7 @@ and filter_undefined = function
 and filter_not_undefined = function
   | MaybeT (r, t) ->
     UnionT (r, UnionRep.make (NullT.why r) t [])
-  | OptionalT t -> filter_not_undefined t
+  | OptionalT (_, t) -> filter_not_undefined t
   | UnionT (r, rep) ->
     recurse_into_union filter_not_undefined (r, UnionRep.members rep)
   | VoidT r -> EmptyT r
@@ -7785,7 +7779,7 @@ and filter_not_false t =
 (* filter out undefined from a type *)
 and filter_optional cx ?trace reason opt_t =
   mk_tvar_where cx reason (fun t ->
-    flow_opt_t cx ?trace (opt_t, OptionalT(t))
+    flow_opt_t cx ?trace (opt_t, OptionalT (reason, t))
   )
 
 (**********)
@@ -9483,8 +9477,9 @@ and reposition cx ?trace loc t =
          T. *)
       let r = repos_reason loc r in
       MaybeT (r, recurse seen t)
-  | OptionalT t ->
-      OptionalT (recurse seen t)
+  | OptionalT (r, t) ->
+      let r = repos_reason loc r in
+      OptionalT (r, recurse seen t)
   | UnionT (r, rep) ->
       let r = repos_reason loc r in
       let rep = UnionRep.map (recurse seen) rep in
@@ -9771,8 +9766,8 @@ and object_spread =
   let spread2 reason (r1,props1,dict1,flags1) (r2,props2,dict2,flags2) =
     let union t1 t2 = UnionT (reason, UnionRep.make t1 t2 []) in
     let merge_props (t1, own1) (t2, own2) =
-      let t1, opt1 = match t1 with OptionalT t -> t, true | _ -> t1, false in
-      let t2, opt2 = match t2 with OptionalT t -> t, true | _ -> t2, false in
+      let t1, opt1 = match t1 with OptionalT (_, t) -> t, true | _ -> t1, false in
+      let t2, opt2 = match t2 with OptionalT (_, t) -> t, true | _ -> t2, false in
       (* An own, non-optional property definitely overwrites earlier properties.
          Otherwise, the type might come from either side. *)
       let t, own =
@@ -9786,7 +9781,7 @@ and object_spread =
         if own1 && own2 then opt1 && opt2
         else own1 && opt1 || own2 && opt2
       in
-      let t = if opt then OptionalT t else t in
+      let t = if opt then optional t else t in
       t, own
     in
     let props = SMap.merge (fun x p1 p2 ->
@@ -9795,7 +9790,7 @@ and object_spread =
        * Property accesses which read from dictionaries normally result in a
        * non-optional result, but that leads to confusing spread results. For
        * example, `p` in `{...{|p:T|},...{[]:U}` should `T|U`, not `U`. *)
-      let read_dict r d = OptionalT (read_dict r d), true in
+      let read_dict r d = optional (read_dict r d), true in
       (* Due to width subtyping, failing to read from an inexact object does not
          imply non-existence, but rather an unknown result. *)
       let unknown r =
@@ -9852,11 +9847,11 @@ and object_spread =
     let intersection t1 t2 = IntersectionT (reason, InterRep.make t1 t2 []) in
     let merge_props (t1, own1) (t2, own2) =
       let t1, t2, opt = match t1, t2 with
-      | OptionalT t1, OptionalT t2 -> t1, t2, true
-      | OptionalT t1, t2 | t1, OptionalT t2 | t1, t2 -> t1, t2, false
+      | OptionalT (_, t1), OptionalT (_, t2) -> t1, t2, true
+      | OptionalT (_, t1), t2 | t1, OptionalT (_, t2) | t1, t2 -> t1, t2, false
       in
       let t = intersection t1 t2 in
-      let t = if opt then OptionalT t else t in
+      let t = if opt then optional t else t in
       t, own1 || own2
     in
     let r =
@@ -9864,7 +9859,7 @@ and object_spread =
       mk_reason RObjectType loc
     in
     let props = SMap.merge (fun _ p1 p2 ->
-      let read_dict r d = OptionalT (read_dict r d), true in
+      let read_dict r d = optional (read_dict r d), true in
       match p1, p2 with
       | None, None -> None
       | Some p1, Some p2 -> Some (merge_props p1 p2)
@@ -9902,7 +9897,7 @@ and object_spread =
          might be on a proto object instead, so make the result optional. *)
       let t = match t with
       | OptionalT _ -> t
-      | _ -> if own then t else OptionalT t
+      | _ -> if own then t else optional t
       in
       Field (t, Neutral)
     ) props in
@@ -10363,7 +10358,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     unify_opt cx static Locationless.AnyT.t;
     recurse super
 
-  | OptionalT t ->
+  | OptionalT (_, t) ->
     recurse t
 
   | TypeAppT (c, ts) ->

@@ -37,7 +37,7 @@ let mk cx type_params_map ~expr func =
       | None ->
         let t =
           if optional
-          then OptionalT t
+          then Type.optional t
           else t
         in
         Hashtbl.replace (Context.type_table cx) loc t;
@@ -47,7 +47,7 @@ let mk cx type_params_map ~expr func =
       | Some expr ->
         (* TODO: assert (not optional) *)
         let binding = name, t, loc in
-        { list = Simple (OptionalT t, binding) :: params.list;
+        { list = Simple (Type.optional t, binding) :: params.list;
           defaults = SMap.add name (Default.Expr expr) params.defaults;
           rest = params.rest; })
     | loc, _ ->
@@ -72,7 +72,7 @@ let mk cx type_params_map ~expr func =
         )
       );
       let t = match default with
-        | Some _ -> OptionalT t
+        | Some _ -> Type.optional t
         | None -> t (* TODO: assert (not optional) *)
       in
       let param = Complex (t, List.rev !rev_bindings) in
@@ -122,7 +122,7 @@ let convert cx type_params_map func = Ast.Type.Function.(
     | None -> "_"
     | Some (_, name) -> name in
     let t = Anno.convert cx type_params_map typeAnnotation in
-    let t = if optional then OptionalT t else t in
+    let t = if optional then Type.optional t else t in
     let binding = name, t, loc in
     { params with list = Simple (t, binding) :: params.list }
   in

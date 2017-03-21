@@ -213,7 +213,7 @@ and parts_of_t cx = function
   | Some { key; value; _ } -> ["#key#", Def key; "#val#", Def value]
   end
 | OpenPredT (_, base, _, _) -> ["base", Def base]
-| OptionalT t
+| OptionalT (_, t)
 | PolyT (_, t) -> ["t", Def t]
 | ReposT (_, t) -> ["t", Def t]
 | ReposUpperT (_, t) -> ["t", Def t]

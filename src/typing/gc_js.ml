@@ -129,7 +129,7 @@ let rec gc cx state = function
       gc cx state t;
       gc_pred_map cx state p_map;
       gc_pred_map cx state n_map
-  | OptionalT t -> gc cx state t
+  | OptionalT (_, t) -> gc cx state t
   | PolyT (typeparams, t) ->
       typeparams |> List.iter (gc_typeparam cx state);
       gc cx state t

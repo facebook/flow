@@ -282,8 +282,8 @@ let run cx trace reason_op l u
         next todo (add_dict dict shape)
       | ResolveProp (k, todo, shape) ->
         let t = match coerce_prop_type l with
-        | OK (required, t) -> if required then t else OptionalT t
-        | Err _ -> OptionalT (AnyT (reason_op))
+        | OK (required, t) -> if required then t else Type.optional t
+        | Err _ -> Type.optional (AnyT (reason_op))
         in
         next todo (add_prop k t shape))
   in
@@ -706,8 +706,8 @@ let run cx trace reason_op l u
         next todo (add_dict dict prop_types)
       | ResolveProp (k, todo, prop_types) ->
         let t = match coerce_prop_type l with
-        | OK (required, t) -> if required then t else OptionalT t
-        | Err reason -> OptionalT (AnyT reason)
+        | OK (required, t) -> if required then t else Type.optional t
+        | Err reason -> Type.optional (AnyT reason)
         in
         next todo (add_prop k t prop_types))
 
