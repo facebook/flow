@@ -84,7 +84,7 @@ class ['a] t = object(self)
     let acc = self#eval_id cx acc id in
     acc
 
-  | PolyT (typeparams, t) ->
+  | PolyT (_, typeparams, t) ->
     let acc = self#list (self#type_param cx) acc typeparams in
     let acc = self#type_ cx acc t in
     acc

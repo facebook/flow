@@ -30,7 +30,7 @@ let rec mark_declared_classes name t env = Codegen.(Type.(
   match resolve_type t env with
   | ThisClassT (InstanceT (_, _, _, _, {class_id; _;})) ->
     set_class_name class_id name env
-  | PolyT (_, t) ->
+  | PolyT (_, _, t) ->
     mark_declared_classes name t env
   | _ ->
     env
@@ -154,7 +154,7 @@ let gen_class_body =
           |> gen_type return_t
           |> add_str ";\n"
       )
-    | PolyT (tparams, t) ->
+    | PolyT (_, tparams, t) ->
       let p = Field (t, Positive) in
       add_tparams tparams env |> gen_method ~static method_name p
     | t -> failwith (
@@ -317,7 +317,7 @@ let gen_local_classes =
       match Codegen.resolve_type t env with
       | ThisClassT (InstanceT (_, _, _, _, {class_id; _;})) ->
         ISet.add class_id set
-      | PolyT (_, t) -> fold_imported_classid _name t set
+      | PolyT (_, _, t) -> fold_imported_classid _name t set
       | _ -> set
     ) in
     let imported_classids =
@@ -348,7 +348,7 @@ let gen_named_exports =
           |> gen_type return_t
           |> add_str ";"
 
-      | PolyT (tparams, t) ->
+      | PolyT (_, tparams, t) ->
         add_tparams tparams env |> fold_named_export name t
 
       | ThisClassT (InstanceT (_, static, super, implements, {
@@ -415,7 +415,7 @@ let gen_exports named_exports cjs_export env =
     let type_exports = SMap.filter Type.(fun _name t ->
       let t = match t with OpenT _ -> Codegen.resolve_type t env | _ -> t in
       match t with
-      | TypeT _ | PolyT (_, TypeT _) -> true
+      | TypeT _ | PolyT (_, _, TypeT _) -> true
       | _ -> false
     ) named_exports in
     gen_named_exports type_exports env

@@ -214,7 +214,7 @@ and parts_of_t cx = function
   end
 | OpenPredT (_, base, _, _) -> ["base", Def base]
 | OptionalT (_, t)
-| PolyT (_, t) -> ["t", Def t]
+| PolyT (_, _, t) -> ["t", Def t]
 | ReposT (_, t) -> ["t", Def t]
 | ReposUpperT (_, t) -> ["t", Def t]
 | ShapeT t -> ["t", Def t]

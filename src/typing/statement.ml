@@ -663,11 +663,7 @@ and statement cx = Ast.Statement.(
       let typeparams, typeparams_map =
         Anno.mk_type_param_declarations cx typeParameters in
       let t = Anno.convert cx typeparams_map right in
-      let type_ =
-        if typeparams = []
-        then TypeT (r, t)
-        else PolyT(typeparams, TypeT (r, t))
-      in
+      let type_ = poly_type typeparams (TypeT (r, t)) in
       Hashtbl.replace (Context.type_table cx) loc type_;
       Env.init_type cx name type_ r
 

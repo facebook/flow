@@ -555,7 +555,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         changeset = Changeset.empty
       })
   in
-  if (tparams = []) then ft else PolyT(tparams, ft)
+  poly_type tparams ft
 
 | loc, Object { Object.exact; properties } ->
   let reason_desc = RObjectType in

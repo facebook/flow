@@ -171,7 +171,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       | Some t -> [ "result", _json_of_t json_cx t ]
       end
 
-  | PolyT (tparams, t) -> [
+  | PolyT (_, tparams, t) -> [
       "typeParams", JSON_Array (List.map (json_of_typeparam json_cx) tparams);
       "type", _json_of_t json_cx t
     ]
@@ -1464,7 +1464,7 @@ and dump_t_ (depth, tvars) cx t =
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _ -> p t
-  | PolyT (tps,c) -> p ~extra:(spf "%s [%s]"
+  | PolyT (_, tps,c) -> p ~extra:(spf "%s [%s]"
       (kid c)
       (String.concat "; " (List.map (fun tp -> tp.name) tps))) t
   | ThisClassT _ -> p t

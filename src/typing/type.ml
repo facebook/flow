@@ -113,7 +113,7 @@ module rec TypeTerm : sig
        it is forced only when polymorphic types are applied. *)
 
     (* polymorphic type *)
-    | PolyT of typeparam list * t
+    | PolyT of reason * typeparam list * t
     (* type application *)
     | TypeAppT of t * t list
     (* this-abstracted class *)
@@ -1758,7 +1758,7 @@ let rec reason_of_t = function
   | ObjT (reason,_) -> reason
   | OpenPredT (reason, _, _, _) -> reason
   | OptionalT (reason, _) -> reason
-  | PolyT (_,t) -> replace_reason (fun desc -> RPolyType desc) (reason_of_t t)
+  | PolyT (reason, _, _) -> reason
   | ReposT (reason, _) -> reason
   | ReposUpperT (reason, _) -> reason
   | ShapeT (t) -> reason_of_t t
@@ -1915,7 +1915,7 @@ let rec mod_reason_of_t f = function
   | ObjT (reason, ot) -> ObjT (f reason, ot)
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
   | OptionalT (reason, t) -> OptionalT (f reason, t)
-  | PolyT (plist, t) -> PolyT (plist, mod_reason_of_t f t)
+  | PolyT (reason, plist, t) -> PolyT (f reason, plist, t)
   | ReposT (reason, t) -> ReposT (f reason, t)
   | ReposUpperT (reason, t) -> ReposUpperT (reason, mod_reason_of_t f t)
   | ShapeT t -> ShapeT (mod_reason_of_t f t)
@@ -2326,3 +2326,10 @@ let class_type t =
 let extends_type l u =
   let reason = replace_reason (fun desc -> RExtends desc) (reason_of_t u) in
   ExtendsT (reason, [], l, u)
+
+let poly_type tparams t =
+  if tparams = []
+  then t
+  else
+    let reason = replace_reason (fun desc -> RPolyType desc) (reason_of_t t) in
+    PolyT (reason, tparams, t)

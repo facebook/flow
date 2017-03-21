@@ -205,7 +205,7 @@ let rec type_printer_impl ~size override enclosure cx t =
     | MaybeT (_, t) ->
         spf "?%s" (pp EnclosureMaybe cx t)
 
-    | PolyT (xs,t) ->
+    | PolyT (_, xs, t) ->
         let xs_str =
           xs
           |> List.map (fun param -> param.name)
@@ -326,15 +326,15 @@ let rec type_printer_impl ~size override enclosure cx t =
         assert_false (spf "Missing printer for %s" (string_of_ctor t))
 
 and instance_of_poly_type_printer ~size override enclosure cx = function
-  | PolyT (_, ThisClassT t)
-  | PolyT (_, ClassT (_, t))
+  | PolyT (_, _, ThisClassT t)
+  | PolyT (_, _, ClassT (_, t))
     -> type_printer ~size override enclosure cx t
 
-  | PolyT (_, TypeT (reason, _))
+  | PolyT (_, _, TypeT (reason, _))
     -> DescFormat.name_of_type_reason reason
 
   (* NOTE: t = FunT is legit, others probably mean upstream errors *)
-  | PolyT (_, t)
+  | PolyT (_, _, t)
     -> type_printer ~size override enclosure cx t
 
   (* since we're called with args that aren't statically guaranteed
@@ -452,7 +452,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
       let ts = UnionRep.members rep in
       is_printed_type_list_parsable weak cx EnclosureUnion ts
 
-  | PolyT (_, t)
+  | PolyT (_, _, t)
     ->
       (* unwrap PolyT (ClassT t) because class names are parsable as part of a
          polymorphic type declaration. *)
@@ -493,11 +493,11 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
       false
 
 and is_instantiable_poly_type weak cx enclosure = function
-  | PolyT (_, ThisClassT t)
-  | PolyT (_, ClassT (_, t))
+  | PolyT (_, _, ThisClassT t)
+  | PolyT (_, _, ClassT (_, t))
     -> is_printed_type_parsable_impl weak cx enclosure t
 
-  | PolyT (_, TypeT _)
+  | PolyT (_, _, TypeT _)
     -> true
 
   | _ -> false

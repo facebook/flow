@@ -262,11 +262,11 @@ let rec normalize_type_impl cx ids t = match t with
       let any = AnyT (locationless_reason RAny) in
       let react_element =
         let instance = fake_instance "React$Element" in
-        TypeAppT (PolyT ([config_tp], class_type instance), [config])
+        TypeAppT (poly_type [config_tp] (class_type instance), [config])
       in
       let component_class =
         let instance = fake_instance "ReactClass" in
-        TypeAppT (PolyT ([config_tp], class_type instance), [config])
+        TypeAppT (poly_type [config_tp] (class_type instance), [config])
       in
       let stateless_functional_component =
         let params_names = Some ["config"; "context"] in
@@ -276,12 +276,12 @@ let rec normalize_type_impl cx ids t = match t with
       let t1 =
         let params_names = Some ["name"; "config"; "children"] in
         let param_ts = [component_class; config; any] in
-        PolyT ([config_tp], fake_fun params_names param_ts None react_element)
+        poly_type [config_tp] (fake_fun params_names param_ts None react_element)
       in
       let t2 =
         let params_names = Some ["fn"; "config"; "children"] in
         let param_ts = [stateless_functional_component; config; any] in
-        PolyT ([config_tp], fake_fun params_names param_ts None react_element)
+        poly_type [config_tp] (fake_fun params_names param_ts None react_element)
       in
       IntersectionT (
         locationless_reason RIntersectionType,
@@ -354,8 +354,9 @@ let rec normalize_type_impl cx ids t = match t with
       | MaybeT _ -> t
       | _ -> MaybeT (reason, t))
 
-  | PolyT (xs, t) ->
-      PolyT (xs, normalize_type_impl cx ids t)
+  | PolyT (reason, xs, t) ->
+      let reason = locationless_reason (desc_of_reason reason) in
+      PolyT (reason, xs, normalize_type_impl cx ids t)
 
   | ClassT (reason, t) ->
       let reason = locationless_reason (desc_of_reason reason) in

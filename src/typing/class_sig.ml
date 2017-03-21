@@ -306,7 +306,7 @@ let classtype cx ?(check_polarity=true) x =
   let open Type in
   (if check_polarity then Flow.check_polarity cx Positive this);
   let t = if structural then class_type this else ThisClassT this in
-  if tparams = [] then t else PolyT (tparams, t)
+  poly_type tparams t
 
 let mk_super cx tparams_map c targs = Type.(
   (* A super class must be parameterized by This, so that it can be

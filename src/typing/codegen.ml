@@ -123,7 +123,7 @@ let gen_builtin_class_type t env = Type.(
     match resolve_type builtin_t env with
     | ThisClassT(InstanceT(_, _, _, _, {class_id; _;})) ->
       class_id
-    | PolyT(_, ThisClassT(InstanceT(_, _, _, _, {class_id; _;}))) ->
+    | PolyT(_, _, ThisClassT(InstanceT(_, _, _, _, {class_id; _;}))) ->
       class_id
     | builtin_t -> failwith (spf "Unexpected global type: %s" (string_of_ctor builtin_t))
   in
@@ -291,7 +291,7 @@ let rec gen_type t env = Type.(
   )
   | OptionalT (_, t) -> add_str "void | " env |> gen_type t
   | OpenT _ -> gen_type (resolve_type t env) env
-  | PolyT (tparams, t) -> gen_type t (add_tparams tparams env)
+  | PolyT (_, tparams, t) -> gen_type t (add_tparams tparams env)
   | ReposT (_, t) -> gen_type t env
   | ReposUpperT (_, t) -> gen_type t env
   | ShapeT t -> add_str "$Shape<" env |> gen_type t |> add_str ">"
@@ -378,7 +378,7 @@ and gen_prop k p env =
         |> gen_func_params params_names params_tlist rest_param
         |> add_str "): "
         |> gen_type return_t
-    | PolyT (tparams, t) -> gen_method k t (add_tparams tparams env)
+    | PolyT (_, tparams, t) -> gen_method k t (add_tparams tparams env)
     | _ -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
   in
 

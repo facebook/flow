@@ -162,9 +162,7 @@ let functiontype cx this_t {reason; kind; tparams; params; return_t; _} =
     changeset = Env.retrieve_closure_changeset ()
   } in
   let t = FunT (reason, static, prototype, funtype) in
-  if tparams = []
-  then t
-  else PolyT (tparams, t)
+  poly_type tparams t
 
 let methodtype {reason; tparams; params; return_t; _} =
   let params_tlist = Func_params.tlist params in
@@ -176,9 +174,7 @@ let methodtype {reason; tparams; params; return_t; _} =
     Flow.dummy_prototype,
     Flow.mk_boundfunctiontype params_tlist ~rest_param ~params_names return_t
   ) in
-  if tparams = []
-  then t
-  else PolyT (tparams, t)
+  poly_type tparams t
 
 let gettertype ({return_t; _}: t) = return_t
 

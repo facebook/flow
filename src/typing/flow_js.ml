@@ -1026,7 +1026,7 @@ module ResolvableTypeJob = struct
         Property.fold_t (fun ts t -> t::ts) ts p
       ) props_tmap ts in
       collect_of_types ?log_unresolved cx reason acc ts
-    | PolyT (_, t) ->
+    | PolyT (_, _, t) ->
       collect_of_type ?log_unresolved cx reason acc t
     | BoundT _ ->
       acc
@@ -1644,24 +1644,25 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace
         (fix_this_class cx trace reason i, u)
 
-    | (PolyT(typeparams, ClassT(_, inst)), ImportTypeT(reason, _, t)) ->
-      rec_flow_t cx trace (PolyT(typeparams, TypeT(reason, inst)), t)
+    | (PolyT(_, typeparams, ClassT(_, inst)), ImportTypeT(reason, _, t)) ->
+      rec_flow_t cx trace (poly_type typeparams (TypeT(reason, inst)), t)
 
     (* delay fixing a polymorphic this-abstracted class until it is specialized,
        by transforming the instance type to a type application *)
-    | (PolyT(typeparams, ThisClassT _), ImportTypeT _) ->
+    | (PolyT(_, typeparams, ThisClassT _), ImportTypeT _) ->
       let targs = List.map (fun tp -> BoundT tp) typeparams in
-      rec_flow cx trace (PolyT(typeparams, class_type (TypeAppT(l, targs))), u)
+      rec_flow cx trace
+        (poly_type typeparams (class_type (TypeAppT(l, targs))), u)
 
     | (FunT(_, _, prototype, _), ImportTypeT(reason, _, t)) ->
       rec_flow_t cx trace (TypeT(reason, prototype), t)
 
-    | PolyT(typeparams, FunT(_, _, prototype, _)),
+    | PolyT(_, typeparams, FunT(_, _, prototype, _)),
       ImportTypeT(reason, _, t) ->
-      rec_flow_t cx trace (PolyT(typeparams, TypeT(reason, prototype)), t)
+      rec_flow_t cx trace (poly_type typeparams (TypeT(reason, prototype)), t)
 
     | (TypeT _, ImportTypeT(_, _, t))
-    | (PolyT(_, TypeT _), ImportTypeT(_, _, t))
+    | (PolyT(_, _, TypeT _), ImportTypeT(_, _, t))
       -> rec_flow_t cx trace (l, t)
 
     (** TODO: This rule allows interpreting an object as a type!
@@ -1703,12 +1704,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* `import typeof` creates a properly-parameterized type alias for the  *)
     (* "typeof" the remote export.                                          *)
     (************************************************************************)
-    | PolyT(typeparams, ((ClassT _ | FunT _) as lower_t)),
+    | PolyT(_, typeparams, ((ClassT _ | FunT _) as lower_t)),
       ImportTypeofT(reason, _, t) ->
       let typeof_t = mk_typeof_annotation cx ~trace reason lower_t in
-      rec_flow_t cx trace (PolyT(typeparams, TypeT(reason, typeof_t)), t)
+      rec_flow_t cx trace (poly_type typeparams (TypeT(reason, typeof_t)), t)
 
-    | ((TypeT _ | PolyT(_, TypeT _)), ImportTypeofT(reason, export_name, _)) ->
+    | ((TypeT _ | PolyT(_, _, TypeT _)), ImportTypeofT(reason, export_name, _)) ->
       add_output cx ~trace (FlowError.EImportTypeAsTypeof (reason, export_name))
 
     | (_, ImportTypeofT(reason, _, t)) ->
@@ -2052,7 +2053,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ) ->
       rec_flow_t cx trace (AnyT.why reason, t)
 
-    | ((PolyT (_, TypeT _) | TypeT _), AssertImportIsValueT(reason, name)) ->
+    | ((PolyT (_, _, TypeT _) | TypeT _), AssertImportIsValueT(reason, name)) ->
       add_output cx ~trace (FlowError.EImportTypeAsValue (reason, name))
 
     | (_, AssertImportIsValueT(_, _)) -> ()
@@ -3171,12 +3172,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         UseT (UnknownUse, tvar)
       )
 
-    | PolyT (xs, ThisClassT (InstanceT (_, _, _, _, instance))),
+    | PolyT (_, xs, ThisClassT (InstanceT (_, _, _, _, instance))),
       MixinT (r, tvar) ->
       let static = ObjProtoT r in
       let super = ObjProtoT r in
       rec_flow cx trace (
-        PolyT (xs, ThisClassT (InstanceT (r, static, super, [], instance))),
+        poly_type xs (ThisClassT (InstanceT (r, static, super, [], instance))),
         UseT (UnknownUse, tvar)
       )
 
@@ -3197,16 +3198,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        to be the same as implicit specialization, which is handled by a
        fall-through case below.The exception is when the PolyT has type
        parameters with defaults. *)
-    | (PolyT (ids,t), SpecializeT(reason_op,reason_tapp,cache,ts,tvar))
+    | (PolyT (_, ids,t), SpecializeT(reason_op,reason_tapp,cache,ts,tvar))
         when ts <> [] || (poly_minimum_arity ids < List.length ids) ->
       let t_ = instantiate_poly_with_targs cx trace
         ~reason_op ~reason_tapp ?cache (ids,t) ts in
       rec_flow_t cx trace (t_, tvar)
 
-    | PolyT (tps, _), VarianceCheckT(_, ts, polarity) ->
+    | PolyT (_, tps, _), VarianceCheckT(_, ts, polarity) ->
       variance_check cx ~trace polarity (tps, ts)
 
-    | PolyT (tparams, _), TypeAppVarianceCheckT (_, reason_tapp, targs) ->
+    | PolyT (_, tparams, _), TypeAppVarianceCheckT (_, reason_tapp, targs) ->
       let minimum_arity = poly_minimum_arity tparams in
       let maximum_arity = List.length tparams in
       let reason_arity =
@@ -3253,14 +3254,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyT _, ThisSpecializeT (_, _, tvar) ->
       rec_flow_t cx trace (l, tvar)
 
-    (* PolyT doesn't have a position since it takes on the position of the upper
-       bound, so it doesn't need to be repositioned. This case is necessary to
-       prevent the wildcard (PolyT, _) below from firing too early. *)
-    | (PolyT _, ReposLowerT (_, u)) ->
-      rec_flow cx trace (l, u)
+    | (PolyT _, ReposLowerT (reason_op, u)) ->
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
-    (* get this out of the way too, as above, except that repositioning does
-       make sense *)
     | (ThisClassT _, ReposLowerT (reason_op, u)) ->
       rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
@@ -3295,7 +3291,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        polymorphic type at all! For example, we can let a non-generic method be
        overridden with a generic method, as long as the non-generic signature
        can be derived as a specialization of the generic signature. *)
-    | (_, UseT (use_op, PolyT (ids, t))) ->
+    | (_, UseT (use_op, PolyT (_, ids, t))) ->
         generate_tests cx (reason_of_t l) ids (fun map_ ->
           rec_flow cx trace (l, UseT (use_op, subst cx map_ t))
         )
@@ -3315,9 +3311,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         extends clauses and at function call sites - without explicit type
         arguments, since typically they're easily inferred from context.
       *)
-    | (PolyT (ids,t), _) ->
+    | (PolyT (reason_tapp, ids, t), _) ->
       let reason_op = reason_of_use_t u in
-      let reason_tapp = reason_of_t l in
       begin match u with
       | UseT (_, TypeT _) ->
         if Context.enforce_strict_type_args cx then
@@ -6084,7 +6079,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
         changeset
       })
 
-  | PolyT (xs, inner) ->
+  | PolyT (reason, xs, inner) ->
     let xs, map, changed = List.fold_left (fun (xs, map, changed) typeparam ->
       let bound = subst cx ~force map typeparam.bound in
       let default = match typeparam.default with
@@ -6099,7 +6094,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     ) ([], map, false) xs in
     let inner_ = subst cx ~force:false map inner in
     let changed = changed || inner_ != inner in
-    if changed then PolyT (List.rev xs, inner_) else t
+    if changed then PolyT (reason, List.rev xs, inner_) else t
 
   | ThisClassT this ->
     let map = SMap.remove "this" map in
@@ -6453,7 +6448,7 @@ and check_polarity cx ?trace polarity = function
   | IntersectionT (_, rep) ->
     List.iter (check_polarity cx ?trace polarity) (InterRep.members rep)
 
-  | PolyT (xs, t) ->
+  | PolyT (_, xs, t) ->
     List.iter (check_polarity_typeparam cx ?trace (Polarity.inv polarity)) xs;
     check_polarity cx ?trace polarity t
 
@@ -6556,7 +6551,7 @@ and instantiate_poly_with_targs
     )
     (SMap.empty, ts)
     xs in
-  subst cx map t
+  subst cx map (reposition cx ~trace (loc_of_reason reason_tapp) t)
 
 (* Given a type parameter, a supplied type argument for specializing it, and a
    reason for specialization, either return the type argument or, when directed,
@@ -8695,7 +8690,7 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
   | t, OpenT (_, id) when ok_unify t ->
     resolve_id cx trace ~use_op id t
 
-  | PolyT (params1, t1), PolyT (params2, t2)
+  | PolyT (_, params1, t1), PolyT (_, params2, t2)
     when List.length params1 = List.length params2 ->
     (** for equal-arity polymorphic types, unify param upper bounds
         with each other, then instances parameterized by these *)
@@ -9520,7 +9515,7 @@ and get_builtin_prop_type cx ?trace reason tool =
 and instantiate_poly_t cx t types =
   if types = [] then (* nothing to do *) t else
   match t with
-  | PolyT (type_params, t_) -> (
+  | PolyT (_, type_params, t_) -> (
     try
       let subst_map = List.fold_left2 (fun acc {name; _} type_ ->
         SMap.add name type_ acc
@@ -10157,7 +10152,7 @@ end = struct
         let inst_t = instantiate_poly_t cx c ts in
         let inst_t = instantiate_type inst_t in
         extract cx inst_t
-    | PolyT (_, sub_type) ->
+    | PolyT (_, _, sub_type) ->
         (* TODO: replace type parameters with stable/proper names? *)
         extract cx sub_type
     | ThisClassT (InstanceT (_, static, _, _, _))
@@ -10313,7 +10308,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
       rest_param;
     recurse ~infer:true return_t
 
-  | PolyT (_, t)
+  | PolyT (_, _, t)
   | ThisClassT t ->
     recurse t
 
