@@ -149,7 +149,7 @@ let gen_separated_list list sep gen_fn env =
 (* Generate type syntax for a given type *)
 let rec gen_type t env = Type.(
   match t with
-  | AbstractT t -> add_str "$Abstract<" env |> gen_type t |> add_str ">"
+  | AbstractT (_, t) -> add_str "$Abstract<" env |> gen_type t |> add_str ">"
   | AnnotT t -> gen_type t env
   | AnyFunT _ -> add_str "Function" env
   | AnyObjT _ -> add_str "Object" env

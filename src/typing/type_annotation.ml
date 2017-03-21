@@ -300,7 +300,8 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$Abstract" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
-      AbstractT t
+      let reason = mk_reason (RAbstract (desc_of_t t)) loc in
+      AbstractT (reason, t)
     )
 
   | "$TupleMap" ->

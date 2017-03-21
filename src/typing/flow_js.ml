@@ -1058,7 +1058,7 @@ module ResolvableTypeJob = struct
 
     | AnyWithUpperBoundT t
     | AnyWithLowerBoundT t
-    | AbstractT t
+    | AbstractT (_, t)
     | ExactT (_, t)
     | TypeT (_, t)
     | ClassT t
@@ -3971,8 +3971,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
              of the property in this class may be abstract or not.  We want to
              unify just the underlying types, ignoring the abstract part.  *)
           let p, t2 = match p, t2 with
-          | Field (AbstractT t1, polarity), AbstractT t2
-          | Field (AbstractT t1, polarity), t2 -> Field (t1, polarity), t2
+          | Field (AbstractT (_, t1), polarity), AbstractT (_, t2)
+          | Field (AbstractT (_, t1), polarity), t2 -> Field (t1, polarity), t2
           | _ -> p, t2
           in
           (match rw, Property.access rw p with
@@ -3983,18 +3983,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               (FlowError.EPropAccess ((lreason, reason_op), Some x, p, rw)))
         | LookupProp (use_op, up) ->
           let p, up = match p, up with
-          | Field (AbstractT t, polarity), Field (AbstractT ut, upolarity) ->
+          | Field (AbstractT (_, t), polarity), Field (AbstractT (_, ut), upolarity) ->
             Field (t, polarity), Field (ut, upolarity)
-          | Field (AbstractT t, polarity), up ->
+          | Field (AbstractT (_, t), polarity), up ->
             Field (t, polarity), up
           | _ -> p, up
           in
           rec_flow_p cx trace ~use_op lreason reason_op propref (p, up)
         | SuperProp lp ->
           let p, lp = match p, lp with
-          | Field (AbstractT t, polarity), Field (AbstractT lt, lpolarity) ->
+          | Field (AbstractT (_, t), polarity), Field (AbstractT (_, lt), lpolarity) ->
             Field (t, polarity), Field (lt, lpolarity)
-          | Field (AbstractT t, polarity), lp ->
+          | Field (AbstractT (_, t), polarity), lp ->
             Field (t, polarity), lp
           | _ -> p, lp
           in
@@ -4867,7 +4867,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ->
         Context.iter_props cx instance_super.fields_tmap (fun x p ->
           match p with
-          | Field (AbstractT t, _)
+          | Field (AbstractT (_, t), _)
             when not (Context.has_prop cx instance.fields_tmap x) ->
             (* when abstract fields are not implemented, make them void *)
             let reason = reason_of_t t in
@@ -6191,9 +6191,9 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     let opt_t_ = subst cx ~force map opt_t in
     if opt_t_ == opt_t then t else OptionalT (reason, opt_t_)
 
-  | AbstractT abstract_t ->
+  | AbstractT (reason, abstract_t) ->
     let abstract_t_ = subst cx ~force map abstract_t in
-    if abstract_t_ == abstract_t then t else AbstractT abstract_t_
+    if abstract_t_ == abstract_t then t else AbstractT (reason, abstract_t_)
 
   | ExactT (reason, exact_t) ->
     let exact_t_ = subst cx ~force map exact_t in
@@ -6402,7 +6402,7 @@ and check_polarity cx ?trace polarity = function
     -> ()
 
   | OptionalT (_, t)
-  | AbstractT t
+  | AbstractT (_, t)
   | ExactT (_, t)
   | MaybeT (_, t)
   | AnyWithLowerBoundT t

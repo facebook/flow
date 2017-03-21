@@ -84,7 +84,7 @@ module rec TypeTerm : sig
 
     (* type of an optional parameter *)
     | OptionalT of reason * t
-    | AbstractT of t
+    | AbstractT of reason * t
 
     (* type expression whose evaluation is deferred *)
     (* Usually a type expression is evaluated by splitting it into a def type
@@ -1721,7 +1721,7 @@ let any_propagating_use_t = function
 
 let rec reason_of_t = function
   | OpenT (reason,_) -> reason
-  | AbstractT t -> replace_reason (fun desc -> RAbstract desc) (reason_of_t t)
+  | AbstractT (reason, _) -> reason
   | AnnotT assume_t -> reason_of_t assume_t
   | AnyFunT reason -> reason
   | AnyObjT reason -> reason
@@ -1877,7 +1877,7 @@ let loc_of_t t = loc_of_reason (reason_of_t t)
 (* TODO make a type visitor *)
 let rec mod_reason_of_t f = function
   | OpenT (reason, t) -> OpenT (f reason, t)
-  | AbstractT t -> AbstractT (mod_reason_of_t f t)
+  | AbstractT (reason, t) -> AbstractT (f reason, t)
   | AnnotT assume_t ->
       AnnotT (mod_reason_of_t f assume_t)
   | AnyFunT reason -> AnyFunT (f reason)

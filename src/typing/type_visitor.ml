@@ -76,7 +76,7 @@ class ['a] t = object(self)
 
   | OptionalT (_, t) -> self#type_ cx acc t
 
-  | AbstractT t -> self#type_ cx acc t
+  | AbstractT (_, t) -> self#type_ cx acc t
 
   | EvalT (t, defer_use_t, id) ->
     let acc = self#type_ cx acc t in

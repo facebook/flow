@@ -66,7 +66,7 @@ let rec gc cx state = function
 
   (** def types **)
 
-  | AbstractT t -> gc cx state t
+  | AbstractT (_, t) -> gc cx state t
   | AnnotT t -> gc cx state t
   | AnyFunT _ -> ()
   | AnyObjT _ -> ()
