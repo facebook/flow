@@ -967,7 +967,7 @@ module ResolvableTypeJob = struct
       if IMap.mem id acc then acc
       else IMap.add id (Binding source) acc
 
-    | ThisTypeAppT (poly_t, _, targs)
+    | ThisTypeAppT (_, poly_t, _, targs)
     | TypeAppT (poly_t, targs)
       ->
       begin match poly_t with
@@ -2386,16 +2386,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        because substitution of type parameters in def types does not affect
        their reasons, so we'd trivially lose precision. *)
 
-    | (ThisTypeAppT(c,this,ts), _) ->
+    | (ThisTypeAppT(reason_tapp,c,this,ts), _) ->
       let reason_op = reason_of_use_t u in
-      let reason_tapp = reason_of_t l in
       let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
       let c = instantiate_this_class cx trace reason_op tc this in
       rec_flow cx trace (mk_instance cx ~trace reason_op ~for_type:false c, u)
 
-    | (_, UseT (use_op, ThisTypeAppT(c,this,ts))) ->
+    | (_, UseT (use_op, ThisTypeAppT(reason_tapp,c,this,ts))) ->
       let reason_op = reason_of_t l in
-      let reason_tapp = reason_of_use_t u in
       let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
       let c = instantiate_this_class cx trace reason_op tc this in
       let t_out = mk_instance cx ~trace reason_op ~for_type:false c in
@@ -6207,12 +6205,12 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     let ts_ = ident_map (subst cx ~force map) ts in
     if c_ == c && ts_ == ts then t else TypeAppT (c_, ts_)
 
-  | ThisTypeAppT(c, this, ts) ->
+  | ThisTypeAppT(reason, c, this, ts) ->
     let c_ = subst cx ~force map c in
     let this_ = subst cx ~force map this in
     let ts_ = ident_map (subst cx ~force map) ts in
     if c_ == c && this_ == this && ts_ == ts then t
-    else ThisTypeAppT (c_, this_, ts_)
+    else ThisTypeAppT (reason, c_, this_, ts_)
 
   | MaybeT (reason, maybe_t) ->
     let maybe_t_ = subst cx ~force map maybe_t in
@@ -6454,7 +6452,7 @@ and check_polarity cx ?trace polarity = function
     List.iter (check_polarity_typeparam cx ?trace (Polarity.inv polarity)) xs;
     check_polarity cx ?trace polarity t
 
-  | ThisTypeAppT (c, _, ts)
+  | ThisTypeAppT (_, c, _, ts)
   | TypeAppT (c, ts)
     ->
     check_polarity_typeapp cx ?trace polarity c ts
@@ -10148,7 +10146,7 @@ end = struct
           | None -> None
         in
         SuccessModule (named_exports, cjs_export)
-    | ThisTypeAppT (c, _, ts)
+    | ThisTypeAppT (_, c, _, ts)
     | TypeAppT (c, ts) ->
         let c = resolve_type cx c in
         let inst_t = instantiate_poly_t cx c ts in
@@ -10362,7 +10360,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     recurse ~infer:true c;
     List.iter recurse ts
 
-  | ThisTypeAppT (c, this, ts) ->
+  | ThisTypeAppT (_, c, this, ts) ->
     recurse ~infer:true c;
     recurse ~infer:true this;
     List.iter recurse ts

@@ -119,7 +119,7 @@ module rec TypeTerm : sig
     (* this-abstracted class *)
     | ThisClassT of reason * t
     (* this instantiation *)
-    | ThisTypeAppT of t * t * t list
+    | ThisTypeAppT of reason * t * t * t list
     (* bound type variable *)
     | BoundT of typeparam
     (* existential type variable *)
@@ -1768,8 +1768,7 @@ let rec reason_of_t = function
   | StrT (reason, _) -> reason
   | TaintT (r) -> r
   | ThisClassT (reason, _) -> reason
-  | ThisTypeAppT(t,_,_) ->
-      replace_reason (fun desc -> RThisTypeApp desc) (reason_of_t t)
+  | ThisTypeAppT(reason, _, _, _) -> reason
   | TypeAppT(t,_) -> replace_reason (fun desc -> RTypeApp desc) (reason_of_t t)
   | TypeMapT (reason, _, _, _) -> reason
   | TypeT (reason,_) -> reason
@@ -1925,7 +1924,7 @@ let rec mod_reason_of_t f = function
   | StrT (reason, t) -> StrT (f reason, t)
   | TaintT (r) -> TaintT (f r)
   | ThisClassT (reason, t) -> ThisClassT (f reason, t)
-  | ThisTypeAppT (t, this, ts) -> ThisTypeAppT (mod_reason_of_t f t, this, ts)
+  | ThisTypeAppT (reason, t, this, ts) -> ThisTypeAppT (f reason, t, this, ts)
   | TypeAppT (t, ts) -> TypeAppT (mod_reason_of_t f t, ts)
   | TypeMapT (reason, kind, t1, t2) -> TypeMapT (f reason, kind, t1, t2)
   | TypeT (reason, t) -> TypeT (f reason, t)
@@ -2337,3 +2336,7 @@ let poly_type tparams t =
   else
     let reason = replace_reason (fun desc -> RPolyType desc) (reason_of_t t) in
     PolyT (reason, tparams, t)
+
+let this_typeapp t this tparams =
+  let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in
+  ThisTypeAppT (reason, t, this, tparams)

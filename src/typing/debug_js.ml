@@ -185,7 +185,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | ThisTypeAppT (t, this, targs) -> [
+  | ThisTypeAppT (_, t, this, targs) -> [
       "typeArgs", JSON_Array (List.map (_json_of_t json_cx) targs);
       "thisArg", _json_of_t json_cx this;
       "type", _json_of_t json_cx t
@@ -1492,7 +1492,7 @@ and dump_t_ (depth, tvars) cx t =
       ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
   | TypeAppT (base, args) -> p ~reason:false ~extra:(spf "%s, [%s]"
       (kid base) (String.concat "; " (List.map kid args))) t
-  | ThisTypeAppT (base, this, args) -> p ~reason:false
+  | ThisTypeAppT (_, base, this, args) -> p ~reason:false
       ~extra:(spf "%s, %s, [%s]" (kid base) (kid this)
         (String.concat "; " (List.map kid args))) t
   | ExactT (_, arg) -> p ~extra:(kid arg) t

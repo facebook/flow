@@ -142,7 +142,7 @@ let rec gc cx state = function
   | ReposUpperT (_, t) -> gc cx state t
   | TaintT _ -> ()
   | ThisClassT (_, t) -> gc cx state t
-  | ThisTypeAppT (t, this, ts) ->
+  | ThisTypeAppT (_, t, this, ts) ->
       gc cx state t;
       gc cx state this;
       List.iter (gc cx state) ts

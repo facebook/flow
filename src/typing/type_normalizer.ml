@@ -382,11 +382,12 @@ let rec normalize_type_impl cx ids t = match t with
       let ts = List.map (normalize_type_impl cx ids) ts in
       TypeAppT (c, ts)
 
-  | ThisTypeAppT (c, this, ts) ->
+  | ThisTypeAppT (reason, c, this, ts) ->
+      let reason = locationless_reason (desc_of_reason reason) in
       let c = normalize_type_impl cx ids c in
       let this = normalize_type_impl cx ids this in
       let ts = List.map (normalize_type_impl cx ids) ts in
-      ThisTypeAppT (c, this, ts)
+      ThisTypeAppT (reason, c, this, ts)
 
   | IntersectionT (_, rep) ->
       let reason = locationless_reason RIntersection in
