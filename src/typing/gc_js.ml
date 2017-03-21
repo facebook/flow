@@ -78,7 +78,7 @@ let rec gc cx state = function
   | BoolT _ -> ()
   | BoundT typeparam -> gc_typeparam cx state typeparam
   | ChoiceKitT _ -> ()
-  | ClassT(t) -> gc cx state t
+  | ClassT (_, t) -> gc cx state t
   | CustomFunT _ -> ()
   | DiffT (t1, t2) ->
       gc cx state t1;

@@ -257,7 +257,7 @@ class unexported_class_visitor = object(self)
         let env =
           match resolve_type extends env with
           | ObjProtoT _ -> env
-          | ClassT t when (
+          | ClassT (_, t) when (
               match resolve_type t env with | ObjProtoT _ -> true | _ -> false
             ) -> env
           | ThisTypeAppT (extends, _, ts) ->

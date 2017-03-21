@@ -349,7 +349,8 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "Class" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
-      ClassT t
+      let reason = mk_reason (RClassType (desc_of_t t)) loc in
+      ClassT (reason, t)
     )
 
   | "Function" | "function" ->

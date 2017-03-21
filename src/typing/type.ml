@@ -78,7 +78,7 @@ module rec TypeTerm : sig
     | ArrT of reason * arrtype
 
     (* type of a class *)
-    | ClassT of t
+    | ClassT of reason * t
     (* type of an instance of a class *)
     | InstanceT of reason * static * super * implements * insttype
 
@@ -1732,7 +1732,7 @@ let rec reason_of_t = function
   | BoolT (reason, _) -> reason
   | BoundT typeparam -> typeparam.reason
   | ChoiceKitT (reason, _) -> reason
-  | ClassT t -> replace_reason (fun desc -> RClassType desc) (reason_of_t t)
+  | ClassT (reason, _) -> reason
   | CustomFunT (reason, _) -> reason
   | DiffT (t, _) -> reason_of_t t
   | EmptyT reason -> reason
@@ -1890,7 +1890,7 @@ let rec mod_reason_of_t f = function
   | BoundT { reason; name; bound; polarity; default; } ->
       BoundT { reason = f reason; name; bound; polarity; default; }
   | ChoiceKitT (reason, tool) -> ChoiceKitT (f reason, tool)
-  | ClassT t -> ClassT (mod_reason_of_t f t)
+  | ClassT (reason, t) -> ClassT (f reason, t)
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
   | DiffT (t1, t2) -> DiffT (mod_reason_of_t f t1, t2)
   | EmptyT reason -> EmptyT (f reason)
@@ -2321,3 +2321,7 @@ and elemt_of_arrtype reason = function
 let optional t =
   let reason = replace_reason (fun desc -> ROptional desc) (reason_of_t t) in
   OptionalT (reason, t)
+
+let class_type t =
+  let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
+  ClassT (reason, t)

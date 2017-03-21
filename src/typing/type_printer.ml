@@ -212,7 +212,7 @@ let rec type_printer_impl ~size override enclosure cx t =
           |> String.concat ", "
         in
         let type_s = match t with
-        | ClassT u
+        | ClassT (_, u)
         | ThisClassT u ->
           spf "%s<%s>" (pp EnclosureNone cx u) xs_str
         | _ ->
@@ -251,7 +251,7 @@ let rec type_printer_impl ~size override enclosure cx t =
     | TaintT (_) -> spf "$Tainted<any>"
 
     (* The following types are not syntax-supported *)
-    | ClassT t ->
+    | ClassT (_, t) ->
         spf "[class: %s]" (pp EnclosureNone cx t)
 
     | TypeT (_, t) ->
@@ -327,7 +327,7 @@ let rec type_printer_impl ~size override enclosure cx t =
 
 and instance_of_poly_type_printer ~size override enclosure cx = function
   | PolyT (_, ThisClassT t)
-  | PolyT (_, ClassT t)
+  | PolyT (_, ClassT (_, t))
     -> type_printer ~size override enclosure cx t
 
   | PolyT (_, TypeT (reason, _))
@@ -458,7 +458,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
          polymorphic type declaration. *)
       let t = match t with
         | ThisClassT u
-        | ClassT u -> u
+        | ClassT (_, u) -> u
         | _ -> t
       in
       is_printed_type_parsable_impl weak cx EnclosureNone t
@@ -480,7 +480,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | AnyWithUpperBoundT t
   | AnyWithLowerBoundT t
   | ThisClassT t
-  | ClassT t
+  | ClassT (_, t)
     when weak
     ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
@@ -494,7 +494,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
 
 and is_instantiable_poly_type weak cx enclosure = function
   | PolyT (_, ThisClassT t)
-  | PolyT (_, ClassT t)
+  | PolyT (_, ClassT (_, t))
     -> is_printed_type_parsable_impl weak cx enclosure t
 
   | PolyT (_, TypeT _)

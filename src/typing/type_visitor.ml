@@ -65,7 +65,7 @@ class ['a] t = object(self)
     self#list (self#type_ cx) acc tuple_types
   | ArrT (_, EmptyAT) -> acc
 
-  | ClassT t -> self#type_ cx acc t
+  | ClassT (_, t) -> self#type_ cx acc t
 
   | InstanceT (_, static, super, implements, insttype) ->
     let acc = self#type_ cx acc static in

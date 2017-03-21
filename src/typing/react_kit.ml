@@ -566,7 +566,7 @@ let run cx trace reason_op l u
           reason, static_props, dict, exact, sealed
         in
         let reason = replace_reason_const RReactStatics reason in
-        mk_object_with_map_proto cx reason props (ClassT super)
+        mk_object_with_map_proto cx reason props (class_type super)
           ?dict ~exact ~sealed
       in
 
@@ -585,7 +585,7 @@ let run cx trace reason_op l u
       let instance = InstanceT (reason_component, static, super, [], insttype) in
       rec_flow_t cx trace (instance, knot.this);
       rec_flow_t cx trace (static, knot.static);
-      rec_flow_t cx trace (ClassT instance, tout)
+      rec_flow_t cx trace (class_type instance, tout)
     in
 
     let empty_spec obj = {

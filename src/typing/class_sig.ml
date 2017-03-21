@@ -50,7 +50,7 @@ let empty ?(structural=false) id reason tparams tparams_map super implements =
   } in
   let constructor = [] in
   let static =
-    let super = Type.ClassT super in
+    let super = Type.class_type super in
     let reason = replace_reason (fun desc -> RStatics desc) reason in
     empty_sig reason super
   in
@@ -305,7 +305,7 @@ let classtype cx ?(check_polarity=true) x =
   let { structural; tparams; _ } = remove_this x in
   let open Type in
   (if check_polarity then Flow.check_polarity cx Positive this);
-  let t = if structural then ClassT this else ThisClassT this in
+  let t = if structural then class_type this else ThisClassT this in
   if tparams = [] then t else PolyT (tparams, t)
 
 let mk_super cx tparams_map c targs = Type.(
@@ -721,7 +721,7 @@ let toplevels cx ~decls ~stmts ~expr x =
   in
 
   let this = SMap.find_unsafe "this" x.tparams_map in
-  let static = Type.ClassT this in
+  let static = Type.class_type this in
 
   x |> with_sig ~static:true (fun s ->
     (* process static methods and fields *)
@@ -742,7 +742,7 @@ let toplevels cx ~decls ~stmts ~expr x =
          locals, e.g., so it cannot be used in general to track definite
          assignments. *)
       let derived_ctor = Type.(match s.super with
-        | ClassT (ObjProtoT _) -> false
+        | ClassT (_, ObjProtoT _) -> false
         | ObjProtoT _ -> false
         | _ -> true
       ) in

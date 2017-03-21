@@ -176,7 +176,7 @@ and parts_of_t cx = function
 | ArrT (_, arrtype) -> parts_of_arrtype arrtype
 | BoolT  _ -> []
 | BoundT _ -> []
-| ClassT t -> ["class", Def t]
+| ClassT (_, t) -> ["class", Def t]
 | CustomFunT _ | ChoiceKitT _ -> []
 | DiffT (l, r) -> ["left", Def l; "right", Def r]
 | EmptyT _ -> []

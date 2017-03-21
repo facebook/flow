@@ -145,7 +145,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "kind", JSON_String "EmptyArray";
     ]
 
-  | ClassT t -> [
+  | ClassT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -1481,7 +1481,7 @@ and dump_t_ (depth, tvars) cx t =
   | ArrT (_, ROArrayAT (elemt)) -> p
       ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
   | ArrT (_, EmptyAT) -> p ~extra:("EmptyArray") t
-  | ClassT inst -> p ~reason:false ~extra:(kid inst) t
+  | ClassT (_, inst) -> p ~extra:(kid inst) t
   | InstanceT (_, _, _, _, { class_id; _ }) -> p ~extra:(spf "#%d" class_id) t
   | TypeT (_, arg) -> p ~extra:(kid arg) t
   | AnnotT source -> p ~reason:false

@@ -157,7 +157,7 @@ let rec normalize_type_impl cx ids t = match t with
   | CustomFunT (_, Mixin) ->
       let obj = AnyObjT (locationless_reason RObjectType) in
       let arr = ArrT (locationless_reason RArray, ArrayAT(obj, None)) in
-      let tout = ClassT obj in
+      let tout = class_type obj in
       let tins = [] in
       let rest_param = Some ("objects", arr) in
       let params_names = Some [] in
@@ -234,7 +234,7 @@ let rec normalize_type_impl cx ids t = match t with
   | CustomFunT (_, ReactCreateClass) ->
       let component_class =
         let instance = fake_instance "ReactClass" in
-        TypeAppT (ClassT instance, [Locationless.AnyT.t])
+        TypeAppT (class_type instance, [Locationless.AnyT.t])
       in
       fake_fun (Some ["spec"]) [Locationless.AnyT.t] None component_class
 
@@ -262,11 +262,11 @@ let rec normalize_type_impl cx ids t = match t with
       let any = AnyT (locationless_reason RAny) in
       let react_element =
         let instance = fake_instance "React$Element" in
-        TypeAppT (PolyT ([config_tp], ClassT instance), [config])
+        TypeAppT (PolyT ([config_tp], class_type instance), [config])
       in
       let component_class =
         let instance = fake_instance "ReactClass" in
-        TypeAppT (PolyT ([config_tp], ClassT instance), [config])
+        TypeAppT (PolyT ([config_tp], class_type instance), [config])
       in
       let stateless_functional_component =
         let params_names = Some ["config"; "context"] in
@@ -357,11 +357,12 @@ let rec normalize_type_impl cx ids t = match t with
   | PolyT (xs, t) ->
       PolyT (xs, normalize_type_impl cx ids t)
 
-  | ClassT t ->
-      ClassT (normalize_type_impl cx ids t)
+  | ClassT (reason, t) ->
+      let reason = locationless_reason (desc_of_reason reason) in
+      ClassT (reason, normalize_type_impl cx ids t)
 
   | ThisClassT t ->
-      ClassT (normalize_type_impl cx ids t)
+      class_type (normalize_type_impl cx ids t)
 
   | TypeT (reason, t) ->
       let reason = locationless_reason (desc_of_reason reason) in

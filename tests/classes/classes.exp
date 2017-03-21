@@ -138,7 +138,7 @@ statics.js:13
  13: (o: Class<C>); // error, object type incompatible with class type
       ^ object type. This type is incompatible with
  13: (o: Class<C>); // error, object type incompatible with class type
-               ^ class type: C
+         ^^^^^^^^ class type: C
 
 
 Found 21 errors

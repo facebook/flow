@@ -1061,7 +1061,7 @@ module ResolvableTypeJob = struct
     | AbstractT (_, t)
     | ExactT (_, t)
     | TypeT (_, t)
-    | ClassT t
+    | ClassT (_, t)
     | ThisClassT t
       ->
       collect_of_type ?log_unresolved cx reason acc t
@@ -1636,7 +1636,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* `import type` creates a properly-parameterized type alias for the *)
     (* remote type -- but only for particular, valid remote types.       *)
     (*********************************************************************)
-    | (ClassT(inst), ImportTypeT(reason, _, t)) ->
+    | (ClassT(_, inst), ImportTypeT(reason, _, t)) ->
       rec_flow_t cx trace (TypeT(reason, inst), t)
 
     (* fix this-abstracted class when used as a type *)
@@ -1644,14 +1644,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace
         (fix_this_class cx trace reason i, u)
 
-    | (PolyT(typeparams, ClassT(inst)), ImportTypeT(reason, _, t)) ->
+    | (PolyT(typeparams, ClassT(_, inst)), ImportTypeT(reason, _, t)) ->
       rec_flow_t cx trace (PolyT(typeparams, TypeT(reason, inst)), t)
 
     (* delay fixing a polymorphic this-abstracted class until it is specialized,
        by transforming the instance type to a type application *)
     | (PolyT(typeparams, ThisClassT _), ImportTypeT _) ->
       let targs = List.map (fun tp -> BoundT tp) typeparams in
-      rec_flow cx trace (PolyT(typeparams, ClassT (TypeAppT(l, targs))), u)
+      rec_flow cx trace (PolyT(typeparams, class_type (TypeAppT(l, targs))), u)
 
     | (FunT(_, _, prototype, _), ImportTypeT(reason, _, t)) ->
       rec_flow_t cx trace (TypeT(reason, prototype), t)
@@ -3244,12 +3244,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* this-specialize a this-abstracted class by substituting This *)
     | ThisClassT i, ThisSpecializeT(_, this, tvar) ->
       let i = subst cx (SMap.singleton "this" this) i in
-      rec_flow_t cx trace (ClassT i, tvar)
+      rec_flow_t cx trace (class_type i, tvar)
 
     (* this-specialization of non-this-abstracted classes is a no-op *)
-    | ClassT i, ThisSpecializeT(_, _this, tvar) ->
+    | ClassT (r, i), ThisSpecializeT(_, _this, tvar) ->
       (* TODO: check that this is a subtype of i? *)
-      rec_flow_t cx trace (ClassT i, tvar)
+      rec_flow_t cx trace (ClassT (r, i), tvar)
 
     | AnyT _, ThisSpecializeT (_, _, tvar) ->
       rec_flow_t cx trace (l, tvar)
@@ -3593,7 +3593,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | CustomFunT (_, Mixin),
       CallT (reason_op, { call_args_tlist; call_tout; _ }) ->
-      let t = ClassT (spread_objects cx reason_op call_args_tlist) in
+      let t = class_type (spread_objects cx reason_op call_args_tlist) in
       rec_flow_t cx trace (t, call_tout)
 
     | CustomFunT (_, DebugPrint),
@@ -3826,7 +3826,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* runtime types derive static types through annotation *)
     (********************************************************)
 
-    | (ClassT(it), UseT (_, TypeT(r,t))) ->
+    | (ClassT(_, it), UseT (_, TypeT(r,t))) ->
       (* a class value annotation becomes the instance type *)
       rec_flow cx trace (it, BecomeT (r, t))
 
@@ -3846,22 +3846,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reasons = FlowError.ordered_reasons l u in
       add_output cx ~trace (FlowError.EValueUsedAsType reasons)
 
-    | (ClassT(l), UseT (use_op, ClassT(u))) ->
+    | (ClassT(_, l), UseT (use_op, ClassT(_, u))) ->
       rec_flow cx trace (l, UseT (use_op, u))
 
     | FunT (_, static1, prototype, _),
-      UseT (_, ClassT (InstanceT (_, static2, _, _, _) as u_)) ->
+      UseT (_, ClassT (_, (InstanceT (_, static2, _, _, _) as u_))) ->
       rec_unify cx trace static1 static2;
       rec_unify cx trace prototype u_
 
-    | AnyT _, UseT (use_op, ClassT u) ->
+    | AnyT _, UseT (use_op, ClassT (_, u)) ->
       rec_flow cx trace (l, UseT (use_op, u))
 
     (*********************************************************)
     (* class types derive instance types (with constructors) *)
     (*********************************************************)
 
-    | ClassT (this),
+    | ClassT (_, this),
       ConstructorT (reason_op, args, t) ->
       let reason_o =
         replace_reason_const RConstructorReturn (reason_of_t this) in
@@ -4037,7 +4037,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (super, ReposLowerT (reason, UseT (UnknownUse, t)))
 
     | InstanceT _ as instance, GetPropT (_, Named (_, "constructor"), t) ->
-      rec_flow_t cx trace (ClassT instance, t)
+      rec_flow_t cx trace (class_type instance, t)
 
     | InstanceT (reason_c, _, super, _, instance),
       GetPropT (reason_op, Named (reason_prop, x), tout) ->
@@ -4614,7 +4614,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (FunT (_, _, t, _), GetPropT(_, Named (_, "prototype"), tout)) ->
       rec_flow_t cx trace (t,tout)
 
-    | (ClassT (instance), GetPropT(_, Named (_, "prototype"), tout)) ->
+    | (ClassT (reason, instance), GetPropT(_, Named (_, "prototype"), tout)) ->
+      let instance = reposition cx ~trace (loc_of_reason reason) instance in
       rec_flow_t cx trace (instance, tout)
 
     (**************************************)
@@ -5119,10 +5120,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* class statics *)
     (*****************)
 
-    | (ClassT instance, _) when object_use u || object_like_op u ->
-      let reason = replace_reason (fun desc ->
-        RStatics desc
-      ) (reason_of_t instance) in
+    | (ClassT (reason, instance), _) when object_use u || object_like_op u ->
+      let desc = RStatics (desc_of_reason (reason_of_t instance)) in
+      let loc = loc_of_reason reason in
+      let reason = mk_reason desc loc in
       let static = mk_tvar cx reason in
       rec_flow cx trace (instance, GetStaticsT (reason, static));
       rec_flow cx trace (static, ReposLowerT (reason, u))
@@ -5148,12 +5149,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        - the class's static $call property type must be a subtype of the
        function type. *)
     | FunT (reason, static, prototype, funtype),
-      UseT (use_op, ClassT instance) ->
+      UseT (use_op, (ClassT (_, instance) as class_t)) ->
       rec_flow cx trace (instance, UseT (use_op, prototype));
       rec_flow cx trace (instance, UseT (use_op, funtype.this_t));
       rec_flow cx trace (instance, GetStaticsT (reason, static));
-      rec_flow cx trace (ClassT instance,
-        GetPropT (reason, Named (reason, "$call"), l))
+      rec_flow cx trace (class_t, GetPropT (reason, Named (reason, "$call"), l))
 
     (************)
     (* indexing *)
@@ -6147,9 +6147,9 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     if elemt_ = elemt then t else ArrT (reason, ROArrayAT (elemt_))
   | ArrT (_, EmptyAT) ->
     t
-  | ClassT cls ->
+  | ClassT (reason, cls) ->
     let cls_ = subst cx ~force map cls in
-    if cls_ == cls then t else ClassT cls_
+    if cls_ == cls then t else ClassT (reason, cls_)
 
   | TypeT (reason, type_t) ->
     let type_t_ = subst cx ~force map type_t in
@@ -6411,7 +6411,7 @@ and check_polarity cx ?trace polarity = function
   | ReposUpperT (_, t)
     -> check_polarity cx ?trace polarity t
 
-  | ClassT t
+  | ClassT (_, t)
     -> check_polarity cx ?trace Neutral t
 
   | TypeT (_, t)
@@ -6609,7 +6609,7 @@ and fix_this_class cx trace reason i =
   let this = mk_tvar cx reason in
   let i = subst cx (SMap.singleton "this" this) i in
   rec_unify cx trace this i;
-  ClassT(i)
+  class_type i
 
 (* Specialize This in a class. Eventually this causes substitution. *)
 and instantiate_this_class cx trace reason tc this =
@@ -7619,7 +7619,7 @@ and filter_not_exists t = match t with
   | MixedT (r, Mixed_truthy)
     -> EmptyT r
 
-  | ClassT t -> EmptyT (reason_of_t t)
+  | ClassT (reason, _) -> EmptyT reason
 
   (* unknown boolies become falsy *)
   | MaybeT (r, _) ->
@@ -8159,21 +8159,21 @@ and instanceof_test cx trace result = function
       first. *)
   | (true,
     (ArrT (reason, arrtype) as arr),
-    ClassT(InstanceT _ as a)) ->
+    ClassT (_, (InstanceT _ as a))) ->
 
     let elemt = elemt_of_arrtype reason arrtype in
 
-    let right = ClassT(ExtendsT([], arr, a)) in
+    let right = class_type (ExtendsT([], arr, a)) in
     let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
     rec_flow cx trace (arrt, PredicateT(LeftP(InstanceofTest, right), result))
 
   | (false,
     (ArrT (reason, arrtype) as arr),
-    ClassT(InstanceT _ as a)) ->
+    ClassT (_, (InstanceT _ as a))) ->
 
     let elemt = elemt_of_arrtype reason arrtype in
 
-    let right = ClassT(ExtendsT([], arr, a)) in
+    let right = class_type (ExtendsT([], arr, a)) in
     let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
     let pred = NotP(LeftP(InstanceofTest, right)) in
     rec_flow cx trace (arrt, PredicateT (pred, result))
@@ -8197,16 +8197,16 @@ and instanceof_test cx trace result = function
       class. (As a technical tool, we use Extends(_, _) to perform this
       recursion; it is also used elsewhere for running similar recursive
       subclass decisions.) **)
-  | (true, (InstanceT _ as c), ClassT(InstanceT _ as a)) ->
+  | (true, (InstanceT _ as c), ClassT (_, (InstanceT _ as a))) ->
     predicate cx trace result
-      (ClassT (ExtendsT([], c, a)))
+      (class_type (ExtendsT([], c, a)))
       (RightP (InstanceofTest, c))
 
   (** If C is a subclass of A, then don't refine the type of x. Otherwise,
       refine the type of x to A. (In general, the type of x should be refined to
       C & A, but that's hard to compute.) **)
   | (true, InstanceT (reason,_,super_c,_,instance_c),
-     (ClassT(ExtendsT(_, c, InstanceT (_,_,_,_,instance_a))) as right))
+     (ClassT (_, ExtendsT(_, c, InstanceT (_,_,_,_,instance_a))) as right))
     -> (* TODO: intersection *)
 
     if instance_a.class_id = instance_c.class_id
@@ -8217,7 +8217,7 @@ and instanceof_test cx trace result = function
       let u = PredicateT(pred, result) in
       rec_flow cx trace (super_c, ReposLowerT (reason, u))
 
-  | (true, ObjProtoT _, ClassT(ExtendsT (_, _, a)))
+  | (true, ObjProtoT _, ClassT (_, ExtendsT (_, _, a)))
     ->
     (** We hit the root class, so C is not a subclass of A **)
     rec_flow_t cx trace (a, result)
@@ -8235,15 +8235,15 @@ and instanceof_test cx trace result = function
       check whether x is _not_ `instanceof` class A. To decide what the
       appropriate refinement for x should be, we need to decide whether C
       extends A, choosing either nothing or C based on the result. **)
-  | (false, (InstanceT _ as c), ClassT(InstanceT _ as a)) ->
+  | (false, (InstanceT _ as c), ClassT (_, (InstanceT _ as a))) ->
     predicate cx trace result
-      (ClassT(ExtendsT([], c, a)))
+      (class_type (ExtendsT([], c, a)))
       (NotP(RightP(InstanceofTest, c)))
 
   (** If C is a subclass of A, then do nothing, since this check cannot
       succeed. Otherwise, don't refine the type of x. **)
   | (false, InstanceT (reason, _, super_c, _, instance_c),
-     (ClassT(ExtendsT(_, _, InstanceT (_,_,_,_,instance_a))) as right))
+     (ClassT (_, ExtendsT(_, _, InstanceT (_,_,_,_,instance_a))) as right))
     ->
 
     if instance_a.class_id = instance_c.class_id
@@ -8252,7 +8252,7 @@ and instanceof_test cx trace result = function
       let u = PredicateT(NotP(LeftP(InstanceofTest, right)), result) in
       rec_flow cx trace (super_c, ReposLowerT (reason, u))
 
-  | (false, ObjProtoT _, ClassT(ExtendsT(_, c, _)))
+  | (false, ObjProtoT _, ClassT (_, ExtendsT(_, c, _)))
     ->
     (** We hit the root class, so C is not a subclass of A **)
     rec_flow_t cx trace (c, result)
@@ -9411,7 +9411,7 @@ and mk_instance cx ?trace instance_reason ?(for_type=true) c =
     ))
   else
     mk_tvar_derivable_where cx instance_reason (fun t ->
-      flow_opt_t cx ?trace (c, ClassT(t))
+      flow_opt_t cx ?trace (c, class_type t)
     )
 
 (* set the position of the given def type from a reason *)
@@ -9535,7 +9535,7 @@ and instantiate_poly_t cx t types =
 
 and instantiate_type t =
   match t with
-  | ThisClassT t | ClassT t -> t
+  | ThisClassT t | ClassT (_, t) -> t
   | _ -> AnyT.why (reason_of_t t) (* ideally, assert false *)
 
 and call_args_iter f = List.iter (function Arg t | SpreadArg t -> f t)
@@ -10161,7 +10161,7 @@ end = struct
         (* TODO: replace type parameters with stable/proper names? *)
         extract cx sub_type
     | ThisClassT (InstanceT (_, static, _, _, _))
-    | ClassT (InstanceT (_, static, _, _, _)) ->
+    | ClassT (_, InstanceT (_, static, _, _, _)) ->
         let static_t = resolve_type cx static in
         extract cx static_t
     | FunT (_, static, proto, _) ->
@@ -10333,7 +10333,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     recurse ~infer:true elemt;
     List.iter (recurse ~infer:true) tuple_types
 
-  | ClassT t
+  | ClassT (_, t)
   | TypeT (_, t) ->
     recurse t
 
