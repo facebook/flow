@@ -183,7 +183,7 @@ and parts_of_t cx = function
 | EvalT (t, _, _) -> ["t", Def t]
 | ExactT (_, t) -> ["t", Def t]
 | ExistsT _ -> []
-| ExtendsT (nexts, l, u) -> ("l", Def l) :: ("u", Def u) :: list_parts nexts
+| ExtendsT (_, nexts, l, u) -> ("l", Def l) :: ("u", Def u) :: list_parts nexts
 | FunProtoApplyT _ -> []
 | FunProtoBindT _ -> []
 | FunProtoCallT _ -> []

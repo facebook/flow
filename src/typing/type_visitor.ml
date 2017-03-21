@@ -143,7 +143,7 @@ class ['a] t = object(self)
   | ModuleT (_, exporttypes) ->
     self#export_types cx acc exporttypes
 
-  | ExtendsT (ts, t1, t2) ->
+  | ExtendsT (_, ts, t1, t2) ->
     let acc = self#list (self#type_ cx) acc ts in
     let acc = self#type_ cx acc t1 in
     let acc = self#type_ cx acc t2 in

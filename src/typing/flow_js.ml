@@ -1037,7 +1037,7 @@ module ResolvableTypeJob = struct
     | EvalT _
     | ChoiceKitT (_, _)
     | ModuleT (_, _)
-    | ExtendsT (_, _, _)
+    | ExtendsT _
       ->
       acc
 
@@ -2700,15 +2700,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (** extends **)
     | IntersectionT (_, rep),
-      UseT (use_op, ExtendsT (try_ts_on_failure, l, u)) ->
-      let ts = InterRep.members rep in
-      assert (ts <> []);
+      UseT (use_op, ExtendsT (reason, try_ts_on_failure, l, u)) ->
+      let t, ts = InterRep.members_nel rep in
+      let try_ts_on_failure = (Nel.to_list ts) @ try_ts_on_failure in
       (* Since s could be in any object type in the list ts, we try to look it
          up in the first element of ts, pushing the rest into the list
          try_ts_on_failure (see below). *)
-      rec_flow cx trace
-        (List.hd ts,
-         UseT (use_op, ExtendsT ((List.tl ts) @ try_ts_on_failure, l, u)))
+      rec_flow cx trace (t, UseT (use_op,
+        ExtendsT (reason, try_ts_on_failure, l, u)))
 
     (** consistent override of properties **)
     | IntersectionT (_, rep), SuperT _ ->
@@ -3804,10 +3803,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (**************************************************)
 
     | (InstanceT _, UseT (use_op, (InstanceT _ as u))) ->
-      rec_flow cx trace (l, UseT (use_op, ExtendsT([],l,u)))
+      rec_flow cx trace (l, UseT (use_op, extends_type l u))
 
     | InstanceT (reason, _, super, implements, instance),
-      UseT (use_op, ExtendsT (try_ts_on_failure, l,
+      UseT (use_op, ExtendsT (reason_op, try_ts_on_failure, l,
         (InstanceT (_, _, _, _, instance_super) as u))) ->
       if instance.class_id = instance_super.class_id
       then
@@ -3819,7 +3818,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
            implementation, thereby short-circuiting a potentially expensive
            structural test at the use site. *)
         let u = UseT (use_op,
-          ExtendsT (try_ts_on_failure @ implements, l, u)) in
+          ExtendsT (reason_op, try_ts_on_failure @ implements, l, u)) in
         rec_flow cx trace (super, ReposLowerT (reason, u))
 
     (********************************************************)
@@ -5325,14 +5324,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (** ExtendsT searches for a nominal superclass. The search terminates with
         either failure at the root or a structural subtype check. **)
 
-    | (ObjProtoT _, UseT (use_op, ExtendsT (next::try_ts_on_failure, l, u))) ->
+    | ObjProtoT _,
+      UseT (use_op, ExtendsT (reason, next::try_ts_on_failure, l, u)) ->
       (* When seaching for a nominal superclass fails, we always try to look it
          up in the next element in the list try_ts_on_failure. *)
       rec_flow cx trace
-        (next, UseT (use_op, ExtendsT (try_ts_on_failure, l, u)))
+        (next, UseT (use_op, ExtendsT (reason, try_ts_on_failure, l, u)))
 
     | ObjProtoT _,
-      UseT (use_op, ExtendsT ([], l, InstanceT (reason_inst, _, super, _, {
+      UseT (use_op, ExtendsT (_, [], l, InstanceT (reason_inst, _, super, _, {
         fields_tmap;
         methods_tmap;
         structural = true;
@@ -5342,7 +5342,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (fields_tmap, methods_tmap);
       rec_flow cx trace (l, UseT (use_op, super))
 
-    | (ObjProtoT _, UseT (use_op, ExtendsT ([], t, tc))) ->
+    | (ObjProtoT _, UseT (use_op, ExtendsT (_, [], t, tc))) ->
       let reason_l, reason_u =
         Flow_error.ordered_reasons t (UseT (UnknownUse, tc)) in
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp
@@ -8163,7 +8163,7 @@ and instanceof_test cx trace result = function
 
     let elemt = elemt_of_arrtype reason arrtype in
 
-    let right = class_type (ExtendsT([], arr, a)) in
+    let right = class_type (extends_type arr a) in
     let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
     rec_flow cx trace (arrt, PredicateT(LeftP(InstanceofTest, right), result))
 
@@ -8173,7 +8173,7 @@ and instanceof_test cx trace result = function
 
     let elemt = elemt_of_arrtype reason arrtype in
 
-    let right = class_type (ExtendsT([], arr, a)) in
+    let right = class_type (extends_type arr a) in
     let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
     let pred = NotP(LeftP(InstanceofTest, right)) in
     rec_flow cx trace (arrt, PredicateT (pred, result))
@@ -8199,14 +8199,14 @@ and instanceof_test cx trace result = function
       subclass decisions.) **)
   | (true, (InstanceT _ as c), ClassT (_, (InstanceT _ as a))) ->
     predicate cx trace result
-      (class_type (ExtendsT([], c, a)))
+      (class_type (extends_type c a))
       (RightP (InstanceofTest, c))
 
   (** If C is a subclass of A, then don't refine the type of x. Otherwise,
       refine the type of x to A. (In general, the type of x should be refined to
       C & A, but that's hard to compute.) **)
   | (true, InstanceT (reason,_,super_c,_,instance_c),
-     (ClassT (_, ExtendsT(_, c, InstanceT (_,_,_,_,instance_a))) as right))
+     (ClassT (_, ExtendsT(_, _, c, InstanceT (_,_,_,_,instance_a))) as right))
     -> (* TODO: intersection *)
 
     if instance_a.class_id = instance_c.class_id
@@ -8217,7 +8217,7 @@ and instanceof_test cx trace result = function
       let u = PredicateT(pred, result) in
       rec_flow cx trace (super_c, ReposLowerT (reason, u))
 
-  | (true, ObjProtoT _, ClassT (_, ExtendsT (_, _, a)))
+  | (true, ObjProtoT _, ClassT (_, ExtendsT (_, _, _, a)))
     ->
     (** We hit the root class, so C is not a subclass of A **)
     rec_flow_t cx trace (a, result)
@@ -8237,13 +8237,13 @@ and instanceof_test cx trace result = function
       extends A, choosing either nothing or C based on the result. **)
   | (false, (InstanceT _ as c), ClassT (_, (InstanceT _ as a))) ->
     predicate cx trace result
-      (class_type (ExtendsT([], c, a)))
+      (class_type (extends_type c a))
       (NotP(RightP(InstanceofTest, c)))
 
   (** If C is a subclass of A, then do nothing, since this check cannot
       succeed. Otherwise, don't refine the type of x. **)
   | (false, InstanceT (reason, _, super_c, _, instance_c),
-     (ClassT (_, ExtendsT(_, _, InstanceT (_,_,_,_,instance_a))) as right))
+     (ClassT (_, ExtendsT(_, _, _, InstanceT (_,_,_,_,instance_a))) as right))
     ->
 
     if instance_a.class_id = instance_c.class_id
@@ -8252,7 +8252,7 @@ and instanceof_test cx trace result = function
       let u = PredicateT(NotP(LeftP(InstanceofTest, right)), result) in
       rec_flow cx trace (super_c, ReposLowerT (reason, u))
 
-  | (false, ObjProtoT _, ClassT (_, ExtendsT(_, c, _)))
+  | (false, ObjProtoT _, ClassT (_, ExtendsT(_, _, c, _)))
     ->
     (** We hit the root class, so C is not a subclass of A **)
     rec_flow_t cx trace (c, result)
@@ -10218,7 +10218,7 @@ end = struct
     | EmptyT _
     | EvalT (_, _, _)
     | ExistsT _
-    | ExtendsT (_, _, _)
+    | ExtendsT _
     | FunProtoApplyT _
     | FunProtoBindT _
     | FunProtoCallT _

@@ -276,7 +276,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "hasEveryNamedExport", JSON_Bool has_every_named_export;
     ]
 
-  | ExtendsT (_, t1, t2) -> [
+  | ExtendsT (_, _, t1, t2) -> [
       "type1", _json_of_t json_cx t1;
       "type2", _json_of_t json_cx t2
     ]
@@ -1513,7 +1513,7 @@ and dump_t_ (depth, tvars) cx t =
   | SingletonNumT (_, (_, s)) -> p ~extra:s t
   | SingletonBoolT (_, b) -> p ~extra:(spf "%B" b) t
   | ModuleT _ -> p t
-  | ExtendsT (nexts, l, u) -> p ~reason:false ~extra:(spf "[%s], %s, %s"
+  | ExtendsT (_, nexts, l, u) -> p ~extra:(spf "[%s], %s, %s"
     (String.concat "; " (List.map kid nexts)) (kid l) (kid u)) t
   | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
   | ChoiceKitT _ -> p t

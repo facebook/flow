@@ -214,7 +214,7 @@ module rec TypeTerm : sig
         The round pegs in the square holes. **)
 
     (* util for deciding subclassing relations *)
-    | ExtendsT of t list * t * t
+    | ExtendsT of reason * t list * t * t
 
     (* toolkit for making choices *)
     | ChoiceKitT of reason * choice_tool
@@ -1739,8 +1739,7 @@ let rec reason_of_t = function
   | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
   | ExactT (reason, _) -> reason
   | ExistsT reason -> reason
-  | ExtendsT (_,_,t) ->
-      replace_reason (fun desc -> RExtends desc) (reason_of_t t)
+  | ExtendsT (reason, _, _, _) -> reason
   | FunProtoApplyT reason -> reason
   | FunProtoBindT reason -> reason
   | FunProtoCallT reason -> reason
@@ -1896,7 +1895,7 @@ let rec mod_reason_of_t f = function
       EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
   | ExactT (reason, t) -> ExactT (f reason, t)
   | ExistsT reason -> ExistsT (f reason)
-  | ExtendsT (ts, t, tc) -> ExtendsT (ts, t, mod_reason_of_t f tc)
+  | ExtendsT (reason, ts, t, tc) -> ExtendsT (f reason, ts, t, tc)
   | FunProtoApplyT (reason) -> FunProtoApplyT (f reason)
   | FunProtoBindT (reason) -> FunProtoBindT (f reason)
   | FunProtoCallT (reason) -> FunProtoCallT (f reason)
@@ -2323,3 +2322,7 @@ let optional t =
 let class_type t =
   let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
   ClassT (reason, t)
+
+let extends_type l u =
+  let reason = replace_reason (fun desc -> RExtends desc) (reason_of_t u) in
+  ExtendsT (reason, [], l, u)

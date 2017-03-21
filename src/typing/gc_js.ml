@@ -90,7 +90,7 @@ let rec gc cx state = function
       Flow_js.visit_eval_id cx id (gc cx state)
   | ExactT (_, t) -> gc cx state t
   | ExistsT _ -> ()
-  | ExtendsT (ts, t1, t2) ->
+  | ExtendsT (_, ts, t1, t2) ->
       ts |> List.iter (gc cx state);
       gc cx state t1;
       gc cx state t2
