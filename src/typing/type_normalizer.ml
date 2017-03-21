@@ -362,8 +362,9 @@ let rec normalize_type_impl cx ids t = match t with
       let reason = locationless_reason (desc_of_reason reason) in
       ClassT (reason, normalize_type_impl cx ids t)
 
-  | ThisClassT t ->
-      class_type (normalize_type_impl cx ids t)
+  | ThisClassT (reason, t) ->
+      let reason = locationless_reason (desc_of_reason reason) in
+      ThisClassT (reason, normalize_type_impl cx ids t)
 
   | TypeT (reason, t) ->
       let reason = locationless_reason (desc_of_reason reason) in

@@ -213,7 +213,7 @@ let rec type_printer_impl ~size override enclosure cx t =
         in
         let type_s = match t with
         | ClassT (_, u)
-        | ThisClassT u ->
+        | ThisClassT (_, u) ->
           spf "%s<%s>" (pp EnclosureNone cx u) xs_str
         | _ ->
           spf "<%s>%s" xs_str (pp
@@ -326,7 +326,7 @@ let rec type_printer_impl ~size override enclosure cx t =
         assert_false (spf "Missing printer for %s" (string_of_ctor t))
 
 and instance_of_poly_type_printer ~size override enclosure cx = function
-  | PolyT (_, _, ThisClassT t)
+  | PolyT (_, _, ThisClassT (_, t))
   | PolyT (_, _, ClassT (_, t))
     -> type_printer ~size override enclosure cx t
 
@@ -457,7 +457,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
       (* unwrap PolyT (ClassT t) because class names are parsable as part of a
          polymorphic type declaration. *)
       let t = match t with
-        | ThisClassT u
+        | ThisClassT (_, u)
         | ClassT (_, u) -> u
         | _ -> t
       in
@@ -479,7 +479,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | TypeT (_, t)
   | AnyWithUpperBoundT t
   | AnyWithLowerBoundT t
-  | ThisClassT t
+  | ThisClassT (_, t)
   | ClassT (_, t)
     when weak
     ->
@@ -493,7 +493,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
       false
 
 and is_instantiable_poly_type weak cx enclosure = function
-  | PolyT (_, _, ThisClassT t)
+  | PolyT (_, _, ThisClassT (_, t))
   | PolyT (_, _, ClassT (_, t))
     -> is_printed_type_parsable_impl weak cx enclosure t
 

@@ -141,7 +141,7 @@ let rec gc cx state = function
   | ReposT (_, t) -> gc cx state t
   | ReposUpperT (_, t) -> gc cx state t
   | TaintT _ -> ()
-  | ThisClassT t -> gc cx state t
+  | ThisClassT (_, t) -> gc cx state t
   | ThisTypeAppT (t, this, ts) ->
       gc cx state t;
       gc cx state this;

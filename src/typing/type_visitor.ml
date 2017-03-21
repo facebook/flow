@@ -94,7 +94,7 @@ class ['a] t = object(self)
     let acc = self#list (self#type_ cx) acc ts in
     acc
 
-  | ThisClassT t -> self#type_ cx acc t
+  | ThisClassT (_, t) -> self#type_ cx acc t
 
   | ThisTypeAppT (t, this, ts) ->
     let acc = self#type_ cx acc t in

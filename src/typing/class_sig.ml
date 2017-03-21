@@ -305,7 +305,7 @@ let classtype cx ?(check_polarity=true) x =
   let { structural; tparams; _ } = remove_this x in
   let open Type in
   (if check_polarity then Flow.check_polarity cx Positive this);
-  let t = if structural then class_type this else ThisClassT this in
+  let t = if structural then class_type this else this_class_type this in
   poly_type tparams t
 
 let mk_super cx tparams_map c targs = Type.(

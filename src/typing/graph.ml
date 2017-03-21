@@ -223,7 +223,7 @@ and parts_of_t cx = function
 | SingletonStrT _ -> []
 | StrT _ -> []
 | TaintT _ -> []
-| ThisClassT t -> ["this", Def t]
+| ThisClassT (_, t) -> ["this", Def t]
 | ThisTypeAppT (t, this, args) ->
   ("t", Def t) :: ("this", Def this) :: list_parts args
 | TypeAppT (t, args) -> ("t", Def t) :: list_parts args

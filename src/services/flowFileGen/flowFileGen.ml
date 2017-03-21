@@ -28,7 +28,7 @@ let exports_map cx module_name =
 
 let rec mark_declared_classes name t env = Codegen.(Type.(
   match resolve_type t env with
-  | ThisClassT (InstanceT (_, _, _, _, {class_id; _;})) ->
+  | ThisClassT (_, InstanceT (_, _, _, _, {class_id; _;})) ->
     set_class_name class_id name env
   | PolyT (_, _, t) ->
     mark_declared_classes name t env
@@ -315,7 +315,7 @@ let gen_local_classes =
     in
     let rec fold_imported_classid _name t set = Type.(
       match Codegen.resolve_type t env with
-      | ThisClassT (InstanceT (_, _, _, _, {class_id; _;})) ->
+      | ThisClassT (_, InstanceT (_, _, _, _, {class_id; _;})) ->
         ISet.add class_id set
       | PolyT (_, _, t) -> fold_imported_classid _name t set
       | _ -> set
@@ -351,7 +351,7 @@ let gen_named_exports =
       | PolyT (_, tparams, t) ->
         add_tparams tparams env |> fold_named_export name t
 
-      | ThisClassT (InstanceT (_, static, super, implements, {
+      | ThisClassT (_, InstanceT (_, static, super, implements, {
           fields_tmap;
           methods_tmap;
           (* TODO: The only way to express `mixins` right now is with a

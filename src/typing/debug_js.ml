@@ -181,7 +181,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | ThisClassT t -> [
+  | ThisClassT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -1467,7 +1467,7 @@ and dump_t_ (depth, tvars) cx t =
   | PolyT (_, tps,c) -> p ~extra:(spf "%s [%s]"
       (kid c)
       (String.concat "; " (List.map (fun tp -> tp.name) tps))) t
-  | ThisClassT _ -> p t
+  | ThisClassT (_, inst) -> p ~extra:(kid inst) t
   | BoundT param -> p ~extra:param.name t
   | ExistsT _ -> p t
   | ObjT (_, { props_tmap; _ }) -> p t

@@ -121,9 +121,9 @@ let gen_builtin_class_type t env = Type.(
   let builtin_t = Flow_js.get_builtin env.flow_cx builtin_name reason in
   let builtin_classid =
     match resolve_type builtin_t env with
-    | ThisClassT(InstanceT(_, _, _, _, {class_id; _;})) ->
+    | ThisClassT(_, InstanceT(_, _, _, _, {class_id; _;})) ->
       class_id
-    | PolyT(_, _, ThisClassT(InstanceT(_, _, _, _, {class_id; _;}))) ->
+    | PolyT(_, _, ThisClassT(_, InstanceT(_, _, _, _, {class_id; _;}))) ->
       class_id
     | builtin_t -> failwith (spf "Unexpected global type: %s" (string_of_ctor builtin_t))
   in
@@ -302,7 +302,7 @@ let rec gen_type t env = Type.(
     (* TODO: Consider polarity and print the literal type when appropriate *)
     add_str "string" env
   | StrT (_, (Truthy|AnyLiteral)) -> add_str "string" env
-  | ThisClassT t -> gen_type t env
+  | ThisClassT (_, t) -> gen_type t env
   | ThisTypeAppT (t, _, ts) -> add_applied_tparams ts env |> gen_type t
   | TypeAppT (t, ts) -> add_applied_tparams ts env |> gen_type t
   | TypeT (_, t) -> gen_type t env

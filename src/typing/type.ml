@@ -117,7 +117,7 @@ module rec TypeTerm : sig
     (* type application *)
     | TypeAppT of t * t list
     (* this-abstracted class *)
-    | ThisClassT of t
+    | ThisClassT of reason * t
     (* this instantiation *)
     | ThisTypeAppT of t * t * t list
     (* bound type variable *)
@@ -1767,7 +1767,7 @@ let rec reason_of_t = function
   | SingletonStrT (reason, _) -> reason
   | StrT (reason, _) -> reason
   | TaintT (r) -> r
-  | ThisClassT t -> replace_reason (fun desc -> RClassType desc) (reason_of_t t)
+  | ThisClassT (reason, _) -> reason
   | ThisTypeAppT(t,_,_) ->
       replace_reason (fun desc -> RThisTypeApp desc) (reason_of_t t)
   | TypeAppT(t,_) -> replace_reason (fun desc -> RTypeApp desc) (reason_of_t t)
@@ -1924,7 +1924,7 @@ let rec mod_reason_of_t f = function
   | SingletonStrT (reason, t) -> SingletonStrT (f reason, t)
   | StrT (reason, t) -> StrT (f reason, t)
   | TaintT (r) -> TaintT (f r)
-  | ThisClassT t -> ThisClassT (mod_reason_of_t f t)
+  | ThisClassT (reason, t) -> ThisClassT (f reason, t)
   | ThisTypeAppT (t, this, ts) -> ThisTypeAppT (mod_reason_of_t f t, this, ts)
   | TypeAppT (t, ts) -> TypeAppT (mod_reason_of_t f t, ts)
   | TypeMapT (reason, kind, t1, t2) -> TypeMapT (f reason, kind, t1, t2)
@@ -2322,6 +2322,10 @@ let optional t =
 let class_type t =
   let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
   ClassT (reason, t)
+
+let this_class_type t =
+  let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
+  ThisClassT (reason, t)
 
 let extends_type l u =
   let reason = replace_reason (fun desc -> RExtends desc) (reason_of_t u) in
