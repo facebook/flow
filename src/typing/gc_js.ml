@@ -146,7 +146,7 @@ let rec gc cx state = function
       gc cx state t;
       gc cx state this;
       List.iter (gc cx state) ts
-  | TypeAppT (t, ts) ->
+  | TypeAppT (_, t, ts) ->
       gc cx state t;
       ts |> List.iter (gc cx state)
   | TypeMapT (_, _, t1, t2) ->

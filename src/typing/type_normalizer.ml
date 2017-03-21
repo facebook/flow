@@ -234,7 +234,7 @@ let rec normalize_type_impl cx ids t = match t with
   | CustomFunT (_, ReactCreateClass) ->
       let component_class =
         let instance = fake_instance "ReactClass" in
-        TypeAppT (class_type instance, [Locationless.AnyT.t])
+        typeapp (class_type instance) [Locationless.AnyT.t]
       in
       fake_fun (Some ["spec"]) [Locationless.AnyT.t] None component_class
 
@@ -262,11 +262,11 @@ let rec normalize_type_impl cx ids t = match t with
       let any = AnyT (locationless_reason RAny) in
       let react_element =
         let instance = fake_instance "React$Element" in
-        TypeAppT (poly_type [config_tp] (class_type instance), [config])
+        typeapp (poly_type [config_tp] (class_type instance)) [config]
       in
       let component_class =
         let instance = fake_instance "ReactClass" in
-        TypeAppT (poly_type [config_tp] (class_type instance), [config])
+        typeapp (poly_type [config_tp] (class_type instance)) [config]
       in
       let stateless_functional_component =
         let params_names = Some ["config"; "context"] in
@@ -377,10 +377,11 @@ let rec normalize_type_impl cx ids t = match t with
       let reason = locationless_reason (desc_of_reason reason) in
       OptionalT (reason, normalize_type_impl cx ids t)
 
-  | TypeAppT (c, ts) ->
+  | TypeAppT (reason, c, ts) ->
+      let reason = locationless_reason (desc_of_reason reason) in
       let c = normalize_type_impl cx ids c in
       let ts = List.map (normalize_type_impl cx ids) ts in
-      TypeAppT (c, ts)
+      TypeAppT (reason, c, ts)
 
   | ThisTypeAppT (reason, c, this, ts) ->
       let reason = locationless_reason (desc_of_reason reason) in

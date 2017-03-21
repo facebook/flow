@@ -115,7 +115,7 @@ module rec TypeTerm : sig
     (* polymorphic type *)
     | PolyT of reason * typeparam list * t
     (* type application *)
-    | TypeAppT of t * t list
+    | TypeAppT of reason * t * t list
     (* this-abstracted class *)
     | ThisClassT of reason * t
     (* this instantiation *)
@@ -1769,7 +1769,7 @@ let rec reason_of_t = function
   | TaintT (r) -> r
   | ThisClassT (reason, _) -> reason
   | ThisTypeAppT(reason, _, _, _) -> reason
-  | TypeAppT(t,_) -> replace_reason (fun desc -> RTypeApp desc) (reason_of_t t)
+  | TypeAppT (reason, _, _) -> reason
   | TypeMapT (reason, _, _, _) -> reason
   | TypeT (reason,_) -> reason
   | UnionT (reason, _) -> reason
@@ -1925,7 +1925,7 @@ let rec mod_reason_of_t f = function
   | TaintT (r) -> TaintT (f r)
   | ThisClassT (reason, t) -> ThisClassT (f reason, t)
   | ThisTypeAppT (reason, t, this, ts) -> ThisTypeAppT (f reason, t, this, ts)
-  | TypeAppT (t, ts) -> TypeAppT (mod_reason_of_t f t, ts)
+  | TypeAppT (reason, t, ts) -> TypeAppT (f reason, t, ts)
   | TypeMapT (reason, kind, t1, t2) -> TypeMapT (f reason, kind, t1, t2)
   | TypeT (reason, t) -> TypeT (f reason, t)
   | UnionT (reason, ts) -> UnionT (f reason, ts)
@@ -2336,6 +2336,10 @@ let poly_type tparams t =
   else
     let reason = replace_reason (fun desc -> RPolyType desc) (reason_of_t t) in
     PolyT (reason, tparams, t)
+
+let typeapp t tparams =
+  let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in
+  TypeAppT (reason, t, tparams)
 
 let this_typeapp t this tparams =
   let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in

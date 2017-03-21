@@ -89,7 +89,7 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc t in
     acc
 
-  | TypeAppT (t, ts) ->
+  | TypeAppT (_, t, ts) ->
     let acc = self#type_ cx acc t in
     let acc = self#list (self#type_ cx) acc ts in
     acc

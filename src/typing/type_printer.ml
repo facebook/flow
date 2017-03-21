@@ -191,7 +191,7 @@ let rec type_printer_impl ~size override enclosure cx t =
     | InstanceT (reason, _, _, _, _) ->
         DescFormat.name_of_instance_reason reason
 
-    | TypeAppT (c,ts) ->
+    | TypeAppT (_, c,ts) ->
         let type_s =
           spf "%s<%s>"
             (instance_of_poly_type_printer ~size override EnclosureAppT cx c)
@@ -467,7 +467,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | AnyFunT _ -> true
 
   | ThisTypeAppT (_, t, _, ts)
-  | TypeAppT (t, ts)
+  | TypeAppT (_, t, ts)
     ->
       (is_instantiable_poly_type weak cx EnclosureAppT t) &&
       (is_printed_type_list_parsable weak cx EnclosureNone ts)

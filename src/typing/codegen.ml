@@ -304,7 +304,7 @@ let rec gen_type t env = Type.(
   | StrT (_, (Truthy|AnyLiteral)) -> add_str "string" env
   | ThisClassT (_, t) -> gen_type t env
   | ThisTypeAppT (_, t, _, ts) -> add_applied_tparams ts env |> gen_type t
-  | TypeAppT (t, ts) -> add_applied_tparams ts env |> gen_type t
+  | TypeAppT (_, t, ts) -> add_applied_tparams ts env |> gen_type t
   | TypeT (_, t) -> gen_type t env
   | UnionT (_, union) -> gen_union_list union env
   | VoidT _ -> add_str "void" env

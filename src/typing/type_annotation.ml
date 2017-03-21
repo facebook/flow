@@ -767,7 +767,7 @@ and mk_nominal_type ?(for_type=true) cx reason tparams_map (c, targs) =
       Flow_js.mk_instance cx reason ~for_type c
   | Some targs ->
       let tparams = List.map (convert cx tparams_map) targs in
-      TypeAppT (c, tparams)
+      typeapp c tparams
 
 (* take a list of AST type param declarations,
    do semantic checking and create types for them. *)

@@ -330,7 +330,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
     | Async ->
       let reason = mk_reason (RCustom "Promise<void>") loc in
       let promise = Flow.get_builtin cx "Promise" reason in
-      FunImplicitReturn, TypeAppT (promise, [VoidT.at loc])
+      FunImplicitReturn, typeapp promise [VoidT.at loc]
     | Generator ->
       let reason = mk_reason (RCustom "Generator<Yield,void,Next>") loc in
       let return_t = VoidT.at loc in

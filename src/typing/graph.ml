@@ -226,7 +226,7 @@ and parts_of_t cx = function
 | ThisClassT (_, t) -> ["this", Def t]
 | ThisTypeAppT (_, t, this, args) ->
   ("t", Def t) :: ("this", Def this) :: list_parts args
-| TypeAppT (t, args) -> ("t", Def t) :: list_parts args
+| TypeAppT (_, t, args) -> ("t", Def t) :: list_parts args
 | TypeMapT (_, _, t1, t2) -> ["t", Def t1; "mapfn", Def t2]
 | TypeT (_, t) -> ["t", Def t]
 | UnionT (_, rep) -> list_parts (UnionRep.members rep)

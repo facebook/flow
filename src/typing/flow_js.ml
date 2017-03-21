@@ -695,7 +695,7 @@ end = struct
     inherit [TypeSet.t] Type_visitor.t as super
 
     method! type_ cx acc t = match t with
-    | TypeAppT (c, _) -> super#type_ cx (TypeSet.add c acc) t
+    | TypeAppT (_, c, _) -> super#type_ cx (TypeSet.add c acc) t
     | _ -> super#type_ cx acc t
   end
   let collect_roots cx = (new roots_collector)#type_ cx TypeSet.empty
@@ -968,7 +968,7 @@ module ResolvableTypeJob = struct
       else IMap.add id (Binding source) acc
 
     | ThisTypeAppT (_, poly_t, _, targs)
-    | TypeAppT (poly_t, targs)
+    | TypeAppT (_, poly_t, targs)
       ->
       begin match poly_t with
       | OpenT (_, id) ->
@@ -1652,7 +1652,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (PolyT(_, typeparams, ThisClassT _), ImportTypeT _) ->
       let targs = List.map (fun tp -> BoundT tp) typeparams in
       rec_flow cx trace
-        (poly_type typeparams (class_type (TypeAppT(l, targs))), u)
+        (poly_type typeparams (class_type (typeapp l targs)), u)
 
     | (FunT(_, _, prototype, _), ImportTypeT(reason, _, t)) ->
       rec_flow_t cx trace (TypeT(reason, prototype), t)
@@ -2402,14 +2402,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | TypeAppT _, ReposLowerT (reason_op, u) ->
         rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
-    | (TypeAppT(c,ts), MethodT _) ->
+    | (TypeAppT(reason_tapp,c,ts), MethodT _) ->
         let reason_op = reason_of_use_t u in
-        let reason_tapp = reason_of_t l in
         let t = mk_typeapp_instance cx
           ~trace ~reason_op ~reason_tapp ~cache:[] c ts in
         rec_flow cx trace (t, u)
 
-    | (TypeAppT (c1, ts1), UseT (_, TypeAppT (c2, ts2)))
+    | (TypeAppT (_,c1, ts1), UseT (_, TypeAppT (_,c2, ts2)))
       when c1 = c2 && List.length ts1 = List.length ts2 ->
       let reason_op = reason_of_t l in
       let reason_tapp = reason_of_use_t u in
@@ -2417,19 +2416,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (c1,
         TypeAppVarianceCheckT (reason_op, reason_tapp, targs))
 
-    | (TypeAppT(c,ts), _) ->
+    | (TypeAppT(reason_tapp,c,ts), _) ->
         if TypeAppExpansion.push_unless_loop cx (c, ts) then (
           let reason_op = reason_of_use_t u in
-          let reason_tapp = reason_of_t l in
           let t = mk_typeapp_instance cx ~trace ~reason_op ~reason_tapp c ts in
           rec_flow cx trace (t, u);
           TypeAppExpansion.pop ()
         )
 
-    | (_, UseT (use_op, TypeAppT(c,ts))) ->
+    | (_, UseT (use_op, TypeAppT(reason_tapp,c,ts))) ->
         if TypeAppExpansion.push_unless_loop cx (c, ts) then (
           let reason_op = reason_of_t l in
-          let reason_tapp = reason_of_use_t u in
           let t = mk_typeapp_instance cx ~trace ~reason_op ~reason_tapp c ts in
           rec_flow cx trace (l, UseT (use_op, t));
           TypeAppExpansion.pop ()
@@ -6200,10 +6197,10 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     if eval_t_ == eval_t && defer_use_t_ == defer_use_t then t
     else EvalT (eval_t_, defer_use_t_, mk_id ())
 
-  | TypeAppT(c, ts) ->
+  | TypeAppT(reason,c, ts) ->
     let c_ = subst cx ~force map c in
     let ts_ = ident_map (subst cx ~force map) ts in
-    if c_ == c && ts_ == ts then t else TypeAppT (c_, ts_)
+    if c_ == c && ts_ == ts then t else TypeAppT (reason,c_, ts_)
 
   | ThisTypeAppT(reason, c, this, ts) ->
     let c_ = subst cx ~force map c in
@@ -6453,7 +6450,7 @@ and check_polarity cx ?trace polarity = function
     check_polarity cx ?trace polarity t
 
   | ThisTypeAppT (_, c, _, ts)
-  | TypeAppT (c, ts)
+  | TypeAppT (_, c, ts)
     ->
     check_polarity_typeapp cx ?trace polarity c ts
 
@@ -8763,7 +8760,7 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
     List.iter2 (rec_unify cx trace) funtype1.params_tlist funtype2.params_tlist;
     rec_unify cx trace funtype1.return_t funtype2.return_t
 
-  | TypeAppT (c1, ts1), TypeAppT (c2, ts2)
+  | TypeAppT (_, c1, ts1), TypeAppT (_, c2, ts2)
     when c1 = c2 && List.length ts1 = List.length ts2 ->
     List.iter2 (rec_unify cx trace) ts1 ts2
 
@@ -9386,10 +9383,11 @@ and lookup_builtin cx ?trace x reason strict builtin =
     LookupT (reason, strict, [], propref, RWProp (builtin, Read)))
 
 and get_builtin_typeapp cx ?trace reason x ts =
-  TypeAppT(get_builtin cx ?trace x reason, ts)
+  typeapp (get_builtin cx ?trace x reason) ts
 
 (* Specialize a polymorphic class, make an instance of the specialized class. *)
 and mk_typeapp_instance cx ?trace ~reason_op ~reason_tapp ?cache c ts =
+  let c = reposition cx ?trace (loc_of_reason reason_tapp) c in
   let t = mk_tvar cx reason_op in
   flow_opt cx ?trace (c, SpecializeT(reason_op,reason_tapp, cache, ts, t));
   mk_instance cx ?trace (reason_of_t c) t
@@ -10147,7 +10145,7 @@ end = struct
         in
         SuccessModule (named_exports, cjs_export)
     | ThisTypeAppT (_, c, _, ts)
-    | TypeAppT (c, ts) ->
+    | TypeAppT (_, c, ts) ->
         let c = resolve_type cx c in
         let inst_t = instantiate_poly_t cx c ts in
         let inst_t = instantiate_type inst_t in
@@ -10356,7 +10354,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | OptionalT (_, t) ->
     recurse t
 
-  | TypeAppT (c, ts) ->
+  | TypeAppT (_, c, ts) ->
     recurse ~infer:true c;
     List.iter recurse ts
 

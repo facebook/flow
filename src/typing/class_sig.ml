@@ -247,7 +247,7 @@ let add_this self cx reason tparams tparams_map =
       Flow.mk_instance cx reason self
     | _ ->
       let tparams = List.map (fun tp -> Type.BoundT tp) tparams in
-      Type.TypeAppT (self, tparams)
+      Type.typeapp self tparams
   in
   let this_tp = { Type.
     name = "this";
