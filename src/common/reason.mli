@@ -105,6 +105,7 @@ type reason_desc =
   | RStatics of reason_desc
   | RSuperOf of reason_desc
   | RFrozen of reason_desc
+  | RReadOnly of reason_desc
   | RBound of reason_desc
   | RVarianceCheck of reason_desc
   | RPredicateOf of reason_desc

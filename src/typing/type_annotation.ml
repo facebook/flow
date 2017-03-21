@@ -272,6 +272,12 @@ let rec convert cx tparams_map = Ast.Type.(function
       KeysT (mk_reason RKeySet loc, t)
     )
 
+  | "$ReadOnly" ->
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      let t = convert_type_params () |> List.hd in
+      ReadOnlyT (mk_reason (RReadOnly (desc_of_t t)) loc, t)
+    )
+
   | "$Exact" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = List.hd (convert_type_params ()) in

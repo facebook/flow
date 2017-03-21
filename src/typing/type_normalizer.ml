@@ -414,6 +414,9 @@ let rec normalize_type_impl cx ids t = match t with
   | KeysT (_, t) ->
       KeysT (locationless_reason RKeySet, normalize_type_impl cx ids t)
 
+  | ReadOnlyT (_, t) ->
+      ReadOnlyT (locationless_reason RKeySet, normalize_type_impl cx ids t)
+
   | AbstractT t ->
       AbstractT (normalize_type_impl cx ids t)
 

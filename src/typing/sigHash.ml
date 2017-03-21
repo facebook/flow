@@ -71,6 +71,7 @@ type hash =
   | ShapeH
   | DiffH
   | KeysH
+  | ReadOnlyH
   | SingletonStrH of string
   | SingletonNumH of Type.number_literal
   | SingletonBoolH of bool
@@ -109,6 +110,7 @@ let hash_of_ctor = Type.(function
   | ExactT _ -> ExactH
   | ExistsT _ -> ExistsH
   | ExtendsT _ -> ExtendsH
+  | ReadOnlyT _ -> ReadOnlyH
   | FunProtoApplyT _ -> FunProtoApplyH
   | FunProtoBindT _ -> FunProtoBindH
   | FunProtoCallT _ -> FunProtoCallH

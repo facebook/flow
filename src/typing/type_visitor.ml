@@ -130,6 +130,7 @@ class ['a] t = object(self)
     acc
 
   | KeysT (_, t) -> self#type_ cx acc t
+  | ReadOnlyT (_, t) -> self#type_ cx acc t
 
   | SingletonStrT _
   | SingletonNumT _

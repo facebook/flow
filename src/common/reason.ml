@@ -153,6 +153,7 @@ type reason_desc =
   | RStatics of reason_desc
   | RSuperOf of reason_desc
   | RFrozen of reason_desc
+  | RReadOnly of reason_desc
   | RBound of reason_desc
   | RVarianceCheck of reason_desc
   | RPredicateOf of reason_desc
@@ -443,6 +444,7 @@ let rec string_of_desc = function
   | RStatics d -> spf "statics of %s" (string_of_desc d)
   | RSuperOf d -> spf "super of %s" (string_of_desc d)
   | RFrozen d -> spf "frozen %s" (string_of_desc d)
+  | RReadOnly d -> spf "read-only %s" (string_of_desc d)
   | RBound d -> spf "bound %s" (string_of_desc d)
   | RVarianceCheck d -> spf "variance check: %s" (string_of_desc d)
   | RPredicateOf d -> spf "predicate of %s" (string_of_desc d)
