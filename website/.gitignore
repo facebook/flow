@@ -6,6 +6,5 @@ _site
 .asset-cache
 
 # Flow build artifacts are copied here:
-/_assets/gen
 /static/master
 /_data/flow_dot_js_versions.csv

@@ -50,6 +50,7 @@ exclude:
   - package.json
   - node_modules
   - .asset-cache
+  - yarn.lock
 
 assets:
   sources:
@@ -57,5 +58,4 @@ assets:
     - _assets/js
     - _assets/images
     - _assets/third-party
-    - _assets/gen
     - node_modules
