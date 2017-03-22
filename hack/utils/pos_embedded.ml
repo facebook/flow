@@ -38,6 +38,11 @@ let info_pos t =
   let end_ = end_offset - bol in
   line, start, end_
 
+let info_pos_extended t =
+  let line_begin, start, end_ = info_pos t in
+  let line_end, _, _ = File_pos.line_column_beg t.pos_end in
+  line_begin, line_end, start, end_
+
 let info_raw t = File_pos.offset t.pos_start, File_pos.offset t.pos_end
 let length t = File_pos.offset t.pos_end - File_pos.offset t.pos_start
 

@@ -34,6 +34,8 @@ val end_line : 'a pos -> int
 
 val info_pos : 'a pos -> int * int * int
 
+val info_pos_extended : 'a pos -> int * int * int * int
+
 val info_raw : 'a pos -> int * int
 
 val length : 'a pos -> int
