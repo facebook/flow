@@ -30,9 +30,8 @@ printf "travis_fold:end:website_deps\n"
 printf "travis_fold:start:jekyll_build\nBuilding Jekyll site\n"
 GEN_DIR=$([[ "$TRAVIS_TAG" = "" ]] && echo "master" || echo "$TRAVIS_TAG")
 mkdir -p "$PAGES_CHECKOUT"
-mkdir -p "website/_assets/gen/${GEN_DIR}"
 mkdir -p "website/static/$GEN_DIR"
-cp "bin/flow.js" "website/_assets/gen/${GEN_DIR}/flow.js"
+cp "bin/flow.js" "website/static/${GEN_DIR}/flow.js"
 cp -r "lib" "website/static/${GEN_DIR}/flowlib"
 echo "version" > "website/_data/flow_dot_js_versions.csv"
 git ls-remote --tags | awk '{print $2}' | cut -d/ -f3 | \

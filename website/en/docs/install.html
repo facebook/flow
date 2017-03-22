@@ -63,3 +63,7 @@ scripts:
     {% include_relative _install/include.html package_manager="npm"  compiler="flow-remove-types" %}
   </div>
 </div>
+
+<script type="text/javascript">
+  require(['{% asset_name install %}']);
+</script>

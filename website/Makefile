@@ -21,15 +21,15 @@ install: test-bundler test-yarn
 flow_js:
 	(cd ..; make js)
 
-_assets/gen/master/flow.js:
+static/master/flow.js:
 	mkdir -p $(dir $@)
-	(cd $(dir $@); ln -sf "../../../../bin/flow.js" "flow.js")
+	(cd $(dir $@); ln -sf "../../../bin/flow.js" "flow.js")
 
 static/master/flowlib:
 	mkdir -p $(dir $@)
 	(cd $(dir $@); ln -sf "../../../lib" "flowlib")
 
-symlinks: _assets/gen/master/flow.js static/master/flowlib
+symlinks: static/master/flow.js static/master/flowlib
 
 serve: test-jekyll symlinks
 	@bundle exec jekyll serve --host="::" --port=8080

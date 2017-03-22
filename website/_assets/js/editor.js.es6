@@ -194,4 +194,4 @@ Editor.init = function() {
   // });
 };
 
-Editor.init();
+export default Editor;

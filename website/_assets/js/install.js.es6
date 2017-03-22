@@ -12,7 +12,10 @@ function update() {
     if (input.checked) {
       match[input.name] = input.value;
     }
-    $(input).parent('.btn').toggleClass('active', input.checked);
+    // bootstrap does this for us, but it's one of the only things it does so
+    // we could do this instead of pulling in all of bootstrap.js (the other
+    // thing it handles is the mobile hamburger right now)
+    // $(input).parent('.btn').toggleClass('active', input.checked);
   });
 
   guides.each(function(index, guide) {

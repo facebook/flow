@@ -161,7 +161,7 @@ function initFlow(version) {
     `/static/${version}/flowlib/react.js`,
   ];
   const flowLoader = new Promise(function(resolve) {
-    require([`${version}/flow`], resolve);
+    require([`/static/${version}/flow.js`], resolve);
   });
   return Promise.all([flowLoader, ...libs.map(get)])
     .then(function([_flow, ...contents]) {
@@ -344,9 +344,4 @@ function createEditor(
   });
 }
 
-createEditor(
-  window.FLOW_DATA.version,
-  document.getElementById("code"),
-  document.getElementById("results"),
-  window.FLOW_DATA.versions
-);
+exports.createEditor = createEditor;
