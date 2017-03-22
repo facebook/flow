@@ -225,11 +225,11 @@ promise.js:201
 promise.js:206
 206:   .catch(function(num) { return Promise.resolve('asdf'); })
                                      ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-639:       onReject?: (error: any) => ?Promise<U> | U
-                                      ^^^^^^^^^^^^^^^ union: ?type application of class `Promise` | type parameter `U` of call of method `catch`. See lib: <BUILTINS>/core.js:639
+639:       onReject?: (error: any) => Promise<U> | U
+                                      ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `U` of call of method `catch`. See lib: <BUILTINS>/core.js:639
   Member 1:
-  639:       onReject?: (error: any) => ?Promise<U> | U
-                                        ^^^^^^^^^^^ ?type application of class `Promise`. See lib: <BUILTINS>/core.js:639
+  639:       onReject?: (error: any) => Promise<U> | U
+                                        ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:639
   Error:
   209:     var b: number = str; // Error: string ~> number
                            ^^^ string. This type is incompatible with
@@ -265,6 +265,18 @@ promise.js:214
                            ^^^ Promise. This type is incompatible with
   216:     var a: string = str;
                   ^^^^^^ string
+
+promise.js:225
+225:     var b: string = num; // Error: string ~> number
+                         ^^^ number. This type is incompatible with
+225:     var b: string = num; // Error: string ~> number
+                ^^^^^^ string
+
+promise.js:225
+225:     var b: string = num; // Error: string ~> number
+                         ^^^ undefined. This type is incompatible with
+225:     var b: string = num; // Error: string ~> number
+                ^^^^^^ string
 
 resolve_global.js:35
  35:   return Promise.resolve(0);
@@ -307,4 +319,4 @@ resolve_void.js:5
                                             ^^^^^^ number
 
 
-Found 26 errors
+Found 28 errors
