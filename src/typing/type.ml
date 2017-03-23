@@ -1666,6 +1666,7 @@ let any_propagating_use_t = function
   | MethodT _
   | MixinT _
   | NotT _
+  | ObjRestT _
   | ObjSpreadT _
   | OrT _
   | PredicateT _
@@ -1705,7 +1706,6 @@ let any_propagating_use_t = function
   | ObjAssignFromT _
   | ObjAssignToT _
   | ObjFreezeT _
-  | ObjRestT _
   | ObjSealT _
   | ObjTestT _
   | SetPropT _

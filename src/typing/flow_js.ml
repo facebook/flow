@@ -4286,6 +4286,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       rec_flow_t cx trace (o, t)
 
+    | AnyT _, ObjRestT (reason, _, t) ->
+      rec_flow_t cx trace (AnyT.why reason, t)
+
     (* ...AnyObjT and AnyFunT yield AnyObjT *)
     | (AnyFunT _ | AnyObjT _), ObjRestT (reason, _, t) ->
       rec_flow_t cx trace (AnyObjT reason, t)
