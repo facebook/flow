@@ -1632,35 +1632,35 @@ let is_any = function
 (* Use types trapped for any propagation *)
 let any_propagating_use_t = function
   | AdderT _
-  | CallT _
-  | GetPropT _
-  | MethodT _
-  | PredicateT _
-  | GuardT _
   | AndT _
-  | OrT _
-  | ReposLowerT _
-  | IntersectionPreprocessKitT _
-  | CallOpenPredT _
-  | CallLatentPredT _
-  | CJSRequireT _
-  | ImportModuleNsT _
-  | ImportDefaultT _
-  | ImportNamedT _
   | CJSExtractNamedExportsT _
+  | CJSRequireT _
+  | CallLatentPredT _
+  | CallOpenPredT _
+  | CallT _
   | CopyNamedExportsT _
+  | GetPropT _
+  | GuardT _
+  | ImportDefaultT _
+  | ImportModuleNsT _
+  | ImportNamedT _
+  | IntersectionPreprocessKitT _
+  | MethodT _
+  | ObjSpreadT _
+  | OrT _
+  | PredicateT _
   | ReactKitT _
+  | ReposLowerT _
   | ResolveSpreadT _
   | SpecializeT _
   | ThisSpecializeT _
   | UseT (_, ClassT _) (* mk_instance ~for_type:false *)
-  | ObjSpreadT _
     -> true
 
   (* These types have no t_out, so can't propagate anything *)
   | AssertArithmeticOperandT _
-  | ComparatorT _
   | AssertRestParamT _
+  | ComparatorT _
     -> false
 
   (* TODO: Figure out if these should be true or false *)
