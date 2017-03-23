@@ -8,7 +8,6 @@
  *
  *)
 
-module Token = Lexer_flow.Token
 open Token
 open Parser_env
 module Ast = Spider_monkey_ast

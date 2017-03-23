@@ -77,7 +77,7 @@ let token_to_json token_result =
   } = token_result in
 
   JSON_Object [
-    ("type", JSON_String (Lexer_flow.Token.token_to_string token));
+    ("type", JSON_String (Token.token_to_string token));
     ("context", JSON_String Parser_env.Lex_mode.(
       match token_context with
       | NORMAL -> "normal"

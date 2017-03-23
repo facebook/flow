@@ -590,82 +590,7 @@ module.exports = {
         },
         '/* multiline\ncomment\nshould\nbe\nignored */ 42',
         '/*a\r\nb*/ 42',
-        {
-          content: '/*a\rb*/ 42',
-          explanation: "Flow and esprima disagree whether \r is a newline",
-          expected_differences: {
-            'root.body.0.expression.loc.start.line': {
-              type: 'Wrong number',
-              expected: 2,
-              actual: 1
-            },
-            'root.body.0.expression.loc.start.column': {
-              type: 'Wrong number',
-              expected: 4,
-              actual: 8
-            },
-            'root.body.0.expression.loc.end.line': {
-              type: 'Wrong number',
-              expected: 2,
-              actual: 1
-            },
-            'root.body.0.expression.loc.end.column': {
-              type: 'Wrong number',
-              expected: 6,
-              actual: 10
-            },
-            'root.body.0.loc.start.line': {
-              type: 'Wrong number',
-              expected: 2,
-              actual: 1
-            },
-            'root.body.0.loc.start.column': {
-              type: 'Wrong number',
-              expected: 4,
-              actual: 8
-            },
-            'root.body.0.loc.end.line': {
-              type: 'Wrong number',
-              expected: 2,
-              actual: 1
-            },
-            'root.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 6,
-              actual: 10
-            },
-            'root.loc.start.line': {
-              type: 'Wrong number',
-              expected: 2,
-              actual: 1
-            },
-            'root.loc.start.column': {
-              type: 'Wrong number',
-              expected: 4,
-              actual: 8
-            },
-            'root.loc.end.line': {
-              type: 'Wrong number',
-              expected: 2,
-              actual: 1
-            },
-            'root.loc.end.column': {
-              type: 'Wrong number',
-              expected: 6,
-              actual: 10
-            },
-            'root.comments.0.loc.end.line': {
-              type: 'Wrong number',
-              expected: 2,
-              actual: 1
-            },
-            'root.comments.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 3,
-              actual: 7
-            },
-          }
-        },
+        '/*a\rb*/ 42',
         '/*a\nb*/ 42',
         '/*a\nc*/ 42',
         '// one\\n',
@@ -2305,96 +2230,16 @@ module.exports = {
         '/*hello',
         '/*hello  *',
         '\n]',
-        {
-          content: '\r]',
-          explanation: "Flow and esprima disagree whether \r is a newline",
-          expected_differences: {
-            'root.errors.0.column': {
-              type: 'Wrong error column',
-              expected: 0,
-              actual: '1-2'
-            },
-            'root.errors.0.line': {
-              type: 'Wrong error line',
-              expected: 2,
-              actual: '1-1'
-            },
-          }
-        },
+        '\r]',
         '\r\n]',
-        {
-          content: '\n\r]',
-          explanation: "Flow and esprima disagree whether \r is a newline",
-          expected_differences: {
-            'root.errors.0.column': {
-              type: 'Wrong error column',
-              expected: 0,
-              actual: '1-2'
-            },
-            'root.errors.0.line': {
-              type: 'Wrong error line',
-              expected: 3,
-              actual: '2-2'
-            },
-          }
-        },
+        '\n\r]',
         '//\r\n]',
-        {
-          content: '//\n\r]',
-          explanation: "Flow and esprima disagree whether \r is a newline",
-          expected_differences: {
-            'root.errors.0.column': {
-              type: 'Wrong error column',
-              expected: 0,
-              actual: '1-2'
-            },
-            'root.errors.0.line': {
-              type: 'Wrong error line',
-              expected: 3,
-              actual: '2-2'
-            },
-          }
-        },
+        '//\n\r]',
         '/a\\\n/',
-        {
-          content: '//\r \n]',
-          explanation: "Flow and esprima disagree whether \r is a newline",
-          expected_differences: {
-            'root.errors.0.line': {
-              type: 'Wrong error line',
-              expected: 3,
-              actual: '2-2'
-            },
-          }
-        },
+        '//\r \n]',
         '/*\r\n*/]',
-        {
-          content: '/*\n\r*/]',
-          explanation: "Flow and esprima disagree whether \r is a newline",
-          expected_differences: {
-            'root.errors.0.column': {
-              type: 'Wrong error column',
-              expected: 2,
-              actual: '3-4'
-            },
-            'root.errors.0.line': {
-              type: 'Wrong error line',
-              expected: 3,
-              actual: '2-2'
-            },
-          }
-        },
-        {
-          content: '/*\r \n*/]',
-          explanation: "Flow and esprima disagree whether \r is a newline",
-          expected_differences: {
-            'root.errors.0.line': {
-              type: 'Wrong error line',
-              expected: 3,
-              actual: '2-2'
-            },
-          }
-        },
+        '/*\n\r*/]',
+        '/*\r \n*/]',
         '\\\\',
         '\\x',
         {
