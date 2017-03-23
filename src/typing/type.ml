@@ -1670,6 +1670,7 @@ let any_propagating_use_t = function
   | OrT _
   | PredicateT _
   | ReactKitT _
+  | RefineT _
   | ReposLowerT _
   | ReposUseT _
   | ResolveSpreadT _
@@ -1707,7 +1708,6 @@ let any_propagating_use_t = function
   | ObjRestT _
   | ObjSealT _
   | ObjTestT _
-  | RefineT _
   | SetPropT _
   | SubstOnPredT _
   | UseT _
