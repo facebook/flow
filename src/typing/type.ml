@@ -1659,32 +1659,35 @@ let any_propagating_use_t = function
 
   (* These types have no t_out, so can't propagate anything *)
   | AssertArithmeticOperandT _
-  | AssertRestParamT _
-  | ComparatorT _
-    -> false
-
-  (* TODO: Figure out if these should be true or false *)
-  | ArrRestT _
   | AssertBinaryInLHST _
   | AssertBinaryInRHST _
   | AssertForInRHST _
   | AssertImportIsValueT _
+  | AssertRestParamT _
+  | ComparatorT _
+  | DebugPrintT _
+  | EqT _
+  | HasOwnPropT _
+  | ImplementsT _
+  | SuperT _
+  | TypeAppVarianceCheckT _
+  | VarianceCheckT _
+    -> false
+
+  (* TODO: Figure out if these should be true or false *)
+  | ArrRestT _
   | BecomeT _
   | BindT _
   | CallElemT _
   | ChoiceKitUseT _
   | ConstructorT _
-  | DebugPrintT _
   | ElemT _
-  | EqT _
   | ExportNamedT _
   | GetElemT _
   | GetKeysT _
   | GetStaticsT _
-  | HasOwnPropT _
   | IdxUnMaybeifyT _
   | IdxUnwrap _
-  | ImplementsT _
   | ImportTypeT _
   | ImportTypeofT _
   | LookupT _
@@ -1704,13 +1707,10 @@ let any_propagating_use_t = function
   | SetElemT _
   | SetPropT _
   | SubstOnPredT _
-  | SuperT _
   | TestPropT _
-  | TypeAppVarianceCheckT _
   | UnaryMinusT _
   | UnifyT _
   | UseT _
-  | VarianceCheckT _
     -> false
 
 
