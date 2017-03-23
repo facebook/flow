@@ -1665,6 +1665,7 @@ let any_propagating_use_t = function
   | MapTypeT _
   | MethodT _
   | MixinT _
+  | NotT _
   | ObjSpreadT _
   | OrT _
   | PredicateT _
@@ -1695,7 +1696,6 @@ let any_propagating_use_t = function
     -> false
 
   (* TODO: Figure out if these should be true or false *)
-  | NotT _
   | ObjAssignFromT _
   | ObjAssignToT _
   | ObjFreezeT _

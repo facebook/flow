@@ -2271,6 +2271,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* logical types *)
     (*****************)
 
+    | AnyT _, NotT (reason, tout) ->
+      rec_flow_t cx trace (AnyT.why reason, tout)
+
     (* !x when x is of unknown truthiness *)
     | BoolT (_, None), NotT (reason, tout)
     | StrT (_, AnyLiteral), NotT (reason, tout)
