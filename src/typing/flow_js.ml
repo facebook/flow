@@ -3895,12 +3895,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason_o = replace_reason_const RConstructorReturn reason in
       rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
 
-    | AnyFunT reason_fundef, ConstructorT (reason_op, args, t) ->
-      let reason_o = replace_reason_const RConstructorReturn reason_fundef in
+    | AnyFunT reason, ConstructorT (reason_op, args, t) ->
+      let reason_o = replace_reason_const RConstructorReturn reason in
       call_args_iter
         (fun t -> rec_flow_t cx trace (t, AnyT.why reason_op))
         args;
       rec_flow_t cx trace (AnyObjT reason_o, t);
+
+    | AnyT _, ConstructorT (reason_op, args, t) ->
+      call_args_iter (fun t ->
+        rec_flow_t cx trace (t, AnyT.why reason_op)
+      ) args;
+      rec_flow_t cx trace (AnyT.why reason_op, t);
 
     (* Since we don't know the signature of a method on AnyFunT, assume every
        parameter is an AnyT. *)
