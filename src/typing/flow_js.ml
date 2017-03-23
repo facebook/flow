@@ -3757,6 +3757,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (o2, ObjRestT (reason, [], t2));
         rec_flow cx trace (t2, ObjAssignToT(reason, l, o1, [], ObjAssign))
 
+    | AnyT _, ObjTestT (reason_op, _, u) ->
+      rec_flow_t cx trace (AnyT.why reason_op, u)
+
     | (_, ObjTestT(reason_op, default, u)) ->
       let u = ReposLowerT(reason_op, UseT (UnknownUse, u)) in
       if object_like l

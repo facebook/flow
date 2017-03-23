@@ -1668,6 +1668,7 @@ let any_propagating_use_t = function
   | NotT _
   | ObjRestT _
   | ObjSpreadT _
+  | ObjTestT _
   | OrT _
   | PredicateT _
   | ReactKitT _
@@ -1707,7 +1708,6 @@ let any_propagating_use_t = function
   | ObjAssignToT _
   | ObjFreezeT _
   | ObjSealT _
-  | ObjTestT _
   | SetPropT _
   | SubstOnPredT _
   | UseT _
