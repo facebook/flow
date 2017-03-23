@@ -4315,6 +4315,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (new_obj, t)
 
+    | AnyT _, ObjSealT (reason, tout) ->
+      rec_flow_t cx trace (AnyT.why reason, tout)
+
     (*************************)
     (* objects can be frozen *)
     (*************************)
