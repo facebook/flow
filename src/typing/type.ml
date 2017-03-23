@@ -1652,6 +1652,8 @@ let any_propagating_use_t = function
   | GetPropT _
   | GetStaticsT _
   | GuardT _
+  | IdxUnMaybeifyT _
+  | IdxUnwrap _
   | ImportDefaultT _
   | ImportModuleNsT _
   | ImportNamedT _
@@ -1687,8 +1689,6 @@ let any_propagating_use_t = function
     -> false
 
   (* TODO: Figure out if these should be true or false *)
-  | IdxUnMaybeifyT _
-  | IdxUnwrap _
   | ImportTypeT _
   | ImportTypeofT _
   | LookupT _
