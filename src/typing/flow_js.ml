@@ -5002,6 +5002,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (num, t_out)
 
+    | AnyT _, UnaryMinusT (reason_op, t_out) ->
+      rec_flow_t cx trace (AnyT.why reason_op, t_out)
+
     (************************)
     (* binary `in` operator *)
     (************************)

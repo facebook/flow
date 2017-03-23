@@ -1678,6 +1678,7 @@ let any_propagating_use_t = function
   | SpecializeT _
   | TestPropT _
   | ThisSpecializeT _
+  | UnaryMinusT _
   | UseT (_, ClassT _) (* mk_instance ~for_type:false *)
     -> true
 
@@ -1708,7 +1709,6 @@ let any_propagating_use_t = function
   | RefineT _
   | SetPropT _
   | SubstOnPredT _
-  | UnaryMinusT _
   | UnifyT _
   | UseT _
     -> false
