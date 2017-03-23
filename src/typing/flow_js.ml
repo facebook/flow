@@ -3186,6 +3186,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         UseT (UnknownUse, tvar)
       )
 
+    | AnyT _, MixinT (r, tvar) ->
+      rec_flow_t cx trace (AnyT.why r, tvar)
+
     (* TODO: it is conceivable that other things (e.g. functions) could also be
        viewed as mixins (e.g. by extracting properties in their prototypes), but
        such enhancements are left as future work. *)
