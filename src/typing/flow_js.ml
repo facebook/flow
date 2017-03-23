@@ -4739,7 +4739,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           ResolveSpreadsToMultiflowPartial (mk_id (), ft, reason_op, call_tout) in
         resolve_call_list cx ~trace reason tins2 resolve_to
 
-    | AnyFunT _,
+    | (AnyT _ | AnyFunT _),
       BindT (reason, {
         call_this_t;
         call_args_tlist;

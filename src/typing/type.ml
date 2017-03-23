@@ -1635,6 +1635,7 @@ let any_propagating_use_t = function
   | AndT _
   | ArrRestT _
   | BecomeT _
+  | BindT _
   | CJSExtractNamedExportsT _
   | CJSRequireT _
   | CallLatentPredT _
@@ -1677,7 +1678,6 @@ let any_propagating_use_t = function
     -> false
 
   (* TODO: Figure out if these should be true or false *)
-  | BindT _
   | CallElemT _
   | ChoiceKitUseT _
   | ConstructorT _
