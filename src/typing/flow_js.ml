@@ -4336,9 +4336,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           LookupT (reason_op, strict, try_ts_on_failure, propref, action)));
       Ops.set ops
 
-    | AnyObjT reason_obj, LookupT (reason_op, _, _, propref, action) ->
-      let p = Field (AnyT.why reason_op, Neutral) in
-      perform_lookup_action cx trace propref p reason_obj reason_op action
+    | (AnyT reason | AnyObjT reason),
+      LookupT (reason_op, _, _, propref, action) ->
+      (match action with
+      | SuperProp lp when Property.write_t lp = None ->
+        (* Without this exception, we will call rec_flow_p where
+         * `write_t lp = None` and `write_t up = Some`, which is a polarity
+         * mismatch error. Instead of this, we could "read" `mixed` from
+         * covariant props, which would always flow into `any`. *)
+        ()
+      | _ ->
+        let p = Field (AnyT.why reason_op, Neutral) in
+        perform_lookup_action cx trace propref p reason reason_op action)
 
     (*****************************************)
     (* ... and their fields written *)
