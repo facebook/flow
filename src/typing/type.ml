@@ -1675,6 +1675,7 @@ let any_propagating_use_t = function
   | ResolveSpreadT _
   | SetElemT _
   | SpecializeT _
+  | TestPropT _
   | ThisSpecializeT _
   | UseT (_, ClassT _) (* mk_instance ~for_type:false *)
     -> true
@@ -1707,7 +1708,6 @@ let any_propagating_use_t = function
   | SentinelPropTestT _
   | SetPropT _
   | SubstOnPredT _
-  | TestPropT _
   | UnaryMinusT _
   | UnifyT _
   | UseT _
