@@ -1673,6 +1673,7 @@ let any_propagating_use_t = function
   | ReposLowerT _
   | ReposUseT _
   | ResolveSpreadT _
+  | SentinelPropTestT _
   | SetElemT _
   | SpecializeT _
   | TestPropT _
@@ -1705,7 +1706,6 @@ let any_propagating_use_t = function
   | ObjSealT _
   | ObjTestT _
   | RefineT _
-  | SentinelPropTestT _
   | SetPropT _
   | SubstOnPredT _
   | UnaryMinusT _
