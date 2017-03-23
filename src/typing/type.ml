@@ -1646,6 +1646,7 @@ let any_propagating_use_t = function
   | ConstructorT _
   | CopyNamedExportsT _
   | ElemT _
+  | ExportNamedT _
   | GetElemT _
   | GetPropT _
   | GuardT _
@@ -1684,7 +1685,6 @@ let any_propagating_use_t = function
     -> false
 
   (* TODO: Figure out if these should be true or false *)
-  | ExportNamedT _
   | GetKeysT _
   | GetStaticsT _
   | IdxUnMaybeifyT _
