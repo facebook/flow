@@ -4550,6 +4550,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* function types can be mapped over a structure  *)
     (**************************************************)
 
+    | AnyT _, MapTypeT (reason_op, _, _, k) ->
+      continue cx trace (AnyT.why reason_op) k
+
     | ArrT (_, arrtype), MapTypeT (reason_op, TupleMap, funt, k) ->
       let f x = mk_tvar_where cx reason_op (fun t ->
         let callt = CallT (reason_op, mk_functioncalltype [Arg x] t) in
