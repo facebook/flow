@@ -3932,6 +3932,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Mixins don't have statics at all, so we can just prune here. *)
       ()
 
+    | AnyT _, GetStaticsT (reason_op, t) ->
+      rec_flow_t cx trace (AnyT.why reason_op, t)
+
     | ObjProtoT reason, GetStaticsT (_, t) ->
       (* ObjProtoT not only serves as the instance type of the root class, but
          also as the statics of the root class. *)

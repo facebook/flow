@@ -1650,6 +1650,7 @@ let any_propagating_use_t = function
   | GetElemT _
   | GetKeysT _
   | GetPropT _
+  | GetStaticsT _
   | GuardT _
   | ImportDefaultT _
   | ImportModuleNsT _
@@ -1686,7 +1687,6 @@ let any_propagating_use_t = function
     -> false
 
   (* TODO: Figure out if these should be true or false *)
-  | GetStaticsT _
   | IdxUnMaybeifyT _
   | IdxUnwrap _
   | ImportTypeT _
