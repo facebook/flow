@@ -515,6 +515,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         semicolon exact env;
         properties ~allow_static ~allow_spread ~exact env (call_prop::acc)
       | T_ELLIPSIS when allow_spread ->
+        error_unsupported_variance env variance;
         Eat.token env;
         let (arg_loc, _) as argument = _type env in
         let loc = Loc.btwn start_loc arg_loc in

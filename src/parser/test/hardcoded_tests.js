@@ -5147,7 +5147,7 @@ module.exports = {
     },
     'Object type spread': {
       'type T = {...O}': {
-        'errors': [],
+        'errors.length': 0,
         'body.0.right.properties': [{
           'type': 'ObjectTypeSpreadProperty',
           'argument': {
@@ -5190,6 +5190,13 @@ module.exports = {
           'argument.id.name': 'O2',
         }],
       },
+      'type T = {+...O}': {
+        'errors.0': {
+          'message': 'Unexpected variance sigil',
+          'loc.start.column': 10,
+          'loc.end.column': 11,
+        }
+      }
     },
     'Invalid instance spread': {
       'interface I {...O}': {
