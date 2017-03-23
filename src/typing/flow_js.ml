@@ -4509,6 +4509,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let a = ArrT (reason, arrtype) in
       rec_flow_t cx trace (a, tout)
 
+    | AnyT _, ArrRestT (reason, _, tout) ->
+      rec_flow_t cx trace (AnyT.why reason, tout)
+
     (**********************)
     (* object type spread *)
     (**********************)

@@ -1633,6 +1633,7 @@ let is_any = function
 let any_propagating_use_t = function
   | AdderT _
   | AndT _
+  | ArrRestT _
   | CJSExtractNamedExportsT _
   | CJSRequireT _
   | CallLatentPredT _
@@ -1675,7 +1676,6 @@ let any_propagating_use_t = function
     -> false
 
   (* TODO: Figure out if these should be true or false *)
-  | ArrRestT _
   | BecomeT _
   | BindT _
   | CallElemT _
