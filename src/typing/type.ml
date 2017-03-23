@@ -1671,6 +1671,7 @@ let any_propagating_use_t = function
   | PredicateT _
   | ReactKitT _
   | ReposLowerT _
+  | ReposUseT _
   | ResolveSpreadT _
   | SetElemT _
   | SpecializeT _
@@ -1703,7 +1704,6 @@ let any_propagating_use_t = function
   | ObjSealT _
   | ObjTestT _
   | RefineT _
-  | ReposUseT _
   | SentinelPropTestT _
   | SetPropT _
   | SubstOnPredT _
