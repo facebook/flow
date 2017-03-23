@@ -4332,6 +4332,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let new_obj = ObjT (reason, {objtype with flags}) in
       rec_flow_t cx trace (new_obj, t)
 
+    | AnyT _, ObjFreezeT (reason_op, t) ->
+      rec_flow_t cx trace (AnyT.why reason_op, t)
+
     (*******************************************)
     (* objects may have their fields looked up *)
     (*******************************************)
