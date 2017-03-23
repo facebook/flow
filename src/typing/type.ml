@@ -1638,10 +1638,13 @@ let any_propagating_use_t = function
   | BindT _
   | CJSExtractNamedExportsT _
   | CJSRequireT _
+  | CallElemT _
   | CallLatentPredT _
   | CallOpenPredT _
   | CallT _
   | CopyNamedExportsT _
+  | ElemT _
+  | GetElemT _
   | GetPropT _
   | GuardT _
   | ImportDefaultT _
@@ -1655,6 +1658,7 @@ let any_propagating_use_t = function
   | ReactKitT _
   | ReposLowerT _
   | ResolveSpreadT _
+  | SetElemT _
   | SpecializeT _
   | ThisSpecializeT _
   | UseT (_, ClassT _) (* mk_instance ~for_type:false *)
@@ -1678,12 +1682,9 @@ let any_propagating_use_t = function
     -> false
 
   (* TODO: Figure out if these should be true or false *)
-  | CallElemT _
   | ChoiceKitUseT _
   | ConstructorT _
-  | ElemT _
   | ExportNamedT _
-  | GetElemT _
   | GetKeysT _
   | GetStaticsT _
   | IdxUnMaybeifyT _
@@ -1704,7 +1705,6 @@ let any_propagating_use_t = function
   | RefineT _
   | ReposUseT _
   | SentinelPropTestT _
-  | SetElemT _
   | SetPropT _
   | SubstOnPredT _
   | TestPropT _

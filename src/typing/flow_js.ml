@@ -4406,13 +4406,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects/arrays may have their properties/elements written and read *)
     (**********************************************************************)
 
-    | (ObjT _ | AnyObjT _ | ArrT _), SetElemT (reason_op, key, tin) ->
+    | (ObjT _ | AnyObjT _ | ArrT _ | AnyT _), SetElemT (reason_op, key, tin) ->
       rec_flow cx trace (key, ElemT (reason_op, l, WriteElem tin))
 
-    | (ObjT _ | AnyObjT _ | ArrT _), GetElemT (reason_op, key, tout) ->
+    | (ObjT _ | AnyObjT _ | ArrT _ | AnyT _), GetElemT (reason_op, key, tout) ->
       rec_flow cx trace (key, ElemT (reason_op, l, ReadElem tout))
 
-    | (ObjT _ | AnyObjT _ | ArrT _),
+    | (ObjT _ | AnyObjT _ | ArrT _ | AnyT _),
       CallElemT (reason_call, reason_lookup, key, ft) ->
       let action = CallElem (reason_call, ft) in
       rec_flow cx trace (key, ElemT (reason_lookup, l, action))
@@ -4432,7 +4432,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow cx trace (o, u)
 
-    | _, ElemT (reason_op, AnyObjT _, action) ->
+    | _, ElemT (reason_op, (AnyObjT _ | AnyT _), action) ->
       let value = AnyT.why reason_op in
       perform_elem_action cx trace value action
 
