@@ -162,7 +162,7 @@ let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
      * the first token. *)
     let lb = Lexing.from_string content in
     let env =
-      Lexer_flow.Lex_env.new_lex_env (Some filename) lb ~enable_types_in_comments:false in
+      Lex_env.new_lex_env (Some filename) lb ~enable_types_in_comments:false in
     let rec get_first_comment_contents ?(i=0) env =
       if i < max_tokens then
         let env, lexer_result = Lexer_flow.token env in

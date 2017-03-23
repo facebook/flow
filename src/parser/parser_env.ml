@@ -9,7 +9,6 @@
  *)
 
 module Ast = Spider_monkey_ast
-module Lex_env = Lexer_flow.Lex_env
 module Lex_result = Lexer_flow.Lex_result
 open Ast
 module Error = Parse_error
