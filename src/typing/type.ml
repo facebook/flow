@@ -1661,6 +1661,7 @@ let any_propagating_use_t = function
   | ImportTypeofT _
   | IntersectionPreprocessKitT _
   | LookupT _
+  | MakeExactT _
   | MethodT _
   | ObjSpreadT _
   | OrT _
@@ -1692,7 +1693,6 @@ let any_propagating_use_t = function
     -> false
 
   (* TODO: Figure out if these should be true or false *)
-  | MakeExactT _
   | MapTypeT _
   | MixinT _
   | NotT _

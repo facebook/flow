@@ -2991,6 +2991,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       );
       rec_flow_t cx trace (ObjT (rl, xl), ObjT (ru, xu))
 
+    | AnyT _, MakeExactT (reason_op, k) ->
+      continue cx trace (AnyT.why reason_op) k
+
     (* unsupported kind *)
     | _, MakeExactT _ ->
       let reasons = FlowError.ordered_reasons l u in
