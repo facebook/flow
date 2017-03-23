@@ -167,7 +167,7 @@ let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
       if i < max_tokens then
         let env, lexer_result = Lexer_flow.token env in
         match Lex_result.comments lexer_result with
-        | [] -> Lexer_flow.Token.(
+        | [] -> Token.(
             (**
              * Stop looking for docblocks if we see any tokens other than a
              * string or a semicolon (`"use babel";` or `"use strict";`).
