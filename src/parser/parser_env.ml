@@ -9,7 +9,6 @@
  *)
 
 module Ast = Spider_monkey_ast
-module Lex_result = Lexer_flow.Lex_result
 open Ast
 module Error = Parse_error
 module SSet = Set.Make(String)
