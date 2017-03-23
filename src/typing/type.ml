@@ -1657,6 +1657,8 @@ let any_propagating_use_t = function
   | ImportDefaultT _
   | ImportModuleNsT _
   | ImportNamedT _
+  | ImportTypeT _
+  | ImportTypeofT _
   | IntersectionPreprocessKitT _
   | MethodT _
   | ObjSpreadT _
@@ -1689,8 +1691,6 @@ let any_propagating_use_t = function
     -> false
 
   (* TODO: Figure out if these should be true or false *)
-  | ImportTypeT _
-  | ImportTypeofT _
   | LookupT _
   | MakeExactT _
   | MapTypeT _

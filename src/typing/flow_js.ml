@@ -1697,6 +1697,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ObjT _, ImportTypeT(_, "default", t)) ->
       rec_flow_t cx trace (l, t)
 
+    | AnyT _, ImportTypeT (_, _, t) ->
+      rec_flow_t cx trace (l, t)
+
     | (_, ImportTypeT(reason, export_name, _)) ->
       add_output cx ~trace (FlowError.EImportValueAsType (reason, export_name))
 
