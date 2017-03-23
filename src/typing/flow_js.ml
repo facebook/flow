@@ -2583,6 +2583,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (AnyObjT reason | AnyFunT reason), GetKeysT (_, keys) ->
       rec_flow_t cx trace (StrT.why reason, keys)
 
+    | AnyT _, GetKeysT (reason_op, keys) ->
+      rec_flow_t cx trace (AnyT.why reason_op, keys)
+
     (** In general, typechecking is monotonic in the sense that more constraints
         produce more errors. However, sometimes we may want to speculatively try
         out constraints, backtracking if they produce errors (and removing the
