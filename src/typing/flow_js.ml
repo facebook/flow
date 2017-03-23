@@ -4390,7 +4390,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       write_obj_prop cx trace o propref reason_obj reason_op tin
 
     (* Since we don't know the type of the prop, use AnyT. *)
-    | (AnyObjT _, SetPropT (reason_op, _, t)) ->
+    | (AnyT _ | AnyObjT _), SetPropT (reason_op, _, t) ->
       rec_flow_t cx trace (t, AnyT.why reason_op)
 
     (*****************************)

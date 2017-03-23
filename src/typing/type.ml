@@ -1700,6 +1700,7 @@ let any_propagating_use_t = function
   | EqT _
   | HasOwnPropT _
   | ImplementsT _
+  | SetPropT _
   | SuperT _
   | TypeAppVarianceCheckT _
   | VarianceCheckT _
@@ -1708,7 +1709,6 @@ let any_propagating_use_t = function
   (* TODO: Figure out if these should be true or false *)
   | ObjAssignFromT _
   | ObjAssignToT _
-  | SetPropT _
   | SubstOnPredT _
   | UseT _
     -> false
