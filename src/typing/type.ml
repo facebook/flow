@@ -1642,6 +1642,7 @@ let any_propagating_use_t = function
   | CallLatentPredT _
   | CallOpenPredT _
   | CallT _
+  | ChoiceKitUseT _
   | CopyNamedExportsT _
   | ElemT _
   | GetElemT _
@@ -1682,7 +1683,6 @@ let any_propagating_use_t = function
     -> false
 
   (* TODO: Figure out if these should be true or false *)
-  | ChoiceKitUseT _
   | ConstructorT _
   | ExportNamedT _
   | GetKeysT _
