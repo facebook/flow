@@ -15,50 +15,50 @@ homepage_github_stars: "GitHub Stars"
 homepage_code_faster_title: "Code Faster."
 homepage_code_faster_img_alt: ""
 homepage_code_faster_description: >
-  Having to run your code to manually test if it works leads to a lot of
-  repetitive guessing and checking. Flow identifies problems as you write code.
-  Stop wasting your time guessing and checking.
+  Tired of having to run your code to find bugs? Flow identifies problems as you
+  code. Stop wasting your time guessing and checking.
 
 homepage_code_smarter_title: "Code Smarter."
 homepage_code_smarter_img_alt: ""
 homepage_code_smarter_description: >
-  JavaScript code on its own is really static, it's really hard for tools to
-  pull out meaning from it. Using Flow makes your code describe itself. So your
-  code can give you feedback, and you can build more interesting tools on top
-  of it.
+  It's hard to build smart tools for dynamic languages like JavaScript. Flow
+  understands your code and makes its knowledge available, enabling other smart
+  tools to be built on top of Flow.
 
 homepage_code_confidently_title: "Code Confidently."
 homepage_code_confidently_img_alt: ""
 homepage_code_confidently_description: >
-  Making major changes to large codebases can be scary. Flow helps you identify
-  all of the errors ahead of time. So you can focus on the change you want to
-  make, and stop worrying about what you might break.
+  Making major changes to large codebases can be scary. Flow helps you refactor
+  safely, so you can focus on the changes you want to make, and stop worrying
+  about what you might break.
 
 homepage_code_bigger_title: "Code Bigger."
 homepage_code_bigger_img_alt: ""
 homepage_code_bigger_description: >
   Working in a codebase with lots of developers can make it difficult to keep
-  track of every change being made. Flow removes the need to know the state of
-  all the code all the time. Helping you grow your team and code while staying
-  productive.
+  your master branch working. Flow can help prevent bad rebases. Flow can help
+  protect your carefully designed library from your coworkers. And Flow can help
+  you understand the code you wrote six months ago.
 
 homepage_featurettes:
   - title: "Type Inference"
     description: >
-      Using type inference, Flow tracks values through your code. It can find
-      bugs in places where you haven't written any type annotations.
+      Using data flow analysis, Flow infers types and tracks data as it moves
+      through your code. You don't need to fully annotate your code before Flow
+      can start to find bugs.
   - title: "JavaScript, Your Way"
     description: >
-      Flow is designed around JavaScript so that it can get out of your way. It
-      understands common JavaScript patterns and very dynamic code.
+      Flow is designed to understand idiomatic JavaScript. It understands common
+      JavaScript patterns and many of the weird things we JavaScript developers
+      love to do.
   - title: "Realtime Feedback"
     description: >
-      By incrementally rechecking your code as you make changes. Flow gives you
-      a fast feedback cycle while writing your code.
+      Flow gives you fast feedback while you code by incrementally rechecking
+      your code as you make changes.
   - title: "Easy Integration"
     description: >
-      Flow integrates well with tools that you're probably already using.
-      Making it easy to insert into your existing workflow and toolchain.
+      Flow integrates well with many tools, making it easy to insert into your
+      existing workflow and toolchain.
 
 homepage_ready_to_get_going: "Ready to get going?"
 
