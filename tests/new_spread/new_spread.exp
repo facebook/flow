@@ -43,9 +43,9 @@ type.js:26
                            ^ T
 
 type.js:30
- 30: type O3 = {|...{p:T}|}; // error: spread result is not exact
+ 30: type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
                     ^^^^^ object type. Inexact type is incompatible with exact type
- 30: type O3 = {|...{p:T}|}; // error: spread result is not exact
+ 30: type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
                ^^^^^^^^^^^^ object type
 
 type.js:37
@@ -106,9 +106,9 @@ type.js:57
                                     ^ U
 
 type.js:62
- 62: type O7 = {|...{p:T},...{|p:U|}|}; // error: spread result is not exact
+ 62: type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not exact
                     ^^^^^ object type. Inexact type is incompatible with exact type
- 62: type O7 = {|...{p:T},...{|p:U|}|}; // error: spread result is not exact
+ 62: type O7 = {|...{p:T},...{|p:U|}|}; ({p:y}: O7);// error: spread result is not exact
                ^^^^^^^^^^^^^^^^^^^^^^^ object type
 
 type.js:68
@@ -164,6 +164,28 @@ type_contra.js:13
  13: (o2.p: T); // errors: unknown ~> T
             ^ T
 
+type_generic.js:3
+  3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
+      ^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+  3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
+                           ^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `p` is incompatible:
+      3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
+                    ^ number. This type is incompatible with
+      3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
+                                    ^^^^^ empty
+
+type_generic.js:3
+  3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
+      ^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+  3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
+                           ^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `q` is incompatible:
+      3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
+                          ^ number. This type is incompatible with
+      3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
+                                             ^^^^^ empty
+
 type_intersection.js:15
  15: ({p: new A}: O2); // error: A ~> B
       ^^^^^^^^^^ object literal. This type is incompatible with
@@ -176,4 +198,4 @@ type_intersection.js:15
                                 ^ B
 
 
-Found 22 errors
+Found 24 errors

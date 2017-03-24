@@ -784,6 +784,7 @@ module rec TypeTerm : sig
   | NonMaybeType
   | PropertyType of string
   | Bind of t
+  | SpreadType of bool * t list
 
   and type_map =
   | TupleMap

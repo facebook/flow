@@ -352,6 +352,7 @@ and gc_destructor cx state = function
   | NonMaybeType -> ()
   | PropertyType _ -> ()
   | Bind t -> gc cx state t
+  | SpreadType (_, ts) -> List.iter (gc cx state) ts
 
 and gc_pred cx state = function
 

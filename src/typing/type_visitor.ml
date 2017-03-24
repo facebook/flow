@@ -206,6 +206,7 @@ class ['a] t = object(self)
   | NonMaybeType -> acc
   | PropertyType _ -> acc
   | Bind t -> self#type_ cx acc t
+  | SpreadType (_, ts) -> self#list (self#type_ cx) acc ts
 
   method private use_type_ cx acc = function
   | UseT (_, t) ->

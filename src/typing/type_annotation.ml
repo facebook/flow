@@ -692,13 +692,9 @@ let rec convert cx tparams_map = Ast.Type.(function
     if exact
     then ExactT (mk_reason (RExactType reason_desc) loc, t)
     else t
-  | t::todo_rev ->
-    let open ObjectSpread in
+  | t::ts ->
     let reason = mk_reason RObjectType loc in
-    let tool = Resolve Next in
-    let state = { todo_rev; acc = []; make_exact = exact } in
-    AnnotT (Flow_js.mk_tvar_where cx reason (fun tout ->
-      Flow_js.flow cx (t, ObjSpreadT (reason, tool, state, tout)))))
+    EvalT (t, TypeDestructorT (reason, SpreadType (exact, ts)), mk_id ()))
 
 | loc, Exists ->
   (* Do not evaluate existential type variables when map is non-empty. This

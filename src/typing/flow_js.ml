@@ -5770,6 +5770,8 @@ and ground_subtype = function
   | (_, ReposLowerT _) -> false
   | (_, ReposUseT _) -> false
 
+  | (_, ObjSpreadT _) -> false
+
   (* Allow deferred unification with `any` *)
   | (_, UnifyT _) -> false
 
@@ -6384,6 +6386,11 @@ and eval_destructor cx ~trace reason curr_t s i =
             UseT (UnknownUse, MaybeT (maybe_r, tvar))
         | PropertyType x -> GetPropT(reason, Named (reason, x), tvar)
         | Bind t -> BindT(reason, mk_methodcalltype t [] tvar, true)
+        | SpreadType (make_exact, todo_rev) ->
+            let open ObjectSpread in
+            let tool = Resolve Next in
+            let state = { todo_rev; acc = []; make_exact } in
+            ObjSpreadT (reason, tool, state, tvar)
         )
     )
   | Some it ->
@@ -6415,6 +6422,9 @@ and subst_destructor cx force map s = match s with
   | Bind t ->
     let t_ = subst cx ~force map t in
     if t_ == t then s else Bind t_
+  | SpreadType (exact, ts) ->
+    let ts_ = ident_map (subst cx ~force map) ts in
+    if ts_ == ts then s else SpreadType (exact, ts_)
 
 and subst_predicate cx ?(force=true) (map: Type.t SMap.t) p = match p with
   | LatentP (t, i) ->

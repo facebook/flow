@@ -973,6 +973,10 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | Bind t -> JSON_Object [
       "thisType", _json_of_t json_cx t
     ]
+  | SpreadType (exact, ts) -> JSON_Object [
+      "spread", JSON_Array (List.map (_json_of_t json_cx) ts);
+      "exact", JSON_Bool exact;
+    ]
 )
 
 and json_of_polarity_map json_cx = check_depth json_of_polarity_map_impl json_cx
@@ -1388,6 +1392,7 @@ and dump_t_ (depth, tvars) cx t =
     | NonMaybeType -> "non-maybe type"
     | PropertyType x -> spf "property type `%s`" x
     | Bind _ -> "bind"
+    | SpreadType _ -> "spread"
     in
     fun expr t -> match expr with
     | DestructuringT (_, selector) ->
@@ -1942,6 +1947,7 @@ let string_of_destructor = function
   | NonMaybeType -> "NonMaybeType"
   | PropertyType x -> spf "PropertyType %s" x
   | Bind _ -> "Bind"
+  | SpreadType _ -> "Spread"
 
 let string_of_default = Default.fold
   ~expr:(fun (loc, _) ->
