@@ -713,6 +713,7 @@ let choose_provider ~options m files errmap =
 (***** public *****)
 (******************)
 
+let is_tracked_file = InfoHeap.mem
 let module_exists = NameHeap.mem
 
 let get_file_unsafe ~audit m =
@@ -732,6 +733,10 @@ let get_info_unsafe ~audit f =
   | Some info -> info
   | None -> failwith
       (spf "module info not found for file %s" (string_of_filename f))
+
+let checked_file ~audit f =
+  let info = f |> get_info_unsafe ~audit in
+  info.checked
 
 (* TODO [perf]: measure size and possibly optimize *)
 (* Extract and process information from context. In particular, resolve

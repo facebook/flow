@@ -176,9 +176,8 @@ let dependent_files workers ~unchanged ~new_or_changed ~changed_modules =
    savings in init and recheck times). *)
 
 
-let checked ~audit m = Module_js.(
-  let info = m |> get_file_unsafe ~audit |> get_info_unsafe ~audit in
-  info.checked
+let checked_module ~audit m = Module_js.(
+  m |> get_file_unsafe ~audit |> checked_file ~audit
 )
 
 (* A file is considered to implement a required module r only if the file is
@@ -186,39 +185,28 @@ let checked ~audit m = Module_js.(
    before any file that requires module r, so this notion naturally gives rise
    to a dependency ordering among files for merging. *)
 let implementation_file ~audit r = Module_js.(
-  if module_exists r && checked ~audit r
+  if module_exists r && checked_module ~audit r
   then Some (get_file_unsafe ~audit r)
   else None
+)
+
+let deps_of_file ~audit file = Module_js.(
+  let { required; _ } = get_resolved_requires_unsafe ~audit file in
+  NameSet.fold (fun r files ->
+    match implementation_file ~audit:Expensive.ok r with
+    | Some f -> FilenameSet.add f files
+    | None -> files
+  ) required FilenameSet.empty
 )
 
 let calc_dependencies workers files =
   let deps = MultiWorker.call
     workers
     ~job: (List.fold_left (fun deps file ->
-      let { Module_js.required; _ } =
-        Module_js.get_resolved_requires_unsafe ~audit:Expensive.ok file in
-      let files = Module_js.NameSet.fold (fun r files ->
-        match implementation_file ~audit:Expensive.ok r with
-        | Some f -> FilenameSet.add f files
-        | None -> files
-      ) required FilenameSet.empty in
-      FilenameMap.add file files deps
+      FilenameMap.add file (deps_of_file ~audit:Expensive.ok file) deps
     ))
     ~neutral: FilenameMap.empty
     ~merge: FilenameMap.union
     ~next: (MultiWorker.next workers files) in
   deps |> FilenameMap.map (
     FilenameSet.filter (fun f -> FilenameMap.mem f deps))
-
-let walk_dependencies =
-  let rec loop dependency_graph =
-    FilenameSet.fold (fun file acc ->
-      match FilenameMap.get file dependency_graph with
-      | Some files ->
-        let files = FilenameSet.diff files acc in
-        let acc = FilenameSet.union files acc in
-        loop dependency_graph files acc
-      | None -> acc
-    ) in
-  fun dependency_graph files ->
-    loop dependency_graph files files

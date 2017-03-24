@@ -17,12 +17,9 @@ val dependent_files:
   changed_modules:Module_js.NameSet.t ->
   FilenameSet.t * FilenameSet.t
 
+val deps_of_file: (filename -> FilenameSet.t) Expensive.t
+
 val calc_dependencies:
   Worker.t list option -> (* workers *)
   filename list -> (* files *)
   FilenameSet.t FilenameMap.t
-
-val walk_dependencies:
-  FilenameSet.t FilenameMap.t -> (* dependency graph *)
-  FilenameSet.t -> (* files *)
-  FilenameSet.t

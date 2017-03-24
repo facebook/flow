@@ -58,10 +58,14 @@ val get_file_unsafe: (Modulename.t -> filename) Expensive.t
 (* given a module name, returns either (Some filename) or None *)
 val get_file: (Modulename.t -> filename option) Expensive.t
 
+val is_tracked_file: filename -> bool
+
 (* given a filename, returns resolved requires. unsafe *)
 val get_resolved_requires_unsafe: (filename -> resolved_requires) Expensive.t
 (* given a filename, returns module info. unsafe *)
 val get_info_unsafe: (filename -> info) Expensive.t
+
+val checked_file: (filename -> bool) Expensive.t
 
 (* add module records for given files;
    returns the set of modules added
