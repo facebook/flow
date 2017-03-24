@@ -384,7 +384,7 @@ let rec search_for_root config start recursion_limit : Path.t option =
   else search_for_root config (Path.parent start) (recursion_limit - 1)
 
 (* Given a valid file or directory, find a valid Flow root directory *)
-(* NOTE: exists on invalid file or .flowconfig not found! *)
+(* NOTE: exits on invalid file or .flowconfig not found! *)
 let guess_root dir_or_file =
   let dir_or_file = match dir_or_file with
   | Some dir_or_file -> dir_or_file

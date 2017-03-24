@@ -147,6 +147,7 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
 
   { Options.
     opt_check_mode = false;
+    opt_focus_check_target = None;
     opt_server_mode = false;
     opt_error_flags = Options.default_error_flags;
     opt_log_file = opt_log_file;

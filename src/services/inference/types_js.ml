@@ -254,6 +254,7 @@ let typecheck
 
   (* local inference populates context heap, resolved requires heap *)
   Flow_logger.log "Running local inference";
+
   let profiling, infer_results =
     with_timer ~options "Infer" profiling (fun () ->
       Infer_service.infer ~options ~workers parsed
@@ -266,7 +267,15 @@ let typecheck
       file::inferred, errset, suppressions
     ) ([], local_errors, suppressions) infer_results
   in
-  let inferred = List.rev rev_inferred in
+  let inferred = match Options.focus_check_target options with
+    | Some f when List.mem f rev_inferred ->
+      let inferred_subset = Dep_service.(
+        let dependency_graph = calc_dependencies workers rev_inferred in
+        walk_dependencies dependency_graph (FilenameSet.singleton f)
+      ) in
+      FilenameSet.elements inferred_subset
+    | _ -> List.rev rev_inferred
+  in
 
   (* call supplied function to calculate closure of modules to merge *)
   let profiling, merge_input =

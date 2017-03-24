@@ -1,0 +1,55 @@
+
+Stop any already-running server.
+Full check:
+a.js:3
+  3: (require('./b'): number);
+      ^^^^^^^^^^^^^^ string. This type is incompatible with
+  3: (require('./b'): number);
+                      ^^^^^^ number
+
+test.js:3
+  3: ("": number);
+      ^^ string. This type is incompatible with
+  3: ("": number);
+          ^^^^^^ number
+
+
+Found 2 errors
+
+Focused check on a file with local errors but no dependency:
+test.js:3
+  3: ("": number);
+      ^^ string. This type is incompatible with
+  3: ("": number);
+          ^^^^^^ number
+
+
+Found 1 error
+
+Focused check on a file with no local errors but a dependency:
+a.js:3
+  3: (require('./b'): number);
+      ^^^^^^^^^^^^^^ string. This type is incompatible with
+  3: (require('./b'): number);
+                      ^^^^^^ number
+
+test.js:3
+  3: ("": number);
+      ^^ string. This type is incompatible with
+  3: ("": number);
+          ^^^^^^ number
+
+
+Found 2 errors
+
+Focused check on a file with no local errors and no dependency:
+test.js:3
+  3: ("": number);
+      ^^ string. This type is incompatible with
+  3: ("": number);
+          ^^^^^^ number
+
+
+Found 1 error
+
+Done!

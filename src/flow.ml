@@ -37,6 +37,7 @@ end = struct
     ServerCommands.CheckCommand.command;
     ServerCommands.ServerCommand.command;
     ServerCommands.StartCommand.command;
+    ServerCommands.FocusCheckCommand.command;
     StopCommand.command;
     SuggestCommand.command;
     TypeAtPosCommand.command;

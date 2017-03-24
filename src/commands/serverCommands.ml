@@ -14,7 +14,7 @@
 
 open CommandUtils
 
-type mode = Check | Server | Detach
+type mode = Check | Server | Detach | FocusCheck
 
 module type CONFIG = sig
   val mode : mode
@@ -27,11 +27,14 @@ module OptionParser(Config : CONFIG) = struct
   | Check -> "check"
   | Server -> "server"
   | Detach -> "start"
+  | FocusCheck -> "focus-check"
 
   let cmddoc = match Config.mode with
   | Check -> "Does a full Flow check and prints the results"
   | Server -> "Runs a Flow server in the foreground"
   | Detach -> "Starts a Flow server"
+  | FocusCheck -> "[experimental] " ^
+    "Does a focused Flow check on a file and its dependencies and prints the results"
 
   let common_args prev = CommandSpec.ArgSpec.(
     prev
@@ -103,6 +106,19 @@ module OptionParser(Config : CONFIG) = struct
           ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
       |> flag "--wait" no_arg
           ~doc:"Wait for the server to finish initializing"
+      |> common_args
+    )
+  | FocusCheck -> CommandSpec.ArgSpec.(
+      empty
+      |> error_flags
+      |> flag "--no-suppressions" no_arg
+        ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
+      |> flag "--json" no_arg
+          ~doc:"Output errors in JSON format"
+      |> flag "--profile" no_arg
+          ~doc:"Output profiling information"
+      |> dummy None  (* log-file *)
+      |> dummy false (* wait *)
       |> common_args
     )
 
@@ -194,11 +210,11 @@ module OptionParser(Config : CONFIG) = struct
       shm_log_level
       from
       quiet
-      root
+      path_opt
       () =
 
     FlowEventLogger.set_from from;
-    let root = CommandUtils.guess_root root in
+    let root = CommandUtils.guess_root path_opt in
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
 
     begin match ignore_version, FlowConfig.(flowconfig.options.Opts.version) with
@@ -272,7 +288,15 @@ module OptionParser(Config : CONFIG) = struct
     let opt_max_workers = min opt_max_workers Sys_utils.nbr_procs in
 
     let options = { Options.
-      opt_check_mode = Config.(mode = Check);
+      (* NOTE: At this experimental stage, focus mode implies check mode, so that we
+         kill the server after we are done. Later on, focus mode might keep the
+         server running after we are done. *)
+      opt_check_mode = Config.(mode = Check || mode = FocusCheck);
+      opt_focus_check_target =
+        Config.(if mode = FocusCheck
+          then Option.find_map path_opt ~f:(fun file ->
+            Some (Loc.SourceFile Path.(to_string (make file))))
+          else None);
       opt_server_mode = Config.(mode = Server);
       opt_error_flags = error_flags;
       opt_log_file = opt_log_file;
@@ -380,3 +404,4 @@ end
 module CheckCommand = OptionParser (struct let mode = Check end)
 module ServerCommand = OptionParser (struct let mode = Server end)
 module StartCommand = OptionParser (struct let mode = Detach end)
+module FocusCheckCommand = OptionParser (struct let mode = FocusCheck end)
