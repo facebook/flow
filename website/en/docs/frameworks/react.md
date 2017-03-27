@@ -100,7 +100,7 @@ class MyComponent extends React.Component {
 
 It can sometimes be useful to explicitly specify the generics of
 `React.Component`. You can do this by creating type aliases for your
-`defualtProps`, `props`, and `state` and passing them as generics to
+`defaultProps`, `props`, and `state` and passing them as generics to
 `React.Component` in that order.
 
 ```js
@@ -169,7 +169,7 @@ class MyComponent extends React.Component {
 
 ### Adding types to React lifecycle methods <a class="toc" id="toc-adding-types-to-react-lifecycle-methods" href="#toc-adding-types-to-react-lifecycle-methods"></a>
 
-React component lifecycle methods that recieve `props` and `state` should be
+React component lifecycle methods that receive `props` and `state` should be
 typed with the same types as you have provided for the component.
 
 ```js
