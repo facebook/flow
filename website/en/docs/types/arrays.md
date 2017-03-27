@@ -70,7 +70,7 @@ let arr3: (?number)[] = [null]; // Works!
 ## Array access is unsafe <a class="toc" id="toc-array-access-is-unsafe" href="#toc-array-access-is-unsafe"></a>
 
 When you retrieve an element from an array there is always a possibility that
-it `undefined`. You could have either accessed an index which is out of the
+it is `undefined`. You could have either accessed an index which is out of the
 bounds of the array, or the element could not exist because it is a "sparse
 array".
 
