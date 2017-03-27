@@ -32,11 +32,11 @@ The core benefit to Flow is its ability to quickly check your code for errors. O
 flow status
 ```
 
-This command first starts a background process that will checks all [Flow files](#toc-prepare-your-code-for-flow) for errors. The background process continues running monitoring changes to your code and checking those changes incrementally for errors.
+This command first starts a background process that will check all [Flow files](#toc-prepare-your-code-for-flow) for errors. The background process continues running, monitoring changes to your code and checking those changes incrementally for errors.
 
 > You can also type `flow` to accomplish the same effect as `status` is the default flag to the `flow` binary.
 
-> Only one background process will be running at any given time, so if you run `flow status` multiple time, it will use the same process.
+> Only one background process will be running at any given time, so if you run `flow status` multiple times, it will use the same process.
 
 > To stop the background process, run `flow stop`.
 
