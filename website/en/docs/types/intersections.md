@@ -4,7 +4,7 @@ layout: guide
 
 Sometimes it is useful to create a type which is ***all of*** a set of other
 types. For example, you might want to write a function which accepts an object
-which is the combination of other object types. For this Flow supports
+which is the combination of other object types. For this, Flow supports
 **intersection types**.
 
 ```js
@@ -55,8 +55,8 @@ type Fish = Numbers & Colors;
 
 Intersection types require all in, but one out
 
-Intersections types are the opposite of union types. When calling a function
-that accepts an intersection type we must pass in ***all of those types***. But
+Intersection types are the opposite of union types. When calling a function
+that accepts an intersection type, we must pass in ***all of those types***. But
 inside of our function we only have to treat it as ***any one of those
 types***.
 
@@ -73,12 +73,12 @@ function method(value: A & B & C) {
 }
 ```
 
-Even as we treat our value as just one of the types we do not get an error
+Even as we treat our value as just one of the types, we do not get an error
 because it satisfies all of them.
 
 ### Impossible intersection types <a class="toc" id="toc-impossible-intersection-types" href="#toc-impossible-intersection-types"></a>
 
-Using intersection types it is possible to create types which are not possible
+Using intersection types, it is possible to create types which are impossible
 to create at runtime. Intersection types will allow you to combine any set of
 types, even ones that conflict with one another.
 
@@ -104,7 +104,7 @@ like this, but it's a side effect of how intersection types work.
 
 ### Intersections of object types <a class="toc" id="toc-intersections-of-object-types" href="#toc-intersections-of-object-types"></a>
 
-When you create an intersection of object types you merge all of their
+When you create an intersection of object types, you merge all of their
 properties together.
 
 For example, when you create an intersection of two objects with different sets
