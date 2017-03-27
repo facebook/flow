@@ -8,10 +8,6 @@ environment:
       ocpwin_version: 4.02.1+ocp1-full-mingw64-20160113
       ocpwin_zip: C:\ocpwin64-20160113-4.02.1+ocp1-full-mingw64.zip
       ocpwin_uri: https://s3.amazonaws.com/ci-cache.flowtype.org/master/ocpwin/ocpwin64-20160113-4.02.1%2Bocp1-full-mingw64.zip
-#    - ocaml_version: 4.01.0
-#      ocpwin_version: 4.01.0+ocp1-full-mingw64-20160113
-#      ocpwin_zip: C:\ocpwin64-20160113-4.01.0+ocp1-full-mingw64.zip
-#      ocpwin_uri: http://www.ocamlpro.com/pub/ocpwin/ocpwin-builds/ocpwin64/20160113/ocpwin64-20160113-4.01.0+ocp1-full-mingw64.zip
 
 install:
 - ps: C:\projects\flow\resources\appveyor\install.ps1
