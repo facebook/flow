@@ -189,7 +189,7 @@ let three: 3 = identity(42);
 
 #### Adding types to generics <a class="toc" id="toc-adding-types-to-generics" href="#toc-adding-types-to-generics"></a>
 
-Similar to  `mixed` generics have an "unknown" type. You're not allowed to use
+Similar to  `mixed`, generics have an "unknown" type. You're not allowed to use
 a generic as if it were a specific type.
 
 ```js
@@ -388,4 +388,4 @@ let bar: Item<2> = { prop: 2 };
 ```
 
 You must always include the brackets `<>` when using the type (just like
-parenthesis for a function call).
+parentheses for a function call).
