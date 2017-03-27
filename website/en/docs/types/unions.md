@@ -206,7 +206,7 @@ handleResponse({
 Unless the objects somehow conflict with one another there is no way to
 distinguish them.
 
-However, to get around this you could use** exact object types**.
+However, to get around this you could use **exact object types**.
 
 ```js
 // @flow
