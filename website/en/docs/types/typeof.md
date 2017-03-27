@@ -67,7 +67,7 @@ asserting it as a type. While this can be very useful, it can also lead to some
 unexpected results.
 
 For example, when you use literal values in Flow, their inferred type is the
-primitive that it belongs to. So that the number 42 has the inferred type of
+primitive that it belongs to. Thus, the number 42 has the inferred type of
 `number`. You can see this when you use `typeof`.
 
 ```js
@@ -83,7 +83,7 @@ let str2: typeof str1 = 'world'; // Works!
 ```
 
 However, this only happens with the inferred type. If you specify the literal
-type it will be used in `typeof`.
+type, it will be used in `typeof`.
 
 ```js
 // @flow
