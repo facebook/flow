@@ -2,7 +2,7 @@
 layout: guide
 ---
 
-It's common for JavaScript code to have introduce "optional" values so that you
+It's common for JavaScript code to introduce "optional" values so that you
 have the option of leaving out the value or passing `null` instead.
 
 Using Flow you can use Maybe types for these values. Maybe types work with any
