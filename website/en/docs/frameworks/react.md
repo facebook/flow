@@ -100,7 +100,7 @@ class MyComponent extends React.Component {
 
 It can sometimes be useful to explicitly specify the generics of
 `React.Component`. You can do this by creating type aliases for your
-`defualtProps`, `props`, and `state` and passing them as generics to
+`defaultProps`, `props`, and `state` and passing them as generics to
 `React.Component` in that order.
 
 ```js
