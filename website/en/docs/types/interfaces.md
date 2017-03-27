@@ -104,7 +104,7 @@ interface MyInterface {
 }
 ```
 
-Interfaces properties can be optional as well.
+Interface properties can be optional as well.
 
 ```js
 interface MyInterface {
@@ -134,7 +134,7 @@ interface MyInterface<A, B, C> {
 }
 ```
 
-Interfaces generics are [parameterized](../generics/#toc-parameterized-generics).
+Interface generics are [parameterized](../generics/#toc-parameterized-generics).
 When you use an interface you need to pass parameters for each of its generics.
 
 ```js
