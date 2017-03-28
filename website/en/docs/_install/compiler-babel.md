@@ -33,7 +33,7 @@ You can add this to your `package.json` scripts easily.
   "main": "lib/index.js",
   "scripts": {
     "build": "babel src/ -D lib/",
-    "prepublish": "{{include.install_command}} run build"
+    "prepublish": "{{include.package_manager}} run build"
   }
 }
 ```
