@@ -21,7 +21,7 @@ Placement in this directory tells Flow to interpret them as libdefs rather than
 normal JS files.
 
 > NOTE: Using the `/flow-typed` directory for libdefs is a convention that
->       enables Flow to JustWork™ out of the box and encourages consistentcy
+>       enables Flow to JustWork™ out of the box and encourages consistency
 >       across projects that use Flow, but it is also possible to explicitly
 >       configure Flow to look elsewhere for libdefs using the [`[libs]` section
 >       of your `.flowconfig`](../config/libs).
