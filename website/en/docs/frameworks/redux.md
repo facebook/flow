@@ -124,6 +124,44 @@ function bar(value: boolean): BarAction {
 }
 ```
 
+##### Typing Redux thunk actions <a class="toc" id="toc-typing-redux-thunk-actions" href="#toc-typing-redux-thunk-actions"></a>
+
+In order to type your Redux [thunk actions](http://redux.js.org/docs/advanced/AsyncActions.html#async-action-creators),
+you'll add types for `ThunkAction` as a function `Dispatch`, and `GetState`. `GetState` is a function that returns an `Object`. `Dispatch` accepts a disjoint union of `Action`, `ThunkAction`, `PromiseAction` and `Array<Action>` and can return `any`.
+
+```js
+type Dispatch = (action: Action | ThunkAction | PromiseAction) => any;
+type GetState = () => Object;
+type ThunkAction = (dispatch: Dispatch, getState: GetState) => any;
+type PromiseAction = Promise<Action>;
+```
+
+Then to type a thunk action creator, add a return type of a `ThunkAction` to your action creator.
+
+```js
+// @flow
+type Action =
+  | { type: "FOO", foo: number }
+  | { type: "BAR", bar: boolean };
+
+type GetState = () => Object;
+type PromiseAction = Promise<Action>;
+type ThunkAction = (dispatch: Dispatch, getState: GetState) => any;
+type Dispatch = (action: Action | ThunkAction | PromiseAction | Array<Action>) => any;
+
+
+function foo(): ThunkAction {
+  return (dispatch, getState) => {
+    const baz = getState().baz
+    dispatch({ type: "BAR", bar: true })
+    doSomethingAsync(baz)
+      .then(value => {
+  	    dispatch({ type: "FOO", foo: value })
+      })
+	}
+}
+```
+
 ### Typing Redux reducers <a class="toc" id="toc-typing-redux-reducers" href="#toc-typing-redux-reducers"></a>
 
 [Reducers](http://redux.js.org/docs/basics/Reducers.html) take the state and
