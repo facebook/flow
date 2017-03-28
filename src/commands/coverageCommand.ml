@@ -32,7 +32,7 @@ let spec = {
     |> root_flag
     |> json_flags
     |> flag "--color" no_arg
-        ~doc:"Print the file with colors showing which parts have known types"
+        ~doc:"Print the file with colors showing which parts have unknown types"
     |> flag "--debug" no_arg
         ~doc:"Print debugging info about each range in the file to stderr"
     |> flag "--strip-root" no_arg
