@@ -24,7 +24,7 @@ You can add this to your `package.json` scripts easily.
   "main": "lib/index.js",
   "scripts": {
     "build": "flow-remove-types src/ -D lib/",
-    "prepublish": "yarn run build"
+    "prepublish": "{{include.package_manager}} run build"
   }
 }
 ```
