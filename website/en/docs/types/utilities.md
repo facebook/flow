@@ -249,3 +249,70 @@ const user2 = {name: 'John Wilkes Booth'};
 (user2: ExactUser);
 (user2: ExactUserShorthand);
 ```
+
+## `$ObjMap<T, F>` <a class="toc" id="toc-objmap" href="#toc-objmap"></a>
+`ObjMap<T, F>` is the type obtained by taking the type of the values of an object and mapping them with a type function.
+
+Let's see an example. Suppose you have a function called `run` that takes an object of thunks (functions in the form `() => A`) in input:
+
+```js
+// @flow
+function run<A, O: {[key: string]: () => A}>(o: O) {
+  return Object.keys.map(k => o[k]());
+}
+```
+
+The function's purpose is to run all the thunks and return an object made of values. What's the return type of this function?
+
+The keys are the same, but the values have a different type, namely the return type of each function. At a value level (the implementation of the function) we're essentially mapping over the object to produce new values for the keys. How to express this at a type level?
+
+This is where `ObjMap<T, F>` comes in handy.
+
+```js
+// @flow
+
+// let's write a typelevel function that takes a `() => V` and returns a `V` (its return type)
+type ExtractReturnType = <V>(() => V) => V 
+
+function run<A, O: {[key: string]: () => A}>(o: O): $ObjMap<O, ExtractReturnType> {
+  return Object.keys.map(k => o[k]());
+}
+```
+
+Let's try this out
+
+```js
+// @flow
+const o = {
+  a: () => true,
+  b: () => 'foo'
+};
+      
+(run(o).a: boolean); // Ok
+(run(o).b: string);  // Ok
+// $ExpectError
+(run(o).b: boolean); // Nope, b is a string
+// $ExpectError
+run(o).c;            // Nope, c was not in the original object
+```
+
+This is extremely useful for expressing the return type of functions that manipulate objects values. You could use a similar approach (for instance) to provide the return type of bluebird's [`Promise.props`](http://bluebirdjs.com/docs/api/promise.props.html) function, which is like `Promise.all` but takes an object as input.
+
+Here's a possible declaration of this function, which is very similar to our first example:
+
+```js
+// @flow
+declare function props<A, O: { [key: string]: A }>(promises: O): Promise<$ObjMap<O, typeof $await>>;
+```
+
+And use:
+
+```js
+// @flow
+const promises = { a: Promise.resolve(42) };
+props(promises).then(o => {
+  (o.a: 42); // Ok
+  // $ExpectError
+  (o.a: 43); // Error, flow knows it's 42
+});
+```
