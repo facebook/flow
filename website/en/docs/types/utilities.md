@@ -253,6 +253,11 @@ const user2 = {name: 'John Wilkes Booth'};
 ## `$ObjMap<T, F>` <a class="toc" id="toc-objmap" href="#toc-objmap"></a>
 `ObjMap<T, F>` is the type obtained by taking the type of the values of an object and mapping them with a type function.
 
+> ### Warning
+> `$ObjMap` is currently in an unstable state, due to a bug that allows invalid writes.
+>
+> For more information, please refer to [#2674](https://github.com/facebook/flow/issues/2674).
+
 Let's see an example. Suppose you have a function called `run` that takes an object of thunks (functions in the form `() => A`) in input:
 
 ```js
