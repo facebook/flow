@@ -58,7 +58,7 @@ This flag is in the form of a normal JavaScript comment annotated with `@flow`. 
 
 Now that all the setup and initialization is complete, you are ready to write actual Flow code. For each file that you have flagged with `// @flow`, you now have the full power of Flow and its type-checking available to you. Here is an example Flow file:
 
-```
+```js
 // @flow
 
 function foo(x: ?number): string {
