@@ -13,6 +13,7 @@ cloudfront_wildcard_invalidation: true
 redirects:
   index.html: en/
   about/: en/docs/lang/
+  docs/: en/docs/
   docs/about-flow.html: en/docs/lang/
   docs/getting-started.html: en/docs/getting-started/
   # docs/five-simple-examples.html: ??
