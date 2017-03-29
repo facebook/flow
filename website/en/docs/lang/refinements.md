@@ -6,7 +6,7 @@ Refinements are a frequently used aspect of any type system. They are so
 ingrained in the way that we program and even the way that we think you might
 not even notice them.
 
-In the code below, value can either be `"A"` or `"B"` and an if statement
+In the code below, value can either be `"A"` or `"B"`.
 
 ```js
 // @flow
