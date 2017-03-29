@@ -21,7 +21,7 @@ Within `method`, we know that `obj` has at least a property `foo` and the
 property access expression `obj.foo` will have type `string`.
 
 This is a kind of subtyping commonly referred to as "width subtyping" because
-because a type that is "wider" (i.e., has more properties) is a subtype of a
+a type that is "wider" (i.e., has more properties) is a subtype of a
 narrower type.
 
 So in the following example, `obj2` is a _subtype_ of `obj1`.
