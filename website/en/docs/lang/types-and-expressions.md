@@ -47,8 +47,8 @@ Instead, Flow needs to be able to figure out the type of a value by analyzing
 it without running it (static analysis). It works its way through every known
 type and starts to figure out what all the expressions around them result in.
 
-For example, to figure out the result of following expression Flow needs to
-figure out what the values are in it first.
+For example, to figure out the result of the following expression, Flow needs to
+figure out what its values are first.
 
 ```js
 val1 + val2;

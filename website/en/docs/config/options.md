@@ -105,7 +105,7 @@ on use since this proposal is still very early-stage.
 #### `experimental.const_params` _`(boolean)`_ <a class="toc" id="toc-experimental-const-params-boolean" href="#toc-experimental-const-params-boolean"></a>
 
 Setting this to true makes Flow treat all function parameters as const
-bindings. Reassigning a param is an error which, lets Flow be less conservative
+bindings. Reassigning a param is an error which lets Flow be less conservative
 with refinements.
 
 The default value is `false`.
@@ -321,7 +321,7 @@ will match a comment like this:
 var x : string = 123;
 ```
 
-And suppress the error. If there is no error on the next line (the suppression
+and suppress the error. If there is no error on the next line (the suppression
 is unnecessary), an "Unused suppression" error will be shown instead.
 
 If no suppression comments are specified in your config, Flow will apply one
@@ -338,14 +338,14 @@ default: `// $FlowFixMe`.
 This option lets you alias `any` with a given string. This is useful for
 explaining why you're using `any`. For example, let's say you sometimes want
 to sometimes use `any` to suppress an error and sometimes to mark a TODO.
-You're code might look like
+Your code might look like
 
 ```
 var myString: any = 1 + 1;
 var myBoolean: any = 1 + 1;
 ```
 
-If you add the following to your configuration
+If you add the following to your configuration:
 
 ```
 [options]
@@ -353,7 +353,7 @@ suppress_type=$FlowFixMe
 suppress_type=$FlowTODO
 ```
 
-You can update your code to the more readable
+You can update your code to the more readable:
 
 ```
 var myString: $FlowFixMe = 1 + 1;
@@ -365,7 +365,7 @@ var myBoolean: $FlowTODO = 1 + 1;
 #### `temp_dir` _`(string)`_ <a class="toc" id="toc-temp-dir-string" href="#toc-temp-dir-string"></a>
 
 Tell Flow which directory to use as a temp directory. Can be overridden with the
-commandline flag `--temp-dir`.
+command line flag `--temp-dir`.
 
 The default value is `/tmp/flow`.
 

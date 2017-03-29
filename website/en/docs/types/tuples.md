@@ -13,7 +13,7 @@ let tuple2: [number, boolean] = [1, true];
 let tuple3: [number, boolean, string] = [1, true, "three"];
 ```
 
-When you getting a value from a tuple at a specific index, it will return the
+When you are getting a value from a tuple at a specific index, it will return the
 type at that index.
 
 ```js
@@ -83,7 +83,7 @@ let tuple1: [number, boolean]       = [1, true];
 let tuple2: [number, boolean, void] = tuple1; // Error!
 ```
 
-Also that a longer tuple can't be used in place of a shorter one.
+Also, a longer tuple can't be used in place of a shorter one.
 
 ```js
 // @flow

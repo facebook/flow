@@ -124,8 +124,8 @@ function cloneObject(obj) {
 }
 ```
 
-It would be hard to create a type for this because we're creating an new object
-based arbitrary on another object.
+It would be hard to create a type for this because we're creating a new object
+based on another object.
 
 If we cast through any, we can return a type which is more useful.
 

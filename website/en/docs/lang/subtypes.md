@@ -26,7 +26,7 @@ type TypeB = 1 | 2 | 3 | 4 | 5;
 > `Y` is a subset of `X`).
 
 If we had a `TypeLetters` which described the strings: "A", "B", "C", and a
-type `TypeNumbers` which described the numbers: 1, 2, 3. Neither of them would
+`TypeNumbers` which described the numbers: 1, 2, 3. Neither of them would
 be a subtype of the other, as they contain a completely different set of
 values.
 
@@ -49,7 +49,7 @@ type TypeB =         3 | 4 | 5;
 
 Most of the work that Flow does is comparing types against one another.
 
-For example, in order to know if you are calling a function correctly. Flow
+For example, in order to know if you are calling a function correctly, Flow
 needs to compare the arguments you are passing to the function with the
 parameters the function expects.
 
@@ -126,7 +126,7 @@ type Func2 = (1 | 2 | 3) => "A" | "B" | "C";
 ```
 
 This also applies to the number of parameters in the functions. If one function
-contains a subset of the parameters of the other then the other is a subtype.
+contains a subset of the parameters of the other, then the other is a subtype.
 
 ```js
 // @flow
