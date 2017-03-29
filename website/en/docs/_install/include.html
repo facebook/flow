@@ -9,8 +9,8 @@
 {% capture compiler_intro %}{% include_relative _install/compiler-intro.md %}{% endcapture %}
 {% capture setup_intro %}{% include_relative _install/setup-intro.md %}{% endcapture %}
 
-{% capture babel %}{% include_relative _install/compiler-babel.md install_command=install_command run_command=run_command %}{% endcapture %}
-{% capture flowRemoveTypes %}{% include_relative _install/compiler-flow-remove-types.md install_command=install_command run_command=run_command %}{% endcapture %}
+{% capture babel %}{% include_relative _install/compiler-babel.md install_command=install_command run_command=run_command package_manager=include.package_manager %}{% endcapture %}
+{% capture flowRemoveTypes %}{% include_relative _install/compiler-flow-remove-types.md install_command=install_command run_command=run_command package_manager=include.package_manager %}{% endcapture %}
 
 {% capture yarn %}{% include_relative _install/setup-yarn.md %}{% endcapture %}
 {% capture npm %}{% include_relative _install/setup-npm.md %}{% endcapture %}
