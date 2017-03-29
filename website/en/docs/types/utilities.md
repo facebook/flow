@@ -263,7 +263,7 @@ Let's see an example. Suppose you have a function called `run` that takes an obj
 ```js
 // @flow
 function run<A, O: {[key: string]: () => A}>(o: O) {
-  return Object.keys.map(k => o[k]());
+  return Object.keys(o).reduce((acc, k) => Object.assign(acc, { [k]: o[k]() }), {});
 }
 ```
 
@@ -280,7 +280,7 @@ This is where `ObjMap<T, F>` comes in handy.
 type ExtractReturnType = <V>(() => V) => V 
 
 function run<A, O: {[key: string]: () => A}>(o: O): $ObjMap<O, ExtractReturnType> {
-  return Object.keys.map(k => o[k]());
+  return Object.keys(o).reduce((acc, k) => Object.assign(acc, { [k]: o[k]() }), {});
 }
 ```
 
