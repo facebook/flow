@@ -21,12 +21,25 @@ npm install --save-dev flow-bin
 
 **Run Flow:**
 
+The first time, run:
+
+```sh
+npm run flow init
+```
+
+```
+> my-flow-project@1.0.0 flow /Users/Projects/my-flow-project
+> flow "init"
+```
+
+After running `flow` with `init` the first time, run:
+
 ```sh
 npm run flow
 ```
 
 ```
-> my-flow-project@1.0.0 flow /Users/jimi/Projects/my-flow-project
+> my-flow-project@1.0.0 flow /Users/Projects/my-flow-project
 > flow
 
 No errors!
