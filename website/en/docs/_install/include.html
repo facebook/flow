@@ -9,12 +9,7 @@
 {% capture compiler_intro %}{% include_relative _install/compiler-intro.md %}{% endcapture %}
 {% capture setup_intro %}{% include_relative _install/setup-intro.md %}{% endcapture %}
 
-{% if include.package_manager == "yarn" %}
-  {% capture babel %}{% include_relative _install/compiler-babel-yarn.md install_command=install_command run_command=run_command %}{% endcapture %}
-{% elsif include.package_manager == "npm" %}
-  {% capture babel %}{% include_relative _install/compiler-babel-npm.md install_command=install_command run_command=run_command %}{% endcapture %}
-{% endif %}
-
+{% capture babel %}{% include_relative _install/compiler-babel.md install_command=install_command run_command=run_command %}{% endcapture %}
 {% capture flowRemoveTypes %}{% include_relative _install/compiler-flow-remove-types.md install_command=install_command run_command=run_command %}{% endcapture %}
 
 {% capture yarn %}{% include_relative _install/setup-yarn.md %}{% endcapture %}
