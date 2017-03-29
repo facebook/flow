@@ -436,9 +436,9 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "match",
-               "type": "(regexp: string | RegExp) => ?Array<string>",
+               "type": "(regexp: string | RegExp) => ?MatchResult",
                "func_details": {
-                 "return_type": "?Array<string>",
+                 "return_type": "?MatchResult",
                  "params": [
                    {
                      "name": "regexp",
@@ -450,7 +450,7 @@ export default suite(({addFile, flowCmd}) => [
                "line": 286,
                "endline": 286,
                "start": 5,
-               "end": 50
+               "end": 48
              },
              {
                "name": "normalize",

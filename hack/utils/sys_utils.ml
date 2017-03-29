@@ -403,18 +403,11 @@ let nbr_procs = nproc ()
 external set_priorities : cpu_priority:int -> io_priority:int -> unit =
   "hh_set_priorities"
 
-external win_terminate_process: int -> bool = "win_terminate_process"
-
 external pid_of_handle: int -> int = "pid_of_handle"
 external handle_of_pid_for_termination: int -> int =
   "handle_of_pid_for_termination"
 
-let terminate_process pid =
-  try Unix.kill pid Sys.sigkill
-  with exn when Sys.win32 ->
-    (* Can be removed once support for ocaml-4.01 is dropped *)
-    if not (win_terminate_process pid) then
-      raise Unix.(Unix_error(ESRCH, "kill", ""))
+let terminate_process pid = Unix.kill pid Sys.sigkill
 
 let lstat path =
   (* WTF, on Windows `lstat` fails if a directory path ends with an

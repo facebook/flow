@@ -43,6 +43,22 @@ redirects:
   docs/declarations.html: en/docs/libdefs/
   docs/utility-types.html: en/docs/types/utilities/
   docs/react.html: en/docs/frameworks/react/
+  blog/2016/10/13/Flow-Typed.html: blog/2016/10/13/Flow-Typed/
+  blog/2016/10/04/Property-Variance.html: blog/2016/10/04/Property-Variance/
+  blog/2016/08/01/Windows-Support.html: blog/2016/08/01/Windows-Support/
+  blog/2016/07/01/New-Unions-Intersections.html: blog/2016/07/01/New-Unions-Intersections/
+  blog/2016/02/02/Version-0.21.0.html: blog/2016/02/02/Version-0.21.0/
+  blog/2015/12/01/Version-0.19.0.html: blog/2015/12/01/Version-0.19.0/
+  blog/2015/11/09/Generators.html: blog/2015/11/09/Generators/
+  blog/2015/10/07/Version-0.17.0.html: blog/2015/10/07/Version-0.17.0/
+  blog/2015/09/22/Version-0.16.0.html: blog/2015/09/22/Version-0.16.0/
+  blog/2015/09/10/Version-0.15.0.html: blog/2015/09/10/Version-0.15.0/
+  blog/2015/07/29/Version-0.14.0.html: blog/2015/07/29/Version-0.14.0/
+  blog/2015/07/03/Disjoint-Unions.html: blog/2015/07/03/Disjoint-Unions/
+  blog/2015/03/12/Bounded-Polymorphism.html: blog/2015/03/12/Bounded-Polymorphism/
+  blog/2015/02/20/Flow-Comments.html: blog/2015/02/20/Flow-Comments/
+  blog/2015/02/18/Typecasts.html: blog/2015/02/18/Typecasts/
+  blog/2015/02/18/Import-Types.html: blog/2015/02/18/Import-Types/
 
 ignore_on_server:
   - assets/v.*

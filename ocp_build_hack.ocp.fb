@@ -210,11 +210,6 @@ begin library "hh-utils-sys"
     "tmp.ml"
     "tty.ml"
   ]
-  if not(os_type = "Win32") || (ocaml_major_version = "4" && ocaml_minor_version = "01") then {
-    files += [
-      "win32_support.c"
-    ]
-  }
   requires = [
     "hh-utils-collections"
     "hh-utils-core"

@@ -685,3 +685,10 @@ let intersperse t ~sep =
   match t with
   | [] -> []
   | x :: xs -> x :: fold_right xs ~init:[] ~f:(fun y acc -> sep :: y :: acc)
+
+let rec replicate ~num x =
+  match num with
+  | 0 -> []
+  | n when n < 0 ->
+      invalid_argf "List.replicate was called with %d argument" n ()
+  | _ -> x :: replicate ~num:(num - 1) x

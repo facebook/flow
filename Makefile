@@ -92,7 +92,6 @@ NATIVE_C_FILES=\
   hack/utils/realpath.c\
   hack/utils/sysinfo.c\
   hack/utils/priorities.c\
-  hack/utils/win32_support.c\
   hack/hhi/hhi_win32res_stubs.c\
   src/embedded/flowlib_elf.c\
   $(sort $(wildcard src/third-party/lz4/*.c))\

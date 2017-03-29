@@ -1,15 +1,6 @@
 #!/bin/bash -e
 
-OPAM_DEPENDS="ocamlfind ocp-build"
-
-# js_of_ocaml 2.7 is  <  ocaml 4.03
-# js_of_ocaml 2.8 is  >= ocaml 4.02
-# opam 1.1.1 doesn't have js_of_ocaml 2.8
-if [ "$OPAM_VERSION" = "1.1.1" ] || [ "$OCAML_VERSION" = "4.01.0" ]; then
-  OPAM_DEPENDS+=" js_of_ocaml.2.7"
-else
-  OPAM_DEPENDS+=" js_of_ocaml.2.8.1"
-fi
+OPAM_DEPENDS="ocamlfind ocp-build js_of_ocaml.2.8.1"
 
 TMP=${TMPDIR:-/tmp}
 
@@ -64,17 +55,9 @@ echo "Initializing OPAM..."
   -k local flow resources/opam \
   --comp "$OCAML_VERSION" >/dev/null
 eval $("$OPAM" config env)
-case "$OPAM_VERSION" in
-  1.1.*)
-    DEFAULT_OPAM_REPO=https://opam.ocaml.org/1.1
-    ;;
-  *)
-    DEFAULT_OPAM_REPO=https://opam.ocaml.org
-    ;;
-esac
 ("$OPAM" repository list --short | grep "\bdefault\b" >/dev/null) || \
   "$OPAM" repository --yes \
-    add default "$DEFAULT_OPAM_REPO" --priority=-1 >/dev/null
+    add default "https://opam.ocaml.org" --priority=-1 >/dev/null
 
 "$OPAM" repository list
 

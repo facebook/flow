@@ -19,10 +19,7 @@ baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://flow.org" # the base hostname & protocol for your site
 repository: facebook/flow
 
-permalink: pretty
-
-include:
-  - _redirects
+permalink: /blog/:categories/:year/:month/:day/:title/
 
 flow:
   path: 'flow'

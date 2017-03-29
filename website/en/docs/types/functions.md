@@ -47,7 +47,7 @@ functions.
 
 ## Syntax of functions <a class="toc" id="toc-syntax-of-functions" href="#toc-syntax-of-functions"></a>
 
-There are three forms of functions that each have their own particular syntax.
+There are three forms of functions that each have their own slightly different syntax.
 
 ### Function Declarations <a class="toc" id="toc-function-declarations" href="#toc-function-declarations"></a>
 
