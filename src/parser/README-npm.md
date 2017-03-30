@@ -39,9 +39,3 @@ The second argument to `flow.parse` is the options object. Currently supported o
 * `esproposal_class_static_fields` (boolean, default `false`) - enable parsing of class static fields
 * `esproposal_export_star_as` (boolean, default `false`) - enable parsing of `export * as` syntax
 * `types` (boolean, default `true`) - enable parsing of Flow types
-
-# bin scripts
-
-* `flowparse` - Pass it a string to parse or a file to parse and it dumps the AST to stdout
-* `flowvalidate` - Pass it one or more files and it checks if they parse
-
