@@ -217,10 +217,9 @@ type Response = Success | Failed;
 
 function handleResponse(response: Response) {
   if (response.success) {
-    // $ExpectError
-    var value: boolean = response.value; // Error!
+    var value: boolean = response.value;
   } else {
-    var message: string = response.message; // Error!
+    var message: string = response.message;
   }
 }
 ```
