@@ -10,9 +10,9 @@ open Lexing
 
 type b = Pos_source.t
 
-(* Note: While Pos.string prints out positions as closed intervals, pos_start
- * and pos_end actually form a half-open interval (i.e. pos_end points to the
- * character *after* the last character of the relevant lexeme.) *)
+(* Note: While Pos.string and Pos.info_pos return positions as closed intervals,
+ * pos_start and pos_end actually form a half-open interval (i.e. pos_end points
+ * to the character *after* the last character of the relevant lexeme.) *)
 type 'a pos = {
   pos_file: 'a ;
   pos_start: File_pos.t ;
@@ -31,6 +31,7 @@ let none = {
 
 let filename p = p.pos_file
 
+(* This returns a closed interval that's incorrect for multi-line spans. *)
 let info_pos t =
   let line, start_minus1, bol = File_pos.line_column_beg t.pos_start in
   let start = start_minus1 + 1 in
@@ -38,6 +39,7 @@ let info_pos t =
   let end_ = end_offset - bol in
   line, start, end_
 
+(* This returns a closed interval. *)
 let info_pos_extended t =
   let line_begin, start, end_ = info_pos t in
   let line_end, _, _ = File_pos.line_column_beg t.pos_end in
@@ -50,17 +52,20 @@ let start_cnum t = File_pos.offset t.pos_start
 let line t = File_pos.line t.pos_start
 let end_line t = File_pos.line t.pos_end
 
+(* This returns a closed interval. *)
 let string t =
   let line, start, end_ = info_pos t in
   Printf.sprintf "File %S, line %d, characters %d-%d:"
     (String.trim t.pos_file) line start end_
 
 (* Some positions, like those in buffers sent by IDE/created by unit tests might
- * not have a file specified *)
+ * not have a file specified.
+ * This returns a closed interval. *)
 let string_no_file t =
   let line, start, end_ = info_pos t in
   Printf.sprintf "line %d, characters %d-%d" line start end_
 
+(* This returns a closed interval. *)
 let json pos =
   let line, start, end_ = info_pos pos in
   let fn = filename pos in
@@ -132,22 +137,26 @@ let compare x y =
 let pos_start p = p.pos_start
 let pos_end p = p.pos_end
 
+(* This returns a half-open interval. *)
 let destruct_range (p : 'a pos) : (int * int * int * int) =
   let line_start, col_start_minus1 = File_pos.line_column p.pos_start in
   let line_end,   col_end_minus1   = File_pos.line_column p.pos_end in
   line_start, col_start_minus1 + 1,
   line_end,   col_end_minus1 + 1
 
+(* This returns a half-open interval. *)
 let multiline_string t =
   let line_start, char_start, line_end, char_end = destruct_range t in
   Printf.sprintf "File %S, line %d, character %d - line %d, character %d:"
     (String.trim t.pos_file) line_start char_start line_end (char_end - 1)
 
+(* This returns a half-open interval. *)
 let multiline_string_no_file t =
   let line_start, char_start, line_end, char_end = destruct_range t in
   Printf.sprintf "line %d, character %d - line %d, character %d"
     line_start char_start line_end (char_end - 1)
 
+(* This returns a half-open interval. *)
 let multiline_json t =
   let line_start, char_start, line_end, char_end = destruct_range t in
   let fn = filename t in

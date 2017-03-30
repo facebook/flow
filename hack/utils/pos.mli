@@ -32,24 +32,32 @@ val line : 'a pos -> int
 
 val end_line : 'a pos -> int
 
+(* This returns a closed interval that's incorrect for multi-line spans. *)
 val info_pos : 'a pos -> int * int * int
 
+(* This returns a closed interval. *)
 val info_pos_extended : 'a pos -> int * int * int * int
 
 val info_raw : 'a pos -> int * int
 
 val length : 'a pos -> int
 
+(* This returns a closed interval. *)
 val string : absolute -> string
 
+(* This returns a half-open interval. *)
 val multiline_string : absolute -> string
 
+(* This returns a closed interval. *)
 val string_no_file : 'a pos -> string
 
+(* This returns a half-open interval. *)
 val multiline_string_no_file : 'a pos -> string
 
+(* This returns a closed interval. *)
 val json : absolute -> Hh_json.json
 
+(* This returns a half-open interval. *)
 val multiline_json : absolute -> Hh_json.json
 
 val inside : 'a pos -> int -> int -> bool
@@ -66,6 +74,7 @@ val to_absolute : t -> absolute
 
 val to_relative_string : t -> string pos
 
+(* This returns a half-open interval. *)
 val destruct_range : 'a pos -> (int * int * int * int)
 
 (* Compare by filename, then tie-break by start position, and finally by the
