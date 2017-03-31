@@ -17,5 +17,4 @@ after you save a file.
 
 Other extensions that you may try are:
 
-- [vscode-flow](https://marketplace.visualstudio.com/items?itemName=rtorr.vscode-flow)
 - [vscode-flow-ide](https://marketplace.visualstudio.com/items?itemName=gcazaciuc.vscode-flow-ide)
