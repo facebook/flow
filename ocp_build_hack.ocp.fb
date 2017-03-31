@@ -114,6 +114,7 @@ begin library "hh-utils"
   sort = true
   files = [
     "buffered_line_reader.ml"
+    "http_lite.ml"
     "config_file.ml"
     "file_pos.ml"
     "findUtils.ml"
