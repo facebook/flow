@@ -136,3 +136,37 @@ type Func2 = (number, string) => void;
 let func1: Func1 = (a: number) => {};
 let func2: Func2 = func1;
 ```
+
+#### Subtypes of unions of functions <a class="toc" id="toc-subtypes-of-unions-of-functions" href="#toc-subtypes-of-unions-of-functions"></a>
+
+A function is a subtype of another when the input is contravariant (_less specific type / supertype_) and the output is covariant (_more specific type / subtype_).
+
+```js
+// @flow
+declare var foo1: (string => ?string) => void
+declare var bar1: ?string => string
+
+foo1(bar1) // Works!
+```
+So what would be a subtype of a union of functions? Well we know that a subtype of ``A | B`` woudld be either ``A`` or ``B``, but we are looking for the subtype of ``A => B | C => D``. Let's walk through this...
+
+```js
+// @flow
+declare class A {}; declare class B {}; declare class C {}; declare class D {}
+
+declare var foo2: ((A => B) | (C => D)) => void
+
+declare var bar2: A => B
+declare var baz2: C => D
+
+foo2(bar2); // Works!
+foo2(baz2); // Works!
+```
+But is there anything else we can pass into ``foo2``? Yes! 
+```js
+// @flow
+
+declare var bar3: (A | C) => (B & D)
+foo2(bar3);
+```
+A subtype of a union of functions is a union (``|``) of the inputs and a intersection (``&``) of the outputs. While not covered here, the inverse is true for a intersection of functions: a subtype of a intersection of functions (``A => B & C => D``) is a intersection (``&``) of the inputs and a union (``|``) of the outputs.
