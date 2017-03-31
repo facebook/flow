@@ -32,13 +32,9 @@ matrix:
       os: linux
       env: OCAML_VERSION=4.03.0 OPAM_VERSION=1.2.0
 
-    - compiler: ": Linux, ocaml 4.02.1, opam 1.2.0"
-      os: linux
-      env: OCAML_VERSION=4.02.1 OPAM_VERSION=1.2.0
-
-    - compiler: ": Mac, ocaml 4.02.1, opam 1.2.0"
+    - compiler: ": Mac, ocaml 4.03.0, opam 1.2.0"
       os: osx
-      env: OCAML_VERSION=4.02.1 OPAM_VERSION=1.2.0
+      env: OCAML_VERSION=4.03.0 OPAM_VERSION=1.2.0
 
 addons:
   apt:
@@ -75,7 +71,7 @@ deploy:
   on:
     tags: true
     condition:
-    - $OCAML_VERSION = 4.02.1
+    - $OCAML_VERSION = 4.03.0
     - $OPAM_VERSION = 1.2.0
 
 # Deploy the parser to npm
@@ -87,7 +83,7 @@ deploy:
     tags: true
     condition:
     - $TRAVIS_OS_NAME = linux
-    - $OCAML_VERSION = 4.02.1
+    - $OCAML_VERSION = 4.03.0
     - $OPAM_VERSION = 1.2.0
 
 # Deploy the website
@@ -100,7 +96,7 @@ deploy:
     condition:
     - $TRAVIS_TAG != "" || $TRAVIS_BRANCH = "master"
     - $TRAVIS_OS_NAME = linux
-    - $OCAML_VERSION = 4.02.1
+    - $OCAML_VERSION = 4.03.0
     - $OPAM_VERSION = 1.2.0
 
 # The use of secure prevents forks from spamming irc and email.
