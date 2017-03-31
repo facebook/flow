@@ -13,17 +13,13 @@ all the possible values for both types and figure out if the other has a
 _subset_ of the values.
 
 For example, if we had a `TypeA` which described the numbers 1 through 3, and
-a `TypeB` which described the numbers 1 through 5. `TypeB` would be considered
-a _subtype_ of `TypeA` because `TypeA` is a subset of `TypeB`.
+a `TypeB` which described the numbers 1 through 5. `TypeA` would be considered
+a _subtype_ of `TypeB` because `TypeA` is a subset of `TypeB`.
 
 ```js
 type TypeA = 1 | 2 | 3;
 type TypeB = 1 | 2 | 3 | 4 | 5;
 ```
-
-> **Note:** To avoid any confusion remember that the relationships between
-> "subsets" and "subtypes" are inverted. (i.e. `X` is a subtype of `Y` only if
-> `Y` is a subset of `X`).
 
 If we had a `TypeLetters` which described the strings: "A", "B", "C", and a
 `TypeNumbers` which described the numbers: 1, 2, 3. Neither of them would
