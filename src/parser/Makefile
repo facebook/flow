@@ -104,6 +104,13 @@ native_test_files:
 	ocamlbuild $(REL_DIR)/tools/native_test_files.native; \
 	mv native_test_files.native $(REL_DIR)/tools/native_test_files
 
+npm-pack:
+	mv README.md README-backup.md
+	mv README-npm.md README.md
+	-npm pack
+	mv README.md README-npm.md
+	mv README-backup.md README.md
+
 npm-publish:
 	mv README.md README-backup.md
 	mv README-npm.md README.md
