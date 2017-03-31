@@ -1,0 +1,29 @@
+opam-version: "1.2"
+maintainer: "gabe@fb.com"
+homepage: "http://flowtype.org"
+dev-repo: "https://github.com/facebook/flow.git"
+bug-reports: "https://github.com/facebook/flow/issues"
+authors: [
+  "Avik Chaudhuri"
+  "Basil Hosmer"
+  "Gabe Levi"
+  "Jeff Morrison"
+  "Marshall Roch"
+  "Sam Goldman"
+  "James Kyle"
+]
+doc: "http://flowtype.org/docs/getting-started.html"
+license: "BSD3"
+depends: [
+  "base-unix"
+  "base-bytes"
+  "ocamlbuild" {build}
+  "ocp-build" {build & os = "win32"}
+]
+available: [ocaml-version >= "4.01.0" & ocaml-version < "4.04.0"]
+build: [ [ make ] ]
+depexts: [
+ [ ["debian"] ["libelf-dev"] ]
+ [ ["ubuntu"] ["libelf-dev"] ]
+ [ ["centos"] ["elfutils-libelf-devel"] ]
+]

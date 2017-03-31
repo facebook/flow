@@ -10,7 +10,11 @@ EXTRA_LIB_PATHS=
 INTERNAL_MODULES=hack/stubs src/stubs
 INTERNAL_NATIVE_C_FILES=
 
-OS=$(shell uname -s)
+ifeq ($(OS), Windows_NT)
+  UNAME_S=Windows
+else
+  UNAME_S=$(shell uname -s)
+endif
 
 -include facebook/Makefile
 
@@ -18,25 +22,41 @@ OS=$(shell uname -s)
 #                              OS-dependent stuff                              #
 ################################################################################
 
-FLOWLIB=bin/flowlib.tar.gz
-
-ifeq ($(OS), Linux)
-  INOTIFY=third-party/inotify
+ifeq ($(UNAME_S), Linux)
+  FLOWLIB=bin/flowlib.tar.gz
+  INOTIFY=hack/third-party/inotify
   INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.c
-  FSNOTIFY=fsnotify_linux
+  FSNOTIFY=hack/fsnotify_linux
+  FSNOTIFY_STUBS=
   ELF=elf
   RT=rt
   FRAMEWORKS=
   SECTCREATE=
+  EXE=
 endif
-ifeq ($(OS), Darwin)
-  INOTIFY=fsevents
+ifeq ($(UNAME_S), Darwin)
+  FLOWLIB=bin/flowlib.tar.gz
+  INOTIFY=hack/fsevents
   INOTIFY_STUBS=$(INOTIFY)/fsevents_stubs.c
-  FSNOTIFY=fsnotify_darwin
+  FSNOTIFY=hack/fsnotify_darwin
+  FSNOTIFY_STUBS=
   ELF=
   RT=
   FRAMEWORKS=CoreServices CoreFoundation
   SECTCREATE=-cclib -sectcreate -cclib __text -cclib flowlib -cclib $(abspath $(FLOWLIB))
+  EXE=
+endif
+ifeq ($(UNAME_S), Windows)
+  FLOWLIB=flowlib.rc
+  INOTIFY=
+  INOTIFY_STUBS=
+  FSNOTIFY=hack/fsnotify_win
+  FSNOTIFY_STUBS=$(FSNOTIFY)/fsnotify_stubs.c
+  ELF=
+  RT=
+  FRAMEWORKS=
+  SECTCREATE=
+  EXE=.exe
 endif
 
 ################################################################################
@@ -77,12 +97,13 @@ MODULES=\
   hack/utils/collections\
   hack/utils/disk\
   hack/utils/hh_json\
-  hack/$(INOTIFY)\
-  hack/$(FSNOTIFY)\
+  $(INOTIFY)\
+  $(FSNOTIFY)\
   $(INTERNAL_MODULES)
 
 NATIVE_C_FILES=\
-  hack/$(INOTIFY_STUBS)\
+  $(INOTIFY_STUBS)\
+  $(FSNOTIFY_STUBS)\
   hack/heap/hh_shared.c\
   hack/hhi/hhi_elf.c\
   hack/utils/files.c\
@@ -173,12 +194,19 @@ build-flow: $(BUILT_OBJECT_FILES) $(FLOWLIB)
 build-flow-with-ocp: $(OCP_BUILD_FILES) $(FLOWLIB) hack/utils/get_build_id.gen.c
 	[ -d _obuild ] || ocp-build init
 	ocp-build build flow
+	mkdir -p bin
+	cp _obuild/flow/flow.asm$(EXE) bin/flow$(EXE)
+	rm -f $(OCP_BUILD_FILES)
+
+build-parser-test-with-ocp: $(OCP_BUILD_FILES)
+	[ -d _obuild ] || ocp-build init
+	ocp-build build flow-parser-hardcoded-test
 	rm -f $(OCP_BUILD_FILES)
 
 build-flow-debug: $(BUILT_OBJECT_FILES) $(FLOWLIB)
 	ocamlbuild -lflags -custom -no-links $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.d.byte
 	mkdir -p bin
-	cp _build/src/flow.d.byte bin/flow
+	cp _build/src/flow.d.byte bin/flow$(EXE)
 
 %.h: $(subst _build/,,$@)
 	mkdir -p $(dir $@)
@@ -203,33 +231,36 @@ _build/hack/utils/get_build_id.gen.c: FORCE scripts/utils.ml scripts/gen_build_i
 # binary. Unfortunately we rely on ocamlbuild to embed the archive on OSX and
 # ocamlbuild isn't smart enough to understand dependencies outside of its
 # automatic-dependency stuff.
-$(FLOWLIB): $(wildcard lib/*)
+bin/flowlib.tar.gz: $(wildcard lib/*)
 	mkdir -p bin
 	tar czf $@ -C lib .
-ifeq ($(OS), Darwin)
+ifeq ($(UNAME_S), Darwin)
 	rm -f _build/src/flow.d.byte _build/src/flow.native
 	rm -f _obuild/flow/flow.byte _obuild/flow/flow.asm
 endif
 
+flowlib.rc: scripts/gen_index.ml $(wildcard lib/*)
+	ocaml -I scripts -w -3 unix.cma ./scripts/gen_index.ml flowlib.rc lib
+
 copy-flow-files: build-flow $(FILES_TO_COPY)
 	mkdir -p bin
-ifeq ($(OS), Linux)
-	objcopy --add-section flowlib=$(FLOWLIB) _build/src/flow.native bin/flow
+ifeq ($(UNAME_S), Linux)
+	objcopy --add-section flowlib=$(FLOWLIB) _build/src/flow.native bin/flow$(EXE)
 else
-	cp _build/src/flow.native bin/flow
+	cp _build/src/flow.native bin/flow$(EXE)
 endif
 
 copy-flow-files-ocp: build-flow-with-ocp $(FLOWLIB) $(FILES_TO_COPY)
 	mkdir -p bin
-ifeq ($(OS), Linux)
-	objcopy --add-section flowlib=$(FLOWLIB) _obuild/flow/flow.asm bin/flow
+ifeq ($(UNAME_S), Linux)
+	objcopy --add-section flowlib=$(FLOWLIB) _obuild/flow/flow.asm bin/flow$(EXE)
 else
-	cp _obuild/flow/flow.asm bin/flow
+	cp _obuild/flow/flow.asm bin/flow$(EXE)
 endif
 
 do-test:
-	./runtests.sh bin/flow
-	bin/flow check
+	./runtests.sh bin/flow$(EXE)
+	bin/flow$(EXE) check
 	./tool test
 
 test: build-flow copy-flow-files

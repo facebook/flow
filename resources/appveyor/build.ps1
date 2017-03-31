@@ -1,4 +1,7 @@
-﻿pushd $PSScriptRoot\..\..
+pushd $PSScriptRoot\..\..
+
+$env:PATH += ";C:\cygwin64\home\appveyor\.opam\$env:OPAM_SWITCH\bin"
+$env:OCAMLLIB = "C:\cygwin64\home\appveyor\.opam\$env:OPAM_SWITCH\lib"
 
 try {
   ./make.bat 2>&1 | %{ "$_" }
