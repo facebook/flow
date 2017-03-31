@@ -2,7 +2,7 @@
 layout: guide
 ---
 
-Once you have [installed](../docs/install/) Flow, you will want to get a feel of how to use Flow at the most basic level. For most new Flow projects, you will follow this general pattern:
+Once you have [installed](../install/) Flow, you will want to get a feel of how to use Flow at the most basic level. For most new Flow projects, you will follow this general pattern:
 
 - [Initialize your project](#toc-initialize-your-project) with `flow init`.
 - Start the [Flow background process](#toc-run-the-flow-background-process) with `flow`.
