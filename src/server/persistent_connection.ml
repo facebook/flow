@@ -26,6 +26,7 @@ let send_errors errors connection =
   Marshal_tools.to_fd_with_preamble connection.outfd (message : Prot.response)
 
 let add_client connections client =
+  print_endline "Adding new persistent connection";
   let new_connection =
     {
       client;
@@ -55,8 +56,11 @@ let client_of_fd connections fd =
 let update_clients connections errors =
   let error_count = Errors.ErrorSet.cardinal errors in
   let subscribed_connections = List.filter (fun c -> c.subscribed) connections in
-  let client_count = List.length subscribed_connections in
-  Printf.printf "sending %d errors to %d subscribed clients" error_count client_count;
+  let subscribed_client_count = List.length subscribed_connections in
+  let all_client_count = List.length connections in
+  Printf.printf
+    "sending %d errors to %d subscribed clients (of %d total)"
+    error_count subscribed_client_count all_client_count;
   print_newline ();
   List.iter (send_errors errors) subscribed_connections
 
@@ -70,6 +74,7 @@ let rec modify_item lst item f = match lst with
         hd::(modify_item tl item f)
 
 let subscribe_client connections client current_errors =
+  print_endline "Subscribing client to push diagnostics";
   if client.subscribed then
     (* noop *)
     connections
