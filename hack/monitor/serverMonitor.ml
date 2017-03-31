@@ -151,10 +151,15 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
   let update_status env monitor_config =
      let server = update_status_ env.server monitor_config in
      let env = { env with server = server } in
-     let informant_report = Informant.report env.informant in
-     let exit_status = match server with
-       | Died_unexpectedly ((Unix.WEXITED c), _) -> Some c
-       | _ -> None in
+     let exit_status, server_state = match server with
+       | Alive _ ->
+         None, Informant_sig.Server_alive
+       | Died_unexpectedly ((Unix.WEXITED c), _) ->
+         Some c, Informant_sig.Server_dead
+       | Died_unexpectedly ((Unix.WSIGNALED _| Unix.WSTOPPED _), _)
+       | Informant_killed ->
+         None, Informant_sig.Server_dead in
+     let informant_report = Informant.report env.informant server_state in
      let is_watchman_fresh_instance = match exit_status with
        | Some c when c = Exit_status.(exit_code Watchman_fresh_instance) -> true
        | _ -> false in

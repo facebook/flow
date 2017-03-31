@@ -17,6 +17,10 @@ type report =
   (** Kill the server (if one is running) and start a new one. *)
   | Restart_server
 
+type server_state =
+  | Server_alive
+  | Server_dead
+
 (** The informant collects information to tell the monitor when to
  * intelligently kill and restart the server daemon.
  *
@@ -28,5 +32,5 @@ module type S = sig
   type t
   type init_env
   val init : init_env -> t
-  val report : t -> report
+  val report : t -> server_state -> report
 end
