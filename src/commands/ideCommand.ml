@@ -67,25 +67,9 @@ let send_server_request fd msg =
   Marshal_tools.to_fd_with_preamble fd (msg: Prot.request)
 
 let handle_stdin_message buffered_stdin server_fd =
-  let line = Buffered_line_reader.get_next_line buffered_stdin in
-  (* This is just a quick and dirty implementation that works with something very similar to
-  vscode-jsonrpc. The only catch is that in this implementation we expect a line break after each
-  message, which requires a small modification to the client code. This was done for expedience,
-  since Buffered_line_reader operates, obviously, on lines.
-
-  We will replace it with a full-fledged ocaml implementation of vscode-jsonrpc when it
-  becomes available. *)
-  (* Mostly used to trim off \r (vscode-jsonrpc is an MS thing so they use CRLF line endings) *)
-  let line = String.trim line in
-  if String.length line = 0 then
-    (* Some lines are empty, ignore them *)
-    ()
-  else if String.length line > 14 && String.sub line 0 14 = "Content-Length" then
-    (* Some lines are html-style headers. ignore them too *)
-    ()
-  else
-    (* other lines hopefully actually have JSON *)
-    let parsed = Hh_json.json_of_string line in
+  try
+    let message = Http_lite.read_message_utf8 buffered_stdin in
+    let parsed = Hh_json.json_of_string message in
     let props = Hh_json.get_object_exn parsed in
     let _, method_json = List.find (function key, _ -> key = "method") props in
     let method_name = Hh_json.get_string_exn method_json in
@@ -94,6 +78,12 @@ let handle_stdin_message buffered_stdin server_fd =
       send_server_request server_fd Prot.Subscribe
     end else
       prerr_endline ("unrecognized method: " ^ method_name)
+  with Http_lite.Malformed _ ->
+    (* Currently, Nuclide sends an extra newline after each message to satisfy the implementation
+    that was previously here. Now, this manifests as a malformed request after each message. Ignore
+    it while we are transitioning, but still log something in case things go wrong with the real
+    messages too. *)
+    prerr_endline "received malformed request"
 
 let rec handle_all_stdin_messages buffered_stdin server_fd =
   handle_stdin_message buffered_stdin server_fd;
