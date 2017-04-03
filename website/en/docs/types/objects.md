@@ -148,11 +148,11 @@ the type of all possible assignments.
 var obj = {};
 
 if (Math.random()) obj.prop = true;
-if (Math.random()) obj.prop = "hello";
+else obj.prop = "hello";
 
-// SExpectError
+// $ExpectError
 var val1: boolean = obj.prop; // Error!
-// SExpectError
+// $ExpectError
 var val2: string  = obj.prop; // Error!
 var val3: boolean | string = obj.prop; // Works!
 ```
@@ -172,7 +172,7 @@ var val1: boolean = obj.prop; // Error!
 var val2: string  = obj.prop; // Works!
 ```
 
-As Flow gets smarter and smarter there should be less of these scenarios.
+As Flow gets smarter and smarter, there should be fewer of these scenarios.
 
 ##### Unknown property lookup on unsealed objects is unsafe <a class="toc" id="toc-unknown-property-lookup-on-unsealed-objects-is-unsafe" href="#toc-unknown-property-lookup-on-unsealed-objects-is-unsafe"></a>
 
