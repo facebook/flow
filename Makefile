@@ -182,7 +182,7 @@ clean:
 	rm -f flow.odocl
 
 clean-ocp: clean
-	ocp-build clean
+	[ -d _obuild ] && ocp-build clean || true
 	rm -f $(OCP_BUILD_FILES)
 
 build-flow: $(BUILT_OBJECT_FILES) $(FLOWLIB)
