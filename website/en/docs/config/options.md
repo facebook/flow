@@ -360,7 +360,7 @@ var myString: $FlowFixMe = 1 + 1;
 var myBoolean: $FlowTODO = 1 + 1;
 ```
 
-> **Note:** You can specify `suppress_suppress` multiple times.
+> **Note:** You can specify `suppress_type` multiple times.
 
 #### `temp_dir` _`(string)`_ <a class="toc" id="toc-temp-dir-string" href="#toc-temp-dir-string"></a>
 
