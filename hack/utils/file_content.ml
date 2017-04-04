@@ -55,6 +55,7 @@ let invalid_position p =
   raise (Failure (Printf.sprintf
     "Invalid position: {line: %d; column: %d}" p.line p.column))
 
+(* this returns 0-based offsets *)
 let get_offsets content queries =
   match get_offsets content queries 1 1 0 (None, None) with
   | Some r1, Some r2 -> r1, r2
