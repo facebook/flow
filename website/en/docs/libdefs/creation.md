@@ -175,7 +175,7 @@ declare module "some-commonjs-module" {
 
 Note that you can also declare other things inside the body of the 
 `declare module`, and those things will be scoped to the body of the 
-`declare module`, **but they will not exported from the module**:
+`declare module`, **but they will not be exported from the module**:
 
 **flow-typed/some-commonjs-module.js**
 ```js
