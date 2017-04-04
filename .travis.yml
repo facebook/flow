@@ -99,6 +99,21 @@ deploy:
     - $OCAML_VERSION = 4.03.0
     - $OPAM_VERSION = 1.2.0
 
+# Upload release versions of flow.js
+- provider: s3
+  access_key_id: "$AWS_ACCESS_KEY_ID"
+  secret_access_key: "$AWS_SECRET_ACCESS_KEY"
+  bucket: "$S3_BUCKET"
+  skip_cleanup: true
+  local_dir: "$HOME/static"
+  upload-dir: static
+  on:
+    tags: true
+    condition:
+    - $TRAVIS_OS_NAME = linux
+    - $OCAML_VERSION = 4.03.0
+    - $OPAM_VERSION = 1.2.0
+
 # The use of secure prevents forks from spamming irc and email.
 # See https://github.com/travis-ci/travis-ci/issues/5063
 notifications:

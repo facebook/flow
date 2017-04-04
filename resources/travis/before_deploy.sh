@@ -11,3 +11,12 @@ cd "$HOME/release" && zip -r \
   "$TRAVIS_BUILD_DIR/flow-$PLATFORM-$TRAVIS_TAG.zip" \
   flow \
   -x \*.tar.gz # exclude flowlib.tar.gz
+
+# We don't deploy the whole website on tags, but we do upload flow.js and the
+# libs. This sets up the directory we'll upload. See the deploy section of
+# .travis.yml.
+if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+  mkdir -p "$HOME/static/$TRAVIS_TAG"
+  cp "bin/flow.js" "$HOME/static/$TRAVIS_TAG/flow.js"
+  cp -r "lib" "$HOME/static/${TRAVIS_TAG}/flowlib"
+fi
