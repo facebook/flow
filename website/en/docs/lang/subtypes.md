@@ -117,56 +117,38 @@ can decide if we have a subtype or not.
 
 #### Subtypes of functions <a class="toc" id="toc-subtypes-of-functions" href="#toc-subtypes-of-functions"></a>
 
-Flow compares two functions by comparing its inputs and outputs. If all the
-inputs and outputs are a subset of the other function, then it is a subtype.
+Flow compares two functions by comparing its inputs and outputs. Subtypes have
+less specific inputs and more specific outputs. Less specific types are supertypes,
+or contravariant, and more specific types are subtypes, or covariant.
 
 ```js
-type Func1 = (1 | 2)     => "A" | "B";
-type Func2 = (1 | 2 | 3) => "A" | "B" | "C";
-```
+type Func1 = string => ?boolean;
+type Func2 = ?string => boolean;
+````
+> ```Func2``` is a subtype of ```Func1``` since ```?string``` (_an optional ```string```
+> or ```string | null```_) is a less specific type of ```string``` and ```boolean``` is
+> a more specific type of ```?boolean```.
 
-This also applies to the number of parameters in the functions. If one function
-contains a subset of the parameters of the other, then the other is a subtype.
-
+Let's take a look at a more practical example:
 ```js
-// @flow
-type Func1 = (number) => void;
-type Func2 = (number, string) => void;
+function needsWelcome(handler: (string) => ?boolean): void {
+  const didWelcome = handler("hello world!");
+  if (didWelcome) {
+    console.log(`didWelcome: ${didWelcome.toString()}`);
+  }
+}
 
-let func1: Func1 = (a: number) => {};
-let func2: Func2 = func1;
+function welcome(value: ?string): boolean {
+  if (value) {
+    console.log(value);
+    return true;
+  }
+  return false;
+}
+
+needsWelcome(welcome); // No error!
 ```
+The function ```needsHandler``` needs a function that can handle at least a ```string``` as
+an input. If you look at the ```welcome``` function, it can handle more cases than ```needsWelcome```
+specifies, while always providing a ```boolean``` output.
 
-#### Subtypes of unions of functions <a class="toc" id="toc-subtypes-of-unions-of-functions" href="#toc-subtypes-of-unions-of-functions"></a>
-
-A function is a subtype of another when the input is contravariant (_less specific type / supertype_) and the output is covariant (_more specific type / subtype_).
-
-```js
-// @flow
-declare var foo1: (string => ?string) => void
-declare var bar1: ?string => string
-
-foo1(bar1) // Works!
-```
-So what would be a subtype of a union of functions? Well we know that a subtype of ``A | B`` woudld be either ``A`` or ``B``, but we are looking for the subtype of ``A => B | C => D``. Let's walk through this...
-
-```js
-// @flow
-declare class A {}; declare class B {}; declare class C {}; declare class D {}
-
-declare var foo2: ((A => B) | (C => D)) => void
-
-declare var bar2: A => B
-declare var baz2: C => D
-
-foo2(bar2); // Works!
-foo2(baz2); // Works!
-```
-But is there anything else we can pass into ``foo2``? Yes! 
-```js
-// @flow
-
-declare var bar3: (A | C) => (B & D)
-foo2(bar3);
-```
-A subtype of a union of functions is a union (``|``) of the inputs and a intersection (``&``) of the outputs. While not covered here, the inverse is true for a intersection of functions: a subtype of a intersection of functions (``A => B & C => D``) is a intersection (``&``) of the inputs and a union (``|``) of the outputs.
