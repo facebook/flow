@@ -125,7 +125,7 @@ Note that you can also declare other things inside the body of the
 ```js
 declare module "some-es-module" {
   // Defines the type of a Path class within this `declare module` body, but 
-  // does not it. It can only be referenced by other things inside the body of
+  // does not export it. It can only be referenced by other things inside the body of
   // this `declare module`
   declare class Path {
     toString(): string;
