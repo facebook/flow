@@ -1,6 +1,6 @@
 opam-version: "1.2"
 maintainer: "gabe@fb.com"
-homepage: "http://flowtype.org"
+homepage: "https://flow.org"
 dev-repo: "https://github.com/facebook/flow.git"
 bug-reports: "https://github.com/facebook/flow/issues"
 authors: [
@@ -12,15 +12,15 @@ authors: [
   "Sam Goldman"
   "James Kyle"
 ]
-doc: "http://flowtype.org/docs/getting-started.html"
+doc: "https://flow.org/en/docs/getting-started/"
 license: "BSD3"
 depends: [
   "base-unix"
   "base-bytes"
   "ocamlbuild" {build}
-  "ocp-build" {build & os = "win32"}
+  "ocp-build" {build}
 ]
-available: [ocaml-version >= "4.01.0" & ocaml-version < "4.04.0"]
+available: [ocaml-version >= "4.03.0" & ocaml-version < "4.04.0"]
 build: [ [ make ] ]
 depexts: [
  [ ["debian"] ["libelf-dev"] ]
