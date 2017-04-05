@@ -184,6 +184,7 @@ module ContextOptimizer = struct
     reduced_property_maps : Properties.map;
     reduced_export_maps : Exports.map;
     reduced_envs : Context.env IMap.t;
+    reduced_evaluated : Type.t IMap.t;
     sig_hash : SigHash.t;
   }
 
@@ -192,8 +193,15 @@ module ContextOptimizer = struct
     reduced_property_maps = Properties.Map.empty;
     reduced_export_maps = Exports.Map.empty;
     reduced_envs = IMap.empty;
+    reduced_evaluated = IMap.empty;
     sig_hash = SigHash.empty;
   }
+
+  let lowers_of_tvar cx id r =
+    match Flow_js.possible_types cx id with
+    | [] -> Locationless.AnyT.t
+    | [t] -> t
+    | t0::t1::ts -> UnionT (r, UnionRep.make t0 t1 ts)
 
   class context_optimizer = object(self)
     inherit [quotient] Type_visitor.t as super
@@ -207,6 +215,7 @@ module ContextOptimizer = struct
     val mutable stable_tvar_ids = IMap.empty
     val mutable stable_propmap_ids = Properties.Map.empty
     val mutable stable_nominal_ids = IMap.empty
+    val mutable stable_eval_ids = IMap.empty
 
     method! tvar cx quotient r id =
       let { reduced_graph; sig_hash; _ } = quotient in
@@ -216,12 +225,7 @@ module ContextOptimizer = struct
         let sig_hash = SigHash.add stable_id sig_hash in
         { quotient with sig_hash }
       else
-        let types = Flow_js.possible_types cx id in
-        let t = match types with
-          | [] -> Locationless.AnyT.t
-          | [t] -> t
-          | t0::t1::ts -> UnionT (r, UnionRep.make t0 t1 ts)
-        in
+        let t = lowers_of_tvar cx id r in
         let node = Root { rank = 0; constraints = Resolved t } in
         let reduced_graph = IMap.add id node reduced_graph in
         let stable_id = self#fresh_stable_id in
@@ -253,6 +257,26 @@ module ContextOptimizer = struct
         let reduced_export_maps =
           Exports.Map.add id tmap reduced_export_maps in
         super#exports cx { quotient with reduced_export_maps; sig_hash } id
+
+    method! eval_id cx quotient id =
+      let { reduced_evaluated; sig_hash; _ } = quotient in
+      if IMap.mem id reduced_evaluated
+      then
+        let stable_id = IMap.find_unsafe id stable_eval_ids in
+        let sig_hash = SigHash.add stable_id sig_hash in
+        { quotient with sig_hash }
+      else
+        let stable_id = self#fresh_stable_id in
+        stable_eval_ids <- IMap.add id stable_id stable_eval_ids;
+        match IMap.get id (Context.evaluated cx) with
+        | None -> quotient
+        | Some t ->
+          let t = match t with
+          | OpenT (r, id) -> lowers_of_tvar cx id r
+          | t -> t
+          in
+          let reduced_evaluated = IMap.add id t reduced_evaluated in
+          super#eval_id cx { quotient with reduced_evaluated } id
 
     method! fun_type cx quotient funtype =
       let id = funtype.closure_t in
@@ -321,6 +345,7 @@ module ContextOptimizer = struct
     Context.set_property_maps cx quotient.reduced_property_maps;
     Context.set_export_maps cx quotient.reduced_export_maps;
     Context.set_envs cx quotient.reduced_envs;
+    Context.set_evaluated cx quotient.reduced_evaluated;
     Context.set_type_graph cx (
       Graph_explorer.new_graph
         (IMap.fold (fun k _ -> ISet.add k) quotient.reduced_graph ISet.empty)

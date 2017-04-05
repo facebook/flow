@@ -178,7 +178,7 @@ and find_root cx id =
       let msg = spf "find_root: tvar %d not found in file %s" id
         (Debug_js.string_of_file cx)
       in
-      failwith msg
+      assert_false msg
 
 (* Replace the node associated with a type variable in the graph. *)
 and replace_node cx id node = Context.set_tvar cx id node
