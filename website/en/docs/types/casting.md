@@ -8,14 +8,14 @@ syntax which can be used in a number of different ways.
 
 ## Type Cast Expression Syntax <a class="toc" id="toc-type-cast-expression-syntax" href="#toc-type-cast-expression-syntax"></a>
 
-In order to create a type cast expression around a `value`, add a semicolon `:`
-with the `Type` and wrap the expression with parenthesis `(` `)`.
+In order to create a type cast expression around a `value`, add a colon `:`
+with the `Type` and wrap the expression with parentheses `(` `)`.
 
 ```js
 (value: Type)
 ```
 
-> **Note:** The parenthesis are necessary to avoid ambiguity with other syntax.
+> **Note:** The parentheses are necessary to avoid ambiguity with other syntax.
 
 Type cast expressions can appear anywhere an expression can appear.
 
