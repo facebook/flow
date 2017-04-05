@@ -15,7 +15,7 @@ with the `Type` and wrap the expression with parentheses `(` `)`.
 (value: Type)
 ```
 
-> **Note:** The parenthesis are necessary to avoid ambiguity with other syntax.
+> **Note:** The parentheses are necessary to avoid ambiguity with other syntax.
 
 Type cast expressions can appear anywhere an expression can appear.
 
