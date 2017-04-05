@@ -1,3 +1,8 @@
+### v0.43.1
+
+Features:
+* Big perf improvment!
+
 ### v0.43.0
 
 Parser:
