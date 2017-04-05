@@ -16,3 +16,5 @@ val edit_file_unsafe : string -> text_edit list -> string
 
 val get_offsets :
   string -> position * position -> int * int
+
+val offset_to_position : string -> int -> position

@@ -62,6 +62,33 @@ let get_offsets content queries =
   | None, _ -> invalid_position (fst queries)
   | _, None -> invalid_position (snd queries)
 
+
+(* This takes 0-based offsets and returns 1-based positions.                  *)
+(* It gives the position of the character *immediately after* this offset,    *)
+(* e.g. "offset_to_position s 0" gives the 1-based position {line=1,col=1}.   *)
+(* It sounds confusing but is natural when you work with half-open ranges!    *)
+(* It is okay to ask for the position of the offset of the end of the file.   *)
+(* In case of multi-byte characters, if you give an offset inside a character,*)
+(* it still gives the position immediately after.                             *)
+let offset_to_position (content: string) (offset: int)
+  : Ide_api_types.position =
+  let rec helper ~(line: int) ~(column: int) ~(index: int) =
+    if index >= offset then
+      {line; column;}
+    else
+      let c = get_char content index in
+      let clen = get_char_length c in
+      if c = '\n' then
+        helper (line + 1) 1 (index + clen)
+      else
+        helper line (column + 1) (index + clen)
+  in
+  if offset > String.length content then
+    raise (Failure (Printf.sprintf "Invalid offset: %d" offset))
+  else
+    helper ~line:1 ~column:1 ~index:0
+
+
 let apply_edit = fun content {range; text} ->
   match range with
   | None -> text
