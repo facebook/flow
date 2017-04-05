@@ -9,7 +9,7 @@ syntax which can be used in a number of different ways.
 ## Type Cast Expression Syntax <a class="toc" id="toc-type-cast-expression-syntax" href="#toc-type-cast-expression-syntax"></a>
 
 In order to create a type cast expression around a `value`, add a colon `:`
-with the `Type` and wrap the expression with parenthesis `(` `)`.
+with the `Type` and wrap the expression with parentheses `(` `)`.
 
 ```js
 (value: Type)
