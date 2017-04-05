@@ -2,7 +2,7 @@
 
 Parser:
 * Fixed parser to disallow variance sigil for when using object spread.
-* Cleaned the flow-parser npm package of cruft. Thanks [@zertosh](github.com/zertosh)!
+* Cleaned the flow-parser npm package of cruft. Thanks [@zertosh](http://github.com/zertosh)!
 
 Notable bug fixes:
 * Some internal refactoring helps Flow find some errors that it was previously missing.
