@@ -1,7 +1,7 @@
 ### v0.43.1
 
 Features:
-* Big perf improvment!
+* Big perf improvement!
 
 ### v0.43.0
 
