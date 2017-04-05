@@ -305,7 +305,7 @@ class ['a] t = object(self)
     Context.find_exports cx id
     |> self#smap (self#type_ cx) acc
 
-  method private eval_id cx acc id =
+  method eval_id cx acc id =
     match IMap.get id (Context.evaluated cx) with
     | None -> acc
     | Some t -> self#type_ cx acc t
