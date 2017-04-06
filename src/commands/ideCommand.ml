@@ -57,10 +57,7 @@ let handle_server_message fd =
     ])
   in
   let json_string = Hh_json.json_to_string json_message in
-  print_endline ("Content-Length: " ^ (string_of_int (String.length json_string)) ^ "\r");
-  print_endline "\r";
-  print_string json_string;
-  flush stdout;
+  Http_lite.write_message stdout json_string;
   prerr_endline "sent diagnostics notification"
 
 let send_server_request fd msg =
