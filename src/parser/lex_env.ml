@@ -12,10 +12,17 @@ module Ast = Spider_monkey_ast
 
 type t = {
   lex_source            : Loc.filename option;
-  lex_lb                : Lexing.lexbuf;
+  lex_lb                : Sedlexing.lexbuf;
+  lex_bol               : bol;
   lex_in_comment_syntax : bool;
   lex_enable_comment_syntax: bool;
   lex_state             : lex_state;
+}
+
+(* bol = Beginning Of Line *)
+and bol = {
+  line: int;
+  offset: int;
 }
 
 and lex_state = {
@@ -31,6 +38,7 @@ let empty_lex_state = {
 let new_lex_env lex_source lex_lb ~enable_types_in_comments = {
   lex_source;
   lex_lb;
+  lex_bol = { line = 1; offset = 0};
   lex_in_comment_syntax = false;
   lex_enable_comment_syntax = enable_types_in_comments;
   lex_state = empty_lex_state;
@@ -48,6 +56,8 @@ let lexbuf env = env.lex_lb
 let with_lexbuf ~lexbuf env = { env with lex_lb = lexbuf }
 let source env = env.lex_source
 let state env = env.lex_state
+let line env = env.lex_bol.line
+let bol_offset env = env.lex_bol.offset
 let is_in_comment_syntax env = env.lex_in_comment_syntax
 let is_comment_syntax_enabled env = env.lex_enable_comment_syntax
 let in_comment_syntax is_in env =
@@ -55,39 +65,8 @@ let in_comment_syntax is_in env =
   then { env with lex_in_comment_syntax = is_in }
   else env
 
-let debug_string_of_lexing_position position =
-  Printf.sprintf
-    "{pos_fname=%S; pos_lnum=%d; pos_bol=%d; pos_cnum=%d}"
-    position.Lexing.pos_fname
-    position.Lexing.pos_lnum
-    position.Lexing.pos_bol
-    position.Lexing.pos_cnum
-
-let debug_string_of_lexbuf (lb: Lexing.lexbuf) =
-  Printf.sprintf
-    "{ \
-      lex_buffer = %S; \
-      lex_buffer_len = %d; \
-      lex_abs_pos = %d; \
-      lex_start_pos = %d; \
-      lex_curr_pos = %d; \
-      lex_last_pos = %d; \
-      lex_last_action = %d; \
-      lex_eof_reached = %b; \
-      lex_mem = TODO; \
-      lex_start_p = %s; \
-      lex_curr_p = %s; \
-    }"
-    lb.Lexing.lex_buffer
-    lb.Lexing.lex_buffer_len
-    lb.Lexing.lex_abs_pos
-    lb.Lexing.lex_start_pos
-    lb.Lexing.lex_curr_pos
-    lb.Lexing.lex_last_pos
-    lb.Lexing.lex_last_action
-    lb.Lexing.lex_eof_reached
-    (debug_string_of_lexing_position lb.Lexing.lex_start_p)
-    (debug_string_of_lexing_position lb.Lexing.lex_curr_p)
+(* TODO *)
+let debug_string_of_lexbuf _lb = ""
 
 let debug_string_of_lex_env (env: t) =
   let source = match (source env) with

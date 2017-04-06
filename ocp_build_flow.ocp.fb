@@ -176,10 +176,20 @@ begin library "flow-parser"
   sort = true
   files = begin fb-glob "src/parser"
     excludes = [
+      "lexer.ml"
       "flow_parser_js.ml"
       "flow_parser_dot_js.ml"
     ]
   end
+  files += [
+    "src/parser/lexer.ml" (comp += [
+      "-w" "-31-39"
+      "-ppx" "%{sedlex_FULL_SRC_DIR}%/ppx_sedlex"
+    ])
+  ]
+  requires = [
+    "sedlex"
+  ]
 end
 
 begin library "flow-parsing"

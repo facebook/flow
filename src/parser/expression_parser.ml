@@ -622,15 +622,23 @@ module Expression
     let value = match number_type with
     | LEGACY_OCTAL ->
       strict_error env Error.StrictOctalLiteral;
-      Int64.to_float (Int64.of_string ("0o"^value))
+      begin try Int64.to_float (Int64.of_string ("0o"^value))
+      with Failure _ -> failwith ("Invalid legacy octal "^value)
+      end
     | BINARY
     | OCTAL ->
-      Int64.to_float (Int64.of_string value)
+      begin try Int64.to_float (Int64.of_string value)
+      with Failure _ -> failwith ("Invalid binary/octal "^value)
+      end
     | NORMAL ->
-      try Lexer_flow.FloatOfString.float_of_string value
-      with _ when Sys.win32 ->
+      begin try Lexer.FloatOfString.float_of_string value
+      with
+      | _ when Sys.win32 ->
         error env Parse_error.WindowsFloatOfString;
         789.0
+      | Failure _ ->
+        failwith ("Invalid number "^value)
+      end
     in
     Expect.token env (T_NUMBER number_type);
     value

@@ -2625,6 +2625,13 @@ module.exports = {
           'raw': '0o274134317073',
         }
       },
+      'var a: 1e5': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+          'type': 'NumberLiteralTypeAnnotation',
+          'value': 100000,
+          'raw': '1e5',
+        }
+      },
     },
     'Invalid Number Literal Types': {
       'var a: 0173': {
@@ -5364,6 +5371,26 @@ module.exports = {
       },
       'import {a nopeNeedsAPrecedingComma} from "MyModule";': {
         'errors.0.message': 'Missing comma between import specifiers'
+      },
+    },
+    'Numbers': {
+      '1': {
+        'body.0.expression': {
+          'value': 1,
+          'raw':'1',
+        },
+      },
+      '1e5': {
+        'body.0.expression': {
+          'value': 100000,
+          'raw':'1e5',
+        },
+      },
+      '1e+05': {
+        'body.0.expression': {
+          'value': 100000,
+          'raw':'1e+05',
+        },
       },
     },
     'Large numbers (ints are 32-bit in js_of_ocaml)': {

@@ -521,10 +521,9 @@ end = struct
         | Todo str -> None, Some str
         | Same -> None, None
       in
-      begin match todo, case.expected with
-      | Some reason, _ -> Case_skipped (Some reason)
-      | None, Some (Module _) -> (* TODO *) Case_skipped None
-      | None, Some (Tree tree) ->
+      begin match case.expected with
+      | Some (Module _) -> (* TODO *) Case_skipped None
+      | Some (Tree tree) ->
           let expected = fst (Parser_flow.json_file ~fail:true tree None) in
           let expected = match diff with
           | Some str ->
@@ -537,11 +536,15 @@ end = struct
             expected
           in
           let errors = test_tree [] actual expected [] in
-          if List.length errors = 0 then Case_ok
-          else Case_error errors
-      | None, Some (Tokens _) -> (* TODO *) Case_skipped None
-      | None, Some (Failure _) -> (* TODO *) Case_skipped None
-      | None, None -> Case_error ["Nothing to do"]
+          begin match errors, todo with
+          | [], None -> Case_ok
+          | [], Some _ -> Case_error ["Skipped test passes"]
+          | _, Some reason -> Case_skipped (Some reason)
+          | _, None -> Case_error errors
+          end
+      | Some (Tokens _) -> (* TODO *) Case_skipped None
+      | Some (Failure _) -> (* TODO *) Case_skipped None
+      | None -> Case_error ["Nothing to do"]
       end
 
   type test_results = {

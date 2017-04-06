@@ -159,12 +159,12 @@ let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
      * contstraints with Atom (see https://github.com/atom/atom/issues/8416 for
      * more context). At some point this should change back to consuming only
      * the first token. *)
-    let lb = Lexing.from_string content in
+    let lb = Sedlexing.Utf8.from_string content in
     let env =
       Lex_env.new_lex_env (Some filename) lb ~enable_types_in_comments:false in
     let rec get_first_comment_contents ?(i=0) env =
       if i < max_tokens then
-        let env, lexer_result = Lexer_flow.token env in
+        let env, lexer_result = Lexer.token env in
         match Lex_result.comments lexer_result with
         | [] -> Token.(
             (**

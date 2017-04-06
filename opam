@@ -17,6 +17,7 @@ license: "BSD3"
 depends: [
   "base-unix"
   "base-bytes"
+  "sedlex"
   "ocamlbuild" {build}
   "ocp-build" {build}
 ]
