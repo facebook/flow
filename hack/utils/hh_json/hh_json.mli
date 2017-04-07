@@ -32,6 +32,7 @@ val get_object_exn : json -> (string * json) list
 val get_array_exn : json -> json list
 val get_string_exn : json -> string
 val get_number_exn : json -> string
+val get_number_int_exn : json -> int
 val get_bool_exn : json -> bool
 
 val opt_string_to_json : string option -> json
@@ -47,6 +48,7 @@ type json_type =
   | Array_t
   | String_t
   | Number_t
+  | Integer_t
   | Bool_t
 
 (**
@@ -69,6 +71,51 @@ type json_type =
  * with the appropriate error and the history of key accesses that arrived
  * there (so you can trace how far it went successfully and exactly where the
  * error was encountered).
+ *
+ * Same goes for accessing multiple fields within one object.
+ * Suppose we have a record type:
+   *  type fbz_record = {
+   *    foo : bool;
+   *    bar : string;
+   *    baz : int;
+   *  }
+ *
+ * And we have JSON as a string:
+   * let data =
+   *    "{\n"^
+   *    "  \"foo\" : true,\n"^
+   *    "  \"bar\" : \"hello\",\n"^
+   *    "  \"baz\" : 5\n"^
+   *    "}"
+   * in
+ *
+ * We parse the JSON, monadically access the fields we want, and fill in the
+ * record by doing:
+ *
+   *  let json = Hh_json_json_of_string data in
+   *  let open Hh_json.Access in
+   *  let accessor = return json in
+   *  let result =
+   *    accessor >>= get_bool "foo" >>= fun (foo, _) ->
+   *    accessor >>= get_string "bar" >>= fun (bar, _) ->
+   *    accessor >>= get_number_int "baz" >>= fun (baz, _) ->
+   *    return {
+   *      foo;
+   *      bar;
+   *      baz;
+   *    }
+   *  in
+ *
+ * The result will be the record type inside the Result monad.
+ *
+   * match result with
+   * | Result.Ok (v, _) ->
+   *   Printf.eprintf "Got baz: %d" v.baz
+   * | Result.Error access_failure ->
+   *   Printf.eprintf "JSON failure: %s"
+   *     (access_failure_to_string access_failure)
+ *
+ * See unit tests for more examples.
  *)
 module type Access = sig
   type keytrace = string list
@@ -112,6 +159,7 @@ module type Access = sig
   val get_bool : string -> json * keytrace -> bool m
   val get_string : string -> json * keytrace -> string m
   val get_number : string -> json * keytrace -> string m
+  val get_number_int : string -> json * keytrace -> int m
   val get_array: string -> json * keytrace -> (json list) m
   val get_val: string -> json * keytrace -> json m (* any expected type *)
 end
