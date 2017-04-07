@@ -280,7 +280,7 @@ js: $(BUILT_OBJECT_FILES)
 	# result.cma, and this is the most expedient (though fragile) way to unblock
 	# ourselves.
 	ocamlbuild -use-ocamlfind \
-		-pkgs js_of_ocaml \
+		-pkgs js_of_ocaml,sedlex \
 		-build-dir _build \
 		-lflags -custom -no-links \
 		$(INCLUDE_OPTS) $(LIB_OPTS) \
