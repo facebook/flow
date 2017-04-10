@@ -71,7 +71,7 @@ class Foo implements Bar, Baz {
 
 ## Interface Syntax <a class="toc" id="toc-interface-syntax" href="#toc-interface-syntax"></a>
 
-Interfaces are created using the keyword `interface` followed by it's name and
+Interfaces are created using the keyword `interface` followed by its name and
 a block which contains the body of the type definition.
 
 ```js
