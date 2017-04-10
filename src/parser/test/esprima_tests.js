@@ -2621,7 +2621,11 @@ module.exports = {
         'new raw`42`',
         '`foo ${\n  "bar"\n} baz`',
         '`foo ${/* a */ "bar" /* b */} baz`',
-        '( foo)`bar`'
+        '( foo)`bar`',
+        '[...a.b`hi`.c`bye`]',
+        'foo`foo`.bar`bar`.baz',
+        'foo`bar``baz`',
+        'foo`foo`()',
     ],
 
 

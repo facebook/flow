@@ -445,11 +445,7 @@ module Expression
     | _ when Peek.is_function env -> _function env
     | _ -> primary env in
     let expr = member env start_loc expr in
-    match Peek.token env with
-    | T_LPAREN -> call env start_loc expr
-    | T_TEMPLATE_PART part ->
-        member env start_loc (tagged_template env start_loc expr part)
-    | _ -> expr
+    call env start_loc expr
 
   and call env start_loc left =
     match Peek.token env with
@@ -480,7 +476,8 @@ module Expression
           property = PropertyIdentifier id;
           computed = false;
         })))
-    | T_TEMPLATE_PART part -> tagged_template env start_loc left part
+    | T_TEMPLATE_PART part ->
+        call env start_loc (tagged_template env start_loc left part)
     | _ -> left
 
   and new_expression env =
@@ -579,6 +576,8 @@ module Expression
           property = PropertyIdentifier id;
           computed = false;
         })))
+    | T_TEMPLATE_PART part ->
+        call env start_loc (tagged_template env start_loc left part)
     | _ -> left
 
   and _function env =
