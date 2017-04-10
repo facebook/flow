@@ -27,7 +27,7 @@ You can use primitive values for these types:
 - Numbers: like `42` or `3.14`
 - Strings: like `"foo"` or `"bar"`
 
-Using these with union types is powerful:
+Using these with [union types](../unions/) is powerful:
 
 ```js
 // @flow
