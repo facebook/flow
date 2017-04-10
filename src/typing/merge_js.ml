@@ -130,6 +130,21 @@ let restore cx dep_cxs master_cx =
   dep_cxs |> List.iter (Context.merge_into cx);
   Context.merge_into cx master_cx
 
+(* Given a sig context, it makes sense to clear the parts that are shared with
+   the master sig context. Why? The master sig context, which contains global
+   declarations, is an implicit dependency for every file, and so will be
+   "merged in" anyway, thus making those shared parts redundant to carry around
+   in other sig contexts. This saves a lot of shared memory as well as
+   deserialization time. *)
+let clear_master_shared cx master_cx =
+  Context.set_graph cx (Context.graph cx |> IMap.filter (fun id _ -> not
+    (IMap.mem id (Context.graph master_cx))));
+  Context.set_property_maps cx (Context.property_maps cx |> Type.Properties.Map.filter (fun id _ -> not
+    (Type.Properties.Map.mem id (Context.property_maps master_cx))));
+  Context.set_envs cx (Context.envs cx |> IMap.filter (fun id _ -> not
+    (IMap.mem id (Context.envs master_cx))));
+  Context.set_evaluated cx (Context.evaluated cx |> IMap.filter (fun id _ -> not
+    (IMap.mem id (Context.evaluated master_cx))))
 
 let merge_lib_file cx master_cx =
   Context.merge_into master_cx cx;

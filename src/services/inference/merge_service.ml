@@ -125,7 +125,7 @@ let merge_strict_context ~options cache component_cxs =
     component_cxs sig_cxs impls res decls master_cx;
   Merge_js.restore cx orig_sig_cxs orig_master_cx;
 
-  ()
+  orig_master_cx
 
 (* Entry point for merging a component *)
 let merge_strict_component ~options = function
@@ -161,11 +161,15 @@ let merge_strict_component ~options = function
     let component_cxs =
       List.map (cache#read ~audit:Expensive.ok) component in
 
-    merge_strict_context ~options cache component_cxs;
+    let master_cx = merge_strict_context ~options cache component_cxs in
 
     let md5 = Merge_js.ContextOptimizer.sig_context component_cxs in
     let cx = List.hd component_cxs in
+
+    Merge_js.clear_master_shared cx master_cx;
+
     let errors = Context.errors cx in
+
     Context.remove_all_errors cx;
     Context.clear_intermediates cx;
 

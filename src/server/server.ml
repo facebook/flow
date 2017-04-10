@@ -420,7 +420,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
             begin match flow_file_cxs with
             | [] -> ()
             | _ ->
-              try Merge_service.merge_strict_context ~options cache flow_file_cxs
+              try
+                (Merge_service.merge_strict_context ~options cache flow_file_cxs
+                   : Context.t)
+                |> ignore
               with exn -> failwith (
                 spf "Error merging contexts: %s" (Printexc.to_string exn)
               )

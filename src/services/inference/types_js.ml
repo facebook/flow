@@ -162,7 +162,7 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
 
       (* merge *)
       let cache = new Context_cache.context_cache in
-      let profiling, () = with_timer "Merge" profiling (fun () ->
+      let profiling, _ = with_timer "Merge" profiling (fun () ->
         Merge_service.merge_strict_context ~options cache [cx]
       ) in
 
