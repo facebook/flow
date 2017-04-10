@@ -38,18 +38,33 @@ let spec = {
   )
 }
 
-let print_errors errors =
-  let json_errors = Errors.Json_output.full_status_json_of_errors ~strip_root:None errors in
-  let json_message = Hh_json.(
+let jsonrpcize_message method_ json =
+  Hh_json.(
     JSON_Object [
       ("jsonrpc", JSON_String "2.0");
-      ("method", JSON_String "diagnosticsNotification");
-      ("params", json_errors);
-    ])
-  in
+      ("method", JSON_String method_);
+      ("params", json);
+    ]
+  )
+
+let print_errors errors =
+  let json_errors = Errors.Json_output.full_status_json_of_errors ~strip_root:None errors in
+  let json_message = jsonrpcize_message "diagnosticsNotification" json_errors in
   let json_string = Hh_json.json_to_string json_message in
   Http_lite.write_message stdout json_string;
   prerr_endline "sent diagnostics notification"
+
+let print_start_recheck () =
+  Hh_json.JSON_Null
+    |> jsonrpcize_message "startRecheck"
+    |> Hh_json.json_to_string
+    |> Http_lite.write_message stdout
+
+let print_end_recheck () =
+  Hh_json.JSON_Null
+    |> jsonrpcize_message "endRecheck"
+    |> Hh_json.json_to_string
+    |> Http_lite.write_message stdout
 
 let handle_server_message fd =
   let (message : Prot.response) =
@@ -63,8 +78,8 @@ let handle_server_message fd =
   match message with
     | Prot.Errors errors -> print_errors errors
     (* TODO do an actual thing *)
-    | Prot.StartRecheck -> prerr_endline "start recheck"
-    | Prot.EndRecheck -> prerr_endline "end recheck"
+    | Prot.StartRecheck -> print_start_recheck ()
+    | Prot.EndRecheck -> print_end_recheck ()
 
 let send_server_request fd msg =
   Marshal_tools.to_fd_with_preamble fd (msg: Prot.request)
