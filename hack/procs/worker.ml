@@ -275,7 +275,7 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
     Unix.clear_close_on_exec heap_handle.SharedMem.h_fd;
     let handle =
       Daemon.spawn
-        Unix.(stdout, stderr)
+        (Daemon.null_fd (), Unix.stdout, Unix.stderr)
         entry
         (saved_state, gc_control, heap_handle) in
     Unix.set_close_on_exec heap_handle.SharedMem.h_fd;

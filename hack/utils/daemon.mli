@@ -84,8 +84,8 @@ val fork :
    alternate entry point. *)
 val spawn :
   ?channel_mode:[ `pipe | `socket ] ->
-  (* Where the daemon's output should go *)
-  (Unix.file_descr * Unix.file_descr) ->
+  (* Where the daemon's input and output should go *)
+  (Unix.file_descr * Unix.file_descr * Unix.file_descr) ->
   ('param, 'input, 'output) entry -> 'param -> ('output, 'input) handle
 
 (* Close the typed channels associated to a 'spawned' child. *)

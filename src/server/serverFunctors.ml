@@ -424,6 +424,7 @@ end = struct
       FlowExitStatus.(exit ~msg Lock_stolen)
     end;
 
+    let null_fd = Daemon.null_fd () in
     let log_file = Path.to_string (Options.log_file options) in
     let log_fd = open_log_file options in
     let config_file = Server_files_js.config_file root in
@@ -449,7 +450,7 @@ end = struct
     with Unix_error (EINVAL, _, _) -> ());
     let {Daemon.pid; channels = (waiting_channel_ic, waiting_channel_oc)} =
       Daemon.spawn
-        (log_fd, log_fd)
+        (null_fd, log_fd, log_fd)
         main_entry
         (options, (config_file, FlowConfig.get config_file), FlowEventLogger.get_context ()) in
     (* detach ourselves from the parent process *)
