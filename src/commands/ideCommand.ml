@@ -38,16 +38,7 @@ let spec = {
   )
 }
 
-let handle_server_message fd =
-  let (message : Prot.response) =
-    try
-      Marshal_tools.from_fd_with_preamble fd
-    with End_of_file ->
-      prerr_endline "Server closed the connection";
-      (* TODO choose a standard exit code for this *)
-      exit 1
-  in
-  let Prot.Errors errors = message in
+let print_errors errors =
   let json_errors = Errors.Json_output.full_status_json_of_errors ~strip_root:None errors in
   let json_message = Hh_json.(
     JSON_Object [
@@ -59,6 +50,21 @@ let handle_server_message fd =
   let json_string = Hh_json.json_to_string json_message in
   Http_lite.write_message stdout json_string;
   prerr_endline "sent diagnostics notification"
+
+let handle_server_message fd =
+  let (message : Prot.response) =
+    try
+      Marshal_tools.from_fd_with_preamble fd
+    with End_of_file ->
+      prerr_endline "Server closed the connection";
+      (* TODO choose a standard exit code for this *)
+      exit 1
+  in
+  match message with
+    | Prot.Errors errors -> print_errors errors
+    (* TODO do an actual thing *)
+    | Prot.StartRecheck -> prerr_endline "start recheck"
+    | Prot.EndRecheck -> prerr_endline "end recheck"
 
 let send_server_request fd msg =
   Marshal_tools.to_fd_with_preamble fd (msg: Prot.request)

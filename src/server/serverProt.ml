@@ -149,4 +149,6 @@ module Persistent_connection_prot = struct
 
   type response =
     | Errors of Errors.ErrorSet.t
+    | StartRecheck
+    | EndRecheck
 end

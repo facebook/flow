@@ -22,6 +22,8 @@ val remove_client: t -> single_client -> t
 
 (* Send error updates to any clients that are subscribed *)
 val update_clients: t -> Errors.ErrorSet.t -> unit
+val send_start_recheck: t -> unit
+val send_end_recheck: t -> unit
 
 val client_fd_list: t -> Unix.file_descr list
 
