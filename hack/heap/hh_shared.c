@@ -239,8 +239,13 @@ typedef struct {
 #ifdef _WIN32
 /* We have to set differently our shared memory location on Windows. */
 #define SHARED_MEM_INIT ((char *) 0x48047e00000ll)
+#elif defined __aarch64__
+/* CentOS 7.3.1611 kernel does not support a full 48-bit VA space, so choose a
+ * value low enough that the 21 GB's mmapped in do not interfere with anything
+ * growing down from the top. 1 << 36 works. */
+#define SHARED_MEM_INIT ((char *) 0x1000000000ll)
 #else
-#define SHARED_MEM_INIT ((char *)0x500000000000ll)
+#define SHARED_MEM_INIT ((char *) 0x500000000000ll)
 #endif
 
 /* As a sanity check when loading from a file */
