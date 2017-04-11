@@ -315,9 +315,12 @@ let set_prop cx id x p =
   |> SMap.add x p
   |> add_property_map cx id
 
-let set_export cx id x t =
+let has_export cx id name =
+  find_exports cx id |> SMap.mem name
+
+let set_export cx id name t =
   find_exports cx id
-  |> SMap.add x t
+  |> SMap.add name t
   |> add_export_map cx id
 
 (* constructors *)

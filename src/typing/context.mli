@@ -132,6 +132,7 @@ val iter_props: t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -
 val has_prop: t -> Type.Properties.id -> string -> bool
 val get_prop: t -> Type.Properties.id -> string -> Type.Property.t option
 val set_prop: t -> Type.Properties.id -> string -> Type.Property.t -> unit
+val has_export: t -> Type.Exports.id -> string -> bool
 val set_export: t -> Type.Exports.id -> string -> Type.t -> unit
 
 (* constructors *)

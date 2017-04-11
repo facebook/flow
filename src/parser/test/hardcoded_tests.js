@@ -1369,6 +1369,16 @@ module.exports = {
           },
         }]
       },
+      'export type * from "foo"': {
+        'body.0': {
+          'type': 'ExportAllDeclaration',
+          'source': {
+            'type': 'Literal',
+            'value': 'foo'
+          },
+          'exportKind': 'type'
+        }
+      },
 
       // Duplicate exports are an early/parse error
       'export let foo = 1; export const foo = 2;': {
@@ -2388,6 +2398,16 @@ module.exports = {
           '0.message': 'Unexpected reserved word',
         }
       },
+      'export type * "from" "foo"': {
+        'errors': {
+          '0.message': 'Unexpected string',
+        }
+      },
+      'export type * as blah from "foo"': {
+        'errors': {
+          '0.message': 'Unexpected identifier',
+        }
+      }
     },
     'JSX Syntax': {
       '(<div>{}</div>)': {

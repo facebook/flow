@@ -617,8 +617,19 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "target_module_t", _json_of_t json_cx target_module_t;
       "t_out", _json_of_t json_cx t_out;
     ]
-  | ExportNamedT (_, tmap, t_out) -> [
+  | CopyTypeExportsT (_, target_module_t, t_out) -> [
+      "target_module_t", _json_of_t json_cx target_module_t;
+      "t_out", _json_of_t json_cx t_out;
+    ]
+  | ExportNamedT (_, skip_dupes, tmap, t_out) -> [
+      "skip_duplicates", JSON_Bool skip_dupes;
       "tmap", json_of_tmap json_cx tmap;
+      "t_out", _json_of_t json_cx t_out;
+    ]
+  | ExportTypeT (_, skip_dupes, name, t, t_out) -> [
+      "skip_duplicates", JSON_Bool skip_dupes;
+      "name", JSON_String name;
+      "tmap", _json_of_t json_cx t;
       "t_out", _json_of_t json_cx t_out;
     ]
   | DebugPrintT _reason -> []
@@ -1724,10 +1735,12 @@ and dump_use_t_ (depth, tvars) cx t =
   | ComparatorT (_, arg) -> p ~extra:(kid arg) t
   | ConstructorT _ -> p t
   | CopyNamedExportsT _ -> p t
+  | CopyTypeExportsT _ -> p t
   | DebugPrintT _ -> p t
   | ElemT _ -> p t
   | EqT (_, arg) -> p ~extra:(kid arg) t
   | ExportNamedT _ -> p t
+  | ExportTypeT _ -> p t
   | GetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetKeysT _ -> p t
   | GetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"

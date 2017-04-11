@@ -415,7 +415,18 @@ module rec TypeTerm : sig
         * (* local ModuleT *) (reason * exporttypes)
         * (* 't_out' to receive the resolved ModuleT *) t_out
     | CopyNamedExportsT of reason * t * t_out
-    | ExportNamedT of reason * t SMap.t * t_out
+    | CopyTypeExportsT of reason * t * t_out
+    | ExportNamedT of
+        reason
+        * bool (* skip_duplicates *)
+        * t SMap.t (* exports_tmap *)
+        * t_out
+    | ExportTypeT of
+        reason
+        * bool (* skip_duplicates *)
+        * string (* export_name *)
+        * t (* target_module_t *)
+        * t_out
 
     (* Map a FunT over a structure *)
     | MapTypeT of reason * type_map * t * cont
@@ -1646,8 +1657,10 @@ let any_propagating_use_t = function
   | ChoiceKitUseT _
   | ConstructorT _
   | CopyNamedExportsT _
+  | CopyTypeExportsT _
   | ElemT _
   | ExportNamedT _
+  | ExportTypeT _
   | GetElemT _
   | GetKeysT _
   | GetPropT _
@@ -1804,10 +1817,12 @@ and reason_of_use_t = function
   | ComparatorT (reason,_) -> reason
   | ConstructorT (reason,_,_) -> reason
   | CopyNamedExportsT (reason, _, _) -> reason
+  | CopyTypeExportsT (reason, _, _) -> reason
   | DebugPrintT reason -> reason
   | ElemT (reason, _, _) -> reason
   | EqT (reason, _) -> reason
-  | ExportNamedT (reason, _, _) -> reason
+  | ExportNamedT (reason, _, _, _) -> reason
+  | ExportTypeT (reason, _, _, _, _) -> reason
   | GetElemT (reason,_,_) -> reason
   | GetKeysT (reason, _) -> reason
   | GetPropT (reason,_,_) -> reason
@@ -1964,10 +1979,15 @@ and mod_reason_of_use_t f = function
   | ConstructorT (reason, ts, t) -> ConstructorT (f reason, ts, t)
   | CopyNamedExportsT (reason, target_module_t, t_out) ->
       CopyNamedExportsT(f reason, target_module_t, t_out)
+  | CopyTypeExportsT (reason, target_module_t, t_out) ->
+      CopyTypeExportsT(f reason, target_module_t, t_out)
   | DebugPrintT reason -> DebugPrintT (f reason)
   | ElemT (reason, t, action) -> ElemT (f reason, t, action)
   | EqT (reason, t) -> EqT (f reason, t)
-  | ExportNamedT (reason, tmap, t_out) -> ExportNamedT(f reason, tmap, t_out)
+  | ExportNamedT (reason, skip_dupes, tmap, t_out) ->
+      ExportNamedT(f reason, skip_dupes, tmap, t_out)
+  | ExportTypeT (reason, skip_dupes, name, t, t_out) ->
+      ExportTypeT(f reason, skip_dupes, name, t, t_out)
   | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetPropT (reason, n, t) -> GetPropT (f reason, n, t)
@@ -2172,10 +2192,12 @@ let string_of_use_ctor = function
   | ComparatorT _ -> "ComparatorT"
   | ConstructorT _ -> "ConstructorT"
   | CopyNamedExportsT _ -> "CopyNamedExportsT"
+  | CopyTypeExportsT _ -> "CopyTypeExportsT"
   | DebugPrintT _ -> "DebugPrintT"
   | ElemT _ -> "ElemT"
   | EqT _ -> "EqT"
   | ExportNamedT _ -> "ExportNamedT"
+  | ExportTypeT _ -> "ExportTypeT"
   | GetElemT _ -> "GetElemT"
   | GetKeysT _ -> "GetKeysT"
   | GetPropT _ -> "GetPropT"

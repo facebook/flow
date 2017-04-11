@@ -919,22 +919,40 @@ module Statement
         let open Statement.ExportNamedDeclaration in
         if not (should_parse_types env)
         then error env Error.UnexpectedTypeExport;
-        let type_alias = type_alias env in
-        (match type_alias with
-          | (loc, Statement.TypeAlias {Statement.TypeAlias.id; _;}) ->
-            record_export env (loc, extract_ident_name id)
-          | _ -> failwith (
-              "Internal Flow Error! Parsed `export type` into something " ^
-              "other than a type alias!"
-            )
-        );
-        let end_loc = fst type_alias in
-        Loc.btwn start_loc end_loc, Statement.ExportNamedDeclaration {
-          declaration = Some type_alias;
-          specifiers = None;
-          source = None;
-          exportKind = Statement.ExportType;
-        }
+        (match Peek.token ~i:1 env with
+        | T_MULT ->
+          Expect.token env T_TYPE;
+          let specifier_loc = Peek.loc env in
+          Expect.token env T_MULT;
+          let source = export_source env in
+          let end_loc = match Peek.semicolon_loc env with
+          | Some loc -> loc
+          | None -> fst source in
+          Eat.semicolon env;
+          Loc.btwn start_loc end_loc, Statement.ExportNamedDeclaration {
+            declaration = None;
+            specifiers = Some (ExportBatchSpecifier (specifier_loc, None));
+            source = Some source;
+            exportKind = Statement.ExportType;
+          }
+        | _ ->
+          let type_alias = type_alias env in
+          (match type_alias with
+            | (loc, Statement.TypeAlias {Statement.TypeAlias.id; _;}) ->
+              record_export env (loc, extract_ident_name id)
+            | _ -> failwith (
+                "Internal Flow Error! Parsed `export type` into something " ^
+                "other than a type alias!"
+              )
+          );
+          let end_loc = fst type_alias in
+          Loc.btwn start_loc end_loc, Statement.ExportNamedDeclaration {
+            declaration = Some type_alias;
+            specifiers = None;
+            source = None;
+            exportKind = Statement.ExportType;
+          }
+        )
     | T_INTERFACE ->
         (* export interface I { ... } *)
         let open Statement.ExportNamedDeclaration in

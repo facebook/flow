@@ -217,13 +217,19 @@ and gc_use cx state = function
   | CopyNamedExportsT (_, target_module, t_out) ->
       gc cx state target_module;
       gc cx state t_out;
+  | CopyTypeExportsT (_, target_module, t_out) ->
+      gc cx state target_module;
+      gc cx state t_out;
   | DebugPrintT _ -> ()
   | ElemT (_, t1, action) ->
       gc cx state t1;
       gc_elem_action cx state action
   | EqT (_, t) -> gc cx state t
-  | ExportNamedT (_, t_smap, t_out) ->
+  | ExportNamedT (_, _, t_smap, t_out) ->
       List.iter (gc cx state) (SMap.values t_smap);
+      gc cx state t_out
+  | ExportTypeT (_, _, _, t, t_out) ->
+      gc cx state t;
       gc cx state t_out
   | GetElemT(_, i, t) -> gc cx state i; gc cx state t
   | GetKeysT (_, t) -> gc cx state t

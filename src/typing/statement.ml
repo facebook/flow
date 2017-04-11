@@ -1559,7 +1559,7 @@ and statement cx = Ast.Statement.(
         let module_t =
           mk_commonjs_module_t cx reason reason cjs_module_exports in
         let module_t = Flow.mk_tvar_where cx reason (fun t ->
-          Flow.flow cx (module_t, ExportNamedT (reason, type_exports, t))
+          Flow.flow cx (module_t, ExportNamedT (reason, false, type_exports, t))
         ) in
         Flow.unify cx module_t t;
       | DeclareModule.ES _ ->
@@ -1901,7 +1901,7 @@ and export_statement cx loc
     set_module_t cx reason (fun t ->
       Flow.flow cx (
         module_t_of_cx cx,
-        ExportNamedT(reason, SMap.singleton local_name local_tvar, t)
+        ExportNamedT(reason, false, SMap.singleton local_name local_tvar, t)
       )
     )
   ) in
@@ -1976,7 +1976,7 @@ and export_statement cx loc
         set_module_t cx reason (fun t ->
           Flow.flow cx (
             module_t_of_cx cx,
-            ExportNamedT(reason, SMap.singleton remote_name local_tvar, t)
+            ExportNamedT(reason, false, SMap.singleton remote_name local_tvar, t)
           )
         )
       ) in
@@ -2029,21 +2029,26 @@ and export_statement cx loc
         set_module_t cx reason (fun t ->
           Flow.flow cx (
             module_t_of_cx cx,
-            ExportNamedT(reason, SMap.singleton name remote_namespace_t, t)
+            ExportNamedT(reason, false, SMap.singleton name remote_namespace_t, t)
           )
         )
       | None ->
         let reason =
-          mk_reason (RCustom (spf "export * from %S" source_module_name)) loc
+          mk_reason
+            (RCustom (spf "%s * from %S" export_kind_start source_module_name))
+            loc
         in
-        set_module_kind cx reason Context.ESModule;
 
-        set_module_t cx reason (fun t ->
-          Flow.flow cx (
-            import ~reason cx source_module_name loc,
-            CopyNamedExportsT(reason, module_t_of_cx cx, t)
-          )
-        )
+        (* It's legal to export types from a CommonJS module. *)
+        if exportKind != ExportType
+        then set_module_kind cx reason Context.ESModule;
+
+        set_module_t cx reason (fun t -> Flow.flow cx (
+          import ~reason cx source_module_name loc,
+          match exportKind with
+          | ExportValue -> CopyNamedExportsT(reason, module_t_of_cx cx, t)
+          | ExportType -> CopyTypeExportsT(reason, module_t_of_cx cx, t)
+        ))
       )
 
     | ([], None) -> failwith (

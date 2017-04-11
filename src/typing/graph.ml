@@ -292,12 +292,14 @@ and parts_of_use_t cx = function
   let args = List.map (function Arg t | SpreadArg t -> t) args in
   ("out", Def out) :: list_parts args
 | CopyNamedExportsT (_, target, out) -> ["target", Def target; "out", Def out]
+| CopyTypeExportsT (_, target, out) -> ["target", Def target; "out", Def out]
 | DebugPrintT _ -> []
 | ElemT (_, l, ReadElem t) -> ["l", Def l; "read", Def t]
 | ElemT (_, l, WriteElem t) -> ["l", Def l; "write", Def t]
 | ElemT (_, l, CallElem (_, fct)) -> ("l", Def l) :: parts_of_funcalltype fct
 | EqT (_, arg) -> ["arg", Def arg]
-| ExportNamedT (_, map, out) -> ("out", Def out) :: map_parts map
+| ExportNamedT (_, _, map, out) -> ("out", Def out) :: map_parts map
+| ExportTypeT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
 | GetElemT (_, ix, out) -> ["ix", Def ix; "out", Def out]
 | GetKeysT (_, out) -> ["out", Def out]
 | GetPropT (_, _, out) -> ["out", Def out]

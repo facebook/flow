@@ -1636,34 +1636,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* `import type` creates a properly-parameterized type alias for the *)
     (* remote type -- but only for particular, valid remote types.       *)
     (*********************************************************************)
-    | (ClassT(_, inst), ImportTypeT(reason, _, t)) ->
-      rec_flow_t cx trace (TypeT(reason, inst), t)
-
-    (* fix this-abstracted class when used as a type *)
-    | (ThisClassT (r, i), ImportTypeT(reason, _, _)) ->
-      rec_flow cx trace
-        (fix_this_class cx trace reason (r, i), u)
-
-    | (PolyT(_, typeparams, ClassT(_, inst)), ImportTypeT(reason, _, t)) ->
-      rec_flow_t cx trace (poly_type typeparams (TypeT(reason, inst)), t)
-
-    (* delay fixing a polymorphic this-abstracted class until it is specialized,
-       by transforming the instance type to a type application *)
-    | (PolyT(_, typeparams, ThisClassT _), ImportTypeT _) ->
-      let targs = List.map (fun tp -> BoundT tp) typeparams in
-      rec_flow cx trace
-        (poly_type typeparams (class_type (typeapp l targs)), u)
-
-    | (FunT(_, _, prototype, _), ImportTypeT(reason, _, t)) ->
-      rec_flow_t cx trace (TypeT(reason, prototype), t)
-
-    | PolyT(_, typeparams, FunT(_, _, prototype, _)),
-      ImportTypeT(reason, _, t) ->
-      rec_flow_t cx trace (poly_type typeparams (TypeT(reason, prototype)), t)
-
-    | (TypeT _, ImportTypeT(_, _, t))
-    | (PolyT(_, _, TypeT _), ImportTypeT(_, _, t))
-      -> rec_flow_t cx trace (l, t)
 
     (** TODO: This rule allows interpreting an object as a type!
 
@@ -1697,11 +1669,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ObjT _, ImportTypeT(_, "default", t)) ->
       rec_flow_t cx trace (l, t)
 
-    | AnyT _, ImportTypeT (_, _, t) ->
-      rec_flow_t cx trace (l, t)
-
-    | (_, ImportTypeT(reason, export_name, _)) ->
-      add_output cx ~trace (FlowError.EImportValueAsType (reason, export_name))
+    | (exported_type, ImportTypeT(reason, export_name, t)) ->
+      (match canonicalize_imported_type cx trace reason exported_type with
+      | Some imported_t -> rec_flow_t cx trace (imported_t, t)
+      | None -> add_output cx ~trace (
+          FlowError.EImportValueAsType (reason, export_name)
+        )
+      )
 
     (************************************************************************)
     (* `import typeof` creates a properly-parameterized type alias for the  *)
@@ -1785,8 +1759,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        that are not @flow, so the rules have to deal with `any`. *)
 
     (* util that grows a module by adding named exports from a given map *)
-    | (ModuleT(_, exports), ExportNamedT(_, tmap, t_out)) ->
-      SMap.iter (Context.set_export cx exports.exports_tmap) tmap;
+    | (ModuleT(_, exports), ExportNamedT(_, skip_dupes, tmap, t_out)) ->
+      tmap |> SMap.iter (fun name t ->
+        if skip_dupes && Context.has_export cx exports.exports_tmap name
+        then ()
+        else Context.set_export cx exports.exports_tmap name t
+      );
       rec_flow_t cx trace (l, t_out)
 
     (** Copy the named exports from a source module into a target module. Used
@@ -1797,8 +1775,50 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let source_tmap = Context.find_exports cx source_exports.exports_tmap in
       rec_flow cx trace (
         target_module_t,
-        ExportNamedT(reason, source_tmap, t_out)
+        ExportNamedT(reason, (*skip_dupes*)true, source_tmap, t_out)
       )
+
+    (**
+     * Copy only the type exports from a source module into a target module.
+     * Used to implement `export type * from ...`.
+     *)
+    | ModuleT(_, source_exports),
+      CopyTypeExportsT(reason, target_module_t, t_out) ->
+      let source_exports = Context.find_exports cx source_exports.exports_tmap in
+      let target_module_t =
+        SMap.fold (fun export_name export_t target_module_t ->
+          mk_tvar_where cx reason (fun t -> rec_flow cx trace (
+            export_t,
+            ExportTypeT(reason, true, export_name, target_module_t, t)
+          ))
+        ) source_exports target_module_t
+      in
+      rec_flow_t cx trace (target_module_t, t_out)
+
+    (**
+     * Export a type from a given ModuleT, but only if the type is compatible
+     * with `import type`/`export type`. When it is not compatible, it is simply
+     * not added to the exports map.
+     *
+     * Note that this is very similar to `ExportNamedT` except that it only
+     * exports one type at a time and it takes the type to be exported as a
+     * lower (so that the type can be filtered post-resolution).
+     *)
+    | l, ExportTypeT(reason, skip_dupes, export_name, target_module_t, t_out) ->
+      let is_type_export = (
+        match l with
+        | ObjT _ when export_name = "default" -> true
+        | l -> canonicalize_imported_type cx trace reason l <> None
+      ) in
+      if is_type_export then
+        rec_flow cx trace (target_module_t, ExportNamedT(
+          reason,
+          skip_dupes,
+          SMap.singleton export_name l,
+          t_out
+        ))
+      else
+        rec_flow_t cx trace (target_module_t, t_out)
 
     (* There is nothing to copy from a module exporting `any` or `Object`. *)
     | (AnyT _ | AnyObjT _), CopyNamedExportsT(_, target_module, t) ->
@@ -1824,6 +1844,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Copy own props *)
       rec_flow cx trace (module_t, ExportNamedT(
         reason,
+        false, (* skip_dupes *)
         Properties.extract_named_exports (Context.find_props cx props_tmap),
         t_out
       ))
@@ -1849,6 +1870,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let module_t = mk_tvar_where cx reason (fun t ->
         rec_flow cx trace (module_t, ExportNamedT(
           reason,
+          false, (* skip_dupes *)
           extract_named_exports fields_tmap,
           t
         ))
@@ -1857,6 +1879,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Copy methods *)
       rec_flow cx trace (module_t, ExportNamedT(
         reason,
+        false, (* skip_dupes *)
         extract_named_exports methods_tmap,
         t_out
       ))
@@ -6666,6 +6689,42 @@ and fix_this_class cx trace reason (r, i) =
   let i = subst cx (SMap.singleton "this" this) i in
   rec_unify cx trace this i;
   ClassT (r, i)
+
+and canonicalize_imported_type cx trace reason t =
+  match t with
+  | ClassT(_, inst) ->
+    Some (TypeT (reason, inst))
+
+  | FunT(_, _, prototype, _) ->
+    Some (TypeT (reason, prototype))
+
+  | PolyT(_, typeparams, ClassT(_, inst)) ->
+    Some (poly_type typeparams (TypeT(reason, inst)))
+
+  | PolyT(_, typeparams, FunT(_, _, prototype, _)) ->
+    Some (poly_type typeparams (TypeT (reason, prototype)))
+
+  (* delay fixing a polymorphic this-abstracted class until it is specialized,
+     by transforming the instance type to a type application *)
+  | PolyT(_, typeparams, ThisClassT _) ->
+    let targs = List.map (fun tp -> BoundT tp) typeparams in
+    Some (poly_type typeparams (class_type (typeapp t targs)))
+
+  | PolyT(_, _, TypeT _) ->
+    Some t
+
+  (* fix this-abstracted class when used as a type *)
+  | ThisClassT(r, i) ->
+    Some (fix_this_class cx trace reason (r, i))
+
+  | TypeT _ ->
+    Some t
+
+  | AnyT _ ->
+    Some t
+
+  | _ ->
+    None
 
 (* Specialize This in a class. Eventually this causes substitution. *)
 and instantiate_this_class cx trace reason tc this =
