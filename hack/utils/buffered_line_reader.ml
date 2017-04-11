@@ -53,7 +53,7 @@ let rec read_line chunks r =
   let b = Bytes.create chunk_size in
 
   let bytes_read = Unix.read r.fd b 0 chunk_size in
-  assert (bytes_read > 0);
+  if bytes_read == 0 then raise End_of_file;
   let b = String.sub b 0 bytes_read in
 
   match index b '\n' with
@@ -102,7 +102,7 @@ let rec read_bytes r size chunks =
   let bytes_desired = min chunk_size size in
   let b = Bytes.create bytes_desired in
   let bytes_read = Unix.read r.fd b 0 bytes_desired in
-  assert (bytes_read > 0);
+  if bytes_read == 0 then raise End_of_file;
   if bytes_read < size then
     let b = String.sub b 0 bytes_read in
     read_bytes r (size - bytes_read) (b :: chunks)
