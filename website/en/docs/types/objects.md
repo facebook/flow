@@ -198,7 +198,7 @@ var baz: string  = obj.baz; // Works?
 ## Exact object types <a class="toc" id="toc-exact-object-types" href="#toc-exact-object-types"></a>
 
 In Flow, it is considered safe to pass an object with extra properties where
-an normal object type is expected.
+a normal object type is expected.
 
 ```js
 // @flow
