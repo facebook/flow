@@ -4,16 +4,19 @@ require 'cgi'
 
 module Jekyll
   module Converters
-    class Markdown < Converter
-      alias old_convert convert
+    class Markdown::FlowMarkdown
+      class << self
+        attr_accessor :tempdir
+      end
 
       def initialize(config)
-        super(config)
+        @config = config
         @flow_cache = {}
+        @markdown = Jekyll::Converters::Markdown::KramdownParser.new config
       end
 
       def convert(content)
-        old_convert(render(content))
+        @markdown.convert(render(content))
       end
 
       def render(content)
@@ -55,12 +58,20 @@ module Jekyll
         content.match(/^(\/\/ *@flow|\/\*\s*@flow)/)
       end
 
+      def run_flow(command, stdin, success_codes)
+        out, err, status = Open3.capture3(
+          "#{@config['flow']['path'] || 'flow'} #{command}",
+          :stdin_data => stdin
+        )
+        if status.exited? and success_codes.include?(status.exitstatus)
+          response = JSON.parse(out)
+        else
+          raise "flow ast failed (exit #{status.exitstatus}): #{err}"
+        end
+      end
+
       def get_tokens(content)
-        response = Open3.popen3("flow ast --tokens") {|stdin, stdout|
-          stdin.puts(content)
-          stdin.close
-          JSON.parse(stdout.gets)
-        }
+        response = run_flow("ast --tokens", content, [0])
         response['comments'].each do |comment|
           normalize_comment comment
         end
@@ -82,11 +93,11 @@ module Jekyll
 
       def get_errors(content)
         return [] unless match_pragma(content)
-        response = Open3.popen3("flow check-contents --json") {|stdin, stdout|
-          stdin.puts(content)
-          stdin.close
-          JSON.parse(stdout.gets)
-        }
+        response = run_flow(
+          "check-contents --json --root #{self.class.tempdir}",
+          content,
+          [0, 2]
+        )
         response['errors']
       end
 
@@ -249,5 +260,26 @@ module Jekyll
         errors.join("\n")
       end
     end
+  end
+
+  Hooks.register :site, :pre_render do |site|
+    tempdir = Dir.mktmpdir
+    Converters::Markdown::FlowMarkdown.tempdir = tempdir
+    File.open(File.join(tempdir, '.flowconfig'), 'w') {|f|
+      f.write(
+        <<-EOF.gsub(/^ {10}/, '')
+          [options]
+          suppress_comment=\\\\(.\\\\|\\n\\\\)*\\\\$DocIssue
+          max_header_tokens=1
+        EOF
+      )
+    }
+  end
+
+  Hooks.register :site, :post_render do |site|
+    tempdir = Converters::Markdown::FlowMarkdown.tempdir
+    flow = site.config['flow']['path'] || 'flow'
+    `#{flow} stop #{tempdir}`
+    FileUtils.remove_entry_secure tempdir
   end
 end

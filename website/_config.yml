@@ -21,6 +21,8 @@ repository: facebook/flow
 
 permalink: /blog/:categories/:year/:month/:day/:title/
 
+markdown: FlowMarkdown
+
 flow:
   path: 'flow'
 
@@ -48,6 +50,9 @@ exclude:
   - node_modules
   - .asset-cache
   - yarn.lock
+
+keep_files:
+  - static/master
 
 assets:
   sources:
