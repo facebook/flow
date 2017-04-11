@@ -26,8 +26,10 @@ let make_genv options watch_paths handle =
     else
       let tmp_dir = Options.temp_dir options in
       let root = Options.root options in
+      let in_fd = Daemon.null_fd () in
       let log_file = Server_files_js.dfind_log_file ~tmp_dir root in
       let log_fd = Daemon.fd_of_path log_file in
-      Some (DfindLib.init (log_fd, log_fd) ("flow_server_events", watch_paths))
+      let fds = (in_fd, log_fd, log_fd) in
+      Some (DfindLib.init fds ("flow_server_events", watch_paths))
   in
   { ServerEnv.options; workers; dfind; }
