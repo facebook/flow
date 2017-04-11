@@ -74,6 +74,7 @@ MODULES=\
   src/dts\
   src/embedded\
   src/parser\
+  src/parser_utils\
   src/parsing\
   src/server\
   src/services/autocomplete\
