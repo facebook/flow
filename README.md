@@ -106,6 +106,13 @@ brew install libelf opam
 opam init --comp 4.03.0
 ```
 
+Then, restart your shell and install these additional libraries:
+
+```
+opam update
+opam install -y ocamlfind sedlex
+```
+
 Once you have these dependencies, building Flow just requires running
 
 ```
