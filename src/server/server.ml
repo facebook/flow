@@ -80,7 +80,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     (* TODO: check status.directory *)
     status_log errors;
     FlowEventLogger.status_response
-      (Errors.Json_output.json_of_errors ~strip_root:None errors);
+      ~num_errors:(Errors.ErrorSet.cardinal errors);
     send_errorl errors oc
 
   (* helper - print errors. used in check-and-die runs *)
