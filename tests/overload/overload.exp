@@ -3,23 +3,23 @@ overload.js:7
                       ^^^^^^^^^^^ call of method `match`
   7: var x1: number = "".match(0)[0];
                                ^ number. This type is incompatible with
-286:     match(regexp: string | RegExp): ?MatchResult;
+286:     match(regexp: string | RegExp): ?Array<string>;
                        ^^^^^^^^^^^^^^^ union: string | RegExp. See lib: <BUILTINS>/core.js:286
   Member 1:
-  286:     match(regexp: string | RegExp): ?MatchResult;
+  286:     match(regexp: string | RegExp): ?Array<string>;
                          ^^^^^^ string. See lib: <BUILTINS>/core.js:286
   Error:
     7: var x1: number = "".match(0)[0];
                                  ^ number. This type is incompatible with
-  286:     match(regexp: string | RegExp): ?MatchResult;
+  286:     match(regexp: string | RegExp): ?Array<string>;
                          ^^^^^^ string. See lib: <BUILTINS>/core.js:286
   Member 2:
-  286:     match(regexp: string | RegExp): ?MatchResult;
+  286:     match(regexp: string | RegExp): ?Array<string>;
                                   ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:286
   Error:
     7: var x1: number = "".match(0)[0];
                                  ^ number. This type is incompatible with
-  286:     match(regexp: string | RegExp): ?MatchResult;
+  286:     match(regexp: string | RegExp): ?Array<string>;
                                   ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:286
 
 overload.js:7
