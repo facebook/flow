@@ -1,3 +1,16 @@
+### v0.44.0
+
+New Features:
+* Another big perf win!
+
+Notable bug fixes:
+* Internally, Flow wasn't always propagating the any type, which could suppress certain errors. We've fixed this, and Flow now notices some errors it was missing before
+
+Misc:
+* Lots of libdef and docs PRs merged! Thanks to everyone for the help!
+* Minimum OCaml version is now 4.02
+* Partial support for object type spreads with generics
+
 ### v0.43.1
 
 Features:
