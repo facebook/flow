@@ -14,7 +14,7 @@ val merge_strict_context:
   options: Options.t ->
   Context_cache.context_cache ->
   Context.t list ->
-  unit
+  Context.t
 val merge_strict:
   options: Options.t ->
   workers: Worker.t list option ->
