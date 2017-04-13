@@ -22,7 +22,7 @@ If you then put all your source files in a `src` directory you can compile them
 to another directory by running:
 
 ```sh
-{{include.run_command}}babel src/ -D lib/
+{{include.run_command}}babel src/ -d lib/
 ```
 
 You can add this to your `package.json` scripts easily.
@@ -32,7 +32,7 @@ You can add this to your `package.json` scripts easily.
   "name": "my-project",
   "main": "lib/index.js",
   "scripts": {
-    "build": "babel src/ -D lib/",
+    "build": "babel src/ -d lib/",
     "prepublish": "{{include.package_manager}} run build"
   }
 }
