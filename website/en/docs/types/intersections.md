@@ -47,10 +47,10 @@ Each of the members of a intersection type can be any type, even another
 intersection type.
 
 ```js
-type Numbers = 1 & 2;
-type Colors = 'red' & 'blue'
+type Foo = Type1 & Type2;
+type Bar = Type3 & Type4;
 
-type Fish = Numbers & Colors;
+type Baz = Foo & Bar;
 ```
 
 Intersection types require all in, but one out
