@@ -15,10 +15,6 @@
 open CommandUtils
 open Utils_js
 
-module CheckCommand = ServerCommands.OptionParser (
-  struct let mode = ServerCommands.Check end
-)
-
 let spec = {
   CommandSpec.
   name = "ls";
@@ -180,7 +176,7 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_profile = false;
     opt_strip_root;
     opt_module;
-    opt_libs = CheckCommand.libs ~root flowconfig None;
+    opt_libs = ServerCommands.CheckCommand.libs ~root flowconfig None;
     opt_default_lib_dir = None;
     opt_munge_underscores = false;
     opt_temp_dir;

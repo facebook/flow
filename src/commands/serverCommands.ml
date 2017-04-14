@@ -18,6 +18,7 @@ type mode = Check | Server | Detach | FocusCheck
 
 module type CONFIG = sig
   val mode : mode
+  val default_log_filter : Hh_logger.Level.t -> bool
 end
 
 module Main = ServerFunctors.ServerMain (Server.FlowProgram)
@@ -213,7 +214,14 @@ module OptionParser(Config : CONFIG) = struct
       path_opt
       () =
 
+    (* initialize loggers *)
     FlowEventLogger.set_from from;
+    Hh_logger.Level.set_filter (
+      if quiet then (function _ -> false)
+      else if verbose != None || debug then (function _ -> true)
+      else Config.default_log_filter
+    );
+
     let root = CommandUtils.guess_root path_opt in
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
 
@@ -401,7 +409,22 @@ module OptionParser(Config : CONFIG) = struct
   let command = CommandSpec.command spec main
 end
 
-module CheckCommand = OptionParser (struct let mode = Check end)
-module ServerCommand = OptionParser (struct let mode = Server end)
-module StartCommand = OptionParser (struct let mode = Detach end)
-module FocusCheckCommand = OptionParser (struct let mode = FocusCheck end)
+module CheckCommand = OptionParser (struct
+  let mode = Check
+  let default_log_filter = function
+    | Hh_logger.Level.Fatal
+    | Hh_logger.Level.Error -> true
+    | _ -> false
+end)
+module ServerCommand = OptionParser (struct
+  let mode = Server
+  let default_log_filter = Hh_logger.Level.default_filter
+end)
+module StartCommand = OptionParser (struct
+  let mode = Detach
+  let default_log_filter = Hh_logger.Level.default_filter
+end)
+module FocusCheckCommand = OptionParser (struct
+  let mode = FocusCheck
+  let default_log_filter = Hh_logger.Level.default_filter
+end)

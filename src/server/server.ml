@@ -30,8 +30,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let cache = new Context_cache.context_cache in
       Merge_service.merge_strict_context ~options cache [cx] in
     (* write binary path and version to server log *)
-    Flow_logger.log "executable=%s" (Sys_utils.executable_path ());
-    Flow_logger.log "version=%s" FlowConfig.version;
+    Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
+    Hh_logger.info "version=%s" FlowConfig.version;
     (* start the server and pipe its result into the dumper *)
     Types_js.server_init genv
     |> Dumper.init merge_component genv
@@ -39,14 +39,14 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
   let incorrect_hash oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_OUT_OF_DATE;
     FlowEventLogger.out_of_date ();
-    Flow_logger.log     "Status: Error";
-    Flow_logger.log     "%s is out of date. Exiting." name;
+    Hh_logger.fatal     "Status: Error";
+    Hh_logger.fatal     "%s is out of date. Exiting." name;
     FlowExitStatus.(exit Server_out_of_date)
 
   let status_log errors =
     if Errors.ErrorSet.is_empty errors
-      then Flow_logger.log "Status: OK"
-      else Flow_logger.log "Status: Error";
+      then Hh_logger.info "Status: OK"
+      else Hh_logger.info "Status: Error";
     flush stdout
 
   let send_errorl el oc =
@@ -67,11 +67,11 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         ServerProt.client=client_root
       } in
       ServerProt.response_to_channel oc msg;
-      Flow_logger.log "Status: Error";
-      Flow_logger.log "server_dir=%s, client_dir=%s"
+      Hh_logger.fatal "Status: Error";
+      Hh_logger.fatal "server_dir=%s, client_dir=%s"
         (Path.to_string server_root)
         (Path.to_string client_root);
-      Flow_logger.log "%s is not listening to the same directory. Exiting."
+      Hh_logger.fatal "%s is not listening to the same directory. Exiting."
         name;
       FlowExitStatus.(exit Server_client_directory_mismatch)
     end;
@@ -119,8 +119,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
   let die_nicely genv oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_DYING;
     FlowEventLogger.killed ();
-    Flow_logger.log "Status: Error";
-    Flow_logger.log "Sent KILL command by client. Dying.";
+    Hh_logger.fatal "Status: Error";
+    Hh_logger.fatal "Sent KILL command by client. Dying.";
     (match genv.ServerEnv.dfind with
     | Some handle -> Sys_utils.terminate_process (DfindLib.pid handle);
     | None -> ()
@@ -149,7 +149,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           state
           parse_result
       with exn ->
-        Flow_logger.log "Couldn't autocomplete%s" (Printexc.to_string exn);
+        Hh_logger.warn "Couldn't autocomplete%s" (Printexc.to_string exn);
         OK []
     in
     Autocomplete_js.autocomplete_unset_hooks ();
@@ -354,7 +354,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
          let patch_content = Diff.diff_of_file_and_string file new_content in
          SMap.add file patch_content result_map
        with exn ->
-         Flow_logger.log
+         Hh_logger.warn
            "Could not fill types for %s\n%s"
            file
            (Printexc.to_string exn);
@@ -469,7 +469,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
        let result = FindRefs_js.result cx state in
        Marshal.to_channel oc result []
      with exn ->
-       Flow_logger.log
+       Hh_logger.warn
          "Could not find refs for %s:%d:%d\n%s"
          filename line col
          (Printexc.to_string exn)
@@ -497,7 +497,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       in
       Marshal.to_channel oc result []
     with exn ->
-      Flow_logger.log
+      Hh_logger.warn
         "Could not get definition for %s:%d:%d\n%s"
         filename line col
         (Printexc.to_string exn)
@@ -559,8 +559,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
     (* Die if the .flowconfig changed *)
     if SSet.mem config_path updates then begin
-      Flow_logger.log "Status: Error";
-      Flow_logger.log
+      Hh_logger.fatal "Status: Error";
+      Hh_logger.fatal
         "%s changed in an incompatible way. Exiting.\n%!"
         config_path;
       FlowExitStatus.(exit Server_out_of_date)
@@ -604,9 +604,9 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     ) updates in
     if not (SSet.is_empty incompatible_packages)
     then begin
-      Flow_logger.log "Status: Error";
-      SSet.iter (Flow_logger.log "Modified package: %s") incompatible_packages;
-      Flow_logger.log
+      Hh_logger.fatal "Status: Error";
+      SSet.iter (Hh_logger.fatal "Modified package: %s") incompatible_packages;
+      Hh_logger.fatal
         "Packages changed in an incompatible way. Exiting.\n%!";
       FlowExitStatus.(exit Server_out_of_date)
     end;
@@ -633,9 +633,9 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let libs = updates |> SSet.filter is_changed_lib in
     if not (SSet.is_empty libs)
     then begin
-      Flow_logger.log "Status: Error";
-      SSet.iter (Flow_logger.log "Modified lib file: %s") libs;
-      Flow_logger.log
+      Hh_logger.fatal "Status: Error";
+      SSet.iter (Hh_logger.fatal "Modified lib file: %s") libs;
+      Hh_logger.fatal
         "Lib files changed in an incompatible way. Exiting.\n%!";
       FlowExitStatus.(exit Server_out_of_date)
     end;

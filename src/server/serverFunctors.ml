@@ -87,16 +87,16 @@ end = struct
     let tmp_dir = Options.temp_dir options in
     let t = Unix.gettimeofday () in
     grab_lock ~tmp_dir root;
-    Flow_logger.log "Initializing Server (This might take some time)";
+    Hh_logger.info "Initializing Server (This might take some time)";
     grab_init_lock ~tmp_dir root;
     wakeup_client waiting_channel Starting;
     ServerPeriodical.init options;
     let _profiling, env = init_fun () in
     release_init_lock ~tmp_dir root;
     wakeup_client waiting_channel Ready;
-    Flow_logger.log "Server is READY";
+    Hh_logger.info "Server is READY";
     let t' = Unix.gettimeofday () in
-    Flow_logger.log "Took %f seconds to initialize." (t' -. t);
+    Hh_logger.info "Took %f seconds to initialize." (t' -. t);
     close_waiting_channel waiting_channel;
     env
 end
@@ -221,11 +221,11 @@ end = struct
     while true do
       let lock_file = Server_files.lock_file ~tmp_dir root in
       if not (Lock.check lock_file) then begin
-        Flow_logger.log "Lost %s lock; reacquiring.\n" Program.name;
+        Hh_logger.warn "Lost %s lock; reacquiring.\n" Program.name;
         FlowEventLogger.lock_lost lock_file;
         if not (Lock.grab lock_file)
         then
-          Flow_logger.log "Failed to reacquire lock; terminating.\n";
+          Hh_logger.fatal "Failed to reacquire lock; terminating.\n";
           FlowEventLogger.lock_stolen lock_file;
           die()
       end;
@@ -300,7 +300,6 @@ end = struct
       PidLog.log ~reason:"main" (Unix.getpid())
     end else begin
       PidLog.disable ();
-      Flow_logger.disable ()
     end;
     end;
     FlowEventLogger.init_server root;

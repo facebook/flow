@@ -253,7 +253,7 @@ let typecheck
   in
 
   (* local inference populates context heap, resolved requires heap *)
-  Flow_logger.log "Running local inference";
+  Hh_logger.info "Running local inference";
 
   let profiling, infer_results =
     match Options.focus_check_target options with
@@ -295,7 +295,7 @@ let typecheck
        recheck_map maps each file in to_merge to whether it should be rechecked
        initially.
     *)
-    Flow_logger.log "Calculating dependencies";
+    Hh_logger.info "Calculating dependencies";
     let profiling, dependency_graph =
       with_timer ~options "CalcDeps" profiling (fun () ->
         Dep_service.calc_dependencies workers to_merge
@@ -304,7 +304,7 @@ let typecheck
     if Options.should_profile options then Sort_js.log partition;
     let component_map = Sort_js.component_map partition in
     let profiling, merge_errors = try
-      Flow_logger.log "Merging";
+      Hh_logger.info "Merging";
       let profiling, merge_errors =
         with_timer ~options "Merge" profiling (fun () ->
           let merged = Merge_service.merge_strict
@@ -323,7 +323,7 @@ let typecheck
       let merge_errors = update_errset merge_errors
         (Context.file master_cx) (Context.errors master_cx) in
       if Options.should_profile options then Gc.print_stat stderr;
-      Flow_logger.log "Done";
+      Hh_logger.info "Done";
       profiling, merge_errors
     with
     (* Unrecoverable exceptions *)
@@ -394,7 +394,7 @@ let recheck genv env ~updates =
   Parsing_service_js.remove_batch deleted;
   SharedMem_js.collect options `gentle;
 
-  Flow_logger.log "Parsing";
+  Hh_logger.info "Parsing";
   (* reparse modified files, updating modified to new_or_changed to reflect
      removal of unchanged files *)
   let profiling, (new_or_changed, freshparse_results) =
@@ -592,7 +592,7 @@ let recheck genv env ~updates =
         ~changed_modules
       in
 
-      Flow_logger.log "Re-resolving directly dependent files";
+      Hh_logger.info "Re-resolving directly dependent files";
       (** TODO [perf] Consider oldifying **)
       Module_js.remove_batch_resolved_requires direct_deps;
       SharedMem_js.collect options `gentle;
@@ -612,14 +612,14 @@ let recheck genv env ~updates =
 
       let n = FilenameSet.cardinal all_deps in
       if n > 0
-      then Flow_logger.log "remerge %d dependent files:" n;
+      then Hh_logger.info "remerge %d dependent files:" n;
       dependent_file_count := n;
 
       let _ = FilenameSet.fold (fun f i ->
-        Flow_logger.log "%d/%d: %s" i n (string_of_filename f);
+        Hh_logger.info "%d/%d: %s" i n (string_of_filename f);
         i + 1
       ) all_deps 1 in
-      Flow_logger.log "Merge prep";
+      Hh_logger.info "Merge prep";
 
       (* merge errors for unchanged dependents will be cleared lazily *)
 
@@ -691,7 +691,7 @@ let full_check workers ~ordered_libs parse_next options =
   let profile = Options.should_profile options in
   let max_header_tokens = Options.max_header_tokens options in
 
-  Flow_logger.log "Parsing";
+  Hh_logger.info "Parsing";
   let profiling, parse_results =
     with_timer ~options "Parsing" profiling (fun () ->
       Parsing_service_js.parse
@@ -712,7 +712,7 @@ let full_check workers ~ordered_libs parse_next options =
     update_errset errors file errset
   ) local_errors error_files in
 
-  Flow_logger.log "Building package heap";
+  Hh_logger.info "Building package heap";
   let profiling, () = with_timer ~options "PackageHeap" profiling (fun () ->
     FilenameSet.iter (fun filename ->
       match filename with
@@ -725,7 +725,7 @@ let full_check workers ~ordered_libs parse_next options =
 
   (* load library code *)
   (* if anything errors, we'll infer but not merge client code *)
-  Flow_logger.log "Loading libraries";
+  Hh_logger.info "Loading libraries";
   let profiling, (libs_ok, local_errors, suppressions) =
     with_timer ~options "InitLibs" profiling (fun () ->
       let lib_files = Init_js.init ~options ordered_libs in
