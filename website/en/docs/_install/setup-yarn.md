@@ -16,3 +16,4 @@ $ flow
 No errors!
 ✨  Done in 0.17s.
 ```
+**Note:** you may need to run `flow init` before executing `yarn run flow`.
