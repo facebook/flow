@@ -8,7 +8,6 @@
  *
  *)
 
-module Ast = Spider_monkey_ast
 
 open Token
 open Lex_env

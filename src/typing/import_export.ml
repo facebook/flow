@@ -10,7 +10,6 @@
 
 (* AST handling and type setup for import/export *)
 
-module Ast = Spider_monkey_ast
 module Flow = Flow_js
 
 open Utils_js

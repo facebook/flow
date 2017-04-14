@@ -22,8 +22,8 @@ val set_module_t : Context.t -> Reason.t -> (Type.t -> unit) -> unit
 val set_module_kind :
   Context.t -> Reason.t -> Context.module_kind -> unit
 val nameify_default_export_decl :
-  Loc.t * Spider_monkey_ast.Statement.t' ->
-  Loc.t * Spider_monkey_ast.Statement.t'
+  Loc.t * Ast.Statement.t' ->
+  Loc.t * Ast.Statement.t'
 val warn_or_ignore_export_star_as : Context.t -> (Loc.t * 'a) option -> unit
 val get_module_exports : Context.t -> Reason.t -> Type.t
 val set_module_exports : Context.t -> Reason.t -> Type.t -> unit

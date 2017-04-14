@@ -56,7 +56,7 @@ val in_strict_mode : env -> bool
 val last_loc : env -> Loc.t option
 val in_export : env -> bool
 val labels : env -> SSet.t
-val comments : env -> Spider_monkey_ast.Comment.t list
+val comments : env -> Ast.Comment.t list
 val in_loop : env -> bool
 val in_switch : env -> bool
 val in_function : env -> bool
@@ -81,7 +81,7 @@ val error_on_decorators : env -> (Loc.t * 'a) list -> unit
 val strict_error : env -> Parse_error.t -> unit
 val strict_error_at : env -> Loc.t * Parse_error.t -> unit
 val get_unexpected_error : Token.t * string -> Parse_error.t
-val comment_list : env -> Spider_monkey_ast.Comment.t list -> unit
+val comment_list : env -> Ast.Comment.t list -> unit
 val error_list : env -> (Loc.t * Parse_error.t) list -> unit
 val record_export: env -> Loc.t * string -> unit
 
@@ -116,7 +116,7 @@ module Peek : sig
   val value : ?i:int -> env -> string
   val loc : ?i:int -> env -> Loc.t
   val errors : ?i:int -> env -> (Loc.t * Parse_error.t) list
-  val comments : ?i:int -> env -> Spider_monkey_ast.Comment.t list
+  val comments : ?i:int -> env -> Ast.Comment.t list
   val is_line_terminator : env -> bool
   val is_implicit_semicolon : env -> bool
   val semicolon_loc : ?i:int -> env -> Loc.t option

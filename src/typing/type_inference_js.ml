@@ -10,7 +10,6 @@
 
 (* infer phase services *)
 
-module Ast = Spider_monkey_ast
 module Flow = Flow_js
 module FlowError = Flow_error
 module ImpExp = Import_export

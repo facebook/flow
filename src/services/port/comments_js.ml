@@ -11,7 +11,6 @@
 open Utils_js
 open Span
 
-module Ast = Spider_monkey_ast
 
 (**************************)
 

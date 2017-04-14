@@ -8,7 +8,6 @@
  *
  *)
 
-module Ast = Spider_monkey_ast
 
 type env = Scope.t list
 
@@ -33,7 +32,7 @@ type metadata = {
   verbose: Verbose.t option;
   weak: bool;
   max_workers: int;
-  jsx: (string * Spider_monkey_ast.Expression.t) option;
+  jsx: (string * Ast.Expression.t) option;
 }
 
 (* TODO this has a bunch of stuff in it that should be localized *)

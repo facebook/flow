@@ -8,9 +8,9 @@
  *
  *)
 
-val key: Spider_monkey_ast.Expression.t -> Key.t option
+val key: Ast.Expression.t -> Key.t option
 val get:
   Context.t ->
-  Spider_monkey_ast.Expression.t ->
+  Ast.Expression.t ->
   Reason.reason ->
   Type.t option

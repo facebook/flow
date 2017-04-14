@@ -121,7 +121,6 @@ end = struct
   open Hh_json
   open String_utils
 
-  module Ast = Spider_monkey_ast
   module SMap = Map.Make(String)
   module C = Tty
 

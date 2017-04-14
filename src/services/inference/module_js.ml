@@ -18,7 +18,6 @@
 
 open Utils_js
 
-module Ast = Spider_monkey_ast
 module FlowError = Flow_error
 
 module NameSet = Set.Make(Modulename)

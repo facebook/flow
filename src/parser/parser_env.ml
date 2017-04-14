@@ -8,7 +8,6 @@
  *
  *)
 
-module Ast = Spider_monkey_ast
 open Ast
 module Error = Parse_error
 module SSet = Set.Make(String)

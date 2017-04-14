@@ -101,9 +101,9 @@ val add_parsed_resolved_requires: (options:Options.t -> Context.t -> unit) Expen
 (* remove resolved requires from store *)
 val remove_batch_resolved_requires: FilenameSet.t -> unit
 
-val add_package: string -> Spider_monkey_ast.program -> unit
+val add_package: string -> Ast.program -> unit
 
-val package_incompatible: string -> Spider_monkey_ast.program -> bool
+val package_incompatible: string -> Ast.program -> bool
 
 (***************************************************)
 

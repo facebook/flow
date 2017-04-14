@@ -8,7 +8,6 @@
  *
  *)
 
-module Ast = Spider_monkey_ast
 
 type flow_mode = OptIn | OptInWeak | OptOut
 
@@ -17,7 +16,7 @@ type t = {
   preventMunge: bool option;
   providesModule: string option;
   isDeclarationFile: bool;
-  jsx: (string * Spider_monkey_ast.Expression.t) option;
+  jsx: (string * Ast.Expression.t) option;
 }
 
 type error = Loc.t * error_kind

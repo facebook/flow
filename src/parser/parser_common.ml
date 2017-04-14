@@ -9,7 +9,7 @@
  *)
 
 open Parser_env
-open Spider_monkey_ast
+open Ast
 module Error = Parse_error
 
 module type PARSER = sig

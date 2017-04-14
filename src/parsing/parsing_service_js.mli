@@ -16,7 +16,7 @@ type types_mode =
 
 (* result of individual parse *)
 type result =
-  | Parse_ok of Spider_monkey_ast.program
+  | Parse_ok of Ast.program
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -80,10 +80,10 @@ val reparse_with_defaults:
 
 val has_ast: filename -> bool
 
-val get_ast: filename -> Spider_monkey_ast.program option
+val get_ast: filename -> Ast.program option
 
 (* after parsing, retrieves ast and docblock by filename (unsafe) *)
-val get_ast_unsafe: filename -> Spider_monkey_ast.program
+val get_ast_unsafe: filename -> Ast.program
 val get_docblock_unsafe: filename -> Docblock.t
 
 (* remove asts and docblocks for given file set. *)
@@ -94,7 +94,7 @@ val remove_batch: FilenameSet.t -> unit
  * file, the AST is None.
  *)
 val register_hook:
-  (filename -> Spider_monkey_ast.program option -> unit) ->
+  (filename -> Ast.program option -> unit) ->
   unit
 
 val get_docblock:

@@ -8,7 +8,6 @@
  *
  *)
 
-module Ast = Spider_monkey_ast
 module FlowError = Flow_error
 
 open Utils_js

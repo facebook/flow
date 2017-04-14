@@ -16,7 +16,6 @@
    variables) but also flow-sensitive information about local variables at every
    point inside a function (and when to narrow or widen their types). *)
 
-module Ast = Spider_monkey_ast
 module Anno = Type_annotation
 module Flow = Flow_js
 module Iface_sig = Class_sig (* same thing, mo'less *)

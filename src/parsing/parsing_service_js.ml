@@ -10,10 +10,9 @@
 
 open Utils_js
 open Sys_utils
-module Ast = Spider_monkey_ast
 
 type result =
-  | Parse_ok of Spider_monkey_ast.program
+  | Parse_ok of Ast.program
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -47,7 +46,7 @@ let empty_result = {
 
 (* shared heap for parsed ASTs by filename *)
 module ASTHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
-    type t = Spider_monkey_ast.program
+    type t = Ast.program
     let prefix = Prefix.make()
     let description = "AST"
 end)
@@ -116,7 +115,7 @@ let parse_json_file ~fail content file =
     Parser_flow.json_file ~fail ~parse_options content (Some file) in
   if fail then assert (parse_errors = []);
 
-  let open Parser_flow.Ast in
+  let open Ast in
   let loc_none = Loc.none in
   let module_exports = loc_none, Expression.(Member { Member.
     _object = loc_none, Identifier (loc_none, "module");

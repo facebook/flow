@@ -10,7 +10,6 @@
 
 open Token
 open Parser_env
-module Ast = Spider_monkey_ast
 open Ast
 module Error = Parse_error
 

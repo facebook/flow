@@ -11,7 +11,6 @@
 open Hh_json
 open Utils_js
 
-module Ast = Spider_monkey_ast
 module C = Tty
 
 module RunHardcodedTests : sig

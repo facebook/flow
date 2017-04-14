@@ -32,7 +32,7 @@ type metadata = {
   verbose: Verbose.t option;
   weak: bool;
   max_workers: int;
-  jsx: (string * Spider_monkey_ast.Expression.t) option;
+  jsx: (string * Ast.Expression.t) option;
 }
 type module_kind =
   | CommonJSModule of Loc.t option
@@ -64,7 +64,7 @@ val find_tvar_reason: t -> Constraint.ident -> Reason.t
 val mem_nominal_id: t -> Constraint.ident -> bool
 val globals: t -> SSet.t
 val graph: t -> Constraint.node IMap.t
-val import_stmts: t -> Spider_monkey_ast.Statement.ImportDeclaration.t list
+val import_stmts: t -> Ast.Statement.ImportDeclaration.t list
 val imported_ts: t -> Type.t SMap.t
 val is_checked: t -> bool
 val is_verbose: t -> bool
@@ -90,7 +90,7 @@ val type_graph: t -> Graph_explorer.graph
 val type_table: t -> (Loc.t, Type.t) Hashtbl.t
 val verbose: t -> Verbose.t option
 val max_workers: t -> int
-val jsx: t -> (string * Spider_monkey_ast.Expression.t) option
+val jsx: t -> (string * Ast.Expression.t) option
 val pid_prefix: t -> string
 
 val copy_of_context: t -> t
@@ -101,7 +101,7 @@ val add_env: t -> int -> env -> unit
 val add_error: t -> Errors.error -> unit
 val add_error_suppression: t -> Loc.t -> unit
 val add_global: t -> string -> unit
-val add_import_stmt: t -> Spider_monkey_ast.Statement.ImportDeclaration.t -> unit
+val add_import_stmt: t -> Ast.Statement.ImportDeclaration.t -> unit
 val add_imported_t: t -> string -> Type.t -> unit
 val add_module: t -> string -> Type.t -> unit
 val add_property_map: t -> Type.Properties.id -> Type.Properties.t -> unit

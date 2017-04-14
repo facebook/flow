@@ -11,13 +11,13 @@
 val infer_ast:
   metadata: Context.metadata ->
   filename: Loc.filename ->
-  Spider_monkey_ast.program ->
+  Ast.program ->
   Context.t
 
 val infer_lib_file:
   metadata: Context.metadata ->
   exclude_syms:SSet.t ->
   Utils_js.filename ->
-  Spider_monkey_ast.Statement.t list ->
-  Spider_monkey_ast.Comment.t list ->
+  Ast.Statement.t list ->
+  Ast.Comment.t list ->
   Context.t * string list

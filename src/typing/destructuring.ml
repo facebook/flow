@@ -10,7 +10,6 @@
 
 (* AST handling for destructuring exprs *)
 
-module Ast = Spider_monkey_ast
 
 open Utils_js
 open Reason

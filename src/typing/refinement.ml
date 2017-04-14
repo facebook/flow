@@ -8,7 +8,6 @@
  *
  *)
 
-module Ast = Spider_monkey_ast
 
 (*
  * type refinements on expressions - wraps Env API

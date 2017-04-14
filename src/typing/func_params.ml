@@ -1,4 +1,3 @@
-module Ast = Spider_monkey_ast
 module Anno = Type_annotation
 module Flow = Flow_js
 

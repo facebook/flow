@@ -9,7 +9,6 @@
  *)
 
 module Anno = Type_annotation
-module Ast = Spider_monkey_ast
 module Flow = Flow_js
 
 open Reason
