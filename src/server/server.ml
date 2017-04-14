@@ -544,7 +544,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Marshal.to_channel oc results [];
     flush oc
 
-  let get_watch_paths options = Path_matcher.stems (Options.includes options)
+  let get_watch_paths options = Files.watched_paths options
 
   (* filter a set of updates coming from dfind and return
      a FilenameSet. updates may be coming in from

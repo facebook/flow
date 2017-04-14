@@ -318,7 +318,7 @@ end = struct
     * someone C-c the client.
     *)
     Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
-    let watch_paths = root :: Program.get_watch_paths options in
+    let watch_paths = Program.get_watch_paths options in
     let genv =
       ServerEnvBuild.make_genv options watch_paths handle in
     let program_init = create_program_init genv in

@@ -272,6 +272,11 @@ let wanted ~options lib_fileset =
   let is_ignored_ = is_ignored options in
   fun path -> not (is_ignored_ path) && not (SSet.mem path lib_fileset)
 
+let watched_paths options =
+  let root = Options.root options in
+  let others = Path_matcher.stems (Options.includes options) in
+  root::others
+
 (**
  * Creates a "next" function (see also: `get_all`) for finding the files in a
  * given FlowConfig root. This means all the files under the root and all the
@@ -283,11 +288,10 @@ let wanted ~options lib_fileset =
 let make_next_files ~all ~subdir ~options ~libs =
   let root = Options.root options in
   let filter = if all then fun _ -> true else wanted ~options libs in
-  let others = Path_matcher.stems (Options.includes options) in
 
   (* The directories from which we start our search *)
   let starting_points = match subdir with
-  | None -> root::others
+  | None -> watched_paths options
   | Some subdir -> [subdir] in
 
   let root_str= Path.to_string root in
