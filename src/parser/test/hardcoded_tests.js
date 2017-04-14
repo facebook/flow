@@ -5444,6 +5444,14 @@ module.exports = {
           'raw':'0b10111100001011100011001111000111011',
         },
       },
+    },
+    'Dynamic Import Expressions': {
+      'import(my-module)': {
+        '%parse_options%': {
+          "esproposal_dynamic_import": true
+        },
+        'errors': [],
+      },
     }
   }
 };

@@ -158,6 +158,7 @@ module Expression
     | _, TaggedTemplate _
     | _, This
     | _, Super
+    | _, Import
     | _, Class _
     | _, Function _
     | _, New _
@@ -187,6 +188,7 @@ module Expression
     | _, TaggedTemplate _
     | _, This
     | _, Super
+    | _, Import
     | _, Class _
     | _, Function _
     | _, New _
