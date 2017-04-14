@@ -230,9 +230,7 @@ module OptionParser(Config : CONFIG) = struct
     | _ -> ()
     end;
 
-    let opt_module = FlowConfig.(match flowconfig.options.Opts.moduleSystem with
-    | Opts.Node -> Options.Node
-    | Opts.Haste -> Options.Haste) in
+    let opt_module = FlowConfig.(flowconfig.options.Opts.module_system) in
     let opt_ignores = ignores_of_arg
       root
       flowconfig.FlowConfig.ignores

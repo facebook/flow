@@ -9,7 +9,6 @@
  *)
 
 module Opts : sig
-  type moduleSystem = Node | Haste
   type t = {
     emoji: bool;
     enable_const_params: bool;
@@ -25,7 +24,7 @@ module Opts : sig
     haste_paths_whitelist: string list;
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
-    moduleSystem: moduleSystem;
+    module_system: Options.module_system;
     module_name_mappers: (Str.regexp * string) list;
     node_resolver_dirnames: string list;
     munge_underscores: bool;

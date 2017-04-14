@@ -39,8 +39,6 @@ let project_root_token = Str.regexp_string "<PROJECT_ROOT>";
 module Opts = struct
   exception UserError of string
 
-  type moduleSystem = Node | Haste
-
   type t = {
     emoji: bool;
     enable_const_params: bool;
@@ -56,7 +54,7 @@ module Opts = struct
     haste_paths_whitelist: string list;
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
-    moduleSystem: moduleSystem;
+    module_system: Options.module_system;
     module_name_mappers: (Str.regexp * string) list;
     node_resolver_dirnames: string list;
     munge_underscores: bool;
@@ -158,7 +156,7 @@ module Opts = struct
     haste_paths_whitelist = ["<PROJECT_ROOT>/.*"];
     haste_use_name_reducers = false;
     ignore_non_literal_requires = false;
-    moduleSystem = Node;
+    module_system = Options.Node;
     module_name_mappers = [];
     node_resolver_dirnames = ["node_modules"];
     munge_underscores = false;
@@ -340,13 +338,13 @@ end = struct
     let opt o name value = fprintf o "%s=%s\n" name value
 
     in let module_system = function
-      | Opts.Node -> "node"
-      | Opts.Haste -> "haste"
+      | Options.Node -> "node"
+      | Options.Haste -> "haste"
 
     in fun o config -> Opts.(
       let options = config.options in
-      if options.moduleSystem <> default_options.moduleSystem
-      then opt o "module.system" (module_system options.moduleSystem);
+      if options.module_system <> default_options.module_system
+      then opt o "module.system" (module_system options.module_system);
       if options.all <> default_options.all
       then opt o "all" (string_of_bool options.all);
       if options.weak <> default_options.weak
@@ -592,11 +590,11 @@ let parse_options config lines =
       _initializer = USE_DEFAULT;
       flags = [];
       optparser = optparse_enum [
-        ("node", Node);
-        ("haste", Haste);
+        ("node", Options.Node);
+        ("haste", Options.Haste);
       ];
       setter = (fun opts v -> {
-        opts with moduleSystem = v;
+        opts with module_system = v;
       });
     }
 
