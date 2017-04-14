@@ -318,12 +318,18 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       (** Next client to connect starts a new server. *)
       Exit_status.exit Exit_status.No_error
     | Informant_killed ->
-      if handoff_options.MonitorRpc.force_dormant_start then
-        msg_to_channel client_fd (PH.Server_not_alive_dormant
-          "Warning - starting a server by force-dormant-start option...")
-      else
+      let env =
+        if handoff_options.MonitorRpc.force_dormant_start then begin
+          msg_to_channel client_fd (PH.Server_not_alive_dormant
+            "Warning - starting a server by force-dormant-start option...");
+          restart_server env None
+        end
+      else begin
         msg_to_channel client_fd (PH.Server_not_alive_dormant
           "Server killed by informant. Waiting for next server...");
+        env
+      end
+      in
       if (List.length env.purgatory_clients) >= max_purgatory_clients then
         let () = msg_to_channel
           client_fd PH.Server_dormant_connections_limit_reached in
