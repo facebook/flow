@@ -1,5 +1,8 @@
 [ignore]
 <PROJECT_ROOT>/tmp*
 
+[libs]
+lib
+
 [options]
 strip_root=true

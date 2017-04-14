@@ -550,8 +550,12 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
      a FilenameSet. updates may be coming in from
      the root, or an include path. *)
   let process_updates genv env updates =
-    let all_libs = env.ServerEnv.libs in
     let options = genv.ServerEnv.options in
+    let all_libs =
+      let known_libs = env.ServerEnv.libs in
+      let _, maybe_new_libs = Files.init options in
+      SSet.union known_libs maybe_new_libs
+    in
     let root = Options.root options in
     let config_path = Server_files_js.config_file root in
     let sroot = Path.to_string root in
@@ -620,6 +624,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         let new_ast =
           let filename_set = FilenameSet.singleton file in
           let _ = Parsing_service_js.reparse_with_defaults
+            (* types are always allowed in lib files *)
+            ~types_mode:Parsing_service_js.TypesAllowed
+            (* lib files are always "use strict" *)
+            ~use_strict:true
             options
             (* workers *) None
             filename_set

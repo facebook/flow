@@ -73,6 +73,8 @@ val reparse:
   FilenameSet.t * results   (* modified files and job results *)
 
 val reparse_with_defaults:
+  ?types_mode: types_mode ->
+  ?use_strict: bool ->
   Options.t ->
   Worker.t list option ->
   FilenameSet.t ->

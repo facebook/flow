@@ -87,6 +87,19 @@ $FLOW force-recheck j1.js
 $FLOW status .
 rm j*.js
 
+printf "\nTest k:\n"
+cp tmplibk/libk1.js lib/
+cp tmpk/k.js ./
+$FLOW force-recheck k.js lib/libk1.js
+$FLOW status .
+cp tmplibk/libk2.js lib/
+$FLOW force-recheck lib/libk2.js
+$FLOW status .
+rm lib/libk2.js
+$FLOW force-recheck lib/libk2.js
+$FLOW status .
+rm k.js
+rm lib/*.js
 
 mv tmp/*.js ./
 rmdir tmp
