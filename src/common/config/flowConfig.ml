@@ -82,7 +82,7 @@ module Opts = struct
     version: string option;
   }
 
-  type _initializer =
+  type initializer_ =
     | USE_DEFAULT
     | INIT_FN of (t -> t)
 
@@ -91,7 +91,7 @@ module Opts = struct
 
   type 'a option_definition = {
     (**
-     * The _initializer gets set on the options object immediately before
+     * The initializer_ gets set on the options object immediately before
      * parsing the *first* occurrence of the user-specified config option. This
      * is useful in cases where the user's value should blow away the default
      * value (rather than being aggregated to it).
@@ -100,7 +100,7 @@ module Opts = struct
      * ['.js'; '.jsx'], but if the user specifies any 'module.file_ext'
      * settings, we want to start from a clean list.
      *)
-    _initializer: _initializer;
+    initializer_: initializer_;
     flags: option_flag list;
     setter: (t -> 'a -> t);
     optparser: (string -> 'a);
@@ -213,7 +213,7 @@ module Opts = struct
     | None -> (new_raw_opts, config)
     | Some values ->
         let config = (
-          match definition._initializer with
+          match definition.initializer_ with
           | USE_DEFAULT -> config
           | INIT_FN f ->
               try f config
@@ -413,7 +413,7 @@ let parse_options config lines =
   let open Opts in
   let options = parse config.options lines
     |> define_opt "emoji" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
@@ -422,7 +422,7 @@ let parse_options config lines =
     }
 
     |> define_opt "esproposal.class_instance_fields" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_esproposal_feature_flag ~allow_enable:true;
       setter = (fun opts v -> {
@@ -431,7 +431,7 @@ let parse_options config lines =
     }
 
     |> define_opt "esproposal.class_static_fields" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_esproposal_feature_flag ~allow_enable:true;
       setter = (fun opts v -> {
@@ -440,7 +440,7 @@ let parse_options config lines =
     }
 
     |> define_opt "esproposal.decorators" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_esproposal_feature_flag;
       setter = (fun opts v -> {
@@ -449,7 +449,7 @@ let parse_options config lines =
     }
 
     |> define_opt "esproposal.export_star_as" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_esproposal_feature_flag ~allow_enable:true;
       setter = (fun opts v -> {
@@ -458,7 +458,7 @@ let parse_options config lines =
     }
 
     |> define_opt "facebook.fbt" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_string;
       setter = (fun opts v -> {
@@ -467,7 +467,7 @@ let parse_options config lines =
     }
 
     |> define_opt "module.system.haste.name_reducers" {
-      _initializer = INIT_FN (fun opts -> {
+      initializer_ = INIT_FN (fun opts -> {
         opts with haste_name_reducers = [];
       });
       flags = [ALLOW_DUPLICATE];
@@ -481,7 +481,7 @@ let parse_options config lines =
     }
 
     |> define_opt "module.system.haste.paths.blacklist" {
-      _initializer = INIT_FN (fun opts -> {
+      initializer_ = INIT_FN (fun opts -> {
         opts with haste_paths_blacklist = [];
       });
       flags = [ALLOW_DUPLICATE];
@@ -492,7 +492,7 @@ let parse_options config lines =
     }
 
     |> define_opt "module.system.haste.paths.whitelist" {
-      _initializer = INIT_FN (fun opts -> {
+      initializer_ = INIT_FN (fun opts -> {
         opts with haste_paths_whitelist = [];
       });
       flags = [ALLOW_DUPLICATE];
@@ -503,7 +503,7 @@ let parse_options config lines =
     }
 
     |> define_opt "module.system.haste.use_name_reducers" {
-      _initializer = INIT_FN (fun opts -> {
+      initializer_ = INIT_FN (fun opts -> {
         opts with haste_use_name_reducers = false;
       });
       flags = [];
@@ -514,7 +514,7 @@ let parse_options config lines =
     }
 
     |> define_opt "log.file" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_filepath;
       setter = (fun opts v -> {
@@ -523,7 +523,7 @@ let parse_options config lines =
     }
 
     |> define_opt "max_header_tokens" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_uint;
       setter = (fun opts v ->
@@ -532,7 +532,7 @@ let parse_options config lines =
     }
 
     |> define_opt "module.ignore_non_literal_requires" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
@@ -541,7 +541,7 @@ let parse_options config lines =
     }
 
     |> define_opt "module.file_ext" {
-      _initializer = INIT_FN (fun opts -> {
+      initializer_ = INIT_FN (fun opts -> {
         opts with module_file_exts = SSet.empty;
       });
       flags = [ALLOW_DUPLICATE];
@@ -561,7 +561,7 @@ let parse_options config lines =
     }
 
     |> define_opt "module.name_mapper" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [ALLOW_DUPLICATE];
       optparser = (fun str ->
         let (pattern, template) = optparse_mapping str in
@@ -574,7 +574,7 @@ let parse_options config lines =
     }
 
     |> define_opt "module.name_mapper.extension" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [ALLOW_DUPLICATE];
       optparser = (fun str ->
         let (file_ext, template) = optparse_mapping str in
@@ -587,7 +587,7 @@ let parse_options config lines =
     }
 
     |> define_opt "module.system" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_enum [
         ("node", Options.Node);
@@ -599,7 +599,7 @@ let parse_options config lines =
     }
 
     |> define_opt "module.system.node.resolve_dirname" {
-      _initializer = INIT_FN (fun opts -> {
+      initializer_ = INIT_FN (fun opts -> {
         opts with node_resolver_dirnames = [];
       });
       flags = [ALLOW_DUPLICATE];
@@ -611,7 +611,7 @@ let parse_options config lines =
     }
 
     |> define_opt "module.use_strict" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
@@ -620,7 +620,7 @@ let parse_options config lines =
     }
 
     |> define_opt "munge_underscores" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
@@ -629,7 +629,7 @@ let parse_options config lines =
     }
 
     |> define_opt "server.max_workers" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_uint;
       setter = (fun opts v ->
@@ -638,7 +638,7 @@ let parse_options config lines =
     }
 
     |> define_opt "strip_root" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
@@ -647,7 +647,7 @@ let parse_options config lines =
     }
 
     |> define_opt "all" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
@@ -656,7 +656,7 @@ let parse_options config lines =
     }
 
     |> define_opt "weak" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
@@ -665,7 +665,7 @@ let parse_options config lines =
     }
 
     |> define_opt "suppress_comment" {
-      _initializer = INIT_FN (fun opts ->
+      initializer_ = INIT_FN (fun opts ->
         {opts with suppress_comments = [];}
       );
       flags = [ALLOW_DUPLICATE];
@@ -676,7 +676,7 @@ let parse_options config lines =
     }
 
     |> define_opt "suppress_type" {
-      _initializer = INIT_FN (fun opts ->
+      initializer_ = INIT_FN (fun opts ->
         {opts with suppress_types = SSet.empty;}
       );
       flags = [ALLOW_DUPLICATE];
@@ -687,7 +687,7 @@ let parse_options config lines =
     }
 
     |> define_opt "temp_dir" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_string;
       setter = (fun opts v -> {
@@ -696,7 +696,7 @@ let parse_options config lines =
     }
 
     |> define_opt "sharedmemory.dirs" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [ALLOW_DUPLICATE];
       optparser = optparse_string;
       setter = (fun opts v -> {
@@ -705,7 +705,7 @@ let parse_options config lines =
     }
 
     |> define_opt "sharedmemory.minimum_available" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_uint;
       setter = (fun opts shm_min_avail -> {
@@ -714,7 +714,7 @@ let parse_options config lines =
     }
 
     |> define_opt "sharedmemory.dep_table_pow" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_uint;
       setter = (fun opts shm_dep_table_pow -> {
@@ -723,7 +723,7 @@ let parse_options config lines =
     }
 
     |> define_opt "sharedmemory.hash_table_pow" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_uint;
       setter = (fun opts shm_hash_table_pow -> {
@@ -732,7 +732,7 @@ let parse_options config lines =
     }
 
     |> define_opt "sharedmemory.log_level" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_uint;
       setter = (fun opts shm_log_level -> {
@@ -741,7 +741,7 @@ let parse_options config lines =
     }
 
     |> define_opt "traces" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_uint;
       setter = (fun opts v ->
@@ -750,7 +750,7 @@ let parse_options config lines =
     }
 
     |> define_opt "unsafe.enable_getters_and_setters" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
@@ -759,7 +759,7 @@ let parse_options config lines =
     }
 
     |> define_opt "experimental.const_params" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
@@ -768,7 +768,7 @@ let parse_options config lines =
     }
 
     |> define_opt "experimental.strict_type_args" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
@@ -777,7 +777,7 @@ let parse_options config lines =
     }
 
     |> define_opt "no_flowlib" {
-      _initializer = USE_DEFAULT;
+      initializer_ = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
