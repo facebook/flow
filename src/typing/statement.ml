@@ -3407,28 +3407,47 @@ and jsx cx = Ast.JSX.(
 and jsx_title cx openingElement children = Ast.JSX.(
   let eloc, { Opening.name; attributes; _ } = openingElement in
   let facebook_fbt = Context.facebook_fbt cx in
-  let is_react = Context.jsx cx = None in
+  let jsx_mode = Context.jsx cx in
 
-  match (name, facebook_fbt) with
-  | (Identifier (_, { Identifier.name }), Some facebook_fbt)
+  match (name, facebook_fbt, jsx_mode) with
+  | (Identifier (_, { Identifier.name }), Some facebook_fbt, _)
       when name = "fbt" ->
     let fbt_reason = mk_reason (RCustom "<fbt />") eloc in
     Flow.get_builtin_type cx fbt_reason facebook_fbt
 
-  | Identifier (loc, { Identifier.name }), _
+  (**
+   * It's a bummer to duplicate this case, but CSX does not want the
+   * "when name = String.capitalize name" restriction.
+   *)
+  | (Identifier (loc, { Identifier.name }), _, Some Options.CSX) ->
+    if Type_inference_hooks_js.dispatch_id_hook cx name loc
+    then AnyT.at eloc
+    else begin
+      let reason = mk_reason (RJSXElement(Some name)) eloc in
+      let c = Env.get_var cx name reason in
+      (* With CSX children are just a prop, so pass them to jsx_mk_props... *)
+      let o = jsx_mk_props cx reason c name attributes (Some children) in
+      (* Sucks to also pass children to jsx_desugar here, they're ignored *)
+      jsx_desugar cx name c o attributes children eloc
+    end
+
+  | Identifier (loc, { Identifier.name }), _, _
       when name = String.capitalize name ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc
     then AnyT.at eloc
     else begin
-      let reason = mk_reason
-        (if is_react then RReactElement(Some name) else RJSXElement(Some name))
-        eloc in
+      let el =
+        if jsx_mode = None
+        then RReactElement(Some name) else RJSXElement(Some name) in
+      let reason = mk_reason el eloc in
       let c = Env.get_var cx name reason in
-      let o = jsx_mk_props cx reason c name attributes in
+      (* TODO: put children in the props for react, so that we can seal props
+       * for react *)
+      let o = jsx_mk_props cx reason c name attributes None in
       jsx_desugar cx name c o attributes children eloc
     end
 
-  | (Identifier (loc, { Identifier.name }), _) ->
+  | (Identifier (loc, { Identifier.name }), _, _) ->
       (**
        * For JSX intrinsics, we assume a built-in global
        * object type: $JSXIntrinsics. The keys of this object type correspond to
@@ -3465,7 +3484,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
        mk_reason desc eloc
      in
      let component_t =
-       if is_react
+       if jsx_mode = None
        then Flow.mk_tvar_where cx component_t_reason (fun t ->
         let prop_t =
           if Type_inference_hooks_js.dispatch_member_hook
@@ -3481,7 +3500,8 @@ and jsx_title cx openingElement children = Ast.JSX.(
         Flow.flow_t cx (prop_t, t)
       )
       else StrT (component_t_reason, Literal (None, name)) in
-      let o = jsx_mk_props cx component_t_reason component_t name attributes in
+      let o = jsx_mk_props cx component_t_reason
+        component_t name attributes None in
       jsx_desugar cx name component_t o attributes children eloc
 
   | _ ->
@@ -3489,7 +3509,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
       AnyT.at eloc
 )
 
-and jsx_mk_props cx reason c name attributes = Ast.JSX.(
+and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
   let is_react = Context.jsx cx = None in
   let map = ref SMap.empty in
   let spread = ref None in
@@ -3523,13 +3543,26 @@ and jsx_mk_props cx reason c name attributes = Ast.JSX.(
 
     | Opening.SpreadAttribute (_, { SpreadAttribute.argument }) ->
         let ex_t = expression cx argument in
+        (* TODO: this overwrites all but the last spread *)
         spread := Some (ex_t)
+  );
+  (match children with
+    | Some children when List.length children <> 0 ->
+        let arr = Flow_js.mk_tvar_where cx reason (fun tout ->
+          Flow.resolve_spread_list
+            cx
+            ~reason_op:reason
+            (List.map (fun child -> UnresolvedArg child) children)
+            (ResolveSpreadsToArrayLiteral (mk_id (), tout))
+        ) in
+        let p = Field (arr, Neutral) in
+        map := SMap.add "children" p !map
+    | _ -> ()
   );
   let reason_props = replace_reason_const
     (if is_react then RReactElementProps name else RJSXElementProps name)
     reason in
-  (* TODO: put children in the props for react, so that we can seal props for
-   * react *)
+  (* TODO: ideally we'd seal even for spreads someday *)
   let sealed = !spread=None && not is_react in
   let o = Flow.mk_object_with_map_proto cx reason_props ~sealed
     !map (ObjProtoT reason_props)
@@ -3559,7 +3592,7 @@ and jsx_desugar cx name component_t props attributes children eloc =
           Flow.mk_methodcalltype react [Arg component_t; Arg props] tvar
         ))
       )
-  | Some (raw_jsx_expr, jsx_expr) ->
+  | Some Options.JSXPragma (raw_jsx_expr, jsx_expr) ->
       let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) eloc in
 
       (* A JSX element with no attributes should pass in null as the second
@@ -3582,6 +3615,9 @@ and jsx_desugar cx name component_t props attributes children eloc =
           let f = jsx_pragma_expression cx raw_jsx_expr eloc jsx_expr in
           func_call cx reason f argts
       )
+  | Some Options.CSX ->
+      let reason = mk_reason (RJSXFunctionCall name) eloc in
+      func_call cx reason component_t [Arg props]
 
 (* The @jsx pragma specifies a left hand side expression EXPR such that
  *

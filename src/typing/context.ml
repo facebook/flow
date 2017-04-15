@@ -32,7 +32,7 @@ type metadata = {
   verbose: Verbose.t option;
   weak: bool;
   max_workers: int;
-  jsx: (string * Ast.Expression.t) option;
+  jsx: Options.jsx_mode option;
 }
 
 (* TODO this has a bunch of stuff in it that should be localized *)

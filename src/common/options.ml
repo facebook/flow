@@ -23,6 +23,20 @@ type module_system =
   | Node
   | Haste
 
+type jsx_mode =
+  (**
+   * Specifies a function that should be invoked instead of React.createElement
+   * when interpreting JSX syntax. Otherwise, the usual rules of JSX are
+   * followed: children are varargs after a props argument.
+   *)
+  | JSXPragma of (string * Ast.Expression.t)
+  (**
+   * Alternate mode for interpreting JSX syntax. The element name is treated
+   * as a function to be directly invoked, e.g. <Foo /> -> Foo({}).
+   * Children are part of props instead of a separate argument.
+   *)
+  | CSX
+
 type t = {
   opt_all : bool;
   opt_check_mode: bool;
