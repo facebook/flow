@@ -1078,11 +1078,11 @@ void.js:75
 
 void.js:82
  82:   if (100 * void(0)) {
-                 ^^^^^^ undefined. The operand of an arithmetic operation must be a number.
+                 ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 void.js:85
  85:   if (void(0) * 100) {
-           ^^^^^^ undefined. The operand of an arithmetic operation must be a number.
+           ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
 Found 186 errors
