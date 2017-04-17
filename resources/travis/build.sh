@@ -19,6 +19,10 @@ printf "travis_fold:start:make_js\nBuilding flow.js\n"
 make js
 printf "travis_fold:end:make_js\n"
 
+printf "travis_fold:start:make_ocp-build\nBuilding flow with ocp-build\n"
+make all-ocp
+printf "travis_fold:end:make_ocp-build\n"
+
 printf "travis_fold:start:flow_check\nRunning flow check\n"
 bin/flow check
 printf "travis_fold:end:flow_check\n"
@@ -34,7 +38,3 @@ printf "travis_fold:end:run_tool_test\n"
 printf "travis_fold:start:run_parser_tests\nRunning parser tests\n"
 (cd src/parser && make test)
 printf "travis_fold:end:run_parser_tests\n"
-
-printf "travis_fold:start:make_ocp-build\nBuilding flow with ocp-build\n"
-make build-flow-with-ocp
-printf "travis_fold:end:make_ocp-build\n"
