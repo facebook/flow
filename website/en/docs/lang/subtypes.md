@@ -31,7 +31,7 @@ type TypeLetters = "A" | "B" | "C";
 type TypeNumbers =  1  |  2  |  3;
 ```
 
-Finally, if we has a `TypeA` which described the numbers 1 through 3, and a
+Finally, if we had a `TypeA` which described the numbers 1 through 3, and a
 `TypeB` which described the numbers 3 through 5. Neither of them would be a
 subtype of the other. Even though they both have 3 and describe numbers, they
 each have some unique items.
