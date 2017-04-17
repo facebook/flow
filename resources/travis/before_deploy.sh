@@ -7,10 +7,12 @@ PLATFORM=$([ "$TRAVIS_OS_NAME" == "linux" ] && echo "linux64" || echo "$TRAVIS_O
 mkdir -p "$HOME/release"
 rm -rf "$HOME/release/flow"
 cp -R bin "$HOME/release/flow"
-cd "$HOME/release" && zip -r \
+pushd "$HOME/release" > /dev/null
+zip -r \
   "$TRAVIS_BUILD_DIR/flow-$PLATFORM-$TRAVIS_TAG.zip" \
   flow \
   -x \*.tar.gz # exclude flowlib.tar.gz
+popd > /dev/null
 
 # We don't deploy the whole website on tags, but we do upload flow.js and the
 # libs. This sets up the directory we'll upload. See the deploy section of
