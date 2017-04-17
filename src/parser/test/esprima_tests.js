@@ -925,6 +925,8 @@ module.exports = {
         'void x',
         'delete x',
         'typeof x',
+        '!(x)',
+        '++(x)',
     ],
 
     'Multiplicative Operators': [

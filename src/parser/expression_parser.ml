@@ -380,7 +380,7 @@ module Expression
         | None -> postfix env
         | Some operator ->
             Eat.token env;
-            let argument = unary env in
+            let end_loc, argument = with_loc unary env in
             if not (is_lhs argument)
             then error_at env (fst argument, Error.InvalidLHSInAssignment);
             (match argument with
@@ -388,7 +388,7 @@ module Expression
               when is_restricted name ->
                 strict_error env Error.StrictLHSPrefix
             | _ -> ());
-            Loc.btwn begin_loc (fst argument), Expression.(Update Update.({
+            Loc.btwn begin_loc end_loc, Expression.(Update Update.({
               operator;
               prefix = true;
               argument;
@@ -396,8 +396,8 @@ module Expression
       end
     | Some operator ->
       Eat.token env;
-      let argument = unary env in
-      let loc = Loc.btwn begin_loc (fst argument) in
+      let end_loc, argument = with_loc unary env in
+      let loc = Loc.btwn begin_loc end_loc in
       Expression.(match operator, argument with
       | Unary.Delete, (_, Identifier _) ->
           strict_error_at env (loc, Error.StrictDelete)
