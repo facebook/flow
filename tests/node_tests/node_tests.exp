@@ -274,5 +274,47 @@ os/userInfo.js:14
  14: (u3.username: string); // error
                    ^^^^^^ string
 
+process/nextTick.js:14
+ 14:   0, // Error: number ~> string
+       ^ number. This type is incompatible with the expected param type of
+ 13:   (a: string, b: number, c: boolean) => {},
+           ^^^^^^ string
 
-Found 33 errors
+process/nextTick.js:16
+ 16:   null // Error: null ~> boolean
+       ^^^^ null. This type is incompatible with the expected param type of
+ 13:   (a: string, b: number, c: boolean) => {},
+                                 ^^^^^^^ boolean
+
+process/nextTick.js:22
+ 22:   'y', // Error: string ~> number
+       ^^^ string. This type is incompatible with the expected param type of
+ 20:   (a: string, b: number, c: boolean) => {},
+                      ^^^^^^ number
+
+process/nextTick.js:26
+ 26: process.nextTick(
+     ^ call of method `nextTick`
+ 27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
+           ^^^^^^ string. This type is incompatible with
+1732:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1732
+
+process/nextTick.js:26
+ 26: process.nextTick(
+     ^ call of method `nextTick`
+ 27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
+                      ^^^^^^ number. This type is incompatible with
+1732:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1732
+
+process/nextTick.js:26
+ 26: process.nextTick(
+     ^ call of method `nextTick`
+ 27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
+                                 ^^^^^^^ boolean. This type is incompatible with
+1732:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1732
+
+
+Found 39 errors
