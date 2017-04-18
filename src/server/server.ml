@@ -116,15 +116,14 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       then FlowExitStatus.(exit No_error)
       else FlowExitStatus.(exit Type_error)
 
-  let die_nicely genv oc =
+  let die_nicely oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_DYING;
     FlowEventLogger.killed ();
     Hh_logger.fatal "Status: Error";
     Hh_logger.fatal "Sent KILL command by client. Dying.";
-    (match genv.ServerEnv.dfind with
-    | Some handle -> Sys_utils.terminate_process (DfindLib.pid handle);
-    | None -> ()
-    );
+    (* when we exit, the dfind process will attempt to read from the broken
+       pipe and then exit with SIGPIPE, so it is unnecessary to kill it
+       explicitly *)
     die ()
 
   let autocomplete ~options command_context file_input oc =
@@ -709,7 +708,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
         infer_type ~options client_logging_context (fn, line, char, verbose, include_raw) oc
     | ServerProt.KILL ->
-        die_nicely genv oc
+        die_nicely oc
     | ServerProt.PING ->
         ServerProt.response_to_channel oc ServerProt.PONG
     | ServerProt.PORT (files) ->
