@@ -127,11 +127,7 @@ end = struct
    * right after one rechecking round finishes to be part of the same
    * rebase, and we don't log the recheck_end event until the update list
    * is no longer getting populated. *)
-  let rec recheck_loop genv env =
-    let dfind = match genv.dfind with
-    | Some dfind -> dfind
-    | None -> failwith "recheck_loop called without dfind set"
-    in
+  let rec recheck_loop ~dfind genv env =
     let raw_updates = DfindLib.get_changes dfind in
     if SSet.is_empty raw_updates then env else begin
       let updates = Program.process_updates genv env raw_updates in
@@ -141,10 +137,10 @@ end = struct
       let env = Program.recheck genv env updates in
       if did_change then Persistent_connection.update_clients env.connections env.errorl;
       Persistent_connection.send_end_recheck env.connections;
-      recheck_loop genv env
+      recheck_loop ~dfind genv env
     end
 
-  let serve genv env socket =
+  let serve ~dfind ~genv ~env socket =
     let root = Options.root genv.options in
     let tmp_dir = Options.temp_dir genv.options in
     let env = ref env in
@@ -161,7 +157,7 @@ end = struct
       end;
       ServerPeriodical.call_before_sleeping();
       let ready_sockets = sleep_and_check socket !env.connections in
-      env := recheck_loop genv !env;
+      env := recheck_loop ~dfind genv !env;
       List.iter ready_sockets (function
         | New_client fd ->
             env := handle_connection genv !env fd;
@@ -189,6 +185,16 @@ end = struct
     Hh_logger.info "Took %f seconds to initialize." (t' -. t);
     Server_daemon.close_waiting_channel waiting_channel;
     env
+
+  let init_dfind options =
+    let tmp_dir = Options.temp_dir options in
+    let root = Options.root options in
+    let in_fd = Daemon.null_fd () in
+    let log_file = Server_files_js.dfind_log_file ~tmp_dir root in
+    let log_fd = Daemon.fd_of_path log_file in
+    let fds = (in_fd, log_fd, log_fd) in
+    let watch_paths = Program.get_watch_paths options in
+    DfindLib.init fds ("flow_server_events", watch_paths)
 
   let create_program_init genv () =
     let profiling, env = Program.init genv in
@@ -231,9 +237,7 @@ end = struct
     (* this is to transform SIGPIPE into an exception. A SIGPIPE can happen when
      * someone C-c the client. *)
     Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
-    let watch_paths = Program.get_watch_paths options in
-    let genv =
-      ServerEnvBuild.make_genv options watch_paths handle in
+    let genv = ServerEnvBuild.make_genv options handle in
     let program_init = create_program_init genv in
     if is_check_mode then
       let profiling, env = program_init () in
@@ -248,17 +252,14 @@ end = struct
       let socket = Socket.init_unix_socket (
         Server_files.socket_file ~tmp_dir root
       ) in
+      let dfind = init_dfind options in
       let env = with_init_lock ~options ?waiting_channel (fun () ->
         ServerPeriodical.init options;
         let env = program_init () in
-        DfindLib.wait_until_ready (
-          match genv.dfind with
-          | Some dfind -> dfind
-          | None -> failwith "dfind not set up in server mode"
-        );
+        DfindLib.wait_until_ready dfind;
         env
       ) in
-      serve genv env socket
+      serve ~dfind ~genv ~env socket
 
   let run options = main options
 

@@ -12,8 +12,7 @@
 (*****************************************************************************)
 (* Building the environment *)
 (*****************************************************************************)
-let make_genv options watch_paths handle =
-  let check_mode = Options.is_check_mode options in
+let make_genv options handle =
   let multicore = Options.max_workers options > 0 in
   let workers =
     if multicore then
@@ -21,15 +20,4 @@ let make_genv options watch_paths handle =
     else
       None
   in
-  let dfind =
-    if check_mode then None
-    else
-      let tmp_dir = Options.temp_dir options in
-      let root = Options.root options in
-      let in_fd = Daemon.null_fd () in
-      let log_file = Server_files_js.dfind_log_file ~tmp_dir root in
-      let log_fd = Daemon.fd_of_path log_file in
-      let fds = (in_fd, log_fd, log_fd) in
-      Some (DfindLib.init fds ("flow_server_events", watch_paths))
-  in
-  { ServerEnv.options; workers; dfind; }
+  { ServerEnv.options; workers; }
