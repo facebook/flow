@@ -307,7 +307,6 @@ module OptionParser(Config : CONFIG) = struct
       opt_error_flags = error_flags;
       opt_log_file = opt_log_file;
       opt_root = root;
-      opt_should_detach = Config.(mode = Detach);
       opt_should_wait = wait;
       opt_debug = debug;
       opt_verbose = verbose;
@@ -402,7 +401,9 @@ module OptionParser(Config : CONFIG) = struct
         flowconfig.options.Opts.haste_use_name_reducers
       )
     } in
-    Main.start options
+    if Config.(mode = Detach)
+    then Main.daemonize options
+    else Main.run options
 
   let command = CommandSpec.command spec main
 end
