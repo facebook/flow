@@ -41,17 +41,6 @@ type env = {
     connections: Persistent_connection.t;
 }
 
-let async_queue : (unit -> unit) list ref = ref []
-
-let async f = async_queue := f :: !async_queue
-
-let invoke_async_queue () =
-  let queue = !async_queue in
-  (* we reset the queue before rather than after invoking the function as
-   * those functions may themselves add more items to the queue *)
-  async_queue := [];
-  List.iter (fun f -> f ()) queue
-
 (*****************************************************************************)
 (* Killing the server  *)
 (*****************************************************************************)

@@ -239,7 +239,6 @@ end = struct
         | Existing_client client ->
             env := respond_to_client !env client;
       );
-      ServerEnv.invoke_async_queue ();
       EventLogger.flush ();
     done
 
