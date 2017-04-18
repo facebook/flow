@@ -1542,7 +1542,7 @@ and statement cx = Ast.Statement.(
               match entry with
               | Value {specific; _} ->
                 ts,
-                SMap.add x (Property.field Neutral specific) vs
+                SMap.add x (Field (specific, Neutral)) vs
               | Type {_type; _} ->
                 SMap.add x _type ts,
                 vs
