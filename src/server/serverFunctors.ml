@@ -29,12 +29,6 @@ module type SERVER_PROGRAM = sig
   val handle_client : genv -> env -> client -> env
 end
 
-let grab_lock ~tmp_dir root =
-  if not (Lock.grab (Server_files.lock_file ~tmp_dir root))
-  then
-    let msg = "Error: another server is already running?\n" in
-    FlowExitStatus.(exit ~msg Lock_stolen)
-
 (*****************************************************************************)
 (* Main initialization *)
 (*****************************************************************************)
@@ -58,7 +52,6 @@ end = struct
     let root = Options.root options in
     let tmp_dir = Options.temp_dir options in
     let t = Unix.gettimeofday () in
-    grab_lock ~tmp_dir root;
     Hh_logger.info "Initializing Server (This might take some time)";
     grab_init_lock ~tmp_dir root;
     Server_daemon.wakeup_client waiting_channel Server_daemon.Starting;
@@ -83,6 +76,13 @@ end = struct
   type ready_socket =
     | New_client of Unix.file_descr
     | Existing_client of Persistent_connection.single_client
+
+
+  let grab_lock ~tmp_dir root =
+    if not (Lock.grab (Server_files.lock_file ~tmp_dir root))
+    then
+      let msg = "Error: another server is already running?\n" in
+      FlowExitStatus.(exit ~msg Lock_stolen)
 
   let sleep_and_check socket persistent_connections =
     let client_fds = Persistent_connection.client_fd_list persistent_connections in
