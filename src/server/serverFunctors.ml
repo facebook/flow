@@ -30,43 +30,6 @@ module type SERVER_PROGRAM = sig
 end
 
 (*****************************************************************************)
-(* Main initialization *)
-(*****************************************************************************)
-
-module MainInit : sig
-  val go:
-    Options.t ->
-    (unit -> Profiling_js.t * env) -> (* init function to run while we have init lock *)
-    Server_daemon.waiting_channel option ->
-    env
-end = struct
-
-  let grab_init_lock ~tmp_dir root =
-    ignore(Lock.grab (Server_files.init_file ~tmp_dir root))
-
-  let release_init_lock ~tmp_dir root =
-    ignore(Lock.release (Server_files.init_file ~tmp_dir root))
-
-  (* This code is only executed when the options --check is NOT present *)
-  let go options init_fun waiting_channel =
-    let root = Options.root options in
-    let tmp_dir = Options.temp_dir options in
-    let t = Unix.gettimeofday () in
-    Hh_logger.info "Initializing Server (This might take some time)";
-    grab_init_lock ~tmp_dir root;
-    Server_daemon.wakeup_client waiting_channel Server_daemon.Starting;
-    ServerPeriodical.init options;
-    let _profiling, env = init_fun () in
-    release_init_lock ~tmp_dir root;
-    Server_daemon.wakeup_client waiting_channel Server_daemon.Ready;
-    Hh_logger.info "Server is READY";
-    let t' = Unix.gettimeofday () in
-    Hh_logger.info "Took %f seconds to initialize." (t' -. t);
-    Server_daemon.close_waiting_channel waiting_channel;
-    env
-end
-
-(*****************************************************************************)
 (* The main loop *)
 (*****************************************************************************)
 module ServerMain (Program : SERVER_PROGRAM) : sig
@@ -209,6 +172,24 @@ end = struct
       EventLogger.flush ();
     done
 
+  (* This code is only executed when the options --check is NOT present *)
+  let with_init_lock ~options ?waiting_channel init_fun =
+    let root = Options.root options in
+    let tmp_dir = Options.temp_dir options in
+    let init_lock = Server_files.init_file ~tmp_dir root in
+    let t = Unix.gettimeofday () in
+    Hh_logger.info "Initializing Server (This might take some time)";
+    ignore (Lock.grab init_lock);
+    Server_daemon.wakeup_client waiting_channel Server_daemon.Starting;
+    let _profiling, env = init_fun () in
+    ignore (Lock.release init_lock);
+    Server_daemon.wakeup_client waiting_channel Server_daemon.Ready;
+    Hh_logger.info "Server is READY";
+    let t' = Unix.gettimeofday () in
+    Hh_logger.info "Took %f seconds to initialize." (t' -. t);
+    Server_daemon.close_waiting_channel waiting_channel;
+    env
+
   let create_program_init genv () =
     let profiling, env = Program.init genv in
     FlowEventLogger.init_done ~profiling;
@@ -224,7 +205,6 @@ end = struct
       shm_min_avail = Options.shm_min_avail options;
       log_level = Options.shm_log_level options;
     }
-
 
   (* The main entry point of the daemon
   * the only trick to understand here, is that env.modified is the set
@@ -259,21 +239,25 @@ end = struct
       let profiling, env = program_init () in
       Program.run_once_and_exit ~profiling genv env
     else
-      (* Open up a server on the socket before we go into MainInit -- the client
-      * will try to connect to the socket as soon as we lock the init lock. We
-      * need to have the socket open now (even if we won't actually accept
-      * connections until init is done) so that the client can try to use the
-      * socket and get blocked on it -- otherwise, trying to open a socket with
-      * no server on the other end is an immediate error. *)
+      (* Open up a server on the socket before we go into program_init -- the
+         client will try to connect to the socket as soon as we lock the init
+         lock. We need to have the socket open now (even if we won't actually
+         accept connections until init is done) so that the client can try to
+         use the socket and get blocked on it -- otherwise, trying to open a
+         socket with no server on the other end is an immediate error. *)
       let socket = Socket.init_unix_socket (
         Server_files.socket_file ~tmp_dir root
       ) in
-      let env = MainInit.go options program_init waiting_channel in
-      let dfind = match genv.dfind with
-      | Some dfind -> dfind
-      | None -> failwith "dfind not set up in server mode"
-      in
-      DfindLib.wait_until_ready dfind;
+      let env = with_init_lock ~options ?waiting_channel (fun () ->
+        ServerPeriodical.init options;
+        let env = program_init () in
+        DfindLib.wait_until_ready (
+          match genv.dfind with
+          | Some dfind -> dfind
+          | None -> failwith "dfind not set up in server mode"
+        );
+        env
+      ) in
       serve genv env socket
 
   let run options = main options
