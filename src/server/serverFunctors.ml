@@ -387,7 +387,8 @@ end = struct
             else
               spf "exited prematurely with code %d." code, exit_code
         | Unix.WSIGNALED signal ->
-            spf "The server was killed prematurely with signal %d." signal,
+            let signal_name = Sys_utils.name_of_signal signal in
+            spf "The server was killed prematurely with signal %s." signal_name,
             exit_code
         | Unix.WSTOPPED signal ->
             spf "The server was stopped prematurely with signal %d." signal,
