@@ -501,7 +501,12 @@ end with type t = Impl.t) = struct
           "meta", identifier meta_prop.meta;
           "property", identifier meta_prop.property;
         |]
-      ))
+      )
+    | loc, Import arg -> node "CallExpression" loc [|
+        "callee", node "Import" (Loc.btwn loc (fst arg)) [||];
+        "arguments", array_of_list expression [arg];
+      |]
+  )
 
   and function_declaration (loc, fn) = Function.(
     let body = match fn.body with

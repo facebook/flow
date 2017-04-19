@@ -2948,6 +2948,39 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
     Flow_js.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, MetaPropertyExpression));
     EmptyT.at loc
+
+  | Import arg -> (
+    match arg with
+    | _, Ast.Expression.Literal {
+        Ast.Literal.value = Ast.Literal.String module_name; _;
+      }
+    | _, TemplateLiteral {
+        TemplateLiteral.quasis = [_, {
+          TemplateLiteral.Element.value = {
+            TemplateLiteral.Element.cooked = module_name; _
+          }; _
+        }];
+        expressions = [];
+      } ->
+
+      let imported_module_t =
+        let import_reason = mk_reason (RCustom (
+          spf "exports of %S" module_name
+        )) loc in
+        import_ns cx import_reason module_name loc
+      in
+
+      let reason = mk_reason (RCustom "async import") loc in
+      Flow.get_builtin_typeapp cx reason "Promise" [imported_module_t]
+    | _ ->
+      let ignore_non_literals =
+        Context.should_ignore_non_literal_requires cx in
+      if not ignore_non_literals
+      then
+        Flow_js.add_output cx
+          Flow_error.(EUnsupportedSyntax (loc, ImportDynamicArgument));
+      AnyT.at loc
+  )
 )
 
 (* Handles function calls that appear in conditional contexts. The main

@@ -481,38 +481,38 @@ and Statement : sig
 
   type t = Loc.t * t'
   and t' =
-    | Empty
     | Block of Block.t
-    | Expression of Expression.t
-    | If of If.t
-    | Labeled of Labeled.t
     | Break of Break.t
+    | ClassDeclaration of Class.t
     | Continue of Continue.t
-    | With of With.t
-    | TypeAlias of TypeAlias.t
-    | Switch of Switch.t
-    | Return of Return.t
-    | Throw of Throw.t
-    | Try of Try.t
-    | While of While.t
+    | Debugger
+    | DeclareClass of Interface.t
+    | DeclareExportDeclaration of DeclareExportDeclaration.t
+    | DeclareFunction of DeclareFunction.t
+    | DeclareModule of DeclareModule.t
+    | DeclareModuleExports of Type.annotation
+    | DeclareVariable of DeclareVariable.t
     | DoWhile of DoWhile.t
+    | Empty
+    | ExportDefaultDeclaration of ExportDefaultDeclaration.t
+    | ExportNamedDeclaration of ExportNamedDeclaration.t
+    | Expression of Expression.t
     | For of For.t
     | ForIn of ForIn.t
     | ForOf of ForOf.t
-    | Debugger
     | FunctionDeclaration of Function.t
-    | VariableDeclaration of VariableDeclaration.t
-    | ClassDeclaration of Class.t
-    | InterfaceDeclaration of Interface.t
-    | DeclareVariable of DeclareVariable.t
-    | DeclareFunction of DeclareFunction.t
-    | DeclareClass of Interface.t
-    | DeclareModule of DeclareModule.t
-    | DeclareModuleExports of Type.annotation
-    | DeclareExportDeclaration of DeclareExportDeclaration.t
-    | ExportNamedDeclaration of ExportNamedDeclaration.t
-    | ExportDefaultDeclaration of ExportDefaultDeclaration.t
+    | If of If.t
     | ImportDeclaration of ImportDeclaration.t
+    | InterfaceDeclaration of Interface.t
+    | Labeled of Labeled.t
+    | Return of Return.t
+    | Switch of Switch.t
+    | Throw of Throw.t
+    | Try of Try.t
+    | TypeAlias of TypeAlias.t
+    | VariableDeclaration of VariableDeclaration.t
+    | While of While.t
+    | With of With.t
 end = Statement
 
 and Expression : sig
@@ -751,33 +751,34 @@ and Expression : sig
 
   type t = Loc.t * t'
   and t' =
-    | This
-    | Super
     | Array of Array.t
-    | Object of Object.t
-    | Function of Function.t
     | ArrowFunction of Function.t
-    | Sequence of Sequence.t
-    | Unary of Unary.t
-    | Binary of Binary.t
     | Assignment of Assignment.t
-    | Update of Update.t
-    | Logical of Logical.t
-    | Conditional of Conditional.t
-    | New of New.t
+    | Binary of Binary.t
     | Call of Call.t
-    | Member of Member.t
-    | Yield of Yield.t
+    | Class of Class.t
     | Comprehension of Comprehension.t
+    | Conditional of Conditional.t
+    | Function of Function.t
     | Generator of Generator.t
     | Identifier of Identifier.t
-    | Literal of Literal.t
-    | TemplateLiteral of TemplateLiteral.t
-    | TaggedTemplate of TaggedTemplate.t
+    | Import of t
     | JSXElement of JSX.element
-    | Class of Class.t
-    | TypeCast of TypeCast.t
+    | Literal of Literal.t
+    | Logical of Logical.t
+    | Member of Member.t
     | MetaProperty of MetaProperty.t
+    | New of New.t
+    | Object of Object.t
+    | Sequence of Sequence.t
+    | Super
+    | TaggedTemplate of TaggedTemplate.t
+    | TemplateLiteral of TemplateLiteral.t
+    | This
+    | TypeCast of TypeCast.t
+    | Unary of Unary.t
+    | Update of Update.t
+    | Yield of Yield.t
 end = Expression
 
 and JSX : sig

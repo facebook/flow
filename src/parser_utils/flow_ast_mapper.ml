@@ -126,6 +126,7 @@ class mapper = object(this)
     | loc, Function x -> id this#function_ x expr (fun x -> loc, Function x)
     | loc, Generator x -> id this#generator x expr (fun x -> loc, Generator x)
     | loc, Identifier x -> id this#identifier x expr (fun x -> loc, Identifier x)
+    | loc, Import x -> id this#import x expr (fun x -> loc, Import x)
     | loc, JSXElement x -> id this#jsx_element x expr (fun x -> loc, JSXElement x)
     | loc, Literal x -> id this#literal x expr (fun x -> loc, Literal x)
     | loc, Logical x -> id this#logical x expr (fun x -> loc, Logical x)
@@ -334,6 +335,8 @@ class mapper = object(this)
   method generator (expr: Ast.Expression.Generator.t) = expr
 
   method identifier (expr: Ast.Identifier.t) = expr
+
+  method import (expr: Ast.Expression.t) = expr
 
   method if_consequent_statement ~has_else (stmt: Ast.Statement.t) =
     ignore has_else;

@@ -147,62 +147,72 @@ module Expression
     }))
 
   and is_lhs = Expression.(function
+    | _, Identifier _
     | _, Member _
     | _, MetaProperty _
-    | _, Identifier _ -> true
+      -> true
+
     | _, Array _
-    | _, Object _
-    | _, Literal _
-    | _, TemplateLiteral _
-    | _, TaggedTemplate _
-    | _, This
-    | _, Super
-    | _, Class _
-    | _, Function _
-    | _, New _
-    | _, Call _
-    | _, Comprehension _
-    | _, Generator _
+    | _, ArrowFunction _
     | _, Assignment _
     | _, Binary _
+    | _, Call _
+    | _, Class _
+    | _, Comprehension _
     | _, Conditional _
+    | _, Function _
+    | _, Generator _
+    | _, Import _
+    | _, JSXElement _
+    | _, Literal _
     | _, Logical _
+    | _, New _
+    | _, Object _
     | _, Sequence _
+    | _, Super
+    | _, TaggedTemplate _
+    | _, TemplateLiteral _
+    | _, This
+    | _, TypeCast _
     | _, Unary _
     | _, Update _
-    | _, ArrowFunction _
     | _, Yield _
-    | _, JSXElement _
-    | _, TypeCast _ -> false)
+      -> false
+  )
 
   and is_assignable_lhs = Expression.(function
     | _, Array _
-    | _, Object _
+    | _, Identifier _
     | _, Member _
     | _, MetaProperty _
-    | _, Identifier _ -> true
-    | _, Literal _
-    | _, TemplateLiteral _
-    | _, TaggedTemplate _
-    | _, This
-    | _, Super
-    | _, Class _
-    | _, Function _
-    | _, New _
-    | _, Call _
-    | _, Comprehension _
-    | _, Generator _
+    | _, Object _
+      -> true
+
+    | _, ArrowFunction _
     | _, Assignment _
     | _, Binary _
+    | _, Call _
+    | _, Class _
+    | _, Comprehension _
     | _, Conditional _
+    | _, Function _
+    | _, Generator _
+    | _, Import _
+    | _, JSXElement _
+    | _, Literal _
     | _, Logical _
+    | _, New _
     | _, Sequence _
+    | _, Super
+    | _, TaggedTemplate _
+    | _, TemplateLiteral _
+    | _, This
+    | _, TypeCast _
     | _, Unary _
     | _, Update _
-    | _, ArrowFunction _
     | _, Yield _
-    | _, JSXElement _
-    | _, TypeCast _ -> false)
+      -> false
+  )
 
 
   and assignment_op env =
@@ -441,10 +451,18 @@ module Expression
     let env = with_no_new false env in
     let expr = match Peek.token env with
     | T_NEW when allow_new -> new_expression env
+    | T_IMPORT -> import env start_loc
     | _ when Peek.is_function env -> _function env
     | _ -> primary env in
     let expr = member env start_loc expr in
     call env start_loc expr
+
+  and import env start_loc =
+    Expect.token env T_IMPORT;
+    Expect.token env T_LPAREN;
+    let arg = assignment (with_no_in false env) in
+    Expect.token env T_RPAREN;
+    Expression.(Loc.btwn start_loc (fst arg), Import arg)
 
   and call env start_loc left =
     match Peek.token env with

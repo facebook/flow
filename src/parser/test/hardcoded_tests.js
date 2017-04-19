@@ -2951,6 +2951,70 @@ module.exports = {
         }
       },
     },
+    'Dynamic Import': {
+      'const m = import("asdf");': {
+        'body.0.declarations.0.init': {
+          'type': 'CallExpression',
+          'callee': {
+            'type': 'Import',
+            'loc': {
+              'start': {'line': 1, 'column': 10},
+              'end': {'line': 1, 'column': 23}
+            },
+          },
+          'arguments': [{
+            'type': 'Literal',
+            'value': 'asdf'
+          }]
+        }
+      },
+      'const m = import("asdf").then();': {
+        'body.0.declarations.0.init': {
+          'type': 'CallExpression',
+          'callee': {
+            'type': 'MemberExpression',
+            'object': {
+              'type': 'CallExpression',
+              'callee': {'type': 'Import'},
+              'arguments': [{
+                'type': 'Literal',
+                'value': 'asdf'
+              }]
+            },
+            'property': {
+              'type': 'Identifier',
+              'name': 'then'
+            }
+          },
+          'arguments': []
+        }
+      },
+      'const m = import(a + b);': {
+        'body.0.declarations.0.init': {
+          'type': 'CallExpression',
+          'callee': {
+            'type': 'Import',
+            'loc': {
+              'start': {'line': 1, 'column': 10},
+              'end': {'line': 1, 'column': 22}
+            },
+          },
+          'arguments': [{'type': 'BinaryExpression'}]
+        }
+      },
+
+      // Invalid syntax tests
+      'import("asdf");': {
+        'errors': {
+          '0.message': 'Unexpected token (',
+        }
+      },
+      'const a = import("asdf", nope);': {
+        'errors': {
+          '0.message': 'Unexpected token ,',
+        }
+      }
+    },
     'Invalid Declare Module': {
       'declare Module A {}': {
         'errors': {

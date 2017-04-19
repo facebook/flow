@@ -198,3 +198,9 @@ def("ForAwaitStatement")
     def("Expression")))
   .field("right", def("Expression"))
   .field("body", def("Statement"));
+
+def('Import')
+  .bases("Node")
+
+def('CallExpression')
+  .field('callee', or(def('Expression'), def('Import')));

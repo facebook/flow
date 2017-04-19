@@ -169,6 +169,7 @@ and unsupported_syntax =
   | PredicateVoidReturn
   | MultipleIndexers
   | SpreadArgument
+  | ImportDynamicArgument
 
 (* decide reason order based on UB's flavor and blamability *)
 let ordered_reasons l u =
@@ -838,6 +839,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             "unsupported property specification in createClass"
         | RequireDynamicArgument ->
             "The parameter passed to require() must be a literal string."
+        | ImportDynamicArgument ->
+            "The parameter passed to import() must be a literal string."
         | RequireLazyDynamicArgument ->
             "The first arg to requireLazy() must be a literal array of \
              string literals!"
