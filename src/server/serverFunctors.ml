@@ -135,8 +135,8 @@ end = struct
       let did_change = not (FilenameSet.is_empty updates) in
       Persistent_connection.send_start_recheck env.connections;
       let env = Program.recheck genv env updates in
-      if did_change then Persistent_connection.update_clients env.connections env.errorl;
       Persistent_connection.send_end_recheck env.connections;
+      if did_change then Persistent_connection.update_clients env.connections env.errorl;
       recheck_loop ~dfind genv env
     end
 
