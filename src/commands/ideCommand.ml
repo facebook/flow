@@ -15,7 +15,7 @@
 open CommandUtils
 module Prot = ServerProt.Persistent_connection_prot
 
-let protocol_options = ["very-unstable"]
+let protocol_options = ["very-unstable"; "human-readable"]
 
 let protocol_options_string = String.concat ", " protocol_options
 
@@ -41,6 +41,22 @@ let spec = {
 module type ClientProtocol = sig
   val server_request_of_stdin_message: Buffered_line_reader.t -> Prot.request option
   val handle_server_response: Prot.response -> unit
+end
+
+module HumanReadable: ClientProtocol = struct
+  let server_request_of_stdin_message buffered_stdin =
+    let line = Buffered_line_reader.get_next_line buffered_stdin in
+    match line with
+      | "subscribe" -> Some Prot.Subscribe
+      | x ->
+        prerr_endline ("Command not recognized: " ^ x); None
+  let handle_server_response = function
+    | Prot.Errors errors ->
+      let count = Errors.ErrorSet.cardinal errors in
+      print_endline ("Received " ^ (string_of_int count) ^ " errors")
+    | Prot.StartRecheck -> print_endline "Start recheck"
+    | Prot.EndRecheck -> print_endline "End recheck"
+
 end
 
 module VeryUnstable: ClientProtocol = struct
@@ -145,6 +161,7 @@ module ProtocolFunctor (Protocol: ClientProtocol) = struct
 end
 
 module VeryUnstableProtocol = ProtocolFunctor(VeryUnstable)
+module HumanReadableProtocol = ProtocolFunctor(HumanReadable)
 
 let main option_values root protocol () =
   let root = CommandUtils.guess_root root in
@@ -155,6 +172,7 @@ let main option_values root protocol () =
   let oc_fd = Unix.descr_of_out_channel oc in
   let main_loop = match protocol with
     | "very-unstable" -> VeryUnstableProtocol.main_loop
+    | "human-readable" -> HumanReadableProtocol.main_loop
     | x -> failwith ("Internal error: unknown protocol '" ^ x ^ "'")
   in
   main_loop ~buffered_stdin ~ic_fd ~oc_fd
