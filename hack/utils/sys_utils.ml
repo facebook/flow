@@ -421,3 +421,35 @@ let lstat path =
 let normalize_filename_dir_sep =
   let dir_sep_char = String.get Filename.dir_sep 0 in
   String.map (fun c -> if c = dir_sep_char then '/' else c)
+
+
+let name_of_signal = function
+  | s when s = Sys.sigabrt -> "SIGABRT (Abnormal termination)"
+  | s when s = Sys.sigalrm -> "SIGALRM (Timeout)"
+  | s when s = Sys.sigfpe -> "SIGFPE (Arithmetic exception)"
+  | s when s = Sys.sighup -> "SIGHUP (Hangup on controlling terminal)"
+  | s when s = Sys.sigill -> "SIGILL (Invalid hardware instruction)"
+  | s when s = Sys.sigint -> "SIGINT (Interactive interrupt (ctrl-C))"
+  | s when s = Sys.sigkill -> "SIGKILL (Termination)"
+  | s when s = Sys.sigpipe -> "SIGPIPE (Broken pipe)"
+  | s when s = Sys.sigquit -> "SIGQUIT (Interactive termination)"
+  | s when s = Sys.sigsegv -> "SIGSEGV (Invalid memory reference)"
+  | s when s = Sys.sigterm -> "SIGTERM (Termination)"
+  | s when s = Sys.sigusr1 -> "SIGUSR1 (Application-defined signal 1)"
+  | s when s = Sys.sigusr2 -> "SIGUSR2 (Application-defined signal 2)"
+  | s when s = Sys.sigchld -> "SIGCHLD (Child process terminated)"
+  | s when s = Sys.sigcont -> "SIGCONT (Continue)"
+  | s when s = Sys.sigstop -> "SIGSTOP (Stop)"
+  | s when s = Sys.sigtstp -> "SIGTSTP (Interactive stop)"
+  | s when s = Sys.sigttin -> "SIGTTIN (Terminal read from background process)"
+  | s when s = Sys.sigttou -> "SIGTTOU (Terminal write from background process)"
+  | s when s = Sys.sigvtalrm -> "SIGVTALRM (Timeout in virtual time)"
+  | s when s = Sys.sigprof -> "SIGPROF (Profiling interrupt)"
+  | s when s = Sys.sigbus -> "SIGBUS (Bus error)"
+  | s when s = Sys.sigpoll -> "SIGPOLL (Pollable event)"
+  | s when s = Sys.sigsys -> "SIGSYS (Bad argument to routine)"
+  | s when s = Sys.sigtrap -> "SIGTRAP (Trace/breakpoint trap)"
+  | s when s = Sys.sigurg -> "SIGURG (Urgent condition on socket)"
+  | s when s = Sys.sigxcpu -> "SIGXCPU (Timeout in cpu time)"
+  | s when s = Sys.sigxfsz -> "SIGXFSZ (File size limit exceeded)"
+  | other -> string_of_int other

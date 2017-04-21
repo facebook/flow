@@ -23,6 +23,20 @@ type module_system =
   | Node
   | Haste
 
+type jsx_mode =
+  (**
+   * Specifies a function that should be invoked instead of React.createElement
+   * when interpreting JSX syntax. Otherwise, the usual rules of JSX are
+   * followed: children are varargs after a props argument.
+   *)
+  | JSXPragma of (string * Ast.Expression.t)
+  (**
+   * Alternate mode for interpreting JSX syntax. The element name is treated
+   * as a function to be directly invoked, e.g. <Foo /> -> Foo({}).
+   * Children are part of props instead of a separate argument.
+   *)
+  | CSX
+
 type t = {
   opt_all : bool;
   opt_check_mode: bool;
@@ -61,7 +75,6 @@ type t = {
   opt_quiet : bool;
   opt_root : Path.t;
   opt_server_mode: bool;
-  opt_should_detach : bool;
   opt_should_wait : bool;
   opt_strip_root : bool;
   opt_suppress_comments : Str.regexp list;
@@ -123,7 +136,6 @@ let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 let node_resolver_dirnames opts = opts.opt_node_resolver_dirnames
 let output_graphml opts = opts.opt_output_graphml
 let root opts = opts.opt_root
-let should_detach opts = opts.opt_should_detach
 let facebook_fbt opts = opts.opt_facebook_fbt
 let should_ignore_non_literal_requires opts =
   opts.opt_ignore_non_literal_requires

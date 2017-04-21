@@ -19,5 +19,5 @@ opam pin add flowtype-ci . -n
 opam depext -u flowtype-ci
 opam install flowtype-ci --deps-only
 opam install camlp4 ocp-build
-make build-flow-with-ocp
+make all-ocp
 make build-parser-test-with-ocp

@@ -70,6 +70,7 @@ module.exports = {
         'x = { null: 42 }',
         'x = { "answer": 42 }',
         'x = { x: 1, x: 2 }',
+        'x = { y: ( 123 ) }',
         {
           content: 'x = { get width() { return m_width } }',
           explanation: "Esprima counts the whitespace before the implicit " +
@@ -925,6 +926,8 @@ module.exports = {
         'void x',
         'delete x',
         'typeof x',
+        '!(x)',
+        '++(x)',
     ],
 
     'Multiplicative Operators': [

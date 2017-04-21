@@ -210,3 +210,22 @@ j2.js:5
 
 
 Found 1 error
+
+Test k:
+k.js:4
+  4: (x.p: string);
+        ^ property `p`. Property not found in
+  4: (x.p: string);
+      ^ object type
+
+
+Found 1 error
+No errors!
+k.js:4
+  4: (x.p: string);
+        ^ property `p`. Property not found in
+  4: (x.p: string);
+      ^ object type
+
+
+Found 1 error

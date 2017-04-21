@@ -107,9 +107,6 @@ class Item<T> {
 
 ##### Type aliases with generics <a class="toc" id="toc-type-aliases-with-generics" href="#toc-type-aliases-with-generics"></a>
 
-Classes can create generics by placing the type parameter list before the body
-of the class.
-
 ```js
 type Item<T> = {
   foo: T,

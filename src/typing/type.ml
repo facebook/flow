@@ -961,8 +961,6 @@ end
 and Property : sig
   type t = TypeTerm.property
 
-  val field: Polarity.t -> TypeTerm.t -> t
-
   val polarity: t -> Polarity.t
 
   val read_t: t -> TypeTerm.t option
@@ -980,8 +978,6 @@ end = struct
   open TypeTerm
 
   type t = property
-
-  let field polarity t = Field (t, polarity)
 
   let polarity = function
     | Field (_, polarity) -> polarity

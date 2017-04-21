@@ -1,3 +1,8 @@
+### v0.44.1
+
+Notable bug fixes:
+* Fixed the definition for `HTMLBRElement`, which extended itself :(
+
 ### v0.44.0
 
 New Features:

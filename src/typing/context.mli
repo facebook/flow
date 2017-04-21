@@ -32,7 +32,7 @@ type metadata = {
   verbose: Verbose.t option;
   weak: bool;
   max_workers: int;
-  jsx: (string * Ast.Expression.t) option;
+  jsx: Options.jsx_mode option;
 }
 type module_kind =
   | CommonJSModule of Loc.t option
@@ -90,7 +90,7 @@ val type_graph: t -> Graph_explorer.graph
 val type_table: t -> (Loc.t, Type.t) Hashtbl.t
 val verbose: t -> Verbose.t option
 val max_workers: t -> int
-val jsx: t -> (string * Ast.Expression.t) option
+val jsx: t -> Options.jsx_mode option
 val pid_prefix: t -> string
 
 val copy_of_context: t -> t

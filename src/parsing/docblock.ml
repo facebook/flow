@@ -16,7 +16,7 @@ type t = {
   preventMunge: bool option;
   providesModule: string option;
   isDeclarationFile: bool;
-  jsx: (string * Ast.Expression.t) option;
+  jsx: Options.jsx_mode option;
 }
 
 type error = Loc.t * error_kind
@@ -69,6 +69,14 @@ let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
         (* dupes are ok since they can only be truthy *)
         let preventMunge = Some true in
         parse_attributes (errors, { info with preventMunge }) xs
+    | (csx_loc, "@csx") :: xs ->
+        let acc =
+          if info.jsx <> None then
+            (csx_loc, MultipleJSXAttributes)::errors, info
+          else
+            errors, { info with jsx = Some Options.CSX }
+        in
+        parse_attributes acc xs
     | [jsx_loc, "@jsx"] -> (jsx_loc, InvalidJSXAttribute None)::errors, info
     | (jsx_loc, "@jsx") :: (expr_loc, expr) :: xs ->
         let acc =
@@ -83,7 +91,8 @@ let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
               let (jsx_expr, _) = Parser_flow.jsx_pragma_expression
                 (padding ^ expr)
                 expr_loc.Loc.source in
-              errors, { info with jsx = Some (expr, jsx_expr) }
+              let jsx_pragma = Options.JSXPragma (expr, jsx_expr) in
+              errors, { info with jsx = Some jsx_pragma }
             with
             | Parse_error.Error [] ->
                 (expr_loc, InvalidJSXAttribute None)::errors, info

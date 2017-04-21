@@ -116,15 +116,14 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       then FlowExitStatus.(exit No_error)
       else FlowExitStatus.(exit Type_error)
 
-  let die_nicely genv oc =
+  let die_nicely oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_DYING;
     FlowEventLogger.killed ();
     Hh_logger.fatal "Status: Error";
     Hh_logger.fatal "Sent KILL command by client. Dying.";
-    (match genv.ServerEnv.dfind with
-    | Some handle -> Sys_utils.terminate_process (DfindLib.pid handle);
-    | None -> ()
-    );
+    (* when we exit, the dfind process will attempt to read from the broken
+       pipe and then exit with SIGPIPE, so it is unnecessary to kill it
+       explicitly *)
     die ()
 
   let autocomplete ~options command_context file_input oc =
@@ -550,8 +549,12 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
      a FilenameSet. updates may be coming in from
      the root, or an include path. *)
   let process_updates genv env updates =
-    let all_libs = env.ServerEnv.libs in
     let options = genv.ServerEnv.options in
+    let all_libs =
+      let known_libs = env.ServerEnv.libs in
+      let _, maybe_new_libs = Files.init options in
+      SSet.union known_libs maybe_new_libs
+    in
     let root = Options.root options in
     let config_path = Server_files_js.config_file root in
     let sroot = Path.to_string root in
@@ -620,6 +623,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         let new_ast =
           let filename_set = FilenameSet.singleton file in
           let _ = Parsing_service_js.reparse_with_defaults
+            (* types are always allowed in lib files *)
+            ~types_mode:Parsing_service_js.TypesAllowed
+            (* lib files are always "use strict" *)
+            ~use_strict:true
             options
             (* workers *) None
             filename_set
@@ -701,7 +708,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
         infer_type ~options client_logging_context (fn, line, char, verbose, include_raw) oc
     | ServerProt.KILL ->
-        die_nicely genv oc
+        die_nicely oc
     | ServerProt.PING ->
         ServerProt.response_to_channel oc ServerProt.PONG
     | ServerProt.PORT (files) ->

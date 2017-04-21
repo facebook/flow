@@ -13,6 +13,8 @@ open Parser_env
 open Ast
 module Error = Parse_error
 
+open Parser_common
+
 (* A module for parsing various object related things, like object literals
  * and classes *)
 
@@ -167,54 +169,65 @@ module Object
         shorthand = false;
       })
 
-    and init env start_loc key async generator =
-      Ast.Expression.Object.Property.(
-        let value, shorthand, _method =
-          match Peek.token env with
-          | T_RCURLY
-          | T_COMMA ->
-              (match key with
-              | Literal lit -> fst lit, Ast.Expression.Literal (snd lit)
-              | Identifier id -> fst id, Ast.Expression.Identifier id
-              | Computed expr -> expr), true, false
-          | T_LESS_THAN
-          | T_LPAREN ->
-              let start_loc = Peek.loc env in
-              let typeParameters = Type.type_parameter_declaration env in
-              let params = Declaration.function_params env in
-              let returnType = Type.annotation_opt env in
-              let _, body, strict =
-                Declaration.function_body env ~async ~generator in
-              let simple = Declaration.is_simple_function_params params in
-              Declaration.strict_post_check env ~strict ~simple None params;
-              let end_loc, expression = match body with
-                | Function.BodyBlock (loc, _) -> loc, false
-                | Function.BodyExpression (loc, _) -> loc, true
-              in
-              let loc = Loc.btwn start_loc end_loc in
-              let value = loc, Ast.Expression.(Function Function.({
-                id = None;
-                params;
-                body;
-                generator;
-                async;
-                (* TODO: add support for object method predicates *)
-                predicate = None;
-                expression;
-                returnType;
-                typeParameters;
-              })) in
-              value, false, true
-          | _ ->
-            Expect.token env T_COLON;
-            Parse.assignment env, false, false in
-        Loc.btwn start_loc (fst value), {
+    and init =
+      let open Ast.Expression.Object.Property in
+      let parse_shorthand key = match key with
+        | Literal lit -> fst lit, Ast.Expression.Literal (snd lit)
+        | Identifier id -> fst id, Ast.Expression.Identifier id
+        | Computed expr -> expr
+      in
+      let parse_method env ~async ~generator =
+        let start_loc = Peek.loc env in
+        let typeParameters = Type.type_parameter_declaration env in
+        let params = Declaration.function_params env in
+        let returnType = Type.annotation_opt env in
+        let _, body, strict =
+          Declaration.function_body env ~async ~generator in
+        let simple = Declaration.is_simple_function_params params in
+        Declaration.strict_post_check env ~strict ~simple None params;
+        let end_loc, expression = match body with
+          | Function.BodyBlock (loc, _) -> loc, false
+          | Function.BodyExpression (loc, _) -> loc, true
+        in
+        let loc = Loc.btwn start_loc end_loc in
+        let value = loc, Ast.Expression.(Function Function.({
+          id = None;
+          params;
+          body;
+          generator;
+          async;
+          (* TODO: add support for object method predicates *)
+          predicate = None;
+          expression;
+          returnType;
+          typeParameters;
+        })) in
+        value
+      in
+      let parse_value env =
+        Expect.token env T_COLON;
+        Parse.assignment env
+      in
+      let parse_init ~key ~async ~generator env = match Peek.token env with
+        | T_RCURLY
+        | T_COMMA ->
+          parse_shorthand key, true, false
+        | T_LESS_THAN
+        | T_LPAREN ->
+          parse_method env ~async ~generator, false, true
+        | _ ->
+          parse_value env, false, false
+      in
+      fun env start_loc key async generator ->
+        let end_loc, (value, shorthand, _method) = with_loc (
+          parse_init ~key ~async ~generator
+        ) env in
+        Loc.btwn start_loc end_loc, {
           key;
           value = Init value;
           _method;
           shorthand;
         }
-      )
 
     and properties env acc =
       match Peek.token env with

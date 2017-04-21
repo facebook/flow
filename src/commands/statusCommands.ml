@@ -110,12 +110,14 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     in
     match response with
     | ServerProt.DIRECTORY_MISMATCH d ->
-      Printf.printf "%s is running on a different directory.\n" name;
-      Printf.printf "server_root: %s, client_root: %s\n"
+      let msg = Printf.sprintf
+        ("%s is running on a different directory.\n" ^^
+         "server_root: %s, client_root: %s")
+        name
         (Path.to_string d.ServerProt.server)
-        (Path.to_string d.ServerProt.client);
-      flush stdout;
-      raise CommandExceptions.Server_directory_mismatch
+        (Path.to_string d.ServerProt.client)
+      in
+      FlowExitStatus.(exit ~msg Server_client_directory_mismatch)
     | ServerProt.ERRORS errors ->
       let error_flags = args.error_flags in
       begin if args.output_json then

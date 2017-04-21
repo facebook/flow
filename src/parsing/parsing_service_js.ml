@@ -362,9 +362,9 @@ let parse_with_defaults ?types_mode ?use_strict options workers next =
   in
   parse ~types_mode ~use_strict ~profile ~max_header_tokens workers next
 
-let reparse_with_defaults options workers files =
+let reparse_with_defaults ?types_mode ?use_strict options workers files =
   let types_mode, use_strict, profile, max_header_tokens =
-    get_defaults ~types_mode:None ~use_strict:None options
+    get_defaults ~types_mode ~use_strict options
   in
   reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~options workers files
 
