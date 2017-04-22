@@ -243,6 +243,29 @@ let typecheck
 
   let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
 
+  let resolve_errors = MultiWorker.call workers
+    ~job: (fun acc files ->
+      List.fold_left (fun acc filename ->
+        let ast = Parsing_service_js.get_ast_unsafe filename in
+        let info = Parsing_service_js.get_docblock_unsafe filename in
+        let metadata = Context.metadata_of_options options in
+        let metadata = Infer_service.apply_docblock_overrides metadata info in
+        let is_react = metadata.Context.jsx = None in
+        let mapper = new Require.mapper is_react in
+        let _ = mapper#program ast in
+        let require_loc = mapper#requires in
+        let errors =
+          Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
+            filename require_loc in
+        if Errors.ErrorSet.is_empty errors then acc else FilenameMap.add filename errors acc
+      ) acc files
+    )
+    ~neutral: FilenameMap.empty
+    ~merge: FilenameMap.union
+    ~next:(MultiWorker.next workers parsed) in
+
+  let local_errors = FilenameMap.union resolve_errors local_errors in
+
   (* conservatively approximate set of modules whose providers will change *)
   (* register providers for modules, warn on dupes etc. *)
   let profiling, (changed_modules, local_errors) =
@@ -603,7 +626,8 @@ let recheck genv env ~updates =
           let cache = new Context_cache.context_cache in
           List.iter (fun f ->
             let cx = cache#read ~audit:Expensive.ok f in
-            Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options cx
+            Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
+              (Context.file cx) (Context.require_loc cx) |> ignore
           ) files
         )
         ~neutral: ()

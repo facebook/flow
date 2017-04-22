@@ -97,7 +97,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
       (* function just so we don't do the work unless it's actually needed. *)
       let get_imported_file () =
         let filename = Module_js.get_file Expensive.warn (
-          Module_js.imported_module ~options cx require_loc name
+          Module_js.imported_module ~options (Context.file cx) require_loc name
         ) in
         (match filename with
         | Some file -> Loc.({none with source = Some file;})

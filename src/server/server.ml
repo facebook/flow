@@ -379,7 +379,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     }) in
     let cx = Context.make metadata file (Files.module_ref file) in
     let loc = {Loc.none with Loc.source = Some file;} in
-    let module_name = Module_js.imported_module ~options cx loc moduleref in
+    let module_name = Module_js.imported_module ~options (Context.file cx) loc moduleref in
     let response: filename option =
       Module_js.get_file ~audit:Expensive.warn module_name in
     Marshal.to_channel oc response [];

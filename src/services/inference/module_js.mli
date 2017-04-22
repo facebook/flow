@@ -43,9 +43,14 @@ val eponymous_module: filename -> Modulename.t
 val exported_module:
   options: Options.t ->
   filename -> Docblock.t -> Modulename.t
+
+type resolution_acc = {
+  mutable paths: SSet.t;
+  mutable errors: Flow_error.error_message list;
+}
 val imported_module:
   options: Options.t ->
-  Context.t -> Loc.t -> ?path_acc: SSet.t ref -> string -> Modulename.t
+  filename -> Loc.t -> ?resolution_acc:resolution_acc -> string -> Modulename.t
 
 val find_resolved_module:
   (options: Options.t ->
@@ -97,7 +102,8 @@ val commit_modules:
     error list FilenameMap.t            (* filenames to error sets *)
 
 (* resolve and add requires from context to store *)
-val add_parsed_resolved_requires: (options:Options.t -> Context.t -> unit) Expensive.t
+val add_parsed_resolved_requires: (options:Options.t -> filename -> Loc.t SMap.t
+                                   -> Errors.ErrorSet.t) Expensive.t
 (* remove resolved requires from store *)
 val remove_batch_resolved_requires: FilenameSet.t -> unit
 

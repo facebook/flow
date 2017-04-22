@@ -55,8 +55,6 @@ let infer_job ~options acc files =
 
         (* infer produces a context for this module *)
         let cx = infer_module ~metadata file in
-        (* register module info *)
-        Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options cx;
         (* note: save and clear errors and error suppressions before storing
          * cx to shared heap *)
         let errs = Context.errors cx in
@@ -101,8 +99,6 @@ let streaming_infer_job ~options acc files =
 
         (* infer produces a context for this module *)
         let cx = infer_module ~metadata file in
-        (* register module info *)
-        Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options cx;
         (* note: save and clear errors and error suppressions before storing
          * cx to shared heap *)
         let errs = Context.errors cx in
