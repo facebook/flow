@@ -44,11 +44,26 @@ class mapper = object(this)
     | (loc, Break break) ->
       id this#break break stmt (fun break -> loc, Break break)
 
+    | (loc, ClassDeclaration cls) ->
+      id this#class_ cls stmt (fun cls -> loc, ClassDeclaration cls)
+
     | (loc, Continue cont) ->
       id this#continue cont stmt (fun cont -> loc, Continue cont)
 
+    | (loc, DeclareExportDeclaration decl) ->
+      id this#declare_export_declaration decl stmt (fun decl -> loc, DeclareExportDeclaration decl)
+
     | (loc, DoWhile stuff) ->
       id this#do_while stuff stmt (fun stuff -> loc, DoWhile stuff)
+
+    | (_loc, Empty) ->
+      stmt
+
+    | (loc, ExportDefaultDeclaration decl) ->
+      id this#export_default_declaration decl stmt (fun decl -> loc, ExportDefaultDeclaration decl)
+
+    | (loc, ExportNamedDeclaration decl) ->
+      id this#export_named_declaration decl stmt (fun decl -> loc, ExportNamedDeclaration decl)
 
     | (loc, Expression expr) ->
       id this#expression_statement expr stmt (fun expr -> loc, Expression expr)
@@ -67,6 +82,9 @@ class mapper = object(this)
 
     | (loc, If if_stmt) ->
       id this#if_statement if_stmt stmt (fun if_stmt -> loc, If if_stmt)
+
+    | (loc, ImportDeclaration decl) ->
+      id this#import_declaration decl stmt (fun decl -> loc, ImportDeclaration decl)
 
     | (loc, Labeled label) ->
       id this#labeled_statement label stmt (fun label -> loc, Labeled label)
@@ -93,18 +111,12 @@ class mapper = object(this)
       id this#with_ stuff stmt (fun stuff -> loc, With stuff)
 
     (* TODO: ES6 or Flow specific stuff *)
-    | (_loc, ClassDeclaration _) -> stmt
     | (_loc, Debugger) -> stmt
     | (_loc, DeclareClass _) -> stmt
-    | (_loc, DeclareExportDeclaration _) -> stmt
     | (_loc, DeclareFunction _) -> stmt
     | (_loc, DeclareModule _) -> stmt
     | (_loc, DeclareModuleExports _) -> stmt
     | (_loc, DeclareVariable _) -> stmt
-    | (_loc, Empty) -> stmt
-    | (_loc, ExportDefaultDeclaration _) -> stmt
-    | (_loc, ExportNamedDeclaration _) -> stmt
-    | (_loc, ImportDeclaration _) -> stmt
     | (_loc, InterfaceDeclaration _) -> stmt
     | (_loc, TypeAlias _) -> stmt
 
@@ -149,8 +161,8 @@ class mapper = object(this)
     if elements == elements' then expr
     else { Array.elements = elements' }
 
-  (* TODO *)
-  method arrow_function (expr: Ast.Function.t) = expr
+  method arrow_function (expr: Ast.Function.t) =
+    this#function_ expr
 
   method assignment (expr: Ast.Expression.Assignment.t) =
     let open Ast.Expression.Assignment in
@@ -199,8 +211,48 @@ class mapper = object(this)
     if param == param' && body == body' then clause
     else { param = param'; body = body' }
 
-  (* TODO *)
-  method class_ (expr: Ast.Class.t) = expr
+  method class_ (cls: Ast.Class.t) =
+    let open Ast.Class in
+    let {
+      id; body; superClass;
+      typeParameters = _; superTypeParameters = _; implements = _; classDecorators = _;
+    } = cls in
+    let id' = opt this#identifier id in
+    let body' = this#class_body body in
+    let superClass' = opt this#expression superClass in
+    if id == id' && body == body' && superClass' == superClass then cls
+    else { cls with id = id'; body = body'; superClass = superClass' }
+
+  method class_body (cls_body: Ast.Class.Body.t) =
+    let open Ast.Class.Body in
+    let loc, { body } = cls_body in
+    let body' = ident_map this#class_element body in
+    if body == body' then cls_body
+    else loc, { body = body' }
+
+  method class_element (elem: Ast.Class.Body.element) =
+    let open Ast.Class.Body in
+    match elem with
+    | Method (loc, meth) -> id this#class_method meth elem (fun meth -> Method (loc, meth))
+    | Property (loc, prop) -> id this#class_property prop elem (fun prop -> Property (loc, prop))
+
+  method class_method (meth: Ast.Class.Method.t') =
+    let open Ast.Class.Method in
+    let { kind = _; key; value; static = _; decorators = _; } = meth in
+    let key' = this#object_key key in
+    let value' =
+      let loc, fn = value in
+      id this#function_ fn value (fun fn -> loc, fn) in
+    if key == key' && value == value' then meth
+    else { meth with key = key'; value = value' }
+
+  method class_property (prop: Ast.Class.Property.t') =
+    let open Ast.Class.Property in
+    let { key; value; typeAnnotation = _; static = _; variance = _; } = prop in
+    let key' = this#object_key key in
+    let value' = opt this#expression value in
+    if key == key' && value == value' then prop
+    else { prop with key = key'; value = value' }
 
   (* TODO *)
   method comprehension (expr: Ast.Expression.Comprehension.t) = expr
@@ -221,6 +273,18 @@ class mapper = object(this)
     let label' = opt this#identifier label in
     if label == label' then cont else { label = label' }
 
+  method declare_export_declaration (decl: Ast.Statement.DeclareExportDeclaration.t) =
+    let open Ast.Statement.DeclareExportDeclaration in
+    let { default; source; specifiers; declaration } = decl in
+    let specifiers' = opt this#export_named_specifier specifiers in
+    let declaration' = opt this#declare_export_declaration_decl declaration in
+    if specifiers == specifiers' && declaration == declaration' then decl
+    else { default; source; specifiers = specifiers'; declaration = declaration' }
+
+  (* TODO *)
+  method declare_export_declaration_decl (decl: Ast.Statement.DeclareExportDeclaration.declaration) =
+    decl
+
   method do_while (stuff: Ast.Statement.DoWhile.t) =
     let open Ast.Statement.DoWhile in
     let { body; test } = stuff in
@@ -228,6 +292,31 @@ class mapper = object(this)
     let test' = this#expression test in
     if body == body' && test == test' then stuff
     else { body = body'; test = test' }
+
+  method export_default_declaration (decl: Ast.Statement.ExportDefaultDeclaration.t) =
+    let open Ast.Statement.ExportDefaultDeclaration in
+    let { exportKind; declaration } = decl in
+    let declaration' = this#export_default_declaration_decl declaration in
+    if declaration == declaration' then decl
+    else { exportKind; declaration = declaration' }
+
+  method export_default_declaration_decl (decl: Ast.Statement.ExportDefaultDeclaration.declaration) =
+    let open Ast.Statement.ExportDefaultDeclaration in
+    match decl with
+    | Declaration stmt -> id this#statement stmt decl (fun stmt -> Declaration stmt)
+    | Expression expr -> id this#expression expr decl (fun expr -> Expression expr)
+
+  method export_named_declaration (decl: Ast.Statement.ExportNamedDeclaration.t) =
+    let open Ast.Statement.ExportNamedDeclaration in
+    let { exportKind; source; specifiers; declaration } = decl in
+    let specifiers' = opt this#export_named_specifier specifiers in
+    let declaration' = opt this#statement declaration in
+    if specifiers == specifiers' && declaration == declaration' then decl
+    else { exportKind; source; specifiers = specifiers'; declaration = declaration' }
+
+  (* TODO *)
+  method export_named_specifier (spec: Ast.Statement.ExportNamedDeclaration.specifier) =
+    spec
 
   method expression_statement (stmt: Ast.Statement.Expression.t) =
     let open Ast.Statement.Expression in
@@ -353,8 +442,76 @@ class mapper = object(this)
     then stmt
     else { test = test'; consequent = consequent'; alternate = alternate' }
 
+  method import_declaration (decl: Ast.Statement.ImportDeclaration.t) =
+    let open Ast.Statement.ImportDeclaration in
+    let { importKind; source; specifiers } = decl in
+    let specifiers' = ident_map this#import_specifier specifiers in
+    if specifiers == specifiers' then decl
+    else { importKind; source; specifiers = specifiers'; }
+
   (* TODO *)
-  method jsx_element (expr: Ast.JSX.element) = expr
+  method import_specifier (specifier: Ast.Statement.ImportDeclaration.specifier) =
+    specifier
+
+  method jsx_element (expr: Ast.JSX.element) =
+    let open Ast.JSX in
+    let { openingElement; closingElement = _; children } = expr in
+    let openingElement' = this#jsx_opening_element openingElement in
+    let children' = ident_map this#jsx_child children in
+    if openingElement == openingElement' && children == children' then expr
+    else { expr with openingElement = openingElement'; children = children' }
+
+  method jsx_opening_element (elem: Ast.JSX.Opening.t) =
+    let open Ast.JSX.Opening in
+    let loc, { name; selfClosing; attributes } = elem in
+    let attributes' = ident_map this#jsx_opening_attribute attributes in
+    if attributes == attributes' then elem
+    else loc, { name; selfClosing; attributes = attributes' }
+
+  method jsx_opening_attribute (jsx_attr: Ast.JSX.Opening.attribute) =
+    let open Ast.JSX.Opening in
+    match jsx_attr with
+    | Attribute attr ->
+      id this#jsx_attribute attr jsx_attr (fun attr -> Attribute attr)
+    | SpreadAttribute (loc, attr) ->
+      id this#jsx_spread_attribute attr jsx_attr (fun attr -> SpreadAttribute (loc, attr))
+
+  method jsx_spread_attribute (attr: Ast.JSX.SpreadAttribute.t') =
+    let open Ast.JSX.SpreadAttribute in
+    let { argument } = attr in
+    id this#expression argument attr (fun argument -> { argument })
+
+  method jsx_attribute (attr: Ast.JSX.Attribute.t) =
+    let open Ast.JSX.Attribute in
+    let loc, { name; value } = attr in
+    let value' = opt this#jsx_attribute_value value in
+    if value == value' then attr
+    else loc, { name; value }
+
+  method jsx_attribute_value (value: Ast.JSX.Attribute.value) =
+    let open Ast.JSX.Attribute in
+    match value with
+    | Literal _ -> value
+    | ExpressionContainer (expr_loc, expr) ->
+      id this#jsx_expression expr value (fun expr -> ExpressionContainer (expr_loc, expr))
+
+  method jsx_child (child: Ast.JSX.child) =
+    let open Ast.JSX in
+    let loc, child' = child in
+    match child' with
+    | Element elem ->
+      id this#jsx_element elem child (fun elem -> loc, Element elem)
+    | ExpressionContainer expr ->
+      id this#jsx_expression expr child (fun expr -> loc, ExpressionContainer expr)
+    | Text _ -> child
+
+  method jsx_expression (jsx_expr: Ast.JSX.ExpressionContainer.t) =
+    let open Ast.JSX.ExpressionContainer in
+    let { expression } = jsx_expr in
+    match expression with
+    | Expression expr ->
+      id this#expression expr jsx_expr (fun expr -> { expression = Expression expr})
+    | EmptyExpression _ -> jsx_expr
 
   method labeled_statement (stmt: Ast.Statement.Labeled.t) =
     let open Ast.Statement.Labeled in
@@ -493,8 +650,10 @@ class mapper = object(this)
   method statement_list (stmts: Ast.Statement.t list) =
     ident_map this#statement stmts
 
-  (* TODO *)
-  method spread_element (expr: Ast.Expression.SpreadElement.t) = expr
+  method spread_element (expr: Ast.Expression.SpreadElement.t) =
+    let open Ast.Expression.SpreadElement in
+    let loc, { argument } = expr in
+    id this#expression argument expr (fun argument -> loc, { argument })
 
   method spread_property (expr: Ast.Expression.Object.SpreadProperty.t) =
     let open Ast.Expression.Object.SpreadProperty in
@@ -520,11 +679,27 @@ class mapper = object(this)
     if test == test' && consequent == consequent' then case
     else { test = test'; consequent = consequent' }
 
-  (* TODO *)
-  method tagged_template (expr: Ast.Expression.TaggedTemplate.t) = expr
+  method tagged_template (expr: Ast.Expression.TaggedTemplate.t) =
+    let open Ast.Expression.TaggedTemplate in
+    let { tag; quasi } = expr in
+    let tag' = this#expression tag in
+    let quasi' =
+      let loc, templ = quasi in
+      id this#template_literal templ quasi (fun templ -> loc, templ) in
+    if tag == tag' && quasi == quasi' then expr
+    else { tag = tag'; quasi = quasi' }
+
+  method template_literal (expr: Ast.Expression.TemplateLiteral.t) =
+    let open Ast.Expression.TemplateLiteral in
+    let { quasis; expressions } = expr in
+    let quasis' = ident_map this#template_literal_element quasis in
+    let expressions' = ident_map this#expression expressions in
+    if quasis == quasis' && expressions == expressions' then expr
+    else { quasis = quasis'; expressions = expressions' }
 
   (* TODO *)
-  method template_literal (expr: Ast.Expression.TemplateLiteral.t) = expr
+  method template_literal_element (elem: Ast.Expression.TemplateLiteral.Element.t) =
+    elem
 
   method throw (stmt: Ast.Statement.Throw.t) =
     let open Ast.Statement.Throw in
@@ -553,8 +728,10 @@ class mapper = object(this)
       finalizer = finalizer'
     }
 
-  (* TODO *)
-  method type_cast (expr: Ast.Expression.TypeCast.t) = expr
+  method type_cast (expr: Ast.Expression.TypeCast.t) =
+    let open Ast.Expression.TypeCast in
+    let { expression; typeAnnotation = _ } = expr in
+    id this#expression expression expr (fun expression -> { expr with expression })
 
   method unary_expression (expr: Ast.Expression.Unary.t) =
     let open Ast.Expression in
