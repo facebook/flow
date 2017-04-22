@@ -244,20 +244,24 @@ let typecheck
 
   let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
 
-  let resolve_errors = MultiWorker.call workers
-    ~job: (List.fold_left (fun errors_acc filename ->
-        let require_loc = Parsing_service_js.get_requires_unsafe filename in
-        let errors =
-          Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
-            filename require_loc in
-        if Errors.ErrorSet.is_empty errors
-        then errors_acc
-        else FilenameMap.add filename errors errors_acc
-      )
+  let profiling, resolve_errors =
+    with_timer ~options "ResolveRequires" profiling (fun () ->
+      MultiWorker.call workers
+        ~job: (List.fold_left (fun errors_acc filename ->
+          let require_loc = Parsing_service_js.get_requires_unsafe filename in
+          let errors =
+            Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
+              filename require_loc in
+          if Errors.ErrorSet.is_empty errors
+          then errors_acc
+          else FilenameMap.add filename errors errors_acc
+        )
+        )
+        ~neutral: FilenameMap.empty
+        ~merge: FilenameMap.union
+        ~next:(MultiWorker.next workers parsed)
     )
-    ~neutral: FilenameMap.empty
-    ~merge: FilenameMap.union
-    ~next:(MultiWorker.next workers parsed) in
+  in
 
   let local_errors = FilenameMap.union resolve_errors local_errors in
 
