@@ -23,3 +23,8 @@ val calc_dependencies:
   Worker.t list option -> (* workers *)
   filename list -> (* files *)
   FilenameSet.t FilenameMap.t
+
+val walk_dependencies:
+  FilenameSet.t FilenameMap.t -> (* dependency graph *)
+  FilenameSet.t -> (* files *)
+  FilenameSet.t

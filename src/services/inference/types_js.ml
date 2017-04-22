@@ -286,7 +286,9 @@ let typecheck
         && Module_js.checked_file ~audit:Expensive.warn f
       then
         with_timer ~options "Infer" profiling (fun () ->
-          Infer_service.streaming_infer ~options ~workers f
+          let dependency_graph = Dep_service.calc_dependencies workers parsed in
+          let files = Dep_service.walk_dependencies dependency_graph (FilenameSet.singleton f) in
+          Infer_service.infer ~options ~workers (FilenameSet.elements files)
         )
       else (* terminate *)
         profiling, []

@@ -210,3 +210,16 @@ let calc_dependencies workers files =
     ~next: (MultiWorker.next workers files) in
   deps |> FilenameMap.map (
     FilenameSet.filter (fun f -> FilenameMap.mem f deps))
+
+let walk_dependencies =
+  let rec loop dependency_graph =
+    FilenameSet.fold (fun file acc ->
+      match FilenameMap.get file dependency_graph with
+      | Some files ->
+        let files = FilenameSet.diff files acc in
+        let acc = FilenameSet.union files acc in
+        loop dependency_graph files acc
+      | None -> acc
+    ) in
+  fun dependency_graph files ->
+    loop dependency_graph files files
