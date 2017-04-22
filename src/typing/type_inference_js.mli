@@ -12,6 +12,7 @@ val infer_ast:
   metadata: Context.metadata ->
   filename: Loc.filename ->
   Ast.program ->
+  require_loc_map: Loc.t SMap.t ->
   Context.t
 
 val infer_lib_file:

@@ -143,10 +143,11 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
       } in
       (* apply overrides from the docblock *)
       let metadata = Infer_service.apply_docblock_overrides metadata info in
+      let require_loc_map = Parsing_service_js.calc_requires ast (info.Docblock.jsx = None) in
 
       (* infer *)
       let profiling, cx = with_timer "Infer" profiling (fun () ->
-        Type_inference_js.infer_ast ~metadata ~filename ast
+        Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map
       ) in
 
       (* write graphml of (unmerged) types, if requested *)
@@ -244,21 +245,15 @@ let typecheck
   let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
 
   let resolve_errors = MultiWorker.call workers
-    ~job: (fun acc files ->
-      List.fold_left (fun acc filename ->
-        let ast = Parsing_service_js.get_ast_unsafe filename in
-        let info = Parsing_service_js.get_docblock_unsafe filename in
-        let metadata = Context.metadata_of_options options in
-        let metadata = Infer_service.apply_docblock_overrides metadata info in
-        let is_react = metadata.Context.jsx = None in
-        let mapper = new Require.mapper is_react in
-        let _ = mapper#program ast in
-        let require_loc = mapper#requires in
+    ~job: (List.fold_left (fun errors_acc filename ->
+        let require_loc = Parsing_service_js.get_requires_unsafe filename in
         let errors =
           Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
             filename require_loc in
-        if Errors.ErrorSet.is_empty errors then acc else FilenameMap.add filename errors acc
-      ) acc files
+        if Errors.ErrorSet.is_empty errors
+        then errors_acc
+        else FilenameMap.add filename errors errors_acc
+      )
     )
     ~neutral: FilenameMap.empty
     ~merge: FilenameMap.union

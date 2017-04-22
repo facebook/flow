@@ -39,7 +39,8 @@ let infer_module ~metadata filename =
   let ast = Parsing_service_js.get_ast_unsafe filename in
   let info = Parsing_service_js.get_docblock_unsafe filename in
   let metadata = apply_docblock_overrides metadata info in
-  Type_inference_js.infer_ast ~metadata ~filename ast
+  let require_loc_map = Parsing_service_js.get_requires_unsafe filename in
+  Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map
 
 (* local inference job:
    takes list of filenames, accumulates into parallel lists of

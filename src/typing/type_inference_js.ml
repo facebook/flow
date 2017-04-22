@@ -68,7 +68,7 @@ let scan_for_suppressions =
       | _ -> ()) comments
 
 (* build module graph *)
-let infer_ast ~metadata ~filename ast =
+let infer_ast ~metadata ~filename ast ~require_loc_map =
   Flow_js.Cache.clear();
 
   let _, statements, comments = ast in
@@ -114,14 +114,10 @@ let infer_ast ~metadata ~filename ast =
 
   let initial_module_t = ImpExp.module_t_of_cx cx in
   if checked then (
-    let is_react = Context.jsx cx = None in
-    let mapper = new Require.mapper is_react in
-    let _ = mapper#program ast in
-    let require_loc = mapper#requires in
     SMap.iter (fun r loc ->
       Context.add_require cx r loc;
       Import_export.add_module_tvar cx r loc;
-    ) require_loc;
+    ) require_loc_map;
 
     let init_exports = Flow.mk_object cx reason in
     ImpExp.set_module_exports cx reason init_exports;
