@@ -1,6 +1,6 @@
 foo/bar/nested_test.js:10
  10: var unreachable = require('annotation');
-                       ^^^^^^^^^^^^^^^^^^^^^ annotation. Required module not found
+                               ^^^^^^^^^^^^ annotation. Required module not found
 
 foo/bar/nested_test.js:12
  12: (docblock.fun(): string);

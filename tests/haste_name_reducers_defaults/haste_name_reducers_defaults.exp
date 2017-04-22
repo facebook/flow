@@ -18,7 +18,7 @@ index.js:4
 
 index.js:5
   5: require('Module3');
-     ^^^^^^^^^^^^^^^^^^ Module3. Required module not found
+             ^^^^^^^^^ Module3. Required module not found
 
 
 Found 4 errors

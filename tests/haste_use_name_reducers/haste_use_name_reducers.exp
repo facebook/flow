@@ -6,7 +6,7 @@ index.js:3
 
 index.js:6
   6: require('Module4');
-     ^^^^^^^^^^^^^^^^^^ Module4. Required module not found
+             ^^^^^^^^^ Module4. Required module not found
 
 
 Found 2 errors

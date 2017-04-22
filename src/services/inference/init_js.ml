@@ -92,7 +92,7 @@ let load_lib_files ~options files =
 
       let lib_file = Loc.LibFile file in
       match parse_lib_file options file with
-      | Parsing.Parse_ok (_, statements, comments) ->
+      | Parsing.Parse_ok ast ->
 
         let metadata = Context.({ (metadata_of_options options) with
           checked = false;
@@ -101,7 +101,7 @@ let load_lib_files ~options files =
 
         let cx, syms = Infer.infer_lib_file
           ~metadata ~exclude_syms
-          lib_file statements comments
+          lib_file ast
         in
 
         let master_cx = get_master_cx options in

@@ -6,11 +6,11 @@ test.js:12
 
 test.js:22
  22: var buffer2 = require("./buffer");
-                   ^^^^^^^^^^^^^^^^^^^ ./buffer. Required module not found
+                           ^^^^^^^^^^ ./buffer. Required module not found
 
 test.js:25
  25: var buffer3 = require("./buffer.js");
-                   ^^^^^^^^^^^^^^^^^^^^^^ ./buffer.js. Required module not found
+                           ^^^^^^^^^^^^^ ./buffer.js. Required module not found
 
 
 Found 3 errors

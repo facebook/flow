@@ -18,6 +18,5 @@ val infer_lib_file:
   metadata: Context.metadata ->
   exclude_syms:SSet.t ->
   Utils_js.filename ->
-  Ast.Statement.t list ->
-  Ast.Comment.t list ->
+  Ast.program ->
   Context.t * string list

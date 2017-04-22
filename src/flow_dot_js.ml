@@ -43,11 +43,11 @@ let load_lib_files ~master_cx ~metadata files
       let lib_content = Sys_utils.cat file in
       let lib_file = Loc.LibFile file in
       match parse_content lib_file lib_content with
-      | (_, statements, comments), [] ->
+      | ast, [] ->
 
         let cx, syms = Type_inference_js.infer_lib_file
           ~metadata ~exclude_syms
-          lib_file statements comments
+          lib_file ast
         in
 
         let errs, suppressions = Merge_js.merge_lib_file cx master_cx in
