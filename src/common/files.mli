@@ -10,6 +10,8 @@
 
 (* utilities for supported filenames *)
 
+val node_modules_containers: SSet.t ref
+
 val global_file_name: string
 val flow_ext: string
 

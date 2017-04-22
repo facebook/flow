@@ -11,10 +11,14 @@
 open Utils_js
 
 val merge_strict_context:
-  options: Options.t ->
   Context_cache.context_cache ->
   Context.t list ->
   Context.t
+val merge_contents_context:
+  options: Options.t ->
+  Context_cache.context_cache ->
+  Context.t ->
+  unit
 val merge_strict:
   options: Options.t ->
   workers: Worker.t list option ->

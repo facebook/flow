@@ -10,6 +10,8 @@
 
 (************** file filter utils ***************)
 
+let node_modules_containers = ref SSet.empty
+
 let global_file_name = "(global)"
 let flow_ext = ".flow"
 
@@ -51,6 +53,9 @@ let is_valid_path ~options =
     (* foo.js.flow is valid if foo.js is valid *)
     then is_valid_path_helper (Filename.chop_suffix path flow_ext)
     else is_valid_path_helper path
+
+let is_node_module options path =
+  List.mem (Filename.basename path) (Options.node_resolver_dirnames options)
 
 let is_flow_file ~options path =
   is_valid_path ~options path && not (is_directory path)
@@ -124,7 +129,7 @@ let max_files = 1000
 
     If kind_of_path fails, then we only emit a warning if error_filter passes *)
 let make_next_files_and_symlinks
-    ~path_filter ~realpath_filter ~error_filter paths =
+    ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths =
   let prefix_checkers = List.map is_prefix paths in
   let rec process sz (acc, symlinks) files dir stack =
     if sz >= max_files then
@@ -140,6 +145,8 @@ let make_next_files_and_symlinks
           then process (sz+1) (real :: acc, symlinks) files dir stack
           else process sz (acc, symlinks) files dir stack
         | Dir (path, is_symlink) ->
+          if node_module_filter file
+          then node_modules_containers := SSet.add (Filename.dirname file) !node_modules_containers;
           let dirfiles = Array.to_list @@ try_readdir path in
           let symlinks =
             (* accumulates all of the symlinks that point to
@@ -173,13 +180,14 @@ let make_next_files_and_symlinks
    and including any directories that are symlinked to even if they are outside
    of `paths`. *)
 let make_next_files_following_symlinks
+  ~node_module_filter
   ~path_filter
   ~realpath_filter
   ~error_filter
   paths =
   let paths = List.map Path.to_string paths in
   let cb = ref (make_next_files_and_symlinks
-    ~path_filter ~realpath_filter ~error_filter paths
+    ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths
   ) in
   let symlinks = ref SSet.empty in
   let seen_symlinks = ref SSet.empty in
@@ -198,7 +206,7 @@ let make_next_files_following_symlinks
       symlinks := SSet.empty;
       (* since we're following a symlink, use realpath_filter for both *)
       cb := make_next_files_and_symlinks
-        ~path_filter:realpath_filter ~realpath_filter ~error_filter paths;
+        ~node_module_filter ~path_filter:realpath_filter ~realpath_filter ~error_filter paths;
       rec_cb ()
     end
   in
@@ -216,6 +224,7 @@ let get_all =
   fun next -> get_all_rec next SSet.empty
 
 let init options =
+  let node_module_filter = is_node_module options in
   let libs = Options.lib_paths options in
   let libs, filter = match Options.default_lib_dir options with
     | None -> libs, is_valid_path ~options
@@ -232,6 +241,7 @@ let init options =
         let lib_str = Path.to_string lib in
         let filter' path = path = lib_str || filter path in
         make_next_files_following_symlinks
+          ~node_module_filter
           ~path_filter:filter'
           ~realpath_filter:filter'
           ~error_filter:(fun _ -> true)
@@ -286,6 +296,7 @@ let watched_paths options =
  * If subdir is set, then we return the subset of files under subdir
  *)
 let make_next_files ~all ~subdir ~options ~libs =
+  let node_module_filter = is_node_module options in
   let root = Options.root options in
   let filter = if all then fun _ -> true else wanted ~options libs in
 
@@ -321,7 +332,7 @@ let make_next_files ~all ~subdir ~options ~libs =
       )
   in
   make_next_files_following_symlinks
-    ~path_filter ~realpath_filter ~error_filter:filter starting_points
+    ~node_module_filter ~path_filter ~realpath_filter ~error_filter:filter starting_points
 
 let is_windows_root root =
   Sys.win32 &&

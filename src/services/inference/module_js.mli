@@ -50,11 +50,11 @@ type resolution_acc = {
 }
 val imported_module:
   options: Options.t ->
+  node_modules_containers: SSet.t ->
   filename -> Loc.t -> ?resolution_acc:resolution_acc -> string -> Modulename.t
 
 val find_resolved_module:
-  (options: Options.t ->
-   Context.t -> Loc.t -> string -> Modulename.t) Expensive.t
+  (filename -> string -> Modulename.t) Expensive.t
 
 val module_exists: Modulename.t -> bool
 
@@ -102,8 +102,10 @@ val commit_modules:
     error list FilenameMap.t            (* filenames to error sets *)
 
 (* resolve and add requires from context to store *)
-val add_parsed_resolved_requires: (options:Options.t -> filename -> Loc.t SMap.t
-                                   -> Errors.ErrorSet.t) Expensive.t
+val add_parsed_resolved_requires:
+  (options:Options.t ->
+   node_modules_containers: SSet.t ->
+   filename -> Loc.t SMap.t -> Errors.ErrorSet.t) Expensive.t
 (* remove resolved requires from store *)
 val remove_batch_resolved_requires: FilenameSet.t -> unit
 

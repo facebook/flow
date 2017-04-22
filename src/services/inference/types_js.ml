@@ -163,8 +163,8 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
 
       (* merge *)
       let cache = new Context_cache.context_cache in
-      let profiling, _ = with_timer "Merge" profiling (fun () ->
-        Merge_service.merge_strict_context ~options cache [cx]
+      let profiling, () = with_timer "Merge" profiling (fun () ->
+        Merge_service.merge_contents_context ~options cache cx
       ) in
 
       (* Filter out suppressed errors *)
@@ -244,6 +244,7 @@ let typecheck
 
   let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
 
+  let node_modules_containers = !Files.node_modules_containers in
   let profiling, resolve_errors =
     with_timer ~options "ResolveRequires" profiling (fun () ->
       MultiWorker.call workers
@@ -251,6 +252,7 @@ let typecheck
           let require_loc = Parsing_service_js.get_requires_unsafe filename in
           let errors =
             Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
+              ~node_modules_containers
               filename require_loc in
           if Errors.ErrorSet.is_empty errors
           then errors_acc
@@ -619,6 +621,7 @@ let recheck genv env ~updates =
       Module_js.remove_batch_resolved_requires direct_deps;
       SharedMem_js.collect options `gentle;
 
+      let node_modules_containers = !Files.node_modules_containers in
       (* requires in direct_deps must be re-resolved before merging. *)
       MultiWorker.call workers
         ~job: (fun () files ->
@@ -626,7 +629,7 @@ let recheck genv env ~updates =
           List.iter (fun f ->
             let cx = cache#read ~audit:Expensive.ok f in
             Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
-              (Context.file cx) (Context.require_loc cx) |> ignore
+              ~node_modules_containers (Context.file cx) (Context.require_loc cx) |> ignore
           ) files
         )
         ~neutral: ()
