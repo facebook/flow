@@ -1,10 +1,15 @@
 // @flow
 
 let tests = [
-  // undefined input returns undefined
+  // undefined input returns undefined, expected to fail
   function() {
     var a;
     (JSON.stringify(a): string);
+  },
+  // undefined input returns undefined
+  function() {
+    var a;
+    (JSON.stringify(a): void);
   },
   // null input returns string
   function() {
