@@ -233,7 +233,7 @@ In addition to their set value type, these optional properties can either be
 
 ```js
 // @flow
-function acceptsObject(value: { optionalProp?: string }) {
+function acceptsObject(value: { foo?: string }) {
   // ...
 }
 
