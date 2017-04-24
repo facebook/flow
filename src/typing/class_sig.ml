@@ -687,8 +687,11 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       x
   ) iface_sig properties in
 
+  (* Structural interfaces never get a default constructor. Non-structural
+   * (aka declare class) get a default constructor if they don't have a
+   * constructor and won't inherit one from a super *)
   let inherits_constructor = extends <> [] || mixins <> [] in
-  if mem_constructor iface_sig || inherits_constructor
+  if structural || mem_constructor iface_sig || inherits_constructor
   then iface_sig
   else
     let reason = mk_reason RConstructor loc in
