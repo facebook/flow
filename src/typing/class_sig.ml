@@ -604,7 +604,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       then Type.FunProtoT (locationless_reason RObjectClassName) :: interface_supers
       else interface_supers in
     let super = Type.(match interface_supers with
-      | [] -> AnyT.why super_reason
+      | [] -> AnyT.why super_reason (* Is this case even possible? *)
       | [t] -> t
       | t0::t1::ts -> IntersectionT (super_reason, InterRep.make t0 t1 ts)
     ) in
@@ -687,7 +687,8 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       x
   ) iface_sig properties in
 
-  if mem_constructor iface_sig
+  let inherits_constructor = extends <> [] || mixins <> [] in
+  if mem_constructor iface_sig || inherits_constructor
   then iface_sig
   else
     let reason = mk_reason RConstructor loc in
