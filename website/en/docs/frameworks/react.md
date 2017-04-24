@@ -162,7 +162,7 @@ class MyComponent extends React.Component {
   button: HTMLButtonElement;
 
   render() {
-    return <button ref={el => this.button = el}>Toggle</button>;
+    return <button ref={(el: HTMLButtonElement) => this.button = el}>Toggle</button>;
   }
 }
 ```
