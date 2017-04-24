@@ -16,8 +16,12 @@ module Make(Ord: Map.OrderedType) : S with type key = Ord.t = struct
 
   let find_unsafe = find
 
-  let union x y =
-    union (fun _ fst _ -> Some fst) x y
+  let union ?combine x y =
+    let combine = match combine with
+      | None -> (fun _ fst _ -> Some fst)
+      | Some f -> f
+    in
+    union combine x y
 
   let compare x y = compare Pervasives.compare x y
   let equal x y = compare x y = 0
