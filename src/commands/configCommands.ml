@@ -32,6 +32,7 @@ module Init = struct
     | None -> Sys.getcwd () |> Path.make
     | Some root -> Path.make root
     in
+    FlowEventLogger.set_root (Some (Path.to_string root));
     let options = match options with
     | None -> []
     | Some str -> Str.split (Str.regexp ";") str
