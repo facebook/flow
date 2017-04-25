@@ -1,18 +1,24 @@
+json.js:7
+  7:     (JSON.stringify(a): string);
+          ^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+  7:     (JSON.stringify(a): string);
+                             ^^^^^^ string
+
 map.js:23
  23:     let x = new Map(['foo', 123]); // error
                  ^^^^^^^^^^^^^^^^^^^^^ constructor call
  23:     let x = new Map(['foo', 123]); // error
                           ^^^^^ string. This type is incompatible with
-579:     constructor(iterable: ?Iterable<[K, V]>): void;
-                                         ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:579
+584:     constructor(iterable: ?Iterable<[K, V]>): void;
+                                         ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:584
 
 map.js:23
  23:     let x = new Map(['foo', 123]); // error
                  ^^^^^^^^^^^^^^^^^^^^^ constructor call
  23:     let x = new Map(['foo', 123]); // error
                                  ^^^ number. This type is incompatible with
-579:     constructor(iterable: ?Iterable<[K, V]>): void;
-                                         ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:579
+584:     constructor(iterable: ?Iterable<[K, V]>): void;
+                                         ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:584
 
 map.js:24
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -65,32 +71,32 @@ weakset.js:19
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                             ^ number. This type is incompatible with
-616: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:616
+621: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:621
 
 weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                ^ number. This type is incompatible with
-616: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:616
+621: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:621
 
 weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                   ^ number. This type is incompatible with
-616: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:616
+621: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:621
 
 weakset.js:36
  36: let ws5 = new WeakSet(numbers()); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  29: function* numbers(): Iterable<number> {
                                    ^^^^^^ number. This type is incompatible with
-616: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:616
+621: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:621
 
 
-Found 13 errors
+Found 14 errors
