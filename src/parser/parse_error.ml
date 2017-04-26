@@ -84,6 +84,7 @@ type t =
   | InvalidNonTypeImportInDeclareModule
   | ImportTypeShorthandOnlyInPureImport
   | ImportSpecifierMissingComma
+  | MalformedUnicode
 
 exception Error of (Loc.t * t) list
 
@@ -200,4 +201,6 @@ module PP =
         `import typeof` statements"
       | ImportSpecifierMissingComma ->
         "Missing comma between import specifiers"
+      | MalformedUnicode ->
+        "Malformed unicode"
   end
