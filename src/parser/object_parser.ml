@@ -353,10 +353,15 @@ module Object
               Some (Parse.expression env)
             end else None
           ) else None in
-        let end_loc = Peek.loc env in
-        if Expect.maybe env T_SEMICOLON then () else begin
-          if Peek.token env == T_LBRACKET || Peek.token env == T_LPAREN then error_unexpected env
-        end;
+        let end_loc = begin
+            if Peek.token env == T_LBRACKET || Peek.token env == T_LPAREN then
+              error_unexpected env;
+            match Peek.semicolon_loc env with
+            | Some loc -> Eat.semicolon env; loc
+            | None -> match value with
+                      | Some expr -> fst expr
+                      | None -> start_loc
+          end in
         let loc = Loc.btwn start_loc end_loc in
         Ast.Class.(Body.Property (loc, Property.({
           key;
