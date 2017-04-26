@@ -23,7 +23,7 @@ import simpleDiffAssertion from '../test/assertions/simpleDiffAssertion';
 
 import type {Args} from './convertCommand';
 
-async function shouldConvert(source, log? = () => {}) {
+async function shouldConvert(source, log? = (...args) => {}) {
   const source_exists = await exists(source);
   if (!source_exists) {
     log("'%s' doesn't exist", source);

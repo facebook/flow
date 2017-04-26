@@ -23,7 +23,7 @@ export default suite(({addFile, addFiles, addCode}) => [
     // step introduced 0 flow errors
     addCode('var myNum = 123;')
       .addCode('var myStr = "hello";')
-      .noNewErrors(''),
+      .noNewErrors(),
 
     // Here we introduce a flow error but no assertion. This flow error is
     // ignored and won't affect the other assertions.

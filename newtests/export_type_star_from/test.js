@@ -14,7 +14,7 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode(`
       import type {aType} from "./forward_only";
       ("asdf": aType);
-    `).noNewErrors(''),
+    `).noNewErrors(),
     addCode('(42: aType)').newErrors(`
       test.js:8
         8: (42: aType)

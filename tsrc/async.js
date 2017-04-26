@@ -26,7 +26,7 @@ export function exec(cmd: string, options?: Object): Promise<string> {
       if (err == null) {
         resolve(stdout.toString());
       } else {
-        reject(err, stdout, stderr);
+        reject([err, stdout, stderr]);
       }
     })
   });

@@ -18,7 +18,7 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode(`
       // $TestSuppression
       ('a': number);
-    `).noNewErrors(''),
+    `).noNewErrors(),
 
     addCode(`
       // $FlowFixMe

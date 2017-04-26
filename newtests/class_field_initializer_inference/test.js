@@ -20,12 +20,12 @@ export default suite(({addFile, addFiles, addCode}) => [
 
   test('Annotated instance fields dont require annotation', [
     addCode('export class Foo { a: number; }')
-      .noNewErrors('')
+      .noNewErrors()
   ]),
 
   test('Initialized instance fields infer type from init value', [
     addCode('export class Foo { a = 42; }')
-      .noNewErrors('')
+      .noNewErrors()
   ]),
 
   test('Initialized instance fields require annotation within init values', [
@@ -36,7 +36,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `                             ^ parameter \`p\`. Missing annotation`,
       ),
     addCode('export class Bar { a = (p: number) => 42; }')
-      .noNewErrors('')
+      .noNewErrors()
   ]),
 
 ]);
