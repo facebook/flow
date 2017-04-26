@@ -133,3 +133,20 @@ lexer.native: lexer.ml
 	ocamlbuild \
 		-use-ocamlfind -pkgs sedlex \
 		$@
+
+tools/native_test_files: ../../_build/$(REL_DIR)/tools/native_test_files
+
+../../_build/$(REL_DIR)/tools/native_test_files: build-parser
+	cd $(TOP); \
+	ocamlbuild \
+		-ocamlc "ocamlopt" \
+		$(NATIVE_OBJECT_FILES); \
+	ocamlbuild \
+		-I $(REL_DIR) \
+		-use-ocamlfind -pkgs sedlex \
+	 	-lib unix -lib str \
+	 	-lflags "$(NATIVE_OBJECT_FILES)" \
+		$(REL_DIR)/tools/native_test_files.native; \
+	rm native_test_files.native; \
+	mv _build/$(REL_DIR)/tools/native_test_files.native $(REL_DIR)/tools/native_test_files
+
