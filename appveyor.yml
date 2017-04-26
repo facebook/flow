@@ -28,6 +28,9 @@ after_build:
 test_script:
 - ps: C:\projects\flow\resources\appveyor\test.ps1
 
+cache:
+- "%LOCALAPPDATA%\\Yarn"
+
 artifacts:
   - path: bin\*.zip
 

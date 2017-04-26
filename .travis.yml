@@ -38,9 +38,13 @@ matrix:
 
 addons:
   apt:
+    sources:
+    - sourceline: 'deb https://dl.yarnpkg.com/debian/ stable main'
+      key_url: 'https://dl.yarnpkg.com/debian/pubkey.gpg'
     packages:
     - libelf-dev
     - aspcud
+    - yarn
 
 before_install: bash -e resources/travis/before_install.sh
 install: bash -e resources/travis/install_deps.sh
