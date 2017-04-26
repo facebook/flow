@@ -3838,6 +3838,10 @@ module.exports = {
           'value': { 'type': 'Literal', 'value': 'y'},
           'static': false,
           'computed': false,
+          'loc': {
+            'start': { 'line': 2, 'column': 2 },
+            'end': { 'line': 2, 'column': 9 }
+          },
         }, {
           'type': 'MethodDefinition',
           'key': {
@@ -3846,6 +3850,10 @@ module.exports = {
           },
           'value.type': 'FunctionExpression',
           'kind': 'method',
+          'loc': {
+            'start': { 'line': 3, 'column': 2 },
+            'end': { 'line': 3, 'column': 10 }
+          },
         }],
         'errors': [],
       },
