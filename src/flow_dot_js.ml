@@ -14,6 +14,11 @@ let parse_content file content =
   }) in
   Parser_flow.program_file ~fail:false ~parse_options content (Some file)
 
+let calc_requires ast =
+  let mapper = new Require.mapper false in
+  let _ = mapper#program ast in
+  mapper#requires
+
 let array_of_list f lst =
   Array.of_list (List.map f lst)
 
@@ -43,11 +48,11 @@ let load_lib_files ~master_cx ~metadata files
       let lib_content = Sys_utils.cat file in
       let lib_file = Loc.LibFile file in
       match parse_content lib_file lib_content with
-      | (_, statements, comments), [] ->
+      | ast, [] ->
 
         let cx, syms = Type_inference_js.infer_lib_file
           ~metadata ~exclude_syms
-          lib_file statements comments
+          lib_file ast
         in
 
         let errs, suppressions = Merge_js.merge_lib_file cx master_cx in
@@ -78,6 +83,7 @@ let stub_metadata ~root ~checked = { Context.
   enable_const_params = false;
   enable_unsafe_getters_and_setters = true;
   enforce_strict_type_args = true;
+  enforce_strict_call_arity = false;
   esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
   esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
   esproposal_decorators = Options.ESPROPOSAL_ENABLE;
@@ -139,7 +145,8 @@ let check_content ~filename ~content =
 
     Flow_js.Cache.clear();
 
-    let cx = Type_inference_js.infer_ast ~metadata ~filename ast in
+    let require_loc_map = calc_requires ast in
+    let cx = Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map in
 
     (* this is a VERY pared-down version of Merge_service.merge_strict_context.
        it relies on the JS version only supporting libs + 1 file, so every
@@ -201,7 +208,8 @@ let infer_type filename content line col =
 
       Flow_js.Cache.clear();
 
-      let cx = Type_inference_js.infer_ast ~metadata ~filename ast in
+      let require_loc_map = calc_requires ast in
+      let cx = Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map in
       let loc = mk_loc filename line col in
       let loc, ground_t, possible_ts = Query_types.(match query_type cx loc with
         | FailureNoMatch -> Loc.none, None, []
@@ -234,7 +242,8 @@ let dump_types js_file js_content =
 
       Flow_js.Cache.clear();
 
-      let cx = Type_inference_js.infer_ast ~metadata ~filename ast in
+      let require_loc_map = calc_requires ast in
+      let cx = Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map in
       let printer = Type_printer.string_of_t in
       let raw_printer _ _ = None in
       let types = Query_types.dump_types printer raw_printer cx in

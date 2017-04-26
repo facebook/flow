@@ -80,6 +80,11 @@ val reparse_with_defaults:
   FilenameSet.t ->
   FilenameSet.t * results
 
+val calc_requires:
+  Ast.program ->
+  bool ->
+  Loc.t SMap.t
+
 val has_ast: filename -> bool
 
 val get_ast: filename -> Ast.program option
@@ -87,6 +92,7 @@ val get_ast: filename -> Ast.program option
 (* after parsing, retrieves ast and docblock by filename (unsafe) *)
 val get_ast_unsafe: filename -> Ast.program
 val get_docblock_unsafe: filename -> Docblock.t
+val get_requires_unsafe: filename -> Loc.t SMap.t
 
 (* remove asts and docblocks for given file set. *)
 val remove_batch: FilenameSet.t -> unit

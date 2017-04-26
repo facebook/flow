@@ -16,12 +16,6 @@ val infer:
   filename list ->
   (filename * Errors.ErrorSet.t * Errors.ErrorSuppressions.t) list
 
-val streaming_infer:
-  options: Options.t ->
-  workers: Worker.t list option ->
-  filename ->
-  (filename * Errors.ErrorSet.t * Errors.ErrorSuppressions.t) list
-
 val apply_docblock_overrides:
  Context.metadata ->
  Docblock.t ->

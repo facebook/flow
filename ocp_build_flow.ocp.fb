@@ -192,6 +192,16 @@ begin library "flow-parser"
   ]
 end
 
+begin library "flow-parser-utils"
+  sort = true
+  files = begin fb-glob "src/parser_utils"
+  end
+  requires = [
+    "flow-parser"
+    "hh-utils-collections"
+  ]
+end
+
 begin library "flow-parsing"
   sort = true
   files = begin fb-glob "src/parsing"
@@ -201,10 +211,12 @@ begin library "flow-parsing"
     "flow-common-errors"
     "flow-common-utils"
     "flow-parser"
+    "flow-parser-utils"
     "flow-shmem"
     "hh-procs"
     "hh-heap"
     "hh-utils"
+    "hh-utils-collections"
     "hh-utils-json"
   ]
 end
@@ -337,6 +349,7 @@ begin library "flow-services-inference"
     "flow-common-utils"
     "flow-stubs"
     "flow-parser"
+    "flow-parser-utils"
     "flow-parsing"
     "flow-server-env"
     "flow-server-files"
@@ -397,6 +410,7 @@ begin library "flow-typing"
     "flow-common-errors"
     "flow-common-utils"
     "flow-parser"
+    "flow-parser-utils"
     "tp-core"
     "hh-utils"
     "hh-utils-collections"

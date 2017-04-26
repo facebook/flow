@@ -143,10 +143,11 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
       } in
       (* apply overrides from the docblock *)
       let metadata = Infer_service.apply_docblock_overrides metadata info in
+      let require_loc_map = Parsing_service_js.calc_requires ast (info.Docblock.jsx = None) in
 
       (* infer *)
       let profiling, cx = with_timer "Infer" profiling (fun () ->
-        Type_inference_js.infer_ast ~metadata ~filename ast
+        Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map
       ) in
 
       (* write graphml of (unmerged) types, if requested *)
@@ -162,8 +163,8 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
 
       (* merge *)
       let cache = new Context_cache.context_cache in
-      let profiling, _ = with_timer "Merge" profiling (fun () ->
-        Merge_service.merge_strict_context ~options cache [cx]
+      let profiling, () = with_timer "Merge" profiling (fun () ->
+        Merge_service.merge_contents_context ~options cache cx
       ) in
 
       (* Filter out suppressed errors *)
@@ -243,6 +244,29 @@ let typecheck
 
   let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
 
+  let node_modules_containers = !Files.node_modules_containers in
+  let profiling, resolve_errors =
+    with_timer ~options "ResolveRequires" profiling (fun () ->
+      MultiWorker.call workers
+        ~job: (List.fold_left (fun errors_acc filename ->
+          let require_loc = Parsing_service_js.get_requires_unsafe filename in
+          let errors =
+            Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
+              ~node_modules_containers
+              filename require_loc in
+          if Errors.ErrorSet.is_empty errors
+          then errors_acc
+          else FilenameMap.add filename errors errors_acc
+        )
+        )
+        ~neutral: FilenameMap.empty
+        ~merge: FilenameMap.union
+        ~next:(MultiWorker.next workers parsed)
+    )
+  in
+
+  let local_errors = FilenameMap.union resolve_errors local_errors in
+
   (* conservatively approximate set of modules whose providers will change *)
   (* register providers for modules, warn on dupes etc. *)
   let profiling, (changed_modules, local_errors) =
@@ -262,7 +286,9 @@ let typecheck
         && Module_js.checked_file ~audit:Expensive.warn f
       then
         with_timer ~options "Infer" profiling (fun () ->
-          Infer_service.streaming_infer ~options ~workers f
+          let dependency_graph = Dep_service.calc_dependencies workers parsed in
+          let files = Dep_service.walk_dependencies dependency_graph (FilenameSet.singleton f) in
+          Infer_service.infer ~options ~workers (FilenameSet.elements files)
         )
       else (* terminate *)
         profiling, []
@@ -597,13 +623,15 @@ let recheck genv env ~updates =
       Module_js.remove_batch_resolved_requires direct_deps;
       SharedMem_js.collect options `gentle;
 
+      let node_modules_containers = !Files.node_modules_containers in
       (* requires in direct_deps must be re-resolved before merging. *)
       MultiWorker.call workers
         ~job: (fun () files ->
           let cache = new Context_cache.context_cache in
           List.iter (fun f ->
             let cx = cache#read ~audit:Expensive.ok f in
-            Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options cx
+            Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
+              ~node_modules_containers (Context.file cx) (Context.require_loc cx) |> ignore
           ) files
         )
         ~neutral: ()

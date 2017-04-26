@@ -478,8 +478,8 @@ let rec convert cx tparams_map = Ast.Type.(function
           fun_reason,
           Flow_js.dummy_static static_reason,
           AnyT (mk_reason RPrototype loc),
-          Flow_js.mk_functiontype tins ~rest_param:None ~params_names:key_strs
-            ~is_predicate:true tout
+          Flow_js.mk_functiontype tins ~rest_param:None ~def_reason:fun_reason
+            ~params_names:key_strs ~is_predicate:true tout
         )
 
       | _ ->
@@ -551,7 +551,8 @@ let rec convert cx tparams_map = Ast.Type.(function
         return_t;
         is_predicate = false;
         closure_t = 0;
-        changeset = Changeset.empty
+        changeset = Changeset.empty;
+        def_reason = reason;
       })
   in
   poly_type tparams ft

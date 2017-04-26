@@ -6,25 +6,31 @@ inconsistent use of library definitions
   2:   foo(): number;
               ^^^^^^ number
 
-declare_class.js:6
-  6: C.x = "";
+declare_class.js:8
+  8: C.x = "";
      ^^^ assignment of property `x`
-  6: C.x = "";
+  8: C.x = "";
            ^^ string. This type is incompatible with
-  6: C.x = "";
+  8: C.x = "";
      ^^^ number
 
-declare_class.js:7
-  7: C.foo("");
+declare_class.js:9
+  9: C.foo("");
            ^^ string. This type is incompatible with the expected param type of
   3:     static foo(x: number): void;
                        ^^^^^^ number
 
-declare_class.js:10
- 10: (C.name: number); // error, it's a string
+declare_class.js:12
+ 12: (C.name: number); // error, it's a string
       ^^^^^^ string. This type is incompatible with
- 10: (C.name: number); // error, it's a string
+ 12: (C.name: number); // error, it's a string
               ^^^^^^ number
 
+declare_class.js:15
+ 15: new D(123); // error, number ~> string
+           ^^^ number. This type is incompatible with the expected param type of
+  5:     constructor(x: string): void;
+                        ^^^^^^ string
 
-Found 4 errors
+
+Found 5 errors

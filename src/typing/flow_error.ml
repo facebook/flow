@@ -113,6 +113,7 @@ type error_message =
   | EIncompatibleWithUseOp of reason * reason * use_op
   | EUnsupportedImplements of reason
   | EReactKit of (reason * reason) * React.tool
+  | EFunctionCallExtraArg of (reason * reason * int)
 
 and binding_error =
   | ENameAlreadyBound
@@ -234,7 +235,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | ResolveSpreadsToArray _
       | ResolveSpreadsToArrayLiteral _
         -> "Expected spread element to be an iterable instead of"
-      | ResolveSpreadsToMultiflowFull _
+      | ResolveSpreadsToMultiflowCallFull _
+      | ResolveSpreadsToMultiflowSubtypeFull _
       | ResolveSpreadsToMultiflowPartial _
       | ResolveSpreadsToCallT _
         -> "Expected spread argument to be an iterable instead of"
@@ -274,12 +276,10 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     xs |> filter (fun typeparam -> typeparam.default = None) |> length
   ) in
 
-  let typecheck_error msg ?(suppress_op=false) ?extra (r1, r2) =
-    (* make core info from reasons, message, and optional extra infos *)
-    let core_infos = [
-      mk_info r1 [msg];
-      mk_info r2 []
-    ] in
+  let typecheck_error_with_core_infos ?(suppress_op=false) ?extra core_msgs =
+    let core_reasons = List.map fst core_msgs in
+    let core_infos = List.map (fun (r, msgs) -> mk_info r msgs) core_msgs in
+
     (* Since pointing to endpoints in the library without any information on
        the code that uses those endpoints inconsistently is useless, we point
        to the file containing that code instead. Ideally, improvements in
@@ -287,7 +287,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
 
        Additionally, we never suppress ops when this happens, because that is
        our last chance at relevant context. *)
-    let lib_infos, suppress_op = if is_lib_reason r1 && is_lib_reason r2 then
+    let lib_infos, suppress_op = if List.for_all is_lib_reason core_reasons then
         let loc = Loc.({ none with source = Some source_file }) in
         [loc, ["inconsistent use of library definitions"]], false
       else [], suppress_op
@@ -295,10 +295,10 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     (* NOTE: We include the operation's reason in the error message, unless it
        overlaps *both* endpoints, exactly matches r1, or overlaps r1's origin *)
     let op_info = if suppress_op then None else
-      match op with
-      | Some r ->
+      match op, core_reasons with
+      | Some r, r1::_ ->
         if r = r1 then None
-        else if reasons_overlap r r1 && reasons_overlap r r2 then None
+        else if List.for_all (reasons_overlap r) core_reasons then None
         else Some (info_of_reason r)
       | _ -> None
     in
@@ -306,6 +306,15 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
        extra info appended. ops/trace info is held separately in error *)
     let msg_infos = lib_infos @ core_infos in
     mk_error ?op_info ~trace_infos ?extra msg_infos
+  in
+
+  let typecheck_error msg ?suppress_op ?extra (r1, r2) =
+    (* make core info from reasons, message, and optional extra infos *)
+    let core_msgs = [
+      r1, [msg];
+      r2, [];
+    ] in
+    typecheck_error_with_core_infos ?suppress_op ?extra core_msgs
   in
 
   let prop_polarity_error reasons x p1 p2 =
@@ -1068,3 +1077,19 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | CreateClass (tool, _, _) -> create_class tool
       in
       typecheck_error msg reasons
+| EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
+  let core_msgs = [
+    unused_reason, [];
+  ] in
+  let expects = match param_count with
+  | 0 -> "expects no arguments"
+  | 1 -> "expects no more than 1 argument"
+  | n -> spf "expects no more than %d arguments" n in
+  let extra = [
+    InfoLeaf [loc_of_reason def_reason, [spf
+      "%s %s"
+      (string_of_desc (desc_of_reason def_reason))
+      expects
+    ]];
+  ] in
+  typecheck_error_with_core_infos ~extra core_msgs

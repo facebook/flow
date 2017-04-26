@@ -2591,7 +2591,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         reason,
         Flow.dummy_static reason,
         Flow.dummy_prototype,
-        Flow.mk_functiontype [] ~rest_param:None ~params_names:[] proto
+        Flow.mk_functiontype
+          [] ~rest_param:None ~def_reason:reason ~params_names:[] proto
       )
     )
 
@@ -3020,15 +3021,16 @@ and new_call cx tok class_ argts =
     Flow.flow cx (class_, ConstructorT (reason, argts, t));
   )
 
-and func_call cx reason func_t argts =
+and func_call cx reason ?(call_strict_arity=true) func_t argts =
   Env.havoc_heap_refinements ();
   Flow.mk_tvar_where cx reason (fun t ->
     let frame = Env.peek_frame () in
-    let app = Flow.mk_functioncalltype argts t ~frame in
+    let app = Flow.mk_functioncalltype argts t ~frame ~call_strict_arity in
     Flow.flow cx (func_t, CallT(reason, app))
   )
 
-and method_call cx reason prop_loc (expr, obj_t, name) argts =
+and method_call cx reason ?(call_strict_arity=true) prop_loc
+    (expr, obj_t, name) argts =
   Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
   (match Refinement.get cx expr reason with
   | Some f ->
@@ -3041,7 +3043,8 @@ and method_call cx reason prop_loc (expr, obj_t, name) argts =
       Env.havoc_heap_refinements ();
       Flow.mk_tvar_where cx reason (fun t ->
         let frame = Env.peek_frame () in
-        let app = Flow.mk_methodcalltype obj_t argts t ~frame in
+        let app =
+          Flow.mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
         Flow.flow cx (f, CallT (reason, app));
       )
   | None ->
@@ -3051,7 +3054,8 @@ and method_call cx reason prop_loc (expr, obj_t, name) argts =
         let expr_loc, _ = expr in
         let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
         let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
-        let app = Flow.mk_methodcalltype obj_t argts t ~frame in
+        let app =
+          Flow.mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
         let propref = Named (reason_prop, name) in
         Flow.flow cx (obj_t, MethodT(reason, reason_expr, propref, app))
       )
@@ -3643,14 +3647,15 @@ and jsx_desugar cx name component_t props attributes children eloc =
           _;
         } ->
           let ot = jsx_pragma_expression cx raw_jsx_expr eloc _object in
-          method_call cx reason prop_loc (jsx_expr, ot, name) argts
+          method_call cx reason ~call_strict_arity:false prop_loc
+            (jsx_expr, ot, name) argts
       | _ ->
           let f = jsx_pragma_expression cx raw_jsx_expr eloc jsx_expr in
-          func_call cx reason f argts
+          func_call cx reason ~call_strict_arity:false f argts
       )
   | Some Options.CSX ->
       let reason = mk_reason (RJSXFunctionCall name) eloc in
-      func_call cx reason component_t [Arg props]
+      func_call cx reason ~call_strict_arity:false component_t [Arg props]
 
 (* The @jsx pragma specifies a left hand side expression EXPR such that
  *

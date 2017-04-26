@@ -39,7 +39,8 @@ let infer_module ~metadata filename =
   let ast = Parsing_service_js.get_ast_unsafe filename in
   let info = Parsing_service_js.get_docblock_unsafe filename in
   let metadata = apply_docblock_overrides metadata info in
-  Type_inference_js.infer_ast ~metadata ~filename ast
+  let require_loc_map = Parsing_service_js.get_requires_unsafe filename in
+  Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map
 
 (* local inference job:
    takes list of filenames, accumulates into parallel lists of
@@ -55,8 +56,6 @@ let infer_job ~options acc files =
 
         (* infer produces a context for this module *)
         let cx = infer_module ~metadata file in
-        (* register module info *)
-        Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options cx;
         (* note: save and clear errors and error suppressions before storing
          * cx to shared heap *)
         let errs = Context.errors cx in
@@ -85,56 +84,6 @@ let infer_job ~options acc files =
       (file, errorset, Errors.ErrorSuppressions.empty) :: acc
   ) acc files
 
-(* streaming local inference job:
-   takes list of filenames, accumulates into parallel lists of
-   filenames, error sets; also returns dependencies, which are analyzed next *)
-(* TODO: lots of code duplication with infer_job. Then _only_ difference is
-   returning dependencies. *)
-let streaming_infer_job ~options acc files =
-  let metadata = Context.metadata_of_options options in
-  List.fold_left (fun acc file ->
-    let file_str = string_of_filename file in
-    try Profile_utils.checktime ~options 1.0
-      (fun t -> spf "perf: inferred %s in %f" file_str t)
-      (fun () ->
-        (* prerr_endlinef "[%d] INFER: %s" (Unix.getpid()) file_str; *)
-
-        (* infer produces a context for this module *)
-        let cx = infer_module ~metadata file in
-        (* register module info *)
-        Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options cx;
-        (* note: save and clear errors and error suppressions before storing
-         * cx to shared heap *)
-        let errs = Context.errors cx in
-        let suppressions = Context.error_suppressions cx in
-        Context.remove_all_errors cx;
-        Context.remove_all_error_suppressions cx;
-
-        Context_cache.add ~audit:Expensive.ok cx;
-
-        (* TODO: make this more efficient: resolved_requires for file was just
-           written above by Module_js.add_parsed_resolved_requires. *)
-        let deps = Dep_service.deps_of_file ~audit:Expensive.ok file in
-
-        (* add filename, errorset, suppressions *)
-        (Context.file cx, errs, suppressions, deps) :: acc
-      )
-    with
-    (* Unrecoverable exceptions *)
-    | SharedMem_js.Out_of_shared_memory
-    | SharedMem_js.Heap_full
-    | SharedMem_js.Hash_table_full
-    | SharedMem_js.Dep_table_full as exc -> raise exc
-    (* A catch all suppression is probably a bad idea... *)
-    | exc ->
-      let msg = "infer_job exception: "^(fmt_exc exc) in
-      let errorset = Errors.ErrorSet.singleton
-        (Errors.internal_error file msg) in
-      prerr_endlinef "(%d) infer_job THROWS: %s"
-        (Unix.getpid()) (fmt_file_exc (string_of_filename file) exc);
-      (file, errorset, Errors.ErrorSuppressions.empty, FilenameSet.empty) :: acc
-  ) acc files
-
 (* local type inference pass.
    Returns a set of successfully inferred files.
    Creates contexts for inferred files, with errors in cx.errors *)
@@ -149,18 +98,3 @@ let infer ~options ~workers files =
         ~merge: List.rev_append
         ~next: (MultiWorker.next workers files)
     )
-
-let streaming_infer ~options ~workers f =
-  let streaming_infer_results = Profile_utils.logtime ~options
-    (fun t -> spf "inferred in %f" t)
-    (fun () ->
-      MultiWorker.call
-        workers
-        ~job: (streaming_infer_job ~options)
-        ~neutral: []
-        ~merge: Infer_stream.join
-        ~next: (Infer_stream.make f)
-    ) in
-  List.map (fun (inferred, errset, suppressions, _) ->
-    inferred, errset, suppressions
-  ) streaming_infer_results

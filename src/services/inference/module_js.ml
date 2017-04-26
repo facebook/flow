@@ -266,6 +266,11 @@ let package_incompatible package ast =
     let result = not (tokens_equal old_tokens new_tokens) in
     result
 
+type resolution_acc = {
+  mutable paths: SSet.t;
+  mutable errors: Flow_error.error_message list;
+}
+
 (* Specification of a module system. Currently this signature is sufficient to
    model both Haste and Node, but should be further generalized. *)
 module type MODULE_SYSTEM = sig
@@ -277,8 +282,9 @@ module type MODULE_SYSTEM = sig
      record paths that were looked up but not found during resolution. *)
   val imported_module:
     options: Options.t ->
-    Context.t -> Loc.t ->
-    ?path_acc:SSet.t ref ->
+    SSet.t ->
+    filename -> Loc.t ->
+    ?resolution_acc:resolution_acc ->
     string -> Modulename.t
 
   (* for a given module name, choose a provider from among a set of
@@ -377,27 +383,27 @@ module Node = struct
 
   let record_path path = function
     | None -> ()
-    | Some paths -> paths := SSet.add path !paths
+    | Some resolution_acc -> resolution_acc.paths <- SSet.add path resolution_acc.paths
 
   let path_if_exists =
     let path_exists ~options path =
       (file_exists path) &&
         not (Files.is_ignored options path) &&
         not (dir_exists path)
-    in fun ~options path_acc path ->
+    in fun ~options resolution_acc path ->
       let path = resolve_symlinks path in
       let declaration_path = path ^ Files.flow_ext in
       if path_exists ~options declaration_path ||
         path_exists ~options path
       then Some path
-      else (record_path path path_acc; None)
+      else (record_path path resolution_acc; None)
 
-  let path_if_exists_with_file_exts ~options path_acc path file_exts =
+  let path_if_exists_with_file_exts ~options resolution_acc path file_exts =
     lazy_seq (file_exts |> List.map (fun ext ->
-      lazy (path_if_exists ~options path_acc (path ^ ext))
+      lazy (path_if_exists ~options resolution_acc (path ^ ext))
     ))
 
-  let parse_main ~options cx loc path_acc package file_exts =
+  let parse_main ~options loc resolution_acc package file_exts =
     let package = resolve_symlinks package in
     if not (file_exists package) || (Files.is_ignored options package)
     then None
@@ -423,7 +429,11 @@ module Node = struct
             FlowError.EModuleOutsideRoot (loc, package_relative_to_root)
           )
         in
-        Flow_js.add_output cx msg;
+        begin match resolution_acc with
+        | Some resolution_acc ->
+          resolution_acc.errors <- msg :: resolution_acc.errors
+        | None -> ()
+        end;
         SMap.empty
       in
       let dir = Filename.dirname package in
@@ -434,15 +444,15 @@ module Node = struct
         let path_w_index = Filename.concat path "index" in
 
         lazy_seq [
-          lazy (path_if_exists ~options path_acc path);
-          lazy (path_if_exists_with_file_exts ~options path_acc path file_exts);
-          lazy (path_if_exists_with_file_exts ~options path_acc path_w_index file_exts);
+          lazy (path_if_exists ~options resolution_acc path);
+          lazy (path_if_exists_with_file_exts ~options resolution_acc path file_exts);
+          lazy (path_if_exists_with_file_exts ~options resolution_acc path_w_index file_exts);
         ]
 
-  let resolve_relative ~options cx loc ?path_acc root_path rel_path =
+  let resolve_relative ~options loc ?resolution_acc root_path rel_path =
     let path = Files.normalize_path root_path rel_path in
     if Files.is_flow_file ~options path
-    then path_if_exists ~options path_acc path
+    then path_if_exists ~options resolution_acc path
     else (
       let path_w_index = Filename.concat path "index" in
       (* We do not try resource file extensions here. So while you can write
@@ -452,27 +462,29 @@ module Node = struct
         |> SSet.elements in
 
       lazy_seq ([
-        lazy (path_if_exists_with_file_exts ~options path_acc path file_exts);
-        lazy (parse_main ~options cx loc path_acc (Filename.concat path "package.json") file_exts);
-        lazy (path_if_exists_with_file_exts ~options path_acc path_w_index file_exts);
+        lazy (path_if_exists_with_file_exts ~options resolution_acc path file_exts);
+        lazy (parse_main ~options loc resolution_acc (Filename.concat path "package.json") file_exts);
+        lazy (path_if_exists_with_file_exts ~options resolution_acc path_w_index file_exts);
       ])
     )
 
-  let rec node_module ~options cx loc path_acc dir r =
+  let rec node_module ~options node_modules_containers file loc resolution_acc dir r =
     lazy_seq [
       lazy (
-        lazy_seq (Options.node_resolver_dirnames options |> List.map (fun dirname ->
-          lazy (resolve_relative
-            ~options
-            cx loc ?path_acc dir (spf "%s%s%s" dirname Filename.dir_sep r)
-          )
-        ))
+        if SSet.mem dir node_modules_containers then
+          lazy_seq (Options.node_resolver_dirnames options |> List.map (fun dirname ->
+            lazy (resolve_relative
+              ~options
+              loc ?resolution_acc dir (spf "%s%s%s" dirname Filename.dir_sep r)
+            )
+          ))
+        else None
       );
 
       lazy (
         let parent_dir = Filename.dirname dir in
         if dir = parent_dir then None
-        else node_module ~options cx loc path_acc (Filename.dirname dir) r
+        else node_module ~options node_modules_containers file loc resolution_acc (Filename.dirname dir) r
       );
     ]
 
@@ -483,20 +495,20 @@ module Node = struct
     Str.string_match Files.current_dir_name r 0
     || Str.string_match Files.parent_dir_name r 0
 
-  let resolve_import ~options cx loc ?path_acc import_str =
-    let file = string_of_filename (Context.file cx) in
+  let resolve_import ~options node_modules_containers f loc ?resolution_acc import_str =
+    let file = string_of_filename f in
     let dir = Filename.dirname file in
     if explicitly_relative import_str || absolute import_str
-    then resolve_relative ~options cx loc ?path_acc dir import_str
-    else node_module ~options cx loc path_acc dir import_str
+    then resolve_relative ~options loc ?resolution_acc dir import_str
+    else node_module ~options node_modules_containers f loc resolution_acc dir import_str
 
-  let imported_module ~options cx loc ?path_acc import_str =
+  let imported_module ~options node_modules_containers file loc ?resolution_acc import_str =
     let candidates = module_name_candidates ~options import_str in
 
     let rec choose_candidate = function
       | [] -> None
       | candidate :: candidates ->
-        match resolve_import ~options cx loc ?path_acc candidate with
+        match resolve_import ~options node_modules_containers file loc ?resolution_acc candidate with
         | None -> choose_candidate candidates
         | Some _ as result -> result
     in
@@ -598,18 +610,18 @@ module Haste: MODULE_SYSTEM = struct
         )
 
   (* similar to Node resolution, with possible special cases *)
-  let resolve_import ~options cx loc ?path_acc r =
-    let file = string_of_filename (Context.file cx) in
+  let resolve_import ~options node_modules_containers f loc ?resolution_acc r =
+    let file = string_of_filename f in
     lazy_seq [
-      lazy (Node.resolve_import ~options cx loc ?path_acc r);
+      lazy (Node.resolve_import ~options node_modules_containers f loc ?resolution_acc r);
       lazy (match expanded_name r with
         | Some r ->
-          Node.resolve_relative ~options cx loc ?path_acc (Filename.dirname file) r
+          Node.resolve_relative ~options loc ?resolution_acc (Filename.dirname file) r
         | None -> None
       );
     ]
 
-  let imported_module ~options cx loc ?path_acc imported_name =
+  let imported_module ~options node_modules_containers file loc ?resolution_acc imported_name =
     let candidates = module_name_candidates ~options imported_name in
 
     (**
@@ -624,7 +636,7 @@ module Haste: MODULE_SYSTEM = struct
      *)
     let chosen_candidate = List.hd candidates in
 
-    match resolve_import ~options cx loc ?path_acc chosen_candidate with
+    match resolve_import ~options node_modules_containers file loc ?resolution_acc chosen_candidate with
     | Some name ->
         eponymous_module (Files.filename_from_string ~options name)
     | None -> Modulename.String chosen_candidate
@@ -673,36 +685,20 @@ let exported_module ~options file info =
   let module M = (val (get_module_system options)) in
   M.exported_module options file info
 
-let imported_module ~options cx loc ?path_acc r =
+let imported_module ~options ~node_modules_containers file loc ?resolution_acc r =
   let module M = (val (get_module_system options)) in
-  M.imported_module ~options cx loc ?path_acc r
+  M.imported_module ~options node_modules_containers file loc ?resolution_acc r
 
-let imported_modules ~options cx =
+let imported_modules ~options node_modules_containers f require_loc =
   (* Resolve all reqs relative to the given cx. Accumulate dependent paths in
-     path_acc. Return the map of reqs to their resolved names, and the set
+     resolution_acc. Return the map of reqs to their resolved names, and the set
      containing the resolved names. *)
-  let reqs = Context.required cx in
-  let req_locs = Context.require_loc cx in
-  let path_acc = ref SSet.empty in
-  let set, map = SSet.fold (fun r (set, map) ->
-    let loc = SMap.find_unsafe r req_locs in
-    let resolved_r = imported_module ~options cx loc ~path_acc r in
+  let resolution_acc = { paths = SSet.empty; errors = [] } in
+  let set, map = SMap.fold (fun r loc (set, map) ->
+    let resolved_r = imported_module ~options ~node_modules_containers f loc ~resolution_acc r in
     NameSet.add resolved_r set, SMap.add r resolved_r map
-  ) reqs (NameSet.empty, SMap.empty) in
-  set, map, !path_acc
-
-(* Look up cached resolved module. *)
-let cached_resolved_module ~audit file r =
-  match get_resolved_requires ~audit file with
-  | Some { resolved_modules; _ } -> SMap.get r resolved_modules
-  | None -> None
-
-(* Optimized module resolution function that goes through cache. *)
-let find_resolved_module ~audit ~options cx loc r =
-  let context_file = Context.file cx in
-  match cached_resolved_module ~audit context_file r with
-  | Some resolved_r -> resolved_r
-  | None -> imported_module ~options cx loc r
+  ) require_loc (NameSet.empty, SMap.empty) in
+  set, map, resolution_acc
 
 let choose_provider ~options m files errmap =
   let module M = (val (get_module_system options)) in
@@ -727,6 +723,11 @@ let get_resolved_requires_unsafe ~audit f =
   | None -> failwith
       (spf "resolved requires not found for file %s" (string_of_filename f))
 
+(* Look up cached resolved module. *)
+let find_resolved_module ~audit file r =
+  let { resolved_modules; _ } = get_resolved_requires_unsafe ~audit file in
+  SMap.find_unsafe r resolved_modules
+
 let get_info_unsafe ~audit f =
   match get_info ~audit f with
   | Some info -> info
@@ -740,25 +741,29 @@ let checked_file ~audit f =
 (* TODO [perf]: measure size and possibly optimize *)
 (* Extract and process information from context. In particular, resolve
    references to required modules in a file, and record the results.  *)
-let resolved_requires_of ~options cx =
-  let required, resolved_modules, phantom_dependents =
-    imported_modules ~options cx in
+let resolved_requires_of ~options node_modules_containers f require_loc =
+  let required, resolved_modules, { paths; errors } =
+    imported_modules ~options node_modules_containers f require_loc in
   let require_loc = SMap.fold
     (fun r loc require_loc ->
       let resolved_r = SMap.find_unsafe r resolved_modules in
       SMap.add (Modulename.to_string resolved_r) loc require_loc)
-    (Context.require_loc cx) SMap.empty in
-  {
+    require_loc SMap.empty in
+  errors, {
     required;
     require_loc;
     resolved_modules;
-    phantom_dependents;
+    phantom_dependents = paths;
   }
 
-let add_parsed_resolved_requires ~audit ~options cx =
-  let resolved_requires = resolved_requires_of ~options cx in
-  let file = Context.file cx in
-  add_resolved_requires ~audit file resolved_requires
+let add_parsed_resolved_requires ~audit ~options ~node_modules_containers file require_loc =
+  let errors, resolved_requires =
+    resolved_requires_of ~options node_modules_containers file require_loc in
+  add_resolved_requires ~audit file resolved_requires;
+  List.fold_left (fun acc msg ->
+    Errors.ErrorSet.add (Flow_error.error_of_msg
+    ~trace_reasons:[] ~op:(Flow_error.Ops.peek ())
+    ~source_file:file msg) acc) Errors.ErrorSet.empty errors
 
 (* Note that the module provided by a file is always accessible via its full
    path, so that it may be imported by specifying (a part of) that path in any

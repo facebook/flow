@@ -80,6 +80,7 @@ type reason_desc =
   | RFunctionType
   | RFunctionBody
   | RFunctionCall
+  | RFunctionUnusedArgument
   | RJSXFunctionCall of string
   | RJSXIdentifier of string * string
   | RJSXElementProps of string
@@ -111,6 +112,7 @@ type reason_desc =
   | RPrototype
   | RDestructuring
   | RConstructor
+  | RDefaultConstructor
   | RConstructorCall
   | RReturn
   | RRegExp
@@ -360,6 +362,7 @@ let rec string_of_desc = function
   | RFunctionType -> "function type"
   | RFunctionBody -> "function body"
   | RFunctionCall -> "function call"
+  | RFunctionUnusedArgument -> "unused function argument"
   | RJSXFunctionCall raw_jsx -> spf "JSX desugared to `%s(...)`" raw_jsx
   | RJSXIdentifier (raw_jsx, name) ->
       spf "JSX desugared to `%s(...)`. identifier %s" raw_jsx name
@@ -396,6 +399,7 @@ let rec string_of_desc = function
   | RPrototype -> "prototype"
   | RDestructuring -> "destructuring"
   | RConstructor -> "constructor"
+  | RDefaultConstructor -> "default constructor"
   | RConstructorCall -> "constructor call"
   | RReturn -> "return"
   | RRegExp -> "regexp"

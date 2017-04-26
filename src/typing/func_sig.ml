@@ -158,7 +158,8 @@ let functiontype cx this_t {reason; kind; tparams; params; return_t; _} =
     return_t;
     is_predicate = kind = Predicate;
     closure_t = Env.peek_frame ();
-    changeset = Env.retrieve_closure_changeset ()
+    changeset = Env.retrieve_closure_changeset ();
+    def_reason = reason;
   } in
   let t = FunT (reason, static, prototype, funtype) in
   poly_type tparams t
@@ -167,11 +168,13 @@ let methodtype {reason; tparams; params; return_t; _} =
   let params_tlist = Func_params.tlist params in
   let params_names = Func_params.names params in
   let rest_param = Func_params.rest params in
+  let def_reason = reason in
   let t = FunT (
     reason,
     Flow.dummy_static reason,
     Flow.dummy_prototype,
-    Flow.mk_boundfunctiontype params_tlist ~rest_param ~params_names return_t
+    Flow.mk_boundfunctiontype
+      params_tlist ~rest_param ~def_reason ~params_names return_t
   ) in
   poly_type tparams t
 

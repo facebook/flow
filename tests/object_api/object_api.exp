@@ -97,14 +97,14 @@ object_prototype.js:49
 object_prototype.js:51
  51: (123).toString('foo'); // error
                     ^^^^^ string. This type is incompatible with the expected param type of
-131:     toString(radix?: number): string;
-                          ^^^^^^ number. See lib: <BUILTINS>/core.js:131
+133:     toString(radix?: number): string;
+                          ^^^^^^ number. See lib: <BUILTINS>/core.js:133
 
 object_prototype.js:52
  52: (123).toString(null); // error
                     ^^^^ null. This type is incompatible with the expected param type of
-131:     toString(radix?: number): string;
-                          ^^^^^^ number. See lib: <BUILTINS>/core.js:131
+133:     toString(radix?: number): string;
+                          ^^^^^^ number. See lib: <BUILTINS>/core.js:133
 
 object_prototype.js:68
  68: b.hasOwnProperty = function() { return false; };
@@ -187,8 +187,8 @@ object_prototype.js:150
 object_prototype.js:151
 151: var xToLocaleString2 : () => number = x.toLocaleString; // error
                                   ^^^^^^ number. This type is incompatible with
-445:     toLocaleString(): string;
-                           ^^^^^^ string. See lib: <BUILTINS>/core.js:445
+448:     toLocaleString(): string;
+                           ^^^^^^ string. See lib: <BUILTINS>/core.js:448
 
 object_prototype.js:155
 155: var yToLocaleString : number = y.toLocaleString; // error

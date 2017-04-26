@@ -28,7 +28,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     (* Encapsulate merge_strict_context for dumper *)
     let merge_component options cx =
       let cache = new Context_cache.context_cache in
-      Merge_service.merge_strict_context ~options cache [cx] in
+      Merge_service.merge_contents_context ~options cache cx in
     (* write binary path and version to server log *)
     Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
     Hh_logger.info "version=%s" FlowConfig.version;
@@ -379,7 +379,9 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     }) in
     let cx = Context.make metadata file (Files.module_ref file) in
     let loc = {Loc.none with Loc.source = Some file;} in
-    let module_name = Module_js.imported_module ~options cx loc moduleref in
+    let module_name = Module_js.imported_module
+      ~options ~node_modules_containers:!Files.node_modules_containers
+      (Context.file cx) loc moduleref in
     let response: filename option =
       Module_js.get_file ~audit:Expensive.warn module_name in
     Marshal.to_channel oc response [];
@@ -416,13 +418,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         | Some e -> Utils_js.Err e
         | None ->
           try
-            begin match flow_file_cxs with
-            | [] -> ()
-            | _ ->
-              try
-                (Merge_service.merge_strict_context ~options cache flow_file_cxs
-                   : Context.t)
-                |> ignore
+            begin
+              try List.iter (fun flow_file_cx ->
+                Merge_service.merge_contents_context ~options cache flow_file_cx
+              ) flow_file_cxs
               with exn -> failwith (
                 spf "Error merging contexts: %s" (Printexc.to_string exn)
               )

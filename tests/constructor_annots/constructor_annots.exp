@@ -6,10 +6,10 @@ constructors.js:3
   3:   this.x = 0; // constructs objects with property x
        ^^^^^^ boolean
 
-constructors.js:21
- 21: exports.Foo2 = (Foo: Class<IFoo>);
+constructors.js:22
+ 22: exports.Foo2 = (Foo: Class<IFoo>);
                                 ^^^^ statics of IFoo. This type is incompatible with
- 21: exports.Foo2 = (Foo: Class<IFoo>);
+ 22: exports.Foo2 = (Foo: Class<IFoo>);
                      ^^^ statics of function
   Property `y` is incompatible:
       5: Foo.y = 0; // has static property y

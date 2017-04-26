@@ -65,9 +65,13 @@ let mk_resource_module_t cx loc f =
   mk_commonjs_module_t cx reason reason exports_t
 
 
+let add_module_tvar cx r loc =
+  let tvar = Flow.mk_tvar cx (mk_reason (RCustom r) loc) in
+  Context.add_module cx r tvar
+
 (* given a module name, return associated tvar if already
  * present in module map, or create and add *)
-let module_t_of_ref cx m reason =
+let module_t_of_ref_safe cx m reason =
   match Context.declare_module_t cx with
   (**
    * TODO: Imports within `declare module`s can only reference other
@@ -84,35 +88,48 @@ let module_t_of_ref cx m reason =
         Flow.mk_tvar_where cx reason (fun t -> Context.add_module cx m t)
     )
 
+(* given a module name, return associated tvar in module map (failing if not
+   found); e.g., used to find tvars associated with requires *after* all
+   requires already have entries in the module map *)
+let module_t_of_ref_unsafe cx m reason =
+  match Context.declare_module_t cx with
+  (**
+   * TODO: Imports within `declare module`s can only reference other
+   *       `declare module`s (for now). This won't fly forever so at some point
+   *       we'll need to move `declare module` storage into the modulemap just
+   *       like normal modules and merge them as such.
+   *)
+  | Some _ ->
+    Env.get_var_declared_type cx (internal_module_name m) reason
+  | None ->
+    SMap.find_unsafe m (Context.module_map cx)
+
 let require cx ?(internal=false) module_ref loc =
-  Context.add_require cx module_ref loc;
   if not internal
   then Type_inference_hooks_js.dispatch_require_hook cx module_ref loc;
   let desc = RCustom (spf "CommonJS exports of \"%s\"" module_ref) in
   let reason = mk_reason desc loc in
   Flow.mk_tvar_where cx reason (fun t ->
     Flow.flow cx (
-      module_t_of_ref cx module_ref (mk_reason (RCustom module_ref) loc),
+      module_t_of_ref_unsafe cx module_ref (mk_reason (RCustom module_ref) loc),
       CJSRequireT(reason, t)
     )
   )
 
 let import ?reason cx module_ref loc =
-  Context.add_require cx module_ref loc;
   Type_inference_hooks_js.dispatch_import_hook cx module_ref loc;
   let reason =
     match reason with
     | Some r -> r
     | None -> mk_reason (RCustom module_ref) loc
   in
-  module_t_of_ref cx module_ref reason
+  module_t_of_ref_unsafe cx module_ref reason
 
 let import_ns cx reason module_ref loc =
-  Context.add_require cx module_ref loc;
   Type_inference_hooks_js.dispatch_import_hook cx module_ref loc;
   Flow.mk_tvar_where cx reason (fun t ->
     Flow.flow cx (
-      module_t_of_ref cx module_ref (mk_reason (RCustom module_ref) loc),
+      module_t_of_ref_unsafe cx module_ref (mk_reason (RCustom module_ref) loc),
       ImportModuleNsT(reason, t)
     )
   )
@@ -122,7 +139,7 @@ let module_t_of_cx cx =
   | None ->
     let m = Context.module_ref cx in
     let loc = Loc.({ none with source = Some (Context.file cx) }) in
-    module_t_of_ref cx m (Reason.mk_reason (RCustom "exports") loc)
+    module_t_of_ref_safe cx m (Reason.mk_reason (RCustom "exports") loc)
   | Some t -> t
 
 let set_module_t cx reason f =

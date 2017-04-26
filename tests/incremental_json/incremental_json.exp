@@ -2,7 +2,7 @@
 Initial status:
 test.js:4
   4: var data = require('./data');
-                ^^^^^^^^^^^^^^^^^ ./data. Required module not found
+                        ^^^^^^^^ ./data. Required module not found
 
 
 Found 1 error
@@ -23,7 +23,7 @@ Found 1 error
 Delete data.json:
 test.js:4
   4: var data = require('./data');
-                ^^^^^^^^^^^^^^^^^ ./data. Required module not found
+                        ^^^^^^^^ ./data. Required module not found
 
 
 Found 1 error

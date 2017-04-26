@@ -452,7 +452,7 @@ let mk cx _loc reason self ~expr =
       (* TODO: Does this distinction matter for the type checker? *)
       class_sig
     else
-      let reason = replace_reason_const RConstructor reason in
+      let reason = replace_reason_const RDefaultConstructor reason in
       add_default_constructor reason class_sig
   in
 
@@ -604,7 +604,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       then Type.FunProtoT (locationless_reason RObjectClassName) :: interface_supers
       else interface_supers in
     let super = Type.(match interface_supers with
-      | [] -> AnyT.why super_reason
+      | [] -> AnyT.why super_reason (* Is this case even possible? *)
       | [t] -> t
       | t0::t1::ts -> IntersectionT (super_reason, InterRep.make t0 t1 ts)
     ) in
@@ -687,10 +687,14 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       x
   ) iface_sig properties in
 
-  if mem_constructor iface_sig
+  (* Structural interfaces never get a default constructor. Non-structural
+   * (aka declare class) get a default constructor if they don't have a
+   * constructor and won't inherit one from a super *)
+  let inherits_constructor = extends <> [] || mixins <> [] in
+  if structural || mem_constructor iface_sig || inherits_constructor
   then iface_sig
   else
-    let reason = mk_reason RConstructor loc in
+    let reason = mk_reason RDefaultConstructor loc in
     add_default_constructor reason iface_sig
 )
 

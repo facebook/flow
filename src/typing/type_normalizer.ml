@@ -18,11 +18,12 @@ let fake_fun params_names param_ts rest_param ret_t =
   let rest_param = Option.map
     ~f:(fun (name, t) -> Some name, Loc.none, t)
     rest_param in
+  let def_reason = reason in
   FunT (
     reason,
     Flow_js.dummy_static reason,
     Flow_js.dummy_prototype,
-    Flow_js.mk_functiontype param_ts ~rest_param ?params_names ret_t
+    Flow_js.mk_functiontype param_ts ~rest_param ~def_reason ?params_names ret_t
   )
 
 let fake_instance name =
@@ -81,12 +82,13 @@ let rec normalize_type_impl cx ids t = match t with
       let tout = normalize_type_impl cx ids ft.return_t in
       let reason = locationless_reason (RFunction RNormal) in
       let is_predicate = Some ft.is_predicate in
+      let def_reason = ft.def_reason in
       FunT (
         reason,
         Flow_js.dummy_static reason,
         Flow_js.dummy_prototype,
         Flow_js.mk_functiontype
-          tins ~rest_param ?params_names ?is_predicate tout
+          tins ~rest_param ~def_reason ?params_names ?is_predicate tout
       )
 
   (* Fake the signature of Function.prototype.apply: *)

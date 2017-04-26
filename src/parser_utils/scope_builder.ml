@@ -153,13 +153,13 @@ class walker = object(this)
       | None -> SMap.add x (this#next) map
     ) SMap.empty
 
-  method private push bindings =
+  method push bindings =
     let save_counter = counter in
     let old_env = env in
     env <- SMap.fold SMap.add (this#mk_env bindings) old_env;
     old_env, save_counter
 
-  method private pop (old_env, save_counter) =
+  method pop (old_env, save_counter) =
     env <- old_env;
     counter <- save_counter
 

@@ -261,8 +261,8 @@ export default suite(({addFile, addFiles, addCode}) => [
           test.js:3
             3: const arr: Array<number> = [..."hello"];
                                 ^^^^^^ number. This type is incompatible with
-          274:     @@iterator(): Iterator<string>;
-                                          ^^^^^^ string. See lib: [LIB] core.js:274
+          276:     @@iterator(): Iterator<string>;
+                                          ^^^^^^ string. See lib: [LIB] core.js:276
         `,
       )
       .because('String is an Iterable<string>'),

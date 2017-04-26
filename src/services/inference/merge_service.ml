@@ -57,20 +57,7 @@ let add_decl (r, resolved_r, cx) declarations =
    The arguments (b), (c), (d) are passed to `merge_component_strict`, and
    argument (a) is passed to `restore`.
 *)
-let merge_strict_context ~options cache component_cxs =
-  let required = List.fold_left (fun required cx ->
-    let require_locs = Context.require_loc cx in
-    SSet.fold (fun r ->
-      let loc =
-        try SMap.find_unsafe r require_locs
-        with Not_found -> raise (Key_not_found ("require_locs", r))
-      in
-      let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
-        ~options cx loc r in
-      check_require (r, resolved_r, cx);
-      add_decl (r, resolved_r, cx)
-    ) (Context.required cx) required
-  ) [] component_cxs in
+let merge_strict_context_with_required cache component_cxs required =
   let cx = List.hd component_cxs in
 
   let sig_cache = new Context_cache.sig_context_cache in
@@ -127,8 +114,40 @@ let merge_strict_context ~options cache component_cxs =
 
   orig_master_cx
 
+let merge_strict_context cache component_cxs =
+  let required = List.fold_left (fun required cx ->
+    SSet.fold (fun r ->
+      let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
+        (Context.file cx) r in
+      check_require (r, resolved_r, cx);
+      add_decl (r, resolved_r, cx)
+    ) (Context.required cx) required
+  ) [] component_cxs in
+  merge_strict_context_with_required cache component_cxs required
+
+(* Variation of merge_strict_context where requires may not have already been
+   resolved. This is used by commands that make up a context on the fly. *)
+let merge_contents_context ~options cache cx =
+  let required =
+    let require_locs = Context.require_loc cx in
+    SSet.fold (fun r ->
+      let loc =
+        try SMap.find_unsafe r require_locs
+        with Not_found -> raise (Key_not_found ("require_locs", r))
+      in
+      let resolved_r = Module_js.imported_module
+        ~options
+        ~node_modules_containers:!Files.node_modules_containers
+        (Context.file cx) loc r in
+      check_require (r, resolved_r, cx);
+      add_decl (r, resolved_r, cx)
+    ) (Context.required cx) []
+  in
+  (merge_strict_context_with_required cache [cx] required: Context.t)
+  |> ignore
+
 (* Entry point for merging a component *)
-let merge_strict_component ~options = function
+let merge_strict_component = function
   | Merge_stream.Skip file ->
     (* Skip rechecking this file (because none of its dependencies changed). We
        are going to reuse the existing signature for the file, so we must be
@@ -161,7 +180,7 @@ let merge_strict_component ~options = function
     let component_cxs =
       List.map (cache#read ~audit:Expensive.ok) component in
 
-    let master_cx = merge_strict_context ~options cache component_cxs in
+    let master_cx = merge_strict_context cache component_cxs in
 
     let md5 = Merge_js.ContextOptimizer.sig_context component_cxs in
     let cx = List.hd component_cxs in
@@ -193,7 +212,7 @@ let merge_strict_job ~options (merged, unchanged) elements =
       (fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) files t)
       (fun () ->
         (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
-        let file, errors, diff = merge_strict_component ~options element in
+        let file, errors, diff = merge_strict_component element in
         match diff with
         | Some diff ->
           (* file was rechecked; diff says whether its signature was changed *)
