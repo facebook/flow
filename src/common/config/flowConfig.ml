@@ -10,7 +10,7 @@
 
 open Utils_js
 
-let version = "0.44.1"
+let version = "0.45.0"
 
 let default_temp_dir = Filename.concat Sys_utils.temp_dir_name "flow"
 let default_shm_dirs =
