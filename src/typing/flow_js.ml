@@ -60,7 +60,7 @@ let global_this =
 
 (* A method type is a function type with `this` specified. *)
 let mk_methodtype
-    this tins ~rest_param
+    this tins ~rest_param ~def_reason
     ?(frame=0) ?params_names ?(is_predicate=false) tout = {
   this_t = this;
   params_tlist = tins;
@@ -69,15 +69,17 @@ let mk_methodtype
   return_t = tout;
   is_predicate;
   closure_t = frame;
-  changeset = Changeset.empty
+  changeset = Changeset.empty;
+  def_reason;
 }
 
 let mk_methodcalltype
-    this tins ?(frame=0) tout = {
+    this tins ?(frame=0) ?(call_strict_arity=true) tout = {
   call_this_t = this;
   call_args_tlist = tins;
   call_tout = tout;
   call_closure_t = frame;
+  call_strict_arity;
 }
 
 (* A bound function type is a function type with `this` = `any`. Typically, such
@@ -380,7 +382,7 @@ let rec merge_type cx =
             reason,
             dummy_static reason,
             dummy_prototype,
-            mk_functiontype tins ~rest_param tout
+            mk_functiontype tins ~rest_param ~def_reason:reason tout
           )
       end
 
@@ -2169,6 +2171,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         call_args_tlist;
         call_tout;
         call_closure_t;
+        call_strict_arity;
       }) ->
       (match call_args_tlist with
         | (Arg obj)::(Arg cb)::[] ->
@@ -2179,6 +2182,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               call_args_tlist = [Arg wrapped_obj];
               call_tout = t;
               call_closure_t;
+              call_strict_arity;
             }))
           ) in
           let unwrapped_t = mk_tvar_where cx reason_op (fun t ->
@@ -2891,7 +2895,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             ()
         )
 
-      | ResolveSpreadsToMultiflowFull (id, _)
+      | ResolveSpreadsToMultiflowCallFull (id, _)
+      | ResolveSpreadsToMultiflowSubtypeFull (id, _)
       | ResolveSpreadsToMultiflowPartial (id, _, _, _) ->
         let reason_elemt = reason_of_t elemt in
         ConstFoldExpansion.guard id reason_elemt (fun recursion_depth ->
@@ -3422,7 +3427,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let args = List.rev (match rest2 with
       | Some (_, _, rest) -> (SpreadArg rest) :: args
       | None -> args) in
-      multiflow cx trace reason args ft;
+      multiflow_subtype cx trace reason args ft;
 
       (* Well-formedness adjustment: If this is predicate function subtyping,
          make sure to apply a latent substitution on the right-hand use to
@@ -3475,11 +3480,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           closure_t = func_scope_id; changeset; _ } as ft)),
       CallT (reason_callsite,
         { call_this_t = o2; call_args_tlist = tins2; call_tout = t2;
-          call_closure_t = call_scope_id;})
+          call_closure_t = call_scope_id; call_strict_arity})
       ->
       Ops.push reason_callsite;
       rec_flow cx trace (o2, UseT (FunCallThis reason_callsite, o1));
-      multiflow cx trace reason_callsite tins2 ft;
+      if call_strict_arity
+      then multiflow_call cx trace reason_callsite tins2 ft
+      else multiflow_subtype cx trace reason_callsite tins2 ft;
       Ops.pop ();
 
       (* flow return type of function to the tvar holding the return type of the
@@ -3500,7 +3507,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       havoc_call_env cx func_scope_id call_scope_id changeset;
 
     | (AnyFunT reason_fundef | AnyT reason_fundef),
-      CallT (reason_op, { call_this_t; call_args_tlist; call_tout; call_closure_t=_;}) ->
+      CallT (reason_op,
+        { call_this_t; call_args_tlist; call_tout; call_closure_t=_;
+          call_strict_arity=_;}) ->
       let any = AnyT.why reason_fundef in
       rec_flow_t cx trace (call_this_t, any);
       call_args_iter (fun t -> rec_flow_t cx trace (t, any)) call_args_tlist;
@@ -3930,8 +3939,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let pmap = Context.make_property_map cx SMap.empty in
       let new_obj = ObjT (reason_c, mk_objecttype ~flags dict pmap proto) in
       (** call function with this = new_obj, params = args **)
+      Ops.push reason_op;
       rec_flow_t cx trace (new_obj, this);
-      multiflow cx trace reason_op args ft;
+      multiflow_call cx trace reason_op args ft;
+      Ops.pop ();
       (** if ret is object-like, return ret; otherwise return new_obj **)
       let reason_o = replace_reason_const RConstructorReturn reason in
       rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
@@ -4643,7 +4654,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | ObjT (_, o), MapTypeT (reason_op, ObjectMapi, funt, k) ->
       let mapi_t key t = mk_tvar_where cx reason_op (fun t' ->
-        let funtype = mk_functioncalltype [Arg key; Arg t] t' in
+        let funtype = { (mk_functioncalltype [Arg key; Arg t] t') with
+          call_strict_arity = false;
+        } in
         rec_flow cx trace (funt, CallT (reason_op, funtype))
       ) in
       let mapi_field key t =
@@ -4800,15 +4813,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       BindT (reason_op, {
         call_this_t = o2;
         call_args_tlist = tins2;
-        call_tout; call_closure_t=_
+        call_tout; call_closure_t=_; call_strict_arity = _;
       }, _) ->
         (* TODO: closure *)
 
+        Ops.push reason_op;
         rec_flow_t cx trace (o2,o1);
 
         let resolve_to =
           ResolveSpreadsToMultiflowPartial (mk_id (), ft, reason_op, call_tout) in
-        resolve_call_list cx ~trace reason tins2 resolve_to
+        resolve_call_list cx ~trace reason tins2 resolve_to;
+        Ops.pop ()
 
     | (AnyT _ | AnyFunT _),
       BindT (reason, {
@@ -6123,7 +6138,8 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     return_t;
     is_predicate;
     closure_t;
-    changeset
+    changeset;
+    def_reason;
   }) ->
     let static_ = subst cx ~force map static in
     let proto_ = subst cx ~force map proto in
@@ -6152,7 +6168,8 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
         return_t = return_t_;
         is_predicate;
         closure_t;
-        changeset
+        changeset;
+        def_reason;
       })
 
   | PolyT (reason, xs, inner) ->
@@ -9042,17 +9059,24 @@ and array_unify cx trace = function
 (*******************************************************************)
 
 (* Process spread arguments and then apply the arguments to the parameters *)
-and multiflow cx trace reason_op args ft =
-  let resolve_to = ResolveSpreadsToMultiflowFull (mk_id (), ft) in
+and multiflow_call cx trace reason_op args ft =
+  let resolve_to = ResolveSpreadsToMultiflowCallFull (mk_id (), ft) in
+  resolve_call_list cx ~trace reason_op args resolve_to
+
+(* Process spread arguments and then apply the arguments to the parameters *)
+and multiflow_subtype cx trace reason_op args ft =
+  let resolve_to = ResolveSpreadsToMultiflowSubtypeFull (mk_id (), ft) in
   resolve_call_list cx ~trace reason_op args resolve_to
 
 (* Like multiflow_partial, but if there is no spread argument, it flows VoidT to
  * all unused parameters *)
 and multiflow_full
-  cx ~trace reason_op ~spread_arg ~rest_param (arglist, parlist) =
+  cx ~trace reason_op ~is_call ~def_reason
+  ~spread_arg ~rest_param (arglist, parlist) =
 
   let unused_parameters, _ = multiflow_partial
-    cx ~trace reason_op ~spread_arg ~rest_param (arglist, parlist) in
+    cx ~trace reason_op ~is_call ~def_reason
+    ~spread_arg ~rest_param (arglist, parlist) in
 
   List.iter (fun param ->
     let reason = replace_reason_const RTooFewArgsExpectedRest reason_op in
@@ -9097,7 +9121,7 @@ and multiflow_partial =
 
 
   in
-  fun cx ~trace reason_op ~spread_arg ~rest_param (arglist, parlist) ->
+  fun cx ~trace reason_op ~is_call ~def_reason ~spread_arg ~rest_param (arglist, parlist) ->
     (* Handle all the non-spread arguments and all the non-rest parameters *)
     let unused_arglist, unused_parlist =
       multiflow_non_spreads cx ~trace (arglist, parlist) in
@@ -9118,7 +9142,19 @@ and multiflow_partial =
 
     (* If there is a rest parameter, it will consume all the unused arguments *)
     begin match rest_param with
-    | None -> unused_parlist, rest_param
+    | None ->
+      if is_call && Context.enforce_strict_call_arity cx
+      then begin
+        List.iter (fun unused_arg ->
+          FlowError.EFunctionCallExtraArg (
+            mk_reason RFunctionUnusedArgument (loc_of_t unused_arg),
+            def_reason,
+            List.length parlist
+          )
+          |> add_output cx ~trace
+        ) unused_arglist
+      end;
+      unused_parlist, rest_param
     | Some (name, loc, rest_param) ->
       let orig_rest_reason = repos_reason loc (reason_of_t rest_param) in
 
@@ -9400,24 +9436,26 @@ and finish_resolve_spread_list =
     | Some trace -> trace
     | None -> failwith "All multiflows show have a trace" in
 
-    let {params_tlist; rest_param; return_t; _} = ft in
+    let {params_tlist; rest_param; return_t; def_reason; _} = ft in
 
     let args, spread_arg = flatten_call_arg cx reason_op resolved in
 
     let params_tlist, rest_param = multiflow_partial
-      cx ~trace reason_op ~spread_arg ~rest_param (args, params_tlist) in
+      cx ~trace reason_op ~is_call:true ~def_reason ~spread_arg ~rest_param
+      (args, params_tlist) in
 
     (* e.g. "bound function type", positioned at reason_op *)
     let bound_reason =
       let desc = RBound (desc_of_reason reason_op) in
       replace_reason_const desc call_reason
     in
+    let def_reason = reason_op in
 
     let funt = FunT(
       reason_op,
       dummy_static bound_reason,
       dummy_prototype,
-      mk_boundfunctiontype params_tlist ~rest_param return_t
+      mk_boundfunctiontype params_tlist ~rest_param ~def_reason return_t
     ) in
     rec_flow_t cx trace (funt, tout)
 
@@ -9425,18 +9463,19 @@ and finish_resolve_spread_list =
 
   (* This is used for things like function application, where all the arguments
    * are applied to a function *)
-  let finish_multiflow_full cx ?trace ~reason_op ft resolved =
+  let finish_multiflow_full cx ?trace ~reason_op ~is_call ft resolved =
     (* Multiflows always come out of a flow *)
     let trace = match trace with
     | Some trace -> trace
     | None -> failwith "All multiflows show have a trace" in
 
-    let {params_tlist; rest_param; _} = ft in
+    let {params_tlist; rest_param; def_reason; _} = ft in
 
     let args, spread_arg = flatten_call_arg cx reason_op resolved in
 
     multiflow_full
-      cx ~trace reason_op ~spread_arg ~rest_param (args, params_tlist)
+      cx ~trace reason_op ~is_call ~def_reason
+      ~spread_arg ~rest_param (args, params_tlist)
 
   in
 
@@ -9462,8 +9501,10 @@ and finish_resolve_spread_list =
       finish_array cx ?trace ~reason_op ~resolve_to:`Array resolved tout
     | ResolveSpreadsToMultiflowPartial (_, ft, call_reason, tout) ->
       finish_multiflow_partial cx ?trace ~reason_op ft call_reason resolved tout
-    | ResolveSpreadsToMultiflowFull (_, ft) ->
-      finish_multiflow_full cx ?trace ~reason_op ft resolved
+    | ResolveSpreadsToMultiflowCallFull (_, ft) ->
+      finish_multiflow_full cx ?trace ~reason_op ~is_call:true ft resolved
+    | ResolveSpreadsToMultiflowSubtypeFull (_, ft) ->
+      finish_multiflow_full cx ?trace ~reason_op ~is_call:false ft resolved
     | ResolveSpreadsToCallT (funcalltype, tin) ->
       finish_call_t cx ?trace ~reason_op funcalltype resolved tin
   )

@@ -32,6 +32,7 @@ type reason_desc =
   | RFunctionType
   | RFunctionBody
   | RFunctionCall
+  | RFunctionUnusedArgument
   | RJSXFunctionCall of string
   | RJSXIdentifier of string * string
   | RJSXElementProps of string
@@ -63,6 +64,7 @@ type reason_desc =
   | RPrototype
   | RDestructuring
   | RConstructor
+  | RDefaultConstructor
   | RConstructorCall
   | RReturn
   | RRegExp

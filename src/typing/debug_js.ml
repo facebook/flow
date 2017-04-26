@@ -760,7 +760,8 @@ and json_of_resolve_to_impl json_cx resolve_to = Hh_json.(JSON_Object (
   | ResolveSpreadsToArray (tout) -> [
     "t_out", _json_of_t json_cx tout;
   ]
-  | ResolveSpreadsToMultiflowFull (id, ft) -> [
+  | ResolveSpreadsToMultiflowCallFull (id, ft)
+  | ResolveSpreadsToMultiflowSubtypeFull (id, ft) -> [
     "id", JSON_Number (string_of_int id);
     "funtype", json_of_funtype json_cx ft;
   ]
@@ -878,7 +879,8 @@ and json_of_funtype_impl json_cx {
   return_t;
   is_predicate;
   closure_t;
-  changeset
+  changeset;
+  def_reason;
 } = Hh_json.(
   JSON_Object ([
     "thisType", _json_of_t json_cx this_t;
@@ -902,6 +904,7 @@ and json_of_funtype_impl json_cx {
     "isPredicate", JSON_Bool is_predicate;
     "closureIndex", int_ closure_t;
     "changeset", json_of_changeset json_cx changeset;
+    "defLoc", json_of_reason ~strip_root:json_cx.strip_root def_reason;
   ])
 )
 
@@ -911,6 +914,7 @@ and json_of_funcalltype_impl json_cx {
   call_args_tlist;
   call_tout;
   call_closure_t;
+  call_strict_arity;
 } = Hh_json.(
   let arg_types = List.map (json_of_funcallarg json_cx) call_args_tlist in
   JSON_Object ([
@@ -918,6 +922,7 @@ and json_of_funcalltype_impl json_cx {
     "argTypes", JSON_Array arg_types;
     "tout", _json_of_t json_cx call_tout;
     "closureIndex", int_ call_closure_t;
+    "strictArity", JSON_Bool call_strict_arity;
   ])
 )
 
@@ -1791,7 +1796,9 @@ and dump_use_t_ (depth, tvars) cx t =
         p ~extra:(kid tout) t
       | ResolveSpreadsToCallT (_, tin) ->
         p ~extra:(kid tin) t
-      | ResolveSpreadsToMultiflowFull (_, _) -> p t)
+      | ResolveSpreadsToMultiflowCallFull _
+      | ResolveSpreadsToMultiflowSubtypeFull _ ->
+        p t)
   | SentinelPropTestT (l, sense, sentinel, result) -> p ~reason:false
       ~extra:(spf "%s, %b, %s, %s"
         (kid l)
@@ -2263,3 +2270,8 @@ let dump_flow_error =
         spf "EReactKit (%s, %s, _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
+    | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
+        spf "EFunctionCallExtraArg (%s, %s, %d)"
+          (dump_reason cx  unused_reason)
+          (dump_reason cx def_reason)
+          param_count

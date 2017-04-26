@@ -20,8 +20,8 @@ let run cx trace reason_op l u
   ~(rec_flow_t: Context.t -> Trace.t -> ?use_op:Type.use_op -> (Type.t * Type.t) -> unit)
   ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t)
   ~(get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
-  ~(mk_functioncalltype: Type.call_arg list -> ?frame:int -> Type.t -> Type.funcalltype)
-  ~(mk_methodcalltype: Type.t -> Type.call_arg list -> ?frame:int -> Type.t -> Type.funcalltype)
+  ~(mk_functioncalltype: Type.call_arg list -> ?frame:int -> ?call_strict_arity:bool -> Type.t -> Type.funcalltype)
+  ~(mk_methodcalltype: Type.t -> Type.call_arg list -> ?frame:int -> ?call_strict_arity:bool -> Type.t -> Type.funcalltype)
   ~(mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?for_type:bool -> Type.t -> Type.t)
   ~(mk_object: Context.t -> reason -> Type.t)
   ~(mk_object_with_map_proto: Context.t -> reason -> ?sealed:bool -> ?exact:bool -> ?frozen:bool -> ?dict:Type.dicttype -> Type.Properties.t -> Type.t -> Type.t)
@@ -113,9 +113,13 @@ let run cx trace reason_op l u
           [Locationless.AnyT.t]
       in
       let return_t = MaybeT (elem_reason, return_t) in
-      let context_t = Locationless.AnyT.t in
+      let context_t =
+        AnyT (replace_reason_const (RCustom "context") elem_reason) in
       let args = [Arg config; Arg context_t] in
-      let call_t = CallT (reason_op, mk_functioncalltype args return_t) in
+      let funcalltype ={ (mk_functioncalltype args return_t) with
+        call_strict_arity = false;
+      } in
+      let call_t = CallT (reason_op, funcalltype) in
       rec_flow cx trace (l, call_t)
     | StrT _
     | SingletonStrT _ ->

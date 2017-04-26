@@ -509,21 +509,21 @@ response.js:33
   827: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                                                                   ^^^^^^^^^^^^^^^^ union: $TypedArray | DataView. See lib: <BUILTINS>/bom.js:827
     Member 1:
-    664: type $ArrayBufferView = $TypedArray | DataView;
-                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:664
+    668: type $ArrayBufferView = $TypedArray | DataView;
+                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:668
     Error:
      33: const i: Response = new Response({
                                           ^ object literal. This type is incompatible with
-    664: type $ArrayBufferView = $TypedArray | DataView;
-                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:664
+    668: type $ArrayBufferView = $TypedArray | DataView;
+                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:668
     Member 2:
-    664: type $ArrayBufferView = $TypedArray | DataView;
-                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:664
+    668: type $ArrayBufferView = $TypedArray | DataView;
+                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:668
     Error:
      33: const i: Response = new Response({
                                           ^ object literal. This type is incompatible with
-    664: type $ArrayBufferView = $TypedArray | DataView;
-                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:664
+    668: type $ArrayBufferView = $TypedArray | DataView;
+                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:668
 
 response.js:44
  44: h.text().then((t: Buffer) => t); // incorrect

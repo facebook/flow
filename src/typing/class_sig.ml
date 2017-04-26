@@ -452,7 +452,7 @@ let mk cx _loc reason self ~expr =
       (* TODO: Does this distinction matter for the type checker? *)
       class_sig
     else
-      let reason = replace_reason_const RConstructor reason in
+      let reason = replace_reason_const RDefaultConstructor reason in
       add_default_constructor reason class_sig
   in
 
@@ -694,7 +694,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
   if structural || mem_constructor iface_sig || inherits_constructor
   then iface_sig
   else
-    let reason = mk_reason RConstructor loc in
+    let reason = mk_reason RDefaultConstructor loc in
     add_default_constructor reason iface_sig
 )
 

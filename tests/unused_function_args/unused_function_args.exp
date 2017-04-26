@@ -1,0 +1,238 @@
+test.js:4
+  4: foo(1, 2); // 2 errors
+         ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:4
+  4: foo(1, 2); // 2 errors
+            ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:6
+  6:   1, // error
+       ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:7
+  7:   2, // error
+       ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:9
+  9: foo(...args); // 2 errors
+     ^^^^^^^^^^^^ function call
+  2: const args = [3, 4];
+                   ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:9
+  9: foo(...args); // 2 errors
+     ^^^^^^^^^^^^ function call
+  2: const args = [3, 4];
+                      ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:11
+ 11: foo.call(null, 1, 2); // 2 errors
+                    ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:11
+ 11: foo.call(null, 1, 2); // 2 errors
+                       ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:12
+ 12: foo.call(null, ...args); // 2 errors
+     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
+  2: const args = [3, 4];
+                   ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:12
+ 12: foo.call(null, ...args); // 2 errors
+     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
+  2: const args = [3, 4];
+                      ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:13
+ 13: foo.call(null, 1, 2, ...args); // 4 errors
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
+  2: const args = [3, 4];
+                   ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:13
+ 13: foo.call(null, 1, 2, ...args); // 4 errors
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
+  2: const args = [3, 4];
+                      ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:13
+ 13: foo.call(null, 1, 2, ...args); // 4 errors
+                    ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:13
+ 13: foo.call(null, 1, 2, ...args); // 4 errors
+                       ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:15
+ 15: foo.apply(null, [1, 2]); // 2 errors
+                      ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:15
+ 15: foo.apply(null, [1, 2]); // 2 errors
+                         ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:16
+ 16: foo.apply(null, args); // 2 errors
+     ^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+  2: const args = [3, 4];
+                   ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:16
+ 16: foo.apply(null, args); // 2 errors
+     ^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+  2: const args = [3, 4];
+                      ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:18
+ 18: foo.bind(null, 1, 2); // 2 errors
+                    ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:18
+ 18: foo.bind(null, 1, 2); // 2 errors
+                       ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:19
+ 19: foo.bind(null, ...args); // 2 errors
+     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `bind`
+  2: const args = [3, 4];
+                   ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:19
+ 19: foo.bind(null, ...args); // 2 errors
+     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `bind`
+  2: const args = [3, 4];
+                      ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:20
+ 20: foo.bind(null, 1, 2, ...args); // 4 errors
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `bind`
+  2: const args = [3, 4];
+                   ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:20
+ 20: foo.bind(null, 1, 2, ...args); // 4 errors
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `bind`
+  2: const args = [3, 4];
+                      ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:20
+ 20: foo.bind(null, 1, 2, ...args); // 4 errors
+                    ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:20
+ 20: foo.bind(null, 1, 2, ...args); // 4 errors
+                       ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:22
+ 22: new foo(1, 2); // 2 errors
+             ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:22
+ 22: new foo(1, 2); // 2 errors
+                ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:23
+ 23: new foo(...args); // 2 errors
+     ^^^^^^^^^^^^^^^^ constructor call
+  2: const args = [3, 4];
+                   ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:23
+ 23: new foo(...args); // 2 errors
+     ^^^^^^^^^^^^^^^^ constructor call
+  2: const args = [3, 4];
+                      ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:24
+ 24: new foo(1, 2, ...args); // 4 errors
+     ^^^^^^^^^^^^^^^^^^^^^^ constructor call
+  2: const args = [3, 4];
+                   ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:24
+ 24: new foo(1, 2, ...args); // 4 errors
+     ^^^^^^^^^^^^^^^^^^^^^^ constructor call
+  2: const args = [3, 4];
+                      ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:24
+ 24: new foo(1, 2, ...args); // 4 errors
+             ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+test.js:24
+ 24: new foo(1, 2, ...args); // 4 errors
+                ^ unused function argument
+    1: function foo() {}
+       ^^^^^^^^^^^^^^^^^ function expects no arguments
+
+
+Found 34 errors

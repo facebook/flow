@@ -607,7 +607,8 @@ module rec TypeTerm : sig
     return_t: t;
     closure_t: int;
     is_predicate: bool;
-    changeset: Changeset.t
+    changeset: Changeset.t;
+    def_reason: Reason.t;
   }
 
   (* Used by CallT and similar constructors *)
@@ -616,6 +617,7 @@ module rec TypeTerm : sig
     call_args_tlist: call_arg list;
     call_tout: t;
     call_closure_t: int;
+    call_strict_arity: bool;
   }
 
   and call_arg =
@@ -896,7 +898,8 @@ module rec TypeTerm : sig
 
   (* Once we've finished resolving spreads for a function's arguments, call the
    * function with those arguments *)
-  | ResolveSpreadsToMultiflowFull of int * funtype
+  | ResolveSpreadsToMultiflowCallFull of int * funtype
+  | ResolveSpreadsToMultiflowSubtypeFull of int * funtype
 
   (* Once we've finished resolving spreads for a function's arguments,
    * partially apply the arguments to the function and return the resulting
@@ -2237,7 +2240,9 @@ let string_of_use_ctor = function
     | ResolveSpreadsToTuple _ -> "ResolveSpreadsToTuple"
     | ResolveSpreadsToArray _ -> "ResolveSpreadsToArray"
     | ResolveSpreadsToArrayLiteral _ -> "ResolveSpreadsToArrayLiteral"
-    | ResolveSpreadsToMultiflowFull _ -> "ResolveSpreadsToMultiflowFull"
+    | ResolveSpreadsToMultiflowCallFull _ -> "ResolveSpreadsToMultiflowCallFull"
+    | ResolveSpreadsToMultiflowSubtypeFull _ ->
+      "ResolveSpreadsToMultiflowSubtypeFull"
     | ResolveSpreadsToMultiflowPartial _ -> "ResolveSpreadsToMultiflowPartial"
     | ResolveSpreadsToCallT _ -> "ResolveSpreadsToCallT"
     end
