@@ -1,3 +1,21 @@
+### 0.45.0
+
+New Features:
+* Flow now has proper unicode support in its parser!
+* Support for `import` expressions (Thanks [deecewan](https://github.com/deecewan)!)
+* Introducing `export type * from ...`, an analogue of `export * from ...`
+
+Notable bug fixes:
+* Fixed incremental checking bug when lib files are added or removed
+
+Misc:
+* libdef and docs updates. Thanks for the PRs! Keep 'em coming!
+
+Parser:
+* Unicode is finally supported! We've moved our lexer from ocamllex to sedlex, which supports unicode!
+* Fixed location of unary operator argument when surrounded by parens
+* Fixed a bug around using tagged templates expressions as call or member expressions
+
 ### v0.44.1
 
 Notable bug fixes:
