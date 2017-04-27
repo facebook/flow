@@ -188,18 +188,18 @@ let settertype {params; _} =
 let toplevels id cx this super ~decls ~stmts ~expr
   {kind; tparams_map; params; body; return_t; _} =
 
-  let reason =
+  let loc, reason =
     let loc = Ast.Function.(match body with
       | BodyBlock (loc, _)
       | BodyExpression (loc, _) -> loc
     ) in
-    mk_reason RFunctionBody loc
+    loc, mk_reason RFunctionBody loc
   in
 
   let env =  Env.peek_env () in
   let new_env = Env.clone_env env in
 
-  Env.update_env cx reason new_env;
+  Env.update_env cx loc new_env;
   Env.havoc_all();
 
   (* create and prepopulate function scope *)
@@ -357,4 +357,4 @@ let toplevels id cx this super ~decls ~stmts ~expr
 
   Env.pop_var_scope ();
 
-  Env.update_env cx reason env
+  Env.update_env cx loc env

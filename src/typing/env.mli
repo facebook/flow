@@ -47,7 +47,7 @@ val init_env:
   Scope.t ->
   unit
 
-val update_env: Context.t -> reason -> t -> unit
+val update_env: Context.t -> Loc.t -> t -> unit
 
 (***)
 

@@ -284,12 +284,12 @@ let init_env ?(exclude_syms=SSet.empty) cx module_scope =
 (* replace the current env with the passed one.
    envs must be congruent - we measure length as a quick check,
    with a more thorough check on env merge/copy *)
-let update_env cx reason new_scopes =
+let update_env cx loc new_scopes =
 
   (if List.length new_scopes != List.length (peek_env ())
   then assert_false (spf
     "update_env %s: unequal length scope lists, old %d new %d "
-    (string_of_reason reason)
+    (string_of_loc loc)
     (List.length new_scopes)
     (List.length (peek_env ()))));
 
@@ -1341,13 +1341,13 @@ let in_refined_env cx reason preds orig_types f =
   let oldset = Changeset.clear () in
   let orig_env = peek_env () in
   let new_env = clone_env orig_env in
-  update_env cx reason new_env;
+  update_env cx (loc_of_reason reason) new_env;
   let _ = refine_with_preds cx reason preds orig_types in
 
   let result = f () in
 
   let newset = Changeset.merge oldset in
   merge_env cx reason (orig_env, orig_env, new_env) newset;
-  update_env cx reason orig_env;
+  update_env cx (loc_of_reason reason) orig_env;
 
   result
