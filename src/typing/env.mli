@@ -52,30 +52,30 @@ val update_env: Context.t -> Loc.t -> t -> unit
 (***)
 
 val bind_var: ?state:State.t -> Context.t -> string -> Type.t ->
-  reason -> unit
+  Loc.t -> unit
 
 val bind_let: ?state:State.t -> Context.t -> string -> Type.t ->
-  reason -> unit
+  Loc.t -> unit
 
 val bind_implicit_let: ?state:State.t -> Entry.let_binding_kind ->
-  Context.t -> string -> Type.t -> reason -> unit
+  Context.t -> string -> Type.t -> Loc.t -> unit
 
 val bind_fun: ?state:State.t -> Context.t -> string -> Type.t ->
-  reason -> unit
+  Loc.t -> unit
 
 val bind_implicit_const: ?state:State.t -> Entry.const_binding_kind ->
-  Context.t -> string -> Type.t -> reason -> unit
+  Context.t -> string -> Type.t -> Loc.t -> unit
 
 val bind_const: ?state:State.t -> Context.t -> string -> Type.t ->
-  reason -> unit
+  Loc.t -> unit
 
-val bind_import: Context.t -> string -> Type.t -> reason -> unit
+val bind_import: Context.t -> string -> Type.t -> Loc.t -> unit
 
 val bind_type: ?state:State.t -> Context.t -> string -> Type.t ->
-  reason -> unit
+  Loc.t -> unit
 
-val bind_declare_var: Context.t -> string -> Type.t -> reason -> unit
-val bind_declare_fun: Context.t -> string -> Type.t -> reason -> unit
+val bind_declare_var: Context.t -> string -> Type.t -> Loc.t -> unit
+val bind_declare_fun: Context.t -> string -> Type.t -> Loc.t -> unit
 
 val declare_const: Context.t -> string -> reason -> unit
 val declare_let: Context.t -> string -> reason -> unit

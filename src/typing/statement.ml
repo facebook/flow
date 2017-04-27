@@ -75,7 +75,7 @@ let rec variable_decl cx entry = Ast.Statement.(
          will resolve the type annotation and unify it with this tvar. *)
       let t = Flow_js.mk_tvar cx r in
       Hashtbl.replace (Context.type_table cx) loc t;
-      bind cx name t r
+      bind cx name t id_loc
     | (loc, _) as p ->
       let pattern_name = internal_pattern_name loc in
       let desc = RCustom (spf "%s _" str_of_kind) in
@@ -84,7 +84,7 @@ let rec variable_decl cx entry = Ast.Statement.(
       let t = typeAnnotation |>
         (* TODO: delay resolution of type annotation like above? *)
         Anno.mk_type_annotation cx SMap.empty r in
-      bind cx pattern_name t r;
+      bind cx pattern_name t loc;
       let expr _ _ = EmptyT.at loc in (* don't eval computed property keys *)
       destructuring cx ~expr t None None p ~f:(fun loc name _default t ->
         let r = repos_reason loc r in
@@ -95,7 +95,7 @@ let rec variable_decl cx entry = Ast.Statement.(
           EvalT (t, DestructuringT (r, Become), mk_id())
         in
         Hashtbl.replace (Context.type_table cx) loc t;
-        bind cx name t r
+        bind cx name t loc
       )
   ) in
 
@@ -149,7 +149,7 @@ and statement_decl cx = Ast.Statement.(
   | (_, TypeAlias { TypeAlias.id = (name_loc, name); _ } ) ->
       let r = DescFormat.type_reason name name_loc in
       let tvar = Flow.mk_tvar cx r in
-      Env.bind_type cx name tvar r
+      Env.bind_type cx name tvar name_loc
 
   | (_, Switch { Switch.cases; _ }) ->
       Env.in_lex_scope cx (fun () ->
@@ -219,7 +219,7 @@ and statement_decl cx = Ast.Statement.(
         let desc = RFunction (function_desc func) in
         let r = mk_reason desc loc in
         let tvar = Flow.mk_tvar cx r in
-        Env.bind_fun cx name tvar r
+        Env.bind_fun cx name tvar loc
       | None ->
         failwith (
           "Flow Error: Nameless function declarations should always be given " ^
@@ -234,7 +234,7 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (RCustom (spf "declare %s" name)) loc in
       let t = Anno.mk_type_annotation cx SMap.empty r typeAnnotation in
       Hashtbl.replace (Context.type_table cx) loc t;
-      Env.bind_declare_var cx name t r
+      Env.bind_declare_var cx name t loc
 
   | (loc, DeclareFunction { DeclareFunction.
       id = (_, name) as id;
@@ -247,7 +247,7 @@ and statement_decl cx = Ast.Statement.(
           let t =
             Anno.mk_type_annotation cx SMap.empty r (Some typeAnnotation) in
           Hashtbl.replace (Context.type_table cx) loc t;
-          Env.bind_declare_fun cx name t r
+          Env.bind_declare_fun cx name t loc
       | Some func_decl ->
           statement_decl cx (loc, func_decl)
       )
@@ -260,7 +260,7 @@ and statement_decl cx = Ast.Statement.(
       | Some (name_loc, name) ->
         let r = mk_reason (RCustom (spf "class `%s`" name)) name_loc in
         let tvar = Flow.mk_tvar cx r in
-        Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name tvar r
+        Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name tvar name_loc
       | None -> ()
     )
 
@@ -273,8 +273,8 @@ and statement_decl cx = Ast.Statement.(
       let tvar = Flow.mk_tvar cx r in
       (* interface is a type alias, declare class is a var *)
       if is_interface
-      then Env.bind_type cx name tvar r
-      else Env.bind_declare_var cx name tvar r
+      then Env.bind_type cx name tvar loc
+      else Env.bind_declare_var cx name tvar loc
 
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
@@ -289,7 +289,7 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (RCustom (spf "module `%s`" name)) loc in
       let t = Flow.mk_tvar cx r in
       Hashtbl.replace (Context.type_table cx) loc t;
-      Env.bind_declare_var cx (internal_module_name name) t r
+      Env.bind_declare_var cx (internal_module_name name) t loc
 
   | _,
     DeclareExportDeclaration {
@@ -369,8 +369,8 @@ and statement_decl cx = Ast.Statement.(
         let tvar = Flow.mk_tvar cx reason in
         let state = Scope.State.Initialized in
         if isType
-        then Env.bind_type ~state cx local_name tvar reason
-        else Env.bind_import cx local_name tvar reason
+        then Env.bind_type ~state cx local_name tvar loc
+        else Env.bind_import cx local_name tvar loc
       )
 )
 
@@ -462,7 +462,7 @@ and statement cx = Ast.Statement.(
 
           (match Env.in_lex_scope cx (fun () ->
             Scope.(Env.bind_implicit_let
-              ~state:State.Initialized Entry.CatchParamBinding cx name t r);
+              ~state:State.Initialized Entry.CatchParamBinding cx name t loc);
 
             Abnormal.catch_control_flow_exception (fun () ->
               toplevel_decls cx b.Block.body;
@@ -1601,8 +1601,7 @@ and statement cx = Ast.Statement.(
 
     if Context.declare_module_t cx <> None then (
       let name = internal_name "declare_module.exports" in
-      let reason = mk_reason (RCustom "declare module.exports") loc in
-      Env.bind_declare_var cx name t reason
+      Env.bind_declare_var cx name t loc
     ) else (
       let reason = mk_reason (RCustom "declare module.exports") loc in
       set_module_kind cx reason (Context.CommonJSModule(Some loc));

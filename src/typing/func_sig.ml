@@ -229,7 +229,8 @@ let toplevels id cx this super ~decls ~stmts ~expr
   (* bind type params *)
   SMap.iter (fun name t ->
     let r = reason_of_t t in
-    Env.bind_type cx name (TypeT (r, t)) r
+    let loc = loc_of_reason r in
+    Env.bind_type cx name (TypeT (r, t)) loc
       ~state:Scope.State.Initialized
   ) tparams_map;
 
@@ -254,9 +255,9 @@ let toplevels id cx this super ~decls ~stmts ~expr
     (* add to scope *)
     if const_params
     then Env.bind_implicit_const ~state:State.Initialized
-      Entry.ConstParamBinding cx name t reason
+      Entry.ConstParamBinding cx name t loc
     else Env.bind_implicit_let ~state:State.Initialized
-      Entry.ParamBinding cx name t reason
+      Entry.ParamBinding cx name t loc
   );
 
   (* early-add our own name binding for recursive calls *)

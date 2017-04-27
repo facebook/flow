@@ -424,7 +424,7 @@ let already_bound_error =
    may appear in an AST)
  *)
 
-let bind_entry cx name entry reason =
+let bind_entry cx name entry loc =
   (* iterate top-down through scopes until the appropriate scope for this
      binding is found, or realize a binding error *)
   let rec loop = function
@@ -469,49 +469,42 @@ let bind_entry cx name entry reason =
             Flow_js.unify cx
               (Entry.general_of_value p) (Entry.general_of_value e)
           (* bad shadowing is a binding error *)
-          | _ -> already_bound_error cx name prev (loc_of_reason reason))
+          | _ -> already_bound_error cx name prev loc)
 
         (* shadowing in a lex scope is always an error *)
-        | LexScope -> already_bound_error cx name prev (loc_of_reason reason)
+        | LexScope -> already_bound_error cx name prev loc
   in
   if not (is_excluded name) then loop !scopes
 
 (* bind var entry *)
-let bind_var ?(state=State.Declared) cx name t r =
-  let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_var t ~loc ~state) r
+let bind_var ?(state=State.Declared) cx name t loc =
+  bind_entry cx name (Entry.new_var t ~loc ~state) loc
 
 (* bind let entry *)
-let bind_let ?(state=State.Undeclared) cx name t r =
-  let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_let t ~loc ~state) r
+let bind_let ?(state=State.Undeclared) cx name t loc =
+  bind_entry cx name (Entry.new_let t ~loc ~state) loc
 
 (* bind implicit let entry *)
-let bind_implicit_let ?(state=State.Undeclared) kind cx name t r =
-  let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_let t ~kind ~loc ~state) r
+let bind_implicit_let ?(state=State.Undeclared) kind cx name t loc =
+  bind_entry cx name (Entry.new_let t ~kind ~loc ~state) loc
 
 let bind_fun ?(state=State.Declared) =
   bind_implicit_let ~state Entry.FunctionBinding
 
 (* bind const entry *)
-let bind_const ?(state=State.Undeclared) cx name t r =
-  let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_const t ~loc ~state) r
+let bind_const ?(state=State.Undeclared) cx name t loc =
+  bind_entry cx name (Entry.new_const t ~loc ~state) loc
 
-let bind_import cx name t r =
-  let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_import t ~loc) r
+let bind_import cx name t loc =
+  bind_entry cx name (Entry.new_import t ~loc) loc
 
 (* bind implicit const entry *)
-let bind_implicit_const ?(state=State.Undeclared) kind cx name t r =
-  let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_const t ~kind ~loc ~state) r
+let bind_implicit_const ?(state=State.Undeclared) kind cx name t loc =
+  bind_entry cx name (Entry.new_const t ~kind ~loc ~state) loc
 
 (* bind type entry *)
-let bind_type ?(state=State.Declared) cx name t r =
-  let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_type t ~loc ~state) r
+let bind_type ?(state=State.Declared) cx name t loc =
+  bind_entry cx name (Entry.new_type t ~loc ~state) loc
 
 (* vars coming from 'declare' statements are preinitialized *)
 let bind_declare_var = bind_var ~state:State.Initialized
@@ -527,14 +520,14 @@ let bind_declare_fun =
     IntersectionT (reason, InterRep.make seen_t new_t [])
   in
 
-  fun cx name t reason ->
+  fun cx name t loc ->
     if not (is_excluded name)
     then (
       let scope = peek_scope () in
       match Scope.get_entry name scope with
       | None ->
         let entry =
-          Entry.new_var t ~loc:(loc_of_reason reason) ~state:State.Initialized
+          Entry.new_var t ~loc ~state:State.Initialized
         in
         Scope.add_entry name entry scope
 
@@ -551,7 +544,7 @@ let bind_declare_fun =
 
         | _ ->
           (* declare function shadows some other kind of binding *)
-          already_bound_error cx name prev (loc_of_reason reason)
+          already_bound_error cx name prev loc
         )
     )
 
