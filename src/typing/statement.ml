@@ -594,14 +594,13 @@ and statement cx = Ast.Statement.(
       | (loc, For _)
       | (loc, ForIn _)
         ->
-        let reason = mk_reason (RCustom "label") loc in
         let oldset = Changeset.clear () in
         let label = Some name in
         let save_break = Abnormal.clear_saved (Abnormal.Break label) in
         let save_continue = Abnormal.clear_saved (Abnormal.Continue label) in
 
         let env = Env.peek_env () in
-        Env.widen_env cx reason;
+        Env.widen_env cx loc;
 
         let loop_env = Env.clone_env env in
         Env.update_env cx loc loop_env;
@@ -1106,7 +1105,7 @@ and statement cx = Ast.Statement.(
       let oldset = Changeset.clear () in
 
       (* widen_env wraps specifics in tvars, anticipating widening inflows *)
-      Env.widen_env cx reason;
+      Env.widen_env cx loc;
 
       (* start_env is Pre above: env as of loop top *)
       let start_env = Env.peek_env () in
@@ -1163,7 +1162,7 @@ and statement cx = Ast.Statement.(
       (* env = Pre *)
       (* ENV = [env] *)
 
-      Env.widen_env cx reason;
+      Env.widen_env cx loc;
       (* env = Pre', Pre' > Pre *)
 
       let body_env = Env.clone_env env in
@@ -1231,7 +1230,7 @@ and statement cx = Ast.Statement.(
 
         let env =  Env.peek_env () in
         let oldset = Changeset.clear () in
-        Env.widen_env cx reason;
+        Env.widen_env cx loc;
 
         let do_env = Env.clone_env env in
         Env.update_env cx loc do_env;
@@ -1291,7 +1290,7 @@ and statement cx = Ast.Statement.(
 
         let env =  Env.peek_env () in
         let oldset = Changeset.clear () in
-        Env.widen_env cx reason;
+        Env.widen_env cx loc;
 
         let body_env = Env.clone_env env in
         Env.update_env cx loc body_env;
@@ -1355,7 +1354,7 @@ and statement cx = Ast.Statement.(
 
         let env =  Env.peek_env () in
         let oldset = Changeset.clear () in
-        Env.widen_env cx reason;
+        Env.widen_env cx loc;
 
         let body_env = Env.clone_env env in
         Env.update_env cx loc body_env;

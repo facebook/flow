@@ -1156,37 +1156,37 @@ let copy_env =
  *)
 let widen_env =
 
-  let widened cx reason name specific general =
+  let widened cx loc name specific general =
     if specific = general
     then None
     else
-      let reason = replace_reason_const (RCustom name) reason in
+      let reason = mk_reason (RIdentifier name) loc in
       let tvar = Flow_js.mk_tvar cx reason in
       Flow_js.flow cx (specific, UseT (Internal WidenEnv, tvar));
       Flow_js.flow cx (tvar, UseT (Internal WidenEnv, general));
       Some tvar
   in
 
-  let widen_var cx reason name ({ Entry.specific; general; _ } as var) =
-    match widened cx reason name specific general with
+  let widen_var cx loc name ({ Entry.specific; general; _ } as var) =
+    match widened cx loc name specific general with
     | None -> var
     | Some specific -> { var with Entry.specific }
   in
 
-  let widen_refi cx reason name ({ refined; original; _ } as refi) =
-    match widened cx reason name refined original with
+  let widen_refi cx loc name ({ refined; original; _ } as refi) =
+    match widened cx loc name refined original with
     | None -> refi
     | Some refined -> { refi with refined }
   in
 
-  fun cx reason ->
+  fun cx loc ->
     iter_local_scopes (fun scope ->
       scope |> Scope.update_entries Entry.(fun name -> function
-        | Value var -> Value (widen_var cx reason name var)
+        | Value var -> Value (widen_var cx loc name var)
         | entry -> entry
       );
       scope |> Scope.update_refis (fun key refi ->
-        widen_refi cx reason (Key.string_of_key key) refi)
+        widen_refi cx loc (Key.string_of_key key) refi)
     )
 
 (* The protocol around havoc has changed a few times.

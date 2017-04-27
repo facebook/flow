@@ -175,7 +175,7 @@ val merge_env:
   Changeset.t ->
   unit
 
-val widen_env: Context.t -> reason -> unit
+val widen_env: Context.t -> Loc.t -> unit
 
 val copy_env:
   Context.t ->
