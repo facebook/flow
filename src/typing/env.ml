@@ -1283,7 +1283,7 @@ let refine_expr = add_heap_refinement Changeset.Refine
    only necessary for fresh pseudovars like heap refinements -
    others can be obtained via query_var.
  *)
-let refine_with_preds cx reason preds orig_types =
+let refine_with_preds cx loc preds orig_types =
   let mk_refi_type orig_type pred refi_reason =
     Flow_js.mk_tvar_where cx refi_reason (fun refined_type ->
       Flow_js.flow cx (orig_type, PredicateT (pred, refined_type)))
@@ -1292,16 +1292,16 @@ let refine_with_preds cx reason preds orig_types =
     match key with
     (* for real consts/lets/vars, we model assignment/initialization *)
     | name, [] when not (is_internal_name name) ->
+      let reason = mk_reason (RIdentifier name) loc in
       let refi_reason =
         let pred_str = string_of_predicate pred in
         let rstr = spf "identifier %s when %s" name pred_str in
-        replace_reason_const (RCustom rstr) reason
+        mk_reason (RCustom rstr) loc
       in
       Entry.(match find_entry cx name reason with
       | _, Value v ->
         let orig_type =
-          let get_reason = replace_reason_const (RIdentifier name) reason in
-          query_var ~track_ref:false cx name get_reason
+          query_var ~track_ref:false cx name reason
         in
         let refi_type = mk_refi_type orig_type pred refi_reason in
         let refine = match Entry.kind_of_value v with
@@ -1322,7 +1322,7 @@ let refine_with_preds cx reason preds orig_types =
         let pred_str = string_of_predicate pred in
         let rstr = spf "expression %s when %s"
           (Key.string_of_key key) pred_str in
-        replace_reason_const (RCustom rstr) reason
+        mk_reason (RCustom rstr) loc
       in
       let orig_type = Key_map.find_unsafe key orig_types in
       let refi_type = mk_refi_type orig_type pred refi_reason in
@@ -1340,7 +1340,7 @@ let in_refined_env cx reason preds orig_types f =
   let orig_env = peek_env () in
   let new_env = clone_env orig_env in
   update_env cx (loc_of_reason reason) new_env;
-  let _ = refine_with_preds cx reason preds orig_types in
+  let _ = refine_with_preds cx (loc_of_reason reason) preds orig_types in
 
   let result = f () in
 

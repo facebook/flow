@@ -505,8 +505,6 @@ and statement cx = Ast.Statement.(
      [Pre] if c S1 else S2 [Post]
   *)
   | (loc, If { If.test; consequent; alternate }) ->
-      let reason = mk_reason (RCustom "if") loc in
-
       let _, preds, not_preds, xts =
         predicates_of_condition cx test in
 
@@ -518,7 +516,7 @@ and statement cx = Ast.Statement.(
       (* swap in a refined clone of initial env for then *)
       Env.(
         update_env cx loc (clone_env start_env);
-        ignore (refine_with_preds cx reason preds xts)
+        ignore (refine_with_preds cx loc preds xts)
       );
 
       let exception_then = Abnormal.catch_control_flow_exception
@@ -531,7 +529,7 @@ and statement cx = Ast.Statement.(
       (* then swap in a refined clone of initial env for else *)
       Env.(
         update_env cx loc (clone_env start_env);
-        ignore (refine_with_preds cx reason not_preds xts)
+        ignore (refine_with_preds cx loc not_preds xts)
       );
 
       let exception_else = match alternate with
@@ -721,12 +719,10 @@ and statement cx = Ast.Statement.(
         fun (loc, { Switch.Case.test; consequent }) ->
 
         (* compute predicates implied by case expr or default *)
-        let reason, (_, preds, not_preds, xtypes) = match test with
+        let _, preds, not_preds, xtypes = match test with
         | None ->
-          mk_reason (RCustom "default") loc,
-          (EmptyT.at loc, Key_map.empty, Key_map.empty, Key_map.empty)
+          EmptyT.at loc, Key_map.empty, Key_map.empty, Key_map.empty
         | Some expr ->
-          mk_reason (RCustom "case") loc,
           let fake_ast = loc, Ast.Expression.(Binary {
             Binary.operator = Binary.StrictEqual;
             left = discriminant; right = expr
@@ -740,7 +736,7 @@ and statement cx = Ast.Statement.(
         let save_changes = Changeset.clear () in
 
         (* add test refinements - save changelist for later *)
-        let test_refis = Env.refine_with_preds cx reason preds xtypes in
+        let test_refis = Env.refine_with_preds cx loc preds xtypes in
 
         (* merge env changes from fallthrough case, if present *)
         Option.iter !fallthrough_case ~f:(fun (env, writes, refis, _) ->
@@ -792,7 +788,7 @@ and statement cx = Ast.Statement.(
         (* add negative refis of this case's test to common start env *)
         (* TODO add API to do this without having to swap in env *)
         Env.update_env cx loc case_start_env;
-        let _ = Env.refine_with_preds cx reason not_preds xtypes in
+        let _ = Env.refine_with_preds cx loc not_preds xtypes in
 
         exit
       ) in
@@ -1092,8 +1088,6 @@ and statement cx = Ast.Statement.(
   *)
   (***************************************************************************)
   | (loc, While { While.test; body }) ->
-
-      let reason = mk_reason (RCustom "while") loc in
       let save_break = Abnormal.clear_saved (Abnormal.Break None) in
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
 
@@ -1113,7 +1107,7 @@ and statement cx = Ast.Statement.(
       (* swap in Pre & c *)
       Env.(
         update_env cx loc (clone_env start_env);
-        ignore (refine_with_preds cx reason preds orig_types)
+        ignore (refine_with_preds cx loc preds orig_types)
       );
 
       (* traverse loop body - after this, body_env = Post' *)
@@ -1136,7 +1130,7 @@ and statement cx = Ast.Statement.(
       Env.(
         copy_env cx loc (start_env, body_env) newset;
         update_env cx loc start_env;
-        ignore (refine_with_preds cx reason not_preds orig_types)
+        ignore (refine_with_preds cx loc not_preds orig_types)
       );
 
       (* if we broke out of the loop, havoc vars changed by loop body *)
@@ -1154,7 +1148,6 @@ and statement cx = Ast.Statement.(
   *)
   (***************************************************************************)
   | (loc, DoWhile { DoWhile.body; test }) ->
-      let reason = mk_reason (RCustom "do-while") loc in
       let save_break = Abnormal.clear_saved (Abnormal.Break None) in
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
       let env =  Env.peek_env () in
@@ -1185,7 +1178,7 @@ and statement cx = Ast.Statement.(
       let done_env = Env.clone_env body_env in
       (* done_env = Post' *)
 
-      let _ = Env.refine_with_preds cx reason preds xtypes in
+      let _ = Env.refine_with_preds cx loc preds xtypes in
       (* body_env = Post' & c *)
 
       let newset = Changeset.merge oldset in
@@ -1193,7 +1186,7 @@ and statement cx = Ast.Statement.(
       (* Pre' > Post' & c *)
 
       Env.update_env cx loc done_env;
-      let _ = Env.refine_with_preds cx reason not_preds xtypes in
+      let _ = Env.refine_with_preds cx loc not_preds xtypes in
       if Abnormal.swap_saved (Abnormal.Break None) save_break <> None
       then Env.havoc_vars newset;
       (* ENV = [done_env] *)
@@ -1216,7 +1209,6 @@ and statement cx = Ast.Statement.(
   (***************************************************************************)
   | (loc, For { For.init; test; update; body }) ->
       Env.in_lex_scope cx (fun () ->
-        let reason = mk_reason (RCustom "for") loc in
         let save_break = Abnormal.clear_saved (Abnormal.Break None) in
         let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
         (match init with
@@ -1245,7 +1237,7 @@ and statement cx = Ast.Statement.(
 
         let body_env = Env.clone_env do_env in
         Env.update_env cx loc body_env;
-        let _ = Env.refine_with_preds cx reason preds xtypes in
+        let _ = Env.refine_with_preds cx loc preds xtypes in
 
         ignore (Abnormal.catch_control_flow_exception
           (fun () -> statement cx body));
@@ -1263,7 +1255,7 @@ and statement cx = Ast.Statement.(
         Env.copy_env cx loc (env, body_env) newset;
 
         Env.update_env cx loc do_env;
-        let _ = Env.refine_with_preds cx reason not_preds xtypes in
+        let _ = Env.refine_with_preds cx loc not_preds xtypes in
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None
         then Env.havoc_vars newset
       )
@@ -1297,7 +1289,7 @@ and statement cx = Ast.Statement.(
 
         let _, preds, _, xtypes =
           predicates_of_condition cx right in
-        let _ = Env.refine_with_preds cx reason preds xtypes in
+        let _ = Env.refine_with_preds cx loc preds xtypes in
 
         (match left with
           | ForIn.LeftDeclaration (_, ({ VariableDeclaration.
@@ -1361,7 +1353,7 @@ and statement cx = Ast.Statement.(
 
         let _, preds, _, xtypes =
           predicates_of_condition cx right in
-        let _ = Env.refine_with_preds cx reason preds xtypes in
+        let _ = Env.refine_with_preds cx loc preds xtypes in
 
         (match left with
           | ForOf.LeftDeclaration (_, ({ VariableDeclaration.
@@ -2720,7 +2712,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       | (Expression cond)::arguments ->
         ignore (List.map (expression_or_spread cx) arguments);
         let _, preds, _, xtypes = predicates_of_condition cx cond in
-        let _ = Env.refine_with_preds cx reason preds xtypes in
+        let _ = Env.refine_with_preds cx loc preds xtypes in
         ()
       | (Spread _)::_ ->
         Flow_js.add_output cx
@@ -2743,12 +2735,12 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
       let then_env = Env.clone_env env in
       Env.update_env cx loc then_env;
-      let _ = Env.refine_with_preds cx reason preds xtypes in
+      let _ = Env.refine_with_preds cx loc preds xtypes in
       let t1 = expression cx consequent in
 
       let else_env = Env.clone_env env in
       Env.update_env cx loc else_env;
-      let _ = Env.refine_with_preds cx reason not_preds xtypes in
+      let _ = Env.refine_with_preds cx loc not_preds xtypes in
       let t2 = expression cx alternate in
 
       let newset = Changeset.merge oldset in

@@ -155,7 +155,7 @@ val set_expr: Key.t -> reason -> Type.t -> Type.t ->
 
 val refine_with_preds:
   Context.t ->
-  reason ->
+  Loc.t ->
   Type.predicate Key_map.t ->
   Type.t Key_map.t ->
   Changeset.t
