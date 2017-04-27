@@ -3588,11 +3588,11 @@ and jsx_desugar cx name component_t props attributes children eloc =
         property = Member.PropertyIdentifier (prop_loc, name);
           _;
         } ->
-          let ot = jsx_pragma_expression cx eloc _object in
+          let ot = jsx_pragma_expression cx raw_jsx_expr eloc _object in
           method_call cx reason ~call_strict_arity:false prop_loc
             (jsx_expr, ot, name) argts
       | _ ->
-          let f = jsx_pragma_expression cx eloc jsx_expr in
+          let f = jsx_pragma_expression cx raw_jsx_expr eloc jsx_expr in
           func_call cx reason ~call_strict_arity:false f argts
       )
   | Some Options.CSX ->
@@ -3614,9 +3614,10 @@ and jsx_desugar cx name component_t props attributes children eloc =
  * We can cover almost all the cases by just explicitly handling identifiers,
  * since the common error is that the identifier is not in scope.
  *)
-and jsx_pragma_expression cx loc = Ast.Expression.(function
+and jsx_pragma_expression cx raw_jsx_expr loc = Ast.Expression.(function
   | _, Identifier (_, name) ->
-      Env.var_ref ~lookup_mode:ForValue cx name loc
+      let desc = RJSXIdentifier (raw_jsx_expr, name) in
+      Env.var_ref ~lookup_mode:ForValue cx name loc ~desc
   | expr ->
       (* Oh well, we tried *)
       expression cx expr

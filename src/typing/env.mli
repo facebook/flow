@@ -140,6 +140,7 @@ val var_ref:
   ?lookup_mode:LookupMode.t ->
   Context.t ->
   string ->
+  ?desc:Reason.reason_desc ->
   Loc.t ->
   Type.t
 

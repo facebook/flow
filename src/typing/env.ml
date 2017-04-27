@@ -332,14 +332,18 @@ let global_lexicals = [
    flag such errors on the current deferred basis.
    tests/global_ref tracks this issue.
  *)
-let cache_global cx name loc global_scope =
+let cache_global cx name ?desc loc global_scope =
   let t =
     if List.mem name global_any
     then AnyT.at loc
     else if List.mem name global_lexicals
     then ObjProtoT (mk_reason (RCustom "global object") loc)
     else
-      let reason = mk_reason (RIdentifier name) loc in
+      let desc = match desc with
+      | Some desc -> desc
+      | None -> RIdentifier name
+      in
+      let reason = mk_reason desc loc in
       Flow_js.get_builtin cx name reason
   in
   let entry = Entry.new_var t ~loc ~state:State.Initialized in
@@ -364,7 +368,7 @@ let local_scope_entry_exists name =
    return scope and entry. Note that anything we don't resolve
    otherwise, we add to the global scope after generating a
    deferred lookup, which may fail later. *)
-let find_entry cx name loc =
+let find_entry cx name ?desc loc =
   let rec loop = function
     | [] -> assert_false "empty scope list"
     | scope::scopes ->
@@ -373,7 +377,7 @@ let find_entry cx name loc =
       | None ->
         (* keep looking until we're at the global scope *)
         match scopes with
-        | [] -> cache_global cx name loc scope
+        | [] -> cache_global cx name ?desc loc scope
         | _ -> loop scopes
   in
   loop !scopes
@@ -702,8 +706,8 @@ let allow_forward_ref = Scope.Entry.(function
 )
 
 (* helper - does semantic checking and returns entry type *)
-let read_entry ~track_ref ~lookup_mode ~specific cx name loc =
-  let scope, entry = find_entry cx name loc in
+let read_entry ~track_ref ~lookup_mode ~specific cx name ?desc loc =
+  let scope, entry = find_entry cx name ?desc loc in
   if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
     (Entry.entry_loc entry) loc;
   Entry.(match entry with
@@ -754,7 +758,7 @@ let get_current_env_refi key =
 
 (* get var's specific type (and track the reference) *)
 let get_var ?(lookup_mode=ForValue) =
-  read_entry ~track_ref:true ~lookup_mode ~specific:true
+  read_entry ~track_ref:true ~lookup_mode ~specific:true ?desc:None
 
 (* query var's specific type *)
 let query_var ~track_ref ?(lookup_mode=ForValue) =
@@ -768,7 +772,7 @@ let get_internal_var cx name loc =
    types assigned to the var throughout its lifetime.
  *)
 let get_var_declared_type ?(lookup_mode=ForValue) =
-  read_entry ~track_ref:false ~lookup_mode ~specific:false
+  read_entry ~track_ref:false ~lookup_mode ~specific:false ?desc:None
 
 (* Unify declared type with another type. This is useful for allowing forward
    references in declared types to other types declared later in scope. *)
@@ -792,8 +796,8 @@ let is_global_var _cx name =
   loop !scopes
 
 (* get var type, with given location used in type's reason *)
-let var_ref ?(lookup_mode=ForValue) cx name loc =
-  let t = query_var ~track_ref:true ~lookup_mode cx name loc in
+let var_ref ?(lookup_mode=ForValue) cx name ?desc loc =
+  let t = query_var ~track_ref:true ~lookup_mode cx name ?desc loc in
   Flow_js.reposition cx loc t
 
 (* get refinement entry *)
