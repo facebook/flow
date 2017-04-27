@@ -718,7 +718,7 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
     )
 
   | Unqualified (loc, name) ->
-    let desc = RCustom (spf "%s `%s`" reason_prefix name) in
+    let desc = RIdentifier name in
     let reason = mk_reason desc loc in
     Env.get_var ~lookup_mode cx name reason
 )
