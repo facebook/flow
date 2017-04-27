@@ -114,20 +114,20 @@ val get_var:
   ?lookup_mode:LookupMode.t ->
   Context.t ->
   string ->
-  reason ->
+  Loc.t ->
   Type.t
 
 val get_internal_var:
   Context.t ->
   string ->
-  reason ->
+  Loc.t ->
   Type.t
 
 val get_var_declared_type:
   ?lookup_mode:LookupMode.t ->
   Context.t ->
   string ->
-  reason ->
+  Loc.t ->
   Type.t
 
 val unify_declared_type:
@@ -141,7 +141,7 @@ val var_ref:
   ?lookup_mode:LookupMode.t ->
   Context.t ->
   string ->
-  reason ->
+  Loc.t ->
   Type.t
 
 val set_var: Context.t -> string -> Type.t -> reason ->

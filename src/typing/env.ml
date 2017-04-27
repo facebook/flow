@@ -702,15 +702,15 @@ let allow_forward_ref = Scope.Entry.(function
 )
 
 (* helper - does semantic checking and returns entry type *)
-let read_entry ~track_ref ~lookup_mode ~specific cx name reason =
-  let scope, entry = find_entry cx name (loc_of_reason reason) in
+let read_entry ~track_ref ~lookup_mode ~specific cx name loc =
+  let scope, entry = find_entry cx name loc in
   if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
-    (Entry.entry_loc entry) (loc_of_reason reason);
+    (Entry.entry_loc entry) loc;
   Entry.(match entry with
 
   | Type _ when lookup_mode != ForType ->
     let msg = FlowError.ETypeInValuePosition in
-    binding_error msg cx name entry (loc_of_reason reason);
+    binding_error msg cx name entry loc;
     AnyT.at (entry_loc entry)
 
   | Type t ->
@@ -721,7 +721,7 @@ let read_entry ~track_ref ~lookup_mode ~specific cx name reason =
     | { Entry.kind; value_state = State.Undeclared; value_declare_loc; _ }
       when lookup_mode = ForValue && not (allow_forward_ref kind)
       && same_activation scope ->
-      tdz_error cx name (loc_of_reason reason) v;
+      tdz_error cx name loc v;
       AnyT.at value_declare_loc
     | _ ->
       Changeset.change_var (scope.id, name, Changeset.Read);
@@ -760,8 +760,8 @@ let get_var ?(lookup_mode=ForValue) =
 let query_var ~track_ref ?(lookup_mode=ForValue) =
   read_entry ~track_ref ~lookup_mode ~specific:true
 
-let get_internal_var cx name reason =
-  query_var ~track_ref:false cx (internal_name name) reason
+let get_internal_var cx name loc =
+  query_var ~track_ref:false cx (internal_name name) loc
 
 (* get var's general type - for annotated vars, this is the
    annotated type, and for others it's the union of all
@@ -791,10 +791,10 @@ let is_global_var _cx name =
   in
   loop !scopes
 
-(* get var type, with location of given reason used in type's reason *)
-let var_ref ?(lookup_mode=ForValue) cx name reason =
-  let t = query_var ~track_ref:true ~lookup_mode cx name reason in
-  Flow_js.reposition cx (loc_of_reason reason) t
+(* get var type, with given location used in type's reason *)
+let var_ref ?(lookup_mode=ForValue) cx name loc =
+  let t = query_var ~track_ref:true ~lookup_mode cx name loc in
+  Flow_js.reposition cx loc t
 
 (* get refinement entry *)
 let get_refinement cx key reason =
@@ -1286,16 +1286,15 @@ let refine_with_preds cx loc preds orig_types =
     match key with
     (* for real consts/lets/vars, we model assignment/initialization *)
     | name, [] when not (is_internal_name name) ->
-      let reason = mk_reason (RIdentifier name) loc in
       let refi_reason =
         let pred_str = string_of_predicate pred in
         let rstr = spf "identifier %s when %s" name pred_str in
         mk_reason (RCustom rstr) loc
       in
-      Entry.(match find_entry cx name (loc_of_reason reason) with
+      Entry.(match find_entry cx name loc with
       | _, Value v ->
         let orig_type =
-          query_var ~track_ref:false cx name reason
+          query_var ~track_ref:false cx name loc
         in
         let refi_type = mk_refi_type orig_type pred refi_reason in
         let refine = match Entry.kind_of_value v with

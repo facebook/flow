@@ -845,7 +845,7 @@ and statement cx = Ast.Statement.(
 
   | (loc, Return { Return.argument }) ->
       let reason = mk_reason (RCustom "return") loc in
-      let ret = Env.get_internal_var cx "return" reason in
+      let ret = Env.get_internal_var cx "return" loc in
       let t = match argument with
         | None -> VoidT.at loc
         | Some expr ->
@@ -877,20 +877,20 @@ and statement cx = Ast.Statement.(
          * Y and R are internals, installed earlier. *)
         let reason = mk_reason (RCustom "generator return") loc in
         Flow.get_builtin_typeapp cx reason "Generator" [
-          Env.get_internal_var cx "yield" reason;
+          Env.get_internal_var cx "yield" loc;
           Flow.mk_tvar_derivable_where cx reason (fun tvar ->
             Flow.flow_t cx (t, tvar)
           );
-          Env.get_internal_var cx "next" reason
+          Env.get_internal_var cx "next" loc
         ]
       | Scope.AsyncGenerator ->
         let reason = mk_reason (RCustom "async generator return") loc in
         Flow.get_builtin_typeapp cx reason "AsyncGenerator" [
-          Env.get_internal_var cx "yield" reason;
+          Env.get_internal_var cx "yield" loc;
           Flow.mk_tvar_derivable_where cx reason (fun tvar ->
             Flow.flow_t cx (t, tvar)
           );
-          Env.get_internal_var cx "next" reason
+          Env.get_internal_var cx "next" loc
         ]
       | _ -> t
       in
@@ -1472,7 +1472,7 @@ and statement cx = Ast.Statement.(
     let _, { Ast.Statement.Block.body = elements } = body in
 
     let reason = mk_reason (RCustom (spf "module `%s`" name)) loc in
-    let t = Env.get_var_declared_type cx (internal_module_name name) reason in
+    let t = Env.get_var_declared_type cx (internal_module_name name) loc in
 
     let module_scope = Scope.fresh () in
     Env.push_var_scope cx module_scope;
@@ -1834,15 +1834,12 @@ and statement cx = Ast.Statement.(
       in
 
       let t_generic =
-        let lookup_mode, reason =
+        let lookup_mode =
           match import_kind with
-          | Type.ImportType | Type.ImportTypeof ->
-            ForType, DescFormat.type_reason local_name loc
-          | Type.ImportValue ->
-            let desc = RCustom (spf "identifier `%s`" local_name) in
-            ForValue, mk_reason desc loc
+          | Type.ImportType | Type.ImportTypeof -> ForType
+          | Type.ImportValue -> ForValue
         in
-        Env.get_var_declared_type ~lookup_mode cx local_name reason
+        Env.get_var_declared_type ~lookup_mode cx local_name loc
       in
       Flow.unify cx t t_generic
     );
@@ -1868,7 +1865,7 @@ and export_statement cx loc
       mk_reason (RCustom (spf "%s %s" export_reason_start export_reason)) loc
     in
     let local_tvar = match local_tvar with
-    | None -> Env.var_ref ~lookup_mode cx local_name reason
+    | None -> Env.var_ref ~lookup_mode cx local_name loc
     | Some t -> t in
 
     (**
@@ -1896,14 +1893,14 @@ and export_statement cx loc
     (* [declare] export [type] {foo, bar} [from ...]; *)
     | ([], Some (ExportNamedDeclaration.ExportSpecifiers specifiers)) ->
       let export_specifier specifier = (
-        let (reason, local_name, remote_name) = (
+        let loc, reason, local_name, remote_name =
           match specifier with
           | loc, { ExportNamedDeclaration.ExportSpecifier.
               local = (_, id);
               exported = None;
             } ->
             let reason = mk_reason (RCustom (spf "export {%s}" id)) loc in
-            (reason, id, id)
+            (loc, reason, id, id)
           | loc, { ExportNamedDeclaration.ExportSpecifier.
               local = (_, local);
               exported = Some (_, exported);
@@ -1911,8 +1908,8 @@ and export_statement cx loc
             let reason =
               mk_reason (RCustom (spf "export {%s as %s}" local exported)) loc
             in
-            (reason, local, exported)
-        ) in
+            (loc, reason, local, exported)
+        in
 
         (**
           * Determine if we're dealing with the `export {} from` form
@@ -1943,7 +1940,7 @@ and export_statement cx loc
               Flow.flow cx (tvar, GetPropT (reason, Named (reason, local_name), t))
             )
           | None ->
-            Env.var_ref ~lookup_mode cx local_name reason
+            Env.var_ref ~lookup_mode cx local_name loc
         ) in
 
         (**
@@ -2345,12 +2342,11 @@ and this_ cx loc = Ast.Expression.(
   let r = mk_reason RThis loc in
   match Refinement.get cx (loc, This) r with
   | Some t -> t
-  | None -> Env.var_ref cx (internal_name "this") r
+  | None -> Env.var_ref cx (internal_name "this") loc
 )
 
 and super_ cx loc =
-  let reason = mk_reason RSuper loc in
-  Env.var_ref cx (internal_name "super") reason
+  Env.var_ref cx (internal_name "super") loc
 
 and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
@@ -2866,25 +2862,18 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       | None -> mk_class cx loc reason c)
 
   | Yield { Yield.argument; delegate = false } ->
-      let reason = mk_reason (RCustom "yield") loc in
-      let yield = Env.get_internal_var cx "yield" reason in
+      let yield = Env.get_internal_var cx "yield" loc in
       let t = match argument with
       | Some expr -> expression cx expr
       | None -> VoidT.at loc in
       Env.havoc_heap_refinements ();
       Flow.flow_t cx (t, yield);
-      Env.get_internal_var cx "next" reason
+      Env.get_internal_var cx "next" loc
 
   | Yield { Yield.argument; delegate = true } ->
       let reason = mk_reason (RCustom "yield* delegate") loc in
-      let next_reason = replace_reason (fun desc -> RCustom (
-        spf "next of parent generator in %s" (string_of_desc desc)
-      )) reason in
-      let yield_reason = replace_reason (fun desc -> RCustom (
-        spf "yield of parent generator in %s" (string_of_desc desc)
-      )) reason in
-      let next = Env.get_internal_var cx "next" next_reason in
-      let yield = Env.get_internal_var cx "yield" yield_reason in
+      let next = Env.get_internal_var cx "next" loc in
+      let yield = Env.get_internal_var cx "yield" loc in
       let t = match argument with
       | Some expr -> expression cx expr
       | None -> assert_false "delegate yield without argument" in
@@ -3042,10 +3031,7 @@ and method_call cx reason ?(call_strict_arity=true) prop_loc
 and identifier cx name loc =
   if Type_inference_hooks_js.dispatch_id_hook cx name loc
   then AnyT.at loc
-  else (
-    let reason = mk_reason (RIdentifier name) loc in
-    Env.var_ref ~lookup_mode:ForValue cx name reason
-  )
+  else Env.var_ref ~lookup_mode:ForValue cx name loc
 
 (* traverse a literal expression, return result type *)
 and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
@@ -3439,7 +3425,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
     then AnyT.at eloc
     else begin
       let reason = mk_reason (RJSXElement(Some name)) eloc in
-      let c = Env.get_var cx name reason in
+      let c = Env.get_var cx name eloc in
       (* With CSX children are just a prop, so pass them to jsx_mk_props... *)
       let o = jsx_mk_props cx reason c name attributes (Some children) in
       (* Sucks to also pass children to jsx_desugar here, they're ignored *)
@@ -3455,7 +3441,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
         if jsx_mode = None
         then RReactElement(Some name) else RJSXElement(Some name) in
       let reason = mk_reason el eloc in
-      let c = Env.get_var cx name reason in
+      let c = Env.get_var cx name eloc in
       (* TODO: put children in the props for react, so that we can seal props
        * for react *)
       let o = jsx_mk_props cx reason c name attributes None in
@@ -3624,11 +3610,11 @@ and jsx_desugar cx name component_t props attributes children eloc =
         property = Member.PropertyIdentifier (prop_loc, name);
           _;
         } ->
-          let ot = jsx_pragma_expression cx raw_jsx_expr eloc _object in
+          let ot = jsx_pragma_expression cx eloc _object in
           method_call cx reason ~call_strict_arity:false prop_loc
             (jsx_expr, ot, name) argts
       | _ ->
-          let f = jsx_pragma_expression cx raw_jsx_expr eloc jsx_expr in
+          let f = jsx_pragma_expression cx eloc jsx_expr in
           func_call cx reason ~call_strict_arity:false f argts
       )
   | Some Options.CSX ->
@@ -3650,10 +3636,9 @@ and jsx_desugar cx name component_t props attributes children eloc =
  * We can cover almost all the cases by just explicitly handling identifiers,
  * since the common error is that the identifier is not in scope.
  *)
-and jsx_pragma_expression cx raw_jsx_expr loc = Ast.Expression.(function
+and jsx_pragma_expression cx loc = Ast.Expression.(function
   | _, Identifier (_, name) ->
-      let reason = mk_reason (RJSXIdentifier(raw_jsx_expr, name)) loc in
-      Env.var_ref ~lookup_mode:ForValue cx name reason
+      Env.var_ref ~lookup_mode:ForValue cx name loc
   | expr ->
       (* Oh well, we tried *)
       expression cx expr
@@ -4472,7 +4457,7 @@ and function_decl id cx loc func this super =
 (* Switch back to the declared type for an internal name. *)
 and define_internal cx reason x =
   let ix = internal_name x in
-  let opt = Env.get_var_declared_type cx ix reason in
+  let opt = Env.get_var_declared_type cx ix (loc_of_reason reason) in
   ignore Env.(set_var cx ix (Flow.filter_optional cx reason opt) reason)
 
 (* Process a function definition, returning a (polymorphic) function type. *)

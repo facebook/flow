@@ -287,7 +287,7 @@ let rec convert cx tparams_map = Ast.Type.(function
           let desc = RCustom (spf "exports of module `%s`" value) in
           let reason = mk_reason desc loc in
           let remote_module_t =
-            Env.get_var_declared_type cx (internal_module_name value) reason
+            Env.get_var_declared_type cx (internal_module_name value) loc
           in
           Flow_js.mk_tvar_where cx reason (fun t ->
             Flow_js.flow cx (remote_module_t, CJSRequireT(reason, t))
@@ -718,9 +718,7 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
     )
 
   | Unqualified (loc, name) ->
-    let desc = RIdentifier name in
-    let reason = mk_reason desc loc in
-    Env.get_var ~lookup_mode cx name reason
+    Env.get_var ~lookup_mode cx name loc
 )
 
 and mk_type cx tparams_map reason = function
@@ -799,15 +797,9 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) typeParameters =
 and type_identifier cx name loc =
   if Type_inference_hooks_js.dispatch_id_hook cx name loc
   then AnyT.at loc
-  else (
-    if name = "undefined"
-    then VoidT.at loc
-    else (
-      let reason = mk_reason (RIdentifier name) loc in
-      let t = Env.var_ref ~lookup_mode:ForType cx name reason in
-      t
-    )
-  )
+  else if name = "undefined"
+  then VoidT.at loc
+  else Env.var_ref ~lookup_mode:ForType cx name loc
 
 and extract_type_param_declarations =
   let open Ast.Type.ParameterDeclaration in

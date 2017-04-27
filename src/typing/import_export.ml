@@ -80,7 +80,7 @@ let module_t_of_ref_safe cx m reason =
    *       like normal modules and merge them as such.
    *)
   | Some _ ->
-    Env.get_var_declared_type cx (internal_module_name m) reason
+    Env.get_var_declared_type cx (internal_module_name m) (loc_of_reason reason)
   | None ->
     (match SMap.get m (Context.module_map cx) with
       | Some t -> t
@@ -100,7 +100,7 @@ let module_t_of_ref_unsafe cx m reason =
    *       like normal modules and merge them as such.
    *)
   | Some _ ->
-    Env.get_var_declared_type cx (internal_module_name m) reason
+    Env.get_var_declared_type cx (internal_module_name m) (loc_of_reason reason)
   | None ->
     SMap.find_unsafe m (Context.module_map cx)
 
@@ -230,7 +230,7 @@ let warn_or_ignore_export_star_as cx name =
    final value is (initial object or otherwise) is checked against the type
    declared for exports or any other use of exports. *)
 let get_module_exports cx reason =
-  Env.get_internal_var cx "exports" reason
+  Env.get_internal_var cx "exports" (loc_of_reason reason)
 
 let set_module_exports cx reason t =
   ignore Env.(set_internal_var cx "exports" t reason)

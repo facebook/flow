@@ -434,7 +434,7 @@ let mk cx _loc reason self ~expr =
     let implements = List.map (fun (_, i) ->
       let { Ast.Class.Implements.id = (loc, name); typeParameters } = i in
       let reason = mk_reason (RCustom "implements") loc in
-      let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name reason in
+      let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name loc in
       let params = Anno.extract_type_param_instantiations typeParameters in
       Anno.mk_nominal_type cx reason tparams_map (c, params)
     ) implements in
