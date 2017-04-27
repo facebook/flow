@@ -25,5 +25,5 @@ val nameify_default_export_decl :
   Loc.t * Ast.Statement.t' ->
   Loc.t * Ast.Statement.t'
 val warn_or_ignore_export_star_as : Context.t -> (Loc.t * 'a) option -> unit
-val get_module_exports : Context.t -> Reason.t -> Type.t
-val set_module_exports : Context.t -> Reason.t -> Type.t -> unit
+val get_module_exports : Context.t -> Loc.t -> Type.t
+val set_module_exports : Context.t -> Loc.t -> Type.t -> unit

@@ -229,8 +229,10 @@ let warn_or_ignore_export_star_as cx name =
    module, and then flowing module.exports to exports, so that whatever its
    final value is (initial object or otherwise) is checked against the type
    declared for exports or any other use of exports. *)
-let get_module_exports cx reason =
-  Env.get_internal_var cx "exports" (loc_of_reason reason)
+let get_module_exports cx loc =
+  Env.get_internal_var cx "exports" loc
 
-let set_module_exports cx reason t =
-  ignore Env.(set_internal_var cx "exports" t (loc_of_reason reason))
+let set_module_exports cx loc t =
+  let change: Changeset.EntryRef.t option =
+    Env.set_internal_var cx "exports" t loc in
+  ignore change

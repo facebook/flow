@@ -1602,7 +1602,7 @@ and statement cx = Ast.Statement.(
     ) else (
       let reason = mk_reason (RCustom "declare module.exports") loc in
       set_module_kind cx reason (Context.CommonJSModule(Some loc));
-      set_module_exports cx reason t
+      set_module_exports cx loc t
     )
 
   | (loc, ExportNamedDeclaration { ExportNamedDeclaration.
@@ -2403,8 +2403,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       property = Member.PropertyIdentifier (_, "exports");
       _
     } ->
-      let reason = mk_reason (RCustom "module.exports") loc in
-      get_module_exports cx reason
+      get_module_exports cx loc
 
   | Member {
       Member._object =
@@ -3237,7 +3236,7 @@ and assignment cx loc = Ast.Expression.(function
             let reason =
               mk_reason (RCustom "assignment of module.exports") lhs_loc in
             set_module_kind cx reason (Context.CommonJSModule(Some(lhs_loc)));
-            set_module_exports cx reason t
+            set_module_exports cx lhs_loc t
 
         (* super.name = e *)
         | lhs_loc, Ast.Pattern.Expression (_, Member {

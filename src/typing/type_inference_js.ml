@@ -108,9 +108,8 @@ let infer_ast ~metadata ~filename ast ~require_loc_map =
 
   Env.init_env cx module_scope;
 
-  let reason = Reason.mk_reason (Reason.RCustom "exports") Loc.({
-    none with source = Some filename
-  }) in
+  let file_loc = Loc.({ none with source = Some filename }) in
+  let reason = Reason.mk_reason (Reason.RCustom "exports") file_loc in
 
   let initial_module_t = ImpExp.module_t_of_cx cx in
   if checked then (
@@ -120,7 +119,7 @@ let infer_ast ~metadata ~filename ast ~require_loc_map =
     ) require_loc_map;
 
     let init_exports = Flow.mk_object cx reason in
-    ImpExp.set_module_exports cx reason init_exports;
+    ImpExp.set_module_exports cx file_loc init_exports;
 
     (* infer *)
     Flow_js.flow_t cx (init_exports, local_exports_var);
@@ -132,7 +131,7 @@ let infer_ast ~metadata ~filename ast ~require_loc_map =
       match Context.module_kind cx with
       (* CommonJS with a clobbered module.exports *)
       | CommonJSModule(Some(loc)) ->
-        let module_exports_t = ImpExp.get_module_exports cx reason in
+        let module_exports_t = ImpExp.get_module_exports cx file_loc in
         let reason = Reason.mk_reason (Reason.RCustom "exports") loc in
         ImpExp.mk_commonjs_module_t cx reason_exports_module
           reason module_exports_t
