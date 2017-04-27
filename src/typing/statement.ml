@@ -3287,7 +3287,7 @@ and assignment cx loc = Ast.Expression.(function
                    object and refinement types - `o` and `t` here - are
                    fully resolved.
                  *)
-                ignore Env.(set_expr key reason t t)
+                ignore Env.(set_expr key lhs_loc t t)
               | None ->
                 ()
             )

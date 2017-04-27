@@ -1257,8 +1257,7 @@ let havoc_heap_refinements_with_propname name =
    (broadly, assignment of function values) may provoke havoc_ctx
    into clearing the refinement we're in the process of installing.
  *)
-let add_heap_refinement op key reason refined original =
-  let refi_loc = loc_of_reason reason in
+let add_heap_refinement op key refi_loc refined original =
   let refi = { refi_loc; refined; original } in
   let base, _ = key in
   let scope, _ = find_entry_in_var_scope base in
@@ -1318,7 +1317,7 @@ let refine_with_preds cx loc preds orig_types =
       in
       let orig_type = Key_map.find_unsafe key orig_types in
       let refi_type = mk_refi_type orig_type pred refi_reason in
-      let change = refine_expr key refi_reason refi_type orig_type in
+      let change = refine_expr key loc refi_type orig_type in
       Changeset.add_refi change acc
   in
   Key_map.fold refine_with_pred preds Changeset.empty

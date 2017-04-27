@@ -150,7 +150,7 @@ val set_var: Context.t -> string -> Type.t -> Loc.t ->
 val set_internal_var: Context.t -> string -> Type.t -> Loc.t ->
   Changeset.EntryRef.t option
 
-val set_expr: Key.t -> reason -> Type.t -> Type.t ->
+val set_expr: Key.t -> Loc.t -> Type.t -> Type.t ->
   Changeset.RefiRef.t
 
 val refine_with_preds:
