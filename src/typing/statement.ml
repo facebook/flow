@@ -2360,8 +2360,9 @@ and expression ?(is_cond=false) cx (loc, e) =
   Hashtbl.replace (Context.type_table cx) loc t;
   t
 
-and this_ cx r = Ast.Expression.(
-  match Refinement.get cx (loc_of_reason r, This) r with
+and this_ cx loc = Ast.Expression.(
+  let r = mk_reason RThis loc in
+  match Refinement.get cx (loc, This) r with
   | Some t -> t
   | None -> Env.var_ref cx (internal_name "this") r
 )
@@ -2378,7 +2379,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       identifier cx name loc
 
   | This ->
-      this_ cx (mk_reason RThis loc)
+      this_ cx loc
 
   | Super ->
       identifier cx "super" loc
@@ -2693,7 +2694,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       define_internal cx reason "this";
       define_internal cx reason "super";
 
-      let this = this_ cx reason in
+      let this = this_ cx loc in
       let super = super_ cx super_reason in
       Flow.mk_tvar_where cx reason (fun t ->
         let funtype = Flow.mk_methodcalltype this argts t in
@@ -4506,7 +4507,7 @@ and mk_function id cx reason func =
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
 and mk_arrow cx reason func =
-  let this = this_ cx reason in
+  let this = this_ cx (loc_of_reason reason) in
   let super = super_ cx reason in
   let {Ast.Function.id; _} = func in
   let func_sig = function_decl id cx reason func this super in
