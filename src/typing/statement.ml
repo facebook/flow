@@ -36,7 +36,7 @@ let ident_name (_, name) = name
 
 (* AST helpers *)
 
-let function_desc ~async ~generator =
+let function_desc {Ast.Function.async; generator; _} =
   match async, generator with
   | true, true -> RAsyncGenerator
   | true, false -> RAsync
@@ -213,10 +213,10 @@ and statement_decl cx = Ast.Statement.(
 
   | (_, Debugger) -> ()
 
-  | (loc, FunctionDeclaration { Ast.Function.id; async; generator; _ }) ->
-      (match id with
+  | (loc, FunctionDeclaration func) ->
+      (match func.Ast.Function.id with
       | Some (_, name) ->
-        let desc = RFunction (function_desc ~async ~generator) in
+        let desc = RFunction (function_desc func) in
         let r = mk_reason desc loc in
         let tvar = Flow.mk_tvar cx r in
         Env.bind_fun cx name tvar r
@@ -4462,7 +4462,8 @@ and mk_class cx loc reason c =
    signature consisting of type parameters, parameter types, parameter names,
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
-and function_decl id cx reason func this super =
+and function_decl id cx loc func this super =
+  let reason = mk_reason (RFunction (function_desc func)) loc in
   let func_sig = Func_sig.mk cx SMap.empty ~expr:expression reason func in
 
   let this, super =
@@ -4494,18 +4495,15 @@ and mk_function id cx loc func =
   let this = Flow.mk_tvar cx (mk_reason RThis loc) in
   (* Normally, functions do not have access to super. *)
   let super = ObjProtoT (mk_reason RNoSuper loc) in
-  let {Ast.Function.async; generator; _} = func in
-  let reason = mk_reason (RFunction (function_desc ~async ~generator)) loc in
-  let func_sig = function_decl id cx reason func this super in
+  let func_sig = function_decl id cx loc func this super in
   Func_sig.functiontype cx this func_sig
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
 and mk_arrow cx loc func =
   let this = this_ cx loc in
   let super = super_ cx loc in
-  let {Ast.Function.id; async; generator; _} = func in
-  let reason = mk_reason (RFunction (function_desc ~async ~generator)) loc in
-  let func_sig = function_decl id cx reason func this super in
+  let {Ast.Function.id; _} = func in
+  let func_sig = function_decl id cx loc func this super in
   (* Do not expose the type of `this` in the function's type. The call to
      function_decl above has already done the necessary checking of `this` in
      the body of the function. Now we want to avoid re-binding `this` to
