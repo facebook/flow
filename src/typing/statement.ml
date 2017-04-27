@@ -2808,10 +2808,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       mk_function id cx reason func
 
   | ArrowFunction func ->
-      let {Ast.Function.async; generator; _} = func in
-      let desc = RFunction (function_desc ~async ~generator) in
-      let reason = mk_reason desc loc in
-      mk_arrow cx reason func
+      mk_arrow cx loc func
 
   | TaggedTemplate {
       TaggedTemplate.tag = _, Identifier (_, "query");
@@ -4507,10 +4504,11 @@ and mk_function id cx reason func =
   Func_sig.functiontype cx this func_sig
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
-and mk_arrow cx reason func =
-  let this = this_ cx (loc_of_reason reason) in
-  let super = super_ cx (loc_of_reason reason) in
-  let {Ast.Function.id; _} = func in
+and mk_arrow cx loc func =
+  let this = this_ cx loc in
+  let super = super_ cx loc in
+  let {Ast.Function.id; async; generator; _} = func in
+  let reason = mk_reason (RFunction (function_desc ~async ~generator)) loc in
   let func_sig = function_decl id cx reason func this super in
   (* Do not expose the type of `this` in the function's type. The call to
      function_decl above has already done the necessary checking of `this` in
