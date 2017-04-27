@@ -486,18 +486,27 @@ let mk cx _loc reason self ~expr =
       | Get | Set -> warn_unsafe_getters_setters cx loc
       | _ -> ());
 
+      let function_desc =
+        let {Ast.Function.async; generator; _} = func in
+        match async, generator with
+        | true, true -> RAsyncGenerator
+        | true, false -> RAsync
+        | false, true -> RGenerator
+        | false, false -> RNormal
+      in
+
       let method_desc, add = match kind with
       | Method.Constructor ->
           RConstructor,
           add_constructor
       | Method.Method ->
-          RProperty (Some name),
+          RFunction function_desc,
           add_method ~static name
       | Method.Get ->
-          RProperty (Some name),
+          RFunction function_desc,
           add_getter ~static name
       | Method.Set ->
-          RProperty (Some name),
+          RFunction function_desc,
           add_setter ~static name
       in
       let reason = mk_reason method_desc loc in
