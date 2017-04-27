@@ -1405,7 +1405,7 @@ and statement cx = Ast.Statement.(
   | (loc, FunctionDeclaration func) ->
       let {Ast.Function.id; _} = func in
       let reason = mk_reason (RFunction RNormal) loc in
-      let fn_type = mk_function None cx reason func in
+      let fn_type = mk_function None cx loc func in
       (**
        * Use the loc for the function name in the types table. When the function
        * has no name (i.e. for `export default function() ...`), generate a loc
@@ -2076,10 +2076,8 @@ and object_prop cx map = Ast.Expression.Object.(function
       _method;
       _
     }) ->
-    let {Ast.Function.id; async; generator; _} = func in
-    let desc = RFunction (function_desc ~async ~generator) in
-    let reason = mk_reason desc vloc in
-    let ft = mk_function id cx reason func in
+    let {Ast.Function.id; _} = func in
+    let ft = mk_function id cx vloc func in
     Hashtbl.replace (Context.type_table cx) vloc ft;
     if _method then
       Properties.add_method name ft map
@@ -2116,8 +2114,7 @@ and object_prop cx map = Ast.Expression.Object.(function
       value = Property.Get (vloc, func);
       _ }) ->
     if Context.enable_unsafe_getters_and_setters cx then
-      let reason = mk_reason (RFunction RNormal) vloc in
-      let function_type = mk_function None cx reason func in
+      let function_type = mk_function None cx vloc func in
       let return_t = Type.extract_getter_type function_type in
       Properties.add_getter name return_t map
     else begin
@@ -2132,8 +2129,7 @@ and object_prop cx map = Ast.Expression.Object.(function
       value = Property.Set (vloc, func);
       _ }) ->
     if Context.enable_unsafe_getters_and_setters cx then
-      let reason = mk_reason (RFunction RNormal) vloc in
-      let function_type = mk_function None cx reason func in
+      let function_type = mk_function None cx vloc func in
       let param_t = Type.extract_setter_type function_type in
       Properties.add_setter name param_t map
     else begin
@@ -2794,9 +2790,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         expressions
 
   | Function func ->
-      let {Ast.Function.id; async; generator; predicate; _} = func in
-      let desc = RFunction (function_desc ~async ~generator) in
-      let reason = mk_reason desc loc in
+      let {Ast.Function.id; predicate; _} = func in
 
       (match predicate with
       | Some (_, Ast.Type.Predicate.Inferred) ->
@@ -2805,7 +2799,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           )
       | _ -> ());
 
-      mk_function id cx reason func
+      mk_function id cx loc func
 
   | ArrowFunction func ->
       mk_arrow cx loc func
@@ -4496,10 +4490,12 @@ and define_internal cx reason x =
   ignore Env.(set_var cx ix (Flow.filter_optional cx reason opt) reason)
 
 (* Process a function definition, returning a (polymorphic) function type. *)
-and mk_function id cx reason func =
-  let this = Flow.mk_tvar cx (replace_reason_const RThis reason) in
+and mk_function id cx loc func =
+  let this = Flow.mk_tvar cx (mk_reason RThis loc) in
   (* Normally, functions do not have access to super. *)
-  let super = ObjProtoT (replace_reason_const RNoSuper reason) in
+  let super = ObjProtoT (mk_reason RNoSuper loc) in
+  let {Ast.Function.async; generator; _} = func in
+  let reason = mk_reason (RFunction (function_desc ~async ~generator)) loc in
   let func_sig = function_decl id cx reason func this super in
   Func_sig.functiontype cx this func_sig
 
