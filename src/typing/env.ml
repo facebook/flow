@@ -575,10 +575,10 @@ let declare_const = declare_value_entry Entry.(Const ConstVarBinding)
 
 (* helper - update var entry to reflect assignment/initialization *)
 (* note: here is where we understand that a name can be multiply var-bound *)
-let init_value_entry kind cx name ~has_anno specific reason =
+let init_value_entry kind cx name ~has_anno specific loc =
   if not (is_excluded name)
   then Entry.(
-    let scope, entry = find_entry cx name (loc_of_reason reason) in
+    let scope, entry = find_entry cx name loc in
     match kind, entry with
     | Var, Value ({ Entry.kind = Var; _ } as v)
     | Let _, Value ({ Entry.kind = Let _;
@@ -609,10 +609,10 @@ let init_fun = init_implicit_let ~has_anno:false Entry.FunctionBinding
 let init_const = init_value_entry Entry.(Const ConstVarBinding)
 
 (* update type alias to reflect initialization in code *)
-let init_type cx name _type reason =
+let init_type cx name _type loc =
   if not (is_excluded name)
   then Entry.(
-    let scope, entry = find_entry cx name (loc_of_reason reason) in
+    let scope, entry = find_entry cx name loc in
     match entry with
     | Type ({ type_state = State.Declared; _ } as t)->
       Flow_js.flow_t cx (_type, t._type);
@@ -626,10 +626,10 @@ let init_type cx name _type reason =
     )
 
 (* treat a var's declared (annotated) type as an initializer *)
-let pseudo_init_declared_type cx name reason =
+let pseudo_init_declared_type cx name loc =
   if not (is_excluded name)
   then Entry.(
-    let scope, entry = find_entry cx name (loc_of_reason reason) in
+    let scope, entry = find_entry cx name loc in
     match entry with
     | Value value_binding ->
       let entry = Value { value_binding with

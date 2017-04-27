@@ -83,21 +83,21 @@ val declare_let: Context.t -> string -> Loc.t -> unit
 val declare_implicit_let: Entry.let_binding_kind -> Context.t -> string ->
   Loc.t -> unit
 
-val init_var: Context.t -> string -> has_anno:bool -> Type.t -> reason -> unit
-val init_let: Context.t -> string -> has_anno:bool -> Type.t -> reason -> unit
+val init_var: Context.t -> string -> has_anno:bool -> Type.t -> Loc.t -> unit
+val init_let: Context.t -> string -> has_anno:bool -> Type.t -> Loc.t -> unit
 val init_implicit_let:
   Entry.let_binding_kind
     -> Context.t
     -> string
     -> has_anno:bool
     -> Type.t
-    -> reason
+    -> Loc.t
     -> unit
-val init_fun: Context.t -> string -> Type.t -> reason -> unit
-val init_const: Context.t -> string -> has_anno:bool -> Type.t -> reason -> unit
-val init_type: Context.t -> string -> Type.t -> reason -> unit
+val init_fun: Context.t -> string -> Type.t -> Loc.t -> unit
+val init_const: Context.t -> string -> has_anno:bool -> Type.t -> Loc.t -> unit
+val init_type: Context.t -> string -> Type.t -> Loc.t -> unit
 
-val pseudo_init_declared_type: Context.t -> string -> reason -> unit
+val pseudo_init_declared_type: Context.t -> string -> Loc.t -> unit
 
 module LookupMode: sig
   type t = ForValue | ForType | ForTypeof

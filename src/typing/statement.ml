@@ -447,7 +447,7 @@ and statement cx = Ast.Statement.(
     Hashtbl.replace (Context.type_table cx) loc interface_t;
     (* interface is a type alias, declare class is a var *)
     Env.(if structural then init_type else init_var ~has_anno:false)
-      cx name interface_t reason
+      cx name interface_t loc
   in
 
   let catch_clause cx { Try.CatchClause.param; body = (_, b) } =
@@ -661,7 +661,7 @@ and statement cx = Ast.Statement.(
       let t = Anno.convert cx typeparams_map right in
       let type_ = poly_type typeparams (TypeT (r, t)) in
       Hashtbl.replace (Context.type_table cx) loc type_;
-      Env.init_type cx name type_ r
+      Env.init_type cx name type_ name_loc
 
   (*******************************************************)
 
@@ -1393,7 +1393,6 @@ and statement cx = Ast.Statement.(
 
   | (loc, FunctionDeclaration func) ->
       let {Ast.Function.id; _} = func in
-      let reason = mk_reason (RFunction RNormal) loc in
       let fn_type = mk_function None cx loc func in
       (**
        * Use the loc for the function name in the types table. When the function
@@ -1418,7 +1417,7 @@ and statement cx = Ast.Statement.(
       Hashtbl.replace (Context.type_table cx) type_table_loc fn_type;
       (match id with
       | Some(_, name) ->
-        Env.init_fun cx name fn_type reason
+        Env.init_fun cx name fn_type loc
       | None -> ())
 
   | (_, DeclareVariable _) ->
@@ -1451,7 +1450,7 @@ and statement cx = Ast.Statement.(
         name
         ~has_anno:false
         class_t
-        reason
+        name_loc
 
   | (loc, DeclareClass decl) ->
     interface cx loc false decl
@@ -2234,10 +2233,9 @@ and variable cx kind
           name = (id_loc, name); typeAnnotation; optional
         }) ->
         (* simple lvalue *)
-        let desc = RCustom (spf "%s `%s`" str_of_kind name) in
-        let reason = mk_reason desc id_loc in
         (* make annotation, unify with declared type created in variable_decl *)
         let t =
+          let desc = RCustom (spf "%s `%s`" str_of_kind name) in
           let anno_reason = mk_reason desc loc in
           Anno.mk_type_annotation cx SMap.empty anno_reason typeAnnotation in
         Env.unify_declared_type cx name t;
@@ -2269,23 +2267,22 @@ and variable cx kind
             Type_inference_hooks_js.(
               dispatch_lval_hook cx name loc (RHSLoc hook_loc));
             let rhs = Flow.reposition cx rhs_loc rhs in
-            init_var cx name ~has_anno rhs reason
+            init_var cx name ~has_anno rhs id_loc
           | None ->
             Type_inference_hooks_js.(
               dispatch_lval_hook cx name loc NoRHS);
             match if_uninitialized with
             | Some f ->
               if not optional
-              then init_var cx name ~has_anno (f loc) reason
+              then init_var cx name ~has_anno (f loc) id_loc
             | None ->
               if has_anno
-              then Env.pseudo_init_declared_type cx name reason
+              then Env.pseudo_init_declared_type cx name id_loc
               else declare_var cx name id_loc;
         )
     | loc, _ ->
         (* compound lvalue *)
         let pattern_name = internal_pattern_name loc in
-        let reason = mk_reason (RCustom (spf "%s _" str_of_kind)) loc in
         let typeAnnotation = type_of_pattern id in
         let has_anno = not (typeAnnotation = None) in
         let t = match init with
@@ -2296,14 +2293,14 @@ and variable cx kind
             | None -> VoidT.at loc
           )
         in
-        init_var cx pattern_name ~has_anno t reason;
+        init_var cx pattern_name ~has_anno t loc;
         destructuring cx ~expr:expression ~f:(fun loc name default t ->
           let reason = mk_reason (RCustom (spf "%s %s" str_of_kind name)) loc in
           Option.iter default (fun d ->
             let default_t = Flow.mk_default cx reason d ~expr:expression in
             Flow.flow_t cx (default_t, t)
           );
-          init_var cx name ~has_anno t reason
+          init_var cx name ~has_anno t loc
         ) t init None id
 )
 
