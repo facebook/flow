@@ -925,12 +925,13 @@ let rec find_scope cx loc envs scope_id =
 let merge_env =
 
   (* find scope triple in env triple *)
-  let find_scope_triple cx reason (env0, env1, env2) id =
-    let lst = find_scope cx (loc_of_reason reason) [env0; env1; env2] id in
+  let find_scope_triple cx loc (env0, env1, env2) id =
+    let lst = find_scope cx loc [env0; env1; env2] id in
     List.(nth lst 0, nth lst 1, nth lst 2)
   in
 
-  let create_union cx reason l1 l2 =
+  let create_union cx loc name l1 l2 =
+    let reason = mk_reason (RIdentifier name) loc in
     Flow_js.mk_tvar_where cx reason (fun tvar ->
       Flow_js.flow cx (l1, UseT (Internal MergeEnv, tvar));
       Flow_js.flow cx (l2, UseT (Internal MergeEnv, tvar));
@@ -938,7 +939,7 @@ let merge_env =
   in
 
   (* merge_entry helper - calculate new specific type *)
-  let merge_specific cx reason name (specific0, general0) specific1 specific2 =
+  let merge_specific cx loc name (specific0, general0) specific1 specific2 =
     (** if both children are unchanged, or 1 child is unchanged and the other
         is bottom (EmptyT), then we can avoid creating a merged specific *)
     if (specific0 = specific1 && (specific0 = specific2 || is_bot specific2))
@@ -949,8 +950,7 @@ let merge_env =
     then general0
     (* general case *)
     else
-      let reason = replace_reason_const (RCustom name) reason in
-      let tvar = create_union cx reason specific1 specific2 in
+      let tvar = create_union cx loc name specific1 specific2 in
       Flow_js.flow cx (tvar, UseT (Internal MergeEnv, general0));
       tvar
   in
@@ -975,8 +975,8 @@ let merge_env =
     | _ -> orig.value_state
   ) in
 
-  let merge_entry cx reason envs ((scope_id, name, _) as entry_ref) =
-    let scope0, scope1, scope2 = find_scope_triple cx reason envs scope_id in
+  let merge_entry cx loc envs ((scope_id, name, _) as entry_ref) =
+    let scope0, scope1, scope2 = find_scope_triple cx loc envs scope_id in
     let get = get_entry name in
     Entry.(match get scope0, get scope1, get scope2 with
     (* merge child var and let types back to original *)
@@ -984,7 +984,7 @@ let merge_env =
       let { specific = s0; general = g0; _ } = orig in
       let { specific = s1; _ } = child1 in
       let { specific = s2; _ } = child2 in
-      let specific = merge_specific cx reason name (s0, g0) s1 s2 in
+      let specific = merge_specific cx loc name (s0, g0) s1 s2 in
       let value_state = merge_states orig child1 child2 in
       (* replace entry if anything changed *)
       if specific == s0 && value_state = orig.value_state
@@ -994,7 +994,7 @@ let merge_env =
     (* type aliases can't be refined or reassigned, shouldn't be here *)
     | Some Type _, Some Type _, Some Type _ ->
       assert_false (spf "merge_env %s: type alias %s found in changelist"
-        (string_of_reason reason) name)
+        (string_of_loc loc) name)
     (* global lookups may leave uneven new entries, which we can forget *)
     | _, _, _ when is_global scope0 ->
       ()
@@ -1003,7 +1003,7 @@ let merge_env =
       assert_false (spf
         "%smerge_entry %s %s: missing from scopes:\n%s\n%s\n%s"
         (Context.pid_prefix cx)
-        (string_of_reason reason)
+        (string_of_loc loc)
         (Changeset.string_of_entry_ref entry_ref)
         (Debug_js.string_of_scope cx scope0)
         (Debug_js.string_of_scope cx scope1)
@@ -1021,21 +1021,21 @@ let merge_env =
       | Some e -> spf "Some %s" Entry.(string_of_kind e)
       in assert_false (spf
         "merge_env %s: non-uniform distribution of entry %s: %s, %s, %s"
-        (string_of_reason reason)
+        (string_of_loc loc)
         name
         (print_entry_kind_opt orig)
         (print_entry_kind_opt child1)
         (print_entry_kind_opt child2))
   ) in
 
-  let merge_refi cx reason envs (scope_id, key, _) =
-    let scope0, scope1, scope2 = find_scope_triple cx reason envs scope_id in
+  let merge_refi cx loc envs (scope_id, key, _) =
+    let scope0, scope1, scope2 = find_scope_triple cx loc envs scope_id in
     let get = get_refi key in
     match get scope0, get scope1, get scope2 with
     (* evenly distributed refinements are merged *)
     | Some base, Some child1, Some child2 ->
       let name = Key.string_of_key key in
-      let refined = merge_specific cx reason name (base.refined, base.original)
+      let refined = merge_specific cx loc name (base.refined, base.original)
         child1.refined child2.refined in
       if refined == base.refined
       then ()
@@ -1044,11 +1044,9 @@ let merge_env =
     (* refi was introduced in both children *)
     | None, Some child1, Some child2 ->
       let name = Key.string_of_key key in
-      let reason = replace_reason_const (RCustom name) reason in
-      let refined = create_union cx reason child1.refined child2.refined in
-      let original = create_union cx reason child1.original child2.original in
-      let refi_loc = loc_of_reason reason in
-      let refi = { refi_loc; refined; original } in
+      let refined = create_union cx loc name child1.refined child2.refined in
+      let original = create_union cx loc name child1.original child2.original in
+      let refi = { refi_loc = loc; refined; original } in
       add_refi key refi scope0
 
     (* refi was cleared in a child env. clear from original *)
@@ -1061,15 +1059,15 @@ let merge_env =
   in
 
   (* merge entries and refis found in changeset *)
-  fun cx reason (env0, env1, env2) changeset ->
+  fun cx loc (env0, env1, env2) changeset ->
     begin if not (envs_congruent [env0; env1; env2]) then assert_false
       (spf "merge_env %s: envs not congruent: %d %d %d"
-        (string_of_reason reason)
+        (string_of_loc loc)
         (List.length env0) (List.length env1) (List.length env2))
     end;
     changeset |> Changeset.iter_type_updates
-      (merge_entry cx reason (env0, env1, env2))
-      (merge_refi cx reason (env0, env1, env2))
+      (merge_entry cx loc (env0, env1, env2))
+      (merge_refi cx loc (env0, env1, env2))
 
 (* copy changes from env2 into env1 *)
 let copy_env =
@@ -1347,7 +1345,7 @@ let in_refined_env cx reason preds orig_types f =
   let result = f () in
 
   let newset = Changeset.merge oldset in
-  merge_env cx reason (orig_env, orig_env, new_env) newset;
+  merge_env cx (loc_of_reason reason) (orig_env, orig_env, new_env) newset;
   update_env cx (loc_of_reason reason) orig_env;
 
   result

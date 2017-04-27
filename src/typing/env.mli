@@ -170,7 +170,7 @@ val in_refined_env:
 
 val merge_env:
   Context.t ->
-  reason ->
+  Loc.t ->
   t * t * t ->
   Changeset.t ->
   unit

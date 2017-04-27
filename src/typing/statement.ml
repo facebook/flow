@@ -561,14 +561,14 @@ and statement cx = Ast.Statement.(
       | None, Some _
       | Some _, None
       | Some _, Some _ ->
-        Env.merge_env cx reason (start_env, then_env, else_env) newset;
+        Env.merge_env cx loc (start_env, then_env, else_env) newset;
         start_env
 
       | None, None ->
         (* if neither branch has abnormal flow, then refinements that happen in
            the branches should be forgotten since the original type covers
            all of the options. *)
-        Env.merge_env cx reason
+        Env.merge_env cx loc
           (start_env, then_env, else_env)
           (Changeset.exclude_refines newset);
         start_env
@@ -702,7 +702,7 @@ and statement cx = Ast.Statement.(
 
       (* switch_state tracks case effects and is used to create outgoing env *)
       let switch_state = ref None in
-      let update_switch_state (case_env, case_writes, _test_refis, reason) =
+      let update_switch_state (case_env, case_writes, _test_refis, loc) =
         let case_env = ListUtils.last_n incoming_depth case_env in
         let state = match !switch_state with
         | None ->
@@ -712,7 +712,7 @@ and statement cx = Ast.Statement.(
           let partial_writes = Changeset.union partial_writes case_diff in
           let total_writes = Changeset.inter case_writes total_writes in
           (* merge new case into switch env *)
-          Env.merge_env cx reason (env, env, case_env) case_writes;
+          Env.merge_env cx loc (env, env, case_env) case_writes;
           env, partial_writes, total_writes
         in switch_state := Some state
       in
@@ -746,7 +746,7 @@ and statement cx = Ast.Statement.(
         (* merge env changes from fallthrough case, if present *)
         Option.iter !fallthrough_case ~f:(fun (env, writes, refis, _) ->
           let chg = Changeset.union writes refis in
-          Env.merge_env cx reason (case_env, case_env, env) chg
+          Env.merge_env cx loc (case_env, case_env, env) chg
         );
 
         (** process statements, track control flow exits: exit will be an
@@ -778,7 +778,7 @@ and statement cx = Ast.Statement.(
 
         (* save state for fallthrough *)
         fallthrough_case := if falls_through
-          then Some (case_env, case_writes, test_refis, reason)
+          then Some (case_env, case_writes, test_refis, loc)
           else None;
 
         (* if we break to end, add effects to terminal state *)
@@ -787,7 +787,7 @@ and statement cx = Ast.Statement.(
             Flow_js.add_output cx
               Flow_error.(EInternal (loc, BreakEnvMissingForCase))
           | Some break_env ->
-            update_switch_state (break_env, case_writes, test_refis, reason)
+            update_switch_state (break_env, case_writes, test_refis, loc)
         end;
 
         (* add negative refis of this case's test to common start env *)
@@ -804,8 +804,7 @@ and statement cx = Ast.Statement.(
     (** env in switch_state has accumulated switch effects. now merge in
         original types for partially written values, and swap env in *)
     Option.iter !switch_state ~f:(fun (env, partial_writes, _) ->
-      let reason = mk_reason (RCustom "switch") switch_loc in
-      Env.merge_env cx reason (env, env, incoming_env) partial_writes;
+      Env.merge_env cx switch_loc (env, env, incoming_env) partial_writes;
       Env.update_env cx switch_loc env);
 
     (* merge original changeset back in *)
@@ -972,7 +971,6 @@ and statement cx = Ast.Statement.(
    *)
   (***************************************************************************)
   | (loc, Try { Try.block = (_, b); handler; finalizer }) ->
-      let reason = mk_reason (RCustom "try") loc in
       let oldset = Changeset.clear () in
 
       (* save ref to initial env and swap in a clone *)
@@ -1000,7 +998,7 @@ and statement cx = Ast.Statement.(
            over everything that happened from start_env to try_env *)
         Env.(
           let e = clone_env start_env in
-          merge_env cx reason (e, e, try_env) (Changeset.peek ());
+          merge_env cx loc (e, e, try_env) (Changeset.peek ());
           update_env cx loc e
         );
 
@@ -1017,7 +1015,7 @@ and statement cx = Ast.Statement.(
         (* if catch ends normally, then non-throwing finally can be
            reached via it or a non-throwing try. merge terminal states *)
         let e = clone_env try_env in
-        merge_env cx reason (e, e, catch_env) (Changeset.peek ());
+        merge_env cx loc (e, e, catch_env) (Changeset.peek ());
         e
       | Some _ ->
         (* if catch throws, then the only way into non-throwing finally
@@ -1040,7 +1038,7 @@ and statement cx = Ast.Statement.(
         (* env may be in any state from start of try through end of catch *)
         Env.(
           let e = clone_env start_env in
-          merge_env cx reason (e, e, catch_env) (Changeset.peek ());
+          merge_env cx loc (e, e, catch_env) (Changeset.peek ());
           update_env cx loc e
         );
 
@@ -2755,7 +2753,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let t2 = expression cx alternate in
 
       let newset = Changeset.merge oldset in
-      Env.merge_env cx reason (env, then_env, else_env) newset;
+      Env.merge_env cx loc (env, then_env, else_env) newset;
       Env.update_env cx loc env;
       (* TODO call loc_of_predicate on some pred?
          t1 is wrong but hopefully close *)
