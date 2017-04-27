@@ -77,11 +77,11 @@ val bind_type: ?state:State.t -> Context.t -> string -> Type.t ->
 val bind_declare_var: Context.t -> string -> Type.t -> Loc.t -> unit
 val bind_declare_fun: Context.t -> string -> Type.t -> Loc.t -> unit
 
-val declare_const: Context.t -> string -> reason -> unit
-val declare_let: Context.t -> string -> reason -> unit
+val declare_const: Context.t -> string -> Loc.t -> unit
+val declare_let: Context.t -> string -> Loc.t -> unit
 
 val declare_implicit_let: Entry.let_binding_kind -> Context.t -> string ->
-  reason -> unit
+  Loc.t -> unit
 
 val init_var: Context.t -> string -> has_anno:bool -> Type.t -> reason -> unit
 val init_let: Context.t -> string -> has_anno:bool -> Type.t -> reason -> unit

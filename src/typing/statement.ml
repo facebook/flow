@@ -1442,7 +1442,7 @@ and statement cx = Ast.Statement.(
   | (class_loc, ClassDeclaration c) ->
       let (name_loc, name) = extract_class_name class_loc c in
       let reason = DescFormat.instance_reason name name_loc in
-      Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name reason;
+      Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name name_loc;
       let class_t = mk_class cx class_loc reason c in
       Hashtbl.replace (Context.type_table cx) class_loc class_t;
       Env.init_implicit_let
@@ -2249,7 +2249,7 @@ and variable cx kind
              * Const and let variables are not declared during evaluation of
              * their initializer expressions.
              *)
-            declare_var cx name reason;
+            declare_var cx name id_loc;
             let hook_loc = Ast.Expression.(
               match expr with
               (**
@@ -2280,7 +2280,7 @@ and variable cx kind
             | None ->
               if has_anno
               then Env.pseudo_init_declared_type cx name reason
-              else declare_var cx name reason;
+              else declare_var cx name id_loc;
         )
     | loc, _ ->
         (* compound lvalue *)

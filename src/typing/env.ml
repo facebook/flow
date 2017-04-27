@@ -364,7 +364,7 @@ let local_scope_entry_exists name =
    return scope and entry. Note that anything we don't resolve
    otherwise, we add to the global scope after generating a
    deferred lookup, which may fail later. *)
-let find_entry cx name reason =
+let find_entry cx name loc =
   let rec loop = function
     | [] -> assert_false "empty scope list"
     | scope::scopes ->
@@ -373,7 +373,7 @@ let find_entry cx name reason =
       | None ->
         (* keep looking until we're at the global scope *)
         match scopes with
-        | [] -> cache_global cx name (loc_of_reason reason) scope
+        | [] -> cache_global cx name loc scope
         | _ -> loop scopes
   in
   loop !scopes
@@ -554,10 +554,10 @@ let bind_declare_fun =
    recursive internal refs: hoisted things (vars and types) become declared
    immediately on binding.
  *)
-let declare_value_entry kind cx name reason =
+let declare_value_entry kind cx name loc =
   if not (is_excluded name)
   then Entry.(
-    let scope, entry = find_entry cx name reason in
+    let scope, entry = find_entry cx name loc in
     match entry with
     | Value v when
         Entry.kind_of_value v = kind &&
@@ -565,7 +565,7 @@ let declare_value_entry kind cx name reason =
       let new_entry = Value { v with value_state = State.Declared } in
       Scope.add_entry name new_entry scope
     | _ ->
-      already_bound_error cx name entry (loc_of_reason reason)
+      already_bound_error cx name entry loc
   )
 
 let declare_let = declare_value_entry Entry.(Let LetVarBinding)
@@ -578,7 +578,7 @@ let declare_const = declare_value_entry Entry.(Const ConstVarBinding)
 let init_value_entry kind cx name ~has_anno specific reason =
   if not (is_excluded name)
   then Entry.(
-    let scope, entry = find_entry cx name reason in
+    let scope, entry = find_entry cx name (loc_of_reason reason) in
     match kind, entry with
     | Var, Value ({ Entry.kind = Var; _ } as v)
     | Let _, Value ({ Entry.kind = Let _;
@@ -612,7 +612,7 @@ let init_const = init_value_entry Entry.(Const ConstVarBinding)
 let init_type cx name _type reason =
   if not (is_excluded name)
   then Entry.(
-    let scope, entry = find_entry cx name reason in
+    let scope, entry = find_entry cx name (loc_of_reason reason) in
     match entry with
     | Type ({ type_state = State.Declared; _ } as t)->
       Flow_js.flow_t cx (_type, t._type);
@@ -629,7 +629,7 @@ let init_type cx name _type reason =
 let pseudo_init_declared_type cx name reason =
   if not (is_excluded name)
   then Entry.(
-    let scope, entry = find_entry cx name reason in
+    let scope, entry = find_entry cx name (loc_of_reason reason) in
     match entry with
     | Value value_binding ->
       let entry = Value { value_binding with
@@ -703,7 +703,7 @@ let allow_forward_ref = Scope.Entry.(function
 
 (* helper - does semantic checking and returns entry type *)
 let read_entry ~track_ref ~lookup_mode ~specific cx name reason =
-  let scope, entry = find_entry cx name reason in
+  let scope, entry = find_entry cx name (loc_of_reason reason) in
   if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
     (Entry.entry_loc entry) (loc_of_reason reason);
   Entry.(match entry with
@@ -805,7 +805,7 @@ let get_refinement cx key reason =
 
 (* helper: update let or var entry *)
 let update_var ?(track_ref=false) op cx name specific reason =
-  let scope, entry = find_entry cx name reason in
+  let scope, entry = find_entry cx name (loc_of_reason reason) in
   if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
     (Entry.entry_loc entry) (loc_of_reason reason);
   let value_assign_loc = loc_of_reason reason in
@@ -863,7 +863,7 @@ let refine_var = update_var Changeset.Refine
 
 (* set const's specific type to reflect a refinement test (internal) *)
 let refine_const cx name specific reason =
-  let scope, entry = find_entry cx name reason in
+  let scope, entry = find_entry cx name (loc_of_reason reason) in
   Entry.(match entry with
   | Value ({ Entry.kind = Const _; _ } as v) ->
     let change = scope.id, name, Changeset.Refine in
@@ -1292,7 +1292,7 @@ let refine_with_preds cx loc preds orig_types =
         let rstr = spf "identifier %s when %s" name pred_str in
         mk_reason (RCustom rstr) loc
       in
-      Entry.(match find_entry cx name reason with
+      Entry.(match find_entry cx name (loc_of_reason reason) with
       | _, Value v ->
         let orig_type =
           query_var ~track_ref:false cx name reason
