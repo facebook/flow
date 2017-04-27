@@ -2367,7 +2367,8 @@ and this_ cx loc = Ast.Expression.(
   | None -> Env.var_ref cx (internal_name "this") r
 )
 
-and super_ cx reason =
+and super_ cx loc =
+  let reason = mk_reason RSuper loc in
   Env.var_ref cx (internal_name "super") reason
 
 and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
@@ -2451,7 +2452,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       | None ->
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
 
-        let super = super_ cx (mk_reason RSuper super_loc) in
+        let super = super_ cx super_loc in
 
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc super
         then AnyT.at ploc
@@ -2646,7 +2647,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason = mk_reason (RMethodCall (Some name)) loc in
       let reason_lookup = mk_reason (RProperty (Some name)) callee_loc in
       let reason_prop = mk_reason (RProperty (Some name)) ploc in
-      let super = super_ cx (mk_reason RSuper super_loc) in
+      let super = super_ cx super_loc in
       let argts = List.map (expression_or_spread cx) arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Flow.mk_tvar_where cx reason (fun t ->
@@ -2688,14 +2689,14 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
     } ->
       let argts = List.map (expression_or_spread cx) arguments in
       let reason = mk_reason RFunctionCall loc in
-      let super_reason = mk_reason RSuper ploc in
 
       (* switch back env entries for this and super from undefined *)
       define_internal cx reason "this";
       define_internal cx reason "super";
 
       let this = this_ cx loc in
-      let super = super_ cx super_reason in
+      let super = super_ cx ploc in
+      let super_reason = reason_of_t super in
       Flow.mk_tvar_where cx reason (fun t ->
         let funtype = Flow.mk_methodcalltype this argts t in
         let propref = Named (super_reason, "constructor") in
@@ -3289,7 +3290,7 @@ and assignment cx loc = Ast.Expression.(function
             let reason =
               mk_reason (RPropertyAssignment name) lhs_loc in
             let prop_reason = mk_reason (RProperty (Some name)) ploc in
-            let super = super_ cx reason in
+            let super = super_ cx lhs_loc in
             Flow.flow cx (super, SetPropT (reason, Named (prop_reason, name), t))
 
         (* _object.name = e *)
@@ -4137,7 +4138,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
     ->
       let obj_t = match _object with
       | super_loc, Super ->
-          super_ cx (mk_reason (RProperty (Some prop_name)) super_loc)
+          super_ cx super_loc
       | _ ->
           (* use `expression` instead of `condition` because `_object` is the
              object in a member expression; if it itself is a member expression,
@@ -4508,7 +4509,7 @@ and mk_function id cx reason func =
 (* Process an arrow function, returning a (polymorphic) function type. *)
 and mk_arrow cx reason func =
   let this = this_ cx (loc_of_reason reason) in
-  let super = super_ cx reason in
+  let super = super_ cx (loc_of_reason reason) in
   let {Ast.Function.id; _} = func in
   let func_sig = function_decl id cx reason func this super in
   (* Do not expose the type of `this` in the function's type. The call to
