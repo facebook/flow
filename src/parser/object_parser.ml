@@ -342,21 +342,26 @@ module Object
       | T_ASSIGN
       | T_SEMICOLON when not async && not generator ->
         (* Class property with annotation *)
-        let typeAnnotation = Type.annotation_opt env in
-        let options = parse_options env in
-        let value =
-          if Peek.token env = T_ASSIGN then (
-            if static && options.esproposal_class_static_fields
-               || (not static) && options.esproposal_class_instance_fields
-            then begin
-              Expect.token env T_ASSIGN;
-              Some (Parse.expression env)
-            end else None
-          ) else None in
-        let end_loc = Peek.loc env in
-        if Expect.maybe env T_SEMICOLON then () else begin
-          if Peek.token env == T_LBRACKET || Peek.token env == T_LPAREN then error_unexpected env
-        end;
+        let end_loc, (typeAnnotation, value) = with_loc (fun env ->
+          let typeAnnotation = Type.annotation_opt env in
+          let options = parse_options env in
+          let value =
+            if Peek.token env = T_ASSIGN then (
+              if static && options.esproposal_class_static_fields
+                 || (not static) && options.esproposal_class_instance_fields
+              then begin
+                Expect.token env T_ASSIGN;
+                Some (Parse.expression env)
+              end else None
+            ) else None
+          in
+          begin if Expect.maybe env T_SEMICOLON then
+            ()
+          else if Peek.token env == T_LBRACKET || Peek.token env == T_LPAREN then
+            error_unexpected env
+          end;
+          typeAnnotation, value
+        ) env in
         let loc = Loc.btwn start_loc end_loc in
         Ast.Class.(Body.Property (loc, Property.({
           key;
