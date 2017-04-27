@@ -2216,9 +2216,9 @@ let dump_flow_error =
         spf "EUseArrayLiteral (%s)" (string_of_loc loc)
     | EMissingAnnotation reason ->
         spf "EMissingAnnotation (%s)" (dump_reason cx reason)
-    | EBindingError (_binding_error, reason, x, entry) ->
+    | EBindingError (_binding_error, loc, x, entry) ->
         spf "EBindingError (_, %s, %s, %s)"
-          (dump_reason cx reason)
+          (string_of_loc loc)
           x
           (Scope.Entry.string_of_kind entry)
     | ERecursionLimit (reason1, reason2) ->

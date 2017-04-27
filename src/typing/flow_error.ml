@@ -93,7 +93,7 @@ type error_message =
   | EIllegalName of Loc.t
   | EUseArrayLiteral of Loc.t
   | EMissingAnnotation of reason
-  | EBindingError of binding_error * reason * string * Scope.Entry.t
+  | EBindingError of binding_error * Loc.t * string * Scope.Entry.t
   | ERecursionLimit of (reason * reason)
   | EModuleOutsideRoot of Loc.t * string
   | EExperimentalDecorators of Loc.t
@@ -892,7 +892,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | EMissingAnnotation reason ->
       mk_error ~trace_infos [mk_info reason ["Missing annotation"]]
 
-  | EBindingError (binding_error, reason, x, entry) ->
+  | EBindingError (binding_error, loc, x, entry) ->
       let msg =
         match binding_error with
         | ENameAlreadyBound ->
@@ -915,7 +915,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
               (Scope.Entry.string_of_kind entry)
       in
       mk_error ~trace_infos [
-        loc_of_reason reason, [x; msg];
+        loc, [x; msg];
         Scope.Entry.entry_loc entry, [
           spf "%s %s" (Scope.Entry.string_of_kind entry) x
         ]
