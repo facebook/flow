@@ -14,8 +14,8 @@
    associated type information. *)
 
 open Utils_js
-open Reason
 open Type
+open Reason
 open Scope
 
 module FlowError = Flow_error
@@ -1199,8 +1199,8 @@ let havoc_all () =
    TODO rework the early-exit stuff to not break invariants. Until then it'll
    remain a source of bugs.
  *)
-let reset_current_activation reason =
-  iter_local_scopes (Scope.reset reason)
+let reset_current_activation loc =
+  iter_local_scopes (Scope.reset loc)
 
 (* clear refinement info for (topmost bindings of) given names in env *)
 let havoc_vars = Scope.(

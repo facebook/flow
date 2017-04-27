@@ -8,7 +8,6 @@
  *
  *)
 
-open Reason
 open Scope
 
 type t = Scope.t list
@@ -186,7 +185,7 @@ val copy_env:
 
 val havoc_all: unit -> unit
 
-val reset_current_activation: reason -> unit
+val reset_current_activation: Loc.t -> unit
 
 val havoc_vars: Changeset.t -> unit
 

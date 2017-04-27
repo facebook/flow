@@ -639,7 +639,7 @@ and statement cx = Ast.Statement.(
         | None -> None, Env.(clone_env (peek_env ()))
         | Some (_, name) -> Some name, []
       in
-      Env.reset_current_activation (mk_reason (RCustom "break") loc);
+      Env.reset_current_activation loc;
       Abnormal.save_and_throw (Abnormal.Break label_opt) ~env
 
   | (loc, Continue { Continue.label }) ->
@@ -647,7 +647,7 @@ and statement cx = Ast.Statement.(
         | None -> None
         | Some (_, name) -> Some name
       in
-      Env.reset_current_activation (mk_reason (RCustom "continue") loc);
+      Env.reset_current_activation loc;
       Abnormal.save_and_throw (Abnormal.Continue label_opt)
 
   | (_, With _) ->
@@ -895,13 +895,12 @@ and statement cx = Ast.Statement.(
       | _ -> t
       in
       Flow.flow cx (t, UseT (FunReturn, ret));
-      Env.reset_current_activation reason;
+      Env.reset_current_activation loc;
       Abnormal.save_and_throw Abnormal.Return
 
   | (loc, Throw { Throw.argument }) ->
-      let reason = mk_reason (RCustom "throw") loc in
       ignore (expression cx argument);
-      Env.reset_current_activation reason;
+      Env.reset_current_activation loc;
       Abnormal.save_and_throw Abnormal.Throw
 
   (***************************************************************************)
@@ -2682,19 +2681,18 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       arguments
     } ->
       (* TODO: require *)
-      let reason = mk_reason (RCustom "invariant") loc in
       ignore (expression cx callee);
       (match arguments with
       | [] ->
         (* invariant() is treated like a throw *)
-        Env.reset_current_activation reason;
+        Env.reset_current_activation loc;
         Abnormal.save_and_throw Abnormal.Throw
       | (Expression (_, Ast.Expression.Literal {
           Ast.Literal.value = Ast.Literal.Boolean false; _;
         }))::arguments ->
         (* invariant(false, ...) is treated like a throw *)
         ignore (List.map (expression_or_spread cx) arguments);
-        Env.reset_current_activation reason;
+        Env.reset_current_activation loc;
         Abnormal.save_and_throw Abnormal.Throw
       | (Expression cond)::arguments ->
         ignore (List.map (expression_or_spread cx) arguments);

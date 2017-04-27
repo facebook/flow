@@ -64,7 +64,7 @@ module Entry :
     val general_of_value : value_binding -> Type.t
     val state_of_value : value_binding -> State.t
     val havoc : string -> t -> t
-    val reset : Reason.t -> string -> t -> t
+    val reset : Loc.t -> string -> t -> t
     val is_lex : t -> bool
   end
 type var_scope_kind =
@@ -107,6 +107,6 @@ val havoc_refi : Key_map.key -> t -> unit
 val filter_refis_using_propname : string -> 'a Key_map.t -> 'a Key_map.t
 val havoc_refis : ?name:string -> t -> unit
 val havoc : t -> unit
-val reset : Reason.t -> t -> unit
+val reset : Loc.t -> t -> unit
 val is_lex : t -> bool
 val is_global : t -> bool
