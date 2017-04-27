@@ -162,7 +162,7 @@ val refine_with_preds:
 
 val in_refined_env:
   Context.t ->
-  reason ->
+  Loc.t ->
   Type.predicate Key_map.t ->
   Type.t Key_map.t ->
   (unit -> 'a) ->

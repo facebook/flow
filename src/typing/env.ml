@@ -1335,17 +1335,17 @@ let refine_with_preds cx loc preds orig_types =
    augmented by the given refinement map, then merge the final
    state of the cloned environment back into the reinstated
    original *)
-let in_refined_env cx reason preds orig_types f =
+let in_refined_env cx loc preds orig_types f =
   let oldset = Changeset.clear () in
   let orig_env = peek_env () in
   let new_env = clone_env orig_env in
-  update_env cx (loc_of_reason reason) new_env;
-  let _ = refine_with_preds cx (loc_of_reason reason) preds orig_types in
+  update_env cx loc new_env;
+  let _ = refine_with_preds cx loc preds orig_types in
 
   let result = f () in
 
   let newset = Changeset.merge oldset in
-  merge_env cx (loc_of_reason reason) (orig_env, orig_env, new_env) newset;
-  update_env cx (loc_of_reason reason) orig_env;
+  merge_env cx loc (orig_env, orig_env, new_env) newset;
+  update_env cx loc orig_env;
 
   result

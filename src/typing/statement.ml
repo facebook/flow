@@ -3203,7 +3203,7 @@ and logical cx loc = Ast.Expression.Logical.(function
   | { operator = Or; left; right } ->
       let t1, _, not_map, xtypes = predicates_of_condition cx left in
       let reason = mk_reason (RCustom "||") loc in
-      let t2 = Env.in_refined_env cx reason not_map xtypes
+      let t2 = Env.in_refined_env cx loc not_map xtypes
         (fun () -> expression cx right)
       in
       Flow.mk_tvar_where cx reason (fun t ->
@@ -3213,7 +3213,7 @@ and logical cx loc = Ast.Expression.Logical.(function
   | { operator = And; left; right } ->
       let t1, map, _, xtypes = predicates_of_condition cx left in
       let reason = mk_reason (RCustom "&&") loc in
-      let t2 = Env.in_refined_env cx reason map xtypes
+      let t2 = Env.in_refined_env cx loc map xtypes
         (fun () -> expression cx right)
       in
       Flow.mk_tvar_where cx reason (fun t ->
@@ -4216,7 +4216,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let reason = mk_reason (RCustom "&&") loc in
       let t1, map1, not_map1, xts1 =
         predicates_of_condition cx left in
-      let t2, map2, not_map2, xts2 = Env.in_refined_env cx reason map1 xts1
+      let t2, map2, not_map2, xts2 = Env.in_refined_env cx loc map1 xts1
         (fun () -> predicates_of_condition cx right)
       in
       (
@@ -4233,7 +4233,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let reason = mk_reason (RCustom "||") loc in
       let t1, map1, not_map1, xts1 =
         predicates_of_condition cx left in
-      let t2, map2, not_map2, xts2 = Env.in_refined_env cx reason not_map1 xts1
+      let t2, map2, not_map2, xts2 = Env.in_refined_env cx loc not_map1 xts1
         (fun () -> predicates_of_condition cx right)
       in
       (
