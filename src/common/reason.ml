@@ -322,6 +322,16 @@ let mk_reason desc loc =
 let locationless_reason desc =
   mk_reason_with_test_id None desc Loc.none ()
 
+let func_reason {Ast.Function.async; generator; _} =
+  let func_desc = match async, generator with
+  | true, true -> RAsyncGenerator
+  | true, false -> RAsync
+  | false, true -> RGenerator
+  | false, false -> RNormal
+  in
+  mk_reason (RFunction func_desc)
+
+
 let loc_of_reason r = r.loc
 
 let function_desc_prefix = function

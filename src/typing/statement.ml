@@ -34,15 +34,6 @@ open Import_export
 
 let ident_name (_, name) = name
 
-(* AST helpers *)
-
-let function_desc {Ast.Function.async; generator; _} =
-  match async, generator with
-  | true, true -> RAsyncGenerator
-  | true, false -> RAsync
-  | false, true -> RGenerator
-  | false, false -> RNormal
-
 (************)
 (* Visitors *)
 (************)
@@ -216,8 +207,7 @@ and statement_decl cx = Ast.Statement.(
   | (loc, FunctionDeclaration func) ->
       (match func.Ast.Function.id with
       | Some (_, name) ->
-        let desc = RFunction (function_desc func) in
-        let r = mk_reason desc loc in
+        let r = func_reason func loc in
         let tvar = Flow.mk_tvar cx r in
         Env.bind_fun cx name tvar loc
       | None ->
@@ -4421,7 +4411,7 @@ and mk_class cx loc reason c =
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
 and function_decl id cx loc func this super =
-  let reason = mk_reason (RFunction (function_desc func)) loc in
+  let reason = func_reason func loc in
   let func_sig = Func_sig.mk cx SMap.empty ~expr:expression reason func in
 
   let this, super =

@@ -153,6 +153,8 @@ val json_of_loc: ?strip_root:Path.t option -> Loc.t -> Hh_json.json
 
 val locationless_reason: reason_desc -> reason
 
+val func_reason: Ast.Function.t -> Loc.t -> reason
+
 val is_internal_name: string -> bool
 val internal_name: string -> string
 
