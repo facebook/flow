@@ -173,12 +173,12 @@ let set_module_t cx reason f =
  * `exports` value? Do we use the type that clobbered `module.exports`? Or do we
  * use neither because the module only has direct ES exports?).
  *)
-let set_module_kind cx reason new_exports_kind = Context.(
+let set_module_kind cx loc new_exports_kind = Context.(
   (match (Context.module_kind cx, new_exports_kind) with
   | (ESModule, CommonJSModule(Some _))
   | (CommonJSModule(Some _), ESModule)
     ->
-      Flow_js.add_output cx (Flow_error.EIndeterminateModuleType (loc_of_reason reason))
+      Flow_js.add_output cx (Flow_error.EIndeterminateModuleType loc)
   | _ -> ()
   );
   Context.set_module_kind cx new_exports_kind

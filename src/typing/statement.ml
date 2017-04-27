@@ -1600,8 +1600,7 @@ and statement cx = Ast.Statement.(
       let name = internal_name "declare_module.exports" in
       Env.bind_declare_var cx name t loc
     ) else (
-      let reason = mk_reason (RCustom "declare module.exports") loc in
-      set_module_kind cx reason (Context.CommonJSModule(Some loc));
+      set_module_kind cx loc (Context.CommonJSModule(Some loc));
       set_module_exports cx loc t
     )
 
@@ -1876,7 +1875,7 @@ and export_statement cx loc
       *       user given CommonJS<->ESModule interop.
       *)
     (if lookup_mode != ForType then
-      set_module_kind cx reason Context.ESModule);
+      set_module_kind cx loc Context.ESModule);
 
     let local_name = if default then "default" else local_name in
     set_module_t cx reason (fun t ->
@@ -1952,7 +1951,7 @@ and export_statement cx loc
           *       effect to the user given CommonJS<->ESModule interop.
           *)
         (if lookup_mode != ForType
-        then set_module_kind cx reason Context.ESModule);
+        then set_module_kind cx loc Context.ESModule);
 
         set_module_t cx reason (fun t ->
           Flow.flow cx (
@@ -1991,7 +1990,7 @@ and export_statement cx loc
             (RCustom (spf "export * as %s from %S" name source_module_name))
             loc
         in
-        set_module_kind cx reason Context.ESModule;
+        set_module_kind cx loc Context.ESModule;
 
         let remote_namespace_t =
           if parse_export_star_as = Options.ESPROPOSAL_ENABLE
@@ -2022,7 +2021,7 @@ and export_statement cx loc
 
         (* It's legal to export types from a CommonJS module. *)
         if exportKind != ExportType
-        then set_module_kind cx reason Context.ESModule;
+        then set_module_kind cx loc Context.ESModule;
 
         set_module_t cx reason (fun t -> Flow.flow cx (
           import ~reason cx source_module_name loc,
@@ -3233,9 +3232,7 @@ and assignment cx loc = Ast.Expression.(function
             property = Member.PropertyIdentifier (_, "exports");
             _
           }) ->
-            let reason =
-              mk_reason (RCustom "assignment of module.exports") lhs_loc in
-            set_module_kind cx reason (Context.CommonJSModule(Some(lhs_loc)));
+            set_module_kind cx lhs_loc (Context.CommonJSModule(Some(lhs_loc)));
             set_module_exports cx lhs_loc t
 
         (* super.name = e *)
