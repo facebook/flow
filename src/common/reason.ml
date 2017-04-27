@@ -90,8 +90,6 @@ type reason_desc =
   | RUnknownString
   | RStringEnum
   | RNumberEnum
-  | RGetterFunction
-  | RSetterFunction
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -375,8 +373,6 @@ let rec string_of_desc = function
   | RUnknownString -> "some string with unknown value"
   | RStringEnum -> "string enum"
   | RNumberEnum -> "number enum"
-  | RGetterFunction -> "getter function"
-  | RSetterFunction -> "setter function"
   | RGetterSetterProperty -> "getter/setter property"
   | RThis -> "this"
   | RThisType -> "`this` type"

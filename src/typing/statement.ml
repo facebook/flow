@@ -2116,7 +2116,7 @@ and object_prop cx map = Ast.Expression.Object.(function
       value = Property.Get (vloc, func);
       _ }) ->
     if Context.enable_unsafe_getters_and_setters cx then
-      let reason = mk_reason RGetterFunction vloc in
+      let reason = mk_reason (RFunction RNormal) vloc in
       let function_type = mk_function None cx reason func in
       let return_t = Type.extract_getter_type function_type in
       Properties.add_getter name return_t map
@@ -2132,7 +2132,7 @@ and object_prop cx map = Ast.Expression.Object.(function
       value = Property.Set (vloc, func);
       _ }) ->
     if Context.enable_unsafe_getters_and_setters cx then
-      let reason = mk_reason RSetterFunction vloc in
+      let reason = mk_reason (RFunction RNormal) vloc in
       let function_type = mk_function None cx reason func in
       let param_t = Type.extract_setter_type function_type in
       Properties.add_setter name param_t map
