@@ -908,15 +908,15 @@ let envs_congruent envs =
 
 (* find scopes with a given id in a list of envs.
    envs are assumed congruent amd assumed to contain scope id *)
-let rec find_scope cx reason envs scope_id =
+let rec find_scope cx loc envs scope_id =
   match envs with
   | (scope0 :: _) :: _ ->
     if scope0.id = scope_id
     then List.(map hd envs)
-    else find_scope cx reason List.(map tl envs) scope_id
+    else find_scope cx loc List.(map tl envs) scope_id
   | _ ->
     assert_false (spf "find_scopes %s: scope %d not found. head env %s"
-      (string_of_reason reason) scope_id
+      (string_of_loc loc) scope_id
       (string_of_env cx (List.hd envs)))
 
 (* The following function takes a changset and a triple of environments -
@@ -926,7 +926,7 @@ let merge_env =
 
   (* find scope triple in env triple *)
   let find_scope_triple cx reason (env0, env1, env2) id =
-    let lst = find_scope cx reason [env0; env1; env2] id in
+    let lst = find_scope cx (loc_of_reason reason) [env0; env1; env2] id in
     List.(nth lst 0, nth lst 1, nth lst 2)
   in
 
@@ -1076,7 +1076,7 @@ let copy_env =
 
   (* find sscope pair in env pair *)
   let find_scope_pair cx reason (env0, env1) id =
-    let lst = find_scope cx reason [env0; env1] id in
+    let lst = find_scope cx (loc_of_reason reason) [env0; env1] id in
     List.(nth lst 0, nth lst 1)
   in
 
