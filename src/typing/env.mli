@@ -193,6 +193,6 @@ val havoc_vars: Changeset.t -> unit
 val havoc_heap_refinements: unit -> unit
 val havoc_heap_refinements_with_propname: string -> unit
 
-val get_refinement: Context.t -> Key.t -> reason -> Type.t option
+val get_refinement: Context.t -> Key.t -> Loc.t -> Type.t option
 
 val is_global_var: Context.t -> string -> bool

@@ -96,7 +96,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
               }))
             ) in
             let refinement = Option.bind init (fun init ->
-              Refinement.get cx init reason
+              Refinement.get cx init loc
             ) in
             let parent_pattern_t, tvar = (match refinement with
             | Some refined_t -> refined_t, refined_t
@@ -142,7 +142,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                   }))
                 ) in
                 let refinement = Option.bind init (fun init ->
-                  Refinement.get cx init reason
+                  Refinement.get cx init loc
                 ) in
                 let parent_pattern_t, tvar = (match refinement with
                 | Some refined_t -> refined_t, refined_t
@@ -167,7 +167,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                   }))
                 ) in
                 let refinement = Option.bind init (fun init ->
-                  Refinement.get cx init reason
+                  Refinement.get cx init loc
                 ) in
                 let parent_pattern_t, tvar = (match refinement with
                 | Some refined_t -> refined_t, refined_t

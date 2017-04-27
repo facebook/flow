@@ -2337,8 +2337,7 @@ and expression ?(is_cond=false) cx (loc, e) =
   t
 
 and this_ cx loc = Ast.Expression.(
-  let r = mk_reason RThis loc in
-  match Refinement.get cx (loc, This) r with
+  match Refinement.get cx (loc, This) loc with
   | Some t -> t
   | None -> Env.var_ref cx (internal_name "this") loc
 )
@@ -2389,7 +2388,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
     } ->
       let reason =
         mk_reason (RCustom "access of computed property/element") loc in
-      (match Refinement.get cx (loc, e) reason with
+      (match Refinement.get cx (loc, e) loc with
       | Some t -> t
       | None ->
         let tobj = expression cx _object in
@@ -2422,7 +2421,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       _
     } ->
       let expr_reason = mk_reason (RProperty (Some name)) loc in
-      (match Refinement.get cx (loc, e) expr_reason with
+      (match Refinement.get cx (loc, e) loc with
       | Some t -> t
       | None ->
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
@@ -2446,7 +2445,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       _
     } -> (
       let expr_reason = mk_reason (RProperty (Some name)) loc in
-      match Refinement.get cx (loc, e) expr_reason with
+      match Refinement.get cx (loc, e) loc with
       | Some t -> t
       | None ->
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
@@ -2997,7 +2996,7 @@ and func_call cx reason ?(call_strict_arity=true) func_t argts =
 and method_call cx reason ?(call_strict_arity=true) prop_loc
     (expr, obj_t, name) argts =
   Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
-  (match Refinement.get cx expr reason with
+  (match Refinement.get cx expr (loc_of_reason reason) with
   | Some f ->
       (* note: the current state of affairs is that we understand
          member expressions as having refined types, rather than
@@ -3837,7 +3836,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
 
       let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
       let expr_reason = mk_reason (RProperty (Some prop_name)) expr_loc in
-      let prop_t = match Refinement.get cx expr expr_reason with
+      let prop_t = match Refinement.get cx expr expr_loc with
       | Some t -> t
       | None ->
         if Type_inference_hooks_js.dispatch_member_hook cx
@@ -4103,7 +4102,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
           expression cx _object in
       let expr_reason = mk_reason (RProperty (Some prop_name)) loc in
       let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
-      let t = match Refinement.get cx e expr_reason with
+      let t = match Refinement.get cx e loc with
       | Some t -> t
       | None ->
         if Type_inference_hooks_js.dispatch_member_hook cx

@@ -797,10 +797,10 @@ let var_ref ?(lookup_mode=ForValue) cx name loc =
   Flow_js.reposition cx loc t
 
 (* get refinement entry *)
-let get_refinement cx key reason =
+let get_refinement cx key loc =
   match find_refi_in_var_scope key with
   | Some (_, { refined; _ }) ->
-      Some (Flow_js.reposition cx (loc_of_reason reason) refined)
+      Some (Flow_js.reposition cx loc refined)
   | _ -> None
 
 (* helper: update let or var entry *)

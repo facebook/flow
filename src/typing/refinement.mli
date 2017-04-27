@@ -12,5 +12,5 @@ val key: Ast.Expression.t -> Key.t option
 val get:
   Context.t ->
   Ast.Expression.t ->
-  Reason.reason ->
+  Loc.t ->
   Type.t option
