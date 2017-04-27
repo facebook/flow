@@ -2807,7 +2807,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | ArrowFunction func ->
       let {Ast.Function.async; generator; _} = func in
-      let desc = RArrowFunction (function_desc ~async ~generator) in
+      let desc = RFunction (function_desc ~async ~generator) in
       let reason = mk_reason desc loc in
       mk_arrow cx reason func
 

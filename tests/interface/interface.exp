@@ -126,7 +126,7 @@ test4.js:9
     5:   bar(i: I): void;
                 ^ property `foo` of I. Property not found in
     9: new C().bar((x: string) => { }); // error, number ~/~> string
-                   ^^^^^^^^^^^^^^^^^^ arrow function
+                   ^^^^^^^^^^^^^^^^^^ function
   Member 2:
     6:   bar(f: (x: number) => void): void;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type

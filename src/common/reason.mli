@@ -28,7 +28,6 @@ type reason_desc =
   | RTupleElement
   | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
-  | RArrowFunction of reason_desc_function
   | RFunctionType
   | RFunctionBody
   | RFunctionCall

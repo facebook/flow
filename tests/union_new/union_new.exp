@@ -6,7 +6,7 @@ issue-1462-i.js:21
 
 test1.js:39
  39: const fun_result = fun(() => "");
-                            ^^^^^^^^ arrow function. Could not decide which case to select
+                            ^^^^^^^^ function. Could not decide which case to select
  35: function fun(a: A3 | A4) {
                      ^^^^^^^ union type
   Case 1 may work:
@@ -36,7 +36,7 @@ test1.js:57
 
 test10.js:38
  38: check_fun((x) => x);
-               ^^^^^^^^ arrow function. Could not decide which case to select
+               ^^^^^^^^ function. Could not decide which case to select
  35: function check_fun(_: ((_: number) => number) | ((_: string) => string)) { }
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union type
   Case 1 may work:
@@ -157,7 +157,7 @@ test14.js:12
 
 test16.js:11
  11: foo(() => qux());
-         ^^^^^^^^^^^ arrow function. Could not decide which case to select
+         ^^^^^^^^^^^ function. Could not decide which case to select
  10: function foo(x: Foo) { }
                      ^^^ union type
   Case 1 may work:
@@ -172,7 +172,7 @@ test16.js:11
 
 test16.js:14
  14: bar(() => qux());
-         ^^^^^^^^^^^ arrow function. Could not decide which case to select
+         ^^^^^^^^^^^ function. Could not decide which case to select
  13: function bar(x: Bar) { }
                      ^^^ union type
   Case 2 may work:

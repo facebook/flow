@@ -5612,7 +5612,6 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   | RSpreadOf _
   | RObjectPatternRestProp
   | RFunction _
-  | RArrowFunction _
   | RReactElementProps _
   | RJSXElementProps _ -> true
   | _ -> lflags.frozen
