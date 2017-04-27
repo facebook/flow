@@ -179,7 +179,7 @@ val widen_env: Context.t -> reason -> unit
 
 val copy_env:
   Context.t ->
-  reason ->
+  Loc.t ->
   t * t ->
   Changeset.t ->
   unit

@@ -616,7 +616,7 @@ and statement cx = Ast.Statement.(
         if Abnormal.swap_saved (Abnormal.Continue label) save_continue <> None
         then Env.havoc_vars newset;
 
-        Env.copy_env cx reason (env,loop_env) newset;
+        Env.copy_env cx loc (env,loop_env) newset;
 
         if Abnormal.swap_saved (Abnormal.Break label) save_break <> None
         then Env.havoc_vars newset
@@ -1135,7 +1135,7 @@ and statement cx = Ast.Statement.(
          (turning Pre into Pre' = Pre | Post')
          then reinstall and add ~c to make Post *)
       Env.(
-        copy_env cx reason (start_env, body_env) newset;
+        copy_env cx loc (start_env, body_env) newset;
         update_env cx loc start_env;
         ignore (refine_with_preds cx reason not_preds orig_types)
       );
@@ -1190,7 +1190,7 @@ and statement cx = Ast.Statement.(
       (* body_env = Post' & c *)
 
       let newset = Changeset.merge oldset in
-      Env.copy_env cx reason (env, body_env) newset;
+      Env.copy_env cx loc (env, body_env) newset;
       (* Pre' > Post' & c *)
 
       Env.update_env cx loc done_env;
@@ -1261,7 +1261,7 @@ and statement cx = Ast.Statement.(
         );
 
         let newset = Changeset.merge oldset in
-        Env.copy_env cx reason (env, body_env) newset;
+        Env.copy_env cx loc (env, body_env) newset;
 
         Env.update_env cx loc do_env;
         let _ = Env.refine_with_preds cx reason not_preds xtypes in
@@ -1323,7 +1323,7 @@ and statement cx = Ast.Statement.(
 
         if Abnormal.swap_saved (Abnormal.Continue None) save_continue <> None
         then Env.havoc_vars newset;
-        Env.copy_env cx reason (env,body_env) newset;
+        Env.copy_env cx loc (env,body_env) newset;
 
         Env.update_env cx loc env;
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None
@@ -1390,7 +1390,7 @@ and statement cx = Ast.Statement.(
 
         if Abnormal.swap_saved (Abnormal.Continue None) save_continue <> None
         then Env.havoc_vars newset;
-        Env.copy_env cx reason (env,body_env) newset;
+        Env.copy_env cx loc (env,body_env) newset;
 
         Env.update_env cx loc env;
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None

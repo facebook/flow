@@ -1073,15 +1073,15 @@ let merge_env =
 let copy_env =
 
   (* find sscope pair in env pair *)
-  let find_scope_pair cx reason (env0, env1) id =
-    let lst = find_scope cx (loc_of_reason reason) [env0; env1] id in
+  let find_scope_pair cx loc (env0, env1) id =
+    let lst = find_scope cx loc [env0; env1] id in
     List.(nth lst 0, nth lst 1)
   in
 
   (* look for and copy entry, starting in topmost scope *)
-  let copy_entry cx reason envs (scope_id, name, _) =
+  let copy_entry cx loc envs (scope_id, name, _) =
 
-    let scope1, scope2 = find_scope_pair cx reason envs scope_id in
+    let scope1, scope2 = find_scope_pair cx loc envs scope_id in
     let get = get_entry name in
     Entry.(match get scope1, get scope2 with
     (* for values, flow env2's specific type into env1's specific type *)
@@ -1101,7 +1101,7 @@ let copy_env =
     (* type aliases shouldn't be here *)
     | Some Type _, Some Type _ ->
       assert_false (spf "copy_env %s: type alias %s found in changelist"
-        (string_of_reason reason) name)
+        (string_of_loc loc) name)
 
     (* global lookups may leave new entries in env2, or orphan changes *)
     (* ...which we can forget *)
@@ -1121,15 +1121,15 @@ let copy_env =
       | Some e -> spf "Some %s" (Entry.string_of_kind e)
       in assert_false (spf
         "copy_env %s: non-uniform distribution of entry %s: %s, %s"
-        (string_of_reason reason)
+        (string_of_loc loc)
         name
         (print_entry_kind_opt entry1)
         (print_entry_kind_opt entry2))
   ) in
 
   (* look for and copy refinement in top scope only *)
-  let copy_refi cx reason envs (scope_id, key, _) =
-    let scope0, scope1 = find_scope_pair cx reason envs scope_id in
+  let copy_refi cx loc envs (scope_id, key, _) =
+    let scope0, scope1 = find_scope_pair cx loc envs scope_id in
     let get = get_refi key in
     match get scope0, get scope1 with
     (* flow child refi's type back to parent *)
@@ -1141,13 +1141,13 @@ let copy_env =
   in
 
   (* copy entries and refis bound to names and keys, respectively *)
-  fun cx reason (env1, env2) changeset ->
+  fun cx loc (env1, env2) changeset ->
     (if envs_congruent [env1; env2] then ()
     else assert_false (spf "copy_env %s: envs not congruent"
-      (string_of_reason reason)));
+      (string_of_loc loc)));
     changeset |> Changeset.iter_type_updates
-      (copy_entry cx reason (env1, env2))
-      (copy_refi cx reason (env1, env2))
+      (copy_entry cx loc (env1, env2))
+      (copy_refi cx loc (env1, env2))
 
 (* in the top scope, convert specific types to tvars with former
    specific type as incoming lower bound, and general type as
