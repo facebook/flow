@@ -197,7 +197,7 @@ let autocomplete_id cx env =
         then (Loc.none, "this")
         else if is_super
         then (Loc.none, "super")
-        else (Scope.Entry.loc entry, name)
+        else (Scope.Entry.entry_loc entry, name)
       in
 
       let type_ = Scope.Entry.actual_type entry in

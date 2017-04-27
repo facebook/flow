@@ -130,7 +130,7 @@ module Entry = struct
     }
 
   (* accessors *)
-  let loc = function
+  let entry_loc = function
   | Value v -> v.value_declare_loc
   | Type t -> t.type_loc
 

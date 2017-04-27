@@ -440,7 +440,7 @@ let bind_entry cx name entry reason =
         | LexScope, Value { Entry.kind = Let _; _ }
         | LexScope, Value { Entry.kind = Const _; _ }
         | VarScope _, _ ->
-          let loc = loc entry in
+          let loc = entry_loc entry in
           Type_inference_hooks_js.dispatch_ref_hook cx loc loc;
           add_entry name entry scope
         (* otherwise, keep looking for our scope *)
@@ -711,13 +711,13 @@ let allow_forward_ref = Scope.Entry.(function
 let read_entry ~track_ref ~lookup_mode ~specific cx name reason =
   let scope, entry = find_entry cx name reason in
   if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
-    (Entry.loc entry) (loc_of_reason reason);
+    (Entry.entry_loc entry) (loc_of_reason reason);
   Entry.(match entry with
 
   | Type _ when lookup_mode != ForType ->
     let msg = FlowError.ETypeInValuePosition in
     binding_error msg cx name entry reason;
-    AnyT.at (Entry.loc entry)
+    AnyT.at (entry_loc entry)
 
   | Type t ->
     t._type
@@ -813,7 +813,7 @@ let get_refinement cx key reason =
 let update_var ?(track_ref=false) op cx name specific reason =
   let scope, entry = find_entry cx name reason in
   if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
-    (Entry.loc entry) (loc_of_reason reason);
+    (Entry.entry_loc entry) (loc_of_reason reason);
   let value_assign_loc = loc_of_reason reason in
   Entry.(match entry with
   | Value ({

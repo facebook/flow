@@ -916,7 +916,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       in
       mk_error ~trace_infos [
         loc_of_reason reason, [x; msg];
-        Scope.Entry.loc entry, [
+        Scope.Entry.entry_loc entry, [
           spf "%s %s" (Scope.Entry.string_of_kind entry) x
         ]
       ]

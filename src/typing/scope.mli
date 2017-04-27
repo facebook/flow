@@ -55,7 +55,7 @@ module Entry :
     val new_var :
       loc:Loc.t -> ?state:State.t -> ?specific:Type.t -> Type.t -> t
     val new_type : loc:Loc.t -> ?state:State.t -> Type.t -> t
-    val loc : t -> Loc.t
+    val entry_loc : t -> Loc.t
     val assign_loc : t -> Loc.t
     val declared_type : t -> Type.t
     val actual_type : t -> Type.t
