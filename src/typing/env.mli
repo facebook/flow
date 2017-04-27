@@ -144,10 +144,10 @@ val var_ref:
   Loc.t ->
   Type.t
 
-val set_var: Context.t -> string -> Type.t -> reason ->
+val set_var: Context.t -> string -> Type.t -> Loc.t ->
   Changeset.EntryRef.t option
 
-val set_internal_var: Context.t -> string -> Type.t -> reason ->
+val set_internal_var: Context.t -> string -> Type.t -> Loc.t ->
   Changeset.EntryRef.t option
 
 val set_expr: Key.t -> reason -> Type.t -> Type.t ->

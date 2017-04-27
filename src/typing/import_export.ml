@@ -233,4 +233,4 @@ let get_module_exports cx reason =
   Env.get_internal_var cx "exports" (loc_of_reason reason)
 
 let set_module_exports cx reason t =
-  ignore Env.(set_internal_var cx "exports" t reason)
+  ignore Env.(set_internal_var cx "exports" t (loc_of_reason reason))

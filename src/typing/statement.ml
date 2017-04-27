@@ -1300,8 +1300,7 @@ and statement cx = Ast.Statement.(
 
           | ForIn.LeftExpression (loc, Ast.Expression.Identifier ident) ->
               let name = ident_name ident in
-              let reason = mk_reason (RCustom (spf "for..in `%s`" name)) loc in
-              ignore Env.(set_var cx name (StrT.at loc) reason)
+              ignore Env.(set_var cx name (StrT.at loc) loc)
 
           | _ ->
               Flow_js.add_output cx Flow_error.(EInternal (loc, ForInLHS))
@@ -1367,8 +1366,7 @@ and statement cx = Ast.Statement.(
 
           | ForOf.LeftExpression (loc, Ast.Expression.Identifier ident) ->
               let name = ident_name ident in
-              let reason = mk_reason (RCustom (spf "for..of `%s`" name)) loc in
-              ignore Env.(set_var cx name element_tvar reason)
+              ignore Env.(set_var cx name element_tvar loc)
 
           | _ ->
               Flow_js.add_output cx Flow_error.(EInternal (loc, ForOfLHS))
@@ -3112,8 +3110,7 @@ and update cx loc expr = Ast.Expression.Update.(
   | _, Ast.Expression.Identifier (id_loc, name) ->
     Flow.flow cx (identifier cx name id_loc, AssertArithmeticOperandT reason);
     (* enforce state-based guards for binding update, e.g., const *)
-    let id_reason = mk_reason (RCustom name) id_loc in
-    ignore (Env.set_var cx name result_t id_reason)
+    ignore (Env.set_var cx name result_t id_loc)
   | expr ->
     Flow.flow cx (expression cx expr, AssertArithmeticOperandT reason)
   );
@@ -3335,8 +3332,7 @@ and assignment cx loc = Ast.Expression.(function
         name = id_loc, name;
         _;
       } ->
-        let id_reason = mk_reason (RCustom name) id_loc in
-        ignore Env.(set_var cx name result_t id_reason)
+        ignore Env.(set_var cx name result_t id_loc)
       | _ -> ()
       );
       lhs_t
@@ -3366,8 +3362,7 @@ and assignment cx loc = Ast.Expression.(function
         name = id_loc, name;
         _;
       } ->
-        let id_reason = mk_reason (RCustom name) id_loc in
-        ignore Env.(set_var cx name (NumT.at loc) id_reason)
+        ignore Env.(set_var cx name (NumT.at loc) id_loc)
       | _ -> ()
       );
       lhs_t
@@ -4457,8 +4452,9 @@ and function_decl id cx loc func this super =
 (* Switch back to the declared type for an internal name. *)
 and define_internal cx reason x =
   let ix = internal_name x in
-  let opt = Env.get_var_declared_type cx ix (loc_of_reason reason) in
-  ignore Env.(set_var cx ix (Flow.filter_optional cx reason opt) reason)
+  let loc = loc_of_reason reason in
+  let opt = Env.get_var_declared_type cx ix loc in
+  ignore Env.(set_var cx ix (Flow.filter_optional cx reason opt) loc)
 
 (* Process a function definition, returning a (polymorphic) function type. *)
 and mk_function id cx loc func =

@@ -249,7 +249,6 @@ let type_of_pattern = Ast.Pattern.(function
 let destructuring_assignment cx ~expr rhs_t init =
   let f loc name _default t =
     (* TODO destructuring+defaults unsupported in assignment expressions *)
-    let reason = mk_reason (RIdentifierAssignment name) loc in
-    ignore Env.(set_var cx name t reason)
+    ignore Env.(set_var cx name t loc)
   in
   destructuring cx ~expr rhs_t (Some init) None ~f

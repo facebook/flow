@@ -804,16 +804,15 @@ let get_refinement cx key reason =
   | _ -> None
 
 (* helper: update let or var entry *)
-let update_var ?(track_ref=false) op cx name specific reason =
-  let scope, entry = find_entry cx name (loc_of_reason reason) in
+let update_var ?(track_ref=false) op cx name specific loc =
+  let scope, entry = find_entry cx name loc in
   if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
-    (Entry.entry_loc entry) (loc_of_reason reason);
-  let value_assign_loc = loc_of_reason reason in
+    (Entry.entry_loc entry) loc;
   Entry.(match entry with
   | Value ({
       Entry.kind = (Let _ as kind); value_state = State.Undeclared; _
     } as v) when not (allow_forward_ref kind) && same_activation scope ->
-    tdz_error cx name (loc_of_reason reason) v;
+    tdz_error cx name loc v;
     None
   | Value ({ Entry.kind = Let _ | Var; _ } as v) ->
     let change = scope.id, name, op in
@@ -829,41 +828,41 @@ let update_var ?(track_ref=false) op cx name specific reason =
       v with Entry.
       value_state = State.Initialized;
       specific;
-      value_assign_loc;
+      value_assign_loc = loc;
     } in
     Scope.add_entry name update scope;
     Some change
   | Value { Entry.kind = Const ConstVarBinding; _ } ->
     let msg = FlowError.EConstReassigned in
-    binding_error msg cx name entry (loc_of_reason reason);
+    binding_error msg cx name entry loc;
     None
   | Value { Entry.kind = Const ConstImportBinding; _; } ->
     let msg = FlowError.EImportReassigned in
-    binding_error msg cx name entry (loc_of_reason reason);
+    binding_error msg cx name entry loc;
     None
   | Value { Entry.kind = Const ConstParamBinding; _ } ->
     (* TODO: remove extra info when surface syntax is added *)
     let msg = FlowError.EConstParamReassigned in
-    binding_error msg cx name entry (loc_of_reason reason);
+    binding_error msg cx name entry loc;
     None
   | Type _ ->
     let msg = FlowError.ETypeAliasInValuePosition in
-    binding_error msg cx name entry (loc_of_reason reason);
+    binding_error msg cx name entry loc;
     None
   )
 
 (* update var by direct assignment *)
 let set_var = update_var ~track_ref:true Changeset.Write
 
-let set_internal_var cx name t reason =
-  update_var ~track_ref:false Changeset.Write cx (internal_name name) t reason
+let set_internal_var cx name t loc =
+  update_var ~track_ref:false Changeset.Write cx (internal_name name) t loc
 
 (* update var by refinement test *)
 let refine_var = update_var Changeset.Refine
 
 (* set const's specific type to reflect a refinement test (internal) *)
-let refine_const cx name specific reason =
-  let scope, entry = find_entry cx name (loc_of_reason reason) in
+let refine_const cx name specific loc =
+  let scope, entry = find_entry cx name loc in
   Entry.(match entry with
   | Value ({ Entry.kind = Const _; _ } as v) ->
     let change = scope.id, name, Changeset.Refine in
@@ -1301,7 +1300,7 @@ let refine_with_preds cx loc preds orig_types =
           | Const _ -> refine_const
           | _ -> refine_var
         in
-        begin match refine cx name refi_type refi_reason with
+        begin match refine cx name refi_type loc with
         | Some change -> Changeset.add_var change acc
         | None -> acc
         end
