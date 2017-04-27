@@ -318,7 +318,7 @@ scope.js:42
 
 scope.js:45
  45:   a = ""; // error: a no longer in scope
-       ^ assignment of identifier `a`. Could not resolve name
+       ^ identifier `a`. Could not resolve name
 
 scope.js:66
  66:   for (var a = "" /* error: string ~> number */;;) {}

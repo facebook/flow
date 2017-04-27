@@ -81,7 +81,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:6
             6:       <Bar />;
-                     ^^^^^^^ JSX desugared to \`Foo(...)\`. identifier Foo. Could not resolve name
+                     ^^^^^^^ identifier \`Foo\`. Could not resolve name
         `,
       ),
   ]),
@@ -95,7 +95,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:6
             6:       <Bar />;
-                     ^^^^^^^ JSX desugared to \`Foo.baz(...)\`. identifier Foo. Could not resolve name
+                     ^^^^^^^ identifier \`Foo\`. Could not resolve name
         `,
       ),
   ]),
@@ -281,7 +281,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       <Bar y="hi" />;
-                     ^^^^^^^^^^^^^^ JSX element \`Bar\`. Could not resolve name
+                     ^^^^^^^^^^^^^^ identifier \`Bar\`. Could not resolve name
         `,
       ),
   ]),

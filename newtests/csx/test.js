@@ -29,8 +29,8 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:5
           5:       <Bar x={23} />;
-                   ^^^^^^^^^^^^^^ JSX element \`Bar\`. Could not resolve name
-      `
+                   ^^^^^^^^^^^^^^ identifier \`Bar\`. Could not resolve name
+      `,
     ),
   ]),
   test('Should raise no errors if JSX references a function with correct types', [

@@ -332,15 +332,16 @@ let global_lexicals = [
    flag such errors on the current deferred basis.
    tests/global_ref tracks this issue.
  *)
-let cache_global cx name reason global_scope =
+let cache_global cx name loc global_scope =
   let t =
     if List.mem name global_any
-    then AnyT.at (loc_of_reason reason)
-    else (if List.mem name global_lexicals
-    then ObjProtoT (replace_reason_const (RCustom "global object") reason)
-    else Flow_js.get_builtin cx name reason)
+    then AnyT.at loc
+    else if List.mem name global_lexicals
+    then ObjProtoT (mk_reason (RCustom "global object") loc)
+    else
+      let reason = mk_reason (RIdentifier name) loc in
+      Flow_js.get_builtin cx name reason
   in
-  let loc = loc_of_reason reason in
   let entry = Entry.new_var t ~loc ~state:State.Initialized in
   Scope.add_entry name entry global_scope;
   Context.add_global cx name;
@@ -372,7 +373,7 @@ let find_entry cx name reason =
       | None ->
         (* keep looking until we're at the global scope *)
         match scopes with
-        | [] -> cache_global cx name reason scope
+        | [] -> cache_global cx name (loc_of_reason reason) scope
         | _ -> loop scopes
   in
   loop !scopes
