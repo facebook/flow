@@ -114,8 +114,8 @@ let add_setter name fsig = map_sig (fun s -> {
   methods = SMap.remove name s.methods;
 })
 
-let mk_method cx ~expr x reason func =
-  Func_sig.mk cx x.tparams_map ~expr reason func
+let mk_method cx ~expr x loc func =
+  Func_sig.mk cx x.tparams_map ~expr loc func
 
 let mk_field cx ~polarity x reason typeAnnotation value =
   let t = Anno.mk_type_annotation cx x.tparams_map reason typeAnnotation in
@@ -486,31 +486,13 @@ let mk cx _loc reason self ~expr =
       | Get | Set -> warn_unsafe_getters_setters cx loc
       | _ -> ());
 
-      let function_desc =
-        let {Ast.Function.async; generator; _} = func in
-        match async, generator with
-        | true, true -> RAsyncGenerator
-        | true, false -> RAsync
-        | false, true -> RGenerator
-        | false, false -> RNormal
+      let add = match kind with
+      | Method.Constructor -> add_constructor
+      | Method.Method -> add_method ~static name
+      | Method.Get -> add_getter ~static name
+      | Method.Set -> add_setter ~static name
       in
-
-      let method_desc, add = match kind with
-      | Method.Constructor ->
-          RConstructor,
-          add_constructor
-      | Method.Method ->
-          RFunction function_desc,
-          add_method ~static name
-      | Method.Get ->
-          RFunction function_desc,
-          add_getter ~static name
-      | Method.Set ->
-          RFunction function_desc,
-          add_setter ~static name
-      in
-      let reason = mk_reason method_desc loc in
-      let method_sig = mk_method cx ~expr c reason func in
+      let method_sig = mk_method cx ~expr c loc func in
       add method_sig c
 
     (* fields *)

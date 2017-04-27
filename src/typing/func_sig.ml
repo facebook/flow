@@ -49,32 +49,32 @@ let function_kind {Ast.Function.async; generator; predicate; _ } =
   | false, false, Some (_ , Inferred) -> Predicate
   | _, _, _ -> Utils_js.assert_false "(async || generator) && pred")
 
-let mk cx tparams_map ~expr reason func =
+let mk cx tparams_map ~expr loc func =
   let {Ast.Function.typeParameters; returnType; body; predicate; _} = func in
+  let reason = func_reason func loc in
   let kind = function_kind func in
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx ~tparams_map typeParameters
   in
   let params = Func_params.mk cx tparams_map ~expr func in
+  let ret_reason = mk_reason RReturn (return_loc func) in
   let return_t =
-    let reason = mk_reason RReturn (return_loc func) in
-    Anno.mk_type_annotation cx tparams_map reason returnType
+    Anno.mk_type_annotation cx tparams_map ret_reason returnType
   in
   let return_t = Ast.Type.Predicate.(match predicate with
     | None ->
         return_t
     | Some (_, Inferred) ->
         (* Restrict the fresh condition type by the declared return type *)
-        let fresh_t = Anno.mk_type_annotation cx tparams_map reason None in
+        let fresh_t = Anno.mk_type_annotation cx tparams_map ret_reason None in
         Flow.flow_t cx (fresh_t, return_t);
         fresh_t
     | Some (loc, Declared _) ->
         Flow_js.add_output cx Flow_error.(
           EUnsupportedSyntax (loc, PredicateDeclarationForImplementation)
         );
-        Anno.mk_type_annotation cx tparams_map reason None
+        Anno.mk_type_annotation cx tparams_map ret_reason None
   ) in
-
   {reason; kind; tparams; tparams_map; params; body; return_t}
 
 let empty_body =

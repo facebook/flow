@@ -8,7 +8,7 @@ type t
 val mk: Context.t ->
   Type.t SMap.t -> (* type params map *)
   expr:(Context.t -> Ast.Expression.t -> Type.t) ->
-  Reason.t ->
+  Loc.t ->
   Ast.Function.t ->
   t
 
