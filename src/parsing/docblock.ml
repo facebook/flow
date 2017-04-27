@@ -167,7 +167,11 @@ let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
      * contstraints with Atom (see https://github.com/atom/atom/issues/8416 for
      * more context). At some point this should change back to consuming only
      * the first token. *)
-    let lb = Sedlexing.Utf8.from_string content in
+    let lb =
+      try Sedlexing.Utf8.from_string content
+      with Sedlexing.MalFormed ->
+        Hh_logger.warn "File %s is malformed" (Loc.string_of_filename filename);
+        Sedlexing.Utf8.from_string "" in
     let env =
       Lex_env.new_lex_env (Some filename) lb ~enable_types_in_comments:false in
     let rec get_first_comment_contents ?(i=0) env =
@@ -194,11 +198,11 @@ let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
       then { default_info with isDeclarationFile = true; }
       else default_info in
     match get_first_comment_contents env with
-      | Some comments ->
-          List.fold_left (fun acc (loc, s) ->
-            parse_attributes acc (split loc s)
-          ) ([], info) comments
-      | None -> [], info
+    | Some comments ->
+        List.fold_left (fun acc (loc, s) ->
+          parse_attributes acc (split loc s)
+        ) ([], info) comments
+    | None -> [], info
 
 (* accessors *)
 let flow info = info.flow

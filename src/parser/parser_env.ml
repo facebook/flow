@@ -207,7 +207,11 @@ type env = {
 let init_env ?(token_sink=None) ?(parse_options=None) source content =
   (* let lb = Sedlexing.Utf16.from_string
     content (Some Sedlexing.Utf16.Little_endian) in *)
-  let lb = Sedlexing.Utf8.from_string content in
+  let lb, errors = try Sedlexing.Utf8.from_string content, []
+  with Sedlexing.MalFormed ->
+    Sedlexing.Utf8.from_string "",
+    [ { Loc.none with Loc.source; }, Parse_error.MalformedUnicode ]
+  in
 
   let parse_options =
     match parse_options with
@@ -217,7 +221,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
   let enable_types_in_comments = parse_options.types in
   let lex_env = Lex_env.new_lex_env source lb ~enable_types_in_comments in
   {
-    errors = ref [];
+    errors = ref errors;
     comments = ref [];
     labels = SSet.empty;
     exports = ref SSet.empty;
