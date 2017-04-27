@@ -407,8 +407,8 @@ let find_refi_in_var_scope key =
 
 (* helpers *)
 
-let binding_error msg cx name entry reason =
-  Flow_js.add_output cx (FlowError.EBindingError (msg, loc_of_reason reason, name, entry))
+let binding_error msg cx name entry loc =
+  Flow_js.add_output cx (FlowError.EBindingError (msg, loc, name, entry))
 
 let already_bound_error =
   binding_error FlowError.ENameAlreadyBound
@@ -469,10 +469,10 @@ let bind_entry cx name entry reason =
             Flow_js.unify cx
               (Entry.general_of_value p) (Entry.general_of_value e)
           (* bad shadowing is a binding error *)
-          | _ -> already_bound_error cx name prev reason)
+          | _ -> already_bound_error cx name prev (loc_of_reason reason))
 
         (* shadowing in a lex scope is always an error *)
-        | LexScope -> already_bound_error cx name prev reason
+        | LexScope -> already_bound_error cx name prev (loc_of_reason reason)
   in
   if not (is_excluded name) then loop !scopes
 
@@ -551,7 +551,7 @@ let bind_declare_fun =
 
         | _ ->
           (* declare function shadows some other kind of binding *)
-          already_bound_error cx name prev reason
+          already_bound_error cx name prev (loc_of_reason reason)
         )
     )
 
@@ -571,7 +571,7 @@ let declare_value_entry kind cx name reason =
       let new_entry = Value { v with value_state = State.Declared } in
       Scope.add_entry name new_entry scope
     | _ ->
-      already_bound_error cx name entry reason
+      already_bound_error cx name entry (loc_of_reason reason)
   )
 
 let declare_let = declare_value_entry Entry.(Let LetVarBinding)
@@ -694,10 +694,10 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
 )
 
 (* emit tdz error for value entry *)
-let tdz_error cx name reason v = Entry.(
+let tdz_error cx name loc v = Entry.(
   (* second clause of error message is due to switch scopes *)
   let msg = FlowError.EReferencedBeforeDeclaration in
-  binding_error msg cx name (Value v) reason
+  binding_error msg cx name (Value v) loc
 )
 
 (* helper for read/write tdz checks *)
@@ -716,7 +716,7 @@ let read_entry ~track_ref ~lookup_mode ~specific cx name reason =
 
   | Type _ when lookup_mode != ForType ->
     let msg = FlowError.ETypeInValuePosition in
-    binding_error msg cx name entry reason;
+    binding_error msg cx name entry (loc_of_reason reason);
     AnyT.at (entry_loc entry)
 
   | Type t ->
@@ -727,7 +727,7 @@ let read_entry ~track_ref ~lookup_mode ~specific cx name reason =
     | { Entry.kind; value_state = State.Undeclared; value_declare_loc; _ }
       when lookup_mode = ForValue && not (allow_forward_ref kind)
       && same_activation scope ->
-      tdz_error cx name reason v;
+      tdz_error cx name (loc_of_reason reason) v;
       AnyT.at value_declare_loc
     | _ ->
       Changeset.change_var (scope.id, name, Changeset.Read);
@@ -819,7 +819,7 @@ let update_var ?(track_ref=false) op cx name specific reason =
   | Value ({
       Entry.kind = (Let _ as kind); value_state = State.Undeclared; _
     } as v) when not (allow_forward_ref kind) && same_activation scope ->
-    tdz_error cx name reason v;
+    tdz_error cx name (loc_of_reason reason) v;
     None
   | Value ({ Entry.kind = Let _ | Var; _ } as v) ->
     let change = scope.id, name, op in
@@ -841,20 +841,20 @@ let update_var ?(track_ref=false) op cx name specific reason =
     Some change
   | Value { Entry.kind = Const ConstVarBinding; _ } ->
     let msg = FlowError.EConstReassigned in
-    binding_error msg cx name entry reason;
+    binding_error msg cx name entry (loc_of_reason reason);
     None
   | Value { Entry.kind = Const ConstImportBinding; _; } ->
     let msg = FlowError.EImportReassigned in
-    binding_error msg cx name entry reason;
+    binding_error msg cx name entry (loc_of_reason reason);
     None
   | Value { Entry.kind = Const ConstParamBinding; _ } ->
     (* TODO: remove extra info when surface syntax is added *)
     let msg = FlowError.EConstParamReassigned in
-    binding_error msg cx name entry reason;
+    binding_error msg cx name entry (loc_of_reason reason);
     None
   | Type _ ->
     let msg = FlowError.ETypeAliasInValuePosition in
-    binding_error msg cx name entry reason;
+    binding_error msg cx name entry (loc_of_reason reason);
     None
   )
 
