@@ -178,7 +178,7 @@ let set_module_kind cx reason new_exports_kind = Context.(
   | (ESModule, CommonJSModule(Some _))
   | (CommonJSModule(Some _), ESModule)
     ->
-      Flow_js.add_output cx (Flow_error.EIndeterminateModuleType reason)
+      Flow_js.add_output cx (Flow_error.EIndeterminateModuleType (loc_of_reason reason))
   | _ -> ()
   );
   Context.set_module_kind cx new_exports_kind

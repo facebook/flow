@@ -100,7 +100,7 @@ type error_message =
   | EExperimentalClassProperties of Loc.t * bool
   | EUnsafeGetSet of Loc.t
   | EExperimentalExportStarAs of Loc.t
-  | EIndeterminateModuleType of reason
+  | EIndeterminateModuleType of Loc.t
   | EUnreachable of Loc.t
   | EInvalidTypeof of Loc.t * string
   | EBinaryInLHS of reason
@@ -979,8 +979,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
          of your .flowconfig";
       ]]
 
-  | EIndeterminateModuleType reason ->
-      mk_error ~trace_infos ~kind:InferWarning [mk_info reason [
+  | EIndeterminateModuleType loc ->
+      mk_error ~trace_infos ~kind:InferWarning [loc, [
         "Unable to determine module type (CommonJS vs ES) if both an export \
          statement and module.exports are used in the same module!"
       ]]

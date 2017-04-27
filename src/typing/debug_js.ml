@@ -2235,8 +2235,8 @@ let dump_flow_error =
         spf "EUnsafeGetSet (%s)" (string_of_loc loc)
     | EExperimentalExportStarAs loc ->
         spf "EExperimentalExportStarAs (%s)" (string_of_loc loc)
-    | EIndeterminateModuleType reason ->
-        spf "EIndeterminateModuleType (%s)" (dump_reason cx reason)
+    | EIndeterminateModuleType loc ->
+        spf "EIndeterminateModuleType (%s)" (string_of_loc loc)
     | EUnreachable loc ->
         spf "EUnreachable (%s)" (string_of_loc loc)
     | EInvalidTypeof (loc, name) ->
