@@ -176,6 +176,13 @@ LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS) $(SECTCREATE)
 all: $(FLOWLIB) build-flow copy-flow-files
 all-ocp: build-flow-with-ocp copy-flow-files-ocp
 
+all-homebrew: 
+	export OPAMROOT="$(shell mktemp -d)"; \
+	export OPAMYES="1"; \
+	opam init --no-setup && \
+	opam install ocamlfind sedlex && \
+	opam config exec -- make
+
 clean:
 	ocamlbuild -clean
 	rm -rf bin
