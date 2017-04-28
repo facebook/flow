@@ -121,6 +121,20 @@ make
 
 This produces a `bin` folder containing the `flow` binary.
 
+In order to make the flow.js file, you first need to install js_of_ocaml:
+
+```
+opam install -y js_of_ocaml
+```
+
+After that, making flow.js is easy:
+
+```
+make js
+```
+
+The new `flow.js` file will also live in the `bin` folder.
+
 *Note: at this time, the OCaml dependency prevents us from adding Flow to [npm](http://npmjs.org). Try [flow-bin](https://www.npmjs.org/package/flow-bin) if you need a npm binary wrapper.*
 
 Flow can also compile its parser to JavaScript. [Read how here](src/parser/README.md).
