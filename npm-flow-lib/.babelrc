@@ -3,6 +3,7 @@
     "transform-flow-strip-types",
     "transform-regenerator",
     "syntax-async-functions",
+    "transform-object-rest-spread",
    ],
   "presets": ["es2015"]
 }
