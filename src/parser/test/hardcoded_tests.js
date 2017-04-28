@@ -2950,6 +2950,22 @@ module.exports = {
           },
         }
       },
+      'declare module A {}\ndeclare module B {}': {
+        'body.0': {
+          'type': 'DeclareModule',
+          'id.name': 'A',
+          'body.body': [],
+          'loc.start': { 'line': 1, 'column': 0 },
+          'loc.end': { 'line': 1, 'column': 19 },
+        },
+        'body.1': {
+          'type': 'DeclareModule',
+          'id.name': 'B',
+          'body.body': [],
+          'loc.start': { 'line': 2, 'column': 0 },
+          'loc.end': { 'line': 2, 'column': 19 },
+        },
+      },
     },
     'Dynamic Import': {
       'const m = import("asdf");': {

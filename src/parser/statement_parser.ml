@@ -723,14 +723,14 @@ module Statement
           Statement.DeclareModule.Literal (loc, { Literal.value; raw; })
       | _ ->
           Statement.DeclareModule.Identifier (Parse.identifier env) in
-      let body_start_loc = Peek.loc env in
-      Expect.token env T_LCURLY;
-      let (module_kind, body) = module_items env ~module_kind:None [] in
-      Expect.token env T_RCURLY;
-      let body_end_loc = Peek.loc env in
-      let body_loc = Loc.btwn body_start_loc body_end_loc in
+      let body_loc, (module_kind, body) = with_loc (fun env ->
+        Expect.token env T_LCURLY;
+        let res = module_items env ~module_kind:None [] in
+        Expect.token env T_RCURLY;
+        res
+      ) env in
       let body = body_loc, { Statement.Block.body; } in
-      let loc = Loc.btwn start_loc (fst body) in
+      let loc = Loc.btwn start_loc body_loc in
       let kind =
         match module_kind with
         | Some k -> k
