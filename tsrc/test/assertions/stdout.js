@@ -6,7 +6,8 @@ import type {AssertionLocation, ErrorAssertion} from './assertionTypes';
 
 function formatIfJSON(actual: string) {
   try {
-    return JSON.stringify(JSON.parse(actual), null, 2);
+    let parsed: mixed = JSON.parse(actual)
+    return JSON.stringify(parsed, null, 2);
   } catch (e) {
     return actual;
   }
