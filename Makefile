@@ -177,7 +177,7 @@ all: $(FLOWLIB) build-flow copy-flow-files
 all-ocp: build-flow-with-ocp copy-flow-files-ocp
 
 all-homebrew: 
-	export OPAMROOT="$(shell mktemp -d)"; \
+	export OPAMROOT="$(shell mktemp -d 2> /dev/null || mktemp -d -t opam)"; \
 	export OPAMYES="1"; \
 	opam init --no-setup && \
 	opam pin add flowtype . && \
