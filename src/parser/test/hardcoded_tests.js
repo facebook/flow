@@ -4502,6 +4502,26 @@ module.exports = {
             'name': 'y',
           }
         }]
+      },
+      'let [x=y, z] = []': {
+        'errors.length': 0,
+        'body.0.declarations.0.id.elements': [
+          {
+            'type': 'AssignmentPattern',
+            'left': {
+              'type': 'Identifier',
+              'name': 'x',
+            },
+            'right': {
+              'type': 'Identifier',
+              'name': 'y',
+            }
+          },
+          {
+            'type': 'Identifier',
+            'name': 'z',
+          },
+        ]
       }
     },
     'Type Parameter Defaults': {

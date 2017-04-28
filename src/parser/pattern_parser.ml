@@ -196,7 +196,7 @@ module Pattern
         let pattern = match Peek.token env with
           | T_ASSIGN ->
             Expect.token env T_ASSIGN;
-            let default = Parse.expression env in
+            let default = Parse.assignment env in
             let loc = Loc.btwn (fst pattern) (fst default) in
             loc, Pattern.(Assignment Assignment.({
               left = pattern;
