@@ -24,7 +24,7 @@ class.js:28
 
 class.js:49
  49:       var x: number = yield; // error: string ~> number
-                           ^^^^^^ string. This type is incompatible with
+                           ^^^^^ string. This type is incompatible with
  49:       var x: number = yield; // error: string ~> number
                   ^^^^^^ number
 
@@ -138,7 +138,7 @@ generators.js:35
 
 generators.js:65
  65:     var x: number = yield; // error: string ~> number
-                         ^^^^^^ string. This type is incompatible with
+                         ^^^^^ string. This type is incompatible with
  65:     var x: number = yield; // error: string ~> number
                 ^^^^^^ number
 

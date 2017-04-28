@@ -120,8 +120,7 @@ module Expression
         )
       | _ -> assignment_but_not_arrow_function env
 
-  and yield env =
-    let start_loc = Peek.loc env in
+  and yield env = with_loc (fun env ->
     Expect.token env T_YIELD;
     if not (allow_yield env)
     then error env Error.IllegalYield;
@@ -133,18 +132,11 @@ module Expression
       if delegate || has_argument
       then Some (assignment env)
       else None in
-    let end_loc = match argument with
-    | Some expr -> fst expr
-    | None ->
-        let end_loc = match Peek.semicolon_loc env with
-          | Some loc -> loc
-          | None -> start_loc in
-        Eat.semicolon env;
-        end_loc in
-    Loc.btwn start_loc end_loc, Expression.(Yield Yield.({
+    Expression.(Yield Yield.({
       argument;
       delegate;
     }))
+  ) env
 
   and is_lhs = Expression.(function
     | _, Identifier _
