@@ -4502,6 +4502,40 @@ module.exports = {
             'name': 'y',
           }
         }]
+      },
+      'let [x=1, y=2, z=3] = []': {
+        'errors.length': 0,
+        'body.0.declarations.0.id.elements': [{
+          'type': 'AssignmentPattern',
+          'left': {
+            'type': 'Identifier',
+            'name': 'x',
+          },
+          'right': {
+            'type': 'Literal',
+            'value': 1
+          }
+        }, {
+          'type': 'AssignmentPattern',
+          'left': {
+            'type': 'Identifier',
+            'name': 'y',
+          },
+          'right': {
+            'type': 'Literal',
+            'value': 2
+          }
+        }, {
+          'type': 'AssignmentPattern',
+          'left': {
+            'type': 'Identifier',
+            'name': 'z',
+          },
+          'right': {
+            'type': 'Literal',
+            'value': 3
+          }
+        }]
       }
     },
     'Type Parameter Defaults': {
