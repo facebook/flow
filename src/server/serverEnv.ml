@@ -35,7 +35,6 @@ type errors = {
 type env = {
     files: Utils_js.FilenameSet.t;
     libs: SSet.t; (* a subset of `files` *)
-    errorl: Errors.ErrorSet.t;
     errors: errors;
     connections: Persistent_connection.t;
 }

@@ -49,6 +49,47 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       else Hh_logger.info "Status: Error";
     flush stdout
 
+(* combine error maps into a single error list *)
+let collate_errors =
+  let open Errors in
+  let collate errset acc =
+    FilenameMap.fold (fun _key -> ErrorSet.union) errset acc
+  in
+  let filter_suppressed_errors suppressions errors =
+    (* Filter out suppressed errors. also track which suppressions are used. *)
+    let errors, suppressions = ErrorSet.fold (fun error (errors, supp_acc) ->
+      let locs = Errors.locs_of_error error in
+      let (suppressed, supp_acc) = ErrorSuppressions.check locs supp_acc in
+      let errors = if not suppressed
+        then ErrorSet.add error errors
+        else errors in
+      errors, supp_acc
+    ) errors (ErrorSet.empty, suppressions) in
+
+    (* For each unused suppression, create an error *)
+    ErrorSuppressions.unused suppressions
+    |> List.fold_left
+      (fun errset loc ->
+        let err = Errors.mk_error [
+          loc, ["Error suppressing comment"; "Unused suppression"]
+        ] in
+        ErrorSet.add err errset
+      )
+      errors
+  in
+  fun { ServerEnv.local_errors; merge_errors; suppressions; } ->
+    (* union suppressions from all files together *)
+    let suppressions = FilenameMap.fold
+      (fun _key -> ErrorSuppressions.union)
+      suppressions
+      ErrorSuppressions.empty in
+
+    (* union the errors from all files together, filtering suppressed errors *)
+    ErrorSet.empty
+    |> collate local_errors
+    |> collate merge_errors
+    |> filter_suppressed_errors suppressions
+
   let send_errorl el oc =
     if Errors.ErrorSet.is_empty el
     then
@@ -76,7 +117,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       FlowExitStatus.(exit Server_client_directory_mismatch)
     end;
     flush stdout;
-    let errors = env.ServerEnv.errorl in
+
+    (* collate errors by origin *)
+    let errors = collate_errors env.ServerEnv.errors in
+
     (* TODO: check status.directory *)
     status_log errors;
     FlowEventLogger.status_response
@@ -110,7 +154,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         errors
 
   let run_once_and_exit ~profiling genv env =
-    let errors = env.ServerEnv.errorl in
+    let errors = collate_errors env.ServerEnv.errors in
     print_errors ~profiling genv.ServerEnv.options errors;
     if Errors.ErrorSet.is_empty errors
       then FlowExitStatus.(exit No_error)
@@ -388,7 +432,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     flush oc
 
   let gen_flow_files ~options env files oc =
-    let errors = env.ServerEnv.errorl in
+    let errors = collate_errors env.ServerEnv.errors in
     let result = if Errors.ErrorSet.is_empty errors
       then begin
         let cache = new Context_cache.context_cache in

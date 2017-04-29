@@ -49,47 +49,6 @@ let update_suppressions map file errsup =
     then FilenameMap.remove file map
     else FilenameMap.add file errsup map
 
-(* combine error maps into a single error list *)
-let collate_errors =
-  let open Errors in
-  let collate errset acc =
-    FilenameMap.fold (fun _key -> ErrorSet.union) errset acc
-  in
-  let filter_suppressed_errors suppressions errors =
-    (* Filter out suppressed errors. also track which suppressions are used. *)
-    let errors, suppressions = ErrorSet.fold (fun error (errors, supp_acc) ->
-      let locs = Errors.locs_of_error error in
-      let (suppressed, supp_acc) = ErrorSuppressions.check locs supp_acc in
-      let errors = if not suppressed
-        then ErrorSet.add error errors
-        else errors in
-      errors, supp_acc
-    ) errors (ErrorSet.empty, suppressions) in
-
-    (* For each unused suppression, create an error *)
-    ErrorSuppressions.unused suppressions
-    |> List.fold_left
-      (fun errset loc ->
-        let err = Errors.mk_error [
-          loc, ["Error suppressing comment"; "Unused suppression"]
-        ] in
-        ErrorSet.add err errset
-      )
-      errors
-  in
-  fun { ServerEnv.local_errors; merge_errors; suppressions; } ->
-    (* union suppressions from all files together *)
-    let suppressions = FilenameMap.fold
-      (fun _key -> ErrorSuppressions.union)
-      suppressions
-      ErrorSuppressions.empty in
-
-    (* union the errors from all files together, filtering suppressed errors *)
-    ErrorSet.empty
-    |> collate local_errors
-    |> collate merge_errors
-    |> filter_suppressed_errors suppressions
-
 let with_timer ?options timer profiling f =
   let profiling = Profiling_js.start_timer ~timer profiling in
   let ret = f () in
@@ -679,11 +638,6 @@ let recheck genv env ~updates =
     ~errors
   in
 
-  (* collate errors by origin *)
-  let profiling, errorl = with_timer ~options "CollateErrors" profiling (fun () ->
-    collate_errors errors
-  ) in
-
   FlowEventLogger.recheck
     (** TODO: update log to reflect current terminology **)
     ~modified_count:new_or_changed_count
@@ -696,7 +650,6 @@ let recheck genv env ~updates =
   (* NOTE: unused fields are left in their initial empty state *)
   { env with ServerEnv.
     files = parsed;
-    errorl;
     errors;
   }
 
@@ -816,11 +769,6 @@ let server_init genv =
   let (profiling, parsed, errors) = full_check
     genv.ServerEnv.workers ~ordered_libs get_next options in
 
-  (* collate errors by origin *)
-  let profiling, errorl = with_timer ~options "CollateErrors" profiling (fun () ->
-    collate_errors errors
-  ) in
-
   let profiling = SharedMem.(
     let dep_stats = dep_stats () in
     let hash_stats = hash_stats () in
@@ -846,11 +794,10 @@ let server_init genv =
 
   (* Return an env that initializes invariants required and maintained by
      recheck, namely that `files` contains files that parsed successfully, and
-     `errorl` contains the current set of errors. *)
+     `errors` contains the current set of errors. *)
   profiling, { ServerEnv.
     files = parsed;
     libs;
-    errorl;
     errors;
     connections = Persistent_connection.empty;
   }

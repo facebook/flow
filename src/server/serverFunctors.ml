@@ -27,6 +27,7 @@ module type SERVER_PROGRAM = sig
   val get_watch_paths: Options.t -> Path.t list
   val name: string
   val handle_client : genv -> env -> client -> env
+  val collate_errors : errors -> Errors.ErrorSet.t
 end
 
 (*****************************************************************************)
@@ -115,8 +116,9 @@ end = struct
     in
     match msg with
       | Some Persistent_connection_prot.Subscribe ->
+          let errorl = Program.collate_errors env.errors in
           let new_connections =
-            Persistent_connection.subscribe_client env.connections client env.errorl
+            Persistent_connection.subscribe_client env.connections client errorl
           in
           { env with connections = new_connections }
       | None -> env
@@ -136,7 +138,10 @@ end = struct
       Persistent_connection.send_start_recheck env.connections;
       let env = Program.recheck genv env updates in
       Persistent_connection.send_end_recheck env.connections;
-      if did_change then Persistent_connection.update_clients env.connections env.errorl;
+      if did_change then begin
+        let errorl = Program.collate_errors env.errors in
+        Persistent_connection.update_clients env.connections errorl
+      end;
       recheck_loop ~dfind genv env
     end
 
