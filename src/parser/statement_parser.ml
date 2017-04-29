@@ -611,7 +611,6 @@ module Statement
     Expect.token env T_COLON;
     let returnType = Type._type env in
     let end_loc = fst returnType in
-    let predicate = Type.predicate_opt env in
     let loc = Loc.btwn start_sig_loc end_loc in
     let typeAnnotation = loc, Ast.Type.(Function {Function.
       params;
@@ -620,8 +619,13 @@ module Statement
     }) in
     let typeAnnotation = fst typeAnnotation, typeAnnotation in
     let id = Loc.btwn (fst id) end_loc, snd id in
+    let predicate = Type.predicate_opt env in
     let end_loc = match Peek.semicolon_loc env with
-    | None -> end_loc
+    | None ->
+      begin match predicate with
+      | Some (end_loc, _) -> end_loc
+      | None -> end_loc
+      end
     | Some end_loc -> end_loc in
     Eat.semicolon env;
     let loc = Loc.btwn start_loc end_loc in

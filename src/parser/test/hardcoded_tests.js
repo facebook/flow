@@ -4620,6 +4620,15 @@ module.exports = {
               }
             }
           },
+          'loc.start': { 'line': 1, 'column': 0 },
+          'loc.end': { 'line': 1, 'column': 58 },
+        },
+      },
+      'declare function f(x: mixed): boolean %checks(x !== null)': {
+        'body.0': {
+          'type': 'DeclareFunction',
+          'loc.start': { 'line': 1, 'column': 0 },
+          'loc.end': { 'line': 1, 'column': 57 },
         },
       },
       'function foo(x: mixed): %checks { return x !== null }': {
