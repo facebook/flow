@@ -3039,11 +3039,38 @@ module.exports = {
           'arguments': []
         }
       },
-
+      '{ import("dsa").then(); }': {
+        'body.0.body.0.expression': {
+          'type': 'CallExpression',
+          'callee': {
+            'type': 'MemberExpression',
+            'object': {
+              'type': 'CallExpression',
+              'callee': {'type': 'Import'},
+              'arguments': [{
+                'type': 'Literal',
+                'value': 'dsa'
+              }]
+            },
+            'property': {
+              'type': 'Identifier',
+              'name': 'then'
+            }
+          },
+          'arguments': []
+        },
+        'errors': [],
+      },
       // Invalid syntax tests
       'const a = import("asdf", nope);': {
         'errors': {
           '0.message': 'Unexpected token ,',
+        }
+      },
+      // Should not be detected as dynamic import.
+      '{ import "asdf"; }': {
+        'errors': {
+          '0.message': 'Unexpected token import',
         }
       }
     },

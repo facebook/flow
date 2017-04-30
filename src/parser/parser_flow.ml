@@ -153,6 +153,7 @@ module rec Parse : PARSER = struct
     | _ when Peek.is_class env -> class_declaration env decorators
     | T_INTERFACE -> interface env
     | T_DECLARE -> declare env
+    | T_IMPORT when Peek.token ~i:1 env = T_LPAREN -> expression env
     | T_TYPE -> type_alias env
     | _ -> statement env)
 
