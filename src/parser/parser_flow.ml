@@ -99,7 +99,10 @@ module rec Parse : PARSER = struct
     | T_EXPORT -> Statement.export_declaration env decorators
     | T_IMPORT ->
         error_on_decorators env decorators;
-        Statement.import_declaration env
+        let statement = match Peek.token ~i:1 env with
+          | T_LPAREN -> Statement.expression env
+          | _ -> Statement.import_declaration env in
+        statement
     | T_DECLARE when Peek.token ~i:1 env = T_EXPORT ->
         error_on_decorators env decorators;
         Statement.declare_export_declaration env

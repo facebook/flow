@@ -3018,6 +3018,27 @@ module.exports = {
           'arguments': [{'type': 'BinaryExpression'}]
         }
       },
+      'import("dsa").then();': {
+        'body.0.expression': {
+          'type': 'CallExpression',
+          'callee': {
+            'type': 'MemberExpression',
+            'object': {
+              'type': 'CallExpression',
+              'callee': {'type': 'Import'},
+              'arguments': [{
+                'type': 'Literal',
+                'value': 'dsa'
+              }]
+            },
+            'property': {
+              'type': 'Identifier',
+              'name': 'then'
+            }
+          },
+          'arguments': []
+        }
+      },
 
       // Invalid syntax tests
       'import("asdf");': {
