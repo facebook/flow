@@ -41,18 +41,27 @@ let spec = {
   )
 }
 
+let exit () =
+    CommandSpec.usage spec;
+    FlowExitStatus.(exit Commandline_usage_error)
+
+let parse_line_and_column line column =
+    try (int_of_string line), (int_of_string column)
+    with Failure(_) -> exit ()
+
 let parse_args path args =
   let (file, line, column) = match args with
   | [file; line; column] ->
       let file = expand_path file in
-      ServerProt.FileName file, (int_of_string line), (int_of_string column)
+      let line, column = parse_line_and_column line column in
+      ServerProt.FileName file, line, column
   | [line; column] ->
+      let line, column = parse_line_and_column line column in
       get_file_from_filename_or_stdin path None,
-      (int_of_string line),
-      (int_of_string column)
+      line,
+      column
   | _ ->
-      CommandSpec.usage spec;
-      FlowExitStatus.(exit Commandline_usage_error)
+      exit ()
   in
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
