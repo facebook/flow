@@ -3041,11 +3041,6 @@ module.exports = {
       },
 
       // Invalid syntax tests
-      'import("asdf");': {
-        'errors': {
-          '0.message': 'Unexpected token (',
-        }
-      },
       'const a = import("asdf", nope);': {
         'errors': {
           '0.message': 'Unexpected token ,',
