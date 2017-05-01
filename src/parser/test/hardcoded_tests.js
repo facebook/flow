@@ -3070,7 +3070,7 @@ module.exports = {
       // Should not be detected as dynamic import.
       '{ import "asdf"; }': {
         'errors': {
-          '0.message': 'Unexpected token import',
+          '0.message': 'Unexpected string',
         }
       }
     },

@@ -180,8 +180,6 @@ module rec Parse : PARSER = struct
     (* If we see an else then it's definitely an error, but we can probably
      * assume that this is a malformed if statement that is missing the if *)
     | T_ELSE -> _if env
-    (* Handle dynamic imports *)
-    | T_IMPORT when Peek.token ~i:1 env = T_LPAREN -> expression env
     (* There are a bunch of tokens that aren't the start of any valid
      * statement. We list them here in order to skip over them, rather than
      * getting stuck *)
@@ -201,7 +199,6 @@ module rec Parse : PARSER = struct
     | T_EXTENDS
     | T_STATIC
     | T_EXPORT (* TODO *)
-    | T_IMPORT (* Not dynamic import *)
     | T_ELLIPSIS ->
         error_unexpected env;
         Eat.token env;
