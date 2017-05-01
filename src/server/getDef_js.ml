@@ -12,31 +12,32 @@ open Utils_js
 
 type getdef_type =
 | Gdloc of Loc.t
+| Gdval of Type.t
 | Gdmem of (string * Type.t)
 | Gdrequire of string * Loc.t
 
+let id state name =
+  let env = Env.all_entries () in
+  match SMap.get name env with
+  | Some entry ->
+    state := Some (Gdloc (Scope.Entry.entry_loc entry))
+  | None ->
+    ()
+
 let getdef_id (state, loc1) _cx name loc2 =
   if Reason.in_range loc1 loc2
-  then (
-    let env = Env.all_entries () in
-    match SMap.get name env with
-    | Some entry ->
-        state := Some (Gdloc (Scope.Entry.assign_loc entry))
-    | None ->
-      ());
+  then id state name;
   false
 
-let getdef_lval (state, loc1) cx name loc2 rhs =
+let getdef_lval (state, loc1) _cx name loc2 rhs =
   if Reason.in_range loc1 loc2
-  then (match rhs with
-    | Type_inference_hooks_js.RHSLoc loc ->
-      state := Some (Gdloc loc)
-    | Type_inference_hooks_js.RHSType t ->
-      state := Some (Gdmem (name, t))
-    | Type_inference_hooks_js.NoRHS ->
-      let _ = getdef_id (state, loc1) cx name loc2 in
-      ()
-  )
+  then match rhs with
+  | Type_inference_hooks_js.Val v ->
+    state := Some (Gdval v)
+  | Type_inference_hooks_js.Parent t ->
+    state := Some (Gdmem (name, t))
+  | Type_inference_hooks_js.Id ->
+    id state name
 
 let getdef_member (state, loc1) _cx name loc2 this_t =
   if (Reason.in_range loc1 loc2)
@@ -57,9 +58,20 @@ let getdef_require (state, user_requested_loc) _cx name require_loc =
     state := Some (Gdrequire (name, require_loc))
   )
 
+(* TODO: the uses of `resolve_type` in the implementation below are pretty
+   delicate, since in many cases the resulting type lacks location
+   information. Edit with caution. *)
 let getdef_get_result profiling client_logging_context ~options cx state =
   match !state with
   | Some Gdloc loc -> loc
+  | Some Gdval v ->
+    (* Use `possible_types_of_type` instead of `resolve_type` because we're
+       actually interested in the location of the resolved types. *)
+    let ts = Flow_js.possible_types_of_type cx v in
+    begin match ts with
+    | [t] -> Type.def_loc_of_t t
+    | _ -> Loc.none
+    end
   | Some Gdmem (name, this) ->
       let this_t = Flow_js.resolve_type cx this in
       let member_result = Flow_js.Members.extract cx this_t in

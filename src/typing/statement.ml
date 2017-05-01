@@ -2223,6 +2223,7 @@ and variable cx kind
           Anno.mk_type_annotation cx SMap.empty anno_reason typeAnnotation in
         Env.unify_declared_type cx name t;
         let has_anno = not (typeAnnotation = None) in
+        Type_inference_hooks_js.(dispatch_lval_hook cx name loc (Val t));
         (match init with
           | Some ((rhs_loc, _) as expr) ->
             let rhs = expression cx expr in
@@ -2231,29 +2232,9 @@ and variable cx kind
              * their initializer expressions.
              *)
             declare_var cx name id_loc;
-            let hook_loc = Ast.Expression.(
-              match expr with
-              (**
-               * It's common to do `var Foo = require('Bar').Foo`. In these
-               * cases, we should point to the property of the member expression
-               * during `get-def`. This lets us hop *in* to the property on the
-               * module.exports object returned by require() rather than hopping
-               * directly to the `module.exports` object itself.
-               *)
-              | (_, Member {Member.property; _;}) -> (
-                  match property with
-                  | Member.PropertyIdentifier (loc, _) -> loc
-                  | Member.PropertyExpression (loc, _) -> loc
-                )
-              | (loc, _) -> loc
-            ) in
-            Type_inference_hooks_js.(
-              dispatch_lval_hook cx name loc (RHSLoc hook_loc));
             let rhs = Flow.reposition cx rhs_loc rhs in
             init_var cx name ~has_anno rhs id_loc
           | None ->
-            Type_inference_hooks_js.(
-              dispatch_lval_hook cx name loc NoRHS);
             match if_uninitialized with
             | Some f ->
               if not optional

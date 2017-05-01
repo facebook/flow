@@ -25,40 +25,37 @@ let jsx_nop _ _ _ _ = false
 let ref_nop _ _ _ = ()
 
 (* This type represents the possible definition-points for an lvalue. *)
-type rhs_def =
+type def =
   (**
-   * Given a simple assignment/initialization such as:
+   * Given a variable declaration such as:
    *
    *   var a = 42; // <-- this
-   *   b = a;      // <-- also this
+   *   var b; // <-- this
    *
-   * We emit the raw location of the expression on the RHS of the equal sign as
-   * the "definition" for the lvalue.
+   * We emit the type of the variable, given as an annotation or inferred by
+   * looking at its assignments, as the "definition" for the lvalue.
    *)
-  | RHSLoc of Loc.t
+  | Val of Type.t
 
   (*
-   * Given a destructuring pattern for an assignment/initialization such as:
+   * Given a destructuring pattern for an initialization such as:
    *
    *  var {
    *    a // <-- this
    *  } = {a: {b: 42}};
-   *
-   *  ( {b} = a );
-   *  // ^-- this
    *
    * We emit the tvar for the "parent pattern" being destructured so that we
    * may extract the type of the corresponding property -- and thus the location
    * of that type -- as the "definition" for the binding generated from a
    * destructuring pattern.
    *)
-  | RHSType of Type.t
+  | Parent of Type.t
 
   (**
-   * Some lvalues have no RHS such as initializer-less variable declarations
-   * or function parameters.
+   * For assignments, we consider lvalues to have the same "definition" as
+   * corresponding rvalues: both kinds of references point to the declaration site.
    *)
-  | NoRHS
+  | Id
 
 type hook_state_t = {
   id_hook:
@@ -68,7 +65,7 @@ type hook_state_t = {
 
   lval_hook:
     (Context.t ->
-      string -> Loc.t -> rhs_def ->
+      string -> Loc.t -> def ->
       unit);
 
   member_hook:

@@ -194,7 +194,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
 
   | loc, Identifier { Identifier.name = (_, name); _ } ->
       Type_inference_hooks_js.dispatch_lval_hook cx name loc (
-        match (parent_pattern_t, init) with
+        match parent_pattern_t with
         (**
          * If there was a parent_pattern, we must be within a destructuring
          * pattern and a `get-def` on this identifier should point at the "def"
@@ -202,21 +202,14 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
          * parent pattern so that get-def can dive in to that type and extract
          * the location of the "def" of this property.
          *)
-        | (Some rhs_t, _) -> Type_inference_hooks_js.RHSType rhs_t
+        | Some rhs_t -> Type_inference_hooks_js.Parent rhs_t
 
         (**
          * If there was no parent_pattern, we must not be within a destructuring
          * pattern and a `get-def` on this identifier should point at the
-         * location of the RHS of the assignment.
+         * location where the binding is introduced.
          *)
-        | (None, Some (loc, _)) -> Type_inference_hooks_js.RHSLoc loc
-
-        (**
-         * If there was no parent_pattern and no RHS expression (i.e. `var a;`,
-         * function parameters, etc), there's nothing useful we can do for a
-         * `get-def` on this identifier.
-         *)
-        | (None, None) -> Type_inference_hooks_js.NoRHS
+        | None -> Type_inference_hooks_js.Id
       );
       f loc name default curr_t
 
