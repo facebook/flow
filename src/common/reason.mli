@@ -187,7 +187,7 @@ val dump_reason: ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)
 val loc_of_reason: reason -> Loc.t
-
+val def_loc_of_reason: reason -> Loc.t
 val desc_of_reason: reason -> reason_desc
 
 (* simple way to get derived reasons whose descriptions are

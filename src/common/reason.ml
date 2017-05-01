@@ -182,6 +182,7 @@ type reason = {
   derivable: bool;
   desc: reason_desc;
   loc: Loc.t;
+  def_loc_opt: Loc.t option;
 }
 
 type t = reason
@@ -307,20 +308,21 @@ let json_of_loc ?(strip_root=None) loc = Hh_json.(Loc.(
 
 (* reason constructors, accessors, etc. *)
 
-let mk_reason_with_test_id test_id desc loc () = {
+let mk_reason_with_test_id test_id desc loc def_loc_opt = {
   test_id;
   derivable = false;
   desc;
   loc;
+  def_loc_opt;
 }
 
 (* The current test_id is included in every new reason. *)
 let mk_reason desc loc =
-  mk_reason_with_test_id (TestID.current()) desc loc ()
+  mk_reason_with_test_id (TestID.current()) desc loc None
 
 (* Lift a string to a reason. Usually used as a dummy reason. *)
 let locationless_reason desc =
-  mk_reason_with_test_id None desc Loc.none ()
+  mk_reason_with_test_id None desc Loc.none None
 
 let func_reason {Ast.Function.async; generator; _} =
   let func_desc = match async, generator with
@@ -333,6 +335,11 @@ let func_reason {Ast.Function.async; generator; _} =
 
 
 let loc_of_reason r = r.loc
+
+let def_loc_of_reason r =
+  match r.def_loc_opt with
+  | Some loc -> loc
+  | None -> loc_of_reason r
 
 let function_desc_prefix = function
   | RAsync -> "async "
@@ -486,10 +493,10 @@ let string_of_reason ?(strip_root=None) r =
   )
 
 let json_of_reason ?(strip_root=None) r = Hh_json.(
-  JSON_Object [
+  JSON_Object ([
     "pos", json_of_loc ~strip_root (loc_of_reason r);
     "desc", JSON_String (string_of_desc r.desc)
-  ]
+  ])
 )
 
 let dump_reason ?(strip_root=None) r =
@@ -602,7 +609,11 @@ let replace_reason_const desc r =
 
 (* returns reason with new location and description of original *)
 let repos_reason loc reason =
-  mk_reason_with_test_id reason.test_id (desc_of_reason reason) loc ()
+  let def_loc_opt =
+    let def_loc = def_loc_of_reason reason in
+    if loc = def_loc then None else Some def_loc
+  in
+  mk_reason_with_test_id reason.test_id (desc_of_reason reason) loc def_loc_opt
 
 module ReasonMap = MyMap.Make(struct
   type t = reason

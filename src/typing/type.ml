@@ -1885,6 +1885,8 @@ let desc_of_t t = desc_of_reason (reason_of_t t)
 
 let loc_of_t t = loc_of_reason (reason_of_t t)
 
+let def_loc_of_t t = def_loc_of_reason (reason_of_t t)
+
 (* TODO make a type visitor *)
 let rec mod_reason_of_t f = function
   | OpenT (reason, t) -> OpenT (f reason, t)

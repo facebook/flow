@@ -48,10 +48,13 @@ let types_to_json types ~strip_root =
       ("type", JSON_String str) ::
       ("reasons", JSON_Array (List.map (fun r ->
         let r_loc = loc_of_reason r in
+        let r_def_loc = def_loc_of_reason r in
         JSON_Object (
           ("desc", JSON_String (string_of_desc (desc_of_reason r))) ::
           ("loc", json_of_loc ~strip_root r_loc) ::
-          (Errors.deprecated_json_props_of_loc ~strip_root r_loc)
+          ((if r_def_loc = r_loc then [] else [
+            "def_loc", json_of_loc ~strip_root r_def_loc
+          ]) @ (Errors.deprecated_json_props_of_loc ~strip_root r_loc))
         )
       ) reasons)) ::
       ("loc", json_of_loc ~strip_root loc) ::
