@@ -25,7 +25,7 @@ that you are expecting.
 
 ```js
 // @flow
-interface Serializeable {
+interface Serializable {
   serialize(): string;
 }
 
@@ -37,8 +37,8 @@ class Bar {
   serialize() { return '[Bar]'; }
 }
 
-const foo: Serializeable = new Foo(); // Works!
-const bar: Serializeable = new Bar(); // Works!
+const foo: Serializable = new Foo(); // Works!
+const bar: Serializable = new Bar(); // Works!
 ```
 
 You can also use `implements` to tell Flow that you want the class to match an
@@ -47,15 +47,15 @@ class.
 
 ```js
 // @flow
-interface Serializeable {
+interface Serializable {
   serialize(): string;
 }
 
-class Foo implements Serializeable {
+class Foo implements Serializable {
   serialize() { return '[Foo]'; } // Works!
 }
 
-class Bar implements Serializeable {
+class Bar implements Serializable {
   // $ExpectError
   serialize() { return 42; } // Error!
 }
