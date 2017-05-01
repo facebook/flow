@@ -8,7 +8,6 @@
  *
  *)
 
-module Ast = Spider_monkey_ast
 
 module type Translator = sig
   type t
@@ -96,6 +95,7 @@ end with type t = Impl.t) = struct
   | loc, Expression expr ->
       node "ExpressionStatement" loc [|
         "expression", expression expr.Expression.expression;
+        "directive", option string expr.Expression.directive;
       |]
   | loc, If _if -> If.(
       node "IfStatement" loc [|
@@ -275,8 +275,8 @@ end with type t = Impl.t) = struct
         let specifiers = import.specifiers |> List.map (function
           | ImportDefaultSpecifier id ->
               import_default_specifier id
-          | ImportNamedSpecifier {local; remote;} ->
-              import_named_specifier local remote
+          | ImportNamedSpecifier {local; remote; kind;} ->
+              import_named_specifier local remote kind
           | ImportNamespaceSpecifier id ->
               import_namespace_specifier id
         ) in
@@ -501,7 +501,12 @@ end with type t = Impl.t) = struct
           "meta", identifier meta_prop.meta;
           "property", identifier meta_prop.property;
         |]
-      ))
+      )
+    | loc, Import arg -> node "CallExpression" loc [|
+        "callee", node "Import" (Loc.btwn loc (fst arg)) [||];
+        "arguments", array_of_list expression [arg];
+      |]
+  )
 
   and function_declaration (loc, fn) = Function.(
     let body = match fn.body with
@@ -788,14 +793,14 @@ end with type t = Impl.t) = struct
       | Literal lit -> literal lit, false
       | Identifier id -> identifier id, false
       | Computed expr -> expression expr, true)  in
-      let kind = match prop.kind with
-      | Init -> "init"
-      | Get -> "get"
-      | Set -> "set"
+      let value, kind = match prop.value with
+      | Init value -> expression value, "init"
+      | Get value -> function_expression value, "get"
+      | Set value -> function_expression value, "set"
       in
       node "Property" loc [|
         "key", key;
-        "value", expression prop.value;
+        "value", value;
         "kind", string kind;
         "method", bool prop._method;
         "shorthand", bool prop.shorthand;
@@ -1023,18 +1028,24 @@ end with type t = Impl.t) = struct
     | Expression.Object.Property.Computed _ ->
       failwith "There should not be computed object type property keys"
     in
+    let value, kind = match prop.value with
+    | Init value -> _type value, "init"
+    | Get (loc, f) -> function_type (loc, f), "get"
+    | Set (loc, f) -> function_type (loc, f), "set"
+    in
     node "ObjectTypeProperty" loc [|
       "key", key;
-      "value", _type prop.value;
+      "value", value;
       "optional", bool prop.optional;
       "static", bool prop.static;
       "variance", option variance prop.variance;
+      "kind", string kind;
     |]
   )
 
   and object_type_spread_property (loc, prop) = Type.Object.SpreadProperty.(
     node "ObjectTypeSpreadProperty" loc [|
-      "argument", generic_type prop.argument;
+      "argument", _type prop.argument;
     |]
   )
 
@@ -1275,7 +1286,7 @@ end with type t = Impl.t) = struct
       "local", identifier id;
     |]
 
-  and import_named_specifier local_id remote_id =
+  and import_named_specifier local_id remote_id kind =
     let span_loc =
       match local_id with
       | Some local_id -> Loc.btwn (fst remote_id) (fst local_id)
@@ -1288,6 +1299,12 @@ end with type t = Impl.t) = struct
     node "ImportSpecifier" span_loc [|
       "imported", identifier remote_id;
       "local", identifier local_id;
+      "importKind", (
+        match kind with
+        | Some Statement.ImportDeclaration.ImportType -> string "type"
+        | Some Statement.ImportDeclaration.ImportTypeof -> string "typeof"
+        | Some Statement.ImportDeclaration.ImportValue | None -> null
+      );
     |]
 
   and comment_list comments = array_of_list comment comments

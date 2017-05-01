@@ -13,7 +13,7 @@ module type S = sig
 
   val get: key -> 'a t -> 'a option
   val find_unsafe: key -> 'a t -> 'a
-  val union: 'a t -> 'a t -> 'a t
+  val union: ?combine:(key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
   val compare: 'a t -> 'a t -> int
   val equal: 'a t -> 'a t -> bool
   val keys: 'a t -> key list

@@ -109,7 +109,7 @@ let gen_builtin_class_type t env = Type.(
    *)
   let classid =
     match t with
-    | InstanceT (_, _, _, {class_id; _;}) -> class_id
+    | InstanceT (_, _, _, _, {class_id; _;}) -> class_id
     | t -> failwith (
       spf
         ("Internal error: Expected an InstanceT while looking up a builtin " ^^
@@ -121,9 +121,9 @@ let gen_builtin_class_type t env = Type.(
   let builtin_t = Flow_js.get_builtin env.flow_cx builtin_name reason in
   let builtin_classid =
     match resolve_type builtin_t env with
-    | ThisClassT(InstanceT(_, _, _, {class_id; _;})) ->
+    | ThisClassT(_, InstanceT(_, _, _, _, {class_id; _;})) ->
       class_id
-    | PolyT(_, ThisClassT(InstanceT(_, _, _, {class_id; _;}))) ->
+    | PolyT(_, _, ThisClassT(_, InstanceT(_, _, _, _, {class_id; _;}))) ->
       class_id
     | builtin_t -> failwith (spf "Unexpected global type: %s" (string_of_ctor builtin_t))
   in
@@ -149,7 +149,7 @@ let gen_separated_list list sep gen_fn env =
 (* Generate type syntax for a given type *)
 let rec gen_type t env = Type.(
   match t with
-  | AbstractT t -> add_str "$Abstract<" env |> gen_type t |> add_str ">"
+  | AbstractT (_, t) -> add_str "$Abstract<" env |> gen_type t |> add_str ">"
   | AnnotT t -> gen_type t env
   | AnyFunT _ -> add_str "Function" env
   | AnyObjT _ -> add_str "Object" env
@@ -163,12 +163,19 @@ let rec gen_type t env = Type.(
       add_str "Array<" env
         |> gen_type elemt
         |> add_str ">"
+    | ROArrayAT (elemt) ->
+      add_str "$ReadOnlyArray<" env
+        |> gen_type elemt
+        |> add_str ">"
     | ArrayAT (_, Some tuple_types)
     | TupleAT (_, tuple_types) ->
       env
       |> add_str "["
       |> gen_separated_list tuple_types ", " gen_type
       |> add_str "]"
+    | EmptyAT ->
+      (* There isn't any real way to write this type at the moment *)
+      add_str "Array<empty>" env
     )
 
   | BoolT (_, Some _) ->
@@ -177,18 +184,33 @@ let rec gen_type t env = Type.(
   | BoolT (_, None) ->
     add_str "boolean" env
   | BoundT {name; _;} -> add_str name env
-  | ClassT t ->
+  | ClassT (_, t) ->
     add_str "Class<" env
       |> gen_type t
       |> add_str ">"
   | CustomFunT (_, ObjectAssign) -> add_str "Object$Assign" env
   | CustomFunT (_, ObjectGetPrototypeOf) -> add_str "Object$GetPrototypeOf" env
+  | CustomFunT (_, ReactPropType (React.PropType.Primitive (_, t))) ->
+    add_str "React$PropType$Primitive<" env
+      |> gen_type t
+      |> add_str ">"
+  | CustomFunT (_, ReactPropType (React.PropType.Complex kind)) ->
+    add_str React.PropType.(match kind with
+    | ArrayOf -> "React$PropType$ArrayOf"
+    | InstanceOf -> "React$PropType$InstanceOf"
+    | ObjectOf -> "React$PropType$ObjectOf"
+    | OneOf -> "React$PropType$OneOf"
+    | OneOfType -> "React$PropType$OneOfType"
+    | Shape -> "React$PropType$Shape"
+    ) env
+  | CustomFunT (_, ReactCreateClass) -> add_str "React$CreateClass" env
   | CustomFunT (_, ReactCreateElement) -> add_str "React$CreateElement" env
   | CustomFunT (_, Merge) -> add_str "$Facebookism$Merge" env
   | CustomFunT (_, MergeDeepInto) -> add_str "$Facebookism$MergeDeepInto" env
   | CustomFunT (_, MergeInto) -> add_str "$Facebookism$MergeInto" env
   | CustomFunT (_, Mixin) -> add_str "$Facebookism$Mixin" env
   | CustomFunT (_, Idx) -> add_str "$Facebookism$Idx" env
+  | CustomFunT (_, DebugPrint) -> add_str "$Flow$DebugPrint" env
   (* TODO: Once predicate types are a little more fleshed out, fill out this
    *       codegen.
    *)
@@ -205,13 +227,14 @@ let rec gen_type t env = Type.(
   | FunProtoApplyT _ -> add_str "typeof Function.prototype.apply" env
   | FunProtoBindT _ -> add_str "typeof Function.prototype.bind" env
   | FunProtoCallT _ -> add_str "typeof Function.prototype.call" env
-  | FunT (_, _static, _prototype, {params_tlist; params_names; return_t; _;}) ->
+  | FunT (_, _static, _prototype, ft) ->
+    let {params_tlist; params_names; rest_param; return_t; _;} = ft in
     gen_tparams_list env
       |> add_str "("
-      |> gen_func_params params_names params_tlist
+      |> gen_func_params params_names params_tlist rest_param
       |> add_str ") => "
       |> gen_type return_t
-  | InstanceT (_, _static, _super, {class_id; _;}) -> (
+  | InstanceT (_, _static, _super, _, {class_id; _;}) -> (
     (* TODO: See if we can preserve class names *)
     let env =
       match IMap.get class_id env.class_names with
@@ -222,7 +245,7 @@ let rec gen_type t env = Type.(
   )
   | IntersectionT (_, intersection) -> gen_intersection_list intersection env
   | KeysT (_, t) -> add_str "$Keys<" env |> gen_type t |> add_str ">"
-  | MaybeT t -> add_str "?" env |> gen_type t
+  | MaybeT (_, t) -> add_str "?" env |> gen_type t
   | MixedT _ -> add_str "mixed" env
   | NumT (_, Literal _) ->
     (* TODO: Consider polarity and print the literal type when appropriate *)
@@ -266,12 +289,11 @@ let rec gen_type t env = Type.(
 
     add_str "}" env
   )
-  | OptionalT t -> add_str "void | " env |> gen_type t
+  | OptionalT (_, t) -> add_str "void | " env |> gen_type t
   | OpenT _ -> gen_type (resolve_type t env) env
-  | PolyT (tparams, t) -> gen_type t (add_tparams tparams env)
+  | PolyT (_, tparams, t) -> gen_type t (add_tparams tparams env)
   | ReposT (_, t) -> gen_type t env
   | ReposUpperT (_, t) -> gen_type t env
-  | RestT rest -> gen_type rest env
   | ShapeT t -> add_str "$Shape<" env |> gen_type t |> add_str ">"
   | SingletonBoolT (_, v) -> add_str (spf "%b" v) env
   | SingletonNumT (_, (_, v)) -> add_str (spf "%s" v) env
@@ -280,9 +302,9 @@ let rec gen_type t env = Type.(
     (* TODO: Consider polarity and print the literal type when appropriate *)
     add_str "string" env
   | StrT (_, (Truthy|AnyLiteral)) -> add_str "string" env
-  | ThisClassT t -> gen_type t env
-  | ThisTypeAppT (t, _, ts) -> add_applied_tparams ts env |> gen_type t
-  | TypeAppT (t, ts) -> add_applied_tparams ts env |> gen_type t
+  | ThisClassT (_, t) -> gen_type t env
+  | ThisTypeAppT (_, t, _, ts) -> add_applied_tparams ts env |> gen_type t
+  | TypeAppT (_, t, ts) -> add_applied_tparams ts env |> gen_type t
   | TypeT (_, t) -> gen_type t env
   | UnionT (_, union) -> gen_union_list union env
   | VoidT _ -> add_str "void" env
@@ -346,12 +368,26 @@ and gen_prop k p env =
       |> add_str "): void"
   in
 
+  let rec gen_method k t env =
+    match t with
+    | FunT (_, _static, _prototype, ft) ->
+      let {params_tlist; params_names; rest_param; return_t; _;} = ft in
+      add_str k env
+        |> gen_tparams_list
+        |> add_str "("
+        |> gen_func_params params_names params_tlist rest_param
+        |> add_str "): "
+        |> gen_type return_t
+    | PolyT (_, tparams, t) -> gen_method k t (add_tparams tparams env)
+    | _ -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
+  in
+
   match p with
   | Field (t, polarity) ->
     let sigil = Polarity.sigil polarity in
     let (sep, t) =
       match resolve_type t env with
-      | OptionalT t -> ("?: ", resolve_type t env)
+      | OptionalT (_, t) -> ("?: ", resolve_type t env)
       | t -> (": ", t)
     in
     add_str sigil env
@@ -362,31 +398,38 @@ and gen_prop k p env =
   | Set t -> gen_setter k t env
   | GetSet (t1, t2) ->
     gen_getter k t1 env |> gen_setter k t2
+  | Method t -> gen_method k t env
 
-and gen_func_params params_names params_tlist env =
+and gen_func_params params_names params_tlist rest_param env =
   let params =
     match params_names with
     | Some params_names ->
       List.rev (List.fold_left2 (fun params name t ->
-        (name, t):: params
+        (name, t, false):: params
       ) [] params_names params_tlist)
     | None ->
-      List.mapi (fun idx t -> (spf "p%d" idx, t)) params_tlist
+      List.mapi (fun idx t -> (spf "p%d" idx, t, false)) params_tlist
   in
-  gen_separated_list params ", " (fun (name, t) env ->
-    gen_func_param name t env
+  let params = match rest_param with
+  | None -> params
+  | Some (name, _, t) ->
+    params @ [Option.value ~default:"rest" name, t, true] in
+  gen_separated_list params ", " (fun (name, t, is_rest) env ->
+    if is_rest
+    then gen_func_rest_param name t env
+    else gen_func_param name t env
   ) env
+
+and gen_func_rest_param name t env =
+  add_str "..." env
+  |> add_str name
+  |> add_str ": "
+  |> gen_type t
 
 and gen_func_param name t env =
   let open Type in
   match t with
-  | RestT t ->
-    add_str "..." env
-    |> add_str name
-    |> add_str ": Array<"
-    |> gen_type t
-    |> add_str ">"
-  | OptionalT t ->
+  | OptionalT (_, t) ->
     add_str name env
     |> add_str "?: "
     |> gen_type t

@@ -366,6 +366,106 @@ module.exports = {
           }
         ]
       },
+      'var a: { get foo(): number; }': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation.properties': [
+          {
+            'key.name': 'foo',
+            'value': {
+              'type': 'FunctionTypeAnnotation',
+              'params': [],
+              'returnType.type': 'NumberTypeAnnotation',
+              'rest': null,
+            },
+            'kind': 'get',
+          }
+        ]
+      },
+      'var a: { set foo(x: number): void; }': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation.properties': [
+          {
+            'key.name': 'foo',
+            'value': {
+              'type': 'FunctionTypeAnnotation',
+              'params': [
+                {
+                  'name.name': 'x',
+                  'typeAnnotation.type': 'NumberTypeAnnotation',
+                }
+              ],
+              'returnType.type': 'VoidTypeAnnotation',
+              'rest': null,
+            },
+            'kind': 'set',
+          }
+        ]
+      },
+      'var a: { get foo(): number; set foo(x: number): void; }': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation.properties': [
+          {
+            'key.name': 'foo',
+            'value': {
+              'type': 'FunctionTypeAnnotation',
+              'params': [],
+              'returnType.type': 'NumberTypeAnnotation',
+              'rest': null,
+            },
+            'kind': 'get',
+          },
+          {
+            'key.name': 'foo',
+            'value': {
+              'type': 'FunctionTypeAnnotation',
+              'params': [
+                {
+                  'name.name': 'x',
+                  'typeAnnotation.type': 'NumberTypeAnnotation',
+                }
+              ],
+              'returnType.type': 'VoidTypeAnnotation',
+              'rest': null,
+            },
+            'kind': 'set',
+          }
+        ]
+      },
+      'var a: {get?: number; set?: string}': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+          'properties.0.optional': true,
+          'properties.1.optional': true,
+        }
+      },
+      'var a: { get foo(x: string): number; }': {
+        'errors': {
+          '0': {
+            'message': 'Getter should have zero parameters',
+            'loc.start': { 'line': 1, 'column': 13 },
+            'loc.end': { 'line': 1, 'column': 16 },
+          }
+        }
+      },
+      'var a: { set foo(): void; }': {
+        'errors': {
+          '0': {
+            'message': 'Setter should have exactly one parameter',
+            'loc.start': { 'line': 1, 'column': 13 },
+            'loc.end': { 'line': 1, 'column': 16 },
+          }
+        }
+      },
+      'var a: { +get foo(): number }': {
+        'errors.0': {
+          'message': 'Unexpected variance sigil',
+          'loc.start.column': 9,
+          'loc.end.column': 10,
+        }
+      },
+      'var a: { +set foo(x: number): void }': {
+        'errors.0': {
+          'message': 'Unexpected variance sigil',
+          'loc.start.column': 9,
+          'loc.end.column': 10,
+        }
+      },
       'var a:(...rest:Array<number>) => number': {
         'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
           'type': 'FunctionTypeAnnotation',
@@ -1269,6 +1369,16 @@ module.exports = {
           },
         }]
       },
+      'export type * from "foo"': {
+        'body.0': {
+          'type': 'ExportAllDeclaration',
+          'source': {
+            'type': 'Literal',
+            'value': 'foo'
+          },
+          'exportKind': 'type'
+        }
+      },
 
       // Duplicate exports are an early/parse error
       'export let foo = 1; export const foo = 2;': {
@@ -1602,6 +1712,22 @@ module.exports = {
             }
           ]
         }
+      },
+      'declare class A { get foo(): number; }': {
+        'body.0.body.properties.0': {
+          'static': false,
+          'kind': 'get',
+        }
+      },
+      'declare class A { set foo(x: number): void; }': {
+        'body.0.body.properties.0': {
+          'static': false,
+          'kind': 'set',
+        }
+      },
+      'declare class A { get foo(): number; set foo(x: string): void; }': {
+        'body.0.body.properties.0.kind': 'get',
+        'body.0.body.properties.1.kind': 'set'
       },
     },
     'Declare Export': {
@@ -2272,6 +2398,16 @@ module.exports = {
           '0.message': 'Unexpected reserved word',
         }
       },
+      'export type * "from" "foo"': {
+        'errors': {
+          '0.message': 'Unexpected string',
+        }
+      },
+      'export type * as blah from "foo"': {
+        'errors': {
+          '0.message': 'Unexpected identifier',
+        }
+      }
     },
     'JSX Syntax': {
       '(<div>{}</div>)': {
@@ -2486,6 +2622,34 @@ module.exports = {
           'type': 'NumberLiteralTypeAnnotation',
           'value': -123,
           'raw': '- 123',
+        }
+      },
+      'var a: 25257156155': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+          'type': 'NumberLiteralTypeAnnotation',
+          'value': 25257156155,
+          'raw': '25257156155',
+        }
+      },
+      'var a: 0x5E1719E3B': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+          'type': 'NumberLiteralTypeAnnotation',
+          'value': 25257156155,
+          'raw': '0x5E1719E3B',
+        }
+      },
+      'var a: 0o274134317073': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+          'type': 'NumberLiteralTypeAnnotation',
+          'value': 25257156155,
+          'raw': '0o274134317073',
+        }
+      },
+      'var a: 1e5': {
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+          'type': 'NumberLiteralTypeAnnotation',
+          'value': 100000,
+          'raw': '1e5',
         }
       },
     },
@@ -2786,6 +2950,86 @@ module.exports = {
           },
         }
       },
+      'declare module A {}\ndeclare module B {}': {
+        'body.0': {
+          'type': 'DeclareModule',
+          'id.name': 'A',
+          'body.body': [],
+          'loc.start': { 'line': 1, 'column': 0 },
+          'loc.end': { 'line': 1, 'column': 19 },
+        },
+        'body.1': {
+          'type': 'DeclareModule',
+          'id.name': 'B',
+          'body.body': [],
+          'loc.start': { 'line': 2, 'column': 0 },
+          'loc.end': { 'line': 2, 'column': 19 },
+        },
+      },
+    },
+    'Dynamic Import': {
+      'const m = import("asdf");': {
+        'body.0.declarations.0.init': {
+          'type': 'CallExpression',
+          'callee': {
+            'type': 'Import',
+            'loc': {
+              'start': {'line': 1, 'column': 10},
+              'end': {'line': 1, 'column': 23}
+            },
+          },
+          'arguments': [{
+            'type': 'Literal',
+            'value': 'asdf'
+          }]
+        }
+      },
+      'const m = import("asdf").then();': {
+        'body.0.declarations.0.init': {
+          'type': 'CallExpression',
+          'callee': {
+            'type': 'MemberExpression',
+            'object': {
+              'type': 'CallExpression',
+              'callee': {'type': 'Import'},
+              'arguments': [{
+                'type': 'Literal',
+                'value': 'asdf'
+              }]
+            },
+            'property': {
+              'type': 'Identifier',
+              'name': 'then'
+            }
+          },
+          'arguments': []
+        }
+      },
+      'const m = import(a + b);': {
+        'body.0.declarations.0.init': {
+          'type': 'CallExpression',
+          'callee': {
+            'type': 'Import',
+            'loc': {
+              'start': {'line': 1, 'column': 10},
+              'end': {'line': 1, 'column': 22}
+            },
+          },
+          'arguments': [{'type': 'BinaryExpression'}]
+        }
+      },
+
+      // Invalid syntax tests
+      'import("asdf");': {
+        'errors': {
+          '0.message': 'Unexpected token (',
+        }
+      },
+      'const a = import("asdf", nope);': {
+        'errors': {
+          '0.message': 'Unexpected token ,',
+        }
+      }
     },
     'Invalid Declare Module': {
       'declare Module A {}': {
@@ -3610,6 +3854,10 @@ module.exports = {
           'value': { 'type': 'Literal', 'value': 'y'},
           'static': false,
           'computed': false,
+          'loc': {
+            'start': { 'line': 2, 'column': 2 },
+            'end': { 'line': 2, 'column': 9 }
+          },
         }, {
           'type': 'MethodDefinition',
           'key': {
@@ -3618,6 +3866,10 @@ module.exports = {
           },
           'value.type': 'FunctionExpression',
           'kind': 'method',
+          'loc': {
+            'start': { 'line': 3, 'column': 2 },
+            'end': { 'line': 3, 'column': 10 }
+          },
         }],
         'errors': [],
       },
@@ -3771,7 +4023,13 @@ module.exports = {
           { 'type': 'Block', 'value': ' comment '}
         ],
         'body.0.right.typeParameters.params.0.type': 'ExistsTypeAnnotation'
-      }
+      },
+      'type Foo =\n| string // a\n| number // b': {
+        'comments': [
+          { 'type': 'Line', 'value': ' a' },
+          { 'type': 'Line', 'value': ' b' },
+        ],
+      },
     },
     'Decorators (experimental/early)': {
       'function Bar() { @myDecorator2 @myDecorator1\nclass Foo { myMethod() {} } }': {
@@ -4244,6 +4502,26 @@ module.exports = {
             'name': 'y',
           }
         }]
+      },
+      'let [x=y, z] = []': {
+        'errors.length': 0,
+        'body.0.declarations.0.id.elements': [
+          {
+            'type': 'AssignmentPattern',
+            'left': {
+              'type': 'Identifier',
+              'name': 'x',
+            },
+            'right': {
+              'type': 'Identifier',
+              'name': 'y',
+            }
+          },
+          {
+            'type': 'Identifier',
+            'name': 'z',
+          },
+        ]
       }
     },
     'Type Parameter Defaults': {
@@ -4342,6 +4620,15 @@ module.exports = {
               }
             }
           },
+          'loc.start': { 'line': 1, 'column': 0 },
+          'loc.end': { 'line': 1, 'column': 58 },
+        },
+      },
+      'declare function f(x: mixed): boolean %checks(x !== null)': {
+        'body.0': {
+          'type': 'DeclareFunction',
+          'loc.start': { 'line': 1, 'column': 0 },
+          'loc.end': { 'line': 1, 'column': 57 },
         },
       },
       'function foo(x: mixed): %checks { return x !== null }': {
@@ -5004,7 +5291,7 @@ module.exports = {
     },
     'Object type spread': {
       'type T = {...O}': {
-        'errors': [],
+        'errors.length': 0,
         'body.0.right.properties': [{
           'type': 'ObjectTypeSpreadProperty',
           'argument': {
@@ -5047,6 +5334,13 @@ module.exports = {
           'argument.id.name': 'O2',
         }],
       },
+      'type T = {+...O}': {
+        'errors.0': {
+          'message': 'Unexpected variance sigil',
+          'loc.start.column': 10,
+          'loc.end.column': 11,
+        }
+      }
     },
     'Invalid instance spread': {
       'interface I {...O}': {
@@ -5083,5 +5377,190 @@ module.exports = {
         ]
       },
     },
+    'import type shorthand': {
+      'import {type} from "foo";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 'type',
+            'local.name': 'type',
+            'importKind': null,
+          }]
+        }
+      },
+      'import {type t} from "foo";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 't',
+            'local.name': 't',
+            'importKind': 'type',
+          }]
+        }
+      },
+      'import {type as} from "foo";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 'as',
+            'local.name': 'as',
+            'importKind': 'type',
+          }]
+        }
+      },
+      'import {type t as u} from "foo";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 't',
+            'local.name': 'u',
+            'importKind': 'type',
+          }]
+        }
+      },
+
+      'import {typeof t} from "foo";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 't',
+            'local.name': 't',
+            'importKind': 'typeof',
+          }]
+        }
+      },
+      'import {typeof as} from "foo";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 'as',
+            'local.name': 'as',
+            'importKind': 'typeof',
+          }]
+        }
+      },
+      'import {typeof t as u} from "foo";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 't',
+            'local.name': 'u',
+            'importKind': 'typeof',
+          }]
+        }
+      },
+
+      'import {type t as} from "foo";': {
+        'errors.0.message': 'Unexpected token }'
+      },
+      'import {typeof} from "foo";': {
+        'errors.0.message': 'Unexpected token typeof'
+      },
+      'import type {type t} from "foo";': {
+        'errors.0.message': 'The `type` and `typeof` keywords on named imports can only be used on regular `import` statements. It cannot be used with `import type` or `import typeof` statements'
+      },
+      'import typeof {typeof t} from "foo";': {
+        'errors.0.message': 'The `type` and `typeof` keywords on named imports can only be used on regular `import` statements. It cannot be used with `import type` or `import typeof` statements'
+      },
+    },
+    'import statements': {
+      'import {x,} from "MyModule";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 'x',
+            'local.name': 'x',
+          }]
+        }
+      },
+      'import defexp, {x,} from "MyModule";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [
+            {
+              'type': 'ImportDefaultSpecifier',
+              'local.name': 'defexp',
+            },
+            {
+              'type': 'ImportSpecifier',
+              'imported.name': 'x',
+              'local.name': 'x',
+            }
+          ]
+        }
+      },
+      'import {a nopeNeedsAPrecedingComma} from "MyModule";': {
+        'errors.0.message': 'Missing comma between import specifiers'
+      },
+    },
+    'Numbers': {
+      '1': {
+        'body.0.expression': {
+          'value': 1,
+          'raw':'1',
+        },
+      },
+      '1e5': {
+        'body.0.expression': {
+          'value': 100000,
+          'raw':'1e5',
+        },
+      },
+      '1e+05': {
+        'body.0.expression': {
+          'value': 100000,
+          'raw':'1e+05',
+        },
+      },
+    },
+    'Large numbers (ints are 32-bit in js_of_ocaml)': {
+      '25257156155': {
+        'body.0.expression': {
+          'value': 25257156155,
+          'raw':'25257156155',
+        },
+      },
+      '0274134317073': {
+        'body.0.expression': {
+          'value': 25257156155,
+          'raw':'0274134317073',
+        },
+      },
+      '0o274134317073': {
+        'body.0.expression': {
+          'value': 25257156155,
+          'raw':'0o274134317073',
+        },
+      },
+      '0x5E1719E3B': {
+        'body.0.expression': {
+          'value': 25257156155,
+          'raw':'0x5E1719E3B',
+        },
+      },
+      '0b10111100001011100011001111000111011': {
+        'body.0.expression': {
+          'value': 25257156155,
+          'raw':'0b10111100001011100011001111000111011',
+        },
+      },
+    }
   }
 };

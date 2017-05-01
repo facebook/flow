@@ -30,18 +30,19 @@ end = struct
     ForceRecheckCommand.command;
     GenFlowFilesCommand.command;
     GetDefCommand.command;
-    GetImportersCommand.command;
     GetImportsCommand.command;
+    IdeCommand.command;
     LsCommand.command;
     PortCommand.command;
     ServerCommands.CheckCommand.command;
     ServerCommands.ServerCommand.command;
     ServerCommands.StartCommand.command;
+    ServerCommands.FocusCheckCommand.command;
     StopCommand.command;
     SuggestCommand.command;
     TypeAtPosCommand.command;
     VersionCommand.command;
-  ]
+  ] @ (Extra_commands.extra_commands ())
 
   (* status commands, which need a list of other commands *)
   module StatusCommand = StatusCommands.Status(struct

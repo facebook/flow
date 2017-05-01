@@ -1,0 +1,30 @@
+opam-version: "1.2"
+maintainer: "gabe@fb.com"
+homepage: "https://flow.org"
+dev-repo: "https://github.com/facebook/flow.git"
+bug-reports: "https://github.com/facebook/flow/issues"
+authors: [
+  "Avik Chaudhuri"
+  "Basil Hosmer"
+  "Gabe Levi"
+  "Jeff Morrison"
+  "Marshall Roch"
+  "Sam Goldman"
+  "James Kyle"
+]
+doc: "https://flow.org/en/docs/getting-started/"
+license: "BSD3"
+depends: [
+  "base-unix"
+  "base-bytes"
+  "sedlex"
+  "ocamlbuild" {build}
+  "ocp-build" {build}
+]
+available: [ocaml-version >= "4.03.0"]
+build: [ [ make ] ]
+depexts: [
+ [ ["debian"] ["libelf-dev"] ]
+ [ ["ubuntu"] ["libelf-dev"] ]
+ [ ["centos"] ["elfutils-libelf-devel"] ]
+]

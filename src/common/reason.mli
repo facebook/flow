@@ -23,24 +23,25 @@ type reason_desc =
   | RArrayLit
   | REmptyArrayLit
   | RArrayType
+  | RROArrayType
   | RTupleType
   | RTupleElement
+  | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
-  | RArrowFunction of reason_desc_function
   | RFunctionType
   | RFunctionBody
   | RFunctionCall
+  | RFunctionUnusedArgument
   | RJSXFunctionCall of string
   | RJSXIdentifier of string * string
   | RJSXElementProps of string
   | RJSXElement of string option
+  | RJSXText
   | RAnyObject
   | RAnyFunction
   | RUnknownString
   | RStringEnum
   | RNumberEnum
-  | RGetterFunction
-  | RSetterFunction
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -60,6 +61,7 @@ type reason_desc =
   | RPrototype
   | RDestructuring
   | RConstructor
+  | RDefaultConstructor
   | RConstructorCall
   | RReturn
   | RRegExp
@@ -118,19 +120,8 @@ type reason_desc =
   | RReactStatics
   | RReactDefaultProps
   | RReactState
-  | RReactComponentProps
   | RReactElementProps of string
   | RReactPropTypes
-  | RPropTypeArray
-  | RPropTypeFunc
-  | RPropTypeObject
-  | RPropTypeArrayOf
-  | RPropTypeInstanceOf
-  | RPropTypeObjectOf
-  | RPropTypeOneOf
-  | RPropTypeOneOfType
-  | RPropTypeShape
-  | RPropTypeFbt
 
 and reason_desc_function =
   | RAsync
@@ -162,6 +153,8 @@ val json_of_loc: ?strip_root:Path.t option -> Loc.t -> Hh_json.json
 
 val locationless_reason: reason_desc -> reason
 
+val func_reason: Ast.Function.t -> Loc.t -> reason
+
 val is_internal_name: string -> bool
 val internal_name: string -> string
 
@@ -174,7 +167,7 @@ val is_instantiable_reason: reason -> bool
 
 val is_constant_property_reason: reason -> bool
 
-val is_method_call_reason: string -> reason -> bool
+val is_typemap_reason: reason -> bool
 
 val derivable_reason: reason -> reason
 val is_derivable_reason: reason -> bool
@@ -197,8 +190,6 @@ val loc_of_reason: reason -> Loc.t
 
 val desc_of_reason: reason -> reason_desc
 
-val origin_of_reason: reason -> reason option
-
 (* simple way to get derived reasons whose descriptions are
    simple replacements of the original *)
 val replace_reason: (reason_desc -> reason_desc) -> reason -> reason
@@ -206,6 +197,6 @@ val replace_reason_const: reason_desc -> reason -> reason
 
 val repos_reason: Loc.t -> reason -> reason
 
-val update_origin_of_reason: reason option -> reason -> reason
-
 val do_patch: string list -> (int * int * string) list -> string
+
+module ReasonMap : MyMap.S with type key = reason

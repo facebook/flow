@@ -14,8 +14,8 @@
    associated type information. *)
 
 open Utils_js
-open Reason
 open Type
+open Reason
 open Scope
 
 module FlowError = Flow_error
@@ -284,12 +284,12 @@ let init_env ?(exclude_syms=SSet.empty) cx module_scope =
 (* replace the current env with the passed one.
    envs must be congruent - we measure length as a quick check,
    with a more thorough check on env merge/copy *)
-let update_env cx reason new_scopes =
+let update_env cx loc new_scopes =
 
   (if List.length new_scopes != List.length (peek_env ())
   then assert_false (spf
     "update_env %s: unequal length scope lists, old %d new %d "
-    (string_of_reason reason)
+    (string_of_loc loc)
     (List.length new_scopes)
     (List.length (peek_env ()))));
 
@@ -332,15 +332,20 @@ let global_lexicals = [
    flag such errors on the current deferred basis.
    tests/global_ref tracks this issue.
  *)
-let cache_global cx name reason global_scope =
+let cache_global cx name ?desc loc global_scope =
   let t =
     if List.mem name global_any
-    then AnyT.at (loc_of_reason reason)
-    else (if List.mem name global_lexicals
-    then ObjProtoT (replace_reason_const (RCustom "global object") reason)
-    else Flow_js.get_builtin cx name reason)
+    then AnyT.at loc
+    else if List.mem name global_lexicals
+    then ObjProtoT (mk_reason (RCustom "global object") loc)
+    else
+      let desc = match desc with
+      | Some desc -> desc
+      | None -> RIdentifier name
+      in
+      let reason = mk_reason desc loc in
+      Flow_js.get_builtin cx name reason
   in
-  let loc = loc_of_reason reason in
   let entry = Entry.new_var t ~loc ~state:State.Initialized in
   Scope.add_entry name entry global_scope;
   Context.add_global cx name;
@@ -363,7 +368,7 @@ let local_scope_entry_exists name =
    return scope and entry. Note that anything we don't resolve
    otherwise, we add to the global scope after generating a
    deferred lookup, which may fail later. *)
-let find_entry cx name reason =
+let find_entry cx name ?desc loc =
   let rec loop = function
     | [] -> assert_false "empty scope list"
     | scope::scopes ->
@@ -372,7 +377,7 @@ let find_entry cx name reason =
       | None ->
         (* keep looking until we're at the global scope *)
         match scopes with
-        | [] -> cache_global cx name reason scope
+        | [] -> cache_global cx name ?desc loc scope
         | _ -> loop scopes
   in
   loop !scopes
@@ -407,9 +412,8 @@ let find_refi_in_var_scope key =
 
 (* helpers *)
 
-let binding_error msg cx name entry reason =
-  FlowError.(add_output cx
-    (EBindingError (msg, reason, name, entry)))
+let binding_error msg cx name entry loc =
+  Flow_js.add_output cx (FlowError.EBindingError (msg, loc, name, entry))
 
 let already_bound_error =
   binding_error FlowError.ENameAlreadyBound
@@ -425,7 +429,7 @@ let already_bound_error =
    may appear in an AST)
  *)
 
-let bind_entry cx name entry reason =
+let bind_entry cx name entry loc =
   (* iterate top-down through scopes until the appropriate scope for this
      binding is found, or realize a binding error *)
   let rec loop = function
@@ -441,7 +445,7 @@ let bind_entry cx name entry reason =
         | LexScope, Value { Entry.kind = Let _; _ }
         | LexScope, Value { Entry.kind = Const _; _ }
         | VarScope _, _ ->
-          let loc = loc entry in
+          let loc = entry_loc entry in
           Type_inference_hooks_js.dispatch_ref_hook cx loc loc;
           add_entry name entry scope
         (* otherwise, keep looking for our scope *)
@@ -470,49 +474,42 @@ let bind_entry cx name entry reason =
             Flow_js.unify cx
               (Entry.general_of_value p) (Entry.general_of_value e)
           (* bad shadowing is a binding error *)
-          | _ -> already_bound_error cx name prev reason)
+          | _ -> already_bound_error cx name prev loc)
 
         (* shadowing in a lex scope is always an error *)
-        | LexScope -> already_bound_error cx name prev reason
+        | LexScope -> already_bound_error cx name prev loc
   in
   if not (is_excluded name) then loop !scopes
 
 (* bind var entry *)
-let bind_var ?(state=State.Declared) cx name t r =
-  let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_var t ~loc ~state) r
+let bind_var ?(state=State.Declared) cx name t loc =
+  bind_entry cx name (Entry.new_var t ~loc ~state) loc
 
 (* bind let entry *)
-let bind_let ?(state=State.Undeclared) cx name t r =
-  let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_let t ~loc ~state) r
+let bind_let ?(state=State.Undeclared) cx name t loc =
+  bind_entry cx name (Entry.new_let t ~loc ~state) loc
 
 (* bind implicit let entry *)
-let bind_implicit_let ?(state=State.Undeclared) kind cx name t r =
-  let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_let t ~kind ~loc ~state) r
+let bind_implicit_let ?(state=State.Undeclared) kind cx name t loc =
+  bind_entry cx name (Entry.new_let t ~kind ~loc ~state) loc
 
 let bind_fun ?(state=State.Declared) =
   bind_implicit_let ~state Entry.FunctionBinding
 
 (* bind const entry *)
-let bind_const ?(state=State.Undeclared) cx name t r =
-  let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_const t ~loc ~state) r
+let bind_const ?(state=State.Undeclared) cx name t loc =
+  bind_entry cx name (Entry.new_const t ~loc ~state) loc
 
-let bind_import cx name t r =
-  let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_import t ~loc) r
+let bind_import cx name t loc =
+  bind_entry cx name (Entry.new_import t ~loc) loc
 
 (* bind implicit const entry *)
-let bind_implicit_const ?(state=State.Undeclared) kind cx name t r =
-  let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_const t ~kind ~loc ~state) r
+let bind_implicit_const ?(state=State.Undeclared) kind cx name t loc =
+  bind_entry cx name (Entry.new_const t ~kind ~loc ~state) loc
 
 (* bind type entry *)
-let bind_type ?(state=State.Declared) cx name t r =
-  let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_type t ~loc ~state) r
+let bind_type ?(state=State.Declared) cx name t loc =
+  bind_entry cx name (Entry.new_type t ~loc ~state) loc
 
 (* vars coming from 'declare' statements are preinitialized *)
 let bind_declare_var = bind_var ~state:State.Initialized
@@ -528,14 +525,14 @@ let bind_declare_fun =
     IntersectionT (reason, InterRep.make seen_t new_t [])
   in
 
-  fun cx name t reason ->
+  fun cx name t loc ->
     if not (is_excluded name)
     then (
       let scope = peek_scope () in
       match Scope.get_entry name scope with
       | None ->
         let entry =
-          Entry.new_var t ~loc:(loc_of_reason reason) ~state:State.Initialized
+          Entry.new_var t ~loc ~state:State.Initialized
         in
         Scope.add_entry name entry scope
 
@@ -552,7 +549,7 @@ let bind_declare_fun =
 
         | _ ->
           (* declare function shadows some other kind of binding *)
-          already_bound_error cx name prev reason
+          already_bound_error cx name prev loc
         )
     )
 
@@ -561,10 +558,10 @@ let bind_declare_fun =
    recursive internal refs: hoisted things (vars and types) become declared
    immediately on binding.
  *)
-let declare_value_entry kind cx name reason =
+let declare_value_entry kind cx name loc =
   if not (is_excluded name)
   then Entry.(
-    let scope, entry = find_entry cx name reason in
+    let scope, entry = find_entry cx name loc in
     match entry with
     | Value v when
         Entry.kind_of_value v = kind &&
@@ -572,7 +569,7 @@ let declare_value_entry kind cx name reason =
       let new_entry = Value { v with value_state = State.Declared } in
       Scope.add_entry name new_entry scope
     | _ ->
-      already_bound_error cx name entry reason
+      already_bound_error cx name entry loc
   )
 
 let declare_let = declare_value_entry Entry.(Let LetVarBinding)
@@ -582,10 +579,10 @@ let declare_const = declare_value_entry Entry.(Const ConstVarBinding)
 
 (* helper - update var entry to reflect assignment/initialization *)
 (* note: here is where we understand that a name can be multiply var-bound *)
-let init_value_entry kind cx name ~has_anno specific reason =
+let init_value_entry kind cx name ~has_anno specific loc =
   if not (is_excluded name)
   then Entry.(
-    let scope, entry = find_entry cx name reason in
+    let scope, entry = find_entry cx name loc in
     match kind, entry with
     | Var, Value ({ Entry.kind = Var; _ } as v)
     | Let _, Value ({ Entry.kind = Let _;
@@ -616,10 +613,10 @@ let init_fun = init_implicit_let ~has_anno:false Entry.FunctionBinding
 let init_const = init_value_entry Entry.(Const ConstVarBinding)
 
 (* update type alias to reflect initialization in code *)
-let init_type cx name _type reason =
+let init_type cx name _type loc =
   if not (is_excluded name)
   then Entry.(
-    let scope, entry = find_entry cx name reason in
+    let scope, entry = find_entry cx name loc in
     match entry with
     | Type ({ type_state = State.Declared; _ } as t)->
       Flow_js.flow_t cx (_type, t._type);
@@ -633,10 +630,10 @@ let init_type cx name _type reason =
     )
 
 (* treat a var's declared (annotated) type as an initializer *)
-let pseudo_init_declared_type cx name reason =
+let pseudo_init_declared_type cx name loc =
   if not (is_excluded name)
   then Entry.(
-    let scope, entry = find_entry cx name reason in
+    let scope, entry = find_entry cx name loc in
     match entry with
     | Value value_binding ->
       let entry = Value { value_binding with
@@ -695,10 +692,10 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
 )
 
 (* emit tdz error for value entry *)
-let tdz_error cx name reason v = Entry.(
+let tdz_error cx name loc v = Entry.(
   (* second clause of error message is due to switch scopes *)
   let msg = FlowError.EReferencedBeforeDeclaration in
-  binding_error msg cx name (Value v) reason
+  binding_error msg cx name (Value v) loc
 )
 
 (* helper for read/write tdz checks *)
@@ -709,16 +706,16 @@ let allow_forward_ref = Scope.Entry.(function
 )
 
 (* helper - does semantic checking and returns entry type *)
-let read_entry ~track_ref ~lookup_mode ~specific cx name reason =
-  let scope, entry = find_entry cx name reason in
+let read_entry ~track_ref ~lookup_mode ~specific cx name ?desc loc =
+  let scope, entry = find_entry cx name ?desc loc in
   if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
-    (Entry.loc entry) (loc_of_reason reason);
+    (Entry.entry_loc entry) loc;
   Entry.(match entry with
 
   | Type _ when lookup_mode != ForType ->
     let msg = FlowError.ETypeInValuePosition in
-    binding_error msg cx name entry reason;
-    AnyT.at (Entry.loc entry)
+    binding_error msg cx name entry loc;
+    AnyT.at (entry_loc entry)
 
   | Type t ->
     t._type
@@ -728,7 +725,7 @@ let read_entry ~track_ref ~lookup_mode ~specific cx name reason =
     | { Entry.kind; value_state = State.Undeclared; value_declare_loc; _ }
       when lookup_mode = ForValue && not (allow_forward_ref kind)
       && same_activation scope ->
-      tdz_error cx name reason v;
+      tdz_error cx name loc v;
       AnyT.at value_declare_loc
     | _ ->
       Changeset.change_var (scope.id, name, Changeset.Read);
@@ -761,21 +758,21 @@ let get_current_env_refi key =
 
 (* get var's specific type (and track the reference) *)
 let get_var ?(lookup_mode=ForValue) =
-  read_entry ~track_ref:true ~lookup_mode ~specific:true
+  read_entry ~track_ref:true ~lookup_mode ~specific:true ?desc:None
 
 (* query var's specific type *)
 let query_var ~track_ref ?(lookup_mode=ForValue) =
   read_entry ~track_ref ~lookup_mode ~specific:true
 
-let get_internal_var cx name reason =
-  query_var ~track_ref:false cx (internal_name name) reason
+let get_internal_var cx name loc =
+  query_var ~track_ref:false cx (internal_name name) loc
 
 (* get var's general type - for annotated vars, this is the
    annotated type, and for others it's the union of all
    types assigned to the var throughout its lifetime.
  *)
 let get_var_declared_type ?(lookup_mode=ForValue) =
-  read_entry ~track_ref:false ~lookup_mode ~specific:false
+  read_entry ~track_ref:false ~lookup_mode ~specific:false ?desc:None
 
 (* Unify declared type with another type. This is useful for allowing forward
    references in declared types to other types declared later in scope. *)
@@ -798,28 +795,28 @@ let is_global_var _cx name =
   in
   loop !scopes
 
-(* get var type, with location of given reason used in type's reason *)
-let var_ref ?(lookup_mode=ForValue) cx name reason =
-  let t = query_var ~track_ref:true ~lookup_mode cx name reason in
-  Flow_js.reposition cx reason t
+(* get var type, with given location used in type's reason *)
+let var_ref ?(lookup_mode=ForValue) cx name ?desc loc =
+  let t = query_var ~track_ref:true ~lookup_mode cx name ?desc loc in
+  Flow_js.reposition cx loc t
 
 (* get refinement entry *)
-let get_refinement cx key reason =
+let get_refinement cx key loc =
   match find_refi_in_var_scope key with
-  | Some (_, { refined; _ }) -> Some (Flow_js.reposition cx reason refined)
+  | Some (_, { refined; _ }) ->
+      Some (Flow_js.reposition cx loc refined)
   | _ -> None
 
 (* helper: update let or var entry *)
-let update_var ?(track_ref=false) op cx name specific reason =
-  let scope, entry = find_entry cx name reason in
+let update_var ?(track_ref=false) op cx name specific loc =
+  let scope, entry = find_entry cx name loc in
   if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
-    (Entry.loc entry) (loc_of_reason reason);
-  let value_assign_loc = loc_of_reason reason in
+    (Entry.entry_loc entry) loc;
   Entry.(match entry with
   | Value ({
       Entry.kind = (Let _ as kind); value_state = State.Undeclared; _
     } as v) when not (allow_forward_ref kind) && same_activation scope ->
-    tdz_error cx name reason v;
+    tdz_error cx name loc v;
     None
   | Value ({ Entry.kind = Let _ | Var; _ } as v) ->
     let change = scope.id, name, op in
@@ -835,41 +832,41 @@ let update_var ?(track_ref=false) op cx name specific reason =
       v with Entry.
       value_state = State.Initialized;
       specific;
-      value_assign_loc;
+      value_assign_loc = loc;
     } in
     Scope.add_entry name update scope;
     Some change
   | Value { Entry.kind = Const ConstVarBinding; _ } ->
     let msg = FlowError.EConstReassigned in
-    binding_error msg cx name entry reason;
+    binding_error msg cx name entry loc;
     None
   | Value { Entry.kind = Const ConstImportBinding; _; } ->
     let msg = FlowError.EImportReassigned in
-    binding_error msg cx name entry reason;
+    binding_error msg cx name entry loc;
     None
   | Value { Entry.kind = Const ConstParamBinding; _ } ->
     (* TODO: remove extra info when surface syntax is added *)
     let msg = FlowError.EConstParamReassigned in
-    binding_error msg cx name entry reason;
+    binding_error msg cx name entry loc;
     None
   | Type _ ->
     let msg = FlowError.ETypeAliasInValuePosition in
-    binding_error msg cx name entry reason;
+    binding_error msg cx name entry loc;
     None
   )
 
 (* update var by direct assignment *)
 let set_var = update_var ~track_ref:true Changeset.Write
 
-let set_internal_var cx name t reason =
-  update_var ~track_ref:false Changeset.Write cx (internal_name name) t reason
+let set_internal_var cx name t loc =
+  update_var ~track_ref:false Changeset.Write cx (internal_name name) t loc
 
 (* update var by refinement test *)
 let refine_var = update_var Changeset.Refine
 
 (* set const's specific type to reflect a refinement test (internal) *)
-let refine_const cx name specific reason =
-  let scope, entry = find_entry cx name reason in
+let refine_const cx name specific loc =
+  let scope, entry = find_entry cx name loc in
   Entry.(match entry with
   | Value ({ Entry.kind = Const _; _ } as v) ->
     let change = scope.id, name, Changeset.Refine in
@@ -908,15 +905,15 @@ let envs_congruent envs =
 
 (* find scopes with a given id in a list of envs.
    envs are assumed congruent amd assumed to contain scope id *)
-let rec find_scope cx reason envs scope_id =
+let rec find_scope cx loc envs scope_id =
   match envs with
   | (scope0 :: _) :: _ ->
     if scope0.id = scope_id
     then List.(map hd envs)
-    else find_scope cx reason List.(map tl envs) scope_id
+    else find_scope cx loc List.(map tl envs) scope_id
   | _ ->
     assert_false (spf "find_scopes %s: scope %d not found. head env %s"
-      (string_of_reason reason) scope_id
+      (string_of_loc loc) scope_id
       (string_of_env cx (List.hd envs)))
 
 (* The following function takes a changset and a triple of environments -
@@ -925,12 +922,13 @@ let rec find_scope cx reason envs scope_id =
 let merge_env =
 
   (* find scope triple in env triple *)
-  let find_scope_triple cx reason (env0, env1, env2) id =
-    let lst = find_scope cx reason [env0; env1; env2] id in
+  let find_scope_triple cx loc (env0, env1, env2) id =
+    let lst = find_scope cx loc [env0; env1; env2] id in
     List.(nth lst 0, nth lst 1, nth lst 2)
   in
 
-  let create_union cx reason l1 l2 =
+  let create_union cx loc name l1 l2 =
+    let reason = mk_reason (RIdentifier name) loc in
     Flow_js.mk_tvar_where cx reason (fun tvar ->
       Flow_js.flow cx (l1, UseT (Internal MergeEnv, tvar));
       Flow_js.flow cx (l2, UseT (Internal MergeEnv, tvar));
@@ -938,7 +936,7 @@ let merge_env =
   in
 
   (* merge_entry helper - calculate new specific type *)
-  let merge_specific cx reason name (specific0, general0) specific1 specific2 =
+  let merge_specific cx loc name (specific0, general0) specific1 specific2 =
     (** if both children are unchanged, or 1 child is unchanged and the other
         is bottom (EmptyT), then we can avoid creating a merged specific *)
     if (specific0 = specific1 && (specific0 = specific2 || is_bot specific2))
@@ -949,8 +947,7 @@ let merge_env =
     then general0
     (* general case *)
     else
-      let reason = replace_reason_const (RCustom name) reason in
-      let tvar = create_union cx reason specific1 specific2 in
+      let tvar = create_union cx loc name specific1 specific2 in
       Flow_js.flow cx (tvar, UseT (Internal MergeEnv, general0));
       tvar
   in
@@ -975,8 +972,8 @@ let merge_env =
     | _ -> orig.value_state
   ) in
 
-  let merge_entry cx reason envs ((scope_id, name, _) as entry_ref) =
-    let scope0, scope1, scope2 = find_scope_triple cx reason envs scope_id in
+  let merge_entry cx loc envs ((scope_id, name, _) as entry_ref) =
+    let scope0, scope1, scope2 = find_scope_triple cx loc envs scope_id in
     let get = get_entry name in
     Entry.(match get scope0, get scope1, get scope2 with
     (* merge child var and let types back to original *)
@@ -984,7 +981,7 @@ let merge_env =
       let { specific = s0; general = g0; _ } = orig in
       let { specific = s1; _ } = child1 in
       let { specific = s2; _ } = child2 in
-      let specific = merge_specific cx reason name (s0, g0) s1 s2 in
+      let specific = merge_specific cx loc name (s0, g0) s1 s2 in
       let value_state = merge_states orig child1 child2 in
       (* replace entry if anything changed *)
       if specific == s0 && value_state = orig.value_state
@@ -994,7 +991,7 @@ let merge_env =
     (* type aliases can't be refined or reassigned, shouldn't be here *)
     | Some Type _, Some Type _, Some Type _ ->
       assert_false (spf "merge_env %s: type alias %s found in changelist"
-        (string_of_reason reason) name)
+        (string_of_loc loc) name)
     (* global lookups may leave uneven new entries, which we can forget *)
     | _, _, _ when is_global scope0 ->
       ()
@@ -1003,7 +1000,7 @@ let merge_env =
       assert_false (spf
         "%smerge_entry %s %s: missing from scopes:\n%s\n%s\n%s"
         (Context.pid_prefix cx)
-        (string_of_reason reason)
+        (string_of_loc loc)
         (Changeset.string_of_entry_ref entry_ref)
         (Debug_js.string_of_scope cx scope0)
         (Debug_js.string_of_scope cx scope1)
@@ -1021,21 +1018,21 @@ let merge_env =
       | Some e -> spf "Some %s" Entry.(string_of_kind e)
       in assert_false (spf
         "merge_env %s: non-uniform distribution of entry %s: %s, %s, %s"
-        (string_of_reason reason)
+        (string_of_loc loc)
         name
         (print_entry_kind_opt orig)
         (print_entry_kind_opt child1)
         (print_entry_kind_opt child2))
   ) in
 
-  let merge_refi cx reason envs (scope_id, key, _) =
-    let scope0, scope1, scope2 = find_scope_triple cx reason envs scope_id in
+  let merge_refi cx loc envs (scope_id, key, _) =
+    let scope0, scope1, scope2 = find_scope_triple cx loc envs scope_id in
     let get = get_refi key in
     match get scope0, get scope1, get scope2 with
     (* evenly distributed refinements are merged *)
     | Some base, Some child1, Some child2 ->
       let name = Key.string_of_key key in
-      let refined = merge_specific cx reason name (base.refined, base.original)
+      let refined = merge_specific cx loc name (base.refined, base.original)
         child1.refined child2.refined in
       if refined == base.refined
       then ()
@@ -1044,11 +1041,9 @@ let merge_env =
     (* refi was introduced in both children *)
     | None, Some child1, Some child2 ->
       let name = Key.string_of_key key in
-      let reason = replace_reason_const (RCustom name) reason in
-      let refined = create_union cx reason child1.refined child2.refined in
-      let original = create_union cx reason child1.original child2.original in
-      let refi_loc = loc_of_reason reason in
-      let refi = { refi_loc; refined; original } in
+      let refined = create_union cx loc name child1.refined child2.refined in
+      let original = create_union cx loc name child1.original child2.original in
+      let refi = { refi_loc = loc; refined; original } in
       add_refi key refi scope0
 
     (* refi was cleared in a child env. clear from original *)
@@ -1061,29 +1056,29 @@ let merge_env =
   in
 
   (* merge entries and refis found in changeset *)
-  fun cx reason (env0, env1, env2) changeset ->
+  fun cx loc (env0, env1, env2) changeset ->
     begin if not (envs_congruent [env0; env1; env2]) then assert_false
       (spf "merge_env %s: envs not congruent: %d %d %d"
-        (string_of_reason reason)
+        (string_of_loc loc)
         (List.length env0) (List.length env1) (List.length env2))
     end;
     changeset |> Changeset.iter_type_updates
-      (merge_entry cx reason (env0, env1, env2))
-      (merge_refi cx reason (env0, env1, env2))
+      (merge_entry cx loc (env0, env1, env2))
+      (merge_refi cx loc (env0, env1, env2))
 
 (* copy changes from env2 into env1 *)
 let copy_env =
 
   (* find sscope pair in env pair *)
-  let find_scope_pair cx reason (env0, env1) id =
-    let lst = find_scope cx reason [env0; env1] id in
+  let find_scope_pair cx loc (env0, env1) id =
+    let lst = find_scope cx loc [env0; env1] id in
     List.(nth lst 0, nth lst 1)
   in
 
   (* look for and copy entry, starting in topmost scope *)
-  let copy_entry cx reason envs (scope_id, name, _) =
+  let copy_entry cx loc envs (scope_id, name, _) =
 
-    let scope1, scope2 = find_scope_pair cx reason envs scope_id in
+    let scope1, scope2 = find_scope_pair cx loc envs scope_id in
     let get = get_entry name in
     Entry.(match get scope1, get scope2 with
     (* for values, flow env2's specific type into env1's specific type *)
@@ -1103,7 +1098,7 @@ let copy_env =
     (* type aliases shouldn't be here *)
     | Some Type _, Some Type _ ->
       assert_false (spf "copy_env %s: type alias %s found in changelist"
-        (string_of_reason reason) name)
+        (string_of_loc loc) name)
 
     (* global lookups may leave new entries in env2, or orphan changes *)
     (* ...which we can forget *)
@@ -1123,15 +1118,15 @@ let copy_env =
       | Some e -> spf "Some %s" (Entry.string_of_kind e)
       in assert_false (spf
         "copy_env %s: non-uniform distribution of entry %s: %s, %s"
-        (string_of_reason reason)
+        (string_of_loc loc)
         name
         (print_entry_kind_opt entry1)
         (print_entry_kind_opt entry2))
   ) in
 
   (* look for and copy refinement in top scope only *)
-  let copy_refi cx reason envs (scope_id, key, _) =
-    let scope0, scope1 = find_scope_pair cx reason envs scope_id in
+  let copy_refi cx loc envs (scope_id, key, _) =
+    let scope0, scope1 = find_scope_pair cx loc envs scope_id in
     let get = get_refi key in
     match get scope0, get scope1 with
     (* flow child refi's type back to parent *)
@@ -1143,13 +1138,13 @@ let copy_env =
   in
 
   (* copy entries and refis bound to names and keys, respectively *)
-  fun cx reason (env1, env2) changeset ->
+  fun cx loc (env1, env2) changeset ->
     (if envs_congruent [env1; env2] then ()
     else assert_false (spf "copy_env %s: envs not congruent"
-      (string_of_reason reason)));
+      (string_of_loc loc)));
     changeset |> Changeset.iter_type_updates
-      (copy_entry cx reason (env1, env2))
-      (copy_refi cx reason (env1, env2))
+      (copy_entry cx loc (env1, env2))
+      (copy_refi cx loc (env1, env2))
 
 (* in the top scope, convert specific types to tvars with former
    specific type as incoming lower bound, and general type as
@@ -1158,37 +1153,37 @@ let copy_env =
  *)
 let widen_env =
 
-  let widened cx reason name specific general =
+  let widened cx loc name specific general =
     if specific = general
     then None
     else
-      let reason = replace_reason_const (RCustom name) reason in
+      let reason = mk_reason (RIdentifier name) loc in
       let tvar = Flow_js.mk_tvar cx reason in
       Flow_js.flow cx (specific, UseT (Internal WidenEnv, tvar));
       Flow_js.flow cx (tvar, UseT (Internal WidenEnv, general));
       Some tvar
   in
 
-  let widen_var cx reason name ({ Entry.specific; general; _ } as var) =
-    match widened cx reason name specific general with
+  let widen_var cx loc name ({ Entry.specific; general; _ } as var) =
+    match widened cx loc name specific general with
     | None -> var
     | Some specific -> { var with Entry.specific }
   in
 
-  let widen_refi cx reason name ({ refined; original; _ } as refi) =
-    match widened cx reason name refined original with
+  let widen_refi cx loc name ({ refined; original; _ } as refi) =
+    match widened cx loc name refined original with
     | None -> refi
     | Some refined -> { refi with refined }
   in
 
-  fun cx reason ->
+  fun cx loc ->
     iter_local_scopes (fun scope ->
       scope |> Scope.update_entries Entry.(fun name -> function
-        | Value var -> Value (widen_var cx reason name var)
+        | Value var -> Value (widen_var cx loc name var)
         | entry -> entry
       );
       scope |> Scope.update_refis (fun key refi ->
-        widen_refi cx reason (Key.string_of_key key) refi)
+        widen_refi cx loc (Key.string_of_key key) refi)
     )
 
 (* The protocol around havoc has changed a few times.
@@ -1208,8 +1203,8 @@ let havoc_all () =
    TODO rework the early-exit stuff to not break invariants. Until then it'll
    remain a source of bugs.
  *)
-let reset_current_activation reason =
-  iter_local_scopes (Scope.reset reason)
+let reset_current_activation loc =
+  iter_local_scopes (Scope.reset loc)
 
 (* clear refinement info for (topmost bindings of) given names in env *)
 let havoc_vars = Scope.(
@@ -1266,8 +1261,7 @@ let havoc_heap_refinements_with_propname name =
    (broadly, assignment of function values) may provoke havoc_ctx
    into clearing the refinement we're in the process of installing.
  *)
-let add_heap_refinement op key reason refined original =
-  let refi_loc = loc_of_reason reason in
+let add_heap_refinement op key refi_loc refined original =
   let refi = { refi_loc; refined; original } in
   let base, _ = key in
   let scope, _ = find_entry_in_var_scope base in
@@ -1285,7 +1279,7 @@ let refine_expr = add_heap_refinement Changeset.Refine
    only necessary for fresh pseudovars like heap refinements -
    others can be obtained via query_var.
  *)
-let refine_with_preds cx reason preds orig_types =
+let refine_with_preds cx loc preds orig_types =
   let mk_refi_type orig_type pred refi_reason =
     Flow_js.mk_tvar_where cx refi_reason (fun refined_type ->
       Flow_js.flow cx (orig_type, PredicateT (pred, refined_type)))
@@ -1297,20 +1291,19 @@ let refine_with_preds cx reason preds orig_types =
       let refi_reason =
         let pred_str = string_of_predicate pred in
         let rstr = spf "identifier %s when %s" name pred_str in
-        replace_reason_const (RCustom rstr) reason
+        mk_reason (RCustom rstr) loc
       in
-      Entry.(match find_entry cx name reason with
+      Entry.(match find_entry cx name loc with
       | _, Value v ->
         let orig_type =
-          let get_reason = replace_reason_const (RIdentifier name) reason in
-          query_var ~track_ref:false cx name get_reason
+          query_var ~track_ref:false cx name loc
         in
         let refi_type = mk_refi_type orig_type pred refi_reason in
         let refine = match Entry.kind_of_value v with
           | Const _ -> refine_const
           | _ -> refine_var
         in
-        begin match refine cx name refi_type refi_reason with
+        begin match refine cx name refi_type loc with
         | Some change -> Changeset.add_var change acc
         | None -> acc
         end
@@ -1324,11 +1317,11 @@ let refine_with_preds cx reason preds orig_types =
         let pred_str = string_of_predicate pred in
         let rstr = spf "expression %s when %s"
           (Key.string_of_key key) pred_str in
-        replace_reason_const (RCustom rstr) reason
+        mk_reason (RCustom rstr) loc
       in
       let orig_type = Key_map.find_unsafe key orig_types in
       let refi_type = mk_refi_type orig_type pred refi_reason in
-      let change = refine_expr key refi_reason refi_type orig_type in
+      let change = refine_expr key loc refi_type orig_type in
       Changeset.add_refi change acc
   in
   Key_map.fold refine_with_pred preds Changeset.empty
@@ -1337,17 +1330,17 @@ let refine_with_preds cx reason preds orig_types =
    augmented by the given refinement map, then merge the final
    state of the cloned environment back into the reinstated
    original *)
-let in_refined_env cx reason preds orig_types f =
+let in_refined_env cx loc preds orig_types f =
   let oldset = Changeset.clear () in
   let orig_env = peek_env () in
   let new_env = clone_env orig_env in
-  update_env cx reason new_env;
-  let _ = refine_with_preds cx reason preds orig_types in
+  update_env cx loc new_env;
+  let _ = refine_with_preds cx loc preds orig_types in
 
   let result = f () in
 
   let newset = Changeset.merge oldset in
-  merge_env cx reason (orig_env, orig_env, new_env) newset;
-  update_env cx reason orig_env;
+  merge_env cx loc (orig_env, orig_env, new_env) newset;
+  update_env cx loc orig_env;
 
   result

@@ -25,7 +25,7 @@ val tvar_with_constraint: Context.t -> ?trace:Trace.t -> ?derivable:bool -> Type
 
 val unify: Context.t -> Type.t -> Type.t -> unit
 
-val reposition: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
+val reposition: Context.t -> ?trace:Trace.t -> Loc.t -> Type.t -> Type.t
 
 (* constraint utils *)
 val filter_optional: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
@@ -42,13 +42,16 @@ val mk_tvar_derivable_where: Context.t -> reason -> (Type.t -> unit) -> Type.t
 
 val get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
 
+val resolve_spread_list: Context.t -> reason_op:Reason.t -> Type.unresolved_param list -> Type.spread_resolve -> unit
+
 (* polymorphism *)
 
 val subst: Context.t -> ?force:bool -> (Type.t SMap.t) -> Type.t -> Type.t
 val generate_tests: Context.t -> reason -> Type.typeparam list -> (Type.t SMap.t -> unit)
   -> unit
 
-val check_polarity: Context.t -> Type.polarity -> Type.t -> unit
+val check_polarity:
+  Context.t -> ?trace:Trace.t -> Type.polarity -> Type.t -> unit
 
 (* selectors *)
 
@@ -58,18 +61,33 @@ val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
 
 val mk_methodtype :
   Type.t -> Type.t list ->
+  rest_param:(string option * Loc.t * Type.t) option -> def_reason: Reason.t ->
   ?frame:int -> ?params_names:string list -> ?is_predicate:bool ->
   Type.t -> Type.funtype
 
+val mk_methodcalltype :
+  Type.t -> Type.call_arg list ->
+  ?frame:int ->
+  ?call_strict_arity:bool ->
+  Type.t -> Type.funcalltype
+
 val mk_boundfunctiontype :
   Type.t list ->
+  rest_param:(string option * Loc.t * Type.t) option -> def_reason: Reason.t ->
   ?frame:int -> ?params_names:string list -> ?is_predicate:bool ->
   Type.t -> Type.funtype
 
 val mk_functiontype :
   Type.t list ->
+  rest_param:(string option * Loc.t * Type.t) option -> def_reason: Reason.t ->
   ?frame:int -> ?params_names:string list -> ?is_predicate:bool ->
   Type.t -> Type.funtype
+
+val mk_functioncalltype :
+  Type.call_arg list ->
+  ?frame:int ->
+  ?call_strict_arity:bool ->
+  Type.t -> Type.funcalltype
 
 val dummy_this : Type.t
 val dummy_static : reason -> Type.t
@@ -81,9 +99,9 @@ val mk_objecttype : ?flags:Type.flags ->
 val mk_object_with_proto : Context.t -> reason ->
   ?dict:Type.dicttype ->
   Type.t -> Type.t
+
 val mk_object_with_map_proto : Context.t -> reason ->
-  ?sealed:bool ->
-  ?frozen:bool ->
+  ?sealed:bool -> ?exact:bool -> ?frozen:bool ->
   ?dict:Type.dicttype -> Type.Properties.t -> Type.t -> Type.t
 
 val mk_object: Context.t -> reason -> Type.t
@@ -100,7 +118,8 @@ val mk_default: Context.t -> reason ->
 val lookup_module: Context.t -> string -> Type.t
 
 (* contexts *)
-val fresh_context: Context.metadata -> Loc.filename -> Modulename.t -> Context.t
+val fresh_context: Context.metadata -> Loc.filename -> string -> Context.t
+val add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit
 
 (* builtins *)
 
@@ -122,16 +141,16 @@ val resolve_type: Context.t -> Type.t -> Type.t
 val possible_types: Context.t -> Constraint.ident -> Type.t list
 val possible_types_of_type: Context.t -> Type.t -> Type.t list
 
-module Autocomplete : sig
-  type member_result =
+module Members : sig
+  type t =
     | Success of Type.t SMap.t
     | SuccessModule of Type.t SMap.t * (Type.t option)
     | FailureMaybeType
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
-  val command_result_of_member_result: member_result ->
+  val to_command_result: t ->
     (Type.t SMap.t, string) Utils_js.ok_or_err
 
-  val extract_members: Context.t -> Type.t -> member_result
+  val extract: Context.t -> Type.t -> t
 end

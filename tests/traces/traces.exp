@@ -13,16 +13,16 @@ Trace:
   3: function f0(x) { g0(x) }
                          ^ NumT [number]
   3: function f0(x) { g0(x) }
-                         ^ ~> UseT(UnknownUse, OpenT) [identifier `x`] (from path 3)
+                         ^ ~> UseT(UnknownUse, OpenT) [parameter `x`] (from path 3)
   3: function f0(x) { g0(x) }
-                         ^ ~> ReposLowerT [identifier `x`] (from [not shown])
+                         ^ ~> ReposLowerT [parameter `x`] (from [not shown])
 * path 3:
   4: f0(0);
         ^ NumT [number]
   3: function f0(x) { g0(x) }
                  ^ ~> UseT(FunCallParam, OpenT) [parameter `x`] (from [not shown])
   3: function f0(x) { g0(x) }
-                         ^ ~> ReposLowerT [identifier `x`]
+                         ^ ~> ReposLowerT [parameter `x`]
 
 Traces.js:8
   8: function f1(x, y) { g1(x, y) }
@@ -39,28 +39,88 @@ Trace:
   8: function f1(x, y) { g1(x, y) }
                                ^ NumT [number]
   8: function f1(x, y) { g1(x, y) }
-                               ^ ~> UseT(UnknownUse, OpenT) [identifier `y`] (from path 3)
+                               ^ ~> UseT(UnknownUse, OpenT) [parameter `y`] (from path 3)
   8: function f1(x, y) { g1(x, y) }
-                               ^ ~> ReposLowerT [identifier `y`] (from [not shown])
+                               ^ ~> ReposLowerT [parameter `y`] (from [not shown])
 * path 3:
   9: f1("hey", 0);
                ^ NumT [number]
   8: function f1(x, y) { g1(x, y) }
                     ^ ~> UseT(FunCallParam, OpenT) [parameter `y`] (from [not shown])
   8: function f1(x, y) { g1(x, y) }
-                               ^ ~> ReposLowerT [identifier `y`]
+                               ^ ~> ReposLowerT [parameter `y`]
 
 Traces.js:14
  14: f2(function(x) { return x * x });
                              ^ string. The operand of an arithmetic operation must be a number.
+Trace:
+* path 1:
+ 14: f2(function(x) { return x * x });
+                             ^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                             ^ ~> UseT(UnknownUse, OpenT) [parameter `x`] (from path 2)
+ 14: f2(function(x) { return x * x });
+                             ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+* path 2:
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                 ^ ~> UseT(FunCallParam, OpenT) [parameter `x`] (from path 3)
+ 14: f2(function(x) { return x * x });
+                             ^ ~> ReposLowerT [parameter `x`]
+* path 3:
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
 Traces.js:14
  14: f2(function(x) { return x * x });
                                  ^ string. The operand of an arithmetic operation must be a number.
+Trace:
+* path 1:
+ 14: f2(function(x) { return x * x });
+                                 ^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                                 ^ ~> UseT(UnknownUse, OpenT) [parameter `x`] (from path 2)
+ 14: f2(function(x) { return x * x });
+                             ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+* path 2:
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                 ^ ~> UseT(FunCallParam, OpenT) [parameter `x`] (from path 3)
+ 14: f2(function(x) { return x * x });
+                                 ^ ~> ReposLowerT [parameter `x`]
+* path 3:
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
 Traces.js:19
  19: function double(n) { return n * 2 }
                                  ^ string. The operand of an arithmetic operation must be a number.
+Trace:
+* path 1:
+ 19: function double(n) { return n * 2 }
+                                 ^ StrT [string]
+ 19: function double(n) { return n * 2 }
+                                 ^ ~> UseT(UnknownUse, OpenT) [parameter `n`] (from path 2)
+ 19: function double(n) { return n * 2 }
+                                 ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+* path 2:
+ 17: function g3(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 19: function double(n) { return n * 2 }
+                     ^ ~> UseT(FunCallParam, OpenT) [parameter `n`] (from path 3)
+ 19: function double(n) { return n * 2 }
+                                 ^ ~> ReposLowerT [parameter `n`]
+* path 3:
+ 17: function g3(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 17: function g3(ylam: (s:string) => number) { }
+                          ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
 Traces2.js:17
  17:     return <B bar="hey"/>;

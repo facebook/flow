@@ -24,7 +24,7 @@ class.js:28
 
 class.js:49
  49:       var x: number = yield; // error: string ~> number
-                           ^^^^^^ string. This type is incompatible with
+                           ^^^^^ string. This type is incompatible with
  49:       var x: number = yield; // error: string ~> number
                   ^^^^^^ number
 
@@ -63,8 +63,8 @@ class.js:122
 class.js:125
 125: examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
                                               ^^ string. This type is incompatible with
-549: type Iterator<+T> = $Iterator<T,void,void>;
-                                          ^^^^ undefined. See lib: <BUILTINS>/core.js:549
+557: type Iterator<+T> = $Iterator<T,void,void>;
+                                          ^^^^ undefined. See lib: <BUILTINS>/core.js:557
 
 class.js:128
 128:   (x : string) // error: number ~> string
@@ -138,7 +138,7 @@ generators.js:35
 
 generators.js:65
  65:     var x: number = yield; // error: string ~> number
-                         ^^^^^^ string. This type is incompatible with
+                         ^^^^^ string. This type is incompatible with
  65:     var x: number = yield; // error: string ~> number
                 ^^^^^^ number
 
@@ -157,8 +157,8 @@ generators.js:87
 generators.js:94
  94: delegate_next_iterable([]).next(""); // error: Iterator has no next value
                                      ^^ string. This type is incompatible with
-549: type Iterator<+T> = $Iterator<T,void,void>;
-                                          ^^^^ undefined. See lib: <BUILTINS>/core.js:549
+557: type Iterator<+T> = $Iterator<T,void,void>;
+                                          ^^^^ undefined. See lib: <BUILTINS>/core.js:557
 
 generators.js:100
 100:   (x : string) // error: number ~> string
@@ -177,6 +177,18 @@ generators.js:128
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
 128:   (multiple_return_result.value: void); // error: number|string ~> void
                                       ^^^^ undefined
+
+refi.js:5
+  5:   (x.a: string); // error
+        ^^^ undefined. This type is incompatible with
+  5:   (x.a: string); // error
+             ^^^^^^ string
+
+refi.js:22
+ 22:   (x.a: string); // error
+        ^^^ undefined. This type is incompatible with
+ 22:   (x.a: string); // error
+             ^^^^^^ string
 
 return.js:5
   5:   (ret.value: void); // error: string | number ~> void
@@ -215,4 +227,4 @@ throw.js:24
                             ^^^^^^ string
 
 
-Found 35 errors
+Found 37 errors

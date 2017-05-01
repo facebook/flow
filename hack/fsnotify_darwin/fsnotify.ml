@@ -11,7 +11,7 @@
 open Core
 
 module SSet = Set.Make(String)
-exception Error of string * int
+exception Error of string * Unix.error
 
 type watch = string
 type env = {

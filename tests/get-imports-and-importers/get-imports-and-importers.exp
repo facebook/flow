@@ -1,8 +1,0 @@
-{"a.js":{"not_flow":false,"requirements":[]}}
-{"b":{"not_flow":false,"requirements":[{"import":"a.js","loc":{"source":"b.js","type":"SourceFile","start":{"line":5,"column":1,"offset":38},"end":{"line":5,"column":14,"offset":52}},"path":"b.js","line":5,"endline":5,"start":1,"end":14}]}}
-{"b.js":{"not_flow":false,"requirements":[{"import":"a.js","loc":{"source":"b.js","type":"SourceFile","start":{"line":5,"column":1,"offset":38},"end":{"line":5,"column":14,"offset":52}},"path":"b.js","line":5,"endline":5,"start":1,"end":14}]}}
-{"c.js":{"not_flow":false,"requirements":[{"import":"a.js","loc":{"source":"c.js","type":"SourceFile","start":{"line":2,"column":1,"offset":9},"end":{"line":2,"column":17,"offset":26}},"path":"c.js","line":2,"endline":2,"start":1,"end":17},{"import":"b","loc":{"source":"c.js","type":"SourceFile","start":{"line":3,"column":1,"offset":28},"end":{"line":3,"column":12,"offset":40}},"path":"c.js","line":3,"endline":3,"start":1,"end":12}]}}
-{"a.js":["b","c.js"]}
-{"b":["c.js"]}
-{"b.js":["c.js"]}
-{"c.js":[]}

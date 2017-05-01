@@ -11,7 +11,7 @@ case "$TRAVIS_OS_NAME" in
   osx)
     printf "travis_fold:start:brew_install\nInstalling brew\n"
     brew update
-    brew install aspcud awscli
+    brew install aspcud awscli yarn
     printf "travis_fold:end:brew_install\n"
     ;;
   *)
@@ -19,8 +19,3 @@ case "$TRAVIS_OS_NAME" in
     nvm install 6
     nvm use 6
 esac
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-# Install Yarn. not global so it can be cached easily.
-(cd $DIR; npm install)

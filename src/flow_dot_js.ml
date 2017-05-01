@@ -14,6 +14,11 @@ let parse_content file content =
   }) in
   Parser_flow.program_file ~fail:false ~parse_options content (Some file)
 
+let calc_requires ast =
+  let mapper = new Require.mapper false in
+  let _ = mapper#program ast in
+  mapper#requires
+
 let array_of_list f lst =
   Array.of_list (List.map f lst)
 
@@ -43,14 +48,16 @@ let load_lib_files ~master_cx ~metadata files
       let lib_content = Sys_utils.cat file in
       let lib_file = Loc.LibFile file in
       match parse_content lib_file lib_content with
-      | (_, statements, comments), [] ->
+      | ast, [] ->
 
         let cx, syms = Type_inference_js.infer_lib_file
           ~metadata ~exclude_syms
-          lib_file statements comments
+          lib_file ast
         in
 
-        Merge_js.merge_lib_file cx master_cx save_infer_errors save_suppressions;
+        let errs, suppressions = Merge_js.merge_lib_file cx master_cx in
+        save_infer_errors lib_file errs;
+        save_suppressions lib_file suppressions;
 
         (* symbols loaded from this file are suppressed
            if found in later ones *)
@@ -59,8 +66,10 @@ let load_lib_files ~master_cx ~metadata files
         exclude_syms, result
 
       | _, parse_errors ->
-        let converted = List.fold_left (fun acc err ->
-          Errors.(ErrorSet.add (parse_error_to_flow_error err) acc)
+        let converted = List.fold_left (fun acc (loc, err) ->
+          let error = Errors.mk_error
+            ~kind:Errors.ParseError [loc, [Parse_error.PP.error err]] in
+          Errors.ErrorSet.add error acc
         ) Errors.ErrorSet.empty parse_errors in
         save_parse_errors lib_file converted;
         exclude_syms, ((lib_file, false) :: result)
@@ -74,6 +83,7 @@ let stub_metadata ~root ~checked = { Context.
   enable_const_params = false;
   enable_unsafe_getters_and_setters = true;
   enforce_strict_type_args = true;
+  enforce_strict_call_arity = false;
   esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
   esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
   esproposal_decorators = Options.ESPROPOSAL_ENABLE;
@@ -102,7 +112,7 @@ let get_master_cx =
       let cx = Flow_js.fresh_context
         (stub_metadata ~root ~checked:false)
         Loc.Builtins
-        (Modulename.String Files.lib_module) in
+        Files.lib_module_ref in
       master_cx := Some (root, cx);
       cx
 
@@ -135,9 +145,8 @@ let check_content ~filename ~content =
 
     Flow_js.Cache.clear();
 
-    let cx = Type_inference_js.infer_ast
-      ~metadata ~filename ~module_name:(Modulename.String "-") ast
-    in
+    let require_loc_map = calc_requires ast in
+    let cx = Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map in
 
     (* this is a VERY pared-down version of Merge_service.merge_strict_context.
        it relies on the JS version only supporting libs + 1 file, so every
@@ -152,13 +161,14 @@ let check_content ~filename ~content =
 
     Context.errors cx
   | _, parse_errors ->
-    List.fold_left (fun acc err ->
-      Errors.(ErrorSet.add (parse_error_to_flow_error err) acc)
+    List.fold_left (fun acc (loc, err) ->
+      let error = Errors.mk_error
+        ~kind:Errors.ParseError [loc, [Parse_error.PP.error err]] in
+      Errors.ErrorSet.add error acc
     ) Errors.ErrorSet.empty parse_errors
   in
   let strip_root = Some root in
   errors
-  |> Errors.ErrorSet.elements
   |> Errors.Json_output.json_of_errors_with_context ~strip_root ~stdin_file
   |> js_of_json
 
@@ -198,11 +208,14 @@ let infer_type filename content line col =
 
       Flow_js.Cache.clear();
 
-      let cx = Type_inference_js.infer_ast
-        ~metadata ~filename ~module_name:(Modulename.String "-") ast
-      in
+      let require_loc_map = calc_requires ast in
+      let cx = Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map in
       let loc = mk_loc filename line col in
-      let (loc, ground_t, possible_ts) = Query_types.query_type cx loc in
+      let loc, ground_t, possible_ts = Query_types.(match query_type cx loc with
+        | FailureNoMatch -> Loc.none, None, []
+        | FailureUnparseable (loc, _, possible_ts) -> loc, None, possible_ts
+        | Success (loc, gt, possible_ts) -> loc, Some gt, possible_ts
+      ) in
       let ty, raw_type = match ground_t with
         | None -> None, None
         | Some t ->
@@ -218,6 +231,28 @@ let infer_type filename content line col =
       (None, Some (loc, ty, raw_type, reasons))
     | _, _ -> failwith "parse error"
 
+let dump_types js_file js_content =
+    let filename = Loc.SourceFile (Js.to_string js_file) in
+    let root = Path.dummy_path in
+    let content = Js.to_string js_content in
+    match parse_content filename content with
+    | ast, [] ->
+      (* defaults *)
+      let metadata = stub_metadata ~root ~checked:true in
+
+      Flow_js.Cache.clear();
+
+      let require_loc_map = calc_requires ast in
+      let cx = Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map in
+      let printer = Type_printer.string_of_t in
+      let raw_printer _ _ = None in
+      let types = Query_types.dump_types printer raw_printer cx in
+
+      let strip_root = None in
+      let types_json = DumpTypesCommand.types_to_json types ~strip_root in
+
+      js_of_json types_json
+    | _, _ -> failwith "parse error"
 
 let handle_inferred_result (_, inferred, _, _) =
   inferred
@@ -249,6 +284,8 @@ let () = Js.Unsafe.set exports
   "check" (Js.wrap_callback check_js)
 let () = Js.Unsafe.set exports
   "checkContent" (Js.wrap_callback check_content_js)
+let () = Js.Unsafe.set exports
+  "dumpTypes" (Js.wrap_callback dump_types)
 let () = Js.Unsafe.set exports
   "jsOfOcamlVersion" (Js.string Sys_js.js_of_ocaml_version)
 let () = Js.Unsafe.set exports

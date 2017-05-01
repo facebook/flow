@@ -28,35 +28,70 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     (* Encapsulate merge_strict_context for dumper *)
     let merge_component options cx =
       let cache = new Context_cache.context_cache in
-      Merge_service.merge_strict_context ~options cache [cx] in
+      Merge_service.merge_contents_context ~options cache cx in
     (* write binary path and version to server log *)
-    Flow_logger.log "executable=%s" (Sys_utils.executable_path ());
-    Flow_logger.log "version=%s" FlowConfig.version;
+    Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
+    Hh_logger.info "version=%s" FlowConfig.version;
     (* start the server and pipe its result into the dumper *)
     Types_js.server_init genv
     |> Dumper.init merge_component genv
 
-  let run_once_and_exit env =
-    match env.ServerEnv.errorl with
-      | [] -> FlowExitStatus.(exit No_error)
-      | _ -> FlowExitStatus.(exit Type_error)
-
   let incorrect_hash oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_OUT_OF_DATE;
     FlowEventLogger.out_of_date ();
-    Flow_logger.log     "Status: Error";
-    Flow_logger.log     "%s is out of date. Exiting." name;
+    Hh_logger.fatal     "Status: Error";
+    Hh_logger.fatal     "%s is out of date. Exiting." name;
     FlowExitStatus.(exit Server_out_of_date)
 
   let status_log errors =
-    begin match errors with
-    | [] -> Flow_logger.log "Status: OK"
-    | _ -> Flow_logger.log "Status: Error"
-    end;
+    if Errors.ErrorSet.is_empty errors
+      then Hh_logger.info "Status: OK"
+      else Hh_logger.info "Status: Error";
     flush stdout
 
+(* combine error maps into a single error list *)
+let collate_errors =
+  let open Errors in
+  let collate errset acc =
+    FilenameMap.fold (fun _key -> ErrorSet.union) errset acc
+  in
+  let filter_suppressed_errors suppressions errors =
+    (* Filter out suppressed errors. also track which suppressions are used. *)
+    let errors, suppressions = ErrorSet.fold (fun error (errors, supp_acc) ->
+      let locs = Errors.locs_of_error error in
+      let (suppressed, supp_acc) = ErrorSuppressions.check locs supp_acc in
+      let errors = if not suppressed
+        then ErrorSet.add error errors
+        else errors in
+      errors, supp_acc
+    ) errors (ErrorSet.empty, suppressions) in
+
+    (* For each unused suppression, create an error *)
+    ErrorSuppressions.unused suppressions
+    |> List.fold_left
+      (fun errset loc ->
+        let err = Errors.mk_error [
+          loc, ["Error suppressing comment"; "Unused suppression"]
+        ] in
+        ErrorSet.add err errset
+      )
+      errors
+  in
+  fun { ServerEnv.local_errors; merge_errors; suppressions; } ->
+    (* union suppressions from all files together *)
+    let suppressions = FilenameMap.fold
+      (fun _key -> ErrorSuppressions.union)
+      suppressions
+      ErrorSuppressions.empty in
+
+    (* union the errors from all files together, filtering suppressed errors *)
+    ErrorSet.empty
+    |> collate local_errors
+    |> collate merge_errors
+    |> filter_suppressed_errors suppressions
+
   let send_errorl el oc =
-    if el = []
+    if Errors.ErrorSet.is_empty el
     then
       ServerProt.response_to_channel oc ServerProt.NO_ERRORS
     else begin
@@ -73,31 +108,66 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         ServerProt.client=client_root
       } in
       ServerProt.response_to_channel oc msg;
-      Flow_logger.log "Status: Error";
-      Flow_logger.log "server_dir=%s, client_dir=%s"
+      Hh_logger.fatal "Status: Error";
+      Hh_logger.fatal "server_dir=%s, client_dir=%s"
         (Path.to_string server_root)
         (Path.to_string client_root);
-      Flow_logger.log "%s is not listening to the same directory. Exiting."
+      Hh_logger.fatal "%s is not listening to the same directory. Exiting."
         name;
       FlowExitStatus.(exit Server_client_directory_mismatch)
     end;
     flush stdout;
-    let errors = env.ServerEnv.errorl in
+
+    (* collate errors by origin *)
+    let errors = collate_errors env.ServerEnv.errors in
+
     (* TODO: check status.directory *)
     status_log errors;
     FlowEventLogger.status_response
-      (Errors.Json_output.json_of_errors ~strip_root:None errors);
+      ~num_errors:(Errors.ErrorSet.cardinal errors);
     send_errorl errors oc
 
-  let die_nicely genv oc =
+  (* helper - print errors. used in check-and-die runs *)
+  let print_errors ~profiling options errors =
+    let strip_root =
+      if Options.should_strip_root options
+      then Some (Options.root options)
+      else None
+    in
+
+    if Options.should_output_json options
+    then begin
+      let profiling =
+        if options.Options.opt_profile
+        then Some profiling
+        else None in
+      Errors.Json_output.print_errors
+        ~out_channel:stdout
+        ~strip_root
+        ~profiling
+        errors
+    end else
+      Errors.Cli_output.print_errors
+        ~out_channel:stdout
+        ~flags:(Options.error_flags options)
+        ~strip_root
+        errors
+
+  let run_once_and_exit ~profiling genv env =
+    let errors = collate_errors env.ServerEnv.errors in
+    print_errors ~profiling genv.ServerEnv.options errors;
+    if Errors.ErrorSet.is_empty errors
+      then FlowExitStatus.(exit No_error)
+      else FlowExitStatus.(exit Type_error)
+
+  let die_nicely oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_DYING;
     FlowEventLogger.killed ();
-    Flow_logger.log "Status: Error";
-    Flow_logger.log "Sent KILL command by client. Dying.";
-    (match genv.ServerEnv.dfind with
-    | Some handle -> Sys_utils.terminate_process (DfindLib.pid handle);
-    | None -> ()
-    );
+    Hh_logger.fatal "Status: Error";
+    Hh_logger.fatal "Sent KILL command by client. Dying.";
+    (* when we exit, the dfind process will attempt to read from the broken
+       pipe and then exit with SIGPIPE, so it is unnecessary to kill it
+       explicitly *)
     die ()
 
   let autocomplete ~options command_context file_input oc =
@@ -122,7 +192,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           state
           parse_result
       with exn ->
-        Flow_logger.log "Couldn't autocomplete%s" (Printexc.to_string exn);
+        Hh_logger.warn "Couldn't autocomplete%s" (Printexc.to_string exn);
         OK []
     in
     Autocomplete_js.autocomplete_unset_hooks ();
@@ -153,7 +223,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           let errors = match checked with
           | _, _, errors, _ -> errors
           in
-          send_errorl (Errors.to_list errors) oc
+          send_errorl errors oc
         else
           ServerProt.response_to_channel oc ServerProt.NOT_COVERED
 
@@ -165,16 +235,37 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       _end = { Loc.line; column = col + 1; offset = 0; };
     }
 
-  let infer_type ~options (file_input, line, col, verbose, include_raw) oc =
+  let infer_type ~options client_context (file_input, line, col, verbose, include_raw) oc =
     let file = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile file in
     let response = (try
       let content = ServerProt.file_input_get_content file_input in
-      let cx = match Types_js.typecheck_contents ?verbose ~options content file with
-      | _, Some cx, _, _ -> cx
+      let profiling, cx = match Types_js.typecheck_contents ?verbose ~options content file with
+      | profiling, Some cx, _, _ -> profiling, cx
       | _  -> failwith "Couldn't parse file" in
       let loc = mk_loc file line col in
-      let (loc, ground_t, possible_ts) = Query_types.query_type cx loc in
+      let result_str, data, loc, ground_t, possible_ts =
+        let mk_data loc ty = [
+          "loc", Reason.json_of_loc loc;
+          "type", Debug_js.json_of_t ~depth:3 cx ty
+        ] in
+        Query_types.(match query_type cx loc with
+        | FailureNoMatch ->
+          "FAILURE_NO_MATCH", [],
+          Loc.none, None, []
+        | FailureUnparseable (loc, gt, possible_ts) ->
+          "FAILURE_UNPARSEABLE", mk_data loc gt,
+          loc, None, possible_ts
+        | Success (loc, gt, possible_ts) ->
+          "SUCCESS", mk_data loc gt,
+          loc, Some gt, possible_ts
+      ) in
+      FlowEventLogger.type_at_pos_result
+        ~client_context
+        ~result_str
+        ~json_data:(Hh_json.JSON_Object data)
+        ~profiling;
+
       let ty, raw_type = match ground_t with
         | None -> None, None
         | Some t ->
@@ -306,7 +397,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
          let patch_content = Diff.diff_of_file_and_string file new_content in
          SMap.add file patch_content result_map
        with exn ->
-         Flow_logger.log
+         Hh_logger.warn
            "Could not fill types for %s\n%s"
            file
            (Printexc.to_string exn);
@@ -330,18 +421,20 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let metadata = Context.({ (metadata_of_options options) with
       checked = false;
     }) in
-    let cx = Context.make metadata file (Modulename.Filename file) in
+    let cx = Context.make metadata file (Files.module_ref file) in
     let loc = {Loc.none with Loc.source = Some file;} in
-    let module_name = Module_js.imported_module ~options cx loc moduleref in
+    let module_name = Module_js.imported_module
+      ~options ~node_modules_containers:!Files.node_modules_containers
+      (Context.file cx) loc moduleref in
     let response: filename option =
-      Module_js.get_module_file ~audit:Expensive.warn module_name in
+      Module_js.get_file ~audit:Expensive.warn module_name in
     Marshal.to_channel oc response [];
     flush oc
 
   let gen_flow_files ~options env files oc =
-    let errors = env.ServerEnv.errorl in
-    let result = match errors with
-      | [] ->
+    let errors = collate_errors env.ServerEnv.errors in
+    let result = if Errors.ErrorSet.is_empty errors
+      then begin
         let cache = new Context_cache.context_cache in
         let (flow_files, flow_file_cxs, non_flow_files, error) =
           List.fold_left (fun (flow_files, cxs, non_flow_files, error) file ->
@@ -369,10 +462,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         | Some e -> Utils_js.Err e
         | None ->
           try
-            begin match flow_file_cxs with
-            | [] -> ()
-            | _ ->
-              try Merge_service.merge_strict_context ~options cache flow_file_cxs
+            begin
+              try List.iter (fun flow_file_cx ->
+                Merge_service.merge_contents_context ~options cache flow_file_cx
+              ) flow_file_cxs
               with exn -> failwith (
                 spf "Error merging contexts: %s" (Printexc.to_string exn)
               )
@@ -398,11 +491,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
             ServerProt.GenFlowFile_UnexpectedError (Printexc.to_string exn)
           )
         end
-      | _ ->
-        let error_set = List.fold_left (fun set err ->
-          Errors.ErrorSet.add err set
-        ) Errors.ErrorSet.empty errors in
-        Utils_js.Err (ServerProt.GenFlowFile_TypecheckError error_set)
+      end else
+        Utils_js.Err (ServerProt.GenFlowFile_TypecheckError errors)
     in
     Marshal.to_channel oc result [];
     flush oc
@@ -421,7 +511,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
        let result = FindRefs_js.result cx state in
        Marshal.to_channel oc result []
      with exn ->
-       Flow_logger.log
+       Hh_logger.warn
          "Could not find refs for %s:%d:%d\n%s"
          filename line col
          (Printexc.to_string exn)
@@ -429,21 +519,27 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     FindRefs_js.unset_hooks ();
     flush oc
 
-  let get_def ~options (file_input, line, col) oc =
+  let get_def ~options command_context (file_input, line, col) oc =
     let filename = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile filename in
     let loc = mk_loc file line col in
     let state = GetDef_js.getdef_set_hooks loc in
     (try
       let content = ServerProt.file_input_get_content file_input in
-      let cx = match Types_js.typecheck_contents ~options content file with
-        | _, Some cx, _, _ -> cx
+      let profiling, cx = match Types_js.typecheck_contents ~options content file with
+        | profiling, Some cx, _, _ -> profiling, cx
         | _  -> failwith "Couldn't parse file"
       in
-      let result = GetDef_js.getdef_get_result ~options cx state in
+      let result = GetDef_js.getdef_get_result
+        profiling
+        command_context
+        ~options
+        cx
+        state
+      in
       Marshal.to_channel oc result []
     with exn ->
-      Flow_logger.log
+      Hh_logger.warn
         "Could not get definition for %s:%d:%d\n%s"
         filename line col
         (Printexc.to_string exn)
@@ -457,37 +553,24 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     then Modulename.Filename (Loc.SourceFile path)
     else Modulename.String module_name_str
 
-  let get_importers ~options module_names oc =
-    let add_to_results map module_name_str =
-      let module_name = module_name_of_string ~options module_name_str in
-      match Module_js.get_reverse_imports ~audit:Expensive.warn
-        module_name with
-      | Some references ->
-          SMap.add module_name_str references map
-      | None -> map
-    in
-    let results = List.fold_left add_to_results
-                  SMap.empty module_names in
-    Marshal.to_channel oc results [];
-    flush oc
-
   let get_imports ~options module_names oc =
     let add_to_results (map, non_flow) module_name_str =
       let module_name = module_name_of_string ~options module_name_str in
-      match Module_js.get_module_file ~audit:Expensive.warn module_name with
+      match Module_js.get_file ~audit:Expensive.warn module_name with
       | Some file ->
         (* We do not process all modules which are stored in our module
          * database. In case we do not process a module its requirements
          * are not kept track of. To avoid confusing results we notify the
          * client that these modules have not been processed.
          *)
-        let { Module_js.
+        let { Module_js.checked; _ } =
+          Module_js.get_info_unsafe ~audit:Expensive.warn file in
+        if checked then
+          let { Module_js.
               required = requirements;
               require_loc = req_locs;
-              checked; _ } =
-          Module_js.get_module_info ~audit:Expensive.warn file in
-        if checked
-        then
+              _ } =
+          Module_js.get_resolved_requires_unsafe ~audit:Expensive.warn file in
           (SMap.add module_name_str (requirements, req_locs) map, non_flow)
         else
           (map, SSet.add module_name_str non_flow)
@@ -503,14 +586,18 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Marshal.to_channel oc results [];
     flush oc
 
-  let get_watch_paths options = Path_matcher.stems (Options.includes options)
+  let get_watch_paths options = Files.watched_paths options
 
   (* filter a set of updates coming from dfind and return
      a FilenameSet. updates may be coming in from
      the root, or an include path. *)
   let process_updates genv env updates =
-    let all_libs = env.ServerEnv.libs in
     let options = genv.ServerEnv.options in
+    let all_libs =
+      let known_libs = env.ServerEnv.libs in
+      let _, maybe_new_libs = Files.init options in
+      SSet.union known_libs maybe_new_libs
+    in
     let root = Options.root options in
     let config_path = Server_files_js.config_file root in
     let sroot = Path.to_string root in
@@ -518,8 +605,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
     (* Die if the .flowconfig changed *)
     if SSet.mem config_path updates then begin
-      Flow_logger.log "Status: Error";
-      Flow_logger.log
+      Hh_logger.fatal "Status: Error";
+      Hh_logger.fatal
         "%s changed in an incompatible way. Exiting.\n%!"
         config_path;
       FlowExitStatus.(exit Server_out_of_date)
@@ -563,9 +650,9 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     ) updates in
     if not (SSet.is_empty incompatible_packages)
     then begin
-      Flow_logger.log "Status: Error";
-      SSet.iter (Flow_logger.log "Modified package: %s") incompatible_packages;
-      Flow_logger.log
+      Hh_logger.fatal "Status: Error";
+      SSet.iter (Hh_logger.fatal "Modified package: %s") incompatible_packages;
+      Hh_logger.fatal
         "Packages changed in an incompatible way. Exiting.\n%!";
       FlowExitStatus.(exit Server_out_of_date)
     end;
@@ -579,6 +666,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         let new_ast =
           let filename_set = FilenameSet.singleton file in
           let _ = Parsing_service_js.reparse_with_defaults
+            (* types are always allowed in lib files *)
+            ~types_mode:Parsing_service_js.TypesAllowed
+            (* lib files are always "use strict" *)
+            ~use_strict:true
             options
             (* workers *) None
             filename_set
@@ -592,9 +683,9 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let libs = updates |> SSet.filter is_changed_lib in
     if not (SSet.is_empty libs)
     then begin
-      Flow_logger.log "Status: Error";
-      SSet.iter (Flow_logger.log "Modified lib file: %s") libs;
-      Flow_logger.log
+      Hh_logger.fatal "Status: Error";
+      SSet.iter (Hh_logger.fatal "Modified lib file: %s") libs;
+      Hh_logger.fatal
         "Lib files changed in an incompatible way. Exiting.\n%!";
       FlowExitStatus.(exit Server_out_of_date)
     end;
@@ -620,7 +711,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let root = Options.root genv.ServerEnv.options in
       let tmp_dir = Options.temp_dir genv.ServerEnv.options in
       ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
-      let env = Types_js.recheck genv env updates in
+      let env = Types_js.recheck genv env ~updates in
       ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
       env
     end
@@ -654,15 +745,13 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     | ServerProt.GEN_FLOW_FILES files ->
         gen_flow_files ~options !env files oc
     | ServerProt.GET_DEF (fn, line, char) ->
-        get_def ~options (fn, line, char) oc
-    | ServerProt.GET_IMPORTERS module_names ->
-        get_importers ~options module_names oc
+        get_def ~options client_logging_context (fn, line, char) oc
     | ServerProt.GET_IMPORTS module_names ->
         get_imports ~options module_names oc
     | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
-        infer_type ~options (fn, line, char, verbose, include_raw) oc
+        infer_type ~options client_logging_context (fn, line, char, verbose, include_raw) oc
     | ServerProt.KILL ->
-        die_nicely genv oc
+        die_nicely oc
     | ServerProt.PING ->
         ServerProt.response_to_channel oc ServerProt.PONG
     | ServerProt.PORT (files) ->
@@ -671,13 +760,20 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         print_status genv !env client_root oc
     | ServerProt.SUGGEST (files) ->
         suggest ~options files oc
+    | ServerProt.CONNECT ->
+        let new_connections = Persistent_connection.add_client !env.connections client in
+        env := {!env with connections = new_connections}
     end;
     !env
+
+  let should_close = function
+    | { ServerProt.command = ServerProt.CONNECT; _ } -> false
+    | _ -> true
 
   let handle_client genv env client =
     let msg = ServerProt.cmd_from_channel client.ic in
     let env = respond genv env ~client ~msg in
-    client.close ();
+    if should_close msg then client.close ();
     env
 
 end

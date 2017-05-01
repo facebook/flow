@@ -11,15 +11,18 @@
 open Utils_js
 
 val merge_strict_context:
-  options: Options.t ->
   Context_cache.context_cache ->
   Context.t list ->
+  Context.t
+val merge_contents_context:
+  options: Options.t ->
+  Context_cache.context_cache ->
+  Context.t ->
   unit
 val merge_strict:
   options: Options.t ->
   workers: Worker.t list option ->
-  save_errors: (filename list -> Errors.ErrorSet.t list -> unit) ->
   FilenameSet.t FilenameMap.t ->
-  filename list list IMap.t ->
+  (filename list) FilenameMap.t ->
   bool FilenameMap.t ->
-  unit
+  (filename * Errors.ErrorSet.t) list

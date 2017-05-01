@@ -16,12 +16,6 @@ array_lib.js:8
   8: var d: number = b[0];
             ^^^^^^ number
 
-array_lib.js:10
- 10: var e:Array<string> = a.reverse();
-                 ^^^^^^ string. This type is incompatible with
-  4: var a = [0];
-              ^ number
-
 array_lib.js:21
  21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                                      ^^^ string. This type is incompatible with
@@ -46,9 +40,9 @@ array_lib.js:46
 
 array_lib.js:46
  46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
-                                 ^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
+                                           ^^^^^^ property `length`. Property not found in
  46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
-        ^^ string
+                                       ^^^ Number
 
 array_lib.js:47
  47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
@@ -56,9 +50,9 @@ array_lib.js:47
 
 array_lib.js:47
  47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-                                      ^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
+                                                ^^^^^^ property `length`. Property not found in
  47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-        ^^ string
+                                            ^^^ Number
 
 
-Found 11 errors
+Found 10 errors

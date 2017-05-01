@@ -6,13 +6,13 @@ A.js:2
 
 B.js:6
   6: (b.foo: number); // error, number !~> function
-      ^^^^^ property `foo`. This type is incompatible with
+      ^^^^^ function. This type is incompatible with
   6: (b.foo: number); // error, number !~> function
              ^^^^^^ number
 
 C.js:8
   8: (c.foo: number); // error, number !~> function
-      ^^^^^ property `foo`. This type is incompatible with
+      ^^^^^ function. This type is incompatible with
   8: (c.foo: number); // error, number !~> function
              ^^^^^^ number
 
@@ -26,12 +26,6 @@ class_shapes.js:4
   4:   a: string;    // exists in TestClass
           ^^^^^^ string. This type is incompatible with
  27:   a: number;  // conflicts with cast to Foo
-          ^^^^^^ number
-
-class_shapes.js:5
-  5:   b: string;    // doesn't exist
-          ^^^^^^ string. This type is incompatible with
- 31:   b: number;  // conflicts with cast to Foo
           ^^^^^^ number
 
 class_shapes.js:6
@@ -70,11 +64,27 @@ class_shapes.js:28
   6:   c?: ?string;  // exists in TestClass, optional
             ^^^^^^ string
 
-class_shapes.js:31
- 31:   b: number;  // conflicts with cast to Foo
-          ^^^^^^ number. This type is incompatible with
-  5:   b: string;    // doesn't exist
-          ^^^^^^ string
+class_shapes.js:35
+ 35: var w : Foo = z;
+                   ^ Test2Class. This type is incompatible with
+ 35: var w : Foo = z;
+             ^^^ object type
+  Property `b` is incompatible:
+      5:   b: string;    // doesn't exist
+              ^^^^^^ string. This type is incompatible with
+     31:   b: number;  // conflicts with cast to Foo
+              ^^^^^^ number
+
+class_shapes.js:35
+ 35: var w : Foo = z;
+                   ^ Test2Class. This type is incompatible with
+ 35: var w : Foo = z;
+             ^^^ object type
+  Property `b` is incompatible:
+     31:   b: number;  // conflicts with cast to Foo
+              ^^^^^^ number. This type is incompatible with
+      5:   b: string;    // doesn't exist
+              ^^^^^^ string
 
 expr.js:14
  14: var b = new Baz(); // error: Baz is not a runtime binding in this scope
@@ -102,23 +112,33 @@ loc.js:5
   3: type Foo = number
           ^^^ type Foo
 
-statics.js:4
-  4:   static p: string;
-                 ^^^^^^ string. This type is incompatible with
+statics.js:10
  10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-            ^^^^^^ number
+      ^ statics of C. This type is incompatible with
+ 10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
+         ^^^^^^^^^^ object type
+  Property `p` is incompatible:
+      4:   static p: string;
+                     ^^^^^^ string. This type is incompatible with
+     10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
+                ^^^^^^ number
 
 statics.js:10
  10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
-            ^^^^^^ number. This type is incompatible with
-  4:   static p: string;
-                 ^^^^^^ string
+      ^ statics of C. This type is incompatible with
+ 10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
+         ^^^^^^^^^^ object type
+  Property `p` is incompatible:
+     10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
+                ^^^^^^ number. This type is incompatible with
+      4:   static p: string;
+                     ^^^^^^ string
 
 statics.js:13
  13: (o: Class<C>); // error, object type incompatible with class type
       ^ object type. This type is incompatible with
  13: (o: Class<C>); // error, object type incompatible with class type
-               ^ class type: C
+         ^^^^^^^^ class type: C
 
 
 Found 21 errors

@@ -7,16 +7,16 @@ type t
 (** Create signature from function AST. *)
 val mk: Context.t ->
   Type.t SMap.t -> (* type params map *)
-  expr:(Context.t -> Spider_monkey_ast.Expression.t -> Type.t) ->
-  Reason.t ->
-  Spider_monkey_ast.Function.t ->
+  expr:(Context.t -> Ast.Expression.t -> Type.t) ->
+  Loc.t ->
+  Ast.Function.t ->
   t
 
 (** Create signature from function type AST. *)
 val convert: Context.t ->
   Type.t SMap.t -> (* type params map *)
   Loc.t ->
-  Spider_monkey_ast.Type.Function.t ->
+  Ast.Type.Function.t ->
   t
 
 (** Create signature for a default constructor.
@@ -37,7 +37,7 @@ val default_constructor:
 val field_initializer:
   Type.t SMap.t -> (* type params map *)
   Reason.t ->
-  Spider_monkey_ast.Expression.t -> (* init *)
+  Ast.Expression.t -> (* init *)
   Type.t -> (* return type *)
   t
 
@@ -66,13 +66,13 @@ val generate_tests: Context.t ->
     statements in the function body, and provides an implicit return type if
     necessary *)
 val toplevels:
-  Spider_monkey_ast.Identifier.t option -> (* id *)
+  Ast.Identifier.t option -> (* id *)
   Context.t ->
   Scope.Entry.t -> (* this *)
   Scope.Entry.t -> (* super *)
-  decls:(Context.t -> Spider_monkey_ast.Statement.t list -> unit) ->
-  stmts:(Context.t -> Spider_monkey_ast.Statement.t list -> unit) ->
-  expr:(Context.t -> Spider_monkey_ast.Expression.t -> Type.t) ->
+  decls:(Context.t -> Ast.Statement.t list -> unit) ->
+  stmts:(Context.t -> Ast.Statement.t list -> unit) ->
+  expr:(Context.t -> Ast.Expression.t -> Type.t) ->
   t -> unit
 
 (** 1. Type Conversion *)
@@ -97,9 +97,7 @@ val gettertype: t -> Type.t
     setter, this function will raise an exception. *)
 val settertype: t -> Type.t
 
-val methodtype_DEPRECATED: t -> Type.t
-
 (** 1. Util *)
 
 (** The location of the return type for a function. *)
-val return_loc: Spider_monkey_ast.Function.t -> Loc.t
+val return_loc: Ast.Function.t -> Loc.t

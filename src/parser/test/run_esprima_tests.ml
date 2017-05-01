@@ -121,7 +121,6 @@ end = struct
   open Hh_json
   open String_utils
 
-  module Ast = Spider_monkey_ast
   module SMap = Map.Make(String)
   module C = Tty
 
@@ -275,13 +274,6 @@ end = struct
     (* TODO: enable this in tests *)
     | [], Some "tokens", None
 
-    (* TODO: this hasn't been standardized yet. Esprima adds a "directive" field
-       to ExpressionStatement to distinguish `"use strict"` from
-       `("use strict")` or one with escaped characters.
-        See https://github.com/jquery/esprima/issues/1006 and
-        https://github.com/estree/estree/issues/6 *)
-    | _, Some "directive", None
-
     (* Flow doesn't support this *)
     | _, Some "leadingComments", None
     | _, Some "trailingComments", None
@@ -310,8 +302,7 @@ end = struct
           key = Object.Property.Literal (_, {
             Ast.Literal.value = Ast.Literal.String name; raw = _
           });
-          value;
-          kind = Object.Property.Init;
+          value = Object.Property.Init value;
           _method = false; shorthand = false;
         }) ->
           SMap.add name value acc
@@ -396,6 +387,12 @@ end = struct
     if SMap.mem name expected_map then
       let expected_value = SMap.find name expected_map in
       test_tree ((Prop name)::path) value expected_value acc
+    else if value = JSON_Null then
+      (* allow Flow to have extra properties when their values are null. this is
+         a narrower exception than `expected_different_property`; that function
+         allows the field to have any value, but sometimes we want to allow Flow
+         to return consistent shapes, without allowing arbitrary differences. *)
+      acc
     else if expected_different_property path None (Some name) then
       acc
     else
@@ -415,8 +412,7 @@ end = struct
         key = Object.Property.Literal (_, {
           Ast.Literal.value = Ast.Literal.String name; raw = _
         });
-        value;
-        kind = Object.Property.Init;
+        value = Object.Property.Init value;
         _method = false; shorthand = false;
       } -> name, value
     | _ -> failwith "Invalid JSON"
@@ -450,7 +446,7 @@ end = struct
                   match apply_diff diff_value exp_value with
                   | Some value ->
                     let prop = Object.Property (exp_loc, { exp_prop with
-                      Object.Property.value = value;
+                      Object.Property.value = Object.Property.Init value;
                     }) in
                     prop::acc
                   | None ->
@@ -524,10 +520,9 @@ end = struct
         | Todo str -> None, Some str
         | Same -> None, None
       in
-      begin match todo, case.expected with
-      | Some reason, _ -> Case_skipped (Some reason)
-      | None, Some (Module _) -> (* TODO *) Case_skipped None
-      | None, Some (Tree tree) ->
+      begin match case.expected with
+      | Some (Module _) -> (* TODO *) Case_skipped None
+      | Some (Tree tree) ->
           let expected = fst (Parser_flow.json_file ~fail:true tree None) in
           let expected = match diff with
           | Some str ->
@@ -540,11 +535,15 @@ end = struct
             expected
           in
           let errors = test_tree [] actual expected [] in
-          if List.length errors = 0 then Case_ok
-          else Case_error errors
-      | None, Some (Tokens _) -> (* TODO *) Case_skipped None
-      | None, Some (Failure _) -> (* TODO *) Case_skipped None
-      | None, None -> Case_error ["Nothing to do"]
+          begin match errors, todo with
+          | [], None -> Case_ok
+          | [], Some _ -> Case_error ["Skipped test passes"]
+          | _, Some reason -> Case_skipped (Some reason)
+          | _, None -> Case_error errors
+          end
+      | Some (Tokens _) -> (* TODO *) Case_skipped None
+      | Some (Failure _) -> (* TODO *) Case_skipped None
+      | None -> Case_error ["Nothing to do"]
       end
 
   type test_results = {

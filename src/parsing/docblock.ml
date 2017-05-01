@@ -8,8 +8,6 @@
  *
  *)
 
-module Ast = Spider_monkey_ast
-module Lex_result = Lexer_flow.Lex_result
 
 type flow_mode = OptIn | OptInWeak | OptOut
 
@@ -18,7 +16,7 @@ type t = {
   preventMunge: bool option;
   providesModule: string option;
   isDeclarationFile: bool;
-  jsx: (string * Spider_monkey_ast.Expression.t) option;
+  jsx: Options.jsx_mode option;
 }
 
 type error = Loc.t * error_kind
@@ -71,6 +69,14 @@ let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
         (* dupes are ok since they can only be truthy *)
         let preventMunge = Some true in
         parse_attributes (errors, { info with preventMunge }) xs
+    | (csx_loc, "@csx") :: xs ->
+        let acc =
+          if info.jsx <> None then
+            (csx_loc, MultipleJSXAttributes)::errors, info
+          else
+            errors, { info with jsx = Some Options.CSX }
+        in
+        parse_attributes acc xs
     | [jsx_loc, "@jsx"] -> (jsx_loc, InvalidJSXAttribute None)::errors, info
     | (jsx_loc, "@jsx") :: (expr_loc, expr) :: xs ->
         let acc =
@@ -85,7 +91,8 @@ let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
               let (jsx_expr, _) = Parser_flow.jsx_pragma_expression
                 (padding ^ expr)
                 expr_loc.Loc.source in
-              errors, { info with jsx = Some (expr, jsx_expr) }
+              let jsx_pragma = Options.JSXPragma (expr, jsx_expr) in
+              errors, { info with jsx = Some jsx_pragma }
             with
             | Parse_error.Error [] ->
                 (expr_loc, InvalidJSXAttribute None)::errors, info
@@ -160,14 +167,18 @@ let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
      * contstraints with Atom (see https://github.com/atom/atom/issues/8416 for
      * more context). At some point this should change back to consuming only
      * the first token. *)
-    let lb = Lexing.from_string content in
+    let lb =
+      try Sedlexing.Utf8.from_string content
+      with Sedlexing.MalFormed ->
+        Hh_logger.warn "File %s is malformed" (Loc.string_of_filename filename);
+        Sedlexing.Utf8.from_string "" in
     let env =
-      Lexer_flow.Lex_env.new_lex_env (Some filename) lb ~enable_types_in_comments:false in
+      Lex_env.new_lex_env (Some filename) lb ~enable_types_in_comments:false in
     let rec get_first_comment_contents ?(i=0) env =
       if i < max_tokens then
-        let env, lexer_result = Lexer_flow.token env in
+        let env, lexer_result = Lexer.token env in
         match Lex_result.comments lexer_result with
-        | [] -> Lexer_flow.Token.(
+        | [] -> Token.(
             (**
              * Stop looking for docblocks if we see any tokens other than a
              * string or a semicolon (`"use babel";` or `"use strict";`).
@@ -187,11 +198,11 @@ let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
       then { default_info with isDeclarationFile = true; }
       else default_info in
     match get_first_comment_contents env with
-      | Some comments ->
-          List.fold_left (fun acc (loc, s) ->
-            parse_attributes acc (split loc s)
-          ) ([], info) comments
-      | None -> [], info
+    | Some comments ->
+        List.fold_left (fun acc (loc, s) ->
+          parse_attributes acc (split loc s)
+        ) ([], info) comments
+    | None -> [], info
 
 (* accessors *)
 let flow info = info.flow

@@ -130,7 +130,7 @@ module Entry = struct
     }
 
   (* accessors *)
-  let loc = function
+  let entry_loc = function
   | Value v -> v.value_declare_loc
   | Type t -> t.type_loc
 
@@ -175,14 +175,14 @@ module Entry = struct
       then entry
       else Value { v with specific = v.general }
 
-  let reset reason name entry =
+  let reset loc name entry =
     match entry with
     | Type _ ->
       entry
     | Value v ->
       if Reason.is_internal_name name
       then entry
-      else Value { v with specific = Type.EmptyT reason }
+      else Value { v with specific = Type.EmptyT.at loc }
 
   let is_lex = function
     | Type _ -> false
@@ -337,9 +337,9 @@ let havoc scope =
   havoc_refis scope;
   update_entries Entry.havoc scope
 
-let reset reason scope =
+let reset loc scope =
   havoc_refis scope;
-  update_entries (Entry.reset reason) scope
+  update_entries (Entry.reset loc) scope
 
 let is_lex scope =
   match scope.kind with

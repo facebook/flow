@@ -1,16 +1,24 @@
-/* @flow */
+/*
+ * @flow
+ * @lint-ignore-every LINE_WRAP1
+ */
 
 
 import {suite, test} from '../../tsrc/test/Tester';
 
 export default suite(({addFile, addFiles, flowCmd}) => [
   test('named class exports', [
-    addFile('named_class_exports.js'),
+    addFile('named_class_exports', 'named_class_exports.js'),
     flowCmd(['gen-flow-files', '--quiet', 'named_class_exports.js']).stdout(`
       // @flow
 
       declare class Class0 {
+
         map<U>(f: (x: T) => U): Class0<U>;
+      }
+      declare interface Class1 {
+
+        foo: string;
       }
       declare export class Base<A, B, C> {
         static baseStaticMethod(a: number, b: string): number;
@@ -21,12 +29,20 @@ export default suite(({addFile, addFiles, flowCmd}) => [
         baseMethod(a: number, b: string): number;
         overriddenMethod(a: {b: number, c: number}): number;
       }
+
       declare export class Child<A, B> extends Base<A, B, mixed> {
         static overriddenStaticMethod(a: {b: number}): number;
 
         notExported: Class0<number>;
         overriddenMethod(a: {b: number}): number;
       }
+
+      declare export class Foo implements Class1 {
+
+        foo: string;
+      }
+
+
     `)
     .stderr('')
   ]),
@@ -90,18 +106,24 @@ export default suite(({addFile, addFiles, flowCmd}) => [
   ]),
 
   test('default class exports', [
-    addFile('default_class_export.js'),
+    addFile('default_class_export', 'default_class_export.js'),
     flowCmd(['gen-flow-files', '--quiet', 'default_class_export.js'])
       .stderr('')
       .stdout(
         `
           // @flow
 
+          declare interface Class0 {
+
+          }
+          declare interface Class1 {
+
+          }
           declare export class Base<A, B, C> {
 
           }
 
-          declare export default class<A, B> extends Base<A, B, mixed> {
+          declare export default class<A, B> extends Base<A, B, mixed> implements Class0, Class1 {
 
             p: number;
           }
@@ -171,8 +193,8 @@ export default suite(({addFile, addFiles, flowCmd}) => [
   ]),
 
   test('imported class types arent redefined', [
-    addFile('named_class_exports.js'),
-    addFile('export_imported_type.js'),
+    addFile('named_class_exports', 'named_class_exports.js'),
+    addFile('export_imported_type', 'export_imported_type.js'),
     flowCmd(['gen-flow-files', '--quiet', 'export_imported_type.js'])
       .stderr('')
       .stdout(
@@ -367,5 +389,17 @@ export default suite(({addFile, addFiles, flowCmd}) => [
       test_project/src/lib/utils.js -> test_project/dist/lib/utils.js.flow
       test_project/src/main.js -> test_project/dist/main.js.flow
     `),
+  ]),
+
+  test('object literals with method declarations', [
+    addFile('object_literal_method.js'),
+    flowCmd(['gen-flow-files', '--quiet', 'object_literal_method.js']).stdout(`
+      // @flow
+      declare export var a: {bar(): void};
+      declare export var b: {bar: () => void};
+      declare export var c: {m<T>(x: T): T};
+      declare export var d: {m: <T>(x: T) => T};
+    `)
+    .stderr('')
   ]),
 ]);

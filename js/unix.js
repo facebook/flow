@@ -48,6 +48,11 @@ function unix_fork() {
   throw new Error('unix_fork: not implemented in JS');
 }
 
+//Provides: unix_isatty const
+function unix_isatty() {
+  return false;
+}
+
 //Provides: unix_kill
 function unix_kill() {
   throw new Error('unix_kill: not implemented in JS');

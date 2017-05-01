@@ -16,6 +16,7 @@ type metadata = {
   enable_const_params: bool;
   enable_unsafe_getters_and_setters: bool;
   enforce_strict_type_args: bool;
+  enforce_strict_call_arity: bool;
   esproposal_class_static_fields: Options.esproposal_feature_mode;
   esproposal_class_instance_fields: Options.esproposal_feature_mode;
   esproposal_decorators: Options.esproposal_feature_mode;
@@ -32,13 +33,13 @@ type metadata = {
   verbose: Verbose.t option;
   weak: bool;
   max_workers: int;
-  jsx: (string * Spider_monkey_ast.Expression.t) option;
+  jsx: Options.jsx_mode option;
 }
 type module_kind =
   | CommonJSModule of Loc.t option
   | ESModule
 
-val make: metadata -> Loc.filename -> Modulename.t -> t
+val make: metadata -> Loc.filename -> string -> t
 val metadata_of_options: Options.t -> metadata
 
 (* accessors *)
@@ -48,6 +49,7 @@ val declare_module_t: t -> Type.t option
 val enable_const_params: t -> bool
 val enable_unsafe_getters_and_setters: t -> bool
 val enforce_strict_type_args: t -> bool
+val enforce_strict_call_arity: t -> bool
 val envs: t -> env IMap.t
 val errors: t -> Errors.ErrorSet.t
 val error_suppressions: t -> Errors.ErrorSuppressions.t
@@ -64,7 +66,7 @@ val find_tvar_reason: t -> Constraint.ident -> Reason.t
 val mem_nominal_id: t -> Constraint.ident -> bool
 val globals: t -> SSet.t
 val graph: t -> Constraint.node IMap.t
-val import_stmts: t -> Spider_monkey_ast.Statement.ImportDeclaration.t list
+val import_stmts: t -> Ast.Statement.ImportDeclaration.t list
 val imported_ts: t -> Type.t SMap.t
 val is_checked: t -> bool
 val is_verbose: t -> bool
@@ -72,7 +74,7 @@ val is_weak: t -> bool
 val max_trace_depth: t -> int
 val module_kind: t -> module_kind
 val module_map: t -> Type.t SMap.t
-val module_name: t -> Modulename.t
+val module_ref: t -> string
 val output_graphml: t -> bool
 val property_maps: t -> Type.Properties.map
 val refs_table: t -> (Loc.t, Loc.t) Hashtbl.t
@@ -90,7 +92,7 @@ val type_graph: t -> Graph_explorer.graph
 val type_table: t -> (Loc.t, Type.t) Hashtbl.t
 val verbose: t -> Verbose.t option
 val max_workers: t -> int
-val jsx: t -> (string * Spider_monkey_ast.Expression.t) option
+val jsx: t -> Options.jsx_mode option
 val pid_prefix: t -> string
 
 val copy_of_context: t -> t
@@ -101,7 +103,7 @@ val add_env: t -> int -> env -> unit
 val add_error: t -> Errors.error -> unit
 val add_error_suppression: t -> Loc.t -> unit
 val add_global: t -> string -> unit
-val add_import_stmt: t -> Spider_monkey_ast.Statement.ImportDeclaration.t -> unit
+val add_import_stmt: t -> Ast.Statement.ImportDeclaration.t -> unit
 val add_imported_t: t -> string -> Type.t -> unit
 val add_module: t -> string -> Type.t -> unit
 val add_property_map: t -> Type.Properties.id -> Type.Properties.t -> unit
@@ -132,6 +134,7 @@ val iter_props: t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -
 val has_prop: t -> Type.Properties.id -> string -> bool
 val get_prop: t -> Type.Properties.id -> string -> Type.Property.t option
 val set_prop: t -> Type.Properties.id -> string -> Type.Property.t -> unit
+val has_export: t -> Type.Exports.id -> string -> bool
 val set_export: t -> Type.Exports.id -> string -> Type.t -> unit
 
 (* constructors *)

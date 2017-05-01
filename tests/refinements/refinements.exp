@@ -448,6 +448,24 @@ number.js:17
  17:     (x: void); // error
              ^^^^ undefined
 
+number.js:21
+ 21:     if (x === 0) {
+                   ^ number literal `0`. This === check always fails because `0` is not the same number as `1`
+ 20:   function(x: 1): 0 {
+                   ^ number literal `1`
+
+number.js:28
+ 28:     if (x === 1) {
+                   ^ number literal `1`. This === check always fails because `1` is not the same number as `0`
+ 27:   function(x: 0): number {
+                   ^ number literal `0`
+
+number.js:35
+ 35:     if (x !== 1) {
+                   ^ number literal `1`. This !== check always succeeds because `1` is not the same number as `0`
+ 34:   function(x: 0) {
+                   ^ number literal `0`
+
 number.js:51
  51:       (x: void); // error
             ^ number literal `0`. This type is incompatible with
@@ -585,6 +603,24 @@ string.js:17
           ^ string. This type is incompatible with
  17:     (x: void); // error
              ^^^^ undefined
+
+string.js:21
+ 21:     if (x === 'foo') {
+                   ^^^^^ string literal `foo`. This === check always fails because `foo` is not the same string as `bar`
+ 20:   function(x: 'bar'): 'foo' {
+                   ^^^^^ string literal `bar`
+
+string.js:28
+ 28:     if (x === 'bar') {
+                   ^^^^^ string literal `bar`. This === check always fails because `bar` is not the same string as `foo`
+ 27:   function(x: 'foo'): string {
+                   ^^^^^ string literal `foo`
+
+string.js:35
+ 35:     if (x !== 'bar') {
+                   ^^^^^ string literal `bar`. This !== check always succeeds because `bar` is not the same string as `foo`
+ 34:   function(x: 'foo') {
+                   ^^^^^ string literal `foo`
 
 string.js:51
  51:       (x: void); // error
@@ -866,6 +902,54 @@ tagged_union.js:229
 229:       x.z; // error
            ^ object type
 
+tagged_union.js:237
+237:       x.z; // error
+             ^ property `z`. Property not found in
+237:       x.z; // error
+           ^ object type
+
+tagged_union.js:240
+240:       x.y; // error
+             ^ property `y`. Property not found in
+240:       x.y; // error
+           ^ object type
+
+tagged_union.js:244
+244:       x.y; // error
+             ^ property `y`. Property not found in
+244:       x.y; // error
+           ^ object type
+
+tagged_union.js:247
+247:       x.z; // error
+             ^ property `z`. Property not found in
+247:       x.z; // error
+           ^ object type
+
+tagged_union.js:255
+255:       x.z; // error
+             ^ property `z`. Property not found in
+255:       x.z; // error
+           ^ object type
+
+tagged_union.js:258
+258:       x.y; // error
+             ^ property `y`. Property not found in
+258:       x.y; // error
+           ^ object type
+
+tagged_union.js:262
+262:       x.y; // error
+             ^ property `y`. Property not found in
+262:       x.y; // error
+           ^ object type
+
+tagged_union.js:265
+265:       x.z; // error
+             ^ property `z`. Property not found in
+265:       x.z; // error
+           ^ object type
+
 typeof.js:5
   5:     x[0]; // error for boolean, not number
          ^^^^ access of computed property/element. Computed property/element cannot be accessed on
@@ -994,11 +1078,11 @@ void.js:75
 
 void.js:82
  82:   if (100 * void(0)) {
-                 ^^^^^^ undefined. The operand of an arithmetic operation must be a number.
+                 ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 void.js:85
  85:   if (void(0) * 100) {
-           ^^^^^^ undefined. The operand of an arithmetic operation must be a number.
+           ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 172 errors
+Found 186 errors

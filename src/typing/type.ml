@@ -78,15 +78,13 @@ module rec TypeTerm : sig
     | ArrT of reason * arrtype
 
     (* type of a class *)
-    | ClassT of t
+    | ClassT of reason * t
     (* type of an instance of a class *)
-    | InstanceT of reason * static * super * insttype
+    | InstanceT of reason * static * super * implements * insttype
 
     (* type of an optional parameter *)
-    | OptionalT of t
-    (* type of a rest parameter *)
-    | RestT of t
-    | AbstractT of t
+    | OptionalT of reason * t
+    | AbstractT of reason * t
 
     (* type expression whose evaluation is deferred *)
     (* Usually a type expression is evaluated by splitting it into a def type
@@ -115,13 +113,13 @@ module rec TypeTerm : sig
        it is forced only when polymorphic types are applied. *)
 
     (* polymorphic type *)
-    | PolyT of typeparam list * t
+    | PolyT of reason * typeparam list * t
     (* type application *)
-    | TypeAppT of t * t list
+    | TypeAppT of reason * t * t list
     (* this-abstracted class *)
-    | ThisClassT of t
+    | ThisClassT of reason * t
     (* this instantiation *)
-    | ThisTypeAppT of t * t * t list
+    | ThisTypeAppT of reason * t * t * t list
     (* bound type variable *)
     | BoundT of typeparam
     (* existential type variable *)
@@ -131,7 +129,7 @@ module rec TypeTerm : sig
     | ExactT of reason * t
 
     (* ? types *)
-    | MaybeT of t
+    | MaybeT of reason * t
 
     | TaintT of reason
 
@@ -216,7 +214,7 @@ module rec TypeTerm : sig
         The round pegs in the square holes. **)
 
     (* util for deciding subclassing relations *)
-    | ExtendsT of t list * t * t
+    | ExtendsT of reason * t list * t * t
 
     (* toolkit for making choices *)
     | ChoiceKitT of reason * choice_tool
@@ -272,6 +270,7 @@ module rec TypeTerm : sig
     | FunReturn
     | Internal of internal_use_op
     | MissingTupleElement of int
+    | PropertyCompatibility of string * reason * reason * use_op
     | TypeRefinement
     | UnknownUse
 
@@ -283,20 +282,16 @@ module rec TypeTerm : sig
     (* use types *)
     (*************)
 
-    (* operation on literals *)
-    | SummarizeT of reason * t
-
     (* operations on runtime values, such as functions, objects, and arrays *)
-    | ApplyT of reason * t * funtype
-    | BindT of reason * funtype
-    | CallT of reason * funtype
-    | MethodT of (* call *) reason * (* lookup *) reason * propref * funtype
+    | BindT of reason * funcalltype * bool (* pass-through *)
+    | CallT of reason * funcalltype
+    | MethodT of (* call *) reason * (* lookup *) reason * propref * funcalltype
     | SetPropT of reason * propref * t
     | GetPropT of reason * propref * t
     | TestPropT of reason * propref * t
     | SetElemT of reason * t * t
     | GetElemT of reason * t * t
-    | CallElemT of (* call *) reason * (* lookup *) reason * t * funtype
+    | CallElemT of (* call *) reason * (* lookup *) reason * t * funcalltype
     | GetStaticsT of reason * t_out
 
     (* repositioning *)
@@ -304,8 +299,9 @@ module rec TypeTerm : sig
     | ReposUseT of reason * use_op * t
 
     (* operations on runtime types, such as classes and functions *)
-    | ConstructorT of reason * t list * t
+    | ConstructorT of reason * call_arg list * t
     | SuperT of reason * insttype
+    | ImplementsT of t
     | MixinT of reason * t
 
     (* overloaded +, could be subsumed by general overloading *)
@@ -320,6 +316,7 @@ module rec TypeTerm : sig
     | AssertBinaryInLHST of reason
     | AssertBinaryInRHST of reason
     | AssertForInRHST of reason
+    | AssertRestParamT of reason
 
     (* operation specifying a type refinement via a predicate *)
     | PredicateT of predicate * t
@@ -348,7 +345,7 @@ module rec TypeTerm : sig
         The first reason is the reason why we're specializing. The second
         reason points to the type application itself
     **)
-    | SpecializeT of reason * reason * bool * t list * t
+    | SpecializeT of reason * reason * specialize_cache * t list * t
     (* operation on this-abstracted classes *)
     | ThisSpecializeT of reason * t * t
     (* variance check on polymorphic types *)
@@ -373,7 +370,11 @@ module rec TypeTerm : sig
     | LookupT of reason * lookup_kind * t list * propref * lookup_action
 
     (* operations on objects *)
-    | ObjAssignT of reason * t * t * string list * bool
+
+    (* Resolves the object into which the properties are assigned *)
+    | ObjAssignToT of reason * t * t * string list * obj_assign_kind
+    (* Resolves the object from which the properties are assigned *)
+    | ObjAssignFromT of reason * t * t * string list * obj_assign_kind
     | ObjFreezeT of reason * t
     | ObjRestT of reason * string list * t
     | ObjSealT of reason * t
@@ -414,23 +415,26 @@ module rec TypeTerm : sig
         * (* local ModuleT *) (reason * exporttypes)
         * (* 't_out' to receive the resolved ModuleT *) t_out
     | CopyNamedExportsT of reason * t * t_out
-    | ExportNamedT of reason * t SMap.t * t_out
+    | CopyTypeExportsT of reason * t * t_out
+    | ExportNamedT of
+        reason
+        * bool (* skip_duplicates *)
+        * t SMap.t (* exports_tmap *)
+        * t_out
+    | ExportTypeT of
+        reason
+        * bool (* skip_duplicates *)
+        * string (* export_name *)
+        * t (* target_module_t *)
+        * t_out
 
     (* Map a FunT over a structure *)
     | MapTypeT of reason * type_map * t * cont
 
-    (**
-     * An internal-only type to evaluate JSX expression. This type exists to
-     * wait for the first parameter of a React.createElement call in order to
-     * properly dispatch. That is, given a ReactClass, a stateless functional
-     * component, or a string, do the right thing.
-     *
-     * This type shouldn't exist, but is a temporary measure until the type of
-     * React.createElement can be represented by an intersection without running
-     * into intersection bugs. *)
-    | ReactCreateElementT of reason * t * t_out
+    | ReactKitT of reason * React.tool
 
-    (* toolkit for making choices, contd. (appearing only as upper bounds) *)
+    | ObjSpreadT of reason * ObjectSpread.tool * ObjectSpread.state * t_out
+
     | ChoiceKitUseT of reason * choice_use_tool
 
     (* tools for preprocessing intersections *)
@@ -528,6 +532,16 @@ module rec TypeTerm : sig
      *)
     | RefineT of reason * predicate * t
 
+    (* Spread elements show up in a bunch of places: array literals, function
+     * parameters, function call arguments, method arguments. constructor
+     * arguments, etc. Often we have logic that depends on what the spread
+     * elements resolve to. ResolveSpreadT is a use type that waits for a list
+     * of spread and non-spread elements to resolve, and then constructs
+     * whatever type it resolves to *)
+    | ResolveSpreadT of reason * resolve_spread_type
+
+  and specialize_cache = reason list option
+
   and predicate =
     | AndP of predicate * predicate
     | OrP of predicate * predicate
@@ -542,8 +556,8 @@ module rec TypeTerm : sig
     | MaybeP (* null or undefined *)
 
     | SingletonBoolP of bool (* true or false *)
-    | SingletonStrP of string (* string literal *)
-    | SingletonNumP of number_literal
+    | SingletonStrP of Loc.t * bool * string (* string literal *)
+    | SingletonNumP of Loc.t * bool * number_literal
 
     | BoolP (* boolean *)
     | FunP (* function *)
@@ -570,7 +584,7 @@ module rec TypeTerm : sig
     | SentinelProp of string
 
   and 'a literal =
-    | Literal of 'a
+    | Literal of bool option * 'a
     | Truthy
     | AnyLiteral
 
@@ -584,16 +598,31 @@ module rec TypeTerm : sig
     | Mixed_non_void
     | Empty_intersection
 
-  (* used by FunT and CallT *)
+  (* used by FunT *)
   and funtype = {
     this_t: t;
     params_tlist: t list;
     params_names: string list option;
+    rest_param: (string option * Loc.t * t) option;
     return_t: t;
     closure_t: int;
     is_predicate: bool;
-    changeset: Changeset.t
+    changeset: Changeset.t;
+    def_reason: Reason.t;
   }
+
+  (* Used by CallT and similar constructors *)
+  and funcalltype = {
+    call_this_t: t;
+    call_args_tlist: call_arg list;
+    call_tout: t;
+    call_closure_t: int;
+    call_strict_arity: bool;
+  }
+
+  and call_arg =
+  | Arg of t
+  | SpreadArg of t
 
   and arrtype =
   | ArrayAT of t * t list option
@@ -602,6 +631,11 @@ module rec TypeTerm : sig
    * myTuple[expr]
    *)
   | TupleAT of t * t list
+  (* ROArrayAT(elemt) is the super type for all tuples and arrays for which
+   * elemt is a supertype of every element type *)
+  | ROArrayAT of t
+  (* EmptyAT is the bottom type for all arrays and tuples *)
+  | EmptyAT
 
   and objtype = {
     flags: flags;
@@ -609,6 +643,14 @@ module rec TypeTerm : sig
     props_tmap: Properties.id;
     proto_t: prototype;
   }
+
+  (* Object.assign(target, source1, ...source2) first resolves target then the
+     sources. *)
+  and obj_assign_kind =
+  (* Obj.assign(target, source) *)
+  | ObjAssign
+  (* Obj.assign(target, ...source) *)
+  | ObjSpreadAssign
 
   and cont = Lower of t | Upper of use_t
 
@@ -653,7 +695,7 @@ module rec TypeTerm : sig
 
   and lookup_action =
   | RWProp of t_out * rw
-  | LookupProp of Property.t
+  | LookupProp of use_op * Property.t
   | SuperProp of Property.t
 
   and rw = Read | Write
@@ -661,7 +703,7 @@ module rec TypeTerm : sig
   and elem_action =
     | ReadElem of t
     | WriteElem of t
-    | CallElem of reason (* call *) * funtype
+    | CallElem of reason (* call *) * funcalltype
 
   and propref =
     | Named of reason * name
@@ -691,6 +733,7 @@ module rec TypeTerm : sig
     | Get of t
     | Set of t
     | GetSet of t * t
+    | Method of t
 
   and insttype = {
     class_id: ident;
@@ -753,6 +796,8 @@ module rec TypeTerm : sig
   and destructor =
   | NonMaybeType
   | PropertyType of string
+  | Bind of t
+  | SpreadType of bool * t list
 
   and type_map =
   | TupleMap
@@ -765,6 +810,8 @@ module rec TypeTerm : sig
 
   and static = t
 
+  and implements = t list
+
   and t_out = t
 
   and custom_fun_kind =
@@ -773,6 +820,8 @@ module rec TypeTerm : sig
   | ObjectGetPrototypeOf
 
   (* 3rd party libs *)
+  | ReactPropType of React.PropType.t
+  | ReactCreateClass
   | ReactCreateElement
 
   (* Facebookisms *)
@@ -782,10 +831,15 @@ module rec TypeTerm : sig
   | Mixin
   | Idx
 
+  (* Internal tools *)
+  | DebugPrint
+
   and sentinel_value =
   | SentinelStr of string
   | SentinelNum of number_literal
   | SentinelBool of bool
+  | SentinelNull
+  | SentinelVoid
 
   and choice_tool =
   | Trigger
@@ -811,6 +865,49 @@ module rec TypeTerm : sig
   *)
   and dep_preds =
     t * predicate Key_map.t * predicate Key_map.t
+
+  and resolve_spread_type = {
+    (* This is the list of elements that are already resolved (that is have no
+     * more unresolved spread elements *)
+    rrt_resolved: resolved_param list;
+    (* This is the list of elements that we have yet to resolve *)
+    rrt_unresolved: unresolved_param list;
+    (* Once all the elements have been resolved, this tells us what type to
+     * construct *)
+    rrt_resolve_to: spread_resolve;
+  }
+
+  and unresolved_param =
+  | UnresolvedArg of t
+  | UnresolvedSpreadArg of t
+
+  and resolved_param =
+  | ResolvedArg of t
+  | ResolvedSpreadArg of reason * arrtype
+  | ResolvedAnySpreadArg of reason
+
+  and spread_resolve =
+  (* Once we've finished resolving spreads, try to construct a tuple *)
+  | ResolveSpreadsToTuple of int * t
+  (* Once we've finished resolving spreads, try to construct an array with
+   * known element types *)
+  | ResolveSpreadsToArrayLiteral of int * t
+  (* Once we've finished resolving spreads, try to construct a non-tuple array
+   *)
+  | ResolveSpreadsToArray of t
+
+  (* Once we've finished resolving spreads for a function's arguments, call the
+   * function with those arguments *)
+  | ResolveSpreadsToMultiflowCallFull of int * funtype
+  | ResolveSpreadsToMultiflowSubtypeFull of int * funtype
+
+  (* Once we've finished resolving spreads for a function's arguments,
+   * partially apply the arguments to the function and return the resulting
+   * function (basically what func.bind(that, ...args) does) *)
+  | ResolveSpreadsToMultiflowPartial of int * funtype * reason * t
+
+  | ResolveSpreadsToCallT of funcalltype * t
+
 end = TypeTerm
 
 and Polarity : sig
@@ -867,8 +964,6 @@ end
 and Property : sig
   type t = TypeTerm.property
 
-  val field: Polarity.t -> TypeTerm.t -> t
-
   val polarity: t -> Polarity.t
 
   val read_t: t -> TypeTerm.t option
@@ -887,13 +982,12 @@ end = struct
 
   type t = property
 
-  let field polarity t = Field (t, polarity)
-
   let polarity = function
     | Field (_, polarity) -> polarity
     | Get _ -> Positive
     | Set _ -> Negative
     | GetSet _ -> Neutral
+    | Method _ -> Positive
 
   let read_t = function
     | Field (t, polarity) ->
@@ -903,6 +997,7 @@ end = struct
     | Get t -> Some t
     | Set _ -> None
     | GetSet (t, _) -> Some t
+    | Method t -> Some t
 
   let write_t = function
     | Field (t, polarity) ->
@@ -912,6 +1007,7 @@ end = struct
     | Get _ -> None
     | Set t -> Some t
     | GetSet (_, t) -> Some t
+    | Method _ -> None
 
   let access = function
     | Read -> read_t
@@ -920,7 +1016,8 @@ end = struct
   let iter_t f = function
     | Field (t, _)
     | Get t
-    | Set t ->
+    | Set t
+    | Method t ->
       f t
     | GetSet (t1, t2) ->
       f t1;
@@ -929,7 +1026,8 @@ end = struct
   let fold_t f acc = function
     | Field (t, _)
     | Get t
-    | Set t ->
+    | Set t
+    | Method t ->
       f acc t
     | GetSet (t1, t2) ->
       f (f acc t1) t2
@@ -939,6 +1037,7 @@ end = struct
     | Get t -> Get (f t)
     | Set t -> Set (f t)
     | GetSet (t1, t2) -> GetSet (f t1, f t2)
+    | Method t -> Method (f t)
 
   let ident_map_t f p =
     match p with
@@ -955,6 +1054,9 @@ end = struct
       let t1_ = f t1 in
       let t2_ = f t2 in
       if t1_ == t1 && t2_ == t2 then p else GetSet (t1_, t2_)
+    | Method t ->
+      let t_ = f t in
+      if t_ == t then p else Method t_
 
   let forall_t f = fold_t (fun acc t -> acc && f t) true
 
@@ -973,11 +1075,14 @@ and Properties : sig
   val add_field: string -> Polarity.t -> TypeTerm.t -> t -> t
   val add_getter: string -> TypeTerm.t -> t -> t
   val add_setter: string -> TypeTerm.t -> t -> t
+  val add_method: string -> TypeTerm.t -> t -> t
 
   val mk_id: unit -> id
   val fake_id: id
   val string_of_id: id -> string
   val extract_named_exports: t -> Exports.t
+
+  val iter_t: (TypeTerm.t -> unit) -> t -> unit
 
   val map_t: (TypeTerm.t -> TypeTerm.t) -> t -> t
   val map_fields: (TypeTerm.t -> TypeTerm.t) -> t -> t
@@ -1012,6 +1117,9 @@ end = struct
     in
     SMap.add x p map
 
+  let add_method x t =
+    SMap.add x (Method t)
+
   let mk_id = Reason.mk_id
   let fake_id = 0
   let string_of_id = string_of_int
@@ -1022,6 +1130,8 @@ end = struct
       | Some t -> SMap.add x t tmap
       | None -> tmap
     ) pmap SMap.empty
+
+  let iter_t f = SMap.iter (fun _ -> Property.iter_t f)
 
   let map_t f = SMap.map (Property.map_t f)
 
@@ -1083,6 +1193,7 @@ and UnionRep : sig
 
   (** members in declaration order *)
   val members: t -> TypeTerm.t list
+  val members_nel: t -> TypeTerm.t * TypeTerm.t Nel.t
 
   val cons: TypeTerm.t -> t -> t
 
@@ -1104,9 +1215,9 @@ end = struct
   let canon t = TypeTerm.(
     match t with
     | SingletonStrT _ -> t
-    | StrT (r, Literal s) -> SingletonStrT (r, s)
+    | StrT (r, Literal (_, s)) -> SingletonStrT (r, s)
     | SingletonNumT _ -> t
-    | NumT (r, Literal lit) -> SingletonNumT (r, lit)
+    | NumT (r, Literal (_, lit)) -> SingletonNumT (r, lit)
     | _ -> t
   )
 
@@ -1166,6 +1277,7 @@ end = struct
     | Some (base, _) -> Some base
 
   let members (t0, t1, ts, _) = t0::t1::ts
+  let members_nel (t0, t1, ts, _) = t0, (t1, ts)
 
   let cons t0 (t1, t2, ts, _) =
     make t0 t1 (t2::ts)
@@ -1216,6 +1328,7 @@ and InterRep : sig
 
   (** member list in declaration order *)
   val members: t -> TypeTerm.t list
+  val members_nel: t -> TypeTerm.t * TypeTerm.t Nel.t
 
   (** map rep r to rep r' along type mapping f. drops history *)
   val map: (TypeTerm.t -> TypeTerm.t) -> t -> t
@@ -1236,6 +1349,7 @@ end = struct
   let make t0 t1 ts = (t0, t1, ts)
 
   let members (t0, t1, ts) = t0::t1::ts
+  let members_nel (t0, t1, ts) = t0, (t1, ts)
 
   let map f (t0, t1, ts) = make (f t0) (f t1) (List.map f ts)
 
@@ -1271,11 +1385,143 @@ and TypeMap : MyMap.S with type key = TypeTerm.t = MyMap.Make (struct
   let compare = Pervasives.compare
 end)
 
+and UseTypeSet : Set.S with type elt = TypeTerm.use_t = Set.Make (struct
+  type elt = TypeTerm.use_t
+  type t = elt
+  let compare = Pervasives.compare
+end)
+
 and UseTypeMap : MyMap.S with type key = TypeTerm.use_t = MyMap.Make (struct
   type key = TypeTerm.use_t
   type t = key
   let compare = Pervasives.compare
 end)
+
+and React : sig
+  module PropType : sig
+    type t =
+    | Primitive of (is_required * TypeTerm.t)
+    | Complex of complex
+
+    and is_required = bool
+
+    and complex =
+    | ArrayOf
+    | InstanceOf
+    | ObjectOf
+    | OneOf
+    | OneOfType
+    | Shape
+  end
+
+  type resolved_object =
+    reason * Properties.t * TypeTerm.dicttype option * TypeTerm.flags
+
+  type resolve_object =
+  | ResolveObject
+  | ResolveDict of (TypeTerm.dicttype * Properties.t * resolved_object)
+  | ResolveProp of (string * Properties.t * resolved_object)
+
+  type resolve_array =
+  | ResolveArray
+  | ResolveElem of TypeTerm.t list * TypeTerm.t list
+
+  module SimplifyPropType : sig
+    type tool =
+    | ArrayOf
+    | InstanceOf
+    | ObjectOf
+    | OneOf of resolve_array
+    | OneOfType of resolve_array
+    | Shape of resolve_object
+  end
+
+  module CreateClass : sig
+    (* In order to derive a component instance type from a specification, we
+     * need to resolve the spec object itself and a number of its fields. We do
+     * this in order, accumulating the resolved information until we have enough
+     * to compute the instance type. *)
+    type tool =
+    | Spec of stack_tail
+    | Mixins of stack
+    | Statics of stack
+    | PropTypes of stack * resolve_object
+    | DefaultProps of TypeTerm.t list * default_props option
+    | InitialState of TypeTerm.t list * initial_state option
+
+    (* When we encounter mixins, we push the current spec's props into a stack,
+     * then resolve each mixin in turn. This is recursive, as mixins can have
+     * mixins. *)
+    and stack = stack_head * stack_tail
+    and stack_head = resolved_object * spec
+    and stack_tail = (stack_head * TypeTerm.t list * spec maybe_known list) list
+
+    and spec = {
+      obj: resolved_object;
+      statics: statics option;
+      prop_types: prop_types option;
+      get_default_props: TypeTerm.t list;
+      get_initial_state: TypeTerm.t list;
+      unknown_mixins: reason list;
+    }
+
+    and statics = resolved_object maybe_known
+    and prop_types = resolved_object maybe_known
+    and default_props = resolved_object maybe_known
+    and initial_state = resolved_object or_null maybe_known
+
+    and 'a maybe_known = Known of 'a | Unknown of reason
+    and 'a or_null = NotNull of 'a | Null of reason
+
+    (* Components have some recursive dependencies. For example, the instance
+     * type depends on the return value of its methods, but those methods also
+     * depend on `this`. We use these tvars to "tie the knot" in those cases. *)
+    type knot = {
+      this: TypeTerm.t;
+      static: TypeTerm.t;
+      state_t: TypeTerm.t;
+      default_t: TypeTerm.t;
+    }
+  end
+
+  type tool =
+  | CreateElement of TypeTerm.t * TypeTerm.t_out
+  | SimplifyPropType of SimplifyPropType.tool * TypeTerm.t_out
+  | CreateClass of CreateClass.tool * CreateClass.knot * TypeTerm.t_out
+end = React
+
+and ObjectSpread : sig
+  type tool =
+    (* Each part of a spread must be resolved in order to compute the result *)
+    | Resolve of resolve
+    (* In order to resolve an InstanceT, all supers must also be resolved to
+       collect class properties, which are own. *)
+    | Super of slice * resolve
+
+  and resolve =
+    | Next
+    (* Resolve each element of a union or intersection *)
+    | List0 of TypeTerm.t Nel.t * join
+    | List of TypeTerm.t list * resolved Nel.t * join
+
+  and join = And | Or
+
+  and state = {
+    todo_rev: TypeTerm.t list;
+    acc: resolved list;
+    make_exact: bool;
+  }
+
+  (* A union type resolves to a resolved spread with more than one element *)
+  and resolved = slice Nel.t
+
+  and slice = reason * props * dict * TypeTerm.flags
+
+  and props = prop SMap.t
+  and prop = TypeTerm.t * bool (* own *)
+
+  and dict = TypeTerm.dicttype option
+end = ObjectSpread
 
 include TypeTerm
 
@@ -1293,16 +1539,8 @@ module type PrimitiveType = sig
   val make: reason -> t
 end
 
-module type PrimitiveT = sig
-  val desc: reason_desc
-  val t: t
-  val at: Loc.t -> t
-  val why: reason -> t
-end
-
 module Primitive (P: PrimitiveType) = struct
   let desc = P.desc
-  let t = P.make (locationless_reason desc)
   let at tok = P.make (mk_reason desc tok)
   let why reason = P.make (replace_reason_const desc reason)
   let make = P.make
@@ -1353,6 +1591,26 @@ module ObjProtoT = Primitive (struct
   let make r = ObjProtoT r
 end)
 
+(* USE WITH CAUTION!!! Locationless types should not leak to errors, otherwise
+   they will cause error printing to crash.
+
+   We use locationless reasons legitimately for normalizing. Also, because `any`
+   doesn't cause errors, locationless `AnyT` is OK.
+*)
+module Locationless = struct
+  module LocationLess (P: PrimitiveType) = struct
+    let t = P.make (locationless_reason P.desc)
+  end
+  module NumT = LocationLess (NumT)
+  module StrT = LocationLess (StrT)
+  module BoolT = LocationLess (BoolT)
+  module MixedT = LocationLess (MixedT)
+  module EmptyT = LocationLess (EmptyT)
+  module AnyT = LocationLess (AnyT)
+  module VoidT = LocationLess (VoidT)
+  module NullT = LocationLess (NullT)
+end
+
 (* lift an operation on Type.t to an operation on Type.use_t *)
 let lift_to_use f = function
   | UseT (_, t) -> f t
@@ -1385,32 +1643,89 @@ let is_any = function
 (* Use types trapped for any propagation *)
 let any_propagating_use_t = function
   | AdderT _
-  | CallT _
-  | GetPropT _
-  | MethodT _
-  | PredicateT _
-  | GuardT _
   | AndT _
-  | OrT _
-  | ReposLowerT _
-  | IntersectionPreprocessKitT _
-  | CallOpenPredT _
-  | CallLatentPredT _
-  | CJSRequireT _
-  | ImportModuleNsT _
-  | ImportDefaultT _
-  | ImportNamedT _
+  | ArrRestT _
+  | BecomeT _
+  | BindT _
   | CJSExtractNamedExportsT _
+  | CJSRequireT _
+  | CallElemT _
+  | CallLatentPredT _
+  | CallOpenPredT _
+  | CallT _
+  | ChoiceKitUseT _
+  | ConstructorT _
   | CopyNamedExportsT _
+  | CopyTypeExportsT _
+  | ElemT _
+  | ExportNamedT _
+  | ExportTypeT _
+  | GetElemT _
+  | GetKeysT _
+  | GetPropT _
+  | GetStaticsT _
+  | GuardT _
+  | IdxUnMaybeifyT _
+  | IdxUnwrap _
+  | ImportDefaultT _
+  | ImportModuleNsT _
+  | ImportNamedT _
+  | ImportTypeT _
+  | ImportTypeofT _
+  | IntersectionPreprocessKitT _
+  | LookupT _
+  | MakeExactT _
+  | MapTypeT _
+  | MethodT _
+  | MixinT _
+  | NotT _
+  | ObjFreezeT _
+  | ObjRestT _
+  | ObjSealT _
+  | ObjSpreadT _
+  | ObjTestT _
+  | OrT _
+  | PredicateT _
+  | ReactKitT _
+  | RefineT _
+  | ReposLowerT _
+  | ReposUseT _
+  | ResolveSpreadT _
+  | SentinelPropTestT _
+  | SetElemT _
+  | SpecializeT _
+  | TestPropT _
+  | ThisSpecializeT _
+  | UnaryMinusT _
+  | UnifyT _
+  | UseT (_, ClassT _) (* mk_instance ~for_type:false *)
     -> true
 
   (* These types have no t_out, so can't propagate anything *)
   | AssertArithmeticOperandT _
+  | AssertBinaryInLHST _
+  | AssertBinaryInRHST _
+  | AssertForInRHST _
+  | AssertImportIsValueT _
+  | AssertRestParamT _
   | ComparatorT _
+  | DebugPrintT _
+  | EqT _
+  | HasOwnPropT _
+  | ImplementsT _
+  | SetPropT _
+  | SuperT _
+  | TypeAppVarianceCheckT _
+  | VarianceCheckT _
     -> false
 
-  (* TODO: remove wildcard, decide which should be true *)
-  | _ -> false
+  (* TODO: Figure out if these should be true or false *)
+  | ObjAssignFromT _
+  | ObjAssignToT _
+  | SubstOnPredT _
+  | UseT _
+    -> false
+
 
 (* Usually types carry enough information about the "reason" for their
    existence (e.g., position in code, introduction/elimination rules in
@@ -1419,7 +1734,7 @@ let any_propagating_use_t = function
 
 let rec reason_of_t = function
   | OpenT (reason,_) -> reason
-  | AbstractT t -> replace_reason (fun desc -> RAbstract desc) (reason_of_t t)
+  | AbstractT (reason, _) -> reason
   | AnnotT assume_t -> reason_of_t assume_t
   | AnyFunT reason -> reason
   | AnyObjT reason -> reason
@@ -1430,27 +1745,24 @@ let rec reason_of_t = function
   | BoolT (reason, _) -> reason
   | BoundT typeparam -> typeparam.reason
   | ChoiceKitT (reason, _) -> reason
-  | ClassT t -> replace_reason (fun desc -> RClassType desc) (reason_of_t t)
+  | ClassT (reason, _) -> reason
   | CustomFunT (reason, _) -> reason
   | DiffT (t, _) -> reason_of_t t
   | EmptyT reason -> reason
   | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
-  | ExactT (reason, t) ->
-      let desc = desc_of_reason (reason_of_t t) in
-      replace_reason_const (RExactType desc) reason
+  | ExactT (reason, _) -> reason
   | ExistsT reason -> reason
-  | ExtendsT (_,_,t) ->
-      replace_reason (fun desc -> RExtends desc) (reason_of_t t)
+  | ExtendsT (reason, _, _, _) -> reason
   | FunProtoApplyT reason -> reason
   | FunProtoBindT reason -> reason
   | FunProtoCallT reason -> reason
   | FunProtoT reason -> reason
   | FunT (reason,_,_,_) -> reason
   | IdxWrapper (reason, _) -> reason
-  | InstanceT (reason,_,_,_) -> reason
+  | InstanceT (reason,_,_,_,_) -> reason
   | IntersectionT (reason, _) -> reason
   | KeysT (reason, _) -> reason
-  | MaybeT t -> replace_reason (fun desc -> RMaybe desc) (reason_of_t t)
+  | MaybeT (reason, _) -> reason
   | MixedT (reason, _) -> reason
   | ModuleT (reason, _) -> reason
   | NullT reason -> reason
@@ -1458,21 +1770,19 @@ let rec reason_of_t = function
   | ObjProtoT reason -> reason
   | ObjT (reason,_) -> reason
   | OpenPredT (reason, _, _, _) -> reason
-  | OptionalT t -> replace_reason (fun desc -> ROptional desc) (reason_of_t t)
-  | PolyT (_,t) -> replace_reason (fun desc -> RPolyType desc) (reason_of_t t)
+  | OptionalT (reason, _) -> reason
+  | PolyT (reason, _, _) -> reason
   | ReposT (reason, _) -> reason
   | ReposUpperT (reason, _) -> reason
-  | RestT t -> replace_reason (fun desc -> RRestArray desc) (reason_of_t t)
   | ShapeT (t) -> reason_of_t t
   | SingletonBoolT (reason, _) -> reason
   | SingletonNumT (reason, _) -> reason
   | SingletonStrT (reason, _) -> reason
   | StrT (reason, _) -> reason
   | TaintT (r) -> r
-  | ThisClassT t -> replace_reason (fun desc -> RClassType desc) (reason_of_t t)
-  | ThisTypeAppT(t,_,_) ->
-      replace_reason (fun desc -> RThisTypeApp desc) (reason_of_t t)
-  | TypeAppT(t,_) -> replace_reason (fun desc -> RTypeApp desc) (reason_of_t t)
+  | ThisClassT (reason, _) -> reason
+  | ThisTypeAppT(reason, _, _, _) -> reason
+  | TypeAppT (reason, _, _) -> reason
   | TypeMapT (reason, _, _, _) -> reason
   | TypeT (reason,_) -> reason
   | UnionT (reason, _) -> reason
@@ -1487,15 +1797,15 @@ and reason_of_use_t = function
   | UseT (_, t) -> reason_of_t t
   | AdderT (reason,_,_) -> reason
   | AndT (reason, _, _) -> reason
-  | ApplyT (reason, _, _) -> reason
   | ArrRestT (reason, _, _) -> reason
   | AssertArithmeticOperandT reason -> reason
   | AssertBinaryInLHST reason -> reason
   | AssertBinaryInRHST reason -> reason
   | AssertForInRHST reason -> reason
+  | AssertRestParamT reason -> reason
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT (reason, _) -> reason
-  | BindT (reason, _) -> reason
+  | BindT (reason, _, _) -> reason
   | CallElemT (reason, _, _, _) -> reason
   | CallLatentPredT (reason, _, _, _, _) -> reason
   | CallOpenPredT (reason, _, _, _, _) -> reason
@@ -1506,10 +1816,12 @@ and reason_of_use_t = function
   | ComparatorT (reason,_) -> reason
   | ConstructorT (reason,_,_) -> reason
   | CopyNamedExportsT (reason, _, _) -> reason
+  | CopyTypeExportsT (reason, _, _) -> reason
   | DebugPrintT reason -> reason
   | ElemT (reason, _, _) -> reason
   | EqT (reason, _) -> reason
-  | ExportNamedT (reason, _, _) -> reason
+  | ExportNamedT (reason, _, _, _) -> reason
+  | ExportTypeT (reason, _, _, _, _) -> reason
   | GetElemT (reason,_,_) -> reason
   | GetKeysT (reason, _) -> reason
   | GetPropT (reason,_,_) -> reason
@@ -1518,6 +1830,7 @@ and reason_of_use_t = function
   | HasOwnPropT (reason, _) -> reason
   | IdxUnMaybeifyT (reason, _) -> reason
   | IdxUnwrap (reason, _) -> reason
+  | ImplementsT t -> reason_of_t t
   | ImportDefaultT (reason, _, _, _) -> reason
   | ImportModuleNsT (reason, _) -> reason
   | ImportNamedT (reason, _, _, _) -> reason
@@ -1530,23 +1843,25 @@ and reason_of_use_t = function
   | MethodT (reason,_,_,_) -> reason
   | MixinT (reason, _) -> reason
   | NotT (reason, _) -> reason
-  | ObjAssignT (reason, _, _, _, _) -> reason
+  | ObjAssignToT (reason, _, _, _, _) -> reason
+  | ObjAssignFromT (reason, _, _, _, _) -> reason
   | ObjFreezeT (reason, _) -> reason
   | ObjRestT (reason, _, _) -> reason
   | ObjSealT (reason, _) -> reason
   | ObjTestT (reason, _, _) -> reason
   | OrT (reason, _, _) -> reason
   | PredicateT (_, t) -> reason_of_t t
-  | ReactCreateElementT (reason, _, _) -> reason
+  | ReactKitT (reason, _) -> reason
   | RefineT (reason, _, _) -> reason
   | ReposLowerT (reason, _) -> reason
   | ReposUseT (reason, _, _) -> reason
+  | ResolveSpreadT (reason, _) -> reason
   | SentinelPropTestT (_, _, _, result) -> reason_of_t result
   | SetElemT (reason,_,_) -> reason
   | SetPropT (reason,_,_) -> reason
   | SpecializeT(reason,_,_,_,_) -> reason
+  | ObjSpreadT (reason, _, _, _) -> reason
   | SubstOnPredT (reason, _, _) -> reason
-  | SummarizeT (reason, _) -> reason
   | SuperT (reason,_) -> reason
   | TestPropT (reason, _, _) -> reason
   | ThisSpecializeT(reason,_,_) -> reason
@@ -1573,7 +1888,7 @@ let loc_of_t t = loc_of_reason (reason_of_t t)
 (* TODO make a type visitor *)
 let rec mod_reason_of_t f = function
   | OpenT (reason, t) -> OpenT (f reason, t)
-  | AbstractT t -> AbstractT (mod_reason_of_t f t)
+  | AbstractT (reason, t) -> AbstractT (f reason, t)
   | AnnotT assume_t ->
       AnnotT (mod_reason_of_t f assume_t)
   | AnyFunT reason -> AnyFunT (f reason)
@@ -1586,7 +1901,7 @@ let rec mod_reason_of_t f = function
   | BoundT { reason; name; bound; polarity; default; } ->
       BoundT { reason = f reason; name; bound; polarity; default; }
   | ChoiceKitT (reason, tool) -> ChoiceKitT (f reason, tool)
-  | ClassT t -> ClassT (mod_reason_of_t f t)
+  | ClassT (reason, t) -> ClassT (f reason, t)
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
   | DiffT (t1, t2) -> DiffT (mod_reason_of_t f t1, t2)
   | EmptyT reason -> EmptyT (f reason)
@@ -1594,17 +1909,18 @@ let rec mod_reason_of_t f = function
       EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
   | ExactT (reason, t) -> ExactT (f reason, t)
   | ExistsT reason -> ExistsT (f reason)
-  | ExtendsT (ts, t, tc) -> ExtendsT (ts, t, mod_reason_of_t f tc)
+  | ExtendsT (reason, ts, t, tc) -> ExtendsT (f reason, ts, t, tc)
   | FunProtoApplyT (reason) -> FunProtoApplyT (f reason)
   | FunProtoBindT (reason) -> FunProtoBindT (f reason)
   | FunProtoCallT (reason) -> FunProtoCallT (f reason)
   | FunProtoT (reason) -> FunProtoT (f reason)
   | FunT (reason, s, p, ft) -> FunT (f reason, s, p, ft)
   | IdxWrapper (reason, t) -> IdxWrapper (f reason, t)
-  | InstanceT (reason, st, su, inst) -> InstanceT (f reason, st, su, inst)
+  | InstanceT (reason, st, su, impls, inst) ->
+      InstanceT (f reason, st, su, impls, inst)
   | IntersectionT (reason, ts) -> IntersectionT (f reason, ts)
   | KeysT (reason, t) -> KeysT (f reason, t)
-  | MaybeT t -> MaybeT (mod_reason_of_t f t)
+  | MaybeT (reason, t) -> MaybeT (f reason, t)
   | MixedT (reason, t) -> MixedT (f reason, t)
   | ModuleT (reason, exports) -> ModuleT (f reason, exports)
   | NullT reason -> NullT (f reason)
@@ -1612,20 +1928,19 @@ let rec mod_reason_of_t f = function
   | ObjProtoT reason -> ObjProtoT (f reason)
   | ObjT (reason, ot) -> ObjT (f reason, ot)
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
-  | OptionalT t -> OptionalT (mod_reason_of_t f t)
-  | PolyT (plist, t) -> PolyT (plist, mod_reason_of_t f t)
+  | OptionalT (reason, t) -> OptionalT (f reason, t)
+  | PolyT (reason, plist, t) -> PolyT (f reason, plist, t)
   | ReposT (reason, t) -> ReposT (f reason, t)
   | ReposUpperT (reason, t) -> ReposUpperT (reason, mod_reason_of_t f t)
-  | RestT t -> RestT (mod_reason_of_t f t)
   | ShapeT t -> ShapeT (mod_reason_of_t f t)
   | SingletonBoolT (reason, t) -> SingletonBoolT (f reason, t)
   | SingletonNumT (reason, t) -> SingletonNumT (f reason, t)
   | SingletonStrT (reason, t) -> SingletonStrT (f reason, t)
   | StrT (reason, t) -> StrT (f reason, t)
   | TaintT (r) -> TaintT (f r)
-  | ThisClassT t -> ThisClassT (mod_reason_of_t f t)
-  | ThisTypeAppT (t, this, ts) -> ThisTypeAppT (mod_reason_of_t f t, this, ts)
-  | TypeAppT (t, ts) -> TypeAppT (mod_reason_of_t f t, ts)
+  | ThisClassT (reason, t) -> ThisClassT (f reason, t)
+  | ThisTypeAppT (reason, t, this, ts) -> ThisTypeAppT (f reason, t, this, ts)
+  | TypeAppT (reason, t, ts) -> TypeAppT (f reason, t, ts)
   | TypeMapT (reason, kind, t1, t2) -> TypeMapT (f reason, kind, t1, t2)
   | TypeT (reason, t) -> TypeT (f reason, t)
   | UnionT (reason, ts) -> UnionT (f reason, ts)
@@ -1639,15 +1954,15 @@ and mod_reason_of_use_t f = function
   | UseT (_, t) -> UseT (UnknownUse, mod_reason_of_t f t)
   | AdderT (reason, rt, lt) -> AdderT (f reason, rt, lt)
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
-  | ApplyT (reason, l, ft) -> ApplyT (f reason, l, ft)
   | ArrRestT (reason, i, t) -> ArrRestT (f reason, i, t)
   | AssertArithmeticOperandT reason -> AssertArithmeticOperandT (f reason)
   | AssertBinaryInLHST reason -> AssertBinaryInLHST (f reason)
   | AssertBinaryInRHST reason -> AssertBinaryInRHST (f reason)
   | AssertForInRHST reason -> AssertForInRHST (f reason)
+  | AssertRestParamT reason -> AssertRestParamT (f reason)
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
   | BecomeT (reason, t) -> BecomeT (f reason, t)
-  | BindT (reason, ft) -> BindT (f reason, ft)
+  | BindT (reason, ft, pass) -> BindT (f reason, ft, pass)
   | CallElemT (reason_call, reason_lookup, t, ft) ->
       CallElemT (f reason_call, reason_lookup, t, ft)
   | CallLatentPredT (reason, b, k, l, t) ->
@@ -1663,10 +1978,15 @@ and mod_reason_of_use_t f = function
   | ConstructorT (reason, ts, t) -> ConstructorT (f reason, ts, t)
   | CopyNamedExportsT (reason, target_module_t, t_out) ->
       CopyNamedExportsT(f reason, target_module_t, t_out)
+  | CopyTypeExportsT (reason, target_module_t, t_out) ->
+      CopyTypeExportsT(f reason, target_module_t, t_out)
   | DebugPrintT reason -> DebugPrintT (f reason)
   | ElemT (reason, t, action) -> ElemT (f reason, t, action)
   | EqT (reason, t) -> EqT (f reason, t)
-  | ExportNamedT (reason, tmap, t_out) -> ExportNamedT(f reason, tmap, t_out)
+  | ExportNamedT (reason, skip_dupes, tmap, t_out) ->
+      ExportNamedT(f reason, skip_dupes, tmap, t_out)
+  | ExportTypeT (reason, skip_dupes, name, t, t_out) ->
+      ExportTypeT(f reason, skip_dupes, name, t, t_out)
   | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetPropT (reason, n, t) -> GetPropT (f reason, n, t)
@@ -1675,6 +1995,7 @@ and mod_reason_of_use_t f = function
   | HasOwnPropT (reason, prop) -> HasOwnPropT (f reason, prop)
   | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
   | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
+  | ImplementsT t -> ImplementsT (mod_reason_of_t f t)
   | ImportDefaultT (reason, import_kind, name, t) ->
       ImportDefaultT (f reason, import_kind, name, t)
   | ImportModuleNsT (reason, t) -> ImportModuleNsT (f reason, t)
@@ -1691,27 +2012,29 @@ and mod_reason_of_use_t f = function
       MethodT (f reason_call, reason_lookup, name, ft)
   | MixinT (reason, inst) -> MixinT (f reason, inst)
   | NotT (reason, t) -> NotT (f reason, t)
-  | ObjAssignT (reason, t, t2, filter, resolve) ->
-      ObjAssignT (f reason, t, t2, filter, resolve)
+  | ObjAssignToT (reason, t, t2, filter, kind) ->
+      ObjAssignToT (f reason, t, t2, filter, kind)
+  | ObjAssignFromT (reason, t, t2, filter, kind) ->
+      ObjAssignFromT (f reason, t, t2, filter, kind)
   | ObjFreezeT (reason, t) -> ObjFreezeT (f reason, t)
   | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
   | ObjSealT (reason, t) -> ObjSealT (f reason, t)
   | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
   | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
-  | ReactCreateElementT (reason, t, tout) ->
-      ReactCreateElementT (f reason, t, tout)
+  | ReactKitT (reason, tool) -> ReactKitT (f reason, tool)
   | RefineT (reason, p, t) -> RefineT (f reason, p, t)
   | ReposLowerT (reason, t) -> ReposLowerT (f reason, t)
   | ReposUseT (reason, use_op, t) -> ReposUseT (f reason, use_op, t)
+  | ResolveSpreadT (reason_op, resolve) -> ResolveSpreadT (f reason_op, resolve)
   | SentinelPropTestT (l, sense, sentinel, result) ->
       SentinelPropTestT (l, sense, sentinel, mod_reason_of_t f result)
   | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
   | SetPropT (reason, n, t) -> SetPropT (f reason, n, t)
   | SpecializeT(reason_op, reason_tapp, cache, ts, t) ->
       SpecializeT (f reason_op, reason_tapp, cache, ts, t)
+  | ObjSpreadT (reason, tool, state, k) -> ObjSpreadT (f reason, tool, state, k)
   | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
-  | SummarizeT (reason, t) -> SummarizeT (f reason, t)
   | SuperT (reason, inst) -> SuperT (f reason, inst)
   | TestPropT (reason, n, t) -> TestPropT (f reason, n, t)
   | ThisSpecializeT(reason, this, t) -> ThisSpecializeT (f reason, this, t)
@@ -1728,6 +2051,9 @@ let reasonless_compare =
   fun t t' ->
     if t == t' then 0 else
     compare t (swap_reason t' (reason_of_t t))
+
+let reasonless_eq t1 t2 =
+  reasonless_compare t1 t2 = 0
 
 (* Printing some types in parseable form relies on particular formats in
    corresponding reason descriptions. The following module formalizes the
@@ -1804,7 +2130,6 @@ let string_of_ctor = function
   | PolyT _ -> "PolyT"
   | ReposT _ -> "ReposT"
   | ReposUpperT _ -> "ReposUpperT"
-  | RestT _ -> "RestT"
   | ShapeT _ -> "ShapeT"
   | SingletonBoolT _ -> "SingletonBoolT"
   | SingletonNumT _ -> "SingletonNumT"
@@ -1834,6 +2159,7 @@ let string_of_use_op = function
   | FunReturn -> "FunReturn"
   | Internal op -> spf "Internal %s" (string_of_internal_use_op op)
   | MissingTupleElement _ -> "MissingTupleElement"
+  | PropertyCompatibility _ -> "PropertyCompatibility"
   | TypeRefinement -> "TypeRefinement"
   | UnknownUse -> "UnknownUse"
 
@@ -1842,13 +2168,13 @@ let string_of_use_ctor = function
 
   | AdderT _ -> "AdderT"
   | AndT _ -> "AndT"
-  | ApplyT _ -> "ApplyT"
   | ArrRestT _ -> "ArrRestT"
   | AssertArithmeticOperandT _ -> "AssertArithmeticOperandT"
   | AssertBinaryInLHST _ -> "AssertBinaryInLHST"
   | AssertBinaryInRHST _ -> "AssertBinaryInRHST"
   | AssertForInRHST _ -> "AssertForInRHST"
   | AssertImportIsValueT _ -> "AssertImportIsValueT"
+  | AssertRestParamT _ -> "AssertRestParamT"
   | BecomeT _ -> "BecomeT"
   | BindT _ -> "BindT"
   | CallElemT _ -> "CallElemT"
@@ -1865,10 +2191,12 @@ let string_of_use_ctor = function
   | ComparatorT _ -> "ComparatorT"
   | ConstructorT _ -> "ConstructorT"
   | CopyNamedExportsT _ -> "CopyNamedExportsT"
+  | CopyTypeExportsT _ -> "CopyTypeExportsT"
   | DebugPrintT _ -> "DebugPrintT"
   | ElemT _ -> "ElemT"
   | EqT _ -> "EqT"
   | ExportNamedT _ -> "ExportNamedT"
+  | ExportTypeT _ -> "ExportTypeT"
   | GetElemT _ -> "GetElemT"
   | GetKeysT _ -> "GetKeysT"
   | GetPropT _ -> "GetPropT"
@@ -1877,6 +2205,7 @@ let string_of_use_ctor = function
   | HasOwnPropT _ -> "HasOwnPropT"
   | IdxUnMaybeifyT _ -> "IdxUnMaybeifyT"
   | IdxUnwrap _ -> "IdxUnwrap"
+  | ImplementsT _ -> "ImplementsT"
   | ImportDefaultT _ -> "ImportDefaultT"
   | ImportModuleNsT _ -> "ImportModuleNsT"
   | ImportNamedT _ -> "ImportNamedT"
@@ -1894,23 +2223,35 @@ let string_of_use_ctor = function
   | MethodT _ -> "MethodT"
   | MixinT _ -> "MixinT"
   | NotT _ -> "NotT"
-  | ObjAssignT _ -> "ObjAssignT"
+  | ObjAssignToT _ -> "ObjAssignToT"
+  | ObjAssignFromT _ -> "ObjAssignFromT"
   | ObjFreezeT _ -> "ObjFreezeT"
   | ObjRestT _ -> "ObjRestT"
   | ObjSealT _ -> "ObjSealT"
   | ObjTestT _ -> "ObjTestT"
   | OrT _ -> "OrT"
   | PredicateT _ -> "PredicateT"
-  | ReactCreateElementT _ -> "ReactCreateElementT"
+  | ReactKitT _ -> "ReactKitT"
   | RefineT _ -> "RefineT"
   | ReposLowerT _ -> "ReposLowerT"
   | ReposUseT _ -> "ReposUseT"
+  | ResolveSpreadT (_, {rrt_resolve_to; _;})->
+    spf "ResolveSpreadT(%s)" begin match rrt_resolve_to with
+    | ResolveSpreadsToTuple _ -> "ResolveSpreadsToTuple"
+    | ResolveSpreadsToArray _ -> "ResolveSpreadsToArray"
+    | ResolveSpreadsToArrayLiteral _ -> "ResolveSpreadsToArrayLiteral"
+    | ResolveSpreadsToMultiflowCallFull _ -> "ResolveSpreadsToMultiflowCallFull"
+    | ResolveSpreadsToMultiflowSubtypeFull _ ->
+      "ResolveSpreadsToMultiflowSubtypeFull"
+    | ResolveSpreadsToMultiflowPartial _ -> "ResolveSpreadsToMultiflowPartial"
+    | ResolveSpreadsToCallT _ -> "ResolveSpreadsToCallT"
+    end
   | SentinelPropTestT _ -> "SentinelPropTestT"
   | SetElemT _ -> "SetElemT"
   | SetPropT _ -> "SetPropT"
   | SpecializeT _ -> "SpecializeT"
+  | ObjSpreadT _ -> "ObjSpreadT"
   | SubstOnPredT _ -> "SubstOnPredT"
-  | SummarizeT _ -> "SummarizeT"
   | SuperT _ -> "SuperT"
   | TestPropT _ -> "TestPropT"
   | ThisSpecializeT _ -> "ThisSpecializeT"
@@ -1942,8 +2283,8 @@ let rec string_of_predicate = function
 
   | SingletonBoolP false -> "false"
   | SingletonBoolP true -> "true"
-  | SingletonStrP str -> spf "string `%s`" str
-  | SingletonNumP (_,raw) -> spf "number `%s`" raw
+  | SingletonStrP (_, _, str) -> spf "string `%s`" str
+  | SingletonNumP (_, _, (_,raw)) -> spf "number `%s`" raw
 
   (* typeof *)
   | VoidP -> "undefined"
@@ -1962,12 +2303,12 @@ let rec string_of_predicate = function
   | LatentP (t,i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
 
 let literal_eq x = function
-  | Literal y -> x = y
+  | Literal (_, y) -> x = y
   | Truthy -> false
   | AnyLiteral -> false
 
 let number_literal_eq (x, _) = function
-  | Literal (y, _) -> x = y
+  | Literal (_, (y, _)) -> x = y
   | Truthy -> false
   | AnyLiteral -> false
 
@@ -1982,3 +2323,48 @@ let name_of_propref = function
 let reason_of_propref = function
   | Named (r, _) -> r
   | Computed t -> reason_of_t t
+
+and extract_setter_type = function
+  | FunT (_, _, _, { params_tlist = [param_t]; _; }) -> param_t
+  | _ ->  failwith "Setter property with unexpected type"
+
+and extract_getter_type = function
+  | FunT (_, _, _, { return_t; _; }) -> return_t
+  | _ -> failwith "Getter property with unexpected type"
+
+and elemt_of_arrtype reason = function
+| ArrayAT (elemt, _)
+| ROArrayAT (elemt)
+| TupleAT (elemt, _) -> elemt
+| EmptyAT -> EmptyT reason
+
+let optional t =
+  let reason = replace_reason (fun desc -> ROptional desc) (reason_of_t t) in
+  OptionalT (reason, t)
+
+let class_type t =
+  let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
+  ClassT (reason, t)
+
+let this_class_type t =
+  let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
+  ThisClassT (reason, t)
+
+let extends_type l u =
+  let reason = replace_reason (fun desc -> RExtends desc) (reason_of_t u) in
+  ExtendsT (reason, [], l, u)
+
+let poly_type tparams t =
+  if tparams = []
+  then t
+  else
+    let reason = replace_reason (fun desc -> RPolyType desc) (reason_of_t t) in
+    PolyT (reason, tparams, t)
+
+let typeapp t tparams =
+  let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in
+  TypeAppT (reason, t, tparams)
+
+let this_typeapp t this tparams =
+  let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in
+  ThisTypeAppT (reason, t, this, tparams)

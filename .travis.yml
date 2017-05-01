@@ -8,10 +8,12 @@ env:
   - secure: HMGkDgbay0TcQtiCm5K4F1Y8trtMT5X5S8nRGrTrKBuI4RIEkTQ06VdQVf96gnhe/7IjDQfAUbXWspSmlpWbIKij4BRHOijezU37sooNUkQp4R+EfPpbJECnuv+4WqZI2bMj2i3sw3b8f1oNCFztzHrpxZQ9oOeQbenf/8c2fQs=
   # AWS_SECRET_ACCESS_KEY
   - secure: huLKjE7xlxl7HaCLIIVyDaZN9ZsWrR4RcxW+JNUH1F9lM5mbRjAPayawSKRzHViu7u6uUNkjMOJs3lRlWdj8ezH2vnJNm9oNvCOYuSFmBIBELVlXcfbqpX9ZffbJeFiUZ2dOwrDEhm3+WIg6Wr3QbUtVdlMfNvljOJ3CQQc9Yc4=
-  # CLOUDFRONT_ID
-  - secure: Jr+6c6pF5H0lP4Kt6evlf/xYD/Qjoms3HK7lw1kg8lzwoEXPD3MezgkpOktU8ZBllGolc+ou23h+3hgJwvqi7ANmjzfxyVDdpB7Kiw4y2pEm6tAXYzmatSDb401u7+2sb2H/aSe8yikNrVrizvqaJrDOGeptCBjXQF+a2lNeMC0=
   # NPM_TOKEN
   - secure: hzJKtjqujadYb7QiMhCLCieNtTp77aMRaqxorJq2+CT+dMcIh1S/S9jxXsfl4OzidnIv2QHussHo5gOdS3U4JzRsHEgQ5+4HRkpxif1UijVqb4FXgaaS3PuBylV2xtMAlVjOUW+HqSCVxbokhrqWkeTKEozfk18+E8TnuOqhKjU=
+  # S3_BUCKET (beta.flow.org)
+  - secure: fEJ1vIc7a7xqZPfbUDL1GbMYTcujVU7JY1wrQvDax8rcEOWEO6fKUomIxGCRKhut7fVlvRVaa8nLzVwyRDeT/KD4x2alQLuxJV9wwVGO/PFb6XDjUXayxzG7EmhzsERY9udh0+//SNShetY+1FbBS5zm6/aDAUenYMrqKqEZJyU=
+  # CLOUDFRONT_ID
+  - secure: SbgDWLAqwxJ+/4MdyVDv+ImlPCNIqEc+qMfLmn606QB20ocnS4C8KtKFgZERVcPdBkMiZ2XR5Bk8jrGxPgw0WfxsABe0nxCWn8x6vIUFuScPK4SalTqksNOEuHmSxK4YgmIa855B6KRPQKQyG5HCxWrH2IvDBg7TkCvQG+Rz5cc=
 
 # NOTE: We set the compiler to a bogus "no-op" bash command (":") to work around
 # a Travis caching limitation: the cache slug only depends on the compiler name,
@@ -30,23 +32,19 @@ matrix:
       os: linux
       env: OCAML_VERSION=4.03.0 OPAM_VERSION=1.2.0
 
-    - compiler: ": Linux, ocaml 4.02.1, opam 1.2.0"
-      os: linux
-      env: OCAML_VERSION=4.02.1 OPAM_VERSION=1.2.0
-
-    - compiler: ": Linux, ocaml 4.02.1, opam 1.1.1"
-      os: linux
-      env: OCAML_VERSION=4.02.1 OPAM_VERSION=1.1.1
-
-    - compiler: ": Mac, ocaml 4.02.1, opam 1.2.0"
+    - compiler: ": Mac, ocaml 4.03.0, opam 1.2.0"
       os: osx
-      env: OCAML_VERSION=4.02.1 OPAM_VERSION=1.2.0
+      env: OCAML_VERSION=4.03.0 OPAM_VERSION=1.2.0
 
 addons:
   apt:
+    sources:
+    - sourceline: 'deb https://dl.yarnpkg.com/debian/ stable main'
+      key_url: 'https://dl.yarnpkg.com/debian/pubkey.gpg'
     packages:
     - libelf-dev
     - aspcud
+    - yarn
 
 before_install: bash -e resources/travis/before_install.sh
 install: bash -e resources/travis/install_deps.sh
@@ -77,7 +75,7 @@ deploy:
   on:
     tags: true
     condition:
-    - $OCAML_VERSION = 4.02.1
+    - $OCAML_VERSION = 4.03.0
     - $OPAM_VERSION = 1.2.0
 
 # Deploy the parser to npm
@@ -89,7 +87,7 @@ deploy:
     tags: true
     condition:
     - $TRAVIS_OS_NAME = linux
-    - $OCAML_VERSION = 4.02.1
+    - $OCAML_VERSION = 4.03.0
     - $OPAM_VERSION = 1.2.0
 
 # Deploy the website
@@ -98,11 +96,26 @@ deploy:
   script: bash -e resources/travis/deploy.sh
   skip_cleanup: true
   on:
-    all_branches: true
+    branch: master
     condition:
     - $TRAVIS_TAG != "" || $TRAVIS_BRANCH = "master"
     - $TRAVIS_OS_NAME = linux
-    - $OCAML_VERSION = 4.02.1
+    - $OCAML_VERSION = 4.03.0
+    - $OPAM_VERSION = 1.2.0
+
+# Upload release versions of flow.js
+- provider: s3
+  access_key_id: "$AWS_ACCESS_KEY_ID"
+  secret_access_key: "$AWS_SECRET_ACCESS_KEY"
+  bucket: "$S3_BUCKET"
+  skip_cleanup: true
+  local_dir: "$HOME/static"
+  upload-dir: static
+  on:
+    tags: true
+    condition:
+    - $TRAVIS_OS_NAME = linux
+    - $OCAML_VERSION = 4.03.0
     - $OPAM_VERSION = 1.2.0
 
 # The use of secure prevents forks from spamming irc and email.

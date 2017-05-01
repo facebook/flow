@@ -113,6 +113,8 @@ begin library "hh-utils"
   dirname = "hack/utils"
   sort = true
   files = [
+    "buffered_line_reader.ml"
+    "http_lite.ml"
     "config_file.ml"
     "file_pos.ml"
     "findUtils.ml"
@@ -209,32 +211,10 @@ begin library "hh-utils-sys"
     "tmp.ml"
     "tty.ml"
   ]
-  if not(os_type = "Win32") || (ocaml_major_version = "4" && ocaml_minor_version = "01") then {
-    files += [
-      "win32_support.c"
-    ]
-  }
   requires = [
     "hh-utils-collections"
     "hh-utils-core"
     "hh-utils-disk"
-    "hh-utils-string"
-    "tp-core"
-  ]
-end
-
-begin library "hh-utils-errors"
-  dirname = "hack/utils"
-  sort = true
-  files = [
-    "errors_sig.ml"
-  ]
-  requires = [
-    "hh-utils-collections"
-    "hh-utils-core"
-    "hh-utils-json"
-    "hh-utils-pos"
-    "hh-utils-relative-path"
     "hh-utils-string"
     "tp-core"
   ]

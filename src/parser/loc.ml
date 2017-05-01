@@ -121,7 +121,9 @@ let compare =
       if k <> 0 then k
       else String.compare (string_of_filename fn1) (string_of_filename fn2)
   in
-  let pos_cmp a b = Pervasives.compare (a.line, a.column) (b.line, b.column) in
+  let pos_cmp a b =
+    let k = a.line - b.line in if k = 0 then a.column - b.column else k
+  in
   fun loc1 loc2 ->
     let k = source_cmp loc1.source loc2.source in
     if k = 0 then

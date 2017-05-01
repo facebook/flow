@@ -57,20 +57,7 @@ let add_decl (r, resolved_r, cx) declarations =
    The arguments (b), (c), (d) are passed to `merge_component_strict`, and
    argument (a) is passed to `restore`.
 *)
-let merge_strict_context ~options cache component_cxs =
-  let required = List.fold_left (fun required cx ->
-    let require_locs = Context.require_loc cx in
-    SSet.fold (fun r ->
-      let loc =
-        try SMap.find_unsafe r require_locs
-        with Not_found -> raise (Key_not_found ("require_locs", r))
-      in
-      let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
-        ~options cx loc r in
-      check_require (r, resolved_r, cx);
-      add_decl (r, resolved_r, cx)
-    ) (Context.required cx) required
-  ) [] component_cxs in
+let merge_strict_context_with_required cache component_cxs required =
   let cx = List.hd component_cxs in
 
   let sig_cache = new Context_cache.sig_context_cache in
@@ -78,15 +65,15 @@ let merge_strict_context ~options cache component_cxs =
   let orig_sig_cxs, sig_cxs, impls, res, decls =
     List.fold_left (fun (orig_sig_cxs, sig_cxs, impls, res, decls) req ->
       let r, resolved_r, cx_to = req in
-      Module_js.(match get_module_file Expensive.ok resolved_r with
+      Module_js.(match get_file Expensive.ok resolved_r with
       | Some (Loc.ResourceFile f) ->
           orig_sig_cxs, sig_cxs,
           impls, (r, f, cx_to) :: res, decls
       | Some file ->
-          let info = get_module_info ~audit:Expensive.ok file in
+          let info = get_info_unsafe ~audit:Expensive.ok file in
           if info.checked && info.parsed then
             (* checked implementation exists *)
-            let impl sig_cx = sig_cx, r, info._module, cx_to in
+            let impl sig_cx = sig_cx, Files.module_ref file, r, cx_to in
             begin match cache#find file with
             | Some sig_cx ->
                 orig_sig_cxs, sig_cxs,
@@ -125,10 +112,42 @@ let merge_strict_context ~options cache component_cxs =
     component_cxs sig_cxs impls res decls master_cx;
   Merge_js.restore cx orig_sig_cxs orig_master_cx;
 
-  ()
+  orig_master_cx
+
+let merge_strict_context cache component_cxs =
+  let required = List.fold_left (fun required cx ->
+    SSet.fold (fun r ->
+      let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
+        (Context.file cx) r in
+      check_require (r, resolved_r, cx);
+      add_decl (r, resolved_r, cx)
+    ) (Context.required cx) required
+  ) [] component_cxs in
+  merge_strict_context_with_required cache component_cxs required
+
+(* Variation of merge_strict_context where requires may not have already been
+   resolved. This is used by commands that make up a context on the fly. *)
+let merge_contents_context ~options cache cx =
+  let required =
+    let require_locs = Context.require_loc cx in
+    SSet.fold (fun r ->
+      let loc =
+        try SMap.find_unsafe r require_locs
+        with Not_found -> raise (Key_not_found ("require_locs", r))
+      in
+      let resolved_r = Module_js.imported_module
+        ~options
+        ~node_modules_containers:!Files.node_modules_containers
+        (Context.file cx) loc r in
+      check_require (r, resolved_r, cx);
+      add_decl (r, resolved_r, cx)
+    ) (Context.required cx) []
+  in
+  (merge_strict_context_with_required cache [cx] required: Context.t)
+  |> ignore
 
 (* Entry point for merging a component *)
-let merge_strict_component ~options = function
+let merge_strict_component = function
   | Merge_stream.Skip file ->
     (* Skip rechecking this file (because none of its dependencies changed). We
        are going to reuse the existing signature for the file, so we must be
@@ -155,17 +174,21 @@ let merge_strict_component ~options = function
 
      It also follows when file is checked, other_files must be checked too!
   *)
-  let info = Module_js.get_module_info ~audit:Expensive.ok file in
+  let info = Module_js.get_info_unsafe ~audit:Expensive.ok file in
   if info.Module_js.checked then (
     let cache = new Context_cache.context_cache in
     let component_cxs =
       List.map (cache#read ~audit:Expensive.ok) component in
 
-    merge_strict_context ~options cache component_cxs;
+    let master_cx = merge_strict_context cache component_cxs in
 
     let md5 = Merge_js.ContextOptimizer.sig_context component_cxs in
     let cx = List.hd component_cxs in
+
+    Merge_js.clear_master_shared cx master_cx;
+
     let errors = Context.errors cx in
+
     Context.remove_all_errors cx;
     Context.clear_intermediates cx;
 
@@ -175,8 +198,8 @@ let merge_strict_component ~options = function
   )
   else file, Errors.ErrorSet.empty, Some true
 
-let merge_strict_job ~options (merged, errsets, unchanged) elements =
-  List.fold_left (fun (merged, errsets, unchanged) element ->
+let merge_strict_job ~options (merged, unchanged) elements =
+  List.fold_left (fun (merged, unchanged) element ->
     let component = Merge_stream.(match element with
       | Component component -> component
       | Skip file -> [file]
@@ -189,15 +212,15 @@ let merge_strict_job ~options (merged, errsets, unchanged) elements =
       (fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) files t)
       (fun () ->
         (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
-        let file, errors, diff = merge_strict_component ~options element in
+        let file, errors, diff = merge_strict_component element in
         match diff with
         | Some diff ->
           (* file was rechecked; diff says whether its signature was changed *)
-          file :: merged, errors :: errsets,
+          (file, errors) :: merged,
           if diff then unchanged else file :: unchanged
         | None ->
           (* file was skipped, so its signature is definitely unchanged *)
-          merged, errsets,
+          merged,
           file :: unchanged
       )
     with
@@ -213,25 +236,18 @@ let merge_strict_job ~options (merged, errsets, unchanged) elements =
         (Errors.internal_error file msg) in
       prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
         (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
-      file :: merged, errorset::errsets, unchanged
-  ) (merged, errsets, unchanged) elements
+      (file, errorset) :: merged, unchanged
+  ) (merged, unchanged) elements
 
-let merge_strict ~options ~workers ~save_errors
-    dependency_graph partition recheck_map =
+(* make a map from component leaders to components *)
+let merge_strict ~options ~workers
+    dependency_graph component_map recheck_map =
   (* NOTE: master_cx will only be saved once per server lifetime *)
   let master_cx = Init_js.get_master_cx options in
   (* TODO: we probably don't need to save master_cx in ContextHeap *)
   Context_cache.add ~audit:Expensive.ok master_cx;
   (* store master signature context to heap *)
   Context_cache.add_sig ~audit:Expensive.ok master_cx;
-  (* make a map from component leaders to components *)
-  let component_map =
-    IMap.fold (fun _ components acc ->
-      List.fold_left (fun acc component ->
-        FilenameMap.add (List.hd component) component acc
-      ) acc components
-    ) partition FilenameMap.empty
-  in
   (* make a map from files to their component leaders *)
   let leader_map =
     FilenameMap.fold (fun file component acc ->
@@ -248,13 +264,12 @@ let merge_strict ~options ~workers ~save_errors
     (fun t -> spf "merged (strict) in %f" t)
     (fun () ->
       (* returns parallel lists of filenames and errorsets *)
-      let files, errsets, _ = MultiWorker.call_dynamic
+      let merged, _ = MultiWorker.call
         workers
         ~job: (merge_strict_job ~options)
-        ~neutral: ([], [], [])
+        ~neutral: ([], [])
         ~merge: Merge_stream.join
         ~next: (Merge_stream.make
                   dependency_graph leader_map component_map recheck_leader_map) in
-      (* save *)
-      save_errors files errsets
+      merged
     )

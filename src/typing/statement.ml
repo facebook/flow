@@ -16,7 +16,6 @@
    variables) but also flow-sensitive information about local variables at every
    point inside a function (and when to narrow or widen their types). *)
 
-module Ast = Spider_monkey_ast
 module Anno = Type_annotation
 module Flow = Flow_js
 module Iface_sig = Class_sig (* same thing, mo'less *)
@@ -33,38 +32,7 @@ open Import_export
 (* Utilities *)
 (*************)
 
-(* type exemplar set - reasons are not considered in compare *)
-module TypeExSet = Set.Make(struct
-  include Type
-  let compare = reasonless_compare
-end)
-
 let ident_name (_, name) = name
-
-let summarize cx t = match t with
-  | OpenT _ ->
-      let reason = reason_of_t t in
-      Flow.mk_tvar_where cx reason (fun tvar ->
-        Flow.flow cx (t, SummarizeT (reason, tvar))
-      )
-  (* These remaining cases simulate SummarizeT semantics, and are a slight
-     optimization in that they avoid creation of fresh type
-     variables. Semantically, we could have the above case fire unconditionally,
-     since the fresh type variable is unified in all cases. *)
-  | StrT (_, AnyLiteral) -> t
-  | StrT (reason, _) -> StrT.why reason
-  | NumT (_, AnyLiteral) -> t
-  | NumT (reason, _) -> NumT.why reason
-  | _ -> t
-
-(* AST helpers *)
-
-let function_desc ~async ~generator =
-  match async, generator with
-  | true, true -> RAsyncGenerator
-  | true, false -> RAsync
-  | false, true -> RGenerator
-  | false, false -> RNormal
 
 (************)
 (* Visitors *)
@@ -98,7 +66,7 @@ let rec variable_decl cx entry = Ast.Statement.(
          will resolve the type annotation and unify it with this tvar. *)
       let t = Flow_js.mk_tvar cx r in
       Hashtbl.replace (Context.type_table cx) loc t;
-      bind cx name t r
+      bind cx name t id_loc
     | (loc, _) as p ->
       let pattern_name = internal_pattern_name loc in
       let desc = RCustom (spf "%s _" str_of_kind) in
@@ -107,8 +75,8 @@ let rec variable_decl cx entry = Ast.Statement.(
       let t = typeAnnotation |>
         (* TODO: delay resolution of type annotation like above? *)
         Anno.mk_type_annotation cx SMap.empty r in
-      bind cx pattern_name t r;
-      let expr _ _ = EmptyT.t in (* don't eval computed property keys *)
+      bind cx pattern_name t loc;
+      let expr _ _ = EmptyT.at loc in (* don't eval computed property keys *)
       destructuring cx ~expr t None None p ~f:(fun loc name _default t ->
         let r = repos_reason loc r in
         let t = match typeAnnotation with
@@ -118,7 +86,7 @@ let rec variable_decl cx entry = Ast.Statement.(
           EvalT (t, DestructuringT (r, Become), mk_id())
         in
         Hashtbl.replace (Context.type_table cx) loc t;
-        bind cx name t r
+        bind cx name t loc
       )
   ) in
 
@@ -172,7 +140,7 @@ and statement_decl cx = Ast.Statement.(
   | (_, TypeAlias { TypeAlias.id = (name_loc, name); _ } ) ->
       let r = DescFormat.type_reason name name_loc in
       let tvar = Flow.mk_tvar cx r in
-      Env.bind_type cx name tvar r
+      Env.bind_type cx name tvar name_loc
 
   | (_, Switch { Switch.cases; _ }) ->
       Env.in_lex_scope cx (fun () ->
@@ -236,13 +204,12 @@ and statement_decl cx = Ast.Statement.(
 
   | (_, Debugger) -> ()
 
-  | (loc, FunctionDeclaration { Ast.Function.id; async; generator; _ }) ->
-      (match id with
+  | (loc, FunctionDeclaration func) ->
+      (match func.Ast.Function.id with
       | Some (_, name) ->
-        let desc = RFunction (function_desc ~async ~generator) in
-        let r = mk_reason desc loc in
+        let r = func_reason func loc in
         let tvar = Flow.mk_tvar cx r in
-        Env.bind_fun cx name tvar r
+        Env.bind_fun cx name tvar loc
       | None ->
         failwith (
           "Flow Error: Nameless function declarations should always be given " ^
@@ -257,7 +224,7 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (RCustom (spf "declare %s" name)) loc in
       let t = Anno.mk_type_annotation cx SMap.empty r typeAnnotation in
       Hashtbl.replace (Context.type_table cx) loc t;
-      Env.bind_declare_var cx name t r
+      Env.bind_declare_var cx name t loc
 
   | (loc, DeclareFunction { DeclareFunction.
       id = (_, name) as id;
@@ -270,7 +237,7 @@ and statement_decl cx = Ast.Statement.(
           let t =
             Anno.mk_type_annotation cx SMap.empty r (Some typeAnnotation) in
           Hashtbl.replace (Context.type_table cx) loc t;
-          Env.bind_declare_fun cx name t r
+          Env.bind_declare_fun cx name t loc
       | Some func_decl ->
           statement_decl cx (loc, func_decl)
       )
@@ -283,7 +250,7 @@ and statement_decl cx = Ast.Statement.(
       | Some (name_loc, name) ->
         let r = mk_reason (RCustom (spf "class `%s`" name)) name_loc in
         let tvar = Flow.mk_tvar cx r in
-        Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name tvar r
+        Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name tvar name_loc
       | None -> ()
     )
 
@@ -296,8 +263,8 @@ and statement_decl cx = Ast.Statement.(
       let tvar = Flow.mk_tvar cx r in
       (* interface is a type alias, declare class is a var *)
       if is_interface
-      then Env.bind_type cx name tvar r
-      else Env.bind_declare_var cx name tvar r
+      then Env.bind_type cx name tvar loc
+      else Env.bind_declare_var cx name tvar loc
 
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
@@ -312,7 +279,7 @@ and statement_decl cx = Ast.Statement.(
       let r = mk_reason (RCustom (spf "module `%s`" name)) loc in
       let t = Flow.mk_tvar cx r in
       Hashtbl.replace (Context.type_table cx) loc t;
-      Env.bind_declare_var cx (internal_module_name name) t r
+      Env.bind_declare_var cx (internal_module_name name) t loc
 
   | _,
     DeclareExportDeclaration {
@@ -355,60 +322,45 @@ and statement_decl cx = Ast.Statement.(
   | (_, ImportDeclaration import_decl) ->
       let open ImportDeclaration in
 
-      let module_name = (
-        let (_, source_literal) = import_decl.source in
-        match source_literal.Ast.Literal.value with
-        | Ast.Literal.String(value) -> value
-        | _ -> failwith  (
-            "Parser error: Invalid source type! Must be a string literal."
-          )
-      ) in
-
-      let (import_str, isType) = (
+      let isType =
         match import_decl.importKind with
-        | ImportDeclaration.ImportType -> "import type", true
-        | ImportDeclaration.ImportTypeof -> "import typeof", true
-        | ImportDeclaration.ImportValue -> "import", false
-      ) in
+        | ImportDeclaration.ImportType -> true
+        | ImportDeclaration.ImportTypeof -> true
+        | ImportDeclaration.ImportValue -> false
+      in
 
       import_decl.specifiers |> List.iter (fun specifier ->
-        let (local_name, reason) = (match specifier with
-          | ImportNamedSpecifier {local; remote;} ->
+        let (local_name, loc, isType) = (match specifier with
+          | ImportNamedSpecifier {local; remote; kind;} ->
             let remote_name = ident_name remote in
-            let (local_name, reason) = (
+            let (local_name, loc) = (
               match local with
               | Some local ->
-                let local_name = ident_name local in
-                let reason_str =
-                  spf "%s { %s as %s }" import_str remote_name local_name
-                in
-                let loc = Loc.btwn (fst remote) (fst local) in
-                (local_name, mk_reason (RCustom reason_str) loc)
+                (ident_name local, Loc.btwn (fst remote) (fst local))
               | None ->
-                let reason_str = spf "%s { %s }" import_str remote_name in
-                (remote_name, mk_reason (RCustom reason_str) (fst remote))
+                (remote_name, fst remote)
             ) in
-            (local_name, reason)
+            let isType = isType || (
+              match kind with
+              | None -> isType
+              | Some kind ->
+                kind = ImportDeclaration.ImportType
+              || kind = ImportDeclaration.ImportTypeof
+            ) in
+            (local_name, loc, isType)
           | ImportDefaultSpecifier local ->
-            let local_name = ident_name local in
-            let reason_str =
-              spf "%s %s from %S" import_str local_name module_name
-            in
-            let reason = mk_reason (RCustom reason_str) (fst local) in
-            (local_name, reason)
+            (ident_name local, fst local, isType)
           | ImportNamespaceSpecifier (_, local) ->
-            let local_name = ident_name local in
-            let reason_str =
-              spf "%s * as %s from %S" import_str local_name module_name
-            in
-            let reason = mk_reason (RCustom reason_str) (fst local) in
-            (local_name, reason)
+            (ident_name local, fst local, isType)
         ) in
+        let reason = if isType
+          then DescFormat.type_reason local_name loc
+          else mk_reason (RCustom (spf "identifier `%s`" local_name)) loc in
         let tvar = Flow.mk_tvar cx reason in
         let state = Scope.State.Initialized in
         if isType
-        then Env.bind_type ~state cx local_name tvar reason
-        else Env.bind_import cx local_name tvar reason
+        then Env.bind_type ~state cx local_name tvar loc
+        else Env.bind_import cx local_name tvar loc
       )
 )
 
@@ -438,9 +390,8 @@ and toplevels cx stmts =
     let uc = !n+1 in
     if uc < List.length stmts
     then (
-      let warn_unreachable loc = Flow_error.(
-        add_output cx (EUnreachable loc)
-      ) in
+      let warn_unreachable loc =
+        Flow_js.add_output cx (Flow_error.EUnreachable loc) in
       let rec drop n lst = match (n, lst) with
         | (_, []) -> []
         | (0, l) -> l
@@ -486,7 +437,7 @@ and statement cx = Ast.Statement.(
     Hashtbl.replace (Context.type_table cx) loc interface_t;
     (* interface is a type alias, declare class is a var *)
     Env.(if structural then init_type else init_var ~has_anno:false)
-      cx name interface_t reason
+      cx name interface_t loc
   in
 
   let catch_clause cx { Try.CatchClause.param; body = (_, b) } =
@@ -501,7 +452,7 @@ and statement cx = Ast.Statement.(
 
           (match Env.in_lex_scope cx (fun () ->
             Scope.(Env.bind_implicit_let
-              ~state:State.Initialized Entry.CatchParamBinding cx name t r);
+              ~state:State.Initialized Entry.CatchParamBinding cx name t loc);
 
             Abnormal.catch_control_flow_exception (fun () ->
               toplevel_decls cx b.Block.body;
@@ -513,12 +464,12 @@ and statement cx = Ast.Statement.(
           )
 
       | loc, Identifier _ ->
-          Flow_error.(add_output cx
-            (EUnsupportedSyntax (loc, CatchParameterAnnotation)))
+          Flow_js.add_output cx
+            Flow_error.(EUnsupportedSyntax (loc, CatchParameterAnnotation))
 
       | loc, _ ->
-          Flow_error.(add_output cx
-            (EUnsupportedSyntax (loc, CatchParameterDeclaration)))
+          Flow_js.add_output cx
+            Flow_error.(EUnsupportedSyntax (loc, CatchParameterDeclaration))
     )
   in
 
@@ -532,7 +483,7 @@ and statement cx = Ast.Statement.(
         toplevels cx body
       )
 
-  | (_, Expression { Expression.expression = e }) ->
+  | (_, Expression { Expression.expression = e; directive = _ }) ->
       ignore (expression cx e)
 
   (* Refinements for `if` are derived by the following Hoare logic rule:
@@ -544,8 +495,6 @@ and statement cx = Ast.Statement.(
      [Pre] if c S1 else S2 [Post]
   *)
   | (loc, If { If.test; consequent; alternate }) ->
-      let reason = mk_reason (RCustom "if") loc in
-
       let _, preds, not_preds, xts =
         predicates_of_condition cx test in
 
@@ -556,8 +505,8 @@ and statement cx = Ast.Statement.(
 
       (* swap in a refined clone of initial env for then *)
       Env.(
-        update_env cx reason (clone_env start_env);
-        ignore (refine_with_preds cx reason preds xts)
+        update_env cx loc (clone_env start_env);
+        ignore (refine_with_preds cx loc preds xts)
       );
 
       let exception_then = Abnormal.catch_control_flow_exception
@@ -569,8 +518,8 @@ and statement cx = Ast.Statement.(
 
       (* then swap in a refined clone of initial env for else *)
       Env.(
-        update_env cx reason (clone_env start_env);
-        ignore (refine_with_preds cx reason not_preds xts)
+        update_env cx loc (clone_env start_env);
+        ignore (refine_with_preds cx loc not_preds xts)
       );
 
       let exception_else = match alternate with
@@ -600,19 +549,19 @@ and statement cx = Ast.Statement.(
       | None, Some _
       | Some _, None
       | Some _, Some _ ->
-        Env.merge_env cx reason (start_env, then_env, else_env) newset;
+        Env.merge_env cx loc (start_env, then_env, else_env) newset;
         start_env
 
       | None, None ->
         (* if neither branch has abnormal flow, then refinements that happen in
            the branches should be forgotten since the original type covers
            all of the options. *)
-        Env.merge_env cx reason
+        Env.merge_env cx loc
           (start_env, then_env, else_env)
           (Changeset.exclude_refines newset);
         start_env
       in
-      Env.update_env cx reason end_env;
+      Env.update_env cx loc end_env;
 
       (* handle control flow in cases where we've thrown from both sides *)
       begin match exception_then, exception_else with
@@ -633,17 +582,16 @@ and statement cx = Ast.Statement.(
       | (loc, For _)
       | (loc, ForIn _)
         ->
-        let reason = mk_reason (RCustom "label") loc in
         let oldset = Changeset.clear () in
         let label = Some name in
         let save_break = Abnormal.clear_saved (Abnormal.Break label) in
         let save_continue = Abnormal.clear_saved (Abnormal.Continue label) in
 
         let env = Env.peek_env () in
-        Env.widen_env cx reason;
+        Env.widen_env cx loc;
 
         let loop_env = Env.clone_env env in
-        Env.update_env cx reason loop_env;
+        Env.update_env cx loc loop_env;
 
         Abnormal.(
           check_control_flow_exception (
@@ -655,7 +603,7 @@ and statement cx = Ast.Statement.(
         if Abnormal.swap_saved (Abnormal.Continue label) save_continue <> None
         then Env.havoc_vars newset;
 
-        Env.copy_env cx reason (env,loop_env) newset;
+        Env.copy_env cx loc (env,loop_env) newset;
 
         if Abnormal.swap_saved (Abnormal.Break label) save_break <> None
         then Env.havoc_vars newset
@@ -681,7 +629,7 @@ and statement cx = Ast.Statement.(
         | None -> None, Env.(clone_env (peek_env ()))
         | Some (_, name) -> Some name, []
       in
-      Env.reset_current_activation (mk_reason (RCustom "break") loc);
+      Env.reset_current_activation loc;
       Abnormal.save_and_throw (Abnormal.Break label_opt) ~env
 
   | (loc, Continue { Continue.label }) ->
@@ -689,7 +637,7 @@ and statement cx = Ast.Statement.(
         | None -> None
         | Some (_, name) -> Some name
       in
-      Env.reset_current_activation (mk_reason (RCustom "continue") loc);
+      Env.reset_current_activation loc;
       Abnormal.save_and_throw (Abnormal.Continue label_opt)
 
   | (_, With _) ->
@@ -701,13 +649,9 @@ and statement cx = Ast.Statement.(
       let typeparams, typeparams_map =
         Anno.mk_type_param_declarations cx typeParameters in
       let t = Anno.convert cx typeparams_map right in
-      let type_ =
-        if typeparams = []
-        then TypeT (r, t)
-        else PolyT(typeparams, TypeT (r, t))
-      in
+      let type_ = poly_type typeparams (TypeT (r, t)) in
       Hashtbl.replace (Context.type_table cx) loc type_;
-      Env.init_type cx name type_ r
+      Env.init_type cx name type_ name_loc
 
   (*******************************************************)
 
@@ -745,7 +689,7 @@ and statement cx = Ast.Statement.(
 
       (* switch_state tracks case effects and is used to create outgoing env *)
       let switch_state = ref None in
-      let update_switch_state (case_env, case_writes, _test_refis, reason) =
+      let update_switch_state (case_env, case_writes, _test_refis, loc) =
         let case_env = ListUtils.last_n incoming_depth case_env in
         let state = match !switch_state with
         | None ->
@@ -755,7 +699,7 @@ and statement cx = Ast.Statement.(
           let partial_writes = Changeset.union partial_writes case_diff in
           let total_writes = Changeset.inter case_writes total_writes in
           (* merge new case into switch env *)
-          Env.merge_env cx reason (env, env, case_env) case_writes;
+          Env.merge_env cx loc (env, env, case_env) case_writes;
           env, partial_writes, total_writes
         in switch_state := Some state
       in
@@ -765,12 +709,10 @@ and statement cx = Ast.Statement.(
         fun (loc, { Switch.Case.test; consequent }) ->
 
         (* compute predicates implied by case expr or default *)
-        let reason, (_, preds, not_preds, xtypes) = match test with
+        let _, preds, not_preds, xtypes = match test with
         | None ->
-          mk_reason (RCustom "default") loc,
-          (EmptyT.at loc, Key_map.empty, Key_map.empty, Key_map.empty)
+          EmptyT.at loc, Key_map.empty, Key_map.empty, Key_map.empty
         | Some expr ->
-          mk_reason (RCustom "case") loc,
           let fake_ast = loc, Ast.Expression.(Binary {
             Binary.operator = Binary.StrictEqual;
             left = discriminant; right = expr
@@ -780,16 +722,16 @@ and statement cx = Ast.Statement.(
 
         (* swap in case's starting env and clear changeset *)
         let case_env = Env.clone_env case_start_env in
-        Env.update_env cx reason case_env;
+        Env.update_env cx loc case_env;
         let save_changes = Changeset.clear () in
 
         (* add test refinements - save changelist for later *)
-        let test_refis = Env.refine_with_preds cx reason preds xtypes in
+        let test_refis = Env.refine_with_preds cx loc preds xtypes in
 
         (* merge env changes from fallthrough case, if present *)
         Option.iter !fallthrough_case ~f:(fun (env, writes, refis, _) ->
           let chg = Changeset.union writes refis in
-          Env.merge_env cx reason (case_env, case_env, env) chg
+          Env.merge_env cx loc (case_env, case_env, env) chg
         );
 
         (** process statements, track control flow exits: exit will be an
@@ -821,21 +763,22 @@ and statement cx = Ast.Statement.(
 
         (* save state for fallthrough *)
         fallthrough_case := if falls_through
-          then Some (case_env, case_writes, test_refis, reason)
+          then Some (case_env, case_writes, test_refis, loc)
           else None;
 
         (* if we break to end, add effects to terminal state *)
         if breaks_to_end then begin match break_opt with
           | None ->
-            Flow_error.(add_output cx (EInternal (loc, BreakEnvMissingForCase)))
+            Flow_js.add_output cx
+              Flow_error.(EInternal (loc, BreakEnvMissingForCase))
           | Some break_env ->
-            update_switch_state (break_env, case_writes, test_refis, reason)
+            update_switch_state (break_env, case_writes, test_refis, loc)
         end;
 
         (* add negative refis of this case's test to common start env *)
         (* TODO add API to do this without having to swap in env *)
-        Env.update_env cx reason case_start_env;
-        let _ = Env.refine_with_preds cx reason not_preds xtypes in
+        Env.update_env cx loc case_start_env;
+        let _ = Env.refine_with_preds cx loc not_preds xtypes in
 
         exit
       ) in
@@ -846,9 +789,8 @@ and statement cx = Ast.Statement.(
     (** env in switch_state has accumulated switch effects. now merge in
         original types for partially written values, and swap env in *)
     Option.iter !switch_state ~f:(fun (env, partial_writes, _) ->
-      let reason = mk_reason (RCustom "switch") switch_loc in
-      Env.merge_env cx reason (env, env, incoming_env) partial_writes;
-      Env.update_env cx reason env);
+      Env.merge_env cx switch_loc (env, env, incoming_env) partial_writes;
+      Env.update_env cx switch_loc env);
 
     (* merge original changeset back in *)
     let _ = Changeset.merge incoming_changes in
@@ -893,7 +835,7 @@ and statement cx = Ast.Statement.(
 
   | (loc, Return { Return.argument }) ->
       let reason = mk_reason (RCustom "return") loc in
-      let ret = Env.get_internal_var cx "return" reason in
+      let ret = Env.get_internal_var cx "return" loc in
       let t = match argument with
         | None -> VoidT.at loc
         | Some expr ->
@@ -915,7 +857,7 @@ and statement cx = Ast.Statement.(
         Flow.get_builtin_typeapp cx reason "Promise" [
           Flow.mk_tvar_derivable_where cx reason (fun tvar ->
             let funt = Flow.get_builtin cx "$await" reason in
-            let callt = Flow.mk_functiontype [t] tvar in
+            let callt = Flow.mk_functioncalltype [Arg t] tvar in
             let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
             Flow.flow cx (funt, CallT (reason, callt))
           )
@@ -925,31 +867,30 @@ and statement cx = Ast.Statement.(
          * Y and R are internals, installed earlier. *)
         let reason = mk_reason (RCustom "generator return") loc in
         Flow.get_builtin_typeapp cx reason "Generator" [
-          Env.get_internal_var cx "yield" reason;
+          Env.get_internal_var cx "yield" loc;
           Flow.mk_tvar_derivable_where cx reason (fun tvar ->
             Flow.flow_t cx (t, tvar)
           );
-          Env.get_internal_var cx "next" reason
+          Env.get_internal_var cx "next" loc
         ]
       | Scope.AsyncGenerator ->
         let reason = mk_reason (RCustom "async generator return") loc in
         Flow.get_builtin_typeapp cx reason "AsyncGenerator" [
-          Env.get_internal_var cx "yield" reason;
+          Env.get_internal_var cx "yield" loc;
           Flow.mk_tvar_derivable_where cx reason (fun tvar ->
             Flow.flow_t cx (t, tvar)
           );
-          Env.get_internal_var cx "next" reason
+          Env.get_internal_var cx "next" loc
         ]
       | _ -> t
       in
       Flow.flow cx (t, UseT (FunReturn, ret));
-      Env.reset_current_activation reason;
+      Env.reset_current_activation loc;
       Abnormal.save_and_throw Abnormal.Return
 
   | (loc, Throw { Throw.argument }) ->
-      let reason = mk_reason (RCustom "throw") loc in
       ignore (expression cx argument);
-      Env.reset_current_activation reason;
+      Env.reset_current_activation loc;
       Abnormal.save_and_throw Abnormal.Throw
 
   (***************************************************************************)
@@ -1014,12 +955,11 @@ and statement cx = Ast.Statement.(
    *)
   (***************************************************************************)
   | (loc, Try { Try.block = (_, b); handler; finalizer }) ->
-      let reason = mk_reason (RCustom "try") loc in
       let oldset = Changeset.clear () in
 
       (* save ref to initial env and swap in a clone *)
       let start_env = Env.peek_env () in
-      Env.(update_env cx reason (clone_env start_env));
+      Env.(update_env cx loc (clone_env start_env));
 
       let exception_try = Env.in_lex_scope cx (fun () ->
         Abnormal.catch_control_flow_exception (fun () ->
@@ -1042,8 +982,8 @@ and statement cx = Ast.Statement.(
            over everything that happened from start_env to try_env *)
         Env.(
           let e = clone_env start_env in
-          merge_env cx reason (e, e, try_env) (Changeset.peek ());
-          update_env cx reason e
+          merge_env cx loc (e, e, try_env) (Changeset.peek ());
+          update_env cx loc e
         );
 
         Abnormal.catch_control_flow_exception
@@ -1059,7 +999,7 @@ and statement cx = Ast.Statement.(
         (* if catch ends normally, then non-throwing finally can be
            reached via it or a non-throwing try. merge terminal states *)
         let e = clone_env try_env in
-        merge_env cx reason (e, e, catch_env) (Changeset.peek ());
+        merge_env cx loc (e, e, catch_env) (Changeset.peek ());
         e
       | Some _ ->
         (* if catch throws, then the only way into non-throwing finally
@@ -1072,7 +1012,7 @@ and statement cx = Ast.Statement.(
          (in which subsequent code is reachable) *)
       let exception_finally = match finalizer with
       | None ->
-        Env.update_env cx reason nonthrow_finally_env;
+        Env.update_env cx loc nonthrow_finally_env;
         None
 
       | Some (_, { Block.body }) ->
@@ -1082,8 +1022,8 @@ and statement cx = Ast.Statement.(
         (* env may be in any state from start of try through end of catch *)
         Env.(
           let e = clone_env start_env in
-          merge_env cx reason (e, e, catch_env) (Changeset.peek ());
-          update_env cx reason e
+          merge_env cx loc (e, e, catch_env) (Changeset.peek ());
+          update_env cx loc e
         );
 
         let result = Env.in_lex_scope cx (fun () ->
@@ -1094,7 +1034,7 @@ and statement cx = Ast.Statement.(
         ) in
 
         (* 2. non-throwing finally case. *)
-        Env.update_env cx reason nonthrow_finally_env;
+        Env.update_env cx loc nonthrow_finally_env;
 
         (* (exceptions will be the same in both cases) *)
         let _ = Env.in_lex_scope cx (fun () ->
@@ -1137,8 +1077,6 @@ and statement cx = Ast.Statement.(
   *)
   (***************************************************************************)
   | (loc, While { While.test; body }) ->
-
-      let reason = mk_reason (RCustom "while") loc in
       let save_break = Abnormal.clear_saved (Abnormal.Break None) in
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
 
@@ -1150,15 +1088,15 @@ and statement cx = Ast.Statement.(
       let oldset = Changeset.clear () in
 
       (* widen_env wraps specifics in tvars, anticipating widening inflows *)
-      Env.widen_env cx reason;
+      Env.widen_env cx loc;
 
       (* start_env is Pre above: env as of loop top *)
       let start_env = Env.peek_env () in
 
       (* swap in Pre & c *)
       Env.(
-        update_env cx reason (clone_env start_env);
-        ignore (refine_with_preds cx reason preds orig_types)
+        update_env cx loc (clone_env start_env);
+        ignore (refine_with_preds cx loc preds orig_types)
       );
 
       (* traverse loop body - after this, body_env = Post' *)
@@ -1179,9 +1117,9 @@ and statement cx = Ast.Statement.(
          (turning Pre into Pre' = Pre | Post')
          then reinstall and add ~c to make Post *)
       Env.(
-        copy_env cx reason (start_env, body_env) newset;
-        update_env cx reason start_env;
-        ignore (refine_with_preds cx reason not_preds orig_types)
+        copy_env cx loc (start_env, body_env) newset;
+        update_env cx loc start_env;
+        ignore (refine_with_preds cx loc not_preds orig_types)
       );
 
       (* if we broke out of the loop, havoc vars changed by loop body *)
@@ -1199,7 +1137,6 @@ and statement cx = Ast.Statement.(
   *)
   (***************************************************************************)
   | (loc, DoWhile { DoWhile.body; test }) ->
-      let reason = mk_reason (RCustom "do-while") loc in
       let save_break = Abnormal.clear_saved (Abnormal.Break None) in
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
       let env =  Env.peek_env () in
@@ -1207,11 +1144,11 @@ and statement cx = Ast.Statement.(
       (* env = Pre *)
       (* ENV = [env] *)
 
-      Env.widen_env cx reason;
+      Env.widen_env cx loc;
       (* env = Pre', Pre' > Pre *)
 
       let body_env = Env.clone_env env in
-      Env.update_env cx reason body_env;
+      Env.update_env cx loc body_env;
       (* body_env = Pre' *)
       (* ENV = [body_env] *)
 
@@ -1230,15 +1167,15 @@ and statement cx = Ast.Statement.(
       let done_env = Env.clone_env body_env in
       (* done_env = Post' *)
 
-      let _ = Env.refine_with_preds cx reason preds xtypes in
+      let _ = Env.refine_with_preds cx loc preds xtypes in
       (* body_env = Post' & c *)
 
       let newset = Changeset.merge oldset in
-      Env.copy_env cx reason (env, body_env) newset;
+      Env.copy_env cx loc (env, body_env) newset;
       (* Pre' > Post' & c *)
 
-      Env.update_env cx reason done_env;
-      let _ = Env.refine_with_preds cx reason not_preds xtypes in
+      Env.update_env cx loc done_env;
+      let _ = Env.refine_with_preds cx loc not_preds xtypes in
       if Abnormal.swap_saved (Abnormal.Break None) save_break <> None
       then Env.havoc_vars newset;
       (* ENV = [done_env] *)
@@ -1261,7 +1198,6 @@ and statement cx = Ast.Statement.(
   (***************************************************************************)
   | (loc, For { For.init; test; update; body }) ->
       Env.in_lex_scope cx (fun () ->
-        let reason = mk_reason (RCustom "for") loc in
         let save_break = Abnormal.clear_saved (Abnormal.Break None) in
         let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
         (match init with
@@ -1275,10 +1211,10 @@ and statement cx = Ast.Statement.(
 
         let env =  Env.peek_env () in
         let oldset = Changeset.clear () in
-        Env.widen_env cx reason;
+        Env.widen_env cx loc;
 
         let do_env = Env.clone_env env in
-        Env.update_env cx reason do_env;
+        Env.update_env cx loc do_env;
 
         let _, preds, not_preds, xtypes = match test with
           | None ->
@@ -1289,8 +1225,8 @@ and statement cx = Ast.Statement.(
         in
 
         let body_env = Env.clone_env do_env in
-        Env.update_env cx reason body_env;
-        let _ = Env.refine_with_preds cx reason preds xtypes in
+        Env.update_env cx loc body_env;
+        let _ = Env.refine_with_preds cx loc preds xtypes in
 
         ignore (Abnormal.catch_control_flow_exception
           (fun () -> statement cx body));
@@ -1305,10 +1241,10 @@ and statement cx = Ast.Statement.(
         );
 
         let newset = Changeset.merge oldset in
-        Env.copy_env cx reason (env, body_env) newset;
+        Env.copy_env cx loc (env, body_env) newset;
 
-        Env.update_env cx reason do_env;
-        let _ = Env.refine_with_preds cx reason not_preds xtypes in
+        Env.update_env cx loc do_env;
+        let _ = Env.refine_with_preds cx loc not_preds xtypes in
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None
         then Env.havoc_vars newset
       )
@@ -1335,14 +1271,14 @@ and statement cx = Ast.Statement.(
 
         let env =  Env.peek_env () in
         let oldset = Changeset.clear () in
-        Env.widen_env cx reason;
+        Env.widen_env cx loc;
 
         let body_env = Env.clone_env env in
-        Env.update_env cx reason body_env;
+        Env.update_env cx loc body_env;
 
         let _, preds, _, xtypes =
           predicates_of_condition cx right in
-        let _ = Env.refine_with_preds cx reason preds xtypes in
+        let _ = Env.refine_with_preds cx loc preds xtypes in
 
         (match left with
           | ForIn.LeftDeclaration (_, ({ VariableDeclaration.
@@ -1353,11 +1289,10 @@ and statement cx = Ast.Statement.(
 
           | ForIn.LeftExpression (loc, Ast.Expression.Identifier ident) ->
               let name = ident_name ident in
-              let reason = mk_reason (RCustom (spf "for..in `%s`" name)) loc in
-              ignore Env.(set_var cx name (StrT.at loc) reason)
+              ignore Env.(set_var cx name (StrT.at loc) loc)
 
           | _ ->
-              Flow_error.(add_output cx (EInternal (loc, ForInLHS)))
+              Flow_js.add_output cx Flow_error.(EInternal (loc, ForInLHS))
         );
 
         ignore (Abnormal.catch_control_flow_exception
@@ -1367,9 +1302,9 @@ and statement cx = Ast.Statement.(
 
         if Abnormal.swap_saved (Abnormal.Continue None) save_continue <> None
         then Env.havoc_vars newset;
-        Env.copy_env cx reason (env,body_env) newset;
+        Env.copy_env cx loc (env,body_env) newset;
 
-        Env.update_env cx reason env;
+        Env.update_env cx loc env;
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None
         then Env.havoc_vars newset
       )
@@ -1399,32 +1334,31 @@ and statement cx = Ast.Statement.(
 
         let env =  Env.peek_env () in
         let oldset = Changeset.clear () in
-        Env.widen_env cx reason;
+        Env.widen_env cx loc;
 
         let body_env = Env.clone_env env in
-        Env.update_env cx reason body_env;
+        Env.update_env cx loc body_env;
 
         let _, preds, _, xtypes =
           predicates_of_condition cx right in
-        let _ = Env.refine_with_preds cx reason preds xtypes in
+        let _ = Env.refine_with_preds cx loc preds xtypes in
 
         (match left with
           | ForOf.LeftDeclaration (_, ({ VariableDeclaration.
               kind; declarations = [vdecl]
             } as decl)) ->
               let repos_tvar loc =
-                Flow.reposition cx (repos_reason loc reason) element_tvar
+                Flow.reposition cx loc element_tvar
               in
               variable_decl cx decl;
               variable cx kind ~if_uninitialized:repos_tvar vdecl
 
           | ForOf.LeftExpression (loc, Ast.Expression.Identifier ident) ->
               let name = ident_name ident in
-              let reason = mk_reason (RCustom (spf "for..of `%s`" name)) loc in
-              ignore Env.(set_var cx name element_tvar reason)
+              ignore Env.(set_var cx name element_tvar loc)
 
           | _ ->
-              Flow_error.(add_output cx (EInternal (loc, ForOfLHS)))
+              Flow_js.add_output cx Flow_error.(EInternal (loc, ForOfLHS))
         );
 
         ignore (Abnormal.catch_control_flow_exception
@@ -1434,9 +1368,9 @@ and statement cx = Ast.Statement.(
 
         if Abnormal.swap_saved (Abnormal.Continue None) save_continue <> None
         then Env.havoc_vars newset;
-        Env.copy_env cx reason (env,body_env) newset;
+        Env.copy_env cx loc (env,body_env) newset;
 
-        Env.update_env cx reason env;
+        Env.update_env cx loc env;
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None
         then Env.havoc_vars newset
       )
@@ -1446,8 +1380,7 @@ and statement cx = Ast.Statement.(
 
   | (loc, FunctionDeclaration func) ->
       let {Ast.Function.id; _} = func in
-      let reason = mk_reason (RFunction RNormal) loc in
-      let fn_type = mk_function None cx reason func in
+      let fn_type = mk_function None cx loc func in
       (**
        * Use the loc for the function name in the types table. When the function
        * has no name (i.e. for `export default function() ...`), generate a loc
@@ -1471,7 +1404,7 @@ and statement cx = Ast.Statement.(
       Hashtbl.replace (Context.type_table cx) type_table_loc fn_type;
       (match id with
       | Some(_, name) ->
-        Env.init_fun cx name fn_type reason
+        Env.init_fun cx name fn_type loc
       | None -> ())
 
   | (_, DeclareVariable _) ->
@@ -1495,7 +1428,7 @@ and statement cx = Ast.Statement.(
   | (class_loc, ClassDeclaration c) ->
       let (name_loc, name) = extract_class_name class_loc c in
       let reason = DescFormat.instance_reason name name_loc in
-      Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name reason;
+      Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name name_loc;
       let class_t = mk_class cx class_loc reason c in
       Hashtbl.replace (Context.type_table cx) class_loc class_t;
       Env.init_implicit_let
@@ -1504,7 +1437,7 @@ and statement cx = Ast.Statement.(
         name
         ~has_anno:false
         class_t
-        reason
+        name_loc
 
   | (loc, DeclareClass decl) ->
     interface cx loc false decl
@@ -1526,7 +1459,7 @@ and statement cx = Ast.Statement.(
     let _, { Ast.Statement.Block.body = elements } = body in
 
     let reason = mk_reason (RCustom (spf "module `%s`" name)) loc in
-    let t = Env.get_var_declared_type cx (internal_module_name name) reason in
+    let t = Env.get_var_declared_type cx (internal_module_name name) loc in
 
     let module_scope = Scope.fresh () in
     Env.push_var_scope cx module_scope;
@@ -1584,7 +1517,7 @@ and statement cx = Ast.Statement.(
               match entry with
               | Value {specific; _} ->
                 ts,
-                SMap.add x (Property.field Neutral specific) vs
+                SMap.add x (Field (specific, Neutral)) vs
               | Type {_type; _} ->
                 SMap.add x _type ts,
                 vs
@@ -1600,7 +1533,7 @@ and statement cx = Ast.Statement.(
         let module_t =
           mk_commonjs_module_t cx reason reason cjs_module_exports in
         let module_t = Flow.mk_tvar_where cx reason (fun t ->
-          Flow.flow cx (module_t, ExportNamedT (reason, type_exports, t))
+          Flow.flow cx (module_t, ExportNamedT (reason, false, type_exports, t))
         ) in
         Flow.unify cx module_t t;
       | DeclareModule.ES _ ->
@@ -1654,12 +1587,10 @@ and statement cx = Ast.Statement.(
 
     if Context.declare_module_t cx <> None then (
       let name = internal_name "declare_module.exports" in
-      let reason = mk_reason (RCustom "declare module.exports") loc in
-      Env.bind_declare_var cx name t reason
+      Env.bind_declare_var cx name t loc
     ) else (
-      let reason = mk_reason (RCustom "declare module.exports") loc in
-      set_module_kind cx reason (Context.CommonJSModule(Some loc));
-      set_module_exports cx reason t
+      set_module_kind cx loc (Context.CommonJSModule(Some loc));
+      set_module_exports cx loc t
     )
 
   | (loc, ExportNamedDeclaration { ExportNamedDeclaration.
@@ -1775,7 +1706,7 @@ and statement cx = Ast.Statement.(
 
     let module_t = import cx module_name (fst import_decl.source) in
 
-    let get_imported_t get_reason remote_export_name local_name =
+    let get_imported_t get_reason import_kind remote_export_name local_name =
       Flow.mk_tvar_where cx get_reason (fun t ->
         let import_type =
           if remote_export_name = "default"
@@ -1790,51 +1721,39 @@ and statement cx = Ast.Statement.(
     in
 
     import_decl.specifiers |> List.iter (fun specifier ->
-      let (reason, local_name, t) = (
+      let (loc, local_name, t, specifier_kind) = (
         match specifier with
-        | ImportNamedSpecifier {local; remote;} ->
+        | ImportNamedSpecifier {local; remote; kind;} ->
           let remote_name = ident_name remote in
-
-          let import_reason_str =
-            spf "Named import from module `%s`" module_name
-          in
-
-          let (loc, local_name, import_reason, bind_reason) = (
+          let (loc, local_name) = (
             match local with
             | Some local ->
-              let local_name = ident_name local in
-              let import_reason =
-                mk_reason (RCustom import_reason_str) (fst remote) in
-              let bind_reason_str =
-                spf "%s { %s as %s } from %S"
-                  import_str
-                  remote_name
-                  local_name
-                  module_name
-              in
-              let bind_loc = Loc.btwn (fst remote) (fst local) in
-              let bind_reason = mk_reason (RCustom bind_reason_str) bind_loc in
-              (bind_loc, local_name, import_reason, bind_reason)
+              (Loc.btwn (fst remote) (fst local), ident_name local)
             | None ->
-              let import_reason =
-                mk_reason (RCustom import_reason_str) (fst remote) in
-              let bind_reason_str =
-                spf "%s { %s } from %S"
-                  import_str
-                  remote_name
-                  module_name
-              in
-              let bind_reason =
-                mk_reason (RCustom bind_reason_str) (fst remote) in
-              (fst remote, remote_name, import_reason, bind_reason)
+              (fst remote, remote_name)
           ) in
           let imported_t =
+            let import_reason =
+              let import_reason_str =
+                spf "Named import from module `%s`" module_name
+              in
+              mk_reason (RCustom import_reason_str) (fst remote)
+            in
             if Type_inference_hooks_js.dispatch_member_hook
               cx remote_name loc module_t
             then AnyT.why import_reason
-            else get_imported_t import_reason remote_name local_name
+            else (
+              let import_kind =
+                match kind with
+                | Some ImportDeclaration.ImportType -> Type.ImportType
+                | Some ImportDeclaration.ImportTypeof -> Type.ImportTypeof
+                | Some ImportDeclaration.ImportValue -> Type.ImportValue
+                | None -> import_kind
+              in
+              get_imported_t import_reason import_kind remote_name local_name
+            )
           in
-          (bind_reason, local_name, imported_t)
+          (loc, local_name, imported_t, kind)
 
         | ImportDefaultSpecifier local ->
           let local_name = ident_name local in
@@ -1845,18 +1764,13 @@ and statement cx = Ast.Statement.(
           in
           let import_reason = mk_reason (RCustom import_reason_str) loc in
 
-          let bind_reason_str =
-            spf "%s %s from %S" import_str local_name module_name
-          in
-          let bind_reason = mk_reason (RCustom bind_reason_str) loc in
-
           let imported_t =
             if Type_inference_hooks_js.dispatch_member_hook
               cx "default" loc module_t
             then AnyT.why import_reason
-            else get_imported_t import_reason "default" local_name
+            else get_imported_t import_reason import_kind "default" local_name
           in
-          (bind_reason, local_name, imported_t)
+          (loc, local_name, imported_t, None)
 
         | ImportNamespaceSpecifier (ns_loc, local) ->
           let local_name = ident_name local in
@@ -1869,9 +1783,9 @@ and statement cx = Ast.Statement.(
 
           (match import_kind with
             | Type.ImportType ->
-              Flow_error.(add_output cx (EImportTypeofNamespace
-                (import_reason, local_name, module_name)));
-              (import_reason, local_name, AnyT.why import_reason)
+              Flow_js.add_output cx Flow_error.(EImportTypeofNamespace
+                (import_reason, local_name, module_name));
+              (import_loc, local_name, AnyT.why import_reason, None)
             | Type.ImportTypeof ->
               let bind_reason = repos_reason (fst local) import_reason in
               let module_ns_t =
@@ -1884,7 +1798,7 @@ and statement cx = Ast.Statement.(
                     ImportTypeofT (bind_reason, "*", t))
                 )
               in
-              (import_reason, local_name, module_ns_typeof)
+              (import_loc, local_name, module_ns_typeof, None)
             | Type.ImportValue ->
               let reason =
                 mk_reason (RCustom (spf "exports of %S" module_name)) import_loc
@@ -1893,11 +1807,17 @@ and statement cx = Ast.Statement.(
                 import_ns cx reason module_name (fst import_decl.source)
               in
               Context.add_imported_t cx local_name module_ns_t;
-              let bind_reason =
-                mk_reason (RCustom import_reason_str) (fst local) in
-              (bind_reason, local_name, module_ns_t)
+              (fst local, local_name, module_ns_t, None)
           )
       ) in
+
+      let import_kind =
+        match specifier_kind with
+        | Some ImportDeclaration.ImportType -> Type.ImportType
+        | Some ImportDeclaration.ImportTypeof -> Type.ImportTypeof
+        | Some ImportDeclaration.ImportValue -> Type.ImportValue
+        | None -> import_kind
+      in
 
       let t_generic =
         let lookup_mode =
@@ -1905,7 +1825,7 @@ and statement cx = Ast.Statement.(
           | Type.ImportType | Type.ImportTypeof -> ForType
           | Type.ImportValue -> ForValue
         in
-        Env.get_var_declared_type ~lookup_mode cx local_name reason
+        Env.get_var_declared_type ~lookup_mode cx local_name loc
       in
       Flow.unify cx t t_generic
     );
@@ -1931,7 +1851,7 @@ and export_statement cx loc
       mk_reason (RCustom (spf "%s %s" export_reason_start export_reason)) loc
     in
     let local_tvar = match local_tvar with
-    | None -> Env.var_ref ~lookup_mode cx local_name reason
+    | None -> Env.var_ref ~lookup_mode cx local_name loc
     | Some t -> t in
 
     (**
@@ -1944,13 +1864,13 @@ and export_statement cx loc
       *       user given CommonJS<->ESModule interop.
       *)
     (if lookup_mode != ForType then
-      set_module_kind cx reason Context.ESModule);
+      set_module_kind cx loc Context.ESModule);
 
     let local_name = if default then "default" else local_name in
     set_module_t cx reason (fun t ->
       Flow.flow cx (
         module_t_of_cx cx,
-        ExportNamedT(reason, SMap.singleton local_name local_tvar, t)
+        ExportNamedT(reason, false, SMap.singleton local_name local_tvar, t)
       )
     )
   ) in
@@ -1959,14 +1879,14 @@ and export_statement cx loc
     (* [declare] export [type] {foo, bar} [from ...]; *)
     | ([], Some (ExportNamedDeclaration.ExportSpecifiers specifiers)) ->
       let export_specifier specifier = (
-        let (reason, local_name, remote_name) = (
+        let loc, reason, local_name, remote_name =
           match specifier with
           | loc, { ExportNamedDeclaration.ExportSpecifier.
               local = (_, id);
               exported = None;
             } ->
             let reason = mk_reason (RCustom (spf "export {%s}" id)) loc in
-            (reason, id, id)
+            (loc, reason, id, id)
           | loc, { ExportNamedDeclaration.ExportSpecifier.
               local = (_, local);
               exported = Some (_, exported);
@@ -1974,8 +1894,8 @@ and export_statement cx loc
             let reason =
               mk_reason (RCustom (spf "export {%s as %s}" local exported)) loc
             in
-            (reason, local, exported)
-        ) in
+            (loc, reason, local, exported)
+        in
 
         (**
           * Determine if we're dealing with the `export {} from` form
@@ -2006,7 +1926,7 @@ and export_statement cx loc
               Flow.flow cx (tvar, GetPropT (reason, Named (reason, local_name), t))
             )
           | None ->
-            Env.var_ref ~lookup_mode cx local_name reason
+            Env.var_ref ~lookup_mode cx local_name loc
         ) in
 
         (**
@@ -2020,12 +1940,12 @@ and export_statement cx loc
           *       effect to the user given CommonJS<->ESModule interop.
           *)
         (if lookup_mode != ForType
-        then set_module_kind cx reason Context.ESModule);
+        then set_module_kind cx loc Context.ESModule);
 
         set_module_t cx reason (fun t ->
           Flow.flow cx (
             module_t_of_cx cx,
-            ExportNamedT(reason, SMap.singleton remote_name local_tvar, t)
+            ExportNamedT(reason, false, SMap.singleton remote_name local_tvar, t)
           )
         )
       ) in
@@ -2059,7 +1979,7 @@ and export_statement cx loc
             (RCustom (spf "export * as %s from %S" name source_module_name))
             loc
         in
-        set_module_kind cx reason Context.ESModule;
+        set_module_kind cx loc Context.ESModule;
 
         let remote_namespace_t =
           if parse_export_star_as = Options.ESPROPOSAL_ENABLE
@@ -2078,21 +1998,26 @@ and export_statement cx loc
         set_module_t cx reason (fun t ->
           Flow.flow cx (
             module_t_of_cx cx,
-            ExportNamedT(reason, SMap.singleton name remote_namespace_t, t)
+            ExportNamedT(reason, false, SMap.singleton name remote_namespace_t, t)
           )
         )
       | None ->
         let reason =
-          mk_reason (RCustom (spf "export * from %S" source_module_name)) loc
+          mk_reason
+            (RCustom (spf "%s * from %S" export_kind_start source_module_name))
+            loc
         in
-        set_module_kind cx reason Context.ESModule;
 
-        set_module_t cx reason (fun t ->
-          Flow.flow cx (
-            import ~reason cx source_module_name loc,
-            CopyNamedExportsT(reason, module_t_of_cx cx, t)
-          )
-        )
+        (* It's legal to export types from a CommonJS module. *)
+        if exportKind != ExportType
+        then set_module_kind cx loc Context.ESModule;
+
+        set_module_t cx reason (fun t -> Flow.flow cx (
+          import ~reason cx source_module_name loc,
+          match exportKind with
+          | ExportValue -> CopyNamedExportsT(reason, module_t_of_cx cx, t)
+          | ExportType -> CopyTypeExportsT(reason, module_t_of_cx cx, t)
+        ))
       )
 
     | ([], None) -> failwith (
@@ -2116,36 +2041,36 @@ and export_statement cx loc
 and object_prop cx map = Ast.Expression.Object.(function
   (* name = function expr *)
   | Property (_, { Property.
-      kind = Property.Init;
       key = Property.Identifier (_, name);
-      value = (vloc, Ast.Expression.Function func);
+      value = Property.Init (vloc, Ast.Expression.Function func);
       _method;
       _
     }) ->
-    let {Ast.Function.id; async; generator; _} = func in
-    let desc = RFunction (function_desc ~async ~generator) in
-    let reason = mk_reason desc vloc in
-    let ft = mk_function id cx reason func in
+    let {Ast.Function.id; _} = func in
+    let ft = mk_function id cx vloc func in
     Hashtbl.replace (Context.type_table cx) vloc ft;
-    let polarity = if _method then Positive else Neutral in
-    Properties.add_field name polarity ft map
+    if _method then
+      Properties.add_method name ft map
+    else begin
+      Properties.add_field name Neutral ft map
+    end
 
   (* name = non-function expr *)
-  | Property (_, { Property.kind = Property.Init;
+  | Property (_, { Property.
       key =
         Property.Identifier (_, name) |
         Property.Literal (_, {
           Ast.Literal.value = Ast.Literal.String name;
           _;
         });
-      value = v; _ }) ->
+      value = Property.Init v; _ }) ->
     let t = expression cx v in
     Properties.add_field name Neutral t map
 
   (* literal LHS *)
   | Property (loc, { Property.key = Property.Literal _; _ }) ->
-    Flow_error.(add_output cx
-      (EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString)));
+    Flow_js.add_output cx
+      Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString));
     map
 
   (* With the enable_unsafe_getters_and_setters option set, we enable some
@@ -2154,34 +2079,47 @@ and object_prop cx map = Ast.Expression.Object.(function
    *)
 
   (* unsafe getter property *)
-  | Property (_, {
-      Property.kind = Property.Get;
+  | Property (loc, { Property.
       key = Property.Identifier (_, name);
-      value = (vloc, Ast.Expression.Function func);
-      _ })
-    when Context.enable_unsafe_getters_and_setters cx ->
-      let reason = mk_reason RGetterFunction vloc in
-      let function_type = mk_function None cx reason func in
-      let return_t = extract_getter_type function_type in
+      value = Property.Get (vloc, func);
+      _ }) ->
+    if Context.enable_unsafe_getters_and_setters cx then
+      let function_type = mk_function None cx vloc func in
+      let return_t = Type.extract_getter_type function_type in
       Properties.add_getter name return_t map
+    else begin
+      Flow_js.add_output cx
+        Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
+      map
+    end
 
   (* unsafe setter property *)
-  | Property (_, {
-    Property.kind = Property.Set;
+  | Property (loc, { Property.
       key = Property.Identifier (_, name);
-      value = (vloc, Ast.Expression.Function func);
-      _ })
-    when Context.enable_unsafe_getters_and_setters cx ->
-      let reason = mk_reason RSetterFunction vloc in
-      let function_type = mk_function None cx reason func in
-      let param_t = extract_setter_type function_type in
+      value = Property.Set (vloc, func);
+      _ }) ->
+    if Context.enable_unsafe_getters_and_setters cx then
+      let function_type = mk_function None cx vloc func in
+      let param_t = Type.extract_setter_type function_type in
       Properties.add_setter name param_t map
+    else begin
+      Flow_js.add_output cx
+        Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
+      map
+    end
 
-  | Property (loc, { Property.kind = Property.Get | Property.Set; _ }) ->
-    Flow_error.(add_output cx (EUnsupportedSyntax (loc, ObjectPropertyGetSet)));
+  (* computed getters and setters aren't supported yet regardless of the
+     `enable_getters_and_setters` config option *)
+  | Property (loc, { Property.
+      key = Property.Computed _;
+      value = Property.Get _ | Property.Set _;
+      _
+    }) ->
+    Flow_js.add_output cx
+      Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyComputedGetSet));
     map
 
-  (* computed LHS *)
+  (* computed LHS silently ignored for now *)
   | Property (_, { Property.key = Property.Computed _; _ }) ->
     map
 
@@ -2206,7 +2144,7 @@ and object_ cx reason ?(allow_sealed=true) props =
      not sealed. *)
   let mk_spread from_obj to_obj =
     Flow.mk_tvar_where cx reason (fun t ->
-      Flow.flow cx (to_obj, ObjAssignT(reason, from_obj, t, [], true));
+      Flow.flow cx (to_obj, ObjAssignToT(reason, from_obj, t, [], ObjAssign));
     )
   in
   (* When there's no result, return a new object with specified sealing. When
@@ -2238,7 +2176,11 @@ and object_ cx reason ?(allow_sealed=true) props =
         let obj = eval_object (map, result) in
         let result = mk_spread spread obj in
         false, SMap.empty, Some result
-    | Property (_, { Property.key = Property.Computed k; value = v; _ }) ->
+    | Property (_, { Property.
+        key = Property.Computed k;
+        value = Property.Init v;
+        _method = _; shorthand = _;
+      }) ->
         let k = expression cx k in
         let v = expression cx v in
         let obj = eval_object (map, result) in
@@ -2274,26 +2216,21 @@ and variable cx kind
           name = (id_loc, name); typeAnnotation; optional
         }) ->
         (* simple lvalue *)
-        let desc = RCustom (spf "%s `%s`" str_of_kind name) in
-        let reason = mk_reason desc id_loc in
         (* make annotation, unify with declared type created in variable_decl *)
         let t =
+          let desc = RCustom (spf "%s `%s`" str_of_kind name) in
           let anno_reason = mk_reason desc loc in
           Anno.mk_type_annotation cx SMap.empty anno_reason typeAnnotation in
         Env.unify_declared_type cx name t;
         let has_anno = not (typeAnnotation = None) in
         (match init with
           | Some ((rhs_loc, _) as expr) ->
-            let rhs_reason =
-              let desc = RCustom (spf "assignment of var `%s`" name) in
-              mk_reason desc rhs_loc
-            in
             let rhs = expression cx expr in
             (**
              * Const and let variables are not declared during evaluation of
              * their initializer expressions.
              *)
-            declare_var cx name reason;
+            declare_var cx name id_loc;
             let hook_loc = Ast.Expression.(
               match expr with
               (**
@@ -2312,24 +2249,23 @@ and variable cx kind
             ) in
             Type_inference_hooks_js.(
               dispatch_lval_hook cx name loc (RHSLoc hook_loc));
-            let rhs = Flow.reposition cx rhs_reason rhs in
-            init_var cx name ~has_anno rhs reason
+            let rhs = Flow.reposition cx rhs_loc rhs in
+            init_var cx name ~has_anno rhs id_loc
           | None ->
             Type_inference_hooks_js.(
               dispatch_lval_hook cx name loc NoRHS);
             match if_uninitialized with
             | Some f ->
               if not optional
-              then init_var cx name ~has_anno (f loc) reason
+              then init_var cx name ~has_anno (f loc) id_loc
             | None ->
               if has_anno
-              then Env.pseudo_init_declared_type cx name reason
-              else declare_var cx name reason;
+              then Env.pseudo_init_declared_type cx name id_loc
+              else declare_var cx name id_loc;
         )
     | loc, _ ->
         (* compound lvalue *)
         let pattern_name = internal_pattern_name loc in
-        let reason = mk_reason (RCustom (spf "%s _" str_of_kind)) loc in
         let typeAnnotation = type_of_pattern id in
         let has_anno = not (typeAnnotation = None) in
         let t = match init with
@@ -2340,53 +2276,62 @@ and variable cx kind
             | None -> VoidT.at loc
           )
         in
-        init_var cx pattern_name ~has_anno t reason;
+        init_var cx pattern_name ~has_anno t loc;
         destructuring cx ~expr:expression ~f:(fun loc name default t ->
           let reason = mk_reason (RCustom (spf "%s %s" str_of_kind name)) loc in
           Option.iter default (fun d ->
             let default_t = Flow.mk_default cx reason d ~expr:expression in
             Flow.flow_t cx (default_t, t)
           );
-          init_var cx name ~has_anno t reason
+          init_var cx name ~has_anno t loc
         ) t init None id
 )
 
-and array_element cx undef_loc el = Ast.Expression.(
+and mixin_element cx undef_loc el = Ast.Expression.(
   match el with
-  | Some (Expression e) -> expression cx e
-  | Some (Spread (_, { SpreadElement.argument })) ->
-      array_element_spread cx argument
+  | Some (Expression (loc, expr)) ->
+      let t = expression cx (loc, expr) in
+      Flow.reposition cx loc t
+  | Some (Spread (loc, { SpreadElement.argument })) ->
+      let t = mixin_element_spread cx argument in
+      Flow.reposition cx loc t
   | None -> EmptyT.at undef_loc
 )
 
 and expression_or_spread cx = Ast.Expression.(function
-  | Expression e -> expression cx e
-  | Spread (_, { SpreadElement.argument }) -> spread cx argument
+  | Expression e -> Arg (expression cx e)
+  | Spread (_, { SpreadElement.argument }) -> SpreadArg (expression cx argument)
 )
 
-and array_element_spread cx (loc, e) =
+and expression_or_spread_list cx undef_loc = Ast.Expression.(
+  List.map (function
+  | Some (Expression e) -> UnresolvedArg (expression cx e)
+  | None -> UnresolvedArg (EmptyT.at undef_loc)
+  | Some (Spread (_, { SpreadElement.argument })) ->
+      UnresolvedSpreadArg (expression cx argument)
+  )
+)
+
+and mixin_element_spread cx (loc, e) =
   let arr = expression cx (loc, e) in
   let reason = mk_reason (RCustom "spread operand") loc in
   Flow.mk_tvar_where cx reason (fun tvar ->
     Flow.flow_t cx (arr, ArrT (reason, ArrayAT(tvar, None)));
   )
 
-and spread cx (loc, e) =
-  RestT (array_element_spread cx (loc, e))
-
 and expression ?(is_cond=false) cx (loc, e) =
   let t = expression_ ~is_cond cx loc e in
   Hashtbl.replace (Context.type_table cx) loc t;
   t
 
-and this_ cx r = Ast.Expression.(
-  match Refinement.get cx (loc_of_reason r, This) r with
+and this_ cx loc = Ast.Expression.(
+  match Refinement.get cx (loc, This) loc with
   | Some t -> t
-  | None -> Env.var_ref cx (internal_name "this") r
+  | None -> Env.var_ref cx (internal_name "this") loc
 )
 
-and super_ cx reason =
-  Env.var_ref cx (internal_name "super") reason
+and super_ cx loc =
+  Env.var_ref cx (internal_name "super") loc
 
 and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
@@ -2397,7 +2342,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       identifier cx name loc
 
   | This ->
-      this_ cx (mk_reason RThis loc)
+      this_ cx loc
 
   | Super ->
       identifier cx "super" loc
@@ -2431,7 +2376,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
     } ->
       let reason =
         mk_reason (RCustom "access of computed property/element") loc in
-      (match Refinement.get cx (loc, e) reason with
+      (match Refinement.get cx (loc, e) loc with
       | Some t -> t
       | None ->
         let tobj = expression cx _object in
@@ -2446,8 +2391,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       property = Member.PropertyIdentifier (_, "exports");
       _
     } ->
-      let reason = mk_reason (RCustom "module.exports") loc in
-      get_module_exports cx reason
+      get_module_exports cx loc
 
   | Member {
       Member._object =
@@ -2464,12 +2408,12 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       _
     } ->
       let expr_reason = mk_reason (RProperty (Some name)) loc in
-      (match Refinement.get cx (loc, e) expr_reason with
+      (match Refinement.get cx (loc, e) loc with
       | Some t -> t
       | None ->
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
 
-        let super = super_ cx (mk_reason RSuper super_loc) in
+        let super = super_ cx super_loc in
 
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc super
         then AnyT.at ploc
@@ -2488,7 +2432,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       _
     } -> (
       let expr_reason = mk_reason (RProperty (Some name)) loc in
-      match Refinement.get cx (loc, e) expr_reason with
+      match Refinement.get cx (loc, e) loc with
       | Some t -> t
       | None ->
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
@@ -2515,60 +2459,12 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         let reason = replace_reason_const REmptyArrayLit reason in
         ArrT (reason, ArrayAT (elemt, Some []))
     | elems ->
-        (* tup is true if no spreads *)
-        (* tset is set of distinct (mod reason) elem types *)
-        (* tlist is reverse list of element types if tup, else [] *)
-        let _, tset, tlist = List.fold_left (fun (tup, tset, tlist) elem ->
-          let elemt = array_element cx loc elem in
-
-          let tup = match elem with Some (Spread _) -> false | _ -> tup in
-          let elemt = if tup then elemt else summarize cx elemt in
-          tup,
-          TypeExSet.add elemt tset,
-          if tup then elemt :: tlist else []
-        ) (true, TypeExSet.empty, []) elems
-        in
-        (* composite elem type is an upper bound of all element types *)
-        let elemt = match TypeExSet.elements tset with
-        | [t] -> t
-        | list ->
-          let element_reason =
-            let desc = RCustom ("inferred union of array element types \
-(alternatively, provide an annotation to summarize the array element type)") in
-            mk_reason desc loc
-          in
-          (* Should the element type of the array be the union of its element
-             types?
-
-             No. Instead of using a union, we use an unresolved tvar to
-             represent the least upper bound of each element type. Effectively,
-             this keeps the element type "open," at least locally.[*]
-
-             Using a union pins down the element type prematurely, and moreover,
-             might lead to speculative matching when setting elements or caling
-             contravariant methods (`push`, `concat`, etc.) on the array.
-
-             In any case, using a union doesn't quite work as intended today
-             when the element types themselves could be unresolved tvars. For
-             example, the following code would work even with unions:
-
-             declare var o: { x: number; }
-             // no error, but is an error if o.x is replaced by 42
-             var a = ["hey", o.x];
-             declare var i: number;
-             a[i] = false;
-
-             [*] Eventually, the element type does get pinned down to a union
-             when it is part of the module's exports. In the future we might
-             have to do that pinning more carefully, and using an unresolved
-             tvar instead of a union here doesn't conflict with those plans.
-          *)
-          Flow_js.mk_tvar_where cx element_reason (fun tvar ->
-            list |> List.iter (fun t ->
-              Flow_js.flow cx (t, UseT (UnknownUse, tvar)))
-          )
-        in
-        ArrT (reason, ArrayAT(elemt, Some (List.rev tlist)))
+        let elem_spread_list = expression_or_spread_list cx loc elems in
+        Flow_js.mk_tvar_where cx reason (fun tout ->
+          let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), tout)) in
+          let reason_op = reason in
+          Flow.resolve_spread_list cx ~reason_op elem_spread_list resolve_to
+        )
     )
 
   | Call {
@@ -2593,8 +2489,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           Context.should_ignore_non_literal_requires cx in
         if not ignore_non_literals
         then
-          Flow_error.(add_output cx
-            (EUnsupportedSyntax (loc, RequireDynamicArgument)));
+          Flow_js.add_output cx
+            Flow_error.(EUnsupportedSyntax (loc, RequireDynamicArgument));
         AnyT.at loc
     )
 
@@ -2623,12 +2519,14 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
               let module_tvar = require cx module_name loc in
               module_tvar::tvars
           | _ ->
-              Flow_error.(add_output cx
-                (EUnsupportedSyntax (loc, RequireLazyDynamicArgument)));
+              Flow_js.add_output cx Flow_error.(
+                EUnsupportedSyntax (loc, RequireLazyDynamicArgument)
+              );
               tvars
         ) in
-        let module_tvars = List.fold_left element_to_module_tvar [] elements in
-        let module_tvars = List.rev module_tvars in
+        let module_tvars = elements
+          |> List.fold_left element_to_module_tvar []
+          |> List.rev_map (fun e -> Arg e) in
 
         let callback_expr_t = expression cx callback_expr in
         let reason = mk_reason (RCustom "requireLazy() callback") loc in
@@ -2637,8 +2535,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         NullT.at loc
 
       | _ ->
-        Flow_error.(add_output cx
-          (EUnsupportedSyntax (loc, RequireLazyDynamicArgument)));
+        Flow_js.add_output cx
+          Flow_error.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
         AnyT.at loc
     )
 
@@ -2647,7 +2545,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       arguments
     } -> (
       let argts = List.map (expression_or_spread cx) arguments in
-      List.iter (fun t ->
+      List.iter (function Arg t | SpreadArg t ->
         Flow.flow_t cx (t, StrT.at loc)
       ) argts;
       let reason = mk_reason (RCustom "new Function(..)") loc in
@@ -2656,7 +2554,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         reason,
         Flow.dummy_static reason,
         Flow.dummy_prototype,
-        Flow.mk_functiontype [] ~params_names:[] proto
+        Flow.mk_functiontype
+          [] ~rest_param:None ~def_reason:reason ~params_names:[] proto
       )
     )
 
@@ -2666,7 +2565,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
     } -> (
       let argts = List.map (expression_or_spread cx) arguments in
       (match argts with
-      | [argt] ->
+      | [Arg argt] ->
         let reason = mk_reason (RCustom "new Array(..)") loc in
         let length_reason =
           replace_reason_const (RCustom "array length") reason in
@@ -2677,7 +2576,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         (* TODO - tuple_types could be undefined x N if given a literal *)
         ArrT (reason, ArrayAT (t, None))
       | _ ->
-        Flow_error.(add_output cx (EUseArrayLiteral loc));
+        Flow_js.add_output cx (Flow_error.EUseArrayLiteral loc);
         EmptyT.at loc
       )
     )
@@ -2699,16 +2598,6 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       static_method_call_Object cx loc prop_loc expr obj_t name arguments
 
   | Call {
-      Call.callee = _, Member {
-        Member._object = _, Identifier (_, "React");
-        property = Member.PropertyIdentifier (_, "createClass");
-        _
-      };
-      arguments = [ Expression (_, Object { Object.properties = class_props }) ]
-    } ->
-      react_create_class cx loc class_props
-
-  | Call {
       Call.callee = callee_loc, Member {
         Member._object = super_loc, Super;
         property = Member.PropertyIdentifier (ploc, name);
@@ -2719,11 +2608,11 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason = mk_reason (RMethodCall (Some name)) loc in
       let reason_lookup = mk_reason (RProperty (Some name)) callee_loc in
       let reason_prop = mk_reason (RProperty (Some name)) ploc in
-      let super = super_ cx (mk_reason RSuper super_loc) in
+      let super = super_ cx super_loc in
       let argts = List.map (expression_or_spread cx) arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Flow.mk_tvar_where cx reason (fun t ->
-        let funtype = Flow.mk_methodtype super argts t in
+        let funtype = Flow.mk_methodcalltype super argts t in
         Flow.flow cx (
           super,
           MethodT (reason, reason_lookup, Named (reason_prop, name), funtype)
@@ -2750,7 +2639,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         Flow.mk_tvar_where cx reason_call (fun t ->
           let elem_t = expression cx expr in
           let frame = Env.peek_frame () in
-          let funtype = Flow.mk_methodtype ot argts t ~frame in
+          let funtype = Flow.mk_methodcalltype ot argts t ~frame in
           Flow.flow cx (ot,
             CallElemT (reason_call, reason_lookup, elem_t, funtype))
         ))
@@ -2761,16 +2650,16 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
     } ->
       let argts = List.map (expression_or_spread cx) arguments in
       let reason = mk_reason RFunctionCall loc in
-      let super_reason = mk_reason RSuper ploc in
 
       (* switch back env entries for this and super from undefined *)
       define_internal cx reason "this";
       define_internal cx reason "super";
 
-      let this = this_ cx reason in
-      let super = super_ cx super_reason in
+      let this = this_ cx loc in
+      let super = super_ cx ploc in
+      let super_reason = reason_of_t super in
       Flow.mk_tvar_where cx reason (fun t ->
-        let funtype = Flow.mk_methodtype this argts t in
+        let funtype = Flow.mk_methodcalltype this argts t in
         let propref = Named (super_reason, "constructor") in
         Flow.flow cx (super, MethodT(reason, super_reason, propref, funtype)))
 
@@ -2782,28 +2671,27 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       arguments
     } ->
       (* TODO: require *)
-      let reason = mk_reason (RCustom "invariant") loc in
       ignore (expression cx callee);
       (match arguments with
       | [] ->
         (* invariant() is treated like a throw *)
-        Env.reset_current_activation reason;
+        Env.reset_current_activation loc;
         Abnormal.save_and_throw Abnormal.Throw
       | (Expression (_, Ast.Expression.Literal {
           Ast.Literal.value = Ast.Literal.Boolean false; _;
         }))::arguments ->
         (* invariant(false, ...) is treated like a throw *)
         ignore (List.map (expression_or_spread cx) arguments);
-        Env.reset_current_activation reason;
+        Env.reset_current_activation loc;
         Abnormal.save_and_throw Abnormal.Throw
       | (Expression cond)::arguments ->
         ignore (List.map (expression_or_spread cx) arguments);
         let _, preds, _, xtypes = predicates_of_condition cx cond in
-        let _ = Env.refine_with_preds cx reason preds xtypes in
+        let _ = Env.refine_with_preds cx loc preds xtypes in
         ()
       | (Spread _)::_ ->
-        Flow_error.(add_output cx
-          (EUnsupportedSyntax (loc, InvariantSpreadArgument)))
+        Flow_js.add_output cx
+          Flow_error.(EUnsupportedSyntax (loc, InvariantSpreadArgument))
       );
       VoidT.at loc
 
@@ -2821,18 +2709,18 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let oldset = Changeset.clear () in
 
       let then_env = Env.clone_env env in
-      Env.update_env cx reason then_env;
-      let _ = Env.refine_with_preds cx reason preds xtypes in
+      Env.update_env cx loc then_env;
+      let _ = Env.refine_with_preds cx loc preds xtypes in
       let t1 = expression cx consequent in
 
       let else_env = Env.clone_env env in
-      Env.update_env cx reason else_env;
-      let _ = Env.refine_with_preds cx reason not_preds xtypes in
+      Env.update_env cx loc else_env;
+      let _ = Env.refine_with_preds cx loc not_preds xtypes in
       let t2 = expression cx alternate in
 
       let newset = Changeset.merge oldset in
-      Env.merge_env cx reason (env, then_env, else_env) newset;
-      Env.update_env cx reason env;
+      Env.merge_env cx loc (env, then_env, else_env) newset;
+      Env.update_env cx loc env;
       (* TODO call loc_of_predicate on some pred?
          t1 is wrong but hopefully close *)
 
@@ -2866,23 +2754,19 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         expressions
 
   | Function func ->
-      let {Ast.Function.id; async; generator; predicate; _} = func in
-      let desc = RFunction (function_desc ~async ~generator) in
-      let reason = mk_reason desc loc in
+      let {Ast.Function.id; predicate; _} = func in
 
       (match predicate with
       | Some (_, Ast.Type.Predicate.Inferred) ->
-          Flow_error.(add_output cx
-            (EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression)))
+          Flow_js.add_output cx Flow_error.(
+            EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression)
+          )
       | _ -> ());
 
-      mk_function id cx reason func
+      mk_function id cx loc func
 
   | ArrowFunction func ->
-      let {Ast.Function.async; generator; _} = func in
-      let desc = RArrowFunction (function_desc ~async ~generator) in
-      let reason = mk_reason desc loc in
-      mk_arrow cx reason func
+      mk_arrow cx loc func
 
   | TaggedTemplate {
       TaggedTemplate.tag = _, Identifier (_, "query");
@@ -2903,9 +2787,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason = mk_reason (RCustom "encaps tag") loc in
       let reason_array = replace_reason_const RArray reason in
       let ret = Flow.mk_tvar cx reason in
-      let ft = Flow.mk_functiontype
-        [ ArrT (reason_array, ArrayAT (StrT.why reason, None));
-          RestT (AnyT.why reason) ]
+      let ft = Flow.mk_functioncalltype
+        [ Arg (ArrT (reason_array, ArrayAT (StrT.why reason, None)));
+          SpreadArg (AnyT.why reason) ]
         ret
       in
       Flow.flow cx (t, CallT (reason, ft));
@@ -2922,7 +2806,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
             _
           };
           _
-        }) -> StrT (mk_reason RString elem_loc, Type.Literal cooked)
+        }) -> StrT (mk_reason RString elem_loc, Type.Literal (None, cooked))
       in
       begin match quasis with
       | head::[] ->
@@ -2961,24 +2845,18 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       | None -> mk_class cx loc reason c)
 
   | Yield { Yield.argument; delegate = false } ->
-      let reason = mk_reason (RCustom "yield") loc in
-      let yield = Env.get_internal_var cx "yield" reason in
+      let yield = Env.get_internal_var cx "yield" loc in
       let t = match argument with
       | Some expr -> expression cx expr
       | None -> VoidT.at loc in
+      Env.havoc_heap_refinements ();
       Flow.flow_t cx (t, yield);
-      Env.get_internal_var cx "next" reason
+      Env.get_internal_var cx "next" loc
 
   | Yield { Yield.argument; delegate = true } ->
       let reason = mk_reason (RCustom "yield* delegate") loc in
-      let next_reason = replace_reason (fun desc -> RCustom (
-        spf "next of parent generator in %s" (string_of_desc desc)
-      )) reason in
-      let yield_reason = replace_reason (fun desc -> RCustom (
-        spf "yield of parent generator in %s" (string_of_desc desc)
-      )) reason in
-      let next = Env.get_internal_var cx "next" next_reason in
-      let yield = Env.get_internal_var cx "yield" yield_reason in
+      let next = Env.get_internal_var cx "next" loc in
+      let yield = Env.get_internal_var cx "yield" loc in
       let t = match argument with
       | Some expr -> expression cx expr
       | None -> assert_false "delegate yield without argument" in
@@ -3001,25 +2879,59 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
             (mk_reason (RCustom "iteration expected on Iterable") loc)
             "$Iterable" targs
       in
+      Env.havoc_heap_refinements ();
       Flow.flow_t cx (t, iterable);
 
       ret
 
   (* TODO *)
   | Comprehension _ ->
-    Flow_error.(add_output cx
-      (EUnsupportedSyntax (loc, ComprehensionExpression)));
+    Flow_js.add_output cx
+      Flow_error.(EUnsupportedSyntax (loc, ComprehensionExpression));
     EmptyT.at loc
 
   | Generator _ ->
-    Flow_error.(add_output cx
-      (EUnsupportedSyntax (loc, GeneratorExpression)));
+    Flow_js.add_output cx
+      Flow_error.(EUnsupportedSyntax (loc, GeneratorExpression));
     EmptyT.at loc
 
   | MetaProperty _->
-    Flow_error.(add_output cx
-      (EUnsupportedSyntax (loc, MetaPropertyExpression)));
+    Flow_js.add_output cx
+      Flow_error.(EUnsupportedSyntax (loc, MetaPropertyExpression));
     EmptyT.at loc
+
+  | Import arg -> (
+    match arg with
+    | _, Ast.Expression.Literal {
+        Ast.Literal.value = Ast.Literal.String module_name; _;
+      }
+    | _, TemplateLiteral {
+        TemplateLiteral.quasis = [_, {
+          TemplateLiteral.Element.value = {
+            TemplateLiteral.Element.cooked = module_name; _
+          }; _
+        }];
+        expressions = [];
+      } ->
+
+      let imported_module_t =
+        let import_reason = mk_reason (RCustom (
+          spf "exports of %S" module_name
+        )) loc in
+        import_ns cx import_reason module_name loc
+      in
+
+      let reason = mk_reason (RCustom "async import") loc in
+      Flow.get_builtin_typeapp cx reason "Promise" [imported_module_t]
+    | _ ->
+      let ignore_non_literals =
+        Context.should_ignore_non_literal_requires cx in
+      if not ignore_non_literals
+      then
+        Flow_js.add_output cx
+          Flow_error.(EUnsupportedSyntax (loc, ImportDynamicArgument));
+      AnyT.at loc
+  )
 )
 
 (* Handles function calls that appear in conditional contexts. The main
@@ -3044,7 +2956,7 @@ and predicated_call_expression_ cx loc callee arguments =
   let reason = mk_reason RFunctionCall loc in
   let argts = List.map (expression cx) arguments in
   let argks = List.map Refinement.key arguments in
-  let t = func_call cx reason f argts in
+  let t = func_call cx reason f (List.map (fun e -> Arg e) argts) in
   (f, argks, argts, t)
 
 (* We assume that constructor functions return void
@@ -3059,17 +2971,18 @@ and new_call cx tok class_ argts =
     Flow.flow cx (class_, ConstructorT (reason, argts, t));
   )
 
-and func_call cx reason func_t argts =
+and func_call cx reason ?(call_strict_arity=true) func_t argts =
   Env.havoc_heap_refinements ();
   Flow.mk_tvar_where cx reason (fun t ->
     let frame = Env.peek_frame () in
-    let app = Flow.mk_functiontype argts t ~frame in
+    let app = Flow.mk_functioncalltype argts t ~frame ~call_strict_arity in
     Flow.flow cx (func_t, CallT(reason, app))
   )
 
-and method_call cx reason prop_loc (expr, obj_t, name) argts =
+and method_call cx reason ?(call_strict_arity=true) prop_loc
+    (expr, obj_t, name) argts =
   Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
-  (match Refinement.get cx expr reason with
+  (match Refinement.get cx expr (loc_of_reason reason) with
   | Some f ->
       (* note: the current state of affairs is that we understand
          member expressions as having refined types, rather than
@@ -3080,7 +2993,8 @@ and method_call cx reason prop_loc (expr, obj_t, name) argts =
       Env.havoc_heap_refinements ();
       Flow.mk_tvar_where cx reason (fun t ->
         let frame = Env.peek_frame () in
-        let app = Flow.mk_methodtype obj_t argts t ~frame in
+        let app =
+          Flow.mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
         Flow.flow cx (f, CallT (reason, app));
       )
   | None ->
@@ -3090,7 +3004,8 @@ and method_call cx reason prop_loc (expr, obj_t, name) argts =
         let expr_loc, _ = expr in
         let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
         let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
-        let app = Flow.mk_methodtype obj_t argts t ~frame in
+        let app =
+          Flow.mk_methodcalltype obj_t argts t ~frame ~call_strict_arity in
         let propref = Named (reason_prop, name) in
         Flow.flow cx (obj_t, MethodT(reason, reason_expr, propref, app))
       )
@@ -3099,15 +3014,12 @@ and method_call cx reason prop_loc (expr, obj_t, name) argts =
 and identifier cx name loc =
   if Type_inference_hooks_js.dispatch_id_hook cx name loc
   then AnyT.at loc
-  else (
-    let reason = mk_reason (RIdentifier name) loc in
-    Env.var_ref ~lookup_mode:ForValue cx name reason
-  )
+  else Env.var_ref ~lookup_mode:ForValue cx name loc
 
 (* traverse a literal expression, return result type *)
 and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
   | String s ->
-      StrT (mk_reason RString loc, Literal s)
+      StrT (mk_reason RString loc, Literal (None, s))
 
   | Boolean b ->
       BoolT (mk_reason RBoolean loc, Some b)
@@ -3116,7 +3028,7 @@ and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
       NullT.at loc
 
   | Number f ->
-      NumT (mk_reason RNumber loc, Literal (f, lit.raw))
+      NumT (mk_reason RNumber loc, Literal (None, (f, lit.raw)))
 
   | RegExp _ ->
       Flow.get_builtin_type cx (mk_reason RRegExp loc) "RegExp"
@@ -3172,7 +3084,7 @@ and unary cx loc = Ast.Expression.Unary.(function
     let reason = mk_reason (RCustom "await") loc in
     let await = Flow.get_builtin cx "$await" reason in
     let arg = expression cx argument in
-    func_call cx reason await [arg]
+    func_call cx reason await [Arg arg]
 )
 
 (* numeric pre/post inc/dec *)
@@ -3183,8 +3095,7 @@ and update cx loc expr = Ast.Expression.Update.(
   | _, Ast.Expression.Identifier (id_loc, name) ->
     Flow.flow cx (identifier cx name id_loc, AssertArithmeticOperandT reason);
     (* enforce state-based guards for binding update, e.g., const *)
-    let id_reason = mk_reason (RCustom name) id_loc in
-    ignore (Env.set_var cx name result_t id_reason)
+    ignore (Env.set_var cx name result_t id_loc)
   | expr ->
     Flow.flow cx (expression cx expr, AssertArithmeticOperandT reason)
   );
@@ -3256,7 +3167,7 @@ and logical cx loc = Ast.Expression.Logical.(function
   | { operator = Or; left; right } ->
       let t1, _, not_map, xtypes = predicates_of_condition cx left in
       let reason = mk_reason (RCustom "||") loc in
-      let t2 = Env.in_refined_env cx reason not_map xtypes
+      let t2 = Env.in_refined_env cx loc not_map xtypes
         (fun () -> expression cx right)
       in
       Flow.mk_tvar_where cx reason (fun t ->
@@ -3266,7 +3177,7 @@ and logical cx loc = Ast.Expression.Logical.(function
   | { operator = And; left; right } ->
       let t1, map, _, xtypes = predicates_of_condition cx left in
       let reason = mk_reason (RCustom "&&") loc in
-      let t2 = Env.in_refined_env cx reason map xtypes
+      let t2 = Env.in_refined_env cx loc map xtypes
         (fun () -> expression cx right)
       in
       Flow.mk_tvar_where cx reason (fun t ->
@@ -3277,7 +3188,7 @@ and logical cx loc = Ast.Expression.Logical.(function
 and assignment_lhs cx = Ast.Pattern.(function
   | loc, Object _
   | loc, Array _ ->
-      Flow_error.(add_output cx (EInvalidLHSInAssignment loc));
+      Flow_js.add_output cx (Flow_error.EInvalidLHSInAssignment loc);
       AnyT.at loc
 
   | _, Identifier { Ast.Pattern.Identifier.name = (loc, name); _; } ->
@@ -3309,10 +3220,8 @@ and assignment cx loc = Ast.Expression.(function
             property = Member.PropertyIdentifier (_, "exports");
             _
           }) ->
-            let reason =
-              mk_reason (RCustom "assignment of module.exports") lhs_loc in
-            set_module_kind cx reason (Context.CommonJSModule(Some(lhs_loc)));
-            set_module_exports cx reason t
+            set_module_kind cx lhs_loc (Context.CommonJSModule(Some(lhs_loc)));
+            set_module_exports cx lhs_loc t
 
         (* super.name = e *)
         | lhs_loc, Ast.Pattern.Expression (_, Member {
@@ -3323,7 +3232,7 @@ and assignment cx loc = Ast.Expression.(function
             let reason =
               mk_reason (RPropertyAssignment name) lhs_loc in
             let prop_reason = mk_reason (RProperty (Some name)) ploc in
-            let super = super_ cx reason in
+            let super = super_ cx lhs_loc in
             Flow.flow cx (super, SetPropT (reason, Named (prop_reason, name), t))
 
         (* _object.name = e *)
@@ -3361,7 +3270,7 @@ and assignment cx loc = Ast.Expression.(function
                    object and refinement types - `o` and `t` here - are
                    fully resolved.
                  *)
-                ignore Env.(set_expr key reason t t)
+                ignore Env.(set_expr key lhs_loc t t)
               | None ->
                 ()
             )
@@ -3406,8 +3315,7 @@ and assignment cx loc = Ast.Expression.(function
         name = id_loc, name;
         _;
       } ->
-        let id_reason = mk_reason (RCustom name) id_loc in
-        ignore Env.(set_var cx name result_t id_reason)
+        ignore Env.(set_var cx name result_t id_loc)
       | _ -> ()
       );
       lhs_t
@@ -3437,8 +3345,7 @@ and assignment cx loc = Ast.Expression.(function
         name = id_loc, name;
         _;
       } ->
-        let id_reason = mk_reason (RCustom name) id_loc in
-        ignore Env.(set_var cx name (NumT.at loc) id_reason)
+        ignore Env.(set_var cx name (NumT.at loc) id_loc)
       | _ -> ()
       );
       lhs_t
@@ -3450,7 +3357,7 @@ and clone_object_with_excludes cx reason this that excludes =
     let t = Flow.tvar_with_constraint cx u in
     Flow.flow cx (
       this,
-      ObjAssignT(reason, that, t, [], true)
+      ObjAssignToT(reason, that, t, [], ObjAssign)
     )
   )
 
@@ -3465,91 +3372,61 @@ and react_ignore_attribute aname =
 
 and jsx cx = Ast.JSX.(
   function { openingElement; children; _ } ->
-  jsx_title cx openingElement (List.map (jsx_body cx) children)
+  let children =
+    children
+    |> List.map (jsx_body cx)
+    |> List.fold_left (fun children -> function
+      | None -> children
+      | Some child -> child::children) []
+    |> List.rev in
+
+  jsx_title cx openingElement children
 )
 
 and jsx_title cx openingElement children = Ast.JSX.(
   let eloc, { Opening.name; attributes; _ } = openingElement in
   let facebook_fbt = Context.facebook_fbt cx in
+  let jsx_mode = Context.jsx cx in
 
-  let is_react = Context.jsx cx = None in
-
-  let mk_props reason c name =
-    let map = ref SMap.empty in
-    let spread = ref None in
-    attributes |> List.iter (function
-      | Opening.Attribute (aloc, { Attribute.
-            name = Attribute.Identifier (_, { Identifier.name = aname });
-            value
-          }) ->
-        if not (Type_inference_hooks_js.dispatch_jsx_hook cx aname aloc c)
-        then
-          let atype = (match value with
-            | Some (Attribute.Literal (loc, lit)) ->
-                literal cx loc lit
-            | Some (Attribute.ExpressionContainer (_, {
-                ExpressionContainer.expression =
-                  ExpressionContainer.Expression (loc, e)
-              })) ->
-                expression cx (loc, e)
-            | _ ->
-                (* empty or nonexistent attribute values *)
-                EmptyT.at aloc
-          ) in
-
-          if not (is_react && react_ignore_attribute aname)
-          then
-            let p = Field (atype, Neutral) in
-            map := SMap.add aname p !map
-
-      | Opening.Attribute _ ->
-          () (* TODO: attributes with namespaced names *)
-
-      | Opening.SpreadAttribute (_, { SpreadAttribute.argument }) ->
-          let ex_t = expression cx argument in
-          spread := Some (ex_t)
-    );
-    let reason_props = replace_reason_const
-      (if is_react then RReactElementProps name else RJSXElementProps name)
-      reason in
-    (* TODO: put children in the props for react, so that we can seal props for
-     * react *)
-    let sealed = !spread=None && not is_react in
-    let o = Flow.mk_object_with_map_proto cx reason_props ~sealed
-      !map (ObjProtoT reason_props)
-    in
-    match !spread with
-      | None -> o
-      | Some ex_t ->
-          let reason_prop = replace_reason (fun desc ->
-            RSpreadOf desc
-          ) (reason_of_t ex_t) in
-          let ignored_attributes =
-            if is_react then react_ignored_attributes else [] in
-          clone_object_with_excludes cx
-            reason_prop o ex_t ignored_attributes
-  in
-
-  match (name, facebook_fbt) with
-  | (Identifier (_, { Identifier.name }), Some facebook_fbt)
+  match (name, facebook_fbt, jsx_mode) with
+  | (Identifier (_, { Identifier.name }), Some facebook_fbt, _)
       when name = "fbt" ->
     let fbt_reason = mk_reason (RCustom "<fbt />") eloc in
     Flow.get_builtin_type cx fbt_reason facebook_fbt
 
-  | Identifier (loc, { Identifier.name }), _
+  (**
+   * It's a bummer to duplicate this case, but CSX does not want the
+   * "when name = String.capitalize name" restriction.
+   *)
+  | (Identifier (loc, { Identifier.name }), _, Some Options.CSX) ->
+    if Type_inference_hooks_js.dispatch_id_hook cx name loc
+    then AnyT.at eloc
+    else begin
+      let reason = mk_reason (RJSXElement(Some name)) eloc in
+      let c = Env.get_var cx name eloc in
+      (* With CSX children are just a prop, so pass them to jsx_mk_props... *)
+      let o = jsx_mk_props cx reason c name attributes (Some children) in
+      (* Sucks to also pass children to jsx_desugar here, they're ignored *)
+      jsx_desugar cx name c o attributes children eloc
+    end
+
+  | Identifier (loc, { Identifier.name }), _, _
       when name = String.capitalize name ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc
     then AnyT.at eloc
     else begin
-      let reason = mk_reason
-        (if is_react then RReactElement(Some name) else RJSXElement(Some name))
-        eloc in
-      let c = Env.get_var cx name reason in
-      let o = mk_props reason c name in
+      let el =
+        if jsx_mode = None
+        then RReactElement(Some name) else RJSXElement(Some name) in
+      let reason = mk_reason el eloc in
+      let c = Env.get_var cx name eloc in
+      (* TODO: put children in the props for react, so that we can seal props
+       * for react *)
+      let o = jsx_mk_props cx reason c name attributes None in
       jsx_desugar cx name c o attributes children eloc
     end
 
-  | (Identifier (loc, { Identifier.name }), _) ->
+  | (Identifier (loc, { Identifier.name }), _, _) ->
       (**
        * For JSX intrinsics, we assume a built-in global
        * object type: $JSXIntrinsics. The keys of this object type correspond to
@@ -3586,7 +3463,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
        mk_reason desc eloc
      in
      let component_t =
-       if is_react
+       if jsx_mode = None
        then Flow.mk_tvar_where cx component_t_reason (fun t ->
         let prop_t =
           if Type_inference_hooks_js.dispatch_member_hook
@@ -3601,13 +3478,81 @@ and jsx_title cx openingElement children = Ast.JSX.(
         in
         Flow.flow_t cx (prop_t, t)
       )
-      else StrT (component_t_reason, Literal name) in
-      let o = mk_props component_t_reason component_t name in
+      else StrT (component_t_reason, Literal (None, name)) in
+      let o = jsx_mk_props cx component_t_reason
+        component_t name attributes None in
       jsx_desugar cx name component_t o attributes children eloc
 
   | _ ->
       (* TODO? covers namespaced names, member expressions as element names *)
       AnyT.at eloc
+)
+
+and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
+  let is_react = Context.jsx cx = None in
+  let map = ref SMap.empty in
+  let spread = ref None in
+  attributes |> List.iter (function
+    | Opening.Attribute (aloc, { Attribute.
+          name = Attribute.Identifier (_, { Identifier.name = aname });
+          value
+        }) ->
+      if not (Type_inference_hooks_js.dispatch_jsx_hook cx aname aloc c)
+      then
+        let atype = (match value with
+          | Some (Attribute.Literal (loc, lit)) ->
+              literal cx loc lit
+          | Some (Attribute.ExpressionContainer (_, {
+              ExpressionContainer.expression =
+                ExpressionContainer.Expression (loc, e)
+            })) ->
+              expression cx (loc, e)
+          | _ ->
+              (* empty or nonexistent attribute values *)
+              EmptyT.at aloc
+        ) in
+
+        if not (is_react && react_ignore_attribute aname)
+        then
+          let p = Field (atype, Neutral) in
+          map := SMap.add aname p !map
+
+    | Opening.Attribute _ ->
+        () (* TODO: attributes with namespaced names *)
+
+    | Opening.SpreadAttribute (_, { SpreadAttribute.argument }) ->
+        let ex_t = expression cx argument in
+        (* TODO: this overwrites all but the last spread *)
+        spread := Some (ex_t)
+  );
+  (match children with
+    | Some children when List.length children <> 0 ->
+        let arr = Flow_js.mk_tvar_where cx reason (fun tout ->
+          Flow.resolve_spread_list
+            cx
+            ~reason_op:reason
+            (List.map (fun child -> UnresolvedArg child) children)
+            (ResolveSpreadsToArrayLiteral (mk_id (), tout))
+        ) in
+        let p = Field (arr, Neutral) in
+        map := SMap.add "children" p !map
+    | _ -> ()
+  );
+  let reason_props = replace_reason_const
+    (if is_react then RReactElementProps name else RJSXElementProps name)
+    reason in
+  (* TODO: ideally we'd seal even for spreads someday *)
+  let sealed = !spread=None && not is_react in
+  let o = Flow.mk_object_with_map_proto cx reason_props ~sealed
+    !map (ObjProtoT reason_props)
+  in
+  match !spread with
+    | None -> o
+    | Some ex_t ->
+        let ignored_attributes =
+          if is_react then react_ignored_attributes else [] in
+        clone_object_with_excludes cx
+          reason_props o ex_t ignored_attributes
 )
 
 and jsx_desugar cx name component_t props attributes children eloc =
@@ -3623,10 +3568,10 @@ and jsx_desugar cx name component_t props attributes children eloc =
           reason,
           reason_createElement,
           Named (reason_createElement, "createElement"),
-          Flow.mk_methodtype react [component_t;props] tvar
+          Flow.mk_methodcalltype react [Arg component_t; Arg props] tvar
         ))
       )
-  | Some (raw_jsx_expr, jsx_expr) ->
+  | Some Options.JSXPragma (raw_jsx_expr, jsx_expr) ->
       let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) eloc in
 
       (* A JSX element with no attributes should pass in null as the second
@@ -3634,7 +3579,9 @@ and jsx_desugar cx name component_t props attributes children eloc =
       let props = match attributes with
       | [] -> NullT.at eloc
       | _ -> props in
-      let argts = [component_t;props] @ children in
+      let argts =
+        [Arg component_t; Arg props] @
+        (List.map (fun c -> Arg c) children) in
       Ast.Expression.(match jsx_expr with
       | _, Member {
         Member._object;
@@ -3642,11 +3589,15 @@ and jsx_desugar cx name component_t props attributes children eloc =
           _;
         } ->
           let ot = jsx_pragma_expression cx raw_jsx_expr eloc _object in
-          method_call cx reason prop_loc (jsx_expr, ot, name) argts
+          method_call cx reason ~call_strict_arity:false prop_loc
+            (jsx_expr, ot, name) argts
       | _ ->
           let f = jsx_pragma_expression cx raw_jsx_expr eloc jsx_expr in
-          func_call cx reason f argts
+          func_call cx reason ~call_strict_arity:false f argts
       )
+  | Some Options.CSX ->
+      let reason = mk_reason (RJSXFunctionCall name) eloc in
+      func_call cx reason ~call_strict_arity:false component_t [Arg props]
 
 (* The @jsx pragma specifies a left hand side expression EXPR such that
  *
@@ -3665,472 +3616,140 @@ and jsx_desugar cx name component_t props attributes children eloc =
  *)
 and jsx_pragma_expression cx raw_jsx_expr loc = Ast.Expression.(function
   | _, Identifier (_, name) ->
-      let reason = mk_reason (RJSXIdentifier(raw_jsx_expr, name)) loc in
-      Env.var_ref ~lookup_mode:ForValue cx name reason
+      let desc = RJSXIdentifier (raw_jsx_expr, name) in
+      Env.var_ref ~lookup_mode:ForValue cx name loc ~desc
   | expr ->
       (* Oh well, we tried *)
       expression cx expr
 )
 
 and jsx_body cx = Ast.JSX.(function
-  | _, Element e -> jsx cx e
+  | _, Element e -> Some (jsx cx e)
   | _, ExpressionContainer ec -> (
       let open ExpressionContainer in
       let { expression = ex } = ec in
-      match ex with
+      Some (match ex with
         | Expression (loc, e) -> expression cx (loc, e)
         | EmptyExpression loc ->
-          EmptyT (mk_reason (RCustom "empty jsx body") loc)
+          EmptyT (mk_reason (RCustom "empty jsx body") loc))
     )
-  | loc, Text _ -> StrT.at loc (* TODO: create StrT (..., Literal ...)) *)
+  | loc, Text { Text.value; raw=_; } -> jsx_trim_text loc value
 )
 
-(* Native support for React.PropTypes validation functions, which are
-   interpreted as type annotations for React props. This strategy is reasonable
-   because the validation functions enforce types at run time (during
-   development), and we can always insist on them because they are turned off in
-   production. *)
+(* This is hard for two main reasons:
+ *  1. We can't use Str
+ *  2. It's not enough to trim the text, we also need to figure out the line and
+ *     column for the start and end of the text
+*)
+and jsx_trim_text =
+  (* Removes all the spaces from the beginning of the string *)
+  let prefix_trim =
+    let rec trimmer str len idx =
+      if idx >= len
+      then ""
+      else if String.get str idx = ' '
+      then trimmer str len (idx+1)
+      else String.sub str idx (len - idx)
 
-and mk_proptype cx = Ast.Expression.(function
-  | _, Member { Member.
-      property = Member.PropertyIdentifier
-        (_, "isRequired");
-      _object = e;
-      _
-    } ->
-      mk_proptype cx e
+    in fun str -> trimmer str (String.length str) 0
+  in
 
-  | vloc, Member { Member.
-      property = Member.PropertyIdentifier
-        (_, "number");
-      _
-    } ->
-      NumT.at vloc
+  (* Removes all the spaces from the end of the string *)
+  let suffix_trim =
+    let rec trimmer str idx =
+      if idx < 0
+      then ""
+      else if String.get str idx = ' '
+      then trimmer str (idx-1)
+      else String.sub str 0 (idx+1)
 
-  | vloc, Member { Member.
-      property = Member.PropertyIdentifier
-        (_, "string");
-      _
-    } ->
-      StrT.at vloc
+    in fun str -> trimmer str (String.length str - 1)
+  in
 
-  | vloc, Member { Member.
-      property = Member.PropertyIdentifier
-        (_, "bool");
-      _
-    } ->
-      BoolT.at vloc
+  fun loc value ->
+    (* Tabs get turned into spaces *)
+    let value = String_utils.replace_char '\t' ' ' value in
 
-  | vloc, Member { Member.
-      property = Member.PropertyIdentifier
-        (_, "array");
-      _
-    } ->
-      ArrT (
-        mk_reason RPropTypeArray vloc,
-        ArrayAT (AnyT.at vloc, None)
-      )
+    (* The algorithm is line based, so split the string into lines *)
+    let lines = String_utils.split_into_lines value in
+    let last_line = List.length lines - 1 in
 
-  | vloc, Member { Member.
-      property = Member.PropertyIdentifier
-        (_, "func");
-      _
-    } ->
-      AnyFunT (mk_reason RPropTypeFunc vloc)
+    let trimmed_lines = List.mapi (fun idx line ->
+      (* Remove the leading whitespace from every line but the first *)
+      let line = if idx <> 0 then prefix_trim line else line in
+      (* Remove the trailing whitespace from every line but the last *)
+      if idx <> last_line then suffix_trim line else line
+    ) lines in
 
-  | vloc, Member { Member.
-      property = Member.PropertyIdentifier
-        (_, "object");
-      _
-    } ->
-      AnyObjT (mk_reason RPropTypeObject vloc)
+    (* Figure out the first and last non-empty line, if there are any *)
+    let _, first_and_last_non_empty =
+      List.fold_left
+        (fun (idx, first_and_last) line ->
+          let first_and_last =
+            if line <> ""
+            then match first_and_last with
+            | None -> Some (idx, idx)
+            | Some (first, _) -> Some (first, idx)
+            else first_and_last in
+          idx+1, first_and_last)
+        (0, None)
+        trimmed_lines in
 
-  | vloc, Member { Member.
-      property = Member.PropertyIdentifier
-        (_, "node");
-      _
-    } ->
-      AnyT.at vloc (* TODO *)
+    match first_and_last_non_empty with
+    | None -> None
+    | Some (first_line, last_line) ->
+      (* Filter out empty lines and turn newlines into spaces *)
+      let trimmed =
+        trimmed_lines
+        |> List.filter (fun line -> line <> "")
+        |> String.concat " " in
 
-  | vloc, Member { Member.
-      property = Member.PropertyIdentifier
-        (_, "element");
-      _
-    } ->
-      AnyT.at vloc (* TODO *)
+      let open Loc in
+      let start_line = loc.start.line + first_line in
+      let end_line = loc.start.line + last_line in
 
-  | vloc, Call { Call.
-      callee = _, Member { Member.
-         property = Member.PropertyIdentifier
-          (_, "arrayOf");
-         _
-      };
-      arguments = [Expression e];
-    } ->
-      ArrT (
-        mk_reason RPropTypeArrayOf vloc,
-        ArrayAT (mk_proptype cx e, None)
-      )
+      (* We want to know the column and offset for the first and last
+       * non-whitespace characters. We can do that by figuring out what those
+       * characters are and using String.index and String.rindex to search for
+       * them *)
+      let first_trimmed_line = List.nth trimmed_lines first_line in
+      let last_trimmed_line = List.nth trimmed_lines last_line in
+      let first_char = String.get first_trimmed_line 0 in
+      let last_char =
+        String.get last_trimmed_line (String.length last_trimmed_line - 1) in
 
-  | vloc, Call { Call.
-      callee = _, Member { Member.
-         property = Member.PropertyIdentifier
-          (_, "instanceOf");
-         _
-      };
-      arguments = [Expression e];
-    } ->
-      Flow.mk_instance cx ~for_type:false (mk_reason RPropTypeInstanceOf vloc)
-        (expression cx e)
+      (* For column we just do a search within the line *)
+      let start_column = String.index (List.nth lines first_line) first_char in
+      let end_column = String.rindex (List.nth lines last_line) last_char + 1 in
 
-  | vloc, Call { Call.
-      callee = _, Member { Member.
-         property = Member.PropertyIdentifier
-          (_, "objectOf");
-         _
-      };
-      arguments = [Expression e];
-    } ->
-      let flags = {
-        frozen = false;
-        sealed = UnsealedInFile (Loc.source vloc);
-        exact = true
+      (* If we're on the first line, then we need to see on whic column the line
+         starts *)
+      let start_column =
+        if first_line = 0
+        then start_column + loc.start.column
+        else start_column in
+      let end_column =
+        if last_line = 0
+        then end_column + loc.start.column
+        else end_column in
+
+      (* For offset, we do a search in the whole JSXText string *)
+      let start_offset = loc.start.offset + (String.index value first_char) in
+      let end_offset = loc.start.offset + (String.rindex value last_char) + 1 in
+
+      let loc = { loc with
+        start = {
+          line = start_line;
+          column = start_column;
+          offset = start_offset;
+        };
+        _end = {
+          line = end_line;
+          column = end_column;
+          offset = end_offset;
+        };
       } in
-      let dict = Some {
-        dict_name = None;
-        key = AnyT.t;
-        value = mk_proptype cx e;
-        dict_polarity = Neutral;
-      } in
-      let pmap = Context.make_property_map cx SMap.empty in
-      let proto = ObjProtoT (locationless_reason RObjectClassName) in
-      let reason = mk_reason RPropTypeObjectOf vloc in
-      ObjT (reason, Flow.mk_objecttype ~flags dict pmap proto)
-
-  | vloc, Call { Call.
-      callee = _, Member { Member.
-         property = Member.PropertyIdentifier
-          (_, "oneOf");
-         _
-      };
-      arguments = [Expression (_, Array { Array.elements })]
-    } ->
-      let rec string_literals acc = function
-        | Some (Expression (_, Ast.Expression.Literal { Ast.Literal.
-            value = Ast.Literal.String lit; _
-          })) :: tl ->
-          string_literals (lit :: acc) tl
-        | [] -> Some acc
-        | _ -> None
-      in
-      let reason = mk_reason RPropTypeOneOf vloc in
-      (match string_literals [] elements with
-      | Some keys -> Anno.mk_keys_type reason keys
-      | None -> AnyT reason)
-
-  | vloc, Call { Call.
-      callee = _, Member { Member.
-         property = Member.PropertyIdentifier
-          (_, "oneOfType");
-         _
-      };
-      arguments = [Expression (_, Array { Array.elements })]
-    } ->
-      let rec proptype_elements acc = function
-        | Some (Expression e) :: tl ->
-            proptype_elements (mk_proptype cx e :: acc) tl
-        | _ -> acc
-      in
-      let reason = mk_reason RPropTypeOneOfType vloc in
-      (match proptype_elements [] elements with
-      | [] -> EmptyT reason
-      | [t] -> t
-      | t0::t1::ts -> UnionT (reason, UnionRep.make t0 t1 ts))
-
-  | vloc, Call { Call.
-      callee = _, Member { Member.
-         property = Member.PropertyIdentifier
-          (_, "shape");
-         _
-      };
-      arguments = [Expression (_, Object { Object.properties })];
-    } ->
-      let reason = mk_reason RPropTypeShape vloc in
-      let amap, omap, dict = mk_proptypes cx properties in
-      let omap = Properties.map_t (fun t -> OptionalT t) omap in
-      let map = SMap.union amap omap in
-      let proto = ObjProtoT reason in
-      Flow.mk_object_with_map_proto cx reason ?dict map proto
-
-  (* Support for FB-specific ReactPropTypes validators. *)
-  (** TODO: instead, route to custom lib defs, somehow...details of which have
-      not been set up or even worked out yet. **)
-  | vloc, Member { Member.
-      property = Member.PropertyIdentifier
-        (_, "Fbt");
-      _
-    } ->
-      (* We assume that there is a Fbt type defined in the global scope. *)
-      Flow.get_builtin_type cx (mk_reason RPropTypeFbt vloc) "Fbt"
-
-  | vloc, _ -> AnyT.at vloc
-)
-
-and mk_proptypes cx props = Ast.Expression.Object.(
-  List.fold_left (fun (amap, omap, dict) -> function
-
-    (* required prop *)
-    | Property (_, { Property.
-        kind = Property.Init;
-        key = Property.Identifier (_, name);
-        value = (_, Ast.Expression.Member {
-          Ast.Expression.Member.
-          property = Ast.Expression.Member.PropertyIdentifier (_, "isRequired");
-          _object = e;
-          _
-        });
-        _ }) ->
-        let p = Field (mk_proptype cx e, Neutral) in
-        SMap.add name p amap,
-        omap,
-        dict
-
-    (* other prop *)
-    | Property (_, { Property.kind = Property.Init;
-        key =
-          Property.Identifier (_, name) |
-          Property.Literal (_, {
-            Ast.Literal.value = Ast.Literal.String name;
-            _;
-          });
-        value = v;
-        _ }) ->
-        let p = Field (mk_proptype cx v, Neutral) in
-        amap,
-        SMap.add name p omap,
-        dict
-
-    (* spread prop *)
-    | SpreadProperty _ ->
-      (* Instead of modeling the spread precisely, we instead make the propTypes
-         extensible. This has the effect of loosening the check for properties
-         added by the spread, while leaving the checking of other properties as
-         is. FWIW we use a similar approximation for mixins. It would be nice to
-         be more precise here, but given that this only affects legacy React
-         classes, and that reconstructing props is already fairly delicate in
-         that world, it may not be worth it to spend time on this right now. *)
-      amap, omap, Some {
-        dict_name = None;
-        key = StrT.t;
-        value = AnyT.t;
-        dict_polarity = Neutral;
-      }
-
-    (* literal LHS *)
-    | Property (loc, { Property.key = Property.Literal _; _ }) ->
-      Flow_error.(add_output cx
-        (EUnsupportedSyntax (loc, ReactPropTypesPropertyLiteralNonString)));
-      amap, omap, dict
-
-    (* get/set kind *)
-    | Property (loc, { Property.kind = Property.Get | Property.Set; _ }) ->
-      Flow_error.(add_output cx
-        (EUnsupportedSyntax (loc, ReactPropTypesPropertyGetSet)));
-      amap, omap, dict
-
-    (* computed LHS *)
-    | Property (loc, { Property.key = Property.Computed _; _ }) ->
-      Flow_error.(add_output cx
-        (EUnsupportedSyntax (loc, ReactPropTypesPropertyComputed)));
-      amap, omap, dict
-
-  ) (SMap.empty, SMap.empty, None) props
-)
-
-(* Legacy: generate React class from specification object. *)
-and react_create_class cx loc class_props = Ast.Expression.(
-  let reason_class = mk_reason RReactClass loc in
-  let reason_component = mk_reason RReactComponent loc in
-  let this = Flow.mk_tvar cx reason_component in
-  let mixins = ref [] in
-  let static_reason = replace_reason_const RReactStatics reason_class in
-  let static = ref (Flow.mk_object cx static_reason) in
-  let default_reason =
-    replace_reason_const RReactDefaultProps reason_component in
-  let default = ref (Flow.mk_object cx default_reason) in
-  let reason_state = replace_reason_const RReactState reason_component in
-  let state = ref (Flow.mk_object cx reason_state) in
-
-  let props_reason =
-    replace_reason_const RReactComponentProps reason_component in
-  (* TODO - this probably should be the empty object AND we should enforce it *)
-  let props = ref (AnyObjT props_reason) in
-
-  let (fmap, mmap) =
-    List.fold_left Ast.Expression.Object.(fun (fmap, mmap) -> function
-
-      (* mixins *)
-      | Property (_, { Property.kind = Property.Init;
-          key =
-            Property.Identifier (_, "mixins");
-          value = aloc, Array { Array.elements };
-          _ }) ->
-        mixins := List.map (array_element cx aloc) elements;
-        fmap, mmap
-
-      (* statics *)
-      | Property (_, { Property.kind = Property.Init;
-            key = Property.Identifier (nloc, "statics");
-          value = _, Object { Object.properties };
-          _ }) ->
-        let reason = mk_reason RReactStatics nloc in
-        static :=
-          object_ cx reason ~allow_sealed:false properties;
-        fmap, mmap
-
-      (* propTypes *)
-      | Property (_, { Property.kind = Property.Init;
-          key = Property.Identifier (nloc, "propTypes");
-          value = _, Object { Object.properties } as value;
-          _ }) ->
-        ignore (expression cx value);
-        let reason = mk_reason RReactPropTypes nloc in
-        let amap, omap, dict = mk_proptypes cx properties in
-        let omap = Properties.map_t (fun t -> OptionalT t) omap in
-        let map = SMap.union amap omap in
-        let proto = ObjProtoT reason in
-        props := Flow.mk_object_with_map_proto cx reason ?dict map proto;
-        fmap, mmap
-
-      (* getDefaultProps *)
-      | Property (_, { Property.kind = Property.Init;
-          key = Property.Identifier (_, "getDefaultProps");
-          value = (vloc, Ast.Expression.Function func);
-          _
-        }) ->
-          let reason = mk_reason RReactDefaultProps vloc in
-          let t = mk_method cx reason func this in
-          let ret_loc = Func_sig.return_loc func in
-          let ret_reason = repos_reason ret_loc reason in
-          let default_tvar = Flow.mk_tvar cx (derivable_reason ret_reason) in
-          let override_default = Flow.tvar_with_constraint cx
-            (BecomeT(ret_reason, default_tvar)) in
-          default := default_tvar;
-          Flow.flow cx (t,
-            CallT (reason,
-              Flow.mk_functiontype [] override_default));
-          fmap, mmap
-
-      (* getInitialState *)
-      | Property (_, { Property.kind = Property.Init;
-          key = Property.Identifier (_, "getInitialState");
-          value = (vloc, Ast.Expression.Function func);
-          _
-        }) ->
-          let reason = mk_reason RReactState vloc in
-          let t = mk_method cx reason func this in
-          (* since the call to getInitialState happens internally, we need to
-             fake a location to pretend the call happened. using the position
-             of the return type makes it act like an IIFE. *)
-          let ret_loc = Func_sig.return_loc func in
-          let ret_reason = repos_reason ret_loc reason in
-          let state_tvar = Flow.mk_tvar cx (derivable_reason ret_reason) in
-          let override_state = Flow.tvar_with_constraint cx
-            (BecomeT (ret_reason, state_tvar)) in
-          state := state_tvar;
-          Flow.flow cx (t,
-            CallT (ret_reason,
-              Flow.mk_functiontype [] override_state));
-          fmap, mmap
-
-      (* name = function expr *)
-      | Property (_, { Property.kind = Property.Init;
-          key = Property.Identifier (_, name);
-          value = (vloc, Ast.Expression.Function func);
-          _
-        }) ->
-          let {Ast.Function.async; generator; _ } = func in
-          let desc = RFunction (function_desc ~async ~generator) in
-          let reason = mk_reason desc vloc in
-          let t = mk_method cx reason func this in
-          let p = Field (t, Neutral) in
-          fmap, SMap.add name p mmap
-
-      (* name = non-function expr *)
-      | Property (_, { Property.kind = Property.Init;
-          key =
-            Property.Identifier (_, name) |
-            Property.Literal (_, {
-              Ast.Literal.value = Ast.Literal.String name; _;
-            });
-          value = v;
-          _ }) ->
-        let t = expression cx v in
-        let p = Field (t, Neutral) in
-        SMap.add name p fmap, mmap
-
-      | _ ->
-        Flow_error.(add_output cx
-          (EUnsupportedSyntax (loc, ReactCreateClassPropertyNonInit)));
-        fmap, mmap
-
-    ) (SMap.empty, SMap.empty) class_props in
-
-  let type_args = [!default; !props; !state] in
-  let super_reason =
-    replace_reason (fun desc -> RSuperOf desc) reason_component in
-  let super =
-    Flow.get_builtin_typeapp cx super_reason
-      "LegacyReactComponent" type_args
-  in
-
-  let extract_map (from_map,to_map) name =
-    match SMap.get name from_map with
-    | Some p -> SMap.remove name from_map, SMap.add name p to_map
-    | None -> from_map, to_map
-  in
-  let fmap =
-    let p = Field (!state, Neutral) in
-    SMap.add "state" p fmap in
-  let fmap, smap =
-    List.fold_left extract_map (fmap, SMap.empty)
-      ["contextTypes";"childContextTypes";"displayName"]
-  in
-  let override_statics =
-    Flow.mk_object_with_map_proto cx
-      static_reason smap (ObjProtoT static_reason)
-  in
-  let super_static = Flow.mk_tvar_where cx static_reason (fun t ->
-    Flow.flow cx (super, GetStaticsT (static_reason, t));
-  ) in
-  Flow.flow_t cx (super_static, override_statics);
-  static := clone_object cx static_reason !static super_static;
-
-  let itype = {
-    class_id = 0;
-    type_args = SMap.empty;
-    arg_polarities = SMap.empty;
-    fields_tmap = Context.make_property_map cx fmap;
-    initialized_field_names = SSet.empty;
-    methods_tmap = Context.make_property_map cx mmap;
-    mixins = !mixins <> [];
-    structural = false;
-  } in
-  Flow.flow cx (super, SuperT (super_reason, itype));
-
-  (* TODO: Mixins are handled quite superficially. *)
-  (* mixins' statics are copied into static to inherit static properties *)
-  (* mixins must be consistent with instance properties *)
-  !mixins |> List.iter (fun mixin ->
-    static := clone_object cx static_reason !static mixin;
-    Flow.flow cx (mixin, SuperT (super_reason, itype))
-  );
-
-  let instance = InstanceT (reason_component,!static,super,itype) in
-  Flow.flow_t cx (instance, this);
-
-  ClassT(instance)
-)
+      Some (StrT (mk_reason RJSXText loc, Type.Literal (None, trimmed)))
 
 (* Given an expression found in a test position, notices certain
    type refinements which follow from the test's success or failure,
@@ -4176,40 +3795,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
     empty_result test_t |> add_predicate key unrefined_t pred sense
   in
 
-  (* inspect a null equality test *)
-  let null_test loc ~sense ~strict e null_t =
-    let t, refinement = match refinable_lvalue e with
-    | None, t -> t, None
-    | Some name, t ->
-        let pred = if strict then NullP else MaybeP in
-        t, Some (name, t, pred, sense)
-    in
-    flow_eqt ~strict loc (t, null_t);
-    match refinement with
-    | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
-    | None -> empty_result (BoolT.at loc)
-  in
-
-  let void_test loc ~sense ~strict e void_t =
-    let t, refinement = match refinable_lvalue e with
-    | None, t -> t, None
-    | Some name, t ->
-        let pred = if strict then VoidP else MaybeP in
-        t, Some (name, t, pred, sense)
-    in
-    flow_eqt ~strict loc (t, void_t);
-    match refinement with
-    | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
-    | None -> empty_result (BoolT.at loc)
-  in
-
-  (* inspect an undefined equality test *)
-  let undef_test loc ~sense ~strict e void_t =
-    if Env.is_global_var cx "undefined"
-    then void_test loc ~sense ~strict e void_t
-    else empty_result (BoolT.at loc)
-  in
-
   (* a wrapper around `condition` (which is a wrapper around `expression`) that
      evaluates `expr`. if this is a sentinel property check (determined by
      a strict equality check against a member expression `_object.prop_name`),
@@ -4236,7 +3821,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
 
       let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
       let expr_reason = mk_reason (RProperty (Some prop_name)) expr_loc in
-      let prop_t = match Refinement.get cx expr expr_reason with
+      let prop_t = match Refinement.get cx expr expr_loc with
       | Some t -> t
       | None ->
         if Type_inference_hooks_js.dispatch_member_hook cx
@@ -4258,6 +3843,52 @@ and predicates_of_condition cx e = Ast.(Expression.(
       condition cx expr, None
   in
 
+  (* inspect a null equality test *)
+  let null_test loc ~sense ~strict e null_t =
+    let t, sentinel_refinement = condition_of_maybe_sentinel cx
+      ~sense ~strict e null_t in
+    flow_eqt ~strict loc (t, null_t);
+    let out = match Refinement.key e with
+    | None -> empty_result (BoolT.at loc)
+    | Some name ->
+        let pred = if strict then NullP else MaybeP in
+        result (BoolT.at loc) name t pred sense
+    in
+    match sentinel_refinement with
+    | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+    | None -> out
+  in
+
+  let void_test loc ~sense ~strict e void_t =
+    (* if `void_t` is not a VoidT, make it one so that the sentinel test has a
+       literal type to test against. It's not appropriate to call `void_test`
+       with a `void_t` that you don't want to treat like an actual `void`! *)
+    let void_t = match void_t with
+    | VoidT _ -> void_t
+    | _ -> VoidT.why (reason_of_t void_t)
+    in
+    let t, sentinel_refinement = condition_of_maybe_sentinel cx
+      ~sense ~strict e void_t in
+    flow_eqt ~strict loc (t, void_t);
+    let out = match Refinement.key e with
+    | None -> empty_result (BoolT.at loc)
+    | Some name ->
+        let pred = if strict then VoidP else MaybeP in
+        result (BoolT.at loc) name t pred sense
+    in
+    match sentinel_refinement with
+    | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+    | None -> out
+  in
+
+  (* inspect an undefined equality test *)
+  let undef_test loc ~sense ~strict e void_t =
+    (* if `undefined` isn't redefined in scope, then we assume it is `void` *)
+    if Env.is_global_var cx "undefined"
+    then void_test loc ~sense ~strict e void_t
+    else empty_result (BoolT.at loc)
+  in
+
   let literal_test loc ~strict ~sense expr val_t pred =
     let t, sentinel_refinement = condition_of_maybe_sentinel cx
       ~sense ~strict expr val_t in
@@ -4274,6 +3905,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
 
   (* inspect a typeof equality test *)
   let typeof_test loc sense arg typename str_loc =
+    let bool = BoolT.at loc in
     match refinable_lvalue arg with
     | Some name, t ->
         let pred = match typename with
@@ -4286,12 +3918,12 @@ and predicates_of_condition cx e = Ast.(Expression.(
         | _ -> None
         in
         begin match pred with
-        | Some pred -> result BoolT.t name t pred sense
+        | Some pred -> result bool name t pred sense
         | None ->
-          Flow_error.(add_output cx (EInvalidTypeof (str_loc, typename)));
-          empty_result (BoolT.at loc)
+          Flow_js.add_output cx Flow_error.(EInvalidTypeof (str_loc, typename));
+          empty_result bool
         end
-    | None, _ -> empty_result (BoolT.at loc)
+    | None, _ -> empty_result bool
   in
 
   let sentinel_prop_test loc ~sense ~strict expr val_t =
@@ -4342,19 +3974,19 @@ and predicates_of_condition cx e = Ast.(Expression.(
         literal_test loc ~sense ~strict expr val_t (SingletonBoolP lit)
 
     (* special case equality relations involving strings *)
-    | (_, Expression.Literal { Literal.value = Literal.String lit; _})
-      as value, expr
-    | expr, ((_, Expression.Literal { Literal.value = Literal.String lit; _})
+    | ((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _})
+      as value), expr
+    | expr, ((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _})
       as value)
     | expr, ((_, Expression.TemplateLiteral {
-        TemplateLiteral.quasis = [_, {
+        TemplateLiteral.quasis = [lit_loc, {
           TemplateLiteral.Element.value = {
             TemplateLiteral.Element.cooked = lit; _
           }; _
         }]; _
       }) as value)
     | ((_, Expression.TemplateLiteral {
-        TemplateLiteral.quasis = [_, {
+        TemplateLiteral.quasis = [lit_loc, {
           TemplateLiteral.Element.value = {
             TemplateLiteral.Element.cooked = lit; _
           }; _
@@ -4362,16 +3994,18 @@ and predicates_of_condition cx e = Ast.(Expression.(
       }) as value), expr
       ->
         let val_t = expression cx value in
-        literal_test loc ~sense ~strict expr val_t (SingletonStrP lit)
+        literal_test loc ~sense ~strict expr val_t
+          (SingletonStrP (lit_loc, sense, lit))
 
     (* special case equality relations involving numbers *)
-    | (_, Expression.Literal { Literal.value = Literal.Number lit; raw })
-      as value, expr
-    | expr, ((_, Expression.Literal { Literal.value = Literal.Number lit; raw })
+    | ((lit_loc, Expression.Literal { Literal.value = Literal.Number lit; raw })
+      as value), expr
+    | expr, ((lit_loc, Expression.Literal { Literal.value = Literal.Number lit; raw })
       as value)
       ->
         let val_t = expression cx value in
-        literal_test loc ~sense ~strict expr val_t (SingletonNumP (lit, raw))
+        literal_test loc ~sense ~strict expr val_t
+          (SingletonNumP (lit_loc, sense, (lit, raw)))
 
     (* TODO: add Type.predicate variant that tests number equality *)
 
@@ -4444,7 +4078,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
     ->
       let obj_t = match _object with
       | super_loc, Super ->
-          super_ cx (mk_reason (RProperty (Some prop_name)) super_loc)
+          super_ cx super_loc
       | _ ->
           (* use `expression` instead of `condition` because `_object` is the
              object in a member expression; if it itself is a member expression,
@@ -4453,7 +4087,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
           expression cx _object in
       let expr_reason = mk_reason (RProperty (Some prop_name)) loc in
       let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
-      let t = match Refinement.get cx e expr_reason with
+      let t = match Refinement.get cx e loc with
       | Some t -> t
       | None ->
         if Type_inference_hooks_js.dispatch_member_hook cx
@@ -4487,14 +4121,15 @@ and predicates_of_condition cx e = Ast.(Expression.(
     )
 
   (* expr instanceof t *)
-  | _, Binary { Binary.operator = Binary.Instanceof; left; right } -> (
+  | loc, Binary { Binary.operator = Binary.Instanceof; left; right } -> (
+      let bool = BoolT.at loc in
       match refinable_lvalue left with
       | Some name, t ->
           let right_t = expression cx right in
           let pred = LeftP (InstanceofTest, right_t) in
-          result BoolT.t name t pred true
+          result bool name t pred true
       | None, _ ->
-          empty_result BoolT.t
+          empty_result bool
     )
 
   (* expr op expr *)
@@ -4508,7 +4143,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       eq_test loc ~sense:false ~strict:true left right
 
   (* Array.isArray(expr) *)
-  | _, Call {
+  | loc, Call {
       Call.callee = callee_loc, Member {
         Member._object = (_, Identifier (_, "Array") as o);
         property = Member.PropertyIdentifier (prop_loc, "isArray");
@@ -4527,12 +4162,13 @@ and predicates_of_condition cx e = Ast.(Expression.(
         Flow.flow cx (obj_t, GetPropT (reason, Named (prop_reason, "isArray"), t))
       ) in
       Hashtbl.replace (Context.type_table cx) prop_loc fn_t;
+      let bool = BoolT.at loc in
 
       match refinable_lvalue arg with
       | Some name, t ->
-          result BoolT.t name t ArrP true
+          result bool name t ArrP true
       | None, _ ->
-          empty_result BoolT.t
+          empty_result bool
     )
 
   (* test1 && test2 *)
@@ -4540,7 +4176,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let reason = mk_reason (RCustom "&&") loc in
       let t1, map1, not_map1, xts1 =
         predicates_of_condition cx left in
-      let t2, map2, not_map2, xts2 = Env.in_refined_env cx reason map1 xts1
+      let t2, map2, not_map2, xts2 = Env.in_refined_env cx loc map1 xts1
         (fun () -> predicates_of_condition cx right)
       in
       (
@@ -4557,7 +4193,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let reason = mk_reason (RCustom "||") loc in
       let t1, map1, not_map1, xts1 =
         predicates_of_condition cx left in
-      let t2, map2, not_map2, xts2 = Env.in_refined_env cx reason not_map1 xts1
+      let t2, map2, not_map2, xts2 = Env.in_refined_env cx loc not_map1 xts1
         (fun () -> predicates_of_condition cx right)
       in
       (
@@ -4661,8 +4297,9 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
       | None ->
         (* Since the properties object must be a literal, and literal objects
            can only ever contain neutral fields, this should not happen. *)
-        Flow_error.(add_output cx
-          (EInternal (prop_loc, PropertyDescriptorPropertyCannotBeRead)));
+        Flow_js.add_output cx Flow_error.(
+          EInternal (prop_loc, PropertyDescriptorPropertyCannotBeRead)
+        );
         acc
       | Some spec ->
         let reason = replace_reason (fun desc ->
@@ -4715,8 +4352,9 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
       | None ->
         (* Since the properties object must be a literal, and literal objects
            can only ever contain neutral fields, this should not happen. *)
-        Flow_error.(add_output cx
-          (EInternal (prop_loc, PropertyDescriptorPropertyCannotBeRead)));
+        Flow_js.add_output cx Flow_error.(
+          EInternal (prop_loc, PropertyDescriptorPropertyCannotBeRead)
+        );
       | Some spec ->
         let reason = replace_reason (fun desc ->
           RCustom (spf ".%s of %s" x (string_of_desc desc))
@@ -4738,21 +4376,13 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
     ) in
 
     let reason = mk_reason (RMethodCall (Some m)) loc in
-    method_call cx reason prop_loc (expr, obj_t, m) [arg_t]
+    method_call cx reason prop_loc (expr, obj_t, m) [Arg arg_t]
 
   (* TODO *)
   | (_, args) ->
     let argts = List.map (expression_or_spread cx) args in
     let reason = mk_reason (RMethodCall (Some m)) loc in
     method_call cx reason prop_loc (expr, obj_t, m) argts
-
-and extract_setter_type = function
-  | FunT (_, _, _, { params_tlist = [param_t]; _; }) -> param_t
-  | _ ->  failwith "Setter property with unexpected type"
-
-and extract_getter_type = function
-  | FunT (_, _, _, { return_t; _; }) -> return_t
-  | _ -> failwith "Getter property with unexpected type"
 
 and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
   match id with
@@ -4767,6 +4397,7 @@ and mk_class cx loc reason c =
   in
   class_sig |> Class_sig.generate_tests cx (fun class_sig ->
     Class_sig.check_super cx class_sig;
+    Class_sig.check_implements cx class_sig;
     Class_sig.toplevels cx class_sig
       ~decls:toplevel_decls
       ~stmts:toplevels
@@ -4780,8 +4411,8 @@ and mk_class cx loc reason c =
    signature consisting of type parameters, parameter types, parameter names,
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
-and function_decl id cx reason func this super =
-  let func_sig = Func_sig.mk cx SMap.empty ~expr:expression reason func in
+and function_decl id cx loc func this super =
+  let func_sig = Func_sig.mk cx SMap.empty ~expr:expression loc func in
 
   let this, super =
     let new_entry t = Scope.Entry.new_var ~loc:(loc_of_t t) t in
@@ -4804,44 +4435,38 @@ and function_decl id cx reason func this super =
 (* Switch back to the declared type for an internal name. *)
 and define_internal cx reason x =
   let ix = internal_name x in
-  let opt = Env.get_var_declared_type cx ix reason in
-  ignore Env.(set_var cx ix (Flow.filter_optional cx reason opt) reason)
+  let loc = loc_of_reason reason in
+  let opt = Env.get_var_declared_type cx ix loc in
+  ignore Env.(set_var cx ix (Flow.filter_optional cx reason opt) loc)
 
 (* Process a function definition, returning a (polymorphic) function type. *)
-and mk_function id cx reason func =
-  let this = Flow.mk_tvar cx (replace_reason_const RThis reason) in
+and mk_function id cx loc func =
+  let this = Flow.mk_tvar cx (mk_reason RThis loc) in
   (* Normally, functions do not have access to super. *)
-  let super = ObjProtoT (replace_reason_const RNoSuper reason) in
-  let func_sig = function_decl id cx reason func this super in
+  let super = ObjProtoT (mk_reason RNoSuper loc) in
+  let func_sig = function_decl id cx loc func this super in
   Func_sig.functiontype cx this func_sig
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
-and mk_arrow cx reason func =
-  let this = this_ cx reason in
-  let super = super_ cx reason in
+and mk_arrow cx loc func =
+  let this = this_ cx loc in
+  let super = super_ cx loc in
   let {Ast.Function.id; _} = func in
-  let func_sig = function_decl id cx reason func this super in
+  let func_sig = function_decl id cx loc func this super in
   (* Do not expose the type of `this` in the function's type. The call to
      function_decl above has already done the necessary checking of `this` in
      the body of the function. Now we want to avoid re-binding `this` to
      objects through which the function may be called. *)
   Func_sig.functiontype cx Flow.dummy_this func_sig
 
-(* This function is around for the sole purpose of modeling some method-like
-   behaviors of non-ES6 React classes. It is otherwise deprecated. *)
-and mk_method cx reason func this =
-  let super = ObjProtoT reason in
-  let id = None in
-  let func_sig = function_decl id cx reason func this super in
-  Func_sig.methodtype_DEPRECATED func_sig
-
 (* Transform predicate declare functions to functions whose body is the
    predicate declared for the funcion *)
 and declare_function_to_function_declaration cx id typeAnnotation predicate =
   match predicate with
   | Some (loc, Ast.Type.Predicate.Inferred) ->
-      Flow_error.(add_output cx
-        (EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression)));
+      Flow_js.add_output cx Flow_error.(
+        EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression)
+      );
       None
 
   | Some (loc, Ast.Type.Predicate.Declared e) -> begin
@@ -4857,8 +4482,8 @@ and declare_function_to_function_declaration cx id typeAnnotation predicate =
               | Some name -> name
               | None ->
                   let name_loc = fst typeAnnotation in
-                  Flow_error.(add_output cx (EUnsupportedSyntax
-                    (loc, PredicateDeclarationAnonymousParameters)));
+                  Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
+                    (loc, PredicateDeclarationAnonymousParameters));
                   (name_loc, "_")
               in
               let name' = ({ Ast.Pattern.Identifier.

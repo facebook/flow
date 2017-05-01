@@ -1,0 +1,16 @@
+
+Initial status:
+No errors!
+
+Clear A.js:
+B.js:5
+  5: require('A');
+             ^^^ A. Required module not found
+
+
+Found 1 error
+
+Restore A.js:
+No errors!
+
+Done!

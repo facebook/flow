@@ -8,10 +8,8 @@
  *
  *)
 
-module Token = Lexer_flow.Token
 open Token
 open Parser_env
-module Ast = Spider_monkey_ast
 open Ast
 module Error = Parse_error
 module SSet = Set.Make(String)
@@ -471,6 +469,7 @@ module Statement
         Eat.semicolon env;
         Loc.btwn (fst expression) end_loc, Statement.(Expression Expression.({
           expression;
+          directive = None;
         }))
 
   and expression env =
@@ -479,8 +478,19 @@ module Statement
     | Some semicolon_loc -> Loc.btwn loc semicolon_loc
     | None -> loc in
     Eat.semicolon env;
+    let directive = if allow_directive env
+      then match expression with
+      | _, Ast.Expression.Literal { Ast.Literal.
+          value = Ast.Literal.String _;
+          raw;
+          _
+        } -> Some (String.sub raw 1 (String.length raw - 2))
+      | _ -> None
+      else None
+    in
     loc, Statement.(Expression Expression.({
       expression;
+      directive;
     }))
 
   and type_alias_helper env =
@@ -601,7 +611,6 @@ module Statement
     Expect.token env T_COLON;
     let returnType = Type._type env in
     let end_loc = fst returnType in
-    let predicate = Type.predicate_opt env in
     let loc = Loc.btwn start_sig_loc end_loc in
     let typeAnnotation = loc, Ast.Type.(Function {Function.
       params;
@@ -610,8 +619,13 @@ module Statement
     }) in
     let typeAnnotation = fst typeAnnotation, typeAnnotation in
     let id = Loc.btwn (fst id) end_loc, snd id in
+    let predicate = Type.predicate_opt env in
     let end_loc = match Peek.semicolon_loc env with
-    | None -> end_loc
+    | None ->
+      begin match predicate with
+      | Some (end_loc, _) -> end_loc
+      | None -> end_loc
+      end
     | Some end_loc -> end_loc in
     Eat.semicolon env;
     let loc = Loc.btwn start_loc end_loc in
@@ -713,14 +727,14 @@ module Statement
           Statement.DeclareModule.Literal (loc, { Literal.value; raw; })
       | _ ->
           Statement.DeclareModule.Identifier (Parse.identifier env) in
-      let body_start_loc = Peek.loc env in
-      Expect.token env T_LCURLY;
-      let (module_kind, body) = module_items env ~module_kind:None [] in
-      Expect.token env T_RCURLY;
-      let body_end_loc = Peek.loc env in
-      let body_loc = Loc.btwn body_start_loc body_end_loc in
+      let body_loc, (module_kind, body) = with_loc (fun env ->
+        Expect.token env T_LCURLY;
+        let res = module_items env ~module_kind:None [] in
+        Expect.token env T_RCURLY;
+        res
+      ) env in
       let body = body_loc, { Statement.Block.body; } in
-      let loc = Loc.btwn start_loc (fst body) in
+      let loc = Loc.btwn start_loc body_loc in
       let kind =
         match module_kind with
         | Some k -> k
@@ -908,22 +922,40 @@ module Statement
         let open Statement.ExportNamedDeclaration in
         if not (should_parse_types env)
         then error env Error.UnexpectedTypeExport;
-        let type_alias = type_alias env in
-        (match type_alias with
-          | (loc, Statement.TypeAlias {Statement.TypeAlias.id; _;}) ->
-            record_export env (loc, extract_ident_name id)
-          | _ -> failwith (
-              "Internal Flow Error! Parsed `export type` into something " ^
-              "other than a type alias!"
-            )
-        );
-        let end_loc = fst type_alias in
-        Loc.btwn start_loc end_loc, Statement.ExportNamedDeclaration {
-          declaration = Some type_alias;
-          specifiers = None;
-          source = None;
-          exportKind = Statement.ExportType;
-        }
+        (match Peek.token ~i:1 env with
+        | T_MULT ->
+          Expect.token env T_TYPE;
+          let specifier_loc = Peek.loc env in
+          Expect.token env T_MULT;
+          let source = export_source env in
+          let end_loc = match Peek.semicolon_loc env with
+          | Some loc -> loc
+          | None -> fst source in
+          Eat.semicolon env;
+          Loc.btwn start_loc end_loc, Statement.ExportNamedDeclaration {
+            declaration = None;
+            specifiers = Some (ExportBatchSpecifier (specifier_loc, None));
+            source = Some source;
+            exportKind = Statement.ExportType;
+          }
+        | _ ->
+          let type_alias = type_alias env in
+          (match type_alias with
+            | (loc, Statement.TypeAlias {Statement.TypeAlias.id; _;}) ->
+              record_export env (loc, extract_ident_name id)
+            | _ -> failwith (
+                "Internal Flow Error! Parsed `export type` into something " ^
+                "other than a type alias!"
+              )
+          );
+          let end_loc = fst type_alias in
+          Loc.btwn start_loc end_loc, Statement.ExportNamedDeclaration {
+            declaration = Some type_alias;
+            specifiers = None;
+            source = None;
+            exportKind = Statement.ExportType;
+          }
+        )
     | T_INTERFACE ->
         (* export interface I { ... } *)
         let open Statement.ExportNamedDeclaration in
@@ -1215,27 +1247,64 @@ module Statement
           error_unexpected env;
           ret
 
-    in let rec specifier_list env acc =
+    in let rec specifier_list ?(preceding_comma=true) env is_type_import acc =
       match Peek.token env with
       | T_EOF
       | T_RCURLY -> List.rev acc
       | _ ->
-          let remote, err = Parse.identifier_or_reserved_keyword env in
-          let specifier =
-            if Peek.value env = "as" then begin
-              Expect.contextual env "as";
+        if not preceding_comma then error_at env (
+          Peek.loc env, Error.ImportSpecifierMissingComma
+        );
+        let remote, err = Parse.identifier_or_reserved_keyword env in
+        let (starts_w_type, type_kind) =
+          let v = snd remote in
+          if v = "type" then true, Some ImportType
+          else if v = "typeof" then true, Some ImportTypeof
+          else false, None
+        in
+        let specifier =
+          if Peek.value env = "as" then (
+            let as_ident = Parse.identifier env in
+            if starts_w_type && not (Peek.is_identifier env) then (
+              (* `import {type as ,` or `import {type as }` *)
+              (if is_type_import then error_at env (
+                fst remote,
+                Error.ImportTypeShorthandOnlyInPureImport
+              ));
+              ImportNamedSpecifier {
+                local = None;
+                remote = as_ident;
+                kind = type_kind;
+              }
+            ) else (
+              (* `import {type as foo` *)
               let local = Some (Parse.identifier env) in
-              ImportNamedSpecifier { local; remote; }
-            end else begin
-              (match err with Some err -> error_at env err | None -> ());
-              ImportNamedSpecifier { local = None; remote; }
-            end
-          in
-          if Peek.token env = T_COMMA
-          then Expect.token env T_COMMA;
-          specifier_list env (specifier::acc)
+              ImportNamedSpecifier {local; remote; kind = None; }
+            )
+          ) else if starts_w_type && Peek.is_identifier env then (
+            (* `import {type foo` *)
+            (if is_type_import then error_at env (
+              fst remote,
+              Error.ImportTypeShorthandOnlyInPureImport
+            ));
+            let remote, err = Parse.identifier_or_reserved_keyword env in
+            (match err with Some err -> error_at env err | None -> ());
+            let local =
+              if Peek.value env = "as" then (
+                Expect.contextual env "as";
+                Some (Parse.identifier env)
+              ) else None
+            in
+            ImportNamedSpecifier { local; remote; kind = type_kind; }
+          ) else (
+            (match err with Some err -> error_at env err | None -> ());
+            ImportNamedSpecifier { local = None; remote; kind = None; }
+          )
+        in
+        let preceding_comma = Expect.maybe env T_COMMA in
+        specifier_list ~preceding_comma env is_type_import (specifier::acc)
 
-    in let named_or_namespace_specifier env =
+    in let named_or_namespace_specifier env is_type_import =
       let start_loc = Peek.loc env in
       match Peek.token env with
       | T_MULT ->
@@ -1245,7 +1314,7 @@ module Statement
           [ImportNamespaceSpecifier (Loc.btwn start_loc (fst id), id)]
       | _ ->
           Expect.token env T_LCURLY;
-          let specifiers = specifier_list env [] in
+          let specifiers = specifier_list env is_type_import [] in
           Expect.token env T_RCURLY;
           specifiers
 
@@ -1268,6 +1337,7 @@ module Statement
           ImportTypeof, None
         | _ -> ImportValue, None
       in
+      let is_type_import = importKind <> ImportValue in
       match Peek.token env, Peek.is_identifier env with
       (* import "ModuleName"; *)
       | T_STRING (str_loc, value, raw, octal), _
@@ -1302,7 +1372,7 @@ module Statement
             match Peek.token env with
             | T_COMMA -> (* `import Foo, ...` *)
                 Expect.token env T_COMMA;
-                named_or_namespace_specifier env
+                named_or_namespace_specifier env is_type_import
             | _ -> []
           ) in
 
@@ -1320,7 +1390,7 @@ module Statement
 
       (* `import [type] { ... } ...` or `import [typeof] * as ...` *)
       | _ ->
-          let specifiers = named_or_namespace_specifier env in
+          let specifiers = named_or_namespace_specifier env is_type_import in
           let source = source env in
           let end_loc = match Peek.semicolon_loc env with
           | Some loc -> loc

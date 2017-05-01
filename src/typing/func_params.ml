@@ -1,4 +1,3 @@
-module Ast = Spider_monkey_ast
 module Anno = Type_annotation
 module Flow = Flow_js
 
@@ -10,14 +9,15 @@ type binding = string * Type.t * Loc.t
 type param =
   | Simple of Type.t * binding
   | Complex of Type.t * binding list
-  | Rest of Type.t * binding
 type t = {
   list: param list;
+  rest: binding option;
   defaults: Ast.Expression.t Default.t SMap.t;
 }
 
 let empty = {
   list = [];
+  rest = None;
   defaults = SMap.empty
 }
 
@@ -36,7 +36,7 @@ let mk cx type_params_map ~expr func =
       | None ->
         let t =
           if optional
-          then OptionalT t
+          then Type.optional t
           else t
         in
         Hashtbl.replace (Context.type_table cx) loc t;
@@ -46,8 +46,9 @@ let mk cx type_params_map ~expr func =
       | Some expr ->
         (* TODO: assert (not optional) *)
         let binding = name, t, loc in
-        { list = Simple (OptionalT t, binding) :: params.list;
-          defaults = SMap.add name (Default.Expr expr) params.defaults })
+        { list = Simple (Type.optional t, binding) :: params.list;
+          defaults = SMap.add name (Default.Expr expr) params.defaults;
+          rest = params.rest; })
     | loc, _ ->
       let reason = mk_reason RDestructuring loc in
       let typeAnnotation = type_of_pattern pattern in
@@ -70,11 +71,15 @@ let mk cx type_params_map ~expr func =
         )
       );
       let t = match default with
-        | Some _ -> OptionalT t
+        | Some _ -> Type.optional t
         | None -> t (* TODO: assert (not optional) *)
       in
       let param = Complex (t, List.rev !rev_bindings) in
-      { list = param :: params.list; defaults = !defaults }
+      {
+        list = param :: params.list;
+        defaults = !defaults;
+        rest = params.rest;
+      }
   ) in
   let add_rest params pattern =
     match pattern with
@@ -87,11 +92,10 @@ let mk cx type_params_map ~expr func =
       let t =
         Anno.mk_type_annotation cx type_params_map reason typeAnnotation
       in
-      let param = Rest (Anno.mk_rest cx t, (name, t, loc)) in
-      { params with list =  param :: params.list }
+      { params with rest = Some (name, t, loc) }
     | loc, _ ->
-      Flow_error.(add_output cx
-        (EInternal (loc, RestArgumentNotIdentifierPattern)));
+      Flow_js.add_output cx
+        Flow_error.(EInternal (loc, RestParameterNotIdentifierPattern));
       params
   in
   let add_param params pattern =
@@ -117,7 +121,7 @@ let convert cx type_params_map func = Ast.Type.Function.(
     | None -> "_"
     | Some (_, name) -> name in
     let t = Anno.convert cx type_params_map typeAnnotation in
-    let t = if optional then OptionalT t else t in
+    let t = if optional then Type.optional t else t in
     let binding = name, t, loc in
     { params with list = Simple (t, binding) :: params.list }
   in
@@ -126,8 +130,9 @@ let convert cx type_params_map func = Ast.Type.Function.(
     | None -> "_"
     | Some (_, name) -> name in
     let t = Anno.convert cx type_params_map typeAnnotation in
-    let param = Rest (Anno.mk_rest cx t, (name, t, loc)) in
-    { params with list = param :: params.list }
+    let reason = mk_reason (RRestParameter name) (loc_of_t t) in
+    Flow.flow cx (t, AssertRestParamT reason);
+    { params with rest = Some (name, t, loc) }
   in
   let (params, rest) = func.params in
   let params = List.fold_left add_param empty params in
@@ -140,21 +145,24 @@ let convert cx type_params_map func = Ast.Type.Function.(
 
 let names params =
   params.list |> List.map (function
-    | Simple (_, (name, _, _))
-    | Rest (_, (name, _, _)) -> name
-  | Complex _ -> "_")
+    | Simple (_, (name, _, _)) -> name
+    | Complex _ -> "_")
 
 let tlist params =
   params.list |> List.map (function
     | Simple (t, _)
-    | Complex (t, _)
-    | Rest (t, _) -> t)
+    | Complex (t, _) -> t)
+
+let rest params =
+  match params.rest with
+  | None -> None
+  | Some (name, t, loc) -> Some (Some name, loc, t)
 
 let iter f params =
   params.list |> List.iter (function
-    | Simple (_, b)
-    | Rest (_, b) -> f b
-    | Complex (_, bs) -> List.iter f bs)
+    | Simple (_, b) -> f b
+    | Complex (_, bs) -> List.iter f bs);
+  params.rest |> Option.iter ~f
 
 let with_default name f params =
   match SMap.get name params.defaults with
@@ -168,7 +176,6 @@ let subst cx map params =
     | Simple (t, b) ->
       Simple (Flow.subst cx map t, subst_binding cx map b)
     | Complex (t, bs) ->
-      Complex (Flow.subst cx map t, List.map (subst_binding cx map) bs)
-    | Rest (t, b) ->
-      Rest (Flow.subst cx map t, subst_binding cx map b)) in
-  { params with list }
+      Complex (Flow.subst cx map t, List.map (subst_binding cx map) bs)) in
+  let rest = Option.map ~f:(subst_binding cx map) params.rest in
+  { params with list; rest; }

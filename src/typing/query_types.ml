@@ -16,7 +16,7 @@
    query_type/fill_types: in general those types may not be ground (the only
    non-ground parts should be strict_requires).
 
-   1. Look up InfoHeap(Context.file cx) to get strict_reqs.
+   1. Look up ResolvedRequiresHeap(Context.file cx) to get strict_reqs.
 
    2. Look up ContextHeap(NameHeap(strict_req)) to get strict_cxs that cx
    depends on, and so on.
@@ -36,8 +36,13 @@
 
 open Utils_js
 
+type result =
+| FailureNoMatch
+| FailureUnparseable of Loc.t * Type.t * Type.t list
+| Success of Loc.t * Type.t * Type.t list
+
 let query_type cx loc =
-  let result = ref (Loc.none, None, []) in
+  let result = ref FailureNoMatch in
   let diff = ref (max_int, max_int) in
   Hashtbl.iter (fun range t ->
     if Reason.in_range loc range
@@ -49,8 +54,8 @@ let query_type cx loc =
         let ground_t = Type_normalizer.normalize_type cx t in
         let possible_ts = Flow_js.possible_types_of_type cx t in
         result := if Type_printer.is_printed_type_parsable cx ground_t
-          then (range, Some ground_t, possible_ts)
-          else (range, None, possible_ts)
+          then Success (range, ground_t, possible_ts)
+          else FailureUnparseable (range, ground_t, possible_ts)
       )
     )
   ) (Context.type_table cx);

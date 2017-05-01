@@ -14,10 +14,11 @@
 
 open CommandUtils
 
-type mode = Check | Server | Detach
+type mode = Check | Server | Detach | FocusCheck
 
 module type CONFIG = sig
   val mode : mode
+  val default_log_filter : Hh_logger.Level.t -> bool
 end
 
 module Main = ServerFunctors.ServerMain (Server.FlowProgram)
@@ -27,11 +28,14 @@ module OptionParser(Config : CONFIG) = struct
   | Check -> "check"
   | Server -> "server"
   | Detach -> "start"
+  | FocusCheck -> "focus-check"
 
   let cmddoc = match Config.mode with
   | Check -> "Does a full Flow check and prints the results"
   | Server -> "Runs a Flow server in the foreground"
   | Detach -> "Starts a Flow server"
+  | FocusCheck -> "[experimental] " ^
+    "Does a focused Flow check on a file and its dependencies and prints the results"
 
   let common_args prev = CommandSpec.ArgSpec.(
     prev
@@ -70,6 +74,8 @@ module OptionParser(Config : CONFIG) = struct
   | Check -> CommandSpec.ArgSpec.(
       empty
       |> error_flags
+      |> flag "--no-suppressions" no_arg
+        ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
       |> flag "--json" no_arg
           ~doc:"Output errors in JSON format"
       |> flag "--profile" no_arg
@@ -81,8 +87,10 @@ module OptionParser(Config : CONFIG) = struct
   | Server -> CommandSpec.ArgSpec.(
       empty
       |> dummy Options.default_error_flags (* error_flags *)
+      |> dummy false (* no_suppressions *)
       |> dummy false (* json *)
-      |> dummy false (* profile *)
+      |> flag "--profile" no_arg
+          ~doc:"Output profiling information"
       |> dummy None  (* log-file *)
       |> dummy false (* wait *)
       |> common_args
@@ -90,13 +98,28 @@ module OptionParser(Config : CONFIG) = struct
   | Detach -> CommandSpec.ArgSpec.(
       empty
       |> dummy Options.default_error_flags (* error_flags *)
+      |> dummy false (* no_suppressions *)
       |> flag "--json" no_arg
           ~doc:"Respond in JSON format"
-      |> dummy false (* profile *)
+      |> flag "--profile" no_arg
+          ~doc:"Output profiling information"
       |> flag "--log-file" string
           ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
       |> flag "--wait" no_arg
           ~doc:"Wait for the server to finish initializing"
+      |> common_args
+    )
+  | FocusCheck -> CommandSpec.ArgSpec.(
+      empty
+      |> error_flags
+      |> flag "--no-suppressions" no_arg
+        ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
+      |> flag "--json" no_arg
+          ~doc:"Output errors in JSON format"
+      |> flag "--profile" no_arg
+          ~doc:"Output profiling information"
+      |> dummy None  (* log-file *)
+      |> dummy false (* wait *)
       |> common_args
     )
 
@@ -163,6 +186,7 @@ module OptionParser(Config : CONFIG) = struct
 
   let main
       error_flags
+      no_suppressions
       json
       profile
       log_file
@@ -187,11 +211,18 @@ module OptionParser(Config : CONFIG) = struct
       shm_log_level
       from
       quiet
-      root
+      path_opt
       () =
 
+    (* initialize loggers *)
     FlowEventLogger.set_from from;
-    let root = CommandUtils.guess_root root in
+    Hh_logger.Level.set_filter (
+      if quiet then (function _ -> false)
+      else if verbose != None || debug then (function _ -> true)
+      else Config.default_log_filter
+    );
+
+    let root = CommandUtils.guess_root path_opt in
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
 
     begin match ignore_version, FlowConfig.(flowconfig.options.Opts.version) with
@@ -199,9 +230,7 @@ module OptionParser(Config : CONFIG) = struct
     | _ -> ()
     end;
 
-    let opt_module = FlowConfig.(match flowconfig.options.Opts.moduleSystem with
-    | Opts.Node -> Options.Node
-    | Opts.Haste -> Options.Haste) in
+    let opt_module = FlowConfig.(flowconfig.options.Opts.module_system) in
     let opt_ignores = ignores_of_arg
       root
       flowconfig.FlowConfig.ignores
@@ -242,7 +271,9 @@ module OptionParser(Config : CONFIG) = struct
       shm_log_level
       ~default:FlowConfig.(flowconfig.options.Opts.shm_log_level) in
     let opt_default_lib_dir =
-      if no_flowlib then None else Some (default_lib_dir opt_temp_dir) in
+      if no_flowlib || FlowConfig.(flowconfig.options.Opts.no_flowlib)
+      then None
+      else Some (default_lib_dir opt_temp_dir) in
     let opt_log_file = match log_file with
       | Some s ->
           let dirname = Path.make (Filename.dirname s) in
@@ -263,12 +294,19 @@ module OptionParser(Config : CONFIG) = struct
     let opt_max_workers = min opt_max_workers Sys_utils.nbr_procs in
 
     let options = { Options.
-      opt_check_mode = Config.(mode = Check);
+      (* NOTE: At this experimental stage, focus mode implies check mode, so that we
+         kill the server after we are done. Later on, focus mode might keep the
+         server running after we are done. *)
+      opt_check_mode = Config.(mode = Check || mode = FocusCheck);
+      opt_focus_check_target =
+        Config.(if mode = FocusCheck
+          then Option.find_map path_opt ~f:(fun file ->
+            Some (Loc.SourceFile Path.(to_string (make file))))
+          else None);
       opt_server_mode = Config.(mode = Server);
       opt_error_flags = error_flags;
       opt_log_file = opt_log_file;
       opt_root = root;
-      opt_should_detach = Config.(mode = Detach);
       opt_should_wait = wait;
       opt_debug = debug;
       opt_verbose = verbose;
@@ -314,7 +352,7 @@ module OptionParser(Config : CONFIG) = struct
       opt_max_workers;
       opt_ignores;
       opt_includes;
-      opt_suppress_comments = FlowConfig.(
+      opt_suppress_comments = if no_suppressions then [] else FlowConfig.(
         flowconfig.options.Opts.suppress_comments
       );
       opt_suppress_types = FlowConfig.(
@@ -325,6 +363,9 @@ module OptionParser(Config : CONFIG) = struct
       );
       opt_enforce_strict_type_args = FlowConfig.(
         flowconfig.options.Opts.enforce_strict_type_args
+      );
+      opt_enforce_strict_call_arity = FlowConfig.(
+        flowconfig.options.Opts.enforce_strict_call_arity
       );
       opt_enable_unsafe_getters_and_setters = FlowConfig.(
         flowconfig.options.Opts.enable_unsafe_getters_and_setters
@@ -349,13 +390,43 @@ module OptionParser(Config : CONFIG) = struct
       );
       opt_max_header_tokens = FlowConfig.(
         flowconfig.options.Opts.max_header_tokens
+      );
+      opt_haste_name_reducers = FlowConfig.(
+        flowconfig.options.Opts.haste_name_reducers
+      );
+      opt_haste_paths_blacklist = FlowConfig.(
+        flowconfig.options.Opts.haste_paths_blacklist
+      );
+      opt_haste_paths_whitelist = FlowConfig.(
+        flowconfig.options.Opts.haste_paths_whitelist
+      );
+      opt_haste_use_name_reducers = FlowConfig.(
+        flowconfig.options.Opts.haste_use_name_reducers
       )
     } in
-    Main.start options
+    if Config.(mode = Detach)
+    then Main.daemonize options
+    else Main.run options
 
   let command = CommandSpec.command spec main
 end
 
-module CheckCommand = OptionParser (struct let mode = Check end)
-module ServerCommand = OptionParser (struct let mode = Server end)
-module StartCommand = OptionParser (struct let mode = Detach end)
+module CheckCommand = OptionParser (struct
+  let mode = Check
+  let default_log_filter = function
+    | Hh_logger.Level.Fatal
+    | Hh_logger.Level.Error -> true
+    | _ -> false
+end)
+module ServerCommand = OptionParser (struct
+  let mode = Server
+  let default_log_filter = Hh_logger.Level.default_filter
+end)
+module StartCommand = OptionParser (struct
+  let mode = Detach
+  let default_log_filter = Hh_logger.Level.default_filter
+end)
+module FocusCheckCommand = OptionParser (struct
+  let mode = FocusCheck
+  let default_log_filter = Hh_logger.Level.default_filter
+end)

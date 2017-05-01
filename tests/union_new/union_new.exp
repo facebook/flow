@@ -6,7 +6,7 @@ issue-1462-i.js:21
 
 test1.js:39
  39: const fun_result = fun(() => "");
-                            ^^^^^^^^ arrow function. Could not decide which case to select
+                            ^^^^^^^^ function. Could not decide which case to select
  35: function fun(a: A3 | A4) {
                      ^^^^^^^ union type
   Case 1 may work:
@@ -32,11 +32,11 @@ test1.js:57
                              ^^ A6
   Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
    57: inst([new B6]);
-             ^^^^^^ constructor call
+            ^^^^^^^^ inferred union of array element types (alternatively, provide an annotation to summarize the array element type)
 
 test10.js:38
  38: check_fun((x) => x);
-               ^^^^^^^^ arrow function. Could not decide which case to select
+               ^^^^^^^^ function. Could not decide which case to select
  35: function check_fun(_: ((_: number) => number) | ((_: string) => string)) { }
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union type
   Case 1 may work:
@@ -66,6 +66,21 @@ test10.js:50
    50: check_obj({ x: id("") });
                       ^^^^^^ function call
 
+test10.js:59
+ 59: check_arr([""]);
+               ^^^^ array literal. Could not decide which case to select
+ 56: function check_arr(_: number[] | string[]) { }
+                           ^^^^^^^^^^^^^^^^^^^ union type
+  Case 1 may work:
+   56: function check_arr(_: number[] | string[]) { }
+                             ^^^^^^^^ array type
+  But if it doesn't, case 2 looks promising too:
+   56: function check_arr(_: number[] | string[]) { }
+                                        ^^^^^^^^ array type
+  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
+   59: check_arr([""]);
+                 ^^^^ inferred union of array element types (alternatively, provide an annotation to summarize the array element type)
+
 test10.js:62
  62: check_arr([id("")]);
                ^^^^^^^^ array literal. Could not decide which case to select
@@ -79,7 +94,7 @@ test10.js:62
                                         ^^^^^^^^ array type
   Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
    62: check_arr([id("")]);
-                  ^^^^^^ function call
+                 ^^^^^^^^ inferred union of array element types (alternatively, provide an annotation to summarize the array element type)
 
 test11.js:12
  12: length({ kind: "cons" }); // missing `next`
@@ -142,7 +157,7 @@ test14.js:12
 
 test16.js:11
  11: foo(() => qux());
-         ^^^^^^^^^^^ arrow function. Could not decide which case to select
+         ^^^^^^^^^^^ function. Could not decide which case to select
  10: function foo(x: Foo) { }
                      ^^^ union type
   Case 1 may work:
@@ -157,7 +172,7 @@ test16.js:11
 
 test16.js:14
  14: bar(() => qux());
-         ^^^^^^^^^^^ arrow function. Could not decide which case to select
+         ^^^^^^^^^^^ function. Could not decide which case to select
  13: function bar(x: Bar) { }
                      ^^^ union type
   Case 2 may work:
@@ -188,9 +203,9 @@ test20.js:14
 
 test20.js:14
  14: [""].reduce((acc,str) => acc * str.length);
-                              ^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
+                                        ^^^^^^ property `length`. Property not found in
  14: [""].reduce((acc,str) => acc * str.length);
-      ^^ string
+                                    ^^^ Number
 
 test21.js:11
  11: ({ type: bar(), x: str() }: T);
@@ -294,4 +309,4 @@ test9.js:12
                   ^ null. The operand of an arithmetic operation must be a number.
 
 
-Found 22 errors
+Found 23 errors

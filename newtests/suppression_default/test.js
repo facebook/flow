@@ -1,4 +1,7 @@
-/* @flow */
+/*
+ * @flow
+ * @lint-ignore-every LINE_WRAP1
+ */
 
 
 import {suite, test} from '../../tsrc/test/Tester';
@@ -15,7 +18,7 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode(`
       // $TestSuppression
       ('a': number);
-    `).noNewErrors(''),
+    `).noNewErrors(),
 
     addCode(`
       // $FlowFixMe

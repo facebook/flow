@@ -142,11 +142,16 @@ defaults.js:53
  53:   p = true // error: boolean ~> string
        ^ string
 
-defaults.js:57
- 57:   p: 0 // error: number ~> string
-          ^ number. This type is incompatible with
- 55:   p: string
-          ^^^^^^ string
+defaults.js:56
+ 56: } = {
+         ^ object literal. This type is incompatible with
+ 54: }: {
+        ^ object type
+  Property `p` is incompatible:
+     57:   p: 0 // error: number ~> string
+              ^ number. This type is incompatible with
+     55:   p: string
+              ^^^^^^ string
 
 defaults.js:59
  59: (p:void); // error: string ~> void
@@ -306,21 +311,36 @@ destructuring.js:28
 
 destructuring.js:31
  31: qux({a:""});
-            ^^ string. This type is incompatible with the expected param type of
+         ^^^^^^ object literal. This type is incompatible with the expected param type of
  30: function qux(_: {a:number}) { }
-                        ^^^^^^ number
+                     ^^^^^^^^^^ object type
+  Property `a` is incompatible:
+     31: qux({a:""});
+                ^^ string. This type is incompatible with
+     30: function qux(_: {a:number}) { }
+                            ^^^^^^ number
 
 destructuring.js:33
  33: corge({b:0});
-              ^ number. This type is incompatible with the expected param type of
+           ^^^^^ object literal. This type is incompatible with the expected param type of
  32: function corge({b}: {b:string}) { }
-                            ^^^^^^ string
+                         ^^^^^^^^^^ object type
+  Property `b` is incompatible:
+     33: corge({b:0});
+                  ^ number. This type is incompatible with
+     32: function corge({b}: {b:string}) { }
+                                ^^^^^^ string
 
 destructuring.js:35
  35: var {n}:{n: number} = {n: ""}
-                               ^^ string. This type is incompatible with
+                           ^^^^^^^ object literal. This type is incompatible with
  35: var {n}:{n: number} = {n: ""}
-                 ^^^^^^ number
+             ^^^^^^^^^^^ object type
+  Property `n` is incompatible:
+     35: var {n}:{n: number} = {n: ""}
+                                   ^^ string. This type is incompatible with
+     35: var {n}:{n: number} = {n: ""}
+                     ^^^^^^ number
 
 destructuring.js:38
  38:   var {foo} = {bar: 123}; // error on foo
@@ -378,10 +398,6 @@ eager.js:2
   2: ({x} = null); // error, property `x` can not be accessed on `null`
             ^^^^ null
 
-poly.js:15
- 15: function rest_antipattern<T>(...t: T) {} // nonsense
-                                        ^ T. rest parameter should have an explicit array type (or type `any`)
-
 string_lit.js:2
   2: (val: void); // error: string ~> void
       ^^^ string. This type is incompatible with
@@ -395,4 +411,4 @@ unannotated.js:8
        ^ object literal
 
 
-Found 65 errors
+Found 64 errors

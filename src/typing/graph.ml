@@ -133,13 +133,14 @@ let prop (n, p) =
   | Get t -> ["get "^n, Def t]
   | Set t -> ["set "^n, Def t]
   | GetSet (t1, t2) -> ["get "^n, Def t1; "set "^n, Def t2]
+  | Method t -> ["+"^n, Def t]
 
 let map_props m = SMap.bindings m |> List.map prop |> List.flatten
 
 let lookup_action_parts = function
   | RWProp (t, Read) -> [("read", Def t)]
   | RWProp (t, Write) -> [("write", Def t)]
-  | LookupProp p -> prop ("lookup", p)
+  | LookupProp (_, p) -> prop ("lookup", p)
   | SuperProp p -> prop ("super", p)
 
 let rec add_t cx t (ts, nodes, edges) =
@@ -167,7 +168,7 @@ and add_parts cx id parts state =
 
 and parts_of_t cx = function
 | OpenT _ -> assert false
-| AbstractT t -> ["t", Def t]
+| AbstractT (_, t) -> ["t", Def t]
 | AnnotT source -> ["source", Def source]
 | AnyObjT _ | AnyFunT _ -> []
 | AnyT _ -> []
@@ -175,29 +176,30 @@ and parts_of_t cx = function
 | ArrT (_, arrtype) -> parts_of_arrtype arrtype
 | BoolT  _ -> []
 | BoundT _ -> []
-| ClassT t -> ["class", Def t]
+| ClassT (_, t) -> ["class", Def t]
 | CustomFunT _ | ChoiceKitT _ -> []
 | DiffT (l, r) -> ["left", Def l; "right", Def r]
 | EmptyT _ -> []
 | EvalT (t, _, _) -> ["t", Def t]
 | ExactT (_, t) -> ["t", Def t]
 | ExistsT _ -> []
-| ExtendsT (nexts, l, u) -> ("l", Def l) :: ("u", Def u) :: list_parts nexts
+| ExtendsT (_, nexts, l, u) -> ("l", Def l) :: ("u", Def u) :: list_parts nexts
 | FunProtoApplyT _ -> []
 | FunProtoBindT _ -> []
 | FunProtoCallT _ -> []
 | FunProtoT _ -> []
 | FunT (_, _, _, funtype) -> parts_of_funtype funtype
 | IdxWrapper (_, inner) -> ["inner", Def inner]
-| InstanceT (_, static, super,
+| InstanceT (_, static, super, implements,
   { type_args; fields_tmap; methods_tmap; _ }) ->
   map_parts type_args @
   map_props (Context.find_props cx fields_tmap) @
   map_props (Context.find_props cx methods_tmap) @
+  list_parts implements @
   ["static", Def static; "super", Def super]
 | IntersectionT (_, rep) -> list_parts (InterRep.members rep)
 | KeysT (_, t) -> ["t", Def t]
-| MaybeT t -> ["t", Def t]
+| MaybeT (_, t) -> ["t", Def t]
 | MixedT _ -> []
 | ModuleT (_, exporttypes) -> parts_of_exporttypes cx exporttypes
 | NullT _ -> []
@@ -211,32 +213,42 @@ and parts_of_t cx = function
   | Some { key; value; _ } -> ["#key#", Def key; "#val#", Def value]
   end
 | OpenPredT (_, base, _, _) -> ["base", Def base]
-| OptionalT t
-| PolyT (_, t) -> ["t", Def t]
+| OptionalT (_, t)
+| PolyT (_, _, t) -> ["t", Def t]
 | ReposT (_, t) -> ["t", Def t]
 | ReposUpperT (_, t) -> ["t", Def t]
-| RestT t
 | ShapeT t -> ["t", Def t]
 | SingletonBoolT _ -> []
 | SingletonNumT _ -> []
 | SingletonStrT _ -> []
 | StrT _ -> []
 | TaintT _ -> []
-| ThisClassT t -> ["this", Def t]
-| ThisTypeAppT (t, this, args) ->
+| ThisClassT (_, t) -> ["this", Def t]
+| ThisTypeAppT (_, t, this, args) ->
   ("t", Def t) :: ("this", Def this) :: list_parts args
-| TypeAppT (t, args) -> ("t", Def t) :: list_parts args
+| TypeAppT (_, t, args) -> ("t", Def t) :: list_parts args
 | TypeMapT (_, _, t1, t2) -> ["t", Def t1; "mapfn", Def t2]
 | TypeT (_, t) -> ["t", Def t]
 | UnionT (_, rep) -> list_parts (UnionRep.members rep)
 | VoidT _ -> []
 
-and parts_of_funtype { params_tlist; params_names; return_t; _ } =
+and parts_of_funtype { params_tlist; params_names; rest_param; return_t; _ } =
   (* OMITTED: static, prototype, this_t *)
   ("return_t", Def return_t) ::
+  (match rest_param with
+  | None -> []
+  | Some (Some name, _, t) -> [name, Def t]
+  | Some (None, _, t) -> ["restParam", Def t]) @
   match params_names with
   | Some ns -> List.map2 (fun n t -> n, Def t) ns params_tlist
   | None -> list_parts params_tlist
+
+and parts_of_funcalltype { call_args_tlist; call_tout; _; } =
+  (* OMITTED: this_t *)
+  let call_args =
+    List.map (function Arg t | SpreadArg t -> t) call_args_tlist in
+  ("call_tout", Def call_tout) ::
+  (list_parts call_args)
 
 and parts_of_exporttypes cx { exports_tmap; cjs_export; _ } =
   map_parts (Context.find_exports cx exports_tmap) @
@@ -258,32 +270,36 @@ and parts_of_use_t cx = function
 | UseT (_, t) -> ["t", Def t]
 | AdderT (_, r, out) -> ["right", Def r; "out", Def out]
 | AndT (_, r, out) -> ["right", Def r; "out", Def out]
-| ApplyT (_, f, funtype) -> ("f", Def f) :: parts_of_funtype funtype
 | ArrRestT (_, _, out) -> ["out", Def out]
 | AssertArithmeticOperandT _ -> []
 | AssertBinaryInLHST _ -> []
 | AssertBinaryInRHST _ -> []
 | AssertForInRHST _ -> []
 | AssertImportIsValueT _ -> []
+| AssertRestParamT _ -> []
 | BecomeT (_, t) -> ["t", Def t]
-| BindT (_, funtype) -> parts_of_funtype funtype
-| CallElemT (_, _, ix, ft) -> ("ix", Def ix) :: parts_of_funtype ft
+| BindT (_, funcalltype, _) -> parts_of_funcalltype funcalltype
+| CallElemT (_, _, ix, fct) -> ("ix", Def ix) :: parts_of_funcalltype fct
 | CallLatentPredT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
 | CallOpenPredT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
-| CallT (_, funtype) -> parts_of_funtype funtype
+| CallT (_, funcalltype) -> parts_of_funcalltype funcalltype
 | ChoiceKitUseT _-> []
 | CJSExtractNamedExportsT (_, (_, exporttypes), out) ->
     ("out", Def out) :: parts_of_exporttypes cx exporttypes
 | CJSRequireT (_, out) -> ["out", Def out]
 | ComparatorT (_, arg) -> ["arg", Def arg]
-| ConstructorT (_, args, out) -> ("out", Def out) :: list_parts args
+| ConstructorT (_, args, out) ->
+  let args = List.map (function Arg t | SpreadArg t -> t) args in
+  ("out", Def out) :: list_parts args
 | CopyNamedExportsT (_, target, out) -> ["target", Def target; "out", Def out]
+| CopyTypeExportsT (_, target, out) -> ["target", Def target; "out", Def out]
 | DebugPrintT _ -> []
 | ElemT (_, l, ReadElem t) -> ["l", Def l; "read", Def t]
 | ElemT (_, l, WriteElem t) -> ["l", Def l; "write", Def t]
-| ElemT (_, l, CallElem (_, ft)) -> ("l", Def l) :: parts_of_funtype ft
+| ElemT (_, l, CallElem (_, fct)) -> ("l", Def l) :: parts_of_funcalltype fct
 | EqT (_, arg) -> ["arg", Def arg]
-| ExportNamedT (_, map, out) -> ("out", Def out) :: map_parts map
+| ExportNamedT (_, _, map, out) -> ("out", Def out) :: map_parts map
+| ExportTypeT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
 | GetElemT (_, ix, out) -> ["ix", Def ix; "out", Def out]
 | GetKeysT (_, out) -> ["out", Def out]
 | GetPropT (_, _, out) -> ["out", Def out]
@@ -292,6 +308,7 @@ and parts_of_use_t cx = function
 | HasOwnPropT _ -> []
 | IdxUnMaybeifyT (_, out) -> ["out", Def out]
 | IdxUnwrap (_, out) -> ["out", Def out]
+| ImplementsT t -> ["instance", Def t]
 | ImportDefaultT (_, _, _, out) -> ["out", Def out]
 | ImportModuleNsT (_, out) -> ["out", Def out]
 | ImportNamedT (_, _, _, out) -> ["out", Def out]
@@ -302,26 +319,44 @@ and parts_of_use_t cx = function
     lookup_action_parts action @ list_parts nexts
 | MakeExactT (_, k) -> ["cont", node_of_cont k]
 | MapTypeT (_, _, t, k) -> ["t", Def t; "cont", node_of_cont k]
-| MethodT (_, _, _, funtype) -> parts_of_funtype funtype
+| MethodT (_, _, _, funcalltype) -> parts_of_funcalltype funcalltype
 | MixinT (_, t) -> ["t", Def t]
 | NotT (_, out) -> ["out", Def out]
-| ObjAssignT (_, p, t, _, _) -> ["proto", Def p; "t", Def t]
+| ObjAssignToT (_, s, t, _, _) -> ["source", Def s; "t", Def t]
+| ObjAssignFromT (_, p, t, _, _) -> ["proto", Def p; "t", Def t]
 | ObjFreezeT (_, out) -> ["out", Def out]
 | ObjRestT (_, _, out) -> ["out", Def out]
 | ObjSealT (_, out) -> ["out", Def out]
 | ObjTestT (_, d, t) -> ["default", Def d; "out", Def t]
 | OrT (_, r, out) -> ["right", Def r; "out", Def out]
 | PredicateT (_, out) -> ["out", Def out]
-| ReactCreateElementT (_, t, out) -> ["t", Def t; "out", Def out]
+| ReactKitT (_, tool) -> parts_of_react_kit tool
 | RefineT (_, _, t) -> ["t", Def t]
 | ReposLowerT (_, u) -> ["upper", Use u]
 | ReposUseT (_, _, l) ->  ["lower", Def l]
+| ResolveSpreadT (_, {
+    rrt_resolved;
+    rrt_unresolved;
+    rrt_resolve_to;
+  }) ->
+    let parts_of_resolved = List.mapi (fun i -> function
+      | ResolvedArg t -> [spf "resolved param #%d" i, Def t]
+      | ResolvedSpreadArg (_, arrtype) -> parts_of_arrtype arrtype
+      | ResolvedAnySpreadArg _ -> []
+    ) rrt_resolved
+    |> List.flatten in
+    let parts_of_unresolved = List.mapi (fun i -> function
+      | UnresolvedArg t -> spf "unresolved param #%d" i, Def t
+      | UnresolvedSpreadArg t -> spf "unresolved rest param #%d" i, Def t
+    ) rrt_unresolved in
+    let parts_of_resolve_to = parts_of_spread_resolve rrt_resolve_to in
+    parts_of_resolved @ parts_of_unresolved @ parts_of_resolve_to
 | SentinelPropTestT (t, _, _, out) -> ["t", Def t; "out", Def out]
 | SetElemT (_, ix, t) -> ["ix", Def ix; "t", Def t]
 | SetPropT (_, _, t) -> ["t", Def t]
 | SpecializeT (_, _, _, args, out) -> ("out", Def out) :: list_parts args
+| ObjSpreadT (_, _, _, out) -> ["out", Def out]
 | SubstOnPredT (_, _, t) -> ["t", Def t]
-| SummarizeT (_, t) -> ["t", Def t]
 | SuperT _ -> []
 | TestPropT (_, _, out) -> ["out", Def out]
 | ThisSpecializeT (_, t, out) -> ["t", Def t; "out", Def out]
@@ -331,10 +366,25 @@ and parts_of_use_t cx = function
 | TypeAppVarianceCheckT _ -> []
 
 and parts_of_arrtype = function
-| ArrayAT (elemt, None) -> [("elem"), Def elemt]
+| ArrayAT (elemt, None)
+| ROArrayAT (elemt) -> [("elem"), Def elemt]
 | ArrayAT (elemt, Some tuple_types)
 | TupleAT (elemt, tuple_types) ->
   ("elem", Def elemt)::(list_parts tuple_types)
+| EmptyAT -> []
+
+and parts_of_spread_resolve = function
+| ResolveSpreadsToTuple (_, tout)
+| ResolveSpreadsToArrayLiteral (_, tout)
+| ResolveSpreadsToArray (tout) ->
+  [ "out", Def tout ]
+| ResolveSpreadsToMultiflowCallFull (_, ft)
+| ResolveSpreadsToMultiflowSubtypeFull (_, ft) ->
+  parts_of_funtype ft
+| ResolveSpreadsToMultiflowPartial (_, ft, _, tout) ->
+  (parts_of_funtype ft) @ [ "out", Def tout ]
+| ResolveSpreadsToCallT (fct, tin) ->
+  (parts_of_funcalltype fct) @ [ "out", Def tin ]
 
 and parts_of_inter_preprocess_tool = function
 | ConcretizeTypes (unresolved, resolved, it, u) ->
@@ -343,6 +393,29 @@ and parts_of_inter_preprocess_tool = function
   ["t", Def t; "it", Def it; "out", Def out]
 | PropExistsTest (_, _, it, out) ->
   ["it", Def it; "out", Def out]
+
+and parts_of_react_kit =
+  let open React in
+  let resolve_array out = function
+  | ResolveArray -> ["out", Def out]
+  | ResolveElem (todo, done_rev) ->
+    ("out", Def out) :: list_parts todo @ list_parts done_rev
+  in
+  let resolve_object out = function
+  | ResolveObject -> ["out", Def out]
+  | ResolveDict (_, todo, _)
+  | ResolveProp (_, todo, _) ->
+    ("out", Def out) :: map_props todo
+  in
+  let simplify_prop_type out = SimplifyPropType.(function
+  | ArrayOf | InstanceOf | ObjectOf -> ["out", Def out]
+  | OneOf tool | OneOfType tool -> resolve_array out tool
+  | Shape tool -> resolve_object out tool
+  ) in
+  function
+  | CreateElement (t, out) -> ["t", Def t; "out", Def out]
+  | SimplifyPropType (tool, out) -> simplify_prop_type out tool
+  | CreateClass (_, _, out) -> ["out", Def out]
 
 and add_bounds cx id { lower; upper; lowertvars; uppertvars } (ts, ns, es) =
   (* NOTE: filtering out non-immediate LB/UBs for readability, but this

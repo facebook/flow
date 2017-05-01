@@ -3,24 +3,24 @@ overload.js:7
                       ^^^^^^^^^^^ call of method `match`
   7: var x1: number = "".match(0)[0];
                                ^ number. This type is incompatible with
-298:     match(regexp: string | RegExp): ?Array<string>;
-                       ^^^^^^^^^^^^^^^ union: string | RegExp. See lib: <BUILTINS>/core.js:298
+289:     match(regexp: string | RegExp): ?Array<string>;
+                       ^^^^^^^^^^^^^^^ union: string | RegExp. See lib: <BUILTINS>/core.js:289
   Member 1:
-  298:     match(regexp: string | RegExp): ?Array<string>;
-                         ^^^^^^ string. See lib: <BUILTINS>/core.js:298
+  289:     match(regexp: string | RegExp): ?Array<string>;
+                         ^^^^^^ string. See lib: <BUILTINS>/core.js:289
   Error:
     7: var x1: number = "".match(0)[0];
                                  ^ number. This type is incompatible with
-  298:     match(regexp: string | RegExp): ?Array<string>;
-                         ^^^^^^ string. See lib: <BUILTINS>/core.js:298
+  289:     match(regexp: string | RegExp): ?Array<string>;
+                         ^^^^^^ string. See lib: <BUILTINS>/core.js:289
   Member 2:
-  298:     match(regexp: string | RegExp): ?Array<string>;
-                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:298
+  289:     match(regexp: string | RegExp): ?Array<string>;
+                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:289
   Error:
     7: var x1: number = "".match(0)[0];
                                  ^ number. This type is incompatible with
-  298:     match(regexp: string | RegExp): ?Array<string>;
-                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:298
+  289:     match(regexp: string | RegExp): ?Array<string>;
+                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:289
 
 overload.js:7
   7: var x1: number = "".match(0)[0];
@@ -96,17 +96,27 @@ overload.js:28
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
   Error:
    28: a.bar({ a: true }); // error, function cannot be called on intersection type
-                  ^^^^ boolean. This type is incompatible with the expected param type of
+             ^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
    16:     bar(x: { a: number }): number;
-                       ^^^^^^ number
+                  ^^^^^^^^^^^^^ object type
+    Property `a` is incompatible:
+       28: a.bar({ a: true }); // error, function cannot be called on intersection type
+                      ^^^^ boolean. This type is incompatible with
+       16:     bar(x: { a: number }): number;
+                           ^^^^^^ number
   Member 2:
    17:     bar(x: { a: string }): string;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
   Error:
    28: a.bar({ a: true }); // error, function cannot be called on intersection type
-                  ^^^^ boolean. This type is incompatible with the expected param type of
+             ^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
    17:     bar(x: { a: string }): string;
-                       ^^^^^^ string
+                  ^^^^^^^^^^^^^ object type
+    Property `a` is incompatible:
+       28: a.bar({ a: true }); // error, function cannot be called on intersection type
+                      ^^^^ boolean. This type is incompatible with
+       17:     bar(x: { a: string }): string;
+                           ^^^^^^ string
 
 overload.js:32
  32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
@@ -126,9 +136,14 @@ overload.js:32
                         ^^^^^^^^^^^^^^^ object type
     Error:
      30: declare var x: { a: boolean; } & { b: string };
-                             ^^^^^^^ boolean. This type is incompatible with
+                        ^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
      16:     bar(x: { a: number }): number;
-                         ^^^^^^ number
+                    ^^^^^^^^^^^^^ object type
+      Property `a` is incompatible:
+         30: declare var x: { a: boolean; } & { b: string };
+                                 ^^^^^^^ boolean. This type is incompatible with
+         16:     bar(x: { a: number }): number;
+                             ^^^^^^ number
     Member 2:
      30: declare var x: { a: boolean; } & { b: string };
                                           ^^^^^^^^^^^^^ object type
@@ -150,9 +165,14 @@ overload.js:32
                         ^^^^^^^^^^^^^^^ object type
     Error:
      30: declare var x: { a: boolean; } & { b: string };
-                             ^^^^^^^ boolean. This type is incompatible with
+                        ^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
      17:     bar(x: { a: string }): string;
-                         ^^^^^^ string
+                    ^^^^^^^^^^^^^ object type
+      Property `a` is incompatible:
+         30: declare var x: { a: boolean; } & { b: string };
+                                 ^^^^^^^ boolean. This type is incompatible with
+         17:     bar(x: { a: string }): string;
+                             ^^^^^^ string
     Member 2:
      30: declare var x: { a: boolean; } & { b: string };
                                           ^^^^^^^^^^^^^ object type

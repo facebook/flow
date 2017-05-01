@@ -62,8 +62,9 @@ sanity-pred-with-body.js:6
 
 sanity-return-type.js:3
   3: declare function f2(x: mixed): string %checks(Array.isArray(x));
-                                    ^^^^^^ string. This type is incompatible with
-boolean
+                                                   ^^^^^^^^^^^^^^^^ boolean. This type is incompatible with
+  3: declare function f2(x: mixed): string %checks(Array.isArray(x));
+                                    ^^^^^^ string
 
 
 Found 9 errors

@@ -10,7 +10,6 @@
 
 (* infer phase services *)
 
-module Ast = Spider_monkey_ast
 module Flow = Flow_js
 module FlowError = Flow_error
 module ImpExp = Import_export
@@ -21,7 +20,7 @@ module Utils = Utils_js
 (**********)
 
 let force_annotations cx =
-  let m = Modulename.to_string (Context.module_name cx) in
+  let m = Context.module_ref cx in
   let tvar = Flow_js.lookup_module cx m in
   let _, id = Type.open_tvar tvar in
   let before = Errors.ErrorSet.cardinal (Context.errors cx) in
@@ -29,7 +28,7 @@ let force_annotations cx =
   let after = Errors.ErrorSet.cardinal (Context.errors cx) in
   if (after > before) then
     Context.add_tvar cx id Constraint.(Root {
-      rank = 0; constraints = Resolved Type.AnyT.t
+      rank = 0; constraints = Resolved Type.Locationless.AnyT.t
     })
 
 (* core inference, assuming setup and teardown happens elsewhere *)
@@ -44,10 +43,10 @@ let infer_core cx statements =
   | Abnormal.Exn _ ->
     (* should never happen *)
     let loc = Loc.({ none with source = Some (Context.file cx) }) in
-    FlowError.(add_output cx (EInternal (loc, AbnormalControlFlow)))
+    Flow_js.add_output cx FlowError.(EInternal (loc, AbnormalControlFlow))
   | exc ->
     let loc = Loc.({ none with source = Some (Context.file cx) }) in
-    FlowError.(add_output cx (EInternal (loc, UncaughtException exc)))
+    Flow_js.add_output cx FlowError.(EInternal (loc, UncaughtException exc))
 
 (* There's a .flowconfig option to specify suppress_comments regexes. Any
  * comments that match those regexes will suppress any errors on the next line
@@ -69,20 +68,18 @@ let scan_for_suppressions =
       | _ -> ()) comments
 
 (* build module graph *)
-let infer_ast ~metadata ~filename ~module_name ast =
+let infer_ast ~metadata ~filename ast ~require_loc_map =
   Flow_js.Cache.clear();
 
   let _, statements, comments = ast in
 
-  let cx =
-    Flow_js.fresh_context metadata filename module_name
-  in
+  let module_ref = Files.module_ref filename in
+  let cx = Flow_js.fresh_context metadata filename module_ref in
   let checked = Context.is_checked cx in
 
-  let exported_module_name = Modulename.to_string module_name in
   let reason_exports_module =
     let desc = Reason.RCustom (
-      Utils.spf "exports of module `%s`" exported_module_name
+      Utils.spf "exports of file `%s`" module_ref
     ) in
     Reason.locationless_reason desc
   in
@@ -111,14 +108,18 @@ let infer_ast ~metadata ~filename ~module_name ast =
 
   Env.init_env cx module_scope;
 
-  let reason = Reason.mk_reason (Reason.RCustom "exports") Loc.({
-    none with source = Some filename
-  }) in
+  let file_loc = Loc.({ none with source = Some filename }) in
+  let reason = Reason.mk_reason (Reason.RCustom "exports") file_loc in
 
   let initial_module_t = ImpExp.module_t_of_cx cx in
   if checked then (
+    SMap.iter (fun r loc ->
+      Context.add_require cx r loc;
+      Import_export.add_module_tvar cx r loc;
+    ) require_loc_map;
+
     let init_exports = Flow.mk_object cx reason in
-    ImpExp.set_module_exports cx reason init_exports;
+    ImpExp.set_module_exports cx file_loc init_exports;
 
     (* infer *)
     Flow_js.flow_t cx (init_exports, local_exports_var);
@@ -130,7 +131,7 @@ let infer_ast ~metadata ~filename ~module_name ast =
       match Context.module_kind cx with
       (* CommonJS with a clobbered module.exports *)
       | CommonJSModule(Some(loc)) ->
-        let module_exports_t = ImpExp.get_module_exports cx reason in
+        let module_exports_t = ImpExp.get_module_exports cx file_loc in
         let reason = Reason.mk_reason (Reason.RCustom "exports") loc in
         ImpExp.mk_commonjs_module_t cx reason_exports_module
           reason module_exports_t
@@ -145,7 +146,7 @@ let infer_ast ~metadata ~filename ~module_name ast =
     ) in
     Flow_js.flow_t cx (module_t, initial_module_t)
   ) else (
-    Flow_js.unify cx initial_module_t Type.AnyT.t
+    Flow_js.unify cx initial_module_t Type.Locationless.AnyT.t
   );
 
   (* insist that whatever type flows into exports is fully annotated *)
@@ -159,11 +160,18 @@ let infer_ast ~metadata ~filename ~module_name ast =
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
  *)
-let infer_lib_file ~metadata ~exclude_syms file statements comments =
+let infer_lib_file ~metadata ~exclude_syms file ast =
+  let _, statements, comments = ast in
   Flow_js.Cache.clear();
 
-  let cx = Flow_js.fresh_context
-    metadata file (Modulename.String Files.lib_module) in
+  let cx = Flow_js.fresh_context metadata file Files.lib_module_ref in
+  let mapper = new Require.mapper false in
+  let _ = mapper#program ast in
+  let require_loc = mapper#requires in
+  SMap.iter (fun r loc ->
+    Context.add_require cx r loc;
+    Import_export.add_module_tvar cx r loc;
+  ) require_loc;
 
   let module_scope = Scope.fresh () in
   Env.init_env ~exclude_syms cx module_scope;

@@ -3,16 +3,16 @@ map.js:23
                  ^^^^^^^^^^^^^^^^^^^^^ constructor call
  23:     let x = new Map(['foo', 123]); // error
                           ^^^^^ string. This type is incompatible with
-591:     constructor(iterable: ?Iterable<[K, V]>): void;
-                                         ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:591
+599:     constructor(iterable: ?Iterable<[K, V]>): void;
+                                         ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:599
 
 map.js:23
  23:     let x = new Map(['foo', 123]); // error
                  ^^^^^^^^^^^^^^^^^^^^^ constructor call
  23:     let x = new Map(['foo', 123]); // error
                                  ^^^ number. This type is incompatible with
-591:     constructor(iterable: ?Iterable<[K, V]>): void;
-                                         ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:591
+599:     constructor(iterable: ?Iterable<[K, V]>): void;
+                                         ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:599
 
 map.js:24
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -51,46 +51,46 @@ map.js:30
 regexp.js:26
  26:     RegExp('foo', 'z'); // error
                        ^^^ string. This type is incompatible with the expected param type of
-396:     static (pattern: string | RegExp, flags?: RegExp$flags): RegExp;
-                                                   ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/core.js:396
+387:     static (pattern: string | RegExp, flags?: RegExp$flags): RegExp;
+                                                   ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/core.js:387
 
 regexp.js:27
  27:     new RegExp('foo', 'z'); // error
                            ^^^ string. This type is incompatible with the expected param type of
-398:     constructor(pattern: string | RegExp, flags?: RegExp$flags): RegExp;
-                                                       ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/core.js:398
+389:     constructor(pattern: string | RegExp, flags?: RegExp$flags): RegExp;
+                                                       ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/core.js:389
 
 weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                             ^ number. This type is incompatible with
-629: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:629
+637: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:637
 
 weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                ^ number. This type is incompatible with
-629: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:629
+637: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:637
 
 weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                   ^ number. This type is incompatible with
-629: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:629
+637: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:637
 
 weakset.js:36
  36: let ws5 = new WeakSet(numbers()); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  29: function* numbers(): Iterable<number> {
                                    ^^^^^^ number. This type is incompatible with
-629: declare class WeakSet<T: Object> {
-                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:629
+637: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:637
 
 
 Found 13 errors

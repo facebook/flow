@@ -1,15 +1,6 @@
 #!/bin/bash -e
 
-OPAM_DEPENDS="ocp-build"
-
-# js_of_ocaml 2.7 is  <  ocaml 4.03
-# js_of_ocaml 2.8 is  >= ocaml 4.02
-# opam 1.1.1 doesn't have js_of_ocaml 2.8
-if [ "$OPAM_VERSION" = "1.1.1" ] || [ "$OCAML_VERSION" = "4.01.0" ]; then
-  OPAM_DEPENDS+=" js_of_ocaml.2.7"
-else
-  OPAM_DEPENDS+=" js_of_ocaml.2.8.1"
-fi
+OPAM_DEPENDS="ocamlfind ocp-build js_of_ocaml.2.8.1 sedlex.1.99.3"
 
 TMP=${TMPDIR:-/tmp}
 
@@ -64,44 +55,45 @@ echo "Initializing OPAM..."
   -k local flow resources/opam \
   --comp "$OCAML_VERSION" >/dev/null
 eval $("$OPAM" config env)
-case "$OPAM_VERSION" in
-  1.1.*)
-    DEFAULT_OPAM_REPO=https://opam.ocaml.org/1.1
-    ;;
-  *)
-    DEFAULT_OPAM_REPO=https://opam.ocaml.org
-    ;;
-esac
 ("$OPAM" repository list --short | grep "\bdefault\b" >/dev/null) || \
   "$OPAM" repository --yes \
-    add default "$DEFAULT_OPAM_REPO" --priority=-1 >/dev/null
+    add default "https://opam.ocaml.org" --priority=-1 >/dev/null
 
 "$OPAM" repository list
 
 echo "Installing dependencies..."
 "$OPAM" install --yes ${OPAM_DEPENDS}
 
+echo "opam config:"
+echo "INSTALL_DIR=$INSTALL_DIR"
+opam config env # print for the logs
+
+eval "$(opam config env)"
+echo "Installed packages:"
+ocamlfind list
+
 printf "travis_fold:end:opam_installer\n"
 
-printf "travis_fold:start:npm_install\nInstalling npm dependencies\n"
+printf "travis_fold:start:yarn_install\nInstalling yarn dependencies\n"
   case "$TRAVIS_OS_NAME" in
     osx)
       # OS X has a modern version of node already
+      export PATH="$PATH:`yarn global bin`"
       ;;
     *)
       source $HOME/.nvm/nvm.sh
       nvm use 6
   esac
 
-  printf "Using npm version $(npm --version)\n"
+  printf "Using yarn version $(yarn --version)\n"
 
-  printf "travis_fold:start:npm_install_tool\nRunning npm install for tool\n"
-    npm install | cat
-  printf "travis_fold:end:npm_install_tool\n"
+  printf "travis_fold:start:yarn_install_tool\nRunning yarn install for tool\n"
+    yarn install | cat
+  printf "travis_fold:end:yarn_install_tool\n"
 
-  printf "travis_fold:start:npm_install_parser\nRunning npm install for the parser\n"
+  printf "travis_fold:start:yarn_install_parser\nRunning yarn install for the parser\n"
     pushd src/parser >/dev/null
-      npm install | cat
+      yarn install | cat
     popd >/dev/null
-  printf "travis_fold:end:npm_install_parser\n"
-printf "travis_fold:end:npm_install\n"
+  printf "travis_fold:end:yarn_install_parser\n"
+printf "travis_fold:end:yarn_install\n"

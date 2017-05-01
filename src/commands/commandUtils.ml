@@ -218,10 +218,10 @@ let list_of_string_arg = function
 | Some arg_str -> Str.split (Str.regexp ",") arg_str
 
 let collect_flowconfig_flags main ignores_str includes_str lib_str =
-    let ignores = list_of_string_arg ignores_str in
-    let includes = list_of_string_arg includes_str in
-    let libs = list_of_string_arg lib_str in
-    main { ignores; includes; libs; }
+  let ignores = list_of_string_arg ignores_str in
+  let includes = list_of_string_arg includes_str in
+  let libs = list_of_string_arg lib_str in
+  main { ignores; includes; libs; }
 
 let ignore_flag prev = CommandSpec.ArgSpec.(
   prev
@@ -372,6 +372,7 @@ let connect server_flags root =
     shm_log_level = server_flags.shm_log_level;
     log_file;
     ignore_version = server_flags.ignore_version;
+    emoji = config_options.FlowConfig.Opts.emoji;
     quiet = server_flags.quiet;
   } in
   CommandConnect.connect env
@@ -383,7 +384,7 @@ let rec search_for_root config start recursion_limit : Path.t option =
   else search_for_root config (Path.parent start) (recursion_limit - 1)
 
 (* Given a valid file or directory, find a valid Flow root directory *)
-(* NOTE: exists on invalid file or .flowconfig not found! *)
+(* NOTE: exits on invalid file or .flowconfig not found! *)
 let guess_root dir_or_file =
   let dir_or_file = match dir_or_file with
   | Some dir_or_file -> dir_or_file
@@ -452,4 +453,4 @@ let range_string_of_loc ~strip_root loc = Loc.(
   spf "%s:%d:%d,%d:%d" file l0 c0 l1 c1
 )
 
-let exe_name = Filename.basename Sys.executable_name
+let exe_name = Utils_js.exe_name

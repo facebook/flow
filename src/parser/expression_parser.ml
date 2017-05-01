@@ -8,10 +8,8 @@
  *
  *)
 
-module Token = Lexer_flow.Token
 open Token
 open Parser_env
-module Ast = Spider_monkey_ast
 open Ast
 module Error = Parse_error
 open Parser_common
@@ -122,8 +120,7 @@ module Expression
         )
       | _ -> assignment_but_not_arrow_function env
 
-  and yield env =
-    let start_loc = Peek.loc env in
+  and yield env = with_loc (fun env ->
     Expect.token env T_YIELD;
     if not (allow_yield env)
     then error env Error.IllegalYield;
@@ -135,76 +132,79 @@ module Expression
       if delegate || has_argument
       then Some (assignment env)
       else None in
-    let end_loc = match argument with
-    | Some expr -> fst expr
-    | None ->
-        let end_loc = match Peek.semicolon_loc env with
-          | Some loc -> loc
-          | None -> start_loc in
-        Eat.semicolon env;
-        end_loc in
-    Loc.btwn start_loc end_loc, Expression.(Yield Yield.({
+    Expression.(Yield Yield.({
       argument;
       delegate;
     }))
+  ) env
 
   and is_lhs = Expression.(function
+    | _, Identifier _
     | _, Member _
     | _, MetaProperty _
-    | _, Identifier _ -> true
+      -> true
+
     | _, Array _
-    | _, Object _
-    | _, Literal _
-    | _, TemplateLiteral _
-    | _, TaggedTemplate _
-    | _, This
-    | _, Super
-    | _, Class _
-    | _, Function _
-    | _, New _
-    | _, Call _
-    | _, Comprehension _
-    | _, Generator _
+    | _, ArrowFunction _
     | _, Assignment _
     | _, Binary _
+    | _, Call _
+    | _, Class _
+    | _, Comprehension _
     | _, Conditional _
+    | _, Function _
+    | _, Generator _
+    | _, Import _
+    | _, JSXElement _
+    | _, Literal _
     | _, Logical _
+    | _, New _
+    | _, Object _
     | _, Sequence _
+    | _, Super
+    | _, TaggedTemplate _
+    | _, TemplateLiteral _
+    | _, This
+    | _, TypeCast _
     | _, Unary _
     | _, Update _
-    | _, ArrowFunction _
     | _, Yield _
-    | _, JSXElement _
-    | _, TypeCast _ -> false)
+      -> false
+  )
 
   and is_assignable_lhs = Expression.(function
     | _, Array _
-    | _, Object _
+    | _, Identifier _
     | _, Member _
     | _, MetaProperty _
-    | _, Identifier _ -> true
-    | _, Literal _
-    | _, TemplateLiteral _
-    | _, TaggedTemplate _
-    | _, This
-    | _, Super
-    | _, Class _
-    | _, Function _
-    | _, New _
-    | _, Call _
-    | _, Comprehension _
-    | _, Generator _
+    | _, Object _
+      -> true
+
+    | _, ArrowFunction _
     | _, Assignment _
     | _, Binary _
+    | _, Call _
+    | _, Class _
+    | _, Comprehension _
     | _, Conditional _
+    | _, Function _
+    | _, Generator _
+    | _, Import _
+    | _, JSXElement _
+    | _, Literal _
     | _, Logical _
+    | _, New _
     | _, Sequence _
+    | _, Super
+    | _, TaggedTemplate _
+    | _, TemplateLiteral _
+    | _, This
+    | _, TypeCast _
     | _, Unary _
     | _, Update _
-    | _, ArrowFunction _
     | _, Yield _
-    | _, JSXElement _
-    | _, TypeCast _ -> false)
+      -> false
+  )
 
 
   and assignment_op env =
@@ -382,7 +382,7 @@ module Expression
         | None -> postfix env
         | Some operator ->
             Eat.token env;
-            let argument = unary env in
+            let end_loc, argument = with_loc unary env in
             if not (is_lhs argument)
             then error_at env (fst argument, Error.InvalidLHSInAssignment);
             (match argument with
@@ -390,7 +390,7 @@ module Expression
               when is_restricted name ->
                 strict_error env Error.StrictLHSPrefix
             | _ -> ());
-            Loc.btwn begin_loc (fst argument), Expression.(Update Update.({
+            Loc.btwn begin_loc end_loc, Expression.(Update Update.({
               operator;
               prefix = true;
               argument;
@@ -398,8 +398,8 @@ module Expression
       end
     | Some operator ->
       Eat.token env;
-      let argument = unary env in
-      let loc = Loc.btwn begin_loc (fst argument) in
+      let end_loc, argument = with_loc unary env in
+      let loc = Loc.btwn begin_loc end_loc in
       Expression.(match operator, argument with
       | Unary.Delete, (_, Identifier _) ->
           strict_error_at env (loc, Error.StrictDelete)
@@ -443,14 +443,18 @@ module Expression
     let env = with_no_new false env in
     let expr = match Peek.token env with
     | T_NEW when allow_new -> new_expression env
+    | T_IMPORT -> import env start_loc
     | _ when Peek.is_function env -> _function env
     | _ -> primary env in
     let expr = member env start_loc expr in
-    match Peek.token env with
-    | T_LPAREN -> call env start_loc expr
-    | T_TEMPLATE_PART part ->
-        member env start_loc (tagged_template env start_loc expr part)
-    | _ -> expr
+    call env start_loc expr
+
+  and import env start_loc =
+    Expect.token env T_IMPORT;
+    Expect.token env T_LPAREN;
+    let arg = assignment (with_no_in false env) in
+    Expect.token env T_RPAREN;
+    Expression.(Loc.btwn start_loc (fst arg), Import arg)
 
   and call env start_loc left =
     match Peek.token env with
@@ -481,7 +485,8 @@ module Expression
           property = PropertyIdentifier id;
           computed = false;
         })))
-    | T_TEMPLATE_PART part -> tagged_template env start_loc left part
+    | T_TEMPLATE_PART part ->
+        call env start_loc (tagged_template env start_loc left part)
     | _ -> left
 
   and new_expression env =
@@ -580,6 +585,8 @@ module Expression
           property = PropertyIdentifier id;
           computed = false;
         })))
+    | T_TEMPLATE_PART part ->
+        call env start_loc (tagged_template env start_loc left part)
     | _ -> left
 
   and _function env =
@@ -623,15 +630,23 @@ module Expression
     let value = match number_type with
     | LEGACY_OCTAL ->
       strict_error env Error.StrictOctalLiteral;
-      float (int_of_string ("0o"^value))
+      begin try Int64.to_float (Int64.of_string ("0o"^value))
+      with Failure _ -> failwith ("Invalid legacy octal "^value)
+      end
     | BINARY
     | OCTAL ->
-      float (int_of_string value)
+      begin try Int64.to_float (Int64.of_string value)
+      with Failure _ -> failwith ("Invalid binary/octal "^value)
+      end
     | NORMAL ->
-      try Lexer_flow.FloatOfString.float_of_string value
-      with _ when Sys.win32 ->
+      begin try Lexer.FloatOfString.float_of_string value
+      with
+      | _ when Sys.win32 ->
         error env Parse_error.WindowsFloatOfString;
         789.0
+      | Failure _ ->
+        failwith ("Invalid number "^value)
+      end
     in
     Expect.token env (T_NUMBER number_type);
     value
@@ -909,13 +924,9 @@ module Expression
         let expr = assignment env in
         sequence env (expr::acc)
     | _ ->
-      let last_loc = (match acc with
-        | (loc, _)::_ -> loc
-        | _ -> Loc.none) in
+      let (last_loc, _) = List.hd acc in
       let expressions = List.rev acc in
-      let first_loc = (match expressions with
-        | (loc, _)::_ -> loc
-        | _ -> Loc.none) in
+      let (first_loc, _) = List.hd expressions in
       Loc.btwn first_loc last_loc, Expression.(Sequence Sequence.({
         expressions;
       }))

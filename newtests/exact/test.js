@@ -1,4 +1,7 @@
-/* @flow */
+/*
+ * @flow
+ * @lint-ignore-every LINE_WRAP1
+ */
 
 import {suite, test} from '../../tsrc/test/Tester';
 
@@ -22,8 +25,8 @@ type ArityError = $Exact<number, number>; // error, 2 params expected 1
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
                                    49: takesExactlyPerson(subtypeOfPerson); // error
                                                           ^^^^^^^^^^^^^^^ property \`first\`. Property not found in
-                                   36: type ExactPerson = {| salutation: string, last: string |};
-                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                                   43: declare function takesExactlyPerson(person: ExactPerson): void;
+                                                                                   ^^^^^^^^^^^ object type
 
                                   exact_basics.js:61
                                    61: takesExactlyPerson(returnsSubtypeOfPerson());  // error
@@ -38,8 +41,8 @@ type ArityError = $Exact<number, number>; // error, 2 params expected 1
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
                                    71: takesExactlyPerson(returnsExactlyPerson2()); // error
                                                           ^^^^^^^^^^^^^^^^^^^^^^^ property \`first\`. Property not found in
-                                   36: type ExactPerson = {| salutation: string, last: string |};
-                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                                   43: declare function takesExactlyPerson(person: ExactPerson): void;
+                                                                                   ^^^^^^^^^^^ object type
 
                                   exact_basics.js:85
                                    85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
@@ -54,7 +57,7 @@ type ArityError = $Exact<number, number>; // error, 2 params expected 1
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
                                    94: takesPersonPred(returnsExactlyPersonPred()); // error
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: PersonPred. Unsupported exact type
-                                   91: declare function returnsExactlyPersonPred(): \$Exact<PersonPred>;
+                                   91: declare function returnsExactlyPersonPred(): $Exact<PersonPred>;
                                                                                            ^^^^^^^^^^ function type
                                 `,
                               ),

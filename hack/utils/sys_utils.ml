@@ -92,6 +92,12 @@ let cat_no_fail filename =
 let nl_regexp = Str.regexp "[\r\n]"
 let split_lines = Str.split nl_regexp
 
+(** Returns true if substring occurs somewhere inside str. *)
+let string_contains str substring =
+  (** regexp_string matches only this string and nothing else. *)
+  let re = Str.regexp_string substring in
+  try (Str.search_forward re str 0) >= 0 with Not_found -> false
+
 let exec_read cmd =
   let ic = Unix.open_process_in cmd in
   let result = input_line ic in
@@ -108,6 +114,28 @@ let exec_read_lines ?(reverse=false) cmd =
   with End_of_file -> ());
   assert (Unix.close_process_in ic = Unix.WEXITED 0);
   if not reverse then List.rev !result else !result
+
+(** Deletes the file given by "path". If it is a directory, recursively
+ * deletes all its contents then removes the directory itself. *)
+let rec rm_dir_tree path =
+  try begin
+    let stats = Unix.lstat path in
+    match stats.Unix.st_kind with
+    | Unix.S_DIR ->
+      let contents = Sys.readdir path in
+      List.iter (Array.to_list contents) ~f:(fun name ->
+        let name = Filename.concat path name in
+        rm_dir_tree name);
+      Unix.rmdir path
+    | Unix.S_LNK | Unix.S_REG | Unix.S_CHR | Unix.S_BLK | Unix.S_FIFO
+    | Unix.S_SOCK ->
+      Unix.unlink path
+  end with
+  (** Path has been deleted out from under us - can ignore it. *)
+  | Sys_error(s) when s = Printf.sprintf "%s: No such file or directory" path ->
+    ()
+  | Unix.Unix_error(Unix.ENOENT, _, _) ->
+    ()
 
 let restart () =
   let cmd = Sys.argv.(0) in
@@ -375,18 +403,11 @@ let nbr_procs = nproc ()
 external set_priorities : cpu_priority:int -> io_priority:int -> unit =
   "hh_set_priorities"
 
-external win_terminate_process: int -> bool = "win_terminate_process"
-
 external pid_of_handle: int -> int = "pid_of_handle"
 external handle_of_pid_for_termination: int -> int =
   "handle_of_pid_for_termination"
 
-let terminate_process pid =
-  try Unix.kill pid Sys.sigkill
-  with exn when Sys.win32 ->
-    (* Can be removed once support for ocaml-4.01 is dropped *)
-    if not (win_terminate_process pid) then
-      raise Unix.(Unix_error(ESRCH, "kill", ""))
+let terminate_process pid = Unix.kill pid Sys.sigkill
 
 let lstat path =
   (* WTF, on Windows `lstat` fails if a directory path ends with an
@@ -400,3 +421,35 @@ let lstat path =
 let normalize_filename_dir_sep =
   let dir_sep_char = String.get Filename.dir_sep 0 in
   String.map (fun c -> if c = dir_sep_char then '/' else c)
+
+
+let name_of_signal = function
+  | s when s = Sys.sigabrt -> "SIGABRT (Abnormal termination)"
+  | s when s = Sys.sigalrm -> "SIGALRM (Timeout)"
+  | s when s = Sys.sigfpe -> "SIGFPE (Arithmetic exception)"
+  | s when s = Sys.sighup -> "SIGHUP (Hangup on controlling terminal)"
+  | s when s = Sys.sigill -> "SIGILL (Invalid hardware instruction)"
+  | s when s = Sys.sigint -> "SIGINT (Interactive interrupt (ctrl-C))"
+  | s when s = Sys.sigkill -> "SIGKILL (Termination)"
+  | s when s = Sys.sigpipe -> "SIGPIPE (Broken pipe)"
+  | s when s = Sys.sigquit -> "SIGQUIT (Interactive termination)"
+  | s when s = Sys.sigsegv -> "SIGSEGV (Invalid memory reference)"
+  | s when s = Sys.sigterm -> "SIGTERM (Termination)"
+  | s when s = Sys.sigusr1 -> "SIGUSR1 (Application-defined signal 1)"
+  | s when s = Sys.sigusr2 -> "SIGUSR2 (Application-defined signal 2)"
+  | s when s = Sys.sigchld -> "SIGCHLD (Child process terminated)"
+  | s when s = Sys.sigcont -> "SIGCONT (Continue)"
+  | s when s = Sys.sigstop -> "SIGSTOP (Stop)"
+  | s when s = Sys.sigtstp -> "SIGTSTP (Interactive stop)"
+  | s when s = Sys.sigttin -> "SIGTTIN (Terminal read from background process)"
+  | s when s = Sys.sigttou -> "SIGTTOU (Terminal write from background process)"
+  | s when s = Sys.sigvtalrm -> "SIGVTALRM (Timeout in virtual time)"
+  | s when s = Sys.sigprof -> "SIGPROF (Profiling interrupt)"
+  | s when s = Sys.sigbus -> "SIGBUS (Bus error)"
+  | s when s = Sys.sigpoll -> "SIGPOLL (Pollable event)"
+  | s when s = Sys.sigsys -> "SIGSYS (Bad argument to routine)"
+  | s when s = Sys.sigtrap -> "SIGTRAP (Trace/breakpoint trap)"
+  | s when s = Sys.sigurg -> "SIGURG (Urgent condition on socket)"
+  | s when s = Sys.sigxcpu -> "SIGXCPU (Timeout in cpu time)"
+  | s when s = Sys.sigxfsz -> "SIGXFSZ (File size limit exceeded)"
+  | other -> string_of_int other

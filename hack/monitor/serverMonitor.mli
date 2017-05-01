@@ -8,7 +8,14 @@
  *
 *)
 
-val start_monitoring:
-  waiting_client:Unix.file_descr option ->
-  ServerMonitorUtils.monitor_config ->
-  ServerMonitorUtils.monitor_starter -> 'a
+module Make_monitor :
+  functor (SC : ServerMonitorUtils.Server_config) ->
+  functor (Informant : Informant_sig.S) ->
+    sig
+      val start_monitoring:
+        waiting_client:Unix.file_descr option ->
+        SC.server_start_options ->
+        Informant.init_env ->
+        ServerMonitorUtils.monitor_config ->
+        'a
+    end

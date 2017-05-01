@@ -1,7 +1,7 @@
 ---
 title: Announcing Flow Comments
 short-title: Flow Comments
-author: glevi
+author: Gabe Levi
 ---
 
 As of Flow 0.4.0, you can put your Flow-specific syntax in special comments. If you use these special comments then you do not need to transform away Flow-specific syntax before running your code. While we strongly recommend that you write your code without the special comments, this feature will help people who can't fit a Flow-stripping transformation into their setup. This was one of our [most requested features](https://github.com/facebook/flow/issues/3) and hopefully it will enable even more people to use Flow!

@@ -12,12 +12,19 @@ open Utils_js
 
 val dependent_files:
   Worker.t list option -> (* workers *)
-  FilenameSet.t -> (* unmodified_files *)
-  FilenameSet.t -> (* inferred_files *)
-  Module_js.NameSet.t -> (* touched_modules *)
+  unchanged:FilenameSet.t ->
+  new_or_changed:FilenameSet.t ->
+  changed_modules:Module_js.NameSet.t ->
   FilenameSet.t * FilenameSet.t
+
+val deps_of_file: (filename -> FilenameSet.t) Expensive.t
 
 val calc_dependencies:
   Worker.t list option -> (* workers *)
   filename list -> (* files *)
   FilenameSet.t FilenameMap.t
+
+val walk_dependencies:
+  FilenameSet.t FilenameMap.t -> (* dependency graph *)
+  FilenameSet.t -> (* files *)
+  FilenameSet.t

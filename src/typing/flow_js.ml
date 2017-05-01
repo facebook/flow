@@ -29,6 +29,13 @@ open Type
 module FlowError = Flow_error
 module Ops = FlowError.Ops
 
+
+(* type exemplar set - reasons are not considered in compare *)
+module TypeExSet = Set.Make(struct
+  include Type
+  let compare = reasonless_compare
+end)
+
 (* The following functions are used as constructors for function types and
    object types, which unfortunately have many fields, not all of which are
    meaningful in all contexts. This part of the design should be revisited:
@@ -48,19 +55,31 @@ let dummy_this =
   AnyT reason
 
 let global_this =
-  let reason = locationless_reason (RCustom "global object") in
+  let reason = builtin_reason (RCustom "global object") in
   ObjProtoT reason
 
 (* A method type is a function type with `this` specified. *)
 let mk_methodtype
-    this tins ?(frame=0) ?params_names ?(is_predicate=false) tout = {
+    this tins ~rest_param ~def_reason
+    ?(frame=0) ?params_names ?(is_predicate=false) tout = {
   this_t = this;
   params_tlist = tins;
   params_names;
+  rest_param;
   return_t = tout;
   is_predicate;
   closure_t = frame;
-  changeset = Changeset.empty
+  changeset = Changeset.empty;
+  def_reason;
+}
+
+let mk_methodcalltype
+    this tins ?(frame=0) ?(call_strict_arity=true) tout = {
+  call_this_t = this;
+  call_args_tlist = tins;
+  call_tout = tout;
+  call_closure_t = frame;
+  call_strict_arity;
 }
 
 (* A bound function type is a function type with `this` = `any`. Typically, such
@@ -75,6 +94,8 @@ let mk_boundfunctiontype = mk_methodtype dummy_this
    non-trivially: indeed, calling them directly would cause `this` to be bound
    to the global object, which is typically unintended. *)
 let mk_functiontype = mk_methodtype global_this
+let mk_functioncalltype = mk_methodcalltype global_this
+
 
 (* An object type has two flags, sealed and exact. A sealed object type cannot
    be extended. An exact object type accurately describes objects without
@@ -159,7 +180,7 @@ and find_root cx id =
       let msg = spf "find_root: tvar %d not found in file %s" id
         (Debug_js.string_of_file cx)
       in
-      failwith msg
+      assert_false msg
 
 (* Replace the node associated with a type variable in the graph. *)
 and replace_node cx id node = Context.set_tvar cx id node
@@ -324,23 +345,46 @@ let rec merge_type cx =
   | (VoidT _, (MaybeT _ as t)) | ((MaybeT _ as t), VoidT _) ->
       t
 
-  | (FunT (_,_,_,ft1), FunT (_,_,_,ft2)) ->
-      let tins =
-        try
-          List.map2 (fun t1 t2 -> merge_type cx (t1,t2))
-            ft1.params_tlist ft2.params_tlist
-        with _ ->
-          [AnyT.t] (* TODO *)
-      in
-      let tout = merge_type cx (ft1.return_t, ft2.return_t) in
-      (* TODO: How to merge parameter names? *)
-      let reason = locationless_reason (RCustom "function") in
-      FunT (
-        reason,
-        dummy_static reason,
-        dummy_prototype,
-        mk_functiontype tins tout
-      )
+  | ((FunT (_,_,_,ft1) as fun1), (FunT (_,_,_,ft2) as fun2)) ->
+      (* Functions with different number of parameters cannot be merged into a
+       * single function type. Instead, we should turn them into a union *)
+      let params =
+        if List.length ft1.params_tlist <> List.length ft2.params_tlist
+        then None
+        else
+          let params_tlists =  List.map2 (fun t1 t2 -> (t1, t2))
+            ft1.params_tlist ft2.params_tlist in
+          match ft1.rest_param, ft2.rest_param with
+          | None, Some _
+          | Some _, None -> None
+          | None, None -> Some (params_tlists, None)
+          | Some r1, Some r2 -> Some (params_tlists, Some (r1, r2)) in
+
+      begin match params with
+      | None -> create_union (UnionRep.make fun1 fun2 [])
+      | Some (params_tlists, rest_params) ->
+          let tins = List.map (merge_type cx) params_tlists in
+
+          let rest_param = match rest_params with
+          | None -> None
+          | Some ((name1, loc, rest_t1), (name2, _, rest_t2)) ->
+              (* TODO: How to merge rest names and locs? *)
+              let name = match name1, name2 with
+              | None, None -> None
+              | Some name, _
+              | _, Some name -> Some name in
+              Some (name, loc, merge_type cx (rest_t1, rest_t2)) in
+
+          let tout = merge_type cx (ft1.return_t, ft2.return_t) in
+          (* TODO: How to merge parameter names? *)
+          let reason = locationless_reason (RCustom "function") in
+          FunT (
+            reason,
+            dummy_static reason,
+            dummy_prototype,
+            mk_functiontype tins ~rest_param ~def_reason:reason tout
+          )
+      end
 
   | (ObjT (_,o1) as t1), (ObjT (_,o2) as t2) ->
     let map1 = Context.find_props cx o1.props_tmap in
@@ -435,12 +479,28 @@ let rec merge_type cx =
        TupleAT (merge_type cx (t1, t2), list_map2 (merge_type cx) ts1 ts2)
      )
 
-  | (MaybeT t1, MaybeT t2) ->
-      MaybeT (merge_type cx (t1, t2))
+  | (ArrT (_, ROArrayAT elemt1),
+     ArrT (_, ROArrayAT elemt2)) ->
 
-  | (MaybeT t1, t2)
-  | (t1, MaybeT t2) ->
-      MaybeT (merge_type cx (t1, t2))
+     ArrT (
+       locationless_reason (RCustom "read only array"),
+       ROArrayAT (merge_type cx (elemt1, elemt2))
+     )
+
+ | (ArrT (_, EmptyAT),
+    ArrT (_, EmptyAT)) ->
+
+    ArrT (
+      locationless_reason (RCustom "empty array"),
+      EmptyAT
+    )
+
+  | (MaybeT (_, t1), MaybeT (_, t2))
+  | (MaybeT (_, t1), t2)
+  | (t1, MaybeT (_, t2)) ->
+      let t = merge_type cx (t1, t2) in
+      let reason = locationless_reason (RMaybe (desc_of_t t)) in
+      MaybeT (reason, t)
 
   | UnionT (_, rep1), UnionT (_, rep2) ->
       create_union (UnionRep.rev_append rep1 rep2)
@@ -471,7 +531,7 @@ and resolve_type cx = function
          improve failure tolerance.  *)
       List.fold_left (fun u t ->
         merge_type cx (t, u)
-      ) AnyT.t ts
+      ) Locationless.AnyT.t ts
   | t -> t
 
 (** The following functions do "shallow" walks over types, respectively from
@@ -533,8 +593,8 @@ let rec assume_ground cx ?(depth=1) ids t =
       (parts of) requires/imports. *)
 
   | GetPropT (_, _, t)
-  | CallT (_, { return_t = t; _ })
-  | MethodT (_, _, _, { return_t = t; _ })
+  | CallT (_, { call_tout = t; _ })
+  | MethodT (_, _, _, { call_tout = t; _ })
   | ConstructorT (_, _, t) ->
     assume_ground cx ~depth:(depth + 1) ids (UseT (UnknownUse, t))
 
@@ -572,21 +632,21 @@ and assume_ground_id cx ~depth ids id =
    required by it, the module it provides, and so on). *)
 let mk_builtins cx =
   let builtins = mk_tvar cx (builtin_reason (RCustom "module")) in
-  Context.add_module cx Files.lib_module builtins
+  Context.add_module cx Files.lib_module_ref builtins
 
 (* Local references to modules can be looked up. *)
 let lookup_module cx m = Context.find_module cx m
 
 (* The builtins reference is accessed just like references to other modules. *)
 let builtins cx =
-  lookup_module cx Files.lib_module
+  lookup_module cx Files.lib_module_ref
 
 let restore_builtins cx b =
-  Context.add_module cx Files.lib_module b
+  Context.add_module cx Files.lib_module_ref b
 
 (* new contexts are prepared here, so we can install shared tvars *)
-let fresh_context metadata file module_name =
-  let cx = Context.make metadata file module_name in
+let fresh_context metadata file module_ref =
+  let cx = Context.make metadata file module_ref in
   (* add types for pervasive builtins *)
   mk_builtins cx;
   cx
@@ -601,21 +661,11 @@ module ImplicitTypeArgument = struct
      polymorphic types need to be implicitly instantiated, because there was no
      explicit instantiation (via a type application), or when we want to cache a
      unique instantiation and unify it with other explicit instantiations. *)
-  let mk_targ cx (typeparam, reason_op) =
+  let mk_targ cx typeparam reason_op =
     let reason = replace_reason (fun desc ->
       RTypeParam (typeparam.name, desc)
     ) reason_op in
     mk_tvar cx reason
-
-  (* Abstract a type argument that is created by implicit instantiation
-     above. Sometimes, these type arguments are involved in type expansion
-     loops, so we abstract them to detect such loops. *)
-  let abstract_targ tvar =
-    let reason, _ = open_tvar tvar in
-    let desc = desc_of_reason reason in
-    match desc with
-    | RTypeParam _ -> Some (OpenT (locationless_reason desc, 0))
-    | _ -> None
 end
 
 (* We maintain a stack of entries representing type applications processed
@@ -647,11 +697,7 @@ end = struct
     inherit [TypeSet.t] Type_visitor.t as super
 
     method! type_ cx acc t = match t with
-    | TypeAppT (c, _) -> super#type_ cx (TypeSet.add c acc) t
-    | OpenT _ -> (match ImplicitTypeArgument.abstract_targ t with
-      | None -> acc
-      | Some t -> TypeSet.add t acc
-      )
+    | TypeAppT (_, c, _) -> super#type_ cx (TypeSet.add c acc) t
     | _ -> super#type_ cx acc t
   end
   let collect_roots cx = (new roots_collector)#type_ cx TypeSet.empty
@@ -724,16 +770,25 @@ end
 
 module Cache = struct
 
-  type type_pair = TypeTerm.t * TypeTerm.use_t
-  module TypePairSet : Set.S with type elt = type_pair =
-  Set.Make (struct
-    type t = type_pair
-    let compare = Pervasives.compare
-  end)
+  module FlowSet = struct
+    let empty = TypeMap.empty
+
+    let add_not_found l us setr =
+      setr := TypeMap.add l us !setr; false
+    let cache (l, u) setr =
+      match TypeMap.get l !setr with
+      | None -> add_not_found l (UseTypeSet.singleton u) setr
+      | Some us ->
+        if UseTypeSet.mem u us then true
+        else add_not_found l (UseTypeSet.add u us) setr
+
+    let fold f =
+      TypeMap.fold (fun l -> UseTypeSet.fold (fun u -> f (l, u)))
+  end
 
   (* Cache that remembers pairs of types that are passed to __flow. *)
   module FlowConstraint = struct
-    let cache = ref TypePairSet.empty
+    let cache = ref FlowSet.empty
 
     (* attempt to read LB/UB pair from cache, add if absent *)
     let get cx (l, u) = match l, u with
@@ -741,35 +796,34 @@ module Cache = struct
          corresponding typing rules are already sufficiently robust. *)
       | OpenT _, _ | _, UseT (_, OpenT _) -> false
       | _ ->
-        if TypePairSet.mem (l, u) !cache then begin
-          if Context.is_verbose cx then
-            prerr_endlinef "%sFlowConstraint cache hit on (%s, %s)"
-              (Context.pid_prefix cx)
-              (string_of_ctor l) (string_of_use_ctor u);
-          true
-        end else begin
-          cache := TypePairSet.add (l, u) !cache;
-          false
-        end
+        let found = FlowSet.cache (l, u) cache in
+        if found && Context.is_verbose cx then
+          prerr_endlinef "%sFlowConstraint cache hit on (%s, %s)"
+            (Context.pid_prefix cx)
+            (string_of_ctor l) (string_of_use_ctor u);
+        found
   end
 
   (* Cache that limits instantiation of polymorphic definitions. Intuitively,
      for each operation on a polymorphic definition, we remember the type
      arguments we use to specialize the type parameters. An operation is
-     identified by its reason: we don't use the entire operation for caching
-     since it may contain the very type variables we are trying to limit the
-     creation of with the cache. In other words, the cache would be useless if
-     we considered those type variables as part of the identity of the
-     operation. *)
+     identified by its reason, and possibly the reasons of its arguments. We
+     don't use the entire operation for caching since it may contain the very
+     type variables we are trying to limit the creation of with the cache (e.g.,
+     those representing the result): the cache would be useless if we considered
+     those type variables as part of the identity of the operation. *)
   module PolyInstantiation = struct
-    let cache = Hashtbl.create 0
+    type cache_key = reason * op_reason
+    and op_reason = reason Nel.t
 
-    let find cx (typeparam, reason_op) =
+    let cache: (cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
+
+    let find cx typeparam op_reason =
       try
-        Hashtbl.find cache (typeparam.reason, reason_op)
+        Hashtbl.find cache (typeparam.reason, op_reason)
       with _ ->
-        let t = ImplicitTypeArgument.mk_targ cx (typeparam, reason_op) in
-        Hashtbl.add cache (typeparam.reason, reason_op) t;
+        let t = ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) in
+        Hashtbl.add cache (typeparam.reason, op_reason) t;
         t
   end
 
@@ -802,7 +856,7 @@ module Cache = struct
   end
 
   let clear () =
-    FlowConstraint.cache := TypePairSet.empty;
+    FlowConstraint.cache := FlowSet.empty;
     Hashtbl.clear PolyInstantiation.cache;
     repos_cache := Repos_cache.empty;
     SentinelProp.cache := Properties.Map.empty
@@ -814,7 +868,7 @@ module Cache = struct
   (* Summarize flow constraints in cache as ctor/reason pairs, and return counts
      for each group. *)
   let summarize_flow_constraint () =
-    let group_counts = TypePairSet.fold (fun (l,u) map ->
+    let group_counts = FlowSet.fold (fun (l,u) map ->
       let key = spf "[%s] %s => [%s] %s"
         (string_of_ctor l) (string_of_reason (reason_of_t l))
         (string_of_use_ctor u) (string_of_reason (reason_of_use_t u)) in
@@ -915,8 +969,8 @@ module ResolvableTypeJob = struct
       if IMap.mem id acc then acc
       else IMap.add id (Binding source) acc
 
-    | ThisTypeAppT (poly_t, _, targs)
-    | TypeAppT (poly_t, targs)
+    | ThisTypeAppT (_, poly_t, _, targs)
+    | TypeAppT (_, poly_t, targs)
       ->
       begin match poly_t with
       | OpenT (_, id) ->
@@ -959,9 +1013,12 @@ module ResolvableTypeJob = struct
       collect_of_types ?log_unresolved cx reason acc ts
     | ArrT (_, TupleAT (elemt, tuple_types)) ->
       collect_of_types ?log_unresolved cx reason acc (elemt::tuple_types)
-    | InstanceT (_, static, super,
+    | ArrT (_, ROArrayAT (elemt)) ->
+      collect_of_type ?log_unresolved cx reason acc elemt
+    | ArrT (_, EmptyAT) -> acc
+    | InstanceT (_, static, super, _,
                  { class_id; type_args; fields_tmap; methods_tmap; _ }) ->
-      let ts = if class_id = 0 then [] else [super; static] in
+                   let ts = if class_id = 0 then [] else [super; static] in
       let ts = SMap.fold (fun _ t ts -> t::ts) type_args ts in
       let props_tmap = SMap.union
         (Context.find_props cx fields_tmap)
@@ -971,7 +1028,7 @@ module ResolvableTypeJob = struct
         Property.fold_t (fun ts t -> t::ts) ts p
       ) props_tmap ts in
       collect_of_types ?log_unresolved cx reason acc ts
-    | PolyT (_, t) ->
+    | PolyT (_, _, t) ->
       collect_of_type ?log_unresolved cx reason acc t
     | BoundT _ ->
       acc
@@ -982,7 +1039,7 @@ module ResolvableTypeJob = struct
     | EvalT _
     | ChoiceKitT (_, _)
     | ModuleT (_, _)
-    | ExtendsT (_, _, _)
+    | ExtendsT _
       ->
       acc
 
@@ -992,7 +1049,7 @@ module ResolvableTypeJob = struct
        virtualization of calls to this function doesn't lead to perf
        degradation: this function is expected to be quite hot). *)
 
-    | OptionalT t | MaybeT t | RestT t ->
+    | OptionalT (_, t) | MaybeT (_, t) ->
       collect_of_type ?log_unresolved cx reason acc t
     | UnionT (_, rep) ->
       let ts = UnionRep.members rep in
@@ -1003,11 +1060,11 @@ module ResolvableTypeJob = struct
 
     | AnyWithUpperBoundT t
     | AnyWithLowerBoundT t
-    | AbstractT t
+    | AbstractT (_, t)
     | ExactT (_, t)
     | TypeT (_, t)
-    | ClassT t
-    | ThisClassT t
+    | ClassT (_, t)
+    | ThisClassT (_, t)
       ->
       collect_of_type ?log_unresolved cx reason acc t
 
@@ -1061,9 +1118,10 @@ module ResolvableTypeJob = struct
   and collect_of_use ~log_unresolved cx reason acc = function
   | UseT (_, t) ->
     collect_of_type ~log_unresolved cx reason acc t
-  | CallT (_, ft) ->
-    collect_of_types ~log_unresolved cx reason acc
-      (ft.params_tlist @ [ft.return_t])
+  | CallT (_, fct) ->
+    let arg_types =
+      List.map (function Arg t | SpreadArg t -> t) fct.call_args_tlist in
+    collect_of_types ~log_unresolved cx reason acc (arg_types @ [fct.call_tout])
   | _ -> acc
 
 end
@@ -1072,10 +1130,50 @@ end
 
 exception SpeculativeError of FlowError.error_message
 
-let add_output cx trace msg =
+let add_output cx ?trace msg =
   if Speculation.speculating ()
-  then raise (SpeculativeError msg)
-  else FlowError.add_output cx ~trace msg
+  then begin
+    begin match Context.verbose cx with
+    | Some { Verbose.depth; _ } ->
+      prerr_endlinef "\nspeculative_error: %s"
+        (Debug_js.dump_flow_error ~depth cx msg)
+    | _ -> ()
+    end;
+    raise (SpeculativeError msg)
+  end else begin
+    begin match Context.verbose cx with
+    | Some { Verbose.depth; _ } ->
+      prerr_endlinef "\nadd_output: %s" (Debug_js.dump_flow_error ~depth cx msg)
+    | _ -> ()
+    end;
+
+    let trace_reasons = match trace with
+    | None -> []
+    | Some trace ->
+      (* format a trace into list of (reason, desc) pairs used
+       downstream for obscure reasons, and then to messages *)
+      let max_trace_depth = Context.max_trace_depth cx in
+      if max_trace_depth = 0 then [] else
+        Trace.reasons_of_trace ~level:max_trace_depth trace
+    in
+    let error = FlowError.error_of_msg
+      ~trace_reasons ~op:(Ops.peek ()) ~source_file:(Context.file cx) msg in
+
+    (* catch no-loc errors early, before they get into error map *)
+    Errors.(
+      if Loc.source (loc_of_error error) = None then
+        let strip_root = if Context.should_strip_root cx
+          then Some (Context.root cx)
+          else None in
+        let errset = ErrorSet.singleton error in
+        let json = Json_output.json_of_errors ~strip_root errset in
+        assert_false (
+          spf "add_output: no source for error: %s"
+          (Hh_json.json_to_multiline json))
+    );
+
+    Context.add_error cx error
+  end
 
 (********************)
 (* subtype relation *)
@@ -1104,6 +1202,57 @@ end = struct
   let check trace =
     if Trace.trace_depth trace >= limit
     then raise (LimitExceeded trace)
+end
+
+(* The main problem with constant folding is infinite recursion. Consider a loop
+ * that keeps adding 1 to a variable x, which is initialized to 0. If we
+ * constant fold x naively, we'll recurse forever, inferring that x has the type
+ * (0 | 1 | 2 | 3 | 4 | etc). What we need to do is recognize loops and stop
+ * doing constant folding.
+ *
+ * One solution is for constant-folding-location to keep count of how many times
+ * we have seen a reason. Then, when we've seen it multiple times, we can decide
+ * to stop doing constant folding.
+ *)
+module ConstFoldExpansion : sig
+  val guard: int -> reason -> (int -> 't) -> 't
+end = struct
+  let rmaps: int ReasonMap.t IMap.t ref = ref IMap.empty
+
+  let get_rmap id = Option.value ~default:ReasonMap.empty (IMap.get id !rmaps)
+
+  let increment reason rmap =
+    match ReasonMap.get reason rmap with
+    | None -> 0, ReasonMap.add reason 1 rmap
+    | Some count -> count, ReasonMap.add reason (count + 1) rmap
+
+  let decrement reason rmap =
+    match ReasonMap.get reason rmap with
+    | Some count ->
+      if count > 1
+      then ReasonMap.add reason (count - 1) rmap
+      else ReasonMap.remove reason rmap
+    | None -> rmap
+
+  let push id reason =
+    let rmap = get_rmap id in
+    let old_value, new_reason_map = increment reason rmap in
+    rmaps := IMap.add id new_reason_map !rmaps;
+    old_value
+
+  let pop id reason =
+    let rmap =
+      get_rmap id
+      |> decrement reason in
+    if ReasonMap.is_empty rmap
+    then rmaps := IMap.remove id !rmaps
+    else rmaps := IMap.add id rmap !rmaps
+
+  let guard id reason f =
+    let count = push id reason in
+    let ret = f count in
+    pop id reason;
+    ret
 end
 
 (* Sometimes we don't expect to see type parameters, e.g. when they should have
@@ -1238,9 +1387,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | EvalT (t, DestructuringT (reason, s), i), _ ->
       rec_flow cx trace (eval_selector cx ~trace reason t s i, u)
 
-    | _, UseT (use_op, EvalT (t, DestructuringT (reason, s), i)) ->
-      rec_flow cx trace (l, UseT (use_op, eval_selector cx ~trace reason t s i))
-
+    (** NOTE: the rule with EvalT (_, DestructuringT _, _) as upper bound is
+        moved below the OpenT rules, so that we can take advantage of the
+        caching inherent in those rules (in particular, when OpenT is a lower
+        bound). This caching seems necessary to avoid non-termination. There
+        could be other, better ways of achieving the same effect. **)
 
     (******************)
     (* process X ~> Y *)
@@ -1295,6 +1446,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Resolved t2 ->
           rec_flow cx trace (t1, UseT (use_op, t2))
       );
+
+    (****************)
+    (* eval, contd. *)
+    (****************)
+
+    | _, UseT (use_op, EvalT (t, DestructuringT (reason, s), i)) ->
+      rec_flow cx trace (l, UseT (use_op, eval_selector cx ~trace reason t s i))
+
 
     (************************)
     (* Full type resolution *)
@@ -1354,15 +1513,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (t, u)
       )
 
-    | MaybeT t, IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
-      let lreason = reason_of_t t in
+    | MaybeT (lreason, t), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
       rec_flow cx trace (NullT.why lreason, u);
       rec_flow cx trace (VoidT.why lreason, u);
       rec_flow cx trace (t, u);
 
-    | OptionalT t, IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
-      let lreason = reason_of_t t in
-      rec_flow cx trace (VoidT.why lreason, u);
+    | OptionalT (r, t), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
+      rec_flow cx trace (VoidT.why r, u);
       rec_flow cx trace (t, u);
 
     | AnnotT source_t, IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
@@ -1383,8 +1540,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Debugging *)
     (*************)
 
-    | (_, DebugPrintT (reason)) ->
-      add_output cx trace (FlowError.EDebugPrint (reason, l))
+    | _, DebugPrintT reason ->
+      let str = Debug_js.jstr_of_t cx l in
+      add_output cx ~trace (FlowError.EDebugPrint (reason, str))
 
     (************)
     (* tainting *)
@@ -1405,7 +1563,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* if a ReposT is used as a lower bound, `reposition` can reposition it *)
     | ReposT (reason, l), _ ->
-      rec_flow cx trace (reposition cx ~trace reason l, u)
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason) l, u)
 
     (* if a ReposT is used as an upper bound, wrap the now-concrete lower bound
        in a `ReposUpperT`, which will repos `u` when `u` becomes concrete. *)
@@ -1415,7 +1573,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | ReposUpperT (reason, l), UseT (use_op, u) ->
       (* since this guarantees that `u` is not an OpenT, it's safe to use
          `reposition` on the upper bound here. *)
-      rec_flow cx trace (l, UseT (use_op, reposition cx ~trace reason u))
+      let u = reposition cx ~trace (loc_of_reason reason) u in
+      rec_flow cx trace (l, UseT (use_op, u))
 
     | ReposUpperT (_, l), _ ->
       rec_flow cx trace (l, u)
@@ -1434,7 +1593,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, UseT (use_op, u_def))
 
     | (u_def, ReposUseT (reason, use_op, l)) ->
-      rec_flow cx trace (l, UseT (use_op, reposition cx ~trace reason u_def))
+      let u = reposition cx ~trace (loc_of_reason reason) u_def in
+      rec_flow cx trace (l, UseT (use_op, u))
 
     (***************)
     (* annotations *)
@@ -1451,14 +1611,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        site to downstream uses. *)
 
     | AnnotT source_t, u ->
-      let reason = reason_of_t source_t in
-      rec_flow cx trace (reposition ~trace cx reason source_t, u)
+      let loc = loc_of_t source_t in
+      rec_flow cx trace (reposition ~trace cx loc source_t, u)
 
     (****************************************************************)
     (* BecomeT unifies a tvar with an incoming concrete lower bound *)
     (****************************************************************)
     | _, BecomeT (reason, t) ->
-      rec_unify cx trace (reposition ~trace cx reason l) t
+      rec_unify cx trace (reposition ~trace cx (loc_of_reason reason) l) t
 
     (***********************)
     (* guarded unification *)
@@ -1478,33 +1638,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* `import type` creates a properly-parameterized type alias for the *)
     (* remote type -- but only for particular, valid remote types.       *)
     (*********************************************************************)
-    | (ClassT(inst), ImportTypeT(reason, _, t)) ->
-      rec_flow_t cx trace (TypeT(reason, inst), t)
-
-    (* fix this-abstracted class when used as a type *)
-    | (ThisClassT i, ImportTypeT(reason, _, _)) ->
-      rec_flow cx trace
-        (fix_this_class cx trace reason i, u)
-
-    | (PolyT(typeparams, ClassT(inst)), ImportTypeT(reason, _, t)) ->
-      rec_flow_t cx trace (PolyT(typeparams, TypeT(reason, inst)), t)
-
-    (* delay fixing a polymorphic this-abstracted class until it is specialized,
-       by transforming the instance type to a type application *)
-    | (PolyT(typeparams, ThisClassT _), ImportTypeT _) ->
-      let targs = List.map (fun tp -> BoundT tp) typeparams in
-      rec_flow cx trace (PolyT(typeparams, ClassT (TypeAppT(l, targs))), u)
-
-    | (FunT(_, _, prototype, _), ImportTypeT(reason, _, t)) ->
-      rec_flow_t cx trace (TypeT(reason, prototype), t)
-
-    | PolyT(typeparams, FunT(_, _, prototype, _)),
-      ImportTypeT(reason, _, t) ->
-      rec_flow_t cx trace (PolyT(typeparams, TypeT(reason, prototype)), t)
-
-    | (TypeT _, ImportTypeT(_, _, t))
-    | (PolyT(_, TypeT _), ImportTypeT(_, _, t))
-      -> rec_flow_t cx trace (l, t)
 
     (** TODO: This rule allows interpreting an object as a type!
 
@@ -1538,20 +1671,25 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ObjT _, ImportTypeT(_, "default", t)) ->
       rec_flow_t cx trace (l, t)
 
-    | (_, ImportTypeT(reason, export_name, _)) ->
-      add_output cx trace (FlowError.EImportValueAsType (reason, export_name))
+    | (exported_type, ImportTypeT(reason, export_name, t)) ->
+      (match canonicalize_imported_type cx trace reason exported_type with
+      | Some imported_t -> rec_flow_t cx trace (imported_t, t)
+      | None -> add_output cx ~trace (
+          FlowError.EImportValueAsType (reason, export_name)
+        )
+      )
 
     (************************************************************************)
     (* `import typeof` creates a properly-parameterized type alias for the  *)
     (* "typeof" the remote export.                                          *)
     (************************************************************************)
-    | PolyT(typeparams, ((ClassT _ | FunT _) as lower_t)),
+    | PolyT(_, typeparams, ((ClassT _ | FunT _) as lower_t)),
       ImportTypeofT(reason, _, t) ->
       let typeof_t = mk_typeof_annotation cx ~trace reason lower_t in
-      rec_flow_t cx trace (PolyT(typeparams, TypeT(reason, typeof_t)), t)
+      rec_flow_t cx trace (poly_type typeparams (TypeT(reason, typeof_t)), t)
 
-    | ((TypeT _ | PolyT(_, TypeT _)), ImportTypeofT(reason, export_name, _)) ->
-      add_output cx trace (FlowError.EImportTypeAsTypeof (reason, export_name))
+    | ((TypeT _ | PolyT(_, _, TypeT _)), ImportTypeofT(reason, export_name, _)) ->
+      add_output cx ~trace (FlowError.EImportTypeAsTypeof (reason, export_name))
 
     | (_, ImportTypeofT(reason, _, t)) ->
       let typeof_t = mk_typeof_annotation cx ~trace reason l in
@@ -1623,8 +1761,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        that are not @flow, so the rules have to deal with `any`. *)
 
     (* util that grows a module by adding named exports from a given map *)
-    | (ModuleT(_, exports), ExportNamedT(_, tmap, t_out)) ->
-      SMap.iter (Context.set_export cx exports.exports_tmap) tmap;
+    | (ModuleT(_, exports), ExportNamedT(_, skip_dupes, tmap, t_out)) ->
+      tmap |> SMap.iter (fun name t ->
+        if skip_dupes && Context.has_export cx exports.exports_tmap name
+        then ()
+        else Context.set_export cx exports.exports_tmap name t
+      );
       rec_flow_t cx trace (l, t_out)
 
     (** Copy the named exports from a source module into a target module. Used
@@ -1635,8 +1777,50 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let source_tmap = Context.find_exports cx source_exports.exports_tmap in
       rec_flow cx trace (
         target_module_t,
-        ExportNamedT(reason, source_tmap, t_out)
+        ExportNamedT(reason, (*skip_dupes*)true, source_tmap, t_out)
       )
+
+    (**
+     * Copy only the type exports from a source module into a target module.
+     * Used to implement `export type * from ...`.
+     *)
+    | ModuleT(_, source_exports),
+      CopyTypeExportsT(reason, target_module_t, t_out) ->
+      let source_exports = Context.find_exports cx source_exports.exports_tmap in
+      let target_module_t =
+        SMap.fold (fun export_name export_t target_module_t ->
+          mk_tvar_where cx reason (fun t -> rec_flow cx trace (
+            export_t,
+            ExportTypeT(reason, true, export_name, target_module_t, t)
+          ))
+        ) source_exports target_module_t
+      in
+      rec_flow_t cx trace (target_module_t, t_out)
+
+    (**
+     * Export a type from a given ModuleT, but only if the type is compatible
+     * with `import type`/`export type`. When it is not compatible, it is simply
+     * not added to the exports map.
+     *
+     * Note that this is very similar to `ExportNamedT` except that it only
+     * exports one type at a time and it takes the type to be exported as a
+     * lower (so that the type can be filtered post-resolution).
+     *)
+    | l, ExportTypeT(reason, skip_dupes, export_name, target_module_t, t_out) ->
+      let is_type_export = (
+        match l with
+        | ObjT _ when export_name = "default" -> true
+        | l -> canonicalize_imported_type cx trace reason l <> None
+      ) in
+      if is_type_export then
+        rec_flow cx trace (target_module_t, ExportNamedT(
+          reason,
+          skip_dupes,
+          SMap.singleton export_name l,
+          t_out
+        ))
+      else
+        rec_flow_t cx trace (target_module_t, t_out)
 
     (* There is nothing to copy from a module exporting `any` or `Object`. *)
     | (AnyT _ | AnyObjT _), CopyNamedExportsT(_, target_module, t) ->
@@ -1662,6 +1846,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Copy own props *)
       rec_flow cx trace (module_t, ExportNamedT(
         reason,
+        false, (* skip_dupes *)
         Properties.extract_named_exports (Context.find_props cx props_tmap),
         t_out
       ))
@@ -1670,7 +1855,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * InstanceT CommonJS export values have their properties turned into named
      * exports
      *)
-    | InstanceT(_, _, _, {fields_tmap; methods_tmap; _;}),
+    | InstanceT(_, _, _, _, {fields_tmap; methods_tmap; _;}),
       CJSExtractNamedExportsT(
         reason, (module_t_reason, exporttypes), t_out
       ) ->
@@ -1687,6 +1872,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let module_t = mk_tvar_where cx reason (fun t ->
         rec_flow cx trace (module_t, ExportNamedT(
           reason,
+          false, (* skip_dupes *)
           extract_named_exports fields_tmap,
           t
         ))
@@ -1695,6 +1881,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Copy methods *)
       rec_flow cx trace (module_t, ExportNamedT(
         reason,
+        false, (* skip_dupes *)
         extract_named_exports methods_tmap,
         t_out
       ))
@@ -1744,12 +1931,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | Some t ->
           (* reposition the export to point at the require(), like the object
              we create below for non-CommonJS exports *)
-          reposition ~trace cx reason t
+          reposition ~trace cx (loc_of_reason reason) t
         | None ->
           (* convert ES module's named exports to an object *)
           let proto = ObjProtoT reason in
           let exports_tmap = Context.find_exports cx exports.exports_tmap in
-          let props = SMap.map (Property.field Neutral) exports_tmap in
+          let props = SMap.map (fun t -> Field (t, Neutral)) exports_tmap in
           mk_object_with_map_proto cx reason
             ~sealed:true ~frozen:true props proto
       ) in
@@ -1758,7 +1945,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* import * as X from 'SomeModule'; *)
     | (ModuleT(_, exports), ImportModuleNsT(reason, t)) ->
       let exports_tmap = Context.find_exports cx exports.exports_tmap in
-      let props = SMap.map (Property.field Neutral) exports_tmap in
+      let props = SMap.map (fun t -> Field (t, Neutral)) exports_tmap in
       let props = match exports.cjs_export with
       | Some t ->
         let p = Field (t, Neutral) in
@@ -1780,7 +1967,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (ns_obj, t)
 
     (* import [type] X from 'SomeModule'; *)
-    | ModuleT(_, exports),
+    | ModuleT(module_reason, exports),
       ImportDefaultT(reason, import_kind, (local_name, module_name), t) ->
       let export_t = match exports.cjs_export with
         | Some t -> t
@@ -1804,9 +1991,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                  *)
                 let known_exports = SMap.keys exports_tmap in
                 let suggestion = typo_suggestion known_exports local_name in
-                add_output cx trace (FlowError.ENoDefaultExport
+                add_output cx ~trace (FlowError.ENoDefaultExport
                   (reason, module_name, suggestion));
-                AnyT.t
+                AnyT.why module_reason
       in
 
       let import_t = (
@@ -1879,7 +2066,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                 let suggestion = typo_suggestion known_exports export_name in
                 FlowError.ENoNamedExport (reason, export_name, suggestion)
             in
-            add_output cx trace msg;
+            add_output cx ~trace msg;
             AnyT.why reason
         ) in
         rec_flow_t cx trace (import_t, t)
@@ -1894,23 +2081,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ) ->
       rec_flow_t cx trace (AnyT.why reason, t)
 
-    | ((PolyT (_, TypeT _) | TypeT _), AssertImportIsValueT(reason, name)) ->
-      add_output cx trace (FlowError.EImportTypeAsValue (reason, name))
+    | ((PolyT (_, _, TypeT _) | TypeT _), AssertImportIsValueT(reason, name)) ->
+      add_output cx ~trace (FlowError.EImportTypeAsValue (reason, name))
 
     | (_, AssertImportIsValueT(_, _)) -> ()
-
-    (********************************************)
-    (* summary types forget literal information *)
-    (********************************************)
-
-    | (StrT (_, (Literal _ | Truthy)), SummarizeT (reason, t)) ->
-      rec_unify cx trace (StrT.why reason) t
-
-    | (NumT (_, (Literal _ | Truthy)), SummarizeT (reason, t)) ->
-      rec_unify cx trace (NumT.why reason) t
-
-    | (_, SummarizeT (_, t)) ->
-      rec_unify cx trace l t
 
     (*******************************)
     (* common implicit conversions *)
@@ -1993,34 +2167,43 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      *)
     | CustomFunT (_, Idx),
       CallT (reason_op, {
-        params_tlist;
-        return_t;
-        this_t;
-        closure_t;
-        changeset;
-        _;
+        call_this_t;
+        call_args_tlist;
+        call_tout;
+        call_closure_t;
+        call_strict_arity;
       }) ->
-      (match params_tlist with
-        | obj::cb::[] ->
+      (match call_args_tlist with
+        | (Arg obj)::(Arg cb)::[] ->
           let wrapped_obj = IdxWrapper (reason_op, obj) in
           let callback_result = mk_tvar_where cx reason_op (fun t ->
             rec_flow cx trace (cb, CallT (reason_op, {
-              this_t;
-              params_tlist = [wrapped_obj];
-              params_names = None;
-              return_t = t;
-              is_predicate = false;
-              closure_t;
-              changeset
+              call_this_t;
+              call_args_tlist = [Arg wrapped_obj];
+              call_tout = t;
+              call_closure_t;
+              call_strict_arity;
             }))
           ) in
           let unwrapped_t = mk_tvar_where cx reason_op (fun t ->
             rec_flow cx trace (callback_result, IdxUnwrap(reason_op, t))
           ) in
-          rec_flow_t cx trace (MaybeT unwrapped_t, return_t)
+          let maybe_r = replace_reason (fun desc -> RMaybe desc) reason_op in
+          let maybe = MaybeT (maybe_r, unwrapped_t) in
+          rec_flow_t cx trace (maybe, call_tout)
+        | (SpreadArg t1)::(SpreadArg t2)::_ ->
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (loc_of_t t1, SpreadArgument)));
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (loc_of_t t2, SpreadArgument)))
+        | (SpreadArg t)::_
+        | _::(SpreadArg t)::_ ->
+          let spread_loc = loc_of_t t in
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (spread_loc, SpreadArgument)))
         | _ ->
           (* Why is idx strict about arity? No other functions are. *)
-          add_output cx trace (FlowError.EIdxArity reason_op)
+          add_output cx ~trace (FlowError.EIdxArity reason_op)
       )
 
     (* Unwrap idx() callback param *)
@@ -2028,8 +2211,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (_, IdxUnwrap (_, t)) -> rec_flow_t cx trace (l, t)
 
     (* De-maybe-ify an idx() property access *)
-    | (MaybeT inner_t, IdxUnMaybeifyT _)
-    | (OptionalT inner_t, IdxUnMaybeifyT _)
+    | (MaybeT (_, inner_t), IdxUnMaybeifyT _)
+    | (OptionalT (_, inner_t), IdxUnMaybeifyT _)
       -> rec_flow cx trace (inner_t, u)
     | (NullT _, IdxUnMaybeifyT _) -> ()
     | (VoidT _, IdxUnMaybeifyT _) -> ()
@@ -2067,10 +2250,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (IdxWrapper (idx_reason, prop_type), t_out)
 
     | (IdxWrapper (reason, _), UseT _) ->
-      add_output cx trace (FlowError.EIdxUse1 reason)
+      add_output cx ~trace (FlowError.EIdxUse1 reason)
 
     | (IdxWrapper (reason, _), _) ->
-      add_output cx trace (FlowError.EIdxUse2 reason)
+      add_output cx ~trace (FlowError.EIdxUse2 reason)
 
     (***************)
     (* maybe types *)
@@ -2078,19 +2261,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (** The type maybe(T) is the same as null | undefined | UseT *)
 
-    | (NullT r | VoidT r), UseT (use_op, MaybeT tout) ->
+    | (NullT r | VoidT r), UseT (use_op, MaybeT (_, tout)) ->
       rec_flow cx trace (EmptyT.why r, UseT (use_op, tout))
 
     | MaybeT _, ReposLowerT (reason_op, u) ->
       (* Don't split the maybe type into its constituent members. Instead,
          reposition the entire maybe type. *)
-      rec_flow cx trace (reposition cx ~trace reason_op l, u)
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
-    | MaybeT t1, UseT (_, MaybeT _) ->
-      rec_flow cx trace (t1, u)
+    | MaybeT (_, t), UseT (_, MaybeT _) ->
+      rec_flow cx trace (t, u)
 
-    | (MaybeT(t), _) ->
-      let reason = reason_of_t t in
+    | (MaybeT (reason, t), _) ->
       rec_flow cx trace (NullT.why reason, u);
       rec_flow cx trace (VoidT.why reason, u);
       rec_flow cx trace (t, u)
@@ -2106,16 +2288,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | OptionalT _, ReposLowerT (reason_op, u) ->
       (* Don't split the optional type into its constituent members. Instead,
          reposition the entire optional type. *)
-      rec_flow cx trace (reposition cx ~trace reason_op l, u)
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
-    | (OptionalT(t), _) ->
-      let reason = reason_of_t t in
-      rec_flow cx trace (VoidT.why reason, u);
+    | OptionalT (r, t), _ ->
+      rec_flow cx trace (VoidT.why r, u);
       rec_flow cx trace (t, u)
 
     (*****************)
     (* logical types *)
     (*****************)
+
+    | AnyT _, NotT (reason, tout) ->
+      rec_flow_t cx trace (AnyT.why reason, tout)
 
     (* !x when x is of unknown truthiness *)
     | BoolT (_, None), NotT (reason, tout)
@@ -2126,9 +2310,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* !x when x is falsy *)
     | BoolT (_, Some false), NotT (reason, tout)
     | SingletonBoolT (_, false), NotT (reason, tout)
-    | StrT (_, Literal ""), NotT (reason, tout)
+    | StrT (_, Literal (_, "")), NotT (reason, tout)
     | SingletonStrT (_, ""), NotT (reason, tout)
-    | NumT (_, Literal (0., _)), NotT (reason, tout)
+    | NumT (_, Literal (_, (0., _))), NotT (reason, tout)
     | SingletonNumT (_, (0., _)), NotT (reason, tout)
     | NullT _, NotT (reason, tout)
     | VoidT _, NotT (reason, tout) ->
@@ -2186,12 +2370,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         )
       )
 
-    | (_, ObjTestT(reason_op, default, u)) ->
-      let u = ReposLowerT(reason_op, UseT (UnknownUse, u)) in
-      if object_like l
-      then rec_flow cx trace (l, u)
-      else rec_flow cx trace (default, u)
-
     (*****************************)
     (* upper and lower any types *)
     (*****************************)
@@ -2241,32 +2419,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        because substitution of type parameters in def types does not affect
        their reasons, so we'd trivially lose precision. *)
 
-    | (ThisTypeAppT(c,this,ts), _) ->
+    | (ThisTypeAppT(reason_tapp,c,this,ts), _) ->
       let reason_op = reason_of_use_t u in
-      let reason_tapp = reason_of_t l in
       let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
       let c = instantiate_this_class cx trace reason_op tc this in
       rec_flow cx trace (mk_instance cx ~trace reason_op ~for_type:false c, u)
 
-    | (_, UseT (use_op, ThisTypeAppT(c,this,ts))) ->
+    | (_, UseT (use_op, ThisTypeAppT(reason_tapp,c,this,ts))) ->
       let reason_op = reason_of_t l in
-      let reason_tapp = reason_of_use_t u in
       let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
       let c = instantiate_this_class cx trace reason_op tc this in
       let t_out = mk_instance cx ~trace reason_op ~for_type:false c in
       rec_flow cx trace (l, UseT (use_op, t_out))
 
     | TypeAppT _, ReposLowerT (reason_op, u) ->
-        rec_flow cx trace (reposition cx ~trace reason_op l, u)
+        rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
-    | (TypeAppT(c,ts), MethodT _) ->
+    | (TypeAppT(reason_tapp,c,ts), MethodT _) ->
         let reason_op = reason_of_use_t u in
-        let reason_tapp = reason_of_t l in
         let t = mk_typeapp_instance cx
-          ~trace ~reason_op ~reason_tapp ~cache:true c ts in
+          ~trace ~reason_op ~reason_tapp ~cache:[] c ts in
         rec_flow cx trace (t, u)
 
-    | (TypeAppT (c1, ts1), UseT (_, TypeAppT (c2, ts2)))
+    | (TypeAppT (_,c1, ts1), UseT (_, TypeAppT (_,c2, ts2)))
       when c1 = c2 && List.length ts1 = List.length ts2 ->
       let reason_op = reason_of_t l in
       let reason_tapp = reason_of_use_t u in
@@ -2274,19 +2449,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (c1,
         TypeAppVarianceCheckT (reason_op, reason_tapp, targs))
 
-    | (TypeAppT(c,ts), _) ->
+    | (TypeAppT(reason_tapp,c,ts), _) ->
         if TypeAppExpansion.push_unless_loop cx (c, ts) then (
           let reason_op = reason_of_use_t u in
-          let reason_tapp = reason_of_t l in
           let t = mk_typeapp_instance cx ~trace ~reason_op ~reason_tapp c ts in
           rec_flow cx trace (t, u);
           TypeAppExpansion.pop ()
         )
 
-    | (_, UseT (use_op, TypeAppT(c,ts))) ->
+    | (_, UseT (use_op, TypeAppT(reason_tapp,c,ts))) ->
         if TypeAppExpansion.push_unless_loop cx (c, ts) then (
           let reason_op = reason_of_t l in
-          let reason_tapp = reason_of_use_t u in
           let t = mk_typeapp_instance cx ~trace ~reason_op ~reason_tapp c ts in
           rec_flow cx trace (l, UseT (use_op, t));
           TypeAppExpansion.pop ()
@@ -2346,7 +2519,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       then ()
       else
         let reasons = FlowError.ordered_reasons l u in
-        add_output cx trace
+        add_output cx ~trace
           (FlowError.EExpectedStringLit (reasons, expected, actual))
 
     | NumT (_, actual), UseT (_, SingletonNumT (_, expected)) ->
@@ -2354,7 +2527,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       then ()
       else
         let reasons = FlowError.ordered_reasons l u in
-        add_output cx trace
+        add_output cx ~trace
           (FlowError.EExpectedNumberLit (reasons, expected, actual))
 
     | BoolT (_, actual), UseT (_, SingletonBoolT (_, expected)) ->
@@ -2362,7 +2535,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       then ()
       else
         let reasons = FlowError.ordered_reasons l u in
-        add_output cx trace
+        add_output cx ~trace
           (FlowError.EExpectedBooleanLit (reasons, expected, actual))
 
     (*****************************************************)
@@ -2371,7 +2544,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (StrT (reason_s, literal), UseT (_, KeysT (reason_op, o))) ->
       let reason_next = match literal with
-      | Literal x -> replace_reason_const (RProperty (Some x)) reason_s
+      | Literal (_, x) -> replace_reason_const (RProperty (Some x)) reason_s
       | _ -> replace_reason_const RUnknownString reason_s in
       (* check that o has key x *)
       let u = HasOwnPropT(reason_next, literal) in
@@ -2391,52 +2564,60 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       HasOwnPropT (reason_op, x) ->
       (match x, dict_t with
       (* If we have a literal string and that property exists *)
-      | Literal x, _ when Context.has_prop cx mapr x -> ()
+      | Literal (_, x), _ when Context.has_prop cx mapr x -> ()
       (* If we have a dictionary, try that next *)
       | _, Some { key; _ } -> rec_flow_t cx trace (StrT (reason_op, x), key)
       | _ ->
-        add_output cx trace (FlowError.EPropNotFound (reason_op, reason_o)))
+        let err = FlowError.EPropNotFound ((reason_op, reason_o), UnknownUse) in
+        add_output cx ~trace err)
 
-    | InstanceT (reason_o, _, _, instance), HasOwnPropT(reason_op, Literal x) ->
+    | InstanceT (reason_o, _, _, _, instance), HasOwnPropT(reason_op, Literal (_, x)) ->
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       let methods_tmap = Context.find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
       (match SMap.get x fields with
       | Some _ -> ()
       | None ->
-        add_output cx trace (FlowError.EPropNotFound (reason_op, reason_o)))
+        let err = FlowError.EPropNotFound ((reason_op, reason_o), UnknownUse) in
+        add_output cx ~trace err)
 
-    | (InstanceT (reason_o, _, _, _), HasOwnPropT(reason_op, _)) ->
+    | (InstanceT (reason_o, _, _, _, _), HasOwnPropT(reason_op, _)) ->
         let msg = "Expected string literal" in
-        add_output cx trace (FlowError.ECustom ((reason_op, reason_o), msg))
+        add_output cx ~trace (FlowError.ECustom ((reason_op, reason_o), msg))
 
     (* AnyObjT has every prop *)
     | AnyObjT _, HasOwnPropT _ -> ()
 
-    | ObjT (_, { flags; props_tmap = mapr; _ }), GetKeysT (reason_op, keys) ->
+    | ObjT (_, { flags; props_tmap; dict_t; _ }), GetKeysT (reason_op, keys) ->
       begin match flags.sealed with
       | Sealed ->
         (* flow each key of l to keys *)
-        Context.iter_props cx mapr (fun x _ ->
+        Context.iter_props cx props_tmap (fun x _ ->
           let reason = replace_reason_const (RStringLit x) reason_op in
-          let t = StrT (reason, Literal x) in
+          let t = StrT (reason, Literal (None, x)) in
           rec_flow_t cx trace (t, keys)
+        );
+        Option.iter dict_t (fun _ ->
+          rec_flow_t cx trace (StrT.why reason_op, keys)
         );
       | _ ->
         rec_flow_t cx trace (StrT.why reason_op, keys)
       end
 
-    | InstanceT (_, _, _, instance), GetKeysT (reason_op, keys) ->
+    | InstanceT (_, _, _, _, instance), GetKeysT (reason_op, keys) ->
       (* methods are not enumerable, so only walk fields *)
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       fields_tmap |> SMap.iter (fun x _ ->
         let reason = replace_reason_const (RStringLit x) reason_op in
-        let t = StrT (reason, Literal x) in
+        let t = StrT (reason, Literal (None, x)) in
         rec_flow_t cx trace (t, keys)
       )
 
     | (AnyObjT reason | AnyFunT reason), GetKeysT (_, keys) ->
       rec_flow_t cx trace (StrT.why reason, keys)
+
+    | AnyT _, GetKeysT (reason_op, keys) ->
+      rec_flow_t cx trace (AnyT.why reason_op, keys)
 
     (** In general, typechecking is monotonic in the sense that more constraints
         produce more errors. However, sometimes we may want to speculatively try
@@ -2455,9 +2636,25 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | UnionT _, ReposLowerT (reason_op, u) ->
       (* Don't split the union type into its constituent members. Instead,
          reposition the entire union type. *)
-      rec_flow cx trace (reposition cx ~trace reason_op l, u)
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+
+    | UnionT _, ObjSpreadT (reason_op, tool, state, tout) ->
+      object_spread cx trace reason_op tool state tout l
 
     (* cases where there is no loss of precision *)
+
+    (** Optimization where an union is a subset of another. Equality modulo
+        reasons is important for this optimization to be effective, since types
+        are repositioned everywhere.
+
+        TODO: (1) Define a more general partial equality, that takes into
+        account unified type variables. (2) Get rid of UnionRep.quick_mem. **)
+    | UnionT (_, rep1), UseT (_, UnionT (_, rep2)) when
+        let l1, l2 = UnionRep.members rep1, UnionRep.members rep2 in
+        l1 |> List.for_all (fun t1 ->
+          l2 |> List.exists (fun t2 ->
+            reasonless_eq t1 t2)) ->
+      ()
 
     | UnionT (_, rep), _ ->
       UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
@@ -2506,10 +2703,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* maybe and optional types are just special union types *)
 
-    | (t1, UseT (use_op, MaybeT(t2))) ->
+    | (t1, UseT (use_op, MaybeT (_, t2))) ->
       rec_flow cx trace (t1, UseT (use_op, t2))
 
-    | (t1, UseT (use_op, OptionalT(t2))) ->
+    | (t1, UseT (use_op, OptionalT (_, t2))) ->
       rec_flow cx trace (t1, UseT (use_op, t2))
 
     (** special treatment for some operations on intersections: these
@@ -2535,15 +2732,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (** extends **)
     | IntersectionT (_, rep),
-      UseT (use_op, ExtendsT (try_ts_on_failure, l, u)) ->
-      let ts = InterRep.members rep in
-      assert (ts <> []);
+      UseT (use_op, ExtendsT (reason, try_ts_on_failure, l, u)) ->
+      let t, ts = InterRep.members_nel rep in
+      let try_ts_on_failure = (Nel.to_list ts) @ try_ts_on_failure in
       (* Since s could be in any object type in the list ts, we try to look it
          up in the first element of ts, pushing the rest into the list
          try_ts_on_failure (see below). *)
-      rec_flow cx trace
-        (List.hd ts,
-         UseT (use_op, ExtendsT ((List.tl ts) @ try_ts_on_failure, l, u)))
+      rec_flow cx trace (t, UseT (use_op,
+        ExtendsT (reason, try_ts_on_failure, l, u)))
 
     (** consistent override of properties **)
     | IntersectionT (_, rep), SuperT _ ->
@@ -2562,7 +2758,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       iter_real_props cx props_tmap (fun x p ->
         let pmap = SMap.singleton x p in
         let id = Context.make_property_map cx pmap in
-        let obj = mk_objecttype ~flags dict_t id ObjProtoT.t in
+        let obj = mk_objecttype ~flags dict_t id dummy_prototype in
         rec_flow cx trace (l, UseT (use_op, ObjT (r, obj)))
       );
       rec_flow cx trace (l, UseT (use_op, proto_t))
@@ -2576,17 +2772,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | IntersectionT _, GuardT (pred, result, tout) ->
       guard cx trace l pred result tout
 
-    (** ObjAssignT copies multiple properties from its incoming LB.
+    (** ObjAssignFromT copies multiple properties from its incoming LB.
         Here we simulate a merged object type by iterating over the
         entire intersection. *)
-    | IntersectionT (_, rep), ObjAssignT (_, _, _, _, false) ->
+    | IntersectionT (_, rep), ObjAssignFromT (_, _, _, _, _) ->
       InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
 
     (** This duplicates the (_, ReposLowerT u) near the end of this pattern
         match but has to appear here to preempt the (IntersectionT, _) in
         between so that we reposition the entire intersection. *)
     | IntersectionT _, ReposLowerT (reason_op, u) ->
-      rec_flow cx trace (reposition cx ~trace reason_op l, u)
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+
+    | IntersectionT _, ObjSpreadT (reason_op, tool, state, tout) ->
+      object_spread cx trace reason_op tool state tout l
 
     (** All other pairs with an intersection lower bound come here. Before
         further processing, we ensure that the upper bound is concretized. See
@@ -2600,6 +2799,153 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | IntersectionT (r, rep), u ->
       prep_try_intersection cx trace
         (reason_of_use_t u) (parts_to_replace u) [] u r rep
+
+    (*************************)
+    (* Resolving rest params *)
+    (*************************)
+
+    (* `any` is obviously fine as a spread element. `Object` is fine because
+     * any Iterable can be spread, and `Object` is the any type that covers
+     * iterable objects. *)
+    | (AnyT r | AnyObjT r),
+      ResolveSpreadT (reason_op, {
+        rrt_resolved;
+        rrt_unresolved;
+        rrt_resolve_to;
+      }) ->
+
+      let rrt_resolved = (ResolvedAnySpreadArg r)::rrt_resolved in
+      resolve_spread_list_rec
+        cx ~trace ~reason_op
+        (rrt_resolved, rrt_unresolved) rrt_resolve_to
+
+    | _,
+      ResolveSpreadT (reason_op, {
+        rrt_resolved;
+        rrt_unresolved;
+        rrt_resolve_to;
+      }) ->
+      let reason = reason_of_t l in
+
+      let r, arrtype = match l with
+      | ArrT (r, arrtype) ->
+        (* Arrays *)
+        r, arrtype
+      | _ ->
+        (* Non-array non-any iterables *)
+        let reason = reason_of_t l in
+        let element_tvar = mk_tvar cx reason in
+        let iterable =
+          let targs = [element_tvar; AnyT.why reason; AnyT.why reason] in
+          get_builtin_typeapp cx
+            (replace_reason_const (RCustom "Iterable expected for spread") reason)
+            "$Iterable" targs
+        in
+        flow_t cx (l, iterable);
+        reason, ArrayAT (element_tvar, None)
+      in
+
+      let elemt = elemt_of_arrtype r arrtype in
+
+      begin match rrt_resolve_to with
+      (* Any ResolveSpreadsTo* which does some sort of constant folding needs to
+       * carry an id around to break the infinite recursion that constant
+       * constant folding can trigger *)
+      | ResolveSpreadsToTuple (id, tout)
+      | ResolveSpreadsToArrayLiteral (id, tout) ->
+        (* You might come across code like
+         *
+         * for (let x = 1; x < 3; x++) { foo = [...foo, x]; }
+         *
+         * where every time you spread foo, you flow another type into foo. So
+         * each time `l ~> ResolveSpreadT` is processed, it might produce a new
+         * `l ~> ResolveSpreadT` with a new `l`.
+         *
+         * Here is how we avoid this:
+         *
+         * 1. We use ConstFoldExpansion to detect when we see a ResolveSpreadT
+         *    upper bound multiple times
+         * 2. When a ResolveSpreadT upper bound multiple times, we change it into
+         *    a ResolveSpreadT upper bound that resolves to a more general type.
+         *    This should prevent more distinct lower bounds from flowing in
+         * 3. rec_flow caches (l,u) pairs.
+         *)
+
+
+        let reason_elemt = reason_of_t elemt in
+        ConstFoldExpansion.guard id reason_elemt (fun recursion_depth ->
+          match recursion_depth with
+          | 0 ->
+            (* The first time we see this, we process it normally *)
+            let rrt_resolved =
+              ResolvedSpreadArg(reason, arrtype)::rrt_resolved in
+            resolve_spread_list_rec
+              cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to
+          | 1 ->
+            (* To avoid infinite recursion, let's deconstruct to a simplier case
+             * where we no longer resolve to a tuple but instead just resolve to
+             * an array. *)
+            rec_flow cx trace (l, ResolveSpreadT (reason_op, {
+              rrt_resolved;
+              rrt_unresolved;
+              rrt_resolve_to = ResolveSpreadsToArray (tout);
+            }))
+          | _ ->
+            (* We've already deconstructed, so there's nothing left to do *)
+            ()
+        )
+
+      | ResolveSpreadsToMultiflowCallFull (id, _)
+      | ResolveSpreadsToMultiflowSubtypeFull (id, _)
+      | ResolveSpreadsToMultiflowPartial (id, _, _, _) ->
+        let reason_elemt = reason_of_t elemt in
+        ConstFoldExpansion.guard id reason_elemt (fun recursion_depth ->
+          match recursion_depth with
+          | 0 ->
+            (* The first time we see this, we process it normally *)
+            let rrt_resolved =
+              ResolvedSpreadArg(reason, arrtype)::rrt_resolved in
+            resolve_spread_list_rec
+              cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to
+          | 1 ->
+            (* Consider
+             *
+             * function foo(...args) { foo(1, ...args); }
+             * foo();
+             *
+             * Because args is unannotated, we try to infer it. However, due to
+             * the constant folding we do with spread arguments, we'll first
+             * infer that it is [], then [] | [1], then [] | [1] | [1,1] ...etc
+             *
+             * We can recognize that we're stuck in a constant folding loop. But
+             * how to break it?
+             *
+             * In this case, we are constant folding by recognizing when args is
+             * a tuple or an array literal. We can break the loop by turning
+             * tuples or array literals into simple arrays.
+             *)
+
+            let new_arrtype = match arrtype with
+            (* These can get us into constant folding loops *)
+            | ArrayAT (elemt, Some _)
+            | TupleAT (elemt, _) -> ArrayAT (elemt, None)
+            (* These cannot *)
+            | ArrayAT (_, None)
+            | ROArrayAT _
+            | EmptyAT -> arrtype in
+
+            let rrt_resolved =
+             ResolvedSpreadArg(reason, new_arrtype)::rrt_resolved in
+            resolve_spread_list_rec
+             cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to
+          | _ -> ()
+        )
+
+      | _ ->
+        let rrt_resolved = ResolvedSpreadArg(reason, arrtype)::rrt_resolved in
+        resolve_spread_list_rec
+          cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to
+      end
 
     (* singleton lower bounds are equivalent to the corresponding
        primitive with a literal constraint. These conversions are
@@ -2616,10 +2962,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      *)
 
     | SingletonStrT (reason, key), _ ->
-      rec_flow cx trace (StrT (reason, Literal key), u)
+      rec_flow cx trace (StrT (reason, Literal (None, key)), u)
 
     | SingletonNumT (reason, lit), _ ->
-      rec_flow cx trace (NumT (reason, Literal lit), u)
+      rec_flow cx trace (NumT (reason, Literal (None, lit)), u)
 
     | SingletonBoolT (reason, b), _ ->
       rec_flow cx trace (BoolT (reason, Some b), u)
@@ -2652,7 +2998,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* inexact LB ~> $Exact<UB>. error *)
     | _, UseT (_, ExactT _) ->
       let reasons = FlowError.ordered_reasons l u in
-      add_output cx trace (FlowError.EIncompatibleWithExact reasons)
+      add_output cx ~trace (FlowError.EIncompatibleWithExact reasons)
 
     (* LB ~> MakeExactT (_, UB) exactifies LB, then flows result to UB *)
 
@@ -2662,22 +3008,27 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (ObjT (r, exactobj), u)
 
     (* exactify incoming UB object type, flow to LB *)
-    | ObjT (ru, obj_u), MakeExactT (_, Lower ObjT (rl, obj_l)) ->
+    | ObjT (ru, obj_u), MakeExactT (reason_op, Lower ObjT (rl, obj_l)) ->
       (* check for extra props in LB, then forward to standard obj ~> obj *)
       let xl = { obj_l with flags = { obj_l.flags with exact = true } } in
+      let ru = repos_reason (loc_of_reason reason_op) ru in
       let xu = { obj_u with flags = { obj_u.flags with exact = true } } in
       iter_real_props cx obj_l.props_tmap (fun prop_name _ ->
         if not (Context.has_prop cx obj_u.props_tmap prop_name)
         then
           let rl = replace_reason_const (RProperty (Some prop_name)) rl in
-          add_output cx trace (FlowError.EPropNotFound (rl, ru))
+          let err = FlowError.EPropNotFound ((rl, ru), UnknownUse) in
+          add_output cx ~trace err
       );
       rec_flow_t cx trace (ObjT (rl, xl), ObjT (ru, xu))
+
+    | AnyT _, MakeExactT (reason_op, k) ->
+      continue cx trace (AnyT.why reason_op) k
 
     (* unsupported kind *)
     | _, MakeExactT _ ->
       let reasons = FlowError.ordered_reasons l u in
-      add_output cx trace (FlowError.EUnsupportedExact reasons)
+      add_output cx ~trace (FlowError.EUnsupportedExact reasons)
 
     (**************************************************************************)
     (* TestPropT is emitted for property reads in the context of branch tests.
@@ -2788,7 +3139,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Utils_js.OK key -> rec_flow cx trace
           (return_t, CallOpenPredT (reason, sense, key, unrefined_t, fresh_t))
       | Utils_js.Err (msg, reasons) ->
-        add_output cx trace (FlowError.ECustom (reasons, msg));
+        add_output cx ~trace (FlowError.ECustom (reasons, msg));
         rec_flow_t cx trace (unrefined_t, fresh_t))
 
 
@@ -2833,7 +3184,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | OpenPredT _, UseT (_, OpenPredT _) ->
       let loc = loc_of_reason (reason_of_use_t u) in
-      add_output cx trace FlowError.(EInternal (loc, OpenPredWithoutSubst))
+      add_output cx ~trace FlowError.(EInternal (loc, OpenPredWithoutSubst))
 
     (*********************************************)
     (* Using predicate functions as regular ones *)
@@ -2848,22 +3199,26 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* A class can be viewed as a mixin by extracting its immediate properties,
        and "erasing" its static and super *)
 
-    | ThisClassT (InstanceT (_, _, _, instance)), MixinT (r, tvar) ->
+    | ThisClassT (_, InstanceT (_, _, _, _, instance)), MixinT (r, tvar) ->
       let static = ObjProtoT r in
       let super = ObjProtoT r in
       rec_flow cx trace (
-        ThisClassT (InstanceT (r, static, super, instance)),
+        this_class_type (InstanceT (r, static, super, [], instance)),
         UseT (UnknownUse, tvar)
       )
 
-    | PolyT (xs, ThisClassT (InstanceT (_, _, _, instance))),
+    | PolyT (_, xs, ThisClassT (_, InstanceT (_, _, _, _, insttype))),
       MixinT (r, tvar) ->
       let static = ObjProtoT r in
       let super = ObjProtoT r in
+      let instance = InstanceT (r, static, super, [], insttype) in
       rec_flow cx trace (
-        PolyT (xs, ThisClassT (InstanceT (r, static, super, instance))),
+        poly_type xs (this_class_type instance),
         UseT (UnknownUse, tvar)
       )
+
+    | AnyT _, MixinT (r, tvar) ->
+      rec_flow_t cx trace (AnyT.why r, tvar)
 
     (* TODO: it is conceivable that other things (e.g. functions) could also be
        viewed as mixins (e.g. by extracting properties in their prototypes), but
@@ -2882,16 +3237,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        to be the same as implicit specialization, which is handled by a
        fall-through case below.The exception is when the PolyT has type
        parameters with defaults. *)
-    | (PolyT (ids,t), SpecializeT(reason_op,reason_tapp,cache,ts,tvar))
+    | (PolyT (_, ids,t), SpecializeT(reason_op,reason_tapp,cache,ts,tvar))
         when ts <> [] || (poly_minimum_arity ids < List.length ids) ->
       let t_ = instantiate_poly_with_targs cx trace
-        ~reason_op ~reason_tapp ~cache (ids,t) ts in
+        ~reason_op ~reason_tapp ?cache (ids,t) ts in
       rec_flow_t cx trace (t_, tvar)
 
-    | PolyT (tps, _), VarianceCheckT(_, ts, polarity) ->
-      variance_check cx polarity (tps, ts)
+    | PolyT (_, tps, _), VarianceCheckT(_, ts, polarity) ->
+      variance_check cx ~trace polarity (tps, ts)
 
-    | PolyT (tparams, _), TypeAppVarianceCheckT (_, reason_tapp, targs) ->
+    | PolyT (_, tparams, _), TypeAppVarianceCheckT (_, reason_tapp, targs) ->
       let minimum_arity = poly_minimum_arity tparams in
       let maximum_arity = List.length tparams in
       let reason_arity =
@@ -2899,13 +3254,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let loc = Loc.btwn (loc_of_reason tp1.reason) (loc_of_reason tpN.reason) in
         mk_reason (RCustom "See type parameters of definition here") loc in
       if List.length targs > maximum_arity
-      then add_output cx trace
+      then add_output cx ~trace
         (FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
       let unused_targs = List.fold_left (fun targs { default; polarity; _ } ->
         match default, targs with
         | None, [] ->
           (* fewer arguments than params but no default *)
-          add_output cx trace (FlowError.ETooFewTypeArgs
+          add_output cx ~trace (FlowError.ETooFewTypeArgs
             (reason_tapp, reason_arity, minimum_arity));
           []
         | _, [] -> []
@@ -2922,26 +3277,27 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ClassT _ | ThisClassT _), SpecializeT(_,_,_,[],tvar) ->
       rec_flow_t cx trace (l, tvar)
 
+    | AnyT _, SpecializeT (_, _, _, _, tvar) ->
+      rec_flow_t cx trace (l, tvar)
+
     (* this-specialize a this-abstracted class by substituting This *)
-    | ThisClassT i, ThisSpecializeT(_, this, tvar) ->
+    | ThisClassT (reason, i), ThisSpecializeT(_, this, tvar) ->
       let i = subst cx (SMap.singleton "this" this) i in
-      rec_flow_t cx trace (ClassT i, tvar)
+      rec_flow_t cx trace (ClassT (reason, i), tvar)
 
     (* this-specialization of non-this-abstracted classes is a no-op *)
-    | ClassT i, ThisSpecializeT(_, _this, tvar) ->
+    | ClassT (r, i), ThisSpecializeT(_, _this, tvar) ->
       (* TODO: check that this is a subtype of i? *)
-      rec_flow_t cx trace (ClassT i, tvar)
+      rec_flow_t cx trace (ClassT (r, i), tvar)
 
-    (* PolyT doesn't have a position since it takes on the position of the upper
-       bound, so it doesn't need to be repositioned. This case is necessary to
-       prevent the wildcard (PolyT, _) below from firing too early. *)
-    | (PolyT _, ReposLowerT (_, u)) ->
-      rec_flow cx trace (l, u)
+    | AnyT _, ThisSpecializeT (_, _, tvar) ->
+      rec_flow_t cx trace (l, tvar)
 
-    (* get this out of the way too, as above, except that repositioning does
-       make sense *)
+    | (PolyT _, ReposLowerT (reason_op, u)) ->
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+
     | (ThisClassT _, ReposLowerT (reason_op, u)) ->
-      rec_flow cx trace (reposition cx ~trace reason_op l, u)
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
     (* When do we consider a polymorphic type <X:U> T to be a subtype of another
        polymorphic type <X:U'> T'? This is the subject of a long line of
@@ -2974,7 +3330,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        polymorphic type at all! For example, we can let a non-generic method be
        overridden with a generic method, as long as the non-generic signature
        can be derived as a specialization of the generic signature. *)
-    | (_, UseT (use_op, PolyT (ids, t))) ->
+    | (_, UseT (use_op, PolyT (_, ids, t))) ->
         generate_tests cx (reason_of_t l) ids (fun map_ ->
           rec_flow cx trace (l, UseT (use_op, subst cx map_ t))
         )
@@ -2982,9 +3338,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* TODO: ideally we'd do the same when lower bounds flow to a
        this-abstracted class, but fixing the class is easier; might need to
        revisit *)
-    | (_, UseT (use_op, ThisClassT i)) ->
-      let r = reason_of_t l in
-      rec_flow cx trace (l, UseT (use_op, fix_this_class cx trace r i))
+    | (_, UseT (use_op, ThisClassT (r, i))) ->
+      let reason = reason_of_t l in
+      rec_flow cx trace (l, UseT (use_op, fix_this_class cx trace reason (r, i)))
 
     (** This rule is hit when a polymorphic type appears outside a
         type application expression - i.e. not followed by a type argument list
@@ -2994,28 +3350,56 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         extends clauses and at function call sites - without explicit type
         arguments, since typically they're easily inferred from context.
       *)
-    | (PolyT (ids,t), _) ->
+    | (PolyT (reason_tapp, ids, t), _) ->
       let reason_op = reason_of_use_t u in
-      let reason_tapp = reason_of_t l in
       begin match u with
       | UseT (_, TypeT _) ->
         if Context.enforce_strict_type_args cx then
-          add_output cx trace (FlowError.EMissingTypeArgs (reason_op, ids))
+          add_output cx ~trace (FlowError.EMissingTypeArgs (reason_op, ids))
         else
           let inst = instantiate_poly_default_args
             cx trace ~reason_op ~reason_tapp (ids, t) in
           rec_flow cx trace (inst, u)
-      (* Special case for <fun>.apply and <fun>.call, which could be used to
-         simulate method calls on instances of generic classes, thereby
-         bypassing the specialization cache that is used in TypeAppT ~> MethodT
-         to avoid non-termination. So, we must use the specialization cache
-         here, too. *)
-      | CallT _ when
-          is_method_call_reason "apply" reason_op ||
-          is_method_call_reason "call" reason_op
-          ->
+      (* Special case for React.PropTypes.instanceOf arguments, which are an
+         exception to type arg arity strictness, because it's not possible to
+         provide args and we need to interpret the value as a type. *)
+      | ReactKitT (reason_op, (React.SimplifyPropType
+          (React.SimplifyPropType.InstanceOf, _) as tool)) ->
+        let l = instantiate_poly_default_args cx trace
+          ~reason_op ~reason_tapp (ids, t) in
+        react_kit cx trace reason_op l tool
+      (* Calls to polymorphic functions may cause non-termination, e.g. when the
+         results of the calls feed back as subtle variations of the original
+         arguments. This is similar to how we may have non-termination with
+         method calls on type applications. Thus, it makes sense to replicate
+         the specialization caching mechanism used in TypeAppT ~> MethodT to
+         avoid non-termination in PolyT ~> CallT.
+
+         As it turns out, we need a bit more work here. A call may invoke
+         different cases of an overloaded polymorphic function on different
+         arguments, so we use the reasons of arguments in addition to the reason
+         of the call as keys for caching instantiations.
+
+         On the other hand, even the reasons of arguments may not offer sufficient
+         distinguishing power when the arguments have not been concretized:
+         differently typed arguments could be incorrectly summarized by common
+         type variables they flow to, causing spurious errors. In particular, we
+         don't cache calls involved in the execution of TypeMapT operations
+         ($TupleMap, $ObjectMap, $ObjectMapi) to avoid this problem.
+
+         NOTE: This is probably not the final word on non-termination with
+         generics. We need to separate the double duty of reasons in the current
+         implementation as error positions and as caching keys. As error
+         positions we should be able to subject reasons to arbitrary tweaking,
+         without fearing regressions in termination guarantees.
+      *)
+      | CallT (_, calltype) when not (is_typemap_reason reason_op) ->
+        let arg_reasons = List.map (function
+          | Arg t -> reason_of_t t
+          | SpreadArg t -> reason_of_t t
+        ) calltype.call_args_tlist in
         let t_ = instantiate_poly cx trace
-          ~reason_op ~reason_tapp ~cache:true (ids,t) in
+          ~reason_op ~reason_tapp ~cache:arg_reasons (ids,t) in
         rec_flow cx trace (t_, u)
       | _ ->
         let t_ = instantiate_poly cx trace ~reason_op ~reason_tapp (ids,t) in
@@ -3023,23 +3407,27 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     (* when a this-abstracted class flows to upper bounds, fix the class *)
-    | (ThisClassT i, _) ->
-      let r = reason_of_use_t u in
-      rec_flow cx trace (fix_this_class cx trace r i, u)
+    | (ThisClassT (r, i), _) ->
+      let reason = reason_of_use_t u in
+      rec_flow cx trace (fix_this_class cx trace reason (r, i), u)
 
     (***********************************************)
     (* function types deconstruct into their parts *)
     (***********************************************)
 
     | FunT (_, _, _,
-        { this_t = o1; params_tlist = tins1; params_names = p1;
-          is_predicate = ip1; return_t = t1; _ }),
+        ({ this_t = o1; params_tlist = _; params_names = p1;
+          rest_param = _; is_predicate = ip1; return_t = t1; _ } as ft)),
       UseT (use_op, FunT (reason, _, _,
         { this_t = o2; params_tlist = tins2; params_names = p2;
-          is_predicate = ip2; return_t = t2; _ }))
+          rest_param = rest2; is_predicate = ip2; return_t = t2; _ }))
       ->
       rec_flow cx trace (o2, UseT (use_op, o1));
-      multiflow cx trace reason (tins2, tins1);
+      let args = List.rev_map (fun t -> Arg t) tins2 in
+      let args = List.rev (match rest2 with
+      | Some (_, _, rest) -> (SpreadArg rest) :: args
+      | None -> args) in
+      multiflow_subtype cx trace reason args ft;
 
       (* Well-formedness adjustment: If this is predicate function subtyping,
          make sure to apply a latent substitution on the right-hand use to
@@ -3053,7 +3441,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if not ip1 then
           (* Non-predicate functions are incompatible with predicate ones
              TODO: somehow the original flow needs to be propagated as well *)
-          add_output cx trace (FlowError.ECustom (
+          add_output cx ~trace (FlowError.ECustom (
             (reason_of_t l, reason_of_use_t u),
             "Function is incompatible with"))
         else
@@ -3069,7 +3457,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               let mod_reason n = replace_reason (fun _ ->
                 RCustom (spf "predicate function with %d arguments" n)
               ) in
-              add_output cx trace (FlowError.ECustom (
+              add_output cx ~trace (FlowError.ECustom (
                 (mod_reason (List.length s1) (reason_of_t l),
                  mod_reason (List.length s2) (reason_of_use_t u)),
                 "Predicate function is incompatible with"))
@@ -3081,29 +3469,34 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               rec_flow cx trace (t1, SubstOnPredT (reason, subst, t2))
           | _ ->
             let loc = loc_of_reason (reason_of_use_t u) in
-            add_output cx trace
+            add_output cx ~trace
               FlowError.(EInternal (loc, PredFunWithoutParamNames))
           end
       else
         rec_flow cx trace (t1, UseT (use_op, t2))
 
     | FunT (reason_fundef, _, _,
-        { this_t = o1; params_tlist = tins1; return_t = t1;
-          closure_t = func_scope_id; changeset; _ }),
+        ({ this_t = o1; params_tlist = _; rest_param = _; return_t = t1;
+          closure_t = func_scope_id; changeset; _ } as ft)),
       CallT (reason_callsite,
-        { this_t = o2; params_tlist = tins2; return_t = t2;
-          closure_t = call_scope_id; _})
+        { call_this_t = o2; call_args_tlist = tins2; call_tout = t2;
+          call_closure_t = call_scope_id; call_strict_arity})
       ->
       Ops.push reason_callsite;
       rec_flow cx trace (o2, UseT (FunCallThis reason_callsite, o1));
-      multiflow cx trace reason_callsite (tins2, tins1);
+      if call_strict_arity
+      then multiflow_call cx trace reason_callsite tins2 ft
+      else multiflow_subtype cx trace reason_callsite tins2 ft;
       Ops.pop ();
 
       (* flow return type of function to the tvar holding the return type of the
          call. clears the op stack because the result of the call is not the
          call itself. *)
       let ops = Ops.clear () in
-      rec_flow_t cx trace (reposition cx ~trace reason_callsite t1, t2);
+      rec_flow_t cx trace (
+        reposition cx ~trace (loc_of_reason reason_callsite) t1,
+        t2
+      );
       Ops.set ops;
 
       (if Context.is_verbose cx then
@@ -3114,89 +3507,141 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       havoc_call_env cx func_scope_id call_scope_id changeset;
 
     | (AnyFunT reason_fundef | AnyT reason_fundef),
-      CallT (reason_op, { this_t; params_tlist; return_t; _}) ->
+      CallT (reason_op,
+        { call_this_t; call_args_tlist; call_tout; call_closure_t=_;
+          call_strict_arity=_;}) ->
       let any = AnyT.why reason_fundef in
-      rec_flow_t cx trace (this_t, any);
-      List.iter (fun t -> rec_flow_t cx trace (t, any)) params_tlist;
-      rec_flow_t cx trace (AnyT.why reason_op, return_t)
+      rec_flow_t cx trace (call_this_t, any);
+      call_args_iter (fun t -> rec_flow_t cx trace (t, any)) call_args_tlist;
+      rec_flow_t cx trace (AnyT.why reason_op, call_tout)
 
     (* Special handlers for builtin functions *)
 
     | CustomFunT (_, ObjectAssign),
-      CallT (reason_op, { params_tlist = dest_t::ts; return_t; _ }) ->
+      CallT (reason_op, { call_args_tlist = dest_t::ts; call_tout; _ }) ->
+      let dest_t = extract_non_spread cx ~trace dest_t in
       let t = chain_objects cx ~trace reason_op dest_t ts in
-      rec_flow_t cx trace (t, return_t)
+      rec_flow_t cx trace (t, call_tout)
 
     | CustomFunT (_, ObjectGetPrototypeOf),
-      CallT (reason_op, { params_tlist = obj::_; return_t; _ }) ->
-      rec_flow cx trace (
-        obj,
-        GetPropT(reason_op, Named (reason_op, "__proto__"), return_t)
+      CallT (reason_op, { call_args_tlist = arg::_; call_tout; _ }) ->
+      (match arg with
+      | Arg obj ->
+        rec_flow cx trace (
+          obj,
+          GetPropT(reason_op, Named (reason_op, "__proto__"), call_tout)
+        )
+      | SpreadArg t ->
+        add_output cx ~trace
+          (FlowError.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)))
       );
 
-    (* If you haven't heard, React is a pretty big deal. *)
+    (* React prop type functions are modeled as a custom function type in Flow,
+       so that Flow can exploit the extra information to gratuitously hardcode
+       best-effort static checking of dynamic prop type validation.
 
-    | CustomFunT (_, ReactCreateElement),
-      CallT (reason_op, { params_tlist = c::o::_; return_t; _ }) ->
+       A prop type is either a primitive or some complex type, which is a
+       function that simplifies to a primitive prop type when called. *)
+
+    | CustomFunT (_, ReactPropType (React.PropType.Primitive (false, t))),
+      GetPropT (reason_op, Named (_, "isRequired"), tout) ->
+      let prop_type = React.PropType.Primitive (true, t) in
+      rec_flow_t cx trace (CustomFunT (reason_op, ReactPropType prop_type), tout)
+
+    | CustomFunT (reason, ReactPropType (React.PropType.Primitive (req, _))), _
+      when object_use u || function_use u || function_like_op u ->
+      let builtin_name =
+        if req
+        then "ReactPropsCheckType"
+        else "ReactPropsChainableTypeChecker"
+      in
+      let l = get_builtin_type cx ~trace reason builtin_name in
+      rec_flow cx trace (l, u)
+
+    | CustomFunT (_, ReactPropType React.PropType.Complex kind),
+      CallT (reason_op, { call_args_tlist = arg1::_; call_tout; _ }) ->
+      let open React in
+      let tool = match kind with
+      | PropType.ArrayOf -> SimplifyPropType.ArrayOf
+      | PropType.InstanceOf -> SimplifyPropType.InstanceOf
+      | PropType.ObjectOf -> SimplifyPropType.ObjectOf
+      | PropType.OneOf -> SimplifyPropType.OneOf ResolveArray
+      | PropType.OneOfType -> SimplifyPropType.OneOfType ResolveArray
+      | PropType.Shape -> SimplifyPropType.Shape ResolveObject
+      in
+      let t = extract_non_spread cx ~trace arg1 in
+      rec_flow cx trace (t, ReactKitT (reason_op,
+        SimplifyPropType (tool, call_tout)))
+
+    | CustomFunT (reason, ReactPropType React.PropType.Complex kind), _
+      when object_use u || function_use u || function_like_op u ->
+      rec_flow cx trace (get_builtin_prop_type cx ~trace reason kind, u)
+
+    | CustomFunT (_, ReactCreateClass),
+      CallT (reason_op, { call_args_tlist = arg1::_; call_tout; _ }) ->
       Ops.push reason_op;
-      rec_flow cx trace (c, ReactCreateElementT (reason_op, o, return_t));
+      let spec = extract_non_spread cx ~trace arg1 in
+      let knot = { React.CreateClass.
+        this = mk_tvar cx reason_op;
+        static = mk_tvar cx reason_op;
+        state_t = mk_tvar cx reason_op;
+        default_t = mk_tvar cx reason_op;
+      } in
+      rec_flow cx trace (spec, ReactKitT (reason_op,
+        React.CreateClass (React.CreateClass.Spec [], knot, call_tout)));
       Ops.pop ()
 
-    | _, ReactCreateElementT (reason_op, config, tout) ->
-      let elem_reason = replace_reason_const (RReactElement None) reason_op in
-      (match l with
-      | ClassT _ ->
-        let react_class =
-          get_builtin_typeapp cx ~trace reason_op "ReactClass" [config]
-        in
-        rec_flow_t cx trace (l, react_class)
-      | FunT _ ->
-        let return_t =
-          get_builtin_typeapp cx ~trace elem_reason "React$Element" [AnyT.t]
-        in
-        let return_t = MaybeT return_t in
-        let context_t = AnyT.t in
-        let call_t =
-          CallT (reason_op, mk_functiontype [config; context_t] return_t)
-        in
-        rec_flow cx trace (l, call_t)
-      | StrT _
-      | SingletonStrT _ ->
-        let jsx_intrinsics =
-          get_builtin_type cx ~trace reason_op "$JSXIntrinsics" in
-        rec_flow_t cx trace (l, KeysT (reason_op, jsx_intrinsics))
-      | AnyFunT _ -> ()
-      | AnyObjT _ -> ()
+    (* When evaluating React.createElement, it's useful to know if the `type`
+       argument is a class, function, or an intrinsic. *)
+
+    | CustomFunT (_, ReactCreateElement),
+      CallT (reason_op, { call_args_tlist = arg1::arg2::_; call_tout; _ }) ->
+      (match arg1, arg2 with
+      | Arg c, Arg o ->
+        Ops.push reason_op;
+        rec_flow cx trace (c, ReactKitT (reason_op,
+          React.CreateElement (o, call_tout)));
+        Ops.pop ()
       | _ ->
-        add_output cx trace (FlowError.EIncompatible (l, u))
-      );
-      rec_flow_t cx trace (
-        get_builtin_typeapp cx ~trace elem_reason "React$Element" [config],
-        tout
-      )
+        ignore (extract_non_spread cx ~trace arg1);
+        ignore (extract_non_spread cx ~trace arg2))
+
+    | _, ReactKitT (reason_op, tool) ->
+      react_kit cx trace reason_op l tool
 
     (* Facebookisms are special Facebook-specific functions that are not
        expressable with our current type syntax, so we've hacked in special
        handling. Terminate with extreme prejudice. *)
 
     | CustomFunT (_, MergeInto),
-      CallT (reason_op, { params_tlist = dest_t::ts; return_t; _ }) ->
+      CallT (reason_op, { call_args_tlist = dest_t::ts; call_tout; _ }) ->
+      let dest_t = extract_non_spread cx ~trace dest_t in
       ignore (chain_objects cx ~trace reason_op dest_t ts);
-      rec_flow_t cx trace (VoidT.why reason_op, return_t)
+      rec_flow_t cx trace (VoidT.why reason_op, call_tout)
 
     | CustomFunT (_, MergeDeepInto),
-      CallT (reason_op, { return_t; _ }) ->
+      CallT (reason_op, { call_tout; _ }) ->
       (* TODO *)
-      rec_flow_t cx trace (VoidT.why reason_op, return_t)
+      rec_flow_t cx trace (VoidT.why reason_op, call_tout)
 
     | CustomFunT (_, Merge),
-      CallT (reason_op, { params_tlist; return_t; _ }) ->
-      rec_flow_t cx trace (spread_objects cx reason_op params_tlist, return_t)
+      CallT (reason_op, { call_args_tlist; call_tout; _ }) ->
+      rec_flow_t cx trace (spread_objects cx reason_op call_args_tlist, call_tout)
 
     | CustomFunT (_, Mixin),
-      CallT (reason_op, { params_tlist; return_t; _ }) ->
-      let t = ClassT (spread_objects cx reason_op params_tlist) in
-      rec_flow_t cx trace (t, return_t)
+      CallT (reason_op, { call_args_tlist; call_tout; _ }) ->
+      let t = class_type (spread_objects cx reason_op call_args_tlist) in
+      rec_flow_t cx trace (t, call_tout)
+
+    | CustomFunT (_, DebugPrint),
+      CallT (reason_op, { call_args_tlist; call_tout; _ }) ->
+      List.iter (fun arg -> match arg with
+        | Arg t -> rec_flow cx trace (t, DebugPrintT reason_op)
+        | SpreadArg t ->
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)));
+      ) call_args_tlist;
+      rec_flow_t cx trace (VoidT.why reason_op, call_tout);
 
     | CustomFunT (reason, _), _ when function_like_op u ->
       rec_flow cx trace (AnyFunT reason, u)
@@ -3216,7 +3661,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* InstanceT -> ObjT *)
 
-    | InstanceT (lreason, _, super, {
+    | InstanceT (lreason, _, super, _, {
         fields_tmap = lflds;
         methods_tmap = lmethods; _ }),
       UseT (use_op, ObjT (ureason, {
@@ -3230,21 +3675,30 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
 
       iter_real_props cx uflds (fun s up ->
-        let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
-        let propref = Named (reason_prop, s) in
+        let propref =
+          let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
+          Named (reason_prop, s)
+        in
         match SMap.get s lflds with
         | Some lp ->
+          let use_op =
+            let use_op = if use_op_is_cycle (s, lreason, ureason) use_op
+              then UnknownUse
+              else use_op
+            in PropertyCompatibility (s, lreason, ureason, use_op)
+          in
           rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
         | _ ->
           match up with
-          | Field (OptionalT ut, upolarity) ->
+          | Field (OptionalT (_, ut), upolarity) ->
             rec_flow cx trace (l,
-              LookupT (reason_prop, NonstrictReturning None, [], propref,
-                LookupProp (Field (ut, upolarity))))
+              LookupT (ureason, NonstrictReturning None, [], propref,
+                LookupProp (use_op, Field (ut, upolarity))))
           | _ ->
-            rec_flow cx trace (super,
-              LookupT (reason_prop, Strict lreason, [], propref,
-                LookupProp up))
+            let u =
+              LookupT (ureason, Strict lreason, [], propref,
+                LookupProp (use_op, up)) in
+            rec_flow cx trace (super, ReposLowerT (lreason, u))
       );
 
       rec_flow cx trace (l, UseT (use_op, uproto))
@@ -3252,14 +3706,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* For some object `x` and constructor `C`, if `x instanceof C`, then the
        object is a subtype. *)
     | ObjT (lreason, { proto_t; _ }),
-      UseT (_, InstanceT (_, _, _, { structural = false; _ })) ->
-      rec_flow cx trace (reposition cx ~trace lreason proto_t, u)
+      UseT (_, InstanceT (_, _, _, _, { structural = false; _ })) ->
+      let l = reposition cx ~trace (loc_of_reason lreason) proto_t in
+      rec_flow cx trace (l, u)
 
     (****************************************)
     (* You can cast an object to a function *)
     (****************************************)
-    | (ObjT (reason, _) | InstanceT (reason, _, _, _)),
+
+    | (ObjT (reason, _) | InstanceT (reason, _, _, _, _)),
       (UseT (_, FunT (reason_op, _, _, _)) |
+       BindT (reason_op, _, _) |
        UseT (_, AnyFunT reason_op) |
        CallT (reason_op, _)) ->
       let tvar = mk_tvar cx (
@@ -3267,7 +3724,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           RCustom (spf "%s used as a function" (string_of_desc desc))
         ) reason
       ) in
-      lookup_prop cx trace l reason_op reason_op (Strict reason) "$call"
+      let strict = match u with
+        | BindT (reason_op, {call_tout; _}, true) ->
+          (* Pass-through binding an object should not error if the object lacks
+             a callable property. Instead, we should flow the object to the
+             output tvar. This nonstrict lookup will unify the object with
+             `pass`, which flows to the output tvar. *)
+          let pass = mk_tvar_where cx reason_op (fun t ->
+            rec_flow_t cx trace (t, call_tout)
+          ) in
+          NonstrictReturning (Some (l, pass))
+        | _ -> Strict reason
+      in
+      lookup_prop cx trace l reason_op reason_op strict "$call"
         (RWProp (tvar, Read));
       rec_flow cx trace (tvar, u)
 
@@ -3286,9 +3755,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if t is a subtype of x's type in o. Otherwise, the property should be
         assignable to o.
 
-        TODO: The type constructors ShapeT, DiffT, ObjAssignT, ObjRestT express
-        related meta-operations on objects. Consolidate these meta-operations
-        and ensure consistency of their semantics. **)
+        TODO: The type constructors ShapeT, DiffT, ObjAssignToT/ObjAssignFromT,
+        ObjRestT express related meta-operations on objects. Consolidate these
+        meta-operations and ensure consistency of their semantics. **)
 
     | (ShapeT (o), _) ->
         rec_flow cx trace (o, u)
@@ -3296,7 +3765,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ObjT (reason, { props_tmap = mapr; _ }), UseT (_, ShapeT (proto))) ->
         (* TODO: ShapeT should have its own reason *)
         let reason_op = reason_of_t proto in
-        Context.iter_props cx mapr (fun x p ->
+        iter_real_props cx mapr (fun x p ->
           match Property.read_t p with
           | Some t ->
             let reason_prop = replace_reason (fun desc ->
@@ -3306,19 +3775,28 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let t = filter_optional cx ~trace reason_prop t in
             rec_flow cx trace (proto, SetPropT (reason_op, propref, t))
           | None ->
-            add_output cx trace
+            add_output cx ~trace
               (FlowError.EPropAccess ((reason, reason_op), Some x, p, Read))
         )
 
     | (_, UseT (_, ShapeT (o))) ->
         let reason = reason_of_t o in
-        rec_flow cx trace (l, ObjAssignT(reason, o, AnyT.t, [], false))
+        rec_flow cx trace (l, ObjAssignFromT(reason, o, Locationless.AnyT.t, [], ObjAssign))
 
     | (_, UseT (_, DiffT (o1, o2))) ->
         let reason = reason_of_t l in
         let t2 = mk_tvar cx reason in
         rec_flow cx trace (o2, ObjRestT (reason, [], t2));
-        rec_flow cx trace (t2, ObjAssignT(reason, l, o1, [], true))
+        rec_flow cx trace (t2, ObjAssignToT(reason, l, o1, [], ObjAssign))
+
+    | AnyT _, ObjTestT (reason_op, _, u) ->
+      rec_flow_t cx trace (AnyT.why reason_op, u)
+
+    | (_, ObjTestT(reason_op, default, u)) ->
+      let u = ReposLowerT(reason_op, UseT (UnknownUse, u)) in
+      if object_like l
+      then rec_flow cx trace (l, u)
+      else rec_flow cx trace (default, u)
 
     (********************************************)
     (* array types deconstruct into their parts *)
@@ -3340,7 +3818,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let l2 = List.length ts2 in
       if l1 <> l2
       then
-        add_output cx trace (FlowError.ETupleArityMismatch ((r1, r2), l1, l2))
+        add_output cx ~trace (FlowError.ETupleArityMismatch ((r1, r2), l1, l2))
       else
         List.iter2 (fun l u -> flow_to_mutable_child cx trace fresh l u) ts1 ts2
 
@@ -3348,31 +3826,47 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | ArrT (r1, ArrayAT (t1, ts1)),
       UseT (_, ArrT (r2, TupleAT _)) ->
       begin match ts1 with
-      | None -> add_output cx trace (FlowError.ENonLitArrayToTuple (r1, r2))
+      | None -> add_output cx ~trace (FlowError.ENonLitArrayToTuple (r1, r2))
       | Some ts1 ->
           rec_flow cx trace (ArrT (r1, TupleAT (t1, ts1)), u)
       end
+
+    (* EmptyAT arrays are the subtype of all arrays *)
+    | ArrT (_, EmptyAT), UseT (_, ArrT _) -> ()
+
+    (* Read only arrays are the super type of all tuples and arrays *)
+    | ArrT (_, (ArrayAT (t1, _) | TupleAT (t1, _) | ROArrayAT (t1))),
+      UseT (_, ArrT (_, ROArrayAT (t2))) ->
+      rec_flow_t cx trace (t1, t2)
 
     (**************************************************)
     (* instances of classes follow declared hierarchy *)
     (**************************************************)
 
     | (InstanceT _, UseT (use_op, (InstanceT _ as u))) ->
-      rec_flow cx trace (l, UseT (use_op, ExtendsT([],l,u)))
+      rec_flow cx trace (l, UseT (use_op, extends_type l u))
 
-    | (InstanceT (_,_,super,instance),
-       UseT (_, ExtendsT(_, _, InstanceT (_,_,_,instance_super)))) ->
+    | InstanceT (reason, _, super, implements, instance),
+      UseT (use_op, ExtendsT (reason_op, try_ts_on_failure, l,
+        (InstanceT (_, _, _, _, instance_super) as u))) ->
       if instance.class_id = instance_super.class_id
       then
         flow_type_args cx trace instance instance_super
       else
-        rec_flow cx trace (super, u)
+        (* If this instance type has declared implementations, any structural
+           tests have already been performed at the declaration site. We can
+           then use the ExtendsT use type to search for a nominally matching
+           implementation, thereby short-circuiting a potentially expensive
+           structural test at the use site. *)
+        let u = UseT (use_op,
+          ExtendsT (reason_op, try_ts_on_failure @ implements, l, u)) in
+        rec_flow cx trace (super, ReposLowerT (reason, u))
 
     (********************************************************)
     (* runtime types derive static types through annotation *)
     (********************************************************)
 
-    | (ClassT(it), UseT (_, TypeT(r,t))) ->
+    | (ClassT(_, it), UseT (_, TypeT(r,t))) ->
       (* a class value annotation becomes the instance type *)
       rec_flow cx trace (it, BecomeT (r, t))
 
@@ -3390,28 +3884,32 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* non-class/function values used in annotations are errors *)
     | _, UseT (_, TypeT _) ->
       let reasons = FlowError.ordered_reasons l u in
-      add_output cx trace (FlowError.EValueUsedAsType reasons)
+      add_output cx ~trace (FlowError.EValueUsedAsType reasons)
 
-    | (ClassT(l), UseT (use_op, ClassT(u))) ->
-      rec_flow cx trace (l, UseT (use_op, u))
+    | (ClassT(rl, l), UseT (use_op, ClassT(_, u))) ->
+      rec_flow cx trace (
+        reposition cx ~trace (loc_of_reason rl) l,
+        UseT (use_op, u))
 
-    | FunT (_,static1,prototype,_),
-      UseT (_, ClassT (InstanceT (_,static2,_, _) as u_)) ->
+    | FunT (_, static1, prototype, _),
+      UseT (_, ClassT (_, (InstanceT (_, static2, _, _, _) as u_))) ->
       rec_unify cx trace static1 static2;
       rec_unify cx trace prototype u_
+
+    | AnyT _, UseT (use_op, ClassT (_, u)) ->
+      rec_flow cx trace (l, UseT (use_op, u))
 
     (*********************************************************)
     (* class types derive instance types (with constructors) *)
     (*********************************************************)
 
-    | ClassT (this),
+    | ClassT (reason, this),
       ConstructorT (reason_op, args, t) ->
-      let reason_o =
-        replace_reason_const RConstructorReturn (reason_of_t this) in
+      let reason_o = replace_reason_const RConstructorReturn reason in
       Ops.push reason_op;
       (* call this.constructor(args) *)
       let ret = mk_tvar_where cx reason_op (fun t ->
-        let funtype = mk_methodtype this args t in
+        let funtype = mk_methodcalltype this args t in
         let propref = Named (reason_o, "constructor") in
         rec_flow cx trace (
           this,
@@ -3426,11 +3924,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* function types derive objects through explicit instantiation *)
     (****************************************************************)
 
-    | FunT (reason, _, proto, {
+    | FunT (reason, _, proto, ({
         this_t = this;
-        params_tlist = params;
         return_t = ret;
-        _ }),
+        _ } as ft)),
       ConstructorT (reason_op, args, t) ->
       (* TODO: closure *)
       (** create new object **)
@@ -3442,30 +3939,40 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let pmap = Context.make_property_map cx SMap.empty in
       let new_obj = ObjT (reason_c, mk_objecttype ~flags dict pmap proto) in
       (** call function with this = new_obj, params = args **)
+      Ops.push reason_op;
       rec_flow_t cx trace (new_obj, this);
-      multiflow cx trace reason_op (args, params);
+      multiflow_call cx trace reason_op args ft;
+      Ops.pop ();
       (** if ret is object-like, return ret; otherwise return new_obj **)
       let reason_o = replace_reason_const RConstructorReturn reason in
       rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
 
-    | AnyFunT reason_fundef, ConstructorT (reason_op, args, t) ->
-      let reason_o = replace_reason_const RConstructorReturn reason_fundef in
-      List.iter (fun t -> rec_flow_t cx trace (t, AnyT.why reason_op)) args;
+    | AnyFunT reason, ConstructorT (reason_op, args, t) ->
+      let reason_o = replace_reason_const RConstructorReturn reason in
+      call_args_iter
+        (fun t -> rec_flow_t cx trace (t, AnyT.why reason_op))
+        args;
       rec_flow_t cx trace (AnyObjT reason_o, t);
+
+    | AnyT _, ConstructorT (reason_op, args, t) ->
+      call_args_iter (fun t ->
+        rec_flow_t cx trace (t, AnyT.why reason_op)
+      ) args;
+      rec_flow_t cx trace (AnyT.why reason_op, t);
 
     (* Since we don't know the signature of a method on AnyFunT, assume every
        parameter is an AnyT. *)
-    | (AnyFunT _, MethodT (reason_op, _, _, { params_tlist; return_t; _})) ->
+    | (AnyFunT _, MethodT (reason_op, _, _, { call_args_tlist; call_tout; _})) ->
       let any = AnyT.why reason_op in
-      List.iter (fun t -> rec_flow_t cx trace (t, any)) params_tlist;
-      rec_flow_t cx trace (any, return_t)
+      call_args_iter (fun t -> rec_flow_t cx trace (t, any)) call_args_tlist;
+      rec_flow_t cx trace (any, call_tout)
 
     (*************************)
     (* statics can be read   *)
     (*************************)
 
-    | InstanceT (_, static, _, _), GetStaticsT (_, t) ->
-      rec_flow_t cx trace (static, t)
+    | InstanceT (lreason, static, _, _, _), GetStaticsT (ureason, t) ->
+      rec_flow_t cx trace (ReposT (lreason, static), ReposT (ureason, t))
 
     (* GetStaticsT is only ever called on the instance type of a ClassT. There
      * is exactly one place where we create a ClassT with an ObjT instance type:
@@ -3473,6 +3980,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | ObjT _, GetStaticsT _ ->
       (* Mixins don't have statics at all, so we can just prune here. *)
       ()
+
+    | AnyT _, GetStaticsT (reason_op, t) ->
+      rec_flow_t cx trace (AnyT.why reason_op, t)
 
     | ObjProtoT reason, GetStaticsT (_, t) ->
       (* ObjProtoT not only serves as the instance type of the root class, but
@@ -3487,7 +3997,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* instances of classes may have their fields looked up *)
     (********************************************************)
 
-    | InstanceT (lreason, _, super, instance),
+    | InstanceT (lreason, _, super, _, instance),
       LookupT (reason_op, kind, try_ts_on_failure, (Named (_, x) as propref), action) ->
       let fields_pmap = Context.find_props cx instance.fields_tmap in
       let methods_pmap = Context.find_props cx instance.methods_tmap in
@@ -3502,8 +4012,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | true, Strict _ -> NonstrictReturning None
         | _ -> kind
         in
-        rec_flow cx trace (super,
-          LookupT (reason_op, kind, try_ts_on_failure, propref, action))
+        let u = LookupT (reason_op, kind, try_ts_on_failure, propref, action) in
+        rec_flow cx trace (super, ReposLowerT (lreason, u))
       | Some p ->
         (* TODO: Replace AbstractT with abstract fields, then reuse
            perform_lookup_action here. *)
@@ -3513,30 +4023,30 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
              of the property in this class may be abstract or not.  We want to
              unify just the underlying types, ignoring the abstract part.  *)
           let p, t2 = match p, t2 with
-          | Field (AbstractT t1, polarity), AbstractT t2
-          | Field (AbstractT t1, polarity), t2 -> Field (t1, polarity), t2
+          | Field (AbstractT (_, t1), polarity), AbstractT (_, t2)
+          | Field (AbstractT (_, t1), polarity), t2 -> Field (t1, polarity), t2
           | _ -> p, t2
           in
           (match rw, Property.access rw p with
           | Read, Some t1 -> rec_flow_t cx trace (t1, t2)
           | Write, Some t1 -> rec_flow_t cx trace (t2, t1)
           | _, None ->
-            add_output cx trace
+            add_output cx ~trace
               (FlowError.EPropAccess ((lreason, reason_op), Some x, p, rw)))
-        | LookupProp up ->
+        | LookupProp (use_op, up) ->
           let p, up = match p, up with
-          | Field (AbstractT t, polarity), Field (AbstractT ut, upolarity) ->
+          | Field (AbstractT (_, t), polarity), Field (AbstractT (_, ut), upolarity) ->
             Field (t, polarity), Field (ut, upolarity)
-          | Field (AbstractT t, polarity), up ->
+          | Field (AbstractT (_, t), polarity), up ->
             Field (t, polarity), up
           | _ -> p, up
           in
-          rec_flow_p cx trace lreason reason_op propref (p, up)
+          rec_flow_p cx trace ~use_op lreason reason_op propref (p, up)
         | SuperProp lp ->
           let p, lp = match p, lp with
-          | Field (AbstractT t, polarity), Field (AbstractT lt, lpolarity) ->
+          | Field (AbstractT (_, t), polarity), Field (AbstractT (_, lt), lpolarity) ->
             Field (t, polarity), Field (lt, lpolarity)
-          | Field (AbstractT t, polarity), lp ->
+          | Field (AbstractT (_, t), polarity), lp ->
             Field (t, polarity), lp
           | _ -> p, lp
           in
@@ -3547,13 +4057,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          are converted to named property access to `$key` and `$value` during
          element resolution in ElemT. *)
       let loc = loc_of_reason reason_op in
-      add_output cx trace FlowError.(EInternal (loc, InstanceLookupComputed))
+      add_output cx ~trace FlowError.(EInternal (loc, InstanceLookupComputed))
 
     (********************************)
     (* ... and their fields written *)
     (********************************)
 
-    | InstanceT (reason_c, _, super, instance),
+    | InstanceT (reason_c, _, super, _, instance),
       SetPropT (reason_op, Named (reason_prop, x), tin) ->
       Ops.push reason_op;
       let fields_tmap = Context.find_props cx instance.fields_tmap in
@@ -3568,19 +4078,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          are converted to named property access to `$key` and `$value` during
          element resolution in ElemT. *)
       let loc = loc_of_reason reason_op in
-      add_output cx trace FlowError.(EInternal (loc, InstanceLookupComputed))
+      add_output cx ~trace FlowError.(EInternal (loc, InstanceLookupComputed))
 
     (*****************************)
     (* ... and their fields read *)
     (*****************************)
 
-    | InstanceT (_, _, super, _), GetPropT (_, Named (_, "__proto__"), t) ->
-      rec_flow_t cx trace (super, t)
+    | InstanceT (reason, _, super, _, _),
+      GetPropT (_, Named (_, "__proto__"), t) ->
+      rec_flow cx trace (super, ReposLowerT (reason, UseT (UnknownUse, t)))
 
     | InstanceT _ as instance, GetPropT (_, Named (_, "constructor"), t) ->
-      rec_flow_t cx trace (ClassT instance, t)
+      rec_flow_t cx trace (class_type instance, t)
 
-    | InstanceT (reason_c, _, super, instance),
+    | InstanceT (reason_c, _, super, _, instance),
       GetPropT (reason_op, Named (reason_prop, x), tout) ->
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       let methods_tmap = Context.find_props cx instance.methods_tmap in
@@ -3596,13 +4107,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          are converted to named property access to `$key` and `$value` during
          element resolution in ElemT. *)
       let loc = loc_of_reason reason_op in
-      add_output cx trace FlowError.(EInternal (loc, InstanceLookupComputed))
+      add_output cx ~trace FlowError.(EInternal (loc, InstanceLookupComputed))
 
     (********************************)
     (* ... and their methods called *)
     (********************************)
 
-    | InstanceT (reason_c, _, super, instance),
+    | InstanceT (reason_c, _, super, _, instance),
       MethodT (reason_call, reason_lookup, Named (reason_prop, x), funtype)
       -> (* TODO: closure *)
       let fields_tmap = Context.find_props cx instance.fields_tmap in
@@ -3628,7 +4139,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          are converted to named property access to `$key` and `$value` during
          element resolution in ElemT. *)
       let loc = loc_of_reason reason_call in
-      add_output cx trace FlowError.(EInternal (loc, InstanceLookupComputed))
+      add_output cx ~trace FlowError.(EInternal (loc, InstanceLookupComputed))
 
     (** In traditional type systems, object types are not extensible.  E.g., an
         object {x: 0, y: ""} has type {x: number; y: string}. While it is
@@ -3688,19 +4199,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects can be assigned, i.e., their properties can be set in bulk *)
     (**********************************************************************)
 
-    (** When some object-like type O1 flows to ObjAssignT(_,O2,X,_,false), the
-        properties of O1 are copied to O2, and O2 is linked to X to signal that
-        the copying is done; the intention is that when those properties are
-        read through X, they should be found (whereas this cannot be guaranteed
-        when those properties are read through O2). However, there is an
-        additional twist: this scheme may not work when O2 is unresolved. In
-        particular, when O2 is unresolved, the constraints that copy the
-        properties from O1 may race with reads of those properties through X as
-        soon as O2 is resolved. To avoid this race, we make O2 flow to
-        ObjAssignT(_,O1,X,_,true); when O2 is resolved, we make the switch. **)
+    (** When some object-like type O1 flows to
+        ObjAssignFromT(_,O2,X,_,ObjAssign), the properties of O1 are copied to
+        O2, and O2 is linked to X to signal that the copying is done; the
+        intention is that when those properties are read through X, they should
+        be found (whereas this cannot be guaranteed when those properties are
+        read through O2). However, there is an additional twist: this scheme
+        may not work when O2 is unresolved. In particular, when O2 is
+        unresolved, the constraints that copy the properties from O1 may race
+        with reads of those properties through X as soon as O2 is resolved. To
+        avoid this race, we make O2 flow to ObjAssignToT(_,O1,X,_,ObjAssign);
+        when O2 is resolved, we make the switch. **)
 
     | (ObjT (lreason, { props_tmap = mapr; _ }),
-       ObjAssignT (reason_op, proto, t, props_to_skip, false)) ->
+       ObjAssignFromT (reason_op, proto, t, props_to_skip, ObjAssign)) ->
       Ops.push reason_op;
       Context.iter_props cx mapr (fun x p ->
         if not (List.mem x props_to_skip) then (
@@ -3718,15 +4230,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let t = filter_optional cx ~trace reason_prop t in
             rec_flow cx trace (proto, SetPropT (reason_prop, propref, t));
           | None ->
-            add_output cx trace
+            add_output cx ~trace
               (FlowError.EPropAccess ((lreason, reason_op), Some x, p, Read))
         )
       );
       Ops.pop ();
       rec_flow_t cx trace (proto, t)
 
-    | (InstanceT (lreason, _, _, { fields_tmap; methods_tmap; _ }),
-       ObjAssignT (reason_op, proto, t, props_to_skip, false)) ->
+    | (InstanceT (lreason, _, _, _, { fields_tmap; methods_tmap; _ }),
+       ObjAssignFromT (reason_op, proto, t, props_to_skip, ObjAssign)) ->
       let fields_pmap = Context.find_props cx fields_tmap in
       let methods_pmap = Context.find_props cx methods_tmap in
       let pmap = SMap.union fields_pmap methods_pmap in
@@ -3737,7 +4249,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let propref = Named (reason_op, x) in
             rec_flow cx trace (proto, SetPropT (reason_op, propref, t))
           | None ->
-            add_output cx trace
+            add_output cx ~trace
               (FlowError.EPropAccess ((lreason, reason_op), Some x, p, Read))
         )
       );
@@ -3747,21 +4259,34 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        existing object destroys all of the keys, turning the result into an
        AnyObjT as well. TODO: wait for `proto` to be resolved, and then call
        `SetPropT (_, _, AnyT)` on all of its props. *)
-    | AnyObjT _, ObjAssignT (reason, _, t, _, false) ->
+    | AnyObjT _, ObjAssignFromT (reason, _, t, _, ObjAssign) ->
       rec_flow_t cx trace (AnyObjT reason, t)
 
-    | (ObjProtoT _, ObjAssignT (_, proto, t, _, false)) ->
+    | (ObjProtoT _, ObjAssignFromT (_, proto, t, _, ObjAssign)) ->
       rec_flow_t cx trace (proto, t)
 
-    (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
-    | RestT l, ObjAssignT (_, _, _, _, false) ->
-      rec_flow cx trace (l, u)
+    | ArrT (arr_r, arrtype), ObjAssignFromT (r, o, t, xs, ObjSpreadAssign) ->
+      begin match arrtype with
+      | ArrayAT (elemt, None)
+      | ROArrayAT (elemt) ->
+        (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
+        rec_flow cx trace (elemt, ObjAssignFromT (r, o, t, xs, ObjAssign))
+      | TupleAT (_, ts)
+      | ArrayAT (_, Some ts) ->
+        (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
+        List.iter (fun from ->
+          rec_flow cx trace (from, ObjAssignFromT (r, o, t, xs, ObjAssign))
+        ) ts
+      | EmptyAT ->
+        (* Object.assign(o, ...EmptyAT) -> Object.assign(o, empty) *)
+        rec_flow cx trace (EmptyT arr_r, ObjAssignFromT (r, o, t, xs, ObjAssign))
+      end
 
-    | (_, ObjAssignT(reason, o, t, xs, true)) ->
-      rec_flow cx trace (o, ObjAssignT(reason, l, t, xs, false))
+    | (proto, ObjAssignToT(reason, from, t, xs, kind)) ->
+      rec_flow cx trace (from, ObjAssignFromT(reason, proto, t, xs, kind))
 
     (* Object.assign semantics *)
-    | ((NullT _ | VoidT _), ObjAssignT _) -> ()
+    | ((NullT _ | VoidT _), ObjAssignFromT _) -> ()
 
     (*************************)
     (* objects can be copied *)
@@ -3774,27 +4299,32 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let o = mk_object_with_map_proto cx reason map proto in
       rec_flow_t cx trace (o, t)
 
-    | (InstanceT (_, _, super, insttype), ObjRestT (reason, xs, t)) ->
+    | InstanceT (reason, _, super, _, insttype),
+      ObjRestT (reason_op, xs, t) ->
       (* Spread fields from super into an object *)
-      let obj_super = mk_tvar_where cx reason (fun tvar ->
-        rec_flow cx trace (super, ObjRestT (reason, xs, tvar))
+      let obj_super = mk_tvar_where cx reason_op (fun tvar ->
+        let u = ObjRestT (reason_op, xs, tvar) in
+        rec_flow cx trace (super, ReposLowerT (reason, u))
       ) in
 
       (* Spread fields from the instance into another object *)
       let map = Context.find_props cx insttype.fields_tmap in
       let map = List.fold_left (fun map x -> SMap.remove x map) map xs in
-      let proto = ObjProtoT reason in
-      let obj_inst = mk_object_with_map_proto cx reason map proto in
+      let proto = ObjProtoT reason_op in
+      let obj_inst = mk_object_with_map_proto cx reason_op map proto in
 
       (* ObjAssign the inst-generated obj into the super-generated obj *)
-      let o = mk_tvar_where cx reason (fun tvar ->
+      let o = mk_tvar_where cx reason_op (fun tvar ->
         rec_flow cx trace (
           obj_inst,
-          ObjAssignT(reason, obj_super, tvar, [], false)
+          ObjAssignFromT(reason_op, obj_super, tvar, [], ObjAssign)
         )
       ) in
 
       rec_flow_t cx trace (o, t)
+
+    | AnyT _, ObjRestT (reason, _, t) ->
+      rec_flow_t cx trace (AnyT.why reason, t)
 
     (* ...AnyObjT and AnyFunT yield AnyObjT *)
     | (AnyFunT _ | AnyObjT _), ObjRestT (reason, _, t) ->
@@ -3819,6 +4349,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (new_obj, t)
 
+    | AnyT _, ObjSealT (reason, tout) ->
+      rec_flow_t cx trace (AnyT.why reason, tout)
+
     (*************************)
     (* objects can be frozen *)
     (*************************)
@@ -3832,6 +4365,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let flags = {frozen = true; sealed = Sealed; exact = true;} in
       let new_obj = ObjT (reason, {objtype with flags}) in
       rec_flow_t cx trace (new_obj, t)
+
+    | AnyT _, ObjFreezeT (reason_op, t) ->
+      rec_flow_t cx trace (AnyT.why reason_op, t)
 
     (*******************************************)
     (* objects may have their fields looked up *)
@@ -3855,9 +4391,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           LookupT (reason_op, strict, try_ts_on_failure, propref, action)));
       Ops.set ops
 
-    | AnyObjT reason_obj, LookupT (reason_op, _, _, propref, action) ->
-      let p = Field (AnyT.why reason_op, Neutral) in
-      perform_lookup_action cx trace propref p reason_obj reason_op action
+    | (AnyT reason | AnyObjT reason),
+      LookupT (reason_op, _, _, propref, action) ->
+      (match action with
+      | SuperProp lp when Property.write_t lp = None ->
+        (* Without this exception, we will call rec_flow_p where
+         * `write_t lp = None` and `write_t up = Some`, which is a polarity
+         * mismatch error. Instead of this, we could "read" `mixed` from
+         * covariant props, which would always flow into `any`. *)
+        ()
+      | _ ->
+        let p = Field (AnyT.why reason_op, Neutral) in
+        perform_lookup_action cx trace propref p reason reason_op action)
 
     (*****************************************)
     (* ... and their fields written *)
@@ -3867,19 +4412,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       if flags.frozen
       then
         let reasons = FlowError.ordered_reasons l u in
-        add_output cx trace (FlowError.EMutationNotAllowed reasons)
+        add_output cx ~trace (FlowError.EMutationNotAllowed reasons)
 
     (** o.x = ... has the additional effect of o[_] = ... **)
 
     | (ObjT (_, { flags; _ }), SetPropT _) when flags.frozen ->
       let reasons = FlowError.ordered_reasons l u in
-      add_output cx trace (FlowError.EMutationNotAllowed reasons)
+      add_output cx ~trace (FlowError.EMutationNotAllowed reasons)
 
     | ObjT (reason_obj, o), SetPropT (reason_op, propref, tin) ->
       write_obj_prop cx trace o propref reason_obj reason_op tin
 
     (* Since we don't know the type of the prop, use AnyT. *)
-    | (AnyObjT _, SetPropT (reason_op, _, t)) ->
+    | (AnyT _ | AnyObjT _), SetPropT (reason_op, _, t) ->
       rec_flow_t cx trace (t, AnyT.why reason_op)
 
     (*****************************)
@@ -3917,10 +4462,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Since we don't know the signature of a method on AnyObjT, assume every
        parameter is an AnyT. *)
     | (AnyObjT _ | AnyT _),
-      MethodT (reason_op, _, _, { params_tlist; return_t; _}) ->
+      MethodT (reason_op, _, _, { call_args_tlist; call_tout; _}) ->
       let any = AnyT.why reason_op in
-      List.iter (fun t -> rec_flow_t cx trace (t, any)) params_tlist;
-      rec_flow_t cx trace (any, return_t)
+      call_args_iter (fun t -> rec_flow_t cx trace (t, any)) call_args_tlist;
+      rec_flow_t cx trace (any, call_tout)
 
     (******************************************)
     (* strings may have their characters read *)
@@ -3940,20 +4485,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects/arrays may have their properties/elements written and read *)
     (**********************************************************************)
 
-    | (ObjT _ | AnyObjT _ | ArrT _), SetElemT (reason_op, key, tin) ->
+    | (ObjT _ | AnyObjT _ | ArrT _ | AnyT _), SetElemT (reason_op, key, tin) ->
       rec_flow cx trace (key, ElemT (reason_op, l, WriteElem tin))
 
-    | (ObjT _ | AnyObjT _ | ArrT _), GetElemT (reason_op, key, tout) ->
+    | (ObjT _ | AnyObjT _ | ArrT _ | AnyT _), GetElemT (reason_op, key, tout) ->
       rec_flow cx trace (key, ElemT (reason_op, l, ReadElem tout))
 
-    | (ObjT _ | AnyObjT _ | ArrT _),
+    | (ObjT _ | AnyObjT _ | ArrT _ | AnyT _),
       CallElemT (reason_call, reason_lookup, key, ft) ->
       let action = CallElem (reason_call, ft) in
       rec_flow cx trace (key, ElemT (reason_lookup, l, action))
 
     | _, ElemT (reason_op, (ObjT _ as o), action) ->
       let propref = match l with
-      | StrT (reason_x, Literal x) ->
+      | StrT (reason_x, Literal (_, x)) ->
           let reason_prop = replace_reason_const (RProperty (Some x)) reason_x in
           Named (reason_prop, x)
       | _ -> Computed l
@@ -3966,39 +4511,59 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow cx trace (o, u)
 
-    | _, ElemT (reason_op, AnyObjT _, action) ->
+    | _, ElemT (reason_op, (AnyObjT _ | AnyT _), action) ->
       let value = AnyT.why reason_op in
       perform_elem_action cx trace value action
 
+    (* It is not safe to write to an unknown index in a tuple. However, any is
+     * a source of unsoundness, so that's ok. `tup[(0: any)] = 123` should not
+     * error when `tup[0] = 123` does not. *)
     | AnyT _,
-      ElemT (_, ArrT (_, (ArrayAT (value, _) | TupleAT (value, _))), action) ->
+      ElemT (_, ArrT (r, arrtype), action) ->
+      let value = elemt_of_arrtype r arrtype in
       perform_elem_action cx trace value action
 
     | l, ElemT (reason, ArrT (reason_tup, arrtype), action) when numeric l ->
       let value, ts, is_tuple = begin match arrtype with
       | ArrayAT(value, ts) -> value, ts, false
       | TupleAT(value, ts) -> value, Some ts, true
+      | ROArrayAT (value) -> value, None, true
+      | EmptyAT -> EmptyT reason_tup, None, true
       end in
-      let value = match l with
-      | NumT (_, Literal (float_value, _)) ->
+      let exact_index, value = match l with
+      | NumT (_, Literal (_, (float_value, _))) ->
           begin match ts with
-          | None -> value
+          | None -> false, value
           | Some ts ->
               let index = int_of_float float_value in
-              begin try List.nth ts index
-              with _ ->
+              begin
+                try true, List.nth ts index
+                with _ ->
                 if is_tuple then begin
                   let reasons = (reason, reason_tup) in
-                  add_output
-                    cx
-                    trace
-                    (FlowError.ETupleOutOfBounds (reasons, List.length ts, index));
-                end;
-                value
+                  let error =
+                    FlowError.ETupleOutOfBounds (reasons, List.length ts, index)
+                  in
+                  add_output cx ~trace error;
+                  true, VoidT (mk_reason RTupleOutOfBoundsAccess (loc_of_reason reason))
+                end else true, value
               end
           end
-      | _ -> value
+      | _ -> false, value
       in
+      if is_tuple && not exact_index then begin
+        match action with
+        (* These are safe to do with tuples and unknown indexes *)
+        | ReadElem _ | CallElem _ -> ()
+        (* This isn't *)
+        | WriteElem _ ->
+          let reasons = (reason, reason_tup) in
+            add_output
+              cx
+              ~trace
+              (FlowError.ETupleUnsafeWrite reasons)
+      end;
+
       perform_elem_action cx trace value action
 
 
@@ -4015,24 +4580,42 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (ArrT (_, arrtype), ArrRestT (reason, i, tout)) ->
       let arrtype = match arrtype with
-      | ArrayAT (_, None) -> arrtype
+      | ArrayAT (_, None)
+      | ROArrayAT _
+      | EmptyAT -> arrtype
       | ArrayAT (elemt, Some ts) -> ArrayAT (elemt, Some (Core_list.drop ts i))
       | TupleAT (elemt, ts) -> TupleAT (elemt, Core_list.drop ts i) in
       let a = ArrT (reason, arrtype) in
       rec_flow_t cx trace (a, tout)
 
+    | AnyT _, ArrRestT (reason, _, tout) ->
+      rec_flow_t cx trace (AnyT.why reason, tout)
+
+    (**********************)
+    (* object type spread *)
+    (**********************)
+
+    | _, ObjSpreadT (reason_op, tool, state, tout) ->
+      object_spread cx trace reason_op tool state tout l
+
     (**************************************************)
     (* function types can be mapped over a structure  *)
     (**************************************************)
 
+    | AnyT _, MapTypeT (reason_op, _, _, k) ->
+      continue cx trace (AnyT.why reason_op) k
+
     | ArrT (_, arrtype), MapTypeT (reason_op, TupleMap, funt, k) ->
       let f x = mk_tvar_where cx reason_op (fun t ->
-        rec_flow cx trace (funt, CallT (reason_op, mk_functiontype [x] t))
+        let callt = CallT (reason_op, mk_functioncalltype [Arg x] t) in
+        rec_flow cx trace (funt, callt)
       ) in
 
       let arrtype = match arrtype with
       | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Option.map ~f:(List.map f) ts)
-      | TupleAT (elemt, ts) -> TupleAT (f elemt, List.map f ts) in
+      | TupleAT (elemt, ts) -> TupleAT (f elemt, List.map f ts)
+      | ROArrayAT (elemt) -> ROArrayAT (f elemt)
+      | EmptyAT -> EmptyAT in
 
       let t =
         let reason = replace_reason_const RArrayType reason_op in
@@ -4043,14 +4626,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, MapTypeT (reason, TupleMap, funt, k) ->
       let iter = get_builtin cx ~trace "$iterate" reason in
       let elemt = mk_tvar_where cx reason (fun t ->
-        rec_flow cx trace (iter, CallT (reason, mk_functiontype [l] t))
+        let callt = CallT (reason, mk_functioncalltype [Arg l] t) in
+        rec_flow cx trace (iter, callt)
       ) in
       let t = ArrT (reason, ArrayAT (elemt, None)) in
       rec_flow cx trace (t, MapTypeT (reason, TupleMap, funt, k))
 
     | ObjT (_, o), MapTypeT (reason_op, ObjectMap, funt, k) ->
       let map_t t = mk_tvar_where cx reason_op (fun t' ->
-        let funtype = mk_functiontype [t] t' in
+        let funtype = mk_functioncalltype [Arg t] t' in
         rec_flow cx trace (funt, CallT (reason_op, funtype))
       ) in
       let props_tmap =
@@ -4070,7 +4654,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | ObjT (_, o), MapTypeT (reason_op, ObjectMapi, funt, k) ->
       let mapi_t key t = mk_tvar_where cx reason_op (fun t' ->
-        let funtype = mk_functiontype [key; t] t' in
+        let funtype = { (mk_functioncalltype [Arg key; Arg t] t') with
+          call_strict_arity = false;
+        } in
         rec_flow cx trace (funt, CallT (reason_op, funtype))
       ) in
       let mapi_field key t =
@@ -4097,7 +4683,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************************************)
 
     | (FunT (_, _, t, _), SetPropT(reason_op, Named (_, "prototype"), tin)) ->
-      rec_flow cx trace (tin, ObjAssignT(reason_op, t, AnyT.t, [], false))
+      rec_flow cx trace (tin, ObjAssignFromT(reason_op, t, Locationless.AnyT.t, [], ObjAssign))
 
     (*********************************)
     (* ... and their prototypes read *)
@@ -4106,7 +4692,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (FunT (_, _, t, _), GetPropT(_, Named (_, "prototype"), tout)) ->
       rec_flow_t cx trace (t,tout)
 
-    | (ClassT (instance), GetPropT(_, Named (_, "prototype"), tout)) ->
+    | (ClassT (reason, instance), GetPropT(_, Named (_, "prototype"), tout)) ->
+      let instance = reposition cx ~trace (loc_of_reason reason) instance in
       rec_flow_t cx trace (instance, tout)
 
     (**************************************)
@@ -4136,19 +4723,26 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***************************************************************)
 
     | FunProtoCallT _,
-      CallT (reason_op, ({this_t = func; params_tlist; _} as funtype)) ->
-      begin match params_tlist with
+      CallT (reason_op, ({call_this_t = func; call_args_tlist; _} as funtype)) ->
+      begin match call_args_tlist with
       (* func.call() *)
       | [] ->
         let funtype = { funtype with
-          this_t = VoidT.why reason_op;
-          params_tlist = [];
+          call_this_t = VoidT.why reason_op;
+          call_args_tlist = [];
         } in
         rec_flow cx trace (func, CallT (reason_op, funtype))
 
-      (* func.call(this_t, ...params_tlist) *)
-      | this_t::params_tlist ->
-        let funtype = { funtype with this_t; params_tlist } in
+      (* func.call(this_t, ...call_args_tlist) *)
+      | (Arg call_this_t)::call_args_tlist ->
+        let funtype = { funtype with call_this_t; call_args_tlist } in
+        rec_flow cx trace (func, CallT (reason_op, funtype))
+
+      (* func.call(...call_args_tlist) *)
+      | (SpreadArg _ as first_arg)::_ ->
+        let call_this_t = extract_non_spread cx ~trace first_arg in
+
+        let funtype = { funtype with call_this_t; } in
         rec_flow cx trace (func, CallT (reason_op, funtype))
       end
 
@@ -4158,41 +4752,48 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* resolves the arguments... *)
     | FunProtoApplyT _,
-        CallT (reason_op, ({this_t = func; params_tlist; _} as funtype)) ->
-      begin match params_tlist with
+        CallT (reason_op, ({call_this_t = func; call_args_tlist; _} as funtype)) ->
+      begin match call_args_tlist with
       (* func.apply() *)
       | [] ->
           let funtype = { funtype with
-            this_t = VoidT.why reason_op;
-            params_tlist = [];
+            call_this_t = VoidT.why reason_op;
+            call_args_tlist = [];
           } in
           rec_flow cx trace (func, CallT (reason_op, funtype))
 
       (* func.apply(this_arg) *)
-      | this_arg::[] ->
-          let funtype = { funtype with this_t = this_arg; params_tlist = [] } in
+      | (Arg this_arg)::[] ->
+          let funtype = { funtype with call_this_t = this_arg; call_args_tlist = [] } in
           rec_flow cx trace (func, CallT (reason_op, funtype))
 
       (* func.apply(this_arg, ts) *)
-      | _::ts::_ ->
-          (* the first param will be extracted later by ApplyT; extra args are
-             allowed but ignored, as with all function calls in Flow. *)
-          rec_flow cx trace (ts, ApplyT (reason_op, func, funtype))
+      | first_arg::(Arg ts)::_ ->
+        let call_this_t = extract_non_spread cx ~trace first_arg in
+        let call_args_tlist = [ SpreadArg ts ] in
+        let funtype = { funtype with call_this_t; call_args_tlist; } in
+        (* Ignoring `this_arg`, we're basically doing func(...ts). Normally
+         * spread arguments are resolved for the multiflow application, however
+         * there are a bunch of special-cased functions like bind(), call(),
+         * apply, etc which look at the arguments a little earlier. If we delay
+         * resolving the spread argument, then we sabotage them. So we resolve
+         * it early *)
+        let t = mk_tvar_where cx reason_op (fun t ->
+          let resolve_to = ResolveSpreadsToCallT (funtype, t) in
+          resolve_call_list cx ~trace reason_op call_args_tlist resolve_to
+        ) in
+        rec_flow_t cx trace (func, t)
+
+      | (SpreadArg t1)::(SpreadArg t2)::_ ->
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (loc_of_t t1, SpreadArgument)));
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (loc_of_t t2, SpreadArgument)))
+      | (SpreadArg t)::_
+      | (Arg _)::(SpreadArg t)::_ ->
+          add_output cx ~trace
+            (FlowError.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)))
       end
-
-    (* ... then calls the function *)
-    | (ArrT (_, arrtype),
-       ApplyT (r, func, ({params_tlist=this_t::_; _} as funtype))) ->
-      let params_tlist = match arrtype with
-      | ArrayAT (t, ts) -> (Option.value ~default:[] ts) @ [RestT t]
-      | TupleAT (_, ts) -> ts in
-      let funtype = { funtype with this_t; params_tlist; } in
-      rec_flow cx trace (func, CallT (r, funtype))
-
-    | (NullT _ | VoidT _),
-      ApplyT (r, func, ({params_tlist=this_t::_; _} as funtype)) ->
-      let funtype = { funtype with this_t; params_tlist = [] } in
-      rec_flow cx trace (func, CallT (r, funtype))
 
     (************************************************************************)
     (* functions may be bound by passing a receiver and (partial) arguments *)
@@ -4200,49 +4801,45 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | FunProtoBindT _,
       CallT (reason_op, ({
-        this_t = func;
-        params_tlist = this_t::params_tlist;
+        call_this_t = func;
+        call_args_tlist = first_arg::call_args_tlist;
         _
       } as funtype)) ->
-      let funtype = { funtype with this_t; params_tlist } in
-      rec_flow cx trace (func, BindT (reason_op, funtype))
+      let call_this_t = extract_non_spread cx ~trace first_arg in
+      let funtype = { funtype with call_this_t; call_args_tlist } in
+      rec_flow cx trace (func, BindT (reason_op, funtype, false))
 
-    | (FunT (reason,_,_,
-             {this_t = o1; params_tlist = tins1; return_t = tout1; _}),
-       BindT (reason_op,
-             {this_t = o2; params_tlist = tins2; return_t = tout2; _}))
-      -> (* TODO: closure *)
+    | FunT (reason,_,_, ({this_t = o1; _} as ft)),
+      BindT (reason_op, {
+        call_this_t = o2;
+        call_args_tlist = tins2;
+        call_tout; call_closure_t=_; call_strict_arity = _;
+      }, _) ->
+        (* TODO: closure *)
 
+        Ops.push reason_op;
         rec_flow_t cx trace (o2,o1);
 
-        let tins1 = multiflow_partial cx trace (tins2,tins1) in
+        let resolve_to =
+          ResolveSpreadsToMultiflowPartial (mk_id (), ft, reason_op, call_tout) in
+        resolve_call_list cx ~trace reason tins2 resolve_to;
+        Ops.pop ()
 
-        (* e.g. "bound function type", positioned at reason_op *)
-        let bound_reason =
-          let desc = RBound (desc_of_reason reason) in
-          replace_reason_const desc reason_op
-        in
-
-        rec_flow_t cx trace (
-          FunT(
-            reason_op,
-            dummy_static bound_reason,
-            dummy_prototype,
-            mk_boundfunctiontype tins1 tout1
-          ),
-          tout2);
-
-    | (AnyFunT _, BindT (reason, {
-        this_t;
-        params_tlist;
-        return_t;
+    | (AnyT _ | AnyFunT _),
+      BindT (reason, {
+        call_this_t;
+        call_args_tlist;
+        call_tout;
         _;
-      })) ->
-      rec_flow_t cx trace (AnyT.why reason, this_t);
-      params_tlist |> List.iter (fun param_t ->
+      }, _) ->
+      rec_flow_t cx trace (AnyT.why reason, call_this_t);
+      call_args_iter (fun param_t ->
         rec_flow_t cx trace (AnyT.why reason, param_t)
-      );
-      rec_flow_t cx trace (l, return_t)
+      ) call_args_tlist;
+      rec_flow_t cx trace (l, call_tout)
+
+    | _, BindT (_, { call_tout; _ }, true) ->
+      rec_flow_t cx trace (l, call_tout)
 
     (***********************************************)
     (* You can use a function as a callable object *)
@@ -4279,41 +4876,61 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let function_proto = FunProtoT reason in
           let obj = mk_object_with_map_proto cx reason map function_proto in
           let t = mk_tvar_where cx reason (fun t ->
-            rec_flow cx trace (statics, ObjAssignT (reason, obj, t, [], false))
+            rec_flow cx trace (statics, ObjAssignFromT (reason, obj, t, [], ObjAssign))
           ) in
           rec_flow cx trace (t, u)
 
     (* TODO: similar concern as above *)
-    | (FunT (reason, statics, _, _) ,
-       UseT (_, InstanceT (reason_inst, _, super, {
-         fields_tmap;
-         methods_tmap;
-         structural = true;
-         _;
-       })))
-      ->
-        if not
-          (quick_error_fun_as_obj cx trace reason statics reason_inst
-            (SMap.filter (fun x _ -> x = "constructor")
-              (Context.find_props cx fields_tmap)))
-        then
-          structural_subtype cx trace l reason_inst
-            (super, fields_tmap, methods_tmap)
+    | FunT (reason, statics, _, _) ,
+      UseT (use_op, InstanceT (reason_inst, _, super, _, {
+        fields_tmap;
+        methods_tmap;
+        structural = true;
+        _;
+      })) ->
+      if not
+        (quick_error_fun_as_obj cx trace reason statics reason_inst
+          (SMap.filter (fun x _ -> x = "constructor")
+            (Context.find_props cx fields_tmap)))
+      then (
+        structural_subtype cx trace ~use_op l reason_inst
+          (fields_tmap, methods_tmap);
+        rec_flow cx trace (l, UseT (use_op, super))
+      )
 
     (***************************************************************)
     (* Enable structural subtyping for upperbounds like interfaces *)
     (***************************************************************)
 
-    | (_,
-       UseT (_, InstanceT (reason_inst, _, super, {
-         fields_tmap;
-         methods_tmap;
-         structural = true;
-         _;
-       })))
-      ->
-      structural_subtype cx trace l reason_inst
-        (super, fields_tmap, methods_tmap)
+    | _,
+      UseT (use_op, InstanceT (reason_inst, _, super, _, {
+        fields_tmap;
+        methods_tmap;
+        structural = true;
+        _;
+      })) ->
+      structural_subtype cx trace ~use_op l reason_inst
+        (fields_tmap, methods_tmap);
+      rec_flow cx trace (l, UseT (use_op, super))
+
+    (***************************************************************)
+    (* Implements                                                  *)
+    (***************************************************************)
+
+    | ObjProtoT _, ImplementsT _ -> ()
+
+    | InstanceT (reason_inst, _, super, _, {
+        fields_tmap;
+        methods_tmap;
+        structural = true;
+        _;
+      }),
+      ImplementsT t ->
+      structural_subtype cx trace t reason_inst (fields_tmap, methods_tmap);
+      rec_flow cx trace (super, ReposLowerT (reason_inst, ImplementsT t))
+
+    | _, ImplementsT _ ->
+      add_output cx ~trace (FlowError.EUnsupportedImplements (reason_of_t l))
 
     (*********************************************************************)
     (* class A is a base class of class B iff                            *)
@@ -4326,12 +4943,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         for the inherited properties are non-strict: they are not required to
         exist. **)
 
-    | (InstanceT (_,_,_,instance_super),
+    | (InstanceT (_,_,_,_,instance_super),
        SuperT (reason,instance))
       ->
         Context.iter_props cx instance_super.fields_tmap (fun x p ->
           match p with
-          | Field (AbstractT t, _)
+          | Field (AbstractT (_, t), _)
             when not (Context.has_prop cx instance.fields_tmap x) ->
             (* when abstract fields are not implemented, make them void *)
             let reason = reason_of_t t in
@@ -4383,7 +5000,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, AssertArithmeticOperandT _ when numeric l -> ()
     | _, AssertArithmeticOperandT _ ->
-      add_output cx trace (FlowError.EArithmeticOperand (reason_of_t l))
+      add_output cx ~trace (FlowError.EArithmeticOperand (reason_of_t l))
+
+    (***********************************************************************)
+    (* Rest param annotations must be super types of the array bottom type *)
+    (***********************************************************************)
+
+    | rest, AssertRestParamT r ->
+      (* This allows rest to be things like Iterable<T>, mixed, Array<T>, [1,2]
+         but disallows things like number, string, boolean *)
+      rec_flow_t cx trace (ArrT (r, EmptyAT), rest)
 
     (***********************************************************)
     (* coercion                                                *)
@@ -4413,18 +5039,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (NumT (_, lit), UnaryMinusT (reason_op, t_out)) ->
       let num = match lit with
-      | Literal (value, raw) ->
+      | Literal (_, (value, raw)) ->
         let raw_len = String.length raw in
         let raw = if raw_len > 0 && raw.[0] = '-'
           then String.sub raw 1 (raw_len - 1)
           else "-" ^ raw
         in
-        NumT (replace_reason_const RNumber reason_op, Literal (~-. value, raw))
+        NumT (replace_reason_const RNumber reason_op, Literal (None, (~-. value, raw)))
       | AnyLiteral
       | Truthy ->
         l
       in
       rec_flow_t cx trace (num, t_out)
+
+    | AnyT _, UnaryMinusT (reason_op, t_out) ->
+      rec_flow_t cx trace (AnyT.why reason_op, t_out)
 
     (************************)
     (* binary `in` operator *)
@@ -4435,13 +5064,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | StrT _, AssertBinaryInLHST _ -> ()
     | NumT _, AssertBinaryInLHST _ -> ()
     | _, AssertBinaryInLHST _ ->
-      add_output cx trace (FlowError.EBinaryInLHS (reason_of_t l))
+      add_output cx ~trace (FlowError.EBinaryInLHS (reason_of_t l))
 
     (* the right-hand side of a `(x in y)` expression must be object-like *)
     | ArrT _, AssertBinaryInRHST _ -> ()
     | _, AssertBinaryInRHST _ when object_like l -> ()
     | _, AssertBinaryInRHST _ ->
-      add_output cx trace (FlowError.EBinaryInRHS (reason_of_t l))
+      add_output cx ~trace (FlowError.EBinaryInRHS (reason_of_t l))
 
     (******************)
     (* `for...in` RHS *)
@@ -4456,7 +5085,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (NullT _ | VoidT _), AssertForInRHST _ -> ()
 
     | _, AssertForInRHST _ ->
-      add_output cx trace (FlowError.EForInRHS (reason_of_t l))
+      add_output cx ~trace (FlowError.EForInRHS (reason_of_t l))
 
     (**************************************)
     (* types may be refined by predicates *)
@@ -4471,7 +5100,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | StrT (_, lit),
       SentinelPropTestT (l, sense, SentinelStr sentinel, result) ->
         begin match lit with
-        | Literal value when (value = sentinel) != sense ->
+        | Literal (_, value) when (value = sentinel) != sense ->
             () (* provably unreachable, so prune *)
         | _ ->
             rec_flow_t cx trace (l, result)
@@ -4480,7 +5109,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | NumT (_, lit),
       SentinelPropTestT (l, sense, SentinelNum (sentinel, _), result) ->
         begin match lit with
-        | Literal (value, _) when (value = sentinel) != sense ->
+        | Literal (_, (value, _)) when (value = sentinel) != sense ->
             () (* provably unreachable, so prune *)
         | _ ->
             rec_flow_t cx trace (l, result)
@@ -4495,7 +5124,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             rec_flow_t cx trace (l, result)
         end
 
-    | (StrT _ | NumT _ | BoolT _),
+    | NullT _,
+      SentinelPropTestT (l, sense, SentinelNull, result) ->
+        if not sense
+        then () (* provably unreachable, so prune *)
+        else rec_flow_t cx trace (l, result)
+
+    | VoidT _,
+      SentinelPropTestT (l, sense, SentinelVoid, result) ->
+        if not sense
+        then () (* provably unreachable, so prune *)
+        else rec_flow_t cx trace (l, result)
+
+    | (StrT _ | NumT _ | BoolT _ | NullT _ | VoidT _),
       SentinelPropTestT (l, sense, _, result) ->
         (* types don't match (would've been matched above) *)
         (* we don't prune other types like objects or instances, even though
@@ -4517,10 +5158,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_typeapp cx ~trace reason "Array" [t], u)
 
-    | (ArrT (reason, TupleAT(t, _)),
+    | (ArrT (reason, (TupleAT _ | ROArrayAT _ | EmptyAT as arrtype)),
        (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
+      let t = elemt_of_arrtype reason arrtype in
       rec_flow
-        cx trace (get_builtin_typeapp cx ~trace reason "Array$Tuple" [t], u)
+        cx trace (get_builtin_typeapp cx ~trace reason "$ReadOnlyArray" [t], u)
 
     (***********************)
     (* String library call *)
@@ -4561,10 +5203,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* class statics *)
     (*****************)
 
-    | (ClassT instance, _) when object_use u || object_like_op u ->
-      let reason = replace_reason (fun desc ->
-        RStatics desc
-      ) (reason_of_t instance) in
+    | (ClassT (reason, instance), _) when object_use u || object_like_op u ->
+      let desc = RStatics (desc_of_reason (reason_of_t instance)) in
+      let loc = loc_of_reason reason in
+      let reason = mk_reason desc loc in
       let static = mk_tvar cx reason in
       rec_flow cx trace (instance, GetStaticsT (reason, static));
       rec_flow cx trace (static, ReposLowerT (reason, u))
@@ -4590,12 +5232,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        - the class's static $call property type must be a subtype of the
        function type. *)
     | FunT (reason, static, prototype, funtype),
-      UseT (use_op, ClassT instance) ->
+      UseT (use_op, (ClassT (_, instance) as class_t)) ->
       rec_flow cx trace (instance, UseT (use_op, prototype));
       rec_flow cx trace (instance, UseT (use_op, funtype.this_t));
       rec_flow cx trace (instance, GetStaticsT (reason, static));
-      rec_flow cx trace (ClassT instance,
-        GetPropT (reason, Named (reason, "$call"), l))
+      rec_flow cx trace (class_t, GetPropT (reason, Named (reason, "$call"), l))
 
     (************)
     (* indexing *)
@@ -4618,7 +5259,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        where that lower bound was used; the lower bound's location (which is
        being overwritten) is where it was defined. *)
     | (_, ReposLowerT (reason_op, u)) ->
-      rec_flow cx trace (reposition cx ~trace reason_op l, u)
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
     (***************)
     (* unsupported *)
@@ -4655,7 +5296,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (ObjProtoT reason | FunProtoT reason),
       LookupT (_, Strict strict_reason, [], Named (reason_prop, x), _) ->
-      add_output cx trace (FlowError.EStrictLookupFailed
+      add_output cx ~trace (FlowError.EStrictLookupFailed
         ((reason_prop, strict_reason), reason, Some x))
 
     | (ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
@@ -4663,10 +5304,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (match elem_t with
       | OpenT _ ->
         let loc = loc_of_t elem_t in
-        add_output cx trace FlowError.(EInternal (loc, PropRefComputedOpen))
+        add_output cx ~trace FlowError.(EInternal (loc, PropRefComputedOpen))
       | StrT (_, Literal _) ->
         let loc = loc_of_t elem_t in
-        add_output cx trace FlowError.(EInternal (loc, PropRefComputedLiteral))
+        add_output cx ~trace FlowError.(EInternal (loc, PropRefComputedLiteral))
       | AnyT _ | StrT _ | NumT _ ->
         (* any, string, and number keys are allowed, but there's nothing else to
            flow without knowing their literal values. *)
@@ -4674,7 +5315,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         perform_lookup_action cx trace propref p reason reason_op action
       | _ ->
         let reason_prop = reason_of_t elem_t in
-        add_output cx trace (FlowError.EStrictLookupFailed
+        add_output cx ~trace (FlowError.EStrictLookupFailed
           ((reason_prop, strict_reason), reason, None)))
 
     | (ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
@@ -4683,7 +5324,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (match strict with
       | None -> ()
       | Some strict_reason ->
-        add_output cx trace (FlowError.EStrictLookupFailed
+        add_output cx ~trace (FlowError.EStrictLookupFailed
           ((reason_prop, strict_reason), reason, Some x)));
 
       (* Install shadow prop (if necessary) and link up proto chain. *)
@@ -4730,12 +5371,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ObjProtoT _ | FunProtoT _),
       LookupT (_, ShadowRead _, [], Computed elem_t, _) ->
       let loc = loc_of_t elem_t in
-      add_output cx trace FlowError.(EInternal (loc, ShadowReadComputed))
+      add_output cx ~trace FlowError.(EInternal (loc, ShadowReadComputed))
 
     | (ObjProtoT _ | FunProtoT _),
       LookupT (_, ShadowWrite _, [], Computed elem_t, _) ->
       let loc = loc_of_t elem_t in
-      add_output cx trace FlowError.(EInternal (loc, ShadowWriteComputed))
+      add_output cx ~trace FlowError.(EInternal (loc, ShadowWriteComputed))
 
     (* LookupT is a non-strict lookup *)
     | (ObjProtoT _ |
@@ -4767,27 +5408,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (** ExtendsT searches for a nominal superclass. The search terminates with
         either failure at the root or a structural subtype check. **)
 
-    | (ObjProtoT _, UseT (use_op, ExtendsT (next::try_ts_on_failure, l, u))) ->
+    | ObjProtoT _,
+      UseT (use_op, ExtendsT (reason, next::try_ts_on_failure, l, u)) ->
       (* When seaching for a nominal superclass fails, we always try to look it
          up in the next element in the list try_ts_on_failure. *)
       rec_flow cx trace
-        (next, UseT (use_op, ExtendsT (try_ts_on_failure, l, u)))
+        (next, UseT (use_op, ExtendsT (reason, try_ts_on_failure, l, u)))
 
     | ObjProtoT _,
-      UseT (_, ExtendsT ([], l, InstanceT (reason_inst, _, super, {
-         fields_tmap;
-         methods_tmap;
-         structural = true;
-         _;
-       })))
-      ->
-      structural_subtype cx trace l reason_inst
-        (super, fields_tmap, methods_tmap)
+      UseT (use_op, ExtendsT (_, [], l, InstanceT (reason_inst, _, super, _, {
+        fields_tmap;
+        methods_tmap;
+        structural = true;
+        _;
+      }))) ->
+      structural_subtype cx trace ~use_op l reason_inst
+        (fields_tmap, methods_tmap);
+      rec_flow cx trace (l, UseT (use_op, super))
 
-    | (ObjProtoT _, UseT (_, ExtendsT ([], t, tc))) ->
-      let msg = "This type is incompatible with" in
-      let reasons = Flow_error.ordered_reasons t (UseT (UnknownUse, tc)) in
-      add_output cx trace (FlowError.ECustom (reasons, msg))
+    | (ObjProtoT _, UseT (use_op, ExtendsT (_, [], t, tc))) ->
+      let reason_l, reason_u =
+        Flow_error.ordered_reasons t (UseT (UnknownUse, tc)) in
+      add_output cx ~trace (FlowError.EIncompatibleWithUseOp
+        (reason_l, reason_u, use_op))
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
@@ -4799,34 +5442,36 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (_, SetPropT (_, propref, _))
     | (_, LookupT (_, _, _, propref, _)) ->
       let reason_prop = reason_of_propref propref in
-      add_output cx trace (FlowError.EIncompatibleProp (l, u, reason_prop))
+      add_output cx ~trace (FlowError.EIncompatibleProp (l, u, reason_prop))
 
     | _, UseT (Addition, u) ->
-      add_output cx trace (FlowError.EAddition (reason_of_t l, reason_of_t u))
+      add_output cx ~trace (FlowError.EAddition (reason_of_t l, reason_of_t u))
 
     | _, UseT (Coercion, u) ->
-      add_output cx trace (FlowError.ECoercion (reason_of_t l, reason_of_t u))
+      add_output cx ~trace (FlowError.ECoercion (reason_of_t l, reason_of_t u))
 
     | _, UseT (FunCallParam, u) ->
-      add_output cx trace
+      add_output cx ~trace
         (FlowError.EFunCallParam (reason_of_t l, reason_of_t u))
 
     | _, UseT (FunCallThis reason_call, u) ->
-      add_output cx trace
+      add_output cx ~trace
         (FlowError.EFunCallThis (reason_of_t l, reason_of_t u, reason_call))
 
     | _, UseT (FunImplicitReturn, u) ->
-      add_output cx trace
+      add_output cx ~trace
         (FlowError.EFunImplicitReturn (reason_of_t l, reason_of_t u))
 
     | _, UseT (FunReturn, u) ->
-      add_output cx trace (FlowError.EFunReturn (reason_of_t l, reason_of_t u))
+      add_output cx ~trace (FlowError.EFunReturn (reason_of_t l, reason_of_t u))
 
-    | _, UseT (Internal _, _) ->
-      ()
+    | _, UseT (PropertyCompatibility _ as use_op, u) ->
+      add_output cx ~trace (FlowError.EIncompatibleWithUseOp (
+        reason_of_t l, reason_of_t u, use_op
+      ))
 
     | _ ->
-      add_output cx trace (FlowError.EIncompatible (l, u))
+      add_output cx ~trace (FlowError.EIncompatible (l, u))
   )
 
 (* some types need to be resolved before proceeding further *)
@@ -4880,7 +5525,7 @@ and flow_addition cx trace reason l r u =
 
   | (MixedT (reason, _), _)
   | (_, MixedT (reason, _)) ->
-    add_output cx trace (FlowError.EAdditionMixed reason)
+    add_output cx ~trace (FlowError.EAdditionMixed reason)
 
   | (NumT _ | BoolT _ | NullT _ | VoidT _),
     (NumT _ | BoolT _ | NullT _ | VoidT _) ->
@@ -4928,7 +5573,7 @@ and flow_comparator cx trace reason l r =
   | (_, _) when numeric l && numeric r -> ()
   | (_, _) ->
     let reasons = FlowError.ordered_reasons l (UseT (UnknownUse, r)) in
-    add_output cx trace (FlowError.EComparison reasons)
+    add_output cx ~trace (FlowError.EComparison reasons)
 
 (**
  * == equality
@@ -4942,7 +5587,7 @@ and flow_eq cx trace reason l r =
   else if equatable (l, r) then ()
   else
     let reasons = FlowError.ordered_reasons l (UseT (UnknownUse, r)) in
-    add_output cx trace (FlowError.EComparison reasons)
+    add_output cx ~trace (FlowError.EComparison reasons)
 
 
 and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
@@ -4967,7 +5612,6 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   | RSpreadOf _
   | RObjectPatternRestProp
   | RFunction _
-  | RArrowFunction _
   | RReactElementProps _
   | RJSXElementProps _ -> true
   | _ -> lflags.frozen
@@ -4988,6 +5632,12 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   iter_real_props cx uflds (fun s up ->
     let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
     let propref = Named (reason_prop, s) in
+    let use_op =
+      let use_op = if use_op_is_cycle (s, lreason, ureason) use_op
+        then UnknownUse
+        else use_op
+      in PropertyCompatibility (s, lreason, ureason, use_op)
+    in
     match Context.get_prop cx lflds s, ldict with
     | Some lp, _ ->
       if lit then (
@@ -5010,7 +5660,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
       rec_flow_t cx trace (string_key s reason_prop, key);
       let lp = Field (value, dict_polarity) in
       let up = match up with
-      | Field (OptionalT ut, upolarity) ->
+      | Field (OptionalT (_, ut), upolarity) ->
         Field (ut, upolarity)
       | _ -> up
       in
@@ -5024,9 +5674,9 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     | _ ->
       (* property doesn't exist in inflowing type *)
       match up with
-      | Field (OptionalT _, _) when lflags.exact ->
+      | Field (OptionalT _, _) when lit ->
         (* if property is marked optional or otherwise has a maybe type,
-           and if inflowing type is exact (i.e., it is not an
+           and if inflowing type is a literal (i.e., it is not an
            annotation), then we add it to the inflowing type as
            an optional property *)
         (* Band-aid to avoid side effect in speculation mode. Even in
@@ -5043,7 +5693,8 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
         | _ -> NonstrictReturning None
         in
         rec_flow cx trace (lproto,
-          LookupT (ureason, strict, [], propref, LookupProp up))
+          LookupT (ureason, strict, [], propref,
+            LookupProp (use_op, up)))
         (* TODO: instead, consider extending inflowing type with s:t2 when it
            is not sealed *)
   );
@@ -5057,7 +5708,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
       then (
         rec_flow_t cx trace (string_key s lreason, key);
         let lp = match lp with
-        | Field (OptionalT lt, lpolarity) ->
+        | Field (OptionalT (_, lt), lpolarity) ->
           Field (lt, lpolarity)
         | _ -> lp
         in
@@ -5074,6 +5725,15 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
       )));
 
   rec_flow cx trace (ObjT (lreason, l_obj), UseT (use_op, uproto))
+
+and use_op_is_cycle (s, lreason, ureason) use_op =
+  let rec helper = function
+    | PropertyCompatibility (s', lreason', ureason', use_op') ->
+        if s = s' && lreason = lreason' && ureason = ureason' then true
+        else helper use_op'
+    | _ -> false
+  in
+  helper use_op
 
 and is_object_prototype_method = function
   | "isPrototypeOf"
@@ -5133,7 +5793,8 @@ and quick_error_fun_as_obj cx trace reason statics reason_o props =
     SMap.iter (fun x _ ->
       let reason_prop =
         replace_reason (fun desc -> RPropertyOf (x, desc)) reason_o in
-      add_output cx trace (FlowError.EPropNotFound (reason_prop, reason))
+      let err = FlowError.EPropNotFound ((reason_prop, reason), UnknownUse) in
+      add_output cx ~trace err
     ) props_not_found;
     not (SMap.is_empty props_not_found)
   | None -> false
@@ -5145,6 +5806,8 @@ and ground_subtype = function
   (* Allow any lower bound to be repositioned *)
   | (_, ReposLowerT _) -> false
   | (_, ReposUseT _) -> false
+
+  | (_, ObjSpreadT _) -> false
 
   (* Allow deferred unification with `any` *)
   | (_, UnifyT _) -> false
@@ -5177,7 +5840,7 @@ and numeric = function
   | NumT _ -> true
   | SingletonNumT _ -> true
 
-  | InstanceT (reason, _, _, _) ->
+  | InstanceT (reason, _, _, _, _) ->
     string_of_desc (desc_of_reason reason) = "Date"
 
   | _ -> false
@@ -5194,9 +5857,13 @@ and object_like_op = function
   | SetPropT _ | GetPropT _ | MethodT _ | LookupT _
   | SuperT _
   | GetKeysT _ | HasOwnPropT _
-  | ObjAssignT _ | ObjRestT _
+  | ObjAssignToT _ | ObjAssignFromT _ | ObjRestT _
   | SetElemT _ | GetElemT _
   | UseT (_, AnyObjT _) -> true
+  | _ -> false
+
+and function_use = function
+  | UseT (_, FunT _) -> true
   | _ -> false
 
 (* TODO: why is AnyFunT missing? *)
@@ -5358,40 +6025,46 @@ and sealed_in_op reason_op = function
 
 (* dispatch checks to verify that lower satisfies the structural
    requirements given in the tuple. *)
-and structural_subtype cx trace lower reason_struct
-  (super, fields_pmap, methods_pmap) =
+and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
+  (fields_pmap, methods_pmap) =
   let lreason = reason_of_t lower in
   let fields_pmap = Context.find_props cx fields_pmap in
   let methods_pmap = Context.find_props cx methods_pmap in
   fields_pmap |> SMap.iter (fun s p ->
     match p with
-    | Field (OptionalT t, polarity) ->
-      let reason_prop = replace_reason (fun desc ->
-        ROptional (RPropertyOf (s, desc))
-      ) reason_struct in
-      let propref = Named (reason_prop, s) in
+    | Field (OptionalT (_, t), polarity) ->
+      let propref =
+        let reason_prop = replace_reason (fun desc ->
+          ROptional (RPropertyOf (s, desc))
+        ) reason_struct in
+        Named (reason_prop, s)
+      in
       rec_flow cx trace (lower,
-        LookupT (reason_prop, NonstrictReturning None, [], propref,
-          LookupProp (Field (t, polarity))))
+        LookupT (reason_struct, NonstrictReturning None, [], propref,
+          LookupProp (use_op, Field (t, polarity))))
     | _ ->
-      let reason_prop = replace_reason (fun desc ->
-        RPropertyOf (s, desc)
-      ) reason_struct in
-      let propref = Named (reason_prop, s) in
+      let propref =
+        let reason_prop = replace_reason (fun desc ->
+          RPropertyOf (s, desc)
+        ) reason_struct in
+        Named (reason_prop, s)
+      in
       rec_flow cx trace (lower,
-        LookupT (reason_prop, Strict lreason, [], propref, LookupProp p))
+        LookupT (reason_struct, Strict lreason, [], propref,
+          LookupProp (use_op, p)))
   );
   methods_pmap |> SMap.iter (fun s p ->
     if inherited_method s then
-      let reason_prop = replace_reason (fun desc ->
-        RPropertyOf (s, desc)
-      ) reason_struct in
-      let propref = Named (reason_prop, s) in
+      let propref =
+        let reason_prop = replace_reason (fun desc ->
+          RPropertyOf (s, desc)
+        ) reason_struct in
+        Named (reason_prop, s)
+      in
       rec_flow cx trace (lower,
-        LookupT (reason_prop, Strict lreason, [], propref, LookupProp p))
+        LookupT (reason_struct, Strict lreason, [], propref,
+          LookupProp (use_op, p)))
   );
-  rec_flow_t cx trace (lower, super)
-
 
 (*****************)
 (* substitutions *)
@@ -5460,20 +6133,29 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     this_t = this;
     params_tlist = params;
     params_names;
+    rest_param;
     return_t;
     is_predicate;
     closure_t;
-    changeset
+    changeset;
+    def_reason;
   }) ->
     let static_ = subst cx ~force map static in
     let proto_ = subst cx ~force map proto in
     let this_ = subst cx ~force map this in
     let params_ = ident_map (subst cx ~force map) params in
+    let rest_param_ = match rest_param with
+    | None -> rest_param
+    | Some (name, loc, t) ->
+        let t_ = subst cx ~force map t in
+        if t_ = t then rest_param else Some (name, loc, t_)
+    in
     let return_t_ = subst cx ~force map return_t in
     if static_ == static &&
        proto_ == proto &&
        this_ == this &&
        params_ == params &&
+       rest_param_ == rest_param &&
        return_t_ == return_t
     then t
     else
@@ -5481,13 +6163,15 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
         this_t = this_;
         params_tlist = params_;
         params_names;
+        rest_param = rest_param_;
         return_t = return_t_;
         is_predicate;
         closure_t;
-        changeset
+        changeset;
+        def_reason;
       })
 
-  | PolyT (xs, inner) ->
+  | PolyT (reason, xs, inner) ->
     let xs, map, changed = List.fold_left (fun (xs, map, changed) typeparam ->
       let bound = subst cx ~force map typeparam.bound in
       let default = match typeparam.default with
@@ -5502,12 +6186,12 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     ) ([], map, false) xs in
     let inner_ = subst cx ~force:false map inner in
     let changed = changed || inner_ != inner in
-    if changed then PolyT (List.rev xs, inner_) else t
+    if changed then PolyT (reason, List.rev xs, inner_) else t
 
-  | ThisClassT this ->
+  | ThisClassT (reason, this) ->
     let map = SMap.remove "this" map in
     let this_ = subst cx ~force map this in
-    if this_ == this then t else ThisClassT this_
+    if this_ == this then t else ThisClassT (reason, this_)
 
   | ObjT (reason, { flags; dict_t; props_tmap; proto_t; }) ->
     let dict_t_ = match dict_t with
@@ -5545,10 +6229,14 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     if elemt_ = elemt && tuple_types_ = tuple_types
     then t
     else ArrT (reason, TupleAT (elemt_, tuple_types_))
-
-  | ClassT cls ->
+  | ArrT (reason, ROArrayAT (elemt)) ->
+    let elemt_ = subst cx ~force map elemt in
+    if elemt_ = elemt then t else ArrT (reason, ROArrayAT (elemt_))
+  | ArrT (_, EmptyAT) ->
+    t
+  | ClassT (reason, cls) ->
     let cls_ = subst cx ~force map cls in
-    if cls_ == cls then t else ClassT cls_
+    if cls_ == cls then t else ClassT (reason, cls_)
 
   | TypeT (reason, type_t) ->
     let type_t_ = subst cx ~force map type_t in
@@ -5559,14 +6247,16 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     if source_t_ == source_t then t
     else AnnotT source_t_
 
-  | InstanceT (reason, static, super, instance) ->
+  | InstanceT (reason, static, super, implements, instance) ->
     let static_ = subst cx ~force map static in
     let super_ = subst cx ~force map super in
+    let implements_ = ident_map (subst cx ~force map) implements in
     let type_args_ = ident_smap (subst cx ~force map) instance.type_args in
     let fields_tmap_ = subst_propmap cx force map instance.fields_tmap in
     let methods_tmap_ = subst_propmap cx force map instance.methods_tmap in
     if static_ == static &&
        super_ == super &&
+       implements_ == implements &&
        type_args_ == instance.type_args &&
        fields_tmap_ == instance.fields_tmap &&
        methods_tmap_ == instance.methods_tmap
@@ -5576,6 +6266,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
         reason,
         static_,
         super_,
+        implements_,
         { instance with
           type_args = type_args_;
           fields_tmap = fields_tmap_;
@@ -5583,17 +6274,13 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
         }
     )
 
-  | OptionalT opt_t ->
+  | OptionalT (reason, opt_t) ->
     let opt_t_ = subst cx ~force map opt_t in
-    if opt_t_ == opt_t then t else OptionalT opt_t_
+    if opt_t_ == opt_t then t else OptionalT (reason, opt_t_)
 
-  | RestT rest_t ->
-    let rest_t_ = subst cx ~force map rest_t in
-    if rest_t_ == rest_t then t else RestT rest_t_
-
-  | AbstractT abstract_t ->
+  | AbstractT (reason, abstract_t) ->
     let abstract_t_ = subst cx ~force map abstract_t in
-    if abstract_t_ == abstract_t then t else AbstractT abstract_t_
+    if abstract_t_ == abstract_t then t else AbstractT (reason, abstract_t_)
 
   | ExactT (reason, exact_t) ->
     let exact_t_ = subst cx ~force map exact_t in
@@ -5605,21 +6292,21 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     if eval_t_ == eval_t && defer_use_t_ == defer_use_t then t
     else EvalT (eval_t_, defer_use_t_, mk_id ())
 
-  | TypeAppT(c, ts) ->
+  | TypeAppT(reason,c, ts) ->
     let c_ = subst cx ~force map c in
     let ts_ = ident_map (subst cx ~force map) ts in
-    if c_ == c && ts_ == ts then t else TypeAppT (c_, ts_)
+    if c_ == c && ts_ == ts then t else TypeAppT (reason,c_, ts_)
 
-  | ThisTypeAppT(c, this, ts) ->
+  | ThisTypeAppT(reason, c, this, ts) ->
     let c_ = subst cx ~force map c in
     let this_ = subst cx ~force map this in
     let ts_ = ident_map (subst cx ~force map) ts in
     if c_ == c && this_ == this && ts_ == ts then t
-    else ThisTypeAppT (c_, this_, ts_)
+    else ThisTypeAppT (reason, c_, this_, ts_)
 
-  | MaybeT maybe_t ->
+  | MaybeT (reason, maybe_t) ->
     let maybe_t_ = subst cx ~force map maybe_t in
-    if maybe_t_ == maybe_t then t else MaybeT maybe_t_
+    if maybe_t_ == maybe_t then t else MaybeT (reason, maybe_t_)
 
   | IntersectionT (reason, rep) ->
     let rep_ = InterRep.ident_map (subst cx ~force map) rep in
@@ -5723,10 +6410,26 @@ and eval_destructor cx ~trace reason curr_t s i =
         rec_flow_t cx trace (UnionT (r, rep |> UnionRep.map (fun t ->
           EvalT (t, TypeDestructorT (reason, s), mk_id ())
         )), tvar)
+      | MaybeT (r, t) ->
+        let destructor = TypeDestructorT (reason, s) in
+        let rep = UnionRep.make
+          (EvalT (NullT.why r, destructor, mk_id ()))
+          (EvalT (VoidT.why r, destructor, mk_id ()))
+          [EvalT (t, destructor, mk_id ())]
+        in
+        rec_flow_t cx trace (UnionT (r, rep), tvar)
       | _ ->
         rec_flow cx trace (curr_t, match s with
-        | NonMaybeType -> UseT (UnknownUse, MaybeT (tvar))
+        | NonMaybeType ->
+            let maybe_r = replace_reason (fun desc -> RMaybe desc) reason in
+            UseT (UnknownUse, MaybeT (maybe_r, tvar))
         | PropertyType x -> GetPropT(reason, Named (reason, x), tvar)
+        | Bind t -> BindT(reason, mk_methodcalltype t [] tvar, true)
+        | SpreadType (make_exact, todo_rev) ->
+            let open ObjectSpread in
+            let tool = Resolve Next in
+            let state = { todo_rev; acc = []; make_exact } in
+            ObjSpreadT (reason, tool, state, tvar)
         )
     )
   | Some it ->
@@ -5751,10 +6454,16 @@ and subst_selector cx force map s = match s with
     let p' = subst_predicate cx ~force map p in
     if p == p' then s else Refine p'
 
-and subst_destructor _cx _force _map s = match s with
+and subst_destructor cx force map s = match s with
   | NonMaybeType
   | PropertyType _
     -> s
+  | Bind t ->
+    let t_ = subst cx ~force map t in
+    if t_ == t then s else Bind t_
+  | SpreadType (exact, ts) ->
+    let ts_ = ident_map (subst cx ~force map) ts in
+    if ts_ == ts then s else SpreadType (exact, ts_)
 
 and subst_predicate cx ?(force=true) (map: Type.t SMap.t) p = match p with
   | LatentP (t, i) ->
@@ -5763,11 +6472,11 @@ and subst_predicate cx ?(force=true) (map: Type.t SMap.t) p = match p with
   | p -> p
 
 (* TODO: flesh this out *)
-and check_polarity cx polarity = function
+and check_polarity cx ?trace polarity = function
   (* base case *)
   | BoundT tp ->
     if not (Polarity.compat (tp.polarity, polarity))
-    then polarity_mismatch cx polarity tp
+    then polarity_mismatch cx ?trace polarity tp
 
   | OpenT _
   | NumT _
@@ -5787,61 +6496,66 @@ and check_polarity cx polarity = function
   | SingletonBoolT _
     -> ()
 
-  | OptionalT t
-  | RestT t
-  | AbstractT t
+  | OptionalT (_, t)
+  | AbstractT (_, t)
   | ExactT (_, t)
-  | MaybeT t
+  | MaybeT (_, t)
   | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t
   | ReposT (_, t)
   | ReposUpperT (_, t)
-    -> check_polarity cx polarity t
+    -> check_polarity cx ?trace polarity t
 
-  | ClassT t
-    -> check_polarity cx Neutral t
+  | ClassT (_, t)
+    -> check_polarity cx ?trace Neutral t
 
   | TypeT (_, t)
-    -> check_polarity cx Neutral t
+    -> check_polarity cx ?trace Neutral t
 
-  | InstanceT (_, _, _, instance) ->
-    check_polarity_propmap cx instance.fields_tmap;
-    check_polarity_propmap cx instance.methods_tmap
+  | InstanceT (_, _, _, _, instance) ->
+    check_polarity_propmap cx ?trace instance.fields_tmap;
+    check_polarity_propmap cx ?trace instance.methods_tmap
 
   | FunT (_, _, _, func) ->
-    List.iter (check_polarity cx (Polarity.inv polarity)) func.params_tlist;
-    check_polarity cx polarity func.return_t
+    let f = check_polarity cx ?trace (Polarity.inv polarity) in
+    List.iter f func.params_tlist;
+    check_polarity cx ?trace polarity func.return_t
 
   | ArrT (_, ArrayAT (elemt, _)) ->
-    check_polarity cx Neutral elemt
+    check_polarity cx ?trace Neutral elemt
 
   | ArrT (_, TupleAT (_, tuple_types)) ->
-    List.iter (check_polarity cx Neutral) tuple_types
+    List.iter (check_polarity cx ?trace  Neutral) tuple_types
+
+  | ArrT (_, ROArrayAT (elemt)) ->
+    check_polarity cx Neutral elemt
+
+  | ArrT (_, EmptyAT) -> ()
 
   | ObjT (_, obj) ->
-    check_polarity_propmap cx obj.props_tmap;
+    check_polarity_propmap cx ?trace obj.props_tmap;
     (match obj.dict_t with
     | Some { key; value; dict_polarity; _ } ->
-      check_polarity cx dict_polarity key;
-      check_polarity cx dict_polarity value
+      check_polarity cx ?trace dict_polarity key;
+      check_polarity cx ?trace dict_polarity value
     | None -> ())
 
-  | IdxWrapper (_, obj) -> check_polarity cx polarity obj
+  | IdxWrapper (_, obj) -> check_polarity cx ?trace polarity obj
 
   | UnionT (_, rep) ->
-    List.iter (check_polarity cx polarity) (UnionRep.members rep)
+    List.iter (check_polarity cx ?trace polarity) (UnionRep.members rep)
 
   | IntersectionT (_, rep) ->
-    List.iter (check_polarity cx polarity) (InterRep.members rep)
+    List.iter (check_polarity cx ?trace polarity) (InterRep.members rep)
 
-  | PolyT (xs, t) ->
-    List.iter (check_polarity_typeparam cx (Polarity.inv polarity)) xs;
-    check_polarity cx polarity t
+  | PolyT (_, xs, t) ->
+    List.iter (check_polarity_typeparam cx ?trace (Polarity.inv polarity)) xs;
+    check_polarity cx ?trace polarity t
 
-  | ThisTypeAppT (c, _, ts)
-  | TypeAppT (c, ts)
+  | ThisTypeAppT (_, c, _, ts)
+  | TypeAppT (_, c, ts)
     ->
-    check_polarity_typeapp cx polarity c ts
+    check_polarity_typeapp cx ?trace polarity c ts
 
   | ThisClassT _
   | ModuleT _
@@ -5862,37 +6576,38 @@ and check_polarity cx polarity = function
   | TypeMapT _
     -> () (* TODO *)
 
-and check_polarity_propmap cx id =
+and check_polarity_propmap cx ?trace id =
   let pmap = Context.find_props cx id in
-  SMap.iter (fun _ -> check_polarity_prop cx) pmap
+  SMap.iter (fun _ -> check_polarity_prop cx ?trace) pmap
 
-and check_polarity_prop cx = function
-  | Field (t, polarity) -> check_polarity cx polarity t
-  | Get t -> check_polarity cx Positive t
-  | Set t -> check_polarity cx Negative t
+and check_polarity_prop cx ?trace = function
+  | Field (t, polarity) -> check_polarity cx ?trace polarity t
+  | Get t -> check_polarity cx ?trace Positive t
+  | Set t -> check_polarity cx ?trace Negative t
   | GetSet (t1, t2) ->
-    check_polarity cx Positive t1;
-    check_polarity cx Negative t2
+    check_polarity cx ?trace Positive t1;
+    check_polarity cx ?trace Negative t2
+  | Method t -> check_polarity cx ?trace Positive t
 
-and check_polarity_typeparam cx polarity tp =
-  check_polarity cx polarity tp.bound
+and check_polarity_typeparam cx ?trace polarity tp =
+  check_polarity cx ?trace polarity tp.bound
 
-and check_polarity_typeapp cx polarity c ts =
+and check_polarity_typeapp cx ?trace polarity c ts =
   let reason = replace_reason (fun desc ->
     RVarianceCheck desc
   ) (reason_of_t c) in
-  flow_opt cx (c, VarianceCheckT(reason, ts, polarity))
+  flow_opt cx ?trace (c, VarianceCheckT(reason, ts, polarity))
 
-and variance_check cx polarity = function
+and variance_check cx ?trace polarity = function
   | [], _ | _, [] ->
     (* ignore typeapp arity mismatch, since it's handled elsewhere *)
     ()
   | tp::tps, t::ts ->
-    check_polarity cx (Polarity.mult (polarity, tp.polarity)) t;
-    variance_check cx polarity (tps, ts)
+    check_polarity cx ?trace (Polarity.mult (polarity, tp.polarity)) t;
+    variance_check cx ?trace polarity (tps, ts)
 
-and polarity_mismatch cx polarity tp =
-  FlowError.(add_output cx (EPolarityMismatch (tp, polarity)))
+and polarity_mismatch cx ?trace polarity tp =
+  add_output cx ?trace (FlowError.EPolarityMismatch (tp, polarity))
 
 and poly_minimum_arity xs =
   List.filter (fun typeparam -> typeparam.default = None) xs
@@ -5904,7 +6619,7 @@ and instantiate_poly_with_targs
   trace
   ~reason_op
   ~reason_tapp
-  ?(cache=false)
+  ?cache
   (xs,t)
   ts
   =
@@ -5915,7 +6630,7 @@ and instantiate_poly_with_targs
     let loc = Loc.btwn (loc_of_reason x1.reason) (loc_of_reason xN.reason) in
     mk_reason (RCustom "See type parameters of definition here") loc in
   if List.length ts > maximum_arity
-  then add_output cx trace
+  then add_output cx ~trace
     (FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
   let map, _ = List.fold_left
     (fun (map, ts) typeparam ->
@@ -5925,29 +6640,30 @@ and instantiate_poly_with_targs
           subst cx map default, []
       | {default=None; _;}, [] ->
           (* fewer arguments than params but no default *)
-          add_output cx trace (FlowError.ETooFewTypeArgs
+          add_output cx ~trace (FlowError.ETooFewTypeArgs
             (reason_tapp, reason_arity, minimum_arity));
           AnyT reason_op, []
       | _, t::ts ->
           t, ts in
-      let t_ = cache_instantiate cx trace cache (typeparam, reason_op) t in
+      let t_ = cache_instantiate cx trace ?cache typeparam reason_op t in
       rec_flow_t cx trace (t_, subst cx map typeparam.bound);
       SMap.add typeparam.name t_ map, ts
     )
     (SMap.empty, ts)
     xs in
-  subst cx map t
+  subst cx map (reposition cx ~trace (loc_of_reason reason_tapp) t)
 
 (* Given a type parameter, a supplied type argument for specializing it, and a
    reason for specialization, either return the type argument or, when directed,
    look up the instantiation cache for an existing type argument for the same
    purpose and unify it with the supplied type argument. *)
-and cache_instantiate cx trace cache (typeparam, reason_op) t =
-  if cache then
-    let t_ = Cache.PolyInstantiation.find cx (typeparam, reason_op) in
+and cache_instantiate cx trace ?cache typeparam reason_op t =
+  match cache with
+  | None -> t
+  | Some rs ->
+    let t_ = Cache.PolyInstantiation.find cx typeparam (reason_op, rs) in
     rec_unify cx trace t t_;
     t_
-  else t
 
 (* Instantiate a polymorphic definition with stated bound or 'any' for args *)
 (* Needed only for experimental.enforce_strict_type_args=false killswitch *)
@@ -5965,11 +6681,11 @@ and instantiate_poly_default_args cx trace ~reason_op ~reason_tapp (xs,t) =
   instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp (xs,t) ts
 
 (* Instantiate a polymorphic definition by creating fresh type arguments. *)
-and instantiate_poly cx trace ~reason_op ~reason_tapp ?(cache=false) (xs,t) =
+and instantiate_poly cx trace ~reason_op ~reason_tapp ?cache (xs,t) =
   let ts = xs |> List.map (fun typeparam ->
-    ImplicitTypeArgument.mk_targ cx (typeparam, reason_op)
+    ImplicitTypeArgument.mk_targ cx typeparam reason_op
   ) in
-  instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp ~cache (xs,t) ts
+  instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp ?cache (xs,t) ts
 
 (* instantiate each param of a polymorphic type with its upper bound *)
 and instantiate_poly_param_upper_bounds cx typeparams =
@@ -5984,11 +6700,47 @@ and instantiate_poly_param_upper_bounds cx typeparams =
    fixpoint is some `this`, substitute it as This in the instance type, and
    finally unify it with the instance type. Return the class type wrapping the
    instance type. *)
-and fix_this_class cx trace reason i =
+and fix_this_class cx trace reason (r, i) =
   let this = mk_tvar cx reason in
   let i = subst cx (SMap.singleton "this" this) i in
   rec_unify cx trace this i;
-  ClassT(i)
+  ClassT (r, i)
+
+and canonicalize_imported_type cx trace reason t =
+  match t with
+  | ClassT(_, inst) ->
+    Some (TypeT (reason, inst))
+
+  | FunT(_, _, prototype, _) ->
+    Some (TypeT (reason, prototype))
+
+  | PolyT(_, typeparams, ClassT(_, inst)) ->
+    Some (poly_type typeparams (TypeT(reason, inst)))
+
+  | PolyT(_, typeparams, FunT(_, _, prototype, _)) ->
+    Some (poly_type typeparams (TypeT (reason, prototype)))
+
+  (* delay fixing a polymorphic this-abstracted class until it is specialized,
+     by transforming the instance type to a type application *)
+  | PolyT(_, typeparams, ThisClassT _) ->
+    let targs = List.map (fun tp -> BoundT tp) typeparams in
+    Some (poly_type typeparams (class_type (typeapp t targs)))
+
+  | PolyT(_, _, TypeT _) ->
+    Some t
+
+  (* fix this-abstracted class when used as a type *)
+  | ThisClassT(r, i) ->
+    Some (fix_this_class cx trace reason (r, i))
+
+  | TypeT _ ->
+    Some t
+
+  | AnyT _ ->
+    Some t
+
+  | _ ->
+    None
 
 (* Specialize This in a class. Eventually this causes substitution. *)
 and instantiate_this_class cx trace reason tc this =
@@ -6002,22 +6754,19 @@ and instantiate_this_class cx trace reason tc this =
 and specialize_class cx trace ~reason_op ~reason_tapp c ts =
   if ts = [] then c
   else mk_tvar_where cx reason_op (fun tvar ->
-    rec_flow cx trace (c, SpecializeT (reason_op, reason_tapp, false, ts, tvar))
+    rec_flow cx trace (c, SpecializeT (reason_op, reason_tapp, None, ts, tvar))
   )
 
 and mk_object_with_proto cx reason ?dict proto =
   mk_object_with_map_proto cx reason ?dict SMap.empty proto
 
-and mk_object_with_map_proto cx reason ?(sealed=false) ?frozen ?dict map proto =
+and mk_object_with_map_proto cx reason
+  ?(sealed=false) ?(exact=true) ?(frozen=false) ?dict map proto =
   let sealed =
     if sealed then Sealed
     else UnsealedInFile (Loc.source (loc_of_reason reason))
   in
-  let flags = { default_flags with sealed } in
-  let flags = match frozen with
-  | Some frozen -> { flags with frozen }
-  | None -> flags
-  in
+  let flags = { sealed; exact; frozen } in
   let pmap = Context.make_property_map cx map in
   ObjT (reason, mk_objecttype ~flags dict pmap proto)
 
@@ -6043,8 +6792,15 @@ and spread_objects cx reason those =
 
 and chain_objects cx ?trace reason this those =
   List.fold_left (fun result that ->
+    let that, kind = match that with
+    | Arg t -> t, ObjAssign
+    | SpreadArg t ->
+        (* If someone does Object.assign({}, ...Array<obj>) we can treat it like
+           Object.assign({}, obj). *)
+        t, ObjSpreadAssign
+    in
     mk_tvar_where cx reason (fun t ->
-      flow_opt cx ?trace (result, ObjAssignT(reason, that, t, [], true));
+      flow_opt cx ?trace (result, ObjAssignToT(reason, that, t, [], kind));
     )
   ) this those
 
@@ -6221,22 +6977,48 @@ and concretize_patt replace patt =
     else replace, result@[t]
   ) (replace, []) patt)
 
+and concretize_call_args replace call_args =
+  snd (List.fold_left (fun (replace, result) call_arg ->
+    match call_arg with
+    | Arg t ->
+      if patt_that_needs_concretization t
+      then List.tl replace, result@[Arg (List.hd replace)]
+      else replace, result@[call_arg]
+    | SpreadArg t ->
+      if patt_that_needs_concretization t
+      then List.tl replace, result@[SpreadArg (List.hd replace)]
+      else replace, result@[call_arg]
+  ) (replace, []) call_args)
+
 (* for now, we only care about concretizating parts of functions and calls *)
 and parts_to_replace = function
   | UseT (_, FunT (_, _, _, callt)) ->
-    List.filter patt_that_needs_concretization callt.params_tlist
+    let params = match callt.rest_param with
+    | None -> callt.params_tlist
+    | Some (_, _, rest) -> rest::callt.params_tlist in
+    List.filter patt_that_needs_concretization params
   | CallT (_, callt) ->
-    List.filter patt_that_needs_concretization callt.params_tlist
+    callt.call_args_tlist
+      |> List.map (function Arg t | SpreadArg t -> t)
+      |> List.filter patt_that_needs_concretization
   | _ -> []
 
 and replace_parts replace = function
   | UseT (op, FunT (r, t1, t2, callt)) ->
+    let rest_param, params_tlist = match callt.rest_param with
+    | None -> None, concretize_patt replace callt.params_tlist
+    | Some (name, loc, rest) ->
+        (match concretize_patt replace (rest::callt.params_tlist) with
+        | rest::params -> Some (name, loc, rest), params
+        | [] -> failwith "By construction, this list should be non-empty") in
+
     UseT (op, FunT (r, t1, t2, { callt with
-      params_tlist = concretize_patt replace callt.params_tlist;
+      params_tlist;
+      rest_param;
     }))
   | CallT (r, callt) ->
     CallT (r, { callt with
-      params_tlist = concretize_patt replace callt.params_tlist;
+      call_args_tlist = concretize_call_args replace callt.call_args_tlist;
     })
   | u -> u
 
@@ -6274,7 +7056,7 @@ and bindings_of_jobs cx trace jobs =
     | Some speculation_id ->
       Speculation.add_unresolved_to_speculation cx speculation_id t
     | None ->
-      rec_unify cx trace t AnyT.t
+      rec_unify cx trace t Locationless.AnyT.t
     end;
     bindings
   ) jobs []
@@ -6561,7 +7343,7 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
         let r = mk_intersection_reason r ls in
         MixedT (r, Empty_intersection), u
     in
-    add_output cx trace
+    add_output cx ~trace
       (FlowError.ESpeculationFailed (l, u, extra))
 
   in loop (Speculation.NoMatch []) trials
@@ -6583,12 +7365,12 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
 *)
 and blame_unresolved cx trace prev_i i cases case_r r ts =
   let rs = ts |> List.map (fun t ->
-    rec_unify cx trace t AnyT.t;
+    rec_unify cx trace t Locationless.AnyT.t;
     reason_of_t t
   ) in
   let prev_case = reason_of_t (List.nth cases prev_i) in
   let case = reason_of_t (List.nth cases i) in
-  add_output cx trace (FlowError.ESpeculationAmbiguous (
+  add_output cx ~trace (FlowError.ESpeculationAmbiguous (
     (case_r, r),
     (prev_i, prev_case),
     (i, case),
@@ -6607,7 +7389,7 @@ and choices_of_spec = function
     -> ts
 
 and ignore_of_spec = function
-  | IntersectionCases (_, CallT (_, callt)) -> Some (callt.return_t)
+  | IntersectionCases (_, CallT (_, callt)) -> Some (callt.call_tout)
   | _ -> None
 
 (* spec optimization *)
@@ -6640,10 +7422,14 @@ and guess_and_record_sentinel_prop cx ts =
     | AnnotT (OpenT (_, id)) ->
       let constraints = find_graph cx id in
       begin match constraints with
-      | Resolved (SingletonStrT _ | SingletonNumT _ | SingletonBoolT _) -> true
+      | Resolved (
+          SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ |
+          NullT _ | VoidT _
+        ) -> true
       | _ -> false
       end
     | SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ -> true
+    | NullT _ | VoidT _ -> true
     | _ -> false in
 
   (* Compute the intersection of properties of objects *)
@@ -6733,7 +7519,7 @@ and get_prop cx trace reason_prop reason_op strict super x map tout =
     | Some t ->
       rec_flow cx trace (t, u)
     | None ->
-      add_output cx trace
+      add_output cx ~trace
         (FlowError.EPropAccess ((reason_op, reason_op), Some x, p, Read)))
   | None ->
     let tout = tvar_with_constraint cx ~trace u in
@@ -6749,7 +7535,7 @@ and set_prop cx trace reason_prop reason_op strict super x pmap tin =
     | Some t ->
       rec_flow_t cx trace (tin, ReposT (reason_op, t))
     | None ->
-      add_output cx trace
+      add_output cx ~trace
         (FlowError.EPropAccess ((reason_prop, reason_op), Some x, p, Write)))
   | None ->
     lookup_prop cx trace super reason_prop reason_op strict x
@@ -6794,17 +7580,17 @@ and read_obj_prop cx trace o propref reason_obj reason_op tout =
       match elem_t with
       | OpenT _ ->
         let loc = loc_of_t elem_t in
-        add_output cx trace FlowError.(EInternal (loc, PropRefComputedOpen))
+        add_output cx ~trace FlowError.(EInternal (loc, PropRefComputedOpen))
       | StrT (_, Literal _) ->
         let loc = loc_of_t elem_t in
-        add_output cx trace FlowError.(EInternal (loc, PropRefComputedLiteral))
+        add_output cx ~trace FlowError.(EInternal (loc, PropRefComputedLiteral))
       | AnyT _ | StrT _ | NumT _ ->
         (* any, string, and number keys are allowed, but there's nothing else to
            flow without knowing their literal values. *)
         rec_flow_t cx trace (AnyT.why reason_op, tout)
       | _ ->
         let reason_prop = reason_of_t elem_t in
-        add_output cx trace (FlowError.EObjectComputedPropertyAccess
+        add_output cx ~trace (FlowError.EObjectComputedPropertyAccess
           (reason_op, reason_prop)));
   Ops.set ops
 
@@ -6818,7 +7604,9 @@ and write_obj_prop cx trace o propref reason_obj reason_op tin =
     | Named (reason_prop, _) ->
       if sealed_in_op reason_op o.flags.sealed
       then
-        add_output cx trace (FlowError.EPropNotFound (reason_prop, reason_obj))
+        let err =
+          FlowError.EPropNotFound ((reason_prop, reason_obj), UnknownUse) in
+        add_output cx ~trace err
       else
         let strict = ShadowWrite (Nel.one o.props_tmap) in
         rec_flow cx trace (o.proto_t,
@@ -6827,17 +7615,17 @@ and write_obj_prop cx trace o propref reason_obj reason_op tin =
       match elem_t with
       | OpenT _ ->
         let loc = loc_of_t elem_t in
-        add_output cx trace FlowError.(EInternal (loc, PropRefComputedOpen))
+        add_output cx ~trace FlowError.(EInternal (loc, PropRefComputedOpen))
       | StrT (_, Literal _) ->
         let loc = loc_of_t elem_t in
-        add_output cx trace FlowError.(EInternal (loc, PropRefComputedLiteral))
+        add_output cx ~trace FlowError.(EInternal (loc, PropRefComputedLiteral))
       | AnyT _ | StrT _ | NumT _ ->
         (* any, string, and number keys are allowed, but there's nothing else to
            flow without knowing their literal values. *)
         rec_flow_t cx trace (tin, AnyT.why reason_op)
       | _ ->
         let reason_prop = reason_of_t elem_t in
-        add_output cx trace (FlowError.EObjectComputedPropertyAssign
+        add_output cx ~trace (FlowError.EObjectComputedPropertyAssign
           (reason_op, reason_prop));
 
 and find_or_intro_shadow_prop cx trace x =
@@ -6920,13 +7708,13 @@ and filter_exists = function
   | SingletonBoolT (r, false)
   | BoolT (r, Some false)
   | SingletonStrT (r, "")
-  | StrT (r, Literal "")
+  | StrT (r, Literal (_, ""))
   | SingletonNumT (r, (0., _))
-  | NumT (r, Literal (0., _)) -> EmptyT r
+  | NumT (r, Literal (_, (0., _))) -> EmptyT r
 
   (* unknown things become truthy *)
-  | MaybeT t -> t
-  | OptionalT t -> filter_exists t
+  | MaybeT (_, t) -> t
+  | OptionalT (_, t) -> filter_exists t
   | BoolT (r, None) -> BoolT (r, Some true)
   | StrT (r, AnyLiteral) -> StrT (r, Truthy)
   | NumT (r, AnyLiteral) -> NumT (r, Truthy)
@@ -6942,9 +7730,9 @@ and filter_not_exists t = match t with
   | SingletonBoolT (_, false)
   | BoolT (_, Some false)
   | SingletonStrT (_, "")
-  | StrT (_, Literal "")
+  | StrT (_, Literal (_, ""))
   | SingletonNumT (_, (0., _))
-  | NumT (_, Literal (0., _)) -> t
+  | NumT (_, Literal (_, (0., _))) -> t
 
   (* truthy things get removed *)
   | SingletonBoolT (r, _)
@@ -6953,7 +7741,7 @@ and filter_not_exists t = match t with
   | StrT (r, (Literal _ | Truthy))
   | ArrT (r, _)
   | ObjT (r, _)
-  | InstanceT (r, _, _, _)
+  | InstanceT (r, _, _, _, _)
   | AnyObjT r
   | FunT (r, _, _, _)
   | AnyFunT r
@@ -6962,23 +7750,21 @@ and filter_not_exists t = match t with
   | MixedT (r, Mixed_truthy)
     -> EmptyT r
 
-  | ClassT t -> EmptyT (reason_of_t t)
+  | ClassT (reason, _) -> EmptyT reason
 
   (* unknown boolies become falsy *)
-  | MaybeT t ->
-    let reason = reason_of_t t in
-    UnionT (reason, UnionRep.make (NullT.why reason) (VoidT.why reason) [])
+  | MaybeT (r, _) ->
+    UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [])
   | BoolT (r, None) -> BoolT (r, Some false)
-  | StrT (r, AnyLiteral) -> StrT (r, Literal "")
-  | NumT (r, AnyLiteral) -> NumT (r, Literal (0., "0"))
+  | StrT (r, AnyLiteral) -> StrT (r, Literal (None, ""))
+  | NumT (r, AnyLiteral) -> NumT (r, Literal (None, (0., "0")))
 
   (* things that don't track truthiness pass through *)
   | t -> t
 
 and filter_maybe = function
-  | MaybeT t ->
-    let reason = reason_of_t t in
-    UnionT (reason, UnionRep.make (NullT.why reason) (VoidT.why reason) [])
+  | MaybeT (r, _) ->
+    UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [])
   | MixedT (r, Mixed_everything) ->
     UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [])
   | MixedT (r, Mixed_truthy) -> EmptyT.why r
@@ -6987,17 +7773,15 @@ and filter_maybe = function
   | MixedT (r, Mixed_non_null) -> VoidT r
   | NullT _ as t -> t
   | VoidT _ as t -> t
-  | OptionalT t ->
-    let reason = reason_of_t t in
-    VoidT.why reason
+  | OptionalT (r, _) -> VoidT.why r
   | AnyT _ as t -> t
   | t ->
     let reason = reason_of_t t in
     EmptyT.why reason
 
 and filter_not_maybe = function
-  | MaybeT t -> t
-  | OptionalT t -> filter_not_maybe t
+  | MaybeT (_, t) -> t
+  | OptionalT (_, t) -> filter_not_maybe t
   | NullT r | VoidT r -> EmptyT r
   | MixedT (r, Mixed_truthy) -> MixedT (r, Mixed_truthy)
   | MixedT (r, Mixed_everything)
@@ -7007,8 +7791,8 @@ and filter_not_maybe = function
   | t -> t
 
 and filter_null = function
-  | OptionalT (MaybeT t)
-  | MaybeT t -> NullT.why (reason_of_t t)
+  | OptionalT (_, (MaybeT (r, _)))
+  | MaybeT (r, _) -> NullT.why r
   | NullT _ as t -> t
   | MixedT (r, Mixed_everything)
   | MixedT (r, Mixed_non_void) -> NullT.why r
@@ -7018,10 +7802,9 @@ and filter_null = function
     EmptyT.why reason
 
 and filter_not_null = function
-  | MaybeT t ->
-    let reason = reason_of_t t in
-    UnionT (reason, UnionRep.make (VoidT.why reason) t [])
-  | OptionalT t -> OptionalT (filter_not_null t)
+  | MaybeT (r, t) ->
+    UnionT (r, UnionRep.make (VoidT.why r) t [])
+  | OptionalT (r, t) -> OptionalT (r, filter_not_null t)
   | UnionT (r, rep) ->
     recurse_into_union filter_not_null (r, UnionRep.members rep)
   | NullT r -> EmptyT r
@@ -7030,11 +7813,9 @@ and filter_not_null = function
   | t -> t
 
 and filter_undefined = function
-  | MaybeT t -> VoidT.why (reason_of_t t)
+  | MaybeT (r, _) -> VoidT.why r
   | VoidT _ as t -> t
-  | OptionalT t ->
-    let reason = reason_of_t t in
-    VoidT.why reason
+  | OptionalT (r, _) -> VoidT.why r
   | MixedT (r, Mixed_everything)
   | MixedT (r, Mixed_non_null) -> VoidT.why r
   | AnyT _ as t -> t
@@ -7043,10 +7824,9 @@ and filter_undefined = function
     EmptyT.why reason
 
 and filter_not_undefined = function
-  | MaybeT t ->
-    let reason = reason_of_t t in
-    UnionT (reason, UnionRep.make (NullT.why reason) t [])
-  | OptionalT t -> filter_not_undefined t
+  | MaybeT (r, t) ->
+    UnionT (r, UnionRep.make (NullT.why r) t [])
+  | OptionalT (_, t) -> filter_not_undefined t
   | UnionT (r, rep) ->
     recurse_into_union filter_not_undefined (r, UnionRep.members rep)
   | VoidT r -> EmptyT r
@@ -7054,38 +7834,45 @@ and filter_not_undefined = function
   | MixedT (r, Mixed_non_null) -> MixedT (r, Mixed_non_maybe)
   | t -> t
 
-and filter_string_literal expected t =
-  let lit_reason = replace_reason_const (RStringLit expected) in
+and filter_string_literal expected_loc sense expected t =
+  let expected_desc = RStringLit expected in
+  let lit_reason = replace_reason_const expected_desc in
   match t with
-  | StrT (_, Literal actual) when actual = expected -> t
+  | StrT (_, Literal (_, actual)) ->
+    if actual = expected then t
+    else StrT (mk_reason expected_desc expected_loc, Literal (Some sense, expected))
   | StrT (r, Truthy) when expected <> "" ->
-    StrT (lit_reason r, Literal expected)
+    StrT (lit_reason r, Literal (None, expected))
   | StrT (r, AnyLiteral) ->
-    StrT (lit_reason r, Literal expected)
+    StrT (lit_reason r, Literal (None, expected))
   | MixedT (r, _) ->
-    StrT (lit_reason r, Literal expected)
+    StrT (lit_reason r, Literal (None, expected))
   | AnyT _ as t -> t
   | _ -> EmptyT (reason_of_t t)
 
 and filter_not_string_literal expected = function
-  | StrT (r, Literal actual) when actual = expected -> EmptyT r
+  | StrT (r, Literal (_, actual)) when actual = expected -> EmptyT r
   | t -> t
 
-and filter_number_literal expected t =
-  let lit_reason = replace_reason_const (RNumberLit (snd expected)) in
+and filter_number_literal expected_loc sense expected t =
+  let _, expected_raw = expected in
+  let expected_desc = RNumberLit expected_raw in
+  let lit_reason = replace_reason_const expected_desc in
   match t with
-  | NumT (_, Literal actual) when snd actual = snd expected -> t
+  | NumT (_, Literal (_, (_, actual_raw))) ->
+    if actual_raw = expected_raw then t
+    else NumT (mk_reason expected_desc expected_loc, Literal (Some sense, expected))
   | NumT (r, Truthy) when snd expected <> "0" ->
-    NumT (lit_reason r, Literal expected)
+    NumT (lit_reason r, Literal (None, expected))
   | NumT (r, AnyLiteral) ->
-    NumT (lit_reason r, Literal expected)
+    NumT (lit_reason r, Literal (None, expected))
   | MixedT (r, _) ->
-    NumT (lit_reason r, Literal expected)
+    NumT (lit_reason r, Literal (None, expected))
   | AnyT _ as t -> t
   | _ -> EmptyT (reason_of_t t)
 
 and filter_not_number_literal expected = function
-  | NumT (r, Literal actual) when snd actual = snd expected -> EmptyT r
+  | NumT (r, Literal (_, actual)) when snd actual = snd expected -> EmptyT r
   | t -> t
 
 and filter_true t =
@@ -7123,7 +7910,7 @@ and filter_not_false t =
 (* filter out undefined from a type *)
 and filter_optional cx ?trace reason opt_t =
   mk_tvar_where cx reason (fun t ->
-    flow_opt_t cx ?trace (opt_t, OptionalT(t))
+    flow_opt_t cx ?trace (opt_t, OptionalT (reason, t))
   )
 
 (**********)
@@ -7147,7 +7934,7 @@ and guard cx trace source pred result sink = match pred with
 | _ ->
   let loc = loc_of_reason (reason_of_t sink) in
   let pred_str = string_of_predicate pred in
-  add_output cx trace
+  add_output cx ~trace
     FlowError.(EInternal (loc, UnsupportedGuardPredicate pred_str))
 
 (**************)
@@ -7242,20 +8029,20 @@ and predicate cx trace t l p = match p with
   (* _ ~ "some string" *)
   (*********************)
 
-  | SingletonStrP lit ->
-    rec_flow_t cx trace (filter_string_literal lit l, t)
+  | SingletonStrP (expected_loc, sense, lit) ->
+    rec_flow_t cx trace (filter_string_literal expected_loc sense lit l, t)
 
-  | NotP SingletonStrP lit ->
+  | NotP SingletonStrP (_, _, lit) ->
     rec_flow_t cx trace (filter_not_string_literal lit l, t)
 
   (*********************)
   (* _ ~ some number n *)
   (*********************)
 
-  | SingletonNumP lit ->
-    rec_flow_t cx trace (filter_number_literal lit l, t)
+  | SingletonNumP (expected_loc, sense, lit) ->
+    rec_flow_t cx trace (filter_number_literal expected_loc sense lit l, t)
 
-  | NotP SingletonNumP lit ->
+  | NotP SingletonNumP (_, _, lit) ->
     rec_flow_t cx trace (filter_not_number_literal lit l, t)
 
   (***********************)
@@ -7454,7 +8241,7 @@ and prop_exists_test_generic
         rec_flow cx trace (t, GuardT (pred, orig_obj, result))
       | None ->
         (* prop cannot be read *)
-        add_output cx trace
+        add_output cx ~trace
           (FlowError.EPropAccess ((lreason, reason), Some key, p, Read)))
     | None when flags.exact && sealed_in_op (reason_of_t result) flags.sealed ->
       (* prop is absent from exact object type *)
@@ -7502,18 +8289,22 @@ and instanceof_test cx trace result = function
       to (InstanceT(Array), InstanceofP c) because this allows c to be resolved
       first. *)
   | (true,
-    (ArrT (reason, (ArrayAT (elemt, _) | TupleAT (elemt, _))) as arr),
-    ClassT(InstanceT _ as a)) ->
+    (ArrT (reason, arrtype) as arr),
+    ClassT (r, (InstanceT _ as a))) ->
 
-    let right = ClassT(ExtendsT([], arr, a)) in
+    let elemt = elemt_of_arrtype reason arrtype in
+
+    let right = ClassT (r, extends_type arr a) in
     let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
     rec_flow cx trace (arrt, PredicateT(LeftP(InstanceofTest, right), result))
 
   | (false,
-    (ArrT (reason, (ArrayAT (elemt, _) | TupleAT (elemt, _))) as arr),
-    ClassT(InstanceT _ as a)) ->
+    (ArrT (reason, arrtype) as arr),
+    ClassT (r, (InstanceT _ as a))) ->
 
-    let right = ClassT(ExtendsT([], arr, a)) in
+    let elemt = elemt_of_arrtype reason arrtype in
+
+    let right = ClassT (r, extends_type arr a) in
     let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
     let pred = NotP(LeftP(InstanceofTest, right)) in
     rec_flow cx trace (arrt, PredicateT (pred, result))
@@ -7537,16 +8328,16 @@ and instanceof_test cx trace result = function
       class. (As a technical tool, we use Extends(_, _) to perform this
       recursion; it is also used elsewhere for running similar recursive
       subclass decisions.) **)
-  | (true, (InstanceT _ as c), ClassT(InstanceT _ as a)) ->
+  | (true, (InstanceT _ as c), ClassT (r, (InstanceT _ as a))) ->
     predicate cx trace result
-      (ClassT (ExtendsT([], c, a)))
+      (ClassT (r, extends_type c a))
       (RightP (InstanceofTest, c))
 
   (** If C is a subclass of A, then don't refine the type of x. Otherwise,
       refine the type of x to A. (In general, the type of x should be refined to
       C & A, but that's hard to compute.) **)
-  | (true, InstanceT (_,_,super_c,instance_c),
-     (ClassT(ExtendsT(_, c, InstanceT (_,_,_,instance_a))) as right))
+  | (true, InstanceT (reason,_,super_c,_,instance_c),
+     (ClassT (_, ExtendsT(_, _, c, InstanceT (_,_,_,_,instance_a))) as right))
     -> (* TODO: intersection *)
 
     if instance_a.class_id = instance_c.class_id
@@ -7554,12 +8345,13 @@ and instanceof_test cx trace result = function
     else
       (** Recursively check whether super(C) extends A, with enough context. **)
       let pred = LeftP(InstanceofTest, right) in
-      rec_flow cx trace (super_c, PredicateT(pred, result))
+      let u = PredicateT(pred, result) in
+      rec_flow cx trace (super_c, ReposLowerT (reason, u))
 
-  | (true, ObjProtoT _, ClassT(ExtendsT (_, _, a)))
+  | (true, ObjProtoT _, ClassT (r, ExtendsT (_, _, _, a)))
     ->
     (** We hit the root class, so C is not a subclass of A **)
-    rec_flow_t cx trace (a, result)
+    rec_flow_t cx trace (reposition cx ~trace (loc_of_reason r) a, result)
 
   (** Prune the type when any other `instanceof` check succeeds (since this is
       impossible). *)
@@ -7574,26 +8366,27 @@ and instanceof_test cx trace result = function
       check whether x is _not_ `instanceof` class A. To decide what the
       appropriate refinement for x should be, we need to decide whether C
       extends A, choosing either nothing or C based on the result. **)
-  | (false, (InstanceT _ as c), ClassT(InstanceT _ as a)) ->
+  | (false, (InstanceT _ as c), ClassT (r, (InstanceT _ as a))) ->
     predicate cx trace result
-      (ClassT(ExtendsT([], c, a)))
+      (ClassT (r, extends_type c a))
       (NotP(RightP(InstanceofTest, c)))
 
   (** If C is a subclass of A, then do nothing, since this check cannot
       succeed. Otherwise, don't refine the type of x. **)
-  | (false, InstanceT (_,_,super_c,instance_c),
-     (ClassT(ExtendsT(_, _, InstanceT (_,_,_,instance_a))) as right))
+  | (false, InstanceT (reason, _, super_c, _, instance_c),
+     (ClassT (_, ExtendsT(_, _, _, InstanceT (_,_,_,_,instance_a))) as right))
     ->
 
     if instance_a.class_id = instance_c.class_id
     then ()
-    else rec_flow cx trace
-      (super_c, PredicateT(NotP(LeftP(InstanceofTest, right)), result))
+    else
+      let u = PredicateT(NotP(LeftP(InstanceofTest, right)), result) in
+      rec_flow cx trace (super_c, ReposLowerT (reason, u))
 
-  | (false, ObjProtoT _, ClassT(ExtendsT(_, c, _)))
+  | (false, ObjProtoT _, ClassT (r, ExtendsT(_, _, c, _)))
     ->
     (** We hit the root class, so C is not a subclass of A **)
-    rec_flow_t cx trace (c, result)
+    rec_flow_t cx trace (reposition cx ~trace (loc_of_reason r) c, result)
 
   (** Don't refine the type when any other `instanceof` check fails. **)
   | (false, left, _) ->
@@ -7644,7 +8437,7 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       | None ->
         let reason_obj = reason_of_t obj in
         let reason = reason_of_t result in
-        add_output cx trace
+        add_output cx ~trace
           (FlowError.EPropAccess ((reason_obj, reason), Some key, p, Read)))
     | None ->
       (* TODO: possibly unsound to filter out orig_obj here, but if we
@@ -7657,9 +8450,11 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
   in
   let sentinel_of_literal = function
-    | StrT (_, Literal value) -> Some (SentinelStr value)
-    | NumT (_, Literal value) -> Some (SentinelNum value)
+    | StrT (_, Literal (_, value)) -> Some (SentinelStr value)
+    | NumT (_, Literal (_, value)) -> Some (SentinelNum value)
     | BoolT (_, Some value) -> Some (SentinelBool value)
+    | VoidT _ -> Some SentinelVoid
+    | NullT _ -> Some SentinelNull
     | _ -> None
   in
   fun (sense, obj, t) -> match sentinel_of_literal t with
@@ -7670,7 +8465,8 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
         flow_sentinel sense props_tmap obj s
 
       (* instance.key ===/!== literal value *)
-      | InstanceT (_, _, _, { fields_tmap; _}) ->
+      | InstanceT (_, _, _, _, { fields_tmap; _}) ->
+        (* TODO: add test for sentinel test on implements *)
         flow_sentinel sense fields_tmap obj s
 
       | IntersectionT (_, rep) ->
@@ -7907,7 +8703,7 @@ and add_lower_edges cx trace ?(opt=false) (id1, bounds1) (id2, bounds2) =
    connections necessary when two non-unifiers flow to each other. If one or
    both of the roots are resolved, they effectively act like the corresponding
    concrete types. *)
-and goto cx trace (id1, root1) (id2, root2) =
+and goto cx trace ~use_op (id1, root1) (id2, root2) =
   (match root1.constraints, root2.constraints with
 
   | Unresolved bounds1, Unresolved bounds2 ->
@@ -7927,45 +8723,47 @@ and goto cx trace (id1, root1) (id2, root2) =
     );
 
   | Unresolved bounds1, Resolved t2 ->
-    let t2_use = UseT (UnknownUse, t2) in
+    let t2_use = UseT (use_op, t2) in
     edges_and_flows_to_t cx trace ~opt:true (id1, bounds1) t2_use;
     edges_and_flows_from_t cx trace ~opt:true t2 (id1, bounds1);
 
   | Resolved t1, Unresolved bounds2 ->
-    let t1_use = UseT (UnknownUse, t1) in
+    let t1_use = UseT (use_op, t1) in
     replace_node cx id2 (Root { root2 with constraints = Resolved t1 });
     edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1_use;
     edges_and_flows_from_t cx trace ~opt:true t1 (id2, bounds2);
 
   | Resolved t1, Resolved t2 ->
-    rec_unify cx trace t1 t2;
+    rec_unify cx trace ~use_op t1 t2;
   );
   replace_node cx id1 (Goto id2)
 
 (* Unify two type variables. This involves finding their roots, and making one
    point to the other. Ranks are used to keep chains short. *)
-and merge_ids cx trace id1 id2 =
+and merge_ids cx trace ~use_op id1 id2 =
   let (id1, root1), (id2, root2) = find_root cx id1, find_root cx id2 in
   if id1 = id2 then ()
-  else if root1.rank < root2.rank then goto cx trace (id1, root1) (id2, root2)
-  else if root2.rank < root1.rank then goto cx trace (id2, root2) (id1, root1)
+  else if root1.rank < root2.rank
+  then goto cx trace ~use_op (id1, root1) (id2, root2)
+  else if root2.rank < root1.rank
+  then goto cx trace ~use_op (id2, root2) (id1, root1)
   else (
     replace_node cx id2 (Root { root2 with rank = root1.rank+1; });
-    goto cx trace (id1, root1) (id2, root2);
+    goto cx trace ~use_op (id1, root1) (id2, root2);
   )
 
 (* Resolve a type variable to a type. This involves finding its root, and
    resolving to that type. *)
-and resolve_id cx trace id t =
+and resolve_id cx trace ~use_op id t =
   let id, root = find_root cx id in
   match root.constraints with
   | Unresolved bounds ->
     replace_node cx id (Root { root with constraints = Resolved t });
-    edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (UnknownUse, t));
+    edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (use_op, t));
     edges_and_flows_from_t cx trace ~opt:true t (id, bounds);
 
   | Resolved t_ ->
-    rec_unify cx trace t_ t
+    rec_unify cx trace ~use_op t_ t
 
 (******************)
 
@@ -7988,7 +8786,7 @@ and ok_unify = function
   | AnyWithUpperBoundT _ | AnyWithLowerBoundT _ -> false
   | _ -> true
 
-and __unify cx t1 t2 trace =
+and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
   begin match Context.verbose cx with
   | Some { Verbose.indent; depth } ->
     let indent = String.make ((Trace.trace_depth trace - 1) * indent) ' ' in
@@ -8021,14 +8819,14 @@ and __unify cx t1 t2 trace =
   match t1, t2 with
 
   | OpenT (_, id1), OpenT (_, id2) ->
-    merge_ids cx trace id1 id2
+    merge_ids cx trace ~use_op id1 id2
 
   | OpenT (_, id), t when ok_unify t ->
-    resolve_id cx trace id t
+    resolve_id cx trace ~use_op id t
   | t, OpenT (_, id) when ok_unify t ->
-    resolve_id cx trace id t
+    resolve_id cx trace ~use_op id t
 
-  | PolyT (params1, t1), PolyT (params2, t2)
+  | PolyT (_, params1, t1), PolyT (_, params2, t2)
     when List.length params1 = List.length params2 ->
     (** for equal-arity polymorphic types, unify param upper bounds
         with each other, then instances parameterized by these *)
@@ -8057,7 +8855,7 @@ and __unify cx t1 t2 trace =
     let l2 = List.length ts2 in
     if List.length ts1 <> List.length ts2
     then
-      add_output cx trace (FlowError.ETupleArityMismatch ((r1, r2), l1, l2))
+      add_output cx ~trace (FlowError.ETupleArityMismatch ((r1, r2), l1, l2))
     else List.iter2 (rec_unify cx trace) ts1 ts2
 
   | ObjT (lreason, { props_tmap = lflds; dict_t = ldict; _ }),
@@ -8070,10 +8868,12 @@ and __unify cx t1 t2 trace =
         rec_unify cx trace lv uv
     | Some _, None ->
         let lreason = replace_reason_const RSomeProperty lreason in
-        add_output cx trace (FlowError.EPropNotFound (lreason, ureason))
+        let err = FlowError.EPropNotFound ((lreason, ureason), use_op) in
+        add_output cx ~trace err
     | None, Some _ ->
         let ureason = replace_reason_const RSomeProperty ureason in
-        add_output cx trace (FlowError.EPropNotFound (ureason, lreason))
+        let err = FlowError.EPropNotFound ((ureason, lreason), use_op) in
+        add_output cx ~trace err
     | None, None -> ()
     end;
 
@@ -8083,11 +8883,11 @@ and __unify cx t1 t2 trace =
       if not (is_internal_name x || is_dictionary_exempt x)
       then (match lp, up with
       | Some p1, Some p2 ->
-          unify_props cx trace x lreason ureason p1 p2
+          unify_props cx trace ~use_op x lreason ureason p1 p2
       | Some p1, None ->
-          unify_prop_with_dict cx trace x p1 lreason ureason udict
+          unify_prop_with_dict cx trace ~use_op x p1 lreason ureason udict
       | None, Some p2 ->
-          unify_prop_with_dict cx trace x p2 ureason lreason ldict
+          unify_prop_with_dict cx trace ~use_op x p2 ureason lreason ldict
       | None, None -> ());
       None
     ) lpmap upmap |> ignore
@@ -8099,33 +8899,31 @@ and __unify cx t1 t2 trace =
     List.iter2 (rec_unify cx trace) funtype1.params_tlist funtype2.params_tlist;
     rec_unify cx trace funtype1.return_t funtype2.return_t
 
-  | TypeAppT (c1, ts1), TypeAppT (c2, ts2)
+  | TypeAppT (_, c1, ts1), TypeAppT (_, c2, ts2)
     when c1 = c2 && List.length ts1 = List.length ts2 ->
     List.iter2 (rec_unify cx trace) ts1 ts2
 
-  | RestT t1, RestT t2
-  | RestT t1, t2 | t1, RestT t2 ->
-    rec_unify cx trace t1 t2
-
   | _ ->
-    naive_unify cx trace t1 t2
+    naive_unify cx trace ~use_op t1 t2
   )
 
-and unify_props cx trace x r1 r2 p1 p2 =
+and unify_props cx trace ~use_op x r1 r2 p1 p2 =
+  let use_op = PropertyCompatibility (x, r1, r2, use_op) in
+
   (* If both sides are neutral fields, we can just unify once *)
   match p1, p2 with
   | Field (t1, Neutral),
     Field (t2, Neutral) ->
-    rec_unify cx trace t1 t2;
+    rec_unify cx trace ~use_op t1 t2;
   | _ ->
     (* Otherwise, unify read/write sides separately. *)
     (match Property.read_t p1, Property.read_t p2 with
     | Some t1, Some t2 ->
-        rec_unify cx trace t1 t2;
+        rec_unify cx trace ~use_op t1 t2;
     | _ -> ());
     (match Property.write_t p1, Property.write_t p2 with
     | Some t1, Some t2 ->
-        rec_unify cx trace t1 t2;
+        rec_unify cx trace ~use_op t1 t2;
     | _ -> ());
     (* Error if polarity is not compatible both ways. *)
     let polarity1 = Property.polarity p1 in
@@ -8134,27 +8932,31 @@ and unify_props cx trace x r1 r2 p1 p2 =
       Polarity.compat (polarity1, polarity2) &&
       Polarity.compat (polarity2, polarity1)
     ) then
-      add_output cx trace
+      add_output cx ~trace
         (FlowError.EPropPolarityMismatch ((r1, r2), Some x, (polarity1, polarity2)))
 
 (* If some property `x` exists in one object but not another, ensure the
    property is compatible with a dictionary, or error if none. *)
-and unify_prop_with_dict cx trace x p prop_reason dict_reason dict =
-  let prop_reason = replace_reason_const (RProperty (Some x)) prop_reason in
+and unify_prop_with_dict cx trace ~use_op x p prop_obj_reason dict_reason dict =
+  (* prop_obj_reason: reason of the object containing the prop
+     dict_reason: reason of the object potentially containing a dictionary
+     prop_reason: reason of the prop itself *)
+  let prop_reason = replace_reason_const (RProperty (Some x)) prop_obj_reason in
   match dict with
   | Some { key; value; dict_polarity; _ } ->
     rec_flow_t cx trace (string_key x prop_reason, key);
     let p2 = Field (value, dict_polarity) in
-    unify_props cx trace x prop_reason dict_reason p p2
+    unify_props cx trace ~use_op x prop_obj_reason dict_reason p p2
   | None ->
-    add_output cx trace (FlowError.EPropNotFound (prop_reason, dict_reason))
+    let err = FlowError.EPropNotFound ((prop_reason, dict_reason), use_op) in
+    add_output cx ~trace err
 
 (* TODO: Unification between concrete types is still implemented as
    bidirectional flows. This means that the destructuring work is duplicated,
    and we're missing some opportunities for nested unification. *)
 
-and naive_unify cx trace t1 t2 =
-  rec_flow_t cx trace (t1,t2); rec_flow_t cx trace (t2,t1)
+and naive_unify cx trace ?(use_op=UnknownUse) t1 t2 =
+  rec_flow_t cx trace ~use_op (t1,t2); rec_flow_t cx trace ~use_op (t2,t1)
 
 (* mutable sites on parent values (i.e. object properties,
    array elements) must be typed invariantly when a value
@@ -8255,67 +9057,460 @@ and array_unify cx trace = function
 (* subtyping a sequence of arguments with a sequence of parameters *)
 (*******************************************************************)
 
-and multiflow cx trace reason_op (arglist, parlist) =
-  multiflow_partial cx trace ~strict:reason_op (arglist, parlist) |> ignore
+(* Process spread arguments and then apply the arguments to the parameters *)
+and multiflow_call cx trace reason_op args ft =
+  let resolve_to = ResolveSpreadsToMultiflowCallFull (mk_id (), ft) in
+  resolve_call_list cx ~trace reason_op args resolve_to
 
-(* Match arguments to parameters, taking an optional parameter 'strict':
-   - when strict=None, missing arguments (and unmatched parameters) are
-   expected. This is used, e.g., when processing Function.prototype.bind.
-   - when strict=Some reason_op, missing arguments are treated as undefined,
-   whose types are given a reason derived from reason_op when passing to
-   unmatched parameters.
-*)
-and multiflow_partial cx trace ?strict = function
-  (* Do not complain on too many arguments.
-     This pattern is ubiqutous and causes a lot of noise when complained about.
-     Note: optional/rest parameters do not provide a workaround in this case.
-  *)
-  | (_, []) -> []
+(* Process spread arguments and then apply the arguments to the parameters *)
+and multiflow_subtype cx trace reason_op args ft =
+  let resolve_to = ResolveSpreadsToMultiflowSubtypeFull (mk_id (), ft) in
+  resolve_call_list cx ~trace reason_op args resolve_to
 
-  | ([RestT tin], [RestT tout]) ->
-    rec_flow_t cx trace (tin, tout);
-    []
+(* Like multiflow_partial, but if there is no spread argument, it flows VoidT to
+ * all unused parameters *)
+and multiflow_full
+  cx ~trace reason_op ~is_call ~def_reason
+  ~spread_arg ~rest_param (arglist, parlist) =
 
-  | ([RestT tin], tout::touts) ->
-    rec_flow_t cx trace (tin, tout);
-    multiflow_partial cx trace ?strict ([RestT tin], touts)
+  let unused_parameters, _ = multiflow_partial
+    cx ~trace reason_op ~is_call ~def_reason
+    ~spread_arg ~rest_param (arglist, parlist) in
 
-  | (tin::tins, [RestT tout]) ->
-    rec_flow_t cx trace (tin, tout);
-    multiflow_partial cx trace ?strict (tins, [RestT tout])
+  List.iter (fun param ->
+    let reason = replace_reason_const RTooFewArgsExpectedRest reason_op in
+    rec_flow_t cx trace (VoidT reason, param);
+  ) unused_parameters
 
-  | ([], [RestT tout]) -> [RestT tout]
+(* This is a tricky function. The simple description is that it flows all the
+ * arguments to all the parameters. This function is used by
+ * Function.prototype.apply, so after the arguments are applied, it returns the
+ * unused parameters.
+ *
+ * It is a little trickier in that there may be a single spread argument after
+ * all the regular arguments. There may also be a rest parameter.
+ *)
+and multiflow_partial =
+  let rec multiflow_non_spreads cx ~trace (arglist, parlist) =
+    match (arglist, parlist) with
+    (* Do not complain on too many arguments.
+       This pattern is ubiqutous and causes a lot of noise when complained about.
+       Note: optional/rest parameters do not provide a workaround in this case.
+    *)
+    | (_, [])
+    (* No more arguments *)
+    | ([], _) -> arglist, parlist
 
-  | ([], tout::touts) ->
-    (match strict with
-    | Some reason_op ->
-        let reason = replace_reason_const RTooFewArgsExpectedRest reason_op in
-        rec_flow_t cx trace (VoidT reason, tout);
-        multiflow_partial cx trace ?strict ([], touts)
-    | None ->
-        tout::touts
-    );
+    | (tin::tins, tout::touts) ->
+      (* flow `tin` (argument) to `tout` (param). normally, `tin` is passed
+         through a `ReposLowerT` to make sure that the concrete type points at
+         the arg's location. however, if `tin` is an implicit type argument
+         (e.g. the `x` in `function foo<T>(x: T)`), then don't reposition it
+         because implicit type args have no explicit location to point at.
+         instead, let it flow through transparently, so that we point at the
+         place that constrained the type arg. this is pretty hacky. *)
+      let tout =
+        let u = UseT (FunCallParam, tout) in
+        match desc_of_t tin with
+        | RTypeParam _ -> u
+        | _ -> ReposLowerT (reason_of_t tin, u)
+      in
+      flow_opt cx ~trace (tin, tout);
+      multiflow_non_spreads cx ~trace (tins,touts)
 
-  | (tin::tins, tout::touts) ->
-    (* flow `tin` (argument) to `tout` (param). normally, `tin` is passed
-       through a `ReposLowerT` to make sure that the concrete type points at
-       the arg's location. however, if `tin` is an implicit type argument
-       (e.g. the `x` in `function foo<T>(x: T)`), then don't reposition it
-       because implicit type args have no explicit location to point at.
-       instead, let it flow through transparently, so that we point at the
-       place that constrained the type arg. this is pretty hacky. *)
-    let tout =
-      let u = UseT (FunCallParam, tout) in
-      match desc_of_t tin with
-      | RTypeParam _ -> u
-      | _ -> ReposLowerT (reason_of_t tin, u)
+
+  in
+  fun cx ~trace reason_op ~is_call ~def_reason ~spread_arg ~rest_param (arglist, parlist) ->
+    (* Handle all the non-spread arguments and all the non-rest parameters *)
+    let unused_arglist, unused_parlist =
+      multiflow_non_spreads cx ~trace (arglist, parlist) in
+
+    (* If there is a spread argument, it will consume all the unused parameters *)
+    let unused_parlist = match spread_arg with
+    | None -> unused_parlist
+    | Some spread_arg_elemt ->
+      (* The spread argument may be an empty array and to be 100% correct, we
+       * should flow VoidT to every remaining parameter, however we don't. This
+       * is consistent with how we treat arrays almost everywhere else *)
+      List.iter
+        (fun param -> rec_flow_t cx trace (spread_arg_elemt, param))
+        unused_parlist;
+      []
+
     in
-    rec_flow cx trace (tin, tout);
-    multiflow_partial cx trace ?strict (tins,touts)
+
+    (* If there is a rest parameter, it will consume all the unused arguments *)
+    begin match rest_param with
+    | None ->
+      if is_call && Context.enforce_strict_call_arity cx
+      then begin
+        List.iter (fun unused_arg ->
+          FlowError.EFunctionCallExtraArg (
+            mk_reason RFunctionUnusedArgument (loc_of_t unused_arg),
+            def_reason,
+            List.length parlist
+          )
+          |> add_output cx ~trace
+        ) unused_arglist
+      end;
+      unused_parlist, rest_param
+    | Some (name, loc, rest_param) ->
+      let orig_rest_reason = repos_reason loc (reason_of_t rest_param) in
+
+      (* We're going to build an array literal with all the unused arguments
+       * (and the spread argument if it exists). Then we're going to flow that
+       * to the rest parameter *)
+      let rev_elems =
+        List.rev_map (fun arg -> UnresolvedArg arg) unused_arglist in
+
+      let unused_rest_param = match spread_arg with
+      | None ->
+        (* If the rest parameter is consuming N elements, then drop N elements
+         * from the rest parameter *)
+        let rest_reason = reason_of_t rest_param in
+        mk_tvar_where cx rest_reason (fun tout ->
+          let i = List.length rev_elems in
+          rec_flow cx trace (rest_param, ArrRestT (orig_rest_reason, i, tout))
+        )
+      | Some _ ->
+        (* If there is a spread argument, then a tuple rest parameter will error
+         * anyway. So let's assume that the rest param is an array with unknown
+         * arity. Dropping elements from it isn't worth doing *)
+        rest_param
+      in
+
+      let elems = match spread_arg with
+      | None -> List.rev rev_elems
+      | Some spread_arg_elemt ->
+        let reason = reason_of_t spread_arg_elemt in
+        let spread_array = ArrT (reason, ArrayAT (spread_arg_elemt, None)) in
+        List.rev_append rev_elems [ UnresolvedSpreadArg (spread_array) ]
+      in
+
+      let arg_array_reason = replace_reason_const
+        (RRestArray (desc_of_reason reason_op)) reason_op in
+
+      let arg_array = mk_tvar_where cx arg_array_reason (fun tout ->
+        let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), tout)) in
+        resolve_spread_list cx ~reason_op:arg_array_reason elems resolve_to
+      ) in
+      rec_flow_t cx trace (arg_array, rest_param);
+
+      [], Some (name, loc, unused_rest_param)
+    end
+
+and resolve_call_list cx ~trace reason_op args resolve_to =
+  let unresolved = List.map
+    (function
+    | Arg t -> UnresolvedArg t
+    | SpreadArg t -> UnresolvedSpreadArg t)
+    args in
+  resolve_spread_list_rec cx ~trace ~reason_op ([], unresolved) resolve_to
+
+and resolve_spread_list cx ~reason_op list resolve_to =
+  resolve_spread_list_rec cx ~reason_op ([], list) resolve_to
+
+(* This function goes through the unresolved elements to find the next rest
+ * element to resolve *)
+and resolve_spread_list_rec
+  cx ?trace ~reason_op (resolved, unresolved) resolve_to =
+  match resolved, unresolved with
+  | resolved, [] ->
+      finish_resolve_spread_list
+        cx ?trace ~reason_op (List.rev resolved) resolve_to
+  | resolved, UnresolvedArg(next)::unresolved ->
+      resolve_spread_list_rec
+        cx
+        ?trace
+        ~reason_op
+        (ResolvedArg(next)::resolved, unresolved)
+        resolve_to
+  | resolved, UnresolvedSpreadArg(next)::unresolved ->
+      flow_opt cx ?trace (next, ResolveSpreadT (reason_op, {
+        rrt_resolved = resolved;
+        rrt_unresolved = unresolved;
+        rrt_resolve_to = resolve_to;
+      }))
+
+(* Now that everything is resolved, we can construct whatever type we're trying
+ * to resolve to. *)
+and finish_resolve_spread_list =
+  (* Turn tuple rest params into single params *)
+  let flatten_spread_args list =
+    list
+    |> List.fold_left (fun acc param -> match param with
+      | ResolvedSpreadArg (_, arrtype) ->
+          begin match arrtype with
+          | ArrayAT (_, Some tuple_types)
+          | TupleAT (_, tuple_types) ->
+              List.fold_left
+                (fun acc elem -> ResolvedArg(elem)::acc)
+                acc
+                tuple_types
+          | ArrayAT (_, None)
+          | ROArrayAT (_)
+          | EmptyAT
+            -> param::acc
+          end
+      | ResolvedAnySpreadArg _
+      | ResolvedArg _ -> param::acc
+      ) []
+    |> List.rev
+
+  in
+
+  let spread_resolved_to_any = List.exists (function
+    | ResolvedAnySpreadArg _ -> true
+    | ResolvedArg _ | ResolvedSpreadArg _ -> false)
+
+  in
+
+  let finish_array cx ?trace ~reason_op ~resolve_to resolved tout =
+    (* Did `any` flow to one of the rest parameters? If so, we need to resolve
+     * to a type that is both a subtype and supertype of the desired type. *)
+    let result = if spread_resolved_to_any resolved
+    then match resolve_to with
+      (* Array<any> is a good enough any type for arrays *)
+      | `Array -> ArrT (reason_op, ArrayAT (AnyT.why reason_op, None))
+      (* Array literals can flow to a tuple. Arrays can't. So if the presence
+       * of an `any` forces us to degrade an array literal to Array<any> then
+       * we might get a new error. Since introducing `any`'s shouldn't cause
+       * errors, this is bad. Instead, let's degrade array literals to `any` *)
+      | `Literal
+      (* There is no AnyTupleT type, so let's degrade to `any`. *)
+      | `Tuple -> AnyT.why reason_op
+    else begin
+      (* Spreads that resolve to tuples are flattened *)
+      let elems = flatten_spread_args resolved in
+
+      let tuple_types = match resolve_to with
+      | `Literal
+      | `Tuple ->
+          elems
+          (* If no spreads are left, then this is a tuple too! *)
+          |> List.fold_left (fun acc elem ->
+              match (acc, elem) with
+              | None, _ -> None
+              | _, ResolvedSpreadArg _ -> None
+              | Some tuple_types, ResolvedArg t -> Some (t::tuple_types)
+              | _, ResolvedAnySpreadArg _ -> failwith "Should not be hit"
+            ) (Some [])
+          |> Option.map ~f:List.rev
+      | `Array -> None in
+
+      (* We infer the array's general element type by looking at the type of
+       * every element in the array *)
+      let tset = List.fold_left (fun tset elem ->
+        let elemt = match elem with
+        | ResolvedSpreadArg (r, arrtype) -> elemt_of_arrtype r arrtype
+        | ResolvedArg elemt -> elemt
+        | ResolvedAnySpreadArg _ -> failwith "Should not be hit"
+        in
+
+        TypeExSet.add elemt tset
+      ) TypeExSet.empty elems in
+
+      (* composite elem type is an upper bound of all element types *)
+      let elemt =
+        let element_reason =
+          let desc = RCustom (
+            "inferred union of array element types \
+             (alternatively, provide an annotation to summarize the array \
+               element type)") in
+          replace_reason_const desc reason_op
+        in
+        (* Should the element type of the array be the union of its element
+           types?
+
+           No. Instead of using a union, we use an unresolved tvar to
+           represent the least upper bound of each element type. Effectively,
+           this keeps the element type "open," at least locally.[*]
+
+           Using a union pins down the element type prematurely, and moreover,
+           might lead to speculative matching when setting elements or caling
+           contravariant methods (`push`, `concat`, etc.) on the array.
+
+           In any case, using a union doesn't quite work as intended today
+           when the element types themselves could be unresolved tvars. For
+           example, the following code would work even with unions:
+
+           declare var o: { x: number; }
+           var a = ["hey", o.x]; // no error, but is an error if 42 replaces o.x
+           declare var i: number;
+           a[i] = false;
+
+           [*] Eventually, the element type does get pinned down to a union
+           when it is part of the module's exports. In the future we might
+           have to do that pinning more carefully, and using an unresolved
+           tvar instead of a union here doesn't conflict with those plans.
+        *)
+        mk_tvar_where cx element_reason (fun tvar ->
+          TypeExSet.elements tset |> List.iter (fun t ->
+            flow cx (t, UseT (UnknownUse, tvar)))
+        )
+      in
+      match tuple_types, resolve_to with
+      | _, `Array ->
+          ArrT (reason_op, ArrayAT (elemt, None))
+      | _, `Literal ->
+          ArrT (reason_op, ArrayAT (elemt, tuple_types))
+      | Some tuple_types, `Tuple ->
+          ArrT (reason_op, TupleAT (elemt, tuple_types))
+      | None, `Tuple ->
+          ArrT (reason_op, ArrayAT (elemt, None))
+    end in
+
+    flow_opt_t cx ?trace (result, tout)
+  in
+
+  (* If there are no spread elements or if all the spread elements resolved to
+   * tuples or array literals, then this is easy. We just flatten them all.
+   *
+   * However, if we have a spread that resolved to any or to an array of
+   * unknown length, then we're in trouble. Basically, any remaining argument
+   * might flow to any remaining parameter.
+   *)
+  let flatten_call_arg =
+    let rec flatten r args spread resolved =
+      if resolved = []
+      then args, spread
+      else match spread with
+      | None ->
+        (match resolved with
+        | (ResolvedArg t)::rest ->
+          flatten r (t::args) spread rest
+        | (ResolvedSpreadArg
+            (_, (ArrayAT (_, Some ts) | TupleAT (_, ts))))::rest ->
+          let args = List.rev_append ts args in
+          flatten r args spread rest
+        | ResolvedSpreadArg (r, _)::_
+        | ResolvedAnySpreadArg r :: _ ->
+          (* We weren't able to flatten the call argument list to remove all
+           * spreads. This means we need to build a spread argument, with
+           * unknown arity. *)
+          let tset = TypeExSet.empty in
+          flatten r args (Some (Nel.one r, tset)) resolved
+        | [] -> failwith "Empty list already handled"
+        )
+      | Some (spread_reasons, tset) ->
+        let spread_reason, elemt, rest = (match resolved with
+        | (ResolvedArg t)::rest ->
+          reason_of_t t, t, rest
+        | (ResolvedSpreadArg (r, arrtype))::rest ->
+          r, elemt_of_arrtype r arrtype, rest
+        | (ResolvedAnySpreadArg reason)::rest ->
+          reason, AnyT.why reason, rest
+        | [] -> failwith "Empty list already handled")
+        in
+        let spread_reasons = Nel.cons spread_reason spread_reasons in
+        let tset = TypeExSet.add elemt tset in
+        flatten r args (Some (spread_reasons, tset)) rest
+
+    in
+    fun cx r resolved ->
+      let args, spread = flatten r [] None resolved in
+      let spread = Option.map
+        ~f:(fun (spread_reasons, tset) ->
+          let last = Nel.hd spread_reasons in
+          let first = Nel.(hd (rev spread_reasons)) in
+          let loc = Loc.btwn (loc_of_reason first) (loc_of_reason last) in
+          let r = mk_reason RArray loc in
+          mk_tvar_where cx r (fun tvar ->
+            TypeExSet.elements tset
+            |> List.iter (fun t -> flow cx (t, UseT (UnknownUse, tvar)))
+          )
+        )
+        spread
+      in
+      List.rev args, spread
+
+  in
+
+  (* This is used for things like Function.prototype.bind, which partially
+   * apply arguments and then return the new function. *)
+  let finish_multiflow_partial
+    cx ?trace ~reason_op ft call_reason resolved tout =
+    (* Multiflows always come out of a flow *)
+    let trace = match trace with
+    | Some trace -> trace
+    | None -> failwith "All multiflows show have a trace" in
+
+    let {params_tlist; rest_param; return_t; def_reason; _} = ft in
+
+    let args, spread_arg = flatten_call_arg cx reason_op resolved in
+
+    let params_tlist, rest_param = multiflow_partial
+      cx ~trace reason_op ~is_call:true ~def_reason ~spread_arg ~rest_param
+      (args, params_tlist) in
+
+    (* e.g. "bound function type", positioned at reason_op *)
+    let bound_reason =
+      let desc = RBound (desc_of_reason reason_op) in
+      replace_reason_const desc call_reason
+    in
+    let def_reason = reason_op in
+
+    let funt = FunT(
+      reason_op,
+      dummy_static bound_reason,
+      dummy_prototype,
+      mk_boundfunctiontype params_tlist ~rest_param ~def_reason return_t
+    ) in
+    rec_flow_t cx trace (funt, tout)
+
+  in
+
+  (* This is used for things like function application, where all the arguments
+   * are applied to a function *)
+  let finish_multiflow_full cx ?trace ~reason_op ~is_call ft resolved =
+    (* Multiflows always come out of a flow *)
+    let trace = match trace with
+    | Some trace -> trace
+    | None -> failwith "All multiflows show have a trace" in
+
+    let {params_tlist; rest_param; def_reason; _} = ft in
+
+    let args, spread_arg = flatten_call_arg cx reason_op resolved in
+
+    multiflow_full
+      cx ~trace reason_op ~is_call ~def_reason
+      ~spread_arg ~rest_param (args, params_tlist)
+
+  in
+
+  (* This is used for things like Function.prototype.apply, whose second arg is
+   * basically a spread argument that we'd like to resolve *)
+  let finish_call_t cx ?trace ~reason_op funcalltype resolved tin =
+    let flattened = flatten_spread_args resolved in
+    let call_args_tlist = List.map (function
+      | ResolvedArg t -> Arg t
+      | ResolvedSpreadArg (r, arrtype) -> SpreadArg (ArrT (r, arrtype))
+      | ResolvedAnySpreadArg r -> SpreadArg (AnyT.why r)) flattened in
+    let call_t = CallT (reason_op, { funcalltype with call_args_tlist; }) in
+    flow_opt cx ?trace (tin, call_t)
+
+  in
+  fun cx ?trace ~reason_op resolved resolve_to -> (
+    match resolve_to with
+    | ResolveSpreadsToTuple (_, tout)->
+      finish_array cx ?trace ~reason_op ~resolve_to:`Tuple resolved tout
+    | ResolveSpreadsToArrayLiteral (_, tout) ->
+      finish_array cx ?trace ~reason_op ~resolve_to:`Literal resolved tout
+    | ResolveSpreadsToArray (tout) ->
+      finish_array cx ?trace ~reason_op ~resolve_to:`Array resolved tout
+    | ResolveSpreadsToMultiflowPartial (_, ft, call_reason, tout) ->
+      finish_multiflow_partial cx ?trace ~reason_op ft call_reason resolved tout
+    | ResolveSpreadsToMultiflowCallFull (_, ft) ->
+      finish_multiflow_full cx ?trace ~reason_op ~is_call:true ft resolved
+    | ResolveSpreadsToMultiflowSubtypeFull (_, ft) ->
+      finish_multiflow_full cx ?trace ~reason_op ~is_call:false ft resolved
+    | ResolveSpreadsToCallT (funcalltype, tin) ->
+      finish_call_t cx ?trace ~reason_op funcalltype resolved tin
+  )
 
 and perform_lookup_action cx trace propref p lreason ureason = function
-  | LookupProp up ->
-    rec_flow_p cx trace lreason ureason propref (p, up)
+  | LookupProp (use_op, up) ->
+    rec_flow_p cx trace ~use_op lreason ureason propref (p, up)
   | SuperProp lp ->
     rec_flow_p cx trace ureason lreason propref (lp, p)
   | RWProp (tout, rw) ->
@@ -8324,7 +9519,7 @@ and perform_lookup_action cx trace propref p lreason ureason = function
     | Write, Some t -> rec_flow_t cx trace (tout, t)
     | _, None ->
       let x = match propref with Named (_, x) -> Some x | Computed _ -> None in
-      add_output cx trace
+      add_output cx ~trace
         (FlowError.EPropAccess ((lreason, ureason), x, p, rw))
 
 and perform_elem_action cx trace value = function
@@ -8335,7 +9530,7 @@ and perform_elem_action cx trace value = function
 
 and string_key s reason =
   let key_reason = replace_reason_const (RPropertyIsAString s) reason in
-  StrT (key_reason, Literal s)
+  StrT (key_reason, Literal (None, s))
 
 (* builtins, contd. *)
 
@@ -8351,12 +9546,13 @@ and lookup_builtin cx ?trace x reason strict builtin =
     LookupT (reason, strict, [], propref, RWProp (builtin, Read)))
 
 and get_builtin_typeapp cx ?trace reason x ts =
-  TypeAppT(get_builtin cx ?trace x reason, ts)
+  typeapp (get_builtin cx ?trace x reason) ts
 
 (* Specialize a polymorphic class, make an instance of the specialized class. *)
-and mk_typeapp_instance cx ?trace ~reason_op ~reason_tapp ?(cache=false) c ts =
+and mk_typeapp_instance cx ?trace ~reason_op ~reason_tapp ?cache c ts =
+  let c = reposition cx ?trace (loc_of_reason reason_tapp) c in
   let t = mk_tvar cx reason_op in
-  flow_opt cx ?trace (c, SpecializeT(reason_op,reason_tapp,cache,ts,t));
+  flow_opt cx ?trace (c, SpecializeT(reason_op,reason_tapp, cache, ts, t));
   mk_instance cx ?trace (reason_of_t c) t
 
 (* NOTE: the for_type flag is true when expecting a type (e.g., when processing
@@ -8371,37 +9567,14 @@ and mk_instance cx ?trace instance_reason ?(for_type=true) c =
     ))
   else
     mk_tvar_derivable_where cx instance_reason (fun t ->
-      flow_opt_t cx ?trace (c, ClassT(t))
+      flow_opt_t cx ?trace (c, class_type t)
     )
 
-(* We want to match against some t, which may either be a concrete
-   type, or a tvar that will be concretized by a single incoming
-   lower bound (for instance, a tvar representing an externally
-   defined type - the concrete definition will appear as a lower
-   bound to that tvar at merge time).
-
-   Given such a t, `become` will return
-   * t itself, if it is concrete already, or
-   * a new tvar which will behave exactly like the first concrete
-    lower bound that flows into t, whenever that happens.
- *)
-and become cx ?trace r t = match t with
-  | OpenT _ ->
-    (* if t is not concrete, create a new tvar within a BecomeT
-       operation and add it to t's uppertvars. When a concrete
-       lower bound flows to t, it will also flow to this BecomeT,
-       and the rule for BecomeT in __flow will unify the new tvar
-       with it. *)
-    mk_tvar_derivable_where cx r (fun tvar ->
-      flow_opt cx ?trace (t, BecomeT (r, tvar)))
-  | _ ->
-    (* optimization: if t is already concrete, become t immediately :) *)
-    reposition cx ?trace r t
-
 (* set the position of the given def type from a reason *)
-and reposition cx ?trace reason t =
+and reposition cx ?trace loc t =
   let rec recurse seen = function
   | OpenT (r, id) as t ->
+    let reason = repos_reason loc (reason_of_t t) in
     let constraints = find_graph cx id in
     begin match constraints with
     | Resolved t ->
@@ -8448,35 +9621,62 @@ and reposition cx ?trace reason t =
          resulting tvar, i.e., flowing repositioned *lower bounds* to the
          resulting tvar. (Another way of thinking about this is that a `EvalT`
          is just as transparent as its resulting tvar.) *)
+      let reason = repos_reason loc (reason_of_t t) in
       mk_tvar_where cx reason (fun tvar ->
         flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
       )
-  | MaybeT t ->
-      MaybeT (recurse seen t)
-  | OptionalT t ->
-      OptionalT (recurse seen t)
+  | MaybeT (r, t) ->
+      (* repositions both the MaybeT and the nested type. MaybeT represets `?T`.
+         elsewhere, when we decompose into T | NullT | VoidT, we use the reason
+         of the MaybeT for NullT and VoidT but don't reposition `t`, so that any
+         errors on the NullT or VoidT point at ?T, but errors on the T point at
+         T. *)
+      let r = repos_reason loc r in
+      MaybeT (r, recurse seen t)
+  | OptionalT (r, t) ->
+      let r = repos_reason loc r in
+      OptionalT (r, recurse seen t)
   | UnionT (r, rep) ->
-      let r = repos_reason (loc_of_reason reason) r in
+      let r = repos_reason loc r in
       let rep = UnionRep.map (recurse seen) rep in
       UnionT (r, rep)
   | t ->
-      mod_reason_of_t (repos_reason (loc_of_reason reason)) t
+      mod_reason_of_t (repos_reason loc) t
   in
   recurse IMap.empty t
 
 (* given the type of a value v, return the type term
    representing the `typeof v` annotation expression *)
 and mk_typeof_annotation cx ?trace reason t =
-  become cx ?trace reason t
+  match t with
+  | OpenT _ ->
+    let source = mk_tvar_where cx reason (fun t' ->
+      flow_opt cx ?trace (t, BecomeT (reason, t'))
+    ) in
+    AnnotT source
+  | _ ->
+    let loc = loc_of_reason reason in
+    reposition cx ?trace loc t
 
 and get_builtin_type cx ?trace reason x =
   let t = get_builtin cx ?trace x reason in
   mk_instance cx ?trace reason t
 
+and get_builtin_prop_type cx ?trace reason tool =
+  let x = React.PropType.(match tool with
+  | ArrayOf -> "React$PropTypes$arrayOf"
+  | InstanceOf -> "React$PropTypes$instanceOf"
+  | ObjectOf -> "React$PropTypes$objectOf"
+  | OneOf -> "React$PropTypes$oneOf"
+  | OneOfType -> "React$PropTypes$oneOfType"
+  | Shape -> "React$PropTypes$shape"
+  ) in
+  get_builtin_type cx ?trace reason x
+
 and instantiate_poly_t cx t types =
   if types = [] then (* nothing to do *) t else
   match t with
-  | PolyT (type_params, t_) -> (
+  | PolyT (_, type_params, t_) -> (
     try
       let subst_map = List.fold_left2 (fun acc {name; _} type_ ->
         SMap.add name type_ acc
@@ -8491,8 +9691,21 @@ and instantiate_poly_t cx t types =
 
 and instantiate_type t =
   match t with
-  | ThisClassT t | ClassT t -> t
+  | ThisClassT (_, t) | ClassT (_, t) -> t
   | _ -> AnyT.why (reason_of_t t) (* ideally, assert false *)
+
+and call_args_iter f = List.iter (function Arg t | SpreadArg t -> f t)
+
+(* There's a lot of code that looks at a call argument list and tries to do
+ * something with one or two arguments. Usually this code assumes that the
+ * argument is not a spread argument. This utility function helps with that *)
+and extract_non_spread cx ~trace = function
+| Arg t -> t
+| SpreadArg arr ->
+    let reason = reason_of_t arr in
+    let loc = loc_of_t arr in
+    add_output cx ~trace (FlowError.(EUnsupportedSyntax (loc, SpreadArgument)));
+    AnyT.why reason
 
 (** TODO: this should rather be moved close to ground_type_impl/resolve_type
     etc. but Ocaml name resolution rules make that require a lot more moving
@@ -8510,7 +9723,10 @@ and resolve_builtin_class cx ?trace = function
   | ArrT (reason, arrtype) ->
     let builtin, elemt = match arrtype with
     | ArrayAT (elemt, _) -> get_builtin cx ?trace "Array" reason, elemt
-    | TupleAT (elemt, _) -> get_builtin cx ?trace "Array$Tuple" reason, elemt in
+    | TupleAT (elemt, _)
+    | ROArrayAT (elemt) -> get_builtin cx ?trace "$ReadOnlyArray" reason, elemt
+    | EmptyAT -> get_builtin cx ?trace "$ReadOnlyArray" reason, (EmptyT reason)
+    in
     let array_t = resolve_type cx builtin in
     let array_t = instantiate_poly_t cx array_t [elemt] in
     instantiate_type array_t
@@ -8541,14 +9757,14 @@ and rec_flow cx trace (t1, t2) =
   let max = Context.max_trace_depth cx in
   __flow cx (t1, t2) (Trace.rec_trace ~max t1 t2 trace)
 
-and rec_flow_t cx trace (t1, t2) =
-  rec_flow cx trace (t1, UseT (UnknownUse, t2))
+and rec_flow_t cx trace ?(use_op=UnknownUse) (t1, t2) =
+  rec_flow cx trace (t1, UseT (use_op, t2))
 
 and rec_flow_p cx trace ?(use_op=UnknownUse) lreason ureason propref = function
   (* unification cases *)
   | Field (lt, Neutral),
     Field (ut, Neutral) ->
-    rec_unify cx trace lt ut
+    rec_unify cx trace ~use_op lt ut
   (* directional cases *)
   | lp, up ->
     let x = match propref with Named (_, x) -> Some x | Computed _ -> None in
@@ -8556,7 +9772,7 @@ and rec_flow_p cx trace ?(use_op=UnknownUse) lreason ureason propref = function
     | Some lt, Some ut ->
       rec_flow cx trace (lt, UseT (use_op, ut))
     | None, Some _ ->
-      add_output cx trace (FlowError.EPropPolarityMismatch (
+      add_output cx ~trace (FlowError.EPropPolarityMismatch (
         (lreason, ureason), x,
         (Property.polarity lp, Property.polarity up)))
     | _ -> ());
@@ -8564,7 +9780,7 @@ and rec_flow_p cx trace ?(use_op=UnknownUse) lreason ureason propref = function
     | Some lt, Some ut ->
       rec_flow cx trace (ut, UseT (use_op, lt))
     | None, Some _ ->
-      add_output cx trace (FlowError.EPropPolarityMismatch (
+      add_output cx ~trace (FlowError.EPropPolarityMismatch (
         (lreason, ureason), x,
         (Property.polarity lp, Property.polarity up)))
     | _ -> ())
@@ -8594,7 +9810,7 @@ and flow cx (lower, upper) =
   | RecursionCheck.LimitExceeded trace ->
     (* log and continue *)
     let reasons = FlowError.ordered_reasons lower upper in
-    add_output cx trace (FlowError.ERecursionLimit reasons)
+    add_output cx ~trace (FlowError.ERecursionLimit reasons)
   | ex ->
     (* rethrow *)
     raise ex
@@ -8616,9 +9832,9 @@ and tvar_with_constraint cx ?trace ?(derivable=false) u =
 (* Wrapper functions around __unify that manage traces. Use these functions for
    all recursive calls in the implementation of __unify. *)
 
-and rec_unify cx trace t1 t2 =
+and rec_unify cx trace ?(use_op=UnknownUse) t1 t2 =
   let max = Context.max_trace_depth cx in
-  __unify cx t1 t2 (Trace.rec_trace ~max t1 (UseT (UnknownUse, t2)) trace)
+  __unify cx ~use_op t1 t2 (Trace.rec_trace ~max t1 (UseT (use_op, t2)) trace)
 
 and unify_opt cx ?trace t1 t2 =
   let trace = match trace with
@@ -8638,7 +9854,7 @@ and unify cx t1 t2 =
   | RecursionCheck.LimitExceeded trace ->
     (* log and continue *)
     let reasons = FlowError.ordered_reasons t1 (UseT (UnknownUse, t2)) in
-    add_output cx trace (FlowError.ERecursionLimit reasons)
+    add_output cx ~trace (FlowError.ERecursionLimit reasons)
   | ex ->
     (* rethrow *)
     raise ex
@@ -8646,6 +9862,318 @@ and unify cx t1 t2 =
 and continue cx trace t = function
   | Upper u -> rec_flow cx trace (t, u)
   | Lower l -> rec_flow_t cx trace (l, t)
+
+
+and react_kit =
+  React_kit.run
+    ~add_output
+    ~reposition
+    ~rec_flow
+    ~rec_flow_t
+    ~get_builtin_type
+    ~get_builtin_typeapp
+    ~mk_functioncalltype
+    ~mk_methodcalltype
+    ~mk_instance
+    ~mk_object
+    ~mk_object_with_map_proto
+    ~string_key
+    ~mk_tvar
+    ~eval_destructor
+    ~sealed_in_op
+
+and object_spread =
+  let open ObjectSpread in
+
+  let read_prop r flags x p =
+    let t = match Property.read_t p with
+    | Some t -> t
+    | None ->
+      let reason = replace_reason_const (RUnknownProperty (Some x)) r in
+      let t = MixedT (reason, Mixed_everything) in
+      t
+    in
+    t, flags.exact
+  in
+
+  let read_dict r {value; dict_polarity; _} =
+    if Polarity.compat (dict_polarity, Positive)
+    then value
+    else
+      let reason = replace_reason_const (RUnknownProperty None) r in
+      MixedT (reason, Mixed_everything)
+  in
+
+  (* Lift a pairwise function like spread2 to a function over a resolved list *)
+  let merge (f: slice -> slice -> slice) =
+    let f' (x0: resolved) (x1: resolved) =
+      Nel.map_concat (fun slice1 ->
+        Nel.map (f slice1) x0
+      ) x1
+    in
+    let rec loop x0 = function
+      | [] -> x0
+      | x1::xs -> loop (f' x0 x1) xs
+    in
+    fun x0 (x1,xs) -> loop (f' x0 x1) xs
+  in
+
+  (* Compute spread result: slice * slice -> slice *)
+  let spread2 reason (r1,props1,dict1,flags1) (r2,props2,dict2,flags2) =
+    let union t1 t2 = UnionT (reason, UnionRep.make t1 t2 []) in
+    let merge_props (t1, own1) (t2, own2) =
+      let t1, opt1 = match t1 with OptionalT (_, t) -> t, true | _ -> t1, false in
+      let t2, opt2 = match t2 with OptionalT (_, t) -> t, true | _ -> t2, false in
+      (* An own, non-optional property definitely overwrites earlier properties.
+         Otherwise, the type might come from either side. *)
+      let t, own =
+        if own2 && not opt2 then t2, own2
+        else union t1 t2, own1 || own2
+      in
+      (* If either property is own, the result is non-optional unless the own
+         property is itself optional. Non-own implies optional (see mk_object),
+         so we don't need to handle those cases here. *)
+      let opt =
+        if own1 && own2 then opt1 && opt2
+        else own1 && opt1 || own2 && opt2
+      in
+      let t = if opt then optional t else t in
+      t, own
+    in
+    let props = SMap.merge (fun x p1 p2 ->
+      (* Treat dictionaries as optional, own properties. Dictionary reads should
+       * be exact. TODO: Forbid writes to indexers through the photo chain.
+       * Property accesses which read from dictionaries normally result in a
+       * non-optional result, but that leads to confusing spread results. For
+       * example, `p` in `{...{|p:T|},...{[]:U}` should `T|U`, not `U`. *)
+      let read_dict r d = optional (read_dict r d), true in
+      (* Due to width subtyping, failing to read from an inexact object does not
+         imply non-existence, but rather an unknown result. *)
+      let unknown r =
+        let r = replace_reason_const (RUnknownProperty (Some x)) r in
+        MixedT (r, Mixed_everything), false
+      in
+      match p1, p2 with
+      | None, None -> None
+      | Some p1, Some p2 -> Some (merge_props p1 p2)
+      | Some p1, None ->
+        (match dict2 with
+        | Some d2 -> Some (merge_props p1 (read_dict r2 d2))
+        | None ->
+          if flags2.exact
+          then Some p1
+          else Some (merge_props p1 (unknown r2)))
+      | None, Some p2 ->
+        (match dict1 with
+        | Some d1 -> Some (merge_props (read_dict r1 d1) p2)
+        | None ->
+          if flags1.exact
+          then Some p2
+          else Some (merge_props (unknown r1) p2))
+    ) props1 props2 in
+    let dict = Option.merge dict1 dict2 (fun d1 d2 -> {
+      dict_name = None;
+      key = union d1.key d2.key;
+      value = union (read_dict r1 d1) (read_dict r2 d2);
+      dict_polarity = Neutral
+    }) in
+    let flags = {
+      frozen = flags1.frozen && flags2.frozen;
+      sealed = Sealed;
+      exact =
+        flags1.exact && flags2.exact &&
+        sealed_in_op reason flags1.sealed &&
+        sealed_in_op reason flags2.sealed;
+    } in
+    reason, props, dict, flags
+  in
+
+  (* Intersect two object slices: slice * slice -> slice
+   *
+   * In general it is unsound to combine intersection types, but since spread
+   * makes a copy and only reads from its arguments, it is safe in this specific
+   * case.
+   *
+   * {...{p:T}&{q:U}} = {...{p:T,q:U}}
+   * {...{p:T}&{p:U}} = {...{p:T&U}}
+   * {...A&(B|C)} = {...{A&B)|(A&C)}
+   * {...(A|B)&C} = {...{A&C)|(B&C)}
+   *)
+  let intersect2 reason (r1,props1,dict1,flags1) (r2,props2,dict2,flags2) =
+    let intersection t1 t2 = IntersectionT (reason, InterRep.make t1 t2 []) in
+    let merge_props (t1, own1) (t2, own2) =
+      let t1, t2, opt = match t1, t2 with
+      | OptionalT (_, t1), OptionalT (_, t2) -> t1, t2, true
+      | OptionalT (_, t1), t2 | t1, OptionalT (_, t2) | t1, t2 -> t1, t2, false
+      in
+      let t = intersection t1 t2 in
+      let t = if opt then optional t else t in
+      t, own1 || own2
+    in
+    let r =
+      let loc = Loc.btwn (loc_of_reason r1) (loc_of_reason r2) in
+      mk_reason RObjectType loc
+    in
+    let props = SMap.merge (fun _ p1 p2 ->
+      let read_dict r d = optional (read_dict r d), true in
+      match p1, p2 with
+      | None, None -> None
+      | Some p1, Some p2 -> Some (merge_props p1 p2)
+      | Some p1, None ->
+        (match dict2 with
+        | Some d2 -> Some (merge_props p1 (read_dict r2 d2))
+        | None -> Some p1)
+      | None, Some p2 ->
+        (match dict1 with
+        | Some d1 -> Some (merge_props (read_dict r1 d1) p2)
+        | None -> Some p2)
+    ) props1 props2 in
+    let dict = Option.merge dict1 dict2 (fun d1 d2 -> {
+      dict_name = None;
+      key = intersection d1.key d2.key;
+      value = intersection (read_dict r1 d1) (read_dict r2 d2);
+      dict_polarity = Neutral;
+    }) in
+    let flags = {
+      frozen = flags1.frozen || flags2.frozen;
+      sealed = Sealed;
+      exact = flags1.exact || flags2.exact;
+    } in
+    r, props, dict, flags
+  in
+
+  let spread reason = function
+    | x,[] -> x
+    | x0,x1::xs -> merge (spread2 reason) x0 (x1,xs)
+  in
+
+  let mk_object cx reason ~make_exact (r, props, dict, flags) =
+    let props = SMap.map (fun (t, own) ->
+      (* Spread only copies over own properties. If `not own`, then the property
+         might be on a proto object instead, so make the result optional. *)
+      let t = match t with
+      | OptionalT _ -> t
+      | _ -> if own then t else optional t
+      in
+      Field (t, Neutral)
+    ) props in
+    let id = Context.make_property_map cx props in
+    let proto = ObjProtoT reason in
+    let t = ObjT (r, mk_objecttype ~flags dict id proto) in
+    if make_exact then ExactT (reason, t) else t
+  in
+
+  let next cx trace reason {todo_rev; acc; make_exact} tout x =
+    Nel.iter (fun (r,_,_,{exact;_}) ->
+      if make_exact && not exact
+      then add_output cx ~trace (FlowError.EIncompatibleWithExact (r, reason));
+    ) x;
+    match todo_rev with
+    | [] ->
+      let t = match spread reason (Nel.rev (x, acc)) with
+      | x,[] -> mk_object cx reason ~make_exact x
+      | x0,x1::xs ->
+        UnionT (reason, UnionRep.make
+          (mk_object cx reason ~make_exact x0)
+          (mk_object cx reason ~make_exact x1)
+          (List.map (mk_object cx reason ~make_exact) xs))
+      in
+      rec_flow_t cx trace (t, tout)
+    | t::todo_rev ->
+      let tool = Resolve Next in
+      let state = {todo_rev; acc = x::acc; make_exact} in
+      rec_flow cx trace (t, ObjSpreadT (reason, tool, state, tout))
+  in
+
+  let resolved cx trace reason tool state tout x =
+    match tool with
+    | Next -> next cx trace reason state tout x
+    | List0 ((t, todo), join) ->
+      let tool = Resolve (List (todo, Nel.one x, join)) in
+      rec_flow cx trace (t, ObjSpreadT (reason, tool, state, tout))
+    | List (todo, done_rev, join) ->
+      match todo with
+      | [] ->
+        let x = match join with
+        | Or -> Nel.cons x done_rev |> Nel.concat
+        | And -> merge (intersect2 reason) x done_rev
+        in
+        next cx trace reason state tout x
+      | t::todo ->
+        let done_rev = Nel.cons x done_rev in
+        let tool = Resolve (List (todo, done_rev, join)) in
+        rec_flow cx trace (t, ObjSpreadT (reason, tool, state, tout))
+  in
+
+  let object_slice cx r id dict flags =
+    let props = Context.find_props cx id in
+    let props = SMap.mapi (read_prop r flags) props in
+    let dict = Option.map dict (fun d -> {
+      dict_name = None;
+      key = d.key;
+      value = read_dict r d;
+      dict_polarity = Neutral;
+    }) in
+    (r, props, dict, flags)
+  in
+
+  let interface_slice cx r id =
+    let flags = {frozen=false; exact=false; sealed=Sealed} in
+    let id, dict =
+      let props = Context.find_props cx id in
+      match SMap.get "$key" props, SMap.get "$value" props with
+      | Some (Field (key, polarity)), Some (Field (value, polarity'))
+        when polarity = polarity' ->
+        let props = props |> SMap.remove "$key" |> SMap.remove "$value" in
+        let id = Context.make_property_map cx props in
+        let dict = {dict_name = None; key; value; dict_polarity = polarity} in
+        id, Some dict
+      | _ -> id, None
+    in
+    object_slice cx r id dict flags
+  in
+
+  let resolve cx trace reason state tout tool = function
+    | ObjT (r, {props_tmap; dict_t; flags; _}) ->
+      let x = Nel.one (object_slice cx r props_tmap dict_t flags) in
+      resolved cx trace reason tool state tout x
+    | InstanceT (r, _, super, _, {fields_tmap; _}) ->
+      let tool = Super (interface_slice cx r fields_tmap, tool) in
+      rec_flow cx trace (super, ObjSpreadT (reason, tool, state, tout))
+    | UnionT (_, rep) ->
+      let t, todo = UnionRep.members_nel rep in
+      let tool = Resolve (List0 (todo, Or)) in
+      rec_flow cx trace (t, ObjSpreadT (reason, tool, state, tout))
+    | IntersectionT (_, rep) ->
+      let t, todo = InterRep.members_nel rep in
+      let tool = Resolve (List0 (todo, And)) in
+      rec_flow cx trace (t, ObjSpreadT (reason, tool, state, tout))
+    | AnyT _ | AnyObjT _ ->
+      rec_flow_t cx trace (AnyT.why reason, tout)
+    (* Other types have reasonable spread implementations, like FunT, which
+       would spread its statics. Since spread is currently limited to types, an
+       arbitrary subset of possible types are implemented. *)
+    | t ->
+      add_output cx ~trace (FlowError.EIncompatible
+        (t, ObjSpreadT (reason, Resolve tool, state, tout)))
+  in
+
+  let super cx trace reason state tout acc tool = function
+    | InstanceT (r, _, super, _, {fields_tmap; _}) ->
+      let slice = interface_slice cx r fields_tmap in
+      let acc = intersect2 reason acc slice in
+      let tool = Super (acc, tool) in
+      rec_flow cx trace (super, ObjSpreadT (reason, tool, state, tout))
+    | AnyT _ | AnyObjT _ ->
+      rec_flow_t cx trace (AnyT.why reason, tout)
+    | _ ->
+      next cx trace reason state tout (Nel.one acc)
+  in
+
+  fun cx trace reason tool state tout l ->
+    match tool with
+    | Resolve tool -> resolve cx trace reason state tout tool l
+    | Super (acc, tool) -> super cx trace reason state tout acc tool l
 
 (************* end of slab **************************************************)
 
@@ -8665,34 +10193,34 @@ let intersect_members cx members =
         ) map (List.tl members) in
       SMap.map (List.fold_left (fun acc x ->
           merge_type cx (acc, x)
-        ) EmptyT.t) map
+      ) Locationless.EmptyT.t) map
 
-(* It's kind of lame that Autocomplete is in this module, but it uses a bunch
- * of internal APIs so for now it's easier to keep it here than to expose those
- * APIs *)
-module Autocomplete : sig
-  type member_result =
+(* It's kind of lame that Members is in this module, but it uses a bunch of
+   internal APIs so for now it's easier to keep it here than to expose those
+   APIs *)
+module Members : sig
+  type t =
     | Success of Type.t SMap.t
     | SuccessModule of Type.t SMap.t * (Type.t option)
     | FailureMaybeType
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
-  val command_result_of_member_result: member_result ->
+  val to_command_result: t ->
     (Type.t SMap.t, string) ok_or_err
 
-  val extract_members: Context.t -> Type.t -> member_result
+  val extract: Context.t -> Type.t -> t
 
 end = struct
 
-  type member_result =
+  type t =
     | Success of Type.t SMap.t
     | SuccessModule of Type.t SMap.t * (Type.t option)
     | FailureMaybeType
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
-  let command_result_of_member_result = function
+  let to_command_result = function
     | Success map
     | SuccessModule (map, None) ->
         OK map
@@ -8714,25 +10242,25 @@ end = struct
     ) (Context.find_props cx fields)
 
   (* TODO: Think of a better place to put this *)
-  let rec extract_members cx this_t =
+  let rec extract cx this_t =
     match this_t with
     | MaybeT _ | NullT _ | VoidT _ ->
         FailureMaybeType
     | AnyT _ ->
         FailureAnyType
     | AnyObjT reason ->
-        extract_members cx (get_builtin_type cx reason "Object")
+        extract cx (get_builtin_type cx reason "Object")
     | AnyFunT reason ->
         let rep = InterRep.make
           (get_builtin_type cx reason "Function")
           (get_builtin_type cx reason "Object")
           []
         in
-        extract_members cx (IntersectionT (reason, rep))
+        extract cx (IntersectionT (reason, rep))
     | AnnotT source ->
         let source_t = resolve_type cx source in
-        extract_members cx source_t
-    | InstanceT (_, _, super,
+        extract cx source_t
+    | InstanceT (_, _, super, _,
                 {fields_tmap = fields;
                 methods_tmap = methods;
                 _}) ->
@@ -8741,7 +10269,7 @@ end = struct
            * property in autocomplete, so for now we just return the getter
            * type. *)
           let t = match p with
-          | Field (t, _) | Get t | Set t | GetSet (t, _) -> t
+          | Field (t, _) | Get t | Set t | GetSet (t, _) | Method t -> t
           in
           SMap.add x t acc
         ) (find_props cx fields) SMap.empty in
@@ -8770,7 +10298,7 @@ end = struct
         Success (AugmentableSMap.augment prot_members ~with_bindings:members)
     | ExactT (_, t) ->
         let t = resolve_type cx t in
-        extract_members cx t
+        extract cx t
     | ModuleT (_, {exports_tmap; cjs_export; has_every_named_export = _;}) ->
         let named_exports = Context.find_exports cx exports_tmap in
         let cjs_export =
@@ -8779,19 +10307,19 @@ end = struct
           | None -> None
         in
         SuccessModule (named_exports, cjs_export)
-    | ThisTypeAppT (c, _, ts)
-    | TypeAppT (c, ts) ->
+    | ThisTypeAppT (_, c, _, ts)
+    | TypeAppT (_, c, ts) ->
         let c = resolve_type cx c in
         let inst_t = instantiate_poly_t cx c ts in
         let inst_t = instantiate_type inst_t in
-        extract_members cx inst_t
-    | PolyT (_, sub_type) ->
+        extract cx inst_t
+    | PolyT (_, _, sub_type) ->
         (* TODO: replace type parameters with stable/proper names? *)
-        extract_members cx sub_type
-    | ThisClassT (InstanceT (_, static, _, _))
-    | ClassT (InstanceT (_, static, _, _)) ->
+        extract cx sub_type
+    | ThisClassT (_, InstanceT (_, static, _, _, _))
+    | ClassT (_, InstanceT (_, static, _, _, _)) ->
         let static_t = resolve_type cx static in
-        extract_members cx static_t
+        extract cx static_t
     | FunT (_, static, proto, _) ->
         let static_t = resolve_type cx static in
         let proto_t = resolve_type cx proto in
@@ -8822,17 +10350,17 @@ end = struct
         Success members
     | SingletonStrT (reason, _)
     | StrT (reason, _) ->
-        extract_members cx (get_builtin_type cx reason "String")
+        extract cx (get_builtin_type cx reason "String")
     | SingletonNumT (reason, _)
     | NumT (reason, _) ->
-        extract_members cx (get_builtin_type cx reason "Number")
+        extract cx (get_builtin_type cx reason "Number")
     | SingletonBoolT (reason, _)
     | BoolT (reason, _) ->
-        extract_members cx (get_builtin_type cx reason "Boolean")
+        extract cx (get_builtin_type cx reason "Boolean")
 
     | ReposT (_, t)
     | ReposUpperT (_, t) ->
-        extract_members cx t
+        extract cx t
 
     | AbstractT _
     | AnyWithLowerBoundT _
@@ -8846,7 +10374,7 @@ end = struct
     | EmptyT _
     | EvalT (_, _, _)
     | ExistsT _
-    | ExtendsT (_, _, _)
+    | ExtendsT _
     | FunProtoApplyT _
     | FunProtoBindT _
     | FunProtoCallT _
@@ -8858,7 +10386,6 @@ end = struct
     | OpenPredT (_, _, _, _)
     | OpenT _
     | OptionalT _
-    | RestT _
     | ShapeT _
     | TaintT _
     | ThisClassT _
@@ -8868,8 +10395,8 @@ end = struct
         FailureUnhandledType this_t
 
   and extract_members_as_map cx this_t =
-    let member_result = extract_members cx this_t in
-    match command_result_of_member_result member_result with
+    let members = extract cx this_t in
+    match to_command_result members with
     | OK map -> map
     | Err _ -> SMap.empty
 
@@ -8893,8 +10420,8 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | Some { Verbose.depth = verbose_depth; indent; } ->
     let pid = Context.pid_prefix cx in
     let indent = String.make ((depth - 1) * indent) ' ' in
-    prerr_endlinef "\n%s%sassert_ground: %s"
-      indent pid (Debug_js.dump_t cx ~depth:verbose_depth t)
+    prerr_endlinef "\n%s%sassert_ground (infer=%b): %s"
+      indent pid infer (Debug_js.dump_t cx ~depth:verbose_depth t)
   | None -> ()
   end;
   let recurse ?infer = assert_ground ?infer ~depth:(depth + 1) cx skip ids in
@@ -8917,8 +10444,8 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     assert_ground_id cx ~depth:(depth + 1) skip ids id
 
   | OpenT (reason_open, id) ->
-    unify_opt cx (OpenT (reason_open, id)) AnyT.t;
-    FlowError.(add_output cx (EMissingAnnotation reason_open))
+    unify_opt cx (OpenT (reason_open, id)) Locationless.AnyT.t;
+    add_output cx (FlowError.EMissingAnnotation reason_open)
 
   | NumT _
   | StrT _
@@ -8931,36 +10458,42 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | TaintT _ ->
     ()
 
-  | FunT (reason, static, prototype, { this_t; params_tlist; return_t; _ }) ->
-    unify_opt cx static AnyT.t;
-    unify_opt cx prototype AnyT.t;
-    unify_opt cx this_t AnyT.t;
+  | FunT (reason, static, prototype, ft) ->
+    let { this_t; params_tlist; return_t; rest_param; _ } = ft in
+    unify_opt cx static Locationless.AnyT.t;
+    unify_opt cx prototype Locationless.AnyT.t;
+    unify_opt cx this_t Locationless.AnyT.t;
     List.iter (recurse ~infer:(is_derivable_reason reason)) params_tlist;
+    Option.iter
+      ~f:(fun (_, _, t) -> recurse ~infer:(is_derivable_reason reason) t)
+      rest_param;
     recurse ~infer:true return_t
 
-  | PolyT (_, t)
-  | ThisClassT t ->
+  | PolyT (_, _, t)
+  | ThisClassT (_, t) ->
     recurse t
 
   | ObjT (_, { props_tmap = id; proto_t; _ }) ->
-    unify_opt cx proto_t AnyT.t;
+    unify_opt cx proto_t Locationless.AnyT.t;
     Context.iter_props cx id (fun _ -> Property.iter_t (recurse ~infer:true))
 
   | IdxWrapper (_, obj) -> recurse ~infer obj
 
-  | ArrT (_, arrtype) ->
+  | ArrT (r, arrtype) ->
     let elemt, tuple_types = match arrtype with
     | ArrayAT (elemt, None) -> elemt, []
     | ArrayAT (elemt, Some tuple_types)
-    | TupleAT (elemt, tuple_types) -> elemt, tuple_types in
+    | TupleAT (elemt, tuple_types) -> elemt, tuple_types
+    | ROArrayAT (elemt) -> elemt, []
+    | EmptyAT -> EmptyT r, [] in
     recurse ~infer:true elemt;
     List.iter (recurse ~infer:true) tuple_types
 
-  | ClassT t
+  | ClassT (_, t)
   | TypeT (_, t) ->
     recurse t
 
-  | InstanceT (_, static, super, instance) ->
+  | InstanceT (_, static, super, _, instance) ->
     let process_element ?(is_field=false) name t =
       let munged = is_munged_prop_name cx name in
       let initialized = SSet.mem name instance.initialized_field_names in
@@ -8978,24 +10511,23 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
       (fun x -> Property.iter_t (process_element ~is_field:true x));
     Context.iter_props cx instance.methods_tmap
       (fun x -> Property.iter_t (process_element x));
-    unify_opt cx static AnyT.t;
+    unify_opt cx static Locationless.AnyT.t;
     recurse super
 
-  | RestT t
-  | OptionalT t ->
+  | OptionalT (_, t) ->
     recurse t
 
-  | TypeAppT (c, ts) ->
+  | TypeAppT (_, c, ts) ->
     recurse ~infer:true c;
     List.iter recurse ts
 
-  | ThisTypeAppT (c, this, ts) ->
+  | ThisTypeAppT (_, c, this, ts) ->
     recurse ~infer:true c;
     recurse ~infer:true this;
     List.iter recurse ts
 
   | ExactT (_, t)
-  | MaybeT t ->
+  | MaybeT (_, t) ->
     recurse t
 
   | IntersectionT (_, rep) ->

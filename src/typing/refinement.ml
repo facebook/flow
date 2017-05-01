@@ -8,7 +8,6 @@
  *
  *)
 
-module Ast = Spider_monkey_ast
 
 (*
  * type refinements on expressions - wraps Env API
@@ -71,7 +70,7 @@ let rec key = Ast.Expression.(function
 )
 
 (* get type refinement for expression, if it exists *)
-let get cx expr reason =
+let get cx expr loc =
   match key expr with
-  | Some k -> Env.get_refinement cx k reason
+  | Some k -> Env.get_refinement cx k loc
   | None -> None

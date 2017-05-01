@@ -35,7 +35,8 @@ let escape s =
     | '\t' -> Buffer.add_string buf "\\t"
     | '\\' -> Buffer.add_string buf "\\\\"
     | '"' -> Buffer.add_string buf "\\\""
-    | '$' -> Buffer.add_string buf "\\044"
+    | '$' -> Buffer.add_string buf "$"
+    | '?' -> Buffer.add_string buf "\\?"
     | c when is_lit_printable c -> Buffer.add_char buf c
     | c -> Buffer.add_string buf (Printf.sprintf "\\%03o" (Char.code c))
   in

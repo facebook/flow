@@ -74,6 +74,12 @@ let lstrip s prefix =
   then String.sub s prefix_length (String.length s - prefix_length)
   else s
 
+let rstrip s suffix =
+  let result_length = String.length s - String.length suffix in
+  if string_ends_with s suffix
+  then String.sub s 0 result_length
+  else s
+
 let rpartition s c =
   let sep_idx = String.rindex s c in
   let first = String.sub s 0 sep_idx in
@@ -91,3 +97,58 @@ let rec is_not_lowercase str i j =
   if is_lowercase_char str.[i] then false
   else if i = j then true
   else is_not_lowercase str (i + 1) j
+
+(* String provides map and iter but not fold. It also is missing a char_list_of
+ * function. Oh well. You can use fold to simulate anything you need, I suppose
+ *)
+let fold_left ~f ~acc str =
+  let acc = ref acc in
+  String.iter (fun c -> acc := f (!acc) c) str;
+  !acc
+
+let split c = Str.split (Str.regexp @@ Char.escaped c)
+
+(* Replaces all instances of the needle character with the replacement character
+ *)
+let replace_char needle replacement =
+  String.map (fun c -> if c = needle then replacement else c)
+
+(* Splits a string into a list of strings using "\n", "\r" or "\r\n" as
+ * delimiters. If the string starts or ends with a delimiter, there WILL be an
+ * empty string at the beginning or end of the list, like Str.split_delim does
+ *)
+let split_into_lines str =
+  (* To avoid unnecessary string allocations, we're going to keep a list of
+   * the start index of each line and how long it is. Then, at the end, we can
+   * use String.sub to create the actual strings. *)
+  let _, (last_start, lines) = fold_left
+    ~f: (fun (idx, (start, lines)) c ->
+      (* For \r\n, we've already processed the newline *)
+      if c = '\n' && idx > 0 && String.get str (idx-1) = '\r'
+      then idx+1, (idx+1, lines)
+      else
+        if c = '\n' || c = '\r'
+        then idx+1, (idx+1, (start, idx-start)::lines)
+        else idx+1, (start, lines)
+    )
+    ~acc:(0, (0, []))
+    str
+  in
+
+  (* Reverses the list of start,len and turns them into strings *)
+  List.fold_left
+    (fun lines (start, len) -> (String.sub str start len)::lines)
+    []
+    ((last_start, String.length str - last_start)::lines)
+
+(* Splits a string into a list of strings using only "\n" as a delimiter.
+ * If the string ends with a delimiter, an empty string representing the
+ * contents after the final delimiter is NOT included (unlike Str.split_delim).
+ *)
+let split_on_newlines content =
+  let re = Str.regexp "[\n]" in
+  let lines = Str.split_delim re content in
+  (* don't create a list entry for the line after a trailing newline *)
+  match List.rev lines with
+  | "" :: rest -> List.rev rest
+  | _ -> lines

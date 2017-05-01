@@ -10,15 +10,14 @@
 (* Connect the builtins object in master_cx to the builtins reference in some
    arbitrary cx. *)
 let implicit_require_strict cx master_cx cx_to =
-  let from_t = Flow_js.lookup_module master_cx Files.lib_module in
-  let to_t = Flow_js.lookup_module cx_to Files.lib_module in
+  let from_t = Flow_js.lookup_module master_cx Files.lib_module_ref in
+  let to_t = Flow_js.lookup_module cx_to Files.lib_module_ref in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Connect the export of cx_from to its import in cx_to. This happens in some
    arbitrary cx, so cx_from and cx_to should have already been copied to cx. *)
-let explicit_impl_require_strict cx (cx_from, r, resolved_r, cx_to) =
-  let resolved_r = Modulename.to_string resolved_r in
-  let from_t = Flow_js.lookup_module cx_from resolved_r in
+let explicit_impl_require_strict cx (cx_from, m, r, cx_to) =
+  let from_t = Flow_js.lookup_module cx_from m in
   let to_t = Flow_js.lookup_module cx_to r in
   Flow_js.flow_t cx (from_t, to_t)
 
@@ -131,17 +130,30 @@ let restore cx dep_cxs master_cx =
   dep_cxs |> List.iter (Context.merge_into cx);
   Context.merge_into cx master_cx
 
+(* Given a sig context, it makes sense to clear the parts that are shared with
+   the master sig context. Why? The master sig context, which contains global
+   declarations, is an implicit dependency for every file, and so will be
+   "merged in" anyway, thus making those shared parts redundant to carry around
+   in other sig contexts. This saves a lot of shared memory as well as
+   deserialization time. *)
+let clear_master_shared cx master_cx =
+  Context.set_graph cx (Context.graph cx |> IMap.filter (fun id _ -> not
+    (IMap.mem id (Context.graph master_cx))));
+  Context.set_property_maps cx (Context.property_maps cx |> Type.Properties.Map.filter (fun id _ -> not
+    (Type.Properties.Map.mem id (Context.property_maps master_cx))));
+  Context.set_envs cx (Context.envs cx |> IMap.filter (fun id _ -> not
+    (IMap.mem id (Context.envs master_cx))));
+  Context.set_evaluated cx (Context.evaluated cx |> IMap.filter (fun id _ -> not
+    (IMap.mem id (Context.evaluated master_cx))))
 
-let merge_lib_file cx master_cx save_errors save_suppressions =
+let merge_lib_file cx master_cx =
   Context.merge_into master_cx cx;
   implicit_require_strict master_cx master_cx cx;
 
   let errs = Context.errors cx in
   Context.remove_all_errors cx;
-  save_errors (Context.file cx) errs;
-  save_suppressions (Context.file cx) (Context.error_suppressions cx);
 
-  ()
+  errs, Context.error_suppressions cx
 
 
 (****************** signature contexts *********************)
@@ -187,6 +199,7 @@ module ContextOptimizer = struct
     reduced_property_maps : Properties.map;
     reduced_export_maps : Exports.map;
     reduced_envs : Context.env IMap.t;
+    reduced_evaluated : Type.t IMap.t;
     sig_hash : SigHash.t;
   }
 
@@ -195,8 +208,15 @@ module ContextOptimizer = struct
     reduced_property_maps = Properties.Map.empty;
     reduced_export_maps = Exports.Map.empty;
     reduced_envs = IMap.empty;
+    reduced_evaluated = IMap.empty;
     sig_hash = SigHash.empty;
   }
+
+  let lowers_of_tvar cx id r =
+    match Flow_js.possible_types cx id with
+    | [] -> Locationless.AnyT.t
+    | [t] -> t
+    | t0::t1::ts -> UnionT (r, UnionRep.make t0 t1 ts)
 
   class context_optimizer = object(self)
     inherit [quotient] Type_visitor.t as super
@@ -210,6 +230,7 @@ module ContextOptimizer = struct
     val mutable stable_tvar_ids = IMap.empty
     val mutable stable_propmap_ids = Properties.Map.empty
     val mutable stable_nominal_ids = IMap.empty
+    val mutable stable_eval_ids = IMap.empty
 
     method! tvar cx quotient r id =
       let { reduced_graph; sig_hash; _ } = quotient in
@@ -219,12 +240,7 @@ module ContextOptimizer = struct
         let sig_hash = SigHash.add stable_id sig_hash in
         { quotient with sig_hash }
       else
-        let types = Flow_js.possible_types cx id in
-        let t = match types with
-          | [] -> AnyT.t
-          | [t] -> t
-          | t0::t1::ts -> UnionT (r, UnionRep.make t0 t1 ts)
-        in
+        let t = lowers_of_tvar cx id r in
         let node = Root { rank = 0; constraints = Resolved t } in
         let reduced_graph = IMap.add id node reduced_graph in
         let stable_id = self#fresh_stable_id in
@@ -257,6 +273,26 @@ module ContextOptimizer = struct
           Exports.Map.add id tmap reduced_export_maps in
         super#exports cx { quotient with reduced_export_maps; sig_hash } id
 
+    method! eval_id cx quotient id =
+      let { reduced_evaluated; sig_hash; _ } = quotient in
+      if IMap.mem id reduced_evaluated
+      then
+        let stable_id = IMap.find_unsafe id stable_eval_ids in
+        let sig_hash = SigHash.add stable_id sig_hash in
+        { quotient with sig_hash }
+      else
+        let stable_id = self#fresh_stable_id in
+        stable_eval_ids <- IMap.add id stable_id stable_eval_ids;
+        match IMap.get id (Context.evaluated cx) with
+        | None -> quotient
+        | Some t ->
+          let t = match t with
+          | OpenT (r, id) -> lowers_of_tvar cx id r
+          | t -> t
+          in
+          let reduced_evaluated = IMap.add id t reduced_evaluated in
+          super#eval_id cx { quotient with reduced_evaluated } id
+
     method! fun_type cx quotient funtype =
       let id = funtype.closure_t in
       if id = 0 then super#fun_type cx quotient funtype
@@ -266,33 +302,45 @@ module ContextOptimizer = struct
         let reduced_envs = IMap.add id closure reduced_envs in
         super#fun_type cx { quotient with reduced_envs } funtype
 
-    method! type_ cx quotient t = match t with
-    | OpenT _ -> super#type_ cx quotient t
-    | InstanceT (_, _, _, { class_id; _ }) ->
+    method! dict_type cx quotient dicttype =
       let { sig_hash; _ } = quotient in
-      let id =
-        if Context.mem_nominal_id cx class_id
-        then match IMap.get class_id stable_nominal_ids with
-        | None ->
-          let id = self#fresh_stable_id in
-          stable_nominal_ids <- IMap.add class_id id stable_nominal_ids;
-          id
-        | Some id -> id
-        else class_id in
-      let sig_hash = SigHash.add id sig_hash in
-      super#type_ cx { quotient with sig_hash } t
-    | _ ->
-      let { sig_hash; _ } = quotient in
-      let sig_hash = SigHash.add_type t sig_hash in
-      super#type_ cx { quotient with sig_hash } t
+      let sig_hash = SigHash.add dicttype.dict_polarity sig_hash in
+      super#dict_type cx { quotient with sig_hash } dicttype
+
+    method! type_ cx quotient t =
+      let quotient = { quotient with
+        sig_hash = SigHash.add (reason_of_t t) quotient.sig_hash
+      } in
+      match t with
+      | OpenT _ -> super#type_ cx quotient t
+      | InstanceT (_, _, _, _, { class_id; _ }) ->
+        let { sig_hash; _ } = quotient in
+        let id =
+          if Context.mem_nominal_id cx class_id
+          then match IMap.get class_id stable_nominal_ids with
+          | None ->
+            let id = self#fresh_stable_id in
+            stable_nominal_ids <- IMap.add class_id id stable_nominal_ids;
+            id
+          | Some id -> id
+          else class_id in
+        let sig_hash = SigHash.add id sig_hash in
+        super#type_ cx { quotient with sig_hash } t
+      | _ ->
+        let { sig_hash; _ } = quotient in
+        let sig_hash = SigHash.add_type t sig_hash in
+        super#type_ cx { quotient with sig_hash } t
   end
 
   (* walk a context from a list of exports *)
   let reduce_context cx exports =
     let reducer = new context_optimizer in
-    List.fold_left (fun quotient (m, t) ->
+    List.fold_left (fun quotient (f, m, t) ->
+      (* TODO: The hashing of f, m is probably unnecessary at this point. The
+         tests that needed it ('recheck-haste') now pass without it. *)
       let quotient = {
-        quotient with sig_hash = SigHash.add m quotient.sig_hash
+        quotient with sig_hash = quotient.sig_hash
+          |> SigHash.add f |> SigHash.add m
       } in
       reducer#type_ cx quotient t
     ) empty exports
@@ -300,24 +348,24 @@ module ContextOptimizer = struct
   (* string form of a context's own module name paired with the tvar on which a
      context hosts its own exports *)
   let export cx =
-    let m = Modulename.to_string (Context.module_name cx) in
-    m, Flow_js.lookup_module cx m
+    let m = Context.module_ref cx in
+    Context.file cx, m, Flow_js.lookup_module cx m
 
   (* reduce a context to a "signature context" *)
   let sig_context component_cxs =
-    let cx, other_cxs = List.hd component_cxs, List.tl component_cxs in
+    let cx = List.hd component_cxs in
     let exports = List.map export component_cxs in
     let quotient = reduce_context cx exports in
     Context.set_graph cx quotient.reduced_graph;
     Context.set_property_maps cx quotient.reduced_property_maps;
     Context.set_export_maps cx quotient.reduced_export_maps;
     Context.set_envs cx quotient.reduced_envs;
+    Context.set_evaluated cx quotient.reduced_evaluated;
     Context.set_type_graph cx (
       Graph_explorer.new_graph
         (IMap.fold (fun k _ -> ISet.add k) quotient.reduced_graph ISet.empty)
     );
-    other_cxs |> List.iter (fun other_cx ->
-      let other_m, other_t = export other_cx in
+    List.tl exports |> List.iter (fun (_, other_m, other_t) ->
       Context.add_module cx other_m other_t
     );
     quotient.sig_hash

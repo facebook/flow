@@ -354,7 +354,7 @@ export default class Builder {
       flowConfigFilename,
     );
     Builder.builders.push(testBuilder);
-    await testBuilder.createFreshDir(suiteName);
+    await testBuilder.createFreshDir();
     return testBuilder;
   }
 

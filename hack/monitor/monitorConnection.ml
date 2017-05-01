@@ -34,9 +34,9 @@ let send_version oc =
   let _ = Unix.write (Unix.descr_of_out_channel oc) "\n" 0 1 in
   ()
 
-let send_server_handoff_rpc (server_name : string) oc =
+let send_server_handoff_rpc handoff_options oc =
   Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc)
-    (MonitorRpc.HANDOFF_TO_SERVER server_name)
+    (MonitorRpc.HANDOFF_TO_SERVER handoff_options)
 
 let send_shutdown_rpc oc =
   Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc)
@@ -88,7 +88,7 @@ let verify_cstate ic = function
       Result.Error Build_id_mismatched
 
 (** Consume sequence of Prehandoff messages. *)
-let consume_prehandoff_messages ic oc =
+let rec consume_prehandoff_messages ic oc =
   let module PH = Prehandoff in
   let m: PH.msg = from_channel_without_buffering ic in
   match m with
@@ -97,6 +97,13 @@ let consume_prehandoff_messages ic oc =
     Printf.eprintf
       "Requested server name not found. This is probably a bug in Hack.";
     raise (Exit_status.Exit_with (Exit_status.Server_name_not_found));
+  | PH.Server_dormant_connections_limit_reached ->
+    Printf.eprintf @@ "Connections limit on dormant server reached."^^
+      " Be patient waiting for a server to be started.";
+    Result.Error Server_dormant
+  | PH.Server_not_alive_dormant _ ->
+    Printf.eprintf "Waiting for a server to be started...\n%!";
+    consume_prehandoff_messages ic oc
   | PH.Server_died {PH.status; PH.was_oom} ->
     (match was_oom, status with
     | true, _ ->
@@ -145,9 +152,9 @@ let connect_and_shut_down config =
     if not (server_exists config.lock_file) then Result.Error Server_missing
     else Result.Ok ServerMonitorUtils.SHUTDOWN_UNVERIFIED
 
-let connect_once config server_name =
+let connect_once config handoff_options =
   let open Result in
   connect_to_monitor config >>= fun (ic, oc, cstate) ->
   verify_cstate ic cstate >>= fun () ->
-  send_server_handoff_rpc server_name oc;
+  send_server_handoff_rpc handoff_options oc;
   consume_prehandoff_messages ic oc

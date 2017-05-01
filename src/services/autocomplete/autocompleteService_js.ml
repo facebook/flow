@@ -64,6 +64,7 @@ let rec autocomplete_create_result cx name type_ loc =
   Type.(match type_ with
   | FunT (_, _, _, {params_tlist = params;
                     params_names = pnames;
+                    rest_param;
                     return_t = return; _}) ->
       let pnames =
         match pnames with
@@ -78,12 +79,23 @@ let rec autocomplete_create_result cx name type_ loc =
         in
         { param_name; param_ty }
       ) pnames params in
+      let params = match rest_param with
+      | None -> params
+      | Some (name, _, t) ->
+          let name = Option.value ~default:"_" name in
+          let param_name = rest_parameter_name cx name t in
+          let param_ty =
+            if is_printed_param_type_parsable ~weak:true cx t
+            then string_of_param_t cx t
+            else ""
+          in
+          params @ [ { param_name; param_ty; }] in
       let return = print_type cx return in
       { res_loc = loc;
         res_name = name;
         res_ty = (print_type cx type_);
         func_details = Some { params; return_ty = return } }
-  | PolyT (_, sub_type) ->
+  | PolyT (_, _, sub_type) ->
       let result = autocomplete_create_result cx name sub_type loc in
       (* This is not exactly pretty but we need to replace the type to
          be sure to use the same format for poly types as print_type *)
@@ -124,7 +136,7 @@ let autocomplete_member
   (* Resolve primitive types to their internal class type. We do this to allow
      autocompletion on these too. *)
   let this_t = resolve_builtin_class cx this_t in
-  let result = Autocomplete.extract_members cx this_t in
+  let result = Members.extract cx this_t in
 
   let open Hh_json in
 
@@ -137,7 +149,7 @@ let autocomplete_member
     "docblock", Docblock.json_of_docblock docblock;
   ] in
 
-  let result_str, t = Autocomplete.(match result with
+  let result_str, t = Members.(match result with
     | Success _ -> "SUCCESS", this
     | SuccessModule _ -> "SUCCESS", this
     | FailureMaybeType -> "FAILURE_NULLABLE", this
@@ -153,7 +165,7 @@ let autocomplete_member
     ~json_data
     ~profiling;
 
-  match Autocomplete.command_result_of_member_result result with
+  match Members.to_command_result result with
   | Err error -> Err error
   | OK result_map ->
     OK (
@@ -185,7 +197,7 @@ let autocomplete_id cx env =
         then (Loc.none, "this")
         else if is_super
         then (Loc.none, "super")
-        else (Scope.Entry.loc entry, name)
+        else (Scope.Entry.entry_loc entry, name)
       in
 
       let type_ = Scope.Entry.actual_type entry in

@@ -71,24 +71,25 @@ type reason_desc =
   | RArrayLit
   | REmptyArrayLit
   | RArrayType
+  | RROArrayType
   | RTupleType
   | RTupleElement
+  | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
-  | RArrowFunction of reason_desc_function
   | RFunctionType
   | RFunctionBody
   | RFunctionCall
+  | RFunctionUnusedArgument
   | RJSXFunctionCall of string
   | RJSXIdentifier of string * string
   | RJSXElementProps of string
   | RJSXElement of string option
+  | RJSXText
   | RAnyObject
   | RAnyFunction
   | RUnknownString
   | RStringEnum
   | RNumberEnum
-  | RGetterFunction
-  | RSetterFunction
   | RGetterSetterProperty
   | RThis
   | RThisType
@@ -108,6 +109,7 @@ type reason_desc =
   | RPrototype
   | RDestructuring
   | RConstructor
+  | RDefaultConstructor
   | RConstructorCall
   | RReturn
   | RRegExp
@@ -166,19 +168,8 @@ type reason_desc =
   | RReactStatics
   | RReactDefaultProps
   | RReactState
-  | RReactComponentProps
   | RReactElementProps of string
   | RReactPropTypes
-  | RPropTypeArray
-  | RPropTypeFunc
-  | RPropTypeObject
-  | RPropTypeArrayOf
-  | RPropTypeInstanceOf
-  | RPropTypeObjectOf
-  | RPropTypeOneOf
-  | RPropTypeOneOfType
-  | RPropTypeShape
-  | RPropTypeFbt
 
 and reason_desc_function =
   | RAsync
@@ -191,8 +182,6 @@ type reason = {
   derivable: bool;
   desc: reason_desc;
   loc: Loc.t;
-  (* origin is a persistent reason, immune to repos_reason *)
-  origin: reason option;
 }
 
 type t = reason
@@ -318,12 +307,11 @@ let json_of_loc ?(strip_root=None) loc = Hh_json.(Loc.(
 
 (* reason constructors, accessors, etc. *)
 
-let mk_reason_with_test_id test_id desc loc ?(origin=None) () = {
+let mk_reason_with_test_id test_id desc loc () = {
   test_id;
   derivable = false;
   desc;
   loc;
-  origin;
 }
 
 (* The current test_id is included in every new reason. *)
@@ -333,6 +321,16 @@ let mk_reason desc loc =
 (* Lift a string to a reason. Usually used as a dummy reason. *)
 let locationless_reason desc =
   mk_reason_with_test_id None desc Loc.none ()
+
+let func_reason {Ast.Function.async; generator; _} =
+  let func_desc = match async, generator with
+  | true, true -> RAsyncGenerator
+  | true, false -> RAsync
+  | false, true -> RGenerator
+  | false, false -> RNormal
+  in
+  mk_reason (RFunction func_desc)
+
 
 let loc_of_reason r = r.loc
 
@@ -362,13 +360,15 @@ let rec string_of_desc = function
   | RArrayLit -> "array literal"
   | REmptyArrayLit -> "empty array literal"
   | RArrayType -> "array type"
+  | RROArrayType -> "read-only array type"
   | RTupleType -> "tuple type"
   | RTupleElement -> "tuple element"
+  | RTupleOutOfBoundsAccess -> "undefined (out of bounds tuple access)"
   | RFunction func -> spf "%sfunction" (function_desc_prefix func)
-  | RArrowFunction func -> spf "%sarrow function" (function_desc_prefix func)
   | RFunctionType -> "function type"
   | RFunctionBody -> "function body"
   | RFunctionCall -> "function call"
+  | RFunctionUnusedArgument -> "unused function argument"
   | RJSXFunctionCall raw_jsx -> spf "JSX desugared to `%s(...)`" raw_jsx
   | RJSXIdentifier (raw_jsx, name) ->
       spf "JSX desugared to `%s(...)`. identifier %s" raw_jsx name
@@ -377,13 +377,12 @@ let rec string_of_desc = function
     | Some x -> spf "JSX element `%s`" x
     | None -> "JSX element")
   | RJSXElementProps x -> spf "props of JSX element `%s`" x
+  | RJSXText -> spf "JSX text"
   | RAnyObject -> "any object"
   | RAnyFunction -> "any function"
   | RUnknownString -> "some string with unknown value"
   | RStringEnum -> "string enum"
   | RNumberEnum -> "number enum"
-  | RGetterFunction -> "getter function"
-  | RSetterFunction -> "setter function"
   | RGetterSetterProperty -> "getter/setter property"
   | RThis -> "this"
   | RThisType -> "`this` type"
@@ -404,6 +403,7 @@ let rec string_of_desc = function
   | RPrototype -> "prototype"
   | RDestructuring -> "destructuring"
   | RConstructor -> "constructor"
+  | RDefaultConstructor -> "default constructor"
   | RConstructorCall -> "constructor call"
   | RReturn -> "return"
   | RRegExp -> "regexp"
@@ -443,7 +443,7 @@ let rec string_of_desc = function
   | RExactType d -> spf "exact type: %s" (string_of_desc d)
   | ROptional d -> spf "optional %s" (string_of_desc d)
   | RMaybe d -> spf "?%s" (string_of_desc d)
-  | RRestArray d -> spf "rest array of %s" (string_of_desc d)
+  | RRestArray d -> spf "rest parameter array of %s" (string_of_desc d)
   | RAbstract d -> spf "abstract %s" (string_of_desc d)
   | RTypeApp d -> spf "type application of %s" (string_of_desc d)
   | RThisTypeApp d -> spf "this instantiation of %s" (string_of_desc d)
@@ -471,19 +471,8 @@ let rec string_of_desc = function
   | RReactStatics -> "statics of React class"
   | RReactDefaultProps -> "default props of React component"
   | RReactState -> "state of React component"
-  | RReactComponentProps -> "props of React component"
   | RReactElementProps x -> spf "props of React element `%s`" x
   | RReactPropTypes -> "propTypes of React component"
-  | RPropTypeArray -> "array"
-  | RPropTypeFunc -> "func"
-  | RPropTypeObject -> "object"
-  | RPropTypeArrayOf -> "arrayOf"
-  | RPropTypeInstanceOf -> "instanceOf"
-  | RPropTypeObjectOf -> "objectOf"
-  | RPropTypeOneOf -> "oneOf"
-  | RPropTypeOneOfType -> "oneOfType"
-  | RPropTypeShape -> "shape"
-  | RPropTypeFbt -> "Fbd"
 
 let string_of_reason ?(strip_root=None) r =
   let spos = string_of_loc ~strip_root (loc_of_reason r) in
@@ -514,9 +503,6 @@ let dump_reason ?(strip_root=None) r =
 
 let desc_of_reason r =
   r.desc
-
-let origin_of_reason r =
-  r.origin
 
 let internal_name name =
   spf ".%s" name
@@ -570,9 +556,11 @@ let is_constant_property_reason r =
     else is_not_lowercase x 0 (len - 1)
   | _ -> false
 
-let is_method_call_reason x r =
+let is_typemap_reason r =
   match desc_of_reason r with
-  | RMethodCall (Some y) -> x = y
+  | RTupleMap
+  | RObjectMap
+  | RObjectMapi -> true
   | _ -> false
 
 let is_derivable_reason r =
@@ -614,8 +602,9 @@ let replace_reason_const desc r =
 
 (* returns reason with new location and description of original *)
 let repos_reason loc reason =
-  mk_reason_with_test_id reason.test_id (desc_of_reason reason) loc
-    ~origin:(origin_of_reason reason) ()
+  mk_reason_with_test_id reason.test_id (desc_of_reason reason) loc ()
 
-let update_origin_of_reason origin reason =
-  { reason with origin = origin }
+module ReasonMap = MyMap.Make(struct
+  type t = reason
+  let compare = Pervasives.compare
+end)

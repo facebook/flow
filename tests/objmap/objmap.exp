@@ -4,11 +4,27 @@ objmap.js:10
  10: (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
               ^^^^^ string literal `BAR`
 
-objmap.js:16
- 16:   (o.foo: string); // error, number ~> string
-        ^^^^^ number. This type is incompatible with
- 16:   (o.foo: string); // error, number ~> string
-               ^^^^^^ string
+objmap.js:13
+ 13:   foo: Promise.resolve(0),
+            ^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
+670: declare function $await<T>(p: Promise<T> | T): T;
+                                   ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `T` of object map. See lib: <BUILTINS>/core.js:670
+  Member 1:
+  670: declare function $await<T>(p: Promise<T> | T): T;
+                                     ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:670
+  Error:
+   16:   (o.foo: string); // error, number ~> string
+          ^^^^^ number. This type is incompatible with
+   16:   (o.foo: string); // error, number ~> string
+                 ^^^^^^ string
+  Member 2:
+    1: declare function promiseAllByKey<O>(o: O): Promise<$ObjMap<O,typeof $await>>;
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^ type parameter `T` of object map
+  Error:
+   16:   (o.foo: string); // error, number ~> string
+          ^^^^^ Promise. This type is incompatible with
+   16:   (o.foo: string); // error, number ~> string
+                 ^^^^^^ string
 
 
 Found 2 errors

@@ -12,18 +12,18 @@ Trace:
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ NumT [number]
  15: var a: string = foo('hi'); // error number ~> string
-                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [assignment of var `a`] (from path 2)
+                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [function call] (from path 2)
  15: var a: string = foo('hi'); // error number ~> string
          ^ ~> UseT(UnknownUse, OpenT) [var `a`]
 * path 2:
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ NumT [number]
  15: var a: string = foo('hi'); // error number ~> string
-                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [function call] (from path 3)
+                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [return] (from path 3)
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [function call] (from path 6)
  15: var a: string = foo('hi'); // error number ~> string
-                     ^^^^^^^^^ ~> ReposLowerT [assignment of var `a`]
+                     ^^^^^^^^^ ~> ReposLowerT [function call]
 * path 3:
  12:   return bar();
               ^^^^^ NumT [number]
@@ -32,12 +32,12 @@ Trace:
  11: function foo(x: string) {
                             ^ ~> UseT(FunReturn, OpenT) [return]
  15: var a: string = foo('hi'); // error number ~> string
-                     ^^^^^^^^^ ~> ReposLowerT [function call] (from path 6)
+                     ^^^^^^^^^ ~> ReposLowerT [return] (from path 6)
 * path 4:
  12:   return bar();
               ^^^ FunT [function]
  12:   return bar();
-              ^^^ ~> UseT(UnknownUse, OpenT) [identifier `bar`] (from path 5)
+              ^^^ ~> UseT(UnknownUse, OpenT) [function] (from path 5)
  12:   return bar();
               ^^^^^ ~> CallT [function call]
 * path 5:
@@ -46,7 +46,7 @@ Trace:
   9: function bar(): number { return 5; }
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [function]
  12:   return bar();
-              ^^^ ~> ReposLowerT [identifier `bar`]
+              ^^^ ~> ReposLowerT [function]
 * path 6:
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^ FunT [function]

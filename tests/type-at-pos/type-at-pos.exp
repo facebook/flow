@@ -213,7 +213,7 @@
   "type":"C<number>",
   "reasons":[
     {
-      "desc":"type application of identifier `D`",
+      "desc":"type application of function call",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
@@ -555,7 +555,7 @@
   "end":10
 }
 function_expression.js:9:5 = {
-  "type":"{+bar: () => void}",
+  "type":"{bar(): void}",
   "reasons":[],
   "loc":{
     "source":"function_expressions.js",
@@ -583,6 +583,51 @@ function_expression.js:9:7 = {
   "endline":9,
   "start":6,
   "end":16
+}
+function_expression.js:13:5 = {
+  "type":"{bar: () => void}",
+  "reasons":[],
+  "loc":{
+    "source":"function_expressions.js",
+    "type":"SourceFile",
+    "start":{"line":12,"column":11,"offset":151},
+    "end":{"line":14,"column":1,"offset":182}
+  },
+  "path":"function_expressions.js",
+  "line":12,
+  "endline":14,
+  "start":11,
+  "end":1
+}
+function_expression.js:17:3 = {
+  "type":"{m<T>(x: T): T}",
+  "reasons":[],
+  "loc":{
+    "source":"function_expressions.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":11,"offset":195},
+    "end":{"line":18,"column":1,"offset":228}
+  },
+  "path":"function_expressions.js",
+  "line":16,
+  "endline":18,
+  "start":11,
+  "end":1
+}
+function_expression.js:21:3 = {
+  "type":"{m: <T>(x: T) => T}",
+  "reasons":[],
+  "loc":{
+    "source":"function_expressions.js",
+    "type":"SourceFile",
+    "start":{"line":20,"column":11,"offset":241},
+    "end":{"line":22,"column":1,"offset":284}
+  },
+  "path":"function_expressions.js",
+  "line":20,
+  "endline":22,
+  "start":11,
+  "end":1
 }
 predicates.js - null: {
   "type":"null",
@@ -635,16 +680,16 @@ predicates.js - Array: {
     {
       "desc":"polymorphic type: class type: Array",
       "loc":{
-        "source":"[LIB] core.js",
-        "type":"LibFile",
-        "start":{"line":226,"column":1,"offset":8219},
-        "end":{"line":283,"column":1,"offset":11208}
+        "source":"predicates.js",
+        "type":"SourceFile",
+        "start":{"line":6,"column":5,"offset":69},
+        "end":{"line":6,"column":9,"offset":74}
       },
-      "path":"[LIB] core.js",
-      "line":226,
-      "endline":283,
-      "start":1,
-      "end":1
+      "path":"predicates.js",
+      "line":6,
+      "endline":6,
+      "start":5,
+      "end":9
     }
   ],
   "loc":{

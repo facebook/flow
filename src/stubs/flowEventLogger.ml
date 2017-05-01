@@ -28,7 +28,7 @@ let set_command _ = ()
 let set_from _ = ()
 let set_root _ = ()
 
-let status_response _ = ()
+let status_response ~num_errors:_ = ()
 let init_server _ = ()
 let init_done ~profiling:_ = ()
 let init_flow_command ~version:_ = ()
@@ -37,6 +37,16 @@ let lock_lost _ = ()
 let lock_stolen _ = ()
 let out_of_date _ = ()
 let autocomplete_member_result
+    ~client_context:_
+    ~result_str:_
+    ~json_data:_
+    ~profiling:_ = ()
+let get_def_member_result
+    ~client_context:_
+    ~result_str:_
+    ~json_data:_
+    ~profiling:_ = ()
+let type_at_pos_result
     ~client_context:_
     ~result_str:_
     ~json_data:_

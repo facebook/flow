@@ -446,6 +446,8 @@ let json_of_file ?strict filename =
 
 let int_ n = JSON_Number (string_of_int n)
 
+let string_ s = JSON_String s
+
 let get_object_exn = function
   | JSON_Object o -> o
   | _ -> assert false
@@ -462,15 +464,28 @@ let get_number_exn = function
   | JSON_Number s -> s
   | _ -> assert false
 
+let get_number_int_exn = function
+  | JSON_Number s -> int_of_string s
+  | _ -> assert false
+
 let get_bool_exn = function
   | JSON_Bool b -> b
   | _ -> assert false
+
+let opt_string_to_json = function
+  | Some x -> JSON_String x
+  | None -> JSON_Null
+
+let opt_int_to_json = function
+  | Some x -> JSON_Number (string_of_int x)
+  | None -> JSON_Null
 
 type json_type =
   | Object_t
   | Array_t
   | String_t
   | Number_t
+  | Integer_t
   | Bool_t
 
 let json_type_to_string = function
@@ -478,6 +493,7 @@ let json_type_to_string = function
   | Array_t -> "Array"
   | String_t -> "String"
   | Number_t -> "Number"
+  | Integer_t -> "Integer"
   | Bool_t -> "Bool"
 
 module type Access = sig
@@ -495,11 +511,14 @@ module type Access = sig
   val return : 'a -> 'a m
 
   val (>>=) : 'a m -> (('a * keytrace) -> 'b m) -> 'b m
+  val counit_with : (access_failure -> 'a) -> 'a m -> 'a
   val get_obj : string -> json * keytrace -> json m
   val get_bool : string -> json * keytrace -> bool m
   val get_string : string -> json * keytrace -> string m
   val get_number : string -> json * keytrace -> string m
+  val get_number_int : string -> json * keytrace -> int m
   val get_array: string -> json * keytrace -> (json list) m
+  val get_val: string -> json * keytrace -> json m
 end
 
 module Access = struct
@@ -530,8 +549,16 @@ module Access = struct
 
   let (>>=) m f = Result.bind m f
 
+  let counit_with f m = match m with
+    | Result.Ok (v, _) ->
+      v
+    | Result.Error e ->
+      f e
+
   let catch_type_error exp f (v, keytrace) =
     try Result.Ok (f v, keytrace) with
+      | Failure msg when (String.equal "int_of_string" msg) ->
+        Result.Error (Wrong_type_error (keytrace, exp))
       | Assert_failure _ ->
         Result.Error (Wrong_type_error (keytrace, exp))
 
@@ -565,6 +592,9 @@ module Access = struct
 
   let get_number k (v, keytrace) =
     get_val k (v, keytrace) >>= catch_type_error Number_t get_number_exn
+
+  let get_number_int k (v, keytrace) =
+    get_val k (v, keytrace) >>= catch_type_error Integer_t get_number_int_exn
 
   let get_array k (v, keytrace) =
     get_val k (v, keytrace) >>= catch_type_error Array_t get_array_exn

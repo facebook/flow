@@ -8,3 +8,5 @@
 all=true
 esproposal.class_instance_fields=enable
 munge_underscores=true
+no_flowlib=true
+

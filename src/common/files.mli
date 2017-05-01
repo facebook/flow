@@ -10,8 +10,13 @@
 
 (* utilities for supported filenames *)
 
+val node_modules_containers: SSet.t ref
+
 val global_file_name: string
 val flow_ext: string
+
+val has_flow_ext: Loc.filename -> bool
+val chop_flow_ext: Loc.filename -> Loc.filename option
 
 val is_json_file: string -> bool
 val is_flow_file: options: Options.t -> string -> bool
@@ -23,13 +28,16 @@ val is_included: Options.t -> string -> bool
 
 val init: Options.t -> string list * SSet.t
 
-val lib_module: string
+val module_ref: Loc.filename -> string
+val lib_module_ref: string
 
 (* regexp for Filename constants *)
 val dir_sep: Str.regexp
 val current_dir_name: Str.regexp
 val parent_dir_name: Str.regexp
 val absolute_path: Str.regexp
+
+val watched_paths: Options.t -> Path.t list
 
 (* given a root, make a filter for file names *)
 val wanted:

@@ -16,21 +16,28 @@ type types_mode =
 
 (* result of individual parse *)
 type result =
-  | Parse_ok of Spider_monkey_ast.program
-  | Parse_err of Errors.ErrorSet.t
+  | Parse_ok of Ast.program
+  | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
 and parse_skip_reason =
   | Skip_resource_file
   | Skip_non_flow_file
 
+and parse_failure =
+  | Docblock_errors of Docblock.error list
+  | Parse_error of (Loc.t * Parse_error.t)
+
 (* results of parse job, returned by parse and reparse *)
 type results = {
-  parse_ok: FilenameSet.t;                   (* successfully parsed files *)
-  parse_skips: (filename * Docblock.t) list; (* list of skipped files *)
-  parse_fails: (filename * Docblock.t) list; (* list of failed files *)
-  parse_errors: Errors.ErrorSet.t list;      (* parallel list of error sets *)
-  parse_resource_files: FilenameSet.t;       (* resource files *)
+  (* successfully parsed files *)
+  parse_ok: FilenameSet.t;
+
+  (* list of skipped files *)
+  parse_skips: (filename * Docblock.t) list;
+
+  (* list of failed files *)
+  parse_fails: (filename * Docblock.t * parse_failure) list;
 }
 
 (* initial parsing pass: success/failure info is returned,
@@ -41,7 +48,7 @@ val parse:
   profile: bool ->
   max_header_tokens: int ->
   Worker.t list option ->       (* Some=parallel, None=serial *)
-  (unit -> filename list) ->    (* delivers buckets of filenames *)
+  filename list Bucket.next ->  (* delivers buckets of filenames *)
   results                       (* job results, not asts *)
 
 (* Use default values for the various settings that parse takes. Each one can be overridden
@@ -51,7 +58,7 @@ val parse_with_defaults:
   ?use_strict: bool ->
   Options.t ->
   Worker.t list option ->
-  (unit -> filename list) ->
+  filename list Bucket.next ->
   results
 
 (* for non-initial passes: updates asts for passed file set. *)
@@ -66,36 +73,43 @@ val reparse:
   FilenameSet.t * results   (* modified files and job results *)
 
 val reparse_with_defaults:
+  ?types_mode: types_mode ->
+  ?use_strict: bool ->
   Options.t ->
   Worker.t list option ->
   FilenameSet.t ->
   FilenameSet.t * results
 
+val calc_requires:
+  Ast.program ->
+  bool ->
+  Loc.t SMap.t
+
 val has_ast: filename -> bool
 
-(* after parsing, retrieves ast by filename (unsafe) *)
-val get_ast_unsafe: filename -> Spider_monkey_ast.program
-val get_ast_and_info_unsafe:
-  filename -> Spider_monkey_ast.program * Docblock.t
+val get_ast: filename -> Ast.program option
 
-val get_ast: filename -> Spider_monkey_ast.program option
+(* after parsing, retrieves ast and docblock by filename (unsafe) *)
+val get_ast_unsafe: filename -> Ast.program
+val get_docblock_unsafe: filename -> Docblock.t
+val get_requires_unsafe: filename -> Loc.t SMap.t
 
-(* remove asts for given file set. *)
-val remove_asts: FilenameSet.t -> unit
+(* remove asts and docblocks for given file set. *)
+val remove_batch: FilenameSet.t -> unit
 
 (* Adds a hook that is called every time a file has been processed.
  * When a file fails to parse, is deleted or is skipped because it isn't a Flow
  * file, the AST is None.
  *)
 val register_hook:
-  (filename -> Spider_monkey_ast.program option -> unit) ->
+  (filename -> Ast.program option -> unit) ->
   unit
 
 val get_docblock:
   max_tokens:int -> (* how many tokens to check in the beginning of the file *)
   filename ->
   string ->
-  Errors.ErrorSet.t option * Docblock.t
+  Docblock.error list * Docblock.t
 
 (* parse contents of a file *)
 val do_parse:
@@ -111,4 +125,9 @@ val do_parse:
 val next_of_filename_set:
   Worker.t list option ->
   FilenameSet.t ->
-  (unit -> filename list)
+  filename list Bucket.next
+
+val error_of_docblock_error: Docblock.error -> Errors.error
+val set_of_docblock_errors: Docblock.error list -> Errors.ErrorSet.t
+val error_of_parse_error : Loc.t * Parse_error.t -> Errors.error
+val set_of_parse_error: Loc.t * Parse_error.t -> Errors.ErrorSet.t

@@ -11,7 +11,6 @@
 open Utils_js
 open Span
 
-module Ast = Spider_monkey_ast
 
 (**************************)
 
@@ -241,7 +240,7 @@ and meta_expression cmap = Ast.Expression.(function
   | _, Object { Object.properties } ->
       concat_fold (fun cmap -> function
         | Object.Property (loc, {
-            Object.Property.value = (_, Function {
+            Object.Property.value = Object.Property.Init (_, Function {
               Ast.Function.params = (params, _); body; _
             });
             key = Ast.Expression.Object.Property.Identifier _;
@@ -249,7 +248,10 @@ and meta_expression cmap = Ast.Expression.(function
           }) ->
             meta_fbody cmap loc params body
 
-        | Object.Property (_, { Object.Property.value = v ; _ }) ->
+        | Object.Property (_, { Object.Property.
+            value = Object.Property.Init v;
+            _
+          }) ->
             meta_expression cmap v
 
         | _ -> cmap, [] (* TODO? *)
@@ -282,7 +284,7 @@ and meta_statement cmap = Ast.Statement.(function
   | _, VariableDeclaration { VariableDeclaration.declarations; _ } ->
       concat_fold meta_variable cmap declarations
 
-  | _, Expression { Expression.expression = e } ->
+  | _, Expression { Expression.expression = e; _ } ->
       meta_expression cmap e
 
   | _, ClassDeclaration { Ast.Class.body; _ } ->

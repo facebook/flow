@@ -26,7 +26,7 @@ end
 
 type token_sink_result = {
   token_loc: Loc.t;
-  token: Lexer_flow.Token.t;
+  token: Token.t;
   token_context: Lex_mode.t;
   token_value: string;
 }
@@ -56,12 +56,13 @@ val in_strict_mode : env -> bool
 val last_loc : env -> Loc.t option
 val in_export : env -> bool
 val labels : env -> SSet.t
-val comments : env -> Spider_monkey_ast.Comment.t list
+val comments : env -> Ast.Comment.t list
 val in_loop : env -> bool
 val in_switch : env -> bool
 val in_function : env -> bool
 val allow_yield : env -> bool
 val allow_await: env -> bool
+val allow_directive : env -> bool
 val no_in : env -> bool
 val no_call : env -> bool
 val no_let : env -> bool
@@ -79,8 +80,8 @@ val error_unexpected : env -> unit
 val error_on_decorators : env -> (Loc.t * 'a) list -> unit
 val strict_error : env -> Parse_error.t -> unit
 val strict_error_at : env -> Loc.t * Parse_error.t -> unit
-val get_unexpected_error : Lexer_flow.Token.t * string -> Parse_error.t
-val comment_list : env -> Spider_monkey_ast.Comment.t list -> unit
+val get_unexpected_error : Token.t * string -> Parse_error.t
+val comment_list : env -> Ast.Comment.t list -> unit
 val error_list : env -> (Loc.t * Parse_error.t) list -> unit
 val record_export: env -> Loc.t * string -> unit
 
@@ -90,6 +91,7 @@ val with_strict : bool -> env -> env
 val with_in_function : bool -> env -> env
 val with_allow_yield : bool -> env -> env
 val with_allow_await : bool -> env -> env
+val with_allow_directive : bool -> env -> env
 val with_no_let : bool -> env -> env
 val with_in_loop : bool -> env -> env
 val with_no_in : bool -> env -> env
@@ -110,11 +112,11 @@ val is_strict_reserved : string -> bool
 val is_restricted : string -> bool
 
 module Peek : sig
-  val token : ?i:int -> env -> Lexer_flow.Token.t
+  val token : ?i:int -> env -> Token.t
   val value : ?i:int -> env -> string
   val loc : ?i:int -> env -> Loc.t
   val errors : ?i:int -> env -> (Loc.t * Parse_error.t) list
-  val comments : ?i:int -> env -> Spider_monkey_ast.Comment.t list
+  val comments : ?i:int -> env -> Ast.Comment.t list
   val is_line_terminator : env -> bool
   val is_implicit_semicolon : env -> bool
   val semicolon_loc : ?i:int -> env -> Loc.t option
@@ -133,8 +135,8 @@ module Eat : sig
 end
 
 module Expect : sig
-  val token : env -> Lexer_flow.Token.t -> unit
-  val maybe : env -> Lexer_flow.Token.t -> bool
+  val token : env -> Token.t -> unit
+  val maybe : env -> Token.t -> bool
   val contextual : env -> string -> unit
 end
 

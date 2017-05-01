@@ -52,8 +52,6 @@ Found 3 errors
 Test b:
 b3.js:5
   5: (new D: C);
-      ^^^^^ constructor call
-  5: (new D: C);
       ^^^^^ D. This type is incompatible with
   5: (new D: C);
              ^ C
@@ -131,33 +129,53 @@ No errors!
 No errors!
 
 Test f:
-f1.js:4
-  4: type S = { x: string };
-                   ^^^^^^ string. This type is incompatible with
+f2.js:4
   4: (c: { x: number });
-              ^^^^^^ number. See: f2.js:4
+      ^ object type. This type is incompatible with
+  4: (c: { x: number });
+         ^^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+      4: type S = { x: string };
+                       ^^^^^^ string. This type is incompatible with. See: f1.js:4
+      4: (c: { x: number });
+                  ^^^^^^ number
 
 f2.js:4
   4: (c: { x: number });
-              ^^^^^^ number. This type is incompatible with
-  4: type S = { x: string };
-                   ^^^^^^ string. See: f1.js:4
+      ^ object type. This type is incompatible with
+  4: (c: { x: number });
+         ^^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+      4: (c: { x: number });
+                  ^^^^^^ number. This type is incompatible with
+      4: type S = { x: string };
+                       ^^^^^^ string. See: f1.js:4
 
 
 Found 2 errors
 No errors!
 No errors!
-f1.js:4
-  4: type S = { x: string };
-                   ^^^^^^ string. This type is incompatible with
+f2.js:4
   4: (c: { x: number });
-              ^^^^^^ number. See: f2.js:4
+      ^ object type. This type is incompatible with
+  4: (c: { x: number });
+         ^^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+      4: type S = { x: string };
+                       ^^^^^^ string. This type is incompatible with. See: f1.js:4
+      4: (c: { x: number });
+                  ^^^^^^ number
 
 f2.js:4
   4: (c: { x: number });
-              ^^^^^^ number. This type is incompatible with
-  4: type S = { x: string };
-                   ^^^^^^ string. See: f1.js:4
+      ^ object type. This type is incompatible with
+  4: (c: { x: number });
+         ^^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+      4: (c: { x: number });
+                  ^^^^^^ number. This type is incompatible with
+      4: type S = { x: string };
+                       ^^^^^^ string. See: f1.js:4
 
 
 Found 2 errors
@@ -169,6 +187,45 @@ Test h:
 h2.js:3
   3: import type { Foo } from './h1';
                    ^^^ Named import from module `./h1`. This module has no named export called `Foo`.
+
+
+Found 1 error
+
+Test i:
+i2.js:5
+  5: foo.p = 0;
+     ^^^ object type. Covariant property `p` incompatible with contravariant use in
+  5: foo.p = 0;
+     ^^^^^ assignment of property `p`
+
+
+Found 1 error
+
+Test j:
+j2.js:5
+  5: foo.p = 0;
+     ^^^ object type. Covariant property `p` incompatible with contravariant use in
+  5: foo.p = 0;
+     ^^^^^ assignment of property `p`
+
+
+Found 1 error
+
+Test k:
+k.js:4
+  4: (x.p: string);
+        ^ property `p`. Property not found in
+  4: (x.p: string);
+      ^ object type
+
+
+Found 1 error
+No errors!
+k.js:4
+  4: (x.p: string);
+        ^ property `p`. Property not found in
+  4: (x.p: string);
+      ^ object type
 
 
 Found 1 error

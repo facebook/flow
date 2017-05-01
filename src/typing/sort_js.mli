@@ -17,3 +17,4 @@ open Utils_js
 val topsort: FilenameSet.t FilenameMap.t -> filename list list IMap.t
 val reverse: FilenameSet.t FilenameMap.t -> FilenameSet.t FilenameMap.t
 val log: filename list list IMap.t -> unit
+val component_map: filename list list IMap.t -> (filename list) FilenameMap.t

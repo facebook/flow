@@ -7,32 +7,56 @@
 
 EXTRA_INCLUDE_PATHS=
 EXTRA_LIB_PATHS=
+INTERNAL_MODULES=hack/stubs src/stubs
+INTERNAL_NATIVE_C_FILES=
+
+ifeq ($(OS), Windows_NT)
+  UNAME_S=Windows
+else
+  UNAME_S=$(shell uname -s)
+endif
+
+-include facebook/Makefile
 
 ################################################################################
 #                              OS-dependent stuff                              #
 ################################################################################
 
-OS=$(shell uname -s)
-
-FLOWLIB=bin/flowlib.tar.gz
-
-ifeq ($(OS), Linux)
-  INOTIFY=third-party/inotify
+ifeq ($(UNAME_S), Linux)
+  FLOWLIB=bin/flowlib.tar.gz
+  INOTIFY=hack/third-party/inotify
   INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.c
-  FSNOTIFY=fsnotify_linux
+  FSNOTIFY=hack/fsnotify_linux
+  FSNOTIFY_STUBS=
   ELF=elf
   RT=rt
   FRAMEWORKS=
   SECTCREATE=
+  EXE=
 endif
-ifeq ($(OS), Darwin)
-  INOTIFY=fsevents
+ifeq ($(UNAME_S), Darwin)
+  FLOWLIB=bin/flowlib.tar.gz
+  INOTIFY=hack/fsevents
   INOTIFY_STUBS=$(INOTIFY)/fsevents_stubs.c
-  FSNOTIFY=fsnotify_darwin
+  FSNOTIFY=hack/fsnotify_darwin
+  FSNOTIFY_STUBS=
   ELF=
   RT=
   FRAMEWORKS=CoreServices CoreFoundation
   SECTCREATE=-cclib -sectcreate -cclib __text -cclib flowlib -cclib $(abspath $(FLOWLIB))
+  EXE=
+endif
+ifeq ($(UNAME_S), Windows)
+  FLOWLIB=flowlib.rc
+  INOTIFY=
+  INOTIFY_STUBS=
+  FSNOTIFY=hack/fsnotify_win
+  FSNOTIFY_STUBS=$(FSNOTIFY)/fsnotify_stubs.c
+  ELF=
+  RT=
+  FRAMEWORKS=
+  SECTCREATE=
+  EXE=.exe
 endif
 
 ################################################################################
@@ -42,16 +66,21 @@ endif
 MODULES=\
   src/commands\
   src/common\
+  src/common/audit\
+  src/common/config\
+  src/common/errors\
+  src/common/profiling\
+  src/common/utils\
   src/dts\
   src/embedded\
   src/parser\
+  src/parser_utils\
   src/parsing\
   src/server\
   src/services/autocomplete\
   src/services/inference\
   src/services/flowFileGen\
   src/services/port\
-  src/stubs\
   src/third-party/lz4\
   src/typing\
   hack/dfind\
@@ -63,18 +92,19 @@ MODULES=\
   hack/procs\
   hack/search\
   hack/socket\
-  hack/stubs\
   hack/third-party/avl\
   hack/third-party/core\
   hack/utils\
   hack/utils/collections\
   hack/utils/disk\
   hack/utils/hh_json\
-  hack/$(INOTIFY)\
-  hack/$(FSNOTIFY)
+  $(INOTIFY)\
+  $(FSNOTIFY)\
+  $(INTERNAL_MODULES)
 
 NATIVE_C_FILES=\
-  hack/$(INOTIFY_STUBS)\
+  $(INOTIFY_STUBS)\
+  $(FSNOTIFY_STUBS)\
   hack/heap/hh_shared.c\
   hack/hhi/hhi_elf.c\
   hack/utils/files.c\
@@ -84,10 +114,10 @@ NATIVE_C_FILES=\
   hack/utils/realpath.c\
   hack/utils/sysinfo.c\
   hack/utils/priorities.c\
-  hack/utils/win32_support.c\
   hack/hhi/hhi_win32res_stubs.c\
   src/embedded/flowlib_elf.c\
-  $(sort $(wildcard src/third-party/lz4/*.c))
+  $(sort $(wildcard src/third-party/lz4/*.c))\
+  $(INTERNAL_NATIVE_C_FILES)
 
 OCAML_LIBRARIES=\
   unix\
@@ -146,6 +176,14 @@ LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS) $(SECTCREATE)
 all: $(FLOWLIB) build-flow copy-flow-files
 all-ocp: build-flow-with-ocp copy-flow-files-ocp
 
+all-homebrew: 
+	export OPAMROOT="$(shell mktemp -d 2> /dev/null || mktemp -d -t opam)"; \
+	export OPAMYES="1"; \
+	opam init --no-setup && \
+	opam pin add flowtype . && \
+	opam install flowtype --deps-only && \
+	opam config exec -- make
+
 clean:
 	ocamlbuild -clean
 	rm -rf bin
@@ -153,11 +191,15 @@ clean:
 	rm -f flow.odocl
 
 clean-ocp: clean
-	ocp-build clean
+	[ -d _obuild ] && ocp-build clean || true
 	rm -f $(OCP_BUILD_FILES)
 
 build-flow: $(BUILT_OBJECT_FILES) $(FLOWLIB)
-	ocamlbuild  -no-links  $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.native
+	ocamlbuild \
+		-use-ocamlfind -pkgs sedlex \
+		-no-links  $(INCLUDE_OPTS) $(LIB_OPTS) \
+		-lflags "$(LINKER_FLAGS)" \
+		src/flow.native
 
 %.ocp: %.ocp.fb scripts/utils.ml scripts/ocp_build_glob.ml
 	ocaml -I scripts -w -3 str.cma unix.cma scripts/ocp_build_glob.ml $(addsuffix .fb,$@) $@
@@ -165,12 +207,19 @@ build-flow: $(BUILT_OBJECT_FILES) $(FLOWLIB)
 build-flow-with-ocp: $(OCP_BUILD_FILES) $(FLOWLIB) hack/utils/get_build_id.gen.c
 	[ -d _obuild ] || ocp-build init
 	ocp-build build flow
+	mkdir -p bin
+	cp _obuild/flow/flow.asm$(EXE) bin/flow$(EXE)
+	rm -f $(OCP_BUILD_FILES)
+
+build-parser-test-with-ocp: $(OCP_BUILD_FILES)
+	[ -d _obuild ] || ocp-build init
+	ocp-build build flow-parser-hardcoded-test
 	rm -f $(OCP_BUILD_FILES)
 
 build-flow-debug: $(BUILT_OBJECT_FILES) $(FLOWLIB)
 	ocamlbuild -lflags -custom -no-links $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.d.byte
 	mkdir -p bin
-	cp _build/src/flow.d.byte bin/flow
+	cp _build/src/flow.d.byte bin/flow$(EXE)
 
 %.h: $(subst _build/,,$@)
 	mkdir -p $(dir $@)
@@ -195,33 +244,36 @@ _build/hack/utils/get_build_id.gen.c: FORCE scripts/utils.ml scripts/gen_build_i
 # binary. Unfortunately we rely on ocamlbuild to embed the archive on OSX and
 # ocamlbuild isn't smart enough to understand dependencies outside of its
 # automatic-dependency stuff.
-$(FLOWLIB): $(wildcard lib/*)
+bin/flowlib.tar.gz: $(wildcard lib/*)
 	mkdir -p bin
 	tar czf $@ -C lib .
-ifeq ($(OS), Darwin)
+ifeq ($(UNAME_S), Darwin)
 	rm -f _build/src/flow.d.byte _build/src/flow.native
 	rm -f _obuild/flow/flow.byte _obuild/flow/flow.asm
 endif
 
+flowlib.rc: scripts/gen_index.ml $(wildcard lib/*)
+	ocaml -I scripts -w -3 unix.cma ./scripts/gen_index.ml flowlib.rc lib
+
 copy-flow-files: build-flow $(FILES_TO_COPY)
 	mkdir -p bin
-ifeq ($(OS), Linux)
-	objcopy --add-section flowlib=$(FLOWLIB) _build/src/flow.native bin/flow
+ifeq ($(UNAME_S), Linux)
+	objcopy --add-section flowlib=$(FLOWLIB) _build/src/flow.native bin/flow$(EXE)
 else
-	cp _build/src/flow.native bin/flow
+	cp _build/src/flow.native bin/flow$(EXE)
 endif
 
 copy-flow-files-ocp: build-flow-with-ocp $(FLOWLIB) $(FILES_TO_COPY)
 	mkdir -p bin
-ifeq ($(OS), Linux)
-	objcopy --add-section flowlib=$(FLOWLIB) _obuild/flow/flow.asm bin/flow
+ifeq ($(UNAME_S), Linux)
+	objcopy --add-section flowlib=$(FLOWLIB) _obuild/flow/flow.asm bin/flow$(EXE)
 else
-	cp _obuild/flow/flow.asm bin/flow
+	cp _obuild/flow/flow.asm bin/flow$(EXE)
 endif
 
 do-test:
-	./runtests.sh bin/flow
-	bin/flow check
+	./runtests.sh bin/flow$(EXE)
+	bin/flow$(EXE) check
 	./tool test
 
 test: build-flow copy-flow-files
@@ -232,11 +284,16 @@ test-ocp: build-flow-with-ocp copy-flow-files-ocp
 
 js: $(BUILT_OBJECT_FILES)
 	mkdir -p bin
+	# NOTE: temporarily disabling warning 31 because
+	# hack/third-party/core/result.ml and the opam `result` module both define
+	# result.cma, and this is the most expedient (though fragile) way to unblock
+	# ourselves.
 	ocamlbuild -use-ocamlfind \
-		-pkgs js_of_ocaml \
+		-pkgs js_of_ocaml,sedlex \
 		-build-dir _build \
 		-lflags -custom -no-links \
-		$(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(BYTECODE_LINKER_FLAGS)" \
+		$(INCLUDE_OPTS) $(LIB_OPTS) \
+		-lflags "$(BYTECODE_LINKER_FLAGS) -warn-error -31" \
 		src/flow_dot_js.byte
 	# js_of_ocaml has no ability to upgrade warnings to errors, but we want to
 	# error if, for example, there are any unimplemented C primitives.
@@ -275,7 +332,7 @@ flow.odocl: $(shell find . -name "*.ml" -o -name "*.mli")
 	done
 	# For some reason these two AST files cause ocamldoc to get stuck
 	cat deps \
-		| grep -v "src/parser/spider_monkey_ast.ml" \
+		| grep -v "src/parser/ast.ml" \
 		| grep -v "src/dts/dts_ast.ml" \
 		| sed "s/\.ml$$//" > $@
 	rm -f deps last_deps temp_deps

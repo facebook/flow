@@ -5,10 +5,10 @@ apply.js:2
               ^^^^ Number
 
 apply.js:12
- 12: test.apply("", [""]); // error: string ~> number
+ 12: test.apply("", [""]); // error: void ~> number
      ^^^^^^^^^^^^^^^^^^^^ call of method `apply`
- 12: test.apply("", [""]); // error: string ~> number
-                     ^^ string. This type is incompatible with
+ 12: test.apply("", [""]); // error: void ~> number
+     ^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
   1: function test(a: string, b: number): number {
                                  ^^^^^^ number
 
@@ -38,9 +38,11 @@ apply.js:22
 
 apply.js:25
  25: test.apply("", "not array"); // error: expect array of args
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`. Expected array of arguments instead of
- 25: test.apply("", "not array"); // error: expect array of args
-                    ^^^^^^^^^^^ string
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+  1: function test(a: string, b: number): number {
+                                 ^^^^^^ number. This type is incompatible with
+276:     @@iterator(): Iterator<string>;
+                                ^^^^^^ string. See lib: <BUILTINS>/core.js:276
 
 apply.js:32
  32: (test.call.apply(test, [0, 123, 'foo']): void);
@@ -66,11 +68,35 @@ apply.js:37
   1: function test(a: string, b: number): number {
                       ^^^^^^ string
 
+apply.js:47
+ 47:   x.apply(x, ['foo', 123]); // error, number !~> string
+                          ^^^ number. This type is incompatible with the expected param type of
+ 45: function test3(x: { (a: string, b: string): void }) {
+                                        ^^^^^^ string
+
 bind.js:7
   7:     y(123); // error, number !~> string
            ^^^ number. This type is incompatible with the expected param type of
   4:   function(x: (a: string, b: string) => void) {
                                   ^^^^^^ string
+
+bind.js:14
+ 14:     y(123); // error, number !~> string
+           ^^^ number. This type is incompatible with the expected param type of
+ 11:   function(x: { (a: string, b: string): void }) {
+                                    ^^^^^^ string
+
+bind.js:19
+ 19:     x.bind(x, 'foo'); // error
+           ^^^^ property `bind`. Property not found in
+ 19:     x.bind(x, 'foo'); // error
+         ^ object type
+
+bind.js:25
+ 25:     (x.bind(123): void); // error, number !~> string
+                 ^^^ number. This type is incompatible with the expected param type of
+ 23:   function(x: {(a: string, b: string): void, bind(a: string): void}) {
+                                                          ^^^^^^ string
 
 call.js:4
   4:   return this.length; // expect []/"" this
@@ -79,9 +105,9 @@ call.js:4
               ^^^^ Number
 
 call.js:14
- 14: test.call("", ""); // error: string ~> number
+ 14: test.call("", ""); // error: void ~> number
      ^^^^^^^^^^^^^^^^^ call of method `call`
- 14: test.call("", ""); // error: string ~> number
+ 14: test.call("", ""); // error: void ~> number
      ^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
   3: function test(a: string, b: number): number {
                                  ^^^^^^ number
@@ -121,6 +147,12 @@ call.js:30
                                    ^^^^^ string. This type is incompatible with the expected param type of
   3: function test(a: string, b: number): number {
                                  ^^^^^^ number
+
+call.js:40
+ 40:   x.call(x, 'foo', 123); // error, number !~> string
+                        ^^^ number. This type is incompatible with the expected param type of
+ 38: function test3(x: { (a: string, b: string): void }) {
+                                        ^^^^^^ string
 
 function.js:29
  29:   var a: number = x; // Error
@@ -220,13 +252,59 @@ function.js:54
  54:     z.name = 123; // error, it's a string
          ^^^^^^ string
 
-rest.js:8
-  8: function rest_tuple<T>(...xs: [T]): T {
-                                   ^^^ tuple type. rest parameter should have an explicit array type (or type `any`)
+rest.js:36
+ 36:   return xs.pop(); // Error - no bound on T
+              ^^^^^^^^ call of method `pop`. Method cannot be called on
+ 36:   return xs.pop(); // Error - no bound on T
+              ^^ T
 
-rest.js:17
- 17: function rest_t<U, T: Array<U>>(...xs: T): U {
-                                            ^ T. rest parameter should have an explicit array type (or type `any`)
+rest.js:38
+ 38: function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
+                                          ^^^^^ Rest params are always arrays. This type is incompatible with
+ 38: function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
+                               ^^^^^^ string
+
+rest.js:53
+ 53: (empty_rest(): empty); // Error Array ~> empty
+      ^^^^^^^^^^^^ rest parameter array of function call. This type is incompatible with
+ 53: (empty_rest(): empty); // Error Array ~> empty
+                    ^^^^^ empty
+
+rest.js:59
+ 59:     return args; // Error: Array ~> number
+                ^^^^ rest parameter array of function type. This type is incompatible with the expected return type of
+ 57: ): (...args: Args) => number {
+                           ^^^^^^ number
+
+rest_type.js:15
+ 15:   f(123); // Error - number ~> array - luckily this errors
+       ^^^^^^ function call
+ 14: function test_unbound_rest(f: <T>(x: T, ...xs: T) => void) {
+                                                    ^ type parameter `T` of function call. Expected array instead of
+ 15:   f(123); // Error - number ~> array - luckily this errors
+         ^^^ number
+
+rest_type.js:20
+ 20:   f('hello'); // Error - string ~> array - luckily this errors
+       ^^^^^^^^^^ function call
+ 18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
+                                  ^^^^^^ string. Expected array instead of
+ 18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
+                                  ^^^^^^ string
+
+rest_type.js:20
+ 20:   f('hello'); // Error - string ~> array - luckily this errors
+       ^^^^^^^^^^ function call
+ 20:   f('hello'); // Error - string ~> array - luckily this errors
+       ^^^^^^^^^^ rest parameter array of function call. This type is incompatible with
+ 18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
+                                  ^^^^^^ string
+
+rest_type.js:31
+ 31: ((f: empty_rest) => (f(): empty)); // Error Array ~> empty
+                          ^^^ rest parameter array of function call. This type is incompatible with
+ 31: ((f: empty_rest) => (f(): empty)); // Error Array ~> empty
+                               ^^^^^ empty
 
 
-Found 37 errors
+Found 48 errors

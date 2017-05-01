@@ -67,9 +67,6 @@ type element =
 | Skip of filename
 | Component of filename list
 
-let rev_append_triple (x1, y1, z1) (x2, y2, z2) =
-  List.rev_append x1 x2, List.rev_append y1 y2, List.rev_append z1 z2
-
 let component (f, diff) =
   if diff then Component (FilenameMap.find_unsafe f !components)
   else Skip f
@@ -146,9 +143,10 @@ let join =
       ) (FilenameMap.find_unsafe leader_f !dependents)
     ) leader_fs_diffs
   in
-  fun res acc ->
-    let merged, _, unchanged = res in
-    let changed = List.filter (fun f -> not (List.mem f unchanged)) merged in
+  fun (merged, unchanged) (merged_acc, unchanged_acc) ->
+    let changed = List.rev (List.fold_left (fun acc (f, _) ->
+      if not (List.mem f unchanged) then f::acc else acc
+    ) [] merged) in
     List.iter (fun leader_f ->
       let fs = FilenameMap.find_unsafe leader_f !components in
       Context_cache.revive_merge_batch (FilenameSet.of_list fs);
@@ -161,4 +159,4 @@ let join =
       (List.rev_map (fun leader_f -> (leader_f, true)) changed)
       (List.rev_map (fun leader_f -> (leader_f, false)) unchanged)
     );
-    rev_append_triple res acc
+    List.rev_append merged merged_acc, List.rev_append unchanged unchanged_acc

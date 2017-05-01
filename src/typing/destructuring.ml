@@ -10,7 +10,6 @@
 
 (* AST handling for destructuring exprs *)
 
-module Ast = Spider_monkey_ast
 
 open Utils_js
 open Reason
@@ -80,7 +79,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
         | Some (Element ((loc, _) as p)) ->
             let key = NumT (
               mk_reason RNumber loc,
-              Literal (float i, string_of_int i)
+              Literal (None, (float i, string_of_int i))
             ) in
             let reason = mk_reason (RCustom (spf "element %d" i)) loc in
             let init = Option.map init (fun init ->
@@ -97,7 +96,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
               }))
             ) in
             let refinement = Option.bind init (fun init ->
-              Refinement.get cx init reason
+              Refinement.get cx init loc
             ) in
             let parent_pattern_t, tvar = (match refinement with
             | Some refined_t -> refined_t, refined_t
@@ -143,7 +142,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                   }))
                 ) in
                 let refinement = Option.bind init (fun init ->
-                  Refinement.get cx init reason
+                  Refinement.get cx init loc
                 ) in
                 let parent_pattern_t, tvar = (match refinement with
                 | Some refined_t -> refined_t, refined_t
@@ -168,7 +167,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                   }))
                 ) in
                 let refinement = Option.bind init (fun init ->
-                  Refinement.get cx init reason
+                  Refinement.get cx init loc
                 ) in
                 let parent_pattern_t, tvar = (match refinement with
                 | Some refined_t -> refined_t, refined_t
@@ -179,8 +178,8 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                 let default = Option.map default (Default.elem key_t reason) in
                 recurse ~parent_pattern_t tvar init default p
             | { Property.key = Property.Literal _; _ } ->
-                Flow_error.(add_output cx (EUnsupportedSyntax
-                  (loc, DestructuringObjectPropertyLiteralNonString)))
+                Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
+                  (loc, DestructuringObjectPropertyLiteralNonString))
             end
 
         | RestProperty (loc, { RestProperty.argument = p }) ->
@@ -230,8 +229,8 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       recurse ?parent_pattern_t tvar init default left
 
   | loc, Expression _ ->
-      Flow_error.(add_output cx (EUnsupportedSyntax
-        (loc, DestructuringExpressionPattern)))
+      Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
+        (loc, DestructuringExpressionPattern))
 
   in fun t init default pattern -> recurse t init default pattern
 )
@@ -250,7 +249,6 @@ let type_of_pattern = Ast.Pattern.(function
 let destructuring_assignment cx ~expr rhs_t init =
   let f loc name _default t =
     (* TODO destructuring+defaults unsupported in assignment expressions *)
-    let reason = mk_reason (RIdentifierAssignment name) loc in
-    ignore Env.(set_var cx name t reason)
+    ignore Env.(set_var cx name t loc)
   in
   destructuring cx ~expr rhs_t (Some init) None ~f

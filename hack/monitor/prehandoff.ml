@@ -18,5 +18,12 @@ type msg =
   | Sentinel
   (* Client sent a malformed request asking for a server that doesn't exist *)
   | Server_name_not_found
+  (** The monitor keeps a queue of connections that will need to be passed
+   * onto the next server instance. This queue has a size limit that has been
+   * reached. *)
+  | Server_dormant_connections_limit_reached
+  (** Monitor is running but has no server - i.e. dormant. Connection has been
+   * placed on a queue to be sent to the next started server. *)
+  | Server_not_alive_dormant of string
   (** Server process died. Connect another client to start another one. *)
   | Server_died of exit_status

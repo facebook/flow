@@ -4,21 +4,26 @@ child_process/execSync.js:8
   8: (execSync('ls', {timeout: '250'})); // error, no signatures match
       ^^^^^^^^ intersection
   Member 1:
-  261:   declare function execSync(
-                                  ^ function type. See lib: <BUILTINS>/node.js:261
+  263:   declare function execSync(
+                                  ^ function type. See lib: <BUILTINS>/node.js:263
   Error:
-  263:     options: {encoding: buffer$NonBufferEncoding} & child_process$execSyncOpts
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `encoding`. Property not found in. See lib: <BUILTINS>/node.js:263
+  265:     options: {encoding: buffer$NonBufferEncoding} & child_process$execSyncOpts
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `encoding`. Property not found in. See lib: <BUILTINS>/node.js:265
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
                        ^^^^^^^^^^^^^^^^ object literal
   Member 2:
-  266:   declare function execSync(
-                                  ^ function type. See lib: <BUILTINS>/node.js:266
+  268:   declare function execSync(
+                                  ^ function type. See lib: <BUILTINS>/node.js:268
   Error:
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
-                                 ^^^^^ string. This type is incompatible with the expected param type of
-  150:   timeout?: number;
-                   ^^^^^^ number. See lib: <BUILTINS>/node.js:150
+                       ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
+  270:     options?: child_process$execSyncOpts
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/node.js:270
+    Property `timeout` is incompatible:
+        8: (execSync('ls', {timeout: '250'})); // error, no signatures match
+                                     ^^^^^ string. This type is incompatible with
+      152:   timeout?: number;
+                       ^^^^^^ number. See lib: <BUILTINS>/node.js:152
 
 crypto/crypto.js:12
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
@@ -49,24 +54,24 @@ crypto/crypto.js:16
          ^^^^^^^^^^^^^^^ call of method `write`
  16:     hmac.write(123); // 2 errors: not a string or a Buffer
                     ^^^ number. This type is incompatible with
-1286:     chunk: Buffer | string,
-                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1286
+1319:     chunk: Buffer | string,
+                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1319
   Member 1:
-  1286:     chunk: Buffer | string,
-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1286
+  1319:     chunk: Buffer | string,
+                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1319
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  1286:     chunk: Buffer | string,
-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1286
+  1319:     chunk: Buffer | string,
+                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1319
   Member 2:
-  1286:     chunk: Buffer | string,
-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1286
+  1319:     chunk: Buffer | string,
+                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1319
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  1286:     chunk: Buffer | string,
-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1286
+  1319:     chunk: Buffer | string,
+                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1319
 
 crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error
@@ -74,21 +79,21 @@ crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error
          ^^^^^^^^^^^ intersection
   Member 1:
-  437:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:437
+  439:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:439
   Error:
    26:     hmac.update('foo', 'bogus'); // 1 error
                        ^^^^^ string. This type is incompatible with the expected param type of
-  437:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
-                      ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:437
+  439:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
+                      ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:439
   Member 2:
-  438:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'latin1' |
-         ^ function type. See lib: <BUILTINS>/node.js:438
+  440:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'latin1' |
+         ^ function type. See lib: <BUILTINS>/node.js:440
   Error:
    26:     hmac.update('foo', 'bogus'); // 1 error
                               ^^^^^^^ string. This type is incompatible with the expected param type of
-  438:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'latin1' |
-                                               ^ string enum. See lib: <BUILTINS>/node.js:438
+  440:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'latin1' |
+                                               ^ string enum. See lib: <BUILTINS>/node.js:440
 
 crypto/crypto.js:28
  28:     hmac.update(buf, 'utf8'); // 1 error: no encoding when passing a buffer
@@ -96,21 +101,21 @@ crypto/crypto.js:28
  28:     hmac.update(buf, 'utf8'); // 1 error: no encoding when passing a buffer
          ^^^^^^^^^^^ intersection
   Member 1:
-  437:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:437
+  439:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:439
   Error:
    28:     hmac.update(buf, 'utf8'); // 1 error: no encoding when passing a buffer
                             ^^^^^^ string. This type is incompatible with the expected param type of
-  437:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
-                                               ^^^^ undefined. See lib: <BUILTINS>/node.js:437
+  439:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
+                                               ^^^^ undefined. See lib: <BUILTINS>/node.js:439
   Member 2:
-  438:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'latin1' |
-         ^ function type. See lib: <BUILTINS>/node.js:438
+  440:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'latin1' |
+         ^ function type. See lib: <BUILTINS>/node.js:440
   Error:
    21:   function(buf: Buffer) {
                        ^^^^^^ Buffer. This type is incompatible with the expected param type of
-  438:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'latin1' |
-                      ^^^^^^ string. See lib: <BUILTINS>/node.js:438
+  440:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'latin1' |
+                      ^^^^^^ string. See lib: <BUILTINS>/node.js:440
 
 crypto/crypto.js:35
  35:     (hmac.digest('hex'): void); // 1 error
@@ -127,14 +132,14 @@ crypto/crypto.js:36
 fs/fs.js:13
  13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
      ^ call of method `readFile`. Could not decide which case to select
-798:   declare function readFile(
-                                ^ intersection type. See lib: <BUILTINS>/node.js:798
+806:   declare function readFile(
+                                ^ intersection type. See lib: <BUILTINS>/node.js:806
   Case 3 may work:
-  807:   declare function readFile(
-                                  ^ function type. See lib: <BUILTINS>/node.js:807
+  815:   declare function readFile(
+                                  ^ function type. See lib: <BUILTINS>/node.js:815
   But if it doesn't, case 4 looks promising too:
-  812:   declare function readFile(
-                                  ^ function type. See lib: <BUILTINS>/node.js:812
+  820:   declare function readFile(
+                                  ^ function type. See lib: <BUILTINS>/node.js:820
   Please provide additional annotation(s) to determine whether case 3 works (or consider merging it with case 4):
    13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
                                                       ^ parameter `_`
@@ -269,5 +274,47 @@ os/userInfo.js:14
  14: (u3.username: string); // error
                    ^^^^^^ string
 
+process/nextTick.js:14
+ 14:   0, // Error: number ~> string
+       ^ number. This type is incompatible with the expected param type of
+ 13:   (a: string, b: number, c: boolean) => {},
+           ^^^^^^ string
 
-Found 33 errors
+process/nextTick.js:16
+ 16:   null // Error: null ~> boolean
+       ^^^^ null. This type is incompatible with the expected param type of
+ 13:   (a: string, b: number, c: boolean) => {},
+                                 ^^^^^^^ boolean
+
+process/nextTick.js:22
+ 22:   'y', // Error: string ~> number
+       ^^^ string. This type is incompatible with the expected param type of
+ 20:   (a: string, b: number, c: boolean) => {},
+                      ^^^^^^ number
+
+process/nextTick.js:26
+ 26: process.nextTick(
+     ^ call of method `nextTick`
+ 27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
+           ^^^^^^ string. This type is incompatible with
+1732:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1732
+
+process/nextTick.js:26
+ 26: process.nextTick(
+     ^ call of method `nextTick`
+ 27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
+                      ^^^^^^ number. This type is incompatible with
+1732:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1732
+
+process/nextTick.js:26
+ 26: process.nextTick(
+     ^ call of method `nextTick`
+ 27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
+                                 ^^^^^^^ boolean. This type is incompatible with
+1732:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1732
+
+
+Found 39 errors

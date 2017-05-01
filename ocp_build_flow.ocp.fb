@@ -48,7 +48,6 @@ end
 begin library "flow-common"
   sort = true
   files = begin fb-glob "src/common"
-    excludes = [ "utils_js.ml" ]
   end
   requires = [
     "flow-common-utils"
@@ -62,9 +61,57 @@ begin library "flow-common"
   ]
 end
 
+begin library "flow-common-audit"
+  sort = true
+  files = begin fb-glob "src/common/audit"
+  end
+  requires = [
+  ]
+end
+
+begin library "flow-common-config"
+  sort = true
+  files = begin fb-glob "src/common/config"
+  end
+  requires = [
+    "flow-common"
+    "flow-common-utils"
+    "hh-utils"
+    "hh-utils-collections"
+  ]
+end
+
+begin library "flow-common-errors"
+  sort = true
+  files = begin fb-glob "src/common/errors"
+  end
+  requires = [
+    "flow-common"
+    "flow-common-config"
+    "flow-common-profiling"
+    "flow-common-utils"
+    "flow-parser"
+    "hh-utils"
+    "hh-utils-json"
+  ]
+end
+
+begin library "flow-common-profiling"
+  sort = true
+  files = begin fb-glob "src/common/profiling"
+  end
+  requires = [
+    "flow-common-utils"
+    "hh-utils"
+    "hh-utils-collections"
+    "hh-utils-json"
+  ]
+end
+
 begin library "flow-common-utils"
   sort = true
-  files = [ "src/common/utils_js.ml" ]
+  files = begin fb-glob "src/common/utils"
+  end
   requires = [
     "flow-parser"
     "hh-utils"
@@ -99,8 +146,8 @@ begin library "flow-embedded"
     "hh-find"
   ]
   if (os_type = "Win32") then {
-    flow_source = ".\flowlib.rc"
-    flow_target = "%{flow-embedded_FULL_DST_DIR}%/flow_res.o"
+    flow_source = "./flowlib.rc"
+    flow_target = "%{flow-embedded_DST_DIR}%/flow_res.o"
     cclib = [ flow_target ]
     build_rules = [
       flow_target (
@@ -129,10 +176,30 @@ begin library "flow-parser"
   sort = true
   files = begin fb-glob "src/parser"
     excludes = [
+      "lexer.ml"
       "flow_parser_js.ml"
       "flow_parser_dot_js.ml"
     ]
   end
+  files += [
+    "src/parser/lexer.ml" (comp += [
+      "-w" "-31-39"
+      "-ppx" "%{sedlex_FULL_SRC_DIR}%/ppx_sedlex"
+    ])
+  ]
+  requires = [
+    "sedlex"
+  ]
+end
+
+begin library "flow-parser-utils"
+  sort = true
+  files = begin fb-glob "src/parser_utils"
+  end
+  requires = [
+    "flow-parser"
+    "hh-utils-collections"
+  ]
 end
 
 begin library "flow-parsing"
@@ -141,12 +208,15 @@ begin library "flow-parsing"
   end
   requires = [
     "flow-common"
+    "flow-common-errors"
     "flow-common-utils"
     "flow-parser"
+    "flow-parser-utils"
     "flow-shmem"
     "hh-procs"
     "hh-heap"
     "hh-utils"
+    "hh-utils-collections"
     "hh-utils-json"
   ]
 end
@@ -159,6 +229,7 @@ begin library "flow-server-files"
   ]
   requires = [
     "flow-common"
+    "flow-common-config"
     "hh-utils-sys"
   ]
 end
@@ -180,10 +251,13 @@ end
 begin library "flow-server"
   sort = true
   files = begin fb-glob "src/server"
-    excludes = [ 
-      "serverEnv.ml" 
-      "server_files_js.ml" 
-      "server_files_js.mli"  
+    excludes = [
+      "serverEnv.ml"
+      "serverUtils.ml"
+      "serverProt.ml"
+      "persistent_connection.ml"
+      "server_files_js.ml"
+      "server_files_js.mli"
       "sharedMem_js.ml"
     ]
   end
@@ -219,11 +293,28 @@ begin library "flow-server-env"
     "serverEnv.ml"
   ]
   requires = [
+    "flow-persistent-connection"
     "flow-common"
     "flow-common-utils"
     "hh-dfind"
     "hh-procs"
     "hh-utils-collections"
+  ]
+end
+
+begin library "flow-persistent-connection"
+  sort = true
+  dirname = "src/server"
+  files = [
+    "persistent_connection.ml"
+    "serverProt.ml"
+    "serverUtils.ml"
+  ]
+  requires = [
+    "flow-common"
+    "flow-common-utils"
+    "flow-services-autocomplete"
+    "hh-utils"
   ]
 end
 
@@ -254,9 +345,11 @@ begin library "flow-services-inference"
   ]
   requires = [
     "flow-common"
+    "flow-common-audit"
     "flow-common-utils"
     "flow-stubs"
     "flow-parser"
+    "flow-parser-utils"
     "flow-parsing"
     "flow-server-env"
     "flow-server-files"
@@ -314,8 +407,10 @@ begin library "flow-typing"
   ]
   requires = [
     "flow-common"
+    "flow-common-errors"
     "flow-common-utils"
     "flow-parser"
+    "flow-parser-utils"
     "tp-core"
     "hh-utils"
     "hh-utils-collections"

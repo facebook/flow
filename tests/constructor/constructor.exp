@@ -2,5 +2,17 @@ constructor.js:6
   6:     constructor():number { }
                        ^^^^^^ number. This type is incompatible with an implicitly-returned undefined.
 
+constructor.js:15
+ 15: (new Foo(123): Bar<string>); // error, number !~> string
+              ^^^ number. This type is incompatible with
+ 15: (new Foo(123): Bar<string>); // error, number !~> string
+                        ^^^^^^ string
 
-Found 1 error
+constructor.js:22
+ 22: (new Baz(123): Baz<string>); // error, number !~> string
+              ^^^ number. This type is incompatible with
+ 22: (new Baz(123): Baz<string>); // error, number !~> string
+                        ^^^^^^ string
+
+
+Found 3 errors

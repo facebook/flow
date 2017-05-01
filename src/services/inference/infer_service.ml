@@ -10,9 +10,6 @@
 
 open Utils_js
 
-let rev_append_triple (x1, y1, z1) (x2, y2, z2) =
-  (List.rev_append x1 x2, List.rev_append y1 y2, List.rev_append z1 z2)
-
 let apply_docblock_overrides metadata docblock_info =
   let open Context in
 
@@ -38,18 +35,19 @@ let apply_docblock_overrides metadata docblock_info =
 (* Given a filename, retrieve the parsed AST, derive a module name,
    and invoke the local (infer) pass. This will build and return a
    fresh context object for the module. *)
-let infer_module ~options ~metadata filename =
-  let ast, info = Parsing_service_js.get_ast_and_info_unsafe filename in
-  let module_name = Module_js.exported_module ~options filename info in
+let infer_module ~metadata filename =
+  let ast = Parsing_service_js.get_ast_unsafe filename in
+  let info = Parsing_service_js.get_docblock_unsafe filename in
   let metadata = apply_docblock_overrides metadata info in
-  Type_inference_js.infer_ast ~metadata ~filename ~module_name ast
+  let require_loc_map = Parsing_service_js.get_requires_unsafe filename in
+  Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map
 
 (* local inference job:
    takes list of filenames, accumulates into parallel lists of
    filenames, error sets *)
-let infer_job ~options (inferred, errsets, errsuppressions) files =
+let infer_job ~options acc files =
   let metadata = Context.metadata_of_options options in
-  List.fold_left (fun (inferred, errsets, errsuppressions) file ->
+  List.fold_left (fun acc file ->
     let file_str = string_of_filename file in
     try Profile_utils.checktime ~options 1.0
       (fun t -> spf "perf: inferred %s in %f" file_str t)
@@ -57,9 +55,7 @@ let infer_job ~options (inferred, errsets, errsuppressions) files =
         (* prerr_endlinef "[%d] INFER: %s" (Unix.getpid()) file_str; *)
 
         (* infer produces a context for this module *)
-        let cx = infer_module ~options ~metadata file in
-        (* register module info *)
-        Module_js.add_module_info ~audit:Expensive.ok ~options cx;
+        let cx = infer_module ~metadata file in
         (* note: save and clear errors and error suppressions before storing
          * cx to shared heap *)
         let errs = Context.errors cx in
@@ -70,8 +66,7 @@ let infer_job ~options (inferred, errsets, errsuppressions) files =
         Context_cache.add ~audit:Expensive.ok cx;
 
         (* add filename, errorset, suppressions *)
-        let cx_file = Context.file cx in
-        cx_file :: inferred, errs :: errsets, suppressions :: errsuppressions
+        (Context.file cx, errs, suppressions) :: acc
       )
     with
     (* Unrecoverable exceptions *)
@@ -86,26 +81,20 @@ let infer_job ~options (inferred, errsets, errsuppressions) files =
         (Errors.internal_error file msg) in
       prerr_endlinef "(%d) infer_job THROWS: %s"
         (Unix.getpid()) (fmt_file_exc (string_of_filename file) exc);
-      file::inferred,
-        errorset::errsets,
-        Errors.ErrorSuppressions.empty::errsuppressions
-  ) (inferred, errsets, errsuppressions) files
+      (file, errorset, Errors.ErrorSuppressions.empty) :: acc
+  ) acc files
 
 (* local type inference pass.
    Returns a set of successfully inferred files.
    Creates contexts for inferred files, with errors in cx.errors *)
-let infer ~options ~workers ~save_errors ~save_suppressions files =
-  let files = FilenameSet.elements files in
+let infer ~options ~workers files =
   Profile_utils.logtime ~options
     (fun t -> spf "inferred %d files in %f" (List.length files) t)
     (fun () ->
-      let files, errors, suppressions = MultiWorker.call
+      MultiWorker.call
         workers
         ~job: (infer_job ~options)
-        ~neutral: ([], [], [])
-        ~merge: rev_append_triple
-        ~next: (MultiWorker.next workers files) in
-      save_errors files errors;
-      save_suppressions files suppressions;
-      files
+        ~neutral: []
+        ~merge: List.rev_append
+        ~next: (MultiWorker.next workers files)
     )

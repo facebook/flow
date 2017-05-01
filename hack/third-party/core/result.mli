@@ -9,7 +9,7 @@
     | _ as ticker -> Error (sprintf "can't find ric of %s" ticker) ]}
     The return type of ric_of_ticker could be [string option], but [(string, string)
     Result.t] gives more control over the error message. *)
-type ('ok, 'err) t =
+type ('ok, 'err) t = ('ok, 'err) Pervasives.result =
   | Ok of 'ok
   | Error of 'err
 

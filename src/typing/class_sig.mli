@@ -2,7 +2,7 @@
 
 type t
 
-type field = Type.t * Type.polarity * Spider_monkey_ast.Expression.t option
+type field = Type.t * Type.polarity * Ast.Expression.t option
 
 (** 1. Constructors **)
 
@@ -14,6 +14,7 @@ val empty:
   Type.typeparam list ->
   Type.t SMap.t -> (* tparams_map *)
   Type.t -> (* super *)
+  Type.t list -> (* implements *)
   t
 
 (** Add constructor to signature.
@@ -58,8 +59,8 @@ val mk: Context.t ->
   Loc.t ->
   Reason.t ->
   Type.t -> (* self *)
-  expr:(Context.t -> Spider_monkey_ast.Expression.t -> Type.t) ->
-  Spider_monkey_ast.Class.t ->
+  expr:(Context.t -> Ast.Expression.t -> Type.t) ->
+  Ast.Class.t ->
   t
 
 (** Create signature from interface AST. *)
@@ -68,10 +69,14 @@ val mk_interface: Context.t ->
   Reason.t ->
   bool -> (* structural *)
   Type.t -> (* self *)
-  Spider_monkey_ast.Statement.Interface.t ->
+  Ast.Statement.Interface.t ->
   t
 
 (** 1. Manipulation *)
+
+(** Emits constraints to ensure the signature is compatible with its declared
+    interface implementations (classes) *)
+val check_implements: Context.t -> t -> unit
 
 (** Emits constraints to ensure the signature is compatible with its declared
     superclass (classes) or extends/mixins (interfaces) *)
@@ -83,9 +88,9 @@ val generate_tests: Context.t ->
 
 (** Evaluate the class body. *)
 val toplevels: Context.t ->
-  decls:(Context.t -> Spider_monkey_ast.Statement.t list -> unit) ->
-  stmts:(Context.t -> Spider_monkey_ast.Statement.t list -> unit) ->
-  expr:(Context.t -> Spider_monkey_ast.Expression.t -> Type.t) ->
+  decls:(Context.t -> Ast.Statement.t list -> unit) ->
+  stmts:(Context.t -> Ast.Statement.t list -> unit) ->
+  expr:(Context.t -> Ast.Expression.t -> Type.t) ->
   t -> unit
 
 (** 1. Type Conversion *)

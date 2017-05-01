@@ -38,8 +38,12 @@ class ['a] t = object(self)
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _
-  | CustomFunT _
     -> acc
+
+  | CustomFunT (_, ReactPropType (React.PropType.Primitive (_, t))) ->
+    self#type_ cx acc t
+
+  | CustomFunT _ -> acc
 
   | FunT (_, static, prototype, funtype) ->
     let acc = self#type_ cx acc static in
@@ -48,30 +52,31 @@ class ['a] t = object(self)
     acc
 
   | ObjT (_, { dict_t; props_tmap; proto_t; _ }) ->
-    let acc = self#opt (self#dict_ cx) acc dict_t in
+    let acc = self#opt (self#dict_type cx) acc dict_t in
     let acc = self#props cx acc props_tmap in
     let acc = self#type_ cx acc proto_t in
     acc
-  | ArrT (_, ArrayAT (elemt, None)) ->
+
+  | ArrT (_, (ArrayAT (elemt, None) | ROArrayAT (elemt))) ->
     self#type_ cx acc elemt
   | ArrT (_, ArrayAT (elemt, Some tuple_types))
   | ArrT (_, TupleAT (elemt, tuple_types)) ->
     let acc = self#type_ cx acc elemt in
     self#list (self#type_ cx) acc tuple_types
+  | ArrT (_, EmptyAT) -> acc
 
-  | ClassT t -> self#type_ cx acc t
+  | ClassT (_, t) -> self#type_ cx acc t
 
-  | InstanceT (_, static, super, insttype) ->
+  | InstanceT (_, static, super, implements, insttype) ->
     let acc = self#type_ cx acc static in
     let acc = self#type_ cx acc super in
+    let acc = self#list (self#type_ cx) acc implements in
     let acc = self#inst_type cx acc insttype in
     acc
 
-  | OptionalT t -> self#type_ cx acc t
+  | OptionalT (_, t) -> self#type_ cx acc t
 
-  | RestT t -> self#type_ cx acc t
-
-  | AbstractT t -> self#type_ cx acc t
+  | AbstractT (_, t) -> self#type_ cx acc t
 
   | EvalT (t, defer_use_t, id) ->
     let acc = self#type_ cx acc t in
@@ -79,19 +84,19 @@ class ['a] t = object(self)
     let acc = self#eval_id cx acc id in
     acc
 
-  | PolyT (typeparams, t) ->
+  | PolyT (_, typeparams, t) ->
     let acc = self#list (self#type_param cx) acc typeparams in
     let acc = self#type_ cx acc t in
     acc
 
-  | TypeAppT (t, ts) ->
+  | TypeAppT (_, t, ts) ->
     let acc = self#type_ cx acc t in
     let acc = self#list (self#type_ cx) acc ts in
     acc
 
-  | ThisClassT t -> self#type_ cx acc t
+  | ThisClassT (_, t) -> self#type_ cx acc t
 
-  | ThisTypeAppT (t, this, ts) ->
+  | ThisTypeAppT (_, t, this, ts) ->
     let acc = self#type_ cx acc t in
     let acc = self#type_ cx acc this in
     let acc = self#list (self#type_ cx) acc ts in
@@ -103,7 +108,7 @@ class ['a] t = object(self)
 
   | ExactT (_, t) -> self#type_ cx acc t
 
-  | MaybeT t -> self#type_ cx acc t
+  | MaybeT (_, t) -> self#type_ cx acc t
 
   | IntersectionT (_, rep) ->
     self#list (self#type_ cx) acc (InterRep.members rep)
@@ -138,7 +143,7 @@ class ['a] t = object(self)
   | ModuleT (_, exporttypes) ->
     self#export_types cx acc exporttypes
 
-  | ExtendsT (ts, t1, t2) ->
+  | ExtendsT (_, ts, t1, t2) ->
     let acc = self#list (self#type_ cx) acc ts in
     let acc = self#type_ cx acc t1 in
     let acc = self#type_ cx acc t2 in
@@ -197,9 +202,11 @@ class ['a] t = object(self)
   | PropExistsP _ -> acc
   | LatentP (t, _) -> self#type_ cx acc t
 
-  method private destructor _cx acc = function
+  method private destructor cx acc = function
   | NonMaybeType -> acc
   | PropertyType _ -> acc
+  | Bind t -> self#type_ cx acc t
+  | SpreadType (_, ts) -> self#list (self#type_ cx) acc ts
 
   method private use_type_ cx acc = function
   | UseT (_, t) ->
@@ -207,15 +214,15 @@ class ['a] t = object(self)
   (* Currently not walking use types. This will change in an upcoming diff. *)
   | AdderT (_, _, _)
   | AndT (_, _, _)
-  | ApplyT (_, _, _)
   | ArrRestT (_, _, _)
   | AssertArithmeticOperandT _
   | AssertBinaryInLHST _
   | AssertBinaryInRHST _
   | AssertForInRHST _
   | AssertImportIsValueT (_, _)
+  | AssertRestParamT _
   | BecomeT (_, _)
-  | BindT (_, _)
+  | BindT (_, _, _)
   | CallElemT _
   | CallLatentPredT _
   | CallOpenPredT _
@@ -226,10 +233,12 @@ class ['a] t = object(self)
   | ComparatorT (_, _)
   | ConstructorT (_, _, _)
   | CopyNamedExportsT (_, _, _)
+  | CopyTypeExportsT (_, _, _)
   | DebugPrintT (_)
   | ElemT (_, _, _)
   | EqT (_, _)
-  | ExportNamedT (_, _, _)
+  | ExportNamedT (_, _, _, _)
+  | ExportTypeT (_, _, _, _, _)
   | GetElemT (_, _, _)
   | GetKeysT (_, _)
   | GetPropT (_, _, _)
@@ -238,6 +247,7 @@ class ['a] t = object(self)
   | HasOwnPropT (_, _)
   | IdxUnMaybeifyT _
   | IdxUnwrap _
+  | ImplementsT _
   | ImportDefaultT (_, _, _, _)
   | ImportModuleNsT (_, _)
   | ImportNamedT (_, _, _, _)
@@ -250,23 +260,25 @@ class ['a] t = object(self)
   | MethodT (_, _, _, _)
   | MixinT (_, _)
   | NotT (_, _)
-  | ObjAssignT (_, _, _, _, _)
+  | ObjAssignToT (_, _, _, _, _)
+  | ObjAssignFromT (_, _, _, _, _)
   | ObjFreezeT (_, _)
   | ObjRestT (_, _, _)
   | ObjSealT (_, _)
   | ObjTestT (_, _, _)
   | OrT (_, _, _)
   | PredicateT (_, _)
-  | ReactCreateElementT _
+  | ReactKitT _
   | RefineT _
   | ReposLowerT (_, _)
   | ReposUseT (_, _, _)
+  | ResolveSpreadT _
   | SentinelPropTestT _
   | SetElemT (_, _, _)
   | SetPropT (_, _, _)
   | SpecializeT (_,_, _, _, _)
+  | ObjSpreadT _
   | SubstOnPredT _
-  | SummarizeT (_, _)
   | SuperT (_, _)
   | TestPropT (_, _, _)
   | ThisSpecializeT (_, _, _)
@@ -280,7 +292,7 @@ class ['a] t = object(self)
      handle Resolved and Unresolved cases, etc. *)
   method tvar _cx acc _r _id = acc
 
-  method private dict_ cx acc { key; value; _ } =
+  method dict_type cx acc { key; value; _ } =
     let acc = self#type_ cx acc key in
     let acc = self#type_ cx acc value in
     acc
@@ -296,7 +308,7 @@ class ['a] t = object(self)
     Context.find_exports cx id
     |> self#smap (self#type_ cx) acc
 
-  method private eval_id cx acc id =
+  method eval_id cx acc id =
     match IMap.get id (Context.evaluated cx) with
     | None -> acc
     | Some t -> self#type_ cx acc t
@@ -305,9 +317,13 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc bound in
     self#opt (self#type_ cx) acc default
 
-  method fun_type cx acc { this_t; params_tlist; return_t; _ } =
+  method fun_type cx acc { this_t; params_tlist; rest_param; return_t; _ } =
     let acc = self#type_ cx acc this_t in
     let acc = self#list (self#type_ cx) acc params_tlist in
+    let acc = Option.value_map
+      ~f:(fun (_, _, t) -> self#type_ cx acc t)
+      ~default:acc
+      rest_param in
     let acc = self#type_ cx acc return_t in
     acc
 

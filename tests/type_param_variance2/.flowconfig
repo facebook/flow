@@ -3,3 +3,4 @@ libs/
 
 [options]
 module.system=haste
+no_flowlib=false

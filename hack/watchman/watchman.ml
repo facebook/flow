@@ -22,7 +22,6 @@ open Utils
  *)
 
 exception Watchman_error of string
-exception Timeout
 
 (** Throw this exception when we know there is something to read from
  * the watchman channel, but reading took too long. *)
@@ -33,19 +32,19 @@ let debug = false
 (** This number is totally arbitrary. Just need some cap. *)
 let max_reinit_attempts = 8
 
-let sync_file_extension = "tmp_sync"
+let subscription_name = "hh_type_check_watcher"
+
+(**
+ * Triggers watchman to flush buffered updates on this subscription.
+ * See watchman/docs/cmd/flush-subscriptions.html
+ *)
+let flush_subscriptions_cmd = "cmd-flush-subscriptions"
 
 let crash_marker_path root =
   let root_name = Path.slash_escaped_string_of_path root in
   Filename.concat GlobalConfig.tmp_dir (spf ".%s.watchman_failed" root_name)
 
-type init_settings = {
-  subscribe_to_changes: bool;
-  (** Seconds used for init timeout - will be reused for reinitialization. *)
-  init_timeout: int;
-  sync_directory: string;
-  root: Path.t;
-}
+include Watchman_sig.Types
 
 type dead_env = {
   (** Will reuse original settings to reinitializing watchman subscription. *)
@@ -82,17 +81,6 @@ let dead_env_from_alive env =
     prior_clockspec = env.clockspec;
   }
 
-type pushed_changes =
-  (** State name and metadata. *)
-  | State_enter of string * Hh_json.json option
-  | State_leave of string * Hh_json.json option
-  | Files_changed of SSet.t
-
-type changes =
-  | Watchman_unavailable
-  | Watchman_pushed of pushed_changes
-  | Watchman_synchronous of SSet.t
-
 type watchman_instance =
   (** Indicates a dead watchman instance (most likely due to chef upgrading,
    * reconfiguration, or a user terminating watchman, or a timeout reading
@@ -104,14 +92,6 @@ type watchman_instance =
    * cases too. *)
   | Watchman_dead of dead_env
   | Watchman_alive of env
-
-let get_root_path instance = match instance with
-  | Watchman_dead dead_env -> dead_env.prior_settings.root
-  | Watchman_alive env -> env.settings.root
-
-let get_sync_dir instance = match instance with
-  | Watchman_dead dead_env -> dead_env.prior_settings.sync_directory
-  | Watchman_alive env -> env.settings.sync_directory
 
 (* Some JSON processing helpers *)
 module J = struct
@@ -164,7 +144,7 @@ let request_json
     [JSON_String command ; JSON_String env.watch_root] @
       begin
         match watchman_command with
-        | Subscribe -> [JSON_String "hh_type_check_watcher"]
+        | Subscribe -> [JSON_String subscription_name]
         | _ -> []
       end in
   let directives = [
@@ -180,7 +160,6 @@ let request_json
             J.strlist ["suffix"; "phpt"];
             J.strlist ["suffix"; "hh"];
             J.strlist ["suffix"; "hhi"];
-            J.strlist ["suffix"; sync_file_extension];
             J.strlist ["suffix"; "xhp"];
             (* FIXME: This is clearly wrong, but we do it to match the
              * behavior on the server-side. We need to investigate if
@@ -214,12 +193,16 @@ let since_query env =
                 "empty_on_fresh_instance", Hh_json.JSON_Bool true]
     Query env
 
-let subscribe env = request_json
-                      ~extra_kv:["since", Hh_json.JSON_String env.clockspec ;
-                                 "defer", J.strlist ["hg.update"] ;
-                                 "empty_on_fresh_instance",
-                                 Hh_json.JSON_Bool true]
-                      Subscribe env
+let subscribe mode env =
+  let mode = match mode with
+  | Defer_changes -> "defer"
+  | Drop_changes -> "drop" in
+  request_json
+    ~extra_kv:["since", Hh_json.JSON_String env.clockspec ;
+               mode, J.strlist ["hg.update"] ;
+               "empty_on_fresh_instance",
+               Hh_json.JSON_Bool true]
+    Subscribe env
 
 let watch_project root = J.strlist ["watch-project"; root]
 
@@ -306,12 +289,15 @@ let sanitize_watchman_response output =
   assert_no_error response;
   response
 
-let exec ?(timeout=120.0) (reader, oc) json =
+let send_request oc json =
   let json_str = Hh_json.(json_to_string json) in
   if debug then Printf.eprintf "Watchman request: %s\n%!" json_str ;
   output_string oc json_str;
   output_string oc "\n";
-  flush oc ;
+  flush oc
+
+let exec ?(timeout=120.0) (reader, oc) json =
+  send_request oc json;
   sanitize_watchman_response (read_with_timeout timeout reader)
 
 (*****************************************************************************)
@@ -356,8 +342,23 @@ let with_crash_record_exn root source f =
 let with_crash_record_opt root source f =
   Option.try_with (fun () -> with_crash_record_exn root source f)
 
+let has_capability name capabilities =
+  (** Projects down from the boolean error monad into booleans.
+   * Error states go to false, values are projected directly. *)
+  let project_bool m = match m with
+    | Result.Ok (v, _) ->
+      v
+    | Result.Error _ ->
+      false
+  in
+  let open Hh_json.Access in
+  (return capabilities)
+    >>= get_obj "capabilities"
+    >>= get_bool name
+    |> project_bool
+
 let re_init ?prior_clockspec
-  { init_timeout; subscribe_to_changes; sync_directory; root } =
+  { init_timeout; subscribe_mode; sync_directory; root } =
   with_crash_record_opt root "init" @@ fun () ->
   let root_s = Path.to_string root in
   let sockname = get_sockname init_timeout in
@@ -365,7 +366,13 @@ let re_init ?prior_clockspec
   let (tic, oc) = Timeout.open_connection (Unix.ADDR_UNIX sockname) in
   let reader = Buffered_line_reader.create
     @@ Timeout.descr_of_in_channel @@ tic in
-  ignore @@ exec (reader, oc) (capability_check ["relative_root"]);
+  let capabilities = exec (reader, oc)
+    (capability_check ~optional:[ flush_subscriptions_cmd ]
+    ["relative_root"]) in
+  assert_no_error capabilities;
+  let supports_flush = has_capability flush_subscriptions_cmd capabilities in
+  (** Disable subscribe if Watchman flush feature isn't supported. *)
+  let subscribe_mode = if supports_flush then subscribe_mode else None in
   let response = exec (reader, oc) (watch_project root_s) in
   let watch_root = J.get_string_val "watch" response in
   let relative_path = J.get_string_val "relative_path" ~default:"" response in
@@ -377,7 +384,7 @@ let re_init ?prior_clockspec
   let env = {
     settings = {
       init_timeout;
-      subscribe_to_changes;
+      subscribe_mode;
       sync_directory;
       root;
     };
@@ -386,8 +393,11 @@ let re_init ?prior_clockspec
     relative_path;
     clockspec;
   } in
-  if subscribe_to_changes then (ignore @@ exec env.socket (subscribe env)) ;
-  env
+  match subscribe_mode with
+  | None -> env
+  | Some subscribe_mode ->
+    (ignore @@ exec env.socket (subscribe subscribe_mode env));
+    env
 
 let init settings = re_init settings
 
@@ -554,19 +564,13 @@ let transform_asynchronous_get_changes_response env data =
   | Not_found ->
     env, Files_changed (set_of_list @@ extract_file_names env data)
 
-let random_filepath root sync_dir =
-  let root_name = Path.to_string root in
-  let dir = Filename.concat root_name sync_dir in
-  let name = Random_id.(short_string_with_alphabet alphanumeric_alphabet) in
-  Filename.concat dir (spf ".%s.%s" name sync_file_extension)
-
 let get_changes ?deadline instance =
   let timeout = Option.map deadline ~f:(fun deadline ->
     let timeout = deadline -. (Unix.time ()) in
     max timeout 0.0
   ) in
   call_on_instance instance "get_changes" @@ fun env ->
-    if env.settings.subscribe_to_changes
+    if env.settings.subscribe_mode <> None
     then
       let env, result = transform_asynchronous_get_changes_response
         env (poll_for_updates ?timeout env) in
@@ -576,84 +580,71 @@ let get_changes ?deadline instance =
         env (exec ?timeout env.socket (since_query env)) in
       env, Watchman_synchronous result
 
-let rec get_changes_until_file_sync deadline syncfile instance acc_changes =
-  if Unix.time () >= deadline then raise Timeout else ();
-  let instance, changes = get_changes ~deadline instance in
-  match changes with
-  | Watchman_unavailable ->
-    (** We don't need to use Retry_with_backoff_exception because there is
-     * exponential backoff built into get_changes to restart the watchman
-     * instance. *)
-    get_changes_until_file_sync
-      deadline syncfile instance acc_changes (** Not in 4.01 yet [@tailcall] *)
-  | Watchman_synchronous changes
-  | Watchman_pushed (Files_changed changes) ->
-    let acc_changes = SSet.union acc_changes changes in
-    if SSet.mem syncfile changes then
-      instance, acc_changes
-    else
-      get_changes_until_file_sync deadline syncfile instance acc_changes
-  | Watchman_pushed (State_enter _)
-  | Watchman_pushed (State_leave _) ->
-    (** TODO: Add these enter and exit events to the synchronous response. *)
-    get_changes_until_file_sync deadline syncfile instance acc_changes
+let flush_request ~(timeout:int) watch_root =
+  let open Hh_json in
+  let directive = JSON_Object [
+    (** Watchman expects timeout milliseconds. *)
+    ("sync_timeout", (JSON_Number (string_of_int @@ timeout * 1000))) ] in
+  JSON_Array [
+    JSON_String "flush-subscriptions";
+    JSON_String watch_root;
+    directive;
+  ]
 
-(** Raise this exception together with a with_retries_until_deadline call to
- * make use of its exponential backoff machinery. *)
-exception Retry_with_backoff_exception
-
-(** Call "f instance temp_file_name" with a random temporary file created
- * before f and deleted after f. *)
-let with_random_temp_file instance f =
-  let root = get_root_path instance in
-  let temp_file = random_filepath root (get_sync_dir instance) in
-  let fd = try Some (
-    Unix.openfile temp_file [Unix.O_CREAT; Unix.O_EXCL] 555)
-    with
-    | e ->
-      let () = Hh_logger.log "Creating watchman sync file failed: %s"
-        (Printexc.to_string e) in
-      None
+let rec poll_until_sync ~deadline env acc =
+  let is_finished_flush_response json =
+    let open Hh_json.Access in
+    let synced = (return json) >>= get_array "synced" |> begin function
+      | Result.Error _ -> false
+      | Result.Ok (vs, _) ->
+        List.fold_left vs ~init:false ~f:(fun acc v ->
+          acc || ((Hh_json.get_string_exn v) = subscription_name)) end
+    in
+    let not_needed = (return json) >>= get_array "no_sync_needed"
+      |> begin function
+        | Result.Error _ -> false
+        | Result.Ok (vs, _) ->
+          List.fold_left vs ~init:false ~f:(fun acc v ->
+            acc || ((Hh_json.get_string_exn v) = subscription_name)) end
+    in
+    synced || not_needed
   in
-  match fd with
-  | None ->
-    (** Failed to create temp file. Retry with exponential backoff. *)
-    raise Retry_with_backoff_exception
-  | Some fd ->
-    let () = Unix.close fd in
-    let result = f instance temp_file in
-    let () = Sys.remove temp_file in
-    result
+  let timeout = deadline -. Unix.time () in
+  if timeout < 0.0 then raise Timeout else ();
+  let json = poll_for_updates ~timeout env in
+  if is_finished_flush_response json then (env, acc) else
+    let env, result = transform_synchronous_get_changes_response env json in
+    poll_until_sync ~deadline env (SSet.union acc result)
 
-(** Call f with retries if it throws Retry_with_backoff_exception,
- * using exponential backoff between attempts.
- *
- * Raise Timeout if deadline arrives. *)
-let rec with_retries_until_deadline ~attempt instance deadline f =
-  if Unix.time () > deadline then raise Timeout else ();
-  let max_wait_time = 10.0 in
-  try f instance with
-    | Retry_with_backoff_exception ->
-      let () = if Unix.time () > deadline then raise Timeout else () in
-      let wait_time = min max_wait_time (2.0 ** (float_of_int attempt)) in
-      let () = ignore @@ Unix.select [] [] [] wait_time in
-      with_retries_until_deadline ~attempt:(attempt + 1) instance deadline f
+let poll_until_sync ~deadline env =
+  poll_until_sync ~deadline env SSet.empty
 
 let get_changes_synchronously ~(timeout:int) instance =
-  (** Reading uses Timeout.with_timeout, which is not re-entrant. So
-   * we can't use that out here. *)
-  let deadline = Unix.time () +. (float_of_int timeout) in
-  with_retries_until_deadline ~attempt:0 instance deadline begin
-    (** Lambda here must take an instance to avoid capturing the one in the
-     * outer scope, which is the wrong one since it doesn't change between
-     * restart attempts. *)
-    fun instance ->
-      with_random_temp_file instance begin fun instance sync_file ->
-        let result =
-          get_changes_until_file_sync deadline sync_file instance SSet.empty in
-        result
-      end
-  end
+  let instance, result = call_on_instance instance "get_changes_synchronously"
+    @@ (fun env ->
+      if env.settings.subscribe_mode = None
+      then
+        let env, files = transform_synchronous_get_changes_response
+          env (exec ~timeout:(float_of_int timeout)
+            env.socket (since_query env))
+        in
+        env, Watchman_synchronous files
+      else
+        let request = flush_request ~timeout env.watch_root in
+        let _, oc = env.socket in
+        let () = send_request oc request in
+        let deadline = Unix.time () +. (float_of_int timeout) in
+        let env, files = poll_until_sync ~deadline env in
+        env, Watchman_synchronous files
+    )
+  in
+  match result with
+  | Watchman_unavailable ->
+    raise (Watchman_error "Watchman unavailable for synchronous response")
+  | Watchman_pushed _ ->
+    raise (Watchman_error "Wtf? pushed response from synchronous request")
+  | Watchman_synchronous files ->
+    instance, files
 
 module type Testing_sig = sig
   val test_env : env
@@ -663,7 +654,7 @@ end
 
 module Testing = struct
   let test_settings = {
-    subscribe_to_changes = true;
+    subscribe_mode = Some Defer_changes;
     init_timeout = 0;
     sync_directory = "";
     root = Path.dummy_path;
@@ -671,7 +662,7 @@ module Testing = struct
 
   let test_env = {
     settings = test_settings;
-    socket = (Buffered_line_reader.null_reader, open_out "/dev/null");
+    socket = (Buffered_line_reader.get_null_reader (), open_out "/dev/null");
     watch_root = "";
     relative_path = "";
     clockspec = "";

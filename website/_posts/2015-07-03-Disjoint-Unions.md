@@ -1,7 +1,7 @@
 ---
 title: Announcing Disjoint Unions
 short-title: Disjoint Unions
-author: avik
+author: Avik Chaudhuri
 ---
 
 Sometimes programs need to deal with different kinds of data all at once, where the shape of the data can be different based on what kind of data the code is looking at. This kind of programming is so common in functional programming languages that almost all such languages come with a way of:

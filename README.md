@@ -1,8 +1,8 @@
 # Flow [![Build Status](https://travis-ci.org/facebook/flow.svg?branch=master)](https://travis-ci.org/facebook/flow) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/thyvx6i5nixtoocm/branch/master?svg=true)](https://ci.appveyor.com/project/Facebook/flow/branch/master)
 
-Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flowtype.org](http://flowtype.org/).
+Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flow.org](https://flow.org/).
 
-For a background on the project, please read our [launch blog post](https://code.facebook.com/posts/1505962329687926/flow-a-new-static-type-checker-for-javascript/).
+For a background on the project, please read [this overview](https://flow.org/en/docs/lang/).
 
 ## Requirements
 
@@ -86,22 +86,31 @@ flow init
 flow check
 ```
 
-More thorough documentation and many examples can be found at http://flowtype.org.
+More thorough documentation and many examples can be found at https://flow.org.
 
 ## Building Flow
 
-Flow is written in OCaml (OCaml 4.01.0 or higher is required) and (on Linux) requires libelf. You can install OCaml on Mac OS X and Linux by following the instructions at [ocaml.org](https://ocaml.org/docs/install.html).
+Flow is written in OCaml (OCaml 4.03.0 or higher is required) and (on Linux) requires libelf. You can install OCaml on Mac OS X and Linux by following the instructions at [ocaml.org](https://ocaml.org/docs/install.html).
 
-For example, on Ubuntu 14.04 and similar systems:
+For example, on Ubuntu 16.04 and similar systems:
 
 ```
-sudo apt-get install ocaml libelf-dev
+sudo apt-get install opam libelf-dev
+opam init --comp 4.03.0
 ```
 
 On OS X, using the [brew package manager](http://brew.sh/):
 
 ```
-brew install ocaml ocamlbuild libelf opam
+brew install libelf opam
+opam init --comp 4.03.0
+```
+
+Then, restart your shell and install these additional libraries:
+
+```
+opam update
+opam install -y ocamlfind sedlex
 ```
 
 Once you have these dependencies, building Flow just requires running
@@ -111,6 +120,20 @@ make
 ```
 
 This produces a `bin` folder containing the `flow` binary.
+
+In order to make the flow.js file, you first need to install js_of_ocaml:
+
+```
+opam install -y js_of_ocaml
+```
+
+After that, making flow.js is easy:
+
+```
+make js
+```
+
+The new `flow.js` file will also live in the `bin` folder.
 
 *Note: at this time, the OCaml dependency prevents us from adding Flow to [npm](http://npmjs.org). Try [flow-bin](https://www.npmjs.org/package/flow-bin) if you need a npm binary wrapper.*
 
@@ -133,7 +156,7 @@ To run a subset of the tests you can pass a second argument to the `runtests.sh`
 For example: `bash runtests.sh bin/flow class | grep -v 'SKIP'`
 
 ## Join the Flow community
-* Website: [http://flowtype.org/](http://flowtype.org/)
+* Website: [https://flow.org/](https://flow.org/)
 * irc: #flowtype on Freenode
 * Twitter: follow [@flowtype](https://twitter.com/flowtype) and [#flowtype](https://twitter.com/hashtag/flowtype) to keep up with the latest Flow news.
 * Stack Overflow: Ask a question with the [flowtype tag](http://stackoverflow.com/questions/tagged/flowtype)

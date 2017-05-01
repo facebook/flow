@@ -239,8 +239,13 @@ typedef struct {
 #ifdef _WIN32
 /* We have to set differently our shared memory location on Windows. */
 #define SHARED_MEM_INIT ((char *) 0x48047e00000ll)
+#elif defined __aarch64__
+/* CentOS 7.3.1611 kernel does not support a full 48-bit VA space, so choose a
+ * value low enough that the 21 GB's mmapped in do not interfere with anything
+ * growing down from the top. 1 << 36 works. */
+#define SHARED_MEM_INIT ((char *) 0x1000000000ll)
 #else
-#define SHARED_MEM_INIT ((char *)0x500000000000ll)
+#define SHARED_MEM_INIT ((char *) 0x500000000000ll)
 #endif
 
 /* As a sanity check when loading from a file */
@@ -1805,7 +1810,7 @@ static void assert_sql_with_line(
           result);
   static value *exn = NULL;
   if (!exn) exn = caml_named_value("sql_assertion_failure");
-  caml_raise_constant(*exn);
+  caml_raise_with_arg(*exn, Val_long(result));
 }
 
 // Expects the database to be open
@@ -2009,22 +2014,23 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
 
   result = Val_int(0); // The empty list
 
-  // Make sure db connection is made
-  if(db == NULL) {
-    assert(db_filename != NULL);
-    // First lets figure out whether we are in sql mode or not
-    if (*db_filename == '\0') {
-      // This means we are not in sql, return empty list
-      CAMLreturn(result);
-    } else {
-      // We are in sql, hence we shouldn't be in the master process,
-      // since we are not connected yet, soo.. try to connect
-      assert_not_master();
-      // SQLITE_OPEN_READONLY makes sure that we throw if the db doesn't exist
-      assert_sql(sqlite3_open_v2(db_filename, &db, SQLITE_OPEN_READONLY, NULL),
-        SQLITE_OK);
-    }
-    // By now, we either set the db or returned an empty list (not sql case)
+  assert(db_filename != NULL);
+
+  // Check whether we are in SQL mode
+  if (*db_filename == '\0') {
+    // We are not in SQL mode, return empty list
+    CAMLreturn(result);
+  }
+
+  // Now that we know we are in SQL mode, make sure db connection is made
+  if (db == NULL) {
+    assert(*db_filename != '\0');
+    // We are in sql, hence we shouldn't be in the master process,
+    // since we are not connected yet, soo.. try to connect
+    assert_not_master();
+    // SQLITE_OPEN_READONLY makes sure that we throw if the db doesn't exist
+    assert_sql(sqlite3_open_v2(db_filename, &db, SQLITE_OPEN_READONLY, NULL),
+      SQLITE_OK);
     assert(db != NULL);
   }
 

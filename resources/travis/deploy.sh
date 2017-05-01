@@ -24,24 +24,24 @@ gem install --no-rdoc --no-ri bundler
 printf "travis_fold:end:installing_ruby\n"
 
 printf "travis_fold:start:website_deps\nInstalling website deps\n"
-(cd website && make deps)
+(cd website && make install)
 printf "travis_fold:end:website_deps\n"
 
 printf "travis_fold:start:jekyll_build\nBuilding Jekyll site\n"
 GEN_DIR=$([[ "$TRAVIS_TAG" = "" ]] && echo "master" || echo "$TRAVIS_TAG")
 mkdir -p "$PAGES_CHECKOUT"
-mkdir -p "website/_assets/gen/${GEN_DIR}"
 mkdir -p "website/static/$GEN_DIR"
-cp "bin/flow.js" "website/_assets/gen/${GEN_DIR}/flow.js"
+cp "bin/flow.js" "website/static/${GEN_DIR}/flow.js"
 cp -r "lib" "website/static/${GEN_DIR}/flowlib"
 echo "version" > "website/_data/flow_dot_js_versions.csv"
 git ls-remote --tags | awk '{print $2}' | cut -d/ -f3 | \
   grep -e '^v[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}$' | \
   sort -s -t. -k 1,1nr -k 2,2nr -k 3,3nr | \
   head -n 5 >> "website/_data/flow_dot_js_versions.csv"
-env \
+(cd website && env \
   PATH="${TRAVIS_BUILD_DIR}/bin:$PATH" \
-  bundle exec jekyll build -s website/ -d "$PAGES_CHECKOUT" --verbose
+  JEKYLL_ENV=production \
+  make build DEST="$PAGES_CHECKOUT")
 printf "travis_fold:end:jekyll_build\n"
 
 printf "travis_fold:start:push_s3\nPushing to S3\n"

@@ -1,6 +1,7 @@
 /* @flow */
 
 import { exec as cp_exec } from 'child_process';
+import { createInterface as rl_createInterface} from 'readline';
 import {
   appendFile as fs_appendFile,
   exists as fs_exists,
@@ -25,7 +26,7 @@ export function exec(cmd: string, options?: Object): Promise<string> {
       if (err == null) {
         resolve(stdout.toString());
       } else {
-        reject(err, stdout, stderr);
+        reject([err, stdout, stderr]);
       }
     })
   });
@@ -228,5 +229,18 @@ export function isRunning(pid: number): Promise<boolean> {
 export function sleep(timeout: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, timeout);
+  });
+}
+
+export function prompt(message: string): Promise<string> {
+  const rl = rl_createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+  return new Promise((resolve) => {
+    rl.question(message, (result) => {
+      rl.close();
+      resolve(result);
+    });
   });
 }

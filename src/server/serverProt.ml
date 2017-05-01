@@ -44,7 +44,6 @@ type command =
 | FIND_REFS of file_input * int * int (* filename, line, char *)
 | GEN_FLOW_FILES of file_input list
 | GET_DEF of file_input * int * int (* filename, line, char *)
-| GET_IMPORTERS of string list
 | GET_IMPORTS of string list
 | INFER_TYPE of
     file_input * (* filename|content *)
@@ -58,6 +57,7 @@ type command =
 | STATUS of Path.t
 | FORCE_RECHECK of string list
 | SUGGEST of string list
+| CONNECT
 
 type command_with_context = {
   client_logging_context: FlowEventLogger.logging_context;
@@ -115,7 +115,7 @@ type directory_mismatch = {
 
 type response =
 | DIRECTORY_MISMATCH of directory_mismatch
-| ERRORS of Errors.error list
+| ERRORS of Errors.ErrorSet.t
 | NO_ERRORS
 | PONG (* CAREFUL! changing the order of this constructor will make clients
           error when checking the server's version across an upgrade. *)
@@ -142,3 +142,13 @@ let response_from_channel (ic:Timeout.in_channel): response =
   if s <> build_revision
   then SERVER_OUT_OF_DATE
   else Timeout.input_value ic
+
+module Persistent_connection_prot = struct
+  type request =
+    | Subscribe
+
+  type response =
+    | Errors of Errors.ErrorSet.t
+    | StartRecheck
+    | EndRecheck
+end

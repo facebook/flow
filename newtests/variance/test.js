@@ -1,4 +1,7 @@
-/* @flow */
+/*
+ * @flow
+ * @lint-ignore-every LINE_WRAP1
+ */
 
 import {suite, test} from '../../tsrc/test/Tester';
 
@@ -65,11 +68,16 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(rwB: RWA);')
       .newErrors(
         `
-          test.js:9
-            9:     type RWA = {p: A}
-                                  ^ A. This type is incompatible with
-           12:     type RWB = {p: B}
-                                  ^ B
+          test.js:62
+           62: (rwB: RWA);
+                ^^^ object type. This type is incompatible with
+           62: (rwB: RWA);
+                     ^^^ object type
+            Property \`p\` is incompatible:
+                9:     type RWA = {p: A}
+                                      ^ A. This type is incompatible with
+               12:     type RWB = {p: B}
+                                      ^ B
         `,
       ),
     addCode('(drwB: dRWA);')
@@ -109,17 +117,22 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(woB: RWA);')
       .newErrors(
         `
-          test.js:9
-            9:     type RWA = {p: A}
-                                  ^ A. This type is incompatible with
-           14:     type WOB = {-p: B}
-                                   ^ B
-
           test.js:70
            70: (woB: RWA);
                 ^^^ object type. Contravariant property \`p\` incompatible with invariant use in
            70: (woB: RWA);
                      ^^^ object type
+
+          test.js:70
+           70: (woB: RWA);
+                ^^^ object type. This type is incompatible with
+           70: (woB: RWA);
+                     ^^^ object type
+            Property \`p\` is incompatible:
+                9:     type RWA = {p: A}
+                                      ^ A. This type is incompatible with
+               14:     type WOB = {-p: B}
+                                       ^ B
         `,
       ),
     addCode('(dwoB: dRWA);')
@@ -253,11 +266,16 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(rwB: WOA);')
       .newErrors(
         `
-          test.js:11
-           11:     type WOA = {-p: A}
-                                   ^ A. This type is incompatible with
-           12:     type RWB = {p: B}
-                                  ^ B
+          test.js:62
+           62: (rwB: WOA);
+                ^^^ object type. This type is incompatible with
+           62: (rwB: WOA);
+                     ^^^ object type
+            Property \`p\` is incompatible:
+               11:     type WOA = {-p: A}
+                                       ^ A. This type is incompatible with
+               12:     type RWB = {p: B}
+                                      ^ B
         `,
       ),
     addCode('(drwB: dWOA);')
@@ -297,11 +315,16 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(woB: WOA);')
       .newErrors(
         `
-          test.js:11
-           11:     type WOA = {-p: A}
-                                   ^ A. This type is incompatible with
-           14:     type WOB = {-p: B}
-                                   ^ B
+          test.js:70
+           70: (woB: WOA);
+                ^^^ object type. This type is incompatible with
+           70: (woB: WOA);
+                     ^^^ object type
+            Property \`p\` is incompatible:
+               11:     type WOA = {-p: A}
+                                       ^ A. This type is incompatible with
+               14:     type WOB = {-p: B}
+                                       ^ B
         `,
       ),
     addCode('(dwoB: dWOA);')
@@ -323,9 +346,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:42
            42: ({p: new A}: RWB);
-                    ^^^^^ A. This type is incompatible with
-           12:     type RWB = {p: B}
-                                  ^ B
+                ^^^^^^^^^^ object literal. This type is incompatible with
+           42: ({p: new A}: RWB);
+                            ^^^ object type
+            Property \`p\` is incompatible:
+               42: ({p: new A}: RWB);
+                        ^^^^^ A. This type is incompatible with
+               12:     type RWB = {p: B}
+                                      ^ B
         `,
       ),
     addCode('({p: new A}: dRWB);')
@@ -343,11 +371,16 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(rwA: RWB);')
       .newErrors(
         `
-          test.js:9
-            9:     type RWA = {p: A}
-                                  ^ A. This type is incompatible with
-           12:     type RWB = {p: B}
-                                  ^ B
+          test.js:46
+           46: (rwA: RWB);
+                ^^^ object type. This type is incompatible with
+           46: (rwA: RWB);
+                     ^^^ object type
+            Property \`p\` is incompatible:
+                9:     type RWA = {p: A}
+                                      ^ A. This type is incompatible with
+               12:     type RWB = {p: B}
+                                      ^ B
         `,
       ),
     addCode('(drwA: dRWB);')
@@ -365,17 +398,22 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(roA: RWB);')
       .newErrors(
         `
-          test.js:10
-           10:     type ROA = {+p: A}
-                                   ^ A. This type is incompatible with
-           12:     type RWB = {p: B}
-                                  ^ B
-
           test.js:50
            50: (roA: RWB);
                 ^^^ object type. Covariant property \`p\` incompatible with invariant use in
            50: (roA: RWB);
                      ^^^ object type
+
+          test.js:50
+           50: (roA: RWB);
+                ^^^ object type. This type is incompatible with
+           50: (roA: RWB);
+                     ^^^ object type
+            Property \`p\` is incompatible:
+               10:     type ROA = {+p: A}
+                                       ^ A. This type is incompatible with
+               12:     type RWB = {p: B}
+                                      ^ B
         `,
       ),
     addCode('(droA: dRWB);')
@@ -425,9 +463,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:42
            42: ({p: new A}: ROB);
-                    ^^^^^ A. This type is incompatible with
-           13:     type ROB = {+p: B}
-                                   ^ B
+                ^^^^^^^^^^ object literal. This type is incompatible with
+           42: ({p: new A}: ROB);
+                            ^^^ object type
+            Property \`p\` is incompatible:
+               42: ({p: new A}: ROB);
+                        ^^^^^ A. This type is incompatible with
+               13:     type ROB = {+p: B}
+                                       ^ B
         `,
       ),
     addCode('({p: new A}: dROB);')
@@ -445,11 +488,16 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(rwA: ROB);')
       .newErrors(
         `
-          test.js:9
-            9:     type RWA = {p: A}
-                                  ^ A. This type is incompatible with
-           13:     type ROB = {+p: B}
-                                   ^ B
+          test.js:46
+           46: (rwA: ROB);
+                ^^^ object type. This type is incompatible with
+           46: (rwA: ROB);
+                     ^^^ object type
+            Property \`p\` is incompatible:
+                9:     type RWA = {p: A}
+                                      ^ A. This type is incompatible with
+               13:     type ROB = {+p: B}
+                                       ^ B
         `,
       ),
     addCode('(drwA: dROB);')
@@ -467,11 +515,16 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(roA: ROB);')
       .newErrors(
         `
-          test.js:10
-           10:     type ROA = {+p: A}
-                                   ^ A. This type is incompatible with
-           13:     type ROB = {+p: B}
-                                   ^ B
+          test.js:50
+           50: (roA: ROB);
+                ^^^ object type. This type is incompatible with
+           50: (roA: ROB);
+                     ^^^ object type
+            Property \`p\` is incompatible:
+               10:     type ROA = {+p: A}
+                                       ^ A. This type is incompatible with
+               13:     type ROB = {+p: B}
+                                       ^ B
         `,
       ),
     addCode('(droA: dROB);')

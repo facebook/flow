@@ -14,8 +14,7 @@ NATIVE_OBJECT_FILES=\
 	hack/utils/nproc.o\
 	hack/utils/realpath.o\
 	hack/utils/sysinfo.o\
-	hack/utils/priorities.o\
-	hack/utils/win32_support.o
+	hack/utils/priorities.o
 
 RUNNER_DEPS=\
 	hack/heap\
@@ -25,7 +24,7 @@ RUNNER_DEPS=\
 	hack/utils/disk\
 	hack/utils/hh_json\
 	hack/third-party/core\
-	src/common\
+	src/common/utils\
 	src/parser
 
 all: build-parser
@@ -37,12 +36,14 @@ clean:
 
 build-parser:
 	cd $(TOP); \
-	ocamlbuild -no-links $(REL_DIR)/parser_flow.cmxa
+	ocamlbuild \
+		-use-ocamlfind -pkgs sedlex \
+		-no-links $(REL_DIR)/parser_flow.cmxa
 
 js:
 	cd $(TOP); \
 	ocamlbuild \
-		-use-ocamlfind -pkgs js_of_ocaml \
+		-use-ocamlfind -pkgs js_of_ocaml,sedlex \
 		$(REL_DIR)/flow_parser_dot_js.byte; \
 	\
 	if [ $(JSOO_MAJOR) -gt 2 ] || [ $(JSOO_MAJOR) -eq 2 -a $(JSOO_MINOR) -gt 7 ]; then \
@@ -82,6 +83,8 @@ test-js: build-parser js
 		$(foreach dir,$(RUNNER_DEPS),-I $(dir)) \
 	 	-lib unix -lib str \
 	 	-lflags "$(NATIVE_OBJECT_FILES)" \
+		-tag debug \
+		-use-ocamlfind -pkgs sedlex \
 		$(REL_DIR)/test/run_hardcoded_tests.native; \
 	rm run_hardcoded_tests.native
 
@@ -104,6 +107,13 @@ native_test_files:
 	ocamlbuild $(REL_DIR)/tools/native_test_files.native; \
 	mv native_test_files.native $(REL_DIR)/tools/native_test_files
 
+npm-pack:
+	mv README.md README-backup.md
+	mv README-npm.md README.md
+	-npm pack
+	mv README.md README-npm.md
+	mv README-backup.md README.md
+
 npm-publish:
 	mv README.md README-backup.md
 	mv README-npm.md README.md
@@ -118,3 +128,25 @@ ocamlfind-install:
 		_build/parser_flow.cma \
 		_build/parser_flow.cmxa \
 		_build/*.cmi
+
+lexer.native: lexer.ml
+	ocamlbuild \
+		-use-ocamlfind -pkgs sedlex \
+		$@
+
+tools/native_test_files: ../../_build/$(REL_DIR)/tools/native_test_files
+
+../../_build/$(REL_DIR)/tools/native_test_files: build-parser
+	cd $(TOP); \
+	ocamlbuild \
+		-ocamlc "ocamlopt" \
+		$(NATIVE_OBJECT_FILES); \
+	ocamlbuild \
+		-I $(REL_DIR) \
+		-use-ocamlfind -pkgs sedlex \
+	 	-lib unix -lib str \
+	 	-lflags "$(NATIVE_OBJECT_FILES)" \
+		$(REL_DIR)/tools/native_test_files.native; \
+	rm native_test_files.native; \
+	mv _build/$(REL_DIR)/tools/native_test_files.native $(REL_DIR)/tools/native_test_files
+

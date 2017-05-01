@@ -3,9 +3,16 @@
 import {format} from 'util';
 
 import colors from 'colors/safe';
-import {diffWords} from 'diff';
+import {diffLines, diffWords} from 'diff';
 
 import type {AssertionLocation, ErrorAssertionResult, Suggestion} from './assertionTypes';
+
+// Like str.trim(), but only trims blank lines at the beginning and end
+function trim(str: string) {
+  return str
+    .replace(/^\s*\n/, "")
+    .replace(/\n\s*$/, "");
+}
 
 function getDiff(expected: string, actual: string): ?Array<string> {
   let isSame = true;
@@ -13,14 +20,63 @@ function getDiff(expected: string, actual: string): ?Array<string> {
   let expectedLine = "";
   let messages: Array<string> = [];
   let parts = [];
-  for (const part of diffWords(actual.trim(), expected.trim())) {
-    for (const value of part.value.split(/(\n)/)) {
-      if (value != "") {
-        parts.push({
-          added: part.added,
-          removed: part.removed,
-          value,
-        });
+  actual = trim(actual);
+  expected = trim(expected);
+
+
+  // Doing a word-by-word diff algorithm gets really slow for very large, very
+  // different strings. While it's hard to estimate how different they are, it's
+  // easy to tell when they're very large :)
+  const numWords = actual.split(/\s+/).length + expected.split(/\s+/).length;
+  if (numWords > 1000) {
+
+    // diffLines trims every line when ignoreWhitespace is true. What I want is
+    // for the diff algorithm to ignore whitespace but NOT trim whitespace. So
+    // basically I need to look up the original line to get the correct
+    // whitespace. Le sigh.
+    const expectedLines = expected.split("\n");
+    const actualLines = actual.split("\n");
+    let aidx = 0, eidx = 0;
+    for (const part of diffLines(actual, expected, {ignoreWhitespace: true})) {
+      for (let value of part.value.split(/(\n)/)) {
+        if (value != "") {
+          if (value !== "\n") {
+            if (part.added) {
+              value = expectedLines[eidx];
+            } else if (part.removed) {
+              value = actualLines[aidx];
+            } else {
+              value = expectedLines[eidx] || actualLines[aidx];
+            }
+          } else {
+            if (part.added) {
+              eidx++;
+            } else if (part.removed) {
+              aidx++;
+            } else {
+              aidx++;
+              eidx++
+            }
+          }
+          parts.push({
+            added: part.added,
+            removed: part.removed,
+            value: value,
+          });
+        }
+      }
+    }
+  } else {
+    for (const part of diffWords(actual, expected)) {
+      for (const value of part.value.split(/(\n)/)) {
+        if (value != "") {
+          const notWhitespace = !value.match(/^\s+$/);
+          parts.push({
+            added: part.added && notWhitespace,
+            removed: part.removed && notWhitespace,
+            value,
+          });
+        }
       }
     }
   }

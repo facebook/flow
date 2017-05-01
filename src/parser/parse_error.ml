@@ -82,6 +82,9 @@ type t =
   | GetterArity
   | SetterArity
   | InvalidNonTypeImportInDeclareModule
+  | ImportTypeShorthandOnlyInPureImport
+  | ImportSpecifierMissingComma
+  | MalformedUnicode
 
 exception Error of (Loc.t * t) list
 
@@ -192,4 +195,12 @@ module PP =
       | InvalidNonTypeImportInDeclareModule ->
           "Imports within a `declare module` body must always be " ^
           "`import type` or `import typeof`!"
+      | ImportTypeShorthandOnlyInPureImport ->
+        "The `type` and `typeof` keywords on named imports can only be used on \
+        regular `import` statements. It cannot be used with `import type` or \
+        `import typeof` statements"
+      | ImportSpecifierMissingComma ->
+        "Missing comma between import specifiers"
+      | MalformedUnicode ->
+        "Malformed unicode"
   end

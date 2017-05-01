@@ -15,10 +15,6 @@
 open CommandUtils
 open Utils_js
 
-module CheckCommand = ServerCommands.OptionParser (
-  struct let mode = ServerCommands.Check end
-)
-
 let spec = {
   CommandSpec.
   name = "ls";
@@ -130,9 +126,7 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     FlowConfig.(flowconfig.options.Opts.strip_root)
   in
 
-  let opt_module = FlowConfig.(match flowconfig.options.Opts.moduleSystem with
-  | Opts.Node -> Options.Node
-  | Opts.Haste -> Options.Haste) in
+  let opt_module = FlowConfig.(flowconfig.options.Opts.module_system) in
 
   let opt_ignores = ignores_of_arg
     root
@@ -147,11 +141,11 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
 
   { Options.
     opt_check_mode = false;
+    opt_focus_check_target = None;
     opt_server_mode = false;
     opt_error_flags = Options.default_error_flags;
     opt_log_file = opt_log_file;
     opt_root = root;
-    opt_should_detach = false;
     opt_should_wait = false;
     opt_debug = false;
     opt_verbose = None;
@@ -179,7 +173,7 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_profile = false;
     opt_strip_root;
     opt_module;
-    opt_libs = CheckCommand.libs ~root flowconfig None;
+    opt_libs = ServerCommands.CheckCommand.libs ~root flowconfig None;
     opt_default_lib_dir = None;
     opt_munge_underscores = false;
     opt_temp_dir;
@@ -208,6 +202,7 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_enable_const_params = false;
     opt_enable_unsafe_getters_and_setters = false;
     opt_enforce_strict_type_args = false;
+    opt_enforce_strict_call_arity = false;
     opt_esproposal_class_static_fields = Options.ESPROPOSAL_WARN;
     opt_esproposal_class_instance_fields = Options.ESPROPOSAL_WARN;
     opt_esproposal_decorators = Options.ESPROPOSAL_WARN;
@@ -216,6 +211,18 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_ignore_non_literal_requires = false;
     opt_max_header_tokens = FlowConfig.(
       flowconfig.options.Opts.max_header_tokens
+    );
+    opt_haste_name_reducers = FlowConfig.(
+      flowconfig.options.Opts.haste_name_reducers
+    );
+    opt_haste_paths_blacklist = FlowConfig.(
+      flowconfig.options.Opts.haste_paths_blacklist
+    );
+    opt_haste_paths_whitelist = FlowConfig.(
+      flowconfig.options.Opts.haste_paths_whitelist
+    );
+    opt_haste_use_name_reducers = FlowConfig.(
+      flowconfig.options.Opts.haste_use_name_reducers
     )
   }
 

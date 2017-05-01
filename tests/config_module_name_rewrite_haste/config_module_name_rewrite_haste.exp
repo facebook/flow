@@ -1,6 +1,6 @@
 A.js:12
  12: var m2 = require('2DoesntExist'); // Error
-              ^^^^^^^^^^^^^^^^^^^^^^^ 2DoesntExist. Required module not found
+                      ^^^^^^^^^^^^^^ 2DoesntExist. Required module not found
 
 A.js:13
  13: import {numVal as numVal2} from '3DoesntExist'; // Error

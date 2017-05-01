@@ -1,4 +1,7 @@
-/* @flow */
+/*
+ * @flow
+ * @lint-ignore-every LINE_WRAP1
+ */
 
 import {suite, test} from '../../tsrc/test/Tester';
 
@@ -125,11 +128,16 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode(`var o: {p: string} = Object.create(proto);`)
       .newErrors(
         `
-          test.js:5
-            5:       proto.p = 0;
-                               ^ number. This type is incompatible with
+          test.js:8
             8: var o: {p: string} = Object.create(proto);
-                          ^^^^^^ string
+                                    ^^^^^^^^^^^^^^^^^^^^ Object.create. This type is incompatible with
+            8: var o: {p: string} = Object.create(proto);
+                      ^^^^^^^^^^^ object type
+            Property \`p\` is incompatible:
+                5:       proto.p = 0;
+                                   ^ number. This type is incompatible with
+                8: var o: {p: string} = Object.create(proto);
+                              ^^^^^^ string
         `,
       ),
   ]),

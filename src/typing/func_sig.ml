@@ -8,7 +8,6 @@
  *
  *)
 
-module Ast = Spider_monkey_ast
 module Anno = Type_annotation
 module Flow = Flow_js
 
@@ -50,29 +49,31 @@ let function_kind {Ast.Function.async; generator; predicate; _ } =
   | false, false, Some (_ , Inferred) -> Predicate
   | _, _, _ -> Utils_js.assert_false "(async || generator) && pred")
 
-let mk cx tparams_map ~expr reason func =
+let mk cx tparams_map ~expr loc func =
   let {Ast.Function.typeParameters; returnType; body; predicate; _} = func in
+  let reason = func_reason func loc in
   let kind = function_kind func in
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx ~tparams_map typeParameters
   in
   let params = Func_params.mk cx tparams_map ~expr func in
+  let ret_reason = mk_reason RReturn (return_loc func) in
   let return_t =
-    let reason = mk_reason RReturn (return_loc func) in
-    Anno.mk_type_annotation cx tparams_map reason returnType
+    Anno.mk_type_annotation cx tparams_map ret_reason returnType
   in
   let return_t = Ast.Type.Predicate.(match predicate with
     | None ->
         return_t
     | Some (_, Inferred) ->
         (* Restrict the fresh condition type by the declared return type *)
-        let fresh_t = Anno.mk_type_annotation cx tparams_map reason None in
+        let fresh_t = Anno.mk_type_annotation cx tparams_map ret_reason None in
         Flow.flow_t cx (fresh_t, return_t);
         fresh_t
     | Some (loc, Declared _) ->
-        Flow_error.(add_output cx
-          (EUnsupportedSyntax (loc, PredicateDeclarationForImplementation)));
-        Anno.mk_type_annotation cx tparams_map reason None
+        Flow_js.add_output cx Flow_error.(
+          EUnsupportedSyntax (loc, PredicateDeclarationForImplementation)
+        );
+        Anno.mk_type_annotation cx tparams_map ret_reason None
   ) in
   {reason; kind; tparams; tparams_map; params; body; return_t}
 
@@ -91,6 +92,7 @@ let convert cx tparams_map loc func =
   let params = Func_params.convert cx tparams_map func in
   let body = empty_body in
   let return_t = Anno.convert cx tparams_map returnType in
+
   {reason; kind; tparams; tparams_map; params; body; return_t}
 
 let default_constructor reason = {
@@ -100,7 +102,7 @@ let default_constructor reason = {
   tparams_map = SMap.empty;
   params = Func_params.empty;
   body = empty_body;
-  return_t = VoidT.t;
+  return_t = VoidT.why reason;
 }
 
 let field_initializer tparams_map reason expr return_t = {
@@ -152,39 +154,29 @@ let functiontype cx this_t {reason; kind; tparams; params; return_t; _} =
     this_t;
     params_tlist = Func_params.tlist params;
     params_names = Some (Func_params.names params);
+    rest_param = Func_params.rest params;
     return_t;
     is_predicate = kind = Predicate;
     closure_t = Env.peek_frame ();
-    changeset = Env.retrieve_closure_changeset ()
+    changeset = Env.retrieve_closure_changeset ();
+    def_reason = reason;
   } in
   let t = FunT (reason, static, prototype, funtype) in
-  if tparams = []
-  then t
-  else PolyT (tparams, t)
+  poly_type tparams t
 
 let methodtype {reason; tparams; params; return_t; _} =
   let params_tlist = Func_params.tlist params in
   let params_names = Func_params.names params in
+  let rest_param = Func_params.rest params in
+  let def_reason = reason in
   let t = FunT (
     reason,
     Flow.dummy_static reason,
     Flow.dummy_prototype,
-    Flow.mk_boundfunctiontype params_tlist ~params_names return_t
+    Flow.mk_boundfunctiontype
+      params_tlist ~rest_param ~def_reason ~params_names return_t
   ) in
-  if tparams = []
-  then t
-  else PolyT (tparams, t)
-
-let methodtype_DEPRECATED {reason; params; return_t; _} =
-  let params_tlist = Func_params.tlist params in
-  let params_names = Func_params.names params in
-  let frame = Env.peek_frame () in
-  FunT (
-    reason,
-    Flow.dummy_static reason,
-    Flow.dummy_prototype,
-    Flow.mk_functiontype params_tlist ~params_names return_t ~frame
-  )
+  poly_type tparams t
 
 let gettertype ({return_t; _}: t) = return_t
 
@@ -196,18 +188,18 @@ let settertype {params; _} =
 let toplevels id cx this super ~decls ~stmts ~expr
   {kind; tparams_map; params; body; return_t; _} =
 
-  let reason =
+  let loc, reason =
     let loc = Ast.Function.(match body with
       | BodyBlock (loc, _)
       | BodyExpression (loc, _) -> loc
     ) in
-    mk_reason RFunctionBody loc
+    loc, mk_reason RFunctionBody loc
   in
 
   let env =  Env.peek_env () in
   let new_env = Env.clone_env env in
 
-  Env.update_env cx reason new_env;
+  Env.update_env cx loc new_env;
   Env.havoc_all();
 
   (* create and prepopulate function scope *)
@@ -227,12 +219,29 @@ let toplevels id cx this super ~decls ~stmts ~expr
   (* push the scope early so default exprs can reference earlier params *)
   Env.push_var_scope cx function_scope;
 
+  (* add `this` and `super` before looking at parameter bindings as when using
+   * `this` in default parameter values it refers to the function scope and
+   * `super` should resolve to the method's [[HomeObject]]
+  *)
+  Scope.add_entry (internal_name "this") this function_scope;
+  Scope.add_entry (internal_name "super") super function_scope;
+
   (* bind type params *)
   SMap.iter (fun name t ->
     let r = reason_of_t t in
-    Env.bind_type cx name (TypeT (r, t)) r
+    let loc = loc_of_reason r in
+    Env.bind_type cx name (TypeT (r, t)) loc
       ~state:Scope.State.Initialized
   ) tparams_map;
+
+  (* Check the rest parameter annotation *)
+  Option.iter
+    ~f:(fun (_, loc, t) ->
+      let rest_reason =
+        mk_reason (RCustom "Rest params are always arrays") loc in
+      Flow_js.flow cx (t, AssertRestParamT rest_reason)
+    )
+    (Func_params.rest params);
 
   (* add param bindings *)
   let const_params = Context.enable_const_params cx in
@@ -246,9 +255,9 @@ let toplevels id cx this super ~decls ~stmts ~expr
     (* add to scope *)
     if const_params
     then Env.bind_implicit_const ~state:State.Initialized
-      Entry.ConstParamBinding cx name t reason
+      Entry.ConstParamBinding cx name t loc
     else Env.bind_implicit_let ~state:State.Initialized
-      Entry.ParamBinding cx name t reason
+      Entry.ParamBinding cx name t loc
   );
 
   (* early-add our own name binding for recursive calls *)
@@ -275,8 +284,6 @@ let toplevels id cx this super ~decls ~stmts ~expr
     new_entry yield_t, new_entry next_t, new_entry return_t
   ) in
 
-  Scope.add_entry (internal_name "this") this function_scope;
-  Scope.add_entry (internal_name "super") super function_scope;
   Scope.add_entry (internal_name "yield") yield function_scope;
   Scope.add_entry (internal_name "next") next function_scope;
   Scope.add_entry (internal_name "return") return function_scope;
@@ -299,8 +306,8 @@ let toplevels id cx this super ~decls ~stmts ~expr
         | [(_, Return { Return.argument = Some _})] -> ()
         | _ ->
           let loc = loc_of_reason reason in
-          Flow_error.(add_output cx
-            (EUnsupportedSyntax (loc, PredicateInvalidBody)))
+          Flow_js.add_output cx
+            Flow_error.(EUnsupportedSyntax (loc, PredicateInvalidBody))
       end
     | _ -> ()
   );
@@ -326,7 +333,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
     | Async ->
       let reason = mk_reason (RCustom "Promise<void>") loc in
       let promise = Flow.get_builtin cx "Promise" reason in
-      FunImplicitReturn, TypeAppT (promise, [VoidT.at loc])
+      FunImplicitReturn, typeapp promise [VoidT.at loc]
     | Generator ->
       let reason = mk_reason (RCustom "Generator<Yield,void,Next>") loc in
       let return_t = VoidT.at loc in
@@ -342,8 +349,8 @@ let toplevels id cx this super ~decls ~stmts ~expr
       UnknownUse, return_t
     | Predicate ->
       let loc = loc_of_reason reason in
-      Flow_error.(add_output cx
-        (EUnsupportedSyntax (loc, PredicateVoidReturn)));
+      Flow_js.add_output cx
+        Flow_error.(EUnsupportedSyntax (loc, PredicateVoidReturn));
       FunImplicitReturn, VoidT.at loc
     in
     Flow.flow cx (void_t, UseT (use_op, return_t))
@@ -351,4 +358,4 @@ let toplevels id cx this super ~decls ~stmts ~expr
 
   Env.pop_var_scope ();
 
-  Env.update_env cx reason env
+  Env.update_env cx loc env

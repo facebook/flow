@@ -10,7 +10,6 @@
 
 (* AST handling and type setup for import/export *)
 
-module Ast = Spider_monkey_ast
 module Flow = Flow_js
 
 open Utils_js
@@ -66,9 +65,13 @@ let mk_resource_module_t cx loc f =
   mk_commonjs_module_t cx reason reason exports_t
 
 
+let add_module_tvar cx r loc =
+  let tvar = Flow.mk_tvar cx (mk_reason (RCustom r) loc) in
+  Context.add_module cx r tvar
+
 (* given a module name, return associated tvar if already
  * present in module map, or create and add *)
-let module_t_of_name cx m reason =
+let module_t_of_ref_safe cx m reason =
   match Context.declare_module_t cx with
   (**
    * TODO: Imports within `declare module`s can only reference other
@@ -77,7 +80,7 @@ let module_t_of_name cx m reason =
    *       like normal modules and merge them as such.
    *)
   | Some _ ->
-    Env.get_var_declared_type cx (internal_module_name m) reason
+    Env.get_var_declared_type cx (internal_module_name m) (loc_of_reason reason)
   | None ->
     (match SMap.get m (Context.module_map cx) with
       | Some t -> t
@@ -85,35 +88,48 @@ let module_t_of_name cx m reason =
         Flow.mk_tvar_where cx reason (fun t -> Context.add_module cx m t)
     )
 
-let require cx ?(internal=false) m_name loc =
-  Context.add_require cx m_name loc;
+(* given a module name, return associated tvar in module map (failing if not
+   found); e.g., used to find tvars associated with requires *after* all
+   requires already have entries in the module map *)
+let module_t_of_ref_unsafe cx m reason =
+  match Context.declare_module_t cx with
+  (**
+   * TODO: Imports within `declare module`s can only reference other
+   *       `declare module`s (for now). This won't fly forever so at some point
+   *       we'll need to move `declare module` storage into the modulemap just
+   *       like normal modules and merge them as such.
+   *)
+  | Some _ ->
+    Env.get_var_declared_type cx (internal_module_name m) (loc_of_reason reason)
+  | None ->
+    SMap.find_unsafe m (Context.module_map cx)
+
+let require cx ?(internal=false) module_ref loc =
   if not internal
-  then Type_inference_hooks_js.dispatch_require_hook cx m_name loc;
-  let desc = RCustom (spf "CommonJS exports of \"%s\"" m_name) in
+  then Type_inference_hooks_js.dispatch_require_hook cx module_ref loc;
+  let desc = RCustom (spf "CommonJS exports of \"%s\"" module_ref) in
   let reason = mk_reason desc loc in
   Flow.mk_tvar_where cx reason (fun t ->
     Flow.flow cx (
-      module_t_of_name cx m_name (mk_reason (RCustom m_name) loc),
+      module_t_of_ref_unsafe cx module_ref (mk_reason (RCustom module_ref) loc),
       CJSRequireT(reason, t)
     )
   )
 
-let import ?reason cx m_name loc =
-  Context.add_require cx m_name loc;
-  Type_inference_hooks_js.dispatch_import_hook cx m_name loc;
+let import ?reason cx module_ref loc =
+  Type_inference_hooks_js.dispatch_import_hook cx module_ref loc;
   let reason =
     match reason with
     | Some r -> r
-    | None -> mk_reason (RCustom m_name) loc
+    | None -> mk_reason (RCustom module_ref) loc
   in
-  module_t_of_name cx m_name reason
+  module_t_of_ref_unsafe cx module_ref reason
 
-let import_ns cx reason module_name loc =
-  Context.add_require cx module_name loc;
-  Type_inference_hooks_js.dispatch_import_hook cx module_name loc;
+let import_ns cx reason module_ref loc =
+  Type_inference_hooks_js.dispatch_import_hook cx module_ref loc;
   Flow.mk_tvar_where cx reason (fun t ->
     Flow.flow cx (
-      module_t_of_name cx module_name (mk_reason (RCustom module_name) loc),
+      module_t_of_ref_unsafe cx module_ref (mk_reason (RCustom module_ref) loc),
       ImportModuleNsT(reason, t)
     )
   )
@@ -121,16 +137,16 @@ let import_ns cx reason module_name loc =
 let module_t_of_cx cx =
   match Context.declare_module_t cx with
   | None ->
-    let m = Modulename.to_string (Context.module_name cx) in
+    let m = Context.module_ref cx in
     let loc = Loc.({ none with source = Some (Context.file cx) }) in
-    module_t_of_name cx m (Reason.mk_reason (RCustom "exports") loc)
+    module_t_of_ref_safe cx m (Reason.mk_reason (RCustom "exports") loc)
   | Some t -> t
 
 let set_module_t cx reason f =
   match Context.declare_module_t cx with
   | None -> (
-    let module_name = Modulename.to_string (Context.module_name cx) in
-    Context.add_module cx module_name (Flow.mk_tvar_where cx reason f)
+    let module_ref = Context.module_ref cx in
+    Context.add_module cx module_ref (Flow.mk_tvar_where cx reason f)
   )
   | Some _ ->
     Context.set_declare_module_t cx (Some (Flow.mk_tvar_where cx reason f))
@@ -157,12 +173,12 @@ let set_module_t cx reason f =
  * `exports` value? Do we use the type that clobbered `module.exports`? Or do we
  * use neither because the module only has direct ES exports?).
  *)
-let set_module_kind cx reason new_exports_kind = Context.(
+let set_module_kind cx loc new_exports_kind = Context.(
   (match (Context.module_kind cx, new_exports_kind) with
   | (ESModule, CommonJSModule(Some _))
   | (CommonJSModule(Some _), ESModule)
     ->
-      Flow_error.(add_output cx (EIndeterminateModuleType reason))
+      Flow_js.add_output cx (Flow_error.EIndeterminateModuleType loc)
   | _ -> ()
   );
   Context.set_module_kind cx new_exports_kind
@@ -198,7 +214,7 @@ let warn_or_ignore_export_star_as cx name =
   if name = None then () else
   match Context.esproposal_export_star_as cx, name with
   | Options.ESPROPOSAL_WARN, Some(loc, _) ->
-    Flow_error.(add_output cx (EExperimentalExportStarAs loc))
+    Flow_js.add_output cx (Flow_error.EExperimentalExportStarAs loc)
   | _ -> ()
 
 (* Module exports are treated differently than `exports`. The latter is a
@@ -213,8 +229,10 @@ let warn_or_ignore_export_star_as cx name =
    module, and then flowing module.exports to exports, so that whatever its
    final value is (initial object or otherwise) is checked against the type
    declared for exports or any other use of exports. *)
-let get_module_exports cx reason =
-  Env.get_internal_var cx "exports" reason
+let get_module_exports cx loc =
+  Env.get_internal_var cx "exports" loc
 
-let set_module_exports cx reason t =
-  ignore Env.(set_internal_var cx "exports" t reason)
+let set_module_exports cx loc t =
+  let change: Changeset.EntryRef.t option =
+    Env.set_internal_var cx "exports" t loc in
+  ignore change

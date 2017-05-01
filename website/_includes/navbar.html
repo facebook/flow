@@ -1,0 +1,77 @@
+{% include vars.html %}
+
+<nav class="navbar navbar-full navbar-fixed-top navbar-dark">
+  <div class="container">
+    <a class="navbar-brand" href="{{url_base}}/">
+      {% include svg/logo-flow-nav.svg %}
+      <span class="sr-only">Flow</span>
+    </a>
+
+    <div class="clearfix hidden-lg-up">
+      <button class="navbar-toggler float-xs-right" type="button"
+        data-toggle="collapse" data-target="#navbar"
+        aria-controls="exCollapsingNavbar2" aria-expanded="false" aria-label="Toggle navigation">
+        <!-- &#9776; -->
+      </button>
+    </div>
+
+    <div class="collapse navbar-toggleable-md" id="navbar">
+      <ul class="nav navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="{{url_base}}/docs/getting-started/">{{i18n.navbar_getting_started}}</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{url_base}}/docs/">{{i18n.navbar_documentation}}</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{base_url}}/try/">{{i18n.navbar_try}}</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{base_url}}/blog/">{{i18n.navbar_blog}}</a>
+        </li>
+      </ul>
+
+      <ul class="nav navbar-nav float-lg-right">
+        {% assign path = page.url | split: '/' %}
+        {% unless true || path[1] == 'blog' %}
+          <li class="nav-item dropdown">
+            <a id="dropdownNavLanguage" class="nav-link dropdown-toggle" role="button" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              {% include svg/icon-language.svg class="navbar-icon" %}
+              <span class="navbar-language-label">{{lang.name}}</span>
+            </a>
+            <div class="dropdown-menu" aria-labelledby="dropdownNavLanguage">
+              {% for language in site.data.languages %}
+                {% if language.enabled %}
+                  <a href="{{site.baseurl}}/{{language.tag}}/{{url_relative}}"
+                    class="dropdown-item{% if lang.tag == language.tag %} active{% endif %}"
+                    data-lang="{{language.accept_languages[0]}}">
+                    {{language.name}}
+                  </a>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </li>
+        {% endunless %}
+
+        <li class="nav-item">
+          <a class="nav-link" href="https://twitter.com/flowtype">
+            {% include svg/icon-twitter.svg class="navbar-icon" %}
+            <span class="sr-only">{{i18n.navbar_twitter}}</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="http://stackoverflow.com/questions/tagged/flowtype">
+            {% include svg/icon-stackoverflow.svg class="navbar-icon" %}
+            <span class="sr-only">{{i18n.navbar_stackoverflow}}</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/facebook/flow">
+            {% include svg/icon-github.svg class="navbar-icon" %}
+            <span class="sr-only">{{i18n.navbar_github}}</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

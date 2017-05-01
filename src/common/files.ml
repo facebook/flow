@@ -10,8 +10,18 @@
 
 (************** file filter utils ***************)
 
+let node_modules_containers = ref SSet.empty
+
 let global_file_name = "(global)"
 let flow_ext = ".flow"
+
+let has_flow_ext file =
+  Loc.check_suffix file flow_ext
+
+let chop_flow_ext file =
+  if has_flow_ext file
+  then Some (Loc.chop_suffix file flow_ext)
+  else None
 
 let is_directory path = try Sys.is_directory path with Sys_error _ -> false
 
@@ -43,6 +53,9 @@ let is_valid_path ~options =
     (* foo.js.flow is valid if foo.js is valid *)
     then is_valid_path_helper (Filename.chop_suffix path flow_ext)
     else is_valid_path_helper path
+
+let is_node_module options path =
+  List.mem (Filename.basename path) (Options.node_resolver_dirnames options)
 
 let is_flow_file ~options path =
   is_valid_path ~options path && not (is_directory path)
@@ -116,7 +129,7 @@ let max_files = 1000
 
     If kind_of_path fails, then we only emit a warning if error_filter passes *)
 let make_next_files_and_symlinks
-    ~path_filter ~realpath_filter ~error_filter paths =
+    ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths =
   let prefix_checkers = List.map is_prefix paths in
   let rec process sz (acc, symlinks) files dir stack =
     if sz >= max_files then
@@ -132,6 +145,8 @@ let make_next_files_and_symlinks
           then process (sz+1) (real :: acc, symlinks) files dir stack
           else process sz (acc, symlinks) files dir stack
         | Dir (path, is_symlink) ->
+          if node_module_filter file
+          then node_modules_containers := SSet.add (Filename.dirname file) !node_modules_containers;
           let dirfiles = Array.to_list @@ try_readdir path in
           let symlinks =
             (* accumulates all of the symlinks that point to
@@ -165,13 +180,14 @@ let make_next_files_and_symlinks
    and including any directories that are symlinked to even if they are outside
    of `paths`. *)
 let make_next_files_following_symlinks
+  ~node_module_filter
   ~path_filter
   ~realpath_filter
   ~error_filter
   paths =
   let paths = List.map Path.to_string paths in
   let cb = ref (make_next_files_and_symlinks
-    ~path_filter ~realpath_filter ~error_filter paths
+    ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths
   ) in
   let symlinks = ref SSet.empty in
   let seen_symlinks = ref SSet.empty in
@@ -190,7 +206,7 @@ let make_next_files_following_symlinks
       symlinks := SSet.empty;
       (* since we're following a symlink, use realpath_filter for both *)
       cb := make_next_files_and_symlinks
-        ~path_filter:realpath_filter ~realpath_filter ~error_filter paths;
+        ~node_module_filter ~path_filter:realpath_filter ~realpath_filter ~error_filter paths;
       rec_cb ()
     end
   in
@@ -208,6 +224,7 @@ let get_all =
   fun next -> get_all_rec next SSet.empty
 
 let init options =
+  let node_module_filter = is_node_module options in
   let libs = Options.lib_paths options in
   let libs, filter = match Options.default_lib_dir options with
     | None -> libs, is_valid_path ~options
@@ -224,6 +241,7 @@ let init options =
         let lib_str = Path.to_string lib in
         let filter' path = path = lib_str || filter path in
         make_next_files_following_symlinks
+          ~node_module_filter
           ~path_filter:filter'
           ~realpath_filter:filter'
           ~error_filter:(fun _ -> true)
@@ -235,8 +253,12 @@ let init options =
   in
   (libs, Utils_js.set_of_list libs)
 
+(* Local reference to the module exported by a file. Like other local references
+   to modules imported by the file, it is a member of Context.module_map. *)
+let module_ref file =
+  Loc.string_of_filename file
 
-let lib_module = ""
+let lib_module_ref = ""
 
 let dir_sep = Str.regexp "[/\\\\]"
 let current_dir_name = Str.regexp_string Filename.current_dir_name
@@ -260,6 +282,11 @@ let wanted ~options lib_fileset =
   let is_ignored_ = is_ignored options in
   fun path -> not (is_ignored_ path) && not (SSet.mem path lib_fileset)
 
+let watched_paths options =
+  let root = Options.root options in
+  let others = Path_matcher.stems (Options.includes options) in
+  root::others
+
 (**
  * Creates a "next" function (see also: `get_all`) for finding the files in a
  * given FlowConfig root. This means all the files under the root and all the
@@ -269,13 +296,13 @@ let wanted ~options lib_fileset =
  * If subdir is set, then we return the subset of files under subdir
  *)
 let make_next_files ~all ~subdir ~options ~libs =
+  let node_module_filter = is_node_module options in
   let root = Options.root options in
   let filter = if all then fun _ -> true else wanted ~options libs in
-  let others = Path_matcher.stems (Options.includes options) in
 
   (* The directories from which we start our search *)
   let starting_points = match subdir with
-  | None -> root::others
+  | None -> watched_paths options
   | Some subdir -> [subdir] in
 
   let root_str= Path.to_string root in
@@ -305,7 +332,7 @@ let make_next_files ~all ~subdir ~options ~libs =
       )
   in
   make_next_files_following_symlinks
-    ~path_filter ~realpath_filter ~error_filter:filter starting_points
+    ~node_module_filter ~path_filter ~realpath_filter ~error_filter:filter starting_points
 
 let is_windows_root root =
   Sys.win32 &&

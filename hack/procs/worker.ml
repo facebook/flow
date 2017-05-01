@@ -178,8 +178,14 @@ let slave_main ic oc =
       Exit_status.(exit Hash_table_full)
   | SharedMem.Heap_full ->
       Exit_status.(exit Heap_full)
-  | SharedMem.Sql_assertion_failure ->
-      Exit_status.(exit Sql_assertion_failure)
+  | SharedMem.Sql_assertion_failure err_num ->
+      let exit_code = match err_num with
+        | 11 -> Exit_status.Sql_corrupt
+        | 14 -> Exit_status.Sql_cantopen
+        | 21 -> Exit_status.Sql_misuse
+        | _ -> Exit_status.Sql_assertion_failure
+      in
+      Exit_status.exit exit_code
   | e ->
       let e_str = Printexc.to_string e in
       Printf.printf "Exception: %s\n" e_str;
@@ -269,7 +275,7 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
     Unix.clear_close_on_exec heap_handle.SharedMem.h_fd;
     let handle =
       Daemon.spawn
-        Unix.(stdout, stderr)
+        (Daemon.null_fd (), Unix.stdout, Unix.stderr)
         entry
         (saved_state, gc_control, heap_handle) in
     Unix.set_close_on_exec heap_handle.SharedMem.h_fd;

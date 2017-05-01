@@ -10,42 +10,58 @@
 
 open Utils_js
 open Sys_utils
-module Ast = Spider_monkey_ast
 
 type result =
-  | Parse_ok of Spider_monkey_ast.program
-  | Parse_err of Errors.ErrorSet.t
+  | Parse_ok of Ast.program
+  | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
 and parse_skip_reason =
   | Skip_resource_file
   | Skip_non_flow_file
 
+and parse_failure =
+  | Docblock_errors of Docblock.error list
+  | Parse_error of (Loc.t * Parse_error.t)
+
 (* results of parse job, returned by parse and reparse *)
 type results = {
-  parse_ok: FilenameSet.t;                   (* successfully parsed files *)
-  parse_skips: (filename * Docblock.t) list; (* list of skipped files *)
-  parse_fails: (filename * Docblock.t) list; (* list of failed files *)
-  parse_errors: Errors.ErrorSet.t list;      (* parallel list of error sets *)
-  parse_resource_files: FilenameSet.t;       (* resource files *)
+  (* successfully parsed files *)
+  parse_ok: FilenameSet.t;
+
+  (* list of skipped files *)
+  parse_skips: (filename * Docblock.t) list;
+
+  (* list of failed files *)
+  parse_fails: (filename * Docblock.t * parse_failure) list;
 }
 
 let empty_result = {
   parse_ok = FilenameSet.empty;
   parse_skips = [];
   parse_fails = [];
-  parse_errors = [];
-  parse_resource_files = FilenameSet.empty;
 }
 
 (**************************** internal *********************************)
 
 (* shared heap for parsed ASTs by filename *)
-module ParserHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
-    type t = (Spider_monkey_ast.program * Docblock.t)
+module ASTHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
+    type t = Ast.program
     let prefix = Prefix.make()
-    let description = "Parser"
-  end)
+    let description = "AST"
+end)
+
+module DocblockHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
+    type t = Docblock.t
+    let prefix = Prefix.make()
+    let description = "Docblock"
+end)
+
+module RequiresHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
+    type t = Loc.t SMap.t
+    let prefix = Prefix.make()
+    let description = "Requires"
+end)
 
 let (parser_hook: (filename -> Ast.program option -> unit) list ref) = ref []
 let register_hook f = parser_hook := f :: !parser_hook
@@ -105,7 +121,7 @@ let parse_json_file ~fail content file =
     Parser_flow.json_file ~fail ~parse_options content (Some file) in
   if fail then assert (parse_errors = []);
 
-  let open Parser_flow.Ast in
+  let open Ast in
   let loc_none = Loc.none in
   let module_exports = loc_none, Expression.(Member { Member.
     _object = loc_none, Identifier (loc_none, "module");
@@ -119,7 +135,8 @@ let parse_json_file ~fail content file =
         operator = Expression.Assignment.Assign;
         left = loc_none, Pattern.Expression module_exports;
         right = expr;
-      }
+      };
+      directive = None;
     }
   in
   let comments = ([]: Comment.t list) in
@@ -139,24 +156,27 @@ let string_of_docblock_error = function
     | None -> ""
     | Some first_error -> spf " Parse error: %s" first_error)
 
+let error_of_docblock_error (loc, err) =
+  Errors.mk_error ~kind:Errors.ParseError [loc, [string_of_docblock_error err]]
+
+let set_of_docblock_errors errors =
+  List.fold_left (fun acc err ->
+    Errors.ErrorSet.add (error_of_docblock_error err) acc
+  ) Errors.ErrorSet.empty errors
+
+let error_of_parse_error (loc, err) =
+  Errors.mk_error ~kind:Errors.ParseError [loc, [Parse_error.PP.error err]]
+
+let set_of_parse_error error =
+  Errors.ErrorSet.singleton (error_of_parse_error error)
+
 let get_docblock
   ~max_tokens file content
-: Errors.ErrorSet.t option * Docblock.t =
+: Docblock.error list * Docblock.t =
   match file with
   | Loc.ResourceFile _
-  | Loc.JsonFile _ -> None, Docblock.default_info
-  | _ ->
-    let errors, docblock = Docblock.extract ~max_tokens file content in
-    if errors = [] then None, docblock
-    else
-      let errs = List.fold_left (fun acc (loc, err) ->
-        let err = Errors.mk_error
-          ~kind:Errors.ParseError
-          [loc, [string_of_docblock_error err]]
-        in
-        Errors.ErrorSet.add err acc
-      ) Errors.ErrorSet.empty errors in
-      Some errs, docblock
+  | Loc.JsonFile _ -> [], Docblock.default_info
+  | _ -> Docblock.extract ~max_tokens file content
 
 let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
   try (
@@ -186,14 +206,17 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
   )
   with
   | Parse_error.Error (first_parse_error::_) ->
-    let err = Errors.parse_error_to_flow_error first_parse_error in
-    Parse_err (Errors.ErrorSet.singleton err)
+    Parse_fail (Parse_error first_parse_error)
   | e ->
     let s = Printexc.to_string e in
-    let msg = spf "unexpected parsing exception: %s" s in
     let loc = Loc.({ none with source = Some file }) in
-    let err = Errors.(simple_error ~kind:ParseError loc msg) in
-    Parse_err (Errors.ErrorSet.singleton err)
+    let err = loc, Parse_error.Assertion s in
+    Parse_fail (Parse_error err)
+
+let calc_requires ast is_react =
+  let mapper = new Require.mapper is_react in
+  let _ = mapper#program ast in
+  mapper#requires
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
@@ -219,7 +242,7 @@ let reducer
   match content with
   | Some content ->
       begin match get_docblock ~max_tokens:max_header_tokens file content with
-      | None, info ->
+      | [], info ->
         begin match (do_parse ~types_mode ~use_strict ~info content file) with
         | Parse_ok ast ->
             (* Consider the file unchanged if its reparsing info is the same as
@@ -228,34 +251,33 @@ let reducer
              * been added to the modified set simply because a corresponding
              * implementation file was also added. *)
             if not (Loc.check_suffix file Files.flow_ext)
-              && ParserHeap.get_old file = Some (ast, info)
+              && ASTHeap.get_old file = Some ast
             then parse_results
             else begin
-              ParserHeap.add file (ast, info);
+              ASTHeap.add file ast;
+              DocblockHeap.add file info;
+              let require_loc = calc_requires ast (info.Docblock.jsx = None) in
+              RequiresHeap.add file require_loc;
               execute_hook file (Some ast);
               let parse_ok = FilenameSet.add file parse_results.parse_ok in
               { parse_results with parse_ok; }
             end
-        | Parse_err converted ->
+        | Parse_fail converted ->
             execute_hook file None;
-            let parse_fails = (file, info) :: parse_results.parse_fails in
-            let parse_errors = converted :: parse_results.parse_errors in
-            { parse_results with parse_fails; parse_errors; }
-        | Parse_skip Skip_non_flow_file ->
+            let fail = (file, info, converted) in
+            let parse_fails = fail :: parse_results.parse_fails in
+            { parse_results with parse_fails; }
+        | Parse_skip Skip_non_flow_file
+        | Parse_skip Skip_resource_file ->
             execute_hook file None;
             let parse_skips = (file, info) :: parse_results.parse_skips in
             { parse_results with parse_skips; }
-        | Parse_skip Skip_resource_file ->
-            execute_hook file None;
-            let parse_resource_files =
-              FilenameSet.add file parse_results.parse_resource_files in
-            { parse_results with parse_resource_files; }
         end
-      | Some docblock_errors, info ->
+      | docblock_errors, info ->
         execute_hook file None;
-        let parse_fails = (file, info) :: parse_results.parse_fails in
-        let parse_errors = docblock_errors :: parse_results.parse_errors in
-        { parse_results with parse_fails; parse_errors; }
+        let fail = (file, info, Docblock_errors docblock_errors) in
+        let parse_fails = fail :: parse_results.parse_fails in
+        { parse_results with parse_fails; }
       end
   | None ->
       execute_hook file None;
@@ -269,9 +291,6 @@ let merge r1 r2 =
     parse_ok = FilenameSet.union r1.parse_ok r2.parse_ok;
     parse_skips = r1.parse_skips @ r2.parse_skips;
     parse_fails = r1.parse_fails @ r2.parse_fails;
-    parse_errors = r1.parse_errors @ r2.parse_errors;
-    parse_resource_files =
-      FilenameSet.union r1.parse_resource_files r2.parse_resource_files;
   }
 
 let opt_or_alternate opt alternate =
@@ -318,11 +337,9 @@ let parse
     let ok_count = FilenameSet.cardinal results.parse_ok in
     let skip_count = List.length results.parse_skips in
     let fail_count = List.length results.parse_fails in
-    let resource_file_count =
-      FilenameSet.cardinal results.parse_resource_files in
-    prerr_endlinef "parsed %d files (%d ok, %d skipped, %d failed, %d resource files) in %f"
+    prerr_endlinef "parsed %d files (%d ok, %d skipped, %d failed) in %f"
       (ok_count + skip_count + fail_count)
-      ok_count skip_count fail_count resource_file_count
+      ok_count skip_count fail_count
       (t2 -. t)
   else ();
 
@@ -330,23 +347,28 @@ let parse
 
 let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~options workers files =
   (* save old parsing info for files *)
-  ParserHeap.oldify_batch files;
+  ASTHeap.oldify_batch files;
+  DocblockHeap.oldify_batch files;
+  RequiresHeap.oldify_batch files;
   let next = next_of_filename_set workers files in
   let results =
     parse ~types_mode ~use_strict ~profile ~max_header_tokens workers next in
-  let modified =
-    FilenameSet.union results.parse_ok results.parse_resource_files in
-  let modified = List.fold_left (fun acc (fail, _) ->
+  let modified = results.parse_ok in
+  let modified = List.fold_left (fun acc (fail, _, _) ->
     FilenameSet.add fail acc
   ) modified results.parse_fails in
   let modified = List.fold_left (fun acc (skip, _) ->
     FilenameSet.add skip acc
   ) modified results.parse_skips in
   (* discard old parsing info for modified files *)
-  ParserHeap.remove_old_batch modified;
+  ASTHeap.remove_old_batch modified;
+  DocblockHeap.remove_old_batch modified;
+  RequiresHeap.remove_old_batch modified;
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
-  ParserHeap.revive_batch unchanged;
+  ASTHeap.revive_batch unchanged;
+  DocblockHeap.revive_batch unchanged;
+  RequiresHeap.revive_batch unchanged;
   SharedMem_js.collect options `gentle;
   modified, results
 
@@ -356,28 +378,24 @@ let parse_with_defaults ?types_mode ?use_strict options workers next =
   in
   parse ~types_mode ~use_strict ~profile ~max_header_tokens workers next
 
-let reparse_with_defaults options workers files =
+let reparse_with_defaults ?types_mode ?use_strict options workers files =
   let types_mode, use_strict, profile, max_header_tokens =
-    get_defaults ~types_mode:None ~use_strict:None options
+    get_defaults ~types_mode ~use_strict options
   in
   reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~options workers files
 
-let has_ast file =
-  ParserHeap.mem file
+let has_ast = ASTHeap.mem
 
-let get_ast_unsafe file =
-  let ast, _ = ParserHeap.find_unsafe file in
-  ast
+let get_ast = ASTHeap.get
 
-let get_ast file =
-  if has_ast file then
-    Some (get_ast_unsafe file)
-  else
-    None
+let get_ast_unsafe = ASTHeap.find_unsafe
 
-let get_ast_and_info_unsafe file =
-  ParserHeap.find_unsafe file
+let get_docblock_unsafe = DocblockHeap.find_unsafe
 
-let remove_asts files =
-  ParserHeap.remove_batch files;
+let get_requires_unsafe = RequiresHeap.find_unsafe
+
+let remove_batch files =
+  ASTHeap.remove_batch files;
+  DocblockHeap.remove_batch files;
+  RequiresHeap.remove_batch files;
   FilenameSet.iter delete_file files

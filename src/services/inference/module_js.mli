@@ -13,75 +13,105 @@ open Utils_js
 module NameSet: Set.S with type elt = Modulename.t
 module NameMap: MyMap.S with type key = Modulename.t
 
-type info = {
-  _module: Modulename.t;    (* module name *)
+type resolved_requires = {
   required: NameSet.t;      (* required module names *)
   require_loc: Loc.t SMap.t;  (* statement locations *)
   resolved_modules: Modulename.t SMap.t;
   phantom_dependents: SSet.t;
+}
+
+type info = {
+  _module: Modulename.t;    (* module name *)
   checked: bool;            (* in flow? *)
   parsed: bool;             (* if false, it's a tracking record only *)
 }
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
+type error =
+  | ModuleDuplicateProviderError of duplicate_provider_error
+
+and duplicate_provider_error = {
+  module_name: string;
+  provider: Loc.filename;
+  conflict: Loc.filename;
+}
+
+val eponymous_module: filename -> Modulename.t
+
 (* export and import functions for the module system *)
 val exported_module:
   options: Options.t ->
   filename -> Docblock.t -> Modulename.t
+
+type resolution_acc = {
+  mutable paths: SSet.t;
+  mutable errors: Flow_error.error_message list;
+}
 val imported_module:
   options: Options.t ->
-  Context.t -> Loc.t -> ?path_acc: SSet.t ref -> string -> Modulename.t
+  node_modules_containers: SSet.t ->
+  filename -> Loc.t -> ?resolution_acc:resolution_acc -> string -> Modulename.t
 
 val find_resolved_module:
-  (options: Options.t ->
-   Context.t -> Loc.t -> string -> Modulename.t) Expensive.t
+  (filename -> string -> Modulename.t) Expensive.t
 
 val module_exists: Modulename.t -> bool
 
-val get_file: (Modulename.t -> filename) Expensive.t
+val get_file_unsafe: (Modulename.t -> filename) Expensive.t
 
 (* given a module name, returns either (Some filename) or None *)
-val get_module_file: (Modulename.t -> filename option) Expensive.t
+val get_file: (Modulename.t -> filename option) Expensive.t
 
+val is_tracked_file: filename -> bool
+
+(* given a filename, returns resolved requires. unsafe *)
+val get_resolved_requires_unsafe: (filename -> resolved_requires) Expensive.t
 (* given a filename, returns module info. unsafe *)
-val get_module_info: (filename -> info) Expensive.t
+val get_info_unsafe: (filename -> info) Expensive.t
 
-(* given a filename, returns module name *)
-val get_module_names: (filename -> Modulename.t list) Expensive.t
+val checked_file: (filename -> bool) Expensive.t
 
-(* given a module name, returns Some set of modules importing it or None *)
-val get_reverse_imports: (Modulename.t -> NameSet.t option) Expensive.t
+(* add module records for given files;
+   returns the set of modules added
+*)
+val introduce_files:
+  Worker.t list option ->
+  options: Options.t ->
+  filename list ->
+  (filename * Docblock.t) list ->
+    (Modulename.t * filename option) list
 
-(* commit new and removed modules, after local inference *)
+(* remove module records being tracked for given files;
+   returns the set of modules removed
+*)
+val clear_files:
+  Worker.t list option ->
+  options:Options.t ->
+  FilenameSet.t ->
+    (Modulename.t * filename option) list
+
+(* repick providers for old and new modules *)
 val commit_modules:
   Worker.t list option ->
   options: Options.t ->
-  filename list ->                    (* inferred modules *)
-  NameSet.t ->                        (* removed files *)
-  Utils_js.filename list *            (* providers *)
-    Errors.ErrorSet.t FilenameMap.t   (* filenames to error sets *)
+  filename list ->                    (* parsed / unparsed files *)
+  (Modulename.t * filename option) list ->      (* dirty modules *)
+    Utils_js.filename list *            (* providers *)
+    NameSet.t *                         (* changed modules *)
+    error list FilenameMap.t            (* filenames to error sets *)
 
-(* add file represented by context to module info store *)
-val add_module_info: (options:Options.t -> Context.t -> unit) Expensive.t
-
-(* add info for unparsed file to module info store *)
-val add_unparsed_info:
+(* resolve and add requires from context to store *)
+val add_parsed_resolved_requires:
   (options:Options.t ->
-   filename ->
-   Docblock.t ->
-   unit) Expensive.t
+   node_modules_containers: SSet.t ->
+   filename -> Loc.t SMap.t -> Errors.ErrorSet.t) Expensive.t
+(* remove resolved requires from store *)
+val remove_batch_resolved_requires: FilenameSet.t -> unit
 
-(* remove module info being tracked for given file set;
-   returns the set of modules removed
-*)
-val remove_files:
-  Options.t -> Worker.t list option -> FilenameSet.t -> NameSet.t
-val clear_infos: FilenameSet.t -> unit
+val add_package: string -> Ast.program -> unit
 
-val add_package: string -> Spider_monkey_ast.program -> unit
-
-val package_incompatible: string -> Spider_monkey_ast.program -> bool
+val package_incompatible: string -> Ast.program -> bool
 
 (***************************************************)
 

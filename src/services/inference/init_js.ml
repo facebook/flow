@@ -34,8 +34,7 @@ let get_master_cx, restore_master_cx =
       checked = false;
       weak = false;
     }) in
-    let cx = Flow.fresh_context
-      metadata Loc.Builtins (Modulename.String Files.lib_module) in
+    let cx = Flow.fresh_context metadata Loc.Builtins Files.lib_module_ref in
     cx_ := Some cx;
     cx
   | Some cx -> cx in
@@ -61,12 +60,11 @@ let parse_lib_file options file =
     in
     if not (FilenameSet.is_empty results.Parsing.parse_ok) then
       Parsing.Parse_ok (Parsing.get_ast_unsafe lib_file)
-    else if List.length results.Parsing.parse_errors > 0 then
-      Parsing.Parse_err (List.hd results.Parsing.parse_errors)
+    else if List.length results.Parsing.parse_fails > 0 then
+      let _, _, parse_fails = List.hd results.Parsing.parse_fails in
+      Parsing.Parse_fail parse_fails
     else if List.length results.Parsing.parse_skips > 0 then
       Parsing.Parse_skip Parsing.Skip_non_flow_file
-    else if not (FilenameSet.is_empty results.Parsing.parse_resource_files) then
-      Parsing.Parse_skip Parsing.Skip_resource_file
     else
       failwith "Internal error: no parse results found"
   with _ -> failwith (
@@ -81,20 +79,20 @@ let parse_lib_file options file =
    preserve lib path declaration order in the (flattened) list of files
    passed.
 
-   returns list of (filename, success) pairs
+   returns list of (filename, success, errors, suppressions) tuples
  *)
-let load_lib_files files ~options save_errors save_suppressions =
+let load_lib_files ~options files =
 
   let verbose = Options.verbose options in
 
   (* iterate in reverse override order *)
   let _, result = List.rev files |> List.fold_left (
 
-    fun (exclude_syms, result) file ->
+    fun (exclude_syms, results) file ->
 
       let lib_file = Loc.LibFile file in
       match parse_lib_file options file with
-      | Parsing.Parse_ok (_, statements, comments) ->
+      | Parsing.Parse_ok ast ->
 
         let metadata = Context.({ (metadata_of_options options) with
           checked = false;
@@ -103,11 +101,11 @@ let load_lib_files files ~options save_errors save_suppressions =
 
         let cx, syms = Infer.infer_lib_file
           ~metadata ~exclude_syms
-          lib_file statements comments
+          lib_file ast
         in
 
         let master_cx = get_master_cx options in
-        Merge_js.merge_lib_file cx master_cx save_errors save_suppressions;
+        let errs, suppressions = Merge_js.merge_lib_file cx master_cx in
 
         (if verbose != None then
           prerr_endlinef "load_lib %s: added symbols { %s }"
@@ -116,17 +114,24 @@ let load_lib_files files ~options save_errors save_suppressions =
         (* symbols loaded from this file are suppressed
            if found in later ones *)
         let exclude_syms = SSet.union exclude_syms (set_of_list syms) in
-        let result = (lib_file, true) :: result in
-        exclude_syms, result
+        let result = (lib_file, true, errs, suppressions) in
+        exclude_syms, (result :: results)
 
-      | Parsing.Parse_err errors ->
-        save_errors lib_file errors;
-        exclude_syms, ((lib_file, false) :: result)
+      | Parsing.Parse_fail fail ->
+        let errors = match fail with
+        | Parsing.Parse_error error -> Parsing.set_of_parse_error error
+        | Parsing.Docblock_errors errs -> Parsing.set_of_docblock_errors errs
+        in
+        let result = lib_file, false, errors, Errors.ErrorSuppressions.empty in
+        exclude_syms, (result :: results)
 
       | Parsing.Parse_skip
           (Parsing.Skip_non_flow_file | Parsing.Skip_resource_file) ->
         (* should never happen *)
-        exclude_syms, ((lib_file, false) :: result)
+        let errs = Errors.ErrorSet.empty in
+        let suppressions = Errors.ErrorSuppressions.empty in
+        let result = lib_file, false, errs, suppressions in
+        exclude_syms, (result :: results)
 
     ) (SSet.empty, [])
 
@@ -136,12 +141,9 @@ let load_lib_files files ~options save_errors save_suppressions =
    parse and do local inference on library files, and set up master context.
    returns list of (lib file, success) pairs.
  *)
-let init ~options lib_files
-    save_errors save_suppressions =
+let init ~options lib_files =
 
-  let result = load_lib_files lib_files
-    ~options
-    save_errors save_suppressions in
+  let result = load_lib_files ~options lib_files in
 
   Flow.Cache.clear();
   let master_cx = get_master_cx options in

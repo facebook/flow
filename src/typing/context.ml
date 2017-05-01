@@ -8,7 +8,6 @@
  *
  *)
 
-module Ast = Spider_monkey_ast
 
 type env = Scope.t list
 
@@ -17,6 +16,7 @@ type metadata = {
   enable_const_params: bool;
   enable_unsafe_getters_and_setters: bool;
   enforce_strict_type_args: bool;
+  enforce_strict_call_arity: bool;
   esproposal_class_static_fields: Options.esproposal_feature_mode;
   esproposal_class_instance_fields: Options.esproposal_feature_mode;
   esproposal_decorators: Options.esproposal_feature_mode;
@@ -33,13 +33,13 @@ type metadata = {
   verbose: Verbose.t option;
   weak: bool;
   max_workers: int;
-  jsx: (string * Spider_monkey_ast.Expression.t) option;
+  jsx: Options.jsx_mode option;
 }
 
 (* TODO this has a bunch of stuff in it that should be localized *)
 type t = {
   file: Loc.filename;
-  module_name: Modulename.t;
+  module_ref: string;
   metadata: metadata;
 
   (* required modules, and map to their locations *)
@@ -109,6 +109,8 @@ let metadata_of_options options = {
     Options.enable_unsafe_getters_and_setters options;
   enforce_strict_type_args =
     Options.enforce_strict_type_args options;
+  enforce_strict_call_arity =
+    Options.enforce_strict_call_arity options;
   esproposal_class_static_fields =
     Options.esproposal_class_static_fields options;
   esproposal_class_instance_fields =
@@ -134,9 +136,9 @@ let metadata_of_options options = {
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
  *)
-let make metadata file module_name = {
+let make metadata file module_ref = {
   file;
-  module_name;
+  module_ref;
   metadata;
 
   required = SSet.empty;
@@ -178,6 +180,7 @@ let enable_const_params cx = cx.metadata.enable_const_params
 let enable_unsafe_getters_and_setters cx =
   cx.metadata.enable_unsafe_getters_and_setters
 let enforce_strict_type_args cx = cx.metadata.enforce_strict_type_args
+let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 let errors cx = cx.errors
 let error_suppressions cx = cx.error_suppressions
 let esproposal_class_static_fields cx =
@@ -203,7 +206,7 @@ let is_weak cx = cx.metadata.weak
 let max_trace_depth cx = cx.metadata.max_trace_depth
 let module_kind cx = cx.module_kind
 let module_map cx = cx.modulemap
-let module_name cx = cx.module_name
+let module_ref cx = cx.module_ref
 let output_graphml cx = cx.metadata.output_graphml
 let property_maps cx = cx.property_maps
 let refs_table cx = cx.refs_table
@@ -315,9 +318,12 @@ let set_prop cx id x p =
   |> SMap.add x p
   |> add_property_map cx id
 
-let set_export cx id x t =
+let has_export cx id name =
+  find_exports cx id |> SMap.mem name
+
+let set_export cx id name t =
   find_exports cx id
-  |> SMap.add x t
+  |> SMap.add name t
   |> add_export_map cx id
 
 (* constructors *)

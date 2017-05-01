@@ -1,0 +1,170 @@
+/*
+ * @flow
+ * @lint-ignore-every LINE_WRAP1
+ */
+
+
+import {suite, test} from '../../tsrc/test/Tester';
+
+/* This test suite documents a bunch of places where using spread arguments
+ * doesn't work, either intentionally or due to us being lazy */
+export default suite(({addFile, addFiles, addCode}) => [
+  test('idx', [
+    addCode('declare var idx: $Facebookism$Idx;\n'),
+    addCode('idx(...arr, obj => obj.foo)')
+      .newErrors(
+        `
+          test.js:8
+            8: idx(...arr, obj => obj.foo)
+                      ^^^ A spread argument is unsupported here
+        `,
+      ),
+    addCode('idx({}, ...arr)')
+      .newErrors(
+        `
+          test.js:10
+           10: idx({}, ...arr)
+                          ^^^ A spread argument is unsupported here
+        `,
+      ),
+    addCode('idx(...arr, ...arr)')
+      .newErrors(
+        `
+          test.js:12
+           12: idx(...arr, ...arr)
+                      ^^^ A spread argument is unsupported here
+
+          test.js:12
+           12: idx(...arr, ...arr)
+                              ^^^ A spread argument is unsupported here
+        `,
+      ),
+  ]),
+
+  test('React.createElement', [
+    addCode('const React = require("react");'),
+    addCode('React.createElement(...arr, {})')
+      .newErrors(
+        `
+          test.js:7
+            7: React.createElement(...arr, {})
+                                      ^^^ A spread argument is unsupported here
+        `,
+      ),
+    addCode('React.createElement(({}: any), ...arr)')
+      .newErrors(
+        `
+          test.js:9
+            9: React.createElement(({}: any), ...arr)
+                                                 ^^^ A spread argument is unsupported here
+        `,
+      ),
+    addCode('React.createElement(...arr, ...arr)')
+      .newErrors(
+        `
+          test.js:11
+           11: React.createElement(...arr, ...arr)
+                                      ^^^ A spread argument is unsupported here
+
+          test.js:11
+           11: React.createElement(...arr, ...arr)
+                                              ^^^ A spread argument is unsupported here
+        `,
+      ),
+  ]),
+
+  test('fun.call()', [
+    addCode('(function () { return this.bar; }).call(...arr);')
+      .newErrors(
+        `
+          test.js:5
+            5: (function () { return this.bar; }).call(...arr);
+                                                          ^^^ A spread argument is unsupported here
+        `,
+      ),
+  ]),
+
+  test('fun.apply()', [
+    addCode('(function () { return this.bar; }).apply(...arr);')
+      .newErrors(
+        `
+          test.js:5
+            5: (function () { return this.bar; }).apply(...arr);
+                                                           ^^^ A spread argument is unsupported here
+        `,
+      ),
+    addCode('(function () { return this.bar; }).apply(({}: any), ...arr);')
+      .newErrors(
+        `
+          test.js:7
+            7: (function () { return this.bar; }).apply(({}: any), ...arr);
+                                                                      ^^^ A spread argument is unsupported here
+        `,
+      ),
+    addCode('(function () { return this.bar; }).apply(...arr, ...arr);')
+      .newErrors(
+        `
+          test.js:9
+            9: (function () { return this.bar; }).apply(...arr, ...arr);
+                                                           ^^^ A spread argument is unsupported here
+
+          test.js:9
+            9: (function () { return this.bar; }).apply(...arr, ...arr);
+                                                                   ^^^ A spread argument is unsupported here
+        `,
+      ),
+  ]),
+  test('Object.getPrototypeOf()', [
+    addCode('Object.getPrototypeOf(...arr)')
+      .newErrors(
+        `
+          test.js:5
+            5: Object.getPrototypeOf(...arr)
+                                        ^^^ A spread argument is unsupported here
+        `,
+      ),
+  ]),
+  test('Object.assign()', [
+    addCode('const objArr = [ {x: string}, {y: number}]'),
+    addCode(`
+      const o1 = Object.assign(...objArr);
+      o1.x;
+    `)
+      .newErrors(
+        `
+          test.js:8
+            8:       const o1 = Object.assign(...objArr);
+                                                 ^^^^^^ A spread argument is unsupported here
+        `,
+      ),
+    addCode(`
+      const o2 = Object.assign({}, ...objArr);
+      o2.x;
+    `)
+      .noNewErrors()
+      .because('This is actually fine, we just use array element type'),
+    addCode('Object.assign({}, ...[1])')
+      .newErrors(
+        `
+          test.js:17
+           17: Object.assign({}, ...[1])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method \`assign\`. Expected object instead of
+           17: Object.assign({}, ...[1])
+                                     ^ number
+        `,
+      )
+      .because('But this is an error since the array contains non-objects'),
+  ]),
+  test('mergeInto', [
+    addCode('declare var mergeInto: $Facebookism$MergeInto'),
+    addCode('mergeInto(...arr, ...arr)')
+      .newErrors(
+        `
+          test.js:7
+            7: mergeInto(...arr, ...arr)
+                            ^^^ A spread argument is unsupported here
+        `,
+      )
+      .because('First arg cant be a spread, second can'),
+  ]),
+]).beforeEach((({addCode}) => [ addCode('const arr = [1,2,3];') ]));

@@ -1,0 +1,6 @@
+[ignore]
+<PROJECT_ROOT>/tmp*
+
+[options]
+strip_root=true
+all=false

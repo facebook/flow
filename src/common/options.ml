@@ -23,20 +23,40 @@ type module_system =
   | Node
   | Haste
 
+type jsx_mode =
+  (**
+   * Specifies a function that should be invoked instead of React.createElement
+   * when interpreting JSX syntax. Otherwise, the usual rules of JSX are
+   * followed: children are varargs after a props argument.
+   *)
+  | JSXPragma of (string * Ast.Expression.t)
+  (**
+   * Alternate mode for interpreting JSX syntax. The element name is treated
+   * as a function to be directly invoked, e.g. <Foo /> -> Foo({}).
+   * Children are part of props instead of a separate argument.
+   *)
+  | CSX
+
 type t = {
   opt_all : bool;
   opt_check_mode: bool;
+  opt_focus_check_target: Loc.filename option;
   opt_debug : bool;
   opt_default_lib_dir: Path.t option;
   opt_enable_const_params: bool;
   opt_enable_unsafe_getters_and_setters: bool;
   opt_enforce_strict_type_args: bool;
+  opt_enforce_strict_call_arity: bool;
   opt_error_flags: error_flags;
   opt_esproposal_class_static_fields: esproposal_feature_mode;
   opt_esproposal_class_instance_fields: esproposal_feature_mode;
   opt_esproposal_decorators: esproposal_feature_mode;
   opt_esproposal_export_star_as: esproposal_feature_mode;
   opt_facebook_fbt: string option;
+  opt_haste_name_reducers: (Str.regexp * string) list;
+  opt_haste_paths_blacklist: string list;
+  opt_haste_paths_whitelist: string list;
+  opt_haste_use_name_reducers: bool;
   opt_ignore_non_literal_requires: bool;
   opt_ignores: (string * Str.regexp) list;
   opt_includes: Path_matcher.t;
@@ -56,7 +76,6 @@ type t = {
   opt_quiet : bool;
   opt_root : Path.t;
   opt_server_mode: bool;
-  opt_should_detach : bool;
   opt_should_wait : bool;
   opt_strip_root : bool;
   opt_suppress_comments : Str.regexp list;
@@ -87,6 +106,7 @@ let enable_const_params opts = opts.opt_enable_const_params
 let enable_unsafe_getters_and_setters opts =
   opts.opt_enable_unsafe_getters_and_setters
 let enforce_strict_type_args opts = opts.opt_enforce_strict_type_args
+let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 let error_flags opts = opts.opt_error_flags
 let esproposal_class_static_fields opts =
   opts.opt_esproposal_class_static_fields
@@ -94,9 +114,14 @@ let esproposal_class_instance_fields opts =
   opts.opt_esproposal_class_instance_fields
 let esproposal_decorators opts = opts.opt_esproposal_decorators
 let esproposal_export_star_as opts = opts.opt_esproposal_export_star_as
+let haste_name_reducers opts = opts.opt_haste_name_reducers
+let haste_paths_blacklist opts = opts.opt_haste_paths_blacklist
+let haste_paths_whitelist opts = opts.opt_haste_paths_whitelist
+let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
 let ignores opts = opts.opt_ignores
 let includes opts = opts.opt_includes
 let is_check_mode opts = opts.opt_check_mode
+let focus_check_target opts = opts.opt_focus_check_target
 let is_debug_mode opts = opts.opt_debug
 let is_server_mode opts = opts.opt_server_mode
 let is_quiet opts = opts.opt_quiet
@@ -113,7 +138,6 @@ let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 let node_resolver_dirnames opts = opts.opt_node_resolver_dirnames
 let output_graphml opts = opts.opt_output_graphml
 let root opts = opts.opt_root
-let should_detach opts = opts.opt_should_detach
 let facebook_fbt opts = opts.opt_facebook_fbt
 let should_ignore_non_literal_requires opts =
   opts.opt_ignore_non_literal_requires
