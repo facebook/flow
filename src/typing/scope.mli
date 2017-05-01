@@ -39,7 +39,11 @@ module Entry :
       specific : Type.t;
       general : Type.t;
     }
+    type type_binding_kind =
+      | ImportTypeBinding
+      | TypeBinding
     type type_binding = {
+      type_binding_kind: type_binding_kind;
       type_state : State.t;
       type_loc : Loc.t;
       _type : Type.t;
@@ -55,6 +59,7 @@ module Entry :
     val new_var :
       loc:Loc.t -> ?state:State.t -> ?specific:Type.t -> Type.t -> t
     val new_type : loc:Loc.t -> ?state:State.t -> Type.t -> t
+    val new_import_type : loc:Loc.t -> Type.t -> t
     val entry_loc : t -> Loc.t
     val assign_loc : t -> Loc.t
     val declared_type : t -> Type.t

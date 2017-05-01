@@ -357,9 +357,8 @@ and statement_decl cx = Ast.Statement.(
           then DescFormat.type_reason local_name loc
           else mk_reason (RCustom (spf "identifier `%s`" local_name)) loc in
         let tvar = Flow.mk_tvar cx reason in
-        let state = Scope.State.Initialized in
         if isType
-        then Env.bind_type ~state cx local_name tvar loc
+        then Env.bind_import_type cx local_name tvar loc
         else Env.bind_import cx local_name tvar loc
       )
 )

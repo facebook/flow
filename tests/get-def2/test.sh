@@ -37,3 +37,4 @@ printf "\nDirectly jump to required/imported modules (TODO #2)\n"
 $FLOW get-def --strip-root main.js 3 26
 $FLOW get-def --strip-root main.js 23 29
 $FLOW get-def --strip-root main.js 23 14
+$FLOW get-def --strip-root main.js 24 25

@@ -511,6 +511,9 @@ let bind_implicit_const ?(state=State.Undeclared) kind cx name t loc =
 let bind_type ?(state=State.Declared) cx name t loc =
   bind_entry cx name (Entry.new_type t ~loc ~state) loc
 
+let bind_import_type cx name t loc =
+  bind_entry cx name (Entry.new_import_type t ~loc) loc
+
 (* vars coming from 'declare' statements are preinitialized *)
 let bind_declare_var = bind_var ~state:State.Initialized
 

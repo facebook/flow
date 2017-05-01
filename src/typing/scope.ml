@@ -88,7 +88,12 @@ module Entry = struct
     general: Type.t;
   }
 
+  type type_binding_kind =
+    | ImportTypeBinding
+    | TypeBinding
+
   type type_binding = {
+    type_binding_kind: type_binding_kind;
     type_state: State.t;
     type_loc: Loc.t;
     _type: Type.t;
@@ -122,12 +127,19 @@ module Entry = struct
     let specific = match specific with Some t -> t | None -> general in
     new_value Var state specific general loc
 
-  let new_type ~loc ?(state=State.Undeclared) _type =
+  let new_type_ type_binding_kind state loc _type =
     Type {
+      type_binding_kind;
       type_state = state;
       type_loc = loc;
       _type
     }
+
+  let new_type ~loc ?(state=State.Undeclared) _type =
+    new_type_ TypeBinding state loc _type
+
+  let new_import_type ~loc _type =
+    new_type_ ImportTypeBinding State.Initialized loc _type
 
   (* accessors *)
   let entry_loc = function

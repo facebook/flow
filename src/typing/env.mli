@@ -73,6 +73,8 @@ val bind_import: Context.t -> string -> Type.t -> Loc.t -> unit
 val bind_type: ?state:State.t -> Context.t -> string -> Type.t ->
   Loc.t -> unit
 
+val bind_import_type: Context.t -> string -> Type.t -> Loc.t -> unit
+
 val bind_declare_var: Context.t -> string -> Type.t -> Loc.t -> unit
 val bind_declare_fun: Context.t -> string -> Type.t -> Loc.t -> unit
 
