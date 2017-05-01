@@ -18,11 +18,17 @@ type getdef_type =
 
 let id state name =
   let env = Env.all_entries () in
-  match SMap.get name env with
+  Scope.Entry.(match SMap.get name env with
+  | Some (Value { kind = Const ConstImportBinding; general = v; _ }) ->
+    (* for references to import bindings, point directly to the exports they
+       resolve to (rather than to the import bindings, which would themselves in
+       turn point to the exports they resolve to) *)
+    state := Some (Gdval v)
   | Some entry ->
-    state := Some (Gdloc (Scope.Entry.entry_loc entry))
+    state := Some (Gdloc (entry_loc entry))
   | None ->
     ()
+  )
 
 let getdef_id (state, loc1) _cx name loc2 =
   if Reason.in_range loc1 loc2
