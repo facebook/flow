@@ -30,6 +30,7 @@ RUNNER_DEPS=\
 all: build-parser
 
 clean:
+	ocamlbuild -clean; \
 	cd $(TOP); \
 	ocamlbuild -clean; \
 	rm -f $(REL_DIR)/flow_parser.js $(REL_DIR)/tools/native_test_files
@@ -122,7 +123,9 @@ npm-publish:
 	mv README-backup.md README.md
 
 ocamlfind-install:
-	ocamlbuild parser_flow.cma parser_flow.cmxa
+	ocamlbuild \
+		-use-ocamlfind -pkgs sedlex \
+		parser_flow.cma parser_flow.cmxa
 	ocamlfind install flow_parser META \
 		_build/parser_flow.a \
 		_build/parser_flow.cma \
