@@ -504,7 +504,7 @@ end = struct
       else Case_skipped None
     | Some content ->
       let (ast, errors) = Parser_flow.program_file
-        ~fail:false content (Some (Loc.SourceFile "42.js")) in
+        ~fail:false content None in
       let actual = match Translate.program ast with
       | JSON_Object params ->
           let params =

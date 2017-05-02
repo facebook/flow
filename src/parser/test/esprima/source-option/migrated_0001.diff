@@ -1,0 +1,33 @@
+{
+  'loc': { 'source': null },
+  'body': {
+    '0': {
+      'loc': { 'source': null },
+      'expression': {
+        'loc': { 'source': null },
+        'right': { 'loc': { 'source': null } },
+        'left': {
+          'loc': { 'source': null },
+          'left': {
+            'loc': { 'source': null }
+          },
+          'right': {
+            'loc': { 'source': null },
+            'left': {
+              'loc': { 'source': null }
+            },
+            'right': {
+              'loc': { 'source': null },
+              'left': {
+                'loc': { 'source': null }
+              },
+              'right': {
+                'loc': { 'source': null }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
