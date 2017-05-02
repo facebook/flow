@@ -309,6 +309,14 @@ end = struct
       | _ -> failwith "Invalid JSON"
     ) SMap.empty props
 
+  let string_of_json_type = function
+  | JSON_Object _ -> "object"
+  | JSON_Array _ -> "array"
+  | JSON_String _ -> "string"
+  | JSON_Number _ -> "number"
+  | JSON_Bool _ -> "bool"
+  | JSON_Null -> "null"
+
   let rec test_tree
     (path: path_part list)
     (actual: Hh_json.json)
@@ -363,6 +371,21 @@ end = struct
           (spf "%s: Expected %s, got %s." path expected actual)::errors
         else
           errors
+    | JSON_Number actual,
+      (_, Unary { Unary.
+        operator = Unary.Minus;
+        prefix = _;
+        argument = (_, Literal { Ast.Literal.
+          value = Ast.Literal.Number _;
+          raw = expected;
+        })
+      }) ->
+        let expected = "-" ^ expected in
+        if actual <> expected then
+          let path = string_of_path path in
+          (spf "%s: Expected %s, got %s." path expected actual)::errors
+        else
+          errors
     | JSON_String actual,
       (_, Literal { Ast.Literal.
         value = Ast.Literal.String expected;
@@ -381,7 +404,8 @@ end = struct
         errors
     | _, _ ->
         let path = string_of_path path in
-        (spf "%s: Types do not match" path)::errors
+        let act_type = string_of_json_type actual in
+        (spf "%s: Types do not match, got %s" path act_type)::errors
 
   and test_actual_prop path expected_map name value acc =
     if SMap.mem name expected_map then
