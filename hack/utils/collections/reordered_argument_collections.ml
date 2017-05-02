@@ -21,6 +21,8 @@ module Reordered_argument_map (S : MyMap.S) = struct
   let remove m v = remove v m
   let exists m ~f = exists f m
   let merge m1 m2 ~f = merge f m1 m2
+  let filter m ~f = filter m f
+  let partition m ~f = partition f m
 end
 
 module Reordered_argument_set (S : Set.S) = struct
