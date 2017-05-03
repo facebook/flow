@@ -9,6 +9,8 @@ JSOO_VERSION=$(shell which js_of_ocaml 2> /dev/null > /dev/null && js_of_ocaml -
 JSOO_MAJOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 1)
 JSOO_MINOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 2)
 
+OCB = ocamlbuild -use-ocamlfind
+
 NATIVE_OBJECT_FILES=\
 	hack/utils/files.o\
 	hack/utils/nproc.o\
@@ -30,22 +32,18 @@ RUNNER_DEPS=\
 all: build-parser
 
 clean:
-	ocamlbuild -clean; \
+	$(OCB) -clean; \
 	cd $(TOP); \
-	ocamlbuild -clean; \
+	$(OCB) -clean; \
 	rm -f $(REL_DIR)/flow_parser.js $(REL_DIR)/tools/native_test_files
 
 build-parser:
 	cd $(TOP); \
-	ocamlbuild \
-		-use-ocamlfind -pkgs sedlex \
-		-no-links $(REL_DIR)/parser_flow.cmxa
+	$(OCB) -no-links $(REL_DIR)/parser_flow.cmxa
 
 js:
 	cd $(TOP); \
-	ocamlbuild \
-		-use-ocamlfind -pkgs js_of_ocaml,sedlex \
-		$(REL_DIR)/flow_parser_dot_js.byte; \
+	$(OCB) -pkgs js_of_ocaml $(REL_DIR)/flow_parser_dot_js.byte; \
 	\
 	if [ $(JSOO_MAJOR) -gt 2 ] || [ $(JSOO_MAJOR) -eq 2 -a $(JSOO_MINOR) -gt 7 ]; then \
 	    js_of_ocaml --opt 3 \
@@ -65,10 +63,10 @@ test-js: build-parser js
 
 ../../_build/$(REL_DIR)/test/run_esprima_tests.native: build-parser
 	cd $(TOP); \
-	ocamlbuild \
+	$(OCB) \
 		-ocamlc "ocamlopt" \
 		$(NATIVE_OBJECT_FILES); \
-	ocamlbuild \
+	$(OCB) \
 		$(foreach dir,$(RUNNER_DEPS),-I $(dir)) \
 	 	-lib unix -lib str \
 	 	-lflags "$(NATIVE_OBJECT_FILES)" \
@@ -77,15 +75,14 @@ test-js: build-parser js
 
 ../../_build/$(REL_DIR)/test/run_hardcoded_tests.native: build-parser
 	cd $(TOP); \
-	ocamlbuild \
+	$(OCB) \
 		-ocamlc "ocamlopt -ccopt -DNO_SQLITE3" \
 		$(NATIVE_OBJECT_FILES); \
-	ocamlbuild \
+	$(OCB) \
 		$(foreach dir,$(RUNNER_DEPS),-I $(dir)) \
 	 	-lib unix -lib str \
 	 	-lflags "$(NATIVE_OBJECT_FILES)" \
 		-tag debug \
-		-use-ocamlfind -pkgs sedlex \
 		$(REL_DIR)/test/run_hardcoded_tests.native; \
 	rm run_hardcoded_tests.native
 
@@ -105,7 +102,7 @@ tools: native_test_files
 
 native_test_files:
 	cd $(TOP); \
-	ocamlbuild $(REL_DIR)/tools/native_test_files.native; \
+	$(OCB) $(REL_DIR)/tools/native_test_files.native; \
 	mv native_test_files.native $(REL_DIR)/tools/native_test_files
 
 npm-pack:
@@ -123,9 +120,7 @@ npm-publish:
 	mv README-backup.md README.md
 
 ocamlfind-install:
-	ocamlbuild \
-		-use-ocamlfind -pkgs sedlex \
-		parser_flow.cma parser_flow.cmxa
+	$(OCB) parser_flow.cma parser_flow.cmxa
 	ocamlfind install flow_parser META \
 		_build/parser_flow.a \
 		_build/parser_flow.cma \
@@ -133,23 +128,17 @@ ocamlfind-install:
 		_build/*.cmi
 
 lexer.native: lexer.ml
-	ocamlbuild \
-		-use-ocamlfind -pkgs sedlex \
-		$@
+	$(OCB) $@
 
 tools/native_test_files: ../../_build/$(REL_DIR)/tools/native_test_files
 
 ../../_build/$(REL_DIR)/tools/native_test_files: build-parser
 	cd $(TOP); \
-	ocamlbuild \
-		-ocamlc "ocamlopt" \
-		$(NATIVE_OBJECT_FILES); \
-	ocamlbuild \
+	$(OCB) -ocamlc "ocamlopt" $(NATIVE_OBJECT_FILES); \
+	$(OCB) \
 		-I $(REL_DIR) \
-		-use-ocamlfind -pkgs sedlex \
 	 	-lib unix -lib str \
 	 	-lflags "$(NATIVE_OBJECT_FILES)" \
 		$(REL_DIR)/tools/native_test_files.native; \
 	rm native_test_files.native; \
 	mv _build/$(REL_DIR)/tools/native_test_files.native $(REL_DIR)/tools/native_test_files
-
