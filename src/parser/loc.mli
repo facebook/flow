@@ -38,3 +38,4 @@ module FilenameKey :
     val to_string : filename -> string
     val compare : 'a -> 'a -> int
   end
+module LocSet : Set.S with type elt = t

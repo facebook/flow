@@ -107,6 +107,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     let strip_root = if args.strip_root then Some args.root else None in
     let print_json = Errors.Json_output.print_errors
       ~out_channel:stdout ~strip_root ~pretty:args.pretty
+      ~suppressed_errors:([])
     in
     match response with
     | ServerProt.DIRECTORY_MISMATCH d ->

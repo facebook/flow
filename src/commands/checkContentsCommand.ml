@@ -84,7 +84,8 @@ let main option_values root error_flags strip_root json pretty verbose
   in
   let strip_root = if strip_root then Some root else None in
   let print_json = Errors.Json_output.print_errors
-    ~out_channel:stdout ~strip_root ~pretty ~stdin_file in
+    ~out_channel:stdout ~strip_root ~pretty ~stdin_file
+    ~suppressed_errors:([]) in
   match response with
   | ServerProt.ERRORS e ->
       if json

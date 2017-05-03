@@ -197,6 +197,7 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_max_workers = 1;
     opt_ignores;
     opt_includes;
+    opt_include_suppressed = false;
     opt_suppress_comments = [];
     opt_suppress_types = SSet.empty;
     opt_enable_const_params = false;

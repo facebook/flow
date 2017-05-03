@@ -191,3 +191,8 @@ module FilenameKey = struct
   let to_string = string_of_filename
   let compare = Pervasives.compare
 end
+
+module LocSet = Set.Make(struct
+  type nonrec t = t
+  let compare = compare
+end)

@@ -130,7 +130,9 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
       let error_suppressions = Context.error_suppressions cx in
       let errors = Errors.ErrorSet.fold (fun err errors ->
         let locs = Errors.locs_of_error err in
-        if not (fst (Errors.ErrorSuppressions.check locs error_suppressions))
+        let suppressed, _, _ =
+          Errors.ErrorSuppressions.check locs error_suppressions in
+        if not suppressed
         then Errors.ErrorSet.add err errors
         else errors
       ) (Context.errors cx) errors in

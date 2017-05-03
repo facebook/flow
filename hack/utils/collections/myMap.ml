@@ -45,4 +45,12 @@ module Make(Ord: Map.OrderedType) : S with type key = Ord.t = struct
       add key (f key) acc
     end empty keys
 
+  let add ?combine key new_value map =
+    match combine with
+    | None -> add key new_value map
+    | Some combine -> begin
+      match get key map with
+      | None -> add key new_value map
+      | Some old_value -> add key (combine old_value new_value) map
+    end
 end

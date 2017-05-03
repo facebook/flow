@@ -70,7 +70,8 @@ module VeryUnstable: ClientProtocol = struct
     )
 
   let print_errors errors =
-    let json_errors = Errors.Json_output.full_status_json_of_errors ~strip_root:None errors in
+    let json_errors = Errors.Json_output.full_status_json_of_errors
+      ~strip_root:None ~suppressed_errors:([]) errors in
     let json_message = jsonrpcize_message "diagnosticsNotification" json_errors in
     let json_string = Hh_json.json_to_string json_message in
     Http_lite.write_message stdout json_string;

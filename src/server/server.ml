@@ -57,25 +57,29 @@ let collate_errors =
   in
   let filter_suppressed_errors suppressions errors =
     (* Filter out suppressed errors. also track which suppressions are used. *)
-    let errors, suppressions = ErrorSet.fold (fun error (errors, supp_acc) ->
-      let locs = Errors.locs_of_error error in
-      let (suppressed, supp_acc) = ErrorSuppressions.check locs supp_acc in
-      let errors = if not suppressed
-        then ErrorSet.add error errors
-        else errors in
-      errors, supp_acc
-    ) errors (ErrorSet.empty, suppressions) in
+    let errors, suppressed_errors, suppressions = ErrorSet.fold
+      (fun error (errors, suppressed_errors, supp_acc) ->
+        let locs = Errors.locs_of_error error in
+        let (suppressed, consumed_suppressions, supp_acc) = ErrorSuppressions.check locs supp_acc in
+        let errors, suppressed_errors = if suppressed
+          then errors, (error, consumed_suppressions)::suppressed_errors
+          else ErrorSet.add error errors, suppressed_errors in
+        errors, suppressed_errors, supp_acc
+      ) errors (ErrorSet.empty, [], suppressions) in
 
     (* For each unused suppression, create an error *)
-    ErrorSuppressions.unused suppressions
-    |> List.fold_left
-      (fun errset loc ->
-        let err = Errors.mk_error [
-          loc, ["Error suppressing comment"; "Unused suppression"]
-        ] in
-        ErrorSet.add err errset
-      )
-      errors
+    let errors =
+      ErrorSuppressions.unused suppressions
+      |> List.fold_left
+        (fun errset loc ->
+          let err = Errors.mk_error [
+            loc, ["Error suppressing comment"; "Unused suppression"]
+          ] in
+          ErrorSet.add err errset
+        )
+        errors in
+
+      errors, suppressed_errors
   in
   fun { ServerEnv.local_errors; merge_errors; suppressions; } ->
     (* union suppressions from all files together *)
@@ -119,7 +123,7 @@ let collate_errors =
     flush stdout;
 
     (* collate errors by origin *)
-    let errors = collate_errors env.ServerEnv.errors in
+    let errors, _ = collate_errors env.ServerEnv.errors in
 
     (* TODO: check status.directory *)
     status_log errors;
@@ -128,12 +132,16 @@ let collate_errors =
     send_errorl errors oc
 
   (* helper - print errors. used in check-and-die runs *)
-  let print_errors ~profiling options errors =
+  let print_errors ~profiling ~suppressed_errors options errors =
     let strip_root =
       if Options.should_strip_root options
       then Some (Options.root options)
       else None
     in
+
+    let suppressed_errors = if Options.include_suppressed options
+    then suppressed_errors
+    else [] in
 
     if Options.should_output_json options
     then begin
@@ -145,8 +153,14 @@ let collate_errors =
         ~out_channel:stdout
         ~strip_root
         ~profiling
+        ~suppressed_errors
         errors
     end else
+      let errors = List.fold_left
+        (fun acc (error, _) -> Errors.ErrorSet.add error acc)
+        errors
+        suppressed_errors
+      in
       Errors.Cli_output.print_errors
         ~out_channel:stdout
         ~flags:(Options.error_flags options)
@@ -154,8 +168,8 @@ let collate_errors =
         errors
 
   let run_once_and_exit ~profiling genv env =
-    let errors = collate_errors env.ServerEnv.errors in
-    print_errors ~profiling genv.ServerEnv.options errors;
+    let errors, suppressed_errors = collate_errors env.ServerEnv.errors in
+    print_errors ~profiling ~suppressed_errors genv.ServerEnv.options errors;
     if Errors.ErrorSet.is_empty errors
       then FlowExitStatus.(exit No_error)
       else FlowExitStatus.(exit Type_error)
@@ -432,7 +446,7 @@ let collate_errors =
     flush oc
 
   let gen_flow_files ~options env files oc =
-    let errors = collate_errors env.ServerEnv.errors in
+    let errors, _ = collate_errors env.ServerEnv.errors in
     let result = if Errors.ErrorSet.is_empty errors
       then begin
         let cache = new Context_cache.context_cache in

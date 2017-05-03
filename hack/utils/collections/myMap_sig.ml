@@ -11,6 +11,7 @@
 module type S = sig
   include Map.S
 
+  val add: ?combine: ('a -> 'a -> 'a) -> key -> 'a -> 'a t -> 'a t
   val get: key -> 'a t -> 'a option
   val find_unsafe: key -> 'a t -> 'a
   val union: ?combine:(key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t

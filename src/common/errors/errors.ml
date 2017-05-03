@@ -376,7 +376,7 @@ module ErrorSet = Set.Make(Error)
 module ErrorSuppressions = struct
   open Span
 
-  type error_suppressions = Loc.t SpanMap.t
+  type error_suppressions = Loc.LocSet.t SpanMap.t
   type t = {
     suppressions: error_suppressions;
     unused: error_suppressions;
@@ -391,9 +391,11 @@ module ErrorSuppressions = struct
     let start = { loc.start with line = loc._end.line + 1; column = 0 } in
     let _end = { loc._end with line = loc._end.line + 2; column = 0 } in
     let suppression_loc = { loc with start; _end; } in
+    let combine = (Loc.LocSet.union) in
+    let set = Loc.LocSet.singleton loc in
     {
-      suppressions = SpanMap.add suppression_loc loc suppressions;
-      unused = SpanMap.add suppression_loc loc unused;
+      suppressions = SpanMap.add ~combine suppression_loc set suppressions;
+      unused = SpanMap.add ~combine suppression_loc set unused;
     }
   )
 
@@ -402,11 +404,14 @@ module ErrorSuppressions = struct
     unused = SpanMap.union a.unused b.unused;
   }
 
-  let check_loc ((_result, { suppressions; unused; }) as acc) loc =
+  let check_loc ((_result, consumed, { suppressions; unused; }) as acc) loc =
     (* We only want to check the starting position of the reason *)
     let loc = Loc.({ loc with _end = loc.start; }) in
     if SpanMap.mem loc suppressions
-    then true, { suppressions; unused = SpanMap.remove loc unused}
+    then
+      let locs = SpanMap.find_unsafe loc suppressions in
+      let consumed = Loc.LocSet.union locs consumed in
+      true, consumed, { suppressions; unused = SpanMap.remove loc unused}
     else acc
 
   (* Checks if any of the given locations should be suppressed. *)
@@ -414,10 +419,14 @@ module ErrorSuppressions = struct
     (* We need to check every location in order to figure out which suppressions
        are really unused...that's why we don't shortcircuit as soon as we find a
        matching error suppression *)
-    List.fold_left check_loc (false, suppressions) locs
+    List.fold_left check_loc (false, Loc.LocSet.empty, suppressions) locs
 
   (* Get's the locations of the suppression comments that are yet unused *)
-  let unused { unused; _; } = SpanMap.values unused
+  let unused { unused; _; } =
+    unused
+    |> SpanMap.values
+    |> List.fold_left Loc.LocSet.union Loc.LocSet.empty
+    |> Loc.LocSet.elements
 
   let cardinal { suppressions; unused } =
     SpanMap.cardinal suppressions + SpanMap.cardinal unused
@@ -791,7 +800,9 @@ module Json_output = struct
         ["children", JSON_Array kids]
     )
 
-  let json_of_error_props ~json_of_message { kind; messages; op; trace; extra } =
+  let json_of_error_props
+    ~strip_root ~json_of_message
+    ?(suppression_locs=Loc.LocSet.empty) { kind; messages; op; trace; extra } =
     let open Hh_json in
     let kind_str, severity_str = match kind with
       | ParseError -> "parse", "error"
@@ -800,9 +811,15 @@ module Json_output = struct
       | InternalError -> "internal", "error"
       | DuplicateProviderError -> "duplicate provider", "error"
     in
+    let suppressions = suppression_locs
+    |> Loc.LocSet.elements
+    |> List.map (fun loc ->
+        JSON_Object [ "loc", Reason.json_of_loc ~strip_root loc]
+      ) in
     let props = [
       "kind", JSON_String kind_str;
       "level", JSON_String severity_str;
+      "suppressions", JSON_Array suppressions;
       "message", JSON_Array (List.map json_of_message messages);
     ] in
     (* add trace if present *)
@@ -822,27 +839,37 @@ module Json_output = struct
 
   let json_of_error ~strip_root error =
     let json_of_message = json_of_message ~strip_root in
-    Hh_json.JSON_Object (json_of_error_props ~json_of_message error)
+    Hh_json.JSON_Object (json_of_error_props ~strip_root ~json_of_message  error)
 
-  let json_of_error_with_context ~strip_root ~stdin_file error =
+  let json_of_error_with_context
+    ~strip_root ~stdin_file (error, suppression_locs) =
     let json_of_message =
       json_of_message_with_context ~strip_root ~stdin_file in
-    Hh_json.JSON_Object (json_of_error_props ~json_of_message error)
+    Hh_json.JSON_Object (json_of_error_props ~strip_root ~json_of_message ~suppression_locs error)
 
   let json_of_errors ~strip_root errors =
     let f = json_of_error ~strip_root in
     Hh_json.JSON_Array (List.map f (ErrorSet.elements errors))
 
-  let json_of_errors_with_context ~strip_root ~stdin_file errors =
+  let json_of_errors_with_context
+    ~strip_root ~stdin_file ~suppressed_errors errors =
+    let errors = errors
+      |> ErrorSet.elements
+      |> List.map (fun errs -> errs, Loc.LocSet.empty) in
     let f = json_of_error_with_context ~strip_root ~stdin_file in
-    Hh_json.JSON_Array (List.map f (ErrorSet.elements errors))
+    Hh_json.JSON_Array (
+      List.map f errors @
+      List.map f suppressed_errors
+    )
 
-  let full_status_json_of_errors ~strip_root ?(profiling=None) ?(stdin_file=None) errors =
+  let full_status_json_of_errors
+    ~strip_root ~suppressed_errors ?(profiling=None) ?(stdin_file=None) errors =
     let open Hh_json in
 
     let props = [
       "flowVersion", JSON_String FlowConfig.version;
-      "errors", json_of_errors_with_context ~strip_root ~stdin_file errors;
+      "errors", json_of_errors_with_context
+        ~strip_root ~stdin_file ~suppressed_errors errors;
       "passed", JSON_Bool (ErrorSet.is_empty errors);
     ] in
     let props = match profiling with
@@ -852,10 +879,13 @@ module Json_output = struct
 
   let print_errors
       ~out_channel
-      ~strip_root ?(pretty=false) ?(profiling=None) ?(stdin_file=None)
+      ~strip_root
+      ~suppressed_errors
+      ?(pretty=false) ?(profiling=None) ?(stdin_file=None)
       el =
     let open Hh_json in
-    let res = full_status_json_of_errors ~strip_root ~profiling ~stdin_file el in
+    let res = full_status_json_of_errors
+      ~strip_root ~profiling ~stdin_file ~suppressed_errors el in
     output_string out_channel (json_to_string ~pretty res);
     flush out_channel
 end
