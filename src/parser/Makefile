@@ -94,7 +94,7 @@ test-hardcoded-ocaml: ../../_build/$(REL_DIR)/test/run_hardcoded_tests.native
 	cd $(TOP); \
 	_build/$(REL_DIR)/test/run_hardcoded_tests.native $(REL_DIR)/test/hardcoded_tests.js
 
-test-ocaml: test-hardcoded-ocaml
+test-ocaml: test-esprima-ocaml test-hardcoded-ocaml
 
 test: test-js test-ocaml
 
