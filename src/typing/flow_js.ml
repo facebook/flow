@@ -9196,7 +9196,7 @@ and multiflow_partial =
       ) in
       rec_flow_t cx trace (arg_array, rest_param);
 
-      [], Some (name, loc, unused_rest_param)
+      unused_parlist, Some (name, loc, unused_rest_param)
     end
 
 and resolve_call_list cx ~trace reason_op args resolve_to =
@@ -9471,7 +9471,6 @@ and finish_resolve_spread_list =
     let {params_tlist; rest_param; def_reason; _} = ft in
 
     let args, spread_arg = flatten_call_arg cx reason_op resolved in
-
     multiflow_full
       cx ~trace reason_op ~is_call ~def_reason
       ~spread_arg ~rest_param (args, params_tlist)

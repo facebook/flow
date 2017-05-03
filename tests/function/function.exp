@@ -276,6 +276,14 @@ rest.js:59
  57: ): (...args: Args) => number {
                            ^^^^^^ number
 
+rest.js:64
+ 64: requires_first_param(); // Error: missing first arg
+     ^^^^^^^^^^^^^^^^^^^^^^ function call
+ 64: requires_first_param(); // Error: missing first arg
+     ^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+ 63: function requires_first_param(x: number, ...rest: Array<number>): void {}
+                                      ^^^^^^ number
+
 rest_type.js:15
  15:   f(123); // Error - number ~> array - luckily this errors
        ^^^^^^ function call
@@ -307,4 +315,4 @@ rest_type.js:31
                                ^^^^^ empty
 
 
-Found 48 errors
+Found 49 errors
