@@ -54,8 +54,13 @@ annot.js:31
 annot.js:37
  37:     batchRequests: Array<{method: string; path: string; params: ?Object}>,
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `path`. Property not found in
+                  v
  46:       return {
-                  ^ object literal
+ 47:         method: request.method,
+ 48:         params: request.params,
+ 49:         relative_url: request.path,
+ 50:       };
+           ^ object literal
 
 annot.js:55
  55: var toz : null = 3;

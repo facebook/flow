@@ -143,10 +143,16 @@ defaults.js:53
        ^ string
 
 defaults.js:56
+         v
  56: } = {
-         ^ object literal. This type is incompatible with
+ 57:   p: 0 // error: number ~> string
+ 58: };
+     ^ object literal. This type is incompatible with
+        v
  54: }: {
-        ^ object type
+ 55:   p: string
+ 56: } = {
+     ^ object type
   Property `p` is incompatible:
      57:   p: 0 // error: number ~> string
               ^ number. This type is incompatible with

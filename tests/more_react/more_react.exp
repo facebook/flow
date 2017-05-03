@@ -65,16 +65,24 @@ checkPropTypes.js:12
 propTypes.js:15
  15: <D />; // errors: properties `name` and `title` not found
      ^^^^^ React element `D`
+                  v
   9:   propTypes: {
-                  ^ property `name`. Property not found in
+ 10:     name: React.PropTypes.string.isRequired,
+ 11:     ...C.propTypes,
+ 12:   }
+       ^ property `name`. Property not found in
  15: <D />; // errors: properties `name` and `title` not found
      ^^^^^ props of React element `D`
 
 propTypes.js:15
  15: <D />; // errors: properties `name` and `title` not found
      ^^^^^ React element `D`
+                  v
   9:   propTypes: {
-                  ^ property `title`. Property not found in
+ 10:     name: React.PropTypes.string.isRequired,
+ 11:     ...C.propTypes,
+ 12:   }
+       ^ property `title`. Property not found in
  15: <D />; // errors: properties `name` and `title` not found
      ^^^^^ props of React element `D`
 

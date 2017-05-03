@@ -384,8 +384,13 @@ request.js:25
                                 ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/bom.js:910
 
 request.js:53
+                        v----------------------------------
  53: const l: Request = new Request('http://example.org', {
-                        ^ constructor call
+ 54:   method: 'GET',
+ 55:   headers: 'Content-Type: image/jpeg',
+...:
+ 58: }) // incorrect - headers is string
+     -^ constructor call
  55:   headers: 'Content-Type: image/jpeg',
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
 851:     headers?: ?HeadersInit;
@@ -408,8 +413,13 @@ request.js:53
                                     ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:801
 
 request.js:60
+                                                          v
  60: const m: Request = new Request('http://example.org', {
-                                                          ^ object literal. This type is incompatible with the expected param type of
+ 61:   method: 'CONNECT',
+ 62:   headers: {
+...:
+ 67: }) // incorrect - CONNECT is forbidden
+     ^ object literal. This type is incompatible with the expected param type of
 892:     constructor(input: string | Request, init?: RequestOptions): void;
                                                      ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:892
   Property `method` is incompatible:
@@ -419,8 +429,11 @@ request.js:60
                        ^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:853
 
 response.js:10
+                                                      v
  10: const e: Response = new Response("responsebody", {
-                                                      ^ object literal. This type is incompatible with the expected param type of
+ 11:     status: "404"
+ 12: }); // incorrect
+     ^ object literal. This type is incompatible with the expected param type of
 867:     constructor(input?: BodyInit, init?: ResponseOptions): void;
                                               ^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:867
   Property `status` is incompatible:
@@ -430,8 +443,12 @@ response.js:10
                        ^^^^^^ number. See lib: <BUILTINS>/bom.js:861
 
 response.js:14
+                         v-----------------------------
  14: const f: Response = new Response("responsebody", {
-                         ^ constructor call
+ 15:     status: 404,
+ 16:     headers: "'Content-Type': 'image/jpeg'"
+ 17: }); // incorrect
+     -^ constructor call
  16:     headers: "'Content-Type': 'image/jpeg'"
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
 863:     headers?: ?HeadersInit
@@ -454,74 +471,124 @@ response.js:14
                                     ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:801
 
 response.js:33
+                         v-------------
  33: const i: Response = new Response({
-                         ^ constructor call
+ 34:     status: 404,
+ 35:     headers: new Headers({
+...:
+ 38: }); // incorrect
+     -^ constructor call
+                                      v
  33: const i: Response = new Response({
-                                      ^ object literal. This type is incompatible with
+ 34:     status: 404,
+ 35:     headers: new Headers({
+...:
+ 38: }); // incorrect
+     ^ object literal. This type is incompatible with
 867:     constructor(input?: BodyInit, init?: ResponseOptions): void;
                              ^^^^^^^^ union: string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView. See lib: <BUILTINS>/bom.js:867
   Member 1:
   844: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                        ^^^^^^ string. See lib: <BUILTINS>/bom.js:844
   Error:
+                                        v
    33: const i: Response = new Response({
-                                        ^ object literal. This type is incompatible with
+   34:     status: 404,
+   35:     headers: new Headers({
+  ...:
+   38: }); // incorrect
+       ^ object literal. This type is incompatible with
   844: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                        ^^^^^^ string. See lib: <BUILTINS>/bom.js:844
   Member 2:
   844: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                 ^^^^^^^^^^^^^^^ URLSearchParams. See lib: <BUILTINS>/bom.js:844
   Error:
+                                        v
    33: const i: Response = new Response({
-                                        ^ object literal. This type is incompatible with
+   34:     status: 404,
+   35:     headers: new Headers({
+  ...:
+   38: }); // incorrect
+       ^ object literal. This type is incompatible with
   844: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                 ^^^^^^^^^^^^^^^ URLSearchParams. See lib: <BUILTINS>/bom.js:844
   Member 3:
   844: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                                   ^^^^^^^^ FormData. See lib: <BUILTINS>/bom.js:844
   Error:
+                                        v
    33: const i: Response = new Response({
-                                        ^ object literal. This type is incompatible with
+   34:     status: 404,
+   35:     headers: new Headers({
+  ...:
+   38: }); // incorrect
+       ^ object literal. This type is incompatible with
   844: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                                   ^^^^^^^^ FormData. See lib: <BUILTINS>/bom.js:844
   Member 4:
   844: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                                              ^^^^ Blob. See lib: <BUILTINS>/bom.js:844
   Error:
+                                        v
    33: const i: Response = new Response({
-                                        ^ object literal. This type is incompatible with
+   34:     status: 404,
+   35:     headers: new Headers({
+  ...:
+   38: }); // incorrect
+       ^ object literal. This type is incompatible with
   844: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                                              ^^^^ Blob. See lib: <BUILTINS>/bom.js:844
   Member 5:
   844: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                                                     ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/bom.js:844
   Error:
+                                        v
    33: const i: Response = new Response({
-                                        ^ object literal. This type is incompatible with
+   34:     status: 404,
+   35:     headers: new Headers({
+  ...:
+   38: }); // incorrect
+       ^ object literal. This type is incompatible with
   844: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                                                     ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/bom.js:844
   Member 6:
   844: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                                                                   ^^^^^^^^^^^^^^^^ $ArrayBufferView. See lib: <BUILTINS>/bom.js:844
   Error:
+                                        v
    33: const i: Response = new Response({
-                                        ^ object literal. This type is incompatible with
+   34:     status: 404,
+   35:     headers: new Headers({
+  ...:
+   38: }); // incorrect
+       ^ object literal. This type is incompatible with
   844: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                                                                   ^^^^^^^^^^^^^^^^ union: $TypedArray | DataView. See lib: <BUILTINS>/bom.js:844
     Member 1:
     685: type $ArrayBufferView = $TypedArray | DataView;
                                  ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:685
     Error:
+                                          v
      33: const i: Response = new Response({
-                                          ^ object literal. This type is incompatible with
+     34:     status: 404,
+     35:     headers: new Headers({
+    ...:
+     38: }); // incorrect
+         ^ object literal. This type is incompatible with
     685: type $ArrayBufferView = $TypedArray | DataView;
                                  ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:685
     Member 2:
     685: type $ArrayBufferView = $TypedArray | DataView;
                                                ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:685
     Error:
+                                          v
      33: const i: Response = new Response({
-                                          ^ object literal. This type is incompatible with
+     34:     status: 404,
+     35:     headers: new Headers({
+    ...:
+     38: }); // incorrect
+         ^ object literal. This type is incompatible with
     685: type $ArrayBufferView = $TypedArray | DataView;
                                                ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:685
 

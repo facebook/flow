@@ -561,8 +561,13 @@ MutationObserver.js:18
      ^^^^^^^^^^^ call of method `observe`
  18: o.observe(); // incorrect
      ^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+                                                                        v
 348: declare type MutationObserverInit = MutationObserverInitRequired & {
-                                                                        ^ object type. See lib: <BUILTINS>/bom.js:348
+349:     subtree?: boolean;
+350:     attributeOldValue?: boolean;
+...:
+353: }
+     ^ object type
 
 MutationObserver.js:18
  18: o.observe(); // incorrect
@@ -609,8 +614,13 @@ MutationObserver.js:19
      ^^^^^^^^^^^^^^^^^^^^ call of method `observe`
  19: o.observe('invalid'); // incorrect
      ^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+                                                                        v
 348: declare type MutationObserverInit = MutationObserverInitRequired & {
-                                                                        ^ object type. See lib: <BUILTINS>/bom.js:348
+349:     subtree?: boolean;
+350:     attributeOldValue?: boolean;
+...:
+353: }
+     ^ object type
 
 MutationObserver.js:19
  19: o.observe('invalid'); // incorrect
@@ -655,8 +665,13 @@ MutationObserver.js:20
      ^^^^^^^^^^^^^^ call of method `observe`
  20: o.observe(div); // incorrect
      ^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+                                                                        v
 348: declare type MutationObserverInit = MutationObserverInitRequired & {
-                                                                        ^ object type. See lib: <BUILTINS>/bom.js:348
+349:     subtree?: boolean;
+350:     attributeOldValue?: boolean;
+...:
+353: }
+     ^ object type
 
 MutationObserver.js:21
  21: o.observe(div, {}); // incorrect
@@ -725,8 +740,13 @@ MutationObserver.js:22
 MutationObserver.js:23
  23: o.observe(div, { attributes: true, attributeFilter: true }); // incorrect
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
+                                                                        v
 348: declare type MutationObserverInit = MutationObserverInitRequired & {
-                                                                        ^ object type. See lib: <BUILTINS>/bom.js:348
+349:     subtree?: boolean;
+350:     attributeOldValue?: boolean;
+...:
+353: }
+     ^ object type
   Property `attributeFilter` is incompatible:
      23: o.observe(div, { attributes: true, attributeFilter: true }); // incorrect
                                                              ^^^^ boolean. This type is incompatible with

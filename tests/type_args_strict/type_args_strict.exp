@@ -15,7 +15,10 @@ test.js:46
                                         ^^^^^^^^ MyObject. Application of polymorphic type needs <list of 1 argument>. (Can use `*` for inferrable ones)
 
 test.js:54
+     v-----------------------------------------------------------------------------
  54: interface MySubinterface extends MyInterface { // error, missing argument list
+ 55:   y: number;
+ 56: }
      ^ super of MySubinterface. Application of polymorphic type needs <list of 1 argument>. (Can use `*` for inferrable ones)
 
 

@@ -20,8 +20,13 @@ pred.js:16
     8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
                                                           ^^^^^^^^^^^^^^^^^^^^^ object type
   Member 3:
+                                                                                  v
     8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-                                                                                  ^ object type
+    9:   allowHalfOpen? : boolean,
+   10:   readableObjectMode? : boolean,
+   11:   writableObjectMode? : boolean
+   12: };
+       ^ object type
   Error:
    17:     || options.writableObjectMode; // error, undefined ~> boolean
               ^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with the expected return type of

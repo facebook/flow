@@ -490,8 +490,13 @@ incompatible.js:55
                ^^^^^^ string
 
 test.js:4
+                                     v
   4: var o: { foo: QueryFunction } = {
-                                     ^ object literal. This type is incompatible with
+  5:   foo(params) {
+  6:     return params.count; // error, number ~/~ string
+  7:   }
+  8: };
+     ^ object literal. This type is incompatible with
   4: var o: { foo: QueryFunction } = {
             ^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `foo` is incompatible:

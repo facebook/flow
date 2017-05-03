@@ -5197,8 +5197,11 @@ traversal.js:183
 traversal.js:183
 183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
                                                                 ^^^^^^^^ string. This type is incompatible with
+      v--------------------------------
 3178: typeof NodeFilter.FILTER_ACCEPT |
-      ^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3178
+3179: typeof NodeFilter.FILTER_REJECT |
+3180: typeof NodeFilter.FILTER_SKIP;
+      ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP')
   Member 1:
   3178: typeof NodeFilter.FILTER_ACCEPT |
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3178
@@ -5927,8 +5930,11 @@ traversal.js:185
 traversal.js:185
 185:     document.createNodeIterator(document.body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                               ^^^^^^^^ string. This type is incompatible with
+      v--------------------------------
 3178: typeof NodeFilter.FILTER_ACCEPT |
-      ^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3178
+3179: typeof NodeFilter.FILTER_REJECT |
+3180: typeof NodeFilter.FILTER_SKIP;
+      ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP')
   Member 1:
   3178: typeof NodeFilter.FILTER_ACCEPT |
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3178
@@ -7407,8 +7413,11 @@ traversal.js:190
 traversal.js:190
 190:     document.createTreeWalker(document.body, -1, node => 'accept'); // invalid
                                                               ^^^^^^^^ string. This type is incompatible with
+      v--------------------------------
 3178: typeof NodeFilter.FILTER_ACCEPT |
-      ^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3178
+3179: typeof NodeFilter.FILTER_REJECT |
+3180: typeof NodeFilter.FILTER_SKIP;
+      ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP')
   Member 1:
   3178: typeof NodeFilter.FILTER_ACCEPT |
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3178
@@ -8137,8 +8146,11 @@ traversal.js:192
 traversal.js:192
 192:     document.createTreeWalker(document.body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                             ^^^^^^^^ string. This type is incompatible with
+      v--------------------------------
 3178: typeof NodeFilter.FILTER_ACCEPT |
-      ^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3178
+3179: typeof NodeFilter.FILTER_REJECT |
+3180: typeof NodeFilter.FILTER_SKIP;
+      ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP')
   Member 1:
   3178: typeof NodeFilter.FILTER_ACCEPT |
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3178

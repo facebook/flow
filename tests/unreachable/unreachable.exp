@@ -17,8 +17,11 @@ unreachable.js:5
                        ^^^ uninitialized variable
 
 unreachable.js:13
+                 v---------------
  13:   var baz = function (why) {
-                 ^ unreachable code
+ 14:     return y + why;
+ 15:   };
+       ^ unreachable code
 
 unreachable.js:22
  22:       u = 5,

@@ -78,14 +78,22 @@ classes.js:59
 classes.js:66
  66:   setState(o: { y_: string }): void { },
                    ^^^^^^^^^^^^^^ property `y_`. Property not found in
+                     v------------------
  45: var FooLegacy = React.createClass({
-                     ^ object type
+ 46:   is_mounted: (undefined: ?boolean),
+ 47: 
+...:
+ 78: });
+     -^ object type
 
 classes.js:81
  81: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ React element `FooLegacy`
+                  v
  48:   propTypes: {
-                  ^ property `x`. Property not found in
+ 49:     x: React.PropTypes.number.isRequired
+ 50:   },
+       ^ property `x`. Property not found in
  81: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ props of React element `FooLegacy`
 
@@ -155,8 +163,13 @@ new_react.js:21
 new_react.js:29
  29: var element = <C x = {0}/>;
                    ^^^^^^^^^^^^ props of React element `C`. This type is incompatible with
+                    v
   5:     propTypes: {
-                    ^ propTypes of React component
+  6:         x: React.PropTypes.string.isRequired,
+  7:         y: React.PropTypes.array,
+  8:         z: React.PropTypes.number
+  9:     },
+         ^ propTypes of React component
   Property `x` is incompatible:
      29: var element = <C x = {0}/>;
                                ^ number. This type is incompatible with
@@ -166,8 +179,13 @@ new_react.js:29
 new_react.js:30
  30: var element_ = <C/>;
                     ^^^^ React element `C`
+                    v
   5:     propTypes: {
-                    ^ property `x`. Property not found in
+  6:         x: React.PropTypes.string.isRequired,
+  7:         y: React.PropTypes.array,
+  8:         z: React.PropTypes.number
+  9:     },
+         ^ property `x`. Property not found in
  30: var element_ = <C/>;
                     ^^^^ props of React element `C`
 
@@ -178,10 +196,18 @@ new_react.js:32
             ^^^^^^ number
 
 propTypes.js:13
+     v---------------
  13: <C statistics={[
-     ^ React element `C`
+ 14:   {},
+ 15:   {label:"",value:undefined},
+ 16: ]}/>; // error (label is required, value not required)
+     ---^ React element `C`
+                                       v----------------
   6:     statistics: PropTypes.arrayOf(PropTypes.shape({
-                                       ^ property `label`. Property not found in
+  7:       label: PropTypes.string.isRequired,
+  8:       value: PropTypes.number,
+  9:     })).isRequired,
+         -^ property `label`. Property not found in
  14:   {},
        ^^ object literal
 
@@ -232,8 +258,12 @@ props.js:20
 props.js:20
  20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`. This type is incompatible with
+                    v
   4:     propTypes: {
-                    ^ propTypes of React component
+  5:         x: React.PropTypes.string,
+  6:         z: React.PropTypes.number
+  7:     },
+         ^ propTypes of React component
   Property `z` is incompatible:
      20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                                                          ^^^^^ boolean. This type is incompatible with
@@ -265,8 +295,12 @@ props2.js:14
 props2.js:15
  15:         return <C {...this.state} foo = {0} />;
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `C`. This type is incompatible with
+                    v
   3:     propTypes: {
-                    ^ propTypes of React component
+  4:         foo: React.PropTypes.string.isRequired,
+  5:         bar: React.PropTypes.string.isRequired,
+  6:     }
+         ^ propTypes of React component
   Property `bar` is incompatible:
       9:     getInitialState: function(): { bar: number } {
                                                  ^^^^^^ number. This type is incompatible with
@@ -276,8 +310,12 @@ props2.js:15
 props2.js:15
  15:         return <C {...this.state} foo = {0} />;
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `C`. This type is incompatible with
+                    v
   3:     propTypes: {
-                    ^ propTypes of React component
+  4:         foo: React.PropTypes.string.isRequired,
+  5:         bar: React.PropTypes.string.isRequired,
+  6:     }
+         ^ propTypes of React component
   Property `foo` is incompatible:
      15:         return <C {...this.state} foo = {0} />;
                                                   ^ number. This type is incompatible with
@@ -299,8 +337,11 @@ props3.js:50
 props4.js:13
  13: <JDiv id={42} />;
      ^^^^^^^^^^^^^^^^ props of React element `JDiv`. This type is incompatible with
+              v
   7:   props: {
-              ^ object type
+  8:     id: string
+  9:   };
+       ^ object type
   Property `id` is incompatible:
      13: <JDiv id={42} />;
                    ^^ number. This type is incompatible with
@@ -334,8 +375,11 @@ state3.js:11
                     ^^^^^^ number
 
 state3.js:13
+             v--------------
  13:         this.setState({
-             ^ call of method `setState`
+ 14:             x: false // error
+ 15:         })
+             -^ call of method `setState`
  14:             x: false // error
                     ^^^^^ boolean. This type is incompatible with
   4:     getInitialState: function(): { x: string; } {
@@ -346,8 +390,11 @@ state4.js:9
          ^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
   9:     this.setState({ y: 0 });
                        ^^^^^^^^ property `y` of object literal. Property not found in
+                        v--------------------------
   4:   getInitialState: function(): { x: number } {
-                        ^ object type
+  5:     return { x: 0 };
+  6:   },
+       ^ object type
 
 state4.js:10
  10:     return <div>{this.state.z}</div>

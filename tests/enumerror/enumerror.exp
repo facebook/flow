@@ -3,8 +3,13 @@ enumerror.js:10
      ^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  10: isActive({state: 'PAUSE'});
                       ^^^^^^^ property `PAUSE`. Property not found in
+                                   v------
   3: function isActive(ad: {state: $Keys<{
-                                   ^ object type
+  4:     PAUSED: string;
+  5:     ACTIVE: string;
+  6:     DELETED: string;
+  7: }>}): boolean {
+     -^ object type
 
 enumerror.js:20
  20: isActive2({state: 'PAUSE'});

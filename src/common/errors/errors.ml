@@ -155,24 +155,33 @@ let highlight_error_in_line line c0 c1 =
   ]
 
 (* 0-indexed *)
-let nth_line ~n content =
-  let rec loop ~n ~pos content =
-    if pos > String.length content then
-      raise (Invalid_argument "not enough lines");
-    let next_newline =
-      try String.index_from content pos '\n'
-      with Not_found -> String.length content
-    in
-    if n < 0 then
-      raise (Invalid_argument "can't choose negative line")
-    else if n = 0 then
-      String.sub content pos (next_newline - pos)
-    else
-      loop ~n:(n - 1) ~pos:(next_newline + 1) content
-  in
-  loop ~n ~pos:0 content
+let get_lines ~start ~len content =
+  let rec loop ~start ~len ~acc ~pos content =
+    if len = 0
+    then List.rev acc
+    else begin
+      if pos > String.length content then
+        raise (Invalid_argument "not enough lines");
+      let next_newline =
+        try String.index_from content pos '\n'
+        with Not_found -> String.length content
+      in
+      let continue =
+        if start < 0 then
+          raise (Invalid_argument "can't choose negative line")
+        else if start = 0 then
+          let acc = (String.sub content pos (next_newline - pos))::acc in
+          loop ~start ~len:(len - 1) ~acc
+        else
+          loop ~start:(start - 1) ~len ~acc
+        in
 
-let read_line_in_file line filename stdin_file =
+        continue ~pos:(next_newline + 1) content
+    end
+  in
+  loop ~start ~len ~acc:[] ~pos:0 content
+
+let read_lines_in_file loc filename stdin_file =
   match filename with
   | None ->
       None
@@ -187,7 +196,15 @@ let read_line_in_file line filename stdin_file =
             (Utils_js.spf "Expected absolute location, got %s" filename);
           Sys_utils.cat filename
         in
-        try Some (nth_line ~n:line content)
+        try
+          let open Loc in
+          let lines = get_lines
+            ~start:(loc.start.line - 1)
+            ~len:(loc._end.line - loc.start.line + 1)
+            content in
+          match lines with
+          | [] -> None
+          | first::rest -> Some (first, rest)
         with Invalid_argument _ -> None
       end with Sys_error _ -> None
 
@@ -434,7 +451,7 @@ module Cli_output = struct
         ]
     in
 
-    let code_line = read_line_in_file (l0 - 1) filename stdin_file in
+    let code_line = read_lines_in_file loc filename stdin_file in
 
     match code_line, filename with
     | _, None ->
@@ -456,35 +473,116 @@ module Cli_output = struct
         [comment_style s] @
         (see_another_file ~is_lib original_filename) @
         [default_style "\n"];
-    | Some code_line, Some filename ->
+    | Some code_lines, Some filename ->
         let is_lib = match loc.source with
         | Some Loc.LibFile _ -> true
         | _ -> false in
-        let line_number_text = Printf.sprintf "%3d: " l0 in
-        let highlighted_line = if (l1 == l0) && (String.length code_line) >= c1
-          then highlight_error_in_line code_line c0 c1
-          else [source_fragment_style code_line]
-        in
-        let padding =
-          let line_num = String.make (String.length line_number_text) ' ' in
-          let spaces =
-            if String.length code_line <= c0 then ""
-            else
-              let prefix = String.sub code_line 0 c0 in
-              Str.global_replace (Str.regexp "[^\t ]") " " prefix
+        begin match code_lines with
+        | code_line, [] ->
+          (* Here we have a single line of context *)
+          let line_number_text = Printf.sprintf "%3d: " l0 in
+          let highlighted_line = if (l1 == l0) && (String.length code_line) >= c1
+            then highlight_error_in_line code_line c0 c1
+            else [source_fragment_style code_line]
           in
-          line_num ^ spaces
-        in
-        let underline_size = if l1 == l0
-          then max 1 (c1 - c0)
-          else 1
-        in
-        let underline = String.make underline_size '^' in
-        line_number_style line_number_text ::
-        highlighted_line @
-        [comment_style (Printf.sprintf "\n%s%s %s" padding underline s)] @
-        (see_another_file ~is_lib filename) @
-        [default_style "\n"]
+          let padding =
+            let line_num = String.make (String.length line_number_text) ' ' in
+            let spaces =
+              if String.length code_line <= c0 then ""
+              else
+                let prefix = String.sub code_line 0 c0 in
+                Str.global_replace (Str.regexp "[^\t ]") " " prefix
+            in
+            line_num ^ spaces
+          in
+          let underline_size = if l1 == l0
+            then max 1 (c1 - c0)
+            else 1
+          in
+          let underline = String.make underline_size '^' in
+          line_number_style line_number_text ::
+          highlighted_line @
+          [comment_style (Printf.sprintf "\n%s%s %s" padding underline s)] @
+          (see_another_file ~is_lib filename) @
+          [default_style "\n"]
+        | code_lines ->
+          (* Here we have multiple lines of context *)
+
+          (* The most lines of context that we'll show before abridging *)
+          let max_lines = 5 in
+
+          (* Don't abridge if we could just show all the lines *)
+          let abridged = l1 - l0 + 1 > max_lines in
+
+          (* Highlight the context *)
+          let highlighted_lines = code_lines
+          |> Nel.to_list
+          |> List.fold_left (fun (line_num, acc) line ->
+              if not abridged || line_num - l0 < max_lines - 2 || line_num = l1
+              then
+                let line_number_text =
+                  line_number_style (Utils_js.spf "\n%3d: " line_num) in
+                let highlighted_line =
+                  (* First line *)
+                  if line_num = l0
+                  then highlight_error_in_line line c0 (String.length line)
+                  (* Last line *)
+                  else if line_num = l1
+                  then highlight_error_in_line line 0 c1
+                  (* middle lines *)
+                  else [error_fragment_style line] in
+                line_num + 1, (line_number_text :: highlighted_line)::acc
+              else if line_num - l0 = max_lines - 1
+              then line_num + 1, [line_number_style "\n...:"]::acc
+              else line_num + 1, acc
+            ) (l0, [])
+          |> snd
+          |> List.rev
+          |> List.flatten in
+
+          let first_line = code_lines |> Nel.hd in
+          let last_line = code_lines |> Nel.rev |> Nel.hd in
+
+          (* Don't underline the whitespace at the beginning of the last line *)
+          let underline_prefix =
+            if Str.string_match (Str.regexp "^\\([\t ]*\\).*") last_line 0
+            then Str.matched_group 1 last_line
+            else "" in
+
+          let overline_size = max 1 (String.length first_line - c0) in
+          let underline_size = max 1 (c1 - String.length underline_prefix) in
+
+          let line len = if len > 0 then String.make len '-' else "" in
+          let overline = "v" ^ (line (overline_size - 1))  in
+          let underline = (line (underline_size - 1)) ^ "^" in
+
+          let overline_padding =
+            let line_num =
+              String.make (String.length (Printf.sprintf "%3d: " l0)) ' ' in
+            let spaces =
+              if String.length first_line <= c0 then ""
+              else
+                let prefix = String.sub first_line 0 c0 in
+                Str.global_replace (Str.regexp "[^\t ]") " " prefix
+            in
+            line_num ^ spaces
+          in
+
+          let underlineline_padding =
+            String.make (String.length (Printf.sprintf "%3d: " l1)) ' ' in
+
+          let comment = Printf.sprintf
+            "\n%s%s%s %s"
+            underlineline_padding
+            underline_prefix
+            underline
+            s in
+
+          [comment_style (Printf.sprintf "%s%s" overline_padding overline)] @
+          highlighted_lines @
+          [comment_style comment] @
+          [default_style "\n"]
+        end
   )
 
   let print_message_nice ~strip_root stdin_file main_file message =
@@ -665,8 +763,10 @@ module Json_output = struct
     | Some loc ->
         let open Loc in
         let filename = file_of_source loc.source in
-        let line = loc.start.line - 1 in
-        read_line_in_file line filename stdin_file in
+        (match read_lines_in_file loc filename stdin_file with
+        | Some l -> Some (Nel.hd l)
+        | None -> None)
+    in
     let context = ("context", match code_line with
     | None -> JSON_Null
     | Some context -> JSON_String context) in

@@ -230,13 +230,19 @@ test22.js:20
  20:   else return x.result;
                    ^ intersection
   Member 1:
+                    v
    12: type Error = {
-                    ^ object type
+   13:   type: 'ERROR';
+   14: } & Empty;
+       ^ object type
   Error:
    20:   else return x.result;
                        ^^^^^^ property `result`. Property not found in
+                    v
    12: type Error = {
-                    ^ object type
+   13:   type: 'ERROR';
+   14: } & Empty;
+       ^ object type
   Member 2:
    14: } & Empty;
            ^^^^^ Empty

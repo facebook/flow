@@ -193,16 +193,26 @@ object_type.js:52
                                                          ^^^^^^ number
 
 react.js:8
+                  v
   8:   propTypes: {
-                  ^ property `a`. Property not found in
+  9:     get a() { return React.PropTypes.number.isRequired; },
+ 10:     set b(x: number) { this.c = x; },
+ 11:     c: React.PropTypes.string,
+ 12:   }
+       ^ property `a`. Property not found in
  15: (<Example />); // error: property `a` not found
       ^^^^^^^^^^^ props of React element `Example`
 
 react.js:17
  17: (<Example a="bad" />); // error: number ~> string
       ^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+                  v
   8:   propTypes: {
-                  ^ propTypes of React component
+  9:     get a() { return React.PropTypes.number.isRequired; },
+ 10:     set b(x: number) { this.c = x; },
+ 11:     c: React.PropTypes.string,
+ 12:   }
+       ^ propTypes of React component
   Property `a` is incompatible:
      17: (<Example a="bad" />); // error: number ~> string
                      ^^^^^ string. This type is incompatible with
@@ -212,8 +222,13 @@ react.js:17
 react.js:18
  18: (<Example a={0} c={0} />); // error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+                  v
   8:   propTypes: {
-                  ^ propTypes of React component
+  9:     get a() { return React.PropTypes.number.isRequired; },
+ 10:     set b(x: number) { this.c = x; },
+ 11:     c: React.PropTypes.string,
+ 12:   }
+       ^ propTypes of React component
   Property `c` is incompatible:
      18: (<Example a={0} c={0} />); // error: number ~> string
                             ^ number. This type is incompatible with
@@ -221,26 +236,42 @@ react.js:18
                 ^^^^^^^^^^^^^^^^^^^^^^ string
 
 variance.js:21
+      v-------------------
  21: (class extends Base {
-      ^ class expr `<<anonymous class>>`. Covariant property `x` incompatible with invariant use in
+ 22:   // error: getter incompatible with read/write property
+ 23:   get x(): B { return b }
+ 24: });
+     ^ class expr `<<anonymous class>>`. Covariant property `x` incompatible with invariant use in
  21: (class extends Base {
                     ^^^^ Base
 
 variance.js:26
+      v-------------------
  26: (class extends Base {
-      ^ class expr `<<anonymous class>>`. Contravariant property `x` incompatible with invariant use in
+ 27:   // error: setter incompatible with read/write property
+ 28:   set x(value: B): void {}
+ 29: });
+     ^ class expr `<<anonymous class>>`. Contravariant property `x` incompatible with invariant use in
  26: (class extends Base {
                     ^^^^ Base
 
 variance.js:37
+      v-------------------
  37: (class extends Base {
-      ^ class expr `<<anonymous class>>`. Contravariant property `pos` incompatible with covariant use in
+ 38:   // error: setter incompatible with read-only property
+ 39:   set pos(value: B): void {}
+ 40: });
+     ^ class expr `<<anonymous class>>`. Contravariant property `pos` incompatible with covariant use in
  37: (class extends Base {
                     ^^^^ Base
 
 variance.js:47
+      v-------------------
  47: (class extends Base {
-      ^ class expr `<<anonymous class>>`. Covariant property `neg` incompatible with contravariant use in
+ 48:   // error: getter incompatible with write-only property
+ 49:   get neg(): B { return b }
+ 50: });
+     ^ class expr `<<anonymous class>>`. Covariant property `neg` incompatible with contravariant use in
  47: (class extends Base {
                     ^^^^ Base
 

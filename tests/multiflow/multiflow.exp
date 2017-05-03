@@ -96,16 +96,26 @@ jsx.js:34
  34: (<ExpectsProps />); // Error - missing prop
       ^^^^^^^^^^^^^^^^ intersection
   Member 1:
+                           v
     7: declare function JSX<
-                           ^ polymorphic type: function type
+    8:   Children: $ReadOnlyArray<mixed>,
+    9:   Elem,
+  ...:
+   15: ): Elem;
+       ------^ polymorphic type: function type
   Error:
    33: declare function ExpectsProps(props: { name: string }, children: any): string;
                                             ^^^^^^^^^^^^^^^^ property `name`. Property not found in
    10:   C: (props: {}, children: Children) => Elem
                     ^^ object type
   Member 2:
+                           v
    18: declare function JSX<
-                           ^ polymorphic type: function type
+   19:   Children: $ReadOnlyArray<mixed>,
+   20:   Elem,
+  ...:
+   27: ): Elem;
+       ------^ polymorphic type: function type
   Error:
    34: (<ExpectsProps />); // Error - missing prop
         ^^^^^^^^^^^^^^^^ null. This type is incompatible with the expected param type of
@@ -124,16 +134,26 @@ jsx.js:38
  38: (<ExpectsChildrenTuple />); // Error - mising child
       ^^^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
+                           v
     7: declare function JSX<
-                           ^ polymorphic type: function type
+    8:   Children: $ReadOnlyArray<mixed>,
+    9:   Elem,
+  ...:
+   15: ): Elem;
+       ------^ polymorphic type: function type
   Error:
    38: (<ExpectsChildrenTuple />); // Error - mising child
         ^^^^^^^^^^^^^^^^^^^^^^^^ rest parameter array of JSX desugared to `JSX(...)`. Tuple arity mismatch. This tuple has 0 elements and cannot flow to the 1 elements of
    37: declare function ExpectsChildrenTuple(props: any, children: [string]): string;
                                                                    ^^^^^^^^ tuple type
   Member 2:
+                           v
    18: declare function JSX<
-                           ^ polymorphic type: function type
+   19:   Children: $ReadOnlyArray<mixed>,
+   20:   Elem,
+  ...:
+   27: ): Elem;
+       ------^ polymorphic type: function type
   Error:
    38: (<ExpectsChildrenTuple />); // Error - mising child
         ^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
@@ -146,16 +166,26 @@ jsx.js:40
  40: (<ExpectsChildrenTuple>{123}</ExpectsChildrenTuple>); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
+                           v
     7: declare function JSX<
-                           ^ polymorphic type: function type
+    8:   Children: $ReadOnlyArray<mixed>,
+    9:   Elem,
+  ...:
+   15: ): Elem;
+       ------^ polymorphic type: function type
   Error:
    40: (<ExpectsChildrenTuple>{123}</ExpectsChildrenTuple>); // Error: number ~> string
                                ^^^ number. This type is incompatible with
    37: declare function ExpectsChildrenTuple(props: any, children: [string]): string;
                                                                     ^^^^^^ string
   Member 2:
+                           v
    18: declare function JSX<
-                           ^ polymorphic type: function type
+   19:   Children: $ReadOnlyArray<mixed>,
+   20:   Elem,
+  ...:
+   27: ): Elem;
+       ------^ polymorphic type: function type
   Error:
    40: (<ExpectsChildrenTuple>{123}</ExpectsChildrenTuple>); // Error: number ~> string
         ^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
@@ -168,16 +198,26 @@ jsx.js:41
  41: (<ExpectsChildrenTuple>Hi {"there"}</ExpectsChildrenTuple>); // Error: too many children
       ^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
+                           v
     7: declare function JSX<
-                           ^ polymorphic type: function type
+    8:   Children: $ReadOnlyArray<mixed>,
+    9:   Elem,
+  ...:
+   15: ): Elem;
+       ------^ polymorphic type: function type
   Error:
    41: (<ExpectsChildrenTuple>Hi {"there"}</ExpectsChildrenTuple>); // Error: too many children
         ^^^^^^^^^^^^^^^^^^^^^^ rest parameter array of JSX desugared to `JSX(...)`. Tuple arity mismatch. This tuple has 2 elements and cannot flow to the 1 elements of
    37: declare function ExpectsChildrenTuple(props: any, children: [string]): string;
                                                                    ^^^^^^^^ tuple type
   Member 2:
+                           v
    18: declare function JSX<
-                           ^ polymorphic type: function type
+   19:   Children: $ReadOnlyArray<mixed>,
+   20:   Elem,
+  ...:
+   27: ): Elem;
+       ------^ polymorphic type: function type
   Error:
    41: (<ExpectsChildrenTuple>Hi {"there"}</ExpectsChildrenTuple>); // Error: too many children
         ^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
@@ -190,16 +230,26 @@ jsx.js:46
  46: (<ExpectsChildrenArray>{123}</ExpectsChildrenArray>); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
+                           v
     7: declare function JSX<
-                           ^ polymorphic type: function type
+    8:   Children: $ReadOnlyArray<mixed>,
+    9:   Elem,
+  ...:
+   15: ): Elem;
+       ------^ polymorphic type: function type
   Error:
    46: (<ExpectsChildrenArray>{123}</ExpectsChildrenArray>); // Error: number ~> string
                                ^^^ number. This type is incompatible with
    43: declare function ExpectsChildrenArray(props: any, children: Array<string>): string;
                                                                          ^^^^^^ string
   Member 2:
+                           v
    18: declare function JSX<
-                           ^ polymorphic type: function type
+   19:   Children: $ReadOnlyArray<mixed>,
+   20:   Elem,
+  ...:
+   27: ): Elem;
+       ------^ polymorphic type: function type
   Error:
    46: (<ExpectsChildrenArray>{123}</ExpectsChildrenArray>); // Error: number ~> string
         ^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
