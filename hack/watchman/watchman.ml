@@ -21,8 +21,6 @@ open Utils
  *   * Use the BSER protocol for enhanced performance
  *)
 
-exception Watchman_error of string
-
 (** Throw this exception when we know there is something to read from
  * the watchman channel, but reading took too long. *)
 exception Read_payload_too_long

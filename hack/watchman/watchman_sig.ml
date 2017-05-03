@@ -11,6 +11,8 @@
 module Types = struct
 
   exception Timeout
+  exception Watchman_error of string
+
 
   type subscribe_mode =
     | Defer_changes
