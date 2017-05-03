@@ -143,8 +143,8 @@ let collate_errors =
     then suppressed_errors
     else [] in
 
-    if Options.should_output_json options
-    then begin
+    match Options.json_mode options with
+    | Some mode ->
       let profiling =
         if options.Options.opt_profile
         then Some profiling
@@ -153,9 +153,10 @@ let collate_errors =
         ~out_channel:stdout
         ~strip_root
         ~profiling
+        ~pretty:(mode = Options.PrettyJSON)
         ~suppressed_errors
         errors
-    end else
+    | None ->
       let errors = List.fold_left
         (fun acc (error, _) -> Errors.ErrorSet.add error acc)
         errors

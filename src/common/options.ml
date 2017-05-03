@@ -37,6 +37,10 @@ type jsx_mode =
    *)
   | CSX
 
+type json_mode =
+  | NormalJSON
+  | PrettyJSON
+
 type t = {
   opt_all : bool;
   opt_check_mode: bool;
@@ -60,7 +64,7 @@ type t = {
   opt_ignore_non_literal_requires: bool;
   opt_ignores: (string * Str.regexp) list;
   opt_includes: Path_matcher.t;
-  opt_json : bool;
+  opt_json : json_mode option;
   opt_libs: Path.t list;
   opt_log_file: Path.t;
   opt_max_workers: int;
@@ -143,7 +147,7 @@ let facebook_fbt opts = opts.opt_facebook_fbt
 let should_ignore_non_literal_requires opts =
   opts.opt_ignore_non_literal_requires
 let should_munge_underscores opts = opts.opt_munge_underscores
-let should_output_json opts = opts.opt_json
+let json_mode opts = opts.opt_json
 let should_profile opts = opts.opt_profile && not opts.opt_quiet
 let should_strip_root opts = opts.opt_strip_root
 let should_wait opts = opts.opt_should_wait

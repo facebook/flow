@@ -172,7 +172,7 @@ let daemonize ~options main_entry =
   Daemon.close_out waiting_channel_oc;
   (* let original parent exit *)
   let pretty_pid = Sys_utils.pid_of_handle pid in
-  if Options.should_output_json options
+  if Options.json_mode options <> None
   then begin
     let open Hh_json in
     let json = json_to_string (JSON_Object [

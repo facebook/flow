@@ -76,8 +76,7 @@ module OptionParser(Config : CONFIG) = struct
       |> error_flags
       |> flag "--include-suppressed" no_arg
         ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
-      |> flag "--json" no_arg
-          ~doc:"Output errors in JSON format"
+      |> json_flags
       |> flag "--profile" no_arg
           ~doc:"Output profiling information"
       |> dummy None  (* log-file *)
@@ -89,6 +88,7 @@ module OptionParser(Config : CONFIG) = struct
       |> dummy Options.default_error_flags (* error_flags *)
       |> dummy false (* include_suppressed *)
       |> dummy false (* json *)
+      |> dummy false (* pretty *)
       |> flag "--profile" no_arg
           ~doc:"Output profiling information"
       |> dummy None  (* log-file *)
@@ -99,8 +99,7 @@ module OptionParser(Config : CONFIG) = struct
       empty
       |> dummy Options.default_error_flags (* error_flags *)
       |> dummy false (* include_suppressed *)
-      |> flag "--json" no_arg
-          ~doc:"Respond in JSON format"
+      |> json_flags
       |> flag "--profile" no_arg
           ~doc:"Output profiling information"
       |> flag "--log-file" string
@@ -114,8 +113,7 @@ module OptionParser(Config : CONFIG) = struct
       |> error_flags
       |> flag "--include-suppressed" no_arg
         ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
-      |> flag "--json" no_arg
-          ~doc:"Output errors in JSON format"
+      |> json_flags
       |> flag "--profile" no_arg
           ~doc:"Output profiling information"
       |> dummy None  (* log-file *)
@@ -188,6 +186,7 @@ module OptionParser(Config : CONFIG) = struct
       error_flags
       include_suppressed
       json
+      pretty
       profile
       log_file
       wait
@@ -313,8 +312,12 @@ module OptionParser(Config : CONFIG) = struct
       opt_all = all;
       opt_weak = weak;
       opt_traces;
-      opt_json = json;
-      opt_quiet = quiet || json;
+      opt_json = Options.(
+        if pretty then Some PrettyJSON
+        else if json then Some NormalJSON
+        else None
+      );
+      opt_quiet = quiet || json || pretty;
       opt_module_file_exts = FlowConfig.(
         flowconfig.options.Opts.module_file_exts
       );
