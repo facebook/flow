@@ -5,7 +5,7 @@ createclass-callsite.js:19
   5:   propTypes: {
   6:     name: React.PropTypes.string.isRequired,
   7:   },
-       ^ property `name`. Property not found in
+       ^ property `name`. Property not found in. See: createclass-module.js:5
  19:         <Hello />
              ^^^^^^^^^ props of React element `Hello`
 

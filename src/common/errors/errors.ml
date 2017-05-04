@@ -590,6 +590,7 @@ module Cli_output = struct
           [comment_style (Printf.sprintf "%s%s" overline_padding overline)] @
           highlighted_lines @
           [comment_style comment] @
+          (see_another_file ~is_lib filename) @
           [default_style "\n"]
         end
   )

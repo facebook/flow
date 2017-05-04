@@ -567,7 +567,7 @@ MutationObserver.js:18
 350:     attributeOldValue?: boolean;
 ...:
 353: }
-     ^ object type
+     ^ object type. See lib: <BUILTINS>/bom.js:348
 
 MutationObserver.js:18
  18: o.observe(); // incorrect
@@ -620,7 +620,7 @@ MutationObserver.js:19
 350:     attributeOldValue?: boolean;
 ...:
 353: }
-     ^ object type
+     ^ object type. See lib: <BUILTINS>/bom.js:348
 
 MutationObserver.js:19
  19: o.observe('invalid'); // incorrect
@@ -671,7 +671,7 @@ MutationObserver.js:20
 350:     attributeOldValue?: boolean;
 ...:
 353: }
-     ^ object type
+     ^ object type. See lib: <BUILTINS>/bom.js:348
 
 MutationObserver.js:21
  21: o.observe(div, {}); // incorrect
@@ -746,7 +746,7 @@ MutationObserver.js:23
 350:     attributeOldValue?: boolean;
 ...:
 353: }
-     ^ object type
+     ^ object type. See lib: <BUILTINS>/bom.js:348
   Property `attributeFilter` is incompatible:
      23: o.observe(div, { attributes: true, attributeFilter: true }); // incorrect
                                                              ^^^^ boolean. This type is incompatible with
