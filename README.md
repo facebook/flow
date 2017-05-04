@@ -54,7 +54,7 @@ You can also build and install Flow via the OCaml [OPAM](https://opam.ocaml.org)
 
 ```
 opam install depext
-opam depext --install flowtype
+opam-depext --install flowtype
 ```
 
 If you don't have a new enough version of OCaml to compile Flow, you can also use OPAM to bootstrap a modern version.  Install OPAM via the [binary packages](http://opam.ocaml.org/doc/Install.html#InstallOPAMin2minutes) for your operating system and run:
