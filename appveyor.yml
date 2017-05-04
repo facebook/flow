@@ -5,8 +5,8 @@ platform: x64
 environment:
   matrix:
     - OPAM_SWITCH: 4.03.0+mingw64c
-      FORK_USER: ocaml
-      FORK_BRANCH: master
+      FORK_USER: gabelevi
+      FORK_BRANCH: opam-update
       CYG_ROOT: C:\cygwin64
       TESTS: false
       INSTALL: false
