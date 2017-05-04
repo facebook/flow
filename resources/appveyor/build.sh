@@ -18,6 +18,6 @@ cd "${APPVEYOR_BUILD_FOLDER}"
 opam pin add flowtype-ci . -n
 opam depext -u flowtype-ci
 opam install flowtype-ci --deps-only
-opam install camlp4 ocp-build
+opam install camlp4
 make all-ocp
 make build-parser-test-with-ocp

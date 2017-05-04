@@ -19,7 +19,7 @@ depends: [
   "base-bytes"
   "sedlex"
   "ocamlbuild" {build}
-  "ocp-build" {build}
+  "ocp-build" {build & <"1.99.19-beta"}
 ]
 available: [ocaml-version >= "4.03.0"]
 build: [ [ make ] ]
