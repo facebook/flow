@@ -78,13 +78,11 @@ classes.js:59
 classes.js:66
  66:   setState(o: { y_: string }): void { },
                    ^^^^^^^^^^^^^^ property `y_`. Property not found in
-                     v------------------
- 45: var FooLegacy = React.createClass({
- 46:   is_mounted: (undefined: ?boolean),
- 47: 
-...:
- 78: });
-     -^ object type
+                      v------------------
+ 62:   getInitialState(): { y: string } {
+ 63:     return { y: "" };
+ 64:   },
+       ^ object type
 
 classes.js:81
  81: var foo_legacy: $jsx<number> = <FooLegacy/>;

@@ -3581,11 +3581,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       CallT (reason_op, { call_args_tlist = arg1::_; call_tout; _ }) ->
       Ops.push reason_op;
       let spec = extract_non_spread cx ~trace arg1 in
+      let mk_tvar f = mk_tvar cx (f reason_op) in
       let knot = { React.CreateClass.
-        this = mk_tvar cx reason_op;
-        static = mk_tvar cx reason_op;
-        state_t = mk_tvar cx reason_op;
-        default_t = mk_tvar cx reason_op;
+        this = mk_tvar (replace_reason_const RThisType);
+        static = mk_tvar (replace_reason_const RThisType);
+        state_t = mk_tvar (replace_reason (fun d -> RTypeParam ("State", d)));
+        default_t = mk_tvar (replace_reason (fun d -> RTypeParam ("Default", d)));
       } in
       rec_flow cx trace (spec, ReactKitT (reason_op,
         React.CreateClass (React.CreateClass.Spec [], knot, call_tout)));
