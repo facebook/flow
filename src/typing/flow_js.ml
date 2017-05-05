@@ -4214,6 +4214,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (ObjT (lreason, { props_tmap = mapr; _ }),
        ObjAssignFromT (reason_op, proto, t, props_to_skip, ObjAssign)) ->
+      let props_to_skip = "$call" :: props_to_skip in
       Ops.push reason_op;
       Context.iter_props cx mapr (fun x p ->
         if not (List.mem x props_to_skip) then (
@@ -4872,14 +4873,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (quick_error_fun_as_obj cx trace reason statics reason_o
              (Context.find_props cx props_tmap))
         then
-          let callp = Field (l, Positive) in
-          let map = SMap.add "$call" callp SMap.empty in
-          let function_proto = FunProtoT reason in
-          let obj = mk_object_with_map_proto cx reason map function_proto in
-          let t = mk_tvar_where cx reason (fun t ->
-            rec_flow cx trace (statics, ObjAssignFromT (reason, obj, t, [], ObjAssign))
-          ) in
-          rec_flow cx trace (t, u)
+          rec_flow cx trace (statics, u)
 
     (* TODO: similar concern as above *)
     | FunT (reason, statics, _, _) ,
@@ -5613,6 +5607,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   | RSpreadOf _
   | RObjectPatternRestProp
   | RFunction _
+  | RStatics (RFunction _)
   | RReactElementProps _
   | RJSXElementProps _ -> true
   | _ -> lflags.frozen

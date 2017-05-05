@@ -141,10 +141,12 @@ let generate_tests cx f x =
   })
 
 let functiontype cx this_t {reason; kind; tparams; params; return_t; _} =
+  let knot = Flow.mk_tvar cx reason in
   let static =
     let reason = replace_reason (fun desc -> RStatics desc) reason in
+    let props = SMap.singleton "$call" (Method knot) in
     let proto = FunProtoT reason in
-    Flow.mk_object_with_proto cx reason proto
+    Flow.mk_object_with_map_proto cx reason props proto
   in
   let prototype =
     let reason = replace_reason_const RPrototype reason in
@@ -162,7 +164,9 @@ let functiontype cx this_t {reason; kind; tparams; params; return_t; _} =
     def_reason = reason;
   } in
   let t = FunT (reason, static, prototype, funtype) in
-  poly_type tparams t
+  let t = poly_type tparams t in
+  Flow.unify cx t knot;
+  t
 
 let methodtype {reason; tparams; params; return_t; _} =
   let params_tlist = Func_params.tlist params in
