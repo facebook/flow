@@ -1,0 +1,2 @@
+true: package(sedlex)
+<lexer.ml>: warn(-39)
