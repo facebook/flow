@@ -1,0 +1,70 @@
+--- node_tests.exp	2017-05-05 18:32:17.000000000 +0200
++++ node_tests.out	2017-05-05 18:32:18.000000000 +0200
+@@ -62,24 +62,24 @@
+          ^^^^^^^^^^^^^^^ call of method `write`
+  16:     hmac.write(123); // 2 errors: not a string or a Buffer
+                     ^^^ number. This type is incompatible with
+-1319:     chunk: Buffer | string,
+-                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1319
++1336:     chunk: Buffer | string,
++                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1336
+   Member 1:
+-  1319:     chunk: Buffer | string,
+-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1319
++  1336:     chunk: Buffer | string,
++                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1336
+   Error:
+    16:     hmac.write(123); // 2 errors: not a string or a Buffer
+                       ^^^ number. This type is incompatible with
+-  1319:     chunk: Buffer | string,
+-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1319
++  1336:     chunk: Buffer | string,
++                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1336
+   Member 2:
+-  1319:     chunk: Buffer | string,
+-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1319
++  1336:     chunk: Buffer | string,
++                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1336
+   Error:
+    16:     hmac.write(123); // 2 errors: not a string or a Buffer
+                       ^^^ number. This type is incompatible with
+-  1319:     chunk: Buffer | string,
+-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1319
++  1336:     chunk: Buffer | string,
++                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1336
+ 
+ crypto/crypto.js:26
+  26:     hmac.update('foo', 'bogus'); // 1 error
+@@ -331,8 +331,8 @@
+      ^ call of method `nextTick`
+  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
+            ^^^^^^ string. This type is incompatible with
+-1732:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+-                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1732
++1749:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
++                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1749
+ 
+ process/nextTick.js:26
+      v----------------
+@@ -342,8 +342,8 @@
+      ^ call of method `nextTick`
+  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
+                       ^^^^^^ number. This type is incompatible with
+-1732:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+-                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1732
++1749:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
++                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1749
+ 
+ process/nextTick.js:26
+      v----------------
+@@ -353,8 +353,8 @@
+      ^ call of method `nextTick`
+  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
+                                  ^^^^^^^ boolean. This type is incompatible with
+-1732:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+-                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1732
++1749:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
++                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1749
+ 
+ 
+ Found 39 errors
