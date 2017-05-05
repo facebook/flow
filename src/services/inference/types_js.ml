@@ -406,13 +406,25 @@ let recheck genv env ~updates =
 
   (* record reparse errors *)
   let errors =
-    let local_errors = List.fold_left (fun local_errors (file, _, fail) ->
+    let new_local_errors: Errors.ErrorSet.t FilenameMap.t = List.fold_left (fun local_errors (file, _, fail) ->
       let errset = Parsing_service_js.(match fail with
       | Parse_error err -> set_of_parse_error err
       | Docblock_errors errs -> set_of_docblock_errors errs
       ) in
       update_errset local_errors file errset
-    ) errors.ServerEnv.local_errors freshparse_fail in
+    ) FilenameMap.empty freshparse_fail in
+    let () =
+      let error_set: Errors.ErrorSet.t =
+        FilenameMap.fold (fun _ -> Errors.ErrorSet.union) new_local_errors Errors.ErrorSet.empty
+      in
+      Persistent_connection.update_clients env.ServerEnv.connections error_set;
+    in
+    let local_errors =
+      FilenameMap.union
+        ~combine:(fun _ x y -> Some (Errors.ErrorSet.union x y))
+        new_local_errors
+        errors.ServerEnv.local_errors
+    in
     { errors with ServerEnv.local_errors }
   in
 
