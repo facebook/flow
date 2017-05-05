@@ -185,7 +185,7 @@ let collate_errors =
        explicitly *)
     die ()
 
-  let autocomplete ~options command_context file_input oc =
+  let autocomplete ~options command_context file_input =
     let path, content = match file_input with
       | ServerProt.FileName _ -> failwith "Not implemented"
       | ServerProt.FileContent (_, content) ->
@@ -211,8 +211,7 @@ let collate_errors =
         OK []
     in
     Autocomplete_js.autocomplete_unset_hooks ();
-    Marshal.to_channel oc (results : ServerProt.autocomplete_response) [];
-    flush oc
+    results
 
   let check_file ~options ~force ~verbose file_input oc =
     let file = ServerProt.file_input_get_filename file_input in
@@ -734,11 +733,18 @@ let collate_errors =
   let respond genv env ~client ~msg =
     let env = ref env in
     let oc = client.oc in
+    let marshal msg =
+      Marshal.to_channel oc msg [];
+      flush oc
+    in
     let options = genv.ServerEnv.options in
     let { ServerProt.client_logging_context; command; } = msg in
     begin match command with
     | ServerProt.AUTOCOMPLETE fn ->
-        autocomplete ~options client_logging_context fn oc
+        let results: ServerProt.autocomplete_response =
+          autocomplete ~options client_logging_context fn
+        in
+        marshal results
     | ServerProt.CHECK_FILE (fn, verbose, graphml, force) ->
         let options = { options with Options.opt_output_graphml = graphml } in
         check_file ~options ~force ~verbose fn oc
