@@ -68,7 +68,7 @@ typing for classes.
 
 ##### Functions are structurally typed <a class="toc" id="toc-functions-are-structurally-typed" href="#toc-functions-are-structurally-typed"></a>
 
-When comparing an function type with a function it must have the same structure
+When comparing a function type with a function it must have the same structure
 in order to be considered valid.
 
 ```js
