@@ -1,13 +1,14 @@
 ---
 layout: guide
 ---
+### Importing and exporting types <a class="toc" id="toc-importing-and-exporting-types" href="#toc-importing-and-exporting-types"></a>
 
-It is often useful to share types in between modules (files). Flow supports
-importing and exporting types.
+It is often useful to share types in between modules (files). In Flow, you can export type aliases, interfaces, and classes from one file and import them in another.
 
 **`exports.js`**
 
 ```js
+export default class Foo {};
 export type MyObject = { /* ... */ };
 export interface MyInterface { /* ... */ };
 ```
@@ -15,27 +16,7 @@ export interface MyInterface { /* ... */ };
 **`imports.js`**
 
 ```js
-import type {MyObject, MyInterface} from './exports';
-```
-
-### Importing and exporting types <a class="toc" id="toc-importing-and-exporting-types" href="#toc-importing-and-exporting-types"></a>
-
-In Flow, you can export type aliases and interfaces from one file and import
-them in another.
-
-**`exports.js`**
-
-```js
-export type MyType = { /* ... */ };
-export interface MyInterface { /* ... */ }
-```
-
-**`imports.js`**
-
-```js
-import type TypeA from './exports';
-import type {TypeA} from './exports';
-import type {TypeA, TypeB} from './exports';
+import type Foo, {MyObject, MyInterface} from './exports';
 ```
 
 ### Importing and exporting values <a class="toc" id="toc-importing-and-exporting-values" href="#toc-importing-and-exporting-values"></a>
