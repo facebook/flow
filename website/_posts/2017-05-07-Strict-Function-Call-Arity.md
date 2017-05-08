@@ -139,7 +139,7 @@ test:1
 
 #### Function subtyping
 
-Flow will not change it's function subtyping behavior. A function
+Flow will not change its function subtyping behavior. A function
 with a smaller maximum arity is still a subtype of a function with a larger
 maximum arity. This allows callbacks to still work as before.
 
