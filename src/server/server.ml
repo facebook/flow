@@ -782,7 +782,12 @@ let collate_errors =
     | ServerProt.SUGGEST (files) ->
         suggest ~options files oc
     | ServerProt.CONNECT ->
-        let new_connections = Persistent_connection.add_client !env.connections client in
+        let new_connections =
+          Persistent_connection.add_client
+            !env.connections
+            client
+            client_logging_context
+        in
         env := {!env with connections = new_connections}
     end;
     !env

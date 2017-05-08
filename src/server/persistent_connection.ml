@@ -14,6 +14,7 @@ type single_client = {
   client: ServerUtils.client;
   infd: Unix.file_descr;
   outfd: Unix.file_descr;
+  logging_context: FlowEventLogger.logging_context;
   subscribed: bool;
 }
 
@@ -33,13 +34,14 @@ let send_single_start_recheck connection =
 let send_single_end_recheck connection =
   send_message (Prot.EndRecheck) connection
 
-let add_client connections client =
+let add_client connections client logging_context =
   Hh_logger.info "Adding new persistent connection";
   let new_connection =
     {
       client;
       infd = Unix.descr_of_in_channel client.ServerUtils.ic;
       outfd = Unix.descr_of_out_channel client.ServerUtils.oc;
+      logging_context;
       subscribed = false;
     }
   in
