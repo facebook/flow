@@ -13,7 +13,6 @@ open ServerUtils
 open Utils_js
 module List = Core_list
 module Server_files = Server_files_js
-module Persistent_connection_prot = ServerProt.Persistent_connection_prot
 
 exception State_not_found
 
@@ -27,6 +26,7 @@ module type SERVER_PROGRAM = sig
   val get_watch_paths: Options.t -> Path.t list
   val name: string
   val handle_client : genv -> env -> client -> env
+  val handle_persistent_client : env -> Persistent_connection.single_client -> env
   val collate_errors :
     errors ->
     Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list
@@ -106,25 +106,6 @@ end = struct
         flush stderr;
         env
 
-  let respond_to_client env client =
-    let msg, env =
-      try
-        Some (Persistent_connection.input_value client), env
-      with
-        | End_of_file ->
-            print_endline "Lost connection to client";
-            let new_connections = Persistent_connection.remove_client env.connections client in
-            None, {env with connections = new_connections}
-    in
-    match msg with
-      | Some Persistent_connection_prot.Subscribe ->
-          let errorl, _ = Program.collate_errors env.errors in
-          let new_connections =
-            Persistent_connection.subscribe_client env.connections client errorl
-          in
-          { env with connections = new_connections }
-      | None -> env
-
   (* When a rebase occurs, dfind takes a while to give us the full list of
    * updates, and it often comes in batches. To get an accurate measurement
    * of rebase time, we use the heuristic that any changes that come in
@@ -168,9 +149,8 @@ end = struct
       List.iter ready_sockets (function
         | New_client fd ->
             env := handle_connection genv !env fd;
-        (* TODO handle other cases *)
         | Existing_client client ->
-            env := respond_to_client !env client;
+            env := Program.handle_persistent_client !env client;
       );
       EventLogger.flush ();
     done

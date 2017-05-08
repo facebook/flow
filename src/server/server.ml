@@ -10,6 +10,7 @@
 
 module TI = Type_inference_js
 module Server = ServerFunctors
+module Persistent_connection_prot = ServerProt.Persistent_connection_prot
 
 module FlowProgram : Server.SERVER_PROGRAM = struct
   open Utils_js
@@ -792,6 +793,14 @@ let collate_errors =
     end;
     !env
 
+  let respond_to_persistent_client env client = function
+    | Persistent_connection_prot.Subscribe ->
+        let errorl, _ = collate_errors env.errors in
+        let new_connections =
+          Persistent_connection.subscribe_client env.connections client errorl
+        in
+        { env with connections = new_connections }
+
   let should_close = function
     | { ServerProt.command = ServerProt.CONNECT; _ } -> false
     | _ -> true
@@ -801,5 +810,19 @@ let collate_errors =
     let env = respond genv env ~client ~msg in
     if should_close msg then client.close ();
     env
+
+  let handle_persistent_client env client =
+    let msg, env =
+      try
+        Some (Persistent_connection.input_value client), env
+      with
+        | End_of_file ->
+            print_endline "Lost connection to client";
+            let new_connections = Persistent_connection.remove_client env.connections client in
+            None, {env with connections = new_connections}
+    in
+    match msg with
+      | Some msg -> respond_to_persistent_client env client msg
+      | None -> env
 
 end
