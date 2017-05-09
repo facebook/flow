@@ -1699,6 +1699,7 @@ let any_propagating_use_t = function
   | UnaryMinusT _
   | UnifyT _
   | UseT (_, ClassT _) (* mk_instance ~for_type:false *)
+  | UseT (_, MaybeT _) (* eval_destructor NonMaybeType *)
     -> true
 
   (* These types have no t_out, so can't propagate anything *)
