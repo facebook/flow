@@ -28,4 +28,5 @@ for (let v of e.entries()) {
 e.getAll('content-type'); // incorrect
 e.forEach((val: string) => val); // correct
 e.forEach((val: string, key: string) => `${key}: ${val}`); // correct
-e.forEach((val: string, key: string, i: number) => `[${i+1}] ${key}: ${val}`); // correct
+e.forEach((val: string, key: string, o: Headers) => {}); // correct
+e.forEach(() => {}, {}); // correct

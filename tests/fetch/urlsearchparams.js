@@ -29,4 +29,5 @@ e.getAll('key1').forEach((v: string) => {}); // correct
 
 e.forEach((val: string) => val); // correct
 e.forEach((val: string, key: string) => `${key}: ${val}`); // correct
-e.forEach((val: string, key: string, i: number) => `[${i+1}] ${key}: ${val}`); // correct
+e.forEach((val: string, key: string, o: URLSearchParams) => {}); // correct
+e.forEach(() => {}, {}); // correct
