@@ -120,9 +120,21 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     | _ -> server
 
   let start_server options exit_status =
-    let server_process = SC.start_server options exit_status in
+    let server_process = SC.start_server
+      ~prior_exit_status:exit_status options in
     setup_autokill_server_on_exit server_process;
     Alive server_process
+
+  let maybe_start_first_server options informant =
+    if Informant.should_start_first_server informant then begin
+      Hh_logger.log "Starting first server";
+      start_server options None
+    end
+    else begin
+      Hh_logger.log ("Not starting first server. " ^^
+        "Starting will be triggered by informant later.");
+      Informant_killed
+    end
 
   let kill_server_with_check = function
       | Alive server ->
@@ -449,8 +461,19 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
         Printf.eprintf "Caught exception while waking client: %s\n%!"
           (Printexc.to_string e)
     end;
-    let server_process = start_server server_start_options None in
+    (** It is essential that we initiate the Informant before the server if we
+     * want to give the opportunity for the Informant to truly take
+     * ownership over the lifetime of the server.
+     *
+     * This is because start_server won't actually start a server if it sees
+     * a hg update sentinel file indicating an hg update is in-progress.
+     * Starting the informant first ensures that its Watchman watch is started
+     * before we check for the hgupdate sentinel file - this is required
+     * for the informant to properly observe an update is complete without
+     * hitting race conditions. *)
     let informant = Informant.init informant_init_env in
+    let server_process = maybe_start_first_server
+      server_start_options informant in
     let env = {
       informant;
       purgatory_clients = [];

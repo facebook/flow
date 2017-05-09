@@ -33,4 +33,5 @@ module type S = sig
   type init_env
   val init : init_env -> t
   val report : t -> server_state -> report
+  val should_start_first_server : t -> bool
 end
