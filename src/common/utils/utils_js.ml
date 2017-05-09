@@ -121,6 +121,18 @@ let range = range_with (fun x -> x)
 
 let repeat n a = range_with (fun _ -> a) 0 n
 
+let rec iter2opt f = function
+  | x::xs, y::ys ->
+    f (Some x) (Some y);
+    iter2opt f (xs, ys)
+  | x::xs, [] ->
+    f (Some x) None;
+    iter2opt f (xs, [])
+  | [], y::ys ->
+    f None (Some y);
+    iter2opt f ([], ys)
+  | [], [] -> ()
+
 (**
  * Useful for various places where a user might have typoed a string and the
  * set of possible intended strings is known (i.e. variable names).

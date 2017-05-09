@@ -3817,11 +3817,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let fresh = (desc_of_reason r1) = RArrayLit in
       let l1 = List.length ts1 in
       let l2 = List.length ts2 in
-      if l1 <> l2
-      then
-        add_output cx ~trace (FlowError.ETupleArityMismatch ((r1, r2), l1, l2))
-      else
-        List.iter2 (fun l u -> flow_to_mutable_child cx trace fresh l u) ts1 ts2
+      if l1 <> l2 then
+        add_output cx ~trace (FlowError.ETupleArityMismatch ((r1, r2), l1, l2));
+      iter2opt (fun t1 t2 ->
+        match t1, t2 with
+        | Some t1, Some t2 ->
+          flow_to_mutable_child cx trace fresh t1 t2
+        | _ -> ()
+      ) (ts1, ts2);
 
     (* Arrays with known elements can flow to tuples *)
     | ArrT (r1, ArrayAT (t1, ts1)),
@@ -8849,10 +8852,13 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
     ArrT (r2, TupleAT (_, ts2)) ->
     let l1 = List.length ts1 in
     let l2 = List.length ts2 in
-    if List.length ts1 <> List.length ts2
-    then
-      add_output cx ~trace (FlowError.ETupleArityMismatch ((r1, r2), l1, l2))
-    else List.iter2 (rec_unify cx trace) ts1 ts2
+    if l1 <> l2 then
+      add_output cx ~trace (FlowError.ETupleArityMismatch ((r1, r2), l1, l2));
+    iter2opt (fun t1 t2 ->
+      match t1, t2 with
+      | Some t1, Some t2 -> rec_unify cx trace t1 t2
+      | _ -> ()
+    ) (ts1, ts2)
 
   | ObjT (lreason, { props_tmap = lflds; dict_t = ldict; _ }),
     ObjT (ureason, { props_tmap = uflds; dict_t = udict; _ }) ->
