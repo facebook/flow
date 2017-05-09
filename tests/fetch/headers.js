@@ -25,4 +25,4 @@ for (let v of e.entries()) {
   const [i, j]: [string, string] = v; // correct
 }
 
-e.getAll('content-type').forEach((v: string) => {}); // correct
+e.getAll('content-type'); // incorrect
