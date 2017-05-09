@@ -34,6 +34,7 @@ const i: Response = new Response({
 }); // incorrect
 
 const ok: boolean = h.ok;
+const redirected: boolean = h.redirected;
 const status: number = h.status;
 
 h.text().then((t: string) => t); // correct
