@@ -5810,6 +5810,8 @@ and ground_subtype = function
 
   | (_, ObjSpreadT _) -> false
 
+  | (_, ChoiceKitUseT _) -> false
+
   (* Allow deferred unification with `any` *)
   | (_, UnifyT _) -> false
 
