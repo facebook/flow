@@ -5292,10 +5292,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (** TODO: Ditto above comment for Function.prototype *)
       rec_flow cx trace (get_builtin_type cx ~trace reason_op "Function", u)
 
-    | (ObjProtoT reason | FunProtoT reason),
-      LookupT (_, Strict strict_reason, [], Named (reason_prop, x), _) ->
+    | (ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
+        Strict strict_reason, [], (Named (reason_prop, x) as propref), action) ->
       add_output cx ~trace (FlowError.EStrictLookupFailed
-        ((reason_prop, strict_reason), reason, Some x))
+        ((reason_prop, strict_reason), reason, Some x));
+      let p = Field (AnyT.why reason_op, Neutral) in
+      perform_lookup_action cx trace propref p reason reason_op action
 
     | (ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
         Strict strict_reason, [], (Computed elem_t as propref), action) ->
