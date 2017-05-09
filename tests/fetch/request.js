@@ -59,4 +59,4 @@ const l: Request = new Request('http://example.org', {
 
 new Request('/', { method: 'post' }); // correct
 new Request('/', { method: 'hello' }); // correct
-new Request('/', { method: null }); // correct
+new Request('/', { method: null }); // incorrect

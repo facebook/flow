@@ -3,13 +3,9 @@ const a: Response = new Response(); // correct
 const b: Response = new Response(new Blob()); // correct
 const c: Response = new Response(new FormData()); // correct
 
-const d: Response = new Response(new FormData(), {
-    status: 404
-}); // correct
-
-const e: Response = new Response("responsebody", {
-    status: "404"
-}); // incorrect
+new Response("", { status: 404 }); // correct
+new Response("", { status: "404" }); // incorrect
+new Response("", { status: null }); // incorrect
 
 const f: Response = new Response("responsebody", {
     status: 404,
