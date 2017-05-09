@@ -57,11 +57,6 @@ const l: Request = new Request('http://example.org', {
   cache: 'default'
 }) // incorrect - headers is string
 
-const m: Request = new Request('http://example.org', {
-  method: 'CONNECT',
-  headers: {
-    'Content-Type': 'image/jpeg'
-  },
-  mode: 'cors',
-  cache: 'default'
-}) // incorrect - CONNECT is forbidden
+new Request('/', { method: 'post' }); // correct
+new Request('/', { method: 'hello' }); // correct
+new Request('/', { method: null }); // correct
