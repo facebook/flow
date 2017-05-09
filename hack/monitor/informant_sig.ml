@@ -12,8 +12,6 @@
 type report =
   (** Nothing to see here. *)
   | Move_along
-  (** Kill the server. *)
-  | Kill_server
   (** Kill the server (if one is running) and start a new one. *)
   | Restart_server
 

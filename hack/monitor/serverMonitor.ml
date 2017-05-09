@@ -199,15 +199,6 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
          (env.retries + 1);
        restart_server env exit_status
      end
-     else if informant_report = Informant_sig.Kill_server then begin
-       Hh_logger.log "Informant directed server kill. Killing server.";
-       HackEventLogger.informant_induced_kill ();
-       kill_server_and_wait_for_exit env;
-       {
-         env with
-         server = Informant_killed;
-       }
-     end
      else if informant_report = Informant_sig.Restart_server then begin
        Hh_logger.log "Informant directed server restart. Restarting server.";
        HackEventLogger.informant_induced_restart ();
