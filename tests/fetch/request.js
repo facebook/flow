@@ -7,6 +7,7 @@ const e: Request = new Request(b, c); // incorrect
 
 const f: Request = new Request({}) // incorrect
 const g: Request = new Request('http://example.org', {}) // correct
+new Request(new URL('http://example.org')); // correct
 
 const h: Request = new Request('http://example.org', {
   method: 'GET',
