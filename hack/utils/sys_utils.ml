@@ -15,19 +15,25 @@ exception NotADirectory of string
 external realpath: string -> string option = "hh_realpath"
 external is_nfs: string -> bool = "hh_is_nfs"
 
+(** Option type intead of exception throwing. *)
+let get_env name =
+  try Some (Sys.getenv name) with
+  | Not_found -> None
+
 let getenv_user () =
   let user_var = if Sys.win32 then "USERNAME" else "USER" in
   let logname_var = "LOGNAME" in
-  try Some (Sys.getenv user_var) with Not_found ->
-  try Some (Sys.getenv logname_var) with Not_found -> None
+  let user = get_env user_var in
+  let logname = get_env logname_var in
+  Option.first_some user logname
 
 let getenv_home () =
   let home_var = if Sys.win32 then "APPDATA" else "HOME" in
-  try Some (Sys.getenv home_var) with Not_found -> None
+  get_env home_var
 
 let getenv_term () =
   let term_var = "TERM" in (* This variable does not exist on windows. *)
-  try Some (Sys.getenv term_var) with Not_found -> None
+  get_env term_var
 
 let path_sep = if Sys.win32 then ";" else ":"
 let null_path = if Sys.win32 then "nul" else "/dev/null"
@@ -36,7 +42,7 @@ let temp_dir_name =
 
 let getenv_path () =
   let path_var = "PATH" in (* Same variable on windows *)
-  try Some (Sys.getenv path_var) with Not_found -> None
+  get_env path_var
 
 let open_in_no_fail fn =
   try open_in fn
