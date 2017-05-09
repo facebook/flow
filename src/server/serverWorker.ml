@@ -9,18 +9,13 @@
  *)
 
 let save options =
-  let master_cx = Init_js.get_master_cx options in
   let root = Options.root options in
   let config_file = Server_files_js.config_file root in
   let config = FlowConfig.get config_file in
-  Flow_js.builtins master_cx,
-  master_cx,
   (config_file, config)
 
-let restore (b, cx, fc) =
-  Flow_js.restore_builtins cx b;
-  Init_js.restore_master_cx cx;
-  FlowConfig.restore fc
+let restore (config_file, config) =
+  FlowConfig.restore (config_file, config)
 
 (* As for [Daemon.register_entry_point], this should stay
    at toplevel, in order to be executed before

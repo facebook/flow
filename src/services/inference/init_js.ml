@@ -23,24 +23,6 @@ module Flow = Flow_js
 module Parsing = Parsing_service_js
 module Infer = Type_inference_js
 
-(* created in the master process (see Server.preinit), populated and saved to
-   ContextHeap. forked workers will have an empty replica from the master, but
-   it's useless. should only be accessed through ContextHeap. *)
-let get_master_cx, restore_master_cx =
-  let cx_ = ref None in
-  let get_master_cx options = match !cx_ with
-  | None ->
-    let metadata = Context.({ (metadata_of_options options) with
-      checked = false;
-      weak = false;
-    }) in
-    let cx = Flow.fresh_context metadata Loc.Builtins Files.lib_module_ref in
-    cx_ := Some cx;
-    cx
-  | Some cx -> cx in
-  let restore_master_cx cx = cx_ := Some cx in
-  get_master_cx, restore_master_cx
-
 let parse_lib_file options file =
   (* types are always allowed in lib files *)
   let types_mode = Parsing.TypesAllowed in
@@ -81,7 +63,7 @@ let parse_lib_file options file =
 
    returns list of (filename, success, errors, suppressions) tuples
  *)
-let load_lib_files ~options files =
+let load_lib_files ~master_cx ~options files =
 
   let verbose = Options.verbose options in
 
@@ -104,7 +86,6 @@ let load_lib_files ~options files =
           lib_file ast
         in
 
-        let master_cx = get_master_cx options in
         let errs, suppressions = Merge_js.merge_lib_file cx master_cx in
 
         (if verbose != None then
@@ -143,13 +124,23 @@ let load_lib_files ~options files =
  *)
 let init ~options lib_files =
 
-  let result = load_lib_files ~options lib_files in
+  let master_cx =
+    let metadata = Context.({ (metadata_of_options options) with
+      checked = false;
+      weak = false;
+    }) in
+    Flow.fresh_context metadata Loc.Builtins Files.lib_module_ref
+  in
+
+  let result = load_lib_files ~master_cx ~options lib_files in
 
   Flow.Cache.clear();
-  let master_cx = get_master_cx options in
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Flow.mk_object master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context [master_cx] |> ignore;
+
+  (* store master signature context to heap *)
+  Context_cache.add_sig ~audit:Expensive.ok master_cx;
 
   result

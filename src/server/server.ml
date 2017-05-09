@@ -20,11 +20,6 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
   let name = "flow server"
 
-  let preinit options =
-    (* Do some initialization before creating workers, so that each worker is
-     * forked with this information already available. *)
-    ignore (Init_js.get_master_cx options)
-
   let init genv =
     (* Encapsulate merge_strict_context for dumper *)
     let merge_component options cx =

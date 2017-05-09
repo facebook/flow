@@ -17,7 +17,6 @@ module Server_files = Server_files_js
 exception State_not_found
 
 module type SERVER_PROGRAM = sig
-  val preinit : Options.t -> unit
   val init : genv -> (Profiling_js.t * env)
   val run_once_and_exit : profiling:Profiling_js.t -> genv -> env -> unit
   (* filter and relativize updated file paths *)

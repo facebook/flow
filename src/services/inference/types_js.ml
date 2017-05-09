@@ -306,9 +306,6 @@ let typecheck
           ) merge_errors merged
         )
       in
-      let master_cx = Init_js.get_master_cx options in
-      let merge_errors = update_errset merge_errors
-        (Context.file master_cx) (Context.errors master_cx) in
       if Options.should_profile options then Gc.print_stat stderr;
       Hh_logger.info "Done";
       profiling, merge_errors
@@ -395,11 +392,9 @@ let recheck genv env ~updates =
                        parse_fails = freshparse_fail;
   } = freshparse_results in
 
-  (* clear errors for new_or_changed files, deleted files and master *)
-  let master_cx = Init_js.get_master_cx options in
+  (* clear errors for new, changed and deleted files *)
   let errors =
     errors
-    |> clear_errors ~debug ([Context.file master_cx])
     |> clear_errors ~debug (FilenameSet.elements new_or_changed)
     |> clear_errors ~debug (FilenameSet.elements deleted)
   in
@@ -563,9 +558,6 @@ let recheck genv env ~updates =
   Context_cache.remove_batch new_or_changed_or_deleted;
   (* clear out records of files, and names of modules provided by those files *)
   let old_modules = Module_js.clear_files workers ~options new_or_changed_or_deleted in
-
-  (* TODO elsewhere or delete *)
-  Context.remove_all_errors master_cx;
 
   let dependent_file_count = ref 0 in
 
