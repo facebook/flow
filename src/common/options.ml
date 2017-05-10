@@ -50,7 +50,6 @@ type t = {
   opt_enable_const_params: bool;
   opt_enable_unsafe_getters_and_setters: bool;
   opt_enforce_strict_type_args: bool;
-  opt_enforce_strict_call_arity: bool;
   opt_error_flags: error_flags;
   opt_esproposal_class_static_fields: esproposal_feature_mode;
   opt_esproposal_class_instance_fields: esproposal_feature_mode;
@@ -111,7 +110,6 @@ let enable_const_params opts = opts.opt_enable_const_params
 let enable_unsafe_getters_and_setters opts =
   opts.opt_enable_unsafe_getters_and_setters
 let enforce_strict_type_args opts = opts.opt_enforce_strict_type_args
-let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 let error_flags opts = opts.opt_error_flags
 let esproposal_class_static_fields opts =
   opts.opt_esproposal_class_static_fields

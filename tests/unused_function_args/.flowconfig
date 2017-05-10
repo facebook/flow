@@ -5,6 +5,5 @@
 [libs]
 
 [options]
-experimental.strict_call_arity=true
 all=true
 no_flowlib=false

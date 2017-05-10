@@ -1,3 +1,41 @@
+buffer/buffer.js:57
+ 57: buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `from`. Function cannot be called on any member of intersection type
+ 57: buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
+              ^^^^^^^^^^^ intersection
+  Member 1:
+  111:   static from(value: Buffer): Buffer;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:111
+  Error:
+   57: buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
+  111:   static from(value: Buffer): Buffer;
+                            ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:111
+  Member 2:
+  112:   static from(value: string, encoding?: buffer$Encoding): Buffer;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:112
+  Error:
+   57: buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
+  112:   static from(value: string, encoding?: buffer$Encoding): Buffer;
+                            ^^^^^^ string. See lib: <BUILTINS>/node.js:112
+  Member 3:
+  113:   static from(value: ArrayBuffer, byteOffset?: number, length?: number): Buffer;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:113
+  Error:
+   57: buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
+  113:   static from(value: ArrayBuffer, byteOffset?: number, length?: number): Buffer;
+                            ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/node.js:113
+  Member 4:
+  114:   static from(value: Iterable<number>): this;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:114
+  Error:
+   57: buffer = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72], (a:number) => a + 1, {}); // error
+                                                                  ^^^^^^^^^^^^^^^^^^^ unused function argument
+    114:   static from(value: Iterable<number>): this;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/node.js:114
+
 child_process/execSync.js:8
   8: (execSync('ls', {timeout: '250'})); // error, no signatures match
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call. Function cannot be called on any member of intersection type
@@ -357,4 +395,4 @@ process/nextTick.js:26
                           ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1732
 
 
-Found 39 errors
+Found 40 errors

@@ -10,7 +10,7 @@ if (false) {
 }
 f(x);
 
-function f(): number {
+function f(_): number {
   if (x.p) {
     return x.q;
   } else {

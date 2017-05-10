@@ -162,6 +162,36 @@ FormData.js:28
   321:     set(name: string, value: File, filename?: string): void;
                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:321
 
+FormData.js:29
+ 29: a.set('foo', 'bar', 'baz'); // incorrect
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
+ 29: a.set('foo', 'bar', 'baz'); // incorrect
+     ^^^^^ intersection
+  Member 1:
+  319:     set(name: string, value: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:319
+  Error:
+   29: a.set('foo', 'bar', 'baz'); // incorrect
+                           ^^^^^ unused function argument
+    319:     set(name: string, value: string): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/bom.js:319
+  Member 2:
+  320:     set(name: string, value: Blob, filename?: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:320
+  Error:
+   29: a.set('foo', 'bar', 'baz'); // incorrect
+                    ^^^^^ string. This type is incompatible with the expected param type of
+  320:     set(name: string, value: Blob, filename?: string): void;
+                                    ^^^^ Blob. See lib: <BUILTINS>/bom.js:320
+  Member 3:
+  321:     set(name: string, value: File, filename?: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:321
+  Error:
+   29: a.set('foo', 'bar', 'baz'); // incorrect
+                    ^^^^^ string. This type is incompatible with the expected param type of
+  321:     set(name: string, value: File, filename?: string): void;
+                                    ^^^^ File. See lib: <BUILTINS>/bom.js:321
+
 FormData.js:32
  32: a.set('bar', new File([], 'q'), 2) // incorrect
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
@@ -281,6 +311,36 @@ FormData.js:40
                 ^ number. This type is incompatible with the expected param type of
   325:     append(name: string, value: File, filename?: string): void;
                         ^^^^^^ string. See lib: <BUILTINS>/bom.js:325
+
+FormData.js:41
+ 41: a.append('foo', 'bar', 'baz'); // incorrect
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Function cannot be called on any member of intersection type
+ 41: a.append('foo', 'bar', 'baz'); // incorrect
+     ^^^^^^^^ intersection
+  Member 1:
+  323:     append(name: string, value: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:323
+  Error:
+   41: a.append('foo', 'bar', 'baz'); // incorrect
+                              ^^^^^ unused function argument
+    323:     append(name: string, value: string): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 2 arguments. See lib: <BUILTINS>/bom.js:323
+  Member 2:
+  324:     append(name: string, value: Blob, filename?: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:324
+  Error:
+   41: a.append('foo', 'bar', 'baz'); // incorrect
+                       ^^^^^ string. This type is incompatible with the expected param type of
+  324:     append(name: string, value: Blob, filename?: string): void;
+                                       ^^^^ Blob. See lib: <BUILTINS>/bom.js:324
+  Member 3:
+  325:     append(name: string, value: File, filename?: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:325
+  Error:
+   41: a.append('foo', 'bar', 'baz'); // incorrect
+                       ^^^^^ string. This type is incompatible with the expected param type of
+  325:     append(name: string, value: File, filename?: string): void;
+                                       ^^^^ File. See lib: <BUILTINS>/bom.js:325
 
 FormData.js:45
  45: a.append('bar', new File([], 'q'), 2) // incorrect
@@ -754,4 +814,4 @@ MutationObserver.js:23
                                ^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/bom.js:355
 
 
-Found 53 errors
+Found 55 errors

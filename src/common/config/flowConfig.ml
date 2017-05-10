@@ -42,7 +42,6 @@ module Opts = struct
     enable_const_params: bool;
     enable_unsafe_getters_and_setters: bool;
     enforce_strict_type_args: bool;
-    enforce_strict_call_arity: bool;
     esproposal_class_instance_fields: Options.esproposal_feature_mode;
     esproposal_class_static_fields: Options.esproposal_feature_mode;
     esproposal_decorators: Options.esproposal_feature_mode;
@@ -145,7 +144,6 @@ module Opts = struct
     enable_const_params = false;
     enable_unsafe_getters_and_setters = false;
     enforce_strict_type_args = true;
-    enforce_strict_call_arity = false;
     esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_decorators = Options.ESPROPOSAL_WARN;
@@ -777,15 +775,6 @@ let parse_options config lines =
       optparser = optparse_boolean;
       setter = (fun opts v ->
         Ok {opts with enforce_strict_type_args = v;}
-      );
-    }
-
-    |> define_opt "experimental.strict_call_arity" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_boolean;
-      setter = (fun opts v ->
-        Ok {opts with enforce_strict_call_arity = v;}
       );
     }
 

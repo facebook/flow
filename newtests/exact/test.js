@@ -106,8 +106,8 @@ type ArityError = $Exact<number, number>; // error, 2 params expected 1
                                       ^^^^ function call
                                 15:     return x.q;
                                                ^^^ string. This type is incompatible with the expected return type of
-                                13: function f(): number {
-                                                  ^^^^^^ number
+                                13: function f(_): number {
+                                                   ^^^^^^ number
                              `,
                            ),
   ]),

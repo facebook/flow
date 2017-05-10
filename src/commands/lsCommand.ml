@@ -203,7 +203,6 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_enable_const_params = false;
     opt_enable_unsafe_getters_and_setters = false;
     opt_enforce_strict_type_args = false;
-    opt_enforce_strict_call_arity = false;
     opt_esproposal_class_static_fields = Options.ESPROPOSAL_WARN;
     opt_esproposal_class_instance_fields = Options.ESPROPOSAL_WARN;
     opt_esproposal_decorators = Options.ESPROPOSAL_WARN;

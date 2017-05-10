@@ -74,12 +74,12 @@ export default suite(({addFile, addFiles, addCode}) => [
   ]),
 
   test('fun.call()', [
-    addCode('(function () { return this.bar; }).call(...arr);')
+    addCode('(function (...args) { return this.bar; }).call(...arr);')
       .newErrors(
         `
           test.js:5
-            5: (function () { return this.bar; }).call(...arr);
-                                                          ^^^ A spread argument is unsupported here
+            5: (function (...args) { return this.bar; }).call(...arr);
+                                                                 ^^^ A spread argument is unsupported here
         `,
       ),
   ]),
