@@ -297,9 +297,33 @@
     lex_lb_curr_p: Lexing.position;
   }
 
+  let from_lb_p source start _end = Lexing.(
+    { Loc.
+      source;
+      start = { Loc.
+        line = start.pos_lnum;
+        column = start.pos_cnum - start.pos_bol;
+        offset = start.pos_cnum;
+      };
+      _end = { Loc.
+        line = _end.pos_lnum;
+        column = max 0 (_end.pos_cnum - _end.pos_bol);
+        offset = _end.pos_cnum;
+      }
+    }
+  )
+
+  (* Returns the position that the lexer is currently about to lex *)
+  let from_curr_lb source lb =
+    let curr = lb.Lexing.lex_curr_p in
+    from_lb_p source curr curr
+
+  (* Returns the position for the token that was just lexed *)
   let lb_to_loc lexbuf =
-    let source = Loc.LibFile Lexing.(lexbuf.lex_curr_p.pos_fname) in
-    Loc.from_lb (Some source) lexbuf
+    let source = Some (Loc.LibFile Lexing.(lexbuf.lex_curr_p.pos_fname)) in
+    let start = Lexing.lexeme_start_p lexbuf in
+    let _end = Lexing.lexeme_end_p lexbuf in
+    from_lb_p source start _end
 
   let get_result_and_clear_state lb lex_token =
     let state = !lex_state in
@@ -1282,7 +1306,7 @@ and template_part cooked raw = parse
    * *)
   let lex_jsx_child lexbuf =
     let source = Loc.LibFile Lexing.(lexbuf.lex_curr_p.pos_fname) in
-    let start = Loc.from_curr_lb (Some source) lexbuf in
+    let start = from_curr_lb (Some source) lexbuf in
     let buf = Buffer.create 127 in
     let raw = Buffer.create 127 in
     let child = lex_jsx_child start buf raw lexbuf in

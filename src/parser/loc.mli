@@ -17,8 +17,6 @@ type filename =
   | Builtins
 type t = { source : filename option; start : position; _end : position; }
 val none : t
-val from_lb : filename option -> Lexing.lexbuf -> t
-val from_curr_lb : filename option -> Lexing.lexbuf -> t
 val btwn : t -> t -> t
 val btwn_exclusive : t -> t -> t
 val char_before : t -> t

@@ -35,35 +35,6 @@ let none = {
   _end = { line = 0; column = 0; offset = 0; };
 }
 
-let from_lb_p source start _end = Lexing.(
-  {
-    source;
-    start = {
-      line = start.pos_lnum;
-      column = start.pos_cnum - start.pos_bol;
-      offset = start.pos_cnum;
-    };
-    _end = {
-      line = _end.pos_lnum;
-      column = max 0 (_end.pos_cnum - _end.pos_bol);
-      offset = _end.pos_cnum;
-    }
-  }
-)
-
-(* Returns the position for the token that was just lexed *)
-let from_lb source lb = Lexing.(
-  let start = lexeme_start_p lb in
-  let _end = lexeme_end_p lb in
-  from_lb_p source start _end
-)
-
-(* Returns the position that the lexer is currently about to lex *)
-let from_curr_lb source lb = Lexing.(
-  let curr = lb.lex_curr_p in
-  from_lb_p source curr curr
-)
-
 let btwn loc1 loc2 = {
   source = loc1.source;
   start = loc1.start;
