@@ -1,3 +1,39 @@
+### 0.46.0
+
+Likely to cause new Flow errors:
+* We updated the type for the `React.Component` constructor, which means Flow
+can now infer the prop types based on the `super(props)` call in a react
+component constructor. This means components that weren't already declaring
+their  prop types may start getting errors if there are any issues with their
+prop types.
+* We fixed the type of `Promise.prototype.catch`, which means code that uses
+`.catch` but wasn't properly handling the exceptional behavior might now have
+Flow errors
+
+New Features:
+* We're updating how get-def (the jump to definition feature) works. It will now
+jump straight to the definition, even if it's in another file, rather than to the most recent assignment.
+* Starting in v0.47.0 we're going to complain when you call a function with more arguments than it expects. You can try it out in v0.46.0 with the `.flowconfig` option `experimental.strict_call_arity=true`. For more [check out this blog post](https://flow.org/blog/2017/05/07/Strict-Function-Call-Arity/)
+
+Notable bug fixes:
+* Fixed a exponential blowup that could happen when using functions as callable objects
+* Fixed a bug where calling a function with a rest param wouldn't flow `undefined` to unfulfilled parameters.
+* Fixed a bug where `declare class` classes would be given a default constructor even if they extended another class
+
+Misc:
+* Flow is faster! There are a bunch of perf wins in this release!
+* Lots of updates to library definitions! Thanks to all our contributors!
+* When using the Flow CLI, multiline errors will now show multiple lines of context
+* Replaced `--no-suppressions` with `--include-suppressed` which is a little bit more well-behaved.
+* Added `--pretty` flag to `flow check` for pretty-printed JSON
+
+Parser:
+* Import expressions that appear in a statement list are now correctly parsed as import expressions (thanks @[mikaelbr](https://github.com/mikaelbr)!)
+* Fixed the location of `declare function` declarations with predicates
+* Fixed the location of `yield` expressions with semicolons
+* Fixed the location of `declare module` declarations
+* Fixed a bug where array pattern with defaults like `[a=1, b] = c` was parsed like `[a=(1, b)] = c`.
+
 ### 0.45.0
 
 New Features:
