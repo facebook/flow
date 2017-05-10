@@ -85,25 +85,27 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "node", json_of_node json_cx id
     ]
 
-  | NumT (_, lit) ->
+  | DefT (_, NumT lit) ->
     begin match lit with
     | Literal (_, (_, raw)) -> ["literal", JSON_String raw]
     | Truthy -> ["refinement", JSON_String "Truthy"]
     | AnyLiteral -> []
     end
 
-  | StrT (_, lit) -> _json_of_string_literal lit
+  | DefT (_, StrT lit) -> _json_of_string_literal lit
 
-  | BoolT (_, b) ->
+  | DefT (_, BoolT b) ->
     (match b with
       | Some b -> ["literal", JSON_Bool b]
       | None -> [])
 
-  | EmptyT _
-  | MixedT _
-  | AnyT _
-  | NullT _
-  | VoidT _
+  | DefT (_, EmptyT)
+  | DefT (_, MixedT _)
+  | DefT (_, AnyT)
+  | DefT (_, NullT)
+  | DefT (_, VoidT)
+    -> []
+
   | TaintT _
   | ObjProtoT _
   | FunProtoT _
@@ -112,17 +114,17 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | FunProtoCallT _
     -> []
 
-  | FunT (_, static, proto, funtype) -> [
+  | DefT (_, FunT (static, proto, funtype)) -> [
       "static", _json_of_t json_cx static;
       "prototype", _json_of_t json_cx proto;
       "funType", json_of_funtype json_cx funtype
     ]
 
-  | ObjT (_, objtype) -> [
+  | DefT (_, ObjT objtype) -> [
       "type", json_of_objtype json_cx objtype
     ]
 
-  | ArrT (_, ArrayAT (elemt, tuple_types)) -> [
+  | DefT (_, ArrT (ArrayAT (elemt, tuple_types))) -> [
       "kind", JSON_String "Array";
       "elemType", _json_of_t json_cx elemt;
       "tupleType", match tuple_types with
@@ -130,33 +132,33 @@ and _json_of_t_impl json_cx t = Hh_json.(
       | None -> JSON_Null
     ]
 
-  | ArrT (_, TupleAT (elemt, tuple_types)) -> [
+  | DefT (_, ArrT (TupleAT (elemt, tuple_types))) -> [
       "kind", JSON_String "Tuple";
       "elemType", _json_of_t json_cx elemt;
       "tupleType", JSON_Array (List.map (_json_of_t json_cx) tuple_types);
     ]
 
-  | ArrT (_, ROArrayAT (elemt)) -> [
+  | DefT (_, ArrT (ROArrayAT (elemt))) -> [
       "kind", JSON_String "ReadOnlyArray";
       "elemType", _json_of_t json_cx elemt;
     ]
 
-  | ArrT (_, EmptyAT) -> [
+  | DefT (_, ArrT EmptyAT) -> [
       "kind", JSON_String "EmptyArray";
     ]
 
-  | ClassT (_, t) -> [
+  | DefT (_, ClassT t) -> [
       "type", _json_of_t json_cx t
     ]
 
-  | InstanceT (_, static, super, implements, instance) -> [
+  | DefT (_, InstanceT (static, super, implements, instance)) -> [
       "static", _json_of_t json_cx static;
       "super", _json_of_t json_cx super;
       "implements", JSON_Array (List.map (_json_of_t json_cx) implements);
       "instance", json_of_insttype json_cx instance
     ]
 
-  | OptionalT (_, t)
+  | DefT (_, OptionalT t)
   | AbstractT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
@@ -171,12 +173,12 @@ and _json_of_t_impl json_cx t = Hh_json.(
       | Some t -> [ "result", _json_of_t json_cx t ]
       end
 
-  | PolyT (_, tparams, t) -> [
+  | DefT (_, PolyT (tparams, t)) -> [
       "typeParams", JSON_Array (List.map (json_of_typeparam json_cx) tparams);
       "type", _json_of_t json_cx t
     ]
 
-  | TypeAppT (_, t, targs) -> [
+  | DefT (_, TypeAppT (t, targs)) -> [
       "typeArgs", JSON_Array (List.map (_json_of_t json_cx) targs);
       "type", _json_of_t json_cx t
     ]
@@ -202,16 +204,16 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | MaybeT (_, t) -> [
+  | DefT (_, MaybeT t) -> [
       "type", _json_of_t json_cx t
     ]
 
-  | IntersectionT (_, rep) -> [
+  | DefT (_, IntersectionT rep) -> [
       let ts = InterRep.members rep in
       "types", JSON_Array (List.map (_json_of_t json_cx) ts)
     ]
 
-  | UnionT (_, rep) -> [
+  | DefT (_, UnionT rep) -> [
       let ts = UnionRep.members rep in
       "types", JSON_Array (List.map (_json_of_t json_cx) ts)
     ]
@@ -221,8 +223,8 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | AnyObjT _
-  | AnyFunT _ ->
+  | DefT (_, AnyObjT)
+  | DefT (_, AnyFunT) ->
     []
 
   | ShapeT t -> [
@@ -238,19 +240,19 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | SingletonStrT (_, s) -> [
+  | DefT (_, SingletonStrT s) -> [
       "literal", JSON_String s
     ]
 
-  | SingletonNumT (_, (_, raw)) -> [
+  | DefT (_, SingletonNumT (_, raw)) -> [
       "literal", JSON_String raw
     ]
 
-  | SingletonBoolT (_, b) -> [
+  | DefT (_, SingletonBoolT b) -> [
       "literal", JSON_Bool b
     ]
 
-  | TypeT (_, t) -> [
+  | DefT (_, TypeT t) -> [
       "result", _json_of_t json_cx t
     ]
 
@@ -723,9 +725,9 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
         let kind, t = match param with
         | ResolvedArg t -> "ResolvedArg", t
         | ResolvedSpreadArg (r, at) ->
-          "ResolvedSpreadArg", ArrT (r, at)
+          "ResolvedSpreadArg", DefT (r, ArrT at)
         | ResolvedAnySpreadArg r ->
-          "ResolvedAnySpreadArg", AnyT (r)
+          "ResolvedAnySpreadArg", DefT (r, AnyT)
         in
         JSON_Object [
           "kind", JSON_String kind;
@@ -1460,80 +1462,81 @@ and dump_t_ (depth, tvars) cx t =
   if depth = 0 then string_of_ctor t
   else match t with
   | OpenT (_, id) -> p ~extra:(tvar id) t
-  | NumT (_, lit) -> p ~extra:(match lit with
+  | DefT (_, NumT lit) -> p ~extra:(match lit with
     | Literal (_, (_, raw)) -> raw
     | Truthy -> "truthy"
     | AnyLiteral -> "") t
-  | StrT (_, c) -> p ~extra:(match c with
+  | DefT (_, StrT c) -> p ~extra:(match c with
     | Literal (_, s) -> spf "%S" s
     | Truthy -> "truthy"
     | AnyLiteral -> "") t
-  | BoolT (_, c) -> p ~extra:(match c with
+  | DefT (_, BoolT c) -> p ~extra:(match c with
     | Some b -> spf "%B" b
     | None -> "") t
-  | FunT (_,_,_,{params_tlist;return_t;this_t;_}) -> p
+  | DefT (_, FunT (_, _, {params_tlist; return_t; this_t; _})) -> p
       ~extra:(spf "<this: %s>(%s) => %s"
         (kid this_t)
         (String.concat "; " (List.map kid params_tlist))
         (kid return_t)) t
-  | MixedT (_, flavor) -> p ~extra:(string_of_mixed_flavor flavor) t
-  | EmptyT _
-  | AnyT _
-  | NullT _
-  | VoidT _
+  | DefT (_, MixedT flavor) -> p ~extra:(string_of_mixed_flavor flavor) t
+  | DefT (_, EmptyT)
+  | DefT (_, AnyT)
+  | DefT (_, NullT)
+  | DefT (_, VoidT)
+      -> p t
   | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _ -> p t
-  | PolyT (_, tps,c) -> p ~extra:(spf "%s [%s]"
+  | DefT (_, PolyT (tps,c)) -> p ~extra:(spf "%s [%s]"
       (kid c)
       (String.concat "; " (List.map (fun tp -> tp.name) tps))) t
   | ThisClassT (_, inst) -> p ~extra:(kid inst) t
   | BoundT param -> p ~extra:param.name t
   | ExistsT _ -> p t
-  | ObjT (_, { props_tmap; _ }) -> p t
+  | DefT (_, ObjT { props_tmap; _ }) -> p t
       ~extra:(Properties.string_of_id props_tmap)
-  | ArrT (_, ArrayAT (elemt, None)) -> p ~extra:(spf "Array %s" (kid elemt)) t
-  | ArrT (_, ArrayAT (elemt, Some tup)) -> p
+  | DefT (_, ArrT (ArrayAT (elemt, None))) -> p ~extra:(spf "Array %s" (kid elemt)) t
+  | DefT (_, ArrT (ArrayAT (elemt, Some tup))) -> p
       ~extra:(spf "Array %s, %s" (kid elemt)
         (spf "[%s]" (String.concat "; " (List.map kid tup)))) t
-  | ArrT (_, TupleAT (_, tup)) -> p
+  | DefT (_, ArrT (TupleAT (_, tup))) -> p
       ~extra:(spf "Tuple [%s]" (String.concat ", " (List.map kid tup))) t
-  | ArrT (_, ROArrayAT (elemt)) -> p
+  | DefT (_, ArrT (ROArrayAT (elemt))) -> p
       ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
-  | ArrT (_, EmptyAT) -> p ~extra:("EmptyArray") t
-  | ClassT (_, inst) -> p ~extra:(kid inst) t
-  | InstanceT (_, _, _, _, { class_id; _ }) -> p ~extra:(spf "#%d" class_id) t
-  | TypeT (_, arg) -> p ~extra:(kid arg) t
+  | DefT (_, ArrT EmptyAT) -> p ~extra:("EmptyArray") t
+  | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
+  | DefT (_, InstanceT (_, _, _, { class_id; _ })) -> p ~extra:(spf "#%d" class_id) t
+  | DefT (_, TypeT arg) -> p ~extra:(kid arg) t
   | AnnotT source -> p ~reason:false
       ~extra:(spf "%s" (kid source)) t
-  | OptionalT (_, arg)
+  | DefT (_, OptionalT arg)
   | AbstractT (_, arg) -> p ~extra:(kid arg) t
   | EvalT (arg, expr, id) -> p
       ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
-  | TypeAppT (_, base, args) -> p ~extra:(spf "%s, [%s]"
+  | DefT (_, TypeAppT (base, args)) -> p ~extra:(spf "%s, [%s]"
       (kid base) (String.concat "; " (List.map kid args))) t
   | ThisTypeAppT (_, base, this, args) -> p ~reason:false
       ~extra:(spf "%s, %s, [%s]" (kid base) (kid this)
         (String.concat "; " (List.map kid args))) t
   | ExactT (_, arg) -> p ~extra:(kid arg) t
-  | MaybeT (_, arg) -> p ~extra:(kid arg) t
+  | DefT (_, MaybeT arg) -> p ~extra:(kid arg) t
   | TaintT _ -> p t
-  | IntersectionT (_, rep) -> p ~extra:(spf "[%s]"
+  | DefT (_, IntersectionT rep) -> p ~extra:(spf "[%s]"
       (String.concat "; " (List.map kid (InterRep.members rep)))) t
-  | UnionT (_, rep) -> p ~extra:(spf "[%s]"
+  | DefT (_, UnionT rep) -> p ~extra:(spf "[%s]"
       (String.concat "; " (List.map kid (UnionRep.members rep)))) t
   | AnyWithLowerBoundT arg
   | AnyWithUpperBoundT arg -> p ~reason:false ~extra:(kid arg) t
-  | AnyObjT _
-  | AnyFunT _ -> p t
+  | DefT (_, AnyObjT)
+  | DefT (_, AnyFunT) -> p t
   | ShapeT arg -> p ~reason:false ~extra:(kid arg) t
   | DiffT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | KeysT (_, arg) -> p ~extra:(kid arg) t
-  | SingletonStrT (_, s) -> p ~extra:(spf "%S" s) t
-  | SingletonNumT (_, (_, s)) -> p ~extra:s t
-  | SingletonBoolT (_, b) -> p ~extra:(spf "%B" b) t
+  | DefT (_, SingletonStrT s) -> p ~extra:(spf "%S" s) t
+  | DefT (_, SingletonNumT (_, s)) -> p ~extra:s t
+  | DefT (_, SingletonBoolT b) -> p ~extra:(spf "%B" b) t
   | ModuleT _ -> p t
   | ExtendsT (_, nexts, l, u) -> p ~extra:(spf "[%s], %s, %s"
     (String.concat "; " (List.map kid nexts)) (kid l) (kid u)) t
@@ -1670,7 +1673,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | None -> []
     in
     let xs = SMap.fold (fun k (t,_) xs ->
-      let opt = match t with OptionalT _ -> "?" | _ -> "" in
+      let opt = match t with DefT (_, OptionalT _) -> "?" | _ -> "" in
       (k^opt)::xs
     ) props xs in
     let xs = String.concat "; " xs in

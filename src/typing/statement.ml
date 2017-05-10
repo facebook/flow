@@ -648,7 +648,7 @@ and statement cx = Ast.Statement.(
       let typeparams, typeparams_map =
         Anno.mk_type_param_declarations cx typeParameters in
       let t = Anno.convert cx typeparams_map right in
-      let type_ = poly_type typeparams (TypeT (r, t)) in
+      let type_ = poly_type typeparams (DefT (r, TypeT t)) in
       Hashtbl.replace (Context.type_table cx) loc type_;
       Env.init_type cx name type_ name_loc
 
@@ -2296,7 +2296,7 @@ and mixin_element_spread cx (loc, e) =
   let arr = expression cx (loc, e) in
   let reason = mk_reason (RCustom "spread operand") loc in
   Flow.mk_tvar_where cx reason (fun tvar ->
-    Flow.flow_t cx (arr, ArrT (reason, ArrayAT(tvar, None)));
+    Flow.flow_t cx (arr, DefT (reason, ArrT (ArrayAT(tvar, None))));
   )
 
 and expression ?(is_cond=false) cx (loc, e) =
@@ -2437,7 +2437,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         in
         let elemt = Flow.mk_tvar cx element_reason in
         let reason = replace_reason_const REmptyArrayLit reason in
-        ArrT (reason, ArrayAT (elemt, Some []))
+        DefT (reason, ArrT (ArrayAT (elemt, Some [])))
     | elems ->
         let elem_spread_list = expression_or_spread_list cx loc elems in
         Flow_js.mk_tvar_where cx reason (fun tout ->
@@ -2530,13 +2530,12 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       ) argts;
       let reason = mk_reason (RCustom "new Function(..)") loc in
       let proto = ObjProtoT reason in
-      FunT (
-        reason,
+      DefT (reason, FunT (
         Flow.dummy_static reason,
         Flow.dummy_prototype,
         Flow.mk_functiontype
           [] ~rest_param:None ~def_reason:reason ~params_names:[] proto
-      )
+      ))
     )
 
   | New {
@@ -2549,12 +2548,12 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         let reason = mk_reason (RCustom "new Array(..)") loc in
         let length_reason =
           replace_reason_const (RCustom "array length") reason in
-        Flow.flow_t cx (argt, NumT (length_reason, AnyLiteral));
+        Flow.flow_t cx (argt, DefT (length_reason, NumT AnyLiteral));
         let element_reason =
           replace_reason_const (RCustom "array element") reason in
         let t = Flow.mk_tvar cx element_reason in
         (* TODO - tuple_types could be undefined x N if given a literal *)
-        ArrT (reason, ArrayAT (t, None))
+        DefT (reason, ArrT (ArrayAT (t, None)))
       | _ ->
         Flow_js.add_output cx (Flow_error.EUseArrayLiteral loc);
         EmptyT.at loc
@@ -2722,7 +2721,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
          objects, calls on functions) are often represented as unresolved tvars,
          where they could be pinned down to resolved types.
       *)
-      UnionT (reason, UnionRep.make t1 t2 [])
+      DefT (reason, UnionT (UnionRep.make t1 t2 []))
 
   | Assignment { Assignment.operator; left; right } ->
       assignment cx loc (left, operator, right)
@@ -2768,7 +2767,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason_array = replace_reason_const RArray reason in
       let ret = Flow.mk_tvar cx reason in
       let ft = Flow.mk_functioncalltype
-        [ Arg (ArrT (reason_array, ArrayAT (StrT.why reason, None)));
+        [ Arg (DefT (reason_array, ArrT (ArrayAT (StrT.why reason, None))));
           SpreadArg (AnyT.why reason) ]
         ret
       in
@@ -2786,7 +2785,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
             _
           };
           _
-        }) -> StrT (mk_reason RString elem_loc, Type.Literal (None, cooked))
+        }) -> DefT (mk_reason RString elem_loc, StrT (Type.Literal (None, cooked)))
       in
       begin match quasis with
       | head::[] ->
@@ -2999,16 +2998,16 @@ and identifier cx name loc =
 (* traverse a literal expression, return result type *)
 and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
   | String s ->
-      StrT (mk_reason RString loc, Literal (None, s))
+      DefT (mk_reason RString loc, StrT (Literal (None, s)))
 
   | Boolean b ->
-      BoolT (mk_reason RBoolean loc, Some b)
+      DefT (mk_reason RBoolean loc, BoolT (Some b))
 
   | Null ->
       NullT.at loc
 
   | Number f ->
-      NumT (mk_reason RNumber loc, Literal (None, (f, lit.raw)))
+      DefT (mk_reason RNumber loc, NumT (Literal (None, (f, lit.raw))))
 
   | RegExp _ ->
       Flow.get_builtin_type cx (mk_reason RRegExp loc) "RegExp"
@@ -3458,7 +3457,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
         in
         Flow.flow_t cx (prop_t, t)
       )
-      else StrT (component_t_reason, Literal (None, name)) in
+      else DefT (component_t_reason, StrT (Literal (None, name))) in
       let o = jsx_mk_props cx component_t_reason
         component_t name attributes None in
       jsx_desugar cx name component_t o attributes children eloc
@@ -3611,7 +3610,7 @@ and jsx_body cx = Ast.JSX.(function
       Some (match ex with
         | Expression (loc, e) -> expression cx (loc, e)
         | EmptyExpression loc ->
-          EmptyT (mk_reason (RCustom "empty jsx body") loc))
+          DefT (mk_reason (RCustom "empty jsx body") loc, EmptyT))
     )
   | loc, Text { Text.value; raw=_; } -> jsx_trim_text loc value
 )
@@ -3619,7 +3618,7 @@ and jsx_body cx = Ast.JSX.(function
 and jsx_trim_text loc value =
   match (Utils_jsx.trim_jsx_text loc value) with
   | Some (loc, trimmed) ->
-    Some (StrT (mk_reason RJSXText loc, Type.Literal (None, trimmed)))
+    Some (DefT (mk_reason RJSXText loc, StrT (Type.Literal (None, trimmed))))
   | None -> None
 
 (* Given an expression found in a test position, notices certain
@@ -3735,7 +3734,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
        literal type to test against. It's not appropriate to call `void_test`
        with a `void_t` that you don't want to treat like an actual `void`! *)
     let void_t = match void_t with
-    | VoidT _ -> void_t
+    | DefT (_, VoidT) -> void_t
     | _ -> VoidT.why (reason_of_t void_t)
     in
     let t, sentinel_refinement = condition_of_maybe_sentinel cx
@@ -4187,8 +4186,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
   | (("getOwnPropertyNames" | "keys"), [ Expression e ]) ->
     let arr_reason = mk_reason RArrayType loc in
     let o = expression cx e in
-    ArrT (
-      arr_reason,
+    DefT (arr_reason, ArrT (
       ArrayAT (
         Flow.mk_tvar_where cx arr_reason (fun tvar ->
           let keys_reason = replace_reason (fun desc ->
@@ -4198,7 +4196,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
         ),
         None
       )
-    )
+    ))
 
   | ("defineProperty", [ Expression e;
                          Expression ((ploc, Ast.Expression.Literal

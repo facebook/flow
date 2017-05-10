@@ -96,11 +96,12 @@ let infer_ast ~metadata ~filename ast ~require_loc_map =
     add_entry (Reason.internal_name "exports")
       (Entry.new_var
         ~loc:(Reason.loc_of_reason reason_exports_module)
-        ~specific:(Type.EmptyT (
+        ~specific:(Type.DefT (
           Reason.replace_reason_const
             (Reason.RCustom "undefined exports")
-            reason_exports_module))
-        (Type.AnyT reason_exports_module))
+            reason_exports_module,
+          Type.EmptyT))
+        (Type.DefT (reason_exports_module, Type.AnyT)))
       scope;
 
     scope

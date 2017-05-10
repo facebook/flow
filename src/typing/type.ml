@@ -56,35 +56,7 @@ module rec TypeTerm : sig
     (* def types *)
     (*************)
 
-    (* TODO: constant types *)
-
-    | NumT of reason * number_literal literal
-    | StrT of reason * string literal
-    | BoolT of reason * bool option
-    | EmptyT of reason
-    | MixedT of reason * mixed_flavor
-    | AnyT of reason
-    | NullT of reason
-    | VoidT of reason
-
-    | FunT of reason * static * prototype * funtype
-    | FunProtoT of reason       (* Function.prototype *)
-    | FunProtoApplyT of reason  (* Function.prototype.apply *)
-    | FunProtoBindT of reason   (* Function.prototype.bind *)
-    | FunProtoCallT of reason   (* Function.prototype.call *)
-
-    | ObjT of reason * objtype
-    | ObjProtoT of reason       (* Object.prototype *)
-    | ArrT of reason * arrtype
-
-    (* type of a class *)
-    | ClassT of reason * t
-    (* type of an instance of a class *)
-    | InstanceT of reason * static * super * implements * insttype
-
-    (* type of an optional parameter *)
-    | OptionalT of reason * t
-    | AbstractT of reason * t
+    | DefT of reason * def_t
 
     (* type expression whose evaluation is deferred *)
     (* Usually a type expression is evaluated by splitting it into a def type
@@ -99,53 +71,31 @@ module rec TypeTerm : sig
        substitution, but otherwise works in much the same way as usual. *)
     | EvalT of t * defer_use_t * int
 
-    (* A polymorphic type is like a type-level "function" that, when applied to
-       lists of type arguments, generates types. Just like a function, a
-       polymorphic type has a list of type parameters, represented as bound
-       type variables. We say that type parameters are "universally quantified"
-       (or "universal"): every substitution of type arguments for type
-       parameters generates a type. Dually, we have "existentially quantified"
-       (or "existential") type variables: such a type variable denotes some,
-       possibly unknown, type. Universal type parameters may specify subtype
-       constraints ("bounds"), which must be satisfied by any types they may be
-       substituted by. Evaluation of existential types, which involves
-       generating fresh type variables, never happens under polymorphic types;
-       it is forced only when polymorphic types are applied. *)
-
-    (* polymorphic type *)
-    | PolyT of reason * typeparam list * t
-    (* type application *)
-    | TypeAppT of reason * t * t list
-    (* this-abstracted class *)
-    | ThisClassT of reason * t
-    (* this instantiation *)
-    | ThisTypeAppT of reason * t * t * t list
     (* bound type variable *)
     | BoundT of typeparam
     (* existential type variable *)
     | ExistsT of reason
 
+    (* this-abstracted class *)
+    | ThisClassT of reason * t
+    (* this instantiation *)
+    | ThisTypeAppT of reason * t * t * t list
+
     (* exact *)
     | ExactT of reason * t
 
-    (* ? types *)
-    | MaybeT of reason * t
-
     | TaintT of reason
 
-    (* & types *)
-    | IntersectionT of reason * InterRep.t
+    | FunProtoT of reason      (* Function.prototype *)
+    | ObjProtoT of reason       (* Object.prototype *)
 
-    (* | types *)
-    | UnionT of reason * UnionRep.t
+    | FunProtoApplyT of reason  (* Function.prototype.apply *)
+    | FunProtoBindT of reason   (* Function.prototype.bind *)
+    | FunProtoCallT of reason   (* Function.prototype.call *)
 
     (* generalizations of AnyT *)
     | AnyWithLowerBoundT of t (* any supertype of t *)
     | AnyWithUpperBoundT of t (* any subtype of t *)
-
-    (* specializations of AnyT *)
-    | AnyObjT of reason (* any object *)
-    | AnyFunT of reason (* any function *)
 
     (* constrains some properties of an object *)
     | ShapeT of t
@@ -153,16 +103,8 @@ module rec TypeTerm : sig
 
     (* collects the keys of an object *)
     | KeysT of reason * t
-    (* singleton string, matches exactly a given string literal *)
-    | SingletonStrT of reason * string
-    (* matches exactly a given number literal, for some definition of "exactly"
-       when it comes to floats... *)
-    | SingletonNumT of reason * number_literal
-    (* singleton bool, matches exactly a given boolean literal *)
-    | SingletonBoolT of reason * bool
 
-    (* type aliases *)
-    | TypeT of reason * t
+    | AbstractT of reason * t
 
     (* annotations *)
     (** A type that annotates a storage location performs two functions:
@@ -243,6 +185,67 @@ module rec TypeTerm : sig
 
     | ReposT of reason * t
     | ReposUpperT of reason * t
+
+  and def_t =
+    | NumT of number_literal literal
+    | StrT of string literal
+    | BoolT of bool option
+    | EmptyT
+    | MixedT of mixed_flavor
+    | NullT
+    | VoidT
+    | FunT of static * prototype * funtype
+    | ObjT of objtype
+    | ArrT of arrtype
+    (* type of a class *)
+    | ClassT of t
+    (* type of an instance of a class *)
+    | InstanceT of static * super * implements * insttype
+    (* singleton string, matches exactly a given string literal *)
+    | SingletonStrT of string
+    (* matches exactly a given number literal, for some definition of "exactly"
+       when it comes to floats... *)
+    | SingletonNumT of number_literal
+    (* singleton bool, matches exactly a given boolean literal *)
+    | SingletonBoolT of bool
+    (* type aliases *)
+    | TypeT of t
+
+    | AnyT
+
+    (* type of an optional parameter *)
+    | OptionalT of t
+
+    (* A polymorphic type is like a type-level "function" that, when applied to
+       lists of type arguments, generates types. Just like a function, a
+       polymorphic type has a list of type parameters, represented as bound
+       type variables. We say that type parameters are "universally quantified"
+       (or "universal"): every substitution of type arguments for type
+       parameters generates a type. Dually, we have "existentially quantified"
+       (or "existential") type variables: such a type variable denotes some,
+       possibly unknown, type. Universal type parameters may specify subtype
+       constraints ("bounds"), which must be satisfied by any types they may be
+       substituted by. Evaluation of existential types, which involves
+       generating fresh type variables, never happens under polymorphic types;
+       it is forced only when polymorphic types are applied. *)
+
+    (* polymorphic type *)
+    | PolyT of typeparam list * t
+    (* type application *)
+    | TypeAppT of t * t list
+
+    (* ? types *)
+    | MaybeT of t
+
+    (* & types *)
+    | IntersectionT of InterRep.t
+
+    (* | types *)
+    | UnionT of UnionRep.t
+
+    (* specializations of AnyT *)
+    | AnyObjT (* any object *)
+    | AnyFunT (* any function *)
 
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)
@@ -1214,10 +1217,10 @@ end = struct
   (* canonicalize a type w.r.t. enum membership *)
   let canon t = TypeTerm.(
     match t with
-    | SingletonStrT _ -> t
-    | StrT (r, Literal (_, s)) -> SingletonStrT (r, s)
-    | SingletonNumT _ -> t
-    | NumT (r, Literal (_, lit)) -> SingletonNumT (r, lit)
+    | DefT (_, SingletonStrT _) -> t
+    | DefT (r, StrT (Literal (_, s))) -> DefT (r, SingletonStrT s)
+    | DefT (_, SingletonNumT _) -> t
+    | DefT (r, NumT (Literal (_, lit))) -> DefT (r, SingletonNumT lit)
     | _ -> t
   )
 
@@ -1227,9 +1230,9 @@ end = struct
     type t = elt
     let compare x y = TypeTerm.(
       match x, y with
-      | SingletonStrT (_, a), SingletonStrT (_, b) ->
+      | DefT (_, SingletonStrT a), DefT (_, SingletonStrT b) ->
         Pervasives.compare a b
-      | SingletonNumT (_, (a, _)), SingletonNumT (_, (b, _)) ->
+      | DefT (_, SingletonNumT (a, _)), DefT (_, SingletonNumT (b, _)) ->
         Pervasives.compare a b
       | _ -> Pervasives.compare x y
     )
@@ -1237,12 +1240,12 @@ end = struct
 
   (* given a type, return corresponding enum base type if any *)
   let base_of_t = TypeTerm.(
-    let str = Some (StrT (locationless_reason RStringEnum, AnyLiteral)) in
-    let num = Some (NumT (locationless_reason RNumberEnum, AnyLiteral)) in
+    let str = Some (DefT (locationless_reason RStringEnum, StrT AnyLiteral)) in
+    let num = Some (DefT (locationless_reason RNumberEnum, NumT AnyLiteral)) in
     fun t ->
       match t with
-      | SingletonStrT _ -> str
-      | SingletonNumT _ -> num
+      | DefT (_, SingletonStrT _) -> str
+      | DefT (_, SingletonNumT _) -> num
       | _ -> None
   )
 
@@ -1548,42 +1551,42 @@ end
 
 module NumT = Primitive (struct
   let desc = RNumber
-  let make r = NumT (r, AnyLiteral)
+  let make r = DefT (r, NumT AnyLiteral)
 end)
 
 module StrT = Primitive (struct
   let desc = RString
-  let make r = StrT (r, AnyLiteral)
+  let make r = DefT (r, StrT AnyLiteral)
 end)
 
 module BoolT = Primitive (struct
   let desc = RBoolean
-  let make r = BoolT (r, None)
+  let make r = DefT (r, BoolT None)
 end)
 
 module MixedT = Primitive (struct
   let desc = RMixed
-  let make r = MixedT (r, Mixed_everything)
+  let make r = DefT (r, MixedT Mixed_everything)
 end)
 
 module EmptyT = Primitive (struct
   let desc = REmpty
-  let make r = EmptyT r
+  let make r = DefT (r, EmptyT)
 end)
 
 module AnyT = Primitive (struct
   let desc = RAny
-  let make r = AnyT r
+  let make r = DefT (r, AnyT)
 end)
 
 module VoidT = Primitive (struct
   let desc = RVoid
-  let make r = VoidT r
+  let make r = DefT (r, VoidT)
 end)
 
 module NullT = Primitive (struct
   let desc = RNull
-  let make r = NullT r
+  let make r = DefT (r, NullT)
 end)
 
 module ObjProtoT = Primitive (struct
@@ -1629,15 +1632,15 @@ let is_proper_def = function
 
 (* convenience *)
 let is_bot = function
-| EmptyT _ -> true
+| DefT (_, EmptyT) -> true
 | _ -> false
 
 let is_top = function
-| MixedT _ -> true
+| DefT (_, MixedT _) -> true
 | _ -> false
 
 let is_any = function
-| AnyT _ -> true
+| DefT (_, AnyT) -> true
 | _ -> false
 
 (* Use types trapped for any propagation *)
@@ -1698,9 +1701,9 @@ let any_propagating_use_t = function
   | ThisSpecializeT _
   | UnaryMinusT _
   | UnifyT _
-  | UseT (_, ClassT _) (* mk_instance ~for_type:false *)
-  | UseT (_, MaybeT _) (* eval_destructor NonMaybeType *)
-  | UseT (_, TypeT _) (* import type *)
+  | UseT (_, DefT (_, ClassT _)) (* mk_instance ~for_type:false *)
+  | UseT (_, DefT (_, MaybeT _)) (* eval_destructor NonMaybeType *)
+  | UseT (_, DefT (_, TypeT _)) (* import type *)
     -> true
 
   (* These types have no t_out, so can't propagate anything *)
@@ -1738,57 +1741,33 @@ let rec reason_of_t = function
   | OpenT (reason,_) -> reason
   | AbstractT (reason, _) -> reason
   | AnnotT assume_t -> reason_of_t assume_t
-  | AnyFunT reason -> reason
-  | AnyObjT reason -> reason
-  | AnyT reason -> reason
   | AnyWithLowerBoundT (t) -> reason_of_t t
   | AnyWithUpperBoundT (t) -> reason_of_t t
-  | ArrT (reason,_) -> reason
-  | BoolT (reason, _) -> reason
   | BoundT typeparam -> typeparam.reason
   | ChoiceKitT (reason, _) -> reason
-  | ClassT (reason, _) -> reason
   | CustomFunT (reason, _) -> reason
+  | DefT (reason, _) -> reason
   | DiffT (t, _) -> reason_of_t t
-  | EmptyT reason -> reason
   | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
   | ExactT (reason, _) -> reason
   | ExistsT reason -> reason
   | ExtendsT (reason, _, _, _) -> reason
+  | FunProtoT reason -> reason
   | FunProtoApplyT reason -> reason
   | FunProtoBindT reason -> reason
   | FunProtoCallT reason -> reason
-  | FunProtoT reason -> reason
-  | FunT (reason,_,_,_) -> reason
   | IdxWrapper (reason, _) -> reason
-  | InstanceT (reason,_,_,_,_) -> reason
-  | IntersectionT (reason, _) -> reason
   | KeysT (reason, _) -> reason
-  | MaybeT (reason, _) -> reason
-  | MixedT (reason, _) -> reason
   | ModuleT (reason, _) -> reason
-  | NullT reason -> reason
-  | NumT (reason, _) -> reason
   | ObjProtoT reason -> reason
-  | ObjT (reason,_) -> reason
   | OpenPredT (reason, _, _, _) -> reason
-  | OptionalT (reason, _) -> reason
-  | PolyT (reason, _, _) -> reason
   | ReposT (reason, _) -> reason
   | ReposUpperT (reason, _) -> reason
   | ShapeT (t) -> reason_of_t t
-  | SingletonBoolT (reason, _) -> reason
-  | SingletonNumT (reason, _) -> reason
-  | SingletonStrT (reason, _) -> reason
-  | StrT (reason, _) -> reason
   | TaintT (r) -> r
   | ThisClassT (reason, _) -> reason
-  | ThisTypeAppT(reason, _, _, _) -> reason
-  | TypeAppT (reason, _, _) -> reason
+  | ThisTypeAppT (reason, _, _, _) -> reason
   | TypeMapT (reason, _, _, _) -> reason
-  | TypeT (reason,_) -> reason
-  | UnionT (reason, _) -> reason
-  | VoidT reason -> reason
 
 and reason_of_defer_use_t = function
   | DestructuringT (reason, _)
@@ -1895,60 +1874,35 @@ let rec mod_reason_of_t f = function
   | AbstractT (reason, t) -> AbstractT (f reason, t)
   | AnnotT assume_t ->
       AnnotT (mod_reason_of_t f assume_t)
-  | AnyFunT reason -> AnyFunT (f reason)
-  | AnyObjT reason -> AnyObjT (f reason)
-  | AnyT reason -> AnyT (f reason)
   | AnyWithLowerBoundT t -> AnyWithLowerBoundT (mod_reason_of_t f t)
   | AnyWithUpperBoundT t -> AnyWithUpperBoundT (mod_reason_of_t f t)
-  | ArrT (reason, at) -> ArrT (f reason, at)
-  | BoolT (reason, t) -> BoolT (f reason, t)
   | BoundT { reason; name; bound; polarity; default; } ->
       BoundT { reason = f reason; name; bound; polarity; default; }
   | ChoiceKitT (reason, tool) -> ChoiceKitT (f reason, tool)
-  | ClassT (reason, t) -> ClassT (f reason, t)
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
+  | DefT (reason, t) -> DefT (f reason, t)
   | DiffT (t1, t2) -> DiffT (mod_reason_of_t f t1, t2)
-  | EmptyT reason -> EmptyT (f reason)
   | EvalT (t, defer_use_t, id) ->
       EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
   | ExactT (reason, t) -> ExactT (f reason, t)
   | ExistsT reason -> ExistsT (f reason)
   | ExtendsT (reason, ts, t, tc) -> ExtendsT (f reason, ts, t, tc)
   | FunProtoApplyT (reason) -> FunProtoApplyT (f reason)
+  | FunProtoT (reason) -> FunProtoT (f reason)
   | FunProtoBindT (reason) -> FunProtoBindT (f reason)
   | FunProtoCallT (reason) -> FunProtoCallT (f reason)
-  | FunProtoT (reason) -> FunProtoT (f reason)
-  | FunT (reason, s, p, ft) -> FunT (f reason, s, p, ft)
   | IdxWrapper (reason, t) -> IdxWrapper (f reason, t)
-  | InstanceT (reason, st, su, impls, inst) ->
-      InstanceT (f reason, st, su, impls, inst)
-  | IntersectionT (reason, ts) -> IntersectionT (f reason, ts)
   | KeysT (reason, t) -> KeysT (f reason, t)
-  | MaybeT (reason, t) -> MaybeT (f reason, t)
-  | MixedT (reason, t) -> MixedT (f reason, t)
   | ModuleT (reason, exports) -> ModuleT (f reason, exports)
-  | NullT reason -> NullT (f reason)
-  | NumT (reason, t) -> NumT (f reason, t)
-  | ObjProtoT reason -> ObjProtoT (f reason)
-  | ObjT (reason, ot) -> ObjT (f reason, ot)
+  | ObjProtoT (reason) -> ObjProtoT (f reason)
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
-  | OptionalT (reason, t) -> OptionalT (f reason, t)
-  | PolyT (reason, plist, t) -> PolyT (f reason, plist, t)
   | ReposT (reason, t) -> ReposT (f reason, t)
   | ReposUpperT (reason, t) -> ReposUpperT (reason, mod_reason_of_t f t)
   | ShapeT t -> ShapeT (mod_reason_of_t f t)
-  | SingletonBoolT (reason, t) -> SingletonBoolT (f reason, t)
-  | SingletonNumT (reason, t) -> SingletonNumT (f reason, t)
-  | SingletonStrT (reason, t) -> SingletonStrT (f reason, t)
-  | StrT (reason, t) -> StrT (f reason, t)
   | TaintT (r) -> TaintT (f r)
   | ThisClassT (reason, t) -> ThisClassT (f reason, t)
-  | ThisTypeAppT (reason, t, this, ts) -> ThisTypeAppT (f reason, t, this, ts)
-  | TypeAppT (reason, t, ts) -> TypeAppT (f reason, t, ts)
+  | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
   | TypeMapT (reason, kind, t1, t2) -> TypeMapT (f reason, kind, t1, t2)
-  | TypeT (reason, t) -> TypeT (f reason, t)
-  | UnionT (reason, ts) -> UnionT (f reason, ts)
-  | VoidT reason -> VoidT (f reason)
 
 and mod_reason_of_defer_use_t f = function
   | DestructuringT (reason, s) -> DestructuringT (f reason, s)
@@ -2089,64 +2043,67 @@ let string_of_defer_use_ctor = function
   | DestructuringT _ -> "DestructuringT"
   | TypeDestructorT _ -> "TypeDestructorT"
 
+let string_of_def_ctor = function
+  | ArrT _ -> "ArrT"
+  | AnyT -> "AnyT"
+  | AnyObjT -> "AnyObjT"
+  | AnyFunT -> "AnyFunT"
+  | BoolT _ -> "BoolT"
+  | ClassT _ -> "ClassT"
+  | EmptyT -> "EmptyT"
+  | FunT _ -> "FunT"
+  | InstanceT _ -> "InstanceT"
+  | IntersectionT _ -> "IntersectionT"
+  | MaybeT _ -> "MaybeT"
+  | MixedT _ -> "MixedT"
+  | NullT -> "NullT"
+  | NumT _ -> "NumT"
+  | ObjT _ -> "ObjT"
+  | OptionalT _ -> "OptionalT"
+  | PolyT _ -> "PolyT"
+  | SingletonBoolT _ -> "SingletonBoolT"
+  | SingletonNumT _ -> "SingletonNumT"
+  | SingletonStrT _ -> "SingletonStrT"
+  | StrT _ -> "StrT"
+  | TypeT _ -> "TypeT"
+  | TypeAppT _ -> "TypeAppTT"
+  | UnionT _ -> "UnionT"
+  | VoidT -> "VoidT"
+
 let string_of_ctor = function
   | OpenT _ -> "OpenT"
   | AbstractT _ -> "AbstractT"
   | AnnotT _ -> "AnnotT"
-  | AnyFunT _ -> "AnyFunT"
-  | AnyObjT _ -> "AnyObjT"
-  | AnyT _ -> "AnyT"
   | AnyWithLowerBoundT _ -> "AnyWithLowerBoundT"
   | AnyWithUpperBoundT _ -> "AnyWithUpperBoundT"
-  | ArrT _ -> "ArrT"
-  | BoolT _ -> "BoolT"
   | BoundT _ -> "BoundT"
   | ChoiceKitT (_, tool) ->
     spf "ChoiceKitT %s" begin match tool with
     | Trigger -> "Trigger"
     end
-  | ClassT _ -> "ClassT"
   | CustomFunT _ -> "CustomFunT"
+  | DefT (_, t) -> string_of_def_ctor t
   | DiffT _ -> "DiffT"
-  | EmptyT _ -> "EmptyT"
   | EvalT _ -> "EvalT"
   | ExactT _ -> "ExactT"
   | ExistsT _ -> "ExistsT"
   | ExtendsT _ -> "ExtendsT"
+  | FunProtoT _ -> "FunProtoT"
   | FunProtoApplyT _ -> "FunProtoApplyT"
   | FunProtoBindT _ -> "FunProtoBindT"
   | FunProtoCallT _ -> "FunProtoCallT"
-  | FunProtoT _ -> "FunProtoT"
-  | FunT _ -> "FunT"
   | IdxWrapper _ -> "IdxWrapper"
-  | InstanceT _ -> "InstanceT"
-  | IntersectionT _ -> "IntersectionT"
   | KeysT _ -> "KeysT"
-  | MaybeT _ -> "MaybeT"
-  | MixedT _ -> "MixedT"
   | ModuleT _ -> "ModuleT"
-  | NullT _ -> "NullT"
-  | NumT _ -> "NumT"
   | ObjProtoT _ -> "ObjProtoT"
-  | ObjT _ -> "ObjT"
   | OpenPredT _ -> "OpenPredT"
-  | OptionalT _ -> "OptionalT"
-  | PolyT _ -> "PolyT"
   | ReposT _ -> "ReposT"
   | ReposUpperT _ -> "ReposUpperT"
   | ShapeT _ -> "ShapeT"
-  | SingletonBoolT _ -> "SingletonBoolT"
-  | SingletonNumT _ -> "SingletonNumT"
-  | SingletonStrT _ -> "SingletonStrT"
-  | StrT _ -> "StrT"
   | TaintT _ -> "TaintT"
   | ThisClassT _ -> "ThisClassT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
-  | TypeAppT _ -> "TypeAppT"
   | TypeMapT _ -> "TypeMapT"
-  | TypeT _ -> "TypeT"
-  | UnionT _ -> "UnionT"
-  | VoidT _ -> "VoidT"
 
 let string_of_internal_use_op = function
   | CopyEnv -> "CopyEnv"
@@ -2329,26 +2286,26 @@ let reason_of_propref = function
   | Computed t -> reason_of_t t
 
 and extract_setter_type = function
-  | FunT (_, _, _, { params_tlist = [param_t]; _; }) -> param_t
+  | DefT (_, FunT (_, _, { params_tlist = [param_t]; _; })) -> param_t
   | _ ->  failwith "Setter property with unexpected type"
 
 and extract_getter_type = function
-  | FunT (_, _, _, { return_t; _; }) -> return_t
+  | DefT (_, FunT (_, _, { return_t; _; })) -> return_t
   | _ -> failwith "Getter property with unexpected type"
 
 and elemt_of_arrtype reason = function
 | ArrayAT (elemt, _)
 | ROArrayAT (elemt)
 | TupleAT (elemt, _) -> elemt
-| EmptyAT -> EmptyT reason
+| EmptyAT -> DefT (reason, EmptyT)
 
 let optional t =
   let reason = replace_reason (fun desc -> ROptional desc) (reason_of_t t) in
-  OptionalT (reason, t)
+  DefT (reason, OptionalT t)
 
 let class_type t =
   let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
-  ClassT (reason, t)
+  DefT (reason, ClassT t)
 
 let this_class_type t =
   let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
@@ -2363,11 +2320,11 @@ let poly_type tparams t =
   then t
   else
     let reason = replace_reason (fun desc -> RPolyType desc) (reason_of_t t) in
-    PolyT (reason, tparams, t)
+    DefT (reason, PolyT (tparams, t))
 
 let typeapp t tparams =
   let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in
-  TypeAppT (reason, t, tparams)
+  DefT (reason, TypeAppT (t, tparams))
 
 let this_typeapp t this tparams =
   let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in

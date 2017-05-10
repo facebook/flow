@@ -23,8 +23,8 @@ module Action = struct
      tvars and filter the types further (see below); but for now we don't mind
      the redundancy. *)
   let types = Type.(function
-    | Flow ((AnyT _ | EmptyT _), _)
-    | Flow (_, UseT (_, (AnyT _ | MixedT _)))
+    | Flow ((DefT (_, AnyT) | DefT (_, EmptyT)), _)
+    | Flow (_, UseT (_, (DefT (_, AnyT) | DefT (_, MixedT _))))
       -> []
     | Flow (t1, UseT (_, t2)) -> [t1; t2]
     | Flow (t1, _) -> [t1]

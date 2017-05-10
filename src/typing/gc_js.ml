@@ -68,22 +68,25 @@ let rec gc cx state = function
 
   | AbstractT (_, t) -> gc cx state t
   | AnnotT t -> gc cx state t
-  | AnyFunT _ -> ()
-  | AnyObjT _ -> ()
-  | AnyT _ -> ()
+  | DefT (_, AnyFunT) -> ()
+  | DefT (_, AnyObjT) -> ()
+  | DefT (_, AnyT) -> ()
   | AnyWithLowerBoundT (t) -> gc cx state t
   | AnyWithUpperBoundT (t) -> gc cx state t
-  | ArrT(_, arraytype) ->
+  | DefT (_, ArrT arraytype) ->
       gc_arraytype cx state arraytype
-  | BoolT _ -> ()
+  | DefT (_, BoolT _) -> ()
   | BoundT typeparam -> gc_typeparam cx state typeparam
   | ChoiceKitT _ -> ()
-  | ClassT (_, t) -> gc cx state t
+  | DefT (_, ClassT t) -> gc cx state t
   | CustomFunT _ -> ()
+  | DefT (_, NumT _)
+  | DefT (_, StrT _)
+    -> ()
   | DiffT (t1, t2) ->
       gc cx state t1;
       gc cx state t2;
-  | EmptyT _ -> ()
+  | DefT (_, EmptyT) -> ()
   | EvalT (t, defer_use_t, id) ->
       gc cx state t;
       gc_defer_use cx state defer_use_t;
@@ -98,12 +101,13 @@ let rec gc cx state = function
   | FunProtoBindT _ -> ()
   | FunProtoCallT _ -> ()
   | FunProtoT _ -> ()
-  | FunT(_, static, prototype, ft) ->
+  | DefT (_, FunT (static, prototype, ft)) ->
       gc_funtype cx state ft;
       gc cx state prototype;
-      gc cx state static  | MixedT _ -> ()
+      gc cx state static
+  | DefT (_, MixedT _) -> ()
   | IdxWrapper (_, t) -> gc cx state t
-  | InstanceT(_, static, super, implements, instance) ->
+  | DefT (_, InstanceT(static, super, implements, instance)) ->
       instance.type_args |> SMap.iter (fun _ -> gc cx state);
       Context.find_props cx instance.fields_tmap
         |> Properties.iter_t (gc cx state);
@@ -112,14 +116,13 @@ let rec gc cx state = function
       implements |> List.iter (gc cx state);
       gc cx state static;
       gc cx state super
-  | IntersectionT (_, rep) -> InterRep.members rep |> List.iter (gc cx state)
+  | DefT (_, IntersectionT rep) -> InterRep.members rep |> List.iter (gc cx state)
   | KeysT (_, t) -> gc cx state t
-  | MaybeT (_, t) -> gc cx state t
+  | DefT (_, MaybeT t) -> gc cx state t
   | ModuleT (_, exporttypes) -> gc_exporttypes cx state exporttypes
-  | NullT _ -> ()
-  | NumT _ -> ()
+  | DefT (_, NullT) -> ()
   | ObjProtoT _ -> ()
-  | ObjT(_, objtype) ->
+  | DefT (_, ObjT objtype) ->
       let id = objtype.props_tmap in
       Context.iter_props cx id (fun _ ->
         Property.iter_t (gc cx state));
@@ -129,15 +132,14 @@ let rec gc cx state = function
       gc cx state t;
       gc_pred_map cx state p_map;
       gc_pred_map cx state n_map
-  | OptionalT (_, t) -> gc cx state t
-  | PolyT (_, typeparams, t) ->
+  | DefT (_, OptionalT t) -> gc cx state t
+  | DefT (_, PolyT (typeparams, t)) ->
       typeparams |> List.iter (gc_typeparam cx state);
       gc cx state t
   | ShapeT t -> gc cx state t
-  | SingletonBoolT _ -> ()
-  | SingletonNumT _ -> ()
-  | SingletonStrT _ -> ()
-  | StrT _ -> ()
+  | DefT (_, SingletonBoolT _) -> ()
+  | DefT (_, SingletonNumT _) -> ()
+  | DefT (_, SingletonStrT _) -> ()
   | ReposT (_, t) -> gc cx state t
   | ReposUpperT (_, t) -> gc cx state t
   | TaintT _ -> ()
@@ -146,15 +148,15 @@ let rec gc cx state = function
       gc cx state t;
       gc cx state this;
       List.iter (gc cx state) ts
-  | TypeAppT (_, t, ts) ->
+  | DefT (_, TypeAppT (t, ts)) ->
       gc cx state t;
       ts |> List.iter (gc cx state)
   | TypeMapT (_, _, t1, t2) ->
       gc cx state t1;
       gc cx state t2
-  | TypeT (_, t) -> gc cx state t
-  | UnionT (_, rep) -> UnionRep.members rep |> List.iter (gc cx state)
-  | VoidT _ -> ()
+  | DefT (_, TypeT t) -> gc cx state t
+  | DefT (_, UnionT rep) -> UnionRep.members rep |> List.iter (gc cx state)
+  | DefT (_, VoidT) -> ()
 
 
 and gc_defer_use cx state = function

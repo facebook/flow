@@ -77,10 +77,9 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
   | _, Array { Array.elements; _; } -> Array.(
       elements |> List.iteri (fun i -> function
         | Some (Element ((loc, _) as p)) ->
-            let key = NumT (
-              mk_reason RNumber loc,
+            let key = DefT (mk_reason RNumber loc, NumT (
               Literal (None, (float i, string_of_int i))
-            ) in
+            )) in
             let reason = mk_reason (RCustom (spf "element %d" i)) loc in
             let init = Option.map init (fun init ->
               loc, Ast.Expression.(Member Member.({

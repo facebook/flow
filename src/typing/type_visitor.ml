@@ -22,59 +22,22 @@ class ['a] t = object(self)
   method type_ cx (acc: 'a) = function
   | OpenT (r, id) -> self#tvar cx acc r id
 
+  | DefT (_, t) -> self#def_type cx acc t
+
   | ChoiceKitT (_, Trigger) -> acc
 
-  | NumT _
-  | StrT _
-  | BoolT _
-  | EmptyT _
-  | MixedT _
-  | AnyT _
-  | NullT _
-  | VoidT _
   | TaintT _
-  | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _
+  | ObjProtoT _
     -> acc
 
   | CustomFunT (_, ReactPropType (React.PropType.Primitive (_, t))) ->
     self#type_ cx acc t
 
   | CustomFunT _ -> acc
-
-  | FunT (_, static, prototype, funtype) ->
-    let acc = self#type_ cx acc static in
-    let acc = self#type_ cx acc prototype in
-    let acc = self#fun_type cx acc funtype in
-    acc
-
-  | ObjT (_, { dict_t; props_tmap; proto_t; _ }) ->
-    let acc = self#opt (self#dict_type cx) acc dict_t in
-    let acc = self#props cx acc props_tmap in
-    let acc = self#type_ cx acc proto_t in
-    acc
-
-  | ArrT (_, (ArrayAT (elemt, None) | ROArrayAT (elemt))) ->
-    self#type_ cx acc elemt
-  | ArrT (_, ArrayAT (elemt, Some tuple_types))
-  | ArrT (_, TupleAT (elemt, tuple_types)) ->
-    let acc = self#type_ cx acc elemt in
-    self#list (self#type_ cx) acc tuple_types
-  | ArrT (_, EmptyAT) -> acc
-
-  | ClassT (_, t) -> self#type_ cx acc t
-
-  | InstanceT (_, static, super, implements, insttype) ->
-    let acc = self#type_ cx acc static in
-    let acc = self#type_ cx acc super in
-    let acc = self#list (self#type_ cx) acc implements in
-    let acc = self#inst_type cx acc insttype in
-    acc
-
-  | OptionalT (_, t) -> self#type_ cx acc t
 
   | AbstractT (_, t) -> self#type_ cx acc t
 
@@ -84,43 +47,14 @@ class ['a] t = object(self)
     let acc = self#eval_id cx acc id in
     acc
 
-  | PolyT (_, typeparams, t) ->
-    let acc = self#list (self#type_param cx) acc typeparams in
-    let acc = self#type_ cx acc t in
-    acc
-
-  | TypeAppT (_, t, ts) ->
-    let acc = self#type_ cx acc t in
-    let acc = self#list (self#type_ cx) acc ts in
-    acc
-
-  | ThisClassT (_, t) -> self#type_ cx acc t
-
-  | ThisTypeAppT (_, t, this, ts) ->
-    let acc = self#type_ cx acc t in
-    let acc = self#type_ cx acc this in
-    let acc = self#list (self#type_ cx) acc ts in
-    acc
-
   | BoundT typeparam -> self#type_param cx acc typeparam
 
   | ExistsT _ -> acc
 
   | ExactT (_, t) -> self#type_ cx acc t
 
-  | MaybeT (_, t) -> self#type_ cx acc t
-
-  | IntersectionT (_, rep) ->
-    self#list (self#type_ cx) acc (InterRep.members rep)
-
-  | UnionT (_, rep) ->
-    self#list (self#type_ cx) acc (UnionRep.members rep)
-
   | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t -> self#type_ cx acc t
-
-  | AnyObjT _
-  | AnyFunT _ -> acc
 
   | ShapeT t -> self#type_ cx acc t
 
@@ -130,12 +64,6 @@ class ['a] t = object(self)
     acc
 
   | KeysT (_, t) -> self#type_ cx acc t
-
-  | SingletonStrT _
-  | SingletonNumT _
-  | SingletonBoolT _ -> acc
-
-  | TypeT (_, t) -> self#type_ cx acc t
 
   | AnnotT t ->
     self#type_ cx acc t
@@ -158,6 +86,14 @@ class ['a] t = object(self)
     let acc = self#list (self#predicate cx) acc (Key_map.values n_map) in
     acc
 
+  | ThisClassT (_, t) -> self#type_ cx acc t
+
+  | ThisTypeAppT (_, t, this, ts) ->
+    let acc = self#type_ cx acc t in
+    let acc = self#type_ cx acc this in
+    let acc = self#list (self#type_ cx) acc ts in
+    acc
+
   | TypeMapT (_, _, t1, t2) ->
     let acc = self#type_ cx acc t1 in
     let acc = self#type_ cx acc t2 in
@@ -166,6 +102,74 @@ class ['a] t = object(self)
   | ReposT (_, t)
   | ReposUpperT (_, t) ->
     self#type_ cx acc t
+
+  method def_type cx acc = function
+  | AnyT
+  | NumT _
+  | StrT _
+  | BoolT _
+  | EmptyT
+  | MixedT _
+  | NullT
+  | VoidT
+  | AnyObjT
+  | AnyFunT
+    -> acc
+
+  | FunT (static, prototype, funtype) ->
+    let acc = self#type_ cx acc static in
+    let acc = self#type_ cx acc prototype in
+    let acc = self#fun_type cx acc funtype in
+    acc
+
+  | ObjT { dict_t; props_tmap; proto_t; _ } ->
+    let acc = self#opt (self#dict_type cx) acc dict_t in
+    let acc = self#props cx acc props_tmap in
+    let acc = self#type_ cx acc proto_t in
+    acc
+
+  | ArrT (ArrayAT (elemt, None) | ROArrayAT (elemt)) ->
+    self#type_ cx acc elemt
+  | ArrT (ArrayAT (elemt, Some tuple_types))
+  | ArrT (TupleAT (elemt, tuple_types)) ->
+    let acc = self#type_ cx acc elemt in
+    self#list (self#type_ cx) acc tuple_types
+  | ArrT EmptyAT -> acc
+
+  | ClassT t -> self#type_ cx acc t
+
+  | InstanceT (static, super, implements, insttype) ->
+    let acc = self#type_ cx acc static in
+    let acc = self#type_ cx acc super in
+    let acc = self#list (self#type_ cx) acc implements in
+    let acc = self#inst_type cx acc insttype in
+    acc
+
+  | SingletonStrT _
+  | SingletonNumT _
+  | SingletonBoolT _ -> acc
+
+  | TypeT t -> self#type_ cx acc t
+
+  | OptionalT t -> self#type_ cx acc t
+
+  | PolyT (typeparams, t) ->
+    let acc = self#list (self#type_param cx) acc typeparams in
+    let acc = self#type_ cx acc t in
+    acc
+
+  | TypeAppT (t, ts) ->
+    let acc = self#type_ cx acc t in
+    let acc = self#list (self#type_ cx) acc ts in
+    acc
+
+  | MaybeT t -> self#type_ cx acc t
+
+  | IntersectionT rep ->
+    self#list (self#type_ cx) acc (InterRep.members rep)
+
+  | UnionT rep ->
+    self#list (self#type_ cx) acc (UnionRep.members rep)
 
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s

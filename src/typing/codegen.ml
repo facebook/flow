@@ -109,7 +109,7 @@ let gen_builtin_class_type t env = Type.(
    *)
   let classid =
     match t with
-    | InstanceT (_, _, _, _, {class_id; _;}) -> class_id
+    | DefT (_, InstanceT (_, _, _, {class_id; _;})) -> class_id
     | t -> failwith (
       spf
         ("Internal error: Expected an InstanceT while looking up a builtin " ^^
@@ -121,9 +121,9 @@ let gen_builtin_class_type t env = Type.(
   let builtin_t = Flow_js.get_builtin env.flow_cx builtin_name reason in
   let builtin_classid =
     match resolve_type builtin_t env with
-    | ThisClassT(_, InstanceT(_, _, _, _, {class_id; _;})) ->
+    | ThisClassT(_, DefT (_, InstanceT (_, _, _, {class_id; _;}))) ->
       class_id
-    | PolyT(_, _, ThisClassT(_, InstanceT(_, _, _, _, {class_id; _;}))) ->
+    | DefT (_, PolyT(_, ThisClassT(_, DefT (_, InstanceT(_, _, _, {class_id; _;}))))) ->
       class_id
     | builtin_t -> failwith (spf "Unexpected global type: %s" (string_of_ctor builtin_t))
   in
@@ -151,13 +151,13 @@ let rec gen_type t env = Type.(
   match t with
   | AbstractT (_, t) -> add_str "$Abstract<" env |> gen_type t |> add_str ">"
   | AnnotT t -> gen_type t env
-  | AnyFunT _ -> add_str "Function" env
-  | AnyObjT _ -> add_str "Object" env
-  | AnyT _
+  | DefT (_, AnyFunT) -> add_str "Function" env
+  | DefT (_, AnyObjT) -> add_str "Object" env
+  | DefT (_, AnyT)
   | AnyWithLowerBoundT _
   | AnyWithUpperBoundT _
     -> add_str "any" env
-  | ArrT (_, arrtype) ->
+  | DefT (_, ArrT arrtype) ->
     (match arrtype with
     | ArrayAT (elemt, None) ->
       add_str "Array<" env
@@ -178,13 +178,13 @@ let rec gen_type t env = Type.(
       add_str "Array<empty>" env
     )
 
-  | BoolT (_, Some _) ->
+  | DefT (_, BoolT (Some _)) ->
     (* TODO: Consider polarity and print the literal type when appropriate *)
     add_str "boolean" env
-  | BoolT (_, None) ->
+  | DefT (_, BoolT None) ->
     add_str "boolean" env
   | BoundT {name; _;} -> add_str name env
-  | ClassT (_, t) ->
+  | DefT (_, ClassT t) ->
     add_str "Class<" env
       |> gen_type t
       |> add_str ">"
@@ -227,14 +227,14 @@ let rec gen_type t env = Type.(
   | FunProtoApplyT _ -> add_str "typeof Function.prototype.apply" env
   | FunProtoBindT _ -> add_str "typeof Function.prototype.bind" env
   | FunProtoCallT _ -> add_str "typeof Function.prototype.call" env
-  | FunT (_, _static, _prototype, ft) ->
+  | DefT (_, FunT (_static, _prototype, ft)) ->
     let {params_tlist; params_names; rest_param; return_t; _;} = ft in
     gen_tparams_list env
       |> add_str "("
       |> gen_func_params params_names params_tlist rest_param
       |> add_str ") => "
       |> gen_type return_t
-  | InstanceT (_, _static, _super, _, {class_id; _;}) -> (
+  | DefT (_, InstanceT (_static, _super, _, {class_id; _;})) -> (
     (* TODO: See if we can preserve class names *)
     let env =
       match IMap.get class_id env.class_names with
@@ -243,16 +243,16 @@ let rec gen_type t env = Type.(
     in
     gen_tparams_list env
   )
-  | IntersectionT (_, intersection) -> gen_intersection_list intersection env
+  | DefT (_, IntersectionT intersection) -> gen_intersection_list intersection env
   | KeysT (_, t) -> add_str "$Keys<" env |> gen_type t |> add_str ">"
-  | MaybeT (_, t) -> add_str "?" env |> gen_type t
-  | MixedT _ -> add_str "mixed" env
-  | NumT (_, Literal _) ->
+  | DefT (_, MaybeT t) -> add_str "?" env |> gen_type t
+  | DefT (_, MixedT _) -> add_str "mixed" env
+  | DefT (_, NumT (Literal _)) ->
     (* TODO: Consider polarity and print the literal type when appropriate *)
     add_str "number" env
-  | NumT (_, (Truthy|AnyLiteral)) -> add_str "number" env
-  | NullT _ -> add_str "null" env
-  | ObjT (_, {flags = _; dict_t; props_tmap; proto_t = _;}) -> (
+  | DefT (_, NumT (Truthy|AnyLiteral)) -> add_str "number" env
+  | DefT (_, NullT) -> add_str "null" env
+  | DefT (_, ObjT {flags = _; dict_t; props_tmap; proto_t = _;}) -> (
     let env = add_str "{" env in
 
     (* Generate prop entries *)
@@ -289,25 +289,25 @@ let rec gen_type t env = Type.(
 
     add_str "}" env
   )
-  | OptionalT (_, t) -> add_str "void | " env |> gen_type t
+  | DefT (_, OptionalT t) -> add_str "void | " env |> gen_type t
   | OpenT _ -> gen_type (resolve_type t env) env
-  | PolyT (_, tparams, t) -> gen_type t (add_tparams tparams env)
+  | DefT (_, PolyT (tparams, t)) -> gen_type t (add_tparams tparams env)
   | ReposT (_, t) -> gen_type t env
   | ReposUpperT (_, t) -> gen_type t env
   | ShapeT t -> add_str "$Shape<" env |> gen_type t |> add_str ">"
-  | SingletonBoolT (_, v) -> add_str (spf "%b" v) env
-  | SingletonNumT (_, (_, v)) -> add_str (spf "%s" v) env
-  | SingletonStrT (_, v) -> add_str (spf "%S" v) env
-  | StrT (_, Literal _) ->
+  | DefT (_, SingletonBoolT v) -> add_str (spf "%b" v) env
+  | DefT (_, SingletonNumT (_, v)) -> add_str (spf "%s" v) env
+  | DefT (_, SingletonStrT v) -> add_str (spf "%S" v) env
+  | DefT (_, StrT (Literal _)) ->
     (* TODO: Consider polarity and print the literal type when appropriate *)
     add_str "string" env
-  | StrT (_, (Truthy|AnyLiteral)) -> add_str "string" env
+  | DefT (_, StrT (Truthy|AnyLiteral)) -> add_str "string" env
   | ThisClassT (_, t) -> gen_type t env
   | ThisTypeAppT (_, t, _, ts) -> add_applied_tparams ts env |> gen_type t
-  | TypeAppT (_, t, ts) -> add_applied_tparams ts env |> gen_type t
-  | TypeT (_, t) -> gen_type t env
-  | UnionT (_, union) -> gen_union_list union env
-  | VoidT _ -> add_str "void" env
+  | DefT (_, TypeAppT (t, ts)) -> add_applied_tparams ts env |> gen_type t
+  | DefT (_, TypeT t) -> gen_type t env
+  | DefT (_, UnionT union) -> gen_union_list union env
+  | DefT (_, VoidT) -> add_str "void" env
 
   | TypeMapT (_, TupleMap, t1, t2) ->
     add_str "$TupleMap<" env
@@ -340,7 +340,7 @@ let rec gen_type t env = Type.(
    *       (i.e. raise, etc).
    *)
   | ChoiceKitT _
-  | EmptyT _
+  | DefT (_, EmptyT)
   | EvalT _
   | ExistsT _
   | ExtendsT _
@@ -370,7 +370,7 @@ and gen_prop k p env =
 
   let rec gen_method k t env =
     match t with
-    | FunT (_, _static, _prototype, ft) ->
+    | DefT (_, FunT (_static, _prototype, ft)) ->
       let {params_tlist; params_names; rest_param; return_t; _;} = ft in
       add_str k env
         |> gen_tparams_list
@@ -378,7 +378,7 @@ and gen_prop k p env =
         |> gen_func_params params_names params_tlist rest_param
         |> add_str "): "
         |> gen_type return_t
-    | PolyT (_, tparams, t) -> gen_method k t (add_tparams tparams env)
+    | DefT (_, PolyT (tparams, t)) -> gen_method k t (add_tparams tparams env)
     | _ -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
   in
 
@@ -387,7 +387,7 @@ and gen_prop k p env =
     let sigil = Polarity.sigil polarity in
     let (sep, t) =
       match resolve_type t env with
-      | OptionalT (_, t) -> ("?: ", resolve_type t env)
+      | DefT (_, OptionalT t) -> ("?: ", resolve_type t env)
       | t -> (": ", t)
     in
     add_str sigil env
@@ -429,7 +429,7 @@ and gen_func_rest_param name t env =
 and gen_func_param name t env =
   let open Type in
   match t with
-  | OptionalT (_, t) ->
+  | DefT (_, OptionalT t) ->
     add_str name env
     |> add_str "?: "
     |> gen_type t
@@ -449,7 +449,7 @@ and gen_tparams_list = Type.(
     let env = add_str name env in
     let env = (
       match bound with
-      | MixedT _ -> env
+      | DefT (_, MixedT _) -> env
       | bound -> add_str ": " env |> gen_type bound
     ) in
     let env = (

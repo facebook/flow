@@ -52,7 +52,7 @@ let mk_resource_module_t cx loc f =
   | Some ".css" ->
     let desc_str = "Flow assumes requiring a .css file returns an Object" in
     let reason = Reason.mk_reason (RCustom desc_str) loc in
-    reason, Type.AnyObjT reason
+    reason, Type.DefT (reason, Type.AnyObjT)
   | Some ext ->
     let desc_str =
       Utils_js.spf "Flow assumes that requiring a %s file returns a string" ext

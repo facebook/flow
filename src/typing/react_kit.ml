@@ -44,9 +44,9 @@ let run cx trace reason_op l u
      erroring. This is best-effort, after all. *)
 
   let coerce_object = function
-    | ObjT (reason, { props_tmap; dict_t; flags; _ }) ->
+    | DefT (reason, ObjT { props_tmap; dict_t; flags; _ }) ->
       OK (reason, Context.find_props cx props_tmap, dict_t, flags)
-    | AnyT reason | AnyObjT reason ->
+    | DefT (reason, AnyT) | DefT (reason, AnyObjT) ->
       Err reason
     | _ ->
       let reason = reason_of_t l in
@@ -58,11 +58,11 @@ let run cx trace reason_op l u
     | CustomFunT (reason, ReactPropType (PropType.Primitive (required, t))) ->
       let loc = loc_of_reason reason in
       OK (required, reposition cx ~trace loc t)
-    | FunT (reason, _, _, _) as t ->
+    | DefT (reason, FunT _) as t ->
       rec_flow_t cx trace (t,
         get_builtin_type cx reason_op "ReactPropsCheckType");
       Err reason
-    | AnyT reason | AnyFunT reason ->
+    | DefT (reason, AnyT) | DefT (reason, AnyFunT) ->
       Err reason
     | t ->
       let reason = reason_of_t t in
@@ -71,9 +71,9 @@ let run cx trace reason_op l u
   in
 
   let coerce_array = function
-    | ArrT (_, (ArrayAT (_, Some ts) | TupleAT (_, ts))) ->
+    | DefT (_, ArrT (ArrayAT (_, Some ts) | TupleAT (_, ts))) ->
       OK ts
-    | ArrT (reason, _) | AnyT reason ->
+    | DefT (reason, ArrT _) | DefT (reason, AnyT) ->
       Err reason
     | t ->
       let reason = reason_of_t t in
@@ -84,16 +84,18 @@ let run cx trace reason_op l u
   (* Unlike other coercions, don't add a Flow error if the incoming type doesn't
      have a singleton type representation. *)
   let coerce_singleton = function
-    | StrT (reason, Literal (_, x)) ->
+    | DefT (reason, StrT (Literal (_, x))) ->
       let reason = replace_reason_const (RStringLit x) reason in
-      OK (SingletonStrT (reason, x))
-    | NumT (reason, Literal (_, x)) ->
+      OK (DefT (reason, SingletonStrT x))
+
+    | DefT (reason, NumT (Literal (_, x))) ->
       let reason = replace_reason_const (RNumberLit (snd x)) reason in
-      OK (SingletonNumT (reason, x))
-    | BoolT (reason, Some x) ->
+      OK (DefT (reason, SingletonNumT x))
+
+    | DefT (reason, BoolT (Some x)) ->
       let reason = replace_reason_const (RBooleanLit x) reason in
-      OK (SingletonBoolT (reason, x))
-    | NullT _ | VoidT _ as t ->
+      OK (DefT (reason, SingletonBoolT x))
+    | DefT (_, NullT) | DefT (_, VoidT) as t ->
       OK t
     | t ->
       Err (reason_of_t t)
@@ -102,31 +104,31 @@ let run cx trace reason_op l u
   let create_element config tout =
     let elem_reason = replace_reason_const (RReactElement None) reason_op in
     (match l with
-    | ClassT _ ->
+    | DefT (_, ClassT _) ->
       let react_class =
         get_builtin_typeapp cx ~trace reason_op "ReactClass" [config]
       in
       rec_flow_t cx trace (l, react_class)
-    | FunT _ ->
+    | DefT (_, FunT _) ->
       let return_t =
         get_builtin_typeapp cx ~trace elem_reason "React$Element"
           [Locationless.AnyT.t]
       in
-      let return_t = MaybeT (elem_reason, return_t) in
+      let return_t = DefT (elem_reason, MaybeT return_t) in
       let context_t =
-        AnyT (replace_reason_const (RCustom "context") elem_reason) in
+        DefT (replace_reason_const (RCustom "context") elem_reason, AnyT) in
       let args = [Arg config; Arg context_t] in
       let funcalltype ={ (mk_functioncalltype args return_t) with
         call_strict_arity = false;
       } in
       let call_t = CallT (reason_op, funcalltype) in
       rec_flow cx trace (l, call_t)
-    | StrT _
-    | SingletonStrT _ ->
+    | DefT (_, StrT _)
+    | DefT (_, SingletonStrT _) ->
       let jsx_intrinsics =
         get_builtin_type cx ~trace reason_op "$JSXIntrinsics" in
       rec_flow_t cx trace (l, KeysT (reason_op, jsx_intrinsics))
-    | AnyT _ | AnyFunT _ | AnyObjT _ -> ()
+    | DefT (_, (AnyT | AnyFunT | AnyObjT)) -> ()
     | _ -> err_incompatible (reason_of_t l);
     );
     rec_flow_t cx trace (
@@ -147,11 +149,11 @@ let run cx trace reason_op l u
     ) in
 
     let mk_union reason = function
-      | [] -> EmptyT (replace_reason_const REmpty reason)
+      | [] -> DefT (replace_reason_const REmpty reason, EmptyT)
       | [t] -> t
       | t0::t1::ts ->
         let reason = replace_reason_const RUnionType reason in
-        UnionT (reason, UnionRep.make t0 t1 ts)
+        DefT (reason, UnionT (UnionRep.make t0 t1 ts))
     in
 
     let open SimplifyPropType in
@@ -160,10 +162,10 @@ let run cx trace reason_op l u
       (* TODO: Don't ignore the required flag. *)
       let elem_t = match coerce_prop_type l with
         | OK (_required, t) -> t
-        | Err reason -> AnyT reason
+        | Err reason -> DefT (reason, AnyT)
       in
       let reason = replace_reason_const RArrayType reason_op in
-      let t = ArrT (reason, ArrayAT (elem_t, None)) in
+      let t = DefT (reason, ArrT (ArrayAT (elem_t, None))) in
       resolve t
 
     | InstanceOf ->
@@ -174,7 +176,7 @@ let run cx trace reason_op l u
       (* TODO: Don't ignore the required flag. *)
       let value = match coerce_prop_type l with
         | OK (_required, t) -> t
-        | Err reason -> AnyT reason
+        | Err reason -> DefT (reason, AnyT)
       in
       let props = SMap.empty in
       let dict = {
@@ -203,11 +205,11 @@ let run cx trace reason_op l u
       | ResolveArray ->
         (match coerce_array l with
         | OK todo -> next todo []
-        | Err _ -> resolve (AnyT reason_op))
+        | Err _ -> resolve (DefT (reason_op, AnyT)))
       | ResolveElem (todo, done_rev) ->
         (match coerce_singleton l with
         | OK t -> next todo (t::done_rev)
-        | Err _ -> resolve (AnyT reason_op)))
+        | Err _ -> resolve (DefT (reason_op, AnyT))))
 
     | OneOfType tool ->
       (* TODO: This is _very_ similar to `one_of` above. *)
@@ -224,12 +226,12 @@ let run cx trace reason_op l u
       | ResolveArray ->
         (match coerce_array l with
         | OK todo -> next todo []
-        | Err _ -> resolve (AnyT reason_op))
+        | Err _ -> resolve (DefT (reason_op, AnyT)))
       | ResolveElem (todo, done_rev) ->
         (* TODO: Don't ignore the required flag. *)
         (match coerce_prop_type l with
         | OK (_required, t) -> next todo (t::done_rev)
-        | Err _ -> resolve (AnyT reason_op)))
+        | Err _ -> resolve (DefT (reason_op, AnyT))))
 
     | Shape tool ->
       (* TODO: This is _very_ similar to `CreateClass.PropTypes` below, except
@@ -277,17 +279,17 @@ let run cx trace reason_op l u
             rec_flow cx trace (dicttype.value, ReactKitT (reason_op,
               SimplifyPropType (Shape
                 (ResolveDict (dicttype, todo, shape)), tout))))
-        | Err _ -> resolve (AnyT reason_op))
+        | Err _ -> resolve (DefT (reason_op, AnyT)))
       | ResolveDict (dicttype, todo, shape) ->
         let dict = match coerce_prop_type l with
         | OK (_, t) -> {dicttype with value = t}
-        | Err reason -> {dicttype with value = AnyT reason}
+        | Err reason -> {dicttype with value = DefT (reason, AnyT)}
         in
         next todo (add_dict dict shape)
       | ResolveProp (k, todo, shape) ->
         let t = match coerce_prop_type l with
         | OK (required, t) -> if required then t else Type.optional t
-        | Err _ -> Type.optional (AnyT (reason_op))
+        | Err _ -> Type.optional (DefT (reason_op, AnyT))
         in
         next todo (add_prop k t shape))
   in
@@ -418,7 +420,7 @@ let run cx trace reason_op l u
         | None ->
           let reason = replace_reason_const RReactDefaultProps reason_op in
           mk_object cx reason
-        | Some (Unknown reason) -> AnyObjT reason
+        | Some (Unknown reason) -> DefT (reason, AnyObjT)
         | Some (Known (reason, props, dict, _)) ->
           mk_object_with_map_proto cx reason props (ObjProtoT reason)
             ?dict ~sealed:true ~exact:false
@@ -434,8 +436,8 @@ let run cx trace reason_op l u
         | None ->
           let reason = replace_reason_const RReactState reason_op in
           mk_object cx reason
-        | Some (Unknown reason) -> AnyObjT reason
-        | Some (Known (Null reason)) -> NullT reason
+        | Some (Unknown reason) -> DefT (reason, AnyObjT)
+        | Some (Known (Null reason)) -> DefT (reason, NullT)
         | Some (Known (NotNull (reason, props, dict, { exact; sealed; _ }))) ->
           let sealed = not (exact && sealed_in_op reason_op sealed) in
           mk_object_with_map_proto cx reason props (ObjProtoT reason)
@@ -481,8 +483,8 @@ let run cx trace reason_op l u
          stricter, we could use an empty object type, but that would require all
          components to specify propTypes *)
       let props_t = match spec.prop_types with
-      | None -> AnyObjT reason_op
-      | Some (Unknown reason) -> AnyObjT reason
+      | None -> DefT (reason_op, AnyObjT)
+      | Some (Unknown reason) -> DefT (reason, AnyObjT)
       | Some (Known (reason, props, dict, _)) ->
         mk_object_with_map_proto cx reason props (ObjProtoT reason)
           ?dict ~sealed:true ~exact:false
@@ -524,7 +526,7 @@ let run cx trace reason_op l u
         | "updateComponent" ->
           (* Tie the `this` knot with BindT *)
           Property.read_t v |> Option.iter ~f:(fun t ->
-            let dummy_return = AnyT reason_op in
+            let dummy_return = DefT (reason_op, AnyT) in
             let calltype = mk_methodcalltype knot.this [] dummy_return in
             rec_flow cx trace (t, BindT (reason_op, calltype, true))
           );
@@ -586,7 +588,7 @@ let run cx trace reason_op l u
       } in
       rec_flow cx trace (super, SuperT (reason_op, insttype));
 
-      let instance = InstanceT (reason_component, static, super, [], insttype) in
+      let instance = DefT (reason_component, InstanceT (static, super, [], insttype)) in
       rec_flow_t cx trace (instance, knot.this);
       rec_flow_t cx trace (static, knot.static);
       rec_flow_t cx trace (class_type instance, tout)
@@ -705,13 +707,13 @@ let run cx trace reason_op l u
       | ResolveDict (dicttype, todo, prop_types) ->
         let dict = match coerce_prop_type l with
         | OK (_, t) -> {dicttype with value = t}
-        | Err reason -> {dicttype with value = AnyT reason}
+        | Err reason -> {dicttype with value = DefT (reason, AnyT)}
         in
         next todo (add_dict dict prop_types)
       | ResolveProp (k, todo, prop_types) ->
         let t = match coerce_prop_type l with
         | OK (required, t) -> if required then t else Type.optional t
-        | Err reason -> Type.optional (AnyT reason)
+        | Err reason -> Type.optional (DefT (reason, AnyT))
         in
         next todo (add_prop k t prop_types))
 
@@ -722,7 +724,7 @@ let run cx trace reason_op l u
 
     | InitialState (todo, acc) ->
       let initial_state = Some (match l with
-      | NullT reason -> Known (Null reason)
+      | DefT (reason, NullT) -> Known (Null reason)
       | _ ->
         coerce_object l
         |> maybe_known_of_result

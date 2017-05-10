@@ -163,7 +163,7 @@ let functiontype cx this_t {reason; kind; tparams; params; return_t; _} =
     changeset = Env.retrieve_closure_changeset ();
     def_reason = reason;
   } in
-  let t = FunT (reason, static, prototype, funtype) in
+  let t = DefT (reason, FunT (static, prototype, funtype)) in
   let t = poly_type tparams t in
   Flow.unify cx t knot;
   t
@@ -173,13 +173,12 @@ let methodtype {reason; tparams; params; return_t; _} =
   let params_names = Func_params.names params in
   let rest_param = Func_params.rest params in
   let def_reason = reason in
-  let t = FunT (
-    reason,
+  let t = DefT (reason, FunT (
     Flow.dummy_static reason,
     Flow.dummy_prototype,
     Flow.mk_boundfunctiontype
       params_tlist ~rest_param ~def_reason ~params_names return_t
-  ) in
+  )) in
   poly_type tparams t
 
 let gettertype ({return_t; _}: t) = return_t
@@ -234,7 +233,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
   SMap.iter (fun name t ->
     let r = reason_of_t t in
     let loc = loc_of_reason r in
-    Env.bind_type cx name (TypeT (r, t)) loc
+    Env.bind_type cx name (DefT (r, TypeT t)) loc
       ~state:Scope.State.Initialized
   ) tparams_map;
 
@@ -275,8 +274,8 @@ let toplevels id cx this super ~decls ~stmts ~expr
       Flow.mk_tvar cx (replace_reason_const (RCustom "yield") reason),
       Flow.mk_tvar cx (replace_reason_const (RCustom "next") reason)
     else
-      MixedT (replace_reason_const (RCustom "no yield") reason, Mixed_everything),
-      MixedT (replace_reason_const (RCustom "no next") reason, Mixed_everything)
+      DefT (replace_reason_const (RCustom "no yield") reason, MixedT Mixed_everything),
+      DefT (replace_reason_const (RCustom "no next") reason, MixedT Mixed_everything)
   in
 
   let yield, next, return = Scope.(

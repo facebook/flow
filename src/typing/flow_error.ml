@@ -252,11 +252,11 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   in
 
   let err_value = function
-    | NullT _ -> " possibly null value"
-    | VoidT _ -> " possibly undefined value"
-    | MaybeT _ -> " possibly null or undefined value"
-    | IntersectionT _
-    | MixedT (_, Empty_intersection) -> " any member of intersection type"
+    | DefT (_, NullT) -> " possibly null value"
+    | DefT (_, VoidT) -> " possibly undefined value"
+    | DefT (_, MaybeT _) -> " possibly null or undefined value"
+    | DefT (_, IntersectionT _)
+    | DefT (_, MixedT Empty_intersection) -> " any member of intersection type"
     | _ -> ""
   in
 

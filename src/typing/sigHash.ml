@@ -86,62 +86,67 @@ type hash =
   | ReposH
   | ReposUpperH
 
+let hash_of_def_ctor = Type.(function
+  | InstanceT _ -> failwith "undefined hash of InstanceT"
+
+  | AnyFunT -> AnyFunH
+  | AnyObjT -> AnyObjH
+  | AnyT -> AnyH
+  | ArrT _ -> ArrH
+  | BoolT b -> BoolH b
+  | ClassT _ -> ClassH
+  | EmptyT -> EmptyH
+  | FunT _ -> FunH
+  | IntersectionT _ -> IntersectionH
+  | MaybeT _ -> MaybeH
+  | MixedT m -> MixedH m
+  | NullT -> NullH
+  | NumT n -> NumH n
+  | ObjT _ -> ObjH
+  | OptionalT _ -> OptionalH
+  | PolyT _ -> PolyH
+  | SingletonBoolT b -> SingletonBoolH b
+  | SingletonNumT n -> SingletonNumH n
+  | SingletonStrT s -> SingletonStrH s
+  | StrT s -> StrH s
+  | TypeT _ -> TypeH
+  | TypeAppT _ -> TypeAppH
+  | VoidT -> VoidH
+  | UnionT _ -> UnionH
+)
+
 let hash_of_ctor = Type.(function
   | OpenT _ -> failwith "undefined hash of OpenT"
-  | InstanceT _ -> failwith "undefined hash of InstanceT"
 
   | AbstractT _ -> AbstractH
   | AnnotT _ -> AnnotH
-  | AnyFunT _ -> AnyFunH
-  | AnyObjT _ -> AnyObjH
-  | AnyT _ -> AnyH
   | AnyWithLowerBoundT _ -> AnyWithLowerBoundH
   | AnyWithUpperBoundT _ -> AnyWithUpperBoundH
-  | ArrT _ -> ArrH
-  | BoolT (_, b) -> BoolH b
   | BoundT _ -> BoundH
   | ChoiceKitT _ -> ChoiceKitH
-  | ClassT _ -> ClassH
   | CustomFunT _ -> CustomFunH
+  | DefT (_, t) -> hash_of_def_ctor t
   | DiffT _ -> DiffH
-  | EmptyT _ -> EmptyH
   | EvalT _ -> EvalH
   | ExactT _ -> ExactH
   | ExistsT _ -> ExistsH
   | ExtendsT _ -> ExtendsH
+  | FunProtoT _ -> FunProtoH
   | FunProtoApplyT _ -> FunProtoApplyH
   | FunProtoBindT _ -> FunProtoBindH
   | FunProtoCallT _ -> FunProtoCallH
-  | FunProtoT _ -> FunProtoH
-  | FunT _ -> FunH
   | IdxWrapper _ -> IdxWrapperH
-  | IntersectionT _ -> IntersectionH
   | KeysT _ -> KeysH
-  | MaybeT _ -> MaybeH
-  | MixedT (_, m) -> MixedH m
   | ModuleT _ -> ModuleH
-  | NullT _ -> NullH
-  | NumT (_, n) -> NumH n
   | ObjProtoT _ -> ObjProtoH
-  | ObjT _ -> ObjH
   | OpenPredT _ -> OpenPredH
-  | OptionalT _ -> OptionalH
-  | PolyT _ -> PolyH
   | ReposT _ -> ReposH
   | ReposUpperT _ -> ReposUpperH
   | ShapeT _ -> ShapeH
-  | SingletonBoolT (_, b) -> SingletonBoolH b
-  | SingletonNumT (_, n) -> SingletonNumH n
-  | SingletonStrT (_, s) -> SingletonStrH s
-  | StrT (_, s) -> StrH s
   | TaintT _ -> TaintH
   | ThisClassT _ -> ThisClassH
   | ThisTypeAppT _ -> ThisTypeAppH
-  | TypeAppT _ -> TypeAppH
   | TypeMapT _ -> TypeMapH
-  | TypeT _ -> TypeH
-  | UnionT _ -> UnionH
-  | VoidT _ -> VoidH
 )
 
 type prop_hash =

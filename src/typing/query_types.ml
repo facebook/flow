@@ -79,8 +79,8 @@ let dump_types printer raw_printer cx =
   )
 
 let is_covered = function
-  | Type.AnyT _
-  | Type.EmptyT _ -> false
+  | Type.DefT (_, Type.AnyT)
+  | Type.DefT (_, Type.EmptyT) -> false
   | _ -> true
 
 let covered_types cx =

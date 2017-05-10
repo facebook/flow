@@ -142,7 +142,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
             get_imported_file ()
           else
             loc
-      | AnyT _ ->
+      | DefT (_, AnyT) ->
           get_imported_file ()
       | _ -> failwith (
         spf "Internal Flow Error: Expected ModuleT for %S, but got %S!"

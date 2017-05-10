@@ -175,7 +175,7 @@ module Entry = struct
     match entry with
     | Type _ ->
       entry
-    | Value ({ kind = Const _; specific = Type.EmptyT _; _ } as v) ->
+    | Value ({ kind = Const _; specific = Type.DefT (_, Type.EmptyT); _ } as v) ->
       (* cleared consts: see note on Env.reset_current_activation *)
       if Reason.is_internal_name name
       then entry

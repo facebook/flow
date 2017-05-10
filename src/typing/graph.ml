@@ -170,16 +170,20 @@ and parts_of_t cx = function
 | OpenT _ -> assert false
 | AbstractT (_, t) -> ["t", Def t]
 | AnnotT source -> ["source", Def source]
-| AnyObjT _ | AnyFunT _ -> []
-| AnyT _ -> []
+| DefT (_, (AnyObjT | AnyFunT)) -> []
+| DefT (_, AnyT) -> []
 | AnyWithLowerBoundT t | AnyWithUpperBoundT t -> ["t", Def t]
-| ArrT (_, arrtype) -> parts_of_arrtype arrtype
-| BoolT  _ -> []
+| DefT (_, ArrT arrtype) -> parts_of_arrtype arrtype
+| DefT (_, BoolT _) -> []
 | BoundT _ -> []
-| ClassT (_, t) -> ["class", Def t]
+| DefT (_, ClassT t) -> ["class", Def t]
 | CustomFunT _ | ChoiceKitT _ -> []
+| DefT (_, NumT _)
+| DefT (_, StrT _)
+  -> []
+| DefT (_, FunT (_, _, funtype)) -> parts_of_funtype funtype
 | DiffT (l, r) -> ["left", Def l; "right", Def r]
-| EmptyT _ -> []
+| DefT (_, EmptyT) -> []
 | EvalT (t, _, _) -> ["t", Def t]
 | ExactT (_, t) -> ["t", Def t]
 | ExistsT _ -> []
@@ -188,24 +192,22 @@ and parts_of_t cx = function
 | FunProtoBindT _ -> []
 | FunProtoCallT _ -> []
 | FunProtoT _ -> []
-| FunT (_, _, _, funtype) -> parts_of_funtype funtype
 | IdxWrapper (_, inner) -> ["inner", Def inner]
-| InstanceT (_, static, super, implements,
-  { type_args; fields_tmap; methods_tmap; _ }) ->
+| DefT (_, InstanceT (static, super, implements,
+  { type_args; fields_tmap; methods_tmap; _ })) ->
   map_parts type_args @
   map_props (Context.find_props cx fields_tmap) @
   map_props (Context.find_props cx methods_tmap) @
   list_parts implements @
   ["static", Def static; "super", Def super]
-| IntersectionT (_, rep) -> list_parts (InterRep.members rep)
+| DefT (_, IntersectionT rep) -> list_parts (InterRep.members rep)
 | KeysT (_, t) -> ["t", Def t]
-| MaybeT (_, t) -> ["t", Def t]
-| MixedT _ -> []
+| DefT (_, MaybeT t) -> ["t", Def t]
+| DefT (_, MixedT _) -> []
 | ModuleT (_, exporttypes) -> parts_of_exporttypes cx exporttypes
-| NullT _ -> []
-| NumT _ -> []
+| DefT (_, NullT) -> []
 | ObjProtoT _ -> []
-| ObjT (_, { props_tmap; dict_t; proto_t; _ }) ->
+| DefT (_, ObjT { props_tmap; dict_t; proto_t; _ }) ->
   ("proto", Def proto_t) ::
   map_props (Context.find_props cx props_tmap) @
   begin match dict_t with
@@ -213,24 +215,23 @@ and parts_of_t cx = function
   | Some { key; value; _ } -> ["#key#", Def key; "#val#", Def value]
   end
 | OpenPredT (_, base, _, _) -> ["base", Def base]
-| OptionalT (_, t)
-| PolyT (_, _, t) -> ["t", Def t]
+| DefT (_, OptionalT t)
+| DefT (_, PolyT (_, t)) -> ["t", Def t]
 | ReposT (_, t) -> ["t", Def t]
 | ReposUpperT (_, t) -> ["t", Def t]
 | ShapeT t -> ["t", Def t]
-| SingletonBoolT _ -> []
-| SingletonNumT _ -> []
-| SingletonStrT _ -> []
-| StrT _ -> []
+| DefT (_, SingletonBoolT _) -> []
+| DefT (_, SingletonNumT _) -> []
+| DefT (_, SingletonStrT _) -> []
 | TaintT _ -> []
 | ThisClassT (_, t) -> ["this", Def t]
 | ThisTypeAppT (_, t, this, args) ->
   ("t", Def t) :: ("this", Def this) :: list_parts args
-| TypeAppT (_, t, args) -> ("t", Def t) :: list_parts args
+| DefT (_, TypeAppT (t, args)) -> ("t", Def t) :: list_parts args
 | TypeMapT (_, _, t1, t2) -> ["t", Def t1; "mapfn", Def t2]
-| TypeT (_, t) -> ["t", Def t]
-| UnionT (_, rep) -> list_parts (UnionRep.members rep)
-| VoidT _ -> []
+| DefT (_, TypeT t) -> ["t", Def t]
+| DefT (_, UnionT rep) -> list_parts (UnionRep.members rep)
+| DefT (_, VoidT) -> []
 
 and parts_of_funtype { params_tlist; params_names; rest_param; return_t; _ } =
   (* OMITTED: static, prototype, this_t *)

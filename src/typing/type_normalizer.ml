@@ -19,12 +19,11 @@ let fake_fun params_names param_ts rest_param ret_t =
     ~f:(fun (name, t) -> Some name, Loc.none, t)
     rest_param in
   let def_reason = reason in
-  FunT (
-    reason,
+  DefT (reason, FunT (
     Flow_js.dummy_static reason,
     Flow_js.dummy_prototype,
     Flow_js.mk_functiontype param_ts ~rest_param ~def_reason ?params_names ret_t
-  )
+  ))
 
 let fake_instance name =
   let insttype = {
@@ -37,13 +36,12 @@ let fake_instance name =
     mixins = false;
     structural = false;
   } in
-  InstanceT (
-    locationless_reason (RCustom name),
+  DefT (locationless_reason (RCustom name), InstanceT (
     ObjProtoT (locationless_reason (RCustom "dummy static")),
     ObjProtoT (locationless_reason (RCustom "dummy super")),
     [],
     insttype
-  )
+  ))
 
 (* This function does not only resolve every OpenT recursively, but also
    replaces the reasons of types with a uniform ones. It is a left-over bit
@@ -53,27 +51,27 @@ let rec normalize_type_impl cx ids t = match t with
   | OpenT (_, id) ->
       lookup_type cx ids id
 
-  | NumT _ -> Locationless.NumT.t
-  | StrT _ -> Locationless.StrT.t
-  | BoolT _ -> Locationless.BoolT.t
-  | EmptyT _ -> Locationless.EmptyT.t
-  | NullT _ -> Locationless.NullT.t
-  | VoidT _ -> Locationless.VoidT.t
-  | MixedT _ -> Locationless.MixedT.t
-  | AnyT _ -> Locationless.AnyT.t
+  | DefT (_, NumT _) -> Locationless.NumT.t
+  | DefT (_, StrT _) -> Locationless.StrT.t
+  | DefT (_, BoolT _) -> Locationless.BoolT.t
+  | DefT (_, EmptyT) -> Locationless.EmptyT.t
+  | DefT (_, NullT) -> Locationless.NullT.t
+  | DefT (_, VoidT) -> Locationless.VoidT.t
+  | DefT (_, MixedT _) -> Locationless.MixedT.t
+  | DefT (_, AnyT) -> Locationless.AnyT.t
 
   | TaintT _ -> TaintT (locationless_reason (RCustom "taint"))
 
   | ExistsT _ -> ExistsT (locationless_reason (RCustom "exists"))
 
-  | SingletonStrT (_, s) ->
-    SingletonStrT (locationless_reason (RCustom "string singleton"), s)
-  | SingletonNumT (_, n) ->
-    SingletonNumT (locationless_reason (RCustom "number singleton"), n)
-  | SingletonBoolT (_, b) ->
-    SingletonBoolT (locationless_reason (RCustom "boolean singleton"), b)
+  | DefT (_, SingletonStrT s) ->
+    DefT (locationless_reason (RCustom "string singleton"), SingletonStrT s)
+  | DefT (_, SingletonNumT n) ->
+    DefT (locationless_reason (RCustom "number singleton"), SingletonNumT n)
+  | DefT (_, SingletonBoolT b) ->
+    DefT (locationless_reason (RCustom "boolean singleton"), SingletonBoolT b)
 
-  | FunT (_, _, _, ft) ->
+  | DefT (_, FunT (_, _, ft)) ->
       let tins = List.map (normalize_type_impl cx ids) ft.params_tlist in
       let rest_param = Option.map
         ~f:(fun (name, loc, t) -> name, loc, normalize_type_impl cx ids t)
@@ -83,18 +81,17 @@ let rec normalize_type_impl cx ids t = match t with
       let reason = locationless_reason (RFunction RNormal) in
       let is_predicate = Some ft.is_predicate in
       let def_reason = ft.def_reason in
-      FunT (
-        reason,
+      DefT (reason, FunT (
         Flow_js.dummy_static reason,
         Flow_js.dummy_prototype,
         Flow_js.mk_functiontype
           tins ~rest_param ~def_reason ?params_names ?is_predicate tout
-      )
+      ))
 
   (* Fake the signature of Function.prototype.apply: *)
   (* (thisArg: any, argArray?: any): any *)
   | FunProtoApplyT _ ->
-      let any = AnyT (locationless_reason RAny) in
+      let any = DefT (locationless_reason RAny, AnyT) in
       let tins = [any; optional any] in
       let params_names = Some ["thisArg"; "argArray"] in
       fake_fun params_names tins None any
@@ -102,8 +99,8 @@ let rec normalize_type_impl cx ids t = match t with
   (* Fake the signature of Function.prototype.bind: *)
   (* (thisArg: any, ...argArray: Array<any>): any *)
   | FunProtoBindT _ ->
-      let any = AnyT (locationless_reason RAny) in
-      let arr = ArrT (locationless_reason RArray, ArrayAT(any, None)) in
+      let any = DefT (locationless_reason RAny, AnyT) in
+      let arr = DefT (locationless_reason RArray, ArrT (ArrayAT(any, None))) in
       let tins = [any] in
       let rest_param = Some ("argArray", arr) in
       let params_names = Some ["thisArg"] in
@@ -112,8 +109,8 @@ let rec normalize_type_impl cx ids t = match t with
   (* Fake the signature of Function.prototype.call: *)
   (* (thisArg: any, ...argArray: Array<any>): any *)
   | FunProtoCallT _ ->
-      let any = AnyT (locationless_reason RAny) in
-      let arr = ArrT (locationless_reason RArray, ArrayAT(any, None)) in
+      let any = DefT (locationless_reason RAny, AnyT) in
+      let arr = DefT (locationless_reason RArray, ArrT (ArrayAT(any, None))) in
       let tins = [any] in
       let rest_param = Some ("argArray", arr) in
       let params_names = Some ["thisArg"] in
@@ -125,8 +122,8 @@ let rec normalize_type_impl cx ids t = match t with
   (* Fake the signature of $Facebookism$Merge: *)
   (* (...objects: Array<Object>): Object *)
   | CustomFunT (_, Merge) ->
-      let obj = AnyObjT (locationless_reason RObjectType) in
-      let arr = ArrT (locationless_reason RArray, ArrayAT(obj, None)) in
+      let obj = DefT (locationless_reason RObjectType, AnyObjT) in
+      let arr = DefT (locationless_reason RArray, ArrT (ArrayAT(obj, None))) in
       let tins = [] in
       let rest_param = Some ("objects", arr) in
       let params_names = Some [] in
@@ -135,9 +132,9 @@ let rec normalize_type_impl cx ids t = match t with
   (* Fake the signature of $Facebookism$MergeDeepInto: *)
   (* (target: Object, ...objects: Array<Object>): void *)
   | CustomFunT (_, MergeDeepInto) ->
-      let obj = AnyObjT (locationless_reason RObjectType) in
-      let arr = ArrT (locationless_reason RArray, ArrayAT(obj, None)) in
-      let void = VoidT (locationless_reason RVoid) in
+      let obj = DefT (locationless_reason RObjectType, AnyObjT) in
+      let arr = DefT (locationless_reason RArray, ArrT (ArrayAT(obj, None))) in
+      let void = DefT (locationless_reason RVoid, VoidT) in
       let tins = [obj] in
       let rest_param = Some ("objects", arr) in
       let params_names = Some ["target"] in
@@ -146,9 +143,9 @@ let rec normalize_type_impl cx ids t = match t with
   (* Fake the signature of $Facebookism$MergeInto: *)
   (* (target: Object, ...objects: Array<Object>): void *)
   | CustomFunT (_, MergeInto) ->
-      let obj = AnyObjT (locationless_reason RObjectType) in
-      let arr = ArrT (locationless_reason RArray, ArrayAT(obj, None)) in
-      let void = VoidT (locationless_reason RVoid) in
+      let obj = DefT (locationless_reason RObjectType, AnyObjT) in
+      let arr = DefT (locationless_reason RArray, ArrT (ArrayAT(obj, None))) in
+      let void = DefT (locationless_reason RVoid, VoidT) in
       let tins = [obj] in
       let rest_param = Some ("objects", arr) in
       let params_names = Some ["target"] in
@@ -157,8 +154,8 @@ let rec normalize_type_impl cx ids t = match t with
   (* Fake the signature of $Facebookism$Mixin: *)
   (* (...objects: Array<Object>): Class *)
   | CustomFunT (_, Mixin) ->
-      let obj = AnyObjT (locationless_reason RObjectType) in
-      let arr = ArrT (locationless_reason RArray, ArrayAT(obj, None)) in
+      let obj = DefT (locationless_reason RObjectType, AnyObjT) in
+      let arr = DefT (locationless_reason RArray, ArrT (ArrayAT(obj, None))) in
       let tout = class_type obj in
       let tins = [] in
       let rest_param = Some ("objects", arr) in
@@ -168,8 +165,8 @@ let rec normalize_type_impl cx ids t = match t with
   (* Fake the signature of Object.assign:
      (target: any, ...sources: Array<any>): any *)
   | CustomFunT (_, ObjectAssign) ->
-      let any = AnyT (locationless_reason RAny) in
-      let arr = ArrT (locationless_reason RArray, ArrayAT(any, None)) in
+      let any = DefT (locationless_reason RAny, AnyT) in
+      let arr = DefT (locationless_reason RArray, ArrT (ArrayAT(any, None))) in
       let tins = [any] in
       let rest_param = Some ("sources", arr) in
       let params_names = Some ["target"] in
@@ -178,7 +175,7 @@ let rec normalize_type_impl cx ids t = match t with
   (* Fake the signature of Object.getPrototypeOf:
      (o: any): any *)
   | CustomFunT (_, ObjectGetPrototypeOf) ->
-      let any = AnyT (locationless_reason RAny) in
+      let any = DefT (locationless_reason RAny, AnyT) in
       let tins = [any] in
       let params_names = Some ["o"] in
       fake_fun params_names tins None any
@@ -190,7 +187,7 @@ let rec normalize_type_impl cx ids t = match t with
         BoundT {
           reason = obj_reason;
           name = obj_name;
-          bound = AnyObjT (locationless_reason RObjectType);
+          bound = DefT (locationless_reason RObjectType, AnyObjT);
           polarity = Neutral;
           default = None;
         }
@@ -202,7 +199,7 @@ let rec normalize_type_impl cx ids t = match t with
         BoundT {
           reason = cb_ret_reason;
           name = cb_ret_name;
-          bound = MixedT (reason, Mixed_everything);
+          bound = DefT (reason, MixedT Mixed_everything);
           polarity = Neutral;
           default = None;
         }
@@ -218,14 +215,14 @@ let rec normalize_type_impl cx ids t = match t with
       let maybe_ret =
         let reason = reason_of_t cb_ret in
         let reason = replace_reason (fun desc -> RMaybe desc) reason in
-        MaybeT (reason, cb_ret)
+        DefT (reason, MaybeT cb_ret)
       in
       fake_fun param_names tins None maybe_ret
 
   | CustomFunT (_, DebugPrint) ->
       let rest_param = Some (
         "_",
-        ArrT (locationless_reason RArray, ArrayAT(Locationless.AnyT.t, None))
+        DefT (locationless_reason RArray, ArrT (ArrayAT(Locationless.AnyT.t, None)))
       ) in
       fake_fun None [] rest_param Locationless.VoidT.t
 
@@ -255,13 +252,13 @@ let rec normalize_type_impl cx ids t = match t with
         {
           reason;
           name = config_name;
-          bound = MixedT (reason, Mixed_everything);
+          bound = DefT (reason, MixedT Mixed_everything);
           polarity = Neutral;
           default = None;
         }
       in
       let config = BoundT config_tp in
-      let any = AnyT (locationless_reason RAny) in
+      let any = DefT (locationless_reason RAny, AnyT) in
       let react_element =
         let instance = fake_instance "React$Element" in
         typeapp (poly_type [config_tp] (class_type instance)) [config]
@@ -285,16 +282,15 @@ let rec normalize_type_impl cx ids t = match t with
         let param_ts = [stateless_functional_component; config; any] in
         poly_type [config_tp] (fake_fun params_names param_ts None react_element)
       in
-      IntersectionT (
-        locationless_reason RIntersectionType,
-        InterRep.make t1 t2 []
+      DefT (locationless_reason RIntersectionType,
+        IntersectionT (InterRep.make t1 t2 [])
       )
 
   | IdxWrapper (_, obj) ->
     let reason = locationless_reason (RCustom "idx object") in
     IdxWrapper (reason, normalize_type_impl cx ids obj)
 
-  | ObjT (_, ot) ->
+  | DefT (_, ObjT ot) ->
       let dict = match ot.dict_t with
         | None -> None
         | Some dict ->
@@ -309,81 +305,77 @@ let rec normalize_type_impl cx ids t = match t with
         |> Context.make_property_map cx
       in
       let proto = Locationless.AnyT.t in
-      ObjT (
-        locationless_reason RObject,
-        Flow_js.mk_objecttype dict pmap proto
+      DefT (locationless_reason RObject,
+        ObjT (Flow_js.mk_objecttype dict pmap proto)
       )
 
-  | ArrT (_, ArrayAT (elemt, tuple_types)) ->
-      ArrT (
-        locationless_reason RArray,
+  | DefT (_, ArrT (ArrayAT (elemt, tuple_types))) ->
+      DefT (locationless_reason RArray, ArrT (
         ArrayAT (
           normalize_type_impl cx ids elemt,
           Option.map
             ~f:(List.map (normalize_type_impl cx ids))
             tuple_types
         )
-      )
+      ))
 
-  | ArrT (_, TupleAT (elemt, tuple_types)) ->
-      ArrT (
-        locationless_reason RTupleType,
+  | DefT (_, ArrT (TupleAT (elemt, tuple_types))) ->
+      DefT (locationless_reason RTupleType, ArrT (
         TupleAT (
           normalize_type_impl cx ids elemt,
           List.map (normalize_type_impl cx ids) tuple_types
         )
-      )
+      ))
 
-  | ArrT (_, ROArrayAT (elemt)) ->
-      ArrT (
-        locationless_reason RROArrayType,
+  | DefT (_, ArrT (ROArrayAT (elemt))) ->
+      DefT (locationless_reason RROArrayType, ArrT (
         ROArrayAT (
           normalize_type_impl cx ids elemt
         )
-      )
+      ))
 
-  | ArrT (_, EmptyAT) ->
-      ArrT(locationless_reason RArray, EmptyAT)
+  | DefT (_, ArrT EmptyAT) ->
+      DefT (locationless_reason RArray, ArrT EmptyAT)
 
   | ExactT (reason, t) ->
       let reason = locationless_reason (desc_of_reason reason) in
       ExactT (reason, normalize_type_impl cx ids t)
 
-  | MaybeT (reason, t) ->
+  | DefT (reason, MaybeT t) ->
       let reason = locationless_reason (desc_of_reason reason) in
       let t = normalize_type_impl cx ids t in
       (match t with
-      | MaybeT _ -> t
-      | _ -> MaybeT (reason, t))
+      | DefT (_, MaybeT _) -> t
+      | _ -> DefT (reason, MaybeT t))
 
-  | PolyT (reason, xs, t) ->
+  | DefT (reason, PolyT (xs, t)) ->
       let reason = locationless_reason (desc_of_reason reason) in
-      PolyT (reason, xs, normalize_type_impl cx ids t)
+      DefT (reason, PolyT (xs, normalize_type_impl cx ids t))
 
-  | ClassT (reason, t) ->
+  | DefT (reason, ClassT t) ->
       let reason = locationless_reason (desc_of_reason reason) in
-      ClassT (reason, normalize_type_impl cx ids t)
+      DefT (reason, ClassT (normalize_type_impl cx ids t))
 
   | ThisClassT (reason, t) ->
       let reason = locationless_reason (desc_of_reason reason) in
       ThisClassT (reason, normalize_type_impl cx ids t)
 
-  | TypeT (reason, t) ->
+  | DefT (reason, TypeT t) ->
       let reason = locationless_reason (desc_of_reason reason) in
-      TypeT (reason, normalize_type_impl cx ids t)
+      DefT (reason, TypeT (normalize_type_impl cx ids t))
 
-  | InstanceT _ ->
+  | DefT (_, InstanceT _) ->
       t (* nominal type *)
 
-  | OptionalT (reason, t) ->
+  | DefT (reason, OptionalT t) ->
       let reason = locationless_reason (desc_of_reason reason) in
-      OptionalT (reason, normalize_type_impl cx ids t)
+      DefT (reason, OptionalT (normalize_type_impl cx ids t))
 
-  | TypeAppT (reason, c, ts) ->
+  | DefT (reason, TypeAppT (c, ts)) ->
       let reason = locationless_reason (desc_of_reason reason) in
       let c = normalize_type_impl cx ids c in
       let ts = List.map (normalize_type_impl cx ids) ts in
-      TypeAppT (reason, c, ts)
+      DefT (reason, TypeAppT (c, ts))
 
   | ThisTypeAppT (reason, c, this, ts) ->
       let reason = locationless_reason (desc_of_reason reason) in
@@ -392,12 +384,12 @@ let rec normalize_type_impl cx ids t = match t with
       let ts = List.map (normalize_type_impl cx ids) ts in
       ThisTypeAppT (reason, c, this, ts)
 
-  | IntersectionT (_, rep) ->
+  | DefT (_, IntersectionT rep) ->
       let reason = locationless_reason RIntersection in
       let rep = InterRep.map (normalize_type_impl cx ids) rep in
       normalize_intersection reason rep
 
-  | UnionT (_, rep) ->
+  | DefT (_, UnionT rep) ->
       let reason = locationless_reason RUnion in
       let rep = UnionRep.map (normalize_type_impl cx ids) rep in
       normalize_union reason rep
@@ -408,8 +400,8 @@ let rec normalize_type_impl cx ids t = match t with
   | AnyWithLowerBoundT t ->
       AnyWithLowerBoundT (normalize_type_impl cx ids t)
 
-  | AnyObjT _ -> AnyObjT (locationless_reason RAnyObject)
-  | AnyFunT _ -> AnyFunT (locationless_reason RAnyFunction)
+  | DefT (_, AnyObjT) -> DefT (locationless_reason RAnyObject, AnyObjT)
+  | DefT (_, AnyFunT) -> DefT (locationless_reason RAnyFunction, AnyFunT)
 
   | ShapeT t ->
       ShapeT (normalize_type_impl cx ids t)
@@ -510,18 +502,18 @@ and normalize_union r rep =
   let (ts, has_void, has_null) =
     TypeSet.fold (fun t (ts, has_void, has_null) ->
       match t with
-      | MaybeT (_, UnionT (_, rep)) ->
+      | DefT (_, MaybeT (DefT (_, UnionT rep))) ->
           let tlist = UnionRep.members rep in
           let ts = List.fold_left (fun acc t -> TypeSet.add t acc) ts tlist in
           (ts, true, true)
-      | MaybeT (_, t) -> (TypeSet.add t ts, true, true)
-      | VoidT _ -> (ts, true, has_null)
-      | NullT _ -> (ts, has_void, true)
+      | DefT (_, MaybeT t) -> (TypeSet.add t ts, true, true)
+      | DefT (_, VoidT) -> (ts, true, has_null)
+      | DefT (_, NullT) -> (ts, has_void, true)
       (* TODO: We should only get EmptyT here when a completely open type
          variable has been in the union before grounding it. This happens when
          "null" is passed to a function parameter. We throw this out because
          it gives no information at all. merge_type also ignores EmptyT. *)
-      | EmptyT _ -> (ts, has_void, has_null)
+      | DefT (_, EmptyT) -> (ts, has_void, has_null)
       | _ -> (TypeSet.add t ts, has_void, has_null)
     ) ts (TypeSet.empty, false, false) in
   let ts =
@@ -538,20 +530,20 @@ and normalize_union r rep =
   let ts = TypeSet.elements ts in
   let t =
     match ts with
-    | [] -> EmptyT r
+    | [] -> DefT (r, EmptyT)
     | [t] -> t
-    | t0::t1::ts -> UnionT (r, UnionRep.make t0 t1 ts)
+    | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts))
   in
   if has_void && has_null
   then
     let r = replace_reason (fun desc -> RMaybe desc) r in
-    MaybeT (r, t)
+    DefT (r, MaybeT t)
   else t
 
 and collect_union_members ts =
   List.fold_left (fun acc x ->
       match x with
-      | UnionT (_, rep) ->
+      | DefT (_, UnionT rep) ->
         let ts = UnionRep.members rep in
         TypeSet.union (collect_union_members ts) acc
       | _ ->
@@ -566,14 +558,14 @@ and normalize_intersection r rep =
   let ts = collect_intersection_members ts in
   let ts = TypeSet.elements ts in
   match ts with
-  | [] -> MixedT (r, Empty_intersection)
+  | [] -> DefT (r, MixedT Empty_intersection)
   | [t] -> t
-  | t0::t1::ts -> IntersectionT (r, InterRep.make t0 t1 ts)
+  | t0::t1::ts -> DefT (r, IntersectionT (InterRep.make t0 t1 ts))
 
 and collect_intersection_members ts =
   List.fold_left (fun acc x ->
       match x with
-      | IntersectionT (_, rep) ->
+      | DefT (_, IntersectionT rep) ->
         let ts = InterRep.members rep in
         TypeSet.union acc (collect_intersection_members ts)
       | _ ->

@@ -521,11 +521,11 @@ let bind_declare_var = bind_var ~state:State.Initialized
 let bind_declare_fun =
 
   let update_type seen_t new_t = match seen_t with
-  | IntersectionT (reason, rep) ->
-    IntersectionT (reason, InterRep.append [new_t] rep)
+  | DefT (reason, IntersectionT rep) ->
+    DefT (reason, IntersectionT (InterRep.append [new_t] rep))
   | _ ->
     let reason = replace_reason_const RIntersectionType (reason_of_t seen_t) in
-    IntersectionT (reason, InterRep.make seen_t new_t [])
+    DefT (reason, IntersectionT (InterRep.make seen_t new_t []))
   in
 
   fun cx name t loc ->
@@ -686,7 +686,7 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
       else (* State.MaybeInitialized *)
         let desc = (RCustom "possibly uninitialized variable") in
         let rep = UnionRep.make (uninit desc) specific [] in
-        UnionT (mk_reason desc value_declare_loc, rep)
+        DefT (mk_reason desc value_declare_loc, UnionT rep)
     in
     specific, general
 

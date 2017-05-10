@@ -162,7 +162,7 @@ let elements ?constructor = with_sig (fun s ->
     SMap.map Type.(fun xs ->
       match Nel.rev_map Func_sig.methodtype xs with
       | t, [] -> t
-      | t0, t1::ts -> IntersectionT (reason_of_t t0, InterRep.make t0 t1 ts)
+      | t0, t1::ts -> DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts))
     ) s.methods
   in
 
@@ -221,7 +221,7 @@ let insttype ~static cx s =
     | [t] -> Some t
     | t0::t1::ts ->
       let open Type in
-      let t = IntersectionT (reason_of_t t0, InterRep.make t0 t1 ts) in
+      let t = DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts)) in
       Some t
   in
   let inited_fields, fields, methods = elements ?constructor ~static s in
@@ -279,8 +279,8 @@ let thistype cx x =
   } = x in
   let open Type in
   let sinsttype, insttype = mutually (insttype cx x) in
-  let static = InstanceT (sreason, Flow.dummy_prototype, ssuper, [], sinsttype) in
-  InstanceT (reason, static, super, implements, insttype)
+  let static = DefT (sreason, InstanceT (Flow.dummy_prototype, ssuper, [], sinsttype)) in
+  DefT (reason, InstanceT (static, super, implements, insttype))
 
 let check_implements cx x =
   let this = thistype cx x in
@@ -597,7 +597,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
     let super = Type.(match interface_supers with
       | [] -> AnyT.why super_reason (* Is this case even possible? *)
       | [t] -> t
-      | t0::t1::ts -> IntersectionT (super_reason, InterRep.make t0 t1 ts)
+      | t0::t1::ts -> DefT (super_reason, IntersectionT (InterRep.make t0 t1 ts))
     ) in
     empty ~structural id reason tparams tparams_map super []
   in
@@ -737,7 +737,7 @@ let toplevels cx ~decls ~stmts ~expr x =
          locals, e.g., so it cannot be used in general to track definite
          assignments. *)
       let derived_ctor = Type.(match s.super with
-        | ClassT (_, ObjProtoT _) -> false
+        | DefT (_, ClassT (ObjProtoT _)) -> false
         | ObjProtoT _ -> false
         | _ -> true
       ) in
@@ -745,7 +745,7 @@ let toplevels cx ~decls ~stmts ~expr x =
         if derived_ctor then
           let open Type in
           let specific =
-            VoidT (replace_reason_const RUninitializedThis (reason_of_t this))
+            DefT (replace_reason_const RUninitializedThis (reason_of_t this), VoidT)
           in
           Scope.Entry.new_var ~loc:(loc_of_t t) ~specific (Type.optional t)
         else

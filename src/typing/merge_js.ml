@@ -54,7 +54,7 @@ let explicit_decl_require_strict cx (m, resolved_m, cx_to) =
   in
   let from_t = Flow_js.mk_tvar cx reason in
   Flow_js.lookup_builtin cx m_name reason
-    (Type.NonstrictReturning (Some (Type.AnyT reason, from_t))) from_t;
+    (Type.NonstrictReturning (Some (Type.DefT (reason, Type.AnyT), from_t))) from_t;
 
   (* flow the declared module type to importing context *)
   let to_t = Flow_js.lookup_module cx_to m in
@@ -216,7 +216,7 @@ module ContextOptimizer = struct
     match Flow_js.possible_types cx id with
     | [] -> Locationless.AnyT.t
     | [t] -> t
-    | t0::t1::ts -> UnionT (r, UnionRep.make t0 t1 ts)
+    | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts))
 
   class context_optimizer = object(self)
     inherit [quotient] Type_visitor.t as super
@@ -313,7 +313,7 @@ module ContextOptimizer = struct
       } in
       match t with
       | OpenT _ -> super#type_ cx quotient t
-      | InstanceT (_, _, _, _, { class_id; _ }) ->
+      | DefT (_, InstanceT (_, _, _, { class_id; _ })) ->
         let { sig_hash; _ } = quotient in
         let id =
           if Context.mem_nominal_id cx class_id

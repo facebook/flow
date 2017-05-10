@@ -19,7 +19,7 @@ let dedup_strlist list =
   in List.rev rlist
 
 let name_suffix_of_t = function
-  | OptionalT _ -> "?"
+  | DefT (_, OptionalT _) -> "?"
   | _ -> ""
 
 let parameter_name _cx n t =
@@ -116,26 +116,26 @@ let rec type_printer_impl ~size override enclosure cx t =
     | OpenT (_, id) ->
         spf "TYPE_%d" id
 
-    | NumT _
-    | StrT _
-    | BoolT _
-    | EmptyT _
-    | MixedT _
-    | AnyT _
-    | NullT _ ->
-        string_of_desc (desc_of_reason (reason_of_t t))
+    | DefT (r, NumT _)
+    | DefT (r, StrT _)
+    | DefT (r, BoolT _)
+    | DefT (r, EmptyT)
+    | DefT (r, MixedT _)
+    | DefT (r, AnyT)
+    | DefT (r, NullT)
+      -> string_of_desc (desc_of_reason r)
 
     | BoundT typeparam -> typeparam.name
 
-    | SingletonStrT (_, s) -> spf "'%s'" s
-    | SingletonNumT (_, (_, raw)) -> raw
-    | SingletonBoolT (_, b) -> string_of_bool b
+    | DefT (_, SingletonStrT s) -> spf "'%s'" s
+    | DefT (_, SingletonNumT (_, raw)) -> raw
+    | DefT (_, SingletonBoolT b) -> string_of_bool b
 
     (* reasons for VoidT use "undefined" for more understandable error output.
        For parsable types we need to use "void" though, thus overwrite it. *)
-    | VoidT _ -> "void"
+    | DefT (_, VoidT) -> "void"
 
-    | FunT (_,_,_,ft) ->
+    | DefT (_, FunT (_, _, ft)) ->
         let {
           params_tlist = ts;
           params_names = pns;
@@ -167,31 +167,31 @@ let rec type_printer_impl ~size override enclosure cx t =
         in
         parenthesize type_s enclosure [EnclosureUnion; EnclosureIntersect]
 
-    | ObjT (_, {props_tmap = flds; dict_t; _}) ->
+    | DefT (_, ObjT {props_tmap = flds; dict_t; _}) ->
         string_of_obj flds dict_t ~exact:false
 
-    | ExactT (_, ObjT (_, {props_tmap = flds; dict_t; _})) ->
+    | ExactT (_, DefT (_, ObjT {props_tmap = flds; dict_t; _})) ->
         string_of_obj flds dict_t ~exact:true
 
     | ExactT (_, t) ->
         spf "$Exact<%s>" (pp EnclosureNone cx t)
 
-    | ArrT (_, ArrayAT (t, None)) ->
+    | DefT (_, ArrT (ArrayAT (t, None))) ->
         spf "Array<%s>" (pp EnclosureNone cx t)
-    | ArrT (_, ROArrayAT (t)) ->
+    | DefT (_, ArrT (ROArrayAT t)) ->
         spf "$ReadOnlyArray<%s>" (pp EnclosureNone cx t)
-    | ArrT (_, ArrayAT (_, Some ts))
-    | ArrT (_, TupleAT (_, ts)) ->
+    | DefT (_, ArrT (ArrayAT (_, Some ts)))
+    | DefT (_, ArrT (TupleAT (_, ts))) ->
         ts
         |> List.map (pp EnclosureNone cx)
         |> String.concat ", "
         |> spf "[%s]"
-    | ArrT (_, EmptyAT) -> "$EmptyArray"
+    | DefT (_, ArrT EmptyAT) -> "$EmptyArray"
 
-    | InstanceT (reason, _, _, _, _) ->
+    | DefT (reason, InstanceT _) ->
         DescFormat.name_of_instance_reason reason
 
-    | TypeAppT (_, c,ts) ->
+    | DefT (_, TypeAppT (c,ts)) ->
         let type_s =
           spf "%s<%s>"
             (instance_of_poly_type_printer ~size override EnclosureAppT cx c)
@@ -202,17 +202,17 @@ let rec type_printer_impl ~size override enclosure cx t =
         in
         parenthesize type_s enclosure [EnclosureMaybe]
 
-    | MaybeT (_, t) ->
+    | DefT (_, MaybeT t) ->
         spf "?%s" (pp EnclosureMaybe cx t)
 
-    | PolyT (_, xs, t) ->
+    | DefT (_, PolyT (xs, t)) ->
         let xs_str =
           xs
           |> List.map (fun param -> param.name)
           |> String.concat ", "
         in
         let type_s = match t with
-        | ClassT (_, u)
+        | DefT (_, ClassT u)
         | ThisClassT (_, u) ->
           spf "%s<%s>" (pp EnclosureNone cx u) xs_str
         | _ ->
@@ -225,19 +225,19 @@ let rec type_printer_impl ~size override enclosure cx t =
         in
         parenthesize type_s enclosure [EnclosureAppT; EnclosureMaybe]
 
-    | IntersectionT (_, rep) ->
+    | DefT (_, IntersectionT rep) ->
         let mems = List.map (pp EnclosureIntersect cx) (InterRep.members rep) in
         let mems = dedup_strlist mems in
         let type_s = String.concat " & " mems in
         parenthesize type_s enclosure [EnclosureUnion; EnclosureMaybe]
 
-    | UnionT (_, rep) ->
+    | DefT (_, UnionT rep) ->
         let mems = List.map (pp EnclosureUnion cx) (UnionRep.members rep) in
         let mems = dedup_strlist mems in
         let type_s = String.concat " | " mems in
         parenthesize type_s enclosure [EnclosureIntersect; EnclosureMaybe]
 
-    | OptionalT (_, t) ->
+    | DefT (_, OptionalT t) ->
         let type_s = pp EnclosureNone cx t in
         begin match enclosure with
         | EnclosureParam | EnclosureProp -> type_s
@@ -251,10 +251,10 @@ let rec type_printer_impl ~size override enclosure cx t =
     | TaintT (_) -> spf "$Tainted<any>"
 
     (* The following types are not syntax-supported *)
-    | ClassT (_, t) ->
+    | DefT (_, ClassT t) ->
         spf "[class: %s]" (pp EnclosureNone cx t)
 
-    | TypeT (_, t) ->
+    | DefT (_, TypeT t) ->
         spf "[type: %s]" (pp EnclosureNone cx t)
 
     | AnyWithUpperBoundT t ->
@@ -263,10 +263,10 @@ let rec type_printer_impl ~size override enclosure cx t =
     | AnyWithLowerBoundT t ->
         spf "$Supertype<%s>" (pp EnclosureNone cx t)
 
-    | AnyObjT _ ->
+    | DefT (_, AnyObjT) ->
         "Object"
 
-    | AnyFunT _ ->
+    | DefT (_, AnyFunT) ->
         "Function"
 
     | IdxWrapper (_, t) ->
@@ -326,15 +326,15 @@ let rec type_printer_impl ~size override enclosure cx t =
         assert_false (spf "Missing printer for %s" (string_of_ctor t))
 
 and instance_of_poly_type_printer ~size override enclosure cx = function
-  | PolyT (_, _, ThisClassT (_, t))
-  | PolyT (_, _, ClassT (_, t))
+  | DefT (_, PolyT (_, ThisClassT (_, t)))
+  | DefT (_, PolyT (_, DefT (_, ClassT t)))
     -> type_printer ~size override enclosure cx t
 
-  | PolyT (_, _, TypeT (reason, _))
+  | DefT (_, PolyT (_, DefT (reason, TypeT _)))
     -> DescFormat.name_of_type_reason reason
 
   (* NOTE: t = FunT is legit, others probably mean upstream errors *)
-  | PolyT (_, _, t)
+  | DefT (_, PolyT (_, t))
     -> type_printer ~size override enclosure cx t
 
   (* since we're called with args that aren't statically guaranteed
@@ -366,18 +366,17 @@ let type_printer ?(size=5000) override enclosure cx t =
 let rec is_printed_type_parsable_impl weak cx enclosure = function
   (* Base cases *)
   | BoundT _
-  | NumT _
-  | StrT _
-  | BoolT _
-  | AnyT _
-  | NullT _
-  | SingletonStrT _
-  | SingletonNumT _
-  | SingletonBoolT _
-    ->
-      true
 
-  | VoidT _
+  | DefT (_, NumT _)
+  | DefT (_, StrT _)
+  | DefT (_, BoolT _)
+  | DefT (_, AnyT)
+  | DefT (_, NullT)
+  | DefT (_, SingletonStrT _)
+  | DefT (_, SingletonNumT _)
+  | DefT (_, SingletonBoolT _)
+    -> true
+  | DefT (_, VoidT)
     when (enclosure == EnclosureRet)
     ->
       true
@@ -386,26 +385,26 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
       is_printed_type_parsable_impl weak cx enclosure t
 
   (* Composed types *)
-  | MaybeT (_, t)
+  | DefT (_, MaybeT t)
     ->
       is_printed_type_parsable_impl weak cx EnclosureMaybe t
   | TaintT (_)
     ->
       true
 
-  | ArrT (_, ArrayAT (t, None))
+  | DefT (_, ArrT (ArrayAT (t, None)))
     ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
-  | ArrT (_, (ArrayAT (_, Some ts) | TupleAT (_, ts)))
+  | DefT (_, ArrT (ArrayAT (_, Some ts) | TupleAT (_, ts)))
     ->
       is_printed_type_list_parsable weak cx EnclosureNone ts
 
-  | OptionalT (_, t) ->
+  | DefT (_, OptionalT t) ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
 
-  | VoidT _ -> true
+  | DefT (_, VoidT) -> true
 
-  | FunT (_, _, _, { params_tlist; rest_param; return_t; _ })
+  | DefT (_, FunT (_, _, { params_tlist; rest_param; return_t; _ }))
     ->
       (is_printed_type_parsable_impl weak cx EnclosureRet return_t) &&
       (is_printed_type_list_parsable weak cx EnclosureParam params_tlist) &&
@@ -414,7 +413,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
            is_printed_type_parsable_impl weak cx EnclosureParam t
        | None -> true)
 
-  | ObjT (_, { props_tmap; dict_t; _ })
+  | DefT (_, ObjT { props_tmap; dict_t; _ })
     ->
       let is_printable =
         match dict_t with
@@ -438,36 +437,35 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
 
-  | InstanceT _
-    ->
-      true
+  | DefT (_, InstanceT _)
+    -> true
 
-  | IntersectionT (_, rep)
+  | DefT (_, IntersectionT rep)
     ->
       let ts = InterRep.members rep in
       is_printed_type_list_parsable weak cx EnclosureIntersect ts
 
-  | UnionT (_, rep)
+  | DefT (_, UnionT rep)
     ->
       let ts = UnionRep.members rep in
       is_printed_type_list_parsable weak cx EnclosureUnion ts
 
-  | PolyT (_, _, t)
+  | DefT (_, PolyT (_, t))
     ->
       (* unwrap PolyT (ClassT t) because class names are parsable as part of a
          polymorphic type declaration. *)
       let t = match t with
         | ThisClassT (_, u)
-        | ClassT (_, u) -> u
+        | DefT (_, ClassT u) -> u
         | _ -> t
       in
       is_printed_type_parsable_impl weak cx EnclosureNone t
 
-  | AnyObjT _ -> true
-  | AnyFunT _ -> true
+  | DefT (_, AnyObjT) -> true
+  | DefT (_, AnyFunT) -> true
 
   | ThisTypeAppT (_, t, _, ts)
-  | TypeAppT (_, t, ts)
+  | DefT (_, TypeAppT (t, ts))
     ->
       (is_instantiable_poly_type weak cx EnclosureAppT t) &&
       (is_printed_type_list_parsable weak cx EnclosureNone ts)
@@ -476,11 +474,11 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
 
   (* these are types which are not really parsable, but they make sense to a
      human user in cases of autocompletion *)
-  | TypeT (_, t)
+  | DefT (_, TypeT t)
+  | DefT (_, ClassT t)
   | AnyWithUpperBoundT t
   | AnyWithLowerBoundT t
   | ThisClassT (_, t)
-  | ClassT (_, t)
     when weak
     ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
@@ -493,11 +491,11 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
       false
 
 and is_instantiable_poly_type weak cx enclosure = function
-  | PolyT (_, _, ThisClassT (_, t))
-  | PolyT (_, _, ClassT (_, t))
+  | DefT (_, PolyT (_, ThisClassT (_, t)))
+  | DefT (_, PolyT (_, DefT (_, ClassT t)))
     -> is_printed_type_parsable_impl weak cx enclosure t
 
-  | PolyT (_, _, TypeT _)
+  | DefT (_, PolyT (_, DefT (_, TypeT _)))
     -> true
 
   | _ -> false
