@@ -487,27 +487,28 @@ let collate_errors =
     in
     result
 
-  let find_refs ~options (file_input, line, col) oc =
+  let find_refs ~options (file_input, line, col) =
     let filename = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile filename in
     let loc = mk_loc file line col in
     let state = FindRefs_js.set_hooks loc in
-    (try
-       let content = ServerProt.file_input_get_content file_input in
-       let cx = match Types_js.typecheck_contents ~options content file with
-         | _, Some cx, _, _ -> cx
-         | _  -> failwith "Couldn't parse file"
-       in
-       let result = FindRefs_js.result cx state in
-       Marshal.to_channel oc result []
-     with exn ->
-       Hh_logger.warn
-         "Could not find refs for %s:%d:%d\n%s"
-         filename line col
-         (Printexc.to_string exn)
-    );
+    let result =
+      try
+        let content = ServerProt.file_input_get_content file_input in
+        let cx = match Types_js.typecheck_contents ~options content file with
+          | _, Some cx, _, _ -> cx
+          | _  -> failwith "Couldn't parse file"
+        in
+        Some (FindRefs_js.result cx state)
+      with exn ->
+        Hh_logger.warn
+          "Could not find refs for %s:%d:%d\n%s"
+          filename line col
+          (Printexc.to_string exn);
+        None
+    in
     FindRefs_js.unset_hooks ();
-    flush oc
+    result
 
   let get_def ~options command_context (file_input, line, col) oc =
     let filename = ServerProt.file_input_get_filename file_input in
@@ -737,7 +738,10 @@ let collate_errors =
         (find_module ~options (moduleref, filename): filename option)
           |> marshal
     | ServerProt.FIND_REFS (fn, line, char) ->
-        find_refs ~options (fn, line, char) oc
+        begin match find_refs ~options (fn, line, char) with
+          | Some result -> marshal (result: Loc.t list)
+          | None -> ()
+        end
     | ServerProt.FORCE_RECHECK (files) ->
         Marshal.to_channel oc () [];
         flush oc;
