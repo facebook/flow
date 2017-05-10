@@ -245,7 +245,7 @@ let collate_errors =
       _end = { Loc.line; column = col + 1; offset = 0; };
     }
 
-  let infer_type ~options client_context (file_input, line, col, verbose, include_raw) oc =
+  let infer_type ~options client_context (file_input, line, col, verbose, include_raw) =
     let file = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile file in
     let response = (try
@@ -300,10 +300,9 @@ let collate_errors =
         (Printexc.get_backtrace ())) in
       Err err
     ) in
-    Marshal.to_channel oc (response: ServerProt.infer_type_response) [];
-    flush oc
+    response
 
-  let dump_types ~options file_input include_raw strip_root oc =
+  let dump_types ~options file_input include_raw strip_root =
     (* Print type using Flow type syntax *)
     let printer = Type_printer.string_of_t in
     (* Print raw representation of types as json; as it turns out, the
@@ -328,10 +327,9 @@ let collate_errors =
       let err = (loc, Printexc.to_string exn) in
       Err err
     ) in
-    Marshal.to_channel oc (resp : ServerProt.dump_types_response) [];
-    flush oc
+    resp
 
-  let coverage ~options ~force file_input oc =
+  let coverage ~options ~force file_input =
     let file = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile file in
     let resp =
@@ -358,8 +356,7 @@ let collate_errors =
       let err = (loc, Printexc.to_string exn) in
       Err err
     ) in
-    Marshal.to_channel oc (resp : ServerProt.coverage_response) [];
-    flush oc
+    resp
 
   let parse_suggest_cmd file =
     let digits = "\\([0-9]+\\)" in
@@ -426,7 +423,7 @@ let collate_errors =
     Marshal.to_channel oc patches [];
     flush oc
 
-  let find_module ~options (moduleref, filename) oc =
+  let find_module ~options (moduleref, filename) =
     let file = Loc.SourceFile filename in
     let metadata = Context.({ (metadata_of_options options) with
       checked = false;
@@ -436,12 +433,9 @@ let collate_errors =
     let module_name = Module_js.imported_module
       ~options ~node_modules_containers:!Files.node_modules_containers
       (Context.file cx) loc moduleref in
-    let response: filename option =
-      Module_js.get_file ~audit:Expensive.warn module_name in
-    Marshal.to_channel oc response [];
-    flush oc
+    Module_js.get_file ~audit:Expensive.warn module_name
 
-  let gen_flow_files ~options env files oc =
+  let gen_flow_files ~options env files =
     let errors, _ = collate_errors env.ServerEnv.errors in
     let result = if Errors.ErrorSet.is_empty errors
       then begin
@@ -504,8 +498,7 @@ let collate_errors =
       end else
         Utils_js.Err (ServerProt.GenFlowFile_TypecheckError errors)
     in
-    Marshal.to_channel oc result [];
-    flush oc
+    result
 
   let find_refs ~options (file_input, line, col) oc =
     let filename = ServerProt.file_input_get_filename file_input in
@@ -745,13 +738,16 @@ let collate_errors =
         let options = { options with Options.opt_output_graphml = graphml } in
         check_file ~options ~force ~verbose fn oc
     | ServerProt.COVERAGE (fn, force) ->
-        coverage ~options ~force fn oc
+        (coverage ~options ~force fn: ServerProt.coverage_response)
+          |> marshal
     | ServerProt.DUMP_TYPES (fn, format, strip_root) ->
-        dump_types ~options fn format strip_root oc
+        (dump_types ~options fn format strip_root: ServerProt.dump_types_response)
+          |> marshal
     | ServerProt.ERROR_OUT_OF_DATE ->
         incorrect_hash oc
     | ServerProt.FIND_MODULE (moduleref, filename) ->
-        find_module ~options (moduleref, filename) oc
+        (find_module ~options (moduleref, filename): filename option)
+          |> marshal
     | ServerProt.FIND_REFS (fn, line, char) ->
         find_refs ~options (fn, line, char) oc
     | ServerProt.FORCE_RECHECK (files) ->
@@ -760,13 +756,15 @@ let collate_errors =
         let updates = process_updates genv !env (Utils_js.set_of_list files) in
         env := recheck genv !env updates
     | ServerProt.GEN_FLOW_FILES files ->
-        gen_flow_files ~options !env files oc
+        (gen_flow_files ~options !env files: ServerProt.gen_flow_file_response)
+          |> marshal
     | ServerProt.GET_DEF (fn, line, char) ->
         get_def ~options client_logging_context (fn, line, char) oc
     | ServerProt.GET_IMPORTS module_names ->
         get_imports ~options module_names oc
     | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
-        infer_type ~options client_logging_context (fn, line, char, verbose, include_raw) oc
+        (infer_type ~options client_logging_context (fn, line, char, verbose, include_raw): ServerProt.infer_type_response)
+          |> marshal
     | ServerProt.KILL ->
         die_nicely oc
     | ServerProt.PING ->
