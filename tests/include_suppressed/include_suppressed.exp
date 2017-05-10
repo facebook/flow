@@ -36,7 +36,6 @@ Found 3 errors
 
 JSON without --include-suppressed
 {
-  "flowVersion":"0.45.0",
   "errors":[
     {
       "kind":"infer",
@@ -124,9 +123,9 @@ JSON without --include-suppressed
   "passed":false
 }
 
+
 JSON with --include-suppressed
 {
-  "flowVersion":"0.45.0",
   "errors":[
     {
       "kind":"infer",
@@ -271,3 +270,4 @@ JSON with --include-suppressed
   ],
   "passed":false
 }
+
