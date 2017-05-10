@@ -90,42 +90,29 @@ let collate_errors =
     |> collate merge_errors
     |> filter_suppressed_errors suppressions
 
-  let send_errorl el oc =
-    if Errors.ErrorSet.is_empty el
-    then
-      ServerProt.response_to_channel oc ServerProt.NO_ERRORS
-    else begin
-      ServerProt.response_to_channel oc (ServerProt.ERRORS el);
-    end;
-    flush oc
+  let convert_errorl el =
+    if Errors.ErrorSet.is_empty el then
+      ServerProt.NO_ERRORS
+    else
+      ServerProt.ERRORS el
 
-  let print_status genv env client_root oc =
+  let get_status genv env client_root =
     let server_root = Options.root genv.options in
-    if server_root <> client_root
-    then begin
-      let msg = ServerProt.DIRECTORY_MISMATCH {
+    if server_root <> client_root then begin
+      ServerProt.DIRECTORY_MISMATCH {
         ServerProt.server=server_root;
         ServerProt.client=client_root
-      } in
-      ServerProt.response_to_channel oc msg;
-      Hh_logger.fatal "Status: Error";
-      Hh_logger.fatal "server_dir=%s, client_dir=%s"
-        (Path.to_string server_root)
-        (Path.to_string client_root);
-      Hh_logger.fatal "%s is not listening to the same directory. Exiting."
-        name;
-      FlowExitStatus.(exit Server_client_directory_mismatch)
-    end;
-    flush stdout;
+      }
+    end else begin
+      (* collate errors by origin *)
+      let errors, _ = collate_errors env.ServerEnv.errors in
 
-    (* collate errors by origin *)
-    let errors, _ = collate_errors env.ServerEnv.errors in
-
-    (* TODO: check status.directory *)
-    status_log errors;
-    FlowEventLogger.status_response
-      ~num_errors:(Errors.ErrorSet.cardinal errors);
-    send_errorl errors oc
+      (* TODO: check status.directory *)
+      status_log errors;
+      FlowEventLogger.status_response
+        ~num_errors:(Errors.ErrorSet.cardinal errors);
+      convert_errorl errors
+    end
 
   (* helper - print errors. used in check-and-die runs *)
   let print_errors ~profiling ~suppressed_errors options errors =
@@ -209,7 +196,7 @@ let collate_errors =
     Autocomplete_js.autocomplete_unset_hooks ();
     results
 
-  let check_file ~options ~force ~verbose file_input oc =
+  let check_file ~options ~force ~verbose file_input =
     let file = ServerProt.file_input_get_filename file_input in
     match file_input with
     | ServerProt.FileName _ -> failwith "Not implemented"
@@ -233,9 +220,9 @@ let collate_errors =
           let errors = match checked with
           | _, _, errors, _ -> errors
           in
-          send_errorl errors oc
+          convert_errorl errors
         else
-          ServerProt.response_to_channel oc ServerProt.NOT_COVERED
+          ServerProt.NOT_COVERED
 
   let mk_loc file line col =
     {
@@ -736,7 +723,8 @@ let collate_errors =
         marshal results
     | ServerProt.CHECK_FILE (fn, verbose, graphml, force) ->
         let options = { options with Options.opt_output_graphml = graphml } in
-        check_file ~options ~force ~verbose fn oc
+        (check_file ~options ~force ~verbose fn: ServerProt.response)
+          |> ServerProt.response_to_channel oc
     | ServerProt.COVERAGE (fn, force) ->
         (coverage ~options ~force fn: ServerProt.coverage_response)
           |> marshal
@@ -772,7 +760,19 @@ let collate_errors =
     | ServerProt.PORT (files) ->
         port files oc
     | ServerProt.STATUS client_root ->
-        print_status genv !env client_root oc
+        let status = get_status genv !env client_root in
+        ServerProt.response_to_channel oc status;
+        begin match status with
+          | ServerProt.DIRECTORY_MISMATCH {ServerProt.server; ServerProt.client} ->
+              Hh_logger.fatal "Status: Error";
+              Hh_logger.fatal "server_dir=%s, client_dir=%s"
+                (Path.to_string server)
+                (Path.to_string client);
+              Hh_logger.fatal "%s is not listening to the same directory. Exiting."
+                name;
+              FlowExitStatus.(exit Server_client_directory_mismatch)
+          | _ -> ()
+        end
     | ServerProt.SUGGEST (files) ->
         suggest ~options files oc
     | ServerProt.CONNECT ->
