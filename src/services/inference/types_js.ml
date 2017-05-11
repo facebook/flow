@@ -199,6 +199,7 @@ let typecheck
   ~errors =
   (* TODO remove after lookup overhaul *)
   Module_js.clear_filename_cache ();
+  let parsed_set = parsed in
   let parsed = FilenameSet.elements parsed in
 
   let new_modules = Module_js.introduce_files workers ~options parsed unparsed in
@@ -247,8 +248,19 @@ let typecheck
         && Module_js.checked_file ~audit:Expensive.warn f
       then
         with_timer ~options "Infer" profiling (fun () ->
-          let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
-          let files = Dep_service.calc_all_dependencies dependency_graph (FilenameSet.singleton f) in
+          let files =
+            (* Calculate the set of files to check. This set includes not only
+               the files to be "rechecked", which is f and all its dependents,
+               but also the dependencies of such files since they may not
+               already be checked. *)
+            let { Module_js._module; _ } = Module_js.get_info_unsafe ~audit:Expensive.warn f in
+            let all_dependent_files, _ = Dep_service.dependent_files workers
+              ~unchanged:(FilenameSet.remove f parsed_set)
+              ~new_or_changed:(FilenameSet.singleton f)
+              ~changed_modules:(Module_js.NameSet.singleton _module) in
+            let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
+            Dep_service.calc_all_dependencies dependency_graph (FilenameSet.add f all_dependent_files)
+          in
           Infer_service.infer ~options ~workers (FilenameSet.elements files)
         )
       else (* terminate *)
