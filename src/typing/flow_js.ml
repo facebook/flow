@@ -74,12 +74,13 @@ let mk_methodtype
 }
 
 let mk_methodcalltype
-    this tins ?(frame=0) ?(call_strict_arity=true) tout = {
+    this tins ?(frame=0) ?(call_strict_arity=true) ?(call_return_used=true) tout = {
   call_this_t = this;
   call_args_tlist = tins;
   call_tout = tout;
   call_closure_t = frame;
   call_strict_arity;
+  call_return_used;
 }
 
 (* A bound function type is a function type with `this` = `any`. Typically, such
@@ -2172,6 +2173,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         call_tout;
         call_closure_t;
         call_strict_arity;
+        call_return_used;
       }) ->
       (match call_args_tlist with
         | (Arg obj)::(Arg cb)::[] ->
@@ -2183,6 +2185,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               call_tout = t;
               call_closure_t;
               call_strict_arity;
+              call_return_used;
             }))
           ) in
           let unwrapped_t = mk_tvar_where cx reason_op (fun t ->
@@ -3480,13 +3483,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           closure_t = func_scope_id; changeset; _ } as ft))),
       CallT (reason_callsite,
         { call_this_t = o2; call_args_tlist = tins2; call_tout = t2;
-          call_closure_t = call_scope_id; call_strict_arity})
+          call_closure_t = call_scope_id; call_strict_arity; call_return_used})
       ->
       Ops.push reason_callsite;
       rec_flow cx trace (o2, UseT (FunCallThis reason_callsite, o1));
       if call_strict_arity
       then multiflow_call cx trace reason_callsite tins2 ft
       else multiflow_subtype cx trace reason_callsite tins2 ft;
+
+      let returns_value = match t1 with
+          DefT (_, (VoidT | AnyT)) -> false
+        | _ -> true
+      in if returns_value && not call_return_used
+      then add_output cx (FlowError.ECustom((reason_fundef, reason_callsite), "Result of function call unused"))
+      else ();
       Ops.pop ();
 
       (* flow return type of function to the tvar holding the return type of the
@@ -3509,7 +3519,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (reason_fundef, (AnyFunT | AnyT)),
       CallT (reason_op,
         { call_this_t; call_args_tlist; call_tout; call_closure_t=_;
-          call_strict_arity=_;}) ->
+          call_strict_arity=_; call_return_used=_}) ->
       let any = AnyT.why reason_fundef in
       rec_flow_t cx trace (call_this_t, any);
       call_args_iter (fun t -> rec_flow_t cx trace (t, any)) call_args_tlist;
@@ -4818,7 +4828,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       BindT (reason_op, {
         call_this_t = o2;
         call_args_tlist = tins2;
-        call_tout; call_closure_t=_; call_strict_arity = _;
+        call_tout; call_closure_t=_; call_strict_arity = _; call_return_used = _;
       }, _) ->
         (* TODO: closure *)
 

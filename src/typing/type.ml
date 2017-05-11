@@ -621,6 +621,7 @@ module rec TypeTerm : sig
     call_tout: t;
     call_closure_t: int;
     call_strict_arity: bool;
+    call_return_used: bool;
   }
 
   and call_arg =

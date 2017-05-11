@@ -69,6 +69,7 @@ val mk_methodcalltype :
   Type.t -> Type.call_arg list ->
   ?frame:int ->
   ?call_strict_arity:bool ->
+  ?call_return_used:bool ->
   Type.t -> Type.funcalltype
 
 val mk_boundfunctiontype :
@@ -87,6 +88,7 @@ val mk_functioncalltype :
   Type.call_arg list ->
   ?frame:int ->
   ?call_strict_arity:bool ->
+  ?call_return_used:bool ->
   Type.t -> Type.funcalltype
 
 val dummy_this : Type.t

@@ -483,7 +483,7 @@ and statement cx = Ast.Statement.(
       )
 
   | (_, Expression { Expression.expression = e; directive = _ }) ->
-      ignore (expression cx e)
+      ignore (expression ~is_top_level:true cx e)
 
   (* Refinements for `if` are derived by the following Hoare logic rule:
 
@@ -2299,8 +2299,8 @@ and mixin_element_spread cx (loc, e) =
     Flow.flow_t cx (arr, DefT (reason, ArrT (ArrayAT(tvar, None))));
   )
 
-and expression ?(is_cond=false) cx (loc, e) =
-  let t = expression_ ~is_cond cx loc e in
+and expression ?(is_cond=false) ?(is_top_level=false) cx (loc, e) =
+  let t = expression_ ~is_cond ~is_top_level cx loc e in
   Hashtbl.replace (Context.type_table cx) loc t;
   t
 
@@ -2313,7 +2313,7 @@ and this_ cx loc = Ast.Expression.(
 and super_ cx loc =
   Env.var_ref cx (internal_name "super") loc
 
-and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
+and expression_ ~is_cond ~is_top_level cx loc e = Ast.Expression.(match e with
 
   | Ast.Expression.Literal lit ->
       literal cx loc lit
@@ -2679,7 +2679,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason = mk_reason RFunctionCall loc in
       let argts =
         List.map (expression_or_spread cx) arguments in
-      func_call cx reason f argts
+      let call_return_used = not is_top_level in
+      func_call cx reason ~call_return_used f argts
 
   | Conditional { Conditional.test; consequent; alternate } ->
       let reason = mk_reason RConditional loc in
@@ -2950,11 +2951,11 @@ and new_call cx tok class_ argts =
     Flow.flow cx (class_, ConstructorT (reason, argts, t));
   )
 
-and func_call cx reason ?(call_strict_arity=true) func_t argts =
+and func_call cx reason ?(call_strict_arity=true) ?(call_return_used=true) func_t argts =
   Env.havoc_heap_refinements ();
   Flow.mk_tvar_where cx reason (fun t ->
     let frame = Env.peek_frame () in
-    let app = Flow.mk_functioncalltype argts t ~frame ~call_strict_arity in
+    let app = Flow.mk_functioncalltype argts t ~frame ~call_strict_arity ~call_return_used in
     Flow.flow cx (func_t, CallT(reason, app))
   )
 
