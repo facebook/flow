@@ -570,11 +570,7 @@ let collate_errors =
         (map, non_flow)
     in let results = List.fold_left add_to_results
                      (SMap.empty, SSet.empty) module_names in
-    (* Our result is a tuple. The first element is a map from module names to
-     * modules imported by them and their locations of import. The second
-     * element is a set of modules which are not marked for processing by
-     * flow. *)
-    Marshal.to_channel oc results [];
+    Marshal.to_channel oc (results: ServerProt.get_imports_response) [];
     flush oc
 
   let get_watch_paths options = Files.watched_paths options

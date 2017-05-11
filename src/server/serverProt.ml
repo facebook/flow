@@ -90,6 +90,12 @@ type gen_flow_file_result =
 type gen_flow_file_response =
   ((string * gen_flow_file_result) list, gen_flow_file_error) Utils_js.ok_or_err
 
+(* Our result is a tuple. The first element is a map from module names to
+ * modules imported by them and their locations of import. The second
+ * element is a set of modules which are not marked for processing by
+ * flow. *)
+type get_imports_response = (Module_js.NameSet.t * Loc.t SMap.t) SMap.t * SSet.t
+
 let cmd_to_channel (oc:out_channel) (cmd:command): unit =
   let command = {
     client_logging_context = FlowEventLogger.get_context ();
