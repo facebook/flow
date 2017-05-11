@@ -247,8 +247,8 @@ let typecheck
         && Module_js.checked_file ~audit:Expensive.warn f
       then
         with_timer ~options "Infer" profiling (fun () ->
-          let dependency_graph = Dep_service.calc_dependencies workers parsed in
-          let files = Dep_service.walk_dependencies dependency_graph (FilenameSet.singleton f) in
+          let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
+          let files = Dep_service.calc_all_dependencies dependency_graph (FilenameSet.singleton f) in
           Infer_service.infer ~options ~workers (FilenameSet.elements files)
         )
       else (* terminate *)
@@ -285,7 +285,7 @@ let typecheck
     Hh_logger.info "Calculating dependencies";
     let profiling, dependency_graph =
       with_timer ~options "CalcDeps" profiling (fun () ->
-        Dep_service.calc_dependencies workers to_merge
+        Dep_service.calc_dependency_graph workers to_merge
       ) in
     let partition = Sort_js.topsort dependency_graph in
     if Options.should_profile options then Sort_js.log partition;
@@ -573,10 +573,10 @@ let recheck genv env ~updates =
     ~make_merge_input:(fun changed_modules inferred ->
       (* need to merge the closure of inferred files and their deps *)
 
-      (* direct_deps are unchanged files which directly depend on changed modules,
-         or are new / changed files that are phantom dependents. all_deps are
-         direct_deps plus their dependents (transitive closure) *)
-      let all_deps, direct_deps = Dep_service.dependent_files
+      (* direct_dependent_files are unchanged files which directly depend on changed modules,
+         or are new / changed files that are phantom dependents. dependent_files are
+         direct_dependent_files plus their dependents (transitive closure) *)
+      let all_dependent_files, direct_dependent_files = Dep_service.dependent_files
         workers
         ~unchanged
         ~new_or_changed
@@ -585,11 +585,11 @@ let recheck genv env ~updates =
 
       Hh_logger.info "Re-resolving directly dependent files";
       (** TODO [perf] Consider oldifying **)
-      Module_js.remove_batch_resolved_requires direct_deps;
+      Module_js.remove_batch_resolved_requires direct_dependent_files;
       SharedMem_js.collect options `gentle;
 
       let node_modules_containers = !Files.node_modules_containers in
-      (* requires in direct_deps must be re-resolved before merging. *)
+      (* requires in direct_dependent_files must be re-resolved before merging. *)
       MultiWorker.call workers
         ~job: (fun () files ->
           let cache = new Context_cache.context_cache in
@@ -601,9 +601,9 @@ let recheck genv env ~updates =
         )
         ~neutral: ()
         ~merge: (fun () () -> ())
-        ~next:(MultiWorker.next workers (FilenameSet.elements direct_deps));
+        ~next:(MultiWorker.next workers (FilenameSet.elements direct_dependent_files));
 
-      let n = FilenameSet.cardinal all_deps in
+      let n = FilenameSet.cardinal all_dependent_files in
       if n > 0
       then Hh_logger.info "remerge %d dependent files:" n;
       dependent_file_count := n;
@@ -611,7 +611,7 @@ let recheck genv env ~updates =
       let _ = FilenameSet.fold (fun f i ->
         Hh_logger.info "%d/%d: %s" i n (string_of_filename f);
         i + 1
-      ) all_deps 1 in
+      ) all_dependent_files 1 in
       Hh_logger.info "Merge prep";
 
       (* merge errors for unchanged dependents will be cleared lazily *)
@@ -620,17 +620,17 @@ let recheck genv env ~updates =
       (* NOTE: Non-@flow files don't have entries in ResolvedRequiresHeap, so
          don't add then to the set of files to merge! Only inferred files (along
          with dependents) should be merged: see below. *)
-      let to_merge = FilenameSet.union all_deps (FilenameSet.of_list inferred) in
+      let to_merge = FilenameSet.union all_dependent_files (FilenameSet.of_list inferred) in
       Context_cache.oldify_merge_batch to_merge;
       (** TODO [perf]: Consider `aggressive **)
       SharedMem_js.collect genv.ServerEnv.options `gentle;
 
       let to_merge = FilenameSet.elements to_merge in
 
-      (* Definitely recheck inferred and direct_deps. As merging proceeds, other
+      (* Definitely recheck inferred and direct_dependent_files. As merging proceeds, other
          files in to_merge may or may not be rechecked. *)
       let recheck_map = to_merge |> List.fold_left (
-        let roots = FilenameSet.union new_or_changed direct_deps in
+        let roots = FilenameSet.union new_or_changed direct_dependent_files in
         fun recheck_map file ->
           FilenameMap.add file (FilenameSet.mem file roots) recheck_map
       ) FilenameMap.empty in
