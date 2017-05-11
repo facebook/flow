@@ -510,33 +510,33 @@ let collate_errors =
     FindRefs_js.unset_hooks ();
     result
 
-  let get_def ~options command_context (file_input, line, col) oc =
+  let get_def ~options command_context (file_input, line, col) =
     let filename = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile filename in
     let loc = mk_loc file line col in
     let state = GetDef_js.getdef_set_hooks loc in
-    (try
+    let result = try
       let content = ServerProt.file_input_get_content file_input in
       let profiling, cx = match Types_js.typecheck_contents ~options content file with
         | profiling, Some cx, _, _ -> profiling, cx
         | _  -> failwith "Couldn't parse file"
       in
-      let result = GetDef_js.getdef_get_result
+      Some (GetDef_js.getdef_get_result
         profiling
         command_context
         ~options
         cx
         state
-      in
-      Marshal.to_channel oc result []
+      )
     with exn ->
       Hh_logger.warn
         "Could not get definition for %s:%d:%d\n%s"
         filename line col
-        (Printexc.to_string exn)
-    );
+        (Printexc.to_string exn);
+      None
+    in
     GetDef_js.getdef_unset_hooks ();
-    flush oc
+    result
 
   let module_name_of_string ~options module_name_str =
     let path = Path.to_string (Path.make module_name_str) in
@@ -710,6 +710,10 @@ let collate_errors =
       Marshal.to_channel oc msg [];
       flush oc
     in
+    let marshal_option = function
+      | Some msg -> marshal msg
+      | None -> ()
+    in
     let options = genv.ServerEnv.options in
     let { ServerProt.client_logging_context; command; } = msg in
     begin match command with
@@ -734,10 +738,8 @@ let collate_errors =
         (find_module ~options (moduleref, filename): filename option)
           |> marshal
     | ServerProt.FIND_REFS (fn, line, char) ->
-        begin match find_refs ~options (fn, line, char) with
-          | Some result -> marshal (result: Loc.t list)
-          | None -> ()
-        end
+        (find_refs ~options (fn, line, char): Loc.t list option)
+          |> marshal_option
     | ServerProt.FORCE_RECHECK (files) ->
         Marshal.to_channel oc () [];
         flush oc;
@@ -747,7 +749,8 @@ let collate_errors =
         (gen_flow_files ~options !env files: ServerProt.gen_flow_file_response)
           |> marshal
     | ServerProt.GET_DEF (fn, line, char) ->
-        get_def ~options client_logging_context (fn, line, char) oc
+        (get_def ~options client_logging_context (fn, line, char): Loc.t option)
+          |> marshal_option
     | ServerProt.GET_IMPORTS module_names ->
         get_imports ~options module_names oc
     | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
