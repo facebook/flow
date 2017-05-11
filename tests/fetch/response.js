@@ -4,6 +4,7 @@ const b: Response = new Response(new Blob()); // correct
 const c: Response = new Response(new FormData()); // correct
 
 new Response("", { status: 404 }); // correct
+new Response(null, { status: 204 }); // correct
 new Response("", { status: "404" }); // incorrect
 new Response("", { status: null }); // incorrect
 
