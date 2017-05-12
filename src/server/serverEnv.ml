@@ -29,7 +29,7 @@ type errors = {
      dependencies can be cleared during merge. *)
   merge_errors: Errors.ErrorSet.t Utils_js.FilenameMap.t;
   (* error suppressions in the code *)
-  suppressions: Errors.ErrorSuppressions.t Utils_js.FilenameMap.t;
+  suppressions: Error_suppressions.t Utils_js.FilenameMap.t;
 }
 
 type env = {

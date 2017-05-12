@@ -81,7 +81,7 @@ let infer_job ~options acc files =
         (Errors.internal_error file msg) in
       prerr_endlinef "(%d) infer_job THROWS: %s"
         (Unix.getpid()) (fmt_file_exc (string_of_filename file) exc);
-      (file, errorset, Errors.ErrorSuppressions.empty) :: acc
+      (file, errorset, Error_suppressions.empty) :: acc
   ) acc files
 
 (* local type inference pass.

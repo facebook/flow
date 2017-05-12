@@ -54,18 +54,6 @@ val extra_of_error: error -> info_tree list
    traces may share endpoints, and produce the same error *)
 module ErrorSet : Set.S with type elt = error
 
-module ErrorSuppressions : sig
-  type t
-
-  val empty : t
-  val is_empty : t -> bool
-  val add : Loc.t -> t -> t
-  val union : t -> t -> t
-  val check : Loc.t list -> t -> (bool * Loc.LocSet.t * t)
-  val unused : t -> Loc.t list
-  val cardinal : t -> int
-end
-
 (* formatters/printers *)
 
 type stdin_file = (Path.t * string) option

@@ -103,14 +103,14 @@ let load_lib_files ~master_cx ~options files =
         | Parsing.Parse_error error -> Parsing.set_of_parse_error error
         | Parsing.Docblock_errors errs -> Parsing.set_of_docblock_errors errs
         in
-        let result = lib_file, false, errors, Errors.ErrorSuppressions.empty in
+        let result = lib_file, false, errors, Error_suppressions.empty in
         exclude_syms, (result :: results)
 
       | Parsing.Parse_skip
           (Parsing.Skip_non_flow_file | Parsing.Skip_resource_file) ->
         (* should never happen *)
         let errs = Errors.ErrorSet.empty in
-        let suppressions = Errors.ErrorSuppressions.empty in
+        let suppressions = Error_suppressions.empty in
         let result = lib_file, false, errs, suppressions in
         exclude_syms, (result :: results)
 

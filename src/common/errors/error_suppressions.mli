@@ -8,15 +8,12 @@
  *
  *)
 
-open Utils_js
+type t
 
-val infer:
-  options: Options.t ->
-  workers: Worker.t list option ->
-  filename list ->
-  (filename * Errors.ErrorSet.t * Error_suppressions.t) list
-
-val apply_docblock_overrides:
- Context.metadata ->
- Docblock.t ->
- Context.metadata
+val empty : t
+val is_empty : t -> bool
+val add : Loc.t -> t -> t
+val union : t -> t -> t
+val check : Loc.t list -> t -> (bool * Loc.LocSet.t * t)
+val unused : t -> Loc.t list
+val cardinal : t -> int

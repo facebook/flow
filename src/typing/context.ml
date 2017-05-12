@@ -88,7 +88,7 @@ type t = {
   mutable errors: Errors.ErrorSet.t;
   mutable globals: SSet.t;
 
-  mutable error_suppressions: Errors.ErrorSuppressions.t;
+  mutable error_suppressions: Error_suppressions.t;
 
   type_table: (Loc.t, Type.t) Hashtbl.t;
   annot_table: (Loc.t, Type.t) Hashtbl.t;
@@ -159,7 +159,7 @@ let make metadata file module_ref = {
   errors = Errors.ErrorSet.empty;
   globals = SSet.empty;
 
-  error_suppressions = Errors.ErrorSuppressions.empty;
+  error_suppressions = Error_suppressions.empty;
 
   type_table = Hashtbl.create 0;
   annot_table = Hashtbl.create 0;
@@ -240,7 +240,7 @@ let add_error cx error =
   cx.errors <- Errors.ErrorSet.add error cx.errors
 let add_error_suppression cx loc =
   cx.error_suppressions <-
-    Errors.ErrorSuppressions.add loc cx.error_suppressions
+    Error_suppressions.add loc cx.error_suppressions
 let add_global cx name =
   cx.globals <- SSet.add name cx.globals
 let add_import_stmt cx stmt =
@@ -265,7 +265,7 @@ let add_nominal_id cx id =
 let remove_all_errors cx =
   cx.errors <- Errors.ErrorSet.empty
 let remove_all_error_suppressions cx =
-  cx.error_suppressions <- Errors.ErrorSuppressions.empty
+  cx.error_suppressions <- Error_suppressions.empty
 let remove_tvar cx id =
   cx.graph <- IMap.remove id cx.graph
 let set_all_unresolved cx all_unresolved =

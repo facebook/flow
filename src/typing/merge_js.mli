@@ -22,7 +22,7 @@ val clear_master_shared: Context.t -> Context.t -> unit
 val merge_lib_file:
   Context.t ->
   Context.t ->
-  Errors.ErrorSet.t * Errors.ErrorSuppressions.t
+  Errors.ErrorSet.t * Error_suppressions.t
 
 module ContextOptimizer: sig
   val sig_context : Context.t list -> SigHash.t

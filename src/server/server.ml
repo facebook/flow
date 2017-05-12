@@ -56,7 +56,7 @@ let collate_errors =
     let errors, suppressed_errors, suppressions = ErrorSet.fold
       (fun error (errors, suppressed_errors, supp_acc) ->
         let locs = Errors.locs_of_error error in
-        let (suppressed, consumed_suppressions, supp_acc) = ErrorSuppressions.check locs supp_acc in
+        let (suppressed, consumed_suppressions, supp_acc) = Error_suppressions.check locs supp_acc in
         let errors, suppressed_errors = if suppressed
           then errors, (error, consumed_suppressions)::suppressed_errors
           else ErrorSet.add error errors, suppressed_errors in
@@ -65,7 +65,7 @@ let collate_errors =
 
     (* For each unused suppression, create an error *)
     let errors =
-      ErrorSuppressions.unused suppressions
+      Error_suppressions.unused suppressions
       |> List.fold_left
         (fun errset loc ->
           let err = Errors.mk_error [
@@ -80,9 +80,9 @@ let collate_errors =
   fun { ServerEnv.local_errors; merge_errors; suppressions; } ->
     (* union suppressions from all files together *)
     let suppressions = FilenameMap.fold
-      (fun _key -> ErrorSuppressions.union)
+      (fun _key -> Error_suppressions.union)
       suppressions
-      ErrorSuppressions.empty in
+      Error_suppressions.empty in
 
     (* union the errors from all files together, filtering suppressed errors *)
     ErrorSet.empty

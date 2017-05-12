@@ -45,7 +45,7 @@ let filter_duplicate_provider map file =
   | None -> map
 
 let update_suppressions map file errsup =
-  if Errors.ErrorSuppressions.is_empty errsup
+  if Error_suppressions.is_empty errsup
     then FilenameMap.remove file map
     else FilenameMap.add file errsup map
 
@@ -131,7 +131,7 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
       let errors = Errors.ErrorSet.fold (fun err errors ->
         let locs = Errors.locs_of_error err in
         let suppressed, _, _ =
-          Errors.ErrorSuppressions.check locs error_suppressions in
+          Error_suppressions.check locs error_suppressions in
         if not suppressed
         then Errors.ErrorSet.add err errors
         else errors
