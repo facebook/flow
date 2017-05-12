@@ -544,7 +544,7 @@ let collate_errors =
     then Modulename.Filename (Loc.SourceFile path)
     else Modulename.String module_name_str
 
-  let get_imports ~options module_names oc =
+  let get_imports ~options module_names =
     let add_to_results (map, non_flow) module_name_str =
       let module_name = module_name_of_string ~options module_name_str in
       match Module_js.get_file ~audit:Expensive.warn module_name with
@@ -568,10 +568,8 @@ let collate_errors =
       | None ->
         (* We simply ignore non existent modules *)
         (map, non_flow)
-    in let results = List.fold_left add_to_results
-                     (SMap.empty, SSet.empty) module_names in
-    Marshal.to_channel oc (results: ServerProt.get_imports_response) [];
-    flush oc
+    in
+    List.fold_left add_to_results (SMap.empty, SSet.empty) module_names
 
   let get_watch_paths options = Files.watched_paths options
 
@@ -752,7 +750,8 @@ let collate_errors =
         (get_def ~options client_logging_context (fn, line, char): Loc.t option)
           |> marshal_option
     | ServerProt.GET_IMPORTS module_names ->
-        get_imports ~options module_names oc
+        (get_imports ~options module_names: ServerProt.get_imports_response)
+          |> marshal
     | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
         (infer_type ~options client_logging_context (fn, line, char, verbose, include_raw): ServerProt.infer_type_response)
           |> marshal
