@@ -398,10 +398,8 @@ let collate_errors =
          result_map
       )
 
-    in fun files oc ->
-      let suggestions = List.fold_left suggest_for_file SMap.empty files in
-      Marshal.to_channel oc suggestions [];
-      flush oc
+    in fun files ->
+      List.fold_left suggest_for_file SMap.empty files
 
   (* NOTE: currently, not only returns list of annotations, but also writes a
      timestamped file with annotations *)
@@ -780,7 +778,8 @@ let collate_errors =
           | _ -> ()
         end
     | ServerProt.SUGGEST (files) ->
-        suggest ~options files oc
+        (suggest ~options files: string SMap.t)
+          |> marshal
     | ServerProt.CONNECT ->
         let new_connections =
           Persistent_connection.add_client
