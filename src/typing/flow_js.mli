@@ -124,7 +124,6 @@ val add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit
 (* builtins *)
 
 val builtins: Context.t -> Type.t
-val restore_builtins: Context.t -> Type.t -> unit
 val get_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
 val lookup_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.t -> unit
 val get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t
