@@ -569,6 +569,10 @@ let collate_errors =
         (* We simply ignore non existent modules *)
         (map, non_flow)
     in
+    (* Our result is a tuple. The first element is a map from module names to
+     * modules imported by them and their locations of import. The second
+     * element is a set of modules which are not marked for processing by
+     * flow. *)
     List.fold_left add_to_results (SMap.empty, SSet.empty) module_names
 
   let get_watch_paths options = Files.watched_paths options
@@ -750,7 +754,7 @@ let collate_errors =
         (get_def ~options client_logging_context (fn, line, char): Loc.t option)
           |> marshal_option
     | ServerProt.GET_IMPORTS module_names ->
-        (get_imports ~options module_names: ServerProt.get_imports_response)
+        get_imports ~options module_names
           |> marshal
     | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
         (infer_type ~options client_logging_context (fn, line, char, verbose, include_raw): ServerProt.infer_type_response)

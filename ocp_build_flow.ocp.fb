@@ -307,24 +307,14 @@ begin library "flow-persistent-connection"
   dirname = "src/server"
   files = [
     "persistent_connection.ml"
+    "serverProt.ml"
     "serverUtils.ml"
   ]
   requires = [
     "flow-common"
-    "flow-server-prot"
-  ]
-end
-
-begin library "flow-server-prot"
-  sort = true
-  dirname = "src/server"
-  files = [
-    "serverProt.ml"
-  ]
-  requires = [
-    "hh-utils"
-    "flow-module-js"
+    "flow-common-utils"
     "flow-services-autocomplete"
+    "hh-utils"
   ]
 end
 
@@ -348,40 +338,28 @@ end
 begin library "flow-services-inference"
   sort = true
   files = begin fb-glob "src/services/inference"
-    excludes = [
-      "module_js.mli"
-      "module_js.ml"
-    ]
+    excludes = [ "module_js.ml" ]
   end
+  files += [
+    "src/services/inference/module_js.ml" (comp += [ "-w" "-3" ])
+  ]
   requires = [
     "flow-common"
+    "flow-common-audit"
     "flow-common-utils"
     "flow-stubs"
-    "flow-module-js"
     "flow-parser"
     "flow-parser-utils"
+    "flow-parsing"
     "flow-server-env"
     "flow-server-files"
     "flow-shmem"
+    "flow-typing"
     "hh-heap"
     "hh-procs"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
-  ]
-end
-
-begin library "flow-module-js"
-  sort = true
-  dirname = "src/services/inference"
-  files = [
-    "module_js.mli"
-    "module_js.ml" (comp += [ "-w" "-3" ])
-  ]
-  requires = [
-    "flow-common-audit"
-    "flow-parsing"
-    "flow-typing"
   ]
 end
 
