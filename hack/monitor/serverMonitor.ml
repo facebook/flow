@@ -119,16 +119,18 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
           Died_unexpectedly (proc_stat, was_oom))
     | _ -> server
 
-  let start_server options exit_status =
+  let start_server ~informant_managed options exit_status =
     let server_process = SC.start_server
-      ~prior_exit_status:exit_status options in
+      ~prior_exit_status:exit_status
+      ~informant_managed options in
     setup_autokill_server_on_exit server_process;
     Alive server_process
 
   let maybe_start_first_server options informant =
     if Informant.should_start_first_server informant then begin
       Hh_logger.log "Starting first server";
-      start_server options None
+      start_server ~informant_managed:(Informant.is_managing informant)
+        options None
     end
     else begin
       Hh_logger.log ("Not starting first server. " ^^
@@ -154,7 +156,9 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
 
   let restart_server env exit_status =
     kill_server_and_wait_for_exit env;
-    let new_server = start_server env.server_start_options exit_status in
+    let informant_managed = Informant.is_managing env.informant in
+    let new_server = start_server ~informant_managed env.server_start_options
+      exit_status in
     { env with
       server = new_server;
       retries = env.retries + 1;

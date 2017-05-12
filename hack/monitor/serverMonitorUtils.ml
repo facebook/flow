@@ -28,7 +28,10 @@ module type Server_config = sig
 
   (** Start the server. Optionally takes in the exit code of the previously
    * running server that exited. *)
-  val start_server : prior_exit_status:(int option) -> server_start_options ->
+  val start_server :
+    informant_managed:bool ->
+    prior_exit_status:(int option) ->
+    server_start_options ->
     ServerProcess.process_data
 
   (** Callback to run when server exits *)
