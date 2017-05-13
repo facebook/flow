@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+var fs = require('fs');
+var path = require('path');
 var colors = require("colors");
 var parseArgs = require("minimist");
 
@@ -104,42 +106,68 @@ function get_esprima_tests() {
   return sections;
 }
 
-function get_hardcoded_tests() {
-  var spec = require('./hardcoded_tests.js');
-
-  var sections = {};
-  for (var section_name in spec.sections) {
-    // Remove TODO sections
-    if (!spec.sections.hasOwnProperty(section_name) ||
-        spec.todo[section_name] === true) {
-      continue;
+function list_files(root, dir) {
+  var files = fs.readdirSync(dir ? path.join(root, dir) : root);
+  var result = [];
+  for (var i = 0; i < files.length; i++) {
+    var file = dir ? path.join(dir, files[i]) : files[i];
+    var stats = fs.statSync(path.join(root, file));
+    if (stats.isDirectory()) {
+      result = result.concat(list_files(root, file));
+    } else {
+      result.push(file);
     }
-
-    var tests = [];
-    for (var test in spec.sections[section_name]) {
-      if (!spec.sections[section_name].hasOwnProperty(test)) {
-        continue;
-      }
-      var expected_ast = spec.sections[section_name][test];
-      var options = spec.sections[section_name][test]['%parse_options%'] || {};
-      delete expected_ast['%parse_options%'];
-      tests.push({
-        content: test,
-        expected_ast: expected_ast,
-        options: options,
-      });
-    }
-
-    var section = {
-      tests: tests,
-    };
-
-    sections[section_name] = {
-      tests: tests,
-    };
   }
+  return result.sort();
+}
 
-  return sections;
+function get_tests(root_dir) {
+  var files = list_files(root_dir);
+  var tests = {};
+  for (var i = 0; i < files.length; i++) {
+    var file = files[i];
+    var test_name = path.dirname(file);
+    var case_parts = path.basename(file).split('.');
+    var case_name = case_parts[0];
+
+    var cases = (tests[test_name] = tests[test_name] || {});
+    var case_ = (cases[case_name] = cases[case_name] || {});
+
+    var content = fs.readFileSync(
+      path.join(root_dir, file),
+      { encoding: 'utf8' }
+    );
+    var ext = case_parts[case_parts.length - 1];
+    var kind = case_parts.length > 2 ? case_parts[case_parts.length - 2] : null;
+
+    if (ext === "js") {
+      case_.content = content;
+    } else if (ext === "json" && kind === "tree") {
+      case_.expected_ast = JSON.parse(content);
+    } else if (ext === "json" && kind === "options") {
+      case_.options = JSON.parse(content);
+    }
+  }
+  return tests;
+}
+
+function get_hardcoded_tests() {
+  var tests = get_tests(path.join(__dirname, 'flow'));
+  var result = {};
+  for (var section in tests) {
+    if (tests.hasOwnProperty(section)) {
+      var test = tests[section];
+      var cases = [];
+      // TODO: use Object.values if we require new enough node
+      for (var case_ in test) {
+        if (test.hasOwnProperty(case_)) {
+          cases.push(test[case_]);
+        }
+      }
+      result[section] = { tests: cases };
+    }
+  }
+  return result;
 }
 
 function test_section(runTest, section_name, section) {

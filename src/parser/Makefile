@@ -90,9 +90,9 @@ test-esprima-ocaml: ../../_build/$(REL_DIR)/test/run_esprima_tests.native
 	cd $(TOP); \
 	_build/$(REL_DIR)/test/run_esprima_tests.native $(REL_DIR)/test/esprima/
 
-test-hardcoded-ocaml: ../../_build/$(REL_DIR)/test/run_hardcoded_tests.native
+test-hardcoded-ocaml: ../../_build/$(REL_DIR)/test/run_esprima_tests.native
 	cd $(TOP); \
-	_build/$(REL_DIR)/test/run_hardcoded_tests.native $(REL_DIR)/test/hardcoded_tests.js
+	_build/$(REL_DIR)/test/run_esprima_tests.native $(REL_DIR)/test/flow/
 
 test-ocaml: test-esprima-ocaml test-hardcoded-ocaml
 

@@ -142,7 +142,7 @@ function compare(env, ast, spec) {
       }
     }
   } else {
-    if (ast !== spec) {
+    if (ast !== spec && !(ast instanceof RegExp && spec === null)) {
       env.diff("Wrong value", spec, ast);
     }
   }

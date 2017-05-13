@@ -148,6 +148,7 @@ end = struct
 
   type case = {
     source: string option;
+    options: Parser_env.parse_options option;
     expected: case_expectation option;
     diff: case_diff;
     skipped: string list;
@@ -165,6 +166,7 @@ end = struct
 
   let empty_case = {
     source = None;
+    options = None;
     expected = None;
     diff = Same;
     skipped = [];
@@ -180,6 +182,43 @@ end = struct
     | Index i :: rest -> spf "%s[%s]" (string_of_path rest) (string_of_int i)
 
   let find_case name map = try SMap.find name map with Not_found -> empty_case
+
+  let parse_options content =
+    let open Result in
+    let get_bool k v =
+      try return (Hh_json.get_bool_exn v)
+      with Assert_failure _ -> failf "invalid value for %S, expected bool" k
+    in
+    return (Hh_json.json_of_string content)
+    >>= fun json ->
+      begin match json with
+      | Hh_json.JSON_Object props -> return props
+      | _ -> fail "expected options to be a JSON object"
+      end
+    >>= fun props ->
+      List.fold_left (fun opts (k, v) -> opts >>= (fun opts ->
+        match k with
+        | "esproposal_class_instance_fields" -> get_bool k v >>= fun v ->
+          return { opts with Parser_env.esproposal_class_instance_fields = v }
+
+        | "esproposal_class_static_fields" -> get_bool k v >>= fun v ->
+          return { opts with Parser_env.esproposal_class_static_fields = v }
+
+        | "esproposal_decorators" -> get_bool k v >>= fun v ->
+          return { opts with Parser_env.esproposal_decorators = v }
+
+        | "esproposal_export_star_as" -> get_bool k v >>= fun v ->
+          return { opts with Parser_env.esproposal_export_star_as = v }
+
+        | "types" -> get_bool k v >>= fun v ->
+          return { opts with Parser_env.types = v }
+
+        | "use_strict" -> get_bool k v >>= fun v ->
+          return { opts with Parser_env.use_strict = v }
+
+        | _ ->
+          failf "unknown option %S" k
+      )) (return Parser_env.default_parse_options) props
 
   let tests_of_path path =
     let relativize = strip_prefix path in
@@ -213,6 +252,10 @@ end = struct
             | "tree" -> { case with expected = Some (Tree content); }
             | "tokens" -> { case with expected = Some (Tokens content); }
             | "failure" -> { case with expected = Some (Failure content); }
+            | "options" ->
+              (* TODO: propagate errors better *)
+              let options = Result.ok_or_failwith (parse_options content) in
+              { case with options = Some options; }
             | _ -> { case with skipped = file::case.skipped }
             in
             SMap.add case_name case test.cases
@@ -520,6 +563,17 @@ end = struct
         None
     | _ -> failwith "Invalid diff format"
 
+  let parse_file ?parse_options content =
+    let (ast, errors) = Parser_flow.program_file
+      ~fail:false ~parse_options content None in
+    match Translate.program ast with
+    | JSON_Object params ->
+        let params =
+          if errors = [] then params
+          else ("errors", Translate.errors errors)::params in
+        JSON_Object params
+    | _ -> assert false
+
   let run_case case : case_result =
     match case.source with
     | None ->
@@ -527,17 +581,7 @@ end = struct
       then Case_error ["No source"]
       else Case_skipped None
     | Some content ->
-      let (ast, errors) = Parser_flow.program_file
-        ~fail:false content None in
-      let actual = match Translate.program ast with
-      | JSON_Object params ->
-          let params =
-            if List.length errors > 0 then
-              ("errors", Translate.errors errors)::params
-            else params in
-          JSON_Object params
-      | _ -> assert false
-      in
+      let actual = parse_file ?parse_options:case.options content in
       let diff, todo =
         match case.diff with
         | Diff str -> Some str, None
@@ -599,6 +643,18 @@ end = struct
       failed_cases = suite.failed_cases + test.failed;
     }
 
+  let record_tree path test_name case_name case =
+    match case.source, case.expected with
+    | Some content, None
+    | Some content, Some (Tree _) ->
+      let (/) a b = a ^ Filename.dir_sep ^ b in
+      let filename = (path / test_name / case_name) ^ ".tree.json" in
+      let json = parse_file ?parse_options:case.options content in
+      let oc = open_out filename in
+      Printf.fprintf oc "%s\n" (Hh_json.json_to_string ~pretty:true json);
+      close_out oc;
+    | _ -> ()
+
   type verbose_mode =
     | Quiet
     | Verbose
@@ -606,10 +662,12 @@ end = struct
 
   let main () =
     let verbose_ref = ref Normal in
+    let record_ref = ref false in
     let path_ref = ref None in
     let speclist = [
       "-q", Arg.Unit (fun () -> verbose_ref := Quiet), "Enables quiet mode";
       "-v", Arg.Unit (fun () -> verbose_ref := Verbose), "Enables verbose mode";
+      "-r", Arg.Set record_ref, "Re-record failing expected trees";
     ] in
     let usage_msg = "Runs flow parser on esprima tests. Options available:" in
     Arg.parse speclist (fun anon -> path_ref := Some anon) usage_msg;
@@ -619,6 +677,7 @@ end = struct
     in
     let quiet = !verbose_ref = Quiet in
     let verbose = !verbose_ref = Verbose in
+    let record = !record_ref in
     let tests = tests_of_path path in
     let results = List.fold_left (fun results { test_name; cases; } ->
       if not quiet then print [C.Bold C.White, spf "=== %s ===\n" test_name];
@@ -652,6 +711,7 @@ end = struct
             print [C.Normal C.Default, spf "    %s\n" err];
           ) errs;
           flush stdout;
+          if record then record_tree path test_name key case;
           { results with failed = results.failed + 1 }
       ) cases { ok = 0; skipped = 0; failed = 0; } in
       if not quiet then print_endline "";
