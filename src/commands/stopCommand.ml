@@ -93,7 +93,7 @@ let main temp_dir from quiet root () =
   let root_s = Path.to_string root in
   let tmp_dir = match temp_dir with
   | Some x -> x
-  | None -> FlowConfig.(config.options.Opts.temp_dir)
+  | None -> FlowConfig.temp_dir config
   in
   let tmp_dir = Path.to_string (Path.make tmp_dir) in
   FlowEventLogger.set_from from;

@@ -872,3 +872,55 @@ let get filename =
       config
 
 let restore (filename, config) = cache := Some (filename, config)
+
+
+(* Accessors *)
+
+(* file blacklist *)
+let ignores config = config.ignores
+(* non-root include paths *)
+let includes config = config.includes
+(* library paths. no wildcards *)
+let libs config = config.libs
+
+(* options *)
+let all c = c.options.Opts.all
+let emoji c = c.options.Opts.emoji
+let enable_const_params c = c.options.Opts.enable_const_params
+let enable_unsafe_getters_and_setters c = c.options.Opts.enable_unsafe_getters_and_setters
+let enforce_strict_type_args c = c.options.Opts.enforce_strict_type_args
+let esproposal_class_instance_fields c = c.options.Opts.esproposal_class_instance_fields
+let esproposal_class_static_fields c = c.options.Opts.esproposal_class_static_fields
+let esproposal_decorators c = c.options.Opts.esproposal_decorators
+let esproposal_export_star_as c = c.options.Opts.esproposal_export_star_as
+let facebook_fbt c = c.options.Opts.facebook_fbt
+let haste_name_reducers c = c.options.Opts.haste_name_reducers
+let haste_paths_blacklist c = c.options.Opts.haste_paths_blacklist
+let haste_paths_whitelist c = c.options.Opts.haste_paths_whitelist
+let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
+let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
+let log_file c = c.options.Opts.log_file
+let max_header_tokens c = c.options.Opts.max_header_tokens
+let max_workers c = c.options.Opts.max_workers
+let module_file_exts c = c.options.Opts.module_file_exts
+let module_name_mappers c = c.options.Opts.module_name_mappers
+let module_resource_exts c = c.options.Opts.module_resource_exts
+let module_system c = c.options.Opts.module_system
+let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
+let munge_underscores c = c.options.Opts.munge_underscores
+let no_flowlib c = c.options.Opts.no_flowlib
+let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
+let shm_dep_table_pow c = c.options.Opts.shm_dep_table_pow
+let shm_dirs c = c.options.Opts.shm_dirs
+let shm_global_size c = c.options.Opts.shm_global_size
+let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
+let shm_heap_size c = c.options.Opts.shm_heap_size
+let shm_log_level c = c.options.Opts.shm_log_level
+let shm_min_avail c = c.options.Opts.shm_min_avail
+let strip_root c = c.options.Opts.strip_root
+let suppress_comments c = c.options.Opts.suppress_comments
+let suppress_types c = c.options.Opts.suppress_types
+let temp_dir c = c.options.Opts.temp_dir
+let traces c = c.options.Opts.traces
+let required_version c = c.options.Opts.version
+let weak c = c.options.Opts.weak

@@ -181,7 +181,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     if timeout_arg > 0 then CommandUtils.set_timeout timeout_arg;
 
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-    let strip_root = strip_root || FlowConfig.(flowconfig.options.Opts.strip_root) in
+    let strip_root = strip_root || FlowConfig.strip_root flowconfig in
 
     let json = json || pretty in
 

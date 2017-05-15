@@ -341,18 +341,18 @@ let includes_of_arg root paths =
   ) Path_matcher.empty paths
 
 let connect server_flags root =
-  let flowconfig = Server_files_js.config_file root in
-  let config_options = FlowConfig.((get flowconfig).options) in
+  let flowconfig_path = Server_files_js.config_file root in
+  let flowconfig = FlowConfig.get flowconfig_path in
   let normalize dir = Path.(dir |> make |> to_string) in
   let tmp_dir = Option.value_map
     ~f:normalize
-    ~default:config_options.FlowConfig.Opts.temp_dir
+    ~default:(FlowConfig.temp_dir flowconfig)
     server_flags.temp_dir in
   let shm_dirs = Option.map
     ~f:(fun dirs -> dirs |> Str.split (Str.regexp ",") |> List.map normalize)
     server_flags.shm_dirs in
   let log_file =
-    Path.to_string (Server_files_js.log_file ~tmp_dir root config_options) in
+    Path.to_string (Server_files_js.log_file ~tmp_dir root flowconfig) in
   let retries = server_flags.retries in
   let retry_if_init = server_flags.retry_if_init in
   let expiry = match server_flags.timeout with
@@ -372,7 +372,7 @@ let connect server_flags root =
     shm_log_level = server_flags.shm_log_level;
     log_file;
     ignore_version = server_flags.ignore_version;
-    emoji = config_options.FlowConfig.Opts.emoji;
+    emoji = FlowConfig.emoji flowconfig;
     quiet = server_flags.quiet;
   } in
   CommandConnect.connect env

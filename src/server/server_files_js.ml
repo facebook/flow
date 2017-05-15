@@ -29,7 +29,7 @@ let lock_file    = file_of_root "lock"
 let pids_file    = file_of_root "pids"
 let socket_file  = file_of_root "sock"
 let dfind_log_file = file_of_root "dfind"
-let log_file ~tmp_dir root opts =
-  match opts.FlowConfig.Opts.log_file with
+let log_file ~tmp_dir root flowconfig =
+  match FlowConfig.log_file flowconfig with
   | Some x -> x
   | None -> Path.make (file_of_root "log" ~tmp_dir root)

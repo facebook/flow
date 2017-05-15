@@ -156,7 +156,7 @@ module OptionParser(Config : CONFIG) = struct
          *)
         if abs_lib = flowtyped_path then has_explicit_flowtyped_lib := true;
         abs_lib::abs_libs
-      ) flowconfig.FlowConfig.libs []
+      ) (FlowConfig.libs flowconfig) []
     in
     let config_libs =
       if !has_explicit_flowtyped_lib = false
@@ -224,53 +224,52 @@ module OptionParser(Config : CONFIG) = struct
     let root = CommandUtils.guess_root path_opt in
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
 
-    begin match ignore_version, FlowConfig.(flowconfig.options.Opts.version) with
+    begin match ignore_version, FlowConfig.required_version flowconfig with
     | false, Some version -> assert_version version
     | _ -> ()
     end;
 
-    let opt_module = FlowConfig.(flowconfig.options.Opts.module_system) in
+    let opt_module = FlowConfig.module_system flowconfig in
     let opt_ignores = ignores_of_arg
       root
-      flowconfig.FlowConfig.ignores
+      (FlowConfig.ignores flowconfig)
       flowconfig_flags.ignores in
     let opt_includes =
       let includes = List.rev_append
-        flowconfig.FlowConfig.includes
+        (FlowConfig.includes flowconfig)
         flowconfig_flags.includes in
       includes_of_arg root includes in
     let opt_traces = match traces with
       | Some level -> level
-      | None -> FlowConfig.(flowconfig.options.Opts.traces) in
-    let opt_strip_root = strip_root ||
-      FlowConfig.(flowconfig.options.Opts.strip_root) in
+      | None -> FlowConfig.traces flowconfig in
+    let opt_strip_root = strip_root || FlowConfig.strip_root flowconfig in
     let opt_munge_underscores = munge_underscore_members ||
-      FlowConfig.(flowconfig.options.Opts.munge_underscores) in
+      FlowConfig.munge_underscores flowconfig in
     let opt_temp_dir = match temp_dir with
     | Some x -> x
-    | None -> FlowConfig.(flowconfig.options.Opts.temp_dir)
+    | None -> FlowConfig.temp_dir flowconfig
     in
     let opt_shm_dirs = Option.value_map
       shm_dirs
-      ~default:FlowConfig.(flowconfig.options.Opts.shm_dirs)
+      ~default:(FlowConfig.shm_dirs flowconfig)
       ~f:(Str.split (Str.regexp ",")) in
     let opt_shm_min_avail = Option.value
       shm_min_avail
-      ~default:FlowConfig.(flowconfig.options.Opts.shm_min_avail) in
+      ~default:(FlowConfig.shm_min_avail flowconfig) in
     let opt_temp_dir = Path.to_string (Path.make opt_temp_dir) in
     let opt_shm_dirs =
       List.map Path.(fun dir -> dir |> make |> to_string) opt_shm_dirs in
     let opt_shm_dep_table_pow = Option.value
       shm_dep_table_pow
-      ~default:FlowConfig.(flowconfig.options.Opts.shm_dep_table_pow) in
+      ~default:(FlowConfig.shm_dep_table_pow flowconfig) in
     let opt_shm_hash_table_pow = Option.value
       shm_hash_table_pow
-      ~default:FlowConfig.(flowconfig.options.Opts.shm_hash_table_pow) in
+      ~default:(FlowConfig.shm_hash_table_pow flowconfig) in
     let opt_shm_log_level = Option.value
       shm_log_level
-      ~default:FlowConfig.(flowconfig.options.Opts.shm_log_level) in
+      ~default:(FlowConfig.shm_log_level flowconfig) in
     let opt_default_lib_dir =
-      if no_flowlib || FlowConfig.(flowconfig.options.Opts.no_flowlib)
+      if no_flowlib || FlowConfig.no_flowlib flowconfig
       then None
       else Some (default_lib_dir opt_temp_dir) in
     let opt_log_file = match log_file with
@@ -279,17 +278,14 @@ module OptionParser(Config : CONFIG) = struct
           let basename = Filename.basename s in
           Path.concat dirname basename
       | None ->
-          Server_files_js.log_file
-            ~tmp_dir:opt_temp_dir
-            root
-            flowconfig.FlowConfig.options
+          Server_files_js.log_file ~tmp_dir:opt_temp_dir root flowconfig
     in
     let opt_max_workers = match max_workers with
     | Some x -> x
-    | None -> FlowConfig.(flowconfig.options.Opts.max_workers)
+    | None -> FlowConfig.max_workers flowconfig
     in
-    let all = all || FlowConfig.(flowconfig.options.Opts.all) in
-    let weak = weak || FlowConfig.(flowconfig.options.Opts.weak) in
+    let all = all || FlowConfig.all flowconfig in
+    let weak = weak || FlowConfig.weak flowconfig in
     let opt_max_workers = min opt_max_workers Sys_utils.nbr_procs in
 
     let options = { Options.
@@ -318,21 +314,11 @@ module OptionParser(Config : CONFIG) = struct
         else None
       );
       opt_quiet = quiet || json || pretty;
-      opt_module_file_exts = FlowConfig.(
-        flowconfig.options.Opts.module_file_exts
-      );
-      opt_module_resource_exts = FlowConfig.(
-        flowconfig.options.Opts.module_resource_exts
-      );
-      opt_module_name_mappers = FlowConfig.(
-        flowconfig.options.Opts.module_name_mappers
-      );
-      opt_modules_are_use_strict = FlowConfig.(
-        flowconfig.options.Opts.modules_are_use_strict
-      );
-      opt_node_resolver_dirnames = FlowConfig.(
-        flowconfig.options.Opts.node_resolver_dirnames
-      );
+      opt_module_file_exts = FlowConfig.module_file_exts flowconfig;
+      opt_module_resource_exts = FlowConfig.module_resource_exts flowconfig;
+      opt_module_name_mappers = FlowConfig.module_name_mappers flowconfig;
+      opt_modules_are_use_strict = FlowConfig.modules_are_use_strict flowconfig;
+      opt_node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
       opt_output_graphml = false;
       opt_profile = profile;
       opt_strip_root;
@@ -346,64 +332,28 @@ module OptionParser(Config : CONFIG) = struct
       opt_shm_dep_table_pow;
       opt_shm_hash_table_pow;
       opt_shm_log_level;
-      opt_shm_global_size = FlowConfig.(
-        flowconfig.options.Opts.shm_global_size
-      );
-      opt_shm_heap_size = FlowConfig.(
-        flowconfig.options.Opts.shm_heap_size
-      );
+      opt_shm_global_size = FlowConfig.shm_global_size flowconfig;
+      opt_shm_heap_size = FlowConfig.shm_heap_size flowconfig;
       opt_max_workers;
       opt_ignores;
       opt_includes;
       opt_include_suppressed = include_suppressed;
-      opt_suppress_comments = FlowConfig.(
-        flowconfig.options.Opts.suppress_comments
-      );
-      opt_suppress_types = FlowConfig.(
-        flowconfig.options.Opts.suppress_types
-      );
-      opt_enable_const_params = FlowConfig.(
-        flowconfig.options.Opts.enable_const_params
-      );
-      opt_enforce_strict_type_args = FlowConfig.(
-        flowconfig.options.Opts.enforce_strict_type_args
-      );
-      opt_enable_unsafe_getters_and_setters = FlowConfig.(
-        flowconfig.options.Opts.enable_unsafe_getters_and_setters
-      );
-      opt_esproposal_decorators = FlowConfig.(
-        flowconfig.options.Opts.esproposal_decorators
-      );
-      opt_esproposal_export_star_as = FlowConfig.(
-        flowconfig.options.Opts.esproposal_export_star_as
-      );
-      opt_facebook_fbt = FlowConfig.(
-        flowconfig.options.Opts.facebook_fbt
-      );
-      opt_ignore_non_literal_requires = FlowConfig.(
-        flowconfig.options.Opts.ignore_non_literal_requires
-      );
-      opt_esproposal_class_static_fields = FlowConfig.(
-        flowconfig.options.Opts.esproposal_class_static_fields
-      );
-      opt_esproposal_class_instance_fields = FlowConfig.(
-        flowconfig.options.Opts.esproposal_class_instance_fields
-      );
-      opt_max_header_tokens = FlowConfig.(
-        flowconfig.options.Opts.max_header_tokens
-      );
-      opt_haste_name_reducers = FlowConfig.(
-        flowconfig.options.Opts.haste_name_reducers
-      );
-      opt_haste_paths_blacklist = FlowConfig.(
-        flowconfig.options.Opts.haste_paths_blacklist
-      );
-      opt_haste_paths_whitelist = FlowConfig.(
-        flowconfig.options.Opts.haste_paths_whitelist
-      );
-      opt_haste_use_name_reducers = FlowConfig.(
-        flowconfig.options.Opts.haste_use_name_reducers
-      )
+      opt_suppress_comments = FlowConfig.suppress_comments flowconfig;
+      opt_suppress_types = FlowConfig.suppress_types flowconfig;
+      opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
+      opt_enforce_strict_type_args = FlowConfig.enforce_strict_type_args flowconfig;
+      opt_enable_unsafe_getters_and_setters = FlowConfig.enable_unsafe_getters_and_setters flowconfig;
+      opt_esproposal_decorators = FlowConfig.esproposal_decorators flowconfig;
+      opt_esproposal_export_star_as = FlowConfig.esproposal_export_star_as flowconfig;
+      opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
+      opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
+      opt_esproposal_class_static_fields = FlowConfig.esproposal_class_static_fields flowconfig;
+      opt_esproposal_class_instance_fields = FlowConfig.esproposal_class_instance_fields flowconfig;
+      opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
+      opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;
+      opt_haste_paths_blacklist = FlowConfig.haste_paths_blacklist flowconfig;
+      opt_haste_paths_whitelist = FlowConfig.haste_paths_whitelist flowconfig;
+      opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig
     } in
     if Config.(mode = Detach)
     then Main.daemonize options

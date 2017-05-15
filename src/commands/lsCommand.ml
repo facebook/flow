@@ -104,38 +104,38 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
 
   let opt_temp_dir =
-    FlowConfig.(flowconfig.options.Opts.temp_dir)
+    FlowConfig.temp_dir flowconfig
     |> Path.make
     |> Path.to_string
   in
 
   let opt_shm_dirs =
-    FlowConfig.(flowconfig.options.Opts.shm_dirs)
+    FlowConfig.shm_dirs flowconfig
     |> List.map Path.(fun s -> s |> make |> to_string)
   in
 
-  let opt_shm_min_avail = FlowConfig.(flowconfig.options.Opts.shm_min_avail) in
+  let opt_shm_min_avail = FlowConfig.shm_min_avail flowconfig in
 
   let opt_log_file = Server_files_js.log_file
     ~tmp_dir:opt_temp_dir
     root
-    flowconfig.FlowConfig.options
+    flowconfig
   in
 
   let opt_strip_root = strip_root ||
-    FlowConfig.(flowconfig.options.Opts.strip_root)
+    FlowConfig.strip_root flowconfig
   in
 
-  let opt_module = FlowConfig.(flowconfig.options.Opts.module_system) in
+  let opt_module = FlowConfig.module_system flowconfig in
 
   let opt_ignores = ignores_of_arg
     root
-    flowconfig.FlowConfig.ignores
+    (FlowConfig.ignores flowconfig)
     (list_of_string_arg ignore_flag) in
 
   let opt_includes =
     let includes = List.rev_append
-      flowconfig.FlowConfig.includes
+      (FlowConfig.includes flowconfig)
       (list_of_string_arg include_flag) in
     includes_of_arg root includes in
 
@@ -154,21 +154,11 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_traces = 0;
     opt_json = None;
     opt_quiet = false;
-    opt_module_file_exts = FlowConfig.(
-      flowconfig.options.Opts.module_file_exts
-    );
-    opt_module_resource_exts = FlowConfig.(
-      flowconfig.options.Opts.module_resource_exts
-    );
-    opt_module_name_mappers = FlowConfig.(
-      flowconfig.options.Opts.module_name_mappers
-    );
-    opt_modules_are_use_strict = FlowConfig.(
-      flowconfig.options.Opts.modules_are_use_strict
-    );
-    opt_node_resolver_dirnames = FlowConfig.(
-      flowconfig.options.Opts.node_resolver_dirnames
-    );
+    opt_module_file_exts = FlowConfig.module_file_exts flowconfig;
+    opt_module_resource_exts = FlowConfig.module_resource_exts flowconfig;
+    opt_module_name_mappers = FlowConfig.module_name_mappers flowconfig;
+    opt_modules_are_use_strict = FlowConfig.modules_are_use_strict flowconfig;
+    opt_node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
     opt_output_graphml = false;
     opt_profile = false;
     opt_strip_root;
@@ -179,21 +169,11 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_temp_dir;
     opt_shm_dirs;
     opt_shm_min_avail;
-    opt_shm_dep_table_pow = FlowConfig.(
-      flowconfig.options.Opts.shm_dep_table_pow
-    );
-    opt_shm_hash_table_pow = FlowConfig.(
-      flowconfig.options.Opts.shm_hash_table_pow
-    );
-    opt_shm_log_level = FlowConfig.(
-      flowconfig.options.Opts.shm_log_level
-    );
-    opt_shm_global_size = FlowConfig.(
-      flowconfig.options.Opts.shm_global_size
-    );
-    opt_shm_heap_size = FlowConfig.(
-      flowconfig.options.Opts.shm_heap_size
-    );
+    opt_shm_dep_table_pow = FlowConfig.shm_dep_table_pow flowconfig;
+    opt_shm_hash_table_pow = FlowConfig.shm_hash_table_pow flowconfig;
+    opt_shm_log_level = FlowConfig.shm_log_level flowconfig;
+    opt_shm_global_size = FlowConfig.shm_global_size flowconfig;
+    opt_shm_heap_size = FlowConfig.shm_heap_size flowconfig;
     opt_max_workers = 1;
     opt_ignores;
     opt_includes;
@@ -209,21 +189,11 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_esproposal_export_star_as = Options.ESPROPOSAL_WARN;
     opt_facebook_fbt = None;
     opt_ignore_non_literal_requires = false;
-    opt_max_header_tokens = FlowConfig.(
-      flowconfig.options.Opts.max_header_tokens
-    );
-    opt_haste_name_reducers = FlowConfig.(
-      flowconfig.options.Opts.haste_name_reducers
-    );
-    opt_haste_paths_blacklist = FlowConfig.(
-      flowconfig.options.Opts.haste_paths_blacklist
-    );
-    opt_haste_paths_whitelist = FlowConfig.(
-      flowconfig.options.Opts.haste_paths_whitelist
-    );
-    opt_haste_use_name_reducers = FlowConfig.(
-      flowconfig.options.Opts.haste_use_name_reducers
-    )
+    opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
+    opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;
+    opt_haste_paths_blacklist = FlowConfig.haste_paths_blacklist flowconfig;
+    opt_haste_paths_whitelist = FlowConfig.haste_paths_whitelist flowconfig;
+    opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig;
   }
 
 (* Directories will return a closure that returns every file under that

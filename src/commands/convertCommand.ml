@@ -137,15 +137,15 @@ let main error_flags outpath recurse dir () =
   if ! Sys.interactive
   then ()
   else
-    let opts = FlowConfig.Opts.default_options in
+    let config = FlowConfig.empty_config in
     let sharedmem_config = { SharedMem_js.
-      global_size = opts.FlowConfig.Opts.shm_global_size;
-      heap_size = opts.FlowConfig.Opts.shm_heap_size;
-      dep_table_pow = opts.FlowConfig.Opts.shm_dep_table_pow;
-      hash_table_pow = opts.FlowConfig.Opts.shm_hash_table_pow;
-      shm_dirs = opts.FlowConfig.Opts.shm_dirs;
-      shm_min_avail = opts.FlowConfig.Opts.shm_min_avail;
-      log_level = opts.FlowConfig.Opts.shm_log_level;
+      global_size = FlowConfig.shm_global_size config;
+      heap_size = FlowConfig.shm_heap_size config;
+      dep_table_pow = FlowConfig.shm_dep_table_pow config;
+      hash_table_pow = FlowConfig.shm_hash_table_pow config;
+      shm_dirs = FlowConfig.shm_dirs config;
+      shm_min_avail = FlowConfig.shm_min_avail config;
+      log_level = FlowConfig.shm_log_level config;
     } in
     let _handle = SharedMem_js.init sharedmem_config in
     convert path recurse error_flags outpath

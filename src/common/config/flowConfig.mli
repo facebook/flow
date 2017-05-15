@@ -8,64 +8,10 @@
  *
  *)
 
-module Opts : sig
-  type t = {
-    emoji: bool;
-    enable_const_params: bool;
-    enable_unsafe_getters_and_setters: bool;
-    enforce_strict_type_args: bool;
-    esproposal_class_instance_fields: Options.esproposal_feature_mode;
-    esproposal_class_static_fields: Options.esproposal_feature_mode;
-    esproposal_decorators: Options.esproposal_feature_mode;
-    esproposal_export_star_as: Options.esproposal_feature_mode;
-    facebook_fbt: string option;
-    haste_name_reducers: (Str.regexp * string) list;
-    haste_paths_blacklist: string list;
-    haste_paths_whitelist: string list;
-    haste_use_name_reducers: bool;
-    ignore_non_literal_requires: bool;
-    module_system: Options.module_system;
-    module_name_mappers: (Str.regexp * string) list;
-    node_resolver_dirnames: string list;
-    munge_underscores: bool;
-    module_file_exts: SSet.t;
-    module_resource_exts: SSet.t;
-    modules_are_use_strict: bool;
-    suppress_comments: Str.regexp list;
-    suppress_types: SSet.t;
-    traces: int;
-    strip_root: bool;
-    all: bool;
-    weak: bool;
-    log_file: Path.t option;
-    max_header_tokens: int;
-    max_workers: int;
-    no_flowlib: bool;
-    temp_dir: string;
-    shm_global_size: int;
-    shm_heap_size: int;
-    shm_dirs: string list;
-    shm_min_avail: int;
-    shm_dep_table_pow: int;
-    shm_hash_table_pow: int;
-    shm_log_level: int;
-    version: string option;
-  }
-  val default_options : t
-end
-
-type config = {
-  (* file blacklist *)
-  ignores: string list;
-  (* non-root include paths *)
-  includes: string list;
-  (* library paths. no wildcards *)
-  libs: string list;
-  (* config options *)
-  options: Opts.t;
-}
+type config
 
 val get: string -> config
+val empty_config: config
 
 val init:
   ignores: string list ->
@@ -79,3 +25,54 @@ val version: string
 val project_root_token: Str.regexp
 
 val restore: string * config -> unit
+
+(* Accessors *)
+
+(* file blacklist *)
+val ignores: config -> string list
+(* non-root include paths *)
+val includes: config -> string list
+(* library paths. no wildcards *)
+val libs: config -> string list
+
+(* options *)
+val all: config -> bool
+val emoji: config -> bool
+val enable_const_params: config -> bool
+val enable_unsafe_getters_and_setters: config -> bool
+val enforce_strict_type_args: config -> bool
+val esproposal_class_instance_fields: config -> Options.esproposal_feature_mode
+val esproposal_class_static_fields: config -> Options.esproposal_feature_mode
+val esproposal_decorators: config -> Options.esproposal_feature_mode
+val esproposal_export_star_as: config -> Options.esproposal_feature_mode
+val facebook_fbt: config -> string option
+val haste_name_reducers: config -> (Str.regexp * string) list
+val haste_paths_blacklist: config -> string list
+val haste_paths_whitelist: config -> string list
+val haste_use_name_reducers: config -> bool
+val ignore_non_literal_requires: config -> bool
+val log_file: config -> Path.t option
+val max_header_tokens: config -> int
+val max_workers: config -> int
+val module_file_exts: config -> SSet.t
+val module_name_mappers: config -> (Str.regexp * string) list
+val module_resource_exts: config -> SSet.t
+val module_system: config -> Options.module_system
+val modules_are_use_strict: config -> bool
+val munge_underscores: config -> bool
+val no_flowlib: config -> bool
+val node_resolver_dirnames: config -> string list
+val shm_dep_table_pow: config -> int
+val shm_dirs: config -> string list
+val shm_global_size: config -> int
+val shm_hash_table_pow: config -> int
+val shm_heap_size: config -> int
+val shm_log_level: config -> int
+val shm_min_avail: config -> int
+val strip_root: config -> bool
+val suppress_comments: config -> Str.regexp list
+val suppress_types: config -> SSet.t
+val temp_dir: config -> string
+val traces: config -> int
+val required_version: config -> string option
+val weak: config -> bool
