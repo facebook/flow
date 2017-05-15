@@ -104,4 +104,6 @@ let subscribe_client connections client current_errors =
     modify_item connections client (fun c -> { c with subscribed = true })
   end
 
+let get_logging_context client = client.logging_context
+
 let input_value client = Marshal_tools.from_fd_with_preamble client.infd

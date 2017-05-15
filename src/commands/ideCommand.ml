@@ -13,6 +13,7 @@
 (***********************************************************************)
 
 open CommandUtils
+open Utils_js
 module Prot = ServerProt.Persistent_connection_prot
 
 let protocol_options = ["very-unstable"; "human-readable"]
@@ -46,16 +47,35 @@ end
 module HumanReadable: ClientProtocol = struct
   let server_request_of_stdin_message buffered_stdin =
     let line = Buffered_line_reader.get_next_line buffered_stdin in
-    match line with
-      | "subscribe" -> Some Prot.Subscribe
-      | x ->
-        prerr_endline ("Command not recognized: " ^ x); None
+    let tokens = Str.split (Str.regexp "[ \t\r\n]+") line in
+    match tokens with
+      | ["subscribe"] -> Some Prot.Subscribe
+      (* For human-readable mode (which is just for playing around, basically)
+       * you need to include the file contents on the same line, and it must
+       * also have the magic token. *)
+      | "autocomplete"::file::contents ->
+          let fileinput = ServerProt.FileContent (Some file, String.concat " " contents) in
+          Some (Prot.Autocomplete fileinput)
+      | _ ->
+        prerr_endline ("Command not recognized: " ^ line); None
+
+  let handle_autocomplete = function
+    | Err _ -> print_endline "Autocomplete Error"
+    | OK completions ->
+        print_endline "Autocomplete results:";
+        completions |>
+        List.map (fun r -> r.AutocompleteService_js.res_name) |>
+        List.iter (Printf.printf "  %s\n");
+        flush stdout
+
+
   let handle_server_response = function
     | Prot.Errors errors ->
       let count = Errors.ErrorSet.cardinal errors in
       print_endline ("Received " ^ (string_of_int count) ^ " errors")
     | Prot.StartRecheck -> print_endline "Start recheck"
     | Prot.EndRecheck -> print_endline "End recheck"
+    | Prot.AutocompleteResult result -> handle_autocomplete result
 
 end
 
@@ -89,10 +109,16 @@ module VeryUnstable: ClientProtocol = struct
       |> Hh_json.json_to_string
       |> Http_lite.write_message stdout
 
+  let print_autocomplete result =
+    (* TODO actually do something *)
+    ignore result;
+    prerr_endline "received autocomplete result"
+
   let handle_server_response = function
     | Prot.Errors errors -> print_errors errors
     | Prot.StartRecheck -> print_start_recheck ()
     | Prot.EndRecheck -> print_end_recheck ()
+    | Prot.AutocompleteResult result -> print_autocomplete result
 
   let server_request_of_stdin_message buffered_stdin =
     try

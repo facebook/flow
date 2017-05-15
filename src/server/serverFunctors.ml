@@ -25,7 +25,7 @@ module type SERVER_PROGRAM = sig
   val get_watch_paths: Options.t -> Path.t list
   val name: string
   val handle_client : genv -> env -> client -> env
-  val handle_persistent_client : env -> Persistent_connection.single_client -> env
+  val handle_persistent_client : genv -> env -> Persistent_connection.single_client -> env
   val collate_errors :
     errors ->
     Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list
@@ -149,7 +149,7 @@ end = struct
         | New_client fd ->
             env := handle_connection genv !env fd;
         | Existing_client client ->
-            env := Program.handle_persistent_client !env client;
+            env := Program.handle_persistent_client genv !env client;
       );
       EventLogger.flush ();
     done

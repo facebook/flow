@@ -789,13 +789,21 @@ let collate_errors =
     end;
     !env
 
-  let respond_to_persistent_client env client = function
-    | Persistent_connection_prot.Subscribe ->
-        let errorl, _ = collate_errors env.errors in
-        let new_connections =
-          Persistent_connection.subscribe_client env.connections client errorl
-        in
-        { env with connections = new_connections }
+  let respond_to_persistent_client genv env client msg =
+    let options = genv.ServerEnv.options in
+    match msg with
+      | Persistent_connection_prot.Subscribe ->
+          let errorl, _ = collate_errors env.errors in
+          let new_connections =
+            Persistent_connection.subscribe_client env.connections client errorl
+          in
+          { env with connections = new_connections }
+      | Persistent_connection_prot.Autocomplete file_input ->
+          let client_logging_context = Persistent_connection.get_logging_context client in
+          let results = autocomplete ~options client_logging_context file_input in
+          let wrapped = Persistent_connection_prot.AutocompleteResult results in
+          Persistent_connection.send_message wrapped client;
+          env
 
   let should_close = function
     | { ServerProt.command = ServerProt.CONNECT; _ } -> false
@@ -807,7 +815,7 @@ let collate_errors =
     if should_close msg then client.close ();
     env
 
-  let handle_persistent_client env client =
+  let handle_persistent_client genv env client =
     let msg, env =
       try
         Some (Persistent_connection.input_value client), env
@@ -818,7 +826,7 @@ let collate_errors =
             None, {env with connections = new_connections}
     in
     match msg with
-      | Some msg -> respond_to_persistent_client env client msg
+      | Some msg -> respond_to_persistent_client genv env client msg
       | None -> env
 
 end

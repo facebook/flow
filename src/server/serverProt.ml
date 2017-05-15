@@ -147,9 +147,11 @@ let response_from_channel (ic:Timeout.in_channel): response =
 module Persistent_connection_prot = struct
   type request =
     | Subscribe
+    | Autocomplete of file_input
 
   type response =
     | Errors of Errors.ErrorSet.t
     | StartRecheck
     | EndRecheck
+    | AutocompleteResult of autocomplete_response
 end
