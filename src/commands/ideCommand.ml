@@ -79,6 +79,56 @@ module HumanReadable: ClientProtocol = struct
 
 end
 
+module JsonRpc : sig
+  type t =
+    (* method name, params *)
+    | Obj of (string * Hh_json.json list)
+    | Malformed of string
+  val parse_json_rpc_response: string -> t
+end = struct
+  open Hh_json
+  type t =
+    (* method name, params *)
+    | Obj of (string * json list)
+    | Malformed of string
+
+  exception Malformed_exn of string
+
+  let get_prop propname props =
+    try
+      List.assoc propname props
+    with Not_found -> raise (Malformed_exn (propname ^ " property not found"))
+
+  let parse_unsafe str =
+    let parsed =
+      try
+        json_of_string str
+      with Syntax_error msg -> raise (Malformed_exn msg)
+    in
+    let props = match parsed with
+      | JSON_Object props -> props
+      | _ -> raise (Malformed_exn "Message is not a JSON Object")
+    in
+    let method_json = get_prop "method" props in
+    let params_json = get_prop "params" props in
+    let method_name = match method_json with
+      | JSON_String str -> str
+      | _ -> raise (Malformed_exn "Method name is not a string")
+    in
+    let params = match params_json with
+      (* If you don't pass any props you just get a null here *)
+      | JSON_Null -> []
+      | JSON_Array lst -> lst
+      | _ -> raise (Malformed_exn "Unexpected params value")
+    in
+    Obj (method_name, params)
+
+  let parse_json_rpc_response str =
+    try
+      parse_unsafe str
+    with Malformed_exn msg -> Malformed msg
+end
+
 module VeryUnstable: ClientProtocol = struct
   let jsonrpcize_message method_ json =
     Hh_json.(
@@ -121,26 +171,30 @@ module VeryUnstable: ClientProtocol = struct
     | Prot.AutocompleteResult result -> print_autocomplete result
 
   let server_request_of_stdin_message buffered_stdin =
-    try
-      let message = Http_lite.read_message_utf8 buffered_stdin in
-      let parsed = Hh_json.json_of_string message in
-      let props = Hh_json.get_object_exn parsed in
-      let _, method_json = List.find (function key, _ -> key = "method") props in
-      let method_name = Hh_json.get_string_exn method_json in
-      if method_name = "subscribeToDiagnostics" then begin
-        prerr_endline "received subscribe request";
-        Some Prot.Subscribe
-      end else begin
-        prerr_endline ("unrecognized method: " ^ method_name);
-        None
-      end
+    let message = try
+      Some (Http_lite.read_message_utf8 buffered_stdin)
     with Http_lite.Malformed _ ->
       (* Currently, Nuclide sends an extra newline after each message to satisfy the implementation
       that was previously here. Now, this manifests as a malformed request after each message. Ignore
       it while we are transitioning, but still log something in case things go wrong with the real
       messages too. *)
-      prerr_endline "received malformed request";
+      prerr_endline "Received a malformed http message";
       None
+    in
+    match message with
+      | None -> None
+      | Some message ->
+          let obj = JsonRpc.parse_json_rpc_response message in
+          match obj with
+            | JsonRpc.Obj ("subscribeToDiagnostics", _) ->
+                prerr_endline "received subscribe request";
+                Some Prot.Subscribe
+            | JsonRpc.Obj (method_name, _) ->
+                prerr_endline ("unrecognized method: " ^ method_name);
+                None
+            | JsonRpc.Malformed err ->
+                prerr_endline ("Received a malformed message: " ^ err);
+                None
 end
 
 module ProtocolFunctor (Protocol: ClientProtocol) = struct
