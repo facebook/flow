@@ -298,7 +298,6 @@ module OptionParser(Config : CONFIG) = struct
           then Option.find_map path_opt ~f:(fun file ->
             Some (Loc.SourceFile Path.(to_string (make file))))
           else None);
-      opt_server_mode = Config.(mode = Server);
       opt_error_flags = error_flags;
       opt_log_file = opt_log_file;
       opt_root = root;

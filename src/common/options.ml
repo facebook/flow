@@ -78,7 +78,6 @@ type t = {
   opt_profile : bool;
   opt_quiet : bool;
   opt_root : Path.t;
-  opt_server_mode: bool;
   opt_should_wait : bool;
   opt_strip_root : bool;
   opt_include_suppressed : bool;
@@ -126,7 +125,6 @@ let includes opts = opts.opt_includes
 let is_check_mode opts = opts.opt_check_mode
 let focus_check_target opts = opts.opt_focus_check_target
 let is_debug_mode opts = opts.opt_debug
-let is_server_mode opts = opts.opt_server_mode
 let is_quiet opts = opts.opt_quiet
 let lib_paths opts = opts.opt_libs
 let log_file opts = opts.opt_log_file
