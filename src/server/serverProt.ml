@@ -89,6 +89,7 @@ type gen_flow_file_result =
   | GenFlowFile_NonFlowFile
 type gen_flow_file_response =
   ((string * gen_flow_file_result) list, gen_flow_file_error) Utils_js.ok_or_err
+type port_response = (string, exn) Utils_js.ok_or_err SMap.t
 
 let cmd_to_channel (oc:out_channel) (cmd:command): unit =
   let command = {

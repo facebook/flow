@@ -403,10 +403,7 @@ let collate_errors =
 
   (* NOTE: currently, not only returns list of annotations, but also writes a
      timestamped file with annotations *)
-  let port files oc =
-    let patches = Port_service_js.port_files files in
-    Marshal.to_channel oc patches [];
-    flush oc
+  let port = Port_service_js.port_files
 
   let find_module ~options (moduleref, filename) =
     let file = Loc.SourceFile filename in
@@ -762,7 +759,8 @@ let collate_errors =
     | ServerProt.PING ->
         ServerProt.response_to_channel oc ServerProt.PONG
     | ServerProt.PORT (files) ->
-        port files oc
+        (port files: ServerProt.port_response)
+          |> marshal
     | ServerProt.STATUS client_root ->
         let status = get_status genv !env client_root in
         ServerProt.response_to_channel oc status;
