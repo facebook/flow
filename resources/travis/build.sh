@@ -37,4 +37,5 @@ printf "travis_fold:end:run_tool_test\n"
 
 printf "travis_fold:start:run_parser_tests\nRunning parser tests\n"
 (cd src/parser && make test)
+make test-parser-ocp
 printf "travis_fold:end:run_parser_tests\n"

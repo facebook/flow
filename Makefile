@@ -176,7 +176,7 @@ LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS) $(SECTCREATE)
 all: $(FLOWLIB) build-flow copy-flow-files
 all-ocp: build-flow-with-ocp copy-flow-files-ocp
 
-all-homebrew: 
+all-homebrew:
 	export OPAMROOT="$(shell mktemp -d 2> /dev/null || mktemp -d -t opam)"; \
 	export OPAMYES="1"; \
 	opam init --no-setup && \
@@ -211,9 +211,14 @@ build-flow-with-ocp: $(OCP_BUILD_FILES) $(FLOWLIB) hack/utils/get_build_id.gen.c
 	cp _obuild/flow/flow.asm$(EXE) bin/flow$(EXE)
 	rm -f $(OCP_BUILD_FILES)
 
-build-parser-test-with-ocp: $(OCP_BUILD_FILES)
+build-parser-test-with-ocp: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
 	[ -d _obuild ] || ocp-build init
 	ocp-build build flow-parser-hardcoded-test
+	rm -f $(OCP_BUILD_FILES)
+
+test-parser-ocp: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
+	[ -d _obuild ] || ocp-build init
+	ocp-build tests flow-parser-hardcoded-test
 	rm -f $(OCP_BUILD_FILES)
 
 build-flow-debug: $(BUILT_OBJECT_FILES) $(FLOWLIB)
