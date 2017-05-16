@@ -281,8 +281,20 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
          "server socket not yet ready. No more retries. Ignoring request.")
 
   (** Does not return. *)
-  and client_out_of_date_ client_fd =
+  and client_out_of_date_ client_fd _mismatch_info =
     msg_to_channel client_fd Build_id_mismatch;
+    (* TODO: around July 2017, change this to
+     *   "Build_id_mismatch_ex mismatch_info"
+     * Why that date? Imagine if we make the change and someone has a hh_server
+     * currently running which sends the _ex form. Then they hg update to a
+     * bookmark associated with an older version of hh_client which doesn't yet
+     * recognize the _ex form! They'd get a segfault in their hh_client.
+     * Well, hh_client started recognizing the _ex form around April 2017, so
+     * by July, we needn't worry about bookmarks that old.
+     * Oh, and when we make the change here, we should add a TODO for two months
+     * in the future that monitorConnection.ml:verify_cstate can safely assert
+     * that the Build_id_mismatch form will never arise.
+    *)
     HackEventLogger.out_of_date ()
 
   (** Kills servers, sends build ID mismatch message to client, and exits.
@@ -291,12 +303,12 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
    * the client can wait for socket closure as indication that both the monitor
    * and server have exited.
   *)
-  and client_out_of_date env client_fd =
+  and client_out_of_date env client_fd mismatch_info =
     kill_server_with_check env.server;
     let kill_signal_time = Unix.gettimeofday () in
     (** If we detect out of date client, should always kill server and exit
      * monitor, even if messaging to channel or event logger fails. *)
-    (try client_out_of_date_ client_fd with
+    (try client_out_of_date_ client_fd mismatch_info with
      | e -> Hh_logger.log
          "Handling client_out_of_date threw with: %s" (Printexc.to_string e));
     wait_for_server_exit_with_check env.server kill_signal_time;
@@ -356,7 +368,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       let client_version = read_version client_fd in
       if client_version <> Build_id.build_revision
       then
-        client_out_of_date env client_fd
+        client_out_of_date env client_fd ServerMonitorUtils.current_build_info
       else (
         msg_to_channel client_fd Connection_ok;
         handle_monitor_rpc env client_fd

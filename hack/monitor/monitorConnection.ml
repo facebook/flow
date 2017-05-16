@@ -69,9 +69,10 @@ let get_cstate config (ic, oc) =
     if not (server_exists config.lock_file) then Result.Error Server_missing
     else Result.Error Monitor_connection_failure
 
-let verify_cstate ic = function
+let verify_cstate ic cstate =
+  match cstate with
   | Connection_ok -> Result.Ok ()
-  | Build_id_mismatch ->
+  | Build_id_mismatch | Build_id_mismatch_ex _ ->
       (* The server is out of date and is going to exit. Subsequent calls
        * to connect on the Unix Domain Socket might succeed, connecting to
        * the server that is about to die, and eventually we will be hung
@@ -85,7 +86,11 @@ let verify_cstate ic = function
        *)
       wait_on_server_restart ic;
       Timeout.close_in_noerr ic;
-      Result.Error Build_id_mismatched
+      let mismatch_info = match cstate with
+        | Build_id_mismatch_ex mismatch_info -> Some mismatch_info
+        | _ -> None
+      in
+      Result.Error (Build_id_mismatched mismatch_info)
 
 (** Consume sequence of Prehandoff messages. *)
 let rec consume_prehandoff_messages ic oc =
