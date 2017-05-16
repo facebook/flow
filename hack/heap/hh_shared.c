@@ -415,11 +415,14 @@ static pid_t* master_pid;
 static pid_t my_pid;
 
 static char *db_filename = NULL;
+static char *hashtable_db_filename = NULL;
 
 #ifndef NO_SQLITE3
 // SQLite DB pointer
 static sqlite3 *db = NULL;
+static sqlite3 *hashtable_db = NULL;
 static sqlite3_stmt *get_dep_select_stmt = NULL;
+static sqlite3_stmt *get_select_stmt = NULL;
 #endif
 
 /* Where the heap started (bottom) */
@@ -797,6 +800,9 @@ static void define_globals(char * shared_mem_init) {
    */
   db_filename = (char*)mem;
   mem += page_size;
+
+  hashtable_db_filename = (char*)mem;
+  mem += page_size;
   /* END OF THE SMALL OBJECTS PAGE */
 
   /* Global storage initialization */
@@ -834,7 +840,7 @@ static void define_globals(char * shared_mem_init) {
 static size_t get_shared_mem_size() {
   size_t page_size = getpagesize();
   return (global_size_b + dep_size_b + bindings_size_b + hashtbl_size_b +
-          heap_size + 2 * page_size);
+          heap_size + 3 * page_size);
 }
 
 static void init_shared_globals(size_t config_log_level) {
@@ -851,6 +857,7 @@ static void init_shared_globals(size_t config_log_level) {
   // Zero out this shared memory for a string
   size_t page_size = getpagesize();
   memset(db_filename, 0, page_size);
+  memset(hashtable_db_filename, 0, page_size);
 }
 
 static void set_sizes(
@@ -1693,24 +1700,21 @@ value hh_mem(value key) {
 }
 
 /*****************************************************************************/
-/* Returns the value associated to a given key, and deserialize it. */
-/* The key MUST be present. */
+/* Deserializes the value pointed by src. */
+/* The src is an OCaml style pointer, */
+/* meaning that it points right behind the header */
 /*****************************************************************************/
-CAMLprim value hh_get_and_deserialize(value key) {
-  CAMLparam1(key);
+CAMLprim value hh_deserialize(char *src) {
+  CAMLparam0();
   CAMLlocal1(result);
-
-  unsigned int slot = find_slot(key);
-  assert(hashtbl[slot].hash == get_hash(key));
   hh_header_t header =
-    *(hh_header_t*)(hashtbl[slot].addr - sizeof(hh_header_t));
-
-  char* data = hashtbl[slot].addr;
+    *(hh_header_t*)(src - sizeof(hh_header_t));
   size_t size = header.size;
+  char *data = src;
   if (header.uncompressed_size) {
     data = malloc(header.uncompressed_size);
     size_t uncompressed_size = LZ4_decompress_safe(
-      hashtbl[slot].addr,
+      src,
       data,
       header.size,
       header.uncompressed_size);
@@ -1728,7 +1732,20 @@ CAMLprim value hh_get_and_deserialize(value key) {
   if (header.uncompressed_size) {
     free(data);
   }
+  CAMLreturn(result);
+}
 
+/*****************************************************************************/
+/* Returns the value associated to a given key, and deserialize it. */
+/* The key MUST be present. */
+/*****************************************************************************/
+CAMLprim value hh_get_and_deserialize(value key) {
+  CAMLparam1(key);
+  CAMLlocal1(result);
+
+  unsigned int slot = find_slot(key);
+  assert(hashtbl[slot].hash == get_hash(key));
+  result = hh_deserialize(hashtbl[slot].addr);
   CAMLreturn(result);
 }
 
@@ -1794,6 +1811,27 @@ void hh_cleanup_sqlite() {
   memset(db_filename, 0, page_size);
   CAMLreturn0;
 }
+
+// Safe to call outside of sql
+void hh_hashtable_cleanup_sqlite() {
+  CAMLparam0();
+  size_t page_size = getpagesize();
+  memset(hashtable_db_filename, 0, page_size);
+  CAMLreturn0;
+}
+
+#define Val_none Val_int(0)
+
+value Val_some(value v)
+{
+    CAMLparam1(v);
+    CAMLlocal1(some);
+    some = caml_alloc_small(1, 0);
+    Field(some, 0) = v;
+    CAMLreturn(some);
+}
+
+#define Some_val(v) Field(v,0)
 
 #ifndef NO_SQLITE3
 
@@ -2079,6 +2117,245 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   CAMLreturn(result);
 }
 
+/*
+ * HASHTABLE to sqlite functions
+ */
+
+/*
+ * Stores all of the hashmap's keys and values in the database
+ */
+CAMLprim value hh_save_table_sqlite(value out_filename) {
+  CAMLparam1(out_filename);
+
+  // This can only happen in the master
+  assert_master();
+
+  struct timeval tv;
+  struct timeval tv2;
+  gettimeofday(&tv, NULL);
+
+  sqlite3 *db_out;
+  // sqlite3_open creates the db
+  assert_sql(sqlite3_open(String_val(out_filename), &db_out), SQLITE_OK);
+
+  // Create header for verification while we read from the db
+  create_sqlite_header(db_out);
+
+  // Create Dep able
+  const char *sql = "CREATE TABLE HASHTABLE(" \
+               "KEY_VERTEX INT PRIMARY KEY NOT NULL," \
+               "VALUE_VERTEX BLOB NOT NULL);";
+
+  assert_sql(sqlite3_exec(db_out, sql, NULL, 0, NULL), SQLITE_OK);
+  // Hand-off the data to the OS for writing and continue,
+  // don't wait for it to complete
+  assert_sql(sqlite3_exec(db_out, "PRAGMA synchronous = OFF", NULL, 0, NULL),
+    SQLITE_OK);
+  // Store the rollback journal in memory
+  assert_sql(
+    sqlite3_exec(db_out, "PRAGMA journal_mode = MEMORY", NULL, 0, NULL),
+    SQLITE_OK);
+  // Use one transaction for all the insertions
+  assert_sql(sqlite3_exec(db_out, "BEGIN TRANSACTION", NULL, 0, NULL),
+    SQLITE_OK);
+
+  // Create entries on the table
+  size_t slot;
+  sqlite3_stmt *insert_stmt = NULL;
+  sql = "INSERT INTO HASHTABLE (KEY_VERTEX, VALUE_VERTEX) VALUES (?,?)";
+  assert_sql(sqlite3_prepare_v2(db_out, sql, -1, &insert_stmt, NULL),
+    SQLITE_OK);
+  for (slot = 0; slot < hashtbl_size; ++slot) {
+    uint64_t slot_hash = hashtbl[slot].hash;
+    if (slot_hash == 0) {
+      continue;
+    }
+    char *value = hashtbl[slot].addr - sizeof(hh_header_t);
+    hh_header_t *header = (hh_header_t *) value;
+    size_t value_size = header->size + sizeof(hh_header_t);
+
+    assert_sql(sqlite3_bind_int64(insert_stmt, 1, slot_hash), SQLITE_OK);
+    assert_sql(
+      sqlite3_bind_blob(insert_stmt, 2, value, value_size, SQLITE_TRANSIENT),
+        SQLITE_OK);
+    assert_sql(sqlite3_step(insert_stmt), SQLITE_DONE);
+    assert_sql(sqlite3_clear_bindings(insert_stmt), SQLITE_OK);
+    assert_sql(sqlite3_reset(insert_stmt), SQLITE_OK);
+  }
+
+  assert_sql(sqlite3_finalize(insert_stmt), SQLITE_OK);
+  assert_sql(sqlite3_exec(db_out, "END TRANSACTION", NULL, 0, NULL), SQLITE_OK);
+
+  assert_sql(sqlite3_close(db_out), SQLITE_OK);
+  gettimeofday(&tv2, NULL);
+  int secs = tv2.tv_sec - tv.tv_sec;
+  // Reporting only seconds, ignore milli seconds
+  CAMLreturn(Val_long(secs));
+}
+
+/*
+ * Stores only the provided keys and corresponding values in the database
+ */
+CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys) {
+  CAMLparam2(out_filename, keys);
+
+  assert_master();
+
+  struct timeval tv;
+  struct timeval tv2;
+  gettimeofday(&tv, NULL);
+
+  sqlite3 *db_out;
+  assert_sql(sqlite3_open(String_val(out_filename), &db_out), SQLITE_OK);
+  create_sqlite_header(db_out);
+
+  const char *sql =
+    "CREATE TABLE HASHTABLE(" \
+    "  KEY_VERTEX INT PRIMARY KEY NOT NULL," \
+    "  VALUE_VERTEX BLOB NOT NULL" \
+    ");";
+  assert_sql(sqlite3_exec(db_out, sql, NULL, 0, NULL), SQLITE_OK);
+
+  assert_sql(sqlite3_exec(db_out, "PRAGMA synchronous = OFF", NULL, 0, NULL),
+    SQLITE_OK);
+  assert_sql(
+    sqlite3_exec(db_out, "PRAGMA journal_mode = MEMORY", NULL, 0, NULL),
+    SQLITE_OK);
+  assert_sql(sqlite3_exec(db_out, "BEGIN TRANSACTION", NULL, 0, NULL),
+    SQLITE_OK);
+
+  sqlite3_stmt *insert_stmt = NULL;
+  sql = "INSERT INTO HASHTABLE (KEY_VERTEX, VALUE_VERTEX) VALUES (?,?)";
+  assert_sql(sqlite3_prepare_v2(db_out, sql, -1, &insert_stmt, NULL),
+    SQLITE_OK);
+  int n_keys = Wosize_val(keys);
+  int i;
+  for (i = 0; i < n_keys; ++i) {
+    unsigned int slot = find_slot(Field(keys, i));
+    uint64_t slot_hash = hashtbl[slot].hash;
+    if (slot_hash == 0) {
+      continue;
+    }
+    char *value = hashtbl[slot].addr - sizeof(hh_header_t);
+    hh_header_t *header = (hh_header_t *) value;
+    size_t value_size = header->size + sizeof(hh_header_t);
+
+    assert_sql(sqlite3_bind_int64(insert_stmt, 1, slot_hash), SQLITE_OK);
+    assert_sql(
+      sqlite3_bind_blob(insert_stmt, 2, value, value_size, SQLITE_TRANSIENT),
+        SQLITE_OK);
+    assert_sql(sqlite3_step(insert_stmt), SQLITE_DONE);
+    assert_sql(sqlite3_clear_bindings(insert_stmt), SQLITE_OK);
+    assert_sql(sqlite3_reset(insert_stmt), SQLITE_OK);
+  }
+
+  assert_sql(sqlite3_finalize(insert_stmt), SQLITE_OK);
+  assert_sql(sqlite3_exec(db_out, "END TRANSACTION", NULL, 0, NULL), SQLITE_OK);
+
+  assert_sql(sqlite3_close(db_out), SQLITE_OK);
+  gettimeofday(&tv2, NULL);
+  int secs = tv2.tv_sec - tv.tv_sec;
+  CAMLreturn(Val_long(secs));
+}
+
+CAMLprim value hh_load_table_sqlite(value in_filename) {
+  CAMLparam1(in_filename);
+  struct timeval tv;
+  struct timeval tv2;
+  gettimeofday(&tv, NULL);
+
+  // This can only happen in the master
+  assert_master();
+
+  const char *filename = String_val(in_filename);
+  size_t filename_len = strlen(filename);
+
+  /* Since we save the filename on the heap, and have allocated only
+   * getpagesize() space
+   */
+  assert(filename_len < getpagesize());
+
+  memcpy(hashtable_db_filename, filename, filename_len);
+  hashtable_db_filename[filename_len] = '\0';
+
+  // SQLITE_OPEN_READONLY makes sure that we throw if the db doesn't exist
+  assert_sql(
+    sqlite3_open_v2(
+      hashtable_db_filename, &hashtable_db, SQLITE_OPEN_READONLY, NULL),
+    SQLITE_OK);
+
+  // Verify the header
+  verify_sqlite_header(hashtable_db);
+
+  gettimeofday(&tv2, NULL);
+  int secs = tv2.tv_sec - tv.tv_sec;
+  // Reporting only seconds, ignore milli seconds
+  CAMLreturn(Val_long(secs));
+}
+
+CAMLprim value hh_get_sqlite(value ocaml_key) {
+  CAMLparam1(ocaml_key);
+  CAMLlocal1(result);
+
+  result = Val_none;
+
+  assert(hashtable_db_filename != NULL);
+
+  // Check whether we are in SQL mode
+  if (*hashtable_db_filename == '\0') {
+    // We are not in SQL mode, return empty list
+    CAMLreturn(result);
+  }
+
+  // Now that we know we are in SQL mode, make sure db connection is made
+  if (hashtable_db == NULL) {
+    assert(*hashtable_db_filename != '\0');
+    // We are in sql, hence we shouldn't be in the master process,
+    // since we are not connected yet, soo.. try to connect
+    assert_not_master();
+    // SQLITE_OPEN_READONLY makes sure that we throw if the db doesn't exist
+    assert_sql(
+      sqlite3_open_v2(
+        hashtable_db_filename, &hashtable_db, SQLITE_OPEN_READONLY, NULL),
+      SQLITE_OK
+    );
+    assert(hashtable_db != NULL);
+  }
+
+  // The caller is required to pass a 32-bit node ID.
+  const uint64_t hash = get_hash(ocaml_key);
+
+  if (get_select_stmt == NULL) {
+    const char *sql = "SELECT VALUE_VERTEX FROM HASHTABLE WHERE KEY_VERTEX=?;";
+    assert_sql(
+      sqlite3_prepare_v2(hashtable_db, sql, -1, &get_select_stmt, NULL),
+      SQLITE_OK);
+    assert(get_select_stmt != NULL);
+  }
+
+  assert_sql(sqlite3_bind_int64(get_select_stmt, 1, hash), SQLITE_OK);
+
+  int err_num = sqlite3_step(get_select_stmt);
+  // err_num is SQLITE_ROW if there is a row to look at,
+  // SQLITE_DONE if no results
+  if (err_num == SQLITE_ROW) {
+    // Means we found it in the table
+    // Columns are 0 indexed
+    char *value = (char *) sqlite3_column_blob(get_select_stmt, 0);
+    size_t value_size = (size_t) sqlite3_column_bytes(get_select_stmt, 0);
+    hh_header_t header = *(hh_header_t*)value;
+    assert(value_size == header.size + sizeof(hh_header_t));
+    result = Val_some(hh_deserialize(value + sizeof(hh_header_t)));
+  } else if (err_num != SQLITE_DONE) {
+    // Something went wrong in sqlite3_step, lets crash
+    assert_sql(err_num, SQLITE_ROW);
+  }
+
+  assert_sql(sqlite3_clear_bindings(get_select_stmt), SQLITE_OK);
+  assert_sql(sqlite3_reset(get_select_stmt), SQLITE_OK);
+  CAMLreturn(result);
+}
+
 #else
 CAMLprim value hh_save_dep_table_sqlite(value out_filename) {
   CAMLparam0();
@@ -2094,5 +2371,25 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   // Empty list
   CAMLparam0();
   CAMLreturn(Val_int(0));
+}
+
+CAMLprim value hh_save_table_sqlite(value out_filename) {
+  CAMLparam0();
+  CAMLreturn(Val_long(0));
+}
+
+CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys) {
+  CAMLparam0();
+  CAMLreturn(Val_long(0));
+}
+
+CAMLprim value hh_load_table_sqlite(value in_filename) {
+  CAMLparam0();
+  CAMLreturn(Val_long(0));
+}
+
+CAMLprim value hh_get_sqlite(value ocaml_key) {
+  CAMLparam0();
+  CAMLreturn(Val_none);
 }
 #endif
