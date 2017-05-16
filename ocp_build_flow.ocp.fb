@@ -434,13 +434,12 @@ begin program "flow-parser-hardcoded-test"
   sort = true
   dirname = "src/parser/test"
   files = [
-    "hardcoded_test_runner.ml"
-    "run_hardcoded_tests.ml"
+    "run_esprima_tests.ml"
   ]
   requires = [
     "flow-parser"
     "flow-common-utils"
   ]
   tests = [ "hardcoded_tests" ]
-  test_args = [ "%{sources}%\hardcoded_tests.js" ]
+  test_args = [ "%{sources}%/flow/" ]
 end
