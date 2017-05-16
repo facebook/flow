@@ -31,10 +31,6 @@ let print_errors ~profiling ~suppressed_errors options errors =
     else None
   in
 
-  let suppressed_errors = if Options.include_suppressed options
-  then suppressed_errors
-  else [] in
-
   match Options.json_mode options with
   | Some mode ->
     let profiling =
@@ -360,7 +356,6 @@ module OptionParser(Config : CONFIG) = struct
       opt_max_workers;
       opt_ignores;
       opt_includes;
-      opt_include_suppressed = include_suppressed;
       opt_suppress_comments = FlowConfig.suppress_comments flowconfig;
       opt_suppress_types = FlowConfig.suppress_types flowconfig;
       opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
@@ -396,6 +391,8 @@ module OptionParser(Config : CONFIG) = struct
        server running after we are done. *)
     | Check | FocusCheck ->
       let profiling, errors, suppressed_errors = Main.check_once options in
+      let suppressed_errors =
+        if include_suppressed then suppressed_errors else [] in
       print_errors ~profiling ~suppressed_errors options errors;
       if Errors.ErrorSet.is_empty errors
         then FlowExitStatus.(exit No_error)

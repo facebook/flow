@@ -77,7 +77,6 @@ type t = {
   opt_quiet : bool;
   opt_root : Path.t;
   opt_strip_root : bool;
-  opt_include_suppressed : bool;
   opt_suppress_comments : Str.regexp list;
   opt_suppress_types : SSet.t;
   opt_temp_dir: string;
@@ -141,7 +140,6 @@ let should_munge_underscores opts = opts.opt_munge_underscores
 let json_mode opts = opts.opt_json
 let should_profile opts = opts.opt_profile && not opts.opt_quiet
 let should_strip_root opts = opts.opt_strip_root
-let include_suppressed opts = opts.opt_include_suppressed
 let suppress_comments opts = opts.opt_suppress_comments
 let suppress_types opts = opts.opt_suppress_types
 let temp_dir opts = opts.opt_temp_dir
