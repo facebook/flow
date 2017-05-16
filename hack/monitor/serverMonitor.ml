@@ -362,12 +362,6 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
         handle_monitor_rpc env client_fd
       )
     with
-    | Marshal_tools.Malformed_Preamble_Exception ->
-      (** TODO: Remove this after 2 Hack deploys. *)
-      (Hh_logger.log "
-          Marshal tools read malformed preamble, interpreting as version change.
-          ";
-       client_out_of_date env client_fd)
     | Malformed_build_id as e ->
       HackEventLogger.malformed_build_id ();
       Hh_logger.log "Malformed Build ID";
