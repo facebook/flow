@@ -14,7 +14,7 @@
 
 open CommandUtils
 
-type mode = Check | Server | Detach | FocusCheck
+type mode = Check | Server | Start | FocusCheck
 
 module type CONFIG = sig
   val mode : mode
@@ -27,15 +27,16 @@ module OptionParser(Config : CONFIG) = struct
   let cmdname = match Config.mode with
   | Check -> "check"
   | Server -> "server"
-  | Detach -> "start"
+  | Start -> "start"
   | FocusCheck -> "focus-check"
 
   let cmddoc = match Config.mode with
   | Check -> "Does a full Flow check and prints the results"
   | Server -> "Runs a Flow server in the foreground"
-  | Detach -> "Starts a Flow server"
-  | FocusCheck -> "[experimental] " ^
-    "Does a focused Flow check on a file and its dependencies and prints the results"
+  | Start -> "Starts a Flow server"
+  | FocusCheck -> "EXPERIMENTAL: " ^
+    "Does a focused Flow check on a file (and its dependents and their dependencies) " ^
+    "and prints the results"
 
   let common_args prev = CommandSpec.ArgSpec.(
     prev
@@ -95,7 +96,7 @@ module OptionParser(Config : CONFIG) = struct
       |> dummy false (* wait *)
       |> common_args
     )
-  | Detach -> CommandSpec.ArgSpec.(
+  | Start -> CommandSpec.ArgSpec.(
       empty
       |> dummy Options.default_error_flags (* error_flags *)
       |> dummy false (* include_suppressed *)
@@ -354,7 +355,7 @@ module OptionParser(Config : CONFIG) = struct
       opt_haste_paths_whitelist = FlowConfig.haste_paths_whitelist flowconfig;
       opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig
     } in
-    if Config.(mode = Detach)
+    if Config.(mode = Start)
     then Main.daemonize options
     else Main.run options
 
@@ -373,7 +374,7 @@ module ServerCommand = OptionParser (struct
   let default_log_filter = Hh_logger.Level.default_filter
 end)
 module StartCommand = OptionParser (struct
-  let mode = Detach
+  let mode = Start
   let default_log_filter = Hh_logger.Level.default_filter
 end)
 module FocusCheckCommand = OptionParser (struct
