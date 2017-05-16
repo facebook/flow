@@ -75,6 +75,8 @@ module OptionParser(Config : CONFIG) = struct
     prev
     |> flag "--debug" no_arg
         ~doc:"Print debug info during typecheck"
+    |> flag "--profile" no_arg
+        ~doc:"Output profiling information"
     |> flag "--all" no_arg
         ~doc:"Typecheck all files, not just @flow"
     |> flag "--weak" no_arg
@@ -111,8 +113,6 @@ module OptionParser(Config : CONFIG) = struct
       |> flag "--include-suppressed" no_arg
         ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
       |> json_flags
-      |> flag "--profile" no_arg
-          ~doc:"Output profiling information"
       |> dummy None  (* log-file *)
       |> dummy false (* wait *)
       |> common_args
@@ -123,8 +123,6 @@ module OptionParser(Config : CONFIG) = struct
       |> dummy false (* include_suppressed *)
       |> dummy false (* json *)
       |> dummy false (* pretty *)
-      |> flag "--profile" no_arg
-          ~doc:"Output profiling information"
       |> dummy None  (* log-file *)
       |> dummy false (* wait *)
       |> common_args
@@ -134,8 +132,6 @@ module OptionParser(Config : CONFIG) = struct
       |> dummy Options.default_error_flags (* error_flags *)
       |> dummy false (* include_suppressed *)
       |> json_flags
-      |> flag "--profile" no_arg
-          ~doc:"Output profiling information"
       |> flag "--log-file" string
           ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
       |> flag "--wait" no_arg
@@ -148,8 +144,6 @@ module OptionParser(Config : CONFIG) = struct
       |> flag "--include-suppressed" no_arg
         ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
       |> json_flags
-      |> flag "--profile" no_arg
-          ~doc:"Output profiling information"
       |> dummy None  (* log-file *)
       |> dummy false (* wait *)
       |> common_args
@@ -221,10 +215,10 @@ module OptionParser(Config : CONFIG) = struct
       include_suppressed
       json
       pretty
-      profile
       log_file
       wait
       debug
+      profile
       all
       weak
       traces
