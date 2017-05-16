@@ -116,12 +116,6 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
 
   let opt_shm_min_avail = FlowConfig.shm_min_avail flowconfig in
 
-  let opt_log_file = Server_files_js.log_file
-    ~tmp_dir:opt_temp_dir
-    root
-    flowconfig
-  in
-
   let opt_strip_root = strip_root ||
     FlowConfig.strip_root flowconfig
   in
@@ -143,7 +137,6 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_check_mode = false;
     opt_focus_check_target = None;
     opt_error_flags = Options.default_error_flags;
-    opt_log_file = opt_log_file;
     opt_root = root;
     opt_debug = false;
     opt_verbose = None;

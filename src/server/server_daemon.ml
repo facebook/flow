@@ -24,13 +24,11 @@ type entry_point = (
   daemon_msg
 ) Daemon.entry
 
-let open_log_file options =
+let open_log_file file =
   (* When opening a new foo.log file, if foo.log already exists, we move it to
    * foo.log.old. On Linux/OSX this is easy, we just call rename. On Windows,
    * the rename can fail if foo.log is open or if foo.log.old already exists.
    * Not a huge problem, we just need to be more intentional *)
-  let file = Path.to_string (Options.log_file options) in
-
   if Sys.file_exists file
   then begin
     let old_file = file ^ ".old" in
@@ -126,7 +124,7 @@ let register_entry_point
       FlowEventLogger.init_flow_command ~version:FlowConfig.version;
       main ?waiting_channel:(Some waiting_channel) options)
 
-let daemonize ~wait ~options main_entry =
+let daemonize ~wait ~log_file ~options main_entry =
   (* Let's make sure this isn't all for naught before we fork *)
   let root = Options.root options in
   let tmp_dir = Options.temp_dir options in
@@ -140,8 +138,7 @@ let daemonize ~wait ~options main_entry =
   end;
 
   let null_fd = Daemon.null_fd () in
-  let log_file = Path.to_string (Options.log_file options) in
-  let log_fd = open_log_file options in
+  let log_fd = open_log_file log_file in
   let config_file = Server_files_js.config_file root in
   (* Daemon.spawn is creating a new process with log_fd as both the stdout
    * and stderr. We are NOT leaking stdout and stderr. But the Windows

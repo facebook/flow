@@ -19,7 +19,12 @@ val register_entry_point :
   (?waiting_channel:waiting_channel -> Options.t -> unit) ->
   entry_point
 
-val daemonize : wait:bool -> options:Options.t -> entry_point -> unit
+val daemonize :
+  wait:bool ->
+  log_file:string ->
+  options:Options.t ->
+  entry_point ->
+  unit
 
 val wakeup_client : waiting_channel option -> daemon_msg -> unit
 val close_waiting_channel : waiting_channel option -> unit

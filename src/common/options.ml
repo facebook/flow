@@ -65,7 +65,6 @@ type t = {
   opt_includes: Path_matcher.t;
   opt_json : json_mode option;
   opt_libs: Path.t list;
-  opt_log_file: Path.t;
   opt_max_workers: int;
   opt_module: module_system;
   opt_module_file_exts: SSet.t;
@@ -126,7 +125,6 @@ let focus_check_target opts = opts.opt_focus_check_target
 let is_debug_mode opts = opts.opt_debug
 let is_quiet opts = opts.opt_quiet
 let lib_paths opts = opts.opt_libs
-let log_file opts = opts.opt_log_file
 let max_header_tokens opts = opts.opt_max_header_tokens
 let max_trace_depth opts = opts.opt_traces
 let max_workers opts = opts.opt_max_workers

@@ -273,14 +273,6 @@ module OptionParser(Config : CONFIG) = struct
       if no_flowlib || FlowConfig.no_flowlib flowconfig
       then None
       else Some (default_lib_dir opt_temp_dir) in
-    let opt_log_file = match log_file with
-      | Some s ->
-          let dirname = Path.make (Filename.dirname s) in
-          let basename = Filename.basename s in
-          Path.concat dirname basename
-      | None ->
-          Server_files_js.log_file ~tmp_dir:opt_temp_dir root flowconfig
-    in
     let opt_max_workers = match max_workers with
     | Some x -> x
     | None -> FlowConfig.max_workers flowconfig
@@ -300,7 +292,6 @@ module OptionParser(Config : CONFIG) = struct
             Some (Loc.SourceFile Path.(to_string (make file))))
           else None);
       opt_error_flags = error_flags;
-      opt_log_file = opt_log_file;
       opt_root = root;
       opt_debug = debug;
       opt_verbose = verbose;
@@ -354,8 +345,17 @@ module OptionParser(Config : CONFIG) = struct
       opt_haste_paths_whitelist = FlowConfig.haste_paths_whitelist flowconfig;
       opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig
     } in
-    if Config.(mode = Start)
-    then Main.daemonize ~wait options
+    if Config.(mode = Start) then
+      let log_file = match log_file with
+        | Some s ->
+            let dirname = Path.make (Filename.dirname s) in
+            let basename = Filename.basename s in
+            Path.concat dirname basename
+        | None ->
+            Server_files_js.log_file ~tmp_dir:opt_temp_dir root flowconfig
+      in
+      let log_file = Path.to_string log_file in
+      Main.daemonize ~wait ~log_file options
     else Main.run options
 
   let command = CommandSpec.command spec main
