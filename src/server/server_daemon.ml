@@ -54,7 +54,7 @@ let open_log_file options =
  * lock and then write another message when it has finished initializing.
  * It's up to the forking process whether it cares to wait for the
  * initialization to complete *)
-let rec wait_loop child_pid options ic =
+let rec wait_loop ~should_wait child_pid ic =
   let msg = try
     Daemon.from_channel ic
     with End_of_file ->
@@ -104,8 +104,8 @@ let rec wait_loop child_pid options ic =
       in spf "Error: Failed to start server. %s" reason, exit_code
     in FlowExitStatus.(exit ~msg exit_code)
   in
-  if Options.should_wait options && msg <> Ready
-  then wait_loop child_pid options ic
+  if should_wait && msg <> Ready
+  then wait_loop ~should_wait child_pid ic
 
 let new_entry_point =
   let cpt = ref 0 in
@@ -126,7 +126,7 @@ let register_entry_point
       FlowEventLogger.init_flow_command ~version:FlowConfig.version;
       main ?waiting_channel:(Some waiting_channel) options)
 
-let daemonize ~options main_entry =
+let daemonize ~wait ~options main_entry =
   (* Let's make sure this isn't all for naught before we fork *)
   let root = Options.root options in
   let tmp_dir = Options.temp_dir options in
@@ -187,7 +187,7 @@ let daemonize ~options main_entry =
       "Logs will go to %s\n%!" log_file
   end;
 
-  wait_loop pid options waiting_channel_ic
+  wait_loop ~should_wait:wait pid waiting_channel_ic
 
 (* Sends a message to the parent that forked us *)
 let wakeup_client oc msg =

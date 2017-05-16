@@ -302,7 +302,6 @@ module OptionParser(Config : CONFIG) = struct
       opt_error_flags = error_flags;
       opt_log_file = opt_log_file;
       opt_root = root;
-      opt_should_wait = wait;
       opt_debug = debug;
       opt_verbose = verbose;
       opt_all = all;
@@ -356,7 +355,7 @@ module OptionParser(Config : CONFIG) = struct
       opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig
     } in
     if Config.(mode = Start)
-    then Main.daemonize options
+    then Main.daemonize ~wait options
     else Main.run options
 
   let command = CommandSpec.command spec main

@@ -145,7 +145,6 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_error_flags = Options.default_error_flags;
     opt_log_file = opt_log_file;
     opt_root = root;
-    opt_should_wait = false;
     opt_debug = false;
     opt_verbose = None;
     opt_all = false;

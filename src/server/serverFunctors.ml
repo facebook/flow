@@ -36,7 +36,7 @@ end
 (*****************************************************************************)
 module ServerMain (Program : SERVER_PROGRAM) : sig
   val run : Options.t -> unit
-  val daemonize : Options.t -> unit
+  val daemonize : wait:bool -> Options.t -> unit
 end = struct
   type ready_socket =
     | New_client of Unix.file_descr
@@ -251,5 +251,5 @@ end = struct
 
   let daemonize =
     let entry = Server_daemon.register_entry_point main in
-    fun options -> Server_daemon.daemonize ~options entry
+    fun ~wait options -> Server_daemon.daemonize ~wait ~options entry
 end
