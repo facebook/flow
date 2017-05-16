@@ -23,6 +23,43 @@ end
 
 module Main = ServerFunctors.ServerMain (Server.FlowProgram)
 
+(* helper - print errors. used in check-and-die runs *)
+let print_errors ~profiling ~suppressed_errors options errors =
+  let strip_root =
+    if Options.should_strip_root options
+    then Some (Options.root options)
+    else None
+  in
+
+  let suppressed_errors = if Options.include_suppressed options
+  then suppressed_errors
+  else [] in
+
+  match Options.json_mode options with
+  | Some mode ->
+    let profiling =
+      if options.Options.opt_profile
+      then Some profiling
+      else None in
+    Errors.Json_output.print_errors
+      ~out_channel:stdout
+      ~strip_root
+      ~profiling
+      ~pretty:(mode = Options.PrettyJSON)
+      ~suppressed_errors
+      errors
+  | None ->
+    let errors = List.fold_left
+      (fun acc (error, _) -> Errors.ErrorSet.add error acc)
+      errors
+      suppressed_errors
+    in
+    Errors.Cli_output.print_errors
+      ~out_channel:stdout
+      ~flags:(Options.error_flags options)
+      ~strip_root
+      errors
+
 module OptionParser(Config : CONFIG) = struct
   let cmdname = match Config.mode with
   | Check -> "check"
@@ -357,7 +394,12 @@ module OptionParser(Config : CONFIG) = struct
     (* NOTE: At this experimental stage, focus mode implies check mode, so that
        we kill the server after we are done. Later on, focus mode might keep the
        server running after we are done. *)
-    | Check | FocusCheck -> Main.run_and_exit options
+    | Check | FocusCheck ->
+      let profiling, errors, suppressed_errors = Main.check_once options in
+      print_errors ~profiling ~suppressed_errors options errors;
+      if Errors.ErrorSet.is_empty errors
+        then FlowExitStatus.(exit No_error)
+        else FlowExitStatus.(exit Type_error)
 
   let command = CommandSpec.command spec main
 end

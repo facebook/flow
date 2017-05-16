@@ -114,49 +114,8 @@ let collate_errors =
       convert_errorl errors
     end
 
-  (* helper - print errors. used in check-and-die runs *)
-  let print_errors ~profiling ~suppressed_errors options errors =
-    let strip_root =
-      if Options.should_strip_root options
-      then Some (Options.root options)
-      else None
-    in
-
-    let suppressed_errors = if Options.include_suppressed options
-    then suppressed_errors
-    else [] in
-
-    match Options.json_mode options with
-    | Some mode ->
-      let profiling =
-        if options.Options.opt_profile
-        then Some profiling
-        else None in
-      Errors.Json_output.print_errors
-        ~out_channel:stdout
-        ~strip_root
-        ~profiling
-        ~pretty:(mode = Options.PrettyJSON)
-        ~suppressed_errors
-        errors
-    | None ->
-      let errors = List.fold_left
-        (fun acc (error, _) -> Errors.ErrorSet.add error acc)
-        errors
-        suppressed_errors
-      in
-      Errors.Cli_output.print_errors
-        ~out_channel:stdout
-        ~flags:(Options.error_flags options)
-        ~strip_root
-        errors
-
-  let run_once_and_exit ~profiling genv env =
-    let errors, suppressed_errors = collate_errors env.ServerEnv.errors in
-    print_errors ~profiling ~suppressed_errors genv.ServerEnv.options errors;
-    if Errors.ErrorSet.is_empty errors
-      then FlowExitStatus.(exit No_error)
-      else FlowExitStatus.(exit Type_error)
+  let check_once _genv env =
+    collate_errors env.ServerEnv.errors
 
   let die_nicely oc =
     ServerProt.response_to_channel oc ServerProt.SERVER_DYING;

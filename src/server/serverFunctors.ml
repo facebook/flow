@@ -18,7 +18,8 @@ exception State_not_found
 
 module type SERVER_PROGRAM = sig
   val init : genv -> (Profiling_js.t * env)
-  val run_once_and_exit : profiling:Profiling_js.t -> genv -> env -> unit
+  val check_once : genv -> env ->
+    Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list
   (* filter and relativize updated file paths *)
   val process_updates : genv -> env -> SSet.t -> FilenameSet.t
   val recheck: genv -> env -> FilenameSet.t -> env
@@ -36,7 +37,8 @@ end
 (*****************************************************************************)
 module ServerMain (Program : SERVER_PROGRAM) : sig
   val run : Options.t -> unit
-  val run_and_exit : Options.t -> unit
+  val check_once : Options.t ->
+    Profiling_js.t * Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list
   val daemonize : wait:bool -> log_file:string -> Options.t -> unit
 end = struct
   type ready_socket =
@@ -251,11 +253,12 @@ end = struct
 
   let run options = run_internal options
 
-  let run_and_exit options =
+  let check_once options =
     PidLog.disable ();
     let genv, program_init = create_program_init options in
     let profiling, env = program_init () in
-    Program.run_once_and_exit ~profiling genv env
+    let errors, suppressed_errors = Program.check_once genv env in
+    profiling, errors, suppressed_errors
 
   let daemonize =
     let entry = Server_daemon.register_entry_point run_internal in
