@@ -282,10 +282,6 @@ module OptionParser(Config : CONFIG) = struct
     let opt_max_workers = min opt_max_workers Sys_utils.nbr_procs in
 
     let options = { Options.
-      (* NOTE: At this experimental stage, focus mode implies check mode, so that we
-         kill the server after we are done. Later on, focus mode might keep the
-         server running after we are done. *)
-      opt_check_mode = Config.(mode = Check || mode = FocusCheck);
       opt_focus_check_target =
         Config.(if mode = FocusCheck
           then Option.find_map path_opt ~f:(fun file ->
@@ -345,7 +341,8 @@ module OptionParser(Config : CONFIG) = struct
       opt_haste_paths_whitelist = FlowConfig.haste_paths_whitelist flowconfig;
       opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig
     } in
-    if Config.(mode = Start) then
+    match Config.mode with
+    | Start ->
       let log_file = match log_file with
         | Some s ->
             let dirname = Path.make (Filename.dirname s) in
@@ -356,7 +353,11 @@ module OptionParser(Config : CONFIG) = struct
       in
       let log_file = Path.to_string log_file in
       Main.daemonize ~wait ~log_file options
-    else Main.run options
+    | Server -> Main.run options
+    (* NOTE: At this experimental stage, focus mode implies check mode, so that
+       we kill the server after we are done. Later on, focus mode might keep the
+       server running after we are done. *)
+    | Check | FocusCheck -> Main.run_and_exit options
 
   let command = CommandSpec.command spec main
 end

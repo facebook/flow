@@ -36,6 +36,7 @@ end
 (*****************************************************************************)
 module ServerMain (Program : SERVER_PROGRAM) : sig
   val run : Options.t -> unit
+  val run_and_exit : Options.t -> unit
   val daemonize : wait:bool -> log_file:string -> Options.t -> unit
 end = struct
   type ready_socket =
@@ -182,11 +183,6 @@ end = struct
     let watch_paths = Program.get_watch_paths options in
     DfindLib.init fds ("flow_server_events", watch_paths)
 
-  let create_program_init genv () =
-    let profiling, env = Program.init genv in
-    FlowEventLogger.init_done ~profiling;
-    profiling, env
-
   let shared_mem_config_of_options options =
     { SharedMem_js.
       global_size = Options.shm_global_size options;
@@ -204,53 +200,65 @@ end = struct
   * type-checker succeeded. So to know if there is some work to be done,
   * we look if env.modified changed.
   *)
-  let main ?waiting_channel options =
-    (* We don't want to spew for flow check *)
-    let is_check_mode = Options.is_check_mode options in
+  let create_program_init options =
     let root = Options.root options in
-    let tmp_dir = Options.temp_dir options in
-    if is_check_mode then begin
-      PidLog.disable ();
-    end else begin
-      (* You need to grab the lock before initializing the pid files
-         and before allocating the shared heap. *)
-      grab_lock ~tmp_dir root;
-      PidLog.init (Server_files.pids_file ~tmp_dir root);
-      PidLog.log ~reason:"main" (Unix.getpid())
-    end;
     FlowEventLogger.init_server root;
     let handle = SharedMem_js.init (shared_mem_config_of_options options) in
     (* this is to transform SIGPIPE into an exception. A SIGPIPE can happen when
      * someone C-c the client. *)
     Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
     let genv = ServerEnvBuild.make_genv options handle in
-    let program_init = create_program_init genv in
-    if is_check_mode then
-      let profiling, env = program_init () in
-      Program.run_once_and_exit ~profiling genv env
-    else
-      (* Open up a server on the socket before we go into program_init -- the
-         client will try to connect to the socket as soon as we lock the init
-         lock. We need to have the socket open now (even if we won't actually
-         accept connections until init is done) so that the client can try to
-         use the socket and get blocked on it -- otherwise, trying to open a
-         socket with no server on the other end is an immediate error. *)
-      let socket = Socket.init_unix_socket (
-        Server_files.socket_file ~tmp_dir root
-      ) in
-      let dfind = init_dfind options in
-      let env = with_init_lock ~options ?waiting_channel (fun () ->
-        ServerPeriodical.init options;
-        let env = program_init () in
-        DfindLib.wait_until_ready dfind;
-        env
-      ) in
-      serve ~dfind ~genv ~env socket
+    let program_init = fun () ->
+      let profiling, env = Program.init genv in
+      FlowEventLogger.init_done ~profiling;
+      profiling, env
+    in
+    genv, program_init
 
-  let run options = main options
+  let run_internal ?waiting_channel options =
+    let root = Options.root options in
+    let tmp_dir = Options.temp_dir options in
+
+    (* You need to grab the lock before initializing the pid files
+       and before allocating the shared heap. *)
+    grab_lock ~tmp_dir root;
+    PidLog.init (Server_files.pids_file ~tmp_dir root);
+    PidLog.log ~reason:"main" (Unix.getpid());
+
+    let genv, program_init = create_program_init options in
+
+    (* Open up a server on the socket before we go into program_init -- the
+       client will try to connect to the socket as soon as we lock the init
+       lock. We need to have the socket open now (even if we won't actually
+       accept connections until init is done) so that the client can try to
+       use the socket and get blocked on it -- otherwise, trying to open a
+       socket with no server on the other end is an immediate error. *)
+    let socket = Socket.init_unix_socket (
+      let tmp_dir = Options.temp_dir options in
+      Server_files.socket_file ~tmp_dir root
+    ) in
+
+    let dfind = init_dfind options in
+
+    let env = with_init_lock ~options ?waiting_channel (fun () ->
+      ServerPeriodical.init options;
+      let env = program_init () in
+      DfindLib.wait_until_ready dfind;
+      env
+    ) in
+
+    serve ~dfind ~genv ~env socket
+
+  let run options = run_internal options
+
+  let run_and_exit options =
+    PidLog.disable ();
+    let genv, program_init = create_program_init options in
+    let profiling, env = program_init () in
+    Program.run_once_and_exit ~profiling genv env
 
   let daemonize =
-    let entry = Server_daemon.register_entry_point main in
+    let entry = Server_daemon.register_entry_point run_internal in
     fun ~wait ~log_file options ->
       Server_daemon.daemonize ~wait ~log_file ~options entry
 end

@@ -43,7 +43,6 @@ type json_mode =
 
 type t = {
   opt_all : bool;
-  opt_check_mode: bool;
   opt_focus_check_target: Loc.filename option;
   opt_debug : bool;
   opt_default_lib_dir: Path.t option;
@@ -120,7 +119,6 @@ let haste_paths_whitelist opts = opts.opt_haste_paths_whitelist
 let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
 let ignores opts = opts.opt_ignores
 let includes opts = opts.opt_includes
-let is_check_mode opts = opts.opt_check_mode
 let focus_check_target opts = opts.opt_focus_check_target
 let is_debug_mode opts = opts.opt_debug
 let is_quiet opts = opts.opt_quiet
