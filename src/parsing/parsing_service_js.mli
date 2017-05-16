@@ -126,8 +126,3 @@ val next_of_filename_set:
   Worker.t list option ->
   FilenameSet.t ->
   filename list Bucket.next
-
-val error_of_docblock_error: Docblock.error -> Errors.error
-val set_of_docblock_errors: Docblock.error list -> Errors.ErrorSet.t
-val error_of_parse_error : Loc.t * Parse_error.t -> Errors.error
-val set_of_parse_error: Loc.t * Parse_error.t -> Errors.ErrorSet.t

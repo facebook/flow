@@ -91,7 +91,7 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
     )
   in
 
-  let errors = Parsing_service_js.set_of_docblock_errors docblock_errors in
+  let errors = Inference_utils.set_of_docblock_errors docblock_errors in
 
   match parse_result with
   | Parsing_service_js.Parse_ok ast ->
@@ -140,14 +140,16 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
       profiling, Some cx, errors, info
 
   | Parsing_service_js.Parse_fail fails ->
-      let errors = Parsing_service_js.(match fails with
-      | Parse_error err ->
-          Errors.ErrorSet.add (error_of_parse_error err) errors
-      | Docblock_errors errs ->
+      let errors = match fails with
+      | Parsing_service_js.Parse_error err ->
+          let err = Inference_utils.error_of_parse_error err in
+          Errors.ErrorSet.add err errors
+      | Parsing_service_js.Docblock_errors errs ->
           List.fold_left (fun errors err ->
-            Errors.ErrorSet.add (error_of_docblock_error err) errors
+            let err = Inference_utils.error_of_docblock_error err in
+            Errors.ErrorSet.add err errors
           ) errors errs
-      ) in
+      in
       profiling, None, errors, info
 
   | Parsing_service_js.Parse_skip
@@ -414,10 +416,12 @@ let recheck genv env ~updates =
   (* record reparse errors *)
   let errors =
     let new_local_errors: Errors.ErrorSet.t FilenameMap.t = List.fold_left (fun local_errors (file, _, fail) ->
-      let errset = Parsing_service_js.(match fail with
-      | Parse_error err -> set_of_parse_error err
-      | Docblock_errors errs -> set_of_docblock_errors errs
-      ) in
+      let errset = match fail with
+      | Parsing_service_js.Parse_error err ->
+        Inference_utils.set_of_parse_error err
+      | Parsing_service_js.Docblock_errors errs ->
+        Inference_utils.set_of_docblock_errors errs
+      in
       update_errset local_errors file errset
     ) FilenameMap.empty freshparse_fail in
     let () =
@@ -704,10 +708,12 @@ let full_check workers ~ordered_libs parse_next options =
   } = parse_results in
 
   let local_errors = List.fold_left (fun errors (file, _, fail) ->
-    let errset = Parsing_service_js.(match fail with
-    | Parse_error err -> set_of_parse_error err
-    | Docblock_errors errs -> set_of_docblock_errors errs
-    ) in
+    let errset = match fail with
+    | Parsing_service_js.Parse_error err ->
+      Inference_utils.set_of_parse_error err
+    | Parsing_service_js.Docblock_errors errs ->
+      Inference_utils.set_of_docblock_errors errs
+    in
     update_errset errors file errset
   ) local_errors error_files in
 

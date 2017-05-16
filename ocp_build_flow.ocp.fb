@@ -208,7 +208,6 @@ begin library "flow-parsing"
   end
   requires = [
     "flow-common"
-    "flow-common-errors"
     "flow-common-utils"
     "flow-parser"
     "flow-parser-utils"
