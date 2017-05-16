@@ -13,9 +13,9 @@ type t = int array
 let make text =
   (* Clever Tricks Warning
    * ---------------------
-   * By invoking `scan_breaks` on a newline, the first offset at which a line
-   * break occurs is *always* 0. We use this in translating offsets to line
-   * numbers.
+   * We prepend 0, so as to make the invariant hold that there is always a
+   * perceived line break at the start of the file. We use this in translating
+   * offsets to line numbers.
    *
    * Similarly, whether there's a line break at the end or not, the line break
    * map will always end with the length of the original string. This solves
@@ -23,15 +23,17 @@ let make text =
    *)
   let len = String.length text in
   let newline_list =
-    let rec scan_breaks i prev =
-      if i >= len then [len] else begin
-        let ch = String.get text i in
-        if prev = '\r' && ch != '\n' || prev = '\n'
-        then i :: scan_breaks (i + 1) ch
-        else      scan_breaks (i + 1) ch
-      end
-    in
-    scan_breaks 0 '\n'
+    let result = ref [] in
+    for i = 1 to len do
+      let prev = text.[i-1] in
+      if prev = '\r' && text.[i] != '\n' || prev = '\n'
+      then result := i :: !result;
+    done;
+    (match !result with
+    | (r :: _) as rs when r <> len -> result := len :: rs
+    | _ -> ()
+    );
+    0 :: List.rev !result
   in
   Array.of_list newline_list
 
