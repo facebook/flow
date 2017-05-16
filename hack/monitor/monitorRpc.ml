@@ -14,6 +14,10 @@ type handoff_options = {
   (** If server is dormant because it is waiting for Informant to start one,
    * set this to true to start a server anyway. *)
   force_dormant_start : bool;
+  (** What to do if the server already has an existing persistent connection
+   * when we try to connect? Depending on this flag, either the server will
+   * tell it to abort, or our connection attempt will fail. *)
+  force_stop_existing_persistent_connection: bool;
 }
 
 type command =
