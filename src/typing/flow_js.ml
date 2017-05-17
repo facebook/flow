@@ -1155,17 +1155,10 @@ let add_output cx ?trace msg =
       ~trace_reasons ~op:(Ops.peek ()) ~source_file:(Context.file cx) msg in
 
     (* catch no-loc errors early, before they get into error map *)
-    Errors.(
-      if Loc.source (loc_of_error error) = None then
-        let strip_root = if Context.should_strip_root cx
-          then Some (Context.root cx)
-          else None in
-        let errset = ErrorSet.singleton error in
-        let json = Json_output.json_of_errors ~strip_root errset in
-        assert_false (
-          spf "add_output: no source for error: %s"
-          (Hh_json.json_to_multiline json))
-    );
+    if Loc.source (Errors.loc_of_error error) = None then
+      assert_false (
+        spf "add_output: no source for error: %s"
+        (Debug_js.dump_flow_error cx msg));
 
     Context.add_error cx error
   end

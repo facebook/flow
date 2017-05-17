@@ -1982,10 +1982,6 @@ let string_of_default = Default.fold
   ~cons:(fun str default ->
     spf "Cons (%s) (%s)" str default)
 
-let string_of_errors errors =
-  Hh_json.json_to_string ~pretty:true
-    (Errors.Json_output.json_of_errors ~strip_root:None errors)
-
 let dump_flow_error =
   let open Flow_error in
   let dump_internal_error = function
