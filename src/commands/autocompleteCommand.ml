@@ -98,12 +98,12 @@ let main option_values root json pretty strip_root args () =
   then (
     let open Hh_json in
     let json = match results with
-    | Err error ->
+    | Error error ->
       JSON_Object [
         "error", JSON_String error;
         "result", JSON_Array []; (* TODO: remove this? kept for BC *)
       ]
-    | OK completions ->
+    | Ok completions ->
       let results = List.map
         (AutocompleteService_js.autocomplete_result_to_json ~strip_root)
         completions
@@ -113,9 +113,9 @@ let main option_values root json pretty strip_root args () =
     print_endline (json_to_string ~pretty json)
   ) else (
     match results with
-    | Err error ->
+    | Error error ->
       prerr_endlinef "Error: %s" error
-    | OK completions ->
+    | Ok completions ->
       List.iter (fun res ->
         let name = res.AutocompleteService_js.res_name in
         let ty = res.AutocompleteService_js.res_ty in

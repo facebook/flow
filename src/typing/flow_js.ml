@@ -3107,10 +3107,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          that exactly correspond to the function's parameters *)
 
       let key_or_err = try
-        Utils_js.OK (List.nth pn (index-1), [])
+        Ok (List.nth pn (index-1), [])
       with
         | Invalid_argument _ ->
-          Utils_js.Err ("Negative refinement index.",
+          Error ("Negative refinement index.",
             (reason_of_t l, reason_of_use_t u))
         | Failure msg when msg = "nth" ->
           let r1 = replace_reason (fun desc -> RCustom (
@@ -3123,12 +3123,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               (string_of_desc desc)
               (List.length pn)
           )) (reason_of_t l) in
-          Utils_js.Err ("This is incompatible with", (r1, r2))
+          Error ("This is incompatible with", (r1, r2))
       in
       (match key_or_err with
-      | Utils_js.OK key -> rec_flow cx trace
+      | Ok key -> rec_flow cx trace
           (return_t, CallOpenPredT (reason, sense, key, unrefined_t, fresh_t))
-      | Utils_js.Err (msg, reasons) ->
+      | Error (msg, reasons) ->
         add_output cx ~trace (FlowError.ECustom (reasons, msg));
         rec_flow_t cx trace (unrefined_t, fresh_t))
 
@@ -10211,8 +10211,7 @@ module Members : sig
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
-  val to_command_result: t ->
-    (Type.t SMap.t, string) ok_or_err
+  val to_command_result: t -> (Type.t SMap.t, string) result
 
   val extract: Context.t -> Type.t -> t
 
@@ -10228,15 +10227,15 @@ end = struct
   let to_command_result = function
     | Success map
     | SuccessModule (map, None) ->
-        OK map
+        Ok map
     | SuccessModule (named_exports, Some cjs_export) ->
-        OK (SMap.add "default" cjs_export named_exports)
+        Ok (SMap.add "default" cjs_export named_exports)
     | FailureMaybeType ->
-        Err "autocomplete on possibly null or undefined value"
+        Error "autocomplete on possibly null or undefined value"
     | FailureAnyType ->
-        Err "not enough type information to autocomplete"
+        Error "not enough type information to autocomplete"
     | FailureUnhandledType t ->
-        Err (spf
+        Error (spf
           "autocomplete on unexpected type of value %s (please file a task!)"
           (string_of_ctor t))
 
@@ -10402,8 +10401,8 @@ end = struct
   and extract_members_as_map cx this_t =
     let members = extract cx this_t in
     match to_command_result members with
-    | OK map -> map
-    | Err _ -> SMap.empty
+    | Ok map -> map
+    | Error _ -> SMap.empty
 
 end
 

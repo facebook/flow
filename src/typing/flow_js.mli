@@ -148,8 +148,7 @@ module Members : sig
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
-  val to_command_result: t ->
-    (Type.t SMap.t, string) Utils_js.ok_or_err
+  val to_command_result: t -> (Type.t SMap.t, string) result
 
   val extract: Context.t -> Type.t -> t
 end

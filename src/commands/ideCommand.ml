@@ -13,7 +13,7 @@
 (***********************************************************************)
 
 open CommandUtils
-open Utils_js
+
 module Prot = ServerProt.Persistent_connection_prot
 
 let protocol_options = ["very-unstable"; "human-readable"]
@@ -60,8 +60,8 @@ module HumanReadable: ClientProtocol = struct
         prerr_endline ("Command not recognized: " ^ line); None
 
   let handle_autocomplete = function
-    | Err _ -> print_endline "Autocomplete Error"
-    | OK completions ->
+    | Error _ -> print_endline "Autocomplete Error"
+    | Ok completions ->
         print_endline "Autocomplete results:";
         completions |>
         List.map (fun r -> r.AutocompleteService_js.res_name) |>

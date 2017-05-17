@@ -104,8 +104,8 @@ let getdef_get_result profiling client_logging_context ~options cx state =
 
       let command_result = Flow_js.Members.to_command_result member_result in
       begin match command_result with
-      | Err _ -> Loc.none
-      | OK result_map ->
+      | Error _ -> Loc.none
+      | Ok result_map ->
         begin match SMap.get name result_map with
         | Some t -> Type.loc_of_t t
         | None -> Loc.none

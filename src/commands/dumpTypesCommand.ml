@@ -116,9 +116,9 @@ let main option_values root json pretty strip_root path include_raw filename () 
     (ServerProt.DUMP_TYPES (file, include_raw, strip_root));
 
   match (Timeout.input_value ic : ServerProt.dump_types_response) with
-  | Err err ->
+  | Error err ->
       handle_error err ~json ~pretty ~strip_root
-  | OK resp ->
+  | Ok resp ->
       handle_response resp ~json ~pretty ~strip_root
 
 let command = CommandSpec.command spec main

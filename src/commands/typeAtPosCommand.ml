@@ -143,7 +143,7 @@ let main option_values root json pretty strip_root verbose path include_raw args
   ServerProt.cmd_to_channel oc
     (ServerProt.INFER_TYPE (file, line, column, verbose, include_raw));
   match (Timeout.input_value ic : ServerProt.infer_type_response) with
-  | Err err -> handle_error err ~json ~pretty ~strip_root
-  | OK resp -> handle_response resp ~json ~pretty ~strip_root
+  | Error err -> handle_error err ~json ~pretty ~strip_root
+  | Ok resp -> handle_response resp ~json ~pretty ~strip_root
 
 let command = CommandSpec.command spec main

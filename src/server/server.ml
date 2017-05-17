@@ -150,7 +150,7 @@ let collate_errors =
           parse_result
       with exn ->
         Hh_logger.warn "Couldn't autocomplete%s" (Printexc.to_string exn);
-        OK []
+        Ok []
     in
     Autocomplete_js.autocomplete_unset_hooks ();
     results
@@ -238,13 +238,13 @@ let collate_errors =
         possible_ts
         |> List.map Type.reason_of_t
       in
-      OK (loc, ty, raw_type, reasons)
+      Ok (loc, ty, raw_type, reasons)
     with exn ->
       let loc = mk_loc file line col in
       let err = (loc, spf "%s\n%s"
         (Printexc.to_string exn)
         (Printexc.get_backtrace ())) in
-      Err err
+      Error err
     ) in
     response
 
@@ -267,11 +267,11 @@ let collate_errors =
        let cx = match Types_js.typecheck_contents ~options content file with
        | _, Some cx, _, _ -> cx
        | _  -> failwith "Couldn't parse file" in
-      OK (Query_types.dump_types printer raw_printer cx)
+      Ok (Query_types.dump_types printer raw_printer cx)
     with exn ->
       let loc = mk_loc file 0 0 in
       let err = (loc, Printexc.to_string exn) in
-      Err err
+      Error err
     ) in
     resp
 
@@ -294,13 +294,13 @@ let collate_errors =
       | _  -> failwith "Couldn't parse file" in
       let types = Query_types.covered_types cx in
       if should_check then
-        OK types
+        Ok types
       else
-        OK (types |> List.map (fun (loc, _) -> (loc, false)))
+        Ok (types |> List.map (fun (loc, _) -> (loc, false)))
     with exn ->
       let loc = mk_loc file 0 0 in
       let err = (loc, Printexc.to_string exn) in
-      Err err
+      Error err
     ) in
     resp
 
@@ -404,7 +404,7 @@ let collate_errors =
           ) ([], [], [], None) files
         in
         begin match error with
-        | Some e -> Utils_js.Err e
+        | Some e -> Error e
         | None ->
           try
             begin
@@ -431,13 +431,13 @@ let collate_errors =
                 failwith (spf "%s: %s" file_path (Printexc.to_string exn))
             ) result_contents flow_files flow_file_cxs in
 
-            Utils_js.OK result_contents
-          with exn -> Utils_js.Err (
+            Ok result_contents
+          with exn -> Error (
             ServerProt.GenFlowFile_UnexpectedError (Printexc.to_string exn)
           )
         end
       end else
-        Utils_js.Err (ServerProt.GenFlowFile_TypecheckError errors)
+        Error (ServerProt.GenFlowFile_TypecheckError errors)
     in
     result
 

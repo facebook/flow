@@ -10,7 +10,6 @@
 
 open Autocomplete_js
 open Type_printer
-open Utils_js
 
 (* Details about functions to be added in json output *)
 type func_param_result = {
@@ -166,9 +165,9 @@ let autocomplete_member
     ~profiling;
 
   match Members.to_command_result result with
-  | Err error -> Err error
-  | OK result_map ->
-    OK (
+  | Error error -> Error error
+  | Ok result_map ->
+    Ok (
       result_map
       |> autocomplete_filter_members
       |> SMap.mapi (fun name t ->
@@ -207,7 +206,7 @@ let autocomplete_id cx env =
       result :: acc
     )
   ) env [] in
-  OK result
+  Ok result
 
 (* Similar to autocomplete_member, except that we're not directly given an
    object type whose members we want to enumerate: instead, we are given a
@@ -252,4 +251,4 @@ let autocomplete_get_results
   | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
       autocomplete_jsx
         profiling client_logging_context cx cls ac_name ac_loc parse_result
-  | None -> OK []
+  | None -> Ok []

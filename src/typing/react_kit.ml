@@ -8,7 +8,6 @@
  *
  *)
 
-open Utils_js
 open Reason
 open Type
 open React
@@ -45,40 +44,40 @@ let run cx trace reason_op l u
 
   let coerce_object = function
     | DefT (reason, ObjT { props_tmap; dict_t; flags; _ }) ->
-      OK (reason, Context.find_props cx props_tmap, dict_t, flags)
+      Ok (reason, Context.find_props cx props_tmap, dict_t, flags)
     | DefT (reason, AnyT) | DefT (reason, AnyObjT) ->
-      Err reason
+      Error reason
     | _ ->
       let reason = reason_of_t l in
       err_incompatible reason;
-      Err reason
+      Error reason
   in
 
   let coerce_prop_type = function
     | CustomFunT (reason, ReactPropType (PropType.Primitive (required, t))) ->
       let loc = loc_of_reason reason in
-      OK (required, reposition cx ~trace loc t)
+      Ok (required, reposition cx ~trace loc t)
     | DefT (reason, FunT _) as t ->
       rec_flow_t cx trace (t,
         get_builtin_type cx reason_op "ReactPropsCheckType");
-      Err reason
+      Error reason
     | DefT (reason, AnyT) | DefT (reason, AnyFunT) ->
-      Err reason
+      Error reason
     | t ->
       let reason = reason_of_t t in
       err_incompatible reason;
-      Err reason
+      Error reason
   in
 
   let coerce_array = function
     | DefT (_, ArrT (ArrayAT (_, Some ts) | TupleAT (_, ts))) ->
-      OK ts
+      Ok ts
     | DefT (reason, ArrT _) | DefT (reason, AnyT) ->
-      Err reason
+      Error reason
     | t ->
       let reason = reason_of_t t in
       err_incompatible reason;
-      Err reason
+      Error reason
   in
 
   (* Unlike other coercions, don't add a Flow error if the incoming type doesn't
@@ -86,19 +85,19 @@ let run cx trace reason_op l u
   let coerce_singleton = function
     | DefT (reason, StrT (Literal (_, x))) ->
       let reason = replace_reason_const (RStringLit x) reason in
-      OK (DefT (reason, SingletonStrT x))
+      Ok (DefT (reason, SingletonStrT x))
 
     | DefT (reason, NumT (Literal (_, x))) ->
       let reason = replace_reason_const (RNumberLit (snd x)) reason in
-      OK (DefT (reason, SingletonNumT x))
+      Ok (DefT (reason, SingletonNumT x))
 
     | DefT (reason, BoolT (Some x)) ->
       let reason = replace_reason_const (RBooleanLit x) reason in
-      OK (DefT (reason, SingletonBoolT x))
+      Ok (DefT (reason, SingletonBoolT x))
     | DefT (_, NullT) | DefT (_, VoidT) as t ->
-      OK t
+      Ok t
     | t ->
-      Err (reason_of_t t)
+      Error (reason_of_t t)
   in
 
   let create_element config tout =
@@ -161,8 +160,8 @@ let run cx trace reason_op l u
     | ArrayOf ->
       (* TODO: Don't ignore the required flag. *)
       let elem_t = match coerce_prop_type l with
-        | OK (_required, t) -> t
-        | Err reason -> DefT (reason, AnyT)
+        | Ok (_required, t) -> t
+        | Error reason -> DefT (reason, AnyT)
       in
       let reason = replace_reason_const RArrayType reason_op in
       let t = DefT (reason, ArrT (ArrayAT (elem_t, None))) in
@@ -175,8 +174,8 @@ let run cx trace reason_op l u
     | ObjectOf ->
       (* TODO: Don't ignore the required flag. *)
       let value = match coerce_prop_type l with
-        | OK (_required, t) -> t
-        | Err reason -> DefT (reason, AnyT)
+        | Ok (_required, t) -> t
+        | Error reason -> DefT (reason, AnyT)
       in
       let props = SMap.empty in
       let dict = {
@@ -204,12 +203,12 @@ let run cx trace reason_op l u
       (match tool with
       | ResolveArray ->
         (match coerce_array l with
-        | OK todo -> next todo []
-        | Err _ -> resolve (DefT (reason_op, AnyT)))
+        | Ok todo -> next todo []
+        | Error _ -> resolve (DefT (reason_op, AnyT)))
       | ResolveElem (todo, done_rev) ->
         (match coerce_singleton l with
-        | OK t -> next todo (t::done_rev)
-        | Err _ -> resolve (DefT (reason_op, AnyT))))
+        | Ok t -> next todo (t::done_rev)
+        | Error _ -> resolve (DefT (reason_op, AnyT))))
 
     | OneOfType tool ->
       (* TODO: This is _very_ similar to `one_of` above. *)
@@ -225,13 +224,13 @@ let run cx trace reason_op l u
       (match tool with
       | ResolveArray ->
         (match coerce_array l with
-        | OK todo -> next todo []
-        | Err _ -> resolve (DefT (reason_op, AnyT)))
+        | Ok todo -> next todo []
+        | Error _ -> resolve (DefT (reason_op, AnyT)))
       | ResolveElem (todo, done_rev) ->
         (* TODO: Don't ignore the required flag. *)
         (match coerce_prop_type l with
-        | OK (_required, t) -> next todo (t::done_rev)
-        | Err _ -> resolve (DefT (reason_op, AnyT))))
+        | Ok (_required, t) -> next todo (t::done_rev)
+        | Error _ -> resolve (DefT (reason_op, AnyT))))
 
     | Shape tool ->
       (* TODO: This is _very_ similar to `CreateClass.PropTypes` below, except
@@ -271,7 +270,7 @@ let run cx trace reason_op l u
          * we should error and resolve to any. However, since all object spreads
          * are currently unsealed, we must wait for precise spread support.
          * Otherwise, we will cause too many spurious errors. *)
-        | OK (reason, todo, dict, flags) ->
+        | Ok (reason, todo, dict, flags) ->
           let shape = reason, SMap.empty, None, flags in
           (match dict with
           | None -> next todo shape
@@ -279,17 +278,17 @@ let run cx trace reason_op l u
             rec_flow cx trace (dicttype.value, ReactKitT (reason_op,
               SimplifyPropType (Shape
                 (ResolveDict (dicttype, todo, shape)), tout))))
-        | Err _ -> resolve (DefT (reason_op, AnyT)))
+        | Error _ -> resolve (DefT (reason_op, AnyT)))
       | ResolveDict (dicttype, todo, shape) ->
         let dict = match coerce_prop_type l with
-        | OK (_, t) -> {dicttype with value = t}
-        | Err reason -> {dicttype with value = DefT (reason, AnyT)}
+        | Ok (_, t) -> {dicttype with value = t}
+        | Error reason -> {dicttype with value = DefT (reason, AnyT)}
         in
         next todo (add_dict dict shape)
       | ResolveProp (k, todo, shape) ->
         let t = match coerce_prop_type l with
-        | OK (required, t) -> if required then t else Type.optional t
-        | Err _ -> Type.optional (DefT (reason_op, AnyT))
+        | Ok (required, t) -> if required then t else Type.optional t
+        | Error _ -> Type.optional (DefT (reason_op, AnyT))
         in
         next todo (add_prop k t shape))
   in
@@ -298,8 +297,8 @@ let run cx trace reason_op l u
     let open CreateClass in
 
     let maybe_known_of_result = function
-      | OK x -> Known x
-      | Err e -> Unknown e
+      | Ok x -> Known x
+      | Error e -> Unknown e
     in
 
     let map_known f = function
@@ -606,16 +605,16 @@ let run cx trace reason_op l u
     function
     | Spec stack' ->
       let result = match coerce_object l with
-      | OK (reason, _, _, { exact; sealed; _ })
+      | Ok (reason, _, _, { exact; sealed; _ })
         when not (exact && sealed_in_op reason_op sealed) ->
         err_incompatible reason;
-        Err reason
+        Error reason
       | result -> result
       in
       (match result with
-      | OK obj ->
+      | Ok obj ->
         on_resolve_spec ((obj, empty_spec obj), stack')
-      | Err reason ->
+      | Error reason ->
         (match stack' with
         | [] ->
           (* The root spec is unknown *)
@@ -635,14 +634,14 @@ let run cx trace reason_op l u
 
     | Mixins stack ->
       (match coerce_array l with
-      | Err reason ->
+      | Error reason ->
         let stack = map_spec (fun spec -> {
           spec with
           unknown_mixins = reason::spec.unknown_mixins
         }) stack in
         on_resolve_mixins stack
-      | OK [] -> on_resolve_mixins stack
-      | OK (t::todo) ->
+      | Ok [] -> on_resolve_mixins stack
+      | Ok (t::todo) ->
         (* We need to resolve every mixin before we can continue resolving this
          * spec. Push the stack and start resolving the first mixin. Once the
          * mixins are done, we'll pop the stack and continue. *)
@@ -690,7 +689,7 @@ let run cx trace reason_op l u
          * we should error and resolve to any. However, since all object spreads
          * are currently unsealed, we must wait for precise spread support.
          * Otherwise, we will cause too many spurious errors. *)
-        | OK (reason, todo, dict, flags) ->
+        | Ok (reason, todo, dict, flags) ->
           let prop_types = reason, SMap.empty, None, flags in
           (match dict with
           | None -> next todo prop_types
@@ -698,7 +697,7 @@ let run cx trace reason_op l u
             let tool = PropTypes (stack,
               ResolveDict (dicttype, todo, prop_types)) in
             resolve tool dicttype.value)
-        | Err reason ->
+        | Error reason ->
           let prop_types = Some (Unknown reason) in
           map_spec (fun spec -> {
             spec with
@@ -706,14 +705,14 @@ let run cx trace reason_op l u
           }) stack |> on_resolve_prop_types)
       | ResolveDict (dicttype, todo, prop_types) ->
         let dict = match coerce_prop_type l with
-        | OK (_, t) -> {dicttype with value = t}
-        | Err reason -> {dicttype with value = DefT (reason, AnyT)}
+        | Ok (_, t) -> {dicttype with value = t}
+        | Error reason -> {dicttype with value = DefT (reason, AnyT)}
         in
         next todo (add_dict dict prop_types)
       | ResolveProp (k, todo, prop_types) ->
         let t = match coerce_prop_type l with
-        | OK (required, t) -> if required then t else Type.optional t
-        | Err reason -> Type.optional (DefT (reason, AnyT))
+        | Ok (required, t) -> if required then t else Type.optional t
+        | Error reason -> Type.optional (DefT (reason, AnyT))
         in
         next todo (add_prop k t prop_types))
 

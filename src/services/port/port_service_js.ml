@@ -8,9 +8,7 @@
  *
  *)
 
-open Utils_js
-
-let port_file (file: string) : (string, exn) ok_or_err =
+let port_file (file: string) : (string, exn) result =
   try
     let file = Path.to_string (Path.make file) in
     let ast = Parsing_service_js.get_ast_unsafe (Loc.SourceFile file) in
@@ -20,9 +18,9 @@ let port_file (file: string) : (string, exn) ok_or_err =
     let insertions = List.sort Pervasives.compare insertions in
     let new_content = Reason.do_patch lines insertions in
     let patch_content = Diff.diff_of_file_and_string file new_content in
-    OK patch_content
+    Ok patch_content
   with exn ->
-    Err exn
+    Error exn
 
 let port_files (files: string list) =
   List.fold_left (fun result_map file ->

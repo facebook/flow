@@ -67,19 +67,19 @@ type command_with_context = {
 type autocomplete_response = (
   AutocompleteService_js.complete_autocomplete_result list,
   string
-) Utils_js.ok_or_err
+) result
 type coverage_response = (
   (Loc.t * bool) list,
   Loc.t * string
-) Utils_js.ok_or_err
+) result
 type dump_types_response = (
   (Loc.t * string * string * string option * Reason.t list) list,
   Loc.t * string
-) Utils_js.ok_or_err
+) result
 type infer_type_response = (
   Loc.t * string option * string option * Reason.t list,
   Loc.t * string
-) Utils_js.ok_or_err
+) result
 
 type gen_flow_file_error =
   | GenFlowFile_TypecheckError of Errors.ErrorSet.t
@@ -88,8 +88,8 @@ type gen_flow_file_result =
   | GenFlowFile_FlowFile of string
   | GenFlowFile_NonFlowFile
 type gen_flow_file_response =
-  ((string * gen_flow_file_result) list, gen_flow_file_error) Utils_js.ok_or_err
-type port_response = (string, exn) Utils_js.ok_or_err SMap.t
+  ((string * gen_flow_file_result) list, gen_flow_file_error) result
+type port_response = (string, exn) result SMap.t
 
 let cmd_to_channel (oc:out_channel) (cmd:command): unit =
   let command = {

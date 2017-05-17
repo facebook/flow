@@ -249,10 +249,10 @@ let main
   let json = json || pretty in
 
   match (Timeout.input_value ic : ServerProt.coverage_response) with
-  | Err err ->
+  | Error err ->
       let strip_root = if strip_root then Some root else None in
       handle_error ~json ~pretty ~strip_root err
-  | OK resp ->
+  | Ok resp ->
       let content = ServerProt.file_input_get_content file in
       handle_response ~json ~pretty ~color ~debug resp content
 
