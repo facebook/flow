@@ -261,10 +261,10 @@ function acceptsOptionalString(value?: string) {
   // ...
 }
 
-acceptsOptionalString("bar");
-acceptsOptionalString(undefined);
-acceptsOptionalString(null);
-acceptsOptionalString();
+acceptsOptionalString("bar");     // Works!
+acceptsOptionalString(undefined); // Works!
+acceptsOptionalString(null);      // Error!
+acceptsOptionalString();          // Works!
 ```
 
 ### Function parameters with defaults <a class="toc" id="toc-function-parameters-with-defaults" href="#toc-function-parameters-with-defaults"></a>
@@ -285,10 +285,10 @@ function acceptsOptionalString(value: string = "foo") {
   // ...
 }
 
-acceptsOptionalString("bar");
-acceptsOptionalString(undefined);
-acceptsOptionalString(null);
-acceptsOptionalString();
+acceptsOptionalString("bar");     // Works!
+acceptsOptionalString(undefined); // Works!
+acceptsOptionalString(null);      // Error!
+acceptsOptionalString();          // Works!
 ```
 
 ## Symbols <a class="toc" id="toc-symbols" href="#toc-symbols"></a>
