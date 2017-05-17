@@ -3384,7 +3384,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
       let reason = mk_reason (RJSXElement(Some name)) eloc in
       let c = Env.get_var cx name eloc in
       (* With CSX children are just a prop, so pass them to jsx_mk_props... *)
-      let o = jsx_mk_props cx reason c name attributes (Some children) in
+      let o = jsx_mk_props cx reason c name attributes children in
       (* Sucks to also pass children to jsx_desugar here, they're ignored *)
       jsx_desugar cx name c o attributes children eloc
     end
@@ -3399,9 +3399,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
         then RReactElement(Some name) else RJSXElement(Some name) in
       let reason = mk_reason el eloc in
       let c = Env.get_var cx name eloc in
-      (* TODO: put children in the props for react, so that we can seal props
-       * for react *)
-      let o = jsx_mk_props cx reason c name attributes None in
+      let o = jsx_mk_props cx reason c name attributes children in
       jsx_desugar cx name c o attributes children eloc
     end
 
@@ -3459,7 +3457,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
       )
       else DefT (component_t_reason, StrT (Literal (None, name))) in
       let o = jsx_mk_props cx component_t_reason
-        component_t name attributes None in
+        component_t name attributes children in
       jsx_desugar cx name component_t o attributes children eloc
 
   | _ ->
@@ -3469,43 +3467,54 @@ and jsx_title cx openingElement children = Ast.JSX.(
 
 and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
   let is_react = Context.jsx cx = None in
-  let map = ref SMap.empty in
-  let spread = ref None in
-  attributes |> List.iter (function
+  let map, spread = List.fold_left (fun (map, spread) ->
+    function
     | Opening.Attribute (aloc, { Attribute.
           name = Attribute.Identifier (_, { Identifier.name = aname });
           value
         }) ->
-      if not (Type_inference_hooks_js.dispatch_jsx_hook cx aname aloc c)
-      then
-        let atype = (match value with
-          | Some (Attribute.Literal (loc, lit)) ->
-              literal cx loc lit
-          | Some (Attribute.ExpressionContainer (_, {
-              ExpressionContainer.expression =
-                ExpressionContainer.Expression (loc, e)
-            })) ->
-              expression cx (loc, e)
-          | _ ->
-              (* empty or nonexistent attribute values *)
-              EmptyT.at aloc
-        ) in
 
-        if not (is_react && react_ignore_attribute aname)
-        then
-          let p = Field (atype, Neutral) in
-          map := SMap.add aname p !map
+      let atype =
+        if Type_inference_hooks_js.dispatch_jsx_hook cx aname aloc c
+        then AnyT.at aloc
+        else
+          match value with
+            | Some (Attribute.Literal (loc, lit)) ->
+                literal cx loc lit
+            | Some (Attribute.ExpressionContainer (_, {
+                ExpressionContainer.expression =
+                  ExpressionContainer.Expression (loc, e)
+              })) ->
+                expression cx (loc, e)
+            | _ ->
+                (* empty or nonexistent attribute values *)
+                EmptyT.at aloc
+      in
+
+      if is_react && react_ignore_attribute aname
+      then
+        (map, spread)
+      else
+        let p = Field (atype, Neutral) in
+        (SMap.add aname p map, spread)
 
     | Opening.Attribute _ ->
-        () (* TODO: attributes with namespaced names *)
+        (* TODO: attributes with namespaced names *)
+        (map, spread)
 
     | Opening.SpreadAttribute (_, { SpreadAttribute.argument }) ->
-        let ex_t = expression cx argument in
+        let t = expression cx argument in
         (* TODO: this overwrites all but the last spread *)
-        spread := Some (ex_t)
-  );
-  (match children with
-    | Some children when List.length children <> 0 ->
+        (map, Some t)
+  ) (SMap.empty, None) attributes in
+  let map =
+    match children with
+    | [] -> map
+    | _ when is_react ->
+        (* TODO: typed children *)
+        let p = Field (AnyT.why reason, Neutral) in
+        SMap.add "children" p map
+    | _ ->
         let arr = Flow_js.mk_tvar_where cx reason (fun tout ->
           Flow.resolve_spread_list
             cx
@@ -3514,24 +3523,23 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
             (ResolveSpreadsToArrayLiteral (mk_id (), tout))
         ) in
         let p = Field (arr, Neutral) in
-        map := SMap.add "children" p !map
-    | _ -> ()
-  );
+        SMap.add "children" p map
+  in
   let reason_props = replace_reason_const
     (if is_react then RReactElementProps name else RJSXElementProps name)
     reason in
   (* TODO: ideally we'd seal even for spreads someday *)
-  let sealed = !spread=None && not is_react in
+  let sealed = spread = None in
   let o = Flow.mk_object_with_map_proto cx reason_props ~sealed
-    !map (ObjProtoT reason_props)
+    map (ObjProtoT reason_props)
   in
-  match !spread with
+  match spread with
     | None -> o
-    | Some ex_t ->
+    | Some t ->
         let ignored_attributes =
           if is_react then react_ignored_attributes else [] in
         clone_object_with_excludes cx
-          reason_props o ex_t ignored_attributes
+          reason_props o t ignored_attributes
 )
 
 and jsx_desugar cx name component_t props attributes children eloc =

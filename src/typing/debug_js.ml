@@ -1778,10 +1778,13 @@ and dump_use_t_ (depth, tvars) cx t =
   | MethodT (_, _, prop, _) -> p ~extra:(spf "(%s)" (propref prop)) t
   | MixinT (_, arg) -> p ~extra:(kid arg) t
   | NotT (_, arg) -> p ~extra:(kid arg) t
-  | ObjAssignToT _ -> p t
-  | ObjAssignFromT _ -> p t
+  | ObjAssignToT (_, arg1, arg2, _, _) -> p t
+      ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
+  | ObjAssignFromT (_, arg1, arg2, _, _) -> p t
+      ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
   | ObjFreezeT _ -> p t
-  | ObjRestT _ -> p t
+  | ObjRestT (_, xs, arg) -> p t
+      ~extra:(spf "[%s], %s" (String.concat "; " xs) (kid arg))
   | ObjSealT _ -> p t
   | ObjTestT _ -> p t
   | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
