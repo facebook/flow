@@ -131,7 +131,7 @@ you'll add types for `ThunkAction` as a function `Dispatch`, and `GetState`. `Ge
 
 ```js
 type Dispatch = (action: Action | ThunkAction | PromiseAction) => any;
-type GetState = () => Object;
+type GetState = () => State;
 type ThunkAction = (dispatch: Dispatch, getState: GetState) => any;
 type PromiseAction = Promise<Action>;
 ```
@@ -144,7 +144,7 @@ type Action =
   | { type: "FOO", foo: number }
   | { type: "BAR", bar: boolean };
 
-type GetState = () => Object;
+type GetState = () => State;
 type PromiseAction = Promise<Action>;
 type ThunkAction = (dispatch: Dispatch, getState: GetState) => any;
 type Dispatch = (action: Action | ThunkAction | PromiseAction | Array<Action>) => any;
