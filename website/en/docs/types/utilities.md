@@ -250,6 +250,10 @@ const user2 = {name: 'John Wilkes Booth'};
 (user2: ExactUserShorthand);
 ```
 
+## `$Shape<T>` <a class="toc" id="toc-shape" href="#toc-shape"></a>
+
+`$Shape<T>` is the same shape as `T` but with all optional fields.
+
 ## `$ObjMap<T, F>` <a class="toc" id="toc-objmap" href="#toc-objmap"></a>
 `ObjMap<T, F>` is the type obtained by taking the type of the values of an object and mapping them with a type function.
 
