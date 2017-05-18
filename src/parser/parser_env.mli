@@ -54,6 +54,7 @@ val init_env :
 (* getters: *)
 val in_strict_mode : env -> bool
 val last_loc : env -> Loc.t option
+val last_token : env -> Token.t option
 val in_export : env -> bool
 val labels : env -> SSet.t
 val comments : env -> Ast.Comment.t list

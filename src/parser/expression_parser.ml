@@ -82,8 +82,9 @@ module Expression
       let env = env |> with_error_callback error_callback in
       let ret = assignment_but_not_arrow_function env in
       match Peek.token env with
-      | T_ARROW (* x => 123 *)
-      | T_COLON -> (* (x): number => 123 *)
+      | T_ARROW -> (* x => 123 *)
+        raise Try.Rollback
+      | T_COLON when last_token env = Some T_RPAREN-> (* (x): number => 123 *)
         raise Try.Rollback
       (* async x => 123 -- and we've already parsed async as an identifier
        * expression *)
