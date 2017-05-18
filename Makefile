@@ -81,6 +81,7 @@ MODULES=\
   src/services/inference\
   src/services/flowFileGen\
   src/services/port\
+  src/services/type_info\
   src/third-party/lz4\
   src/typing\
   hack/dfind\

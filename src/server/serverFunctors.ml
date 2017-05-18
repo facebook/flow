@@ -130,21 +130,24 @@ end = struct
       recheck_loop ~dfind genv env
     end
 
-  let serve ~dfind ~genv ~env socket =
+  let assert_lock genv =
     let root = Options.root genv.options in
     let tmp_dir = Options.temp_dir genv.options in
+    let lock_file = Server_files.lock_file ~tmp_dir root in
+    if not (Lock.check lock_file) then begin
+      Hh_logger.warn "Lost %s lock; reacquiring.\n" Program.name;
+      FlowEventLogger.lock_lost lock_file;
+      if not (Lock.grab lock_file)
+      then
+        Hh_logger.fatal "Failed to reacquire lock; terminating.\n";
+        FlowEventLogger.lock_stolen lock_file;
+        die()
+    end
+
+  let serve ~dfind ~genv ~env socket =
     let env = ref env in
     while true do
-      let lock_file = Server_files.lock_file ~tmp_dir root in
-      if not (Lock.check lock_file) then begin
-        Hh_logger.warn "Lost %s lock; reacquiring.\n" Program.name;
-        FlowEventLogger.lock_lost lock_file;
-        if not (Lock.grab lock_file)
-        then
-          Hh_logger.fatal "Failed to reacquire lock; terminating.\n";
-          FlowEventLogger.lock_stolen lock_file;
-          die()
-      end;
+      assert_lock genv;
       ServerPeriodical.call_before_sleeping();
       let ready_sockets = sleep_and_check socket !env.connections in
       env := recheck_loop ~dfind genv !env;

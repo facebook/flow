@@ -196,49 +196,10 @@ let collate_errors =
     let file = Loc.SourceFile file in
     let response = (try
       let content = ServerProt.file_input_get_content file_input in
-      let profiling, cx = match Types_js.typecheck_contents ?verbose ~options content file with
-      | profiling, Some cx, _, _ -> profiling, cx
-      | _  -> failwith "Couldn't parse file" in
-      let loc = mk_loc file line col in
-      let result_str, data, loc, ground_t, possible_ts =
-        let mk_data loc ty = [
-          "loc", Reason.json_of_loc loc;
-          "type", Debug_js.json_of_t ~depth:3 cx ty
-        ] in
-        Query_types.(match query_type cx loc with
-        | FailureNoMatch ->
-          "FAILURE_NO_MATCH", [],
-          Loc.none, None, []
-        | FailureUnparseable (loc, gt, possible_ts) ->
-          "FAILURE_UNPARSEABLE", mk_data loc gt,
-          loc, None, possible_ts
-        | Success (loc, gt, possible_ts) ->
-          "SUCCESS", mk_data loc gt,
-          loc, Some gt, possible_ts
-      ) in
-      FlowEventLogger.type_at_pos_result
-        ~client_context
-        ~result_str
-        ~json_data:(Hh_json.JSON_Object data)
-        ~profiling;
-
-      let ty, raw_type = match ground_t with
-        | None -> None, None
-        | Some t ->
-            let ty = Some (Type_printer.string_of_t cx t) in
-            let raw_type =
-              if include_raw then
-                Some (Debug_js.jstr_of_t ~size:50 ~depth:10 cx t)
-              else
-                None
-            in
-            ty, raw_type
-      in
-      let reasons =
-        possible_ts
-        |> List.map Type.reason_of_t
-      in
-      Ok (loc, ty, raw_type, reasons)
+      Ok (Type_info_service.type_at_pos
+        ~options ~client_context ~verbose ~include_raw
+        file content line col
+      )
     with exn ->
       let loc = mk_loc file line col in
       let err = (loc, spf "%s\n%s"
@@ -248,61 +209,29 @@ let collate_errors =
     ) in
     response
 
-  let dump_types ~options file_input include_raw strip_root =
-    (* Print type using Flow type syntax *)
-    let printer = Type_printer.string_of_t in
-    (* Print raw representation of types as json; as it turns out, the
-       json gets cut off at a specified depth, so pass the maximum
-       possible depth to avoid that. *)
-    let raw_printer c t =
-      if include_raw
-        then Some (Debug_js.jstr_of_t ~depth:max_int ~strip_root c t)
-        else None
-      in
+  let dump_types ~options ~include_raw ~strip_root file_input =
     let file = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile file in
-    let resp =
-    (try
-       let content = ServerProt.file_input_get_content file_input in
-       let cx = match Types_js.typecheck_contents ~options content file with
-       | _, Some cx, _, _ -> cx
-       | _  -> failwith "Couldn't parse file" in
-      Ok (Query_types.dump_types printer raw_printer cx)
+    try
+      let content = ServerProt.file_input_get_content file_input in
+      Ok (Type_info_service.dump_types
+        ~options ~include_raw ~strip_root file content
+      )
     with exn ->
       let loc = mk_loc file 0 0 in
       let err = (loc, Printexc.to_string exn) in
       Error err
-    ) in
-    resp
 
   let coverage ~options ~force file_input =
     let file = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile file in
-    let resp =
-    (try
+    try
       let content = ServerProt.file_input_get_content file_input in
-      let should_check =
-        if force then
-          true
-        else
-          let (_, docblock) =
-            Parsing_service_js.get_docblock Docblock.max_tokens file content in
-          Docblock.is_flow docblock
-      in
-      let cx = match Types_js.typecheck_contents ~options content file with
-      | _, Some cx, _, _ -> cx
-      | _  -> failwith "Couldn't parse file" in
-      let types = Query_types.covered_types cx in
-      if should_check then
-        Ok types
-      else
-        Ok (types |> List.map (fun (loc, _) -> (loc, false)))
+      Ok (Type_info_service.coverage ~options ~force file content)
     with exn ->
       let loc = mk_loc file 0 0 in
       let err = (loc, Printexc.to_string exn) in
       Error err
-    ) in
-    resp
 
   let parse_suggest_cmd file =
     let digits = "\\([0-9]+\\)" in
@@ -685,8 +614,8 @@ let collate_errors =
     | ServerProt.COVERAGE (fn, force) ->
         (coverage ~options ~force fn: ServerProt.coverage_response)
           |> marshal
-    | ServerProt.DUMP_TYPES (fn, format, strip_root) ->
-        (dump_types ~options fn format strip_root: ServerProt.dump_types_response)
+    | ServerProt.DUMP_TYPES (fn, include_raw, strip_root) ->
+        (dump_types ~options ~include_raw ~strip_root fn: ServerProt.dump_types_response)
           |> marshal
     | ServerProt.ERROR_OUT_OF_DATE ->
         incorrect_hash oc

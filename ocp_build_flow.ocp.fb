@@ -270,6 +270,7 @@ begin library "flow-server"
     "flow-parsing"
     "flow-server-files"
     "flow-services-autocomplete"
+    "flow-services-type-info"
     "flow-services-flowFileGen"
     "flow-services-inference"
     "flow-services-port"
@@ -330,6 +331,21 @@ begin library "flow-services-autocomplete"
     "flow-typing"
     "hh-utils"
     "hh-utils-collections"
+    "hh-utils-json"
+  ]
+end
+
+begin library "flow-services-type-info"
+  sort = true
+  files = begin fb-glob "src/services/type_info"
+  end
+  requires = [
+    "flow-common"
+    "flow-common-utils"
+    "flow-parser"
+    "flow-parsing"
+    "flow-services-inference"
+    "flow-typing"
     "hh-utils-json"
   ]
 end
