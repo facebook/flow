@@ -4,25 +4,29 @@ This.js:29
  28: function f1() : number {
                      ^^^^^^ number
 
+This.js:29
+ 29:   return this.x
+                   ^ property `x`. Property not found in
+ 29:   return this.x
+              ^^^^ Object
+
 This.js:33
  33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
                          ^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
                 ^^^^^^ string
 
-This.js:36
- 36: var f1_4 = f1();                         // error, (global object).x
-                ^^^^ function call
- 29:   return this.x
-                   ^ property `x`. Property cannot be accessed on
- 29:   return this.x
-              ^^^^ global object
-
 This.js:41
  41:   return this.x
-                   ^ property `x`. Property cannot be accessed on
+                   ^ property `x`. Property not found in
  41:   return this.x
-              ^^^^ global object
+              ^^^^ Object
+
+This.js:48
+ 48:     var a2 = () => { return this.x };
+                                      ^ property `x`. Property not found in
+ 48:     var a2 = () => { return this.x };
+                                 ^^^^ Object
 
 This.js:49
  49:     return a2()
@@ -35,14 +39,6 @@ This.js:53
                          ^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  53: var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
                 ^^^^^^ string
-
-This.js:56
- 56: var f2_4 = f2();                         // error, (global object).x
-                ^^^^ function call
- 48:     var a2 = () => { return this.x };
-                                      ^ property `x`. Property cannot be accessed on
- 48:     var a2 = () => { return this.x };
-                                 ^^^^ global object
 
 This.js:58
  58: (this: void);

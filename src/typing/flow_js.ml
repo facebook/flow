@@ -5179,6 +5179,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (FunProtoT reason, (GetPropT _ | SetPropT _ | MethodT _)) ->
       rec_flow cx trace (get_builtin_type cx ~trace reason "Function",u)
 
+    (***********************)
+    (* Object library call *)
+    (***********************)
+
+    | (ObjProtoT reason, (GetPropT _ | SetPropT _ | MethodT _)) ->
+      rec_flow cx trace (get_builtin_type cx ~trace reason "Object",u)
+
     (*********************)
     (* functions statics *)
     (*********************)
