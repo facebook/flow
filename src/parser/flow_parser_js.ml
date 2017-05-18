@@ -42,13 +42,6 @@ end = struct
     Js.Unsafe.inject regexp
 end
 
-let throw e =
-  let fn = (Js.Unsafe.new_obj (Js.Unsafe.variable "Function") [|
-    Js.Unsafe.inject (Js.string "e");
-    Js.Unsafe.inject (Js.string "throw e;");
-  |]) in
-  Js.Unsafe.call fn fn [| e|]
-
 let parse_options jsopts = Parser_env.(
   let opts = default_parse_options in
 
@@ -88,18 +81,10 @@ let parse content options =
   in
   let content = Js.to_string content in
   let parse_options = Some (parse_options options) in
-  try
-    let (ocaml_ast, errors) = Parser_flow.program ~fail:false ~parse_options content in
-    JsTranslator.translation_errors := [];
-    let module Translate = Estree_translator.Translate (JsTranslator) in
-    let ret = Translate.program ocaml_ast in
-    let translation_errors = !JsTranslator.translation_errors in
-    Js.Unsafe.set ret "errors" (Translate.errors (errors @ translation_errors));
-    ret
-  with Parse_error.Error l ->
-    let e = Js.Unsafe.new_obj (Js.Unsafe.variable "Error") [|
-      Js.Unsafe.inject (Js.string ((string_of_int (List.length l))^" errors"));
-    |] in
-    Js.Unsafe.set e "name" ((Js.string "Parse Error"));
-    ignore (throw e);
-    Js.Unsafe.obj [||]
+  let (ocaml_ast, errors) = Parser_flow.program ~fail:false ~parse_options content in
+  JsTranslator.translation_errors := [];
+  let module Translate = Estree_translator.Translate (JsTranslator) in
+  let ret = Translate.program ocaml_ast in
+  let translation_errors = !JsTranslator.translation_errors in
+  Js.Unsafe.set ret "errors" (Translate.errors (errors @ translation_errors));
+  ret
