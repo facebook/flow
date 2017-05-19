@@ -55,7 +55,7 @@ module HumanReadable: ClientProtocol = struct
        * also have the magic token. *)
       | "autocomplete"::file::contents ->
           let fileinput = ServerProt.FileContent (Some file, String.concat " " contents) in
-          Some (Prot.Autocomplete fileinput)
+          Some (Prot.Autocomplete (fileinput, 0 (* use a dummy id *)))
       | _ ->
         prerr_endline ("Command not recognized: " ^ line); None
 
@@ -75,21 +75,21 @@ module HumanReadable: ClientProtocol = struct
       print_endline ("Received " ^ (string_of_int count) ^ " errors")
     | Prot.StartRecheck -> print_endline "Start recheck"
     | Prot.EndRecheck -> print_endline "End recheck"
-    | Prot.AutocompleteResult result -> handle_autocomplete result
+    | Prot.AutocompleteResult (result, _ (* ignore id *)) -> handle_autocomplete result
 
 end
 
 module JsonRpc : sig
   type t =
-    (* method name, params *)
-    | Obj of (string * Hh_json.json list)
+    (* method name, params, id (only for requests) *)
+    | Obj of (string * Hh_json.json list * int option)
     | Malformed of string
   val parse_json_rpc_response: string -> t
 end = struct
   open Hh_json
   type t =
-    (* method name, params *)
-    | Obj of (string * json list)
+    (* method name, params, id (only for requests) *)
+    | Obj of (string * json list * int option)
     | Malformed of string
 
   exception Malformed_exn of string
@@ -111,6 +111,7 @@ end = struct
     in
     let method_json = get_prop "method" props in
     let params_json = get_prop "params" props in
+    let id_json = try Some (List.assoc "id" props) with Not_found -> None in
     let method_name = match method_json with
       | JSON_String str -> str
       | _ -> raise (Malformed_exn "Method name is not a string")
@@ -121,7 +122,12 @@ end = struct
       | JSON_Array lst -> lst
       | _ -> raise (Malformed_exn "Unexpected params value")
     in
-    Obj (method_name, params)
+    let id = match id_json with
+      | None -> None
+      | Some (JSON_Number x) -> Some (int_of_string x)
+      | Some _ -> raise (Malformed_exn "Unexpected id value")
+    in
+    Obj (method_name, params, id)
 
   let parse_json_rpc_response str =
     try
@@ -130,7 +136,7 @@ end = struct
 end
 
 module VeryUnstable: ClientProtocol = struct
-  let jsonrpcize_message method_ json =
+  let jsonrpcize_notification method_ json =
     Hh_json.(
       JSON_Object [
         ("jsonrpc", JSON_String "2.0");
@@ -139,36 +145,59 @@ module VeryUnstable: ClientProtocol = struct
       ]
     )
 
+  let jsonrpcize_response id json =
+    Hh_json.(
+      JSON_Object [
+        ("jsonrpc", JSON_String "2.0");
+        ("id", JSON_Number (string_of_int id));
+        ("result", json);
+      ]
+    )
+
   let print_errors errors =
     let json_errors = Errors.Json_output.full_status_json_of_errors
       ~strip_root:None ~suppressed_errors:([]) errors in
-    let json_message = jsonrpcize_message "diagnosticsNotification" json_errors in
+    let json_message = jsonrpcize_notification "diagnosticsNotification" json_errors in
     let json_string = Hh_json.json_to_string json_message in
     Http_lite.write_message stdout json_string;
     prerr_endline "sent diagnostics notification"
 
   let print_start_recheck () =
     Hh_json.JSON_Null
-      |> jsonrpcize_message "startRecheck"
+      |> jsonrpcize_notification "startRecheck"
       |> Hh_json.json_to_string
       |> Http_lite.write_message stdout
 
   let print_end_recheck () =
     Hh_json.JSON_Null
-      |> jsonrpcize_message "endRecheck"
+      |> jsonrpcize_notification "endRecheck"
       |> Hh_json.json_to_string
       |> Http_lite.write_message stdout
 
-  let print_autocomplete result =
-    (* TODO actually do something *)
-    ignore result;
-    prerr_endline "received autocomplete result"
+  let print_autocomplete response id =
+    AutocompleteService_js.autocomplete_response_to_json ~strip_root:None response
+      |> jsonrpcize_response id
+      |> Hh_json.json_to_string
+      |> Http_lite.write_message stdout
 
   let handle_server_response = function
     | Prot.Errors errors -> print_errors errors
     | Prot.StartRecheck -> print_start_recheck ()
     | Prot.EndRecheck -> print_end_recheck ()
-    | Prot.AutocompleteResult result -> print_autocomplete result
+    | Prot.AutocompleteResult (result, id) -> print_autocomplete result id
+
+  let handle_autocomplete id = Hh_json.(function
+    | [JSON_String file; JSON_Number line_str; JSON_Number column_str; JSON_String contents] ->
+        let file = get_path_of_file file in
+        let line = int_of_string line_str in
+        let column = int_of_string column_str in
+        let (line, column) = convert_input_pos (line, column) in
+        let with_token = AutocompleteService_js.add_autocomplete_token contents line column in
+        Some (Prot.Autocomplete (ServerProt.FileContent (Some file, with_token), id))
+    | _ ->
+        prerr_endline "Incorrect arguments passed to autocomplete. Should be filepath, line, column, contents";
+        None
+  )
 
   let server_request_of_stdin_message buffered_stdin =
     let message = try
@@ -186,11 +215,14 @@ module VeryUnstable: ClientProtocol = struct
       | Some message ->
           let obj = JsonRpc.parse_json_rpc_response message in
           match obj with
-            | JsonRpc.Obj ("subscribeToDiagnostics", _) ->
+            | JsonRpc.Obj ("subscribeToDiagnostics", _, None) ->
                 prerr_endline "received subscribe request";
                 Some Prot.Subscribe
-            | JsonRpc.Obj (method_name, _) ->
-                prerr_endline ("unrecognized method: " ^ method_name);
+            | JsonRpc.Obj ("autocomplete", params, Some id) ->
+                handle_autocomplete id params
+            | JsonRpc.Obj (method_name, _, id) ->
+                let id_str = match id with None -> "no id" | Some _ -> "an id" in
+                prerr_endline ("unrecognized method: " ^ method_name ^ " with " ^ id_str ^ " provided");
                 None
             | JsonRpc.Malformed err ->
                 prerr_endline ("Received a malformed message: " ^ err);

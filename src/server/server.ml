@@ -686,10 +686,10 @@ let collate_errors =
             Persistent_connection.subscribe_client env.connections client errorl
           in
           { env with connections = new_connections }
-      | Persistent_connection_prot.Autocomplete file_input ->
+      | Persistent_connection_prot.Autocomplete (file_input, id) ->
           let client_logging_context = Persistent_connection.get_logging_context client in
           let results = autocomplete ~options client_logging_context file_input in
-          let wrapped = Persistent_connection_prot.AutocompleteResult results in
+          let wrapped = Persistent_connection_prot.AutocompleteResult (results, id) in
           Persistent_connection.send_message wrapped client;
           env
 
