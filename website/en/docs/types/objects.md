@@ -233,7 +233,7 @@ var foo: {| foo: string |} = { foo: "Hello", bar: "World!" }; // Error!
 
 Newer versions of the JavaScript standard include a `Map` class, but it is
 still very common to use objects as maps as well. In this use case, an object
-will likely have properties added to it and retrieved throughout it's life.
+will likely have properties added to it and retrieved throughout its life.
 Furthermore, the property keys may not even be known statically, so writing out
 a type annotation would not be possible.
 
