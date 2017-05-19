@@ -2258,8 +2258,8 @@ CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys) {
   CAMLreturn(Val_long(secs));
 }
 
-CAMLprim value hh_load_table_sqlite(value in_filename) {
-  CAMLparam1(in_filename);
+CAMLprim value hh_load_table_sqlite(value in_filename, value verify) {
+  CAMLparam2(in_filename, verify);
   struct timeval tv;
   struct timeval tv2;
   gettimeofday(&tv, NULL);
@@ -2285,7 +2285,9 @@ CAMLprim value hh_load_table_sqlite(value in_filename) {
     SQLITE_OK);
 
   // Verify the header
-  verify_sqlite_header(hashtable_db);
+  if (Val_bool(verify)) {
+    verify_sqlite_header(hashtable_db);
+  }
 
   gettimeofday(&tv2, NULL);
   int secs = tv2.tv_sec - tv.tv_sec;
