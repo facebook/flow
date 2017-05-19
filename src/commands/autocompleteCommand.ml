@@ -42,19 +42,6 @@ let spec = {
   )
 }
 
-let add_autocomplete_token contents line column =
-  let (line, column) = convert_input_pos (line, column) in
-  let line = line - 1 in
-  Line.transform_nth contents line (fun line_str ->
-    let length = String.length line_str in
-    if length >= column
-    then (
-      let start = String.sub line_str 0 column in
-      let end_ = String.sub line_str column (length - column) in
-      start ^ Autocomplete_js.autocomplete_suffix ^ end_
-    ) else line_str
-  )
-
 let parse_args = function
   | None
   | Some [] ->
@@ -68,15 +55,17 @@ let parse_args = function
       let line = int_of_string line in
       let column = int_of_string column in
       let contents = Sys_utils.read_stdin_to_string () in
+      let (line, column) = convert_input_pos (line, column) in
       ServerProt.FileContent (None,
-                              add_autocomplete_token contents line column)
+                              AutocompleteService_js.add_autocomplete_token contents line column)
   | Some [filename; line; column] ->
       let line = int_of_string line in
       let column = int_of_string column in
       let contents = Sys_utils.read_stdin_to_string () in
       let filename = get_path_of_file filename in
+      let (line, column) = convert_input_pos (line, column) in
       ServerProt.FileContent (Some filename,
-                              add_autocomplete_token contents line column)
+                              AutocompleteService_js.add_autocomplete_token contents line column)
   | _ ->
       CommandSpec.usage spec;
       FlowExitStatus.(exit Commandline_usage_error)

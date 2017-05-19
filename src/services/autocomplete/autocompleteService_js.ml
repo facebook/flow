@@ -30,6 +30,18 @@ type complete_autocomplete_result = {
     func_details : func_details_result option;
   }
 
+let add_autocomplete_token contents line column =
+  let line = line - 1 in
+  Line.transform_nth contents line (fun line_str ->
+    let length = String.length line_str in
+    if length >= column
+    then (
+      let start = String.sub line_str 0 column in
+      let end_ = String.sub line_str column (length - column) in
+      start ^ Autocomplete_js.autocomplete_suffix ^ end_
+    ) else line_str
+  )
+
 let autocomplete_result_to_json ~strip_root result =
   let func_param_to_json param =
     Hh_json.JSON_Object [
