@@ -85,21 +85,10 @@ let main option_values root json pretty strip_root args () =
   let results = (Timeout.input_value ic : ServerProt.autocomplete_response) in
   if json || pretty
   then (
-    let open Hh_json in
-    let json = match results with
-    | Error error ->
-      JSON_Object [
-        "error", JSON_String error;
-        "result", JSON_Array []; (* TODO: remove this? kept for BC *)
-      ]
-    | Ok completions ->
-      let results = List.map
-        (AutocompleteService_js.autocomplete_result_to_json ~strip_root)
-        completions
-      in
-      JSON_Object ["result", JSON_Array results]
-    in
-    print_endline (json_to_string ~pretty json)
+    results
+      |> AutocompleteService_js.autocomplete_response_to_json ~strip_root
+      |> Hh_json.json_to_string ~pretty
+      |> print_endline
   ) else (
     match results with
     | Error error ->

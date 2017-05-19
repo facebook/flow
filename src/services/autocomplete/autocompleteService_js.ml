@@ -66,6 +66,21 @@ let autocomplete_result_to_json ~strip_root result =
     (Errors.deprecated_json_props_of_loc ~strip_root result.res_loc)
   )
 
+let autocomplete_response_to_json ~strip_root response =
+  let open Hh_json in
+  match response with
+    | Error error ->
+      JSON_Object [
+        "error", JSON_String error;
+        "result", JSON_Array []; (* TODO: remove this? kept for BC *)
+      ]
+    | Ok completions ->
+      let results = List.map
+        (autocomplete_result_to_json ~strip_root)
+        completions
+      in
+      JSON_Object ["result", JSON_Array results]
+
 let print_type cx type_ =
   if is_printed_type_parsable ~weak:true cx type_
   then string_of_t cx type_
