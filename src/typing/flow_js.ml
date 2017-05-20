@@ -5452,14 +5452,24 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (next, UseT (use_op, ExtendsT (reason, try_ts_on_failure, l, u)))
 
     | ObjProtoT _,
-      UseT (use_op, ExtendsT (_, [], l, DefT (reason_inst, InstanceT (_, super, _, {
-        fields_tmap;
-        methods_tmap;
-        structural = true;
-        _;
+      UseT (use_op, ExtendsT (_, [], l, DefT (reason_inst,
+        InstanceT (
+          DefT (reason_stat, InstanceT (_, _, _, {
+            fields_tmap = static_fields_tmap;
+            methods_tmap = static_methods_tmap;
+            structural = true;
+            _;
+          })), super, _, {
+            fields_tmap;
+            methods_tmap;
+            structural = true;
+            _;
       })))) ->
       structural_subtype cx trace ~use_op l reason_inst
         (fields_tmap, methods_tmap);
+      let l_static = lookup_static cx trace reason_inst l in
+      structural_subtype cx trace ~use_op l_static reason_stat
+        (static_fields_tmap, static_methods_tmap);
       rec_flow cx trace (l, UseT (use_op, super))
 
     | (ObjProtoT _, UseT (use_op, ExtendsT (_, [], t, tc))) ->
