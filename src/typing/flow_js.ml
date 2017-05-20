@@ -4935,6 +4935,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | ObjProtoT _, ImplementsT _ -> ()
 
+    | DefT (reason, ClassT instance), ImplementsT _ ->
+      let static = lookup_static cx trace reason instance in
+      rec_flow cx trace (static, ReposLowerT (reason, u))
+
     | DefT (reason_inst, InstanceT (_, super, _, {
         fields_tmap;
         methods_tmap;
@@ -4958,6 +4962,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         properties with overridden properties. As such, the lookups performed
         for the inherited properties are non-strict: they are not required to
         exist. **)
+
+    | DefT (reason, ClassT instance), SuperT _ ->
+        let static = lookup_static cx trace reason instance in
+        rec_flow cx trace (static, ReposLowerT (reason, u))
 
     | (DefT (_, InstanceT (_, _, _, instance_super)),
        SuperT (reason,instance))
@@ -5226,11 +5234,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*****************)
 
     | DefT (reason, ClassT instance), _ when object_use u || object_like_op u ->
-      let desc = RStatics (desc_of_reason (reason_of_t instance)) in
-      let loc = loc_of_reason reason in
-      let reason = mk_reason desc loc in
-      let static = mk_tvar cx reason in
-      rec_flow cx trace (instance, GetStaticsT (reason, static));
+      let static = lookup_static cx trace reason instance in
       rec_flow cx trace (static, ReposLowerT (reason, u))
 
     (**********************************************)
@@ -5892,7 +5896,6 @@ and object_use = function
 and object_like_op = function
   | SetPropT _ | GetPropT _ | MethodT _ | LookupT _
   | GetProtoT _ | SetProtoT _
-  | SuperT _
   | GetKeysT _ | HasOwnPropT _
   | ObjAssignToT _ | ObjAssignFromT _ | ObjRestT _
   | SetElemT _ | GetElemT _
@@ -7574,6 +7577,14 @@ and set_prop cx trace reason_prop reason_op strict l super x pmap tin =
   | None ->
     lookup_prop cx trace super reason_prop reason_op strict x
       (RWProp (l, tin, Write))
+
+and lookup_static cx trace reason instance =
+  let desc = RStatics (desc_of_reason (reason_of_t instance)) in
+  let loc = loc_of_reason reason in
+  let reason = mk_reason desc loc in
+  mk_tvar_where cx reason (fun t ->
+    rec_flow cx trace (instance, GetStaticsT (reason, t))
+  )
 
 and get_obj_prop cx trace o propref reason_op =
   let named_prop = match propref with

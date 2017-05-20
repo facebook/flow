@@ -284,8 +284,9 @@ let thistype cx x =
 
 let check_implements cx x =
   let this = thistype cx x in
-  List.iter (fun i ->
-    Flow.flow cx (i, Type.ImplementsT this)
+  List.iter Type.(fun i ->
+    Flow.flow cx (i, ImplementsT this);
+    Flow.flow cx (class_type i, ImplementsT (class_type this))
   ) x.implements
 
 let check_super cx x =
