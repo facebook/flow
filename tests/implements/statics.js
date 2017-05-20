@@ -5,30 +5,52 @@ interface IFoo {
   static bar: number;
 }
 
-class C1 implements IFoo {}
+class C1 implements IFoo {} //ng
 class C2 implements IFoo {
+  foo: string;
+  static bar: string; //ng
+}
+
+class Impl1 {
+  foo: string;
+  static bar: string; //wrong type
+}
+Impl1.bar = "s1";
+let i1: IFoo = new Impl1; //ng (the error message is icky, citing the "wrong type" line)
+let I1: Class<IFoo> = Impl1; //ng  (the error message is icky, citing the "wrong type" line)
+
+class Impl2 {
   foo: string;
   static bar: number;
 }
+let i2: IFoo = new Impl2;
+let I2: Class<IFoo> = Impl2;
 
-interface I {
-  x: number;
-  static x: number;
-  static fn(): number
+function F1() {}
+F1.foo = "s2";
+let f1: IFoo = F1; //ng
+
+function F2() { this.foo = "s3"; }
+F1.bar = 3;
+let f2: IFoo = new F2;
+
+interface IFlat1 {
+  foo: string;
+  bar: number;
 }
 
-class Impl {
-  x: string;
-  static x: string;
-  static fn(): string {
-    return "some string";
-  }
-};
-Impl.x = "another string";
+function F3() {}
+F3.foo = "s4";
+F3.bar = 5;
+let f3: IFlat1 = F3;
 
-function f(c: I): number {
-  return c.constructor.fn();
+interface IFlat2 {
+  static (): void;
+  static foo: string;
+  static bar: number;
 }
 
-var i = new Impl();
-var n: number = f(i);
+function F4() {}
+F4.foo = "s6";
+F4.bar = 7;
+let flat2: Class<IFlat2> = F4;

@@ -4898,11 +4898,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* TODO: similar concern as above *)
     | DefT (reason, FunT (statics, _, _)),
-      UseT (use_op, DefT (reason_inst, InstanceT (_, super, _, {
-        fields_tmap;
-        methods_tmap;
-        structural = true;
-        _;
+      UseT (use_op, DefT (reason_inst, InstanceT (
+        DefT (reason_stat, InstanceT (_, _, _, {
+          fields_tmap = static_fields_tmap;
+          methods_tmap = static_methods_tmap;
+          structural = true;
+          _;
+        })) , super, _, {
+          fields_tmap;
+          methods_tmap;
+          structural = true;
+          _;
       }))) ->
       if not
         (quick_error_fun_as_obj cx trace reason statics reason_inst
@@ -4911,6 +4917,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       then (
         structural_subtype cx trace ~use_op l reason_inst
           (fields_tmap, methods_tmap);
+        let reason = replace_reason (fun desc -> RStatics desc) reason in
+        let fn = get_builtin_type cx ~trace reason "Function" in
+        structural_subtype cx trace ~use_op fn reason_stat
+          (static_fields_tmap, static_methods_tmap);
         rec_flow cx trace (l, UseT (use_op, super))
       )
 
