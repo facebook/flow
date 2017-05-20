@@ -52,7 +52,6 @@ type command =
     Verbose.t option *
     bool (* include raw *)
 | KILL
-| PING
 | PORT of string list
 | STATUS of Path.t
 | FORCE_RECHECK of string list
@@ -118,8 +117,6 @@ type response =
 | DIRECTORY_MISMATCH of directory_mismatch
 | ERRORS of Errors.ErrorSet.t
 | NO_ERRORS
-| PONG (* CAREFUL! changing the order of this constructor will make clients
-          error when checking the server's version across an upgrade. *)
 | SERVER_DYING
 | SERVER_OUT_OF_DATE
 | NOT_COVERED
@@ -129,7 +126,6 @@ let response_to_string = function
   | ERRORS _ -> "Some Errors"
   | NO_ERRORS -> "No Errors"
   | NOT_COVERED -> "No Errors (Not @flow)"
-  | PONG -> "Pong"
   | SERVER_DYING -> "Server Dying"
   | SERVER_OUT_OF_DATE -> "Server Out of Date"
 

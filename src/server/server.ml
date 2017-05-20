@@ -644,8 +644,6 @@ let collate_errors =
           |> marshal
     | ServerProt.KILL ->
         die_nicely oc
-    | ServerProt.PING ->
-        ServerProt.response_to_channel oc ServerProt.PONG
     | ServerProt.PORT (files) ->
         (port files: ServerProt.port_response)
           |> marshal
