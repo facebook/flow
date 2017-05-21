@@ -112,6 +112,7 @@ type error_message =
   | EInvalidLHSInAssignment of Loc.t
   | EIncompatibleWithUseOp of reason * reason * use_op
   | EUnsupportedImplements of reason
+  | EInterfaceIncompatibility of reason * reason
   | EReactKit of (reason * reason) * React.tool
   | EFunctionCallExtraArg of (reason * reason * int)
   | EUnsupportedSetProto of reason
@@ -1037,6 +1038,9 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | EUnsupportedImplements reason ->
       mk_error ~trace_infos [mk_info reason [
         "Argument to implements clause must be an interface"]]
+
+  | EInterfaceIncompatibility (lreason, ureason) ->
+     typecheck_error "Incompatible with interface" (lreason, ureason)
 
   | EReactKit (reasons, tool) ->
       let open React in

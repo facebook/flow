@@ -4928,15 +4928,49 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Enable structural subtyping for upperbounds like interfaces *)
     (***************************************************************)
 
-    | _,
-      UseT (use_op, DefT (reason_inst, InstanceT (_, super, _, {
-        fields_tmap;
-        methods_tmap;
-        structural = true;
-        _;
+    | DefT (lr, (VoidT | NullT)),
+      UseT (_, DefT (ur, InstanceT (_, _, _, { structural = true; _ }))) ->
+        (* `undefined` and `null` lack a static `name` property. *)
+        add_output cx ~trace (FlowError.EInterfaceIncompatibility (lr, ur))
+
+    | _, UseT (use_op, DefT (reason_inst, InstanceT (
+        DefT (reason_stat, InstanceT (_, _, _, {
+          fields_tmap = static_fields_tmap;
+          methods_tmap = static_methods_tmap;
+          structural = true;
+          _;
+        })), super, _, {
+          fields_tmap;
+          methods_tmap;
+          structural = true;
+          _;
       }))) ->
       structural_subtype cx trace ~use_op l reason_inst
         (fields_tmap, methods_tmap);
+      let l_static = match l with
+        | DefT (reason, ObjT _) ->
+            (* This would throw away any statics on those lower bounds
+               constructed through `FunT _ ~> ConstructorT _` if the statics
+               hadn't already been thrown away. *)
+            let reason = replace_reason (fun desc -> RStatics desc) reason in
+            let obj = get_builtin_type cx ~trace reason "Object" in
+            lookup_static cx trace reason obj
+        | DefT (reason, ArrT arrtype) ->
+            let array = get_array cx ~trace reason arrtype in
+            lookup_static cx trace reason array
+        | DefT (reason, StrT _) ->
+            let string = get_builtin_type cx ~trace reason "String" in
+            lookup_static cx trace reason string
+        | DefT (reason, BoolT _) ->
+            let boolean = get_builtin_type cx ~trace reason "Boolean" in
+            lookup_static cx trace reason boolean
+        | DefT (reason, NumT _) ->
+            let number = get_builtin_type cx ~trace reason "Number" in
+            lookup_static cx trace reason number
+        | _ -> assert false
+      in
+      structural_subtype cx trace ~use_op l_static reason_stat
+        (static_fields_tmap, static_methods_tmap);
       rec_flow cx trace (l, UseT (use_op, super))
 
     (***************************************************************)
@@ -5187,15 +5221,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Array library call *)
     (**********************)
 
-    | DefT (reason, ArrT (ArrayAT(t, _))),
+    | DefT (reason, ArrT arrtype),
       (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ->
-      rec_flow cx trace (get_builtin_typeapp cx ~trace reason "Array" [t], u)
-
-    | DefT (reason, ArrT (TupleAT _ | ROArrayAT _ | EmptyAT as arrtype)),
-      (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ->
-      let t = elemt_of_arrtype reason arrtype in
-      rec_flow
-        cx trace (get_builtin_typeapp cx ~trace reason "$ReadOnlyArray" [t], u)
+      rec_flow cx trace (get_array cx ~trace reason arrtype, u)
 
     (***********************)
     (* String library call *)
@@ -9631,6 +9659,15 @@ and lookup_builtin cx ?trace x reason strict builtin =
 
 and get_builtin_typeapp cx ?trace reason x ts =
   typeapp (get_builtin cx ?trace x reason) ts
+
+and get_array cx ?trace reason arrtype =
+  match arrtype with
+  | ArrayAT (t, _) -> get_builtin_typeapp cx ?trace reason "Array" [t]
+  | TupleAT _
+  | ROArrayAT _
+  | EmptyAT ->
+      let t = elemt_of_arrtype reason arrtype in
+      get_builtin_typeapp cx ?trace reason "$ReadOnlyArray" [t]
 
 (* Specialize a polymorphic class, make an instance of the specialized class. *)
 and mk_typeapp_instance cx ?trace ~reason_op ~reason_tapp ?cache c ts =
