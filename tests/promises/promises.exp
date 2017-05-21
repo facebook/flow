@@ -37,10 +37,10 @@ all.js:19
 all.js:24
  24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
      ^^^^^^^^^^^^^ call of method `all`
-662:     static all<Elem, T:Iterable<Elem>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                            ^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in possibly undefined value. See lib: <BUILTINS>/core.js:662
  24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
-     ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters)
+     ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). Incompatible with interface
+662:     static all<Elem, T:Iterable<Elem>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+                            ^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:662
 
 all.js:27
  27: Promise.all(0); // Error: expected array instead of number
