@@ -40,6 +40,12 @@ importer.js:32
   5: export interface IFoo2 { prop: string };
                                     ^^^^^^ string. See: types_only2.js:5
 
+importer.js:41
+ 41:   static prop: number;
+                    ^^^^^^ number. This type is incompatible with
+  6: export interface IFoo3 { static prop: string };
+                                           ^^^^^^ string. See: types_only2.js:6
+
 types_only.js:5
   5: var b: inlinedType1 = 'asdf'; // Error: string ~> number
                            ^^^^^^ string. This type is incompatible with
@@ -64,5 +70,11 @@ types_only2.js:5
  32: var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
                            ^^ number. See: importer.js:32
 
+types_only2.js:6
+  6: export interface IFoo3 { static prop: string };
+                                           ^^^^^^ string. This type is incompatible with
+ 41:   static prop: number;
+                    ^^^^^^ number. See: importer.js:41
 
-Found 11 errors
+
+Found 13 errors
