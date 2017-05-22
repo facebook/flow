@@ -39,7 +39,9 @@ module ServerMain (Program : SERVER_PROGRAM) : sig
   val run : Options.t -> unit
   val check_once : Options.t ->
     Profiling_js.t * Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list
-  val daemonize : wait:bool -> log_file:string -> Options.t -> unit
+  val daemonize :
+    wait:bool -> log_file:string -> ?on_spawn:(int -> unit) ->
+    Options.t -> unit
 end = struct
   type ready_socket =
     | New_client of Unix.file_descr
@@ -265,6 +267,6 @@ end = struct
 
   let daemonize =
     let entry = Server_daemon.register_entry_point run_internal in
-    fun ~wait ~log_file options ->
-      Server_daemon.daemonize ~wait ~log_file ~options entry
+    fun ~wait ~log_file ?on_spawn options ->
+      Server_daemon.daemonize ~wait ~log_file ?on_spawn ~options entry
 end

@@ -23,6 +23,7 @@ val daemonize :
   wait:bool ->
   log_file:string ->
   options:Options.t ->
+  ?on_spawn:(int -> unit) ->
   entry_point ->
   unit
 

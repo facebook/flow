@@ -377,7 +377,23 @@ module OptionParser(Config : CONFIG) = struct
             Server_files_js.log_file ~tmp_dir:opt_temp_dir root flowconfig
       in
       let log_file = Path.to_string log_file in
-      Main.daemonize ~wait ~log_file options
+      let on_spawn pid =
+        if Options.json_mode options <> None
+        then begin
+          let open Hh_json in
+          let json = json_to_string (JSON_Object [
+            "pid", JSON_String (string_of_int pid);
+            "log_file", JSON_String log_file;
+          ]) in
+          print_string json
+        end else if not (Options.is_quiet options) then begin
+          Printf.eprintf
+            "Spawned flow server (pid=%d)\n" pid;
+          Printf.eprintf
+            "Logs will go to %s\n%!" log_file
+        end
+      in
+      Main.daemonize ~wait ~log_file ~on_spawn options
     | Server -> Main.run options
     (* NOTE: At this experimental stage, focus mode implies check mode, so that
        we kill the server after we are done. Later on, focus mode might keep the

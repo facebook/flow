@@ -124,7 +124,7 @@ let register_entry_point
       FlowEventLogger.init_flow_command ~version:FlowConfig.version;
       main ?waiting_channel:(Some waiting_channel) options)
 
-let daemonize ~wait ~log_file ~options main_entry =
+let daemonize ~wait ~log_file ~options ?on_spawn main_entry =
   (* Let's make sure this isn't all for naught before we fork *)
   let root = Options.root options in
   let tmp_dir = Options.temp_dir options in
@@ -169,21 +169,7 @@ let daemonize ~wait ~log_file ~options main_entry =
   Daemon.close_out waiting_channel_oc;
   (* let original parent exit *)
   let pretty_pid = Sys_utils.pid_of_handle pid in
-  if Options.json_mode options <> None
-  then begin
-    let open Hh_json in
-    let json = json_to_string (JSON_Object [
-      "pid", JSON_String (string_of_int pretty_pid);
-      "log_file", JSON_String log_file;
-    ]) in
-    print_string json
-  end else if not (Options.is_quiet options) then begin
-    Printf.eprintf
-      "Spawned flow server (pid=%d)\n" pretty_pid;
-    Printf.eprintf
-      "Logs will go to %s\n%!" log_file
-  end;
-
+  Option.call pretty_pid ~f:on_spawn;
   wait_loop ~should_wait:wait pid waiting_channel_ic
 
 (* Sends a message to the parent that forked us *)
