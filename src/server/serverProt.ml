@@ -69,17 +69,17 @@ type autocomplete_response = (
 ) result
 type coverage_response = (
   (Loc.t * bool) list,
-  Loc.t * string
+  string
 ) result
 type dump_types_response = (
   (Loc.t * string * string * string option * Reason.t list) list,
-  Loc.t * string
+  string
 ) result
 type find_refs_response = (Loc.t list, string) result
 type get_def_response = (Loc.t, string) result
 type infer_type_response = (
   Loc.t * string option * string option * Reason.t list,
-  Loc.t * string
+  string
 ) result
 
 type gen_flow_file_error =

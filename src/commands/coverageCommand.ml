@@ -35,8 +35,6 @@ let spec = {
         ~doc:"Print the file with colors showing which parts have unknown types"
     |> flag "--debug" no_arg
         ~doc:"Print debugging info about each range in the file to stderr"
-    |> flag "--strip-root" no_arg
-        ~doc:"Print paths without the root"
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
     |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
@@ -46,19 +44,14 @@ let spec = {
   )
 }
 
-let handle_error ~json ~pretty ~strip_root (loc, err) =
+let handle_error ~json ~pretty err =
   if json
   then (
     let open Hh_json in
-    let json = JSON_Object (
-      ("error", JSON_String err) ::
-      ("loc", Reason.json_of_loc ~strip_root loc) ::
-      (Errors.deprecated_json_props_of_loc ~strip_root loc)
-    ) in
+    let json = JSON_Object ["error", JSON_String err] in
     prerr_endline (json_to_string ~pretty json);
   ) else (
-    let loc = Reason.string_of_loc ~strip_root loc in
-    prerr_endlinef "%s:\n%s" loc err;
+    prerr_endline err;
   )
 
 let accum_coverage (covered, total) (_loc, is_covered) =
@@ -223,7 +216,7 @@ let handle_response ~json ~pretty ~color ~debug (types : (Loc.t * bool) list) co
   )
 
 let main
-    option_values root json pretty color debug strip_root path respect_pragma
+    option_values root json pretty color debug path respect_pragma
     all filename () =
   let file = get_file_from_filename_or_stdin path filename in
   let root = guess_root (
@@ -250,8 +243,7 @@ let main
 
   match (Timeout.input_value ic : ServerProt.coverage_response) with
   | Error err ->
-      let strip_root = if strip_root then Some root else None in
-      handle_error ~json ~pretty ~strip_root err
+      handle_error ~json ~pretty err
   | Ok resp ->
       let content = ServerProt.file_input_get_content file in
       handle_response ~json ~pretty ~color ~debug resp content

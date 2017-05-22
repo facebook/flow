@@ -111,19 +111,14 @@ let handle_response (loc, t, raw_t, reasons) ~json ~pretty ~strip_root =
     print_endline (ty^range^pty)
   )
 
-let handle_error (loc, err) ~json ~pretty ~strip_root =
+let handle_error err ~json ~pretty =
   if json
   then (
     let open Hh_json in
-    let json = JSON_Object (
-      ("error", JSON_String err) ::
-      ("loc", Reason.json_of_loc ~strip_root loc) ::
-      (Errors.deprecated_json_props_of_loc ~strip_root loc)
-    ) in
+    let json = JSON_Object ["error", JSON_String err] in
     prerr_endline (json_to_string ~pretty json)
   ) else (
-    let loc = Reason.string_of_loc ~strip_root loc in
-    prerr_endlinef "%s:\n%s" loc err
+    prerr_endline err
   )
 
 let main option_values root json pretty strip_root verbose path include_raw args () =
@@ -143,7 +138,7 @@ let main option_values root json pretty strip_root verbose path include_raw args
   ServerProt.cmd_to_channel oc
     (ServerProt.INFER_TYPE (file, line, column, verbose, include_raw));
   match (Timeout.input_value ic : ServerProt.infer_type_response) with
-  | Error err -> handle_error err ~json ~pretty ~strip_root
+  | Error err -> handle_error err ~json ~pretty
   | Ok resp -> handle_response resp ~json ~pretty ~strip_root
 
 let command = CommandSpec.command spec main

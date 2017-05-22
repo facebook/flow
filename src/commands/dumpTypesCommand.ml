@@ -83,21 +83,16 @@ let handle_response types ~json ~pretty ~strip_root =
     print_endline out
   )
 
-let handle_error (loc, err) ~json ~pretty ~strip_root =
+let handle_error err ~json ~pretty ~strip_root =
   if json
   then (
     let open Hh_json in
-    let error_json = JSON_Object (
-      ("error", JSON_String err) ::
-      ("loc", Reason.json_of_loc ~strip_root loc) ::
-      (Errors.deprecated_json_props_of_loc ~strip_root loc)
-    ) in
+    let error_json = JSON_Object ["error", JSON_String err] in
     prerr_endline (json_to_string ~pretty error_json);
     (* also output an empty array on stdout, for JSON parsers *)
     handle_response [] ~json ~pretty ~strip_root
   ) else (
-    let loc = Reason.string_of_loc ~strip_root loc in
-    prerr_endlinef "%s:\n%s" loc err
+    prerr_endline err
   )
 
 let main option_values root json pretty strip_root path include_raw filename () =

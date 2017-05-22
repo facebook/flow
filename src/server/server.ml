@@ -201,10 +201,9 @@ let collate_errors =
         file content line col
       )
     with exn ->
-      let loc = mk_loc file line col in
-      let err = (loc, spf "%s\n%s"
+      let err = spf "%s\n%s"
         (Printexc.to_string exn)
-        (Printexc.get_backtrace ())) in
+        (Printexc.get_backtrace ()) in
       Error err
     ) in
     response
@@ -218,9 +217,7 @@ let collate_errors =
         ~options ~include_raw ~strip_root file content
       )
     with exn ->
-      let loc = mk_loc file 0 0 in
-      let err = (loc, Printexc.to_string exn) in
-      Error err
+      Error (Printexc.to_string exn)
 
   let coverage ~options ~force file_input =
     let file = ServerProt.file_input_get_filename file_input in
@@ -229,9 +226,7 @@ let collate_errors =
       let content = ServerProt.file_input_get_content file_input in
       Ok (Type_info_service.coverage ~options ~force file content)
     with exn ->
-      let loc = mk_loc file 0 0 in
-      let err = (loc, Printexc.to_string exn) in
-      Error err
+      Error (Printexc.to_string exn)
 
   let parse_suggest_cmd file =
     let digits = "\\([0-9]+\\)" in
