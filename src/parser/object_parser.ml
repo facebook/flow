@@ -332,16 +332,61 @@ module Object
         decorators;
       })))
 
+    in let method_value env async generator =
+      let func_loc = Peek.loc env in
+      let typeParameters = Type.type_parameter_declaration env in
+      let params = Declaration.function_params env in
+      let returnType = Type.annotation_opt env in
+      let _, body, strict =
+        Declaration.function_body env ~async ~generator in
+      let simple = Declaration.is_simple_function_params params in
+      Declaration.strict_post_check env ~strict ~simple None params;
+      let end_loc, expression = Function.(
+        match body with
+        | BodyBlock (loc, _) -> loc, false
+        | BodyExpression (loc, _) -> loc, true) in
+      Loc.btwn func_loc end_loc, Function.({
+        id = None;
+        params;
+        body;
+        generator;
+        async;
+        (* TODO: add support for method predicates *)
+        predicate = None;
+        expression;
+        returnType;
+        typeParameters;
+      })
+
+    in let abstract_method_value env =
+      let func_loc = Peek.loc env in
+      let typeParameters = Type.type_parameter_declaration env in
+      let params = Type.function_param_list env in
+      Expect.token env T_COLON;
+      let returnType = Type._type env in
+      let end_loc = fst returnType in
+      Expect.token env T_SEMICOLON;
+      Loc.btwn func_loc end_loc, Ast.Type.Function.({
+        params;
+        returnType;
+        typeParameters;
+      })
+
     in let error_unsupported_variance env = function
     | Some (loc, _) -> error_at env (loc, Error.UnexpectedVariance)
     | None -> ()
 
-    in let rec init env start_loc decorators key async generator static variance =
+    in let error_unsupported_abstract env = function
+    | Some loc -> error_at env (loc, Error.UnexpectedAbstract)
+    | None -> ()
+
+    in let rec init env start_loc decorators key async generator abstract static variance =
       match Peek.token env with
       | T_COLON
       | T_ASSIGN
       | T_SEMICOLON when not async && not generator ->
         (* Class property with annotation *)
+        error_unsupported_abstract env abstract;
         let end_loc, (typeAnnotation, value) = with_loc (fun env ->
           let typeAnnotation = Type.annotation_opt env in
           let options = parse_options env in
@@ -374,54 +419,66 @@ module Object
         (* TODO: add support for optional class properties *)
         error_unexpected env;
         Eat.token env;
-        init env start_loc decorators key async generator static variance
+        init env start_loc decorators key async generator abstract static variance
       | _ ->
         error_unsupported_variance env variance;
-        let func_loc = Peek.loc env in
-        let typeParameters = Type.type_parameter_declaration env in
-        let params = Declaration.function_params env in
-        let returnType = Type.annotation_opt env in
-        let _, body, strict =
-          Declaration.function_body env ~async ~generator in
-        let simple = Declaration.is_simple_function_params params in
-        Declaration.strict_post_check env ~strict ~simple None params;
-        let end_loc, expression = Function.(
-          match body with
-          | BodyBlock (loc, _) -> loc, false
-          | BodyExpression (loc, _) -> loc, true) in
-        let loc = Loc.btwn func_loc end_loc in
-        let value = loc, Function.({
-          id = None;
-          params;
-          body;
-          generator;
-          async;
-          (* TODO: add support for method predicates *)
-          predicate = None;
-          expression;
-          returnType;
-          typeParameters;
-        }) in
-        let kind = Ast.(match static, key with
-          | false, Expression.Object.Property.Identifier (_, "constructor")
-          | false, Expression.Object.Property.Literal (_, {
-              Literal.value = Literal.String "constructor";
-              _;
-            }) ->
-            Class.Method.Constructor
-          | _ ->
-            Class.Method.Method) in
-        Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
-          key;
-          value;
-          kind;
-          static;
-          decorators;
-        })))
+        match abstract, key with
+        | Some loc, Ast.Expression.Object.Property.Identifier (_, "constructor")
+        | Some loc, Ast.Expression.Object.Property.Literal (_, {
+            Literal.value = Literal.String "constructor";
+            _;
+          }) ->
+          error_at env (loc, Error.UnexpectedAbstract);
+          init env start_loc decorators key async generator None static variance
+        | Some abstract_loc, _ ->
+          error_unsupported_variance env variance;
+          Ast.(match static, key with
+            | false, Expression.Object.Property.Identifier (_, "constructor")
+            | false, Expression.Object.Property.Literal (_, {
+                Literal.value = Literal.String "constructor";
+                _;
+              }) ->
+              error_at env (abstract_loc, Error.UnexpectedAbstract);
+              init env start_loc decorators key async generator None static variance
+            | _ ->
+               let value = abstract_method_value env in
+              let loc = Loc.btwn start_loc (fst value) in
+              Class.(Body.AbstractMethod (loc, AbstractMethod.({
+                key;
+                value;
+                static;
+              }))))
+        | None, _ ->
+          error_unsupported_variance env variance;
+          let value = method_value env async generator in
+          let kind = Ast.(match static, key with
+            | false, Expression.Object.Property.Identifier (_, "constructor")
+            | false, Expression.Object.Property.Literal (_, {
+                Literal.value = Literal.String "constructor";
+                _;
+              }) ->
+              Class.Method.Constructor
+            | _ ->
+              Class.Method.Method)
+          in
+          Ast.Class.(Body.Method (Loc.btwn start_loc (fst value), Method.({
+            key;
+            value;
+            kind;
+            static;
+            decorators;
+          })))
 
     in fun env -> Ast.Expression.Object.Property.(
       let start_loc = Peek.loc env in
       let decorators = decorator_list env in
+      let abstract =
+        let loc = Peek.loc env in
+        if Peek.token ~i:1 env <> T_LPAREN
+           && Peek.token ~i:1 env <> T_LESS_THAN
+           && Expect.maybe env T_ABSTRACT
+        then Some loc else None
+      in
       let static =
         Peek.token ~i:1 env <> T_LPAREN &&
         Peek.token ~i:1 env <> T_LESS_THAN &&
@@ -445,9 +502,10 @@ module Object
           | T_ASSIGN
           | T_SEMICOLON
           | T_LPAREN ->
-            init env start_loc decorators key async generator static variance
+            init env start_loc decorators key async generator abstract static variance
           | _ ->
             error_unsupported_variance env variance;
+            error_unsupported_abstract env abstract;
             get env start_loc decorators static)
       | false, false,
         (_, (Identifier (_, "set") as key)) ->
@@ -457,12 +515,13 @@ module Object
           | T_ASSIGN
           | T_SEMICOLON
           | T_LPAREN ->
-            init env start_loc decorators key async generator static variance
+            init env start_loc decorators key async generator abstract static variance
           | _ ->
             error_unsupported_variance env variance;
+            error_unsupported_abstract env abstract;
             set env start_loc decorators static)
       | _, _, (_, key) ->
-          init env start_loc decorators key async generator static variance
+          init env start_loc decorators key async generator abstract static variance
     )
 
   let class_declaration env decorators =
