@@ -73,19 +73,26 @@ let main option_values root json pretty strip_root path args () =
   ServerProt.cmd_to_channel oc
     (ServerProt.GET_DEF (file, line, column));
   (* command result will be a position structure with full file path *)
-  let loc:Loc.t = Timeout.input_value ic in
-  (* format output *)
-  if json || pretty
-  then (
-    (* TODO: this format is deprecated but can't be backwards-compatible.
-       should be replaced with just `Reason.json_of_loc loc`. *)
-    let open Hh_json in
-    let json =
-      JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root loc) in
-    print_endline (json_to_string ~pretty json)
-  ) else
-    if option_values.from = "vim" || option_values.from = "emacs"
-    then print_endline (Errors.Vim_emacs_output.string_of_loc ~strip_root loc)
-    else print_endline (range_string_of_loc ~strip_root loc)
+  let response: ServerProt.get_def_response = Timeout.input_value ic in
+  match response with
+  | Ok loc ->
+    (* format output *)
+    if json || pretty
+    then (
+      (* TODO: this format is deprecated but can't be backwards-compatible.
+         should be replaced with just `Reason.json_of_loc loc`. *)
+      let open Hh_json in
+      let json =
+        JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root loc) in
+      print_endline (json_to_string ~pretty json)
+    ) else
+      if option_values.from = "vim" || option_values.from = "emacs"
+      then print_endline (Errors.Vim_emacs_output.string_of_loc ~strip_root loc)
+      else print_endline (range_string_of_loc ~strip_root loc)
+  | Error exn_msg ->
+      Utils_js.prerr_endlinef
+        "Could not get definition for %s:%d:%d\n%s"
+        (ServerProt.file_input_get_filename file) line column
+        exn_msg
 
 let command = CommandSpec.command spec main

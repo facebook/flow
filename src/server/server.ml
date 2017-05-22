@@ -404,7 +404,7 @@ let collate_errors =
         | profiling, Some cx, _, _ -> profiling, cx
         | _  -> failwith "Couldn't parse file"
       in
-      Some (GetDef_js.getdef_get_result
+      Ok (GetDef_js.getdef_get_result
         profiling
         command_context
         ~options
@@ -412,11 +412,7 @@ let collate_errors =
         state
       )
     with exn ->
-      Hh_logger.warn
-        "Could not get definition for %s:%d:%d\n%s"
-        filename line col
-        (Printexc.to_string exn);
-      None
+      Error (Printexc.to_string exn)
     in
     GetDef_js.getdef_unset_hooks ();
     result
@@ -634,8 +630,8 @@ let collate_errors =
         (gen_flow_files ~options !env files: ServerProt.gen_flow_file_response)
           |> marshal
     | ServerProt.GET_DEF (fn, line, char) ->
-        (get_def ~options client_logging_context (fn, line, char): Loc.t option)
-          |> marshal_option
+        (get_def ~options client_logging_context (fn, line, char): ServerProt.get_def_response)
+          |> marshal
     | ServerProt.GET_IMPORTS module_names ->
         get_imports ~options module_names
           |> marshal
