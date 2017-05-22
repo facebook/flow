@@ -59,7 +59,7 @@ let collect_error_flags main color one_line show_all_errors =
   | None -> Tty.Color_Auto
   | _ -> assert false (* the enum type enforces this *)
   in
-  main { Options.color; one_line; show_all_errors; }
+  main { Errors.Cli_output.color; one_line; show_all_errors; }
 
 let error_flags prev = CommandSpec.ArgSpec.(
   prev

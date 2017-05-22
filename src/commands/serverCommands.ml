@@ -24,7 +24,7 @@ end
 module Main = ServerFunctors.ServerMain (Server.FlowProgram)
 
 (* helper - print errors. used in check-and-die runs *)
-let print_errors ~profiling ~suppressed_errors options errors =
+let print_errors ~flags ~profiling ~suppressed_errors options errors =
   let strip_root =
     if Options.should_strip_root options
     then Some (Options.root options)
@@ -52,7 +52,7 @@ let print_errors ~profiling ~suppressed_errors options errors =
     in
     Errors.Cli_output.print_errors
       ~out_channel:stdout
-      ~flags:(Options.error_flags options)
+      ~flags
       ~strip_root
       errors
 
@@ -119,7 +119,7 @@ module OptionParser(Config : CONFIG) = struct
     )
   | Server -> CommandSpec.ArgSpec.(
       empty
-      |> dummy Options.default_error_flags (* error_flags *)
+      |> dummy Errors.Cli_output.default_error_flags (* error_flags *)
       |> dummy false (* include_suppressed *)
       |> dummy false (* json *)
       |> dummy false (* pretty *)
@@ -129,7 +129,7 @@ module OptionParser(Config : CONFIG) = struct
     )
   | Start -> CommandSpec.ArgSpec.(
       empty
-      |> dummy Options.default_error_flags (* error_flags *)
+      |> dummy Errors.Cli_output.default_error_flags (* error_flags *)
       |> dummy false (* include_suppressed *)
       |> json_flags
       |> flag "--log-file" string
@@ -314,7 +314,6 @@ module OptionParser(Config : CONFIG) = struct
           then Option.find_map path_opt ~f:(fun file ->
             Some (Loc.SourceFile Path.(to_string (make file))))
           else None);
-      opt_error_flags = error_flags;
       opt_root = root;
       opt_debug = debug;
       opt_verbose = verbose;
@@ -387,7 +386,8 @@ module OptionParser(Config : CONFIG) = struct
       let profiling, errors, suppressed_errors = Main.check_once options in
       let suppressed_errors =
         if include_suppressed then suppressed_errors else [] in
-      print_errors ~profiling ~suppressed_errors options errors;
+      print_errors
+        ~flags:error_flags ~profiling ~suppressed_errors options errors;
       if Errors.ErrorSet.is_empty errors
         then FlowExitStatus.(exit No_error)
         else FlowExitStatus.(exit Type_error)

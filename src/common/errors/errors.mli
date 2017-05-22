@@ -65,9 +65,17 @@ val deprecated_json_props_of_loc :
 
 (* Human readable output *)
 module Cli_output : sig
+  type error_flags = {
+    color: Tty.color_mode;
+    one_line: bool;
+    show_all_errors: bool;
+  }
+
+  val default_error_flags: error_flags
+
   val print_errors:
     out_channel:out_channel ->
-    flags:Options.error_flags ->
+    flags:error_flags ->
     ?stdin_file:stdin_file ->
     strip_root: Path.t option ->
     ErrorSet.t ->

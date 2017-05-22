@@ -94,7 +94,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     from: string;
     output_json: bool;
     pretty: bool;
-    error_flags: Options.error_flags;
+    error_flags: Errors.Cli_output.error_flags;
     strip_root: bool;
   }
 

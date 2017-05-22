@@ -135,7 +135,6 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
 
   { Options.
     opt_focus_check_target = None;
-    opt_error_flags = Options.default_error_flags;
     opt_root = root;
     opt_debug = false;
     opt_verbose = None;

@@ -372,6 +372,18 @@ module ErrorSet = Set.Make(Error)
 
 (* Human readable output *)
 module Cli_output = struct
+  type error_flags = {
+    color: Tty.color_mode;
+    one_line: bool;
+    show_all_errors: bool;
+  }
+
+  let default_error_flags = {
+    color = Tty.Color_Auto;
+    one_line = false;
+    show_all_errors = false;
+  }
+
   let print_file_at_location ~strip_root stdin_file main_file loc s = Loc.(
     let l0 = loc.start.line in
     let l1 = loc._end.line in
@@ -653,9 +665,9 @@ module Cli_output = struct
 
   let print_errors ~out_channel ~flags ?(stdin_file=None) ~strip_root errors =
     let error_or_errors n = if n != 1 then "errors" else "error" in
-    let truncate = not (flags.Options.show_all_errors) in
-    let one_line = flags.Options.one_line in
-    let color = flags.Options.color in
+    let truncate = not (flags.show_all_errors) in
+    let one_line = flags.one_line in
+    let color = flags.color in
     let print_error_if_not_truncated e curr =
       if not(truncate) || curr < 50 then print_error_color
         ~stdin_file ~strip_root ~one_line ~color ~out_channel e;

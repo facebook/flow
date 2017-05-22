@@ -24,6 +24,7 @@ begin library "flow-commands"
   ]
   requires = [
     "flow-common"
+    "flow-common-errors"
     "flow-common-utils"
     "flow-dts"
     "flow-embedded"
