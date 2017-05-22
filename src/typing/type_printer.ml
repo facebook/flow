@@ -71,6 +71,9 @@ let rec type_printer_impl ~size override enclosure cx t =
     | Method t -> spf "%s%s"
       (prop_name cx x t)
       (pp EnclosureMethod cx t)
+    | AbstractMethod t -> spf "abstract %s%s"
+      (prop_name cx x t)
+      (pp EnclosureMethod cx t)
   in
 
   let string_of_obj flds dict_t ~exact =
@@ -251,7 +254,8 @@ let rec type_printer_impl ~size override enclosure cx t =
     | TaintT (_) -> spf "$Tainted<any>"
 
     (* The following types are not syntax-supported *)
-    | DefT (_, ClassT t) ->
+    | DefT (_, ClassT t)
+    | DefT (_, NonabstractClassT t) ->
         spf "[class: %s]" (pp EnclosureNone cx t)
 
     | DefT (_, TypeT t) ->
@@ -320,6 +324,7 @@ let rec type_printer_impl ~size override enclosure cx t =
     | FunProtoCallT _
     | ObjProtoT _
     | AbstractT _
+    | AbstractsT _
     | DiffT (_, _)
     | ExtendsT (_, _, _, _)
     | TypeMapT (_, _, _, _) ->

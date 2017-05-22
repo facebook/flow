@@ -19,6 +19,7 @@ type signature = {
   reason: reason;
   super: Type.t;
   fields: field SMap.t;
+  abstracts: SSet.t;
   (* Multiple function signatures indicates an overloaded method. Note that
      function signatures are stored in reverse definition order. *)
   methods: Func_sig.t Nel.t SMap.t;
@@ -43,6 +44,7 @@ let empty ?(structural=false) id reason tparams tparams_map super implements =
   let empty_sig reason super = {
     reason; super;
     fields = SMap.empty;
+    abstracts = SSet.empty;
     methods = SMap.empty;
     getters = SMap.empty;
     setters = SMap.empty;
@@ -84,12 +86,68 @@ let add_default_constructor reason s =
 let append_constructor fsig s =
   {s with constructor = fsig::s.constructor}
 
-let add_method name fsig = map_sig (fun s -> {
-  s with
-  methods = SMap.add name (Nel.one fsig) s.methods;
-  getters = SMap.remove name s.getters;
-  setters = SMap.remove name s.setters;
-})
+let error_illegal_accessor_override cx fsig_update = function
+  | Some fsig ->
+      let extant_reason = Func_sig.reason_of_t fsig in
+      let update_reason = Func_sig.reason_of_t fsig_update in
+      let error = Flow_error.(
+        let e = IllegalOverload (extant_reason, update_reason) in
+        EAbstract e
+      ) in
+      Flow_js.add_output cx error;
+      true
+  | None ->
+      false
+
+let add_method cx name fsig = map_sig (fun s ->
+  let methods, getters, setters =
+    match SSet.mem name s.abstracts, SMap.get name s.methods with
+    | true, Some fsigs ->
+        (* Overloading abstract methods. Reject the attempt. *)
+        let extant_reason = Func_sig.reason_of_t (Nel.hd fsigs) in
+        let update_reason = Func_sig.reason_of_t fsig in
+        let error = Flow_error.(
+          let e = IllegalOverload (extant_reason, update_reason) in
+          EAbstract e
+        ) in
+        Flow_js.add_output cx error;
+        s.methods, s.getters, s.setters
+    | _ ->
+        (* ES6 overwrites the existing method with later methods. *)
+        let methods = SMap.add name (Nel.one fsig) s.methods in
+        let getters = SMap.remove name s.getters in
+        let setters = SMap.remove name s.setters in
+        methods, getters, setters
+  in
+  { s with methods; getters; setters; })
+
+let add_abstract_method cx name fsig = map_sig (fun s ->
+  let abstracts, methods, getters, setters =
+    match SSet.mem name s.abstracts, SMap.get name s.methods with
+    | true, Some fsigs ->
+        (* Overloading existing abstract methods. *)
+        let methods = SMap.add name (Nel.cons fsig fsigs) s.methods in
+        s.abstracts, methods, s.getters, s.setters
+    | false, Some fsigs ->
+        (* Overloading nonabstract methods. Reject the attempt. *)
+        let extant_reason = Func_sig.reason_of_t (Nel.hd fsigs) in
+        let update_reason = Func_sig.reason_of_t fsig in
+        let error = Flow_error.(
+          let e = IllegalOverload (extant_reason, update_reason) in
+          EAbstract e
+        ) in
+        Flow_js.add_output cx error;
+        s.abstracts, s.methods, s.getters, s.setters
+    | _ ->
+        (* `true, None` is not possible, so this is `false, None`. *)
+        if error_illegal_accessor_override cx fsig (SMap.get name s.getters)
+          || error_illegal_accessor_override cx fsig (SMap.get name s.setters)
+        then s.abstracts, s.methods, s.getters, s.setters
+        else
+          let methods = SMap.add name (Nel.one fsig) s.methods in
+          SSet.add name s.abstracts, methods, s.getters, s.setters
+  in
+  { s with abstracts; methods; getters; setters; })
 
 (* Appending a method builds a list of function signatures. This implements the
    bahvior of interfaces and declared classes, which interpret duplicate
@@ -102,20 +160,42 @@ let append_method name fsig = map_sig (fun s ->
   {s with methods}
 )
 
-let add_getter name fsig = map_sig (fun s -> {
-  s with
-  getters = SMap.add name fsig s.getters;
-  methods = SMap.remove name s.methods;
-})
+let add_accessor abstracts methods host other cx name fsig =
+  match SSet.mem name abstracts, SMap.get name methods with
+  | true, Some fsigs ->
+      (* Overloading abstract methods. Reject the attempt. *)
+      let extant_reason = Func_sig.reason_of_t (Nel.hd fsigs) in
+      let update_reason = Func_sig.reason_of_t fsig in
+      let error = Flow_error.(
+        let e = IllegalOverload (extant_reason, update_reason) in
+        EAbstract e
+      ) in
+      Flow_js.add_output cx error;
+      methods, host, other
+  | _ ->
+      (* ES6 overwrites the existing method with later methods. *)
+      let methods = SMap.remove name methods in
+      let host = SMap.add name fsig host in
+      let other = SMap.remove name other in
+      methods, host, other
 
-let add_setter name fsig = map_sig (fun s -> {
-  s with
-  setters = SMap.add name fsig s.setters;
-  methods = SMap.remove name s.methods;
-})
+let add_getter cx name fsig = map_sig (fun s ->
+  let methods, getters, setters =
+    add_accessor s.abstracts s.methods s.getters s.setters cx name fsig
+  in
+  { s with methods; getters; setters; })
+
+let add_setter cx name fsig = map_sig (fun s ->
+  let methods, setters, getters =
+    add_accessor s.abstracts s.methods s.setters s.getters cx name fsig
+  in
+  { s with methods; getters; setters; })
 
 let mk_method cx ~expr x loc func =
   Func_sig.mk cx x.tparams_map ~expr loc func
+
+let mk_abstract_method cx x loc func =
+  Func_sig.convert cx x.tparams_map loc func
 
 let mk_field cx ~polarity x reason typeAnnotation value =
   let t = Anno.mk_type_annotation cx x.tparams_map reason typeAnnotation in
@@ -137,6 +217,7 @@ let subst_sig cx map s = {
   reason = s.reason;
   super = Flow.subst cx map s.super;
   fields = SMap.map (subst_field cx map) s.fields;
+  abstracts = s.abstracts;
   methods = SMap.map (Nel.map (Func_sig.subst cx map)) s.methods;
   getters = SMap.map (Func_sig.subst cx map) s.getters;
   setters = SMap.map (Func_sig.subst cx map) s.setters;
@@ -225,6 +306,10 @@ let insttype ~static cx s =
       Some t
   in
   let inited_fields, fields, methods = elements ?constructor ~static s in
+  let abstracts =
+    let reason = with_sig ~static (fun s -> s.reason) s in
+    Flow.mk_tvar cx (replace_reason (fun desc -> RAbstracts desc) reason)
+  in
   { Type.
     class_id;
     type_args = s.tparams_map;
@@ -234,6 +319,7 @@ let insttype ~static cx s =
     methods_tmap = Context.make_property_map cx methods;
     mixins = false;
     structural = s.structural;
+    abstracts;
   }
 
 let add_this self cx reason tparams tparams_map =
@@ -471,6 +557,16 @@ let mk cx _loc reason self ~expr =
      it. In the future, we could do it again, but only for private fields. *)
 
   List.fold_left Ast.Class.(fun c -> function
+    (* abstract instance and abstract static methods *)
+    | Body.AbstractMethod (loc, {
+        AbstractMethod.key = Ast.Expression.Object.Property.Identifier (_, name);
+        value = (_, func);
+        static;
+      }) ->
+
+      let method_sig = mk_abstract_method cx c loc func in
+      add_abstract_method ~static cx name method_sig c
+
     (* instance and static methods *)
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Identifier (_, name);
@@ -488,9 +584,9 @@ let mk cx _loc reason self ~expr =
 
       let add = match kind with
       | Method.Constructor -> add_constructor
-      | Method.Method -> add_method ~static name
-      | Method.Get -> add_getter ~static name
-      | Method.Set -> add_setter ~static name
+      | Method.Method -> add_method ~static cx name
+      | Method.Get -> add_getter ~static cx name
+      | Method.Set -> add_setter ~static cx name
       in
       let method_sig = mk_method cx ~expr c loc func in
       add method_sig c
@@ -513,6 +609,10 @@ let mk cx _loc reason self ~expr =
         add_field ~static name field c
 
     (* literal LHS *)
+    | Body.AbstractMethod (loc, {
+        AbstractMethod.key = Ast.Expression.Object.Property.Literal _;
+        _
+      })
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Literal _;
         _
@@ -526,6 +626,10 @@ let mk cx _loc reason self ~expr =
         c
 
     (* computed LHS *)
+    | Body.AbstractMethod (loc, {
+        AbstractMethod.key = Ast.Expression.Object.Property.Computed _;
+        _
+      })
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Computed _;
         _
@@ -657,14 +761,14 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
           Ast.Type.Object.Property.Get (_, func)
             when Context.enable_unsafe_getters_and_setters cx ->
           let fsig = Func_sig.convert cx tparams_map loc func in
-          add_getter ~static name fsig x
+          add_getter ~static cx name fsig x
 
       (* unsafe setter property *)
       | _, Property.Identifier (_, name),
           Ast.Type.Object.Property.Set (_, func)
             when Context.enable_unsafe_getters_and_setters cx ->
           let fsig = Func_sig.convert cx tparams_map loc func in
-          add_setter ~static name fsig x
+          add_setter ~static cx name fsig x
 
       | _, _, Ast.Type.Object.Property.Get _
       | _, _, Ast.Type.Object.Property.Set _ ->

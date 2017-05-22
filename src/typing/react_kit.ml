@@ -103,7 +103,10 @@ let run cx trace reason_op l u
   let create_element config tout =
     let elem_reason = replace_reason_const (RReactElement None) reason_op in
     (match l with
-    | DefT (_, ClassT _) ->
+    | DefT (_, ClassT _)
+      (*TJP: Since this is a new feature, I'm guaranteed safety here, but that
+        won't always be the case, yeah?*)
+    | DefT (_, NonabstractClassT _) ->
       let react_class =
         get_builtin_typeapp cx ~trace reason_op "ReactClass" [config]
       in
@@ -575,6 +578,13 @@ let run cx trace reason_op l u
           ?dict ~exact ~sealed
       in
 
+      let abstracts =
+        (*TJP: Since this is a new feature, I'm guaranteed safety here, but that
+          won't always be the case, yeah?*)
+        let reason = replace_reason (fun desc -> RAbstracts desc) reason_op in
+        AbstractsT (reason, SSet.empty)
+      in
+
       let insttype = {
         class_id = 0;
         type_args = SMap.empty;
@@ -584,6 +594,7 @@ let run cx trace reason_op l u
         methods_tmap = Context.make_property_map cx SMap.empty;
         mixins = spec.unknown_mixins <> [];
         structural = false;
+        abstracts;
       } in
       rec_flow cx trace (super, SuperT (reason_op, insttype));
 

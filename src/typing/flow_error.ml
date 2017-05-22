@@ -132,6 +132,7 @@ type error_message =
   | EParseError of Loc.t * Parse_error.t
   | EDocblockError of Loc.t * docblock_error
   | EUnusedSuppression of Loc.t
+  | EAbstract of abstract_error
 
 and binding_error =
   | ENameAlreadyBound
@@ -197,6 +198,10 @@ and unsupported_syntax =
   | MultipleIndexers
   | SpreadArgument
   | ImportDynamicArgument
+
+and abstract_error =
+  | IllegalOverload of reason * reason
+  | Unimplemented
 
 let rec locs_of_use_op acc = function
   | FunCallThis reason -> (loc_of_reason reason)::acc
@@ -353,6 +358,12 @@ let locs_of_error_message = function
   | EParseError (loc, _) -> [loc]
   | EDocblockError (loc, _) -> [loc]
   | EUnusedSuppression (loc) -> [loc]
+  | EAbstract (abstract_error) ->
+      match abstract_error with
+      | IllegalOverload (reason1, reason2) ->
+        [loc_of_reason reason1; loc_of_reason reason2]
+      | Unimplemented ->
+        []
 
 let loc_of_error ~op msg =
   match op with
@@ -1291,6 +1302,15 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | CreateClass (tool, _, _) -> create_class tool
       in
       typecheck_error msg reasons
+
+  | EAbstract abstract_error -> (
+      match abstract_error with
+      | IllegalOverload (extant_reason, update_reason) ->
+          let reasons = (extant_reason, update_reason) in
+          let msg = "Illegal overload found at" in
+          typecheck_error msg reasons
+      | Unimplemented -> assert false
+    )
 
   | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
     let core_msgs = [

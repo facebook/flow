@@ -105,6 +105,7 @@ module rec TypeTerm : sig
     | KeysT of reason * t
 
     | AbstractT of reason * t
+    | AbstractsT of reason * SSet.t
 
     (* annotations *)
     (** A type that annotates a storage location performs two functions:
@@ -197,8 +198,10 @@ module rec TypeTerm : sig
     | FunT of static * prototype * funtype
     | ObjT of objtype
     | ArrT of arrtype
-    (* type of a class *)
+    (* type of a possibly abstract class *)
     | ClassT of t
+    (* type of a nonabstract class *)
+    | NonabstractClassT of t
     (* type of an instance of a class *)
     | InstanceT of static * super * implements * insttype
     (* singleton string, matches exactly a given string literal *)
@@ -309,6 +312,7 @@ module rec TypeTerm : sig
     | SuperT of reason * insttype
     | ImplementsT of t
     | MixinT of reason * t
+    | GatherAbstractsT of reason * insttype * SSet.t * t
 
     (* overloaded +, could be subsumed by general overloading *)
     | AdderT of reason * t * t
@@ -323,6 +327,7 @@ module rec TypeTerm : sig
     | AssertBinaryInRHST of reason
     | AssertForInRHST of reason
     | AssertRestParamT of reason
+    | AssertNonabstractT of reason
 
     (* operation specifying a type refinement via a predicate *)
     | PredicateT of predicate * t
@@ -744,6 +749,7 @@ module rec TypeTerm : sig
     | Set of t
     | GetSet of t * t
     | Method of t
+    | AbstractMethod of t
 
   and insttype = {
     class_id: ident;
@@ -754,7 +760,10 @@ module rec TypeTerm : sig
     methods_tmap: Properties.id;
     mixins: bool;
     structural: bool;
+    abstracts: t;
   }
+
+  and insttype_abstracts = insttype * SSet.t
 
   and exporttypes = {
     (**
@@ -1001,6 +1010,7 @@ end = struct
     | Set _ -> Negative
     | GetSet _ -> Neutral
     | Method _ -> Positive
+    | AbstractMethod _ -> Positive
 
   let read_t = function
     | Field (t, polarity) ->
@@ -1011,6 +1021,7 @@ end = struct
     | Set _ -> None
     | GetSet (t, _) -> Some t
     | Method t -> Some t
+    | AbstractMethod t -> Some t
 
   let write_t = function
     | Field (t, polarity) ->
@@ -1021,6 +1032,7 @@ end = struct
     | Set t -> Some t
     | GetSet (_, t) -> Some t
     | Method _ -> None
+    | AbstractMethod _ -> None
 
   let access = function
     | Read -> read_t
@@ -1030,7 +1042,8 @@ end = struct
     | Field (t, _)
     | Get t
     | Set t
-    | Method t ->
+    | Method t
+    | AbstractMethod t ->
       f t
     | GetSet (t1, t2) ->
       f t1;
@@ -1040,7 +1053,8 @@ end = struct
     | Field (t, _)
     | Get t
     | Set t
-    | Method t ->
+    | Method t
+    | AbstractMethod t ->
       f acc t
     | GetSet (t1, t2) ->
       f (f acc t1) t2
@@ -1051,6 +1065,7 @@ end = struct
     | Set t -> Set (f t)
     | GetSet (t1, t2) -> GetSet (f t1, f t2)
     | Method t -> Method (f t)
+    | AbstractMethod t -> AbstractMethod (f t)
 
   let ident_map_t f p =
     match p with
@@ -1070,6 +1085,9 @@ end = struct
     | Method t ->
       let t_ = f t in
       if t_ == t then p else Method t_
+    | AbstractMethod t ->
+      let t_ = f t in
+      if t_ == t then p else AbstractMethod t_
 
   let forall_t f = fold_t (fun acc t -> acc && f t) true
 
@@ -1693,6 +1711,7 @@ let any_propagating_use_t = function
   | ElemT _
   | ExportNamedT _
   | ExportTypeT _
+  | GatherAbstractsT _
   | GetElemT _
   | GetKeysT _
   | GetValuesT _
@@ -1744,6 +1763,7 @@ let any_propagating_use_t = function
   | AssertBinaryInRHST _
   | AssertForInRHST _
   | AssertImportIsValueT _
+  | AssertNonabstractT _
   | AssertRestParamT _
   | ComparatorT _
   | DebugPrintT _
@@ -1773,6 +1793,7 @@ let any_propagating_use_t = function
 let rec reason_of_t = function
   | OpenT (reason,_) -> reason
   | AbstractT (reason, _) -> reason
+  | AbstractsT (reason, _) -> reason
   | AnnotT assume_t -> reason_of_t assume_t
   | AnyWithLowerBoundT (t) -> reason_of_t t
   | AnyWithUpperBoundT (t) -> reason_of_t t
@@ -1816,6 +1837,7 @@ and reason_of_use_t = function
   | AssertBinaryInLHST reason -> reason
   | AssertBinaryInRHST reason -> reason
   | AssertForInRHST reason -> reason
+  | AssertNonabstractT reason -> reason
   | AssertRestParamT reason -> reason
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT (reason, _) -> reason
@@ -1836,6 +1858,7 @@ and reason_of_use_t = function
   | EqT (reason, _) -> reason
   | ExportNamedT (reason, _, _, _) -> reason
   | ExportTypeT (reason, _, _, _, _) -> reason
+  | GatherAbstractsT (reason, _, _, _) -> reason
   | GetElemT (reason,_,_) -> reason
   | GetKeysT (reason, _) -> reason
   | GetValuesT (reason, _) -> reason
@@ -1908,6 +1931,7 @@ let def_loc_of_t t = def_loc_of_reason (reason_of_t t)
 let rec mod_reason_of_t f = function
   | OpenT (reason, t) -> OpenT (f reason, t)
   | AbstractT (reason, t) -> AbstractT (f reason, t)
+  | AbstractsT (reason, names) -> AbstractsT (f reason, names)
   | AnnotT assume_t ->
       AnnotT (mod_reason_of_t f assume_t)
   | AnyWithLowerBoundT t -> AnyWithLowerBoundT (mod_reason_of_t f t)
@@ -1953,6 +1977,7 @@ and mod_reason_of_use_t f = function
   | AssertBinaryInLHST reason -> AssertBinaryInLHST (f reason)
   | AssertBinaryInRHST reason -> AssertBinaryInRHST (f reason)
   | AssertForInRHST reason -> AssertForInRHST (f reason)
+  | AssertNonabstractT reason -> AssertNonabstractT (f reason)
   | AssertRestParamT reason -> AssertRestParamT (f reason)
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
   | BecomeT (reason, t) -> BecomeT (f reason, t)
@@ -1981,6 +2006,8 @@ and mod_reason_of_use_t f = function
       ExportNamedT(f reason, skip_dupes, tmap, t_out)
   | ExportTypeT (reason, skip_dupes, name, t, t_out) ->
       ExportTypeT(f reason, skip_dupes, name, t, t_out)
+  | GatherAbstractsT (reason, instance_pair, static_pair, ts) ->
+      GatherAbstractsT (f reason, instance_pair, static_pair, ts)
   | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetValuesT (reason, t) -> GetValuesT (f reason, t)
@@ -2095,6 +2122,7 @@ let string_of_def_ctor = function
   | IntersectionT _ -> "IntersectionT"
   | MaybeT _ -> "MaybeT"
   | MixedT _ -> "MixedT"
+  | NonabstractClassT _ -> "NonabstractClassT"
   | NullT -> "NullT"
   | NumT _ -> "NumT"
   | ObjT _ -> "ObjT"
@@ -2112,6 +2140,7 @@ let string_of_def_ctor = function
 let string_of_ctor = function
   | OpenT _ -> "OpenT"
   | AbstractT _ -> "AbstractT"
+  | AbstractsT _ -> "AbstractsT"
   | AnnotT _ -> "AnnotT"
   | AnyWithLowerBoundT _ -> "AnyWithLowerBoundT"
   | AnyWithUpperBoundT _ -> "AnyWithUpperBoundT"
@@ -2174,6 +2203,7 @@ let string_of_use_ctor = function
   | AssertBinaryInRHST _ -> "AssertBinaryInRHST"
   | AssertForInRHST _ -> "AssertForInRHST"
   | AssertImportIsValueT _ -> "AssertImportIsValueT"
+  | AssertNonabstractT _ -> "AssertNonabstractT"
   | AssertRestParamT _ -> "AssertRestParamT"
   | BecomeT _ -> "BecomeT"
   | BindT _ -> "BindT"
@@ -2197,6 +2227,7 @@ let string_of_use_ctor = function
   | EqT _ -> "EqT"
   | ExportNamedT _ -> "ExportNamedT"
   | ExportTypeT _ -> "ExportTypeT"
+  | GatherAbstractsT _ -> "GatherAbstractsT"
   | GetElemT _ -> "GetElemT"
   | GetKeysT _ -> "GetKeysT"
   | GetValuesT _ -> "GetValuesT"

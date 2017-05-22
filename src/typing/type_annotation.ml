@@ -363,8 +363,20 @@ let rec convert cx tparams_map = Ast.Type.(function
       Locationless.AnyT.t
     )
 
-  (* Class<T> is the type of the class whose instances are of type T *)
+  (* Class<T> is the type of the class whose instances are of type T.
+     The NonabstractClassT wrapper assures that any flows to the annotation site
+     will be checked for abstractness, where abstract classes are rejected. *)
   | "Class" ->
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      let t = convert_type_params () |> List.hd in
+      let reason = mk_reason (RClassType (desc_of_t t)) loc in
+      DefT (reason, NonabstractClassT t)
+    )
+
+  (* AbstractClass<T> is the dual to Class<T> that admits abstract lower bounds.
+     These annotations allow the user to move abstract classes around without
+     checking for abstractness. *)
+  | "AbstractClass" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       let reason = mk_reason (RClassType (desc_of_t t)) loc in

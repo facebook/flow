@@ -134,6 +134,7 @@ let prop (n, p) =
   | Set t -> ["set "^n, Def t]
   | GetSet (t1, t2) -> ["get "^n, Def t1; "set "^n, Def t2]
   | Method t -> ["+"^n, Def t]
+  | AbstractMethod t -> ["abstract +"^n, Def t]
 
 let map_props m = SMap.bindings m |> List.map prop |> List.flatten
 
@@ -169,6 +170,7 @@ and add_parts cx id parts state =
 and parts_of_t cx = function
 | OpenT _ -> assert false
 | AbstractT (_, t) -> ["t", Def t]
+| AbstractsT (_, _) -> []
 | AnnotT source -> ["source", Def source]
 | DefT (_, (AnyObjT | AnyFunT)) -> []
 | DefT (_, AnyT) -> []
@@ -177,6 +179,7 @@ and parts_of_t cx = function
 | DefT (_, BoolT _) -> []
 | BoundT _ -> []
 | DefT (_, ClassT t) -> ["class", Def t]
+| DefT (_, NonabstractClassT t) -> ["class", Def t]
 | CustomFunT _ | ChoiceKitT _ -> []
 | DefT (_, NumT _)
 | DefT (_, StrT _)
@@ -277,6 +280,7 @@ and parts_of_use_t cx = function
 | AssertBinaryInRHST _ -> []
 | AssertForInRHST _ -> []
 | AssertImportIsValueT _ -> []
+| AssertNonabstractT _ -> []
 | AssertRestParamT _ -> []
 | BecomeT (_, t) -> ["t", Def t]
 | BindT (_, funcalltype, _) -> parts_of_funcalltype funcalltype
@@ -301,6 +305,7 @@ and parts_of_use_t cx = function
 | EqT (_, arg) -> ["arg", Def arg]
 | ExportNamedT (_, _, map, out) -> ("out", Def out) :: map_parts map
 | ExportTypeT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
+| GatherAbstractsT (_, _, _, _) -> []
 | GetElemT (_, ix, out) -> ["ix", Def ix; "out", Def out]
 | GetKeysT (_, out) -> ["out", Def out]
 | GetValuesT (_, out) -> ["out", Def out]

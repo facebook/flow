@@ -32,6 +32,8 @@ type t = {
   return_t: Type.t;
 }
 
+let reason_of_t ({reason; _}:t) = reason
+
 let return_loc =
   let module F = Ast.Function in
   let open F in function
@@ -231,7 +233,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
 
   (* bind type params *)
   SMap.iter (fun name t ->
-    let r = reason_of_t t in
+    let r = Type.reason_of_t t in
     let loc = loc_of_reason r in
     Env.bind_type cx name (DefT (r, TypeT t)) loc
       ~state:Scope.State.Initialized

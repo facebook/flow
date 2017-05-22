@@ -146,6 +146,8 @@ type reason_desc =
   | RMaybe of reason_desc
   | RRestArray of reason_desc
   | RAbstract of reason_desc
+  | RAbstracts of reason_desc
+  | RDummyAbstracts
   | RTypeApp of reason_desc
   | RThisTypeApp of reason_desc
   | RExtends of reason_desc
@@ -453,6 +455,8 @@ let rec string_of_desc = function
   | RMaybe d -> spf "?%s" (string_of_desc d)
   | RRestArray d -> spf "rest parameter array of %s" (string_of_desc d)
   | RAbstract d -> spf "abstract %s" (string_of_desc d)
+  | RAbstracts d -> spf "abstracts of %s" (string_of_desc d)
+  | RDummyAbstracts -> "vacuous abstracts"
   | RTypeApp d -> spf "type application of %s" (string_of_desc d)
   | RThisTypeApp d -> spf "this instantiation of %s" (string_of_desc d)
   | RExtends d -> spf "extends %s" (string_of_desc d)

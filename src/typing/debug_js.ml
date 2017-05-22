@@ -147,7 +147,8 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "kind", JSON_String "EmptyArray";
     ]
 
-  | DefT (_, ClassT t) -> [
+  | DefT (_, ClassT t)
+  | DefT (_, NonabstractClassT t) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -161,6 +162,12 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | DefT (_, OptionalT t)
   | AbstractT (_, t) -> [
       "type", _json_of_t json_cx t
+    ]
+
+  | AbstractsT (_, names) ->
+    let intern s = JSON_String s in
+    [
+      "names", JSON_Array (List.map intern (SSet.elements names));
     ]
 
   | EvalT (t, defer_use_t, id) -> [
@@ -370,6 +377,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | AssertBinaryInLHST _ -> []
   | AssertBinaryInRHST _ -> []
   | AssertForInRHST _ -> []
+  | AssertNonabstractT _ -> []
 
   | BecomeT (_, t) -> [
       "result", _json_of_t json_cx t
@@ -440,6 +448,14 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | MixinT (_, t) -> [
       "type", _json_of_t json_cx t
+    ]
+
+  | GatherAbstractsT (_, insttype, names, t) ->
+    let intern s = JSON_String s in
+    [
+      "instance", json_of_insttype json_cx insttype;
+      "names", JSON_Array (List.map intern (SSet.elements names));
+      "t_out", _json_of_t json_cx t;
     ]
 
   | AdderT (_, l, r) -> [
@@ -963,6 +979,7 @@ and json_of_insttype_impl json_cx insttype = Hh_json.(
     "methodTypes", json_of_pmap json_cx method_pmap;
     "mixins", JSON_Bool insttype.mixins;
     "structural", JSON_Bool insttype.structural;
+    "abstracts", _json_of_t json_cx insttype.abstracts;
   ]
 )
 
@@ -1089,6 +1106,9 @@ and json_of_prop_impl json_cx p = Hh_json.(
     ]
   | Method t -> [
       "method", _json_of_t json_cx t;
+    ]
+  | AbstractMethod t -> [
+      " abstract method", _json_of_t json_cx t;
     ]
 ))
 
@@ -1526,13 +1546,15 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, ArrT (ROArrayAT (elemt))) -> p
       ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
   | DefT (_, ArrT EmptyAT) -> p ~extra:("EmptyArray") t
-  | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
+  | DefT (_, ClassT inst)
+  | DefT (_, NonabstractClassT inst) -> p ~extra:(kid inst) t
   | DefT (_, InstanceT (_, _, _, { class_id; _ })) -> p ~extra:(spf "#%d" class_id) t
   | DefT (_, TypeT arg) -> p ~extra:(kid arg) t
   | AnnotT source -> p ~reason:false
       ~extra:(spf "%s" (kid source)) t
   | DefT (_, OptionalT arg)
   | AbstractT (_, arg) -> p ~extra:(kid arg) t
+  | AbstractsT _ -> p t
   | EvalT (arg, expr, id) -> p
       ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
   | DefT (_, TypeAppT (base, args)) -> p ~extra:(spf "%s, [%s]"
@@ -1745,6 +1767,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | AssertBinaryInRHST _ -> p t
   | AssertForInRHST _ -> p t
   | AssertImportIsValueT _ -> p t
+  | AssertNonabstractT _ -> p t
   | AssertRestParamT _ -> p t
   | BecomeT (_, arg) -> p ~extra:(kid arg) t
   | BindT _ -> p t
@@ -1775,6 +1798,7 @@ and dump_use_t_ (depth, tvars) cx t =
           (List.map (fun (x,_) -> x)
             (SMap.bindings tmap))))
   | ExportTypeT _ -> p t
+  | GatherAbstractsT _ -> p t
   | GetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetKeysT _ -> p t
   | GetValuesT _ -> p t
@@ -1911,6 +1935,8 @@ and dump_prop_ (depth, tvars) cx p =
     spf "Get %s Set %s" (kid t1) (kid t2)
   | Method t ->
     spf "Method %s" (kid t)
+  | AbstractMethod t ->
+    spf "AbstractMethod %s" (kid t)
 
 (*****************************************************)
 
@@ -2328,6 +2354,14 @@ let dump_flow_error =
         spf "EReactKit (%s, %s, _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
+    | EAbstract (abstract_error) -> (
+        match abstract_error with
+        | IllegalOverload (extant_reason, update_reason) ->
+            spf "EAbstract (IllegalOverload (%s, %s)"
+              (dump_reason cx extant_reason)
+              (dump_reason cx update_reason)
+        | Unimplemented -> "EAbstract Unimplemented"
+      )
     | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
         spf "EFunctionCallExtraArg (%s, %s, %d)"
           (dump_reason cx  unused_reason)

@@ -2,6 +2,8 @@
 
 type t
 
+val reason_of_t: t -> Reason.t
+
 (** 1. Constructors *)
 
 (** Create signature from function AST. *)

@@ -1009,7 +1009,8 @@ module ResolvableTypeJob = struct
     | DefT (_, ArrT EmptyAT) -> acc
     | DefT (_, InstanceT (static, super, _,
         { class_id; type_args; fields_tmap; methods_tmap; _ })) ->
-      let ts = if class_id = 0 then [] else [super; static] in
+      let ts =
+        if class_id = 0 then [] else [super; static] in
       let ts = SMap.fold (fun _ t ts -> t::ts) type_args ts in
       let props_tmap = SMap.union
         (Context.find_props cx fields_tmap)
@@ -1055,6 +1056,7 @@ module ResolvableTypeJob = struct
     | ExactT (_, t)
     | DefT (_, TypeT t)
     | DefT (_, ClassT t)
+    | DefT (_, NonabstractClassT t)
     | ThisClassT (_, t)
       ->
       collect_of_type ?log_unresolved cx reason acc t
@@ -1099,6 +1101,7 @@ module ResolvableTypeJob = struct
     | CustomFunT (_, _)
 
     | TaintT _
+    | AbstractsT _
     | ExistsT _
     | OpenPredT _
     | TypeMapT _
@@ -6369,6 +6372,9 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | DefT (reason, ClassT cls) ->
     let cls_ = subst cx ~force map cls in
     if cls_ == cls then t else DefT (reason, ClassT cls_)
+  | DefT (reason, NonabstractClassT cls) ->
+    let cls_ = subst cx ~force map cls in
+    if cls_ == cls then t else DefT (reason, NonabstractClassT cls_)
 
   | DefT (reason, TypeT type_t) ->
     let type_t_ = subst cx ~force map type_t in
@@ -6411,6 +6417,9 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | AbstractT (reason, abstract_t) ->
     let abstract_t_ = subst cx ~force map abstract_t in
     if abstract_t_ == abstract_t then t else AbstractT (reason, abstract_t_)
+
+  | AbstractsT _
+    -> t
 
   | ExactT (reason, exact_t) ->
     let exact_t_ = subst cx ~force map exact_t in
@@ -6643,6 +6652,7 @@ and check_polarity cx ?trace polarity = function
   | DefT (_, AnyFunT)
     -> ()
   | TaintT _
+  | AbstractsT _
   | ExistsT _
     -> ()
 
@@ -6657,6 +6667,7 @@ and check_polarity cx ?trace polarity = function
     -> check_polarity cx ?trace polarity t
 
   | DefT (_, ClassT t)
+  | DefT (_, NonabstractClassT t)
     -> check_polarity cx ?trace Neutral t
 
   | DefT (_, TypeT t)
@@ -6738,6 +6749,7 @@ and check_polarity_prop cx ?trace = function
     check_polarity cx ?trace Positive t1;
     check_polarity cx ?trace Negative t2
   | Method t -> check_polarity cx ?trace Positive t
+  | AbstractMethod t -> check_polarity cx ?trace Positive t
 
 and check_polarity_typeparam cx ?trace polarity tp =
   check_polarity cx ?trace polarity tp.bound
@@ -10475,7 +10487,9 @@ end = struct
            * property in autocomplete, so for now we just return the getter
            * type. *)
           let t = match p with
-          | Field (t, _) | Get t | Set t | GetSet (t, _) | Method t -> t
+          | Field (t, _) | Get t | Set t
+          | GetSet (t, _) | Method t | AbstractMethod t
+            -> t
           in
           SMap.add x t acc
         ) (find_props cx fields) SMap.empty in
@@ -10523,7 +10537,8 @@ end = struct
         (* TODO: replace type parameters with stable/proper names? *)
         extract cx sub_type
     | ThisClassT (_, DefT (_, InstanceT (static, _, _, _)))
-    | DefT (_, ClassT (DefT (_, InstanceT (static, _, _, _)))) ->
+    | DefT (_, ClassT (DefT (_, InstanceT (static, _, _, _))))
+    | DefT (_, NonabstractClassT (DefT (_, InstanceT (static, _, _, _))))->
         let static_t = resolve_type cx static in
         extract cx static_t
     | DefT (_, FunT (static, proto, _)) ->
@@ -10569,12 +10584,14 @@ end = struct
         extract cx t
 
     | AbstractT _
+    | AbstractsT _
     | AnyWithLowerBoundT _
     | AnyWithUpperBoundT _
     | DefT (_, ArrT _)
     | BoundT _
     | ChoiceKitT (_, _)
     | DefT (_, ClassT _)
+    | DefT (_, NonabstractClassT _)
     | CustomFunT (_, _)
     | DiffT (_, _)
     | DefT (_, EmptyT)
@@ -10663,8 +10680,9 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | DefT (_, AnyT)
     -> ()
 
-  | TaintT _ ->
-    ()
+  | TaintT _
+  | AbstractsT _
+    -> ()
 
   | DefT (reason, FunT (static, prototype, ft)) ->
     let { this_t; params_tlist; return_t; rest_param; _ } = ft in
@@ -10698,6 +10716,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     List.iter (recurse ~infer:true) tuple_types
 
   | DefT (_, ClassT t)
+  | DefT (_, NonabstractClassT t)
   | DefT (_, TypeT t) ->
     recurse t
 

@@ -184,8 +184,12 @@ let rec gen_type t env = Type.(
   | DefT (_, BoolT None) ->
     add_str "boolean" env
   | BoundT {name; _;} -> add_str name env
-  | DefT (_, ClassT t) ->
+  | DefT (_, NonabstractClassT t) ->
     add_str "Class<" env
+      |> gen_type t
+      |> add_str ">"
+  | DefT (_, ClassT t) ->
+    add_str "AbstractClass<" env
       |> gen_type t
       |> add_str ">"
   | CustomFunT (_, ObjectAssign) -> add_str "Object$Assign" env
@@ -348,6 +352,7 @@ let rec gen_type t env = Type.(
   | IdxWrapper _
   | ModuleT _
   | TaintT _
+  | AbstractsT _
     -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
 )
 
@@ -383,6 +388,22 @@ and gen_prop k p env =
     | _ -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
   in
 
+  let rec gen_abstract_method k t env =
+    match t with
+    | DefT (_, FunT (_static, _prototype, ft)) ->
+      let {params_tlist; params_names; rest_param; return_t; _;} = ft in
+      add_str "abstract " env
+        |> add_str k
+        |> gen_tparams_list
+        |> add_str "("
+        |> gen_func_params params_names params_tlist rest_param
+        |> add_str "): "
+        |> gen_type return_t
+    | DefT (_, PolyT (tparams, t)) ->
+      gen_abstract_method k t (add_tparams tparams env)
+    | _ -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
+  in
+
   match p with
   | Field (t, polarity) ->
     let sigil = Polarity.sigil polarity in
@@ -400,6 +421,7 @@ and gen_prop k p env =
   | GetSet (t1, t2) ->
     gen_getter k t1 env |> gen_setter k t2
   | Method t -> gen_method k t env
+  | AbstractMethod t -> gen_abstract_method k t env
 
 and gen_func_params params_names params_tlist rest_param env =
   let params =

@@ -26,6 +26,10 @@ let fake_fun params_names param_ts rest_param ret_t =
   ))
 
 let fake_instance name =
+  let abstracts =
+    let reason = locationless_reason RDummyAbstracts in
+    AbstractsT (reason, SSet.empty)
+  in
   let insttype = {
     class_id = 0;
     type_args = SMap.empty;
@@ -35,6 +39,7 @@ let fake_instance name =
     methods_tmap = Properties.fake_id;
     mixins = false;
     structural = false;
+    abstracts;
   } in
   DefT (locationless_reason (RCustom name), InstanceT (
     ObjProtoT (locationless_reason (RCustom "dummy static")),
@@ -362,6 +367,10 @@ let rec normalize_type_impl cx ids t = match t with
       let reason = locationless_reason (desc_of_reason reason) in
       DefT (reason, ClassT (normalize_type_impl cx ids t))
 
+  | DefT (reason, NonabstractClassT t) ->
+      let reason = locationless_reason (desc_of_reason reason) in
+      DefT (reason, NonabstractClassT (normalize_type_impl cx ids t))
+
   | ThisClassT (reason, t) ->
       let reason = locationless_reason (desc_of_reason reason) in
       ThisClassT (reason, normalize_type_impl cx ids t)
@@ -423,6 +432,10 @@ let rec normalize_type_impl cx ids t = match t with
   | AbstractT (reason, t) ->
       let reason = locationless_reason (desc_of_reason reason) in
       AbstractT (reason, normalize_type_impl cx ids t)
+
+  | AbstractsT (reason, names) ->
+      let reason = locationless_reason (desc_of_reason reason) in
+      AbstractsT (reason, names)
 
   | EvalT (_, _, id) ->
       let evaluated = Context.evaluated cx in
