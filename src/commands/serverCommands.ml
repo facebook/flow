@@ -16,6 +16,10 @@ open CommandUtils
 
 type mode = Check | Server | Start | FocusCheck
 
+type printer =
+  | Json of { pretty: bool }
+  | Cli of Errors.Cli_output.error_flags
+
 module type CONFIG = sig
   val mode : mode
   val default_log_filter : Hh_logger.Level.t -> bool
@@ -24,15 +28,15 @@ end
 module Main = ServerFunctors.ServerMain (Server.FlowProgram)
 
 (* helper - print errors. used in check-and-die runs *)
-let print_errors ~flags ~profiling ~suppressed_errors options errors =
+let print_errors ~printer ~profiling ~suppressed_errors options errors =
   let strip_root =
     if Options.should_strip_root options
     then Some (Options.root options)
     else None
   in
 
-  match Options.json_mode options with
-  | Some mode ->
+  match printer with
+  | Json { pretty } ->
     let profiling =
       if options.Options.opt_profile
       then Some profiling
@@ -41,10 +45,10 @@ let print_errors ~flags ~profiling ~suppressed_errors options errors =
       ~out_channel:stdout
       ~strip_root
       ~profiling
-      ~pretty:(mode = Options.PrettyJSON)
+      ~pretty
       ~suppressed_errors
       errors
-  | None ->
+  | Cli flags ->
     let errors = List.fold_left
       (fun acc (error, _) -> Errors.ErrorSet.add error acc)
       errors
@@ -320,11 +324,6 @@ module OptionParser(Config : CONFIG) = struct
       opt_all = all;
       opt_weak = weak;
       opt_traces;
-      opt_json = Options.(
-        if pretty then Some PrettyJSON
-        else if json then Some NormalJSON
-        else None
-      );
       opt_quiet = quiet || json || pretty;
       opt_module_file_exts = FlowConfig.module_file_exts flowconfig;
       opt_module_resource_exts = FlowConfig.module_resource_exts flowconfig;
@@ -378,14 +377,13 @@ module OptionParser(Config : CONFIG) = struct
       in
       let log_file = Path.to_string log_file in
       let on_spawn pid =
-        if Options.json_mode options <> None
-        then begin
+        if pretty || json then begin
           let open Hh_json in
-          let json = json_to_string (JSON_Object [
+          let json = json_to_string ~pretty (JSON_Object [
             "pid", JSON_String (string_of_int pid);
             "log_file", JSON_String log_file;
           ]) in
-          print_string json
+          print_endline json
         end else if not (Options.is_quiet options) then begin
           Printf.eprintf
             "Spawned flow server (pid=%d)\n" pid;
@@ -402,8 +400,9 @@ module OptionParser(Config : CONFIG) = struct
       let profiling, errors, suppressed_errors = Main.check_once options in
       let suppressed_errors =
         if include_suppressed then suppressed_errors else [] in
-      print_errors
-        ~flags:error_flags ~profiling ~suppressed_errors options errors;
+      let printer =
+        if json || pretty then Json { pretty } else Cli error_flags in
+      print_errors ~printer ~profiling ~suppressed_errors options errors;
       if Errors.ErrorSet.is_empty errors
         then FlowExitStatus.(exit No_error)
         else FlowExitStatus.(exit Type_error)

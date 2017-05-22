@@ -141,7 +141,6 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_all = false;
     opt_weak = false;
     opt_traces = 0;
-    opt_json = None;
     opt_quiet = false;
     opt_module_file_exts = FlowConfig.module_file_exts flowconfig;
     opt_module_resource_exts = FlowConfig.module_resource_exts flowconfig;
