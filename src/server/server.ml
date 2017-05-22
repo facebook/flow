@@ -382,13 +382,9 @@ let collate_errors =
           | _, Some cx, _, _ -> cx
           | _  -> failwith "Couldn't parse file"
         in
-        Some (FindRefs_js.result cx state)
+        Ok (FindRefs_js.result cx state)
       with exn ->
-        Hh_logger.warn
-          "Could not find refs for %s:%d:%d\n%s"
-          filename line col
-          (Printexc.to_string exn);
-        None
+        Error (Printexc.to_string exn)
     in
     FindRefs_js.unset_hooks ();
     result
@@ -591,10 +587,6 @@ let collate_errors =
       Marshal.to_channel oc msg [];
       flush oc
     in
-    let marshal_option = function
-      | Some msg -> marshal msg
-      | None -> ()
-    in
     let options = genv.ServerEnv.options in
     let { ServerProt.client_logging_context; command; } = msg in
     begin match command with
@@ -619,8 +611,8 @@ let collate_errors =
         (find_module ~options (moduleref, filename): filename option)
           |> marshal
     | ServerProt.FIND_REFS (fn, line, char) ->
-        (find_refs ~options (fn, line, char): Loc.t list option)
-          |> marshal_option
+        (find_refs ~options (fn, line, char): ServerProt.find_refs_response)
+          |> marshal
     | ServerProt.FORCE_RECHECK (files) ->
         Marshal.to_channel oc () [];
         flush oc;

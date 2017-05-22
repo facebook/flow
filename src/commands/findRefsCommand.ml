@@ -74,16 +74,23 @@ let main option_values root json pretty strip_root path args () =
   ServerProt.cmd_to_channel oc
     (ServerProt.FIND_REFS (file, line, column));
   (* command result will be a position structure with full file path *)
-  let locs: Loc.t list = Timeout.input_value ic in
-  (* format output *)
-  print_endline @@
-    if json || pretty
-    then Hh_json.(json_to_string ~pretty @@
-      JSON_Array (List.map (Reason.json_of_loc ~strip_root) locs)
-    )
-    else String.concat "\n" @@
-      if option_values.from = "vim" || option_values.from = "emacs"
-      then List.map (Errors.Vim_emacs_output.string_of_loc ~strip_root) locs
-      else List.map (range_string_of_loc ~strip_root) locs
+  let response: ServerProt.find_refs_response = Timeout.input_value ic in
+  match response with
+  | Ok locs ->
+    (* format output *)
+    print_endline @@
+      if json || pretty
+      then Hh_json.(json_to_string ~pretty @@
+        JSON_Array (List.map (Reason.json_of_loc ~strip_root) locs)
+      )
+      else String.concat "\n" @@
+        if option_values.from = "vim" || option_values.from = "emacs"
+        then List.map (Errors.Vim_emacs_output.string_of_loc ~strip_root) locs
+        else List.map (range_string_of_loc ~strip_root) locs
+  | Error exn_msg ->
+    Utils_js.prerr_endlinef
+      "Could not find refs for %s:%d:%d\n%s"
+      (ServerProt.file_input_get_filename file) line column exn_msg
+
 
 let command = CommandSpec.command spec main

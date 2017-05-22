@@ -75,6 +75,7 @@ type dump_types_response = (
   (Loc.t * string * string * string option * Reason.t list) list,
   Loc.t * string
 ) result
+type find_refs_response = (Loc.t list, string) result
 type get_def_response = (Loc.t, string) result
 type infer_type_response = (
   Loc.t * string option * string option * Reason.t list,
