@@ -28,7 +28,7 @@ let fake_fun params_names param_ts rest_param ret_t =
 let fake_instance name =
   let abstracts =
     let reason = locationless_reason RDummyAbstracts in
-    AbstractsT (reason, SSet.empty)
+    AbstractsT (reason, SMap.empty)
   in
   let insttype = {
     class_id = 0;

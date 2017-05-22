@@ -105,7 +105,7 @@ module rec TypeTerm : sig
     | KeysT of reason * t
 
     | AbstractT of reason * t
-    | AbstractsT of reason * SSet.t
+    | AbstractsT of reason * reason SMap.t
 
     (* annotations *)
     (** A type that annotates a storage location performs two functions:
@@ -312,7 +312,7 @@ module rec TypeTerm : sig
     | SuperT of reason * insttype
     | ImplementsT of t
     | MixinT of reason * t
-    | GatherAbstractsT of reason * insttype * SSet.t * t
+    | GatherAbstractsT of reason * insttype * reason SMap.t * t
 
     (* overloaded +, could be subsumed by general overloading *)
     | AdderT of reason * t * t
@@ -762,8 +762,6 @@ module rec TypeTerm : sig
     structural: bool;
     abstracts: t;
   }
-
-  and insttype_abstracts = insttype * SSet.t
 
   and exporttypes = {
     (**

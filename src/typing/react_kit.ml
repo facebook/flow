@@ -582,7 +582,7 @@ let run cx trace reason_op l u
         (*TJP: Since this is a new feature, I'm guaranteed safety here, but that
           won't always be the case, yeah?*)
         let reason = replace_reason (fun desc -> RAbstracts desc) reason_op in
-        AbstractsT (reason, SSet.empty)
+        AbstractsT (reason, SMap.empty)
       in
 
       let insttype = {

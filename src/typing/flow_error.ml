@@ -201,7 +201,7 @@ and unsupported_syntax =
 
 and abstract_error =
   | IllegalOverload of reason * reason
-  | Unimplemented
+  | Unimplemented of reason * reason * reason list
 
 let rec locs_of_use_op acc = function
   | FunCallThis reason -> (loc_of_reason reason)::acc
@@ -1309,7 +1309,19 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
           let reasons = (extant_reason, update_reason) in
           let msg = "Illegal overload found at" in
           typecheck_error msg reasons
-      | Unimplemented -> assert false
+      | Unimplemented (host_reason, reason_op, abstract_reasons) ->
+          let abstracts = List.map info_of_reason abstract_reasons in
+          (*TJP: Incorporate abstract reason ctors for "function type" \mapsto
+            "abstract function type"? Use blank info strings for "function type"
+            \mapsto ""? *)
+          (*TJP: Sort by loc or maintain insertion order?*)
+          let extra = [
+            InfoLeaf (
+              (Loc.none, ["Abstract(s):"])::abstracts
+            )
+          ] in
+          let msg = "Unimplemented abstract(s) found in" in
+          typecheck_error msg ~extra (reason_op, host_reason)
     )
 
   | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->

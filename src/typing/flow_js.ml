@@ -5040,17 +5040,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       GatherAbstractsT _ ->
         rec_flow cx trace (super_abstracts, u)
 
-    | AbstractsT (_, super_names),
-      GatherAbstractsT (reason, instance, local_names, t) ->
+    | AbstractsT (_, super_abstracts),
+      GatherAbstractsT (reason, instance, local_abstracts, t) ->
         let freshes = SMap.union
           (Context.find_props cx instance.fields_tmap)
           (Context.find_props cx instance.methods_tmap)
         in
-        let unmasked_super_names = SSet.filter (fun super_name ->
-          SMap.mem super_name freshes
-        ) super_names in
-        let abstract_names = SSet.union unmasked_super_names local_names in
-        rec_unify cx trace (AbstractsT (reason, abstract_names)) t
+        let unmasked_super_abstracts =
+          SMap.filter (fun super_name _ ->
+            SMap.mem super_name freshes
+          ) super_abstracts
+        in
+        let abstracts = SMap.union unmasked_super_abstracts local_abstracts in
+        rec_unify cx trace (AbstractsT (reason, abstracts)) t
+
+    | AbstractsT (reason, abstracts), AssertNonabstractT reason_op ->
+      (* TJP: Suboptimal lex ordering (by names) *)
+      let abstract_reasons = SMap.bindings abstracts |> List.map snd in
+      if abstract_reasons <> []
+      then
+        let error = FlowError.(
+          EAbstract (Unimplemented (reason, reason_op, abstract_reasons))
+        ) in
+        add_output cx ~trace error
 
     (*********************************************************************)
     (* class A is a base class of class B iff                            *)

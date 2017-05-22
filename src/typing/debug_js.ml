@@ -164,10 +164,11 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | AbstractsT (_, names) ->
+  | AbstractsT (_, abstracts) ->
     let intern s = JSON_String s in
+    let bindings = SMap.bindings abstracts in
     [
-      "names", JSON_Array (List.map intern (SSet.elements names));
+      "names", JSON_Array (List.map (fun b -> intern (fst b)) bindings);
     ]
 
   | EvalT (t, defer_use_t, id) -> [
@@ -450,11 +451,12 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | GatherAbstractsT (_, insttype, names, t) ->
+  | GatherAbstractsT (_, insttype, local_abstracts, t) ->
     let intern s = JSON_String s in
+    let bindings = SMap.bindings local_abstracts in
     [
       "instance", json_of_insttype json_cx insttype;
-      "names", JSON_Array (List.map intern (SSet.elements names));
+      "names", JSON_Array (List.map (fun b -> intern (fst b)) bindings);
       "t_out", _json_of_t json_cx t;
     ]
 
@@ -2360,7 +2362,11 @@ let dump_flow_error =
             spf "EAbstract (IllegalOverload (%s, %s)"
               (dump_reason cx extant_reason)
               (dump_reason cx update_reason)
-        | Unimplemented -> "EAbstract Unimplemented"
+        | Unimplemented (host_reason, reason_op, abstract_reasons) ->
+            spf "Unimplemented (%s, %s, [%s])"
+              (dump_reason cx host_reason)
+              (dump_reason cx reason_op)
+              (String.concat "; " (List.map (dump_reason cx) abstract_reasons))
       )
     | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
         spf "EFunctionCallExtraArg (%s, %s, %d)"

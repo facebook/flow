@@ -19,7 +19,7 @@ type signature = {
   reason: reason;
   super: Type.t;
   fields: field SMap.t;
-  abstracts: SSet.t;
+  abstracts: reason SMap.t;
   (* Multiple function signatures indicates an overloaded method. Note that
      function signatures are stored in reverse definition order. *)
   methods: Func_sig.t Nel.t SMap.t;
@@ -44,7 +44,7 @@ let empty ?(structural=false) id reason tparams tparams_map super implements =
   let empty_sig reason super = {
     reason; super;
     fields = SMap.empty;
-    abstracts = SSet.empty;
+    abstracts = SMap.empty;
     methods = SMap.empty;
     getters = SMap.empty;
     setters = SMap.empty;
@@ -101,7 +101,7 @@ let error_illegal_accessor_override cx fsig_update = function
 
 let add_method cx name fsig = map_sig (fun s ->
   let methods, getters, setters =
-    match SSet.mem name s.abstracts, SMap.get name s.methods with
+    match SMap.mem name s.abstracts, SMap.get name s.methods with
     | true, Some fsigs ->
         (* Overloading abstract methods. Reject the attempt. *)
         let extant_reason = Func_sig.reason_of_t (Nel.hd fsigs) in
@@ -123,7 +123,7 @@ let add_method cx name fsig = map_sig (fun s ->
 
 let add_abstract_method cx name fsig = map_sig (fun s ->
   let abstracts, methods, getters, setters =
-    match SSet.mem name s.abstracts, SMap.get name s.methods with
+    match SMap.mem name s.abstracts, SMap.get name s.methods with
     | true, Some fsigs ->
         (* Overloading existing abstract methods. *)
         let methods = SMap.add name (Nel.cons fsig fsigs) s.methods in
@@ -145,7 +145,11 @@ let add_abstract_method cx name fsig = map_sig (fun s ->
         then s.abstracts, s.methods, s.getters, s.setters
         else
           let methods = SMap.add name (Nel.one fsig) s.methods in
-          SSet.add name s.abstracts, methods, s.getters, s.setters
+          let abstracts =
+            let reason = Func_sig.reason_of_t fsig in
+            SMap.add name reason s.abstracts
+          in
+          abstracts, methods, s.getters, s.setters
   in
   { s with abstracts; methods; getters; setters; })
 
@@ -161,7 +165,7 @@ let append_method name fsig = map_sig (fun s ->
 )
 
 let add_accessor abstracts methods host other cx name fsig =
-  match SSet.mem name abstracts, SMap.get name methods with
+  match SMap.mem name abstracts, SMap.get name methods with
   | true, Some fsigs ->
       (* Overloading abstract methods. Reject the attempt. *)
       let extant_reason = Func_sig.reason_of_t (Nel.hd fsigs) in
