@@ -359,12 +359,16 @@ let thistype cx x =
   let x = remove_this x in
   let {
     implements;
-    static = {reason = sreason; super = ssuper; _};
-    instance = {reason; super; _};
+    static = {reason = sreason; super = ssuper; abstracts = sabstracts; _};
+    instance = {reason; super; abstracts; _};
     _;
   } = x in
-  let open Type in
   let sinsttype, insttype = mutually (insttype cx x) in
+  let t = insttype.Type.abstracts in
+  let st = sinsttype.Type.abstracts in
+  let open Type in
+  Flow.flow cx (super, GatherAbstractsT (reason, insttype, abstracts, t));
+  Flow.flow cx (ssuper, GatherAbstractsT (sreason, sinsttype, sabstracts, st));
   let static = DefT (sreason, InstanceT (Flow.dummy_prototype, ssuper, [], sinsttype)) in
   DefT (reason, InstanceT (static, super, implements, insttype))
 
@@ -820,7 +824,11 @@ let toplevels cx ~decls ~stmts ~expr x =
   in
 
   let this = SMap.find_unsafe "this" x.tparams_map in
-  let static = Type.class_type this in
+
+  (* Use the nonabstract `this` in static methods. This probably doesn't play
+     nice with class property initializers. They should use the possibly
+     abstract version. *)
+  let static = Type.nonabstract_class_type this in
 
   x |> with_sig ~static:true (fun s ->
     (* process static methods and fields *)

@@ -5032,6 +5032,26 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, ImplementsT _ ->
       add_output cx ~trace (FlowError.EUnsupportedImplements (reason_of_t l))
 
+    (********************)
+    (* GatherAbstractsT *)
+    (********************)
+
+    | DefT (_, InstanceT (_, _, _, { abstracts = super_abstracts; _; })),
+      GatherAbstractsT _ ->
+        rec_flow cx trace (super_abstracts, u)
+
+    | AbstractsT (_, super_names),
+      GatherAbstractsT (reason, instance, local_names, t) ->
+        let freshes = SMap.union
+          (Context.find_props cx instance.fields_tmap)
+          (Context.find_props cx instance.methods_tmap)
+        in
+        let unmasked_super_names = SSet.filter (fun super_name ->
+          SMap.mem super_name freshes
+        ) super_names in
+        let abstract_names = SSet.union unmasked_super_names local_names in
+        rec_unify cx trace (AbstractsT (reason, abstract_names)) t
+
     (*********************************************************************)
     (* class A is a base class of class B iff                            *)
     (* properties in B that override properties in A or its base classes *)

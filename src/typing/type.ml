@@ -2380,6 +2380,10 @@ let class_type t =
   let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
   DefT (reason, ClassT t)
 
+let nonabstract_class_type t =
+  let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
+  DefT (reason, NonabstractClassT t)
+
 let this_class_type t =
   let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in
   ThisClassT (reason, t)
