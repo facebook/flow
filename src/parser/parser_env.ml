@@ -178,7 +178,7 @@ type env = {
   comments              : Comment.t list ref;
   labels                : SSet.t;
   exports               : SSet.t ref;
-  last_loc              : Loc.t option ref;
+  last_lex_result       : Lex_result.t option ref;
   in_strict_mode        : bool;
   in_export             : bool;
   in_loop               : bool;
@@ -225,7 +225,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     comments = ref [];
     labels = SSet.empty;
     exports = ref SSet.empty;
-    last_loc = ref None;
+    last_lex_result = ref None;
     in_strict_mode = parse_options.use_strict;
     in_export = false;
     in_loop = false;
@@ -309,7 +309,13 @@ let with_error_callback error_callback env =
 
 (* other helper functions: *)
 let error_list env = List.iter (error_at env)
-let last_loc env = !(env.last_loc)
+let last_loc env = match !(env.last_lex_result) with
+| Some lex_result -> Some (Lex_result.loc lex_result)
+| None -> None
+
+let last_token env = match !(env.last_lex_result) with
+| Some lex_result -> Some (Lex_result.token lex_result)
+| None -> None
 
 let without_error_callback env = { env with error_callback = None }
 
@@ -479,7 +485,7 @@ module Eat = struct
 
     error_list env (Peek.errors env);
     comment_list env (Peek.comments env);
-    env.last_loc := Some (Peek.loc env);
+    env.last_lex_result := Some (lookahead env);
 
     Lookahead.junk !(env.lookahead)
 
@@ -543,12 +549,12 @@ module Try = struct
   exception Rollback
 
   type saved_state = {
-    saved_errors         : (Loc.t * Error.t) list;
-    saved_comments       : Ast.Comment.t list;
-    saved_last_loc       : Loc.t option;
-    saved_lex_mode_stack : Lex_mode.t list;
-    saved_lex_env        : Lex_env.t;
-    token_buffer         : ((token_sink_result -> unit) * token_sink_result Queue.t) option;
+    saved_errors          : (Loc.t * Error.t) list;
+    saved_comments        : Ast.Comment.t list;
+    saved_last_lex_result : Lex_result.t option;
+    saved_lex_mode_stack  : Lex_mode.t list;
+    saved_lex_env         : Lex_env.t;
+    token_buffer          : ((token_sink_result -> unit) * token_sink_result Queue.t) option;
   }
 
   let save_state env =
@@ -563,11 +569,11 @@ module Try = struct
           Some(orig_token_sink, buffer)
     in
     {
-      saved_errors         = !(env.errors);
-      saved_comments       = !(env.comments);
-      saved_last_loc       = !(env.last_loc);
-      saved_lex_mode_stack = !(env.lex_mode_stack);
-      saved_lex_env        = !(env.lex_env);
+      saved_errors          = !(env.errors);
+      saved_comments        = !(env.comments);
+      saved_last_lex_result = !(env.last_lex_result);
+      saved_lex_mode_stack  = !(env.lex_mode_stack);
+      saved_lex_env         = !(env.lex_env);
       token_buffer;
     }
 
@@ -582,7 +588,7 @@ module Try = struct
     reset_token_sink ~flush:false env saved_state.token_buffer;
     env.errors := saved_state.saved_errors;
     env.comments := saved_state.saved_comments;
-    env.last_loc := saved_state.saved_last_loc;
+    env.last_lex_result := saved_state.saved_last_lex_result;
     env.lex_mode_stack := saved_state.saved_lex_mode_stack;
     env.lex_env := saved_state.saved_lex_env;
     env.lookahead := Lookahead.create !(env.lex_env) (lex_mode env);
