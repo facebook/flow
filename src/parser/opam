@@ -1,0 +1,27 @@
+opam-version: "1.2"
+name: "flow_parser"
+version: "0.46.0"
+maintainer: "gabe@fb.com"
+authors: [
+  "Avik Chaudhuri"
+  "Basil Hosmer"
+  "Gabe Levi"
+  "Jeff Morrison"
+  "Marshall Roch"
+  "Sam Goldman"
+  "James Kyle"
+]
+homepage: "https://github.com/facebook/flow/tree/master/src/parser"
+bug-reports: "https://github.com/facebook/flow/issues"
+license: "BSD3"
+
+build: [ "sh" "-c" "cd src/parser && make ocamlfind-install" ]
+
+remove: ["ocamlfind" "remove" "flow_parser"]
+depends: [
+  "ocamlfind" {build}
+  "ocamlbuild" {build}
+  "sedlex"
+]
+available: [ocaml-version >= "4.03.0"]
+dev-repo: "https://github.com/facebook/flow.git"

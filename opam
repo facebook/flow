@@ -1,4 +1,6 @@
 opam-version: "1.2"
+name: "flowtype"
+version: "0.46.0"
 maintainer: "gabe@fb.com"
 homepage: "https://flow.org"
 dev-repo: "https://github.com/facebook/flow.git"
@@ -17,11 +19,10 @@ license: "BSD3"
 depends: [
   "base-unix"
   "base-bytes"
-  "sedlex"
   "ocamlbuild" {build}
-  "ocp-build" {build & <"1.99.19-beta"}
+  "sedlex"
 ]
-available: [ocaml-version >= "4.03.0"]
+available: [ocaml-version >= "4.03.0" & ocaml-version < "4.04.0"]
 build: [ [ make ] ]
 depexts: [
  [ ["debian"] ["libelf-dev"] ]
