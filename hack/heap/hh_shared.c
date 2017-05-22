@@ -2285,7 +2285,7 @@ CAMLprim value hh_load_table_sqlite(value in_filename, value verify) {
     SQLITE_OK);
 
   // Verify the header
-  if (Val_bool(verify)) {
+  if (Bool_val(verify)) {
     verify_sqlite_header(hashtable_db);
   }
 
