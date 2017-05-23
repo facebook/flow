@@ -5367,8 +5367,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Setting of static fields on abstract classes alone is permitted. See
          `tests/class_abstracts/static_field.js` for degeneracies arising from
          covariant access. *)
-      (* TJP: Static FieldInit should use the possibly abstract ClassT,
-         not NonabstractClassT *)
       let static = lookup_static cx trace reason instance in
       rec_flow cx trace (static, ReposLowerT (reason, u))
 

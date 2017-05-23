@@ -829,9 +829,10 @@ let toplevels cx ~decls ~stmts ~expr x =
 
   let this = SMap.find_unsafe "this" x.tparams_map in
 
-  (* Use the nonabstract `this` in static methods. This probably doesn't play
-     nice with class property initializers. They should use the possibly
-     abstract version. *)
+  (* Use the nonabstract `this` in static methods. *)
+  (* TODO: This probably doesn't play nice with class property initializers.
+     They should use the possibly abstract version, i.e.
+     `Type.class_type this`. *)
   let static = Type.nonabstract_class_type this in
 
   x |> with_sig ~static:true (fun s ->
