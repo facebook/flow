@@ -362,8 +362,9 @@ let locs_of_error_message = function
       match abstract_error with
       | IllegalOverload (reason1, reason2) ->
         [loc_of_reason reason1; loc_of_reason reason2]
-      | Unimplemented ->
-        []
+      | Unimplemented (reason1, reason2, reasons) ->
+        (loc_of_reason reason1)::(loc_of_reason reason2)::
+          (List.map loc_of_reason reasons)
 
 let loc_of_error ~op msg =
   match op with
