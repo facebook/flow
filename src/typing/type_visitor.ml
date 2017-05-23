@@ -341,10 +341,11 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc return_t in
     acc
 
-  method private inst_type cx acc { type_args; fields_tmap; methods_tmap; _ } =
+  method private inst_type cx acc { type_args; fields_tmap; methods_tmap; abstracts; _ } =
     let acc = self#smap (self#type_ cx) acc type_args in
     let acc = self#props cx acc fields_tmap in
     let acc = self#props cx acc methods_tmap in
+    let acc = self#type_ cx acc abstracts in
     acc
 
   method private export_types cx acc { exports_tmap; cjs_export; has_every_named_export=_; } =

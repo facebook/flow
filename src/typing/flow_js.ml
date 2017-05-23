@@ -5060,6 +5060,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* GatherAbstractsT *)
     (********************)
 
+    | DefT (_, AnyT), GatherAbstractsT (reason, _, local_abstracts, t) ->
+        rec_unify cx trace (AbstractsT (reason, local_abstracts)) t
+
     | DefT (reason, ClassT instance), GatherAbstractsT _ ->
         let static = lookup_static cx trace reason instance in
         (*TJP: Is this reposition just yielding the reason from GatherAbstractsT?*)
@@ -5073,6 +5076,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       GatherAbstractsT _ ->
         rec_flow cx trace (super_abstracts, u)
 
+    | DefT (_, ObjT _), GatherAbstractsT (reason, _, local_abstracts, t)
     | ObjProtoT _, GatherAbstractsT (reason, _, local_abstracts, t)
     | FunProtoT _, GatherAbstractsT (reason, _, local_abstracts, t) ->
         rec_unify cx trace (AbstractsT (reason, local_abstracts)) t
@@ -5107,6 +5111,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           ) in
           add_output cx ~trace error
 
+    | DefT (_, FunT _), AssertNonabstractT _
+    | DefT (_, ObjT _), AssertNonabstractT _
     | ObjProtoT _, AssertNonabstractT _
     | FunProtoT _, AssertNonabstractT _ -> ()
 

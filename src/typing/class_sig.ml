@@ -164,7 +164,7 @@ let append_method name fsig = map_sig (fun s ->
   {s with methods}
 )
 
-let add_accessor abstracts methods host other cx name fsig =
+let add_accessor abstracts methods host cx name fsig =
   match SMap.mem name abstracts, SMap.get name methods with
   | true, Some fsigs ->
       (* Overloading abstract methods. Reject the attempt. *)
@@ -175,25 +175,24 @@ let add_accessor abstracts methods host other cx name fsig =
         EAbstract e
       ) in
       Flow_js.add_output cx error;
-      methods, host, other
+      methods, host
   | _ ->
       (* ES6 overwrites the existing method with later methods. *)
       let methods = SMap.remove name methods in
       let host = SMap.add name fsig host in
-      let other = SMap.remove name other in
-      methods, host, other
+      methods, host
 
 let add_getter cx name fsig = map_sig (fun s ->
-  let methods, getters, setters =
-    add_accessor s.abstracts s.methods s.getters s.setters cx name fsig
+  let methods, getters =
+    add_accessor s.abstracts s.methods s.getters cx name fsig
   in
-  { s with methods; getters; setters; })
+  { s with methods; getters; })
 
 let add_setter cx name fsig = map_sig (fun s ->
-  let methods, setters, getters =
-    add_accessor s.abstracts s.methods s.setters s.getters cx name fsig
+  let methods, setters =
+    add_accessor s.abstracts s.methods s.setters cx name fsig
   in
-  { s with methods; getters; setters; })
+  { s with methods; setters; })
 
 let mk_method cx ~expr x loc func =
   Func_sig.mk cx x.tparams_map ~expr loc func
