@@ -1,3 +1,39 @@
+abstract_mixin.js:10
+ 10: class B extends mixin(A) {} //ng
+                           ^ class type: A. Unimplemented abstract(s) found in
+  5: class A {
+           ^ A
+  Abstract(s):
+    6:   abstract m(): void;
+         ^^^^^^^^^^^^^^^^^^ abstract method type
+
+abstract_mixin.js:10
+ 10: class B extends mixin(A) {} //ng
+                           ^ class type: A. Unimplemented abstract(s) found in
+  5: class A {
+           ^ statics of A
+  Abstract(s):
+    7:   abstract static static_m(): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type
+
+abstract_mixin.js:11
+ 11: class C extends mixin(A) {
+                           ^ class type: A. Unimplemented abstract(s) found in
+  5: class A {
+           ^ A
+  Abstract(s):
+    6:   abstract m(): void;
+         ^^^^^^^^^^^^^^^^^^ abstract method type
+
+abstract_mixin.js:11
+ 11: class C extends mixin(A) {
+                           ^ class type: A. Unimplemented abstract(s) found in
+  5: class A {
+           ^ statics of A
+  Abstract(s):
+    7:   abstract static static_m(): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type
+
 copyProperties.js:6
   6:     (copyProperties()); // error, unknown global
           ^^^^^^^^^^^^^^ identifier `copyProperties`. Could not resolve name
@@ -34,4 +70,4 @@ test.js:7
          ^^^^ Foo
 
 
-Found 6 errors
+Found 10 errors

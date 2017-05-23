@@ -3712,8 +3712,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | CustomFunT (reason, Mixin),
       CallT (reason_op, { call_args_tlist; call_tout; _ }) ->
-      (* TJP: Trigger nonabstractness errors with some tests. I'm skeptical of
-         error message quality *)
       let t = spread_objects cx reason_op call_args_tlist in
       error_nonabstract cx trace reason t;
       rec_flow_t cx trace (class_type t, call_tout)
