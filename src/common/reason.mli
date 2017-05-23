@@ -29,6 +29,7 @@ type reason_desc =
   | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
   | RFunctionType
+  | RAbstractMethodType
   | RFunctionBody
   | RFunctionCall
   | RFunctionUnusedArgument

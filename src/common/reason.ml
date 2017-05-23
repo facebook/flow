@@ -77,6 +77,7 @@ type reason_desc =
   | RTupleOutOfBoundsAccess
   | RFunction of reason_desc_function
   | RFunctionType
+  | RAbstractMethodType
   | RFunctionBody
   | RFunctionCall
   | RFunctionUnusedArgument
@@ -376,6 +377,7 @@ let rec string_of_desc = function
   | RTupleOutOfBoundsAccess -> "undefined (out of bounds tuple access)"
   | RFunction func -> spf "%sfunction" (function_desc_prefix func)
   | RFunctionType -> "function type"
+  | RAbstractMethodType -> "abstract method type"
   | RFunctionBody -> "function body"
   | RFunctionCall -> "function call"
   | RFunctionUnusedArgument -> "unused function argument"

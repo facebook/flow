@@ -1312,9 +1312,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
           typecheck_error msg reasons
       | Unimplemented (host_reason, reason_op, abstract_reasons) ->
           let abstracts = List.map info_of_reason abstract_reasons in
-          (*TJP: Incorporate abstract reason ctors for "function type" \mapsto
-            "abstract function type"? Use blank info strings for "function type"
-            \mapsto ""? *)
           (*TJP: Sort by loc or maintain insertion order?*)
           let extra = [
             InfoLeaf (

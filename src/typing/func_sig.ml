@@ -32,8 +32,6 @@ type t = {
   return_t: Type.t;
 }
 
-let reason_of_t ({reason; _}:t) = reason
-
 let return_loc =
   let module F = Ast.Function in
   let open F in function
@@ -368,3 +366,11 @@ let toplevels id cx this super ~decls ~stmts ~expr
   Env.pop_var_scope ();
 
   Env.update_env cx loc env
+
+let reason_of_t ({reason; _}:t) = reason
+
+let replace_reason f (t:t):t =
+  {t with reason = replace_reason f t.reason}
+
+let replace_reason_const desc (t:t):t =
+  {t with reason = replace_reason_const desc t.reason}

@@ -5,7 +5,7 @@ extends.js:13
                   ^ A. See: A.js:3
   Abstract(s):
     4:   abstract m(n: number): number;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:4
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type. See: A.js:4
 
 extends.js:13
  13: let B4: Class<A> = A; //ng
@@ -14,7 +14,7 @@ extends.js:13
                   ^ statics of A. See: A.js:3
   Abstract(s):
     5:   abstract static static_m(s: string): string;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:5
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type. See: A.js:5
 
 import.js:5
   5: let a1 = new A;
@@ -23,7 +23,7 @@ import.js:5
                   ^ A. See: A.js:3
   Abstract(s):
     4:   abstract m(n: number): number;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:4
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type. See: A.js:4
 
 import.js:5
   5: let a1 = new A;
@@ -32,7 +32,7 @@ import.js:5
                   ^ statics of A. See: A.js:3
   Abstract(s):
     5:   abstract static static_m(s: string): string;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:5
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type. See: A.js:5
 
 import.js:6
   6: let a2: A = new A; //ng
@@ -41,7 +41,7 @@ import.js:6
                   ^ A. See: A.js:3
   Abstract(s):
     4:   abstract m(n: number): number;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:4
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type. See: A.js:4
 
 import.js:6
   6: let a2: A = new A; //ng
@@ -50,7 +50,7 @@ import.js:6
                   ^ statics of A. See: A.js:3
   Abstract(s):
     5:   abstract static static_m(s: string): string;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:5
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type. See: A.js:5
 
 import.js:7
   7: let A3: Class<A> = A; //ng
@@ -59,7 +59,7 @@ import.js:7
                   ^ A. See: A.js:3
   Abstract(s):
     4:   abstract m(n: number): number;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:4
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type. See: A.js:4
 
 import.js:7
   7: let A3: Class<A> = A; //ng
@@ -68,7 +68,7 @@ import.js:7
                   ^ statics of A. See: A.js:3
   Abstract(s):
     5:   abstract static static_m(s: string): string;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:5
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type. See: A.js:5
 
 import.js:10
  10: let s1 = A.static_m("asdf"); //ng
@@ -77,7 +77,7 @@ import.js:10
                   ^ A. See: A.js:3
   Abstract(s):
     4:   abstract m(n: number): number;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:4
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type. See: A.js:4
 
 import.js:10
  10: let s1 = A.static_m("asdf"); //ng
@@ -86,7 +86,7 @@ import.js:10
                   ^ statics of A. See: A.js:3
   Abstract(s):
     5:   abstract static static_m(s: string): string;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:5
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type. See: A.js:5
 
 import.js:11
  11: let s2: string = A.static_m("qwerty"); //ng
@@ -95,7 +95,7 @@ import.js:11
                   ^ A. See: A.js:3
   Abstract(s):
     4:   abstract m(n: number): number;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:4
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type. See: A.js:4
 
 import.js:11
  11: let s2: string = A.static_m("qwerty"); //ng
@@ -104,7 +104,7 @@ import.js:11
                   ^ statics of A. See: A.js:3
   Abstract(s):
     5:   abstract static static_m(s: string): string;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:5
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type. See: A.js:5
 
 
 Found 12 errors

@@ -198,7 +198,8 @@ let mk_method cx ~expr x loc func =
   Func_sig.mk cx x.tparams_map ~expr loc func
 
 let mk_abstract_method cx x loc func =
-  Func_sig.convert cx x.tparams_map loc func
+  let fsig = Func_sig.convert cx x.tparams_map loc func in
+  Func_sig.replace_reason_const RAbstractMethodType fsig
 
 let mk_field cx ~polarity x reason typeAnnotation value =
   let t = Anno.mk_type_annotation cx x.tparams_map reason typeAnnotation in
