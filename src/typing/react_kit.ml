@@ -104,8 +104,9 @@ let run cx trace reason_op l u
     let elem_reason = replace_reason_const (RReactElement None) reason_op in
     (match l with
     | DefT (_, ClassT _)
-      (*TJP: Since this is a new feature, I'm guaranteed safety here, but that
-        won't always be the case, yeah?*)
+      (* TJP: Get some feedback from React folks on whether this is reachable
+         with abstract classes. I vaguely recall seeing a React component
+         created through class extension.... *)
     | DefT (_, NonabstractClassT _) ->
       let react_class =
         get_builtin_typeapp cx ~trace reason_op "ReactClass" [config]
@@ -579,8 +580,10 @@ let run cx trace reason_op l u
       in
 
       let abstracts =
-        (*TJP: Since this is a new feature, I'm guaranteed safety here, but that
-          won't always be the case, yeah?*)
+        (* TJP: `mk_class` takes a `spec` argument. I suspect that this relates
+           to React's use of object literals to parametrize components. If
+           that's the case, then the assumption of no abstract members is safe.
+         *)
         let reason = replace_reason (fun desc -> RAbstracts desc) reason_op in
         AbstractsT (reason, SMap.empty)
       in
