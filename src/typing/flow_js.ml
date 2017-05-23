@@ -5065,8 +5065,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (reason, ClassT instance), GatherAbstractsT _ ->
         let static = lookup_static cx trace reason instance in
-        (*TJP: Is this reposition just yielding the reason from GatherAbstractsT?*)
-        rec_flow cx trace (static, ReposLowerT (reason, u))
+        rec_flow cx trace (static, u)
 
     | DefT (_, NonabstractClassT _),
       GatherAbstractsT (reason, _, local_abstracts, t) ->
