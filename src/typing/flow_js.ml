@@ -3973,7 +3973,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx ~trace (FlowError.EValueUsedAsType reasons)
 
     | DefT (rl, ClassT l), UseT (use_op, DefT (_, NonabstractClassT u)) ->
-      (*TJP: Error message quality? Should I be using the Ops stack for errors?*)
       error_nonabstract cx trace rl l;
       rec_flow cx trace (
         reposition cx ~trace (loc_of_reason rl) l,
