@@ -34,6 +34,8 @@ end = struct
   let set _ops = ops := _ops
 end
 
+module LocMap = Map.Make (Loc)
+
 type error_message =
   | EIncompatible of Type.t * Type.use_t
   | EIncompatibleDefs of reason * reason
@@ -1311,8 +1313,14 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
           let msg = "Illegal overload found at" in
           typecheck_error msg reasons
       | Unimplemented (host_reason, reason_op, abstract_reasons) ->
-          let abstracts = List.map info_of_reason abstract_reasons in
-          (*TJP: Sort by loc or maintain insertion order?*)
+          let abstracts =
+            (* Sort abstract reasons by loc. *)
+            let add map reason = LocMap.add (loc_of_reason reason) reason map in
+            List.fold_left add LocMap.empty abstract_reasons
+              |> LocMap.bindings
+              |> List.map snd
+              |> List.map info_of_reason
+          in
           let extra = [
             InfoLeaf (
               (Loc.none, ["Abstract(s):"])::abstracts

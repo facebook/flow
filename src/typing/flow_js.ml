@@ -5098,7 +5098,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (abstracts, u)
 
     | AbstractsT (reason, abstracts), AssertNonabstractT reason_op ->
-        (* TJP: Suboptimal lex ordering (by names) *)
         let abstract_reasons = SMap.bindings abstracts |> List.map snd in
         if abstract_reasons <> []
         then
