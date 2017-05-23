@@ -304,6 +304,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
    * and server have exited.
   *)
   and client_out_of_date env client_fd mismatch_info =
+    Hh_logger.log "Client out of date. Killing server.";
     kill_server_with_check env.server;
     let kill_signal_time = Unix.gettimeofday () in
     (** If we detect out of date client, should always kill server and exit
