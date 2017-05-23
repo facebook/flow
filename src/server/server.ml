@@ -228,21 +228,21 @@ let collate_errors =
     with exn ->
       Error (Printexc.to_string exn)
 
-  let parse_suggest_cmd file =
-    let digits = "\\([0-9]+\\)" in
-    let re = Printf.sprintf "\\(.*\\):%s:%s,%s:%s"
-      digits digits digits digits in
-    if Str.string_match (Str.regexp re) file 0
-    then
-      (Str.matched_group 1 file,
-       List.map (fun i -> Str.matched_group i file) [2;3;4;5])
-    else
-      (file, [])
-
   (* NOTE: currently, not only returns list of annotations, but also rewrites
      file with annotations *)
-  let suggest ~options =
-    let suggest_for_file result_map file =
+  let suggest =
+    let parse_suggest_cmd file =
+      let digits = "\\([0-9]+\\)" in
+      let re = Printf.sprintf "\\(.*\\):%s:%s,%s:%s"
+        digits digits digits digits in
+      if Str.string_match (Str.regexp re) file 0
+      then
+        (Str.matched_group 1 file,
+         List.map (fun i -> Str.matched_group i file) [2;3;4;5])
+      else
+        (file, [])
+    in
+    let suggest_for_file ~options result_map file =
       (try
          let (file, region) = parse_suggest_cmd file in
          let file = Path.to_string (Path.make file) in
@@ -272,17 +272,12 @@ let collate_errors =
          in
          let new_content = Reason.do_patch lines insertions in
          let patch_content = Diff.diff_of_file_and_string file new_content in
-         SMap.add file patch_content result_map
-       with exn ->
-         Hh_logger.warn
-           "Could not fill types for %s\n%s"
-           file
-           (Printexc.to_string exn);
-         result_map
+         SMap.add file (Ok patch_content) result_map
+      with exn ->
+        SMap.add file (Error (Printexc.to_string exn)) result_map
       )
-
-    in fun files ->
-      List.fold_left suggest_for_file SMap.empty files
+    in fun ~options files ->
+      List.fold_left (suggest_for_file ~options) SMap.empty files
 
   (* NOTE: currently, not only returns list of annotations, but also writes a
      timestamped file with annotations *)
@@ -645,7 +640,7 @@ let collate_errors =
           | _ -> ()
         end
     | ServerProt.SUGGEST (files) ->
-        (suggest ~options files: string SMap.t)
+        (suggest ~options files: ServerProt.suggest_response)
           |> marshal
     | ServerProt.CONNECT ->
         let new_connections =

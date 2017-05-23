@@ -13,6 +13,7 @@
 (***********************************************************************)
 
 open CommandUtils
+open Utils_js
 
 let spec = {
   CommandSpec.
@@ -55,9 +56,11 @@ let main option_values root files () =
   let files = List.map expand_path files in
   let files = List.map2 (^) files regions in
   ServerProt.cmd_to_channel oc (ServerProt.SUGGEST files);
-  let suggestion_map: string SMap.t = Timeout.input_value ic in
-  SMap.iter (fun file suggestions ->
-    Printf.printf "%s\n%s" file suggestions
+  let suggestion_map: ServerProt.suggest_response = Timeout.input_value ic in
+  SMap.iter (fun file result ->
+    match result with
+    | Ok suggestions -> Printf.printf "%s\n%s" file suggestions
+    | Error msg -> prerr_endlinef "Could not fill types for %s\n%s" file msg
   ) suggestion_map;
   flush stdout
 

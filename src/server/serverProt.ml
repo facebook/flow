@@ -81,6 +81,7 @@ type infer_type_response = (
   Loc.t * string option * string option * Reason.t list,
   string
 ) result
+type suggest_response = (string, string) result SMap.t (* map of files to annotation or error *)
 
 type gen_flow_file_error =
   | GenFlowFile_TypecheckError of Errors.ErrorSet.t
