@@ -5362,7 +5362,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let static = lookup_static cx trace reason instance in
       rec_flow cx trace (static, ReposLowerT (reason, u))
 
-    | DefT (reason, ClassT instance), SetPropT _ ->
+    | DefT (reason, ClassT instance), SetPropT _
+    | DefT (reason, ClassT instance), LookupT _ ->
       (* Setting of static fields on abstract classes alone is permitted. See
          `tests/class_abstracts/static_field.js` for degeneracies arising from
          covariant access. *)

@@ -117,5 +117,25 @@ static_property.js:16
    11:   abstract static static_method(): string;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type
 
+static_property.js:19
+ 19: let s2: string = C.static_field(); //ng
+                      ^ class type: C. Unimplemented abstract(s) found in
+ 18: class C extends B {}
+           ^ statics of C
+  Abstract(s):
+   11:   abstract static static_method(): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type
 
-Found 13 errors
+static_property.js:19
+ 19: let s2: string = C.static_field(); //ng
+                      ^^^^^^^^^^^^^^^^ call of method `static_field`
+ 14:   return this.static_method();
+              ^^^^ class type: C. Unimplemented abstract(s) found in
+ 18: class C extends B {}
+           ^ statics of C
+  Abstract(s):
+   11:   abstract static static_method(): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type
+
+
+Found 15 errors
