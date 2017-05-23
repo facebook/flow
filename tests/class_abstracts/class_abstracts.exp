@@ -106,5 +106,16 @@ import.js:11
     5:   abstract static static_m(s: string): string;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type. See: A.js:5
 
+static_property.js:16
+ 16: let s1: string = B.static_field(); //ng
+                      ^^^^^^^^^^^^^^^^ call of method `static_field`
+ 14:   return this.static_method();
+              ^^^^ class type: B. Unimplemented abstract(s) found in
+  9: class B {
+           ^ statics of B
+  Abstract(s):
+   11:   abstract static static_method(): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type
 
-Found 12 errors
+
+Found 13 errors
