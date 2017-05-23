@@ -5089,7 +5089,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         in
         let unmasked_super_abstracts =
           SMap.filter (fun super_name _ ->
-            SMap.mem super_name freshes
+            not (SMap.mem super_name freshes)
           ) super_abstracts
         in
         let abstracts = SMap.union unmasked_super_abstracts local_abstracts in

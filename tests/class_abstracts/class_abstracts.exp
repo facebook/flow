@@ -1,0 +1,110 @@
+extends.js:13
+ 13: let B4: Class<A> = A; //ng
+                        ^ class type: A. Unimplemented abstract(s) found in
+  3: export class A {
+                  ^ A. See: A.js:3
+  Abstract(s):
+    4:   abstract m(n: number): number;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:4
+
+extends.js:13
+ 13: let B4: Class<A> = A; //ng
+                        ^ class type: A. Unimplemented abstract(s) found in
+  3: export class A {
+                  ^ statics of A. See: A.js:3
+  Abstract(s):
+    5:   abstract static static_m(s: string): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:5
+
+import.js:5
+  5: let a1 = new A;
+                  ^ class type: A. Unimplemented abstract(s) found in
+  3: export class A {
+                  ^ A. See: A.js:3
+  Abstract(s):
+    4:   abstract m(n: number): number;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:4
+
+import.js:5
+  5: let a1 = new A;
+                  ^ class type: A. Unimplemented abstract(s) found in
+  3: export class A {
+                  ^ statics of A. See: A.js:3
+  Abstract(s):
+    5:   abstract static static_m(s: string): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:5
+
+import.js:6
+  6: let a2: A = new A; //ng
+                     ^ class type: A. Unimplemented abstract(s) found in
+  3: export class A {
+                  ^ A. See: A.js:3
+  Abstract(s):
+    4:   abstract m(n: number): number;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:4
+
+import.js:6
+  6: let a2: A = new A; //ng
+                     ^ class type: A. Unimplemented abstract(s) found in
+  3: export class A {
+                  ^ statics of A. See: A.js:3
+  Abstract(s):
+    5:   abstract static static_m(s: string): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:5
+
+import.js:7
+  7: let A3: Class<A> = A; //ng
+                        ^ class type: A. Unimplemented abstract(s) found in
+  3: export class A {
+                  ^ A. See: A.js:3
+  Abstract(s):
+    4:   abstract m(n: number): number;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:4
+
+import.js:7
+  7: let A3: Class<A> = A; //ng
+                        ^ class type: A. Unimplemented abstract(s) found in
+  3: export class A {
+                  ^ statics of A. See: A.js:3
+  Abstract(s):
+    5:   abstract static static_m(s: string): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:5
+
+import.js:10
+ 10: let s1 = A.static_m("asdf"); //ng
+              ^ class type: A. Unimplemented abstract(s) found in
+  3: export class A {
+                  ^ A. See: A.js:3
+  Abstract(s):
+    4:   abstract m(n: number): number;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:4
+
+import.js:10
+ 10: let s1 = A.static_m("asdf"); //ng
+              ^ class type: A. Unimplemented abstract(s) found in
+  3: export class A {
+                  ^ statics of A. See: A.js:3
+  Abstract(s):
+    5:   abstract static static_m(s: string): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:5
+
+import.js:11
+ 11: let s2: string = A.static_m("qwerty"); //ng
+                      ^ class type: A. Unimplemented abstract(s) found in
+  3: export class A {
+                  ^ A. See: A.js:3
+  Abstract(s):
+    4:   abstract m(n: number): number;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:4
+
+import.js:11
+ 11: let s2: string = A.static_m("qwerty"); //ng
+                      ^ class type: A. Unimplemented abstract(s) found in
+  3: export class A {
+                  ^ statics of A. See: A.js:3
+  Abstract(s):
+    5:   abstract static static_m(s: string): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: A.js:5
+
+
+Found 12 errors
