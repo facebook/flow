@@ -9156,7 +9156,7 @@ and multiflow_partial =
     (* If there is a rest parameter, it will consume all the unused arguments *)
     begin match rest_param with
     | None ->
-      if is_call
+      if is_call && Context.enforce_strict_call_arity cx
       then begin
         List.iter (fun unused_arg ->
           FlowError.EFunctionCallExtraArg (

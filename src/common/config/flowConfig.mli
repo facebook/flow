@@ -41,6 +41,7 @@ val emoji: config -> bool
 val enable_const_params: config -> bool
 val enable_unsafe_getters_and_setters: config -> bool
 val enforce_strict_type_args: config -> bool
+val enforce_strict_call_arity: config -> bool
 val esproposal_class_instance_fields: config -> Options.esproposal_feature_mode
 val esproposal_class_static_fields: config -> Options.esproposal_feature_mode
 val esproposal_decorators: config -> Options.esproposal_feature_mode

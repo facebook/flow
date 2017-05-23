@@ -42,6 +42,7 @@ module Opts = struct
     enable_const_params: bool;
     enable_unsafe_getters_and_setters: bool;
     enforce_strict_type_args: bool;
+    enforce_strict_call_arity: bool;
     esproposal_class_instance_fields: Options.esproposal_feature_mode;
     esproposal_class_static_fields: Options.esproposal_feature_mode;
     esproposal_decorators: Options.esproposal_feature_mode;
@@ -144,6 +145,7 @@ module Opts = struct
     enable_const_params = false;
     enable_unsafe_getters_and_setters = false;
     enforce_strict_type_args = true;
+    enforce_strict_call_arity = true;
     esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_decorators = Options.ESPROPOSAL_WARN;
@@ -778,6 +780,15 @@ let parse_options config lines =
       );
     }
 
+    |> define_opt "experimental.strict_call_arity" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        Ok {opts with enforce_strict_call_arity = v;}
+      );
+    }
+
     |> define_opt "no_flowlib" {
       initializer_ = USE_DEFAULT;
       flags = [];
@@ -889,6 +900,7 @@ let emoji c = c.options.Opts.emoji
 let enable_const_params c = c.options.Opts.enable_const_params
 let enable_unsafe_getters_and_setters c = c.options.Opts.enable_unsafe_getters_and_setters
 let enforce_strict_type_args c = c.options.Opts.enforce_strict_type_args
+let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 let esproposal_class_instance_fields c = c.options.Opts.esproposal_class_instance_fields
 let esproposal_class_static_fields c = c.options.Opts.esproposal_class_static_fields
 let esproposal_decorators c = c.options.Opts.esproposal_decorators
