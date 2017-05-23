@@ -9909,9 +9909,6 @@ and mk_instance cx ?trace instance_reason ?(for_type=true) c =
     ))
   else
     mk_tvar_derivable_where cx instance_reason (fun t ->
-      (*TJP: When I extend an abstract class, isn't this going to fail because
-        of the possibly abstract ClassT? Maybe a non-filtering ClassT~>LookupT
-        will do the trick?*)
       flow_opt_t cx ?trace (c, class_type t)
     )
 
