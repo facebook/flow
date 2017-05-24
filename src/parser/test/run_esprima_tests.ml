@@ -97,23 +97,7 @@ module String_utils = struct
     chopped, ext
 end
 
-module Hh_jsonTranslator : (
-  Estree_translator.Translator with type t = Hh_json.json
-) = struct
-  open Hh_json
-
-  type t = Hh_json.json
-
-  let string x = JSON_String x
-  let bool x = JSON_Bool x
-  let obj props = JSON_Object (Array.to_list props)
-  let array arr = JSON_Array (Array.to_list arr)
-  let number x = JSON_Number (Utils_js.string_of_float_trunc x)
-  let null = JSON_Null
-  let regexp _loc _pattern _flags = JSON_Null
-end
-
-module Translate = Estree_translator.Translate (Hh_jsonTranslator)
+module Translate = Estree_translator.Translate (Json_of_estree)
 
 module RunEsprimaTests : sig
   val main : unit -> unit

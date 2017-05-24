@@ -29,6 +29,7 @@ begin library "flow-commands"
     "flow-dts"
     "flow-embedded"
     "flow-parser"
+    "flow-parser-utils"
     "flow-stubs"
     "flow-server"
     "flow-server-env"
@@ -199,8 +200,10 @@ begin library "flow-parser-utils"
   files = begin fb-glob "src/parser_utils"
   end
   requires = [
+    "flow-common-utils"
     "flow-parser"
     "hh-utils-collections"
+    "hh-utils-json"
   ]
 end
 

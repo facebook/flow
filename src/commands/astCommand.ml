@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils_js
-
 (***********************************************************************)
 (* flow ast command *)
 (***********************************************************************)
@@ -42,27 +40,11 @@ type ast_file_type =
   | Ast_json
   | Ast_js
 
-module Hh_jsonTranslator : (
-  Estree_translator.Translator with type t = Hh_json.json
-) = struct
-  type t = Hh_json.json
-
-  open Hh_json
-
-  let string x = JSON_String x
-  let bool x = JSON_Bool x
-  let obj props = JSON_Object (Array.to_list props)
-  let array arr = JSON_Array (Array.to_list arr)
-  let number x = JSON_Number (string_of_float_trunc x)
-  let null = JSON_Null
-  let regexp _loc _pattern _flags = JSON_Null
-end
-
 let get_file = function
   | Some filename -> File_input.FileName (CommandUtils.expand_path filename)
   | None -> File_input.FileContent (None, Sys_utils.read_stdin_to_string ())
 
-module Translate = Estree_translator.Translate (Hh_jsonTranslator)
+module Translate = Estree_translator.Translate (Json_of_estree)
 
 let token_to_json token_result =
   let open Loc in
