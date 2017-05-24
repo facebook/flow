@@ -14,6 +14,9 @@ val edit_file : string -> text_edit list -> (string, string) Result.t
 
 val edit_file_unsafe : string -> text_edit list -> string
 
+(* NOTE: If you need two offsets, use `get_offsets` below instead. *)
+val get_offset : string -> position -> int
+
 val get_offsets :
   string -> position * position -> int * int
 

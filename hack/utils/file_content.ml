@@ -56,11 +56,19 @@ let invalid_position p =
     "Invalid position: {line: %d; column: %d}" p.line p.column))
 
 (* this returns 0-based offsets *)
-let get_offsets content queries =
+let get_offsets
+  (content : string)
+  (queries : position * position)
+  : (int * int) =
   match get_offsets content queries 1 1 0 (None, None) with
   | Some r1, Some r2 -> r1, r2
   | None, _ -> invalid_position (fst queries)
   | _, None -> invalid_position (snd queries)
+
+(* This returns a 0-based offset. If you need to get two offsets, use
+   `get_offsets` instead. *)
+let get_offset (content : string) (position : position) : int =
+  fst (get_offsets content (position, position))
 
 
 (* This takes 0-based offsets and returns 1-based positions.                  *)
