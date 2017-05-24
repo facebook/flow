@@ -1,3 +1,12 @@
+abstract_class_anno.js:12
+ 12: let x1 = new X; //ng
+                  ^ class type: A. Unimplemented abstract(s) found in
+  3: class A {
+           ^ A
+  Abstract(s):
+    4:   abstract m(): void;
+         ^^^^^^^^^^^^^^^^^^ abstract method type
+
 extends.js:13
  13: let B4: Class<A> = A; //ng
                         ^ class type: A. Unimplemented abstract(s) found in
@@ -138,4 +147,4 @@ static_property.js:19
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ abstract method type
 
 
-Found 15 errors
+Found 16 errors
