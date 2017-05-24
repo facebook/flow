@@ -343,12 +343,11 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
           msg_to_channel client_fd (PH.Server_not_alive_dormant
             "Warning - starting a server by force-dormant-start option...");
           restart_server env None
+        end else begin
+          msg_to_channel client_fd (PH.Server_not_alive_dormant
+            "Server killed by informant. Waiting for next server...");
+          env
         end
-      else begin
-        msg_to_channel client_fd (PH.Server_not_alive_dormant
-          "Server killed by informant. Waiting for next server...");
-        env
-      end
       in
       if (Queue.length env.purgatory_clients) >= max_purgatory_clients then
         let () = msg_to_channel
