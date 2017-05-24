@@ -7399,7 +7399,6 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
 *)
 and blame_unresolved cx trace prev_i i cases case_r r ts =
   let rs = ts |> List.map (fun t ->
-    rec_unify cx trace t Locationless.AnyT.t;
     reason_of_t t
   ) in
   let prev_case = reason_of_t (List.nth cases prev_i) in

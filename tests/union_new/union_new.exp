@@ -274,6 +274,27 @@ test26.js:20
    17:   set(x: 'bar', y: string): void;
                 ^^^^^ string literal `bar`
 
+test33.js:7
+  7: foo(bar); // error: ambiguous speculation
+         ^^^ function. Could not decide which case to select
+  5: function foo(cb: (() => string) | (() => number)) {}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union type
+  Case 1 may work:
+    5: function foo(cb: (() => string) | (() => number)) {}
+                         ^^^^^^^^^^^^ function type
+  But if it doesn't, case 2 looks promising too:
+    5: function foo(cb: (() => string) | (() => number)) {}
+                                          ^^^^^^^^^^^^ function type
+  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
+    6: function bar() { return 0 }
+                     ^ return
+
+test33.js:8
+  8: (bar(): string); // error: number ~> string
+      ^^^^^ number. This type is incompatible with
+  8: (bar(): string); // error: number ~> string
+             ^^^^^^ string
+
 test5.js:14
  14: fun(a1);
          ^^ function. Could not decide which case to select
@@ -315,4 +336,4 @@ test9.js:12
                   ^ null. The operand of an arithmetic operation must be a number.
 
 
-Found 23 errors
+Found 25 errors
