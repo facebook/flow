@@ -228,31 +228,15 @@ let collate_errors =
     with exn ->
       Error (Printexc.to_string exn)
 
-  (* NOTE: currently, not only returns list of annotations, but also rewrites
-     file with annotations *)
   let suggest =
-    let parse_suggest_cmd file =
-      let digits = "\\([0-9]+\\)" in
-      let re = Printf.sprintf "\\(.*\\):%s:%s,%s:%s"
-        digits digits digits digits in
-      if Str.string_match (Str.regexp re) file 0
-      then
-        (Str.matched_group 1 file,
-         List.map (fun i -> Str.matched_group i file) [2;3;4;5])
-      else
-        (file, [])
-    in
-    let suggest_for_file ~options result_map file =
+    let suggest_for_file ~options result_map (file, region) =
       (try
-         let (file, region) = parse_suggest_cmd file in
-         let file = Path.to_string (Path.make file) in
          let content = cat file in
          let file_loc = Loc.SourceFile file in
          let cx =
            match Types_js.typecheck_contents ~options content file_loc with
            | _, Some cx, _, _ -> cx
            | _  -> failwith "Couldn't parse file" in
-         let lines = Str.split_delim (Str.regexp "\n") content in
          let insertions =
            Query_types.fill_types cx
            |> List.sort Pervasives.compare
@@ -270,9 +254,7 @@ let collate_errors =
                   )
               | _ -> assert false
          in
-         let new_content = Reason.do_patch lines insertions in
-         let patch_content = Diff.diff_of_file_and_string file new_content in
-         SMap.add file (Ok patch_content) result_map
+         SMap.add file (Ok insertions) result_map
       with exn ->
         SMap.add file (Error (Printexc.to_string exn)) result_map
       )

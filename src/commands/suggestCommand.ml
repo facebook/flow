@@ -34,32 +34,42 @@ let spec = {
   )
 }
 
-(* move to utils? *)
-let split_char c s =
-  try
-    let i = String.index s c in
-    (Str.string_before s i, Str.string_after s i)
-  with _ -> (s, "")
+let parse_suggest_cmd file =
+  let digits = "\\([0-9]+\\)" in
+  let re = Printf.sprintf "\\(.*\\):%s:%s,%s:%s"
+    digits digits digits digits in
+  if Str.string_match (Str.regexp re) file 0
+  then
+    (Str.matched_group 1 file,
+     List.map (fun i -> Str.matched_group i file) [2;3;4;5])
+  else
+    (file, [])
 
 let main option_values root files () =
-  let (files, regions) = files |> List.map (split_char ':') |> List.split in
+  let files_and_regions = List.map parse_suggest_cmd files in
   let root = guess_root (
     match root with
     | Some root -> Some root
     | None ->
-      begin match files with
-      | file::_ -> Some file
+      begin match files_and_regions with
+      | (file, _)::_ -> Some file
       | _ -> failwith "Expected at least one file"
       end
   ) in
   let ic, oc = connect option_values root in
-  let files = List.map expand_path files in
-  let files = List.map2 (^) files regions in
-  ServerProt.cmd_to_channel oc (ServerProt.SUGGEST files);
+  let files_and_regions = List.map (fun (file, region) ->
+    expand_path file, region
+  ) files_and_regions in
+  ServerProt.cmd_to_channel oc (ServerProt.SUGGEST files_and_regions);
   let suggestion_map: ServerProt.suggest_response = Timeout.input_value ic in
   SMap.iter (fun file result ->
     match result with
-    | Ok suggestions -> Printf.printf "%s\n%s" file suggestions
+    | Ok insertions ->
+      let content = Sys_utils.cat file in
+      let lines = Str.split_delim (Str.regexp "\n") content in
+      let new_content = Reason.do_patch lines insertions in
+      let patch_content = Diff.diff_of_file_and_string file new_content in
+      Printf.printf "%s\n%s" file patch_content
     | Error msg -> prerr_endlinef "Could not fill types for %s\n%s" file msg
   ) suggestion_map;
   flush stdout

@@ -55,7 +55,7 @@ type command =
 | PORT of string list
 | STATUS of Path.t
 | FORCE_RECHECK of string list
-| SUGGEST of string list
+| SUGGEST of (string * string list) list
 | CONNECT
 
 type command_with_context = {
@@ -81,7 +81,8 @@ type infer_type_response = (
   Loc.t * string option * string option * Reason.t list,
   string
 ) result
-type suggest_response = (string, string) result SMap.t (* map of files to annotation or error *)
+(* map of files to `Ok (line, col, annotation)` or `Error msg` *)
+type suggest_response = ((int * int * string) list, string) result SMap.t
 
 type gen_flow_file_error =
   | GenFlowFile_TypecheckError of Errors.ErrorSet.t
