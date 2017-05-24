@@ -12,6 +12,7 @@
 (* flow stop command *)
 (***********************************************************************)
 
+open CommandUtils
 open Utils_js
 
 exception FailedToKill of string option
@@ -25,12 +26,12 @@ let spec = {
       Stops a flow server\n\n\
       Flow will search upward for a .flowconfig file, beginning at ROOT.\n\
       ROOT is assumed to be current directory if unspecified\n"
-      CommandUtils.exe_name;
+      exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> CommandUtils.temp_dir_flag
-    |> CommandUtils.from_flag
-    |> CommandUtils.quiet_flag
+    |> temp_dir_flag
+    |> from_flag
+    |> quiet_flag
     |> anon "root" (optional string) ~doc:"Root directory"
   )
 }
@@ -43,8 +44,8 @@ let is_expected = function
       false
 
 let kill (ic, oc) =
-  ServerProt.cmd_to_channel oc ServerProt.KILL;
-  ServerProt.response_from_channel ic
+  send_command oc ServerProt.KILL;
+  wait_for_response ic
 
 let nice_kill (ic, oc) ~tmp_dir root =
   let response = kill (ic, oc) in
@@ -69,7 +70,7 @@ let mean_kill ~tmp_dir root =
         "Unable to figure out pids of running Flow server. \
         Try manually killing it with 'pkill %s' (be careful on shared \
         devservers)"
-        CommandUtils.exe_name
+        exe_name
       in
       raise (FailedToKill (Some msg))
   in
@@ -88,7 +89,7 @@ let mean_kill ~tmp_dir root =
   ()
 
 let main temp_dir from quiet root () =
-  let root = CommandUtils.guess_root root in
+  let root = guess_root root in
   let config = FlowConfig.get (Server_files_js.config_file root) in
   let root_s = Path.to_string root in
   let tmp_dir = match temp_dir with

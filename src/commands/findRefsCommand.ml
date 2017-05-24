@@ -71,8 +71,7 @@ let main option_values root json pretty strip_root path args () =
   (* connect to server *)
   let ic, oc = connect option_values root in
   (* dispatch command *)
-  ServerProt.cmd_to_channel oc
-    (ServerProt.FIND_REFS (file, line, column));
+  send_command oc (ServerProt.FIND_REFS (file, line, column));
   (* command result will be a position structure with full file path *)
   let response: ServerProt.find_refs_response = Timeout.input_value ic in
   match response with

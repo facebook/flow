@@ -72,9 +72,8 @@ let main option_values root error_flags strip_root json pretty verbose
      be removed. *)
   let all = all || not respect_pragma in
 
-  ServerProt.cmd_to_channel oc
-    (ServerProt.CHECK_FILE (file, verbose, graphml, all));
-  let response = ServerProt.response_from_channel ic in
+  send_command oc (ServerProt.CHECK_FILE (file, verbose, graphml, all));
+  let response = wait_for_response ic in
   let stdin_file = match file with
     | ServerProt.FileContent (None, contents) ->
         Some (Path.make_unsafe "-", contents)

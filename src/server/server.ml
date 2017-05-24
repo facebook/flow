@@ -20,6 +20,20 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
   let name = "flow server"
 
+  let wait_for_command client : ServerProt.command_with_context =
+    let s = input_line client.ic in
+    if s <> ServerProt.build_revision
+    then { ServerProt.
+      client_logging_context = FlowEventLogger.get_context ();
+      command = ServerProt.ERROR_OUT_OF_DATE;
+    }
+    else Marshal.from_channel client.ic
+
+  let send_response (oc:out_channel) (cmd:ServerProt.response): unit =
+    Printf.fprintf oc "%s\n" ServerProt.build_revision;
+    Marshal.to_channel oc cmd [];
+    flush oc
+
   let init genv =
     (* Encapsulate merge_strict_context for dumper *)
     let merge_component options cx =
@@ -33,10 +47,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     |> Dumper.init merge_component genv
 
   let incorrect_hash oc =
-    ServerProt.response_to_channel oc ServerProt.SERVER_OUT_OF_DATE;
+    send_response oc ServerProt.SERVER_OUT_OF_DATE;
     FlowEventLogger.out_of_date ();
-    Hh_logger.fatal     "Status: Error";
-    Hh_logger.fatal     "%s is out of date. Exiting." name;
+    Hh_logger.fatal "Status: Error";
+    Hh_logger.fatal "flow server is out of date. Exiting.";
     FlowExitStatus.(exit Server_out_of_date)
 
   let status_log errors =
@@ -118,7 +132,7 @@ let collate_errors =
     collate_errors env.ServerEnv.errors
 
   let die_nicely oc =
-    ServerProt.response_to_channel oc ServerProt.SERVER_DYING;
+    send_response oc ServerProt.SERVER_DYING;
     FlowEventLogger.killed ();
     Hh_logger.fatal "Status: Error";
     Hh_logger.fatal "Sent KILL command by client. Dying.";
@@ -531,7 +545,7 @@ let collate_errors =
       env
     end
 
-  let respond genv env ~client ~msg =
+  let respond ~genv ~env ~client { ServerProt.client_logging_context; command; } =
     let env = ref env in
     let oc = client.oc in
     let marshal msg =
@@ -539,7 +553,6 @@ let collate_errors =
       flush oc
     in
     let options = genv.ServerEnv.options in
-    let { ServerProt.client_logging_context; command; } = msg in
     begin match command with
     | ServerProt.AUTOCOMPLETE fn ->
         let results: ServerProt.autocomplete_response =
@@ -549,7 +562,7 @@ let collate_errors =
     | ServerProt.CHECK_FILE (fn, verbose, graphml, force) ->
         let options = { options with Options.opt_output_graphml = graphml } in
         (check_file ~options ~force ~verbose fn: ServerProt.response)
-          |> ServerProt.response_to_channel oc
+          |> send_response oc
     | ServerProt.COVERAGE (fn, force) ->
         (coverage ~options ~force fn: ServerProt.coverage_response)
           |> marshal
@@ -588,7 +601,7 @@ let collate_errors =
           |> marshal
     | ServerProt.STATUS client_root ->
         let status = get_status genv !env client_root in
-        ServerProt.response_to_channel oc status;
+        send_response oc status;
         begin match status with
           | ServerProt.DIRECTORY_MISMATCH {ServerProt.server; ServerProt.client} ->
               Hh_logger.fatal "Status: Error";
@@ -635,9 +648,9 @@ let collate_errors =
     | _ -> true
 
   let handle_client genv env client =
-    let msg = ServerProt.cmd_from_channel client.ic in
-    let env = respond genv env ~client ~msg in
-    if should_close msg then client.close ();
+    let command = wait_for_command client in
+    let env = respond ~genv ~env ~client command in
+    if should_close command then client.close ();
     env
 
   let handle_persistent_client genv env client =

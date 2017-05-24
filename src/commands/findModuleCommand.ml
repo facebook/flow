@@ -45,7 +45,7 @@ let main option_values root json pretty strip_root moduleref filename () =
 
   let ic, oc = connect option_values root in
 
-  ServerProt.cmd_to_channel oc (ServerProt.FIND_MODULE (moduleref, filename));
+  send_command oc (ServerProt.FIND_MODULE (moduleref, filename));
   let response: Loc.filename option = Timeout.input_value ic in
   let result = match response with
     | Some Loc.LibFile file

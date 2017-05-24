@@ -236,7 +236,7 @@ let main
   let all = all || not respect_pragma in
 
   let ic, oc = connect option_values root in
-  ServerProt.cmd_to_channel oc (ServerProt.COVERAGE (file, all));
+  send_command oc (ServerProt.COVERAGE (file, all));
 
   (* pretty implies json *)
   let json = json || pretty in

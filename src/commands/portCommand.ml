@@ -42,7 +42,7 @@ let main option_values root files () =
   ) in
   let ic, oc = connect option_values root in
   let files = List.map expand_path files in
-  ServerProt.cmd_to_channel oc (ServerProt.PORT files);
+  send_command oc (ServerProt.PORT files);
   let patch_map: ((string, exn) result) SMap.t = Timeout.input_value ic in
   SMap.iter (fun file patches_or_err ->
     match patches_or_err with

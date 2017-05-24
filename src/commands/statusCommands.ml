@@ -9,6 +9,7 @@
  *)
 
 open CommandInfo
+open CommandUtils
 
 (***********************************************************************)
 (* flow status (report current error set) command impl *)
@@ -36,13 +37,13 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           A server will be started if none is running over ROOT.\n\
           \n\
           Status command options:"
-          CommandUtils.exe_name;
+          exe_name;
       args = CommandSpec.ArgSpec.(
         empty
-        |> CommandUtils.server_flags
-        |> CommandUtils.json_flags
-        |> CommandUtils.error_flags
-        |> CommandUtils.strip_root_flag
+        |> server_flags
+        |> json_flags
+        |> error_flags
+        |> strip_root_flag
         |> dummy false (* match --version below *)
         |> anon "root" (optional string) ~doc:"Root directory"
       )
@@ -75,14 +76,14 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
               \tstatus\n\
           \n\
           Status command options:"
-          CommandUtils.exe_name
+          exe_name
           cmd_usage;
       args = CommandSpec.ArgSpec.(
         empty
-        |> CommandUtils.server_flags
-        |> CommandUtils.json_flags
-        |> CommandUtils.error_flags
-        |> CommandUtils.strip_root_flag
+        |> server_flags
+        |> json_flags
+        |> error_flags
+        |> strip_root_flag
         |> flag "--version" no_arg
             ~doc:"(Deprecated, use `flow version` instead) Print version number and exit"
         |> anon "root" (optional string) ~doc:"Root directory"
@@ -101,9 +102,9 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
   let rec check_status (args:args) server_flags =
     let name = "flow" in
 
-    let ic, oc = CommandUtils.connect server_flags args.root in
-    ServerProt.cmd_to_channel oc (ServerProt.STATUS args.root);
-    let response = ServerProt.response_from_channel ic in
+    let ic, oc = connect server_flags args.root in
+    send_command oc (ServerProt.STATUS args.root);
+    let response = wait_for_response ic in
     let strip_root = if args.strip_root then Some args.root else None in
     let print_json = Errors.Json_output.print_errors
       ~out_channel:stdout ~strip_root ~pretty:args.pretty
@@ -147,7 +148,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         (Path.to_string args.root) in
       FlowExitStatus.(exit ~msg Server_dying)
     | ServerProt.SERVER_OUT_OF_DATE ->
-      if server_flags.CommandUtils.no_auto_start
+      if server_flags.no_auto_start
       then Printf.printf "%s is outdated, killing it.\n" name
       else Printf.printf "%s is outdated, going to launch a new one.\n" name;
       flush stdout;
@@ -155,13 +156,13 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
 
 
   and retry (args, server_flags) sleep msg =
-    CommandUtils.check_timeout ();
-    let retries = server_flags.CommandUtils.retries in
+    check_timeout ();
+    let retries = server_flags.retries in
     if retries > 0
     then begin
       Printf.fprintf stderr "%s\n%!" msg;
       CommandUtils.sleep sleep;
-      check_status args { server_flags with CommandUtils.retries = retries - 1 }
+      check_status args { server_flags with retries = retries - 1 }
     end else
       FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries)
 
@@ -169,13 +170,13 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     if version then (
       prerr_endline "Warning: \
         `flow --version` is deprecated in favor of `flow version`";
-      CommandUtils.print_version ();
+      print_version ();
       FlowExitStatus.(exit No_error)
     );
 
-    let root = CommandUtils.guess_root root in
-    let timeout_arg = server_flags.CommandUtils.timeout in
-    if timeout_arg > 0 then CommandUtils.set_timeout timeout_arg;
+    let root = guess_root root in
+    let timeout_arg = server_flags.timeout in
+    if timeout_arg > 0 then set_timeout timeout_arg;
 
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
     let strip_root = strip_root || FlowConfig.strip_root flowconfig in

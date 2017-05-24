@@ -135,7 +135,7 @@ let main option_values root json pretty strip_root verbose path include_raw args
   then prerr_endline "NOTE: --verbose writes to the server log file";
 
   let ic, oc = connect option_values root in
-  ServerProt.cmd_to_channel oc
+  send_command oc
     (ServerProt.INFER_TYPE (file, line, column, verbose, include_raw));
   match (Timeout.input_value ic : ServerProt.infer_type_response) with
   | Error err -> handle_error err ~json ~pretty

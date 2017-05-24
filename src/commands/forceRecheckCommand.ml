@@ -12,6 +12,8 @@
 (* flow force-recheck *)
 (***********************************************************************)
 
+open CommandUtils
+
 let spec = {
   CommandSpec.
   name = "force-recheck";
@@ -19,11 +21,11 @@ let spec = {
   usage = Printf.sprintf
     "Usage: %s force-recheck [OPTION]... FILES\n\
       Forces the Flow server to recheck a given list of files.\n"
-    CommandUtils.exe_name;
+    exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> CommandUtils.server_flags
-    |> CommandUtils.root_flag
+    |> server_flags
+    |> root_flag
     |> anon "files" (required (list_of string))
         ~doc:"Specify files to recheck"
   )
@@ -35,10 +37,9 @@ type args = {
 }
 
 let force_recheck (args:args) server_flags =
-  let ic, oc = CommandUtils.connect server_flags args.root in
-  let files = List.map CommandUtils.get_path_of_file args.files in
-  ServerProt.cmd_to_channel oc
-    (ServerProt.FORCE_RECHECK files);
+  let ic, oc = connect server_flags args.root in
+  let files = List.map get_path_of_file args.files in
+  send_command oc (ServerProt.FORCE_RECHECK files);
   let () = Timeout.input_value ic in
   FlowExitStatus.(exit No_error)
 
@@ -56,7 +57,7 @@ let rec find_parent_that_exists path =
   end
 
 let main server_flags root files () =
-  let root = CommandUtils.guess_root (
+  let root = guess_root (
     match root, files with
     | Some root, _ -> Some root
     | None, file::_ -> (Some (find_parent_that_exists file))

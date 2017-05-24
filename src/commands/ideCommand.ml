@@ -279,7 +279,7 @@ module HumanReadableProtocol = ProtocolFunctor(HumanReadable)
 let main option_values root protocol () =
   let root = CommandUtils.guess_root root in
   let ic, oc = connect option_values root in
-  ServerProt.cmd_to_channel oc ServerProt.CONNECT;
+  send_command oc ServerProt.CONNECT;
   let buffered_stdin = stdin |> Unix.descr_of_in_channel |> Buffered_line_reader.create in
   let ic_fd = Timeout.descr_of_in_channel ic in
   let oc_fd = Unix.descr_of_out_channel oc in

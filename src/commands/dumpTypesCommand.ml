@@ -107,8 +107,7 @@ let main option_values root json pretty strip_root path include_raw filename () 
   let strip_root = if strip_root then Some root else None in
 
   let ic, oc = connect option_values root in
-  ServerProt.cmd_to_channel oc
-    (ServerProt.DUMP_TYPES (file, include_raw, strip_root));
+  send_command oc (ServerProt.DUMP_TYPES (file, include_raw, strip_root));
 
   match (Timeout.input_value ic : ServerProt.dump_types_response) with
   | Error err ->

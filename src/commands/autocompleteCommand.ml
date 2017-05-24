@@ -81,7 +81,7 @@ let main option_values root json pretty strip_root args () =
   let strip_root = strip_root || FlowConfig.strip_root flowconfig in
   let strip_root = if strip_root then Some root else None in
   let ic, oc = connect option_values root in
-  ServerProt.cmd_to_channel oc (ServerProt.AUTOCOMPLETE file);
+  send_command oc (ServerProt.AUTOCOMPLETE file);
   let results = (Timeout.input_value ic : ServerProt.autocomplete_response) in
   if json || pretty
   then (

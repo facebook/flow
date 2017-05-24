@@ -60,7 +60,7 @@ let main option_values root files () =
   let files_and_regions = List.map (fun (file, region) ->
     expand_path file, region
   ) files_and_regions in
-  ServerProt.cmd_to_channel oc (ServerProt.SUGGEST files_and_regions);
+  send_command oc (ServerProt.SUGGEST files_and_regions);
   let suggestion_map: ServerProt.suggest_response = Timeout.input_value ic in
   SMap.iter (fun file result ->
     match result with

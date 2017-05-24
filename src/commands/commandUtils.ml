@@ -420,3 +420,18 @@ let range_string_of_loc ~strip_root loc = Loc.(
 )
 
 let exe_name = Utils_js.exe_name
+
+let send_command (oc:out_channel) (cmd:ServerProt.command): unit =
+  let command = { ServerProt.
+    client_logging_context = FlowEventLogger.get_context ();
+    command = cmd;
+  } in
+  Printf.fprintf oc "%s\n" ServerProt.build_revision;
+  Marshal.to_channel oc command [];
+  flush oc
+
+let wait_for_response (ic:Timeout.in_channel): ServerProt.response =
+  let s = Timeout.input_line ic in
+  if s <> ServerProt.build_revision
+  then ServerProt.SERVER_OUT_OF_DATE
+  else Timeout.input_value ic
