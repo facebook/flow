@@ -96,10 +96,31 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
   match parse_result with
   | Parsing_service_js.Parse_ok ast ->
       (* defaults *)
-      let metadata = { (Context.metadata_of_options options) with
-        Context.checked = true;
-        Context.verbose = verbose;
-      } in
+      let metadata = Context.metadata_of_options options in
+      let metadata =
+        let checked, weak = Docblock.(
+          match flow info with
+          | None ->
+            (* If the file does not specify a @flow pragma, we still want to try
+               to infer something, but the file might be huge and unannotated,
+               which can cause performance issues (including non-termination).
+               To avoid this case, we infer the file using "weak mode." *)
+            true, true
+          | Some OptIn ->
+            (* Respect @flow pragma *)
+            true, false
+          | Some OptInWeak ->
+            (* Respect @flow weak pragma *)
+            true, true
+          | Some OptOut ->
+            (* Respect @noflow, which `apply_docblock_overrides` does not by
+               default. Again, large files can cause non-termination, so
+               respecting this pragma gives programmers a way to tell Flow to
+               avoid inference on such files. *)
+            false, false
+        ) in
+        { metadata with Context.checked; weak; verbose }
+      in
       (* apply overrides from the docblock *)
       let metadata = Infer_service.apply_docblock_overrides metadata info in
       let require_loc_map = Parsing_service_js.calc_requires ast (info.Docblock.jsx = None) in

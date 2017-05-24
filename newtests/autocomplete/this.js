@@ -3,8 +3,8 @@
 // issue #1197
 class Foo {
   baz: string;
-  bar() {}
-  hello() {
+  bar(): void {}
+  hello(): void {
     this.
   }
 }
