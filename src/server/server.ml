@@ -121,9 +121,9 @@ let collate_errors =
 
   let autocomplete ~options command_context file_input =
     let path, content = match file_input with
-      | ServerProt.FileName _ -> failwith "Not implemented"
-      | ServerProt.FileContent (_, content) ->
-          ServerProt.file_input_get_filename file_input, content
+      | File_input.FileName _ -> failwith "Not implemented"
+      | File_input.FileContent (_, content) ->
+          File_input.filename_of_file_input file_input, content
     in
     let state = Autocomplete_js.autocomplete_set_hooks () in
     let results =
@@ -148,10 +148,10 @@ let collate_errors =
     results
 
   let check_file ~options ~force ~verbose file_input =
-    let file = ServerProt.file_input_get_filename file_input in
+    let file = File_input.filename_of_file_input file_input in
     match file_input with
-    | ServerProt.FileName _ -> failwith "Not implemented"
-    | ServerProt.FileContent (_, content) ->
+    | File_input.FileName _ -> failwith "Not implemented"
+    | File_input.FileContent (_, content) ->
         let should_check =
           if force then
             true
@@ -184,10 +184,10 @@ let collate_errors =
     }
 
   let infer_type ~options client_context (file_input, line, col, verbose, include_raw) =
-    let file = ServerProt.file_input_get_filename file_input in
+    let file = File_input.filename_of_file_input file_input in
     let file = Loc.SourceFile file in
     let response = (try
-      let content = ServerProt.file_input_get_content file_input in
+      let content = File_input.content_of_file_input file_input in
       Ok (Type_info_service.type_at_pos
         ~options ~client_context ~verbose ~include_raw
         file content line col
@@ -201,10 +201,10 @@ let collate_errors =
     response
 
   let dump_types ~options ~include_raw ~strip_root file_input =
-    let file = ServerProt.file_input_get_filename file_input in
+    let file = File_input.filename_of_file_input file_input in
     let file = Loc.SourceFile file in
     try
-      let content = ServerProt.file_input_get_content file_input in
+      let content = File_input.content_of_file_input file_input in
       Ok (Type_info_service.dump_types
         ~options ~include_raw ~strip_root file content
       )
@@ -212,10 +212,10 @@ let collate_errors =
       Error (Printexc.to_string exn)
 
   let coverage ~options ~force file_input =
-    let file = ServerProt.file_input_get_filename file_input in
+    let file = File_input.filename_of_file_input file_input in
     let file = Loc.SourceFile file in
     try
-      let content = ServerProt.file_input_get_content file_input in
+      let content = File_input.content_of_file_input file_input in
       Ok (Type_info_service.coverage ~options ~force file content)
     with exn ->
       Error (Printexc.to_string exn)
@@ -257,13 +257,13 @@ let collate_errors =
           List.fold_left (fun (flow_files, cxs, non_flow_files, error) file ->
             if error <> None then (flow_files, cxs, non_flow_files, error) else
             match file with
-            | ServerProt.FileContent _ ->
+            | File_input.FileContent _ ->
               let error_msg = "This command only works with file paths." in
               let error =
                 Some (ServerProt.GenFlowFile_UnexpectedError error_msg)
               in
               (flow_files, cxs, non_flow_files, error)
-            | ServerProt.FileName file_path ->
+            | File_input.FileName file_path ->
               let src_file = Loc.SourceFile file_path in
               (* TODO: Use InfoHeap as the definitive way to detect @flow vs
                * non-@flow
@@ -314,13 +314,13 @@ let collate_errors =
     result
 
   let find_refs ~options (file_input, line, col) =
-    let filename = ServerProt.file_input_get_filename file_input in
+    let filename = File_input.filename_of_file_input file_input in
     let file = Loc.SourceFile filename in
     let loc = mk_loc file line col in
     let state = FindRefs_js.set_hooks loc in
     let result =
       try
-        let content = ServerProt.file_input_get_content file_input in
+        let content = File_input.content_of_file_input file_input in
         let cx = match Types_js.typecheck_contents ~options content file with
           | _, Some cx, _, _ -> cx
           | _  -> failwith "Couldn't parse file"
@@ -333,12 +333,12 @@ let collate_errors =
     result
 
   let get_def ~options command_context (file_input, line, col) =
-    let filename = ServerProt.file_input_get_filename file_input in
+    let filename = File_input.filename_of_file_input file_input in
     let file = Loc.SourceFile filename in
     let loc = mk_loc file line col in
     let state = GetDef_js.getdef_set_hooks loc in
     let result = try
-      let content = ServerProt.file_input_get_content file_input in
+      let content = File_input.content_of_file_input file_input in
       let profiling, cx = match Types_js.typecheck_contents ~options content file with
         | profiling, Some cx, _, _ -> profiling, cx
         | _  -> failwith "Couldn't parse file"

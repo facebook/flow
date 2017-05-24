@@ -8,44 +8,26 @@
  *
  *)
 
-type file_input =
-| FileName of string
-| FileContent of string option * string (* filename, content *)
-
-let path_of_input = function
-| FileName f -> Some f
-| FileContent (Some f, _) -> Some f
-| _ -> None
-
-let file_input_get_filename = function
-  | FileName fn -> fn
-  | FileContent (Some fn, _) -> fn
-  | FileContent (None, _) -> "-"
-
-let file_input_get_content = function
-  | FileName fn -> Sys_utils.cat fn
-  | FileContent (_, content) -> content
-
 let build_revision = match Build_id.build_revision with
   | "" -> FlowConfig.version
   | x -> x
 
 type command =
-| AUTOCOMPLETE of file_input
+| AUTOCOMPLETE of File_input.t
 | CHECK_FILE of
-    file_input *
+    File_input.t *
     Verbose.t option *
     bool * (* graphml *)
     bool (* force *)
-| COVERAGE of file_input * bool (* force *)
-| DUMP_TYPES of file_input * bool (* filename, include raw *) * (Path.t option) (* strip_root *)
+| COVERAGE of File_input.t * bool (* force *)
+| DUMP_TYPES of File_input.t * bool (* filename, include raw *) * (Path.t option) (* strip_root *)
 | FIND_MODULE of string * string
-| FIND_REFS of file_input * int * int (* filename, line, char *)
-| GEN_FLOW_FILES of file_input list
-| GET_DEF of file_input * int * int (* filename, line, char *)
+| FIND_REFS of File_input.t * int * int (* filename, line, char *)
+| GEN_FLOW_FILES of File_input.t list
+| GET_DEF of File_input.t * int * int (* filename, line, char *)
 | GET_IMPORTS of string list
 | INFER_TYPE of
-    file_input * (* filename|content *)
+    File_input.t * (* filename|content *)
     int * (* line *)
     int * (* char *)
     Verbose.t option *
@@ -108,7 +90,7 @@ type response =
 module Persistent_connection_prot = struct
   type request =
     | Subscribe
-    | Autocomplete of (file_input * (* request id *) int)
+    | Autocomplete of (File_input.t * (* request id *) int)
 
   type response =
     | Errors of Errors.ErrorSet.t

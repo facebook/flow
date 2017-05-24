@@ -222,7 +222,7 @@ let main
   let root = guess_root (
     match root with
     | Some root -> Some root
-    | None -> ServerProt.path_of_input file
+    | None -> File_input.path_of_file_input file
   ) in
 
   if not json && all && respect_pragma then prerr_endline
@@ -245,7 +245,7 @@ let main
   | Error err ->
       handle_error ~json ~pretty err
   | Ok resp ->
-      let content = ServerProt.file_input_get_content file in
+      let content = File_input.content_of_file_input file in
       handle_response ~json ~pretty ~color ~debug resp content
 
 let command = CommandSpec.command spec main

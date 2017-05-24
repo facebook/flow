@@ -41,7 +41,7 @@ let parse_args path args =
   let (file, line, column) = match args with
   | [file; line; column] ->
       let file = expand_path file in
-      ServerProt.FileName file, (int_of_string line), (int_of_string column)
+      File_input.FileName file, (int_of_string line), (int_of_string column)
   | [line; column] ->
       get_file_from_filename_or_stdin path None,
       (int_of_string line),
@@ -64,7 +64,7 @@ let main option_values root json pretty strip_root path args () =
   let root = guess_root (
     match root with
     | Some root -> Some root
-    | None -> ServerProt.path_of_input file
+    | None -> File_input.path_of_file_input file
   ) in
   let strip_root = if strip_root then Some root else None in
   (* connect to server *)
@@ -91,7 +91,7 @@ let main option_values root json pretty strip_root path args () =
   | Error exn_msg ->
       Utils_js.prerr_endlinef
         "Could not get definition for %s:%d:%d\n%s"
-        (ServerProt.file_input_get_filename file) line column
+        (File_input.filename_of_file_input file) line column
         exn_msg
 
 let command = CommandSpec.command spec main

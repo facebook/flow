@@ -59,8 +59,8 @@ module Hh_jsonTranslator : (
 end
 
 let get_file = function
-  | Some filename -> ServerProt.FileName (CommandUtils.expand_path filename)
-  | None -> ServerProt.FileContent (None, Sys_utils.read_stdin_to_string ())
+  | Some filename -> File_input.FileName (CommandUtils.expand_path filename)
+  | None -> File_input.FileContent (None, Sys_utils.read_stdin_to_string ())
 
 module Translate = Estree_translator.Translate (Hh_jsonTranslator)
 
@@ -107,7 +107,7 @@ let token_to_json token_result =
 let main include_tokens pretty file_type_opt from filename () =
   FlowEventLogger.set_from from;
   let file = get_file filename in
-  let content = ServerProt.file_input_get_content file in
+  let content = File_input.content_of_file_input file in
 
   let file_type =
     match file_type_opt with

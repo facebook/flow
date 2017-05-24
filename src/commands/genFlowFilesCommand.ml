@@ -102,7 +102,7 @@ let main option_values root error_flags strip_root ignore_flag include_flag src 
 
   let src_is_dir = Sys.is_directory src in
   let filenames =
-    if not src_is_dir then [ServerProt.FileName src] else (
+    if not src_is_dir then [File_input.FileName src] else (
       (* If `src` is a directory, we require that an out_dir was specified *)
       (if out_dir = None then
         let msg =
@@ -120,7 +120,7 @@ let main option_values root error_flags strip_root ignore_flag include_flag src 
       let files = Files.get_all next_files in
       let num_files = SSet.cardinal files in
       print_endlinef "Found %d files, generating libdefs..." num_files;
-      List.map (fun f -> ServerProt.FileName f) (SSet.elements files)
+      List.map (fun f -> File_input.FileName f) (SSet.elements files)
     )
   in
 

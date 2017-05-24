@@ -101,7 +101,7 @@ let main option_values root json pretty strip_root path include_raw filename () 
   let root = guess_root (
     match root with
     | Some root -> Some root
-    | None -> ServerProt.path_of_input file
+    | None -> File_input.path_of_file_input file
   ) in
 
   let strip_root = if strip_root then Some root else None in

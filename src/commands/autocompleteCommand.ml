@@ -45,18 +45,18 @@ let spec = {
 let parse_args = function
   | None
   | Some [] ->
-      ServerProt.FileContent (None,
+      File_input.FileContent (None,
                               Sys_utils.read_stdin_to_string ())
   | Some [filename] ->
       let filename = get_path_of_file filename in
-      ServerProt.FileContent (Some filename,
+      File_input.FileContent (Some filename,
                               Sys_utils.read_stdin_to_string ())
   | Some [line; column] ->
       let line = int_of_string line in
       let column = int_of_string column in
       let contents = Sys_utils.read_stdin_to_string () in
       let (line, column) = convert_input_pos (line, column) in
-      ServerProt.FileContent (None,
+      File_input.FileContent (None,
                               AutocompleteService_js.add_autocomplete_token contents line column)
   | Some [filename; line; column] ->
       let line = int_of_string line in
@@ -64,7 +64,7 @@ let parse_args = function
       let contents = Sys_utils.read_stdin_to_string () in
       let filename = get_path_of_file filename in
       let (line, column) = convert_input_pos (line, column) in
-      ServerProt.FileContent (Some filename,
+      File_input.FileContent (Some filename,
                               AutocompleteService_js.add_autocomplete_token contents line column)
   | _ ->
       CommandSpec.usage spec;
@@ -75,7 +75,7 @@ let main option_values root json pretty strip_root args () =
   let root = guess_root (
     match root with
     | Some root -> Some root
-    | None -> ServerProt.path_of_input file
+    | None -> File_input.path_of_file_input file
   ) in
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
   let strip_root = strip_root || FlowConfig.strip_root flowconfig in

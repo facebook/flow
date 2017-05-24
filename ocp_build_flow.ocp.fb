@@ -32,6 +32,7 @@ begin library "flow-commands"
     "flow-stubs"
     "flow-server"
     "flow-server-env"
+    "flow-server-utils"
     "flow-services-autocomplete"
     "flow-services-inference"
     "flow-services-flowFileGen"
@@ -252,6 +253,7 @@ begin library "flow-server"
   sort = true
   files = begin fb-glob "src/server"
     excludes = [
+      "file_input.ml"
       "serverEnv.ml"
       "serverUtils.ml"
       "serverProt.ml"
@@ -303,17 +305,29 @@ begin library "flow-server-env"
   ]
 end
 
+begin library "flow-server-utils"
+  sort = true
+  dirname = "src/server"
+  files = [
+    "file_input.ml"
+    "serverUtils.ml"
+  ]
+  requires = [
+    "hh-utils-sys"
+  ]
+end
+
 begin library "flow-persistent-connection"
   sort = true
   dirname = "src/server"
   files = [
     "persistent_connection.ml"
     "serverProt.ml"
-    "serverUtils.ml"
   ]
   requires = [
     "flow-common"
     "flow-common-utils"
+    "flow-server-utils"
     "flow-services-autocomplete"
     "hh-utils"
   ]

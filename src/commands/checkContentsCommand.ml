@@ -49,7 +49,7 @@ let main option_values root error_flags strip_root json pretty verbose
   let root = guess_root (
     match root with
     | Some root -> Some root
-    | None -> ServerProt.path_of_input file
+    | None -> File_input.path_of_file_input file
   ) in
 
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
@@ -75,9 +75,9 @@ let main option_values root error_flags strip_root json pretty verbose
   send_command oc (ServerProt.CHECK_FILE (file, verbose, graphml, all));
   let response = wait_for_response ic in
   let stdin_file = match file with
-    | ServerProt.FileContent (None, contents) ->
+    | File_input.FileContent (None, contents) ->
         Some (Path.make_unsafe "-", contents)
-    | ServerProt.FileContent (Some path, contents) ->
+    | File_input.FileContent (Some path, contents) ->
         Some (Path.make path, contents)
     | _ -> None
   in

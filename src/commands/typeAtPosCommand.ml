@@ -54,7 +54,7 @@ let parse_args path args =
   | [file; line; column] ->
       let file = expand_path file in
       let line, column = parse_line_and_column line column in
-      ServerProt.FileName file, line, column
+      File_input.FileName file, line, column
   | [line; column] ->
       let line, column = parse_line_and_column line column in
       get_file_from_filename_or_stdin path None,
@@ -127,7 +127,7 @@ let main option_values root json pretty strip_root verbose path include_raw args
   let root = guess_root (
     match root with
     | Some root -> Some root
-    | None -> ServerProt.path_of_input file
+    | None -> File_input.path_of_file_input file
   ) in
   let strip_root = if strip_root then Some root else None in
 

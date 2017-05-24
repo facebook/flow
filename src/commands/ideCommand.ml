@@ -54,7 +54,7 @@ module HumanReadable: ClientProtocol = struct
        * you need to include the file contents on the same line, and it must
        * also have the magic token. *)
       | "autocomplete"::file::contents ->
-          let fileinput = ServerProt.FileContent (Some file, String.concat " " contents) in
+          let fileinput = File_input.FileContent (Some file, String.concat " " contents) in
           Some (Prot.Autocomplete (fileinput, 0 (* use a dummy id *)))
       | _ ->
         prerr_endline ("Command not recognized: " ^ line); None
@@ -193,7 +193,7 @@ module VeryUnstable: ClientProtocol = struct
         let column = int_of_string column_str in
         let (line, column) = convert_input_pos (line, column) in
         let with_token = AutocompleteService_js.add_autocomplete_token contents line column in
-        Some (Prot.Autocomplete (ServerProt.FileContent (Some file, with_token), id))
+        Some (Prot.Autocomplete (File_input.FileContent (Some file, with_token), id))
     | _ ->
         prerr_endline "Incorrect arguments passed to autocomplete. Should be filepath, line, column, contents";
         None

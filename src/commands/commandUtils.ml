@@ -399,7 +399,7 @@ let get_path_of_file file =
 
 let get_file_from_filename_or_stdin path = function
   | Some filename ->
-      ServerProt.FileName (expand_path filename)
+      File_input.FileName (expand_path filename)
   | None ->
       let contents = Sys_utils.read_stdin_to_string () in
       let filename = (match path with
@@ -407,7 +407,7 @@ let get_file_from_filename_or_stdin path = function
         | None -> None
         | Some str -> Some (get_path_of_file str)
       ) in
-      ServerProt.FileContent (filename, contents)
+      File_input.FileContent (filename, contents)
 
 let range_string_of_loc ~strip_root loc = Loc.(
   let file = match loc.source with
