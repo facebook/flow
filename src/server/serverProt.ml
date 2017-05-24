@@ -39,7 +39,6 @@ type command =
     bool (* force *)
 | COVERAGE of file_input * bool (* force *)
 | DUMP_TYPES of file_input * bool (* filename, include raw *) * (Path.t option) (* strip_root *)
-| ERROR_OUT_OF_DATE
 | FIND_MODULE of string * string
 | FIND_REFS of file_input * int * int (* filename, line, char *)
 | GEN_FLOW_FILES of file_input list
@@ -104,7 +103,6 @@ type response =
 | ERRORS of Errors.ErrorSet.t
 | NO_ERRORS
 | SERVER_DYING
-| SERVER_OUT_OF_DATE
 | NOT_COVERED
 
 let response_to_string = function
@@ -113,7 +111,6 @@ let response_to_string = function
   | NO_ERRORS -> "No Errors"
   | NOT_COVERED -> "No Errors (Not @flow)"
   | SERVER_DYING -> "Server Dying"
-  | SERVER_OUT_OF_DATE -> "Server Out of Date"
 
 module Persistent_connection_prot = struct
   type request =

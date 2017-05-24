@@ -20,20 +20,6 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
   let name = "flow server"
 
-  let wait_for_command client : ServerProt.command_with_context =
-    let s = input_line client.ic in
-    if s <> ServerProt.build_revision
-    then { ServerProt.
-      client_logging_context = FlowEventLogger.get_context ();
-      command = ServerProt.ERROR_OUT_OF_DATE;
-    }
-    else Marshal.from_channel client.ic
-
-  let send_response (oc:out_channel) (cmd:ServerProt.response): unit =
-    Printf.fprintf oc "%s\n" ServerProt.build_revision;
-    Marshal.to_channel oc cmd [];
-    flush oc
-
   let init genv =
     (* Encapsulate merge_strict_context for dumper *)
     let merge_component options cx =
@@ -45,13 +31,6 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     (* start the server and pipe its result into the dumper *)
     Types_js.server_init genv
     |> Dumper.init merge_component genv
-
-  let incorrect_hash oc =
-    send_response oc ServerProt.SERVER_OUT_OF_DATE;
-    FlowEventLogger.out_of_date ();
-    Hh_logger.fatal "Status: Error";
-    Hh_logger.fatal "flow server is out of date. Exiting.";
-    FlowExitStatus.(exit Server_out_of_date)
 
   let status_log errors =
     if Errors.ErrorSet.is_empty errors
@@ -131,8 +110,7 @@ let collate_errors =
   let check_once _genv env =
     collate_errors env.ServerEnv.errors
 
-  let die_nicely oc =
-    send_response oc ServerProt.SERVER_DYING;
+  let die_nicely () =
     FlowEventLogger.killed ();
     Hh_logger.fatal "Status: Error";
     Hh_logger.fatal "Sent KILL command by client. Dying.";
@@ -562,15 +540,13 @@ let collate_errors =
     | ServerProt.CHECK_FILE (fn, verbose, graphml, force) ->
         let options = { options with Options.opt_output_graphml = graphml } in
         (check_file ~options ~force ~verbose fn: ServerProt.response)
-          |> send_response oc
+          |> marshal
     | ServerProt.COVERAGE (fn, force) ->
         (coverage ~options ~force fn: ServerProt.coverage_response)
           |> marshal
     | ServerProt.DUMP_TYPES (fn, include_raw, strip_root) ->
         (dump_types ~options ~include_raw ~strip_root fn: ServerProt.dump_types_response)
           |> marshal
-    | ServerProt.ERROR_OUT_OF_DATE ->
-        incorrect_hash oc
     | ServerProt.FIND_MODULE (moduleref, filename) ->
         (find_module ~options (moduleref, filename): filename option)
           |> marshal
@@ -595,13 +571,14 @@ let collate_errors =
         (infer_type ~options client_logging_context (fn, line, char, verbose, include_raw): ServerProt.infer_type_response)
           |> marshal
     | ServerProt.KILL ->
-        die_nicely oc
+        marshal (ServerProt.SERVER_DYING: ServerProt.response);
+        die_nicely ()
     | ServerProt.PORT (files) ->
         (port files: ServerProt.port_response)
           |> marshal
     | ServerProt.STATUS client_root ->
-        let status = get_status genv !env client_root in
-        send_response oc status;
+        let status: ServerProt.response = get_status genv !env client_root in
+        marshal status;
         begin match status with
           | ServerProt.DIRECTORY_MISMATCH {ServerProt.server; ServerProt.client} ->
               Hh_logger.fatal "Status: Error";
@@ -648,7 +625,7 @@ let collate_errors =
     | _ -> true
 
   let handle_client genv env client =
-    let command = wait_for_command client in
+    let command : ServerProt.command_with_context = Marshal.from_channel client.ic in
     let env = respond ~genv ~env ~client command in
     if should_close command then client.close ();
     env

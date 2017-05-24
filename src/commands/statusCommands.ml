@@ -147,12 +147,6 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         "Server has been killed for %s"
         (Path.to_string args.root) in
       FlowExitStatus.(exit ~msg Server_dying)
-    | ServerProt.SERVER_OUT_OF_DATE ->
-      if server_flags.no_auto_start
-      then Printf.printf "%s is outdated, killing it.\n" name
-      else Printf.printf "%s is outdated, going to launch a new one.\n" name;
-      flush stdout;
-      retry (args, server_flags) 3 "The flow server will be ready in a moment"
 
 
   and retry (args, server_flags) sleep msg =

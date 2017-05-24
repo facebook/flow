@@ -37,8 +37,7 @@ let spec = {
 }
 
 let is_expected = function
-  | ServerProt.SERVER_DYING
-  | ServerProt.SERVER_OUT_OF_DATE ->
+  | ServerProt.SERVER_DYING ->
       true
   | _ ->
       false

@@ -77,8 +77,8 @@ end = struct
       if client_build_id <> ServerProt.build_revision then begin
         msg_to_channel oc Build_id_mismatch;
         FlowEventLogger.out_of_date ();
-        Printf.eprintf "Status: Error\n";
-        Printf.eprintf "%s is out of date. Exiting.\n" Program.name;
+        Hh_logger.fatal "Status: Error";
+        Hh_logger.fatal "flow server is out of date. Exiting.";
         FlowExitStatus.exit FlowExitStatus.Build_id_mismatch
       end else msg_to_channel oc Connection_ok;
       let client = { ic; oc; close } in
