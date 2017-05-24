@@ -1599,47 +1599,49 @@ export default suite(({addFile, flowCmd}) => [
       ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'this.js', '8', '10'],
       'this.js',
     ).stdout(
-`{
-  "result": [
-    {
-      "name": "bar",
-      "type": "() => void",
-      "func_details": {
-        "return_type": "void",
-        "params": []
-      },
-      "path": "this.js",
-      "line": 6,
-      "endline": 6,
-      "start": 3,
-      "end": 10
-    },
-    {
-      "name": "baz",
-      "type": "string",
-      "func_details": null,
-      "path": "this.js",
-      "line": 5,
-      "endline": 5,
-      "start": 8,
-      "end": 13
-    },
-    {
-      "name": "hello",
-      "type": "() => void",
-      "func_details": {
-        "return_type": "void",
-        "params": []
-      },
-      "path": "this.js",
-      "line": 7,
-      "endline": 9,
-      "start": 3,
-      "end": 3
-    }
-  ]
-}`,
-).exitCodes([0]),
+       `
+         {
+           "result": [
+             {
+               "name": "bar",
+               "type": "() => void",
+               "func_details": {
+                 "return_type": "void",
+                 "params": []
+               },
+               "path": "this.js",
+               "line": 6,
+               "endline": 6,
+               "start": 3,
+               "end": 16
+             },
+             {
+               "name": "baz",
+               "type": "string",
+               "func_details": null,
+               "path": "this.js",
+               "line": 5,
+               "endline": 5,
+               "start": 8,
+               "end": 13
+             },
+             {
+               "name": "hello",
+               "type": "() => void",
+               "func_details": {
+                 "return_type": "void",
+                 "params": []
+               },
+               "path": "this.js",
+               "line": 7,
+               "endline": 9,
+               "start": 3,
+               "end": 3
+             }
+           ]
+         }
+       `,
+     ).exitCodes([0]),
 
 
     addFile("typeparams.js"),
