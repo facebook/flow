@@ -77,6 +77,8 @@ module Entry : sig
   val get_context:
     unit ->
     (('param, 'input, 'output) t * 'param * ('input, 'output) channel_pair)
+  val clear_context:
+    unit -> unit
 
 end = struct
 
@@ -122,9 +124,11 @@ end = struct
    * I'm not entirely sure what this does on Windows. *)
   let get_context () =
     let entry = Unix.getenv "HH_SERVER_DAEMON" in
+    if entry = "" then raise Not_found;
     let (in_handle, out_handle, param) =
       try
         let file = Sys.getenv "HH_SERVER_DAEMON_PARAM" in
+        if file = "" then raise Not_found;
         let ic = Sys_utils.open_in_bin_no_fail file in
         let res = Marshal.from_channel ic in
         Sys_utils.close_in_no_fail "Daemon.get_context" ic;
@@ -135,6 +139,10 @@ end = struct
     (entry, param,
      (Timeout.in_channel_of_descr in_handle,
       Unix.out_channel_of_descr out_handle))
+
+  let clear_context () =
+    Unix.putenv "HH_SERVER_DAEMON" "";
+    Unix.putenv "HH_SERVER_DAEMON_PARAM" "";
 
 end
 
@@ -234,6 +242,7 @@ let spawn
   Entry.set_context entry param (child_in, child_out);
   let exe = Sys_utils.executable_path () in
   let pid = Unix.create_process exe [|exe|] stdin stdout stderr in
+  Entry.clear_context ();
   (match channel_mode with
   | `pipe ->
     Unix.close child_in;
@@ -274,6 +283,7 @@ let devnull () =
 let check_entry_point () =
   try
     let entry, param, (ic, oc) = Entry.get_context () in
+    Entry.clear_context ();
     exec entry param ic oc
   with Not_found -> ()
 
