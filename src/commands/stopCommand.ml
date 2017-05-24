@@ -36,30 +36,22 @@ let spec = {
   )
 }
 
-let is_expected = function
-  | ServerProt.SERVER_DYING ->
-      true
-  | _ ->
-      false
-
-let kill (ic, oc) =
+let kill (ic, oc) : ServerProt.stop_response =
   send_command oc ServerProt.KILL;
-  wait_for_response ic
+  Timeout.input_value ic
 
 let nice_kill (ic, oc) ~tmp_dir root =
-  let response = kill (ic, oc) in
-  if is_expected response then begin
+  match kill (ic, oc) with
+  | Ok () ->
     let i = ref 0 in
     while CommandConnectSimple.server_exists ~tmp_dir root do
       incr i;
       if !i < 5 then ignore @@ Unix.sleep 1
       else raise (FailedToKill None)
     done;
-  end else begin
-    let msg = Printf.sprintf "Unexpected response from the server: %s"
-      (ServerProt.response_to_string response) in
+  | Error msg ->
+    let msg = Printf.sprintf "Unexpected response from the server: %s" msg in
     raise (FailedToKill (Some msg))
-  end
 
 let mean_kill ~tmp_dir root =
   let pids =

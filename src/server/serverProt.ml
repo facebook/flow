@@ -92,6 +92,7 @@ type gen_flow_file_result =
 type gen_flow_file_response =
   ((string * gen_flow_file_result) list, gen_flow_file_error) result
 type port_response = (string, exn) result SMap.t
+type stop_response = (unit, string) result
 
 type directory_mismatch = {
   server: Path.t;
@@ -102,15 +103,7 @@ type response =
 | DIRECTORY_MISMATCH of directory_mismatch
 | ERRORS of Errors.ErrorSet.t
 | NO_ERRORS
-| SERVER_DYING
 | NOT_COVERED
-
-let response_to_string = function
-  | DIRECTORY_MISMATCH _ -> "Directory Mismatch"
-  | ERRORS _ -> "Some Errors"
-  | NO_ERRORS -> "No Errors"
-  | NOT_COVERED -> "No Errors (Not @flow)"
-  | SERVER_DYING -> "Server Dying"
 
 module Persistent_connection_prot = struct
   type request =

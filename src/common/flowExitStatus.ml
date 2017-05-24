@@ -36,8 +36,6 @@ type t =
   | Commandline_usage_error
   (* Failed to start a server *)
   | Server_start_failed of Unix.process_status
-  (* Connected to a dying server *)
-  | Server_dying
   (* Something went wrong with extracting the flowlib *)
   | Missing_flowlib
 
@@ -81,7 +79,6 @@ let error_code = function
   (* EX_USAGE -- command line usage error -- from glibc's sysexits.h *)
   | Commandline_usage_error -> 64
   | Server_start_failed _ -> 78
-  | Server_dying -> 79
   | Missing_flowlib -> 97
   | Socket_error -> 98
   | Dfind_died -> 99
@@ -106,7 +103,6 @@ let to_string = function
   | Out_of_retries -> "Out_of_retries"
   | Invalid_flowconfig -> "Invalid_flowconfig"
   | Server_initializing -> "Server_initializing"
-  | Server_dying -> "Server_dying"
   | Server_start_failed status ->
       let reason, code = unpack_process_status status in
       Utils_js.spf "Server_start_failed (%s, %d)" reason code

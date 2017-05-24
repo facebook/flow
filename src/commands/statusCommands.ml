@@ -142,12 +142,6 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     | ServerProt.NOT_COVERED ->
       let msg = "Why on earth did the server respond with NOT_COVERED?" in
       FlowExitStatus.(exit ~msg Unknown_error)
-    | ServerProt.SERVER_DYING ->
-      let msg = Utils_js.spf
-        "Server has been killed for %s"
-        (Path.to_string args.root) in
-      FlowExitStatus.(exit ~msg Server_dying)
-
 
   and retry (args, server_flags) sleep msg =
     check_timeout ();

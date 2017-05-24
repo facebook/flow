@@ -571,7 +571,7 @@ let collate_errors =
         (infer_type ~options client_logging_context (fn, line, char, verbose, include_raw): ServerProt.infer_type_response)
           |> marshal
     | ServerProt.KILL ->
-        marshal (ServerProt.SERVER_DYING: ServerProt.response);
+        (Ok () : ServerProt.stop_response) |> marshal;
         die_nicely ()
     | ServerProt.PORT (files) ->
         (port files: ServerProt.port_response)

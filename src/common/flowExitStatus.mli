@@ -16,7 +16,6 @@ type t =
   | Server_client_directory_mismatch
   | Commandline_usage_error
   | Server_start_failed of Unix.process_status
-  | Server_dying
   | Missing_flowlib
   | Socket_error
   | Dfind_died
