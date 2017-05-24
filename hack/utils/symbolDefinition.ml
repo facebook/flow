@@ -22,6 +22,7 @@ type kind =
   | LocalVar
   | Typeconst
   | Param
+  | Typedef
 
 and modifier =
   | Final
@@ -70,6 +71,7 @@ let string_of_kind = function
   | Typeconst -> "typeconst"
   | LocalVar -> "local"
   | Param -> "param"
+  | Typedef -> "typedef"
 
 let string_of_modifier = function
   | Final -> "final"
@@ -89,7 +91,7 @@ let class_const_kind_name = "class_const"
 let get_symbol_id kind parent_class name =
   let prefix = match kind with
     | Function -> Some function_kind_name
-    | Class | Enum | Interface | Trait -> Some type_id_kind_name
+    | Class | Typedef | Enum | Interface | Trait -> Some type_id_kind_name
     | Method -> Some method_kind_name
     | Property -> Some property_kind_name
     | Typeconst | Const -> Some class_const_kind_name
