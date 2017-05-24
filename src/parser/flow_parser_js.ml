@@ -83,7 +83,10 @@ let parse content options =
   let parse_options = Some (parse_options options) in
   let (ocaml_ast, errors) = Parser_flow.program ~fail:false ~parse_options content in
   JsTranslator.translation_errors := [];
-  let module Translate = Estree_translator.Translate (JsTranslator) in
+  let module Translate = Estree_translator.Translate (JsTranslator) (struct
+    let include_comments = true
+    let include_locs = true
+  end) in
   let ret = Translate.program ocaml_ast in
   let translation_errors = !JsTranslator.translation_errors in
   Js.Unsafe.set ret "errors" (Translate.errors (errors @ translation_errors));

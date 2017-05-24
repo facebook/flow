@@ -20,7 +20,12 @@ module type Translator = sig
   val regexp: Loc.t -> string -> string -> t
 end
 
-module Translate (Impl : Translator) : (sig
+module type Config = sig
+  val include_locs: bool
+  val include_comments: bool
+end
+
+module Translate (Impl : Translator) (Config : Config) : (sig
   type t
   val program:
     Loc.t * Ast.Statement.t list * (Loc.t * Ast.Comment.t') list ->
@@ -68,11 +73,13 @@ end with type t = Impl.t) = struct
   )
 
   let node _type location props =
-    obj (Array.append [|
-      "type", string _type;
-      "loc", loc location;
-      "range", range location;
-    |] props)
+    let prefix =
+      if Config.include_locs then
+        [| "type", string _type; "loc", loc location; "range", range location; |]
+      else
+        [| "type", string _type; |]
+    in
+    obj (Array.append prefix props)
 
   let errors l =
     let error (location, e) =
@@ -83,10 +90,12 @@ end with type t = Impl.t) = struct
     in array_of_list error l
 
   let rec program (loc, statements, comments) =
-    node "Program" loc [|
-      "body", statement_list statements;
-      "comments", comment_list comments;
-    |]
+    let body = statement_list statements in
+    let props =
+      if Config.include_comments then [| "body", body; "comments", comment_list comments; |]
+      else [| "body", body; |]
+    in
+    node "Program" loc props
 
   and statement_list statements = array_of_list statement statements
   and statement = Statement.(function

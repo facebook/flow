@@ -97,7 +97,10 @@ module String_utils = struct
     chopped, ext
 end
 
-module Translate = Estree_translator.Translate (Json_of_estree)
+module Translate = Estree_translator.Translate (Json_of_estree) (struct
+  let include_comments = true
+  let include_locs = true
+end)
 
 module RunEsprimaTests : sig
   val main : unit -> unit

@@ -44,7 +44,11 @@ let get_file = function
   | Some filename -> File_input.FileName (CommandUtils.expand_path filename)
   | None -> File_input.FileContent (None, Sys_utils.read_stdin_to_string ())
 
-module Translate = Estree_translator.Translate (Json_of_estree)
+module Translate = Estree_translator.Translate (Json_of_estree) (struct
+  (* TODO: make these configurable via CLI flags *)
+  let include_comments = true
+  let include_locs = true
+end)
 
 let token_to_json token_result =
   let open Loc in
