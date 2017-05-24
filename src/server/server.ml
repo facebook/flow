@@ -231,29 +231,8 @@ let collate_errors =
   let suggest =
     let suggest_for_file ~options result_map (file, region) =
       (try
-         let content = cat file in
-         let file_loc = Loc.SourceFile file in
-         let cx =
-           match Types_js.typecheck_contents ~options content file_loc with
-           | _, Some cx, _, _ -> cx
-           | _  -> failwith "Couldn't parse file" in
-         let insertions =
-           Query_types.fill_types cx
-           |> List.sort Pervasives.compare
-           |> match region with
-              | [] -> fun insertions -> insertions
-              | [l1;c1;l2;c2] ->
-                  let l1,c1,l2,c2 =
-                    int_of_string l1,
-                    int_of_string c1,
-                    int_of_string l2,
-                    int_of_string c2
-                  in
-                  List.filter (fun (l,c,_) ->
-                    (l1,c1) <= (l,c) && (l,c) <= (l2,c2)
-                  )
-              | _ -> assert false
-         in
+         let insertions = Type_info_service.suggest ~options
+           (Loc.SourceFile file) region (cat file) in
          SMap.add file (Ok insertions) result_map
       with exn ->
         SMap.add file (Error (Printexc.to_string exn)) result_map

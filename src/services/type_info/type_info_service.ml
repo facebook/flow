@@ -103,3 +103,25 @@ let coverage ~options ~force file content =
     types
   else
     types |> List.map (fun (loc, _) -> (loc, false))
+
+
+let suggest ~options file region content =
+  let cx =
+    match Types_js.typecheck_contents ~options content file with
+    | _, Some cx, _, _ -> cx
+    | _  -> failwith "Couldn't parse file" in
+  Query_types.fill_types cx
+  |> List.sort Pervasives.compare
+  |> match region with
+    | [] -> fun insertions -> insertions
+    | [l1;c1;l2;c2] ->
+        let l1,c1,l2,c2 =
+          int_of_string l1,
+          int_of_string c1,
+          int_of_string l2,
+          int_of_string c2
+        in
+        List.filter (fun (l,c,_) ->
+          (l1,c1) <= (l,c) && (l,c) <= (l2,c2)
+        )
+    | _ -> assert false
