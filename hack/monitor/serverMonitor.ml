@@ -45,7 +45,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
      * then sent to the living server.
      *
      * String is the server name it wants to connect to. *)
-    purgatory_clients : (MonitorRpc.handoff_options * Unix.file_descr) list;
+    purgatory_clients : (MonitorRpc.handoff_options * Unix.file_descr) Queue.t;
   }
 
   let fd_to_int (x: Unix.file_descr) : int = Obj.magic x
@@ -350,16 +350,14 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
         env
       end
       in
-      if (List.length env.purgatory_clients) >= max_purgatory_clients then
+      if (Queue.length env.purgatory_clients) >= max_purgatory_clients then
         let () = msg_to_channel
           client_fd PH.Server_dormant_connections_limit_reached in
         env
       else
-        {
-          env with
-          purgatory_clients =
-            (handoff_options, client_fd) :: env.purgatory_clients;
-        }
+        let () = Queue.add (handoff_options, client_fd)
+          env.purgatory_clients in
+        env
     | _ ->
       msg_to_channel client_fd PH.Server_name_not_found;
       env
@@ -381,17 +379,24 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       raise e
 
   and push_purgatory_clients env =
-    let clients = env.purgatory_clients in
-    let env = { env with purgatory_clients = [] ; } in
-    let env = List.fold_left clients ~init:env ~f:begin
+    (** We create a queue and transfer all the purgatory clients to it before
+     * processing to avoid repeatedly retrying the same client even after
+     * an EBADF. Control flow is easier this way than trying to manage an
+     * immutable env in the face of exceptions. *)
+    let clients = Queue.create () in
+    Queue.transfer env.purgatory_clients clients;
+    let env = Queue.fold begin
       fun env (handoff_options, client_fd) ->
-        client_prehandoff env handoff_options client_fd
-    end in
+        try client_prehandoff env handoff_options client_fd with
+        | Unix.Unix_error(Unix.EBADF, _, _) ->
+          Hh_logger.log "Purgatory client disconnected. Dropping.";
+          env
+    end env clients in
     env
 
   and maybe_push_purgatory_clients env =
-    match env.server, env.purgatory_clients with
-    | Alive _, [] ->
+    match env.server, Queue.length env.purgatory_clients with
+    | Alive _, 0 ->
       env
     | Alive _, _ ->
       push_purgatory_clients env
@@ -478,7 +483,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       server_start_options informant in
     let env = {
       informant;
-      purgatory_clients = [];
+      purgatory_clients = Queue.create ();
       server = server_process;
       server_start_options;
       retries = 0;
