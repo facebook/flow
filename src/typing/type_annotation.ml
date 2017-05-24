@@ -394,6 +394,8 @@ let rec convert cx tparams_map = Ast.Type.(function
       mk_custom_fun cx loc typeParameters ObjectAssign
   | "Object$GetPrototypeOf" ->
       mk_custom_fun cx loc typeParameters ObjectGetPrototypeOf
+  | "Object$SetPrototypeOf" ->
+      mk_custom_fun cx loc typeParameters ObjectSetPrototypeOf
 
   | "React$PropType$Primitive" ->
       check_type_param_arity cx loc typeParameters 1 (fun () ->

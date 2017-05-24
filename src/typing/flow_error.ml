@@ -114,6 +114,7 @@ type error_message =
   | EUnsupportedImplements of reason
   | EReactKit of (reason * reason) * React.tool
   | EFunctionCallExtraArg of (reason * reason * int)
+  | EUnsupportedSetProto of reason
 
 and binding_error =
   | ENameAlreadyBound
@@ -1077,19 +1078,24 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | CreateClass (tool, _, _) -> create_class tool
       in
       typecheck_error msg reasons
-| EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
-  let core_msgs = [
-    unused_reason, [];
-  ] in
-  let expects = match param_count with
-  | 0 -> "expects no arguments"
-  | 1 -> "expects no more than 1 argument"
-  | n -> spf "expects no more than %d arguments" n in
-  let extra = [
-    InfoLeaf [loc_of_reason def_reason, [spf
-      "%s %s"
-      (string_of_desc (desc_of_reason def_reason))
-      expects
-    ]];
-  ] in
-  typecheck_error_with_core_infos ~extra core_msgs
+
+  | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
+    let core_msgs = [
+      unused_reason, [];
+    ] in
+    let expects = match param_count with
+    | 0 -> "expects no arguments"
+    | 1 -> "expects no more than 1 argument"
+    | n -> spf "expects no more than %d arguments" n in
+    let extra = [
+      InfoLeaf [loc_of_reason def_reason, [spf
+        "%s %s"
+        (string_of_desc (desc_of_reason def_reason))
+        expects
+      ]];
+    ] in
+    typecheck_error_with_core_infos ~extra core_msgs
+
+  | EUnsupportedSetProto reason ->
+      mk_error ~trace_infos [mk_info reason [
+        "Prototype mutation not allowed"]]

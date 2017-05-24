@@ -180,6 +180,12 @@ let rec normalize_type_impl cx ids t = match t with
       let params_names = Some ["o"] in
       fake_fun params_names tins None any
 
+  | CustomFunT (_, ObjectSetPrototypeOf) ->
+      let any = DefT (locationless_reason RAny, AnyT) in
+      let tins = [any; any] in
+      let params_names = Some ["o"; "proto"] in
+      fake_fun params_names tins None any
+
   | CustomFunT (reason, Idx) ->
       let obj_param = (
         let obj_name = "IdxObject" in

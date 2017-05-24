@@ -190,6 +190,7 @@ let rec gen_type t env = Type.(
       |> add_str ">"
   | CustomFunT (_, ObjectAssign) -> add_str "Object$Assign" env
   | CustomFunT (_, ObjectGetPrototypeOf) -> add_str "Object$GetPrototypeOf" env
+  | CustomFunT (_, ObjectSetPrototypeOf) -> add_str "Object$SetPrototypeOf" env
   | CustomFunT (_, ReactPropType (React.PropType.Primitive (_, t))) ->
     add_str "React$PropType$Primitive<" env
       |> gen_type t

@@ -3061,7 +3061,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           Some (DefT (r, MixedT Mixed_everything), t)
       ) in
       let lookup =
-        LookupT (reason_op, lookup_kind, [], propref, RWProp (t, Read))
+        LookupT (reason_op, lookup_kind, [], propref, RWProp (l, t, Read))
       in rec_flow cx trace (l, lookup)
 
 
@@ -3515,16 +3515,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | CustomFunT (_, ObjectGetPrototypeOf),
       CallT (reason_op, { call_args_tlist = arg::_; call_tout; _ }) ->
-      (match arg with
-      | Arg obj ->
-        rec_flow cx trace (
-          obj,
-          GetPropT(reason_op, Named (reason_op, "__proto__"), call_tout)
-        )
-      | SpreadArg t ->
-        add_output cx ~trace
-          (FlowError.(EUnsupportedSyntax (loc_of_t t, SpreadArgument)))
-      );
+      let l = extract_non_spread cx ~trace arg in
+      rec_flow cx trace (l, GetProtoT (reason_op, call_tout))
+
+    | CustomFunT (_, ObjectSetPrototypeOf),
+      CallT (reason_op, { call_args_tlist = arg1::arg2::_; call_tout; _ }) ->
+      let target = extract_non_spread cx ~trace arg1 in
+      let proto = extract_non_spread cx ~trace arg2 in
+      rec_flow cx trace (target, SetProtoT (reason_op, proto));
+      rec_flow_t cx trace (BoolT.why reason_op, call_tout)
 
     (* React prop type functions are modeled as a custom function type in Flow,
        so that Flow can exploit the extra information to gratuitously hardcode
@@ -3728,7 +3727,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | _ -> Strict reason
       in
       lookup_prop cx trace l reason_op reason_op strict "$call"
-        (RWProp (tvar, Read));
+        (RWProp (l, tvar, Read));
       rec_flow cx trace (tvar, u)
 
     (******************************)
@@ -3987,6 +3986,42 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let static = ObjProtoT static_reason in
       rec_flow_t cx trace (static, t)
 
+    (********************)
+    (* __proto__ getter *)
+    (********************)
+
+    (* TODO: Fix GetProtoT for InstanceT (and ClassT).
+       The __proto__ object of an instance is an ObjT having the properties in
+       insttype.methods_tmap, not the super instance.  *)
+    | DefT (_, InstanceT (_, super, _, _)), GetProtoT (reason_op, t) ->
+      let proto = reposition cx ~trace (loc_of_reason reason_op) super in
+      rec_flow_t cx trace (proto, t)
+
+    | DefT (_, ObjT {proto_t; _}), GetProtoT (reason_op, t) ->
+      let proto = reposition cx ~trace (loc_of_reason reason_op) proto_t in
+      rec_flow_t cx trace (proto, t)
+
+    | ObjProtoT _, GetProtoT (reason_op, t) ->
+      let proto = NullT.why reason_op in
+      rec_flow_t cx trace (proto, t)
+
+    | FunProtoT reason, GetProtoT (reason_op, t) ->
+      let proto = ObjProtoT (repos_reason (loc_of_reason reason_op) reason) in
+      rec_flow_t cx trace (proto, t)
+
+    | DefT (_, (AnyT | AnyObjT | AnyFunT)), GetProtoT (reason_op, t) ->
+      let proto = AnyT.why reason_op in
+      rec_flow_t cx trace (proto, t)
+
+    (********************)
+    (* __proto__ setter *)
+    (********************)
+
+    | DefT (_, (AnyT | AnyObjT | AnyFunT)), SetProtoT _ -> ()
+
+    | _, SetProtoT (reason_op, _) ->
+      add_output cx ~trace (FlowError.EUnsupportedSetProto reason_op)
+
     (********************************************************)
     (* instances of classes may have their fields looked up *)
     (********************************************************)
@@ -4012,7 +4047,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* TODO: Replace AbstractT with abstract fields, then reuse
            perform_lookup_action here. *)
         (match action with
-        | RWProp (t2, rw) ->
+        | RWProp (_, t2, rw) ->
           (* The type of the property in the super class is abstract. The type
              of the property in this class may be abstract or not.  We want to
              unify just the underlying types, ignoring the abstract part.  *)
@@ -4064,7 +4099,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let methods_tmap = Context.find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
       let strict = Strict reason_c in
-      set_prop cx trace reason_prop reason_op strict super x fields tin;
+      set_prop cx trace reason_prop reason_op strict l super x fields tin;
       Ops.pop ();
 
     | DefT (_, InstanceT _), SetPropT (reason_op, Computed _, _) ->
@@ -4078,10 +4113,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ... and their fields read *)
     (*****************************)
 
-    | DefT (reason, InstanceT (_, super, _, _)),
-      GetPropT (_, Named (_, "__proto__"), t) ->
-      rec_flow cx trace (super, ReposLowerT (reason, UseT (UnknownUse, t)))
-
     | DefT (_, InstanceT _) as instance, GetPropT (_, Named (_, "constructor"), t) ->
       rec_flow_t cx trace (class_type instance, t)
 
@@ -4094,7 +4125,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if instance.mixins then NonstrictReturning None
         else Strict reason_c
       in
-      get_prop cx trace reason_prop reason_op strict super x fields tout
+      get_prop cx trace reason_prop reason_op strict l super x fields tout
 
     | DefT (_, InstanceT _), GetPropT (reason_op, Computed _, _) ->
       (* Instances don't have proper dictionary support. All computed accesses
@@ -4118,7 +4149,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if instance.mixins then NonstrictReturning None
         else Strict reason_c
       in
-      get_prop cx trace reason_prop reason_lookup strict super x methods funt;
+      get_prop cx trace reason_prop reason_lookup strict l super x methods funt;
 
       (* suppress ops while calling the function. if `funt` is a `FunT`, then
          `CallT` will set its own ops during the call. if `funt` is something
@@ -4425,9 +4456,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*****************************)
     (* ... and their fields read *)
     (*****************************)
-
-    | DefT (_, ObjT {proto_t = proto; _}), GetPropT (_, Named (_, "__proto__"), t) ->
-      rec_flow_t cx trace (proto,t)
 
     | DefT (_, ObjT _), GetPropT (reason_op, Named (_, "constructor"), tout) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
@@ -5275,6 +5303,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace
         (next, LookupT (reason, strict, try_ts_on_failure, propref, t))
 
+    | ObjProtoT _,
+      LookupT (reason_op, _, [], Named (_, "__proto__"), RWProp (l, t, rw)) ->
+      (* __proto__ is a getter/setter on Object.prototype *)
+      let u = match rw with
+      | Read -> GetProtoT (reason_op, t)
+      | Write -> SetProtoT (reason_op, t)
+      in
+      rec_flow cx trace (l, u)
+
     | ObjProtoT _, LookupT (reason_op, _, [], Named (_, x), _)
       when is_object_prototype_method x ->
       (** TODO: These properties should go in Object.prototype. Currently we
@@ -5854,6 +5891,7 @@ and object_use = function
 
 and object_like_op = function
   | SetPropT _ | GetPropT _ | MethodT _ | LookupT _
+  | GetProtoT _ | SetProtoT _
   | SuperT _
   | GetKeysT _ | HasOwnPropT _
   | ObjAssignToT _ | ObjAssignFromT _ | ObjRestT _
@@ -7506,7 +7544,7 @@ and lookup_prop cx trace l reason_prop reason_op strict x action =
   let propref = Named (reason_prop, x) in
   rec_flow cx trace (l, LookupT (reason_op, strict, [], propref, action))
 
-and get_prop cx trace reason_prop reason_op strict super x map tout =
+and get_prop cx trace reason_prop reason_op strict l super x map tout =
   let ops = Ops.clear () in
   let u = ReposLowerT (reason_op, UseT (UnknownUse, tout)) in
   begin match SMap.get x map with
@@ -7520,11 +7558,11 @@ and get_prop cx trace reason_prop reason_op strict super x map tout =
   | None ->
     let tout = tvar_with_constraint cx ~trace u in
     lookup_prop cx trace super reason_prop reason_op strict x
-      (RWProp (tout, Read))
+      (RWProp (l, tout, Read))
   end;
   Ops.set ops
 
-and set_prop cx trace reason_prop reason_op strict super x pmap tin =
+and set_prop cx trace reason_prop reason_op strict l super x pmap tin =
   match SMap.get x pmap with
   | Some p ->
     (match Property.write_t p with
@@ -7535,7 +7573,7 @@ and set_prop cx trace reason_prop reason_op strict super x pmap tin =
         (FlowError.EPropAccess ((reason_prop, reason_op), Some x, p, Write)))
   | None ->
     lookup_prop cx trace super reason_prop reason_op strict x
-      (RWProp (tin, Write))
+      (RWProp (l, tin, Write))
 
 and get_obj_prop cx trace o propref reason_op =
   let named_prop = match propref with
@@ -7570,8 +7608,9 @@ and read_obj_prop cx trace o propref reason_obj reason_op tout =
         then Strict reason_obj
         else ShadowRead (None, Nel.one o.props_tmap)
       in
+      let l = DefT (reason_obj, ObjT o) in
       rec_flow cx trace (o.proto_t,
-        LookupT (reason_op, strict, [], propref, RWProp (tout, Read)))
+        LookupT (reason_op, strict, [], propref, RWProp (l, tout, Read)))
     | Computed elem_t ->
       match elem_t with
       | OpenT _ ->
@@ -7605,8 +7644,9 @@ and write_obj_prop cx trace o propref reason_obj reason_op tin =
         add_output cx ~trace err
       else
         let strict = ShadowWrite (Nel.one o.props_tmap) in
+        let l = DefT (reason_obj, ObjT o) in
         rec_flow cx trace (o.proto_t,
-          LookupT (reason_op, strict, [], propref, RWProp (tin, Write)))
+          LookupT (reason_op, strict, [], propref, RWProp (l, tin, Write)))
     | Computed elem_t ->
       match elem_t with
       | OpenT _ ->
@@ -9525,7 +9565,7 @@ and perform_lookup_action cx trace propref p lreason ureason = function
     rec_flow_p cx trace ~use_op lreason ureason propref (p, up)
   | SuperProp lp ->
     rec_flow_p cx trace ureason lreason propref (lp, p)
-  | RWProp (tout, rw) ->
+  | RWProp (_, tout, rw) ->
     match rw, Property.access rw p with
     | Read, Some t -> rec_flow_t cx trace (t, tout)
     | Write, Some t -> rec_flow_t cx trace (tout, t)
@@ -9554,8 +9594,9 @@ and get_builtin cx ?trace x reason =
 
 and lookup_builtin cx ?trace x reason strict builtin =
   let propref = Named (reason, x) in
-  flow_opt cx ?trace (builtins cx,
-    LookupT (reason, strict, [], propref, RWProp (builtin, Read)))
+  let l = builtins cx in
+  flow_opt cx ?trace (l,
+    LookupT (reason, strict, [], propref, RWProp (l, builtin, Read)))
 
 and get_builtin_typeapp cx ?trace reason x ts =
   typeapp (get_builtin cx ?trace x reason) ts

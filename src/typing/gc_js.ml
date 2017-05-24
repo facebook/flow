@@ -236,6 +236,7 @@ and gc_use cx state = function
   | GetElemT(_, i, t) -> gc cx state i; gc cx state t
   | GetKeysT (_, t) -> gc cx state t
   | GetPropT(_, _, t) -> gc cx state t
+  | GetProtoT (_, t) -> gc cx state t
   | GetStaticsT(_, t) -> gc cx state t
   | GuardT (pred, t1, t2) ->
       gc_pred cx state pred;
@@ -255,7 +256,8 @@ and gc_use cx state = function
   | LookupT (_, _, ts, _, action) ->
       ts |> List.iter (gc cx state);
       (match action with
-      | RWProp (t, _) ->
+      | RWProp (l, t, _) ->
+        gc cx state l;
         gc cx state t
       | LookupProp (_, p)
       | SuperProp p ->
@@ -280,6 +282,7 @@ and gc_use cx state = function
   | SentinelPropTestT (t, _, _, t_out) -> gc cx state t; gc cx state t_out
   | SetElemT(_, i, t) -> gc cx state i; gc cx state t
   | SetPropT(_, _, t) -> gc cx state t
+  | SetProtoT (_, t) -> gc cx state t
   | SpecializeT (_, _, _, ts, t) -> List.iter (gc cx state) ts; gc cx state t
   | ObjSpreadT (_, tool, state', t) ->
       gc_object_spread cx state tool state';

@@ -246,6 +246,7 @@ class ['a] t = object(self)
   | GetElemT (_, _, _)
   | GetKeysT (_, _)
   | GetPropT (_, _, _)
+  | GetProtoT (_, _)
   | GetStaticsT (_, _)
   | GuardT (_, _, _)
   | HasOwnPropT (_, _)
@@ -280,6 +281,7 @@ class ['a] t = object(self)
   | SentinelPropTestT _
   | SetElemT (_, _, _)
   | SetPropT (_, _, _)
+  | SetProtoT (_, _)
   | SpecializeT (_,_, _, _, _)
   | ObjSpreadT _
   | SubstOnPredT _

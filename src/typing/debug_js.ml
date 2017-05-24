@@ -293,6 +293,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "kind", JSON_String (match kind with
       | ObjectAssign -> "Object.assign"
       | ObjectGetPrototypeOf -> "Object.getPrototypeOf"
+      | ObjectSetPrototypeOf -> "Object.setPrototypeOf"
       | ReactPropType _ -> "ReactPropsCheckType"
       | ReactCreateClass -> "React.createClass"
       | ReactCreateElement -> "React.createElement"
@@ -416,6 +417,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
 
   | GetStaticsT (_, t) -> [
+      "type", _json_of_t json_cx t
+    ]
+
+  | GetProtoT (_, t)
+  | SetProtoT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -1202,7 +1208,7 @@ and json_of_lookup_action json_cx =
 and json_of_lookup_action_impl json_cx action = Hh_json.(
   JSON_Object (
     match action with
-    | RWProp (t, rw) -> [
+    | RWProp (_, t, rw) -> [
         "kind", JSON_String "RWProp";
         "rw", JSON_String (string_of_rw rw);
         "t", _json_of_t json_cx t
@@ -1448,6 +1454,7 @@ and dump_t_ (depth, tvars) cx t =
     function
     | ObjectAssign -> "ObjectAssign"
     | ObjectGetPrototypeOf -> "ObjectGetPrototypeOf"
+    | ObjectSetPrototypeOf -> "ObjectSetPrototypeOf"
     | ReactPropType p -> spf "ReactPropType (%s)" (react_prop_type p)
     | ReactCreateElement -> "ReactCreateElement"
     | ReactCreateClass -> "ReactCreateClass"
@@ -1597,8 +1604,8 @@ and dump_use_t_ (depth, tvars) cx t =
   in
 
   let lookup_action = function
-  | RWProp (t, Read) -> spf "Read %s" (kid t)
-  | RWProp (t, Write) -> spf "Write %s" (kid t)
+  | RWProp (_, t, Read) -> spf "Read %s" (kid t)
+  | RWProp (_, t, Write) -> spf "Write %s" (kid t)
   | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (prop p)
   | SuperProp p -> spf "Super %s" (prop p)
   in
@@ -1755,6 +1762,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | GetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t
+  | GetProtoT (_, arg) -> p ~extra:(kid arg) t
   | GetStaticsT (_, arg) -> p ~extra:(kid arg) t
   | GuardT (pred, result, sink) -> p ~reason:false
       ~extra:(spf "%s, %s, %s"
@@ -1825,6 +1833,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | SetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t
+  | SetProtoT (_, arg) -> p ~extra:(kid arg) t
   | SpecializeT (_, _, cache, args, ret) -> p ~extra:(spf "%s, [%s], %s"
       (specialize_cache cache) (String.concat "; " (List.map kid args)) (kid ret)) t
   | ObjSpreadT (_, tool, state, arg) -> p ~extra:(spf "%s, %s"
@@ -2279,3 +2288,5 @@ let dump_flow_error =
           (dump_reason cx  unused_reason)
           (dump_reason cx def_reason)
           param_count
+    | EUnsupportedSetProto reason ->
+        spf "EUnsupportedSetProto (%s)" (dump_reason cx reason)

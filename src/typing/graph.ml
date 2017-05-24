@@ -138,8 +138,8 @@ let prop (n, p) =
 let map_props m = SMap.bindings m |> List.map prop |> List.flatten
 
 let lookup_action_parts = function
-  | RWProp (t, Read) -> [("read", Def t)]
-  | RWProp (t, Write) -> [("write", Def t)]
+  | RWProp (_, t, Read) -> [("read", Def t)]
+  | RWProp (_, t, Write) -> [("write", Def t)]
   | LookupProp (_, p) -> prop ("lookup", p)
   | SuperProp p -> prop ("super", p)
 
@@ -304,6 +304,7 @@ and parts_of_use_t cx = function
 | GetElemT (_, ix, out) -> ["ix", Def ix; "out", Def out]
 | GetKeysT (_, out) -> ["out", Def out]
 | GetPropT (_, _, out) -> ["out", Def out]
+| GetProtoT (_, out) -> ["out", Def out]
 | GetStaticsT (_, out) -> ["out", Def out]
 | GuardT (_, t, out) -> ["iftrue", Def t; "out", Def out]
 | HasOwnPropT _ -> []
@@ -355,6 +356,7 @@ and parts_of_use_t cx = function
 | SentinelPropTestT (t, _, _, out) -> ["t", Def t; "out", Def out]
 | SetElemT (_, ix, t) -> ["ix", Def ix; "t", Def t]
 | SetPropT (_, _, t) -> ["t", Def t]
+| SetProtoT (_, t) -> ["t", Def t]
 | SpecializeT (_, _, _, args, out) -> ("out", Def out) :: list_parts args
 | ObjSpreadT (_, _, _, out) -> ["out", Def out]
 | SubstOnPredT (_, _, t) -> ["t", Def t]

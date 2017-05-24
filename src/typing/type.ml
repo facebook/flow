@@ -297,6 +297,9 @@ module rec TypeTerm : sig
     | CallElemT of (* call *) reason * (* lookup *) reason * t * funcalltype
     | GetStaticsT of reason * t_out
 
+    | GetProtoT of reason * t_out
+    | SetProtoT of reason * t
+
     (* repositioning *)
     | ReposLowerT of reason * use_t
     | ReposUseT of reason * use_op * t
@@ -697,7 +700,7 @@ module rec TypeTerm : sig
   | ShadowWrite of Properties.id Nel.t
 
   and lookup_action =
-  | RWProp of t_out * rw
+  | RWProp of t (* original target *) * t (* in/out type *) * rw
   | LookupProp of use_op * Property.t
   | SuperProp of Property.t
 
@@ -821,6 +824,7 @@ module rec TypeTerm : sig
   (* builtins *)
   | ObjectAssign
   | ObjectGetPrototypeOf
+  | ObjectSetPrototypeOf
 
   (* 3rd party libs *)
   | ReactPropType of React.PropType.t
@@ -1666,6 +1670,7 @@ let any_propagating_use_t = function
   | GetElemT _
   | GetKeysT _
   | GetPropT _
+  | GetProtoT _
   | GetStaticsT _
   | GuardT _
   | IdxUnMaybeifyT _
@@ -1719,6 +1724,7 @@ let any_propagating_use_t = function
   | HasOwnPropT _
   | ImplementsT _
   | SetPropT _
+  | SetProtoT _
   | SuperT _
   | TypeAppVarianceCheckT _
   | VarianceCheckT _
@@ -1806,6 +1812,7 @@ and reason_of_use_t = function
   | GetElemT (reason,_,_) -> reason
   | GetKeysT (reason, _) -> reason
   | GetPropT (reason,_,_) -> reason
+  | GetProtoT (reason,_) -> reason
   | GetStaticsT (reason,_) -> reason
   | GuardT (_, _, t) -> reason_of_t t
   | HasOwnPropT (reason, _) -> reason
@@ -1840,6 +1847,7 @@ and reason_of_use_t = function
   | SentinelPropTestT (_, _, _, result) -> reason_of_t result
   | SetElemT (reason,_,_) -> reason
   | SetPropT (reason,_,_) -> reason
+  | SetProtoT (reason,_) -> reason
   | SpecializeT(reason,_,_,_,_) -> reason
   | ObjSpreadT (reason, _, _, _) -> reason
   | SubstOnPredT (reason, _, _) -> reason
@@ -1948,6 +1956,7 @@ and mod_reason_of_use_t f = function
   | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetPropT (reason, n, t) -> GetPropT (f reason, n, t)
+  | GetProtoT (reason, t) -> GetProtoT (f reason, t)
   | GetStaticsT (reason, t) -> GetStaticsT (f reason, t)
   | GuardT (pred, result, t) -> GuardT (pred, result, mod_reason_of_t f t)
   | HasOwnPropT (reason, prop) -> HasOwnPropT (f reason, prop)
@@ -1989,6 +1998,7 @@ and mod_reason_of_use_t f = function
       SentinelPropTestT (l, sense, sentinel, mod_reason_of_t f result)
   | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
   | SetPropT (reason, n, t) -> SetPropT (f reason, n, t)
+  | SetProtoT (reason, t) -> SetProtoT (f reason, t)
   | SpecializeT(reason_op, reason_tapp, cache, ts, t) ->
       SpecializeT (f reason_op, reason_tapp, cache, ts, t)
   | ObjSpreadT (reason, tool, state, k) -> ObjSpreadT (f reason, tool, state, k)
@@ -2161,6 +2171,7 @@ let string_of_use_ctor = function
   | GetElemT _ -> "GetElemT"
   | GetKeysT _ -> "GetKeysT"
   | GetPropT _ -> "GetPropT"
+  | GetProtoT _ -> "GetProtoT"
   | GetStaticsT _ -> "GetStaticsT"
   | GuardT _ -> "GuardT"
   | HasOwnPropT _ -> "HasOwnPropT"
@@ -2210,6 +2221,7 @@ let string_of_use_ctor = function
   | SentinelPropTestT _ -> "SentinelPropTestT"
   | SetElemT _ -> "SetElemT"
   | SetPropT _ -> "SetPropT"
+  | SetProtoT _ -> "SetProtoT"
   | SpecializeT _ -> "SpecializeT"
   | ObjSpreadT _ -> "ObjSpreadT"
   | SubstOnPredT _ -> "SubstOnPredT"

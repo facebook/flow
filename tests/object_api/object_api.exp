@@ -196,5 +196,29 @@ object_prototype.js:155
 155: var yToLocaleString : number = y.toLocaleString; // error
                            ^^^^^^ number
 
+proto.js:3
+  3: (o1_proto.toString: empty); // error: function ~> empty
+      ^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+  3: (o1_proto.toString: empty); // error: function ~> empty
+                         ^^^^^ empty
 
-Found 33 errors
+proto.js:7
+  7: (o2.__proto__.p: empty); // error: number ~> empty
+      ^^^^^^^^^^^^^^ number. This type is incompatible with
+  7: (o2.__proto__.p: empty); // error: number ~> empty
+                      ^^^^^ empty
+
+proto.js:13
+ 13: (C1_proto.bind: empty); // TODO error: function ~> empty
+               ^^^^ property `bind`. Property not found in
+ 13: (C1_proto.bind: empty); // TODO error: function ~> empty
+      ^^^^^^^^ Object
+
+proto.js:17
+ 17: (inst1_proto.m: empty); // TODO error: function ~> empty
+                  ^ property `m`. Property not found in
+ 17: (inst1_proto.m: empty); // TODO error: function ~> empty
+      ^^^^^^^^^^^ Object
+
+
+Found 37 errors
