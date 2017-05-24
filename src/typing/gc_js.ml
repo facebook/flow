@@ -67,6 +67,7 @@ let rec gc cx state = function
   (** def types **)
 
   | AbstractT (_, t) -> gc cx state t
+  | AbstractsT (_, _) -> ()
   | AnnotT t -> gc cx state t
   | DefT (_, AnyFunT) -> ()
   | DefT (_, AnyObjT) -> ()
@@ -79,6 +80,7 @@ let rec gc cx state = function
   | BoundT typeparam -> gc_typeparam cx state typeparam
   | ChoiceKitT _ -> ()
   | DefT (_, ClassT t) -> gc cx state t
+  | DefT (_, NonabstractClassT t) -> gc cx state t
   | CustomFunT _ -> ()
   | DefT (_, NumT _)
   | DefT (_, StrT _)
@@ -199,6 +201,7 @@ and gc_use cx state = function
   | AssertBinaryInRHST _ -> ()
   | AssertForInRHST _ -> ()
   | AssertImportIsValueT _ -> ()
+  | AssertNonabstractT _ -> ()
   | AssertRestParamT _ -> ()
   | BecomeT (_, t) -> gc cx state t
   | BindT(_, funcalltype, _) -> gc_funcalltype cx state funcalltype
@@ -233,6 +236,7 @@ and gc_use cx state = function
   | ExportTypeT (_, _, _, t, t_out) ->
       gc cx state t;
       gc cx state t_out
+  | GatherAbstractsT (_, i, _, t) -> gc_insttype cx state i; gc cx state t
   | GetElemT(_, i, t) -> gc cx state i; gc cx state t
   | GetKeysT (_, t) -> gc cx state t
   | GetValuesT (_, t) -> gc cx state t
