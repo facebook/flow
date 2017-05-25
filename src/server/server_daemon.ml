@@ -19,7 +19,7 @@ type daemon_msg =
 type waiting_channel = daemon_msg Daemon.out_channel
 
 type entry_point = (
-  Options.t * (string * FlowConfig.config) * FlowEventLogger.logging_context,
+  Options.t * FlowEventLogger.logging_context,
   in_channel,
   daemon_msg
 ) Daemon.entry
@@ -116,12 +116,11 @@ let register_entry_point
 : entry_point =
   Daemon.register_entry_point
     (new_entry_point ())
-    (fun (options, config, logging_context) (ic, waiting_channel) ->
+    (fun (options, logging_context) (ic, waiting_channel) ->
       ignore(Sys_utils.setsid());
       Daemon.close_in ic;
-      FlowConfig.restore config;
       FlowEventLogger.restore_context logging_context;
-      FlowEventLogger.init_flow_command ~version:FlowConfig.version;
+      FlowEventLogger.init_flow_command ~version:Flow_version.version;
       main ?waiting_channel:(Some waiting_channel) options)
 
 let daemonize ~wait ~log_file ~options ?on_spawn main_entry =
@@ -139,7 +138,6 @@ let daemonize ~wait ~log_file ~options ?on_spawn main_entry =
 
   let null_fd = Daemon.null_fd () in
   let log_fd = open_log_file log_file in
-  let config_file = Server_files_js.config_file root in
   (* Daemon.spawn is creating a new process with log_fd as both the stdout
    * and stderr. We are NOT leaking stdout and stderr. But the Windows
    * implementation of OCaml does leak stdout and stderr. This means any process
@@ -164,7 +162,7 @@ let daemonize ~wait ~log_file ~options ?on_spawn main_entry =
     Daemon.spawn
       (null_fd, log_fd, log_fd)
       (main_entry)
-      (options, (config_file, FlowConfig.get config_file), FlowEventLogger.get_context ()) in
+      (options, FlowEventLogger.get_context ()) in
   (* detach ourselves from the parent process *)
   Daemon.close_out waiting_channel_oc;
   (* let original parent exit *)

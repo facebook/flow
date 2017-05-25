@@ -265,6 +265,8 @@ let current_dir_name = Str.regexp_string Filename.current_dir_name
 let parent_dir_name = Str.regexp_string Filename.parent_dir_name
 let absolute_path = Str.regexp "^\\(/\\|[A-Za-z]:[/\\\\]\\)"
 
+let project_root_token = Str.regexp_string "<PROJECT_ROOT>"
+
 (* true if a file path matches an [ignore] entry in config *)
 let is_ignored options =
   let list = List.map snd (Options.ignores options) in

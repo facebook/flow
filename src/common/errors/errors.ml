@@ -815,7 +815,7 @@ module Json_output = struct
     let open Hh_json in
 
     let props = [
-      "flowVersion", JSON_String FlowConfig.version;
+      "flowVersion", JSON_String Flow_version.version;
       "errors", json_of_errors_with_context
         ~strip_root ~stdin_file ~suppressed_errors errors;
       "passed", JSON_Bool (ErrorSet.is_empty errors);

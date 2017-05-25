@@ -205,12 +205,12 @@ module OptionParser(Config : CONFIG) = struct
       config_libs @ libs
 
   let assert_version version_constraint =
-    if not (Semver.satisfies version_constraint FlowConfig.version)
+    if not (Semver.satisfies version_constraint Flow_version.version)
     then
       let msg = Utils_js.spf
         "Wrong version of Flow. The config specifies version %s but this is version %s"
         version_constraint
-        FlowConfig.version
+        Flow_version.version
       in
       FlowExitStatus.(exit ~msg Invalid_flowconfig)
 
@@ -374,7 +374,7 @@ module OptionParser(Config : CONFIG) = struct
             let basename = Filename.basename s in
             Path.concat dirname basename
         | None ->
-            Server_files_js.log_file ~tmp_dir:opt_temp_dir root flowconfig
+            CommandUtils.log_file ~tmp_dir:opt_temp_dir root flowconfig
       in
       let log_file = Path.to_string log_file in
       let on_spawn pid =

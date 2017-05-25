@@ -23,6 +23,7 @@ begin library "flow-commands"
     "src/commands/shellCompleteCommand.ml" (comp += [ "-w" "-3" ])
   ]
   requires = [
+    "flow-commands-config"
     "flow-common"
     "flow-common-errors"
     "flow-common-utils"
@@ -45,6 +46,18 @@ begin library "flow-commands"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+  ]
+end
+
+begin library "flow-commands-config"
+  sort = true
+  files = begin fb-glob "src/commands/config"
+  end
+  requires = [
+    "flow-common"
+    "flow-common-utils"
+    "hh-utils"
+    "hh-utils-collections"
   ]
 end
 
@@ -72,25 +85,12 @@ begin library "flow-common-audit"
   ]
 end
 
-begin library "flow-common-config"
-  sort = true
-  files = begin fb-glob "src/common/config"
-  end
-  requires = [
-    "flow-common"
-    "flow-common-utils"
-    "hh-utils"
-    "hh-utils-collections"
-  ]
-end
-
 begin library "flow-common-errors"
   sort = true
   files = begin fb-glob "src/common/errors"
   end
   requires = [
     "flow-common"
-    "flow-common-config"
     "flow-common-profiling"
     "flow-common-utils"
     "flow-parser"
@@ -233,7 +233,6 @@ begin library "flow-server-files"
   ]
   requires = [
     "flow-common"
-    "flow-common-config"
     "hh-utils-sys"
   ]
 end

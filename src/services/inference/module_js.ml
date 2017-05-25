@@ -128,7 +128,7 @@ let module_name_candidates ~options name =
         (* Then we replace the PROJECT_ROOT placeholder. This works like
          * Str.global_replace except it ignores things that look like
          * backreferences, like \1 *)
-        |> Str.split_delim FlowConfig.project_root_token
+        |> Str.split_delim Files.project_root_token
         |> String.concat root in
       if new_name = name then mapped_names else new_name::mapped_names
     in
@@ -552,7 +552,7 @@ module Haste: MODULE_SYSTEM = struct
     let root = Path.to_string (Options.root options)
       |> Sys_utils.normalize_filename_dir_sep in
     str
-      |> Str.split_delim FlowConfig.project_root_token
+      |> Str.split_delim Files.project_root_token
       |> String.concat root
       |> Str.regexp
 

@@ -65,9 +65,9 @@ endif
 
 MODULES=\
   src/commands\
+  src/commands/config\
   src/common\
   src/common/audit\
-  src/common/config\
   src/common/errors\
   src/common/profiling\
   src/common/utils\

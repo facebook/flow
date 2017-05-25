@@ -79,7 +79,7 @@ end = struct
     in
     let command_string = CommandSpec.name command in
     FlowEventLogger.set_command (Some command_string);
-    FlowEventLogger.init_flow_command ~version:FlowConfig.version;
+    FlowEventLogger.init_flow_command ~version:Flow_version.version;
 
     let args =
       try CommandSpec.args_of_argv command argv

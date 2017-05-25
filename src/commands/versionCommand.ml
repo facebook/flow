@@ -39,7 +39,7 @@ let main json pretty from _root () =
   then begin
     let open Hh_json in
     let json = JSON_Object [
-      "semver", JSON_String FlowConfig.version;
+      "semver", JSON_String Flow_version.version;
       "binary", JSON_String (Sys_utils.executable_path ());
       "build_id", JSON_String Build_id.build_id_ohai;
     ] in

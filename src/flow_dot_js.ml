@@ -300,7 +300,7 @@ let () = Js.Unsafe.set exports
 let () = Js.Unsafe.set exports
   "jsOfOcamlVersion" (Js.string Sys_js.js_of_ocaml_version)
 let () = Js.Unsafe.set exports
-  "flowVersion" (Js.string FlowConfig.version)
+  "flowVersion" (Js.string Flow_version.version)
 let () = Js.Unsafe.set exports
   "parse" (Js.wrap_callback Flow_parser_js.parse)
 let () = Js.Unsafe.set exports

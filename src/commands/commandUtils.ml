@@ -13,7 +13,7 @@ open Utils_js
 let print_version () =
   print_endlinef
     "Flow, a static type checker for JavaScript, version %s"
-    FlowConfig.version
+    Flow_version.version
 
 let expand_path file =
   let path = Path.make file in
@@ -294,7 +294,7 @@ let ignores_of_arg root patterns extras =
    let root = Path.to_string root
      |> Sys_utils.normalize_filename_dir_sep in
    let reg = s
-     |> Str.split_delim FlowConfig.project_root_token
+     |> Str.split_delim Files.project_root_token
      |> String.concat root
      |> Str.regexp in
     (s, reg)
@@ -305,6 +305,11 @@ let includes_of_arg root paths =
     let path = Files.make_path_absolute root path in
     Path_matcher.add acc path
   ) Path_matcher.empty paths
+
+let log_file ~tmp_dir root flowconfig =
+  match FlowConfig.log_file flowconfig with
+  | Some x -> x
+  | None -> Path.make (Server_files_js.file_of_root "log" ~tmp_dir root)
 
 let connect server_flags root =
   let flowconfig_path = Server_files_js.config_file root in
@@ -318,7 +323,7 @@ let connect server_flags root =
     ~f:(fun dirs -> dirs |> Str.split (Str.regexp ",") |> List.map normalize)
     server_flags.shm_dirs in
   let log_file =
-    Path.to_string (Server_files_js.log_file ~tmp_dir root flowconfig) in
+    Path.to_string (log_file ~tmp_dir root flowconfig) in
   let retries = server_flags.retries in
   let retry_if_init = server_flags.retry_if_init in
   let expiry = match server_flags.timeout with

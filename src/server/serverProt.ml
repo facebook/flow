@@ -9,7 +9,7 @@
  *)
 
 let build_revision = match Build_id.build_revision with
-  | "" -> FlowConfig.version
+  | "" -> Flow_version.version
   | x -> x
 
 type command =

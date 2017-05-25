@@ -8,14 +8,8 @@
  *
  *)
 
-let save options =
-  let root = Options.root options in
-  let config_file = Server_files_js.config_file root in
-  let config = FlowConfig.get config_file in
-  (config_file, config)
-
-let restore (config_file, config) =
-  FlowConfig.restore (config_file, config)
+let save _options = ()
+let restore () = ()
 
 (* As for [Daemon.register_entry_point], this should stay
    at toplevel, in order to be executed before

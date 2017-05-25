@@ -10,8 +10,6 @@
 
 open Utils_js
 
-let version = "0.47.0"
-
 let default_temp_dir = Filename.concat Sys_utils.temp_dir_name "flow"
 let default_shm_dirs =
   try
@@ -33,8 +31,6 @@ let multi_error (errs:(int * string) list) =
   FlowExitStatus.(exit ~msg Invalid_flowconfig)
 
 let error ln msg = multi_error [(ln, msg)]
-
-let project_root_token = Str.regexp_string "<PROJECT_ROOT>";
 
 module Opts = struct
   type t = {
