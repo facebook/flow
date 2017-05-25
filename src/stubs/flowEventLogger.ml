@@ -29,7 +29,6 @@ let set_from _ = ()
 let set_root _ = ()
 
 let status_response ~num_errors:_ = ()
-let init_server _ = ()
 let init_done ~profiling:_ = ()
 let init_flow_command ~version:_ = ()
 let killed _ = ()

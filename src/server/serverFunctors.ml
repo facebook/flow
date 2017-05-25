@@ -208,8 +208,6 @@ end = struct
   * we look if env.modified changed.
   *)
   let create_program_init options =
-    let root = Options.root options in
-    FlowEventLogger.init_server root;
     let handle = SharedMem_js.init (shared_mem_config_of_options options) in
     (* this is to transform SIGPIPE into an exception. A SIGPIPE can happen when
      * someone C-c the client. *)
