@@ -27,11 +27,11 @@ let entry = Worker.register_entry_point ~restore
  * prevents the workers from inheriting GC settings the master needs. *)
 let gc_control = Gc.get ()
 
-let make options heap_handle =
+let make ~n heap_handle =
   Worker.make
     ?call_wrapper:None
     ~saved_state: (save options)
     ~entry
-    ~nbr_procs: (Options.max_workers options)
+    ~nbr_procs: n
     ~gc_control
     ~heap_handle
