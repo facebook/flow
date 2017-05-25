@@ -8,13 +8,10 @@
  *
  *)
 
-let save _options = ()
-let restore () = ()
-
 (* As for [Daemon.register_entry_point], this should stay
    at toplevel, in order to be executed before
    [Daemon.check_entry_point]. *)
-let entry = Worker.register_entry_point ~restore
+let entry = Worker.register_entry_point ~restore:(fun () -> ())
 
 (* Saves the default GC settings, which are restored by the workers. Workers can
  * have more relaxed GC configs as they are short-lived processes, and this
@@ -24,7 +21,7 @@ let gc_control = Gc.get ()
 let make ~n heap_handle =
   Worker.make
     ?call_wrapper:None
-    ~saved_state: (save options)
+    ~saved_state: ()
     ~entry
     ~nbr_procs: n
     ~gc_control
