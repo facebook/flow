@@ -1,3 +1,22 @@
+### 0.47.0
+
+Likely to cause new Flow errors:
+* We are now sealing the object type that is passed to a React component's props. This means Flow will start complaining if you try and access unknown React props.
+* Strict function call arity checking is now on for everyone! The `experimental.strict_call_arity` option has been removed. For more, see https://flow.org/blog/2017/05/07/Strict-Function-Call-Arity/
+
+
+Notable bug fixes:
+* There are a bunch of flow commands that will quickly try to check a single file, like autocomplete, get-def, check-contents, etc. We're trying to clean up what happens when these commands are given a file with @flow, @noflow, or no pragma. v0.47.0 contains a change intended to avoid doing extra work for files with @noflow or no pragma at all. v0.48.0 should continue to address this.
+
+Misc:
+* Libdef updates! Thanks everyone for the contributions!
+* In a bunch of situations we're now propagating `any` types and continuing typechecking rather than stopping altogether.
+* Using a function as an object will now give that object a call property
+
+Parser:
+* Optimized parsing of huge list of nested ternary expressions
+* The JS version of the parser now throws proper JS errors in the rare case that an OCaml exception is uncaught
+
 ### 0.46.0
 
 Likely to cause new Flow errors:
