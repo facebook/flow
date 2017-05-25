@@ -1,4 +1,4 @@
-opam-version: "1.2"
+opam-version: "0.47.0"
 name: "flowtype"
 version: "0.46.0"
 maintainer: "gabe@fb.com"
