@@ -139,6 +139,34 @@ The new `flow.js` file will also live in the `bin` folder.
 
 Flow can also compile its parser to JavaScript. [Read how here](src/parser/README.md).
 
+## Building Flow on Windows
+
+This is a little more complicated. Here is a process that works, though it probably can be simplified.
+
+The general idea is that we build in Cygwin, targeting mingw. This gives us a binary that works even outside of Cygwin.
+
+### Install Cygwin
+1. Install Cygwin 64bit from https://cygwin.com/install.html
+2. In powershell, run `iex ((new-object net.webclient).DownloadString("https://raw.githubusercontent.com/ocaml/ocaml-ci-scripts/master/appveyor-install.ps1"))` which will likely run a cygwin setup installer with a bunch of cygwin packages and stuff. This helps make sure that every package that opam needs is available.
+
+### Install Opam
+1. Open the cygin64 terminal
+2. Download opam with `curl -fsSL -o opam64.tar.xz https://github.com/fdopen/opam-repository-mingw/releases/download/0.0.0.1/opam64.tar.xz`
+3. `tar -xf opam64.tar.xz`
+4. `cd opam64.tar.xz`
+5. Install opam `./install.sh`
+6. Initialize opam to point to a mingw fork: `opam init -a default "https://github.com/fdopen/opam-repository-mingw.git" --comp "4.03.0+mingw64c" --switch "4.03.0+mingw64c"`
+7. Make sure opam stuff is in your path: ```eval `opam config env` ```
+
+### Install Flow
+1. Clone flow: `git clone https://github.com/facebook/flow.git`
+2. `cd flow`
+3. Tell opam to use this directory as the flowtype project: `opam pin add flowtype . -n`
+4. Install system dependencies `opam depext -u flowtype`
+5. Install Flow's dependencies `opam install flowtype --deps-only`
+6. We need these too: `opam install camlp4 ocp-build`
+7. Finally, build Flow: `make all-ocp`
+
 ## Using Flow's parser from JavaScript
 
 While Flow is written in OCaml, its parser is available as a compiled-to-JavaScript module published to npm, named [flow-parser](https://www.npmjs.com/package/flow-parser). **Most end users of Flow
