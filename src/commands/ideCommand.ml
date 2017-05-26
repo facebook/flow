@@ -23,7 +23,8 @@ let protocol_options_string = String.concat ", " protocol_options
 let spec = {
   CommandSpec.
   name = "ide";
-  doc = "Starts a persistent connection to the server. Currently in development and highly unstable";
+  doc =
+    "Starts a persistent connection to the server. Currently in development and highly unstable";
   usage = Printf.sprintf
     "Usage: %s ide\n\n\
       Starts a persistent connection to the server\n"
@@ -195,7 +196,8 @@ module VeryUnstable: ClientProtocol = struct
         let with_token = AutocompleteService_js.add_autocomplete_token contents line column in
         Some (Prot.Autocomplete (File_input.FileContent (Some file, with_token), id))
     | _ ->
-        prerr_endline "Incorrect arguments passed to autocomplete. Should be filepath, line, column, contents";
+        prerr_endline
+          "Incorrect arguments passed to autocomplete. Should be filepath, line, column, contents";
         None
   )
 
@@ -204,9 +206,9 @@ module VeryUnstable: ClientProtocol = struct
       Some (Http_lite.read_message_utf8 buffered_stdin)
     with Http_lite.Malformed _ ->
       (* Currently, Nuclide sends an extra newline after each message to satisfy the implementation
-      that was previously here. Now, this manifests as a malformed request after each message. Ignore
-      it while we are transitioning, but still log something in case things go wrong with the real
-      messages too. *)
+       * that was previously here. Now, this manifests as a malformed request after each message.
+       * Ignore it while we are transitioning, but still log something in case things go wrong with
+       * the real messages too. *)
       prerr_endline "Received a malformed http message";
       None
     in
@@ -222,7 +224,8 @@ module VeryUnstable: ClientProtocol = struct
                 handle_autocomplete id params
             | JsonRpc.Obj (method_name, _, id) ->
                 let id_str = match id with None -> "no id" | Some _ -> "an id" in
-                prerr_endline ("unrecognized method: " ^ method_name ^ " with " ^ id_str ^ " provided");
+                prerr_endline
+                  ("unrecognized method: " ^ method_name ^ " with " ^ id_str ^ " provided");
                 None
             | JsonRpc.Malformed err ->
                 prerr_endline ("Received a malformed message: " ^ err);
