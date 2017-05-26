@@ -1,3 +1,27 @@
+statics.js:5
+  5:   static bar: number;
+                   ^^^^^^ number. This type is incompatible with
+ 11:   static bar: string; //ng
+                   ^^^^^^ string
+
+statics.js:8
+  8: class C1 implements IFoo {} //ng
+                         ^^^^ property `bar` of statics of IFoo. Property not found in
+  8: class C1 implements IFoo {} //ng
+           ^^ class type: C1
+
+statics.js:8
+  8: class C1 implements IFoo {} //ng
+                         ^^^^ property `foo` of IFoo. Property not found in
+  8: class C1 implements IFoo {} //ng
+           ^^ C1
+
+statics.js:11
+ 11:   static bar: string; //ng
+                   ^^^^^^ string. This type is incompatible with
+  5:   static bar: number;
+                   ^^^^^^ number
+
 test.js:3
   3: interface IFoo { foo: string }
                            ^^^^^^ string. This type is incompatible with
@@ -50,5 +74,9 @@ test.js:26
  26: class C7 implements C1 {} // error: C1 is a class, expected an interface
                          ^^ C1. Argument to implements clause must be an interface
 
+test.js:26
+ 26: class C7 implements C1 {} // error: C1 is a class, expected an interface
+                         ^^ statics of C1. Argument to implements clause must be an interface
 
-Found 9 errors
+
+Found 14 errors

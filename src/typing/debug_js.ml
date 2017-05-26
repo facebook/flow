@@ -2279,6 +2279,10 @@ let dump_flow_error =
           (string_of_use_op use_op)
     | EUnsupportedImplements reason ->
         spf "EUnsupportedImplements (%s)" (dump_reason cx reason)
+    | EInterfaceIncompatibility (reason1, reason2) ->
+        spf "EIncompatibleInterface (%s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
     | EReactKit ((reason1, reason2), _) ->
         spf "EReactKit (%s, %s, _)"
           (dump_reason cx reason1)

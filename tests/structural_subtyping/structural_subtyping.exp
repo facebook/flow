@@ -76,5 +76,37 @@ optional.js:12
   5:   b?: number,
            ^^^^^^ number
 
+statics.js:3
+     v---------------
+  3: interface IFoo {
+  4:   foo: string;
+  5:   static bar: number;
+  6: }
+     ^ property `bar` of statics of IFoo. Property not found in
+ 25: let f1: IFoo = F1; //ng
+                    ^^ statics of function
 
-Found 13 errors
+statics.js:3
+     v---------------
+  3: interface IFoo {
+  4:   foo: string;
+  5:   static bar: number;
+  6: }
+     ^ property `bar` of statics of IFoo. Property not found in
+ 29: let f2: IFoo = new F2; // ng: FunT~>ConstructorT doesn't install the function's statics to the constructed ObjT
+                    ^^^^^^ statics of statics of new object
+
+statics.js:5
+  5:   static bar: number;
+                   ^^^^^^ number. This type is incompatible with
+ 10:   static bar: string; //wrong type
+                   ^^^^^^ string
+
+statics.js:10
+ 10:   static bar: string; //wrong type
+                   ^^^^^^ string. This type is incompatible with
+  5:   static bar: number;
+                   ^^^^^^ number
+
+
+Found 17 errors
