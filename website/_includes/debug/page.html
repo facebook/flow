@@ -109,7 +109,7 @@ page:guide        : {{page_guide        | inspect}}
 
       {% unless insideCodeBlock %}
         {% if firstChar == '#' %}
-          {% assign stripped = line | strip_html %}
+          {% assign stripped = line | strip_liquid_tags | strip_html %}
           {% assign slug = stripped | slugify | prepend: 'toc-' %}
           {% assign link = '<a class="toc" id="' | append: slug | append: '" href="#' | append: slug | append: '"></a>' %}
           {% assign full = stripped | append: ' ' | append: link %}

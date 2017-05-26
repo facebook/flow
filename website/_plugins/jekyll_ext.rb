@@ -192,3 +192,39 @@ module Jekyll
     end
   end
 end
+
+
+class VersionTag < Liquid::Tag
+  def initialize(tag_name, version, tokens)
+     super
+     @tag_name = tag_name
+     @version = version
+  end
+
+  def render(context)
+    if @tag_name == "since" then
+      cls = "added"
+      title = "Added in #{@version}"
+      symbol = "&ge;"
+    else
+      cls = "removed"
+      title = "Removed after #{@version}"
+      symbol = "&le;"
+    end
+    "<span class=\"version #{cls}\" title=\"#{title}\">"\
+      "#{symbol}#{@version}"\
+    "</span>"
+  end
+end
+
+Liquid::Template.register_tag('since', VersionTag)
+Liquid::Template.register_tag('until', VersionTag)
+
+module StripTagsFilter
+  def strip_liquid_tags(input)
+    empty = ''.freeze
+    input.to_s.gsub(/{%.*?%}/m, empty)
+  end
+end
+
+Liquid::Template.register_filter(StripTagsFilter)

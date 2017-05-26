@@ -53,4 +53,22 @@
   .list-group-item-heading {
     margin-top: 0;
   }
+
+  .version {
+    padding: 3px 5px;
+    font-size: 12px;
+    border-radius: 6px;
+    display: inline-block;
+    vertical-align: middle;
+
+    &.added {
+      background: $flow-green;
+      color: white;
+    }
+
+    &.removed {
+      background: $flow-red;
+      color: white;
+    }
+  }
 }
