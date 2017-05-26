@@ -209,9 +209,6 @@ end = struct
   *)
   let create_program_init options =
     let handle = SharedMem_js.init (shared_mem_config_of_options options) in
-    (* this is to transform SIGPIPE into an exception. A SIGPIPE can happen when
-     * someone C-c the client. *)
-    Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
     let genv = ServerEnvBuild.make_genv options handle in
     let program_init = fun () ->
       let profiling, env = Program.init genv in

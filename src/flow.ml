@@ -61,7 +61,6 @@ end = struct
   let commands = ShellCommand.command :: commands
 
   let main () =
-    Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
     let default_command = DefaultCommand.command in
     let argv = Array.to_list Sys.argv in
     let (command, argv) = match argv with
@@ -100,6 +99,16 @@ end = struct
 end
 
 let _ =
+  (* A SIGPIPE signal happens when writing to a closed pipe (e.g. C-c, or piping to `head` which
+     exits after it prints enough lines). By default, SIGPIPE kills the program because this is a
+     sane behavior for most commands; it makes them stop processing input if they can't write it
+     anywhere.
+
+     We don't like being killed uncleanly like that. By ignoring SIGPIPE, the write() syscall that
+     normally would cause a SIGPIPE instead throws an EPIPE exception. We handle exceptions and
+     exit via FlowExitStatus.exit instead. *)
+  let () = Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore in
+
   try
     Daemon.check_entry_point (); (* this call might not return *)
     FlowShell.main ()
