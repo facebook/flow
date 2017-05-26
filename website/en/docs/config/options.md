@@ -298,10 +298,11 @@ serialized into and deserialized out of shared memory.
 
 By default this is 0.
 
-#### `strip_root` _`(boolean)`_ <a class="toc" id="toc-strip-root-boolean" href="#toc-strip-root-boolean"></a>
+#### `strip_root` _`(boolean)`_ {% until 0.48 %} <a class="toc" id="toc-strip-root-boolean" href="#toc-strip-root-boolean"></a>
 
-Set this to `true` to always strip the root directory from file paths in error
-messages. Can be overridden with the command line flag `--strip-root`.
+Obsolete. Set this to `true` to always strip the root directory from file paths
+in error messages when using `--json`, `--from emacs`, and `--from vim`.
+Do not use this option. Instead, pass the command line flag `--strip-root`.
 
 By default this is `false`.
 

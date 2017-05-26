@@ -274,7 +274,6 @@ module OptionParser(Config : CONFIG) = struct
     let opt_traces = match traces with
       | Some level -> level
       | None -> FlowConfig.traces flowconfig in
-    let opt_strip_root = strip_root || FlowConfig.strip_root flowconfig in
     let opt_munge_underscores = munge_underscore_members ||
       FlowConfig.munge_underscores flowconfig in
     let opt_temp_dir = match temp_dir with
@@ -338,7 +337,7 @@ module OptionParser(Config : CONFIG) = struct
       opt_node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
       opt_output_graphml = false;
       opt_profile = profile;
-      opt_strip_root;
+      opt_strip_root = strip_root;
       opt_module;
       opt_libs = libs ~root flowconfig lib;
       opt_default_lib_dir;

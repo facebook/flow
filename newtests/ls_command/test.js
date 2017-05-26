@@ -27,7 +27,7 @@ export default suite(({flowCmd, removeFile}) => [
       .sortedStdout('')
       .because("Assumes current directory is root, and there's no .flowconfig"),
 
-    flowCmd(['ls', 'src'])
+    flowCmd(['ls', '--strip-root', 'src'])
       .stderr('')
       .sortedStdout(
         `
@@ -37,7 +37,7 @@ export default suite(({flowCmd, removeFile}) => [
       )
       .because('Infers root and only shows included files in src directory'),
 
-    flowCmd(['ls', 'src', 'other'])
+    flowCmd(['ls', '--strip-root', 'src', 'other'])
       .stderr('')
       .sortedStdout(
         `
@@ -48,7 +48,7 @@ export default suite(({flowCmd, removeFile}) => [
       )
       .because('Infers root and will show included files in both directories'),
 
-    flowCmd(['ls', 'other', 'src'])
+    flowCmd(['ls', '--strip-root', 'other', 'src'])
       .stderr(
         `
           Could not find a .flowconfig in other or any of its parent directories.
@@ -58,7 +58,7 @@ export default suite(({flowCmd, removeFile}) => [
       .sortedStdout('')
       .because('Infers root from first arg, which is not a flow root'),
 
-    flowCmd(['ls', 'src/doesNotExist.js'])
+    flowCmd(['ls', '--strip-root', 'src/doesNotExist.js'])
       .sortedStdout('')
       .sortedStdout('')
       .because("Won't show files that don't exist")
@@ -66,6 +66,7 @@ export default suite(({flowCmd, removeFile}) => [
   test('Explicit root will not filter',[
     flowCmd([
       'ls',
+      '--strip-root',
       '--root',
       'src',
     ])
@@ -81,6 +82,7 @@ export default suite(({flowCmd, removeFile}) => [
   test('--all should all libs, included files, and explicitly ignored files', [
     flowCmd([
       'ls',
+      '--strip-root',
       '--all',
       '--root',
       'src',
@@ -100,6 +102,7 @@ export default suite(({flowCmd, removeFile}) => [
   test('Implicit/Explicit Included/Ignored/Lib should be correct', [
       flowCmd([
         'ls',
+        '--strip-root',
         '--root', 'src',
         '--all',
         '--explain',
@@ -120,6 +123,7 @@ export default suite(({flowCmd, removeFile}) => [
     flowCmd([
       'ls',
        '--json',
+       '--strip-root',
        '--root', 'src',
        '--all',
      ].concat(files))
@@ -141,6 +145,7 @@ export default suite(({flowCmd, removeFile}) => [
     flowCmd([
       'ls',
        '--json',
+       '--strip-root',
        '--root', 'src',
        '--all',
        '--explain'

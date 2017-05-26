@@ -6,4 +6,3 @@
 libs/
 
 [options]
-strip_root=true

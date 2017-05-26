@@ -59,7 +59,6 @@ module Opts = struct
     suppress_comments: Str.regexp list;
     suppress_types: SSet.t;
     traces: int;
-    strip_root: bool;
     all: bool;
     weak: bool;
     log_file: Path.t option;
@@ -162,7 +161,6 @@ module Opts = struct
     suppress_comments = [Str.regexp "\\(.\\|\n\\)*\\$FlowFixMe"];
     suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
     traces = 0;
-    strip_root = false;
     all = false;
     weak = false;
     log_file = None;
@@ -637,15 +635,6 @@ let parse_options config lines =
       );
     }
 
-    |> define_opt "strip_root" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_boolean;
-      setter = (fun opts v ->
-        Ok {opts with strip_root = v;}
-      );
-    }
-
     |> define_opt "all" {
       initializer_ = USE_DEFAULT;
       flags = [];
@@ -925,7 +914,6 @@ let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
 let shm_heap_size c = c.options.Opts.shm_heap_size
 let shm_log_level c = c.options.Opts.shm_log_level
 let shm_min_avail c = c.options.Opts.shm_min_avail
-let strip_root c = c.options.Opts.strip_root
 let suppress_comments c = c.options.Opts.suppress_comments
 let suppress_types c = c.options.Opts.suppress_types
 let temp_dir c = c.options.Opts.temp_dir

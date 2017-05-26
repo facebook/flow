@@ -67,7 +67,6 @@ val shm_hash_table_pow: config -> int
 val shm_heap_size: config -> int
 val shm_log_level: config -> int
 val shm_min_avail: config -> int
-val strip_root: config -> bool
 val suppress_comments: config -> Str.regexp list
 val suppress_types: config -> SSet.t
 val temp_dir: config -> string

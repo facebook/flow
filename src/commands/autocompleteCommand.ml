@@ -77,8 +77,6 @@ let main option_values root json pretty strip_root args () =
     | Some root -> Some root
     | None -> File_input.path_of_file_input file
   ) in
-  let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-  let strip_root = strip_root || FlowConfig.strip_root flowconfig in
   let strip_root = if strip_root then Some root else None in
   let ic, oc = connect option_values root in
   send_command oc (ServerProt.AUTOCOMPLETE file);

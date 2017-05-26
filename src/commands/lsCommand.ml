@@ -109,10 +109,6 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     |> Path.to_string
   in
 
-  let opt_strip_root = strip_root ||
-    FlowConfig.strip_root flowconfig
-  in
-
   let opt_module = FlowConfig.module_system flowconfig in
 
   let opt_ignores = ignores_of_arg
@@ -142,7 +138,7 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
     opt_output_graphml = false;
     opt_profile = false;
-    opt_strip_root;
+    opt_strip_root = strip_root;
     opt_module;
     opt_libs = ServerCommands.CheckCommand.libs ~root flowconfig None;
     opt_default_lib_dir = None;
