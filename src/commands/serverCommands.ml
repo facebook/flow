@@ -281,25 +281,7 @@ module OptionParser(Config : CONFIG) = struct
     | Some x -> x
     | None -> FlowConfig.temp_dir flowconfig
     in
-    let opt_shm_dirs = Option.value_map
-      shm_dirs
-      ~default:(FlowConfig.shm_dirs flowconfig)
-      ~f:(Str.split (Str.regexp ",")) in
-    let opt_shm_min_avail = Option.value
-      shm_min_avail
-      ~default:(FlowConfig.shm_min_avail flowconfig) in
     let opt_temp_dir = Path.to_string (Path.make opt_temp_dir) in
-    let opt_shm_dirs =
-      List.map Path.(fun dir -> dir |> make |> to_string) opt_shm_dirs in
-    let opt_shm_dep_table_pow = Option.value
-      shm_dep_table_pow
-      ~default:(FlowConfig.shm_dep_table_pow flowconfig) in
-    let opt_shm_hash_table_pow = Option.value
-      shm_hash_table_pow
-      ~default:(FlowConfig.shm_hash_table_pow flowconfig) in
-    let opt_shm_log_level = Option.value
-      shm_log_level
-      ~default:(FlowConfig.shm_log_level flowconfig) in
     let opt_default_lib_dir =
       if no_flowlib || FlowConfig.no_flowlib flowconfig
       then None
@@ -311,6 +293,30 @@ module OptionParser(Config : CONFIG) = struct
     let all = all || FlowConfig.all flowconfig in
     let weak = weak || FlowConfig.weak flowconfig in
     let opt_max_workers = min opt_max_workers Sys_utils.nbr_procs in
+
+    let shared_mem_config =
+      let dep_table_pow = Option.value shm_dep_table_pow
+        ~default:(FlowConfig.shm_dep_table_pow flowconfig) in
+      let hash_table_pow = Option.value shm_hash_table_pow
+        ~default:(FlowConfig.shm_hash_table_pow flowconfig) in
+      let shm_dirs = Option.value_map shm_dirs
+        ~default:(FlowConfig.shm_dirs flowconfig)
+        ~f:(Str.split (Str.regexp ","))
+        |> List.map Path.(fun dir -> dir |> make |> to_string) in
+      let shm_min_avail = Option.value shm_min_avail
+        ~default:(FlowConfig.shm_min_avail flowconfig) in
+      let log_level = Option.value shm_log_level
+        ~default:(FlowConfig.shm_log_level flowconfig) in
+      { SharedMem_js.
+        global_size = FlowConfig.shm_global_size flowconfig;
+        heap_size = FlowConfig.shm_heap_size flowconfig;
+        dep_table_pow;
+        hash_table_pow;
+        shm_dirs;
+        shm_min_avail;
+        log_level;
+      }
+    in
 
     let options = { Options.
       opt_focus_check_target =
@@ -338,13 +344,6 @@ module OptionParser(Config : CONFIG) = struct
       opt_default_lib_dir;
       opt_munge_underscores = opt_munge_underscores;
       opt_temp_dir;
-      opt_shm_dirs;
-      opt_shm_min_avail;
-      opt_shm_dep_table_pow;
-      opt_shm_hash_table_pow;
-      opt_shm_log_level;
-      opt_shm_global_size = FlowConfig.shm_global_size flowconfig;
-      opt_shm_heap_size = FlowConfig.shm_heap_size flowconfig;
       opt_max_workers;
       opt_ignores;
       opt_includes;
@@ -392,13 +391,14 @@ module OptionParser(Config : CONFIG) = struct
             "Logs will go to %s\n%!" log_file
         end
       in
-      Main.daemonize ~wait ~log_file ~on_spawn options
-    | Server -> Main.run options
+      Main.daemonize ~wait ~log_file ~shared_mem_config ~on_spawn options
+    | Server -> Main.run ~shared_mem_config options
     (* NOTE: At this experimental stage, focus mode implies check mode, so that
        we kill the server after we are done. Later on, focus mode might keep the
        server running after we are done. *)
     | Check | FocusCheck ->
-      let profiling, errors, suppressed_errors = Main.check_once options in
+      let profiling, errors, suppressed_errors = Main.check_once
+        ~shared_mem_config options in
       let suppressed_errors =
         if include_suppressed then suppressed_errors else [] in
       let printer =

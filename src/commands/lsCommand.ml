@@ -109,13 +109,6 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     |> Path.to_string
   in
 
-  let opt_shm_dirs =
-    FlowConfig.shm_dirs flowconfig
-    |> List.map Path.(fun s -> s |> make |> to_string)
-  in
-
-  let opt_shm_min_avail = FlowConfig.shm_min_avail flowconfig in
-
   let opt_strip_root = strip_root ||
     FlowConfig.strip_root flowconfig
   in
@@ -155,13 +148,6 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_default_lib_dir = None;
     opt_munge_underscores = false;
     opt_temp_dir;
-    opt_shm_dirs;
-    opt_shm_min_avail;
-    opt_shm_dep_table_pow = FlowConfig.shm_dep_table_pow flowconfig;
-    opt_shm_hash_table_pow = FlowConfig.shm_hash_table_pow flowconfig;
-    opt_shm_log_level = FlowConfig.shm_log_level flowconfig;
-    opt_shm_global_size = FlowConfig.shm_global_size flowconfig;
-    opt_shm_heap_size = FlowConfig.shm_heap_size flowconfig;
     opt_max_workers = 1;
     opt_ignores;
     opt_includes;

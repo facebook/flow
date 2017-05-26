@@ -19,7 +19,7 @@ type daemon_msg =
 type waiting_channel = daemon_msg Daemon.out_channel
 
 type entry_point = (
-  Options.t * FlowEventLogger.logging_context,
+  SharedMem_js.config * Options.t * FlowEventLogger.logging_context,
   in_channel,
   daemon_msg
 ) Daemon.entry
@@ -112,18 +112,22 @@ let new_entry_point =
     Printf.sprintf "main_%d" !cpt
 
 let register_entry_point
-  (main: ?waiting_channel:waiting_channel -> Options.t -> unit)
+  (main:
+    ?waiting_channel:waiting_channel ->
+    shared_mem_config:SharedMem_js.config ->
+    Options.t ->
+    unit)
 : entry_point =
   Daemon.register_entry_point
     (new_entry_point ())
-    (fun (options, logging_context) (ic, waiting_channel) ->
+    (fun (shared_mem_config, options, logging_context) (ic, waiting_channel) ->
       ignore(Sys_utils.setsid());
       Daemon.close_in ic;
       FlowEventLogger.restore_context logging_context;
       FlowEventLogger.init_flow_command ~version:Flow_version.version;
-      main ?waiting_channel:(Some waiting_channel) options)
+      main ?waiting_channel:(Some waiting_channel) ~shared_mem_config options)
 
-let daemonize ~wait ~log_file ~options ?on_spawn main_entry =
+let daemonize ~wait ~log_file ~shared_mem_config ~options ?on_spawn main_entry =
   (* Let's make sure this isn't all for naught before we fork *)
   let root = Options.root options in
   let tmp_dir = Options.temp_dir options in
@@ -162,7 +166,7 @@ let daemonize ~wait ~log_file ~options ?on_spawn main_entry =
     Daemon.spawn
       (null_fd, log_fd, log_fd)
       (main_entry)
-      (options, FlowEventLogger.get_context ()) in
+      (shared_mem_config, options, FlowEventLogger.get_context ()) in
   (* detach ourselves from the parent process *)
   Daemon.close_out waiting_channel_oc;
   (* let original parent exit *)

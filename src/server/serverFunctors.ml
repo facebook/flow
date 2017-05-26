@@ -36,11 +36,19 @@ end
 (* The main loop *)
 (*****************************************************************************)
 module ServerMain (Program : SERVER_PROGRAM) : sig
-  val run : Options.t -> unit
-  val check_once : Options.t ->
+  val run :
+    shared_mem_config:SharedMem_js.config ->
+    Options.t ->
+    unit
+  val check_once :
+    shared_mem_config:SharedMem_js.config ->
+    Options.t ->
     Profiling_js.t * Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list
   val daemonize :
-    wait:bool -> log_file:string -> ?on_spawn:(int -> unit) ->
+    wait:bool ->
+    log_file:string ->
+    shared_mem_config:SharedMem_js.config ->
+    ?on_spawn:(int -> unit) ->
     Options.t -> unit
 end = struct
   type ready_socket =
@@ -190,16 +198,6 @@ end = struct
     let watch_paths = Program.get_watch_paths options in
     DfindLib.init fds ("flow_server_events", watch_paths)
 
-  let shared_mem_config_of_options options =
-    { SharedMem_js.
-      global_size = Options.shm_global_size options;
-      heap_size = Options.shm_heap_size options;
-      dep_table_pow = Options.shm_dep_table_pow options;
-      hash_table_pow = Options.shm_hash_table_pow options;
-      shm_dirs = Options.shm_dirs options;
-      shm_min_avail = Options.shm_min_avail options;
-      log_level = Options.shm_log_level options;
-    }
 
   (* The main entry point of the daemon
   * the only trick to understand here, is that env.modified is the set
@@ -207,8 +205,8 @@ end = struct
   * type-checker succeeded. So to know if there is some work to be done,
   * we look if env.modified changed.
   *)
-  let create_program_init options =
-    let handle = SharedMem_js.init (shared_mem_config_of_options options) in
+  let create_program_init ~shared_mem_config options =
+    let handle = SharedMem_js.init shared_mem_config in
     let genv = ServerEnvBuild.make_genv options handle in
     let program_init = fun () ->
       let profiling, env = Program.init genv in
@@ -217,7 +215,7 @@ end = struct
     in
     genv, program_init
 
-  let run_internal ?waiting_channel options =
+  let run_internal ?waiting_channel ~shared_mem_config options =
     let root = Options.root options in
     let tmp_dir = Options.temp_dir options in
 
@@ -227,7 +225,7 @@ end = struct
     PidLog.init (Server_files.pids_file ~tmp_dir root);
     PidLog.log ~reason:"main" (Unix.getpid());
 
-    let genv, program_init = create_program_init options in
+    let genv, program_init = create_program_init ~shared_mem_config options in
 
     (* Open up a server on the socket before we go into program_init -- the
        client will try to connect to the socket as soon as we lock the init
@@ -251,17 +249,17 @@ end = struct
 
     serve ~dfind ~genv ~env socket
 
-  let run options = run_internal options
+  let run ~shared_mem_config options = run_internal ~shared_mem_config options
 
-  let check_once options =
+  let check_once ~shared_mem_config options =
     PidLog.disable ();
-    let genv, program_init = create_program_init options in
+    let genv, program_init = create_program_init ~shared_mem_config options in
     let profiling, env = program_init () in
     let errors, suppressed_errors = Program.check_once genv env in
     profiling, errors, suppressed_errors
 
   let daemonize =
     let entry = Server_daemon.register_entry_point run_internal in
-    fun ~wait ~log_file ?on_spawn options ->
-      Server_daemon.daemonize ~wait ~log_file ?on_spawn ~options entry
+    fun ~wait ~log_file ~shared_mem_config ?on_spawn options ->
+      Server_daemon.daemonize ~wait ~log_file ~shared_mem_config ?on_spawn ~options entry
 end

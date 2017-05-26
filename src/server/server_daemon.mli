@@ -16,12 +16,16 @@ type waiting_channel
 type entry_point
 
 val register_entry_point :
-  (?waiting_channel:waiting_channel -> Options.t -> unit) ->
+  (?waiting_channel:waiting_channel ->
+    shared_mem_config:SharedMem_js.config ->
+    Options.t ->
+    unit) ->
   entry_point
 
 val daemonize :
   wait:bool ->
   log_file:string ->
+  shared_mem_config:SharedMem_js.config ->
   options:Options.t ->
   ?on_spawn:(int -> unit) ->
   entry_point ->
