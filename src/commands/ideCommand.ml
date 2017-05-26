@@ -229,8 +229,64 @@ module VeryUnstable: ClientProtocol = struct
                 None
 end
 
+module PendingRequests : sig
+  type t
+  val empty: t
+  val add_request: t -> Prot.request -> t
+  val add_response: t -> Prot.response -> t
+  val ready_request: t -> (Prot.request option * t)
+end = struct
+  module IntMap = Map.Make(struct type t = int let compare = ( - ) end)
+
+  type t = {
+    queue: Prot.request ImmQueue.t;
+    outstanding: Prot.request option;
+  }
+
+  let empty = {
+    queue = ImmQueue.empty;
+    outstanding = None;
+  }
+
+  let add_request t req =
+    { t with
+      queue = ImmQueue.push t.queue req;
+    }
+
+  let add_response t response =
+    match response, t.outstanding with
+      | Prot.Errors _, _
+      | Prot.StartRecheck, _
+      | Prot.EndRecheck, _ ->
+          t
+      | Prot.AutocompleteResult (_, response_id), Some (Prot.Autocomplete (_, request_id)) ->
+          if response_id <> request_id then begin
+            failwith "Internal error: request and response id mismatch."
+          end;
+          { t with outstanding = None }
+      | Prot.AutocompleteResult _, Some _ ->
+          failwith "Internal error: received a mismatched response type"
+      | Prot.AutocompleteResult _, None ->
+          failwith "Internal error: received a response when there was no outstanding request."
+
+  let ready_request t =
+    match t.outstanding with
+      | Some _ -> (None, t)
+      | None -> begin
+          match ImmQueue.pop t.queue with
+            | None, q -> (None, { t with queue = q })
+            | Some req, q ->
+                let outstanding = match req with
+                  (* We do not expect a response from `subscribe` *)
+                  | Prot.Subscribe -> None
+                  | _ -> Some req
+                in
+                (Some req, { outstanding; queue = q })
+        end
+end
+
 module ProtocolFunctor (Protocol: ClientProtocol) = struct
-  let handle_server_response fd =
+  let handle_server_response fd pending_requests =
     let (message : Prot.response) =
       try
         Marshal_tools.from_fd_with_preamble fd
@@ -239,34 +295,46 @@ module ProtocolFunctor (Protocol: ClientProtocol) = struct
         (* TODO choose a standard exit code for this *)
         exit 1
     in
-    Protocol.handle_server_response message
+    let pending_requests = PendingRequests.add_response pending_requests message in
+    Protocol.handle_server_response message;
+    pending_requests
 
   let send_server_request fd msg =
     Marshal_tools.to_fd_with_preamble fd (msg: Prot.request)
 
-  let handle_stdin_message buffered_stdin server_fd =
-    let request_option =
-      Protocol.server_request_of_stdin_message buffered_stdin
-    in
-    match request_option with
-      | None -> ()
-      | Some req -> send_server_request server_fd req
+  let handle_stdin_message buffered_stdin pending_requests =
+    match Protocol.server_request_of_stdin_message buffered_stdin with
+      | None -> pending_requests
+      | Some req -> PendingRequests.add_request pending_requests req
 
-  let rec handle_all_stdin_messages buffered_stdin server_fd =
-    handle_stdin_message buffered_stdin server_fd;
+  let rec handle_all_stdin_messages buffered_stdin pending_requests =
+    let pending_requests = handle_stdin_message buffered_stdin pending_requests in
     if Buffered_line_reader.has_buffered_content buffered_stdin then
-      handle_all_stdin_messages buffered_stdin server_fd
+      handle_all_stdin_messages buffered_stdin pending_requests
+    else
+      pending_requests
+
+  let rec send_pending_requests fd pending_requests =
+    let (req, pending_requests) = PendingRequests.ready_request pending_requests in
+    match req with
+      | None -> pending_requests
+      | Some req -> begin
+          send_server_request fd req;
+          send_pending_requests fd pending_requests
+        end
 
   let main_loop ~buffered_stdin ~ic_fd ~oc_fd =
     let stdin_fd = Buffered_line_reader.get_fd buffered_stdin in
+    let pending_requests = ref PendingRequests.empty in
     while true do
+      pending_requests := send_pending_requests oc_fd !pending_requests;
       (* Negative timeout means this call will wait indefinitely *)
       let readable_fds, _, _ = Unix.select [stdin_fd; ic_fd] [] [] ~-.1.0 in
       List.iter (fun fd ->
         if fd = ic_fd then begin
-          handle_server_response ic_fd
+          pending_requests := handle_server_response ic_fd !pending_requests
         end else if fd = stdin_fd then begin
-          handle_all_stdin_messages buffered_stdin oc_fd
+          pending_requests := handle_all_stdin_messages buffered_stdin !pending_requests
         end else
           failwith "Internal error: select returned an unknown fd"
       ) readable_fds
