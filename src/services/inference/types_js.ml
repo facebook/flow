@@ -282,7 +282,8 @@ let typecheck
               ~new_or_changed:(FilenameSet.singleton f)
               ~changed_modules:(Module_js.NameSet.singleton _module) in
             let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
-            Dep_service.calc_all_dependencies dependency_graph (FilenameSet.add f all_dependent_files)
+            Dep_service.calc_all_dependencies dependency_graph
+              (FilenameSet.add f all_dependent_files)
           in
           Infer_service.infer ~options ~workers (FilenameSet.elements files)
         )
@@ -436,15 +437,17 @@ let recheck genv env ~updates =
 
   (* record reparse errors *)
   let errors =
-    let new_local_errors: Errors.ErrorSet.t FilenameMap.t = List.fold_left (fun local_errors (file, _, fail) ->
-      let errset = match fail with
-      | Parsing_service_js.Parse_error err ->
-        Inference_utils.set_of_parse_error err
-      | Parsing_service_js.Docblock_errors errs ->
-        Inference_utils.set_of_docblock_errors errs
-      in
-      update_errset local_errors file errset
-    ) FilenameMap.empty freshparse_fail in
+    let new_local_errors: Errors.ErrorSet.t FilenameMap.t =
+      List.fold_left (fun local_errors (file, _, fail) ->
+        let errset = match fail with
+        | Parsing_service_js.Parse_error err ->
+          Inference_utils.set_of_parse_error err
+        | Parsing_service_js.Docblock_errors errs ->
+          Inference_utils.set_of_docblock_errors errs
+        in
+        update_errset local_errors file errset
+      ) FilenameMap.empty freshparse_fail
+    in
     let () =
       let error_set: Errors.ErrorSet.t =
         FilenameMap.fold (fun _ -> Errors.ErrorSet.union) new_local_errors Errors.ErrorSet.empty
