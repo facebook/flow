@@ -28,7 +28,7 @@ begin library "flow-commands"
     "flow-common-errors"
     "flow-common-utils"
     "flow-dts"
-    "flow-embedded"
+    "flow-flowlib"
     "flow-parser"
     "flow-parser-utils"
     "flow-stubs"
@@ -134,45 +134,44 @@ begin library "flow-dts"
   ]
 end
 
-(* This library is used to extract the archive embedded in the Elf binary.
- * The archive contains the standard library for Flow and is extracted
- * into /tmp. This way, Flow can be distributed as a simple binary, and
- * will install itself the first time it is run. *)
-begin library "flow-embedded"
+begin library "flow-scripts-utils"
+  dirname = "scripts"
+  files = [
+    "utils"
+  ]
+  requires = [
+    "unix"
+  ]
+end
+
+begin program "flow-ppx-gen-flowlib"
+  requires = [
+    "flow-scripts-utils"
+    "compiler-libs.common"
+  ]
+  dirname = "scripts"
+  files = [
+    "ppx_gen_flowlibs.ml"
+  ]
+end
+
+begin library "flow-flowlib"
+  dirname = "src/flowlib"
   sort = true
-  files = begin fb-glob "src/embedded"
-  end
+  files = [
+    "flowlib.mli"
+    "flowlib.ml"
+  ]
   requires = [
     "flow-common"
-    "flow-shmem"
-    "hh-win32res"
-    "hh-find"
+
   ]
-  if (os_type = "Win32") then {
-    flow_source = "./flowlib.rc"
-    flow_target = "%{flow-embedded_DST_DIR}%/flow_res.o"
-    cclib = [ flow_target ]
-    build_rules = [
-      flow_target (
-        sources = [ flow_source ]
-        commands = [
-          { "windres"
-            "--preprocessor=x86_64-w64-mingw32-gcc.exe"
-            "--preprocessor-arg=-E"
-            "--preprocessor-arg=-xc-header"
-            flow_source flow_target }
-          ]
-          build_target = true
-      )
-    ]
-  } else if (system = "macosx" && os_type = "Unix") then {
-      cclib = [
-        "-sectcreate" "__text" "flowlib"
-        "%{ROOTPROJECT_FULL_SRC_DIR}%/bin/flowlib.tar.gz"
-        "-framework" "CoreServices"
-        "-framework" "CoreFoundation"
-      ]
-  }
+  comp_requires = [
+    "flow-ppx-gen-flowlib:asm"
+  ]
+  comp = [
+    "-ppx" "%{flow-ppx-gen-flowlib_FULL_DST_DIR}%/flow-ppx-gen-flowlib.asm lib/"
+  ]
 end
 
 begin library "flow-parser"
@@ -268,7 +267,6 @@ begin library "flow-server"
   requires = [
     "flow-common"
     "flow-common-utils"
-    "flow-embedded"
     "flow-shmem"
     "flow-stubs"
     "flow-parser"
@@ -451,13 +449,8 @@ begin library "flow-typing"
 end
 
 begin program "flow"
-  requires = [ "flow-commands" "flow-embedded" ]
+  requires = [ "flow-commands" ]
   dirname = "src"
-  (* There doesn't seem to be a good way to force the linker to run if
-   * flow-embedded has changed. Well, this seems to work. *)
-  if (os_type = "Win32") then {
-    rule_sources = "%{flow-embedded_FULL_DST_DIR}%/flow_res.o"
-  }
   files = [
     "flow.ml" (comp += [ "-w" "-3" ])
   ]

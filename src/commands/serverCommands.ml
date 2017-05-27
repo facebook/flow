@@ -169,12 +169,12 @@ module OptionParser(Config : CONFIG) = struct
 
   let default_lib_dir tmp_dir =
     let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
-    if Flowlib.extract_flowlib root
-    then root
-    else begin
+    try
+      Flowlib.extract_flowlib root;
+      root
+    with _ ->
       let msg = "Could not locate flowlib files" in
       FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
-    end
 
   let libs ~root flowconfig extras =
     let flowtyped_path = Files.get_flowtyped_path root in

@@ -32,10 +32,10 @@ let with_out_channel filename f =
 
 (* Read the first line in stdout or stderr of an external command. *)
 let read_process_output name args =
-  with_pipe @@ fun in_r in_w ->
+  with_pipe @@ fun in_r _in_w ->
   with_pipe @@ fun out_r out_w ->
-  let pid = 
-    try Unix.create_process name args in_r out_w out_w 
+  let pid =
+    try Unix.create_process name args in_r out_w out_w
     with Unix.Unix_error (Unix.ENOENT, _, _) ->
       (* On Windows, this is what happens if you call create_process
        * non_existant_thing *)
@@ -59,7 +59,7 @@ let read_process_output name args =
 
 let string_of_file filename =
   with_in_channel filename @@ fun ic ->
-  let s = String.create 32759 in
+  let s = Bytes.create 32759 in
   let b = Buffer.create 1000 in
   let rec iter ic b s =
     let nread = input ic s 0 32759 in

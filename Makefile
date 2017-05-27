@@ -23,39 +23,30 @@ endif
 ################################################################################
 
 ifeq ($(UNAME_S), Linux)
-  FLOWLIB=bin/flowlib.tar.gz
   INOTIFY=hack/third-party/inotify
   INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.c
   FSNOTIFY=hack/fsnotify_linux
   FSNOTIFY_STUBS=
-  ELF=elf
   RT=rt
   FRAMEWORKS=
-  SECTCREATE=
   EXE=
 endif
 ifeq ($(UNAME_S), Darwin)
-  FLOWLIB=bin/flowlib.tar.gz
   INOTIFY=hack/fsevents
   INOTIFY_STUBS=$(INOTIFY)/fsevents_stubs.c
   FSNOTIFY=hack/fsnotify_darwin
   FSNOTIFY_STUBS=
-  ELF=
   RT=
   FRAMEWORKS=CoreServices CoreFoundation
-  SECTCREATE=-cclib -sectcreate -cclib __text -cclib flowlib -cclib $(abspath $(FLOWLIB))
   EXE=
 endif
 ifeq ($(UNAME_S), Windows)
-  FLOWLIB=flowlib.rc
   INOTIFY=
   INOTIFY_STUBS=
   FSNOTIFY=hack/fsnotify_win
   FSNOTIFY_STUBS=$(FSNOTIFY)/fsnotify_stubs.c
-  ELF=
   RT=
   FRAMEWORKS=
-  SECTCREATE=
   EXE=.exe
 endif
 
@@ -72,7 +63,7 @@ MODULES=\
   src/common/profiling\
   src/common/utils\
   src/dts\
-  src/embedded\
+  src/flowlib\
   src/parser\
   src/parser_utils\
   src/parsing\
@@ -88,7 +79,6 @@ MODULES=\
   hack/find\
   hack/globals\
   hack/heap\
-  hack/hhi\
   hack/injection/default_injector\
   hack/procs\
   hack/search\
@@ -107,7 +97,6 @@ NATIVE_C_FILES=\
   $(INOTIFY_STUBS)\
   $(FSNOTIFY_STUBS)\
   hack/heap/hh_shared.c\
-  hack/hhi/hhi_elf.c\
   hack/utils/files.c\
   hack/utils/get_build_id.c\
   hack/utils/handle_stubs.c\
@@ -115,8 +104,6 @@ NATIVE_C_FILES=\
   hack/utils/realpath.c\
   hack/utils/sysinfo.c\
   hack/utils/priorities.c\
-  hack/hhi/hhi_win32res_stubs.c\
-  src/embedded/flowlib_elf.c\
   $(sort $(wildcard src/third-party/lz4/*.c))\
   $(INTERNAL_NATIVE_C_FILES)
 
@@ -127,18 +114,18 @@ OCAML_LIBRARIES=\
 
 NATIVE_LIBRARIES=\
   pthread\
-  $(ELF)\
   $(RT)
 
 OCP_BUILD_FILES=\
   ocp_build_flow.ocp\
   ocp_build_hack.ocp
 
-FILES_TO_COPY=\
-  $(wildcard lib/*.js)
+COPIED_FLOWLIB=\
+	$(foreach lib,$(wildcard lib/*.js),_build/$(lib))
 
 JS_STUBS=\
 	$(wildcard js/*.js)
+
 
 # We need caml_hexstring_of_float for js_of_ocaml < 2.8
 JSOO_VERSION=$(shell which js_of_ocaml 2> /dev/null > /dev/null && js_of_ocaml --version)
@@ -172,9 +159,9 @@ EXTRA_LIB_OPTS=$(foreach dir, $(EXTRA_LIB_PATHS),-cclib -L -cclib $(dir))
 FRAMEWORK_OPTS=$(foreach framework, $(FRAMEWORKS),-cclib -framework -cclib $(framework))
 
 BYTECODE_LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) $(FRAMEWORK_OPTS)
-LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS) $(SECTCREATE)
+LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS)
 
-all: $(FLOWLIB) build-flow copy-flow-files
+all: build-flow copy-flow-files
 all-ocp: build-flow-with-ocp copy-flow-files-ocp
 
 all-homebrew:
@@ -195,7 +182,7 @@ clean-ocp: clean
 	[ -d _obuild ] && ocp-build clean || true
 	rm -f $(OCP_BUILD_FILES)
 
-build-flow: $(BUILT_OBJECT_FILES) $(FLOWLIB)
+build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
 	ocamlbuild \
 		-use-ocamlfind -pkgs sedlex \
 		-no-links  $(INCLUDE_OPTS) $(LIB_OPTS) \
@@ -205,8 +192,10 @@ build-flow: $(BUILT_OBJECT_FILES) $(FLOWLIB)
 %.ocp: %.ocp.fb scripts/utils.ml scripts/ocp_build_glob.ml
 	ocaml -I scripts -w -3 str.cma unix.cma scripts/ocp_build_glob.ml $(addsuffix .fb,$@) $@
 
-build-flow-with-ocp: $(OCP_BUILD_FILES) $(FLOWLIB) hack/utils/get_build_id.gen.c
+build-flow-with-ocp: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
 	[ -d _obuild ] || ocp-build init
+	 # Force us to pick up libdef changes - ocp-build is fast so it's fine
+	rm -rf _obuild/flow-flowlib
 	ocp-build build flow
 	mkdir -p bin
 	cp _obuild/flow/flow.asm$(EXE) bin/flow$(EXE)
@@ -222,7 +211,7 @@ test-parser-ocp: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
 	ocp-build tests flow-parser-hardcoded-test
 	rm -f $(OCP_BUILD_FILES)
 
-build-flow-debug: $(BUILT_OBJECT_FILES) $(FLOWLIB)
+build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
 	ocamlbuild -lflags -custom -no-links $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.d.byte
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow$(EXE)
@@ -245,37 +234,25 @@ hack/utils/get_build_id.gen.c: FORCE scripts/utils.ml scripts/gen_build_id.ml
 _build/hack/utils/get_build_id.gen.c: FORCE scripts/utils.ml scripts/gen_build_id.ml
 	ocaml -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
 
-# We only rebuild the flowlib archive if any of the libs have changed. If the
-# archive has changed, then the incremental build needs to re-embed it into the
-# binary. Unfortunately we rely on ocamlbuild to embed the archive on OSX and
-# ocamlbuild isn't smart enough to understand dependencies outside of its
-# automatic-dependency stuff.
-bin/flowlib.tar.gz: $(wildcard lib/*)
-	mkdir -p bin
-	tar czf $@ -C lib .
-ifeq ($(UNAME_S), Darwin)
-	rm -f _build/src/flow.d.byte _build/src/flow.native
-	rm -f _obuild/flow/flow.byte _obuild/flow/flow.asm
-endif
+$(COPIED_FLOWLIB): _build/%.js: %.js
+	mkdir -p $(dir $@)
+	cp $< $@
+	rm -rf _build/src/flowlib
 
-flowlib.rc: scripts/gen_index.ml $(wildcard lib/*)
-	ocaml -I scripts -w -3 unix.cma ./scripts/gen_index.ml flowlib.rc lib
+_build/scripts/ppx_gen_flowlibs.native: scripts/ppx_gen_flowlibs.ml
+	ocamlbuild \
+		-use-ocamlfind -pkgs sedlex,compiler-libs.common,unix \
+		-I scripts \
+		scripts/ppx_gen_flowlibs.native
+	rm -f ppx_gen_flowlibs.native
 
-copy-flow-files: build-flow $(FILES_TO_COPY)
+copy-flow-files: build-flow
 	mkdir -p bin
-ifeq ($(UNAME_S), Linux)
-	objcopy --add-section flowlib=$(FLOWLIB) _build/src/flow.native bin/flow$(EXE)
-else
 	cp _build/src/flow.native bin/flow$(EXE)
-endif
 
-copy-flow-files-ocp: build-flow-with-ocp $(FLOWLIB) $(FILES_TO_COPY)
+copy-flow-files-ocp: build-flow-with-ocp
 	mkdir -p bin
-ifeq ($(UNAME_S), Linux)
-	objcopy --add-section flowlib=$(FLOWLIB) _obuild/flow/flow.asm bin/flow$(EXE)
-else
 	cp _obuild/flow/flow.asm bin/flow$(EXE)
-endif
 
 do-test:
 	./runtests.sh bin/flow$(EXE)

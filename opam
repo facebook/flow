@@ -25,7 +25,4 @@ depends: [
 available: [ocaml-version >= "4.03.0"]
 build: [ [ make ] ]
 depexts: [
- [ ["debian"] ["libelf-dev"] ]
- [ ["ubuntu"] ["libelf-dev"] ]
- [ ["centos"] ["elfutils-libelf-devel"] ]
 ]

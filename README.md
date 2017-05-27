@@ -90,19 +90,19 @@ More thorough documentation and many examples can be found at https://flow.org.
 
 ## Building Flow
 
-Flow is written in OCaml (OCaml 4.03.0 or higher is required) and (on Linux) requires libelf. You can install OCaml on Mac OS X and Linux by following the instructions at [ocaml.org](https://ocaml.org/docs/install.html).
+Flow is written in OCaml (OCaml 4.03.0 or higher is required). You can install OCaml on Mac OS X and Linux by following the instructions at [ocaml.org](https://ocaml.org/docs/install.html).
 
 For example, on Ubuntu 16.04 and similar systems:
 
 ```
-sudo apt-get install opam libelf-dev
+sudo apt-get install opam
 opam init --comp 4.03.0
 ```
 
 On OS X, using the [brew package manager](http://brew.sh/):
 
 ```
-brew install libelf opam
+brew install opam
 opam init --comp 4.03.0
 ```
 
