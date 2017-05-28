@@ -10,6 +10,24 @@
 
 (************** file filter utils ***************)
 
+type options = {
+  default_lib_dir: Path.t option;
+  ignores: (string * Str.regexp) list;
+  includes: Path_matcher.t;
+  lib_paths: Path.t list;
+  module_file_exts: SSet.t;
+  module_resource_exts: SSet.t;
+  node_resolver_dirnames: string list;
+}
+
+let default_lib_dir options = options.default_lib_dir
+let ignores options = options.ignores
+let includes options = options.includes
+let lib_paths options = options.lib_paths
+let module_file_exts options = options.module_file_exts
+let module_resource_exts options = options.module_resource_exts
+let node_resolver_dirnames options = options.node_resolver_dirnames
+
 let node_modules_containers = ref SSet.empty
 
 let global_file_name = "(global)"
@@ -40,9 +58,7 @@ let is_json_file filename =
   Utils_js.extension_of_filename filename = Some ".json"
 
 let is_valid_path ~options =
-  let file_exts = SSet.union
-    (Options.module_file_exts options)
-    (Options.module_resource_exts options) in
+  let file_exts = SSet.union options.module_file_exts options.module_resource_exts in
   let is_valid_path_helper path =
     not (is_dot_file path) &&
     (SSet.exists (Filename.check_suffix path) file_exts ||
@@ -55,7 +71,7 @@ let is_valid_path ~options =
     else is_valid_path_helper path
 
 let is_node_module options path =
-  List.mem (Filename.basename path) (Options.node_resolver_dirnames options)
+  List.mem (Filename.basename path) options.node_resolver_dirnames
 
 let is_flow_file ~options path =
   is_valid_path ~options path && not (is_directory path)
@@ -223,10 +239,10 @@ let get_all =
   in
   fun next -> get_all_rec next SSet.empty
 
-let init options =
+let init (options: options) =
   let node_module_filter = is_node_module options in
-  let libs = Options.lib_paths options in
-  let libs, filter = match Options.default_lib_dir options with
+  let libs = options.lib_paths in
+  let libs, filter = match options.default_lib_dir with
     | None -> libs, is_valid_path ~options
     | Some root ->
       let is_in_flowlib = is_prefix (Path.to_string root) in
@@ -268,8 +284,8 @@ let absolute_path = Str.regexp "^\\(/\\|[A-Za-z]:[/\\\\]\\)"
 let project_root_token = Str.regexp_string "<PROJECT_ROOT>"
 
 (* true if a file path matches an [ignore] entry in config *)
-let is_ignored options =
-  let list = List.map snd (Options.ignores options) in
+let is_ignored (options: options) =
+  let list = List.map snd options.ignores in
   fun path ->
     (* On Windows, the path may use \ instead of /, but let's standardize the
      * ignore regex to use / *)
@@ -278,15 +294,14 @@ let is_ignored options =
 
 (* true if a file path matches an [include] path in config *)
 let is_included options f =
-  Path_matcher.matches (Options.includes options) f
+  Path_matcher.matches options.includes f
 
 let wanted ~options lib_fileset =
   let is_ignored_ = is_ignored options in
   fun path -> not (is_ignored_ path) && not (SSet.mem path lib_fileset)
 
-let watched_paths options =
-  let root = Options.root options in
-  let others = Path_matcher.stems (Options.includes options) in
+let watched_paths ~root options =
+  let others = Path_matcher.stems options.includes in
   root::others
 
 (**
@@ -297,14 +312,13 @@ let watched_paths options =
  * If `all` is true, ignored files and libs are also returned.
  * If subdir is set, then we return the subset of files under subdir
  *)
-let make_next_files ~all ~subdir ~options ~libs =
+let make_next_files ~root ~all ~subdir ~options ~libs =
   let node_module_filter = is_node_module options in
-  let root = Options.root options in
   let filter = if all then fun _ -> true else wanted ~options libs in
 
   (* The directories from which we start our search *)
   let starting_points = match subdir with
-  | None -> watched_paths options
+  | None -> watched_paths ~root options
   | Some subdir -> [subdir] in
 
   let root_str= Path.to_string root in
@@ -395,7 +409,7 @@ let get_flowtyped_path root =
 
 (* helper: make different kinds of Loc.filename from a path string *)
 let filename_from_string ~options p =
-  let resource_file_exts = Options.module_resource_exts options in
+  let resource_file_exts = options.module_resource_exts in
   match Utils_js.extension_of_filename p with
   | Some ".json" -> Loc.JsonFile p
   | Some ext when SSet.mem ext resource_file_exts -> Loc.ResourceFile p

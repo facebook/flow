@@ -803,14 +803,16 @@ let full_check workers ~ordered_libs parse_next options =
 (* initialize flow server state, including full check *)
 let server_init genv =
   let options = genv.ServerEnv.options in
+  let root = Options.root options in
+  let file_options = Options.file_options options in
 
-  let ordered_libs, libs = Files.init options in
+  let ordered_libs, libs = Files.init file_options in
 
-  let get_next_raw =
-    Files.make_next_files ~all:false ~subdir:None ~options ~libs in
+  let get_next_raw : unit -> string list =
+    Files.make_next_files ~root ~all:false ~subdir:None ~options:file_options ~libs in
   let get_next = fun () ->
     get_next_raw ()
-    |> List.map (Files.filename_from_string ~options)
+    |> List.map (Files.filename_from_string ~options:file_options)
     |> Bucket.of_list
   in
 

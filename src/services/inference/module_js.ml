@@ -386,35 +386,34 @@ module Node = struct
     | Some resolution_acc -> resolution_acc.paths <- SSet.add path resolution_acc.paths
 
   let path_if_exists =
-    let path_exists ~options path =
+    let path_exists ~file_options path =
       (file_exists path) &&
-        not (Files.is_ignored options path) &&
+        not (Files.is_ignored file_options path) &&
         not (dir_exists path)
-    in fun ~options resolution_acc path ->
+    in fun ~file_options resolution_acc path ->
       let path = resolve_symlinks path in
       let declaration_path = path ^ Files.flow_ext in
-      if path_exists ~options declaration_path ||
-        path_exists ~options path
+      if path_exists ~file_options declaration_path ||
+        path_exists ~file_options path
       then Some path
       else (record_path path resolution_acc; None)
 
-  let path_if_exists_with_file_exts ~options resolution_acc path file_exts =
+  let path_if_exists_with_file_exts ~file_options resolution_acc path file_exts =
     lazy_seq (file_exts |> List.map (fun ext ->
-      lazy (path_if_exists ~options resolution_acc (path ^ ext))
+      lazy (path_if_exists ~file_options resolution_acc (path ^ ext))
     ))
 
-  let parse_main ~options loc resolution_acc package file_exts =
+  let parse_main ~root ~file_options loc resolution_acc package file_exts =
     let package = resolve_symlinks package in
-    if not (file_exists package) || (Files.is_ignored options package)
+    if not (file_exists package) || (Files.is_ignored file_options package)
     then None
     else
       let tokens = match PackageHeap.get package with
       | Some tokens -> tokens
       | None ->
-        let project_root = Options.root options in
         let msg =
-          let is_included = Files.is_included options package in
-          let project_root_str = Path.to_string project_root in
+          let is_included = Files.is_included file_options package in
+          let project_root_str = Path.to_string root in
           let is_contained_in_root =
             Files.is_prefix project_root_str package
           in
@@ -444,35 +443,36 @@ module Node = struct
         let path_w_index = Filename.concat path "index" in
 
         lazy_seq [
-          lazy (path_if_exists ~options resolution_acc path);
-          lazy (path_if_exists_with_file_exts ~options resolution_acc path file_exts);
-          lazy (path_if_exists_with_file_exts ~options resolution_acc path_w_index file_exts);
+          lazy (path_if_exists ~file_options resolution_acc path);
+          lazy (path_if_exists_with_file_exts ~file_options resolution_acc path file_exts);
+          lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
         ]
 
   let resolve_relative ~options loc ?resolution_acc root_path rel_path =
+    let file_options = Options.file_options options in
     let path = Files.normalize_path root_path rel_path in
-    if Files.is_flow_file ~options path
-    then path_if_exists ~options resolution_acc path
+    if Files.is_flow_file ~options:file_options path
+    then path_if_exists ~file_options resolution_acc path
     else (
       let path_w_index = Filename.concat path "index" in
       (* We do not try resource file extensions here. So while you can write
        * require('foo') to require foo.js, it should never resolve to foo.css
        *)
-      let file_exts = Options.module_file_exts options
-        |> SSet.elements in
-
+      let file_exts = SSet.elements (Files.module_file_exts file_options) in
+      let root = Options.root options in
       lazy_seq ([
-        lazy (path_if_exists_with_file_exts ~options resolution_acc path file_exts);
-        lazy (parse_main ~options loc resolution_acc (Filename.concat path "package.json") file_exts);
-        lazy (path_if_exists_with_file_exts ~options resolution_acc path_w_index file_exts);
+        lazy (path_if_exists_with_file_exts ~file_options resolution_acc path file_exts);
+        lazy (parse_main ~root ~file_options loc resolution_acc (Filename.concat path "package.json") file_exts);
+        lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
       ])
     )
 
   let rec node_module ~options node_modules_containers file loc resolution_acc dir r =
+    let file_options = Options.file_options options in
     lazy_seq [
       lazy (
         if SSet.mem dir node_modules_containers then
-          lazy_seq (Options.node_resolver_dirnames options |> List.map (fun dirname ->
+          lazy_seq (Files.node_resolver_dirnames file_options |> List.map (fun dirname ->
             lazy (resolve_relative
               ~options
               loc ?resolution_acc dir (spf "%s%s%s" dirname Filename.dir_sep r)
@@ -513,7 +513,9 @@ module Node = struct
         | Some _ as result -> result
     in
     match choose_candidate candidates with
-    | Some str -> eponymous_module (Files.filename_from_string ~options str)
+    | Some str ->
+      let options = Options.file_options options in
+      eponymous_module (Files.filename_from_string ~options str)
     | None -> Modulename.String import_str
 
   (* in node, file names are module names, as guaranteed by
@@ -638,6 +640,7 @@ module Haste: MODULE_SYSTEM = struct
 
     match resolve_import ~options node_modules_containers file loc ?resolution_acc chosen_candidate with
     | Some name ->
+        let options = Options.file_options options in
         eponymous_module (Files.filename_from_string ~options name)
     | None -> Modulename.String chosen_candidate
 

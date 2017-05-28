@@ -262,15 +262,6 @@ module OptionParser(Config : CONFIG) = struct
     end;
 
     let opt_module = FlowConfig.module_system flowconfig in
-    let opt_ignores = ignores_of_arg
-      root
-      (FlowConfig.ignores flowconfig)
-      flowconfig_flags.ignores in
-    let opt_includes =
-      let includes = List.rev_append
-        (FlowConfig.includes flowconfig)
-        flowconfig_flags.includes in
-      includes_of_arg root includes in
     let opt_traces = match traces with
       | Some level -> level
       | None -> FlowConfig.traces flowconfig in
@@ -281,10 +272,6 @@ module OptionParser(Config : CONFIG) = struct
     | None -> FlowConfig.temp_dir flowconfig
     in
     let opt_temp_dir = Path.to_string (Path.make opt_temp_dir) in
-    let opt_default_lib_dir =
-      if no_flowlib || FlowConfig.no_flowlib flowconfig
-      then None
-      else Some (default_lib_dir opt_temp_dir) in
     let opt_max_workers = match max_workers with
     | Some x -> x
     | None -> FlowConfig.max_workers flowconfig
@@ -317,6 +304,31 @@ module OptionParser(Config : CONFIG) = struct
       }
     in
 
+    let file_options =
+      let default_lib_dir =
+        if no_flowlib || FlowConfig.no_flowlib flowconfig
+        then None
+        else Some (default_lib_dir opt_temp_dir) in
+      let ignores = ignores_of_arg
+        root
+        (FlowConfig.ignores flowconfig)
+        flowconfig_flags.ignores in
+      let includes =
+        flowconfig_flags.includes
+        |> List.rev_append (FlowConfig.includes flowconfig)
+        |> includes_of_arg root in
+      let lib_paths = libs ~root flowconfig lib in
+      { Files.
+        default_lib_dir;
+        ignores;
+        includes;
+        lib_paths;
+        module_file_exts = FlowConfig.module_file_exts flowconfig;
+        module_resource_exts = FlowConfig.module_resource_exts flowconfig;
+        node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
+      }
+    in
+
     let options = { Options.
       opt_focus_check_target =
         Config.(if mode = FocusCheck
@@ -330,22 +342,15 @@ module OptionParser(Config : CONFIG) = struct
       opt_weak = weak;
       opt_traces;
       opt_quiet = quiet || json || pretty;
-      opt_module_file_exts = FlowConfig.module_file_exts flowconfig;
-      opt_module_resource_exts = FlowConfig.module_resource_exts flowconfig;
       opt_module_name_mappers = FlowConfig.module_name_mappers flowconfig;
       opt_modules_are_use_strict = FlowConfig.modules_are_use_strict flowconfig;
-      opt_node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
       opt_output_graphml = false;
       opt_profile = profile;
       opt_strip_root = strip_root;
       opt_module;
-      opt_libs = libs ~root flowconfig lib;
-      opt_default_lib_dir;
       opt_munge_underscores = opt_munge_underscores;
       opt_temp_dir;
       opt_max_workers;
-      opt_ignores;
-      opt_includes;
       opt_suppress_comments = FlowConfig.suppress_comments flowconfig;
       opt_suppress_types = FlowConfig.suppress_types flowconfig;
       opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
@@ -362,7 +367,8 @@ module OptionParser(Config : CONFIG) = struct
       opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;
       opt_haste_paths_blacklist = FlowConfig.haste_paths_blacklist flowconfig;
       opt_haste_paths_whitelist = FlowConfig.haste_paths_whitelist flowconfig;
-      opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig
+      opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig;
+      opt_file_options = file_options;
     } in
     match Config.mode with
     | Start ->

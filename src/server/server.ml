@@ -357,8 +357,9 @@ let collate_errors =
     result
 
   let module_name_of_string ~options module_name_str =
+    let file_options = Options.file_options options in
     let path = Path.to_string (Path.make module_name_str) in
-    if Files.is_flow_file ~options path
+    if Files.is_flow_file ~options:file_options path
     then Modulename.Filename (Loc.SourceFile path)
     else Modulename.String module_name_str
 
@@ -393,22 +394,25 @@ let collate_errors =
      * flow. *)
     List.fold_left add_to_results (SMap.empty, SSet.empty) module_names
 
-  let get_watch_paths options = Files.watched_paths options
+  let get_watch_paths options =
+    let root = Options.root options in
+    Files.watched_paths ~root (Options.file_options options)
 
   (* filter a set of updates coming from dfind and return
      a FilenameSet. updates may be coming in from
      the root, or an include path. *)
   let process_updates genv env updates =
     let options = genv.ServerEnv.options in
+    let file_options = Options.file_options options in
     let all_libs =
       let known_libs = env.ServerEnv.libs in
-      let _, maybe_new_libs = Files.init options in
+      let _, maybe_new_libs = Files.init file_options in
       SSet.union known_libs maybe_new_libs
     in
     let root = Options.root options in
     let config_path = Server_files_js.config_file root in
     let sroot = Path.to_string root in
-    let want = Files.wanted ~options all_libs in
+    let want = Files.wanted ~options:file_options all_libs in
 
     (* Die if the .flowconfig changed *)
     if SSet.mem config_path updates then begin
@@ -450,7 +454,7 @@ let collate_errors =
     (* Die if a package.json changed in an incompatible way *)
     let incompatible_packages = SSet.filter (fun f ->
       (String_utils.string_starts_with f sroot ||
-        Files.is_included options f)
+        Files.is_included file_options f)
       && (Filename.basename f) = "package.json"
       && want f
       && is_incompatible f
@@ -498,14 +502,14 @@ let collate_errors =
     end;
 
     SSet.fold (fun f acc ->
-      if Files.is_flow_file ~options f &&
+      if Files.is_flow_file ~options:file_options f &&
         (* note: is_included may be expensive. check in-root match first. *)
         (String_utils.string_starts_with f sroot ||
-          Files.is_included options f) &&
+          Files.is_included file_options f) &&
         (* removes excluded and lib files. the latter are already filtered *)
         want f
       then
-        let filename = Files.filename_from_string ~options f in
+        let filename = Files.filename_from_string ~options:file_options f in
         FilenameSet.add filename acc
       else acc
     ) updates FilenameSet.empty
