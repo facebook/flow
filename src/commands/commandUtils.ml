@@ -84,39 +84,59 @@ let temp_dir_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Directory in which to store temp files (default: /tmp/flow/)"
 )
 
-let shm_dirs_flag prev = CommandSpec.ArgSpec.(
+type shared_mem_params = {
+  shm_dirs: string option;
+  shm_min_avail: int option;
+  shm_dep_table_pow: int option;
+  shm_hash_table_pow: int option;
+  shm_log_level: int option;
+}
+
+let collect_shm_flags main
+    shm_dirs shm_min_avail shm_dep_table_pow shm_hash_table_pow shm_log_level =
+  main { shm_dirs; shm_min_avail; shm_dep_table_pow; shm_hash_table_pow; shm_log_level; }
+
+let shm_flags prev = CommandSpec.ArgSpec.(
   prev
+  |> collect collect_shm_flags
   |> flag "--sharedmemory-dirs" string
       ~doc:"Directory in which to store shared memory heap (default: /dev/shm/)"
-)
-
-let shm_min_avail_flag prev = CommandSpec.ArgSpec.(
-  prev
   |> flag "--sharedmemory-minimum-available" int
       ~doc:"Flow will only use a filesystem for shared memory if it has at \
         least these many bytes available (default: 536870912 - which is 512MB)"
-)
-
-let shm_dep_table_pow_flag prev = CommandSpec.ArgSpec.(
-  prev
   |> flag "--sharedmemory-dep-table-pow" int
       ~doc:"The exponent for the size of the shared memory dependency table. \
         The default is 17, implying a size of 2^17 bytes"
-)
-
-let shm_hash_table_pow_flag prev = CommandSpec.ArgSpec.(
-  prev
   |> flag "--sharedmemory-hash-table-pow" int
       ~doc:"The exponent for the size of the shared memory hash table. \
         The default is 19, implying a size of 2^19 bytes"
-)
-
-let shm_log_level_flag prev = CommandSpec.ArgSpec.(
-  prev
   |> flag "--sharedmemory-log-level" int
       ~doc:"The logging level for shared memory statistics. \
         0=none, 1=some"
 )
+
+let shm_config shm_flags flowconfig =
+  let dep_table_pow = Option.value shm_flags.shm_dep_table_pow
+    ~default:(FlowConfig.shm_dep_table_pow flowconfig) in
+  let hash_table_pow = Option.value shm_flags.shm_hash_table_pow
+    ~default:(FlowConfig.shm_hash_table_pow flowconfig) in
+  let shm_dirs = Option.value_map shm_flags.shm_dirs
+    ~default:(FlowConfig.shm_dirs flowconfig)
+    ~f:(Str.split (Str.regexp ","))
+    |> List.map Path.(fun dir -> dir |> make |> to_string) in
+  let shm_min_avail = Option.value shm_flags.shm_min_avail
+    ~default:(FlowConfig.shm_min_avail flowconfig) in
+  let log_level = Option.value shm_flags.shm_log_level
+    ~default:(FlowConfig.shm_log_level flowconfig) in
+  { SharedMem_js.
+    global_size = FlowConfig.shm_global_size flowconfig;
+    heap_size = FlowConfig.shm_heap_size flowconfig;
+    dep_table_pow;
+    hash_table_pow;
+    shm_dirs;
+    shm_min_avail;
+    log_level;
+  }
 
 let from_flag prev = CommandSpec.ArgSpec.(
   prev
@@ -222,11 +242,7 @@ type command_params = {
   timeout            : int;
   no_auto_start      : bool;
   temp_dir           : string option;
-  shm_dirs           : string option;
-  shm_min_avail      : int option;
-  shm_dep_table_pow  : int option;
-  shm_hash_table_pow : int option;
-  shm_log_level      : int option;
+  shm_flags          : shared_mem_params;
   ignore_version     : bool;
   quiet              : bool;
 }
@@ -238,11 +254,7 @@ let collect_server_flags
     retry_if_init
     no_auto_start
     temp_dir
-    shm_dirs
-    shm_min_avail
-    shm_dep_table_pow
-    shm_hash_table_pow
-    shm_log_level
+    shm_flags
     from
     ignore_version
     quiet =
@@ -257,11 +269,7 @@ let collect_server_flags
     timeout = (default 0 timeout);
     no_auto_start = no_auto_start;
     temp_dir;
-    shm_dirs;
-    shm_min_avail;
-    shm_dep_table_pow;
-    shm_hash_table_pow;
-    shm_log_level;
+    shm_flags;
     ignore_version;
     quiet;
   }
@@ -278,11 +286,7 @@ let server_flags prev = CommandSpec.ArgSpec.(
   |> flag "--no-auto-start" no_arg
       ~doc:"If the server is not running, do not start it; just exit"
   |> temp_dir_flag
-  |> shm_dirs_flag
-  |> shm_min_avail_flag
-  |> shm_dep_table_pow_flag
-  |> shm_hash_table_pow_flag
-  |> shm_log_level_flag
+  |> shm_flags
   |> from_flag
   |> ignore_version_flag
   |> quiet_flag
@@ -321,7 +325,7 @@ let connect server_flags root =
     server_flags.temp_dir in
   let shm_dirs = Option.map
     ~f:(fun dirs -> dirs |> Str.split (Str.regexp ",") |> List.map normalize)
-    server_flags.shm_dirs in
+    server_flags.shm_flags.shm_dirs in
   let log_file =
     Path.to_string (log_file ~tmp_dir root flowconfig) in
   let retries = server_flags.retries in
@@ -337,10 +341,10 @@ let connect server_flags root =
     expiry;
     tmp_dir;
     shm_dirs;
-    shm_min_avail = server_flags.shm_min_avail;
-    shm_dep_table_pow = server_flags.shm_dep_table_pow;
-    shm_hash_table_pow = server_flags.shm_hash_table_pow;
-    shm_log_level = server_flags.shm_log_level;
+    shm_min_avail = server_flags.shm_flags.shm_min_avail;
+    shm_dep_table_pow = server_flags.shm_flags.shm_dep_table_pow;
+    shm_hash_table_pow = server_flags.shm_flags.shm_hash_table_pow;
+    shm_log_level = server_flags.shm_flags.shm_log_level;
     log_file;
     ignore_version = server_flags.ignore_version;
     emoji = FlowConfig.emoji flowconfig;

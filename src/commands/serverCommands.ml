@@ -103,11 +103,7 @@ module OptionParser(Config : CONFIG) = struct
     |> verbose_flags
     |> strip_root_flag
     |> temp_dir_flag
-    |> shm_dirs_flag
-    |> shm_min_avail_flag
-    |> shm_dep_table_pow_flag
-    |> shm_hash_table_pow_flag
-    |> shm_log_level_flag
+    |> shm_flags
     |> from_flag
     |> quiet_flag
     |> anon "root" (optional string) ~doc:"Root directory"
@@ -249,11 +245,7 @@ module OptionParser(Config : CONFIG) = struct
       verbose
       strip_root
       temp_dir
-      shm_dirs
-      shm_min_avail
-      shm_dep_table_pow
-      shm_hash_table_pow
-      shm_log_level
+      shm_flags
       from
       quiet
       path_opt
@@ -294,29 +286,7 @@ module OptionParser(Config : CONFIG) = struct
     let weak = weak || FlowConfig.weak flowconfig in
     let opt_max_workers = min opt_max_workers Sys_utils.nbr_procs in
 
-    let shared_mem_config =
-      let dep_table_pow = Option.value shm_dep_table_pow
-        ~default:(FlowConfig.shm_dep_table_pow flowconfig) in
-      let hash_table_pow = Option.value shm_hash_table_pow
-        ~default:(FlowConfig.shm_hash_table_pow flowconfig) in
-      let shm_dirs = Option.value_map shm_dirs
-        ~default:(FlowConfig.shm_dirs flowconfig)
-        ~f:(Str.split (Str.regexp ","))
-        |> List.map Path.(fun dir -> dir |> make |> to_string) in
-      let shm_min_avail = Option.value shm_min_avail
-        ~default:(FlowConfig.shm_min_avail flowconfig) in
-      let log_level = Option.value shm_log_level
-        ~default:(FlowConfig.shm_log_level flowconfig) in
-      { SharedMem_js.
-        global_size = FlowConfig.shm_global_size flowconfig;
-        heap_size = FlowConfig.shm_heap_size flowconfig;
-        dep_table_pow;
-        hash_table_pow;
-        shm_dirs;
-        shm_min_avail;
-        log_level;
-      }
-    in
+    let shared_mem_config = shm_config shm_flags flowconfig in
 
     let file_options =
       let default_lib_dir =
