@@ -164,6 +164,7 @@ begin library "flow-flowlib"
   ]
   requires = [
     "flow-common"
+    "flow-ppx-gen-flowlib"
 
   ]
   comp_requires = [
