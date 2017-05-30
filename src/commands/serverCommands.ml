@@ -177,43 +177,6 @@ module OptionParser(Config : CONFIG) = struct
         exe_name cmdname cmddoc;
   }
 
-  let default_lib_dir tmp_dir =
-    let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
-    try
-      Flowlib.extract_flowlib root;
-      root
-    with _ ->
-      let msg = "Could not locate flowlib files" in
-      FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
-
-  let libs ~root flowconfig extras =
-    let flowtyped_path = Files.get_flowtyped_path root in
-    let has_explicit_flowtyped_lib = ref false in
-    let config_libs =
-      List.fold_right (fun lib abs_libs ->
-        let abs_lib = Files.make_path_absolute root lib in
-        (**
-         * "flow-typed" is always included in the libs list for convenience,
-         * but there's no guarantee that it exists on the filesystem.
-         *)
-        if abs_lib = flowtyped_path then has_explicit_flowtyped_lib := true;
-        abs_lib::abs_libs
-      ) (FlowConfig.libs flowconfig) []
-    in
-    let config_libs =
-      if !has_explicit_flowtyped_lib = false
-         && (Sys.file_exists (Path.to_string flowtyped_path))
-      then flowtyped_path::config_libs
-      else config_libs
-    in
-    match extras with
-    | None -> config_libs
-    | Some libs ->
-      let libs = libs
-      |> Str.split (Str.regexp ",")
-      |> List.map Path.make in
-      config_libs @ libs
-
   let assert_version version_constraint =
     if not (Semver.satisfies version_constraint Flow_version.version)
     then
@@ -288,30 +251,8 @@ module OptionParser(Config : CONFIG) = struct
 
     let shared_mem_config = shm_config shm_flags flowconfig in
 
-    let file_options =
-      let default_lib_dir =
-        if no_flowlib || FlowConfig.no_flowlib flowconfig
-        then None
-        else Some (default_lib_dir opt_temp_dir) in
-      let ignores = ignores_of_arg
-        root
-        (FlowConfig.ignores flowconfig)
-        flowconfig_flags.ignores in
-      let includes =
-        flowconfig_flags.includes
-        |> List.rev_append (FlowConfig.includes flowconfig)
-        |> includes_of_arg root in
-      let lib_paths = libs ~root flowconfig lib in
-      { Files.
-        default_lib_dir;
-        ignores;
-        includes;
-        lib_paths;
-        module_file_exts = FlowConfig.module_file_exts flowconfig;
-        module_resource_exts = FlowConfig.module_resource_exts flowconfig;
-        node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
-      }
-    in
+    let file_options = CommandUtils.file_options
+      ~root ~no_flowlib ~temp_dir:opt_temp_dir ~lib flowconfig_flags flowconfig in
 
     let options = { Options.
       opt_focus_check_target =

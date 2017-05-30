@@ -209,6 +209,86 @@ let collect_flowconfig_flags main ignores_str includes_str lib_str =
   let libs = list_of_string_arg lib_str in
   main { ignores; includes; libs; }
 
+let file_options =
+  let default_lib_dir tmp_dir =
+    let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
+    try
+      Flowlib.extract_flowlib root;
+      root
+    with _ ->
+      let msg = "Could not locate flowlib files" in
+      FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+  in
+  let ignores_of_arg root patterns extras =
+    let patterns = List.rev_append extras patterns in
+    List.map (fun s ->
+     let root = Path.to_string root
+       |> Sys_utils.normalize_filename_dir_sep in
+     let reg = s
+       |> Str.split_delim Files.project_root_token
+       |> String.concat root
+       |> Str.regexp in
+      (s, reg)
+    ) patterns
+  in
+  let includes_of_arg root paths =
+    List.fold_left (fun acc path ->
+      let path = Files.make_path_absolute root path in
+      Path_matcher.add acc path
+    ) Path_matcher.empty paths
+  in
+  let libs ~root flowconfig extras =
+    let flowtyped_path = Files.get_flowtyped_path root in
+    let has_explicit_flowtyped_lib = ref false in
+    let config_libs =
+      List.fold_right (fun lib abs_libs ->
+        let abs_lib = Files.make_path_absolute root lib in
+        (**
+         * "flow-typed" is always included in the libs list for convenience,
+         * but there's no guarantee that it exists on the filesystem.
+         *)
+        if abs_lib = flowtyped_path then has_explicit_flowtyped_lib := true;
+        abs_lib::abs_libs
+      ) (FlowConfig.libs flowconfig) []
+    in
+    let config_libs =
+      if !has_explicit_flowtyped_lib = false
+         && (Sys.file_exists (Path.to_string flowtyped_path))
+      then flowtyped_path::config_libs
+      else config_libs
+    in
+    match extras with
+    | None -> config_libs
+    | Some libs ->
+      let libs = libs
+      |> Str.split (Str.regexp ",")
+      |> List.map Path.make in
+      config_libs @ libs
+  in
+  fun ~root ~no_flowlib ~temp_dir ~lib flowconfig_flags flowconfig ->
+    let default_lib_dir =
+      if no_flowlib || FlowConfig.no_flowlib flowconfig
+      then None
+      else Some (default_lib_dir temp_dir) in
+    let ignores = ignores_of_arg
+      root
+      (FlowConfig.ignores flowconfig)
+      flowconfig_flags.ignores in
+    let includes =
+      flowconfig_flags.includes
+      |> List.rev_append (FlowConfig.includes flowconfig)
+      |> includes_of_arg root in
+    let lib_paths = libs ~root flowconfig lib in
+    { Files.
+      default_lib_dir;
+      ignores;
+      includes;
+      lib_paths;
+      module_file_exts = FlowConfig.module_file_exts flowconfig;
+      module_resource_exts = FlowConfig.module_resource_exts flowconfig;
+      node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
+    }
+
 let ignore_flag prev = CommandSpec.ArgSpec.(
   prev
   |> flag "--ignore" (optional string)
@@ -291,24 +371,6 @@ let server_flags prev = CommandSpec.ArgSpec.(
   |> ignore_version_flag
   |> quiet_flag
 )
-
-let ignores_of_arg root patterns extras =
-  let patterns = List.rev_append extras patterns in
-  List.map (fun s ->
-   let root = Path.to_string root
-     |> Sys_utils.normalize_filename_dir_sep in
-   let reg = s
-     |> Str.split_delim Files.project_root_token
-     |> String.concat root
-     |> Str.regexp in
-    (s, reg)
-  ) patterns
-
-let includes_of_arg root paths =
-  List.fold_left (fun acc path ->
-    let path = Files.make_path_absolute root path in
-    Path_matcher.add acc path
-  ) Path_matcher.empty paths
 
 let log_file ~tmp_dir root flowconfig =
   match FlowConfig.log_file flowconfig with

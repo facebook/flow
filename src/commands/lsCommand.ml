@@ -101,23 +101,13 @@ let rec iter_get_next ~f get_next =
 
 let make_options ~root ~ignore_flag ~include_flag =
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-  let ignores = ignores_of_arg
-    root
-    (FlowConfig.ignores flowconfig)
-    (list_of_string_arg ignore_flag) in
-  let includes =
-    list_of_string_arg include_flag
-    |> List.rev_append (FlowConfig.includes flowconfig)
-    |> includes_of_arg root in
-  { Files.
-    default_lib_dir = None;
-    ignores;
-    includes;
-    lib_paths = ServerCommands.CheckCommand.libs ~root flowconfig None;
-    module_file_exts = FlowConfig.module_file_exts flowconfig;
-    module_resource_exts = FlowConfig.module_resource_exts flowconfig;
-    node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
-  }
+  let flowconfig_flags = { CommandUtils.
+    ignores = CommandUtils.list_of_string_arg ignore_flag;
+    includes = CommandUtils.list_of_string_arg include_flag;
+    libs = [];
+  } in
+  let temp_dir = FlowConfig.temp_dir flowconfig in
+  CommandUtils.file_options ~root ~no_flowlib:true ~temp_dir ~lib:None flowconfig_flags flowconfig
 
 (* Directories will return a closure that returns every file under that
    directory. Individual files will return a closure that returns just that file
