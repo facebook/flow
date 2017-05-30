@@ -11,14 +11,13 @@ Here is suggested ALE configuration to place in your .vimrc file:
 " Asynchronous Lint Engine (ALE)
 " Limit linters used for JavaScript.
 let g:ale_linters = {
-\  'javascript': ['eslint', 'flow'],
-\  'scss': ['stylelint']
+\  'javascript': ['flow'] " can add more
 \}
 highlight clear ALEErrorSign " otherwise uses error bg color (typically red)
 highlight clear ALEWarningSign " otherwise uses error bg color (typically red)
-let g:ale_sign_error = '👎'
-let g:ale_sign_warning = '❓'
-let g:ale_statusline_format = ['👎 %d', '❓ %d', '']
+let g:ale_sign_error = '&#x1F44E;'
+let g:ale_sign_warning = '&#x2753;'
+let g:ale_statusline_format = ['&#x1F44E; %d', '&#x2753; %d', '']
 " %linter% is the name of the linter that provided the message
 " $s is the error or warning message
 let g:ale_echo_msg_format = '%linter% says %s'
