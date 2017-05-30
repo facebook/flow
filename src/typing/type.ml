@@ -1647,6 +1647,16 @@ let is_any = function
 | DefT (_, AnyT) -> true
 | _ -> false
 
+(* Primitives, like string, will be promoted to their wrapper object types for
+ * certain operations, like GetPropT, but not for others, like `UseT _`. *)
+let primitive_promoting_use_t = function
+  | GetPropT _
+  | LookupT _
+  | MethodT _
+    -> true
+  (* TODO: enumerate all use types *)
+  | _ -> false
+
 (* Use types trapped for any propagation *)
 let any_propagating_use_t = function
   | AdderT _

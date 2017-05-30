@@ -5447,21 +5447,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* String library call *)
     (***********************)
 
-    | (DefT (reason, StrT _), (GetPropT _ | MethodT _ | LookupT _)) ->
+    | DefT (reason, StrT _), u when primitive_promoting_use_t u ->
       rec_flow cx trace (get_builtin_type cx ~trace reason "String",u)
 
     (***********************)
     (* Number library call *)
     (***********************)
 
-    | (DefT (reason, NumT _), (GetPropT _ | MethodT _ | LookupT _)) ->
+    | DefT (reason, NumT _), u when primitive_promoting_use_t u ->
       rec_flow cx trace (get_builtin_type cx ~trace reason "Number",u)
 
     (***********************)
     (* Boolean library call *)
     (***********************)
 
-    | DefT (reason, BoolT _), (GetPropT _ | MethodT _ | LookupT _) ->
+    | DefT (reason, BoolT _), u when primitive_promoting_use_t u ->
       rec_flow cx trace (get_builtin_type cx ~trace reason "Boolean",u)
 
     (* Special cases of FunT *)
