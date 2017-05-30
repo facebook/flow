@@ -33,7 +33,6 @@ type jsx_mode =
 
 type t = {
   opt_all : bool;
-  opt_focus_check_target: Loc.filename option;
   opt_debug : bool;
   opt_enable_const_params: bool;
   opt_enable_unsafe_getters_and_setters: bool;
@@ -45,6 +44,7 @@ type t = {
   opt_esproposal_export_star_as: esproposal_feature_mode;
   opt_facebook_fbt: string option;
   opt_file_options: Files.options;
+  opt_focus_check_target: Loc.filename option;
   opt_haste_name_reducers: (Str.regexp * string) list;
   opt_haste_paths_blacklist: string list;
   opt_haste_paths_whitelist: string list;
@@ -57,6 +57,7 @@ type t = {
   opt_munge_underscores: bool;
   opt_output_graphml: bool;
   opt_profile : bool;
+  opt_quick_start_mode: bool;
   opt_quiet : bool;
   opt_root : Path.t;
   opt_strip_root : bool;
@@ -88,6 +89,7 @@ let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
 let file_options opts = opts.opt_file_options
 let focus_check_target opts = opts.opt_focus_check_target
 let is_debug_mode opts = opts.opt_debug
+let is_quick_start_mode opts = opts.opt_quick_start_mode
 let is_quiet opts = opts.opt_quiet
 let max_header_tokens opts = opts.opt_max_header_tokens
 let max_trace_depth opts = opts.opt_traces

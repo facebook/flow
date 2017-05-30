@@ -38,6 +38,7 @@ end = struct
     ServerCommands.ServerCommand.command;
     ServerCommands.StartCommand.command;
     ServerCommands.FocusCheckCommand.command;
+    ServerCommands.QuickStartCommand.command;
     StopCommand.command;
     SuggestCommand.command;
     TypeAtPosCommand.command;

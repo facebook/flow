@@ -119,7 +119,6 @@ let make_options ~root ~ignore_flag ~include_flag =
     node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
   }
 
-
 (* Directories will return a closure that returns every file under that
    directory. Individual files will return a closure that returns just that file
  *)
