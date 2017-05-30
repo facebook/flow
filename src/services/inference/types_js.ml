@@ -266,6 +266,8 @@ let typecheck
   ~workers
   ~errors
   ~infer_input
+  ~parsed
+  ~all_dependent_files
   ~make_merge_input =
   let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
 
@@ -274,7 +276,15 @@ let typecheck
 
   let profiling, infer_results =
     with_timer ~options "Infer" profiling (fun () ->
-      Infer_service.infer ~options ~workers infer_input
+      if Options.is_quick_start_mode options
+      then
+        let new_files = FilenameSet.of_list infer_input in
+        let roots = FilenameSet.union new_files all_dependent_files in
+        let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
+        let all_dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
+        Infer_service.infer ~options ~workers (FilenameSet.elements all_dependencies)
+      else
+        Infer_service.infer ~options ~workers infer_input
     ) in
 
   let rev_inferred, local_errors, suppressions =
@@ -619,16 +629,18 @@ let recheck genv env ~updates =
   (* requires in direct_dependent_files must be re-resolved before merging. *)
   MultiWorker.call workers
     ~job: (fun () files ->
-      let cache = new Context_cache.context_cache in
       List.iter (fun f ->
-        let cx = cache#read ~audit:Expensive.ok f in
-        Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
-          ~node_modules_containers (Context.file cx) (Context.require_loc cx) |> ignore
+        let require_loc = Parsing_service_js.get_requires_unsafe f in
+        let errors = Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
+          ~node_modules_containers f require_loc in
+        ignore errors (* TODO: why, FFS, why? *)
       ) files
     )
     ~neutral: ()
     ~merge: (fun () () -> ())
     ~next:(MultiWorker.next workers (FilenameSet.elements direct_dependent_files));
+
+  let parsed = FilenameSet.union freshparsed unchanged in
 
   (* recheck *)
   let profiling, errors = typecheck
@@ -637,6 +649,8 @@ let recheck genv env ~updates =
     ~workers
     ~errors
     ~infer_input:freshparsed_list
+    ~parsed:(FilenameSet.elements parsed)
+    ~all_dependent_files
     ~make_merge_input:(fun inferred ->
       (* need to merge the closure of inferred files and their deps *)
 
@@ -657,7 +671,8 @@ let recheck genv env ~updates =
       (* NOTE: Non-@flow files don't have entries in ResolvedRequiresHeap, so
          don't add then to the set of files to merge! Only inferred files (along
          with dependents) should be merged: see below. *)
-      let to_merge = FilenameSet.union all_dependent_files (FilenameSet.of_list inferred) in
+      let inferred = FilenameSet.of_list inferred in
+      let to_merge = FilenameSet.union all_dependent_files inferred in
       Context_cache.oldify_merge_batch to_merge;
       (** TODO [perf]: Consider `aggressive **)
       SharedMem_js.collect genv.ServerEnv.options `gentle;
@@ -667,7 +682,7 @@ let recheck genv env ~updates =
       (* Definitely recheck inferred and direct_dependent_files. As merging proceeds, other
          files in to_merge may or may not be rechecked. *)
       let recheck_map = to_merge |> List.fold_left (
-        let roots = FilenameSet.union new_or_changed direct_dependent_files in
+        let roots = FilenameSet.union direct_dependent_files inferred in
         fun recheck_map file ->
           FilenameMap.add file (FilenameSet.mem file roots) recheck_map
       ) FilenameMap.empty in
@@ -682,8 +697,6 @@ let recheck genv env ~updates =
     ~deleted_count
     ~dependent_file_count:!dependent_file_count
     ~profiling;
-
-  let parsed = FilenameSet.union freshparsed unchanged in
 
   (* NOTE: unused fields are left in their initial empty state *)
   { env with ServerEnv.
@@ -710,11 +723,13 @@ let full_check workers ~ordered_libs parse_next options =
   let profile = Options.should_profile options in
   let max_header_tokens = Options.max_header_tokens options in
 
+  let quick_start_mode = Options.is_quick_start_mode options in
+
   Hh_logger.info "Parsing";
   let profiling, parse_results =
     with_timer ~options "Parsing" profiling (fun () ->
       Parsing_service_js.parse
-        ~types_mode ~use_strict ~profile ~max_header_tokens
+        ~types_mode ~use_strict ~profile ~max_header_tokens ~quick_start_mode
         workers parse_next
     ) in
   let {
@@ -783,6 +798,10 @@ let full_check workers ~ordered_libs parse_next options =
       ~new_or_changed:all_files
       ~errors in
 
+  let parsed_list =
+    if quick_start_mode then []
+    else parsed_list in
+
   let infer_input = match Options.focus_check_target options with
     | Some f ->
       if Module_js.is_tracked_file f (* otherwise, f is probably a directory *)
@@ -814,6 +833,8 @@ let full_check workers ~ordered_libs parse_next options =
     ~workers
     ~errors
     ~infer_input
+    ~parsed:parsed_list
+    ~all_dependent_files:FilenameSet.empty
     ~make_merge_input:(fun inferred ->
       if not libs_ok then None
       else Some (inferred,

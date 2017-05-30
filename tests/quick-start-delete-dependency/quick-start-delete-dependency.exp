@@ -1,0 +1,20 @@
+
+Stop any already-running server.
+
+Quick start.
+
+Expect no errors.
+No errors!
+
+Delete @flow file with a @flow dependent file, expect error.
+b.js:2
+  2: require('./a');
+             ^^^^^ ./a. Required module not found
+
+
+Found 1 error
+
+Revert file, expect no errors.
+No errors!
+
+Done!

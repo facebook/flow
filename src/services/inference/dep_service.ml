@@ -243,8 +243,9 @@ let calc_dependency_graph workers files =
     ~neutral: FilenameMap.empty
     ~merge: FilenameMap.union
     ~next: (MultiWorker.next workers files) in
-  dependency_graph |> FilenameMap.map (
-    FilenameSet.filter (fun f -> FilenameMap.mem f dependency_graph))
+  FilenameMap.map (
+    FilenameSet.filter (fun f -> FilenameMap.mem f dependency_graph)
+  ) dependency_graph
 
 let calc_all_dependencies =
   let rec loop dependency_graph =

@@ -1,0 +1,12 @@
+
+Stop any already-running server.
+
+Quick start.
+
+Expect no errors.
+No errors!
+
+Touch @flow file with dependency on a @flow file, expect no error.
+No errors!
+
+Done!

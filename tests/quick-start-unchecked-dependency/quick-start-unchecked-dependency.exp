@@ -1,0 +1,18 @@
+
+Stop any already-running server.
+
+Quick start.
+
+Expect no errors.
+No errors!
+
+"Warm up" a dependency.
+No errors!
+
+"Perturb" a dependent that depends on the warmed up, but unchanged dependency.
+No errors!
+
+Test that the perturbed dependent is actually known (expecting a crash otherwise).
+No errors!
+
+Done!

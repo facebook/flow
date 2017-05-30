@@ -193,7 +193,7 @@ let calc_requires ast is_react =
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
 let reducer
-  ~types_mode ~use_strict ~max_header_tokens
+  ~types_mode ~use_strict ~max_header_tokens ~quick_start_mode
   parse_results
   file
 : results =
@@ -223,7 +223,14 @@ let reducer
              * been added to the modified set simply because a corresponding
              * implementation file was also added. *)
             if not (Loc.check_suffix file Files.flow_ext)
-              && ASTHeap.get_old file = Some ast
+              (* In quick-start mode, a file is parsed initially but not
+                 checked, and reparsing it later triggers a check even if the
+                 file hasn't changed.
+
+                 TODO: this optimization is never hit in this mode, but we can
+                 use it if `file` is in the current set of checked files. *)
+              && not quick_start_mode
+              && (ASTHeap.get_old file = Some ast)
             then parse_results
             else begin
               ASTHeap.add file ast;
@@ -285,7 +292,8 @@ let get_defaults ~types_mode ~use_strict options =
   in
   let profile = Options.should_profile options in
   let max_header_tokens = Options.max_header_tokens options in
-  types_mode, use_strict, profile, max_header_tokens
+  let quick_start_mode = Options.is_quick_start_mode options in
+  types_mode, use_strict, profile, max_header_tokens, quick_start_mode
 
 (***************************** public ********************************)
 
@@ -293,13 +301,13 @@ let next_of_filename_set workers filenames =
   MultiWorker.next workers (FilenameSet.elements filenames)
 
 let parse
-  ~types_mode ~use_strict ~profile ~max_header_tokens
+  ~types_mode ~use_strict ~profile ~max_header_tokens ~quick_start_mode
   workers next
 : results =
   let t = Unix.gettimeofday () in
   let results = MultiWorker.call
     workers
-    ~job: (List.fold_left (reducer ~types_mode ~use_strict ~max_header_tokens))
+    ~job: (List.fold_left (reducer ~types_mode ~use_strict ~max_header_tokens ~quick_start_mode))
     ~neutral: empty_result
     ~merge: merge
     ~next: next in
@@ -317,14 +325,15 @@ let parse
 
   results
 
-let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~options workers files =
+let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~quick_start_mode
+    ~options workers files =
   (* save old parsing info for files *)
   ASTHeap.oldify_batch files;
   DocblockHeap.oldify_batch files;
   RequiresHeap.oldify_batch files;
   let next = next_of_filename_set workers files in
   let results =
-    parse ~types_mode ~use_strict ~profile ~max_header_tokens workers next in
+    parse ~types_mode ~use_strict ~profile ~max_header_tokens ~quick_start_mode workers next in
   let modified = results.parse_ok in
   let modified = List.fold_left (fun acc (fail, _, _) ->
     FilenameSet.add fail acc
@@ -345,16 +354,16 @@ let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~options workers
   modified, results
 
 let parse_with_defaults ?types_mode ?use_strict options workers next =
-  let types_mode, use_strict, profile, max_header_tokens =
+  let types_mode, use_strict, profile, max_header_tokens, quick_start_mode =
     get_defaults ~types_mode ~use_strict options
   in
-  parse ~types_mode ~use_strict ~profile ~max_header_tokens workers next
+  parse ~types_mode ~use_strict ~profile ~max_header_tokens ~quick_start_mode workers next
 
 let reparse_with_defaults ?types_mode ?use_strict options workers files =
-  let types_mode, use_strict, profile, max_header_tokens =
+  let types_mode, use_strict, profile, max_header_tokens, quick_start_mode =
     get_defaults ~types_mode ~use_strict options
   in
-  reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~options workers files
+  reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~quick_start_mode ~options workers files
 
 let has_ast = ASTHeap.mem
 
