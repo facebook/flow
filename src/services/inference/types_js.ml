@@ -180,9 +180,15 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
       profiling, None, errors, info
 
 (* commit providers for old and new modules, collect errors. *)
-let commit_modules workers ~options errors new_or_changed dirty_modules =
-  let providers, changed_modules, errmap =
-    Module_js.commit_modules workers ~options new_or_changed dirty_modules in
+let commit_modules ~options profiling ~workers
+    parsed unparsed ~old_modules local_errors new_or_changed =
+  (* conservatively approximate set of modules whose providers will change *)
+  (* register providers for modules, warn on dupes etc. *)
+    with_timer ~options "CommitModules" profiling (fun () ->
+      let new_modules = Module_js.introduce_files workers ~options parsed unparsed in
+      let dirty_modules = List.rev_append old_modules new_modules in
+      let providers, changed_modules, errmap =
+        Module_js.commit_modules workers ~options new_or_changed dirty_modules in
   (* Providers might be new but not changed. This typically happens when old
      providers are deleted, and previously duplicate providers become new
      providers. In such cases, we must clear the old duplicate provider errors
@@ -191,30 +197,49 @@ let commit_modules workers ~options errors new_or_changed dirty_modules =
      (Note that this is unncessary when the providers are changed, because in
      that case they are rechecked and *all* their errors are cleared. But we
      don't care about optimizing that case for now.) *)
-  let errors = List.fold_left filter_duplicate_provider errors providers in
-  changed_modules, FilenameMap.fold (fun file errors acc ->
-    let errset = List.fold_left (fun acc err ->
-      match err with
-      | Module_js.ModuleDuplicateProviderError { Module_js.
-          module_name; provider; conflict;
-        } ->
-        let error = Errors.mk_error ~kind:Errors.DuplicateProviderError [
-          Loc.({ none with source = Some conflict }), [
-            module_name; "Duplicate module provider"];
-          Loc.({ none with source = Some provider }), [
-            "current provider"]
-        ] in
-        Errors.ErrorSet.add error acc
-    ) Errors.ErrorSet.empty errors in
-    update_errset acc file errset
-  ) errmap errors
+      let errors = List.fold_left filter_duplicate_provider local_errors providers in
+      changed_modules, FilenameMap.fold (fun file errors acc ->
+        let errset = List.fold_left (fun acc err ->
+          match err with
+          | Module_js.ModuleDuplicateProviderError { Module_js.
+              module_name; provider; conflict;
+            } ->
+            let error = Errors.mk_error ~kind:Errors.DuplicateProviderError [
+              Loc.({ none with source = Some conflict }), [
+                module_name; "Duplicate module provider"];
+              Loc.({ none with source = Some provider }), [
+                "current provider"]
+            ] in
+            Errors.ErrorSet.add error acc
+        ) Errors.ErrorSet.empty errors in
+        update_errset acc file errset
+      ) errmap errors
+    )
 
-(* helper *)
-let typecheck
+let resolve_requires ~options profiling ~workers parsed =
+  let node_modules_containers = !Files.node_modules_containers in
+  with_timer ~options "ResolveRequires" profiling (fun () ->
+    MultiWorker.call workers
+      ~job: (List.fold_left (fun errors_acc filename ->
+        let require_loc = Parsing_service_js.get_requires_unsafe filename in
+        let errors =
+          Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
+            ~node_modules_containers
+            filename require_loc in
+        if Errors.ErrorSet.is_empty errors
+        then errors_acc
+        else FilenameMap.add filename errors errors_acc
+      )
+      )
+      ~neutral: FilenameMap.empty
+      ~merge: FilenameMap.union
+      ~next:(MultiWorker.next workers parsed)
+  )
+
+let commit_modules_and_resolve_requires
   ~options
   ~profiling
   ~workers
-  ~make_merge_input
   ~old_modules
   ~parsed
   ~unparsed
@@ -222,44 +247,27 @@ let typecheck
   ~errors =
   (* TODO remove after lookup overhaul *)
   Module_js.clear_filename_cache ();
-  let parsed_set = parsed in
-  let parsed = FilenameSet.elements parsed in
-
-  let new_modules = Module_js.introduce_files workers ~options parsed unparsed in
 
   let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
 
-  let node_modules_containers = !Files.node_modules_containers in
-  let profiling, resolve_errors =
-    with_timer ~options "ResolveRequires" profiling (fun () ->
-      MultiWorker.call workers
-        ~job: (List.fold_left (fun errors_acc filename ->
-          let require_loc = Parsing_service_js.get_requires_unsafe filename in
-          let errors =
-            Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
-              ~node_modules_containers
-              filename require_loc in
-          if Errors.ErrorSet.is_empty errors
-          then errors_acc
-          else FilenameMap.add filename errors errors_acc
-        )
-        )
-        ~neutral: FilenameMap.empty
-        ~merge: FilenameMap.union
-        ~next:(MultiWorker.next workers parsed)
-    )
-  in
+  let profiling, (changed_modules, local_errors) = commit_modules
+    ~options profiling ~workers parsed unparsed ~old_modules local_errors new_or_changed in
 
+  let profiling, resolve_errors = resolve_requires
+    ~options profiling ~workers parsed in
   let local_errors = FilenameMap.union resolve_errors local_errors in
 
-  (* conservatively approximate set of modules whose providers will change *)
-  (* register providers for modules, warn on dupes etc. *)
-  let profiling, (changed_modules, local_errors) =
-    with_timer ~options "CommitModules" profiling (fun () ->
-      let dirty_modules = List.rev_append old_modules new_modules in
-      commit_modules workers ~options local_errors new_or_changed dirty_modules
-    )
-  in
+  profiling, changed_modules, { ServerEnv.local_errors; merge_errors; suppressions }
+
+(* helper *)
+let typecheck
+  ~options
+  ~profiling
+  ~workers
+  ~errors
+  ~infer_input
+  ~make_merge_input =
+  let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
 
   (* local inference populates context heap, resolved requires heap *)
   Hh_logger.info "Running local inference";
@@ -278,12 +286,12 @@ let typecheck
                already be checked. *)
             let { Module_js._module; _ } = Module_js.get_info_unsafe ~audit:Expensive.warn f in
             let all_dependent_files, _ = Dep_service.dependent_files workers
-              ~unchanged:(FilenameSet.remove f parsed_set)
+              ~unchanged:(FilenameSet.(remove f (of_list infer_input)))
               ~new_or_changed:(FilenameSet.singleton f)
+              (* TODO: isn't it possible that _module is not provided by f? *)
               ~changed_modules:(Module_js.NameSet.singleton _module) in
-            let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
-            Dep_service.calc_all_dependencies dependency_graph
-              (FilenameSet.add f all_dependent_files)
+            let dependency_graph = Dep_service.calc_dependency_graph workers infer_input in
+            Dep_service.calc_all_dependencies dependency_graph (FilenameSet.add f all_dependent_files)
           in
           Infer_service.infer ~options ~workers (FilenameSet.elements files)
         )
@@ -291,7 +299,7 @@ let typecheck
         profiling, []
     | _ ->
       with_timer ~options "Infer" profiling (fun () ->
-        Infer_service.infer ~options ~workers parsed
+        Infer_service.infer ~options ~workers infer_input
       ) in
 
   let rev_inferred, local_errors, suppressions =
@@ -307,7 +315,7 @@ let typecheck
   (* call supplied function to calculate closure of modules to merge *)
   let profiling, merge_input =
     with_timer ~options "MakeMergeInput" profiling (fun () ->
-      make_merge_input changed_modules inferred
+      make_merge_input inferred
     ) in
 
   match merge_input with
@@ -605,43 +613,57 @@ let recheck genv env ~updates =
     (file, info) :: unparsed
   ) freshparse_skips freshparse_fail in
 
+  let freshparsed_list = FilenameSet.elements freshparsed in
+  let profiling, changed_modules, errors =
+    commit_modules_and_resolve_requires
+      ~options
+      ~profiling
+      ~workers
+      ~old_modules
+      ~parsed:freshparsed_list
+      ~unparsed
+      ~new_or_changed:(FilenameSet.elements new_or_changed)
+      ~errors in
+
+  (* direct_dependent_files are unchanged files which directly depend on changed modules,
+     or are new / changed files that are phantom dependents. dependent_files are
+     direct_dependent_files plus their dependents (transitive closure) *)
+  let all_dependent_files, direct_dependent_files = Dep_service.dependent_files
+    workers
+    ~unchanged
+    ~new_or_changed
+    ~changed_modules
+  in
+
+  Hh_logger.info "Re-resolving directly dependent files";
+  (** TODO [perf] Consider oldifying **)
+  Module_js.remove_batch_resolved_requires direct_dependent_files;
+  SharedMem_js.collect options `gentle;
+
+  let node_modules_containers = !Files.node_modules_containers in
+  (* requires in direct_dependent_files must be re-resolved before merging. *)
+  MultiWorker.call workers
+    ~job: (fun () files ->
+      let cache = new Context_cache.context_cache in
+      List.iter (fun f ->
+        let cx = cache#read ~audit:Expensive.ok f in
+        Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
+          ~node_modules_containers (Context.file cx) (Context.require_loc cx) |> ignore
+      ) files
+    )
+    ~neutral: ()
+    ~merge: (fun () () -> ())
+    ~next:(MultiWorker.next workers (FilenameSet.elements direct_dependent_files));
+
   (* recheck *)
   let profiling, errors = typecheck
     ~options
     ~profiling
     ~workers
-    ~make_merge_input:(fun changed_modules inferred ->
+    ~errors
+    ~infer_input:freshparsed_list
+    ~make_merge_input:(fun inferred ->
       (* need to merge the closure of inferred files and their deps *)
-
-      (* direct_dependent_files are unchanged files which directly depend on changed modules,
-         or are new / changed files that are phantom dependents. dependent_files are
-         direct_dependent_files plus their dependents (transitive closure) *)
-      let all_dependent_files, direct_dependent_files = Dep_service.dependent_files
-        workers
-        ~unchanged
-        ~new_or_changed
-        ~changed_modules
-      in
-
-      Hh_logger.info "Re-resolving directly dependent files";
-      (** TODO [perf] Consider oldifying **)
-      Module_js.remove_batch_resolved_requires direct_dependent_files;
-      SharedMem_js.collect options `gentle;
-
-      let node_modules_containers = !Files.node_modules_containers in
-      (* requires in direct_dependent_files must be re-resolved before merging. *)
-      MultiWorker.call workers
-        ~job: (fun () files ->
-          let cache = new Context_cache.context_cache in
-          List.iter (fun f ->
-            let cx = cache#read ~audit:Expensive.ok f in
-            Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
-              ~node_modules_containers (Context.file cx) (Context.require_loc cx) |> ignore
-          ) files
-        )
-        ~neutral: ()
-        ~merge: (fun () () -> ())
-        ~next:(MultiWorker.next workers (FilenameSet.elements direct_dependent_files));
 
       let n = FilenameSet.cardinal all_dependent_files in
       if n > 0
@@ -677,11 +699,6 @@ let recheck genv env ~updates =
 
       Some (to_merge, recheck_map)
     )
-    ~old_modules
-    ~parsed:freshparsed
-    ~unparsed
-    ~new_or_changed:(FilenameSet.elements new_or_changed)
-    ~errors
   in
 
   FlowEventLogger.recheck
@@ -775,27 +792,36 @@ let full_check workers ~ordered_libs parse_next options =
 
   let errors = { ServerEnv.local_errors; merge_errors; suppressions } in
 
+  let parsed_list = FilenameSet.elements parsed in
   let all_files = List.fold_left (fun acc (filename, _) ->
     filename::acc
-  ) (FilenameSet.elements parsed) unparsed in
+  ) parsed_list unparsed in
+
+  let profiling, _, errors =
+    commit_modules_and_resolve_requires
+      ~options
+      ~profiling
+      ~workers
+      ~old_modules:[]
+      ~parsed:parsed_list
+      ~unparsed
+      ~new_or_changed:all_files
+      ~errors in
 
   (* typecheck client files *)
   let profiling, errors = typecheck
     ~options
     ~profiling
     ~workers
-    ~make_merge_input:(fun _ inferred ->
+    ~errors
+    ~infer_input:parsed_list
+    ~make_merge_input:(fun inferred ->
       if not libs_ok then None
       else Some (inferred,
         inferred |> List.fold_left (fun map f ->
           FilenameMap.add f true map
         ) FilenameMap.empty)
     )
-    ~old_modules:[]
-    ~parsed
-    ~unparsed
-    ~new_or_changed:all_files
-    ~errors
   in
 
   (profiling, parsed, errors)
