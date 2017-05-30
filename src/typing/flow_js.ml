@@ -5165,13 +5165,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* property exists, but is not something we can use for refinement *)
         rec_flow_t cx trace (l, result)
 
-    (***********************)
-    (* Boolean library call *)
-    (***********************)
-
-    | DefT (reason, BoolT _), (GetPropT _ | MethodT _ | LookupT _) ->
-      rec_flow cx trace (get_builtin_type cx ~trace reason "Boolean",u)
-
     (*************************)
     (* Function library call *)
     (*************************)
@@ -5463,6 +5456,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (DefT (reason, NumT _), (GetPropT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx ~trace reason "Number",u)
+
+    (***********************)
+    (* Boolean library call *)
+    (***********************)
+
+    | DefT (reason, BoolT _), (GetPropT _ | MethodT _ | LookupT _) ->
+      rec_flow cx trace (get_builtin_type cx ~trace reason "Boolean",u)
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
