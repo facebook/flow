@@ -265,6 +265,7 @@ let typecheck
   ~profiling
   ~workers
   ~errors
+  ~unchanged_checked
   ~infer_input
   ~parsed
   ~all_dependent_files
@@ -282,7 +283,8 @@ let typecheck
         let roots = FilenameSet.union new_files all_dependent_files in
         let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
         let all_dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
-        Infer_service.infer ~options ~workers (FilenameSet.elements all_dependencies)
+        let to_infer = FilenameSet.diff all_dependencies unchanged_checked in
+        Infer_service.infer ~options ~workers (FilenameSet.elements to_infer)
       else
         Infer_service.infer ~options ~workers infer_input
     ) in
@@ -348,10 +350,12 @@ let typecheck
     | exc ->
         prerr_endline (Printexc.to_string exc);
         profiling, merge_errors in
-    profiling, { ServerEnv.local_errors; merge_errors; suppressions; }
+    profiling,
+    FilenameSet.union unchanged_checked (FilenameSet.of_list to_merge),
+    { ServerEnv.local_errors; merge_errors; suppressions; }
 
   | None ->
-    profiling, { ServerEnv.local_errors; merge_errors; suppressions; }
+    profiling, unchanged_checked, { ServerEnv.local_errors; merge_errors; suppressions; }
 
 
 (* We maintain the following invariant across rechecks: The set of
@@ -589,6 +593,7 @@ let recheck genv env ~updates =
   (* clear contexts and module registrations for new, changed, and deleted files *)
   (* remember old modules *)
   Context_cache.remove_batch new_or_changed_or_deleted;
+  let unchanged_checked = FilenameSet.diff env.ServerEnv.checked_files new_or_changed_or_deleted in
   (* clear out records of files, and names of modules provided by those files *)
   let old_modules = Module_js.clear_files workers ~options new_or_changed_or_deleted in
 
@@ -643,11 +648,12 @@ let recheck genv env ~updates =
   let parsed = FilenameSet.union freshparsed unchanged in
 
   (* recheck *)
-  let profiling, errors = typecheck
+  let profiling, checked, errors = typecheck
     ~options
     ~profiling
     ~workers
     ~errors
+    ~unchanged_checked
     ~infer_input:freshparsed_list
     ~parsed:(FilenameSet.elements parsed)
     ~all_dependent_files
@@ -701,6 +707,7 @@ let recheck genv env ~updates =
   (* NOTE: unused fields are left in their initial empty state *)
   { env with ServerEnv.
     files = parsed;
+    checked_files = checked;
     errors;
   }
 
@@ -827,11 +834,12 @@ let full_check workers ~ordered_libs parse_next options =
   in
 
   (* typecheck client files *)
-  let profiling, errors = typecheck
+  let profiling, checked, errors = typecheck
     ~options
     ~profiling
     ~workers
     ~errors
+    ~unchanged_checked:FilenameSet.empty
     ~infer_input
     ~parsed:parsed_list
     ~all_dependent_files:FilenameSet.empty
@@ -844,7 +852,7 @@ let full_check workers ~ordered_libs parse_next options =
     )
   in
 
-  (profiling, parsed, errors)
+  (profiling, parsed, checked, errors)
 
 (* initialize flow server state, including full check *)
 let server_init genv =
@@ -862,7 +870,7 @@ let server_init genv =
     |> Bucket.of_list
   in
 
-  let (profiling, parsed, errors) = full_check
+  let (profiling, parsed, checked, errors) = full_check
     genv.ServerEnv.workers ~ordered_libs get_next options in
 
   let profiling = SharedMem.(
@@ -893,6 +901,7 @@ let server_init genv =
      `errors` contains the current set of errors. *)
   profiling, { ServerEnv.
     files = parsed;
+    checked_files = checked;
     libs;
     errors;
     connections = Persistent_connection.empty;
