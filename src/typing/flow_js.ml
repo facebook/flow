@@ -5166,13 +5166,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow_t cx trace (l, result)
 
     (***********************)
-    (* Number library call *)
-    (***********************)
-
-    | (DefT (reason, NumT _), (GetPropT _ | MethodT _ | LookupT _)) ->
-      rec_flow cx trace (get_builtin_type cx ~trace reason "Number",u)
-
-    (***********************)
     (* Boolean library call *)
     (***********************)
 
@@ -5463,6 +5456,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (DefT (reason, StrT _), (GetPropT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx ~trace reason "String",u)
+
+    (***********************)
+    (* Number library call *)
+    (***********************)
+
+    | (DefT (reason, NumT _), (GetPropT _ | MethodT _ | LookupT _)) ->
+      rec_flow cx trace (get_builtin_type cx ~trace reason "Number",u)
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
