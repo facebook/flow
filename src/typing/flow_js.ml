@@ -5165,20 +5165,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* property exists, but is not something we can use for refinement *)
         rec_flow_t cx trace (l, result)
 
-    (**********************)
-    (* Array library call *)
-    (**********************)
-
-    | DefT (reason, ArrT (ArrayAT(t, _))),
-      (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ->
-      rec_flow cx trace (get_builtin_typeapp cx ~trace reason "Array" [t], u)
-
-    | DefT (reason, ArrT (TupleAT _ | ROArrayAT _ | EmptyAT as arrtype)),
-      (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ->
-      let t = elemt_of_arrtype reason arrtype in
-      rec_flow
-        cx trace (get_builtin_typeapp cx ~trace reason "$ReadOnlyArray" [t], u)
-
     (***********************)
     (* String library call *)
     (***********************)
@@ -5463,6 +5449,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         Flow_error.ordered_reasons t (UseT (UnknownUse, tc)) in
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp
         (reason_l, reason_u, use_op))
+
+    (**********************)
+    (* Array library call *)
+    (**********************)
+
+    | DefT (reason, ArrT (ArrayAT(t, _))),
+      (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ->
+      rec_flow cx trace (get_builtin_typeapp cx ~trace reason "Array" [t], u)
+
+    | DefT (reason, ArrT (TupleAT _ | ROArrayAT _ | EmptyAT as arrtype)),
+      (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ->
+      let t = elemt_of_arrtype reason arrtype in
+      rec_flow
+        cx trace (get_builtin_typeapp cx ~trace reason "$ReadOnlyArray" [t], u)
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
