@@ -273,34 +273,9 @@ let typecheck
   Hh_logger.info "Running local inference";
 
   let profiling, infer_results =
-    match Options.focus_check_target options with
-    | Some f ->
-      if Module_js.is_tracked_file f (* otherwise, f is probably a directory *)
-        && Module_js.checked_file ~audit:Expensive.warn f
-      then
-        with_timer ~options "Infer" profiling (fun () ->
-          let files =
-            (* Calculate the set of files to check. This set includes not only
-               the files to be "rechecked", which is f and all its dependents,
-               but also the dependencies of such files since they may not
-               already be checked. *)
-            let { Module_js._module; _ } = Module_js.get_info_unsafe ~audit:Expensive.warn f in
-            let all_dependent_files, _ = Dep_service.dependent_files workers
-              ~unchanged:(FilenameSet.(remove f (of_list infer_input)))
-              ~new_or_changed:(FilenameSet.singleton f)
-              (* TODO: isn't it possible that _module is not provided by f? *)
-              ~changed_modules:(Module_js.NameSet.singleton _module) in
-            let dependency_graph = Dep_service.calc_dependency_graph workers infer_input in
-            Dep_service.calc_all_dependencies dependency_graph (FilenameSet.add f all_dependent_files)
-          in
-          Infer_service.infer ~options ~workers (FilenameSet.elements files)
-        )
-      else (* terminate *)
-        profiling, []
-    | _ ->
-      with_timer ~options "Infer" profiling (fun () ->
-        Infer_service.infer ~options ~workers infer_input
-      ) in
+    with_timer ~options "Infer" profiling (fun () ->
+      Infer_service.infer ~options ~workers infer_input
+    ) in
 
   let rev_inferred, local_errors, suppressions =
     List.fold_left (fun (inferred, errset, suppressions) (file, errs, supps) ->
@@ -808,13 +783,37 @@ let full_check workers ~ordered_libs parse_next options =
       ~new_or_changed:all_files
       ~errors in
 
+  let infer_input = match Options.focus_check_target options with
+    | Some f ->
+      if Module_js.is_tracked_file f (* otherwise, f is probably a directory *)
+        && Module_js.checked_file ~audit:Expensive.warn f
+      then
+        (* Calculate the set of files to check. This set includes not only the
+           files to be "rechecked", which is f and all its dependents, but also
+           the dependencies of such files since they may not already be
+           checked. *)
+        let { Module_js._module; _ } = Module_js.get_info_unsafe ~audit:Expensive.warn f in
+        let all_dependent_files, _ = Dep_service.dependent_files workers
+          ~unchanged:(FilenameSet.(remove f (of_list parsed_list)))
+          ~new_or_changed:(FilenameSet.singleton f)
+          (* TODO: isn't it possible that _module is not provided by f? *)
+          ~changed_modules:(Module_js.NameSet.singleton _module) in
+        let dependency_graph = Dep_service.calc_dependency_graph workers parsed_list in
+        let roots = FilenameSet.add f all_dependent_files in
+        let to_infer = Dep_service.calc_all_dependencies dependency_graph roots in
+        FilenameSet.elements to_infer
+      else (* terminate *)
+        []
+    | _ -> parsed_list
+  in
+
   (* typecheck client files *)
   let profiling, errors = typecheck
     ~options
     ~profiling
     ~workers
     ~errors
-    ~infer_input:parsed_list
+    ~infer_input
     ~make_merge_input:(fun inferred ->
       if not libs_ok then None
       else Some (inferred,
