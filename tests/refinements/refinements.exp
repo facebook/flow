@@ -376,12 +376,6 @@ not.js:5
 
 not.js:11
  11:     x[0]; // should error for null, void and number (0)
-         ^^^^ access of computed property/element. Computed property/element cannot be accessed on
- 11:     x[0]; // should error for null, void and number (0)
-         ^ number
-
-not.js:11
- 11:     x[0]; // should error for null, void and number (0)
          ^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly null value
  11:     x[0]; // should error for null, void and number (0)
          ^ null
@@ -392,11 +386,17 @@ not.js:11
  11:     x[0]; // should error for null, void and number (0)
          ^ undefined
 
+not.js:11
+ 11:     x[0]; // should error for null, void and number (0)
+         ^^^^ access of computed property/element. Indexable signature not found in
+ 11:     x[0]; // should error for null, void and number (0)
+         ^ Number
+
 not.js:21
  21:     x[0]; // should error for number (0)
-         ^^^^ access of computed property/element. Computed property/element cannot be accessed on
+         ^^^^ access of computed property/element. Indexable signature not found in
  21:     x[0]; // should error for number (0)
-         ^ number
+         ^ Number
 
 not.js:41
  41:     (!x: false); // error, strings are not always truthy
@@ -666,15 +666,15 @@ switch.js:8
 
 switch.js:27
  27:       return text[0]; // error, [0] on number
-                  ^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on
+                  ^^^^^^^ access of computed property/element. Indexable signature not found in
  27:       return text[0]; // error, [0] on number
-                  ^^^^ number
+                  ^^^^ Number
 
 switch.js:37
  37:       return text[0]; // error, [0] on number
-                  ^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on
+                  ^^^^^^^ access of computed property/element. Indexable signature not found in
  37:       return text[0]; // error, [0] on number
-                  ^^^^ number
+                  ^^^^ Number
 
 switch.js:51
  51:       return (text++) + '';
@@ -952,9 +952,9 @@ tagged_union.js:265
 
 typeof.js:5
   5:     x[0]; // error for boolean, not number
-         ^^^^ access of computed property/element. Computed property/element cannot be accessed on
+         ^^^^ access of computed property/element. Indexable signature not found in
   5:     x[0]; // error for boolean, not number
-         ^ boolean
+         ^ Boolean
 
 typeof.js:12
  12:     return x; // error, null
@@ -1028,21 +1028,21 @@ undef.js:77
 
 union.js:7
   7:     x[0]; // error on boolean
-         ^^^^ access of computed property/element. Computed property/element cannot be accessed on
+         ^^^^ access of computed property/element. Indexable signature not found in
   7:     x[0]; // error on boolean
-         ^ boolean literal `true`
+         ^ Boolean
 
 union.js:13
  13:     x[0]; // error on number
-         ^^^^ access of computed property/element. Computed property/element cannot be accessed on
+         ^^^^ access of computed property/element. Indexable signature not found in
  13:     x[0]; // error on number
-         ^ number
+         ^ Number
 
 union.js:19
  19:     x[0]; // error on number
-         ^^^^ access of computed property/element. Computed property/element cannot be accessed on
+         ^^^^ access of computed property/element. Indexable signature not found in
  19:     x[0]; // error on number
-         ^ number
+         ^ Number
 
 void.js:31
  31:     var y = x * 1000;

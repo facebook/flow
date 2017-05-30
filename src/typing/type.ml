@@ -1650,10 +1650,20 @@ let is_any = function
 (* Primitives, like string, will be promoted to their wrapper object types for
  * certain operations, like GetPropT, but not for others, like `UseT _`. *)
 let primitive_promoting_use_t = function
+  | CallElemT _
+  | GetElemT _
   | GetPropT _
-  | LookupT _
+  | GetProtoT _
   | MethodT _
+  | TestPropT _
     -> true
+
+  (* "internal" use types, which should not be called directly on primitives,
+   * but it's OK if they are in practice. TODO: consider making this an internal
+   * error *)
+  | LookupT _
+    -> true
+
   (* TODO: enumerate all use types *)
   | _ -> false
 

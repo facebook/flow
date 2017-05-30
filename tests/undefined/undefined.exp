@@ -30,9 +30,9 @@ undefined2.js:11
 
 undefined2.js:22
  22:       x[0]; // should error, could be void
-           ^^^^ access of computed property/element. Computed property/element cannot be accessed on
+           ^^^^ access of computed property/element. Indexable signature not found in
  22:       x[0]; // should error, could be void
-           ^ number
+           ^ Number
 
 undefined2.js:26
  26:       undefined,
