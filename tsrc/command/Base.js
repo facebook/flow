@@ -48,7 +48,7 @@ export const commonFlags = {
     description: "The flow command to check flow errors",
     validValues: ["check", "status"],
     aliases: ["c"],
-    default: "check",
+    default: "status",
   },
 }
 

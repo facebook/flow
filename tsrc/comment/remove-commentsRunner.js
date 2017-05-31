@@ -1,5 +1,7 @@
 /* @flow */
 
+import {join} from 'path';
+
 import getFlowErrors from './getFlowErrors';
 
 import {readFile, writeFile} from '../async';
@@ -27,9 +29,9 @@ async function getErrors(args: Args): Promise<Map<string, Array<Loc>>> {
   const errorsByFile = new Map();;
   for (const error of errors) {
     if (error.message[0].loc && error.message[0].loc.source) {
-      const file = error.message[0].loc.source;
       const start = error.message[0].loc.start.offset;
       const end = error.message[0].loc.end.offset;
+      const file = join(args.root, error.message[0].loc.source);
       const fileErrors = errorsByFile.get(file) || [];
       fileErrors.push({start, end});
       errorsByFile.set(file, fileErrors);
