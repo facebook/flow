@@ -6,6 +6,9 @@ set +x
 # only run on tags
 if [[ "$TRAVIS_TAG" = "" ]]; then exit 0; fi
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $DIR/setup_opam.sh
+
 NPM_V=$(sed -n 's/.*"version":.*\([0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\).*/\1/p' src/parser/package.json)
 TAG_V=$(echo "${TRAVIS_TAG}" | sed -n 's/v\{0,\}\([0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\)/\1/p')
 if [[ "$TAG_V" == "$NPM_V" ]]; then
