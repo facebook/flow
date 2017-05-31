@@ -45,6 +45,8 @@ let opt_fold f env = function
   | None -> env
   | Some x -> f env x
 
+let singleton_if cond x = if cond then [x] else []
+
 let smap_inter m1 m2 =
   SMap.fold (
   fun x y acc ->
