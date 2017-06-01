@@ -2096,7 +2096,7 @@ let string_of_def_ctor = function
   | SingletonStrT _ -> "SingletonStrT"
   | StrT _ -> "StrT"
   | TypeT _ -> "TypeT"
-  | TypeAppT _ -> "TypeAppTT"
+  | TypeAppT _ -> "TypeAppT"
   | UnionT _ -> "UnionT"
   | VoidT -> "VoidT"
 
