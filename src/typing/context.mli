@@ -11,8 +11,17 @@
 type env = Scope.t list
 
 type t
-type metadata = {
+type cacheable_t
+
+type local_metadata = {
   checked: bool;
+  munge_underscores: bool;
+  output_graphml: bool;
+  verbose: Verbose.t option;
+  weak: bool;
+  jsx: Options.jsx_mode option;
+}
+type global_metadata = {
   enable_const_params: bool;
   enable_unsafe_getters_and_setters: bool;
   enforce_strict_type_args: bool;
@@ -24,16 +33,15 @@ type metadata = {
   facebook_fbt: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
-  munge_underscores: bool;
-  output_graphml: bool;
   root: Path.t;
   strip_root: bool;
   suppress_comments: Str.regexp list;
   suppress_types: SSet.t;
-  verbose: Verbose.t option;
-  weak: bool;
   max_workers: int;
-  jsx: Options.jsx_mode option;
+}
+type metadata = {
+  local_metadata: local_metadata;
+  global_metadata: global_metadata;
 }
 type module_kind =
   | CommonJSModule of Loc.t option
@@ -41,6 +49,9 @@ type module_kind =
 
 val make: metadata -> Loc.filename -> string -> t
 val metadata_of_options: Options.t -> metadata
+
+val to_cache: t -> cacheable_t
+val from_cache: options:Options.t -> cacheable_t -> t
 
 (* accessors *)
 val all_unresolved: t -> Type.TypeSet.t IMap.t

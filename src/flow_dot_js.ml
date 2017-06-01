@@ -89,28 +89,32 @@ let load_lib_files ~master_cx ~metadata files
   in result
 
 let stub_metadata ~root ~checked = { Context.
-  checked;
-  enable_const_params = false;
-  enable_unsafe_getters_and_setters = true;
-  enforce_strict_type_args = true;
-  enforce_strict_call_arity = false;
-  esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
-  esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
-  esproposal_decorators = Options.ESPROPOSAL_ENABLE;
-  esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
-  facebook_fbt = None;
-  ignore_non_literal_requires = false;
-  max_trace_depth = 0;
-  max_workers = 0;
-  munge_underscores = false;
-  output_graphml = false;
-  root;
-  strip_root = true;
-  suppress_comments = [];
-  suppress_types = SSet.empty;
-  verbose = None;
-  weak = false;
-  jsx = None;
+  local_metadata = { Context.
+    checked;
+    munge_underscores = false;
+    output_graphml = false;
+    verbose = None;
+    weak = false;
+    jsx = None;
+  };
+  global_metadata = { Context.
+    enable_const_params = false;
+    enable_unsafe_getters_and_setters = true;
+    enforce_strict_type_args = true;
+    enforce_strict_call_arity = false;
+    esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
+    esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
+    esproposal_decorators = Options.ESPROPOSAL_ENABLE;
+    esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
+    facebook_fbt = None;
+    ignore_non_literal_requires = false;
+    max_trace_depth = 0;
+    max_workers = 0;
+    root;
+    strip_root = true;
+    suppress_comments = [];
+    suppress_types = SSet.empty;
+  };
 }
 
 let get_master_cx =

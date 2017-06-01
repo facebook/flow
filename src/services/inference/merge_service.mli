@@ -11,6 +11,7 @@
 open Utils_js
 
 val merge_strict_context:
+  options: Options.t ->
   Context_cache.context_cache ->
   Context.t list ->
   Context.t

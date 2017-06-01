@@ -120,7 +120,8 @@ let typecheck_contents ~options ?(check_syntax=false) contents filename =
                avoid inference on such files. *)
             false, false
         ) in
-        { metadata with Context.checked; weak }
+        let local_metadata = { metadata.Context.local_metadata with Context.checked; weak } in
+        { metadata with Context.local_metadata }
       in
       (* apply overrides from the docblock *)
       let metadata = Infer_service.apply_docblock_overrides metadata info in
