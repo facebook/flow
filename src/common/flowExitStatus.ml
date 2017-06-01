@@ -85,6 +85,33 @@ let error_code = function
   | Dfind_unresponsive -> 100
   | Unknown_error -> 110
 
+(* Return an error type given an error code *)
+let error_type = function
+  | 1 -> Server_initializing
+  | 2 -> Type_error
+  | 3 -> Out_of_time
+  | 4 -> Kill_error
+  | 6 -> No_server_running
+  | 7 -> Out_of_retries
+  | 8 -> Invalid_flowconfig
+  | 9 -> Build_id_mismatch
+  | 10 -> Input_error
+  | 11 -> Lock_stolen
+  | 12 -> Could_not_find_flowconfig
+  | 13 -> Server_out_of_date
+  | 14 -> Server_client_directory_mismatch
+  | 15 -> Out_of_shared_memory
+  | 64 -> Commandline_usage_error
+  (* The process status is made up *)
+  | 78 -> Server_start_failed (Unix.WEXITED (-1))
+  | 97 -> Missing_flowlib
+  | 98 -> Socket_error
+  | 99 -> Dfind_died
+  | 100 -> Dfind_unresponsive
+  | 110 -> Unknown_error
+  | _ -> raise Not_found
+
+
 let unpack_process_status = function
   | Unix.WEXITED n -> "exit", n
   | Unix.WSIGNALED n -> "signaled", n
