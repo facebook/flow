@@ -118,6 +118,7 @@ module OptionParser(Config : CONFIG) = struct
       |> json_flags
       |> dummy None  (* log-file *)
       |> dummy false (* wait *)
+      |> dummy false (* lazy *)
       |> common_args
     )
   | Server -> CommandSpec.ArgSpec.(
@@ -128,6 +129,8 @@ module OptionParser(Config : CONFIG) = struct
       |> dummy false (* pretty *)
       |> dummy None  (* log-file *)
       |> dummy false (* wait *)
+      |> flag "--lazy" no_arg
+          ~doc:"EXPERIMENTAL: Don't run a full check"
       |> common_args
     )
   | Start -> CommandSpec.ArgSpec.(
@@ -139,6 +142,8 @@ module OptionParser(Config : CONFIG) = struct
           ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
       |> flag "--wait" no_arg
           ~doc:"Wait for the server to finish initializing"
+      |> flag "--lazy" no_arg
+          ~doc:"EXPERIMENTAL: Don't run a full check"
       |> common_args
     )
   | FocusCheck -> CommandSpec.ArgSpec.(
@@ -149,6 +154,7 @@ module OptionParser(Config : CONFIG) = struct
       |> json_flags
       |> dummy None  (* log-file *)
       |> dummy false (* wait *)
+      |> dummy false (* lazy *)
       |> common_args
     )
   | QuickStart -> CommandSpec.ArgSpec.(
@@ -160,6 +166,7 @@ module OptionParser(Config : CONFIG) = struct
           ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
       |> flag "--wait" no_arg
           ~doc:"Wait for the server to finish initializing"
+      |> dummy true (* lazy *)
       |> common_args
     )
 
@@ -194,6 +201,7 @@ module OptionParser(Config : CONFIG) = struct
       pretty
       log_file
       wait
+      lazy_
       debug
       profile
       all
@@ -260,7 +268,7 @@ module OptionParser(Config : CONFIG) = struct
           then Option.find_map path_opt ~f:(fun file ->
             Some (Loc.SourceFile Path.(to_string (make file))))
           else None);
-      opt_quick_start_mode = Config.(mode = QuickStart);
+      opt_quick_start_mode = lazy_;
       opt_root = root;
       opt_debug = debug;
       opt_verbose = verbose;
