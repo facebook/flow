@@ -253,7 +253,7 @@ module OptionParser(Config : CONFIG) = struct
           then Option.find_map path_opt ~f:(fun file ->
             Some (Loc.SourceFile Path.(to_string (make file))))
           else None);
-      opt_quick_start_mode = lazy_;
+      opt_lazy = lazy_;
       opt_root = root;
       opt_debug = debug;
       opt_verbose = verbose;

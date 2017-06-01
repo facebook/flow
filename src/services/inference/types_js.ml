@@ -279,7 +279,7 @@ let typecheck
 
   let profiling, infer_results =
     with_timer ~options "Infer" profiling (fun () ->
-      if Options.is_quick_start_mode options
+      if Options.is_lazy_mode options
       then
         let new_files = FilenameSet.of_list infer_input in
         let roots = FilenameSet.union new_files all_dependent_files in
@@ -746,13 +746,13 @@ let full_check workers ~ordered_libs parse_next options =
   let profile = Options.should_profile options in
   let max_header_tokens = Options.max_header_tokens options in
 
-  let quick_start_mode = Options.is_quick_start_mode options in
+  let lazy_mode = Options.is_lazy_mode options in
 
   Hh_logger.info "Parsing";
   let profiling, parse_results =
     with_timer ~options "Parsing" profiling (fun () ->
       Parsing_service_js.parse
-        ~types_mode ~use_strict ~profile ~max_header_tokens ~quick_start_mode
+        ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
         workers parse_next
     ) in
   let {
@@ -822,7 +822,7 @@ let full_check workers ~ordered_libs parse_next options =
       ~errors in
 
   let parsed_list =
-    if quick_start_mode then []
+    if lazy_mode then []
     else parsed_list in
 
   let infer_input = match Options.focus_check_target options with
