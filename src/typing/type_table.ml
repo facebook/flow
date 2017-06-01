@@ -15,4 +15,4 @@ let set t loc value = Hashtbl.replace t loc value
 let iter f t = Hashtbl.iter f t
 let fold f t init = Hashtbl.fold f t init
 let find_unsafe t k = Hashtbl.find t k
-let clear t = Hashtbl.clear t
+let reset t = Hashtbl.reset t

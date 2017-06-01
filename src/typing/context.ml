@@ -339,8 +339,9 @@ let set_tvar cx id node =
   cx.local.graph <- IMap.add id node cx.local.graph
 
 let clear_intermediates cx =
-  Type_table.clear cx.local.type_table;
-  Hashtbl.clear cx.local.annot_table;
+  (* call reset instead of clear to also shrink the bucket tables *)
+  Type_table.reset cx.local.type_table;
+  Hashtbl.reset cx.local.annot_table;
   cx.local.all_unresolved <- IMap.empty
 
 (* utils *)

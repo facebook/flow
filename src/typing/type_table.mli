@@ -15,4 +15,4 @@ val set: t -> Loc.t -> Type.t -> unit
 val iter: (Loc.t -> Type.t -> unit) -> t -> unit
 val fold: (Loc.t -> Type.t -> 'a -> 'a) -> t -> 'a -> 'a
 val find_unsafe: t -> Loc.t -> Type.t
-val clear: t -> unit
+val reset: t -> unit
