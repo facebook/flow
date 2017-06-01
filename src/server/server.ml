@@ -49,7 +49,9 @@ let collate_errors =
     let errors, suppressed_errors, suppressions = ErrorSet.fold
       (fun error (errors, suppressed_errors, supp_acc) ->
         let locs = Errors.locs_of_error error in
-        let (suppressed, consumed_suppressions, supp_acc) = Error_suppressions.check locs supp_acc in
+        let (suppressed, consumed_suppressions, supp_acc) =
+          Error_suppressions.check locs supp_acc
+        in
         let errors, suppressed_errors = if suppressed
           then errors, (error, consumed_suppressions)::suppressed_errors
           else ErrorSet.add error errors, suppressed_errors in
@@ -574,7 +576,10 @@ let collate_errors =
         get_imports ~options module_names
           |> marshal
     | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
-        (infer_type ~options client_logging_context (fn, line, char, verbose, include_raw): ServerProt.infer_type_response)
+        (infer_type
+            ~options
+            client_logging_context
+            (fn, line, char, verbose, include_raw) : ServerProt.infer_type_response)
           |> marshal
     | ServerProt.KILL ->
         (Ok () : ServerProt.stop_response) |> marshal;
