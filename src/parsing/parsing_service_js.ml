@@ -233,7 +233,7 @@ let reducer
              * been added to the modified set simply because a corresponding
              * implementation file was also added. *)
             if not (Loc.check_suffix file Files.flow_ext)
-              (* In quick-start mode, a file is parsed initially but not
+              (* In --lazy mode, a file is parsed initially but not
                  checked, and reparsing it later triggers a check even if the
                  file hasn't changed.
 

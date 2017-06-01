@@ -14,7 +14,7 @@
 
 open CommandUtils
 
-type mode = Check | Server | Start | FocusCheck | QuickStart
+type mode = Check | Server | Start | FocusCheck
 
 type printer =
   | Json of { pretty: bool }
@@ -66,7 +66,6 @@ module OptionParser(Config : CONFIG) = struct
   | Server -> "server"
   | Start -> "start"
   | FocusCheck -> "focus-check"
-  | QuickStart -> "quick-start"
 
   let cmddoc = match Config.mode with
   | Check -> "Does a full Flow check and prints the results"
@@ -75,8 +74,6 @@ module OptionParser(Config : CONFIG) = struct
   | FocusCheck -> "EXPERIMENTAL: " ^
     "Does a focused Flow check on a file (and its dependents and their dependencies) " ^
     "and prints the results"
-  | QuickStart -> "EXPERIMENTAL: " ^
-    "Starts a Flow server without running a full check"
 
   let common_args prev = CommandSpec.ArgSpec.(
     prev
@@ -155,18 +152,6 @@ module OptionParser(Config : CONFIG) = struct
       |> dummy None  (* log-file *)
       |> dummy false (* wait *)
       |> dummy false (* lazy *)
-      |> common_args
-    )
-  | QuickStart -> CommandSpec.ArgSpec.(
-      empty
-      |> dummy Errors.Cli_output.default_error_flags (* error_flags *)
-      |> dummy false (* include_suppressed *)
-      |> json_flags
-      |> flag "--log-file" string
-          ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
-      |> flag "--wait" no_arg
-          ~doc:"Wait for the server to finish initializing"
-      |> dummy true (* lazy *)
       |> common_args
     )
 
@@ -305,7 +290,7 @@ module OptionParser(Config : CONFIG) = struct
       opt_file_options = file_options;
     } in
     match Config.mode with
-    | Start | QuickStart ->
+    | Start ->
       let log_file = match log_file with
         | Some s ->
             let dirname = Path.make (Filename.dirname s) in
@@ -367,9 +352,5 @@ module StartCommand = OptionParser (struct
 end)
 module FocusCheckCommand = OptionParser (struct
   let mode = FocusCheck
-  let default_log_filter = Hh_logger.Level.default_filter
-end)
-module QuickStartCommand = OptionParser (struct
-  let mode = QuickStart
   let default_log_filter = Hh_logger.Level.default_filter
 end)
