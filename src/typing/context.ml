@@ -92,7 +92,7 @@ type t = {
 
   mutable error_suppressions: Error_suppressions.t;
 
-  type_table: (Loc.t, Type.t) Hashtbl.t;
+  type_table: Type_table.t;
   annot_table: (Loc.t, Type.t) Hashtbl.t;
   refs_table: (Loc.t, Loc.t) Hashtbl.t;
 
@@ -163,7 +163,7 @@ let make metadata file module_ref = {
 
   error_suppressions = Error_suppressions.empty;
 
-  type_table = Hashtbl.create 0;
+  type_table = Type_table.create ();
   annot_table = Hashtbl.create 0;
   refs_table = Hashtbl.create 0;
 
@@ -298,7 +298,7 @@ let set_tvar cx id node =
   cx.graph <- IMap.add id node cx.graph
 
 let clear_intermediates cx =
-  Hashtbl.clear cx.type_table;
+  Type_table.clear cx.type_table;
   Hashtbl.clear cx.annot_table;
   cx.all_unresolved <- IMap.empty
 

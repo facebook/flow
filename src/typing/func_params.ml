@@ -39,7 +39,7 @@ let mk cx type_params_map ~expr func =
           then Type.optional t
           else t
         in
-        Hashtbl.replace (Context.type_table cx) loc t;
+        Type_table.set (Context.type_table cx) loc t;
         let binding = name, t, loc in
         let list = Simple (t, binding) :: params.list in
         { params with list }
@@ -64,7 +64,7 @@ let mk cx type_params_map ~expr func =
           let reason = repos_reason loc reason in
           EvalT (t, DestructuringT (reason, Become), mk_id())
         in
-        Hashtbl.replace (Context.type_table cx) loc t;
+        Type_table.set (Context.type_table cx) loc t;
         rev_bindings := (name, t, loc) :: !rev_bindings;
         Option.iter default ~f:(fun default ->
           defaults := SMap.add name default !defaults

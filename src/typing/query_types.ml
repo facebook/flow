@@ -44,7 +44,7 @@ type result =
 let query_type cx loc =
   let result = ref FailureNoMatch in
   let diff = ref (max_int, max_int) in
-  Hashtbl.iter (fun range t ->
+  Type_table.iter (fun range t ->
     if Reason.in_range loc range
     then (
       let d = Reason.diff_range range in
@@ -63,7 +63,7 @@ let query_type cx loc =
 
 let dump_types printer raw_printer cx =
   Type_normalizer.suggested_type_cache := IMap.empty;
-  let lst = Hashtbl.fold (fun loc t list ->
+  let lst = Type_table.fold (fun loc t list ->
     let ground_t = Type_normalizer.normalize_type cx t in
     let possible_ts = Flow_js.possible_types_of_type cx t in
     let possible_reasons = possible_ts
@@ -85,7 +85,7 @@ let is_covered = function
 
 let covered_types cx =
   Type_normalizer.suggested_type_cache := IMap.empty;
-  let lst = Hashtbl.fold (fun loc t list ->
+  let lst = Type_table.fold (fun loc t list ->
     let ground_t = Type_normalizer.normalize_type cx t in
     (loc, is_covered ground_t)::list
   ) (Context.type_table cx) [] in

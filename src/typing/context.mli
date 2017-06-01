@@ -87,7 +87,7 @@ val should_strip_root: t -> bool
 val suppress_comments: t -> Str.regexp list
 val suppress_types: t -> SSet.t
 val type_graph: t -> Graph_explorer.graph
-val type_table: t -> (Loc.t, Type.t) Hashtbl.t
+val type_table: t -> Type_table.t
 val verbose: t -> Verbose.t option
 val max_workers: t -> int
 val jsx: t -> Options.jsx_mode option
