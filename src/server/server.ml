@@ -248,7 +248,7 @@ let collate_errors =
       (Context.file cx) loc moduleref in
     Module_js.get_file ~audit:Expensive.warn module_name
 
-  let gen_flow_files ~options env files =
+  let gen_flow_files env files =
     let errors, _ = collate_errors env.ServerEnv.errors in
     let result = if Errors.ErrorSet.is_empty errors
       then begin
@@ -281,7 +281,9 @@ let collate_errors =
           try
             begin
               try List.iter (fun flow_file_cx ->
-                Merge_service.merge_contents_context ~options cache flow_file_cx
+                let master_cx: Context.t =
+                  Merge_service.merge_strict_context cache [flow_file_cx] in
+                ignore master_cx
               ) flow_file_cxs
               with exn -> failwith (
                 spf "Error merging contexts: %s" (Printexc.to_string exn)
@@ -563,7 +565,7 @@ let collate_errors =
         let updates = process_updates genv !env (Utils_js.set_of_list files) in
         env := recheck genv !env updates
     | ServerProt.GEN_FLOW_FILES files ->
-        (gen_flow_files ~options !env files: ServerProt.gen_flow_file_response)
+        (gen_flow_files !env files: ServerProt.gen_flow_file_response)
           |> marshal
     | ServerProt.GET_DEF (fn, line, char) ->
         (get_def ~options client_logging_context (fn, line, char): ServerProt.get_def_response)
