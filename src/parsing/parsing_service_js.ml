@@ -11,6 +11,10 @@
 open Utils_js
 open Sys_utils
 
+exception Ast_not_found of string
+exception Docblock_not_found of string
+exception Requires_not_found of string
+
 type result =
   | Parse_ok of Ast.program
   | Parse_fail of parse_failure
@@ -369,11 +373,17 @@ let has_ast = ASTHeap.mem
 
 let get_ast = ASTHeap.get
 
-let get_ast_unsafe = ASTHeap.find_unsafe
+let get_ast_unsafe file =
+  try ASTHeap.find_unsafe file
+  with Not_found -> raise (Ast_not_found (Loc.string_of_filename file))
 
-let get_docblock_unsafe = DocblockHeap.find_unsafe
+let get_docblock_unsafe file =
+  try DocblockHeap.find_unsafe file
+  with Not_found -> raise (Docblock_not_found (Loc.string_of_filename file))
 
-let get_requires_unsafe = RequiresHeap.find_unsafe
+let get_requires_unsafe file =
+  try RequiresHeap.find_unsafe file
+  with Not_found -> raise (Requires_not_found (Loc.string_of_filename file))
 
 let remove_batch files =
   ASTHeap.remove_batch files;
