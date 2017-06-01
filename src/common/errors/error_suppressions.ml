@@ -13,6 +13,7 @@
  *)
 
 open Span
+open Utils_js
 
 type error_suppressions = Loc.LocSet.t SpanMap.t
 type t = {
@@ -71,3 +72,42 @@ let cardinal { suppressions; unused } =
 
 let is_empty { suppressions; unused; } =
   SpanMap.is_empty suppressions && SpanMap.is_empty unused
+
+let union_suppressions suppressions =
+  (* union suppressions from all files together *)
+  FilenameMap.fold
+    (fun _key -> union)
+    suppressions
+    empty
+
+let filter_suppressed_errors suppressions errors =
+  (* Filter out suppressed errors. also track which suppressions are used. *)
+  let errors, suppressed_errors, suppressions = Errors.ErrorSet.fold
+    (fun error (errors, suppressed_errors, supp_acc) ->
+      let locs = Errors.locs_of_error error in
+      let (suppressed, consumed_suppressions, supp_acc) =
+        check locs supp_acc
+      in
+      let errors, suppressed_errors = if suppressed
+        then errors, (error, consumed_suppressions)::suppressed_errors
+        else Errors.ErrorSet.add error errors, suppressed_errors in
+      errors, suppressed_errors, supp_acc
+    ) errors (Errors.ErrorSet.empty, [], suppressions)
+  in
+  (* these are bound just so it's more obvious what is being returned *)
+  (errors, suppressed_errors, suppressions)
+
+let add_unused_suppression_errors suppressions errors =
+  (* For each unused suppression, create an error *)
+  let errors =
+    (unused suppressions
+    |> List.fold_left
+      (fun errset loc ->
+        let err = Errors.mk_error [
+          loc, ["Error suppressing comment"; "Unused suppression"]
+        ] in
+        Errors.ErrorSet.add err errset
+      )
+      errors)
+  in
+  errors

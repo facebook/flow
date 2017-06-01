@@ -44,46 +44,18 @@ let collate_errors =
   let collate errset acc =
     FilenameMap.fold (fun _key -> ErrorSet.union) errset acc
   in
-  let filter_suppressed_errors suppressions errors =
-    (* Filter out suppressed errors. also track which suppressions are used. *)
-    let errors, suppressed_errors, suppressions = ErrorSet.fold
-      (fun error (errors, suppressed_errors, supp_acc) ->
-        let locs = Errors.locs_of_error error in
-        let (suppressed, consumed_suppressions, supp_acc) =
-          Error_suppressions.check locs supp_acc
-        in
-        let errors, suppressed_errors = if suppressed
-          then errors, (error, consumed_suppressions)::suppressed_errors
-          else ErrorSet.add error errors, suppressed_errors in
-        errors, suppressed_errors, supp_acc
-      ) errors (ErrorSet.empty, [], suppressions) in
-
-    (* For each unused suppression, create an error *)
-    let errors =
-      Error_suppressions.unused suppressions
-      |> List.fold_left
-        (fun errset loc ->
-          let err = Errors.mk_error [
-            loc, ["Error suppressing comment"; "Unused suppression"]
-          ] in
-          ErrorSet.add err errset
-        )
-        errors in
-
-      errors, suppressed_errors
-  in
   fun { ServerEnv.local_errors; merge_errors; suppressions; } ->
-    (* union suppressions from all files together *)
-    let suppressions = FilenameMap.fold
-      (fun _key -> Error_suppressions.union)
-      suppressions
-      Error_suppressions.empty in
+    let open Error_suppressions in
+    let suppressions = union_suppressions suppressions in
 
     (* union the errors from all files together, filtering suppressed errors *)
-    ErrorSet.empty
-    |> collate local_errors
-    |> collate merge_errors
-    |> filter_suppressed_errors suppressions
+    let errors = ErrorSet.empty
+      |> collate local_errors
+      |> collate merge_errors
+    in
+    let errors, suppressed_errors, suppressions = filter_suppressed_errors suppressions errors in
+    let errors = add_unused_suppression_errors suppressions errors in
+    errors, suppressed_errors
 
   let convert_errorl el =
     if Errors.ErrorSet.is_empty el then

@@ -17,3 +17,12 @@ val union : t -> t -> t
 val check : Loc.t list -> t -> (bool * Loc.LocSet.t * t)
 val unused : t -> Loc.t list
 val cardinal : t -> int
+
+(* combines suppressions collated by filename into one collection *)
+val union_suppressions : t Utils_js.FilenameMap.t -> t
+
+val filter_suppressed_errors :
+  t -> Errors.ErrorSet.t ->
+  (Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list * t)
+
+val add_unused_suppression_errors : t -> Errors.ErrorSet.t -> Errors.ErrorSet.t
