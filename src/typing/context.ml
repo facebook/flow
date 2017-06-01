@@ -8,6 +8,10 @@
  *
  *)
 
+exception Props_not_found of Type.Properties.id
+exception Exports_not_found of Type.Exports.id
+exception Module_not_found of string
+exception Tvar_reason_not_found of Constraint.ident
 
 type env = Scope.t list
 
@@ -191,10 +195,18 @@ let esproposal_decorators cx = cx.metadata.esproposal_decorators
 let esproposal_export_star_as cx = cx.metadata.esproposal_export_star_as
 let evaluated cx = cx.evaluated
 let file cx = cx.file
-let find_props cx id = Type.Properties.Map.find_unsafe id cx.property_maps
-let find_exports cx id = Type.Exports.Map.find_unsafe id cx.export_maps
-let find_module cx m = SMap.find_unsafe m cx.modulemap
-let find_tvar_reason cx id = IMap.find_unsafe id cx.tvar_reasons
+let find_props cx id =
+  try Type.Properties.Map.find_unsafe id cx.property_maps
+  with Not_found -> raise (Props_not_found id)
+let find_exports cx id =
+  try Type.Exports.Map.find_unsafe id cx.export_maps
+  with Not_found -> raise (Exports_not_found id)
+let find_module cx m =
+  try SMap.find_unsafe m cx.modulemap
+  with Not_found -> raise (Module_not_found m)
+let find_tvar_reason cx id =
+  try IMap.find_unsafe id cx.tvar_reasons
+  with Not_found -> raise (Tvar_reason_not_found id)
 let mem_nominal_id cx id = ISet.mem id cx.nominal_ids
 let globals cx = cx.globals
 let graph cx = cx.graph
