@@ -34,6 +34,8 @@ let update_errset map file errset =
     in
     FilenameMap.add file errset map
 
+let merge_error_maps = FilenameMap.union ~combine:(fun _ x y -> Some (Errors.ErrorSet.union x y))
+
 (* Filter out duplicate provider error, if any, for the given file. *)
 let filter_duplicate_provider map file =
   match FilenameMap.get file map with
@@ -269,7 +271,8 @@ let typecheck
   ~infer_input
   ~parsed
   ~all_dependent_files
-  ~make_merge_input =
+  ~make_merge_input
+  ~persistent_connections =
   let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
 
   (* local inference populates context heap, resolved requires heap *)
@@ -289,13 +292,31 @@ let typecheck
         Infer_service.infer ~options ~workers infer_input
     ) in
 
-  let rev_inferred, local_errors, suppressions =
+  let rev_inferred, new_local_errors, suppressions =
     List.fold_left (fun (inferred, errset, suppressions) (file, errs, supps) ->
+      (* TODO update_errset may be able to be replaced by a simpler operation, since infer_results
+       * may only have one entry per file *)
       let errset = update_errset errset file errs in
       let suppressions = update_suppressions suppressions file supps in
       file::inferred, errset, suppressions
-    ) ([], local_errors, suppressions) infer_results
+    ) ([], FilenameMap.empty, suppressions) infer_results
   in
+
+  let () =
+    match persistent_connections with
+      | None -> ()
+      | Some conns ->
+          let error_set: Errors.ErrorSet.t =
+            FilenameMap.fold (fun _ -> Errors.ErrorSet.union) new_local_errors Errors.ErrorSet.empty
+          in
+          let suppressions = Error_suppressions.union_suppressions suppressions in
+          let error_set, _, _ =
+            Error_suppressions.filter_suppressed_errors suppressions error_set
+          in
+          Persistent_connection.update_clients conns error_set;
+  in
+
+  let local_errors = merge_error_maps new_local_errors local_errors in
 
   let inferred = List.rev rev_inferred in
 
@@ -451,12 +472,7 @@ let recheck genv env ~updates =
       in
       Persistent_connection.update_clients env.ServerEnv.connections error_set;
     in
-    let local_errors =
-      FilenameMap.union
-        ~combine:(fun _ x y -> Some (Errors.ErrorSet.union x y))
-        new_local_errors
-        errors.ServerEnv.local_errors
-    in
+    let local_errors = merge_error_maps new_local_errors errors.ServerEnv.local_errors in
     { errors with ServerEnv.local_errors }
   in
 
@@ -657,6 +673,7 @@ let recheck genv env ~updates =
     ~infer_input:freshparsed_list
     ~parsed:(FilenameSet.elements parsed)
     ~all_dependent_files
+    ~persistent_connections:(Some env.ServerEnv.connections)
     ~make_merge_input:(fun inferred ->
       (* need to merge the closure of inferred files and their deps *)
 
@@ -843,6 +860,7 @@ let full_check workers ~ordered_libs parse_next options =
     ~infer_input
     ~parsed:parsed_list
     ~all_dependent_files:FilenameSet.empty
+    ~persistent_connections:None
     ~make_merge_input:(fun inferred ->
       if not libs_ok then None
       else Some (inferred,
