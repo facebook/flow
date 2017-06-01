@@ -121,7 +121,7 @@ let collate_errors =
     Autocomplete_js.autocomplete_unset_hooks ();
     results
 
-  let check_file ~options ~force ~verbose file_input =
+  let check_file ~options ~force file_input =
     let file = File_input.filename_of_file_input file_input in
     match file_input with
     | File_input.FileName _ -> failwith "Not implemented"
@@ -141,7 +141,7 @@ let collate_errors =
         if should_check then
           let file = Loc.SourceFile file in
           let checked = Types_js.typecheck_contents
-            ~options ?verbose ~check_syntax:true content file in
+            ~options ~check_syntax:true content file in
           let errors = match checked with
           | _, _, errors, _ -> errors
           in
@@ -162,8 +162,9 @@ let collate_errors =
     let file = Loc.SourceFile file in
     let response = (try
       let content = File_input.content_of_file_input file_input in
+      let options = { options with Options.opt_verbose = verbose } in
       Ok (Type_info_service.type_at_pos
-        ~options ~client_context ~verbose ~include_raw
+        ~options ~client_context ~include_raw
         file content line col
       )
     with exn ->
@@ -518,8 +519,11 @@ let collate_errors =
         in
         marshal results
     | ServerProt.CHECK_FILE (fn, verbose, graphml, force) ->
-        let options = { options with Options.opt_output_graphml = graphml } in
-        (check_file ~options ~force ~verbose fn: ServerProt.response)
+        let options = { options with Options.
+          opt_output_graphml = graphml;
+          opt_verbose = verbose;
+        } in
+        (check_file ~options ~force fn: ServerProt.response)
           |> marshal
     | ServerProt.COVERAGE (fn, force) ->
         (coverage ~options ~force fn: ServerProt.coverage_response)

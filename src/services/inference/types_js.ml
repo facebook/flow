@@ -73,8 +73,7 @@ let with_timer ?options timer profiling f =
 
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
-let typecheck_contents ~options ?verbose ?(check_syntax=false)
-  contents filename =
+let typecheck_contents ~options ?(check_syntax=false) contents filename =
   let profiling = Profiling_js.empty in
 
   (* always enable types when checking an individual file *)
@@ -121,7 +120,7 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
                avoid inference on such files. *)
             false, false
         ) in
-        { metadata with Context.checked; weak; verbose }
+        { metadata with Context.checked; weak }
       in
       (* apply overrides from the docblock *)
       let metadata = Infer_service.apply_docblock_overrides metadata info in
