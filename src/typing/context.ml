@@ -46,9 +46,6 @@ type t = {
   module_ref: string;
   metadata: metadata;
 
-  (* required modules, and map to their locations *)
-  mutable required: SSet.t;
-  mutable require_loc: Loc.t SMap.t;
   mutable module_kind: module_kind;
 
   mutable import_stmts: Ast.Statement.ImportDeclaration.t list;
@@ -145,8 +142,6 @@ let make metadata file module_ref = {
   module_ref;
   metadata;
 
-  required = SSet.empty;
-  require_loc = SMap.empty;
   module_kind = CommonJSModule(None);
 
   import_stmts = [];
@@ -223,8 +218,6 @@ let output_graphml cx = cx.metadata.output_graphml
 let property_maps cx = cx.property_maps
 let refs_table cx = cx.refs_table
 let export_maps cx = cx.export_maps
-let required cx = cx.required
-let require_loc cx = cx.require_loc
 let root cx = cx.metadata.root
 let facebook_fbt cx = cx.metadata.facebook_fbt
 let should_ignore_non_literal_requires cx =
@@ -269,9 +262,6 @@ let add_property_map cx id pmap =
   cx.property_maps <- Type.Properties.Map.add id pmap cx.property_maps
 let add_export_map cx id tmap =
   cx.export_maps <- Type.Exports.Map.add id tmap cx.export_maps
-let add_require cx name loc =
-  cx.required <- SSet.add name cx.required;
-  cx.require_loc <- SMap.add name loc cx.require_loc
 let add_tvar cx id bounds =
   cx.graph <- IMap.add id bounds cx.graph
 let add_tvar_reason cx id reason =

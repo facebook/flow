@@ -154,6 +154,19 @@ let get_docblock
   | Loc.JsonFile _ -> [], Docblock.default_info
   | _ -> Docblock.extract ~max_tokens file content
 
+(* Allow types based on `types_mode`, using the @flow annotation in the
+   file header if possible. Note, this should be consistent with
+   Infer_service.apply_docblock_overrides w.r.t. the metadata.checked flag. *)
+let types_checked types_mode info =
+  match types_mode with
+  | TypesAllowed -> true
+  | TypesForbiddenByDefault ->
+    match Docblock.flow info with
+    | None
+    | Some Docblock.OptOut -> false
+    | Some Docblock.OptIn
+    | Some Docblock.OptInWeak -> true
+
 let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
   try (
     match file with
@@ -162,18 +175,11 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
     | Loc.ResourceFile _ ->
       Parse_skip Skip_resource_file
     | _ ->
-      (* Allow types based on `types_mode`, using the @flow annotation in the
-       file header if possible. *)
-      let types = match types_mode with
-      | TypesAllowed -> true
-      | TypesForbiddenByDefault ->
-          Docblock.isDeclarationFile info ||
-            begin match Docblock.flow info with
-            | None
-            | Some Docblock.OptOut -> false
-            | Some Docblock.OptIn
-            | Some Docblock.OptInWeak -> true
-            end
+      let types =
+        (* either all=true or @flow pragma exists *)
+        types_checked types_mode info ||
+        (* always parse types for .flow files -- NB: will _not_ be inferred *)
+        Docblock.isDeclarationFile info
       in
       (* don't bother to parse if types are disabled *)
       if types
@@ -239,7 +245,15 @@ let reducer
             else begin
               ASTHeap.add file ast;
               DocblockHeap.add file info;
-              let require_loc = calc_requires ast (info.Docblock.jsx = None) in
+              (* Only calculate requires for files which will actually be
+                 inferred. The only files which are parsed (thus, Parse_ok) but
+                 not inferred are .flow files with no @flow pragma and .json
+                 files. *)
+              let require_loc =
+                if types_checked types_mode info
+                then calc_requires ast (info.Docblock.jsx = None)
+                else SMap.empty
+              in
               RequiresHeap.add file require_loc;
               execute_hook file (Some ast);
               let parse_ok = FilenameSet.add file parse_results.parse_ok in

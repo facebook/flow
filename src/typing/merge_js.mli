@@ -9,8 +9,8 @@
 
 val merge_component_strict: Context.t list -> Context.t list ->
   (Context.t * string * string * Context.t) list ->
-  (string * string * Context.t) list ->
-  (string * Modulename.t * Context.t) list ->
+  (string * Loc.t * string * Context.t) list ->
+  (string * Loc.t * Modulename.t * Context.t) list ->
   Context.t ->
   unit
 

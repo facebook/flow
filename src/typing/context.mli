@@ -79,8 +79,6 @@ val output_graphml: t -> bool
 val property_maps: t -> Type.Properties.map
 val refs_table: t -> (Loc.t, Loc.t) Hashtbl.t
 val export_maps: t -> Type.Exports.map
-val required: t -> SSet.t
-val require_loc: t -> Loc.t SMap.t
 val root: t -> Path.t
 val facebook_fbt: t -> string option
 val should_ignore_non_literal_requires: t -> bool
@@ -108,7 +106,6 @@ val add_imported_t: t -> string -> Type.t -> unit
 val add_module: t -> string -> Type.t -> unit
 val add_property_map: t -> Type.Properties.id -> Type.Properties.t -> unit
 val add_export_map: t -> Type.Exports.id -> Type.Exports.t -> unit
-val add_require: t -> string -> Loc.t -> unit
 val add_tvar: t -> Constraint.ident -> Constraint.node -> unit
 val add_tvar_reason: t -> Constraint.ident -> Reason.t -> unit
 val add_nominal_id: t -> Constraint.ident -> unit

@@ -18,6 +18,7 @@ val merge_contents_context:
   options: Options.t ->
   Context_cache.context_cache ->
   Context.t ->
+  Loc.t SMap.t ->
   unit
 val merge_strict:
   options: Options.t ->

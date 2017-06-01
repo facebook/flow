@@ -14,22 +14,15 @@ open Utils_js
 
    TODO maybe make this suppressable
 *)
-let check_require (r, resolved_r, cx) =
+let check_require r loc resolved_r cx =
   if not (Module_js.module_exists resolved_r)
   then
-    let loc =
-      try SMap.find_unsafe r (Context.require_loc cx)
-      with Not_found -> raise (Key_not_found ("Context.require_loc", r))
-    in
     let reason = Reason.mk_reason (Reason.RCustom r) loc in
 
     let m_name = Modulename.to_string resolved_r in
     let tvar = Flow_js.mk_tvar cx reason in
     Flow_js.lookup_builtin cx (Reason.internal_module_name m_name)
       reason (Type.Strict (Reason.builtin_reason (Reason.RCustom m_name))) tvar
-
-let add_decl (r, resolved_r, cx) declarations =
-  (r, resolved_r, cx) :: declarations
 
 (* To merge the contexts of a component (component_cxs) with their dependencies,
    we call the functions `merge_component_strict` and `restore` defined
@@ -64,11 +57,11 @@ let merge_strict_context_with_required cache component_cxs required =
 
   let orig_sig_cxs, sig_cxs, impls, res, decls =
     List.fold_left (fun (orig_sig_cxs, sig_cxs, impls, res, decls) req ->
-      let r, resolved_r, cx_to = req in
+      let r, loc, resolved_r, cx_to = req in
       Module_js.(match get_file Expensive.ok resolved_r with
       | Some (Loc.ResourceFile f) ->
           orig_sig_cxs, sig_cxs,
-          impls, (r, f, cx_to) :: res, decls
+          impls, (r, loc, f, cx_to) :: res, decls
       | Some file ->
           let info = get_info_unsafe ~audit:Expensive.ok file in
           if info.checked && info.parsed then
@@ -96,11 +89,11 @@ let merge_strict_context_with_required cache component_cxs required =
             (* use required name as resolved name, for lib lookups *)
             let fake_resolved = Modulename.String r in
             orig_sig_cxs, sig_cxs,
-            impls, res, (r, fake_resolved, cx_to) :: decls
+            impls, res, (r, loc, fake_resolved, cx_to) :: decls
       | None ->
           (* implementation doesn't exist *)
           orig_sig_cxs, sig_cxs,
-          impls, res, (r, resolved_r, cx_to) :: decls
+          impls, res, (r, loc, resolved_r, cx_to) :: decls
       )
     ) ([], [], [], [], []) required
   in
@@ -116,32 +109,29 @@ let merge_strict_context_with_required cache component_cxs required =
 
 let merge_strict_context cache component_cxs =
   let required = List.fold_left (fun required cx ->
-    SSet.fold (fun r ->
+    let file = Context.file cx in
+    let require_loc_map = Parsing_service_js.get_requires_unsafe file in
+    SMap.fold (fun r loc ->
       let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
-        (Context.file cx) r in
-      check_require (r, resolved_r, cx);
-      add_decl (r, resolved_r, cx)
-    ) (Context.required cx) required
+        file r in
+      check_require r loc resolved_r cx;
+      List.cons (r, loc, resolved_r, cx)
+    ) require_loc_map required
   ) [] component_cxs in
   merge_strict_context_with_required cache component_cxs required
 
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
-let merge_contents_context ~options cache cx =
+let merge_contents_context ~options cache cx require_loc_map =
   let required =
-    let require_locs = Context.require_loc cx in
-    SSet.fold (fun r ->
-      let loc =
-        try SMap.find_unsafe r require_locs
-        with Not_found -> raise (Key_not_found ("require_locs", r))
-      in
+    SMap.fold (fun r loc ->
       let resolved_r = Module_js.imported_module
         ~options
         ~node_modules_containers:!Files.node_modules_containers
         (Context.file cx) loc r in
-      check_require (r, resolved_r, cx);
-      add_decl (r, resolved_r, cx)
-    ) (Context.required cx) []
+      check_require r loc resolved_r cx;
+      List.cons (r, loc, resolved_r, cx)
+    ) require_loc_map []
   in
   (merge_strict_context_with_required cache [cx] required: Context.t)
   |> ignore
