@@ -923,6 +923,7 @@ and json_of_funcalltype_impl json_cx {
   call_tout;
   call_closure_t;
   call_strict_arity;
+  call_return_used;
 } = Hh_json.(
   let arg_types = List.map (json_of_funcallarg json_cx) call_args_tlist in
   JSON_Object ([
@@ -931,6 +932,7 @@ and json_of_funcalltype_impl json_cx {
     "tout", _json_of_t json_cx call_tout;
     "closureIndex", int_ call_closure_t;
     "strictArity", JSON_Bool call_strict_arity;
+    "returnUsed", JSON_Bool call_return_used;
   ])
 )
 
