@@ -133,19 +133,7 @@ let merge_contents_context ~options cache cx require_loc_map =
   |> ignore
 
 (* Entry point for merging a component *)
-let merge_strict_component ~options = function
-  | Merge_stream.Skip file ->
-    (* Skip rechecking this file (because none of its dependencies changed). We
-       are going to reuse the existing signature for the file, so we must be
-       careful that such a signature actually exists! This holds because a
-       skipped file cannot be a direct dependency, so its dependencies cannot
-       change, which in particular means that it belongs to the same component,
-       although possibly with a different leader that has the signature. *)
-    file, Errors.ErrorSet.empty, None
-  | Merge_stream.Component component ->
-  (* A component may have several files: there's always at least one, and
-     multiple files indicate a cycle. *)
-
+let merge_strict_component ~options component =
   let file = List.hd component in
 
   (* We choose file as the leader, and other_files are followers. It is always
@@ -180,34 +168,36 @@ let merge_strict_component ~options = function
 
     let diff = Context_cache.add_merge_on_diff ~audit:Expensive.ok
       component_cxs md5 in
-    file, errors, Some diff
+    file, errors, diff
   )
-  else file, Errors.ErrorSet.empty, Some true
+  else file, Errors.ErrorSet.empty, true
 
 let merge_strict_job ~options (merged, unchanged) elements =
-  List.fold_left (fun (merged, unchanged) element ->
-    let component = Merge_stream.(match element with
-      | Component component -> component
-      | Skip file -> [file]
-    ) in
-    let files = component
-    |> List.map string_of_filename
-    |> String.concat "\n\t"
-    in
-    try Profile_utils.checktime ~options 1.0
-      (fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) files t)
-      (fun () ->
-        (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
-        let file, errors, diff = merge_strict_component ~options element in
-        match diff with
-        | Some diff ->
-          (* file was rechecked; diff says whether its signature was changed *)
+  List.fold_left (fun (merged, unchanged) -> function
+    | Merge_stream.Skip file ->
+      (* Skip rechecking this file (because none of its dependencies changed).
+         We are going to reuse the existing signature for the file, so we must
+         be careful that such a signature actually exists! This holds because a
+         skipped file cannot be a direct dependency, so its dependencies cannot
+         change, which in particular means that it belongs to the same component,
+         although possibly with a different leader that has the signature. *)
+      (* file was skipped, so its signature is definitely unchanged *)
+      (merged, file::unchanged)
+    | Merge_stream.Component component ->
+      (* A component may have several files: there's always at least one, and
+         multiple files indicate a cycle. *)
+      let files = component
+      |> List.map string_of_filename
+      |> String.concat "\n\t"
+      in
+      try Profile_utils.checktime ~options 1.0
+        (fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) files t)
+        (fun () ->
+          (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
+          let file, errors, diff = merge_strict_component ~options component in
+          (* diff says whether its signature was changed *)
           (file, errors) :: merged,
           if diff then unchanged else file :: unchanged
-        | None ->
-          (* file was skipped, so its signature is definitely unchanged *)
-          merged,
-          file :: unchanged
       )
     with
     | SharedMem_js.Out_of_shared_memory
