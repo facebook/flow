@@ -235,8 +235,6 @@ module PendingRequests : sig
   val add_response: t -> Prot.response -> t
   val ready_request: t -> (Prot.request option * t)
 end = struct
-  module IntMap = Map.Make(struct type t = int let compare = ( - ) end)
-
   type t = {
     queue: Prot.request ImmQueue.t;
     outstanding: Prot.request option;
