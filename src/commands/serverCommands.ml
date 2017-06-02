@@ -167,16 +167,6 @@ module OptionParser(Config : CONFIG) = struct
         exe_name cmdname cmddoc;
   }
 
-  let assert_version version_constraint =
-    if not (Semver.satisfies version_constraint Flow_version.version)
-    then
-      let msg = Utils_js.spf
-        "Wrong version of Flow. The config specifies version %s but this is version %s"
-        version_constraint
-        Flow_version.version
-      in
-      FlowExitStatus.(exit ~msg Invalid_flowconfig)
-
   let main
       error_flags
       include_suppressed
@@ -215,10 +205,7 @@ module OptionParser(Config : CONFIG) = struct
     let root = CommandUtils.guess_root path_opt in
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
 
-    begin match ignore_version, FlowConfig.required_version flowconfig with
-    | false, Some version -> assert_version version
-    | _ -> ()
-    end;
+    if not ignore_version then assert_version flowconfig;
 
     let opt_module = FlowConfig.module_system flowconfig in
     let opt_traces = match traces with

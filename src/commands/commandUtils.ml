@@ -193,6 +193,19 @@ let ignore_version_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Ignore the version constraint in .flowconfig"
 )
 
+let assert_version flowconfig =
+  match FlowConfig.required_version flowconfig with
+  | None -> ()
+  | Some version_constraint ->
+    if not (Semver.satisfies version_constraint Flow_version.version)
+    then
+      let msg = Utils_js.spf
+        "Wrong version of Flow. The config specifies version %s but this is version %s"
+        version_constraint
+        Flow_version.version
+      in
+      FlowExitStatus.(exit ~msg Invalid_flowconfig)
+
 type flowconfig_params = {
   ignores: string list;
   includes: string list;
