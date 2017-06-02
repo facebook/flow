@@ -51,6 +51,17 @@ let sleep seconds =
         then timeout_go_boom ()
         else Unix.sleep seconds
 
+let init_loggers ~from ~options ?(default=Hh_logger.Level.default_filter) () =
+  FlowEventLogger.set_from from;
+  Hh_logger.Level.set_filter (
+    let verbose = Options.verbose options in
+    let debug = Options.is_debug_mode options in
+    let quiet = Options.is_quiet options in
+    if quiet then (function _ -> false)
+    else if verbose != None || debug then (function _ -> true)
+    else default
+  )
+
 let collect_error_flags main color one_line show_all_errors =
   let color = match color with
   | Some "never" -> Tty.Color_Never
@@ -384,6 +395,139 @@ let log_file ~tmp_dir root flowconfig =
   match FlowConfig.log_file flowconfig with
   | Some x -> x
   | None -> Path.make (Server_files_js.file_of_root "log" ~tmp_dir root)
+
+module Options_flags = struct
+  type t = {
+    all: bool;
+    debug: bool;
+    flowconfig_flags: flowconfig_params;
+    max_workers: int option;
+    munge_underscore_members: bool;
+    no_flowlib: bool;
+    profile: bool;
+    quiet: bool;
+    strip_root: bool;
+    temp_dir: string option;
+    traces: int option;
+    verbose: Verbose.t option;
+    weak: bool;
+  }
+end
+
+let options_flags =
+  let collect_options_flags main
+    debug profile all weak traces no_flowlib munge_underscore_members max_workers
+    flowconfig_flags verbose strip_root temp_dir quiet =
+    main { Options_flags.
+      debug;
+      profile;
+      all;
+      weak;
+      traces;
+      no_flowlib;
+      munge_underscore_members;
+      max_workers;
+      flowconfig_flags;
+      verbose;
+      strip_root;
+      temp_dir;
+      quiet;
+   }
+  in
+  fun prev ->
+    let open CommandSpec.ArgSpec in
+    prev
+    |> collect collect_options_flags
+    |> flag "--debug" no_arg
+        ~doc:"Print debug info during typecheck"
+    |> flag "--profile" no_arg
+        ~doc:"Output profiling information"
+    |> flag "--all" no_arg
+        ~doc:"Typecheck all files, not just @flow"
+    |> flag "--weak" no_arg
+        ~doc:"Typecheck with weak inference, assuming dynamic types by default"
+    |> flag "--traces" (optional int)
+        ~doc:"Outline an error path up to a specified level"
+    |> flag "--no-flowlib" no_arg
+        ~doc:"Do not include embedded declarations"
+    |> flag "--munge-underscore-members" no_arg
+        ~doc:"Treat any class member name with a leading underscore as private"
+    |> flag "--max-workers" (optional int)
+        ~doc:"Maximum number of workers to create (capped by number of cores)"
+    |> flowconfig_flags
+    |> verbose_flags
+    |> strip_root_flag
+    |> temp_dir_flag
+    |> quiet_flag
+
+(* For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet *)
+let options_and_json_flags =
+  let collect_options_and_json main options_flags json pretty =
+    main { options_flags with
+      Options_flags.quiet = options_flags.Options_flags.quiet || json || pretty
+    } json pretty
+  in
+  fun prev ->
+    prev
+    |> CommandSpec.ArgSpec.collect collect_options_and_json
+    |> options_flags
+    |> json_flags
+
+let make_options ~flowconfig ~lazy_ ~root (options_flags: Options_flags.t) =
+  let temp_dir =
+    options_flags.Options_flags.temp_dir
+    |> Option.value ~default:(FlowConfig.temp_dir flowconfig)
+    |> Path.make
+    |> Path.to_string
+  in
+  let open Options_flags in
+  let file_options =
+    let no_flowlib = options_flags.no_flowlib in
+    let { includes; ignores; libs } = options_flags.flowconfig_flags in
+    file_options ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs flowconfig
+  in
+  { Options.
+    opt_lazy = lazy_;
+    opt_root = root;
+    opt_debug = options_flags.debug;
+    opt_verbose = options_flags.verbose;
+    opt_all = options_flags.all || FlowConfig.all flowconfig;
+    opt_weak = options_flags.weak || FlowConfig.weak flowconfig;
+    opt_traces = Option.value options_flags.traces ~default:(FlowConfig.traces flowconfig);
+    opt_quiet = options_flags.Options_flags.quiet;
+    opt_module_name_mappers = FlowConfig.module_name_mappers flowconfig;
+    opt_modules_are_use_strict = FlowConfig.modules_are_use_strict flowconfig;
+    opt_output_graphml = false;
+    opt_profile = options_flags.profile;
+    opt_strip_root = options_flags.strip_root;
+    opt_module = FlowConfig.module_system flowconfig;
+    opt_munge_underscores =
+      options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
+    opt_temp_dir = temp_dir;
+    opt_max_workers =
+      Option.value options_flags.max_workers ~default:(FlowConfig.max_workers flowconfig)
+      |> min Sys_utils.nbr_procs;
+    opt_suppress_comments = FlowConfig.suppress_comments flowconfig;
+    opt_suppress_types = FlowConfig.suppress_types flowconfig;
+    opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
+    opt_enforce_strict_type_args = FlowConfig.enforce_strict_type_args flowconfig;
+    opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
+    opt_enable_unsafe_getters_and_setters =
+      FlowConfig.enable_unsafe_getters_and_setters flowconfig;
+    opt_esproposal_decorators = FlowConfig.esproposal_decorators flowconfig;
+    opt_esproposal_export_star_as = FlowConfig.esproposal_export_star_as flowconfig;
+    opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
+    opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
+    opt_esproposal_class_static_fields = FlowConfig.esproposal_class_static_fields flowconfig;
+    opt_esproposal_class_instance_fields =
+      FlowConfig.esproposal_class_instance_fields flowconfig;
+    opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
+    opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;
+    opt_haste_paths_blacklist = FlowConfig.haste_paths_blacklist flowconfig;
+    opt_haste_paths_whitelist = FlowConfig.haste_paths_whitelist flowconfig;
+    opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig;
+    opt_file_options = file_options;
+  }
 
 let connect server_flags root =
   let flowconfig_path = Server_files_js.config_file root in

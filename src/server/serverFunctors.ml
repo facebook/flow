@@ -17,7 +17,7 @@ module Server_files = Server_files_js
 exception State_not_found
 
 module type SERVER_PROGRAM = sig
-  val init : genv -> (Profiling_js.t * env)
+  val init : focus_target:Loc.filename option -> genv -> (Profiling_js.t * env)
   val check_once : genv -> env ->
     Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list
   (* filter and relativize updated file paths *)
@@ -42,6 +42,7 @@ module ServerMain (Program : SERVER_PROGRAM) : sig
     unit
   val check_once :
     shared_mem_config:SharedMem_js.config ->
+    ?focus_target:Loc.filename ->
     Options.t ->
     Profiling_js.t * Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list
   val daemonize :
@@ -205,11 +206,11 @@ end = struct
   * type-checker succeeded. So to know if there is some work to be done,
   * we look if env.modified changed.
   *)
-  let create_program_init ~shared_mem_config options =
+  let create_program_init ~shared_mem_config ~focus_target options =
     let handle = SharedMem_js.init shared_mem_config in
     let genv = ServerEnvBuild.make_genv options handle in
     let program_init = fun () ->
-      let profiling, env = Program.init genv in
+      let profiling, env = Program.init ~focus_target genv in
       FlowEventLogger.init_done ~profiling;
       profiling, env
     in
@@ -225,7 +226,7 @@ end = struct
     PidLog.init (Server_files.pids_file ~tmp_dir root);
     PidLog.log ~reason:"main" (Unix.getpid());
 
-    let genv, program_init = create_program_init ~shared_mem_config options in
+    let genv, program_init = create_program_init ~shared_mem_config ~focus_target:None options in
 
     (* Open up a server on the socket before we go into program_init -- the
        client will try to connect to the socket as soon as we lock the init
@@ -251,9 +252,9 @@ end = struct
 
   let run ~shared_mem_config options = run_internal ~shared_mem_config options
 
-  let check_once ~shared_mem_config options =
+  let check_once ~shared_mem_config ?focus_target options =
     PidLog.disable ();
-    let genv, program_init = create_program_init ~shared_mem_config options in
+    let genv, program_init = create_program_init ~shared_mem_config ~focus_target options in
     let profiling, env = program_init () in
     let errors, suppressed_errors = Program.check_once genv env in
     profiling, errors, suppressed_errors

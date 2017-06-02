@@ -15,6 +15,7 @@ val recheck: ServerEnv.genv -> ServerEnv.env -> updates:FilenameSet.t -> ServerE
 
 (* hh_server initial (full) check *)
 val server_init:
+  focus_target:Loc.filename option ->
   ServerEnv.genv -> Profiling_js.t * ServerEnv.env
 
 val typecheck_contents:

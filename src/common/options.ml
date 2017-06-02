@@ -44,7 +44,6 @@ type t = {
   opt_esproposal_export_star_as: esproposal_feature_mode;
   opt_facebook_fbt: string option;
   opt_file_options: Files.options;
-  opt_focus_check_target: Loc.filename option;
   opt_haste_name_reducers: (Str.regexp * string) list;
   opt_haste_paths_blacklist: string list;
   opt_haste_paths_whitelist: string list;
@@ -87,7 +86,6 @@ let haste_paths_blacklist opts = opts.opt_haste_paths_blacklist
 let haste_paths_whitelist opts = opts.opt_haste_paths_whitelist
 let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
 let file_options opts = opts.opt_file_options
-let focus_check_target opts = opts.opt_focus_check_target
 let is_debug_mode opts = opts.opt_debug
 let is_lazy_mode opts = opts.opt_lazy
 let is_quiet opts = opts.opt_quiet

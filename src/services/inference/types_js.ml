@@ -729,7 +729,7 @@ let recheck genv env ~updates =
   }
 
 (* full typecheck *)
-let full_check workers ~ordered_libs parse_next options =
+let full_check workers ~ordered_libs ~focus_target parse_next options =
   let local_errors = FilenameMap.empty in
   let merge_errors = FilenameMap.empty in
   let suppressions = FilenameMap.empty in
@@ -826,7 +826,7 @@ let full_check workers ~ordered_libs parse_next options =
     if lazy_mode then []
     else parsed_list in
 
-  let infer_input = match Options.focus_check_target options with
+  let infer_input = match focus_target with
     | Some f ->
       if Module_js.is_tracked_file f (* otherwise, f is probably a directory *)
         && Module_js.checked_file ~audit:Expensive.warn f
@@ -873,7 +873,7 @@ let full_check workers ~ordered_libs parse_next options =
   (profiling, parsed, checked, errors)
 
 (* initialize flow server state, including full check *)
-let server_init genv =
+let server_init ~focus_target genv =
   let options = genv.ServerEnv.options in
   let root = Options.root options in
   let file_options = Options.file_options options in
@@ -889,7 +889,7 @@ let server_init genv =
   in
 
   let (profiling, parsed, checked, errors) = full_check
-    genv.ServerEnv.workers ~ordered_libs get_next options in
+    genv.ServerEnv.workers ~ordered_libs ~focus_target get_next options in
 
   let profiling = SharedMem.(
     let dep_stats = dep_stats () in
