@@ -101,13 +101,11 @@ let rec iter_get_next ~f get_next =
 
 let make_options ~root ~ignore_flag ~include_flag =
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-  let flowconfig_flags = { CommandUtils.
-    ignores = CommandUtils.list_of_string_arg ignore_flag;
-    includes = CommandUtils.list_of_string_arg include_flag;
-    libs = [];
-  } in
   let temp_dir = FlowConfig.temp_dir flowconfig in
-  CommandUtils.file_options ~root ~no_flowlib:true ~temp_dir ~lib:None flowconfig_flags flowconfig
+  let includes = CommandUtils.list_of_string_arg include_flag in
+  let ignores = CommandUtils.list_of_string_arg ignore_flag in
+  let libs = [] in
+  CommandUtils.file_options ~root ~no_flowlib:true ~temp_dir ~ignores ~includes ~libs flowconfig
 
 (* Directories will return a closure that returns every file under that
    directory. Individual files will return a closure that returns just that file

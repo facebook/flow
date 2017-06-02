@@ -87,8 +87,6 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Typecheck with weak inference, assuming dynamic types by default"
     |> flag "--traces" (optional int)
         ~doc:"Outline an error path up to a specified level"
-    |> flag "--lib" (optional string)
-        ~doc:"Specify one or more library paths, comma separated"
     |> flag "--no-flowlib" no_arg
         ~doc:"Do not include embedded declarations"
     |> flag "--munge-underscore-members" no_arg
@@ -192,7 +190,6 @@ module OptionParser(Config : CONFIG) = struct
       all
       weak
       traces
-      lib
       no_flowlib
       munge_underscore_members
       max_workers
@@ -244,8 +241,11 @@ module OptionParser(Config : CONFIG) = struct
 
     let shared_mem_config = shm_config shm_flags flowconfig in
 
-    let file_options = CommandUtils.file_options
-      ~root ~no_flowlib ~temp_dir:opt_temp_dir ~lib flowconfig_flags flowconfig in
+    let file_options =
+      let temp_dir = opt_temp_dir in
+      let { includes; ignores; libs } = flowconfig_flags in
+      CommandUtils.file_options ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs flowconfig
+    in
 
     let options = { Options.
       opt_focus_check_target =

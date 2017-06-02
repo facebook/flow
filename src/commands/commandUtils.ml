@@ -237,7 +237,7 @@ let file_options =
       Path_matcher.add acc path
     ) Path_matcher.empty paths
   in
-  let libs ~root flowconfig extras =
+  let lib_paths ~root flowconfig extras =
     let flowtyped_path = Files.get_flowtyped_path root in
     let has_explicit_flowtyped_lib = ref false in
     let config_libs =
@@ -258,14 +258,10 @@ let file_options =
       else config_libs
     in
     match extras with
-    | None -> config_libs
-    | Some libs ->
-      let libs = libs
-      |> Str.split (Str.regexp ",")
-      |> List.map Path.make in
-      config_libs @ libs
+    | [] -> config_libs
+    | _ -> config_libs @ (List.map Path.make extras)
   in
-  fun ~root ~no_flowlib ~temp_dir ~lib flowconfig_flags flowconfig ->
+  fun ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs flowconfig ->
     let default_lib_dir =
       if no_flowlib || FlowConfig.no_flowlib flowconfig
       then None
@@ -273,17 +269,16 @@ let file_options =
     let ignores = ignores_of_arg
       root
       (FlowConfig.ignores flowconfig)
-      flowconfig_flags.ignores in
+      ignores in
     let includes =
-      flowconfig_flags.includes
+      includes
       |> List.rev_append (FlowConfig.includes flowconfig)
       |> includes_of_arg root in
-    let lib_paths = libs ~root flowconfig lib in
     { Files.
       default_lib_dir;
       ignores;
       includes;
-      lib_paths;
+      lib_paths = lib_paths ~root flowconfig libs;
       module_file_exts = FlowConfig.module_file_exts flowconfig;
       module_resource_exts = FlowConfig.module_resource_exts flowconfig;
       node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
@@ -301,9 +296,9 @@ let include_flag prev = CommandSpec.ArgSpec.(
     ~doc:"Specify one or more include patterns, comma separated"
 )
 
-let libs_flag prev = CommandSpec.ArgSpec.(
+let lib_flag prev = CommandSpec.ArgSpec.(
   prev
-  |> flag "--libs" (optional string)
+  |> flag "--lib" (optional string)
     ~doc:"Specify one or more lib files/directories, comma separated"
 )
 
@@ -312,7 +307,7 @@ let flowconfig_flags prev = CommandSpec.ArgSpec.(
   |> collect collect_flowconfig_flags
   |> ignore_flag
   |> include_flag
-  |> libs_flag
+  |> lib_flag
 )
 
 type command_params = {
