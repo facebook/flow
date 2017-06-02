@@ -278,28 +278,32 @@ let typecheck
   (* local inference populates context heap, resolved requires heap *)
   Hh_logger.info "Running local inference";
 
+  let infer_input =
+    if Options.is_lazy_mode options
+    then
+      let new_files = FilenameSet.of_list infer_input in
+      let roots = FilenameSet.union new_files all_dependent_files in
+      let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
+      let all_dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
+      let to_infer = FilenameSet.diff all_dependencies unchanged_checked in
+      FilenameSet.elements to_infer
+    else
+      infer_input
+  in
+
   let profiling, infer_results =
     with_timer ~options "Infer" profiling (fun () ->
-      if Options.is_lazy_mode options
-      then
-        let new_files = FilenameSet.of_list infer_input in
-        let roots = FilenameSet.union new_files all_dependent_files in
-        let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
-        let all_dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
-        let to_infer = FilenameSet.diff all_dependencies unchanged_checked in
-        Infer_service.infer ~options ~workers (FilenameSet.elements to_infer)
-      else
-        Infer_service.infer ~options ~workers infer_input
+      Infer_service.infer ~options ~workers infer_input
     ) in
 
-  let rev_inferred, new_local_errors, suppressions =
-    List.fold_left (fun (inferred, errset, suppressions) (file, errs, supps) ->
+  let new_local_errors, suppressions =
+    List.fold_left (fun (errset, suppressions) (file, errs, supps) ->
       (* TODO update_errset may be able to be replaced by a simpler operation, since infer_results
        * may only have one entry per file *)
       let errset = update_errset errset file errs in
       let suppressions = update_suppressions suppressions file supps in
-      file::inferred, errset, suppressions
-    ) ([], FilenameMap.empty, suppressions) infer_results
+      errset, suppressions
+    ) (FilenameMap.empty, suppressions) infer_results
   in
 
   let () =
@@ -318,12 +322,10 @@ let typecheck
 
   let local_errors = merge_error_maps new_local_errors local_errors in
 
-  let inferred = List.rev rev_inferred in
-
   (* call supplied function to calculate closure of modules to merge *)
   let profiling, merge_input =
     with_timer ~options "MakeMergeInput" profiling (fun () ->
-      make_merge_input inferred
+      make_merge_input infer_input
     ) in
 
   match merge_input with
