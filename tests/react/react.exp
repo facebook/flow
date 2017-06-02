@@ -257,14 +257,28 @@ create_class_initial_state_sealed.js:35
 
 create_class_initial_state_sealed.js:45
  45:     this.setState({ q: 0 }); // property `q` not found
-         ^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
+         ^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`. Function cannot be called on any member of intersection type
  45:     this.setState({ q: 0 }); // property `q` not found
-                       ^^^^^^^^ property `q` of object literal. Property not found in
-                      v------------------
- 41:   getInitialState(): { p: number } {
- 42:     return { p: 0 };
- 43:   },
-       ^ object type
+         ^^^^^^^^^^^^^ intersection
+  Member 1:
+   25:   setState(partialState: $Shape<State>, callback?: () => mixed): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:25
+  Error:
+   45:     this.setState({ q: 0 }); // property `q` not found
+                         ^^^^^^^^ property `q` of object literal. Property not found in
+                        v------------------
+   41:   getInitialState(): { p: number } {
+   42:     return { p: 0 };
+   43:   },
+         ^ object type
+  Member 2:
+   26:   setState(mapState: (prevState: State, props: Props ) => $Shape<State>, callback?: () => mixed): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:26
+  Error:
+   26:   setState(mapState: (prevState: State, props: Props ) => $Shape<State>, callback?: () => mixed): void;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:26
+   45:     this.setState({ q: 0 }); // property `q` not found
+                         ^^^^^^^^ object literal
 
 create_class_initial_state_sealed.js:48
  48:     (this.state.q: empty); // property `q` not found
@@ -280,14 +294,28 @@ create_class_initial_state_sealed.js:66
 
 create_class_initial_state_sealed.js:81
  81:     this.setState({ baz: 0 }); // property `baz`  not found
-         ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`. Function cannot be called on any member of intersection type
  81:     this.setState({ baz: 0 }); // property `baz`  not found
-                       ^^^^^^^^^^ property `baz` of object literal. Property not found in
-                        v--------------------
- 73:     getInitialState(): { foo: number } {
- 74:       return { foo: 0 };
- 75:     },
-         ^ object type
+         ^^^^^^^^^^^^^ intersection
+  Member 1:
+   25:   setState(partialState: $Shape<State>, callback?: () => mixed): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:25
+  Error:
+   81:     this.setState({ baz: 0 }); // property `baz`  not found
+                         ^^^^^^^^^^ property `baz` of object literal. Property not found in
+                          v--------------------
+   73:     getInitialState(): { foo: number } {
+   74:       return { foo: 0 };
+   75:     },
+           ^ object type
+  Member 2:
+   26:   setState(mapState: (prevState: State, props: Props ) => $Shape<State>, callback?: () => mixed): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:26
+  Error:
+   26:   setState(mapState: (prevState: State, props: Props ) => $Shape<State>, callback?: () => mixed): void;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:26
+   81:     this.setState({ baz: 0 }); // property `baz`  not found
+                         ^^^^^^^^^^ object literal
 
 create_class_initial_state_sealed.js:84
  84:     (this.state.baz: empty); // property `baz` not found

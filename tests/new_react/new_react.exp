@@ -45,6 +45,12 @@ classes.js:25
   9:   state: State;
               ^^^^^ object type
 
+classes.js:25
+ 25:   setState(o: { y_: string }): void { }
+                   ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
+ 26:   setState(mapState: (prevState: State, props: Props ) => $Shape<State>, callback?: () => mixed): void;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:26
+
 classes.js:40
  40: Foo.defaultProps = 0;
      ^^^^^^^^^^^^^^^^ assignment of property `defaultProps`
@@ -83,6 +89,12 @@ classes.js:66
  63:     return { y: "" };
  64:   },
        ^ object type
+
+classes.js:66
+ 66:   setState(o: { y_: string }): void { },
+                   ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
+ 26:   setState(mapState: (prevState: State, props: Props ) => $Shape<State>, callback?: () => mixed): void;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:26
 
 classes.js:81
  81: var foo_legacy: $jsx<number> = <FooLegacy/>;
@@ -377,22 +389,53 @@ state3.js:13
  13:         this.setState({
  14:             x: false // error
  15:         })
-             -^ call of method `setState`
- 14:             x: false // error
-                    ^^^^^ boolean. This type is incompatible with
-  4:     getInitialState: function(): { x: string; } {
-                                           ^^^^^^ string
+             -^ call of method `setState`. Function cannot be called on any member of intersection type
+ 13:         this.setState({
+             ^^^^^^^^^^^^^ intersection
+  Member 1:
+   25:   setState(partialState: $Shape<State>, callback?: () => mixed): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:25
+  Error:
+   14:             x: false // error
+                      ^^^^^ boolean. This type is incompatible with
+    4:     getInitialState: function(): { x: string; } {
+                                             ^^^^^^ string
+  Member 2:
+   26:   setState(mapState: (prevState: State, props: Props ) => $Shape<State>, callback?: () => mixed): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:26
+  Error:
+   26:   setState(mapState: (prevState: State, props: Props ) => $Shape<State>, callback?: () => mixed): void;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:26
+                             v
+   13:         this.setState({
+   14:             x: false // error
+   15:         })
+               ^ object literal
 
 state4.js:9
   9:     this.setState({ y: 0 });
-         ^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
+         ^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`. Function cannot be called on any member of intersection type
   9:     this.setState({ y: 0 });
-                       ^^^^^^^^ property `y` of object literal. Property not found in
-                        v--------------------------
-  4:   getInitialState: function(): { x: number } {
-  5:     return { x: 0 };
-  6:   },
-       ^ object type
+         ^^^^^^^^^^^^^ intersection
+  Member 1:
+   25:   setState(partialState: $Shape<State>, callback?: () => mixed): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:25
+  Error:
+    9:     this.setState({ y: 0 });
+                         ^^^^^^^^ property `y` of object literal. Property not found in
+                          v--------------------------
+    4:   getInitialState: function(): { x: number } {
+    5:     return { x: 0 };
+    6:   },
+         ^ object type
+  Member 2:
+   26:   setState(mapState: (prevState: State, props: Props ) => $Shape<State>, callback?: () => mixed): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:26
+  Error:
+   26:   setState(mapState: (prevState: State, props: Props ) => $Shape<State>, callback?: () => mixed): void;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:26
+    9:     this.setState({ y: 0 });
+                         ^^^^^^^^ object literal
 
 state4.js:10
  10:     return <div>{this.state.z}</div>
@@ -407,4 +450,4 @@ state5.js:5
                 ^^^^^^^^^^ undefined. Did you forget to declare type parameter `State` of property `Component`?
 
 
-Found 50 errors
+Found 52 errors
