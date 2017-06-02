@@ -16,5 +16,10 @@ exception Writing_Payload_Exception
 exception Reading_Preamble_Exception
 exception Reading_Payload_Exception
 
+type remote_exception_data = {
+  message : string;
+  stack : string;
+}
+
 val to_fd_with_preamble: Unix.file_descr -> 'a -> unit
 val from_fd_with_preamble: Unix.file_descr -> 'a

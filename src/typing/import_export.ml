@@ -102,7 +102,7 @@ let module_t_of_ref_unsafe cx m reason =
   | Some _ ->
     Env.get_var_declared_type cx (internal_module_name m) (loc_of_reason reason)
   | None ->
-    SMap.find_unsafe m (Context.module_map cx)
+    Context.find_module cx m
 
 let require cx ?(internal=false) module_ref loc =
   if not internal

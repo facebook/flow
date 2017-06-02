@@ -121,7 +121,7 @@ let collate_errors =
     Autocomplete_js.autocomplete_unset_hooks ();
     results
 
-  let check_file ~options ~force ~verbose file_input =
+  let check_file ~options ~force file_input =
     let file = File_input.filename_of_file_input file_input in
     match file_input with
     | File_input.FileName _ -> failwith "Not implemented"
@@ -141,7 +141,7 @@ let collate_errors =
         if should_check then
           let file = Loc.SourceFile file in
           let checked = Types_js.typecheck_contents
-            ~options ?verbose ~check_syntax:true content file in
+            ~options ~check_syntax:true content file in
           let errors = match checked with
           | _, _, errors, _ -> errors
           in
@@ -162,8 +162,9 @@ let collate_errors =
     let file = Loc.SourceFile file in
     let response = (try
       let content = File_input.content_of_file_input file_input in
+      let options = { options with Options.opt_verbose = verbose } in
       Ok (Type_info_service.type_at_pos
-        ~options ~client_context ~verbose ~include_raw
+        ~options ~client_context ~include_raw
         file content line col
       )
     with exn ->
@@ -212,9 +213,12 @@ let collate_errors =
 
   let find_module ~options (moduleref, filename) =
     let file = Loc.SourceFile filename in
-    let metadata = Context.({ (metadata_of_options options) with
-      checked = false;
-    }) in
+    let metadata =
+      let open Context in
+      let metadata = metadata_of_options options in
+      let local_metadata = { metadata.local_metadata with checked = false } in
+      { metadata with local_metadata }
+    in
     let cx = Context.make metadata file (Files.module_ref file) in
     let loc = {Loc.none with Loc.source = Some file;} in
     let module_name = Module_js.imported_module
@@ -222,7 +226,7 @@ let collate_errors =
       (Context.file cx) loc moduleref in
     Module_js.get_file ~audit:Expensive.warn module_name
 
-  let gen_flow_files env files =
+  let gen_flow_files ~options env files =
     let errors, _ = collate_errors env.ServerEnv.errors in
     let result = if Errors.ErrorSet.is_empty errors
       then begin
@@ -242,7 +246,7 @@ let collate_errors =
               (* TODO: Use InfoHeap as the definitive way to detect @flow vs
                * non-@flow
                *)
-              match cache#read_safe ~audit:Expensive.warn src_file with
+              match cache#read_safe ~audit:Expensive.warn ~options src_file with
               | None ->
                 (flow_files, cxs, src_file::non_flow_files, error)
               | Some cx ->
@@ -256,7 +260,7 @@ let collate_errors =
             begin
               try List.iter (fun flow_file_cx ->
                 let master_cx: Context.t =
-                  Merge_service.merge_strict_context cache [flow_file_cx] in
+                  Merge_service.merge_strict_context ~options cache [flow_file_cx] in
                 ignore master_cx
               ) flow_file_cxs
               with exn -> failwith (
@@ -518,8 +522,11 @@ let collate_errors =
         in
         marshal results
     | ServerProt.CHECK_FILE (fn, verbose, graphml, force) ->
-        let options = { options with Options.opt_output_graphml = graphml } in
-        (check_file ~options ~force ~verbose fn: ServerProt.response)
+        let options = { options with Options.
+          opt_output_graphml = graphml;
+          opt_verbose = verbose;
+        } in
+        (check_file ~options ~force fn: ServerProt.response)
           |> marshal
     | ServerProt.COVERAGE (fn, force) ->
         (coverage ~options ~force fn: ServerProt.coverage_response)
@@ -539,7 +546,7 @@ let collate_errors =
         let updates = process_updates genv !env (Utils_js.set_of_list files) in
         env := recheck genv !env updates
     | ServerProt.GEN_FLOW_FILES files ->
-        (gen_flow_files !env files: ServerProt.gen_flow_file_response)
+        (gen_flow_files ~options !env files: ServerProt.gen_flow_file_response)
           |> marshal
     | ServerProt.GET_DEF (fn, line, char) ->
         (get_def ~options client_logging_context (fn, line, char): ServerProt.get_def_response)

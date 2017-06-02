@@ -11,8 +11,17 @@
 type env = Scope.t list
 
 type t
-type metadata = {
+type cacheable_t
+
+type local_metadata = {
   checked: bool;
+  munge_underscores: bool;
+  output_graphml: bool;
+  verbose: Verbose.t option;
+  weak: bool;
+  jsx: Options.jsx_mode option;
+}
+type global_metadata = {
   enable_const_params: bool;
   enable_unsafe_getters_and_setters: bool;
   enforce_strict_type_args: bool;
@@ -24,16 +33,15 @@ type metadata = {
   facebook_fbt: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
-  munge_underscores: bool;
-  output_graphml: bool;
   root: Path.t;
   strip_root: bool;
   suppress_comments: Str.regexp list;
   suppress_types: SSet.t;
-  verbose: Verbose.t option;
-  weak: bool;
   max_workers: int;
-  jsx: Options.jsx_mode option;
+}
+type metadata = {
+  local_metadata: local_metadata;
+  global_metadata: global_metadata;
 }
 type module_kind =
   | CommonJSModule of Loc.t option
@@ -41,6 +49,9 @@ type module_kind =
 
 val make: metadata -> Loc.filename -> string -> t
 val metadata_of_options: Options.t -> metadata
+
+val to_cache: t -> cacheable_t
+val from_cache: options:Options.t -> cacheable_t -> t
 
 (* accessors *)
 val all_unresolved: t -> Type.TypeSet.t IMap.t
@@ -79,8 +90,6 @@ val output_graphml: t -> bool
 val property_maps: t -> Type.Properties.map
 val refs_table: t -> (Loc.t, Loc.t) Hashtbl.t
 val export_maps: t -> Type.Exports.map
-val required: t -> SSet.t
-val require_loc: t -> Loc.t SMap.t
 val root: t -> Path.t
 val facebook_fbt: t -> string option
 val should_ignore_non_literal_requires: t -> bool
@@ -89,7 +98,7 @@ val should_strip_root: t -> bool
 val suppress_comments: t -> Str.regexp list
 val suppress_types: t -> SSet.t
 val type_graph: t -> Graph_explorer.graph
-val type_table: t -> (Loc.t, Type.t) Hashtbl.t
+val type_table: t -> Type_table.t
 val verbose: t -> Verbose.t option
 val max_workers: t -> int
 val jsx: t -> Options.jsx_mode option
@@ -108,7 +117,6 @@ val add_imported_t: t -> string -> Type.t -> unit
 val add_module: t -> string -> Type.t -> unit
 val add_property_map: t -> Type.Properties.id -> Type.Properties.t -> unit
 val add_export_map: t -> Type.Exports.id -> Type.Exports.t -> unit
-val add_require: t -> string -> Loc.t -> unit
 val add_tvar: t -> Constraint.ident -> Constraint.node -> unit
 val add_tvar_reason: t -> Constraint.ident -> Reason.t -> unit
 val add_nominal_id: t -> Constraint.ident -> unit

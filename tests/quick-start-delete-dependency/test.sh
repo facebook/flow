@@ -7,7 +7,7 @@ $FLOW stop .
 mkdir tmp
 
 printf "\nQuick start.\n"
-$FLOW quick-start .
+$FLOW start --lazy .
 
 printf "\nExpect no errors.\n"
 $FLOW status --no-auto-start .

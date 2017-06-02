@@ -205,10 +205,6 @@ module VeryUnstable: ClientProtocol = struct
     let message = try
       Some (Http_lite.read_message_utf8 buffered_stdin)
     with Http_lite.Malformed _ ->
-      (* Currently, Nuclide sends an extra newline after each message to satisfy the implementation
-       * that was previously here. Now, this manifests as a malformed request after each message.
-       * Ignore it while we are transitioning, but still log something in case things go wrong with
-       * the real messages too. *)
       prerr_endline "Received a malformed http message";
       None
     in

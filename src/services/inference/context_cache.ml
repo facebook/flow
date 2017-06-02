@@ -20,13 +20,15 @@ open Utils_js
    context graphs is presumably a lot less than deserializing contexts, so the
    optimization makes sense. *)
 module ContextHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
-  type t = Context.t
+  type t = Context.cacheable_t
   let prefix = Prefix.make()
   let description = "Context"
 end)
 
-let add_context = Expensive.wrap ContextHeap.add
-let find_unsafe_context = Expensive.wrap ContextHeap.find_unsafe
+let add_context = Expensive.wrap (fun file cx -> ContextHeap.add file (Context.to_cache cx))
+let find_unsafe_context = Expensive.wrap (fun ~options file ->
+  Context.from_cache ~options (ContextHeap.find_unsafe file)
+)
 
 let add ~audit cx =
   let cx_file = Context.file cx in
@@ -36,13 +38,15 @@ let remove_batch files =
   ContextHeap.remove_batch files
 
 module SigContextHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
-  type t = Context.t
+  type t = Context.cacheable_t
   let prefix = Prefix.make()
   let description = "SigContext"
 end)
 
-let add_sig_context = Expensive.wrap SigContextHeap.add
-let find_unsafe_sig_context = Expensive.wrap SigContextHeap.find_unsafe
+let add_sig_context = Expensive.wrap (fun file cx -> SigContextHeap.add file (Context.to_cache cx))
+let find_unsafe_sig_context = Expensive.wrap (fun ~options file ->
+  Context.from_cache ~options (SigContextHeap.find_unsafe file)
+)
 
 let add_sig ~audit cx =
   let cx_file = Context.file cx in
@@ -113,9 +117,9 @@ class context_cache = object(self)
     with _ -> None
 
   (* read a context from shared memory, copy its graph, and cache the context *)
-  method read ~audit file =
+  method read ~audit ~options file =
     let orig_cx =
-      try find_unsafe_context ~audit file
+      try find_unsafe_context ~audit ~options file
       with Not_found ->
         raise (Key_not_found ("ContextHeap", (string_of_filename file)))
     in
@@ -123,8 +127,8 @@ class context_cache = object(self)
     Hashtbl.add cached_infer_contexts file cx;
     cx
 
-  method read_safe ~audit file =
-    try Some (self#read ~audit file)
+  method read_safe ~audit ~options file =
+    try Some (self#read ~audit ~options file)
     with Key_not_found _ -> None
 end
 
@@ -140,9 +144,9 @@ class sig_context_cache = object(self)
     with _ -> None
 
   (* read a context from shared memory, copy its graph, and cache the context *)
-  method read ~audit file =
+  method read ~audit ~options file =
     let orig_cx =
-      try find_unsafe_sig_context ~audit file
+      try find_unsafe_sig_context ~audit ~options file
       with Not_found ->
         raise (Key_not_found ("SigContextHeap", (string_of_filename file)))
     in
@@ -150,7 +154,7 @@ class sig_context_cache = object(self)
     Hashtbl.add cached_merge_contexts file cx;
     orig_cx, cx
 
-  method read_safe ~audit file =
-    try Some (self#read ~audit file)
+  method read_safe ~audit ~options file =
+    try Some (self#read ~audit ~options file)
     with Key_not_found _ -> None
 end

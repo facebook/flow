@@ -10674,15 +10674,15 @@ and assert_ground_id cx ?(depth=1) skip ids id =
         assert_ground cx ~depth skip ids t
   )
 
-let enforce_strict cx id =
+let enforce_strict cx id required =
   (* First, compute a set of ids to be skipped by calling `assume_ground`. After
      the call, skip_ids contains precisely those ids that correspond to
      requires/imports. *)
   let skip_ids = ref ISet.empty in
-  SSet.iter (fun r ->
+  List.iter (fun r ->
     let tvar = lookup_module cx r in
     assume_ground cx skip_ids (UseT (UnknownUse, tvar))
-  ) (Context.required cx);
+  ) required;
 
   (* With the computed skip_ids, call `assert_ground` to force annotations while
      walking the graph starting from id. Typically, id corresponds to

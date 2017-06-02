@@ -17,10 +17,9 @@ let mk_loc file line col =
   }
 
 
-let type_at_pos ~options ~client_context ~verbose ~include_raw
-    file content line col =
+let type_at_pos ~options ~client_context ~include_raw file content line col =
   let profiling, cx =
-    match Types_js.typecheck_contents ?verbose ~options content file with
+    match Types_js.typecheck_contents ~options content file with
     | profiling, Some cx, _, _ -> profiling, cx
     | _  -> failwith "Couldn't parse file"
   in

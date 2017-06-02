@@ -154,6 +154,19 @@ let get_docblock
   | Loc.JsonFile _ -> [], Docblock.default_info
   | _ -> Docblock.extract ~max_tokens file content
 
+(* Allow types based on `types_mode`, using the @flow annotation in the
+   file header if possible. Note, this should be consistent with
+   Infer_service.apply_docblock_overrides w.r.t. the metadata.checked flag. *)
+let types_checked types_mode info =
+  match types_mode with
+  | TypesAllowed -> true
+  | TypesForbiddenByDefault ->
+    match Docblock.flow info with
+    | None
+    | Some Docblock.OptOut -> false
+    | Some Docblock.OptIn
+    | Some Docblock.OptInWeak -> true
+
 let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
   try (
     match file with
@@ -162,18 +175,11 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
     | Loc.ResourceFile _ ->
       Parse_skip Skip_resource_file
     | _ ->
-      (* Allow types based on `types_mode`, using the @flow annotation in the
-       file header if possible. *)
-      let types = match types_mode with
-      | TypesAllowed -> true
-      | TypesForbiddenByDefault ->
-          Docblock.isDeclarationFile info ||
-            begin match Docblock.flow info with
-            | None
-            | Some Docblock.OptOut -> false
-            | Some Docblock.OptIn
-            | Some Docblock.OptInWeak -> true
-            end
+      let types =
+        (* either all=true or @flow pragma exists *)
+        types_checked types_mode info ||
+        (* always parse types for .flow files -- NB: will _not_ be inferred *)
+        Docblock.isDeclarationFile info
       in
       (* don't bother to parse if types are disabled *)
       if types
@@ -197,7 +203,7 @@ let calc_requires ast is_react =
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
 let reducer
-  ~types_mode ~use_strict ~max_header_tokens ~quick_start_mode
+  ~types_mode ~use_strict ~max_header_tokens ~lazy_mode
   parse_results
   file
 : results =
@@ -227,19 +233,27 @@ let reducer
              * been added to the modified set simply because a corresponding
              * implementation file was also added. *)
             if not (Loc.check_suffix file Files.flow_ext)
-              (* In quick-start mode, a file is parsed initially but not
+              (* In --lazy mode, a file is parsed initially but not
                  checked, and reparsing it later triggers a check even if the
                  file hasn't changed.
 
                  TODO: this optimization is never hit in this mode, but we can
                  use it if `file` is in the current set of checked files. *)
-              && not quick_start_mode
+              && not lazy_mode
               && (ASTHeap.get_old file = Some ast)
             then parse_results
             else begin
               ASTHeap.add file ast;
               DocblockHeap.add file info;
-              let require_loc = calc_requires ast (info.Docblock.jsx = None) in
+              (* Only calculate requires for files which will actually be
+                 inferred. The only files which are parsed (thus, Parse_ok) but
+                 not inferred are .flow files with no @flow pragma and .json
+                 files. *)
+              let require_loc =
+                if types_checked types_mode info
+                then calc_requires ast (info.Docblock.jsx = None)
+                else SMap.empty
+              in
               RequiresHeap.add file require_loc;
               execute_hook file (Some ast);
               let parse_ok = FilenameSet.add file parse_results.parse_ok in
@@ -296,8 +310,8 @@ let get_defaults ~types_mode ~use_strict options =
   in
   let profile = Options.should_profile options in
   let max_header_tokens = Options.max_header_tokens options in
-  let quick_start_mode = Options.is_quick_start_mode options in
-  types_mode, use_strict, profile, max_header_tokens, quick_start_mode
+  let lazy_mode = Options.is_lazy_mode options in
+  types_mode, use_strict, profile, max_header_tokens, lazy_mode
 
 (***************************** public ********************************)
 
@@ -305,13 +319,13 @@ let next_of_filename_set workers filenames =
   MultiWorker.next workers (FilenameSet.elements filenames)
 
 let parse
-  ~types_mode ~use_strict ~profile ~max_header_tokens ~quick_start_mode
+  ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
   workers next
 : results =
   let t = Unix.gettimeofday () in
   let results = MultiWorker.call
     workers
-    ~job: (List.fold_left (reducer ~types_mode ~use_strict ~max_header_tokens ~quick_start_mode))
+    ~job: (List.fold_left (reducer ~types_mode ~use_strict ~max_header_tokens ~lazy_mode))
     ~neutral: empty_result
     ~merge: merge
     ~next: next in
@@ -329,7 +343,7 @@ let parse
 
   results
 
-let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~quick_start_mode
+let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
     ~options workers files =
   (* save old parsing info for files *)
   ASTHeap.oldify_batch files;
@@ -337,7 +351,7 @@ let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~quick_start_mod
   RequiresHeap.oldify_batch files;
   let next = next_of_filename_set workers files in
   let results =
-    parse ~types_mode ~use_strict ~profile ~max_header_tokens ~quick_start_mode workers next in
+    parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode workers next in
   let modified = results.parse_ok in
   let modified = List.fold_left (fun acc (fail, _, _) ->
     FilenameSet.add fail acc
@@ -358,16 +372,16 @@ let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~quick_start_mod
   modified, results
 
 let parse_with_defaults ?types_mode ?use_strict options workers next =
-  let types_mode, use_strict, profile, max_header_tokens, quick_start_mode =
+  let types_mode, use_strict, profile, max_header_tokens, lazy_mode =
     get_defaults ~types_mode ~use_strict options
   in
-  parse ~types_mode ~use_strict ~profile ~max_header_tokens ~quick_start_mode workers next
+  parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode workers next
 
 let reparse_with_defaults ?types_mode ?use_strict options workers files =
-  let types_mode, use_strict, profile, max_header_tokens, quick_start_mode =
+  let types_mode, use_strict, profile, max_header_tokens, lazy_mode =
     get_defaults ~types_mode ~use_strict options
   in
-  reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~quick_start_mode ~options workers files
+  reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode ~options workers files
 
 let has_ast = ASTHeap.mem
 

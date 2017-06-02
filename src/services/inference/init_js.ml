@@ -76,10 +76,12 @@ let load_lib_files ~master_cx ~options files =
       match parse_lib_file options file with
       | Parsing.Parse_ok ast ->
 
-        let metadata = Context.({ (metadata_of_options options) with
-          checked = false;
-          weak = false;
-        }) in
+        let metadata =
+          let open Context in
+          let metadata = metadata_of_options options in
+          let local_metadata = { metadata.local_metadata with checked = false; weak = false; } in
+          { metadata with local_metadata }
+        in
 
         let cx, syms = Infer.infer_lib_file
           ~metadata ~exclude_syms
@@ -127,10 +129,12 @@ let load_lib_files ~master_cx ~options files =
 let init ~options lib_files =
 
   let master_cx =
-    let metadata = Context.({ (metadata_of_options options) with
-      checked = false;
-      weak = false;
-    }) in
+    let metadata =
+      let open Context in
+      let metadata = metadata_of_options options in
+      let local_metadata = { metadata.local_metadata with checked = false; weak = false; } in
+      { metadata with local_metadata }
+    in
     Flow.fresh_context metadata Loc.Builtins Files.lib_module_ref
   in
 

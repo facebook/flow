@@ -35,8 +35,20 @@ exception Writing_Payload_Exception
 exception Reading_Preamble_Exception
 exception Reading_Payload_Exception
 
+(* We want to marshal exceptions (or at least their message+stacktrace) over  *)
+(* the wire. This type ensures that no one will attempt to pattern-match on   *)
+(* the thing we marshal: 'Values of extensible variant types, for example     *)
+(* exceptions (of extensible type exn), returned by the unmarhsaller should   *)
+(* not be pattern-matched over, because unmarshalling does not preserve the   *)
+(* information required for matching their constructors.'                     *)
+(* https://caml.inria.fr/pub/docs/manual-ocaml/libref/Marshal.html            *)
+type remote_exception_data = {
+  message : string;
+  stack : string;
+}
+
 let preamble_start_sentinel = '\142'
-(** Siez in bytes. *)
+(** Size in bytes. *)
 let preamble_core_size = 4
 let expected_preamble_size = preamble_core_size + 1
 (** Payload size in bytes = 2^31 - 1. *)

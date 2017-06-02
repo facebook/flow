@@ -24,8 +24,7 @@ let explicit_impl_require_strict cx (cx_from, m, r, cx_to) =
 (* Create the export of a resource file on the fly and connect it to its import
    in cxs_to. This happens in some arbitrary cx, so cx_to should have already
    been copied to cx. *)
-let explicit_res_require_strict cx (r, f, cx_to) =
-  let loc = SMap.find_unsafe r (Context.require_loc cx_to) in
+let explicit_res_require_strict cx (r, loc, f, cx_to) =
   (* Recall that a resource file is not parsed, so its export doesn't depend on
      its contents, just its extension. So, we create the export of a resource
      file on the fly by looking at its extension. The general alternative of
@@ -40,8 +39,7 @@ let explicit_res_require_strict cx (r, f, cx_to) =
 
 (* Connect a export of a declared module to its import in cxs_to. This happens
    in some arbitrary cx, so cx_to should have already been copied to cx. *)
-let explicit_decl_require_strict cx (m, resolved_m, cx_to) =
-  let loc = SMap.find_unsafe m (Context.require_loc cx_to) in
+let explicit_decl_require_strict cx (m, loc, resolved_m, cx_to) =
   let reason = Reason.(mk_reason (RCustom m) loc) in
 
   (* lookup module declaration from builtin context *)

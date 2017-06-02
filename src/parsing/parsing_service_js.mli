@@ -47,7 +47,7 @@ val parse:
   use_strict: bool ->
   profile: bool ->
   max_header_tokens: int ->
-  quick_start_mode: bool ->
+  lazy_mode: bool ->
   Worker.t list option ->       (* Some=parallel, None=serial *)
   filename list Bucket.next ->  (* delivers buckets of filenames *)
   results                       (* job results, not asts *)
@@ -68,7 +68,7 @@ val reparse:
   use_strict: bool ->
   profile: bool ->
   max_header_tokens: int ->
-  quick_start_mode: bool ->
+  lazy_mode: bool ->
   options: Options.t ->
   Worker.t list option ->   (* Some=parallel, None=serial *)
   FilenameSet.t ->          (* filenames to reparse *)

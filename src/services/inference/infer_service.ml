@@ -10,32 +10,37 @@
 
 open Utils_js
 
-let apply_docblock_overrides metadata docblock_info =
+let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
   let open Context in
 
-  let metadata = { metadata with jsx = Docblock.jsx docblock_info } in
+  let local_metadata = metadata.local_metadata in
 
-  let metadata = match Docblock.flow docblock_info with
-  | None -> metadata
-  | Some Docblock.OptIn -> { metadata with checked = true; }
-  | Some Docblock.OptInWeak -> { metadata with checked = true; weak = true }
+  let local_metadata = { local_metadata with jsx = Docblock.jsx docblock_info } in
+
+  let local_metadata = match Docblock.flow docblock_info with
+  | None -> local_metadata
+  | Some Docblock.OptIn -> { local_metadata with checked = true; }
+  | Some Docblock.OptInWeak -> { local_metadata with checked = true; weak = true }
 
   (* --all (which sets metadata.checked = true) overrides @noflow, so there are
      currently no scenarios where we'd change checked = true to false. in the
      future, there may be a case where checked defaults to true (but is not
      forced to be true ala --all), but for now we do *not* want to force
      checked = false here. *)
-  | Some Docblock.OptOut -> metadata
+  | Some Docblock.OptOut -> local_metadata
   in
 
-  match Docblock.preventMunge docblock_info with
-  | Some value -> { metadata with munge_underscores = not value; }
-  | None -> metadata
+  let local_metadata = match Docblock.preventMunge docblock_info with
+  | Some value -> { local_metadata with munge_underscores = not value; }
+  | None -> local_metadata
+  in
+
+  { metadata with local_metadata }
 
 (* Given a filename, retrieve the parsed AST, derive a module name,
    and invoke the local (infer) pass. This will build and return a
    fresh context object for the module. *)
-let infer_module ~metadata filename =
+let infer_module ~(metadata: Context.metadata) filename =
   let ast = Parsing_service_js.get_ast_unsafe filename in
   let info = Parsing_service_js.get_docblock_unsafe filename in
   let metadata = apply_docblock_overrides metadata info in

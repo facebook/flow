@@ -65,7 +65,7 @@ let rec variable_decl cx entry = Ast.Statement.(
          now, we create a tvar that will serve as the declared type. Later, we
          will resolve the type annotation and unify it with this tvar. *)
       let t = Flow_js.mk_tvar cx r in
-      Hashtbl.replace (Context.type_table cx) loc t;
+      Type_table.set (Context.type_table cx) loc t;
       bind cx name t id_loc
     | (loc, _) as p ->
       let pattern_name = internal_pattern_name loc in
@@ -85,7 +85,7 @@ let rec variable_decl cx entry = Ast.Statement.(
           let r = repos_reason loc r in
           EvalT (t, DestructuringT (r, Become), mk_id())
         in
-        Hashtbl.replace (Context.type_table cx) loc t;
+        Type_table.set (Context.type_table cx) loc t;
         bind cx name t loc
       )
   ) in
@@ -223,7 +223,7 @@ and statement_decl cx = Ast.Statement.(
     }) ->
       let r = mk_reason (RCustom (spf "declare %s" name)) loc in
       let t = Anno.mk_type_annotation cx SMap.empty r typeAnnotation in
-      Hashtbl.replace (Context.type_table cx) loc t;
+      Type_table.set (Context.type_table cx) loc t;
       Env.bind_declare_var cx name t loc
 
   | (loc, DeclareFunction { DeclareFunction.
@@ -236,7 +236,7 @@ and statement_decl cx = Ast.Statement.(
           let r = mk_reason (RCustom (spf "declare %s" name)) loc in
           let t =
             Anno.mk_type_annotation cx SMap.empty r (Some typeAnnotation) in
-          Hashtbl.replace (Context.type_table cx) loc t;
+          Type_table.set (Context.type_table cx) loc t;
           Env.bind_declare_fun cx name t loc
       | Some func_decl ->
           statement_decl cx (loc, func_decl)
@@ -278,7 +278,7 @@ and statement_decl cx = Ast.Statement.(
         assert false in
       let r = mk_reason (RCustom (spf "module `%s`" name)) loc in
       let t = Flow.mk_tvar cx r in
-      Hashtbl.replace (Context.type_table cx) loc t;
+      Type_table.set (Context.type_table cx) loc t;
       Env.bind_declare_var cx (internal_module_name name) t loc
 
   | _,
@@ -433,7 +433,7 @@ and statement cx = Ast.Statement.(
     );
     let interface_t = Iface_sig.classtype ~check_polarity:false cx iface_sig in
     Flow.unify cx self interface_t;
-    Hashtbl.replace (Context.type_table cx) loc interface_t;
+    Type_table.set (Context.type_table cx) loc interface_t;
     (* interface is a type alias, declare class is a var *)
     Env.(if structural then init_type else init_var ~has_anno:false)
       cx name interface_t loc
@@ -447,7 +447,7 @@ and statement cx = Ast.Statement.(
           let r = mk_reason (RCustom "catch") loc in
           let t = Flow.mk_tvar cx r in
 
-          Hashtbl.replace (Context.type_table cx) loc t;
+          Type_table.set (Context.type_table cx) loc t;
 
           (match Env.in_lex_scope cx (fun () ->
             Scope.(Env.bind_implicit_let
@@ -649,7 +649,7 @@ and statement cx = Ast.Statement.(
         Anno.mk_type_param_declarations cx typeParameters in
       let t = Anno.convert cx typeparams_map right in
       let type_ = poly_type typeparams (DefT (r, TypeT t)) in
-      Hashtbl.replace (Context.type_table cx) loc type_;
+      Type_table.set (Context.type_table cx) loc type_;
       Env.init_type cx name type_ name_loc
 
   (*******************************************************)
@@ -1400,7 +1400,7 @@ and statement cx = Ast.Statement.(
             };
           })
       in
-      Hashtbl.replace (Context.type_table cx) type_table_loc fn_type;
+      Type_table.set (Context.type_table cx) type_table_loc fn_type;
       (match id with
       | Some(_, name) ->
         Env.init_fun cx name fn_type loc
@@ -1429,7 +1429,7 @@ and statement cx = Ast.Statement.(
       let reason = DescFormat.instance_reason name name_loc in
       Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name name_loc;
       let class_t = mk_class cx class_loc reason c in
-      Hashtbl.replace (Context.type_table cx) class_loc class_t;
+      Type_table.set (Context.type_table cx) class_loc class_t;
       Env.init_implicit_let
         Scope.Entry.ClassNameBinding
         cx
@@ -2047,7 +2047,7 @@ and object_prop cx map = Ast.Expression.Object.(function
     }) ->
     let {Ast.Function.id; _} = func in
     let ft = mk_function id cx vloc func in
-    Hashtbl.replace (Context.type_table cx) vloc ft;
+    Type_table.set (Context.type_table cx) vloc ft;
     if _method then
       Properties.add_method name ft map
     else begin
@@ -2301,7 +2301,7 @@ and mixin_element_spread cx (loc, e) =
 
 and expression ?(is_cond=false) cx (loc, e) =
   let t = expression_ ~is_cond cx loc e in
-  Hashtbl.replace (Context.type_table cx) loc t;
+  Type_table.set (Context.type_table cx) loc t;
   t
 
 and this_ cx loc = Ast.Expression.(
@@ -2344,7 +2344,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         typeAnnotation } ->
       let r = mk_reason (RCustom "typecast") loc in
       let t = Anno.mk_type_annotation cx SMap.empty r (Some typeAnnotation)
-      in Hashtbl.replace (Context.type_table cx) loc t;
+      in Type_table.set (Context.type_table cx) loc t;
       let infer_t = expression cx e in
       Flow.flow_t cx (infer_t, t);
       t
@@ -2921,7 +2921,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 and predicated_call_expression cx (loc, callee, arguments) =
   let (f, argks, argts, t) =
     predicated_call_expression_ cx loc callee arguments in
-  Hashtbl.replace (Context.type_table cx) loc t;
+  Type_table.set (Context.type_table cx) loc t;
   (f, argks, argts, t)
 
 (* Returns a quadruple containing:
@@ -4039,7 +4039,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
         let prop_reason = mk_reason (RProperty (Some "isArray")) prop_loc in
         Flow.flow cx (obj_t, GetPropT (reason, Named (prop_reason, "isArray"), t))
       ) in
-      Hashtbl.replace (Context.type_table cx) prop_loc fn_t;
+      Type_table.set (Context.type_table cx) prop_loc fn_t;
       let bool = BoolT.at loc in
 
       match refinable_lvalue arg with

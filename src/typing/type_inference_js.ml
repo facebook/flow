@@ -19,12 +19,12 @@ module Utils = Utils_js
 (* Driver *)
 (**********)
 
-let force_annotations cx =
+let force_annotations cx require_loc_map =
   let m = Context.module_ref cx in
   let tvar = Flow_js.lookup_module cx m in
   let _, id = Type.open_tvar tvar in
   let before = Errors.ErrorSet.cardinal (Context.errors cx) in
-  Flow_js.enforce_strict cx id;
+  Flow_js.enforce_strict cx id (SMap.keys require_loc_map);
   let after = Errors.ErrorSet.cardinal (Context.errors cx) in
   if (after > before) then
     Context.add_tvar cx id Constraint.(Root {
@@ -114,10 +114,7 @@ let infer_ast ~metadata ~filename ast ~require_loc_map =
 
   let initial_module_t = ImpExp.module_t_of_cx cx in
   if checked then (
-    SMap.iter (fun r loc ->
-      Context.add_require cx r loc;
-      Import_export.add_module_tvar cx r loc;
-    ) require_loc_map;
+    SMap.iter (Import_export.add_module_tvar cx) require_loc_map;
 
     let init_exports = Flow.mk_object cx reason in
     ImpExp.set_module_exports cx file_loc init_exports;
@@ -151,7 +148,7 @@ let infer_ast ~metadata ~filename ast ~require_loc_map =
   );
 
   (* insist that whatever type flows into exports is fully annotated *)
-  force_annotations cx;
+  force_annotations cx require_loc_map;
 
   cx
 
@@ -169,10 +166,7 @@ let infer_lib_file ~metadata ~exclude_syms file ast =
   let mapper = new Require.mapper false in
   let _ = mapper#program ast in
   let require_loc = mapper#requires in
-  SMap.iter (fun r loc ->
-    Context.add_require cx r loc;
-    Import_export.add_module_tvar cx r loc;
-  ) require_loc;
+  SMap.iter (Import_export.add_module_tvar cx) require_loc;
 
   let module_scope = Scope.fresh () in
   Env.init_env ~exclude_syms cx module_scope;
