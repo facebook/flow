@@ -14,15 +14,12 @@ open Utils_js
 
    TODO maybe make this suppressable
 *)
-let check_require r loc resolved_r cx =
-  if not (Module_js.module_exists resolved_r)
-  then
-    let reason = Reason.mk_reason (Reason.RCustom r) loc in
-
-    let m_name = Modulename.to_string resolved_r in
-    let tvar = Flow_js.mk_tvar cx reason in
-    Flow_js.lookup_builtin cx (Reason.internal_module_name m_name)
-      reason (Type.Strict (Reason.builtin_reason (Reason.RCustom m_name))) tvar
+let missing_required_module r loc resolved_r cx =
+  let reason = Reason.mk_reason (Reason.RCustom r) loc in
+  let m_name = Modulename.to_string resolved_r in
+  let tout = Type.(DefT (reason, MixedT Mixed_everything)) in
+  Flow_js.lookup_builtin cx (Reason.internal_module_name m_name)
+    reason (Type.Strict (Reason.builtin_reason (Reason.RCustom m_name))) tout
 
 (* To merge the contexts of a component (component_cxs) with their dependencies,
    we call the functions `merge_component_strict` and `restore` defined
@@ -92,6 +89,7 @@ let merge_strict_context_with_required ~options cache component_cxs required =
             impls, res, (r, loc, fake_resolved, cx_to) :: decls
       | None ->
           (* implementation doesn't exist *)
+          missing_required_module r loc resolved_r cx_to;
           orig_sig_cxs, sig_cxs,
           impls, res, (r, loc, resolved_r, cx_to) :: decls
       )
@@ -114,7 +112,6 @@ let merge_strict_context ~options cache component_cxs =
     SMap.fold (fun r loc ->
       let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
         file r in
-      check_require r loc resolved_r cx;
       List.cons (r, loc, resolved_r, cx)
     ) require_loc_map required
   ) [] component_cxs in
@@ -129,7 +126,6 @@ let merge_contents_context ~options cache cx require_loc_map =
         ~options
         ~node_modules_containers:!Files.node_modules_containers
         (Context.file cx) loc r in
-      check_require r loc resolved_r cx;
       List.cons (r, loc, resolved_r, cx)
     ) require_loc_map []
   in
