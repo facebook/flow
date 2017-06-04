@@ -48,8 +48,73 @@ addons:
 
 before_install: bash -e resources/travis/before_install.sh
 install: bash -e resources/travis/install_deps.sh
-script: bash -e resources/travis/build.sh
-before_deploy: bash -e resources/travis/before_deploy.sh
+
+jobs:
+  include:
+    - stage: build
+      script: bash -e resources/travis/build.sh
+      before_deploy: bash -e resources/travis/before_deploy.sh
+      deploy:
+      # upload releases to github, from both Mac and Linux
+      - provider: releases
+        api_key:
+          # flow-bot
+          secure: "l3R6GrPhrqUIXlAcknFA7rKllPmVsY/1cOGtctxFQ6++oC3xd+XawIMVAR78ZtUoirZ+/3KYdY6o3SoGMb6olgnSerR/CXktP4DXuUK6XlHGRxqSRCclWra3DnJutlaiafnurhIruRMIvXeTYiO2Q1MU/nyQVKZtOhJJHEBg0Mc="
+        repo: facebook/flow
+        skip_cleanup: true
+        file_glob: true
+        file: flow-*.zip
+        on:
+          tags: true
+          condition:
+          - $OCAML_VERSION = 4.03.0
+          - $OPAM_VERSION = 1.2.0
+
+      # Deploy the parser to npm
+      - provider: script
+        repo: facebook/flow
+        script: bash -e resources/travis/deploy_npm.sh
+        skip_cleanup: true
+        on:
+          tags: true
+          condition:
+          - $TRAVIS_OS_NAME = linux
+          - $OCAML_VERSION = 4.03.0
+          - $OPAM_VERSION = 1.2.0
+
+      # Deploy the website
+      - provider: script
+        repo: facebook/flow
+        script: bash -e resources/travis/deploy.sh
+        skip_cleanup: true
+        on:
+          branch: master
+          condition:
+          - $TRAVIS_TAG != "" || $TRAVIS_BRANCH = "master"
+          - $TRAVIS_OS_NAME = linux
+          - $OCAML_VERSION = 4.03.0
+          - $OPAM_VERSION = 1.2.0
+
+      # Upload release versions of flow.js
+      - provider: s3
+        access_key_id: "$AWS_ACCESS_KEY_ID"
+        secret_access_key: "$AWS_SECRET_ACCESS_KEY"
+        bucket: "$S3_BUCKET"
+        skip_cleanup: true
+        local_dir: "$HOME/static"
+        upload-dir: static
+        on:
+          tags: true
+          condition:
+          - $TRAVIS_OS_NAME = linux
+          - $OCAML_VERSION = 4.03.0
+          - $OPAM_VERSION = 1.2.0
+
+    - stage: build
+      script: bash -e resources/travis/build_js.sh
+
+    - stage: build
+      script: bash -e resources/travis/build_ocp.sh
 
 cache:
   directories:
@@ -61,62 +126,6 @@ cache:
 
 before_cache:
   - rm -rf $HOME/.flow_cache/ocaml-*/.opam/log
-
-deploy:
-# upload releases to github, from both Mac and Linux
-- provider: releases
-  api_key:
-    # flow-bot
-    secure: "l3R6GrPhrqUIXlAcknFA7rKllPmVsY/1cOGtctxFQ6++oC3xd+XawIMVAR78ZtUoirZ+/3KYdY6o3SoGMb6olgnSerR/CXktP4DXuUK6XlHGRxqSRCclWra3DnJutlaiafnurhIruRMIvXeTYiO2Q1MU/nyQVKZtOhJJHEBg0Mc="
-  repo: facebook/flow
-  skip_cleanup: true
-  file_glob: true
-  file: flow-*.zip
-  on:
-    tags: true
-    condition:
-    - $OCAML_VERSION = 4.03.0
-    - $OPAM_VERSION = 1.2.0
-
-# Deploy the parser to npm
-- provider: script
-  repo: facebook/flow
-  script: bash -e resources/travis/deploy_npm.sh
-  skip_cleanup: true
-  on:
-    tags: true
-    condition:
-    - $TRAVIS_OS_NAME = linux
-    - $OCAML_VERSION = 4.03.0
-    - $OPAM_VERSION = 1.2.0
-
-# Deploy the website
-- provider: script
-  repo: facebook/flow
-  script: bash -e resources/travis/deploy.sh
-  skip_cleanup: true
-  on:
-    branch: master
-    condition:
-    - $TRAVIS_TAG != "" || $TRAVIS_BRANCH = "master"
-    - $TRAVIS_OS_NAME = linux
-    - $OCAML_VERSION = 4.03.0
-    - $OPAM_VERSION = 1.2.0
-
-# Upload release versions of flow.js
-- provider: s3
-  access_key_id: "$AWS_ACCESS_KEY_ID"
-  secret_access_key: "$AWS_SECRET_ACCESS_KEY"
-  bucket: "$S3_BUCKET"
-  skip_cleanup: true
-  local_dir: "$HOME/static"
-  upload-dir: static
-  on:
-    tags: true
-    condition:
-    - $TRAVIS_OS_NAME = linux
-    - $OCAML_VERSION = 4.03.0
-    - $OPAM_VERSION = 1.2.0
 
 # The use of secure prevents forks from spamming irc and email.
 # See https://github.com/travis-ci/travis-ci/issues/5063
