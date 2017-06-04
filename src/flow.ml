@@ -67,7 +67,7 @@ end = struct
     | [] -> failwith "Expected command"
     | _cmd::[] -> (default_command, [])
     | _cmd::next::rest ->
-        let subcmd = String.lowercase next in
+        let subcmd = String.lowercase_ascii next in
         try
           let command = List.find (fun command ->
             (CommandSpec.name command) = subcmd

@@ -324,7 +324,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     | None -> "computed property"
     in
     let msg = spf "%s %s incompatible with %s use in"
-      (String.capitalize (Polarity.string p1))
+      (String.capitalize_ascii (Polarity.string p1))
       prop_name
       (Polarity.string p2)
     in
@@ -958,7 +958,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
            You may opt-in to using them anyway in Flow by putting \
            `esproposal.%s=enable` into the [options] section of your \
            .flowconfig."
-          (String.capitalize config_name)
+          (String.capitalize_ascii config_name)
           config_key
       ]]
 

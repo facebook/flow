@@ -68,7 +68,7 @@ module Command(CommandList : COMMAND_LIST) = struct
       print_endline (String.concat " " commands)
     ) else (
       try
-        let cmdstr = String.lowercase (List.nth rest 1) in
+        let cmdstr = String.lowercase_ascii (List.nth rest 1) in
         let command = CommandList.commands |> List.find (fun (command) ->
           CommandSpec.name command = cmdstr
         ) in

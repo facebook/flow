@@ -313,7 +313,7 @@ end
    and try to keep it from being too horrendously expensive *)
 
 let case_sensitive =
-  not (Sys.file_exists (String.uppercase (Sys.getcwd ())))
+  not (Sys.file_exists (String.uppercase_ascii (Sys.getcwd ())))
 
 (* map of dirs to file lists *)
 (** TODO [perf]: investigate whether this takes too much memory **)

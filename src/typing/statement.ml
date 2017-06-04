@@ -3390,7 +3390,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
     end
 
   | Identifier (loc, { Identifier.name }), _, _
-      when name = String.capitalize name ->
+      when name = String.capitalize_ascii name ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc
     then AnyT.at eloc
     else begin
