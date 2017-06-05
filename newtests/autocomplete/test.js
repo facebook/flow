@@ -418,13 +418,21 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "localeCompare",
-               "type": "(that: string) => number",
+               "type": "(that: string, locales?: string | Array<string>, options?: Object) => number",
                "func_details": {
                  "return_type": "number",
                  "params": [
                    {
                      "name": "that",
                      "type": "string"
+                   },
+                   {
+                     "name": "locales?",
+                     "type": "string | Array<string>"
+                   },
+                   {
+                     "name": "options?",
+                     "type": "Object"
                    }
                  ]
                },
@@ -432,7 +440,7 @@ export default suite(({addFile, flowCmd}) => [
                "line": 288,
                "endline": 288,
                "start": 5,
-               "end": 39
+               "end": 91
              },
              {
                "name": "match",
