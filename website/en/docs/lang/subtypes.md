@@ -8,22 +8,22 @@ A type like `number`, `boolean`, or `string` describes a set of possible
 values. A `number` describes every possible number, so a single number
 (such as `42`) would be a *subtype* of the `number` type.
 
-If we want to know if one type is the subtype of another. We need to look at
+If we want to know whether one type is the subtype of another, we need to look at
 all the possible values for both types and figure out if the other has a
 _subset_ of the values.
 
 For example, if we had a `TypeA` which described the numbers 1 through 3, and
-a `TypeB` which described the numbers 1 through 5. `TypeA` would be considered
-a _subtype_ of `TypeB` because `TypeA` is a subset of `TypeB`.
+a `TypeB` which described the numbers 1 through 5: `TypeA` would be considered
+a _subtype_ of `TypeB`, because `TypeA` is a subset of `TypeB`.
 
 ```js
 type TypeA = 1 | 2 | 3;
 type TypeB = 1 | 2 | 3 | 4 | 5;
 ```
 
-If we had a `TypeLetters` which described the strings: "A", "B", "C", and a
+Consider a `TypeLetters` which described the strings: "A", "B", "C", and a
 `TypeNumbers` which described the numbers: 1, 2, 3. Neither of them would
-be a subtype of the other, as they contain a completely different set of
+be a subtype of the other, as they each contain a completely different set of
 values.
 
 ```js
@@ -46,8 +46,8 @@ type TypeB =         3 | 4 | 5;
 Most of the work that Flow does is comparing types against one another.
 
 For example, in order to know if you are calling a function correctly, Flow
-needs to compare the arguments you are passing to the function with the
-parameters the function expects.
+needs to compare the arguments you are passing with the parameters the
+function expects.
 
 This often means figuring out if the value you are passing in is a subtype of
 the value you are expecting.
@@ -72,7 +72,7 @@ method(numsB); // Error!
 ## Subtypes of complex types <a class="toc" id="toc-subtypes-of-complex-types" href="#toc-subtypes-of-complex-types"></a>
 
 Flow needs to compare more than just sets of primitive values, it also needs to
-be able to compare objects, function, and everything that appears in the
+be able to compare objects, functions, and every other type that appears in the
 language.
 
 #### Subtypes of objects <a class="toc" id="toc-subtypes-of-objects" href="#toc-subtypes-of-objects"></a>
@@ -108,8 +108,8 @@ let objectA: ObjectA = objectB; // Error!
 ```
 
 If these values on the object happen to be other objects, we would have to
-compare those against one another. Comparing every value recursively until we
-can decide if we have a subtype or not.
+compare those against one another. We need to compare every value 
+recursively until we can decide if we have a subtype or not.
 
 #### Subtypes of functions <a class="toc" id="toc-subtypes-of-functions" href="#toc-subtypes-of-functions"></a>
 
