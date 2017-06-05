@@ -15,26 +15,14 @@ env:
   # CLOUDFRONT_ID
   - secure: SbgDWLAqwxJ+/4MdyVDv+ImlPCNIqEc+qMfLmn606QB20ocnS4C8KtKFgZERVcPdBkMiZ2XR5Bk8jrGxPgw0WfxsABe0nxCWn8x6vIUFuScPK4SalTqksNOEuHmSxK4YgmIa855B6KRPQKQyG5HCxWrH2IvDBg7TkCvQG+Rz5cc=
 
-# NOTE: We set the compiler to a bogus "no-op" bash command (":") to work around
-# a Travis caching limitation: the cache slug only depends on the compiler name,
-# not any other environment vars, so we fake the compiler name to change the
-# cache slug. Using `language: cpp` ensures that the `CC` env is set to `gcc`
-# instead of our bogus value.
-#
-# Alternatively, if Travis had ocaml support, it would presumably include the
-# ocaml version in the slug like it does for other languages.
-#
-# See https://github.com/travis-ci/travis-ci/issues/4393
-language: cpp
+language: generic
 matrix:
   include:
-    - compiler: ": Linux, ocaml 4.03.0, opam 1.2.0"
-      os: linux
-      env: OCAML_VERSION=4.03.0 OPAM_VERSION=1.2.0
+    - os: linux
+      env: OCAML_VERSION=4.03.0 OPAM_VERSION=1.2.2
 
-    - compiler: ": Mac, ocaml 4.03.0, opam 1.2.0"
-      os: osx
-      env: OCAML_VERSION=4.03.0 OPAM_VERSION=1.2.0
+    - os: osx
+      env: OCAML_VERSION=4.03.0 OPAM_VERSION=1.2.2
 
 addons:
   apt:
@@ -76,7 +64,7 @@ deploy:
     tags: true
     condition:
     - $OCAML_VERSION = 4.03.0
-    - $OPAM_VERSION = 1.2.0
+    - $OPAM_VERSION = 1.2.2
 
 # Deploy the parser to npm
 - provider: script
@@ -88,7 +76,7 @@ deploy:
     condition:
     - $TRAVIS_OS_NAME = linux
     - $OCAML_VERSION = 4.03.0
-    - $OPAM_VERSION = 1.2.0
+    - $OPAM_VERSION = 1.2.2
 
 # Deploy the website
 - provider: script
@@ -101,7 +89,7 @@ deploy:
     - $TRAVIS_TAG != "" || $TRAVIS_BRANCH = "master"
     - $TRAVIS_OS_NAME = linux
     - $OCAML_VERSION = 4.03.0
-    - $OPAM_VERSION = 1.2.0
+    - $OPAM_VERSION = 1.2.2
 
 # Upload release versions of flow.js
 - provider: s3
@@ -116,7 +104,7 @@ deploy:
     condition:
     - $TRAVIS_OS_NAME = linux
     - $OCAML_VERSION = 4.03.0
-    - $OPAM_VERSION = 1.2.0
+    - $OPAM_VERSION = 1.2.2
 
 # The use of secure prevents forks from spamming irc and email.
 # See https://github.com/travis-ci/travis-ci/issues/5063
