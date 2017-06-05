@@ -50,15 +50,8 @@ else
 fi
 
 echo "Initializing OPAM..."
-"$OPAM" init \
-  --no-setup --yes --quiet \
-  -k local flow resources/opam \
-  --comp "$OCAML_VERSION" >/dev/null
+"$OPAM" init --yes --quiet --comp "$OCAML_VERSION" >/dev/null
 eval $("$OPAM" config env)
-("$OPAM" repository list --short | grep "\bdefault\b" >/dev/null) || \
-  "$OPAM" repository --yes \
-    add default "https://opam.ocaml.org" --priority=-1 >/dev/null
-
 "$OPAM" repository list
 
 echo "Installing dependencies..."
