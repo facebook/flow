@@ -13,8 +13,8 @@ advanced_arrows.js:11
 arrows.js:7
   7:     images = images.sort((a, b) => (a.width - b.width) + "");
                                         ^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with the expected param type of
-258:     sort(compareFn?: (a: T, b: T) => number): Array<T>;
-                                          ^^^^^^ number. See lib: <BUILTINS>/core.js:258
+260:     sort(compareFn?: (a: T, b: T) => number): Array<T>;
+                                          ^^^^^^ number. See lib: <BUILTINS>/core.js:260
 
 
 Found 3 errors
