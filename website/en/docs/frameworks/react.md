@@ -49,7 +49,7 @@ a class field annotation and assign `defaultProps` after the class declaration.
 
 ```js
 class MyComponent extends React.Component {
-  static defaultProps: {
+  props: {
     prop1: string
   };
 }
