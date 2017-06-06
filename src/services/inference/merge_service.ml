@@ -119,16 +119,18 @@ let merge_strict_context ~options cache component_cxs =
 
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
-let merge_contents_context ~options cache cx require_loc_map =
-  let required =
-    SMap.fold (fun r loc ->
+let merge_contents_context ~options cache cx require_loc_map ~ensure_checked_dependencies =
+  let resolved_rs, required =
+    SMap.fold (fun r loc (resolved_rs, required) ->
       let resolved_r = Module_js.imported_module
         ~options
         ~node_modules_containers:!Files.node_modules_containers
         (Context.file cx) loc r in
-      List.cons (r, loc, resolved_r, cx)
-    ) require_loc_map []
+      Module_js.NameSet.add resolved_r resolved_rs,
+      (r, loc, resolved_r, cx) :: required
+    ) require_loc_map (Module_js.NameSet.empty, [])
   in
+  ensure_checked_dependencies resolved_rs;
   (merge_strict_context_with_required ~options cache [cx] required: Context.t)
   |> ignore
 

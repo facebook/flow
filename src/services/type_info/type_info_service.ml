@@ -17,9 +17,9 @@ let mk_loc file line col =
   }
 
 
-let type_at_pos ~options ~client_context ~include_raw file content line col =
+let type_at_pos ~options ~workers ~env ~client_context ~include_raw file content line col =
   let profiling, cx =
-    match Types_js.typecheck_contents ~options content file with
+    match Types_js.typecheck_contents ~options ~workers ~env content file with
     | profiling, Some cx, _, _ -> profiling, cx
     | _  -> failwith "Couldn't parse file"
   in
@@ -65,7 +65,7 @@ let type_at_pos ~options ~client_context ~include_raw file content line col =
   (loc, ty, raw_type, reasons)
 
 
-let dump_types ~options ~include_raw ~strip_root file content =
+let dump_types ~options ~workers ~env ~include_raw ~strip_root file content =
   (* Print type using Flow type syntax *)
   let printer = Type_printer.string_of_t in
 
@@ -78,14 +78,14 @@ let dump_types ~options ~include_raw ~strip_root file content =
       else None
     in
 
-  let cx = match Types_js.typecheck_contents ~options content file with
+  let cx = match Types_js.typecheck_contents ~options ~workers ~env content file with
   | _, Some cx, _, _ -> cx
   | _  -> failwith "Couldn't parse file" in
 
   Query_types.dump_types printer raw_printer cx
 
 
-let coverage ~options ~force file content =
+let coverage ~options ~workers ~env ~force file content =
   let should_check =
     if force then
       true
@@ -94,7 +94,7 @@ let coverage ~options ~force file content =
         Parsing_service_js.get_docblock Docblock.max_tokens file content in
       Docblock.is_flow docblock
   in
-  let cx = match Types_js.typecheck_contents ~options content file with
+  let cx = match Types_js.typecheck_contents ~options ~workers ~env content file with
   | _, Some cx, _, _ -> cx
   | _  -> failwith "Couldn't parse file" in
   let types = Query_types.covered_types cx in
@@ -104,9 +104,9 @@ let coverage ~options ~force file content =
     types |> List.map (fun (loc, _) -> (loc, false))
 
 
-let suggest ~options file region content =
+let suggest ~options ~workers ~env file region content =
   let cx =
-    match Types_js.typecheck_contents ~options content file with
+    match Types_js.typecheck_contents ~options ~workers ~env content file with
     | _, Some cx, _, _ -> cx
     | _  -> failwith "Couldn't parse file" in
   Query_types.fill_types cx

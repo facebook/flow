@@ -1,0 +1,32 @@
+
+Stop any already-running server.
+
+Quick start.
+
+Expect no errors.
+No errors!
+
+Check contents with dependency, expect errors in contents.
+test.js:2
+  2: (require('./dependency'): string);
+      ^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+  2: (require('./dependency'): string);
+                               ^^^^^^ string
+
+
+Found 1 error
+
+Expect errors in dependency.
+dependency.js:2
+  2: module.exports = ("hello": number);
+                       ^^^^^^^ string. This type is incompatible with
+  2: module.exports = ("hello": number);
+                                ^^^^^^ number
+
+
+Found 1 error
+
+Unsaved files don't have dependents, as in non-lazy mode.
+No errors!
+
+Done!

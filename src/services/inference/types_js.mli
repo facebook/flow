@@ -20,6 +20,8 @@ val server_init:
 
 val typecheck_contents:
   options: Options.t ->
+  workers: Worker.t list option ->
+  env: ServerEnv.env ref ->
   ?check_syntax: bool ->
   string ->               (* contents *)
   filename ->             (* fake file-/module name *)

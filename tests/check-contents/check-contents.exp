@@ -48,3 +48,8 @@ not_flow.js:1
 
 
 Found 1 error
+
+
+unsaved_foo.js depends on bar.js which is still checked against foo.js
+
+No errors!
