@@ -130,6 +130,11 @@ function get_tests(root_dir) {
     var case_parts = path.basename(file).split('.');
     var case_name = case_parts[0];
 
+    // Hack to ignore hidden files.
+    if (case_name === '') {
+      continue;
+    }
+
     var cases = (tests[test_name] = tests[test_name] || {});
     var case_ = (cases[case_name] = cases[case_name] || {});
 
