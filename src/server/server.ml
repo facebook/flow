@@ -93,7 +93,7 @@ let collate_errors =
        explicitly *)
     die ()
 
-  let autocomplete ~options command_context file_input =
+  let autocomplete ~options ~workers ~env command_context file_input =
     let path, content = match file_input with
       | File_input.FileName _ -> failwith "Not implemented"
       | File_input.FileContent (_, content) ->
@@ -104,7 +104,7 @@ let collate_errors =
       try
         let path = Loc.SourceFile path in
         let profiling, cx, parse_result =
-          match Types_js.typecheck_contents ~options content path with
+          match Types_js.typecheck_contents ~options ~workers ~env content path with
           | profiling, Some cx, _, parse_result -> profiling, cx, parse_result
           | _  -> failwith "Couldn't parse file"
         in
@@ -121,7 +121,7 @@ let collate_errors =
     Autocomplete_js.autocomplete_unset_hooks ();
     results
 
-  let check_file ~options ~force file_input =
+  let check_file ~options ~workers ~env ~force file_input =
     let file = File_input.filename_of_file_input file_input in
     match file_input with
     | File_input.FileName _ -> failwith "Not implemented"
@@ -141,7 +141,7 @@ let collate_errors =
         if should_check then
           let file = Loc.SourceFile file in
           let checked = Types_js.typecheck_contents
-            ~options ~check_syntax:true content file in
+            ~options ~workers ~env ~check_syntax:true content file in
           let errors = match checked with
           | _, _, errors, _ -> errors
           in
@@ -157,14 +157,14 @@ let collate_errors =
       _end = { Loc.line; column = col + 1; offset = 0; };
     }
 
-  let infer_type ~options client_context (file_input, line, col, verbose, include_raw) =
+  let infer_type ~options ~workers ~env client_context (file_input, line, col, verbose, include_raw) =
     let file = File_input.filename_of_file_input file_input in
     let file = Loc.SourceFile file in
     let response = (try
       let content = File_input.content_of_file_input file_input in
       let options = { options with Options.opt_verbose = verbose } in
       Ok (Type_info_service.type_at_pos
-        ~options ~client_context ~include_raw
+        ~options ~workers ~env ~client_context ~include_raw
         file content line col
       )
     with exn ->
@@ -175,37 +175,37 @@ let collate_errors =
     ) in
     response
 
-  let dump_types ~options ~include_raw ~strip_root file_input =
+  let dump_types ~options ~workers ~env ~include_raw ~strip_root file_input =
     let file = File_input.filename_of_file_input file_input in
     let file = Loc.SourceFile file in
     try
       let content = File_input.content_of_file_input file_input in
       Ok (Type_info_service.dump_types
-        ~options ~include_raw ~strip_root file content
+        ~options ~workers ~env ~include_raw ~strip_root file content
       )
     with exn ->
       Error (Printexc.to_string exn)
 
-  let coverage ~options ~force file_input =
+  let coverage ~options ~workers ~env ~force file_input =
     let file = File_input.filename_of_file_input file_input in
     let file = Loc.SourceFile file in
     try
       let content = File_input.content_of_file_input file_input in
-      Ok (Type_info_service.coverage ~options ~force file content)
+      Ok (Type_info_service.coverage ~options ~workers ~env ~force file content)
     with exn ->
       Error (Printexc.to_string exn)
 
   let suggest =
-    let suggest_for_file ~options result_map (file, region) =
+    let suggest_for_file ~options ~workers ~env result_map (file, region) =
       (try
-         let insertions = Type_info_service.suggest ~options
+         let insertions = Type_info_service.suggest ~options ~workers ~env
            (Loc.SourceFile file) region (cat file) in
          SMap.add file (Ok insertions) result_map
       with exn ->
         SMap.add file (Error (Printexc.to_string exn)) result_map
       )
-    in fun ~options files ->
-      List.fold_left (suggest_for_file ~options) SMap.empty files
+    in fun ~options ~workers ~env files ->
+      List.fold_left (suggest_for_file ~options ~workers ~env) SMap.empty files
 
   (* NOTE: currently, not only returns list of annotations, but also writes a
      timestamped file with annotations *)
@@ -293,7 +293,7 @@ let collate_errors =
     in
     result
 
-  let find_refs ~options (file_input, line, col) =
+  let find_refs ~options ~workers ~env (file_input, line, col) =
     let filename = File_input.filename_of_file_input file_input in
     let file = Loc.SourceFile filename in
     let loc = mk_loc file line col in
@@ -301,7 +301,7 @@ let collate_errors =
     let result =
       try
         let content = File_input.content_of_file_input file_input in
-        let cx = match Types_js.typecheck_contents ~options content file with
+        let cx = match Types_js.typecheck_contents ~options ~workers ~env content file with
           | _, Some cx, _, _ -> cx
           | _  -> failwith "Couldn't parse file"
         in
@@ -312,14 +312,14 @@ let collate_errors =
     FindRefs_js.unset_hooks ();
     result
 
-  let get_def ~options command_context (file_input, line, col) =
+  let get_def ~options ~workers ~env command_context (file_input, line, col) =
     let filename = File_input.filename_of_file_input file_input in
     let file = Loc.SourceFile filename in
     let loc = mk_loc file line col in
     let state = GetDef_js.getdef_set_hooks loc in
     let result = try
       let content = File_input.content_of_file_input file_input in
-      let profiling, cx = match Types_js.typecheck_contents ~options content file with
+      let profiling, cx = match Types_js.typecheck_contents ~options ~workers ~env content file with
         | profiling, Some cx, _, _ -> profiling, cx
         | _  -> failwith "Couldn't parse file"
       in
@@ -515,10 +515,11 @@ let collate_errors =
       flush oc
     in
     let options = genv.ServerEnv.options in
+    let workers = genv.ServerEnv.workers in
     begin match command with
     | ServerProt.AUTOCOMPLETE fn ->
         let results: ServerProt.autocomplete_response =
-          autocomplete ~options client_logging_context fn
+          autocomplete ~options ~workers ~env client_logging_context fn
         in
         marshal results
     | ServerProt.CHECK_FILE (fn, verbose, graphml, force) ->
@@ -526,19 +527,19 @@ let collate_errors =
           opt_output_graphml = graphml;
           opt_verbose = verbose;
         } in
-        (check_file ~options ~force fn: ServerProt.response)
+        (check_file ~options ~workers ~env ~force fn: ServerProt.response)
           |> marshal
     | ServerProt.COVERAGE (fn, force) ->
-        (coverage ~options ~force fn: ServerProt.coverage_response)
+        (coverage ~options ~workers ~env ~force fn: ServerProt.coverage_response)
           |> marshal
     | ServerProt.DUMP_TYPES (fn, include_raw, strip_root) ->
-        (dump_types ~options ~include_raw ~strip_root fn: ServerProt.dump_types_response)
+        (dump_types ~options ~workers ~env ~include_raw ~strip_root fn: ServerProt.dump_types_response)
           |> marshal
     | ServerProt.FIND_MODULE (moduleref, filename) ->
         (find_module ~options (moduleref, filename): filename option)
           |> marshal
     | ServerProt.FIND_REFS (fn, line, char) ->
-        (find_refs ~options (fn, line, char): ServerProt.find_refs_response)
+        (find_refs ~options ~workers ~env (fn, line, char): ServerProt.find_refs_response)
           |> marshal
     | ServerProt.FORCE_RECHECK (files) ->
         Marshal.to_channel oc () [];
@@ -549,14 +550,14 @@ let collate_errors =
         (gen_flow_files ~options !env files: ServerProt.gen_flow_file_response)
           |> marshal
     | ServerProt.GET_DEF (fn, line, char) ->
-        (get_def ~options client_logging_context (fn, line, char): ServerProt.get_def_response)
+        (get_def ~options ~workers ~env client_logging_context (fn, line, char): ServerProt.get_def_response)
           |> marshal
     | ServerProt.GET_IMPORTS module_names ->
         get_imports ~options module_names
           |> marshal
     | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
         (infer_type
-            ~options
+            ~options ~workers ~env
             client_logging_context
             (fn, line, char, verbose, include_raw) : ServerProt.infer_type_response)
           |> marshal
@@ -581,7 +582,7 @@ let collate_errors =
           | _ -> ()
         end
     | ServerProt.SUGGEST (files) ->
-        (suggest ~options files: ServerProt.suggest_response)
+        (suggest ~options ~workers ~env files: ServerProt.suggest_response)
           |> marshal
     | ServerProt.CONNECT ->
         let new_connections =
@@ -595,20 +596,22 @@ let collate_errors =
     !env
 
   let respond_to_persistent_client genv env client msg =
+    let env = ref env in
     let options = genv.ServerEnv.options in
+    let workers = genv.ServerEnv.workers in
     match msg with
       | Persistent_connection_prot.Subscribe ->
-          let errorl, _ = collate_errors env.errors in
+          let errorl, _ = collate_errors !env.errors in
           let new_connections =
-            Persistent_connection.subscribe_client env.connections client errorl
+            Persistent_connection.subscribe_client !env.connections client errorl
           in
-          { env with connections = new_connections }
+          { !env with connections = new_connections }
       | Persistent_connection_prot.Autocomplete (file_input, id) ->
           let client_logging_context = Persistent_connection.get_logging_context client in
-          let results = autocomplete ~options client_logging_context file_input in
+          let results = autocomplete ~options ~workers ~env client_logging_context file_input in
           let wrapped = Persistent_connection_prot.AutocompleteResult (results, id) in
           Persistent_connection.send_message wrapped client;
-          env
+          !env
 
   let should_close = function
     | { ServerProt.command = ServerProt.CONNECT; _ } -> false

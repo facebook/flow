@@ -20,6 +20,7 @@ val merge_contents_context:
   Context_cache.context_cache ->
   Context.t ->
   Loc.t SMap.t ->
+  ensure_checked_dependencies: (Module_js.NameSet.t -> unit) ->
   unit
 val merge_strict:
   options: Options.t ->

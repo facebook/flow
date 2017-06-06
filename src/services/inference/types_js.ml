@@ -71,115 +71,22 @@ let with_timer ?options timer profiling f =
 
   (profiling, ret)
 
-(* Another special case, similar assumptions as above. *)
-(** TODO: handle case when file+contents don't agree with file system state **)
-let typecheck_contents ~options ?(check_syntax=false) contents filename =
-  let profiling = Profiling_js.empty in
+let parse_contents ~options ~profiling ~check_syntax filename contents =
+  with_timer "Parsing" profiling (fun () ->
+    (* always enable types when checking an individual file *)
+    let types_mode = Parsing_service_js.TypesAllowed in
+    let use_strict = Options.modules_are_use_strict options in
+    let max_tokens = Options.max_header_tokens options in
 
-  (* always enable types when checking an individual file *)
-  let types_mode = Parsing_service_js.TypesAllowed in
-  let use_strict = Options.modules_are_use_strict options in
-  let max_tokens = Options.max_header_tokens options in
-  let profiling, (docblock_errors, parse_result, info) =
-    with_timer "Parsing" profiling (fun () ->
-      let docblock_errors, info =
-        Parsing_service_js.get_docblock ~max_tokens filename contents in
-      let parse_result = Parsing_service_js.do_parse
-        ~fail:check_syntax ~types_mode ~use_strict ~info
-        contents filename
-      in
-      docblock_errors, parse_result, info
-    )
-  in
-
-  let errors = Inference_utils.set_of_docblock_errors docblock_errors in
-
-  match parse_result with
-  | Parsing_service_js.Parse_ok ast ->
-      (* defaults *)
-      let metadata = Context.metadata_of_options options in
-      let metadata =
-        let checked, weak = Docblock.(
-          match flow info with
-          | None ->
-            (* If the file does not specify a @flow pragma, we still want to try
-               to infer something, but the file might be huge and unannotated,
-               which can cause performance issues (including non-termination).
-               To avoid this case, we infer the file using "weak mode." *)
-            true, true
-          | Some OptIn ->
-            (* Respect @flow pragma *)
-            true, false
-          | Some OptInWeak ->
-            (* Respect @flow weak pragma *)
-            true, true
-          | Some OptOut ->
-            (* Respect @noflow, which `apply_docblock_overrides` does not by
-               default. Again, large files can cause non-termination, so
-               respecting this pragma gives programmers a way to tell Flow to
-               avoid inference on such files. *)
-            false, false
-        ) in
-        let local_metadata = { metadata.Context.local_metadata with Context.checked; weak } in
-        { metadata with Context.local_metadata }
-      in
-      (* apply overrides from the docblock *)
-      let metadata = Infer_service.apply_docblock_overrides metadata info in
-      let require_loc_map = Parsing_service_js.calc_requires ast (info.Docblock.jsx = None) in
-
-      (* infer *)
-      let profiling, cx = with_timer "Infer" profiling (fun () ->
-        Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map
-      ) in
-
-      (* write graphml of (unmerged) types, if requested *)
-      if Options.output_graphml options then begin
-        let fn = Loc.string_of_filename filename in
-        let graphml = spf "%s.graphml"
-          (if fn = "-" then "contents" else fn) in
-        let lines = Graph.format cx in
-        let oc = open_out graphml in
-        List.iter (output_string oc) lines;
-        close_out oc
-      end;
-
-      (* merge *)
-      let cache = new Context_cache.context_cache in
-      let profiling, () = with_timer "Merge" profiling (fun () ->
-        Merge_service.merge_contents_context ~options cache cx require_loc_map
-      ) in
-
-      (* Filter out suppressed errors *)
-      let error_suppressions = Context.error_suppressions cx in
-      let errors = Errors.ErrorSet.fold (fun err errors ->
-        let locs = Errors.locs_of_error err in
-        let suppressed, _, _ =
-          Error_suppressions.check locs error_suppressions in
-        if not suppressed
-        then Errors.ErrorSet.add err errors
-        else errors
-      ) (Context.errors cx) errors in
-
-      profiling, Some cx, errors, info
-
-  | Parsing_service_js.Parse_fail fails ->
-      let errors = match fails with
-      | Parsing_service_js.Parse_error err ->
-          let err = Inference_utils.error_of_parse_error err in
-          Errors.ErrorSet.add err errors
-      | Parsing_service_js.Docblock_errors errs ->
-          List.fold_left (fun errors err ->
-            let err = Inference_utils.error_of_docblock_error err in
-            Errors.ErrorSet.add err errors
-          ) errors errs
-      in
-      profiling, None, errors, info
-
-  | Parsing_service_js.Parse_skip
-     (Parsing_service_js.Skip_non_flow_file
-    | Parsing_service_js.Skip_resource_file) ->
-      (* should never happen *)
-      profiling, None, errors, info
+    let docblock_errors, info =
+      Parsing_service_js.get_docblock ~max_tokens filename contents in
+    let errors = Inference_utils.set_of_docblock_errors docblock_errors in
+    let parse_result = Parsing_service_js.do_parse
+      ~fail:check_syntax ~types_mode ~use_strict ~info
+      contents filename
+    in
+    errors, parse_result, info
+  )
 
 (* commit providers for old and new modules, collect errors. *)
 let commit_modules ~options profiling ~workers
@@ -378,6 +285,135 @@ let typecheck
   | None ->
     profiling, unchanged_checked, { ServerEnv.local_errors; merge_errors; suppressions; }
 
+(* When checking contents, ensure that dependencies are checked. Might have more
+   general utility. *)
+let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
+  if Options.is_lazy_mode options
+  then begin
+    let dependencies = Module_js.(NameSet.fold (fun m acc ->
+      match get_file m ~audit:Expensive.warn with
+      | Some f -> f :: acc
+      | None -> acc (* complain elsewhere about required module not found *)
+    ) resolved_requires []) in
+    let profiling = Profiling_js.empty in
+    let errors = !env.ServerEnv.errors in
+    let unchanged_checked = !env.ServerEnv.checked_files in
+    let infer_input = dependencies in
+    let parsed = FilenameSet.elements !env.ServerEnv.files in
+    let all_dependent_files = FilenameSet.empty in
+    let persistent_connections = Some (!env.ServerEnv.connections) in
+    let _profiling, checked, errors = typecheck ~options ~profiling ~workers ~errors
+      ~unchanged_checked ~infer_input
+      ~parsed ~all_dependent_files
+      ~persistent_connections
+      ~make_merge_input:(fun inferred ->
+        Some (inferred,
+              inferred |> List.fold_left (fun map f ->
+                FilenameMap.add f true map
+              ) FilenameMap.empty)
+      ) in
+    env := { !env with ServerEnv.
+      checked_files = checked;
+      errors
+    }
+  end
+
+(* Another special case, similar assumptions as above. *)
+(** TODO: handle case when file+contents don't agree with file system state **)
+let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents filename =
+  let profiling = Profiling_js.empty in
+
+  let profiling, (errors, parse_result, info) =
+    parse_contents ~options ~profiling ~check_syntax filename contents in
+
+  match parse_result with
+  | Parsing_service_js.Parse_ok ast ->
+      (* defaults *)
+      let metadata = Context.metadata_of_options options in
+      let metadata =
+        let checked, weak = Docblock.(
+          match flow info with
+          | None ->
+            (* If the file does not specify a @flow pragma, we still want to try
+               to infer something, but the file might be huge and unannotated,
+               which can cause performance issues (including non-termination).
+               To avoid this case, we infer the file using "weak mode." *)
+            true, true
+          | Some OptIn ->
+            (* Respect @flow pragma *)
+            true, false
+          | Some OptInWeak ->
+            (* Respect @flow weak pragma *)
+            true, true
+          | Some OptOut ->
+            (* Respect @noflow, which `apply_docblock_overrides` does not by
+               default. Again, large files can cause non-termination, so
+               respecting this pragma gives programmers a way to tell Flow to
+               avoid inference on such files. *)
+            false, false
+        ) in
+        let local_metadata = { metadata.Context.local_metadata with Context.checked; weak } in
+        { metadata with Context.local_metadata }
+      in
+      (* apply overrides from the docblock *)
+      let metadata = Infer_service.apply_docblock_overrides metadata info in
+      let require_loc_map = Parsing_service_js.calc_requires ast (info.Docblock.jsx = None) in
+
+      (* infer *)
+      let profiling, cx = with_timer "Infer" profiling (fun () ->
+        Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map
+      ) in
+
+      (* write graphml of (unmerged) types, if requested *)
+      if Options.output_graphml options then begin
+        let fn = Loc.string_of_filename filename in
+        let graphml = spf "%s.graphml"
+          (if fn = "-" then "contents" else fn) in
+        let lines = Graph.format cx in
+        let oc = open_out graphml in
+        List.iter (output_string oc) lines;
+        close_out oc
+      end;
+
+      (* merge *)
+      let cache = new Context_cache.context_cache in
+      let profiling, () = with_timer "Merge" profiling (fun () ->
+        let ensure_checked_dependencies = ensure_checked_dependencies ~options ~workers ~env in
+        Merge_service.merge_contents_context ~options cache cx require_loc_map
+           ~ensure_checked_dependencies
+      ) in
+
+      (* Filter out suppressed errors *)
+      let error_suppressions = Context.error_suppressions cx in
+      let errors = Errors.ErrorSet.fold (fun err errors ->
+        let locs = Errors.locs_of_error err in
+        let suppressed, _, _ =
+          Error_suppressions.check locs error_suppressions in
+        if not suppressed
+        then Errors.ErrorSet.add err errors
+        else errors
+      ) (Context.errors cx) errors in
+
+      profiling, Some cx, errors, info
+
+  | Parsing_service_js.Parse_fail fails ->
+      let errors = match fails with
+      | Parsing_service_js.Parse_error err ->
+          let err = Inference_utils.error_of_parse_error err in
+          Errors.ErrorSet.add err errors
+      | Parsing_service_js.Docblock_errors errs ->
+          List.fold_left (fun errors err ->
+            let err = Inference_utils.error_of_docblock_error err in
+            Errors.ErrorSet.add err errors
+          ) errors errs
+      in
+      profiling, None, errors, info
+
+  | Parsing_service_js.Parse_skip
+     (Parsing_service_js.Skip_non_flow_file
+    | Parsing_service_js.Skip_resource_file) ->
+      (* should never happen *)
+      profiling, None, errors, info
 
 (* We maintain the following invariant across rechecks: The set of
    `files` contains files that parsed successfully in the previous
