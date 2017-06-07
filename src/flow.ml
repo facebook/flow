@@ -116,7 +116,11 @@ let _ =
   | SharedMem_js.Out_of_shared_memory ->
       FlowExitStatus.(exit Out_of_shared_memory)
   | e ->
-      let msg = Utils.spf "Unhandled exception: %s" (Printexc.to_string e) in
+      let bt = Printexc.get_backtrace () in
+      let msg = Utils.spf "Unhandled exception: %s%s"
+        (Printexc.to_string e)
+        (if bt = "" then bt else "\n"^bt)
+      in
       FlowExitStatus.(exit ~msg Unknown_error)
 
 (* If we haven't exited yet, let's exit now for logging's sake *)
