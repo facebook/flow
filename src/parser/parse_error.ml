@@ -19,6 +19,7 @@ type t =
   | UnexpectedEOS
   | UnexpectedVariance
   | UnexpectedTypeAlias
+  | UnexpectedOpaqueTypeAlias
   | UnexpectedTypeAnnotation
   | UnexpectedTypeDeclaration
   | UnexpectedTypeImport
@@ -69,6 +70,7 @@ type t =
   | DeclareExportLet
   | DeclareExportConst
   | DeclareExportType
+  | DeclareExportOpaqueType
   | DeclareExportInterface
   | UnexpectedExportStarAs
   | DuplicateExport of string
@@ -107,6 +109,7 @@ module PP =
       | UnexpectedEOS ->  "Unexpected end of input"
       | UnexpectedVariance -> "Unexpected variance sigil"
       | UnexpectedTypeAlias -> "Type aliases are not allowed in untyped mode"
+      | UnexpectedOpaqueTypeAlias -> "Opaque type aliases are not allowed in untyped mode"
       | UnexpectedTypeAnnotation -> "Type annotations are not allowed in untyped mode"
       | UnexpectedTypeDeclaration -> "Type declarations are not allowed in untyped mode"
       | UnexpectedTypeImport -> "Type imports are not allowed in untyped mode"
@@ -166,6 +169,8 @@ module PP =
           `declare export var` instead."
       | DeclareExportType -> "`declare export type` is not supported. Use \
           `export type` instead."
+      | DeclareExportOpaqueType -> "`declare export opaque type` is not supported. Use \
+          `export opaque type` instead."
       | DeclareExportInterface -> "`declare export interface` is not supported. Use \
           `export interface` instead."
       | UnexpectedExportStarAs -> "`export * as` is an early-stage proposal \

@@ -134,6 +134,7 @@ end with type t = Impl.t) = struct
       |]
     )
   | loc, TypeAlias alias -> type_alias (loc, alias)
+  | loc, OpaqueType opaque_t -> opaque_type (loc, opaque_t)
   | loc, Switch switch -> Switch.(
       node "SwitchStatement" loc [|
         "discriminant", expression switch.discriminant;
@@ -241,6 +242,7 @@ end with type t = Impl.t) = struct
           | Some (Class c) -> declare_class c
           | Some (DefaultType t) -> _type t
           | Some (NamedType t) -> type_alias t
+          | Some (NamedOpaqueType t) -> opaque_type t
           | Some (Interface i) -> interface_declaration i
           | None -> null
           in
@@ -651,6 +653,14 @@ end with type t = Impl.t) = struct
       "id", identifier alias.id;
       "typeParameters", option type_parameter_declaration alias.typeParameters;
       "right", _type alias.right;
+    |]
+  )
+
+  and opaque_type (loc, opaque_t) =  Statement.OpaqueType.(
+    node "OpaqueType" loc [|
+      "id", identifier opaque_t.id;
+      "typeParameters", option type_parameter_declaration opaque_t.typeParameters;
+      "right", _type opaque_t.right;
     |]
   )
 

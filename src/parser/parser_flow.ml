@@ -154,6 +154,7 @@ module rec Parse : PARSER = struct
     | T_INTERFACE -> interface env
     | T_DECLARE -> declare env
     | T_TYPE -> type_alias env
+    | T_OPAQUE -> opaque_type env
     | _ -> statement env)
 
   and statement env =
@@ -243,6 +244,7 @@ module rec Parse : PARSER = struct
     | T_OF
     | T_ASYNC
     | T_AWAIT
+    | T_OPAQUE
     | T_TYPE as t ->
         (* These aren't real identifiers *)
         Expect.token env t

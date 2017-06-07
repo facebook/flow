@@ -77,6 +77,7 @@ type t =
   | T_DEBUGGER
   | T_DECLARE
   | T_TYPE
+  | T_OPAQUE
   | T_OF
   | T_ASYNC
   | T_AWAIT
@@ -207,6 +208,7 @@ let token_to_string = function
   | T_DEBUGGER -> "T_DEBUGGER"
   | T_DECLARE -> "T_DECLARE"
   | T_TYPE -> "T_TYPE"
+  | T_OPAQUE -> "T_OPAQUE"
   | T_OF -> "T_OF"
   | T_ASYNC -> "T_ASYNC"
   | T_AWAIT -> "T_AWAIT"

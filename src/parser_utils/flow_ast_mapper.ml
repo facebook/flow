@@ -119,6 +119,7 @@ class mapper = object(this)
     | (_loc, DeclareVariable _) -> stmt
     | (_loc, InterfaceDeclaration _) -> stmt
     | (_loc, TypeAlias _) -> stmt
+    | (_loc, OpaqueType _) -> stmt
 
   method comment (c: Ast.Comment.t) = c
 

@@ -385,6 +385,7 @@ let _ = List.iter (fun (key, token) -> Hashtbl.add keywords key token)
     "debugger", T_DEBUGGER;
     "declare", T_DECLARE;
     "type", T_TYPE;
+    "opaque", T_OPAQUE;
     "of", T_OF;
     "async", T_ASYNC;
     "await", T_AWAIT;

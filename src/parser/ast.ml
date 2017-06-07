@@ -259,6 +259,13 @@ and Statement : sig
       right: Type.t;
     }
   end
+  module OpaqueType: sig
+    type t = {
+      id: Identifier.t;
+      typeParameters: Type.ParameterDeclaration.t option;
+      right: Type.t;
+    }
+  end
   module Switch : sig
     module Case : sig
       type t = Loc.t * t'
@@ -436,6 +443,8 @@ and Statement : sig
       | DefaultType of Type.t
       (* declare export type *)
       | NamedType of (Loc.t * TypeAlias.t)
+      (* declare export opaque type *)
+      | NamedOpaqueType of (Loc.t * OpaqueType.t)
       (* declare export interface *)
       | Interface of (Loc.t * Interface.t)
 
@@ -510,6 +519,7 @@ and Statement : sig
     | Throw of Throw.t
     | Try of Try.t
     | TypeAlias of TypeAlias.t
+    | OpaqueType of OpaqueType.t
     | VariableDeclaration of VariableDeclaration.t
     | While of While.t
     | With of With.t

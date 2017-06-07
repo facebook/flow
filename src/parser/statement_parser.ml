@@ -36,6 +36,7 @@ module type STATEMENT = sig
  val import_declaration: env -> Statement.t
  val interface: env -> Statement.t
  val maybe_labeled: env -> Statement.t
+ val opaque_type : env -> Statement.t
  val return: env -> Statement.t
  val switch: env -> Statement.t
  val throw: env -> Statement.t
@@ -522,6 +523,35 @@ module Statement
     else
       Parse.statement env
 
+  and opaque_type_helper env =
+    let start_loc = Peek.loc env in
+    if not (should_parse_types env)
+    then error env Error.UnexpectedOpaqueTypeAlias;
+    Expect.token env T_OPAQUE;
+    Expect.token env T_TYPE;
+    Eat.push_lex_mode env Lex_mode.TYPE;
+    let id = Parse.identifier env in
+    let typeParameters = Type.type_parameter_declaration_with_defaults env in
+    Expect.token env T_ASSIGN;
+    let right = Type._type env in
+    let end_loc = match Peek.semicolon_loc env with
+    | None -> fst right
+    | Some end_loc -> end_loc in
+    Eat.semicolon env;
+    Eat.pop_lex_mode env;
+    Loc.btwn start_loc end_loc, Statement.OpaqueType.({
+      id;
+      typeParameters;
+      right;
+    })
+
+  and opaque_type env =
+    match Peek.token ~i:1 env with
+      T_TYPE ->
+        let loc, opaque_t = opaque_type_helper env in
+        loc, Statement.OpaqueType opaque_t
+    | _ -> Parse.statement env
+
   and interface_helper =
     let rec supers env acc =
       let super = Type.generic env in
@@ -776,6 +806,14 @@ module Statement
             Expect.token env T_DECLARE;
             type_alias env;
         )
+      | T_OPAQUE -> (
+          match Peek.token env with
+          | T_IMPORT when in_module ->
+              import_declaration env
+          | _ ->
+              Expect.token env T_DECLARE;
+              opaque_type env;
+        )
       | T_TYPEOF when (Peek.token env) = T_IMPORT ->
         import_declaration env
       | T_FUNCTION ->
@@ -939,23 +977,28 @@ module Statement
             exportKind = Statement.ExportType;
           }
         | _ ->
-          let type_alias = type_alias env in
-          (match type_alias with
-            | (loc, Statement.TypeAlias {Statement.TypeAlias.id; _;}) ->
-              record_export env (loc, extract_ident_name id)
-            | _ -> failwith (
-                "Internal Flow Error! Parsed `export type` into something " ^
-                "other than a type alias!"
-              )
-          );
-          let end_loc = fst type_alias in
-          Loc.btwn start_loc end_loc, Statement.ExportNamedDeclaration {
+          let loc, type_alias = type_alias_helper env in
+          record_export env (loc, extract_ident_name type_alias.Statement.TypeAlias.id);
+          let type_alias = (loc, Statement.TypeAlias type_alias) in
+          Loc.btwn start_loc loc, Statement.ExportNamedDeclaration {
             declaration = Some type_alias;
             specifiers = None;
             source = None;
             exportKind = Statement.ExportType;
           }
         )
+    | T_OPAQUE ->
+        (* export opaque type ... *)
+        let open Statement.ExportNamedDeclaration in
+        let loc, opaque_t = opaque_type_helper env in
+        record_export env (loc, extract_ident_name opaque_t.Statement.OpaqueType.id);
+        let opaque_t = (loc, Statement.OpaqueType opaque_t) in
+        Loc.btwn start_loc loc, Statement.ExportNamedDeclaration {
+          declaration = Some opaque_t;
+          specifiers = None;
+          source = None;
+          exportKind = Statement.ExportType;
+        }
     | T_INTERFACE ->
         (* export interface I { ... } *)
         let open Statement.ExportNamedDeclaration in
@@ -1186,6 +1229,16 @@ module Statement
           specifiers = None;
           source = None;
         })
+    | T_OPAQUE when allow_export_type ->
+        (* declare export opaque type = ... *)
+        let (opaque_loc, opaque_t) = opaque_type_helper env in
+        let loc = Loc.btwn start_loc opaque_loc in
+        (loc, Statement.DeclareExportDeclaration {
+          default = false;
+            declaration = Some (NamedOpaqueType (opaque_loc, opaque_t));
+            specifiers = None;
+            source = None;
+        })
     | T_INTERFACE when allow_export_type ->
         (* declare export interface ... *)
         let (iface_loc, iface) = interface_helper env in
@@ -1199,6 +1252,7 @@ module Statement
     | _ ->
         (match Peek.token env with
           | T_TYPE -> error env Error.DeclareExportType
+          | T_OPAQUE -> error env Error.DeclareExportOpaqueType
           | T_INTERFACE -> error env Error.DeclareExportInterface
           | _ -> ()
         );

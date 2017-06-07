@@ -142,6 +142,11 @@ and statement_decl cx = Ast.Statement.(
       let tvar = Flow.mk_tvar cx r in
       Env.bind_type cx name tvar name_loc
 
+  | (_, OpaqueType { OpaqueType.id = (name_loc, name); _ } ) ->
+      let r = DescFormat.type_reason name name_loc in
+      let tvar = Flow.mk_tvar cx r in
+      Env.bind_type cx name tvar name_loc
+
   | (_, Switch { Switch.cases; _ }) ->
       Env.in_lex_scope cx (fun () ->
         cases |> List.iter (fun (_, { Switch.Case.consequent; _ }) ->
@@ -295,6 +300,8 @@ and statement_decl cx = Ast.Statement.(
         | Some (DefaultType _) -> ()
         | Some (NamedType (loc, t)) ->
             statement_decl cx (loc, TypeAlias t)
+        | Some (NamedOpaqueType (loc, t)) ->
+            statement_decl cx (loc, OpaqueType t)
         | Some (Interface (loc, i)) ->
             statement_decl cx (loc, InterfaceDeclaration i)
         | None ->
@@ -644,6 +651,15 @@ and statement cx = Ast.Statement.(
       ()
 
   | (loc, TypeAlias {TypeAlias.id=(name_loc, name); typeParameters; right;}) ->
+      let r = DescFormat.type_reason name name_loc in
+      let typeparams, typeparams_map =
+        Anno.mk_type_param_declarations cx typeParameters in
+      let t = Anno.convert cx typeparams_map right in
+      let type_ = poly_type typeparams (DefT (r, TypeT t)) in
+      Type_table.set (Context.type_table cx) loc type_;
+      Env.init_type cx name type_ name_loc
+
+  | (loc, OpaqueType {OpaqueType.id=(name_loc, name); typeParameters; right;}) ->
       let r = DescFormat.type_reason name name_loc in
       let typeparams, typeparams_map =
         Anno.mk_type_param_declarations cx typeParameters in
@@ -1571,6 +1587,13 @@ and statement cx = Ast.Statement.(
           } as talias))) ->
             statement cx (talias_loc, TypeAlias talias);
             [(spf "type %s = ..." name, name_loc, name, None)], ExportType
+        | Some (NamedOpaqueType (opaque_loc, ({
+            OpaqueType.
+            id = (name_loc, name);
+            _;
+          } as opaque_t))) ->
+            statement cx (opaque_loc, OpaqueType opaque_t);
+            [(spf "opauqe type %s = ..." name, name_loc, name, None)], ExportType
         | Some (Interface (loc, i)) ->
             let {Interface.id = (name_loc, name); _;} = i in
             statement cx (loc, InterfaceDeclaration i);
@@ -1630,6 +1653,9 @@ and statement cx = Ast.Statement.(
           | _, TypeAlias {TypeAlias.id; _} ->
             let name = ident_name id in
             [(spf "type %s = ..." name, loc, name, None)]
+          | _, OpaqueType {OpaqueType.id; _} ->
+            let name = ident_name id in
+            [(spf "opaque type %s = ..." name, loc, name, None)]
           | _, InterfaceDeclaration {Interface.id; _} ->
             let name = ident_name id in
             [(spf "interface %s = ..." name, loc, name, None)]
@@ -1671,6 +1697,9 @@ and statement cx = Ast.Statement.(
           | _, TypeAlias {TypeAlias.id; _} ->
             let name = ident_name id in
             [(spf "type %s = ..." name, loc, name, None)]
+          | _, OpaqueType {OpaqueType .id; _} ->
+            let name = ident_name id in
+            [(spf "opaque type %s = ..." name, loc, name, None)]
           | _, InterfaceDeclaration {Interface.id; _} ->
             let name = ident_name id in
             [(spf "interface %s = ..." name, loc, name, None)]

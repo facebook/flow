@@ -29,6 +29,7 @@ def("DeclareExportDeclaration")
     def("DeclareClass"),
     def("Type"), // Implies default type
     def("TypeAlias"), // Implies named type
+    def("OpaqueType"), // Implies named opaque type
     def("InterfaceDeclaration"),
     null
   ))
@@ -37,6 +38,17 @@ def("DeclareExportAllDeclaration")
     .bases("Declaration")
     .build("source")
     .field("source", def("Literal"));
+
+def("OpaqueType")
+  .bases("Declaration")
+  .build("id", "typeParameters", "right")
+  .field("id", def("Identifier"))
+  .field("typeParameters", or(def("TypeParameterDeclaration"), null))
+  .field("right", def("Type"));
+
+def("DeclareOpaqueType")
+  .bases("TypeAlias")
+  .build("id", "typeParameters", "right");
 
 
 // TODO: should be named NullableClassDeclaration. estree allows a nameless
@@ -65,6 +77,7 @@ def("ExportDefaultDeclaration")
       def("VariableDeclaration"),
       def("InterfaceDeclaration"),
       def("TypeAlias"),
+      def("OpaqueType"),
       def("Expression")))
     .field("exportKind", or("type", "value"));
 

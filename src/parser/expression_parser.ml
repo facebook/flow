@@ -948,6 +948,7 @@ module Expression
     | T_IDENTIFIER
     | T_OF
     | T_TYPE
+    | T_OPAQUE
       -> Parse.identifier env, None
     | _ ->
       let err = match lex_token with

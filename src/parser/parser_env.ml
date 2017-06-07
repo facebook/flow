@@ -390,6 +390,7 @@ module Peek = struct
       is_future_reserved name-> true
     | T_LET
     | T_TYPE
+    | T_OPAQUE
     | T_OF
     | T_DECLARE
     | T_ASYNC
