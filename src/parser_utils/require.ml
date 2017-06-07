@@ -10,7 +10,7 @@
 
 (* Mapper class that performs actual renaming. Uses the walker class above.
 *)
-class mapper is_react = object
+class mapper ~default_jsx = object
   inherit Flow_ast_mapper.mapper as super
 
   (* TODO: these are not really mutable, they're re-initialized below *)
@@ -97,7 +97,7 @@ class mapper is_react = object
     | Identifier (_, { Identifier.name }) ->
       if name = "fbt" then ()
       else begin
-        if is_react then requires <- SMap.add "react" require_loc requires
+        if default_jsx then requires <- SMap.add "react" require_loc requires
       end
     | _ -> ()
     end;
