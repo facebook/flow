@@ -10,11 +10,17 @@
 
 open Utils_js
 
+val init:
+  profiling:Profiling_js.t ->
+  workers:Worker.t list option ->
+  Options.t ->
+  Profiling_js.t * FilenameSet.t * SSet.t * bool * ServerEnv.errors
+
 (* incremental typecheck entry point *)
 val recheck: ServerEnv.genv -> ServerEnv.env -> updates:FilenameSet.t -> ServerEnv.env
 
-(* hh_server initial (full) check *)
-val server_init:
+(* initial (full) check *)
+val full_check:
   focus_target:Loc.filename option ->
   ServerEnv.genv -> Profiling_js.t * ServerEnv.env
 

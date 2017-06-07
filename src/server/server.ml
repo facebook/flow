@@ -24,8 +24,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     (* write binary path and version to server log *)
     Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
     Hh_logger.info "version=%s" Flow_version.version;
-    (* start the server *)
-    Types_js.server_init ~focus_target genv
+    (* compute initial state *)
+    Types_js.full_check ~focus_target genv
 
   let status_log errors =
     if Errors.ErrorSet.is_empty errors

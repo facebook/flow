@@ -858,29 +858,40 @@ let files_to_infer ~workers ~focus_target parsed_list =
       []
   | _ -> parsed_list
 
-(* full typecheck *)
-let full_check workers ~ordered_libs ~focus_target parse_next options =
-  let merge_errors = FilenameMap.empty in
-  let suppressions = FilenameMap.empty in
+(* creates a closure that lists all files in the given root, returned in chunks *)
+let make_next_files ~libs ~file_options root =
+  let make_next_raw =
+    Files.make_next_files ~root ~all:false ~subdir:None ~options:file_options ~libs in
+  fun () ->
+    make_next_raw ()
+    |> List.map (Files.filename_from_string ~options:file_options)
+    |> Bucket.of_list
 
-  let profiling = Profiling_js.empty in
+let init ~profiling ~workers options =
+  let file_options = Options.file_options options in
+  let ordered_libs, libs = Files.init file_options in
+  let next_files = make_next_files ~libs ~file_options (Options.root options) in
 
   Hh_logger.info "Parsing";
   let profiling, (parsed, unparsed, local_errors) =
-    parse ~options ~profiling ~workers parse_next in
+    parse ~options ~profiling ~workers next_files in
 
   Hh_logger.info "Building package heap";
   let profiling = init_package_heap ~options ~profiling parsed in
 
   Hh_logger.info "Loading libraries";
   let profiling, (libs_ok, local_errors, suppressions) =
+    let suppressions = FilenameMap.empty in
     init_libs ~options ~profiling ~local_errors ~suppressions ordered_libs in
 
-  let errors = { ServerEnv.local_errors; merge_errors; suppressions } in
-
-  let parsed_list = FilenameSet.elements parsed in
-
+  Hh_logger.info "Resolving dependencies";
   let profiling, _, errors =
+    let parsed_list = FilenameSet.elements parsed in
+    let errors = { ServerEnv.
+      local_errors;
+      merge_errors = FilenameMap.empty;
+      suppressions;
+    } in
     let all_files = List.fold_left (fun acc (filename, _) ->
       filename::acc
     ) parsed_list unparsed in
@@ -895,9 +906,20 @@ let full_check workers ~ordered_libs ~focus_target parse_next options =
       ~errors
   in
 
+  profiling, parsed, libs, libs_ok, errors
+
+(* initialize flow server state, including full check *)
+let full_check ~focus_target genv =
+  let profiling = Profiling_js.empty in
+
+  let workers = genv.ServerEnv.workers in
+  let options = genv.ServerEnv.options in
+
+  let profiling, parsed, libs, libs_ok, errors = init ~profiling ~workers options in
+
   let parsed_list =
     if Options.is_lazy_mode options then []
-    else parsed_list in
+    else FilenameSet.elements parsed in
 
   let infer_input = files_to_infer ~workers ~focus_target parsed_list in
 
@@ -921,27 +943,6 @@ let full_check workers ~ordered_libs ~focus_target parse_next options =
         ) FilenameMap.empty)
     )
   in
-
-  (profiling, parsed, checked, errors)
-
-(* initialize flow server state, including full check *)
-let server_init ~focus_target genv =
-  let options = genv.ServerEnv.options in
-  let root = Options.root options in
-  let file_options = Options.file_options options in
-
-  let ordered_libs, libs = Files.init file_options in
-
-  let get_next_raw : unit -> string list =
-    Files.make_next_files ~root ~all:false ~subdir:None ~options:file_options ~libs in
-  let get_next = fun () ->
-    get_next_raw ()
-    |> List.map (Files.filename_from_string ~options:file_options)
-    |> Bucket.of_list
-  in
-
-  let (profiling, parsed, checked, errors) = full_check
-    genv.ServerEnv.workers ~ordered_libs ~focus_target get_next options in
 
   let profiling = SharedMem.(
     let dep_stats = dep_stats () in
