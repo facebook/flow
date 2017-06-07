@@ -631,12 +631,12 @@ module Expression
     let value = match number_type with
     | LEGACY_OCTAL ->
       strict_error env Error.StrictOctalLiteral;
-      begin try Int64.to_float (Int64.of_string ("0o"^value))
+      begin try Lexer.FloatOfString.float_of_string ("0o"^value)
       with Failure _ -> failwith ("Invalid legacy octal "^value)
       end
     | BINARY
     | OCTAL ->
-      begin try Int64.to_float (Int64.of_string value)
+      begin try Lexer.FloatOfString.float_of_string value
       with Failure _ -> failwith ("Invalid binary/octal "^value)
       end
     | NORMAL ->
