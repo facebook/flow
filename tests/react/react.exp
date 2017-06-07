@@ -1,3 +1,10 @@
+Library type error:
+<BUILTINS>/react.js:251
+251:     callback?: () => void
+                    ^^^^^^^^^^ function type. Callable signature not found in
+ 23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
+                                                                  ^^ object literal. See: render_callback.js:23
+
 createElementRequiredProp_string.js:5
               v
   5:   props: {
@@ -1037,5 +1044,23 @@ proptypes_sealed.js:22
  22:     this.props.baz = 0;
          ^^^^^^^^^^ propTypes of React component
 
+render_callback.js:22
+ 22: ReactDOM.render(<Example/>, document.querySelector('#site'), 1);
+                                                                  ^ number. This type is incompatible with the expected param type of
+251:     callback?: () => void
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:251
 
-Found 117 errors
+render_callback.js:24
+ 24: ReactDOM.render(<Example/>, document.querySelector('#site'), '');
+                                                                  ^^ string. This type is incompatible with the expected param type of
+251:     callback?: () => void
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:251
+
+render_callback.js:25
+ 25: ReactDOM.render(<Example/>, document.querySelector('#site'), null);
+                                                                  ^^^^ null. This type is incompatible with the expected param type of
+251:     callback?: () => void
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:251
+
+
+Found 121 errors
