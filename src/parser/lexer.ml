@@ -161,7 +161,7 @@ end = struct
   type t = {
     base: base option;
     negative: bool;
-    mantissa: int;
+    mantissa: float;
     exponent: int;
     decimal_exponent: int option;
     todo: char list;
@@ -180,7 +180,7 @@ end = struct
     {
       base = None;
       negative = false;
-      mantissa = 0;
+      mantissa = 0.0;
       exponent = 0;
       decimal_exponent = None;
       todo = List.rev (!todo);
@@ -255,12 +255,12 @@ end = struct
         let decimal_exponent = match f.decimal_exponent with
         | None -> None
         | Some e -> Some (e - num_bits) in
-        let mantissa = (f.mantissa lsl num_bits) + value in
+        let mantissa = (ldexp f.mantissa num_bits) +. (float_of_int value) in
         parse_body { (eat f) with decimal_exponent; mantissa; }
 
   let float_of_t f =
     assert (f.todo = []);
-    let ret = float_of_int f.mantissa in
+    let ret = f.mantissa in
     let exponent = match f.decimal_exponent with
     | None -> f.exponent
     | Some decimal_exponent -> f.exponent + decimal_exponent in
