@@ -629,9 +629,12 @@ class mapper = object(this)
         if name == name' then patt
         else Identifier { Identifier.name = name'; typeAnnotation; optional }
       | Expression e ->
-        id this#expression e patt (fun e -> Expression e)
+        id this#pattern_expression e patt (fun e -> Expression e)
     in
     if patt == patt' then expr else (loc, patt')
+
+  method pattern_expression (expr: Ast.Expression.t) =
+    this#expression expr
 
   (* TODO *)
   method function_rest_element (expr: Ast.Function.RestElement.t) = expr
