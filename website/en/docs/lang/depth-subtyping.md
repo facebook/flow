@@ -65,4 +65,4 @@ property allows us to use objects which have subtype-compatible values for that
 property. By default, object properties are invariant, which allow both reads
 and writes, but are more restrictive in the values they accept.
 
-Read more about property variance (TODO: where?).
+Read more about [property variance](/en/docs/lang/variance/).
