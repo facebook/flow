@@ -214,7 +214,7 @@ let merge_strict_job ~options (merged, unchanged) elements =
         (Errors.internal_error file msg) in
       prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
         (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
-      (file, errorset) :: merged, unchanged
+      ((file, errorset) :: merged), unchanged
   ) (merged, unchanged) elements
 
 (* make a map from component leaders to components *)
