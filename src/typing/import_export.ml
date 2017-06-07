@@ -12,7 +12,6 @@
 
 module Flow = Flow_js
 
-open Utils_js
 open Reason
 open Type
 
@@ -107,8 +106,7 @@ let module_t_of_ref_unsafe cx m reason =
 let require cx ?(internal=false) module_ref loc =
   if not internal
   then Type_inference_hooks_js.dispatch_require_hook cx module_ref loc;
-  let desc = RCustom (spf "CommonJS exports of \"%s\"" module_ref) in
-  let reason = mk_reason desc loc in
+  let reason = mk_reason (RCommonJSExports module_ref) loc in
   Flow.mk_tvar_where cx reason (fun t ->
     Flow.flow cx (
       module_t_of_ref_unsafe cx module_ref (mk_reason (RCustom module_ref) loc),

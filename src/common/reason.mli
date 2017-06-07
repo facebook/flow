@@ -113,6 +113,7 @@ type reason_desc =
   | RSpreadOf of reason_desc
   | RObjectPatternRestProp
   | RArrayPatternRestProp
+  | RCommonJSExports of string
 
   | RReactElement of string option
   | RReactClass
