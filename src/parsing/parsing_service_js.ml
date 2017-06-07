@@ -195,8 +195,8 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
     let err = loc, Parse_error.Assertion s in
     Parse_fail (Parse_error err)
 
-let calc_requires ast is_react =
-  let mapper = new Require.mapper is_react in
+let calc_requires ast ~default_jsx =
+  let mapper = new Require.mapper ~default_jsx in
   let _ = mapper#program ast in
   mapper#requires
 
@@ -251,7 +251,7 @@ let reducer
                  files. *)
               let require_loc =
                 if types_checked types_mode info
-                then calc_requires ast (info.Docblock.jsx = None)
+                then calc_requires ast ~default_jsx:(info.Docblock.jsx = None)
                 else SMap.empty
               in
               RequiresHeap.add file require_loc;

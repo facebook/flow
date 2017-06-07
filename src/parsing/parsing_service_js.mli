@@ -84,7 +84,7 @@ val reparse_with_defaults:
 
 val calc_requires:
   Ast.program ->
-  bool ->
+  default_jsx: bool ->
   Loc.t SMap.t
 
 val has_ast: filename -> bool

@@ -25,7 +25,7 @@ let parse_content file content =
   Parser_flow.program_file ~fail:false ~parse_options content (Some file)
 
 let calc_requires ast =
-  let mapper = new Require.mapper false in
+  let mapper = new Require.mapper ~default_jsx:true in
   let _ = mapper#program ast in
   mapper#requires
 
