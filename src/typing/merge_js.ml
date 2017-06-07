@@ -153,6 +153,11 @@ let merge_lib_file cx master_cx =
 
   errs, Context.error_suppressions cx
 
+let merge_type r types =
+  match types with
+  | [] -> Type.Locationless.AnyT.t
+  | [t] -> t
+  | t0::t1::ts -> Type.(DefT (r, UnionT (UnionRep.make t0 t1 ts)))
 
 (****************** signature contexts *********************)
 
@@ -211,10 +216,7 @@ module ContextOptimizer = struct
   }
 
   let lowers_of_tvar cx id r =
-    match Flow_js.possible_types cx id with
-    | [] -> Locationless.AnyT.t
-    | [t] -> t
-    | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts))
+    merge_type r (Flow_js.possible_types cx id)
 
   class context_optimizer = object(self)
     inherit [quotient] Type_visitor.t as super

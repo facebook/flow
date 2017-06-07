@@ -24,6 +24,8 @@ val merge_lib_file:
   Context.t ->
   Errors.ErrorSet.t * Error_suppressions.t
 
+val merge_type: Reason.t -> Type.t list -> Type.t
+
 module ContextOptimizer: sig
   val sig_context : Context.t list -> SigHash.t
 end
