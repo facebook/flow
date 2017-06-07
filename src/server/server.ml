@@ -21,16 +21,11 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
   let name = "flow server"
 
   let init ~focus_target genv =
-    (* Encapsulate merge_strict_context for dumper *)
-    let merge_component options cx =
-      let cache = new Context_cache.context_cache in
-      Merge_service.merge_contents_context ~options cache cx in
     (* write binary path and version to server log *)
     Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
     Hh_logger.info "version=%s" Flow_version.version;
-    (* start the server and pipe its result into the dumper *)
+    (* start the server *)
     Types_js.server_init ~focus_target genv
-    |> Dumper.init merge_component genv
 
   let status_log errors =
     if Errors.ErrorSet.is_empty errors
