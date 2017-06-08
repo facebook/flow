@@ -45,3 +45,7 @@ let pop_unsafe t =
   match pop t with
     | (Some x, t) -> (x, t)
     | (None, _) -> raise Empty
+
+let iter t ~f =
+  List.iter f t.outgoing;
+  List.iter f (List.rev t.incoming)
