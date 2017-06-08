@@ -356,15 +356,16 @@ let typecheck
 let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
   if Options.is_lazy_mode options
   then begin
-    let dependencies = Module_js.(NameSet.fold (fun m acc ->
+    let infer_input = Module_js.(NameSet.fold (fun m acc ->
       match get_file m ~audit:Expensive.warn with
-      | Some f -> f :: acc
+      | Some f ->
+        if FilenameSet.mem f !env.ServerEnv.files then f :: acc
+        else acc
       | None -> acc (* complain elsewhere about required module not found *)
     ) resolved_requires []) in
     let profiling = Profiling_js.empty in
     let errors = !env.ServerEnv.errors in
     let unchanged_checked = !env.ServerEnv.checked_files in
-    let infer_input = dependencies in
     let parsed = FilenameSet.elements !env.ServerEnv.files in
     let all_dependent_files = FilenameSet.empty in
     let persistent_connections = Some (!env.ServerEnv.connections) in
