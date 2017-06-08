@@ -15,6 +15,7 @@ module Types = struct
 
 
   type subscribe_mode =
+    | All_changes
     | Defer_changes
     (** See also Watchman docs on drop. This means the subscriber will not
      * get a list of files changed during a repo update. Practically, this
@@ -29,6 +30,8 @@ module Types = struct
     (** Seconds used for init timeout - will be reused for reinitialization. *)
     init_timeout: int;
     sync_directory: string;
+    (** See watchman expression terms. *)
+    expression_terms: Hh_json.json list;
     root: Path.t;
   }
 

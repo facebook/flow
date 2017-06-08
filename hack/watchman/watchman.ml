@@ -28,6 +28,7 @@ module Testing_common = struct
     subscribe_mode = Some Defer_changes;
     init_timeout = 0;
     sync_directory = "";
+    expression_terms = [];
     root = Path.dummy_path;
   }
 end
@@ -123,38 +124,7 @@ module Watchman_actual = struct
     | Watchman_dead of dead_env
     | Watchman_alive of env
 
-  (* Some JSON processing helpers *)
-  module J = struct
-    let try_get_val key json =
-      let obj = Hh_json.get_object_exn json in
-      List.Assoc.find obj key
-
-    let get_string_val key ?default json =
-      let v = try_get_val key json in
-      match v, default with
-      | Some v, _ -> Hh_json.get_string_exn v
-      | None, Some def -> def
-      | None, None -> raise Not_found
-
-    let get_array_val key ?default json =
-      let v = try_get_val key json in
-      match v, default with
-      | Some v, _ -> Hh_json.get_array_exn v
-      | None, Some def -> def
-      | None, None -> raise Not_found
-
-    let strlist args =
-      Hh_json.JSON_Array begin
-        List.map args (fun arg -> Hh_json.JSON_String arg)
-      end
-
-    (* Prepend a string to a JSON array of strings. pred stands for predicate,
-     * because that's how they are typically represented in watchman. See e.g.
-     * https://facebook.github.io/watchman/docs/expr/allof.html *)
-    let pred name args =
-      let open Hh_json in
-      JSON_Array (JSON_String name :: args)
-  end
+  module J = Hh_json_helpers
 
   (****************************************************************************)
   (* JSON methods. *)
@@ -164,8 +134,9 @@ module Watchman_actual = struct
 
   type watch_command = Subscribe | Query
 
+  (** Conjunction of extra_expressions and expression_terms. *)
   let request_json
-      ?(extra_kv=[]) ?(extra_expressions=[]) watchman_command env =
+      ?(extra_kv=[]) ?(extra_expressions=[]) ~expression_terms watchman_command env =
     let open Hh_json in
     let command = begin match watchman_command with
       | Subscribe -> "subscribe"
@@ -181,32 +152,8 @@ module Watchman_actual = struct
       JSON_Object (extra_kv @ [
         "fields", J.strlist ["name"];
         "relative_root", JSON_String env.relative_path;
-        "expression", J.pred "allof" @@ (extra_expressions @ [
-          J.strlist ["type"; "f"];
-          J.pred "anyof" @@ [
-            J.strlist ["name"; ".hhconfig"];
-            J.pred "anyof" @@ [
-              J.strlist ["suffix"; "php"];
-              J.strlist ["suffix"; "phpt"];
-              J.strlist ["suffix"; "hh"];
-              J.strlist ["suffix"; "hhi"];
-              J.strlist ["suffix"; "xhp"];
-              (* FIXME: This is clearly wrong, but we do it to match the
-               * behavior on the server-side. We need to investigate if
-               * tracking js files is truly necessary.
-               *)
-              J.strlist ["suffix"; "js"];
-            ];
-          ];
-          J.pred "not" @@ [
-            J.pred "anyof" @@ [
-              (** We don't exclude the .hg directory, because we touch unique
-               * files there to support synchronous queries. *)
-              J.strlist ["dirname"; ".git"];
-              J.strlist ["dirname"; ".svn"];
-            ]
-          ]
-        ])
+        "expression", J.pred "allof" @@
+          (extra_expressions @ expression_terms)
       ])
     ] in
     let request = JSON_Array (header @ directives) in
@@ -215,23 +162,27 @@ module Watchman_actual = struct
   let all_query env =
     request_json
       ~extra_expressions:([Hh_json.JSON_String "exists"])
+      ~expression_terms:env.settings.expression_terms
       Query env
 
   let since_query env =
     request_json
       ~extra_kv: ["since", Hh_json.JSON_String env.clockspec;
                   "empty_on_fresh_instance", Hh_json.JSON_Bool true]
+      ~expression_terms:env.settings.expression_terms
       Query env
 
   let subscribe mode env =
     let mode = match mode with
-    | Defer_changes -> "defer"
-    | Drop_changes -> "drop" in
+    | All_changes -> []
+    | Defer_changes -> ["defer", J.strlist ["hg.update"]]
+    | Drop_changes -> ["drop", J.strlist ["hg.update"]]
+    in
     request_json
-      ~extra_kv:["since", Hh_json.JSON_String env.clockspec ;
-                 mode, J.strlist ["hg.update"] ;
-                 "empty_on_fresh_instance",
-                 Hh_json.JSON_Bool true]
+      ~extra_kv:((["since", Hh_json.JSON_String env.clockspec] @ mode) @
+                 ["empty_on_fresh_instance",
+                 Hh_json.JSON_Bool true])
+      ~expression_terms:env.settings.expression_terms
       Subscribe env
 
   let watch_project root = J.strlist ["watch-project"; root]
@@ -390,7 +341,7 @@ module Watchman_actual = struct
       |> project_bool
 
   let re_init ?prior_clockspec
-    { init_timeout; subscribe_mode; sync_directory; root } =
+    { init_timeout; subscribe_mode; sync_directory; expression_terms; root } =
     with_crash_record_opt root "init" @@ fun () ->
     let root_s = Path.to_string root in
     let sockname = get_sockname init_timeout in
@@ -419,6 +370,7 @@ module Watchman_actual = struct
         init_timeout;
         subscribe_mode;
         sync_directory;
+        expression_terms;
         root;
       };
       socket = (reader, oc);
