@@ -39,6 +39,19 @@ let collate_errors =
   let collate errset acc =
     FilenameMap.fold (fun _key -> ErrorSet.union) errset acc
   in
+  let add_unused_suppression_errors suppressions errors =
+    (* For each unused suppression, create an error *)
+    Error_suppressions.unused suppressions
+    |> List.fold_left
+      (fun errset loc ->
+        let err =
+          let msg = Flow_error.EUnusedSuppression loc in
+          let source_file = match Loc.source loc with Some x -> x | None -> Loc.SourceFile "-" in
+          Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file msg in
+        Errors.ErrorSet.add err errset
+      )
+      errors
+  in
   fun { ServerEnv.local_errors; merge_errors; suppressions; } ->
     let open Error_suppressions in
     let suppressions = union_suppressions suppressions in

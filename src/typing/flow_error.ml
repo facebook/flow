@@ -122,6 +122,7 @@ type error_message =
     }
   | EParseError of Loc.t * Parse_error.t
   | EDocblockError of Loc.t * docblock_error
+  | EUnusedSuppression of Loc.t
 
 and binding_error =
   | ENameAlreadyBound
@@ -1146,3 +1147,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | Some first_error -> spf " Parse error: %s" first_error)
     in
     mk_error ~kind:ParseError [loc, [msg]]
+
+  | EUnusedSuppression loc ->
+    mk_error [loc, ["Error suppressing comment"; "Unused suppression"]]

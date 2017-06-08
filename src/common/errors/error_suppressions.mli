@@ -24,5 +24,3 @@ val union_suppressions : t Utils_js.FilenameMap.t -> t
 val filter_suppressed_errors :
   t -> Errors.ErrorSet.t ->
   (Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list * t)
-
-val add_unused_suppression_errors : t -> Errors.ErrorSet.t -> Errors.ErrorSet.t

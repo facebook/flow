@@ -96,18 +96,3 @@ let filter_suppressed_errors suppressions errors =
   in
   (* these are bound just so it's more obvious what is being returned *)
   (errors, suppressed_errors, suppressions)
-
-let add_unused_suppression_errors suppressions errors =
-  (* For each unused suppression, create an error *)
-  let errors =
-    (unused suppressions
-    |> List.fold_left
-      (fun errset loc ->
-        let err = Errors.mk_error [
-          loc, ["Error suppressing comment"; "Unused suppression"]
-        ] in
-        Errors.ErrorSet.add err errset
-      )
-      errors)
-  in
-  errors
