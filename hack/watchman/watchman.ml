@@ -240,7 +240,7 @@ module Watchman_actual = struct
       >>= (fun (is_fresh, trace) ->
        if is_fresh then begin
          Hh_logger.log "Watchman server is fresh instance. Exiting.";
-         Exit_status.(exit Watchman_fresh_instance)
+         raise Exit_status.(Exit_with Watchman_fresh_instance)
        end
        else
          Result.Ok ((), trace)
@@ -437,7 +437,7 @@ module Watchman_actual = struct
       if dead_env.reinit_attempts >= max_reinit_attempts then
         let () = Hh_logger.log
           "Ran out of watchman reinit attempts. Exiting." in
-        Exit_status.(exit Watchman_failed)
+        raise Exit_status.(Exit_with Watchman_failed)
       else if within_backoff_time dead_env.reinit_attempts
       dead_env.dead_since then
         let () =
@@ -514,7 +514,7 @@ module Watchman_actual = struct
         | e ->
           let msg = Printexc.to_string e in
           EventLogger.watchman_uncaught_failure msg;
-          Exit_status.(exit Watchman_failed)
+          raise Exit_status.(Exit_with Watchman_failed)
     end
 
   (** This is a large >50MB payload, which could longer than 2 minutes for
@@ -525,7 +525,7 @@ module Watchman_actual = struct
       env.clockspec <- J.get_string_val "clock" response;
       extract_file_names env response with
       | _ ->
-        Exit_status.(exit Watchman_failed)
+        raise Exit_status.(Exit_with Watchman_failed)
 
   let transform_synchronous_get_changes_response env data =
     env.clockspec <- J.get_string_val "clock" data;
