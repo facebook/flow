@@ -145,6 +145,8 @@ and internal_error =
   | ShadowWriteComputed
   | RestParameterNotIdentifierPattern
   | InterfaceTypeSpread
+  | InferJobException of exn
+  | MergeJobException of exn
 
 and unsupported_syntax =
   | ComprehensionExpression
@@ -820,6 +822,10 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
           "unexpected rest parameter, expected an identifier pattern"
       | InterfaceTypeSpread ->
           "unexpected spread property in interface"
+      | InferJobException exc ->
+          "infer_job exception: "^(Utils_js.fmt_exc exc)
+      | MergeJobException exc ->
+          "merge_job exception: "^(Utils_js.fmt_exc exc)
       in
       mk_error ~trace_infos ~kind:InternalError [loc, [
         spf "Internal error: %s" msg

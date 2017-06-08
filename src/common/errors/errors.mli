@@ -41,8 +41,6 @@ val mk_error:
   info list ->
   error
 
-val simple_error: ?kind: error_kind -> Loc.t -> string -> error
-val internal_error: Loc.filename -> string -> error
 val is_duplicate_provider_error: error -> bool
 
 val loc_of_error: error -> Loc.t

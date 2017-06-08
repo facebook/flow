@@ -82,9 +82,10 @@ let infer_job ~options acc files =
     | SharedMem_js.Dep_table_full as exc -> raise exc
     (* A catch all suppression is probably a bad idea... *)
     | exc ->
-      let msg = "infer_job exception: "^(fmt_exc exc) in
-      let errorset = Errors.ErrorSet.singleton
-        (Errors.internal_error file msg) in
+      let loc = Loc.({ none with source = Some file }) in
+      let msg = Flow_error.(EInternal (loc, InferJobException exc)) in
+      let error = Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file:file msg in
+      let errorset = Errors.ErrorSet.singleton error in
       prerr_endlinef "(%d) infer_job THROWS: %s"
         (Unix.getpid()) (fmt_file_exc (string_of_filename file) exc);
       (file, errorset, Error_suppressions.empty) :: acc

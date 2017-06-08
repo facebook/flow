@@ -213,9 +213,10 @@ let merge_strict_job ~options (merged, unchanged) elements =
     (* A catch all suppression is probably a bad idea... *)
     | exc ->
       let file = List.hd component in
-      let msg = "merge_strict_job exception: "^(fmt_exc exc) in
-      let errorset = Errors.ErrorSet.singleton
-        (Errors.internal_error file msg) in
+      let loc = Loc.({ none with source = Some file }) in
+      let msg = Flow_error.(EInternal (loc, MergeJobException exc)) in
+      let error = Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file:file msg in
+      let errorset = Errors.ErrorSet.singleton error in
       prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
         (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
       ((file, errorset) :: merged), unchanged

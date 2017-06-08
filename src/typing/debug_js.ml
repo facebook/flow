@@ -2017,6 +2017,8 @@ let dump_flow_error =
   | ShadowWriteComputed -> "ShadowWriteComputed"
   | RestParameterNotIdentifierPattern -> "RestParameterNotIdentifierPattern"
   | InterfaceTypeSpread -> "InterfaceTypeSpread"
+  | InferJobException _ -> "InferJobException"
+  | MergeJobException _ -> "MergeJobException"
   in
   fun ?(depth=3) cx err ->
     match err with
