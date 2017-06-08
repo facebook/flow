@@ -199,8 +199,6 @@ let to_json_properties profile =
     "memory", Memory.to_json profile.memory;
   ]
 
-let to_json profile = Hh_json.JSON_Object (to_json_properties profile)
-
 let get_timing_json_string profile =
   Timing.to_json profile.timing |> Hh_json.json_to_string
 

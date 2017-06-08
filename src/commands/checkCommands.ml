@@ -86,6 +86,8 @@ module CheckCommand = struct
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
     let options = make_options ~flowconfig ~lazy_:false ~root options_flags in
 
+    if Options.should_profile options then Flow_server_profile.init ();
+
     (* initialize loggers before doing too much, especially anything that might exit *)
     init_loggers ~from ~options ~default:log_filter ();
 

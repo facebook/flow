@@ -822,7 +822,8 @@ module Json_output = struct
     ] in
     let props = match profiling with
     | None -> props
-    | Some profiling -> props @ Profiling_js.to_json_properties profiling in
+    | Some profiling -> props @ Profiling_js.to_json_properties profiling
+    in
     JSON_Object props
 
   let print_errors

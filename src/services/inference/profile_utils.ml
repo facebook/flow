@@ -11,19 +11,28 @@
 (* Time logging utility. Computes the elapsed time when running some code, and
    if the elapsed time satisfies a given predicate (typically, is more than a
    threshold), prints a message. *)
-let time pred msg f =
-  let start = Unix.gettimeofday () in
-  let ret = f () in
-  let elap = (Unix.gettimeofday ()) -. start in
-  if not (pred elap) then () else prerr_endline (msg elap);
-  ret
 
-let wraptime ~options pred msg f =
-  if Options.should_profile options then time pred msg f
-  else f()
+let checktime, logtime =
+  let time ~pred ~msg ~log ~f =
+    let start = Unix.gettimeofday () in
+    let ret = f () in
+    let elap = (Unix.gettimeofday ()) -. start in
+    (match log with None -> () | Some log -> log elap);
+    if not (pred elap) then () else prerr_endline (msg elap);
+    ret
+  in
 
-let checktime ~options limit msg f =
-  wraptime ~options (fun t -> t > limit) msg f
+  let wraptime ~options ~pred ~msg ~log ~f =
+    if Options.should_profile options then time ~pred ~msg ~log ~f
+    else f()
+  in
 
-let logtime ~options msg f =
-  wraptime ~options (fun _ -> true) msg f
+  let checktime ~options ~limit ~msg ~log ~f =
+    wraptime ~options ~pred:(fun t -> t > limit) ~msg ~log:(Some log) ~f
+  in
+
+  let logtime ~options ~msg ~f =
+    wraptime ~options ~pred:(fun _ -> true) ~msg ~log:None ~f
+  in
+
+  checktime, logtime

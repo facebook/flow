@@ -21,5 +21,4 @@
  val get_timing_json_string: t -> string
  val get_memory_json_string: t -> string
 
- val to_json: t -> Hh_json.json
  val to_json_properties: t -> (string * Hh_json.json) list

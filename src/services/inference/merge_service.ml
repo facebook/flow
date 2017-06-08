@@ -192,9 +192,13 @@ let merge_strict_job ~options (merged, unchanged) elements =
       |> List.map string_of_filename
       |> String.concat "\n\t"
       in
-      try Profile_utils.checktime ~options 1.0
-        (fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) files t)
-        (fun () ->
+      try Profile_utils.checktime ~options ~limit:1.0
+        ~msg:(fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) files t)
+        ~log:(fun merge_time ->
+          let length = List.length component in
+          let leader = List.hd component |> string_of_filename in
+          Flow_server_profile.merge ~length ~merge_time ~leader)
+        ~f:(fun () ->
           (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
           let file, errors, diff = merge_strict_component ~options component in
           (* diff says whether its signature was changed *)
@@ -233,8 +237,8 @@ let merge_strict ~options ~workers
     List.exists (fun f -> FilenameMap.find_unsafe f recheck_map)
   ) component_map in
   Profile_utils.logtime ~options
-    (fun t -> spf "merged (strict) in %f" t)
-    (fun () ->
+    ~msg:(fun t -> spf "merged (strict) in %f" t)
+    ~f:(fun () ->
       (* returns parallel lists of filenames and errorsets *)
       let merged, _ = MultiWorker.call
         workers

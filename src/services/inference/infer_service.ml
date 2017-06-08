@@ -54,9 +54,10 @@ let infer_job ~options acc files =
   let metadata = Context.metadata_of_options options in
   List.fold_left (fun acc file ->
     let file_str = string_of_filename file in
-    try Profile_utils.checktime ~options 1.0
-      (fun t -> spf "perf: inferred %s in %f" file_str t)
-      (fun () ->
+    try Profile_utils.checktime ~options ~limit:1.0
+      ~msg:(fun t -> spf "perf: inferred %s in %f" file_str t)
+      ~log:(fun t -> Flow_server_profile.infer ~filename:file_str ~infer_time:t)
+      ~f:(fun () ->
         (* prerr_endlinef "[%d] INFER: %s" (Unix.getpid()) file_str; *)
 
         (* infer produces a context for this module *)
@@ -94,8 +95,8 @@ let infer_job ~options acc files =
    Creates contexts for inferred files, with errors in cx.errors *)
 let infer ~options ~workers files =
   Profile_utils.logtime ~options
-    (fun t -> spf "inferred %d files in %f" (List.length files) t)
-    (fun () ->
+    ~msg:(fun t -> spf "inferred %d files in %f" (List.length files) t)
+    ~f:(fun () ->
       MultiWorker.call
         workers
         ~job: (infer_job ~options)
