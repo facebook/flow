@@ -121,6 +121,21 @@ let exec_read_lines ?(reverse=false) cmd =
   assert (Unix.close_process_in ic = Unix.WEXITED 0);
   if not reverse then List.rev !result else !result
 
+(**
+ * Recursively collects paths that satisfy a predicate from a directory.
+ *)
+let rec collect_paths path_predicate dir_path =
+  let process_filename acc filename =
+    let path = Filename.concat dir_path filename in
+    if Sys.is_directory path then
+      collect_paths path_predicate path @ acc
+    else
+      if path_predicate path then path :: acc else acc in
+  dir_path
+    |> Sys.readdir
+    |> Array.to_list
+    |> List.fold ~f:process_filename ~init:[]
+
 (** Deletes the file given by "path". If it is a directory, recursively
  * deletes all its contents then removes the directory itself. *)
 let rec rm_dir_tree path =
