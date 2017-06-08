@@ -8,32 +8,23 @@
  *
  *)
 
-open Utils_js
+let error_of_docblock_error ~source_file (loc, err) =
+  let flow_err = Flow_error.EDocblockError (loc, match err with
+    | Docblock.MultipleFlowAttributes -> Flow_error.MultipleFlowAttributes
+    | Docblock.MultipleProvidesModuleAttributes -> Flow_error.MultipleProvidesModuleAttributes
+    | Docblock.MultipleJSXAttributes -> Flow_error.MultipleJSXAttributes
+    | Docblock.InvalidJSXAttribute first_error -> Flow_error.InvalidJSXAttribute first_error
+  ) in
+  Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file flow_err
 
-let string_of_docblock_error = function
-  | Docblock.MultipleFlowAttributes ->
-    "Unexpected @flow declaration. Only one per file is allowed."
-  | Docblock.MultipleProvidesModuleAttributes ->
-    "Unexpected @providesModule declaration. Only one per file is allowed."
-  | Docblock.MultipleJSXAttributes ->
-    "Unexpected @jsx declaration. Only one per file is allowed."
-  | Docblock.InvalidJSXAttribute first_error ->
-    "Invalid @jsx declaration. Should have form `@jsx LeftHandSideExpression` "^
-    "with no spaces."^
-    (match first_error with
-    | None -> ""
-    | Some first_error -> spf " Parse error: %s" first_error)
-
-let error_of_docblock_error (loc, err) =
-  Errors.mk_error ~kind:Errors.ParseError [loc, [string_of_docblock_error err]]
-
-let set_of_docblock_errors errors =
+let set_of_docblock_errors ~source_file errors =
   List.fold_left (fun acc err ->
-    Errors.ErrorSet.add (error_of_docblock_error err) acc
+    Errors.ErrorSet.add (error_of_docblock_error ~source_file err) acc
   ) Errors.ErrorSet.empty errors
 
-let error_of_parse_error (loc, err) =
-  Errors.mk_error ~kind:Errors.ParseError [loc, [Parse_error.PP.error err]]
+let error_of_parse_error ~source_file (loc, err) =
+  let flow_err = Flow_error.EParseError (loc, err) in
+  Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file flow_err
 
-let set_of_parse_error error =
-  Errors.ErrorSet.singleton (error_of_parse_error error)
+let set_of_parse_error ~source_file error =
+  Errors.ErrorSet.singleton (error_of_parse_error ~source_file error)

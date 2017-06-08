@@ -91,9 +91,9 @@ let parse ~options ~profiling ~workers parse_next =
     let local_errors = List.fold_left (fun errors (file, _, fail) ->
       let errset = match fail with
       | Parsing_service_js.Parse_error err ->
-        Inference_utils.set_of_parse_error err
+        Inference_utils.set_of_parse_error ~source_file:file err
       | Parsing_service_js.Docblock_errors errs ->
-        Inference_utils.set_of_docblock_errors errs
+        Inference_utils.set_of_docblock_errors ~source_file:file errs
       in
       update_errset errors file errset
     ) FilenameMap.empty parse_fails in
@@ -114,9 +114,9 @@ let reparse ~options ~profiling ~workers modified =
       List.fold_left (fun local_errors (file, _, fail) ->
         let errset = match fail with
         | Parsing_service_js.Parse_error err ->
-          Inference_utils.set_of_parse_error err
+          Inference_utils.set_of_parse_error ~source_file:file err
         | Parsing_service_js.Docblock_errors errs ->
-          Inference_utils.set_of_docblock_errors errs
+          Inference_utils.set_of_docblock_errors ~source_file:file errs
         in
         update_errset local_errors file errset
       ) FilenameMap.empty parse_fails
@@ -138,7 +138,7 @@ let parse_contents ~options ~profiling ~check_syntax filename contents =
 
     let docblock_errors, info =
       Parsing_service_js.get_docblock ~max_tokens filename contents in
-    let errors = Inference_utils.set_of_docblock_errors docblock_errors in
+    let errors = Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors in
     let parse_result = Parsing_service_js.do_parse
       ~fail:check_syntax ~types_mode ~use_strict ~info
       contents filename
@@ -462,11 +462,11 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
   | Parsing_service_js.Parse_fail fails ->
       let errors = match fails with
       | Parsing_service_js.Parse_error err ->
-          let err = Inference_utils.error_of_parse_error err in
+          let err = Inference_utils.error_of_parse_error ~source_file:filename err in
           Errors.ErrorSet.add err errors
       | Parsing_service_js.Docblock_errors errs ->
           List.fold_left (fun errors err ->
-            let err = Inference_utils.error_of_docblock_error err in
+            let err = Inference_utils.error_of_docblock_error ~source_file:filename err in
             Errors.ErrorSet.add err errors
           ) errors errs
       in

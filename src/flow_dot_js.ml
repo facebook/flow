@@ -48,6 +48,9 @@ let rec js_of_json = function
   | Hh_json.JSON_Null ->
       Js.Unsafe.inject Js.null
 
+let error_of_parse_error source_file (loc, err) =
+  let flow_err = Flow_error.EParseError (loc, err) in
+  Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file flow_err
 
 let load_lib_files ~master_cx ~metadata files
     save_parse_errors save_infer_errors save_suppressions =
@@ -76,10 +79,8 @@ let load_lib_files ~master_cx ~metadata files
         exclude_syms, result
 
       | _, parse_errors ->
-        let converted = List.fold_left (fun acc (loc, err) ->
-          let error = Errors.mk_error
-            ~kind:Errors.ParseError [loc, [Parse_error.PP.error err]] in
-          Errors.ErrorSet.add error acc
+        let converted = List.fold_left (fun acc parse_error ->
+          Errors.ErrorSet.add (error_of_parse_error lib_file parse_error) acc
         ) Errors.ErrorSet.empty parse_errors in
         save_parse_errors lib_file converted;
         exclude_syms, ((lib_file, false) :: result)
@@ -175,10 +176,8 @@ let check_content ~filename ~content =
 
     Context.errors cx
   | _, parse_errors ->
-    List.fold_left (fun acc (loc, err) ->
-      let error = Errors.mk_error
-        ~kind:Errors.ParseError [loc, [Parse_error.PP.error err]] in
-      Errors.ErrorSet.add error acc
+    List.fold_left (fun acc parse_error ->
+      Errors.ErrorSet.add (error_of_parse_error filename parse_error) acc
     ) Errors.ErrorSet.empty parse_errors
   in
   let strip_root = Some root in

@@ -120,6 +120,8 @@ type error_message =
       provider: Loc.filename;
       conflict: Loc.filename
     }
+  | EParseError of Loc.t * Parse_error.t
+  | EDocblockError of Loc.t * docblock_error
 
 and binding_error =
   | ENameAlreadyBound
@@ -129,6 +131,12 @@ and binding_error =
   | EConstReassigned
   | EConstParamReassigned
   | EImportReassigned
+
+and docblock_error =
+  | MultipleFlowAttributes
+  | MultipleProvidesModuleAttributes
+  | MultipleJSXAttributes
+  | InvalidJSXAttribute of string option
 
 and internal_error =
   | PackageHeapNotFound of string
@@ -1118,3 +1126,23 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         Loc.({ none with source = Some provider }), [
           "current provider"]
       ]
+
+  | EParseError (loc, parse_error) ->
+    mk_error ~kind:ParseError [loc, [Parse_error.PP.error parse_error]]
+
+  | EDocblockError (loc, err) ->
+    let msg = match err with
+    | MultipleFlowAttributes ->
+      "Unexpected @flow declaration. Only one per file is allowed."
+    | MultipleProvidesModuleAttributes ->
+      "Unexpected @providesModule declaration. Only one per file is allowed."
+    | MultipleJSXAttributes ->
+      "Unexpected @jsx declaration. Only one per file is allowed."
+    | InvalidJSXAttribute first_error ->
+      "Invalid @jsx declaration. Should have form `@jsx LeftHandSideExpression` "^
+      "with no spaces."^
+      (match first_error with
+      | None -> ""
+      | Some first_error -> spf " Parse error: %s" first_error)
+    in
+    mk_error ~kind:ParseError [loc, [msg]]

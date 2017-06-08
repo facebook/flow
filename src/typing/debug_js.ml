@@ -2297,3 +2297,15 @@ let dump_flow_error =
           module_name
           (string_of_filename provider)
           (string_of_filename conflict)
+    | EParseError (loc, _parse_error) ->
+      spf "EParseError (%s, _)"
+        (string_of_loc loc)
+        (* TODO: string of parse error constructor *)
+    | EDocblockError (loc, err) ->
+      spf "EDocblockError (%s, %s)"
+        (string_of_loc loc)
+        (match err with
+        | MultipleFlowAttributes -> "MultipleFlowAttributes"
+        | MultipleProvidesModuleAttributes -> "MultipleProvidesModuleAttributes"
+        | MultipleJSXAttributes -> "MultipleJSXAttributes"
+        | InvalidJSXAttribute _ -> "InvalidJSXAttribute")

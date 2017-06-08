@@ -103,9 +103,9 @@ let load_lib_files ~master_cx ~options files =
       | Parsing.Parse_fail fail ->
         let errors = match fail with
         | Parsing.Parse_error error ->
-          Inference_utils.set_of_parse_error error
+          Inference_utils.set_of_parse_error ~source_file:lib_file error
         | Parsing.Docblock_errors errs ->
-          Inference_utils.set_of_docblock_errors errs
+          Inference_utils.set_of_docblock_errors ~source_file:lib_file errs
         in
         let result = lib_file, false, errors, Error_suppressions.empty in
         exclude_syms, (result :: results)
