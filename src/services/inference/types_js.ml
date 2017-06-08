@@ -234,10 +234,18 @@ let infer ~options ~profiling ~workers ~suppressions infer_input =
     ) (FilenameMap.empty, suppressions) infer_results
   )
 
-let merge ~options ~profiling ~workers ~merge_errors dependency_graph component_map recheck_map =
+let merge
+    ~intermediate_result_callback
+    ~options
+    ~profiling
+    ~workers
+    ~merge_errors
+    dependency_graph
+    component_map
+    recheck_map =
   with_timer ~options "Merge" profiling (fun () ->
     let merged = Merge_service.merge_strict
-      ~options ~workers dependency_graph component_map recheck_map
+      ~intermediate_result_callback ~options ~workers dependency_graph component_map recheck_map
     in
     List.fold_left (fun merge_errors (file, errors) ->
       let merge_errors = List.fold_left (fun merge_errors file ->
@@ -281,18 +289,29 @@ let typecheck
   let profiling, (new_local_errors, suppressions) =
     infer ~options ~profiling ~workers ~suppressions infer_input in
 
+  let send_errors_over_connection = match persistent_connections with
+    | None -> fun _ -> ()
+    | Some conns ->
+        let open Errors in
+        let current_errors = ref ErrorSet.empty in
+        let suppressions = Error_suppressions.union_suppressions suppressions in
+        function lazy new_errors ->
+          let new_errors, _, _ =
+            Error_suppressions.filter_suppressed_errors suppressions new_errors
+          in
+          let new_errors = ErrorSet.diff new_errors !current_errors in
+          current_errors := ErrorSet.union new_errors !current_errors;
+          if not (ErrorSet.is_empty new_errors) then
+            Persistent_connection.update_clients conns new_errors
+  in
+
   let () =
-    match persistent_connections with
-      | None -> ()
-      | Some conns ->
-          let error_set: Errors.ErrorSet.t =
-            FilenameMap.fold (fun _ -> Errors.ErrorSet.union) new_local_errors Errors.ErrorSet.empty
-          in
-          let suppressions = Error_suppressions.union_suppressions suppressions in
-          let error_set, _, _ =
-            Error_suppressions.filter_suppressed_errors suppressions error_set
-          in
-          Persistent_connection.update_clients conns error_set;
+    let new_errors =
+      lazy (
+        FilenameMap.fold (fun _ -> Errors.ErrorSet.union) new_local_errors Errors.ErrorSet.empty
+      )
+    in
+    send_errors_over_connection new_errors
   in
 
   let local_errors = merge_error_maps new_local_errors local_errors in
@@ -323,7 +342,15 @@ let typecheck
     Hh_logger.info "Merging";
     let profiling, merge_errors = try
       let profiling, merge_errors =
-        merge ~options ~profiling ~workers ~merge_errors dependency_graph component_map recheck_map
+        merge
+          ~intermediate_result_callback:send_errors_over_connection
+          ~options
+          ~profiling
+          ~workers
+          ~merge_errors
+          dependency_graph
+          component_map
+          recheck_map
       in
       if Options.should_profile options then Gc.print_stat stderr;
       Hh_logger.info "Done";

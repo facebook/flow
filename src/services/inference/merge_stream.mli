@@ -27,6 +27,8 @@ val make :
   element list MultiWorker.bucket
 
 val join :
+  (* intermediate result callback *)
+  (Errors.ErrorSet.t Lazy.t -> unit) ->
   (* merged, unchanged *)
   (filename * Errors.ErrorSet.t) list * filename list ->
   (* accumulators *)

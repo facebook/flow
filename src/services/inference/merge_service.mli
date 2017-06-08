@@ -23,6 +23,7 @@ val merge_contents_context:
   ensure_checked_dependencies: (Module_js.NameSet.t -> unit) ->
   unit
 val merge_strict:
+  intermediate_result_callback: (Errors.ErrorSet.t Lazy.t -> unit) ->
   options: Options.t ->
   workers: Worker.t list option ->
   FilenameSet.t FilenameMap.t ->

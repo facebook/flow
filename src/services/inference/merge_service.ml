@@ -223,7 +223,7 @@ let merge_strict_job ~options (merged, unchanged) elements =
   ) (merged, unchanged) elements
 
 (* make a map from component leaders to components *)
-let merge_strict ~options ~workers
+let merge_strict ~intermediate_result_callback ~options ~workers
     dependency_graph component_map recheck_map =
   (* make a map from files to their component leaders *)
   let leader_map =
@@ -245,7 +245,7 @@ let merge_strict ~options ~workers
         workers
         ~job: (merge_strict_job ~options)
         ~neutral: ([], [])
-        ~merge: Merge_stream.join
+        ~merge: (Merge_stream.join intermediate_result_callback)
         ~next: (Merge_stream.make
                   dependency_graph leader_map component_map recheck_leader_map) in
       merged

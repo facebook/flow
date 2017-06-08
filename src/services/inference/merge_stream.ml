@@ -126,7 +126,7 @@ let make dependency_graph leader_map component_map recheck_leader_map =
 
 (* We know when files are done by having jobs return the files they processed,
    and trapping the function that joins results. ;), yeah. *)
-let join =
+let join result_callback =
   let push leader_fs_diffs =
     List.iter (fun (leader_f, diff) ->
       FilenameSet.iter (fun dep_leader_f ->
@@ -144,6 +144,17 @@ let join =
     ) leader_fs_diffs
   in
   fun (merged, unchanged) (merged_acc, unchanged_acc) ->
+    let () =
+      let errors =
+        lazy (
+          List.fold_left
+            (fun acc (_, errs) -> Errors.ErrorSet.union acc errs)
+            Errors.ErrorSet.empty
+            merged
+        )
+      in
+      result_callback errors
+    in
     let changed = List.rev (List.fold_left (fun acc (f, _) ->
       if not (List.mem f unchanged) then f::acc else acc
     ) [] merged) in
