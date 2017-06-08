@@ -115,6 +115,11 @@ type error_message =
   | EReactKit of (reason * reason) * React.tool
   | EFunctionCallExtraArg of (reason * reason * int)
   | EUnsupportedSetProto of reason
+  | EDuplicateModuleProvider of {
+      module_name: string;
+      provider: Loc.filename;
+      conflict: Loc.filename
+    }
 
 and binding_error =
   | ENameAlreadyBound
@@ -1105,3 +1110,11 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | EUnsupportedSetProto reason ->
       mk_error ~trace_infos [mk_info reason [
         "Prototype mutation not allowed"]]
+
+  | EDuplicateModuleProvider {module_name; provider; conflict} ->
+      mk_error ~kind:DuplicateProviderError [
+        Loc.({ none with source = Some conflict }), [
+          module_name; "Duplicate module provider"];
+        Loc.({ none with source = Some provider }), [
+          "current provider"]
+      ]

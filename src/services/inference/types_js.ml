@@ -171,12 +171,8 @@ let commit_modules ~options profiling ~workers
           | Module_js.ModuleDuplicateProviderError { Module_js.
               module_name; provider; conflict;
             } ->
-            let error = Errors.mk_error ~kind:Errors.DuplicateProviderError [
-              Loc.({ none with source = Some conflict }), [
-                module_name; "Duplicate module provider"];
-              Loc.({ none with source = Some provider }), [
-                "current provider"]
-            ] in
+            let msg = Flow_error.(EDuplicateModuleProvider { module_name; provider; conflict }) in
+            let error = Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file:file msg in
             Errors.ErrorSet.add error acc
         ) Errors.ErrorSet.empty errors in
         update_errset acc file errset

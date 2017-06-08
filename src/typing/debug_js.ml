@@ -2292,3 +2292,8 @@ let dump_flow_error =
           param_count
     | EUnsupportedSetProto reason ->
         spf "EUnsupportedSetProto (%s)" (dump_reason cx reason)
+    | EDuplicateModuleProvider { module_name; provider; conflict } ->
+        spf "EDuplicateModuleProvider (%S, %s, %s)"
+          module_name
+          (string_of_filename provider)
+          (string_of_filename conflict)
