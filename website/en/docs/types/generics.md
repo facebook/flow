@@ -69,7 +69,7 @@ type (parameter or return types).
 <T>(param: T) => T
 ```
 
-Which then gets used as it's own type.
+Which then gets used as its own type.
 
 ```js
 function method(func: <T>(param: T) => T) {
