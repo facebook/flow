@@ -7,10 +7,10 @@ Expect no errors.
 No errors!
 
 Check contents with dependency, expect errors in contents.
-test.js:2
-  2: (require('./dependency'): string);
+test.js:3
+  3: (require('./dependency'): string);
       ^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
-  2: (require('./dependency'): string);
+  3: (require('./dependency'): string);
                                ^^^^^^ string
 
 
