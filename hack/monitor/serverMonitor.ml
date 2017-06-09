@@ -135,7 +135,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     else begin
       Hh_logger.log ("Not starting first server. " ^^
         "Starting will be triggered by informant later.");
-      Informant_killed
+      Not_yet_started
     end
 
   let kill_server_with_check = function
@@ -172,6 +172,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
          None, Informant_sig.Server_alive
        | Died_unexpectedly ((Unix.WEXITED c), _) ->
          Some c, Informant_sig.Server_dead
+       | Not_yet_started ->
+         None, Informant_sig.Server_not_yet_started
        | Died_unexpectedly ((Unix.WSIGNALED _| Unix.WSTOPPED _), _)
        | Informant_killed ->
          None, Informant_sig.Server_dead in
@@ -337,6 +339,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       msg_to_channel client_fd (PH.Server_died {PH.status; PH.was_oom});
       (** Next client to connect starts a new server. *)
       Exit_status.exit Exit_status.No_error
+    | Not_yet_started
     | Informant_killed ->
       let env =
         if handoff_options.MonitorRpc.force_dormant_start then begin
@@ -399,7 +402,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       env
     | Alive _, _ ->
       push_purgatory_clients env
-    | Informant_killed, _ | Died_unexpectedly _, _ ->
+    | Not_yet_started, _ | Informant_killed, _ | Died_unexpectedly _, _ ->
       env
 
   let rec check_and_run_loop env monitor_config

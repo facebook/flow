@@ -16,6 +16,7 @@ type report =
   | Restart_server
 
 type server_state =
+  | Server_not_yet_started
   | Server_alive
   | Server_dead
 

@@ -22,6 +22,7 @@ type process_data =
   }
 
 type server_process =
+  | Not_yet_started
   | Alive of process_data
   | Informant_killed
   (** When the server crashes, we want to track that it has crashed and report
