@@ -130,6 +130,14 @@ let get_next_bytes r size =
 
 let has_buffered_content r = !(r.unconsumed_buffer) <> None
 
+
+let is_readable r =
+  if has_buffered_content r then
+    true
+  else
+    let readable, _, _ = Unix.select [r.fd] [] [] 0.0 in
+    readable <> []
+
 let create fd = {
   fd = fd;
   unconsumed_buffer = ref None;

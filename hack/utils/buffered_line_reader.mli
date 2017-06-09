@@ -19,6 +19,9 @@
  * there is content coming.
  *
  * The "has_buffered_content" method below does exactly that.
+ *
+ * is_readable is a friendly wrapper around "has_buffered_content" and
+ * non-blocking Unix.select.
  *)
 
 type t
@@ -28,6 +31,13 @@ val create: Unix.file_descr -> t
 val get_null_reader: unit -> t
 
 val has_buffered_content: t -> bool
+
+(**
+  * Returns true if and only if there is content to be read (does not know if
+  * the incoming content is newline-terminated. So we can't actually know
+  * if get_next_line will be non-blocking.
+  *)
+val is_readable : t -> bool
 
 val get_fd: t -> Unix.file_descr
 

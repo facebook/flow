@@ -371,6 +371,9 @@ let is_test_mode () =
     true
   with _ -> false
 
+let sleep ~seconds =
+  ignore @@ Unix.select [] [] [] seconds
+
 let symlink =
   (* Dummy implementation of `symlink` on Windows: we create a text
      file containing the targeted-file's path. Symlink are available
