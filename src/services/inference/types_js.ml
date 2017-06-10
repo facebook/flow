@@ -448,7 +448,9 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
       in
       (* apply overrides from the docblock *)
       let metadata = Infer_service.apply_docblock_overrides metadata info in
-      let require_loc_map = Parsing_service_js.calc_requires ast ~default_jsx:(info.Docblock.jsx = None) in
+      let require_loc_map =
+        Parsing_service_js.calc_requires ast ~default_jsx:(info.Docblock.jsx = None)
+      in
 
       (* infer *)
       let profiling, cx = with_timer "Infer" profiling (fun () ->
