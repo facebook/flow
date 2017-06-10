@@ -295,9 +295,10 @@ let typecheck
         let open Errors in
         let current_errors = ref ErrorSet.empty in
         let suppressions = Error_suppressions.union_suppressions suppressions in
+        let lint_settings = Options.lint_settings options in
         function lazy new_errors ->
           let new_errors, _, _ =
-            Error_suppressions.filter_suppressed_errors suppressions new_errors
+            Error_suppressions.filter_suppressed_errors suppressions lint_settings new_errors
           in
           let new_errors = ErrorSet.diff new_errors !current_errors in
           current_errors := ErrorSet.union new_errors !current_errors;
@@ -476,9 +477,9 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
       (* Filter out suppressed errors *)
       let error_suppressions = Context.error_suppressions cx in
       let errors = Errors.ErrorSet.fold (fun err errors ->
-        let locs = Errors.locs_of_error err in
+        let lint_settings = Options.lint_settings options in
         let suppressed, _, _ =
-          Error_suppressions.check locs error_suppressions in
+          Error_suppressions.check err lint_settings error_suppressions in
         if not suppressed
         then Errors.ErrorSet.add err errors
         else errors

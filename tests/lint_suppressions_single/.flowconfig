@@ -1,0 +1,14 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[options]
+
+[lints]
+all=false
+sketchy_null_bool=true
+sketchy_null_string=true
+sketchy_null_number=true
+sketchy_null_mixed=true

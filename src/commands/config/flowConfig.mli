@@ -18,6 +18,7 @@ val init:
   includes: string list ->
   libs: string list ->
   options: string list ->
+  lints: string list ->
   config
 val write: config -> out_channel -> unit
 
@@ -73,3 +74,6 @@ val temp_dir: config -> string
 val traces: config -> int
 val required_version: config -> string option
 val weak: config -> bool
+
+(* global defaults for lint suppressions *)
+val lint_settings: config -> LintSettings.t

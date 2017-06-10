@@ -52,18 +52,18 @@ let collate_errors =
       )
       errors
   in
-  fun { ServerEnv.local_errors; merge_errors; suppressions; } ->
+  fun { ServerEnv.local_errors; merge_errors; suppressions; } lint_settings ->
     let open Error_suppressions in
     let suppressions = union_suppressions suppressions in
 
-    (* union the errors from all files together, filtering suppressed errors *)
-    let errors = ErrorSet.empty
-      |> collate local_errors
-      |> collate merge_errors
-    in
-    let errors, suppressed_errors, suppressions = filter_suppressed_errors suppressions errors in
-    let errors = add_unused_suppression_errors suppressions errors in
-    errors, suppressed_errors
+      (* union the errors from all files together, filtering suppressed errors *)
+      let errors = ErrorSet.empty
+        |> collate local_errors
+        |> collate merge_errors
+      in
+      let errors, suppressed_errors, suppressions = filter_suppressed_errors suppressions lint_settings errors in
+      let errors = add_unused_suppression_errors suppressions errors in
+      errors, suppressed_errors
 
   let convert_errorl el =
     if Errors.ErrorSet.is_empty el then
@@ -80,7 +80,8 @@ let collate_errors =
       }
     end else begin
       (* collate errors by origin *)
-      let errors, _ = collate_errors env.ServerEnv.errors in
+      let lint_settings = Options.lint_settings genv.options in
+      let errors, _ = collate_errors env.ServerEnv.errors lint_settings in
 
       (* TODO: check status.directory *)
       status_log errors;
@@ -89,8 +90,9 @@ let collate_errors =
       convert_errorl errors
     end
 
-  let check_once _genv env =
-    collate_errors env.ServerEnv.errors
+  let check_once genv env =
+    let lint_settings = Options.lint_settings genv.options in
+    collate_errors env.ServerEnv.errors lint_settings
 
   let die_nicely () =
     FlowEventLogger.killed ();
@@ -235,7 +237,8 @@ let collate_errors =
     Module_js.get_file ~audit:Expensive.warn module_name
 
   let gen_flow_files ~options env files =
-    let errors, _ = collate_errors env.ServerEnv.errors in
+    let lint_settings = Options.lint_settings options in
+    let errors, _ = collate_errors env.ServerEnv.errors lint_settings in
     let result = if Errors.ErrorSet.is_empty errors
       then begin
         let cache = new Context_cache.context_cache in
@@ -609,7 +612,8 @@ let collate_errors =
     let workers = genv.ServerEnv.workers in
     match msg with
       | Persistent_connection_prot.Subscribe ->
-          let errorl, _ = collate_errors !env.errors in
+          let lint_settings = Options.lint_settings options in
+          let errorl, _ = collate_errors !env.errors lint_settings in
           let new_connections =
             Persistent_connection.subscribe_client !env.connections client errorl
           in

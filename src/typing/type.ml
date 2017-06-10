@@ -557,7 +557,8 @@ module rec TypeTerm : sig
     | LeftP of binary_test * t
     | RightP of binary_test * t
 
-    | ExistsP (* truthy *)
+    (* Only track locations of existence checks created when walking the AST *)
+    | ExistsP (* truthy *) of Loc.t option (* Location of the existence check *)
     | NullP (* null *)
     | MaybeP (* null or undefined *)
 
@@ -574,8 +575,8 @@ module rec TypeTerm : sig
 
     | ArrP (* Array.isArray *)
 
-    (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP "b", tout))` *)
-    | PropExistsP of reason * string
+    (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP (reason, "b", loc), tout))` *)
+    | PropExistsP of reason * string * Loc.t option (* Location of the property in the existence check *)
 
     (* Encondes the latent predicate associated with the i-th parameter
        of a function, whose type is the second element of the triplet. *)
@@ -2270,7 +2271,7 @@ let rec string_of_predicate = function
   | RightP (b, t) ->
       spf "right operand of %s with left operand = %s"
         (string_of_binary_test b) (string_of_desc (desc_of_t t))
-  | ExistsP -> "truthy"
+  | ExistsP _ -> "truthy"
   | NullP -> "null"
   | MaybeP -> "null or undefined"
 
@@ -2290,7 +2291,7 @@ let rec string_of_predicate = function
   (* Array.isArray *)
   | ArrP -> "array"
 
-  | PropExistsP (_, key) -> spf "prop `%s` is truthy" key
+  | PropExistsP (_, key, _) -> spf "prop `%s` is truthy" key
 
   | LatentP (OpenT (_, id),i) -> spf "LatentPred(TYPE_%d, %d)" id i
   | LatentP (t,i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i

@@ -307,6 +307,8 @@ type config = {
   libs: string list;
   (* config options *)
   options: Opts.t;
+  (* lint settings *)
+  lint_settings: LintSettings.t
 }
 
 module Pp : sig
@@ -345,6 +347,13 @@ end = struct
       then opt o "temp_dir" options.temp_dir
     )
 
+  let lints o config =
+    let lint_settings = config.lint_settings in
+    fprintf o "all=%b\n" (LintSettings.get_default lint_settings);
+    LintSettings.iter
+      (fun kind enabled -> (fprintf o "%s=%b\n" (LintSettings.string_of_kind kind) enabled))
+      lint_settings
+
   let config o config =
     section_header o "ignore";
     ignores o config.ignores;
@@ -356,7 +365,10 @@ end = struct
     libs o config.libs;
     fprintf o "\n";
     section_header o "options";
-    options o config
+    options o config;
+    fprintf o "\n";
+    section_header o "lints";
+    lints o config
 end
 
 let empty_config = {
@@ -364,6 +376,7 @@ let empty_config = {
   includes = [];
   libs = [];
   options = Opts.default_options;
+  lint_settings = LintSettings.default_settings
 }
 
 let group_into_sections lines =
@@ -806,6 +819,39 @@ let parse_version config lines =
     { config with options }
   | _ -> config
 
+let parse_lint_option line_number = function
+  | "true" | "on" -> true
+  | "false" | "off" -> false
+  | _ -> error line_number
+    "Invalid setting encountered. Valid settings are 'true', 'false', 'on', and 'off'."
+
+let parse_lints config lines =
+  let update_config config (number, line) =
+    let pieces = Str.split_delim (Str.regexp "=") line in
+    let left, right = match pieces with
+      | [left; right] -> left, right
+      | _ -> error number
+        "Malformed lint rule option. Properly formed rule options contain a single '=' character."
+    in
+    let left = left |> String.trim |> String.lowercase_ascii in
+    let right = right |> String.trim |> String.lowercase_ascii in
+    let err_setting = parse_lint_option number right in
+    let new_lint_settings =
+      match left with
+      | "all" -> LintSettings.fresh_settings err_setting
+      | _ ->
+        let lints = try
+          LintSettings.string_to_lints left
+        with
+          Not_found -> error number (spf "Invalid lint rule \"%s\" encountered." left)
+        in
+        let update_lint value lint_settings lint_setting =
+          LintSettings.set_enabled lint_setting value lint_settings in
+        List.fold_left (update_lint err_setting) config.lint_settings lints
+    in
+    {config with lint_settings = new_lint_settings}
+  in List.fold_left update_config config lines
+
 
 let parse_section config ((section_ln, section), lines) =
   match section, lines with
@@ -817,6 +863,7 @@ let parse_section config ((section_ln, section), lines) =
   | "libs", _ -> parse_libs config lines
   | "options", _ -> parse_options config lines
   | "version", _ -> parse_version config lines
+  | "lints", _ -> parse_lints config lines
   | _ -> error section_ln (spf "Unsupported config section: \"%s\"" section)
 
 let parse config lines =
@@ -841,15 +888,17 @@ let read filename =
     |> List.filter is_not_comment in
   parse empty_config lines
 
-let init ~ignores ~includes ~libs ~options =
+let init ~ignores ~includes ~libs ~options ~lints =
   let ignores_lines = List.map (fun s -> (1, s)) ignores in
   let includes_lines = List.map (fun s -> (1, s)) includes in
   let options_lines = List.map (fun s -> (1, s)) options in
   let lib_lines = List.map (fun s -> (1, s)) libs in
+  let lint_lines = List.map (fun s -> (1, s)) lints in
   let config = parse_ignores empty_config ignores_lines in
   let config = parse_includes config includes_lines in
   let config = parse_options config options_lines in
   let config = parse_libs config lib_lines in
+  let config = parse_lints config lint_lines in
   config
 
 let write config oc = Pp.config oc config
@@ -920,3 +969,6 @@ let temp_dir c = c.options.Opts.temp_dir
 let traces c = c.options.Opts.traces
 let required_version c = c.options.Opts.version
 let weak c = c.options.Opts.weak
+
+(* global defaults for lint suppressions *)
+let lint_settings c = c.lint_settings

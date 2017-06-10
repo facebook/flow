@@ -56,6 +56,7 @@ begin library "flow-commands-config"
   end
   requires = [
     "flow-common"
+    "flow-common-lints"
     "flow-common-utils"
     "hh-utils"
     "hh-utils-collections"
@@ -67,6 +68,7 @@ begin library "flow-common"
   files = begin fb-glob "src/common"
   end
   requires = [
+    "flow-common-lints"
     "flow-common-utils"
     "flow-stubs"
     "flow-parser"
@@ -92,11 +94,20 @@ begin library "flow-common-errors"
   end
   requires = [
     "flow-common"
+    "flow-common-lints"
     "flow-common-profiling"
     "flow-common-utils"
     "flow-parser"
     "hh-utils"
     "hh-utils-json"
+  ]
+end
+
+begin library "flow-common-lints"
+  sort = true
+  files = begin fb-glob "src/common/lints"
+  end
+  requires = [
   ]
 end
 
@@ -268,6 +279,7 @@ begin library "flow-server"
   end
   requires = [
     "flow-common"
+    "flow-common-lints"
     "flow-common-utils"
     "flow-shmem"
     "flow-stubs"
@@ -440,6 +452,7 @@ begin library "flow-typing"
   requires = [
     "flow-common"
     "flow-common-errors"
+    "flow-common-lints"
     "flow-common-utils"
     "flow-parser"
     "flow-parser-utils"

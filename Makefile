@@ -60,6 +60,7 @@ MODULES=\
   src/common\
   src/common/audit\
   src/common/errors\
+  src/common/lints\
   src/common/profiling\
   src/common/utils\
   src/dts\

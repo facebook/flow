@@ -54,11 +54,25 @@ let check_loc ((_result, consumed, { suppressions; unused; }) as acc) loc =
   else acc
 
 (* Checks if any of the given locations should be suppressed. *)
-let check (locs: Loc.t list) suppressions =
+let check_locs (locs: Loc.t list) suppressions =
   (* We need to check every location in order to figure out which suppressions
      are really unused...that's why we don't shortcircuit as soon as we find a
      matching error suppression *)
   List.fold_left check_loc (false, Loc.LocSet.empty, suppressions) locs
+
+let check err lint_settings suppressions =
+  let locs = Errors.locs_of_error err in
+  let (suppressed, consumed, suppressions) as result = check_locs locs suppressions in
+  if suppressed then result
+  else
+    let err_kind = Errors.kind_of_error err in
+    match err_kind with
+    | Errors.LintError lint_kind ->
+      (* TODO: (rballard) use the location information when that gets added in. *)
+      (* TODO: (rballard) track unused lint suppressions. *)
+      let suppressed = LintSettings.is_suppressed lint_kind lint_settings in
+      (suppressed, consumed, suppressions)
+    | _ -> result
 
 (* Get's the locations of the suppression comments that are yet unused *)
 let unused { unused; _; } =
@@ -80,13 +94,12 @@ let union_suppressions suppressions =
     suppressions
     empty
 
-let filter_suppressed_errors suppressions errors =
+let filter_suppressed_errors suppressions lint_settings errors =
   (* Filter out suppressed errors. also track which suppressions are used. *)
   let errors, suppressed_errors, suppressions = Errors.ErrorSet.fold
     (fun error (errors, suppressed_errors, supp_acc) ->
-      let locs = Errors.locs_of_error error in
       let (suppressed, consumed_suppressions, supp_acc) =
-        check locs supp_acc
+        check error lint_settings supp_acc
       in
       let errors, suppressed_errors = if suppressed
         then errors, (error, consumed_suppressions)::suppressed_errors

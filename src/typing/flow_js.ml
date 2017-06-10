@@ -96,7 +96,6 @@ let mk_boundfunctiontype = mk_methodtype dummy_this
 let mk_functiontype = mk_methodtype global_this
 let mk_functioncalltype = mk_methodcalltype global_this
 
-
 (* An object type has two flags, sealed and exact. A sealed object type cannot
    be extended. An exact object type accurately describes objects without
    "forgeting" any properties: so to extend an object type with optional
@@ -2322,13 +2321,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (match truthy_left with
       | DefT (_, EmptyT) ->
         (* falsy *)
-        rec_flow cx trace (left, PredicateT (NotP ExistsP, u))
+        rec_flow cx trace (left, PredicateT (NotP (ExistsP None), u))
       | _ ->
         (match filter_not_exists left with
         | DefT (_, EmptyT) -> (* truthy *)
           rec_flow cx trace (right, UseT (UnknownUse, u))
         | _ ->
-          rec_flow cx trace (left, PredicateT (NotP ExistsP, u));
+          rec_flow cx trace (left, PredicateT (NotP (ExistsP None), u));
           begin match truthy_left with
           | DefT (_, EmptyT) -> ()
           | _ ->
@@ -2345,13 +2344,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (match falsy_left with
       | DefT (_, EmptyT) ->
         (* truthy *)
-        rec_flow cx trace (left, PredicateT (ExistsP, u))
+        rec_flow cx trace (left, PredicateT (ExistsP None, u))
       | _ ->
         (match filter_exists left with
         | DefT (_, EmptyT) -> (* falsy *)
           rec_flow cx trace (right, UseT (UnknownUse, u))
         | _ ->
-          rec_flow cx trace (left, PredicateT (ExistsP, u));
+          rec_flow cx trace (left, PredicateT (ExistsP None, u));
           begin match falsy_left with
           | DefT (_, EmptyT) -> ()
           | _ ->
@@ -7950,19 +7949,52 @@ and filter_optional cx ?trace reason opt_t =
     flow_opt_t cx ?trace (opt_t, DefT (reason, OptionalT t))
   )
 
+and update_sketchy_null =
+  let loc_if_nonempty = function
+    | DefT (_, EmptyT) -> None
+    | t -> Some (loc_of_t t)
+  in
+  let loc_if_null_or_undefined t =
+    t |> filter_maybe |> loc_if_nonempty
+  in
+
+  let loc_if_real_falsey t =
+    t |> filter_not_exists |> filter_not_maybe |> loc_if_nonempty
+  in
+
+  fun cx opt_loc t ->
+    match t with
+    | DefT (_, AnyT) -> ()
+    | _ ->
+      match opt_loc with
+      | None -> ()
+      | Some loc ->
+        let exist_checks = Context.exist_checks cx in
+        let check = (loc_if_null_or_undefined t, loc_if_real_falsey t) in
+        let check =
+          match LocMap.get loc exist_checks with
+          | None -> check
+          | Some check' ->
+            match check, check' with
+            | (n, f), (n', f') -> Option.first_some n n', Option.first_some f f'
+        in
+        Context.set_exist_checks cx (LocMap.add loc check exist_checks)
+
 (**********)
 (* guards *)
 (**********)
 
 and guard cx trace source pred result sink = match pred with
 
-| ExistsP ->
+| ExistsP loc ->
+  update_sketchy_null cx loc source;
   begin match filter_exists source with
   | DefT (_, EmptyT) -> ()
   | _ -> rec_flow_t cx trace (result, sink)
   end
 
-| NotP ExistsP ->
+| NotP (ExistsP loc) ->
+  update_sketchy_null cx loc source;
   begin match filter_not_exists source with
   | DefT (_, EmptyT) -> ()
   | _ -> rec_flow_t cx trace (result, sink)
@@ -8227,16 +8259,20 @@ and predicate cx trace t l p = match p with
   (* truthyness *)
   (************************)
 
-  | ExistsP ->
+  | ExistsP loc ->
+    update_sketchy_null cx loc l;
     rec_flow_t cx trace (filter_exists l, t)
 
-  | NotP ExistsP ->
+  | NotP (ExistsP loc) ->
+    update_sketchy_null cx loc l;
     rec_flow_t cx trace (filter_not_exists l, t)
 
-  | PropExistsP (reason, key) ->
+  | PropExistsP (reason, key, loc) ->
+    update_sketchy_null cx loc l;
     prop_exists_test cx trace reason key true l t
 
-  | NotP (PropExistsP (reason, key)) ->
+  | NotP (PropExistsP (reason, key, loc)) ->
+    update_sketchy_null cx loc l;
     prop_exists_test cx trace reason key false l t
 
   (* unreachable *)
@@ -8273,7 +8309,7 @@ and prop_exists_test_generic
       (match Property.read_t p with
       | Some t ->
         (* prop is present on object type *)
-        let pred = if sense then ExistsP else NotP ExistsP in
+        let pred = if sense then ExistsP None else NotP (ExistsP None) in
         rec_flow cx trace (t, GuardT (pred, orig_obj, result))
       | None ->
         (* prop cannot be read *)

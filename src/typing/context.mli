@@ -102,6 +102,7 @@ val type_table: t -> Type_table.t
 val verbose: t -> Verbose.t option
 val max_workers: t -> int
 val jsx: t -> Options.jsx_mode option
+val exist_checks: t -> (Loc.t option * Loc.t option) Utils_js.LocMap.t
 val pid_prefix: t -> string
 
 val copy_of_context: t -> t
@@ -134,6 +135,7 @@ val set_module_kind: t -> module_kind -> unit
 val set_property_maps: t -> Type.Properties.map -> unit
 val set_export_maps: t -> Type.Exports.map -> unit
 val set_tvar: t -> Constraint.ident -> Constraint.node -> unit
+val set_exist_checks: t -> (Loc.t option * Loc.t option) Utils_js.LocMap.t -> unit
 
 val clear_intermediates: t -> unit
 

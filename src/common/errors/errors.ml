@@ -14,6 +14,7 @@ type error_kind =
   | InferWarning
   | InternalError
   | DuplicateProviderError
+  | LintError of LintSettings.lint_kind
 
 let string_of_kind = function
 | ParseError -> "ParseError"
@@ -21,6 +22,7 @@ let string_of_kind = function
 | InferWarning -> "InferWarning"
 | InternalError -> "InternalError"
 | DuplicateProviderError -> "DuplicateProviderError"
+| LintError lint_kind -> "LintError" ^ "-" ^ LintSettings.string_of_kind lint_kind
 
 (* internal rep for core info *)
 type message =
@@ -252,6 +254,8 @@ let file_of_error err =
   let loc = loc_of_error err in
   file_of_source loc.Loc.source
 
+let kind_of_error err = err.kind
+
 
 (* TODO: deprecate this in favor of Reason.json_of_loc *)
 let deprecated_json_props_of_loc ~strip_root loc = Loc.(
@@ -271,13 +275,15 @@ let deprecated_json_props_of_loc ~strip_root loc = Loc.(
 let compare =
   let kind_cmp =
     (* show internal errors first, then duplicate provider errors, then parse
-       errors. then both infer warnings and errors at the same priority. *)
+       errors. then both infer warnings and errors at the same priority. then
+       lint errors *)
     let order_of_kind = function
     | InternalError -> 1
     | DuplicateProviderError -> 2
     | ParseError -> 3
     | InferError -> 4
     | InferWarning -> 4
+    | LintError _ -> 5
     in
     fun k1 k2 -> (order_of_kind k1) - (order_of_kind k2)
   in
@@ -570,6 +576,9 @@ module Cli_output = struct
         (* TODO: is this possible? What happens when there are two `declare
            module`s with the same name? *)
         | DuplicateProviderError -> "Library duplicate provider error:"
+        | LintError lint_kind ->
+          let lint_string = LintSettings.string_of_kind lint_kind in
+          Printf.sprintf "Library lint error (%s):" lint_string
         in
         [comment_file_style (header^"\n")],
         relative_lib_path ~strip_root filename
@@ -741,6 +750,7 @@ module Json_output = struct
       | InferWarning -> "infer", "warning"
       | InternalError -> "internal", "error"
       | DuplicateProviderError -> "duplicate provider", "error"
+      | LintError _ -> "lint", "error"
     in
     let suppressions = suppression_locs
     |> Loc.LocSet.elements

@@ -4005,14 +4005,14 @@ and predicates_of_condition cx e = Ast.(Expression.(
       in
 
       let out = match Refinement.key e with
-      | Some name -> result t name t ExistsP true
+      | Some name -> result t name t (ExistsP (Some loc)) true
       | None -> empty_result t
       in
 
       (* refine the object (`foo.bar` in the example) based on the prop. *)
       begin match Refinement.key _object with
       | Some name ->
-        let predicate = PropExistsP (expr_reason, prop_name) in
+        let predicate = PropExistsP (expr_reason, prop_name, Some prop_loc) in
         out |> add_predicate name obj_t predicate true
       | None ->
         out
@@ -4023,7 +4023,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let expr = expression cx e in
       let id = id.Ast.Pattern.Identifier.name in
       match refinable_lvalue (loc, Ast.Expression.Identifier id) with
-      | Some name, _ -> result expr name expr ExistsP true
+      | Some name, _ -> result expr name expr (ExistsP (Some loc)) true
       | None, _ -> empty_result expr
     )
 
@@ -4118,11 +4118,11 @@ and predicates_of_condition cx e = Ast.(Expression.(
       (BoolT.at loc, not_map, map, xts)
 
   (* ids *)
-  | _, This
-  | _, Identifier _
-  | _, Member _ -> (
+  | loc, This
+  | loc, Identifier _
+  | loc, Member _ -> (
       match refinable_lvalue e with
-      | Some name, t -> result t name t ExistsP true
+      | Some name, t -> result t name t (ExistsP (Some loc)) true
       | None, t -> empty_result t
     )
 

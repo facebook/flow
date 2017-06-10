@@ -34,6 +34,8 @@ let string_of_float_trunc x =
   else
     result
 
+module LocMap = MyMap.Make(Loc)
+
 (* alias stuff from `Loc` so that it can be used by doing `open Utils_js`
    instead of `open Loc`, which pollutes too much. *)
 type filename = Loc.filename

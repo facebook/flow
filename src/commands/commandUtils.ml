@@ -527,6 +527,7 @@ let make_options ~flowconfig ~lazy_ ~root (options_flags: Options_flags.t) =
     opt_haste_paths_whitelist = FlowConfig.haste_paths_whitelist flowconfig;
     opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig;
     opt_file_options = file_options;
+    lint_settings = FlowConfig.lint_settings flowconfig;
   }
 
 let connect server_flags root =

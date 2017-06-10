@@ -131,6 +131,10 @@ type local_t = {
   refs_table: (Loc.t, Loc.t) Hashtbl.t;
 
   mutable declare_module_t: Type.t option;
+
+  (* map from exists proposition locations to the types of values running through them
+   * (potential null/void use source loc * potential non-null/void falsey use source loc) *)
+  mutable exist_checks: (Loc.t option * Loc.t option) Utils_js.LocMap.t;
 }
 
 type cacheable_t = local_t
@@ -210,6 +214,8 @@ let make metadata file module_ref = {
     refs_table = Hashtbl.create 0;
 
     declare_module_t = None;
+
+    exist_checks = Utils_js.LocMap.empty;
   }
 }
 
@@ -270,6 +276,7 @@ let type_table cx = cx.local.type_table
 let verbose cx = cx.local.metadata.verbose
 let max_workers cx = Global.max_workers cx.global
 let jsx cx = cx.local.metadata.jsx
+let exist_checks cx = cx.local.exist_checks
 
 let pid_prefix (cx: t) =
   if max_workers cx > 0
@@ -337,12 +344,15 @@ let set_type_graph cx type_graph =
   cx.local.type_graph <- type_graph
 let set_tvar cx id node =
   cx.local.graph <- IMap.add id node cx.local.graph
+let set_exist_checks cx exist_checks =
+  cx.local.exist_checks <- exist_checks
 
 let clear_intermediates cx =
   (* call reset instead of clear to also shrink the bucket tables *)
   Type_table.reset cx.local.type_table;
   Hashtbl.reset cx.local.annot_table;
-  cx.local.all_unresolved <- IMap.empty
+  cx.local.all_unresolved <- IMap.empty;
+  cx.local.exist_checks <- Utils_js.LocMap.empty
 
 (* utils *)
 let iter_props cx id f =
@@ -399,7 +409,8 @@ let merge_into cx cx_other =
   set_type_graph cx (Graph_explorer.union_finished (type_graph cx_other) (type_graph cx));
   set_all_unresolved cx (IMap.union (all_unresolved cx_other) (all_unresolved cx));
   set_globals cx (SSet.union (globals cx_other) (globals cx));
-  set_graph cx (IMap.union (graph cx_other) (graph cx))
+  set_graph cx (IMap.union (graph cx_other) (graph cx));
+  set_exist_checks cx (Utils_js.LocMap.union (exist_checks cx_other) (exist_checks cx))
 
 let to_cache cx = cx.local
 let from_cache ~options local =

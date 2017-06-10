@@ -58,6 +58,20 @@ let explicit_decl_require_strict cx (m, loc, resolved_m, cx_to) =
   let to_t = Flow_js.lookup_module cx_to m in
   Flow_js.flow_t cx (from_t, to_t)
 
+let detect_sketchy_null_checks cx =
+  let exist_checks = Context.exist_checks cx in
+  let detect_function prop_loc = function
+    | (Some null_loc, Some falsey_loc) -> Context.add_error cx (Errors.mk_error
+        ~kind:(Errors.LintError LintSettings.SketchyNullMixed) (* TODO: Track actual error type *)
+        ~extra:[Errors.InfoLeaf [
+          null_loc, ["Potentially null/undefined value."];
+          falsey_loc, ["Potentially falsey value."]
+        ]]
+        [prop_loc, ["Sketchy null check. Perhaps you meant to check for null instead of for existence?"]]
+      )
+    | _ -> () in
+  Utils_js.LocMap.iter detect_function exist_checks
+
 
 (* Merge a component with its "implicit requires" and "explicit requires." The
    implicit requires are those defined in libraries. For the explicit
@@ -108,6 +122,8 @@ let merge_component_strict component_cxs dep_cxs
 
   other_cxs |> List.iter (implicit_require_strict cx master_cx);
   implicit_require_strict cx master_cx cx;
+
+  detect_sketchy_null_checks cx;
 
   ()
 

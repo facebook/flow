@@ -379,7 +379,7 @@ and gc_pred cx state = function
   | NotP (p) ->
       gc_pred cx state p
 
-  | ExistsP
+  | ExistsP _
   | NullP
   | MaybeP
   | BoolP

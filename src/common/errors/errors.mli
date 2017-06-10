@@ -14,6 +14,7 @@ type error_kind =
   | InferWarning
   | InternalError
   | DuplicateProviderError
+  | LintError of LintSettings.lint_kind
 
 val string_of_kind: error_kind -> string
 
@@ -47,6 +48,7 @@ val loc_of_error: error -> Loc.t
 val locs_of_error: error -> Loc.t list
 val infos_of_error: error -> info list
 val extra_of_error: error -> info_tree list
+val kind_of_error: error -> error_kind
 
 (* we store errors in sets, currently, because distinct
    traces may share endpoints, and produce the same error *)

@@ -9,8 +9,10 @@ module Init = struct
         e.g. %s init /path/to/root\n\
         or %s init\n\
         or %s init --options \"optionA=123;optionB=456\"\n\n\
+        or %s init --lints \"lintA=on;lintB=off\"\n\n\
         If the root is not specified it is assumed to be the current working directory\n\n\
         This command will create and initialize /path/to/root/.flowconfig\n"
+        CommandUtils.exe_name
         CommandUtils.exe_name
         CommandUtils.exe_name
         CommandUtils.exe_name
@@ -21,12 +23,14 @@ module Init = struct
       |> CommandUtils.flowconfig_flags
       |> flag "--options" (optional string)
           ~doc:"Semicolon-delimited list of key=value pairs"
+      |> flag "--lints" (optional string)
+          ~doc:"Semicolon-delimited list of key=value pairs"
       |> anon "root" (optional string)
           ~doc:"Root directory (default: current working directory)"
     )
   }
 
-  let main from flowconfig_flags options root () =
+  let main from flowconfig_flags options lints root () =
     FlowEventLogger.set_from from;
     let root = match root with
     | None -> Sys.getcwd () |> Path.make
@@ -34,6 +38,10 @@ module Init = struct
     in
     FlowEventLogger.set_root (Some (Path.to_string root));
     let options = match options with
+    | None -> []
+    | Some str -> Str.split (Str.regexp ";") str
+    in
+    let lints = match lints with
     | None -> []
     | Some str -> Str.split (Str.regexp ";") str
     in
@@ -48,7 +56,7 @@ module Init = struct
       FlowExitStatus.(exit ~msg Invalid_flowconfig)
     end;
 
-    let config = FlowConfig.init ~ignores ~includes ~libs ~options in
+    let config = FlowConfig.init ~ignores ~includes ~libs ~options ~lints in
 
     let out = Sys_utils.open_out_no_fail file in
     FlowConfig.write config out;

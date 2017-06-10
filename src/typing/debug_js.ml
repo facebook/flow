@@ -18,7 +18,7 @@ let string_of_pred_ctor = function
   | NotP _ -> "NotP"
   | LeftP _ -> "LeftP"
   | RightP _ -> "RightP"
-  | ExistsP -> "ExistsP"
+  | ExistsP _ -> "ExistsP"
   | VoidP -> "VoidP"
   | NullP -> "NullP"
   | MaybeP -> "MaybeP"
@@ -1109,9 +1109,9 @@ and json_of_pred_impl json_cx p = Hh_json.(
   | SingletonStrP (_, _, str) -> ["value", JSON_String str]
   | SingletonNumP (_, _, (_,raw)) -> ["value", JSON_String raw]
 
-  | PropExistsP (_, key) -> ["propName", JSON_String key]
+  | PropExistsP (_, key, _) -> ["propName", JSON_String key]
 
-  | ExistsP
+  | ExistsP _
   | VoidP
   | NullP
   | MaybeP

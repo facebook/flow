@@ -190,7 +190,7 @@ class ['a] t = object(self)
   | NotP p -> self#predicate cx acc p
   | LeftP (_, t) -> self#type_ cx acc t
   | RightP (_, t) -> self#type_ cx acc t
-  | ExistsP -> acc
+  | ExistsP _ -> acc
   | NullP -> acc
   | MaybeP -> acc
   | SingletonBoolP _ -> acc

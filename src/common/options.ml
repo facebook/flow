@@ -67,6 +67,7 @@ type t = {
   opt_verbose : Verbose.t option;
   opt_weak : bool;
   opt_max_header_tokens: int;
+  lint_settings: LintSettings.t;
 }
 
 let all opts = opts.opt_all
@@ -108,3 +109,5 @@ let suppress_types opts = opts.opt_suppress_types
 let temp_dir opts = opts.opt_temp_dir
 let verbose opts = opts.opt_verbose
 let weak_by_default opts = opts.opt_weak
+
+let lint_settings opts = opts.lint_settings
