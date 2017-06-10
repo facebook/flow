@@ -167,7 +167,12 @@ let collate_errors =
       _end = { Loc.line; column = col + 1; offset = 0; };
     }
 
-  let infer_type ~options ~workers ~env client_context (file_input, line, col, verbose, include_raw) =
+  let infer_type
+      ~options
+      ~workers
+      ~env
+      client_context
+      (file_input, line, col, verbose, include_raw) =
     let file = File_input.filename_of_file_input file_input in
     let file = Loc.SourceFile file in
     let response = (try
@@ -544,8 +549,10 @@ let collate_errors =
         (coverage ~options ~workers ~env ~force fn: ServerProt.coverage_response)
           |> marshal
     | ServerProt.DUMP_TYPES (fn, include_raw, strip_root) ->
-        (dump_types ~options ~workers ~env ~include_raw ~strip_root fn: ServerProt.dump_types_response)
-          |> marshal
+        let types: ServerProt.dump_types_response =
+          dump_types ~options ~workers ~env ~include_raw ~strip_root fn
+        in
+        marshal types
     | ServerProt.FIND_MODULE (moduleref, filename) ->
         (find_module ~options (moduleref, filename): filename option)
           |> marshal
@@ -561,8 +568,10 @@ let collate_errors =
         (gen_flow_files ~options !env files: ServerProt.gen_flow_file_response)
           |> marshal
     | ServerProt.GET_DEF (fn, line, char) ->
-        (get_def ~options ~workers ~env client_logging_context (fn, line, char): ServerProt.get_def_response)
-          |> marshal
+        let def: ServerProt.get_def_response =
+          get_def ~options ~workers ~env client_logging_context (fn, line, char)
+        in
+        marshal def
     | ServerProt.GET_IMPORTS module_names ->
         get_imports ~options module_names
           |> marshal
