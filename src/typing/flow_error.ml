@@ -36,6 +36,7 @@ end
 
 type error_message =
   | EIncompatible of Type.t * Type.use_t
+  | EIncompatibleDefs of reason * reason
   | EIncompatibleProp of Type.t * Type.use_t * reason
   | EDebugPrint of reason * string
   | EImportValueAsType of reason * string
@@ -47,7 +48,7 @@ type error_message =
   | ENoNamedExport of reason * string * string option
   | EMissingTypeArgs of reason * Type.typeparam list
   | EValueUsedAsType of (reason * reason)
-  | EMutationNotAllowed of (reason * reason)
+  | EMutationNotAllowed of { reason: reason; reason_op: reason }
   | EExpectedStringLit of (reason * reason) * string * string Type.literal
   | EExpectedNumberLit of (reason * reason) * Type.number_literal * Type.number_literal Type.literal
   | EExpectedBooleanLit of (reason * reason) * bool * bool option
@@ -211,6 +212,8 @@ let locs_of_error_message = function
       let reason_l = reason_of_t l in
       let reason_u = reason_of_use_t u in
       [loc_of_reason reason_l; loc_of_reason reason_u]
+  | EIncompatibleDefs (reason_l, reason_u) ->
+      [loc_of_reason reason_l; loc_of_reason reason_u]
   | EIncompatibleProp (l, u, reason) ->
       let reason_l = reason_of_t l in
       let reason_u = reason_of_use_t u in
@@ -226,8 +229,8 @@ let locs_of_error_message = function
   | EMissingTypeArgs (reason, _) -> [loc_of_reason reason]
   | EValueUsedAsType (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | EMutationNotAllowed (reason1, reason2) ->
-      [loc_of_reason reason1; loc_of_reason reason2]
+  | EMutationNotAllowed { reason; reason_op } ->
+      [loc_of_reason reason_op; loc_of_reason reason]
   | EExpectedStringLit ((reason1, reason2), _, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EExpectedNumberLit ((reason1, reason2), _, _) ->
@@ -344,12 +347,15 @@ let loc_of_error ~op msg =
   | None -> List.hd (locs_of_error_message msg)
 
 (* decide reason order based on UB's flavor and blamability *)
-let ordered_reasons l u =
-  let rl = reason_of_t l in
-  let ru = reason_of_use_t u in
-  if is_use u || (is_blamable_reason ru && not (is_blamable_reason rl))
+let ordered_reasons rl ru =
+  if (is_blamable_reason ru && not (is_blamable_reason rl))
   then ru, rl
   else rl, ru
+
+let ordered_reasons_of_types l u =
+  let rl = reason_of_t l in
+  let ru = reason_of_use_t u in
+  if is_use u then ru, rl else ordered_reasons rl ru
 
 let rec error_of_msg ~trace_reasons ~op ~source_file =
   let open Errors in
@@ -431,11 +437,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     | _ -> ""
   in
 
-  let err_msg l u =
-    if is_use u
-    then spf "%s%s" (err_operation u) (err_value l)
-    else "This type is incompatible with"
-  in
+  let err_msg_use l u = spf "%s%s" (err_operation u) (err_value l) in
 
   let msg_export export_name =
     if export_name = "default"
@@ -545,14 +547,19 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
 
   function
   | EIncompatible (l, u) ->
-      typecheck_error (err_msg l u) (ordered_reasons l u)
+      let rl = reason_of_t l in
+      let ru = reason_of_use_t u in
+      typecheck_error (err_msg_use l u) (ru, rl)
+
+  | EIncompatibleDefs (reason_l, reason_u) ->
+      typecheck_error "This type is incompatible with" (ordered_reasons reason_l reason_u)
 
   | EIncompatibleProp (l, u, reason_prop) ->
       (* when unexpected types flow into a GetPropT/SetPropT (e.g. void or
          other non-object-ish things), then use `reason_prop`, which
          represents the reason for the prop itself, not the lookup action. *)
       let reasons = reason_prop, reason_of_t l in
-      typecheck_error (err_msg l u) reasons
+      typecheck_error (err_msg_use l u) reasons
 
   | EDebugPrint (r, str) ->
       mk_error ~trace_infos [mk_info r [str]]
@@ -628,8 +635,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
          (did you forget 'typeof'?)"
         reasons
 
-  | EMutationNotAllowed reasons ->
-      typecheck_error "Mutation not allowed on" reasons
+  | EMutationNotAllowed { reason; reason_op } ->
+      typecheck_error "Mutation not allowed on" (reason_op, reason)
 
   | EExpectedStringLit (reasons, expected, actual) ->
       let msg = match actual with
@@ -808,8 +815,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       typecheck_error msg reasons
 
   | ESpeculationFailed (l, u, branches) ->
-      let reasons = ordered_reasons l u in
-      let msg = err_msg l u in
+      let reasons = ordered_reasons_of_types l u in
+      let msg = if is_use u then err_msg_use l u else "This type is incompatible with" in
       let extra = List.mapi (fun i (r, msg) ->
         let err = error_of_msg ~trace_reasons:[] ~op ~source_file msg in
         let header_infos = [

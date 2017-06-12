@@ -2031,6 +2031,10 @@ let dump_flow_error =
         spf "EIncompatible (%s, %s)"
           (dump_t ~depth cx l)
           (dump_use_t ~depth cx u)
+    | EIncompatibleDefs (reason_l, reason_u) ->
+        spf "EIncompatibleDefs (%s, %s)"
+          (dump_reason cx reason_l)
+          (dump_reason cx reason_u)
     | EIncompatibleProp (l, u, reason_prop) ->
         spf "EIncompatibleProp (%s, %s, %s)"
           (dump_t ~depth cx l)
@@ -2059,10 +2063,10 @@ let dump_flow_error =
         spf "EValueUsedAsType (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EMutationNotAllowed (reason1, reason2) ->
-        spf "EMutationNotAllowed (%s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
+    | EMutationNotAllowed { reason; reason_op } ->
+        spf "EMutationNotAllowed { reason = %s; reason_op = %s }"
+          (dump_reason cx reason)
+          (dump_reason cx reason_op)
     | EExpectedStringLit ((reason1, reason2), expected, literal) ->
         let literal = match literal with
         | Literal (_, str) -> spf "%S" str

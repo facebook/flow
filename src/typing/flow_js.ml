@@ -2504,27 +2504,27 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         necessity we allow all string types to flow to StrT (whereas only
         exactly matching string literal types may flow to SingletonStrT).  **)
 
-    | DefT (_, StrT actual), UseT (_, DefT (_, SingletonStrT expected)) ->
+    | DefT (rl, StrT actual), UseT (_, DefT (ru, SingletonStrT expected)) ->
       if literal_eq expected actual
       then ()
       else
-        let reasons = FlowError.ordered_reasons l u in
+        let reasons = FlowError.ordered_reasons rl ru in
         add_output cx ~trace
           (FlowError.EExpectedStringLit (reasons, expected, actual))
 
-    | DefT (_, NumT actual), UseT (_, DefT (_, SingletonNumT expected)) ->
+    | DefT (rl, NumT actual), UseT (_, DefT (ru, SingletonNumT expected)) ->
       if number_literal_eq expected actual
       then ()
       else
-        let reasons = FlowError.ordered_reasons l u in
+        let reasons = FlowError.ordered_reasons rl ru in
         add_output cx ~trace
           (FlowError.EExpectedNumberLit (reasons, expected, actual))
 
-    | DefT (_, BoolT actual), UseT (_, DefT (_, SingletonBoolT expected)) ->
+    | DefT (rl, BoolT actual), UseT (_, DefT (ru, SingletonBoolT expected)) ->
       if boolean_literal_eq expected actual
       then ()
       else
-        let reasons = FlowError.ordered_reasons l u in
+        let reasons = FlowError.ordered_reasons rl ru in
         add_output cx ~trace
           (FlowError.EExpectedBooleanLit (reasons, expected, actual))
 
@@ -2986,8 +2986,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (t, MakeExactT (r, Lower l))
 
     (* inexact LB ~> $Exact<UB>. error *)
-    | _, UseT (_, ExactT _) ->
-      let reasons = FlowError.ordered_reasons l u in
+    | _, UseT (_, ExactT (ru, _)) ->
+      let reasons = FlowError.ordered_reasons (reason_of_t l) ru in
       add_output cx ~trace (FlowError.EIncompatibleWithExact reasons)
 
     (* LB ~> MakeExactT (_, UB) exactifies LB, then flows result to UB *)
@@ -3016,9 +3016,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       continue cx trace (AnyT.why reason_op) k
 
     (* unsupported kind *)
-    | _, MakeExactT _ ->
-      let reasons = FlowError.ordered_reasons l u in
-      add_output cx ~trace (FlowError.EUnsupportedExact reasons)
+    | _, MakeExactT (ru, _) ->
+      add_output cx ~trace (FlowError.EUnsupportedExact (ru, reason_of_t l))
 
     (**************************************************************************)
     (* TestPropT is emitted for property reads in the context of branch tests.
@@ -3875,8 +3874,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_unify cx trace l u
 
     (* non-class/function values used in annotations are errors *)
-    | _, UseT (_, DefT (_, TypeT _)) ->
-      let reasons = FlowError.ordered_reasons l u in
+    | _, UseT (_, DefT (ru, TypeT _)) ->
+      let reasons = FlowError.ordered_reasons (reason_of_t l) ru in
       add_output cx ~trace (FlowError.EValueUsedAsType reasons)
 
     | DefT (rl, ClassT l), UseT (use_op, DefT (_, ClassT u)) ->
@@ -4434,17 +4433,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ... and their fields written *)
     (*****************************************)
 
-    | DefT (_, ObjT {flags; _}), SetPropT(_, Named (_, "constructor"), _) ->
+    | DefT (reason, ObjT {flags; _}), SetPropT(reason_op, Named (_, "constructor"), _) ->
       if flags.frozen
       then
-        let reasons = FlowError.ordered_reasons l u in
-        add_output cx ~trace (FlowError.EMutationNotAllowed reasons)
+        add_output cx ~trace (FlowError.EMutationNotAllowed { reason; reason_op })
 
     (** o.x = ... has the additional effect of o[_] = ... **)
 
-    | DefT (_, ObjT { flags; _ }), SetPropT _ when flags.frozen ->
-      let reasons = FlowError.ordered_reasons l u in
-      add_output cx ~trace (FlowError.EMutationNotAllowed reasons)
+    | DefT (reason, ObjT { flags; _ }), SetPropT (reason_op, _, _) when flags.frozen ->
+      add_output cx ~trace (FlowError.EMutationNotAllowed { reason; reason_op })
 
     | DefT (reason_obj, ObjT o), SetPropT (reason_op, propref, tin) ->
       write_obj_prop cx trace o propref reason_obj reason_op tin
@@ -5424,10 +5421,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, UseT (use_op, super))
 
     | (ObjProtoT _, UseT (use_op, ExtendsT (_, [], t, tc))) ->
-      let reason_l, reason_u =
-        Flow_error.ordered_reasons t (UseT (UnknownUse, tc)) in
-      add_output cx ~trace (FlowError.EIncompatibleWithUseOp
-        (reason_l, reason_u, use_op))
+      let reason_l, reason_u = Flow_error.ordered_reasons (reason_of_t t) (reason_of_t tc) in
+      add_output cx ~trace (FlowError.EIncompatibleWithUseOp (reason_l, reason_u, use_op))
 
     (**********************)
     (* Array library call *)
@@ -5501,6 +5496,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (
         reason_of_t l, reason_of_t u, use_op
       ))
+
+    | l, UseT (_, u) ->
+      add_output cx ~trace (FlowError.EIncompatibleDefs (reason_of_t l, reason_of_t u))
 
     | _ ->
       add_output cx ~trace (FlowError.EIncompatible (l, u))
@@ -5604,7 +5602,7 @@ and flow_comparator cx trace reason l r =
   | DefT (_, StrT _), DefT (_, StrT _) -> ()
   | (_, _) when numeric l && numeric r -> ()
   | (_, _) ->
-    let reasons = FlowError.ordered_reasons l (UseT (UnknownUse, r)) in
+    let reasons = FlowError.ordered_reasons (reason_of_t l) (reason_of_t r) in
     add_output cx ~trace (FlowError.EComparison reasons)
 
 (**
@@ -5618,7 +5616,7 @@ and flow_eq cx trace reason l r =
   if needs_resolution r then rec_flow cx trace (r, EqT(reason, l))
   else if equatable (l, r) then ()
   else
-    let reasons = FlowError.ordered_reasons l (UseT (UnknownUse, r)) in
+    let reasons = FlowError.ordered_reasons (reason_of_t l) (reason_of_t r) in
     add_output cx ~trace (FlowError.EComparison reasons)
 
 
@@ -9902,7 +9900,7 @@ and flow cx (lower, upper) =
   with
   | RecursionCheck.LimitExceeded trace ->
     (* log and continue *)
-    let reasons = FlowError.ordered_reasons lower upper in
+    let reasons = FlowError.ordered_reasons_of_types lower upper in
     add_output cx ~trace (FlowError.ERecursionLimit reasons)
   | ex ->
     (* rethrow *)
@@ -9946,7 +9944,7 @@ and unify cx t1 t2 =
   with
   | RecursionCheck.LimitExceeded trace ->
     (* log and continue *)
-    let reasons = FlowError.ordered_reasons t1 (UseT (UnknownUse, t2)) in
+    let reasons = FlowError.ordered_reasons (reason_of_t t1) (reason_of_t t2) in
     add_output cx ~trace (FlowError.ERecursionLimit reasons)
   | ex ->
     (* rethrow *)
