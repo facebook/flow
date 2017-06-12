@@ -15,6 +15,7 @@ open Lex_env
 
 let letter = [%sedlex.regexp? 'a'..'z' | 'A'..'Z' | '_' | '$']
 let digit = [%sedlex.regexp? '0'..'9']
+let decintlit = [%sedlex.regexp? '0' | ('1'..'9', Star digit)] (* DecimalIntegerLiteral *)
 let alphanumeric = [%sedlex.regexp? digit | letter]
 let word = [%sedlex.regexp? letter, Star alphanumeric]
 
@@ -27,7 +28,8 @@ let octnumber = [%sedlex.regexp? '0', ('O' | 'o'), Plus ('0'..'7')]
 let legacyoctnumber = [%sedlex.regexp? '0', Plus ('0'..'7')]
 let hexnumber = [%sedlex.regexp? '0', ('X' | 'x'), Plus hex_digit]
 let scinumber = [%sedlex.regexp?
-  Star digit, Opt '.', Plus digit, ('e' | 'E'), Opt ('-' | '+'), Plus digit
+  ((decintlit, Opt ('.', Star digit)) | ('.', Plus digit)),
+  ('e' | 'E'), Opt ('-' | '+'), Plus digit
 ]
 let wholenumber = [%sedlex.regexp? Plus digit, Opt '.']
 let floatnumber = [%sedlex.regexp? Star digit, '.', Plus digit]
