@@ -237,7 +237,7 @@ will likely have properties added to it and retrieved throughout its life.
 Furthermore, the property keys may not even be known statically, so writing out
 a type annotation would not be possible.
 
-For objects like this, Flow provides a special kind of property, called an
+For objects like these, Flow provides a special kind of property, called an
 "indexer property." An indexer property allows reads and writes using any key
 that matches the indexer key type.
 
