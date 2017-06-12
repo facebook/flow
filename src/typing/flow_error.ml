@@ -189,6 +189,160 @@ and unsupported_syntax =
   | SpreadArgument
   | ImportDynamicArgument
 
+let rec locs_of_use_op acc = function
+  | FunCallThis reason -> (loc_of_reason reason)::acc
+  | PropertyCompatibility
+      (_, lower_obj_reason, upper_obj_reason, use_op) ->
+    let lower_loc = loc_of_reason lower_obj_reason in
+    let upper_loc = loc_of_reason upper_obj_reason in
+    locs_of_use_op (lower_loc::upper_loc::acc) use_op
+  | Addition
+  | Coercion
+  | FunImplicitReturn
+  | FunCallParam
+  | FunReturn
+  | TypeRefinement
+  | UnknownUse
+  | Internal _
+  | MissingTupleElement _ -> acc
+
+let locs_of_error_message = function
+  | EIncompatible (l, u) ->
+      let reason_l = reason_of_t l in
+      let reason_u = reason_of_use_t u in
+      [loc_of_reason reason_l; loc_of_reason reason_u]
+  | EIncompatibleProp (l, u, reason) ->
+      let reason_l = reason_of_t l in
+      let reason_u = reason_of_use_t u in
+      [loc_of_reason reason; loc_of_reason reason_l; loc_of_reason reason_u]
+  | EDebugPrint (reason, _) -> [loc_of_reason reason]
+  | EImportValueAsType (reason, _) -> [loc_of_reason reason]
+  | EImportTypeAsTypeof (reason, _) -> [loc_of_reason reason]
+  | EImportTypeAsValue (reason, _) -> [loc_of_reason reason]
+  | EImportTypeofNamespace (reason, _, _) -> [loc_of_reason reason]
+  | ENoDefaultExport (reason, _, _) -> [loc_of_reason reason]
+  | EOnlyDefaultExport (reason, _) -> [loc_of_reason reason]
+  | ENoNamedExport (reason, _, _) -> [loc_of_reason reason]
+  | EMissingTypeArgs (reason, _) -> [loc_of_reason reason]
+  | EValueUsedAsType (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EMutationNotAllowed (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EExpectedStringLit ((reason1, reason2), _, _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EExpectedNumberLit ((reason1, reason2), _, _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EExpectedBooleanLit ((reason1, reason2), _, _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EPropNotFound ((reason1, reason2), use_op) ->
+      (loc_of_reason reason1)::(loc_of_reason reason2)::(locs_of_use_op [] use_op)
+  | EPropAccess ((reason1, reason2), _, _, _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EPropPolarityMismatch ((reason1, reason2), _, _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EPolarityMismatch (tp, _) -> [loc_of_reason tp.reason]
+  | EStrictLookupFailed ((reason1, reason2), _, _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EFunCallParam (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EFunCallThis (_, reason_u, reason_call) ->
+      [loc_of_reason reason_u; loc_of_reason reason_call]
+  | EFunReturn (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EFunImplicitReturn (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EAddition (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EAdditionMixed (reason) -> [loc_of_reason reason]
+  | ECoercion (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EComparison (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | ETupleArityMismatch ((reason1, reason2), _, _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | ENonLitArrayToTuple (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | ETupleOutOfBounds ((reason1, reason2), _, _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | ETupleUnsafeWrite (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | ESpeculationFailed (l, u, _) ->
+      let reason1 = reason_of_t l in
+      let reason2 = reason_of_use_t u in
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | ESpeculationAmbiguous ((reason1, reason2), _, _, _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EIncompatibleWithExact (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EUnsupportedExact (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EIdxArity (reason) -> [loc_of_reason reason]
+  | EIdxUse1 (reason) -> [loc_of_reason reason]
+  | EIdxUse2 (reason) -> [loc_of_reason reason]
+  | EUnexpectedThisType (loc) -> [loc]
+  | EInvalidRestParam (reason) -> [loc_of_reason reason]
+  | ETypeParamArity (loc, _) -> [loc]
+  | ETypeParamMinArity (loc, _) -> [loc]
+  | ETooManyTypeArgs (reason1, reason2, _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | ETooFewTypeArgs (reason1, reason2, _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EPropertyTypeAnnot (loc) -> [loc]
+  | EExportsAnnot (loc) -> [loc]
+  | EUnsupportedKeyInObjectType (loc) -> [loc]
+  | EPredAnnot (loc) -> [loc]
+  | ERefineAnnot (loc) -> [loc]
+  | EUnexpectedTypeof (loc) -> [loc]
+  | ECustom ((reason1, reason2), _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EInternal (loc, _) -> [loc]
+  | EUnsupportedSyntax (loc, _) -> [loc]
+  | EIllegalName (loc) -> [loc]
+  | EUseArrayLiteral (loc) -> [loc]
+  | EMissingAnnotation (reason) -> [loc_of_reason reason]
+  | EBindingError (_, loc, _, entry) ->
+      [loc; Scope.Entry.entry_loc entry]
+  | ERecursionLimit (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EModuleOutsideRoot (loc, _) -> [loc]
+  | EExperimentalDecorators (loc) -> [loc]
+  | EExperimentalClassProperties (loc, _) -> [loc]
+  | EUnsafeGetSet (loc) -> [loc]
+  | EExperimentalExportStarAs (loc) -> [loc]
+  | EIndeterminateModuleType (loc) -> [loc]
+  | EUnreachable (loc) -> [loc]
+  | EInvalidTypeof (loc, _) -> [loc]
+  | EBinaryInLHS (reason) -> [loc_of_reason reason]
+  | EBinaryInRHS (reason) -> [loc_of_reason reason]
+  | EArithmeticOperand (reason) -> [loc_of_reason reason]
+  | EForInRHS (reason) -> [loc_of_reason reason]
+  | EObjectComputedPropertyAccess (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EObjectComputedPropertyAssign (reason1, reason2) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EInvalidLHSInAssignment (loc) -> [loc]
+  | EIncompatibleWithUseOp (reason1, reason2, use_op) ->
+      (loc_of_reason reason1)::(loc_of_reason reason2)::(locs_of_use_op [] use_op)
+  | EUnsupportedImplements (reason) -> [loc_of_reason reason]
+  | EReactKit ((reason1, reason2), _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EFunctionCallExtraArg (reason1, reason2, _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EUnsupportedSetProto (reason) -> [loc_of_reason reason]
+  | EDuplicateModuleProvider { module_name = _; provider; conflict; } ->
+      [
+        Loc.({ none with source = Some conflict });
+        Loc.({ none with source = Some provider })
+      ]
+  | EParseError (loc, _) -> [loc]
+  | EDocblockError (loc, _) -> [loc]
+  | EUnusedSuppression (loc) -> [loc]
+
+let loc_of_error ~op msg =
+  match op with
+  | Some reason -> loc_of_reason reason
+  | None -> List.hd (locs_of_error_message msg)
+
 (* decide reason order based on UB's flavor and blamability *)
 let ordered_reasons l u =
   let rl = reason_of_t l in
