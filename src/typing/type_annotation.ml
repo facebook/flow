@@ -239,6 +239,17 @@ let rec convert cx tparams_map = Ast.Type.(function
         error_type cx loc (FlowError.EPropertyTypeAnnot loc)
     )
 
+  (* $ElementType<T, string> acts as the type of the string elements in object
+     type T *)
+  | "$ElementType" ->
+    check_type_param_arity cx loc typeParameters 2 (fun () ->
+      let ts = convert_type_params () in
+      let t = List.nth ts 0 in
+      let e = List.nth ts 1 in
+      EvalT (t, TypeDestructorT
+        (mk_reason (RCustom "element type") loc, ElementType e), mk_id())
+    )
+
   (* $NonMaybeType<T> acts as the type T without null and void *)
   | "$NonMaybeType" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->

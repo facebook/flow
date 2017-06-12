@@ -1,3 +1,19 @@
+element_type.js:1
+  1: type BadArity = $ElementType<number, number, number>;
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Incorrect number of type parameters (expected 2)
+
+element_type.js:7
+  7: ('hello world': Arr_Elem);
+      ^^^^^^^^^^^^^ string. This type is incompatible with
+  7: ('hello world': Arr_Elem);
+                     ^^^^^^^^ number
+
+element_type.js:18
+ 18: ('hello world': Obj_Elem);
+      ^^^^^^^^^^^^^ string. This type is incompatible with
+ 18: ('hello world': Obj_Elem);
+                     ^^^^^^^^ number
+
 non_maybe_type.js:5
   5:   else return 0; // this should be an error
                    ^ number. This type is incompatible with
@@ -95,4 +111,4 @@ union.js:4
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
 
-Found 7 errors
+Found 10 errors

@@ -209,6 +209,7 @@ class ['a] t = object(self)
   method private destructor cx acc = function
   | NonMaybeType -> acc
   | PropertyType _ -> acc
+  | ElementType t -> self#type_ cx acc t
   | Bind t -> self#type_ cx acc t
   | SpreadType (_, ts) -> self#list (self#type_ cx) acc ts
 

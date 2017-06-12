@@ -6455,6 +6455,7 @@ and eval_destructor cx ~trace reason curr_t s i =
             let maybe_r = replace_reason (fun desc -> RMaybe desc) reason in
             UseT (UnknownUse, DefT (maybe_r, MaybeT tvar))
         | PropertyType x -> GetPropT(reason, Named (reason, x), tvar)
+        | ElementType t -> GetElemT(reason, t, tvar)
         | Bind t -> BindT(reason, mk_methodcalltype t [] tvar, true)
         | SpreadType (make_exact, todo_rev) ->
             let open ObjectSpread in
@@ -6489,6 +6490,9 @@ and subst_destructor cx force map s = match s with
   | NonMaybeType
   | PropertyType _
     -> s
+  | ElementType t ->
+    let t_ = subst cx ~force map t in
+    if t_ == t then s else ElementType t_
   | Bind t ->
     let t_ = subst cx ~force map t in
     if t_ == t then s else Bind t_

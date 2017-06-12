@@ -994,6 +994,9 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | PropertyType x -> JSON_Object [
       "propName", JSON_String x;
     ]
+  | ElementType t -> JSON_Object [
+      "elementType", _json_of_t json_cx t
+    ]
   | Bind t -> JSON_Object [
       "thisType", _json_of_t json_cx t
     ]
@@ -1416,6 +1419,7 @@ and dump_t_ (depth, tvars) cx t =
     let string_of_destructor = function
     | NonMaybeType -> "non-maybe type"
     | PropertyType x -> spf "property type `%s`" x
+    | ElementType _ -> "element type"
     | Bind _ -> "bind"
     | SpreadType _ -> "spread"
     in
@@ -1983,6 +1987,7 @@ let string_of_selector = function
 let string_of_destructor = function
   | NonMaybeType -> "NonMaybeType"
   | PropertyType x -> spf "PropertyType %s" x
+  | ElementType _ -> "ElementType"
   | Bind _ -> "Bind"
   | SpreadType _ -> "Spread"
 

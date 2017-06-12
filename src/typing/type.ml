@@ -803,6 +803,7 @@ module rec TypeTerm : sig
   and destructor =
   | NonMaybeType
   | PropertyType of string
+  | ElementType of t
   | Bind of t
   | SpreadType of bool * t list
 

@@ -362,6 +362,7 @@ and gc_selector cx state = function
 and gc_destructor cx state = function
   | NonMaybeType -> ()
   | PropertyType _ -> ()
+  | ElementType t -> gc cx state t
   | Bind t -> gc cx state t
   | SpreadType (_, ts) -> List.iter (gc cx state) ts
 
