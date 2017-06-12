@@ -1,3 +1,30 @@
+### 0.48.0
+
+New Features:
+
+* Experimental support for "lazy" typechecking. On large codebases, the Flow
+  server will start up faster when using the --lazy flag with `flow start` or
+  `flow server`, by only computing dependency information and not doing any
+  typechecking. Instead, as files are touched, they are typechecked
+  incrementally along with files that depend on them (and their
+  dependencies). Relatedly, running `flow focus-check` on a file will only check
+  that file and files that depend on it (and their dependencies).
+
+Notable bug fixes:
+
+* Fixed crash in flow.org/try when using JSX (which was a regression in 0.46)
+
+Misc:
+* Libdef updates! Thanks everyone for the contributions!
+* Removed the libelf dependency from Flow. This helps a few systems, like the
+  standard node docker, that doesn't have libelf available.
+* Removed the strip_root .flowconfig option, since it doesn't make sense as a
+  project-specific option and complicated IDE integration. Clients (including
+  IDEs) can still use the --strip-root CLI flag as needed.
+* Improvements to handling of Object.prototype
+* Improvements to handling promotion of primitives to objects
+* Lots of refactoring to improve stability of commands and the typechecker
+
 ### 0.47.0
 
 Likely to cause new Flow errors:
