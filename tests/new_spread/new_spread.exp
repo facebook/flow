@@ -197,5 +197,11 @@ type_intersection.js:15
      11: type O2 = {...{p:A}&{p:B}};
                                 ^ B
 
+type_string.js:1
+  1: type O1 = {..."foo"}; // error
+               ^^^^^^^^^^ object type. Cannot spread properties from
+  1: type O1 = {..."foo"}; // error
+                   ^^^^^ string literal `foo`
 
-Found 24 errors
+
+Found 25 errors

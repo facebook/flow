@@ -103,6 +103,7 @@ type error_message =
   | EExperimentalExportStarAs of Loc.t
   | EIndeterminateModuleType of Loc.t
   | EUnreachable of Loc.t
+  | EInvalidSpread of { reason: reason; reason_op: reason }
   | EInvalidTypeof of Loc.t * string
   | EBinaryInLHS of reason
   | EBinaryInRHS of reason
@@ -314,6 +315,8 @@ let locs_of_error_message = function
   | EExperimentalExportStarAs (loc) -> [loc]
   | EIndeterminateModuleType (loc) -> [loc]
   | EUnreachable (loc) -> [loc]
+  | EInvalidSpread { reason; reason_op } ->
+      [loc_of_reason reason_op; loc_of_reason reason]
   | EInvalidTypeof (loc, _) -> [loc]
   | EBinaryInLHS (reason) -> [loc_of_reason reason]
   | EBinaryInRHS (reason) -> [loc_of_reason reason]
@@ -1169,6 +1172,9 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
 
   | EUnreachable loc ->
       mk_error ~trace_infos ~kind:InferWarning [loc, ["unreachable code"]]
+
+  | EInvalidSpread { reason; reason_op } ->
+      typecheck_error "Cannot spread properties from" (reason_op, reason)
 
   | EInvalidTypeof (loc, typename) ->
       mk_error ~trace_infos ~kind:InferWarning [loc, [

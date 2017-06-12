@@ -10245,8 +10245,10 @@ and object_spread =
        would spread its statics. Since spread is currently limited to types, an
        arbitrary subset of possible types are implemented. *)
     | t ->
-      add_output cx ~trace (FlowError.EIncompatible
-        (t, ObjSpreadT (reason, Resolve tool, state, tout)))
+      add_output cx ~trace (FlowError.EInvalidSpread {
+        reason = reason_of_t t;
+        reason_op = reason;
+      })
   in
 
   let super cx trace reason state tout acc tool = function

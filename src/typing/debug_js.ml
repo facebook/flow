@@ -2263,6 +2263,10 @@ let dump_flow_error =
         spf "EIndeterminateModuleType (%s)" (string_of_loc loc)
     | EUnreachable loc ->
         spf "EUnreachable (%s)" (string_of_loc loc)
+    | EInvalidSpread { reason; reason_op } ->
+        spf "EInvalidSpread { reason = %s; reason_op = %s }"
+          (dump_reason cx reason)
+          (dump_reason cx reason_op)
     | EInvalidTypeof (loc, name) ->
         spf "EInvalidTypeof (%s, %S)" (string_of_loc loc) name
     | EBinaryInLHS reason ->
