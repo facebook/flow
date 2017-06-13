@@ -111,7 +111,7 @@ obj.bar = true;    // Error!
 obj.baz = 'three'; // Error!
 ```
 
-The work around here might be to turn your object into an _unsealed object_.
+The workaround here might be to turn your object into an _unsealed object_.
 
 ### Unsealed objects <a class="toc" id="toc-unsealed-objects" href="#toc-unsealed-objects"></a>
 
