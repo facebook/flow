@@ -79,7 +79,7 @@ how they are used.
 
 When you create an object with its properties, you create a _sealed_ object
 type in Flow. These sealed objects will know all of the properties you declared
-it with and the types of their values.
+them with and the types of their values.
 
 ```js
 // @flow
