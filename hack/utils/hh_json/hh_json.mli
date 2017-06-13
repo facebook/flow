@@ -27,6 +27,14 @@ val json_to_multiline : json -> string
 val json_to_output: out_channel -> json ->  unit
 val json_of_string : ?strict:bool -> string -> json
 val json_of_file : ?strict:bool -> string -> json
+val json_truncate : ?max_string_length:int -> ?max_child_count:int
+  -> ?max_depth:int -> ?max_total_count:int
+  -> ?has_changed:bool ref
+  -> json -> json
+val json_truncate_string : ?max_string_length:int -> ?max_child_count:int
+  -> ?max_depth:int -> ?max_total_count:int
+  -> ?allowed_total_length:int -> ?if_reformat_multiline:bool
+  -> string -> string
 
 val get_object_exn : json -> (string * json) list
 val get_array_exn : json -> json list

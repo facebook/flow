@@ -313,6 +313,7 @@ let string_of_file filename =
   in
   loop ()
 
+
 (* Writing JSON *)
 
 (* buf_concat :
@@ -599,3 +600,94 @@ module Access = struct
   let get_array k (v, keytrace) =
     get_val k (v, keytrace) >>= catch_type_error Array_t get_array_exn
 end
+
+let ( >=@ ) : int -> int option -> bool = fun lhs rhs ->
+  match rhs with
+  | None -> false
+  | Some rhs -> lhs >= rhs
+
+let ( <=@ ) : int -> int option -> bool = fun lhs rhs ->
+  match rhs with
+  | None -> false
+  | Some rhs -> lhs <= rhs
+
+let json_truncate
+    ?(max_string_length:int option)
+    ?(max_child_count:int option)
+    ?(max_depth:int option)
+    ?(max_total_count:int option)
+    ?(has_changed:bool ref option)
+    (json: json)
+  : json =
+  let total_count = ref 0 in
+  let mark_changed () = match has_changed with
+    | None -> ()
+    | Some r -> r := true
+  in
+
+  let rec truncate_children ~child_count children ~f =
+    match children with
+    | [] -> []
+    | _ when !total_count >=@ max_total_count -> mark_changed (); []
+    | _ when child_count >=@ max_child_count -> mark_changed (); []
+    | c :: rest ->
+      incr total_count;
+      let c' = f c in (* because of mutable variable, it's important to do this first *)
+      c' :: (truncate_children (child_count + 1) rest f)
+  in
+
+  let rec truncate ~(depth: int) (json: json) : json =
+    match json with
+    | JSON_Object []
+    | JSON_Array []
+    | JSON_Number _
+    | JSON_Bool _
+    | JSON_Null ->
+      json
+    | JSON_Object props ->
+      let f (k, v) = (k, truncate (depth + 1) v) in
+      if depth >=@ max_depth then begin mark_changed (); JSON_Object [] end
+      else JSON_Object (truncate_children ~child_count:0 props ~f)
+    | JSON_Array values ->
+      let f v = truncate (depth + 1) v in
+      if depth >=@ max_depth then begin mark_changed (); JSON_Array [] end
+      else JSON_Array (truncate_children ~child_count:0 values ~f)
+    | JSON_String s -> begin
+        match max_string_length with
+        | None -> json
+        | Some max_string_length ->
+          if String.length s <= max_string_length then JSON_String s
+          else begin mark_changed (); JSON_String ((String.sub s 0 max_string_length) ^ "...") end
+      end
+  in
+  truncate ~depth:0 json
+
+
+let json_truncate_string
+    ?(max_string_length:int option)
+    ?(max_child_count:int option)
+    ?(max_depth:int option)
+    ?(max_total_count:int option)
+    ?(allowed_total_length:int option)
+    ?(if_reformat_multiline = true)
+    (s: string)
+  : string =
+  if String.length s <=@ allowed_total_length then
+    s (* fast zero-allocation path for the commonest case *)
+  else begin
+    let has_changed = ref false in
+    let json = json_of_string s in
+    let truncated_json =
+      json_truncate
+        ?max_string_length
+        ?max_child_count
+        ?max_depth
+        ?max_total_count
+        ~has_changed
+        json in
+    if not !has_changed then
+      s (* moderately fast fewer-string-allocating for another common case *)
+    else
+      if if_reformat_multiline then json_to_multiline truncated_json
+      else json_to_string truncated_json
+  end
