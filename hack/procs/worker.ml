@@ -151,7 +151,7 @@ let slave_main ic oc =
     let stats = Measure.serialize (Measure.pop_global ()) in
     let s = Marshal.to_string (data,stats) [Marshal.Closures] in
     let len = String.length s in
-    if len > 10 * 1024 * 1024 (* 10 MB *) then begin
+    if len > 30 * 1024 * 1024 (* 30 MB *) then begin
       Hh_logger.log "WARNING: you are sending quite a lot of data (%d bytes), \
         which may have an adverse performance impact. If you are sending \
         closures, double-check to ensure that they have not captured large
