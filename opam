@@ -23,6 +23,6 @@ depends: [
   "sedlex"
 ]
 available: [ocaml-version >= "4.03.0"]
-build: [ [ make ] ]
+build: [ [ "env" "FLOW_RELEASE=1" make ] ]
 depexts: [
 ]
