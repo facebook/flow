@@ -113,7 +113,7 @@ updated.
 { success: true, value: false };
 ```
 
-When the request fails, we'll get back and object with `success` set to `false`
+When the request fails, we'll get back an object with `success` set to `false`
 and an `error` property describing the error.
 
 ```js
