@@ -278,9 +278,11 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       (Hh_logger.log "server socket not yet ready. Retrying.";
        hand_off_client_connection_with_retries
          server (retries - 1) client_fd)
-    else
-      (Hh_logger.log
-         "server socket not yet ready. No more retries. Ignoring request.")
+    else begin
+      Hh_logger.log
+        "server socket not yet ready. No more retries. Ignoring request.";
+      Unix.close client_fd
+    end
 
   (** Does not return. *)
   and client_out_of_date_ client_fd _mismatch_info =
