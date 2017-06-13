@@ -162,12 +162,15 @@ FRAMEWORK_OPTS=$(foreach framework, $(FRAMEWORKS),-cclib -framework -cclib $(fra
 BYTECODE_LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) $(FRAMEWORK_OPTS)
 LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS)
 
+RELEASE_TAGS=$(if $(FLOW_RELEASE),-tag warn_a,)
+
 all: build-flow copy-flow-files
 all-ocp: build-flow-with-ocp copy-flow-files-ocp
 
 all-homebrew:
 	export OPAMROOT="$(shell mktemp -d 2> /dev/null || mktemp -d -t opam)"; \
 	export OPAMYES="1"; \
+	export FLOW_RELEASE="1"; \
 	opam init --no-setup && \
 	opam pin add flowtype . && \
 	opam install flowtype --deps-only && \
@@ -188,6 +191,7 @@ build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIE
 		-use-ocamlfind -pkgs sedlex \
 		-no-links  $(INCLUDE_OPTS) $(LIB_OPTS) \
 		-lflags "$(LINKER_FLAGS)" \
+		$(RELEASE_TAGS) \
 		src/flow.native
 
 %.ocp: %.ocp.fb scripts/utils.ml scripts/ocp_build_glob.ml
