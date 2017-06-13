@@ -56,7 +56,7 @@ let establish_connection ~timeout config =
   | Unix.Unix_error (Unix.ECONNREFUSED, _, _)
   | Unix.Unix_error (Unix.ENOENT, _, _) ->
     if not (server_exists config.lock_file) then Result.Error Server_missing
-    else Result.Error Server_busy
+    else Result.Error Monitor_socket_not_ready
 
 let get_cstate config (ic, oc) =
   try
@@ -167,7 +167,7 @@ let connect_to_monitor ~timeout config =
      * *)
     HackEventLogger.client_connect_to_monitor_timeout ();
     if not (server_exists config.lock_file) then Result.Error Server_missing
-    else Result.Error ServerMonitorUtils.Server_busy
+    else Result.Error ServerMonitorUtils.Monitor_establish_connection_timeout
 
 let connect_and_shut_down config =
   let open Result in
@@ -194,14 +194,25 @@ let connect_once ~timeout config handoff_options =
   (* 1. OPEN SOCKET. After this point we have a working stdin/stdout to the  *)
   (* process. Implemented in establish_connection.                           *)
   (*   | catch EConnRefused/ENoEnt/Timeout 1s when lockfile present ->       *)
-  (*     Result.Error Server_busy.                                           *)
-  (*       This is unexpected! after all the monitor is always responsive,   *)
-  (*       and indeed start_server waits until responsive before returning.  *)
+  (*     Result.Error Monitor_socket_not_ready.                              *)
+  (*       This is unexpected! But can happen if you manage to catch the ,   *)
+  (*       monitor in the short timeframe after it has grabbed its lock but  *)
+  (*       before it has started listening in on its socket.                 *)
   (*       -> "hh_client check/ide" -> retry from step 1, up to 800 times.   *)
   (*          The number 800 is hard-coded in 9 places through the codebase. *)
   (*       -> "hh_client start" -> print "replacing unresponsive server"     *)
   (*              kill_server; start_server; exit.                           *)
-  (*   | catch EConnRefused/ENoEnt/Timeout 1s when lockfile absent ->        *)
+  (*   | catch Timeout <retries>s when lockfile present ->                   *)
+  (*     Result.Error Monitor_establish_connection_timeout                   *)
+  (*       This is unexpected! after all the monitor is always responsive,   *)
+  (*       and indeed start_server waits until responsive before returning.  *)
+  (*       But this can happen during a DDOS.                                *)
+  (*       -> "hh_client check/ide" -> Its retry attempts are passed to the  *)
+  (*           monitor connection attempt already. So in this timeout all    *)
+  (*           the retries have already been consumed. Just exit.            *)
+  (*       -> "hh_client start" -> print "replacing unresponsive server"     *)
+  (*              kill_server; start_server; exit.                           *)
+  (*   | catch EConnRefused/ENoEnt/Timeout when lockfile absent ->           *)
   (*     Result.Error Server_missing.                                        *)
   (*       -> "hh_client ide" -> raise Exit_with IDE_no_server.              *)
   (*       -> "hh_client check" -> start_server; retry step 1, up to 800x.   *)
