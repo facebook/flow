@@ -8,7 +8,7 @@ import {TestStep, TestStepFirstStage} from './TestStep';
 import {newEnv} from './stepEnv';
 import {writeFile} from '../async';
 
-import type Builder from './builder';
+import type Builder, {TestBuilder} from './builder';
 import type Suite from './Suite';
 import type {StepResult} from './TestStep';
 
@@ -90,7 +90,7 @@ export default async function(
       // flowErrors will contain null
       let flowErrors = noErrors;
 
-      let testBuilder = await builder.createFreshTest(
+      let testBuilder: TestBuilder = await builder.createFreshTest(
         bin,
         suiteName,
         testNum,
