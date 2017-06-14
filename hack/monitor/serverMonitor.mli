@@ -14,6 +14,7 @@ module Make_monitor :
     sig
       val start_monitoring:
         waiting_client:Unix.file_descr option ->
+        max_purgatory_clients:int ->
         SC.server_start_options ->
         Informant.init_env ->
         ServerMonitorUtils.monitor_config ->

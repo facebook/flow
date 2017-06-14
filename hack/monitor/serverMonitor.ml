@@ -31,7 +31,6 @@ exception Send_fd_failure of int
 
 module Make_monitor (SC : ServerMonitorUtils.Server_config)
 (Informant : Informant_sig.S) = struct
-  let max_purgatory_clients = 50;
 
   type env = {
     informant: Informant.t;
@@ -39,6 +38,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     server_start_options: SC.server_start_options;
     (** How many times have we tried to relaunch it? *)
     retries: int;
+    max_purgatory_clients: int;
     (** After sending a Server_not_alive_dormant during Prehandoff,
      * clients are put here waiting for a server to come alive, at
      * which point they get pushed through the rest of prehandoff and
@@ -355,7 +355,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
           env
         end
       in
-      if (Queue.length env.purgatory_clients) >= max_purgatory_clients then
+      if (Queue.length env.purgatory_clients) >= env.max_purgatory_clients then
         let () = msg_to_channel
           client_fd PH.Server_dormant_connections_limit_reached in
         env
@@ -393,6 +393,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     let env = Queue.fold begin
       fun env (handoff_options, client_fd) ->
         try client_prehandoff env handoff_options client_fd with
+        | Unix.Unix_error(Unix.EPIPE, _, _)
         | Unix.Unix_error(Unix.EBADF, _, _) ->
           Hh_logger.log "Purgatory client disconnected. Dropping.";
           env
@@ -456,7 +457,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
          "Accepting on socket failed. Ignoring client connection attempt.";
          env)
 
-  let start_monitoring ~waiting_client server_start_options informant_init_env
+  let start_monitoring ~waiting_client ~max_purgatory_clients
+    server_start_options informant_init_env
     monitor_config =
     let socket = Socket.init_unix_socket monitor_config.socket_file in
     (* If the client started the server, it opened an FD before forking, so it
@@ -488,6 +490,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       server_start_options informant in
     let env = {
       informant;
+      max_purgatory_clients;
       purgatory_clients = Queue.create ();
       server = server_process;
       server_start_options;
