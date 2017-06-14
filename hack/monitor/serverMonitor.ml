@@ -129,6 +129,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
   let maybe_start_first_server options informant =
     if Informant.should_start_first_server informant then begin
       Hh_logger.log "Starting first server";
+      HackEventLogger.starting_first_server ();
       start_server ~informant_managed:(Informant.is_managing informant)
         options None
     end
