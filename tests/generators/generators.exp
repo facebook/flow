@@ -16,12 +16,6 @@ class.js:24
  23:   *stmt_return_err(): Generator<void, number, void> {
                                            ^^^^^^ number
 
-class.js:28
- 28:     var x: boolean = yield 0; // error: number ~> boolean
-                          ^^^^^^^ number. This type is incompatible with
- 28:     var x: boolean = yield 0; // error: number ~> boolean
-                ^^^^^^^ boolean
-
 class.js:49
  49:       var x: number = yield; // error: string ~> number
                            ^^^^^ string. This type is incompatible with
@@ -227,4 +221,4 @@ throw.js:24
                             ^^^^^^ string
 
 
-Found 37 errors
+Found 36 errors

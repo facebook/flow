@@ -763,3 +763,25 @@ let toplevels cx ~decls ~stmts ~expr x =
       SMap.iter (field config this super) s.fields
     end
   )
+
+module This = struct
+  let is_bound_to_empty x =
+    let open Type in
+    Flow.match_this_binding x.tparams_map
+      (function DefT (_, EmptyT) -> true | _ -> false)
+
+  exception FoundInClass
+  class detector = object
+    inherit Flow_ast_mapper.mapper as super
+
+    method! generic_identifier_type (git: Ast.Type.Generic.Identifier.t) =
+      let open Ast.Type.Generic.Identifier in
+      match git with
+      | Unqualified (_, "this") -> raise FoundInClass
+      | _ -> super#generic_identifier_type git
+  end
+
+  let in_class c =
+    try (new detector)#class_ c |> ignore; false
+    with FoundInClass -> true
+end
