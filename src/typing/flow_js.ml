@@ -2646,6 +2646,26 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             reasonless_eq t1 t2)) ->
       ()
 
+    | DefT (r, UnionT rep), SentinelPropTestT (l, sense, sentinel, result) ->
+      (* we have the check l.key === sentinel where l.key is a union *)
+      if sense then
+        let def = match sentinel with
+          | SentinelStr v -> SingletonStrT v
+          | SentinelNum v -> SingletonNumT v
+          | SentinelBool v -> SingletonBoolT v
+          | SentinelVoid -> VoidT
+          | SentinelNull -> NullT in
+        match UnionRep.quick_mem (DefT (r, def)) rep with
+        | Some false -> ()  (* provably unreachable, so prune *)
+        | Some true -> rec_flow_t cx trace (l, result)
+        | None -> (* inconclusive: the union is not concretized *)
+          UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
+      else
+        (* for l.key !== sentinel where l.key is a union, we can't really prove
+           that the check is guaranteed to fail (assuming the union doesn't
+           degenerate to a singleton) *)
+        rec_flow_t cx trace (l, result)
+
     | DefT (_, UnionT rep), _ ->
       UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
 
