@@ -7365,22 +7365,22 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
     let ts = choices_of_spec spec in
     let msgs = List.rev msgs in
     assert (List.length ts = List.length msgs);
-    let extra = List.mapi (fun i t ->
+    let branches = List.mapi (fun i t ->
       let reason = reason_of_t t in
       let msg = List.nth msgs i in
       reason, msg
     ) ts in
-    let l,u = match spec with
+    begin match spec with
       | UnionCases (l, us) ->
-        let r = mk_union_reason r us in
-        l, UseT (UnknownUse, DefT (r, EmptyT))
+        let reason = reason_of_t l in
+        let reason_op = mk_union_reason r us in
+        add_output cx ~trace (FlowError.EUnionSpeculationFailed { reason; reason_op; branches })
 
       | IntersectionCases (ls, u) ->
         let r = mk_intersection_reason r ls in
-        DefT (r, MixedT Empty_intersection), u
-    in
-    add_output cx ~trace
-      (FlowError.ESpeculationFailed (l, u, extra))
+        let l = DefT (r, MixedT Empty_intersection) in
+        add_output cx ~trace (FlowError.EIntersectionSpeculationFailed (l, u, branches))
+    end
 
   in loop (Speculation.NoMatch []) trials
 )

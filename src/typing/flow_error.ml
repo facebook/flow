@@ -69,7 +69,12 @@ type error_message =
   | ENonLitArrayToTuple of (reason * reason)
   | ETupleOutOfBounds of (reason * reason) * int * int
   | ETupleUnsafeWrite of (reason * reason)
-  | ESpeculationFailed of Type.t * Type.use_t * (reason * error_message) list
+  | EIntersectionSpeculationFailed of Type.t * Type.use_t * (reason * error_message) list
+  | EUnionSpeculationFailed of {
+      reason: reason;
+      reason_op: reason;
+      branches: (reason * error_message) list
+    }
   | ESpeculationAmbiguous of (reason * reason) * (int * reason) * (int * reason) * reason list
   | EIncompatibleWithExact of (reason * reason)
   | EUnsupportedExact of (reason * reason)
@@ -270,10 +275,12 @@ let locs_of_error_message = function
       [loc_of_reason reason1; loc_of_reason reason2]
   | ETupleUnsafeWrite (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | ESpeculationFailed (l, u, _) ->
+  | EIntersectionSpeculationFailed (l, u, _) ->
       let reason1 = reason_of_t l in
       let reason2 = reason_of_use_t u in
       [loc_of_reason reason1; loc_of_reason reason2]
+  | EUnionSpeculationFailed { reason; reason_op; branches = _ } ->
+      [loc_of_reason reason; loc_of_reason reason_op]
   | ESpeculationAmbiguous ((reason1, reason2), _, _, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EIncompatibleWithExact (reason1, reason2) ->
@@ -521,6 +528,25 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         ]
       )
     ]
+  in
+
+  let speculation_extras branches =
+    List.mapi (fun i (r, msg) ->
+      let err = error_of_msg ~trace_reasons:[] ~op ~source_file msg in
+      let header_infos = [
+        Loc.none, [spf "Member %d:" (i + 1)];
+        info_of_reason r;
+        Loc.none, ["Error:"];
+      ] in
+      let error_infos = infos_of_error err in
+      let error_extra = extra_of_error err in
+      let info_list = header_infos @ error_infos in
+      let info_tree = match error_extra with
+        | [] -> Errors.InfoLeaf (info_list)
+        | _ -> Errors.InfoNode (info_list, error_extra)
+      in
+      info_tree
+    ) branches
   in
 
   let rec unwrap_use_ops ((l_reason, u_reason), nested_extra, msg) = function
@@ -817,25 +843,16 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         element of the tuple you are mutating. Unsafe mutation of" in
       typecheck_error msg reasons
 
-  | ESpeculationFailed (l, u, branches) ->
+  | EIntersectionSpeculationFailed (l, u, branches) ->
       let reasons = ordered_reasons_of_types l u in
       let msg = if is_use u then err_msg_use l u else "This type is incompatible with" in
-      let extra = List.mapi (fun i (r, msg) ->
-        let err = error_of_msg ~trace_reasons:[] ~op ~source_file msg in
-        let header_infos = [
-          Loc.none, [spf "Member %d:" (i + 1)];
-          info_of_reason r;
-          Loc.none, ["Error:"];
-        ] in
-        let error_infos = infos_of_error err in
-        let error_extra = extra_of_error err in
-        let info_list = header_infos @ error_infos in
-        let info_tree = match error_extra with
-          | [] -> Errors.InfoLeaf (info_list)
-          | _ -> Errors.InfoNode (info_list, error_extra)
-        in
-        info_tree
-      ) branches in
+      let extra = speculation_extras branches in
+      typecheck_error msg ~extra reasons
+
+  | EUnionSpeculationFailed { reason; reason_op; branches } ->
+      let reasons = ordered_reasons reason reason_op in
+      let msg = "This type is incompatible with" in
+      let extra = speculation_extras branches in
       typecheck_error msg ~extra reasons
 
   | ESpeculationAmbiguous ((case_r, r), (prev_i, prev_case), (i, case), case_rs) ->

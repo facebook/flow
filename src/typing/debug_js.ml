@@ -2173,10 +2173,14 @@ let dump_flow_error =
         spf "ETupleUnsafeWrite (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | ESpeculationFailed (l, u, _) ->
-        spf "ESpeculationFailed (%s, %s)"
+    | EIntersectionSpeculationFailed (l, u, _) ->
+        spf "EIntersectionSpeculationFailed (%s, %s)"
           (dump_t ~depth cx l)
           (dump_use_t ~depth cx u)
+    | EUnionSpeculationFailed { reason; reason_op; branches = _ } ->
+        spf "EUnionSpeculationFailed { reason = %s; reason_op = %s; branches = _ }"
+          (dump_reason cx reason)
+          (dump_reason cx reason_op)
     | ESpeculationAmbiguous ((reason1, reason2), _, _, _) ->
         spf "ESpeculationAmbiguous ((%s, %s), _, _, _)"
           (dump_reason cx reason1)
