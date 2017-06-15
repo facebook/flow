@@ -249,11 +249,12 @@ class mapper = object(this)
 
   method class_property (prop: Ast.Class.Property.t') =
     let open Ast.Class.Property in
-    let { key; value; typeAnnotation = _; static = _; variance = _; } = prop in
+    let { key; value; typeAnnotation; static = _; variance = _; } = prop in
     let key' = this#object_key key in
     let value' = opt this#expression value in
-    if key == key' && value == value' then prop
-    else { prop with key = key'; value = value' }
+    let typeAnnotation' = opt this#type_annotation typeAnnotation in
+    if key == key' && value == value' && typeAnnotation' == typeAnnotation then prop
+    else { prop with key = key'; value = value'; typeAnnotation = typeAnnotation' }
 
   (* TODO *)
   method comprehension (expr: Ast.Expression.Comprehension.t) = expr
@@ -389,6 +390,109 @@ class mapper = object(this)
     | InitExpression expr ->
       id this#expression expr init (fun expr -> InitExpression expr)
 
+  method function_param_type (fpt: Ast.Type.Function.Param.t) =
+    let open Ast.Type.Function.Param in
+    let loc, { typeAnnotation; name; optional; } = fpt in
+    let typeAnnotation' = this#type_ typeAnnotation in
+    if typeAnnotation' == typeAnnotation then fpt
+    else loc, { typeAnnotation = typeAnnotation'; name; optional }
+
+  method function_rest_param_type (frpt: Ast.Type.Function.RestParam.t) =
+    let open Ast.Type.Function.RestParam in
+    let loc, { argument } = frpt in
+    let argument' = this#function_param_type argument in
+    if argument' == argument then frpt
+    else loc, { argument = argument' }
+
+  method function_type (ft: Ast.Type.Function.t) =
+    let open Ast.Type.Function in
+    let { params = (ps, rpo) ; returnType; typeParameters; } = ft in
+    let ps' = ident_map this#function_param_type ps in
+    let rpo' = opt this#function_rest_param_type rpo in
+    let returnType' = this#type_ returnType in
+    if ps' == ps && rpo' == rpo && returnType' == returnType then ft
+    else { params = (ps', rpo'); returnType = returnType'; typeParameters }
+
+  method object_property_value_type (opvt: Ast.Type.Object.Property.value) =
+    let open Ast.Type.Object.Property in
+    match opvt with
+    | Init t -> id this#type_ t opvt (fun t -> Init t)
+    | Get (loc, ft) -> id this#function_type ft opvt (fun ft -> Get (loc, ft))
+    | Set (loc, ft) -> id this#function_type ft opvt (fun ft -> Set (loc, ft))
+
+  method object_property_type (opt: Ast.Type.Object.Property.t) =
+    let open Ast.Type.Object.Property in
+    let loc, { key; value; optional; static; _method; variance; } = opt in
+    let value' = this#object_property_value_type value in
+    if value' == value then opt
+    else loc, { key; value = value'; optional; static; _method; variance }
+
+  method object_type (ot: Ast.Type.Object.t) =
+    let open Ast.Type.Object in
+    let { properties ; exact; } = ot in
+    let properties' = ident_map (fun p -> match p with
+      | Property p' -> id this#object_property_type p' p (fun p' -> Property p')
+      | _ -> p (* TODO *)
+    ) properties in
+    if properties' == properties then ot
+    else { properties = properties'; exact }
+
+  method generic_identifier_type (git: Ast.Type.Generic.Identifier.t) =
+    let open Ast.Type.Generic.Identifier in
+    match git with
+    | Unqualified i -> id this#identifier i git (fun i -> Unqualified i)
+    | _ -> git (* TODO *)
+
+  method generic_type (gt: Ast.Type.Generic.t) =
+    let open Ast.Type.Generic in
+    let { id; typeParameters; } = gt in
+    let id' = this#generic_identifier_type id in
+    if id' == id then gt
+    else { id = id'; typeParameters }
+
+  method type_ (t: Ast.Type.t) =
+    let open Ast.Type in
+    match t with
+    | _, Any
+    | _, Mixed
+    | _, Empty
+    | _, Void
+    | _, Null
+    | _, Number
+    | _, String
+    | _, Boolean
+    | _, StringLiteral _
+    | _, NumberLiteral _
+    | _, BooleanLiteral _
+    | _, Exists
+      -> t
+    | loc, Nullable t' -> id this#type_ t' t (fun t' -> loc, Nullable t')
+    | loc, Array t' -> id this#type_ t' t (fun t' -> loc, Array t')
+    | loc, Typeof t' -> id this#type_ t' t (fun t' -> loc, Typeof t')
+    | loc, Function ft -> id this#function_type ft t (fun ft -> loc, Function ft)
+    | loc, Object ot -> id this#object_type ot t (fun ot -> loc, Object ot)
+    | loc, Generic gt -> id this#generic_type gt t (fun gt -> loc, Generic gt)
+    | loc, Union (t0, t1, ts) ->
+      let t0' = this#type_ t0 in
+      let t1' = this#type_ t1 in
+      let ts' = ident_map this#type_ ts in
+      if t0' == t0 && t1' == t1 && ts' == ts then t
+      else loc, Union (t0', t1', ts')
+    | loc, Intersection (t0, t1, ts) ->
+      let t0' = this#type_ t0 in
+      let t1' = this#type_ t1 in
+      let ts' = ident_map this#type_ ts in
+      if t0' == t0 && t1' == t1 && ts' == ts then t
+      else loc, Intersection (t0', t1', ts')
+    | loc, Tuple ts ->
+      let ts' = ident_map this#type_ ts in
+      if ts' == ts then t
+      else loc, Tuple ts'
+
+  method type_annotation (annot: Ast.Type.annotation) =
+    let loc, t = annot in
+    id this#type_ t annot (fun t -> loc, t)
+
   method function_ (expr: Ast.Function.t) =
     let open Ast.Function in
     let {
@@ -403,6 +507,7 @@ class mapper = object(this)
       if param_list == param_list' && rest == rest' then params
       else (param_list', rest')
     in
+    let returnType' = opt this#type_annotation returnType in
     let body' = match body with
       | BodyBlock (loc, block) ->
         id this#block block body (fun block -> BodyBlock (loc, block))
@@ -410,12 +515,11 @@ class mapper = object(this)
         id this#expression expr body (fun expr -> BodyExpression expr)
     in
     (* TODO: walk predicate *)
-    (* TODO: walk returnType *)
     (* TODO: walk typeParameters *)
-    if ident == ident' && params == params' && body == body' then expr
+    if ident == ident' && params == params' && body == body' && returnType == returnType' then expr
     else {
-      id = ident'; params = params'; body = body';
-      async; generator; expression; predicate; returnType; typeParameters;
+      id = ident'; params = params'; returnType = returnType'; body = body';
+      async; generator; expression; predicate; typeParameters;
     }
 
   method function_declaration (stmt: Ast.Function.t) =
@@ -625,9 +729,9 @@ class mapper = object(this)
         else Assignment { Assignment.left = left'; right = right' }
       | Identifier { Identifier.name; typeAnnotation; optional } ->
         let name' = this#identifier name in
-        (* TODO: walk typeAnnotation *)
-        if name == name' then patt
-        else Identifier { Identifier.name = name'; typeAnnotation; optional }
+        let typeAnnotation' = opt this#type_annotation typeAnnotation in
+        if name == name' && typeAnnotation == typeAnnotation' then patt
+        else Identifier { Identifier.name = name'; typeAnnotation = typeAnnotation'; optional }
       | Expression e ->
         id this#pattern_expression e patt (fun e -> Expression e)
     in
@@ -734,8 +838,11 @@ class mapper = object(this)
 
   method type_cast (expr: Ast.Expression.TypeCast.t) =
     let open Ast.Expression.TypeCast in
-    let { expression; typeAnnotation = _ } = expr in
-    id this#expression expression expr (fun expression -> { expr with expression })
+    let { expression; typeAnnotation; } = expr in
+    let expression' = this#expression expression in
+    let typeAnnotation' = this#type_annotation typeAnnotation in
+    if expression' == expression && typeAnnotation' == typeAnnotation then expr
+    else { expression = expression'; typeAnnotation = typeAnnotation' }
 
   method unary_expression (expr: Ast.Expression.Unary.t) =
     let open Ast.Expression in
