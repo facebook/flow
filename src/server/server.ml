@@ -125,7 +125,7 @@ let collate_errors =
           state
           parse_result
       with exn ->
-        Hh_logger.warn "Couldn't autocomplete%s" (Printexc.to_string exn);
+        Hh_logger.warn "Couldn't autocomplete: %s" (Printexc.to_string exn);
         Ok []
     in
     Autocomplete_js.autocomplete_unset_hooks ();
