@@ -11,6 +11,7 @@
 exception Props_not_found of Type.Properties.id
 exception Exports_not_found of Type.Exports.id
 exception Module_not_found of string
+exception Tvar_not_found of Constraint.ident
 exception Tvar_reason_not_found of Constraint.ident
 
 type env = Scope.t list
