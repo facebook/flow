@@ -6592,7 +6592,7 @@ and check_polarity cx ?trace polarity = function
     List.iter (check_polarity cx ?trace  Neutral) tuple_types
 
   | DefT (_, ArrT (ROArrayAT (elemt))) ->
-    check_polarity cx Neutral elemt
+    check_polarity cx ?trace polarity elemt
 
   | DefT (_, ArrT EmptyAT) -> ()
 

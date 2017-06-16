@@ -1,0 +1,10 @@
+test.js:16
+ 16:     bad (x: number) : $ReadOnlyArray<T> {// Error: T in covariant position
+                                          ^ T. covariant position (expected `T` to occur only contravariantly)
+
+test.js:22
+ 22:     bad (x: $ReadOnlyArray<T> => number) : number {// Error: T used covariantly
+                                ^ T. covariant position (expected `T` to occur only contravariantly)
+
+
+Found 2 errors
