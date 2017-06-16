@@ -43,13 +43,26 @@ let explicit_decl_require_strict cx (m, loc, resolved_m, cx_to) =
   let reason = Reason.(mk_reason (RCustom m) loc) in
 
   (* lookup module declaration from builtin context *)
-  (* TODO: cache in modulemap *)
-
   let m_name =
     resolved_m
     |> Modulename.to_string
     |> Reason.internal_module_name
   in
+  let from_t = Flow_js.mk_tvar cx reason in
+  Flow_js.lookup_builtin cx m_name reason
+    (Type.Strict reason) from_t;
+
+  (* flow the declared module type to importing context *)
+  let to_t = Flow_js.lookup_module cx_to m in
+  Flow_js.flow_t cx (from_t, to_t)
+
+(* Connect exports of an unchecked module to its import in cx_to. Note that we
+   still lookup the module instead of returning `any` directly. This is because
+   a resolved-unchecked dependency is superceded by a possibly-checked libdef.
+   See unchecked_*_module_vs_lib tests for examples. *)
+let explicit_unchecked_require_strict cx (m, loc, cx_to) =
+  let reason = Reason.(mk_reason (RCustom m) loc) in
+  let m_name = Reason.internal_module_name m in
   let from_t = Flow_js.mk_tvar cx reason in
   Flow_js.lookup_builtin cx m_name reason
     (Type.NonstrictReturning (Some (Type.DefT (reason, Type.AnyT), from_t))) from_t;
@@ -105,7 +118,7 @@ let detect_sketchy_null_checks cx =
 
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
-let merge_component_strict cxs impls dep_cxs dep_impls res decls master_cx =
+let merge_component_strict cxs impls dep_cxs dep_impls res decls unchecked master_cx =
   let cx, other_cxs = List.hd cxs, List.tl cxs in
   Flow_js.Cache.clear();
 
@@ -119,6 +132,8 @@ let merge_component_strict cxs impls dep_cxs dep_impls res decls master_cx =
   res |> List.iter (explicit_res_require_strict cx);
 
   decls |> List.iter (explicit_decl_require_strict cx);
+
+  unchecked |> List.iter (explicit_unchecked_require_strict cx);
 
   other_cxs |> List.iter (implicit_require_strict cx master_cx);
   implicit_require_strict cx master_cx cx;

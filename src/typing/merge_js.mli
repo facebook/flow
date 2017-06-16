@@ -20,6 +20,8 @@ val merge_component_strict:
   (string * Loc.t * string * Context.t) list ->
   (* declarations *)
   (string * Loc.t * Modulename.t * Context.t) list ->
+  (* unchecked *)
+  (string * Loc.t * Context.t) list ->
   (* master cx *)
   Context.t ->
   unit
