@@ -391,6 +391,12 @@ let server_flags prev = CommandSpec.ArgSpec.(
   |> quiet_flag
 )
 
+let lints_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--lints" (optional string)
+    ~doc:"Specify one or more lint rules, comma separated"
+)
+
 let log_file ~tmp_dir root flowconfig =
   match FlowConfig.log_file flowconfig with
   | Some x -> x
@@ -401,6 +407,7 @@ module Options_flags = struct
     all: bool;
     debug: bool;
     flowconfig_flags: flowconfig_params;
+    lint_settings: LintSettings.t;
     max_workers: int option;
     munge_underscore_members: bool;
     no_flowlib: bool;
@@ -414,10 +421,20 @@ module Options_flags = struct
   }
 end
 
+let parse_lints_flag flag =
+    let flag = Option.value flag ~default:"" in
+    let lines = Str.split_delim (Str.regexp ",") flag
+      |> List.map (fun s -> ((), s)) in
+    match LintSettings.of_lines lines with
+    | Ok settings -> settings
+    | Error (_, msg) ->
+      let msg = spf "Error parsing --lints: %s" msg in
+      FlowExitStatus.(exit ~msg Commandline_usage_error)
+
 let options_flags =
   let collect_options_flags main
     debug profile all weak traces no_flowlib munge_underscore_members max_workers
-    flowconfig_flags verbose strip_root temp_dir quiet =
+    flowconfig_flags lints_flag verbose strip_root temp_dir quiet =
     main { Options_flags.
       debug;
       profile;
@@ -428,6 +445,7 @@ let options_flags =
       munge_underscore_members;
       max_workers;
       flowconfig_flags;
+      lint_settings = parse_lints_flag lints_flag;
       verbose;
       strip_root;
       temp_dir;
@@ -455,6 +473,7 @@ let options_flags =
     |> flag "--max-workers" (optional int)
         ~doc:"Maximum number of workers to create (capped by number of cores)"
     |> flowconfig_flags
+    |> lints_flag
     |> verbose_flags
     |> strip_root_flag
     |> temp_dir_flag
@@ -485,6 +504,11 @@ let make_options ~flowconfig ~lazy_ ~root (options_flags: Options_flags.t) =
     let no_flowlib = options_flags.no_flowlib in
     let { includes; ignores; libs } = options_flags.flowconfig_flags in
     file_options ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs flowconfig
+  in
+  let lint_settings =
+    let cli_lint_settings = options_flags.lint_settings in
+    let flowconfig_lint_settings = FlowConfig.lint_settings flowconfig in
+    LintSettings.merge ~low_prec:flowconfig_lint_settings ~high_prec:cli_lint_settings
   in
   { Options.
     opt_lazy = lazy_;
@@ -527,7 +551,7 @@ let make_options ~flowconfig ~lazy_ ~root (options_flags: Options_flags.t) =
     opt_haste_paths_whitelist = FlowConfig.haste_paths_whitelist flowconfig;
     opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig;
     opt_file_options = file_options;
-    lint_settings = FlowConfig.lint_settings flowconfig;
+    opt_lint_settings = lint_settings;
   }
 
 let connect server_flags root =

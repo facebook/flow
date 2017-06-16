@@ -26,6 +26,7 @@ begin library "flow-commands"
     "flow-commands-config"
     "flow-common"
     "flow-common-errors"
+    "flow-common-lints"
     "flow-common-utils"
     "flow-dts"
     "flow-flowlib"
@@ -108,6 +109,8 @@ begin library "flow-common-lints"
   files = begin fb-glob "src/common/lints"
   end
   requires = [
+    "hh-utils-collections"
+    "tp-core"
   ]
 end
 

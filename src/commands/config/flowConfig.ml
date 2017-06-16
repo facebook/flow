@@ -819,39 +819,10 @@ let parse_version config lines =
     { config with options }
   | _ -> config
 
-let parse_lint_option line_number = function
-  | "true" | "on" -> true
-  | "false" | "off" -> false
-  | _ -> error line_number
-    "Invalid setting encountered. Valid settings are 'true', 'false', 'on', and 'off'."
-
 let parse_lints config lines =
-  let update_config config (number, line) =
-    let pieces = Str.split_delim (Str.regexp "=") line in
-    let left, right = match pieces with
-      | [left; right] -> left, right
-      | _ -> error number
-        "Malformed lint rule option. Properly formed rule options contain a single '=' character."
-    in
-    let left = left |> String.trim |> String.lowercase_ascii in
-    let right = right |> String.trim |> String.lowercase_ascii in
-    let err_setting = parse_lint_option number right in
-    let new_lint_settings =
-      match left with
-      | "all" -> LintSettings.fresh_settings err_setting
-      | _ ->
-        let lints = try
-          LintSettings.string_to_lints left
-        with
-          Not_found -> error number (spf "Invalid lint rule \"%s\" encountered." left)
-        in
-        let update_lint value lint_settings lint_setting =
-          LintSettings.set_enabled lint_setting value lint_settings in
-        List.fold_left (update_lint err_setting) config.lint_settings lints
-    in
-    {config with lint_settings = new_lint_settings}
-  in List.fold_left update_config config lines
-
+  match LintSettings.of_lines lines with
+  | Ok lint_settings -> {config with lint_settings}
+  | Error (ln, msg) -> error ln msg
 
 let parse_section config ((section_ln, section), lines) =
   match section, lines with
