@@ -25,8 +25,15 @@ and parse_skip_reason =
   | Skip_non_flow_file
 
 and parse_failure =
-  | Docblock_errors of Docblock.error list
+  | Docblock_errors of docblock_error list
   | Parse_error of (Loc.t * Parse_error.t)
+
+and docblock_error = Loc.t * docblock_error_kind
+and docblock_error_kind =
+  | MultipleFlowAttributes
+  | MultipleProvidesModuleAttributes
+  | MultipleJSXAttributes
+  | InvalidJSXAttribute of string option
 
 (* results of parse job, returned by parse and reparse *)
 type results = {
@@ -39,6 +46,14 @@ type results = {
   (* list of failed files *)
   parse_fails: (filename * Docblock.t * parse_failure) list;
 }
+
+val docblock_max_tokens: int
+
+val extract_docblock:
+  max_tokens: int ->
+  Loc.filename ->
+  string ->
+  docblock_error list * Docblock.t
 
 (* initial parsing pass: success/failure info is returned,
  * asts are made available via get_ast_unsafe. *)
@@ -111,7 +126,7 @@ val get_docblock:
   max_tokens:int -> (* how many tokens to check in the beginning of the file *)
   filename ->
   string ->
-  Docblock.error list * Docblock.t
+  docblock_error list * Docblock.t
 
 (* parse contents of a file *)
 val do_parse:

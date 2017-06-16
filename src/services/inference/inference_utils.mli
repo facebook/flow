@@ -8,7 +8,7 @@
  *
  *)
 
-val error_of_docblock_error: source_file: Loc.filename -> Docblock.error -> Errors.error
-val set_of_docblock_errors: source_file: Loc.filename -> Docblock.error list -> Errors.ErrorSet.t
+val error_of_docblock_error: source_file: Loc.filename -> Parsing_service_js.docblock_error -> Errors.error
+val set_of_docblock_errors: source_file: Loc.filename -> Parsing_service_js.docblock_error list -> Errors.ErrorSet.t
 val error_of_parse_error : source_file: Loc.filename -> Loc.t * Parse_error.t -> Errors.error
 val set_of_parse_error: source_file: Loc.filename -> Loc.t * Parse_error.t -> Errors.ErrorSet.t

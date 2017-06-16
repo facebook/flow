@@ -140,11 +140,8 @@ let collate_errors =
           if force then
             true
           else
-            let (_, docblock) =
-              Parsing_service_js.get_docblock
-                Docblock.max_tokens
-                (Loc.SourceFile file)
-                content
+            let (_, docblock) = Parsing_service_js.(
+              get_docblock docblock_max_tokens (Loc.SourceFile file) content)
             in
             Docblock.is_flow docblock
         in

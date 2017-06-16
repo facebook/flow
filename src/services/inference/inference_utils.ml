@@ -10,10 +10,10 @@
 
 let error_of_docblock_error ~source_file (loc, err) =
   let flow_err = Flow_error.EDocblockError (loc, match err with
-    | Docblock.MultipleFlowAttributes -> Flow_error.MultipleFlowAttributes
-    | Docblock.MultipleProvidesModuleAttributes -> Flow_error.MultipleProvidesModuleAttributes
-    | Docblock.MultipleJSXAttributes -> Flow_error.MultipleJSXAttributes
-    | Docblock.InvalidJSXAttribute first_error -> Flow_error.InvalidJSXAttribute first_error
+    | Parsing_service_js.MultipleFlowAttributes -> Flow_error.MultipleFlowAttributes
+    | Parsing_service_js.MultipleProvidesModuleAttributes -> Flow_error.MultipleProvidesModuleAttributes
+    | Parsing_service_js.MultipleJSXAttributes -> Flow_error.MultipleJSXAttributes
+    | Parsing_service_js.InvalidJSXAttribute first_error -> Flow_error.InvalidJSXAttribute first_error
   ) in
   Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file flow_err
 
