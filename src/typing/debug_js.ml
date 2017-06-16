@@ -1759,7 +1759,12 @@ and dump_use_t_ (depth, tvars) cx t =
   | DebugPrintT _ -> p t
   | ElemT _ -> p t
   | EqT (_, arg) -> p ~extra:(kid arg) t
-  | ExportNamedT _ -> p t
+  | ExportNamedT (_, _, tmap, arg) -> p t
+      ~extra:(spf "%s, {%s}"
+        (kid arg)
+        (String.concat "; "
+          (List.map (fun (x,_) -> x)
+            (SMap.bindings tmap))))
   | ExportTypeT _ -> p t
   | GetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetKeysT _ -> p t
