@@ -7,10 +7,20 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-val merge_component_strict: Context.t list -> Context.t list ->
+val merge_component_strict:
+  (* component cxs *)
+  Context.t list ->
+  (* component impls *)
   (Context.t * string * string * Context.t) list ->
+  (* dependency cxs *)
+  Context.t list ->
+  (* dependency impls *)
+  (Context.t * string * string * Context.t) list ->
+  (* resources *)
   (string * Loc.t * string * Context.t) list ->
+  (* declarations *)
   (string * Loc.t * Modulename.t * Context.t) list ->
+  (* master cx *)
   Context.t ->
   unit
 

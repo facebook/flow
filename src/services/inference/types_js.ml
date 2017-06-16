@@ -469,10 +469,9 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
       end;
 
       (* merge *)
-      let cache = new Context_cache.context_cache in
       let profiling, () = with_timer "Merge" profiling (fun () ->
         let ensure_checked_dependencies = ensure_checked_dependencies ~options ~workers ~env in
-        Merge_service.merge_contents_context ~options cache cx require_loc_map
+        Merge_service.merge_contents_context ~options cx require_loc_map
            ~ensure_checked_dependencies
       ) in
 

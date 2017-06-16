@@ -246,7 +246,6 @@ let collate_errors =
     let errors, _ = collate_errors env.ServerEnv.errors lint_settings in
     let result = if Errors.ErrorSet.is_empty errors
       then begin
-        let cache = new Context_cache.context_cache in
         let (flow_files, flow_file_cxs, non_flow_files, error) =
           List.fold_left (fun (flow_files, cxs, non_flow_files, error) file ->
             if error <> None then (flow_files, cxs, non_flow_files, error) else
@@ -262,11 +261,14 @@ let collate_errors =
               (* TODO: Use InfoHeap as the definitive way to detect @flow vs
                * non-@flow
                *)
-              match cache#read_safe ~audit:Expensive.warn ~options src_file with
-              | None ->
-                (flow_files, cxs, src_file::non_flow_files, error)
-              | Some cx ->
+              try
+                let cx =
+                  Context_cache.get_context_unsafe ~options src_file
+                    ~audit:Expensive.warn
+                in
                 (src_file::flow_files, cx::cxs, non_flow_files, error)
+              with Not_found ->
+                (flow_files, cxs, src_file::non_flow_files, error)
           ) ([], [], [], None) files
         in
         begin match error with
@@ -276,7 +278,7 @@ let collate_errors =
             begin
               try List.iter (fun flow_file_cx ->
                 let master_cx: Context.t =
-                  Merge_service.merge_strict_context ~options cache [flow_file_cx] in
+                  Merge_service.merge_strict_context ~options [flow_file_cx] in
                 ignore master_cx
               ) flow_file_cxs
               with exn -> failwith (

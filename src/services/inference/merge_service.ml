@@ -47,65 +47,77 @@ let missing_required_module r loc resolved_r cx =
    The arguments (b), (c), (d) are passed to `merge_component_strict`, and
    argument (a) is passed to `restore`.
 *)
-let merge_strict_context_with_required ~options cache component_cxs required =
+let merge_strict_context_with_required ~options component_cxs required =
   let cx = List.hd component_cxs in
+
+  let cache = List.fold_left (fun acc cx ->
+    FilenameMap.add (Context.file cx) cx acc
+  ) FilenameMap.empty component_cxs in
 
   let sig_cache = new Context_cache.sig_context_cache in
 
-  let orig_sig_cxs, sig_cxs, impls, res, decls =
-    List.fold_left (fun (orig_sig_cxs, sig_cxs, impls, res, decls) req ->
+  let orig_dep_cxs, dep_cxs, impls, dep_impls, res, decls =
+    List.fold_left (fun (orig_dep_cxs, dep_cxs, impls, dep_impls, res, decls) req ->
       let r, loc, resolved_r, cx_to = req in
       Module_js.(match get_file Expensive.ok resolved_r with
       | Some (Loc.ResourceFile f) ->
-          orig_sig_cxs, sig_cxs,
-          impls, (r, loc, f, cx_to) :: res, decls
+          orig_dep_cxs, dep_cxs,
+          impls, dep_impls,
+          (r, loc, f, cx_to) :: res, decls
       | Some file ->
           let info = get_info_unsafe ~audit:Expensive.ok file in
           if info.checked && info.parsed then
             (* checked implementation exists *)
-            let impl sig_cx = sig_cx, Files.module_ref file, r, cx_to in
-            begin match cache#find file with
-            | Some sig_cx ->
-                orig_sig_cxs, sig_cxs,
-                (impl sig_cx) :: impls, res, decls
+            match FilenameMap.get file cache with
+            | Some cx ->
+              (* impl is part of component *)
+              orig_dep_cxs, dep_cxs,
+              (cx, Files.module_ref file, r, cx_to) :: impls, dep_impls,
+              res, decls
             | None ->
-                let file = Context_cache.find_leader file in
-                begin match sig_cache#find file with
-                | Some sig_cx ->
-                    orig_sig_cxs, sig_cxs,
-                    (impl sig_cx) :: impls, res, decls
-                | None ->
-                    let orig_sig_cx, sig_cx =
-                      sig_cache#read ~audit:Expensive.ok ~options file in
-                    orig_sig_cx::orig_sig_cxs, sig_cx::sig_cxs,
-                    (impl sig_cx) :: impls, res, decls
-                end
-            end
+              (* look up impl sig_context *)
+              let impl cx = cx, Files.module_ref file, r, cx_to in
+              let file = Context_cache.find_leader file in
+              match sig_cache#find file with
+              | Some sig_cx ->
+                  orig_dep_cxs, dep_cxs,
+                  impls, (impl sig_cx) :: dep_impls,
+                  res, decls
+              | None ->
+                  let orig_sig_cx, sig_cx =
+                    sig_cache#read ~audit:Expensive.ok ~options file in
+                  orig_sig_cx::orig_dep_cxs, sig_cx::dep_cxs,
+                  impls, (impl sig_cx) :: dep_impls,
+                  res, decls
           else
             (* unchecked implementation exists *)
             (* use required name as resolved name, for lib lookups *)
             let fake_resolved = Modulename.String r in
-            orig_sig_cxs, sig_cxs,
-            impls, res, (r, loc, fake_resolved, cx_to) :: decls
+            orig_dep_cxs, dep_cxs,
+            impls, dep_impls,
+            res, (r, loc, fake_resolved, cx_to) :: decls
       | None ->
           (* implementation doesn't exist *)
           missing_required_module r loc resolved_r cx_to;
-          orig_sig_cxs, sig_cxs,
-          impls, res, (r, loc, resolved_r, cx_to) :: decls
+          orig_dep_cxs, dep_cxs,
+          impls, dep_impls,
+          res, (r, loc, resolved_r, cx_to) :: decls
       )
-    ) ([], [], [], [], []) required
+    ) ([], [], [], [], [], []) required
   in
 
   let orig_master_cx, master_cx =
     sig_cache#read ~audit:Expensive.ok ~options Loc.Builtins in
 
   Merge_js.merge_component_strict
-    component_cxs sig_cxs impls res decls master_cx;
-  Merge_js.restore cx orig_sig_cxs orig_master_cx;
+    component_cxs impls
+    dep_cxs dep_impls
+    res decls master_cx;
+  Merge_js.restore cx orig_dep_cxs orig_master_cx;
 
   orig_master_cx
 
-let merge_strict_context ~options cache component_cxs =
+let merge_strict_context ~options component_cxs =
   let required = List.fold_left (fun required cx ->
     let file = Context.file cx in
     let require_loc_map = Parsing_service_js.get_requires_unsafe file in
@@ -115,11 +127,11 @@ let merge_strict_context ~options cache component_cxs =
       List.cons (r, loc, resolved_r, cx)
     ) require_loc_map required
   ) [] component_cxs in
-  merge_strict_context_with_required ~options cache component_cxs required
+  merge_strict_context_with_required ~options component_cxs required
 
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
-let merge_contents_context ~options cache cx require_loc_map ~ensure_checked_dependencies =
+let merge_contents_context ~options cx require_loc_map ~ensure_checked_dependencies =
   let resolved_rs, required =
     SMap.fold (fun r loc (resolved_rs, required) ->
       let resolved_r = Module_js.imported_module
@@ -131,7 +143,7 @@ let merge_contents_context ~options cache cx require_loc_map ~ensure_checked_dep
     ) require_loc_map (Module_js.NameSet.empty, [])
   in
   ensure_checked_dependencies resolved_rs;
-  (merge_strict_context_with_required ~options cache [cx] required: Context.t)
+  (merge_strict_context_with_required ~options [cx] required: Context.t)
   |> ignore
 
 (* Entry point for merging a component *)
@@ -152,11 +164,13 @@ let merge_strict_component ~options component =
   *)
   let info = Module_js.get_info_unsafe ~audit:Expensive.ok file in
   if info.Module_js.checked then (
-    let cache = new Context_cache.context_cache in
     let component_cxs =
-      List.map (cache#read ~audit:Expensive.ok ~options) component in
+      List.map
+        (Context_cache.get_context_unsafe ~audit:Expensive.ok ~options)
+        component
+    in
 
-    let master_cx = merge_strict_context ~options cache component_cxs in
+    let master_cx = merge_strict_context ~options component_cxs in
 
     let md5 = Merge_js.ContextOptimizer.sig_context component_cxs in
     let cx = List.hd component_cxs in

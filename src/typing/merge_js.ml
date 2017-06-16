@@ -105,20 +105,20 @@ let detect_sketchy_null_checks cx =
 
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
-let merge_component_strict component_cxs dep_cxs
-    implementations resources declarations master_cx =
-  let cx, other_cxs = List.hd component_cxs, List.tl component_cxs in
+let merge_component_strict cxs impls dep_cxs dep_impls res decls master_cx =
+  let cx, other_cxs = List.hd cxs, List.tl cxs in
   Flow_js.Cache.clear();
 
   dep_cxs |> List.iter (Context.merge_into cx);
   other_cxs |> List.iter (Context.merge_into cx);
   Context.merge_into cx master_cx;
 
-  implementations |> List.iter (explicit_impl_require_strict cx);
+  impls |> List.iter (explicit_impl_require_strict cx);
+  dep_impls |> List.iter (explicit_impl_require_strict cx);
 
-  resources |> List.iter (explicit_res_require_strict cx);
+  res |> List.iter (explicit_res_require_strict cx);
 
-  declarations |> List.iter (explicit_decl_require_strict cx);
+  decls |> List.iter (explicit_decl_require_strict cx);
 
   other_cxs |> List.iter (implicit_require_strict cx master_cx);
   implicit_require_strict cx master_cx cx;

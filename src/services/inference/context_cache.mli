@@ -8,11 +8,7 @@
  *
  *)
 
-class context_cache : object
-  method find: Loc.FilenameKey.t -> Context.t option
-  method read: (options: Options.t -> Loc.FilenameKey.t -> Context.t) Expensive.t
-  method read_safe: (options: Options.t -> Loc.FilenameKey.t -> Context.t option) Expensive.t
-end
+val get_context_unsafe: (options: Options.t -> Loc.FilenameKey.t -> Context.t) Expensive.t
 
 val add: (Context.t -> unit) Expensive.t
 val remove_batch: Utils_js.FilenameSet.t -> unit
