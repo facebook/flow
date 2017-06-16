@@ -23,13 +23,7 @@ let force_annotations cx require_loc_map =
   let m = Context.module_ref cx in
   let tvar = Flow_js.lookup_module cx m in
   let _, id = Type.open_tvar tvar in
-  let before = Errors.ErrorSet.cardinal (Context.errors cx) in
-  Flow_js.enforce_strict cx id (SMap.keys require_loc_map);
-  let after = Errors.ErrorSet.cardinal (Context.errors cx) in
-  if (after > before) then
-    Context.add_tvar cx id Constraint.(Root {
-      rank = 0; constraints = Resolved Type.Locationless.AnyT.t
-    })
+  Flow_js.enforce_strict cx id (SMap.keys require_loc_map)
 
 (* core inference, assuming setup and teardown happens elsewhere *)
 let infer_core cx statements =
