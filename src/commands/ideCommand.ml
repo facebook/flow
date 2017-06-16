@@ -80,62 +80,6 @@ module HumanReadable: ClientProtocol = struct
 
 end
 
-module JsonRpc : sig
-  type t =
-    (* method name, params, id (only for requests) *)
-    | Obj of (string * Hh_json.json list * int option)
-    | Malformed of string
-  val parse_json_rpc_response: string -> t
-end = struct
-  open Hh_json
-  type t =
-    (* method name, params, id (only for requests) *)
-    | Obj of (string * json list * int option)
-    | Malformed of string
-
-  exception Malformed_exn of string
-
-  let get_prop propname props =
-    try
-      List.assoc propname props
-    with Not_found -> raise (Malformed_exn (propname ^ " property not found"))
-
-  let parse_unsafe str =
-    let parsed =
-      try
-        json_of_string str
-      with Syntax_error msg -> raise (Malformed_exn msg)
-    in
-    let props = match parsed with
-      | JSON_Object props -> props
-      | _ -> raise (Malformed_exn "Message is not a JSON Object")
-    in
-    let method_json = get_prop "method" props in
-    let params_json = get_prop "params" props in
-    let id_json = try Some (List.assoc "id" props) with Not_found -> None in
-    let method_name = match method_json with
-      | JSON_String str -> str
-      | _ -> raise (Malformed_exn "Method name is not a string")
-    in
-    let params = match params_json with
-      (* If you don't pass any props you just get a null here *)
-      | JSON_Null -> []
-      | JSON_Array lst -> lst
-      | _ -> raise (Malformed_exn "Unexpected params value")
-    in
-    let id = match id_json with
-      | None -> None
-      | Some (JSON_Number x) -> Some (int_of_string x)
-      | Some _ -> raise (Malformed_exn "Unexpected id value")
-    in
-    Obj (method_name, params, id)
-
-  let parse_json_rpc_response str =
-    try
-      parse_unsafe str
-    with Malformed_exn msg -> Malformed msg
-end
-
 module VeryUnstable: ClientProtocol = struct
   let jsonrpcize_notification method_ json =
     Hh_json.(
@@ -211,19 +155,19 @@ module VeryUnstable: ClientProtocol = struct
     match message with
       | None -> None
       | Some message ->
-          let obj = JsonRpc.parse_json_rpc_response message in
+          let obj = Json_rpc.parse_json_rpc_response message in
           match obj with
-            | JsonRpc.Obj ("subscribeToDiagnostics", _, None) ->
+            | Json_rpc.Obj ("subscribeToDiagnostics", _, None) ->
                 prerr_endline "received subscribe request";
                 Some Prot.Subscribe
-            | JsonRpc.Obj ("autocomplete", params, Some id) ->
+            | Json_rpc.Obj ("autocomplete", params, Some id) ->
                 handle_autocomplete id params
-            | JsonRpc.Obj (method_name, _, id) ->
+            | Json_rpc.Obj (method_name, _, id) ->
                 let id_str = match id with None -> "no id" | Some _ -> "an id" in
                 prerr_endline
                   ("unrecognized method: " ^ method_name ^ " with " ^ id_str ^ " provided");
                 None
-            | JsonRpc.Malformed err ->
+            | Json_rpc.Malformed err ->
                 prerr_endline ("Received a malformed message: " ^ err);
                 None
 end
