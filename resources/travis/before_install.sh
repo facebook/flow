@@ -7,6 +7,8 @@
 # - modern node (for yarn and npm)
 # - yarn
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 case "$TRAVIS_OS_NAME" in
   osx)
     printf "travis_fold:start:brew_install\nInstalling brew\n"
@@ -15,7 +17,7 @@ case "$TRAVIS_OS_NAME" in
     printf "travis_fold:end:brew_install\n"
     ;;
   *)
-    source $HOME/.nvm/nvm.sh
-    nvm install 6
-    nvm use 6
+    ;;
 esac
+
+source "$DIR/setup_node.sh"
