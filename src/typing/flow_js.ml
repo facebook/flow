@@ -3587,7 +3587,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | CustomFunT (_, ReactCreateClass),
       CallT (reason_op, { call_args_tlist = arg1::_; call_tout; _ }) ->
-      Ops.push reason_op;
+      let ops = Ops.clear () in
       let spec = extract_non_spread cx ~trace arg1 in
       let mk_tvar f = mk_tvar cx (f reason_op) in
       let knot = { React.CreateClass.
@@ -3598,7 +3598,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       } in
       rec_flow cx trace (spec, ReactKitT (reason_op,
         React.CreateClass (React.CreateClass.Spec [], knot, call_tout)));
-      Ops.pop ()
+      Ops.set ops
 
     (* When evaluating React.createElement, it's useful to know if the `type`
        argument is a class, function, or an intrinsic. *)

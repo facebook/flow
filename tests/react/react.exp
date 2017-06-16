@@ -302,23 +302,10 @@ create_class_initial_state_sealed.js:84
  84:     (this.state.baz: empty); // property `baz` not found
           ^^^^^^^^^^ object type
 
-create_class_statics_sealed.js:4
-  4: const A = React.createClass({ p: 0 });
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createClass`
+create_class_statics_sealed.js:5
   5: (A.bar: empty); // number ~> empty (inflow below)
       ^^^^^ number. This type is incompatible with
   5: (A.bar: empty); // number ~> empty (inflow below)
-             ^^^^^ empty
-
-create_class_statics_sealed.js:9
-               v------------------
-  9: const B = React.createClass({
- 10:   statics: { foo: 0 },
- 11: });
-     -^ call of method `createClass`
- 13: (B.bar: empty); // number ~> empty (inflow below)
-      ^^^^^ number. This type is incompatible with
- 13: (B.bar: empty); // number ~> empty (inflow below)
              ^^^^^ empty
 
 create_class_statics_sealed.js:12
@@ -327,15 +314,10 @@ create_class_statics_sealed.js:12
  12: (B.foo: empty); // number ~> empty
              ^^^^^ empty
 
-create_class_statics_sealed.js:17
-               v------------------
- 17: const C = React.createClass({
- 18:   statics: ({ foo: 0 }: {| foo: number |}),
- 19: });
-     -^ call of method `createClass`
- 21: (C.bar: empty); // number ~> empty (inflow below)
+create_class_statics_sealed.js:13
+ 13: (B.bar: empty); // number ~> empty (inflow below)
       ^^^^^ number. This type is incompatible with
- 21: (C.bar: empty); // number ~> empty (inflow below)
+ 13: (B.bar: empty); // number ~> empty (inflow below)
              ^^^^^ empty
 
 create_class_statics_sealed.js:20
@@ -344,16 +326,11 @@ create_class_statics_sealed.js:20
  20: (C.foo: empty); // number ~> empty
              ^^^^^ empty
 
-create_class_statics_sealed.js:25
-               v------------------
- 25: const D = React.createClass({
- 26:   statics: ({ foo: 0 }: { foo: number }),
- 27: });
-     -^ call of method `createClass`
- 30: D.bar = 0; // property `bar` not found
-       ^^^ property `bar`. Property not found in
- 30: D.bar = 0; // property `bar` not found
-     ^ statics of React class
+create_class_statics_sealed.js:21
+ 21: (C.bar: empty); // number ~> empty (inflow below)
+      ^^^^^ number. This type is incompatible with
+ 21: (C.bar: empty); // number ~> empty (inflow below)
+             ^^^^^ empty
 
 create_class_statics_sealed.js:28
  28: (D.foo: empty); // number ~> empty
@@ -367,18 +344,11 @@ create_class_statics_sealed.js:29
  29: (D.bar: empty); // property `bar` not found
       ^ statics of React class
 
-create_class_statics_sealed.js:33
-               v------------------
- 33: const E = React.createClass({
- 34:   mixins: [{
- 35:     statics: { foo: 0 },
-...:
- 38: });
-     -^ call of method `createClass`
- 41: (E.baz: empty); // number ~> empty (inflow below)
-      ^^^^^ number. This type is incompatible with
- 41: (E.baz: empty); // number ~> empty (inflow below)
-             ^^^^^ empty
+create_class_statics_sealed.js:30
+ 30: D.bar = 0; // property `bar` not found
+       ^^^ property `bar`. Property not found in
+ 30: D.bar = 0; // property `bar` not found
+     ^ statics of React class
 
 create_class_statics_sealed.js:39
  39: (E.foo: empty); // number ~> empty
@@ -392,18 +362,11 @@ create_class_statics_sealed.js:40
  40: (E.bar: empty); // number ~> empty
              ^^^^^ empty
 
-create_class_statics_sealed.js:45
-               v------------------
- 45: const F = React.createClass({
- 46:   mixins: [{
- 47:     statics: ({ foo: 0 }: { foo: number }),
-...:
- 50: });
-     -^ call of method `createClass`
- 54: F.baz = 0;
-       ^^^ property `baz`. Property not found in
- 54: F.baz = 0;
-     ^ statics of React class
+create_class_statics_sealed.js:41
+ 41: (E.baz: empty); // number ~> empty (inflow below)
+      ^^^^^ number. This type is incompatible with
+ 41: (E.baz: empty); // number ~> empty (inflow below)
+             ^^^^^ empty
 
 create_class_statics_sealed.js:51
  51: (F.foo: empty); // number ~> empty
@@ -422,6 +385,12 @@ create_class_statics_sealed.js:53
         ^^^ property `baz`. Property not found in
  53: (F.baz: empty); // number ~> empty (inflow below)
       ^ statics of React class
+
+create_class_statics_sealed.js:54
+ 54: F.baz = 0;
+       ^^^ property `baz`. Property not found in
+ 54: F.baz = 0;
+     ^ statics of React class
 
 import_react.js:7
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
@@ -514,19 +483,6 @@ proptype_arrayOf.js:43
  43:     arr: React.PropTypes.arrayOf(0), // error: number not a prop type
                                       ^ number
 
-proptype_custom_validator.js:4
-                   v------------------
-  4: var Example = React.createClass({
-  5:   propTypes: {
-  6:     foo(props, propName, componentName, href) {
-...:
- 14: });
-     -^ call of method `createClass`
- 11:       return (0: mixed); // error: should return ?Error
-                      ^^^^^ mixed. This type is incompatible with
-125:   href?: string) => ?Error;
-                          ^^^^^ Error. See lib: <BUILTINS>/react.js:125
-
 proptype_custom_validator.js:8
   8:       (propName: empty); // error: propName is a string
             ^^^^^^^^ string. This type is incompatible with
@@ -550,6 +506,12 @@ proptype_custom_validator.js:10
             ^^^^ undefined. This type is incompatible with
  10:       (href: empty); // error: href is an optional string
                   ^^^^^ empty
+
+proptype_custom_validator.js:11
+ 11:       return (0: mixed); // error: should return ?Error
+                      ^^^^^ mixed. This type is incompatible with
+125:   href?: string) => ?Error;
+                          ^^^^^ Error. See lib: <BUILTINS>/react.js:125
 
 proptype_func.js:14
  14: var fail_mistyped = <Example func={2} />
