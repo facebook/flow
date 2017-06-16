@@ -217,7 +217,11 @@ test-parser-ocp: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
 	rm -f $(OCP_BUILD_FILES)
 
 build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
-	ocamlbuild -lflags -custom -no-links $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.d.byte
+	ocamlbuild \
+		-use-ocamlfind -pkgs sedlex \
+		-no-links $(INCLUDE_OPTS) $(LIB_OPTS) \
+		-lflags -custom -lflags "$(LINKER_FLAGS)" \
+		src/flow.d.byte
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow$(EXE)
 
