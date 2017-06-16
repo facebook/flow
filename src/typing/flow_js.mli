@@ -49,6 +49,7 @@ val resolve_spread_list: Context.t -> reason_op:Reason.t -> Type.unresolved_para
 val subst: Context.t -> ?force:bool -> (Type.t SMap.t) -> Type.t -> Type.t
 val generate_tests: Context.t -> reason -> Type.typeparam list -> (Type.t SMap.t -> unit)
   -> unit
+val match_this_binding: Type.t SMap.t -> (Type.t -> bool) -> bool
 
 val check_polarity:
   Context.t -> ?trace:Trace.t -> Type.polarity -> Type.t -> unit

@@ -4297,6 +4297,7 @@ and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
 )
 
 and mk_class cx loc reason c =
+  let this_in_class = Class_sig.This.in_class c in
   let self = Flow.mk_tvar cx reason in
   let class_sig =
     Class_sig.mk cx loc reason self c ~expr:expression
@@ -4304,7 +4305,8 @@ and mk_class cx loc reason c =
   class_sig |> Class_sig.generate_tests cx (fun class_sig ->
     Class_sig.check_super cx class_sig;
     Class_sig.check_implements cx class_sig;
-    Class_sig.toplevels cx class_sig
+    if this_in_class || not (Class_sig.This.is_bound_to_empty class_sig) then
+      Class_sig.toplevels cx class_sig
       ~decls:toplevel_decls
       ~stmts:toplevels
       ~expr:expression

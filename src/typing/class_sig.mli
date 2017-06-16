@@ -99,3 +99,8 @@ val toplevels: Context.t ->
 val classtype: Context.t ->
   ?check_polarity:bool ->
   t -> Type.t
+
+module This: sig
+  val is_bound_to_empty: t -> bool
+  val in_class: Ast.Class.t -> bool
+end

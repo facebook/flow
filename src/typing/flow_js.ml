@@ -6143,9 +6143,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     begin match SMap.get typeparam.name map with
     | None -> t
     | Some param_t ->
-      (* opportunistically reposition This substitutions; in general
-         repositioning may lead to non-termination *)
-      if typeparam.name = "this" then ReposT (typeparam.reason, param_t)
+      if typeparam.name = "this" then mk_this_binding typeparam.reason param_t
       else param_t
     end
 
@@ -6485,6 +6483,16 @@ and eval_destructor cx ~trace reason curr_t s i =
     )
   | Some it ->
     it
+
+(* opportunistically reposition This substitutions; in general
+   repositioning may lead to non-termination *)
+and mk_this_binding r t =
+  ReposT (r, t)
+
+and match_this_binding map f =
+  match SMap.find_unsafe "this" map with
+  | ReposT (_, t) -> f t
+  | _ -> failwith "not a this binding"
 
 and subst_propmap cx force map id =
   let pmap = Context.find_props cx id in
