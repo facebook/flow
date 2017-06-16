@@ -17,19 +17,59 @@ module List = struct
       let env, init = f env init x in
       fold_left_env env xs ~init ~f
 
-  let rec map_env env xs ~f = match xs with
-    | [] -> env, []
-    | x :: xs ->
-      let env, x = f env x in
-      let env, xs = map_env env xs ~f in
-      env, x :: xs
-
   let rev_map_env env xs ~f =
     let f2 env init x =
       let env, x = f env x in
       env, x :: init
     in
     fold_left_env env xs ~init:[] ~f:f2
+
+  let map_env env xs ~f =
+    let rec aux env xs counter =
+      match xs with
+      | [] -> env, []
+      | [y1] ->
+        let env, z1 = f env y1 in
+        env, [z1]
+      | [y1; y2] ->
+        let env, z1 = f env y1 in
+        let env, z2 = f env y2 in
+        env, [z1; z2]
+      | [y1; y2; y3] ->
+        let env, z1 = f env y1 in
+        let env, z2 = f env y2 in
+        let env, z3 = f env y3 in
+        env, [z1; z2; z3]
+      | [y1; y2; y3; y4] ->
+        let env, z1 = f env y1 in
+        let env, z2 = f env y2 in
+        let env, z3 = f env y3 in
+        let env, z4 = f env y4 in
+        env, [z1; z2; z3; z4]
+      | [y1; y2; y3; y4; y5] ->
+        let env, z1 = f env y1 in
+        let env, z2 = f env y2 in
+        let env, z3 = f env y3 in
+        let env, z4 = f env y4 in
+        let env, z5 = f env y5 in
+        env, [z1; z2; z3; z4; z5]
+      | y1::y2::y3::y4::y5::ys ->
+        let env, z1 = f env y1 in
+        let env, z2 = f env y2 in
+        let env, z3 = f env y3 in
+        let env, z4 = f env y4 in
+        let env, z5 = f env y5 in
+        let env, zs =
+          if counter > 1000
+          then
+            let env, zs = rev_map_env env ys ~f in
+            env, List.rev zs
+          else
+            aux env ys (counter + 1)
+        in
+        env, z1::z2::z3::z4::z5::zs
+    in
+    aux env xs 0
 
   let rec map2_env env l1 l2 ~f = match l1, l2 with
     | [], [] -> env, []
