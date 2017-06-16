@@ -7,21 +7,33 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
+module Reqs : sig
+  type impl = Context.t * string * string * Context.t
+  type dep_impl = Context.t * string * string * Context.t
+  type unchecked = string * Loc.t * Context.t
+  type res = string * Loc.t * string * Context.t
+  type decl = string * Loc.t * Modulename.t * Context.t
+  type t = {
+    impls: impl list;
+    dep_impls: dep_impl list;
+    unchecked: unchecked list;
+    res: res list;
+    decls: decl list;
+  }
+  val empty: t
+  val add_impl: impl -> t -> t
+  val add_dep_impl: dep_impl -> t -> t
+  val add_unchecked: unchecked -> t -> t
+  val add_res: res -> t -> t
+  val add_decl: decl -> t -> t
+end
+
 val merge_component_strict:
+  Reqs.t ->
   (* component cxs *)
   Context.t list ->
-  (* component impls *)
-  (Context.t * string * string * Context.t) list ->
   (* dependency cxs *)
   Context.t list ->
-  (* dependency impls *)
-  (Context.t * string * string * Context.t) list ->
-  (* resources *)
-  (string * Loc.t * string * Context.t) list ->
-  (* declarations *)
-  (string * Loc.t * Modulename.t * Context.t) list ->
-  (* unchecked *)
-  (string * Loc.t * Context.t) list ->
   (* master cx *)
   Context.t ->
   unit

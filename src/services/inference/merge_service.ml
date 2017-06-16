@@ -9,6 +9,7 @@
  *)
 
 open Utils_js
+module Reqs = Merge_js.Reqs
 
 (* To merge the contexts of a component (component_cxs) with their dependencies,
    we call the functions `merge_component_strict` and `restore` defined
@@ -45,14 +46,13 @@ let merge_strict_context_with_required ~options component_cxs required =
 
   let sig_cache = new Context_cache.sig_context_cache in
 
-  let orig_dep_cxs, dep_cxs, impls, dep_impls, res, decls, unchecked =
-    List.fold_left (fun (orig_dep_cxs, dep_cxs, impls, dep_impls, res, decls, unchecked) req ->
+  let orig_dep_cxs, dep_cxs, reqs =
+    List.fold_left (fun (orig_dep_cxs, dep_cxs, reqs) req ->
       let r, loc, resolved_r, cx_to = req in
       Module_js.(match get_file Expensive.ok resolved_r with
       | Some (Loc.ResourceFile f) ->
           orig_dep_cxs, dep_cxs,
-          impls, dep_impls,
-          (r, loc, f, cx_to) :: res, decls, unchecked
+          Reqs.add_res (r, loc, f, cx_to) reqs
       | Some file ->
           let info = get_info_unsafe ~audit:Expensive.ok file in
           if info.checked && info.parsed then
@@ -61,8 +61,7 @@ let merge_strict_context_with_required ~options component_cxs required =
             | Some cx ->
               (* impl is part of component *)
               orig_dep_cxs, dep_cxs,
-              (cx, Files.module_ref file, r, cx_to) :: impls, dep_impls,
-              res, decls, unchecked
+              Reqs.add_impl (cx, Files.module_ref file, r, cx_to) reqs
             | None ->
               (* look up impl sig_context *)
               let impl cx = cx, Files.module_ref file, r, cx_to in
@@ -70,35 +69,28 @@ let merge_strict_context_with_required ~options component_cxs required =
               match sig_cache#find file with
               | Some sig_cx ->
                   orig_dep_cxs, dep_cxs,
-                  impls, (impl sig_cx) :: dep_impls,
-                  res, decls, unchecked
+                  Reqs.add_dep_impl (impl sig_cx) reqs
               | None ->
                   let orig_sig_cx, sig_cx =
                     sig_cache#read ~audit:Expensive.ok ~options file in
                   orig_sig_cx::orig_dep_cxs, sig_cx::dep_cxs,
-                  impls, (impl sig_cx) :: dep_impls,
-                  res, decls, unchecked
+                  Reqs.add_dep_impl (impl sig_cx) reqs
           else
             (* unchecked implementation exists *)
             orig_dep_cxs, dep_cxs,
-            impls, dep_impls,
-            res, decls, (r, loc, cx_to) :: unchecked
+            Reqs.add_unchecked (r, loc, cx_to) reqs
       | None ->
           (* implementation doesn't exist *)
           orig_dep_cxs, dep_cxs,
-          impls, dep_impls,
-          res, (r, loc, resolved_r, cx_to) :: decls, unchecked
+          Reqs.add_decl (r, loc, resolved_r, cx_to) reqs
       )
-    ) ([], [], [], [], [], [], []) required
+    ) ([], [], Reqs.empty) required
   in
 
   let orig_master_cx, master_cx =
     sig_cache#read ~audit:Expensive.ok ~options Loc.Builtins in
 
-  Merge_js.merge_component_strict
-    component_cxs impls
-    dep_cxs dep_impls
-    res decls unchecked master_cx;
+  Merge_js.merge_component_strict reqs component_cxs dep_cxs master_cx;
   Merge_js.restore cx orig_dep_cxs orig_master_cx;
 
   orig_master_cx

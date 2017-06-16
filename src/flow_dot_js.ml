@@ -170,9 +170,10 @@ let check_content ~filename ~content =
     let decls = SMap.fold (fun module_name loc acc ->
       (module_name, loc, Modulename.String module_name, cx) :: acc
     ) require_loc_map [] in
+    let reqs = Merge_js.Reqs.({empty with decls}) in
 
     let master_cx = get_master_cx root in
-    Merge_js.merge_component_strict [cx] [] [] [] [] decls [] master_cx;
+    Merge_js.merge_component_strict reqs [cx] [] master_cx;
 
     Context.errors cx
   | _, parse_errors ->

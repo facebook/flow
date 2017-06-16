@@ -7,6 +7,44 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
+module Reqs = struct
+  type impl = Context.t * string * string * Context.t
+  type dep_impl = Context.t * string * string * Context.t
+  type unchecked = string * Loc.t * Context.t
+  type res = string * Loc.t * string * Context.t
+  type decl = string * Loc.t * Modulename.t * Context.t
+  type t = {
+    impls: impl list;
+    dep_impls: dep_impl list;
+    unchecked: unchecked list;
+    res: res list;
+    decls: decl list;
+  }
+
+  let empty = {
+    impls = [];
+    dep_impls = [];
+    unchecked = [];
+    res = [];
+    decls = [];
+  }
+
+  let add_impl impl reqs =
+    { reqs with impls = impl::reqs.impls }
+
+  let add_dep_impl dep_impl reqs =
+    { reqs with dep_impls = dep_impl::reqs.dep_impls }
+
+  let add_unchecked unchecked reqs =
+    { reqs with unchecked = unchecked::reqs.unchecked }
+
+  let add_res res reqs =
+    { reqs with res = res::reqs.res }
+
+  let add_decl decl reqs =
+    { reqs with decls = decl::reqs.decls }
+end
+
 (* Connect the builtins object in master_cx to the builtins reference in some
    arbitrary cx. *)
 let implicit_require_strict cx master_cx cx_to =
@@ -118,7 +156,7 @@ let detect_sketchy_null_checks cx =
 
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
-let merge_component_strict cxs impls dep_cxs dep_impls res decls unchecked master_cx =
+let merge_component_strict reqs cxs dep_cxs master_cx =
   let cx, other_cxs = List.hd cxs, List.tl cxs in
   Flow_js.Cache.clear();
 
@@ -126,14 +164,16 @@ let merge_component_strict cxs impls dep_cxs dep_impls res decls unchecked maste
   other_cxs |> List.iter (Context.merge_into cx);
   Context.merge_into cx master_cx;
 
-  impls |> List.iter (explicit_impl_require_strict cx);
-  dep_impls |> List.iter (explicit_impl_require_strict cx);
+  let open Reqs in
 
-  res |> List.iter (explicit_res_require_strict cx);
+  reqs.impls |> List.iter (explicit_impl_require_strict cx);
+  reqs.dep_impls |> List.iter (explicit_impl_require_strict cx);
 
-  decls |> List.iter (explicit_decl_require_strict cx);
+  reqs.res |> List.iter (explicit_res_require_strict cx);
 
-  unchecked |> List.iter (explicit_unchecked_require_strict cx);
+  reqs.decls |> List.iter (explicit_decl_require_strict cx);
+
+  reqs.unchecked |> List.iter (explicit_unchecked_require_strict cx);
 
   other_cxs |> List.iter (implicit_require_strict cx master_cx);
   implicit_require_strict cx master_cx cx;
