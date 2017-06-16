@@ -1,8 +1,3 @@
-Library parse error:
-libs/parse_error.js:8
-  8:   methodB: () => any
-       ^^^^^^^ Unexpected identifier
-
 Library type error:
 libs/type_error.js:2
   2: declare function foo(x: number): Array;
@@ -15,4 +10,4 @@ a.js:5
             ^^^^^^ string
 
 
-Found 3 errors
+Found 2 errors
