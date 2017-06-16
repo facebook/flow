@@ -51,38 +51,38 @@ let merge_strict_context_with_required ~options component_cxs required =
       let r, loc, resolved_r, cx_to = req in
       Module_js.(match get_file Expensive.ok resolved_r with
       | Some (Loc.ResourceFile f) ->
-          orig_dep_cxs, dep_cxs,
-          Reqs.add_res (r, loc, f, cx_to) reqs
+        orig_dep_cxs, dep_cxs,
+        Reqs.add_res (r, loc, f, cx_to) reqs
       | Some file ->
-          let info = get_info_unsafe ~audit:Expensive.ok file in
-          if info.checked && info.parsed then
-            (* checked implementation exists *)
-            match FilenameMap.get file cache with
-            | Some cx ->
-              (* impl is part of component *)
-              orig_dep_cxs, dep_cxs,
-              Reqs.add_impl (cx, Files.module_ref file, r, cx_to) reqs
-            | None ->
-              (* look up impl sig_context *)
-              let impl cx = cx, Files.module_ref file, r, cx_to in
-              let file = Context_cache.find_leader file in
-              match sig_cache#find file with
-              | Some sig_cx ->
-                  orig_dep_cxs, dep_cxs,
-                  Reqs.add_dep_impl (impl sig_cx) reqs
-              | None ->
-                  let orig_sig_cx, sig_cx =
-                    sig_cache#read ~audit:Expensive.ok ~options file in
-                  orig_sig_cx::orig_dep_cxs, sig_cx::dep_cxs,
-                  Reqs.add_dep_impl (impl sig_cx) reqs
-          else
-            (* unchecked implementation exists *)
+        let info = get_info_unsafe ~audit:Expensive.ok file in
+        if info.checked && info.parsed then
+          (* checked implementation exists *)
+          match FilenameMap.get file cache with
+          | Some cx ->
+            (* impl is part of component *)
             orig_dep_cxs, dep_cxs,
-            Reqs.add_unchecked (r, loc, cx_to) reqs
-      | None ->
-          (* implementation doesn't exist *)
+            Reqs.add_impl (cx, Files.module_ref file, r, cx_to) reqs
+          | None ->
+            (* look up impl sig_context *)
+            let impl cx = cx, Files.module_ref file, r, cx_to in
+            let file = Context_cache.find_leader file in
+            match sig_cache#find file with
+            | Some sig_cx ->
+              orig_dep_cxs, dep_cxs,
+              Reqs.add_dep_impl (impl sig_cx) reqs
+            | None ->
+              let orig_sig_cx, sig_cx =
+                sig_cache#read ~audit:Expensive.ok ~options file in
+              orig_sig_cx::orig_dep_cxs, sig_cx::dep_cxs,
+              Reqs.add_dep_impl (impl sig_cx) reqs
+        else
+          (* unchecked implementation exists *)
           orig_dep_cxs, dep_cxs,
-          Reqs.add_decl (r, loc, resolved_r, cx_to) reqs
+          Reqs.add_unchecked (r, loc, cx_to) reqs
+      | None ->
+        (* implementation doesn't exist *)
+        orig_dep_cxs, dep_cxs,
+        Reqs.add_decl (r, loc, resolved_r, cx_to) reqs
       )
     ) ([], [], Reqs.empty) required
   in
