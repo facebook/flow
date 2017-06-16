@@ -79,6 +79,7 @@ val file: t -> Loc.filename
 val find_props: t -> Type.Properties.id -> Type.Properties.t
 val find_exports: t -> Type.Exports.id -> Type.Exports.t
 val find_module: t -> string -> Type.t
+val find_tvar: t -> Constraint.ident -> Constraint.node
 val find_tvar_reason: t -> Constraint.ident -> Reason.t
 val mem_nominal_id: t -> Constraint.ident -> bool
 val globals: t -> SSet.t

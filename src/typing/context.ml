@@ -246,6 +246,9 @@ let find_exports cx id =
 let find_module cx m =
   try SMap.find_unsafe m cx.local.modulemap
   with Not_found -> raise (Module_not_found m)
+let find_tvar cx id =
+  try IMap.find_unsafe id cx.local.graph
+  with Not_found -> raise (Tvar_not_found id)
 let find_tvar_reason cx id =
   try IMap.find_unsafe id cx.local.tvar_reasons
   with Not_found -> raise (Tvar_reason_not_found id)

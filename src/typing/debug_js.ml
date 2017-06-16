@@ -1860,22 +1860,25 @@ and dump_tvar_ (depth, tvars) cx id =
   if ISet.mem id tvars then spf "%d, ^" id else
   let stack = ISet.add id tvars in
   let open Constraint in
-  match IMap.find_unsafe id (Context.graph cx) with
-  | Goto g -> spf "%d, Goto %d" id g
-  | Root { constraints = Resolved t; _ } ->
-    spf "%d, Resolved %s" id (dump_t_ (depth-1, stack) cx t)
-  | Root { constraints = Unresolved { lower; upper; _ }; _ } ->
-    if lower = TypeMap.empty && upper = UseTypeMap.empty
-    then spf "%d" id
-    else spf "%d, [%s], [%s]" id
-      (String.concat "; " (List.rev (TypeMap.fold
-        (fun t _ acc ->
-          dump_t_ (depth-1, stack) cx t :: acc
-        ) lower [])))
-      (String.concat "; " (List.rev (UseTypeMap.fold
-        (fun use_t _ acc ->
-          dump_use_t_ (depth-1, stack) cx use_t :: acc
-        ) upper [])))
+  try
+    match Context.find_tvar cx id with
+    | Goto g -> spf "%d, Goto %d" id g
+    | Root { constraints = Resolved t; _ } ->
+      spf "%d, Resolved %s" id (dump_t_ (depth-1, stack) cx t)
+    | Root { constraints = Unresolved { lower; upper; _ }; _ } ->
+      if lower = TypeMap.empty && upper = UseTypeMap.empty
+      then spf "%d" id
+      else spf "%d, [%s], [%s]" id
+        (String.concat "; " (List.rev (TypeMap.fold
+          (fun t _ acc ->
+            dump_t_ (depth-1, stack) cx t :: acc
+          ) lower [])))
+        (String.concat "; " (List.rev (UseTypeMap.fold
+          (fun use_t _ acc ->
+            dump_use_t_ (depth-1, stack) cx use_t :: acc
+          ) upper [])))
+  with Context.Tvar_not_found _ ->
+    string_of_int id
 
 and dump_prop ?(depth=3) cx p =
   dump_prop_ (depth, ISet.empty) cx p
