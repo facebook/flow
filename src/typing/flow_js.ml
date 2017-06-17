@@ -5485,11 +5485,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | FunProtoCallT reason, _ ->
       rec_flow cx trace (FunProtoT reason, u)
 
-    | (_, GetPropT (_, propref, _))
-    | (_, SetPropT (_, propref, _))
-    | (_, LookupT (_, _, _, propref, _)) ->
+    | _, GetPropT (_, propref, _) ->
       let reason_prop = reason_of_propref propref in
-      add_output cx ~trace (FlowError.EIncompatibleProp (l, u, reason_prop))
+      add_output cx ~trace (FlowError.EIncompatibleGetProp { lower = l; reason_prop })
+
+    | _, SetPropT (_, propref, _) ->
+      let reason_prop = reason_of_propref propref in
+      add_output cx ~trace (FlowError.EIncompatibleSetProp { lower = l; reason_prop })
+
+    | _, LookupT (_, _, _, propref, _) ->
+      let reason_prop = reason_of_propref propref in
+      add_output cx ~trace (FlowError.EIncompatibleProp { lower = l; reason_prop })
 
     | _, UseT (Addition, u) ->
       add_output cx ~trace (FlowError.EAddition (reason_of_t l, reason_of_t u))

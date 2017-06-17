@@ -2043,10 +2043,17 @@ let dump_flow_error =
         spf "EIncompatibleDefs (%s, %s)"
           (dump_reason cx reason_l)
           (dump_reason cx reason_u)
-    | EIncompatibleProp (l, u, reason_prop) ->
-        spf "EIncompatibleProp (%s, %s, %s)"
-          (dump_t ~depth cx l)
-          (dump_use_t ~depth cx u)
+    | EIncompatibleProp { lower; reason_prop } ->
+        spf "EIncompatibleProp { lower = %s; reason_prop = %s }"
+          (dump_t ~depth cx lower)
+          (dump_reason cx reason_prop)
+    | EIncompatibleGetProp { lower; reason_prop } ->
+        spf "EIncompatibleGetProp { lower = %s; reason_prop = %s }"
+          (dump_t ~depth cx lower)
+          (dump_reason cx reason_prop)
+    | EIncompatibleSetProp { lower; reason_prop } ->
+        spf "EIncompatibleSetProp { lower = %s; reason_prop = %s }"
+          (dump_t ~depth cx lower)
           (dump_reason cx reason_prop)
     | EDebugPrint (reason, _) ->
         spf "EDebugPrint (%s, _)" (dump_reason cx reason)

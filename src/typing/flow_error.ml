@@ -37,7 +37,9 @@ end
 type error_message =
   | EIncompatible of Type.t * Type.use_t
   | EIncompatibleDefs of reason * reason
-  | EIncompatibleProp of Type.t * Type.use_t * reason
+  | EIncompatibleProp of { lower: Type.t; reason_prop: reason }
+  | EIncompatibleGetProp of { lower: Type.t; reason_prop: reason }
+  | EIncompatibleSetProp of { lower: Type.t; reason_prop: reason }
   | EDebugPrint of reason * string
   | EImportValueAsType of reason * string
   | EImportTypeAsTypeof of reason * string
@@ -220,10 +222,11 @@ let locs_of_error_message = function
       [loc_of_reason reason_l; loc_of_reason reason_u]
   | EIncompatibleDefs (reason_l, reason_u) ->
       [loc_of_reason reason_l; loc_of_reason reason_u]
-  | EIncompatibleProp (l, u, reason) ->
-      let reason_l = reason_of_t l in
-      let reason_u = reason_of_use_t u in
-      [loc_of_reason reason; loc_of_reason reason_l; loc_of_reason reason_u]
+  | EIncompatibleProp { lower; reason_prop }
+  | EIncompatibleGetProp { lower; reason_prop }
+  | EIncompatibleSetProp { lower; reason_prop } ->
+      let reason_l = reason_of_t lower in
+      [loc_of_reason reason_prop; loc_of_reason reason_l]
   | EDebugPrint (reason, _) -> [loc_of_reason reason]
   | EImportValueAsType (reason, _) -> [loc_of_reason reason]
   | EImportTypeAsTypeof (reason, _) -> [loc_of_reason reason]
@@ -583,12 +586,17 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | EIncompatibleDefs (reason_l, reason_u) ->
       typecheck_error "This type is incompatible with" (ordered_reasons reason_l reason_u)
 
-  | EIncompatibleProp (l, u, reason_prop) ->
-      (* when unexpected types flow into a GetPropT/SetPropT (e.g. void or
-         other non-object-ish things), then use `reason_prop`, which
-         represents the reason for the prop itself, not the lookup action. *)
-      let reasons = reason_prop, reason_of_t l in
-      typecheck_error (err_msg_use l u) reasons
+  | EIncompatibleProp { lower; reason_prop } ->
+      let msg = spf "Property not found in%s" (err_value lower) in
+      typecheck_error msg (reason_prop, reason_of_t lower)
+
+  | EIncompatibleGetProp { lower; reason_prop } ->
+      let msg = spf "Property cannot be accessed on%s" (err_value lower) in
+      typecheck_error msg (reason_prop, reason_of_t lower)
+
+  | EIncompatibleSetProp { lower; reason_prop } ->
+      let msg = spf "Property cannot be assigned on%s" (err_value lower) in
+      typecheck_error msg (reason_prop, reason_of_t lower)
 
   | EDebugPrint (r, str) ->
       mk_error ~trace_infos [mk_info r [str]]
