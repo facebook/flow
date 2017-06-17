@@ -17,12 +17,22 @@ val init:
   Profiling_js.t * FilenameSet.t * SSet.t * bool * ServerEnv.errors
 
 (* incremental typecheck entry point *)
-val recheck: ServerEnv.genv -> ServerEnv.env -> updates:FilenameSet.t -> ServerEnv.env
+val recheck:
+  options:Options.t ->
+  workers:Worker.t list option ->
+  updates:FilenameSet.t ->
+  ServerEnv.env -> ServerEnv.env
 
 (* initial (full) check *)
 val full_check:
+  profiling:Profiling_js.t ->
+  options:Options.t ->
+  workers:Worker.t list option ->
   focus_target:Loc.filename option ->
-  ServerEnv.genv -> Profiling_js.t * ServerEnv.env
+  should_merge:bool ->
+  filename list ->
+  ServerEnv.errors ->
+  Profiling_js.t * Utils_js.FilenameSet.t * ServerEnv.errors
 
 val typecheck_contents:
   options: Options.t ->

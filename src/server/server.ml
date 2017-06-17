@@ -20,12 +20,65 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
   let name = "flow server"
 
+  let sample_init_memory profiling =
+    let open SharedMem_js in
+    let dep_stats = dep_stats () in
+    let hash_stats = hash_stats () in
+    let heap_size = heap_size () in
+    let memory_metrics = [
+      "heap.size", heap_size;
+      "dep_table.nonempty_slots", dep_stats.nonempty_slots;
+      "dep_table.used_slots", dep_stats.used_slots;
+      "dep_table.slots", dep_stats.slots;
+      "hash_table.nonempty_slots", hash_stats.nonempty_slots;
+      "hash_table.used_slots", hash_stats.used_slots;
+      "hash_table.slots", hash_stats.slots;
+    ] in
+    List.fold_left (fun profiling (metric, value) ->
+      Profiling_js.sample_memory
+        ~metric:("init_done." ^ metric)
+        ~value:(float_of_int value)
+         profiling
+    ) profiling memory_metrics
+
   let init ~focus_target genv =
     (* write binary path and version to server log *)
     Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
     Hh_logger.info "version=%s" Flow_version.version;
+
+    let profiling = Profiling_js.empty in
+
+    let workers = genv.ServerEnv.workers in
+    let options = genv.ServerEnv.options in
+
+    let profiling, parsed, libs, libs_ok, errors =
+      Types_js.init ~profiling ~workers options in
+
+    (* if any libs errored, we'll infer but not merge client code *)
+    let should_merge = libs_ok in
+
     (* compute initial state *)
-    Types_js.full_check ~focus_target genv
+    let profiling, checked, errors =
+      let parsed =
+        if Options.is_lazy_mode options then []
+        else FilenameSet.elements parsed in
+      Types_js.full_check ~profiling ~workers ~focus_target ~options ~should_merge parsed errors in
+
+    let profiling = sample_init_memory profiling in
+
+    SharedMem_js.init_done();
+
+    (* Return an env that initializes invariants required and maintained by
+       recheck, namely that `files` contains files that parsed successfully, and
+       `errors` contains the current set of errors. *)
+    profiling, { ServerEnv.
+      files = parsed;
+      checked_files = checked;
+      libs;
+      errors;
+      connections = Persistent_connection.empty;
+    }
+
 
   let status_log errors =
     if Errors.ErrorSet.is_empty errors
@@ -514,10 +567,12 @@ let collate_errors =
     if FilenameSet.is_empty updates
     then env
     else begin
-      let root = Options.root genv.ServerEnv.options in
-      let tmp_dir = Options.temp_dir genv.ServerEnv.options in
+      let options = genv.ServerEnv.options in
+      let root = Options.root options in
+      let tmp_dir = Options.temp_dir options in
+      let workers = genv.ServerEnv.workers in
       ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
-      let env = Types_js.recheck genv env ~updates in
+      let env = Types_js.recheck ~options ~workers ~updates env in
       ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
       env
     end

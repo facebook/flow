@@ -537,9 +537,7 @@ let init_libs ~options ~profiling ~local_errors ~suppressions ordered_libs =
    `files` contains files that parsed successfully in the previous
    phase (which could be the init phase or a previous recheck phase)
 *)
-let recheck genv env ~updates =
-  let workers = genv.ServerEnv.workers in
-  let options = genv.ServerEnv.options in
+let recheck ~options ~workers ~updates env =
   let errors = env.ServerEnv.errors in
   let debug = Options.is_debug_mode options in
 
@@ -830,7 +828,7 @@ let recheck genv env ~updates =
       let to_merge = FilenameSet.union all_dependent_files inferred in
       Context_cache.oldify_merge_batch to_merge;
       (** TODO [perf]: Consider `aggressive **)
-      SharedMem_js.collect genv.ServerEnv.options `gentle;
+      SharedMem_js.collect options `gentle;
 
       let to_merge = FilenameSet.elements to_merge in
 
@@ -934,72 +932,22 @@ let init ~profiling ~workers options =
 
   profiling, parsed, libs, libs_ok, errors
 
-(* initialize flow server state, including full check *)
-let full_check ~focus_target genv =
-  let profiling = Profiling_js.empty in
-
-  let workers = genv.ServerEnv.workers in
-  let options = genv.ServerEnv.options in
-
-  let profiling, parsed, libs, libs_ok, errors = init ~profiling ~workers options in
-
-  let parsed_list =
-    if Options.is_lazy_mode options then []
-    else FilenameSet.elements parsed in
-
-  let infer_input = files_to_infer ~workers ~focus_target parsed_list in
-
-  (* typecheck client files *)
-  let profiling, checked, errors = typecheck
+let full_check ~profiling ~options ~workers ~focus_target ~should_merge parsed errors =
+  let infer_input = files_to_infer ~workers ~focus_target parsed in
+  typecheck
     ~options
     ~profiling
     ~workers
     ~errors
     ~unchanged_checked:FilenameSet.empty
     ~infer_input
-    ~parsed:parsed_list
+    ~parsed
     ~all_dependent_files:FilenameSet.empty
     ~persistent_connections:None
     ~make_merge_input:(fun inferred ->
-      (* if any libs errored, we'll infer but not merge client code *)
-      if not libs_ok then None
+      if not should_merge then None
       else Some (inferred,
         inferred |> List.fold_left (fun map f ->
           FilenameMap.add f true map
         ) FilenameMap.empty)
     )
-  in
-
-  let profiling = SharedMem.(
-    let dep_stats = dep_stats () in
-    let hash_stats = hash_stats () in
-    let heap_size = heap_size () in
-    let memory_metrics = [
-      "heap.size", heap_size;
-      "dep_table.nonempty_slots", dep_stats.nonempty_slots;
-      "dep_table.used_slots", dep_stats.used_slots;
-      "dep_table.slots", dep_stats.slots;
-      "hash_table.nonempty_slots", hash_stats.nonempty_slots;
-      "hash_table.used_slots", hash_stats.used_slots;
-      "hash_table.slots", hash_stats.slots;
-    ] in
-    List.fold_left (fun profiling (metric, value) ->
-      Profiling_js.sample_memory
-        ~metric:("init_done." ^ metric)
-        ~value:(float_of_int value)
-         profiling
-    ) profiling memory_metrics
-  ) in
-
-  SharedMem_js.init_done();
-
-  (* Return an env that initializes invariants required and maintained by
-     recheck, namely that `files` contains files that parsed successfully, and
-     `errors` contains the current set of errors. *)
-  profiling, { ServerEnv.
-    files = parsed;
-    checked_files = checked;
-    libs;
-    errors;
-    connections = Persistent_connection.empty;
-  }
