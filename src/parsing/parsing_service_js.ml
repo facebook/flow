@@ -74,22 +74,6 @@ module RequiresHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
     let description = "Requires"
 end)
 
-let (parser_hook: (filename -> Ast.program option -> unit) list ref) = ref []
-let register_hook f = parser_hook := f :: !parser_hook
-
-let execute_hook file ast =
-  try
-    List.iter (fun callback -> callback file ast) !parser_hook
-  with e ->
-    Printf.printf
-      "Hook failed: %s
-      (you can restart the server with OCAMLRUNPARAM=b to see a stack trace)\n"
-      (Printexc.to_string e);
-    Printexc.print_backtrace stdout
-
-let delete_file fn =
-  execute_hook fn None
-
 (* TODO: add TypesForbidden (disables types even on files with @flow) and
    TypesAllowedByDefault (enables types even on files without @flow, but allows
    something like @noflow to disable them) *)
@@ -433,29 +417,24 @@ let reducer
                 else SMap.empty
               in
               RequiresHeap.add file require_loc;
-              execute_hook file (Some ast);
               let parse_ok = FilenameSet.add file parse_results.parse_ok in
               { parse_results with parse_ok; }
             end
         | Parse_fail converted ->
-            execute_hook file None;
             let fail = (file, info, converted) in
             let parse_fails = fail :: parse_results.parse_fails in
             { parse_results with parse_fails; }
         | Parse_skip Skip_non_flow_file
         | Parse_skip Skip_resource_file ->
-            execute_hook file None;
             let parse_skips = (file, info) :: parse_results.parse_skips in
             { parse_results with parse_skips; }
         end
       | docblock_errors, info ->
-        execute_hook file None;
         let fail = (file, info, Docblock_errors docblock_errors) in
         let parse_fails = fail :: parse_results.parse_fails in
         { parse_results with parse_fails; }
       end
   | None ->
-      execute_hook file None;
       let info = Docblock.default_info in
       let parse_skips = (file, info) :: parse_results.parse_skips in
       { parse_results with parse_skips; }
@@ -580,5 +559,4 @@ let get_requires_unsafe file =
 let remove_batch files =
   ASTHeap.remove_batch files;
   DocblockHeap.remove_batch files;
-  RequiresHeap.remove_batch files;
-  FilenameSet.iter delete_file files
+  RequiresHeap.remove_batch files

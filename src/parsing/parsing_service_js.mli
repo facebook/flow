@@ -114,14 +114,6 @@ val get_requires_unsafe: filename -> Loc.t SMap.t
 (* remove asts and docblocks for given file set. *)
 val remove_batch: FilenameSet.t -> unit
 
-(* Adds a hook that is called every time a file has been processed.
- * When a file fails to parse, is deleted or is skipped because it isn't a Flow
- * file, the AST is None.
- *)
-val register_hook:
-  (filename -> Ast.program option -> unit) ->
-  unit
-
 val get_docblock:
   max_tokens:int -> (* how many tokens to check in the beginning of the file *)
   filename ->
