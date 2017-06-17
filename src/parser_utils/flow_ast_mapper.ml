@@ -168,7 +168,7 @@ class mapper = object(this)
   method assignment (expr: Ast.Expression.Assignment.t) =
     let open Ast.Expression.Assignment in
     let { operator = _; left; right } = expr in
-    let left' = this#pattern left in
+    let left' = this#assignment_pattern left in
     let right' = this#expression right in
     if left == left' && right == right' then expr
     else { expr with left = left'; right = right' }
@@ -204,7 +204,7 @@ class mapper = object(this)
   method catch_clause (clause: Ast.Statement.Try.CatchClause.t') =
     let open Ast.Statement.Try.CatchClause in
     let { param; body } = clause in
-    let param' = this#pattern param in
+    let param' = this#catch_clause_pattern param in
     let body' =
       let (body_loc, block) = body in
       id this#block block body (fun block -> body_loc, block)
@@ -502,7 +502,7 @@ class mapper = object(this)
     let ident' = opt this#identifier ident in
     let params' =
       let (param_list, rest) = params in
-      let param_list' = ident_map this#pattern param_list in
+      let param_list' = ident_map this#function_pattern param_list in
       let rest' = opt this#function_rest_element rest in
       if param_list == param_list' && rest == rest' then params
       else (param_list', rest')
@@ -716,6 +716,21 @@ class mapper = object(this)
   method object_key_identifier (ident: Ast.Identifier.t) =
     this#identifier ident
 
+  method function_pattern (expr: Ast.Pattern.t) =
+    this#pattern expr
+
+  method variable_declarator_pattern (expr: Ast.Pattern.t) =
+    this#pattern expr
+
+  method catch_clause_pattern (expr: Ast.Pattern.t) =
+    this#pattern expr
+
+  method assignment_pattern (expr: Ast.Pattern.t) =
+    this#pattern expr
+
+  method pattern_pattern (expr: Ast.Pattern.t) =
+    this#pattern expr
+
   method pattern (expr: Ast.Pattern.t) =
     let open Ast.Pattern in
     let (loc, patt) = expr in
@@ -723,7 +738,7 @@ class mapper = object(this)
       | Object _ -> patt (* TODO *)
       | Array _ -> patt (* TODO *)
       | Assignment { Assignment.left; right } ->
-        let left' = this#pattern left in
+        let left' = this#pattern_pattern left in
         let right' = this#expression right in
         if left == left' && right == right' then patt
         else Assignment { Assignment.left = left'; right = right' }
@@ -865,7 +880,7 @@ class mapper = object(this)
   method variable_declarator (decl: Ast.Statement.VariableDeclaration.Declarator.t) =
     let open Ast.Statement.VariableDeclaration.Declarator in
     let (loc, { id; init }) = decl in
-    let id' = this#pattern id in
+    let id' = this#variable_declarator_pattern id in
     let init' = opt this#expression init in
     if id == id' && init == init' then decl
     else (loc, { id = id'; init = init' })
