@@ -74,6 +74,34 @@ module RequiresHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
     let description = "Requires"
 end)
 
+(* Groups operations on the multiple heaps that need to stay in sync *)
+module ParsingHeaps = struct
+  let add file ast info require_loc =
+    ASTHeap.add file ast;
+    DocblockHeap.add file info;
+    RequiresHeap.add file require_loc
+
+  let oldify_batch files =
+    ASTHeap.oldify_batch files;
+    DocblockHeap.oldify_batch files;
+    RequiresHeap.oldify_batch files
+
+  let remove_batch files =
+    ASTHeap.remove_batch files;
+    DocblockHeap.remove_batch files;
+    RequiresHeap.remove_batch files
+
+  let remove_old_batch files =
+    ASTHeap.remove_old_batch files;
+    DocblockHeap.remove_old_batch files;
+    RequiresHeap.remove_old_batch files
+
+  let revive_batch files =
+    ASTHeap.revive_batch files;
+    DocblockHeap.revive_batch files;
+    RequiresHeap.revive_batch files
+end
+
 (* TODO: add TypesForbidden (disables types even on files with @flow) and
    TypesAllowedByDefault (enables types even on files without @flow, but allows
    something like @noflow to disable them) *)
@@ -405,8 +433,6 @@ let reducer
               && (ASTHeap.get_old file = Some ast)
             then parse_results
             else begin
-              ASTHeap.add file ast;
-              DocblockHeap.add file info;
               (* Only calculate requires for files which will actually be
                  inferred. The only files which are parsed (thus, Parse_ok) but
                  not inferred are .flow files with no @flow pragma and .json
@@ -416,7 +442,7 @@ let reducer
                 then calc_requires ast ~default_jsx:(info.Docblock.jsx = None)
                 else SMap.empty
               in
-              RequiresHeap.add file require_loc;
+              ParsingHeaps.add file ast info require_loc;
               let parse_ok = FilenameSet.add file parse_results.parse_ok in
               { parse_results with parse_ok; }
             end
@@ -503,9 +529,7 @@ let parse
 let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
     ~options workers files =
   (* save old parsing info for files *)
-  ASTHeap.oldify_batch files;
-  DocblockHeap.oldify_batch files;
-  RequiresHeap.oldify_batch files;
+  ParsingHeaps.oldify_batch files;
   let next = next_of_filename_set workers files in
   let results =
     parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode workers next in
@@ -517,14 +541,10 @@ let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
     FilenameSet.add skip acc
   ) modified results.parse_skips in
   (* discard old parsing info for modified files *)
-  ASTHeap.remove_old_batch modified;
-  DocblockHeap.remove_old_batch modified;
-  RequiresHeap.remove_old_batch modified;
+  ParsingHeaps.remove_old_batch modified;
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
-  ASTHeap.revive_batch unchanged;
-  DocblockHeap.revive_batch unchanged;
-  RequiresHeap.revive_batch unchanged;
+  ParsingHeaps.revive_batch unchanged;
   SharedMem_js.collect options `gentle;
   modified, results
 
@@ -557,6 +577,4 @@ let get_requires_unsafe file =
   with Not_found -> raise (Requires_not_found (Loc.string_of_filename file))
 
 let remove_batch files =
-  ASTHeap.remove_batch files;
-  DocblockHeap.remove_batch files;
-  RequiresHeap.remove_batch files
+  ParsingHeaps.remove_batch files
