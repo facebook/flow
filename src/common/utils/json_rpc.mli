@@ -14,3 +14,17 @@ type t =
   | Malformed of string
 
 val parse_json_rpc_response: string -> t
+
+val jsonrpcize_notification:
+  (* method name *)
+  string ->
+  (* value to send *)
+  Hh_json.json ->
+  Hh_json.json
+
+val jsonrpcize_response:
+  (* request id *)
+  int ->
+  (* return value *)
+  Hh_json.json ->
+  Hh_json.json

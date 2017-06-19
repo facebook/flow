@@ -81,47 +81,29 @@ module HumanReadable: ClientProtocol = struct
 end
 
 module VeryUnstable: ClientProtocol = struct
-  let jsonrpcize_notification method_ json =
-    Hh_json.(
-      JSON_Object [
-        ("jsonrpc", JSON_String "2.0");
-        ("method", JSON_String method_);
-        ("params", json);
-      ]
-    )
-
-  let jsonrpcize_response id json =
-    Hh_json.(
-      JSON_Object [
-        ("jsonrpc", JSON_String "2.0");
-        ("id", JSON_Number (string_of_int id));
-        ("result", json);
-      ]
-    )
-
   let print_errors errors =
     let json_errors = Errors.Json_output.full_status_json_of_errors
       ~strip_root:None ~suppressed_errors:([]) errors in
-    let json_message = jsonrpcize_notification "diagnosticsNotification" json_errors in
+    let json_message = Json_rpc.jsonrpcize_notification "diagnosticsNotification" json_errors in
     let json_string = Hh_json.json_to_string json_message in
     Http_lite.write_message stdout json_string;
     prerr_endline "sent diagnostics notification"
 
   let print_start_recheck () =
     Hh_json.JSON_Null
-      |> jsonrpcize_notification "startRecheck"
+      |> Json_rpc.jsonrpcize_notification "startRecheck"
       |> Hh_json.json_to_string
       |> Http_lite.write_message stdout
 
   let print_end_recheck () =
     Hh_json.JSON_Null
-      |> jsonrpcize_notification "endRecheck"
+      |> Json_rpc.jsonrpcize_notification "endRecheck"
       |> Hh_json.json_to_string
       |> Http_lite.write_message stdout
 
   let print_autocomplete response id =
     AutocompleteService_js.autocomplete_response_to_json ~strip_root:None response
-      |> jsonrpcize_response id
+      |> Json_rpc.jsonrpcize_response id
       |> Hh_json.json_to_string
       |> Http_lite.write_message stdout
 

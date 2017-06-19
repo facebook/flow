@@ -55,3 +55,21 @@ let parse_json_rpc_response str =
   try
     parse_unsafe str
   with Malformed_exn msg -> Malformed msg
+
+let jsonrpcize_notification method_ json =
+  Hh_json.(
+    JSON_Object [
+      ("jsonrpc", JSON_String "2.0");
+      ("method", JSON_String method_);
+      ("params", json);
+    ]
+  )
+
+let jsonrpcize_response id json =
+  Hh_json.(
+    JSON_Object [
+      ("jsonrpc", JSON_String "2.0");
+      ("id", JSON_Number (string_of_int id));
+      ("result", json);
+    ]
+  )
