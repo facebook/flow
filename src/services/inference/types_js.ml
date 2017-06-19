@@ -71,62 +71,35 @@ let with_timer ?options timer profiling f =
 
   (profiling, ret)
 
+let collate_parse_results { Parsing_service_js.parse_ok; parse_skips; parse_fails } =
+  let local_errors = List.fold_left (fun errors (file, _, fail) ->
+    let errset = match fail with
+    | Parsing_service_js.Parse_error err ->
+      Inference_utils.set_of_parse_error ~source_file:file err
+    | Parsing_service_js.Docblock_errors errs ->
+      Inference_utils.set_of_docblock_errors ~source_file:file errs
+    in
+    update_errset errors file errset
+  ) FilenameMap.empty parse_fails in
+
+  let unparsed = List.fold_left (fun unparsed (file, info, _) ->
+    (file, info) :: unparsed
+  ) parse_skips parse_fails in
+
+  parse_ok, unparsed, local_errors
+
 let parse ~options ~profiling ~workers parse_next =
   with_timer ~options "Parsing" profiling (fun () ->
-    (* force types when --all is set, but otherwise forbid them unless the file
-       has @flow in it. *)
-    let types_mode = Parsing_service_js.(
-      if Options.all options then TypesAllowed else TypesForbiddenByDefault
-    ) in
-
-    let use_strict = Options.modules_are_use_strict options in
-    let profile = Options.should_profile options in
-    let max_header_tokens = Options.max_header_tokens options in
-    let lazy_mode = Options.is_lazy_mode options in
-
-    let { Parsing_service_js.parse_ok; parse_skips; parse_fails } = Parsing_service_js.parse
-      ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
-      workers parse_next in
-
-    let local_errors = List.fold_left (fun errors (file, _, fail) ->
-      let errset = match fail with
-      | Parsing_service_js.Parse_error err ->
-        Inference_utils.set_of_parse_error ~source_file:file err
-      | Parsing_service_js.Docblock_errors errs ->
-        Inference_utils.set_of_docblock_errors ~source_file:file errs
-      in
-      update_errset errors file errset
-    ) FilenameMap.empty parse_fails in
-
-    let unparsed = List.fold_left (fun unparsed (file, info, _) ->
-      (file, info) :: unparsed
-    ) parse_skips parse_fails in
-
-    parse_ok, unparsed, local_errors
+    let results = Parsing_service_js.parse_with_defaults options workers parse_next in
+    collate_parse_results results
   )
 
 let reparse ~options ~profiling ~workers modified =
   with_timer ~options "Parsing" profiling (fun () ->
-    let new_or_changed, { Parsing_service_js.parse_ok; parse_skips; parse_fails } =
+    let new_or_changed, results =
       Parsing_service_js.reparse_with_defaults options workers modified in
-
-    let new_local_errors: Errors.ErrorSet.t FilenameMap.t =
-      List.fold_left (fun local_errors (file, _, fail) ->
-        let errset = match fail with
-        | Parsing_service_js.Parse_error err ->
-          Inference_utils.set_of_parse_error ~source_file:file err
-        | Parsing_service_js.Docblock_errors errs ->
-          Inference_utils.set_of_docblock_errors ~source_file:file errs
-        in
-        update_errset local_errors file errset
-      ) FilenameMap.empty parse_fails
-    in
-
-    let unparsed = List.fold_left (fun unparsed (file, info, _) ->
-      (file, info) :: unparsed
-    ) parse_skips parse_fails in
-
-    new_or_changed, parse_ok, unparsed, new_local_errors
+    let parse_ok, unparsed, local_errors = collate_parse_results results in
+    new_or_changed, parse_ok, unparsed, local_errors
   )
 
 let parse_contents ~options ~profiling ~check_syntax filename contents =
