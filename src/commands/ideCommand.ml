@@ -84,19 +84,19 @@ module VeryUnstable: ClientProtocol = struct
   let print_errors errors =
     let json_errors = Errors.Json_output.full_status_json_of_errors
       ~strip_root:None ~suppressed_errors:([]) errors in
-    let json_message = Json_rpc.jsonrpcize_notification "diagnosticsNotification" json_errors in
+    let json_message = Json_rpc.jsonrpcize_notification "diagnosticsNotification" [json_errors] in
     let json_string = Hh_json.json_to_string json_message in
     Http_lite.write_message stdout json_string;
     prerr_endline "sent diagnostics notification"
 
   let print_start_recheck () =
-    Hh_json.JSON_Null
+    []
       |> Json_rpc.jsonrpcize_notification "startRecheck"
       |> Hh_json.json_to_string
       |> Http_lite.write_message stdout
 
   let print_end_recheck () =
-    Hh_json.JSON_Null
+    []
       |> Json_rpc.jsonrpcize_notification "endRecheck"
       |> Hh_json.json_to_string
       |> Http_lite.write_message stdout

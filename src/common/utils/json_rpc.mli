@@ -19,7 +19,7 @@ val jsonrpcize_notification:
   (* method name *)
   string ->
   (* value to send *)
-  Hh_json.json ->
+  Hh_json.json list ->
   Hh_json.json
 
 val jsonrpcize_response:
