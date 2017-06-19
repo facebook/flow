@@ -412,6 +412,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     | LookupT _ -> "Property not found in"
     | GetKeysT _ -> "Expected object instead of"
     | HasOwnPropT _ -> "Property not found in"
+    | GetValuesT _ -> "Expected object instead of"
     | UnaryMinusT _ -> "Expected number instead of"
     | MapTypeT (_, kind, _, _) ->
       (match kind with

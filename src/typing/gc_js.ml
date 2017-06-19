@@ -235,6 +235,7 @@ and gc_use cx state = function
       gc cx state t_out
   | GetElemT(_, i, t) -> gc cx state i; gc cx state t
   | GetKeysT (_, t) -> gc cx state t
+  | GetValuesT (_, t) -> gc cx state t
   | GetPropT(_, _, t) -> gc cx state t
   | GetProtoT (_, t) -> gc cx state t
   | GetStaticsT(_, t) -> gc cx state t
@@ -360,8 +361,10 @@ and gc_selector cx state = function
   | Refine _ -> ()
 
 and gc_destructor cx state = function
-  | NonMaybeType -> ()
-  | PropertyType _ -> ()
+  | NonMaybeType
+  | PropertyType _
+  | ValuesType
+    -> ()
   | ElementType t -> gc cx state t
   | Bind t -> gc cx state t
   | SpreadType (_, ts) -> List.iter (gc cx state) ts

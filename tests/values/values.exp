@@ -1,0 +1,370 @@
+classes.js:26
+ 26: ('yo': $Values<NoProps>); // Error: There are no properties.
+      ^^^^ string. This type is incompatible with
+ 26: ('yo': $Values<NoProps>); // Error: There are no properties.
+            ^^^^^^^^^^^^^^^^ values type
+
+classes.js:27
+ 27: (123: $Values<NoProps>); // Error: There are no properties.
+      ^^^ number. This type is incompatible with
+ 27: (123: $Values<NoProps>); // Error: There are no properties.
+           ^^^^^^^^^^^^^^^^ values type
+
+classes.js:28
+ 28: ((() => {}): $Values<NoProps>); // Error: There are no properties.
+       ^^^^^^^^ function. This type is incompatible with
+ 28: ((() => {}): $Values<NoProps>); // Error: There are no properties.
+                  ^^^^^^^^^^^^^^^^ values type
+
+classes.js:29
+ 29: (true: $Values<NoProps>); // Error: There are no properties.
+      ^^^^ boolean. This type is incompatible with
+ 29: (true: $Values<NoProps>); // Error: There are no properties.
+            ^^^^^^^^^^^^^^^^ values type
+
+classes.js:31
+ 31: ('yo': $Values<NoReadProps>); // Error: There are no readable properties.
+      ^^^^ string. This type is incompatible with
+ 31: ('yo': $Values<NoReadProps>); // Error: There are no readable properties.
+            ^^^^^^^^^^^^^^^^^^^^ values type
+
+classes.js:32
+ 32: (123: $Values<NoReadProps>); // Error: There are no readable properties.
+      ^^^ number. This type is incompatible with
+ 32: (123: $Values<NoReadProps>); // Error: There are no readable properties.
+           ^^^^^^^^^^^^^^^^^^^^ values type
+
+classes.js:33
+ 33: ((() => {}): $Values<NoReadProps>); // Error: There are no readable properties.
+       ^^^^^^^^ function. This type is incompatible with
+ 33: ((() => {}): $Values<NoReadProps>); // Error: There are no readable properties.
+                  ^^^^^^^^^^^^^^^^^^^^ values type
+
+classes.js:34
+ 34: (true: $Values<NoReadProps>); // Error: There are no readable properties.
+      ^^^^ boolean. This type is incompatible with
+ 34: (true: $Values<NoReadProps>); // Error: There are no readable properties.
+            ^^^^^^^^^^^^^^^^^^^^ values type
+
+classes.js:36
+ 36: ('yo': $Values<OneProp>); // Error: There is no property with the type of
+      ^^^^ string. This type is incompatible with
+ 36: ('yo': $Values<OneProp>); // Error: There is no property with the type of
+            ^^^^^^^^^^^^^^^^ number
+
+classes.js:39
+ 39: ((() => {}): $Values<OneProp>); // Error: Even though there is a method, methods
+       ^^^^^^^^ function. This type is incompatible with
+ 39: ((() => {}): $Values<OneProp>); // Error: Even though there is a method, methods
+                  ^^^^^^^^^^^^^^^^ number
+
+classes.js:41
+ 41: (true: $Values<OneProp>); // Error: There is no property with the type of
+      ^^^^ boolean. This type is incompatible with
+ 41: (true: $Values<OneProp>); // Error: There is no property with the type of
+            ^^^^^^^^^^^^^^^^ number
+
+classes.js:46
+ 46: ((() => {}): $Values<SomeProps>); // Error: Even though there is a method,
+       ^^^^^^^^ function. This type is incompatible with
+ 46: ((() => {}): $Values<SomeProps>); // Error: Even though there is a method,
+                  ^^^^^^^^^^^^^^^^^^ union: string(s) | number
+  Member 1:
+   18:   c: string;
+            ^^^^^^ string
+  Error:
+   46: ((() => {}): $Values<SomeProps>); // Error: Even though there is a method,
+         ^^^^^^^^ function. This type is incompatible with
+   18:   c: string;
+            ^^^^^^ string
+  Member 2:
+   17:   b: string;
+            ^^^^^^ string
+  Error:
+   46: ((() => {}): $Values<SomeProps>); // Error: Even though there is a method,
+         ^^^^^^^^ function. This type is incompatible with
+   17:   b: string;
+            ^^^^^^ string
+  Member 3:
+   16:   a: number;
+            ^^^^^^ number
+  Error:
+   46: ((() => {}): $Values<SomeProps>); // Error: Even though there is a method,
+         ^^^^^^^^ function. This type is incompatible with
+   16:   a: number;
+            ^^^^^^ number
+
+classes.js:48
+ 48: (true: $Values<SomeProps>); // Error: There is no property with the type of
+      ^^^^ boolean. This type is incompatible with
+ 48: (true: $Values<SomeProps>); // Error: There is no property with the type of
+            ^^^^^^^^^^^^^^^^^^ union: string(s) | number
+  Member 1:
+   18:   c: string;
+            ^^^^^^ string
+  Error:
+   48: (true: $Values<SomeProps>); // Error: There is no property with the type of
+        ^^^^ boolean. This type is incompatible with
+   18:   c: string;
+            ^^^^^^ string
+  Member 2:
+   17:   b: string;
+            ^^^^^^ string
+  Error:
+   48: (true: $Values<SomeProps>); // Error: There is no property with the type of
+        ^^^^ boolean. This type is incompatible with
+   17:   b: string;
+            ^^^^^^ string
+  Member 3:
+   16:   a: number;
+            ^^^^^^ number
+  Error:
+   48: (true: $Values<SomeProps>); // Error: There is no property with the type of
+        ^^^^ boolean. This type is incompatible with
+   16:   a: number;
+            ^^^^^^ number
+
+classes.js:51
+ 51: ('yo': $Values<Child>); // TODO: This should be ok since there is a property
+      ^^^^ string. This type is incompatible with
+ 51: ('yo': $Values<Child>); // TODO: This should be ok since there is a property
+            ^^^^^^^^^^^^^^ number
+
+classes.js:54
+ 54: ((() => {}): $Values<Child>); // Error: There is no property with the type of
+       ^^^^^^^^ function. This type is incompatible with
+ 54: ((() => {}): $Values<Child>); // Error: There is no property with the type of
+                  ^^^^^^^^^^^^^^ number
+
+classes.js:56
+ 56: (true: $Values<Child>); // Error: There is no property with the type of boolean.
+      ^^^^ boolean. This type is incompatible with
+ 56: (true: $Values<Child>); // Error: There is no property with the type of boolean.
+            ^^^^^^^^^^^^^^ number
+
+non_object.js:3
+  3: ('yo': $Values<boolean>); // Error: `boolean` is not an object and so has no
+            ^^^^^^^^^^^^^^^^ values type. Expected object instead of
+  3: ('yo': $Values<boolean>); // Error: `boolean` is not an object and so has no
+                    ^^^^^^^ boolean
+
+non_object.js:5
+  5: (123: $Values<boolean>); // Error: `boolean` is not an object and so has no
+           ^^^^^^^^^^^^^^^^ values type. Expected object instead of
+  5: (123: $Values<boolean>); // Error: `boolean` is not an object and so has no
+                   ^^^^^^^ boolean
+
+non_object.js:7
+  7: (true: $Values<boolean>); // Error: `boolean` is not an object and so has no
+            ^^^^^^^^^^^^^^^^ values type. Expected object instead of
+  7: (true: $Values<boolean>); // Error: `boolean` is not an object and so has no
+                    ^^^^^^^ boolean
+
+object_types.js:6
+  6: (123: NoProps); // Error: There are no props.
+      ^^^ number. This type is incompatible with
+  6: (123: NoProps); // Error: There are no props.
+           ^^^^^^^ values type
+
+object_types.js:7
+  7: (345: NoReadProps); // Error: There are no props which can be read.
+      ^^^ number. This type is incompatible with
+  7: (345: NoReadProps); // Error: There are no props which can be read.
+           ^^^^^^^^^^^ values type
+
+object_types.js:11
+ 11: (123: OneProp); // Error: There is no property with the type of number.
+      ^^^ number. This type is incompatible with
+ 11: (123: OneProp); // Error: There is no property with the type of number.
+           ^^^^^^^ string
+
+object_types.js:12
+ 12: (true: OneProp); // Error: There is no property with the type of boolean.
+      ^^^^ boolean. This type is incompatible with
+ 12: (true: OneProp); // Error: There is no property with the type of boolean.
+            ^^^^^^^ string
+
+object_types.js:14
+ 14: (((null: any): OneProp): number); // Error: There is no string in the final
+                    ^^^^^^^ string. This type is incompatible with
+ 14: (((null: any): OneProp): number); // Error: There is no string in the final
+                              ^^^^^^ number
+
+object_types.js:20
+ 20: (true: ManyProps); // Error: There is no property with the type of boolean.
+      ^^^^ boolean. This type is incompatible with
+ 20: (true: ManyProps); // Error: There is no property with the type of boolean.
+            ^^^^^^^^^ union: number | string(s)
+  Member 1:
+   17: type ManyProps = $Values<{ a: string, b: string, c: number }>;
+                                                           ^^^^^^ number
+  Error:
+   20: (true: ManyProps); // Error: There is no property with the type of boolean.
+        ^^^^ boolean. This type is incompatible with
+   17: type ManyProps = $Values<{ a: string, b: string, c: number }>;
+                                                           ^^^^^^ number
+  Member 2:
+   17: type ManyProps = $Values<{ a: string, b: string, c: number }>;
+                                                ^^^^^^ string
+  Error:
+   20: (true: ManyProps); // Error: There is no property with the type of boolean.
+        ^^^^ boolean. This type is incompatible with
+   17: type ManyProps = $Values<{ a: string, b: string, c: number }>;
+                                                ^^^^^^ string
+  Member 3:
+   17: type ManyProps = $Values<{ a: string, b: string, c: number }>;
+                                     ^^^^^^ string
+  Error:
+   20: (true: ManyProps); // Error: There is no property with the type of boolean.
+        ^^^^ boolean. This type is incompatible with
+   17: type ManyProps = $Values<{ a: string, b: string, c: number }>;
+                                     ^^^^^^ string
+
+object_types.js:23
+ 23: (((null: any): ManyProps): string | boolean); // Error: There is no number in
+                    ^^^^^^^^^ number. This type is incompatible with
+ 23: (((null: any): ManyProps): string | boolean); // Error: There is no number in
+                                ^^^^^^^^^^^^^^^^ union: string | boolean
+  Member 1:
+   23: (((null: any): ManyProps): string | boolean); // Error: There is no number in
+                                  ^^^^^^ string
+  Error:
+   23: (((null: any): ManyProps): string | boolean); // Error: There is no number in
+                      ^^^^^^^^^ number. This type is incompatible with
+   23: (((null: any): ManyProps): string | boolean); // Error: There is no number in
+                                  ^^^^^^ string
+  Member 2:
+   23: (((null: any): ManyProps): string | boolean); // Error: There is no number in
+                                           ^^^^^^^ boolean
+  Error:
+   23: (((null: any): ManyProps): string | boolean); // Error: There is no number in
+                      ^^^^^^^^^ number. This type is incompatible with
+   23: (((null: any): ManyProps): string | boolean); // Error: There is no number in
+                                           ^^^^^^^ boolean
+
+object_types.js:27
+ 27: ('yo': DictProps); // Error: There is no property with the type of string.
+      ^^^^ string. This type is incompatible with
+ 27: ('yo': DictProps); // Error: There is no property with the type of string.
+            ^^^^^^^^^ union: number | boolean
+  Member 1:
+   26: type DictProps = $Values<{ a: boolean, [key: string]: number }>;
+                                                             ^^^^^^ number
+  Error:
+   27: ('yo': DictProps); // Error: There is no property with the type of string.
+        ^^^^ string. This type is incompatible with
+   26: type DictProps = $Values<{ a: boolean, [key: string]: number }>;
+                                                             ^^^^^^ number
+  Member 2:
+   26: type DictProps = $Values<{ a: boolean, [key: string]: number }>;
+                                     ^^^^^^^ boolean
+  Error:
+   27: ('yo': DictProps); // Error: There is no property with the type of string.
+        ^^^^ string. This type is incompatible with
+   26: type DictProps = $Values<{ a: boolean, [key: string]: number }>;
+                                     ^^^^^^^ boolean
+
+object_types.js:32
+ 32: (((null: any): DictProps): string | boolean); // Error: There is no number in
+                    ^^^^^^^^^ number. This type is incompatible with
+ 32: (((null: any): DictProps): string | boolean); // Error: There is no number in
+                                ^^^^^^^^^^^^^^^^ union: string | boolean
+  Member 1:
+   32: (((null: any): DictProps): string | boolean); // Error: There is no number in
+                                  ^^^^^^ string
+  Error:
+   32: (((null: any): DictProps): string | boolean); // Error: There is no number in
+                      ^^^^^^^^^ number. This type is incompatible with
+   32: (((null: any): DictProps): string | boolean); // Error: There is no number in
+                                  ^^^^^^ string
+  Member 2:
+   32: (((null: any): DictProps): string | boolean); // Error: There is no number in
+                                           ^^^^^^^ boolean
+  Error:
+   32: (((null: any): DictProps): string | boolean); // Error: There is no number in
+                      ^^^^^^^^^ number. This type is incompatible with
+   32: (((null: any): DictProps): string | boolean); // Error: There is no number in
+                                           ^^^^^^^ boolean
+
+object_types.js:40
+ 40: (true: $Values<CallableProp>); // Error: There is no property with the type of
+      ^^^^ boolean. This type is incompatible with
+ 40: (true: $Values<CallableProp>); // Error: There is no property with the type of
+            ^^^^^^^^^^^^^^^^^^^^^ union: number | string
+  Member 1:
+   35: interface CallableProp { a: string; b: number; (): boolean }
+                                              ^^^^^^ number
+  Error:
+   40: (true: $Values<CallableProp>); // Error: There is no property with the type of
+        ^^^^ boolean. This type is incompatible with
+   35: interface CallableProp { a: string; b: number; (): boolean }
+                                              ^^^^^^ number
+  Member 2:
+   35: interface CallableProp { a: string; b: number; (): boolean }
+                                   ^^^^^^ string
+  Error:
+   40: (true: $Values<CallableProp>); // Error: There is no property with the type of
+        ^^^^ boolean. This type is incompatible with
+   35: interface CallableProp { a: string; b: number; (): boolean }
+                                   ^^^^^^ string
+
+object_types.js:43
+ 43: ((() => true): $Values<CallableProp>); // Error: There is no property with a
+       ^^^^^^^^^^ function. This type is incompatible with
+ 43: ((() => true): $Values<CallableProp>); // Error: There is no property with a
+                    ^^^^^^^^^^^^^^^^^^^^^ union: number | string
+  Member 1:
+   35: interface CallableProp { a: string; b: number; (): boolean }
+                                              ^^^^^^ number
+  Error:
+   43: ((() => true): $Values<CallableProp>); // Error: There is no property with a
+         ^^^^^^^^^^ function. This type is incompatible with
+   35: interface CallableProp { a: string; b: number; (): boolean }
+                                              ^^^^^^ number
+  Member 2:
+   35: interface CallableProp { a: string; b: number; (): boolean }
+                                   ^^^^^^ string
+  Error:
+   43: ((() => true): $Values<CallableProp>); // Error: There is no property with a
+         ^^^^^^^^^^ function. This type is incompatible with
+   35: interface CallableProp { a: string; b: number; (): boolean }
+                                   ^^^^^^ string
+
+object_types.js:71
+ 71: ('DIAMONDS': SuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
+      ^^^^^^^^^^ string. This type is incompatible with
+ 71: ('DIAMONDS': SuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
+                  ^^^^^^^^^ string enum
+
+object_types.js:72
+ 72: ('Magic': SuiteEnum); // Error: 'Magic' is not a value.
+      ^^^^^^^ string. This type is incompatible with
+ 72: ('Magic': SuiteEnum); // Error: 'Magic' is not a value.
+               ^^^^^^^^^ string enum
+
+object_types.js:73
+ 73: (('Diamonds': string): SuiteEnum); // Error: the `string` type is to general and
+                   ^^^^^^ string. This type is incompatible with
+ 73: (('Diamonds': string): SuiteEnum); // Error: the `string` type is to general and
+                            ^^^^^^^^^ string enum
+
+object_types.js:79
+ 79: magicTrick('DIAMONDS'); // Error: 'DIAMONDS' is a key, but not a value.
+                ^^^^^^^^^^ string. This type is incompatible with the expected param type of
+ 64: function magicTrick(suite: SuiteEnum) {
+                                ^^^^^^^^^ string enum
+
+object_types.js:80
+ 80: magicTrick('Magic'); // Error: 'Magic' is not a value.
+                ^^^^^^^ string. This type is incompatible with the expected param type of
+ 64: function magicTrick(suite: SuiteEnum) {
+                                ^^^^^^^^^ string enum
+
+object_types.js:81
+ 81: magicTrick(('Diamonds': string)); // Error: the `string` type is to general and
+                             ^^^^^^ string. This type is incompatible with the expected param type of
+ 64: function magicTrick(suite: SuiteEnum) {
+                                ^^^^^^^^^ string enum
+
+
+Found 36 errors

@@ -578,6 +578,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "key", JSON_Object (_json_of_string_literal key)
     ]
 
+  | GetValuesT (_, t) -> [
+      "type", _json_of_t json_cx t
+    ]
+
   | ElemT (_, base, action) -> [
       "baseType", _json_of_t json_cx base;
       match action with
@@ -1004,6 +1008,9 @@ and json_of_destructor_impl json_cx = Hh_json.(function
       "spread", JSON_Array (List.map (_json_of_t json_cx) ts);
       "exact", JSON_Bool exact;
     ]
+  | ValuesType -> JSON_Object [
+      "values", JSON_Bool true;
+    ]
 )
 
 and json_of_polarity_map json_cx = check_depth json_of_polarity_map_impl json_cx
@@ -1422,6 +1429,7 @@ and dump_t_ (depth, tvars) cx t =
     | ElementType _ -> "element type"
     | Bind _ -> "bind"
     | SpreadType _ -> "spread"
+    | ValuesType -> "values"
     in
     fun expr t -> match expr with
     | DestructuringT (_, selector) ->
@@ -1768,6 +1776,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | ExportTypeT _ -> p t
   | GetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetKeysT _ -> p t
+  | GetValuesT _ -> p t
   | GetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t
@@ -1998,6 +2007,7 @@ let string_of_destructor = function
   | ElementType _ -> "ElementType"
   | Bind _ -> "Bind"
   | SpreadType _ -> "Spread"
+  | ValuesType -> "Values"
 
 let string_of_default = Default.fold
   ~expr:(fun (loc, _) ->

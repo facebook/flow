@@ -2619,6 +2619,53 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         intersection of other def types be processed before we process unions
         and intersections: otherwise we may get spurious errors. **)
 
+    (**********)
+    (* values *)
+    (**********)
+
+    | DefT (_, ObjT { props_tmap = tmap; dict_t; _ }), GetValuesT (reason, values) ->
+      (* Find all of the props. *)
+      let props = Context.find_props cx tmap in
+      (* Get the read type for all readable properties and discard the rest. *)
+      let ts = SMap.fold (fun key prop ts ->
+        match Property.read_t prop with
+        (* Don't include the type for the internal "$call" property if one
+           exists. *)
+        | Some t when key != "$call" -> t :: ts
+        | _ -> ts
+      ) props [] in
+      (* If the object has a dictionary value then add that to our types. *)
+      let ts = match dict_t with
+      | Some { value; _ } -> value :: ts
+      | None -> ts in
+      (* Create a union type from all our selected types. *)
+      let values_l = union_of_ts reason ts in
+      rec_flow_t cx trace (values_l, values)
+
+    | DefT (_, InstanceT (_, _, _, { fields_tmap = tmap; _; })), GetValuesT (reason, values) ->
+      (* Find all of the props. *)
+      let props = Context.find_props cx tmap in
+      (* Get the read type for all readable properties and discard the rest. *)
+      let ts = SMap.fold (fun key prop ts ->
+        match Property.read_t prop with
+        (* We don't want to include the property type if its name is the
+           internal value "$key" because that will be the type for the instance
+           index and not the value.
+
+           We also don't include the type for the internal "$call" property if
+           one exists. *)
+        | Some t when key != "$key" && key != "$call" -> t :: ts
+        | _ -> ts
+      ) props [] in
+      (* Create a union type from all our selected types. *)
+      let values_l = union_of_ts reason ts in
+      rec_flow_t cx trace (values_l, values)
+
+    (* Any will always be ok *)
+    | DefT (_, AnyT), GetValuesT (reason, values)
+    | DefT (_, AnyObjT), GetValuesT (reason, values) ->
+      rec_flow_t cx trace (AnyT.why reason, values)
+
     (********************************)
     (* union and intersection types *)
     (********************************)
@@ -5917,7 +5964,7 @@ and object_like_op = function
   | SetPropT _ | GetPropT _ | MethodT _ | LookupT _
   | GetProtoT _ | SetProtoT _
   | SuperT _
-  | GetKeysT _ | HasOwnPropT _
+  | GetKeysT _ | HasOwnPropT _ | GetValuesT _
   | ObjAssignToT _ | ObjAssignFromT _ | ObjRestT _
   | SetElemT _ | GetElemT _
   | UseT (_, DefT (_, AnyObjT)) -> true
@@ -5969,6 +6016,20 @@ and result_of_taint_op = function
   | AdderT (_, _, u) | GetPropT (_, _, u) | GetElemT (_, _, u) -> Some u
   | ComparatorT _ -> None
   | _ -> assert false
+
+(* Creates a union from a list of types. Since unions require a minimum of two
+   types this function will return an empty type when there are no types in the
+   list, or the list head when there is one type in the list. *)
+and union_of_ts reason ts =
+  match ts with
+  (* If we have no types then this is an error. *)
+  | [] -> DefT (reason, EmptyT)
+  (* If we only have one type then only that should be used. *)
+  | t0::[] -> t0
+  (* If we have more than one type then we make a union type. *)
+  | t0::t1::ts ->
+      let union = UnionT (UnionRep.make t0 t1 ts) in
+      DefT (reason, union)
 
 (* generics *)
 
@@ -6485,6 +6546,7 @@ and eval_destructor cx ~trace reason curr_t s i =
             let tool = Resolve Next in
             let state = { todo_rev; acc = []; make_exact } in
             ObjSpreadT (reason, tool, state, tvar)
+        | ValuesType -> GetValuesT (reason, tvar)
         )
     )
   | Some it ->
@@ -6522,6 +6584,7 @@ and subst_selector cx force map s = match s with
 and subst_destructor cx force map s = match s with
   | NonMaybeType
   | PropertyType _
+  | ValuesType
     -> s
   | ElementType t ->
     let t_ = subst cx ~force map t in

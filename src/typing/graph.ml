@@ -303,6 +303,7 @@ and parts_of_use_t cx = function
 | ExportTypeT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
 | GetElemT (_, ix, out) -> ["ix", Def ix; "out", Def out]
 | GetKeysT (_, out) -> ["out", Def out]
+| GetValuesT (_, out) -> ["out", Def out]
 | GetPropT (_, _, out) -> ["out", Def out]
 | GetProtoT (_, out) -> ["out", Def out]
 | GetStaticsT (_, out) -> ["out", Def out]

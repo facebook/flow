@@ -282,6 +282,14 @@ let rec convert cx tparams_map = Ast.Type.(function
       KeysT (mk_reason RKeySet loc, t)
     )
 
+  (* $Values<T> is a union of all the own enumerable value types of T *)
+  | "$Values" ->
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      let t = convert_type_params () |> List.hd in
+      EvalT (t, TypeDestructorT
+        (mk_reason (RCustom "values type") loc, ValuesType), mk_id())
+    )
+
   | "$Exact" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = List.hd (convert_type_params ()) in

@@ -400,6 +400,9 @@ module rec TypeTerm : sig
     | GetKeysT of reason * t
     | HasOwnPropT of reason * string literal
 
+    (* Values *)
+    | GetValuesT of reason * t
+
     (* Element access *)
     | ElemT of reason * t * elem_action
 
@@ -806,6 +809,7 @@ module rec TypeTerm : sig
   | ElementType of t
   | Bind of t
   | SpreadType of bool * t list
+  | ValuesType
 
   and type_map =
   | TupleMap
@@ -1691,6 +1695,7 @@ let any_propagating_use_t = function
   | ExportTypeT _
   | GetElemT _
   | GetKeysT _
+  | GetValuesT _
   | GetPropT _
   | GetProtoT _
   | GetStaticsT _
@@ -1833,6 +1838,7 @@ and reason_of_use_t = function
   | ExportTypeT (reason, _, _, _, _) -> reason
   | GetElemT (reason,_,_) -> reason
   | GetKeysT (reason, _) -> reason
+  | GetValuesT (reason, _) -> reason
   | GetPropT (reason,_,_) -> reason
   | GetProtoT (reason,_) -> reason
   | GetStaticsT (reason,_) -> reason
@@ -1977,6 +1983,7 @@ and mod_reason_of_use_t f = function
       ExportTypeT(f reason, skip_dupes, name, t, t_out)
   | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
+  | GetValuesT (reason, t) -> GetValuesT (f reason, t)
   | GetPropT (reason, n, t) -> GetPropT (f reason, n, t)
   | GetProtoT (reason, t) -> GetProtoT (f reason, t)
   | GetStaticsT (reason, t) -> GetStaticsT (f reason, t)
@@ -2192,6 +2199,7 @@ let string_of_use_ctor = function
   | ExportTypeT _ -> "ExportTypeT"
   | GetElemT _ -> "GetElemT"
   | GetKeysT _ -> "GetKeysT"
+  | GetValuesT _ -> "GetValuesT"
   | GetPropT _ -> "GetPropT"
   | GetProtoT _ -> "GetProtoT"
   | GetStaticsT _ -> "GetStaticsT"

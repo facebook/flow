@@ -207,8 +207,10 @@ class ['a] t = object(self)
   | LatentP (t, _) -> self#type_ cx acc t
 
   method private destructor cx acc = function
-  | NonMaybeType -> acc
-  | PropertyType _ -> acc
+  | NonMaybeType
+  | PropertyType _
+  | ValuesType
+    -> acc
   | ElementType t -> self#type_ cx acc t
   | Bind t -> self#type_ cx acc t
   | SpreadType (_, ts) -> self#list (self#type_ cx) acc ts
@@ -246,6 +248,7 @@ class ['a] t = object(self)
   | ExportTypeT (_, _, _, _, _)
   | GetElemT (_, _, _)
   | GetKeysT (_, _)
+  | GetValuesT (_, _)
   | GetPropT (_, _, _)
   | GetProtoT (_, _)
   | GetStaticsT (_, _)
