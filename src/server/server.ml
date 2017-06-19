@@ -59,10 +59,12 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
     (* compute initial state *)
     let profiling, checked, errors =
-      let parsed =
-        if Options.is_lazy_mode options then []
-        else FilenameSet.elements parsed in
-      Types_js.full_check ~profiling ~workers ~focus_target ~options ~should_merge parsed errors in
+      if Options.is_lazy_mode options then
+        profiling, FilenameSet.empty, errors
+      else
+        let parsed = FilenameSet.elements parsed in
+        Types_js.full_check ~profiling ~workers ~focus_target ~options ~should_merge parsed errors
+    in
 
     let profiling = sample_init_memory profiling in
 
