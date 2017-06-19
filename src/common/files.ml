@@ -267,7 +267,7 @@ let init (options: options) =
       |> List.map (fun lib -> SSet.elements (get_all (get_next lib)))
       |> List.flatten
   in
-  (libs, Utils_js.set_of_list libs)
+  (libs, SSet.of_list libs)
 
 (* Local reference to the module exported by a file. Like other local references
    to modules imported by the file, it is a member of Context.module_map. *)

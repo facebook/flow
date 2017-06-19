@@ -345,7 +345,7 @@ and file_exists path =
     | None ->
         let files =
           if dir_exists dir
-          then set_of_list (Array.to_list (Sys.readdir dir))
+          then SSet.of_list (Array.to_list (Sys.readdir dir))
           else SSet.empty in
         files_in_dir := SMap.add dir files !files_in_dir;
         files

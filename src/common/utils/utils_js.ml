@@ -54,8 +54,6 @@ module PathMap : MyMap.S with type key = Path.t = MyMap.Make (struct
     String.compare (Path.to_string p1) (Path.to_string p2)
 end)
 
-let set_of_list = List.fold_left (fun acc x -> SSet.add x acc) SSet.empty
-
 let assert_false s =
   let callstack = Printexc.(get_callstack 10 |> raw_backtrace_to_string) in
   prerr_endline (spf "%s%s\n%s:\n%s%s%s"

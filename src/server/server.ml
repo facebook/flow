@@ -616,7 +616,7 @@ let collate_errors =
     | ServerProt.FORCE_RECHECK (files) ->
         Marshal.to_channel oc () [];
         flush oc;
-        let updates = process_updates genv !env (Utils_js.set_of_list files) in
+        let updates = process_updates genv !env (SSet.of_list files) in
         env := recheck genv !env updates
     | ServerProt.GEN_FLOW_FILES files ->
         (gen_flow_files ~options !env files: ServerProt.gen_flow_file_response)

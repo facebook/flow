@@ -201,7 +201,7 @@ let elements ?constructor = with_sig (fun s ->
     s.fields
     |> SMap.filter (fun _ (_, _, init_expr) -> init_expr <> None)
     |> SMap.keys
-    |> Utils_js.set_of_list
+    |> SSet.of_list
   in
 
   initialized_field_names, fields, methods
