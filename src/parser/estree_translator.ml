@@ -660,7 +660,8 @@ end with type t = Impl.t) = struct
     node "OpaqueType" loc [|
       "id", identifier opaque_t.id;
       "typeParameters", option type_parameter_declaration opaque_t.typeParameters;
-      "right", _type opaque_t.right;
+      "impltype", _type opaque_t.impltype;
+      "supertype", option _type opaque_t.supertype;
     |]
   )
 

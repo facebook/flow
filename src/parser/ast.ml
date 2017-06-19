@@ -263,7 +263,8 @@ and Statement : sig
     type t = {
       id: Identifier.t;
       typeParameters: Type.ParameterDeclaration.t option;
-      right: Type.t;
+      impltype: Type.t;
+      supertype: Type.t option;
     }
   end
   module Switch : sig

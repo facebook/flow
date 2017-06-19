@@ -41,14 +41,15 @@ def("DeclareExportAllDeclaration")
 
 def("OpaqueType")
   .bases("Declaration")
-  .build("id", "typeParameters", "right")
+  .build("id", "typeParameters", "impltype", "supertype")
   .field("id", def("Identifier"))
   .field("typeParameters", or(def("TypeParameterDeclaration"), null))
-  .field("right", def("Type"));
+  .field("impltype", def("Type"))
+  .field("supertype", or(def("Type"), null));
 
 def("DeclareOpaqueType")
-  .bases("TypeAlias")
-  .build("id", "typeParameters", "right");
+  .bases("OpaqueType")
+  .build("id", "typeParameters", "impltype", "supertype");
 
 
 // TODO: should be named NullableClassDeclaration. estree allows a nameless

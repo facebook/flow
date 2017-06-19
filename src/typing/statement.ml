@@ -659,11 +659,11 @@ and statement cx = Ast.Statement.(
       Type_table.set (Context.type_table cx) loc type_;
       Env.init_type cx name type_ name_loc
 
-  | (loc, OpaqueType {OpaqueType.id=(name_loc, name); typeParameters; right;}) ->
+  | (loc, OpaqueType {OpaqueType.id=(name_loc, name); typeParameters; impltype; supertype = _}) ->
       let r = DescFormat.type_reason name name_loc in
       let typeparams, typeparams_map =
         Anno.mk_type_param_declarations cx typeParameters in
-      let t = Anno.convert cx typeparams_map right in
+      let t = Anno.convert cx typeparams_map impltype in
       let type_ = poly_type typeparams (DefT (r, TypeT t)) in
       Type_table.set (Context.type_table cx) loc type_;
       Env.init_type cx name type_ name_loc

@@ -55,7 +55,7 @@
         "optional": false
       },
       "typeParameters": null,
-      "right": {
+      "impltype": {
         "type": "NumberTypeAnnotation",
         "loc": {
           "source": null,
@@ -72,7 +72,8 @@
           27,
           33
         ]
-      }
+      },
+      "supertype": null
     }
   ],
   "comments": []

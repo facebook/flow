@@ -55,7 +55,7 @@
         "optional": false
       },
       "typeParameters": null,
-      "right": {
+      "impltype": {
         "type": "NumberTypeAnnotation",
         "loc": {
           "source": null,
@@ -72,7 +72,8 @@
           21,
           27
         ]
-      }
+      },
+      "supertype": null
     },
     {
       "type": "OpaqueType",
@@ -113,7 +114,7 @@
         "optional": false
       },
       "typeParameters": null,
-      "right": {
+      "impltype": {
         "type": "GenericTypeAnnotation",
         "loc": {
           "source": null,
@@ -152,7 +153,8 @@
           "optional": false
         },
         "typeParameters": null
-      }
+      },
+      "supertype": null
     }
   ],
   "comments": []

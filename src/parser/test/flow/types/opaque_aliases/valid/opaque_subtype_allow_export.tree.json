@@ -13,7 +13,7 @@
   },
   "range": [
     0,
-    70
+    78
   ],
   "body": [
     {
@@ -31,7 +31,7 @@
       },
       "range": [
         0,
-        70
+        78
       ],
       "id": {
         "type": "Literal",
@@ -68,7 +68,7 @@
         },
         "range": [
           21,
-          70
+          78
         ],
         "body": [
           {
@@ -81,12 +81,12 @@
               },
               "end": {
                 "line": 2,
-                "column": 45
+                "column": 53
               }
             },
             "range": [
               25,
-              68
+              76
             ],
             "default": false,
             "declaration": {
@@ -99,12 +99,12 @@
                 },
                 "end": {
                   "line": 2,
-                  "column": 45
+                  "column": 53
                 }
               },
               "range": [
                 40,
-                68
+                76
               ],
               "id": {
                 "type": "Identifier",
@@ -134,19 +134,36 @@
                   "source": null,
                   "start": {
                     "line": 2,
-                    "column": 38
+                    "column": 46
                   },
                   "end": {
                     "line": 2,
-                    "column": 44
+                    "column": 52
                   }
                 },
                 "range": [
-                  61,
-                  67
+                  69,
+                  75
                 ]
               },
-              "supertype": null
+              "supertype": {
+                "type": "NumberTypeAnnotation",
+                "loc": {
+                  "source": null,
+                  "start": {
+                    "line": 2,
+                    "column": 37
+                  },
+                  "end": {
+                    "line": 2,
+                    "column": 43
+                  }
+                },
+                "range": [
+                  60,
+                  66
+                ]
+              }
             },
             "specifiers": [],
             "source": null

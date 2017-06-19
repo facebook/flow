@@ -532,17 +532,23 @@ module Statement
     Eat.push_lex_mode env Lex_mode.TYPE;
     let id = Parse.identifier env in
     let typeParameters = Type.type_parameter_declaration_with_defaults env in
+    let supertype = match Peek.token env with
+    | T_COLON ->
+        Expect.token env T_COLON;
+        Some (Type._type env)
+    | _ -> None in
     Expect.token env T_ASSIGN;
-    let right = Type._type env in
+    let impltype = Type._type env in
     let end_loc = match Peek.semicolon_loc env with
-    | None -> fst right
+    | None -> fst impltype
     | Some end_loc -> end_loc in
     Eat.semicolon env;
     Eat.pop_lex_mode env;
     Loc.btwn start_loc end_loc, Statement.OpaqueType.({
       id;
       typeParameters;
-      right;
+      impltype;
+      supertype;
     })
 
   and opaque_type env =
