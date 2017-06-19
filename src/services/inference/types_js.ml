@@ -14,15 +14,15 @@ open Utils_js
 
 (****************** typecheck job helpers *********************)
 
-let clear_errors ?(debug=false) (files: filename list) errors =
-  List.fold_left (fun { ServerEnv.local_errors; merge_errors; suppressions; } file ->
+let clear_errors ?(debug=false) (files: FilenameSet.t) errors =
+  FilenameSet.fold (fun file { ServerEnv.local_errors; merge_errors; suppressions; } ->
     if debug then prerr_endlinef "clear errors %s" (string_of_filename file);
     { ServerEnv.
       local_errors = FilenameMap.remove file local_errors;
       merge_errors = FilenameMap.remove file merge_errors;
       suppressions = FilenameMap.remove file suppressions;
     }
-  ) errors files
+  ) files errors
 
 let update_errset map file errset =
   if Errors.ErrorSet.is_empty errset then map
@@ -594,8 +594,8 @@ let recheck ~options ~workers ~updates env =
   (* clear errors for new, changed and deleted files *)
   let errors =
     errors
-    |> clear_errors ~debug (FilenameSet.elements new_or_changed)
-    |> clear_errors ~debug (FilenameSet.elements deleted)
+    |> clear_errors ~debug new_or_changed
+    |> clear_errors ~debug deleted
   in
 
   (* record reparse errors *)
