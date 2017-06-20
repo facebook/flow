@@ -10,6 +10,8 @@
 
 open Utils_js
 
+type 'a merge_results = (filename * ('a, exn) result) list
+
 val merge_strict_context:
   options: Options.t ->
   Context.t list ->
@@ -21,10 +23,10 @@ val merge_contents_context:
   ensure_checked_dependencies: (Module_js.NameSet.t -> unit) ->
   unit
 val merge_strict:
-  intermediate_result_callback: ((filename * Errors.ErrorSet.t) list Lazy.t -> unit) ->
+  intermediate_result_callback: (Errors.ErrorSet.t merge_results Lazy.t -> unit) ->
   options: Options.t ->
   workers: Worker.t list option ->
   FilenameSet.t FilenameMap.t ->
   (filename list) FilenameMap.t ->
   bool FilenameMap.t ->
-  (filename * Errors.ErrorSet.t) list
+  Errors.ErrorSet.t merge_results

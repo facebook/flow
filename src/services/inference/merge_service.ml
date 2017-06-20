@@ -11,6 +11,8 @@
 open Utils_js
 module Reqs = Merge_js.Reqs
 
+type 'a merge_results = (filename * ('a, exn) result) list
+
 (* To merge the contexts of a component (component_cxs) with their dependencies,
    we call the functions `merge_component_strict` and `restore` defined
    in type_inference_js.ml with appropriate arguments prepared below.
@@ -194,24 +196,20 @@ let merge_strict_job ~options (merged, unchanged) elements =
           (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
           let file, errors, diff = merge_strict_component ~options component in
           (* diff says whether its signature was changed *)
-          (file, errors) :: merged,
+          (file, Ok errors) :: merged,
           if diff then unchanged else file :: unchanged
-      )
-    with
-    | SharedMem_js.Out_of_shared_memory
-    | SharedMem_js.Heap_full
-    | SharedMem_js.Hash_table_full
-    | SharedMem_js.Dep_table_full as exc -> raise exc
-    (* A catch all suppression is probably a bad idea... *)
-    | exc ->
-      let file = List.hd component in
-      let loc = Loc.({ none with source = Some file }) in
-      let msg = Flow_error.(EInternal (loc, MergeJobException exc)) in
-      let error = Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file:file msg in
-      let errorset = Errors.ErrorSet.singleton error in
-      prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
-        (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
-      ((file, errorset) :: merged), unchanged
+        )
+      with
+      | SharedMem_js.Out_of_shared_memory
+      | SharedMem_js.Heap_full
+      | SharedMem_js.Hash_table_full
+      | SharedMem_js.Dep_table_full as exc -> raise exc
+      (* A catch all suppression is probably a bad idea... *)
+      | exc ->
+        let file = List.hd component in
+        prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
+          (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
+        ((file, Error exc) :: merged), unchanged
   ) (merged, unchanged) elements
 
 (* make a map from component leaders to components *)

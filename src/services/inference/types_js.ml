@@ -195,6 +195,12 @@ let commit_modules_and_resolve_requires
 
   profiling, changed_modules, { ServerEnv.local_errors; merge_errors; suppressions }
 
+let error_set_of_merge_exception file exc =
+  let loc = Loc.({ none with source = Some file }) in
+  let msg = Flow_error.(EInternal (loc, MergeJobException exc)) in
+  let error = Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file:file msg in
+  Errors.ErrorSet.singleton error
+
 let infer ~options ~profiling ~workers ~suppressions infer_input =
   with_timer ~options "Infer" profiling (fun () ->
     let infer_results = Infer_service.infer ~options ~workers infer_input in
@@ -220,10 +226,14 @@ let merge
     let merged = Merge_service.merge_strict
       ~intermediate_result_callback ~options ~workers dependency_graph component_map recheck_map
     in
-    List.fold_left (fun merge_errors (file, errors) ->
+    List.fold_left (fun merge_errors (file, errors_or_exn) ->
       let merge_errors = List.fold_left (fun merge_errors file ->
         FilenameMap.remove file merge_errors
       ) merge_errors (FilenameMap.find_unsafe file component_map) in
+      let errors = match errors_or_exn with
+      | Ok errors -> errors
+      | Error exc -> error_set_of_merge_exception file exc
+      in
       if Errors.ErrorSet.is_empty errors then merge_errors
       else FilenameMap.add file errors merge_errors
     ) merge_errors merged
@@ -316,9 +326,20 @@ let typecheck
 
     Hh_logger.info "Merging";
     let profiling, merge_errors = try
+      let intermediate_result_callback results =
+        let errors = lazy (
+          List.map (fun (file, errors_or_exc) ->
+            match errors_or_exc with
+            | Ok errors -> file, errors
+            | Error exc -> file, error_set_of_merge_exception file exc
+          ) (Lazy.force results)
+        ) in
+        send_errors_over_connection errors
+      in
+
       let profiling, merge_errors =
         merge
-          ~intermediate_result_callback:send_errors_over_connection
+          ~intermediate_result_callback
           ~options
           ~profiling
           ~workers
