@@ -42,7 +42,7 @@ let parse_unsafe str =
     (* If you don't pass any props you just get a null here *)
     | JSON_Null -> []
     | JSON_Array lst -> lst
-    | _ -> raise (Malformed_exn "Unexpected params value")
+    | other -> [other]
   in
   let id = match id_json with
     | None -> None
