@@ -16,3 +16,4 @@ let iter f t = Hashtbl.iter f t
 let fold f t init = Hashtbl.fold f t init
 let find_unsafe t k = Hashtbl.find t k
 let reset t = Hashtbl.reset t
+let copy t = Hashtbl.copy t

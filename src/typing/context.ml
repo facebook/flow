@@ -290,7 +290,8 @@ let pid_prefix (cx: t) =
 let copy_of_context (cx: t) =
   let local = { cx.local with
     graph = IMap.map Constraint.copy_node cx.local.graph;
-    property_maps = cx.local.property_maps
+    property_maps = cx.local.property_maps;
+    type_table = Type_table.copy cx.local.type_table;
   } in
   { cx with local }
 
