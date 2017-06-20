@@ -10,6 +10,8 @@
 
 open Utils_js
 
+type 'a merge_result = (filename * 'a) list
+
 (* Custom bucketing scheme for dynamically growing and shrinking workloads when
    merging files.
 
@@ -144,17 +146,7 @@ let join result_callback =
     ) leader_fs_diffs
   in
   fun (merged, unchanged) (merged_acc, unchanged_acc) ->
-    let () =
-      let errors =
-        lazy (
-          List.fold_left
-            (fun acc (_, errs) -> Errors.ErrorSet.union acc errs)
-            Errors.ErrorSet.empty
-            merged
-        )
-      in
-      result_callback errors
-    in
+    let () = result_callback (lazy merged) in
     let changed = List.rev (List.fold_left (fun acc (f, _) ->
       if not (List.mem f unchanged) then f::acc else acc
     ) [] merged) in

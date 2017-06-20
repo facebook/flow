@@ -14,6 +14,8 @@ type element =
 | Skip of filename
 | Component of filename list
 
+type 'a merge_result = (filename * 'a) list
+
 val make :
   (* dependency graph *)
   FilenameSet.t FilenameMap.t ->
@@ -28,10 +30,10 @@ val make :
 
 val join :
   (* intermediate result callback *)
-  (Errors.ErrorSet.t Lazy.t -> unit) ->
+  ('a merge_result Lazy.t -> unit) ->
   (* merged, unchanged *)
-  (filename * Errors.ErrorSet.t) list * filename list ->
+  'a merge_result * filename list ->
   (* accumulators *)
-  (filename * Errors.ErrorSet.t) list * filename list ->
+  'a merge_result * filename list ->
   (* accumulated results *)
-  (filename * Errors.ErrorSet.t) list * filename list
+  'a merge_result * filename list

@@ -269,7 +269,12 @@ let typecheck
         let current_errors = ref ErrorSet.empty in
         let suppressions = Error_suppressions.union_suppressions suppressions in
         let lint_settings = Options.lint_settings options in
-        function lazy new_errors ->
+        function lazy results ->
+          let new_errors = List.fold_left
+            (fun acc (_, errs) -> Errors.ErrorSet.union acc errs)
+            Errors.ErrorSet.empty
+            results
+          in
           let new_errors, _, _ =
             Error_suppressions.filter_suppressed_errors suppressions lint_settings new_errors
           in
@@ -280,11 +285,7 @@ let typecheck
   in
 
   let () =
-    let new_errors =
-      lazy (
-        FilenameMap.fold (fun _ -> Errors.ErrorSet.union) new_local_errors Errors.ErrorSet.empty
-      )
-    in
+    let new_errors = lazy (FilenameMap.bindings new_local_errors) in
     send_errors_over_connection new_errors
   in
 
