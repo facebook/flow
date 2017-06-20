@@ -101,3 +101,11 @@ let rec phys_uniq = function
 | [x] -> [x]
 | x :: (y :: _ as l) when x == y -> phys_uniq l
 | x :: rl -> x :: phys_uniq rl
+
+(** performs a map, but returns the original list if there is no change **)
+let ident_map f lst =
+  let rev_lst, changed = List.fold_left (fun (lst_, changed) item ->
+    let item_ = f item in
+    item_::lst_, changed || item_ != item
+  ) ([], false) lst in
+  if changed then List.rev rev_lst else lst
