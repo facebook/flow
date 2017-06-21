@@ -433,10 +433,11 @@ module Cli_output = struct
           let padding =
             let line_num = String.make (String.length line_number_text) ' ' in
             let spaces =
-              if String.length code_line <= c0 then ""
-              else
-                let prefix = String.sub code_line 0 c0 in
-                Str.global_replace (Str.regexp "[^\t ]") " " prefix
+              let prefix = if String.length code_line <= c0
+                then code_line
+                else String.sub code_line 0 c0
+              in
+              Str.global_replace (Str.regexp "[^\t ]") " " prefix
             in
             line_num ^ spaces
           in
