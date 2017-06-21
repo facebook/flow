@@ -29,7 +29,6 @@ module type SERVER_PROGRAM = sig
   val handle_persistent_client : genv -> env -> Persistent_connection.single_client -> env
   val collate_errors :
     errors ->
-    LintSettings.t ->
     Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list
 end
 
@@ -136,9 +135,7 @@ end = struct
       let env = Program.recheck genv env updates in
       Persistent_connection.send_end_recheck env.connections;
       if did_change then begin
-        let options = genv.options in
-        let lint_settings = Options.lint_settings options in
-        let errorl, _ = Program.collate_errors env.errors lint_settings in
+        let errorl, _ = Program.collate_errors env.errors in
         Persistent_connection.update_clients env.connections errorl
       end;
       recheck_loop ~dfind genv env

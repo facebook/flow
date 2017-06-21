@@ -8,7 +8,7 @@ module Init = struct
         Initializes a directory to be used as a flow root directory\n\n\
         e.g. %s init /path/to/root\n\
         or %s init\n\
-        or %s init --options \"optionA=123;optionB=456\"\n\n\
+        or %s init --options \"optionA=123;optionB=456\"\n\
         or %s init --lints \"lintA=on;lintB=off\"\n\n\
         If the root is not specified it is assumed to be the current working directory\n\n\
         This command will create and initialize /path/to/root/.flowconfig\n"

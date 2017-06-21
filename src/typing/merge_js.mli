@@ -46,7 +46,7 @@ val clear_master_shared: Context.t -> Context.t -> unit
 val merge_lib_file:
   Context.t ->
   Context.t ->
-  Errors.ErrorSet.t * Error_suppressions.t
+  Errors.ErrorSet.t * Error_suppressions.t * SuppressionMap.t
 
 val merge_type: Reason.t -> Type.t list -> Type.t
 

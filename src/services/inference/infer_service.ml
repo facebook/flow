@@ -40,18 +40,19 @@ let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
 (* Given a filename, retrieve the parsed AST, derive a module name,
    and invoke the local (infer) pass. This will build and return a
    fresh context object for the module. *)
-let infer_module ~(metadata: Context.metadata) filename =
+let infer_module ~(metadata: Context.metadata) ~lint_settings filename =
   let ast = Parsing_service_js.get_ast_unsafe filename in
   let info = Parsing_service_js.get_docblock_unsafe filename in
   let metadata = apply_docblock_overrides metadata info in
   let require_loc_map = Parsing_service_js.get_requires_unsafe filename in
-  Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map
+  Type_inference_js.infer_ast ~metadata ~filename ~lint_settings ast ~require_loc_map
 
 (* local inference job:
    takes list of filenames, accumulates into parallel lists of
    filenames, error sets *)
 let infer_job ~options acc files =
   let metadata = Context.metadata_of_options options in
+  let lint_settings = Some options.Options.opt_lint_settings in
   List.fold_left (fun acc file ->
     let file_str = string_of_filename file in
     try Profile_utils.checktime ~options ~limit:1.0
@@ -61,18 +62,20 @@ let infer_job ~options acc files =
         (* prerr_endlinef "[%d] INFER: %s" (Unix.getpid()) file_str; *)
 
         (* infer produces a context for this module *)
-        let cx = infer_module ~metadata file in
+        let cx = infer_module ~metadata ~lint_settings file in
         (* note: save and clear errors and error suppressions before storing
          * cx to shared heap *)
         let errs = Context.errors cx in
         let suppressions = Context.error_suppressions cx in
+        let lint_settings = Context.lint_settings cx in
         Context.remove_all_errors cx;
         Context.remove_all_error_suppressions cx;
+        Context.remove_all_lint_settings cx;
 
         Context_cache.add ~audit:Expensive.ok cx;
 
         (* add filename, errorset, suppressions *)
-        (Context.file cx, errs, suppressions) :: acc
+        (Context.file cx, errs, suppressions, lint_settings) :: acc
       )
     with
     (* Unrecoverable exceptions *)
@@ -88,7 +91,7 @@ let infer_job ~options acc files =
       let errorset = Errors.ErrorSet.singleton error in
       prerr_endlinef "(%d) infer_job THROWS: %s"
         (Unix.getpid()) (fmt_file_exc (string_of_filename file) exc);
-      (file, errorset, Error_suppressions.empty) :: acc
+      (file, errorset, Error_suppressions.empty, SuppressionMap.invalid_default) :: acc
   ) acc files
 
 (* local type inference pass.

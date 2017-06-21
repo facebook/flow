@@ -24,7 +24,9 @@ val default_settings: t
 
 val all_setting: bool -> t
 
-val set_enabled: lint_kind -> bool -> t -> t
+val set_enabled: lint_kind -> (bool * Loc.t option) -> t -> t
+
+val set_all: (lint_kind * (bool * Loc.t option)) list -> t -> t
 
 val get_default: t -> bool
 
@@ -32,7 +34,9 @@ val is_enabled: lint_kind -> t -> bool
 (* Always the logical opposite of is_enabled *)
 val is_suppressed: lint_kind -> t -> bool
 (* Iterate over all lint kinds with an explicit setting *)
-val iter: (lint_kind -> bool -> unit) -> t -> unit
+val iter: (lint_kind -> bool * Loc.t option -> unit) -> t -> unit
+(* Fold over all lint kinds with an explicit setting *)
+val fold: (lint_kind -> bool * Loc.t option -> 'a -> 'a) -> t -> 'a -> 'a
 (* Merge two LintSettings, with rules in higher_precedence overwriting
  * rules in lower_precedencse. *)
 val merge: low_prec:t -> high_prec:t -> t

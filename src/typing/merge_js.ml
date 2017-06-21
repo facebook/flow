@@ -222,7 +222,7 @@ let merge_lib_file cx master_cx =
   let errs = Context.errors cx in
   Context.remove_all_errors cx;
 
-  errs, Context.error_suppressions cx
+  errs, Context.error_suppressions cx, Context.lint_settings cx
 
 let merge_type r types =
   match types with

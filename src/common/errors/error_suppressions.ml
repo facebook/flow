@@ -43,36 +43,37 @@ let union a b = {
   unused = SpanMap.union a.unused b.unused;
 }
 
-let check_loc ((_result, consumed, { suppressions; unused; }) as acc) loc =
+let check_loc ((_result, consumed, { suppressions; unused }, lint_kind, lint_settings) as acc) loc =
   (* We only want to check the starting position of the reason *)
-  let loc = Loc.({ loc with _end = loc.start; }) in
+  let loc = Loc.first_char loc in
   if SpanMap.mem loc suppressions
   then
     let locs = SpanMap.find_unsafe loc suppressions in
     let consumed = Loc.LocSet.union locs consumed in
-    true, consumed, { suppressions; unused = SpanMap.remove loc unused}
-  else acc
+    true, consumed, { suppressions; unused = SpanMap.remove loc unused}, lint_kind, lint_settings
+  else
+    Option.value_map lint_kind ~default:acc
+    ~f:(fun some_lint_kind ->
+      let suppressed = SuppressionMap.is_suppressed some_lint_kind loc lint_settings in
+      suppressed || _result, consumed, { suppressions; unused }, lint_kind, lint_settings)
 
 (* Checks if any of the given locations should be suppressed. *)
-let check_locs (locs: Loc.t list) suppressions =
+let check_locs (locs: Loc.t list) suppressions lint_kind lint_settings =
   (* We need to check every location in order to figure out which suppressions
      are really unused...that's why we don't shortcircuit as soon as we find a
      matching error suppression *)
-  List.fold_left check_loc (false, Loc.LocSet.empty, suppressions) locs
+  let (suppressed, consumed, suppressions, _, _) =
+    List.fold_left check_loc (false, Loc.LocSet.empty, suppressions, lint_kind, lint_settings) locs
+  in (suppressed, consumed, suppressions)
 
 let check err lint_settings suppressions =
   let locs = Errors.locs_of_error err in
-  let (suppressed, consumed, suppressions) as result = check_locs locs suppressions in
-  if suppressed then result
-  else
-    let err_kind = Errors.kind_of_error err in
-    match err_kind with
-    | Errors.LintError lint_kind ->
-      (* TODO: (rballard) use the location information when that gets added in. *)
-      (* TODO: (rballard) track unused lint suppressions. *)
-      let suppressed = LintSettings.is_suppressed lint_kind lint_settings in
-      (suppressed, consumed, suppressions)
-    | _ -> result
+  let lint_kind =
+    let open Errors in
+    match kind_of_error err with
+      | LintError lint_kind -> Some lint_kind
+      | _ -> None
+  in check_locs locs suppressions lint_kind lint_settings
 
 (* Get's the locations of the suppression comments that are yet unused *)
 let unused { unused; _; } =

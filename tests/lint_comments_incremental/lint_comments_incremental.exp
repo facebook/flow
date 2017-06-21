@@ -1,0 +1,24 @@
+After start:
+No errors!
+
+After introducing a lint error:
+test.js:3
+  3: if (x) { /* sketchy */ }
+         ^ Sketchy null check. Perhaps you meant to check for null instead of for existence?
+    1: var x: ?number = 0;
+              ^^^^^^^ Potentially null/undefined value.
+    1: var x: ?number = 0;
+               ^^^^^^ Potentially falsey value.
+
+
+Found 1 error
+
+After suppressing the lint error:
+No errors!
+
+After fixing the lint error, leaving the suppression:
+(TODO: check for unused lint suppressions)
+No errors!
+
+After removing the unused suppression:
+No errors!

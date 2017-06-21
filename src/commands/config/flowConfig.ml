@@ -348,10 +348,11 @@ end = struct
     )
 
   let lints o config =
+    let option_of_bool = function true -> "on" | false -> "off" in
     let lint_settings = config.lint_settings in
-    fprintf o "all=%b\n" (LintSettings.get_default lint_settings);
-    LintSettings.iter
-      (fun kind enabled -> (fprintf o "%s=%b\n" (LintSettings.string_of_kind kind) enabled))
+    fprintf o "all=%s\n" (LintSettings.get_default lint_settings |> option_of_bool);
+    LintSettings.iter (fun kind enabled ->
+        (fprintf o "%s=%s\n" (LintSettings.string_of_kind kind) (fst enabled |> option_of_bool)))
       lint_settings
 
   let config o config =

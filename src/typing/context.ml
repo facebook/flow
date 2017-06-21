@@ -126,6 +126,7 @@ type local_t = {
   mutable globals: SSet.t;
 
   mutable error_suppressions: Error_suppressions.t;
+  mutable lint_settings: SuppressionMap.t;
 
   type_table: Type_table.t;
   annot_table: (Loc.t, Type.t) Hashtbl.t;
@@ -209,6 +210,7 @@ let make metadata file module_ref = {
     globals = SSet.empty;
 
     error_suppressions = Error_suppressions.empty;
+    lint_settings = SuppressionMap.invalid_default;
 
     type_table = Type_table.create ();
     annot_table = Hashtbl.create 0;
@@ -260,6 +262,7 @@ let imported_ts cx = cx.local.imported_ts
 let is_checked cx = cx.local.metadata.checked
 let is_verbose cx = cx.local.metadata.verbose <> None
 let is_weak cx = cx.local.metadata.weak
+let lint_settings cx = cx.local.lint_settings
 let max_trace_depth cx = Global.max_trace_depth cx.global
 let module_kind cx = cx.local.module_kind
 let module_map cx = cx.local.modulemap
@@ -325,6 +328,8 @@ let remove_all_errors cx =
   cx.local.errors <- Errors.ErrorSet.empty
 let remove_all_error_suppressions cx =
   cx.local.error_suppressions <- Error_suppressions.empty
+let remove_all_lint_settings cx =
+  cx.local.lint_settings <- SuppressionMap.invalid_default
 let remove_tvar cx id =
   cx.local.graph <- IMap.remove id cx.local.graph
 let set_all_unresolved cx all_unresolved =
@@ -339,6 +344,8 @@ let set_globals cx globals =
   cx.local.globals <- globals
 let set_graph cx graph =
   cx.local.graph <- graph
+let set_lint_settings cx lint_settings =
+  cx.local.lint_settings <- lint_settings
 let set_module_kind cx module_kind =
   cx.local.module_kind <- module_kind
 let set_property_maps cx property_maps =

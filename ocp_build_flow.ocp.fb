@@ -97,10 +97,12 @@ begin library "flow-common-errors"
     "flow-common"
     "flow-common-lints"
     "flow-common-profiling"
+    "flow-common-span"
     "flow-common-utils"
     "flow-parser"
     "hh-utils"
     "hh-utils-json"
+    "tp-core"
   ]
 end
 
@@ -109,8 +111,22 @@ begin library "flow-common-lints"
   files = begin fb-glob "src/common/lints"
   end
   requires = [
+    "flow-common-span"
+    "flow-common-utils"
+    "flow-parser"
     "hh-utils-collections"
     "tp-core"
+  ]
+end
+
+begin library "flow-common-span"
+  sort = true
+  files = begin fb-glob "src/common/span"
+  end
+  requires = [
+    "flow-common-utils"
+    "flow-parser"
+    "hh-utils-collections"
   ]
 end
 
@@ -393,6 +409,8 @@ begin library "flow-services-inference"
   requires = [
     "flow-common"
     "flow-common-audit"
+    "flow-common-errors"
+    "flow-common-lints"
     "flow-common-utils"
     "flow-stubs"
     "flow-parser"
@@ -426,6 +444,7 @@ begin library "flow-services-port"
   end
   requires = [
     "flow-common"
+    "flow-common-span"
     "flow-common-utils"
     "flow-parser"
     "flow-parsing"

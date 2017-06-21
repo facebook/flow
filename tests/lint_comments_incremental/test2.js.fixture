@@ -1,0 +1,4 @@
+var x: ?number = 0;
+
+//flowlint-next-line sketchy-null:off
+if (x) { /* sketchy; suppressed */ }

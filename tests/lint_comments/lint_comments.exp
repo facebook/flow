@@ -1,0 +1,90 @@
+simple_sketchies.js:5
+  5: /*flowlint not-a-real-lint : not-a-real-setting   ,
+                ^^^^^^^^^^^^^^^ Nonexistent/misspelled lint rule. Perhaps you have a missing/extra ','?
+
+simple_sketchies.js:5
+  5: /*flowlint not-a-real-lint : not-a-real-setting   ,
+                                  ^^^^^^^^^^^^^^^^^^ Invalid setting. Valid settings are on and off.
+
+simple_sketchies.js:13
+ 13:   if (x) {/* sketchy */}/* flowlint sketchy-null:off */
+           ^ Sketchy null check. Perhaps you meant to check for null instead of for existence?
+   11: function f(x: ?number) {
+                     ^^^^^^^ Potentially null/undefined value.
+   11: function f(x: ?number) {
+                      ^^^^^^ Potentially falsey value.
+
+simple_sketchies.js:44
+ 44: if (x1) { /* sketchy */ }
+         ^^ Sketchy null check. Perhaps you meant to check for null instead of for existence?
+   43: var x1: ?bool = false;
+               ^^^^^ Potentially null/undefined value.
+   43: var x1: ?bool = false;
+                ^^^^ Potentially falsey value.
+
+simple_sketchies.js:67
+ 67: if (x3) { /* sketchy */ }
+         ^^ Sketchy null check. Perhaps you meant to check for null instead of for existence?
+   66: var x3: ?string = "";
+               ^^^^^^^ Potentially null/undefined value.
+   66: var x3: ?string = "";
+                ^^^^^^ Potentially falsey value.
+
+simple_sketchies.js:77
+ 77:   if (x) { /* sketchy because of calls */ }
+           ^ Sketchy null check. Perhaps you meant to check for null instead of for existence?
+   79: r(null);
+         ^^^^ Potentially null/undefined value.
+   80: r("")
+         ^^ Potentially falsey value.
+
+simple_sketchies.js:89
+ 89:   if (x) { /* sketchy because of calls */ }
+           ^ Sketchy null check. Perhaps you meant to check for null instead of for existence?
+   91: s(null);
+         ^^^^ Potentially null/undefined value.
+   93: s(unknown_str); // possibly falsey, sketchy
+         ^^^^^^^^^^^ Potentially falsey value.
+
+simple_sketchies.js:112
+112:   if (o.p) { /* sketchy */ }
+           ^^^ Sketchy null check. Perhaps you meant to check for null instead of for existence?
+  112:   if (o.p) { /* sketchy */ }
+             ^^^ Potentially null/undefined value.
+  112:   if (o.p) { /* sketchy */ }
+             ^^^ Potentially falsey value.
+
+simple_sketchies.js:146
+146: var sketchyFalse = val2 && false; /* sketchy */ /*flowlint-next-line sketchy-null:on*/ /* flowlint-line sketchy-null:on */
+                        ^^^^ Sketchy null check. Perhaps you meant to check for null instead of for existence?
+  143: var val2: ?number = 0;
+                 ^^^^^^^ Potentially null/undefined value.
+  143: var val2: ?number = 0;
+                  ^^^^^^ Potentially falsey value.
+
+simple_sketchies.js:147
+147: var sketchyTrue = val2 || true; /* sketchy */
+                       ^^^^ Sketchy null check. Perhaps you meant to check for null instead of for existence?
+  143: var val2: ?number = 0;
+                 ^^^^^^^ Potentially null/undefined value.
+  143: var val2: ?number = 0;
+                  ^^^^^^ Potentially falsey value.
+
+simple_sketchies.js:152
+152: // flowlint ,sketchy-null-bool:on,,sketchy-null-mixed:off,
+                 ^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
+
+simple_sketchies.js:152
+152: // flowlint ,sketchy-null-bool:on,,sketchy-null-mixed:off,
+                                       ^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
+
+simple_sketchies.js:152
+152: // flowlint ,sketchy-null-bool:on,,sketchy-null-mixed:off,
+     ^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
+
+simple_sketchies.js:155
+155: // flowlint sketchy-null-bool:on sketchy-null-mixed:off
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
+
+
+Found 14 errors

@@ -62,6 +62,7 @@ MODULES=\
   src/common/errors\
   src/common/lints\
   src/common/profiling\
+  src/common/span\
   src/common/utils\
   src/dts\
   src/flowlib\

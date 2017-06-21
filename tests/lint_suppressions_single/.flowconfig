@@ -7,8 +7,8 @@
 [options]
 
 [lints]
-all=false
-sketchy-null-bool=true
-sketchy-null-string=true
-sketchy-null-number=true
-sketchy-null-mixed=true
+all=off
+sketchy-null-bool=on
+sketchy-null-string=on
+sketchy-null-number=on
+sketchy-null-mixed=on

@@ -42,7 +42,8 @@ type t = {
    * (used in merge) *)
   all_encountered: bool;
   (* Settings for lints that have been explicitly mentioned *)
-  explicit_settings: bool LintMap.t;
+  (* The Loc.t is for settings defined in comments, and is used to find unused lint suppressions. *)
+  explicit_settings: (bool * Loc.t option) LintMap.t;
 }
 
 let default_settings = {
@@ -61,10 +62,14 @@ let set_enabled key value settings =
   let new_map = LintMap.add key value settings.explicit_settings
   in {settings with explicit_settings = new_map}
 
+let set_all entries settings =
+  List.fold_left (fun settings (key, value) -> set_enabled key value settings) settings entries
+
 let get_default settings = settings.default_err
 
 let is_enabled lint_kind settings =
-  LintMap.get lint_kind settings.explicit_settings |> Option.value ~default:settings.default_err
+  LintMap.get lint_kind settings.explicit_settings
+  |> Option.value_map ~f:fst ~default:settings.default_err
 
 let is_suppressed lint_kind settings =
   is_enabled lint_kind settings |> not
@@ -85,7 +90,7 @@ let merge ~low_prec ~high_prec =
 
 type parse_result =
 | AllSetting of t
-| EntryList of lint_kind list * bool
+| EntryList of lint_kind list * (bool * Loc.t option)
 
 (* Takes a list of labeled lines and returns the corresponding LintSettings.t if
  * successful. Otherwise, returns an error message along with the label of the
@@ -93,10 +98,10 @@ type parse_result =
 let of_lines lint_lines =
 
   let parse_value label = function
-    | "true" | "on" -> Ok true
-    | "false" | "off" -> Ok false
+    | "on" -> Ok true
+    | "off" -> Ok false
     | _ -> Error (label,
-      "Invalid setting encountered. Valid settings are 'true', 'false', 'on', and 'off'.")
+      "Invalid setting encountered. Valid settings are on and off.")
   in
 
   let eq_regex = Str.regexp "=" in
@@ -104,24 +109,23 @@ let of_lines lint_lines =
   let parse_line (label, line) =
     match Str.split_delim eq_regex line with
     | [left; right] ->
-      let left = left |> String.trim |> String.lowercase_ascii in
-      let right = right |> String.trim |> String.lowercase_ascii in
+      let left = left |> String.trim in
+      let right = right |> String.trim in
       Result.bind (parse_value label right) (fun value ->
         match left with
         | "all" -> Ok (AllSetting (all_setting value))
         | _ ->
           try
-            Ok (EntryList (kinds_of_string left, value))
+            Ok (EntryList (kinds_of_string left, (value, None)))
           with Not_found ->
             Error (label, (Printf.sprintf "Invalid lint rule \"%s\" encountered." left))
       )
     | _ -> Error (label,
-      "Malformed lint rule option. Properly formed rule options contain a single '=' character.")
+      "Malformed lint rule. Properly formed rules contain a single '=' character.")
   in
 
   let add_settings keys value settings =
-    let entries = List.map (fun key -> (key, value)) keys in
-    List.fold_left (fun settings (key, value) -> set_enabled key value settings) settings entries
+    List.fold_left (fun settings key -> set_enabled key value settings) settings keys
   in
 
   let rec loop acc = function

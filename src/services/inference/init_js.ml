@@ -73,6 +73,7 @@ let load_lib_files ~master_cx ~options files =
     fun (exclude_syms, results) file ->
 
       let lib_file = Loc.LibFile file in
+      let lint_settings = options.Options.opt_lint_settings in
       match parse_lib_file options file with
       | Parsing.Parse_ok ast ->
 
@@ -84,11 +85,11 @@ let load_lib_files ~master_cx ~options files =
         in
 
         let cx, syms = Infer.infer_lib_file
-          ~metadata ~exclude_syms
+          ~metadata ~exclude_syms ~lint_settings:(Some lint_settings)
           lib_file ast
         in
 
-        let errs, suppressions = Merge_js.merge_lib_file cx master_cx in
+        let errs, suppressions, lint_settings = Merge_js.merge_lib_file cx master_cx in
 
         (if verbose != None then
           prerr_endlinef "load_lib %s: added symbols { %s }"
@@ -97,7 +98,7 @@ let load_lib_files ~master_cx ~options files =
         (* symbols loaded from this file are suppressed
            if found in later ones *)
         let exclude_syms = SSet.union exclude_syms (SSet.of_list syms) in
-        let result = (lib_file, true, errs, suppressions) in
+        let result = (lib_file, true, errs, suppressions, lint_settings) in
         exclude_syms, (result :: results)
 
       | Parsing.Parse_fail fail ->
@@ -107,7 +108,8 @@ let load_lib_files ~master_cx ~options files =
         | Parsing.Docblock_errors errs ->
           Inference_utils.set_of_docblock_errors ~source_file:lib_file errs
         in
-        let result = lib_file, false, errors, Error_suppressions.empty in
+        let result = lib_file, false, errors, Error_suppressions.empty,
+          SuppressionMap.global_settings lib_file lint_settings in
         exclude_syms, (result :: results)
 
       | Parsing.Parse_skip
@@ -115,7 +117,8 @@ let load_lib_files ~master_cx ~options files =
         (* should never happen *)
         let errs = Errors.ErrorSet.empty in
         let suppressions = Error_suppressions.empty in
-        let result = lib_file, false, errs, suppressions in
+        let lint_settings = SuppressionMap.global_settings lib_file lint_settings in
+        let result = lib_file, false, errs, suppressions, lint_settings in
         exclude_syms, (result :: results)
 
     ) (SSet.empty, [])
