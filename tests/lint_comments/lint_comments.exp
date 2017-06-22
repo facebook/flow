@@ -80,7 +80,7 @@ simple_sketchies.js:152
 
 simple_sketchies.js:152
 152: // flowlint ,sketchy-null-bool:on,,sketchy-null-mixed:off,
-     ^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
+                                                               ^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
 
 simple_sketchies.js:155
 155: // flowlint sketchy-null-bool:on sketchy-null-mixed:off
