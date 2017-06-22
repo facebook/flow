@@ -2,12 +2,12 @@ After start:
 No errors!
 
 After introducing a lint error:
-test.js:3
-  3: if (x) { /* sketchy */ }
+test.js:5
+  5: if (x) { /* sketchy */ }
          ^ Sketchy null check. Perhaps you meant to check for null instead of for existence?
-    1: var x: ?number = 0;
+    3: var x: ?number = 0;
               ^^^^^^^ Potentially null/undefined value.
-    1: var x: ?number = 0;
+    3: var x: ?number = 0;
                ^^^^^^ Potentially falsey value.
 
 
