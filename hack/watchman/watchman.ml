@@ -148,12 +148,15 @@ module Watchman_actual = struct
           | Subscribe -> [JSON_String subscription_name]
           | _ -> []
         end in
+    let expressions = extra_expressions @ expression_terms in
     let directives = [
-      JSON_Object (extra_kv @ [
+      JSON_Object (extra_kv
+      @ [
         "fields", J.strlist ["name"];
-        "relative_root", JSON_String env.relative_path;
-        "expression", J.pred "allof" @@
-          (extra_expressions @ expression_terms)
+        "relative_root", JSON_String env.relative_path;]
+      (** Watchman doesn't allow an empty allof expression. Omit if empty. *)
+      @ if expressions = [] then [] else [
+        "expression", J.pred "allof" expressions
       ])
     ] in
     let request = JSON_Array (header @ directives) in
