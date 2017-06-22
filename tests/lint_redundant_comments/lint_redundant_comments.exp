@@ -1,0 +1,94 @@
+test.js:3
+  3: //flowlint-line sketchy-null:off
+                     ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:4
+  4: //flowlint-next-line sketchy-null:off
+                          ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:6
+  6: //flowlint sketchy-null:off
+                ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:12
+ 12: //flowlint sketchy-null:on
+                ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:13
+ 13: //flowlint-line sketchy-null:on
+                     ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:16
+ 16: //flowlint sketchy-null:off
+                ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:17
+ 17: //flowlint-line sketchy-null:off
+                     ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:22
+ 22: //flowlint sketchy-null:on, sketchy-null:on
+                                 ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:23
+ 23: //flowlint-line sketchy-null:off, sketchy-null:off
+                                       ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:25
+ 25: //flowlint sketchy-null:off, sketchy-null:off
+                                  ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:26
+ 26: //flowlint-line sketchy-null:on, sketchy-null:on
+                                      ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:31
+ 31: //flowlint sketchy-null:on, sketchy-null:off
+                ^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
+
+test.js:32
+ 32: //flowlint-line sketchy-null:on, sketchy-null:off
+                     ^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
+
+test.js:37
+ 37: //flowlint sketchy-null-bool:on, sketchy-null:off
+                ^^^^^^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
+
+test.js:38
+ 38: //flowlint-line sketchy-null-bool:on, sketchy-null:off
+                     ^^^^^^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
+
+test.js:50
+ 50: //flowlint sketchy-null:on, sketchy-null:on
+                                 ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:51
+ 51: //flowlint-line sketchy-null:on, sketchy-null:on
+                     ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:51
+ 51: //flowlint-line sketchy-null:on, sketchy-null:on
+                                      ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:54
+ 54: //flowlint sketchy-null:off, sketchy-null:off
+                                  ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:55
+ 55: //flowlint-line sketchy-null:off, sketchy-null:off
+                     ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:55
+ 55: //flowlint-line sketchy-null:off, sketchy-null:off
+                                       ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:60
+ 60: //flowlint sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
+                ^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
+
+test.js:61
+ 61: //flowlint-line sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
+                     ^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
+
+
+Found 23 errors

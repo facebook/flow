@@ -67,7 +67,6 @@ type 'a located = {
 }
 
 (* TODO (rballard): track unused lint suppressions *)
-(* TODO (rballard): error on lintsettings that don't change anything *)
 let scan_for_lint_suppressions =
   let flowlint_keywords =
     ["flowlint";
@@ -230,7 +229,6 @@ let scan_for_lint_suppressions =
   let get_kind_settings cx args =
     split_delim_locational comma_regex args
     |> List.map (fun rule -> get_kind_setting cx rule |> Option.value ~default:[])
-    |> List.flatten
   in
 
   let contains_r regex str start_index =
@@ -289,7 +287,11 @@ let scan_for_lint_suppressions =
       {loc = new_loc; value = s}
   in
 
-  let process_comment cx suppression_builder comment =
+  let nested_map f outer_list =
+    List.map (List.map f) outer_list
+  in
+
+  let process_comment cx ((suppression_builder, running_settings) as acc) comment =
     let loc_comment = comment |> convert_comment |> trim_and_stars_locational in
     if starts_with_keyword loc_comment.value then
       let keyword, args = split_comment loc_comment in
@@ -299,19 +301,48 @@ let scan_for_lint_suppressions =
         | Some args ->
           let kind_settings =
             get_kind_settings cx args
-            |> List.map (fun ({loc; value = kind}, enabled) -> (kind, (enabled, loc)))
-          in SuppressionMap.update_settings covered_range kind_settings suppression_builder
+              |> nested_map (fun ({loc; value = kind}, enabled) -> (kind, (enabled, loc)))
+          in
+          let error_encountered = ref false in
+          let (new_builder, new_running_settings) =
+            SuppressionMap.update_settings_and_running running_settings
+              (fun loc msg -> error_encountered := true; add_error cx loc msg)
+              covered_range kind_settings suppression_builder in
+          let () = if not !error_encountered then
+            (* Check for overwritten arguments *)
+            let used_locs = LintSettings.fold
+              (fun _ (_, loc) loc_set -> match loc with
+                | Some loc -> Loc.LocSet.add loc loc_set
+                | None -> loc_set)
+              new_running_settings Loc.LocSet.empty
+            in
+            let arg_locs = List.map
+              (function
+                | (_,(_,loc))::_ -> Some loc
+                | [] -> None)
+              kind_settings
+            in
+            List.iter (function
+              | Some arg_loc ->
+                if not (Loc.LocSet.mem arg_loc used_locs) then add_error cx arg_loc
+                  ("Redundant argument. "
+                  ^ "The values set by this argument are overwritten later in this comment.")
+              | None -> ()) arg_locs
+          in
+          if contains_r line_regex keyword.value 0 then (new_builder, running_settings)
+          else (new_builder, new_running_settings)
         (* Case where we're wholly enabling/disabling linting *)
         | None ->
           add_error cx keyword.loc "Malformed lint rule. At least one argument is required.";
-          suppression_builder (* TODO (rballard): regional lint disabling *)
-    else suppression_builder
+          acc (* TODO (rballard): regional lint disabling *)
+    else acc
   in
 
   fun cx base_settings comments ->
     let suppression_builder = SuppressionMap.new_builder (Context.file cx) base_settings in
-    let suppression_map = List.fold_left (process_comment cx) suppression_builder comments
-      |> SuppressionMap.bake in
+    let suppression_map =
+      List.fold_left (process_comment cx) (suppression_builder, base_settings) comments
+      |> fst |> SuppressionMap.bake in
     Context.set_lint_settings cx suppression_map
 
 let scan_for_suppressions cx base_settings comments =

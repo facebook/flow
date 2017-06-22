@@ -42,7 +42,8 @@ type t = {
    * (used in merge) *)
   all_encountered: bool;
   (* Settings for lints that have been explicitly mentioned *)
-  (* The Loc.t is for settings defined in comments, and is used to find unused lint suppressions. *)
+  (* The Loc.t is for settings defined in comments, and is used to find unused lint
+   * suppressions. The Loc.t is set to None for settings coming from the flowconfig or --lints.*)
   explicit_settings: (bool * Loc.t option) LintMap.t;
 }
 

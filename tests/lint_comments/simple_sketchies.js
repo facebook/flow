@@ -148,8 +148,8 @@ var sketchyTrue = val2 || true; /* sketchy */
 
 //Malformed Rule Tests
 
-//Extra commas (Error reporting is currently weird with zero-length locations at the end of a line.)
-// flowlint ,sketchy-null-bool:on,,sketchy-null-mixed:off,
+//Extra commas
+// flowlint ,sketchy-null-bool:on,,sketchy-null-mixed:on,
 
 //Missing commas
 // flowlint sketchy-null-bool:on sketchy-null-mixed:off

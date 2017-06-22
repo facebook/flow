@@ -98,6 +98,43 @@ let update_settings range kind_settings builder =
     (fun builder original -> update_builder original range kind_settings builder)
     builder original_intersecting
 
+let update_settings_and_running =
+  let update_settings_and_error err_fun settings kind_settings =
+    match kind_settings with
+    | head::_ ->
+      let (new_settings, all_redundant) = List.fold_left
+        (fun (settings, all_redundant) (kind, (enabled, loc)) ->
+          (* Still do set_enabled to update the location, otherwise it's
+           * reported that the results of the argument get overwritten. *)
+          let new_settings = LintSettings.set_enabled kind (enabled, Some loc) settings in
+          let this_redundant = LintSettings.is_enabled kind settings = enabled in
+          (new_settings, all_redundant && this_redundant))
+        (settings, true) kind_settings
+      in
+      if all_redundant then
+        err_fun (head |> snd |> snd)
+          "Redundant argument. This argument doesn't change any lint settings.";
+      new_settings
+    | [] -> settings
+  in
+
+  let update_settings_and_error_from_list err_fun kind_settings_list settings =
+    List.fold_left (update_settings_and_error err_fun)
+      settings kind_settings_list
+  in
+
+  fun running_settings err_fun range kind_settings_list builder ->
+    let flat_kind_settings = List.flatten kind_settings_list in
+    let original_intersecting = get_intersecting range builder in
+    List.fold_left
+      (fun (builder, settings) original ->
+        let new_builder = update_builder
+          original range flat_kind_settings builder in
+        let new_settings =
+          update_settings_and_error_from_list err_fun kind_settings_list settings in
+        (new_builder, new_settings))
+      (builder, running_settings) original_intersecting
+
 let bake =
   List.fold_left (fun map (loc, settings) -> SpanMap.add loc settings map) SpanMap.empty
 

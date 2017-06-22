@@ -54,6 +54,14 @@ simple_sketchies.js:112
   112:   if (o.p) { /* sketchy */ }
              ^^^ Potentially falsey value.
 
+simple_sketchies.js:129
+129:   //flowlint-next-line sketchy-null:off
+                            ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+simple_sketchies.js:142
+142: //flowlint sketchy-null:on
+                ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
 simple_sketchies.js:146
 146: var sketchyFalse = val2 && false; /* sketchy */ /*flowlint-next-line sketchy-null:on*/ /* flowlint-line sketchy-null:on */
                         ^^^^ Sketchy null check. Perhaps you meant to check for null instead of for existence?
@@ -71,20 +79,20 @@ simple_sketchies.js:147
                   ^^^^^^ Potentially falsey value.
 
 simple_sketchies.js:152
-152: // flowlint ,sketchy-null-bool:on,,sketchy-null-mixed:off,
+152: // flowlint ,sketchy-null-bool:on,,sketchy-null-mixed:on,
                  ^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
 
 simple_sketchies.js:152
-152: // flowlint ,sketchy-null-bool:on,,sketchy-null-mixed:off,
+152: // flowlint ,sketchy-null-bool:on,,sketchy-null-mixed:on,
                                        ^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
 
 simple_sketchies.js:152
-152: // flowlint ,sketchy-null-bool:on,,sketchy-null-mixed:off,
-                                                               ^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
+152: // flowlint ,sketchy-null-bool:on,,sketchy-null-mixed:on,
+                                                              ^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
 
 simple_sketchies.js:155
 155: // flowlint sketchy-null-bool:on sketchy-null-mixed:off
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
 
 
-Found 14 errors
+Found 16 errors

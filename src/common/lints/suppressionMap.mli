@@ -42,5 +42,21 @@ val new_builder: Loc.filename -> LintSettings.t -> builder
  * and the location is the position of the setting in the source code. *)
 val update_settings:
   Loc.t -> (LintSettings.lint_kind * (bool * Loc.t)) list -> builder -> builder
+(* Works similarly to update_settings, but takes two additional parameters: a running
+ * LintSettings object and an error function. The LintSettings object is updated with
+ * the new lint settings (in addition to the builder being updated), and if any redundant
+ * settings are encountered, the error function is called with an error message and the
+ * location of the error. Additionally, takes the lint settings in unflattened form so
+ * that errors can be properly reported. *)
+(* This function only checks for settings that are redundant because they don't change
+ * anything. It doesn't check for settings that are redundant because they are
+ * immediately overwritten. (That's done elsewhere.) *)
+val update_settings_and_running:
+  LintSettings.t ->
+  (Loc.t -> string -> unit) ->
+  Loc.t ->
+  (LintSettings.lint_kind * (bool * Loc.t)) list list ->
+  builder ->
+  builder * LintSettings.t
 
 val bake: builder -> t
