@@ -66,8 +66,8 @@ classes.js:41
                              ^^^^^^ React element `Foo`
  41: var foo: $jsx<number> = <Foo/>;
                    ^^^^^^ number. This type is incompatible with
-  5: type _ReactElement<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: $React.Component<DefaultProps, Props, any>> = $React.Element<Config>;
-                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See lib: fakelib/type_aliases.js:5
+  4: type _ReactNode<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: React$Component<DefaultProps, Props, any>> = React$Node<Config>;
+                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See lib: fakelib/type_aliases.js:4
 
 classes.js:59
  59:     var _: string = this.props.x;
@@ -100,8 +100,8 @@ classes.js:81
                                     ^^^^^^^^^^^^ React element `FooLegacy`
  81: var foo_legacy: $jsx<number> = <FooLegacy/>;
                           ^^^^^^ number. This type is incompatible with
-  5: type _ReactElement<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: $React.Component<DefaultProps, Props, any>> = $React.Element<Config>;
-                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See lib: fakelib/type_aliases.js:5
+  4: type _ReactNode<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: React$Component<DefaultProps, Props, any>> = React$Node<Config>;
+                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See lib: fakelib/type_aliases.js:4
 
 classes.js:81
  81: var foo_legacy: $jsx<number> = <FooLegacy/>;
@@ -248,10 +248,42 @@ props.js:16
 props.js:20
  20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `TestProps`
- 25:     propTypes: { w: React.PropTypes.string.isRequired }
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `w`. Property not found in
- 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
+ 27: (element: $jsx<FooProps>);
+      ^^^^^^^ React$Element. This type is incompatible with
+ 27: (element: $jsx<FooProps>);
+               ^^^^^^^^^^^^^^ union: type application of class `React$Element` | string | number | type application of identifier `Iterable`
+  Member 1:
+   13:   | React$Element<Config>
+           ^^^^^^^^^^^^^^^^^^^^^ type application of class `React$Element`. See lib: <BUILTINS>/react.js:13
+  Error:
+   25:     propTypes: { w: React.PropTypes.string.isRequired }
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `w`. Property not found in
+   20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
+  Member 2:
+   14:   | string
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:14
+  Error:
+   27: (element: $jsx<FooProps>);
+        ^^^^^^^ React$Element. This type is incompatible with
+   14:   | string
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:14
+  Member 3:
+   15:   | number
+           ^^^^^^ number. See lib: <BUILTINS>/react.js:15
+  Error:
+   27: (element: $jsx<FooProps>);
+        ^^^^^^^ React$Element. This type is incompatible with
+   15:   | number
+           ^^^^^^ number. See lib: <BUILTINS>/react.js:15
+  Member 4:
+   16:   | Iterable<React$Node<Config>>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:16
+  Error:
+   16:   | Iterable<React$Node<Config>>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:16
+   27: (element: $jsx<FooProps>);
+        ^^^^^^^ React$Element
 
 props.js:20
  20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors

@@ -110,7 +110,7 @@ let run cx trace reason_op l u
       rec_flow_t cx trace (l, react_class)
     | DefT (_, FunT _) ->
       let return_t =
-        get_builtin_typeapp cx ~trace elem_reason "React$Element"
+        get_builtin_typeapp cx ~trace elem_reason "React$Node"
           [Locationless.AnyT.t]
       in
       let return_t = DefT (elem_reason, MaybeT return_t) in
