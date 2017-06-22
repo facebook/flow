@@ -82,7 +82,7 @@ the keys of another object, then it may be a subtype.
 
 For example, if we had an `ObjectA` which contained the key `foo`, and an
 `ObjectB` which contained the keys `foo` and `bar`. Then it's possible that
-`ObjectA` is a subtype of `ObjectB`.
+`ObjectB` is a subtype of `ObjectA`.
 
 ```js
 // @flow
