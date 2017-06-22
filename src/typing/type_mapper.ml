@@ -1061,10 +1061,10 @@ class t = object(self)
         let t'' = self#type_ cx t' in
         if t'' == t' then t
         else ResolveSpreadsToArrayLiteral (i, t'')
-    | ResolveSpreadsToArray t' ->
+    | ResolveSpreadsToArray (i, t') ->
         let t'' = self#type_ cx t' in
         if t'' == t' then t
-        else ResolveSpreadsToArray t''
+        else ResolveSpreadsToArray (i, t'')
     | ResolveSpreadsToMultiflowCallFull (i, funtype) ->
         let funtype' = self#fun_type cx funtype in
         if funtype' == funtype then t
