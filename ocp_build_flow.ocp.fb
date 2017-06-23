@@ -168,7 +168,7 @@ end
 begin library "flow-scripts-utils"
   dirname = "scripts"
   files = [
-    "utils"
+    "script_utils"
   ]
   requires = [
     "unix"

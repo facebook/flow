@@ -17,7 +17,7 @@ open Ast_helper
 let get_flowlibs dir =
  Sys.readdir dir
  |> Array.fold_left (fun acc file ->
-    let contents = Utils.string_of_file (Filename.concat dir file) in
+    let contents = Script_utils.string_of_file (Filename.concat dir file) in
     (file, contents)::acc
  ) []
 
