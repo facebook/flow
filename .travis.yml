@@ -78,6 +78,18 @@ deploy:
     - $OCAML_VERSION = 4.03.0
     - $OPAM_VERSION = 1.2.2
 
+# Deploy to opam
+- provider: script
+  repo: facebook/flow
+  script: bash -e resources/travis/deploy_opam.sh
+  skip_cleanup: true
+  on:
+    tags: true
+    condition:
+    - $TRAVIS_OS_NAME = linux
+    - $OCAML_VERSION = 4.03.0
+    - $OPAM_VERSION = 1.2.0
+
 # Deploy the website
 - provider: script
   repo: facebook/flow
