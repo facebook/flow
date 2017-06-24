@@ -474,7 +474,7 @@ and gc_elem_action cx state = function
   | CallElem (_, fct) -> gc_funcalltype cx state fct
 
 and gc_spread_resolve cx state = function
-| ResolveSpreadsToArray (tout)
+| ResolveSpreadsToArray (_, tout)
 | ResolveSpreadsToArrayLiteral (_, tout)
 | ResolveSpreadsToTuple (_, tout) ->
   gc cx state tout

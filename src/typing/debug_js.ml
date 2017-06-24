@@ -765,7 +765,8 @@ and json_of_resolve_to_impl json_cx resolve_to = Hh_json.(JSON_Object (
     "id", JSON_Number (string_of_int id);
     "t_out", _json_of_t json_cx tout;
   ]
-  | ResolveSpreadsToArray (tout) -> [
+  | ResolveSpreadsToArray (id, tout) -> [
+    "id", JSON_Number (string_of_int id);
     "t_out", _json_of_t json_cx tout;
   ]
   | ResolveSpreadsToMultiflowCallFull (id, ft)
@@ -1810,7 +1811,7 @@ and dump_use_t_ (depth, tvars) cx t =
       (match rrt_resolve_to with
       | ResolveSpreadsToTuple (_, tout)
       | ResolveSpreadsToArrayLiteral (_, tout)
-      | ResolveSpreadsToArray (tout)
+      | ResolveSpreadsToArray (_, tout)
       | ResolveSpreadsToMultiflowPartial (_, _, _, tout) ->
         p ~extra:(kid tout) t
       | ResolveSpreadsToCallT (_, tin) ->

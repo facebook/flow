@@ -379,7 +379,7 @@ and parts_of_arrtype = function
 and parts_of_spread_resolve = function
 | ResolveSpreadsToTuple (_, tout)
 | ResolveSpreadsToArrayLiteral (_, tout)
-| ResolveSpreadsToArray (tout) ->
+| ResolveSpreadsToArray (_, tout) ->
   [ "out", Def tout ]
 | ResolveSpreadsToMultiflowCallFull (_, ft)
 | ResolveSpreadsToMultiflowSubtypeFull (_, ft) ->
