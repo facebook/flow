@@ -4,7 +4,7 @@ layout: guide
 
 ### ALE <a class="toc" id="vim-ale" href="#vim-ale"></a>
 
-The Asynchronous Lint Engine (ALE) [vim-ale](https://github.com/w0rp/ale) plugin for Vim 8+ and NeoVim provides linting of many syntaxes during editing, before files are saved. Supported JavaScript linters include eslint, jscs, jshint, flow, standard, and xo.  Installation instructions can be found at https://github.com/w0rp/ale#3-installation.
+The Asynchronous Lint Engine (ALE) [vim-ale](https://github.com/w0rp/ale) plugin for Vim 8+ and NeoVim provides linting of many syntaxes during editing, before files are saved. Supported JavaScript linters include eslint, jscs, jshint, flow, standard, and xo.  Installation instructions can be found at [https://github.com/w0rp/ale#3-installation](https://github.com/w0rp/ale#3-installation).
 
 Here is suggested ALE configuration to place in your .vimrc file:
 ```
