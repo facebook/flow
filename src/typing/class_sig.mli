@@ -11,6 +11,7 @@ val empty:
   ?structural:bool ->
   int -> (* id *)
   Reason.t ->
+  bool -> (* es6 *)
   Type.typeparam list ->
   Type.t SMap.t -> (* tparams_map *)
   Type.t -> (* super *)
