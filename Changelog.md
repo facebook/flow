@@ -1,3 +1,19 @@
+### 0.49.0
+
+Notable bug fixes:
+* Optimized performance when typechecking classes
+* Optimized performance of sentinel property checks involving large enums
+* Lots of libdef updates! Thanks everyone for the contributions!
+
+Misc:
+* Fixed infinite recursion from array spread
+* Added experimental support for sending errors to an IDE over a persistent connection
+* Removed unused --libs flag on status, check, and start commands
+
+Parser:
+* Fixed parsing scientific notation with decimal but no fractional part
+* Added support for parsing opaque types. Type system support coming soon.
+
 ### 0.48.0
 
 New Features:
