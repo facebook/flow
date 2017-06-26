@@ -219,6 +219,15 @@ let infer ~options ~profiling ~workers ~suppressions ~lint_settings infer_input 
     ) (FilenameMap.empty, suppressions, lint_settings) infer_results
   )
 
+let calc_deps ~options ~profiling ~workers to_merge =
+  with_timer ~options "CalcDeps" profiling (fun () ->
+    let dependency_graph = Dep_service.calc_dependency_graph workers to_merge in
+    let partition = Sort_js.topsort dependency_graph in
+    if Options.should_profile options then Sort_js.log partition;
+    let component_map = Sort_js.component_map partition in
+    dependency_graph, component_map
+  )
+
 let merge
     ~intermediate_result_callback
     ~options
@@ -322,13 +331,8 @@ let typecheck
        initially.
     *)
     Hh_logger.info "Calculating dependencies";
-    let profiling, dependency_graph =
-      with_timer ~options "CalcDeps" profiling (fun () ->
-        Dep_service.calc_dependency_graph workers to_merge
-      ) in
-    let partition = Sort_js.topsort dependency_graph in
-    if Options.should_profile options then Sort_js.log partition;
-    let component_map = Sort_js.component_map partition in
+    let profiling, (dependency_graph, component_map) =
+      calc_deps ~options ~profiling ~workers to_merge in
 
     Hh_logger.info "Merging";
     let profiling, merge_errors = try

@@ -16,6 +16,21 @@ val init:
   Options.t ->
   Profiling_js.t * FilenameSet.t * SSet.t * bool * ServerEnv.errors
 
+val infer:
+  options:Options.t ->
+  profiling:Profiling_js.t ->
+  workers:Worker.t list option ->
+  suppressions:Error_suppressions.t FilenameMap.t ->
+  filename list ->
+  Profiling_js.t * (Errors.ErrorSet.t FilenameMap.t * Error_suppressions.t FilenameMap.t)
+
+val calc_deps:
+  options:Options.t ->
+  profiling:Profiling_js.t ->
+  workers:Worker.t list option ->
+  filename list ->
+  Profiling_js.t * (FilenameSet.t FilenameMap.t * filename list FilenameMap.t)
+
 (* incremental typecheck entry point *)
 val recheck:
   options:Options.t ->
