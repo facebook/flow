@@ -31,6 +31,7 @@ addons:
       key_url: 'https://dl.yarnpkg.com/debian/pubkey.gpg'
     packages:
     - libelf-dev
+    - libgmp-dev # for opam's conf-gmp
     - aspcud
     - yarn
 
