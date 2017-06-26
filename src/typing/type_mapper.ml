@@ -319,7 +319,7 @@ class t = object(self)
     let exps = Context.find_exports cx id in
     let exps' = SMap.ident_map (self#type_ cx) exps in
     if exps == exps' then id
-    else Context.make_export_map cx (SMap.ident_map (self#type_ cx) exps')
+    else Context.make_export_map cx exps'
 
   method obj_type cx ({ flags; dict_t; props_tmap; proto_t} as t) =
     let dict_t' = OptionUtils.ident_map (self#dict_type cx) dict_t in
