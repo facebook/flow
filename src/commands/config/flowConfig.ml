@@ -349,7 +349,10 @@ end = struct
 
   let lints o config =
     let lint_settings = config.lint_settings in
-    fprintf o "all=%b\n" (LintSettings.get_default lint_settings);
+    let lint_default = LintSettings.get_default lint_settings in
+    (* Don't print an 'all' setting if it matches the default setting. *)
+    if (lint_default <> LintSettings.get_default LintSettings.default_settings) then
+      fprintf o "all=%b\n" lint_default;
     LintSettings.iter
       (fun kind enabled -> (fprintf o "%s=%b\n" (LintSettings.string_of_kind kind) enabled))
       lint_settings
