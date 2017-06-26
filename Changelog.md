@@ -1,3 +1,7 @@
+### 0.49.1
+
+Fixed an issue where `flow init` outputs a `[lints]` section (for experimental linting support, coming soon!) that includes `all=false`, which is already deprecated. Upcoming versions will support `all=off` instead.
+
 ### 0.49.0
 
 Notable bug fixes:
