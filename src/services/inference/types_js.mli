@@ -21,8 +21,13 @@ val infer:
   profiling:Profiling_js.t ->
   workers:Worker.t list option ->
   suppressions:Error_suppressions.t FilenameMap.t ->
+  lint_settings:SuppressionMap.t FilenameMap.t ->
   filename list ->
-  Profiling_js.t * (Errors.ErrorSet.t FilenameMap.t * Error_suppressions.t FilenameMap.t)
+  Profiling_js.t * (
+    Errors.ErrorSet.t FilenameMap.t *
+    Error_suppressions.t FilenameMap.t *
+    SuppressionMap.t FilenameMap.t
+  )
 
 val calc_deps:
   options:Options.t ->
