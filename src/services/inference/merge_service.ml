@@ -12,6 +12,11 @@ open Utils_js
 module Reqs = Merge_js.Reqs
 
 type 'a merge_results = (filename * ('a, exn) result) list
+type 'a merge_job =
+  options:Options.t ->
+  'a merge_results * filename list ->
+  filename list ->
+  'a merge_results * filename list
 
 (* To merge the contexts of a component (component_cxs) with their dependencies,
    we call the functions `merge_component_strict` and `restore` defined
@@ -127,7 +132,7 @@ let merge_contents_context ~options cx require_loc_map ~ensure_checked_dependenc
   |> ignore
 
 (* Entry point for merging a component *)
-let merge_strict_component ~options component =
+let merge_strict_component ~options (merged_acc, unchanged_acc) component =
   let file = List.hd component in
 
   (* We choose file as the leader, and other_files are followers. It is always
@@ -164,11 +169,15 @@ let merge_strict_component ~options component =
 
     let diff = Context_cache.add_merge_on_diff ~audit:Expensive.ok
       component_cxs md5 in
-    file, errors, diff
-  )
-  else file, Errors.ErrorSet.empty, true
 
-let merge_strict_job ~options (merged, unchanged) elements =
+    (file, Ok errors) :: merged_acc,
+    if diff then unchanged_acc else file :: unchanged_acc
+  )
+  else
+    (file, Ok Errors.ErrorSet.empty) :: merged_acc, unchanged_acc
+
+
+let merge_strict_job ~options ~job (merged, unchanged) elements =
   List.fold_left (fun (merged, unchanged) -> function
     | Merge_stream.Skip file ->
       (* Skip rechecking this file (because none of its dependencies changed).
@@ -194,10 +203,7 @@ let merge_strict_job ~options (merged, unchanged) elements =
           Flow_server_profile.merge ~length ~merge_time ~leader)
         ~f:(fun () ->
           (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
-          let file, errors, diff = merge_strict_component ~options component in
-          (* diff says whether its signature was changed *)
-          (file, Ok errors) :: merged,
-          if diff then unchanged else file :: unchanged
+          job ~options (merged, unchanged) component
         )
       with
       | SharedMem_js.Out_of_shared_memory
@@ -213,7 +219,7 @@ let merge_strict_job ~options (merged, unchanged) elements =
   ) (merged, unchanged) elements
 
 (* make a map from component leaders to components *)
-let merge_strict ~intermediate_result_callback ~options ~workers
+let merge_runner ~job ~intermediate_result_callback ~options ~workers
     dependency_graph component_map recheck_map =
   (* make a map from files to their component leaders *)
   let leader_map =
@@ -233,10 +239,12 @@ let merge_strict ~intermediate_result_callback ~options ~workers
       (* returns parallel lists of filenames and errorsets *)
       let merged, _ = MultiWorker.call
         workers
-        ~job: (merge_strict_job ~options)
+        ~job: (merge_strict_job ~options ~job)
         ~neutral: ([], [])
         ~merge: (Merge_stream.join intermediate_result_callback)
         ~next: (Merge_stream.make
                   dependency_graph leader_map component_map recheck_leader_map) in
       merged
     )
+
+let merge_strict = merge_runner ~job:merge_strict_component
