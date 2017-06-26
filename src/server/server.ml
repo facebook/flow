@@ -660,12 +660,14 @@ let collate_errors =
         (suggest ~options ~workers ~env files: ServerProt.suggest_response)
           |> marshal
     | ServerProt.CONNECT ->
-        let new_connections =
+        let new_connections, new_client =
           Persistent_connection.add_client
             !env.connections
             client
             client_logging_context
         in
+        (* See ideCommand.ml for a detailed explanation about why this is needed *)
+        Persistent_connection.send_ready new_client;
         env := {!env with connections = new_connections}
     end;
     !env
