@@ -156,9 +156,9 @@ function foo(): ThunkAction {
     dispatch({ type: "BAR", bar: true })
     doSomethingAsync(baz)
       .then(value => {
-  	    dispatch({ type: "FOO", foo: value })
+        dispatch({ type: "FOO", foo: value })
       })
-	}
+    }
 }
 ```
 

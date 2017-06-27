@@ -46,7 +46,7 @@ Valid values for COMMAND:
   version         Print version information
 
 Default values if unspecified:
-  COMMAND	status
+  COMMAND         status
 
 Status command options:
   --color              Display terminal output in color. never, always, auto (default: auto)
