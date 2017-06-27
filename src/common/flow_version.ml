@@ -8,4 +8,4 @@
  *
  *)
 
-let version = "0.49.0"
+let version = "0.49.1"
