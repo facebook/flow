@@ -233,6 +233,7 @@ begin library "flow-parser-utils"
   requires = [
     "flow-common-utils"
     "flow-parser"
+    "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
   ]

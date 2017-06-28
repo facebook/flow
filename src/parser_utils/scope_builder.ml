@@ -89,28 +89,29 @@ class hoister = object(this)
     bindings <- local_bindings @ saved_bindings;
     clause
 
-  (* Ignore let/const declarations. *)
-  method! lexical_variable_declarator_pattern (expr: Ast.Pattern.t) =
-    expr
-
-  (* Ignore class declarations. *)
+  (* Ignore class declarations, since they are lexical bindings (thus not
+     hoisted). *)
   method! class_ (cls: Ast.Class.t) =
     cls
 
-  (* This is visited by function parameters and var declarations (but not
-     assignment expressions or catch patterns or let/const declarations). *)
-  method! pattern (expr: Ast.Pattern.t) =
-    let open Ast.Pattern in
-    let _, patt = expr in
-    begin match patt with
-    | Identifier { Identifier.name; _ } ->
-      this#add_binding name
-    | Object _
-    | Array _
-    | Assignment _ -> ignore (super#pattern expr)
-    | Expression _ -> ()
-    end;
-    expr
+  (* This is visited by function parameters and variable declarations (but not
+     assignment expressions or catch patterns). *)
+  method! pattern ?kind (expr: Ast.Pattern.t) =
+    match Utils.unsafe_opt kind with
+    | Ast.Statement.VariableDeclaration.Var ->
+      let open Ast.Pattern in
+      let _, patt = expr in
+      begin match patt with
+      | Identifier { Identifier.name; _ } ->
+        this#add_binding name
+      | Object _
+      | Array _
+      | Assignment _ -> ignore (super#pattern ?kind expr)
+      | Expression _ -> ()
+      end;
+      expr
+    | Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const ->
+      expr (* don't hoist let/const bindings *)
 
   method! function_declaration (expr: Ast.Function.t) =
     let open Ast.Function in
@@ -136,7 +137,9 @@ class lexical_hoister = object(this)
     List.rev bindings
 
   (* Ignore all statements except variable declarations and class
-     declarations. *)
+     declarations. The ignored statements cannot contain lexical bindings,
+     unless they have substatements, but substatements can only have lexical
+     bindings under blocks, in which case they are not in the current scope. *)
   method! statement (stmt: Ast.Statement.t) =
     let open Ast.Statement in
     match stmt with
@@ -149,38 +152,22 @@ class lexical_hoister = object(this)
   method! expression (expr: Ast.Expression.t) =
     expr
 
-  (* Ignore var declarations. *)
-  method! variable_declarator_pattern (expr: Ast.Pattern.t) =
-    expr
-
-  (* This is visited by let and const declarations. *)
-  method! lexical_variable_declarator_pattern (expr: Ast.Pattern.t) =
-    let open Ast.Pattern in
-    let _, patt = expr in
-    begin match patt with
-    | Identifier { Identifier.name; _ } ->
-      this#add_binding name
-    | Object _
-    | Array _
-    | Assignment _ -> ignore (super#lexical_variable_declarator_pattern expr)
-    | _ -> ()
-    end;
-    expr
-
-  method! pattern_object_property_pattern (expr: Ast.Pattern.t) =
-    this#lexical_variable_declarator_pattern expr
-
-  method! pattern_object_rest_property_pattern (expr: Ast.Pattern.t) =
-    this#lexical_variable_declarator_pattern expr
-
-  method! pattern_array_element_pattern (expr: Ast.Pattern.t) =
-    this#lexical_variable_declarator_pattern expr
-
-  method! pattern_array_rest_element_pattern (expr: Ast.Pattern.t) =
-    this#lexical_variable_declarator_pattern expr
-
-  method! pattern_assignment_pattern (expr: Ast.Pattern.t) =
-    this#lexical_variable_declarator_pattern expr
+  (* This is visited by variable declarations. *)
+  method! variable_declarator_pattern ~kind (expr: Ast.Pattern.t) =
+    match kind with
+    | Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const ->
+      let open Ast.Pattern in
+      let _, patt = expr in
+      begin match patt with
+      | Identifier { Identifier.name; _ } ->
+        this#add_binding name
+      | Object _
+      | Array _
+      | Assignment _ -> ignore (super#variable_declarator_pattern ~kind expr)
+      | _ -> ()
+      end;
+      expr
+    | Ast.Statement.VariableDeclaration.Var -> expr
 
   method! class_ (cls: Ast.Class.t) =
     let open Ast.Class in
@@ -294,11 +281,11 @@ class walker = object(this)
       | Identifier { Identifier.name; _ } ->
         let loc, x = name in
         if List.mem loc bad_catch_params then [] else [loc, x]
-      | _ ->
+      | _ -> (* TODO *)
         []
     ) in
 
-    let _ = this#pattern param in
+    let _ = this#binding_pattern param in
     let _, block = body in
     let _ = this#block block in
 
@@ -325,8 +312,8 @@ class walker = object(this)
       (* hoisting *)
       let hoist = new hoister in
       begin
-        let param_list, _ = params in
-        List.iter (fun p -> ignore (hoist#pattern p)) param_list;
+        let param_list, _rest = params in
+        ignore (Flow_ast_mapper.ident_map hoist#function_param_pattern param_list);
         match body with
         | BodyBlock (_loc, block) ->
           ignore (hoist#block block)
@@ -340,7 +327,7 @@ class walker = object(this)
       let saved_state = this#push hoist#bindings in
 
       let (param_list, rest) = params in
-      List.iter (fun p -> ignore (this#pattern p)) param_list;
+      ignore (Flow_ast_mapper.ident_map this#function_param_pattern param_list);
       ignore (Flow_ast_mapper.opt this#function_rest_element rest);
 
       begin match body with
@@ -381,8 +368,8 @@ class walker = object(this)
       (* hoisting *)
       let hoist = new hoister in
       begin
-        let param_list, _ = params in
-        List.iter (fun p -> ignore (hoist#pattern p)) param_list;
+        let param_list, _rest = params in
+        ignore (Flow_ast_mapper.ident_map hoist#function_param_pattern param_list);
         match body with
         | BodyBlock (_loc, block) ->
           ignore (hoist#block block)
@@ -396,7 +383,7 @@ class walker = object(this)
       let _saved_state = this#push hoist#bindings in
 
       let (param_list, rest) = params in
-      List.iter (fun p -> ignore (this#pattern p)) param_list;
+      ignore (Flow_ast_mapper.ident_map this#function_param_pattern param_list);
       ignore (Flow_ast_mapper.opt this#function_rest_element rest);
 
       begin match body with

@@ -502,7 +502,7 @@ class mapper = object(this)
     let ident' = opt this#identifier ident in
     let params' =
       let (param_list, rest) = params in
-      let param_list' = ident_map this#function_pattern param_list in
+      let param_list' = ident_map this#function_param_pattern param_list in
       let rest' = opt this#function_rest_element rest in
       if param_list == param_list' && rest == rest' then params
       else (param_list', rest')
@@ -716,37 +716,41 @@ class mapper = object(this)
   method object_key_identifier (ident: Ast.Identifier.t) =
     this#identifier ident
 
-  method function_pattern (expr: Ast.Pattern.t) =
-    this#pattern expr
+  method function_param_pattern (expr: Ast.Pattern.t) =
+    this#binding_pattern expr
 
-  method variable_declarator_pattern (expr: Ast.Pattern.t) =
-    this#pattern expr
-
-  method lexical_variable_declarator_pattern (expr: Ast.Pattern.t) =
-    this#pattern expr
+  method variable_declarator_pattern ~kind (expr: Ast.Pattern.t) =
+    this#binding_pattern ~kind expr
 
   method catch_clause_pattern (expr: Ast.Pattern.t) =
-    this#pattern expr
+    this#binding_pattern expr
+
+  method binding_pattern ?(kind=Ast.Statement.VariableDeclaration.Var) (expr: Ast.Pattern.t) =
+    this#pattern ~kind expr
 
   method assignment_pattern (expr: Ast.Pattern.t) =
     this#pattern expr
 
-  method pattern (expr: Ast.Pattern.t) =
+  (* NOTE: Patterns are highly overloaded. A pattern can be a binding pattern,
+     which has a kind (Var/Let/Const, with Var being the default for all pre-ES5
+     bindings), or an assignment pattern, which has no kind. Subterms that are
+     patterns inherit the kind (or lack thereof). *)
+  method pattern ?kind (expr: Ast.Pattern.t) =
     let open Ast.Pattern in
     let (loc, patt) = expr in
     let patt' = match patt with
       | Object { Object.properties; typeAnnotation } ->
-        let properties' = ident_map this#pattern_object_p properties in
+        let properties' = ident_map (this#pattern_object_p ?kind) properties in
         let typeAnnotation' = opt this#type_annotation typeAnnotation in
         if properties' == properties && typeAnnotation' == typeAnnotation then patt
         else Object { Object.properties = properties'; typeAnnotation = typeAnnotation' }
       | Array { Array.elements; typeAnnotation } ->
-        let elements' = ident_map (opt this#pattern_array_e) elements in
+        let elements' = ident_map (opt (this#pattern_array_e ?kind)) elements in
         let typeAnnotation' = opt this#type_annotation typeAnnotation in
         if elements' == elements && typeAnnotation' == typeAnnotation then patt
         else Array { Array.elements = elements'; typeAnnotation = typeAnnotation' }
       | Assignment { Assignment.left; right } ->
-        let left' = this#pattern_assignment_pattern left in
+        let left' = this#pattern_assignment_pattern ?kind left in
         let right' = this#expression right in
         if left == left' && right == right' then patt
         else Assignment { Assignment.left = left'; right = right' }
@@ -756,61 +760,62 @@ class mapper = object(this)
         if name == name' && typeAnnotation == typeAnnotation' then patt
         else Identifier { Identifier.name = name'; typeAnnotation = typeAnnotation'; optional }
       | Expression e ->
+        (* TODO: wtf is this? *)
         id this#pattern_expression e patt (fun e -> Expression e)
     in
     if patt == patt' then expr else (loc, patt')
 
-  method pattern_object_p (p: Ast.Pattern.Object.property) =
+  method pattern_object_p ?kind (p: Ast.Pattern.Object.property) =
     let open Ast.Pattern.Object in
     match p with
     | Property (loc, prop) ->
-      id this#pattern_object_property prop p (fun prop -> Property (loc, prop))
+      id (this#pattern_object_property ?kind) prop p (fun prop -> Property (loc, prop))
     | RestProperty (loc, prop) ->
-      id this#pattern_object_rest_property prop p (fun prop -> RestProperty (loc, prop))
+      id (this#pattern_object_rest_property ?kind) prop p (fun prop -> RestProperty (loc, prop))
 
-  method pattern_object_property (prop: Ast.Pattern.Object.Property.t') =
+  method pattern_object_property ?kind (prop: Ast.Pattern.Object.Property.t') =
     let open Ast.Pattern.Object.Property in
     let { key; pattern; shorthand = _ } = prop in
-    let pattern' = this#pattern_object_property_pattern pattern in
+    let pattern' = this#pattern_object_property_pattern ?kind pattern in
     if pattern' == pattern then prop
     else { key; pattern = pattern'; shorthand = false }
 
-  method pattern_object_rest_property (prop: Ast.Pattern.Object.RestProperty.t') =
+  method pattern_object_rest_property ?kind (prop: Ast.Pattern.Object.RestProperty.t') =
     let open Ast.Pattern.Object.RestProperty in
     let { argument } = prop in
-    let argument' = this#pattern_object_rest_property_pattern argument in
+    let argument' = this#pattern_object_rest_property_pattern ?kind argument in
     if argument' == argument then prop
     else { argument = argument' }
 
-  method pattern_object_property_pattern (expr: Ast.Pattern.t) =
-    this#pattern expr
+  method pattern_object_property_pattern ?kind (expr: Ast.Pattern.t) =
+    this#pattern ?kind expr
 
-  method pattern_object_rest_property_pattern (expr: Ast.Pattern.t) =
-    this#pattern expr
+  method pattern_object_rest_property_pattern ?kind (expr: Ast.Pattern.t) =
+    this#pattern ?kind expr
 
-  method pattern_array_e (e: Ast.Pattern.Array.element) =
+  method pattern_array_e ?kind (e: Ast.Pattern.Array.element) =
     let open Ast.Pattern.Array in
     match e with
     | Element elem ->
-      id this#pattern_array_element_pattern elem e (fun elem -> Element elem)
+      id (this#pattern_array_element_pattern ?kind) elem e (fun elem -> Element elem)
     | RestElement (loc, elem) ->
-      id this#pattern_array_rest_element elem e (fun elem -> RestElement (loc, elem))
+      id (this#pattern_array_rest_element ?kind) elem e (fun elem -> RestElement (loc, elem))
 
-  method pattern_array_element_pattern (expr: Ast.Pattern.t) =
-    this#pattern expr
+  method pattern_array_element_pattern ?kind (expr: Ast.Pattern.t) =
+    this#pattern ?kind expr
 
-  method pattern_array_rest_element (elem: Ast.Pattern.Array.RestElement.t') =
+  method pattern_array_rest_element ?kind (elem: Ast.Pattern.Array.RestElement.t') =
     let open Ast.Pattern.Array.RestElement in
     let { argument } = elem in
-    let argument' = this#pattern_array_rest_element_pattern argument in
+    let argument' = this#pattern_array_rest_element_pattern ?kind argument in
     if argument' == argument then elem
     else { argument = argument' }
 
-  method pattern_array_rest_element_pattern (expr: Ast.Pattern.t) =
-    this#pattern expr
+  method pattern_array_rest_element_pattern ?kind (expr: Ast.Pattern.t) =
+    this#pattern ?kind expr
 
-  method pattern_assignment_pattern (expr: Ast.Pattern.t) =
-    this#pattern expr
+  method pattern_assignment_pattern ?kind (expr: Ast.Pattern.t) =
+    this#pattern ?kind expr
 
   method pattern_expression (expr: Ast.Expression.t) =
     this#expression expr
@@ -933,25 +938,14 @@ class mapper = object(this)
   method variable_declaration (decl: Ast.Statement.VariableDeclaration.t) =
     let open Ast.Statement.VariableDeclaration in
     let { declarations; kind } = decl in
-    let decls' = match kind with
-      | Var -> ident_map this#variable_declarator declarations
-      | Let | Const -> ident_map this#lexical_variable_declarator declarations
-    in
+    let decls' = ident_map (this#variable_declarator ~kind) declarations in
     if declarations == decls' then decl
     else { declarations = decls'; kind }
 
-  method variable_declarator (decl: Ast.Statement.VariableDeclaration.Declarator.t) =
+  method variable_declarator ~kind (decl: Ast.Statement.VariableDeclaration.Declarator.t) =
     let open Ast.Statement.VariableDeclaration.Declarator in
     let (loc, { id; init }) = decl in
-    let id' = this#variable_declarator_pattern id in
-    let init' = opt this#expression init in
-    if id == id' && init == init' then decl
-    else (loc, { id = id'; init = init' })
-
-  method lexical_variable_declarator (decl: Ast.Statement.VariableDeclaration.Declarator.t) =
-    let open Ast.Statement.VariableDeclaration.Declarator in
-    let (loc, { id; init }) = decl in
-    let id' = this#lexical_variable_declarator_pattern id in
+    let id' = this#variable_declarator_pattern ~kind id in
     let init' = opt this#expression init in
     if id == id' && init == init' then decl
     else (loc, { id = id'; init = init' })
