@@ -550,13 +550,41 @@ class mapper = object(this)
   method import_declaration (decl: Ast.Statement.ImportDeclaration.t) =
     let open Ast.Statement.ImportDeclaration in
     let { importKind; source; specifiers } = decl in
-    let specifiers' = ident_map this#import_specifier specifiers in
-    if specifiers == specifiers' then decl
-    else { importKind; source; specifiers = specifiers'; }
+    match importKind with
+    | ImportValue ->
+      let specifiers' = ident_map this#import_specifier specifiers in
+      if specifiers == specifiers' then decl
+      else { importKind; source; specifiers = specifiers'; }
+    | ImportType | ImportTypeof -> decl (* TODO *)
 
-  (* TODO *)
   method import_specifier (specifier: Ast.Statement.ImportDeclaration.specifier) =
-    specifier
+    let open Ast.Statement.ImportDeclaration in
+    match specifier with
+    | ImportNamedSpecifier { kind; local; remote } ->
+      begin match kind with
+      | None ->
+        let ident = match local with
+          | None -> remote
+          | Some ident -> ident in
+        id (this#import_named_specifier ~ident) local specifier
+          (fun local -> ImportNamedSpecifier { kind = None; local; remote })
+      | Some _importKind -> specifier (* TODO *)
+      end
+    | ImportDefaultSpecifier ident ->
+      id this#import_default_specifier ident specifier
+        (fun ident -> ImportDefaultSpecifier ident)
+    | ImportNamespaceSpecifier (loc, ident) ->
+      id this#import_namespace_specifier ident specifier
+        (fun ident -> ImportNamespaceSpecifier (loc, ident))
+
+  method import_named_specifier ~ident (local: Ast.Identifier.t option) =
+    id this#identifier ident local (fun ident -> Some ident)
+
+  method import_default_specifier (id: Ast.Identifier.t) =
+    this#identifier id
+
+  method import_namespace_specifier (id: Ast.Identifier.t) =
+    this#identifier id
 
   method jsx_element (expr: Ast.JSX.element) =
     let open Ast.JSX in

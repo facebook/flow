@@ -95,6 +95,11 @@ class hoister = object(this)
   method! class_ (cls: Ast.Class.t) =
     cls
 
+  (* Ignore import declarations, since they are lexical bindings (thus not
+     hoisted). *)
+  method! import_declaration (decl: Ast.Statement.ImportDeclaration.t) =
+    decl
+
   (* This is visited by function parameters and variable declarations (but not
      assignment expressions or catch patterns). *)
   method! pattern ?kind (expr: Ast.Pattern.t) =
@@ -137,15 +142,15 @@ class lexical_hoister = object(this)
   method bindings =
     List.rev bindings
 
-  (* Ignore all statements except variable declarations and class
-     declarations. The ignored statements cannot contain lexical bindings,
-     unless they have substatements, but substatements can only have lexical
-     bindings under blocks, in which case they are not in the current scope. *)
+  (* Ignore all statements except variable declarations, class declarations, and
+     import declarations. The ignored statements cannot contain lexical
+     bindings in the current scope. *)
   method! statement (stmt: Ast.Statement.t) =
     let open Ast.Statement in
     match stmt with
     | (_, VariableDeclaration _)
-    | (_, ClassDeclaration _) -> super#statement stmt
+    | (_, ClassDeclaration _)
+    | (_, ImportDeclaration _) -> super#statement stmt
     | _ -> stmt
 
   (* Ignore expressions. This includes, importantly, initializers of variable
@@ -182,6 +187,19 @@ class lexical_hoister = object(this)
     | None -> ()
     end;
     cls
+
+  method! import_named_specifier ~ident (local: Ast.Identifier.t option) =
+    this#add_binding ident;
+    local
+
+  method! import_default_specifier (id: Ast.Identifier.t) =
+    this#add_binding id;
+    id
+
+  method! import_namespace_specifier (id: Ast.Identifier.t) =
+    this#add_binding id;
+    id
+
 
 end
 
