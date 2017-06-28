@@ -54,5 +54,17 @@ array_lib.js:47
  47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
                                             ^^^ Number
 
+length.js:7
+  7: r.length = 6; //ng
+       ^^^^^^ property `length`. Covariant property `length` incompatible with contravariant use in
+  7: r.length = 6; //ng
+     ^^^^^^^^ assignment of property `length`
 
-Found 10 errors
+length.js:10
+ 10: t.length = 7; //ng
+       ^^^^^^ property `length`. Covariant property `length` incompatible with contravariant use in
+ 10: t.length = 7; //ng
+     ^^^^^^^^ assignment of property `length`
+
+
+Found 12 errors
