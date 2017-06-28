@@ -492,8 +492,8 @@ response.js:30
   851: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                                                                   ^^^^^^^^^^^^^^^^ union: $TypedArray | DataView. See lib: <BUILTINS>/bom.js:851
     Member 1:
-    696: type $ArrayBufferView = $TypedArray | DataView;
-                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:696
+    697: type $ArrayBufferView = $TypedArray | DataView;
+                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:697
     Error:
                                           v
      30: const i: Response = new Response({
@@ -502,11 +502,11 @@ response.js:30
     ...:
      35: }); // incorrect
          ^ object literal. This type is incompatible with
-    696: type $ArrayBufferView = $TypedArray | DataView;
-                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:696
+    697: type $ArrayBufferView = $TypedArray | DataView;
+                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:697
     Member 2:
-    696: type $ArrayBufferView = $TypedArray | DataView;
-                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:696
+    697: type $ArrayBufferView = $TypedArray | DataView;
+                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:697
     Error:
                                           v
      30: const i: Response = new Response({
@@ -515,8 +515,8 @@ response.js:30
     ...:
      35: }); // incorrect
          ^ object literal. This type is incompatible with
-    696: type $ArrayBufferView = $TypedArray | DataView;
-                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:696
+    697: type $ArrayBufferView = $TypedArray | DataView;
+                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:697
 
 response.js:42
  42: h.text().then((t: Buffer) => t); // incorrect
