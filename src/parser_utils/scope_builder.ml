@@ -93,6 +93,10 @@ class hoister = object(this)
   method! lexical_variable_declarator_pattern (expr: Ast.Pattern.t) =
     expr
 
+  (* Ignore class declarations. *)
+  method! class_ (cls: Ast.Class.t) =
+    cls
+
   (* This is visited by function parameters and var declarations (but not
      assignment expressions or catch patterns or let/const declarations). *)
   method! pattern (expr: Ast.Pattern.t) =
@@ -130,11 +134,13 @@ class lexical_hoister = object(this)
   method bindings =
     List.rev bindings
 
-  (* Ignore all statements except variable declarations *)
+  (* Ignore all statements except variable declarations and class
+     declarations. *)
   method! statement (stmt: Ast.Statement.t) =
     let open Ast.Statement in
     match stmt with
-    | (_, VariableDeclaration _) -> super#statement stmt
+    | (_, VariableDeclaration _)
+    | (_, ClassDeclaration _) -> super#statement stmt
     | _ -> stmt
 
   (* Ignore expressions. This includes, importantly, initializers of variable
@@ -157,6 +163,20 @@ class lexical_hoister = object(this)
       ()
     end;
     expr
+
+  method! class_ (cls: Ast.Class.t) =
+    let open Ast.Class in
+    let {
+      id; body = _; superClass = _;
+      typeParameters = _; superTypeParameters = _; implements = _; classDecorators = _;
+    } = cls in
+    begin match id with
+    | Some name ->
+      this#add_binding name
+    | None -> (* TODO *)
+      ()
+    end;
+    cls
 
 end
 
