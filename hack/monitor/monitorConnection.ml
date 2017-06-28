@@ -139,9 +139,9 @@ let connect_to_monitor ~timeout config =
      * only timeout if the Monitor is being very heavily DDOS'd, or the Monitor
      * has wedged itself (a bug).
      *
-     * The DDOS occurs when the Monitor's new connections queue (arriving on
-     * the socket) grows faster than they are being processed. This can happen
-     * in two scenarios:
+     * The DDOS occurs when the Monitor's new connections (arriving on
+     * the socket) queue grows faster than they are being processed. This can
+     * happen in two scenarios:
        * 1) Malicious DDOSer fills up new connection queue (incoming
        *    connections on the socket) quicker than the queue is being
        *    consumed.
@@ -150,8 +150,8 @@ let connect_to_monitor ~timeout config =
        *    (cancelled due to the timeout above) are being discarded by the
        *    monitor. This could happen from thousands of hh_clients being
        *    used to parallelize a job. This is effectively an inadvertent DDOS.
-       *    In detail, suppose the timeout above is set to 1 ssecond. 1000
-       *    thousand hh_client have timed out at the line above. Then these
+       *    In detail, suppose the timeout above is set to 1 ssecond and that
+       *    1000 thousand hh_client have timed out at the line above. Then these
        *    1000 clients will cancel the connection and retry. But the Monitor's
        *    connection queue still has these dead/canceled connections waiting
        *    to be processed. Suppose it takes the monitor longer than 1
@@ -195,7 +195,7 @@ let connect_once ~timeout config handoff_options =
   (* process. Implemented in establish_connection.                           *)
   (*   | catch EConnRefused/ENoEnt/Timeout 1s when lockfile present ->       *)
   (*     Result.Error Monitor_socket_not_ready.                              *)
-  (*       This is unexpected! But can happen if you manage to catch the ,   *)
+  (*       This is unexpected! But can happen if you manage to catch the     *)
   (*       monitor in the short timeframe after it has grabbed its lock but  *)
   (*       before it has started listening in on its socket.                 *)
   (*       -> "hh_client check/ide" -> retry from step 1, up to 800 times.   *)
