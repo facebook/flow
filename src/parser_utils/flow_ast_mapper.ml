@@ -722,6 +722,9 @@ class mapper = object(this)
   method variable_declarator_pattern (expr: Ast.Pattern.t) =
     this#pattern expr
 
+  method lexical_variable_declarator_pattern (expr: Ast.Pattern.t) =
+    this#pattern expr
+
   method catch_clause_pattern (expr: Ast.Pattern.t) =
     this#pattern expr
 
@@ -873,7 +876,10 @@ class mapper = object(this)
   method variable_declaration (decl: Ast.Statement.VariableDeclaration.t) =
     let open Ast.Statement.VariableDeclaration in
     let { declarations; kind } = decl in
-    let decls' = ident_map this#variable_declarator declarations in
+    let decls' = match kind with
+      | Var -> ident_map this#variable_declarator declarations
+      | Let | Const -> ident_map this#lexical_variable_declarator declarations
+    in
     if declarations == decls' then decl
     else { declarations = decls'; kind }
 
@@ -881,6 +887,14 @@ class mapper = object(this)
     let open Ast.Statement.VariableDeclaration.Declarator in
     let (loc, { id; init }) = decl in
     let id' = this#variable_declarator_pattern id in
+    let init' = opt this#expression init in
+    if id == id' && init == init' then decl
+    else (loc, { id = id'; init = init' })
+
+  method lexical_variable_declarator (decl: Ast.Statement.VariableDeclaration.Declarator.t) =
+    let open Ast.Statement.VariableDeclaration.Declarator in
+    let (loc, { id; init }) = decl in
+    let id' = this#lexical_variable_declarator_pattern id in
     let init' = opt this#expression init in
     if id == id' && init == init' then decl
     else (loc, { id = id'; init = init' })

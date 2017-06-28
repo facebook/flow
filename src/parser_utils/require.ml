@@ -20,12 +20,7 @@ class mapper ~default_jsx = object
     requires
 
   method! program (program: Ast.program) =
-    let walk = new Scope_builder.walker in
-    let hoist = new Scope_builder.hoister in
-    ignore (hoist#program program);
-    let saved_state = walk#push hoist#bindings in
-    let _ = walk#program program in
-    walk#pop saved_state;
+    let walk = Scope_builder.program program in
     renamings <- walk#renamings;
     super#program program
 

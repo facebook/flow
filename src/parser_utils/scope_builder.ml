@@ -89,8 +89,12 @@ class hoister = object(this)
     bindings <- local_bindings @ saved_bindings;
     clause
 
-  (* This is visited by function parameters and variable declarations (but not
-     assignment expressions or catch patterns). *)
+  (* Ignore let/const declarations. *)
+  method! lexical_variable_declarator_pattern (expr: Ast.Pattern.t) =
+    expr
+
+  (* This is visited by function parameters and var declarations (but not
+     assignment expressions or catch patterns or let/const declarations). *)
   method! pattern (expr: Ast.Pattern.t) =
     let open Ast.Pattern in
     let _, patt = expr in
@@ -115,6 +119,47 @@ class hoister = object(this)
 
 end
 
+class lexical_hoister = object(this)
+  inherit Flow_ast_mapper.mapper as super
+
+  val mutable bindings = []
+  method private add_binding (loc, x) =
+    bindings <- (loc, x) :: bindings
+
+  (* result *)
+  method bindings =
+    List.rev bindings
+
+  (* Ignore all statements except variable declarations *)
+  method! statement (stmt: Ast.Statement.t) =
+    let open Ast.Statement in
+    match stmt with
+    | (_, VariableDeclaration _) -> super#statement stmt
+    | _ -> stmt
+
+  (* Ignore expressions. This includes, importantly, initializers of variable
+     declarations. *)
+  method! expression (expr: Ast.Expression.t) =
+    expr
+
+  (* Ignore var declarations. *)
+  method! variable_declarator_pattern (expr: Ast.Pattern.t) =
+    expr
+
+  (* This is visited by let and const declarations. *)
+  method! lexical_variable_declarator_pattern (expr: Ast.Pattern.t) =
+    let open Ast.Pattern in
+    let _, patt = expr in
+    begin match patt with
+    | Identifier { Identifier.name; _ } ->
+      this#add_binding name
+    | _ -> (* TODO *)
+      ()
+    end;
+    expr
+
+end
+
 (* Walker class that prepares renamings for bindings, hoisting bindings one
    scope at a time.
 
@@ -133,7 +178,7 @@ end
    generate names (avoiding conflicts with globals) and rename those locations.
 *)
 class walker = object(this)
-  inherit Flow_ast_mapper.mapper
+  inherit Flow_ast_mapper.mapper as super
 
   val mutable env = SMap.empty
 
@@ -191,6 +236,14 @@ class walker = object(this)
 
   (* don't rename the `foo` in `{ foo: ... }` *)
   method! object_key_identifier (id: Ast.Identifier.t) = id
+
+  method! block (stmt: Ast.Statement.Block.t) =
+    let lexical_hoist = new lexical_hoister in
+    ignore (lexical_hoist#block stmt);
+    let saved_state = this#push lexical_hoist#bindings in
+    ignore (super#block stmt);
+    this#pop saved_state;
+    stmt
 
   method! catch_clause (clause: Ast.Statement.Try.CatchClause.t') =
     let open Ast.Statement.Try.CatchClause in
@@ -323,3 +376,19 @@ class walker = object(this)
 
     expr
 end
+
+let program ?(ignore_toplevel=false) (program: Ast.program) =
+  let walk = new walker in
+  let f () = ignore (walk#program program) in
+  begin
+    if ignore_toplevel then f ()
+    else
+      let hoist = new hoister in
+      ignore (hoist#program program);
+      let lexical_hoist = new lexical_hoister in
+      ignore (lexical_hoist#program program);
+      let saved_state = walk#push (lexical_hoist#bindings @ hoist#bindings) in
+      f ();
+      walk#pop saved_state
+  end;
+  walk
