@@ -37,6 +37,7 @@ end
 
    TODO: Ideally implemented as a fold, not a map.
 *)
+type bindings = (Loc.t * string) list
 class hoister = object(this)
   inherit Flow_ast_mapper.mapper as super
 
@@ -232,6 +233,12 @@ class walker = object(this)
     env <- old_env;
     counter <- save_counter
 
+  method with_bindings: 'a. bindings -> ('a -> 'a) -> 'a -> 'a = fun bindings visit node ->
+    let saved_state = this#push bindings in
+    let node' = visit node in
+    this#pop saved_state;
+    node'
+
   (* map of identifier locations to positions in the name stream *)
   val mutable renamings = LocMap.empty
   method renamings = renamings
@@ -264,14 +271,11 @@ class walker = object(this)
   method! block (stmt: Ast.Statement.Block.t) =
     let lexical_hoist = new lexical_hoister in
     ignore (lexical_hoist#block stmt);
-    let saved_state = this#push lexical_hoist#bindings in
-    ignore (super#block stmt);
-    this#pop saved_state;
-    stmt
+    this#with_bindings lexical_hoist#bindings super#block stmt
 
   method! for_in_statement (stmt: Ast.Statement.ForIn.t) =
     let open Ast.Statement.ForIn in
-    let { left; right; body; each = _ } = stmt in
+    let { left; right = _; body = _; each = _ } = stmt in
 
     let lexical_hoist = new lexical_hoister in
     begin match left with
@@ -279,18 +283,11 @@ class walker = object(this)
       ignore (lexical_hoist#variable_declaration decl)
     | _ -> ()
     end;
-    let saved_state = this#push lexical_hoist#bindings in
-
-    ignore (this#for_in_statement_lhs left);
-    ignore (this#expression right);
-    ignore (this#statement body);
-
-    this#pop saved_state;
-    stmt
+    this#with_bindings lexical_hoist#bindings super#for_in_statement stmt
 
   method! for_of_statement (stmt: Ast.Statement.ForOf.t) =
     let open Ast.Statement.ForOf in
-    let { left; right; body; async = _ } = stmt in
+    let { left; right = _; body = _; async = _ } = stmt in
 
     let lexical_hoist = new lexical_hoister in
     begin match left with
@@ -298,18 +295,11 @@ class walker = object(this)
       ignore (lexical_hoist#variable_declaration decl)
     | _ -> ()
     end;
-    let saved_state = this#push lexical_hoist#bindings in
-
-    ignore (this#for_of_statement_lhs left);
-    ignore (this#expression right);
-    ignore (this#statement body);
-
-    this#pop saved_state;
-    stmt
+    this#with_bindings lexical_hoist#bindings super#for_of_statement stmt
 
   method! for_statement (stmt: Ast.Statement.For.t) =
     let open Ast.Statement.For in
-    let { init; test; update; body } = stmt in
+    let { init; test = _; update = _; body = _ } = stmt in
 
     let lexical_hoist = new lexical_hoister in
     begin match init with
@@ -317,22 +307,13 @@ class walker = object(this)
       ignore (lexical_hoist#variable_declaration decl)
     | _ -> ()
     end;
-    let saved_state = this#push lexical_hoist#bindings in
-
-    ignore (Flow_ast_mapper.opt this#for_statement_init init);
-    ignore (Flow_ast_mapper.opt this#expression test);
-    ignore (Flow_ast_mapper.opt this#expression update);
-    ignore (this#statement body);
-
-    this#pop saved_state;
-    stmt
+    this#with_bindings lexical_hoist#bindings super#for_statement stmt
 
   method! catch_clause (clause: Ast.Statement.Try.CatchClause.t') =
     let open Ast.Statement.Try.CatchClause in
-    let { param; body } = clause in
+    let { param; body = _ } = clause in
 
-    (* pushing *)
-    let saved_state = this#push (
+    this#with_bindings (
       let open Ast.Pattern in
       let _, patt = param in
       match patt with
@@ -341,14 +322,7 @@ class walker = object(this)
         if List.mem loc bad_catch_params then [] else [loc, x]
       | _ -> (* TODO *)
         []
-    ) in
-
-    let _ = this#binding_pattern param in
-    let _, block = body in
-    let _ = this#block block in
-
-    this#pop saved_state;
-    clause
+    ) super#catch_clause clause
 
   method! function_declaration (expr: Ast.Function.t) =
     let contains_with_or_eval =
@@ -461,16 +435,13 @@ end
 
 let program ?(ignore_toplevel=false) (program: Ast.program) =
   let walk = new walker in
-  let f () = ignore (walk#program program) in
-  begin
-    if ignore_toplevel then f ()
+  let _ =
+    if ignore_toplevel then walk#program program
     else
       let hoist = new hoister in
       ignore (hoist#program program);
       let lexical_hoist = new lexical_hoister in
       ignore (lexical_hoist#program program);
-      let saved_state = walk#push (lexical_hoist#bindings @ hoist#bindings) in
-      f ();
-      walk#pop saved_state
-  end;
+      walk#with_bindings (lexical_hoist#bindings @ hoist#bindings) walk#program program
+  in
   walk
