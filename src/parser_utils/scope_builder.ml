@@ -41,7 +41,7 @@ class hoister = object(this)
   inherit Flow_ast_mapper.mapper
 
   val mutable bindings = []
-  method private add_binding (_loc, x) =
+  method private add_binding (loc, x) =
     (* `event` is a global in old IE and jsxmin lazily avoids renaming it. it
        should be safe to shadow it, i.e. `function(event){event.target}` can be
        renamed to `function(a){a.target}`, because code relying on the global
@@ -51,7 +51,7 @@ class hoister = object(this)
 
        TODO[jsxmin]: remove this. *)
     if x = "event" then () else
-    bindings <- x :: bindings
+    bindings <- (loc, x) :: bindings
 
   (* result *)
   method bindings =
@@ -82,7 +82,7 @@ class hoister = object(this)
     begin match patt with
     | Identifier { Identifier.name; _ } ->
       let loc, x = name in
-      if List.mem x local_bindings
+      if List.exists (fun (_loc, x') -> x = x') local_bindings
       then bad_catch_params <- loc :: bad_catch_params
     | _ -> ();
     end;
@@ -147,10 +147,10 @@ class walker = object(this)
     result
 
   method private mk_env =
-    List.fold_left (fun map x ->
+    List.fold_left (fun map (loc, x) ->
       match SMap.get x map with
       | Some _ -> map
-      | None -> SMap.add x (this#next) map
+      | None -> SMap.add x (loc, this#next) map
     ) SMap.empty
 
   method push bindings =
@@ -169,7 +169,7 @@ class walker = object(this)
 
   (* map of positions in the name stream to globals they conflict with *)
   val mutable globals = IMap.empty
-  method private add_global x i =
+  method private add_global x (_loc, i) =
     let iglobals = try IMap.find_unsafe i globals with _ -> SSet.empty in
     globals <- IMap.add i (SSet.add x iglobals) globals
   method globals = globals
@@ -181,7 +181,7 @@ class walker = object(this)
   method! identifier (expr: Ast.Identifier.t) =
     let loc, x = expr in
     begin match SMap.get x env with
-    | Some i -> renamings <- LocMap.add loc i renamings
+    | Some (def_loc, i) -> renamings <- LocMap.add loc (def_loc, i) renamings
     | None -> SMap.iter (fun _ -> this#add_global x) env
     end;
     expr
@@ -203,7 +203,7 @@ class walker = object(this)
       match patt with
       | Identifier { Identifier.name; _ } ->
         let loc, x = name in
-        if List.mem loc bad_catch_params then [] else [x]
+        if List.mem loc bad_catch_params then [] else [loc, x]
       | _ ->
         []
     ) in
@@ -285,7 +285,7 @@ class walker = object(this)
       } = expr in
 
       (* pushing *)
-      let saved_state = this#push (match id with Some (_, x) -> [x] | None -> []) in
+      let saved_state = this#push (match id with Some (loc, x) -> [loc, x] | None -> []) in
       ignore (Flow_ast_mapper.opt this#identifier id);
 
       (* hoisting *)
