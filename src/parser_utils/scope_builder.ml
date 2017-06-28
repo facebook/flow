@@ -269,6 +269,64 @@ class walker = object(this)
     this#pop saved_state;
     stmt
 
+  method! for_in_statement (stmt: Ast.Statement.ForIn.t) =
+    let open Ast.Statement.ForIn in
+    let { left; right; body; each = _ } = stmt in
+
+    let lexical_hoist = new lexical_hoister in
+    begin match left with
+    | LeftDeclaration (_, decl) ->
+      ignore (lexical_hoist#variable_declaration decl)
+    | _ -> ()
+    end;
+    let saved_state = this#push lexical_hoist#bindings in
+
+    ignore (this#for_in_statement_lhs left);
+    ignore (this#expression right);
+    ignore (this#statement body);
+
+    this#pop saved_state;
+    stmt
+
+  method! for_of_statement (stmt: Ast.Statement.ForOf.t) =
+    let open Ast.Statement.ForOf in
+    let { left; right; body; async = _ } = stmt in
+
+    let lexical_hoist = new lexical_hoister in
+    begin match left with
+    | LeftDeclaration (_, decl) ->
+      ignore (lexical_hoist#variable_declaration decl)
+    | _ -> ()
+    end;
+    let saved_state = this#push lexical_hoist#bindings in
+
+    ignore (this#for_of_statement_lhs left);
+    ignore (this#expression right);
+    ignore (this#statement body);
+
+    this#pop saved_state;
+    stmt
+
+  method! for_statement (stmt: Ast.Statement.For.t) =
+    let open Ast.Statement.For in
+    let { init; test; update; body } = stmt in
+
+    let lexical_hoist = new lexical_hoister in
+    begin match init with
+    | Some (InitDeclaration (_, decl)) ->
+      ignore (lexical_hoist#variable_declaration decl)
+    | _ -> ()
+    end;
+    let saved_state = this#push lexical_hoist#bindings in
+
+    ignore (Flow_ast_mapper.opt this#for_statement_init init);
+    ignore (Flow_ast_mapper.opt this#expression test);
+    ignore (Flow_ast_mapper.opt this#expression update);
+    ignore (this#statement body);
+
+    this#pop saved_state;
+    stmt
+
   method! catch_clause (clause: Ast.Statement.Try.CatchClause.t') =
     let open Ast.Statement.Try.CatchClause in
     let { param; body } = clause in
