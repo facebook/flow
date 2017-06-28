@@ -38,7 +38,7 @@ end
    TODO: Ideally implemented as a fold, not a map.
 *)
 class hoister = object(this)
-  inherit Flow_ast_mapper.mapper
+  inherit Flow_ast_mapper.mapper as super
 
   val mutable bindings = []
   method private add_binding (loc, x) =
@@ -105,8 +105,10 @@ class hoister = object(this)
     begin match patt with
     | Identifier { Identifier.name; _ } ->
       this#add_binding name
-    | _ -> (* TODO *)
-      ()
+    | Object _
+    | Array _
+    | Assignment _ -> ignore (super#pattern expr)
+    | Expression _ -> ()
     end;
     expr
 
@@ -116,8 +118,7 @@ class hoister = object(this)
     begin match id with
     | Some name ->
       this#add_binding name
-    | None -> (* TODO *)
-      ()
+    | None -> ()
     end;
     expr
 
@@ -159,10 +160,27 @@ class lexical_hoister = object(this)
     begin match patt with
     | Identifier { Identifier.name; _ } ->
       this#add_binding name
-    | _ -> (* TODO *)
-      ()
+    | Object _
+    | Array _
+    | Assignment _ -> ignore (super#lexical_variable_declarator_pattern expr)
+    | _ -> ()
     end;
     expr
+
+  method! pattern_object_property_pattern (expr: Ast.Pattern.t) =
+    this#lexical_variable_declarator_pattern expr
+
+  method! pattern_object_rest_property_pattern (expr: Ast.Pattern.t) =
+    this#lexical_variable_declarator_pattern expr
+
+  method! pattern_array_element_pattern (expr: Ast.Pattern.t) =
+    this#lexical_variable_declarator_pattern expr
+
+  method! pattern_array_rest_element_pattern (expr: Ast.Pattern.t) =
+    this#lexical_variable_declarator_pattern expr
+
+  method! pattern_assignment_pattern (expr: Ast.Pattern.t) =
+    this#lexical_variable_declarator_pattern expr
 
   method! class_ (cls: Ast.Class.t) =
     let open Ast.Class in
@@ -173,8 +191,7 @@ class lexical_hoister = object(this)
     begin match id with
     | Some name ->
       this#add_binding name
-    | None -> (* TODO *)
-      ()
+    | None -> ()
     end;
     cls
 

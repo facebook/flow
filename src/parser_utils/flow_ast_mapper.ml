@@ -731,17 +731,22 @@ class mapper = object(this)
   method assignment_pattern (expr: Ast.Pattern.t) =
     this#pattern expr
 
-  method pattern_pattern (expr: Ast.Pattern.t) =
-    this#pattern expr
-
   method pattern (expr: Ast.Pattern.t) =
     let open Ast.Pattern in
     let (loc, patt) = expr in
     let patt' = match patt with
-      | Object _ -> patt (* TODO *)
-      | Array _ -> patt (* TODO *)
+      | Object { Object.properties; typeAnnotation } ->
+        let properties' = ident_map this#pattern_object_p properties in
+        let typeAnnotation' = opt this#type_annotation typeAnnotation in
+        if properties' == properties && typeAnnotation' == typeAnnotation then patt
+        else Object { Object.properties = properties'; typeAnnotation = typeAnnotation' }
+      | Array { Array.elements; typeAnnotation } ->
+        let elements' = ident_map (opt this#pattern_array_e) elements in
+        let typeAnnotation' = opt this#type_annotation typeAnnotation in
+        if elements' == elements && typeAnnotation' == typeAnnotation then patt
+        else Array { Array.elements = elements'; typeAnnotation = typeAnnotation' }
       | Assignment { Assignment.left; right } ->
-        let left' = this#pattern_pattern left in
+        let left' = this#pattern_assignment_pattern left in
         let right' = this#expression right in
         if left == left' && right == right' then patt
         else Assignment { Assignment.left = left'; right = right' }
@@ -754,6 +759,58 @@ class mapper = object(this)
         id this#pattern_expression e patt (fun e -> Expression e)
     in
     if patt == patt' then expr else (loc, patt')
+
+  method pattern_object_p (p: Ast.Pattern.Object.property) =
+    let open Ast.Pattern.Object in
+    match p with
+    | Property (loc, prop) ->
+      id this#pattern_object_property prop p (fun prop -> Property (loc, prop))
+    | RestProperty (loc, prop) ->
+      id this#pattern_object_rest_property prop p (fun prop -> RestProperty (loc, prop))
+
+  method pattern_object_property (prop: Ast.Pattern.Object.Property.t') =
+    let open Ast.Pattern.Object.Property in
+    let { key; pattern; shorthand = _ } = prop in
+    let pattern' = this#pattern_object_property_pattern pattern in
+    if pattern' == pattern then prop
+    else { key; pattern = pattern'; shorthand = false }
+
+  method pattern_object_rest_property (prop: Ast.Pattern.Object.RestProperty.t') =
+    let open Ast.Pattern.Object.RestProperty in
+    let { argument } = prop in
+    let argument' = this#pattern_object_rest_property_pattern argument in
+    if argument' == argument then prop
+    else { argument = argument' }
+
+  method pattern_object_property_pattern (expr: Ast.Pattern.t) =
+    this#pattern expr
+
+  method pattern_object_rest_property_pattern (expr: Ast.Pattern.t) =
+    this#pattern expr
+
+  method pattern_array_e (e: Ast.Pattern.Array.element) =
+    let open Ast.Pattern.Array in
+    match e with
+    | Element elem ->
+      id this#pattern_array_element_pattern elem e (fun elem -> Element elem)
+    | RestElement (loc, elem) ->
+      id this#pattern_array_rest_element elem e (fun elem -> RestElement (loc, elem))
+
+  method pattern_array_element_pattern (expr: Ast.Pattern.t) =
+    this#pattern expr
+
+  method pattern_array_rest_element (elem: Ast.Pattern.Array.RestElement.t') =
+    let open Ast.Pattern.Array.RestElement in
+    let { argument } = elem in
+    let argument' = this#pattern_array_rest_element_pattern argument in
+    if argument' == argument then elem
+    else { argument = argument' }
+
+  method pattern_array_rest_element_pattern (expr: Ast.Pattern.t) =
+    this#pattern expr
+
+  method pattern_assignment_pattern (expr: Ast.Pattern.t) =
+    this#pattern expr
 
   method pattern_expression (expr: Ast.Expression.t) =
     this#expression expr
