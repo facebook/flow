@@ -37,8 +37,10 @@ val is_suppressed: lint_kind -> t -> bool
 val iter: (lint_kind -> bool * Loc.t option -> unit) -> t -> unit
 (* Fold over all lint kinds with an explicit setting *)
 val fold: (lint_kind -> bool * Loc.t option -> 'a -> 'a) -> t -> 'a -> 'a
+(* Map over all lint kinds with an explicit setting *)
+val map: (bool * Loc.t option -> bool * Loc.t option) -> t -> t
 (* Merge two LintSettings, with rules in higher_precedence overwriting
  * rules in lower_precedencse. *)
 val merge: low_prec:t -> high_prec:t -> t
 
-val of_lines: ('a * string) list -> (t, 'a * string) result
+val of_lines: (int * string) list -> (t, int * string) result

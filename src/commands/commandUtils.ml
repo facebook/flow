@@ -424,7 +424,7 @@ end
 let parse_lints_flag flag =
     let flag = Option.value flag ~default:"" in
     let lines = Str.split_delim (Str.regexp ",") flag
-      |> List.map (fun s -> ((), s)) in
+      |> List.map (fun s -> (1, s)) in
     match LintSettings.of_lines lines with
     | Ok settings -> settings
     | Error (_, msg) ->

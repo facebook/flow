@@ -83,6 +83,11 @@ let iter f settings =
 let fold f settings acc =
   LintMap.fold f settings.explicit_settings acc
 
+(* Map over all lint kinds with an explicit setting *)
+let map f settings =
+  let new_explicit = LintMap.map f settings.explicit_settings in
+  {settings with explicit_settings = new_explicit}
+
 (* Merge two LintSettings, with rules in higher_precedence overwriting
  * rules in lower_precedencse. *)
 let merge ~low_prec ~high_prec =
@@ -96,7 +101,7 @@ type parse_result =
 (* Takes a list of labeled lines and returns the corresponding LintSettings.t if
  * successful. Otherwise, returns an error message along with the label of the
  * line it failed on. *)
-let of_lines lint_lines =
+let of_lines =
 
   let parse_value label = function
     | "on" -> Ok true
@@ -106,8 +111,9 @@ let of_lines lint_lines =
   in
 
   let eq_regex = Str.regexp "=" in
+  let all_regex = Str.regexp "all" in
 
-  let parse_line (label, line) =
+  let parse_line (loc, (label, line)) =
     match Str.split_delim eq_regex line with
     | [left; right] ->
       let left = left |> String.trim in
@@ -117,7 +123,7 @@ let of_lines lint_lines =
         | "all" -> Ok (AllSetting (all_setting value))
         | _ ->
           try
-            Ok (EntryList (kinds_of_string left, (value, None)))
+            Ok (EntryList (kinds_of_string left, (value, Some loc)))
           with Not_found ->
             Error (label, (Printf.sprintf "Invalid lint rule \"%s\" encountered." left))
       )
@@ -134,10 +140,55 @@ let of_lines lint_lines =
     | line::lines ->
       Result.bind (parse_line line)
         (fun result ->
-          let new_acc = match result with
-            | EntryList (keys, value) -> add_settings keys value acc
-            | AllSetting setting -> setting
-          in loop new_acc lines)
+          match result with
+            | EntryList (keys, value) ->
+              loop (add_settings keys value acc) lines
+            | AllSetting setting ->
+              if acc == default_settings then loop setting lines
+              else Error (line |> snd |> fst,
+                "\"all\" is only allowed as the first setting. Settings are order-sensitive.")
+        )
   in
 
-  loop default_settings lint_lines
+  let loc_of_line line =
+    let open Loc in
+    let start = {line; column = 0; offset = 0} in
+    let _end = {line = line + 1; column = 0; offset = 0} in
+    {source = None; start; _end}
+  in
+
+  fun lint_lines ->
+    let locate_fun =
+      let index = ref 0 in
+      fun item ->
+        let res = (loc_of_line !index, item) in
+        index := !index + 1; res
+    in
+
+    (* Artificially locate the lines to detect unused lines *)
+    let located_lines = List.map locate_fun lint_lines in
+    let settings = loop default_settings located_lines in
+
+    Result.bind settings (fun settings ->
+        let used_locs = fold
+          (fun _kind (_enabled, loc) acc ->
+            Option.value_map loc ~f:(fun loc -> Loc.LocSet.add loc acc) ~default:acc)
+          settings Loc.LocSet.empty
+        in
+        let first_unused = List.fold_left
+          (fun acc (art_loc, (label, line)) ->
+            match acc with
+              | Some _ -> acc
+              | None ->
+                if Loc.LocSet.mem art_loc used_locs
+                  || Str.string_match all_regex (String.trim line) 0
+                then None else Some label
+          ) None located_lines
+        in
+        match first_unused with
+          | Some label -> Error (label, "Redundant argument. "
+            ^ "The values set by this argument are completely overwritten.")
+          | None ->
+            (* Remove the artificial locations before returning the result *)
+            Ok (map (fun (enabled, _loc) -> (enabled, None)) settings)
+    )
