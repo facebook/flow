@@ -113,7 +113,7 @@ let detect_sketchy_null_checks cx =
   let exist_checks = Context.exist_checks cx in
   let detect_function prop_loc = function
     | (Some null_loc, Some falsey_loc) -> Context.add_error cx (Errors.mk_error
-        ~kind:(Errors.LintError LintSettings.SketchyNullMixed) (* TODO: Track actual error type *)
+        ~kind:(Errors.LintError LintSettings.SketchyNullMixed) (* TODO (rballard): Track actual error type *)
         ~extra:[Errors.InfoLeaf [
           null_loc, ["Potentially null/undefined value."];
           falsey_loc, ["Potentially falsey value."]

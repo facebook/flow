@@ -1,5 +1,5 @@
 //setting up for next test
-//flowlint sketchy-null:off
+/*flowlint sketchy-null:off*/ //unused suppression
 
 //error: not a real lint or setting, but sketchy-null is still enabled
 /*flowlint not-a-real-lint : not-a-real-setting   ,
@@ -50,7 +50,7 @@ if (x1) { /* sketchy */ }
  * sketchy-null-bool:off,
  * sketchy-null-mixed:off
  *
- */
+ */ /* The bool suppression is unused because currently all sketchy null checks are reported as mixed. */
 
 var x2: ?bool = false;
 if (x2) { /* sketchy; suppressed */ }
@@ -61,7 +61,7 @@ if (x2) { /* sketchy; suppressed */ }
  *    on,
  * sketchy-null-bool:
  *    off
- */
+ */ //The bool suppression is unused
 
 var x3: ?string = "";
 if (x3) { /* sketchy */ }
@@ -107,7 +107,7 @@ function m(o: { p: ?number }) {
 
 // union
 function n(o: { p: number|null|void }) {
-  // flowlint sketchy-null:off
+  /*flowlint sketchy-null:off*/ //Unused suppression
   // flowlint-next-line sketchy-null:on
   if (o.p) { /* sketchy */ }
   // flowlint sketchy-null:on
@@ -141,7 +141,7 @@ var alwaysTrue = true || value; /* NOT sketchy */
 
 //flowlint sketchy-null:on
 var val2: ?number = 0;
-//flowlint sketchy-null:off
+/*flowlint sketchy-null:off*/ //Unused suppression
 
 var sketchyFalse = val2 && false; /* sketchy */ /*flowlint-next-line sketchy-null:on*/ /* flowlint-line sketchy-null:on */
 var sketchyTrue = val2 || true; /* sketchy */

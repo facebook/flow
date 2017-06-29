@@ -18,6 +18,10 @@ test.js:13
  13: //flowlint-line sketchy-null:on
                      ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
 
+test.js:15
+ 15: /*flowlint sketchy-null:off*/ //Unused suppression
+                ^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+
 test.js:16
  16: //flowlint sketchy-null:off
                 ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
@@ -58,6 +62,18 @@ test.js:38
  38: //flowlint-line sketchy-null-bool:on, sketchy-null:off
                      ^^^^^^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
 
+test.js:43
+ 43: /*flowlint sketchy-null:on, sketchy-null-bool:off*/ //Unused suppression
+                                 ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+
+test.js:44
+ 44: /*flowlint-line sketchy-null:on, sketchy-null-bool:off*/ //Unused suppression
+                                      ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+
+test.js:50
+ 50: //flowlint sketchy-null:on, sketchy-null:on
+                ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
 test.js:50
  50: //flowlint sketchy-null:on, sketchy-null:on
                                  ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
@@ -69,6 +85,14 @@ test.js:51
 test.js:51
  51: //flowlint-line sketchy-null:on, sketchy-null:on
                                       ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+test.js:53
+ 53: /*Clearing the settings; not an error.*/ /*flowlint sketchy-null:off*/ //Unused suppression
+                                                         ^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+
+test.js:54
+ 54: //flowlint sketchy-null:off, sketchy-null:off
+                ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
 
 test.js:54
  54: //flowlint sketchy-null:off, sketchy-null:off
@@ -90,5 +114,29 @@ test.js:61
  61: //flowlint-line sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
                      ^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
 
+test.js:66
+ 66: /*flowlint sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                 ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
-Found 23 errors
+test.js:66
+ 66: /*flowlint sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+
+test.js:66
+ 66: /*flowlint sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+
+test.js:67
+ 67: /*flowlint-line sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                      ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+
+test.js:67
+ 67: /*flowlint-line sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                                             ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+
+test.js:67
+ 67: /*flowlint-line sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+
+
+Found 35 errors

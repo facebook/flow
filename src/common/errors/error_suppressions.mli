@@ -14,9 +14,9 @@ val empty : t
 val is_empty : t -> bool
 val add : Loc.t -> t -> t
 val union : t -> t -> t
+val set_unused_lint_suppressions : Loc.LocSet.t -> t -> t
 val check : Errors.error -> SuppressionMap.t -> t -> (bool * Loc.LocSet.t * t)
 val unused : t -> Loc.t list
-val cardinal : t -> int
 
 (* combines suppressions collated by filename into one collection *)
 val union_suppressions : t Utils_js.FilenameMap.t -> t

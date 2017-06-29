@@ -17,7 +17,6 @@ $FLOW status .
 
 cp test3.js.fixture test.js
 printf "\nAfter fixing the lint error, leaving the suppression:\n"
-printf "(TODO: check for unused lint suppressions)\n"
 $FLOW force-recheck test.js
 $FLOW status .
 

@@ -1,3 +1,7 @@
+simple_sketchies.js:2
+  2: /*flowlint sketchy-null:off*/ //unused suppression
+                ^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+
 simple_sketchies.js:5
   5: /*flowlint not-a-real-lint : not-a-real-setting   ,
                 ^^^^^^^^^^^^^^^ Nonexistent/misspelled lint rule. Perhaps you have a missing/extra ','?
@@ -21,6 +25,16 @@ simple_sketchies.js:44
                ^^^^^ Potentially null/undefined value.
    43: var x1: ?bool = false;
                 ^^^^ Potentially falsey value.
+
+simple_sketchies.js:50
+ 50:  * sketchy-null-bool:off,
+        ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+
+simple_sketchies.js:62
+        v-----------------
+ 62:  * sketchy-null-bool:
+ 63:  *    off
+      -------^ Error suppressing comment. Unused suppression
 
 simple_sketchies.js:67
  67: if (x3) { /* sketchy */ }
@@ -46,6 +60,10 @@ simple_sketchies.js:89
    93: s(unknown_str); // possibly falsey, sketchy
          ^^^^^^^^^^^ Potentially falsey value.
 
+simple_sketchies.js:110
+110:   /*flowlint sketchy-null:off*/ //Unused suppression
+                  ^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+
 simple_sketchies.js:112
 112:   if (o.p) { /* sketchy */ }
            ^^^ Sketchy null check. Perhaps you meant to check for null instead of for existence?
@@ -61,6 +79,10 @@ simple_sketchies.js:129
 simple_sketchies.js:142
 142: //flowlint sketchy-null:on
                 ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+
+simple_sketchies.js:144
+144: /*flowlint sketchy-null:off*/ //Unused suppression
+                ^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
 simple_sketchies.js:146
 146: var sketchyFalse = val2 && false; /* sketchy */ /*flowlint-next-line sketchy-null:on*/ /* flowlint-line sketchy-null:on */
@@ -95,4 +117,4 @@ simple_sketchies.js:155
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Malformed lint rule. Properly formed rules contain a single ':' character. Perhaps you have a missing/extra ','?
 
 
-Found 16 errors
+Found 21 errors

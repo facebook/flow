@@ -17,8 +17,12 @@ After suppressing the lint error:
 No errors!
 
 After fixing the lint error, leaving the suppression:
-(TODO: check for unused lint suppressions)
-No errors!
+test.js:4
+  4: //flowlint-next-line sketchy-null:off
+                          ^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+
+
+Found 1 error
 
 After removing the unused suppression:
 No errors!

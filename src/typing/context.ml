@@ -356,6 +356,8 @@ let set_type_graph cx type_graph =
   cx.local.type_graph <- type_graph
 let set_tvar cx id node =
   cx.local.graph <- IMap.add id node cx.local.graph
+let set_unused_lint_suppressions cx suppressions = cx.local.error_suppressions <-
+  Error_suppressions.set_unused_lint_suppressions suppressions cx.local.error_suppressions
 let set_exist_checks cx exist_checks =
   cx.local.exist_checks <- exist_checks
 
