@@ -50,7 +50,7 @@ if (x1) { /* sketchy */ }
  * sketchy-null-bool:off,
  * sketchy-null-mixed:off
  *
- */ /* The bool suppression is unused because currently all sketchy null checks are reported as mixed. */
+ */
 
 var x2: ?bool = false;
 if (x2) { /* sketchy; suppressed */ }

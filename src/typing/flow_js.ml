@@ -8066,36 +8066,34 @@ and filter_optional cx ?trace reason opt_t =
     flow_opt_t cx ?trace (opt_t, DefT (reason, OptionalT t))
   )
 
-and update_sketchy_null =
-  let loc_if_nonempty = function
-    | DefT (_, EmptyT) -> None
-    | t -> Some (loc_of_t t)
-  in
-  let loc_if_null_or_undefined t =
-    t |> filter_maybe |> loc_if_nonempty
-  in
-
-  let loc_if_real_falsey t =
-    t |> filter_not_exists |> filter_not_maybe |> loc_if_nonempty
-  in
-
-  fun cx opt_loc t ->
-    match t with
-    | DefT (_, AnyT) -> ()
-    | _ ->
-      match opt_loc with
-      | None -> ()
-      | Some loc ->
-        let exist_checks = Context.exist_checks cx in
-        let check = (loc_if_null_or_undefined t, loc_if_real_falsey t) in
-        let check =
-          match LocMap.get loc exist_checks with
-          | None -> check
-          | Some check' ->
-            match check, check' with
-            | (n, f), (n', f') -> Option.first_some n n', Option.first_some f f'
-        in
-        Context.set_exist_checks cx (LocMap.add loc check exist_checks)
+and update_sketchy_null cx opt_loc t =
+  let open ExistsCheck in
+  match t with
+  (* Ignore AnyTs for sketchy null checks; otherwise they'd always trigger the lint. *)
+  | DefT (_, AnyT) -> ()
+  | _ ->
+    match opt_loc with
+    | None -> ()
+    | Some loc ->
+      let t_loc = Some (loc_of_t t) in
+      let exists_checks = Context.exists_checks cx in
+      let exists_check = LocMap.get loc exists_checks |> Option.value ~default:ExistsCheck.empty in
+      let exists_check = match filter_maybe t with
+        | DefT (_, EmptyT) -> exists_check
+        | _ -> {exists_check with null_loc = t_loc}
+      in
+      let exists_check = match t |> filter_not_exists |> filter_not_maybe with
+        | DefT (_, BoolT _) -> {exists_check with bool_loc = t_loc}
+        | DefT (_, StrT _) -> {exists_check with string_loc = t_loc}
+        | DefT (_, NumT _) -> {exists_check with number_loc = t_loc}
+        | DefT (_, MixedT _) -> {exists_check with mixed_loc = t_loc}
+        | _ -> exists_check
+      in
+      let exists_checks = if exists_check = ExistsCheck.empty
+        then exists_checks
+        else LocMap.add loc exists_check exists_checks
+      in
+      Context.set_exists_checks cx exists_checks
 
 (**********)
 (* guards *)
