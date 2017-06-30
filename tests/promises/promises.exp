@@ -37,16 +37,16 @@ all.js:19
 all.js:24
  24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
      ^^^^^^^^^^^^^ call of method `all`
-676:     static all<Elem, T:Iterable<Elem>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                            ^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in possibly undefined value. See lib: <BUILTINS>/core.js:676
+677:     static all<Elem, T:Iterable<Elem>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+                            ^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in possibly undefined value. See lib: <BUILTINS>/core.js:677
  24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
      ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters)
 
 all.js:27
  27: Promise.all(0); // Error: expected array instead of number
      ^^^^^^^^^^^^^^ call of method `all`
-676:     static all<Elem, T:Iterable<Elem>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                            ^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/core.js:676
+677:     static all<Elem, T:Iterable<Elem>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+                            ^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/core.js:677
  27: Promise.all(0); // Error: expected array instead of number
                  ^ number
 
@@ -73,11 +73,11 @@ promise.js:30
  31:     resolve(0);
  32:   }));
        -^ Promise. This type is incompatible with
-661:       resolve: (result: Promise<R> | R) => void,
-                             ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `R` of constructor call. See lib: <BUILTINS>/core.js:661
+662:       resolve: (result: Promise<R> | R) => void,
+                             ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `R` of constructor call. See lib: <BUILTINS>/core.js:662
   Member 1:
-  661:       resolve: (result: Promise<R> | R) => void,
-                               ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:661
+  662:       resolve: (result: Promise<R> | R) => void,
+                               ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:662
   Error:
    35:   var b: string = num; // Error: number ~> string
                          ^^^ number. This type is incompatible with
@@ -108,11 +108,11 @@ promise.js:41
  42:       resolve(0);
  43:     }));
          -^ Promise. This type is incompatible with
-661:       resolve: (result: Promise<R> | R) => void,
-                             ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `R` of constructor call. See lib: <BUILTINS>/core.js:661
+662:       resolve: (result: Promise<R> | R) => void,
+                             ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `R` of constructor call. See lib: <BUILTINS>/core.js:662
   Member 1:
-  661:       resolve: (result: Promise<R> | R) => void,
-                               ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:661
+  662:       resolve: (result: Promise<R> | R) => void,
+                               ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:662
   Error:
    47:   var b: string = num; // Error: number ~> string
                          ^^^ number. This type is incompatible with
@@ -147,11 +147,11 @@ promise.js:117
 promise.js:121
 121: Promise.resolve(Promise.resolve(0)).then(function(num) {
                      ^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-674:     static resolve<T>(object: Promise<T> | T): Promise<T>;
-                                   ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `T` of call of method `resolve`. See lib: <BUILTINS>/core.js:674
+675:     static resolve<T>(object: Promise<T> | T): Promise<T>;
+                                   ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `T` of call of method `resolve`. See lib: <BUILTINS>/core.js:675
   Member 1:
-  674:     static resolve<T>(object: Promise<T> | T): Promise<T>;
-                                     ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:674
+  675:     static resolve<T>(object: Promise<T> | T): Promise<T>;
+                                     ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:675
   Error:
   123:   var b: string = num; // Error: number ~> string
                          ^^^ number. This type is incompatible with
@@ -169,11 +169,11 @@ promise.js:121
 promise.js:127
 127: Promise.resolve(Promise.resolve(Promise.resolve(0))).then(function(num) {
                                      ^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-674:     static resolve<T>(object: Promise<T> | T): Promise<T>;
-                                   ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `T` of call of method `resolve`. See lib: <BUILTINS>/core.js:674
+675:     static resolve<T>(object: Promise<T> | T): Promise<T>;
+                                   ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `T` of call of method `resolve`. See lib: <BUILTINS>/core.js:675
   Member 1:
-  674:     static resolve<T>(object: Promise<T> | T): Promise<T>;
-                                     ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:674
+  675:     static resolve<T>(object: Promise<T> | T): Promise<T>;
+                                     ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:675
   Error:
   129:   var b: string = num; // Error: number ~> string
                          ^^^ number. This type is incompatible with
@@ -197,11 +197,11 @@ promise.js:161
 promise.js:166
 166:   .then(function(num) { return Promise.resolve('asdf'); })
                                     ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-666:       onFulfill?: (value: R) => Promise<U> | U,
-                                     ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `U` of call of method `then`. See lib: <BUILTINS>/core.js:666
+667:       onFulfill?: (value: R) => Promise<U> | U,
+                                     ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `U` of call of method `then`. See lib: <BUILTINS>/core.js:667
   Member 1:
-  666:       onFulfill?: (value: R) => Promise<U> | U,
-                                       ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:666
+  667:       onFulfill?: (value: R) => Promise<U> | U,
+                                       ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:667
   Error:
   169:     var b: number = str; // Error: string ~> number
                            ^^^ string. This type is incompatible with
@@ -221,11 +221,11 @@ promise.js:166
 promise.js:174
 174:   .then(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                     ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-674:     static resolve<T>(object: Promise<T> | T): Promise<T>;
-                                   ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `T` of call of method `resolve`. See lib: <BUILTINS>/core.js:674
+675:     static resolve<T>(object: Promise<T> | T): Promise<T>;
+                                   ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `T` of call of method `resolve`. See lib: <BUILTINS>/core.js:675
   Member 1:
-  674:     static resolve<T>(object: Promise<T> | T): Promise<T>;
-                                     ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:674
+  675:     static resolve<T>(object: Promise<T> | T): Promise<T>;
+                                     ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:675
   Error:
   177:     var b: number = str; // Error: string ~> number
                            ^^^ string. This type is incompatible with
@@ -249,11 +249,11 @@ promise.js:201
 promise.js:206
 206:   .catch(function(num) { return Promise.resolve('asdf'); })
                                      ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-671:       onReject?: (error: any) => Promise<U> | U
-                                      ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `U` of call of method `catch`. See lib: <BUILTINS>/core.js:671
+672:       onReject?: (error: any) => Promise<U> | U
+                                      ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `U` of call of method `catch`. See lib: <BUILTINS>/core.js:672
   Member 1:
-  671:       onReject?: (error: any) => Promise<U> | U
-                                        ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:671
+  672:       onReject?: (error: any) => Promise<U> | U
+                                        ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:672
   Error:
   209:     var b: number = str; // Error: string ~> number
                            ^^^ string. This type is incompatible with
@@ -273,11 +273,11 @@ promise.js:206
 promise.js:214
 214:   .catch(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                      ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-674:     static resolve<T>(object: Promise<T> | T): Promise<T>;
-                                   ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `T` of call of method `resolve`. See lib: <BUILTINS>/core.js:674
+675:     static resolve<T>(object: Promise<T> | T): Promise<T>;
+                                   ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `T` of call of method `resolve`. See lib: <BUILTINS>/core.js:675
   Member 1:
-  674:     static resolve<T>(object: Promise<T> | T): Promise<T>;
-                                     ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:674
+  675:     static resolve<T>(object: Promise<T> | T): Promise<T>;
+                                     ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:675
   Error:
   217:     var b: number = str; // Error: string ~> number
                            ^^^ string. This type is incompatible with
@@ -325,16 +325,16 @@ resolve_void.js:3
 resolve_void.js:5
   5: (Promise.resolve(undefined): Promise<number>); // error
                       ^^^^^^^^^ undefined. This type is incompatible with
-674:     static resolve<T>(object: Promise<T> | T): Promise<T>;
-                                   ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `T` of call of method `resolve`. See lib: <BUILTINS>/core.js:674
+675:     static resolve<T>(object: Promise<T> | T): Promise<T>;
+                                   ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `T` of call of method `resolve`. See lib: <BUILTINS>/core.js:675
   Member 1:
-  674:     static resolve<T>(object: Promise<T> | T): Promise<T>;
-                                     ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:674
+  675:     static resolve<T>(object: Promise<T> | T): Promise<T>;
+                                     ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:675
   Error:
     5: (Promise.resolve(undefined): Promise<number>); // error
                         ^^^^^^^^^ undefined. This type is incompatible with
-  674:     static resolve<T>(object: Promise<T> | T): Promise<T>;
-                                     ^^^^^^^^^^ Promise. See lib: <BUILTINS>/core.js:674
+  675:     static resolve<T>(object: Promise<T> | T): Promise<T>;
+                                     ^^^^^^^^^^ Promise. See lib: <BUILTINS>/core.js:675
   Member 2:
     5: (Promise.resolve(undefined): Promise<number>); // error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^ type parameter `T` of call of method `resolve`
