@@ -7,5 +7,5 @@
 [options]
 
 [lints]
-sketchy-null=on
+sketchy-null=error
 all=off

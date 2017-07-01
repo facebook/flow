@@ -16,20 +16,31 @@ type lint_kind =
 
 val string_of_kind: lint_kind -> string
 
-val kinds_of_string: string -> lint_kind list
+val kinds_of_string: string -> lint_kind list option
+
+type lint_state =
+  | Off
+  | Warn
+  | Err
+
+val string_of_state: lint_state -> string
+
+val state_of_string: string -> lint_state option
 
 type t
 
 val default_settings: t
 
-val all_setting: bool -> t
+val all_setting: lint_state -> t
 
-val set_enabled: lint_kind -> (bool * Loc.t option) -> t -> t
+val set_state: lint_kind -> (lint_state * Loc.t option) -> t -> t
 
-val set_all: (lint_kind * (bool * Loc.t option)) list -> t -> t
+val set_all: (lint_kind * (lint_state * Loc.t option)) list -> t -> t
 
-val get_default: t -> bool
-
+val get_default: t -> lint_state
+(* Get the state of a lint kind in the provided settings *)
+val get_state: lint_kind -> t -> lint_state
+(* True iff get_state returns Warn or Err, false otherwise *)
 val is_enabled: lint_kind -> t -> bool
 (* Always the logical opposite of is_enabled *)
 val is_suppressed: lint_kind -> t -> bool
@@ -37,11 +48,11 @@ val is_suppressed: lint_kind -> t -> bool
  * the active value was not set by a comment *)
 val get_loc: lint_kind -> t -> Loc.t option
 (* Iterate over all lint kinds with an explicit setting *)
-val iter: (lint_kind -> bool * Loc.t option -> unit) -> t -> unit
+val iter: (lint_kind -> lint_state * Loc.t option -> unit) -> t -> unit
 (* Fold over all lint kinds with an explicit setting *)
-val fold: (lint_kind -> bool * Loc.t option -> 'a -> 'a) -> t -> 'a -> 'a
+val fold: (lint_kind -> lint_state * Loc.t option -> 'a -> 'a) -> t -> 'a -> 'a
 (* Map over all lint kinds with an explicit setting *)
-val map: (bool * Loc.t option -> bool * Loc.t option) -> t -> t
+val map: (lint_state * Loc.t option -> lint_state * Loc.t option) -> t -> t
 (* Merge two LintSettings, with rules in higher_precedence overwriting
  * rules in lower_precedencse. *)
 val merge: low_prec:t -> high_prec:t -> t

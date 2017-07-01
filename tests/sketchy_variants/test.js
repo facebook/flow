@@ -1,4 +1,4 @@
-//flowlint sketchy-null:on
+//flowlint sketchy-null:error
 var x: bool|mixed|number|string = null
 
 //Four errors: one for each type
@@ -23,17 +23,17 @@ if (x){}
 //flowlint sketchy-null:off
 
 //Only bool error
-//flowlint-next-line sketchy-null-bool:on
+//flowlint-next-line sketchy-null-bool:error
 if (x){}
 
 //Only mixed error
-//flowlint-next-line sketchy-null-mixed:on
+//flowlint-next-line sketchy-null-mixed:error
 if (x){}
 
 //Only number error
-//flowlint-next-line sketchy-null-number:on
+//flowlint-next-line sketchy-null-number:error
 if (x){}
 
 //Only string error
-//flowlint-next-line sketchy-null-string:on
+//flowlint-next-line sketchy-null-string:error
 if (x){}

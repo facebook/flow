@@ -38,10 +38,10 @@ type builder
 (* Create a new builder for the provided file, using the provided base settings *)
 val new_builder: Loc.filename -> LintSettings.t -> builder
 (* Change the settings in the provided range by adding the provided settings list.
- * In the settings list, the kind is the type of lint, the bool is the enabled setting,
+ * In the settings list, the kind is the type of lint, the lint_state is the state to set to,
  * and the location is the position of the setting in the source code. *)
 val update_settings:
-  Loc.t -> (LintSettings.lint_kind * (bool * Loc.t)) list -> builder -> builder
+  Loc.t -> (LintSettings.lint_kind * (LintSettings.lint_state * Loc.t)) list -> builder -> builder
 (* Works similarly to update_settings, but takes two additional parameters: a running
  * LintSettings object and an error function. The LintSettings object is updated with
  * the new lint settings (in addition to the builder being updated), and if any redundant
@@ -55,7 +55,7 @@ val update_settings_and_running:
   LintSettings.t ->
   (Loc.t -> string -> unit) ->
   Loc.t ->
-  (LintSettings.lint_kind * (bool * Loc.t)) list list ->
+  (LintSettings.lint_kind * (LintSettings.lint_state * Loc.t)) list list ->
   builder ->
   builder * LintSettings.t
 

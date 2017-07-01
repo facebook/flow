@@ -1,3 +1,3 @@
 #!/bin/bash
 FLOW=$1
-"$FLOW" check . --all --lints "all=on"
+"$FLOW" check . --all --lints "all=error"

@@ -21,12 +21,28 @@ let string_of_kind = function
   | SketchyNullMixed -> "sketchy-null-mixed"
 
 let kinds_of_string = function
-  | "sketchy-null" -> [SketchyNullBool; SketchyNullString; SketchyNullNumber; SketchyNullMixed]
-  | "sketchy-null-bool" -> [SketchyNullBool]
-  | "sketchy-null-string" -> [SketchyNullString]
-  | "sketchy-null-number" -> [SketchyNullNumber]
-  | "sketchy-null-mixed" -> [SketchyNullMixed]
-  | _ -> raise Not_found
+  | "sketchy-null" -> Some [SketchyNullBool; SketchyNullString; SketchyNullNumber; SketchyNullMixed]
+  | "sketchy-null-bool" -> Some [SketchyNullBool]
+  | "sketchy-null-string" -> Some [SketchyNullString]
+  | "sketchy-null-number" -> Some [SketchyNullNumber]
+  | "sketchy-null-mixed" -> Some [SketchyNullMixed]
+  | _ -> None
+
+type lint_state =
+  | Off
+  | Warn
+  | Err
+
+let string_of_state = function
+  | Off -> "off"
+  | Warn -> "warn"
+  | Err -> "error"
+
+let state_of_string = function
+ | "off" -> Some Off
+ | "warn" -> Some Warn
+ | "error" -> Some Err
+ | _ -> None
 
 module LintKind = struct
   type t = lint_kind
@@ -36,41 +52,46 @@ end
 module LintMap = MyMap.Make(LintKind)
 
 type t = {
-  (* Whether to throw an error if the error kind isn't found in the map *)
-  default_err: bool;
-  (* Whether default_err has been explicitly set by an "all=..." command
+  (* The default state of a lint if the lint kind isn't found in the map *)
+  default_state: lint_state;
+  (* Whether default_state has been explicitly set by an "all=..." command
    * (used in merge) *)
   all_encountered: bool;
   (* Settings for lints that have been explicitly mentioned *)
   (* The Loc.t is for settings defined in comments, and is used to find unused lint
    * suppressions. The Loc.t is set to None for settings coming from the flowconfig or --lints.*)
-  explicit_settings: (bool * Loc.t option) LintMap.t;
+  explicit_settings: (lint_state * Loc.t option) LintMap.t;
 }
 
 let default_settings = {
-  default_err = false;
+  default_state = Off;
   all_encountered = false;
   explicit_settings = LintMap.empty
 }
 
-let all_setting default_err = {
-  default_err;
+let all_setting default_state = {
+  default_state;
   all_encountered = true;
   explicit_settings = LintMap.empty
 }
 
-let set_enabled key value settings =
+let set_state key value settings =
   let new_map = LintMap.add key value settings.explicit_settings
   in {settings with explicit_settings = new_map}
 
 let set_all entries settings =
-  List.fold_left (fun settings (key, value) -> set_enabled key value settings) settings entries
+  List.fold_left (fun settings (key, value) -> set_state key value settings) settings entries
 
-let get_default settings = settings.default_err
+let get_default settings = settings.default_state
+
+let get_state lint_kind settings =
+  LintMap.get lint_kind settings.explicit_settings
+  |> Option.value_map ~f:fst ~default:settings.default_state
 
 let is_enabled lint_kind settings =
-  LintMap.get lint_kind settings.explicit_settings
-  |> Option.value_map ~f:fst ~default:settings.default_err
+  match get_state lint_kind settings with
+  | Err | Warn -> true
+  | Off -> false
 
 let is_suppressed lint_kind settings =
   is_enabled lint_kind settings |> not
@@ -96,22 +117,22 @@ let map f settings =
  * rules in lower_precedencse. *)
 let merge ~low_prec ~high_prec =
   if high_prec.all_encountered then high_prec
-  else fold set_enabled high_prec low_prec
+  else fold set_state high_prec low_prec
 
 type parse_result =
 | AllSetting of t
-| EntryList of lint_kind list * (bool * Loc.t option)
+| EntryList of lint_kind list * (lint_state * Loc.t option)
 
 (* Takes a list of labeled lines and returns the corresponding LintSettings.t if
  * successful. Otherwise, returns an error message along with the label of the
  * line it failed on. *)
 let of_lines =
 
-  let parse_value label = function
-    | "on" -> Ok true
-    | "off" -> Ok false
-    | _ -> Error (label,
-      "Invalid setting encountered. Valid settings are on and off.")
+  let parse_value label value =
+    match state_of_string value with
+      | Some state -> Ok state
+      | None -> Error (label,
+        "Invalid setting encountered. Valid settings are error, warn, and off.")
   in
 
   let eq_regex = Str.regexp "=" in
@@ -126,17 +147,17 @@ let of_lines =
         match left with
         | "all" -> Ok (AllSetting (all_setting value))
         | _ ->
-          try
-            Ok (EntryList (kinds_of_string left, (value, Some loc)))
-          with Not_found ->
-            Error (label, (Printf.sprintf "Invalid lint rule \"%s\" encountered." left))
+          begin match kinds_of_string left with
+            | Some kinds -> Ok (EntryList (kinds, (value, Some loc)))
+            | None -> Error (label, (Printf.sprintf "Invalid lint rule \"%s\" encountered." left))
+          end
       )
     | _ -> Error (label,
       "Malformed lint rule. Properly formed rules contain a single '=' character.")
   in
 
   let add_settings keys value settings =
-    List.fold_left (fun settings key -> set_enabled key value settings) settings keys
+    List.fold_left (fun settings key -> set_state key value settings) settings keys
   in
 
   let rec loop acc = function

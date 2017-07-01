@@ -8,5 +8,5 @@
 
 [lints]
 all=off
-sketchy-null-bool=on
+sketchy-null-bool=error
 sketchy-null=off

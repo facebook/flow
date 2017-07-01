@@ -1,3 +1,3 @@
 #!/bin/bash
 FLOW=$1
-"$FLOW" check . --all --lints "sketchy-null=on,all=off"
+"$FLOW" check . --all --lints "sketchy-null=error,all=off"

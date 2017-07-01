@@ -8,7 +8,7 @@
 
 [lints]
 all=off
-sketchy-null-bool=on
-sketchy-null-string=on
-sketchy-null-number=on
-sketchy-null-mixed=on
+sketchy-null-bool=error
+sketchy-null-string=error
+sketchy-null-number=error
+sketchy-null-mixed=error
