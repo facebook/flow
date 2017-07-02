@@ -123,10 +123,11 @@ type parse_result =
 | AllSetting of t
 | EntryList of lint_kind list * (lint_state * Loc.t option)
 
-(* Takes a list of labeled lines and returns the corresponding LintSettings.t if
+(* Takes a base LintSettings and a list of labeled lines and returns the corresponding
+ * LintSettings.t from applying the new lines on top of the base settings if
  * successful. Otherwise, returns an error message along with the label of the
  * line it failed on. *)
-let of_lines =
+let of_lines base_settings =
 
   let parse_value label value =
     match state_of_string value with
@@ -157,7 +158,15 @@ let of_lines =
   in
 
   let add_settings keys value settings =
-    List.fold_left (fun settings key -> set_state key value settings) settings keys
+    let (new_settings, all_redundant) = List.fold_left (fun (settings, all_redundant) key ->
+        let all_redundant = all_redundant && get_state key settings = fst value in
+        let settings = set_state key value settings in
+        (settings, all_redundant))
+      (settings, true) keys
+    in
+    if all_redundant
+      then Error "Redundant argument. This argument doesn't change any lint settings."
+      else Ok new_settings
   in
 
   let rec loop acc = function
@@ -167,9 +176,12 @@ let of_lines =
         (fun result ->
           match result with
             | EntryList (keys, value) ->
-              loop (add_settings keys value acc) lines
+              begin match add_settings keys value acc with
+                | Ok settings -> loop settings lines
+                | Error msg -> Error (line |> snd |> fst, msg)
+              end
             | AllSetting setting ->
-              if acc == default_settings then loop setting lines
+              if acc == base_settings then loop setting lines
               else Error (line |> snd |> fst,
                 "\"all\" is only allowed as the first setting. Settings are order-sensitive.")
         )
@@ -192,7 +204,7 @@ let of_lines =
 
     (* Artificially locate the lines to detect unused lines *)
     let located_lines = List.map locate_fun lint_lines in
-    let settings = loop default_settings located_lines in
+    let settings = loop base_settings located_lines in
 
     Result.bind settings (fun settings ->
         let used_locs = fold

@@ -825,7 +825,7 @@ let parse_version config lines =
   | _ -> config
 
 let parse_lints config lines =
-  match LintSettings.of_lines lines with
+  match LintSettings.of_lines LintSettings.default_settings lines with
   | Ok lint_settings -> {config with lint_settings}
   | Error (ln, msg) -> error ln msg
 
