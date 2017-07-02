@@ -100,24 +100,24 @@ crypto/crypto.js:16
          ^^^^^^^^^^^^^^^ call of method `write`
  16:     hmac.write(123); // 2 errors: not a string or a Buffer
                     ^^^ number. This type is incompatible with
-1315:     chunk: Buffer | string,
-                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1315
+1316:     chunk: Buffer | string,
+                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1316
   Member 1:
-  1315:     chunk: Buffer | string,
-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1315
+  1316:     chunk: Buffer | string,
+                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1316
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  1315:     chunk: Buffer | string,
-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1315
+  1316:     chunk: Buffer | string,
+                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1316
   Member 2:
-  1315:     chunk: Buffer | string,
-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1315
+  1316:     chunk: Buffer | string,
+                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1316
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  1315:     chunk: Buffer | string,
-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1315
+  1316:     chunk: Buffer | string,
+                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1316
 
 crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error
@@ -154,27 +154,27 @@ fs/fs.js:13
  15: });
      -^ call of method `readFile`. Could not decide which case to select
                                 v
-802:   declare function readFile(
-803:     filename: string,
-804:     callback: (err: ?ErrnoError, data: Buffer) => void
-805:   ): void;
-       ------^ intersection type. See lib: <BUILTINS>/node.js:802
+803:   declare function readFile(
+804:     filename: string,
+805:     callback: (err: ?ErrnoError, data: Buffer) => void
+806:   ): void;
+       ------^ intersection type. See lib: <BUILTINS>/node.js:803
   Case 3 may work:
                                   v
-  811:   declare function readFile(
-  812:     filename: string,
-  813:     options: { encoding: string; flag?: string },
-  814:     callback: (err: ?ErrnoError, data: string) => void
-  815:   ): void;
-         ------^ function type. See lib: <BUILTINS>/node.js:811
+  812:   declare function readFile(
+  813:     filename: string,
+  814:     options: { encoding: string; flag?: string },
+  815:     callback: (err: ?ErrnoError, data: string) => void
+  816:   ): void;
+         ------^ function type. See lib: <BUILTINS>/node.js:812
   But if it doesn't, case 4 looks promising too:
                                   v
-  816:   declare function readFile(
-  817:     filename: string,
-  818:     options: { flag?: string },
-  819:     callback: (err: ?ErrnoError, data: Buffer) => void
-  820:   ): void;
-         ------^ function type. See lib: <BUILTINS>/node.js:816
+  817:   declare function readFile(
+  818:     filename: string,
+  819:     options: { flag?: string },
+  820:     callback: (err: ?ErrnoError, data: Buffer) => void
+  821:   ): void;
+         ------^ function type. See lib: <BUILTINS>/node.js:817
   Please provide additional annotation(s) to determine whether case 3 works (or consider merging it with case 4):
    13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
                                                       ^ parameter `_`
@@ -335,8 +335,8 @@ process/nextTick.js:26
      ^ call of method `nextTick`
  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
            ^^^^^^ string. This type is incompatible with
-1728:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1728
+1729:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1729
 
 process/nextTick.js:26
      v----------------
@@ -346,8 +346,8 @@ process/nextTick.js:26
      ^ call of method `nextTick`
  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
                       ^^^^^^ number. This type is incompatible with
-1728:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1728
+1729:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1729
 
 process/nextTick.js:26
      v----------------
@@ -357,8 +357,8 @@ process/nextTick.js:26
      ^ call of method `nextTick`
  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
                                  ^^^^^^^ boolean. This type is incompatible with
-1728:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1728
+1729:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1729
 
 
 Found 40 errors
