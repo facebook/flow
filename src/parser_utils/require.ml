@@ -20,8 +20,9 @@ class mapper ~default_jsx = object
     requires
 
   method! program (program: Ast.program) =
-    let walk = Scope_builder.program program in
-    renamings <- walk#renamings;
+    let { Scope_builder.Acc.renamings = _renamings; _ } =
+      Scope_builder.program program in
+    renamings <- _renamings;
     super#program program
 
   method! call (expr: Ast.Expression.Call.t) =

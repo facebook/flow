@@ -11,6 +11,7 @@
 
 module LocMap = Map.Make (Loc)
 open Flow_ast_mapper
+open Flow_ast_visitor
 
 class with_or_eval_mapper result_ref = object
   inherit mapper as super
@@ -221,18 +222,33 @@ end
    from positions in the name stream to globals they conflict with. Later, we
    generate names (avoiding conflicts with globals) and rename those locations.
 *)
-class walker = object(this)
-  inherit mapper as super
+module Acc = struct
+  type t = {
+    (* map of identifier locations to positions in the name stream *)
+    renamings: (Loc.t * int) LocMap.t;
+    (* map of positions in the name stream to globals they conflict with *)
+    globals: SSet.t IMap.t;
+    (* [derivable] maximum number of positions in name stream *)
+    max_counter: int;
+  }
+  let init = {
+    max_counter = 0;
+    globals = IMap.empty;
+    renamings = LocMap.empty;
+  }
+end
+class scope_builder = object(this)
+  inherit [Acc.t] visitor ~init:Acc.init as super
 
   val mutable env = SMap.empty
 
   val mutable counter = 0
-  val mutable max_counter = 0
-  method max_counter = max_counter
   method private next =
     let result = counter in
     counter <- counter + 1;
-    max_counter <- max counter max_counter;
+    this#update_acc (fun acc -> Acc.{ acc with
+      max_counter = max counter acc.max_counter
+    });
     result
 
   method private mk_env =
@@ -258,16 +274,17 @@ class walker = object(this)
     this#pop saved_state;
     node'
 
-  (* map of identifier locations to positions in the name stream *)
-  val mutable renamings = LocMap.empty
-  method renamings = renamings
-
-  (* map of positions in the name stream to globals they conflict with *)
-  val mutable globals = IMap.empty
   method private add_global x (_loc, i) =
-    let iglobals = try IMap.find_unsafe i globals with _ -> SSet.empty in
-    globals <- IMap.add i (SSet.add x iglobals) globals
-  method globals = globals
+    this#update_acc (fun acc -> Acc.{ acc with
+      globals =
+        let iglobals = try IMap.find_unsafe i acc.globals with _ -> SSet.empty in
+        IMap.add i (SSet.add x iglobals) acc.globals
+    })
+
+  method private add_renaming loc (def_loc, i) =
+    this#update_acc (fun acc -> Acc.{ acc with
+      renamings = LocMap.add loc (def_loc, i) acc.renamings
+    })
 
   (* catch params for which their catch blocks introduce bindings, and those
      bindings conflict with the catch params *)
@@ -276,8 +293,8 @@ class walker = object(this)
   method! identifier (expr: Ast.Identifier.t) =
     let loc, x = expr in
     begin match SMap.get x env with
-    | Some (def_loc, i) -> renamings <- LocMap.add loc (def_loc, i) renamings
-    | None -> SMap.iter (fun _ -> this#add_global x) env
+      | Some (def_loc, i) -> this#add_renaming loc (def_loc, i)
+      | None -> SMap.iter (fun _ -> this#add_global x) env
     end;
     expr
 
@@ -452,8 +469,8 @@ class walker = object(this)
     expr
 end
 
-let program ?(ignore_toplevel=false) (program: Ast.program) =
-  let walk = new walker in
+let program ?(ignore_toplevel=false) program =
+  let walk = new scope_builder in
   let _ =
     if ignore_toplevel then walk#program program
     else
@@ -463,4 +480,4 @@ let program ?(ignore_toplevel=false) (program: Ast.program) =
       ignore (lexical_hoist#program program);
       walk#with_bindings (lexical_hoist#bindings @ hoist#bindings) walk#program program
   in
-  walk
+  walk#acc
