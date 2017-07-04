@@ -344,8 +344,14 @@ $feature-hero-text-shadow: '';
 
 @include media-breakpoint-up('md') {
   .featurette {
-    height: 11rem;
+    height: 8rem;
     margin-top: 0;
     margin-bottom: 3rem;
+  }
+}
+
+@include media-breakpoint-only('md') {
+  .featurette {
+    height: 11rem;
   }
 }
