@@ -406,6 +406,11 @@ let trim_lines lines =
   |> List.map (fun (_, line) -> String.trim line)
   |> List.filter (fun s -> s <> "")
 
+let trim_labeled_lines lines =
+  lines
+  |> List.map (fun (label, line) -> (label, String.trim line))
+  |> List.filter (fun (_, s) -> s <> "")
+
 (* parse [include] lines *)
 let parse_includes config lines =
   let includes = trim_lines lines in
@@ -825,7 +830,7 @@ let parse_version config lines =
   | _ -> config
 
 let parse_lints config lines =
-  match LintSettings.of_lines LintSettings.default_settings lines with
+  match lines |> trim_labeled_lines |> LintSettings.of_lines LintSettings.default_settings with
   | Ok lint_settings -> {config with lint_settings}
   | Error (ln, msg) -> error ln msg
 
