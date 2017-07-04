@@ -10,9 +10,10 @@
 
 
 module LocMap = Map.Make (Loc)
+open Flow_ast_mapper
 
 class with_or_eval_mapper result_ref = object
-  inherit Flow_ast_mapper.mapper as super
+  inherit mapper as super
 
   method! expression (expr: Ast.Expression.t) =
     let open Ast.Expression in
@@ -39,7 +40,7 @@ end
 *)
 type bindings = (Loc.t * string) list
 class hoister = object(this)
-  inherit Flow_ast_mapper.mapper as super
+  inherit mapper as super
 
   val mutable bindings = []
   method private add_binding (loc, x) =
@@ -132,7 +133,7 @@ class hoister = object(this)
 end
 
 class lexical_hoister = object(this)
-  inherit Flow_ast_mapper.mapper as super
+  inherit mapper as super
 
   val mutable bindings = []
   method private add_binding (loc, x) =
@@ -221,7 +222,7 @@ end
    generate names (avoiding conflicts with globals) and rename those locations.
 *)
 class walker = object(this)
-  inherit Flow_ast_mapper.mapper as super
+  inherit mapper as super
 
   val mutable env = SMap.empty
 
@@ -357,13 +358,13 @@ class walker = object(this)
         predicate = _; returnType = _; typeParameters = _;
       } = expr in
 
-      ignore (Flow_ast_mapper.opt this#identifier id);
+      ignore (map_opt this#identifier id);
 
       (* hoisting *)
       let hoist = new hoister in
       begin
         let param_list, _rest = params in
-        ignore (Flow_ast_mapper.ident_map hoist#function_param_pattern param_list);
+        ignore (map_list hoist#function_param_pattern param_list);
         match body with
         | BodyBlock (_loc, block) ->
           ignore (hoist#block block)
@@ -377,8 +378,8 @@ class walker = object(this)
       let saved_state = this#push hoist#bindings in
 
       let (param_list, rest) = params in
-      ignore (Flow_ast_mapper.ident_map this#function_param_pattern param_list);
-      ignore (Flow_ast_mapper.opt this#function_rest_element rest);
+      ignore (map_list this#function_param_pattern param_list);
+      ignore (map_opt this#function_rest_element rest);
 
       begin match body with
         | BodyBlock (_, block) ->
@@ -413,13 +414,13 @@ class walker = object(this)
 
       (* pushing *)
       let saved_state = this#push (match id with Some (loc, x) -> [loc, x] | None -> []) in
-      ignore (Flow_ast_mapper.opt this#identifier id);
+      ignore (map_opt this#identifier id);
 
       (* hoisting *)
       let hoist = new hoister in
       begin
         let param_list, _rest = params in
-        ignore (Flow_ast_mapper.ident_map hoist#function_param_pattern param_list);
+        ignore (map_list hoist#function_param_pattern param_list);
         match body with
         | BodyBlock (_loc, block) ->
           ignore (hoist#block block)
@@ -433,8 +434,8 @@ class walker = object(this)
       let _saved_state = this#push hoist#bindings in
 
       let (param_list, rest) = params in
-      ignore (Flow_ast_mapper.ident_map this#function_param_pattern param_list);
-      ignore (Flow_ast_mapper.opt this#function_rest_element rest);
+      ignore (map_list this#function_param_pattern param_list);
+      ignore (map_opt this#function_rest_element rest);
 
       begin match body with
         | BodyBlock (_, block) ->
