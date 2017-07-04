@@ -196,8 +196,8 @@ class lexical_hoister = object(this)
 
 end
 
-(* Walker class that prepares renamings for bindings, hoisting bindings one
-   scope at a time.
+(* Visitor class that prepares use-def info, hoisting bindings one scope at a
+   time. This info can be used for various purposes, e.g. variable renaming.
 
    We do not generate the scope tree for the entire program, because it is not
    clear where to hang scopes for function expressions, catch clauses,
@@ -209,23 +209,26 @@ end
 
    Because globals can appear deep in the program, we cannot actually perform
    any renaming until we have walked the entire program. Instead, we compute (1)
-   a map from identifier locations to positions in a name stream and (2) a map
-   from positions in the name stream to globals they conflict with. Later, we
-   generate names (avoiding conflicts with globals) and rename those locations.
+   a map from identifier locations to name ids corresponding to binding sites
+   and (2) a map from name ids to globals they conflict with. Later, we generate
+   names (avoiding conflicts with globals) and rename those locations.
+
+   We try to create the smallest number of name ids possible.
 *)
+type info = {
+  (* map from identifier locations to name ids *)
+  locals: (Loc.t * int) LocMap.t;
+  (* map from name ids to globals they conflict with *)
+  globals: SSet.t IMap.t;
+  (* number of distinct name ids *)
+  max_distinct: int;
+}
 module Acc = struct
-  type t = {
-    (* map of identifier locations to positions in the name stream *)
-    renamings: (Loc.t * int) LocMap.t;
-    (* map of positions in the name stream to globals they conflict with *)
-    globals: SSet.t IMap.t;
-    (* [derivable] maximum number of positions in name stream *)
-    max_counter: int;
-  }
+  type t = info
   let init = {
-    max_counter = 0;
+    max_distinct = 0;
     globals = IMap.empty;
-    renamings = LocMap.empty;
+    locals = LocMap.empty;
   }
 end
 class scope_builder = object(this)
@@ -237,8 +240,8 @@ class scope_builder = object(this)
   method private next =
     let result = counter in
     counter <- counter + 1;
-    this#update_acc (fun acc -> Acc.{ acc with
-      max_counter = max counter acc.max_counter
+    this#update_acc (fun acc -> { acc with
+      max_distinct = max counter acc.max_distinct
     });
     result
 
@@ -266,15 +269,15 @@ class scope_builder = object(this)
     node'
 
   method private add_global x (_loc, i) =
-    this#update_acc (fun acc -> Acc.{ acc with
+    this#update_acc (fun acc -> { acc with
       globals =
         let iglobals = try IMap.find_unsafe i acc.globals with _ -> SSet.empty in
         IMap.add i (SSet.add x iglobals) acc.globals
     })
 
-  method private add_renaming loc (def_loc, i) =
-    this#update_acc (fun acc -> Acc.{ acc with
-      renamings = LocMap.add loc (def_loc, i) acc.renamings
+  method private add_local loc (def_loc, i) =
+    this#update_acc (fun acc -> { acc with
+      locals = LocMap.add loc (def_loc, i) acc.locals
     })
 
   (* catch params for which their catch blocks introduce bindings, and those
@@ -284,7 +287,7 @@ class scope_builder = object(this)
   method! identifier (expr: Ast.Identifier.t) =
     let loc, x = expr in
     begin match SMap.get x env with
-      | Some (def_loc, i) -> this#add_renaming loc (def_loc, i)
+      | Some (def_loc, i) -> this#add_local loc (def_loc, i)
       | None -> SMap.iter (fun _ -> this#add_global x) env
     end;
     expr

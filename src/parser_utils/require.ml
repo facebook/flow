@@ -16,9 +16,9 @@ open Flow_ast_visitor
 class requires_calculator ~default_jsx ~ast = object(this)
   inherit [Loc.t SMap.t] visitor ~init:SMap.empty as super
 
-  val renamings =
-    let { Scope_builder.Acc.renamings; _ } = Scope_builder.program ast in
-    renamings
+  val locals =
+    let { Scope_builder.locals; _ } = Scope_builder.program ast in
+    locals
 
   method private add_require s loc =
     this#update_acc (SMap.add s loc)
@@ -30,14 +30,14 @@ class requires_calculator ~default_jsx ~ast = object(this)
     | ((_, Identifier (loc, "require")),
        [Expression (require_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ })])
       ->
-      if not (Scope_builder.LocMap.mem loc renamings)
+      if not (Scope_builder.LocMap.mem loc locals)
       then this#add_require v require_loc
     | ((_, Identifier (loc, "requireLazy")),
        [Expression (_, Array ({ Array.elements })); Expression (_);])
       ->
       let element = function
         | Some (Expression (require_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ })) ->
-          if not (Scope_builder.LocMap.mem loc renamings)
+          if not (Scope_builder.LocMap.mem loc locals)
           then this#add_require v require_loc
         | _ -> () in
       List.iter element elements
