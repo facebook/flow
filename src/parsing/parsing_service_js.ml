@@ -385,8 +385,8 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
     let err = loc, Parse_error.Assertion s in
     Parse_fail (Parse_error err)
 
-let calc_requires ast ~default_jsx =
-  Require.program ~default_jsx ast
+let calc_requires ~default_jsx ~ast =
+  Require.program ~default_jsx ~ast
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
@@ -437,7 +437,7 @@ let reducer
                  files. *)
               let require_loc =
                 if types_checked types_mode info
-                then calc_requires ast ~default_jsx:(info.Docblock.jsx = None)
+                then calc_requires ~default_jsx:(info.Docblock.jsx = None) ~ast
                 else SMap.empty
               in
               ParsingHeaps.add file ast info require_loc;

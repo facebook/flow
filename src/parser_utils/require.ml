@@ -13,20 +13,15 @@ open Flow_ast_visitor
 (* Subclass of the AST visitor class that calculates requires. Initializes with
    the scope builder class.
 *)
-class requires_calculator ~default_jsx = object(this)
+class requires_calculator ~default_jsx ~ast = object(this)
   inherit [Loc.t SMap.t] visitor ~init:SMap.empty as super
 
-  (* TODO: these are not really mutable, they're re-initialized below *)
-  val mutable renamings = Scope_builder.LocMap.empty
+  val renamings =
+    let { Scope_builder.Acc.renamings; _ } = Scope_builder.program ast in
+    renamings
 
   method private add_require s loc =
     this#update_acc (SMap.add s loc)
-
-  method! program (program: Ast.program) =
-    let { Scope_builder.Acc.renamings = _renamings; _ } =
-      Scope_builder.program program in
-    renamings <- _renamings;
-    super#program program
 
   method! call (expr: Ast.Expression.Call.t) =
     let open Ast.Expression in
@@ -104,7 +99,6 @@ class requires_calculator ~default_jsx = object(this)
 
 end
 
-let program ~default_jsx ast =
-  let walk = new requires_calculator ~default_jsx in
-  let _ = walk#program ast in
-  walk#acc
+let program ~default_jsx ~ast =
+  let walk = new requires_calculator ~default_jsx ~ast in
+  walk#eval walk#program ast
