@@ -8,16 +8,19 @@
  *
  *)
 
-(* Mapper class that performs actual renaming. Uses the walker class above.
+open Flow_ast_visitor
+
+(* Subclass of the AST visitor class that calculates requires. Initializes with
+   the scope builder class.
 *)
-class mapper ~default_jsx = object
-  inherit Flow_ast_mapper.mapper as super
+class requires_calculator ~default_jsx = object(this)
+  inherit [Loc.t SMap.t] visitor ~init:SMap.empty as super
 
   (* TODO: these are not really mutable, they're re-initialized below *)
   val mutable renamings = Scope_builder.LocMap.empty
-  val mutable requires = SMap.empty
-  method requires =
-    requires
+
+  method private add_require s loc =
+    this#update_acc (SMap.add s loc)
 
   method! program (program: Ast.program) =
     let { Scope_builder.Acc.renamings = _renamings; _ } =
@@ -33,14 +36,14 @@ class mapper ~default_jsx = object
        [Expression (require_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ })])
       ->
       if not (Scope_builder.LocMap.mem loc renamings)
-      then requires <- SMap.add v require_loc requires
+      then this#add_require v require_loc
     | ((_, Identifier (loc, "requireLazy")),
        [Expression (_, Array ({ Array.elements })); Expression (_);])
       ->
       let element = function
         | Some (Expression (require_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ })) ->
           if not (Scope_builder.LocMap.mem loc renamings)
-          then requires <- SMap.add v require_loc requires
+          then this#add_require v require_loc
         | _ -> () in
       List.iter element elements
     | _ -> ()
@@ -51,7 +54,7 @@ class mapper ~default_jsx = object
     let open Ast.Expression in
     begin match expr with
     | require_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ } ->
-      requires <- SMap.add v require_loc requires
+      this#add_require v require_loc
     | _ -> ()
     end;
     super#expression expr
@@ -61,7 +64,7 @@ class mapper ~default_jsx = object
     let { importKind = _; source; specifiers = _ } = decl in
     begin match source with
     | require_loc, { Ast.Literal.value = Ast.Literal.String v; raw = _ } ->
-      requires <- SMap.add v require_loc requires
+      this#add_require v require_loc
     | _ -> ()
     end;
     super#import_declaration decl
@@ -71,7 +74,7 @@ class mapper ~default_jsx = object
     let { exportKind = _; source; specifiers = _; declaration = _ } = decl in
     begin match source with
     | Some (require_loc, { Ast.Literal.value = Ast.Literal.String v; raw = _ }) ->
-      requires <- SMap.add v require_loc requires
+      this#add_require v require_loc
     | _ -> ()
     end;
     super#export_named_declaration decl
@@ -81,7 +84,7 @@ class mapper ~default_jsx = object
     let { default = _; source; specifiers = _; declaration = _ } = decl in
     begin match source with
     | Some (require_loc, { Ast.Literal.value = Ast.Literal.String v; raw = _ }) ->
-      requires <- SMap.add v require_loc requires
+      this#add_require v require_loc
     | _ -> ()
     end;
     super#declare_export_declaration decl
@@ -93,10 +96,15 @@ class mapper ~default_jsx = object
     | Identifier (_, { Identifier.name }) ->
       if name = "fbt" then ()
       else begin
-        if default_jsx then requires <- SMap.add "react" require_loc requires
+        if default_jsx then this#add_require "react" require_loc
       end
     | _ -> ()
     end;
     super#jsx_element expr
 
 end
+
+let program ~default_jsx ast =
+  let walk = new requires_calculator ~default_jsx in
+  let _ = walk#program ast in
+  walk#acc

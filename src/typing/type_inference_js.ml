@@ -475,9 +475,7 @@ let infer_lib_file ~metadata ~exclude_syms ~lint_settings file ast =
   let cx = Flow_js.fresh_context metadata file Files.lib_module_ref in
   (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
      confident that we don't support them in any sensible way. *)
-  let mapper = new Require.mapper ~default_jsx:false in
-  let _ = mapper#program ast in
-  let require_loc = mapper#requires in
+  let require_loc = Require.program ~default_jsx:false ast in
   SMap.iter (Import_export.add_module_tvar cx) require_loc;
 
   let module_scope = Scope.fresh () in

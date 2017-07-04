@@ -386,9 +386,7 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
     Parse_fail (Parse_error err)
 
 let calc_requires ast ~default_jsx =
-  let mapper = new Require.mapper ~default_jsx in
-  let _ = mapper#program ast in
-  mapper#requires
+  Require.program ~default_jsx ast
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
