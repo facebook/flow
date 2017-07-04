@@ -13,22 +13,22 @@ module LocMap = Map.Make (Loc)
 open Flow_ast_mapper
 open Flow_ast_visitor
 
-class with_or_eval_mapper result_ref = object
-  inherit mapper as super
+class with_or_eval_visitor = object(this)
+  inherit [bool] Flow_ast_visitor.visitor ~init:false as super
 
   method! expression (expr: Ast.Expression.t) =
     let open Ast.Expression in
-    if !result_ref = true then expr else match expr with
+    if this#acc = true then expr else match expr with
     | (_, Call { Call.callee = (_, Identifier (_, "eval")); _}) ->
-      result_ref := true;
+      this#set_acc true;
       expr
     | _ -> super#expression expr
 
   method! statement (stmt: Ast.Statement.t) =
-    if !result_ref = true then stmt else super#statement stmt
+    if this#acc = true then stmt else super#statement stmt
 
   method! with_ (stuff: Ast.Statement.With.t) =
-    result_ref := true;
+    this#set_acc true;
     stuff
 end
 
@@ -258,13 +258,13 @@ class scope_builder = object(this)
       | None -> SMap.add x (loc, this#next) map
     ) SMap.empty
 
-  method push bindings =
+  method private push bindings =
     let save_counter = counter in
     let old_env = env in
     env <- SMap.fold SMap.add (this#mk_env bindings) old_env;
     old_env, save_counter
 
-  method pop (old_env, save_counter) =
+  method private pop (old_env, save_counter) =
     env <- old_env;
     counter <- save_counter
 
@@ -362,10 +362,8 @@ class scope_builder = object(this)
 
   method! function_declaration (expr: Ast.Function.t) =
     let contains_with_or_eval =
-      let result = ref false in
-      let mapper = new with_or_eval_mapper result in
-      let _ = mapper#function_declaration expr in
-      !result
+      let visit = new with_or_eval_visitor in
+      visit#eval visit#function_declaration expr
     in
 
     if not contains_with_or_eval then begin
@@ -416,10 +414,8 @@ class scope_builder = object(this)
      function expression is locally in scope. *)
   method! function_ (expr: Ast.Function.t) =
     let contains_with_or_eval =
-      let result = ref false in
-      let mapper = new with_or_eval_mapper result in
-      let _ = mapper#function_ expr in
-      !result
+      let visit = new with_or_eval_visitor in
+      visit#eval visit#function_ expr
     in
 
     if not contains_with_or_eval then begin
