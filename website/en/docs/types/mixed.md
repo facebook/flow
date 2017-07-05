@@ -20,7 +20,7 @@ Here the input value could be either a `string`, a `number`, or a `boolean`.
 
 ```js
 function stringifyBasicValue(value: string | number | boolean) {
-  return '' + value;
+  return String(value);
 }
 ```
 
