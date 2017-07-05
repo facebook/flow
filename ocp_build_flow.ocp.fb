@@ -236,6 +236,7 @@ begin library "flow-parser-utils"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "tp-core"
   ]
 end
 

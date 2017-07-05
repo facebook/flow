@@ -8,9 +8,9 @@
 
 //Comments Redundant with Earlier Range Comments (The first in a triple is valid; the others are errors.)
 
-//flowlint sketchy-null:on
-//flowlint sketchy-null:on
-//flowlint-line sketchy-null:on
+//flowlint sketchy-null:error
+//flowlint sketchy-null:error
+//flowlint-line sketchy-null:error
 
 /*flowlint sketchy-null:off*/ //Unused suppression
 //flowlint sketchy-null:off
@@ -19,36 +19,36 @@
 
 //Comments with Duplicate Arguments (Error.)
 
-//flowlint sketchy-null:on, sketchy-null:on
+//flowlint sketchy-null:error, sketchy-null:error
 //flowlint-line sketchy-null:off, sketchy-null:off
 
 //flowlint sketchy-null:off, sketchy-null:off
-//flowlint-line sketchy-null:on, sketchy-null:on
+//flowlint-line sketchy-null:error, sketchy-null:error
 
 
 //Comments with Self-Contradicting Arguments (Error.)
 
-//flowlint sketchy-null:on, sketchy-null:off
-//flowlint-line sketchy-null:on, sketchy-null:off
+//flowlint sketchy-null:error, sketchy-null:off
+//flowlint-line sketchy-null:error, sketchy-null:off
 
 
 //Comments with Shadowing Arguments (Error.)
 
-//flowlint sketchy-null-bool:on, sketchy-null:off
-//flowlint-line sketchy-null-bool:on, sketchy-null:off
+//flowlint sketchy-null-bool:error, sketchy-null:off
+//flowlint-line sketchy-null-bool:error, sketchy-null:off
 
 
 //Comments with Overlapping but Non-Shadowing Arguments (Not an error.)
 
-/*flowlint sketchy-null:on, sketchy-null-bool:off*/ //Unused suppression
-/*flowlint-line sketchy-null:on, sketchy-null-bool:off*/ //Unused suppression
+/*flowlint sketchy-null:error, sketchy-null-bool:off*/ //Unused suppression
+/*flowlint-line sketchy-null:error, sketchy-null-bool:off*/ //Unused suppression
 
 
 //Comments Both Redundant with Themselves and Earleir Settings (Should only show one kind of error.)
 
-/*Clearing the settings; not an error.*/ //flowlint sketchy-null:on
-//flowlint sketchy-null:on, sketchy-null:on
-//flowlint-line sketchy-null:on, sketchy-null:on
+/*Clearing the settings; not an error.*/ //flowlint sketchy-null:error
+//flowlint sketchy-null:error, sketchy-null:error
+//flowlint-line sketchy-null:error, sketchy-null:error
 
 /*Clearing the settings; not an error.*/ /*flowlint sketchy-null:off*/ //Unused suppression
 //flowlint sketchy-null:off, sketchy-null:off
@@ -57,11 +57,11 @@
 
 //Piecewise Shadowing (Error.)
 
-//flowlint sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
-//flowlint-line sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
+//flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
+//flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
 
 
 //Piecewise Almost Shadowing (Not an error.)
 
-/*flowlint sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
-/*flowlint-line sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+/*flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+/*flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions

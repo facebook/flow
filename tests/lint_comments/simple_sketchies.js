@@ -3,7 +3,7 @@
 
 //error: not a real lint or setting, but sketchy-null is still enabled
 /*flowlint not-a-real-lint : not-a-real-setting   ,
-    sketchy-null:on */
+    sketchy-null:error */
 
 // ExistsP sketchy checks
 
@@ -34,9 +34,9 @@ function k(x: null | 1) {
 
 	 flowlint
 
-  	 sketchy-null-bool:on,
+  	 sketchy-null-bool:error,
 
-  	 sketchy-null-mixed:on
+  	 sketchy-null-mixed:error
 
  	 */
 
@@ -58,7 +58,7 @@ if (x2) { /* sketchy; suppressed */ }
 /*
  * flowlint
  * sketchy-null:
- *    on,
+ *    error,
  * sketchy-null-bool:
  *    off
  */ //The bool suppression is unused
@@ -83,7 +83,7 @@ function w(x) {
   if (x) { /* sketchy because of calls; suppressed */ }
 }
 w(null);
-/*flowlint sketchy-null:off*/w("");/*flowlint sketchy-null:on*/
+/*flowlint sketchy-null:off*/w("");/*flowlint sketchy-null:error*/
 
 function s(x) {
   if (x) { /* sketchy because of calls */ }
@@ -108,9 +108,9 @@ function m(o: { p: ?number }) {
 // union
 function n(o: { p: number|null|void }) {
   /*flowlint sketchy-null:off*/ //Unused suppression
-  // flowlint-next-line sketchy-null:on
+  // flowlint-next-line sketchy-null:error
   if (o.p) { /* sketchy */ }
-  // flowlint sketchy-null:on
+  // flowlint sketchy-null:error
 }
 
 function q(o: { p: number }) {
@@ -129,7 +129,7 @@ function z(x: ?string) {
   //flowlint-next-line sketchy-null:off
   if (assignee = x) { /* sketchy; suppressed */ }
   if (assignee = x) { /* sketchy; suppressed */ }
-  //flowlint sketchy-null:on
+  //flowlint sketchy-null:error
 }
 
 var value: ?number = 0;
@@ -139,26 +139,26 @@ var valToUse = value || /* flowlint-line sketchy-null:off */defaultVal; /* sketc
 var alwaysFalse = false && value; /* NOT sketchy */
 var alwaysTrue = true || value; /* NOT sketchy */
 
-//flowlint sketchy-null:on
+//flowlint sketchy-null:error
 var val2: ?number = 0;
 /*flowlint sketchy-null:off*/ //Unused suppression
 
-var sketchyFalse = val2 && false; /* sketchy */ /*flowlint-next-line sketchy-null:on*/ /* flowlint-line sketchy-null:on */
+var sketchyFalse = val2 && false; /* sketchy */ /*flowlint-next-line sketchy-null:error*/ /* flowlint-line sketchy-null:error */
 var sketchyTrue = val2 || true; /* sketchy */
 
 //Malformed Rule Tests
 
 //Extra commas
-// flowlint ,sketchy-null-bool:on,,sketchy-null-mixed:on,
+// flowlint ,sketchy-null-bool:error,,sketchy-null-mixed:error,
 
 //Missing commas
-// flowlint sketchy-null-bool:on sketchy-null-mixed:off
+// flowlint sketchy-null-bool:error sketchy-null-mixed:off
 
 //Typo on flowlint (Not checked for at the moment. Perhaps in a future diff?)
-// flowline sketchy-null:on
+// flowline sketchy-null:error
 
 //Flowlint inside a comment (Not checked for at the moment. Perhaps in a future diff?)
 /*
  * stuff, stuff, stuff
- * flowlint sketchy-null:on
+ * flowlint sketchy-null:error
  */

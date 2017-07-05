@@ -86,7 +86,7 @@ let update_builder ((old_loc, old_set) as original) new_loc kind_settings builde
   let overlap, remaining_orig = get_overlap ~old_loc ~new_loc in
   let new_overlap =
     let kind_settings =
-      List.map (fun (kind, (enabled, loc)) -> (kind, (enabled, Some loc))) kind_settings in
+      List.map (fun (kind, (state, loc)) -> (kind, (state, Some loc))) kind_settings in
     (overlap, LintSettings.set_all kind_settings old_set) in
   let new_remaining = List.map (fun loc -> (loc, old_set)) remaining_orig in
   let builder = builder |> remove original |> add new_overlap in
@@ -103,11 +103,11 @@ let update_settings_and_running =
     match kind_settings with
     | head::_ ->
       let (new_settings, all_redundant) = List.fold_left
-        (fun (settings, all_redundant) (kind, (enabled, loc)) ->
-          (* Still do set_enabled to update the location, otherwise it's
+        (fun (settings, all_redundant) (kind, (state, loc)) ->
+          (* Still do set_state to update the location, otherwise it's
            * reported that the results of the argument get overwritten. *)
-          let new_settings = LintSettings.set_enabled kind (enabled, Some loc) settings in
-          let this_redundant = LintSettings.is_enabled kind settings = enabled in
+          let new_settings = LintSettings.set_state kind (state, Some loc) settings in
+          let this_redundant = LintSettings.get_state kind settings = state in
           (new_settings, all_redundant && this_redundant))
         (settings, true) kind_settings
       in

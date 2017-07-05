@@ -41,8 +41,8 @@ apply.js:25
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
   1: function test(a: string, b: number): number {
                                  ^^^^^^ number. This type is incompatible with
-290:     @@iterator(): Iterator<string>;
-                                ^^^^^^ string. See lib: <BUILTINS>/core.js:290
+291:     @@iterator(): Iterator<string>;
+                                ^^^^^^ string. See lib: <BUILTINS>/core.js:291
 
 apply.js:32
  32: (test.call.apply(test, [0, 123, 'foo']): void);

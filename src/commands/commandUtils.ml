@@ -407,7 +407,9 @@ module Options_flags = struct
     all: bool;
     debug: bool;
     flowconfig_flags: flowconfig_params;
-    lint_settings: LintSettings.t;
+    (* Defer parsing of the lints flag until after the fowconfig lint settings is known,
+     * to properly detect redundant settings (and avoid false positives) *)
+    lints_flag: string option;
     max_workers: int option;
     munge_underscore_members: bool;
     no_flowlib: bool;
@@ -421,11 +423,11 @@ module Options_flags = struct
   }
 end
 
-let parse_lints_flag flag =
+let parse_lints_flag base_settings flag =
     let flag = Option.value flag ~default:"" in
     let lines = Str.split_delim (Str.regexp ",") flag
       |> List.map (fun s -> (1, s)) in
-    match LintSettings.of_lines lines with
+    match LintSettings.of_lines base_settings lines with
     | Ok settings -> settings
     | Error (_, msg) ->
       let msg = spf "Error parsing --lints: %s" msg in
@@ -445,7 +447,7 @@ let options_flags =
       munge_underscore_members;
       max_workers;
       flowconfig_flags;
-      lint_settings = parse_lints_flag lints_flag;
+      lints_flag;
       verbose;
       strip_root;
       temp_dir;
@@ -506,9 +508,7 @@ let make_options ~flowconfig ~lazy_ ~root (options_flags: Options_flags.t) =
     file_options ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs flowconfig
   in
   let lint_settings =
-    let cli_lint_settings = options_flags.lint_settings in
-    let flowconfig_lint_settings = FlowConfig.lint_settings flowconfig in
-    LintSettings.merge ~low_prec:flowconfig_lint_settings ~high_prec:cli_lint_settings
+    parse_lints_flag (FlowConfig.lint_settings flowconfig) options_flags.lints_flag
   in
   { Options.
     opt_lazy = lazy_;

@@ -455,7 +455,7 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
       (* apply overrides from the docblock *)
       let metadata = Infer_service.apply_docblock_overrides metadata info in
       let require_loc_map =
-        Parsing_service_js.calc_requires ast ~default_jsx:(info.Docblock.jsx = None)
+        Parsing_service_js.calc_requires ~default_jsx:(info.Docblock.jsx = None) ~ast
       in
 
       let lint_settings = Some options.Options.opt_lint_settings in

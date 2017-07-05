@@ -190,17 +190,17 @@ let scan_for_lint_suppressions =
   let colon_regex = Str.regexp ":" in
 
   let parse_kind loc_str =
-    try Ok (LintSettings.kinds_of_string loc_str.value)
-    with Not_found -> Error (loc_str.loc,
+    match LintSettings.kinds_of_string loc_str.value with
+    | Some kinds -> Ok kinds
+    | None -> Error (loc_str.loc,
       "Nonexistent/misspelled lint rule. Perhaps you have a missing/extra ','?")
   in
 
   let parse_value loc_value =
-    match loc_value.value with
-      | "on" -> Ok true
-      | "off" -> Ok false
-      | _ -> Error (loc_value.loc,
-        "Invalid setting. Valid settings are on and off.")
+    match LintSettings.state_of_string loc_value.value with
+      | Some state -> Ok state
+      | None -> Error (loc_value.loc,
+        "Invalid setting. Valid settings are error, warn, and off.")
   in
 
   let get_kind_setting cx arg =
@@ -303,7 +303,7 @@ let scan_for_lint_suppressions =
         | Some args ->
           let kind_settings =
             get_kind_settings cx args
-              |> nested_map (fun ({loc; value = kind}, enabled) -> (kind, (enabled, loc)))
+              |> nested_map (fun ({loc; value = kind}, state) -> (kind, (state, loc)))
           in
           let error_encountered = ref false in
           let (new_builder, new_running_settings) =
@@ -343,7 +343,7 @@ let scan_for_lint_suppressions =
             if not !error_encountered then
               List.fold_left (
                 fun suppression_locs -> function
-                  | (_, (false, loc))::_ -> Loc.LocSet.add loc suppression_locs
+                  | (_, (LintSettings.Off, loc))::_ -> Loc.LocSet.add loc suppression_locs
                   | _ -> suppression_locs
                 ) suppression_locs kind_settings
             else suppression_locs
@@ -475,9 +475,7 @@ let infer_lib_file ~metadata ~exclude_syms ~lint_settings file ast =
   let cx = Flow_js.fresh_context metadata file Files.lib_module_ref in
   (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
      confident that we don't support them in any sensible way. *)
-  let mapper = new Require.mapper ~default_jsx:false in
-  let _ = mapper#program ast in
-  let require_loc = mapper#requires in
+  let require_loc = Require.program ~default_jsx:false ~ast in
   SMap.iter (Import_export.add_module_tvar cx) require_loc;
 
   let module_scope = Scope.fresh () in

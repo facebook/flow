@@ -10,23 +10,24 @@
 
 
 module LocMap = Map.Make (Loc)
+open Flow_ast_visitor
 
-class with_or_eval_mapper result_ref = object
-  inherit Flow_ast_mapper.mapper as super
+class with_or_eval_visitor = object(this)
+  inherit [bool] visitor ~init:false as super
 
   method! expression (expr: Ast.Expression.t) =
     let open Ast.Expression in
-    if !result_ref = true then expr else match expr with
+    if this#acc = true then expr else match expr with
     | (_, Call { Call.callee = (_, Identifier (_, "eval")); _}) ->
-      result_ref := true;
+      this#set_acc true;
       expr
     | _ -> super#expression expr
 
   method! statement (stmt: Ast.Statement.t) =
-    if !result_ref = true then stmt else super#statement stmt
+    if this#acc = true then stmt else super#statement stmt
 
   method! with_ (stuff: Ast.Statement.With.t) =
-    result_ref := true;
+    this#set_acc true;
     stuff
 end
 
@@ -37,11 +38,12 @@ end
 
    TODO: Ideally implemented as a fold, not a map.
 *)
-type bindings = (Loc.t * string) list
+module Bindings = struct
+  type t = (Loc.t * string) list
+end
 class hoister = object(this)
-  inherit Flow_ast_mapper.mapper as super
+  inherit [Bindings.t] visitor ~init:[] as super
 
-  val mutable bindings = []
   method private add_binding (loc, x) =
     (* `event` is a global in old IE and jsxmin lazily avoids renaming it. it
        should be safe to shadow it, i.e. `function(event){event.target}` can be
@@ -52,11 +54,7 @@ class hoister = object(this)
 
        TODO[jsxmin]: remove this. *)
     if x = "event" then () else
-    bindings <- (loc, x) :: bindings
-
-  (* result *)
-  method bindings =
-    List.rev bindings
+      this#update_acc (List.cons (loc, x))
 
   val mutable bad_catch_params = []
   method bad_catch_params = bad_catch_params
@@ -73,11 +71,11 @@ class hoister = object(this)
   method! catch_clause (clause: Ast.Statement.Try.CatchClause.t') =
     let open Ast.Statement.Try.CatchClause in
     let { param; body } = clause in
-    let saved_bindings = bindings in
-    bindings <- [];
+    let saved_bindings = this#acc in
+    this#set_acc [];
     let _, block = body in
     let _ = this#block block in
-    let local_bindings = bindings in
+    let local_bindings = this#acc in
     let open Ast.Pattern in
     let _, patt = param in
     begin match patt with
@@ -87,7 +85,7 @@ class hoister = object(this)
       then bad_catch_params <- loc :: bad_catch_params
     | _ -> ();
     end;
-    bindings <- local_bindings @ saved_bindings;
+    this#set_acc (local_bindings @ saved_bindings);
     clause
 
   (* Ignore class declarations, since they are lexical bindings (thus not
@@ -112,7 +110,7 @@ class hoister = object(this)
         this#add_binding name
       | Object _
       | Array _
-      | Assignment _ -> ignore (super#pattern ?kind expr)
+      | Assignment _ -> run (super#pattern ?kind) expr
       | Expression _ -> ()
       end;
       expr
@@ -132,15 +130,10 @@ class hoister = object(this)
 end
 
 class lexical_hoister = object(this)
-  inherit Flow_ast_mapper.mapper as super
+  inherit [Bindings.t] visitor ~init:[] as super
 
-  val mutable bindings = []
   method private add_binding (loc, x) =
-    bindings <- (loc, x) :: bindings
-
-  (* result *)
-  method bindings =
-    List.rev bindings
+    this#update_acc (List.cons (loc, x))
 
   (* Ignore all statements except variable declarations, class declarations, and
      import declarations. The ignored statements cannot contain lexical
@@ -169,7 +162,7 @@ class lexical_hoister = object(this)
         this#add_binding name
       | Object _
       | Array _
-      | Assignment _ -> ignore (super#variable_declarator_pattern ~kind expr)
+      | Assignment _ -> run (super#variable_declarator_pattern ~kind) expr
       | _ -> ()
       end;
       expr
@@ -203,8 +196,8 @@ class lexical_hoister = object(this)
 
 end
 
-(* Walker class that prepares renamings for bindings, hoisting bindings one
-   scope at a time.
+(* Visitor class that prepares use-def info, hoisting bindings one scope at a
+   time. This info can be used for various purposes, e.g. variable renaming.
 
    We do not generate the scope tree for the entire program, because it is not
    clear where to hang scopes for function expressions, catch clauses,
@@ -216,22 +209,40 @@ end
 
    Because globals can appear deep in the program, we cannot actually perform
    any renaming until we have walked the entire program. Instead, we compute (1)
-   a map from identifier locations to positions in a name stream and (2) a map
-   from positions in the name stream to globals they conflict with. Later, we
-   generate names (avoiding conflicts with globals) and rename those locations.
+   a map from identifier locations to name ids corresponding to binding sites
+   and (2) a map from name ids to globals they conflict with. Later, we generate
+   names (avoiding conflicts with globals) and rename those locations.
+
+   We try to create the smallest number of name ids possible.
 *)
-class walker = object(this)
-  inherit Flow_ast_mapper.mapper as super
+type info = {
+  (* map from identifier locations to name ids *)
+  locals: (Loc.t * int) LocMap.t;
+  (* map from name ids to globals they conflict with *)
+  globals: SSet.t IMap.t;
+  (* number of distinct name ids *)
+  max_distinct: int;
+}
+module Acc = struct
+  type t = info
+  let init = {
+    max_distinct = 0;
+    globals = IMap.empty;
+    locals = LocMap.empty;
+  }
+end
+class scope_builder = object(this)
+  inherit [Acc.t] visitor ~init:Acc.init as super
 
   val mutable env = SMap.empty
 
   val mutable counter = 0
-  val mutable max_counter = 0
-  method max_counter = max_counter
   method private next =
     let result = counter in
     counter <- counter + 1;
-    max_counter <- max counter max_counter;
+    this#update_acc (fun acc -> { acc with
+      max_distinct = max counter acc.max_distinct
+    });
     result
 
   method private mk_env =
@@ -241,32 +252,33 @@ class walker = object(this)
       | None -> SMap.add x (loc, this#next) map
     ) SMap.empty
 
-  method push bindings =
+  method private push bindings =
     let save_counter = counter in
     let old_env = env in
-    env <- SMap.fold SMap.add (this#mk_env bindings) old_env;
+    env <- SMap.fold SMap.add (this#mk_env (List.rev bindings)) old_env;
     old_env, save_counter
 
-  method pop (old_env, save_counter) =
+  method private pop (old_env, save_counter) =
     env <- old_env;
     counter <- save_counter
 
-  method with_bindings: 'a. bindings -> ('a -> 'a) -> 'a -> 'a = fun bindings visit node ->
+  method with_bindings: 'a. Bindings.t -> ('a -> 'a) -> 'a -> 'a = fun bindings visit node ->
     let saved_state = this#push bindings in
     let node' = visit node in
     this#pop saved_state;
     node'
 
-  (* map of identifier locations to positions in the name stream *)
-  val mutable renamings = LocMap.empty
-  method renamings = renamings
-
-  (* map of positions in the name stream to globals they conflict with *)
-  val mutable globals = IMap.empty
   method private add_global x (_loc, i) =
-    let iglobals = try IMap.find_unsafe i globals with _ -> SSet.empty in
-    globals <- IMap.add i (SSet.add x iglobals) globals
-  method globals = globals
+    this#update_acc (fun acc -> { acc with
+      globals =
+        let iglobals = try IMap.find_unsafe i acc.globals with _ -> SSet.empty in
+        IMap.add i (SSet.add x iglobals) acc.globals
+    })
+
+  method private add_local loc (def_loc, i) =
+    this#update_acc (fun acc -> { acc with
+      locals = LocMap.add loc (def_loc, i) acc.locals
+    })
 
   (* catch params for which their catch blocks introduce bindings, and those
      bindings conflict with the catch params *)
@@ -275,8 +287,8 @@ class walker = object(this)
   method! identifier (expr: Ast.Identifier.t) =
     let loc, x = expr in
     begin match SMap.get x env with
-    | Some (def_loc, i) -> renamings <- LocMap.add loc (def_loc, i) renamings
-    | None -> SMap.iter (fun _ -> this#add_global x) env
+      | Some (def_loc, i) -> this#add_local loc (def_loc, i)
+      | None -> SMap.iter (fun _ -> this#add_global x) env
     end;
     expr
 
@@ -288,44 +300,44 @@ class walker = object(this)
 
   method! block (stmt: Ast.Statement.Block.t) =
     let lexical_hoist = new lexical_hoister in
-    ignore (lexical_hoist#block stmt);
-    this#with_bindings lexical_hoist#bindings super#block stmt
+    let lexical_bindings = lexical_hoist#eval lexical_hoist#block stmt in
+    this#with_bindings lexical_bindings super#block stmt
 
   method! for_in_statement (stmt: Ast.Statement.ForIn.t) =
     let open Ast.Statement.ForIn in
     let { left; right = _; body = _; each = _ } = stmt in
 
     let lexical_hoist = new lexical_hoister in
-    begin match left with
+    let lexical_bindings = match left with
     | LeftDeclaration (_, decl) ->
-      ignore (lexical_hoist#variable_declaration decl)
-    | _ -> ()
-    end;
-    this#with_bindings lexical_hoist#bindings super#for_in_statement stmt
+      lexical_hoist#eval lexical_hoist#variable_declaration decl
+    | _ -> []
+    in
+    this#with_bindings lexical_bindings super#for_in_statement stmt
 
   method! for_of_statement (stmt: Ast.Statement.ForOf.t) =
     let open Ast.Statement.ForOf in
     let { left; right = _; body = _; async = _ } = stmt in
 
     let lexical_hoist = new lexical_hoister in
-    begin match left with
+    let lexical_bindings = match left with
     | LeftDeclaration (_, decl) ->
-      ignore (lexical_hoist#variable_declaration decl)
-    | _ -> ()
-    end;
-    this#with_bindings lexical_hoist#bindings super#for_of_statement stmt
+      lexical_hoist#eval lexical_hoist#variable_declaration decl
+    | _ -> []
+    in
+    this#with_bindings lexical_bindings super#for_of_statement stmt
 
   method! for_statement (stmt: Ast.Statement.For.t) =
     let open Ast.Statement.For in
     let { init; test = _; update = _; body = _ } = stmt in
 
     let lexical_hoist = new lexical_hoister in
-    begin match init with
+    let lexical_bindings = match init with
     | Some (InitDeclaration (_, decl)) ->
-      ignore (lexical_hoist#variable_declaration decl)
-    | _ -> ()
-    end;
-    this#with_bindings lexical_hoist#bindings super#for_statement stmt
+      lexical_hoist#eval lexical_hoist#variable_declaration decl
+    | _ -> []
+    in
+    this#with_bindings lexical_bindings super#for_statement stmt
 
   method! catch_clause (clause: Ast.Statement.Try.CatchClause.t') =
     let open Ast.Statement.Try.CatchClause in
@@ -344,10 +356,8 @@ class walker = object(this)
 
   method! function_declaration (expr: Ast.Function.t) =
     let contains_with_or_eval =
-      let result = ref false in
-      let mapper = new with_or_eval_mapper result in
-      let _ = mapper#function_declaration expr in
-      !result
+      let visit = new with_or_eval_visitor in
+      visit#eval visit#function_declaration expr
     in
 
     if not contains_with_or_eval then begin
@@ -357,16 +367,16 @@ class walker = object(this)
         predicate = _; returnType = _; typeParameters = _;
       } = expr in
 
-      ignore (Flow_ast_mapper.opt this#identifier id);
+      run_opt this#identifier id;
 
       (* hoisting *)
       let hoist = new hoister in
       begin
         let param_list, _rest = params in
-        ignore (Flow_ast_mapper.ident_map hoist#function_param_pattern param_list);
+        run_list hoist#function_param_pattern param_list;
         match body with
         | BodyBlock (_loc, block) ->
-          ignore (hoist#block block)
+          run hoist#block block
         | _ ->
           ()
       end;
@@ -374,17 +384,17 @@ class walker = object(this)
       (* pushing *)
       let saved_bad_catch_params = bad_catch_params in
       bad_catch_params <- hoist#bad_catch_params;
-      let saved_state = this#push hoist#bindings in
+      let saved_state = this#push hoist#acc in
 
       let (param_list, rest) = params in
-      ignore (Flow_ast_mapper.ident_map this#function_param_pattern param_list);
-      ignore (Flow_ast_mapper.opt this#function_rest_element rest);
+      run_list this#function_param_pattern param_list;
+      run_opt this#function_rest_element rest;
 
       begin match body with
         | BodyBlock (_, block) ->
-          ignore (this#block block);
+          run this#block block;
         | BodyExpression expr ->
-          ignore (this#expression expr);
+          run this#expression expr;
       end;
 
       (* popping *)
@@ -398,10 +408,8 @@ class walker = object(this)
      function expression is locally in scope. *)
   method! function_ (expr: Ast.Function.t) =
     let contains_with_or_eval =
-      let result = ref false in
-      let mapper = new with_or_eval_mapper result in
-      let _ = mapper#function_ expr in
-      !result
+      let visit = new with_or_eval_visitor in
+      visit#eval visit#function_ expr
     in
 
     if not contains_with_or_eval then begin
@@ -413,16 +421,16 @@ class walker = object(this)
 
       (* pushing *)
       let saved_state = this#push (match id with Some (loc, x) -> [loc, x] | None -> []) in
-      ignore (Flow_ast_mapper.opt this#identifier id);
+      run_opt this#identifier id;
 
       (* hoisting *)
       let hoist = new hoister in
       begin
         let param_list, _rest = params in
-        ignore (Flow_ast_mapper.ident_map hoist#function_param_pattern param_list);
+        run_list hoist#function_param_pattern param_list;
         match body with
         | BodyBlock (_loc, block) ->
-          ignore (hoist#block block)
+          run hoist#block block
         | _ ->
           ()
       end;
@@ -430,17 +438,17 @@ class walker = object(this)
       (* more pushing *)
       let saved_bad_catch_params = bad_catch_params in
       bad_catch_params <- hoist#bad_catch_params;
-      let _saved_state = this#push hoist#bindings in
+      let _saved_state = this#push hoist#acc in
 
       let (param_list, rest) = params in
-      ignore (Flow_ast_mapper.ident_map this#function_param_pattern param_list);
-      ignore (Flow_ast_mapper.opt this#function_rest_element rest);
+      run_list this#function_param_pattern param_list;
+      run_opt this#function_rest_element rest;
 
       begin match body with
         | BodyBlock (_, block) ->
-          ignore (this#block block)
+          run this#block block
         | BodyExpression expr ->
-          ignore (this#expression expr)
+          run this#expression expr
       end;
 
       (* popping *)
@@ -451,15 +459,12 @@ class walker = object(this)
     expr
 end
 
-let program ?(ignore_toplevel=false) (program: Ast.program) =
-  let walk = new walker in
-  let _ =
-    if ignore_toplevel then walk#program program
-    else
-      let hoist = new hoister in
-      ignore (hoist#program program);
-      let lexical_hoist = new lexical_hoister in
-      ignore (lexical_hoist#program program);
-      walk#with_bindings (lexical_hoist#bindings @ hoist#bindings) walk#program program
-  in
-  walk
+let program ?(ignore_toplevel=false) program =
+  let walk = new scope_builder in
+  if ignore_toplevel then walk#eval walk#program program
+  else
+    let hoist = new hoister in
+    let bindings = hoist#eval hoist#program program in
+    let lexical_hoist = new lexical_hoister in
+    let lexical_bindings = lexical_hoist#eval lexical_hoist#program program in
+    walk#eval (walk#with_bindings (lexical_bindings @ bindings) walk#program) program

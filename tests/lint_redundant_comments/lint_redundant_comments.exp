@@ -11,12 +11,12 @@ test.js:6
                 ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
 
 test.js:12
- 12: //flowlint sketchy-null:on
-                ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+ 12: //flowlint sketchy-null:error
+                ^^^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
 
 test.js:13
- 13: //flowlint-line sketchy-null:on
-                     ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+ 13: //flowlint-line sketchy-null:error
+                     ^^^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
 
 test.js:15
  15: /*flowlint sketchy-null:off*/ //Unused suppression
@@ -31,8 +31,8 @@ test.js:17
                      ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
 
 test.js:22
- 22: //flowlint sketchy-null:on, sketchy-null:on
-                                 ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+ 22: //flowlint sketchy-null:error, sketchy-null:error
+                                    ^^^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
 
 test.js:23
  23: //flowlint-line sketchy-null:off, sketchy-null:off
@@ -43,48 +43,48 @@ test.js:25
                                   ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
 
 test.js:26
- 26: //flowlint-line sketchy-null:on, sketchy-null:on
-                                      ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+ 26: //flowlint-line sketchy-null:error, sketchy-null:error
+                                         ^^^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
 
 test.js:31
- 31: //flowlint sketchy-null:on, sketchy-null:off
-                ^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
+ 31: //flowlint sketchy-null:error, sketchy-null:off
+                ^^^^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
 
 test.js:32
- 32: //flowlint-line sketchy-null:on, sketchy-null:off
-                     ^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
+ 32: //flowlint-line sketchy-null:error, sketchy-null:off
+                     ^^^^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
 
 test.js:37
- 37: //flowlint sketchy-null-bool:on, sketchy-null:off
-                ^^^^^^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
+ 37: //flowlint sketchy-null-bool:error, sketchy-null:off
+                ^^^^^^^^^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
 
 test.js:38
- 38: //flowlint-line sketchy-null-bool:on, sketchy-null:off
-                     ^^^^^^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
+ 38: //flowlint-line sketchy-null-bool:error, sketchy-null:off
+                     ^^^^^^^^^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
 
 test.js:43
- 43: /*flowlint sketchy-null:on, sketchy-null-bool:off*/ //Unused suppression
-                                 ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+ 43: /*flowlint sketchy-null:error, sketchy-null-bool:off*/ //Unused suppression
+                                    ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
 test.js:44
- 44: /*flowlint-line sketchy-null:on, sketchy-null-bool:off*/ //Unused suppression
-                                      ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+ 44: /*flowlint-line sketchy-null:error, sketchy-null-bool:off*/ //Unused suppression
+                                         ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
 test.js:50
- 50: //flowlint sketchy-null:on, sketchy-null:on
-                ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+ 50: //flowlint sketchy-null:error, sketchy-null:error
+                ^^^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
 
 test.js:50
- 50: //flowlint sketchy-null:on, sketchy-null:on
-                                 ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+ 50: //flowlint sketchy-null:error, sketchy-null:error
+                                    ^^^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
 
 test.js:51
- 51: //flowlint-line sketchy-null:on, sketchy-null:on
-                     ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+ 51: //flowlint-line sketchy-null:error, sketchy-null:error
+                     ^^^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
 
 test.js:51
- 51: //flowlint-line sketchy-null:on, sketchy-null:on
-                                      ^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
+ 51: //flowlint-line sketchy-null:error, sketchy-null:error
+                                         ^^^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
 
 test.js:53
  53: /*Clearing the settings; not an error.*/ /*flowlint sketchy-null:off*/ //Unused suppression
@@ -107,36 +107,36 @@ test.js:55
                                        ^^^^^^^^^^^^^^^^ Redundant argument. This argument doesn't change any lint settings.
 
 test.js:60
- 60: //flowlint sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
-                ^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
+ 60: //flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
+                ^^^^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
 
 test.js:61
- 61: //flowlint-line sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
-                     ^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
+ 61: //flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off, sketchy-null-mixed:off
+                     ^^^^^^^^^^^^^^^^^^ Redundant argument. The values set by this argument are overwritten later in this comment.
 
 test.js:66
- 66: /*flowlint sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
-                                 ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+ 66: /*flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                    ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
 test.js:66
- 66: /*flowlint sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+ 66: /*flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
 test.js:66
- 66: /*flowlint sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
-                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+ 66: /*flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
 test.js:67
- 67: /*flowlint-line sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
-                                      ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+ 67: /*flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                         ^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
 test.js:67
- 67: /*flowlint-line sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
-                                                             ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+ 67: /*flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                                                ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
 test.js:67
- 67: /*flowlint-line sketchy-null:on, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
-                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
+ 67: /*flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
+                                                                                         ^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
 
 Found 35 errors
