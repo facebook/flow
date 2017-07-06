@@ -471,8 +471,7 @@ module Statement
       directive;
     }))
 
-  and type_alias_helper env =
-    let start_loc = Peek.loc env in
+  and type_alias_helper = with_loc (fun env ->
     if not (should_parse_types env)
     then error env Error.UnexpectedTypeAlias;
     Expect.token env T_TYPE;
@@ -481,16 +480,14 @@ module Statement
     let typeParameters = Type.type_parameter_declaration_with_defaults env in
     Expect.token env T_ASSIGN;
     let right = Type._type env in
-    let end_loc = match Peek.semicolon_loc env with
-    | None -> fst right
-    | Some end_loc -> end_loc in
     Eat.semicolon env;
     Eat.pop_lex_mode env;
-    Loc.btwn start_loc end_loc, Statement.TypeAlias.({
+    Statement.TypeAlias.({
       id;
       typeParameters;
       right;
     })
+  )
 
   and type_alias env =
     if Peek.is_identifier ~i:1 env
