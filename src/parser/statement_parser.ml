@@ -19,7 +19,7 @@ open Parser_common
 module type STATEMENT = sig
  val _for: env -> Statement.t
  val _if: env -> Statement.t
- val _let: env -> Statement.t
+ val let_: env -> Statement.t
  val _try: env -> Statement.t
  val _while: env -> Statement.t
  val _with: env -> Statement.t
@@ -392,32 +392,27 @@ module Statement
       finalizer;
     }));
 
-  and var_or_const env =
-    let (start_loc, declaration), errs = Declaration.variable env in
-    let end_loc = match Peek.semicolon_loc env with
-    | None -> start_loc
-    | Some end_loc -> end_loc in
+  and var_or_const = with_loc (fun env ->
+    let (_loc, declaration), errs = Declaration.variable env in
     Eat.semicolon env;
     errs |> List.iter (error_at env);
-    Loc.btwn start_loc end_loc, declaration
+    declaration
+  )
 
-  and _let env =
-    let start_loc = Peek.loc env in
+  and let_ = with_loc (fun env ->
     Expect.token env T_LET;
     (* Let declaration *)
-    let end_loc, declarations, errs =
+    let _end_loc, declarations, errs =
       Declaration.variable_declaration_list (env |> with_no_let true) in
     let declaration =
       Ast.(Statement.VariableDeclaration Statement.VariableDeclaration.({
         declarations;
         kind = Let;
       })) in
-    let end_loc = match Peek.semicolon_loc env with
-    | None -> end_loc
-    | Some end_loc -> end_loc in
     Eat.semicolon env;
     errs |> List.iter (error_at env);
-    Loc.btwn start_loc end_loc, declaration
+    declaration
+  )
 
   and _while env =
     let start_loc = Peek.loc env in
