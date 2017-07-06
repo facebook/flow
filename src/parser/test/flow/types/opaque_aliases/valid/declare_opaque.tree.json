@@ -1,80 +1,28 @@
 {
-  "type": "Program",
-  "loc": {
-    "source": null,
-    "start": {
-      "line": 1,
-      "column": 8
-    },
-    "end": {
-      "line": 1,
-      "column": 34
-    }
-  },
-  "range": [
-    8,
-    34
-  ],
-  "body": [
+  "type":"Program",
+  "loc":{"source":null,"start":{"line":1,"column":8},"end":{"line":1,"column":34}},
+  "range":[8,34],
+  "body":[
     {
-      "type": "OpaqueType",
-      "loc": {
-        "source": null,
-        "start": {
-          "line": 1,
-          "column": 8
-        },
-        "end": {
-          "line": 1,
-          "column": 34
-        }
+      "type":"OpaqueType",
+      "loc":{"source":null,"start":{"line":1,"column":8},"end":{"line":1,"column":34}},
+      "range":[8,34],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":24}},
+        "range":[20,24],
+        "name":"FBID",
+        "typeAnnotation":null,
+        "optional":false
       },
-      "range": [
-        8,
-        34
-      ],
-      "id": {
-        "type": "Identifier",
-        "loc": {
-          "source": null,
-          "start": {
-            "line": 1,
-            "column": 20
-          },
-          "end": {
-            "line": 1,
-            "column": 24
-          }
-        },
-        "range": [
-          20,
-          24
-        ],
-        "name": "FBID",
-        "typeAnnotation": null,
-        "optional": false
+      "typeParameters":null,
+      "impltype":{
+        "type":"NumberTypeAnnotation",
+        "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":33}},
+        "range":[27,33]
       },
-      "typeParameters": null,
-      "impltype": {
-        "type": "NumberTypeAnnotation",
-        "loc": {
-          "source": null,
-          "start": {
-            "line": 1,
-            "column": 27
-          },
-          "end": {
-            "line": 1,
-            "column": 33
-          }
-        },
-        "range": [
-          27,
-          33
-        ]
-      },
-      "supertype": null
+      "supertype":null
     }
   ],
-  "comments": []
+  "comments":[]
 }
