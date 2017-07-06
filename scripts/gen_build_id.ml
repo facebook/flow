@@ -8,7 +8,7 @@
  *
  *)
 
-#use "utils.ml"
+#use "script_utils.ml"
 
 (**
  * Computes some build identifiers based on the current commit. These IDs are

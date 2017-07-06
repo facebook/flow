@@ -107,7 +107,7 @@ let collate_errors =
       )
       errors
   in
-  fun { ServerEnv.local_errors; merge_errors; suppressions; } lint_settings ->
+  fun { ServerEnv.local_errors; merge_errors; suppressions; lint_settings; } ->
     let open Error_suppressions in
     let suppressions = union_suppressions suppressions in
 
@@ -116,7 +116,9 @@ let collate_errors =
         |> collate local_errors
         |> collate merge_errors
       in
-      let errors, suppressed_errors, suppressions = filter_suppressed_errors suppressions lint_settings errors in
+      let lint_settings = SuppressionMap.union_settings lint_settings in
+      let errors, suppressed_errors, suppressions =
+        filter_suppressed_errors suppressions lint_settings errors in
       let errors = add_unused_suppression_errors suppressions errors in
       errors, suppressed_errors
 
@@ -135,8 +137,7 @@ let collate_errors =
       }
     end else begin
       (* collate errors by origin *)
-      let lint_settings = Options.lint_settings genv.options in
-      let errors, _ = collate_errors env.ServerEnv.errors lint_settings in
+      let errors, _ = collate_errors env.ServerEnv.errors in
 
       (* TODO: check status.directory *)
       status_log errors;
@@ -145,9 +146,8 @@ let collate_errors =
       convert_errorl errors
     end
 
-  let check_once genv env =
-    let lint_settings = Options.lint_settings genv.options in
-    collate_errors env.ServerEnv.errors lint_settings
+  let check_once _genv env =
+    collate_errors env.ServerEnv.errors
 
   let die_nicely () =
     FlowEventLogger.killed ();
@@ -294,8 +294,7 @@ let collate_errors =
     Module_js.get_file ~audit:Expensive.warn module_name
 
   let gen_flow_files ~options env files =
-    let lint_settings = Options.lint_settings options in
-    let errors, _ = collate_errors env.ServerEnv.errors lint_settings in
+    let errors, _ = collate_errors env.ServerEnv.errors in
     let result = if Errors.ErrorSet.is_empty errors
       then begin
         let (flow_files, flow_file_cxs, non_flow_files, error) =
@@ -661,12 +660,14 @@ let collate_errors =
         (suggest ~options ~workers ~env files: ServerProt.suggest_response)
           |> marshal
     | ServerProt.CONNECT ->
-        let new_connections =
+        let new_connections, new_client =
           Persistent_connection.add_client
             !env.connections
             client
             client_logging_context
         in
+        (* See ideCommand.ml for a detailed explanation about why this is needed *)
+        Persistent_connection.send_ready new_client;
         env := {!env with connections = new_connections}
     end;
     !env
@@ -677,8 +678,7 @@ let collate_errors =
     let workers = genv.ServerEnv.workers in
     match msg with
       | Persistent_connection_prot.Subscribe ->
-          let lint_settings = Options.lint_settings options in
-          let errorl, _ = collate_errors !env.errors lint_settings in
+          let errorl, _ = collate_errors !env.errors in
           let new_connections =
             Persistent_connection.subscribe_client !env.connections client errorl
           in

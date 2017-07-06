@@ -15,14 +15,16 @@ open Utils_js
 (****************** typecheck job helpers *********************)
 
 let clear_errors ?(debug=false) (files: FilenameSet.t) errors =
-  FilenameSet.fold (fun file { ServerEnv.local_errors; merge_errors; suppressions; } ->
-    if debug then prerr_endlinef "clear errors %s" (string_of_filename file);
-    { ServerEnv.
-      local_errors = FilenameMap.remove file local_errors;
-      merge_errors = FilenameMap.remove file merge_errors;
-      suppressions = FilenameMap.remove file suppressions;
-    }
-  ) files errors
+  FilenameSet.fold
+    (fun file { ServerEnv.local_errors; merge_errors; suppressions; lint_settings; } ->
+      if debug then prerr_endlinef "clear errors %s" (string_of_filename file);
+      { ServerEnv.
+        local_errors = FilenameMap.remove file local_errors;
+        merge_errors = FilenameMap.remove file merge_errors;
+        suppressions = FilenameMap.remove file suppressions;
+        lint_settings = FilenameMap.remove file lint_settings;
+      }
+    ) files errors
 
 let update_errset map file errset =
   if Errors.ErrorSet.is_empty errset then map
@@ -50,6 +52,9 @@ let update_suppressions map file errsup =
   if Error_suppressions.is_empty errsup
     then FilenameMap.remove file map
     else FilenameMap.add file errsup map
+
+let update_lint_settings map file lintsett =
+  FilenameMap.add file lintsett map
 
 let with_timer ?options timer profiling f =
   let profiling = Profiling_js.start_timer ~timer profiling in
@@ -184,7 +189,7 @@ let commit_modules_and_resolve_requires
   (* TODO remove after lookup overhaul *)
   Module_js.clear_filename_cache ();
 
-  let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
+  let { ServerEnv.local_errors; merge_errors; suppressions; lint_settings } = errors in
 
   let profiling, (changed_modules, local_errors) = commit_modules
     ~options profiling ~workers parsed unparsed ~old_modules local_errors new_or_changed in
@@ -193,7 +198,7 @@ let commit_modules_and_resolve_requires
     ~options profiling ~workers parsed in
   let local_errors = FilenameMap.union resolve_errors local_errors in
 
-  profiling, changed_modules, { ServerEnv.local_errors; merge_errors; suppressions }
+  profiling, changed_modules, { ServerEnv.local_errors; merge_errors; suppressions; lint_settings }
 
 let error_set_of_merge_exception file exc =
   let loc = Loc.({ none with source = Some file }) in
@@ -201,16 +206,26 @@ let error_set_of_merge_exception file exc =
   let error = Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file:file msg in
   Errors.ErrorSet.singleton error
 
-let infer ~options ~profiling ~workers ~suppressions infer_input =
+let infer ~options ~profiling ~workers ~suppressions ~lint_settings infer_input =
   with_timer ~options "Infer" profiling (fun () ->
     let infer_results = Infer_service.infer ~options ~workers infer_input in
-    List.fold_left (fun (errset, suppressions) (file, errs, supps) ->
+    List.fold_left (fun (errset, suppressions, lint_settings) (file, errs, supps, lint_setts) ->
       (* TODO update_errset may be able to be replaced by a simpler operation, since infer_results
        * may only have one entry per file *)
       let errset = update_errset errset file errs in
       let suppressions = update_suppressions suppressions file supps in
-      errset, suppressions
-    ) (FilenameMap.empty, suppressions) infer_results
+      let lint_settings = update_lint_settings lint_settings file lint_setts in
+      errset, suppressions, lint_settings
+    ) (FilenameMap.empty, suppressions, lint_settings) infer_results
+  )
+
+let calc_deps ~options ~profiling ~workers to_merge =
+  with_timer ~options "CalcDeps" profiling (fun () ->
+    let dependency_graph = Dep_service.calc_dependency_graph workers to_merge in
+    let partition = Sort_js.topsort dependency_graph in
+    if Options.should_profile options then Sort_js.log partition;
+    let component_map = Sort_js.component_map partition in
+    dependency_graph, component_map
   )
 
 let merge
@@ -251,7 +266,7 @@ let typecheck
   ~all_dependent_files
   ~make_merge_input
   ~persistent_connections =
-  let { ServerEnv.local_errors; merge_errors; suppressions } = errors in
+  let { ServerEnv.local_errors; merge_errors; suppressions; lint_settings } = errors in
 
   (* local inference populates context heap, resolved requires heap *)
   Hh_logger.info "Running local inference";
@@ -269,8 +284,8 @@ let typecheck
       infer_input
   in
 
-  let profiling, (new_local_errors, suppressions) =
-    infer ~options ~profiling ~workers ~suppressions infer_input in
+  let profiling, (new_local_errors, suppressions, lint_settings) =
+    infer ~options ~profiling ~workers ~suppressions ~lint_settings infer_input in
 
   let send_errors_over_connection = match persistent_connections with
     | None -> fun _ -> ()
@@ -278,7 +293,7 @@ let typecheck
         let open Errors in
         let current_errors = ref ErrorSet.empty in
         let suppressions = Error_suppressions.union_suppressions suppressions in
-        let lint_settings = Options.lint_settings options in
+        let lint_settings = SuppressionMap.union_settings lint_settings in
         function lazy results ->
           let new_errors = List.fold_left
             (fun acc (_, errs) -> Errors.ErrorSet.union acc errs)
@@ -316,13 +331,8 @@ let typecheck
        initially.
     *)
     Hh_logger.info "Calculating dependencies";
-    let profiling, dependency_graph =
-      with_timer ~options "CalcDeps" profiling (fun () ->
-        Dep_service.calc_dependency_graph workers to_merge
-      ) in
-    let partition = Sort_js.topsort dependency_graph in
-    if Options.should_profile options then Sort_js.log partition;
-    let component_map = Sort_js.component_map partition in
+    let profiling, (dependency_graph, component_map) =
+      calc_deps ~options ~profiling ~workers to_merge in
 
     Hh_logger.info "Merging";
     let profiling, merge_errors = try
@@ -365,10 +375,11 @@ let typecheck
 
     profiling,
     FilenameSet.union unchanged_checked (FilenameSet.of_list to_merge),
-    { ServerEnv.local_errors; merge_errors; suppressions; }
+    { ServerEnv.local_errors; merge_errors; suppressions; lint_settings; }
 
   | None ->
-    profiling, unchanged_checked, { ServerEnv.local_errors; merge_errors; suppressions; }
+    profiling, unchanged_checked,
+      { ServerEnv.local_errors; merge_errors; suppressions; lint_settings }
 
 (* When checking contents, ensure that dependencies are checked. Might have more
    general utility. *)
@@ -444,12 +455,14 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
       (* apply overrides from the docblock *)
       let metadata = Infer_service.apply_docblock_overrides metadata info in
       let require_loc_map =
-        Parsing_service_js.calc_requires ast ~default_jsx:(info.Docblock.jsx = None)
+        Parsing_service_js.calc_requires ~default_jsx:(info.Docblock.jsx = None) ~ast
       in
+
+      let lint_settings = Some options.Options.opt_lint_settings in
 
       (* infer *)
       let profiling, cx = with_timer "Infer" profiling (fun () ->
-        Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map
+        Type_inference_js.infer_ast ~metadata ~filename ~lint_settings ast ~require_loc_map
       ) in
 
       (* write graphml of (unmerged) types, if requested *)
@@ -472,8 +485,8 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
 
       (* Filter out suppressed errors *)
       let error_suppressions = Context.error_suppressions cx in
+      let lint_settings = Context.lint_settings cx in
       let errors = Errors.ErrorSet.fold (fun err errors ->
-        let lint_settings = Options.lint_settings options in
         let suppressed, _, _ =
           Error_suppressions.check err lint_settings error_suppressions in
         if not suppressed
@@ -515,17 +528,19 @@ let init_package_heap ~options ~profiling parsed =
   ) in
   profiling
 
-let init_libs ~options ~profiling ~local_errors ~suppressions ordered_libs =
+let init_libs ~options ~profiling ~local_errors ~suppressions ~lint_settings ordered_libs =
   with_timer ~options "InitLibs" profiling (fun () ->
     let lib_files = Init_js.init ~options ordered_libs in
-    List.fold_left (fun acc (lib_file, ok, errs, suppressions) ->
-      let all_ok, errors_acc, suppressions_acc = acc in
+    List.fold_left (fun acc (lib_file, ok, errs, suppressions, lint_settings) ->
+      let all_ok, errors_acc, suppressions_acc, lint_settings_acc = acc in
       let all_ok = if ok then all_ok else false in
       let errors_acc = update_errset errors_acc lib_file errs in
       let suppressions_acc =
         update_suppressions suppressions_acc lib_file suppressions in
-      all_ok, errors_acc, suppressions_acc
-    ) (true, local_errors, suppressions) lib_files
+      let lint_settings_acc =
+        update_lint_settings lint_settings_acc lib_file lint_settings in
+      all_ok, errors_acc, suppressions_acc, lint_settings_acc
+    ) (true, local_errors, suppressions, lint_settings) lib_files
   )
 
 (* We maintain the following invariant across rechecks: The set of
@@ -899,9 +914,10 @@ let init ~profiling ~workers options =
   let profiling = init_package_heap ~options ~profiling parsed in
 
   Hh_logger.info "Loading libraries";
-  let profiling, (libs_ok, local_errors, suppressions) =
+  let profiling, (libs_ok, local_errors, suppressions, lint_settings) =
     let suppressions = FilenameMap.empty in
-    init_libs ~options ~profiling ~local_errors ~suppressions ordered_libs in
+    let lint_settings = FilenameMap.empty in
+    init_libs ~options ~profiling ~local_errors ~suppressions ~lint_settings ordered_libs in
 
   Hh_logger.info "Resolving dependencies";
   let profiling, _, errors =
@@ -910,6 +926,7 @@ let init ~profiling ~workers options =
       local_errors;
       merge_errors = FilenameMap.empty;
       suppressions;
+      lint_settings;
     } in
     let all_files = List.fold_left (fun acc (filename, _) ->
       filename::acc

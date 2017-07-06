@@ -17,7 +17,7 @@ type single_client
 
 val empty: t
 
-val add_client: t -> ServerUtils.client -> FlowEventLogger.logging_context -> t
+val add_client: t -> ServerUtils.client -> FlowEventLogger.logging_context -> (t * single_client)
 val remove_client: t -> single_client -> t
 
 (* Send updates to all clients that are subscribed *)
@@ -27,6 +27,7 @@ val send_end_recheck: t -> unit
 
 (* Send a message to just one client *)
 val send_message: Prot.response -> single_client -> unit
+val send_ready: single_client -> unit
 
 val client_fd_list: t -> Unix.file_descr list
 

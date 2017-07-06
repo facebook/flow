@@ -27,7 +27,8 @@ Flow also supports importing the type of values exported by other modules using
 **`exports.js`**
 
 ```js
-export default const myNumber = 42;
+const myNumber = 42;
+export default myNumber;
 export class MyClass {
   // ...
 }

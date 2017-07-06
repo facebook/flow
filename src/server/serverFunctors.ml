@@ -29,7 +29,6 @@ module type SERVER_PROGRAM = sig
   val handle_persistent_client : genv -> env -> Persistent_connection.single_client -> env
   val collate_errors :
     errors ->
-    LintSettings.t ->
     Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list
 end
 
@@ -130,17 +129,11 @@ end = struct
     let raw_updates = DfindLib.get_changes dfind in
     if SSet.is_empty raw_updates then env else begin
       let updates = Program.process_updates genv env raw_updates in
-      (* This will result in some false positives *)
-      let did_change = not (FilenameSet.is_empty updates) in
       Persistent_connection.send_start_recheck env.connections;
       let env = Program.recheck genv env updates in
       Persistent_connection.send_end_recheck env.connections;
-      if did_change then begin
-        let options = genv.options in
-        let lint_settings = Options.lint_settings options in
-        let errorl, _ = Program.collate_errors env.errors lint_settings in
-        Persistent_connection.update_clients env.connections errorl
-      end;
+      let errorl, _ = Program.collate_errors env.errors in
+      Persistent_connection.update_clients env.connections errorl;
       recheck_loop ~dfind genv env
     end
 

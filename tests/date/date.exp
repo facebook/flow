@@ -10,37 +10,37 @@ date.js:18
  18: new Date({});
          ^^^^ intersection
   Member 1:
-  420:     constructor(): void;
-           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:420
+  435:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:435
   Error:
    18: new Date({});
                 ^^ unused function argument
-    420:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:420
+    435:     constructor(): void;
+             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:435
   Member 2:
-  421:     constructor(timestamp: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:421
+  436:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:436
   Error:
    18: new Date({});
                 ^^ object literal. This type is incompatible with the expected param type of
-  421:     constructor(timestamp: number): void;
-                                  ^^^^^^ number. See lib: <BUILTINS>/core.js:421
+  436:     constructor(timestamp: number): void;
+                                  ^^^^^^ number. See lib: <BUILTINS>/core.js:436
   Member 3:
-  422:     constructor(dateString: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:437
   Error:
    18: new Date({});
                 ^^ object literal. This type is incompatible with the expected param type of
-  422:     constructor(dateString: string): void;
-                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:437
   Member 4:
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:438
   Error:
    18: new Date({});
                 ^^ object literal. This type is incompatible with the expected param type of
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                             ^^^^^^ number. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                             ^^^^^^ number. See lib: <BUILTINS>/core.js:438
 
 date.js:19
  19: new Date(2015, '6');
@@ -48,37 +48,37 @@ date.js:19
  19: new Date(2015, '6');
          ^^^^ intersection
   Member 1:
-  420:     constructor(): void;
-           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:420
+  435:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:435
   Error:
    19: new Date(2015, '6');
                 ^^^^ unused function argument
-    420:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:420
+    435:     constructor(): void;
+             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:435
   Member 2:
-  421:     constructor(timestamp: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:421
+  436:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:436
   Error:
    19: new Date(2015, '6');
                       ^^^ unused function argument
-    421:     constructor(timestamp: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:421
+    436:     constructor(timestamp: number): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:436
   Member 3:
-  422:     constructor(dateString: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:437
   Error:
    19: new Date(2015, '6');
                 ^^^^ number. This type is incompatible with the expected param type of
-  422:     constructor(dateString: string): void;
-                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:437
   Member 4:
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:438
   Error:
    19: new Date(2015, '6');
                       ^^^ string. This type is incompatible with the expected param type of
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                            ^^^^^^ number. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                            ^^^^^^ number. See lib: <BUILTINS>/core.js:438
 
 date.js:20
  20: new Date(2015, 6, '18');
@@ -86,37 +86,37 @@ date.js:20
  20: new Date(2015, 6, '18');
          ^^^^ intersection
   Member 1:
-  420:     constructor(): void;
-           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:420
+  435:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:435
   Error:
    20: new Date(2015, 6, '18');
                 ^^^^ unused function argument
-    420:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:420
+    435:     constructor(): void;
+             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:435
   Member 2:
-  421:     constructor(timestamp: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:421
+  436:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:436
   Error:
    20: new Date(2015, 6, '18');
                       ^ unused function argument
-    421:     constructor(timestamp: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:421
+    436:     constructor(timestamp: number): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:436
   Member 3:
-  422:     constructor(dateString: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:437
   Error:
    20: new Date(2015, 6, '18');
                 ^^^^ number. This type is incompatible with the expected param type of
-  422:     constructor(dateString: string): void;
-                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:437
   Member 4:
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:438
   Error:
    20: new Date(2015, 6, '18');
                          ^^^^ string. This type is incompatible with the expected param type of
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                                          ^^^^^^ number. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                                          ^^^^^^ number. See lib: <BUILTINS>/core.js:438
 
 date.js:21
  21: new Date(2015, 6, 18, '11');
@@ -124,37 +124,37 @@ date.js:21
  21: new Date(2015, 6, 18, '11');
          ^^^^ intersection
   Member 1:
-  420:     constructor(): void;
-           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:420
+  435:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:435
   Error:
    21: new Date(2015, 6, 18, '11');
                 ^^^^ unused function argument
-    420:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:420
+    435:     constructor(): void;
+             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:435
   Member 2:
-  421:     constructor(timestamp: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:421
+  436:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:436
   Error:
    21: new Date(2015, 6, 18, '11');
                       ^ unused function argument
-    421:     constructor(timestamp: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:421
+    436:     constructor(timestamp: number): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:436
   Member 3:
-  422:     constructor(dateString: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:437
   Error:
    21: new Date(2015, 6, 18, '11');
                 ^^^^ number. This type is incompatible with the expected param type of
-  422:     constructor(dateString: string): void;
-                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:437
   Member 4:
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:438
   Error:
    21: new Date(2015, 6, 18, '11');
                              ^^^^ string. This type is incompatible with the expected param type of
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                                                         ^^^^^^ number. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                                                         ^^^^^^ number. See lib: <BUILTINS>/core.js:438
 
 date.js:22
  22: new Date(2015, 6, 18, 11, '55');
@@ -162,37 +162,37 @@ date.js:22
  22: new Date(2015, 6, 18, 11, '55');
          ^^^^ intersection
   Member 1:
-  420:     constructor(): void;
-           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:420
+  435:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:435
   Error:
    22: new Date(2015, 6, 18, 11, '55');
                 ^^^^ unused function argument
-    420:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:420
+    435:     constructor(): void;
+             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:435
   Member 2:
-  421:     constructor(timestamp: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:421
+  436:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:436
   Error:
    22: new Date(2015, 6, 18, 11, '55');
                       ^ unused function argument
-    421:     constructor(timestamp: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:421
+    436:     constructor(timestamp: number): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:436
   Member 3:
-  422:     constructor(dateString: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:437
   Error:
    22: new Date(2015, 6, 18, 11, '55');
                 ^^^^ number. This type is incompatible with the expected param type of
-  422:     constructor(dateString: string): void;
-                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:437
   Member 4:
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:438
   Error:
    22: new Date(2015, 6, 18, 11, '55');
                                  ^^^^ string. This type is incompatible with the expected param type of
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                                                                          ^^^^^^ number. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                                                                          ^^^^^^ number. See lib: <BUILTINS>/core.js:438
 
 date.js:23
  23: new Date(2015, 6, 18, 11, 55, '42');
@@ -200,37 +200,37 @@ date.js:23
  23: new Date(2015, 6, 18, 11, 55, '42');
          ^^^^ intersection
   Member 1:
-  420:     constructor(): void;
-           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:420
+  435:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:435
   Error:
    23: new Date(2015, 6, 18, 11, 55, '42');
                 ^^^^ unused function argument
-    420:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:420
+    435:     constructor(): void;
+             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:435
   Member 2:
-  421:     constructor(timestamp: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:421
+  436:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:436
   Error:
    23: new Date(2015, 6, 18, 11, 55, '42');
                       ^ unused function argument
-    421:     constructor(timestamp: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:421
+    436:     constructor(timestamp: number): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:436
   Member 3:
-  422:     constructor(dateString: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:437
   Error:
    23: new Date(2015, 6, 18, 11, 55, '42');
                 ^^^^ number. This type is incompatible with the expected param type of
-  422:     constructor(dateString: string): void;
-                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:437
   Member 4:
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:438
   Error:
    23: new Date(2015, 6, 18, 11, 55, '42');
                                      ^^^^ string. This type is incompatible with the expected param type of
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                                                                                           ^^^^^^ number. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                                                                                           ^^^^^^ number. See lib: <BUILTINS>/core.js:438
 
 date.js:24
  24: new Date(2015, 6, 18, 11, 55, 42, '999');
@@ -238,37 +238,37 @@ date.js:24
  24: new Date(2015, 6, 18, 11, 55, 42, '999');
          ^^^^ intersection
   Member 1:
-  420:     constructor(): void;
-           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:420
+  435:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:435
   Error:
    24: new Date(2015, 6, 18, 11, 55, 42, '999');
                 ^^^^ unused function argument
-    420:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:420
+    435:     constructor(): void;
+             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:435
   Member 2:
-  421:     constructor(timestamp: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:421
+  436:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:436
   Error:
    24: new Date(2015, 6, 18, 11, 55, 42, '999');
                       ^ unused function argument
-    421:     constructor(timestamp: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:421
+    436:     constructor(timestamp: number): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:436
   Member 3:
-  422:     constructor(dateString: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:437
   Error:
    24: new Date(2015, 6, 18, 11, 55, 42, '999');
                 ^^^^ number. This type is incompatible with the expected param type of
-  422:     constructor(dateString: string): void;
-                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:437
   Member 4:
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:438
   Error:
    24: new Date(2015, 6, 18, 11, 55, 42, '999');
                                          ^^^^^ string. This type is incompatible with the expected param type of
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                                                                                                                 ^^^^^^ number. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                                                                                                                                 ^^^^^^ number. See lib: <BUILTINS>/core.js:438
 
 date.js:25
  25: new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
@@ -276,37 +276,37 @@ date.js:25
  25: new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
          ^^^^ intersection
   Member 1:
-  420:     constructor(): void;
-           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:420
+  435:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:435
   Error:
    25: new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
                 ^^^^ unused function argument
-    420:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:420
+    435:     constructor(): void;
+             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:435
   Member 2:
-  421:     constructor(timestamp: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:421
+  436:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:436
   Error:
    25: new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
                       ^ unused function argument
-    421:     constructor(timestamp: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:421
+    436:     constructor(timestamp: number): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:436
   Member 3:
-  422:     constructor(dateString: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:437
   Error:
    25: new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
                 ^^^^ number. This type is incompatible with the expected param type of
-  422:     constructor(dateString: string): void;
-                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+                                   ^^^^^^ string. See lib: <BUILTINS>/core.js:437
   Member 4:
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:438
   Error:
    25: new Date(2015, 6, 18, 11, 55, 42, 999, 'hahaha');
                                               ^^^^^^^^ unused function argument
-    423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 7 arguments. See lib: <BUILTINS>/core.js:423
+    438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 7 arguments. See lib: <BUILTINS>/core.js:438
 
 date.js:26
  26: new Date('2015', 6);
@@ -314,37 +314,37 @@ date.js:26
  26: new Date('2015', 6);
          ^^^^ intersection
   Member 1:
-  420:     constructor(): void;
-           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:420
+  435:     constructor(): void;
+           ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:435
   Error:
    26: new Date('2015', 6);
                 ^^^^^^ unused function argument
-    420:     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:420
+    435:     constructor(): void;
+             ^^^^^^^^^^^^^^^^^^^ function type expects no arguments. See lib: <BUILTINS>/core.js:435
   Member 2:
-  421:     constructor(timestamp: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:421
+  436:     constructor(timestamp: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:436
   Error:
    26: new Date('2015', 6);
                 ^^^^^^ string. This type is incompatible with the expected param type of
-  421:     constructor(timestamp: number): void;
-                                  ^^^^^^ number. See lib: <BUILTINS>/core.js:421
+  436:     constructor(timestamp: number): void;
+                                  ^^^^^^ number. See lib: <BUILTINS>/core.js:436
   Member 3:
-  422:     constructor(dateString: string): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:422
+  437:     constructor(dateString: string): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:437
   Error:
    26: new Date('2015', 6);
                         ^ unused function argument
-    422:     constructor(dateString: string): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:422
+    437:     constructor(dateString: string): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type expects no more than 1 argument. See lib: <BUILTINS>/core.js:437
   Member 4:
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:438
   Error:
    26: new Date('2015', 6);
                 ^^^^^^ string. This type is incompatible with the expected param type of
-  423:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                             ^^^^^^ number. See lib: <BUILTINS>/core.js:423
+  438:     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
+                             ^^^^^^ number. See lib: <BUILTINS>/core.js:438
 
 
 Found 10 errors

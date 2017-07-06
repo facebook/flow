@@ -53,4 +53,18 @@ module Make(Ord: Map.OrderedType) : S with type key = Ord.t = struct
       | None -> add key new_value map
       | Some old_value -> add key (combine old_value new_value) map
     end
+
+  let ident_map f map =
+    let map_, changed = fold (fun key item (map_, changed) ->
+      let item_ = f item in
+      add key item_ map_, changed || item_ != item
+    ) map (empty, false) in
+    if changed then map_ else map
+
+  let ident_map_key ?combine f map =
+    let map_, changed = fold (fun key item (map_, changed) ->
+      let new_key = f key in
+      add ?combine new_key item map_, changed || new_key != key
+    ) map (empty, false) in
+    if changed then map_ else map
 end

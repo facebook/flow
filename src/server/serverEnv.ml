@@ -30,7 +30,8 @@ type errors = {
   merge_errors: Errors.ErrorSet.t Utils_js.FilenameMap.t;
   (* error suppressions in the code *)
   suppressions: Error_suppressions.t Utils_js.FilenameMap.t;
-  (* TODO: rballard put local lint suppressions here *)
+  (* lint settings in the code *)
+  lint_settings: SuppressionMap.t Utils_js.FilenameMap.t;
 }
 
 type env = {

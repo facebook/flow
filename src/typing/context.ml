@@ -126,6 +126,7 @@ type local_t = {
   mutable globals: SSet.t;
 
   mutable error_suppressions: Error_suppressions.t;
+  mutable lint_settings: SuppressionMap.t;
 
   type_table: Type_table.t;
   annot_table: (Loc.t, Type.t) Hashtbl.t;
@@ -133,9 +134,8 @@ type local_t = {
 
   mutable declare_module_t: Type.t option;
 
-  (* map from exists proposition locations to the types of values running through them
-   * (potential null/void use source loc * potential non-null/void falsey use source loc) *)
-  mutable exist_checks: (Loc.t option * Loc.t option) Utils_js.LocMap.t;
+  (* map from exists proposition locations to the types of values running through them *)
+  mutable exists_checks: ExistsCheck.t Utils_js.LocMap.t;
 }
 
 type cacheable_t = local_t
@@ -209,6 +209,7 @@ let make metadata file module_ref = {
     globals = SSet.empty;
 
     error_suppressions = Error_suppressions.empty;
+    lint_settings = SuppressionMap.invalid_default;
 
     type_table = Type_table.create ();
     annot_table = Hashtbl.create 0;
@@ -216,7 +217,7 @@ let make metadata file module_ref = {
 
     declare_module_t = None;
 
-    exist_checks = Utils_js.LocMap.empty;
+    exists_checks = Utils_js.LocMap.empty;
   }
 }
 
@@ -260,6 +261,7 @@ let imported_ts cx = cx.local.imported_ts
 let is_checked cx = cx.local.metadata.checked
 let is_verbose cx = cx.local.metadata.verbose <> None
 let is_weak cx = cx.local.metadata.weak
+let lint_settings cx = cx.local.lint_settings
 let max_trace_depth cx = Global.max_trace_depth cx.global
 let module_kind cx = cx.local.module_kind
 let module_map cx = cx.local.modulemap
@@ -280,7 +282,7 @@ let type_table cx = cx.local.type_table
 let verbose cx = cx.local.metadata.verbose
 let max_workers cx = Global.max_workers cx.global
 let jsx cx = cx.local.metadata.jsx
-let exist_checks cx = cx.local.exist_checks
+let exists_checks cx = cx.local.exists_checks
 
 let pid_prefix (cx: t) =
   if max_workers cx > 0
@@ -325,6 +327,8 @@ let remove_all_errors cx =
   cx.local.errors <- Errors.ErrorSet.empty
 let remove_all_error_suppressions cx =
   cx.local.error_suppressions <- Error_suppressions.empty
+let remove_all_lint_settings cx =
+  cx.local.lint_settings <- SuppressionMap.invalid_default
 let remove_tvar cx id =
   cx.local.graph <- IMap.remove id cx.local.graph
 let set_all_unresolved cx all_unresolved =
@@ -339,6 +343,8 @@ let set_globals cx globals =
   cx.local.globals <- globals
 let set_graph cx graph =
   cx.local.graph <- graph
+let set_lint_settings cx lint_settings =
+  cx.local.lint_settings <- lint_settings
 let set_module_kind cx module_kind =
   cx.local.module_kind <- module_kind
 let set_property_maps cx property_maps =
@@ -349,15 +355,17 @@ let set_type_graph cx type_graph =
   cx.local.type_graph <- type_graph
 let set_tvar cx id node =
   cx.local.graph <- IMap.add id node cx.local.graph
-let set_exist_checks cx exist_checks =
-  cx.local.exist_checks <- exist_checks
+let set_unused_lint_suppressions cx suppressions = cx.local.error_suppressions <-
+  Error_suppressions.set_unused_lint_suppressions suppressions cx.local.error_suppressions
+let set_exists_checks cx exists_checks =
+  cx.local.exists_checks <- exists_checks
 
 let clear_intermediates cx =
   (* call reset instead of clear to also shrink the bucket tables *)
   Type_table.reset cx.local.type_table;
   Hashtbl.reset cx.local.annot_table;
   cx.local.all_unresolved <- IMap.empty;
-  cx.local.exist_checks <- Utils_js.LocMap.empty
+  cx.local.exists_checks <- Utils_js.LocMap.empty
 
 (* utils *)
 let iter_props cx id f =
@@ -415,7 +423,7 @@ let merge_into cx cx_other =
   set_all_unresolved cx (IMap.union (all_unresolved cx_other) (all_unresolved cx));
   set_globals cx (SSet.union (globals cx_other) (globals cx));
   set_graph cx (IMap.union (graph cx_other) (graph cx));
-  set_exist_checks cx (Utils_js.LocMap.union (exist_checks cx_other) (exist_checks cx))
+  set_exists_checks cx (Utils_js.LocMap.union (exists_checks cx_other) (exists_checks cx))
 
 let to_cache cx = cx.local
 let from_cache ~options local =

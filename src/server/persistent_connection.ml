@@ -25,6 +25,9 @@ let empty = []
 let send_message message connection =
   Marshal_tools.to_fd_with_preamble connection.outfd (message : Prot.response)
 
+let send_ready connection =
+  Marshal_tools.to_fd_with_preamble connection.outfd ()
+
 let send_errors errors connection =
   send_message (Prot.Errors errors) connection
 
@@ -45,7 +48,7 @@ let add_client connections client logging_context =
       subscribed = false;
     }
   in
-  new_connection :: connections
+  (new_connection :: connections, new_connection)
 
 (* Uses identity *)
 let remove_item lst item = List.filter (fun e -> e != item) lst

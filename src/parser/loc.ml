@@ -61,6 +61,13 @@ let char_before loc =
   let _end = loc.start in
   { loc with start; _end }
 
+(* Returns the location of the first character in the given loc. Not accurate if the
+ * first line is a newline character, but is still consistent with loc orderings. *)
+let first_char loc =
+  let start = loc.start in
+  let _end = {start with column = start.column + 1; offset = start.offset + 1} in
+  {loc with _end}
+
 (* Returns true if loc1 entirely overlaps loc2 *)
 let contains loc1 loc2 =
   loc1.source = loc2.source &&
@@ -70,6 +77,10 @@ let contains loc1 loc2 =
 let string_of_filename = function
   | LibFile x | SourceFile x | JsonFile x | ResourceFile x -> x
   | Builtins -> "(global)"
+
+
+let pos_cmp a b =
+  let k = a.line - b.line in if k = 0 then a.column - b.column else k
 
 let compare =
   (* builtins, then libs, then source and json files at the same priority since
@@ -91,9 +102,6 @@ let compare =
       let k = (order_of_filename fn1) - (order_of_filename fn2) in
       if k <> 0 then k
       else String.compare (string_of_filename fn1) (string_of_filename fn2)
-  in
-  let pos_cmp a b =
-    let k = a.line - b.line in if k = 0 then a.column - b.column else k
   in
   fun loc1 loc2 ->
     let k = source_cmp loc1.source loc2.source in

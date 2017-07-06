@@ -3,24 +3,24 @@ overload.js:7
                       ^^^^^^^^^^^ call of method `match`
   7: var x1: number = "".match(0)[0];
                                ^ number. This type is incompatible with
-289:     match(regexp: string | RegExp): ?Array<string>;
-                       ^^^^^^^^^^^^^^^ union: string | RegExp. See lib: <BUILTINS>/core.js:289
+304:     match(regexp: string | RegExp): ?Array<string>;
+                       ^^^^^^^^^^^^^^^ union: string | RegExp. See lib: <BUILTINS>/core.js:304
   Member 1:
-  289:     match(regexp: string | RegExp): ?Array<string>;
-                         ^^^^^^ string. See lib: <BUILTINS>/core.js:289
+  304:     match(regexp: string | RegExp): ?Array<string>;
+                         ^^^^^^ string. See lib: <BUILTINS>/core.js:304
   Error:
     7: var x1: number = "".match(0)[0];
                                  ^ number. This type is incompatible with
-  289:     match(regexp: string | RegExp): ?Array<string>;
-                         ^^^^^^ string. See lib: <BUILTINS>/core.js:289
+  304:     match(regexp: string | RegExp): ?Array<string>;
+                         ^^^^^^ string. See lib: <BUILTINS>/core.js:304
   Member 2:
-  289:     match(regexp: string | RegExp): ?Array<string>;
-                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:289
+  304:     match(regexp: string | RegExp): ?Array<string>;
+                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:304
   Error:
     7: var x1: number = "".match(0)[0];
                                  ^ number. This type is incompatible with
-  289:     match(regexp: string | RegExp): ?Array<string>;
-                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:289
+  304:     match(regexp: string | RegExp): ?Array<string>;
+                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:304
 
 overload.js:7
   7: var x1: number = "".match(0)[0];

@@ -25,9 +25,7 @@ let parse_content file content =
   Parser_flow.program_file ~fail:false ~parse_options content (Some file)
 
 let calc_requires ast =
-  let mapper = new Require.mapper ~default_jsx:true in
-  let _ = mapper#program ast in
-  mapper#requires
+  Require.program ~default_jsx:true ~ast
 
 let array_of_list f lst =
   Array.of_list (List.map f lst)
@@ -53,7 +51,7 @@ let error_of_parse_error source_file (loc, err) =
   Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file flow_err
 
 let load_lib_files ~master_cx ~metadata files
-    save_parse_errors save_infer_errors save_suppressions =
+    save_parse_errors save_infer_errors save_suppressions save_lint_suppressions =
   (* iterate in reverse override order *)
   let _, result = List.rev files |> List.fold_left (
 
@@ -62,15 +60,15 @@ let load_lib_files ~master_cx ~metadata files
       let lib_file = Loc.LibFile file in
       match parse_content lib_file lib_content with
       | ast, [] ->
-
         let cx, syms = Type_inference_js.infer_lib_file
-          ~metadata ~exclude_syms
+          ~metadata ~exclude_syms ~lint_settings:None
           lib_file ast
         in
 
-        let errs, suppressions = Merge_js.merge_lib_file cx master_cx in
+        let errs, suppressions, lint_suppressions = Merge_js.merge_lib_file cx master_cx in
         save_infer_errors lib_file errs;
         save_suppressions lib_file suppressions;
+        save_lint_suppressions lib_file lint_suppressions;
 
         (* symbols loaded from this file are suppressed
            if found in later ones *)
@@ -161,7 +159,8 @@ let check_content ~filename ~content =
     Flow_js.Cache.clear();
 
     let require_loc_map = calc_requires ast in
-    let cx = Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map in
+    let cx =
+      Type_inference_js.infer_ast ~metadata ~filename ~lint_settings:None ast ~require_loc_map in
 
     (* this is a VERY pared-down version of Merge_service.merge_strict_context.
        it relies on the JS version only supporting libs + 1 file, so every
@@ -224,7 +223,8 @@ let infer_type filename content line col =
       Flow_js.Cache.clear();
 
       let require_loc_map = calc_requires ast in
-      let cx = Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map in
+      let cx =
+        Type_inference_js.infer_ast ~metadata ~filename ~lint_settings:None ast ~require_loc_map in
       let loc = mk_loc filename line col in
       let loc, ground_t, possible_ts = Query_types.(match query_type cx loc with
         | FailureNoMatch -> Loc.none, None, []
@@ -258,7 +258,8 @@ let dump_types js_file js_content =
       Flow_js.Cache.clear();
 
       let require_loc_map = calc_requires ast in
-      let cx = Type_inference_js.infer_ast ~metadata ~filename ast ~require_loc_map in
+      let cx =
+        Type_inference_js.infer_ast ~metadata ~filename ~lint_settings:None ast ~require_loc_map in
       let printer = Type_printer.string_of_t in
       let raw_printer _ _ = None in
       let types = Query_types.dump_types printer raw_printer cx in

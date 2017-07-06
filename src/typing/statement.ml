@@ -656,6 +656,7 @@ and statement cx = Ast.Statement.(
         Anno.mk_type_param_declarations cx typeParameters in
       let t = Anno.convert cx typeparams_map right in
       let type_ = poly_type typeparams (DefT (r, TypeT t)) in
+      Flow_js.check_polarity cx Positive t;
       Type_table.set (Context.type_table cx) loc type_;
       Env.init_type cx name type_ name_loc
 

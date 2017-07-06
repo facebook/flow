@@ -907,7 +907,7 @@ module rec TypeTerm : sig
   | ResolveSpreadsToArrayLiteral of int * t
   (* Once we've finished resolving spreads, try to construct a non-tuple array
    *)
-  | ResolveSpreadsToArray of t
+  | ResolveSpreadsToArray of int * t
 
   (* Once we've finished resolving spreads for a function's arguments, call the
    * function with those arguments *)

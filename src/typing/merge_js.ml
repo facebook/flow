@@ -110,18 +110,37 @@ let explicit_unchecked_require_strict cx (m, loc, cx_to) =
   Flow_js.flow_t cx (from_t, to_t)
 
 let detect_sketchy_null_checks cx =
-  let exist_checks = Context.exist_checks cx in
-  let detect_function prop_loc = function
-    | (Some null_loc, Some falsey_loc) -> Context.add_error cx (Errors.mk_error
-        ~kind:(Errors.LintError LintSettings.SketchyNullMixed) (* TODO: Track actual error type *)
-        ~extra:[Errors.InfoLeaf [
-          null_loc, ["Potentially null/undefined value."];
-          falsey_loc, ["Potentially falsey value."]
-        ]]
-        [prop_loc, ["Sketchy null check. Perhaps you meant to check for null instead of for existence?"]]
-      )
-    | _ -> () in
-  Utils_js.LocMap.iter detect_function exist_checks
+  let add_error ~prop_loc ~null_loc ~falsey_loc kind ~type_str ~value_str =
+    Context.add_error cx (Errors.mk_error
+      ~kind:(Errors.LintError kind)
+      [prop_loc, [(Printf.sprintf "Sketchy null check on %s value." type_str)
+        ^ " Perhaps you meant to check for null instead of for existence?"]]
+      ~extra:[Errors.InfoLeaf [
+        null_loc, ["Potentially null/undefined value."];
+        falsey_loc, [Printf.sprintf "%s value." value_str]
+      ]]
+    )
+  in
+
+  let detect_function prop_loc exists_check =
+    let open ExistsCheck in
+    begin match exists_check.null_loc with
+      | None -> ()
+      | Some null_loc ->
+        let add_error = add_error ~prop_loc ~null_loc in
+        Option.iter exists_check.bool_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
+          LintSettings.SketchyNullBool ~type_str:"boolean" ~value_str:"Potentially false");
+        Option.iter exists_check.number_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
+          LintSettings.SketchyNullNumber ~type_str:"number" ~value_str:"Potentially 0");
+        Option.iter exists_check.string_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
+          LintSettings.SketchyNullString ~type_str:"string" ~value_str:"Potentially \"\"");
+        Option.iter exists_check.mixed_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
+          LintSettings.SketchyNullMixed ~type_str:"mixed" ~value_str:"Mixed");
+        ()
+    end
+  in
+
+  Utils_js.LocMap.iter detect_function (Context.exists_checks cx)
 
 
 (* Merge a component with its "implicit requires" and "explicit requires." The
@@ -222,7 +241,7 @@ let merge_lib_file cx master_cx =
   let errs = Context.errors cx in
   Context.remove_all_errors cx;
 
-  errs, Context.error_suppressions cx
+  errs, Context.error_suppressions cx, Context.lint_settings cx
 
 let merge_type r types =
   match types with

@@ -62,3 +62,5 @@ function acceptsMaybeNumber(value: ?number) {
   }
 }
 ```
+
+However, type refinement can be lost. For instance calling a function after refining the type of an object's property will invalidate this refinement. Consult the [refinement invalidations section](https://flow.org/en/docs/lang/refinements/) for more details, to understand why Flow works this way, and how you can avoid this common pitfall.

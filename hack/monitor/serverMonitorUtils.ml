@@ -58,15 +58,14 @@ type connection_error =
   (**
    * This should be rare. The monitor rapidly accepts connections and does
    * the version ID check very quickly. Only under very heavy load will that
-   * sequence time out - we call this Monitor_establish_connection_timeout
-   *)
+   * sequence time out. *)
   | Monitor_establish_connection_timeout
   | Server_missing
   (** There is a brief period of time after the Monitor has grabbed its
    * liveness lock and before it starts listening in on the socket
    * (which can only happen after the socket file is created). During that
    * period, either the socket file doesn't exist yet, or socket connections
-   * are refused. This is called Monitor_socket_not_ready *)
+   * are refused. *)
   | Monitor_socket_not_ready
   | Server_died
   (** Server dormant and can't join the (now full) queue of connections

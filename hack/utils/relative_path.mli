@@ -29,9 +29,8 @@ type t = S.t
 val default : t
 (* Checks that string indeed has the given prefix before constructing path *)
 val create : prefix -> string -> t
-(* Prepends prefix to string *)
-val concat : prefix -> string -> t
-val join : prefix -> string list -> t
+(* Creates a Relative_path.t relative to the root *)
+val from_root : string -> t
 val prefix : t -> prefix
 val suffix : t -> string
 val to_absolute : t -> string

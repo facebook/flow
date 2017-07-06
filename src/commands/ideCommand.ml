@@ -209,55 +209,101 @@ end = struct
 end
 
 module ProtocolFunctor (Protocol: ClientProtocol) = struct
-  let handle_server_response fd pending_requests =
-    let (message : Prot.response) =
-      try
-        Marshal_tools.from_fd_with_preamble fd
-      with End_of_file ->
-        prerr_endline "Server closed the connection";
-        (* TODO choose a standard exit code for this *)
-        exit 1
-    in
-    let pending_requests = PendingRequests.add_response pending_requests message in
-    Protocol.handle_server_response message;
-    pending_requests
+  (* not to be confused with genv or env -- this is state local to the IDE
+   * command process *)
+  type local_env = {
+    pending_requests: PendingRequests.t;
+    is_server_ready: bool;
+  }
+
+  let handle_server_response fd local_env =
+    if not (local_env.is_server_ready) then
+      (* The server reads the first message (CONNECT, which establishes this
+       * connection as a persistent connection rather than a short-lived one)
+       * using the built-in Marshal module. This is based on OCaml channels,
+       * which have a buffer. If we send any subsequent messages before the
+       * server has read the first message, then it is possible for that message
+       * to be stored in the OCaml channel's buffer. Then, when we `select` on
+       * the underlying fd, it never comes up as readable, since the message we
+       * expect to receive has already been read into the buffer.
+       *
+       * We use Marshal_tools to write/read directly from the underlying fd in
+       * order to avoid this problem. However, we need to make sure that we
+       * don't start writing until after the server reads from the OCaml
+       * channel. So, after it does so, it sends down a single `unit` message
+       * down, indicating that it is now ready to start receiving messages.
+       *
+       * This handshake would not be necessary if we converted all client/server
+       * communication to use Marshal_tools rather than the built-in Marshal
+       * module. *)
+      let () = Marshal_tools.from_fd_with_preamble fd in
+      { local_env with is_server_ready = true }
+    else
+      let (message : Prot.response) =
+        try
+          Marshal_tools.from_fd_with_preamble fd
+        with End_of_file ->
+          prerr_endline "Server closed the connection";
+          (* TODO choose a standard exit code for this *)
+          exit 1
+      in
+      let pending_requests =
+        PendingRequests.add_response local_env.pending_requests message
+      in
+      Protocol.handle_server_response message;
+      { local_env with pending_requests }
 
   let send_server_request fd msg =
     Marshal_tools.to_fd_with_preamble fd (msg: Prot.request)
 
-  let handle_stdin_message buffered_stdin pending_requests =
+  let handle_stdin_message buffered_stdin local_env =
     match Protocol.server_request_of_stdin_message buffered_stdin with
-      | None -> pending_requests
-      | Some req -> PendingRequests.add_request pending_requests req
+      | None -> local_env
+      | Some req ->
+          let pending_requests =
+            PendingRequests.add_request local_env.pending_requests req
+          in
+          { local_env with pending_requests }
 
-  let rec handle_all_stdin_messages buffered_stdin pending_requests =
-    let pending_requests = handle_stdin_message buffered_stdin pending_requests in
+  let rec handle_all_stdin_messages buffered_stdin local_env =
+    let local_env = handle_stdin_message buffered_stdin local_env in
     if Buffered_line_reader.has_buffered_content buffered_stdin then
-      handle_all_stdin_messages buffered_stdin pending_requests
+      handle_all_stdin_messages buffered_stdin local_env
     else
-      pending_requests
+      local_env
 
-  let rec send_pending_requests fd pending_requests =
-    let (req, pending_requests) = PendingRequests.ready_request pending_requests in
-    match req with
-      | None -> pending_requests
-      | Some req -> begin
-          send_server_request fd req;
-          send_pending_requests fd pending_requests
-        end
+  let rec send_pending_requests fd local_env =
+    if not (local_env.is_server_ready) then
+      local_env
+    else
+      let (req, pending_requests) =
+        PendingRequests.ready_request local_env.pending_requests
+      in
+      let local_env = { local_env with pending_requests } in
+      match req with
+        | None -> local_env
+        | Some req -> begin
+            send_server_request fd req;
+            send_pending_requests fd local_env
+          end
 
   let main_loop ~buffered_stdin ~ic_fd ~oc_fd =
     let stdin_fd = Buffered_line_reader.get_fd buffered_stdin in
-    let pending_requests = ref PendingRequests.empty in
+    let local_env =
+      ref {
+        pending_requests = PendingRequests.empty;
+        is_server_ready = false;
+      }
+    in
     while true do
-      pending_requests := send_pending_requests oc_fd !pending_requests;
+      local_env := send_pending_requests oc_fd !local_env;
       (* Negative timeout means this call will wait indefinitely *)
       let readable_fds, _, _ = Unix.select [stdin_fd; ic_fd] [] [] ~-.1.0 in
       List.iter (fun fd ->
         if fd = ic_fd then begin
-          pending_requests := handle_server_response ic_fd !pending_requests
+          local_env := handle_server_response ic_fd !local_env
         end else if fd = stdin_fd then begin
-          pending_requests := handle_all_stdin_messages buffered_stdin !pending_requests
+          local_env := handle_all_stdin_messages buffered_stdin !local_env
         end else
           failwith "Internal error: select returned an unknown fd"
       ) readable_fds

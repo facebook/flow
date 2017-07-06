@@ -130,4 +130,4 @@ let edit_file_unsafe fc edits =
   | Result.Ok r -> r
   | Result.Error e ->
       Printf.eprintf "%s" e;
-      assert false
+      failwith e

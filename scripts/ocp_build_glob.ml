@@ -8,7 +8,7 @@
  *
  *)
 
-#use "utils.ml"
+#use "script_utils.ml"
 
 module SSet = Set.Make (struct
   type t = string

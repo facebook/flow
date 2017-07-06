@@ -14,6 +14,12 @@ let iter f (x, xs) =
 
 let map f (x, xs) = (f x, List.map f xs)
 
+let ident_map f ((x, xs) as original) =
+  let x' = f x in
+  let xs' = ListUtils.ident_map f xs in
+  if x' == x && xs' == xs then original
+  else (x', xs')
+
 let concat (xs, xss) =
   let xs = to_list xs in
   let xss = List.map to_list xss in
