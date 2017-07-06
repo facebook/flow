@@ -331,19 +331,15 @@ module Statement
         cases;
       }))
 
-  and throw env =
+  and throw = with_loc (fun env ->
     let start_loc = Peek.loc env in
     Expect.token env T_THROW;
     if Peek.is_line_terminator env
     then error_at env (start_loc, Error.NewlineAfterThrow);
     let argument = Parse.expression env in
-    let end_loc = match Peek.semicolon_loc env with
-    | Some loc -> loc
-    | None -> fst argument in
     Eat.semicolon env;
-    Loc.btwn start_loc end_loc, Statement.(Throw Throw.({
-      argument;
-    }))
+    Statement.(Throw { Throw.argument; })
+  )
 
   and _try env =
     let start_loc = Peek.loc env in
