@@ -270,24 +270,19 @@ module Statement
       alternate;
     }))
 
-  and return env =
+  and return = with_loc (fun env ->
     if not (in_function env)
     then error env Error.IllegalReturn;
-    let start_loc = Peek.loc env in
     Expect.token env T_RETURN;
     let argument =
       if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
       then None
       else Some (Parse.expression env) in
-    let end_loc = match Peek.semicolon_loc env with
-    | Some loc -> loc
-    | None -> (match argument with
-      | Some argument -> fst argument
-      | None -> start_loc) in
     Eat.semicolon env;
-    Loc.btwn start_loc end_loc, Statement.(Return Return.({
+    Statement.(Return Return.({
       argument;
     }))
+  )
 
   and switch =
     let rec case_list env (seen_default, acc) =
