@@ -172,19 +172,20 @@ module Statement
       Expect.token env T_LPAREN;
 
       let init, errs =
+        let env = env |> with_no_in true in
         match Peek.token env with
         | T_SEMICOLON -> None, []
         | T_LET ->
-            let decl, errs = Declaration._let (env |> with_no_in true) in
-            Some (Statement.For.InitDeclaration decl), errs
+            let loc, (decl, errs) = with_loc Declaration.let_ env in
+            Some (Statement.For.InitDeclaration (loc, decl)), errs
         | T_CONST ->
-            let decl, errs = Declaration.const (env |> with_no_in true) in
-            Some (Statement.For.InitDeclaration decl), errs
+            let loc, (decl, errs) = with_loc Declaration.const env in
+            Some (Statement.For.InitDeclaration (loc, decl)), errs
         | T_VAR ->
-            let decl, errs = Declaration.var (env |> with_no_in true) in
-            Some (Statement.For.InitDeclaration decl), errs
+            let loc, (decl, errs) = with_loc Declaration.var env in
+            Some (Statement.For.InitDeclaration (loc, decl)), errs
         | _ ->
-            let expr = Parse.expression (env |> with_no_in true |> with_no_let true) in
+            let expr = Parse.expression (env |> with_no_let true) in
             Some (Statement.For.InitExpression expr), []
       in
 
@@ -402,8 +403,7 @@ module Statement
   and let_ = with_loc (fun env ->
     Expect.token env T_LET;
     (* Let declaration *)
-    let _end_loc, declarations, errs =
-      Declaration.variable_declaration_list (env |> with_no_let true) in
+    let declarations, errs = Declaration.variable_declaration_list (env |> with_no_let true) in
     let declaration =
       Ast.(Statement.VariableDeclaration Statement.VariableDeclaration.({
         declarations;

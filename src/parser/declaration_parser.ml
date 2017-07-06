@@ -25,10 +25,10 @@ module type DECLARATION = sig
   val strict_post_check: env -> strict:bool -> simple:bool -> Identifier.t option -> Pattern.t list * Function.RestElement.t option -> unit
   val concise_function_body: env -> async:bool -> generator:bool -> Function.body * bool
   val variable: env -> Statement.t * (Loc.t * Error.t) list
-  val variable_declaration_list: env -> Loc.t * Statement.VariableDeclaration.Declarator.t list * (Loc.t * Error.t) list
-  val _let: env -> (Loc.t * Statement.VariableDeclaration.t) * (Loc.t * Error.t) list
-  val const: env -> (Loc.t * Statement.VariableDeclaration.t) * (Loc.t * Error.t) list
-  val var: env -> (Loc.t * Statement.VariableDeclaration.t) * (Loc.t * Error.t) list
+  val variable_declaration_list: env -> Statement.VariableDeclaration.Declarator.t list * (Loc.t * Error.t) list
+  val let_: env -> Statement.VariableDeclaration.t * (Loc.t * Error.t) list
+  val const: env -> Statement.VariableDeclaration.t * (Loc.t * Error.t) list
+  val var: env -> Statement.VariableDeclaration.t * (Loc.t * Error.t) list
   val _function: env -> Statement.t
 end
 
@@ -284,27 +284,23 @@ module Declaration
         Expect.token env T_COMMA;
         helper env decls errs
       end else
-        let (end_loc, _) = List.hd decls in
-        let declarations = List.rev decls in
-        let (start_loc, _) = List.hd decls in
-        Loc.btwn start_loc end_loc, declarations, List.rev errs
+        List.rev decls, List.rev errs
 
     in fun env -> helper env [] []
 
   let declarations token kind env =
-    let start_loc = Peek.loc env in
     Expect.token env token;
-    let loc, declarations, errs = variable_declaration_list env in
-    (Loc.btwn start_loc loc, Statement.VariableDeclaration.({
+    let declarations, errs = variable_declaration_list env in
+    Statement.VariableDeclaration.({
       kind;
       declarations;
-    })), errs
+    }), errs
 
   let var = declarations T_VAR Statement.VariableDeclaration.Var
 
   let const env =
     let env = env |> with_no_let true in
-    let (loc, variable), errs =
+    let variable, errs =
       declarations T_CONST Statement.VariableDeclaration.Const env in
     (* Make sure all consts defined are initialized *)
     let errs = Statement.VariableDeclaration.(
@@ -315,21 +311,23 @@ module Declaration
         | _ -> errs
       ) errs variable.declarations
     ) in
-    (loc, variable), List.rev errs
+    variable, List.rev errs
 
-  let _let env =
+  let let_ env =
     let env = env |> with_no_let true in
     declarations T_LET Statement.VariableDeclaration.Let env
 
   let variable env =
-    let start_loc = Peek.loc env in
-    let (end_loc, variable), errs = match Peek.token env with
-    | T_CONST -> const env
-    | T_LET   -> _let env
-    | T_VAR   -> var env
-    | _ ->
-        error_unexpected env;
-        (* We need to return something. This is as good as anything else *)
-        var env in
-    (Loc.btwn start_loc end_loc, Statement.VariableDeclaration variable), errs
+    let loc, (decl, errs) = with_loc (fun env ->
+      let variable, errs = match Peek.token env with
+      | T_CONST -> const env
+      | T_LET   -> let_ env
+      | T_VAR   -> var env
+      | _ ->
+          error_unexpected env;
+          (* We need to return something. This is as good as anything else *)
+          var env in
+      Statement.VariableDeclaration variable, errs
+    ) env in
+    (loc, decl), errs
 end
