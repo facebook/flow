@@ -435,29 +435,20 @@ module Statement
     let loc, block = Parse.block_body env in
     loc, Statement.Block block
 
-  and maybe_labeled env =
-    let expr = Parse.expression env in
-    match (expr, Peek.token env) with
+  and maybe_labeled = with_loc (fun env ->
+    match (Parse.expression env, Peek.token env) with
     | ((loc, Ast.Expression.Identifier label), T_COLON) ->
         let _, name = label in
         Expect.token env T_COLON;
         if SSet.mem name (labels env)
         then error_at env (loc, Error.Redeclaration ("Label", name));
         let env = add_label env name in
-        let labeled_stmt = Parse.statement env in
-        Loc.btwn loc (fst labeled_stmt), Statement.Labeled {
-          Statement.Labeled.label = label;
-          Statement.Labeled.body = labeled_stmt;
-        }
+        let body = Parse.statement env in
+        Statement.Labeled { Statement.Labeled.label; body; }
     | expression, _ ->
-        let end_loc = match Peek.semicolon_loc env with
-        | Some loc -> loc
-        | None -> (fst expression) in
         Eat.semicolon env;
-        Loc.btwn (fst expression) end_loc, Statement.(Expression Expression.({
-          expression;
-          directive = None;
-        }))
+        Statement.(Expression { Expression.expression; directive = None; })
+  )
 
   and expression env =
     let loc, expression = with_loc Parse.expression env in
