@@ -96,7 +96,7 @@ module rec Parse : PARSER = struct
   and module_item env =
     let decorators = Object.decorator_list env in
     match Peek.token env with
-    | T_EXPORT -> Statement.export_declaration env decorators
+    | T_EXPORT -> Statement.export_declaration ~decorators env
     | T_IMPORT ->
         error_on_decorators env decorators;
         let statement = match Peek.token ~i:1 env with

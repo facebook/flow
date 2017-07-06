@@ -31,7 +31,7 @@ module type STATEMENT = sig
  val declare_export_declaration: ?allow_export_type:bool -> env -> Statement.t
  val do_while: env -> Statement.t
  val empty: env -> Statement.t
- val export_declaration: env -> Expression.t list -> Statement.t
+ val export_declaration: decorators:Expression.t list -> env -> Statement.t
  val expression: env -> Statement.t
  val import_declaration: env -> Statement.t
  val interface: env -> Statement.t
@@ -929,7 +929,7 @@ module Statement
         | None -> errs in
         export_specifiers_and_errs env (specifier::specifiers) errs
 
-  and export_declaration env decorators =
+  and export_declaration ~decorators = with_loc (fun env ->
     let env = env |> with_strict true |> with_in_export true in
     let start_loc = Peek.loc env in
     Expect.token env T_EXPORT;
@@ -939,25 +939,22 @@ module Statement
         let open Statement.ExportDefaultDeclaration in
         Expect.token env T_DEFAULT;
         record_export env (Loc.btwn start_loc (Peek.loc env), "default");
-        let end_loc, declaration = match Peek.token env with
+        let declaration = match Peek.token env with
         | T_FUNCTION ->
             (* export default function foo (...) { ... } *)
             let fn = Declaration._function env in
-            fst fn, Declaration fn
+            Declaration fn
         | _ when Peek.is_class env ->
             (* export default class foo { ... } *)
             let _class = Object.class_declaration env decorators in
-            fst _class, Declaration _class
+            Declaration _class
         | _ ->
             (* export default [assignment expression]; *)
             let expr = Parse.assignment env in
-            let end_loc = match Peek.semicolon_loc env with
-            | Some loc -> loc
-            | None -> fst expr in
             Eat.semicolon env;
-            end_loc, Expression expr
+            Expression expr
           in
-        Loc.btwn start_loc end_loc, Statement.ExportDefaultDeclaration {
+        Statement.ExportDefaultDeclaration {
           declaration;
           exportKind = Statement.ExportValue;
         }
@@ -972,11 +969,8 @@ module Statement
           let specifier_loc = Peek.loc env in
           Expect.token env T_MULT;
           let source = export_source env in
-          let end_loc = match Peek.semicolon_loc env with
-          | Some loc -> loc
-          | None -> fst source in
           Eat.semicolon env;
-          Loc.btwn start_loc end_loc, Statement.ExportNamedDeclaration {
+          Statement.ExportNamedDeclaration {
             declaration = None;
             specifiers = Some (ExportBatchSpecifier (specifier_loc, None));
             source = Some source;
@@ -986,7 +980,7 @@ module Statement
           let loc, type_alias = type_alias_helper env in
           record_export env (loc, extract_ident_name type_alias.Statement.TypeAlias.id);
           let type_alias = (loc, Statement.TypeAlias type_alias) in
-          Loc.btwn start_loc loc, Statement.ExportNamedDeclaration {
+          Statement.ExportNamedDeclaration {
             declaration = Some type_alias;
             specifiers = None;
             source = None;
@@ -999,7 +993,7 @@ module Statement
         let loc, opaque_t = opaque_type_helper env in
         record_export env (loc, extract_ident_name opaque_t.Statement.OpaqueType.id);
         let opaque_t = (loc, Statement.OpaqueType opaque_t) in
-        Loc.btwn start_loc loc, Statement.ExportNamedDeclaration {
+        Statement.ExportNamedDeclaration {
           declaration = Some opaque_t;
           specifiers = None;
           source = None;
@@ -1019,8 +1013,7 @@ module Statement
               "other than an interface declaration!"
             )
         );
-        let end_loc = fst interface in
-        Loc.btwn start_loc end_loc, Statement.ExportNamedDeclaration {
+        Statement.ExportNamedDeclaration {
           declaration = Some interface;
           specifiers = None;
           source = None;
@@ -1058,7 +1051,7 @@ module Statement
           | _ -> failwith "Internal Flow Error! Unexpected export statement declaration!"
         ) in
         List.iter (record_export env) names;
-        Loc.btwn start_loc (fst stmt), Statement.ExportNamedDeclaration {
+        Statement.ExportNamedDeclaration {
           declaration = Some stmt;
           specifiers = None;
           source = None;
@@ -1084,12 +1077,9 @@ module Statement
           Some (ExportBatchSpecifier (loc, local_name))
         in
         let source = export_source env in
-        let end_loc = match Peek.semicolon_loc env with
-        | Some loc -> loc
-        | None -> fst source in
         let source = Some source in
         Eat.semicolon env;
-        Loc.btwn start_loc end_loc, Statement.ExportNamedDeclaration {
+        Statement.ExportNamedDeclaration {
           declaration = None;
           specifiers;
           source;
@@ -1105,7 +1095,6 @@ module Statement
         Expect.token env T_LCURLY;
         let specifiers, errs = export_specifiers_and_errs env [] [] in
         let specifiers = Some (ExportSpecifiers specifiers) in
-        let end_loc = Peek.loc env in
         Expect.token env T_RCURLY;
         let source = if Peek.value env = "from"
         then Some (export_source env)
@@ -1113,19 +1102,14 @@ module Statement
           errs |> List.iter (error_at env);
           None
         end in
-        let end_loc = match Peek.semicolon_loc env with
-        | Some loc -> loc
-        | None ->
-            (match source with
-            | Some source -> fst source
-            | None -> end_loc) in
         Eat.semicolon env;
-        Loc.btwn start_loc end_loc, Statement.ExportNamedDeclaration {
+        Statement.ExportNamedDeclaration {
           declaration = None;
           specifiers;
           source;
           exportKind;
         }
+  )
 
   and declare_export_declaration ?(allow_export_type=false) env =
     if not (should_parse_types env)
