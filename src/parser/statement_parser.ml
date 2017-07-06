@@ -1085,7 +1085,7 @@ module Statement
         }
   )
 
-  and declare_export_declaration ?(allow_export_type=false) env =
+  and declare_export_declaration ?(allow_export_type=false) = with_loc (fun env ->
     if not (should_parse_types env)
     then error env Error.UnexpectedTypeDeclaration;
     let start_loc = Peek.loc env in
@@ -1097,25 +1097,22 @@ module Statement
     | T_DEFAULT ->
         (* declare export default ... *)
         Expect.token env T_DEFAULT;
-        let end_loc, declaration = match Peek.token env with
+        let declaration = match Peek.token env with
         | T_FUNCTION ->
             (* declare export default function foo (...): ...  *)
             let fn = declare_function env start_loc in
-            fst fn, Some (Function fn)
+            Some (Function fn)
         | T_CLASS ->
             (* declare export default class foo { ... } *)
-            let _class = declare_class env start_loc in
-            fst _class, Some (Class _class)
+            let class_ = declare_class env start_loc in
+            Some (Class class_)
         | _ ->
             (* declare export default [type]; *)
-            let _type = Type._type env in
-            let end_loc = match Peek.semicolon_loc env with
-            | Some loc -> loc
-            | None -> fst _type in
+            let type_ = Type._type env in
             Eat.semicolon env;
-            end_loc, Some (DefaultType _type)
+            Some (DefaultType type_)
           in
-        Loc.btwn start_loc end_loc, Statement.DeclareExportDeclaration {
+        Statement.DeclareExportDeclaration {
           default = true;
           declaration;
           specifiers = None;
@@ -1126,15 +1123,15 @@ module Statement
     | T_VAR
     | T_CLASS
     | T_FUNCTION ->
-        let end_loc, declaration = match Peek.token env with
+        let declaration = match Peek.token env with
         | T_FUNCTION ->
             (* declare export function foo (...): ...  *)
             let fn = declare_function env start_loc in
-            fst fn, Some (Function fn)
+            Some (Function fn)
         | T_CLASS ->
             (* declare export class foo { ... } *)
-            let _class = declare_class env start_loc in
-            fst _class, Some (Class _class)
+            let class_ = declare_class env start_loc in
+            Some (Class class_)
         | T_LET
         | T_CONST
         | T_VAR as token ->
@@ -1144,9 +1141,9 @@ module Statement
             | _ -> ());
             (* declare export var foo: ... *)
             let var = declare_var env start_loc in
-            fst var, Some (Variable var)
+            Some (Variable var)
         | _ -> assert false in
-        Loc.btwn start_loc end_loc, Statement.DeclareExportDeclaration {
+        Statement.DeclareExportDeclaration {
           default = false;
           declaration;
           specifiers = None;
@@ -1172,47 +1169,40 @@ module Statement
           Some (ExportBatchSpecifier (loc, local_name))
         ) in
         let source = export_source env in
-        let end_loc = match Peek.semicolon_loc env with
-        | Some loc -> loc
-        | None -> fst source in
-        let source = Some source in
         Eat.semicolon env;
-        Loc.btwn start_loc end_loc, Statement.DeclareExportDeclaration {
+        Statement.DeclareExportDeclaration {
           default = false;
           declaration = None;
           specifiers;
-          source;
+          source = Some source;
         }
     | T_TYPE when allow_export_type ->
         (* declare export type = ... *)
-        let (alias_loc, alias) = type_alias_helper env in
-        let loc = Loc.btwn start_loc alias_loc in
-        (loc, Statement.DeclareExportDeclaration {
+        let alias = type_alias_helper env in
+        Statement.DeclareExportDeclaration {
           default = false;
-          declaration = Some (NamedType (alias_loc, alias));
+          declaration = Some (NamedType alias);
           specifiers = None;
           source = None;
-        })
+        }
     | T_OPAQUE when allow_export_type ->
         (* declare export opaque type = ... *)
-        let (opaque_loc, opaque_t) = opaque_type_helper env in
-        let loc = Loc.btwn start_loc opaque_loc in
-        (loc, Statement.DeclareExportDeclaration {
+        let opaque = opaque_type_helper env in
+        Statement.DeclareExportDeclaration {
           default = false;
-            declaration = Some (NamedOpaqueType (opaque_loc, opaque_t));
+            declaration = Some (NamedOpaqueType opaque);
             specifiers = None;
             source = None;
-        })
+        }
     | T_INTERFACE when allow_export_type ->
         (* declare export interface ... *)
-        let (iface_loc, iface) = interface_helper env in
-        let loc = Loc.btwn start_loc iface_loc in
-        (loc, Statement.DeclareExportDeclaration {
+        let iface = interface_helper env in
+        Statement.DeclareExportDeclaration {
           default = false;
-          declaration = Some (Interface (iface_loc, iface));
+          declaration = Some (Interface iface);
           specifiers = None;
           source = None;
-        })
+        }
     | _ ->
         (match Peek.token env with
           | T_TYPE -> error env Error.DeclareExportType
@@ -1223,7 +1213,6 @@ module Statement
         Expect.token env T_LCURLY;
         let specifiers, errs = export_specifiers_and_errs env [] [] in
         let specifiers = Some (Statement.ExportNamedDeclaration.ExportSpecifiers specifiers) in
-        let end_loc = Peek.loc env in
         Expect.token env T_RCURLY;
         let source = if Peek.value env = "from"
         then Some (export_source env)
@@ -1231,20 +1220,15 @@ module Statement
           errs |> List.iter (error_at env);
           None
         end in
-        let end_loc = match Peek.semicolon_loc env with
-        | Some loc -> loc
-        | None ->
-            (match source with
-            | Some source -> fst source
-            | None -> end_loc) in
         Eat.semicolon env;
-        Loc.btwn start_loc end_loc, Statement.DeclareExportDeclaration {
+        Statement.DeclareExportDeclaration {
           default = false;
           declaration = None;
           specifiers;
           source;
         }
     )
+  )
 
   and import_declaration =
     let open Statement.ImportDeclaration in

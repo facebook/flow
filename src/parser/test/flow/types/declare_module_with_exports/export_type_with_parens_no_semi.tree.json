@@ -22,13 +22,13 @@
         "body":[
           {
             "type":"DeclareExportDeclaration",
-            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":35}},
-            "range":[23,56],
+            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":36}},
+            "range":[23,57],
             "default":false,
             "declaration":{
               "type":"TypeAlias",
-              "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":35}},
-              "range":[38,56],
+              "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":36}},
+              "range":[38,57],
               "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":2,"column":22},"end":{"line":2,"column":25}},
