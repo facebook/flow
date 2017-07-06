@@ -50,8 +50,8 @@
         "declarations":[
           {
             "type":"VariableDeclarator",
-            "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":47}},
-            "range":[32,47],
+            "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":48}},
+            "range":[32,48],
             "id":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":35}},

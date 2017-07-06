@@ -9,6 +9,7 @@
  *)
 
 open Token
+open Parser_common
 open Parser_env
 open Ast
 module Error = Parse_error
@@ -256,23 +257,23 @@ module Declaration
 
   let variable_declaration_list =
     let variable_declaration env =
-      let id = Parse.pattern env Error.StrictVarName in
-      let init, errs = if Peek.token env = T_ASSIGN
-      then begin
-        Expect.token env T_ASSIGN;
-        Some (Parse.assignment env), []
-      end else Ast.Pattern.(
-        match id with
-        | _, Identifier _ -> None, []
-        | loc, _ -> None, [(loc, Error.NoUninitializedDestructuring)]
-      ) in
-      let end_loc = match init with
-      | Some expr -> fst expr
-      | _ -> fst id in
-      (Loc.btwn (fst id) end_loc, Ast.Statement.VariableDeclaration.Declarator.({
-        id;
-        init;
-      })), errs
+      let loc, (decl, errs) = with_loc (fun env ->
+        let id = Parse.pattern env Error.StrictVarName in
+        let init, errs = if Peek.token env = T_ASSIGN
+        then begin
+          Expect.token env T_ASSIGN;
+          Some (Parse.assignment env), []
+        end else Ast.Pattern.(
+          match id with
+          | _, Identifier _ -> None, []
+          | loc, _ -> None, [(loc, Error.NoUninitializedDestructuring)]
+        ) in
+        Ast.Statement.VariableDeclaration.Declarator.({
+          id;
+          init;
+        }), errs
+      ) env in
+      (loc, decl), errs
 
     in let rec helper env decls errs =
       let decl, errs_ = variable_declaration env in
