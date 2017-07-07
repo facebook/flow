@@ -22,7 +22,7 @@ module type S = sig
   val elements: 'a t -> (key * 'a) list
   val map_env: ('c -> 'a -> 'c * 'b) -> 'c -> 'a t -> 'c * 'b t
   val choose: 'a t -> (key * 'a) option
-  val from_keys: key list -> (key -> 'a) -> 'a t
+  val from_keys: key list -> f:(key -> 'a) -> 'a t
   val ident_map: ('a -> 'a) -> 'a t -> 'a t
   val ident_map_key: ?combine: ('a -> 'a -> 'a) -> (key -> key) -> 'a t -> 'a t
 end
