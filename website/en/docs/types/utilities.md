@@ -250,6 +250,21 @@ const user2 = {name: 'John Wilkes Booth'};
 (user2: ExactUserShorthand);
 ```
 
+## `$NonMaybeType<T>` <a class="toc" id="toc-nonmaybe" href="#toc-nonmaybe"></a>
+
+`$NonMaybeType<T>` converts a maybe type `T` to a non-maybe type.
+
+```js
+// @flow
+type MaybeName = ?string;
+type Name = $NonMaybeType<MaybeName>;
+
+('Gabriel': MaybeName); // Ok
+(null: MaybeName) // Ok
+('Gabriel': Name); // Ok
+(null: Name); // Error! null can't be annotated as Name because Name is not a maybe type
+```
+
 ## `$ObjMap<T, F>` <a class="toc" id="toc-objmap" href="#toc-objmap"></a>
 `ObjMap<T, F>` is the type obtained by taking the type of the values of an object and mapping them with a type function.
 
