@@ -34,6 +34,8 @@ end = struct
   let set _ops = ops := _ops
 end
 
+module LocMap = Map.Make (Loc)
+
 type error_message =
   | EIncompatible of Type.t * Type.use_t
   | EIncompatibleDefs of reason * reason
@@ -132,6 +134,7 @@ type error_message =
   | EParseError of Loc.t * Parse_error.t
   | EDocblockError of Loc.t * docblock_error
   | EUnusedSuppression of Loc.t
+  | EAbstract of abstract_error
 
 and binding_error =
   | ENameAlreadyBound
@@ -197,6 +200,10 @@ and unsupported_syntax =
   | MultipleIndexers
   | SpreadArgument
   | ImportDynamicArgument
+
+and abstract_error =
+  | IllegalOverload of reason * reason
+  | Unimplemented of reason * reason * reason list
 
 let rec locs_of_use_op acc = function
   | FunCallThis reason -> (loc_of_reason reason)::acc
@@ -353,6 +360,13 @@ let locs_of_error_message = function
   | EParseError (loc, _) -> [loc]
   | EDocblockError (loc, _) -> [loc]
   | EUnusedSuppression (loc) -> [loc]
+  | EAbstract (abstract_error) ->
+      match abstract_error with
+      | IllegalOverload (reason1, reason2) ->
+        [loc_of_reason reason1; loc_of_reason reason2]
+      | Unimplemented (reason1, reason2, reasons) ->
+        (loc_of_reason reason1)::(loc_of_reason reason2)::
+          (List.map loc_of_reason reasons)
 
 let loc_of_error ~op msg =
   match op with
@@ -1291,6 +1305,30 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | CreateClass (tool, _, _) -> create_class tool
       in
       typecheck_error msg reasons
+
+  | EAbstract abstract_error -> (
+      match abstract_error with
+      | IllegalOverload (extant_reason, update_reason) ->
+          let reasons = (extant_reason, update_reason) in
+          let msg = "Illegal overload found at" in
+          typecheck_error msg reasons
+      | Unimplemented (host_reason, reason_op, abstract_reasons) ->
+          let abstracts =
+            (* Sort abstract reasons by loc. *)
+            let add map reason = LocMap.add (loc_of_reason reason) reason map in
+            List.fold_left add LocMap.empty abstract_reasons
+              |> LocMap.bindings
+              |> List.map snd
+              |> List.map info_of_reason
+          in
+          let extra = [
+            InfoLeaf (
+              (Loc.none, ["Abstract(s):"])::abstracts
+            )
+          ] in
+          let msg = "Unimplemented abstract(s) found in" in
+          typecheck_error msg ~extra (reason_op, host_reason)
+    )
 
   | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
     let core_msgs = [

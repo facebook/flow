@@ -39,7 +39,7 @@ val add_field: string -> field -> static:bool -> t -> t
     Overwrites any existing synonymous method. This implements the behavior of
     classes, which permit duplicate definitions where latter definitions
     overwrite former ones. *)
-val add_method: string -> Func_sig.t -> static:bool -> t -> t
+val add_method: Context.t -> string -> Func_sig.t -> static:bool -> t -> t
 
 (** Add method override to signature.
 
@@ -49,10 +49,10 @@ val add_method: string -> Func_sig.t -> static:bool -> t -> t
 val append_method: string -> Func_sig.t -> static:bool -> t -> t
 
 (** Add getter to signature. *)
-val add_getter: string -> Func_sig.t -> static:bool -> t -> t
+val add_getter: Context.t -> string -> Func_sig.t -> static:bool -> t -> t
 
 (** Add setter to signature. *)
-val add_setter: string -> Func_sig.t -> static:bool -> t -> t
+val add_setter: Context.t -> string -> Func_sig.t -> static:bool -> t -> t
 
 (** Create signature from class AST. *)
 val mk: Context.t ->

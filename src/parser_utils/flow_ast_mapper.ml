@@ -236,8 +236,11 @@ class mapper = object(this)
   method class_element (elem: Ast.Class.Body.element) =
     let open Ast.Class.Body in
     match elem with
+    | AbstractMethod (loc, meth) -> id this#class_abstract_method meth elem (fun meth -> AbstractMethod (loc, meth))
     | Method (loc, meth) -> id this#class_method meth elem (fun meth -> Method (loc, meth))
     | Property (loc, prop) -> id this#class_property prop elem (fun prop -> Property (loc, prop))
+
+  method class_abstract_method (meth: Ast.Class.AbstractMethod.t') = meth
 
   method class_method (meth: Ast.Class.Method.t') =
     let open Ast.Class.Method in

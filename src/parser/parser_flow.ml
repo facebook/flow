@@ -198,6 +198,7 @@ module rec Parse : PARSER = struct
     | T_CASE
     | T_DEFAULT
     | T_EXTENDS
+    | T_ABSTRACT
     | T_STATIC
     | T_EXPORT (* TODO *)
     | T_ELLIPSIS ->

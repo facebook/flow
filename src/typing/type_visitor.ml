@@ -40,6 +40,7 @@ class ['a] t = object(self)
   | CustomFunT _ -> acc
 
   | AbstractT (_, t) -> self#type_ cx acc t
+  | AbstractsT _ -> acc
 
   | EvalT (t, defer_use_t, id) ->
     let acc = self#type_ cx acc t in
@@ -136,7 +137,8 @@ class ['a] t = object(self)
     self#list (self#type_ cx) acc tuple_types
   | ArrT EmptyAT -> acc
 
-  | ClassT t -> self#type_ cx acc t
+  | ClassT t
+  | NonabstractClassT t -> self#type_ cx acc t
 
   | InstanceT (static, super, implements, insttype) ->
     let acc = self#type_ cx acc static in
@@ -227,6 +229,7 @@ class ['a] t = object(self)
   | AssertBinaryInRHST _
   | AssertForInRHST _
   | AssertImportIsValueT (_, _)
+  | AssertNonabstractT _
   | AssertRestParamT _
   | BecomeT (_, _)
   | BindT (_, _, _)
@@ -246,6 +249,7 @@ class ['a] t = object(self)
   | EqT (_, _)
   | ExportNamedT (_, _, _, _)
   | ExportTypeT (_, _, _, _, _)
+  | GatherAbstractsT (_, _, _, _)
   | GetElemT (_, _, _)
   | GetKeysT (_, _)
   | GetValuesT (_, _)
@@ -337,10 +341,11 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc return_t in
     acc
 
-  method private inst_type cx acc { type_args; fields_tmap; methods_tmap; _ } =
+  method private inst_type cx acc { type_args; fields_tmap; methods_tmap; abstracts; _ } =
     let acc = self#smap (self#type_ cx) acc type_args in
     let acc = self#props cx acc fields_tmap in
     let acc = self#props cx acc methods_tmap in
+    let acc = self#type_ cx acc abstracts in
     acc
 
   method private export_types cx acc { exports_tmap; cjs_export; has_every_named_export=_; } =

@@ -17,6 +17,7 @@ type t =
   | UnexpectedIdentifier
   | UnexpectedReserved
   | UnexpectedEOS
+  | UnexpectedAbstract
   | UnexpectedVariance
   | UnexpectedTypeAlias
   | UnexpectedOpaqueTypeAlias
@@ -107,6 +108,7 @@ module PP =
       | UnexpectedIdentifier ->  "Unexpected identifier"
       | UnexpectedReserved ->  "Unexpected reserved word"
       | UnexpectedEOS ->  "Unexpected end of input"
+      | UnexpectedAbstract -> "Unexpected abstract"
       | UnexpectedVariance -> "Unexpected variance sigil"
       | UnexpectedTypeAlias -> "Type aliases are not allowed in untyped mode"
       | UnexpectedOpaqueTypeAlias -> "Opaque type aliases are not allowed in untyped mode"

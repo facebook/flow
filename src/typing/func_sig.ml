@@ -28,7 +28,7 @@ type t = {
   tparams: Type.typeparam list;
   tparams_map: Type.t SMap.t;
   params: Func_params.t;
-  body: Ast.Function.body;
+  body: Ast.Function.body option;
   return_t: Type.t;
 }
 
@@ -75,7 +75,7 @@ let mk cx tparams_map ~expr loc func =
         );
         Anno.mk_type_annotation cx tparams_map ret_reason None
   ) in
-  {reason; kind; tparams; tparams_map; params; body; return_t}
+  {reason; kind; tparams; tparams_map; params; body = Some body; return_t}
 
 let empty_body =
   let loc = Loc.none in
@@ -90,7 +90,7 @@ let convert cx tparams_map loc func =
     Anno.mk_type_param_declarations cx ~tparams_map typeParameters
   in
   let params = Func_params.convert cx tparams_map func in
-  let body = empty_body in
+  let body = None in
   let return_t = Anno.convert cx tparams_map returnType in
 
   {reason; kind; tparams; tparams_map; params; body; return_t}
@@ -101,7 +101,7 @@ let default_constructor reason = {
   tparams = [];
   tparams_map = SMap.empty;
   params = Func_params.empty;
-  body = empty_body;
+  body = Some empty_body;
   return_t = VoidT.why reason;
 }
 
@@ -111,7 +111,7 @@ let field_initializer tparams_map reason expr return_t = {
   tparams = [];
   tparams_map;
   params = Func_params.empty;
-  body = empty_body;
+  body = Some empty_body;
   return_t;
 }
 
@@ -191,6 +191,10 @@ let settertype {params; _} =
 let toplevels id cx this super ~decls ~stmts ~expr
   {kind; tparams_map; params; body; return_t; _} =
 
+  match body with
+  | None -> ()
+  | Some body ->
+
   let loc, reason =
     let loc = Ast.Function.(match body with
       | BodyBlock (loc, _)
@@ -231,7 +235,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
 
   (* bind type params *)
   SMap.iter (fun name t ->
-    let r = reason_of_t t in
+    let r = Type.reason_of_t t in
     let loc = loc_of_reason r in
     Env.bind_type cx name (DefT (r, TypeT t)) loc
       ~state:Scope.State.Initialized
@@ -362,3 +366,11 @@ let toplevels id cx this super ~decls ~stmts ~expr
   Env.pop_var_scope ();
 
   Env.update_env cx loc env
+
+let reason_of_t ({reason; _}:t) = reason
+
+let replace_reason f (t:t):t =
+  {t with reason = replace_reason f t.reason}
+
+let replace_reason_const desc (t:t):t =
+  {t with reason = replace_reason_const desc t.reason}

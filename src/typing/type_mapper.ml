@@ -104,6 +104,7 @@ class t = object(self)
           let t'' = self#type_ cx t' in
           if t'' == t' then t
           else AbstractT (r, t'')
+      | AbstractsT _ -> t
       | AnnotT t' ->
           let t'' = self#type_ cx t' in
           if t'' == t' then t
@@ -169,6 +170,10 @@ class t = object(self)
           let t'' = self#type_ cx t' in
           if t'' == t' then t
           else ClassT t''
+      | NonabstractClassT t' ->
+          let t'' = self#type_ cx t' in
+          if t'' == t' then t
+          else NonabstractClassT t''
       | InstanceT (st, su, impl, instt) ->
           let st' = self#type_ cx st in
           let su' = self#type_ cx su in
@@ -257,7 +262,8 @@ class t = object(self)
                         initialized_field_names;
                         methods_tmap;
                         mixins;
-                        structural } as t) =
+                        structural;
+                        abstracts } as t) =
     let type_args' = SMap.ident_map (self#type_ cx) type_args in
     let f_tmap = Context.find_props cx fields_tmap in
     let f_tmap' = SMap.ident_map (Property.ident_map_t (self#type_ cx)) f_tmap in
@@ -269,11 +275,13 @@ class t = object(self)
     let methods_tmap' =
       if m_tmap == m_tmap' then methods_tmap
       else Context.make_property_map cx m_tmap in
-    if type_args == type_args' && methods_tmap == methods_tmap' && fields_tmap == fields_tmap'
+    let abstracts' = self#type_ cx abstracts in
+    if type_args == type_args' && methods_tmap == methods_tmap'
+       && fields_tmap == fields_tmap' && abstracts == abstracts'
     then t
     else
       {class_id; type_args = type_args'; arg_polarities; fields_tmap = fields_tmap';
-     initialized_field_names; methods_tmap = methods_tmap'; mixins; structural}
+     initialized_field_names; methods_tmap = methods_tmap'; mixins; structural; abstracts}
 
   method type_param cx ({reason; name; bound; polarity; default} as t) =
     let bound' = self#type_ cx bound in
@@ -472,7 +480,8 @@ class t = object(self)
     | AssertBinaryInLHST _
     | AssertBinaryInRHST _
     | AssertForInRHST _
-    | AssertRestParamT _ -> t
+    | AssertRestParamT _
+    | AssertNonabstractT _ -> t
     | PredicateT (p, t') ->
         let p' = self#predicate cx p in
         let t'' = self#type_ cx t' in
@@ -640,6 +649,11 @@ class t = object(self)
         let t2' = self#type_ cx t2 in
         if t1' == t1 && t2' == t2 then t
         else ExportTypeT (r, skip, name, t1', t2')
+    | GatherAbstractsT (r, instt, r_map, t') ->
+        let instt' = self#inst_type cx instt in
+        let t'' = self#type_ cx t' in
+        if instt' == instt && t'' == t' then t
+        else GatherAbstractsT (r, instt', r_map, t'')
     | MapTypeT (r, typemap, t', cont) ->
         let t'' = self#type_ cx t' in
         let cont' = self#cont cx cont in

@@ -968,6 +968,14 @@ and Comment : sig
 end = Comment
 
 and Class : sig
+  module AbstractMethod : sig
+    type t = Loc.t * t'
+    and t' = {
+      key: Expression.Object.Property.key;
+      value: Loc.t * Type.Function.t;
+      static: bool;
+    }
+  end
   module Method : sig
     type t = Loc.t * t'
     and kind =
@@ -1002,6 +1010,7 @@ and Class : sig
   end
   module Body : sig
     type element =
+      | AbstractMethod of AbstractMethod.t
       | Method of Method.t
       | Property of Property.t
     type t = Loc.t * t'

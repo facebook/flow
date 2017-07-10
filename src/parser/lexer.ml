@@ -367,6 +367,7 @@ let _ = List.iter (fun (key, token) -> Hashtbl.add keywords key token)
     "for", T_FOR;
     "class", T_CLASS;
     "extends", T_EXTENDS;
+    "abstract", T_ABSTRACT;
     "static", T_STATIC;
     "else", T_ELSE;
     "new", T_NEW;
@@ -394,19 +395,20 @@ let _ = List.iter (fun (key, token) -> Hashtbl.add keywords key token)
   ]
 let _ = List.iter (fun (key, token) -> Hashtbl.add type_keywords key token)
   [
-    "static",  T_STATIC;
-    "typeof",  T_TYPEOF;
-    "any",     T_ANY_TYPE;
-    "mixed",   T_MIXED_TYPE;
-    "empty",   T_EMPTY_TYPE;
-    "bool",    T_BOOLEAN_TYPE;
-    "boolean", T_BOOLEAN_TYPE;
-    "true",    T_TRUE;
-    "false",   T_FALSE;
-    "number",  T_NUMBER_TYPE;
-    "string",  T_STRING_TYPE;
-    "void",    T_VOID_TYPE;
-    "null",    T_NULL;
+    "abstract", T_ABSTRACT;
+    "static",   T_STATIC;
+    "typeof",   T_TYPEOF;
+    "any",      T_ANY_TYPE;
+    "mixed",    T_MIXED_TYPE;
+    "empty",    T_EMPTY_TYPE;
+    "bool",     T_BOOLEAN_TYPE;
+    "boolean",  T_BOOLEAN_TYPE;
+    "true",     T_TRUE;
+    "false",    T_FALSE;
+    "number",   T_NUMBER_TYPE;
+    "string",   T_STRING_TYPE;
+    "void",     T_VOID_TYPE;
+    "null",     T_NULL;
   ]
 
 let rec token (env: Lex_env.t) lexbuf =

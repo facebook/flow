@@ -1009,7 +1009,8 @@ module ResolvableTypeJob = struct
     | DefT (_, ArrT EmptyAT) -> acc
     | DefT (_, InstanceT (static, super, _,
         { class_id; type_args; fields_tmap; methods_tmap; _ })) ->
-      let ts = if class_id = 0 then [] else [super; static] in
+      let ts =
+        if class_id = 0 then [] else [super; static] in
       let ts = SMap.fold (fun _ t ts -> t::ts) type_args ts in
       let props_tmap = SMap.union
         (Context.find_props cx fields_tmap)
@@ -1055,6 +1056,7 @@ module ResolvableTypeJob = struct
     | ExactT (_, t)
     | DefT (_, TypeT t)
     | DefT (_, ClassT t)
+    | DefT (_, NonabstractClassT t)
     | ThisClassT (_, t)
       ->
       collect_of_type ?log_unresolved cx reason acc t
@@ -1099,6 +1101,7 @@ module ResolvableTypeJob = struct
     | CustomFunT (_, _)
 
     | TaintT _
+    | AbstractsT _
     | ExistsT _
     | OpenPredT _
     | TypeMapT _
@@ -3347,7 +3350,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       assert (unused_targs = [])
 
     (* empty targs specialization of non-polymorphic classes is a no-op *)
-    | (DefT (_, ClassT _) | ThisClassT _), SpecializeT(_,_,_,[],tvar) ->
+    | (DefT (_, (ClassT _ | NonabstractClassT _)) | ThisClassT _),
+      SpecializeT(_,_,_,[],tvar) ->
       rec_flow_t cx trace (l, tvar)
 
     | DefT (_, AnyT), SpecializeT (_, _, _, _, tvar) ->
@@ -3362,6 +3366,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (r, ClassT i), ThisSpecializeT(_, _this, tvar) ->
       (* TODO: check that this is a subtype of i? *)
       rec_flow_t cx trace (DefT (r, ClassT i), tvar)
+
+    (* this-specialization of non-this-abstracted classes is a no-op *)
+    | DefT (_, NonabstractClassT _), ThisSpecializeT(_, _this, tvar) ->
+      (* TODO: analogous to ClassT~>ThisSpecializeT *)
+      rec_flow_t cx trace (l, tvar)
 
     | DefT (_, AnyT), ThisSpecializeT (_, _, tvar) ->
       rec_flow_t cx trace (l, tvar)
@@ -3701,10 +3710,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       CallT (reason_op, { call_args_tlist; call_tout; _ }) ->
       rec_flow_t cx trace (spread_objects cx reason_op call_args_tlist, call_tout)
 
-    | CustomFunT (_, Mixin),
+    | CustomFunT (reason, Mixin),
       CallT (reason_op, { call_args_tlist; call_tout; _ }) ->
-      let t = class_type (spread_objects cx reason_op call_args_tlist) in
-      rec_flow_t cx trace (t, call_tout)
+      let t = spread_objects cx reason_op call_args_tlist in
+      error_nonabstract cx trace reason t;
+      rec_flow_t cx trace (class_type t, call_tout)
 
     | CustomFunT (_, DebugPrint),
       CallT (reason_op, { call_args_tlist; call_tout; _ }) ->
@@ -3962,7 +3972,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reasons = FlowError.ordered_reasons (reason_of_t l) ru in
       add_output cx ~trace (FlowError.EValueUsedAsType reasons)
 
-    | DefT (rl, ClassT l), UseT (use_op, DefT (_, ClassT u)) ->
+    | DefT (rl, ClassT l), UseT (use_op, DefT (_, NonabstractClassT u)) ->
+      error_nonabstract cx trace rl l;
+      rec_flow cx trace (
+        reposition cx ~trace (loc_of_reason rl) l,
+        UseT (use_op, u))
+
+    | DefT (rl, ClassT l), UseT (use_op, DefT (_, ClassT u))
+    | DefT (rl, NonabstractClassT l), UseT (use_op, DefT (_, NonabstractClassT u))
+    | DefT (rl, NonabstractClassT l), UseT (use_op, DefT (_, ClassT u)) ->
       rec_flow cx trace (
         reposition cx ~trace (loc_of_reason rl) l,
         UseT (use_op, u))
@@ -3979,7 +3997,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* class types derive instance types (with constructors) *)
     (*********************************************************)
 
-    | DefT (reason, ClassT this),
+    | DefT (reason, NonabstractClassT this),
       ConstructorT (reason_op, args, t) ->
       let reason_o = replace_reason_const RConstructorReturn reason in
       Ops.push reason_op;
@@ -3995,6 +4013,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* return this *)
       rec_flow cx trace (ret, ObjTestT(reason_op, this, t));
       Ops.pop ();
+
+    | DefT (reason, ClassT this),
+      ConstructorT _ ->
+      error_nonabstract cx trace reason this;
+      rec_flow cx trace (DefT (reason, NonabstractClassT this), u)
 
     (****************************************************************)
     (* function types derive objects through explicit instantiation *)
@@ -4796,7 +4819,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, FunT (_, t, _)), GetPropT(_, Named (_, "prototype"), tout) ->
       rec_flow_t cx trace (t,tout)
 
-    | DefT (reason, ClassT instance), GetPropT(_, Named (_, "prototype"), tout) ->
+    | DefT (reason, (ClassT instance | NonabstractClassT instance)),
+      GetPropT(_, Named (_, "prototype"), tout) ->
       let instance = reposition cx ~trace (loc_of_reason reason) instance in
       rec_flow_t cx trace (instance, tout)
 
@@ -5029,6 +5053,64 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, ImplementsT _ ->
       add_output cx ~trace (FlowError.EUnsupportedImplements (reason_of_t l))
 
+    (********************)
+    (* GatherAbstractsT *)
+    (********************)
+
+    | DefT (_, AnyT), GatherAbstractsT (reason, _, local_abstracts, t) ->
+        rec_unify cx trace (AbstractsT (reason, local_abstracts)) t
+
+    | DefT (reason, ClassT instance), GatherAbstractsT _ ->
+        let static = lookup_static cx trace reason instance in
+        rec_flow cx trace (static, u)
+
+    | DefT (_, NonabstractClassT _),
+      GatherAbstractsT (reason, _, local_abstracts, t) ->
+        rec_unify cx trace (AbstractsT (reason, local_abstracts)) t
+
+    | DefT (_, InstanceT (_, _, _, { abstracts = super_abstracts; _; })),
+      GatherAbstractsT _ ->
+        rec_flow cx trace (super_abstracts, u)
+
+    | DefT (_, ObjT _), GatherAbstractsT (reason, _, local_abstracts, t)
+    | ObjProtoT _, GatherAbstractsT (reason, _, local_abstracts, t)
+    | FunProtoT _, GatherAbstractsT (reason, _, local_abstracts, t) ->
+        rec_unify cx trace (AbstractsT (reason, local_abstracts)) t
+
+    | AbstractsT (_, super_abstracts),
+      GatherAbstractsT (reason, instance, local_abstracts, t) ->
+        let freshes = SMap.union
+          (Context.find_props cx instance.fields_tmap)
+          (Context.find_props cx instance.methods_tmap)
+        in
+        let unmasked_super_abstracts =
+          SMap.filter (fun super_name _ ->
+            not (SMap.mem super_name freshes)
+          ) super_abstracts
+        in
+        let abstracts = SMap.union unmasked_super_abstracts local_abstracts in
+        rec_unify cx trace (AbstractsT (reason, abstracts)) t
+
+    (*U = AssertNonabstractT _*)
+
+    | DefT (_, InstanceT (_, _, _, { abstracts; _; })),
+      AssertNonabstractT _ ->
+        rec_flow cx trace (abstracts, u)
+
+    | AbstractsT (reason, abstracts), AssertNonabstractT reason_op ->
+        let abstract_reasons = SMap.bindings abstracts |> List.map snd in
+        if abstract_reasons <> []
+        then
+          let error = FlowError.(
+            EAbstract (Unimplemented (reason, reason_op, abstract_reasons))
+          ) in
+          add_output cx ~trace error
+
+    | DefT (_, FunT _), AssertNonabstractT _
+    | DefT (_, ObjT _), AssertNonabstractT _
+    | ObjProtoT _, AssertNonabstractT _
+    | FunProtoT _, AssertNonabstractT _ -> ()
+
     (*********************************************************************)
     (* class A is a base class of class B iff                            *)
     (* properties in B that override properties in A or its base classes *)
@@ -5039,6 +5121,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         properties with overridden properties. As such, the lookups performed
         for the inherited properties are non-strict: they are not required to
         exist. **)
+
+    | DefT (reason, ClassT instance), SuperT _ ->
+        let static = lookup_static cx trace reason instance in
+        rec_flow cx trace (static, ReposLowerT (reason, u))
 
     | (DefT (_, InstanceT (_, _, _, instance_super)),
        SuperT (reason,instance))
@@ -5271,12 +5357,23 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* class statics *)
     (*****************)
 
-    | DefT (reason, ClassT instance), _ when object_use u || object_like_op u ->
-      let desc = RStatics (desc_of_reason (reason_of_t instance)) in
-      let loc = loc_of_reason reason in
-      let reason = mk_reason desc loc in
-      let static = mk_tvar cx reason in
-      rec_flow cx trace (instance, GetStaticsT (reason, static));
+    | DefT (reason, NonabstractClassT instance),
+      _ when object_use u || object_like_op u ->
+      let static = lookup_static cx trace reason instance in
+      rec_flow cx trace (static, ReposLowerT (reason, u))
+
+    | DefT (reason, ClassT instance), SetPropT _
+    | DefT (reason, ClassT instance), LookupT _ ->
+      (* Setting of static fields on abstract classes alone is permitted. See
+         `tests/class_abstracts/static_field.js` for degeneracies arising from
+         covariant access. *)
+      let static = lookup_static cx trace reason instance in
+      rec_flow cx trace (static, ReposLowerT (reason, u))
+
+    | DefT (reason, ClassT instance),
+      _ when object_use u || object_like_op u ->
+      error_nonabstract cx trace reason instance;
+      let static = lookup_static cx trace reason instance in
       rec_flow cx trace (static, ReposLowerT (reason, u))
 
     (**********************************************)
@@ -5286,7 +5383,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* When a class value flows to a function annotation or call site, check for
        the presence of a $call property in the former (as a static) compatible
        with the latter. *)
-    | DefT (_, ClassT _), (UseT (_, DefT (reason, FunT _)) | CallT (reason, _)) ->
+    | DefT (_, ((ClassT instance | NonabstractClassT instance) as class_t)),
+      (UseT (_, DefT (reason, FunT _)) | CallT (reason, _)) ->
+      (match class_t with
+      | ClassT _ -> error_nonabstract cx trace reason instance;
+      | _ -> ());
       let propref = Named (reason, "$call") in
       rec_flow cx trace (l,
         GetPropT (reason, propref, tvar_with_constraint ~trace cx u))
@@ -5300,7 +5401,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        - the class's static $call property type must be a subtype of the
        function type. *)
     | DefT (reason, FunT (static, prototype, funtype)),
-      UseT (use_op, (DefT (_, ClassT instance) as class_t)) ->
+      UseT (use_op, (
+        DefT (_, (ClassT instance | NonabstractClassT instance)) as class_t)) ->
       rec_flow cx trace (instance, UseT (use_op, prototype));
       rec_flow cx trace (instance, UseT (use_op, funtype.this_t));
       rec_flow cx trace (instance, GetStaticsT (reason, static));
@@ -5980,12 +6082,19 @@ and object_use = function
 and object_like_op = function
   | SetPropT _ | GetPropT _ | MethodT _ | LookupT _
   | GetProtoT _ | SetProtoT _
-  | SuperT _
   | GetKeysT _ | HasOwnPropT _ | GetValuesT _
   | ObjAssignToT _ | ObjAssignFromT _ | ObjRestT _
   | SetElemT _ | GetElemT _
   | UseT (_, DefT (_, AnyObjT)) -> true
   | _ -> false
+
+and lookup_static cx trace reason instance =
+  let desc = RStatics (desc_of_reason (reason_of_t instance)) in
+  let loc = loc_of_reason reason in
+  let reason = mk_reason desc loc in
+  mk_tvar_where cx reason (fun t ->
+    rec_flow cx trace (instance, GetStaticsT (reason, t))
+  )
 
 and function_use = function
   | UseT (_, DefT (_, FunT _)) -> true
@@ -5994,6 +6103,7 @@ and function_use = function
 (* TODO: why is AnyFunT missing? *)
 and function_like = function
   | DefT (_, ClassT _)
+  | DefT (_, NonabstractClassT _)
   | DefT (_, FunT _)
   | CustomFunT _
   | FunProtoApplyT _
@@ -6369,6 +6479,9 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | DefT (reason, ClassT cls) ->
     let cls_ = subst cx ~force map cls in
     if cls_ == cls then t else DefT (reason, ClassT cls_)
+  | DefT (reason, NonabstractClassT cls) ->
+    let cls_ = subst cx ~force map cls in
+    if cls_ == cls then t else DefT (reason, NonabstractClassT cls_)
 
   | DefT (reason, TypeT type_t) ->
     let type_t_ = subst cx ~force map type_t in
@@ -6411,6 +6524,9 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | AbstractT (reason, abstract_t) ->
     let abstract_t_ = subst cx ~force map abstract_t in
     if abstract_t_ == abstract_t then t else AbstractT (reason, abstract_t_)
+
+  | AbstractsT _
+    -> t
 
   | ExactT (reason, exact_t) ->
     let exact_t_ = subst cx ~force map exact_t in
@@ -6643,6 +6759,7 @@ and check_polarity cx ?trace polarity = function
   | DefT (_, AnyFunT)
     -> ()
   | TaintT _
+  | AbstractsT _
   | ExistsT _
     -> ()
 
@@ -6657,6 +6774,7 @@ and check_polarity cx ?trace polarity = function
     -> check_polarity cx ?trace polarity t
 
   | DefT (_, ClassT t)
+  | DefT (_, NonabstractClassT t)
     -> check_polarity cx ?trace Neutral t
 
   | DefT (_, TypeT t)
@@ -6738,6 +6856,7 @@ and check_polarity_prop cx ?trace = function
     check_polarity cx ?trace Positive t1;
     check_polarity cx ?trace Negative t2
   | Method t -> check_polarity cx ?trace Positive t
+  | AbstractMethod t -> check_polarity cx ?trace Positive t
 
 and check_polarity_typeparam cx ?trace polarity tp =
   check_polarity cx ?trace polarity tp.bound
@@ -6747,6 +6866,11 @@ and check_polarity_typeapp cx ?trace polarity c ts =
     RVarianceCheck desc
   ) (reason_of_t c) in
   flow_opt cx ?trace (c, VarianceCheckT(reason, ts, polarity))
+
+and error_nonabstract cx trace reason instance =
+  rec_flow cx trace (instance, ReposLowerT (reason, AssertNonabstractT reason));
+  let static = lookup_static cx trace reason instance in
+  rec_flow cx trace (static, ReposLowerT (reason, AssertNonabstractT reason));
 
 and variance_check cx ?trace polarity = function
   | [], _ | _, [] ->
@@ -6858,7 +6982,8 @@ and fix_this_class cx trace reason (r, i) =
 
 and canonicalize_imported_type cx trace reason t =
   match t with
-  | DefT (_, ClassT inst) ->
+  | DefT (_, ClassT inst)
+  | DefT (_, NonabstractClassT inst) ->
     Some (DefT (reason, TypeT inst))
 
   | DefT (_, FunT (_, prototype, _)) ->
@@ -7902,7 +8027,7 @@ and filter_not_exists t = match t with
     | MixedT Mixed_truthy
     )) -> DefT (r, EmptyT)
 
-  | DefT (reason, ClassT _) -> DefT (reason, EmptyT)
+  | DefT (reason, (ClassT _ | NonabstractClassT _)) -> DefT (reason, EmptyT)
 
   (* unknown boolies become falsy *)
   | DefT (r, MaybeT _) ->
@@ -8468,33 +8593,118 @@ and binary_predicate cx trace sense test left right result =
   in
   handler cx trace result (sense, left, right)
 
-and instanceof_test cx trace result = function
-  (** instanceof on an ArrT is a special case since we treat ArrT as its own
-      type, rather than an InstanceT of the Array builtin class. So, we resolve
-      the ArrT to an InstanceT of Array, and redo the instanceof check. We do
-      it at this stage instead of simply converting (ArrT, InstanceofP c)
-      to (InstanceT(Array), InstanceofP c) because this allows c to be resolved
-      first. *)
-  | true,
-    (DefT (reason, ArrT arrtype) as arr),
-    DefT (r, ClassT (DefT (_, (InstanceT _)) as a)) ->
+and instanceof_test cx trace result =
+  let right_class right reason_c ctor = function
 
-    let elemt = elemt_of_arrtype reason arrtype in
+    (** instanceof on an ArrT is a special case since we treat ArrT as its own
+        type, rather than an InstanceT of the Array builtin class. So, we
+        resolve the ArrT to an InstanceT of Array, and redo the instanceof
+        check. We do it at this stage instead of simply converting
+        (ArrT, InstanceofP c) to (InstanceT(Array), InstanceofP c) because this
+        allows c to be resolved first. *)
+    | true, (DefT (reason, ArrT arrtype) as arr), (DefT (_, (InstanceT _)) as a)
+      ->
+        let elemt = elemt_of_arrtype reason arrtype in
 
-    let right = DefT (r, ClassT (extends_type arr a)) in
-    let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
-    rec_flow cx trace (arrt, PredicateT(LeftP(InstanceofTest, right), result))
+        let right = ctor reason_c (extends_type arr a) in
+        let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
+        let pred = PredicateT (LeftP (InstanceofTest, right), result) in
+        rec_flow cx trace (arrt, pred)
 
-  | false,
-    (DefT (reason, ArrT arrtype) as arr),
-    DefT (r, ClassT (DefT (_, (InstanceT _)) as a)) ->
+    | false, (DefT (reason, ArrT arrtype) as arr), (DefT (_, (InstanceT _)) as a)
+      ->
+        let elemt = elemt_of_arrtype reason arrtype in
 
-    let elemt = elemt_of_arrtype reason arrtype in
+        let right = ctor reason_c (extends_type arr a) in
+        let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
+        let pred = NotP (LeftP (InstanceofTest, right)) in
+        rec_flow cx trace (arrt, PredicateT (pred, result))
 
-    let right = DefT (r, ClassT (extends_type arr a)) in
-    let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
-    let pred = NotP(LeftP(InstanceofTest, right)) in
-    rec_flow cx trace (arrt, PredicateT (pred, result))
+    (** Suppose that we have an instance x of class C, and we check whether x is
+        `instanceof` class A. To decide what the appropriate refinement for x
+        should be, we need to decide whether C extends A, choosing either C or A
+        based on the result. Thus, we generate a constraint to decide whether C
+        extends A (while remembering C), which may recursively generate further
+        constraints to decide super(C) extends A, and so on, until we hit the
+        root class. (As a technical tool, we use Extends(_, _) to perform this
+        recursion; it is also used elsewhere for running similar recursive
+        subclass decisions.) **)
+    | true, (DefT (_, InstanceT _) as c), (DefT (_, (InstanceT _)) as a)
+      ->
+        predicate cx trace result
+          (ctor reason_c (extends_type c a))
+          (RightP (InstanceofTest, c))
+
+    (** If C is a subclass of A, then don't refine the type of x. Otherwise,
+        refine the type of x to A. (In general, the type of x should be refined
+        to C & A, but that's hard to compute.) **)
+    | true,
+      DefT (reason, InstanceT (_, super_c, _, instance_c)),
+      ExtendsT (_, _, c, DefT (_, InstanceT (_, _, _, instance_a)))
+      -> (* TODO: intersection *)
+        if instance_a.class_id = instance_c.class_id
+        then rec_flow_t cx trace (c, result)
+        else
+          (** Recursively check whether super(C) extends A, with enough context. **)
+          let pred = LeftP (InstanceofTest, right) in
+          let u = PredicateT (pred, result) in
+          rec_flow cx trace (super_c, ReposLowerT (reason, u))
+
+    | true, ObjProtoT _, ExtendsT (_, _, _, a)
+      ->
+        (** We hit the root class, so C is not a subclass of A **)
+        let t = reposition cx ~trace (loc_of_reason reason_c) a in
+        rec_flow_t cx trace (t, result)
+
+    (** Prune the type when any other `instanceof` check succeeds (since this is
+        impossible). *)
+    | true, _, _
+      -> ()
+
+    (** Like above, now suppose that we have an instance x of class C, and we
+        check whether x is _not_ `instanceof` class A. To decide what the
+        appropriate refinement for x should be, we need to decide whether C
+        extends A, choosing either nothing or C based on the result. **)
+    | false, (DefT (_, InstanceT _) as c), (DefT (_, (InstanceT _)) as a)
+      ->
+        predicate cx trace result
+          (ctor reason_c (extends_type c a))
+          (NotP (RightP (InstanceofTest, c)))
+
+    (** If C is a subclass of A, then do nothing, since this check cannot
+        succeed. Otherwise, don't refine the type of x. **)
+    | false,
+      DefT (reason, InstanceT (_, super_c, _, instance_c)),
+      ExtendsT (_, _, _, DefT (_, InstanceT (_, _, _, instance_a)))
+      ->
+        if instance_a.class_id = instance_c.class_id
+        then ()
+        else
+          let u = PredicateT (NotP (LeftP (InstanceofTest, right)), result) in
+          rec_flow cx trace (super_c, ReposLowerT (reason, u))
+
+    | false, ObjProtoT _, ExtendsT(_, _, c, _)
+      ->
+        (** We hit the root class, so C is not a subclass of A **)
+        let t = reposition cx ~trace (loc_of_reason reason_c) c in
+        rec_flow_t cx trace (t, result)
+
+    (** Don't refine the type when any other `instanceof` check fails. **)
+    | false, left, _
+      ->
+        rec_flow_t cx trace (left, result)
+  in
+
+  function
+  | sense, left, (DefT (reason, ClassT t) as right) ->
+      let triple = sense, left, t in
+      let ctor = (fun r t -> DefT (r, ClassT t)) in
+      right_class right reason ctor triple
+
+  | sense, left, (DefT (reason, NonabstractClassT t) as right) ->
+      let triple = sense, left, t in
+      let ctor = (fun r t -> DefT (r, NonabstractClassT t)) in
+      right_class right reason ctor triple
 
   (** An object is considered `instanceof` a function F when it is constructed
       by F. Note that this is incomplete with respect to the runtime semantics,
@@ -8508,86 +8718,16 @@ and instanceof_test cx trace result = function
 
     rec_flow_t cx trace (obj, result)
 
-  (** Suppose that we have an instance x of class C, and we check whether x is
-      `instanceof` class A. To decide what the appropriate refinement for x
-      should be, we need to decide whether C extends A, choosing either C or A
-      based on the result. Thus, we generate a constraint to decide whether C
-      extends A (while remembering C), which may recursively generate further
-      constraints to decide super(C) extends A, and so on, until we hit the root
-      class. (As a technical tool, we use Extends(_, _) to perform this
-      recursion; it is also used elsewhere for running similar recursive
-      subclass decisions.) **)
-  | true,
-    (DefT (_, InstanceT _) as c),
-    DefT (r, ClassT (DefT (_, (InstanceT _)) as a)) ->
-    predicate cx trace result
-      (DefT (r, ClassT (extends_type c a)))
-      (RightP (InstanceofTest, c))
-
-  (** If C is a subclass of A, then don't refine the type of x. Otherwise,
-      refine the type of x to A. (In general, the type of x should be refined to
-      C & A, but that's hard to compute.) **)
-  | true,
-    DefT (reason, InstanceT (_, super_c, _, instance_c)),
-    (DefT (_, ClassT (ExtendsT (_, _, c, DefT (_, InstanceT (_, _, _, instance_a))))) as right)
-    -> (* TODO: intersection *)
-
-    if instance_a.class_id = instance_c.class_id
-    then rec_flow_t cx trace (c, result)
-    else
-      (** Recursively check whether super(C) extends A, with enough context. **)
-      let pred = LeftP(InstanceofTest, right) in
-      let u = PredicateT(pred, result) in
-      rec_flow cx trace (super_c, ReposLowerT (reason, u))
-
-  | true,
-    ObjProtoT _,
-    DefT (r, ClassT (ExtendsT (_, _, _, a)))
-    ->
-    (** We hit the root class, so C is not a subclass of A **)
-    rec_flow_t cx trace (reposition cx ~trace (loc_of_reason r) a, result)
-
   (** Prune the type when any other `instanceof` check succeeds (since this is
       impossible). *)
-  | true, _, _ ->
-    ()
+  | true, _, _
+    -> ()
 
   | false,
     DefT (_, ObjT {proto_t = proto2; _}),
     DefT (_, FunT (_, proto1, _))
       when proto1 = proto2 ->
     ()
-
-  (** Like above, now suppose that we have an instance x of class C, and we
-      check whether x is _not_ `instanceof` class A. To decide what the
-      appropriate refinement for x should be, we need to decide whether C
-      extends A, choosing either nothing or C based on the result. **)
-  | false,
-    (DefT (_, InstanceT _) as c),
-    DefT (r, ClassT (DefT (_, (InstanceT _)) as a)) ->
-    predicate cx trace result
-      (DefT (r, ClassT (extends_type c a)))
-      (NotP(RightP(InstanceofTest, c)))
-
-  (** If C is a subclass of A, then do nothing, since this check cannot
-      succeed. Otherwise, don't refine the type of x. **)
-  | false,
-    DefT (reason, InstanceT (_, super_c, _, instance_c)),
-    (DefT (_, ClassT (ExtendsT(_, _, _, DefT (_, InstanceT (_, _, _, instance_a))))) as right)
-    ->
-
-    if instance_a.class_id = instance_c.class_id
-    then ()
-    else
-      let u = PredicateT(NotP(LeftP(InstanceofTest, right)), result) in
-      rec_flow cx trace (super_c, ReposLowerT (reason, u))
-
-  | false,
-    ObjProtoT _,
-    DefT (r, ClassT (ExtendsT(_, _, c, _)))
-    ->
-    (** We hit the root class, so C is not a subclass of A **)
-    rec_flow_t cx trace (reposition cx ~trace (loc_of_reason r) c, result)
 
   (** Don't refine the type when any other `instanceof` check fails. **)
   | false, left, _ ->
@@ -9894,7 +10034,7 @@ and instantiate_poly_t cx t types =
 
 and instantiate_type t =
   match t with
-  | ThisClassT (_, t) | DefT (_, ClassT t) -> t
+  | ThisClassT (_, t) | DefT (_, ClassT t) | DefT (_, NonabstractClassT t) -> t
   | _ -> AnyT.why (reason_of_t t) (* ideally, assert false *)
 
 and call_args_iter f = List.iter (function Arg t | SpreadArg t -> f t)
@@ -10473,7 +10613,9 @@ end = struct
            * property in autocomplete, so for now we just return the getter
            * type. *)
           let t = match p with
-          | Field (t, _) | Get t | Set t | GetSet (t, _) | Method t -> t
+          | Field (t, _) | Get t | Set t
+          | GetSet (t, _) | Method t | AbstractMethod t
+            -> t
           in
           SMap.add x t acc
         ) (find_props cx fields) SMap.empty in
@@ -10521,7 +10663,8 @@ end = struct
         (* TODO: replace type parameters with stable/proper names? *)
         extract cx sub_type
     | ThisClassT (_, DefT (_, InstanceT (static, _, _, _)))
-    | DefT (_, ClassT (DefT (_, InstanceT (static, _, _, _)))) ->
+    | DefT (_, ClassT (DefT (_, InstanceT (static, _, _, _))))
+    | DefT (_, NonabstractClassT (DefT (_, InstanceT (static, _, _, _))))->
         let static_t = resolve_type cx static in
         extract cx static_t
     | DefT (_, FunT (static, proto, _)) ->
@@ -10567,12 +10710,14 @@ end = struct
         extract cx t
 
     | AbstractT _
+    | AbstractsT _
     | AnyWithLowerBoundT _
     | AnyWithUpperBoundT _
     | DefT (_, ArrT _)
     | BoundT _
     | ChoiceKitT (_, _)
     | DefT (_, ClassT _)
+    | DefT (_, NonabstractClassT _)
     | CustomFunT (_, _)
     | DiffT (_, _)
     | DefT (_, EmptyT)
@@ -10661,8 +10806,9 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | DefT (_, AnyT)
     -> ()
 
-  | TaintT _ ->
-    ()
+  | TaintT _
+  | AbstractsT _
+    -> ()
 
   | DefT (reason, FunT (static, prototype, ft)) ->
     let { this_t; params_tlist; return_t; rest_param; _ } = ft in
@@ -10696,6 +10842,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     List.iter (recurse ~infer:true) tuple_types
 
   | DefT (_, ClassT t)
+  | DefT (_, NonabstractClassT t)
   | DefT (_, TypeT t) ->
     recurse t
 

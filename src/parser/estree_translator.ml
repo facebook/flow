@@ -706,8 +706,22 @@ end with type t = Impl.t) = struct
   )
 
   and class_element = Class.Body.(function
+    | AbstractMethod m -> class_abstract_method m
     | Method m -> class_method m
     | Property p -> class_property p)
+
+  and class_abstract_method (loc, method_) =
+    let { Class.AbstractMethod.key; value; static; } = method_ in
+    let key, computed = Expression.Object.Property.(match key with
+      | Literal lit -> literal lit, false
+      | Identifier id -> identifier id, false
+      | Computed expr -> expression expr, true) in
+    node "AbstractMethodDefinition" loc [|
+      "key", key;
+      "value", function_type value;
+      "static", bool static;
+      "computed", bool computed;
+    |]
 
   and class_method (loc, method_) =
     let { Class.Method.key; value; kind; static; decorators; } = method_ in

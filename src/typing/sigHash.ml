@@ -50,8 +50,10 @@ type hash =
   | ObjProtoH
   | ArrH
   | ClassH
+  | NonabstractClassH
   | OptionalH
   | AbstractH
+  | AbstractsH
   | EvalH
   | PolyH
   | TypeAppH
@@ -95,6 +97,7 @@ let hash_of_def_ctor = Type.(function
   | ArrT _ -> ArrH
   | BoolT b -> BoolH b
   | ClassT _ -> ClassH
+  | NonabstractClassT _ -> NonabstractClassH
   | EmptyT -> EmptyH
   | FunT _ -> FunH
   | IntersectionT _ -> IntersectionH
@@ -119,6 +122,7 @@ let hash_of_ctor = Type.(function
   | OpenT _ -> failwith "undefined hash of OpenT"
 
   | AbstractT _ -> AbstractH
+  | AbstractsT _ -> AbstractsH
   | AnnotT _ -> AnnotH
   | AnyWithLowerBoundT _ -> AnyWithLowerBoundH
   | AnyWithUpperBoundT _ -> AnyWithUpperBoundH
@@ -155,6 +159,7 @@ type prop_hash =
   | SetH
   | GetSetH
   | MethodH
+  | AbstractMethodH
 
 let hash_of_prop = Type.(function
   | Field (_, polarity) -> FieldH polarity
@@ -162,6 +167,7 @@ let hash_of_prop = Type.(function
   | Set _ -> SetH
   | GetSet _ -> GetSetH
   | Method _ -> MethodH
+  | AbstractMethod _ -> AbstractMethodH
 )
 
 type t = Digest.t

@@ -2,6 +2,10 @@
 
 type t
 
+val reason_of_t: t -> Reason.t
+val replace_reason: (Reason.reason_desc -> Reason.reason_desc) -> t -> t
+val replace_reason_const: Reason.reason_desc -> t -> t
+
 (** 1. Constructors *)
 
 (** Create signature from function AST. *)
