@@ -122,25 +122,33 @@ let detect_sketchy_null_checks cx =
     )
   in
 
-  let detect_function prop_loc exists_check =
+  let detect_function exists_excuses prop_loc exists_check =
     let open ExistsCheck in
+
+    let exists_excuse = Utils_js.LocMap.get prop_loc exists_excuses
+      |> Option.value ~default:empty in
+
     begin match exists_check.null_loc with
       | None -> ()
       | Some null_loc ->
         let add_error = add_error ~prop_loc ~null_loc in
-        Option.iter exists_check.bool_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
-          LintSettings.SketchyNullBool ~type_str:"boolean" ~value_str:"Potentially false");
-        Option.iter exists_check.number_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
-          LintSettings.SketchyNullNumber ~type_str:"number" ~value_str:"Potentially 0");
-        Option.iter exists_check.string_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
-          LintSettings.SketchyNullString ~type_str:"string" ~value_str:"Potentially \"\"");
-        Option.iter exists_check.mixed_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
-          LintSettings.SketchyNullMixed ~type_str:"mixed" ~value_str:"Mixed");
+        if (Option.is_none exists_excuse.bool_loc) then
+          Option.iter exists_check.bool_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
+            LintSettings.SketchyNullBool ~type_str:"boolean" ~value_str:"Potentially false");
+        if (Option.is_none exists_excuse.number_loc) then
+          Option.iter exists_check.number_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
+            LintSettings.SketchyNullNumber ~type_str:"number" ~value_str:"Potentially 0");
+        if (Option.is_none exists_excuse.string_loc) then
+          Option.iter exists_check.string_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
+            LintSettings.SketchyNullString ~type_str:"string" ~value_str:"Potentially \"\"");
+        if (Option.is_none exists_excuse.mixed_loc) then
+          Option.iter exists_check.mixed_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
+            LintSettings.SketchyNullMixed ~type_str:"mixed" ~value_str:"Mixed");
         ()
     end
   in
 
-  Utils_js.LocMap.iter detect_function (Context.exists_checks cx)
+  Utils_js.LocMap.iter (detect_function (Context.exists_excuses cx)) (Context.exists_checks cx)
 
 
 (* Merge a component with its "implicit requires" and "explicit requires." The

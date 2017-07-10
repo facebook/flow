@@ -111,6 +111,7 @@ val verbose: t -> Verbose.t option
 val max_workers: t -> int
 val jsx: t -> Options.jsx_mode option
 val exists_checks: t -> ExistsCheck.t Utils_js.LocMap.t
+val exists_excuses: t -> ExistsCheck.t Utils_js.LocMap.t
 val pid_prefix: t -> string
 
 val copy_of_context: t -> t
@@ -147,6 +148,7 @@ val set_export_maps: t -> Type.Exports.map -> unit
 val set_tvar: t -> Constraint.ident -> Constraint.node -> unit
 val set_unused_lint_suppressions: t -> Loc.LocSet.t -> unit
 val set_exists_checks: t -> ExistsCheck.t Utils_js.LocMap.t -> unit
+val set_exists_excuses: t -> ExistsCheck.t Utils_js.LocMap.t -> unit
 
 val clear_intermediates: t -> unit
 

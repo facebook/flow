@@ -3174,6 +3174,7 @@ and binary cx loc = Ast.Expression.Binary.(function
 
 and logical cx loc = Ast.Expression.Logical.(function
   | { operator = Or; left; right } ->
+      let () = check_default_pattern cx left right in
       let t1, _, not_map, xtypes = predicates_of_condition cx left in
       let reason = mk_reason (RCustom "||") loc in
       let t2 = Env.in_refined_env cx loc not_map xtypes
@@ -4098,6 +4099,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
 
   (* test1 || test2 *)
   | loc, Logical { Logical.operator = Logical.Or; left; right } ->
+      let () = check_default_pattern cx left right in
       let reason = mk_reason (RCustom "||") loc in
       let t1, map1, not_map1, xts1 =
         predicates_of_condition cx left in
@@ -4433,3 +4435,31 @@ and declare_function_to_function_declaration cx id typeAnnotation predicate =
       end
   | _ ->
       None
+
+and check_default_pattern cx left right =
+  let left_loc = fst left in
+  let right_loc = fst right in
+
+  let update_excuses update_fun =
+    let exists_excuses = Context.exists_excuses cx in
+    let exists_excuse = Utils_js.LocMap.get left_loc exists_excuses
+      |> Option.value ~default:ExistsCheck.empty
+      |> update_fun in
+    let exists_excuses = Utils_js.LocMap.add left_loc exists_excuse exists_excuses in
+    Context.set_exists_excuses cx exists_excuses
+  in
+
+  match snd right with
+    | Ast.Expression.Literal literal ->
+      let open ExistsCheck in
+      begin match literal.Ast.Literal.value with
+        | Ast.Literal.String "" ->
+          update_excuses (fun excuse -> {excuse with string_loc = Some right_loc})
+        | Ast.Literal.Boolean false ->
+          update_excuses (fun excuse -> {excuse with bool_loc = Some right_loc})
+        | Ast.Literal.Number 0. ->
+          update_excuses (fun excuse -> {excuse with number_loc = Some right_loc})
+        (* There's no valid default value for mixed to create an excuse. *)
+        | _ -> ()
+      end
+    | _ -> ()

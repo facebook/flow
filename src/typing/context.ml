@@ -136,6 +136,14 @@ type local_t = {
 
   (* map from exists proposition locations to the types of values running through them *)
   mutable exists_checks: ExistsCheck.t Utils_js.LocMap.t;
+  (* map from exists proposition locations to the types of excuses for them *)
+  (* If a variable appears in something like `x || ''`, the existence check
+   * is excused and not considered sketchy. (The program behaves identically to how it would
+   * if the null check was made explicit (`x == null ? '' : x`), and this is a fairly
+   * common pattern. Excusing it eliminates a lot of noise from the lint rule. *)
+  (* The above example assumes that x is a string. If it were a different type
+   * it wouldn't be excused. *)
+  mutable exists_excuses: ExistsCheck.t Utils_js.LocMap.t;
 }
 
 type cacheable_t = local_t
@@ -218,6 +226,7 @@ let make metadata file module_ref = {
     declare_module_t = None;
 
     exists_checks = Utils_js.LocMap.empty;
+    exists_excuses = Utils_js.LocMap.empty;
   }
 }
 
@@ -283,6 +292,7 @@ let verbose cx = cx.local.metadata.verbose
 let max_workers cx = Global.max_workers cx.global
 let jsx cx = cx.local.metadata.jsx
 let exists_checks cx = cx.local.exists_checks
+let exists_excuses cx = cx.local.exists_excuses
 
 let pid_prefix (cx: t) =
   if max_workers cx > 0
@@ -359,13 +369,16 @@ let set_unused_lint_suppressions cx suppressions = cx.local.error_suppressions <
   Error_suppressions.set_unused_lint_suppressions suppressions cx.local.error_suppressions
 let set_exists_checks cx exists_checks =
   cx.local.exists_checks <- exists_checks
+let set_exists_excuses cx exists_excuses =
+  cx.local.exists_excuses <- exists_excuses
 
 let clear_intermediates cx =
   (* call reset instead of clear to also shrink the bucket tables *)
   Type_table.reset cx.local.type_table;
   Hashtbl.reset cx.local.annot_table;
   cx.local.all_unresolved <- IMap.empty;
-  cx.local.exists_checks <- Utils_js.LocMap.empty
+  cx.local.exists_checks <- Utils_js.LocMap.empty;
+  cx.local.exists_excuses <- Utils_js.LocMap.empty
 
 (* utils *)
 let iter_props cx id f =
@@ -423,7 +436,8 @@ let merge_into cx cx_other =
   set_all_unresolved cx (IMap.union (all_unresolved cx_other) (all_unresolved cx));
   set_globals cx (SSet.union (globals cx_other) (globals cx));
   set_graph cx (IMap.union (graph cx_other) (graph cx));
-  set_exists_checks cx (Utils_js.LocMap.union (exists_checks cx_other) (exists_checks cx))
+  set_exists_checks cx (Utils_js.LocMap.union (exists_checks cx_other) (exists_checks cx));
+  set_exists_excuses cx (Utils_js.LocMap.union (exists_excuses cx_other) (exists_excuses cx))
 
 let to_cache cx = cx.local
 let from_cache ~options local =
