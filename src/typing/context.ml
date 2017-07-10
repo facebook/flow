@@ -114,7 +114,7 @@ type local_t = {
   mutable type_graph: Graph_explorer.graph;
 
   (* map of speculation ids to sets of unresolved tvars *)
-  mutable all_unresolved: Type.TypeSet.t IMap.t;
+  mutable all_unresolved: ISet.t IMap.t;
 
   (* map from frame ids to env snapshots *)
   mutable envs: env IMap.t;

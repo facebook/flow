@@ -919,7 +919,7 @@ module ResolvableTypeJob = struct
   type t =
   | Binding of Type.t
   | OpenResolved
-  | OpenUnresolved of int option * Type.t
+  | OpenUnresolved of int option * Constraint.ident
 
   (* log_unresolved is a mode that determines whether to log unresolved tvars:
      it is None when resolving annotations, and Some speculation_id when
@@ -952,7 +952,7 @@ module ResolvableTypeJob = struct
            them during speculative matching typically do not cause side effects
            across branches, and help make progress. *)
         then acc
-        else IMap.add id (OpenUnresolved (log_unresolved, tvar)) acc
+        else IMap.add id (OpenUnresolved (log_unresolved, id)) acc
       end
 
     | AnnotT source ->
@@ -7201,12 +7201,12 @@ and bindings_of_jobs cx trace jobs =
   IMap.fold ResolvableTypeJob.(fun id job bindings -> match job with
   | OpenResolved -> bindings
   | Binding t -> (id, t)::bindings
-  | OpenUnresolved (log_unresolved, t) ->
+  | OpenUnresolved (log_unresolved, id) ->
     begin match log_unresolved with
     | Some speculation_id ->
-      Speculation.add_unresolved_to_speculation cx speculation_id t
+      Speculation.add_unresolved_to_speculation cx speculation_id id
     | None ->
-      rec_unify cx trace t Locationless.AnyT.t
+      resolve_id cx trace ~use_op:UnknownUse id Locationless.AnyT.t
     end;
     bindings
   ) jobs []
@@ -7425,7 +7425,7 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
     | [] -> return match_state
 
     | (case_id, case_r, l, u)::trials ->
-      let case = { case_id; unresolved = TypeSet.empty; actions = []} in
+      let case = { case_id; unresolved = ISet.empty; actions = []} in
       (* speculatively match the pair of types in this trial *)
       let error = speculative_match cx trace
         { Speculation.ignore; speculation_id; case } l u in
@@ -7435,7 +7435,7 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
         begin match match_state with
         | Speculation.NoMatch _ ->
           (* everything had failed up to this point. so no ambiguity yet... *)
-          if TypeSet.is_empty case.unresolved
+          if ISet.is_empty case.unresolved
           (* ...and no unresolved tvars encountered during the speculative
              match! This is great news. It means that this alternative will
              definitely succeed. Fire any deferred actions and short-cut. *)
@@ -7513,10 +7513,8 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
    encounters potentially side-effectful constraints involving unresolved tvars
    during a trial.
 *)
-and blame_unresolved cx trace prev_i i cases case_r r ts =
-  let rs = ts |> List.map (fun t ->
-    reason_of_t t
-  ) in
+and blame_unresolved cx trace prev_i i cases case_r r tvars =
+  let rs = tvars |> List.map (fun (_, r) -> r) |> List.sort compare in
   let prev_case = reason_of_t (List.nth cases prev_i) in
   let case = reason_of_t (List.nth cases i) in
   add_output cx ~trace (FlowError.ESpeculationAmbiguous (
@@ -7538,7 +7536,9 @@ and choices_of_spec = function
     -> ts
 
 and ignore_of_spec = function
-  | IntersectionCases (_, CallT (_, callt)) -> Some (callt.call_tout)
+  | IntersectionCases (_, CallT (_, {
+      call_tout = OpenT (_, id); _
+    })) -> Some id
   | _ -> None
 
 (* spec optimization *)

@@ -60,7 +60,7 @@ val to_cache: t -> cacheable_t
 val from_cache: options:Options.t -> cacheable_t -> t
 
 (* accessors *)
-val all_unresolved: t -> Type.TypeSet.t IMap.t
+val all_unresolved: t -> ISet.t IMap.t
 val annot_table: t -> (Loc.t, Type.t) Hashtbl.t
 val declare_module_t: t -> Type.t option
 val enable_const_params: t -> bool
@@ -137,7 +137,7 @@ val set_declare_module_t: t -> Type.t option -> unit
 val set_envs: t -> env IMap.t -> unit
 val set_evaluated: t  -> Type.t IMap.t -> unit
 val set_type_graph: t  -> Graph_explorer.graph -> unit
-val set_all_unresolved: t  -> Type.TypeSet.t IMap.t -> unit
+val set_all_unresolved: t  -> ISet.t IMap.t -> unit
 val set_globals: t -> SSet.t -> unit
 val set_graph: t -> Constraint.node IMap.t -> unit
 val set_lint_settings: t -> SuppressionMap.t -> unit
