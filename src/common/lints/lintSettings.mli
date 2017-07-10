@@ -13,6 +13,7 @@ type lint_kind =
   | SketchyNullString
   | SketchyNullNumber
   | SketchyNullMixed
+  | UntypedTypeImport
 
 val string_of_kind: lint_kind -> string
 

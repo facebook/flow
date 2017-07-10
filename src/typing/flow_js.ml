@@ -2062,12 +2062,37 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* imports are `any`-typed when they are from (1) unchecked modules or (2)
        modules with `any`-typed exports *)
-    | DefT (_, (AnyT | AnyObjT)),
+    | DefT (_, AnyObjT),
         ( CJSRequireT(reason, t)
         | ImportModuleNsT(reason, t)
         | ImportDefaultT(reason, _, _, t)
         | ImportNamedT(reason, _, _, t)
         ) ->
+      rec_flow_t cx trace (AnyT.why reason, t)
+
+    | DefT (_, AnyT), (CJSRequireT(reason, t) | ImportModuleNsT(reason, t)) ->
+      rec_flow_t cx trace (AnyT.why reason, t)
+
+    | DefT (_, AnyT), ImportDefaultT(reason, import_kind, (_, module_name), t) ->
+      let () = begin match import_kind with
+        | ImportType | ImportTypeof ->
+          let loc = Reason.loc_of_reason reason in
+          let module_name = spf "`%s`" module_name in
+          let message = FlowError.EUntypedTypeImport (loc, module_name) in
+          add_output cx ~trace message
+        | ImportValue -> ()
+      end in
+      rec_flow_t cx trace (AnyT.why reason, t)
+
+    | DefT (_, AnyT), ImportNamedT(reason, import_kind, export_name, t) ->
+      let () = begin match import_kind with
+        | ImportType | ImportTypeof ->
+          let loc = Reason.loc_of_reason reason in
+          let module_name = spf "the module that exports `%s`" export_name in
+          let message = FlowError.EUntypedTypeImport (loc, module_name) in
+          add_output cx ~trace message
+        | ImportValue -> ()
+      end in
       rec_flow_t cx trace (AnyT.why reason, t)
 
     | (DefT (_, PolyT (_, DefT (_, TypeT _))) | DefT (_, TypeT _)),

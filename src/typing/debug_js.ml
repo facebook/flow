@@ -2352,5 +2352,7 @@ let dump_flow_error =
         | MultipleProvidesModuleAttributes -> "MultipleProvidesModuleAttributes"
         | MultipleJSXAttributes -> "MultipleJSXAttributes"
         | InvalidJSXAttribute _ -> "InvalidJSXAttribute")
+    | EUntypedTypeImport (loc, module_name) ->
+      spf "EUntypedTypeImport (%s, %s)" (string_of_loc loc) module_name
     | EUnusedSuppression loc ->
       spf "EUnusedSuppression (%s)" (string_of_loc loc)

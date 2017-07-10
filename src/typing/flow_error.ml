@@ -131,6 +131,8 @@ type error_message =
     }
   | EParseError of Loc.t * Parse_error.t
   | EDocblockError of Loc.t * docblock_error
+  (* The string is either the name of a module or "the module that exports `_`". *)
+  | EUntypedTypeImport of Loc.t * string
   | EUnusedSuppression of Loc.t
 
 and binding_error =
@@ -352,6 +354,7 @@ let locs_of_error_message = function
       ]
   | EParseError (loc, _) -> [loc]
   | EDocblockError (loc, _) -> [loc]
+  | EUntypedTypeImport (loc, _) -> [loc]
   | EUnusedSuppression (loc) -> [loc]
 
 let loc_of_error ~op msg =
@@ -1340,6 +1343,14 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | Some first_error -> spf " Parse error: %s" first_error)
     in
     mk_error ~kind:ParseError [loc, [msg]]
+
+  | EUntypedTypeImport (loc, module_name) ->
+    mk_error
+      ~kind:(LintError LintSettings.UntypedTypeImport)
+      [loc, [spf (
+        "Importing a type from an untyped module is not safe! Did you " ^^
+        "mean to add `// @flow` to the top of %s?"
+      ) module_name]]
 
   | EUnusedSuppression loc ->
     mk_error [loc, ["Error suppressing comment"; "Unused suppression"]]

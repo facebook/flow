@@ -13,12 +13,14 @@ type lint_kind =
   | SketchyNullString
   | SketchyNullNumber
   | SketchyNullMixed
+  | UntypedTypeImport
 
 let string_of_kind = function
   | SketchyNullBool -> "sketchy-null-bool"
   | SketchyNullString -> "sketchy-null-string"
   | SketchyNullNumber -> "sketchy-null-number"
   | SketchyNullMixed -> "sketchy-null-mixed"
+  | UntypedTypeImport -> "untyped-type-import"
 
 let kinds_of_string = function
   | "sketchy-null" -> Some [SketchyNullBool; SketchyNullString; SketchyNullNumber; SketchyNullMixed]
@@ -26,6 +28,7 @@ let kinds_of_string = function
   | "sketchy-null-string" -> Some [SketchyNullString]
   | "sketchy-null-number" -> Some [SketchyNullNumber]
   | "sketchy-null-mixed" -> Some [SketchyNullMixed]
+  | "untyped-type-import" -> Some [UntypedTypeImport]
   | _ -> None
 
 type lint_state =
