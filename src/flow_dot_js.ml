@@ -176,7 +176,12 @@ let check_content ~filename ~content =
     let master_cx = get_master_cx root in
     Merge_js.merge_component_strict reqs [cx] [] master_cx;
 
-    Context.errors cx
+    (* Perform a basic suppression step to eliminate lints from playground output. *)
+    let errors, _, _ = Error_suppressions.filter_suppressed_errors
+      Error_suppressions.empty
+      (SuppressionMap.global_settings filename LintSettings.default_settings)
+      (Context.errors cx)
+    in errors
   | _, parse_errors ->
     List.fold_left (fun acc parse_error ->
       Errors.ErrorSet.add (error_of_parse_error filename parse_error) acc
