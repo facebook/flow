@@ -1,4 +1,4 @@
-var React = require('React');
+var React = require('react');
 
 type DefaultProps = { };
 type Props = { x: number };

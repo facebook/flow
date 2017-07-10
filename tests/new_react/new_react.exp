@@ -364,26 +364,24 @@ props3.js:50
  50:       bad_two: React.PropTypes.string.inRequired,
                     ^^^^^^^^^^^^^^^^^^^^^^ object type
 
-props4.js:13
- 13: <JDiv id={42} />;
+props4.js:14
+ 14: <JDiv id={42} />;
      ^^^^^^^^^^^^^^^^ props of React element `JDiv`. This type is incompatible with
               v
-  7:   props: {
-  8:     id: string
-  9:   };
+  8:   props: {
+  9:     id: string
+ 10:   };
        ^ object type
   Property `id` is incompatible:
-     13: <JDiv id={42} />;
+     14: <JDiv id={42} />;
                    ^^ number. This type is incompatible with
-      8:     id: string
+      9:     id: string
                  ^^^^^^ string
 
-props4.js:24
- 24:   <Example foo="foo" />,
-       ^^^^^^^^^^^^^^^^^^^^^ React element `Example`
- 16:   props: { bar: string };
+props4.js:17
+ 17:   props: { bar: string };
               ^^^^^^^^^^^^^^^ property `bar`. Property not found in
- 24:   <Example foo="foo" />,
+ 25:   <Example foo="foo" />,
        ^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`
 
 state.js:19

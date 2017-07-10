@@ -1,4 +1,4 @@
-var React = require('React');
+var React = require('react');
 
 type T1 = { }
 type T2 = { x: number }

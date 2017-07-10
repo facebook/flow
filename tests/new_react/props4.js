@@ -1,6 +1,7 @@
 // @flow
 
-import React from "React";
+import React from "react";
+import ReactDOM from "react-dom";
 
 class JDiv extends React.Component {
   // static defaultProps: { };
@@ -20,7 +21,7 @@ class Example extends React.Component {
   }
 }
 
-React.render(
+ReactDOM.render(
   <Example foo="foo" />,
   document.body
 );
