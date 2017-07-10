@@ -3,7 +3,7 @@ Initial status:
 No errors!
 
 Clear A.js:
-B.js:5
+Error: B.js:5
   5: require('A');
              ^^^ A. Required module not found
 

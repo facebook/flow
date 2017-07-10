@@ -1,10 +1,10 @@
-class_static.js:9
+Error: class_static.js:9
   9: var x: number = C.bar();
                      ^^^^^^^ string. This type is incompatible with
   9: var x: number = C.bar();
             ^^^^^^ number
 
-class_static.js:10
+Error: class_static.js:10
  10: var y: number = C.foo();
                      ^^^^^^^ string. This type is incompatible with
  10: var y: number = C.foo();

@@ -1,4 +1,4 @@
-private.js:11
+Error: private.js:11
  11:     var _x: string = this._x;
                                ^^ property `_x`. Property not found in
  11:     var _x: string = this._x;

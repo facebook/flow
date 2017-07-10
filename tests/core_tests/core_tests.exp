@@ -1,4 +1,4 @@
-map.js:23
+Error: map.js:23
  23:     let x = new Map(['foo', 123]); // error
                  ^^^^^^^^^^^^^^^^^^^^^ constructor call
  23:     let x = new Map(['foo', 123]); // error
@@ -6,7 +6,7 @@ map.js:23
 611:     constructor(iterable: ?Iterable<[K, V]>): void;
                                          ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:611
 
-map.js:23
+Error: map.js:23
  23:     let x = new Map(['foo', 123]); // error
                  ^^^^^^^^^^^^^^^^^^^^^ constructor call
  23:     let x = new Map(['foo', 123]); // error
@@ -14,7 +14,7 @@ map.js:23
 611:     constructor(iterable: ?Iterable<[K, V]>): void;
                                          ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:611
 
-map.js:24
+Error: map.js:24
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                       ^^^^^^^^^^^^^^^^^^^^^^^ constructor call
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -22,7 +22,7 @@ map.js:24
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
                     ^^^^^^ number
 
-map.js:24
+Error: map.js:24
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                       ^^^^^^^^^^^^^^^^^^^^^^^ constructor call
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -30,37 +30,37 @@ map.js:24
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
                             ^^^^^^ string
 
-map.js:29
+Error: map.js:29
  29:     (x.get('foo'): boolean); // error, string | void
           ^^^^^^^^^^^^ number. This type is incompatible with
  29:     (x.get('foo'): boolean); // error, string | void
                         ^^^^^^^ boolean
 
-map.js:29
+Error: map.js:29
  29:     (x.get('foo'): boolean); // error, string | void
           ^^^^^^^^^^^^ undefined. This type is incompatible with
  29:     (x.get('foo'): boolean); // error, string | void
                         ^^^^^^^ boolean
 
-map.js:30
+Error: map.js:30
  30:     x.get(123); // error, wrong key type
                ^^^ number. This type is incompatible with the expected param type of
  28:   function(x: Map<string, number>) {
                        ^^^^^^ string
 
-regexp.js:26
+Error: regexp.js:26
  26:     RegExp('foo', 'z'); // error
                        ^^^ string. This type is incompatible with the expected param type of
 402:     static (pattern: string | RegExp, flags?: RegExp$flags): RegExp;
                                                    ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/core.js:402
 
-regexp.js:27
+Error: regexp.js:27
  27:     new RegExp('foo', 'z'); // error
                            ^^^ string. This type is incompatible with the expected param type of
 404:     constructor(pattern: string | RegExp, flags?: RegExp$flags): RegExp;
                                                        ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/core.js:404
 
-weakset.js:19
+Error: weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
@@ -68,7 +68,7 @@ weakset.js:19
 649: declare class WeakSet<T: Object> {
                               ^^^^^^ object type. See lib: <BUILTINS>/core.js:649
 
-weakset.js:19
+Error: weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
@@ -76,7 +76,7 @@ weakset.js:19
 649: declare class WeakSet<T: Object> {
                               ^^^^^^ object type. See lib: <BUILTINS>/core.js:649
 
-weakset.js:19
+Error: weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
@@ -84,7 +84,7 @@ weakset.js:19
 649: declare class WeakSet<T: Object> {
                               ^^^^^^ object type. See lib: <BUILTINS>/core.js:649
 
-weakset.js:36
+Error: weakset.js:36
  36: let ws5 = new WeakSet(numbers()); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  29: function* numbers(): Iterable<number> {

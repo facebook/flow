@@ -1,4 +1,4 @@
-test.js:149
+Error: test.js:149
 149: <NoProps />; // OK: There are no props.
      ^^^^^^^^^^^ React element `NoProps`
 149: <NoProps />; // OK: There are no props.
@@ -6,7 +6,7 @@ test.js:149
  17:   extends React.Component<void, $Exact<Props_NoProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^ exact type: Props_NoProps
 
-test.js:150
+Error: test.js:150
 150: <NoProps foo={42} />; // OK: Extra props are fine.
      ^^^^^^^^^^^^^^^^^^^^ React element `NoProps`
 150: <NoProps foo={42} />; // OK: Extra props are fine.
@@ -14,7 +14,7 @@ test.js:150
  21: const FunctionExact_NoProps = (props: $Exact<Props_NoProps>) => any;
                                            ^^^^^^^^^^^^^^^^^^^^^ object type
 
-test.js:150
+Error: test.js:150
 150: <NoProps foo={42} />; // OK: Extra props are fine.
      ^^^^^^^^^^^^^^^^^^^^ React element `NoProps`
 150: <NoProps foo={42} />; // OK: Extra props are fine.
@@ -22,7 +22,7 @@ test.js:150
  17:   extends React.Component<void, $Exact<Props_NoProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^ exact type: Props_NoProps
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
                   v
@@ -35,7 +35,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
                   v
@@ -48,7 +48,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
                   v
@@ -61,7 +61,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
                   v
@@ -74,7 +74,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
                   v
@@ -87,7 +87,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  49: class Class_ManyProps extends React.Component<void, Props_ManyProps, void> {}
@@ -95,7 +95,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  49: class Class_ManyProps extends React.Component<void, Props_ManyProps, void> {}
@@ -103,7 +103,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  49: class Class_ManyProps extends React.Component<void, Props_ManyProps, void> {}
@@ -111,7 +111,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  49: class Class_ManyProps extends React.Component<void, Props_ManyProps, void> {}
@@ -119,7 +119,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  49: class Class_ManyProps extends React.Component<void, Props_ManyProps, void> {}
@@ -127,7 +127,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  53:   extends React.PureComponent<void, Props_ManyProps, void> {}
@@ -135,7 +135,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  53:   extends React.PureComponent<void, Props_ManyProps, void> {}
@@ -143,7 +143,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  53:   extends React.PureComponent<void, Props_ManyProps, void> {}
@@ -151,7 +151,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  53:   extends React.PureComponent<void, Props_ManyProps, void> {}
@@ -159,7 +159,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  53:   extends React.PureComponent<void, Props_ManyProps, void> {}
@@ -167,7 +167,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  54: const Function_ManyProps = (props: Props_ManyProps) => any;
@@ -175,7 +175,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  54: const Function_ManyProps = (props: Props_ManyProps) => any;
@@ -183,7 +183,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  54: const Function_ManyProps = (props: Props_ManyProps) => any;
@@ -191,7 +191,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  54: const Function_ManyProps = (props: Props_ManyProps) => any;
@@ -199,7 +199,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  54: const Function_ManyProps = (props: Props_ManyProps) => any;
@@ -207,7 +207,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  55: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
@@ -215,7 +215,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  55: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
@@ -223,7 +223,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  55: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
@@ -231,7 +231,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  55: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
@@ -239,7 +239,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
  55: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
@@ -247,7 +247,7 @@ test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ props of React element `ManyProps`
 
-test.js:152
+Error: test.js:152
 152: <ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^ React element `ManyProps`
 152: <ManyProps />; // Error: There are no props.
@@ -255,7 +255,7 @@ test.js:152
  51:   extends React.Component<void, $Exact<Props_ManyProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
-test.js:153
+Error: test.js:153
      v---------------------------------------
 153: <ManyProps // OK: All props are defined.
 154:   string1="foo"
@@ -273,7 +273,7 @@ test.js:153
  51:   extends React.Component<void, $Exact<Props_ManyProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
-test.js:160
+Error: test.js:160
      v-----------------------------------------
 160: <ManyProps // OK: Other props are allowed.
 161:   string1="foo"
@@ -291,7 +291,7 @@ test.js:160
  55: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ object type
 
-test.js:160
+Error: test.js:160
      v-----------------------------------------
 160: <ManyProps // OK: Other props are allowed.
 161:   string1="foo"
@@ -309,7 +309,7 @@ test.js:160
  55: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ object type
 
-test.js:160
+Error: test.js:160
      v-----------------------------------------
 160: <ManyProps // OK: Other props are allowed.
 161:   string1="foo"
@@ -327,7 +327,7 @@ test.js:160
  55: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ object type
 
-test.js:160
+Error: test.js:160
      v-----------------------------------------
 160: <ManyProps // OK: Other props are allowed.
 161:   string1="foo"
@@ -345,7 +345,7 @@ test.js:160
  51:   extends React.Component<void, $Exact<Props_ManyProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -363,7 +363,7 @@ test.js:170
  51:   extends React.Component<void, $Exact<Props_ManyProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -384,7 +384,7 @@ test.js:170
      44:     boolean1: React.PropTypes.bool.isRequired,
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ boolean
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -405,7 +405,7 @@ test.js:170
      45:     boolean2: React.PropTypes.bool.isRequired,
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ boolean
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -426,7 +426,7 @@ test.js:170
      46:     number: React.PropTypes.number.isRequired,
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -447,7 +447,7 @@ test.js:170
      42:     string1: React.PropTypes.string.isRequired,
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -468,7 +468,7 @@ test.js:170
      43:     string2: React.PropTypes.string.isRequired,
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -484,7 +484,7 @@ test.js:170
      35:   boolean1: boolean,
                      ^^^^^^^ boolean
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -500,7 +500,7 @@ test.js:170
      36:   boolean2: boolean,
                      ^^^^^^^ boolean
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -516,7 +516,7 @@ test.js:170
      37:   number: number,
                    ^^^^^^ number
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -532,7 +532,7 @@ test.js:170
      33:   string1: string,
                     ^^^^^^ string
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -548,7 +548,7 @@ test.js:170
      34:   string2: string,
                     ^^^^^^ string
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -564,7 +564,7 @@ test.js:170
      35:   boolean1: boolean,
                      ^^^^^^^ boolean
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -580,7 +580,7 @@ test.js:170
      36:   boolean2: boolean,
                      ^^^^^^^ boolean
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -596,7 +596,7 @@ test.js:170
      37:   number: number,
                    ^^^^^^ number
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -612,7 +612,7 @@ test.js:170
      33:   string1: string,
                     ^^^^^^ string
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -628,7 +628,7 @@ test.js:170
      34:   string2: string,
                     ^^^^^^ string
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -644,7 +644,7 @@ test.js:170
      35:   boolean1: boolean,
                      ^^^^^^^ boolean
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -660,7 +660,7 @@ test.js:170
      36:   boolean2: boolean,
                      ^^^^^^^ boolean
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -676,7 +676,7 @@ test.js:170
      37:   number: number,
                    ^^^^^^ number
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -692,7 +692,7 @@ test.js:170
      33:   string1: string,
                     ^^^^^^ string
 
-test.js:170
+Error: test.js:170
      v-----------------------------------------------------
 170: <ManyProps // Error: All props have an incorrect type.
 171:   string1={null}
@@ -708,7 +708,7 @@ test.js:170
      34:   string2: string,
                     ^^^^^^ string
 
-test.js:177
+Error: test.js:177
      v---------------------------------------
 177: <ManyProps // OK: All props are defined.
 178:   string1="foo"
@@ -726,7 +726,7 @@ test.js:177
  51:   extends React.Component<void, $Exact<Props_ManyProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
-test.js:177
+Error: test.js:177
      v---------------------------------------
 177: <ManyProps // OK: All props are defined.
 178:   string1="foo"
@@ -744,7 +744,7 @@ test.js:177
  55: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -767,7 +767,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -790,7 +790,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -813,7 +813,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -836,7 +836,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -854,7 +854,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -872,7 +872,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -890,7 +890,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -908,7 +908,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -926,7 +926,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -944,7 +944,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -962,7 +962,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -980,7 +980,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -998,7 +998,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -1016,7 +1016,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -1034,7 +1034,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -1052,7 +1052,7 @@ test.js:184
 188: />;
      -^ props of React element `ManyProps`
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -1070,7 +1070,7 @@ test.js:184
  51:   extends React.Component<void, $Exact<Props_ManyProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
-test.js:184
+Error: test.js:184
      v---------------------------------------
 184: <ManyProps // OK: All props are defined.
 185:   {...{string1: 'foo', string2: 'bar'}}
@@ -1088,7 +1088,7 @@ test.js:184
  55: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
-test.js:189
+Error: test.js:189
      v-------------------------------------
 189: <ManyProps // Error: Missing `number`.
 190:   {...{string1: 'foo', string2: 'bar'}}
@@ -1109,7 +1109,7 @@ test.js:189
 192: />;
      -^ props of React element `ManyProps`
 
-test.js:189
+Error: test.js:189
      v-------------------------------------
 189: <ManyProps // Error: Missing `number`.
 190:   {...{string1: 'foo', string2: 'bar'}}
@@ -1130,7 +1130,7 @@ test.js:189
 192: />;
      -^ props of React element `ManyProps`
 
-test.js:189
+Error: test.js:189
      v-------------------------------------
 189: <ManyProps // Error: Missing `number`.
 190:   {...{string1: 'foo', string2: 'bar'}}
@@ -1151,7 +1151,7 @@ test.js:189
 192: />;
      -^ props of React element `ManyProps`
 
-test.js:189
+Error: test.js:189
      v-------------------------------------
 189: <ManyProps // Error: Missing `number`.
 190:   {...{string1: 'foo', string2: 'bar'}}
@@ -1167,7 +1167,7 @@ test.js:189
 192: />;
      -^ props of React element `ManyProps`
 
-test.js:189
+Error: test.js:189
      v-------------------------------------
 189: <ManyProps // Error: Missing `number`.
 190:   {...{string1: 'foo', string2: 'bar'}}
@@ -1183,7 +1183,7 @@ test.js:189
 192: />;
      -^ props of React element `ManyProps`
 
-test.js:189
+Error: test.js:189
      v-------------------------------------
 189: <ManyProps // Error: Missing `number`.
 190:   {...{string1: 'foo', string2: 'bar'}}
@@ -1199,7 +1199,7 @@ test.js:189
 192: />;
      -^ props of React element `ManyProps`
 
-test.js:189
+Error: test.js:189
      v-------------------------------------
 189: <ManyProps // Error: Missing `number`.
 190:   {...{string1: 'foo', string2: 'bar'}}
@@ -1215,7 +1215,7 @@ test.js:189
 192: />;
      -^ props of React element `ManyProps`
 
-test.js:189
+Error: test.js:189
      v-------------------------------------
 189: <ManyProps // Error: Missing `number`.
 190:   {...{string1: 'foo', string2: 'bar'}}
@@ -1231,7 +1231,7 @@ test.js:189
 192: />;
      -^ props of React element `ManyProps`
 
-test.js:189
+Error: test.js:189
      v-------------------------------------
 189: <ManyProps // Error: Missing `number`.
 190:   {...{string1: 'foo', string2: 'bar'}}
@@ -1247,7 +1247,7 @@ test.js:189
 192: />;
      -^ props of React element `ManyProps`
 
-test.js:189
+Error: test.js:189
      v-------------------------------------
 189: <ManyProps // Error: Missing `number`.
 190:   {...{string1: 'foo', string2: 'bar'}}
@@ -1263,7 +1263,7 @@ test.js:189
 192: />;
      -^ props of React element `ManyProps`
 
-test.js:189
+Error: test.js:189
      v-------------------------------------
 189: <ManyProps // Error: Missing `number`.
 190:   {...{string1: 'foo', string2: 'bar'}}
@@ -1279,7 +1279,7 @@ test.js:189
 192: />;
      -^ props of React element `ManyProps`
 
-test.js:189
+Error: test.js:189
      v-------------------------------------
 189: <ManyProps // Error: Missing `number`.
 190:   {...{string1: 'foo', string2: 'bar'}}
@@ -1295,7 +1295,7 @@ test.js:189
 192: />;
      -^ props of React element `ManyProps`
 
-test.js:189
+Error: test.js:189
      v-------------------------------------
 189: <ManyProps // Error: Missing `number`.
 190:   {...{string1: 'foo', string2: 'bar'}}
@@ -1311,7 +1311,7 @@ test.js:189
  51:   extends React.Component<void, $Exact<Props_ManyProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
-test.js:189
+Error: test.js:189
      v-------------------------------------
 189: <ManyProps // Error: Missing `number`.
 190:   {...{string1: 'foo', string2: 'bar'}}
@@ -1327,7 +1327,7 @@ test.js:189
  55: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
-test.js:193
+Error: test.js:193
      v----------------------------------------------------------------
 193: <ManyProps // OK: Extra props are allowed. Error for exact types.
 194:   string1="foo"
@@ -1345,7 +1345,7 @@ test.js:193
  51:   extends React.Component<void, $Exact<Props_ManyProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
-test.js:193
+Error: test.js:193
      v----------------------------------------------------------------
 193: <ManyProps // OK: Extra props are allowed. Error for exact types.
 194:   string1="foo"
@@ -1363,7 +1363,7 @@ test.js:193
  55: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
-test.js:201
+Error: test.js:201
 201: <OptionalProps />; // Error: `foo` is required.
      ^^^^^^^^^^^^^^^^^ React element `OptionalProps`
                   v
@@ -1375,7 +1375,7 @@ test.js:201
 201: <OptionalProps />; // Error: `foo` is required.
      ^^^^^^^^^^^^^^^^^ props of React element `OptionalProps`
 
-test.js:201
+Error: test.js:201
 201: <OptionalProps />; // Error: `foo` is required.
      ^^^^^^^^^^^^^^^^^ React element `OptionalProps`
  75:   extends React.Component<void, Props_OptionalProps, void> {}
@@ -1383,7 +1383,7 @@ test.js:201
 201: <OptionalProps />; // Error: `foo` is required.
      ^^^^^^^^^^^^^^^^^ props of React element `OptionalProps`
 
-test.js:201
+Error: test.js:201
 201: <OptionalProps />; // Error: `foo` is required.
      ^^^^^^^^^^^^^^^^^ React element `OptionalProps`
  79:   extends React.PureComponent<void, Props_OptionalProps, void> {}
@@ -1391,7 +1391,7 @@ test.js:201
 201: <OptionalProps />; // Error: `foo` is required.
      ^^^^^^^^^^^^^^^^^ props of React element `OptionalProps`
 
-test.js:201
+Error: test.js:201
 201: <OptionalProps />; // Error: `foo` is required.
      ^^^^^^^^^^^^^^^^^ React element `OptionalProps`
  80: const Function_OptionalProps = (props: Props_OptionalProps) => any;
@@ -1399,7 +1399,7 @@ test.js:201
 201: <OptionalProps />; // Error: `foo` is required.
      ^^^^^^^^^^^^^^^^^ props of React element `OptionalProps`
 
-test.js:201
+Error: test.js:201
 201: <OptionalProps />; // Error: `foo` is required.
      ^^^^^^^^^^^^^^^^^ React element `OptionalProps`
  81: const FunctionExact_OptionalProps = (props: $Exact<Props_OptionalProps>) => any;
@@ -1407,7 +1407,7 @@ test.js:201
 201: <OptionalProps />; // Error: `foo` is required.
      ^^^^^^^^^^^^^^^^^ props of React element `OptionalProps`
 
-test.js:201
+Error: test.js:201
 201: <OptionalProps />; // Error: `foo` is required.
      ^^^^^^^^^^^^^^^^^ React element `OptionalProps`
 201: <OptionalProps />; // Error: `foo` is required.
@@ -1415,7 +1415,7 @@ test.js:201
  77:   extends React.Component<void, $Exact<Props_OptionalProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_OptionalProps
 
-test.js:202
+Error: test.js:202
 202: <OptionalProps foo={42} />; // OK: `foo` is defined.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `OptionalProps`
 202: <OptionalProps foo={42} />; // OK: `foo` is defined.
@@ -1423,7 +1423,7 @@ test.js:202
  77:   extends React.Component<void, $Exact<Props_OptionalProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_OptionalProps
 
-test.js:203
+Error: test.js:203
 203: <OptionalProps foo={undefined} />; // OK: `foo` is defined as undefined.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `OptionalProps`
 203: <OptionalProps foo={undefined} />; // OK: `foo` is defined as undefined.
@@ -1431,7 +1431,7 @@ test.js:203
  77:   extends React.Component<void, $Exact<Props_OptionalProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_OptionalProps
 
-test.js:204
+Error: test.js:204
      v----------------------------------------------------------------
 204: <OptionalProps // OK: Both props are defined with a correct type.
 205:   foo={4}
@@ -1447,7 +1447,7 @@ test.js:204
  77:   extends React.Component<void, $Exact<Props_OptionalProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_OptionalProps
 
-test.js:208
+Error: test.js:208
      v---------------------------------------------
 208: <OptionalProps // Error: `foo` has a bad type.
 209:   foo="nope"
@@ -1463,7 +1463,7 @@ test.js:208
  77:   extends React.Component<void, $Exact<Props_OptionalProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_OptionalProps
 
-test.js:208
+Error: test.js:208
      v---------------------------------------------
 208: <OptionalProps // Error: `foo` has a bad type.
 209:   foo="nope"
@@ -1478,7 +1478,7 @@ test.js:208
      66: type Props_OptionalProps = {foo: ?number, bar?: number};
                                            ^^^^^^ number
 
-test.js:208
+Error: test.js:208
      v---------------------------------------------
 208: <OptionalProps // Error: `foo` has a bad type.
 209:   foo="nope"
@@ -1493,7 +1493,7 @@ test.js:208
      66: type Props_OptionalProps = {foo: ?number, bar?: number};
                                            ^^^^^^ number
 
-test.js:208
+Error: test.js:208
      v---------------------------------------------
 208: <OptionalProps // Error: `foo` has a bad type.
 209:   foo="nope"
@@ -1508,7 +1508,7 @@ test.js:208
      66: type Props_OptionalProps = {foo: ?number, bar?: number};
                                            ^^^^^^ number
 
-test.js:212
+Error: test.js:212
      v---------------------------------------------
 212: <OptionalProps // Error: `bar` has a bad type.
 213:   foo={4}
@@ -1524,7 +1524,7 @@ test.js:212
  77:   extends React.Component<void, $Exact<Props_OptionalProps>, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_OptionalProps
 
-test.js:212
+Error: test.js:212
      v---------------------------------------------
 212: <OptionalProps // Error: `bar` has a bad type.
 213:   foo={4}
@@ -1543,7 +1543,7 @@ test.js:212
      71:     bar: React.PropTypes.number,
                   ^^^^^^^^^^^^^^^^^^^^^^ number
 
-test.js:212
+Error: test.js:212
      v---------------------------------------------
 212: <OptionalProps // Error: `bar` has a bad type.
 213:   foo={4}
@@ -1558,7 +1558,7 @@ test.js:212
      66: type Props_OptionalProps = {foo: ?number, bar?: number};
                                                          ^^^^^^ number
 
-test.js:212
+Error: test.js:212
      v---------------------------------------------
 212: <OptionalProps // Error: `bar` has a bad type.
 213:   foo={4}
@@ -1573,7 +1573,7 @@ test.js:212
      66: type Props_OptionalProps = {foo: ?number, bar?: number};
                                                          ^^^^^^ number
 
-test.js:212
+Error: test.js:212
      v---------------------------------------------
 212: <OptionalProps // Error: `bar` has a bad type.
 213:   foo={4}
@@ -1588,7 +1588,7 @@ test.js:212
      66: type Props_OptionalProps = {foo: ?number, bar?: number};
                                                          ^^^^^^ number
 
-test.js:221
+Error: test.js:221
      v-------------------------------------------------
 221: <DefaultProps // OK: It is missing a default prop.
 222:   bar={2}
@@ -1606,7 +1606,7 @@ test.js:221
 223: />;
      -^ props of React element `DefaultProps`
 
-test.js:221
+Error: test.js:221
      v-------------------------------------------------
 221: <DefaultProps // OK: It is missing a default prop.
 222:   bar={2}
@@ -1620,7 +1620,7 @@ test.js:221
 223: />;
      -^ props of React element `DefaultProps`
 
-test.js:221
+Error: test.js:221
      v-------------------------------------------------
 221: <DefaultProps // OK: It is missing a default prop.
 222:   bar={2}
@@ -1634,7 +1634,7 @@ test.js:221
 223: />;
      -^ props of React element `DefaultProps`
 
-test.js:224
+Error: test.js:224
      v-----------------------------------------------------------------
 224: <DefaultProps // Error: It is missing a required non-default prop.
 225:   foo={1}
@@ -1652,7 +1652,7 @@ test.js:224
 226: />;
      -^ props of React element `DefaultProps`
 
-test.js:224
+Error: test.js:224
      v-----------------------------------------------------------------
 224: <DefaultProps // Error: It is missing a required non-default prop.
 225:   foo={1}
@@ -1666,7 +1666,7 @@ test.js:224
 226: />;
      -^ props of React element `DefaultProps`
 
-test.js:224
+Error: test.js:224
      v-----------------------------------------------------------------
 224: <DefaultProps // Error: It is missing a required non-default prop.
 225:   foo={1}

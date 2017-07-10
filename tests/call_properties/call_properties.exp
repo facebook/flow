@@ -1,16 +1,16 @@
-A.js:8
+Error: A.js:8
   8:   return f();
               ^^^ string. This type is incompatible with the expected return type of
   7: function b(f: { (): string }): number {
                                     ^^^^^^ number
 
-A.js:13
+Error: A.js:13
  13:   return f("hello");
                 ^^^^^^^ string. This type is incompatible with the expected param type of
  12: function c(f: { (x: number): number }): number {
                          ^^^^^^ number
 
-A.js:18
+Error: A.js:18
  18:   return f();
               ^^^ function call
  18:   return f();
@@ -18,19 +18,19 @@ A.js:18
  17: function d(f: { (x: number): number }): number {
                          ^^^^^^ number
 
-A.js:23
+Error: A.js:23
  23:   return f();
               ^^^ function call. Callable signature not found in
  23:   return f();
               ^ object type
 
-A.js:29
+Error: A.js:29
  29:   return x();
               ^^^ function call. Callable signature not found in
  29:   return x();
               ^ object literal
 
-B.js:5
+Error: B.js:5
   5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of function. This type is incompatible with
   5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
@@ -41,55 +41,55 @@ B.js:5
       5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
                                ^^^^^^ number
 
-B.js:8
+Error: B.js:8
   8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
                   ^^^^^^ string. This type is incompatible with the expected param type of
   8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
                                                    ^^^^^^ number
 
-B.js:11
+Error: B.js:11
  11: var d: { (): string } = function (x: number): string { return "hi"; };
               ^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
  11: var d: { (): string } = function (x: number): string { return "hi"; };
                                           ^^^^^^ number
 
-C.js:7
+Error: C.js:7
   7: function b(x: { (z: number): string }): (z: number) => number {
                                   ^^^^^^ string. This type is incompatible with the expected return type of
   7: function b(x: { (z: number): string }): (z: number) => number {
                                                             ^^^^^^ number
 
-C.js:12
+Error: C.js:12
  12: function c(x: { (z: number): string }): (z: string) => string {
                                                  ^^^^^^ string. This type is incompatible with the expected param type of
  12: function c(x: { (z: number): string }): (z: string) => string {
                          ^^^^^^ number
 
-C.js:17
+Error: C.js:17
  17: function d(x: { (z: number): string }): () => string {
                                              ^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
  17: function d(x: { (z: number): string }): () => string {
                          ^^^^^^ number
 
-C.js:22
+Error: C.js:22
  22: function e(x: {}): () => string {
                         ^^^^^^^^^^^^ function type. Callable signature not found in
  23:   return x;
               ^ object type
 
-C.js:32
+Error: C.js:32
  32: function g(x: {}): Function {
                         ^^^^^^^^ function type. Callable signature not found in
  33:   return x; // error
               ^ object type
 
-D.js:11
+Error: D.js:11
  11: var c: { (): string; (x: number): string } =
               ^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
  12:   function (x: number): string { return "hi"; };
                     ^^^^^^ number
 
-D.js:20
+Error: D.js:20
  20: function e(x: { (): string; (x: number): string }): () => number {
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection. This type is incompatible with
  20: function e(x: { (): string; (x: number): string }): () => number {
@@ -111,13 +111,13 @@ D.js:20
    20: function e(x: { (): string; (x: number): string }): () => number {
                                        ^^^^^^ number
 
-E.js:2
+Error: E.js:2
   2: var a : { someProp: number } = function () {};
              ^^^^^^^^^^^^^^^^^^^^ property `someProp` of object type. Property not found in
   2: var a : { someProp: number } = function () {};
                                     ^^^^^^^^^^^^^^ function
 
-F.js:6
+Error: F.js:6
   6: var b: { (x: number): number } = (x) => "hi"
                                       ^^^^^^^^^^^ statics of function. This type is incompatible with
   6: var b: { (x: number): number } = (x) => "hi"
@@ -128,7 +128,7 @@ F.js:6
       6: var b: { (x: number): number } = (x) => "hi"
                                ^^^^^^ number
 
-F.js:9
+Error: F.js:9
   9: var c: { (x: string): string } = (x) => x.toFixed()
                                                ^^^^^^^ property `toFixed`. Property not found in
   9: var c: { (x: string): string } = (x) => x.toFixed()

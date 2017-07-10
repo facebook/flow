@@ -1,58 +1,58 @@
-delegate_yield.js:3
+Error: delegate_yield.js:3
   3:     var x: void = yield; // error: number ~> void
                        ^^^^^ number. This type is incompatible with
   3:     var x: void = yield; // error: number ~> void
                 ^^^^ undefined
 
-delegate_yield.js:17
+Error: delegate_yield.js:17
  17:     (x: void); // error: number ~> void
           ^ number. This type is incompatible with
  17:     (x: void); // error: number ~> void
              ^^^^ undefined
 
-delegate_yield.js:25
+Error: delegate_yield.js:25
  25:   var x: void = yield *inner(); // error: number ~> void
                      ^^^^^^^^^^^^^^ number. This type is incompatible with
  25:   var x: void = yield *inner(); // error: number ~> void
               ^^^^ undefined
 
-generator.js:23
+Error: generator.js:23
  23:     (line: void); // error: string ~> void
           ^^^^ string. This type is incompatible with
  23:     (line: void); // error: string ~> void
                 ^^^^ undefined
 
-return.js:6
+Error: return.js:6
   6:   (result.value: void); // error: string | number ~> void
         ^^^^^^^^^^^^ number. This type is incompatible with
   6:   (result.value: void); // error: string | number ~> void
                       ^^^^ undefined
 
-return.js:6
+Error: return.js:6
   6:   (result.value: void); // error: string | number ~> void
         ^^^^^^^^^^^^ string. This type is incompatible with
   6:   (result.value: void); // error: string | number ~> void
                       ^^^^ undefined
 
-return.js:20
+Error: return.js:20
  20:     (result.value: string); // error: number | void ~> string
           ^^^^^^^^^^^^ number. This type is incompatible with
  20:     (result.value: string); // error: number | void ~> string
                         ^^^^^^ string
 
-return.js:20
+Error: return.js:20
  20:     (result.value: string); // error: number | void ~> string
           ^^^^^^^^^^^^ undefined. This type is incompatible with
  20:     (result.value: string); // error: number | void ~> string
                         ^^^^^^ string
 
-throw.js:12
+Error: throw.js:12
  12:       (value: void); // error: number ~> void
             ^^^^^ number. This type is incompatible with
  12:       (value: void); // error: number ~> void
                    ^^^^ undefined
 
-throw.js:29
+Error: throw.js:29
  29:       (value: void); // error: number ~> void
             ^^^^^ number. This type is incompatible with
  29:       (value: void); // error: number ~> void

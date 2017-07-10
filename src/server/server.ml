@@ -117,16 +117,16 @@ let collate_errors =
         |> collate merge_errors
       in
       let lint_settings = SuppressionMap.union_settings lint_settings in
-      let errors, suppressed_errors, suppressions =
+      let errors, warnings, suppressed_errors, suppressions =
         filter_suppressed_errors suppressions lint_settings errors in
       let errors = add_unused_suppression_errors suppressions errors in
-      errors, suppressed_errors
+      errors, warnings, suppressed_errors
 
-  let convert_errorl el =
-    if Errors.ErrorSet.is_empty el then
+  let convert_errors ~errors ~warnings =
+    if Errors.ErrorSet.is_empty errors && Errors.ErrorSet.is_empty warnings then
       ServerProt.NO_ERRORS
     else
-      ServerProt.ERRORS el
+      ServerProt.ERRORS {errors; warnings}
 
   let get_status genv env client_root =
     let server_root = Options.root genv.options in
@@ -137,13 +137,13 @@ let collate_errors =
       }
     end else begin
       (* collate errors by origin *)
-      let errors, _ = collate_errors env.ServerEnv.errors in
+      let errors, warnings, _ = collate_errors env.ServerEnv.errors in
 
       (* TODO: check status.directory *)
       status_log errors;
       FlowEventLogger.status_response
         ~num_errors:(Errors.ErrorSet.cardinal errors);
-      convert_errorl errors
+      convert_errors errors warnings
     end
 
   let check_once _genv env =
@@ -170,7 +170,7 @@ let collate_errors =
         let path = Loc.SourceFile path in
         let profiling, cx, parse_result =
           match Types_js.typecheck_contents ~options ~workers ~env content path with
-          | profiling, Some cx, _, parse_result -> profiling, cx, parse_result
+          | profiling, Some cx, _, _, parse_result -> profiling, cx, parse_result
           | _  -> failwith "Couldn't parse file"
         in
         AutocompleteService_js.autocomplete_get_results
@@ -202,12 +202,9 @@ let collate_errors =
         in
         if should_check then
           let file = Loc.SourceFile file in
-          let checked = Types_js.typecheck_contents
+          let _, _, errors, warnings, _ = Types_js.typecheck_contents
             ~options ~workers ~env ~check_syntax:true content file in
-          let errors = match checked with
-          | _, _, errors, _ -> errors
-          in
-          convert_errorl errors
+          convert_errors ~errors ~warnings
         else
           ServerProt.NOT_COVERED
 
@@ -294,7 +291,7 @@ let collate_errors =
     Module_js.get_file ~audit:Expensive.warn module_name
 
   let gen_flow_files ~options env files =
-    let errors, _ = collate_errors env.ServerEnv.errors in
+    let errors, warnings, _ = collate_errors env.ServerEnv.errors in
     let result = if Errors.ErrorSet.is_empty errors
       then begin
         let (flow_files, flow_file_cxs, non_flow_files, error) =
@@ -358,7 +355,7 @@ let collate_errors =
           )
         end
       end else
-        Error (ServerProt.GenFlowFile_TypecheckError errors)
+        Error (ServerProt.GenFlowFile_TypecheckError {errors; warnings})
     in
     result
 
@@ -371,7 +368,7 @@ let collate_errors =
       try
         let content = File_input.content_of_file_input file_input in
         let cx = match Types_js.typecheck_contents ~options ~workers ~env content file with
-          | _, Some cx, _, _ -> cx
+          | _, Some cx, _, _, _ -> cx
           | _  -> failwith "Couldn't parse file"
         in
         Ok (FindRefs_js.result cx state)
@@ -389,7 +386,7 @@ let collate_errors =
     let result = try
       let content = File_input.content_of_file_input file_input in
       let profiling, cx = match Types_js.typecheck_contents ~options ~workers ~env content file with
-        | profiling, Some cx, _, _ -> profiling, cx
+        | profiling, Some cx, _, _, _ -> profiling, cx
         | _  -> failwith "Couldn't parse file"
       in
       Ok (GetDef_js.getdef_get_result
@@ -678,9 +675,9 @@ let collate_errors =
     let workers = genv.ServerEnv.workers in
     match msg with
       | Persistent_connection_prot.Subscribe ->
-          let errorl, _ = collate_errors !env.errors in
-          let new_connections =
-            Persistent_connection.subscribe_client !env.connections client errorl
+          let current_errors, current_warnings, _ = collate_errors !env.errors in
+          let new_connections = Persistent_connection.subscribe_client
+            !env.connections client ~current_errors ~current_warnings
           in
           { !env with connections = new_connections }
       | Persistent_connection_prot.Autocomplete (file_input, id) ->

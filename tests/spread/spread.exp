@@ -1,34 +1,34 @@
-test3.js:8
+Error: test3.js:8
   8: var y: number = o.y;
                      ^^^ string. This type is incompatible with
   8: var y: number = o.y;
             ^^^^^^ number
 
-test3.js:9
+Error: test3.js:9
   9: var z: number = o.z;
                      ^^^ string. This type is incompatible with
   9: var z: number = o.z;
             ^^^^^^ number
 
-test3.js:17
+Error: test3.js:17
  17: var t: boolean = s.y; // error, string or number
                       ^^^ number. This type is incompatible with
  17: var t: boolean = s.y; // error, string or number
             ^^^^^^^ boolean
 
-test3.js:17
+Error: test3.js:17
  17: var t: boolean = s.y; // error, string or number
                       ^^^ string. This type is incompatible with
  17: var t: boolean = s.y; // error, string or number
             ^^^^^^^ boolean
 
-test6.js:10
+Error: test6.js:10
  10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
          ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `abc`. Property not found in
  10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
       ^ object literal
 
-test7.js:6
+Error: test7.js:6
   6:     ({...x}: void); // error, Object
           ^^^^^^ object literal. This type is incompatible with
   6:     ({...x}: void); // error, Object

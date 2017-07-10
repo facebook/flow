@@ -1,10 +1,10 @@
-encaps.js:3
+Error: encaps.js:3
   3: var s1 = `l${a.x}r`; // error: no prop x in A
                     ^ property `x`. Property not found in
   3: var s1 = `l${a.x}r`; // error: no prop x in A
                   ^ A
 
-encaps.js:9
+Error: encaps.js:9
   9: var s2 = tag `l${42}r`;
               ^^^^^^^^^^^^^ encaps tag
   6:     var x:number = strings[0]; // error: string ~> number
@@ -12,7 +12,7 @@ encaps.js:9
   6:     var x:number = strings[0]; // error: string ~> number
                ^^^^^^ number
 
-encaps.js:16
+Error: encaps.js:16
  16: (s3.foo: number); // error: string ~> number
       ^^^^^^ string. This type is incompatible with
  16: (s3.foo: number); // error: string ~> number

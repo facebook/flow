@@ -1,20 +1,20 @@
-test.js:21
+Error: test.js:21
  21: var c: MyClass = new MyClass(0); // error, missing argument list (1)
             ^^^^^^^ MyClass. Application of polymorphic type needs <list of 1 argument>. (Can use `*` for inferrable ones)
 
-test.js:34
+Error: test.js:34
  34: var c2: MyClass2 = new MyClass2(0, ""); // error, missing argument list (1-2)
              ^^^^^^^^ MyClass2. Application of polymorphic type needs <list of 1-2 arguments>. (Can use `*` for inferrable ones)
 
-test.js:42
+Error: test.js:42
  42: var o: MyObject = { x: 0 }; // error, missing argument list
             ^^^^^^^^ MyObject. Application of polymorphic type needs <list of 1 argument>. (Can use `*` for inferrable ones)
 
-test.js:46
+Error: test.js:46
  46: type MySubobject = { y: number } & MyObject; // error, missing argument list
                                         ^^^^^^^^ MyObject. Application of polymorphic type needs <list of 1 argument>. (Can use `*` for inferrable ones)
 
-test.js:54
+Error: test.js:54
      v-----------------------------------------------------------------------------
  54: interface MySubinterface extends MyInterface { // error, missing argument list
  55:   y: number;

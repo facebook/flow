@@ -1,4 +1,4 @@
-test.js:10
+Error: test.js:10
  10:     return new this.constructor(this.n); // Error A ~> number
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
  10:     return new this.constructor(this.n); // Error A ~> number

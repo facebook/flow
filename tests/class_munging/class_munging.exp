@@ -1,4 +1,4 @@
-with_munging.js:13
+Error: with_munging.js:13
  13:     (this._method(): string); // error
                ^^^^^^^ property `_method`. Property not found in
  13:     (this._method(): string); // error

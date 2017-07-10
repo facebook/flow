@@ -1,10 +1,10 @@
-spread.js:14
+Error: spread.js:14
  14: funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);
                                               ^^^^^ string. This type is incompatible with
   5: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
                                            ^^^ number literal `123`
 
-spread.js:14
+Error: spread.js:14
  14: funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);
                                               ^^^^^ string. This type is incompatible with
   5: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}

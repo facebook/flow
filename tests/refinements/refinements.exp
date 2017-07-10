@@ -1,72 +1,72 @@
-assignment.js:16
+Error: assignment.js:16
  16:   while (x = x.parent) { // can't assign x to ?Bar
                   ^^^^^^^^ null. This type is incompatible with
  15: function bar0(x : Bar) {
                        ^^^ object type
 
-assignment.js:16
+Error: assignment.js:16
  16:   while (x = x.parent) { // can't assign x to ?Bar
                   ^^^^^^^^ undefined. This type is incompatible with
  15: function bar0(x : Bar) {
                        ^^^ object type
 
-assignment.js:22
+Error: assignment.js:22
  22:   while (x = x.parent) { // x.parent might be null
                     ^^^^^^ property `parent`. Property cannot be accessed on possibly null value
  22:   while (x = x.parent) { // x.parent might be null
                   ^ null
 
-assignment.js:22
+Error: assignment.js:22
  22:   while (x = x.parent) { // x.parent might be null
                     ^^^^^^ property `parent`. Property cannot be accessed on possibly undefined value
  22:   while (x = x.parent) { // x.parent might be null
                   ^ undefined
 
-bool.js:12
+Error: bool.js:12
  12:   x[0]; // error on null and undefined
        ^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly null value
  12:   x[0]; // error on null and undefined
        ^ null
 
-bool.js:12
+Error: bool.js:12
  12:   x[0]; // error on null and undefined
        ^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly undefined value
  12:   x[0]; // error on null and undefined
        ^ undefined
 
-bool.js:18
+Error: bool.js:18
  18:       x[0]; // error on null and undefined
            ^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly null value
  18:       x[0]; // error on null and undefined
            ^ null
 
-bool.js:18
+Error: bool.js:18
  18:       x[0]; // error on null and undefined
            ^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly undefined value
  18:       x[0]; // error on null and undefined
            ^ undefined
 
-bool.js:24
+Error: bool.js:24
  24:   if (100 * false) {
                  ^^^^^ boolean. The operand of an arithmetic operation must be a number.
 
-bool.js:27
+Error: bool.js:27
  27:   if (false * 100) {
            ^^^^^ boolean. The operand of an arithmetic operation must be a number.
 
-bool.js:37
+Error: bool.js:37
  37:     return x.result; // error
                   ^^^^^^ property `result`. Property not found in
  37:     return x.result; // error
                 ^ object type
 
-bool.js:44
+Error: bool.js:44
  44:     return x.result; // error
                   ^^^^^^ property `result`. Property not found in
  44:     return x.result; // error
                 ^ object type
 
-cond_prop.js:11
+Error: cond_prop.js:11
  11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
@@ -98,989 +98,989 @@ cond_prop.js:11
    11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
                                ^^^^^^^^^^^^ object type
 
-cond_prop.js:19
+Error: cond_prop.js:19
  19:     return x.result; // error
                   ^^^^^^ property `result`. Property not found in
  19:     return x.result; // error
                 ^ object type
 
-cond_prop.js:24
+Error: cond_prop.js:24
  24:       return x.result; // error, consider { foo: "herp", done: "derp" }
                     ^^^^^^ property `result`. Property not found in
  24:       return x.result; // error, consider { foo: "herp", done: "derp" }
                   ^ object type
 
-cond_prop.js:26
+Error: cond_prop.js:26
  26:     return x.result; // error
                   ^^^^^^ property `result`. Property not found in
  26:     return x.result; // error
                 ^ object type
 
-cond_prop.js:36
+Error: cond_prop.js:36
  36:         (t.bar: string); // error, consider { baz: "x", quux: "y", foo: "boom" }
                 ^^^ property `bar`. Property not found in
  36:         (t.bar: string); // error, consider { baz: "x", quux: "y", foo: "boom" }
               ^ object type
 
-cond_prop.js:46
+Error: cond_prop.js:46
  46:         (t.foo: Object); // error, consider { baz: "x", quux: "y", bar: "boom" }
                 ^^^ property `foo`. Property not found in
  46:         (t.foo: Object); // error, consider { baz: "x", quux: "y", bar: "boom" }
               ^ object type
 
-cond_prop.js:48
+Error: cond_prop.js:48
  48:         (t.quux: string); // error, consider { foo: {}, bar: "" }
                 ^^^^ property `quux`. Property not found in
  48:         (t.quux: string); // error, consider { foo: {}, bar: "" }
               ^ object type
 
-eq.js:5
+Error: eq.js:5
   5:     if (x == y) {} // error, string & number are not comparable (unsafe casting)
              ^ string. This type cannot be compared to
   5:     if (x == y) {} // error, string & number are not comparable (unsafe casting)
                   ^ number
 
-eq.js:19
+Error: eq.js:19
  19:     if (x.y == 123) {} // error
              ^^^ string literal `bar`. This type cannot be compared to
  19:     if (x.y == 123) {} // error
                     ^^^ number
 
-eq.js:19
+Error: eq.js:19
  19:     if (x.y == 123) {} // error
              ^^^ string literal `foo`. This type cannot be compared to
  19:     if (x.y == 123) {} // error
                     ^^^ number
 
-hasOwnProperty.js:4
+Error: hasOwnProperty.js:4
   4:   x.y(); // error: could be undefined
        ^^^^^ call of method `y`. Function cannot be called on possibly undefined value
   3: function foo(x:{y?:() => void}) {
                         ^^^^^^^^^^ undefined
 
-hasOwnProperty.js:6
+Error: hasOwnProperty.js:6
   6:     x.y(); // error: still could be undefined
          ^^^^^ call of method `y`. Function cannot be called on possibly undefined value
   3: function foo(x:{y?:() => void}) {
                         ^^^^^^^^^^ undefined
 
-hasOwnProperty.js:9
+Error: hasOwnProperty.js:9
   9:     x.z(); // error: unreachable, but we don't help you here
            ^ property `z`. Property not found in
   9:     x.z(); // error: unreachable, but we don't help you here
          ^ object type
 
-heap_defassign.js:10
+Error: heap_defassign.js:10
  10:     var x: number = obj.p;      // error, obj.p : number | string
                          ^^^^^ string. This type is incompatible with
  10:     var x: number = obj.p;      // error, obj.p : number | string
                 ^^^^^^ number
 
-heap_defassign.js:16
+Error: heap_defassign.js:16
  16:     var x: number = obj.p;      // error, obj.p : number | string
                          ^^^^^ string. This type is incompatible with
  16:     var x: number = obj.p;      // error, obj.p : number | string
                 ^^^^^^ number
 
-heap_defassign.js:22
+Error: heap_defassign.js:22
  22:     var x: number = obj.p;      // error, obj.p : number | string
                          ^^^^^ string. This type is incompatible with
  22:     var x: number = obj.p;      // error, obj.p : number | string
                 ^^^^^^ number
 
-heap_defassign.js:30
+Error: heap_defassign.js:30
  30:     var y: number = obj.p;      // error, obj.p : number | string
                          ^^^^^ string. This type is incompatible with
  30:     var y: number = obj.p;      // error, obj.p : number | string
                 ^^^^^^ number
 
-heap_defassign.js:38
+Error: heap_defassign.js:38
  38:     var y: number = obj.p;      // error, obj.p : number | string
                          ^^^^^ string. This type is incompatible with
  38:     var y: number = obj.p;      // error, obj.p : number | string
                 ^^^^^^ number
 
-heap_defassign.js:62
+Error: heap_defassign.js:62
  62:         var y: number = obj.p;  // error, string ~/~ number
                              ^^^^^ string. This type is incompatible with
  62:         var y: number = obj.p;  // error, string ~/~ number
                     ^^^^^^ number
 
-heap_defassign.js:65
+Error: heap_defassign.js:65
  65:     var z:string = obj.p;       // error, number ~/~ string
                         ^^^^^ number. This type is incompatible with
  65:     var z:string = obj.p;       // error, number ~/~ string
                ^^^^^^ string
 
-heap_defassign.js:73
+Error: heap_defassign.js:73
  73:     var z: number = obj.p;      // error, (number | string) ~/~ number
                          ^^^^^ string. This type is incompatible with
  73:     var z: number = obj.p;      // error, (number | string) ~/~ number
                 ^^^^^^ number
 
-missing-property-cond.js:11
+Error: missing-property-cond.js:11
  11:     o.p2.x; // error, since o.p2's type is unknown (e.g., could be `number`)
               ^ property `x`. Property cannot be accessed on
  11:     o.p2.x; // error, since o.p2's type is unknown (e.g., could be `number`)
          ^^^^ property `p2` of unknown type
 
-missing-property-cond.js:16
+Error: missing-property-cond.js:16
  16:   o.p3.x; // usual error outside conditional
          ^^ property `p3`. Property not found in
  16:   o.p3.x; // usual error outside conditional
        ^ object type
 
-missing-property-cond.js:23
+Error: missing-property-cond.js:23
  23:     o.p4.x; // error
               ^ property `x`. Property cannot be accessed on possibly undefined value
  23:     o.p4.x; // error
          ^^^^ property `p4` does not exist
 
-missing-property-cond.js:37
+Error: missing-property-cond.js:37
  37:   if (o.bar) {} // error, any lookup on mixed is unsafe
              ^^^ property `bar`. Property not found in
  37:   if (o.bar) {} // error, any lookup on mixed is unsafe
            ^ mixed
 
-missing-property-cond.js:41
+Error: missing-property-cond.js:41
  41:   if (typeof o.bar === 'string') {} // error
                     ^^^ property `bar`. Property not found in
  41:   if (typeof o.bar === 'string') {} // error
                   ^ mixed
 
-mixed.js:8
+Error: mixed.js:8
   8:     takesString(x); // error
                      ^ number. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:9
+Error: mixed.js:9
   9:     (!x: false); // error: we don't know the truthiness of x
           ^^ boolean. Expected boolean literal `false`
   9:     (!x: false); // error: we don't know the truthiness of x
               ^^^^^ boolean literal `false`
 
-mixed.js:21
+Error: mixed.js:21
  21:     takesNumber(x); // error
                      ^ string. This type is incompatible with the expected param type of
   3: function takesNumber(x: number) {}
                              ^^^^^^ number
 
-mixed.js:22
+Error: mixed.js:22
  22:     (!x: false); // error: we don't know the truthiness of x
           ^^ boolean. Expected boolean literal `false`
  22:     (!x: false); // error: we don't know the truthiness of x
               ^^^^^ boolean literal `false`
 
-mixed.js:34
+Error: mixed.js:34
  34:     takesString(x); // error
                      ^ boolean. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:35
+Error: mixed.js:35
  35:     (x: true); // error: we don't know the truthiness of x
           ^ boolean. Expected boolean literal `true`
  35:     (x: true); // error: we don't know the truthiness of x
              ^^^^ boolean literal `true`
 
-mixed.js:47
+Error: mixed.js:47
  47:     takesString(x); // error
                      ^ function. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:53
+Error: mixed.js:53
  53:     takesString(x); // error
                      ^ null. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:53
+Error: mixed.js:53
  53:     takesString(x); // error
                      ^ object. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:59
+Error: mixed.js:59
  59:     takesString(x); // error
                      ^ array. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:65
+Error: mixed.js:65
  65:     takesString(x); // error
                      ^ undefined. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:71
+Error: mixed.js:71
  71:     takesString(x); // error
                      ^ null. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:77
+Error: mixed.js:77
  77:     takesString(x); // error
                      ^ null. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:77
+Error: mixed.js:77
  77:     takesString(x); // error
                      ^ undefined. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:83
+Error: mixed.js:83
  83:     takesString(x); // error
                      ^ boolean literal `true`. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:89
+Error: mixed.js:89
  89:     takesString(x); // error
                      ^ boolean literal `false`. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:97
+Error: mixed.js:97
  97:       (x['foo']: string); // error, mixed
             ^^^^^^^^ mixed. This type is incompatible with
  97:       (x['foo']: string); // error, mixed
                       ^^^^^^ string
 
-mixed.js:119
+Error: mixed.js:119
 119:     takesString(x[0]); // error
                      ^^^^ mixed. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-not.js:5
+Error: not.js:5
   5:     x++; // should error for null, void and bool (false)
          ^ boolean. The operand of an arithmetic operation must be a number.
 
-not.js:5
+Error: not.js:5
   5:     x++; // should error for null, void and bool (false)
          ^ null. The operand of an arithmetic operation must be a number.
 
-not.js:5
+Error: not.js:5
   5:     x++; // should error for null, void and bool (false)
          ^ undefined. The operand of an arithmetic operation must be a number.
 
-not.js:5
+Error: not.js:5
   5:     x++; // should error for null, void and bool (false)
          ^^^ number. This type is incompatible with
   3: function foo(x: ?bool) {
                       ^^^^ boolean
 
-not.js:11
+Error: not.js:11
  11:     x[0]; // should error for null, void and number (0)
          ^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly null value
  11:     x[0]; // should error for null, void and number (0)
          ^ null
 
-not.js:11
+Error: not.js:11
  11:     x[0]; // should error for null, void and number (0)
          ^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly undefined value
  11:     x[0]; // should error for null, void and number (0)
          ^ undefined
 
-not.js:11
+Error: not.js:11
  11:     x[0]; // should error for null, void and number (0)
          ^^^^ access of computed property/element. Indexable signature not found in
  11:     x[0]; // should error for null, void and number (0)
          ^ Number
 
-not.js:21
+Error: not.js:21
  21:     x[0]; // should error for number (0)
          ^^^^ access of computed property/element. Indexable signature not found in
  21:     x[0]; // should error for number (0)
          ^ Number
 
-not.js:41
+Error: not.js:41
  41:     (!x: false); // error, strings are not always truthy
           ^^ boolean. Expected boolean literal `false`
  41:     (!x: false); // error, strings are not always truthy
               ^^^^^ boolean literal `false`
 
-not.js:44
+Error: not.js:44
  44:     (!x: false); // error, numbers are not always truthy
           ^^ boolean. Expected boolean literal `false`
  44:     (!x: false); // error, numbers are not always truthy
               ^^^^^ boolean literal `false`
 
-not.js:47
+Error: not.js:47
  47:     (!x: false); // error, bools are not always truthy
           ^^ boolean. Expected boolean literal `false`
  47:     (!x: false); // error, bools are not always truthy
               ^^^^^ boolean literal `false`
 
-null.js:4
+Error: null.js:4
   4:   if (100 * null) {
                  ^^^^ null. The operand of an arithmetic operation must be a number.
 
-null.js:7
+Error: null.js:7
   7:   if (null * 100) {
            ^^^^ null. The operand of an arithmetic operation must be a number.
 
-number.js:8
+Error: number.js:8
   8:       (x: void); // error
             ^ number literal `0`. This type is incompatible with
   8:       (x: void); // error
                ^^^^ undefined
 
-number.js:10
+Error: number.js:10
  10:     (x: 0); // error
           ^ number. Expected number literal `0`
  10:     (x: 0); // error
              ^ number literal `0`
 
-number.js:15
+Error: number.js:15
  15:       (x: 0); // error
             ^ number. Expected number literal `0`
  15:       (x: 0); // error
                ^ number literal `0`
 
-number.js:17
+Error: number.js:17
  17:     (x: void); // error
           ^ number. This type is incompatible with
  17:     (x: void); // error
              ^^^^ undefined
 
-number.js:21
+Error: number.js:21
  21:     if (x === 0) {
                    ^ number literal `0`. This === check always fails because `0` is not the same number as `1`
  20:   function(x: 1): 0 {
                    ^ number literal `1`
 
-number.js:28
+Error: number.js:28
  28:     if (x === 1) {
                    ^ number literal `1`. This === check always fails because `1` is not the same number as `0`
  27:   function(x: 0): number {
                    ^ number literal `0`
 
-number.js:35
+Error: number.js:35
  35:     if (x !== 1) {
                    ^ number literal `1`. This !== check always succeeds because `1` is not the same number as `0`
  34:   function(x: 0) {
                    ^ number literal `0`
 
-number.js:51
+Error: number.js:51
  51:       (x: void); // error
             ^ number literal `0`. This type is incompatible with
  51:       (x: void); // error
                ^^^^ undefined
 
-number.js:55
+Error: number.js:55
  55:       (x: void); // error
             ^ number literal `1`. This type is incompatible with
  55:       (x: void); // error
                ^^^^ undefined
 
-number.js:63
+Error: number.js:63
  63:     return x.foo; // error
                 ^^^^^ number. Expected number literal `0`
  59:   function(x: { foo: number }): 0 {
                                      ^ number literal `0`
 
-number.js:97
+Error: number.js:97
  97:       return s; // error
                   ^ number literal `3`. This type is incompatible with the expected return type of
  93:   function(s: number): ?Mode {
                              ^^^^ number enum
 
-number.js:116
+Error: number.js:116
 116:       return x; // error
                   ^ number. Expected number literal `0`
 114:   function(x: number): 0 {
                             ^ number literal `0`
 
-property.js:71
+Error: property.js:71
  71:     return x[y.z];  // error
                 ^^^^^^ null. This type is incompatible with the expected return type of
  68: function c2(x: {[key: string]: ?string}, y: {z: string}): string {
                                                                ^^^^^^ string
 
-property.js:71
+Error: property.js:71
  71:     return x[y.z];  // error
                 ^^^^^^ undefined. This type is incompatible with the expected return type of
  68: function c2(x: {[key: string]: ?string}, y: {z: string}): string {
                                                                ^^^^^^ string
 
-refinements.js:4
+Error: refinements.js:4
   4:         var y:string = x;
                             ^ number. This type is incompatible with
   4:         var y:string = x;
                    ^^^^^^ string
 
-refinements.js:7
+Error: refinements.js:7
   7:     var z:string = x;
                         ^ boolean. This type is incompatible with
   7:     var z:string = x;
                ^^^^^^ string
 
-refinements.js:7
+Error: refinements.js:7
   7:     var z:string = x;
                         ^ null. This type is incompatible with
   7:     var z:string = x;
                ^^^^^^ string
 
-refinements.js:13
+Error: refinements.js:13
  13:         var y:string = x;
                             ^ null. This type is incompatible with
  13:         var y:string = x;
                    ^^^^^^ string
 
-refinements.js:13
+Error: refinements.js:13
  13:         var y:string = x;
                             ^ number. This type is incompatible with
  13:         var y:string = x;
                    ^^^^^^ string
 
-refinements.js:16
+Error: refinements.js:16
  16:     var z:string = x;
                         ^ boolean. This type is incompatible with
  16:     var z:string = x;
                ^^^^^^ string
 
-refinements.js:33
+Error: refinements.js:33
  33:         var y:number = x;
                             ^ string. This type is incompatible with
  33:         var y:number = x;
                    ^^^^^^ number
 
-refinements.js:36
+Error: refinements.js:36
  36:     var z:string = x;
                         ^ number. This type is incompatible with
  36:     var z:string = x;
                ^^^^^^ string
 
-refinements.js:43
+Error: refinements.js:43
  43:         var y:string = x;
                             ^ number. This type is incompatible with
  43:         var y:string = x;
                    ^^^^^^ string
 
-refinements.js:45
+Error: refinements.js:45
  45:     var z:string = x;
                         ^ boolean. This type is incompatible with
  45:     var z:string = x;
                ^^^^^^ string
 
-refinements.js:45
+Error: refinements.js:45
  45:     var z:string = x;
                         ^ null. This type is incompatible with
  45:     var z:string = x;
                ^^^^^^ string
 
-refinements.js:54
+Error: refinements.js:54
  54:     var z:number = x;
                         ^ boolean. This type is incompatible with
  54:     var z:number = x;
                ^^^^^^ number
 
-string.js:8
+Error: string.js:8
   8:       (x: void); // error
             ^ string literal `foo`. This type is incompatible with
   8:       (x: void); // error
                ^^^^ undefined
 
-string.js:10
+Error: string.js:10
  10:     (x: 'foo'); // error
           ^ string. Expected string literal `foo`
  10:     (x: 'foo'); // error
              ^^^^^ string literal `foo`
 
-string.js:15
+Error: string.js:15
  15:       (x: 'foo'); // error
             ^ string. Expected string literal `foo`
  15:       (x: 'foo'); // error
                ^^^^^ string literal `foo`
 
-string.js:17
+Error: string.js:17
  17:     (x: void); // error
           ^ string. This type is incompatible with
  17:     (x: void); // error
              ^^^^ undefined
 
-string.js:21
+Error: string.js:21
  21:     if (x === 'foo') {
                    ^^^^^ string literal `foo`. This === check always fails because `foo` is not the same string as `bar`
  20:   function(x: 'bar'): 'foo' {
                    ^^^^^ string literal `bar`
 
-string.js:28
+Error: string.js:28
  28:     if (x === 'bar') {
                    ^^^^^ string literal `bar`. This === check always fails because `bar` is not the same string as `foo`
  27:   function(x: 'foo'): string {
                    ^^^^^ string literal `foo`
 
-string.js:35
+Error: string.js:35
  35:     if (x !== 'bar') {
                    ^^^^^ string literal `bar`. This !== check always succeeds because `bar` is not the same string as `foo`
  34:   function(x: 'foo') {
                    ^^^^^ string literal `foo`
 
-string.js:51
+Error: string.js:51
  51:       (x: void); // error
             ^ string literal `foo`. This type is incompatible with
  51:       (x: void); // error
                ^^^^ undefined
 
-string.js:55
+Error: string.js:55
  55:       (x: void); // error
             ^ string literal `bar`. This type is incompatible with
  55:       (x: void); // error
                ^^^^ undefined
 
-string.js:63
+Error: string.js:63
  63:     return x.foo; // error
                 ^^^^^ string. Expected string literal `foo`
  59:   function(x: { foo: string }): 'foo' {
                                      ^^^^^ string literal `foo`
 
-string.js:98
+Error: string.js:98
  98:       return s; // error
                   ^ string literal `d`. This type is incompatible with the expected return type of
  94:   function(s: string): ?Mode {
                              ^^^^ string enum
 
-string.js:117
+Error: string.js:117
 117:       return x; // error
                   ^ string. Expected string literal ``
 115:   function(x: string): "" {
                             ^^ string literal ``
 
-super_member.js:13
+Error: super_member.js:13
  13:       return super.prop; // error, unknown type passed to string expected
                   ^^^^^^^^^^ property `prop` of unknown type. This type is incompatible with the expected return type of
  11:   test(): string {
                ^^^^^^ string
 
-switch.js:8
+Error: switch.js:8
   8:       return text; // error, should return string
                   ^^^^ number. This type is incompatible with the expected return type of
   3: function foo(text: string | number): string {
                                           ^^^^^^ string
 
-switch.js:27
+Error: switch.js:27
  27:       return text[0]; // error, [0] on number
                   ^^^^^^^ access of computed property/element. Indexable signature not found in
  27:       return text[0]; // error, [0] on number
                   ^^^^ Number
 
-switch.js:37
+Error: switch.js:37
  37:       return text[0]; // error, [0] on number
                   ^^^^^^^ access of computed property/element. Indexable signature not found in
  37:       return text[0]; // error, [0] on number
                   ^^^^ Number
 
-switch.js:51
+Error: switch.js:51
  51:       return (text++) + '';
                    ^^^^ string. The operand of an arithmetic operation must be a number.
 
-tagged_union.js:20
+Error: tagged_union.js:20
  20:     return x.prop1.charAt(0); // typeAST: Node1, but x.prop1 may be undefined
                 ^^^^^^^^^^^^^^^^^ call of method `charAt`. Method cannot be called on possibly undefined value
  20:     return x.prop1.charAt(0); // typeAST: Node1, but x.prop1 may be undefined
                 ^^^^^^^ undefined
 
-tagged_union.js:34
+Error: tagged_union.js:34
  34:   if (x.kind === 'Fruit') { (x.taste: 'Good'); } // error, Apple.taste = Bad
                                   ^^^^^^^ string literal `Bad`. Expected string literal `Good`, got `Bad` instead
  34:   if (x.kind === 'Fruit') { (x.taste: 'Good'); } // error, Apple.taste = Bad
                                            ^^^^^^ string literal `Good`
 
-tagged_union.js:35
+Error: tagged_union.js:35
  35:   else (x.raw: 'No'); // error, Carrot.raw = Maybe
              ^^^^^ string literal `Maybe`. Expected string literal `No`, got `Maybe` instead
  35:   else (x.raw: 'No'); // error, Carrot.raw = Maybe
                     ^^^^ string literal `No`
 
-tagged_union.js:40
+Error: tagged_union.js:40
  40:     (x.raw: 'Yes' | 'No'); // 2 errors:
           ^^^^^ string literal `Maybe`. This type is incompatible with
  40:     (x.raw: 'Yes' | 'No'); // 2 errors:
                  ^^^^^^^^^^^^ string enum
 
-tagged_union.js:40
+Error: tagged_union.js:40
  40:     (x.raw: 'Yes' | 'No'); // 2 errors:
             ^^^ property `raw`. Property not found in
  40:     (x.raw: 'Yes' | 'No'); // 2 errors:
           ^ object type
 
-tagged_union.js:72
+Error: tagged_union.js:72
  72:   default: return x.A; // error, x: C and property A not found in type C
                          ^ property `A`. Property not found in
  72:   default: return x.A; // error, x: C and property A not found in type C
                        ^ object type
 
-tagged_union.js:89
+Error: tagged_union.js:89
  89:       (x.kindTypo: string); // typos can't be used, though
             ^^^^^^^^^^ number literal `1`. This type is incompatible with
  89:       (x.kindTypo: string); // typos can't be used, though
                         ^^^^^^ string
 
-tagged_union.js:96
+Error: tagged_union.js:96
  96:     if (x.fooTypo.bar === 1) {} // error, fooTypo doesn't exist
                ^^^^^^^ property `fooTypo`. Property not found in
  96:     if (x.fooTypo.bar === 1) {} // error, fooTypo doesn't exist
              ^ object type
 
-tagged_union.js:101
+Error: tagged_union.js:101
 101:     if (x.kind === (null).toString()) {} // error, method on null
                         ^^^^^^^^^^^^^^^^^ call of method `toString`. Method cannot be called on possibly null value
 101:     if (x.kind === (null).toString()) {} // error, method on null
                          ^^^^ null
 
-tagged_union.js:102
+Error: tagged_union.js:102
 102:     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
                                 ^^^^^^^^^^^^^^^^^ call of method `toString`. Method cannot be called on possibly null value
 102:     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
                                  ^^^^ null
 
-tagged_union.js:113
+Error: tagged_union.js:113
 113:       (x.legnth: string); // error: number literal 0 !~> string
             ^^^^^^^^ number literal `0`. This type is incompatible with
 113:       (x.legnth: string); // error: number literal 0 !~> string
                       ^^^^^^ string
 
-tagged_union.js:118
+Error: tagged_union.js:118
 118:       (y.legnth: string); // error: number literal 0 !~> string
             ^^^^^^^^ number literal `0`. This type is incompatible with
 118:       (y.legnth: string); // error: number literal 0 !~> string
                       ^^^^^^ string
 
-tagged_union.js:123
+Error: tagged_union.js:123
 123:       (z.toStirng: string); // error: number literal 0 !~> string
             ^^^^^^^^^^ number literal `0`. This type is incompatible with
 123:       (z.toStirng: string); // error: number literal 0 !~> string
                         ^^^^^^ string
 
-tagged_union.js:128
+Error: tagged_union.js:128
 128:       (q.valeuOf: string); // error: number literal 0 !~> string
             ^^^^^^^^^ number literal `0`. This type is incompatible with
 128:       (q.valeuOf: string); // error: number literal 0 !~> string
                        ^^^^^^ string
 
-tagged_union.js:146
+Error: tagged_union.js:146
 146:       (x.str: 'not str'); // error: 'str' !~> 'not str'
             ^^^^^ string literal `str`. Expected string literal `not str`, got `str` instead
 146:       (x.str: 'not str'); // error: 'str' !~> 'not str'
                    ^^^^^^^^^ string literal `not str`
 
-tagged_union.js:149
+Error: tagged_union.js:149
 149:       (x.num: 456); // error: 123 !~> 456
             ^^^^^ number literal `123`. Expected number literal `456`, got `123` instead
 149:       (x.num: 456); // error: 123 !~> 456
                    ^^^ number literal `456`
 
-tagged_union.js:152
+Error: tagged_union.js:152
 152:       (x.bool: false); // error: true !~> false
             ^^^^^^ boolean literal `true`. Expected boolean literal `false`, got `true` instead
 152:       (x.bool: false); // error: true !~> false
                     ^^^^^ boolean literal `false`
 
-tagged_union.js:156
+Error: tagged_union.js:156
 156:       (x.badStr: empty); // error: 'bad' !~> empty
             ^^^^^^^^ string literal `bad`. This type is incompatible with
 156:       (x.badStr: empty); // error: 'bad' !~> empty
                       ^^^^^ empty
 
-tagged_union.js:159
+Error: tagged_union.js:159
 159:       (x.badNum: empty); // error: 123 !~> empty
             ^^^^^^^^ number literal `123`. This type is incompatible with
 159:       (x.badNum: empty); // error: 123 !~> empty
                       ^^^^^ empty
 
-tagged_union.js:162
+Error: tagged_union.js:162
 162:       (x.badBool: empty); // error: true !~> empty
             ^^^^^^^^^ boolean literal `true`. This type is incompatible with
 162:       (x.badBool: empty); // error: true !~> empty
                        ^^^^^ empty
 
-tagged_union.js:170
+Error: tagged_union.js:170
 170:       x.z; // error
              ^ property `z`. Property not found in
 170:       x.z; // error
            ^ object type
 
-tagged_union.js:173
+Error: tagged_union.js:173
 173:       x.y; // error
              ^ property `y`. Property not found in
 173:       x.y; // error
            ^ object type
 
-tagged_union.js:177
+Error: tagged_union.js:177
 177:       x.y; // error
              ^ property `y`. Property not found in
 177:       x.y; // error
            ^ object type
 
-tagged_union.js:180
+Error: tagged_union.js:180
 180:       x.z; // error
              ^ property `z`. Property not found in
 180:       x.z; // error
            ^ object type
 
-tagged_union.js:188
+Error: tagged_union.js:188
 188:       x.z; // error
              ^ property `z`. Property not found in
 188:       x.z; // error
            ^ object type
 
-tagged_union.js:190
+Error: tagged_union.js:190
 190:       x.y; // error: x.foo could be a string
              ^ property `y`. Property not found in
 190:       x.y; // error: x.foo could be a string
            ^ object type
 
-tagged_union.js:191
+Error: tagged_union.js:191
 191:       x.z; // error: could still be either case (if foo was a different number)
              ^ property `z`. Property not found in
 191:       x.z; // error: could still be either case (if foo was a different number)
            ^ object type
 
-tagged_union.js:196
+Error: tagged_union.js:196
 196:       x.y; // error
              ^ property `y`. Property not found in
 196:       x.y; // error
            ^ object type
 
-tagged_union.js:199
+Error: tagged_union.js:199
 199:       x.z; // error
              ^ property `z`. Property not found in
 199:       x.z; // error
            ^ object type
 
-tagged_union.js:207
+Error: tagged_union.js:207
 207:       x.z; // error
              ^ property `z`. Property not found in
 207:       x.z; // error
            ^ object type
 
-tagged_union.js:209
+Error: tagged_union.js:209
 209:       x.y; // error: x.foo could be a string
              ^ property `y`. Property not found in
 209:       x.y; // error: x.foo could be a string
            ^ object type
 
-tagged_union.js:210
+Error: tagged_union.js:210
 210:       x.z; // error: could still be either case (if foo was a different number)
              ^ property `z`. Property not found in
 210:       x.z; // error: could still be either case (if foo was a different number)
            ^ object type
 
-tagged_union.js:215
+Error: tagged_union.js:215
 215:       x.y; // error
              ^ property `y`. Property not found in
 215:       x.y; // error
            ^ object type
 
-tagged_union.js:217
+Error: tagged_union.js:217
 217:       x.y; // error: x.foo could be a different string
              ^ property `y`. Property not found in
 217:       x.y; // error: x.foo could be a different string
            ^ object type
 
-tagged_union.js:218
+Error: tagged_union.js:218
 218:       x.z; // error: x.foo could be a number
              ^ property `z`. Property not found in
 218:       x.z; // error: x.foo could be a number
            ^ object type
 
-tagged_union.js:228
+Error: tagged_union.js:228
 228:       x.y; // error: flow isn't smart enough to figure this out yet
              ^ property `y`. Property not found in
 228:       x.y; // error: flow isn't smart enough to figure this out yet
            ^ object type
 
-tagged_union.js:229
+Error: tagged_union.js:229
 229:       x.z; // error
              ^ property `z`. Property not found in
 229:       x.z; // error
            ^ object type
 
-tagged_union.js:237
+Error: tagged_union.js:237
 237:       x.z; // error
              ^ property `z`. Property not found in
 237:       x.z; // error
            ^ object type
 
-tagged_union.js:240
+Error: tagged_union.js:240
 240:       x.y; // error
              ^ property `y`. Property not found in
 240:       x.y; // error
            ^ object type
 
-tagged_union.js:244
+Error: tagged_union.js:244
 244:       x.y; // error
              ^ property `y`. Property not found in
 244:       x.y; // error
            ^ object type
 
-tagged_union.js:247
+Error: tagged_union.js:247
 247:       x.z; // error
              ^ property `z`. Property not found in
 247:       x.z; // error
            ^ object type
 
-tagged_union.js:255
+Error: tagged_union.js:255
 255:       x.z; // error
              ^ property `z`. Property not found in
 255:       x.z; // error
            ^ object type
 
-tagged_union.js:258
+Error: tagged_union.js:258
 258:       x.y; // error
              ^ property `y`. Property not found in
 258:       x.y; // error
            ^ object type
 
-tagged_union.js:262
+Error: tagged_union.js:262
 262:       x.y; // error
              ^ property `y`. Property not found in
 262:       x.y; // error
            ^ object type
 
-tagged_union.js:265
+Error: tagged_union.js:265
 265:       x.z; // error
              ^ property `z`. Property not found in
 265:       x.z; // error
            ^ object type
 
-typeof.js:5
+Error: typeof.js:5
   5:     x[0]; // error for boolean, not number
          ^^^^ access of computed property/element. Indexable signature not found in
   5:     x[0]; // error for boolean, not number
          ^ Boolean
 
-typeof.js:12
+Error: typeof.js:12
  12:     return x; // error, null
                 ^ null. This type is incompatible with the expected return type of
   9: function bar(): number {
                      ^^^^^^ number
 
-typeof.js:23
+Error: typeof.js:23
  23:   BAZ.stuff(123); // error, refinement is gone
        ^^^^^^^^^^^^^^ call of method `stuff`. Function cannot be called on possibly undefined value
   3: declare var BAZ: {stuff?: (x: number) => void} | void;
                                ^^^^^^^^^^^^^^^^^^^ undefined. See lib: lib.js:3
 
-typeof.js:23
+Error: typeof.js:23
  23:   BAZ.stuff(123); // error, refinement is gone
        ^^^^^^^^^^^^^^ call of method `stuff`. Method cannot be called on possibly undefined value
  23:   BAZ.stuff(123); // error, refinement is gone
        ^^^ undefined
 
-typeof.js:26
+Error: typeof.js:26
  26:   BAZ.stuff; // error, could be undefined
            ^^^^^ property `stuff`. Property cannot be accessed on possibly undefined value
  26:   BAZ.stuff; // error, could be undefined
        ^^^ undefined
 
-typeof.js:30
+Error: typeof.js:30
  30:     BAZ.stuff(123); // error, refinement is gone
          ^^^^^^^^^^^^^^ call of method `stuff`. Function cannot be called on possibly undefined value
   3: declare var BAZ: {stuff?: (x: number) => void} | void;
                                ^^^^^^^^^^^^^^^^^^^ undefined. See lib: lib.js:3
 
-typeof.js:49
+Error: typeof.js:49
  49:   if (typeof x === "foo") { // error
                         ^^^^^ string literal `foo`. This value is not a valid `typeof` return value
 
-typeof.js:61
+Error: typeof.js:61
  61:   if (typeof x === `foo`) { // error
                         ^^^^^ string literal `foo`. This value is not a valid `typeof` return value
 
-undef.js:31
+Error: undef.js:31
  31:     var y = x * 1000;
                  ^ null. The operand of an arithmetic operation must be a number.
 
-undef.js:38
+Error: undef.js:38
  38:     var y = x * 1000;
                  ^ null. The operand of an arithmetic operation must be a number.
 
-undef.js:44
+Error: undef.js:44
  44:     var y = x.x * 1000;
                  ^^^ null. The operand of an arithmetic operation must be a number.
 
-undef.js:51
+Error: undef.js:51
  51:     var y = x.x * 1000;
                  ^^^ null. The operand of an arithmetic operation must be a number.
 
-undef.js:69
+Error: undef.js:69
  69:     var b = y * 1000; // error
                  ^ null. The operand of an arithmetic operation must be a number.
 
-undef.js:69
+Error: undef.js:69
  69:     var b = y * 1000; // error
                  ^ undefined. The operand of an arithmetic operation must be a number.
 
-undef.js:74
+Error: undef.js:74
  74:   if (100 * undefined) {
                  ^^^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
-undef.js:77
+Error: undef.js:77
  77:   if (undefined * 100) {
            ^^^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
-union.js:7
+Error: union.js:7
   7:     x[0]; // error on boolean
          ^^^^ access of computed property/element. Indexable signature not found in
   7:     x[0]; // error on boolean
          ^ Boolean
 
-union.js:13
+Error: union.js:13
  13:     x[0]; // error on number
          ^^^^ access of computed property/element. Indexable signature not found in
  13:     x[0]; // error on number
          ^ Number
 
-union.js:19
+Error: union.js:19
  19:     x[0]; // error on number
          ^^^^ access of computed property/element. Indexable signature not found in
  19:     x[0]; // error on number
          ^ Number
 
-void.js:31
+Error: void.js:31
  31:     var y = x * 1000;
                  ^ null. The operand of an arithmetic operation must be a number.
 
-void.js:38
+Error: void.js:38
  38:     var y = x * 1000;
                  ^ null. The operand of an arithmetic operation must be a number.
 
-void.js:44
+Error: void.js:44
  44:     var y = x.x * 1000;
                  ^^^ null. The operand of an arithmetic operation must be a number.
 
-void.js:51
+Error: void.js:51
  51:     var y = x.x * 1000;
                  ^^^ null. The operand of an arithmetic operation must be a number.
 
-void.js:56
+Error: void.js:56
  56:   if (x !== null && x !== void(x * 1000)) {
                                     ^ undefined. The operand of an arithmetic operation must be a number.
 
-void.js:62
+Error: void.js:62
  62:   if (x === null || x === void(x * 1000)) {
                                     ^ undefined. The operand of an arithmetic operation must be a number.
 
-void.js:69
+Error: void.js:69
  69:   if (x.x !== null && x.x !== void(x.x * 1000)) {
                                         ^^^ undefined. The operand of an arithmetic operation must be a number.
 
-void.js:75
+Error: void.js:75
  75:   if (x.x === null || x.x === void(x.x * 1000)) {
                                         ^^^ undefined. The operand of an arithmetic operation must be a number.
 
-void.js:82
+Error: void.js:82
  82:   if (100 * void(0)) {
                  ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
-void.js:85
+Error: void.js:85
  85:   if (void(0) * 100) {
            ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 

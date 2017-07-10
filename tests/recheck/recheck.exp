@@ -1,12 +1,12 @@
 
 Test a:
-a1.js:3
+Error: a1.js:3
   3: function foo(x: number): string { return 5; }
                                               ^ number. This type is incompatible with the expected return type of
   3: function foo(x: number): string { return 5; }
                               ^^^^^^ string
 
-a2.js:5
+Error: a2.js:5
   5: module.exports = foo("");
                           ^^ string. This type is incompatible with the expected param type of
   3: function foo(x: number): string { return 5; }
@@ -14,13 +14,13 @@ a2.js:5
 
 
 Found 2 errors
-a2.js:5
+Error: a2.js:5
   5: module.exports = foo("");
                           ^^ string. This type is incompatible with the expected param type of
   3: function foo(x: number): number { return 5; }
                      ^^^^^^ number. See: a1.js:3
 
-a3.js:5
+Error: a3.js:5
   5: (five + five: string);
       ^^^^^^^^^^^ number. This type is incompatible with
   5: (five + five: string);
@@ -28,19 +28,19 @@ a3.js:5
 
 
 Found 2 errors
-a1.js:5
+Error: a1.js:5
   5: foo("");
          ^^ string. This type is incompatible with the expected param type of
   3: function foo(x: number): number { return 5; }
                      ^^^^^^ number
 
-a2.js:5
+Error: a2.js:5
   5: module.exports = foo("");
                           ^^ string. This type is incompatible with the expected param type of
   3: function foo(x: number): number { return 5; }
                      ^^^^^^ number. See: a1.js:3
 
-a3.js:5
+Error: a3.js:5
   5: (five + five: string);
       ^^^^^^^^^^^ number. This type is incompatible with
   5: (five + five: string);
@@ -50,7 +50,7 @@ a3.js:5
 Found 3 errors
 
 Test b:
-b3.js:5
+Error: b3.js:5
   5: (new D: C);
       ^^^^^ D. This type is incompatible with
   5: (new D: C);
@@ -61,7 +61,7 @@ Found 1 error
 No errors!
 
 Test c:
-c2.js:6
+Error: c2.js:6
   6:   foo({ y: 0 });
        ^^^^^^^^^^^^^ function call
   3: export function foo(props: { x: number }) { }
@@ -69,7 +69,7 @@ c2.js:6
   6:   foo({ y: 0 });
            ^^^^^^^^ object literal
 
-c3.js:5
+Error: c3.js:5
   5: bar({ x: 0 });
      ^^^^^^^^^^^^^ function call
   5: export function bar(props: { y: number }) {
@@ -79,7 +79,7 @@ c3.js:5
 
 
 Found 2 errors
-c3.js:5
+Error: c3.js:5
   5: bar({ x: 0 });
      ^^^^^^^^^^^^^ function call
   5: export function bar(props: { y: number }) {
@@ -91,7 +91,7 @@ c3.js:5
 Found 1 error
 
 Test d:
-d2.js:4
+Error: d2.js:4
   4: export var y: A = x;
                        ^ B. This type is incompatible with
   4: export var y: A = x;
@@ -101,7 +101,7 @@ d2.js:4
 Found 1 error
 
 Test e:
-e2.js:6
+Error: e2.js:6
   6:   return { type: 'QUX' };
               ^^^^^^^^^^^^^^^ object literal. This type is incompatible with
   5: const f = (): Action => {
@@ -129,7 +129,7 @@ No errors!
 No errors!
 
 Test f:
-f2.js:4
+Error: f2.js:4
   4: (c: { x: number });
       ^ object type. This type is incompatible with
   4: (c: { x: number });
@@ -140,7 +140,7 @@ f2.js:4
       4: (c: { x: number });
                   ^^^^^^ number
 
-f2.js:4
+Error: f2.js:4
   4: (c: { x: number });
       ^ object type. This type is incompatible with
   4: (c: { x: number });
@@ -155,7 +155,7 @@ f2.js:4
 Found 2 errors
 No errors!
 No errors!
-f2.js:4
+Error: f2.js:4
   4: (c: { x: number });
       ^ object type. This type is incompatible with
   4: (c: { x: number });
@@ -166,7 +166,7 @@ f2.js:4
       4: (c: { x: number });
                   ^^^^^^ number
 
-f2.js:4
+Error: f2.js:4
   4: (c: { x: number });
       ^ object type. This type is incompatible with
   4: (c: { x: number });
@@ -184,7 +184,7 @@ Test g:
 No errors!
 
 Test h:
-h2.js:3
+Error: h2.js:3
   3: import type { Foo } from './h1';
                    ^^^ Named import from module `./h1`. This module has no named export called `Foo`.
 
@@ -192,7 +192,7 @@ h2.js:3
 Found 1 error
 
 Test i:
-i2.js:5
+Error: i2.js:5
   5: foo.p = 0;
      ^^^ object type. Covariant property `p` incompatible with contravariant use in
   5: foo.p = 0;
@@ -202,7 +202,7 @@ i2.js:5
 Found 1 error
 
 Test j:
-j2.js:5
+Error: j2.js:5
   5: foo.p = 0;
      ^^^ object type. Covariant property `p` incompatible with contravariant use in
   5: foo.p = 0;
@@ -212,7 +212,7 @@ j2.js:5
 Found 1 error
 
 Test k:
-k.js:4
+Error: k.js:4
   4: (x.p: string);
         ^ property `p`. Property not found in
   4: (x.p: string);
@@ -221,7 +221,7 @@ k.js:4
 
 Found 1 error
 No errors!
-k.js:4
+Error: k.js:4
   4: (x.p: string);
         ^ property `p`. Property not found in
   4: (x.p: string);

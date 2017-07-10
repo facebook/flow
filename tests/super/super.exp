@@ -1,16 +1,16 @@
-constructor.js:15
+Error: constructor.js:15
  15:     this.y; // error (no super call)
               ^ property `y`. Property cannot be accessed on possibly undefined value
  15:     this.y; // error (no super call)
          ^^^^ uninitialized this (expected super constructor call)
 
-constructor.js:16
+Error: constructor.js:16
  16:     this.x; // error (no super call)
               ^ property `x`. Property cannot be accessed on possibly undefined value
  16:     this.x; // error (no super call)
          ^^^^ uninitialized this (expected super constructor call)
 
-constructor.js:36
+Error: constructor.js:36
  36:     leak(this); // error (no super call yet)
          ^^^^^^^^^^ function call
  30:   f.y; // error
@@ -18,7 +18,7 @@ constructor.js:36
  30:   f.y; // error
        ^ uninitialized this (expected super constructor call)
 
-constructor.js:36
+Error: constructor.js:36
  36:     leak(this); // error (no super call yet)
          ^^^^^^^^^^ function call
  31:   f.x; // error
@@ -26,13 +26,13 @@ constructor.js:36
  31:   f.x; // error
        ^ uninitialized this (expected super constructor call)
 
-constructor.js:45
+Error: constructor.js:45
  45:     super.x; // error (no super call)
                ^ property `x`. Property cannot be accessed on possibly undefined value
  45:     super.x; // error (no super call)
          ^^^^^ uninitialized this (expected super constructor call)
 
-constructor.js:69
+Error: constructor.js:69
  69:     super(this); // error (no super call yet)
          ^^^^^^^^^^^ function call
  63:     leaked_this.foo()
@@ -40,37 +40,37 @@ constructor.js:69
  63:     leaked_this.foo()
          ^^^^^^^^^^^ uninitialized this (expected super constructor call)
 
-constructor.js:83
+Error: constructor.js:83
  83:     super(() => this.foo()); // error (no super call yet)
                      ^^^^^^^^^^ call of method `foo`. Method cannot be called on possibly undefined value
  83:     super(() => this.foo()); // error (no super call yet)
                      ^^^^ uninitialized this (expected super constructor call)
 
-super.js:10
+Error: super.js:10
  10:     super(x);
                ^ string. This type is incompatible with the expected param type of
   3:   constructor(x:number) { }
                      ^^^^^^ number
 
-super.js:14
+Error: super.js:14
  14:     (super.staticMethod('foo'): number); // error, string !~> number
           ^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
  14:     (super.staticMethod('foo'): number); // error, string !~> number
                                      ^^^^^^ number
 
-super.js:15
+Error: super.js:15
  15:     (super.doesntExist()); // error, A doesn't have a doesntExist method
                 ^^^^^^^^^^^ property `doesntExist`. Property not found in
  15:     (super.doesntExist()); // error, A doesn't have a doesntExist method
           ^^^^^ statics of A
 
-super.js:19
+Error: super.js:19
  19:     super.f(0);
                  ^ number. This type is incompatible with the expected param type of
   5:   f(x:string) { }
            ^^^^^^ string
 
-super.js:20
+Error: super.js:20
  20:     return super.g;
                       ^ property `g`. Property not found in
   8: class B extends A {

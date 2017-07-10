@@ -3,7 +3,7 @@ Initial status:
 No errors!
 
 Delete non-@flow file foo.js:
-test.js:5
+Error: test.js:5
   5: require('Foo');
              ^^^^^ Foo. Required module not found
 

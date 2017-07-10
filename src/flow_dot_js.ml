@@ -151,7 +151,7 @@ let check_content ~filename ~content =
   let stdin_file = Some (Path.make_unsafe filename, content) in
   let root = Path.dummy_path in
   let filename = Loc.SourceFile filename in
-  let errors = match parse_content filename content with
+  let errors, warnings = match parse_content filename content with
   | ast, [] ->
     (* defaults *)
     let metadata = stub_metadata ~root ~checked:true in
@@ -174,16 +174,16 @@ let check_content ~filename ~content =
     let master_cx = get_master_cx root in
     Merge_js.merge_component_strict reqs [cx] [] master_cx;
 
-    Context.errors cx
+    Context.errors cx, Errors.ErrorSet.empty
   | _, parse_errors ->
-    List.fold_left (fun acc parse_error ->
+    let errors = List.fold_left (fun acc parse_error ->
       Errors.ErrorSet.add (error_of_parse_error filename parse_error) acc
     ) Errors.ErrorSet.empty parse_errors
+    in errors, Errors.ErrorSet.empty
   in
   let strip_root = Some root in
-  errors
-  |> Errors.Json_output.json_of_errors_with_context
-    ~strip_root ~stdin_file ~suppressed_errors:[]
+  Errors.Json_output.json_of_errors_with_context
+    ~strip_root ~stdin_file ~suppressed_errors:[] ~errors ~warnings ()
   |> js_of_json
 
 let check filename =

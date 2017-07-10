@@ -19,7 +19,9 @@ exception State_not_found
 module type SERVER_PROGRAM = sig
   val init : focus_target:Loc.filename option -> genv -> (Profiling_js.t * env)
   val check_once : genv -> env ->
-    Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list
+    Errors.ErrorSet.t * (* errors *)
+    Errors.ErrorSet.t * (* warnings *)
+    (Errors.error * Loc.LocSet.t) list (* suppressed errors *)
   (* filter and relativize updated file paths *)
   val process_updates : genv -> env -> SSet.t -> FilenameSet.t
   val recheck: genv -> env -> FilenameSet.t -> env
@@ -29,7 +31,9 @@ module type SERVER_PROGRAM = sig
   val handle_persistent_client : genv -> env -> Persistent_connection.single_client -> env
   val collate_errors :
     errors ->
-    Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list
+    Errors.ErrorSet.t * (* errors *)
+      Errors.ErrorSet.t * (* warnings *)
+      (Errors.error * Loc.LocSet.t) list (* suppressed errors *)
 end
 
 (*****************************************************************************)
@@ -44,7 +48,10 @@ module ServerMain (Program : SERVER_PROGRAM) : sig
     shared_mem_config:SharedMem_js.config ->
     ?focus_target:Loc.filename ->
     Options.t ->
-    Profiling_js.t * Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list
+    Profiling_js.t *
+      Errors.ErrorSet.t * (* errors *)
+      Errors.ErrorSet.t * (* warnings *)
+      (Errors.error * Loc.LocSet.t) list (* suppressed errors *)
   val daemonize :
     wait:bool ->
     log_file:string ->
@@ -132,8 +139,8 @@ end = struct
       Persistent_connection.send_start_recheck env.connections;
       let env = Program.recheck genv env updates in
       Persistent_connection.send_end_recheck env.connections;
-      let errorl, _ = Program.collate_errors env.errors in
-      Persistent_connection.update_clients env.connections errorl;
+      let errors, warnings, _ = Program.collate_errors env.errors in
+      Persistent_connection.update_clients env.connections ~errors ~warnings;
       recheck_loop ~dfind genv env
     end
 
@@ -252,8 +259,8 @@ end = struct
     PidLog.disable ();
     let genv, program_init = create_program_init ~shared_mem_config ~focus_target options in
     let profiling, env = program_init () in
-    let errors, suppressed_errors = Program.check_once genv env in
-    profiling, errors, suppressed_errors
+    let errors, suppressed_errors, lint_settings = Program.check_once genv env in
+    profiling, errors, suppressed_errors, lint_settings
 
   let daemonize =
     let entry = Server_daemon.register_entry_point run_internal in

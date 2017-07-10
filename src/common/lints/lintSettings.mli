@@ -24,8 +24,13 @@ type lint_state =
   | Err
 
 val string_of_state: lint_state -> string
+val output_string_of_state: lint_state -> string
 
 val state_of_string: string -> lint_state option
+
+val state_cmp: lint_state -> lint_state -> int
+val state_min: lint_state -> lint_state -> lint_state
+val state_max: lint_state -> lint_state -> lint_state
 
 type t
 

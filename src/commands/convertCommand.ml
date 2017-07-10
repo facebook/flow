@@ -51,7 +51,10 @@ let convert_file error_flags outpath file =
       ~out_channel:stdout
       ~flags:error_flags
       ~strip_root:None
-      flow_errors;
+      ~errors:flow_errors
+      (* The convert command only has parse errors. *)
+      ~warnings:Errors.ErrorSet.empty
+      ();
     n, 0, 1
   )
 

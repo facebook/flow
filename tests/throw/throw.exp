@@ -1,4 +1,4 @@
-test.js:13
+Error: test.js:13
  13:     return a*1; // a is not null
                 ^ string. The operand of an arithmetic operation must be a number.
 

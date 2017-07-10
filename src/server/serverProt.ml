@@ -66,7 +66,7 @@ type infer_type_response = (
 type suggest_response = ((int * int * string) list, string) result SMap.t
 
 type gen_flow_file_error =
-  | GenFlowFile_TypecheckError of Errors.ErrorSet.t
+  | GenFlowFile_TypecheckError of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}
   | GenFlowFile_UnexpectedError of string
 type gen_flow_file_result =
   | GenFlowFile_FlowFile of string
@@ -83,7 +83,7 @@ type directory_mismatch = {
 
 type response =
 | DIRECTORY_MISMATCH of directory_mismatch
-| ERRORS of Errors.ErrorSet.t
+| ERRORS of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}
 | NO_ERRORS
 | NOT_COVERED
 
@@ -93,7 +93,7 @@ module Persistent_connection_prot = struct
     | Autocomplete of (File_input.t * (* request id *) int)
 
   type response =
-    | Errors of Errors.ErrorSet.t
+    | Errors of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}
     | StartRecheck
     | EndRecheck
     | AutocompleteResult of (autocomplete_response * (* request id *) int)

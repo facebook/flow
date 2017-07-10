@@ -1,4 +1,4 @@
-enumerror.js:10
+Error: enumerror.js:10
  10: isActive({state: 'PAUSE'});
      ^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  10: isActive({state: 'PAUSE'});
@@ -11,7 +11,7 @@ enumerror.js:10
   7: }>}): boolean {
      -^ object type
 
-enumerror.js:20
+Error: enumerror.js:20
  20: isActive2({state: 'PAUSE'});
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  20: isActive2({state: 'PAUSE'});

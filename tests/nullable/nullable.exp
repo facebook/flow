@@ -1,34 +1,34 @@
-maybe.js:5
+Error: maybe.js:5
   5: ((123: ?(?number)): ?string); // error (only num ~> string)
                ^^^^^^ number. This type is incompatible with
   5: ((123: ?(?number)): ?string); // error (only num ~> string)
                           ^^^^^^ string
 
-nullable.js:1
+Error: nullable.js:1
   1: function foo():string { return null; }
                                     ^^^^ null. This type is incompatible with the expected return type of
   1: function foo():string { return null; }
                     ^^^^^^ string
 
-nullable.js:11
+Error: nullable.js:11
  11: if (x != null) corge(x); // x: ?string | null
                           ^ string. This type is incompatible with the expected param type of
   7: function corge(x:number) { }
                       ^^^^^^ number
 
-nullable.js:15
+Error: nullable.js:15
  15:   grault(); qux(x);
                      ^ null. This type is incompatible with the expected param type of
   5: function qux(x:string) { }
                     ^^^^^^ string
 
-nullable.js:15
+Error: nullable.js:15
  15:   grault(); qux(x);
                      ^ undefined. This type is incompatible with the expected param type of
   5: function qux(x:string) { }
                     ^^^^^^ string
 
-simple_nullable.js:4
+Error: simple_nullable.js:4
   4: bar('hmm');
          ^^^^^ string. This type is incompatible with the expected param type of
   2: function bar(x:?number) {}

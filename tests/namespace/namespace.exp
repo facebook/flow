@@ -1,22 +1,22 @@
-client.js:3
+Error: client.js:3
   3: var bar: string = ns.foo
                        ^^^^^^ number. This type is incompatible with
   3: var bar: string = ns.foo
               ^^^^^^ string
 
-namespace.js:2
+Error: namespace.js:2
   2: type T = (x:number) => void;
                  ^^^^^^ number. This type is incompatible with the expected param type of
   3: var f: T = function(x:string): void { }
                            ^^^^^^ string
 
-namespace.js:11
+Error: namespace.js:11
  11: var y:number = bar(0, x => "");
                     ^^^^^^^^^^^^^^^ string. This type is incompatible with
  11: var y:number = bar(0, x => "");
            ^^^^^^ number
 
-namespace.js:15
+Error: namespace.js:15
  15: var s2:Seq = [[""]];
                     ^^ string. This type is incompatible with
  13: type Seq = number | Array<Seq>;
@@ -38,7 +38,7 @@ namespace.js:15
    13: type Seq = number | Array<Seq>;
                            ^^^^^^^^^^ array type
 
-namespace.js:17
+Error: namespace.js:17
  17: module.exports = { foo: ("": number) };
                               ^^ string. This type is incompatible with
  17: module.exports = { foo: ("": number) };

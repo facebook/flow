@@ -96,7 +96,10 @@ let append_trace_reasons message_list trace_reasons =
 let file_location_style text = (Tty.Underline Tty.Default, text)
 let default_style text = (Tty.Normal Tty.Default, text)
 let source_fragment_style text = (Tty.Normal Tty.Default, text)
+let error_heading_style text = (Tty.Bold Tty.Red, text)
+let warning_heading_style text = (Tty.Bold Tty.Yellow, text)
 let error_fragment_style text = (Tty.Normal Tty.Red, text)
+let warning_fragment_style text = (Tty.Normal Tty.Yellow, text)
 let line_number_style text = (Tty.Bold Tty.Default, text)
 let comment_style text = (Tty.Bold Tty.Default, text)
 let comment_file_style text = (Tty.BoldUnderline Tty.Default, text)
@@ -129,13 +132,13 @@ let relative_lib_path ~strip_root filename =
       Printf.sprintf "<BUILTINS>%s%s" sep (Filename.basename filename)
   | None -> relative_path ~strip_root filename
 
-let highlight_error_in_line line c0 c1 =
+let highlight_error_in_line ~severity_style line c0 c1 =
   let prefix = String.sub line 0 c0 in
   let fragment = String.sub line c0 (c1 - c0) in
   let suffix = String.sub line c1 ((String.length line) - c1) in
   [
     source_fragment_style prefix;
-    error_fragment_style fragment;
+    severity_style fragment;
     source_fragment_style suffix;
   ]
 
@@ -373,12 +376,18 @@ module Cli_output = struct
     show_all_errors = false;
   }
 
-  let print_file_at_location ~strip_root stdin_file main_file loc s = Loc.(
+  let print_file_at_location ~strip_root ~severity stdin_file main_file loc s = Loc.(
     let l0 = loc.start.line in
     let l1 = loc._end.line in
     let c0 = loc.start.column in
     let c1 = loc._end.column in
     let filename = file_of_source loc.source in
+    let severity_style = match severity with
+      | LintSettings.Err -> error_fragment_style
+      | LintSettings.Warn -> warning_fragment_style
+      | LintSettings.Off ->
+        Utils_js.assert_false "CLI output is only called with warnings and errors."
+    in
 
     let see_another_file ~is_lib filename =
       if filename = main_file
@@ -427,7 +436,7 @@ module Cli_output = struct
           (* Here we have a single line of context *)
           let line_number_text = Printf.sprintf "%3d: " l0 in
           let highlighted_line = if (l1 == l0) && (String.length code_line) >= c1
-            then highlight_error_in_line code_line c0 c1
+            then highlight_error_in_line ~severity_style code_line c0 c1
             else [source_fragment_style code_line]
           in
           let padding =
@@ -471,10 +480,10 @@ module Cli_output = struct
                 let highlighted_line =
                   (* First line *)
                   if line_num = l0
-                  then highlight_error_in_line line c0 (String.length line)
+                  then highlight_error_in_line ~severity_style line c0 (String.length line)
                   (* Last line *)
                   else if line_num = l1
-                  then highlight_error_in_line line 0 c1
+                  then highlight_error_in_line ~severity_style line 0 c1
                   (* middle lines *)
                   else [error_fragment_style line] in
                 line_num + 1, (line_number_text :: highlighted_line)::acc
@@ -532,13 +541,13 @@ module Cli_output = struct
         end
   )
 
-  let print_message_nice ~strip_root stdin_file main_file message =
+  let print_message_nice ~strip_root ~severity stdin_file main_file message =
     let loc, s = to_pp message in
-    print_file_at_location ~strip_root stdin_file main_file loc s
+    print_file_at_location ~strip_root ~severity stdin_file main_file loc s
 
   let print_extra_info =
     let nonterm_newline = Str.regexp "\n\\(.\\)" in
-    let rec f ~strip_root stdin_file main_file indent tree =
+    let rec f ~strip_root ~severity stdin_file main_file indent tree =
       let infos, kids = match tree with
         | InfoLeaf infos -> infos, []
         | InfoNode (infos, kids) -> infos, kids
@@ -546,7 +555,7 @@ module Cli_output = struct
       let lines = List.map (fun (loc, strs) ->
         let msg = String.concat ". " strs in
         let lines =
-          print_file_at_location ~strip_root stdin_file main_file loc msg in
+          print_file_at_location ~strip_root ~severity stdin_file main_file loc msg in
         match lines with
         | [] -> []
         | (style, str) :: lines ->
@@ -559,19 +568,19 @@ module Cli_output = struct
           )
       ) infos in
       lines @ List.concat (
-        List.map (f ~strip_root stdin_file main_file ("  " ^ indent)) kids
+        List.map (f ~strip_root ~severity stdin_file main_file ("  " ^ indent)) kids
       )
-    in fun ~strip_root stdin_file main_file tree ->
-      List.concat (f ~strip_root stdin_file main_file "  " tree)
+    in fun ~strip_root ~severity stdin_file main_file tree ->
+      List.concat (f ~strip_root ~severity stdin_file main_file "  " tree)
 
-  let print_error_header ~strip_root ~kind message =
+  let print_error_header ~strip_root ~kind ~severity message =
     let loc, _ = to_pp message in
     let prefix, relfilename = match loc.Loc.source with
       | Some Loc.LibFile filename ->
         let header = match kind with
         | ParseError -> "Library parse error:"
         | InferError -> "Library type error:"
-        (* TODO: we don't publicly distinguish warnings vs errors right now *)
+        (* "InferWarning"s should still really be treated as errors. *)
         | InferWarning -> "Library type error:"
         | InternalError -> internal_error_prefix
         (* TODO: is this possible? What happens when there are two `declare
@@ -579,14 +588,25 @@ module Cli_output = struct
         | DuplicateProviderError -> "Library duplicate provider error:"
         | LintError lint_kind ->
           let lint_string = LintSettings.string_of_kind lint_kind in
-          Printf.sprintf "Library lint error (%s):" lint_string
+          Printf.sprintf "Library lint %s (%s):"
+            (LintSettings.output_string_of_state severity) lint_string
         in
         [comment_file_style (header^"\n")],
         relative_lib_path ~strip_root filename
       | Some Loc.SourceFile filename
       | Some Loc.JsonFile filename
       | Some Loc.ResourceFile filename ->
-          [], relative_path ~strip_root filename
+        let heading_style = match severity with
+          | LintSettings.Err -> error_heading_style
+          | LintSettings.Warn -> warning_heading_style
+          | LintSettings.Off ->
+            Utils_js.assert_false "CLI output is only called with warnings and errors."
+        in
+        let severity_str = severity
+          |> LintSettings.output_string_of_state
+          |> String.capitalize_ascii
+        in
+        [heading_style (severity_str ^ ":"); default_style " "], relative_path ~strip_root filename
       | Some Loc.Builtins -> [], "[No file]"
       | None -> [], "[No file]"
     in
@@ -625,20 +645,20 @@ module Cli_output = struct
     (color, Str.global_replace (Str.regexp "\n") "\\n" text)
 
   let get_pretty_printed_error ~stdin_file:stdin_file ~strip_root ~one_line
-    (error : error) =
+      ~severity (error : error) =
     let { kind; messages; op; trace; extra } = error in
     let messages = prepend_op_reason messages op in
     let messages = append_trace_reasons messages trace in
     let messages = merge_comments_into_blames messages in
-    let header = print_error_header ~strip_root ~kind (List.hd messages) in
+    let header = print_error_header ~strip_root ~kind ~severity (List.hd messages) in
     let main_file = match file_of_error error with
       | Some filename -> filename
       | None -> "[No file]" in
     let formatted_messages = List.concat (List.map (
-      print_message_nice ~strip_root stdin_file main_file
+      print_message_nice ~strip_root ~severity stdin_file main_file
     ) messages) in
     let formatted_extra = List.concat (List.map (
-      print_extra_info ~strip_root stdin_file main_file
+      print_extra_info ~strip_root ~severity stdin_file main_file
     ) extra) in
     let to_print = header @ formatted_messages @ formatted_extra in
     let to_print = if one_line then List.map remove_newlines to_print
@@ -651,23 +671,26 @@ module Cli_output = struct
       ~strip_root
       ~one_line
       ~color
+      ~severity
       (error : error) =
     let to_print =
-      get_pretty_printed_error ~stdin_file ~strip_root ~one_line error in
+      get_pretty_printed_error ~stdin_file ~strip_root ~one_line ~severity error in
     Tty.cprint ~out_channel ~color_mode:color to_print
 
-  let print_errors ~out_channel ~flags ?(stdin_file=None) ~strip_root errors =
+  let print_errors ~out_channel ~flags ?(stdin_file=None) ~strip_root ~errors ~warnings () =
     let error_or_errors n = if n != 1 then "errors" else "error" in
     let truncate = not (flags.show_all_errors) in
     let one_line = flags.one_line in
     let color = flags.color in
-    let print_error_if_not_truncated e curr =
-      if not(truncate) || curr < 50 then print_error_color
-        ~stdin_file ~strip_root ~one_line ~color ~out_channel e;
+    let print_error_if_not_truncated severity e curr =
+      begin if not(truncate) || curr < 50 then
+        print_error_color ~stdin_file ~strip_root ~one_line ~color ~out_channel ~severity e
+      end;
 
       curr + 1
     in
-    let total = ErrorSet.fold print_error_if_not_truncated errors 0 in
+    let total = ErrorSet.fold (print_error_if_not_truncated LintSettings.Err) errors 0 in
+    let total = ErrorSet.fold (print_error_if_not_truncated LintSettings.Warn) warnings total in
     if total > 0 then print_newline ();
     if truncate && total > 50 then (
       Printf.fprintf
@@ -701,9 +724,6 @@ module Json_output = struct
     | Some loc ->
       ("loc", Reason.json_of_loc ~strip_root loc) ::
       deprecated_json_props_of_loc ~strip_root loc
-
-  let json_of_message ~strip_root message =
-    Hh_json.JSON_Object (json_of_message_props ~strip_root message)
 
   let json_of_message_with_context ~strip_root ~stdin_file message =
     let open Hh_json in
@@ -742,17 +762,19 @@ module Json_output = struct
     )
 
   let json_of_error_props
-    ~strip_root ~json_of_message
+    ~strip_root ~json_of_message ~severity
     ?(suppression_locs=Loc.LocSet.empty) { kind; messages; op; trace; extra } =
     let open Hh_json in
-    let kind_str, severity_str = match kind with
-      | ParseError -> "parse", "error"
-      | InferError -> "infer", "error"
-      | InferWarning -> "infer", "warning"
-      | InternalError -> "internal", "error"
-      | DuplicateProviderError -> "duplicate provider", "error"
-      | LintError _ -> "lint", "error"
+    let kind_str = match kind with
+      | ParseError -> "parse"
+      | InferError -> "infer"
+      (* "InferWarning"s should still really be treated as errors. (The name is outdated.) *)
+      | InferWarning -> "infer"
+      | InternalError -> "internal"
+      | DuplicateProviderError -> "duplicate provider"
+      | LintError _ -> "lint"
     in
+    let severity_str = LintSettings.output_string_of_state severity in
     let suppressions = suppression_locs
     |> Loc.LocSet.elements
     |> List.map (fun loc ->
@@ -779,39 +801,37 @@ module Json_output = struct
       let extra = List.map (json_of_info_tree ~json_of_message) extra in
       ("extra", JSON_Array extra) :: props
 
-  let json_of_error ~strip_root error =
-    let json_of_message = json_of_message ~strip_root in
-    Hh_json.JSON_Object (json_of_error_props ~strip_root ~json_of_message  error)
-
   let json_of_error_with_context
-    ~strip_root ~stdin_file (error, suppression_locs) =
+    ~strip_root ~stdin_file ~severity (error, suppression_locs) =
     let json_of_message =
       json_of_message_with_context ~strip_root ~stdin_file in
-    Hh_json.JSON_Object (json_of_error_props ~strip_root ~json_of_message ~suppression_locs error)
-
-  let json_of_errors ~strip_root errors =
-    let f = json_of_error ~strip_root in
-    Hh_json.JSON_Array (List.map f (ErrorSet.elements errors))
+    Hh_json.JSON_Object (json_of_error_props ~strip_root ~json_of_message
+      ~severity ~suppression_locs error)
 
   let json_of_errors_with_context
-    ~strip_root ~stdin_file ~suppressed_errors errors =
+    ~strip_root ~stdin_file ~suppressed_errors ~errors ~warnings () =
     let errors = errors
       |> ErrorSet.elements
-      |> List.map (fun errs -> errs, Loc.LocSet.empty) in
+      |> List.map (fun err -> err, Loc.LocSet.empty) in
+    let warnings = warnings
+      |> ErrorSet.elements
+      |> List.map (fun warn -> warn, Loc.LocSet.empty) in
     let f = json_of_error_with_context ~strip_root ~stdin_file in
     Hh_json.JSON_Array (
-      List.map f errors @
-      List.map f suppressed_errors
+      List.map (f ~severity:LintSettings.Err) errors @
+      List.map (f ~severity:LintSettings.Warn) warnings @
+      (* We want these to show up as "suppressed error"s, not "suppressed off"s *)
+      List.map (f ~severity:LintSettings.Err) suppressed_errors
     )
 
   let full_status_json_of_errors
-    ~strip_root ~suppressed_errors ?(profiling=None) ?(stdin_file=None) errors =
+    ~strip_root ~suppressed_errors ?(profiling=None) ?(stdin_file=None) ~errors ~warnings () =
     let open Hh_json in
 
     let props = [
       "flowVersion", JSON_String Flow_version.version;
       "errors", json_of_errors_with_context
-        ~strip_root ~stdin_file ~suppressed_errors errors;
+        ~strip_root ~stdin_file ~suppressed_errors ~errors ~warnings ();
       "passed", JSON_Bool (ErrorSet.is_empty errors);
     ] in
     let props = match profiling with
@@ -825,10 +845,12 @@ module Json_output = struct
       ~strip_root
       ~suppressed_errors
       ?(pretty=false) ?(profiling=None) ?(stdin_file=None)
-      el =
+      ~errors
+      ~warnings
+      () =
     let open Hh_json in
     let res = full_status_json_of_errors
-      ~strip_root ~profiling ~stdin_file ~suppressed_errors el in
+      ~strip_root ~profiling ~stdin_file ~suppressed_errors ~errors ~warnings () in
     output_string out_channel (json_to_string ~pretty res);
     flush out_channel
 end
@@ -874,10 +896,13 @@ module Vim_emacs_output = struct
       );
       Buffer.contents buf
     in
-    fun ~strip_root oc el ->
+    fun ~strip_root oc ~errors ~warnings () ->
       let sl = ErrorSet.fold (fun err acc ->
-        (to_string ~strip_root err)::acc
-      ) el [] in
+        ("Error: " ^ (to_string ~strip_root err))::acc
+      ) (errors) [] in
+      let sl = ErrorSet.fold (fun warn acc ->
+        ("Warning: " ^ (to_string ~strip_root warn))::acc
+      ) (warnings) sl in
       let sl = ListUtils.uniq (List.sort String.compare sl) in
       List.iter begin fun s ->
         output_string oc s;

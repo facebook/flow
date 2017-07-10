@@ -1,4 +1,4 @@
-dir/a.js:2
+Error: dir/a.js:2
   2: (require('b'): boolean);
       ^^^^^^^^^^^^ number. This type is incompatible with
   2: (require('b'): boolean);
@@ -6,7 +6,7 @@ dir/a.js:2
 
 
 Found 1 error
-dir/a.js:2
+Error: dir/a.js:2
   2: (require('b'): boolean);
       ^^^^^^^^^^^^ string. This type is incompatible with
   2: (require('b'): boolean);
@@ -14,7 +14,7 @@ dir/a.js:2
 
 
 Found 1 error
-dir/a.js:2
+Error: dir/a.js:2
   2: (require('b'): boolean);
       ^^^^^^^^^^^^ number. This type is incompatible with
   2: (require('b'): boolean);

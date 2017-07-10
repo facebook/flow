@@ -1,4 +1,4 @@
-typecast.js:7
+Error: typecast.js:7
   7:     var n = ("hey" : number);
                   ^^^^^ string. This type is incompatible with
   7:     var n = ("hey" : number);

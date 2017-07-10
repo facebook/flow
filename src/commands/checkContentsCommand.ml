@@ -84,27 +84,29 @@ let main option_values root error_flags strip_root json pretty verbose
     ~out_channel:stdout ~strip_root ~pretty ~stdin_file
     ~suppressed_errors:([]) in
   match response with
-  | ServerProt.ERRORS e ->
+  | ServerProt.ERRORS {errors; warnings} ->
       if json
       then
-        print_json e
+        print_json ~errors ~warnings ()
       else (
         Errors.Cli_output.print_errors
           ~out_channel:stdout
           ~flags:error_flags
           ~stdin_file
           ~strip_root
-          e;
+          ~errors
+          ~warnings
+          ();
         FlowExitStatus.(exit Type_error)
       )
   | ServerProt.NO_ERRORS ->
-      if json
-      then print_json Errors.ErrorSet.empty
+      if json then
+        print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
   | ServerProt.NOT_COVERED ->
-      if json
-      then print_json Errors.ErrorSet.empty
+      if json then
+        print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()
       else Printf.printf "File is not @flow!\n%!";
       FlowExitStatus.(exit No_error)
   | _ ->

@@ -63,6 +63,10 @@ val deprecated_json_props_of_loc :
   Loc.t ->
   (string * Hh_json.json) list
 
+(* Some of the error printing functions consist only of named and optional arguments,
+ * requiring an extra unit argument for disambiguation on partial application. For
+ * consistency, the extra unit has been adopted on all error printing functions. *)
+
 (* Human readable output *)
 module Cli_output : sig
   type error_flags = {
@@ -78,20 +82,20 @@ module Cli_output : sig
     flags:error_flags ->
     ?stdin_file:stdin_file ->
     strip_root: Path.t option ->
-    ErrorSet.t ->
+    errors: ErrorSet.t ->
+    warnings: ErrorSet.t ->
+    unit ->
     unit
 end
 
 module Json_output : sig
-  val json_of_errors :
-    strip_root: Path.t option ->
-    ErrorSet.t ->
-    Hh_json.json
   val json_of_errors_with_context :
     strip_root: Path.t option ->
     stdin_file: stdin_file ->
     suppressed_errors: (error * Loc.LocSet.t) list ->
-    ErrorSet.t ->
+    errors: ErrorSet.t ->
+    warnings: ErrorSet.t ->
+    unit ->
     Hh_json.json
 
   val full_status_json_of_errors :
@@ -99,7 +103,9 @@ module Json_output : sig
     suppressed_errors: (error * Loc.LocSet.t) list ->
     ?profiling:Profiling_js.t option ->
     ?stdin_file:stdin_file ->
-    ErrorSet.t ->
+    errors: ErrorSet.t ->
+    warnings: ErrorSet.t ->
+    unit ->
     Hh_json.json
 
   val print_errors:
@@ -109,15 +115,21 @@ module Json_output : sig
     ?pretty:bool ->
     ?profiling:Profiling_js.t option ->
     ?stdin_file:stdin_file ->
-    ErrorSet.t ->
+    errors: ErrorSet.t ->
+    warnings: ErrorSet.t ->
+    unit ->
     unit
 end
 
 module Vim_emacs_output : sig
   val string_of_loc:
-    strip_root: Path.t option ->
+    strip_root:Path.t option ->
     Loc.t -> string
   val print_errors:
-    strip_root: Path.t option ->
-    out_channel -> ErrorSet.t -> unit
+    strip_root:Path.t option ->
+    out_channel ->
+    errors:ErrorSet.t ->
+    warnings:ErrorSet.t ->
+    unit ->
+    unit
 end

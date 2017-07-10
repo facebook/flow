@@ -38,11 +38,27 @@ let string_of_state = function
   | Warn -> "warn"
   | Err -> "error"
 
+let output_string_of_state = function
+  | Off -> "off"
+  | Warn -> "warning"
+  | Err -> "error"
+
 let state_of_string = function
- | "off" -> Some Off
- | "warn" -> Some Warn
- | "error" -> Some Err
- | _ -> None
+  | "off" -> Some Off
+  | "warn" -> Some Warn
+  | "error" -> Some Err
+  | _ -> None
+
+let state_cmp =
+  let int_of_state = function
+    | Off -> 0
+    | Warn -> 1
+    | Err -> 2
+  in fun a b -> compare (int_of_state a) (int_of_state b)
+
+let state_min a b = if state_cmp a b < 0 then a else b
+
+let state_max a b = if state_cmp a b > 0 then a else b
 
 module LintKind = struct
   type t = lint_kind

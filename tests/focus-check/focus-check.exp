@@ -1,13 +1,13 @@
 
 Stop any already-running server.
 Full check:
-a.js:3
+Error: a.js:3
   3: (require('./b'): number);
       ^^^^^^^^^^^^^^ string. This type is incompatible with
   3: (require('./b'): number);
                       ^^^^^^ number
 
-test.js:3
+Error: test.js:3
   3: ("": number);
       ^^ string. This type is incompatible with
   3: ("": number);
@@ -17,7 +17,7 @@ test.js:3
 Found 2 errors
 
 Focused check on a file with local errors but no dependency or reverse dependency:
-test.js:3
+Error: test.js:3
   3: ("": number);
       ^^ string. This type is incompatible with
   3: ("": number);
@@ -27,7 +27,7 @@ test.js:3
 Found 1 error
 
 Focused check on a file with no local errors but a dependency:
-a.js:3
+Error: a.js:3
   3: (require('./b'): number);
       ^^^^^^^^^^^^^^ string. This type is incompatible with
   3: (require('./b'): number);
@@ -37,7 +37,7 @@ a.js:3
 Found 1 error
 
 Focused check on a file with no local errors but a reverse dependency:
-a.js:3
+Error: a.js:3
   3: (require('./b'): number);
       ^^^^^^^^^^^^^^ string. This type is incompatible with
   3: (require('./b'): number);

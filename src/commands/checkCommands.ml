@@ -17,7 +17,7 @@ type printer =
   | Cli of Errors.Cli_output.error_flags
 
 (* helper - print errors. used in check-and-die runs *)
-let print_errors ~printer ~profiling ~suppressed_errors options errors =
+let print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings =
   let strip_root =
     if Options.should_strip_root options
     then Some (Options.root options)
@@ -36,7 +36,9 @@ let print_errors ~printer ~profiling ~suppressed_errors options errors =
       ~profiling
       ~pretty
       ~suppressed_errors
-      errors
+      ~errors
+      ~warnings
+      ()
   | Cli flags ->
     let errors = List.fold_left
       (fun acc (error, _) -> Errors.ErrorSet.add error acc)
@@ -47,7 +49,9 @@ let print_errors ~printer ~profiling ~suppressed_errors options errors =
       ~out_channel:stdout
       ~flags
       ~strip_root
-      errors
+      ~errors
+      ~warnings
+      ()
 
 module CheckCommand = struct
   let spec = { CommandSpec.
@@ -95,13 +99,13 @@ module CheckCommand = struct
 
     let shared_mem_config = shm_config shm_flags flowconfig in
 
-    let profiling, errors, suppressed_errors = Main.check_once
+    let profiling, errors, warnings, suppressed_errors = Main.check_once
       ~shared_mem_config options in
     let suppressed_errors =
       if include_suppressed then suppressed_errors else [] in
     let printer =
       if json || pretty then Json { pretty } else Cli error_flags in
-    print_errors ~printer ~profiling ~suppressed_errors options errors;
+    print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
     if Errors.ErrorSet.is_empty errors
       then FlowExitStatus.(exit No_error)
       else FlowExitStatus.(exit Type_error)
@@ -154,13 +158,13 @@ module FocusCheckCommand = struct
     let focus_target = Option.find_map path_opt ~f:(fun file ->
       Some (Loc.SourceFile Path.(to_string (make file))))
     in
-    let profiling, errors, suppressed_errors = Main.check_once
+    let profiling, errors, warnings, suppressed_errors = Main.check_once
       ~shared_mem_config ?focus_target options in
     let suppressed_errors =
       if include_suppressed then suppressed_errors else [] in
     let printer =
       if json || pretty then Json { pretty } else Cli error_flags in
-    print_errors ~printer ~profiling ~suppressed_errors options errors;
+    print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
     if Errors.ErrorSet.is_empty errors
       then FlowExitStatus.(exit No_error)
       else FlowExitStatus.(exit Type_error)

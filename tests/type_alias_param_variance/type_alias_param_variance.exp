@@ -1,16 +1,16 @@
-test.js:7
+Error: test.js:7
   7: type A<-T> = Foo<T>; // Error, Foo expects invariant type
                       ^ T. invariant position (expected `T` to occur only contravariantly)
 
-test.js:8
+Error: test.js:8
   8: type B<+T> = Foo<T>; // Error, Foo expects invariant type
                       ^ T. invariant position (expected `T` to occur only covariantly)
 
-test.js:10
+Error: test.js:10
  10: type D<-T> = Bar<T>; // Error, Bar expects covariant type
                       ^ T. covariant position (expected `T` to occur only contravariantly)
 
-test.js:15
+Error: test.js:15
  15: type I<+T> = Baz<T>; // Error, Baz expects contravariant type
                       ^ T. contravariant position (expected `T` to occur only covariantly)
 

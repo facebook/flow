@@ -1,4 +1,4 @@
-apply.js:12
+Error: apply.js:12
  12: apply(noRest, ['hi', 456]); // Error - 456 ~> 123
      ^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  12: apply(noRest, ['hi', 456]); // Error - 456 ~> 123
@@ -6,7 +6,7 @@ apply.js:12
  10: function noRest(x: 'hi', y: 123): true { return true; }
                                  ^^^ number literal `123`
 
-apply.js:13
+Error: apply.js:13
  13: apply(noRest, ['hi']); // Error - too few args
      ^^^^^^^^^^^^^^^^^^^^^ function call
   4:   fn: (...Args) => Ret,
@@ -14,7 +14,7 @@ apply.js:13
  10: function noRest(x: 'hi', y: 123): true { return true; }
                                  ^^^ number literal `123`
 
-apply.js:19
+Error: apply.js:19
  19: apply(withRest, ['hi', 456]); // Error - 456 ~> 123
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  19: apply(withRest, ['hi', 456]); // Error - 456 ~> 123
@@ -22,7 +22,7 @@ apply.js:19
  17: function withRest(...rest: ['hi', 123]): true { return true; }
                                        ^^^ number literal `123`
 
-apply.js:20
+Error: apply.js:20
  20: apply(withRest, ['hi']); // Error - too few args
      ^^^^^^^^^^^^^^^^^^^^^^^ function call
   4:   fn: (...Args) => Ret,
@@ -30,7 +30,7 @@ apply.js:20
  17: function withRest(...rest: ['hi', 123]): true { return true; }
                                 ^^^^^^^^^^^ tuple type
 
-apply.js:21
+Error: apply.js:21
  21: apply(withRest, ['hi', 123, false]); // Error - too many args
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
   4:   fn: (...Args) => Ret,
@@ -38,7 +38,7 @@ apply.js:21
  17: function withRest(...rest: ['hi', 123]): true { return true; }
                                 ^^^^^^^^^^^ tuple type
 
-apply.js:31
+Error: apply.js:31
  31: applyType(noRest, ['hi', 456]); // Error - 456 ~> 123
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  31: applyType(noRest, ['hi', 456]); // Error - 456 ~> 123
@@ -46,7 +46,7 @@ apply.js:31
  10: function noRest(x: 'hi', y: 123): true { return true; }
                                  ^^^ number literal `123`
 
-apply.js:32
+Error: apply.js:32
  32: applyType(noRest, ['hi']); // Error - too few args
      ^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  25:   fn: (...Args) => Ret,
@@ -54,7 +54,7 @@ apply.js:32
  10: function noRest(x: 'hi', y: 123): true { return true; }
                                  ^^^ number literal `123`
 
-apply.js:38
+Error: apply.js:38
  38: applyType(withRest, ['hi', 456]); // Error - 456 ~> 123
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  38: applyType(withRest, ['hi', 456]); // Error - 456 ~> 123
@@ -62,7 +62,7 @@ apply.js:38
  17: function withRest(...rest: ['hi', 123]): true { return true; }
                                        ^^^ number literal `123`
 
-apply.js:39
+Error: apply.js:39
  39: applyType(withRest, ['hi']); // Error - too few args
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  25:   fn: (...Args) => Ret,
@@ -70,7 +70,7 @@ apply.js:39
  17: function withRest(...rest: ['hi', 123]): true { return true; }
                                 ^^^^^^^^^^^ tuple type
 
-apply.js:40
+Error: apply.js:40
  40: applyType(withRest, ['hi', 123, false]); // Error - too many args
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  25:   fn: (...Args) => Ret,
@@ -78,19 +78,19 @@ apply.js:40
  17: function withRest(...rest: ['hi', 123]): true { return true; }
                                 ^^^^^^^^^^^ tuple type
 
-jsx.js:30
+Error: jsx.js:30
  30: (<AcceptsWhatever />: number); // Error string ~> number
       ^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
  30: (<AcceptsWhatever />: number); // Error string ~> number
                            ^^^^^^ number
 
-jsx.js:31
+Error: jsx.js:31
  31: (<AcceptsWhatever name="hi">Text</AcceptsWhatever>: number); // Error string ~> number
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
  31: (<AcceptsWhatever name="hi">Text</AcceptsWhatever>: number); // Error string ~> number
                                                          ^^^^^^ number
 
-jsx.js:34
+Error: jsx.js:34
  34: (<ExpectsProps />); // Error - missing prop
       ^^^^^^^^^^^^^^^^ JSX desugared to `JSX(...)`. Function cannot be called on any member of intersection type
  34: (<ExpectsProps />); // Error - missing prop
@@ -122,13 +122,13 @@ jsx.js:34
    33: declare function ExpectsProps(props: { name: string }, children: any): string;
                                             ^^^^^^^^^^^^^^^^ object type
 
-jsx.js:35
+Error: jsx.js:35
  35: (<ExpectsProps name="hi">Text</ExpectsProps>: number); // Error string ~> number
       ^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
  35: (<ExpectsProps name="hi">Text</ExpectsProps>: number); // Error string ~> number
                                                    ^^^^^^ number
 
-jsx.js:38
+Error: jsx.js:38
  38: (<ExpectsChildrenTuple />); // Error - mising child
       ^^^^^^^^^^^^^^^^^^^^^^^^ JSX desugared to `JSX(...)`. Function cannot be called on any member of intersection type
  38: (<ExpectsChildrenTuple />); // Error - mising child
@@ -160,7 +160,7 @@ jsx.js:38
    21:   Props: Object,
                 ^^^^^^ object type
 
-jsx.js:40
+Error: jsx.js:40
  40: (<ExpectsChildrenTuple>{123}</ExpectsChildrenTuple>); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^ JSX desugared to `JSX(...)`. Function cannot be called on any member of intersection type
  40: (<ExpectsChildrenTuple>{123}</ExpectsChildrenTuple>); // Error: number ~> string
@@ -192,7 +192,7 @@ jsx.js:40
    21:   Props: Object,
                 ^^^^^^ object type
 
-jsx.js:41
+Error: jsx.js:41
  41: (<ExpectsChildrenTuple>Hi {"there"}</ExpectsChildrenTuple>); // Error: too many children
       ^^^^^^^^^^^^^^^^^^^^^^ JSX desugared to `JSX(...)`. Function cannot be called on any member of intersection type
  41: (<ExpectsChildrenTuple>Hi {"there"}</ExpectsChildrenTuple>); // Error: too many children
@@ -224,7 +224,7 @@ jsx.js:41
    21:   Props: Object,
                 ^^^^^^ object type
 
-jsx.js:46
+Error: jsx.js:46
  46: (<ExpectsChildrenArray>{123}</ExpectsChildrenArray>); // Error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^ JSX desugared to `JSX(...)`. Function cannot be called on any member of intersection type
  46: (<ExpectsChildrenArray>{123}</ExpectsChildrenArray>); // Error: number ~> string
@@ -256,31 +256,31 @@ jsx.js:46
    21:   Props: Object,
                 ^^^^^^ object type
 
-spread.js:7
+Error: spread.js:7
   7: fun(...['hi'], ...[], ...[123], ...[true]); // Error - true is unused
                                          ^^^^ unused function argument
     3: function fun(x: 'hi', y: 123) {}
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function expects no more than 2 arguments
 
-spread.js:8
+Error: spread.js:8
   8: fun(...['hi'], ...[true], ...[123]); // Error: true ~> 123 and 123 is unused
                         ^^^^ boolean. This type is incompatible with the expected param type of
   3: function fun(x: 'hi', y: 123) {}
                               ^^^ number literal `123`
 
-spread.js:8
+Error: spread.js:8
   8: fun(...['hi'], ...[true], ...[123]); // Error: true ~> 123 and 123 is unused
                                    ^^^ unused function argument
     3: function fun(x: 'hi', y: 123) {}
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function expects no more than 2 arguments
 
-spread.js:19
+Error: spread.js:19
  19: funWithRestArray(...['hi'], ...[true], ...[123]); // Error: true ~> 123
                                      ^^^^ boolean. This type is incompatible with the expected param type of
  14: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
                                            ^^^ number literal `123`
 
-spread.js:28
+Error: spread.js:28
  28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
@@ -288,7 +288,7 @@ spread.js:28
  14: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
                                            ^^^ number literal `123`
 
-spread.js:28
+Error: spread.js:28
  28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);

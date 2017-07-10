@@ -1,8 +1,8 @@
-traces.js:8
+Error: traces.js:8
   8: // $FlowFixMe - Error unused suppression
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
-traces.js:15
+Error: traces.js:15
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ number. This type is incompatible with
  15: var a: string = foo('hi'); // error number ~> string

@@ -1,16 +1,16 @@
-CanvasRenderingContext2D.js:11
+Error: CanvasRenderingContext2D.js:11
  11:     ctx.moveTo('0', '1');  // error: should be numbers
                     ^^^ string. This type is incompatible with the expected param type of
 1547:   moveTo(x: number, y: number): void;
                   ^^^^^^ number. See lib: <BUILTINS>/dom.js:1547
 
-CanvasRenderingContext2D.js:11
+Error: CanvasRenderingContext2D.js:11
  11:     ctx.moveTo('0', '1');  // error: should be numbers
                          ^^^ string. This type is incompatible with the expected param type of
 1547:   moveTo(x: number, y: number): void;
                              ^^^^^^ number. See lib: <BUILTINS>/dom.js:1547
 
-Element.js:14
+Error: Element.js:14
  14:     element.scrollIntoView({ behavior: 'invalid' });
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  14:     element.scrollIntoView({ behavior: 'invalid' });
@@ -39,7 +39,7 @@ Element.js:14
       1161:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/dom.js:1161
 
-Element.js:15
+Error: Element.js:15
  15:     element.scrollIntoView({ block: 'invalid' });
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  15:     element.scrollIntoView({ block: 'invalid' });
@@ -68,7 +68,7 @@ Element.js:15
       1161:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
                                                                                                      ^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/dom.js:1161
 
-Element.js:16
+Error: Element.js:16
  16:     element.scrollIntoView(1);
          ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  16:     element.scrollIntoView(1);
@@ -92,7 +92,7 @@ Element.js:16
   1161:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:1161
 
-HTMLElement.js:14
+Error: HTMLElement.js:14
  14:     element.scrollIntoView({ behavior: 'invalid' });
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  14:     element.scrollIntoView({ behavior: 'invalid' });
@@ -121,7 +121,7 @@ HTMLElement.js:14
       1161:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/dom.js:1161
 
-HTMLElement.js:15
+Error: HTMLElement.js:15
  15:     element.scrollIntoView({ block: 'invalid' });
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  15:     element.scrollIntoView({ block: 'invalid' });
@@ -150,7 +150,7 @@ HTMLElement.js:15
       1161:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
                                                                                                      ^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/dom.js:1161
 
-HTMLElement.js:16
+Error: HTMLElement.js:16
  16:     element.scrollIntoView(1);
          ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  16:     element.scrollIntoView(1);
@@ -174,7 +174,7 @@ HTMLElement.js:16
   1161:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:1161
 
-HTMLInputElement.js:7
+Error: HTMLInputElement.js:7
   7:     el.setRangeText('foo', 123); // end is required
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `setRangeText`. Function cannot be called on any member of intersection type
   7:     el.setRangeText('foo', 123); // end is required
@@ -196,7 +196,7 @@ HTMLInputElement.js:7
   2806:   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                 ^^^^^^ number. See lib: <BUILTINS>/dom.js:2806
 
-HTMLInputElement.js:10
+Error: HTMLInputElement.js:10
  10:     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `setRangeText`. Function cannot be called on any member of intersection type
  10:     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
@@ -218,25 +218,25 @@ HTMLInputElement.js:10
   2806:   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                                      ^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/dom.js:2806
 
-URL.js:8
+Error: URL.js:8
   8: const e: string = c.path; // not correct
                          ^^^^ property `path`. Property not found in
   8: const e: string = c.path; // not correct
                        ^ URL
 
-eventtarget.js:9
+Error: eventtarget.js:9
   9:     (target.attachEvent('foo', listener): void); // invalid, may be undefined
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `attachEvent`. Function cannot be called on possibly undefined value
   9:     (target.attachEvent('foo', listener): void); // invalid, may be undefined
           ^^^^^^^^^^^^^^^^^^ undefined
 
-eventtarget.js:16
+Error: eventtarget.js:16
  16:     (target.detachEvent('foo', listener): void); // invalid, may be undefined
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `detachEvent`. Function cannot be called on possibly undefined value
  16:     (target.detachEvent('foo', listener): void); // invalid, may be undefined
           ^^^^^^^^^^^^^^^^^^ undefined
 
-path2d.js:9
+Error: path2d.js:9
   9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `arcTo`. Function cannot be called on any member of intersection type
   9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
@@ -258,19 +258,19 @@ path2d.js:9
   1416:   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
                                                                                           ^^^^^^ number. See lib: <BUILTINS>/dom.js:1416
 
-registerElement.js:52
+Error: registerElement.js:52
  52:           oldVal: string, // Error: This might be null
                        ^^^^^^ string. This type is incompatible with an argument type of
 531:       oldAttributeValue: null,
                               ^^^^ null. See lib: <BUILTINS>/dom.js:531
 
-registerElement.js:53
+Error: registerElement.js:53
  53:           newVal: string, // Error: This might be null
                        ^^^^^^ string. This type is incompatible with an argument type of
 546:       newAttributeValue: null,
                               ^^^^ null. See lib: <BUILTINS>/dom.js:546
 
-traversal.js:6
+Error: traversal.js:6
   6:     const i: NodeIterator<*,*> = document.createNodeIterator(document.body);
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createNodeIterator`. Function cannot be called on any member of intersection type
   6:     const i: NodeIterator<*,*> = document.createNodeIterator(document.body);
@@ -620,13 +620,13 @@ traversal.js:6
   939:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: void): NodeIterator<RootNodeT, Node>;
                                        ^^^^ Node. See lib: <BUILTINS>/dom.js:939
 
-traversal.js:12
+Error: traversal.js:12
  12:       filter.acceptNode(document.body);
                              ^^^^^^^^^^^^^ null. This type is incompatible with the expected param type of
 3187: type NodeFilterCallback = (node: Node) =>
                                        ^^^^ Node. See lib: <BUILTINS>/dom.js:3187
 
-traversal.js:15
+Error: traversal.js:15
  15:     const w: TreeWalker<*,*> = document.createTreeWalker(document.body);
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createTreeWalker`. Function cannot be called on any member of intersection type
  15:     const w: TreeWalker<*,*> = document.createTreeWalker(document.body);
@@ -976,13 +976,13 @@ traversal.js:15
   940:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: void): TreeWalker<RootNodeT, Node>;
                                      ^^^^ Node. See lib: <BUILTINS>/dom.js:940
 
-traversal.js:21
+Error: traversal.js:21
  21:       filter.acceptNode(document.body);
                              ^^^^^^^^^^^^^ null. This type is incompatible with the expected param type of
 3187: type NodeFilterCallback = (node: Node) =>
                                        ^^^^ Node. See lib: <BUILTINS>/dom.js:3187
 
-traversal.js:25
+Error: traversal.js:25
  25:     document.createNodeIterator(document.body); // valid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createNodeIterator`. Function cannot be called on any member of intersection type
  25:     document.createNodeIterator(document.body); // valid
@@ -1332,7 +1332,7 @@ traversal.js:25
   939:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: void): NodeIterator<RootNodeT, Node>;
                                        ^^^^ Node. See lib: <BUILTINS>/dom.js:939
 
-traversal.js:26
+Error: traversal.js:26
  26:     document.createNodeIterator({}); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createNodeIterator`. Function cannot be called on any member of intersection type
  26:     document.createNodeIterator({}); // invalid
@@ -1682,7 +1682,7 @@ traversal.js:26
   939:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: void): NodeIterator<RootNodeT, Node>;
                                        ^^^^ Node. See lib: <BUILTINS>/dom.js:939
 
-traversal.js:29
+Error: traversal.js:29
  29:     document.createTreeWalker(document.body);
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createTreeWalker`. Function cannot be called on any member of intersection type
  29:     document.createTreeWalker(document.body);
@@ -2032,7 +2032,7 @@ traversal.js:29
   940:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: void): TreeWalker<RootNodeT, Node>;
                                      ^^^^ Node. See lib: <BUILTINS>/dom.js:940
 
-traversal.js:30
+Error: traversal.js:30
  30:     document.createTreeWalker({}); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createTreeWalker`. Function cannot be called on any member of intersection type
  30:     document.createTreeWalker({}); // invalid
@@ -2382,7 +2382,7 @@ traversal.js:30
   940:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: void): TreeWalker<RootNodeT, Node>;
                                      ^^^^ Node. See lib: <BUILTINS>/dom.js:940
 
-traversal.js:35
+Error: traversal.js:35
  35:     const i = document.createNodeIterator(_root, NodeFilter.SHOW_ELEMENT);
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createNodeIterator`. Function cannot be called on any member of intersection type
  35:     const i = document.createNodeIterator(_root, NodeFilter.SHOW_ELEMENT);
@@ -2732,13 +2732,13 @@ traversal.js:35
   939:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: void): NodeIterator<RootNodeT, Node>;
                                        ^^^^ Node. See lib: <BUILTINS>/dom.js:939
 
-traversal.js:42
+Error: traversal.js:42
  42:     const _root = document.body.attributes[0];
                                      ^^^^^^^^^^ property `attributes`. Property cannot be accessed on possibly null value
  42:     const _root = document.body.attributes[0];
                        ^^^^^^^^^^^^^ null
 
-traversal.js:51
+Error: traversal.js:51
  51:     const i = document.createNodeIterator(_root, NodeFilter.SHOW_TEXT);
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createNodeIterator`. Function cannot be called on any member of intersection type
  51:     const i = document.createNodeIterator(_root, NodeFilter.SHOW_TEXT);
@@ -3088,7 +3088,7 @@ traversal.js:51
   939:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: void): NodeIterator<RootNodeT, Node>;
                                        ^^^^ Node. See lib: <BUILTINS>/dom.js:939
 
-traversal.js:83
+Error: traversal.js:83
  83:     const i = document.createNodeIterator(_root, NodeFilter.SHOW_ALL);
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createNodeIterator`. Function cannot be called on any member of intersection type
  83:     const i = document.createNodeIterator(_root, NodeFilter.SHOW_ALL);
@@ -3438,7 +3438,7 @@ traversal.js:83
   939:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: void): NodeIterator<RootNodeT, Node>;
                                        ^^^^ Node. See lib: <BUILTINS>/dom.js:939
 
-traversal.js:91
+Error: traversal.js:91
  91:     const w = document.createTreeWalker(_root, NodeFilter.SHOW_ELEMENT);
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createTreeWalker`. Function cannot be called on any member of intersection type
  91:     const w = document.createTreeWalker(_root, NodeFilter.SHOW_ELEMENT);
@@ -3788,13 +3788,13 @@ traversal.js:91
   940:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: void): TreeWalker<RootNodeT, Node>;
                                      ^^^^ Node. See lib: <BUILTINS>/dom.js:940
 
-traversal.js:103
+Error: traversal.js:103
 103:     const _root = document.body.attributes[0];
                                      ^^^^^^^^^^ property `attributes`. Property cannot be accessed on possibly null value
 103:     const _root = document.body.attributes[0];
                        ^^^^^^^^^^^^^ null
 
-traversal.js:117
+Error: traversal.js:117
 117:     const w = document.createTreeWalker(_root, NodeFilter.SHOW_TEXT);
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createTreeWalker`. Function cannot be called on any member of intersection type
 117:     const w = document.createTreeWalker(_root, NodeFilter.SHOW_TEXT);
@@ -4144,7 +4144,7 @@ traversal.js:117
   940:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: void): TreeWalker<RootNodeT, Node>;
                                      ^^^^ Node. See lib: <BUILTINS>/dom.js:940
 
-traversal.js:169
+Error: traversal.js:169
 169:     const w = document.createTreeWalker(_root, NodeFilter.SHOW_ALL);
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createTreeWalker`. Function cannot be called on any member of intersection type
 169:     const w = document.createTreeWalker(_root, NodeFilter.SHOW_ALL);
@@ -4494,7 +4494,7 @@ traversal.js:169
   940:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: void): TreeWalker<RootNodeT, Node>;
                                      ^^^^ Node. See lib: <BUILTINS>/dom.js:940
 
-traversal.js:182
+Error: traversal.js:182
 182:     document.createNodeIterator(document.body, -1, node => NodeFilter.FILTER_ACCEPT); // valid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createNodeIterator`. Function cannot be called on any member of intersection type
 182:     document.createNodeIterator(document.body, -1, node => NodeFilter.FILTER_ACCEPT); // valid
@@ -4844,7 +4844,7 @@ traversal.js:182
   939:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: void): NodeIterator<RootNodeT, Node>;
                                        ^^^^ Node. See lib: <BUILTINS>/dom.js:939
 
-traversal.js:183
+Error: traversal.js:183
 183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createNodeIterator`. Function cannot be called on any member of intersection type
 183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
@@ -5194,7 +5194,7 @@ traversal.js:183
   939:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: void): NodeIterator<RootNodeT, Node>;
                                        ^^^^ Node. See lib: <BUILTINS>/dom.js:939
 
-traversal.js:183
+Error: traversal.js:183
 183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
                                                                 ^^^^^^^^ string. This type is incompatible with
       v--------------------------------
@@ -5227,7 +5227,7 @@ traversal.js:183
   3190: typeof NodeFilter.FILTER_SKIP;
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3190
 
-traversal.js:184
+Error: traversal.js:184
 184:     document.createNodeIterator(document.body, -1, { acceptNode: node => NodeFilter.FILTER_ACCEPT }); // valid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createNodeIterator`. Function cannot be called on any member of intersection type
 184:     document.createNodeIterator(document.body, -1, { acceptNode: node => NodeFilter.FILTER_ACCEPT }); // valid
@@ -5577,7 +5577,7 @@ traversal.js:184
   939:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: void): NodeIterator<RootNodeT, Node>;
                                        ^^^^ Node. See lib: <BUILTINS>/dom.js:939
 
-traversal.js:185
+Error: traversal.js:185
 185:     document.createNodeIterator(document.body, -1, { acceptNode: node => 'accept' }); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createNodeIterator`. Function cannot be called on any member of intersection type
 185:     document.createNodeIterator(document.body, -1, { acceptNode: node => 'accept' }); // invalid
@@ -5927,7 +5927,7 @@ traversal.js:185
   939:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: void): NodeIterator<RootNodeT, Node>;
                                        ^^^^ Node. See lib: <BUILTINS>/dom.js:939
 
-traversal.js:185
+Error: traversal.js:185
 185:     document.createNodeIterator(document.body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                               ^^^^^^^^ string. This type is incompatible with
       v--------------------------------
@@ -5960,7 +5960,7 @@ traversal.js:185
   3190: typeof NodeFilter.FILTER_SKIP;
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3190
 
-traversal.js:186
+Error: traversal.js:186
 186:     document.createNodeIterator(document.body, -1, {}); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createNodeIterator`. Function cannot be called on any member of intersection type
 186:     document.createNodeIterator(document.body, -1, {}); // invalid
@@ -6360,7 +6360,7 @@ traversal.js:186
   939:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: void): NodeIterator<RootNodeT, Node>;
                                                                           ^^^^ undefined. See lib: <BUILTINS>/dom.js:939
 
-traversal.js:186
+Error: traversal.js:186
 186:     document.createNodeIterator(document.body, -1, {}); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createNodeIterator`. Function cannot be called on any member of intersection type
 186:     document.createNodeIterator(document.body, -1, {}); // invalid
@@ -6710,7 +6710,7 @@ traversal.js:186
   939:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: void): NodeIterator<RootNodeT, Node>;
                                        ^^^^ Node. See lib: <BUILTINS>/dom.js:939
 
-traversal.js:189
+Error: traversal.js:189
 189:     document.createTreeWalker(document.body, -1, node => NodeFilter.FILTER_ACCEPT); // valid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createTreeWalker`. Function cannot be called on any member of intersection type
 189:     document.createTreeWalker(document.body, -1, node => NodeFilter.FILTER_ACCEPT); // valid
@@ -7060,7 +7060,7 @@ traversal.js:189
   940:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: void): TreeWalker<RootNodeT, Node>;
                                      ^^^^ Node. See lib: <BUILTINS>/dom.js:940
 
-traversal.js:190
+Error: traversal.js:190
 190:     document.createTreeWalker(document.body, -1, node => 'accept'); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createTreeWalker`. Function cannot be called on any member of intersection type
 190:     document.createTreeWalker(document.body, -1, node => 'accept'); // invalid
@@ -7410,7 +7410,7 @@ traversal.js:190
   940:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: void): TreeWalker<RootNodeT, Node>;
                                      ^^^^ Node. See lib: <BUILTINS>/dom.js:940
 
-traversal.js:190
+Error: traversal.js:190
 190:     document.createTreeWalker(document.body, -1, node => 'accept'); // invalid
                                                               ^^^^^^^^ string. This type is incompatible with
       v--------------------------------
@@ -7443,7 +7443,7 @@ traversal.js:190
   3190: typeof NodeFilter.FILTER_SKIP;
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3190
 
-traversal.js:191
+Error: traversal.js:191
 191:     document.createTreeWalker(document.body, -1, { acceptNode: node => NodeFilter.FILTER_ACCEPT }); // valid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createTreeWalker`. Function cannot be called on any member of intersection type
 191:     document.createTreeWalker(document.body, -1, { acceptNode: node => NodeFilter.FILTER_ACCEPT }); // valid
@@ -7793,7 +7793,7 @@ traversal.js:191
   940:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: void): TreeWalker<RootNodeT, Node>;
                                      ^^^^ Node. See lib: <BUILTINS>/dom.js:940
 
-traversal.js:192
+Error: traversal.js:192
 192:     document.createTreeWalker(document.body, -1, { acceptNode: node => 'accept' }); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createTreeWalker`. Function cannot be called on any member of intersection type
 192:     document.createTreeWalker(document.body, -1, { acceptNode: node => 'accept' }); // invalid
@@ -8143,7 +8143,7 @@ traversal.js:192
   940:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: void): TreeWalker<RootNodeT, Node>;
                                      ^^^^ Node. See lib: <BUILTINS>/dom.js:940
 
-traversal.js:192
+Error: traversal.js:192
 192:     document.createTreeWalker(document.body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                             ^^^^^^^^ string. This type is incompatible with
       v--------------------------------
@@ -8176,7 +8176,7 @@ traversal.js:192
   3190: typeof NodeFilter.FILTER_SKIP;
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3190
 
-traversal.js:193
+Error: traversal.js:193
 193:     document.createTreeWalker(document.body, -1, {}); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createTreeWalker`. Function cannot be called on any member of intersection type
 193:     document.createTreeWalker(document.body, -1, {}); // invalid
@@ -8591,7 +8591,7 @@ traversal.js:193
   940:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: void): TreeWalker<RootNodeT, Node>;
                                                                         ^^^^ undefined. See lib: <BUILTINS>/dom.js:940
 
-traversal.js:193
+Error: traversal.js:193
 193:     document.createTreeWalker(document.body, -1, {}); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createTreeWalker`. Function cannot be called on any member of intersection type
 193:     document.createTreeWalker(document.body, -1, {}); // invalid

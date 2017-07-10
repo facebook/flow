@@ -120,23 +120,25 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         (Path.to_string d.ServerProt.client)
       in
       FlowExitStatus.(exit ~msg Server_client_directory_mismatch)
-    | ServerProt.ERRORS errors ->
+    | ServerProt.ERRORS {errors; warnings} ->
       let error_flags = args.error_flags in
       begin if args.output_json then
-        print_json errors
+        print_json ~errors ~warnings ()
       else if args.from = "vim" || args.from = "emacs" then
-        Errors.Vim_emacs_output.print_errors ~strip_root stdout errors
+        Errors.Vim_emacs_output.print_errors ~strip_root stdout ~errors ~warnings ()
       else
         Errors.Cli_output.print_errors
           ~strip_root
           ~flags:error_flags
           ~out_channel:stdout
-          errors
+          ~errors
+          ~warnings
+          ()
       end;
       FlowExitStatus.(exit Type_error)
     | ServerProt.NO_ERRORS ->
-      if args.output_json
-      then print_json Errors.ErrorSet.empty
+      if args.output_json then
+        print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
     | ServerProt.NOT_COVERED ->

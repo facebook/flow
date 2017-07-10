@@ -71,9 +71,11 @@ module HumanReadable: ClientProtocol = struct
 
 
   let handle_server_response = function
-    | Prot.Errors errors ->
-      let count = Errors.ErrorSet.cardinal errors in
-      print_endline ("Received " ^ (string_of_int count) ^ " errors")
+    | Prot.Errors {errors; warnings} ->
+      let err_count = Errors.ErrorSet.cardinal errors in
+      let warn_count = Errors.ErrorSet.cardinal warnings in
+      print_endline ("Received " ^ (string_of_int err_count) ^ " errors and "
+        ^ (string_of_int warn_count) ^ "warnings")
     | Prot.StartRecheck -> print_endline "Start recheck"
     | Prot.EndRecheck -> print_endline "End recheck"
     | Prot.AutocompleteResult (result, _ (* ignore id *)) -> handle_autocomplete result
@@ -81,9 +83,9 @@ module HumanReadable: ClientProtocol = struct
 end
 
 module VeryUnstable: ClientProtocol = struct
-  let print_errors errors =
+  let print_errors errors warnings =
     let json_errors = Errors.Json_output.full_status_json_of_errors
-      ~strip_root:None ~suppressed_errors:([]) errors in
+      ~strip_root:None ~suppressed_errors:([]) ~errors ~warnings () in
     let json_message = Json_rpc.jsonrpcize_notification "diagnosticsNotification" [json_errors] in
     let json_string = Hh_json.json_to_string json_message in
     Http_lite.write_message stdout json_string;
@@ -108,7 +110,8 @@ module VeryUnstable: ClientProtocol = struct
       |> Http_lite.write_message stdout
 
   let handle_server_response = function
-    | Prot.Errors errors -> print_errors errors
+    | Prot.Errors {errors; warnings} ->
+      print_errors errors warnings
     | Prot.StartRecheck -> print_start_recheck ()
     | Prot.EndRecheck -> print_end_recheck ()
     | Prot.AutocompleteResult (result, id) -> print_autocomplete result id

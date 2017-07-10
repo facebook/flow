@@ -1,10 +1,10 @@
-objmap.js:10
+Error: objmap.js:10
  10: (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
       ^^^^^ string literal `FOO`. Expected string literal `BAR`, got `FOO` instead
  10: (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
               ^^^^^ string literal `BAR`
 
-objmap.js:13
+Error: objmap.js:13
  13:   foo: Promise.resolve(0),
             ^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
 682: declare function $await<T>(p: Promise<T> | T): T;

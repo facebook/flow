@@ -1,4 +1,4 @@
-createclass-callsite.js:20
+Error: createclass-callsite.js:20
  20:         <Hello />
              ^^^^^^^^^ React element `Hello`
                   v
@@ -9,7 +9,7 @@ createclass-callsite.js:20
  20:         <Hello />
              ^^^^^^^^^ props of React element `Hello`
 
-createclass-callsite.js:21
+Error: createclass-callsite.js:21
  21:         <HelloLocal />
              ^^^^^^^^^^^^^^ React element `HelloLocal`
                   v
@@ -20,13 +20,13 @@ createclass-callsite.js:21
  21:         <HelloLocal />
              ^^^^^^^^^^^^^^ props of React element `HelloLocal`
 
-es6class-proptypes-callsite.js:6
+Error: es6class-proptypes-callsite.js:6
   6: class HelloLocal extends React.Component<void, {name: string}, void> {
                                                     ^^^^^^^^^^^^^^ property `name`. Property not found in
  21:         <HelloLocal />
              ^^^^^^^^^^^^^^ props of React element `HelloLocal`
 
-es6class-proptypes-callsite.js:20
+Error: es6class-proptypes-callsite.js:20
  20:         <Hello />
              ^^^^^^^^^ React element `Hello`
   5: class Hello extends React.Component<void, {name: string}, void> {
@@ -34,13 +34,13 @@ es6class-proptypes-callsite.js:20
  20:         <Hello />
              ^^^^^^^^^ props of React element `Hello`
 
-es6class-types-callsite.js:8
+Error: es6class-types-callsite.js:8
   8: class HelloLocal extends React.Component<void, Props, void> {
                                                     ^^^^^ property `name`. Property not found in
  21:         <HelloLocal />
              ^^^^^^^^^^^^^^ props of React element `HelloLocal`
 
-es6class-types-callsite.js:20
+Error: es6class-types-callsite.js:20
  20:         <Hello />
              ^^^^^^^^^ React element `Hello`
   7: class Hello extends React.Component<{}, Props, void>{

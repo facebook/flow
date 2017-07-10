@@ -1,14 +1,14 @@
-function_return.js:7
+Error: function_return.js:7
   7: function f(x): number {
                     ^^^^^^ number. This type is incompatible with an implicitly-returned undefined.
 
-function_return.js:23
+Error: function_return.js:23
  23:   return;
        ^^^^^^^ undefined. This type is incompatible with the expected return type of
  19: function h(x): number {
                     ^^^^^^ number
 
-void.js:12
+Error: void.js:12
  12: (f(true): void); // error: string ~> void
       ^^^^^^^ string. This type is incompatible with
  12: (f(true): void); // error: string ~> void

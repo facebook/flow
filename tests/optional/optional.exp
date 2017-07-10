@@ -1,72 +1,72 @@
-generic.js:1
+Error: generic.js:1
   1: function x<T>(x: T = 0) {}
                           ^ number. This type is incompatible with
   1: function x<T>(x: T = 0) {}
      ^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
 
-generic.js:4
+Error: generic.js:4
   4:   x<T>(x: T = 0) {}
                    ^ number. This type is incompatible with
   4:   x<T>(x: T = 0) {}
        ^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
 
-loop.js:5
+Error: loop.js:5
   5: function f<T:*>(x:T,y?:T) { x = y }
                                      ^ undefined. This type is incompatible with
   5: function f<T:*>(x:T,y?:T) { x = y }
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
 
-nullable.js:17
+Error: nullable.js:17
  17:     x.y++; // should error
          ^^^ null. The operand of an arithmetic operation must be a number.
 
-nullable.js:17
+Error: nullable.js:17
  17:     x.y++; // should error
          ^^^ undefined. The operand of an arithmetic operation must be a number.
 
-nullable.js:23
+Error: nullable.js:23
  23:     x.y++; // should error
          ^^^ null. The operand of an arithmetic operation must be a number.
 
-nullable.js:23
+Error: nullable.js:23
  23:     x.y++; // should error
          ^^^ undefined. The operand of an arithmetic operation must be a number.
 
-nullable.js:29
+Error: nullable.js:29
  29:     x.y++; // should error
          ^^^ null. The operand of an arithmetic operation must be a number.
 
-nullable.js:29
+Error: nullable.js:29
  29:     x.y++; // should error
          ^^^ undefined. The operand of an arithmetic operation must be a number.
 
-nullable.js:35
+Error: nullable.js:35
  35:     x.y++; // should error
          ^^^ null. The operand of an arithmetic operation must be a number.
 
-nullable.js:35
+Error: nullable.js:35
  35:     x.y++; // should error
          ^^^ undefined. The operand of an arithmetic operation must be a number.
 
-optional.js:1
+Error: optional.js:1
   1: function bar(x?,y?) { x * 0; }
                            ^ undefined. The operand of an arithmetic operation must be a number.
 
-optional.js:7
+Error: optional.js:7
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
                   ^ parameter `x`. Missing annotation
 
-optional.js:7
+Error: optional.js:7
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
                                ^ rest parameter `y`. Missing annotation
 
-optional.js:7
+Error: optional.js:7
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
                                                ^ string. This type is incompatible with the expected param type of
   4: var foo:(x?:number)=>void = bar;
                  ^^^^^^ number
 
-optional.js:9
+Error: optional.js:9
   9: qux(0,0); // Error, number ~> string
      ^^^^^^^^ function call
   9: qux(0,0); // Error, number ~> string
@@ -74,7 +74,7 @@ optional.js:9
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
                                   ^^^^^^ string
 
-optional.js:10
+Error: optional.js:10
  10: qux(0,...[42, ""]); // Error, number ~> string
      ^^^^^^^^^^^^^^^^^^ function call
  10: qux(0,...[42, ""]); // Error, number ~> string
@@ -82,19 +82,19 @@ optional.js:10
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
                                   ^^^^^^ string
 
-optional_param2.js:7
+Error: optional_param2.js:7
   7: var j:I<number> = i.map(id => id);
                                    ^^ undefined. This type is incompatible with
   7: var j:I<number> = i.map(id => id);
              ^^^^^^ number
 
-optional_param4.js:12
+Error: optional_param4.js:12
  12: foo(true); // ERROR boolean ~> number
          ^^^^ boolean. This type is incompatible with the expected param type of
   3: function foo(x?: number, ...y: Array<string>): [?number, Array<string>] {
                       ^^^^^^ number
 
-optional_param4.js:13
+Error: optional_param4.js:13
  13: foo(123, true); // ERROR boolean ~> string
      ^^^^^^^^^^^^^^ function call
  13: foo(123, true); // ERROR boolean ~> string
@@ -102,13 +102,13 @@ optional_param4.js:13
   3: function foo(x?: number, ...y: Array<string>): [?number, Array<string>] {
                                           ^^^^^^ string
 
-undefined.js:8
+Error: undefined.js:8
   8:     return x.duck;
                   ^^^^ property `duck`. Property cannot be accessed on possibly undefined value
   8:     return x.duck;
                 ^ undefined
 
-undefined2.js:8
+Error: undefined2.js:8
   8:     return x.duck;
                   ^^^^ property `duck`. Property cannot be accessed on possibly undefined value
   8:     return x.duck;

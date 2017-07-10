@@ -1,4 +1,4 @@
-Bar.js:15
+Error: Bar.js:15
  15:     new Qux().w = "?";
          ^^^^^^^^^^^ assignment of property `w`
  15:     new Qux().w = "?";
@@ -6,35 +6,35 @@ Bar.js:15
  15:     new Qux().w = "?";
          ^^^^^^^^^^^ number
 
-Foo.js:10
+Error: Foo.js:10
  10:     this.x = x;
               ^ property `x`. Property cannot be assigned on possibly undefined value
  10:     this.x = x;
          ^^^^ uninitialized this (expected super constructor call)
 
-Foo.js:13
+Error: Foo.js:13
  13:   foo(y:string,z):number {
                     ^ parameter `z`. Missing annotation
 
-Foo.js:16
+Error: Foo.js:16
  16:     var v = new Bar(y);
                          ^ string. This type is incompatible with the expected param type of
   9:   constructor(y:number) {
                      ^^^^^^ number. See: Bar.js:9
 
-Foo.js:18
+Error: Foo.js:18
  18:     return v.bar(z,u);
                 ^^^^^^^^^^ string. This type is incompatible with the expected return type of
  13:   foo(y:string,z):number {
                        ^^^^^^ number
 
-Foo.js:18
+Error: Foo.js:18
  18:     return v.bar(z,u);
                         ^ number. This type is incompatible with the expected param type of
  14:   bar(z:string,u:string):string {
                       ^^^^^^ string. See: Bar.js:14
 
-Qux.js:9
+Error: Qux.js:9
   9:   fooqux(x:number) { }
                 ^^^^^^ number. This type is incompatible with the expected param type of
  21:   fooqux(x:string) {

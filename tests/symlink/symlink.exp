@@ -1,4 +1,4 @@
-qux.js:2
+Error: qux.js:2
   2: ({ x: "" }: Foo);
       ^^^^^^^^^ object literal. This type is incompatible with
   2: ({ x: "" }: Foo);

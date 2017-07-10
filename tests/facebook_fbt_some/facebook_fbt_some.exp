@@ -1,4 +1,4 @@
-main.js:4
+Error: main.js:4
   4: (<fbt />: string); // Error (the libdef in this test marks fbt as number)
       ^^^^^^^ number. This type is incompatible with
   4: (<fbt />: string); // Error (the libdef in this test marks fbt as number)

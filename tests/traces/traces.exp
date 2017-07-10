@@ -1,4 +1,4 @@
-Traces.js:3
+Error: Traces.js:3
   3: function f0(x) { g0(x) }
                          ^ number. This type is incompatible with the expected param type of
   2: function g0(y:string) { }
@@ -24,7 +24,7 @@ Trace:
   3: function f0(x) { g0(x) }
                          ^ ~> ReposLowerT [parameter `x`]
 
-Traces.js:8
+Error: Traces.js:8
   8: function f1(x, y) { g1(x, y) }
                                ^ number. This type is incompatible with the expected param type of
   7: function g1(a:string, b:string) { }
@@ -50,7 +50,7 @@ Trace:
   8: function f1(x, y) { g1(x, y) }
                                ^ ~> ReposLowerT [parameter `y`]
 
-Traces.js:14
+Error: Traces.js:14
  14: f2(function(x) { return x * x });
                              ^ string. The operand of an arithmetic operation must be a number.
 Trace:
@@ -74,7 +74,7 @@ Trace:
  12: function g2(ylam: (s:string) => number) { }
                           ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
-Traces.js:14
+Error: Traces.js:14
  14: f2(function(x) { return x * x });
                                  ^ string. The operand of an arithmetic operation must be a number.
 Trace:
@@ -98,7 +98,7 @@ Trace:
  12: function g2(ylam: (s:string) => number) { }
                           ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
-Traces.js:19
+Error: Traces.js:19
  19: function double(n) { return n * 2 }
                                  ^ string. The operand of an arithmetic operation must be a number.
 Trace:
@@ -122,7 +122,7 @@ Trace:
  17: function g3(ylam: (s:string) => number) { }
                           ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
-Traces2.js:17
+Error: Traces2.js:17
  17:     return <B bar="hey"/>;
                 ^^^^^^^^^^^^^^ React element `B`
  15:     return <A foo="hey"/>;
@@ -146,7 +146,7 @@ Trace:
  13: function f(b): React.Element<*> {
                     ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, ExtendsT) [extends React$Element] (from [not shown])
 
-Traces2.js:17
+Error: Traces2.js:17
  17:     return <B bar="hey"/>;
                 ^^^^^^^^^^^^^^ React element `B`
  17:     return <B bar="hey"/>;

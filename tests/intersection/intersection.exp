@@ -1,4 +1,4 @@
-pred.js:16
+Error: pred.js:16
  16:     || options.readableObjectMode
             ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `readableObjectMode`. Property cannot be accessed on any member of intersection type
  16:     || options.readableObjectMode
@@ -33,7 +33,7 @@ pred.js:16
    14: function hasObjectMode_bad(options: DuplexStreamOptions): boolean {
                                                                  ^^^^^^^ boolean
 
-test_obj.js:29
+Error: test_obj.js:29
  29: var e: E = c; // error
                 ^ intersection. This type is incompatible with
  29: var e: E = c; // error

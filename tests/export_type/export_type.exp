@@ -1,64 +1,64 @@
-importer.js:11
+Error: importer.js:11
  11: var b: inlinedType1 = 'asdf'; // Error: string ~> number
                            ^^^^^^ string. This type is incompatible with
  11: var b: inlinedType1 = 'asdf'; // Error: string ~> number
             ^^^^^^^^^^^^ number
 
-importer.js:14
+Error: importer.js:14
  14: var d: standaloneType1 = 'asdf'; // Error: string ~> number
                               ^^^^^^ string. This type is incompatible with
  14: var d: standaloneType1 = 'asdf'; // Error: string ~> number
             ^^^^^^^^^^^^^^^ number
 
-importer.js:17
+Error: importer.js:17
  17: var f: talias1 = 'asdf'; // Error: string ~> number
                       ^^^^^^ string. This type is incompatible with
  17: var f: talias1 = 'asdf'; // Error: string ~> number
             ^^^^^^^ number
 
-importer.js:20
+Error: importer.js:20
  20: var h: talias3 = 'asdf'; // Error: string ~> number
                       ^^^^^^ string. This type is incompatible with
  20: var h: talias3 = 'asdf'; // Error: string ~> number
             ^^^^^^^ number
 
-importer.js:24
+Error: importer.js:24
  24: var j: talias4 = 'asdf'; // Error: string ~> number
                       ^^^^^^ string. This type is incompatible with
  24: var j: talias4 = 'asdf'; // Error: string ~> number
             ^^^^^^^ number
 
-importer.js:29
+Error: importer.js:29
  29: var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
                           ^^^^^^ string. This type is incompatible with
  15: export interface IFoo { prop: number };
                                    ^^^^^^ number. See: types_only.js:15
 
-importer.js:32
+Error: importer.js:32
  32: var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
                            ^^ number. This type is incompatible with
   5: export interface IFoo2 { prop: string };
                                     ^^^^^^ string. See: types_only2.js:5
 
-types_only.js:5
+Error: types_only.js:5
   5: var b: inlinedType1 = 'asdf'; // Error: string ~> number
                            ^^^^^^ string. This type is incompatible with
   5: var b: inlinedType1 = 'asdf'; // Error: string ~> number
             ^^^^^^^^^^^^ number
 
-types_only.js:11
+Error: types_only.js:11
  11: export {standaloneType2}; // Error: Missing `type` keyword
              ^^^^^^^^^^^^^^^ standaloneType2. type referenced from value position
  10: type standaloneType2 = number;
           ^^^^^^^^^^^^^^^ type standaloneType2
 
-types_only.js:15
+Error: types_only.js:15
  15: export interface IFoo { prop: number };
                                    ^^^^^^ number. This type is incompatible with
  29: var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
                           ^^^^^^ string. See: importer.js:29
 
-types_only2.js:5
+Error: types_only2.js:5
   5: export interface IFoo2 { prop: string };
                                     ^^^^^^ string. This type is incompatible with
  32: var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}

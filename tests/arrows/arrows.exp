@@ -1,16 +1,16 @@
-advanced_arrows.js:7
+Error: advanced_arrows.js:7
   7: var bad = (x: number): string => x; // Error!
                                       ^ number. This type is incompatible with the expected return type of
   7: var bad = (x: number): string => x; // Error!
                             ^^^^^^ string
 
-advanced_arrows.js:11
+Error: advanced_arrows.js:11
  11: (ident("hi"): number); // Error
       ^^^^^^^^^^^ string. This type is incompatible with
  11: (ident("hi"): number); // Error
                    ^^^^^^ number
 
-arrows.js:7
+Error: arrows.js:7
   7:     images = images.sort((a, b) => (a.width - b.width) + "");
                                         ^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with the expected param type of
 272:     sort(compareFn?: (a: T, b: T) => number): Array<T>;

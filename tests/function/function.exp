@@ -1,10 +1,10 @@
-apply.js:2
+Error: apply.js:2
   2:   return this.length; // expect []/"" this
                    ^^^^^^ property `length`. Property not found in
   2:   return this.length; // expect []/"" this
               ^^^^ Number
 
-apply.js:12
+Error: apply.js:12
  12: test.apply("", [""]); // error: void ~> number
      ^^^^^^^^^^^^^^^^^^^^ call of method `apply`
  12: test.apply("", [""]); // error: void ~> number
@@ -12,31 +12,31 @@ apply.js:12
   1: function test(a: string, b: number): number {
                                  ^^^^^^ number
 
-apply.js:15
+Error: apply.js:15
  15: test.apply("", ["", ""]); // error: string ~> number (2nd arg)
                          ^^ string. This type is incompatible with the expected param type of
   1: function test(a: string, b: number): number {
                                  ^^^^^^ number
 
-apply.js:16
+Error: apply.js:16
  16: test.apply("", [0, 0]); // error: number ~> string (1st arg)
                      ^ number. This type is incompatible with the expected param type of
   1: function test(a: string, b: number): number {
                       ^^^^^^ string
 
-apply.js:21
+Error: apply.js:21
  21: f(["", ""]); // error: string ~> number (2nd arg)
             ^^ string. This type is incompatible with the expected param type of
   1: function test(a: string, b: number): number {
                                  ^^^^^^ number
 
-apply.js:22
+Error: apply.js:22
  22: f([0, 0]); // error: number ~> string (1st arg)
         ^ number. This type is incompatible with the expected param type of
   1: function test(a: string, b: number): number {
                       ^^^^^^ string
 
-apply.js:25
+Error: apply.js:25
  25: test.apply("", "not array"); // error: expect array of args
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
   1: function test(a: string, b: number): number {
@@ -44,67 +44,67 @@ apply.js:25
 291:     @@iterator(): Iterator<string>;
                                 ^^^^^^ string. See lib: <BUILTINS>/core.js:291
 
-apply.js:32
+Error: apply.js:32
  32: (test.call.apply(test, [0, 123, 'foo']): void);
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  32: (test.call.apply(test, [0, 123, 'foo']): void);
                                               ^^^^ undefined
 
-apply.js:32
+Error: apply.js:32
  32: (test.call.apply(test, [0, 123, 'foo']): void);
                                 ^^^ number. This type is incompatible with the expected param type of
   1: function test(a: string, b: number): number {
                       ^^^^^^ string
 
-apply.js:32
+Error: apply.js:32
  32: (test.call.apply(test, [0, 123, 'foo']): void);
                                      ^^^^^ string. This type is incompatible with the expected param type of
   1: function test(a: string, b: number): number {
                                  ^^^^^^ number
 
-apply.js:37
+Error: apply.js:37
  37: (test.bind.apply(test, [0, 123]): (b: number) => number);
                                 ^^^ number. This type is incompatible with the expected param type of
   1: function test(a: string, b: number): number {
                       ^^^^^^ string
 
-apply.js:47
+Error: apply.js:47
  47:   x.apply(x, ['foo', 123]); // error, number !~> string
                           ^^^ number. This type is incompatible with the expected param type of
  45: function test3(x: { (a: string, b: string): void }) {
                                         ^^^^^^ string
 
-bind.js:7
+Error: bind.js:7
   7:     y(123); // error, number !~> string
            ^^^ number. This type is incompatible with the expected param type of
   4:   function(x: (a: string, b: string) => void) {
                                   ^^^^^^ string
 
-bind.js:14
+Error: bind.js:14
  14:     y(123); // error, number !~> string
            ^^^ number. This type is incompatible with the expected param type of
  11:   function(x: { (a: string, b: string): void }) {
                                     ^^^^^^ string
 
-bind.js:19
+Error: bind.js:19
  19:     x.bind(x, 'foo'); // error
            ^^^^ property `bind`. Property not found in
  19:     x.bind(x, 'foo'); // error
          ^ object type
 
-bind.js:25
+Error: bind.js:25
  25:     (x.bind(123): void); // error, number !~> string
                  ^^^ number. This type is incompatible with the expected param type of
  23:   function(x: {(a: string, b: string): void, bind(a: string): void}) {
                                                           ^^^^^^ string
 
-call.js:4
+Error: call.js:4
   4:   return this.length; // expect []/"" this
                    ^^^^^^ property `length`. Property not found in
   4:   return this.length; // expect []/"" this
               ^^^^ Number
 
-call.js:14
+Error: call.js:14
  14: test.call("", ""); // error: void ~> number
      ^^^^^^^^^^^^^^^^^ call of method `call`
  14: test.call("", ""); // error: void ~> number
@@ -112,109 +112,109 @@ call.js:14
   3: function test(a: string, b: number): number {
                                  ^^^^^^ number
 
-call.js:17
+Error: call.js:17
  17: test.call("", "", ""); // error: string ~> number (2nd arg)
                        ^^ string. This type is incompatible with the expected param type of
   3: function test(a: string, b: number): number {
                                  ^^^^^^ number
 
-call.js:18
+Error: call.js:18
  18: test.call("", 0, 0); // error: number ~> string (1st arg)
                    ^ number. This type is incompatible with the expected param type of
   3: function test(a: string, b: number): number {
                       ^^^^^^ string
 
-call.js:21
+Error: call.js:21
  21: function f(args) { test.call("", args[0], args[1]) }
                                       ^^^^^^^ number. This type is incompatible with the expected param type of
   3: function test(a: string, b: number): number {
                       ^^^^^^ string
 
-call.js:21
+Error: call.js:21
  21: function f(args) { test.call("", args[0], args[1]) }
                                                ^^^^^^^ string. This type is incompatible with the expected param type of
   3: function test(a: string, b: number): number {
                                  ^^^^^^ number
 
-call.js:30
+Error: call.js:30
  30: (test.apply.call(test, 0, [0, 'foo']): number);
                                 ^ number. This type is incompatible with the expected param type of
   3: function test(a: string, b: number): number {
                       ^^^^^^ string
 
-call.js:30
+Error: call.js:30
  30: (test.apply.call(test, 0, [0, 'foo']): number);
                                    ^^^^^ string. This type is incompatible with the expected param type of
   3: function test(a: string, b: number): number {
                                  ^^^^^^ number
 
-call.js:40
+Error: call.js:40
  40:   x.call(x, 'foo', 123); // error, number !~> string
                         ^^^ number. This type is incompatible with the expected param type of
  38: function test3(x: { (a: string, b: string): void }) {
                                         ^^^^^^ string
 
-function.js:29
+Error: function.js:29
  29:   var a: number = x; // Error
                        ^ function type. This type is incompatible with
  29:   var a: number = x; // Error
               ^^^^^^ number
 
-function.js:30
+Error: function.js:30
  30:   var b: string = x; // Error
                        ^ function type. This type is incompatible with
  30:   var b: string = x; // Error
               ^^^^^^ string
 
-function.js:31
+Error: function.js:31
  31:   var c: Function = y; // Object is not a Function
                          ^ object type. This type is incompatible with
  31:   var c: Function = y; // Object is not a Function
               ^^^^^^^^ function type
 
-function.js:37
+Error: function.js:37
  37:     (x.length: void); // error, it's a number
           ^^^^^^^^ number. This type is incompatible with
  37:     (x.length: void); // error, it's a number
                     ^^^^ undefined
 
-function.js:38
+Error: function.js:38
  38:     (y.length: void); // error, it's a number
           ^^^^^^^^ number. This type is incompatible with
  38:     (y.length: void); // error, it's a number
                     ^^^^ undefined
 
-function.js:39
+Error: function.js:39
  39:     (z.length: void); // error, it's a number
           ^^^^^^^^ number. This type is incompatible with
  39:     (z.length: void); // error, it's a number
                     ^^^^ undefined
 
-function.js:41
+Error: function.js:41
  41:     (x.name: void); // error, it's a string
           ^^^^^^ string. This type is incompatible with
  41:     (x.name: void); // error, it's a string
                   ^^^^ undefined
 
-function.js:42
+Error: function.js:42
  42:     (y.name: void); // error, it's a string
           ^^^^^^ string. This type is incompatible with
  42:     (y.name: void); // error, it's a string
                   ^^^^ undefined
 
-function.js:43
+Error: function.js:43
  43:     (z.name: void); // error, it's a string
           ^^^^^^ string. This type is incompatible with
  43:     (z.name: void); // error, it's a string
                   ^^^^ undefined
 
-function.js:48
+Error: function.js:48
  48:     x.length = 'foo'; // error, it's a number
                     ^^^^^ string. This type is incompatible with
 102:     length: number;
                  ^^^^^^ number. See lib: <BUILTINS>/core.js:102
 
-function.js:49
+Error: function.js:49
  49:     y.length = 'foo'; // error, it's a number
          ^^^^^^^^ assignment of property `length`
  49:     y.length = 'foo'; // error, it's a number
@@ -222,7 +222,7 @@ function.js:49
  49:     y.length = 'foo'; // error, it's a number
          ^^^^^^^^ number
 
-function.js:50
+Error: function.js:50
  50:     z.length = 'foo'; // error, it's a number
          ^^^^^^^^ assignment of property `length`
  50:     z.length = 'foo'; // error, it's a number
@@ -230,13 +230,13 @@ function.js:50
  50:     z.length = 'foo'; // error, it's a number
          ^^^^^^^^ number
 
-function.js:52
+Error: function.js:52
  52:     x.name = 123; // error, it's a string
                   ^^^ number. This type is incompatible with
 103:     name: string;
                ^^^^^^ string. See lib: <BUILTINS>/core.js:103
 
-function.js:53
+Error: function.js:53
  53:     y.name = 123; // error, it's a string
          ^^^^^^ assignment of property `name`
  53:     y.name = 123; // error, it's a string
@@ -244,7 +244,7 @@ function.js:53
  53:     y.name = 123; // error, it's a string
          ^^^^^^ string
 
-function.js:54
+Error: function.js:54
  54:     z.name = 123; // error, it's a string
          ^^^^^^ assignment of property `name`
  54:     z.name = 123; // error, it's a string
@@ -252,31 +252,31 @@ function.js:54
  54:     z.name = 123; // error, it's a string
          ^^^^^^ string
 
-rest.js:36
+Error: rest.js:36
  36:   return xs.pop(); // Error - no bound on T
               ^^^^^^^^ call of method `pop`. Method cannot be called on
  36:   return xs.pop(); // Error - no bound on T
               ^^ T
 
-rest.js:38
+Error: rest.js:38
  38: function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
                                           ^^^^^ Rest params are always arrays. This type is incompatible with
  38: function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
                                ^^^^^^ string
 
-rest.js:53
+Error: rest.js:53
  53: (empty_rest(): empty); // Error Array ~> empty
       ^^^^^^^^^^^^ rest parameter array of function call. This type is incompatible with
  53: (empty_rest(): empty); // Error Array ~> empty
                     ^^^^^ empty
 
-rest.js:59
+Error: rest.js:59
  59:     return args; // Error: Array ~> number
                 ^^^^ rest parameter array of function type. This type is incompatible with the expected return type of
  57: ): (...args: Args) => number {
                            ^^^^^^ number
 
-rest.js:64
+Error: rest.js:64
  64: requires_first_param(); // Error: missing first arg
      ^^^^^^^^^^^^^^^^^^^^^^ function call
  64: requires_first_param(); // Error: missing first arg
@@ -284,7 +284,7 @@ rest.js:64
  63: function requires_first_param(x: number, ...rest: Array<number>): void {}
                                       ^^^^^^ number
 
-rest_type.js:15
+Error: rest_type.js:15
  15:   f(123); // Error - number ~> array - luckily this errors
        ^^^^^^ function call
  14: function test_unbound_rest(f: <T>(x: T, ...xs: T) => void) {
@@ -292,7 +292,7 @@ rest_type.js:15
  15:   f(123); // Error - number ~> array - luckily this errors
          ^^^ number
 
-rest_type.js:20
+Error: rest_type.js:20
  20:   f('hello'); // Error - string ~> array - luckily this errors
        ^^^^^^^^^^ function call
  18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
@@ -300,7 +300,7 @@ rest_type.js:20
  18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
                                   ^^^^^^ string
 
-rest_type.js:20
+Error: rest_type.js:20
  20:   f('hello'); // Error - string ~> array - luckily this errors
        ^^^^^^^^^^ function call
  20:   f('hello'); // Error - string ~> array - luckily this errors
@@ -308,7 +308,7 @@ rest_type.js:20
  18: type string_rest_t = (...xs: string) => void; // Should be error but no way to check yet :(
                                   ^^^^^^ string
 
-rest_type.js:31
+Error: rest_type.js:31
  31: ((f: empty_rest) => (f(): empty)); // Error Array ~> empty
                           ^^^ rest parameter array of function call. This type is incompatible with
  31: ((f: empty_rest) => (f(): empty)); // Error Array ~> empty

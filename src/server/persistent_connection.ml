@@ -28,8 +28,8 @@ let send_message message connection =
 let send_ready connection =
   Marshal_tools.to_fd_with_preamble connection.outfd ()
 
-let send_errors errors connection =
-  send_message (Prot.Errors errors) connection
+let send_errors ~errors ~warnings connection =
+  send_message (Prot.Errors {errors; warnings}) connection
 
 let send_single_start_recheck connection =
   send_message (Prot.StartRecheck) connection
@@ -68,15 +68,16 @@ let client_of_fd connections fd =
 
 let get_subscribed_connections = List.filter (fun c -> c.subscribed)
 
-let update_clients connections errors =
+let update_clients connections ~errors ~warnings =
   let error_count = Errors.ErrorSet.cardinal errors in
+  let warning_count = Errors.ErrorSet.cardinal warnings in
   let subscribed_connections = get_subscribed_connections connections in
   let subscribed_client_count = List.length subscribed_connections in
   let all_client_count = List.length connections in
   Hh_logger.info
-    "sending %d errors to %d subscribed clients (of %d total)"
-    error_count subscribed_client_count all_client_count;
-  List.iter (send_errors errors) subscribed_connections
+    "sending %d errors and %d warnings to %d subscribed clients (of %d total)"
+    error_count warning_count subscribed_client_count all_client_count;
+  List.iter (send_errors ~errors ~warnings) subscribed_connections
 
 let send_start_recheck connections =
   connections
@@ -97,13 +98,13 @@ let rec modify_item lst item f = match lst with
       else
         hd::(modify_item tl item f)
 
-let subscribe_client connections client current_errors =
+let subscribe_client connections client ~current_errors ~current_warnings =
   Hh_logger.info "Subscribing client to push diagnostics";
   if client.subscribed then
     (* noop *)
     connections
   else begin
-    send_errors current_errors client;
+    send_errors ~errors:current_errors ~warnings:current_warnings client;
     modify_item connections client (fun c -> { c with subscribed = true })
   end
 

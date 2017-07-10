@@ -292,21 +292,24 @@ let typecheck
     | Some conns ->
         let open Errors in
         let current_errors = ref ErrorSet.empty in
+        let current_warnings = ref ErrorSet.empty in
         let suppressions = Error_suppressions.union_suppressions suppressions in
         let lint_settings = SuppressionMap.union_settings lint_settings in
-        function lazy results ->
+        function lazy new_errors ->
           let new_errors = List.fold_left
             (fun acc (_, errs) -> Errors.ErrorSet.union acc errs)
             Errors.ErrorSet.empty
-            results
+            new_errors
           in
-          let new_errors, _, _ =
+          let new_errors, new_warnings, _, _ =
             Error_suppressions.filter_suppressed_errors suppressions lint_settings new_errors
           in
           let new_errors = ErrorSet.diff new_errors !current_errors in
+          let new_warnings = ErrorSet.diff new_warnings !current_warnings in
           current_errors := ErrorSet.union new_errors !current_errors;
-          if not (ErrorSet.is_empty new_errors) then
-            Persistent_connection.update_clients conns new_errors
+          current_warnings := ErrorSet.union new_warnings !current_warnings;
+          if not (ErrorSet.is_empty new_errors) || not (ErrorSet.is_empty new_warnings) then
+            Persistent_connection.update_clients conns ~errors:new_errors ~warnings:new_warnings
   in
 
   let () =
@@ -486,15 +489,11 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
       (* Filter out suppressed errors *)
       let error_suppressions = Context.error_suppressions cx in
       let lint_settings = Context.lint_settings cx in
-      let errors = Errors.ErrorSet.fold (fun err errors ->
-        let suppressed, _, _ =
-          Error_suppressions.check err lint_settings error_suppressions in
-        if not suppressed
-        then Errors.ErrorSet.add err errors
-        else errors
-      ) (Context.errors cx) errors in
+      let errors = Context.errors cx in
+      let errors, warnings, _, _ =
+        Error_suppressions.filter_suppressed_errors error_suppressions lint_settings errors in
 
-      profiling, Some cx, errors, info
+      profiling, Some cx, errors, warnings, info
 
   | Parsing_service_js.Parse_fail fails ->
       let errors = match fails with
@@ -507,13 +506,13 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
             Errors.ErrorSet.add err errors
           ) errors errs
       in
-      profiling, None, errors, info
+      profiling, None, errors, Errors.ErrorSet.empty, info
 
   | Parsing_service_js.Parse_skip
      (Parsing_service_js.Skip_non_flow_file
     | Parsing_service_js.Skip_resource_file) ->
       (* should never happen *)
-      profiling, None, errors, info
+      profiling, None, errors, Errors.ErrorSet.empty, info
 
 
 let init_package_heap ~options ~profiling parsed =
@@ -614,7 +613,8 @@ let recheck ~options ~workers ~updates env =
       let error_set: Errors.ErrorSet.t =
         FilenameMap.fold (fun _ -> Errors.ErrorSet.union) new_local_errors Errors.ErrorSet.empty
       in
-      Persistent_connection.update_clients env.ServerEnv.connections error_set;
+      Persistent_connection.update_clients env.ServerEnv.connections
+        ~errors:error_set ~warnings:Errors.ErrorSet.empty
     in
     let local_errors = merge_error_maps new_local_errors errors.ServerEnv.local_errors in
     { errors with ServerEnv.local_errors }

@@ -1,11 +1,11 @@
 Without --include-suppressed
-test.js:3
+Error: test.js:3
   3: (123: string); // Normal error
       ^^^ number. This type is incompatible with
   3: (123: string); // Normal error
            ^^^^^^ string
 
-test.js:8
+Error: test.js:8
   8: // $FlowFixMe - unused suppression comment
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
@@ -14,19 +14,19 @@ Found 2 errors
 
 
 With --include-suppressed
-test.js:3
+Error: test.js:3
   3: (123: string); // Normal error
       ^^^ number. This type is incompatible with
   3: (123: string); // Normal error
            ^^^^^^ string
 
-test.js:6
+Error: test.js:6
   6: (123: string); // Suppressed error
       ^^^ number. This type is incompatible with
   6: (123: string); // Suppressed error
            ^^^^^^ string
 
-test.js:8
+Error: test.js:8
   8: // $FlowFixMe - unused suppression comment
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 

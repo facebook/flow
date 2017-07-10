@@ -1,184 +1,184 @@
-hoisted.js:10
+Error: hoisted.js:10
  10:   f(); // error, possibly undefined
        ^^^ function call. Function cannot be called on possibly undefined value
  10:   f(); // error, possibly undefined
        ^ possibly uninitialized variable
 
-hoisted.js:17
+Error: hoisted.js:17
  17:   f(); // error, possibly undefined
        ^^^ function call. Function cannot be called on possibly undefined value
  17:   f(); // error, possibly undefined
        ^ possibly uninitialized variable
 
-hoisted.js:31
+Error: hoisted.js:31
  31:   f(); // error, possibly undefined
        ^^^ function call. Function cannot be called on possibly undefined value
  31:   f(); // error, possibly undefined
        ^ uninitialized variable
 
-hoisted.js:38
+Error: hoisted.js:38
  38:   f(); // error, possibly undefined
        ^^^ function call. Function cannot be called on possibly undefined value
  38:   f(); // error, possibly undefined
        ^ possibly uninitialized variable
 
-hoisted.js:45
+Error: hoisted.js:45
  45:   f(); // error, possibly undefined
        ^^^ function call. Function cannot be called on possibly undefined value
  45:   f(); // error, possibly undefined
        ^ possibly uninitialized variable
 
-hoisted2.js:17
+Error: hoisted2.js:17
  17:   var y:number = x; // error
                       ^ uninitialized variable. This type is incompatible with
  17:   var y:number = x; // error
              ^^^^^^ number
 
-hoisted2.js:33
+Error: hoisted2.js:33
  33:     var y:number = x; // error
                         ^ uninitialized variable. This type is incompatible with
  33:     var y:number = x; // error
                ^^^^^^ number
 
-hoisted2.js:39
+Error: hoisted2.js:39
  39:   var y:number = x; // error
                       ^ uninitialized variable. This type is incompatible with
  39:   var y:number = x; // error
              ^^^^^^ number
 
-hoisted2.js:50
+Error: hoisted2.js:50
  50:   var y:number = x; // error
                       ^ possibly uninitialized variable. This type is incompatible with
  50:   var y:number = x; // error
              ^^^^^^ number
 
-hoisted2.js:69
+Error: hoisted2.js:69
  69:   var y:number = x; // error, possibly uninitialized
                       ^ possibly uninitialized variable. This type is incompatible with
  69:   var y:number = x; // error, possibly uninitialized
              ^^^^^^ number
 
-hoisted2.js:94
+Error: hoisted2.js:94
  94:   var y:number = x; // error, possibly uninitialized
                       ^ possibly uninitialized variable. This type is incompatible with
  94:   var y:number = x; // error, possibly uninitialized
              ^^^^^^ number
 
-hoisted2.js:124
+Error: hoisted2.js:124
 124:   var y:number = x; // error
                       ^ uninitialized variable. This type is incompatible with
 124:   var y:number = x; // error
              ^^^^^^ number
 
-hoisted2.js:137
+Error: hoisted2.js:137
 137:   var y:number = x; // error
                       ^ possibly uninitialized variable. This type is incompatible with
 137:   var y:number = x; // error
              ^^^^^^ number
 
-hoisted2.js:146
+Error: hoisted2.js:146
 146:       var y:number = x; // error
                           ^ possibly uninitialized variable. This type is incompatible with
 146:       var y:number = x; // error
                  ^^^^^^ number
 
-hoisted2.js:160
+Error: hoisted2.js:160
 160:   var y:number = x; // error
                       ^ uninitialized variable. This type is incompatible with
 160:   var y:number = x; // error
              ^^^^^^ number
 
-hoisted2.js:171
+Error: hoisted2.js:171
 171:   var y:number = x; // error
                       ^ possibly uninitialized variable. This type is incompatible with
 171:   var y:number = x; // error
              ^^^^^^ number
 
-hoisted2.js:184
+Error: hoisted2.js:184
 184:   var y:number = x; // error
                       ^ uninitialized variable. This type is incompatible with
 184:   var y:number = x; // error
              ^^^^^^ number
 
-hoisted2.js:208
+Error: hoisted2.js:208
 208:   var y:number = x; // error
                       ^ uninitialized variable. This type is incompatible with
 208:   var y:number = x; // error
              ^^^^^^ number
 
-hoisted2.js:219
+Error: hoisted2.js:219
 219:   var y:number = x; // error
                       ^ uninitialized variable. This type is incompatible with
 219:   var y:number = x; // error
              ^^^^^^ number
 
-hoisted2.js:232
+Error: hoisted2.js:232
 232:   var y:number = x; // error
                       ^ uninitialized variable. This type is incompatible with
 232:   var y:number = x; // error
              ^^^^^^ number
 
-hoisted2.js:243
+Error: hoisted2.js:243
 243:   var y:number = x; // error
                       ^ possibly uninitialized variable. This type is incompatible with
 243:   var y:number = x; // error
              ^^^^^^ number
 
-hoisted2.js:256
+Error: hoisted2.js:256
 256:   var y:number = x; // error
                       ^ uninitialized variable. This type is incompatible with
 256:   var y:number = x; // error
              ^^^^^^ number
 
-hoisted2.js:267
+Error: hoisted2.js:267
 267:   var y:number = x; // error
                       ^ possibly uninitialized variable. This type is incompatible with
 267:   var y:number = x; // error
              ^^^^^^ number
 
-let.js:17
+Error: let.js:17
  17:   let z:number = x;   // error
                       ^ uninitialized variable. This type is incompatible with
  17:   let z:number = x;   // error
              ^^^^^^ number
 
-let.js:24
+Error: let.js:24
  24:   let x = x;  // 'x' not initialized!
                ^ x. let referenced before declaration, or after skipped declaration
  24:   let x = x;  // 'x' not initialized!
            ^ let x
 
-let.js:33
+Error: let.js:33
  33:   var y:number = x; // error, possibly uninitialized
                       ^ possibly uninitialized variable. This type is incompatible with
  33:   var y:number = x; // error, possibly uninitialized
              ^^^^^^ number
 
-let.js:58
+Error: let.js:58
  58:   var y:number = x; // error, possibly uninitialized
                       ^ possibly uninitialized variable. This type is incompatible with
  58:   var y:number = x; // error, possibly uninitialized
              ^^^^^^ number
 
-let.js:83
+Error: let.js:83
  83:       let y:number = x; // error, skipped declaration
                           ^ x. let referenced before declaration, or after skipped declaration
  81:       let x:number;
                ^ let x
 
-let.js:93
+Error: let.js:93
  93:   var y:number = x; // error
                       ^ possibly uninitialized variable. This type is incompatible with
  93:   var y:number = x; // error
              ^^^^^^ number
 
-let.js:111
+Error: let.js:111
 111:   var y:number = x; // error
                       ^ possibly uninitialized variable. This type is incompatible with
 111:   var y:number = x; // error
              ^^^^^^ number
 
-let.js:120
+Error: let.js:120
 120:   var y:number = x; // error
                       ^ possibly uninitialized variable. This type is incompatible with
 120:   var y:number = x; // error

@@ -11,17 +11,21 @@
 (* Supports O(log(n)) queries to get the relevant suppression for a loc. *)
 type t
 
-(* Given a filename and a settings, generate a suppression map that spplies those
+(* Given a filename and a settings, generate a suppression map that applies those
  * settings across the entire file. *)
 val global_settings: Loc.filename -> LintSettings.t -> t
+(* Given a filename, generate a suppression map that applies the default settings
+ * across the entire file. *)
+val default_settings: Loc.filename -> t
 (* This isn't a particularly valid suppression map, but it's fine as long as
- * no-one tries to use it. (And even then it shouldn't break; it'll just make
- * no sense.) *)
+ * no-one tries to use it. *)
 val invalid_default: t
 (* Gets the lint settings that apply to a certain location in the code. To
  * resolve ambiguity, this looks at the location of the first character in the
  * provided location. *)
 val settings_at_loc: Loc.t -> t -> LintSettings.t
+
+val get_state: LintSettings.lint_kind -> Loc.t -> t -> LintSettings.lint_state
 
 val is_suppressed: LintSettings.lint_kind -> Loc.t -> t -> bool
 

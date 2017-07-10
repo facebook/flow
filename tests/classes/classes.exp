@@ -1,70 +1,70 @@
-A.js:2
+Error: A.js:2
   2:   foo(x:number):void { }
              ^^^^^^ number. This type is incompatible with the expected param type of
   4:   foo(x:string):void { }
              ^^^^^^ string. See: C.js:4
 
-B.js:6
+Error: B.js:6
   6: (b.foo: number); // error, number !~> function
       ^^^^^ function. This type is incompatible with
   6: (b.foo: number); // error, number !~> function
              ^^^^^^ number
 
-C.js:8
+Error: C.js:8
   8: (c.foo: number); // error, number !~> function
       ^^^^^ function. This type is incompatible with
   8: (c.foo: number); // error, number !~> function
              ^^^^^^ number
 
-D.js:3
+Error: D.js:3
   3: new E().x
              ^ property `x`. Property not found in
   3: new E().x
      ^^^^^^^ E
 
-class_shapes.js:4
+Error: class_shapes.js:4
   4:   a: string;    // exists in TestClass
           ^^^^^^ string. This type is incompatible with
  27:   a: number;  // conflicts with cast to Foo
           ^^^^^^ number
 
-class_shapes.js:6
+Error: class_shapes.js:6
   6:   c?: ?string;  // exists in TestClass, optional
             ^^^^^^ string. This type is incompatible with
  28:   c: ?number; // conflicts with cast to Foo
            ^^^^^^ number
 
-class_shapes.js:18
+Error: class_shapes.js:18
  18: x.b; // error, TestClass has no b
        ^ property `b`. Property not found in
  18: x.b; // error, TestClass has no b
      ^ TestClass
 
-class_shapes.js:20
+Error: class_shapes.js:20
  20: x.d; // error, TestClass has no d
        ^ property `d`. Property not found in
  20: x.d; // error, TestClass has no d
      ^ TestClass
 
-class_shapes.js:22
+Error: class_shapes.js:22
  22: var y : Foo = x;
              ^^^ property `b`. Property not found in
  22: var y : Foo = x;
                    ^ TestClass
 
-class_shapes.js:27
+Error: class_shapes.js:27
  27:   a: number;  // conflicts with cast to Foo
           ^^^^^^ number. This type is incompatible with
   4:   a: string;    // exists in TestClass
           ^^^^^^ string
 
-class_shapes.js:28
+Error: class_shapes.js:28
  28:   c: ?number; // conflicts with cast to Foo
            ^^^^^^ number. This type is incompatible with
   6:   c?: ?string;  // exists in TestClass, optional
             ^^^^^^ string
 
-class_shapes.js:35
+Error: class_shapes.js:35
  35: var w : Foo = z;
                    ^ Test2Class. This type is incompatible with
  35: var w : Foo = z;
@@ -75,7 +75,7 @@ class_shapes.js:35
      31:   b: number;  // conflicts with cast to Foo
               ^^^^^^ number
 
-class_shapes.js:35
+Error: class_shapes.js:35
  35: var w : Foo = z;
                    ^ Test2Class. This type is incompatible with
  35: var w : Foo = z;
@@ -86,33 +86,33 @@ class_shapes.js:35
       5:   b: string;    // doesn't exist
               ^^^^^^ string
 
-expr.js:14
+Error: expr.js:14
  14: var b = new Baz(); // error: Baz is not a runtime binding in this scope
                  ^^^ identifier `Baz`. Could not resolve name
 
-expr.js:17
+Error: expr.js:17
  17: var c: Qux = new C(); // error: Qux is not a type in this scope
             ^^^ identifier `Qux`. Could not resolve name
 
-expr.js:29
+Error: expr.js:29
  29: var alias1: Alias = new _Alias(); // error: bad pun
                          ^^^^^^^^^^^^ class expr `Alias`. This type is incompatible with
  29: var alias1: Alias = new _Alias(); // error: bad pun
                  ^^^^^ Alias
 
-expr.js:30
+Error: expr.js:30
  30: var alias2: Alias = _Alias.factory(); // error: bad pun
                          ^^^^^^^^^^^^^^^^ class expr `Alias`. This type is incompatible with
  30: var alias2: Alias = _Alias.factory(); // error: bad pun
                  ^^^^^ Alias
 
-loc.js:5
+Error: loc.js:5
   5: class Foo {} // error, shadows type Foo
            ^^^ Foo. name is already bound
   3: type Foo = number
           ^^^ type Foo
 
-statics.js:10
+Error: statics.js:10
  10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
       ^ statics of C. This type is incompatible with
  10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
@@ -123,7 +123,7 @@ statics.js:10
      10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
                 ^^^^^^ number
 
-statics.js:10
+Error: statics.js:10
  10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
       ^ statics of C. This type is incompatible with
  10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
@@ -134,7 +134,7 @@ statics.js:10
       4:   static p: string;
                      ^^^^^^ string
 
-statics.js:13
+Error: statics.js:13
  13: (o: Class<C>); // error, object type incompatible with class type
       ^ object type. This type is incompatible with
  13: (o: Class<C>); // error, object type incompatible with class type

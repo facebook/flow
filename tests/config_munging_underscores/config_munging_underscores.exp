@@ -1,4 +1,4 @@
-commonjs_import.js:3
+Error: commonjs_import.js:3
   3: import {_p} from "./commonjs_export";
              ^^ Named import from module `./commonjs_export`. This module has no named export called `_p`.
 

@@ -1,20 +1,20 @@
-element_type.js:1
+Error: element_type.js:1
   1: type BadArity = $ElementType<number, number, number>;
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Incorrect number of type parameters (expected 2)
 
-element_type.js:7
+Error: element_type.js:7
   7: ('hello world': Arr_Elem);
       ^^^^^^^^^^^^^ string. This type is incompatible with
   7: ('hello world': Arr_Elem);
                      ^^^^^^^^ number
 
-element_type.js:18
+Error: element_type.js:18
  18: ('hello world': Obj_Elem);
       ^^^^^^^^^^^^^ string. This type is incompatible with
  18: ('hello world': Obj_Elem);
                      ^^^^^^^^ number
 
-non_maybe_type.js:5
+Error: non_maybe_type.js:5
   5:   else return 0; // this should be an error
                    ^ number. This type is incompatible with
   3: function foo(x: ?string): $NonMaybeType<?string> {
@@ -44,29 +44,29 @@ non_maybe_type.js:5
     3: function foo(x: ?string): $NonMaybeType<?string> {
                                  ^^^^^^^^^^^^^^^^^^^^^^ string
 
-non_maybe_type.js:10
+Error: non_maybe_type.js:10
  10: (0: $NonMaybeType<null>); // error
       ^ number. This type is incompatible with
  10: (0: $NonMaybeType<null>); // error
          ^^^^^^^^^^^^^^^^^^^ empty
 
-property_type.js:1
+Error: property_type.js:1
   1: type Malformed = $PropertyType<any, number>;
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ expected object type and string literal as arguments to $PropertyType
 
-property_type.js:6
+Error: property_type.js:6
   6: (42: Obj_Prop_x);
       ^^ number. This type is incompatible with
   6: (42: Obj_Prop_x);
           ^^^^^^^^^^ string
 
-property_type.js:10
+Error: property_type.js:10
  10:   else return 0;
                    ^ number. This type is incompatible with the expected return type of
   8: function foo(o: Obj): $PropertyType<Obj, 'x'> {
                            ^^^^^^^^^^^^^^^^^^^^^^^ string
 
-union.js:2
+Error: union.js:2
   2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
                                             ^^^^ boolean. This type is incompatible with
   2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
@@ -88,7 +88,7 @@ union.js:2
     2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
-union.js:4
+Error: union.js:4
   4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
                                                         ^^^^ boolean. This type is incompatible with
   4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string

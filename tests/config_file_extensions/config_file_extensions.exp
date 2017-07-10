@@ -1,4 +1,4 @@
-test.js.es6:6
+Error: test.js.es6:6
   6:   return x * 10;
               ^ string. The operand of an arithmetic operation must be a number.
 

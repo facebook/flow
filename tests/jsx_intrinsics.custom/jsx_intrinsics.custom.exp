@@ -1,4 +1,4 @@
-main.js:12
+Error: main.js:12
  12: var b: React$Node<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `CustomComponent`
  12: var b: React$Node<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
@@ -38,7 +38,7 @@ main.js:12
    12: var b: React$Node<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element
 
-main.js:15
+Error: main.js:15
  15: <div id={42} />; // Error: (`id` prop) number ~> string
      ^^^^^^^^^^^^^^^ props of React element `div`. This type is incompatible with
   5:   div: $JSXIntrinsic<{id: string}>,
@@ -49,7 +49,7 @@ main.js:15
       5:   div: $JSXIntrinsic<{id: string}>,
                                    ^^^^^^ string. See lib: lib/jsx.js:5
 
-main.js:17
+Error: main.js:17
  17: var d: React$Node<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
                                        ^^^^^^^^^^^^^^^^^ React element `div`
  17: var d: React$Node<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
@@ -94,7 +94,7 @@ main.js:17
    17: var d: React$Node<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
                                          ^^^^^^^^^^^^^^^^^ React$Element
 
-strings.js:10
+Error: strings.js:10
  10: <Bad />; // Error: 'bad' not in JSXIntrinsics
      ^^^^^^^ React element `Bad`
   6: var Bad = 'bad';
@@ -102,7 +102,7 @@ strings.js:10
  10: <Bad />; // Error: 'bad' not in JSXIntrinsics
      ^^^^^^^ object type
 
-strings.js:11
+Error: strings.js:11
  11: <Str />; // Error: string ~> keys of JSXIntrinsics
      ^^^^^^^ React element `Str`
   7: var Str: string = 'str';
@@ -110,13 +110,13 @@ strings.js:11
  11: <Str />; // Error: string ~> keys of JSXIntrinsics
      ^^^^^^^ object type
 
-strings.js:14
+Error: strings.js:14
  14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
                          ^^^^^ property `bad`. Property not found in
  14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
-strings.js:15
+Error: strings.js:15
  15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
                          ^^^ some string with unknown value. Property not found in
  15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics

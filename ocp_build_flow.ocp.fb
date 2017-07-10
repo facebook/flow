@@ -361,6 +361,7 @@ begin library "flow-persistent-connection"
   ]
   requires = [
     "flow-common"
+    "flow-common-lints"
     "flow-common-utils"
     "flow-server-utils"
     "flow-services-autocomplete"

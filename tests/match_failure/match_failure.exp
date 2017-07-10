@@ -1,4 +1,4 @@
-enum.js:8
+Error: enum.js:8
   8:   } else if (binary === 2) { // oops
                              ^ number literal `2`. This type is incompatible with
   5: function stringifyBinary(binary: Binary): string {

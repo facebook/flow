@@ -1,34 +1,34 @@
-a.js:6
+Error: a.js:6
   6: (require('./b'): void);
       ^^^^^^^^^^^^^^ string. This type is incompatible with
   6: (require('./b'): void);
                       ^^^^ undefined
 
-a.js:7
+Error: a.js:7
   7: (require('C'): void);
       ^^^^^^^^^^^^ string. This type is incompatible with
   7: (require('C'): void);
                     ^^^^ undefined
 
-b.js:6
+Error: b.js:6
   6: (require('A'): void);
       ^^^^^^^^^^^^ string. This type is incompatible with
   6: (require('A'): void);
                     ^^^^ undefined
 
-b.js:7
+Error: b.js:7
   7: (require('D'): void);
       ^^^^^^^^^^^^ string. This type is incompatible with
   7: (require('D'): void);
                     ^^^^ undefined
 
-c.js:7
+Error: c.js:7
   7: (require('./b'): void);
       ^^^^^^^^^^^^^^ string. This type is incompatible with
   7: (require('./b'): void);
                       ^^^^ undefined
 
-d.js:6
+Error: d.js:6
   6: (require('./b'): void);
       ^^^^^^^^^^^^^^ string. This type is incompatible with
   6: (require('./b'): void);
@@ -36,37 +36,37 @@ d.js:6
 
 
 Found 6 errors
-a.js:6
+Error: a.js:6
   6: (require('./b'): void);
       ^^^^^^^^^^^^^^ string. This type is incompatible with
   6: (require('./b'): void);
                       ^^^^ undefined
 
-a.js:7
+Error: a.js:7
   7: (require('C'): void);
       ^^^^^^^^^^^^ string. This type is incompatible with
   7: (require('C'): void);
                     ^^^^ undefined
 
-b.js:6
+Error: b.js:6
   6: (require('A'): void);
       ^^^^^^^^^^^^ string. This type is incompatible with
   6: (require('A'): void);
                     ^^^^ undefined
 
-b.js:7
+Error: b.js:7
   7: (require('D'): void);
       ^^^^^^^^^^^^ string. This type is incompatible with
   7: (require('D'): void);
                     ^^^^ undefined
 
-c.js:7
+Error: c.js:7
   7: (require('./b'): void);
       ^^^^^^^^^^^^^^ string. This type is incompatible with
   7: (require('./b'): void);
                       ^^^^ undefined
 
-d.js:6
+Error: d.js:6
   6: (require('./b'): void);
       ^^^^^^^^^^^^^^ string. This type is incompatible with
   6: (require('./b'): void);

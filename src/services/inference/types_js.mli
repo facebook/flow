@@ -63,5 +63,6 @@ val typecheck_contents:
   filename ->             (* fake file-/module name *)
   Profiling_js.t *
     Context.t option *
-    Errors.ErrorSet.t *
+    Errors.ErrorSet.t * (* errors *)
+    Errors.ErrorSet.t * (* warnings *)
     Docblock.t

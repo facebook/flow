@@ -1,4 +1,4 @@
-symbol.js:4
+Error: symbol.js:4
   4: var WAT = Symbol('foo', 'bar'); // Error - unused argument
                              ^^^^^ unused function argument
    76:   static (value?:any): Symbol;

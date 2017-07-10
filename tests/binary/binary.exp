@@ -1,48 +1,48 @@
-in.js:27
+Error: in.js:27
  27:     ('foo' in 123); // error
                    ^^^ number. The right-hand side of an `in` expression must be an object or array.
 
-in.js:28
+Error: in.js:28
  28:     ('foo' in 'bar'); // error
                    ^^^^^ string. The right-hand side of an `in` expression must be an object or array.
 
-in.js:29
+Error: in.js:29
  29:     ('foo' in void 0); // error
                    ^^^^^^ undefined. The right-hand side of an `in` expression must be an object or array.
 
-in.js:30
+Error: in.js:30
  30:     ('foo' in null); // error
                    ^^^^ null. The right-hand side of an `in` expression must be an object or array.
 
-in.js:35
+Error: in.js:35
  35:     (null in {}); // error
           ^^^^ null. The left-hand side of an `in` expression must be a string or number.
 
-in.js:36
+Error: in.js:36
  36:     (void 0 in {}); // error
           ^^^^^^ undefined. The left-hand side of an `in` expression must be a string or number.
 
-in.js:37
+Error: in.js:37
  37:     ({} in {}); // error
           ^^ object literal. The left-hand side of an `in` expression must be a string or number.
 
-in.js:38
+Error: in.js:38
  38:     ([] in {}); // error
           ^^ empty array literal. The left-hand side of an `in` expression must be a string or number.
 
-in.js:39
+Error: in.js:39
  39:     (false in []); // error
           ^^^^^ boolean. The left-hand side of an `in` expression must be a string or number.
 
-in.js:44
+Error: in.js:44
  44:     if ('foo' in 123) {} // error
                       ^^^ number. The right-hand side of an `in` expression must be an object or array.
 
-in.js:45
+Error: in.js:45
  45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
              ^^^^^^ boolean literal `false`. The left-hand side of an `in` expression must be a string or number.
 
-in.js:52
+Error: in.js:52
  52:     ('foo' in y); // error
                    ^ mixed. The right-hand side of an `in` expression must be an object or array.
 

@@ -20,7 +20,7 @@ let mk_loc file line col =
 let type_at_pos ~options ~workers ~env ~client_context ~include_raw file content line col =
   let profiling, cx =
     match Types_js.typecheck_contents ~options ~workers ~env content file with
-    | profiling, Some cx, _, _ -> profiling, cx
+    | profiling, Some cx, _, _, _ -> profiling, cx
     | _  -> failwith "Couldn't parse file"
   in
   let loc = mk_loc file line col in
@@ -79,7 +79,7 @@ let dump_types ~options ~workers ~env ~include_raw ~strip_root file content =
     in
 
   let cx = match Types_js.typecheck_contents ~options ~workers ~env content file with
-  | _, Some cx, _, _ -> cx
+  | _, Some cx, _, _, _ -> cx
   | _  -> failwith "Couldn't parse file" in
 
   Query_types.dump_types printer raw_printer cx
@@ -95,7 +95,7 @@ let coverage ~options ~workers ~env ~force file content =
       Docblock.is_flow docblock
   in
   let cx = match Types_js.typecheck_contents ~options ~workers ~env content file with
-  | _, Some cx, _, _ -> cx
+  | _, Some cx, _, _, _ -> cx
   | _  -> failwith "Couldn't parse file" in
   let types = Query_types.covered_types cx in
   if should_check then
@@ -107,7 +107,7 @@ let coverage ~options ~workers ~env ~force file content =
 let suggest ~options ~workers ~env file region content =
   let cx =
     match Types_js.typecheck_contents ~options ~workers ~env content file with
-    | _, Some cx, _, _ -> cx
+    | _, Some cx, _, _, _ -> cx
     | _  -> failwith "Couldn't parse file" in
   Query_types.fill_types cx
   |> List.sort Pervasives.compare

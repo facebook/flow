@@ -1,18 +1,18 @@
-annot.js:1
+Error: annot.js:1
   1: var A = require('./unknown_class');
                      ^^^^^^^^^^^^^^^^^ ./unknown_class. Required module not found
 
-annot.js:5
+Error: annot.js:5
   5:   bar(x) { }
            ^ parameter `x`. Missing annotation
 
-fun.js:11
+Error: fun.js:11
  11: var x:string = f(0);
                     ^^^^ number. This type is incompatible with
  11: var x:string = f(0);
            ^^^^^^ string
 
-obj.js:10
+Error: obj.js:10
  10: var x:string = o.x;
                     ^^^ number. This type is incompatible with
  10: var x:string = o.x;

@@ -1,22 +1,22 @@
-A.js:4
+Error: A.js:4
   4:   b: number;
           ^^^^^^ number. This type is incompatible with
   6:   b: B;
           ^ B. See: C.js:6
 
-A.js:5
+Error: A.js:5
   5:   c: string;
           ^^^^^^ string. This type is incompatible with
   6:   c: C;
           ^ C. See: B.js:6
 
-B.js:6
+Error: B.js:6
   6:   c: C;
           ^ C. This type is incompatible with
   5:   c: string;
           ^^^^^^ string. See: A.js:5
 
-C.js:6
+Error: C.js:6
   6:   b: B;
           ^ B. This type is incompatible with
   4:   b: number;
@@ -24,13 +24,13 @@ C.js:6
 
 
 Found 4 errors
-A.js:4
+Error: A.js:4
   4:   b: number;
           ^^^^^^ number. This type is incompatible with
   6:   b: B;
           ^ string. See: C.js:6
 
-C.js:6
+Error: C.js:6
   6:   b: B;
           ^ string. This type is incompatible with
   4:   b: number;
@@ -38,13 +38,13 @@ C.js:6
 
 
 Found 2 errors
-A.js:4
+Error: A.js:4
   4:   b: number;
           ^^^^^^ number. This type is incompatible with
   6:   b: B;
           ^ string. See: C.js:6
 
-C.js:6
+Error: C.js:6
   6:   b: B;
           ^ string. This type is incompatible with
   4:   b: number;
@@ -52,13 +52,13 @@ C.js:6
 
 
 Found 2 errors
-A.js:4
+Error: A.js:4
   4:   b: number;
           ^^^^^^ number. This type is incompatible with
   6:   b: B;
           ^ string. See: C.js:6
 
-C.js:6
+Error: C.js:6
   6:   b: B;
           ^ string. This type is incompatible with
   4:   b: number;

@@ -5,7 +5,7 @@ Library type error:
  23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
                                                                   ^^ object literal. See: render_callback.js:23
 
-createElementRequiredProp_string.js:5
+Error: createElementRequiredProp_string.js:5
               v
   5:   props: {
   6:     test: number,
@@ -14,19 +14,19 @@ createElementRequiredProp_string.js:5
  20:     return (<Cmp/>);
                  ^^^^^^ props of React element `Cmp`
 
-create_class.js:7
+Error: create_class.js:7
   7:     (this.props.foo: empty); // error: string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
   7:     (this.props.foo: empty); // error: string ~> empty
                           ^^^^^ empty
 
-create_class.js:8
+Error: create_class.js:8
   8:     (this.props.bar: empty); // error: number ~> empty
           ^^^^^^^^^^^^^^ number. This type is incompatible with
   8:     (this.props.bar: empty); // error: number ~> empty
                           ^^^^^ empty
 
-create_class.js:15
+Error: create_class.js:15
  15:     this.p = 0; // error: number ~> string
          ^^^^^^ assignment of property `p`
  15:     this.p = 0; // error: number ~> string
@@ -34,235 +34,235 @@ create_class.js:15
  15:     this.p = 0; // error: number ~> string
          ^^^^^^ string
 
-create_class.js:48
+Error: create_class.js:48
  48:     (this.foo: string); // error: number ~> string
           ^^^^^^^^ number. This type is incompatible with
  48:     (this.foo: string); // error: number ~> string
                     ^^^^^^ string
 
-create_class.js:71
+Error: create_class.js:71
  71:     (this.mixins: mixed); // error: property `mixins` not found
                ^^^^^^ property `mixins`. Property not found in
  71:     (this.mixins: mixed); // error: property `mixins` not found
           ^^^^ React component
 
-create_class.js:72
+Error: create_class.js:72
  72:     (this.autobind: mixed); // error: property `autobind` not found
                ^^^^^^^^ property `autobind`. Property not found in
  72:     (this.autobind: mixed); // error: property `autobind` not found
           ^^^^ React component
 
-create_class.js:73
+Error: create_class.js:73
  73:     (this.statics: mixed); // error: property `statics` not found
                ^^^^^^^ property `statics`. Property not found in
  73:     (this.statics: mixed); // error: property `statics` not found
           ^^^^ React component
 
-create_class.js:80
+Error: create_class.js:80
  80:     (this.q: empty); // error: number ~> empty
           ^^^^^^ number. This type is incompatible with
  80:     (this.q: empty); // error: number ~> empty
                   ^^^^^ empty
 
-create_class.js:104
+Error: create_class.js:104
 104:     (this.state.foo: empty); // number ~> empty
           ^^^^^^^^^^^^^^ number. This type is incompatible with
 104:     (this.state.foo: empty); // number ~> empty
                           ^^^^^ empty
 
-create_class.js:117
+Error: create_class.js:117
 117:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
 117:     (this.props.foo: empty); // string ~> empty
                           ^^^^^ empty
 
-create_class.js:118
+Error: create_class.js:118
 118:     (this.state.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
 118:     (this.state.foo: empty); // string ~> empty
                           ^^^^^ empty
 
-create_class.js:133
+Error: create_class.js:133
 133:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
 133:     (this.props.foo: empty); // string ~> empty
                           ^^^^^ empty
 
-create_class.js:134
+Error: create_class.js:134
 134:     return 0; // number ~> void
                 ^ number. This type is incompatible with
  40:   componentWillMount(): void;
                              ^^^^ undefined. See lib: <BUILTINS>/react.js:40
 
-create_class.js:137
+Error: create_class.js:137
 137:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
 137:     (this.props.foo: empty); // string ~> empty
                           ^^^^^ empty
 
-create_class.js:138
+Error: create_class.js:138
 138:     return 0; // number ~> void
                 ^ number. This type is incompatible with
  41:   componentDidMount(): void;
                             ^^^^ undefined. See lib: <BUILTINS>/react.js:41
 
-create_class.js:141
+Error: create_class.js:141
 141:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
 141:     (this.props.foo: empty); // string ~> empty
                           ^^^^^ empty
 
-create_class.js:142
+Error: create_class.js:142
 142:     (nextProps.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^ string. This type is incompatible with
 142:     (nextProps.foo: empty); // string ~> empty
                          ^^^^^ empty
 
-create_class.js:143
+Error: create_class.js:143
 143:     return 0; // number ~> void
                 ^ number. This type is incompatible with
  45:   ): void;
           ^^^^ undefined. See lib: <BUILTINS>/react.js:45
 
-create_class.js:146
+Error: create_class.js:146
 146:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
 146:     (this.props.foo: empty); // string ~> empty
                           ^^^^^ empty
 
-create_class.js:147
+Error: create_class.js:147
 147:     (this.state.bar: empty); // number ~> empty
           ^^^^^^^^^^^^^^ number. This type is incompatible with
 147:     (this.state.bar: empty); // number ~> empty
                           ^^^^^ empty
 
-create_class.js:148
+Error: create_class.js:148
 148:     (nextProps.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^ string. This type is incompatible with
 148:     (nextProps.foo: empty); // string ~> empty
                          ^^^^^ empty
 
-create_class.js:149
+Error: create_class.js:149
 149:     (nextState.bar: empty); // number ~> empty
           ^^^^^^^^^^^^^ number. This type is incompatible with
 149:     (nextState.bar: empty); // number ~> empty
                          ^^^^^ empty
 
-create_class.js:150
+Error: create_class.js:150
 150:     return 0; // number ~> bool
                 ^ number. This type is incompatible with
  50:   ): boolean;
           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:50
 
-create_class.js:153
+Error: create_class.js:153
 153:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
 153:     (this.props.foo: empty); // string ~> empty
                           ^^^^^ empty
 
-create_class.js:154
+Error: create_class.js:154
 154:     (this.state.bar: empty); // number ~> empty
           ^^^^^^^^^^^^^^ number. This type is incompatible with
 154:     (this.state.bar: empty); // number ~> empty
                           ^^^^^ empty
 
-create_class.js:155
+Error: create_class.js:155
 155:     (nextProps.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^ string. This type is incompatible with
 155:     (nextProps.foo: empty); // string ~> empty
                          ^^^^^ empty
 
-create_class.js:156
+Error: create_class.js:156
 156:     (nextState.bar: empty); // number ~> empty
           ^^^^^^^^^^^^^ number. This type is incompatible with
 156:     (nextState.bar: empty); // number ~> empty
                          ^^^^^ empty
 
-create_class.js:157
+Error: create_class.js:157
 157:     return 0; // number ~> void
                 ^ number. This type is incompatible with
  55:   ): void;
           ^^^^ undefined. See lib: <BUILTINS>/react.js:55
 
-create_class.js:160
+Error: create_class.js:160
 160:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
 160:     (this.props.foo: empty); // string ~> empty
                           ^^^^^ empty
 
-create_class.js:161
+Error: create_class.js:161
 161:     (this.state.bar: empty); // number ~> empty
           ^^^^^^^^^^^^^^ number. This type is incompatible with
 161:     (this.state.bar: empty); // number ~> empty
                           ^^^^^ empty
 
-create_class.js:162
+Error: create_class.js:162
 162:     (nextProps.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^ string. This type is incompatible with
 162:     (nextProps.foo: empty); // string ~> empty
                          ^^^^^ empty
 
-create_class.js:163
+Error: create_class.js:163
 163:     (nextState.bar: empty); // number ~> empty
           ^^^^^^^^^^^^^ number. This type is incompatible with
 163:     (nextState.bar: empty); // number ~> empty
                          ^^^^^ empty
 
-create_class.js:164
+Error: create_class.js:164
 164:     return 0; // number ~> void
                 ^ number. This type is incompatible with
  60:   ): void;
           ^^^^ undefined. See lib: <BUILTINS>/react.js:60
 
-create_class.js:167
+Error: create_class.js:167
 167:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
 167:     (this.props.foo: empty); // string ~> empty
                           ^^^^^ empty
 
-create_class.js:168
+Error: create_class.js:168
 168:     (this.state.bar: empty); // number ~> empty
           ^^^^^^^^^^^^^^ number. This type is incompatible with
 168:     (this.state.bar: empty); // number ~> empty
                           ^^^^^ empty
 
-create_class.js:169
+Error: create_class.js:169
 169:     return 0; // number ~> void
                 ^ number. This type is incompatible with
  61:   componentWillUnmount(): void;
                                ^^^^ undefined. See lib: <BUILTINS>/react.js:61
 
-create_class.js:173
+Error: create_class.js:173
 173: React.createClass({}); // error: spec must be [x] exact and [ ] sealed
      ^^^^^^^^^^^^^^^^^^^^^ call of method `createClass`. Expected an exact object instead of
 173: React.createClass({}); // error: spec must be [x] exact and [ ] sealed
                        ^^ object literal
 
-create_class.js:174
+Error: create_class.js:174
 174: React.createClass(({}: {})); // error: spec must be [ ] exact and [x] sealed
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createClass`. Expected an exact object instead of
 174: React.createClass(({}: {})); // error: spec must be [ ] exact and [x] sealed
                             ^^ object type
 
-create_class_initial_state_sealed.js:9
+Error: create_class_initial_state_sealed.js:9
   9:     (this.state.q: empty); // number ~> empty
           ^^^^^^^^^^^^ number. This type is incompatible with
   9:     (this.state.q: empty); // number ~> empty
                         ^^^^^ empty
 
-create_class_initial_state_sealed.js:22
+Error: create_class_initial_state_sealed.js:22
  22:     (this.state.q: empty); // number ~> empty
           ^^^^^^^^^^^^ number. This type is incompatible with
  22:     (this.state.q: empty); // number ~> empty
                         ^^^^^ empty
 
-create_class_initial_state_sealed.js:35
+Error: create_class_initial_state_sealed.js:35
  35:     (this.state.q: empty); // number ~> empty
           ^^^^^^^^^^^^ number. This type is incompatible with
  35:     (this.state.q: empty); // number ~> empty
                         ^^^^^ empty
 
-create_class_initial_state_sealed.js:45
+Error: create_class_initial_state_sealed.js:45
  45:     this.setState({ q: 0 }); // property `q` not found
          ^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
  45:     this.setState({ q: 0 }); // property `q` not found
@@ -273,19 +273,19 @@ create_class_initial_state_sealed.js:45
  43:   },
        ^ object type
 
-create_class_initial_state_sealed.js:48
+Error: create_class_initial_state_sealed.js:48
  48:     (this.state.q: empty); // property `q` not found
                      ^ property `q`. Property not found in
  48:     (this.state.q: empty); // property `q` not found
           ^^^^^^^^^^ object type
 
-create_class_initial_state_sealed.js:66
+Error: create_class_initial_state_sealed.js:66
  66:     (this.state.baz: empty); // number ~> empty
           ^^^^^^^^^^^^^^ number. This type is incompatible with
  66:     (this.state.baz: empty); // number ~> empty
                           ^^^^^ empty
 
-create_class_initial_state_sealed.js:81
+Error: create_class_initial_state_sealed.js:81
  81:     this.setState({ baz: 0 }); // property `baz`  not found
          ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
  81:     this.setState({ baz: 0 }); // property `baz`  not found
@@ -296,103 +296,103 @@ create_class_initial_state_sealed.js:81
  75:     },
          ^ object type
 
-create_class_initial_state_sealed.js:84
+Error: create_class_initial_state_sealed.js:84
  84:     (this.state.baz: empty); // property `baz` not found
                      ^^^ property `baz`. Property not found in
  84:     (this.state.baz: empty); // property `baz` not found
           ^^^^^^^^^^ object type
 
-create_class_statics_sealed.js:5
+Error: create_class_statics_sealed.js:5
   5: (A.bar: empty); // number ~> empty (inflow below)
       ^^^^^ number. This type is incompatible with
   5: (A.bar: empty); // number ~> empty (inflow below)
              ^^^^^ empty
 
-create_class_statics_sealed.js:12
+Error: create_class_statics_sealed.js:12
  12: (B.foo: empty); // number ~> empty
       ^^^^^ number. This type is incompatible with
  12: (B.foo: empty); // number ~> empty
              ^^^^^ empty
 
-create_class_statics_sealed.js:13
+Error: create_class_statics_sealed.js:13
  13: (B.bar: empty); // number ~> empty (inflow below)
       ^^^^^ number. This type is incompatible with
  13: (B.bar: empty); // number ~> empty (inflow below)
              ^^^^^ empty
 
-create_class_statics_sealed.js:20
+Error: create_class_statics_sealed.js:20
  20: (C.foo: empty); // number ~> empty
       ^^^^^ number. This type is incompatible with
  20: (C.foo: empty); // number ~> empty
              ^^^^^ empty
 
-create_class_statics_sealed.js:21
+Error: create_class_statics_sealed.js:21
  21: (C.bar: empty); // number ~> empty (inflow below)
       ^^^^^ number. This type is incompatible with
  21: (C.bar: empty); // number ~> empty (inflow below)
              ^^^^^ empty
 
-create_class_statics_sealed.js:28
+Error: create_class_statics_sealed.js:28
  28: (D.foo: empty); // number ~> empty
       ^^^^^ number. This type is incompatible with
  28: (D.foo: empty); // number ~> empty
              ^^^^^ empty
 
-create_class_statics_sealed.js:29
+Error: create_class_statics_sealed.js:29
  29: (D.bar: empty); // property `bar` not found
         ^^^ property `bar`. Property not found in
  29: (D.bar: empty); // property `bar` not found
       ^ statics of React class
 
-create_class_statics_sealed.js:30
+Error: create_class_statics_sealed.js:30
  30: D.bar = 0; // property `bar` not found
        ^^^ property `bar`. Property not found in
  30: D.bar = 0; // property `bar` not found
      ^ statics of React class
 
-create_class_statics_sealed.js:39
+Error: create_class_statics_sealed.js:39
  39: (E.foo: empty); // number ~> empty
       ^^^^^ number. This type is incompatible with
  39: (E.foo: empty); // number ~> empty
              ^^^^^ empty
 
-create_class_statics_sealed.js:40
+Error: create_class_statics_sealed.js:40
  40: (E.bar: empty); // number ~> empty
       ^^^^^ number. This type is incompatible with
  40: (E.bar: empty); // number ~> empty
              ^^^^^ empty
 
-create_class_statics_sealed.js:41
+Error: create_class_statics_sealed.js:41
  41: (E.baz: empty); // number ~> empty (inflow below)
       ^^^^^ number. This type is incompatible with
  41: (E.baz: empty); // number ~> empty (inflow below)
              ^^^^^ empty
 
-create_class_statics_sealed.js:51
+Error: create_class_statics_sealed.js:51
  51: (F.foo: empty); // number ~> empty
       ^^^^^ number. This type is incompatible with
  51: (F.foo: empty); // number ~> empty
              ^^^^^ empty
 
-create_class_statics_sealed.js:52
+Error: create_class_statics_sealed.js:52
  52: (F.bar: empty); // number ~> empty
       ^^^^^ number. This type is incompatible with
  52: (F.bar: empty); // number ~> empty
              ^^^^^ empty
 
-create_class_statics_sealed.js:53
+Error: create_class_statics_sealed.js:53
  53: (F.baz: empty); // number ~> empty (inflow below)
         ^^^ property `baz`. Property not found in
  53: (F.baz: empty); // number ~> empty (inflow below)
       ^ statics of React class
 
-create_class_statics_sealed.js:54
+Error: create_class_statics_sealed.js:54
  54: F.baz = 0;
        ^^^ property `baz`. Property not found in
  54: F.baz = 0;
      ^ statics of React class
 
-import_react.js:7
+Error: import_react.js:7
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
                      ^^^^^^^^^^^^^^^^^^^^^ constructor call
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
@@ -400,7 +400,7 @@ import_react.js:7
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
             ^^^^^^ number
 
-jsx_spread.js:11
+Error: jsx_spread.js:11
  11: var blah = <Foo {...props} />; // error bar, number given string expected
                 ^^^^^^^^^^^^^^^^^^ props of React element `Foo`. This type is incompatible with
                   v
@@ -414,7 +414,7 @@ jsx_spread.js:11
       6:     bar: React.PropTypes.string.isRequired,
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
-proptype_arrayOf.js:13
+Error: proptype_arrayOf.js:13
  13: var fail_missing = <Example />
                         ^^^^^^^^^^^ React element `Example`
                   v
@@ -425,7 +425,7 @@ proptype_arrayOf.js:13
  13: var fail_missing = <Example />
                         ^^^^^^^^^^^ props of React element `Example`
 
-proptype_arrayOf.js:14
+Error: proptype_arrayOf.js:14
  14: var fail_not_array = <Example arr={2} />
                           ^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
@@ -439,7 +439,7 @@ proptype_arrayOf.js:14
       6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
 
-proptype_arrayOf.js:15
+Error: proptype_arrayOf.js:15
  15: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
  15: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
@@ -447,7 +447,7 @@ proptype_arrayOf.js:15
   6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
                                       ^^^^^^^^^^^^^^^^^^^^^^ number
 
-proptype_arrayOf.js:20
+Error: proptype_arrayOf.js:20
  20: var todo_required = <Example arr={[null]} />
                          ^^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
  20: var todo_required = <Example arr={[null]} />
@@ -455,7 +455,7 @@ proptype_arrayOf.js:20
   6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
                                       ^^^^^^^^^^^^^^^^^^^^^^ number
 
-proptype_arrayOf.js:30
+Error: proptype_arrayOf.js:30
  30: (<OptionalExample arr={[""]} />); // error: string ~> number
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `OptionalExample`
  30: (<OptionalExample arr={[""]} />); // error: string ~> number
@@ -463,7 +463,7 @@ proptype_arrayOf.js:30
  24:     arr: React.PropTypes.arrayOf(React.PropTypes.number),
                                       ^^^^^^^^^^^^^^^^^^^^^^ number
 
-proptype_arrayOf.js:38
+Error: proptype_arrayOf.js:38
  38: (<AnyExample arr={0} />); // error: still needs to be an array
       ^^^^^^^^^^^^^^^^^^^^^^ props of React element `AnyExample`. This type is incompatible with
                   v
@@ -477,43 +477,43 @@ proptype_arrayOf.js:38
      34:     arr: React.PropTypes.arrayOf((0:any)), // OK
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
 
-proptype_arrayOf.js:43
+Error: proptype_arrayOf.js:43
  43:     arr: React.PropTypes.arrayOf(0), // error: number not a prop type
               ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `arrayOf`. Expected a React PropType instead of
  43:     arr: React.PropTypes.arrayOf(0), // error: number not a prop type
                                       ^ number
 
-proptype_custom_validator.js:8
+Error: proptype_custom_validator.js:8
   8:       (propName: empty); // error: propName is a string
             ^^^^^^^^ string. This type is incompatible with
   8:       (propName: empty); // error: propName is a string
                       ^^^^^ empty
 
-proptype_custom_validator.js:9
+Error: proptype_custom_validator.js:9
   9:       (componentName: empty); // error: componentName is a string
             ^^^^^^^^^^^^^ string. This type is incompatible with
   9:       (componentName: empty); // error: componentName is a string
                            ^^^^^ empty
 
-proptype_custom_validator.js:10
+Error: proptype_custom_validator.js:10
  10:       (href: empty); // error: href is an optional string
             ^^^^ string. This type is incompatible with
  10:       (href: empty); // error: href is an optional string
                   ^^^^^ empty
 
-proptype_custom_validator.js:10
+Error: proptype_custom_validator.js:10
  10:       (href: empty); // error: href is an optional string
             ^^^^ undefined. This type is incompatible with
  10:       (href: empty); // error: href is an optional string
                   ^^^^^ empty
 
-proptype_custom_validator.js:11
+Error: proptype_custom_validator.js:11
  11:       return (0: mixed); // error: should return ?Error
                       ^^^^^ mixed. This type is incompatible with
 260:   href?: string) => ?Error;
                           ^^^^^ Error. See lib: <BUILTINS>/react.js:260
 
-proptype_func.js:14
+Error: proptype_func.js:14
  14: var fail_mistyped = <Example func={2} />
                          ^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
@@ -527,7 +527,7 @@ proptype_func.js:14
       6:     func: React.PropTypes.func.isRequired
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
 
-proptype_incompatible.js:3
+Error: proptype_incompatible.js:3
                    v------------------
   3: var Example = React.createClass({
   4:   propTypes: {
@@ -538,7 +538,7 @@ proptype_incompatible.js:3
   5:     foo: 0, // error: `0` is not a prop type
               ^ number
 
-proptype_instanceOf.js:14
+Error: proptype_instanceOf.js:14
  14: (<Example x={new A} />); // error: A ~> B
       ^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
@@ -552,7 +552,7 @@ proptype_instanceOf.js:14
      10:     x: React.PropTypes.instanceOf(B),
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B
 
-proptype_instanceOf.js:17
+Error: proptype_instanceOf.js:17
  17: (<Example x="wrong" />); // error: string ~> B
       ^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
@@ -566,7 +566,7 @@ proptype_instanceOf.js:17
      10:     x: React.PropTypes.instanceOf(B),
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B
 
-proptype_object.js:13
+Error: proptype_object.js:13
  13: var fail_mistyped = <Example object={2} />
                          ^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
@@ -580,7 +580,7 @@ proptype_object.js:13
       6:     object: React.PropTypes.object.isRequired
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
-proptype_objectOf.js:13
+Error: proptype_objectOf.js:13
  13: var fail_missing = <Example />
                         ^^^^^^^^^^^ React element `Example`
                   v
@@ -591,7 +591,7 @@ proptype_objectOf.js:13
  13: var fail_missing = <Example />
                         ^^^^^^^^^^^ props of React element `Example`
 
-proptype_objectOf.js:14
+Error: proptype_objectOf.js:14
  14: var fail_not_object = <Example obj={2} />
                            ^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
@@ -605,7 +605,7 @@ proptype_objectOf.js:14
       6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
-proptype_objectOf.js:15
+Error: proptype_objectOf.js:15
  15: var fail_mistyped_props = <Example obj={{foo: "foo"}} />
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
@@ -619,7 +619,7 @@ proptype_objectOf.js:15
       6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
                                            ^^^^^^^^^^^^^^^^^^^^^^ number
 
-proptype_objectOf.js:20
+Error: proptype_objectOf.js:20
  20: var todo_required = <Example obj={{p:null}} />
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
@@ -633,7 +633,7 @@ proptype_objectOf.js:20
       6:     obj: React.PropTypes.objectOf(React.PropTypes.number).isRequired
                                            ^^^^^^^^^^^^^^^^^^^^^^ number
 
-proptype_objectOf.js:30
+Error: proptype_objectOf.js:30
  30: (<OptionalExample obj={{p:""}} />); // error: string ~> number
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `OptionalExample`. This type is incompatible with
                   v
@@ -647,7 +647,7 @@ proptype_objectOf.js:30
      24:     obj: React.PropTypes.objectOf(React.PropTypes.number),
                                            ^^^^^^^^^^^^^^^^^^^^^^ number
 
-proptype_objectOf.js:38
+Error: proptype_objectOf.js:38
  38: (<AnyExample obj={0} />); // error: still needs to be an object
       ^^^^^^^^^^^^^^^^^^^^^^ props of React element `AnyExample`. This type is incompatible with
                   v
@@ -661,13 +661,13 @@ proptype_objectOf.js:38
      34:     obj: React.PropTypes.objectOf((0:any)), // OK
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
-proptype_objectOf.js:43
+Error: proptype_objectOf.js:43
  43:     obj: React.PropTypes.objectOf(0), // error: number not a prop type
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `objectOf`. Expected a React PropType instead of
  43:     obj: React.PropTypes.objectOf(0), // error: number not a prop type
                                        ^ number
 
-proptype_oneOf.js:14
+Error: proptype_oneOf.js:14
  14: (<Example str="baz" />); // error: 'baz' not in enum
       ^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
@@ -683,7 +683,7 @@ proptype_oneOf.js:14
       6:     str: React.PropTypes.oneOf(["foo", "bar"]),
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string enum
 
-proptype_oneOf.js:17
+Error: proptype_oneOf.js:17
  17: (<Example num={3} />); // error: 3 not in enum
       ^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
@@ -699,7 +699,7 @@ proptype_oneOf.js:17
       7:     num: React.PropTypes.oneOf([0, 1, 2]),
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number enum
 
-proptype_oneOf.js:20
+Error: proptype_oneOf.js:20
  20: (<Example bool={false} />); // error: false ~> true
       ^^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
  20: (<Example bool={false} />); // error: false ~> true
@@ -707,7 +707,7 @@ proptype_oneOf.js:20
   8:     bool: React.PropTypes.oneOf([true]),
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ boolean literal `true`
 
-proptype_oneOf.js:24
+Error: proptype_oneOf.js:24
  24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
       ^^^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
  24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
@@ -739,7 +739,7 @@ proptype_oneOf.js:24
     9:     mixed: React.PropTypes.oneOf(["foo", 0, true]),
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ boolean literal `true`
 
-proptype_oneOf.js:32
+Error: proptype_oneOf.js:32
  32: (<RequiredExample />); // error: `p` not found
       ^^^^^^^^^^^^^^^^^^^ React element `RequiredExample`
                   v
@@ -750,7 +750,7 @@ proptype_oneOf.js:32
  32: (<RequiredExample />); // error: `p` not found
       ^^^^^^^^^^^^^^^^^^^ props of React element `RequiredExample`
 
-proptype_oneOf.js:40
+Error: proptype_oneOf.js:40
  40: (<EmptyExample nil={0} />); // number ~> empty
       ^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `EmptyExample`. This type is incompatible with
                   v
@@ -764,13 +764,13 @@ proptype_oneOf.js:40
      36:     nil: React.PropTypes.oneOf([]), // i.e., `empty`
                   ^^^^^^^^^^^^^^^^^^^^^^^^^ empty
 
-proptype_oneOf.js:76
+Error: proptype_oneOf.js:76
  76:     p: React.PropTypes.oneOf(0), // error: expected array, got 0
             ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `oneOf`. Expected an array instead of
  76:     p: React.PropTypes.oneOf(0), // error: expected array, got 0
                                   ^ number
 
-proptype_oneOfType.js:23
+Error: proptype_oneOfType.js:23
  23: var fail_missing = <Example />;
                         ^^^^^^^^^^^ React element `Example`
                   v
@@ -783,7 +783,7 @@ proptype_oneOfType.js:23
  23: var fail_missing = <Example />;
                         ^^^^^^^^^^^ props of React element `Example`
 
-proptype_oneOfType.js:24
+Error: proptype_oneOfType.js:24
  24: var fail_bool = <Example prop={true} />;
                      ^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
  24: var fail_bool = <Example prop={true} />;
@@ -827,7 +827,7 @@ proptype_oneOfType.js:24
     9:     ]).isRequired
            ------------^ number
 
-proptype_oneOfType.js:29
+Error: proptype_oneOfType.js:29
  29: var todo_required = <Example prop={null} />;
                          ^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
  29: var todo_required = <Example prop={null} />;
@@ -871,7 +871,7 @@ proptype_oneOfType.js:29
     9:     ]).isRequired
            ------------^ number
 
-proptype_oneOfType.js:41
+Error: proptype_oneOfType.js:41
  41: (<OptionalExample p={0} />); // error: number ~> string
       ^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `OptionalExample`. This type is incompatible with
                   v
@@ -890,7 +890,7 @@ proptype_oneOfType.js:41
      35:     ]),
              -^ string
 
-proptype_oneOfType.js:49
+Error: proptype_oneOfType.js:49
  49: (<EmptyExample nil={0} />); // number ~> empty
       ^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `EmptyExample`. This type is incompatible with
                   v
@@ -904,121 +904,121 @@ proptype_oneOfType.js:49
      45:     nil: React.PropTypes.oneOfType([]), // i.e., `empty`
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ empty
 
-proptype_oneOfType.js:91
+Error: proptype_oneOfType.js:91
  91:     p: React.PropTypes.oneOfType(0), // error: expected array, got 0
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `oneOfType`. Expected an array instead of
  91:     p: React.PropTypes.oneOfType(0), // error: expected array, got 0
                                       ^ number
 
-proptype_oneOfType.js:99
+Error: proptype_oneOfType.js:99
  99:     p: React.PropTypes.oneOfType([{}]), // error: expected prop type, got {}
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `oneOfType`. Expected a React PropType instead of
  99:     p: React.PropTypes.oneOfType([{}]), // error: expected prop type, got {}
                                        ^^ object literal
 
-proptype_shape.js:20
+Error: proptype_shape.js:20
  20:     (this.props.foo.baz: string);
                          ^^^ property `baz`. Property not found in
  20:     (this.props.foo.baz: string);
           ^^^^^^^^^^^^^^ object type
 
-proptype_shape.js:24
+Error: proptype_shape.js:24
  24:     this.props.foo.baz = 0;
                         ^^^ property `baz`. Property not found in
  24:     this.props.foo.baz = 0;
          ^^^^^^^^^^^^^^ object type
 
-proptypes_builtins.js:3
+Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
 268:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                      ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:268
 
-proptypes_builtins.js:3
+Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
 272:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                      ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:272
 
-proptypes_builtins.js:3
+Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
 274:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
                         ^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:274
 
-proptypes_builtins.js:3
+Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
 276:   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:276
 
-proptypes_builtins.js:3
+Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
 279:   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:279
 
-proptypes_builtins.js:3
+Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
 268:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:268
 
-proptypes_builtins.js:3
+Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
 270:   (expectedClass: any) => ReactPropsChainableTypeChecker;
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:270
 
-proptypes_builtins.js:3
+Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
 272:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:272
 
-proptypes_builtins.js:3
+Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
 274:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:274
 
-proptypes_builtins.js:3
+Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
 277:     ReactPropsChainableTypeChecker;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:277
 
-proptypes_builtins.js:3
+Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
 280:     ReactPropsChainableTypeChecker;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:280
 
-proptypes_sealed.js:18
+Error: proptypes_sealed.js:18
  18:     (this.props.baz: string);
                      ^^^ property `baz`. Property not found in
  18:     (this.props.baz: string);
           ^^^^^^^^^^ propTypes of React component
 
-proptypes_sealed.js:22
+Error: proptypes_sealed.js:22
  22:     this.props.baz = 0;
                     ^^^ property `baz`. Property not found in
  22:     this.props.baz = 0;
          ^^^^^^^^^^ propTypes of React component
 
-render_callback.js:22
+Error: render_callback.js:22
  22: ReactDOM.render(<Example/>, document.querySelector('#site'), 1);
                                                                   ^ number. This type is incompatible with the expected param type of
 225:     callback?: () => void
                     ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:225
 
-render_callback.js:24
+Error: render_callback.js:24
  24: ReactDOM.render(<Example/>, document.querySelector('#site'), '');
                                                                   ^^ string. This type is incompatible with the expected param type of
 225:     callback?: () => void
                     ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:225
 
-render_callback.js:25
+Error: render_callback.js:25
  25: ReactDOM.render(<Example/>, document.querySelector('#site'), null);
                                                                   ^^^^ null. This type is incompatible with the expected param type of
 225:     callback?: () => void

@@ -1,4 +1,4 @@
-foo.js:2
+Error: foo.js:2
   2: require('./bar');
              ^^^^^^^ ./bar. Required module not found
 

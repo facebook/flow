@@ -1,4 +1,4 @@
-main.js:4
+Error: main.js:4
   4: (<fbt />: number); // Error: ReactElement ~> number
       ^^^^^^^ React element `fbt`
   4: (<fbt />: number); // Error: ReactElement ~> number

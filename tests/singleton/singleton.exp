@@ -1,4 +1,4 @@
-boolean.js:8
+Error: boolean.js:8
   8: var y : boolean = veryOptimistic(false); // error
                        ^^^^^^^^^^^^^^^^^^^^^ function call
   8: var y : boolean = veryOptimistic(false); // error
@@ -6,7 +6,7 @@ boolean.js:8
   3: function veryOptimistic(isThisAwesome: true): boolean {
                                             ^^^^ boolean literal `true`
 
-boolean.js:15
+Error: boolean.js:15
  15: var y : boolean = veryPessimistic(false); // error
                        ^^^^^^^^^^^^^^^^^^^^^^ function call
  15: var y : boolean = veryPessimistic(false); // error
@@ -14,19 +14,19 @@ boolean.js:15
  10: function veryPessimistic(isThisAwesome: true): boolean {
                                              ^^^^ boolean literal `true`
 
-boolean.js:21
+Error: boolean.js:21
  21:     return x;
                 ^ boolean literal `true`. Expected boolean literal `false`, got `true` instead
  19: function bar(x: MyOwnBooleanLOL): false {
                                        ^^^^^ boolean literal `false`
 
-boolean.js:23
+Error: boolean.js:23
  23:     return !x;
                 ^^ boolean literal `true`. Expected boolean literal `false`, got `true` instead
  19: function bar(x: MyOwnBooleanLOL): false {
                                        ^^^^^ boolean literal `false`
 
-boolean.js:29
+Error: boolean.js:29
  29: bar(1); // error
      ^^^^^^ function call
  29: bar(1); // error
@@ -50,7 +50,7 @@ boolean.js:29
    17: type MyOwnBooleanLOL = true | false
                                      ^^^^^ boolean literal `false`
 
-number.js:8
+Error: number.js:8
   8: highlander(2); // error
      ^^^^^^^^^^^^^ function call
   8: highlander(2); // error
@@ -58,7 +58,7 @@ number.js:8
   3: function highlander(howMany: 1): number {
                                   ^ number literal `1`
 
-number.js:19
+Error: number.js:19
  19: bar(3); // error
          ^ number. This type is incompatible with the expected param type of
  13: function bar(num: Foo): number {

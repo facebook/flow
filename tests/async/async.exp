@@ -1,10 +1,10 @@
-async.js:12
+Error: async.js:12
  12:   return 1;  // error, number != bool
               ^ number. This type is incompatible with
  11: async function f1(): Promise<bool> {
                                   ^^^^ boolean
 
-async.js:31
+Error: async.js:31
  31:   return await p; // error, number != bool
               ^^^^^^^ number. This type is incompatible with
 682: declare function $await<T>(p: Promise<T> | T): T;
@@ -26,65 +26,65 @@ async.js:31
    30: async function f4(p: Promise<number>): Promise<bool> {
                                                       ^^^^ boolean
 
-async.js:45
+Error: async.js:45
  45:   static async m(a): void { await a; } // error, void != Promise<void>
                           ^^^^ undefined. This type is incompatible with an implicitly-returned Promise.
 
-async2.js:13
+Error: async2.js:13
  13:     var c: string = a; // Error: number ~> string
                          ^ number. This type is incompatible with
  13:     var c: string = a; // Error: number ~> string
                 ^^^^^^ string
 
-async2.js:26
+Error: async2.js:26
  26:   async function voidoid1() {
                                 ^ Promise. This type is incompatible with
  32:   var voidoid3: () => void = voidoid1; // error, void != Promise<void>
                            ^^^^ undefined
 
-async2.js:50
+Error: async2.js:50
  50:   async function voidoid5(): void { // error, void != Promise<void>
                                   ^^^^ undefined. This type is incompatible with an implicitly-returned Promise.
 
-async2.js:57
+Error: async2.js:57
  57:   : Promise<number> { // error, number != void
          ^^^^^^^^^^^^^^^ undefined. This type is incompatible with
  57:   : Promise<number> { // error, number != void
                  ^^^^^^ number
 
-async3.js:31
+Error: async3.js:31
  31:   var c: string = a;
                        ^ number. This type is incompatible with
  31:   var c: string = a;
               ^^^^^^ string
 
-async_return_void.js:4
+Error: async_return_void.js:4
   4:   return;
        ^^^^^^^ undefined. This type is incompatible with
   3: async function foo1(): Promise<string> {
                                     ^^^^^^ string
 
-async_return_void.js:8
+Error: async_return_void.js:8
   8:   return undefined;
               ^^^^^^^^^ undefined. This type is incompatible with
   7: async function foo2(): Promise<string> {
                                     ^^^^^^ string
 
-async_return_void.js:13
+Error: async_return_void.js:13
  13:   return bar();
               ^^^^^ undefined. This type is incompatible with
  11: async function foo3(): Promise<string> {
                                     ^^^^^^ string
 
-await_not_in_async.js:5
+Error: await_not_in_async.js:5
   5:   await 1;
              ^ Unexpected number
 
-await_not_in_async2.js:6
+Error: await_not_in_async2.js:6
   6: f(await 1);
              ^ Unexpected number
 
-await_not_in_async3.js:6
+Error: await_not_in_async3.js:6
   6: f(await 1);
              ^ Unexpected number
 

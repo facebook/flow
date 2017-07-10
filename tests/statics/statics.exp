@@ -1,28 +1,28 @@
-class_statics.js:6
+Error: class_statics.js:6
   6: C.g = function(x:string) { C.f(x); };
        ^ property `g`. Property not found in
   6: C.g = function(x:string) { C.f(x); };
      ^ statics of C
 
-class_statics.js:6
+Error: class_statics.js:6
   6: C.g = function(x:string) { C.f(x); };
                                     ^ string. This type is incompatible with the expected param type of
   2:   static f(x:number) { }
                   ^^^^^^ number
 
-class_statics.js:7
+Error: class_statics.js:7
   7: C.g(0);
          ^ number. This type is incompatible with the expected param type of
   6: C.g = function(x:string) { C.f(x); };
                       ^^^^^^ string
 
-class_statics.js:9
+Error: class_statics.js:9
   9: var x:number = C.x;
                     ^^^ string. This type is incompatible with
   9: var x:number = C.x;
            ^^^^^^ number
 
-class_statics.js:10
+Error: class_statics.js:10
  10: C.x = 0;
      ^^^ assignment of property `x`
  10: C.x = 0;
@@ -30,7 +30,7 @@ class_statics.js:10
  10: C.x = 0;
      ^^^ string
 
-funstatics.js:5
+Error: funstatics.js:5
   5: var x:string = new C().f();
                     ^^^^^^^^^^^ number. This type is incompatible with
   5: var x:string = new C().f();

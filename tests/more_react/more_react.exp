@@ -1,22 +1,22 @@
-API.react.js:4
+Error: API.react.js:4
   4: app.setProps({y:42}); // error, y:number but foo expects string in App.react
          ^^^^^^^^ property `setProps`. Property not found in
   4: app.setProps({y:42}); // error, y:number but foo expects string in App.react
      ^^^ React$Element
 
-API.react.js:5
+Error: API.react.js:5
   5: app.setState({z:42}); // error, z:number but foo expects string in App.react
          ^^^^^^^^ property `setState`. Property not found in
   5: app.setState({z:42}); // error, z:number but foo expects string in App.react
      ^^^ React$Element
 
-App.react.js:36
+Error: App.react.js:36
  36:         {foo(z,x)} // error, since z: number
                   ^ number. This type is incompatible with the expected param type of
  10: function foo(p:string,q:string):string { return p+q; }
                     ^^^^^^ string
 
-JSX.js:8
+Error: JSX.js:8
   8:   <App y={42}> // error, y: number but foo expects string in App.react
        ^^^^^^^^^^^^ props of React element `App`
   8:   <App y={42}> // error, y: number but foo expects string in App.react
@@ -24,7 +24,7 @@ JSX.js:8
  14:   getDefaultProps: function(): { y: string } {
                                          ^^^^^^ string. See: App.react.js:14
 
-checkPropTypes.js:7
+Error: checkPropTypes.js:7
   7: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }); // error: missing arguments
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
   7: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }); // error: missing arguments
@@ -32,7 +32,7 @@ checkPropTypes.js:7
 175:     location: string,
                    ^^^^^^ string. See lib: <BUILTINS>/react.js:175
 
-checkPropTypes.js:7
+Error: checkPropTypes.js:7
   7: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }); // error: missing arguments
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
   7: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }); // error: missing arguments
@@ -40,7 +40,7 @@ checkPropTypes.js:7
 176:     componentName: string,
                         ^^^^^^ string. See lib: <BUILTINS>/react.js:176
 
-checkPropTypes.js:8
+Error: checkPropTypes.js:8
   8: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value'); // error: missing argument
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
   8: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value'); // error: missing argument
@@ -48,7 +48,7 @@ checkPropTypes.js:8
 176:     componentName: string,
                         ^^^^^^ string. See lib: <BUILTINS>/react.js:176
 
-checkPropTypes.js:10
+Error: checkPropTypes.js:10
  10: checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  10: checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found
@@ -56,13 +56,13 @@ checkPropTypes.js:10
 173:     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
                                   ^^^^^^^^ object literal. See lib: <BUILTINS>/react.js:173
 
-checkPropTypes.js:12
+Error: checkPropTypes.js:12
  12: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string
                                                                                                ^^^ number. This type is incompatible with the expected param type of
 177:     getStack: ?(() => ?string)
                             ^^^^^^ string. See lib: <BUILTINS>/react.js:177
 
-propTypes.js:15
+Error: propTypes.js:15
  15: <D />; // errors: properties `name` and `title` not found
      ^^^^^ React element `D`
                   v
@@ -74,7 +74,7 @@ propTypes.js:15
  15: <D />; // errors: properties `name` and `title` not found
      ^^^^^ props of React element `D`
 
-propTypes.js:15
+Error: propTypes.js:15
  15: <D />; // errors: properties `name` and `title` not found
      ^^^^^ React element `D`
                   v

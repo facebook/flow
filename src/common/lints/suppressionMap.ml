@@ -143,10 +143,12 @@ let bake =
 type t = LintSettings.t SpanMap.t
 
 let global_settings source settings = new_builder source settings |> bake
+
+let default_settings source = global_settings source LintSettings.default_settings
+
 (* This isn't a particularly valid suppression map, but it's fine as long as
- * no-one tries to use it. (And even then it shouldn't break; it'll just make
- * no sense.) *)
-let invalid_default = global_settings (Loc.SourceFile "") LintSettings.default_settings
+ * no-one tries to use it. *)
+let invalid_default = default_settings (Loc.SourceFile "")
 (* Gets the lint settings that apply to a certain location in the code. To
  * resolve ambiguity, this looks at the location of the first character in the
  * provided location. *)
@@ -154,6 +156,9 @@ let invalid_default = global_settings (Loc.SourceFile "") LintSettings.default_s
  * exhaustive, this should never throw. *)
 let settings_at_loc loc suppression_map =
   SpanMap.find_unsafe (Loc.first_char loc) suppression_map
+
+let get_state lint_kind loc suppression_map =
+  settings_at_loc loc suppression_map |> LintSettings.get_state lint_kind
 
 let is_suppressed lint_kind loc suppression_map =
   settings_at_loc loc suppression_map |> LintSettings.is_suppressed lint_kind

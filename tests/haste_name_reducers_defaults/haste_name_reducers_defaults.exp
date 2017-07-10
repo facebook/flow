@@ -1,22 +1,22 @@
-Module1.js:5
+Error: Module1.js:5
   5: (test: boolean);
       ^^^^ Test. This type is incompatible with
   5: (test: boolean);
             ^^^^^^^ boolean
 
-index.js:3
+Error: index.js:3
   3: (require('Module1'): boolean);
       ^^^^^^^^^^^^^^^^^^ Test. This type is incompatible with
   3: (require('Module1'): boolean);
                           ^^^^^^^ boolean
 
-index.js:4
+Error: index.js:4
   4: (require('Module2').foo(): boolean);
       ^^^^^^^^^^^^^^^^^^^^^^^^ Test2. This type is incompatible with
   4: (require('Module2').foo(): boolean);
                                 ^^^^^^^ boolean
 
-index.js:5
+Error: index.js:5
   5: require('Module3');
              ^^^^^^^^^ Module3. Required module not found
 

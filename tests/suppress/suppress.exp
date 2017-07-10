@@ -1,8 +1,8 @@
-A.js:14
+Error: A.js:14
  14: // $FlowFixMe Error unused suppression
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
-A.js:16
+Error: A.js:16
  16: var test4: string = 123; // This error is NOT suppressed
                          ^^^ number. This type is incompatible with
  16: var test4: string = 123; // This error is NOT suppressed

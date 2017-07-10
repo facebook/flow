@@ -1,22 +1,22 @@
-array.js:4
+Error: array.js:4
   4:   return x; // Error, can't enforce arity when flowing array to tuple
               ^ array type. Only tuples and array literals with known elements can flow to
   3: function foo(x: Array<number>): [number, ?number] {
                                      ^^^^^^^^^^^^^^^^^ tuple type
 
-optional.js:4
+Error: optional.js:4
   4: ([0]: [number, ?string]); // Error, arity is enforced
       ^^^ array literal. Tuple arity mismatch. This tuple has 1 elements and cannot flow to the 2 elements of
   4: ([0]: [number, ?string]); // Error, arity is enforced
            ^^^^^^^^^^^^^^^^^ tuple type
 
-optional.js:6
+Error: optional.js:6
   6: ([]: [?number, string]); // error, since second element is not marked optional
       ^^ empty array literal. Tuple arity mismatch. This tuple has 0 elements and cannot flow to the 2 elements of
   6: ([]: [?number, string]); // error, since second element is not marked optional
           ^^^^^^^^^^^^^^^^^ tuple type
 
-too-few.js:5
+Error: too-few.js:5
   5: foo([ {} ]); // error, too few elements in array passed to a tuple
      ^^^^^^^^^^^ function call
   5: foo([ {} ]); // error, too few elements in array passed to a tuple
@@ -24,19 +24,19 @@ too-few.js:5
   3: function foo(a: [Object, Object]) {}
                      ^^^^^^^^^^^^^^^^ tuple type
 
-tuples.js:2
+Error: tuples.js:2
   2: var b: [] = [123]; // Error - arity mismatch
                  ^^^^^ array literal. Tuple arity mismatch. This tuple has 1 elements and cannot flow to the 0 elements of
   2: var b: [] = [123]; // Error - arity mismatch
             ^^ tuple type
 
-tuples.js:3
+Error: tuples.js:3
   3: var c: [number] = []; // nope
                        ^^ empty array literal. Tuple arity mismatch. This tuple has 0 elements and cannot flow to the 1 elements of
   3: var c: [number] = []; // nope
             ^^^^^^^^ tuple type
 
-tuples.js:6
+Error: tuples.js:6
   6: var f: [number, string] = [123, 456];
                                      ^^^ number. This type is incompatible with
   6: var f: [number, string] = [123, 456];

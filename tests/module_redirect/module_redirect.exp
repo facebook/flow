@@ -1,16 +1,16 @@
-D.js:6
+Error: D.js:6
   6: var bar1: string = require('A');
                         ^^^^^^^^^^^^ module `A`. This type is incompatible with
   6: var bar1: string = require('A');
                ^^^^^^ string
 
-D.js:7
+Error: D.js:7
   7: var bar2: string = require('B');
                         ^^^^^^^^^^^^ module `A`. This type is incompatible with
   7: var bar2: string = require('B');
                ^^^^^^ string
 
-D.js:8
+Error: D.js:8
   8: var bar3: string = require('C');
                         ^^^^^^^^^^^^ module `A`. This type is incompatible with
   8: var bar3: string = require('C');
