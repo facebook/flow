@@ -136,12 +136,12 @@ class MyComponent extends React.Component {
 }
 ```
 
-If you want to add the type of the element you can do so with an intersection
-type specifying the `currentTarget`.
+If you want to add the type of the element you can do so using `SyntheticInputEvent`.
 
 ```js
 class MyComponent extends React.Component {
-  onButtonEvent(event: Event & { currentTarget: HTMLButtonElement }) {
+  onTextChange(event: SyntheticInputEvent) {
+    this.setState({ text: event.currentTarget.value });
     // ...
   }
 }
