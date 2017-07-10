@@ -163,6 +163,9 @@ let get_state lint_kind loc suppression_map =
 let is_suppressed lint_kind loc suppression_map =
   settings_at_loc loc suppression_map |> LintSettings.is_suppressed lint_kind
 
+let is_explicit lint_kind loc suppression_map =
+  settings_at_loc loc suppression_map |> LintSettings.is_explicit lint_kind
+
 let union a b = SpanMap.union a b
 
 let union_settings settings =

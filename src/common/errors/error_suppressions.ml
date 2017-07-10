@@ -111,20 +111,35 @@ let union_suppressions suppressions =
     suppressions
     empty
 
-let filter_suppressed_errors suppressions lint_settings errors =
-  (* Filter out suppressed errors. also track which suppressions are used. *)
-  let errors, warnings, suppressed_errors, suppressions = Errors.ErrorSet.fold
-    (fun error (errors, warnings, suppressed_errors, supp_acc) ->
-      let (suppression_state, consumed_suppressions, supp_acc) =
-        check error lint_settings supp_acc
-      in
-      let errors, warnings, suppressed_errors = match suppression_state with
-        | LintSettings.Off -> errors, warnings, (error, consumed_suppressions)::suppressed_errors
-        | LintSettings.Warn -> errors, Errors.ErrorSet.add error warnings, suppressed_errors
-        | LintSettings.Err -> Errors.ErrorSet.add error errors, warnings, suppressed_errors
-      in
-      errors, warnings, suppressed_errors, supp_acc
-    ) errors (Errors.ErrorSet.empty, Errors.ErrorSet.empty, [], suppressions)
+let filter_suppressed_errors =
+  let is_explicit error lint_settings =
+    match Errors.kind_of_error error with
+      | Errors.LintError kind ->
+        let locs = Errors.locs_of_error error in
+        List.fold_left
+          (fun acc loc -> acc || LintSettingsMap.is_explicit kind loc lint_settings)
+          false locs
+      | _ -> true
   in
-  (* these are bound just so it's more obvious what is being returned *)
-  (errors, warnings, suppressed_errors, suppressions)
+
+  fun suppressions lint_settings errors ->
+    (* Filter out suppressed errors. also track which suppressions are used. *)
+    let errors, warnings, suppressed_errors, suppressions = Errors.ErrorSet.fold
+      (fun error (errors, warnings, suppressed_errors, supp_acc) ->
+        let (suppression_state, consumed_suppressions, supp_acc) =
+          check error lint_settings supp_acc
+        in
+        let errors, warnings, suppressed_errors = match suppression_state with
+          | LintSettings.Off ->
+            (* Don't treat a flow lint as suppressed if it was never enabled in the first place. *)
+            if is_explicit error lint_settings
+            then errors, warnings, (error, consumed_suppressions)::suppressed_errors
+            else errors, warnings, suppressed_errors
+          | LintSettings.Warn -> errors, Errors.ErrorSet.add error warnings, suppressed_errors
+          | LintSettings.Err -> Errors.ErrorSet.add error errors, warnings, suppressed_errors
+        in
+        errors, warnings, suppressed_errors, supp_acc
+      ) errors (Errors.ErrorSet.empty, Errors.ErrorSet.empty, [], suppressions)
+    in
+    (* these are bound just so it's more obvious what is being returned *)
+    (errors, warnings, suppressed_errors, suppressions)

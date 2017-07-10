@@ -115,6 +115,9 @@ let is_enabled lint_kind settings =
 let is_suppressed lint_kind settings =
   is_enabled lint_kind settings |> not
 
+let is_explicit lint_kind settings =
+  LintMap.mem lint_kind settings.explicit_settings
+
 let get_loc lint_kind settings =
   LintMap.get lint_kind settings.explicit_settings
   |> Option.value_map ~f:snd ~default:None
