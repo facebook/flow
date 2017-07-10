@@ -45,7 +45,7 @@
       "message":[
         {
           "context":"if (x) {} //appears as an error",
-          "descr":"Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?",
+          "descr":"sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -106,7 +106,7 @@
       "message":[
         {
           "context":"if (x) {} //appears as a warning",
-          "descr":"Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?",
+          "descr":"sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?",
           "type":"Blame",
           "loc":{
             "source":"test.js",

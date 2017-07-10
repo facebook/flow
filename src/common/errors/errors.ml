@@ -61,13 +61,20 @@ let info_to_messages = function
 let infos_to_messages infos =
   List.concat (List.map info_to_messages infos)
 
-let mk_error ?(kind=InferError) ?op_info ?trace_infos ?(extra=[]) infos =  {
-  kind;
-  messages = infos_to_messages infos;
-  op = Utils_js.opt_map info_to_message op_info;
-  trace = Utils_js.opt_map_default infos_to_messages [] trace_infos;
-  extra
-}
+let mk_error ?(kind=InferError) ?op_info ?trace_infos ?(extra=[]) infos =
+  let infos = match kind, infos with
+    | LintError lint_kind, (head_loc, head_str::head_tail)::tail ->
+      let prefix = (LintSettings.string_of_kind lint_kind) ^ ": " in
+      (head_loc, (prefix ^ head_str)::head_tail)::tail
+    | _ -> infos
+  in
+  {
+    kind;
+    messages = infos_to_messages infos;
+    op = Utils_js.opt_map info_to_message op_info;
+    trace = Utils_js.opt_map_default infos_to_messages [] trace_infos;
+    extra
+  }
 
 (*******************************)
 

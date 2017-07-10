@@ -1,6 +1,6 @@
 Error: test.js:5
   5: if (x){}
-         ^ Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-bool: Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -8,7 +8,7 @@ Error: test.js:5
 
 Error: test.js:5
   5: if (x){}
-         ^ Sketchy null check on mixed value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-mixed: Sketchy null check on mixed value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -16,7 +16,7 @@ Error: test.js:5
 
 Error: test.js:5
   5: if (x){}
-         ^ Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -24,7 +24,7 @@ Error: test.js:5
 
 Error: test.js:5
   5: if (x){}
-         ^ Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-string: Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -32,7 +32,7 @@ Error: test.js:5
 
 Error: test.js:9
   9: if (x){}
-         ^ Sketchy null check on mixed value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-mixed: Sketchy null check on mixed value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -40,7 +40,7 @@ Error: test.js:9
 
 Error: test.js:9
   9: if (x){}
-         ^ Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -48,7 +48,7 @@ Error: test.js:9
 
 Error: test.js:9
   9: if (x){}
-         ^ Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-string: Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -56,7 +56,7 @@ Error: test.js:9
 
 Error: test.js:13
  13: if (x){}
-         ^ Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-bool: Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -64,7 +64,7 @@ Error: test.js:13
 
 Error: test.js:13
  13: if (x){}
-         ^ Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -72,7 +72,7 @@ Error: test.js:13
 
 Error: test.js:13
  13: if (x){}
-         ^ Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-string: Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -80,7 +80,7 @@ Error: test.js:13
 
 Error: test.js:17
  17: if (x){}
-         ^ Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-bool: Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -88,7 +88,7 @@ Error: test.js:17
 
 Error: test.js:17
  17: if (x){}
-         ^ Sketchy null check on mixed value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-mixed: Sketchy null check on mixed value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -96,7 +96,7 @@ Error: test.js:17
 
 Error: test.js:17
  17: if (x){}
-         ^ Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-string: Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -104,7 +104,7 @@ Error: test.js:17
 
 Error: test.js:21
  21: if (x){}
-         ^ Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-bool: Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -112,7 +112,7 @@ Error: test.js:21
 
 Error: test.js:21
  21: if (x){}
-         ^ Sketchy null check on mixed value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-mixed: Sketchy null check on mixed value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -120,7 +120,7 @@ Error: test.js:21
 
 Error: test.js:21
  21: if (x){}
-         ^ Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -128,7 +128,7 @@ Error: test.js:21
 
 Error: test.js:27
  27: if (x){}
-         ^ Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-bool: Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -136,7 +136,7 @@ Error: test.js:27
 
 Error: test.js:31
  31: if (x){}
-         ^ Sketchy null check on mixed value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-mixed: Sketchy null check on mixed value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -144,7 +144,7 @@ Error: test.js:31
 
 Error: test.js:35
  35: if (x){}
-         ^ Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
@@ -152,7 +152,7 @@ Error: test.js:35
 
 Error: test.js:39
  39: if (x){}
-         ^ Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
+         ^ sketchy-null-string: Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
     2: var x: bool|mixed|number|string = null
                    ^^^^^ Potentially null/undefined value.
     2: var x: bool|mixed|number|string = null
