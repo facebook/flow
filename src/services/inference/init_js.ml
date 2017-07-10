@@ -109,7 +109,7 @@ let load_lib_files ~master_cx ~options files =
           Inference_utils.set_of_docblock_errors ~source_file:lib_file errs
         in
         let result = lib_file, false, errors, Error_suppressions.empty,
-          SuppressionMap.global_settings lib_file lint_settings in
+          LintSettingsMap.global_settings lib_file lint_settings in
         exclude_syms, (result :: results)
 
       | Parsing.Parse_skip
@@ -117,7 +117,7 @@ let load_lib_files ~master_cx ~options files =
         (* should never happen *)
         let errs = Errors.ErrorSet.empty in
         let suppressions = Error_suppressions.empty in
-        let lint_settings = SuppressionMap.global_settings lib_file lint_settings in
+        let lint_settings = LintSettingsMap.global_settings lib_file lint_settings in
         let result = lib_file, false, errs, suppressions, lint_settings in
         exclude_syms, (result :: results)
 

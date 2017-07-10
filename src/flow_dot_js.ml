@@ -176,7 +176,7 @@ let check_content ~filename ~content =
 
     (* Perform a basic suppression step, to eliminate lints from playground output. *)
     let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
-      Error_suppressions.empty (SuppressionMap.default_settings filename) (Context.errors cx)
+      Error_suppressions.empty (LintSettingsMap.default_settings filename) (Context.errors cx)
     in errors, warnings
   | _, parse_errors ->
     let errors = List.fold_left (fun acc parse_error ->

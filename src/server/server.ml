@@ -116,7 +116,7 @@ let collate_errors =
         |> collate local_errors
         |> collate merge_errors
       in
-      let lint_settings = SuppressionMap.union_settings lint_settings in
+      let lint_settings = LintSettingsMap.union_settings lint_settings in
       let errors, warnings, suppressed_errors, suppressions =
         filter_suppressed_errors suppressions lint_settings errors in
       let errors = add_unused_suppression_errors suppressions errors in

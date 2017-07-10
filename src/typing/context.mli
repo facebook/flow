@@ -89,7 +89,7 @@ val imported_ts: t -> Type.t SMap.t
 val is_checked: t -> bool
 val is_verbose: t -> bool
 val is_weak: t -> bool
-val lint_settings: t -> SuppressionMap.t
+val lint_settings: t -> LintSettingsMap.t
 val max_trace_depth: t -> int
 val module_kind: t -> module_kind
 val module_map: t -> Type.t SMap.t
@@ -141,7 +141,7 @@ val set_type_graph: t  -> Graph_explorer.graph -> unit
 val set_all_unresolved: t  -> ISet.t IMap.t -> unit
 val set_globals: t -> SSet.t -> unit
 val set_graph: t -> Constraint.node IMap.t -> unit
-val set_lint_settings: t -> SuppressionMap.t -> unit
+val set_lint_settings: t -> LintSettingsMap.t -> unit
 val set_module_kind: t -> module_kind -> unit
 val set_property_maps: t -> Type.Properties.map -> unit
 val set_export_maps: t -> Type.Exports.map -> unit

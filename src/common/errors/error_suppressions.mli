@@ -15,12 +15,12 @@ val is_empty : t -> bool
 val add : Loc.t -> t -> t
 val union : t -> t -> t
 val set_unused_lint_suppressions : Loc.LocSet.t -> t -> t
-val check : Errors.error -> SuppressionMap.t -> t -> (LintSettings.lint_state * Loc.LocSet.t * t)
+val check : Errors.error -> LintSettingsMap.t -> t -> (LintSettings.lint_state * Loc.LocSet.t * t)
 val unused : t -> Loc.t list
 
 (* combines suppressions collated by filename into one collection *)
 val union_suppressions : t Utils_js.FilenameMap.t -> t
 
 val filter_suppressed_errors :
-  t -> SuppressionMap.t -> Errors.ErrorSet.t ->
+  t -> LintSettingsMap.t -> Errors.ErrorSet.t ->
   (Errors.ErrorSet.t * Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list * t)

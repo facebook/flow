@@ -307,7 +307,7 @@ let scan_for_lint_suppressions =
           in
           let error_encountered = ref false in
           let (new_builder, new_running_settings) =
-            SuppressionMap.update_settings_and_running running_settings
+            LintSettingsMap.update_settings_and_running running_settings
               (fun loc msg -> error_encountered := true; add_error cx loc msg)
               covered_range kind_settings suppression_builder in
           (* Only report overwritten arguments if there are no no-op arguments,
@@ -359,11 +359,11 @@ let scan_for_lint_suppressions =
   in
 
   fun cx base_settings comments ->
-    let suppression_builder = SuppressionMap.new_builder (Context.file cx) base_settings in
+    let suppression_builder = LintSettingsMap.new_builder (Context.file cx) base_settings in
     let suppression_builder, _, suppression_locs = List.fold_left
       (process_comment cx) (suppression_builder, base_settings, Loc.LocSet.empty) comments
     in
-    let suppression_map = SuppressionMap.bake suppression_builder in
+    let suppression_map = LintSettingsMap.bake suppression_builder in
     Context.set_lint_settings cx suppression_map;
     Context.set_unused_lint_suppressions cx suppression_locs
 

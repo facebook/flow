@@ -14,7 +14,7 @@ val infer:
   options: Options.t ->
   workers: Worker.t list option ->
   filename list ->
-  (filename * Errors.ErrorSet.t * Error_suppressions.t * SuppressionMap.t) list
+  (filename * Errors.ErrorSet.t * Error_suppressions.t * LintSettingsMap.t) list
 
 val apply_docblock_overrides:
  Context.metadata ->

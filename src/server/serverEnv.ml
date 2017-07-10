@@ -31,7 +31,7 @@ type errors = {
   (* error suppressions in the code *)
   suppressions: Error_suppressions.t Utils_js.FilenameMap.t;
   (* lint settings in the code *)
-  lint_settings: SuppressionMap.t Utils_js.FilenameMap.t;
+  lint_settings: LintSettingsMap.t Utils_js.FilenameMap.t;
 }
 
 type env = {

@@ -126,7 +126,7 @@ type local_t = {
   mutable globals: SSet.t;
 
   mutable error_suppressions: Error_suppressions.t;
-  mutable lint_settings: SuppressionMap.t;
+  mutable lint_settings: LintSettingsMap.t;
 
   type_table: Type_table.t;
   annot_table: (Loc.t, Type.t) Hashtbl.t;
@@ -217,7 +217,7 @@ let make metadata file module_ref = {
     globals = SSet.empty;
 
     error_suppressions = Error_suppressions.empty;
-    lint_settings = SuppressionMap.invalid_default;
+    lint_settings = LintSettingsMap.invalid_default;
 
     type_table = Type_table.create ();
     annot_table = Hashtbl.create 0;
@@ -338,7 +338,7 @@ let remove_all_errors cx =
 let remove_all_error_suppressions cx =
   cx.local.error_suppressions <- Error_suppressions.empty
 let remove_all_lint_settings cx =
-  cx.local.lint_settings <- SuppressionMap.invalid_default
+  cx.local.lint_settings <- LintSettingsMap.invalid_default
 let remove_tvar cx id =
   cx.local.graph <- IMap.remove id cx.local.graph
 let set_all_unresolved cx all_unresolved =

@@ -63,9 +63,9 @@ let check_loc ((_result, consumed,
   else
     Option.value_map lint_kind ~default:acc
     ~f:(fun some_lint_kind ->
-      let state = SuppressionMap.get_state some_lint_kind loc lint_settings in
+      let state = LintSettingsMap.get_state some_lint_kind loc lint_settings in
       let unused_lint_suppressions = if state = LintSettings.Off then
-        let settings_at_loc = SuppressionMap.settings_at_loc loc lint_settings in
+        let settings_at_loc = LintSettingsMap.settings_at_loc loc lint_settings in
         let used_lint_suppression = LintSettings.get_loc some_lint_kind settings_at_loc in
         Option.value_map used_lint_suppression
           ~f:(fun used_suppression -> Loc.LocSet.remove used_suppression unused_lint_suppressions)

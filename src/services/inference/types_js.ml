@@ -294,7 +294,7 @@ let typecheck
         let current_errors = ref ErrorSet.empty in
         let current_warnings = ref ErrorSet.empty in
         let suppressions = Error_suppressions.union_suppressions suppressions in
-        let lint_settings = SuppressionMap.union_settings lint_settings in
+        let lint_settings = LintSettingsMap.union_settings lint_settings in
         function lazy new_errors ->
           let new_errors = List.fold_left
             (fun acc (_, errs) -> Errors.ErrorSet.union acc errs)

@@ -91,7 +91,7 @@ let infer_job ~options acc files =
       let errorset = Errors.ErrorSet.singleton error in
       prerr_endlinef "(%d) infer_job THROWS: %s"
         (Unix.getpid()) (fmt_file_exc (string_of_filename file) exc);
-      (file, errorset, Error_suppressions.empty, SuppressionMap.invalid_default) :: acc
+      (file, errorset, Error_suppressions.empty, LintSettingsMap.invalid_default) :: acc
   ) acc files
 
 (* local type inference pass.

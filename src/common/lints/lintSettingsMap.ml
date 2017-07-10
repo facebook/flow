@@ -152,7 +152,7 @@ let invalid_default = default_settings (Loc.SourceFile "")
 (* Gets the lint settings that apply to a certain location in the code. To
  * resolve ambiguity, this looks at the location of the first character in the
  * provided location. *)
-(* Because of the invariant that the ranges in a SuppressionMap are adjacent and
+(* Because of the invariant that the ranges in a LintSettingsMap are adjacent and
  * exhaustive, this should never throw. *)
 let settings_at_loc loc suppression_map =
   SpanMap.find_unsafe (Loc.first_char loc) suppression_map
