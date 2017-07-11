@@ -367,6 +367,7 @@ let _ = List.iter (fun (key, token) -> Hashtbl.add keywords key token)
     "for", T_FOR;
     "class", T_CLASS;
     "extends", T_EXTENDS;
+    "inherits", T_INHERITS;
     "static", T_STATIC;
     "else", T_ELSE;
     "new", T_NEW;

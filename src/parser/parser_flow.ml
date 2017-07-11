@@ -198,6 +198,7 @@ module rec Parse : PARSER = struct
     | T_CASE
     | T_DEFAULT
     | T_EXTENDS
+    | T_INHERITS
     | T_STATIC
     | T_EXPORT (* TODO *)
     | T_ELLIPSIS ->
@@ -241,6 +242,7 @@ module rec Parse : PARSER = struct
       strict_error env Error.StrictReservedWord;
       Eat.token env
     | T_DECLARE
+    | T_INHERITS
     | T_OF
     | T_ASYNC
     | T_AWAIT

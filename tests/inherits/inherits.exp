@@ -1,0 +1,14 @@
+test.js:5
+  5:   static Error: Class<E1>;
+                     ^^^^^^^^^ E1. This type is incompatible with
+  9:   static Error: Class<E2>; //ng
+                           ^^ E2
+
+test.js:9
+  9:   static Error: Class<E2>; //ng
+                     ^^^^^^^^^ E2. This type is incompatible with
+  5:   static Error: Class<E1>;
+                           ^^ E1
+
+
+Found 2 errors

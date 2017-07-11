@@ -39,7 +39,7 @@ type t = {
   instance: signature;
 }
 
-let empty ?(structural=false) id reason tparams tparams_map super implements =
+let empty ?(structural=false) id reason es6 tparams tparams_map super implements =
   let empty_sig reason super = {
     reason; super;
     fields = SMap.empty;
@@ -49,7 +49,10 @@ let empty ?(structural=false) id reason tparams tparams_map super implements =
   } in
   let constructor = [] in
   let static =
-    let super = Type.class_type super in
+    let super = Type.(if es6
+      then class_type super
+      else class_type (ObjProtoT (locationless_reason RObjectClassName)))
+    in
     let reason = replace_reason (fun desc -> RStatics desc) reason in
     empty_sig reason super
   in
@@ -439,7 +442,7 @@ let mk cx _loc reason self ~expr =
       Anno.mk_nominal_type cx reason tparams_map (c, params)
     ) implements in
     let id = Flow.mk_nominal cx in
-    empty id reason tparams tparams_map super implements
+    empty id reason true tparams tparams_map super implements
   in
 
   (* In case there is no constructor, pick up a default one. *)
@@ -559,6 +562,7 @@ let extract_mixins _cx =
 
 let mk_interface cx loc reason structural self = Ast.Statement.(
   fun { Interface.
+    es6;
     typeParameters;
     body = (_, { Ast.Type.Object.properties; _ });
     extends;
@@ -599,7 +603,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       | [t] -> t
       | t0::t1::ts -> DefT (super_reason, IntersectionT (InterRep.make t0 t1 ts))
     ) in
-    empty ~structural id reason tparams tparams_map super []
+    empty ~structural id reason es6 tparams tparams_map super []
   in
 
   let iface_sig =

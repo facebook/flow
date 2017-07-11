@@ -369,6 +369,7 @@ and Statement : sig
   module Interface : sig
     type t = {
       id: Identifier.t;
+      es6: bool;
       typeParameters: Type.ParameterDeclaration.t option;
       body: Loc.t * Type.Object.t;
       extends: (Loc.t * Type.Generic.t) list;

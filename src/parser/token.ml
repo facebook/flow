@@ -57,6 +57,7 @@ type t =
   | T_FOR
   | T_CLASS
   | T_EXTENDS
+  | T_INHERITS
   | T_STATIC
   | T_ELSE
   | T_NEW
@@ -188,6 +189,7 @@ let token_to_string = function
   | T_FOR -> "T_FOR"
   | T_CLASS -> "T_CLASS"
   | T_EXTENDS -> "T_EXTENDS"
+  | T_INHERITS -> "T_INHERITS"
   | T_STATIC -> "T_STATIC"
   | T_ELSE -> "T_ELSE"
   | T_NEW -> "T_NEW"

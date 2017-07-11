@@ -561,6 +561,7 @@ module Statement
       let body = Type._object ~allow_static:true env in
       Statement.Interface.({
         id;
+        es6 = true;
         typeParameters;
         body;
         extends;
@@ -590,17 +591,23 @@ module Statement
         supers env acc
       | _ -> List.rev acc
 
-    (* This is identical to `interface`, except that mixins are allowed *)
+    (* This is identical to `interface`, except that mixins and inherits are
+       allowed *)
     in fun env start_loc ->
       let env = env |> with_strict true in
       Expect.token env T_CLASS;
       let id = Parse.identifier env in
       let typeParameters = Type.type_parameter_declaration_with_defaults env in
-      let extends = if Peek.token env = T_EXTENDS
-        then begin
-          Expect.token env T_EXTENDS;
-          supers env []
-        end else [] in
+      let es6, extends =
+        match Peek.token env with
+        | T_INHERITS ->
+            Expect.token env T_INHERITS;
+            false, supers env []
+        | T_EXTENDS ->
+            Expect.token env T_EXTENDS;
+            true, supers env []
+        | _ -> true, []
+      in
       let mixins = if Peek.value env = "mixins"
         then begin
           Expect.contextual env "mixins";
@@ -610,6 +617,7 @@ module Statement
       let loc = Loc.btwn start_loc (fst body) in
       loc, Statement.Interface.({
         id;
+        es6;
         typeParameters;
         body;
         extends;
