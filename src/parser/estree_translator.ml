@@ -215,6 +215,7 @@ end with type t = Impl.t) = struct
     | loc, DeclareFunction d -> declare_function (loc, d)
     | loc, DeclareClass d -> declare_class (loc, d)
     | loc, DeclareInterface i -> declare_interface (loc, i)
+    | loc, DeclareTypeAlias a -> declare_type_alias (loc, a)
     | loc, DeclareModule m -> DeclareModule.(
         let id = match m.id with
         | Literal lit -> literal lit
@@ -662,6 +663,17 @@ end with type t = Impl.t) = struct
     | None ->
         array [||]
   )
+
+  and declare_type_alias (loc, { Statement.TypeAlias.
+    id;
+    typeParameters;
+    right;
+  }) =
+    node "DeclareTypeAlias" loc [|
+      "id", identifier id;
+      "typeParameters", option type_parameter_declaration typeParameters;
+      "right", _type right;
+    |]
 
   and type_alias (loc, alias) =  Statement.TypeAlias.(
     node "TypeAlias" loc [|

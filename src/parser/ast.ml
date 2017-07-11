@@ -502,6 +502,7 @@ and Statement : sig
     | DeclareInterface of Interface.t
     | DeclareModule of DeclareModule.t
     | DeclareModuleExports of Type.annotation
+    | DeclareTypeAlias of TypeAlias.t
     | DeclareVariable of DeclareVariable.t
     | DoWhile of DoWhile.t
     | Empty

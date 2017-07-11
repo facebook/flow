@@ -471,7 +471,7 @@ module Statement
       directive;
     }))
 
-  and type_alias_helper = with_loc (fun env ->
+  and type_alias_helper env =
     if not (should_parse_types env)
     then error env Error.UnexpectedTypeAlias;
     Expect.token env T_TYPE;
@@ -487,12 +487,17 @@ module Statement
       typeParameters;
       right;
     })
-  )
+
+  and declare_type_alias env = with_loc (fun env ->
+    Expect.token env T_DECLARE;
+    let type_alias = type_alias_helper env in
+    Statement.DeclareTypeAlias type_alias
+  ) env
 
   and type_alias env =
     if Peek.is_identifier ~i:1 env
     then
-      let loc, type_alias = type_alias_helper env in
+      let loc, type_alias = with_loc type_alias_helper env in
       loc, Statement.TypeAlias type_alias
     else
       Parse.statement env
@@ -785,8 +790,7 @@ module Statement
           | T_IMPORT when in_module ->
             import_declaration env
           | _ ->
-            Expect.token env T_DECLARE;
-            type_alias env;
+            declare_type_alias env
         )
       | T_OPAQUE -> (
           match Peek.token env with
@@ -953,7 +957,7 @@ module Statement
             exportKind = Statement.ExportType;
           }
         | _ ->
-          let loc, type_alias = type_alias_helper env in
+          let loc, type_alias = with_loc type_alias_helper env in
           record_export env (loc, extract_ident_name type_alias.Statement.TypeAlias.id);
           let type_alias = (loc, Statement.TypeAlias type_alias) in
           Statement.ExportNamedDeclaration {
@@ -1180,7 +1184,7 @@ module Statement
         }
     | T_TYPE when allow_export_type ->
         (* declare export type = ... *)
-        let alias = type_alias_helper env in
+        let alias = with_loc type_alias_helper env in
         Statement.DeclareExportDeclaration {
           default = false;
           declaration = Some (NamedType alias);

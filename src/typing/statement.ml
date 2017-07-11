@@ -137,6 +137,8 @@ and statement_decl cx = Ast.Statement.(
   | (_, With _) ->
       (* TODO disallow or push vars into env? *)
       ()
+
+  | (_, DeclareTypeAlias { TypeAlias.id = (name_loc, name); _ } )
   | (_, TypeAlias { TypeAlias.id = (name_loc, name); _ } ) ->
       let r = DescFormat.type_reason name name_loc in
       let tvar = Flow.mk_tvar cx r in
@@ -652,6 +654,7 @@ and statement cx = Ast.Statement.(
       (* TODO or disallow? *)
       ()
 
+  | (loc, DeclareTypeAlias {TypeAlias.id=(name_loc, name); typeParameters; right;})
   | (loc, TypeAlias {TypeAlias.id=(name_loc, name); typeParameters; right;}) ->
       let r = DescFormat.type_reason name name_loc in
       let typeparams, typeparams_map =
