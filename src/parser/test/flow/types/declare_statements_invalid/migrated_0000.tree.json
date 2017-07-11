@@ -10,13 +10,13 @@
     }
   ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":3,"column":0}},
-  "range":[34,58],
+  "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":23}},
+  "range":[34,57],
   "body":[
     {
       "type":"DeclareFunction",
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":3,"column":0}},
-      "range":[34,58],
+      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":23}},
+      "range":[34,57],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":3,"column":0}},

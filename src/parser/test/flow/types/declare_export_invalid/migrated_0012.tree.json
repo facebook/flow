@@ -20,8 +20,8 @@
       "default":false,
       "declaration":{
         "type":"DeclareFunction",
-        "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":3,"column":0}},
-        "range":[34,65],
+        "loc":{"source":null,"start":{"line":2,"column":15},"end":{"line":2,"column":30}},
+        "range":[49,64],
         "id":{
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":2,"column":24},"end":{"line":3,"column":0}},

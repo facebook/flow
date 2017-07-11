@@ -620,7 +620,7 @@ module Statement
     let loc, fn = declare_class env start_loc in
     loc, Statement.DeclareClass fn
 
-  and declare_function env start_loc =
+  and declare_function env = with_loc (fun env ->
     Expect.token env T_FUNCTION;
     let id = Parse.identifier env in
     let start_sig_loc = Peek.loc env in
@@ -638,24 +638,17 @@ module Statement
     let typeAnnotation = fst typeAnnotation, typeAnnotation in
     let id = Loc.btwn (fst id) end_loc, snd id in
     let predicate = Type.predicate_opt env in
-    let end_loc = match Peek.semicolon_loc env with
-    | None ->
-      begin match predicate with
-      | Some (end_loc, _) -> end_loc
-      | None -> end_loc
-      end
-    | Some end_loc -> end_loc in
     Eat.semicolon env;
-    let loc = Loc.btwn start_loc end_loc in
-    loc, Statement.DeclareFunction.({
+    Statement.DeclareFunction.({
       id;
       typeAnnotation;
       predicate;
     })
+  ) env
 
   and declare_function_statement env start_loc =
-    let loc, fn = declare_function env start_loc in
-    loc, Statement.DeclareFunction fn
+    let loc, fn = declare_function env in
+    Loc.btwn start_loc loc, Statement.DeclareFunction fn
 
   and declare_var env start_loc =
     Expect.token env T_VAR;
@@ -1106,7 +1099,7 @@ module Statement
         let declaration = match Peek.token env with
         | T_FUNCTION ->
             (* declare export default function foo (...): ...  *)
-            let fn = declare_function env start_loc in
+            let fn = declare_function env in
             Some (Function fn)
         | T_CLASS ->
             (* declare export default class foo { ... } *)
@@ -1132,7 +1125,7 @@ module Statement
         let declaration = match Peek.token env with
         | T_FUNCTION ->
             (* declare export function foo (...): ...  *)
-            let fn = declare_function env start_loc in
+            let fn = declare_function env in
             Some (Function fn)
         | T_CLASS ->
             (* declare export class foo { ... } *)
