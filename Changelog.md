@@ -1,3 +1,20 @@
+### 0.50.0
+
+Likely to cause new Flow errors:
+
+* Fixed a bug that suppressed unrelated errors when a missing annotation error was also suppressed.
+
+New Features:
+
+* Added `$Values` type.
+
+Notable bug fixes:
+
+* Fixed lints appearing in Try Flow.
+* Miscellaneous libdef improvements.
+* Fixed a couple bugs that could lead to missing push diagnostics when using the persistent connection.
+* Made `$ReadOnlyArray` covariant in variance checking.
+
 ### 0.49.1
 
 Fixed an issue where `flow init` outputs a `[lints]` section (for experimental linting support, coming soon!) that includes `all=false`, which is already deprecated. Upcoming versions will support `all=off` instead.
