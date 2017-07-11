@@ -1,32 +1,16 @@
+//= require flow-loader
+//= link tryFlowWorker
 import * as CodeMirror from 'codemirror/lib/codemirror';
 import 'codemirror/addon/lint/lint';
 import 'codemirror/mode/javascript/javascript';
 import 'codemirror/mode/xml/xml';
 import 'codemirror/mode/jsx/jsx';
 import * as LZString from 'lz-string';
+import {load as initFlowLocally} from 'flow-loader';
 
 CodeMirror.defineOption('flow', null, function(editor) {
   editor.performLint();
 });
-
-function get(url) {
-  return new Promise(function(resolve, reject) {
-    var req = new XMLHttpRequest();
-    req.open('GET', url);
-    req.onload = function() {
-      if (req.status == 200) {
-        resolve([url, req.response]);
-      }
-      else {
-        reject(Error(req.statusText));
-      }
-    };
-    req.onerror = function() {
-      reject(Error("Network Error"));
-    };
-    req.send();
-  });
-}
 
 function printError(err, editor) {
   const clickHandler = (msg) => {
@@ -95,7 +79,7 @@ function removeChildren(node) {
 function getAnnotations(text, callback, options, editor) {
   const flow = editor.getOption('flow');
   Promise.resolve(flow).then(() => {
-    var errors = window.flow.checkContent('-', text);
+    var errors = self.flow.checkContent('-', text);
 
     CodeMirror.signal(editor, 'flowErrors', errors);
 
@@ -147,31 +131,82 @@ function removeClass(elem, className) {
   }).join(' ');
 }
 
-const versionCache = {};
-function initFlow(version) {
-  if (version in versionCache) {
-    return Promise.resolve(versionCache[version]);
-  }
-  const libs = [
-    `/static/${version}/flowlib/core.js`,
-    `/static/${version}/flowlib/bom.js`,
-    `/static/${version}/flowlib/cssom.js`,
-    `/static/${version}/flowlib/dom.js`,
-    `/static/${version}/flowlib/node.js`,
-    `/static/${version}/flowlib/react.js`,
-  ];
-  const flowLoader = new Promise(function(resolve) {
-    require([`/static/${version}/flow.js`], resolve);
-  });
-  return Promise.all([flowLoader, ...libs.map(get)])
-    .then(function([_flow, ...contents]) {
-      contents.forEach(function(nameAndContent) {
-        window.flow.registerFile(nameAndContent[0], nameAndContent[1]);
-      });
-      window.flow.setLibs(libs);
-      versionCache[version] = window.flow;
-      return flow;
+class Deferred {
+  constructor() {
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
     });
+  }
+}
+
+const workerRegistry = {}
+class FlowWorker {
+  constructor(version) {
+    this._version = version;
+    this._pending = {};
+    this._index = 0;
+
+    const worker = this._worker = new Worker('/assets/tryFlowWorker.js');
+    worker.onmessage = ({data}) => {
+      if (data.id && this._pending[data.id]) {
+        if (data.err) {
+          this._pending[data.id].reject(data.err);
+        } else {
+          this._pending[data.id].resolve(data.result);
+        }
+        delete this._pending[data.id];
+      }
+    };
+    worker.onerror = function() {
+      console.log('There is an error with your worker!');
+    };
+
+    // keep a reference to the worker, so that it doesn't get GC'd and killed.
+    workerRegistry[version] = worker;
+  }
+
+  send(data) {
+    const id = ++this._index;
+    const version = this._version;
+    this._pending[id] = new Deferred();
+    this._worker.postMessage({ id, version, ...data });
+    return this._pending[id].promise;
+  }
+}
+
+function initFlowWorker(version) {
+  const worker = new FlowWorker(version);
+  return worker.send({ type: 'init' }).then(() => worker);
+}
+
+class AsyncLocalFlow {
+  constructor(flow) {
+    this._flow = flow;
+  }
+
+  checkContent(filename, body) {
+    return Promise.resolve(this._flow.checkContent(filename, body));
+  }
+}
+
+class AsyncWorkerFlow {
+  constructor(worker) {
+    this._worker = worker;
+  }
+
+  checkContent(filename, body) {
+    return this._worker.send({ type: 'checkContent', filename, body });
+  }
+}
+
+function initFlow(version) {
+  const useWorker = localStorage.getItem('tryFlowUseWorker');
+  if (useWorker === 'false') {
+    return initFlowLocally(version).then((flow) => new AsyncLocalFlow(flow));
+  } else {
+    return initFlowWorker(version).then((flow) => new AsyncWorkerFlow(flow));
+  }
 }
 
 function createEditor(
@@ -287,7 +322,7 @@ function createEditor(
       flowReady.then(() => {
         let typeAtPos;
         try {
-          typeAtPos = window.flow.typeAtPos('-', value, cursor.line + 1, cursor.ch);
+          typeAtPos = self.flow.typeAtPos('-', value, cursor.line + 1, cursor.ch);
         } catch (err) {
           // ...
         } finally {
@@ -312,8 +347,8 @@ function createEditor(
 
       if (astNode) {
         flowReady.then(() => {
-          if (window.flow.parse) {
-            let ast = window.flow.parse(editor.getValue(), {});
+          if (self.flow.parse) {
+            let ast = self.flow.parse(editor.getValue(), {});
             removeChildren(astNode);
             astNode.appendChild(
               document.createTextNode(JSON.stringify(ast, null, 2))
