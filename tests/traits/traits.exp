@@ -20,7 +20,7 @@ Error: test2.js:2
   2: declare class C mixins I { }
                             ^ I. type referenced from value position
   1: declare interface I { }
-             ^^^^^^^^^^^^^^^ type I
+     ^^^^^^^^^^^^^^^^^^^^^^^ type I
 
 
 Found 4 errors

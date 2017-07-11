@@ -543,7 +543,6 @@ module Statement
       | _ -> List.rev acc
     in
     fun env ->
-      let start_loc = Peek.loc env in
       if not (should_parse_types env)
       then error env Error.UnexpectedTypeInterface;
       Expect.token env T_INTERFACE;
@@ -555,8 +554,7 @@ module Statement
         supers env []
       end else [] in
       let body = Type._object ~allow_static:true env in
-      let loc = Loc.btwn start_loc (fst body) in
-      loc, Statement.Interface.({
+      Statement.Interface.({
         id;
         typeParameters;
         body;
@@ -564,11 +562,16 @@ module Statement
         mixins = [];
       })
 
+  and declare_interface env = with_loc (fun env ->
+    Expect.token env T_DECLARE;
+    let iface = interface_helper env in
+    Statement.DeclareInterface iface
+  ) env
 
   and interface env =
     if Peek.is_identifier ~i:1 env
     then
-      let loc, iface = interface_helper env in
+      let loc, iface = with_loc interface_helper env in
       loc, Statement.InterfaceDeclaration iface
     else expression env
 
@@ -776,8 +779,7 @@ module Statement
           Expect.token env T_DECLARE;
           declare_class_statement env start_loc
       | T_INTERFACE ->
-          Expect.token env T_DECLARE;
-          interface env
+          declare_interface env
       | T_TYPE -> (
           match Peek.token env with
           | T_IMPORT when in_module ->
@@ -1196,7 +1198,7 @@ module Statement
         }
     | T_INTERFACE when allow_export_type ->
         (* declare export interface ... *)
-        let iface = interface_helper env in
+        let iface = with_loc interface_helper env in
         Statement.DeclareExportDeclaration {
           default = false;
           declaration = Some (Interface iface);

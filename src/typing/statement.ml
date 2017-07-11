@@ -260,8 +260,10 @@ and statement_decl cx = Ast.Statement.(
     )
 
   | (loc, DeclareClass { Interface.id = (_, name); _ })
+  | (loc, DeclareInterface { Interface.id = (_, name); _ })
   | (loc, InterfaceDeclaration { Interface.id = (_, name); _ }) as stmt ->
       let is_interface = match stmt with
+      | (_, DeclareInterface _) -> true
       | (_, InterfaceDeclaration _) -> true
       | _ -> false in
       let r = mk_reason (RCustom (spf "class `%s`" name)) loc in
@@ -1458,6 +1460,7 @@ and statement cx = Ast.Statement.(
   | (loc, DeclareClass decl) ->
     interface cx loc false decl
 
+  | (loc, DeclareInterface decl)
   | (loc, InterfaceDeclaration decl) ->
     interface cx loc true decl
 

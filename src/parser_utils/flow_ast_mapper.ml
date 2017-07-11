@@ -116,6 +116,7 @@ class mapper = object(this)
     | (_loc, Debugger) -> stmt
     | (_loc, DeclareClass _) -> stmt
     | (_loc, DeclareFunction _) -> stmt
+    | (_loc, DeclareInterface _) -> stmt
     | (_loc, DeclareModule _) -> stmt
     | (_loc, DeclareModuleExports _) -> stmt
     | (_loc, DeclareVariable _) -> stmt

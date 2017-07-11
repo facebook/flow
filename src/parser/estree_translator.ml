@@ -214,6 +214,7 @@ end with type t = Impl.t) = struct
     | loc, DeclareVariable d -> declare_variable (loc, d)
     | loc, DeclareFunction d -> declare_function (loc, d)
     | loc, DeclareClass d -> declare_class (loc, d)
+    | loc, DeclareInterface i -> declare_interface (loc, i)
     | loc, DeclareModule m -> DeclareModule.(
         let id = match m.id with
         | Literal lit -> literal lit
@@ -626,6 +627,20 @@ end with type t = Impl.t) = struct
       "extends", array_of_list interface_extends d.extends;
     |]
   )
+
+  and declare_interface (loc, { Statement.Interface.
+    id;
+    typeParameters;
+    body;
+    extends;
+    mixins=_;
+  }) =
+    node "DeclareInterface" loc [|
+      "id", identifier id;
+      "typeParameters", option type_parameter_declaration typeParameters;
+      "body", object_type body;
+      "extends", array_of_list interface_extends extends;
+    |]
 
   and export_kind = function
     | Statement.ExportType -> "type"

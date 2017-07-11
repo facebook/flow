@@ -499,6 +499,7 @@ and Statement : sig
     | DeclareClass of Interface.t
     | DeclareExportDeclaration of DeclareExportDeclaration.t
     | DeclareFunction of DeclareFunction.t
+    | DeclareInterface of Interface.t
     | DeclareModule of DeclareModule.t
     | DeclareModuleExports of Type.annotation
     | DeclareVariable of DeclareVariable.t
