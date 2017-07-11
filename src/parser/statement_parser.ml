@@ -650,20 +650,17 @@ module Statement
     let loc, fn = declare_function env in
     Loc.btwn start_loc loc, Statement.DeclareFunction fn
 
-  and declare_var env start_loc =
+  and declare_var env = with_loc (fun env ->
     Expect.token env T_VAR;
-    let loc, { Pattern.Identifier.name; typeAnnotation; _; } =
+    let _loc, { Pattern.Identifier.name; typeAnnotation; _; } =
       Parse.identifier_with_type env ~no_optional:true Error.StrictVarName in
-    let end_loc = match Peek.semicolon_loc env with
-    | None -> loc
-    | Some loc -> loc in
-    let loc = Loc.btwn start_loc end_loc in
     Eat.semicolon env;
-    loc, Statement.DeclareVariable.({ id=name; typeAnnotation; })
+    Statement.DeclareVariable.({ id=name; typeAnnotation; })
+  ) env
 
   and declare_var_statement env start_loc =
-    let loc, var = declare_var env start_loc in
-    loc, Statement.DeclareVariable var
+    let loc, var = declare_var env in
+    Loc.btwn start_loc loc, Statement.DeclareVariable var
 
   and declare_module =
     let rec module_items env ~module_kind acc =
@@ -1087,7 +1084,6 @@ module Statement
   and declare_export_declaration ?(allow_export_type=false) = with_loc (fun env ->
     if not (should_parse_types env)
     then error env Error.UnexpectedTypeDeclaration;
-    let start_loc = Peek.loc env in
     Expect.token env T_DECLARE;
 
     let env = env |> with_strict true |> with_in_export true in
@@ -1139,7 +1135,7 @@ module Statement
             | T_CONST -> error env Error.DeclareExportConst
             | _ -> ());
             (* declare export var foo: ... *)
-            let var = declare_var env start_loc in
+            let var = declare_var env in
             Some (Variable var)
         | _ -> assert false in
         Statement.DeclareExportDeclaration {
