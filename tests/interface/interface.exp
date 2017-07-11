@@ -12,7 +12,7 @@ Error: interface.js:7
   7: var i = new I(); // error
                  ^ I. type referenced from value position
   5: interface I { x: number; }
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ type I
+               ^ type I
 
 Error: interface.js:10
  10:   (o.name: string); // error, name is static

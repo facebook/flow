@@ -261,19 +261,19 @@ and statement_decl cx = Ast.Statement.(
       | None -> ()
     )
 
-  | (loc, DeclareClass { Interface.id = (_, name); _ })
-  | (loc, DeclareInterface { Interface.id = (_, name); _ })
-  | (loc, InterfaceDeclaration { Interface.id = (_, name); _ }) as stmt ->
+  | (_, DeclareClass { Interface.id = (name_loc, name); _ })
+  | (_, DeclareInterface { Interface.id = (name_loc, name); _ })
+  | (_, InterfaceDeclaration { Interface.id = (name_loc, name); _ }) as stmt ->
       let is_interface = match stmt with
       | (_, DeclareInterface _) -> true
       | (_, InterfaceDeclaration _) -> true
       | _ -> false in
-      let r = mk_reason (RCustom (spf "class `%s`" name)) loc in
+      let r = mk_reason (RCustom (spf "class `%s`" name)) name_loc in
       let tvar = Flow.mk_tvar cx r in
       (* interface is a type alias, declare class is a var *)
       if is_interface
-      then Env.bind_type cx name tvar loc
-      else Env.bind_declare_var cx name tvar loc
+      then Env.bind_type cx name tvar name_loc
+      else Env.bind_declare_var cx name tvar name_loc
 
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
