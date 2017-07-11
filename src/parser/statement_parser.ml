@@ -591,7 +591,7 @@ module Statement
       | _ -> List.rev acc
 
     (* This is identical to `interface`, except that mixins are allowed *)
-    in fun env start_loc ->
+    in with_loc (fun env ->
       let env = env |> with_strict true in
       Expect.token env T_CLASS;
       let id = Parse.identifier env in
@@ -607,18 +607,18 @@ module Statement
           supers env []
         end else [] in
       let body = Type._object ~allow_static:true env in
-      let loc = Loc.btwn start_loc (fst body) in
-      loc, Statement.Interface.({
+      Statement.Interface.({
         id;
         typeParameters;
         body;
         extends;
         mixins;
       })
+    )
 
   and declare_class_statement env start_loc =
-    let loc, fn = declare_class env start_loc in
-    loc, Statement.DeclareClass fn
+    let loc, fn = declare_class env in
+    Loc.btwn start_loc loc, Statement.DeclareClass fn
 
   and declare_function env = with_loc (fun env ->
     Expect.token env T_FUNCTION;
@@ -1103,7 +1103,7 @@ module Statement
             Some (Function fn)
         | T_CLASS ->
             (* declare export default class foo { ... } *)
-            let class_ = declare_class env start_loc in
+            let class_ = declare_class env in
             Some (Class class_)
         | _ ->
             (* declare export default [type]; *)
@@ -1129,7 +1129,7 @@ module Statement
             Some (Function fn)
         | T_CLASS ->
             (* declare export class foo { ... } *)
-            let class_ = declare_class env start_loc in
+            let class_ = declare_class env in
             Some (Class class_)
         | T_LET
         | T_CONST
