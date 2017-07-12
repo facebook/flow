@@ -18,8 +18,6 @@
 
 open Utils_js
 
-module FlowError = Flow_error
-
 (* Subset of a file's context, with the important distinction that module
    references in the file have been resolved to module names. *)
 (** TODO [perf] Make resolved_requires tighter.
@@ -360,9 +358,9 @@ module Node = struct
               (Files.relative_path project_root_str package_filename)
           in
           if is_included || is_contained_in_root then (
-            FlowError.(EInternal (loc, PackageHeapNotFound package_relative_to_root))
+            Flow_error.(EInternal (loc, PackageHeapNotFound package_relative_to_root))
           ) else (
-            FlowError.EModuleOutsideRoot (loc, package_relative_to_root)
+            Flow_error.EModuleOutsideRoot (loc, package_relative_to_root)
           )
         in
         begin match resolution_acc with
