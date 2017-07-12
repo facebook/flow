@@ -225,10 +225,10 @@ class AsyncWorkerFlow {
 
 function initFlow(version) {
   const useWorker = localStorage.getItem('tryFlowUseWorker');
-  if (useWorker === 'false') {
-    return initFlowLocally(version).then((flow) => new AsyncLocalFlow(flow));
-  } else {
+  if (useWorker === 'true') {
     return initFlowWorker(version).then((flow) => new AsyncWorkerFlow(flow));
+  } else {
+    return initFlowLocally(version).then((flow) => new AsyncLocalFlow(flow));
   }
 }
 
