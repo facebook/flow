@@ -8,7 +8,7 @@
  *
  *)
 
-module Prot = ServerProt.Persistent_connection_prot
+module Prot = Persistent_connection_prot
 
 type single_client = {
   client: ServerUtils.client;

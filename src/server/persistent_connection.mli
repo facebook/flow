@@ -8,7 +8,7 @@
  *
  *)
 
-module Prot = ServerProt.Persistent_connection_prot
+module Prot = Persistent_connection_prot
 
 (* Stores all the necessary information about current persistent connections *)
 type t

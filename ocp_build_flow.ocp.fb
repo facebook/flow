@@ -36,6 +36,7 @@ begin library "flow-commands"
     "flow-stubs"
     "flow-server"
     "flow-server-env"
+    "flow-server-protocol"
     "flow-server-utils"
     "flow-services-autocomplete"
     "flow-services-inference"
@@ -284,6 +285,22 @@ begin library "flow-shmem"
   ]
 end
 
+begin library "flow-server-protocol"
+  sort = true
+  files = begin fb-glob "src/server/protocol"
+  end
+  requires = [
+    "flow-common"
+    "flow-common-errors"
+    "flow-parser"
+    "flow-server-utils"
+    "flow-services-autocomplete"
+    "hh-utils"
+    "hh-utils-sys"
+    "hh-utils-collections"
+  ]
+end
+
 begin library "flow-server"
   sort = true
   files = begin fb-glob "src/server"
@@ -291,7 +308,6 @@ begin library "flow-server"
       "file_input.ml"
       "serverEnv.ml"
       "serverUtils.ml"
-      "serverProt.ml"
       "persistent_connection.ml"
       "server_files_js.ml"
       "server_files_js.mli"
@@ -334,6 +350,7 @@ begin library "flow-server-env"
     "flow-persistent-connection"
     "flow-common"
     "flow-common-utils"
+    "flow-server-protocol"
     "hh-dfind"
     "hh-procs"
     "hh-utils-collections"
@@ -357,12 +374,12 @@ begin library "flow-persistent-connection"
   dirname = "src/server"
   files = [
     "persistent_connection.ml"
-    "serverProt.ml"
   ]
   requires = [
     "flow-common"
     "flow-common-lints"
     "flow-common-utils"
+    "flow-server-protocol"
     "flow-server-utils"
     "flow-services-autocomplete"
     "hh-utils"

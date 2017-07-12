@@ -14,7 +14,7 @@
 
 open CommandUtils
 
-module Prot = ServerProt.Persistent_connection_prot
+module Prot = Persistent_connection_prot
 
 let protocol_options = ["very-unstable"; "human-readable"]
 

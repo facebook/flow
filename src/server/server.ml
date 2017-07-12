@@ -10,7 +10,6 @@
 
 module TI = Type_inference_js
 module Server = ServerFunctors
-module Persistent_connection_prot = ServerProt.Persistent_connection_prot
 
 module FlowProgram : Server.SERVER_PROGRAM = struct
   open Utils_js

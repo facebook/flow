@@ -86,15 +86,3 @@ type response =
 | ERRORS of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}
 | NO_ERRORS
 | NOT_COVERED
-
-module Persistent_connection_prot = struct
-  type request =
-    | Subscribe
-    | Autocomplete of (File_input.t * (* request id *) int)
-
-  type response =
-    | Errors of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}
-    | StartRecheck
-    | EndRecheck
-    | AutocompleteResult of (autocomplete_response * (* request id *) int)
-end

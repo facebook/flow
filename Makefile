@@ -70,6 +70,7 @@ MODULES=\
   src/parser_utils\
   src/parsing\
   src/server\
+  src/server/protocol\
   src/services/autocomplete\
   src/services/inference\
   src/services/flowFileGen\
