@@ -624,7 +624,7 @@ let collate_errors =
         in
         marshal def
     | ServerProt.GET_IMPORTS module_names ->
-        get_imports ~options module_names
+        (get_imports ~options module_names: ServerProt.get_imports_response)
           |> marshal
     | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
         (infer_type
