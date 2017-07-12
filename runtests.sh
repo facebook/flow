@@ -102,6 +102,17 @@ print_failure() {
       rm "$diff_file"
     fi
 }
+print_error() {
+    dir=$1
+    name=${dir%*/}
+    name=${name##*/}
+
+    printf "%b[✗] ERRORED:%b %s%b\n" \
+      "$COLOR_RED_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
+
+    log_file="${dir}${name}.log"
+    [ -f "$log_file" ] && cat "$log_file"
+}
 print_skip() {
     name=$1
     name=${name%*/}
@@ -139,25 +150,26 @@ cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
 passed=0
 failed=0
 skipped=0
+errored=0
 filter="$2"
 
 RUNTEST_SUCCESS=0
 RUNTEST_FAILURE=1
 RUNTEST_SKIP=2
 RUNTEST_MISSING_FILES=3
+RUNTEST_ERROR=4
 
 # This function runs in the background so it shouldn't output anything to
 # stdout or stderr. It should only communicate through its return value
 runtest() {
-    return_status=$RUNTEST_SKIP
     dir=$1
     dir=${dir%*/}
     name=${dir##*/}
     exp_file="${name}.exp"
     # On Windows we skip some tests as symlinks not available
     if [ "$OSTYPE" = "msys" ]  &&
-      ([ $name = "symlink" ] ||
-       [ $name = "node_tests" ])
+      ([ "$name" = "symlink" ] ||
+       [ "$name" = "node_tests" ])
     then
         return $RUNTEST_SKIP
     elif [[ -z $filter || $name =~ $filter ]]
@@ -199,6 +211,7 @@ runtest() {
         abs_log_file="$OUT_DIR/$name.log"
         abs_err_file="$OUT_DIR/$name.err"
         abs_diff_file="$OUT_DIR/$name.diff"
+        return_status=$RUNTEST_SUCCESS
 
         # run the tests from inside $OUT_DIR
         pushd "$OUT_DIR" >/dev/null
@@ -231,6 +244,7 @@ runtest() {
         cmd="check"
         stdin=""
         stderr_dest="$abs_err_file"
+        ignore_stderr=true
         cwd=""
         if [ -e ".testconfig" ]
         then
@@ -244,6 +258,7 @@ runtest() {
             # ignore_stderr
             if [ "$(awk '$1=="ignore_stderr:"{print $2}' .testconfig)" == "false" ]
             then
+                ignore_stderr=false
                 stderr_dest="$abs_out_file"
             fi
             # stdin
@@ -279,6 +294,10 @@ runtest() {
             "$FLOW" check . \
               $all $flowlib --strip-root --show-all-errors \
                1> "$abs_out_file" 2> "$stderr_dest"
+            st=$?
+            if [ $ignore_stderr = true ] && [ $st -ne 0 ] && [ $st -ne 2 ]; then
+              return_status=$RUNTEST_ERROR
+            fi
         else
             # otherwise, run specified flow command, then kill the server
 
@@ -288,10 +307,12 @@ runtest() {
             # start server and wait
             "$FLOW" start . \
               $all $flowlib --wait --log-file "$abs_log_file" > /dev/null 2>&1
-            if [ "$shell" != "" ]
-            then
-                # run test script
-                sh "$shell" "$FLOW" 1> "$abs_out_file" 2> "$stderr_dest"
+            if [ $? -ne 0 ]; then
+              # flow failed to start
+              return_status=$RUNTEST_ERROR
+            elif [ "$shell" != "" ]; then
+              # run test script
+              sh "$shell" "$FLOW" 1> "$abs_out_file" 2> "$stderr_dest"
             else
             # If there's stdin, then direct that in
             # cmd should NOT be double quoted...it may contain many commands
@@ -314,35 +335,38 @@ runtest() {
             popd >/dev/null
         fi
 
-        diff -u --strip-trailing-cr "$exp_file" "$out_file" > "$diff_file"
+        if [ $return_status -eq $RUNTEST_SUCCESS ]; then
+          diff -u --strip-trailing-cr "$exp_file" "$out_file" > "$diff_file"
+        fi
 
         # leave $OUT_DIR
         popd >/dev/null
 
-        if [ -s "$OUT_DIR/$diff_file" ]
-        then
-            mv "$OUT_DIR/$out_file" "$dir"
-            [ -s "$OUT_DIR/$log_file" ] && mv "$OUT_DIR/$log_file" "$dir"
-            mv "$OUT_DIR/$err_file" "$dir"
-            mv "$OUT_DIR/$diff_file" "$dir"
-            return_status=$RUNTEST_FAILURE
+        if [ $return_status -ne $RUNTEST_SUCCESS ]; then
+            [ -s "$abs_log_file" ] && mv "$abs_log_file" "$dir"
+            return $return_status
+        elif [ -s "$abs_diff_file" ]; then
+            mv "$abs_out_file" "$dir"
+            [ -s "$abs_log_file" ] && mv "$abs_log_file" "$dir"
+            mv "$abs_err_file" "$dir"
+            mv "$abs_diff_file" "$dir"
+            return $RUNTEST_FAILURE
         else
             rm -rf "$OUT_DIR"
             rm -f "$dir/$out_file"
             rm -f "$dir/$log_file"
             rm -f "$dir/$err_file"
             rm -f "$dir/$diff_file"
-            return_status=$RUNTEST_SUCCESS
+            return $RUNTEST_SUCCESS
         fi
     else
-        return_status=$RUNTEST_SKIP
+        return $RUNTEST_SKIP
     fi
-    return $return_status
 }
 
 
 num_to_run_in_parallel=${FLOW_RUNTESTS_PARALLELISM-16}
-printf "Running up to %d test(s) in parallel\n" $num_to_run_in_parallel
+printf "Running up to %d test(s) in parallel\n" "$num_to_run_in_parallel"
 
 # Index N of pids should correspond to the test at index N of dirs
 dirs=(tests/*/)
@@ -383,11 +407,14 @@ while (( next_test_to_reap < ${#dirs[@]} )); do
         (( skipped++ ))
         print_skip "$testname" "$verbose" ;;
       $RUNTEST_MISSING_FILES )
-        (( failed++ ))
-        print_failure "$testname"
+        (( errored++ ))
+        print_error "$testname"
         name=${testname%*/}
         name=${name##*/}
         printf "Missing %s.exp file or .flowconfig file\n" "$name" ;;
+      $RUNTEST_ERROR )
+        (( errored++ ))
+        print_error "$testname" ;;
     esac
 
     ((next_test_to_reap++))
@@ -398,13 +425,19 @@ done
 
 echo
 if [ $failed -eq 0 ]; then
-  printf "%bPassed: %d, Failed: %d, Skipped: %d%b\n" \
-    "$COLOR_DEFAULT_BOLD" "$passed" "$failed" "$skipped" "$COLOR_RESET"
+  FAILED_COLOR="$COLOR_DEFAULT_BOLD"
 else
-  printf "%bPassed: %d, %bFailed: %d%b, Skipped: %d%b\n" \
-    "$COLOR_DEFAULT_BOLD" "$passed" \
-    "$COLOR_WHITE_ON_RED_BOLD" "$failed" \
-    "$COLOR_DEFAULT_BOLD" "$skipped" \
-    "$COLOR_RESET"
+  FAILED_COLOR="$COLOR_WHITE_ON_RED_BOLD"
 fi
-exit ${failed}
+if [ $errored -eq 0 ]; then
+  ERRORED_COLOR="$COLOR_DEFAULT_BOLD"
+else
+  ERRORED_COLOR="$COLOR_WHITE_ON_RED_BOLD"
+fi
+printf "%bPassed: %d, %bFailed: %d%b, Skipped: %d, %bErrored: %d%b\n" \
+  "$COLOR_DEFAULT_BOLD" "$passed" \
+  "$FAILED_COLOR" "$failed" \
+  "$COLOR_DEFAULT_BOLD" "$skipped" \
+  "$ERRORED_COLOR" "$errored" \
+  "$COLOR_RESET"
+exit $((failed + errored))
