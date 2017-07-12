@@ -25,7 +25,7 @@ val merge_contents_context:
   options: Options.t ->
   Context.t ->
   Loc.t SMap.t ->
-  ensure_checked_dependencies: (Module_js.NameSet.t -> unit) ->
+  ensure_checked_dependencies: (Modulename.Set.t -> unit) ->
   unit
 
 

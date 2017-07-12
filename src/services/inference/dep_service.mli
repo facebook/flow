@@ -14,7 +14,7 @@ val dependent_files:
   Worker.t list option -> (* workers *)
   unchanged:FilenameSet.t ->
   new_or_changed:FilenameSet.t ->
-  changed_modules:Module_js.NameSet.t ->
+  changed_modules:Modulename.Set.t ->
   FilenameSet.t * FilenameSet.t
 
 val file_dependencies: (filename -> FilenameSet.t) Expensive.t

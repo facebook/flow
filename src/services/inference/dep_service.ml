@@ -100,9 +100,9 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
        module records and update incrementally on recheck.
     *)
 
-    let module_dependent_map = NameSet.fold (fun r module_dependent_map ->
-      NameMap.add r FilenameSet.(
-        match NameMap.get r module_dependent_map with
+    let module_dependent_map = Modulename.Set.fold (fun r module_dependent_map ->
+      Modulename.Map.add r FilenameSet.(
+        match Modulename.Map.get r module_dependent_map with
         | None -> singleton f
         | Some files -> add f files
       ) module_dependent_map
@@ -124,7 +124,7 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
       (modules1, module_dependent_map1, resolution_path_files1)
       (modules2, module_dependent_map2, resolution_path_files2) =
     FilenameMap.union modules1 modules2,
-    NameMap.merge (fun _ x y ->
+    Modulename.Map.merge (fun _ x y ->
       match x, y with
       | Some v, None
       | None, Some v -> Some v
@@ -135,7 +135,7 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
   in
 
   MultiWorker.call workers ~job ~merge
-    ~neutral: Module_js.(FilenameMap.empty, NameMap.empty, FilenameSet.empty)
+    ~neutral: (FilenameMap.empty, Modulename.Map.empty, FilenameSet.empty)
     ~next: (MultiWorker.next workers (FilenameSet.elements fileset))
 )
 
@@ -144,7 +144,7 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
    given fileset, using get_info_unsafe to map files to modules
  *)
 let calc_all_dependents modules module_dependent_map fileset =
-  let module_dependents m = Module_js.NameMap.get m module_dependent_map in
+  let module_dependents m = Modulename.Map.get m module_dependent_map in
   let file_dependents f =
     let m = FilenameMap.find_unsafe f modules in
     let f_module = Module_js.eponymous_module f in
@@ -194,12 +194,12 @@ let dependent_files workers ~unchanged ~new_or_changed ~changed_modules =
     = dependent_calc_utils workers unchanged new_or_changed in
 
   (* resolution_path_files, plus files that require changed_modules *)
-  let direct_dependents = Module_js.(NameSet.fold (fun m acc ->
-    match NameMap.get m module_dependent_map with
+  let direct_dependents = Modulename.Set.fold (fun m acc ->
+    match Modulename.Map.get m module_dependent_map with
     | Some files -> FilenameSet.union acc files
     | None -> acc
     ) changed_modules resolution_path_files
-  ) in
+  in
 
   (* (transitive dependents are re-merged, directs are also re-resolved) *)
   calc_all_dependents modules module_dependent_map direct_dependents,
@@ -227,7 +227,7 @@ let implementation_file ~audit r = Module_js.(
 
 let file_dependencies ~audit file = Module_js.(
   let { required; _ } = get_resolved_requires_unsafe ~audit file in
-  NameSet.fold (fun r files ->
+  Modulename.Set.fold (fun r files ->
     match implementation_file ~audit:Expensive.ok r with
     | Some f -> FilenameSet.add f files
     | None -> files

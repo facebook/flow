@@ -20,9 +20,6 @@ open Utils_js
 
 module FlowError = Flow_error
 
-module NameSet = Set.Make(Modulename)
-module NameMap = MyMap.Make(Modulename)
-
 (* Subset of a file's context, with the important distinction that module
    references in the file have been resolved to module names. *)
 (** TODO [perf] Make resolved_requires tighter.
@@ -39,7 +36,7 @@ module NameMap = MyMap.Make(Modulename)
     that's probably guessable.
 **)
 type resolved_requires = {
-  required: NameSet.t; (* required module names *)
+  required: Modulename.Set.t; (* required module names *)
   require_loc: Loc.t SMap.t; (* statement locations *)
   resolved_modules: Modulename.t SMap.t; (* map from module references in file
                                             to module names they resolve to *)
@@ -137,7 +134,7 @@ let module_name_candidates ~options name =
 (****************** shared dependency map *********************)
 
 (* map from module name to filename *)
-module NameHeap = SharedMem_js.WithCache (Modulename) (struct
+module NameHeap = SharedMem_js.WithCache (Modulename.Key) (struct
   type t = filename
   let prefix = Prefix.make()
   let description = "Name"
@@ -639,8 +636,8 @@ let imported_modules ~options node_modules_containers f require_loc =
   let resolution_acc = { paths = SSet.empty; errors = [] } in
   let set, map = SMap.fold (fun r loc (set, map) ->
     let resolved_r = imported_module ~options ~node_modules_containers f loc ~resolution_acc r in
-    NameSet.add resolved_r set, SMap.add r resolved_r map
-  ) require_loc (NameSet.empty, SMap.empty) in
+    Modulename.Set.add resolved_r set, SMap.add r resolved_r map
+  ) require_loc (Modulename.Set.empty, SMap.empty) in
   set, map, resolution_acc
 
 let choose_provider ~options m files errmap =
@@ -821,7 +818,7 @@ let commit_modules workers ~options new_or_changed dirty_modules =
         if debug then prerr_endlinef
           "no remaining providers: %S"
           (Modulename.to_string m);
-        (NameSet.add m rem), prov, rep, errmap, (NameSet.add m diff)
+        (Modulename.Set.add m rem), prov, rep, errmap, (Modulename.Set.add m diff)
     | ps ->
       (* incremental: install empty error sets here for provider candidates.
          this will have the effect of resetting downstream errors for these
@@ -849,8 +846,10 @@ let commit_modules workers ~options new_or_changed dirty_modules =
             "unchanged provider: %S -> %s"
             (Modulename.to_string m)
             (string_of_filename p);
-          rem, prov, rep, errmap,
-            (if FilenameSet.mem p new_or_changed then NameSet.add m diff else diff)
+          let diff = if FilenameSet.mem p new_or_changed
+            then Modulename.Set.add m diff
+            else diff in
+          rem, prov, rep, errmap, diff
         end else begin
           (* When can this happen? Say m pointed to f before, a different file
              f' that provides m changed (so m is not in old_modules), and
@@ -860,7 +859,9 @@ let commit_modules workers ~options new_or_changed dirty_modules =
             (Modulename.to_string m)
             (string_of_filename p)
             (string_of_filename f);
-          (NameSet.add m rem), p::prov, (m, p)::rep, errmap, (NameSet.add m diff)
+          let rem = Modulename.Set.add m rem in
+          let diff = Modulename.Set.add m diff in
+          rem, p::prov, (m, p)::rep, errmap, diff
         end
       | None ->
           (* When can this happen? Either m pointed to a file that used to
@@ -870,11 +871,12 @@ let commit_modules workers ~options new_or_changed dirty_modules =
             "initial provider %S -> %s"
             (Modulename.to_string m)
             (string_of_filename p);
-          rem, p::prov, (m,p)::rep, errmap, (NameSet.add m diff)
-  ) (NameSet.empty, [], [], FilenameMap.empty, NameSet.empty) dirty_modules in
+          let diff = Modulename.Set.add m diff in
+          rem, p::prov, (m,p)::rep, errmap, diff
+  ) (Modulename.Set.empty, [], [], FilenameMap.empty, Modulename.Set.empty) dirty_modules in
 
   (* update NameHeap *)
-  if not (NameSet.is_empty remove) then begin
+  if not (Modulename.Set.is_empty remove) then begin
     NameHeap.remove_batch remove;
     SharedMem_js.collect options `gentle;
   end;

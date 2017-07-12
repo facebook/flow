@@ -123,9 +123,9 @@ let merge_contents_context ~options cx require_loc_map ~ensure_checked_dependenc
         ~options
         ~node_modules_containers:!Files.node_modules_containers
         (Context.file cx) loc r in
-      Module_js.NameSet.add resolved_r resolved_rs,
+      Modulename.Set.add resolved_r resolved_rs,
       (r, loc, resolved_r, cx) :: required
-    ) require_loc_map (Module_js.NameSet.empty, [])
+    ) require_loc_map (Modulename.Set.empty, [])
   in
   ensure_checked_dependencies resolved_rs;
   (merge_strict_context_with_required ~options [cx] required: Context.t)

@@ -10,11 +10,8 @@
 
 open Utils_js
 
-module NameSet: Set.S with type elt = Modulename.t
-module NameMap: MyMap.S with type key = Modulename.t
-
 type resolved_requires = {
-  required: NameSet.t;      (* required module names *)
+  required: Modulename.Set.t;      (* required module names *)
   require_loc: Loc.t SMap.t;  (* statement locations *)
   resolved_modules: Modulename.t SMap.t;
   phantom_dependents: SSet.t;
@@ -98,7 +95,7 @@ val commit_modules:
   filename list ->                    (* parsed / unparsed files *)
   (Modulename.t * filename option) list ->      (* dirty modules *)
     Utils_js.filename list *            (* providers *)
-    NameSet.t *                         (* changed modules *)
+    Modulename.Set.t *                  (* changed modules *)
     error list FilenameMap.t            (* filenames to error sets *)
 
 (* resolve and add requires from context to store *)

@@ -389,13 +389,13 @@ let typecheck
 let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
   if Options.is_lazy_mode options
   then begin
-    let infer_input = Module_js.(NameSet.fold (fun m acc ->
-      match get_file m ~audit:Expensive.warn with
+    let infer_input = Modulename.Set.fold (fun m acc ->
+      match Module_js.get_file m ~audit:Expensive.warn with
       | Some f ->
         if FilenameSet.mem f !env.ServerEnv.files then f :: acc
         else acc
       | None -> acc (* complain elsewhere about required module not found *)
-    ) resolved_requires []) in
+    ) resolved_requires [] in
     let profiling = Profiling_js.empty in
     let errors = !env.ServerEnv.errors in
     let unchanged_checked = !env.ServerEnv.checked_files in
@@ -883,7 +883,7 @@ let files_to_infer ~workers ~focus_target parsed_list =
         ~unchanged:(FilenameSet.(remove f (of_list parsed_list)))
         ~new_or_changed:(FilenameSet.singleton f)
         (* TODO: isn't it possible that _module is not provided by f? *)
-        ~changed_modules:(Module_js.NameSet.singleton _module) in
+        ~changed_modules:(Modulename.Set.singleton _module) in
       let dependency_graph = Dep_service.calc_dependency_graph workers parsed_list in
       let roots = FilenameSet.add f all_dependent_files in
       let to_infer = Dep_service.calc_all_dependencies dependency_graph roots in

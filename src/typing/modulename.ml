@@ -31,3 +31,11 @@ let to_string = function
   | Filename f -> Loc.string_of_filename f
 
 let compare = Pervasives.compare
+
+module Key = struct
+  type nonrec t = t
+  let to_string = to_string
+  let compare = compare
+end
+module Set = Set.Make(Key)
+module Map = MyMap.Make(Key)
