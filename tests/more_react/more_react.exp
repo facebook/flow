@@ -29,38 +29,108 @@ Error: checkPropTypes.js:7
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
   7: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }); // error: missing arguments
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-175:     location: string,
-                   ^^^^^^ string. See lib: <BUILTINS>/react.js:175
+178:     location: string,
+                   ^^^^^^ string. See lib: <BUILTINS>/react.js:178
 
 Error: checkPropTypes.js:7
   7: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }); // error: missing arguments
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
   7: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }); // error: missing arguments
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-176:     componentName: string,
-                        ^^^^^^ string. See lib: <BUILTINS>/react.js:176
+179:     componentName: string,
+                        ^^^^^^ string. See lib: <BUILTINS>/react.js:179
 
 Error: checkPropTypes.js:8
   8: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value'); // error: missing argument
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
   8: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value'); // error: missing argument
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-176:     componentName: string,
-                        ^^^^^^ string. See lib: <BUILTINS>/react.js:176
+179:     componentName: string,
+                        ^^^^^^ string. See lib: <BUILTINS>/react.js:179
 
 Error: checkPropTypes.js:10
  10: checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  10: checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found
                     ^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
-173:     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
-                                  ^^^^^^^^ object literal. See lib: <BUILTINS>/react.js:173
+176:     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
+                                  ^^^^^^^^ object literal. See lib: <BUILTINS>/react.js:176
 
 Error: checkPropTypes.js:12
  12: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string
                                                                                                ^^^ number. This type is incompatible with the expected param type of
-177:     getStack: ?(() => ?string)
-                            ^^^^^^ string. See lib: <BUILTINS>/react.js:177
+180:     getStack: ?(() => ?string)
+                            ^^^^^^ string. See lib: <BUILTINS>/react.js:180
+
+Error: children.js:6
+  6: var callback = (child: React$Child<*>, i) => i;
+                                                  ^ number. This type is incompatible with
+ 14: var mapWrongType: Array<string> = React.Children.map(children, callback); // error: number -> string
+                             ^^^^^^ string
+
+Error: children.js:15
+ 15: React.Children.map(children, (child: React$Element<*>, i) => i); // error: React$Element -> number | string
+                                          ^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with an argument type of
+303: type ReactChildrenCallback<Config, T> = (React$Child<Config>, number) => T
+                                              ^^^^^^^^^^^^^^^^^^^ number. See lib: <BUILTINS>/react.js:303
+
+Error: children.js:15
+ 15: React.Children.map(children, (child: React$Element<*>, i) => i); // error: React$Element -> number | string
+                                          ^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with an argument type of
+303: type ReactChildrenCallback<Config, T> = (React$Child<Config>, number) => T
+                                              ^^^^^^^^^^^^^^^^^^^ string. See lib: <BUILTINS>/react.js:303
+
+Error: children.js:16
+ 16: React.Children.map(children); // error: missing argument
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `map`
+ 16: React.Children.map(children); // error: missing argument
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+306:   map: <Config, T>(children: any, fn: ReactChildrenCallback<Config, T>, thisArg?: any) => Array<T>;
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:306
+
+Error: children.js:25
+ 25: React.Children.forEach(children, (child: React$Element<*>, i) => i); // error: React$Element -> number | string
+                                              ^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with an argument type of
+303: type ReactChildrenCallback<Config, T> = (React$Child<Config>, number) => T
+                                              ^^^^^^^^^^^^^^^^^^^ number. See lib: <BUILTINS>/react.js:303
+
+Error: children.js:25
+ 25: React.Children.forEach(children, (child: React$Element<*>, i) => i); // error: React$Element -> number | string
+                                              ^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with an argument type of
+303: type ReactChildrenCallback<Config, T> = (React$Child<Config>, number) => T
+                                              ^^^^^^^^^^^^^^^^^^^ string. See lib: <BUILTINS>/react.js:303
+
+Error: children.js:26
+ 26: React.Children.forEach(children); // error: missing argument
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `forEach`
+ 26: React.Children.forEach(children); // error: missing argument
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+307:   forEach: <Config>(children: any, fn: ReactChildrenCallback<Config, mixed>, thisArg?: any) => mixed;
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:307
+
+Error: children.js:34
+ 34: var countWrongType: string = React.Children.count(children); // error: number -> string
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 34: var countWrongType: string = React.Children.count(children); // error: number -> string
+                         ^^^^^^ string
+
+Error: children.js:42
+ 42: var onlyWrongType: string = React.Children.only(text); // error: React$Element -> string
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
+ 42: var onlyWrongType: string = React.Children.only(text); // error: React$Element -> string
+                        ^^^^^^ string
+
+Error: children.js:50
+ 50: var toArrayWrongType: Array<React$Element<*>> = React.Children.toArray(children); // error: React$Element -> number | string
+                                 ^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
+310:   toArray: <Config>(children: any) => Array<React$Child<Config>>;
+                                                 ^^^^^^^^^^^^^^^^^^^ number. See lib: <BUILTINS>/react.js:310
+
+Error: children.js:50
+ 50: var toArrayWrongType: Array<React$Element<*>> = React.Children.toArray(children); // error: React$Element -> number | string
+                                 ^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
+310:   toArray: <Config>(children: any) => Array<React$Child<Config>>;
+                                                 ^^^^^^^^^^^^^^^^^^^ string. See lib: <BUILTINS>/react.js:310
 
 Error: propTypes.js:15
  15: <D />; // errors: properties `name` and `title` not found
@@ -87,4 +157,4 @@ Error: propTypes.js:15
      ^^^^^ props of React element `D`
 
 
-Found 11 errors
+Found 22 errors

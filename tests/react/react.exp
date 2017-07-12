@@ -1,6 +1,6 @@
 Library type error:
-<BUILTINS>/react.js:225
-225:     callback?: () => void
+<BUILTINS>/react.js:228
+228:     callback?: () => void
                     ^^^^^^^^^^ function type. Callable signature not found in
  23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
                                                                   ^^ object literal. See: render_callback.js:23
@@ -91,8 +91,8 @@ Error: create_class.js:133
 Error: create_class.js:134
 134:     return 0; // number ~> void
                 ^ number. This type is incompatible with
- 40:   componentWillMount(): void;
-                             ^^^^ undefined. See lib: <BUILTINS>/react.js:40
+ 43:   componentWillMount(): void;
+                             ^^^^ undefined. See lib: <BUILTINS>/react.js:43
 
 Error: create_class.js:137
 137:     (this.props.foo: empty); // string ~> empty
@@ -103,8 +103,8 @@ Error: create_class.js:137
 Error: create_class.js:138
 138:     return 0; // number ~> void
                 ^ number. This type is incompatible with
- 41:   componentDidMount(): void;
-                            ^^^^ undefined. See lib: <BUILTINS>/react.js:41
+ 44:   componentDidMount(): void;
+                            ^^^^ undefined. See lib: <BUILTINS>/react.js:44
 
 Error: create_class.js:141
 141:     (this.props.foo: empty); // string ~> empty
@@ -121,8 +121,8 @@ Error: create_class.js:142
 Error: create_class.js:143
 143:     return 0; // number ~> void
                 ^ number. This type is incompatible with
- 45:   ): void;
-          ^^^^ undefined. See lib: <BUILTINS>/react.js:45
+ 48:   ): void;
+          ^^^^ undefined. See lib: <BUILTINS>/react.js:48
 
 Error: create_class.js:146
 146:     (this.props.foo: empty); // string ~> empty
@@ -151,8 +151,8 @@ Error: create_class.js:149
 Error: create_class.js:150
 150:     return 0; // number ~> bool
                 ^ number. This type is incompatible with
- 50:   ): boolean;
-          ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:50
+ 53:   ): boolean;
+          ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:53
 
 Error: create_class.js:153
 153:     (this.props.foo: empty); // string ~> empty
@@ -181,8 +181,8 @@ Error: create_class.js:156
 Error: create_class.js:157
 157:     return 0; // number ~> void
                 ^ number. This type is incompatible with
- 55:   ): void;
-          ^^^^ undefined. See lib: <BUILTINS>/react.js:55
+ 58:   ): void;
+          ^^^^ undefined. See lib: <BUILTINS>/react.js:58
 
 Error: create_class.js:160
 160:     (this.props.foo: empty); // string ~> empty
@@ -211,8 +211,8 @@ Error: create_class.js:163
 Error: create_class.js:164
 164:     return 0; // number ~> void
                 ^ number. This type is incompatible with
- 60:   ): void;
-          ^^^^ undefined. See lib: <BUILTINS>/react.js:60
+ 63:   ): void;
+          ^^^^ undefined. See lib: <BUILTINS>/react.js:63
 
 Error: create_class.js:167
 167:     (this.props.foo: empty); // string ~> empty
@@ -229,8 +229,8 @@ Error: create_class.js:168
 Error: create_class.js:169
 169:     return 0; // number ~> void
                 ^ number. This type is incompatible with
- 61:   componentWillUnmount(): void;
-                               ^^^^ undefined. See lib: <BUILTINS>/react.js:61
+ 64:   componentWillUnmount(): void;
+                               ^^^^ undefined. See lib: <BUILTINS>/react.js:64
 
 Error: create_class.js:173
 173: React.createClass({}); // error: spec must be [x] exact and [ ] sealed
@@ -510,8 +510,8 @@ Error: proptype_custom_validator.js:10
 Error: proptype_custom_validator.js:11
  11:       return (0: mixed); // error: should return ?Error
                       ^^^^^ mixed. This type is incompatible with
-260:   href?: string) => ?Error;
-                          ^^^^^ Error. See lib: <BUILTINS>/react.js:260
+263:   href?: string) => ?Error;
+                          ^^^^^ Error. See lib: <BUILTINS>/react.js:263
 
 Error: proptype_func.js:14
  14: var fail_mistyped = <Example func={2} />
@@ -931,68 +931,68 @@ Error: proptype_shape.js:24
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-268:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:268
+271:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:271
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-272:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:272
+275:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:275
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-274:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
-                        ^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:274
+277:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+                        ^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:277
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-276:   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:276
+279:   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:279
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-279:   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:279
+282:   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:282
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-268:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:268
+271:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:271
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-270:   (expectedClass: any) => ReactPropsChainableTypeChecker;
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:270
+273:   (expectedClass: any) => ReactPropsChainableTypeChecker;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:273
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-272:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:272
+275:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:275
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-274:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:274
-
-Error: proptypes_builtins.js:3
-  3: type NoFun = mixed => empty;
-                           ^^^^^ empty. This type is incompatible with
-277:     ReactPropsChainableTypeChecker;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:277
+277:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:277
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
 280:     ReactPropsChainableTypeChecker;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:280
+
+Error: proptypes_builtins.js:3
+  3: type NoFun = mixed => empty;
+                           ^^^^^ empty. This type is incompatible with
+283:     ReactPropsChainableTypeChecker;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:283
 
 Error: proptypes_sealed.js:18
  18:     (this.props.baz: string);
@@ -1009,20 +1009,20 @@ Error: proptypes_sealed.js:22
 Error: render_callback.js:22
  22: ReactDOM.render(<Example/>, document.querySelector('#site'), 1);
                                                                   ^ number. This type is incompatible with the expected param type of
-225:     callback?: () => void
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:225
+228:     callback?: () => void
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:228
 
 Error: render_callback.js:24
  24: ReactDOM.render(<Example/>, document.querySelector('#site'), '');
                                                                   ^^ string. This type is incompatible with the expected param type of
-225:     callback?: () => void
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:225
+228:     callback?: () => void
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:228
 
 Error: render_callback.js:25
  25: ReactDOM.render(<Example/>, document.querySelector('#site'), null);
                                                                   ^^^^ null. This type is incompatible with the expected param type of
-225:     callback?: () => void
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:225
+228:     callback?: () => void
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:228
 
 
 Found 121 errors
