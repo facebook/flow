@@ -57,7 +57,10 @@ class t = object(self)
           let dt' = self#defer_use_type cx dt in
           if t' == t'' && dt == dt' then t
           else EvalT (t'', dt', i)
-      | BoundT _
+      | BoundT t' ->
+          let t'' = self#type_param cx t' in
+          if t'' == t' then t
+          else BoundT t''
       | ExistsT _ -> t
       | ThisClassT (r, t') ->
           let t'' = self#type_ cx t' in
@@ -446,7 +449,7 @@ class t = object(self)
     | SuperT (r, instt) ->
         let instt' = self#inst_type cx instt in
         if instt' == instt then t
-        else SuperT (r, instt)
+        else SuperT (r, instt')
     | ImplementsT t' ->
         let t'' = self#type_ cx t' in
         if t'' == t' then t
