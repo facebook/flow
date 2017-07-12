@@ -66,9 +66,6 @@ and duplicate_provider_error = {
   conflict: Loc.filename;
 }
 
-let relevant_package_keys = ["name"; "main"]
-let is_relevant_key key = List.mem key relevant_package_keys
-
 let choose_provider_and_warn_about_duplicates =
   let warn_duplicate_providers m current modules errmap =
     List.fold_left (fun acc f ->
@@ -175,7 +172,7 @@ let add_info = Expensive.wrap InfoHeap.add
 
 (* shared heap for package.json tokens by filename *)
 module PackageHeap = SharedMem_js.WithCache (StringKey) (struct
-    type t = Ast.Expression.t SMap.t
+    type t = Package_json.t
     let prefix = Prefix.make()
     let description = "Package"
   end)
@@ -187,84 +184,27 @@ module ReversePackageHeap = SharedMem_js.WithCache (StringKey) (struct
     let description = "ReversePackage"
   end)
 
-let get_key key tokens = Ast.(
-  match SMap.get key tokens with
-  | Some (_, Expression.Literal { Literal.value = Literal.String name; _ }) ->
-      Some name
-  | _ -> None
-)
+let add_package filename ast =
+  match Package_json.parse ast with
+  | Ok package ->
+    PackageHeap.add filename package;
+    begin match Package_json.name package with
+    | Some name ->
+      ReversePackageHeap.add name (Filename.dirname filename)
+    | None -> ()
+    end
+  | Error parse_err ->
+    assert_false (spf "%s: %s" filename parse_err)
 
-let trim_quotes str =
-  let len = String.length str in
-  assert (len >= 2);
-  assert (String.get str 0 = '"');
-  assert (String.get str (len - 1) = '"');
-  String.sub str 1 (len - 2)
-
-let tokens_equal map1 map2 =
-  if SMap.cardinal map1 <> SMap.cardinal map2 then
-    false
-  else
-    let f key _ is_equal =
-      let map1_val = get_key key map1 in
-      let map2_val = get_key key map2 in
-      is_equal && map1_val = map2_val
-    in
-    SMap.fold f map1 true
-
-let get_package_keys filename ast =
-  let open Ast in
-  let open Expression.Object in
-  let statement = match ast with
-  | (_, [statement], _) -> statement
-  | _ -> assert_false (spf "Expected %s to have a single statement." filename)
-  in
-  let obj = match statement with
-  | _, Statement.Expression { Statement.Expression.
-     expression = _, Expression.Assignment { Expression.Assignment.
-       operator = Expression.Assignment.Assign;
-       left = _;
-       right = obj;
-     };
-     directive = _;
-   } -> obj
-  | _ -> assert_false (spf "Expected %s to be an assignment" filename)
-  in
-  let properties = match obj with
-  | (_, Expression.Object {properties}) -> properties
-  | _ -> assert_false (spf "Expected %s to have an object literal" filename)
-  in
-  let extract_property map = function
-    | Property(_, {
-        Property.key = Property.Literal(_, {Literal.raw; _;});
-        value = Property.Init value;
-        _;
-      }) ->
-        let key = trim_quotes raw in
-        if is_relevant_key key then
-          SMap.add key value map
-        else
-          map
-    | _ -> SMap.empty
-  in
-  List.fold_left extract_property SMap.empty properties
-
-let add_package package ast =
-  let tokens = get_package_keys package ast in
-  PackageHeap.add package tokens;
-  match get_key "name" tokens with
-  | Some name ->
-    ReversePackageHeap.add name (Filename.dirname package)
-  | None -> ()
-
-let package_incompatible package ast =
-  let new_tokens = get_package_keys package ast in
-  let old_tokens_opt = PackageHeap.get package in
-  match old_tokens_opt with
-  | None -> true
-  | Some old_tokens ->
-    let result = not (tokens_equal old_tokens new_tokens) in
-    result
+let package_incompatible filename ast =
+  match Package_json.parse ast with
+  | Ok new_package ->
+    begin match PackageHeap.get filename with
+    | None -> true
+    | Some old_package -> old_package <> new_package
+    end
+  | Error parse_err ->
+    assert_false (spf "%s: %s" filename parse_err)
 
 type resolution_acc = {
   mutable paths: SSet.t;
@@ -403,24 +343,24 @@ module Node = struct
       lazy (path_if_exists ~file_options resolution_acc (path ^ ext))
     ))
 
-  let parse_main ~root ~file_options loc resolution_acc package file_exts =
-    let package = resolve_symlinks package in
-    if not (file_exists package) || (Files.is_ignored file_options package)
+  let parse_main ~root ~file_options loc resolution_acc package_filename file_exts =
+    let package_filename = resolve_symlinks package_filename in
+    if not (file_exists package_filename) || (Files.is_ignored file_options package_filename)
     then None
     else
-      let tokens = match PackageHeap.get package with
-      | Some tokens -> tokens
+      let package = match PackageHeap.get package_filename with
+      | Some package -> package
       | None ->
         let msg =
-          let is_included = Files.is_included file_options package in
+          let is_included = Files.is_included file_options package_filename in
           let project_root_str = Path.to_string root in
           let is_contained_in_root =
-            Files.is_prefix project_root_str package
+            Files.is_prefix project_root_str package_filename
           in
           let package_relative_to_root =
             spf "<<PROJECT_ROOT>>%s%s"
               (Filename.dir_sep)
-              (Files.relative_path project_root_str package)
+              (Files.relative_path project_root_str package_filename)
           in
           if is_included || is_contained_in_root then (
             FlowError.(EInternal (loc, PackageHeapNotFound package_relative_to_root))
@@ -433,10 +373,10 @@ module Node = struct
           resolution_acc.errors <- msg :: resolution_acc.errors
         | None -> ()
         end;
-        SMap.empty
+        Package_json.empty
       in
-      let dir = Filename.dirname package in
-      match get_key "main" tokens with
+      let dir = Filename.dirname package_filename in
+      match Package_json.main package with
       | None -> None
       | Some file ->
         let path = Files.normalize_path dir file in
