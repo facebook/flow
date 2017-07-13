@@ -133,13 +133,14 @@ let set_libs filenames =
   let root = Path.dummy_path in
   let master_cx = get_master_cx root in
   let metadata = stub_metadata ~root ~checked:true in
-  let _ = load_lib_files
+  let _: (Loc.filename * bool) list = load_lib_files
     ~master_cx
     ~metadata
     filenames
     (fun _file _errs -> ())
     (fun _file _errs -> ())
-    (fun _file _sups -> ()) in
+    (fun _file _sups -> ())
+    (fun _file _lint -> ()) in
 
   Flow_js.Cache.clear();
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
