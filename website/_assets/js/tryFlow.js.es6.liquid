@@ -238,7 +238,7 @@ function createEditor(
   resultsNode,
   flowVersions
 ) {
-  const flowReady = initFlow(flowVersion);
+  const defaultFlow = initFlow(flowVersion);
 
   require([
     'codemirror/addon/lint/lint',
@@ -248,7 +248,7 @@ function createEditor(
   ], function() {
     const location = window.location;
 
-    flowReady.then(function() {
+    defaultFlow.then(function() {
       removeClass(resultsNode, 'show-loading');
     });
 
@@ -327,7 +327,7 @@ function createEditor(
       autofocus: true,
       lineNumbers: true,
       mode: "jsx",
-      flow: flowReady,
+      flow: defaultFlow,
       lint: getAnnotations
     });
 
@@ -342,7 +342,8 @@ function createEditor(
       const cursor = editor.getCursor();
       const value = editor.getValue();
       cursorPositionNode.innerHTML = `${cursor.line + 1}:${cursor.ch + 1}`;
-      flowReady.then(flowProxy => flowProxy.typeAtPos(
+      editor.getOption('flow')
+      .then(flowProxy => flowProxy.typeAtPos(
         '-', value, cursor.line + 1, cursor.ch
       ))
       .then(typeAtPos => {
@@ -369,7 +370,8 @@ function createEditor(
       }
 
       if (astNode) {
-        flowReady.then((flowProxy) => {
+        editor.getOption('flow')
+        .then((flowProxy) => {
           flowProxy.supportsParse()
           .then(supportsParse => {
             if (supportsParse) {
