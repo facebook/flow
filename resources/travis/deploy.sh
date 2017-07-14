@@ -19,7 +19,7 @@ export PATH="${TRAVIS_BUILD_DIR}/resources/travis/node_modules/.bin:$PATH"
 
 printf "travis_fold:start:installing_ruby\nInstalling Ruby\n"
 source "$HOME/.rvm/scripts/rvm"
-rvm use 2.2 --install --binary
+rvm use 2.3.4 --install --binary
 gem install --no-rdoc --no-ri bundler
 printf "travis_fold:end:installing_ruby\n"
 
