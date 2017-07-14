@@ -34,7 +34,7 @@ export default function(): ?AssertionLocation {
 
   for (const callSite of stack) {
     const filename = callSite.getFileName();
-    if (filename.match(/test.js$/)) {
+    if (filename != null && filename.match(/test.js$/)) {
       return {
         filename,
         line: callSite.getLineNumber(),
