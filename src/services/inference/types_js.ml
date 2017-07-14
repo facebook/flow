@@ -146,9 +146,7 @@ let commit_modules ~options profiling ~workers
       changed_modules, FilenameMap.fold (fun file errors acc ->
         let errset = List.fold_left (fun acc err ->
           match err with
-          | Module_js.ModuleDuplicateProviderError { Module_js.
-              module_name; provider; conflict;
-            } ->
+          | Module_js.ModuleDuplicateProviderError { module_name; provider; conflict; } ->
             let msg = Flow_error.(EDuplicateModuleProvider { module_name; provider; conflict }) in
             let error = Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file:file msg in
             Errors.ErrorSet.add error acc
@@ -878,12 +876,12 @@ let files_to_infer ~workers ~focus_target parsed_list =
          files to be "rechecked", which is f and all its dependents, but also
          the dependencies of such files since they may not already be
          checked. *)
-      let { Module_js._module; _ } = Module_js.get_info_unsafe ~audit:Expensive.warn f in
+      let { Module_js.module_name; _ } = Module_js.get_info_unsafe ~audit:Expensive.warn f in
       let all_dependent_files, _ = Dep_service.dependent_files workers
         ~unchanged:(FilenameSet.(remove f (of_list parsed_list)))
         ~new_or_changed:(FilenameSet.singleton f)
         (* TODO: isn't it possible that _module is not provided by f? *)
-        ~changed_modules:(Modulename.Set.singleton _module) in
+        ~changed_modules:(Modulename.Set.singleton module_name) in
       let dependency_graph = Dep_service.calc_dependency_graph workers parsed_list in
       let roots = FilenameSet.add f all_dependent_files in
       let to_infer = Dep_service.calc_all_dependencies dependency_graph roots in

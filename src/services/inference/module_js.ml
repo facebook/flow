@@ -45,7 +45,7 @@ type resolved_requires = {
 }
 
 type info = {
-  _module: Modulename.t; (* module name *)
+  module_name: Modulename.t;
   checked: bool; (* in flow? *)
   parsed: bool; (* if false, it's a tracking record only *)
 }
@@ -53,13 +53,11 @@ type info = {
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
 type error =
-  | ModuleDuplicateProviderError of duplicate_provider_error
-
-and duplicate_provider_error = {
-  module_name: string;
-  provider: Loc.filename;
-  conflict: Loc.filename;
-}
+  | ModuleDuplicateProviderError of {
+    module_name: string;
+    provider: Loc.filename;
+    conflict: Loc.filename;
+  }
 
 let choose_provider_and_warn_about_duplicates =
   let warn_duplicate_providers m current modules errmap =
@@ -896,16 +894,16 @@ let commit_modules workers ~options new_or_changed dirty_modules =
 let remove_batch_resolved_requires files =
   ResolvedRequiresHeap.remove_batch files
 
-let get_files ~audit filename _module =
-  (_module, get_file ~audit _module)::
+let get_files ~audit filename module_name =
+  (module_name, get_file ~audit module_name)::
     let f_module = eponymous_module filename in
-    if f_module = _module then []
+    if f_module = module_name then []
     else [f_module, get_file ~audit f_module]
 
-let get_files_unsafe ~audit filename _module =
-  (_module, get_file_unsafe ~audit _module)::
+let get_files_unsafe ~audit filename module_name =
+  (module_name, get_file_unsafe ~audit module_name)::
     let f_module = eponymous_module filename in
-    if f_module = _module then []
+    if f_module = module_name then []
     else [f_module, get_file_unsafe ~audit f_module]
 
 (* Clear module mappings for given files, if they exist.
@@ -936,10 +934,10 @@ let calc_old_modules ~options old_file_module_assoc =
   (* files may or may not be registered as module providers.
      when they are, we need to clear their registrations *)
   let old_modules = List.fold_left (fun old_modules (file, module_provider_assoc) ->
-    List.fold_left (fun old_modules (_module, provider) ->
-      remove_provider file _module;
+    List.fold_left (fun old_modules (module_name, provider) ->
+      remove_provider file module_name;
       if provider = file
-      then (_module, Some provider)::old_modules
+      then (module_name, Some provider)::old_modules
       else old_modules
     ) old_modules module_provider_assoc
   ) [] old_file_module_assoc in
@@ -957,9 +955,9 @@ let clear_files workers ~options new_or_changed_or_deleted =
     ~job: (List.fold_left (fun acc file ->
       match get_info ~audit:Expensive.ok file with
       | Some info ->
-        let { _module; _ } = info in
+        let { module_name; _ } = info in
         (file,
-         get_files_unsafe ~audit:Expensive.ok file _module) :: acc
+         get_files_unsafe ~audit:Expensive.ok file module_name) :: acc
       | None -> acc
     ))
     ~neutral: []
@@ -978,18 +976,18 @@ let clear_files workers ~options new_or_changed_or_deleted =
    is complete. *)
 let add_parsed_info ~audit ~options file docblock =
   let force_check = Options.all options in
-  let _module = exported_module ~options file docblock in
+  let module_name = exported_module ~options file docblock in
   let checked =
     force_check ||
     Docblock.is_flow docblock
   in
   let info = {
-    _module;
+    module_name;
     checked;
     parsed = true;
   } in
   add_info ~audit file info;
-  _module
+  module_name
 
 (* We need to track files that have failed to parse. This begins with
    adding tracking records for unparsed files to InfoHeap. They never
@@ -1000,7 +998,7 @@ let add_parsed_info ~audit ~options file docblock =
  *)
 let add_unparsed_info ~audit ~options file docblock =
   let force_check = Options.all options in
-  let _module = exported_module ~options file docblock in
+  let module_name = exported_module ~options file docblock in
   let checked =
     force_check ||
     Loc.source_is_lib_file file ||
@@ -1008,19 +1006,19 @@ let add_unparsed_info ~audit ~options file docblock =
     Docblock.isDeclarationFile docblock
   in
   let info = {
-    _module;
+    module_name;
     checked;
     parsed = false;
   } in
   add_info ~audit file info;
-  _module
+  module_name
 
 let calc_new_modules ~options file_module_assoc =
   (* all modules provided by newly parsed / unparsed files must be repicked *)
   let new_modules = List.fold_left (fun new_modules (file, module_opt_provider_assoc) ->
-    List.fold_left (fun new_modules (_module, opt_provider) ->
-      add_provider file _module;
-      (_module, opt_provider)::new_modules
+    List.fold_left (fun new_modules (module_, opt_provider) ->
+      add_provider file module_;
+      (module_, opt_provider)::new_modules
     ) new_modules module_opt_provider_assoc
   ) [] file_module_assoc in
 

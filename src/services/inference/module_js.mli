@@ -18,7 +18,7 @@ type resolved_requires = {
 }
 
 type info = {
-  _module: Modulename.t;    (* module name *)
+  module_name: Modulename.t;
   checked: bool;            (* in flow? *)
   parsed: bool;             (* if false, it's a tracking record only *)
 }
@@ -26,13 +26,12 @@ type info = {
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
 type error =
-  | ModuleDuplicateProviderError of duplicate_provider_error
+  | ModuleDuplicateProviderError of {
+    module_name: string;
+    provider: Loc.filename;
+    conflict: Loc.filename;
+  }
 
-and duplicate_provider_error = {
-  module_name: string;
-  provider: Loc.filename;
-  conflict: Loc.filename;
-}
 
 val eponymous_module: filename -> Modulename.t
 

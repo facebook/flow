@@ -91,7 +91,7 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
        instead maintaining the map incrementally and hopefully reusing large
        parts of it.
     *)
-    let modules = FilenameMap.add f info._module modules in
+    let modules = FilenameMap.add f info.module_name modules in
     (* For every r in resolved_requires.required, add f to the reverse dependency list for r,
        stored in `module_dependent_map`. This will be used downstream when computing
        direct_dependents, and also in calc_all_dependents.
