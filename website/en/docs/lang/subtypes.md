@@ -117,8 +117,24 @@ Flow compares two functions by comparing its inputs and outputs. If all the
 inputs and outputs are a subset of the other function, then it is a subtype.
 
 ```js
-type Func1 = (1 | 2)     => "A" | "B";
-type Func2 = (1 | 2 | 3) => "A" | "B" | "C";
+// @flow
+type LessSpecificReturn = (1 | 2 | 3) => "A" | "B" | "C";
+type MoreSpecificReturn = (1 | 2 | 3 ) => "A" | "B";
+
+type LessSpecificParam = (1 | 2 | 3 ) => "A" | "B" | "C";
+type MoreSpecificParam = (1 | 2 ) => "A" | "B" | "C";
+
+var func1: MoreSpecificReturn = (num) => 'B';
+var func2: LessSpecificReturn = func1; // Less specific return is OK! (Subtype)
+
+/* More specific return is not a valid Subtype
+   .. otherwise you may return a type that cannot be handled */
+
+var func3: LessSpecificParam = (num) => "B";
+var func4: MoreSpecificParam = func3; // More specific param is OK! (Subtype)
+
+/* Less specific param is not a Subtype
+  .. otherwise you may pass in an argument type that cannot be handled */
 ```
 
 This also applies to the number of parameters in the functions. If one function
