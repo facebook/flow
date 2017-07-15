@@ -1,3 +1,5 @@
+.idea
+package-lock.json
 *TAGS
 _build
 /_obuild
