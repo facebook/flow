@@ -170,6 +170,7 @@ and parts_of_t cx = function
 | OpenT _ -> assert false
 | AbstractT (_, t) -> ["t", Def t]
 | AnnotT source -> ["source", Def source]
+| OpaqueT (_, _, t) -> ["t", Def t]
 | DefT (_, (AnyObjT | AnyFunT)) -> []
 | DefT (_, AnyT) -> []
 | AnyWithLowerBoundT t | AnyWithUpperBoundT t -> ["t", Def t]

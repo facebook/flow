@@ -260,6 +260,11 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "assume", _json_of_t json_cx t
     ]
 
+  | OpaqueT (_, id, t) -> [
+      "type", _json_of_t json_cx t;
+      "id", JSON_String (string_of_int id)
+  ]
+
   | TypeMapT (_, kind, t1, t2) -> [
       "kind", JSON_String (string_of_type_map kind);
       "type", _json_of_t json_cx t1;
@@ -1531,6 +1536,7 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, TypeT arg) -> p ~extra:(kid arg) t
   | AnnotT source -> p ~reason:false
       ~extra:(spf "%s" (kid source)) t
+  | OpaqueT (_, _, arg) -> p ~extra:(spf "%s" (kid arg)) t
   | DefT (_, OptionalT arg)
   | AbstractT (_, arg) -> p ~extra:(kid arg) t
   | EvalT (arg, expr, id) -> p

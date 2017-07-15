@@ -68,6 +68,9 @@ class ['a] t = object(self)
   | AnnotT t ->
     self#type_ cx acc t
 
+  | OpaqueT (_, _, t) ->
+    self#type_ cx acc t
+
   | ModuleT (_, exporttypes) ->
     self#export_types cx acc exporttypes
 

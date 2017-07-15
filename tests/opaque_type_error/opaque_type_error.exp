@@ -1,0 +1,38 @@
+Error: importtest.js:7
+  7: (3 : ID); // Error: number ~> ID
+      ^ number. This type is incompatible with
+  7: (3 : ID); // Error: number ~> ID
+          ^^ opaque type `ID`
+
+Error: importtest.js:10
+ 10:     return x;
+                ^ number. This type is incompatible with the expected return type of
+  9: function bad1(x: number) : ID { // Error: number ~> ID
+                                ^^ opaque type `ID`
+
+Error: importtest.js:14
+ 14:     return Test.hide(x); // Error: ID ~> number
+                          ^ opaque type `ID`. This type is incompatible with the expected param type of
+ 12: export function hide(x: number) : ID {
+                             ^^^^^^ number. See: test.js:12
+
+Error: importtest.js:18
+ 18:     return x; // Error: ID ~> ID2
+                ^ opaque type `ID`. This type is incompatible with the expected return type of
+ 17: function bad3(x: ID) : ID2 {
+                            ^^^ number
+
+Error: importtest.js:22
+ 22:     return x;
+                ^ number. This type is incompatible with the expected return type of
+ 21: function bad4(x: ID2) : ID { // Error: ID2 ~> ID
+                             ^^ opaque type `ID`
+
+Error: test.js:17
+ 17: ("hello": MyNum) // Error: string ~> number
+      ^^^^^^^ string. This type is incompatible with
+ 17: ("hello": MyNum) // Error: string ~> number
+               ^^^^^ number
+
+
+Found 6 errors

@@ -48,6 +48,7 @@ type hash =
   | FunProtoCallH
   | ObjH
   | ObjProtoH
+  | OpaqueH
   | ArrH
   | ClassH
   | OptionalH
@@ -139,6 +140,7 @@ let hash_of_ctor = Type.(function
   | KeysT _ -> KeysH
   | ModuleT _ -> ModuleH
   | ObjProtoT _ -> ObjProtoH
+  | OpaqueT _ -> OpaqueH
   | OpenPredT _ -> OpenPredH
   | ReposT _ -> ReposH
   | ReposUpperT _ -> ReposUpperH

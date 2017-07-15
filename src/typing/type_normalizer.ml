@@ -417,6 +417,9 @@ let rec normalize_type_impl cx ids t = match t with
   | AnnotT t ->
       AnnotT (normalize_type_impl cx ids t)
 
+  | OpaqueT (r, id, t) ->
+      OpaqueT (r, id, normalize_type_impl cx ids t)
+
   | KeysT (_, t) ->
       KeysT (locationless_reason RKeySet, normalize_type_impl cx ids t)
 

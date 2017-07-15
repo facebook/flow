@@ -111,6 +111,10 @@ class t = object(self)
           let t'' = self#type_ cx t' in
           if t'' == t' then t
           else AnnotT t''
+      | OpaqueT (r, id, t') ->
+          let t'' = self#type_ cx t' in
+          if t'' == t' then t
+          else OpaqueT (r, id, t'')
       | ModuleT (r, exporttypes) ->
           let exporttypes' = self#export_types cx exporttypes in
           if exporttypes == exporttypes' then t

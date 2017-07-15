@@ -68,6 +68,7 @@ let rec gc cx state = function
 
   | AbstractT (_, t) -> gc cx state t
   | AnnotT t -> gc cx state t
+  | OpaqueT (_, _, t) -> gc cx state t
   | DefT (_, AnyFunT) -> ()
   | DefT (_, AnyObjT) -> ()
   | DefT (_, AnyT) -> ()
