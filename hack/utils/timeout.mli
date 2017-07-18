@@ -12,8 +12,6 @@
 
 type t
 
-exception Timeout
-
 (* The function `with_timeout` executes 'do_' for at most 'timeout'
    seconds. If the `timeout` is reached, the `on_timeout` is executed
    if available, otherwise the `Timeout` exception is raised.
@@ -35,7 +33,7 @@ exception Timeout
 *)
 val with_timeout:
   timeout:int ->
-  ?on_timeout:(unit -> unit) ->
+  on_timeout:(unit -> 'a) ->
   do_:(t -> 'a) -> 'a
 
 val check_timeout: t -> unit
@@ -60,7 +58,7 @@ val open_process_in: string -> string array -> in_channel
 val close_process_in: in_channel -> Unix.process_status
 val read_process:
   timeout:int ->
-  ?on_timeout:(unit -> unit) ->
+  on_timeout:(unit -> 'a) ->
   reader:(t -> in_channel -> out_channel -> 'a) ->
   string -> string array -> 'a
 
@@ -68,7 +66,11 @@ val open_connection:
   ?timeout:t -> Unix.sockaddr -> in_channel * out_channel
 val read_connection:
   timeout:int ->
-  ?on_timeout:(unit -> unit) ->
+  on_timeout:(unit -> 'a) ->
   reader:(t -> in_channel -> out_channel -> 'a) ->
   Unix.sockaddr -> 'a
 val shutdown_connection: in_channel -> unit
+
+(* Some silly people like to catch all exceptions. This means they need to explicitly detect and
+ * reraise the timeout exn. *)
+val is_timeout_exn: t -> exn -> bool

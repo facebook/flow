@@ -124,67 +124,64 @@ let rec consume_prehandoff_messages ic oc =
 
 let connect_to_monitor ~timeout config =
   let open Result in
-  try
-    Timeout.with_timeout
-      ~timeout
-      ~on_timeout:(fun _ -> raise Timeout.Timeout)
-      ~do_:begin fun timeout ->
-        establish_connection ~timeout config >>= fun (ic, oc) ->
-        get_cstate config (ic, oc)
-      end
-  with
-  | Timeout.Timeout ->
-    (**
-     * Monitor should always readily accept connections. In theory, this will
-     * only timeout if the Monitor is being very heavily DDOS'd, or the Monitor
-     * has wedged itself (a bug).
-     *
-     * The DDOS occurs when the Monitor's new connections (arriving on
-     * the socket) queue grows faster than they are being processed. This can
-     * happen in two scenarios:
-       * 1) Malicious DDOSer fills up new connection queue (incoming
-       *    connections on the socket) quicker than the queue is being
-       *    consumed.
-       * 2) New client connections to the monitor are being created by the
-       *    retry logic in hh_client faster than those cancelled connections
-       *    (cancelled due to the timeout above) are being discarded by the
-       *    monitor. This could happen from thousands of hh_clients being
-       *    used to parallelize a job. This is effectively an inadvertent DDOS.
-       *    In detail, suppose the timeout above is set to 1 ssecond and that
-       *    1000 thousand hh_client have timed out at the line above. Then these
-       *    1000 clients will cancel the connection and retry. But the Monitor's
-       *    connection queue still has these dead/canceled connections waiting
-       *    to be processed. Suppose it takes the monitor longer than 1
-       *    millisecond to handle and discard a dead connection. Then the
-       *    1000 retrying hh_clients will again add another 1000 dead
-       *    connections during retrying even tho the monitor has discarded
-       *    fewer than 1000 dead connections. Thus, no progress will be made
-       *    on clearing out dead connections and all new connection attempts
-       *    will time out.
-       *
-       *    We ameliorate this by having the timeout be quite large
-       *    (many seconds) and by not auto-retrying connections to the Monitor.
-     * *)
-    HackEventLogger.client_connect_to_monitor_timeout ();
-    if not (server_exists config.lock_file) then Result.Error Server_missing
-    else Result.Error ServerMonitorUtils.Monitor_establish_connection_timeout
+  Timeout.with_timeout
+    ~timeout
+    ~on_timeout:(fun _ ->
+      (**
+      * Monitor should always readily accept connections. In theory, this will
+      * only timeout if the Monitor is being very heavily DDOS'd, or the Monitor
+      * has wedged itself (a bug).
+      *
+      * The DDOS occurs when the Monitor's new connections (arriving on
+      * the socket) queue grows faster than they are being processed. This can
+      * happen in two scenarios:
+        * 1) Malicious DDOSer fills up new connection queue (incoming
+        *    connections on the socket) quicker than the queue is being
+        *    consumed.
+        * 2) New client connections to the monitor are being created by the
+        *    retry logic in hh_client faster than those cancelled connections
+        *    (cancelled due to the timeout above) are being discarded by the
+        *    monitor. This could happen from thousands of hh_clients being
+        *    used to parallelize a job. This is effectively an inadvertent DDOS.
+        *    In detail, suppose the timeout above is set to 1 ssecond and that
+        *    1000 thousand hh_client have timed out at the line above. Then these
+        *    1000 clients will cancel the connection and retry. But the Monitor's
+        *    connection queue still has these dead/canceled connections waiting
+        *    to be processed. Suppose it takes the monitor longer than 1
+        *    millisecond to handle and discard a dead connection. Then the
+        *    1000 retrying hh_clients will again add another 1000 dead
+        *    connections during retrying even tho the monitor has discarded
+        *    fewer than 1000 dead connections. Thus, no progress will be made
+        *    on clearing out dead connections and all new connection attempts
+        *    will time out.
+        *
+        *    We ameliorate this by having the timeout be quite large
+        *    (many seconds) and by not auto-retrying connections to the Monitor.
+      * *)
+      HackEventLogger.client_connect_to_monitor_timeout ();
+      if not (server_exists config.lock_file) then Result.Error Server_missing
+      else Result.Error ServerMonitorUtils.Monitor_establish_connection_timeout
+    )
+    ~do_:begin fun timeout ->
+      establish_connection ~timeout config >>= fun (ic, oc) ->
+      get_cstate config (ic, oc)
+    end
 
 let connect_and_shut_down config =
   let open Result in
   connect_to_monitor ~timeout:3 config >>= fun (ic, oc, cstate) ->
   verify_cstate ic cstate >>= fun () ->
   send_shutdown_rpc oc;
-  try Timeout.with_timeout
+  Timeout.with_timeout
     ~timeout:3
-    ~on_timeout:(fun _ -> ())
+    ~on_timeout:(fun () ->
+      if not (server_exists config.lock_file) then Result.Error Server_missing
+      else Result.Ok ServerMonitorUtils.SHUTDOWN_UNVERIFIED
+    )
     ~do_:begin fun _ ->
       wait_on_server_restart ic;
       Result.Ok ServerMonitorUtils.SHUTDOWN_VERIFIED
     end
-  with
-  | Timeout.Timeout ->
-    if not (server_exists config.lock_file) then Result.Error Server_missing
-    else Result.Ok ServerMonitorUtils.SHUTDOWN_UNVERIFIED
 
 let connect_once ~timeout config handoff_options =
   (***************************************************************************)

@@ -8,32 +8,36 @@
  *
  *)
 
-exception Timeout
+exception Timeout of int
+
+(* The IDs are used to tell the difference between timeout A timing out and timeout B timing out.
+ * So they only really need to be unique between any two active timeouts in the same process. *)
+let id_counter = ref 0
+let mk_id () = incr id_counter; !id_counter
 
 module Alarm_timeout = struct
 
   (** Timeout *)
 
-  type t = unit
-  let with_timeout ~timeout ?on_timeout ~do_ =
-    let old_handler = ref Sys.Signal_default in
-    let old_timeout = ref 0 in
-    let on_timeout _sigalrm =
-      match on_timeout with
-      | None -> raise Timeout
-      | Some f -> f (); raise Timeout in
-    (* TODO - something smarter than pausing alarms when running other alarms.
-     * We should instead have a priority queue, run the shortest alarm, and
-     * decrement the other alarms after each alarm fires or is turned off *)
-    Utils.with_context
-      ~enter:(fun () ->
-          old_handler := Sys.signal Sys.sigalrm (Sys.Signal_handle on_timeout);
-          old_timeout := Unix.alarm timeout)
-      ~exit:(fun () ->
-          ignore (Unix.alarm !old_timeout);
-          Sys.set_signal Sys.sigalrm !old_handler)
-      ~do_
-  let check_timeout () = ()
+  type t = int
+  let with_timeout ~timeout ~on_timeout ~do_ =
+    let id = mk_id () in
+    let callback () = raise (Timeout id) in
+    try
+      let timer = Timer.set_timer ~interval:(float_of_int timeout) ~callback in
+      let ret =
+        try do_ id
+        with exn ->
+          (* Any uncaught exception will cancel the timeout *)
+          Timer.cancel_timer timer;
+          raise exn
+      in
+      Timer.cancel_timer timer;
+      ret
+    with Timeout exn_id when exn_id = id ->
+      on_timeout ()
+
+  let check_timeout _ = ()
 
   (** Channel *)
 
@@ -95,9 +99,9 @@ module Alarm_timeout = struct
         Pervasives.close_in ic;
         snd(Unix.waitpid [] pid)
 
-  let read_process ~timeout ?on_timeout ~reader cmd args =
+  let read_process ~timeout ~on_timeout ~reader cmd args =
     let (ic, oc) = open_process cmd args in
-    with_timeout ~timeout ?on_timeout
+    with_timeout ~timeout ~on_timeout
       ~do_:(fun timeout ->
           try reader timeout ic oc
           with exn -> close_in ic; close_out oc; raise exn)
@@ -109,6 +113,10 @@ module Alarm_timeout = struct
   let shutdown_connection (ic, _) =
     Unix.shutdown_connection ic
 
+  let is_timeout_exn id = function
+  | Timeout exn_id -> exn_id = id
+  | _ -> false
+
 end
 
 module Select_timeout = struct
@@ -117,23 +125,23 @@ module Select_timeout = struct
 
   type t = {
     timeout: float;
+    id: int;
   }
   let create timeout =
-    { timeout = Unix.gettimeofday () +. timeout }
-  let with_timeout ~timeout ?on_timeout ~do_ =
+    { timeout = Unix.gettimeofday () +. timeout; id = mk_id () }
+  let with_timeout ~timeout ~on_timeout ~do_ =
     let t = create (float timeout) in
     try do_ t
-    with Timeout as exn ->
-      match on_timeout with
-      | None -> raise exn
-      | Some ft -> ft (); raise Timeout
+    with Timeout exn_id when exn_id = t.id -> on_timeout ()
+
   let check_timeout t =
-    if Unix.gettimeofday () > t.timeout then raise Timeout
+    if Unix.gettimeofday () > t.timeout then raise (Timeout t.id)
+
   let get_current_timeout = function
     | None -> -. 1.
-    | Some { timeout }  ->
+    | Some { timeout; id }  ->
         let timeout = timeout -. Unix.gettimeofday () in
-        if timeout < 0. then raise Timeout;
+        if timeout < 0. then raise (Timeout id);
         timeout
 
   (** Channel *)
@@ -184,9 +192,13 @@ module Select_timeout = struct
         snd (waitpid_non_intr pid)
 
   let do_read ?timeout tic =
-    let timeout = get_current_timeout timeout in
-    match Unix.select [ tic.fd ] [] [] timeout with
-    | [], _, _ -> raise Timeout
+    let timeout_duration = get_current_timeout timeout in
+    match Unix.select [ tic.fd ] [] [] timeout_duration with
+    | [], _, _ ->
+      (match timeout with
+      | Some timeout -> raise (Timeout timeout.id)
+      | None -> failwith ("This should be unreachable. "^
+        "How did Unix.select return with no fd when there is no timeout?"))
     | [_], _, _ ->
         let read = try
           Unix.read tic.fd tic.buf tic.max (buffer_size - tic.max)
@@ -376,14 +388,13 @@ module Select_timeout = struct
     tic.pid <- Some pid;
     tic
 
-  let read_process ~timeout ?on_timeout ~reader cmd args =
+  let read_process ~timeout ~on_timeout ~reader cmd args =
     let (tic, oc) = open_process cmd args in
     let on_timeout () =
       Option.iter ~f:Sys_utils.terminate_process tic.pid;
       tic.pid <- None;
-      match on_timeout with
-      | None -> raise Timeout
-      | Some f -> f () in
+      on_timeout ()
+    in
     with_timeout ~timeout ~on_timeout
       ~do_:(fun timeout ->
           try reader timeout tic oc
@@ -402,9 +413,13 @@ module Select_timeout = struct
         Unix.connect sock sockaddr;
       with
       | Unix.Unix_error ((Unix.EINPROGRESS | Unix.EWOULDBLOCK), _, _) -> begin
-          let timeout = get_current_timeout timeout in
-          match Unix.select [] [sock] [] timeout with
-          | _, [], _ -> raise Timeout
+          let timeout_duration = get_current_timeout timeout in
+          match Unix.select [] [sock] [] timeout_duration with
+          | _, [], _ ->
+            (match timeout with
+            | Some timeout -> raise (Timeout timeout.id)
+            | None -> failwith ("This should be unreachable. "^
+              "How did Unix.select return with no fd when there is no timeout?"))
           | _, [sock], _ -> ()
           | _, _, _ -> assert false
         end
@@ -422,6 +437,10 @@ module Select_timeout = struct
   let shutdown_connection { fd; _ } =
     Unix.(shutdown fd SHUTDOWN_SEND)
 
+  let is_timeout_exn {id; timeout=_;} = function
+  | Timeout exn_id -> exn_id = id
+  | _ -> false
+
 end
 
 module type S = sig
@@ -429,7 +448,7 @@ module type S = sig
   type t
   val with_timeout:
     timeout:int ->
-    ?on_timeout:(unit -> unit) ->
+    on_timeout:(unit -> 'a) ->
     do_:(t -> 'a) -> 'a
   val check_timeout: t -> unit
 
@@ -449,12 +468,14 @@ module type S = sig
   val close_process_in: in_channel -> Unix.process_status
   val read_process:
     timeout:int ->
-    ?on_timeout:(unit -> unit) ->
+    on_timeout:(unit -> 'a) ->
     reader:(t -> in_channel -> out_channel -> 'a) ->
     string -> string array -> 'a
   val open_connection:
     ?timeout:t -> Unix.sockaddr -> in_channel * out_channel
   val shutdown_connection: in_channel -> unit
+
+  val is_timeout_exn: t -> exn -> bool
 end
 
 let select = (module Select_timeout : S)
@@ -462,8 +483,8 @@ let alarm = (module Alarm_timeout : S)
 
 include (val (if Sys.win32 then select else alarm))
 
-let read_connection ~timeout ?on_timeout ~reader sockaddr =
-  with_timeout ~timeout ?on_timeout
+let read_connection ~timeout ~on_timeout ~reader sockaddr =
+  with_timeout ~timeout ~on_timeout
     ~do_:(fun timeout ->
        let (tic, oc) = open_connection ~timeout sockaddr in
        try reader timeout tic oc

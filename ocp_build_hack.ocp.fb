@@ -208,6 +208,7 @@ begin library "hh-utils-sys"
     "sysinfo.c"
     "tail.ml"
     "timeout.ml"
+    "timer.ml"
     "tmp.ml"
     "tty.ml"
   ]
