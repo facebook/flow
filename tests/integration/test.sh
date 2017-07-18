@@ -1,3 +1,5 @@
+#!/bin/sh
+
 FLOW=$1
 
 mv bar.js _bar.js

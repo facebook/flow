@@ -1,4 +1,4 @@
-
+#!/bin/sh
 FLOW=$1
 
 printf "\nInitial status:\n"

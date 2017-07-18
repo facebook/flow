@@ -1,3 +1,5 @@
+#!/bin/sh
+
 FLOW=$1
 mkdir tmp
 cp *.js tmp/
