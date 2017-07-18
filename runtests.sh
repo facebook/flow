@@ -190,11 +190,13 @@ runtest() {
         # parallel runs of the same test don't stomp on each other (Facebook
         # internally runs a stress test to look for flaky tests). If a test
         # fails, we'll then copy the files back to the source directory.
-        OUT_DIR=$(mktemp -d /tmp/flow_test.XXXXXX)
+        OUT_PARENT_DIR=$(mktemp -d /tmp/flow_test.XXXXXX)
+        OUT_DIR="$OUT_PARENT_DIR/$name"
+        mkdir "$OUT_DIR"
 
         # deletes the temp directory
         function cleanup {
-          rm -rf "$OUT_DIR"
+          rm -rf "$OUT_PARENT_DIR"
         }
         trap cleanup EXIT
 
@@ -202,6 +204,7 @@ runtest() {
         # from there. the . in "$dir/." copies the entire directory, including
         # hidden files like .flowconfig.
         cp -R "$dir/." "$OUT_DIR"
+        cp "$dir/../assert.sh" "$OUT_PARENT_DIR"
 
         out_file="$name.out"
         log_file="$name.log"

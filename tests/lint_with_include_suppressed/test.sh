@@ -1,8 +1,8 @@
 #!/bin/sh
-
+. ../assert.sh
 FLOW=$1
 
 printf "Without --include-suppressed:\n"
-$FLOW check
+assert_ok "$FLOW" check
 printf "With --include-suppressed:\n"
-$FLOW check --include-suppressed
+assert_ok "$FLOW" check --include-suppressed
