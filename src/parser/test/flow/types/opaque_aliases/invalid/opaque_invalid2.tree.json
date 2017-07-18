@@ -1,41 +1,73 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":20}},
+      "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":13}},
+      "message":"Unexpected identifier"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":18}},
       "message":"Unexpected identifier"
     }
   ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":35}},
-  "range":[0,35],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":28}},
+  "range":[0,28],
   "body":[
     {
-      "type":"ExportNamedDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":35}},
-      "range":[0,35],
-      "declaration":{
-        "type":"OpaqueType",
-        "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":35}},
-        "range":[7,35],
-        "id":{
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":6}},
+      "range":[0,6],
+      "expression":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":6}},
+        "range":[0,6],
+        "name":"opaque",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":13}},
+      "range":[7,13],
+      "expression":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":13}},
+        "range":[7,13],
+        "name":"potato",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":28}},
+      "range":[14,28],
+      "expression":{
+        "type":"AssignmentExpression",
+        "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":27}},
+        "range":[14,27],
+        "operator":"=",
+        "left":{
           "type":"Identifier",
-          "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":25}},
-          "range":[21,25],
+          "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":18}},
+          "range":[14,18],
           "name":"FBID",
           "typeAnnotation":null,
           "optional":false
         },
-        "typeParameters":null,
-        "impltype":{
-          "type":"NumberTypeAnnotation",
-          "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":34}},
-          "range":[28,34]
-        },
-        "supertype":null
+        "right":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":27}},
+          "range":[21,27],
+          "name":"number",
+          "typeAnnotation":null,
+          "optional":false
+        }
       },
-      "specifiers":[],
-      "source":null,
-      "exportKind":"type"
+      "directive":null
     }
   ],
   "comments":[]

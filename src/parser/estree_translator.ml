@@ -134,7 +134,7 @@ end with type t = Impl.t) = struct
       |]
     )
   | loc, TypeAlias alias -> type_alias (loc, alias)
-  | loc, OpaqueType opaque_t -> opaque_type (loc, opaque_t)
+  | loc, OpaqueType opaque_t -> opaque_type ~declare:false (loc, opaque_t)
   | loc, Switch switch -> Switch.(
       node "SwitchStatement" loc [|
         "discriminant", expression switch.discriminant;
@@ -211,26 +211,27 @@ end with type t = Impl.t) = struct
   | loc, InterfaceDeclaration i -> interface_declaration (loc, i)
   | loc, VariableDeclaration var -> variable_declaration (loc, var)
   | loc, FunctionDeclaration fn -> function_declaration (loc, fn)
-    | loc, DeclareVariable d -> declare_variable (loc, d)
-    | loc, DeclareFunction d -> declare_function (loc, d)
-    | loc, DeclareClass d -> declare_class (loc, d)
-    | loc, DeclareInterface i -> declare_interface (loc, i)
-    | loc, DeclareTypeAlias a -> declare_type_alias (loc, a)
-    | loc, DeclareModule m -> DeclareModule.(
-        let id = match m.id with
-        | Literal lit -> literal lit
-        | Identifier id -> identifier id
-        in
-        node "DeclareModule" loc [|
-          "id", id;
-          "body", block m.body;
-          "kind", (
-            match m.kind with
-            | DeclareModule.CommonJS _ -> string "CommonJS"
-            | DeclareModule.ES _ -> string "ES"
-          )
-        |]
-      )
+  | loc, DeclareVariable d -> declare_variable (loc, d)
+  | loc, DeclareFunction d -> declare_function (loc, d)
+  | loc, DeclareClass d -> declare_class (loc, d)
+  | loc, DeclareInterface i -> declare_interface (loc, i)
+  | loc, DeclareTypeAlias a -> declare_type_alias (loc, a)
+  | loc, DeclareOpaqueType t -> opaque_type ~declare:true (loc, t)
+  | loc, DeclareModule m -> DeclareModule.(
+      let id = match m.id with
+      | Literal lit -> literal lit
+      | Identifier id -> identifier id
+      in
+      node "DeclareModule" loc [|
+        "id", id;
+        "body", block m.body;
+        "kind", (
+          match m.kind with
+          | DeclareModule.CommonJS _ -> string "CommonJS"
+          | DeclareModule.ES _ -> string "ES"
+        )
+      |]
+    )
     | loc, DeclareExportDeclaration export -> DeclareExportDeclaration.(
         match export.specifiers with
         | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
@@ -244,7 +245,7 @@ end with type t = Impl.t) = struct
           | Some (Class c) -> declare_class c
           | Some (DefaultType t) -> _type t
           | Some (NamedType t) -> type_alias t
-          | Some (NamedOpaqueType t) -> opaque_type t
+          | Some (NamedOpaqueType t) -> opaque_type ~declare:true t
           | Some (Interface i) -> interface_declaration i
           | None -> null
           in
@@ -682,12 +683,12 @@ end with type t = Impl.t) = struct
       "right", _type alias.right;
     |]
   )
-
-  and opaque_type (loc, opaque_t) =  Statement.OpaqueType.(
-    node "OpaqueType" loc [|
+  and opaque_type ~declare (loc, opaque_t) =  Statement.OpaqueType.(
+    let name = if declare then "DeclareOpaqueType" else "OpaqueType" in
+    node name loc [|
       "id", identifier opaque_t.id;
       "typeParameters", option type_parameter_declaration opaque_t.typeParameters;
-      "impltype", _type opaque_t.impltype;
+      "impltype", option _type opaque_t.impltype;
       "supertype", option _type opaque_t.supertype;
     |]
   )

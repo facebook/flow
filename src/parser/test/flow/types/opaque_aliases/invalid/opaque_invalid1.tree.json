@@ -1,102 +1,41 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":21}},
-      "message":"`declare export opaque type` is not supported. Use `export opaque type` instead."
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":21}},
-      "message":"Unexpected token opaque"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":23}},
-      "message":"Unexpected token ="
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":30},"end":{"line":1,"column":31}},
-      "message":"Unexpected token ;"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input"
+      "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":20}},
+      "message":"Unexpected identifier"
     }
   ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
-  "range":[0,32],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":35}},
+  "range":[0,35],
   "body":[
     {
-      "type":"DeclareExportDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
-      "range":[0,32],
-      "default":false,
-      "declaration":null,
-      "specifiers":[
-        {
-          "type":"ExportSpecifier",
-          "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":23}},
-          "range":[22,23],
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":23}},
-            "range":[22,23],
-            "name":"=",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "exported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":23}},
-            "range":[22,23],
-            "name":"=",
-            "typeAnnotation":null,
-            "optional":false
-          }
+      "type":"ExportNamedDeclaration",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":35}},
+      "range":[0,35],
+      "declaration":{
+        "type":"OpaqueType",
+        "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":35}},
+        "range":[7,35],
+        "id":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":25}},
+          "range":[21,25],
+          "name":"FBID",
+          "typeAnnotation":null,
+          "optional":false
         },
-        {
-          "type":"ExportSpecifier",
-          "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":30}},
-          "range":[24,30],
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":30}},
-            "range":[24,30],
-            "name":"potato",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "exported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":30}},
-            "range":[24,30],
-            "name":"potato",
-            "typeAnnotation":null,
-            "optional":false
-          }
+        "typeParameters":null,
+        "impltype":{
+          "type":"NumberTypeAnnotation",
+          "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":34}},
+          "range":[28,34]
         },
-        {
-          "type":"ExportSpecifier",
-          "loc":{"source":null,"start":{"line":1,"column":30},"end":{"line":1,"column":31}},
-          "range":[30,31],
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":30},"end":{"line":1,"column":31}},
-            "range":[30,31],
-            "name":";",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "exported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":30},"end":{"line":1,"column":31}},
-            "range":[30,31],
-            "name":";",
-            "typeAnnotation":null,
-            "optional":false
-          }
-        }
-      ],
-      "source":null
+        "supertype":null
+      },
+      "specifiers":[],
+      "source":null,
+      "exportKind":"type"
     }
   ],
   "comments":[]

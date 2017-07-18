@@ -1,1 +1,1 @@
-export opaque potato FBID = number;
+opaque potato FBID = number;

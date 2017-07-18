@@ -70,7 +70,6 @@ type t =
   | DeclareExportLet
   | DeclareExportConst
   | DeclareExportType
-  | DeclareExportOpaqueType
   | DeclareExportInterface
   | UnexpectedExportStarAs
   | DuplicateExport of string
@@ -169,8 +168,6 @@ module PP =
           `declare export var` instead."
       | DeclareExportType -> "`declare export type` is not supported. Use \
           `export type` instead."
-      | DeclareExportOpaqueType -> "`declare export opaque type` is not supported. Use \
-          `export opaque type` instead."
       | DeclareExportInterface -> "`declare export interface` is not supported. Use \
           `export interface` instead."
       | UnexpectedExportStarAs -> "`export * as` is an early-stage proposal \

@@ -120,6 +120,7 @@ class mapper = object(this)
     | (_loc, DeclareModule _) -> stmt
     | (_loc, DeclareModuleExports _) -> stmt
     | (_loc, DeclareTypeAlias _) -> stmt
+    | (_loc, DeclareOpaqueType _) -> stmt
     | (_loc, DeclareVariable _) -> stmt
     | (_loc, InterfaceDeclaration _) -> stmt
     | (_loc, TypeAlias _) -> stmt

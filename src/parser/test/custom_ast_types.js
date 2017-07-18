@@ -29,7 +29,7 @@ def("DeclareExportDeclaration")
     def("DeclareClass"),
     def("Type"), // Implies default type
     def("TypeAlias"), // Implies named type
-    def("OpaqueType"), // Implies named opaque type
+    def("DeclareOpaqueType"), // Implies named opaque type
     def("InterfaceDeclaration"),
     null
   ))
@@ -49,7 +49,8 @@ def("OpaqueType")
 
 def("DeclareOpaqueType")
   .bases("OpaqueType")
-  .build("id", "typeParameters", "impltype", "supertype");
+  .build("id", "typeParameters", "impltype", "supertype")
+  .field("impltype", or(def("Type"), null));
 
 
 // TODO: should be named NullableClassDeclaration. estree allows a nameless

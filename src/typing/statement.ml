@@ -144,6 +144,7 @@ and statement_decl cx = Ast.Statement.(
       let tvar = Flow.mk_tvar cx r in
       Env.bind_type cx name tvar name_loc
 
+  | (_, DeclareOpaqueType { OpaqueType.id = (name_loc, name); _ } )
   | (_, OpaqueType { OpaqueType.id = (name_loc, name); _ } ) ->
       let r = DescFormat.type_reason name name_loc in
       let tvar = Flow.mk_tvar cx r in
@@ -665,11 +666,16 @@ and statement cx = Ast.Statement.(
       Type_table.set (Context.type_table cx) loc type_;
       Env.init_type cx name type_ name_loc
 
+  | (loc, DeclareOpaqueType
+    {OpaqueType.id=(name_loc, name); typeParameters; impltype; supertype = _})
   | (loc, OpaqueType {OpaqueType.id=(name_loc, name); typeParameters; impltype; supertype = _}) ->
       let r = DescFormat.type_reason name name_loc in
       let typeparams, typeparams_map =
         Anno.mk_type_param_declarations cx typeParameters in
-      let t = Anno.convert cx typeparams_map impltype in
+      (* TODO: update typechecking for opaque types without impltypes *)
+      let t = match impltype with
+      | Some t -> Anno.convert cx typeparams_map t
+      | None -> DefT (r, AnyT) in
       let t = OpaqueT (mk_reason (ROpaqueType name) loc, mk_id (), t) in
       Flow_js.check_polarity cx Positive t;
       let type_ = poly_type typeparams (DefT (r, TypeT t)) in
