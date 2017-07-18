@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 . ../assert.sh
 FLOW=$1
 assert_ok "$FLOW" stop 2> /dev/null > /dev/null
