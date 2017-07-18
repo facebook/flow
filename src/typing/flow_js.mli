@@ -15,7 +15,6 @@ val find_constraints:
   Constraint.ident ->
   Constraint.ident * Constraint.constraints
 val find_graph: Context.t -> Constraint.ident -> Constraint.constraints
-val find_root: Context.t -> Constraint.ident -> (Constraint.ident * Constraint.root)
 
 (* propagates sources to sinks following a subtype relation *)
 val flow: Context.t -> (Type.t * Type.use_t) -> unit
