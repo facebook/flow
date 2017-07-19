@@ -3884,8 +3884,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let t = filter_optional cx ~trace reason_prop t in
             rec_flow cx trace (proto, SetPropT (reason_op, propref, t))
           | None ->
-            add_output cx ~trace
-              (FlowError.EPropAccess ((reason, reason_op), Some x, p, Read))
+            add_output cx ~trace (FlowError.EPropAccess (
+              (reason, reason_op), Some x, Property.polarity p, Read
+            ))
         )
 
     | (_, UseT (_, ShapeT (o))) ->
@@ -4179,8 +4180,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | Read, Some t1 -> rec_flow_t cx trace (t1, t2)
           | Write, Some t1 -> rec_flow_t cx trace (t2, t1)
           | _, None ->
-            add_output cx ~trace
-              (FlowError.EPropAccess ((lreason, reason_op), Some x, p, rw)))
+            add_output cx ~trace (FlowError.EPropAccess (
+              (lreason, reason_op), Some x, Property.polarity p, rw)
+            ))
         | LookupProp (use_op, up) ->
           let p, up = match p, up with
           | Field (AbstractT (_, t), polarity), Field (AbstractT (_, ut), upolarity) ->
@@ -4375,8 +4377,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let t = filter_optional cx ~trace reason_prop t in
             rec_flow cx trace (proto, SetPropT (reason_prop, propref, t));
           | None ->
-            add_output cx ~trace
-              (FlowError.EPropAccess ((lreason, reason_op), Some x, p, Read))
+            add_output cx ~trace (FlowError.EPropAccess (
+              (lreason, reason_op), Some x, Property.polarity p, Read
+            ))
         )
       );
       Ops.pop ();
@@ -4394,8 +4397,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let propref = Named (reason_op, x) in
             rec_flow cx trace (proto, SetPropT (reason_op, propref, t))
           | None ->
-            add_output cx ~trace
-              (FlowError.EPropAccess ((lreason, reason_op), Some x, p, Read))
+            add_output cx ~trace (FlowError.EPropAccess (
+              (lreason, reason_op), Some x, Property.polarity p, Read
+            ))
         )
       );
       rec_flow_t cx trace (proto, t)
@@ -7712,8 +7716,10 @@ and get_prop cx trace reason_prop reason_op strict l super x map tout =
     | Some t ->
       rec_flow cx trace (t, u)
     | None ->
-      add_output cx ~trace
-        (FlowError.EPropAccess ((reason_op, reason_op), Some x, p, Read)))
+      add_output cx ~trace (FlowError.EPropAccess (
+        (reason_op, reason_op), Some x, Property.polarity p, Read
+      ))
+    )
   | None ->
     let tout = tvar_with_constraint cx ~trace u in
     lookup_prop cx trace super reason_prop reason_op strict x
@@ -7728,8 +7734,10 @@ and set_prop cx trace reason_prop reason_op strict l super x pmap tin =
     | Some t ->
       rec_flow_t cx trace (tin, ReposT (reason_op, t))
     | None ->
-      add_output cx ~trace
-        (FlowError.EPropAccess ((reason_prop, reason_op), Some x, p, Write)))
+      add_output cx ~trace (FlowError.EPropAccess (
+        (reason_prop, reason_op), Some x, Property.polarity p, Write
+      ))
+    )
   | None ->
     lookup_prop cx trace super reason_prop reason_op strict x
       (RWProp (l, tin, Write))
@@ -8472,8 +8480,10 @@ and prop_exists_test_generic
         rec_flow cx trace (t, GuardT (pred, orig_obj, result))
       | None ->
         (* prop cannot be read *)
-        add_output cx ~trace
-          (FlowError.EPropAccess ((lreason, reason), Some key, p, Read)))
+        add_output cx ~trace (FlowError.EPropAccess (
+          (lreason, reason), Some key, Property.polarity p, Read
+        ))
+      )
     | None when flags.exact && sealed_in_op (reason_of_t result) flags.sealed ->
       (* prop is absent from exact object type *)
       if sense
@@ -8682,8 +8692,10 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       | None ->
         let reason_obj = reason_of_t obj in
         let reason = reason_of_t result in
-        add_output cx ~trace
-          (FlowError.EPropAccess ((reason_obj, reason), Some key, p, Read)))
+        add_output cx ~trace (FlowError.EPropAccess (
+          (reason_obj, reason), Some key, Property.polarity p, Read
+        ))
+      )
     | None ->
       (* TODO: possibly unsound to filter out orig_obj here, but if we
          don't, case elimination based on sentinel prop checking doesn't
@@ -9765,8 +9777,9 @@ and perform_lookup_action cx trace propref p lreason ureason = function
     | Write, Some t -> rec_flow_t cx trace (tout, t)
     | _, None ->
       let x = match propref with Named (_, x) -> Some x | Computed _ -> None in
-      add_output cx ~trace
-        (FlowError.EPropAccess ((lreason, ureason), x, p, rw))
+      add_output cx ~trace (FlowError.EPropAccess (
+        (lreason, ureason), x, Property.polarity p, rw
+      ))
 
 and perform_elem_action cx trace value = function
   | ReadElem t -> rec_flow_t cx trace (value, t)

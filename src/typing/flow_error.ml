@@ -55,7 +55,7 @@ type error_message =
   | EExpectedNumberLit of (reason * reason) * Type.number_literal * Type.number_literal Type.literal
   | EExpectedBooleanLit of (reason * reason) * bool * bool option
   | EPropNotFound of (reason * reason) * use_op
-  | EPropAccess of (reason * reason) * string option * Type.property * Type.rw
+  | EPropAccess of (reason * reason) * string option * Type.polarity * Type.rw
   | EPropPolarityMismatch of (reason * reason) * string option * (Type.polarity * Type.polarity)
   | EPolarityMismatch of Type.typeparam * Type.polarity
   | EStrictLookupFailed of (reason * reason) * reason * string option
@@ -734,10 +734,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         unwrap_use_ops (reasons, [], "Property not found in") use_op in
       typecheck_error ~extra msg reasons
 
-  | EPropAccess (reasons, x, prop, rw) ->
-      prop_polarity_error reasons x
-        (Property.polarity prop)
-        (Polarity.of_rw rw)
+  | EPropAccess (reasons, x, polarity, rw) ->
+      prop_polarity_error reasons x polarity (Polarity.of_rw rw)
 
   | EPropPolarityMismatch (reasons, x, (p1, p2)) ->
       prop_polarity_error reasons x p1 p2
