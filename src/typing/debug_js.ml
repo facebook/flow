@@ -2089,8 +2089,11 @@ let dump_flow_error =
         spf "EOnlyDefaultExport (%s, %s)" (dump_reason cx reason) export_name
     | ENoNamedExport (reason, export_name, _) ->
         spf "ENoNamedExport (%s, %s)" (dump_reason cx reason) export_name
-    | EMissingTypeArgs (reason, _) ->
-        spf "EMissingTypeArgs (%s, _)" (dump_reason cx reason)
+    | EMissingTypeArgs { reason; min_arity; max_arity } ->
+        spf "EMissingTypeArgs { reason=%s; min_arity=%d; max_arity=%d }"
+          (dump_reason cx reason)
+          min_arity
+          max_arity
     | EValueUsedAsType (reason1, reason2) ->
         spf "EValueUsedAsType (%s, %s)"
           (dump_reason cx reason1)

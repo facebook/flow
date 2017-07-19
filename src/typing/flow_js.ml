@@ -3464,7 +3464,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       begin match u with
       | UseT (_, DefT (_, TypeT _)) ->
         if Context.enforce_strict_type_args cx then
-          add_output cx ~trace (FlowError.EMissingTypeArgs (reason_op, ids))
+          add_output cx ~trace (FlowError.EMissingTypeArgs {
+            reason = reason_op;
+            min_arity = poly_minimum_arity ids;
+            max_arity = List.length ids;
+          })
         else
           let inst = instantiate_poly_default_args
             cx trace ~reason_op ~reason_tapp (ids, t) in

@@ -48,7 +48,7 @@ type error_message =
   | ENoDefaultExport of reason * string * string option
   | EOnlyDefaultExport of reason * string
   | ENoNamedExport of reason * string * string option
-  | EMissingTypeArgs of reason * Type.typeparam list
+  | EMissingTypeArgs of { reason: reason; min_arity: int; max_arity: int }
   | EValueUsedAsType of (reason * reason)
   | EMutationNotAllowed of { reason: reason; reason_op: reason }
   | EExpectedStringLit of (reason * reason) * string * string Type.literal
@@ -249,7 +249,7 @@ let locs_of_error_message = function
   | ENoDefaultExport (reason, _, _) -> [loc_of_reason reason]
   | EOnlyDefaultExport (reason, _) -> [loc_of_reason reason]
   | ENoNamedExport (reason, _, _) -> [loc_of_reason reason]
-  | EMissingTypeArgs (reason, _) -> [loc_of_reason reason]
+  | EMissingTypeArgs { reason; _ } -> [loc_of_reason reason]
   | EValueUsedAsType (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EMutationNotAllowed { reason; reason_op } ->
@@ -476,10 +476,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     else spf "`%s`" export_name
   in
 
-  let poly_minimum_arity xs = List.(
-    xs |> filter (fun typeparam -> typeparam.default = None) |> length
-  ) in
-
   let typecheck_error_with_core_infos ?(suppress_op=false) ?extra core_msgs =
     let core_reasons = List.map fst core_msgs in
     let core_infos = List.map (fun (r, msgs) -> mk_info r msgs) core_msgs in
@@ -672,14 +668,12 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       in
       mk_error ~trace_infos [mk_info r [msg]]
 
-  | EMissingTypeArgs (r, params) ->
-      let min = poly_minimum_arity params in
-      let max = List.length params in
-      let arity, args = if min = max
-        then spf "%d" max, if max = 1 then "argument" else "arguments"
-        else spf "%d-%d" min max, "arguments"
+  | EMissingTypeArgs { reason; min_arity; max_arity } ->
+      let arity, args = if min_arity = max_arity
+        then spf "%d" max_arity, if max_arity = 1 then "argument" else "arguments"
+        else spf "%d-%d" min_arity max_arity, "arguments"
       in
-      mk_error ~trace_infos [mk_info r [spf
+      mk_error ~trace_infos [mk_info reason [spf
         "Application of polymorphic type needs \
          <list of %s %s>. (Can use `*` for inferrable ones)"
         arity args]]
