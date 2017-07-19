@@ -8,11 +8,14 @@
  *
  *)
 
+type sketchy_null_kind =
+  | SketchyBool
+  | SketchyString
+  | SketchyNumber
+  | SketchyMixed
+
 type lint_kind =
-  | SketchyNullBool
-  | SketchyNullString
-  | SketchyNullNumber
-  | SketchyNullMixed
+  | SketchyNull of sketchy_null_kind
   | UntypedTypeImport
 
 val string_of_kind: lint_kind -> string

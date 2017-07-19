@@ -135,6 +135,12 @@ type error_message =
   | EUntypedTypeImport of Loc.t * string
   | EUnusedSuppression of Loc.t
   | ELintSetting of LintSettings.error
+  | ESketchyNullLint of {
+      kind: LintSettings.sketchy_null_kind;
+      loc: Loc.t;
+      null_loc: Loc.t;
+      falsy_loc: Loc.t;
+    }
 
 and binding_error =
   | ENameAlreadyBound
@@ -358,6 +364,7 @@ let locs_of_error_message = function
   | EUntypedTypeImport (loc, _) -> [loc]
   | EUnusedSuppression (loc) -> [loc]
   | ELintSetting (loc, _) -> [loc]
+  | ESketchyNullLint { kind = _; loc; null_loc; falsy_loc; } -> [loc; null_loc; falsy_loc]
 
 let loc_of_error ~op msg =
   match op with
@@ -1375,3 +1382,19 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         "Perhaps you have a missing/extra ','?"
     in
     mk_error ~kind: ParseError [loc, [msg]]
+
+  | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
+    let type_str, value_str = match kind with
+    | LintSettings.SketchyBool -> "boolean", "Potentially false"
+    | LintSettings.SketchyNumber -> "number", "Potentially 0"
+    | LintSettings.SketchyString -> "string", "Potentially \"\""
+    | LintSettings.SketchyMixed -> "mixed", "Mixed"
+    in
+    mk_error
+      ~kind:(LintError (LintSettings.SketchyNull kind))
+      [loc, [(spf "Sketchy null check on %s value." type_str)
+        ^ " Perhaps you meant to check for null instead of for existence?"]]
+      ~extra:[InfoLeaf [
+        null_loc, ["Potentially null/undefined value."];
+        falsy_loc, [spf "%s value." value_str]
+      ]]

@@ -2373,3 +2373,16 @@ let dump_flow_error =
       | Redundant_argument -> "Redundant_argument"
       in
       spf "ELintSetting (%s, %s)" (string_of_loc loc) kind_str
+    | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
+      let open LintSettings in
+      let kind_str = match kind with
+      | SketchyBool -> "SketchyBool"
+      | SketchyString -> "SketchyString"
+      | SketchyNumber -> "SketchyNumber"
+      | SketchyMixed -> "SketchyMixed"
+      in
+      spf "ESketchyNullLint {kind=%s; loc=%s; null_loc=%s; falsy_loc=%s}"
+        kind_str
+        (string_of_loc loc)
+        (string_of_loc null_loc)
+        (string_of_loc falsy_loc)
