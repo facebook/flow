@@ -2145,11 +2145,12 @@ let dump_flow_error =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (match x with Some x -> spf "%S" x | None -> "(computed)")
-    | EPolarityMismatch (tp, p) ->
-        spf "EPolarityMismatch (%s %S, %s)"
-          (Polarity.string tp.polarity)
-          tp.name
-          (Polarity.string p)
+    | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
+        spf "EPolarityMismatch { reason=%s; name=%S; expected_polarity=%s; actual_polarity=%s }"
+          (dump_reason cx reason)
+          name
+          (Polarity.string expected_polarity)
+          (Polarity.string actual_polarity)
     | EStrictLookupFailed ((reason1, reason2), reason, x) ->
         spf "EStrictLookupFailed ((%s, %s), %s, %s)"
           (dump_reason cx reason1)

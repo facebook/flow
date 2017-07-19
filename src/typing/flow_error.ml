@@ -57,7 +57,12 @@ type error_message =
   | EPropNotFound of (reason * reason) * use_op
   | EPropAccess of (reason * reason) * string option * Type.polarity * Type.rw
   | EPropPolarityMismatch of (reason * reason) * string option * (Type.polarity * Type.polarity)
-  | EPolarityMismatch of Type.typeparam * Type.polarity
+  | EPolarityMismatch of {
+      reason: reason;
+      name: string;
+      expected_polarity: Type.polarity;
+      actual_polarity: Type.polarity;
+    }
   | EStrictLookupFailed of (reason * reason) * reason * string option
   | EFunCallParam of (reason * reason)
   | EFunCallThis of reason * reason * reason
@@ -261,7 +266,7 @@ let locs_of_error_message = function
       [loc_of_reason reason1; loc_of_reason reason2]
   | EPropPolarityMismatch ((reason1, reason2), _, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | EPolarityMismatch (tp, _) -> [loc_of_reason tp.reason]
+  | EPolarityMismatch { reason; _ } -> [loc_of_reason reason]
   | EStrictLookupFailed ((reason1, reason2), _, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EFunCallParam (reason1, reason2) ->
@@ -740,12 +745,12 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | EPropPolarityMismatch (reasons, x, (p1, p2)) ->
       prop_polarity_error reasons x p1 p2
 
-  | EPolarityMismatch (tp, p) ->
-      mk_error ~trace_infos [mk_info tp.reason [spf
+  | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
+      mk_error ~trace_infos [mk_info reason [spf
         "%s position (expected `%s` to occur only %sly)"
-        (Polarity.string p)
-        tp.name
-        (Polarity.string tp.polarity)]]
+        (Polarity.string actual_polarity)
+        name
+        (Polarity.string expected_polarity)]]
 
   | EStrictLookupFailed (reasons, lreason, x) ->
     (* if we're looking something up on the global/builtin object, then tweak

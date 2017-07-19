@@ -6669,7 +6669,12 @@ and check_polarity cx ?trace polarity = function
   (* base case *)
   | BoundT tp ->
     if not (Polarity.compat (tp.polarity, polarity))
-    then polarity_mismatch cx ?trace polarity tp
+    then add_output cx ?trace (FlowError.EPolarityMismatch {
+      reason = tp.reason;
+      name = tp.name;
+      expected_polarity = tp.polarity;
+      actual_polarity = polarity;
+    })
 
   | OpenT _
 
@@ -6803,9 +6808,6 @@ and variance_check cx ?trace polarity = function
   | tp::tps, t::ts ->
     check_polarity cx ?trace (Polarity.mult (polarity, tp.polarity)) t;
     variance_check cx ?trace polarity (tps, ts)
-
-and polarity_mismatch cx ?trace polarity tp =
-  add_output cx ?trace (FlowError.EPolarityMismatch (tp, polarity))
 
 and poly_minimum_arity xs =
   List.filter (fun typeparam -> typeparam.default = None) xs
