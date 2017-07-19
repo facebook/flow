@@ -219,7 +219,7 @@ begin library "flow-parser"
   files += [
     "src/parser/lexer.ml" (comp += [
       "-w" "-31-39"
-      "-ppx" "%{sedlex_FULL_SRC_DIR}%/ppx_sedlex"
+      "-ppx" "%{sedlex_FULL_SRC_DIR}%/ppx_sedlex --as-ppx"
     ])
   ]
   requires = [
