@@ -35,6 +35,16 @@ val state_max: lint_state -> lint_state -> lint_state
 
 type t
 
+type error_kind =
+| Invalid_setting
+| Malformed_argument
+| Naked_comment
+| Nonexistent_rule
+| Overwritten_argument
+| Redundant_argument
+
+type error = Loc.t * error_kind
+
 val default_settings: t
 
 val all_setting: lint_state -> t

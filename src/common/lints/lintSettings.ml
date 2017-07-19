@@ -82,6 +82,16 @@ type t = {
   explicit_settings: (lint_state * Loc.t option) LintMap.t;
 }
 
+type error_kind =
+| Invalid_setting
+| Malformed_argument
+| Naked_comment
+| Nonexistent_rule
+| Overwritten_argument
+| Redundant_argument
+
+type error = Loc.t * error_kind
+
 let default_settings = {
   default_state = Off;
   all_encountered = false;

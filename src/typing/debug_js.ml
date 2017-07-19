@@ -2362,3 +2362,14 @@ let dump_flow_error =
       spf "EUntypedTypeImport (%s, %s)" (string_of_loc loc) module_name
     | EUnusedSuppression loc ->
       spf "EUnusedSuppression (%s)" (string_of_loc loc)
+    | ELintSetting (loc, kind) ->
+      let open LintSettings in
+      let kind_str = match kind with
+      | Invalid_setting -> "Invalid_setting"
+      | Malformed_argument -> "Malformed_argument"
+      | Naked_comment -> "Naked_comment"
+      | Nonexistent_rule -> "Nonexistent_rule"
+      | Overwritten_argument -> "Overwritten_argument"
+      | Redundant_argument -> "Redundant_argument"
+      in
+      spf "ELintSetting (%s, %s)" (string_of_loc loc) kind_str

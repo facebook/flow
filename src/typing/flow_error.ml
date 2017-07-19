@@ -134,6 +134,7 @@ type error_message =
   (* The string is either the name of a module or "the module that exports `_`". *)
   | EUntypedTypeImport of Loc.t * string
   | EUnusedSuppression of Loc.t
+  | ELintSetting of LintSettings.error
 
 and binding_error =
   | ENameAlreadyBound
@@ -356,6 +357,7 @@ let locs_of_error_message = function
   | EDocblockError (loc, _) -> [loc]
   | EUntypedTypeImport (loc, _) -> [loc]
   | EUnusedSuppression (loc) -> [loc]
+  | ELintSetting (loc, _) -> [loc]
 
 let loc_of_error ~op msg =
   match op with
@@ -1354,3 +1356,22 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
 
   | EUnusedSuppression loc ->
     mk_error [loc, ["Error suppressing comment"; "Unused suppression"]]
+
+  | ELintSetting (loc, kind) ->
+    let msg = match kind with
+    | LintSettings.Redundant_argument ->
+      "Redundant argument. This argument doesn't change any lint settings."
+    | LintSettings.Overwritten_argument ->
+      "Redundant argument. "
+        ^ "The values set by this argument are overwritten later in this comment."
+    | LintSettings.Naked_comment ->
+      "Malformed lint rule. At least one argument is required."
+    | LintSettings.Nonexistent_rule ->
+      "Nonexistent/misspelled lint rule. Perhaps you have a missing/extra ','?"
+    | LintSettings.Invalid_setting ->
+      "Invalid setting. Valid settings are error, warn, and off."
+    | LintSettings.Malformed_argument ->
+      "Malformed lint rule. Properly formed rules contain a single ':' character. " ^
+        "Perhaps you have a missing/extra ','?"
+    in
+    mk_error ~kind: ParseError [loc, [msg]]

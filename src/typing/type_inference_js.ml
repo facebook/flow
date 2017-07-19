@@ -182,8 +182,10 @@ let scan_for_lint_suppressions =
       "Unreachable match case. (split_comment is only called when comment starts with a keyword)"
   in
 
-  let add_error cx loc msg =
-    Errors.mk_error ~kind: Errors.ParseError [loc, [msg]] |> Context.add_error cx
+  let add_error cx (loc, kind) =
+    let err = FlowError.ELintSetting (loc, kind) in
+    FlowError.error_of_msg ~trace_reasons:[] ~op:None ~source_file:(Context.file cx) err
+    |> Context.add_error cx
   in
 
   let comma_regex = Str.regexp "," in
@@ -192,15 +194,13 @@ let scan_for_lint_suppressions =
   let parse_kind loc_str =
     match LintSettings.kinds_of_string loc_str.value with
     | Some kinds -> Ok kinds
-    | None -> Error (loc_str.loc,
-      "Nonexistent/misspelled lint rule. Perhaps you have a missing/extra ','?")
+    | None -> Error (loc_str.loc, LintSettings.Nonexistent_rule)
   in
 
   let parse_value loc_value =
     match LintSettings.state_of_string loc_value.value with
       | Some state -> Ok state
-      | None -> Error (loc_value.loc,
-        "Invalid setting. Valid settings are error, warn, and off.")
+      | None -> Error (loc_value.loc, LintSettings.Invalid_setting)
   in
 
   let get_kind_setting cx arg =
@@ -213,14 +213,12 @@ let scan_for_lint_suppressions =
         | Ok kinds, Ok setting ->
           Some (List.map (fun kind -> ({value = kind; loc = arg.loc}, setting)) kinds)
         | rule_result, setting_result ->
-          Result.iter_error rule_result ~f:(fun (loc, msg) -> add_error cx loc msg);
-          Result.iter_error setting_result ~f:(fun (loc, msg) -> add_error cx loc msg);
+          Result.iter_error rule_result ~f:(add_error cx);
+          Result.iter_error setting_result ~f:(add_error cx);
           None
       end
     | _ ->
-      add_error cx arg.loc
-        ("Malformed lint rule. Properly formed rules contain a single ':' character. " ^
-        "Perhaps you have a missing/extra ','?");
+      add_error cx (arg.loc, LintSettings.Malformed_argument);
       None
   in
 
@@ -308,7 +306,7 @@ let scan_for_lint_suppressions =
           let error_encountered = ref false in
           let (new_builder, new_running_settings) =
             LintSettingsMap.update_settings_and_running running_settings
-              (fun loc msg -> error_encountered := true; add_error cx loc msg)
+              (fun err -> error_encountered := true; add_error cx err)
               covered_range kind_settings suppression_builder in
           (* Only report overwritten arguments if there are no no-op arguments,
            * to avoid error duplication *)
@@ -330,8 +328,7 @@ let scan_for_lint_suppressions =
               | Some arg_loc ->
                 if not (Loc.LocSet.mem arg_loc used_locs) then begin
                   error_encountered := true;
-                  add_error cx arg_loc ("Redundant argument. "
-                    ^ "The values set by this argument are overwritten later in this comment.")
+                  add_error cx (arg_loc, LintSettings.Overwritten_argument)
                 end
               | None -> ()) arg_locs
           in
@@ -353,7 +350,7 @@ let scan_for_lint_suppressions =
             else (new_builder, new_running_settings, suppression_locs)
         (* Case where we're wholly enabling/disabling linting *)
         | None ->
-          add_error cx keyword.loc "Malformed lint rule. At least one argument is required.";
+          add_error cx (keyword.loc, LintSettings.Naked_comment);
           acc (* TODO (rballard): regional lint disabling *)
     else acc
   in
