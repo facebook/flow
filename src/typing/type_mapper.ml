@@ -111,11 +111,11 @@ class t = object(self)
           let t'' = self#type_ cx t' in
           if t'' == t' then t
           else AnnotT t''
-      | OpaqueT (r, id, t', st) ->
-          let t'' = OptionUtils.ident_map (self#type_ cx) t' in
-          let st' = OptionUtils.ident_map (self#type_ cx) st in
-          if t'' == t' && st' == st then t
-          else OpaqueT (r, id, t'', st')
+      | OpaqueT (r, opaquetype) ->
+          let underlying_t = OptionUtils.ident_map (self#type_ cx) opaquetype.underlying_t in
+          let super_t = OptionUtils.ident_map (self#type_ cx) opaquetype.super_t in
+          if underlying_t == opaquetype.underlying_t && super_t == opaquetype.super_t then t
+          else OpaqueT (r, {opaquetype with underlying_t; super_t})
       | ModuleT (r, exporttypes) ->
           let exporttypes' = self#export_types cx exporttypes in
           if exporttypes == exporttypes' then t
