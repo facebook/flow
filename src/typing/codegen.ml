@@ -151,7 +151,7 @@ let rec gen_type t env = Type.(
   match t with
   | AbstractT (_, t) -> add_str "$Abstract<" env |> gen_type t |> add_str ">"
   | AnnotT t -> gen_type t env
-  | OpaqueT (_, _, t) -> gen_type t env
+  | OpaqueT (_, _, t, _) -> gen_type t env
   | DefT (_, AnyFunT) -> add_str "Function" env
   | DefT (_, AnyObjT) -> add_str "Object" env
   | DefT (_, AnyT)

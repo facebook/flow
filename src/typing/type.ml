@@ -149,7 +149,11 @@ module rec TypeTerm : sig
         upper bounds, and would flow lower bounds to T1 & T2. **)
     | AnnotT of t
 
-    | OpaqueT of reason * int * t
+    (* Opaque type aliases. The int is its unique id, the first t is the underlying type, which
+     * we only allow access to when inside the file the opaque type was defined, and the second
+     * t is the super type, which we use when an OpaqueT is an upperbound in a file in which it
+     * was not defined *)
+    | OpaqueT of reason * int * t * t option
 
     (* Stores exports (and potentially other metadata) for a module *)
     | ModuleT of reason * exporttypes
@@ -1795,7 +1799,7 @@ let rec reason_of_t = function
   | KeysT (reason, _) -> reason
   | ModuleT (reason, _) -> reason
   | ObjProtoT reason -> reason
-  | OpaqueT (reason, _, _) -> reason
+  | OpaqueT (reason, _, _, _) -> reason
   | OpenPredT (reason, _, _, _) -> reason
   | ReposT (reason, _) -> reason
   | ReposUpperT (reason, _) -> reason
@@ -1934,7 +1938,7 @@ let rec mod_reason_of_t f = function
   | KeysT (reason, t) -> KeysT (f reason, t)
   | ModuleT (reason, exports) -> ModuleT (f reason, exports)
   | ObjProtoT (reason) -> ObjProtoT (f reason)
-  | OpaqueT (reason, id, t) -> OpaqueT (f reason, id, t)
+  | OpaqueT (reason, id, t, super) -> OpaqueT (f reason, id, t, super)
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
   | ReposT (reason, t) -> ReposT (f reason, t)
   | ReposUpperT (reason, t) -> ReposUpperT (reason, mod_reason_of_t f t)

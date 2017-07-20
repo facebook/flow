@@ -668,8 +668,8 @@ and statement cx = Ast.Statement.(
       Env.init_type cx name type_ name_loc
 
   | (loc, DeclareOpaqueType
-    {OpaqueType.id=(name_loc, name); typeParameters; impltype; supertype = _})
-  | (loc, OpaqueType {OpaqueType.id=(name_loc, name); typeParameters; impltype; supertype = _}) ->
+    {OpaqueType.id=(name_loc, name); typeParameters; impltype; supertype})
+  | (loc, OpaqueType {OpaqueType.id=(name_loc, name); typeParameters; impltype; supertype}) ->
       let r = DescFormat.type_reason name name_loc in
       let typeparams, typeparams_map =
         Anno.mk_type_param_declarations cx typeParameters in
@@ -677,9 +677,13 @@ and statement cx = Ast.Statement.(
       let t = match impltype with
       | Some t -> Anno.convert cx typeparams_map t
       | None -> DefT (r, AnyT) in
-      let t = OpaqueT (mk_reason (ROpaqueType name) loc, mk_id (), t) in
+      let supertype = Option.map supertype (Anno.convert cx typeparams_map) in
+      let t = OpaqueT (mk_reason (ROpaqueType name) loc, mk_id (), t, supertype) in
       Flow_js.check_polarity cx Positive t;
       let type_ = poly_type typeparams (DefT (r, TypeT t)) in
+      let open Flow_js in
+      Option.iter ~f:(fun st -> generate_tests cx r typeparams (fun map_ ->
+        flow_t cx (subst cx map_ t, subst cx map_ st))) supertype;
       Type_table.set (Context.type_table cx) loc type_;
       Env.init_type cx name type_ name_loc
 
