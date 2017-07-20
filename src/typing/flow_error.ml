@@ -35,11 +35,27 @@ end = struct
 end
 
 type error_message =
-  | EIncompatible of Type.t * Type.use_t
+  | EIncompatible of {
+      reason_lower: reason;
+      special: special_lower option;
+      upper: Type.use_t;
+    }
   | EIncompatibleDefs of reason * reason
-  | EIncompatibleProp of { lower: Type.t; reason_prop: reason }
-  | EIncompatibleGetProp of { lower: Type.t; reason_prop: reason }
-  | EIncompatibleSetProp of { lower: Type.t; reason_prop: reason }
+  | EIncompatibleProp of {
+      reason_prop: reason;
+      reason_obj: reason;
+      special: special_lower option;
+    }
+  | EIncompatibleGetProp of {
+      reason_prop: reason;
+      reason_obj: reason;
+      special: special_lower option;
+    }
+  | EIncompatibleSetProp of {
+      reason_prop: reason;
+      reason_obj: reason;
+      special: special_lower option;
+    }
   | EDebugPrint of reason * string
   | EImportValueAsType of reason * string
   | EImportTypeAsTypeof of reason * string
@@ -76,7 +92,11 @@ type error_message =
   | ENonLitArrayToTuple of (reason * reason)
   | ETupleOutOfBounds of (reason * reason) * int * int
   | ETupleUnsafeWrite of (reason * reason)
-  | EIntersectionSpeculationFailed of Type.t * Type.use_t * (reason * error_message) list
+  | EIntersectionSpeculationFailed of {
+      reason_lower: reason;
+      upper: Type.use_t;
+      branches: (reason * error_message) list;
+    }
   | EUnionSpeculationFailed of {
       reason: reason;
       reason_op: reason;
@@ -212,6 +232,12 @@ and unsupported_syntax =
   | SpreadArgument
   | ImportDynamicArgument
 
+and special_lower =
+  | Possibly_null
+  | Possibly_void
+  | Possibly_null_or_void
+  | Incompatible_intersection
+
 let rec locs_of_use_op acc = function
   | FunCallThis reason -> (loc_of_reason reason)::acc
   | PropertyCompatibility
@@ -230,17 +256,15 @@ let rec locs_of_use_op acc = function
   | MissingTupleElement _ -> acc
 
 let locs_of_error_message = function
-  | EIncompatible (l, u) ->
-      let reason_l = reason_of_t l in
-      let reason_u = reason_of_use_t u in
-      [loc_of_reason reason_l; loc_of_reason reason_u]
+  | EIncompatible { reason_lower; upper; _ } ->
+      let reason_upper = reason_of_use_t upper in
+      [loc_of_reason reason_lower; loc_of_reason reason_upper]
   | EIncompatibleDefs (reason_l, reason_u) ->
       [loc_of_reason reason_l; loc_of_reason reason_u]
-  | EIncompatibleProp { lower; reason_prop }
-  | EIncompatibleGetProp { lower; reason_prop }
-  | EIncompatibleSetProp { lower; reason_prop } ->
-      let reason_l = reason_of_t lower in
-      [loc_of_reason reason_prop; loc_of_reason reason_l]
+  | EIncompatibleProp { reason_prop; reason_obj; _ }
+  | EIncompatibleGetProp { reason_prop; reason_obj; _ }
+  | EIncompatibleSetProp { reason_prop; reason_obj; _ } ->
+      [loc_of_reason reason_prop; loc_of_reason reason_obj]
   | EDebugPrint (reason, _) -> [loc_of_reason reason]
   | EImportValueAsType (reason, _) -> [loc_of_reason reason]
   | EImportTypeAsTypeof (reason, _) -> [loc_of_reason reason]
@@ -292,10 +316,9 @@ let locs_of_error_message = function
       [loc_of_reason reason1; loc_of_reason reason2]
   | ETupleUnsafeWrite (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | EIntersectionSpeculationFailed (l, u, _) ->
-      let reason1 = reason_of_t l in
-      let reason2 = reason_of_use_t u in
-      [loc_of_reason reason1; loc_of_reason reason2]
+  | EIntersectionSpeculationFailed { reason_lower; upper; _ } ->
+      let reason_upper = reason_of_use_t upper in
+      [loc_of_reason reason_lower; loc_of_reason reason_upper]
   | EUnionSpeculationFailed { reason; reason_op; branches = _ } ->
       [loc_of_reason reason; loc_of_reason reason_op]
   | ESpeculationAmbiguous ((reason1, reason2), _, _, _) ->
@@ -382,8 +405,7 @@ let ordered_reasons rl ru =
   then ru, rl
   else rl, ru
 
-let ordered_reasons_of_types l u =
-  let rl = reason_of_t l in
+let ordered_reasons_of_types rl u =
   let ru = reason_of_use_t u in
   if is_use u then ru, rl else ordered_reasons rl ru
 
@@ -459,16 +481,15 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         (string_of_use_ctor t)
   in
 
-  let err_value = function
-    | DefT (_, NullT) -> " possibly null value"
-    | DefT (_, VoidT) -> " possibly undefined value"
-    | DefT (_, MaybeT _) -> " possibly null or undefined value"
-    | DefT (_, IntersectionT _)
-    | DefT (_, MixedT Empty_intersection) -> " any member of intersection type"
-    | _ -> ""
+  let special_suffix = function
+    | Some Possibly_null -> " possibly null value"
+    | Some Possibly_void -> " possibly undefined value"
+    | Some Possibly_null_or_void -> " possibly null or undefined value"
+    | Some Incompatible_intersection -> " any member of intersection type"
+    | None -> ""
   in
 
-  let err_msg_use l u = spf "%s%s" (err_operation u) (err_value l) in
+  let err_msg_use special u = spf "%s%s" (err_operation u) (special_suffix special) in
 
   let msg_export export_name =
     if export_name = "default"
@@ -592,25 +613,24 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   in
 
   function
-  | EIncompatible (l, u) ->
-      let rl = reason_of_t l in
-      let ru = reason_of_use_t u in
-      typecheck_error (err_msg_use l u) (ru, rl)
+  | EIncompatible { reason_lower; special; upper } ->
+      let reason_upper = reason_of_use_t upper in
+      typecheck_error (err_msg_use special upper) (reason_upper, reason_lower)
 
   | EIncompatibleDefs (reason_l, reason_u) ->
       typecheck_error "This type is incompatible with" (ordered_reasons reason_l reason_u)
 
-  | EIncompatibleProp { lower; reason_prop } ->
-      let msg = spf "Property not found in%s" (err_value lower) in
-      typecheck_error msg (reason_prop, reason_of_t lower)
+  | EIncompatibleProp { reason_prop; reason_obj; special } ->
+      let msg = spf "Property not found in%s" (special_suffix special) in
+      typecheck_error msg (reason_prop, reason_obj)
 
-  | EIncompatibleGetProp { lower; reason_prop } ->
-      let msg = spf "Property cannot be accessed on%s" (err_value lower) in
-      typecheck_error msg (reason_prop, reason_of_t lower)
+  | EIncompatibleGetProp { reason_prop; reason_obj; special } ->
+      let msg = spf "Property cannot be accessed on%s" (special_suffix special) in
+      typecheck_error msg (reason_prop, reason_obj)
 
-  | EIncompatibleSetProp { lower; reason_prop } ->
-      let msg = spf "Property cannot be assigned on%s" (err_value lower) in
-      typecheck_error msg (reason_prop, reason_of_t lower)
+  | EIncompatibleSetProp { reason_prop; reason_obj; special } ->
+      let msg = spf "Property cannot be assigned on%s" (special_suffix special) in
+      typecheck_error msg (reason_prop, reason_obj)
 
   | EDebugPrint (r, str) ->
       mk_error ~trace_infos [mk_info r [str]]
@@ -861,9 +881,11 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         element of the tuple you are mutating. Unsafe mutation of" in
       typecheck_error msg reasons
 
-  | EIntersectionSpeculationFailed (l, u, branches) ->
-      let reasons = ordered_reasons_of_types l u in
-      let msg = if is_use u then err_msg_use l u else "This type is incompatible with" in
+  | EIntersectionSpeculationFailed { reason_lower; upper; branches } ->
+      let reasons = ordered_reasons_of_types reason_lower upper in
+      let msg = if is_use upper
+        then err_msg_use (Some Incompatible_intersection) upper
+        else "This type is incompatible with" in
       let extra = speculation_extras branches in
       typecheck_error msg ~extra reasons
 

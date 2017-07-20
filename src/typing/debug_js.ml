@@ -2052,26 +2052,26 @@ let dump_flow_error =
   in
   fun ?(depth=3) cx err ->
     match err with
-    | EIncompatible (l, u) ->
-        spf "EIncompatible (%s, %s)"
-          (dump_t ~depth cx l)
-          (dump_use_t ~depth cx u)
+    | EIncompatible { reason_lower; upper; special = _; } ->
+        spf "EIncompatible { lower_reason = %s; upper = %s; special = _ }"
+          (dump_reason cx reason_lower)
+          (dump_use_t ~depth cx upper)
     | EIncompatibleDefs (reason_l, reason_u) ->
         spf "EIncompatibleDefs (%s, %s)"
           (dump_reason cx reason_l)
           (dump_reason cx reason_u)
-    | EIncompatibleProp { lower; reason_prop } ->
-        spf "EIncompatibleProp { lower = %s; reason_prop = %s }"
-          (dump_t ~depth cx lower)
+    | EIncompatibleProp { reason_prop; reason_obj; special=_ } ->
+        spf "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _ }"
           (dump_reason cx reason_prop)
-    | EIncompatibleGetProp { lower; reason_prop } ->
-        spf "EIncompatibleGetProp { lower = %s; reason_prop = %s }"
-          (dump_t ~depth cx lower)
+          (dump_reason cx reason_obj)
+    | EIncompatibleGetProp { reason_prop; reason_obj; special=_ } ->
+        spf "EIncompatibleGetProp { reason_prop = %s; reason_obj = %s; special = _ }"
           (dump_reason cx reason_prop)
-    | EIncompatibleSetProp { lower; reason_prop } ->
-        spf "EIncompatibleSetProp { lower = %s; reason_prop = %s }"
-          (dump_t ~depth cx lower)
+          (dump_reason cx reason_obj)
+    | EIncompatibleSetProp { reason_prop; reason_obj; special=_ } ->
+        spf "EIncompatibleSetProp { reason_prop = %s; reason_obj = %s; special = _ }"
           (dump_reason cx reason_prop)
+          (dump_reason cx reason_obj)
     | EDebugPrint (reason, _) ->
         spf "EDebugPrint (%s, _)" (dump_reason cx reason)
     | EImportValueAsType (reason, str) ->
@@ -2209,10 +2209,10 @@ let dump_flow_error =
         spf "ETupleUnsafeWrite (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EIntersectionSpeculationFailed (l, u, _) ->
-        spf "EIntersectionSpeculationFailed (%s, %s)"
-          (dump_t ~depth cx l)
-          (dump_use_t ~depth cx u)
+    | EIntersectionSpeculationFailed { reason_lower; upper; branches = _ } ->
+        spf "EIntersectionSpeculationFailed { reason_lower = %s; upper = %s; branches = _ }"
+          (dump_reason cx reason_lower)
+          (dump_use_t ~depth cx upper)
     | EUnionSpeculationFailed { reason; reason_op; branches = _ } ->
         spf "EUnionSpeculationFailed { reason = %s; reason_op = %s; branches = _ }"
           (dump_reason cx reason)

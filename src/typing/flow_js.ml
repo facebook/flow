@@ -5594,16 +5594,25 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (FunProtoT reason, u)
 
     | _, GetPropT (_, propref, _) ->
-      let reason_prop = reason_of_propref propref in
-      add_output cx ~trace (FlowError.EIncompatibleGetProp { lower = l; reason_prop })
+      add_output cx ~trace (FlowError.EIncompatibleGetProp {
+        reason_prop = reason_of_propref propref;
+        reason_obj = reason_of_t l;
+        special = special_of_t l;
+      })
 
     | _, SetPropT (_, propref, _) ->
-      let reason_prop = reason_of_propref propref in
-      add_output cx ~trace (FlowError.EIncompatibleSetProp { lower = l; reason_prop })
+      add_output cx ~trace (FlowError.EIncompatibleSetProp {
+        reason_prop = reason_of_propref propref;
+        reason_obj = reason_of_t l;
+        special = special_of_t l;
+      })
 
     | _, LookupT (_, _, _, propref, _) ->
-      let reason_prop = reason_of_propref propref in
-      add_output cx ~trace (FlowError.EIncompatibleProp { lower = l; reason_prop })
+      add_output cx ~trace (FlowError.EIncompatibleProp {
+        reason_prop = reason_of_propref propref;
+        reason_obj = reason_of_t l;
+        special = special_of_t l;
+      })
 
     | _, UseT (Addition, u) ->
       add_output cx ~trace (FlowError.EAddition (reason_of_t l, reason_of_t u))
@@ -5635,8 +5644,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx ~trace (FlowError.EIncompatibleDefs (reason_of_t l, reason_of_t u))
 
     | _ ->
-      add_output cx ~trace (FlowError.EIncompatible (l, u))
+      add_output cx ~trace (FlowError.EIncompatible {
+        reason_lower = reason_of_t l;
+        upper = u;
+        special = special_of_t l;
+      })
   )
+
+and special_of_t = function
+  | DefT (_, NullT) -> Some Flow_error.Possibly_null
+  | DefT (_, VoidT) -> Some Flow_error.Possibly_void
+  | DefT (_, MaybeT _) -> Some Flow_error.Possibly_null_or_void
+  | DefT (_, IntersectionT _)
+  | DefT (_, MixedT Empty_intersection) -> Some Flow_error.Incompatible_intersection
+  | _ -> None
 
 (* some types need to be resolved before proceeding further *)
 and needs_resolution = function
@@ -7545,9 +7566,11 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
         add_output cx ~trace (FlowError.EUnionSpeculationFailed { reason; reason_op; branches })
 
       | IntersectionCases (ls, u) ->
-        let r = mk_intersection_reason r ls in
-        let l = DefT (r, MixedT Empty_intersection) in
-        add_output cx ~trace (FlowError.EIntersectionSpeculationFailed (l, u, branches))
+        add_output cx ~trace (FlowError.EIntersectionSpeculationFailed {
+          reason_lower = mk_intersection_reason r ls;
+          upper = u;
+          branches;
+        })
     end
 
   in loop (Speculation.NoMatch []) trials
@@ -10078,7 +10101,7 @@ and flow cx (lower, upper) =
   with
   | RecursionCheck.LimitExceeded trace ->
     (* log and continue *)
-    let reasons = FlowError.ordered_reasons_of_types lower upper in
+    let reasons = FlowError.ordered_reasons_of_types (reason_of_t lower) upper in
     add_output cx ~trace (FlowError.ERecursionLimit reasons)
   | ex ->
     (* rethrow *)
