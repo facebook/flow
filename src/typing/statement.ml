@@ -49,8 +49,9 @@ let rec variable_decl cx entry = Ast.Statement.(
     | VariableDeclaration.Const ->
       Scope.Entry.(Const ConstVarBinding), Env.bind_const
     | VariableDeclaration.Let ->
-      Scope.(Entry.Let Entry.LetVarBinding), Env.bind_let
-    | VariableDeclaration.Var -> Scope.Entry.Var, Env.bind_var
+      Scope.Entry.(Let LetVarBinding), Env.bind_let
+    | VariableDeclaration.Var ->
+      Scope.Entry.(Var VarBinding), Env.bind_var
   in
 
   let str_of_kind = Scope.Entry.string_of_value_kind value_kind in
@@ -2248,9 +2249,9 @@ and variable cx kind
     | VariableDeclaration.Const ->
       Scope.Entry.(Const ConstVarBinding), init_const, declare_const
     | VariableDeclaration.Let ->
-      Scope.(Entry.Let Entry.LetVarBinding), init_let, declare_let
+      Scope.Entry.(Let LetVarBinding), init_let, declare_let
     | VariableDeclaration.Var ->
-      Scope.Entry.Var, init_var, (fun _ _ _ -> ())
+      Scope.Entry.(Var VarBinding), init_var, (fun _ _ _ -> ())
   ) in
   let str_of_kind = Scope.Entry.string_of_value_kind value_kind in
   let { VariableDeclaration.Declarator.id; init } = vdecl in

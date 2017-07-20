@@ -19,7 +19,7 @@ module Entry :
     type value_kind =
       | Const of const_binding_kind
       | Let of let_binding_kind
-      | Var
+      | Var of var_binding_kind
     and const_binding_kind =
       | ConstImportBinding
       | ConstParamBinding
@@ -30,6 +30,8 @@ module Entry :
       | CatchParamBinding
       | FunctionBinding
       | ParamBinding
+    and var_binding_kind =
+      | VarBinding
     val string_of_value_kind : value_kind -> string
     type value_binding = {
       kind : value_kind;
@@ -57,7 +59,7 @@ module Entry :
     val new_let :
       loc:Loc.t -> ?state:State.t -> ?kind:let_binding_kind -> Type.t -> t
     val new_var :
-      loc:Loc.t -> ?state:State.t -> ?specific:Type.t -> Type.t -> t
+      loc:Loc.t -> ?state:State.t -> ?kind:var_binding_kind -> ?specific:Type.t -> Type.t -> t
     val new_type : loc:Loc.t -> ?state:State.t -> Type.t -> t
     val new_import_type : loc:Loc.t -> Type.t -> t
     val entry_loc : t -> Loc.t

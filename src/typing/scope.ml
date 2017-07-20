@@ -49,7 +49,7 @@ module Entry = struct
      * are implicit (like class declarations). For implicit lets, we should
      * track why this is a let binding for better error messages *)
     | Let of let_binding_kind
-    | Var
+    | Var of var_binding_kind
 
   and const_binding_kind =
     | ConstImportBinding
@@ -63,6 +63,9 @@ module Entry = struct
     | FunctionBinding
     | ParamBinding
 
+  and var_binding_kind =
+    | VarBinding
+
   let string_of_value_kind = function
   | Const ConstImportBinding -> "import"
   | Const ConstParamBinding -> "const param"
@@ -72,7 +75,7 @@ module Entry = struct
   | Let CatchParamBinding -> "catch"
   | Let FunctionBinding -> "function"
   | Let ParamBinding -> "param"
-  | Var -> "var"
+  | Var VarBinding -> "var"
 
   type value_binding = {
     kind: value_kind;
@@ -123,9 +126,9 @@ module Entry = struct
   let new_let ~loc ?(state=State.Undeclared) ?(kind=LetVarBinding) t =
     new_value (Let kind) state t t loc
 
-  let new_var ~loc ?(state=State.Undeclared) ?specific general =
+  let new_var ~loc ?(state=State.Undeclared) ?(kind=VarBinding) ?specific general =
     let specific = match specific with Some t -> t | None -> general in
-    new_value Var state specific general loc
+    new_value (Var kind) state specific general loc
 
   let new_type_ type_binding_kind state loc _type =
     Type {
