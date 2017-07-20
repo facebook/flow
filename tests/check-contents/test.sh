@@ -1,3 +1,4 @@
+#!/bin/sh
 FLOW=$1
 
 printf "syntax_error.js\n"

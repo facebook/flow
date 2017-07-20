@@ -1,3 +1,4 @@
+#!/bin/sh
 FLOW=$1
 
 $FLOW get-def --strip-root --json ignore/test.js 3 2

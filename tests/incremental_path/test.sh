@@ -1,3 +1,4 @@
+#!/bin/sh
 FLOW=$1
 mkdir tmp
 $FLOW status .

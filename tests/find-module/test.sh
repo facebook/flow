@@ -1,3 +1,5 @@
+#!/bin/sh
+
 FLOW=$1
 
 $FLOW find-module --strip-root --json ./req test.js

@@ -1,3 +1,4 @@
+#!/bin/sh
 FLOW=$1
 
 $FLOW get-imports --strip-root --json a.js
