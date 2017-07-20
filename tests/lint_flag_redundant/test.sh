@@ -1,3 +1,5 @@
 #!/bin/bash
+. ../assert.sh
 FLOW=$1
-"$FLOW" check . --all --lints "sketchy-null=error,sketchy-null-bool=error"
+assert_exit "$EXIT_USAGE" \
+  "$FLOW" check . --all --lints "sketchy-null=error,sketchy-null-bool=error"

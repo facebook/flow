@@ -1,46 +1,46 @@
 #!/bin/sh
-
+. ../assert.sh
 FLOW=$1
 
 printf "\nVariable defs and uses:\n"
-$FLOW find-refs --json --pretty --strip-root locals.js 4 5
-$FLOW find-refs --json --pretty --strip-root locals.js 5 2
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 4 5
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 5 2
 
 printf "\nNested functions:\n"
-$FLOW find-refs --json --pretty --strip-root locals.js 10 10
-$FLOW find-refs --json --pretty --strip-root locals.js 13 3
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 10 10
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 13 3
 
 printf "\nClasses:\n"
-$FLOW find-refs --json --pretty --strip-root locals.js 18 7
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 18 7
 
 printf "\nType aliases:\n"
-$FLOW find-refs --json --pretty --strip-root locals.js 23 6
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 23 6
 
 printf "\nRefinements:\n"
-$FLOW find-refs --json --pretty --strip-root locals.js 28 6
-$FLOW find-refs --json --pretty --strip-root locals.js 29 6
-$FLOW find-refs --json --pretty --strip-root locals.js 30 16
-$FLOW find-refs --json --pretty --strip-root locals.js 31 8
-$FLOW find-refs --json --pretty --strip-root locals.js 33 2
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 28 6
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 29 6
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 30 16
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 31 8
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 33 2
 
 printf "\nDestructuring:\n"
-$FLOW find-refs --json --pretty --strip-root locals.js 36 7
-$FLOW find-refs --json --pretty --strip-root locals.js 37 10
-$FLOW find-refs --json --pretty --strip-root locals.js 37 26
-$FLOW find-refs --json --pretty --strip-root locals.js 38 7
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 36 7
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 37 10
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 37 26
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 38 7
 
 printf "\nNot in scope:\n"
-$FLOW find-refs --json --pretty --strip-root locals.js 41 2
-$FLOW find-refs --json --pretty --strip-root locals.js 42 2
-$FLOW find-refs --json --pretty --strip-root locals.js 42 9
-$FLOW find-refs --json --pretty --strip-root locals.js 43 2
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 41 2
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 42 2
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 42 9
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 43 2
 
 printf "\nJSX:\n"
-$FLOW find-refs --json --pretty --strip-root locals.js 50 4
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 50 4
 
 printf "\nImports:\n"
-$FLOW find-refs --json --pretty --strip-root locals.js 55 2
-$FLOW find-refs --json --pretty --strip-root locals.js 55 9
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 55 2
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 55 9
 
 printf "\nQualified types:\n"
-$FLOW find-refs --json --pretty --strip-root locals.js 58 9
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 58 9

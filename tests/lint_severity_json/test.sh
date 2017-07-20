@@ -1,4 +1,6 @@
 #!/bin/bash
+. ../assert.sh
 FLOW=$1
-"$FLOW" check . --all --pretty --strip-root \
+
+assert_errors "$FLOW" check . --all --pretty --strip-root \
   | grep -v '^ *"flowVersion":.*'

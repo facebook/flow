@@ -1,5 +1,5 @@
 #!/bin/sh
-
+. ../assert.sh
 FLOW=$1
 cd src || exit
-$FLOW check --strip-root
+assert_errors "$FLOW" check --strip-root
