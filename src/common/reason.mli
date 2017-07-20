@@ -73,6 +73,7 @@ type reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
+  | ROpaqueType of string
   | RTypeParam of string * reason_desc
   | RMethodCall of string option
   | RParameter of string

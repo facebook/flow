@@ -121,6 +121,7 @@ type reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
+  | ROpaqueType of string
   | RTypeParam of string * reason_desc
   | RMethodCall of string option
   | RParameter of string
@@ -423,6 +424,7 @@ let rec string_of_desc = function
   | RObjectMap -> "object map"
   | RObjectMapi -> "object mapi"
   | RType x -> spf "type `%s`" x
+  | ROpaqueType x -> spf "opaque type `%s`" x
   | RTypeParam (x,d) -> spf "type parameter `%s` of %s" x (string_of_desc d)
   | RIdentifier x -> spf "identifier `%s`" x
   | RIdentifierAssignment x -> spf "assignment of identifier `%s`" x

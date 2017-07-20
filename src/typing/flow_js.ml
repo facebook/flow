@@ -1055,6 +1055,7 @@ module ResolvableTypeJob = struct
     | ExactT (_, t)
     | DefT (_, TypeT t)
     | DefT (_, ClassT t)
+    | OpaqueT (_, _, t)
     | ThisClassT (_, t)
       ->
       collect_of_type ?log_unresolved cx reason acc t
@@ -1621,6 +1622,34 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (_, UnifyT(t,t_other)) ->
       rec_unify cx trace t t_other
+
+    (**********************)
+    (*    opaque types    *)
+    (**********************)
+
+    (* If the ids are equal, we flow the lower to the upper. We still flow even if the
+     * ids are equal in order to handle any substitution that may have happened with
+     * polymorphic opaque types *)
+    | OpaqueT (_, id1, t1), UseT (use_op, OpaqueT (_, id2, t2)) when id1 = id2 ->
+        rec_flow cx trace (t1, UseT (use_op, t2))
+
+    (* Repositioning should happen before opaque types are considered so that we can
+     * have the "most recent" location when we do look at the opaque type *)
+    | OpaqueT _, ReposLowerT (reason_op, u) ->
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+
+    (* If the type is still in the same file it was defined, we allow it to
+     * expose its underlying type information *)
+    | OpaqueT (r, _, t), _
+      when Loc.source (loc_of_reason r) = Loc.source (def_loc_of_reason r) ->
+      rec_flow cx trace (t, u)
+
+    (* If the lower bound is in the same file as where the opaque type was defined,
+     * we expose the underlying type information *)
+    | _, UseT (use_op, OpaqueT (r, _, t))
+      when Loc.source (loc_of_reason (reason_of_t l)) =
+           Loc.source (def_loc_of_reason r) ->
+      rec_flow cx trace (l, UseT (use_op, t))
 
     (*********************************************************************)
     (* `import type` creates a properly-parameterized type alias for the *)
@@ -6404,6 +6433,11 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     if source_t_ == source_t then t
     else AnnotT source_t_
 
+  | OpaqueT (r, id, opaque_t) ->
+    let opaque_t_ = subst cx ~force map opaque_t in
+    if opaque_t_ == opaque_t then t
+    else OpaqueT (r, id, opaque_t_)
+
   | DefT (reason, InstanceT (static, super, implements, instance)) ->
     let static_ = subst cx ~force map static in
     let super_ = subst cx ~force map super in
@@ -6731,6 +6765,9 @@ and check_polarity cx ?trace polarity = function
   | DefT (_, TypeAppT (c, ts))
     ->
     check_polarity_typeapp cx ?trace polarity c ts
+
+  | OpaqueT (_, _, t) ->
+      check_polarity cx ?trace polarity t
 
   | ThisClassT _
   | ModuleT _
@@ -9868,6 +9905,9 @@ and reposition cx ?trace loc t =
       let r = repos_reason loc r in
       let rep = UnionRep.map (recurse seen) rep in
       DefT (r, UnionT rep)
+  | OpaqueT (r, id, t) ->
+      let r = repos_reason loc r in
+      OpaqueT (r, id, recurse seen t)
   | t ->
       mod_reason_of_t (repos_reason loc) t
   in
@@ -10591,6 +10631,8 @@ end = struct
     | ReposUpperT (_, t) ->
         extract cx t
 
+    | OpaqueT (_, _, t) -> extract cx t
+
     | AbstractT _
     | AnyWithLowerBoundT _
     | AnyWithUpperBoundT _
@@ -10797,6 +10839,8 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     | Some t -> recurse ~infer:true t
     | None -> ()
     end
+
+  | OpaqueT (_, _, t) -> recurse t
 
   | AnnotT _ ->
     (* don't ask for an annotation if one is already provided :) *)
