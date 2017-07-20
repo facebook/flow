@@ -113,7 +113,7 @@ class ['a] t = object(self)
           if t'' == t' then t
           else AnnotT t''
       | OpaqueT (r, id, t', st) ->
-          let t'' = self#type_ cx map_cx t' in
+          let t'' = OptionUtils.ident_map (self#type_ cx map_cx) t' in
           let st' = OptionUtils.ident_map (self#type_ cx map_cx) st in
           if t'' == t' && st' == st then t
           else OpaqueT (r, id, t'', st')

@@ -153,7 +153,7 @@ module rec TypeTerm : sig
      * we only allow access to when inside the file the opaque type was defined, and the second
      * t is the super type, which we use when an OpaqueT is an upperbound in a file in which it
      * was not defined *)
-    | OpaqueT of reason * int * t * t option
+    | OpaqueT of reason * int * t option * t option
 
     (* Stores exports (and potentially other metadata) for a module *)
     | ModuleT of reason * exporttypes
