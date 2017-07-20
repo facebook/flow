@@ -110,8 +110,11 @@ print_error() {
     printf "%b[✗] ERRORED:%b %s%b\n" \
       "$COLOR_RED_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
 
+    out_file="${dir}${name}.out"
+    [ -f "$out_file" ] && cat "$out_file"
+
     log_file="${dir}${name}.log"
-    [ -f "$log_file" ] && cat "$log_file"
+    [ -f "$log_file" ] && printf "\n\nServer log:\n" && cat "$log_file"
 }
 print_skip() {
     name=$1
@@ -315,7 +318,12 @@ runtest() {
               return_status=$RUNTEST_ERROR
             elif [ "$shell" != "" ]; then
               # run test script
-              sh "$shell" "$FLOW" 1> "$abs_out_file" 2> "$stderr_dest"
+              sh -e "$shell" "$FLOW" 1> "$abs_out_file" 2> "$stderr_dest"
+              code=$?
+              if [ $code -ne 0 ]; then
+                printf "%s exited code %s\n" "$shell" "$code" >> "$abs_out_file"
+                return_status=$RUNTEST_ERROR
+              fi
             else
             # If there's stdin, then direct that in
             # cmd should NOT be double quoted...it may contain many commands
@@ -346,6 +354,7 @@ runtest() {
         popd >/dev/null
 
         if [ $return_status -ne $RUNTEST_SUCCESS ]; then
+            mv "$abs_out_file" "$dir"
             [ -s "$abs_log_file" ] && mv "$abs_log_file" "$dir"
             return $return_status
         elif [ -s "$abs_diff_file" ]; then
