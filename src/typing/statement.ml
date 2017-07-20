@@ -673,9 +673,7 @@ and statement cx = Ast.Statement.(
       let typeparams, typeparams_map =
         Anno.mk_type_param_declarations cx typeParameters in
       (* TODO: update typechecking for opaque types without impltypes *)
-      let t = match impltype with
-      | Some t -> Anno.convert cx typeparams_map t
-      | None -> DefT (r, AnyT) in
+      let t = Option.map ~f:(Anno.convert cx typeparams_map) impltype in
       let supertype = Option.map supertype (Anno.convert cx typeparams_map) in
       let t = OpaqueT (mk_reason (ROpaqueType name) loc, mk_id (), t, supertype) in
       Flow_js.check_polarity cx Positive t;
