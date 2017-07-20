@@ -680,7 +680,8 @@ and statement cx = Ast.Statement.(
                          super_t = supertype;
                          opaque_id = mk_id ();
                          opaque_arg_polarities;
-                         opaque_type_args = typeparams_map} in
+                         opaque_type_args = typeparams_map;
+                         opaque_name = name} in
       let t = OpaqueT (mk_reason (ROpaqueType name) loc, opaquetype) in
       Flow_js.check_polarity cx Positive t;
       let type_ = poly_type typeparams (DefT (r, TypeT t)) in

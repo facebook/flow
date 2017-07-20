@@ -1,0 +1,45 @@
+{
+  "type":"ID",
+  "reasons":[],
+  "loc":{
+    "source":"test.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":12,"offset":79},
+    "end":{"line":5,"column":12,"offset":80}
+  },
+  "path":"test.js",
+  "line":5,
+  "endline":5,
+  "start":12,
+  "end":12
+}
+{
+  "type":"ID",
+  "reasons":[],
+  "loc":{
+    "source":"importtest.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":12,"offset":76},
+    "end":{"line":5,"column":12,"offset":77}
+  },
+  "path":"importtest.js",
+  "line":5,
+  "endline":5,
+  "start":12,
+  "end":12
+}
+{
+  "type":"LDefId",
+  "reasons":[],
+  "loc":{
+    "source":"importtest.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":12,"offset":129},
+    "end":{"line":9,"column":12,"offset":130}
+  },
+  "path":"importtest.js",
+  "line":9,
+  "endline":9,
+  "start":12,
+  "end":12
+}
