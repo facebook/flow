@@ -305,10 +305,10 @@ type config = {
   includes: string list;
   (* library paths. no wildcards *)
   libs: string list;
+  (* lint settings *)
+  lint_settings: LintSettings.t;
   (* config options *)
   options: Opts.t;
-  (* lint settings *)
-  lint_settings: LintSettings.t
 }
 
 module Pp : sig
@@ -369,19 +369,19 @@ end = struct
     section_header o "libs";
     libs o config.libs;
     fprintf o "\n";
-    section_header o "options";
-    options o config;
-    fprintf o "\n";
     section_header o "lints";
-    lints o config
+    lints o config;
+    fprintf o "\n";
+    section_header o "options";
+    options o config
 end
 
 let empty_config = {
   ignores = [];
   includes = [];
   libs = [];
-  options = Opts.default_options;
-  lint_settings = LintSettings.default_settings
+  lint_settings = LintSettings.default_settings;
+  options = Opts.default_options
 }
 
 let group_into_sections lines =
@@ -842,9 +842,9 @@ let parse_section config ((section_ln, section), lines) =
   | "include", _ -> parse_includes config lines
   | "ignore", _ -> parse_ignores config lines
   | "libs", _ -> parse_libs config lines
+  | "lints", _ -> parse_lints config lines
   | "options", _ -> parse_options config lines
   | "version", _ -> parse_version config lines
-  | "lints", _ -> parse_lints config lines
   | _ -> error section_ln (spf "Unsupported config section: \"%s\"" section)
 
 let parse config lines =
