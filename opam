@@ -20,7 +20,7 @@ depends: [
   "base-unix"
   "base-bytes"
   "ocamlbuild" {build}
-  "sedlex"
+  "sedlex" { >= "1.99.4" }
 ]
 available: [ocaml-version >= "4.03.0"]
 build: [ [ "env" "FLOW_RELEASE=1" make ] ]
