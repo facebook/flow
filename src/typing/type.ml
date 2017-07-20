@@ -155,7 +155,8 @@ module rec TypeTerm : sig
      * an upperbound in a file in which it was not defined. We also have
      * opaquetype.opaque_arg_polarities and opaquetype.opaque_type_args to compare polymorphic
      * opaque types. We need to keep track of these because underlying_t can be None if the opaque
-     * type is defined in a libdef. *)
+     * type is defined in a libdef. We also keep track of the name of the opaque type in
+     * opaquetype.name for pretty printing. *)
     | OpaqueT of reason * opaquetype
 
     (* Stores exports (and potentially other metadata) for a module *)
@@ -771,6 +772,7 @@ module rec TypeTerm : sig
     super_t: t option;
     opaque_type_args: t SMap.t;
     opaque_arg_polarities: polarity SMap.t;
+    opaque_name: string;
   }
 
   and exporttypes = {

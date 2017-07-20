@@ -246,9 +246,7 @@ let rec type_printer_impl ~size override enclosure cx t =
 
     (* The following types are not syntax-supported in all cases *)
     | AnnotT t -> pp EnclosureNone cx t
-    (* TODO: T19911199: fix how we print opaque types *)
-    | OpaqueT (_, {underlying_t = Some t; _}) -> pp EnclosureNone cx t
-    | OpaqueT _ -> "opaque type"
+    | OpaqueT (_, {opaque_name; _}) -> opaque_name
     | KeysT (_, t) -> spf "$Keys<%s>" (pp EnclosureNone cx t)
     | ShapeT t -> spf "$Shape<%s>" (pp EnclosureNone cx t)
     | TaintT (_) -> spf "$Tainted<any>"
@@ -387,8 +385,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | AnnotT t ->
       is_printed_type_parsable_impl weak cx enclosure t
 
-  | OpaqueT (_, {underlying_t = Some t; _}) ->
-      is_printed_type_parsable_impl weak cx enclosure t
+  | OpaqueT _ -> true
 
   (* Composed types *)
   | DefT (_, MaybeT t)
