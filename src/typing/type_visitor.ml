@@ -68,8 +68,9 @@ class ['a] t = object(self)
   | AnnotT t ->
     self#type_ cx acc t
 
-  | OpaqueT (_, _, t) ->
-    self#type_ cx acc t
+  | OpaqueT (_, _, t, super) ->
+    let acc' = self#type_ cx acc t in
+    Option.fold ~init:acc' ~f:(self#type_ cx) super
 
   | ModuleT (_, exporttypes) ->
     self#export_types cx acc exporttypes
