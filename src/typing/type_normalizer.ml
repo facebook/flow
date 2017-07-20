@@ -417,9 +417,12 @@ let rec normalize_type_impl cx ids t = match t with
   | AnnotT t ->
       AnnotT (normalize_type_impl cx ids t)
 
-  | OpaqueT (r, id, t, st) ->
-      OpaqueT (r, id, OptionUtils.ident_map (normalize_type_impl cx ids) t,
-        OptionUtils.ident_map (normalize_type_impl cx ids) st)
+  | OpaqueT (r, opaquetype) ->
+      OpaqueT (r, { opaquetype with
+                    underlying_t =
+                      OptionUtils.ident_map (normalize_type_impl cx ids) opaquetype.underlying_t;
+                    super_t =
+                      OptionUtils.ident_map (normalize_type_impl cx ids) opaquetype.super_t})
 
   | KeysT (_, t) ->
       KeysT (locationless_reason RKeySet, normalize_type_impl cx ids t)

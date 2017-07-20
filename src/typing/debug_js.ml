@@ -260,16 +260,16 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "assume", _json_of_t json_cx t
     ]
 
-  | OpaqueT (_, id, t, st) ->
-    let t = match t with
+  | OpaqueT (_, opaquetype) ->
+    let t = match opaquetype.underlying_t with
     | Some t -> _json_of_t json_cx t
     | None -> JSON_Null in
-    let st = match st with
+    let st = match opaquetype.super_t with
     | Some st -> _json_of_t json_cx st
     | None -> JSON_Null in
     [
       "type", t;
-      "id", JSON_String (string_of_int id);
+      "id", JSON_String (string_of_int opaquetype.opaque_id);
       "supertype", st
   ]
 
@@ -1544,7 +1544,7 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, TypeT arg) -> p ~extra:(kid arg) t
   | AnnotT source -> p ~reason:false
       ~extra:(spf "%s" (kid source)) t
-  | OpaqueT (_, _, Some arg, _) -> p ~extra:(spf "%s" (kid arg)) t
+  | OpaqueT (_, {underlying_t = Some arg; _}) -> p ~extra:(spf "%s" (kid arg)) t
   | OpaqueT _ -> p t
   | DefT (_, OptionalT arg)
   | AbstractT (_, arg) -> p ~extra:(kid arg) t

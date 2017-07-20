@@ -1031,11 +1031,11 @@ module ResolvableTypeJob = struct
       let ts = InterRep.members rep in
       collect_of_types ?log_unresolved cx reason acc ts
 
-    | OpaqueT (_, _, Some t, Some st) ->
-      collect_of_types ?log_unresolved cx reason acc [t; st]
+    | OpaqueT (_, {underlying_t; super_t; _}) ->
+      let acc = Option.fold underlying_t ~init:acc ~f:(collect_of_type ?log_unresolved cx reason) in
+      let acc = Option.fold super_t ~init:acc ~f:(collect_of_type ?log_unresolved cx reason) in
+      acc
 
-    | OpaqueT (_, _, None, Some t)
-    | OpaqueT (_, _, Some t, None)
     | AnyWithUpperBoundT t
     | AnyWithLowerBoundT t
     | AbstractT (_, t)
@@ -1063,7 +1063,6 @@ module ResolvableTypeJob = struct
     | ReposUpperT (_, t) ->
       collect_of_type ?log_unresolved cx reason acc t
 
-    | OpaqueT _
     | DefT (_, NumT _)
     | DefT (_, StrT _)
     | DefT (_, BoolT _)
@@ -2472,15 +2471,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*    opaque types    *)
     (**********************)
 
-    (* If the ids are equal, we flow the lower to the upper. We still flow even if the
-     * ids are equal in order to handle any substitution that may have happened with
-     * polymorphic opaque types *)
-    | OpaqueT (_, id1, Some t1, _), UseT (use_op, OpaqueT (_, id2, Some t2, _)) when id1 = id2 ->
-        rec_flow cx trace (t1, UseT (use_op, t2))
-
-    (* TODO: polymorphic opaque types need to carry around their type args so that we can still
-     * flow their type args when they are missing an impltype *)
-    | OpaqueT (_, id1, _, _), UseT (_, OpaqueT (_, id2, _, _)) when id1 = id2 -> ()
+    (* If the ids are equal, we use flow_type_args to make sure that the type arguments of each
+     * are compatible with each other. If there are no type args, this doesn't do anything *)
+    | OpaqueT (_, {opaque_id = id1; opaque_arg_polarities = ps; opaque_type_args = ltargs; _}),
+      UseT (_, OpaqueT (_, {opaque_id = id2; opaque_type_args = utargs; _})) when id1 = id2 ->
+        flow_type_args cx trace ps ltargs utargs
 
     (* Repositioning should happen before opaque types are considered so that we can
      * have the "most recent" location when we do look at the opaque type *)
@@ -2489,19 +2484,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* If the type is still in the same file it was defined, we allow it to
      * expose its underlying type information *)
-    | OpaqueT (r, _, Some t, _), _
+    | OpaqueT (r, {underlying_t = Some t; _}), _
       when Loc.source (loc_of_reason r) = Loc.source (def_loc_of_reason r) ->
       rec_flow cx trace (t, u)
 
     (* If the lower bound is in the same file as where the opaque type was defined,
      * we expose the underlying type information *)
-    | _, UseT (use_op, OpaqueT (r, _, Some t, _))
+    | _, UseT (use_op, OpaqueT (r, {underlying_t = Some t; _}))
       when Loc.source (loc_of_reason (reason_of_t l)) =
            Loc.source (def_loc_of_reason r) ->
       rec_flow cx trace (l, UseT (use_op, t))
 
     (* Opaque types may be treated as their supertype when they are a lower bound for a use *)
-    | OpaqueT (_, _, _, Some t), _ ->
+    | OpaqueT (_, {super_t = Some t; _}), _ ->
         rec_flow cx trace (t, u)
 
     (*****************************************************************)
@@ -3980,8 +3975,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       UseT (use_op, ExtendsT (reason_op, try_ts_on_failure, l,
         (DefT (_, InstanceT (_, _, _, instance_super)) as u))) ->
       if instance.class_id = instance_super.class_id
-      then
-        flow_type_args cx trace instance instance_super
+      then begin
+          (if instance.class_id != instance_super.class_id then
+            assert_false "unexpected difference in class_ids in flow_instts");
+          let { type_args = tmap1; arg_polarities = pmap; _ } = instance in
+          let { type_args = tmap2; _ } = instance_super in
+          flow_type_args cx trace pmap tmap1 tmap2
+        end
       else
         (* If this instance type has declared implementations, any structural
            tests have already been performed at the declaration site. We can
@@ -6207,12 +6207,7 @@ and mk_nominal cx =
       "NOM %d %s" nominal (Debug_js.string_of_file cx));
   nominal
 
-and flow_type_args cx trace instance instance_super =
-  (* with this out of the way, we can assume polaritiy maps are the same *)
-  (if instance.class_id != instance_super.class_id then
-    assert_false "unexpected difference in class_ids in flow_type_args");
-  let { type_args = tmap1; arg_polarities = pmap; _ } = instance in
-  let { type_args = tmap2; _ } = instance_super in
+and flow_type_args cx trace pmap tmap1 tmap2 =
   tmap1 |> SMap.iter (fun x t1 ->
     let t2 = SMap.find_unsafe x tmap2 in
     (* type_args contains a mixture of args to type params declared on the
@@ -6457,11 +6452,18 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     if source_t_ == source_t then t
     else AnnotT source_t_
 
-  | OpaqueT (r, id, opaque_t, st) ->
-    let opaque_t_ = OptionUtils.ident_map (subst cx ~force map) opaque_t in
-    let st_ = OptionUtils.ident_map (subst cx ~force map) st in
-    if opaque_t_ == opaque_t && st_ == st then t
-    else OpaqueT (r, id, opaque_t_, st_)
+  | OpaqueT (reason, opaquetype) ->
+    let underlying_t = OptionUtils.ident_map (subst cx ~force map) opaquetype.underlying_t in
+    let super_t = OptionUtils.ident_map (subst cx ~force map) opaquetype.super_t in
+    let opaque_type_args = SMap.ident_map (subst cx ~force map) opaquetype.opaque_type_args in
+    if underlying_t == opaquetype.underlying_t &&
+       super_t == opaquetype.super_t &&
+       opaque_type_args == opaquetype.opaque_type_args
+    then t
+    else OpaqueT (reason, { opaquetype with
+                            underlying_t;
+                            super_t;
+                            opaque_type_args })
 
   | DefT (reason, InstanceT (static, super, implements, instance)) ->
     let static_ = subst cx ~force map static in
@@ -6796,9 +6798,9 @@ and check_polarity cx ?trace polarity = function
     ->
     check_polarity_typeapp cx ?trace polarity c ts
 
-  | OpaqueT (_, _, t, st) ->
-      Option.iter ~f:(check_polarity cx ?trace polarity) t;
-      Option.iter ~f:(check_polarity cx ?trace polarity) st
+  | OpaqueT (_, opaquetype) ->
+      Option.iter ~f:(check_polarity cx ?trace polarity) opaquetype.underlying_t;
+      Option.iter ~f:(check_polarity cx ?trace polarity) opaquetype.super_t
 
   | ThisClassT _
   | ModuleT _
@@ -9944,10 +9946,11 @@ and reposition cx ?trace loc t =
       let r = repos_reason loc r in
       let rep = UnionRep.map (recurse seen) rep in
       DefT (r, UnionT rep)
-  | OpaqueT (r, id, t, st) ->
+  | OpaqueT (r, opaquetype) ->
       let r = repos_reason loc r in
-      OpaqueT (r, id, OptionUtils.ident_map (recurse seen) t,
-        OptionUtils.ident_map (recurse seen) st)
+      OpaqueT (r, { opaquetype with
+        underlying_t = OptionUtils.ident_map (recurse seen) opaquetype.underlying_t;
+        super_t = OptionUtils.ident_map (recurse seen) opaquetype.super_t; })
   | t ->
       mod_reason_of_t (repos_reason loc) t
   in
@@ -10671,7 +10674,9 @@ end = struct
     | ReposUpperT (_, t) ->
         extract cx t
 
-    | OpaqueT (_, _, Some t, _) -> extract cx t
+    | OpaqueT (_, {underlying_t = Some t; _})
+    | OpaqueT (_, {super_t = Some t; _})
+      -> extract cx t
 
     | AbstractT _
     | AnyWithLowerBoundT _
@@ -10694,7 +10699,7 @@ end = struct
     | KeysT (_, _)
     | DefT (_, MixedT _)
     | ObjProtoT _
-    | OpaqueT (_, _, None, _)
+    | OpaqueT _
     | OpenPredT (_, _, _, _)
     | OpenT _
     | DefT (_, OptionalT _)
@@ -10881,7 +10886,8 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     | None -> ()
     end
 
-  | OpaqueT (_, _, t, st) -> Option.iter ~f:recurse t; Option.iter ~f:recurse st
+  | OpaqueT (_, {underlying_t = t; super_t = st; _}) ->
+      Option.iter ~f:recurse t; Option.iter ~f:recurse st
 
   | AnnotT _ ->
     (* don't ask for an annotation if one is already provided :) *)

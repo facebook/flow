@@ -149,11 +149,14 @@ module rec TypeTerm : sig
         upper bounds, and would flow lower bounds to T1 & T2. **)
     | AnnotT of t
 
-    (* Opaque type aliases. The int is its unique id, the first t is the underlying type, which
-     * we only allow access to when inside the file the opaque type was defined, and the second
-     * t is the super type, which we use when an OpaqueT is an upperbound in a file in which it
-     * was not defined *)
-    | OpaqueT of reason * int * t option * t option
+    (* Opaque type aliases. The opaquetype.opaque_id is its unique id, opaquetype.underlying_t is
+     * the underlying type, which we only allow access to when inside the file the opaque type
+     * was defined, and opaquetype.super_t is the super type, which we use when an OpaqueT is
+     * an upperbound in a file in which it was not defined. We also have
+     * opaquetype.opaque_arg_polarities and opaquetype.opaque_type_args to compare polymorphic
+     * opaque types. We need to keep track of these because underlying_t can be None if the opaque
+     * type is defined in a libdef. *)
+    | OpaqueT of reason * opaquetype
 
     (* Stores exports (and potentially other metadata) for a module *)
     | ModuleT of reason * exporttypes
@@ -760,6 +763,14 @@ module rec TypeTerm : sig
     methods_tmap: Properties.id;
     mixins: bool;
     structural: bool;
+  }
+
+  and opaquetype = {
+    opaque_id: int;
+    underlying_t: t option;
+    super_t: t option;
+    opaque_type_args: t SMap.t;
+    opaque_arg_polarities: polarity SMap.t;
   }
 
   and exporttypes = {
@@ -1799,7 +1810,7 @@ let rec reason_of_t = function
   | KeysT (reason, _) -> reason
   | ModuleT (reason, _) -> reason
   | ObjProtoT reason -> reason
-  | OpaqueT (reason, _, _, _) -> reason
+  | OpaqueT (reason, _) -> reason
   | OpenPredT (reason, _, _, _) -> reason
   | ReposT (reason, _) -> reason
   | ReposUpperT (reason, _) -> reason
@@ -1938,7 +1949,7 @@ let rec mod_reason_of_t f = function
   | KeysT (reason, t) -> KeysT (f reason, t)
   | ModuleT (reason, exports) -> ModuleT (f reason, exports)
   | ObjProtoT (reason) -> ObjProtoT (f reason)
-  | OpaqueT (reason, id, t, super) -> OpaqueT (f reason, id, t, super)
+  | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
   | ReposT (reason, t) -> ReposT (f reason, t)
   | ReposUpperT (reason, t) -> ReposUpperT (reason, mod_reason_of_t f t)

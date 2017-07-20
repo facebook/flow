@@ -68,9 +68,9 @@ class ['a] t = object(self)
   | AnnotT t ->
     self#type_ cx acc t
 
-  | OpaqueT (_, _, t, super) ->
-    let acc' = Option.fold ~init:acc ~f:(self#type_ cx) t in
-    Option.fold ~init:acc' ~f:(self#type_ cx) super
+  | OpaqueT (_, opaquetype) ->
+    let acc' = Option.fold ~init:acc ~f:(self#type_ cx) opaquetype.underlying_t in
+    Option.fold ~init:acc' ~f:(self#type_ cx) opaquetype.super_t
 
   | ModuleT (_, exporttypes) ->
     self#export_types cx acc exporttypes

@@ -16,5 +16,23 @@ Error: test.js:13
   8: declare function counter_to_number(c: Counter): number;
                                            ^^^^^^^ opaque type `Counter`. See lib: flow-typed/decls.js:8
 
+Error: test.js:21
+ 21: function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
+                                                 ^^^^^^ number. This type is incompatible with
+ 21: function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
+                                                                     ^^^^^^ string
 
-Found 3 errors
+Error: test.js:21
+ 21: function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
+                                                                     ^^^^^^ string. This type is incompatible with
+ 21: function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
+                                                 ^^^^^^ number
+
+Error: test.js:26
+ 26: function contraBad(x: Contra<number>): Contra<number | string> {
+                                                            ^^^^^^ string. This type is incompatible with
+ 26: function contraBad(x: Contra<number>): Contra<number | string> {
+                                  ^^^^^^ number
+
+
+Found 6 errors
