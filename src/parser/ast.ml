@@ -263,7 +263,7 @@ and Statement : sig
     type t = {
       id: Identifier.t;
       typeParameters: Type.ParameterDeclaration.t option;
-      impltype: Type.t;
+      impltype: Type.t option;
       supertype: Type.t option;
     }
   end
@@ -503,6 +503,7 @@ and Statement : sig
     | DeclareModule of DeclareModule.t
     | DeclareModuleExports of Type.annotation
     | DeclareTypeAlias of TypeAlias.t
+    | DeclareOpaqueType of OpaqueType.t
     | DeclareVariable of DeclareVariable.t
     | DoWhile of DoWhile.t
     | Empty

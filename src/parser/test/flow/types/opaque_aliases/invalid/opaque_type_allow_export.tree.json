@@ -1,4 +1,18 @@
 {
+  "errors":[
+    {
+      "loc":{"source":null,"start":{"line":2,"column":36},"end":{"line":2,"column":37}},
+      "message":"Unexpected token ="
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":38},"end":{"line":2,"column":44}},
+      "message":"Unexpected identifier"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":44},"end":{"line":2,"column":45}},
+      "message":"Unexpected token ;"
+    }
+  ],
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":1}},
   "range":[0,70],
@@ -21,13 +35,13 @@
         "body":[
           {
             "type":"DeclareExportDeclaration",
-            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":45}},
-            "range":[25,68],
+            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":35}},
+            "range":[25,58],
             "default":false,
             "declaration":{
-              "type":"OpaqueType",
-              "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":45}},
-              "range":[40,68],
+              "type":"DeclareOpaqueType",
+              "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":35}},
+              "range":[40,58],
               "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":2,"column":29},"end":{"line":2,"column":35}},
@@ -37,15 +51,24 @@
                 "optional":false
               },
               "typeParameters":null,
-              "impltype":{
-                "type":"StringTypeAnnotation",
-                "loc":{"source":null,"start":{"line":2,"column":38},"end":{"line":2,"column":44}},
-                "range":[61,67]
-              },
+              "impltype":null,
               "supertype":null
             },
             "specifiers":[],
             "source":null
+          },
+          {
+            "type":"DeclareVariable",
+            "loc":{"source":null,"start":{"line":2,"column":36},"end":{"line":2,"column":45}},
+            "range":[59,68],
+            "id":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":2,"column":44},"end":{"line":2,"column":45}},
+              "range":[67,68],
+              "name":";",
+              "typeAnnotation":null,
+              "optional":false
+            }
           }
         ]
       },

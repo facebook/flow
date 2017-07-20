@@ -1,4 +1,18 @@
 {
+  "errors":[
+    {
+      "loc":{"source":null,"start":{"line":2,"column":44},"end":{"line":2,"column":45}},
+      "message":"Unexpected token ="
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":46},"end":{"line":2,"column":52}},
+      "message":"Unexpected identifier"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":52},"end":{"line":2,"column":53}},
+      "message":"Unexpected token ;"
+    }
+  ],
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":1}},
   "range":[0,78],
@@ -21,13 +35,13 @@
         "body":[
           {
             "type":"DeclareExportDeclaration",
-            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":53}},
-            "range":[25,76],
+            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":43}},
+            "range":[25,66],
             "default":false,
             "declaration":{
-              "type":"OpaqueType",
-              "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":53}},
-              "range":[40,76],
+              "type":"DeclareOpaqueType",
+              "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":43}},
+              "range":[40,66],
               "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":2,"column":29},"end":{"line":2,"column":35}},
@@ -37,11 +51,7 @@
                 "optional":false
               },
               "typeParameters":null,
-              "impltype":{
-                "type":"StringTypeAnnotation",
-                "loc":{"source":null,"start":{"line":2,"column":46},"end":{"line":2,"column":52}},
-                "range":[69,75]
-              },
+              "impltype":null,
               "supertype":{
                 "type":"NumberTypeAnnotation",
                 "loc":{"source":null,"start":{"line":2,"column":37},"end":{"line":2,"column":43}},
@@ -50,6 +60,19 @@
             },
             "specifiers":[],
             "source":null
+          },
+          {
+            "type":"DeclareVariable",
+            "loc":{"source":null,"start":{"line":2,"column":44},"end":{"line":2,"column":53}},
+            "range":[67,76],
+            "id":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":2,"column":52},"end":{"line":2,"column":53}},
+              "range":[75,76],
+              "name":";",
+              "typeAnnotation":null,
+              "optional":false
+            }
           }
         ]
       },
