@@ -7,6 +7,7 @@
 
 EXTRA_INCLUDE_PATHS=
 EXTRA_LIB_PATHS=
+EXTRA_LIBS=
 INTERNAL_MODULES=hack/stubs src/stubs
 INTERNAL_NATIVE_C_FILES=
 
@@ -23,11 +24,22 @@ endif
 ################################################################################
 
 ifeq ($(UNAME_S), Linux)
+  EXTRA_LIBS += rt
   INOTIFY=hack/third-party/inotify
   INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.c
   FSNOTIFY=hack/fsnotify_linux
   FSNOTIFY_STUBS=
-  RT=rt
+  FRAMEWORKS=
+  EXE=
+endif
+ifeq ($(UNAME_S), FreeBSD)
+  EXTRA_INCLUDE_PATHS += /usr/local/include
+  EXTRA_LIB_PATHS += /usr/local/lib
+  EXTRA_LIBS += inotify
+  INOTIFY=hack/third-party/inotify
+  INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.c
+  FSNOTIFY=hack/fsnotify_linux
+  FSNOTIFY_STUBS=
   FRAMEWORKS=
   EXE=
 endif
@@ -36,7 +48,6 @@ ifeq ($(UNAME_S), Darwin)
   INOTIFY_STUBS=$(INOTIFY)/fsevents_stubs.c
   FSNOTIFY=hack/fsnotify_darwin
   FSNOTIFY_STUBS=
-  RT=
   FRAMEWORKS=CoreServices CoreFoundation
   EXE=
 endif
@@ -45,7 +56,6 @@ ifeq ($(UNAME_S), Windows)
   INOTIFY_STUBS=
   FSNOTIFY=hack/fsnotify_win
   FSNOTIFY_STUBS=$(FSNOTIFY)/fsnotify_stubs.c
-  RT=
   FRAMEWORKS=
   EXE=.exe
 endif
@@ -117,7 +127,7 @@ OCAML_LIBRARIES=\
 
 NATIVE_LIBRARIES=\
   pthread\
-  $(RT)
+  $(EXTRA_LIBS)
 
 OCP_BUILD_FILES=\
   ocp_build_flow.ocp\
@@ -134,7 +144,7 @@ JS_STUBS=\
 JSOO_VERSION=$(shell which js_of_ocaml 2> /dev/null > /dev/null && js_of_ocaml --version)
 JSOO_MAJOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 1)
 JSOO_MINOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 2)
-ifeq (1, $(shell [[ -z "$(JSOO_VERSION)" ]] || [ $(JSOO_MAJOR) -gt 2 ] || [ $(JSOO_MAJOR) -eq 2 -a $(JSOO_MINOR) -gt 7 ]; echo $$?))
+ifeq (1, $(shell [ -z "$(JSOO_VERSION)" ] || [ $(JSOO_MAJOR) -gt 2 ] || [ $(JSOO_MAJOR) -eq 2 -a $(JSOO_MINOR) -gt 7 ]; echo $$?))
 	JS_STUBS += js/optional/caml_hexstring_of_float.js
 endif
 
