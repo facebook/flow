@@ -318,7 +318,7 @@ runtest() {
               return_status=$RUNTEST_ERROR
             elif [ "$shell" != "" ]; then
               # run test script
-              sh -e "$shell" "$FLOW" 1> "$abs_out_file" 2> "$stderr_dest"
+              /bin/bash -e "$shell" "$FLOW" 1> "$abs_out_file" 2> "$stderr_dest"
               code=$?
               if [ $code -ne 0 ]; then
                 printf "%s exited code %s\n" "$shell" "$code" >> "$abs_out_file"

@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 . ../assert.sh
 FLOW=$1
 
 printf "foo_parse_fail.js = "
-assert_ok \
+assert_errors \
   "$FLOW" autocomplete --strip-root foo_parse_fail.js 10 17 < foo_parse_fail.js
 
 printf "foo.js = "

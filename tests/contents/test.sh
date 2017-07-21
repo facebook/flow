@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 . ../assert.sh
 FLOW=$1
 
