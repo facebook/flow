@@ -1,3 +1,2 @@
 shell: test.sh
 all: false
-ignore_stderr: false
