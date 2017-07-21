@@ -174,6 +174,7 @@ all-homebrew:
 	export OPAMYES="1"; \
 	export FLOW_RELEASE="1"; \
 	opam init --no-setup && \
+	opam switch 4.03.0 && \
 	opam pin add flowtype . && \
 	opam install flowtype --deps-only && \
 	opam config exec -- make
