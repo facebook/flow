@@ -313,8 +313,10 @@ runtest() {
             # start server and wait
             "$FLOW" start . \
               $all $flowlib --wait --log-file "$abs_log_file" > /dev/null 2>&1
-            if [ $? -ne 0 ]; then
+            code=$?
+            if [ $code -ne 0 ]; then
               # flow failed to start
+              printf "flow start exited code %s\n" "$code" > "$abs_out_file"
               return_status=$RUNTEST_ERROR
             elif [ "$shell" != "" ]; then
               # run test script
@@ -354,7 +356,7 @@ runtest() {
         popd >/dev/null
 
         if [ $return_status -ne $RUNTEST_SUCCESS ]; then
-            mv "$abs_out_file" "$dir"
+            [ -s "$abs_out_file" ] && mv "$abs_out_file" "$dir"
             [ -s "$abs_log_file" ] && mv "$abs_log_file" "$dir"
             return $return_status
         elif [ -s "$abs_diff_file" ]; then
