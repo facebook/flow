@@ -13,10 +13,8 @@
 #include <caml/mlvalues.h>
 
 #include <assert.h>
-#ifndef _WIN32
-#ifndef __APPLE__
+#ifdef __linux__
 #include <sys/sysinfo.h>
-#endif
 #endif
 
 #ifdef _WIN32
