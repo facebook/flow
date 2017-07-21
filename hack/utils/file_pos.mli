@@ -10,6 +10,8 @@
 
 type t
 
+val pp : Format.formatter -> t -> unit
+
 (* compatible with Pervasives.compare *)
 val compare : t -> t -> int
 

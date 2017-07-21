@@ -67,6 +67,8 @@ end
 
 let to_absolute (p, rest) = path_of_prefix p ^ rest
 
+let pp fmt rp = Format.pp_print_string fmt (S.to_string rp)
+
 module Set = Reordered_argument_set(Set.Make(S))
 module Map = Reordered_argument_map(MyMap.Make(S))
 

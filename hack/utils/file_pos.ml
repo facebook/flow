@@ -14,6 +14,13 @@ type t = {
   pos_cnum : int;
 }
 
+let pp fmt pos = begin
+  Format.pp_print_string fmt "L";
+  Format.pp_print_int fmt pos.pos_lnum;
+  Format.pp_print_string fmt ":";
+  Format.pp_print_int fmt pos.pos_cnum;
+end
+
 let compare = Pervasives.compare
 
 let dummy = {
