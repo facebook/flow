@@ -18,7 +18,6 @@ be used.
 opaque type ID = string;
 
 function identity(x: ID): ID {
-  (x: ID);
   return x;
 }
 export type {ID};
@@ -33,8 +32,8 @@ name, an equals sign `=`, and a type definition.
 opaque type Alias = Type;
 ```
 
-You can optionally add a subtyping constraint to an opaque type alias by add a
-colon `:` and a type after the name.
+You can optionally add a subtyping constraint to an opaque type alias by adding
+a colon `:` and a type after the name.
 
 ```js
 opaque type Alias: SuperType = Type;
