@@ -76,11 +76,6 @@ module CheckCommand = struct
         exe_name;
   }
 
-  let log_filter = function
-    | Hh_logger.Level.Fatal
-    | Hh_logger.Level.Error -> true
-    | _ -> false
-
   let main
       error_flags include_suppressed options_flags json pretty
       shm_flags ignore_version from path_opt
@@ -93,7 +88,7 @@ module CheckCommand = struct
     if Options.should_profile options then Flow_server_profile.init ();
 
     (* initialize loggers before doing too much, especially anything that might exit *)
-    init_loggers ~from ~options ~default:log_filter ();
+    init_loggers ~from ~options ~min_level:Hh_logger.Level.Error ();
 
     if not ignore_version then assert_version flowconfig;
 
