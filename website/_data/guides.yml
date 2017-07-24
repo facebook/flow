@@ -30,6 +30,7 @@
     - path: "/docs/types/classes/"
 
     - path: "/docs/types/aliases/"
+    - path: "/docs/types/opaque-types/"
     - path: "/docs/types/interfaces/"
 
     - path: "/docs/types/generics/"
