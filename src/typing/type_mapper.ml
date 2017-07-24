@@ -53,11 +53,11 @@ class ['a] t = object(self)
       | DefT (r, t') ->
           let t'' = self#def_type cx map_cx t' in
           if t' == t'' then t else DefT (r, t'')
-      | EvalT (t', dt, i) ->
+      | EvalT (t', dt, _) ->
           let t'' = self#type_ cx map_cx t' in
           let dt' = self#defer_use_type cx map_cx dt in
           if t' == t'' && dt == dt' then t
-          else EvalT (t'', dt', i)
+          else EvalT (t'', dt', Reason.mk_id ())
       | BoundT t' ->
           let t'' = self#type_param cx map_cx t' in
           if t'' == t' then t
@@ -115,8 +115,13 @@ class ['a] t = object(self)
       | OpaqueT (r, opaquetype) ->
           let underlying_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.underlying_t in
           let super_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.super_t in
-          if underlying_t == opaquetype.underlying_t && super_t == opaquetype.super_t then t
-          else OpaqueT (r, {opaquetype with underlying_t; super_t})
+          let opaque_type_args =
+            SMap.ident_map (self#type_ cx map_cx) opaquetype.opaque_type_args in
+          if underlying_t == opaquetype.underlying_t &&
+            super_t == opaquetype.super_t &&
+            opaque_type_args == opaquetype.opaque_type_args
+          then t
+          else OpaqueT (r, {opaquetype with underlying_t; super_t; opaque_type_args})
       | ModuleT (r, exporttypes) ->
           let exporttypes' = self#export_types cx map_cx exporttypes in
           if exporttypes == exporttypes' then t
@@ -181,9 +186,9 @@ class ['a] t = object(self)
       | InstanceT (st, su, impl, instt) ->
           let st' = self#type_ cx map_cx st in
           let su' = self#type_ cx map_cx su in
-          let impl' = ListUtils.ident_map (self#type_ cx map_cx ) impl in
+          let impl' = ListUtils.ident_map (self#type_ cx map_cx) impl in
           let instt' = self#inst_type cx map_cx instt in
-          if st' == st' && su' == su && impl' == impl && instt' == instt then t
+          if st' == st && su' == su && impl' == impl && instt' == instt then t
           else InstanceT (st', su', impl', instt')
       | SingletonStrT _
       | SingletonNumT _
@@ -251,11 +256,21 @@ class ['a] t = object(self)
     let this_t' = self#type_ cx map_cx this_t in
     let return_t' = self#type_ cx map_cx return_t in
     let params_tlist' = ListUtils.ident_map (self#type_ cx map_cx) params_tlist in
-    if this_t' == this_t && return_t' == return_t && params_tlist' == params_tlist then t
+    let rest_param' = match rest_param with
+    | None -> rest_param
+    | Some (name, loc, t) ->
+        let t' = self#type_ cx map_cx t in
+        if t' == t then rest_param else Some (name, loc, t')
+    in
+    if this_t' == this_t &&
+       return_t' == return_t &&
+       params_tlist' == params_tlist &&
+       rest_param' == rest_param then t
     else
       let this_t = this_t' in
       let return_t = return_t' in
       let params_tlist = params_tlist' in
+      let rest_param = rest_param' in
       {this_t; params_tlist; params_names; rest_param; return_t;
        closure_t; is_predicate; changeset; def_reason}
 
@@ -277,7 +292,7 @@ class ['a] t = object(self)
     let m_tmap' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) m_tmap in
     let methods_tmap' =
       if m_tmap == m_tmap' then methods_tmap
-      else Context.make_property_map cx m_tmap in
+      else Context.make_property_map cx m_tmap' in
     if type_args == type_args' && methods_tmap == methods_tmap' && fields_tmap == fields_tmap'
     then t
     else
@@ -303,8 +318,11 @@ class ['a] t = object(self)
       | ObjRest _
       | ArrRest _
       | Default
-      | Become
-      | Refine _ -> t
+      | Become -> t
+      | Refine p ->
+          let p' = self#predicate cx map_cx p in
+          if p' == p then t
+          else Refine p'
 
   method destructor cx map_cx t =
     match t with
