@@ -4,37 +4,45 @@ Error: main.js:12
  12: var b: React$Node<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
  12: var b: React$Node<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of class `React$Element` | string | number | type application of identifier `Iterable`
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: type `React$Child` | type application of identifier `Iterable`
   Member 1:
-   13:   | React$Element<Config>
-           ^^^^^^^^^^^^^^^^^^^^^ type application of class `React$Element`. See lib: <BUILTINS>/react.js:13
+   18:   | React$Child<Config>
+           ^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$Child`. See lib: <BUILTINS>/react.js:18
   Error:
    12: var b: React$Node<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                         ^^^^^^^^^^^^^^^ property `prop1`. Property not found in
-   12: var b: React$Node<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `CustomComponent`
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
+   18:   | React$Child<Config>
+           ^^^^^^^^^^^^^^^^^^^ union: type application of class `React$Element` | string | number. See lib: <BUILTINS>/react.js:18
+    Member 1:
+     13:   | React$Element<Config>
+             ^^^^^^^^^^^^^^^^^^^^^ type application of class `React$Element`. See lib: <BUILTINS>/react.js:13
+    Error:
+     12: var b: React$Node<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                           ^^^^^^^^^^^^^^^ property `prop1`. Property not found in
+     12: var b: React$Node<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `CustomComponent`
+    Member 2:
+     14:   | string
+             ^^^^^^ string. See lib: <BUILTINS>/react.js:14
+    Error:
+     12: var b: React$Node<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
+     14:   | string
+             ^^^^^^ string. See lib: <BUILTINS>/react.js:14
+    Member 3:
+     15:   | number;
+             ^^^^^^ number. See lib: <BUILTINS>/react.js:15
+    Error:
+     12: var b: React$Node<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
+     15:   | number;
+             ^^^^^^ number. See lib: <BUILTINS>/react.js:15
   Member 2:
-   14:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:14
+   19:   | Iterable<React$Node<Config>>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:19
   Error:
-   12: var b: React$Node<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
-   14:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:14
-  Member 3:
-   15:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:15
-  Error:
-   12: var b: React$Node<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
-   15:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:15
-  Member 4:
-   16:   | Iterable<React$Node<Config>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:16
-  Error:
-   16:   | Iterable<React$Node<Config>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:16
+   19:   | Iterable<React$Node<Config>>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:19
    12: var b: React$Node<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element
 
@@ -44,37 +52,45 @@ Error: main.js:19
  19: var d: React$Node<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
  19: var d: React$Node<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of class `React$Element` | string | number | type application of identifier `Iterable`
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: type `React$Child` | type application of identifier `Iterable`
   Member 1:
-   13:   | React$Element<Config>
-           ^^^^^^^^^^^^^^^^^^^^^ type application of class `React$Element`. See lib: <BUILTINS>/react.js:13
+   18:   | React$Child<Config>
+           ^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$Child`. See lib: <BUILTINS>/react.js:18
   Error:
    19: var d: React$Node<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `not_a_real_attr`. Property not found in
-   19: var d: React$Node<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
-                         ^^^^^^^^^^^^^^^^^^^^^ object type
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
+   18:   | React$Child<Config>
+           ^^^^^^^^^^^^^^^^^^^ union: type application of class `React$Element` | string | number. See lib: <BUILTINS>/react.js:18
+    Member 1:
+     13:   | React$Element<Config>
+             ^^^^^^^^^^^^^^^^^^^^^ type application of class `React$Element`. See lib: <BUILTINS>/react.js:13
+    Error:
+     19: var d: React$Node<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `not_a_real_attr`. Property not found in
+     19: var d: React$Node<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
+                           ^^^^^^^^^^^^^^^^^^^^^ object type
+    Member 2:
+     14:   | string
+             ^^^^^^ string. See lib: <BUILTINS>/react.js:14
+    Error:
+     19: var d: React$Node<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
+     14:   | string
+             ^^^^^^ string. See lib: <BUILTINS>/react.js:14
+    Member 3:
+     15:   | number;
+             ^^^^^^ number. See lib: <BUILTINS>/react.js:15
+    Error:
+     19: var d: React$Node<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
+     15:   | number;
+             ^^^^^^ number. See lib: <BUILTINS>/react.js:15
   Member 2:
-   14:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:14
+   19:   | Iterable<React$Node<Config>>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:19
   Error:
-   19: var d: React$Node<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
-   14:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:14
-  Member 3:
-   15:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:15
-  Error:
-   19: var d: React$Node<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
-   15:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:15
-  Member 4:
-   16:   | Iterable<React$Node<Config>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:16
-  Error:
-   16:   | Iterable<React$Node<Config>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:16
+   19:   | Iterable<React$Node<Config>>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:19
    19: var d: React$Node<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element
 

@@ -251,37 +251,45 @@ Error: props.js:20
  27: (element: $jsx<FooProps>);
       ^^^^^^^ React$Element. This type is incompatible with
  27: (element: $jsx<FooProps>);
-               ^^^^^^^^^^^^^^ union: type application of class `React$Element` | string | number | type application of identifier `Iterable`
+               ^^^^^^^^^^^^^^ union: type application of polymorphic type: type `React$Child` | type application of identifier `Iterable`
   Member 1:
-   13:   | React$Element<Config>
-           ^^^^^^^^^^^^^^^^^^^^^ type application of class `React$Element`. See lib: <BUILTINS>/react.js:13
+   18:   | React$Child<Config>
+           ^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$Child`. See lib: <BUILTINS>/react.js:18
   Error:
-   25:     propTypes: { w: React.PropTypes.string.isRequired }
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `w`. Property not found in
-   20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
+   27: (element: $jsx<FooProps>);
+        ^^^^^^^ React$Element. This type is incompatible with
+   18:   | React$Child<Config>
+           ^^^^^^^^^^^^^^^^^^^ union: type application of class `React$Element` | string | number. See lib: <BUILTINS>/react.js:18
+    Member 1:
+     13:   | React$Element<Config>
+             ^^^^^^^^^^^^^^^^^^^^^ type application of class `React$Element`. See lib: <BUILTINS>/react.js:13
+    Error:
+     25:     propTypes: { w: React.PropTypes.string.isRequired }
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `w`. Property not found in
+     20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
+    Member 2:
+     14:   | string
+             ^^^^^^ string. See lib: <BUILTINS>/react.js:14
+    Error:
+     27: (element: $jsx<FooProps>);
+          ^^^^^^^ React$Element. This type is incompatible with
+     14:   | string
+             ^^^^^^ string. See lib: <BUILTINS>/react.js:14
+    Member 3:
+     15:   | number;
+             ^^^^^^ number. See lib: <BUILTINS>/react.js:15
+    Error:
+     27: (element: $jsx<FooProps>);
+          ^^^^^^^ React$Element. This type is incompatible with
+     15:   | number;
+             ^^^^^^ number. See lib: <BUILTINS>/react.js:15
   Member 2:
-   14:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:14
+   19:   | Iterable<React$Node<Config>>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:19
   Error:
-   27: (element: $jsx<FooProps>);
-        ^^^^^^^ React$Element. This type is incompatible with
-   14:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:14
-  Member 3:
-   15:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:15
-  Error:
-   27: (element: $jsx<FooProps>);
-        ^^^^^^^ React$Element. This type is incompatible with
-   15:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:15
-  Member 4:
-   16:   | Iterable<React$Node<Config>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:16
-  Error:
-   16:   | Iterable<React$Node<Config>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:16
+   19:   | Iterable<React$Node<Config>>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:19
    27: (element: $jsx<FooProps>);
         ^^^^^^^ React$Element
 
