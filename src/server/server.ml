@@ -585,11 +585,13 @@ let collate_errors =
     let workers = genv.ServerEnv.workers in
     begin match command with
     | ServerProt.AUTOCOMPLETE fn ->
+        Hh_logger.debug "Request: autocomplete %s" (File_input.filename_of_file_input fn);
         let results: ServerProt.autocomplete_response =
           autocomplete ~options ~workers ~env client_logging_context fn
         in
         marshal results
     | ServerProt.CHECK_FILE (fn, verbose, graphml, force) ->
+        Hh_logger.debug "Request: check %s" (File_input.filename_of_file_input fn);
         let options = { options with Options.
           opt_output_graphml = graphml;
           opt_verbose = verbose;
@@ -597,48 +599,64 @@ let collate_errors =
         (check_file ~options ~workers ~env ~force fn: ServerProt.response)
           |> marshal
     | ServerProt.COVERAGE (fn, force) ->
+        Hh_logger.debug "Request: coverage %s" (File_input.filename_of_file_input fn);
         (coverage ~options ~workers ~env ~force fn: ServerProt.coverage_response)
           |> marshal
     | ServerProt.DUMP_TYPES (fn, include_raw, strip_root) ->
+        Hh_logger.debug "Request: dump-types %s" (File_input.filename_of_file_input fn);
         let types: ServerProt.dump_types_response =
           dump_types ~options ~workers ~env ~include_raw ~strip_root fn
         in
         marshal types
     | ServerProt.FIND_MODULE (moduleref, filename) ->
+        Hh_logger.debug "Request: find-module %s %s" moduleref filename;
         (find_module ~options (moduleref, filename): filename option)
           |> marshal
     | ServerProt.FIND_REFS (fn, line, char) ->
+        Hh_logger.debug "Request: find-refs %s:%d:%d"
+          (File_input.filename_of_file_input fn) line char;
         (find_refs ~options ~workers ~env (fn, line, char): ServerProt.find_refs_response)
           |> marshal
     | ServerProt.FORCE_RECHECK (files) ->
+        Hh_logger.debug "Request: force-recheck %s" (String.concat " " files);
         Marshal.to_channel oc () [];
         flush oc;
         let updates = process_updates genv !env (SSet.of_list files) in
         env := recheck genv !env updates
     | ServerProt.GEN_FLOW_FILES files ->
+        Hh_logger.debug "Request: gen-flow-files %s"
+          (files |> List.map File_input.filename_of_file_input |> String.concat " ");
         (gen_flow_files ~options !env files: ServerProt.gen_flow_file_response)
           |> marshal
     | ServerProt.GET_DEF (fn, line, char) ->
+        Hh_logger.debug "Request: get-def %s:%d:%d"
+          (File_input.filename_of_file_input fn) line char;
         let def: ServerProt.get_def_response =
           get_def ~options ~workers ~env client_logging_context (fn, line, char)
         in
         marshal def
     | ServerProt.GET_IMPORTS module_names ->
+        Hh_logger.debug "Request: get-imports %s" (String.concat " " module_names);
         (get_imports ~options module_names: ServerProt.get_imports_response)
           |> marshal
     | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
+        Hh_logger.debug "Request: type-at-pos %s:%d:%d"
+          (File_input.filename_of_file_input fn) line char;
         (infer_type
             ~options ~workers ~env
             client_logging_context
             (fn, line, char, verbose, include_raw) : ServerProt.infer_type_response)
           |> marshal
     | ServerProt.KILL ->
+        Hh_logger.debug "Request: kill";
         (Ok () : ServerProt.stop_response) |> marshal;
         die_nicely ()
     | ServerProt.PORT (files) ->
+        Hh_logger.debug "Request: port %s" (String.concat " " files);
         (port files: ServerProt.port_response)
           |> marshal
     | ServerProt.STATUS client_root ->
+        Hh_logger.debug "Request: status";
         let status: ServerProt.response = get_status genv !env client_root in
         marshal status;
         begin match status with
@@ -653,9 +671,11 @@ let collate_errors =
           | _ -> ()
         end
     | ServerProt.SUGGEST (files) ->
+        Hh_logger.debug "Request: suggest";
         (suggest ~options ~workers ~env files: ServerProt.suggest_response)
           |> marshal
     | ServerProt.CONNECT ->
+        Hh_logger.debug "Request: connect";
         let new_connections, new_client =
           Persistent_connection.add_client
             !env.connections
