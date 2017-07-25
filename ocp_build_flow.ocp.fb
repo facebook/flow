@@ -102,6 +102,7 @@ begin library "flow-common-errors"
     "flow-common-utils"
     "flow-parser"
     "hh-utils"
+    "hh-utils-collections"
     "hh-utils-json"
     "tp-core"
   ]
