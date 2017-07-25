@@ -2330,14 +2330,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* a falsy && b ~> a
          a truthy && b ~> b
          a && b ~> a falsy | b *)
-      let truthy_left = filter_exists left in
+      let truthy_left, _ = filter_exists left in
       (match truthy_left with
       | DefT (_, EmptyT) ->
         (* falsy *)
         rec_flow cx trace (left, PredicateT (NotP (ExistsP None), u))
       | _ ->
         (match filter_not_exists left with
-        | DefT (_, EmptyT) -> (* truthy *)
+        | DefT (_, EmptyT), _ -> (* truthy *)
           rec_flow cx trace (right, UseT (UnknownUse, u))
         | _ ->
           rec_flow cx trace (left, PredicateT (NotP (ExistsP None), u));
@@ -2353,14 +2353,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* a truthy || b ~> a
          a falsy || b ~> b
          a || b ~> a truthy | b *)
-      let falsy_left = filter_not_exists left in
+      let falsy_left, _ = filter_not_exists left in
       (match falsy_left with
       | DefT (_, EmptyT) ->
         (* truthy *)
         rec_flow cx trace (left, PredicateT (ExistsP None, u))
       | _ ->
         (match filter_exists left with
-        | DefT (_, EmptyT) -> (* falsy *)
+        | DefT (_, EmptyT), _ -> (* falsy *)
           rec_flow cx trace (right, UseT (UnknownUse, u))
         | _ ->
           rec_flow cx trace (left, PredicateT (ExistsP None, u));
@@ -7633,16 +7633,21 @@ and is_bool = function DefT (_, (AnyT | BoolT _)) -> true | _ -> false
 
 and not_ pred x = not(pred x)
 
+(* The filter functions return (filtered_type, did_update) pairs. *)
+
 and recurse_into_union filter_fn (r, ts) =
-  let new_ts = ts |> List.filter (fun t ->
-    match filter_fn t with
-    | DefT (_, EmptyT) -> false
-    | _ -> true
-  ) in
+  let new_ts, updated = List.fold_left (fun (new_ts, updated) t ->
+    let filtered_type, did_update = filter_fn t in
+    let updated = updated || did_update in
+    match filtered_type with
+    | DefT (_, EmptyT) -> new_ts, updated
+    | _ -> filtered_type::new_ts, updated
+  ) ([], false) ts in
+  let new_ts = List.rev new_ts in
   match new_ts with
-  | [] -> DefT (r, EmptyT)
-  | [t] -> t
-  | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts))
+  | [] -> DefT (r, EmptyT), updated
+  | [t] -> t, updated
+  | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts)), updated
 
 and filter_exists = function
   (* falsy things get removed *)
@@ -7655,18 +7660,18 @@ and filter_exists = function
     | StrT (Literal (_, ""))
     | SingletonNumT (0., _)
     | NumT (Literal (_, (0., _)))
-    )) -> DefT (r, EmptyT)
+    )) -> DefT (r, EmptyT), true
 
   (* unknown things become truthy *)
-  | DefT (_, MaybeT t) -> t
-  | DefT (_, OptionalT t) -> filter_exists t
-  | DefT (r, BoolT None) -> DefT (r, BoolT (Some true))
-  | DefT (r, StrT AnyLiteral) -> DefT (r, StrT Truthy)
-  | DefT (r, NumT AnyLiteral) -> DefT (r, NumT Truthy)
-  | DefT (r, MixedT _) -> DefT (r, MixedT Mixed_truthy)
+  | DefT (_, MaybeT t) -> t, true
+  | DefT (_, OptionalT t) -> t |> filter_exists |> fst, true
+  | DefT (r, BoolT None) -> DefT (r, BoolT (Some true)), true
+  | DefT (r, StrT AnyLiteral) -> DefT (r, StrT Truthy), true
+  | DefT (r, NumT AnyLiteral) -> DefT (r, NumT Truthy), true
+  | DefT (r, MixedT _) -> DefT (r, MixedT Mixed_truthy), true
 
   (* truthy things pass through *)
-  | t -> t
+  | t -> t, false
 
 and filter_not_exists t = match t with
   (* falsy things pass through *)
@@ -7679,7 +7684,7 @@ and filter_not_exists t = match t with
     | StrT (Literal (_, ""))
     | SingletonNumT (0., _)
     | NumT (Literal (_, (0., _)))
-    )) -> t
+    )) -> t, false
 
   (* truthy things get removed *)
   | DefT (r, (
@@ -7696,112 +7701,114 @@ and filter_not_exists t = match t with
     | SingletonNumT _
     | NumT (Literal _ | Truthy)
     | MixedT Mixed_truthy
-    )) -> DefT (r, EmptyT)
+    )) -> DefT (r, EmptyT), true
 
-  | DefT (reason, ClassT _) -> DefT (reason, EmptyT)
+  | DefT (reason, ClassT _) -> DefT (reason, EmptyT), true
 
   (* unknown boolies become falsy *)
   | DefT (r, MaybeT _) ->
-    DefT (r, UnionT (UnionRep.make (NullT.why r) (VoidT.why r) []))
-  | DefT (r, BoolT None) -> DefT (r, BoolT (Some false))
-  | DefT (r, StrT AnyLiteral) -> DefT (r, StrT (Literal (None, "")))
-  | DefT (r, NumT AnyLiteral) -> DefT (r, NumT (Literal (None, (0., "0"))))
+    DefT (r, UnionT (UnionRep.make (NullT.why r) (VoidT.why r) [])), true
+  | DefT (r, BoolT None) -> DefT (r, BoolT (Some false)), true
+  | DefT (r, StrT AnyLiteral) -> DefT (r, StrT (Literal (None, ""))), true
+  | DefT (r, NumT AnyLiteral) -> DefT (r, NumT (Literal (None, (0., "0")))), true
 
   (* things that don't track truthiness pass through *)
-  | t -> t
+  | t -> t, false
 
 and filter_maybe = function
   | DefT (r, MaybeT _) ->
-    DefT (r, UnionT (UnionRep.make (NullT.why r) (VoidT.why r) []))
+    DefT (r, UnionT (UnionRep.make (NullT.why r) (VoidT.why r) [])), true
   | DefT (r, MixedT Mixed_everything) ->
-    DefT (r, UnionT (UnionRep.make (NullT.why r) (VoidT.why r) []))
-  | DefT (r, MixedT Mixed_truthy) -> EmptyT.why r
-  | DefT (r, MixedT Mixed_non_maybe) -> EmptyT.why r
-  | DefT (r, MixedT Mixed_non_void) -> DefT (r, NullT)
-  | DefT (r, MixedT Mixed_non_null) -> DefT (r, VoidT)
-  | DefT (_, NullT) as t -> t
-  | DefT (_, VoidT) as t -> t
-  | DefT (r, OptionalT _) -> VoidT.why r
-  | DefT (_, AnyT) as t -> t
+    DefT (r, UnionT (UnionRep.make (NullT.why r) (VoidT.why r) [])), true
+  | DefT (r, MixedT Mixed_truthy) -> EmptyT.why r, true
+  | DefT (r, MixedT Mixed_non_maybe) -> EmptyT.why r, true
+  | DefT (r, MixedT Mixed_non_void) -> DefT (r, NullT), true
+  | DefT (r, MixedT Mixed_non_null) -> DefT (r, VoidT), true
+  | DefT (_, NullT) as t -> t, false
+  | DefT (_, VoidT) as t -> t, false
+  | DefT (r, OptionalT _) -> VoidT.why r, true
+  | DefT (_, AnyT) as t -> t, false
   | t ->
     let reason = reason_of_t t in
-    EmptyT.why reason
+    EmptyT.why reason, true
 
 and filter_not_maybe = function
-  | DefT (_, MaybeT t) -> t
-  | DefT (_, OptionalT t) -> filter_not_maybe t
-  | DefT (r, (NullT | VoidT)) -> DefT (r, EmptyT)
-  | DefT (r, MixedT Mixed_truthy) -> DefT (r, MixedT Mixed_truthy)
+  | DefT (_, MaybeT t) -> t, true
+  | DefT (_, OptionalT t) -> t |> filter_not_maybe |> fst, true
+  | DefT (r, (NullT | VoidT)) -> DefT (r, EmptyT), true
+  | DefT (r, MixedT Mixed_truthy) -> DefT (r, MixedT Mixed_truthy), false
+  | DefT (r, MixedT Mixed_non_maybe) -> DefT (r, MixedT Mixed_non_maybe), false
   | DefT (r, MixedT Mixed_everything)
-  | DefT (r, MixedT Mixed_non_maybe)
   | DefT (r, MixedT Mixed_non_void)
   | DefT (r, MixedT Mixed_non_null)
-    -> DefT (r, MixedT Mixed_non_maybe)
-  | t -> t
+    -> DefT (r, MixedT Mixed_non_maybe), true
+  | t -> t, false
 
 and filter_null = function
   | DefT (_, OptionalT (DefT (r, MaybeT _)))
-  | DefT (r, MaybeT _) -> NullT.why r
-  | DefT (_, NullT) as t -> t
+  | DefT (r, MaybeT _) -> NullT.why r, true
+  | DefT (_, NullT) as t -> t, false
   | DefT (r, MixedT Mixed_everything)
-  | DefT (r, MixedT Mixed_non_void) -> NullT.why r
-  | DefT (_, AnyT) as t -> t
+  | DefT (r, MixedT Mixed_non_void) -> NullT.why r, true
+  | DefT (_, AnyT) as t -> t, false
   | t ->
     let reason = reason_of_t t in
-    EmptyT.why reason
+    EmptyT.why reason, true
 
 and filter_not_null = function
   | DefT (r, MaybeT t) ->
-    DefT (r, UnionT (UnionRep.make (VoidT.why r) t []))
-  | DefT (r, OptionalT t) -> DefT (r, OptionalT (filter_not_null t))
+    DefT (r, UnionT (UnionRep.make (VoidT.why r) t [])), true
+  | DefT (r, OptionalT t) ->
+    let new_t, did_update = filter_not_null t in
+    DefT (r, OptionalT (new_t)), did_update
   | DefT (r, UnionT rep) ->
     recurse_into_union filter_not_null (r, UnionRep.members rep)
-  | DefT (r, NullT) -> DefT (r, EmptyT)
-  | DefT (r, MixedT Mixed_everything) -> DefT (r, MixedT Mixed_non_null)
-  | DefT (r, MixedT Mixed_non_void) -> DefT (r, MixedT Mixed_non_maybe)
-  | t -> t
+  | DefT (r, NullT) -> DefT (r, EmptyT), true
+  | DefT (r, MixedT Mixed_everything) -> DefT (r, MixedT Mixed_non_null), true
+  | DefT (r, MixedT Mixed_non_void) -> DefT (r, MixedT Mixed_non_maybe), true
+  | t -> t, false
 
 and filter_undefined = function
-  | DefT (r, MaybeT _) -> VoidT.why r
-  | DefT (_, VoidT) as t -> t
-  | DefT (r, OptionalT _) -> VoidT.why r
+  | DefT (r, MaybeT _) -> VoidT.why r, true
+  | DefT (_, VoidT) as t -> t, false
+  | DefT (r, OptionalT _) -> VoidT.why r, true
   | DefT (r, MixedT Mixed_everything)
-  | DefT (r, MixedT Mixed_non_null) -> VoidT.why r
-  | DefT (_, AnyT) as t -> t
+  | DefT (r, MixedT Mixed_non_null) -> VoidT.why r, true
+  | DefT (_, AnyT) as t -> t, false
   | t ->
     let reason = reason_of_t t in
-    EmptyT.why reason
+    EmptyT.why reason, true
 
 and filter_not_undefined = function
   | DefT (r, MaybeT t) ->
-    DefT (r, UnionT (UnionRep.make (NullT.why r) t []))
+    DefT (r, UnionT (UnionRep.make (NullT.why r) t [])), true
   | DefT (_, OptionalT t) -> filter_not_undefined t
   | DefT (r, UnionT rep) ->
     recurse_into_union filter_not_undefined (r, UnionRep.members rep)
-  | DefT (r, VoidT) -> DefT (r, EmptyT)
-  | DefT (r, MixedT Mixed_everything) -> DefT (r, MixedT Mixed_non_void)
-  | DefT (r, MixedT Mixed_non_null) -> DefT (r, MixedT Mixed_non_maybe)
-  | t -> t
+  | DefT (r, VoidT) -> DefT (r, EmptyT), true
+  | DefT (r, MixedT Mixed_everything) -> DefT (r, MixedT Mixed_non_void), true
+  | DefT (r, MixedT Mixed_non_null) -> DefT (r, MixedT Mixed_non_maybe), true
+  | t -> t, false
 
 and filter_string_literal expected_loc sense expected t =
   let expected_desc = RStringLit expected in
   let lit_reason = replace_reason_const expected_desc in
   match t with
   | DefT (_, StrT (Literal (_, actual))) ->
-    if actual = expected then t
-    else DefT (mk_reason expected_desc expected_loc, StrT (Literal (Some sense, expected)))
+    if actual = expected then t, false
+    else DefT (mk_reason expected_desc expected_loc, StrT (Literal (Some sense, expected))), true
   | DefT (r, StrT Truthy) when expected <> "" ->
-    DefT (lit_reason r, StrT (Literal (None, expected)))
+    DefT (lit_reason r, StrT (Literal (None, expected))), true
   | DefT (r, StrT AnyLiteral) ->
-    DefT (lit_reason r, StrT (Literal (None, expected)))
+    DefT (lit_reason r, StrT (Literal (None, expected))), true
   | DefT (r, MixedT _) ->
-    DefT (lit_reason r, StrT (Literal (None, expected)))
-  | DefT (_, AnyT) as t -> t
-  | _ -> DefT (reason_of_t t, EmptyT)
+    DefT (lit_reason r, StrT (Literal (None, expected))), true
+  | DefT (_, AnyT) as t -> t, false
+  | _ -> DefT (reason_of_t t, EmptyT), true
 
 and filter_not_string_literal expected = function
-  | DefT (r, StrT (Literal (_, actual))) when actual = expected -> DefT (r, EmptyT)
-  | t -> t
+  | DefT (r, StrT (Literal (_, actual))) when actual = expected -> DefT (r, EmptyT), true
+  | t -> t, false
 
 and filter_number_literal expected_loc sense expected t =
   let _, expected_raw = expected in
@@ -7809,53 +7816,55 @@ and filter_number_literal expected_loc sense expected t =
   let lit_reason = replace_reason_const expected_desc in
   match t with
   | DefT (_, NumT (Literal (_, (_, actual_raw)))) ->
-    if actual_raw = expected_raw then t
-    else DefT (mk_reason expected_desc expected_loc, NumT (Literal (Some sense, expected)))
+    if actual_raw = expected_raw then t, false
+    else DefT (mk_reason expected_desc expected_loc, NumT (Literal (Some sense, expected))), true
   | DefT (r, NumT Truthy) when snd expected <> "0" ->
-    DefT (lit_reason r, NumT (Literal (None, expected)))
+    DefT (lit_reason r, NumT (Literal (None, expected))), true
   | DefT (r, NumT AnyLiteral) ->
-    DefT (lit_reason r, NumT (Literal (None, expected)))
+    DefT (lit_reason r, NumT (Literal (None, expected))), true
   | DefT (r, MixedT _) ->
-    DefT (lit_reason r, NumT (Literal (None, expected)))
-  | DefT (_, AnyT) as t -> t
-  | _ -> DefT (reason_of_t t, EmptyT)
+    DefT (lit_reason r, NumT (Literal (None, expected))), true
+  | DefT (_, AnyT) as t -> t, false
+  | _ -> DefT (reason_of_t t, EmptyT), true
 
 and filter_not_number_literal expected = function
-  | DefT (r, NumT (Literal (_, actual))) when snd actual = snd expected -> DefT (r, EmptyT)
-  | t -> t
+  | DefT (r, NumT (Literal (_, actual))) when snd actual = snd expected -> DefT (r, EmptyT), true
+  | t -> t, false
 
 and filter_true t =
   let lit_reason = replace_reason_const (RBooleanLit true) in
   match t with
-  | DefT (r, BoolT (Some true))
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some true))
-  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some true))
-  | DefT (_, AnyT) as t -> t
-  | t -> DefT (reason_of_t t, EmptyT)
+  | DefT (r, BoolT (Some true)) -> DefT (lit_reason r, BoolT (Some true)), false
+  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some true)), true
+  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some true)), true
+  | DefT (_, AnyT) as t -> t, false
+  | t -> DefT (reason_of_t t, EmptyT), true
 
 and filter_not_true t =
   let lit_reason = replace_reason_const (RBooleanLit false) in
   match t with
-  | DefT (r, BoolT (Some true)) -> DefT (r, EmptyT)
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some false))
-  | t -> t
+  | DefT (r, BoolT (Some true)) -> DefT (r, EmptyT), true
+  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some false)), true
+  | t -> t, false
 
 and filter_false t =
   let lit_reason = replace_reason_const (RBooleanLit false) in
   match t with
-  | DefT (r, BoolT (Some false))
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some false))
-  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some false))
-  | DefT (_, AnyT) as t -> t
-  | t -> DefT (reason_of_t t, EmptyT)
+  | DefT (r, BoolT (Some false)) -> DefT (lit_reason r, BoolT (Some false)), false
+  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some false)), true
+  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some false)), true
+  | DefT (_, AnyT) as t -> t, false
+  | t -> DefT (reason_of_t t, EmptyT), true
 
 and filter_not_false t =
   let lit_reason = replace_reason_const (RBooleanLit true) in
   match t with
-  | DefT (r, BoolT (Some false)) -> DefT (r, EmptyT)
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some true))
-  | t -> t
+  | DefT (r, BoolT (Some false)) -> DefT (r, EmptyT), true
+  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some true)), true
+  | t -> t, false
 
+(* This function is different from the other filter functions; it doesn't
+* need a second return value. *)
 (* filter out undefined from a type *)
 and filter_optional cx ?trace reason opt_t =
   mk_tvar_where cx reason (fun t ->
@@ -7875,10 +7884,10 @@ and update_sketchy_null cx opt_loc t =
       let exists_checks = Context.exists_checks cx in
       let exists_check = LocMap.get loc exists_checks |> Option.value ~default:ExistsCheck.empty in
       let exists_check = match filter_maybe t with
-        | DefT (_, EmptyT) -> exists_check
+        | DefT (_, EmptyT), _ -> exists_check
         | _ -> {exists_check with null_loc = t_loc}
       in
-      let exists_check = match t |> filter_not_exists |> filter_not_maybe with
+      let exists_check = match t |> filter_not_exists |> fst |> filter_not_maybe |> fst with
         | DefT (_, BoolT _) -> {exists_check with bool_loc = t_loc}
         | DefT (_, StrT _) -> {exists_check with string_loc = t_loc}
         | DefT (_, NumT _) -> {exists_check with number_loc = t_loc}
@@ -7900,14 +7909,14 @@ and guard cx trace source pred result sink = match pred with
 | ExistsP loc ->
   update_sketchy_null cx loc source;
   begin match filter_exists source with
-  | DefT (_, EmptyT) -> ()
+  | DefT (_, EmptyT), _ -> ()
   | _ -> rec_flow_t cx trace (result, sink)
   end
 
 | NotP (ExistsP loc) ->
   update_sketchy_null cx loc source;
   begin match filter_not_exists source with
-  | DefT (_, EmptyT) -> ()
+  | DefT (_, EmptyT), _ -> ()
   | _ -> rec_flow_t cx trace (result, sink)
   end
 
@@ -8010,20 +8019,24 @@ and predicate cx trace t l p = match p with
   (*********************)
 
   | SingletonStrP (expected_loc, sense, lit) ->
-    rec_flow_t cx trace (filter_string_literal expected_loc sense lit l, t)
+    let filtered_str, _ = filter_string_literal expected_loc sense lit l in
+    rec_flow_t cx trace (filtered_str, t)
 
   | NotP SingletonStrP (_, _, lit) ->
-    rec_flow_t cx trace (filter_not_string_literal lit l, t)
+    let filtered_str, _ = filter_not_string_literal lit l in
+    rec_flow_t cx trace (filtered_str, t)
 
   (*********************)
   (* _ ~ some number n *)
   (*********************)
 
   | SingletonNumP (expected_loc, sense, lit) ->
-    rec_flow_t cx trace (filter_number_literal expected_loc sense lit l, t)
+    let filtered_num, _ = filter_number_literal expected_loc sense lit l in
+    rec_flow_t cx trace (filtered_num, t)
 
   | NotP SingletonNumP (_, _, lit) ->
-    rec_flow_t cx trace (filter_not_number_literal lit l, t)
+    let filtered_num, _ = filter_not_number_literal lit l in
+    rec_flow_t cx trace (filtered_num, t)
 
   (***********************)
   (* typeof _ ~ "number" *)
@@ -8121,50 +8134,60 @@ and predicate cx trace t l p = match p with
   (***********************)
 
   | VoidP ->
-    rec_flow_t cx trace (filter_undefined l, t)
+    let filtered, _ = filter_undefined l in
+    rec_flow_t cx trace (filtered, t)
 
   | NotP VoidP ->
-    rec_flow_t cx trace (filter_not_undefined l, t)
+    let filtered, _ = filter_not_undefined l in
+    rec_flow_t cx trace (filtered, t)
 
   (********)
   (* null *)
   (********)
 
   | NullP ->
-    rec_flow_t cx trace (filter_null l, t)
+    let filtered, _ = filter_null l in
+    rec_flow_t cx trace (filtered, t)
 
   | NotP NullP ->
-    rec_flow_t cx trace (filter_not_null l, t)
+    let filtered, _ = filter_not_null l in
+    rec_flow_t cx trace (filtered, t)
 
   (*********)
   (* maybe *)
   (*********)
 
   | MaybeP ->
-    rec_flow_t cx trace (filter_maybe l, t)
+    let filtered, _ = filter_maybe l in
+    rec_flow_t cx trace (filtered, t)
 
   | NotP MaybeP ->
-    rec_flow_t cx trace (filter_not_maybe l, t)
+    let filtered, _ = filter_not_maybe l in
+    rec_flow_t cx trace (filtered, t)
 
   (********)
   (* true *)
   (********)
 
   | SingletonBoolP true ->
-    rec_flow_t cx trace (filter_true l, t)
+    let filtered, _ = filter_true l in
+    rec_flow_t cx trace (filtered, t)
 
   | NotP (SingletonBoolP true) ->
-    rec_flow_t cx trace (filter_not_true l, t)
+    let filtered, _ = filter_not_true l in
+    rec_flow_t cx trace (filtered, t)
 
   (*********)
   (* false *)
   (*********)
 
   | SingletonBoolP false ->
-    rec_flow_t cx trace (filter_false l, t)
+    let filtered, _ = filter_false l in
+    rec_flow_t cx trace (filtered, t)
 
   | NotP (SingletonBoolP false) ->
-    rec_flow_t cx trace (filter_not_false l, t)
+    let filtered, _ = filter_not_false l in
+    rec_flow_t cx trace (filtered, t)
 
   (************************)
   (* truthyness *)
@@ -8172,11 +8195,13 @@ and predicate cx trace t l p = match p with
 
   | ExistsP loc ->
     update_sketchy_null cx loc l;
-    rec_flow_t cx trace (filter_exists l, t)
+    let filtered, _ = filter_exists l in
+    rec_flow_t cx trace (filtered, t)
 
   | NotP (ExistsP loc) ->
     update_sketchy_null cx loc l;
-    rec_flow_t cx trace (filter_not_exists l, t)
+    let filtered, _ = filter_not_exists l in
+    rec_flow_t cx trace (filtered, t)
 
   | PropExistsP (reason, key, loc) ->
     update_sketchy_null cx loc l;
