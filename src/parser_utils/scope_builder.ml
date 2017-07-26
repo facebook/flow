@@ -284,7 +284,7 @@ class scope_builder = object(this)
         predicate = _; returnType = _; typeParameters = _;
       } = expr in
 
-      run_opt this#identifier id;
+      run_opt this#function_identifier id;
 
       this#lambda params body;
     end;
@@ -311,7 +311,7 @@ class scope_builder = object(this)
         | Some name -> Bindings.singleton name
         | None -> Bindings.empty
       ) in
-      run_opt this#identifier id;
+      run_opt this#function_identifier id;
 
       this#lambda params body;
 

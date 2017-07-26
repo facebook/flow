@@ -195,7 +195,7 @@ class mapper = object(this)
   method break (break: Ast.Statement.Break.t) =
     let open Ast.Statement.Break in
     let { label } = break in
-    let label' = map_opt this#identifier label in
+    let label' = map_opt this#label_identifier label in
     if label == label' then break else { label = label' }
 
   method call (expr: Ast.Expression.Call.t) =
@@ -223,11 +223,14 @@ class mapper = object(this)
       id; body; superClass;
       typeParameters = _; superTypeParameters = _; implements = _; classDecorators = _;
     } = cls in
-    let id' = map_opt this#identifier id in
+    let id' = map_opt this#class_identifier id in
     let body' = this#class_body body in
     let superClass' = map_opt this#expression superClass in
     if id == id' && body == body' && superClass' == superClass then cls
     else { cls with id = id'; body = body'; superClass = superClass' }
+
+  method class_identifier (ident: Ast.Identifier.t) =
+    this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let ident
 
   method class_body (cls_body: Ast.Class.Body.t) =
     let open Ast.Class.Body in
@@ -277,7 +280,7 @@ class mapper = object(this)
   method continue (cont: Ast.Statement.Continue.t) =
     let open Ast.Statement.Continue in
     let { label } = cont in
-    let label' = map_opt this#identifier label in
+    let label' = map_opt this#label_identifier label in
     if label == label' then cont else { label = label' }
 
   method declare_export_declaration (decl: Ast.Statement.DeclareExportDeclaration.t) =
@@ -418,6 +421,9 @@ class mapper = object(this)
     if ps' == ps && rpo' == rpo && returnType' == returnType then ft
     else { params = (ps', rpo'); returnType = returnType'; typeParameters }
 
+  method label_identifier (ident: Ast.Identifier.t) =
+    this#identifier ident
+
   method object_property_value_type (opvt: Ast.Type.Object.Property.value) =
     let open Ast.Type.Object.Property in
     match opvt with
@@ -504,7 +510,7 @@ class mapper = object(this)
       id = ident; params; body; async; generator; expression;
       predicate; returnType; typeParameters;
     } = expr in
-    let ident' = map_opt this#identifier ident in
+    let ident' = map_opt this#function_identifier ident in
     let params' =
       let (param_list, rest) = params in
       let param_list' = map_list this#function_param_pattern param_list in
@@ -526,6 +532,9 @@ class mapper = object(this)
       id = ident'; params = params'; returnType = returnType'; body = body';
       async; generator; expression; predicate; typeParameters;
     }
+
+  method function_identifier (ident: Ast.Identifier.t) =
+    this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident
 
   method function_declaration (stmt: Ast.Function.t) =
     this#function_ stmt
@@ -583,13 +592,13 @@ class mapper = object(this)
         (fun ident -> ImportNamespaceSpecifier (loc, ident))
 
   method import_named_specifier ~ident (local: Ast.Identifier.t option) =
-    id this#identifier ident local (fun ident -> Some ident)
+    id (this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let) ident local (fun ident -> Some ident)
 
   method import_default_specifier (id: Ast.Identifier.t) =
-    this#identifier id
+    this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
 
   method import_namespace_specifier (id: Ast.Identifier.t) =
-    this#identifier id
+    this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
 
   method jsx_element (expr: Ast.JSX.element) =
     let open Ast.JSX in
@@ -654,7 +663,7 @@ class mapper = object(this)
   method labeled_statement (stmt: Ast.Statement.Labeled.t) =
     let open Ast.Statement.Labeled in
     let { label; body } = stmt in
-    let label' = this#identifier label in
+    let label' = this#label_identifier label in
     let body' = this#statement body in
     if label == label' && body == body' then stmt
     else { label = label'; body = body' }
@@ -788,7 +797,7 @@ class mapper = object(this)
         if left == left' && right == right' then patt
         else Assignment { Assignment.left = left'; right = right' }
       | Identifier { Identifier.name; typeAnnotation; optional } ->
-        let name' = this#identifier name in
+        let name' = this#pattern_identifier ?kind name in
         let typeAnnotation' = map_opt this#type_annotation typeAnnotation in
         if name == name' && typeAnnotation == typeAnnotation' then patt
         else Identifier { Identifier.name = name'; typeAnnotation = typeAnnotation'; optional }
@@ -797,6 +806,10 @@ class mapper = object(this)
         id this#pattern_expression e patt (fun e -> Expression e)
     in
     if patt == patt' then expr else (loc, patt')
+
+  method pattern_identifier ?kind (ident: Ast.Identifier.t) =
+    ignore kind;
+    this#identifier ident
 
   method pattern_object_p ?kind (p: Ast.Pattern.Object.property) =
     let open Ast.Pattern.Object in

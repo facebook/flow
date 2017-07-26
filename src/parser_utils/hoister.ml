@@ -39,6 +39,15 @@ end = struct
   let to_list = List.rev
 end
 
+(* TODO: It should be possible to vastly simplify hoisting by overriding the
+   general method `pattern_identifier ?kind` for kind = Var | Let | Const that
+   was recently introduced to distinguish bindings and assignments from other
+   occurrences (`identifier`).
+
+   Instead, it is implemented below by overriding several specific methods that
+   are known to introduce bindings. The logic here is sufficiently tricky that
+   we probably should not change it without extensive testing. *)
+
 class hoister = object(this)
   inherit [Bindings.t] visitor ~init:Bindings.empty as super
 
