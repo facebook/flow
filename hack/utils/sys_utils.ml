@@ -475,3 +475,19 @@ let name_of_signal = function
   | s when s = Sys.sigxcpu -> "SIGXCPU (Timeout in cpu time)"
   | s when s = Sys.sigxfsz -> "SIGXFSZ (File size limit exceeded)"
   | other -> string_of_int other
+
+(* The units for each of these fields is seconds, similar to Unix.times().
+ * cpu_info and processor_info are constructed by c code (see processor_info.c) so be very
+ * careful modifying these types! *)
+type cpu_info = {
+  cpu_user: float;
+  cpu_nice_user: float;
+  cpu_system: float;
+  cpu_idle: float;
+}
+type processor_info = {
+  proc_totals: cpu_info;
+  proc_per_cpu: cpu_info array;
+}
+
+external processor_info: unit -> processor_info = "hh_processor_info"

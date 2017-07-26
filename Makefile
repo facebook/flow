@@ -107,6 +107,7 @@ NATIVE_C_FILES=\
   hack/utils/realpath.c\
   hack/utils/sysinfo.c\
   hack/utils/priorities.c\
+  hack/utils/processor_info.c\
   $(sort $(wildcard src/third-party/lz4/*.c))\
   $(INTERNAL_NATIVE_C_FILES)
 
