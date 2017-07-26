@@ -183,9 +183,11 @@ class mapper = object(this)
   val merge_dep = Dep.merge_dep
 
   method! program (program: Ast.program) =
-    let { Scope_builder.locals; globals=_; max_distinct=_ } =
+    let { Scope_builder.locals; globals=_; max_distinct=_; scopes=_ } =
     Scope_builder.program ~ignore_toplevel:true program in
-    renamings <- locals;
+    renamings <- Scope_builder.(
+      LocMap.map (fun { Def.loc; name; _ } -> loc, name) locals
+    );
     Scope_builder.LocMap.iter
       (fun _ (def_loc,id) ->
         let open Dep in

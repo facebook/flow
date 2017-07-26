@@ -215,13 +215,22 @@ end
 
    We try to create the smallest number of name ids possible.
 *)
+module Def = struct
+  type t = {
+    loc: Loc.t;
+    scope: int;
+    name: int;
+  }
+end
 type info = {
-  (* map from identifier locations to name ids *)
-  locals: (Loc.t * int) LocMap.t;
+  (* map from identifier locations to defs *)
+  locals: Def.t LocMap.t;
   (* map from name ids to globals they conflict with *)
   globals: SSet.t IMap.t;
   (* number of distinct name ids *)
   max_distinct: int;
+  (* map of child scopes to parent scopes *)
+  scopes: int IMap.t;
 }
 module Acc = struct
   type t = info
@@ -229,12 +238,22 @@ module Acc = struct
     max_distinct = 0;
     globals = IMap.empty;
     locals = LocMap.empty;
+    scopes = IMap.empty;
   }
 end
 class scope_builder = object(this)
   inherit [Acc.t] visitor ~init:Acc.init as super
 
   val mutable env = SMap.empty
+  val mutable scope = -1
+  val mutable scope_counter = 0
+  method private new_scope parent =
+    let child = scope_counter in
+    scope_counter <- scope_counter + 1;
+    this#update_acc (fun acc -> { acc with
+      scopes = IMap.add child parent acc.scopes
+    });
+    child
 
   val mutable counter = 0
   method private next =
@@ -245,20 +264,25 @@ class scope_builder = object(this)
     });
     result
 
-  method private mk_env =
+  method private mk_env scope bindings =
     List.fold_left (fun map (loc, x) ->
       match SMap.get x map with
       | Some _ -> map
-      | None -> SMap.add x (loc, this#next) map
-    ) SMap.empty
+      | None ->
+        let def = Def.{ loc; scope; name = this#next; } in
+        SMap.add x def map
+    ) SMap.empty bindings
 
   method private push bindings =
     let save_counter = counter in
     let old_env = env in
-    env <- SMap.fold SMap.add (this#mk_env (List.rev bindings)) old_env;
-    old_env, save_counter
+    let old_scope = scope in
+    scope <- this#new_scope old_scope;
+    env <- SMap.fold SMap.add (this#mk_env scope (List.rev bindings)) old_env;
+    old_scope, old_env, save_counter
 
-  method private pop (old_env, save_counter) =
+  method private pop (old_scope, old_env, save_counter) =
+    scope <- old_scope;
     env <- old_env;
     counter <- save_counter
 
@@ -268,16 +292,17 @@ class scope_builder = object(this)
     this#pop saved_state;
     node'
 
-  method private add_global x (_loc, i) =
+  method private add_global x def =
+    let { Def.name; _ } = def in
     this#update_acc (fun acc -> { acc with
       globals =
-        let iglobals = try IMap.find_unsafe i acc.globals with _ -> SSet.empty in
-        IMap.add i (SSet.add x iglobals) acc.globals
+        let iglobals = try IMap.find_unsafe name acc.globals with _ -> SSet.empty in
+        IMap.add name (SSet.add x iglobals) acc.globals
     })
 
-  method private add_local loc (def_loc, i) =
+  method private add_local loc def =
     this#update_acc (fun acc -> { acc with
-      locals = LocMap.add loc (def_loc, i) acc.locals
+      locals = LocMap.add loc def acc.locals
     })
 
   (* catch params for which their catch blocks introduce bindings, and those
@@ -287,7 +312,7 @@ class scope_builder = object(this)
   method! identifier (expr: Ast.Identifier.t) =
     let loc, x = expr in
     begin match SMap.get x env with
-      | Some (def_loc, i) -> this#add_local loc (def_loc, i)
+      | Some def -> this#add_local loc def
       | None -> SMap.iter (fun _ -> this#add_global x) env
     end;
     expr
@@ -420,7 +445,7 @@ class scope_builder = object(this)
       } = expr in
 
       (* pushing *)
-      let saved_state = this#push (match id with Some (loc, x) -> [loc, x] | None -> []) in
+      let saved_state_id = this#push (match id with Some (loc, x) -> [loc, x] | None -> []) in
       run_opt this#identifier id;
 
       (* hoisting *)
@@ -438,7 +463,7 @@ class scope_builder = object(this)
       (* more pushing *)
       let saved_bad_catch_params = bad_catch_params in
       bad_catch_params <- hoist#bad_catch_params;
-      let _saved_state = this#push hoist#acc in
+      let saved_state = this#push hoist#acc in
 
       let (param_list, rest) = params in
       run_list this#function_param_pattern param_list;
@@ -454,6 +479,9 @@ class scope_builder = object(this)
       (* popping *)
       this#pop saved_state;
       bad_catch_params <- saved_bad_catch_params;
+
+      (* more popping *)
+      this#pop saved_state_id;
     end;
 
     expr

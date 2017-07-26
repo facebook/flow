@@ -9,10 +9,18 @@
  *)
 
 module LocMap: Map.S with type key = Loc.t
+module Def: sig
+  type t = {
+    loc: Loc.t;
+    scope: int;
+    name: int;
+  }
+end
 type info = {
-  locals: (Loc.t * int) LocMap.t;
+  locals: Def.t LocMap.t;
   globals: SSet.t IMap.t;
   max_distinct: int;
+  scopes: int IMap.t;
 }
 
 val program: ?ignore_toplevel:bool -> Ast.program -> info
