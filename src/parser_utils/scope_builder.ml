@@ -328,6 +328,12 @@ class scope_builder = object(this)
     let lexical_bindings = lexical_hoist#eval lexical_hoist#block stmt in
     this#with_bindings lexical_bindings super#block stmt
 
+  (* like block *)
+  method! program (program: Ast.program) =
+    let lexical_hoist = new lexical_hoister in
+    let lexical_bindings = lexical_hoist#eval lexical_hoist#program program in
+    this#with_bindings lexical_bindings super#program program
+
   method! for_in_statement (stmt: Ast.Statement.ForIn.t) =
     let open Ast.Statement.ForIn in
     let { left; right = _; body = _; each = _ } = stmt in
@@ -469,6 +475,4 @@ let program ?(ignore_toplevel=false) program =
   else
     let hoist = new hoister in
     let bindings = hoist#eval hoist#program program in
-    let lexical_hoist = new lexical_hoister in
-    let lexical_bindings = lexical_hoist#eval lexical_hoist#program program in
-    walk#eval (walk#with_bindings (lexical_bindings @ bindings) walk#program) program
+    walk#eval (walk#with_bindings bindings walk#program) program
