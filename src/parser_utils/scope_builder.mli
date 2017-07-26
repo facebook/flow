@@ -16,11 +16,17 @@ module Def: sig
     name: int;
   }
 end
+module Scope: sig
+  type t = {
+    lexical: bool;
+    parent: int option;
+  }
+end
 type info = {
-  locals: Def.t LocMap.t;
+  locals: (Def.t * int) LocMap.t;
   globals: SSet.t IMap.t;
   max_distinct: int;
-  scopes: int IMap.t;
+  scopes: Scope.t IMap.t;
 }
 
 val program: ?ignore_toplevel:bool -> Ast.program -> info

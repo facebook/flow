@@ -58,15 +58,21 @@ module Def = struct
     name: int;
   }
 end
+module Scope = struct
+  type t = {
+    lexical: bool;
+    parent: int option;
+  }
+end
 type info = {
-  (* map from identifier locations to defs *)
-  locals: Def.t LocMap.t;
+  (* map from identifier locations to their defs and their enclosing scope ids *)
+  locals: (Def.t * int) LocMap.t;
   (* map from name ids to globals they conflict with *)
   globals: SSet.t IMap.t;
   (* number of distinct name ids *)
   max_distinct: int;
-  (* map of child scopes to parent scopes *)
-  scopes: int IMap.t;
+  (* map of scope ids to local scopes *)
+  scopes: Scope.t IMap.t
 }
 module Acc = struct
   type t = info
@@ -77,19 +83,24 @@ module Acc = struct
     scopes = IMap.empty;
   }
 end
+
 class scope_builder = object(this)
   inherit [Acc.t] visitor ~init:Acc.init as super
 
   val mutable env = SMap.empty
-  val mutable scope = -1
+  val mutable current_scope_opt = None
   val mutable scope_counter = 0
-  method private new_scope parent =
-    let child = scope_counter in
+  method private new_scope scope =
+    let new_scope = scope_counter in
     scope_counter <- scope_counter + 1;
     this#update_acc (fun acc -> { acc with
-      scopes = IMap.add child parent acc.scopes
+      scopes = IMap.add new_scope scope acc.scopes
     });
-    child
+    new_scope
+  method current_scope =
+    match current_scope_opt with
+    | None -> failwith "global scope"
+    | Some i -> i
 
   val mutable counter = 0
   method private next =
@@ -109,24 +120,26 @@ class scope_builder = object(this)
         SMap.add x def map
     ) SMap.empty bindings
 
-  method private push bindings =
+  method private push ?(lexical=false) bindings =
     let save_counter = counter in
     let old_env = env in
-    let old_scope = scope in
-    scope <- this#new_scope old_scope;
-    env <- SMap.fold SMap.add (this#mk_env scope (Bindings.to_list bindings)) old_env;
-    old_scope, old_env, save_counter
+    let parent = current_scope_opt in
+    let child = this#new_scope Scope.{ lexical; parent; } in
+    current_scope_opt <- Some child;
+    env <- SMap.fold SMap.add (this#mk_env child (Bindings.to_list bindings)) old_env;
+    parent, old_env, save_counter
 
-  method private pop (old_scope, old_env, save_counter) =
-    scope <- old_scope;
+  method private pop (parent, old_env, save_counter) =
+    current_scope_opt <- parent;
     env <- old_env;
     counter <- save_counter
 
-  method with_bindings: 'a. Bindings.t -> ('a -> 'a) -> 'a -> 'a = fun bindings visit node ->
-    let saved_state = this#push bindings in
-    let node' = visit node in
-    this#pop saved_state;
-    node'
+  method with_bindings: 'a. ?lexical:bool -> Bindings.t -> ('a -> 'a) -> 'a -> 'a =
+    fun ?lexical bindings visit node ->
+      let saved_state = this#push ?lexical bindings in
+      let node' = visit node in
+      this#pop saved_state;
+      node'
 
   method private add_global x def =
     let { Def.name; _ } = def in
@@ -138,7 +151,7 @@ class scope_builder = object(this)
 
   method private add_local loc def =
     this#update_acc (fun acc -> { acc with
-      locals = LocMap.add loc def acc.locals
+      locals = LocMap.add loc (def, this#current_scope) acc.locals
     })
 
   (* catch params for which their catch blocks introduce bindings, and those
@@ -162,13 +175,13 @@ class scope_builder = object(this)
   method! block (stmt: Ast.Statement.Block.t) =
     let lexical_hoist = new lexical_hoister in
     let lexical_bindings = lexical_hoist#eval lexical_hoist#block stmt in
-    this#with_bindings lexical_bindings super#block stmt
+    this#with_bindings ~lexical:true lexical_bindings super#block stmt
 
   (* like block *)
   method! program (program: Ast.program) =
     let lexical_hoist = new lexical_hoister in
     let lexical_bindings = lexical_hoist#eval lexical_hoist#program program in
-    this#with_bindings lexical_bindings super#program program
+    this#with_bindings ~lexical:true lexical_bindings super#program program
 
   method! for_in_statement (stmt: Ast.Statement.ForIn.t) =
     let open Ast.Statement.ForIn in
@@ -180,7 +193,7 @@ class scope_builder = object(this)
       lexical_hoist#eval lexical_hoist#variable_declaration decl
     | _ -> Bindings.empty
     in
-    this#with_bindings lexical_bindings super#for_in_statement stmt
+    this#with_bindings ~lexical:true lexical_bindings super#for_in_statement stmt
 
   method! for_of_statement (stmt: Ast.Statement.ForOf.t) =
     let open Ast.Statement.ForOf in
@@ -192,7 +205,7 @@ class scope_builder = object(this)
       lexical_hoist#eval lexical_hoist#variable_declaration decl
     | _ -> Bindings.empty
     in
-    this#with_bindings lexical_bindings super#for_of_statement stmt
+    this#with_bindings ~lexical:true lexical_bindings super#for_of_statement stmt
 
   method! for_statement (stmt: Ast.Statement.For.t) =
     let open Ast.Statement.For in
@@ -204,7 +217,7 @@ class scope_builder = object(this)
       lexical_hoist#eval lexical_hoist#variable_declaration decl
     | _ -> Bindings.empty
     in
-    this#with_bindings lexical_bindings super#for_statement stmt
+    this#with_bindings ~lexical:true lexical_bindings super#for_statement stmt
 
   method! catch_clause (clause: Ast.Statement.Try.CatchClause.t') =
     let open Ast.Statement.Try.CatchClause in
@@ -319,14 +332,15 @@ module Utils = struct
     ) locals []
 
   let def_of_use { locals; _ } use =
-    LocMap.find use locals
+    let def, _ = LocMap.find use locals in
+    def
 
   let use_is_def info use =
     let def = def_of_use info use in
     def.Def.loc = use
 
   let uses_of_def { locals; _ } ?(exclude_def=false) def =
-    LocMap.fold (fun use def' uses ->
+    LocMap.fold (fun use (def', _) uses ->
       if exclude_def && def'.Def.loc = use then uses
       else if Def.(def.loc = def'.loc) then use::uses else uses
     ) locals []
@@ -339,7 +353,7 @@ module Utils = struct
     uses_of_def info ~exclude_def:true def = []
 
   let all_defs { locals; _ } =
-    LocMap.fold (fun use def defs ->
+    LocMap.fold (fun use (def, _) defs ->
       if use = def.Def.loc then def::defs else defs
     ) locals []
 
