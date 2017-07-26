@@ -309,6 +309,46 @@ class scope_builder = object(this)
     expr
 end
 
+module Utils = struct
+  type scope = int
+  type use = Loc.t
+
+  let all_uses { locals; _ } =
+    LocMap.fold (fun use _ uses ->
+      use::uses
+    ) locals []
+
+  let def_of_use { locals; _ } use =
+    LocMap.find use locals
+
+  let use_is_def info use =
+    let def = def_of_use info use in
+    def.Def.loc = use
+
+  let uses_of_def { locals; _ } ?(exclude_def=false) def =
+    LocMap.fold (fun use def' uses ->
+      if exclude_def && def'.Def.loc = use then uses
+      else if Def.(def.loc = def'.loc) then use::uses else uses
+    ) locals []
+
+  let uses_of_use info ?exclude_def use =
+    let def = def_of_use info use in
+    uses_of_def info ?exclude_def def
+
+  let def_is_unused info def =
+    uses_of_def info ~exclude_def:true def = []
+
+  let all_defs { locals; _ } =
+    LocMap.fold (fun use def defs ->
+      if use = def.Def.loc then def::defs else defs
+    ) locals []
+
+  let defs_of_scope info scope =
+    let defs = all_defs info in
+    List.filter (fun def -> scope = def.Def.scope) defs
+
+end
+
 let program ?(ignore_toplevel=false) program =
   let walk = new scope_builder in
   if ignore_toplevel then walk#eval walk#program program
