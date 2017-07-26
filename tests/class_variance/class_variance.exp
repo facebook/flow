@@ -1,0 +1,6 @@
+Error: test.js:5
+  5: class B<+T> extends A<T> {} // Error: T used invariantly.
+                           ^ T. invariant position (expected `T` to occur only covariantly)
+
+
+Found 1 error

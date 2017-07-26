@@ -3363,6 +3363,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, PolyT (tps, _)), VarianceCheckT(_, ts, polarity) ->
       variance_check cx ~trace polarity (tps, ts)
 
+    (* When we are checking the polarity of a super class where the super class has no type
+       args, we end up generating this constraint. Since it has no type args, we never resolve to
+       a PolyT, but we still want to check the polarity in this case. *)
+    | DefT (_, ClassT _), VarianceCheckT(_, [], polarity) ->
+        check_polarity cx ~trace polarity l
+
     | DefT (_, PolyT (tparams, _)), TypeAppVarianceCheckT (_, reason_tapp, targs) ->
       let minimum_arity = poly_minimum_arity tparams in
       let maximum_arity = List.length tparams in
@@ -6451,7 +6457,8 @@ and check_polarity cx ?trace polarity = function
   | DefT (_, TypeT t)
     -> check_polarity cx ?trace Neutral t
 
-  | DefT (_, InstanceT (_, _, _, instance)) ->
+  | DefT (_, InstanceT (_, super, _, instance)) ->
+    check_polarity cx ?trace polarity super;
     check_polarity_propmap cx ?trace instance.fields_tmap;
     check_polarity_propmap cx ?trace instance.methods_tmap
 
