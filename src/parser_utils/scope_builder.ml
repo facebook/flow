@@ -379,6 +379,42 @@ class scope_builder = object(this)
         []
     ) super#catch_clause clause
 
+  (* helper for function params and body *)
+  method private lambda params body =
+    let open Ast.Function in
+
+    (* hoisting *)
+    let hoist = new hoister in
+    begin
+      let param_list, _rest = params in
+      run_list hoist#function_param_pattern param_list;
+      match body with
+        | BodyBlock (_loc, block) ->
+          run hoist#block block
+        | _ ->
+          ()
+    end;
+
+    (* pushing *)
+    let saved_bad_catch_params = bad_catch_params in
+    bad_catch_params <- hoist#bad_catch_params;
+    let saved_state = this#push hoist#acc in
+
+    let (param_list, rest) = params in
+    run_list this#function_param_pattern param_list;
+    run_opt this#function_rest_element rest;
+
+    begin match body with
+      | BodyBlock (_, block) ->
+        run this#block block
+      | BodyExpression expr ->
+        run this#expression expr
+    end;
+
+    (* popping *)
+    this#pop saved_state;
+    bad_catch_params <- saved_bad_catch_params
+
   method! function_declaration (expr: Ast.Function.t) =
     let contains_with_or_eval =
       let visit = new with_or_eval_visitor in
@@ -394,37 +430,7 @@ class scope_builder = object(this)
 
       run_opt this#identifier id;
 
-      (* hoisting *)
-      let hoist = new hoister in
-      begin
-        let param_list, _rest = params in
-        run_list hoist#function_param_pattern param_list;
-        match body with
-        | BodyBlock (_loc, block) ->
-          run hoist#block block
-        | _ ->
-          ()
-      end;
-
-      (* pushing *)
-      let saved_bad_catch_params = bad_catch_params in
-      bad_catch_params <- hoist#bad_catch_params;
-      let saved_state = this#push hoist#acc in
-
-      let (param_list, rest) = params in
-      run_list this#function_param_pattern param_list;
-      run_opt this#function_rest_element rest;
-
-      begin match body with
-        | BodyBlock (_, block) ->
-          run this#block block;
-        | BodyExpression expr ->
-          run this#expression expr;
-      end;
-
-      (* popping *)
-      this#pop saved_state;
-      bad_catch_params <- saved_bad_catch_params;
+      this#lambda params body;
     end;
 
     expr
@@ -445,43 +451,13 @@ class scope_builder = object(this)
       } = expr in
 
       (* pushing *)
-      let saved_state_id = this#push (match id with Some (loc, x) -> [loc, x] | None -> []) in
+      let saved_state = this#push (match id with Some (loc, x) -> [loc, x] | None -> []) in
       run_opt this#identifier id;
 
-      (* hoisting *)
-      let hoist = new hoister in
-      begin
-        let param_list, _rest = params in
-        run_list hoist#function_param_pattern param_list;
-        match body with
-        | BodyBlock (_loc, block) ->
-          run hoist#block block
-        | _ ->
-          ()
-      end;
-
-      (* more pushing *)
-      let saved_bad_catch_params = bad_catch_params in
-      bad_catch_params <- hoist#bad_catch_params;
-      let saved_state = this#push hoist#acc in
-
-      let (param_list, rest) = params in
-      run_list this#function_param_pattern param_list;
-      run_opt this#function_rest_element rest;
-
-      begin match body with
-        | BodyBlock (_, block) ->
-          run this#block block
-        | BodyExpression expr ->
-          run this#expression expr
-      end;
+      this#lambda params body;
 
       (* popping *)
       this#pop saved_state;
-      bad_catch_params <- saved_bad_catch_params;
-
-      (* more popping *)
-      this#pop saved_state_id;
     end;
 
     expr
