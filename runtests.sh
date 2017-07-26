@@ -16,6 +16,7 @@ show_help() {
 }
 
 export IN_FLOW_TEST=1
+export FLOW_LOG_LEVEL=debug
 
 OPTIND=1
 record=0
