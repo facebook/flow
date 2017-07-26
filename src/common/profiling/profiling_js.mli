@@ -14,7 +14,7 @@
 
  val start_timer: timer:string -> t -> t
  val stop_timer: timer:string -> t -> t
- val get_finished_timer: timer:string -> t -> (float * float) option
+ val get_finished_timer: timer:string -> t -> (float * float * float * float) option
 
  val sample_memory: metric:string -> value:float -> t -> t
 

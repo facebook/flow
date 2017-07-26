@@ -65,12 +65,17 @@ let with_timer ?options timer profiling f =
   (match options with
   | Some options when Options.should_profile options ->
       (match Profiling_js.get_finished_timer ~timer profiling with
-      | Some (start_wall_age, wall_duration) ->
-          prerr_endlinef
-            "TimingEvent `%s`: start_wall_age: %f; wall_duration: %f"
-            timer
+      | Some (start_wall_age, wall_duration, cpu_usage, flow_cpu_usage) ->
+          let stats = Printf.sprintf
+            "start_wall_age: %f; wall_duration: %f; cpu_usage: %f; flow_cpu_usage: %f"
             start_wall_age
             wall_duration
+            cpu_usage
+            flow_cpu_usage in
+          prerr_endlinef
+            "TimingEvent `%s`: %s"
+            timer
+            stats
       | _ -> ());
   | _ -> ());
 
