@@ -57,16 +57,16 @@ that set will be acceptable.
 
 ```js
 // @flow
-function method(val: 1 | 2 | 3 | 4 | 5) {
+function f(param: 1 | 2 | 3 | 4 | 5) {
   // ...
 }
 
-declare var numsA:  1 |  2;
-declare var numsB: 42 | 75;
+declare var oneOrTwo: 1 |  2; // Subset of the input parameters type.
+declare var fiveOrSix: 5 | 6; // Not a subset of the input parameters type.
 
-method(numsA); // Works!
+f(oneOrTwo); // Works!
 // $ExpectError
-method(numsB); // Error!
+f(fiveOrSix); // Error!
 ```
 
 ## Subtypes of complex types <a class="toc" id="toc-subtypes-of-complex-types" href="#toc-subtypes-of-complex-types"></a>
