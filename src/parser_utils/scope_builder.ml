@@ -114,7 +114,7 @@ class scope_builder = object(this)
     let old_env = env in
     let old_scope = scope in
     scope <- this#new_scope old_scope;
-    env <- SMap.fold SMap.add (this#mk_env scope (List.rev bindings)) old_env;
+    env <- SMap.fold SMap.add (this#mk_env scope (Bindings.to_list bindings)) old_env;
     old_scope, old_env, save_counter
 
   method private pop (old_scope, old_env, save_counter) =
@@ -178,7 +178,7 @@ class scope_builder = object(this)
     let lexical_bindings = match left with
     | LeftDeclaration (_, decl) ->
       lexical_hoist#eval lexical_hoist#variable_declaration decl
-    | _ -> []
+    | _ -> Bindings.empty
     in
     this#with_bindings lexical_bindings super#for_in_statement stmt
 
@@ -190,7 +190,7 @@ class scope_builder = object(this)
     let lexical_bindings = match left with
     | LeftDeclaration (_, decl) ->
       lexical_hoist#eval lexical_hoist#variable_declaration decl
-    | _ -> []
+    | _ -> Bindings.empty
     in
     this#with_bindings lexical_bindings super#for_of_statement stmt
 
@@ -202,7 +202,7 @@ class scope_builder = object(this)
     let lexical_bindings = match init with
     | Some (InitDeclaration (_, decl)) ->
       lexical_hoist#eval lexical_hoist#variable_declaration decl
-    | _ -> []
+    | _ -> Bindings.empty
     in
     this#with_bindings lexical_bindings super#for_statement stmt
 
@@ -215,10 +215,11 @@ class scope_builder = object(this)
       let _, patt = param in
       match patt with
       | Identifier { Identifier.name; _ } ->
-        let loc, x = name in
-        if List.mem loc bad_catch_params then [] else [loc, x]
+        let loc, _x = name in
+        if List.mem loc bad_catch_params then Bindings.empty else
+          Bindings.singleton name
       | _ -> (* TODO *)
-        []
+        Bindings.empty
     ) super#catch_clause clause
 
   (* helper for function params and body *)
@@ -293,7 +294,10 @@ class scope_builder = object(this)
       } = expr in
 
       (* pushing *)
-      let saved_state = this#push (match id with Some (loc, x) -> [loc, x] | None -> []) in
+      let saved_state = this#push (match id with
+        | Some name -> Bindings.singleton name
+        | None -> Bindings.empty
+      ) in
       run_opt this#identifier id;
 
       this#lambda params body;

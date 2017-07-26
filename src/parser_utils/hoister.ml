@@ -19,13 +19,30 @@ open Flow_ast_visitor
 
    TODO: Ideally implemented as a fold, not a map.
 *)
-module Bindings = struct
-  type t = (Loc.t * string) list
+module Bindings: sig
+  type t
+  type entry = Loc.t * string
+  val empty: t
+  val singleton: entry -> t
+  val add: entry -> t -> t
+  val push: t -> t -> t
+  val exists: (entry -> bool) -> t -> bool
+  val to_list: t -> entry list
+end = struct
+  type entry = Loc.t * string
+  type t = entry list
+  let empty = []
+  let singleton x = [x]
+  let add = List.cons
+  let push = List.append
+  let exists = List.exists
+  let to_list = List.rev
 end
-class hoister = object(this)
-  inherit [Bindings.t] visitor ~init:[] as super
 
-  method private add_binding (loc, x) =
+class hoister = object(this)
+  inherit [Bindings.t] visitor ~init:Bindings.empty as super
+
+  method private add_binding entry =
     (* `event` is a global in old IE and jsxmin lazily avoids renaming it. it
        should be safe to shadow it, i.e. `function(event){event.target}` can be
        renamed to `function(a){a.target}`, because code relying on the global
@@ -34,8 +51,9 @@ class hoister = object(this)
        compatible with renaming.
 
        TODO[jsxmin]: remove this. *)
+    let _loc, x = entry in
     if x = "event" then () else
-      this#update_acc (List.cons (loc, x))
+      this#update_acc (Bindings.add entry)
 
   val mutable bad_catch_params = []
   method bad_catch_params = bad_catch_params
@@ -53,7 +71,7 @@ class hoister = object(this)
     let open Ast.Statement.Try.CatchClause in
     let { param; body } = clause in
     let saved_bindings = this#acc in
-    this#set_acc [];
+    this#set_acc Bindings.empty;
     let _, block = body in
     let _ = this#block block in
     let local_bindings = this#acc in
@@ -62,11 +80,11 @@ class hoister = object(this)
     begin match patt with
     | Identifier { Identifier.name; _ } ->
       let loc, x = name in
-      if List.exists (fun (_loc, x') -> x = x') local_bindings
+      if Bindings.exists (fun (_loc, x') -> x = x') local_bindings
       then bad_catch_params <- loc :: bad_catch_params
     | _ -> ();
     end;
-    this#set_acc (local_bindings @ saved_bindings);
+    this#set_acc (Bindings.push local_bindings saved_bindings);
     clause
 
   (* Ignore class declarations, since they are lexical bindings (thus not
@@ -111,10 +129,10 @@ class hoister = object(this)
 end
 
 class lexical_hoister = object(this)
-  inherit [Bindings.t] visitor ~init:[] as super
+  inherit [Bindings.t] visitor ~init:Bindings.empty as super
 
-  method private add_binding (loc, x) =
-    this#update_acc (List.cons (loc, x))
+  method private add_binding entry =
+    this#update_acc (Bindings.add entry)
 
   (* Ignore all statements except variable declarations, class declarations, and
      import declarations. The ignored statements cannot contain lexical
