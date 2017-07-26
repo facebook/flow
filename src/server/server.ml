@@ -87,39 +87,53 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       else Hh_logger.info "Status: Error";
     flush stdout
 
-(* combine error maps into a single error list *)
-let collate_errors =
-  let open Errors in
-  let collate errset acc =
-    FilenameMap.fold (fun _key -> ErrorSet.union) errset acc
-  in
-  let add_unused_suppression_errors suppressions errors =
-    (* For each unused suppression, create an error *)
-    Error_suppressions.unused suppressions
-    |> List.fold_left
-      (fun errset loc ->
-        let err =
-          let msg = Flow_error.EUnusedSuppression loc in
-          let source_file = match Loc.source loc with Some x -> x | None -> Loc.SourceFile "-" in
-          Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file msg in
-        Errors.ErrorSet.add err errset
-      )
-      errors
-  in
-  fun { ServerEnv.local_errors; merge_errors; suppressions; lint_settings; } ->
+  (* combine error maps into a single error set and a filtered warning map *)
+  let collate_errors_separate_warnings =
+    let open Errors in
     let open Error_suppressions in
-    let suppressions = union_suppressions suppressions in
+    let add_unused_suppression_errors suppressions errors =
+      (* For each unused suppression, create an error *)
+      Error_suppressions.unused suppressions
+      |> List.fold_left
+        (fun errset loc ->
+          let err =
+            let msg = Flow_error.EUnusedSuppression loc in
+            let source_file = match Loc.source loc with Some x -> x | None -> Loc.SourceFile "-" in
+            Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file msg in
+          Errors.ErrorSet.add err errset
+        )
+        errors
+    in
+    let acc_fun lint_settings filename file_errs
+        (errors, warnings, suppressed_errors, suppressions) =
+      let file_errs, file_warns, file_suppressed_errors, suppressions =
+        filter_suppressed_errors suppressions lint_settings file_errs in
+      let errors = ErrorSet.union file_errs errors in
+      let warnings = FilenameMap.add filename file_warns warnings in
+      let suppressed_errors = List.rev_append file_suppressed_errors suppressed_errors in
+      (errors, warnings, suppressed_errors, suppressions)
+    in
+    fun { ServerEnv.local_errors; merge_errors; suppressions; lint_settings; } ->
+      let suppressions = union_suppressions suppressions in
 
       (* union the errors from all files together, filtering suppressed errors *)
-      let errors = ErrorSet.empty
-        |> collate local_errors
-        |> collate merge_errors
-      in
       let lint_settings = LintSettingsMap.union_settings lint_settings in
+      let acc_fun = acc_fun lint_settings in
       let errors, warnings, suppressed_errors, suppressions =
-        filter_suppressed_errors suppressions lint_settings errors in
+        (ErrorSet.empty, FilenameMap.empty, [], suppressions)
+        |> FilenameMap.fold acc_fun local_errors
+        |> FilenameMap.fold acc_fun merge_errors
+      in
+
       let errors = add_unused_suppression_errors suppressions errors in
       errors, warnings, suppressed_errors
+
+  (* combine error maps into a single error set and a single warning set *)
+  let collate_errors errors =
+    let open Errors in
+    let errors, warning_map, suppressed_errors = collate_errors_separate_warnings errors in
+    let warnings = FilenameMap.fold (fun _key -> ErrorSet.union) warning_map ErrorSet.empty in
+    (errors, warnings, suppressed_errors)
 
   let convert_errors ~errors ~warnings =
     if Errors.ErrorSet.is_empty errors && Errors.ErrorSet.is_empty warnings then
@@ -694,7 +708,7 @@ let collate_errors =
     let workers = genv.ServerEnv.workers in
     match msg with
       | Persistent_connection_prot.Subscribe ->
-          let current_errors, current_warnings, _ = collate_errors !env.errors in
+          let current_errors, current_warnings, _ = collate_errors_separate_warnings !env.errors in
           let new_connections = Persistent_connection.subscribe_client
             !env.connections client ~current_errors ~current_warnings
           in
@@ -705,6 +719,18 @@ let collate_errors =
           let wrapped = Persistent_connection_prot.AutocompleteResult (results, id) in
           Persistent_connection.send_message wrapped client;
           !env
+      | Persistent_connection_prot.DidOpen filenames ->
+          Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
+          let current_errors, current_warnings, _ = collate_errors_separate_warnings !env.errors in
+          let new_connections = Persistent_connection.client_did_open
+            !env.connections client ~filenames ~current_errors ~current_warnings in
+          { !env with connections = new_connections }
+      | Persistent_connection_prot.DidClose filenames ->
+          Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
+          let current_errors, current_warnings, _ = collate_errors_separate_warnings !env.errors in
+          let new_connections = Persistent_connection.client_did_close
+            !env.connections client ~filenames ~current_errors ~current_warnings in
+          { !env with connections = new_connections }
 
   let should_close = function
     | { ServerProt.command = ServerProt.CONNECT; _ } -> false

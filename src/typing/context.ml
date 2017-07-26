@@ -419,13 +419,6 @@ let make_export_map cx tmap =
 
 (* Copy context from cx_other to cx *)
 let merge_into cx cx_other =
-  (* Map.union: which is faster, union M N or union N M when M > N?
-     union X Y = fold add X Y which means iterate over X, adding to Y
-     So running time is roughly X * log Y.
-
-     Now, when M > N, we have M * log N > N * log M.
-     So do union N M as long as N may override M for overlapping keys.
-  *)
   set_envs cx (IMap.union (envs cx_other) (envs cx));
   set_property_maps cx (
     Type.Properties.Map.union (property_maps cx_other) (property_maps cx));

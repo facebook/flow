@@ -57,6 +57,11 @@ module HumanReadable: ClientProtocol = struct
       | "autocomplete"::file::contents ->
           let fileinput = File_input.FileContent (Some file, String.concat " " contents) in
           Some (Prot.Autocomplete (fileinput, 0 (* use a dummy id *)))
+      (* Ensure files is not empty *)
+      | "open"::f::fs ->
+        Some (Prot.DidOpen (f, fs))
+      | "close"::f::fs ->
+        Some (Prot.DidClose (f, fs))
       | _ ->
         prerr_endline ("Command not recognized: " ^ line); None
 
@@ -75,10 +80,12 @@ module HumanReadable: ClientProtocol = struct
       let err_count = Errors.ErrorSet.cardinal errors in
       let warn_count = Errors.ErrorSet.cardinal warnings in
       print_endline ("Received " ^ (string_of_int err_count) ^ " errors and "
-        ^ (string_of_int warn_count) ^ "warnings")
+        ^ (string_of_int warn_count) ^ " warnings")
     | Prot.StartRecheck -> print_endline "Start recheck"
     | Prot.EndRecheck -> print_endline "End recheck"
     | Prot.AutocompleteResult (result, _ (* ignore id *)) -> handle_autocomplete result
+    | Prot.DidOpenAck -> print_endline "Received file open ack"
+    | Prot.DidCloseAck -> print_endline "Received file close ack"
 
 end
 
@@ -91,17 +98,15 @@ module VeryUnstable: ClientProtocol = struct
     Http_lite.write_message stdout json_string;
     prerr_endline "sent diagnostics notification"
 
-  let print_start_recheck () =
+  let print_message message () =
     []
-      |> Json_rpc.jsonrpcize_notification "startRecheck"
+      |> Json_rpc.jsonrpcize_notification message
       |> Hh_json.json_to_string
       |> Http_lite.write_message stdout
 
-  let print_end_recheck () =
-    []
-      |> Json_rpc.jsonrpcize_notification "endRecheck"
-      |> Hh_json.json_to_string
-      |> Http_lite.write_message stdout
+  let print_start_recheck = print_message "startRecheck"
+
+  let print_end_recheck = print_message "endRecheck"
 
   let print_autocomplete response id =
     AutocompleteService_js.autocomplete_response_to_json ~strip_root:None response
@@ -115,6 +120,10 @@ module VeryUnstable: ClientProtocol = struct
     | Prot.StartRecheck -> print_start_recheck ()
     | Prot.EndRecheck -> print_end_recheck ()
     | Prot.AutocompleteResult (result, id) -> print_autocomplete result id
+    (* No need to send the client anything; these acks are to prevent deadlocks
+     * involving the buffers between the ide command and the flow server *)
+    | Prot.DidOpenAck -> ()
+    | Prot.DidCloseAck -> ()
 
   let handle_autocomplete id = Hh_json.(function
     | [JSON_String file; JSON_Number line_str; JSON_Number column_str; JSON_String contents] ->
@@ -129,6 +138,37 @@ module VeryUnstable: ClientProtocol = struct
           "Incorrect arguments passed to autocomplete. Should be filepath, line, column, contents";
         None
   )
+
+  (* Converts a list of json strings into a non-empty string list.
+   * Returns Some files on success; None otherwise. *)
+  let unjsonify_files =
+    let unjsonify_file files = Hh_json.(function
+      | JSON_String file ->
+        let file = get_path_of_file file in
+        Option.bind files (fun files -> Some (file::files))
+      (* Fail on a non-string argument. *)
+      | _ -> None
+    ) in
+    fun files ->
+      match List.fold_left unjsonify_file (Some []) files with
+        | None -> None
+        (* Fail on an empty argument list. *)
+        | Some [] -> None
+        | Some (f::fs) -> Some (f, fs)
+
+  let handle_did_open files =
+    match unjsonify_files files with
+      | Some processed_files -> Some (Prot.DidOpen processed_files)
+      | None ->
+        prerr_endline "Incorrect arguments passed to didOpen. Should be filepath, ...filepaths";
+        None
+
+  let handle_did_close files =
+    match unjsonify_files files with
+      | Some processed_files -> Some (Prot.DidClose processed_files)
+      | None ->
+        prerr_endline "Incorrect arguments passed to didClose. Should be filepath, ...filepaths";
+        None
 
   let server_request_of_stdin_message buffered_stdin =
     let message = try
@@ -147,6 +187,10 @@ module VeryUnstable: ClientProtocol = struct
                 Some Prot.Subscribe
             | Json_rpc.Obj ("autocomplete", params, Some id) ->
                 handle_autocomplete id params
+            | Json_rpc.Obj ("didOpen", params, None) ->
+              handle_did_open params
+            | Json_rpc.Obj ("didClose", params, None) ->
+              handle_did_close params
             | Json_rpc.Obj (method_name, _, id) ->
                 let id_str = match id with None -> "no id" | Some _ -> "an id" in
                 prerr_endline
@@ -180,19 +224,25 @@ end = struct
     }
 
   let add_response t response =
+    let open Prot in
     match response, t.outstanding with
-      | Prot.Errors _, _
-      | Prot.StartRecheck, _
-      | Prot.EndRecheck, _ ->
+      | Errors _, _
+      | StartRecheck, _
+      | EndRecheck, _ ->
           t
-      | Prot.AutocompleteResult (_, response_id), Some (Prot.Autocomplete (_, request_id)) ->
+      | AutocompleteResult (_, response_id), Some (Autocomplete (_, request_id)) ->
           if response_id <> request_id then begin
             failwith "Internal error: request and response id mismatch."
           end;
           { t with outstanding = None }
-      | Prot.AutocompleteResult _, Some _ ->
+      | DidOpenAck, Some (DidOpen _) ->
+          { t with outstanding = None }
+      | DidCloseAck, Some (DidClose _) ->
+          { t with outstanding = None }
+      (* Explicit matches on response instead of `_` to make adding to the protocol easier. *)
+      | (AutocompleteResult _ | DidOpenAck | DidCloseAck), Some _ ->
           failwith "Internal error: received a mismatched response type"
-      | Prot.AutocompleteResult _, None ->
+      | (AutocompleteResult _ | DidOpenAck | DidCloseAck), None ->
           failwith "Internal error: received a response when there was no outstanding request."
 
   let ready_request t =
@@ -205,7 +255,7 @@ end = struct
                 let outstanding = match req with
                   (* We do not expect a response from `subscribe` *)
                   | Prot.Subscribe -> None
-                  | _ -> Some req
+                  | Prot.Autocomplete _ | Prot.DidOpen _ | Prot.DidClose _ -> Some req
                 in
                 (Some req, { outstanding; queue = q })
         end

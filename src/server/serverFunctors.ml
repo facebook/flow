@@ -34,6 +34,11 @@ module type SERVER_PROGRAM = sig
     Errors.ErrorSet.t * (* errors *)
       Errors.ErrorSet.t * (* warnings *)
       (Errors.error * Loc.LocSet.t) list (* suppressed errors *)
+  val collate_errors_separate_warnings :
+    errors ->
+    Errors.ErrorSet.t * (* errors *)
+      Errors.ErrorSet.t FilenameMap.t * (* warnings *)
+      (Errors.error * Loc.LocSet.t) list (* suppressed errors *)
 end
 
 (*****************************************************************************)
@@ -139,7 +144,7 @@ end = struct
       Persistent_connection.send_start_recheck env.connections;
       let env = Program.recheck genv env updates in
       Persistent_connection.send_end_recheck env.connections;
-      let errors, warnings, _ = Program.collate_errors env.errors in
+      let errors, warnings, _ = Program.collate_errors_separate_warnings env.errors in
       Persistent_connection.update_clients env.connections ~errors ~warnings;
       recheck_loop ~dfind genv env
     end

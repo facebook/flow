@@ -293,6 +293,7 @@ begin library "flow-server-protocol"
   requires = [
     "flow-common"
     "flow-common-errors"
+    "flow-common-utils"
     "flow-parser"
     "flow-server-utils"
     "flow-services-autocomplete"
@@ -335,10 +336,10 @@ begin library "flow-server"
     "hh-dfind"
     "hh-procs"
     "hh-socket"
-    "tp-core"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "tp-core"
   ]
 end
 
@@ -356,6 +357,7 @@ begin library "flow-server-env"
     "hh-dfind"
     "hh-procs"
     "hh-utils-collections"
+    "tp-core"
   ]
 end
 
@@ -447,6 +449,7 @@ begin library "flow-services-inference"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "tp-core"
   ]
 end
 
