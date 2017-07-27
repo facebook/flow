@@ -288,7 +288,7 @@ and gc_use cx state = function
   | SetPropT(_, _, t) -> gc cx state t
   | SetProtoT (_, t) -> gc cx state t
   | SpecializeT (_, _, _, ts, t) -> List.iter (gc cx state) ts; gc cx state t
-  | ObjSpreadT (_, tool, state', t) ->
+  | ObjSpreadT (_, _, tool, state', t) ->
       gc_object_spread cx state tool state';
       gc cx state t
   | SubstOnPredT (_, _, t) -> gc cx state t
@@ -431,7 +431,7 @@ and gc_object_spread =
       gc_slice cx state slice;
       gc_resolve cx state tool
   in
-  fun cx state tool {todo_rev; acc; make_exact=_} ->
+  fun cx state tool {todo_rev; acc} ->
     gc_tool cx state tool;
     List.iter (gc cx state) todo_rev;
     List.iter (gc_resolved cx state) acc

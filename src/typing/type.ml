@@ -452,7 +452,12 @@ module rec TypeTerm : sig
 
     | ReactKitT of reason * React.tool
 
-    | ObjSpreadT of reason * ObjectSpread.tool * ObjectSpread.state * t_out
+    | ObjSpreadT of
+        reason
+        * ObjectSpread.options
+        * ObjectSpread.tool
+        * ObjectSpread.state
+        * t_out
 
     | ChoiceKitUseT of reason * choice_use_tool
 
@@ -827,7 +832,7 @@ module rec TypeTerm : sig
   | PropertyType of string
   | ElementType of t
   | Bind of t
-  | SpreadType of bool * t list
+  | SpreadType of ObjectSpread.options * t list
   | ValuesType
 
   and type_map =
@@ -1541,8 +1546,16 @@ and ObjectSpread : sig
   and state = {
     todo_rev: TypeTerm.t list;
     acc: resolved list;
-    make_exact: bool;
   }
+
+  and options = {
+    make_exact: bool;
+    merge_mode: merge_mode;
+  }
+
+  and merge_mode =
+    | DefaultMM
+    | IgnoreExactAndOwnMM
 
   (* A union type resolves to a resolved spread with more than one element *)
   and resolved = slice Nel.t
@@ -1897,7 +1910,7 @@ and reason_of_use_t = function
   | SetPropT (reason,_,_) -> reason
   | SetProtoT (reason,_) -> reason
   | SpecializeT(reason,_,_,_,_) -> reason
-  | ObjSpreadT (reason, _, _, _) -> reason
+  | ObjSpreadT (reason, _, _, _, _) -> reason
   | SubstOnPredT (reason, _, _) -> reason
   | SuperT (reason,_) -> reason
   | TestPropT (reason, _, _) -> reason
@@ -2051,7 +2064,8 @@ and mod_reason_of_use_t f = function
   | SetProtoT (reason, t) -> SetProtoT (f reason, t)
   | SpecializeT(reason_op, reason_tapp, cache, ts, t) ->
       SpecializeT (f reason_op, reason_tapp, cache, ts, t)
-  | ObjSpreadT (reason, tool, state, k) -> ObjSpreadT (f reason, tool, state, k)
+  | ObjSpreadT (reason, options, tool, state, k) ->
+      ObjSpreadT (f reason, options, tool, state, k)
   | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
   | SuperT (reason, inst) -> SuperT (f reason, inst)
   | TestPropT (reason, n, t) -> TestPropT (f reason, n, t)

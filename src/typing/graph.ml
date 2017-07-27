@@ -361,7 +361,7 @@ and parts_of_use_t cx = function
 | SetPropT (_, _, t) -> ["t", Def t]
 | SetProtoT (_, t) -> ["t", Def t]
 | SpecializeT (_, _, _, args, out) -> ("out", Def out) :: list_parts args
-| ObjSpreadT (_, _, _, out) -> ["out", Def out]
+| ObjSpreadT (_, _, _, _, out) -> ["out", Def out]
 | SubstOnPredT (_, _, t) -> ["t", Def t]
 | SuperT _ -> []
 | TestPropT (_, _, out) -> ["out", Def out]

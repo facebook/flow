@@ -665,7 +665,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "cont", JSON_Object (_json_of_cont json_cx cont);
     ]
 
-  | ObjSpreadT (_, _, _, tout) -> [
+  | ObjSpreadT (_, _, _, _, tout) -> [
       "t_out", _json_of_t json_cx tout;
     ]
 
@@ -1018,9 +1018,9 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | Bind t -> JSON_Object [
       "thisType", _json_of_t json_cx t
     ]
-  | SpreadType (exact, ts) -> JSON_Object [
+  | SpreadType ({ObjectSpread.make_exact; _}, ts) -> JSON_Object [
       "spread", JSON_Array (List.map (_json_of_t json_cx) ts);
-      "exact", JSON_Bool exact;
+      "exact", JSON_Bool make_exact;
     ]
   | ValuesType -> JSON_Object [
       "values", JSON_Bool true;
@@ -1739,14 +1739,20 @@ and dump_use_t_ (depth, tvars) cx t =
       | Resolve tool -> spf "Resolve %s" (resolve tool)
       | Super (s, tool) -> spf "Super (%s, %s)" (slice s) (resolve tool)
     in
-    let state {todo_rev; acc; make_exact} =
-      spf "{todo_rev=[%s]; acc=[%s]; make_exact=%b}"
+    let state {todo_rev; acc} =
+      spf "{todo_rev=[%s]; acc=[%s]}"
         (String.concat "; " (List.map kid todo_rev))
         (String.concat "; " (List.map resolved acc))
-        make_exact
     in
-    fun t s ->
-      spf "(%s, %s)" (tool t) (state s)
+    let options {make_exact; merge_mode} =
+      spf "{make_exact=%b; merge_mode=%s}"
+        make_exact
+        (match merge_mode with
+          | DefaultMM -> "Default"
+          | IgnoreExactAndOwnMM -> "IgnoreExactAndOwn")
+    in
+    fun o t s ->
+      spf "(%s, %s, %s)" (options o) (tool t) (state s)
   in
 
   if depth = 0 then string_of_use_ctor t
@@ -1870,8 +1876,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | SetProtoT (_, arg) -> p ~extra:(kid arg) t
   | SpecializeT (_, _, cache, args, ret) -> p ~extra:(spf "%s, [%s], %s"
       (specialize_cache cache) (String.concat "; " (List.map kid args)) (kid ret)) t
-  | ObjSpreadT (_, tool, state, arg) -> p ~extra:(spf "%s, %s"
-      (object_spread tool state)
+  | ObjSpreadT (_, options, tool, state, arg) -> p ~extra:(spf "%s, %s"
+      (object_spread options tool state)
       (kid arg)) t
   | TestPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)

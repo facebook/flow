@@ -677,12 +677,12 @@ class ['a] t = object(self)
         let react_tool' = self#react_tool cx map_cx react_tool in
         if react_tool' == react_tool then t
         else ReactKitT (r, react_tool')
-    | ObjSpreadT (r, tool, state, t') ->
+    | ObjSpreadT (r, options, tool, state, t') ->
         let tool' = self#object_spread_tool cx map_cx tool in
         let state' = self#object_spread_state cx map_cx state in
         let t'' = self#type_ cx map_cx t' in
         if tool' == tool && state' == state && t'' == t' then t
-        else ObjSpreadT (r, tool', state', t'')
+        else ObjSpreadT (r, options, tool', state', t'')
     | ChoiceKitUseT (r, choice_use_tool) ->
         let choice_use_tool' = self#choice_use_tool cx map_cx choice_use_tool in
         if choice_use_tool' == choice_use_tool then t
@@ -914,7 +914,7 @@ class ['a] t = object(self)
     let todo_rev' = ListUtils.ident_map (self#type_ cx map_cx) t.todo_rev in
     let acc' = ListUtils.ident_map (self#resolved cx map_cx) t.acc in
     if todo_rev' == t.todo_rev && acc' == t.acc then t
-    else {todo_rev = todo_rev'; acc = acc'; make_exact = t.make_exact}
+    else {todo_rev = todo_rev'; acc = acc'}
 
   method intersection_preprocess_tool cx map_cx t =
     match t with

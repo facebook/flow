@@ -2719,8 +2719,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          reposition the entire union type. *)
       rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
-    | DefT (_, UnionT _), ObjSpreadT (reason_op, tool, state, tout) ->
-      object_spread cx trace reason_op tool state tout l
+    | DefT (_, UnionT _), ObjSpreadT (reason_op, options, tool, state, tout) ->
+      object_spread cx trace reason_op options tool state tout l
 
     (* cases where there is no loss of precision *)
 
@@ -2885,8 +2885,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, IntersectionT _), ReposLowerT (reason_op, u) ->
       rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
-    | DefT (_, IntersectionT _), ObjSpreadT (reason_op, tool, state, tout) ->
-      object_spread cx trace reason_op tool state tout l
+    | DefT (_, IntersectionT _), ObjSpreadT (reason_op, options, tool, state, tout) ->
+      object_spread cx trace reason_op options tool state tout l
 
     (** All other pairs with an intersection lower bound come here. Before
         further processing, we ensure that the upper bound is concretized. See
@@ -4762,8 +4762,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* object type spread *)
     (**********************)
 
-    | _, ObjSpreadT (reason_op, tool, state, tout) ->
-      object_spread cx trace reason_op tool state tout l
+    | _, ObjSpreadT (reason_op, options, tool, state, tout) ->
+      object_spread cx trace reason_op options tool state tout l
 
     (**************************************************)
     (* function types can be mapped over a structure  *)
@@ -6393,11 +6393,11 @@ and eval_destructor cx ~trace reason curr_t s i =
         | PropertyType x -> GetPropT(reason, Named (reason, x), tvar)
         | ElementType t -> GetElemT(reason, t, tvar)
         | Bind t -> BindT(reason, mk_methodcalltype t [] tvar, true)
-        | SpreadType (make_exact, todo_rev) ->
+        | SpreadType (options, todo_rev) ->
             let open ObjectSpread in
             let tool = Resolve Next in
-            let state = { todo_rev; acc = []; make_exact } in
-            ObjSpreadT (reason, tool, state, tvar)
+            let state = { todo_rev; acc = [] } in
+            ObjSpreadT (reason, options, tool, state, tvar)
         | ValuesType -> GetValuesT (reason, tvar)
         )
     )
@@ -9960,7 +9960,7 @@ and object_spread =
   in
 
   (* Compute spread result: slice * slice -> slice *)
-  let spread2 reason (r1,props1,dict1,flags1) (r2,props2,dict2,flags2) =
+  let spread2 reason {merge_mode; _} (r1,props1,dict1,flags1) (r2,props2,dict2,flags2) =
     let union t1 t2 = DefT (reason, UnionT (UnionRep.make t1 t2 [])) in
     let merge_props (t1, own1) (t2, own2) =
       let t1, opt1 = match t1 with DefT (_, OptionalT t) -> t, true | _ -> t1, false in
@@ -9994,23 +9994,34 @@ and object_spread =
         let r = replace_reason_const (RUnknownProperty (Some x)) r in
         DefT (r, MixedT Mixed_everything), false
       in
-      match p1, p2 with
-      | None, None -> None
-      | Some p1, Some p2 -> Some (merge_props p1 p2)
-      | Some p1, None ->
-        (match dict2 with
-        | Some d2 -> Some (merge_props p1 (read_dict r2 d2))
-        | None ->
-          if flags2.exact
-          then Some p1
-          else Some (merge_props p1 (unknown r2)))
-      | None, Some p2 ->
-        (match dict1 with
-        | Some d1 -> Some (merge_props (read_dict r1 d1) p2)
-        | None ->
-          if flags1.exact
-          then Some p2
-          else Some (merge_props (unknown r1) p2))
+      match merge_mode with
+      | DefaultMM ->
+        begin match p1, p2 with
+        | None, None -> None
+        | Some p1, Some p2 -> Some (merge_props p1 p2)
+        | Some p1, None ->
+          (match dict2 with
+          | Some d2 -> Some (merge_props p1 (read_dict r2 d2))
+          | None ->
+            if flags2.exact
+            then Some p1
+            else Some (merge_props p1 (unknown r2)))
+        | None, Some p2 ->
+          (match dict1 with
+          | Some d1 -> Some (merge_props (read_dict r1 d1) p2)
+          | None ->
+            if flags1.exact
+            then Some p2
+            else Some (merge_props (unknown r1) p2))
+        end
+      (* The simpler merge implementation that does not take into account the
+       * complexities of JavaScript. *)
+      | IgnoreExactAndOwnMM ->
+        begin match p1, p2 with
+        | None, None -> None
+        | Some p, None -> Some p
+        | _, Some p -> Some p
+        end
     ) props1 props2 in
     let dict = Option.merge dict1 dict2 (fun d1 d2 -> {
       dict_name = None;
@@ -10083,9 +10094,9 @@ and object_spread =
     r, props, dict, flags
   in
 
-  let spread reason = function
+  let spread reason options = function
     | x,[] -> x
-    | x0,x1::xs -> merge (spread2 reason) x0 (x1,xs)
+    | x0,x1::xs -> merge (spread2 reason options) x0 (x1,xs)
   in
 
   let mk_object cx reason ~make_exact (r, props, dict, flags) =
@@ -10104,14 +10115,15 @@ and object_spread =
     if make_exact then ExactT (reason, t) else t
   in
 
-  let next cx trace reason {todo_rev; acc; make_exact} tout x =
+  let next cx trace reason options {todo_rev; acc} tout x =
+    let {make_exact; _} = options in
     Nel.iter (fun (r,_,_,{exact;_}) ->
       if make_exact && not exact
       then add_output cx ~trace (FlowError.EIncompatibleWithExact (r, reason));
     ) x;
     match todo_rev with
     | [] ->
-      let t = match spread reason (Nel.rev (x, acc)) with
+      let t = match spread reason options (Nel.rev (x, acc)) with
       | x,[] -> mk_object cx reason ~make_exact x
       | x0,x1::xs ->
         DefT (reason, UnionT (UnionRep.make
@@ -10122,16 +10134,16 @@ and object_spread =
       rec_flow_t cx trace (t, tout)
     | t::todo_rev ->
       let tool = Resolve Next in
-      let state = {todo_rev; acc = x::acc; make_exact} in
-      rec_flow cx trace (t, ObjSpreadT (reason, tool, state, tout))
+      let state = {todo_rev; acc = x::acc} in
+      rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, tout))
   in
 
-  let resolved cx trace reason tool state tout x =
+  let resolved cx trace reason options tool state tout x =
     match tool with
-    | Next -> next cx trace reason state tout x
+    | Next -> next cx trace reason options state tout x
     | List0 ((t, todo), join) ->
       let tool = Resolve (List (todo, Nel.one x, join)) in
-      rec_flow cx trace (t, ObjSpreadT (reason, tool, state, tout))
+      rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, tout))
     | List (todo, done_rev, join) ->
       match todo with
       | [] ->
@@ -10139,11 +10151,11 @@ and object_spread =
         | Or -> Nel.cons x done_rev |> Nel.concat
         | And -> merge (intersect2 reason) x done_rev
         in
-        next cx trace reason state tout x
+        next cx trace reason options state tout x
       | t::todo ->
         let done_rev = Nel.cons x done_rev in
         let tool = Resolve (List (todo, done_rev, join)) in
-        rec_flow cx trace (t, ObjSpreadT (reason, tool, state, tout))
+        rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, tout))
   in
 
   let object_slice cx r id dict flags =
@@ -10174,21 +10186,21 @@ and object_spread =
     object_slice cx r id dict flags
   in
 
-  let resolve cx trace reason state tout tool = function
+  let resolve cx trace reason options state tout tool = function
     | DefT (r, ObjT {props_tmap; dict_t; flags; _}) ->
       let x = Nel.one (object_slice cx r props_tmap dict_t flags) in
-      resolved cx trace reason tool state tout x
+      resolved cx trace reason options tool state tout x
     | DefT (r, InstanceT (_, super, _, {fields_tmap; _})) ->
       let tool = Super (interface_slice cx r fields_tmap, tool) in
-      rec_flow cx trace (super, ObjSpreadT (reason, tool, state, tout))
+      rec_flow cx trace (super, ObjSpreadT (reason, options, tool, state, tout))
     | DefT (_, UnionT rep) ->
       let t, todo = UnionRep.members_nel rep in
       let tool = Resolve (List0 (todo, Or)) in
-      rec_flow cx trace (t, ObjSpreadT (reason, tool, state, tout))
+      rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, tout))
     | DefT (_, IntersectionT rep) ->
       let t, todo = InterRep.members_nel rep in
       let tool = Resolve (List0 (todo, And)) in
-      rec_flow cx trace (t, ObjSpreadT (reason, tool, state, tout))
+      rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, tout))
     | DefT (_, (AnyT | AnyObjT)) ->
       rec_flow_t cx trace (AnyT.why reason, tout)
     (* Other types have reasonable spread implementations, like FunT, which
@@ -10201,22 +10213,22 @@ and object_spread =
       })
   in
 
-  let super cx trace reason state tout acc tool = function
+  let super cx trace reason options state tout acc tool = function
     | DefT (r, InstanceT (_, super, _, {fields_tmap; _})) ->
       let slice = interface_slice cx r fields_tmap in
       let acc = intersect2 reason acc slice in
       let tool = Super (acc, tool) in
-      rec_flow cx trace (super, ObjSpreadT (reason, tool, state, tout))
+      rec_flow cx trace (super, ObjSpreadT (reason, options, tool, state, tout))
     | DefT (_, (AnyT | AnyObjT)) ->
       rec_flow_t cx trace (AnyT.why reason, tout)
     | _ ->
-      next cx trace reason state tout (Nel.one acc)
+      next cx trace reason options state tout (Nel.one acc)
   in
 
-  fun cx trace reason tool state tout l ->
+  fun cx trace reason options tool state tout l ->
     match tool with
-    | Resolve tool -> resolve cx trace reason state tout tool l
-    | Super (acc, tool) -> super cx trace reason state tout acc tool l
+    | Resolve tool -> resolve cx trace reason options state tout tool l
+    | Super (acc, tool) -> super cx trace reason options state tout acc tool l
 
 (************* end of slab **************************************************)
 
