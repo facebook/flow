@@ -3907,6 +3907,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             ))
         )
 
+    (* Function definitions are incompatible with ShapeT. ShapeT is meant to
+     * match an object type with a subset of the props in the type being
+     * destructured. It would be complicated and confusing to use a function for
+     * this. Note that ObjTs with a $call property are, however, allowed.
+     *
+     * This invariant is important for the React setState() type definition. *)
+    | DefT (_, FunT _), UseT (_, ShapeT o) ->
+        add_output cx ~trace (FlowError.ECustom ((reason_of_t l, reason_of_t o),
+          "Is not allowed as the shape of object type"))
+
     | (_, UseT (_, ShapeT (o))) ->
         let reason = reason_of_t o in
         rec_flow cx trace (l, ObjAssignFromT(reason, o, Locationless.AnyT.t, [], ObjAssign))
