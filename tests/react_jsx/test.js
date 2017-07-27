@@ -197,6 +197,18 @@ const DefaultProps:
   boolean2={false}
   {...{number: 42, a: 1, b: 2, c: 3}}
 />;
+<ManyProps // OK: `number` is overwritten at the end of the element.
+  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  boolean1
+  boolean2={false}
+  number={42}
+/>;
+<ManyProps // Error: `number` cannot be null.
+  boolean1
+  boolean2={false}
+  number={42}
+  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+/>;
 
 <OptionalProps />; // Error: `foo` is required.
 <OptionalProps foo={42} />; // OK: `foo` is defined.

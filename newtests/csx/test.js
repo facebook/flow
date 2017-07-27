@@ -111,18 +111,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       const params1 = {x: '23'};
       const params2 = {y: 23};
       <Bar {...params1} {...params2} />;
-    `)
-    .newErrors( // TODO should not raise an error; Flow incorrectly only recognizes the *last* spread.
-      `
-        test.js:9
-          9:       <Bar {...params1} {...params2} />;
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ JSX desugared to \`Bar(...)\`
-          6:       function Bar(props: Props) {}
-                                       ^^^^^ property \`x\`. Property not found in
-          9:       <Bar {...params1} {...params2} />;
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`
-      `
-    ),
+    `).noNewErrors(),
   ]),
   test('Should raise an error if JSX attributes from a spread do not match parameters', [
     addCode(`
