@@ -6,6 +6,10 @@
           {{post.short-title | default: post.title}}
           <span class="sr-only">(current)</span>
         </strong>
+      {% elsif post.medium-link %}
+        <a class="nav-link" href="{{post.medium-link}}">
+          {{post.short-title | default: post.title}}
+        </a>
       {% else %}
         <a class="nav-link" href="{{site.baseurl}}{{post.url}}">
           {{post.short-title | default: post.title}}
