@@ -1,3 +1,7 @@
+### 0.51.1
+
+* Changed linter (experimental, coming soon) to ignore lint errors in node_modules
+
 ### 0.51.0
 
 New Features:
