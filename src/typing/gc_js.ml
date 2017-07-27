@@ -303,6 +303,9 @@ and gc_use cx state = function
       gc cx state t1;
       gc cx state t2
     ) targs
+  | CondT (_, alt, tout) ->
+      gc cx state alt;
+      gc cx state tout
 
   | ResolveSpreadT (_, {
     rrt_resolved;

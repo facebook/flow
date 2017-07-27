@@ -336,10 +336,10 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else Bind t''
-      | SpreadType (b, tlist) ->
+      | SpreadType (options, tlist) ->
           let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
           if tlist' == tlist then t
-          else SpreadType (b, tlist')
+          else SpreadType (options, tlist')
       | ValuesType -> t
 
   method exports cx map_cx id =
@@ -728,6 +728,11 @@ class ['a] t = object(self)
         let resolve_spread' = self#resolve_spread cx map_cx resolve_spread in
         if resolve_spread' == resolve_spread then t
         else ResolveSpreadT (r, resolve_spread')
+    | CondT (r, alt, tout) ->
+        let alt' = self#type_ cx map_cx alt in
+        let tout' = self#type_ cx map_cx tout in
+        if alt' == alt && tout' == tout then t
+        else CondT (r, alt', tout')
 
   method fun_call_type cx map_cx ({call_this_t; call_args_tlist; call_tout;
       call_closure_t; call_strict_arity} as t) =

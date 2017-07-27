@@ -370,6 +370,7 @@ and parts_of_use_t cx = function
 | UnifyT (x, y) -> ["x", Def x; "y", Def y]
 | VarianceCheckT (_, args, _) -> list_parts args
 | TypeAppVarianceCheckT _ -> []
+| CondT (_, alt, out) -> ["alt", Def alt; "out", Def out]
 
 and parts_of_arrtype = function
 | ArrayAT (elemt, None)

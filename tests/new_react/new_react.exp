@@ -119,7 +119,7 @@ Error: classes.js:81
  81: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ React element `FooLegacy`
  81: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ props of React element `FooLegacy`. Expected object instead of
+                                    ^^^^^^^^^^^^ props of React element `FooLegacy`. Cannot spread properties from
  80: FooLegacy.defaultProps = 0;
                               ^ number
 
@@ -306,27 +306,26 @@ Error: props.js:20
   6:         z: React.PropTypes.number
   7:     },
          ^ propTypes of React component
+  Property `x` is incompatible:
+     20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                                     ^^^^^ boolean. This type is incompatible with
+      5:         x: React.PropTypes.string,
+                    ^^^^^^^^^^^^^^^^^^^^^^ string
+
+Error: props.js:20
+ 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`. This type is incompatible with
+                    v
+  4:     propTypes: {
+  5:         x: React.PropTypes.string,
+  6:         z: React.PropTypes.number
+  7:     },
+         ^ propTypes of React component
   Property `z` is incompatible:
      20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                                                          ^^^^^ boolean. This type is incompatible with
       6:         z: React.PropTypes.number
                     ^^^^^^^^^^^^^^^^^^^^^^ number
-
-Error: props.js:20
- 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
- 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                                 ^^^^^ boolean. This type is incompatible with
- 10:         return {x: '', y: 0}
-                        ^^ string
-
-Error: props.js:20
- 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
- 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                                           ^^^^^ boolean. This type is incompatible with
- 10:         return {x: '', y: 0}
-                               ^ number
 
 Error: props2.js:14
  14:         var s: string = this.state.bar;
@@ -572,4 +571,4 @@ Error: state6.js:47
                          ^^^^^ State
 
 
-Found 57 errors
+Found 56 errors

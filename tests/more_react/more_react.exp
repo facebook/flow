@@ -16,14 +16,6 @@ Error: App.react.js:36
  10: function foo(p:string,q:string):string { return p+q; }
                     ^^^^^^ string
 
-Error: JSX.js:8
-  8:   <App y={42}> // error, y: number but foo expects string in App.react
-       ^^^^^^^^^^^^ props of React element `App`
-  8:   <App y={42}> // error, y: number but foo expects string in App.react
-               ^^ number. This type is incompatible with
- 14:   getDefaultProps: function(): { y: string } {
-                                         ^^^^^^ string. See: App.react.js:14
-
 Error: checkPropTypes.js:7
   7: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }); // error: missing arguments
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
@@ -87,4 +79,4 @@ Error: propTypes.js:15
      ^^^^^ props of React element `D`
 
 
-Found 11 errors
+Found 10 errors

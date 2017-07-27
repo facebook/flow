@@ -768,6 +768,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       ) rrt_unresolved);
       "resolve_to", json_of_resolve_to json_cx rrt_resolve_to;
     ]
+  | CondT (_, alternate, t_out) -> [
+      "alternate", _json_of_t json_cx alternate;
+      "t_out", _json_of_t json_cx t_out;
+    ]
   )
 )
 
@@ -1749,7 +1753,8 @@ and dump_use_t_ (depth, tvars) cx t =
         make_exact
         (match merge_mode with
           | DefaultMM -> "Default"
-          | IgnoreExactAndOwnMM -> "IgnoreExactAndOwn")
+          | IgnoreExactAndOwnMM -> "IgnoreExactAndOwn"
+          | DiffMM -> "Diff")
     in
     fun o t s ->
       spf "(%s, %s, %s)" (options o) (tool t) (state s)
@@ -1888,6 +1893,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | VarianceCheckT (_, args, pol) -> p ~extra:(spf "[%s], %s"
       (String.concat "; " (List.map kid args)) (Polarity.string pol)) t
   | TypeAppVarianceCheckT _ -> p t
+  | CondT (_, alt, tout) -> p ~extra:(spf "%s, %s" (kid alt) (kid tout)) t
 
 and dump_tvar ?(depth=3) cx id =
   dump_tvar_ (depth, ISet.empty) cx id

@@ -103,19 +103,19 @@ const Legacy_DefaultProps = React.createClass({
     foo: 42,
   },
 });
-class Class_DefaultProps extends React.Component<*, Props_DefaultProps, void> {
+class Class_DefaultProps extends React.Component<{foo: 42}, Props_DefaultProps, void> {
   static defaultProps = {
     foo: 42,
   };
 }
 class ClassExact_DefaultProps
-  extends React.Component<*, $Exact<Props_DefaultProps>, void> {
+  extends React.Component<{|foo: 42|}, $Exact<Props_DefaultProps>, void> {
   static defaultProps = {
     foo: 42,
   };
 }
 class ClassPure_DefaultProps
-  extends React.PureComponent<*, Props_DefaultProps, void> {
+  extends React.PureComponent<{foo: 42}, Props_DefaultProps, void> {
   static defaultProps = {
     foo: 42,
   };

@@ -1066,5 +1066,19 @@ Error: render_callback.js:25
 227:     callback?: () => void
                     ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:227
 
+Error: undefined_prop.js:11
+ 11: <MyComponent title={undefined} />;
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyComponent`. This type is incompatible with
+              v
+  6:   props: {
+  7:     title: string,
+  8:   };
+       ^ object type
+  Property `title` is incompatible:
+     11: <MyComponent title={undefined} />;
+                             ^^^^^^^^^ undefined. This type is incompatible with
+      7:     title: string,
+                    ^^^^^^ string
 
-Found 121 errors
+
+Found 122 errors

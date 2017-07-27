@@ -3143,6 +3143,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, AnyT), MakeExactT (reason_op, k) ->
       continue cx trace (AnyT.why reason_op) k
 
+    | DefT (_, VoidT), MakeExactT (reason_op, k) ->
+      continue cx trace (VoidT.why reason_op) k
+
     (* unsupported kind *)
     | _, MakeExactT (ru, _) ->
       add_output cx ~trace (FlowError.EUnsupportedExact (ru, reason_of_t l))
@@ -3921,11 +3924,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let reason = reason_of_t o in
         rec_flow cx trace (l, ObjAssignFromT(reason, o, Locationless.AnyT.t, [], ObjAssign))
 
-    | (_, UseT (_, DiffT (o1, o2))) ->
+    | t, UseT (_, DiffT (a, b)) ->
+        let open ObjectSpread in
+        (* To implement `DiffT` we combine the properties from the type we are
+         * subtracting (`b`) and our lower bound (`t`) then compare that to the
+         * type we are subtracting from (`a`). In other terms, if the following
+         * is true: `T = Diff<A, B>`. Then the following must also be true:
+         * `{...B, ...T} = A`. We rearrange `DiffT` into the latter form and
+         * check that. *)
         let reason = reason_of_t l in
-        let t2 = mk_tvar cx reason in
-        rec_flow cx trace (o2, ObjRestT (reason, [], t2));
-        rec_flow cx trace (t2, ObjAssignToT(reason, l, o1, [], ObjAssign))
+        let options = { make_exact = false; merge_mode = DiffMM } in
+        let spread = EvalT (t,
+          TypeDestructorT (reason, SpreadType (options, [b])), mk_id ()) in
+        (* Compare it against A. *)
+        rec_flow_t cx trace (spread, a)
 
     | DefT (_, AnyT), ObjTestT (reason_op, _, u) ->
       rec_flow_t cx trace (AnyT.why reason_op, u)
@@ -5391,6 +5403,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, SetPropT (reason, Named (reason, "$key"), i));
       rec_flow cx trace (l, SetPropT (reason, Named (reason, "$value"), t))
 
+    (***************************)
+    (* conditional type switch *)
+    (***************************)
+
+    (* Use our alternate if our lower bound is void. *)
+    | DefT (_, VoidT), CondT (_, alt, tout) -> rec_flow_t cx trace (alt, tout)
+    (* Otherwise continue by Flowing out lower bound to tout. *)
+    | _, CondT (_, _, tout) -> rec_flow_t cx trace (l, tout)
+
     (*************************)
     (* repositioning, part 2 *)
     (*************************)
@@ -6036,6 +6057,9 @@ and ground_subtype = function
   (* NOTE: the union could be narrowed down to ensure it contains taint *)
   | DefT (_, UnionT _), _
   | (TaintT _, _) -> false
+
+  (* Allow EmptyT ~> CondT *)
+  | (_, CondT _) -> false
 
   | DefT (_, NumT _), UseT (_, DefT (_, NumT _))
   | DefT (_, StrT _), UseT (_, DefT (_, StrT _))
@@ -9970,7 +9994,7 @@ and object_spread =
   in
 
   (* Compute spread result: slice * slice -> slice *)
-  let spread2 reason {merge_mode; _} (r1,props1,dict1,flags1) (r2,props2,dict2,flags2) =
+  let spread2 cx trace reason {merge_mode; _} (r1,props1,dict1,flags1) (r2,props2,dict2,flags2) =
     let union t1 t2 = DefT (reason, UnionT (UnionRep.make t1 t2 [])) in
     let merge_props (t1, own1) (t2, own2) =
       let t1, opt1 = match t1 with DefT (_, OptionalT t) -> t, true | _ -> t1, false in
@@ -10029,8 +10053,29 @@ and object_spread =
       | IgnoreExactAndOwnMM ->
         begin match p1, p2 with
         | None, None -> None
-        | Some p, None -> Some p
-        | _, Some p -> Some p
+        | Some (t, _), None -> Some (t, true)
+        | _, Some (t, _) -> Some (t, true)
+        end
+      (* The diff merge mode is very similar to IgnoreExactAndOwnMM except that
+       * we want undefined to fall through to the property below. *)
+      | DiffMM ->
+        begin match p1, p2 with
+        | None, None -> None
+        | Some (t, _), None -> Some (t, true)
+        | None, Some (t, _) -> Some (t, true)
+        (* If a property is defined in both objects, and the first property's
+         * type includes void then we want to replace every occurence of void
+         * with the second property's type. This is consistent with the behavior
+         * of function default arguments. If you call a function, `f`, like:
+         * `f(undefined)` and there is a default value for the first argument,
+         * then we will ignore the void type and use the type for the default
+         * parameter instead. *)
+        | Some (t1, _), Some (t2, _) ->
+          (* Use CondT to replace void with t1. *)
+          let t = mk_tvar_where cx reason (fun tvar ->
+            rec_flow cx trace (t2, CondT (reason, t1, tvar))
+          ) in
+          Some (t, true)
         end
     ) props1 props2 in
     let dict = Option.merge dict1 dict2 (fun d1 d2 -> {
@@ -10104,12 +10149,12 @@ and object_spread =
     r, props, dict, flags
   in
 
-  let spread reason options = function
+  let spread cx trace reason options = function
     | x,[] -> x
-    | x0,x1::xs -> merge (spread2 reason options) x0 (x1,xs)
+    | x0,x1::xs -> merge (spread2 cx trace reason options) x0 (x1,xs)
   in
 
-  let mk_object cx reason ~make_exact (r, props, dict, flags) =
+  let mk_object cx reason {make_exact; _} (r, props, dict, flags) =
     let props = SMap.map (fun (t, own) ->
       (* Spread only copies over own properties. If `not own`, then the property
          might be on a proto object instead, so make the result optional. *)
@@ -10133,13 +10178,13 @@ and object_spread =
     ) x;
     match todo_rev with
     | [] ->
-      let t = match spread reason options (Nel.rev (x, acc)) with
-      | x,[] -> mk_object cx reason ~make_exact x
+      let t = match spread cx trace reason options (Nel.rev (x, acc)) with
+      | x,[] -> mk_object cx reason options x
       | x0,x1::xs ->
         DefT (reason, UnionT (UnionRep.make
-          (mk_object cx reason ~make_exact x0)
-          (mk_object cx reason ~make_exact x1)
-          (List.map (mk_object cx reason ~make_exact) xs)))
+          (mk_object cx reason options x0)
+          (mk_object cx reason options x1)
+          (List.map (mk_object cx reason options) xs)))
       in
       rec_flow_t cx trace (t, tout)
     | t::todo_rev ->
@@ -10213,6 +10258,12 @@ and object_spread =
       rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, tout))
     | DefT (_, (AnyT | AnyObjT)) ->
       rec_flow_t cx trace (AnyT.why reason, tout)
+    | DefT (_, (NullT | VoidT)) ->
+      (* Mirroring Object.assign() and {...null} semantics, treat null/void as
+       * empty objects. *)
+      let flags = { frozen = true; sealed = Sealed; exact = true } in
+      let x = Nel.one (reason, SMap.empty, None, flags) in
+      resolved cx trace reason options tool state tout x
     (* Other types have reasonable spread implementations, like FunT, which
        would spread its statics. Since spread is currently limited to types, an
        arbitrary subset of possible types are implemented. *)

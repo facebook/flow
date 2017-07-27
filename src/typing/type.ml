@@ -564,6 +564,10 @@ module rec TypeTerm : sig
      * whatever type it resolves to *)
     | ResolveSpreadT of reason * resolve_spread_type
 
+    (* `CondT (reason, alternate, tout)` will flow `alternate` to `tout` when
+     * the lower bound is an `EmptyT`. *)
+    | CondT of reason * t * t_out
+
   and specialize_cache = reason list option
 
   and predicate =
@@ -1556,6 +1560,7 @@ and ObjectSpread : sig
   and merge_mode =
     | DefaultMM
     | IgnoreExactAndOwnMM
+    | DiffMM
 
   (* A union type resolves to a resolved spread with more than one element *)
   and resolved = slice Nel.t
@@ -1768,6 +1773,7 @@ let any_propagating_use_t = function
   | UseT (_, DefT (_, ClassT _)) (* mk_instance ~for_type:false *)
   | UseT (_, DefT (_, MaybeT _)) (* eval_destructor NonMaybeType *)
   | UseT (_, DefT (_, TypeT _)) (* import type *)
+  | CondT _
     -> true
 
   (* These types have no t_out, so can't propagate anything *)
@@ -1919,6 +1925,7 @@ and reason_of_use_t = function
   | UnifyT (_,t) -> reason_of_t t
   | VarianceCheckT(reason,_,_) -> reason
   | TypeAppVarianceCheckT (reason, _, _) -> reason
+  | CondT (reason, _, _) -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -2076,6 +2083,7 @@ and mod_reason_of_use_t f = function
       VarianceCheckT (f reason, ts, polarity)
   | TypeAppVarianceCheckT (reason_op, reason_tapp, targs) ->
       TypeAppVarianceCheckT (f reason_op, reason_tapp, targs)
+  | CondT (reason, alt, tout) -> CondT (f reason, alt, tout)
 
 (* type comparison mod reason *)
 let reasonless_compare =
@@ -2298,6 +2306,7 @@ let string_of_use_ctor = function
   | UnifyT _ -> "UnifyT"
   | VarianceCheckT _ -> "VarianceCheckT"
   | TypeAppVarianceCheckT _ -> "TypeAppVarianceCheck"
+  | CondT _ -> "CondT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"
