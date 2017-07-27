@@ -49,7 +49,7 @@ let union a b = {
 
 let set_unused_lint_suppressions unused_lint_suppressions t = {t with unused_lint_suppressions}
 
-let check_loc ((_result, consumed,
+let check_loc ((result, consumed,
       { suppressions; unused; unused_lint_suppressions; },
       lint_kind, lint_settings) as acc) loc =
   (* We only want to check the starting position of the reason *)
@@ -71,7 +71,7 @@ let check_loc ((_result, consumed,
           ~f:(fun used_suppression -> Loc.LocSet.remove used_suppression unused_lint_suppressions)
           ~default:unused_lint_suppressions
       else unused_lint_suppressions in
-      LintSettings.state_min state _result, consumed, { suppressions; unused;
+      LintSettings.state_min state result, consumed, { suppressions; unused;
         unused_lint_suppressions; }, lint_kind, lint_settings)
 
 (* Checks if any of the given locations should be suppressed. *)
@@ -91,7 +91,21 @@ let check err lint_settings suppressions =
     match kind_of_error err with
       | LintError lint_kind -> Some lint_kind
       | _ -> None
-  in check_locs locs suppressions lint_kind lint_settings
+  in
+  let (result, consumed, { suppressions; unused; unused_lint_suppressions; }) =
+    check_locs locs suppressions lint_kind lint_settings
+  in
+  (* Ignore lints in node_modules folders (which we assume to be dependencies). *)
+  let is_in_dependency = match Errors.infos_of_error err with
+    | (primary_loc,_)::_ ->
+      Option.value_map (Loc.source primary_loc) ~default:false ~f:(fun filename ->
+        String_utils.is_substring "/node_modules/" (Loc.string_of_filename filename))
+    | [] -> false
+  in
+  let result = if is_in_dependency && (Option.is_some lint_kind)
+    then LintSettings.Off
+    else result
+  in (result, consumed, { suppressions; unused; unused_lint_suppressions; })
 
 (* Gets the locations of the suppression comments that are yet unused *)
 let unused { unused; unused_lint_suppressions; _; } =
