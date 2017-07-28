@@ -241,11 +241,32 @@ let merge_lib_file cx master_cx =
 
   errs, Context.error_suppressions cx, Context.lint_settings cx
 
-let merge_type r types =
-  match types with
-  | [] -> Type.Locationless.AnyT.t
-  | [t] -> t
-  | t0::t1::ts -> Type.(DefT (r, UnionT (UnionRep.make t0 t1 ts)))
+let lowers_of_tvar =
+  let open Type in
+  let possible_types = Flow_js.possible_types in
+  let finish r = function
+    | [] -> Locationless.AnyT.t
+    | [t] -> t
+    | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts))
+  in
+  let rec merge cx r seen acc = function
+    | [] -> finish r (List.rev acc)
+    | t::ts ->
+      match t with
+      (* Recursively unwrap unions *)
+      | DefT (_, UnionT rep) ->
+        merge cx r seen acc (UnionRep.members rep @ ts)
+      (* Recursively unwrap unseen tvars *)
+      | OpenT (_, id) ->
+        if ISet.mem id seen
+        then merge cx r seen acc ts (* already unwrapped *)
+        else merge cx r (ISet.add id seen) acc (possible_types cx id @ ts)
+      (* Ignore empty *)
+      | DefT (_, EmptyT) -> merge cx r seen acc ts
+      (* Everything else becomes part of the merge typed *)
+      | _ -> merge cx r seen (t::acc) ts
+  in
+  fun cx r id -> merge cx r (ISet.singleton id) [] (possible_types cx id)
 
 (****************** signature contexts *********************)
 
@@ -303,9 +324,6 @@ module ContextOptimizer = struct
     sig_hash = SigHash.empty;
   }
 
-  let lowers_of_tvar cx id r =
-    merge_type r (Flow_js.possible_types cx id)
-
   class context_optimizer = object(self)
     inherit [quotient] Type_visitor.t as super
 
@@ -328,7 +346,7 @@ module ContextOptimizer = struct
         let sig_hash = SigHash.add stable_id sig_hash in
         { quotient with sig_hash }
       else
-        let t = lowers_of_tvar cx id r in
+        let t = lowers_of_tvar cx r id in
         let node = Root { rank = 0; constraints = Resolved t } in
         let reduced_graph = IMap.add id node reduced_graph in
         let stable_id = self#fresh_stable_id in
@@ -375,7 +393,7 @@ module ContextOptimizer = struct
         | None -> quotient
         | Some t ->
           let t = match t with
-          | OpenT (r, id) -> lowers_of_tvar cx id r
+          | OpenT (r, id) -> lowers_of_tvar cx r id
           | t -> t
           in
           let reduced_evaluated = IMap.add id t reduced_evaluated in
