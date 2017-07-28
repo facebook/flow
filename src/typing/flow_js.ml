@@ -3380,25 +3380,27 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let tp1, tpN = List.hd tparams, List.hd (List.rev tparams) in
         let loc = Loc.btwn (loc_of_reason tp1.reason) (loc_of_reason tpN.reason) in
         mk_reason (RCustom "See type parameters of definition here") loc in
-      if List.length targs > maximum_arity
-      then add_output cx ~trace
-        (FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
-      let unused_targs = List.fold_left (fun targs { default; polarity; _ } ->
-        match default, targs with
-        | None, [] ->
-          (* fewer arguments than params but no default *)
-          add_output cx ~trace (FlowError.ETooFewTypeArgs
-            (reason_tapp, reason_arity, minimum_arity));
-          []
-        | _, [] -> []
-        | _, (t1, t2)::targs ->
-          (match polarity with
-          | Positive -> rec_flow_t cx trace (t1, t2)
-          | Negative -> rec_flow_t cx trace (t2, t1)
-          | Neutral -> rec_unify cx trace t1 t2);
-          targs
-      ) targs tparams in
-      assert (unused_targs = [])
+      if List.length targs > maximum_arity then (
+        add_output cx ~trace
+          (FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
+      ) else (
+        let unused_targs = List.fold_left (fun targs { default; polarity; _ } ->
+          match default, targs with
+          | None, [] ->
+            (* fewer arguments than params but no default *)
+            add_output cx ~trace (FlowError.ETooFewTypeArgs
+              (reason_tapp, reason_arity, minimum_arity));
+            []
+          | _, [] -> []
+          | _, (t1, t2)::targs ->
+            (match polarity with
+            | Positive -> rec_flow_t cx trace (t1, t2)
+            | Negative -> rec_flow_t cx trace (t2, t1)
+            | Neutral -> rec_unify cx trace t1 t2);
+            targs
+        ) targs tparams in
+        assert (unused_targs = []);
+      )
 
     (* empty targs specialization of non-polymorphic classes is a no-op *)
     | (DefT (_, ClassT _) | ThisClassT _), SpecializeT(_,_,_,[],tvar) ->
