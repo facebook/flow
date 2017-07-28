@@ -1771,7 +1771,8 @@ let any_propagating_use_t = function
   | UnaryMinusT _
   | UnifyT _
   | UseT (_, DefT (_, ClassT _)) (* mk_instance ~for_type:false *)
-  | UseT (_, DefT (_, MaybeT _)) (* eval_destructor NonMaybeType *)
+  | UseT (_, DefT (_, MaybeT _)) (* used to filter maybe *)
+  | UseT (_, DefT (_, OptionalT _)) (* used to filter optional *)
   | UseT (_, DefT (_, TypeT _)) (* import type *)
   | CondT _
     -> true

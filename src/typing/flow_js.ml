@@ -2285,7 +2285,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (** The type optional(T) is the same as undefined | UseT *)
 
-    | DefT (_, VoidT), UseT (_, DefT (_, OptionalT _)) -> ()
+    | DefT (r, VoidT), UseT (use_op, DefT (_, OptionalT tout)) ->
+      rec_flow cx trace (EmptyT.why r, UseT (use_op, tout))
 
     | DefT (_, OptionalT _), ReposLowerT (reason_op, u) ->
       (* Don't split the optional type into its constituent members. Instead,
