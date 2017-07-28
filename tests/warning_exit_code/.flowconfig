@@ -4,7 +4,6 @@
 
 [libs]
 
-[options]
-
 [lints]
-untyped-type-import=error
+
+[options]

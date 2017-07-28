@@ -105,9 +105,10 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     let ic, oc = connect server_flags args.root in
     send_command oc (ServerProt.STATUS args.root);
     let response = wait_for_response ic in
+    let include_warnings = args.error_flags.Errors.Cli_output.include_warnings in
     let strip_root = if args.strip_root then Some args.root else None in
     let print_json = Errors.Json_output.print_errors
-      ~out_channel:stdout ~strip_root ~pretty:args.pretty
+      ~out_channel:stdout ~include_warnings ~strip_root ~pretty:args.pretty
       ~suppressed_errors:([])
     in
     match response with
@@ -125,17 +126,20 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       begin if args.output_json then
         print_json ~errors ~warnings ()
       else if args.from = "vim" || args.from = "emacs" then
-        Errors.Vim_emacs_output.print_errors ~strip_root stdout ~errors ~warnings ()
+        Errors.Vim_emacs_output.print_errors ~strip_root ~include_warnings
+          stdout ~errors ~warnings ()
       else
         Errors.Cli_output.print_errors
           ~strip_root
+          ~include_warnings
           ~flags:error_flags
           ~out_channel:stdout
           ~errors
           ~warnings
           ()
       end;
-      FlowExitStatus.(exit Type_error)
+      let open FlowExitStatus in
+      if Errors.ErrorSet.is_empty errors then exit No_error else exit Type_error
     | ServerProt.NO_ERRORS ->
       if args.output_json then
         print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()
