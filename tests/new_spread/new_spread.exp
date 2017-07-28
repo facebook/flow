@@ -48,6 +48,12 @@ Error: type.js:30
  30: type O3 = {|...{p:T}|}; ({p:x}: O3); // error: spread result is not exact
                ^^^^^^^^^^^^ object type
 
+Error: type.js:36
+ 36: (o4: {|p:T|}); // error: not exact
+      ^^ object type. Inexact type is incompatible with exact type
+ 36: (o4: {|p:T|}); // error: not exact
+          ^^^^^^^ exact type: object type
+
 Error: type.js:37
  37: ({}: O4); // error: property `p` not found
           ^^ property `p`. Property not found in
@@ -129,6 +135,28 @@ Error: type.js:75
  75: (o9.p: T); // error: o9.p is optional
             ^ T
 
+Error: type.js:101
+101: (o14: {p:T}); // error: `p` is optional
+      ^^^ object type. This type is incompatible with
+101: (o14: {p:T}); // error: `p` is optional
+           ^^^^^ object type
+  Property `p` is incompatible:
+     99: type O14 = {...{...{|p:T|}}};
+                                ^ undefined. This type is incompatible with
+    101: (o14: {p:T}); // error: `p` is optional
+                  ^ T
+
+Error: type.js:105
+105: ({p:y}: O14); // error: U ~> T
+      ^^^^^ object literal. This type is incompatible with
+105: ({p:y}: O14); // error: U ~> T
+             ^^^ object type
+  Property `p` is incompatible:
+    105: ({p:y}: O14); // error: U ~> T
+             ^ U. This type is incompatible with
+     99: type O14 = {...{...{|p:T|}}};
+                                ^ T
+
 Error: type_contra.js:6
   6: (o1: {p?:T}); // error: unknown ~> T
       ^^ object type. This type is incompatible with
@@ -203,6 +231,12 @@ Error: type_string.js:1
   1: type O1 = {..."foo"}; // error
                    ^^^^^ string literal `foo`
 
+Error: type_void.js:12
+ 12: (o1: {||}); // error
+      ^^ object type. Inexact type is incompatible with exact type
+ 12: (o1: {||}); // error
+          ^^^^ exact type: object type
+
 Error: type_void.js:13
  13: (o1: {p:T}); // error
           ^^^^^ property `p`. Property not found in
@@ -226,6 +260,12 @@ Error: type_void.js:23
       ^^^^^ property `p`. Property not found in
  23: ({p:x}: O2); // error
              ^^ object type
+
+Error: type_void.js:28
+ 28: (o3: {||}); // error
+      ^^ object type. Inexact type is incompatible with exact type
+ 28: (o3: {||}); // error
+          ^^^^ exact type: object type
 
 Error: type_void.js:29
  29: (o3: {p:T}); // error
@@ -296,4 +336,4 @@ Error: type_void.js:56
                           ^ T
 
 
-Found 37 errors
+Found 42 errors

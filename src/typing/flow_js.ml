@@ -10154,7 +10154,7 @@ and object_spread =
     | x0,x1::xs -> merge (spread2 cx trace reason options) x0 (x1,xs)
   in
 
-  let mk_object cx reason {make_exact; _} (r, props, dict, flags) =
+  let mk_object cx reason {make_exact; merge_mode} (r, props, dict, flags) =
     let props = SMap.map (fun (t, own) ->
       (* Spread only copies over own properties. If `not own`, then the property
          might be on a proto object instead, so make the result optional. *)
@@ -10166,6 +10166,20 @@ and object_spread =
     ) props in
     let id = Context.make_property_map cx props in
     let proto = ObjProtoT reason in
+    let flags =
+      match merge_mode with
+      (* DiffMM creates object values, so we never need ExactT, but the
+         value itself can be exact if all parts of the spread are exact.
+         This logic is already encoded in `flags`. *)
+      | DiffMM -> flags
+      (* IgnoreExactAndOwn and Default create object annotations, which
+         need to be wrapped in ExactT if make_exact = true. It's OK to
+         set exact = make_exact here, because we will already have errored
+         if any part of the spread was inexact. *)
+      | IgnoreExactAndOwnMM
+      | DefaultMM ->
+        { sealed = Sealed; frozen = false; exact = make_exact }
+    in
     let t = DefT (r, ObjT (mk_objecttype ~flags dict id proto)) in
     if make_exact then ExactT (reason, t) else t
   in

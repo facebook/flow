@@ -9,7 +9,7 @@ declare var y: U;
 type O1 = {...void};
 declare var o1: O1;
 (o1: {}); // ok
-(o1: {||}); // ok
+(o1: {||}); // error
 (o1: {p:T}); // error
 ({}: O1); // ok
 ({p:x}: O1); // ok
@@ -25,7 +25,7 @@ declare var o2: O2;
 type O3 = {...null};
 declare var o3: O3;
 (o3: {}); // ok
-(o3: {||}); // ok
+(o3: {||}); // error
 (o3: {p:T}); // error
 ({}: O3); // ok
 ({p:x}: O3); // ok

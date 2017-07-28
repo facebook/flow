@@ -28,11 +28,11 @@ declare var o8: {...{p:T},...{|[string]:U|}};
 declare var o9: {...{[string]:T},...{|[string]:U|}};
 (o9: {[string]:T|U}); // ok
 
-declare var o10: {...{|[string]:T|},...{|p:U|}};
+declare var o10: {|...{|[string]:T|},...{|p:U|}|};
 (o10: {|p:U,[string]:T|}); // ok
 
-declare var o11: {...{|p :T|},...{|[string]:U|}};
+declare var o11: {|...{|p :T|},...{|[string]:U|}|};
 (o11: {|p:T|U,[string]:U|}); // ok
 
-declare var o12: {...{|[string]:T|},...{|[string]:U|}};
+declare var o12: {|...{|[string]:T|},...{|[string]:U|}|};
 (o12: {|[string]:T|U|}); // ok
