@@ -382,6 +382,12 @@ let infer_ast ~metadata ~filename ~lint_settings ast ~require_loc_map =
 
   let module_ref = Files.module_ref filename in
   let cx = Flow_js.fresh_context metadata filename module_ref in
+
+  let dep_mapper = new Dep_mapper.mapper in
+  let _ = dep_mapper#program ast in
+  let _ = Context.set_dep_map cx dep_mapper#depMap in
+  let _ = Context.set_renamings cx dep_mapper#renamings in
+
   let checked = Context.is_checked cx in
 
   let reason_exports_module =

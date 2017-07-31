@@ -26,12 +26,14 @@ module Entry :
       | ConstVarBinding
     and let_binding_kind =
         LetVarBinding
+      | LetConstlikeVarBinding
       | ClassNameBinding
       | CatchParamBinding
       | FunctionBinding
       | ParamBinding
     and var_binding_kind =
       | VarBinding
+      | ConstlikeVarBinding
     val string_of_value_kind : value_kind -> string
     type value_binding = {
       kind : value_kind;

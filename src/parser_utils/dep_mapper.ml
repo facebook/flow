@@ -31,25 +31,33 @@ module DepKey = struct
   | HeapLoc of Loc.t * string (* locations in a heap object,
                                   loc=allocation site, string=prop *)
 
+  let same_file_loc_compare =
+    let open Loc in
+    fun loc1 loc2 ->
+    let k = Loc.pos_cmp loc1.start loc2.start in
+    if k = 0 then Loc.pos_cmp loc1._end loc2._end
+    else k
+
   (* ID < Temp < HeapLoc, and within those based on sub-structure comparison *)
   let compare =
     fun k1 k2 ->
       (match k1, k2 with
       | Id (l1,i1), Id (l2,i2) ->
           if (i1 < i2) then -1
-            else (if (i1 > i2) then 1 else Loc.compare l1 l2)
-      | Temp l1, Temp l2 -> Loc.compare l1 l2
-      | HeapLoc (l1, s1), HeapLoc (l2, s2) ->
-          let lcmp = (Loc.compare l1 l2) in
-          if (lcmp = 0) then
-            String.compare s1 s2
-          else lcmp
+            else (if (i1 > i2) then 1 else same_file_loc_compare l1 l2)
+      | Temp l1, Temp l2 -> same_file_loc_compare l1 l2
       | Id _, Temp _ -> -1
       | Temp _, Id _ -> 1
       | Id _, HeapLoc _ -> -1
       | HeapLoc _, Id _ -> 1
       | Temp _, HeapLoc _ -> -1
-      | HeapLoc _, Temp _ -> 1)
+      | HeapLoc _, Temp _ -> 1
+      | HeapLoc (l1, s1), HeapLoc (l2, s2) ->
+          let lcmp = (same_file_loc_compare l1 l2) in
+          if (lcmp = 0) then
+            String.compare s1 s2
+          else lcmp
+      )
 end
 
 module DepMap = MyMap.Make (DepKey)

@@ -58,6 +58,7 @@ module Entry = struct
 
   and let_binding_kind =
     | LetVarBinding
+    | LetConstlikeVarBinding
     | ClassNameBinding
     | CatchParamBinding
     | FunctionBinding
@@ -65,17 +66,20 @@ module Entry = struct
 
   and var_binding_kind =
     | VarBinding
+    | ConstlikeVarBinding
 
   let string_of_value_kind = function
   | Const ConstImportBinding -> "import"
   | Const ConstParamBinding -> "const param"
   | Const ConstVarBinding -> "const"
   | Let LetVarBinding -> "let"
+  | Let LetConstlikeVarBinding -> "let"
   | Let ClassNameBinding -> "class"
   | Let CatchParamBinding -> "catch"
   | Let FunctionBinding -> "function"
   | Let ParamBinding -> "param"
   | Var VarBinding -> "var"
+  | Var ConstlikeVarBinding -> "var"
 
   type value_binding = {
     kind: value_kind;
@@ -184,6 +188,10 @@ module Entry = struct
       then entry
       else Value { v with specific = v.general }
     | Value { kind = Const _; _ } ->
+      entry
+    | Value { kind = Var ConstlikeVarBinding; _ } ->
+      entry
+    | Value { kind = Let LetConstlikeVarBinding; _ } ->
       entry
     | Value v ->
       if Reason.is_internal_name name
