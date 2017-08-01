@@ -513,6 +513,7 @@ module type Access = sig
 
   val (>>=) : 'a m -> (('a * keytrace) -> 'b m) -> 'b m
   val counit_with : (access_failure -> 'a) -> 'a m -> 'a
+  val to_option : 'a m -> 'a option
   val get_obj : string -> json * keytrace -> json m
   val get_bool : string -> json * keytrace -> bool m
   val get_string : string -> json * keytrace -> string m
@@ -555,6 +556,10 @@ module Access = struct
       v
     | Result.Error e ->
       f e
+
+  let to_option = function
+    | Result.Ok (v, _) -> Some v
+    | Result.Error _ -> None
 
   let catch_type_error exp f (v, keytrace) =
     try Result.Ok (f v, keytrace) with

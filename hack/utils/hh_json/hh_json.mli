@@ -150,6 +150,9 @@ module type Access = sig
   (** This is a comonad, but we need a little help to deal with failure *)
   val counit_with : (access_failure -> 'a) -> 'a m -> 'a
 
+  (** From the Error monad to the Option monad. Error states go to None. *)
+  val to_option : 'a m -> 'a option
+
   (**
    * The following getters operate on a JSON_Object by accessing keys on it,
    * and asserting the returned value has the given expected type (types
