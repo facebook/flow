@@ -139,6 +139,7 @@ type reason_desc =
   | RNameProperty of reason_desc
   | RMissingAbstract of reason_desc
   | RFieldInitializer of string
+  | RUntypedModule of string
   | RCustom of string
   | RPolyType of reason_desc
   | RClassType of reason_desc
@@ -447,6 +448,7 @@ let rec string_of_desc = function
   | RMissingAbstract d ->
     spf "undefined. Did you forget to declare %s?" (string_of_desc d)
   | RFieldInitializer x -> spf "field initializer for `%s`" x
+  | RUntypedModule m -> spf "import from untyped module `%s`" m
   | RCustom x -> x
   | RPolyType d -> spf "polymorphic type: %s" (string_of_desc d)
   | RClassType d -> spf "class type: %s" (string_of_desc d)

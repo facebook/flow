@@ -2060,26 +2060,28 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, AnyT), (CJSRequireT(reason, t) | ImportModuleNsT(reason, t)) ->
       rec_flow_t cx trace (AnyT.why reason, t)
 
-    | DefT (_, AnyT), ImportDefaultT(reason, import_kind, (_, module_name), t) ->
-      let () = begin match import_kind with
-        | ImportType | ImportTypeof ->
+    | DefT (lreason, AnyT), ImportDefaultT(reason, import_kind, _, t) ->
+      let () = match import_kind, desc_of_reason lreason with
+        (* Use a special reason so we can tell the difference between an any-typed type import
+         * from an untyped module and an any-typed type import from a nonexistent module. *)
+        | (ImportType | ImportTypeof), RUntypedModule module_name ->
           let loc = Reason.loc_of_reason reason in
-          let module_name = spf "`%s`" module_name in
           let message = FlowError.EUntypedTypeImport (loc, module_name) in
           add_output cx ~trace message
-        | ImportValue -> ()
-      end in
+        | _ -> ()
+      in
       rec_flow_t cx trace (AnyT.why reason, t)
 
-    | DefT (_, AnyT), ImportNamedT(reason, import_kind, export_name, t) ->
-      let () = begin match import_kind with
-        | ImportType | ImportTypeof ->
+    | DefT (lreason, AnyT), ImportNamedT(reason, import_kind, _, t) ->
+      let () = match import_kind, desc_of_reason lreason with
+        (* Use a special reason so we can tell the difference between an any-typed type import
+         * from an untyped module and an any-typed type import from a nonexistent module. *)
+        | (ImportType | ImportTypeof), RUntypedModule module_name ->
           let loc = Reason.loc_of_reason reason in
-          let module_name = spf "the module that exports `%s`" export_name in
           let message = FlowError.EUntypedTypeImport (loc, module_name) in
           add_output cx ~trace message
-        | ImportValue -> ()
-      end in
+        | _ -> ()
+      in
       rec_flow_t cx trace (AnyT.why reason, t)
 
     | (DefT (_, PolyT (_, DefT (_, TypeT _))) | DefT (_, TypeT _)),
