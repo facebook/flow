@@ -287,20 +287,47 @@ module Object
     | _ -> List.rev acc
 
   and class_body =
-    let rec elements env acc =
+    let rec elements env seen_constructor acc =
       match Peek.token env with
       | T_EOF
       | T_RCURLY -> List.rev acc
       | T_SEMICOLON ->
           (* Skip empty elements *)
           Expect.token env T_SEMICOLON;
-          elements env acc
-      | _ -> elements env ((class_element env)::acc)
+          elements env seen_constructor acc
+      | _ ->
+          let element = class_element env in
+          let seen_constructor' = begin match element with
+          | Ast.Class.Body.Method (loc, m) ->
+              let open Ast.Class.Method in
+              begin match m.kind with
+              | Constructor when not m.static ->
+                  if seen_constructor then
+                    error_at env (loc, Error.DuplicateConstructor);
+                  true
+              | _ -> seen_constructor
+              end
+          | Ast.Class.Body.Property (loc, p) ->
+              let open Ast.Expression.Object.Property in
+              begin match p.Ast.Class.Property.key with
+              | Literal (_, x) when String.equal x.Ast.Literal.raw "constructor" ||
+                (String.equal x.Ast.Literal.raw "prototype" && p.Ast.Class.Property.static) ->
+                  error_at env (loc, Error.InvalidPropName (x.Ast.Literal.raw,
+                  String.equal x.Ast.Literal.raw "prototype"))
+
+              | Identifier (_, x) when String.equal x "constructor" ||
+                (String.equal x "prototype" && p.Ast.Class.Property.static) ->
+                  error_at env (loc, Error.InvalidPropName (x, String.equal x "prototype"))
+              | _ -> ()
+              end;
+              seen_constructor
+          end in
+          elements env seen_constructor' (element::acc)
 
     in fun env ->
       let start_loc = Peek.loc env in
       Expect.token env T_LCURLY;
-      let body = elements env [] in
+      let body = elements env false [] in
       let end_loc = Peek.loc env in
       Expect.token env T_RCURLY;
       Loc.btwn start_loc end_loc, Ast.Class.Body.({

@@ -86,6 +86,8 @@ type t =
   | ImportTypeShorthandOnlyInPureImport
   | ImportSpecifierMissingComma
   | MalformedUnicode
+  | DuplicateConstructor
+  | InvalidPropName of string * bool
 
 exception Error of (Loc.t * t) list
 
@@ -205,4 +207,9 @@ module PP =
         "Missing comma between import specifiers"
       | MalformedUnicode ->
         "Malformed unicode"
+      | DuplicateConstructor ->
+        "Classes may only have one constructor"
+      | InvalidPropName (name, static) ->
+        let static_modifier = if static then "static " else "" in
+        "Classes may not have " ^ static_modifier ^ "properties named `" ^ name ^ "`"
   end
