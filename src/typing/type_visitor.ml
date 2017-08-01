@@ -68,8 +68,9 @@ class ['a] t = object(self)
   | AnnotT t ->
     self#type_ cx acc t
 
-  | OpaqueT (_, _, t) ->
-    self#type_ cx acc t
+  | OpaqueT (_, opaquetype) ->
+    let acc' = Option.fold ~init:acc ~f:(self#type_ cx) opaquetype.underlying_t in
+    Option.fold ~init:acc' ~f:(self#type_ cx) opaquetype.super_t
 
   | ModuleT (_, exporttypes) ->
     self#export_types cx acc exporttypes
@@ -299,6 +300,7 @@ class ['a] t = object(self)
   | UnifyT (_, _)
   | VarianceCheckT (_, _, _)
   | TypeAppVarianceCheckT (_, _, _)
+  | CondT _
     -> self#__TODO__ cx acc
 
   (* The default behavior here could be fleshed out a bit, to look up the graph,

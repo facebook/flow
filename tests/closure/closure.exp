@@ -40,41 +40,5 @@ Error: const.js:20
  20:     call_me = () => { var y:number = var_x; };  // error
                                  ^^^^^^ number
 
-Error: const.js:38
- 38:     call_me = () => { var y:number = var_x; };  // error
-                                          ^^^^^ boolean. This type is incompatible with
- 38:     call_me = () => { var y:number = var_x; };  // error
-                                 ^^^^^^ number
 
-Error: const.js:38
- 38:     call_me = () => { var y:number = var_x; };  // error
-                                          ^^^^^ string. This type is incompatible with
- 38:     call_me = () => { var y:number = var_x; };  // error
-                                 ^^^^^^ number
-
-Error: const.js:40
- 40:     call_me = () => { var y:string = var_x; };  // error
-                                          ^^^^^ boolean. This type is incompatible with
- 40:     call_me = () => { var y:string = var_x; };  // error
-                                 ^^^^^^ string
-
-Error: const.js:40
- 40:     call_me = () => { var y:string = var_x; };  // error
-                                          ^^^^^ number. This type is incompatible with
- 40:     call_me = () => { var y:string = var_x; };  // error
-                                 ^^^^^^ string
-
-Error: const.js:42
- 42:     call_me = () => { var y:boolean = var_x; };  // error
-                                           ^^^^^ number. This type is incompatible with
- 42:     call_me = () => { var y:boolean = var_x; };  // error
-                                 ^^^^^^^ boolean
-
-Error: const.js:42
- 42:     call_me = () => { var y:boolean = var_x; };  // error
-                                           ^^^^^ string. This type is incompatible with
- 42:     call_me = () => { var y:boolean = var_x; };  // error
-                                 ^^^^^^^ boolean
-
-
-Found 13 errors
+Found 7 errors

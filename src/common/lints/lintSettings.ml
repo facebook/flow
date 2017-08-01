@@ -8,26 +8,36 @@
  *
  *)
 
+type sketchy_null_kind =
+  | SketchyBool
+  | SketchyString
+  | SketchyNumber
+  | SketchyMixed
 type lint_kind =
-  | SketchyNullBool
-  | SketchyNullString
-  | SketchyNullNumber
-  | SketchyNullMixed
+  | SketchyNull of sketchy_null_kind
   | UntypedTypeImport
 
+let string_of_sketchy_null_kind = function
+  | SketchyBool -> "sketchy-null-bool"
+  | SketchyString -> "sketchy-null-string"
+  | SketchyNumber -> "sketchy-null-number"
+  | SketchyMixed -> "sketchy-null-mixed"
+
 let string_of_kind = function
-  | SketchyNullBool -> "sketchy-null-bool"
-  | SketchyNullString -> "sketchy-null-string"
-  | SketchyNullNumber -> "sketchy-null-number"
-  | SketchyNullMixed -> "sketchy-null-mixed"
+  | SketchyNull kind -> string_of_sketchy_null_kind kind
   | UntypedTypeImport -> "untyped-type-import"
 
 let kinds_of_string = function
-  | "sketchy-null" -> Some [SketchyNullBool; SketchyNullString; SketchyNullNumber; SketchyNullMixed]
-  | "sketchy-null-bool" -> Some [SketchyNullBool]
-  | "sketchy-null-string" -> Some [SketchyNullString]
-  | "sketchy-null-number" -> Some [SketchyNullNumber]
-  | "sketchy-null-mixed" -> Some [SketchyNullMixed]
+  | "sketchy-null" -> Some [
+      SketchyNull SketchyBool;
+      SketchyNull SketchyString;
+      SketchyNull SketchyNumber;
+      SketchyNull SketchyMixed;
+    ]
+  | "sketchy-null-bool" -> Some [SketchyNull SketchyBool]
+  | "sketchy-null-string" -> Some [SketchyNull SketchyString]
+  | "sketchy-null-number" -> Some [SketchyNull SketchyNumber]
+  | "sketchy-null-mixed" -> Some [SketchyNull SketchyMixed]
   | "untyped-type-import" -> Some [UntypedTypeImport]
   | _ -> None
 
@@ -81,6 +91,16 @@ type t = {
    * suppressions. The Loc.t is set to None for settings coming from the flowconfig or --lints.*)
   explicit_settings: (lint_state * Loc.t option) LintMap.t;
 }
+
+type error_kind =
+| Invalid_setting
+| Malformed_argument
+| Naked_comment
+| Nonexistent_rule
+| Overwritten_argument
+| Redundant_argument
+
+type error = Loc.t * error_kind
 
 let default_settings = {
   default_state = Off;

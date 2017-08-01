@@ -20,6 +20,8 @@ type b = Pos_source.t
 
 type t = Relative_path.t pos
 
+val pp : Format.formatter -> t -> unit
+
 type absolute = string pos
 
 val none : t

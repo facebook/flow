@@ -349,3 +349,9 @@ $feature-hero-text-shadow: '';
     margin-bottom: 3rem;
   }
 }
+
+@include media-breakpoint-only('md') {
+  .featurette {
+    height: 11rem;
+  }
+}

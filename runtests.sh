@@ -16,6 +16,7 @@ show_help() {
 }
 
 export IN_FLOW_TEST=1
+export FLOW_LOG_LEVEL=debug
 
 OPTIND=1
 record=0
@@ -144,11 +145,6 @@ print_run() {
         "$COLOR_DEFAULT_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
     fi
 }
-kill_server() {
-  trap - SIGINT SIGTERM
-  "$FLOW" stop . 1> /dev/null 2>&1
-  kill "$1" $$
-}
 cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
 passed=0
 failed=0
@@ -201,7 +197,13 @@ runtest() {
         function cleanup {
           rm -rf "$OUT_PARENT_DIR"
         }
-        trap cleanup EXIT
+        function force_cleanup {
+          "$FLOW" stop "$OUT_DIR" 1> /dev/null 2>&1
+          cleanup
+          exit 1
+        }
+        trap 'cleanup' RETURN
+        trap 'force_cleanup' EXIT
 
         # Some tests mutate the source directory, so make a copy first and run
         # from there. the . in "$dir/." copies the entire directory, including
@@ -307,14 +309,13 @@ runtest() {
         else
             # otherwise, run specified flow command, then kill the server
 
-            trap "kill_server -INT" SIGINT
-            trap "kill_server -TERM" SIGTERM
-
             # start server and wait
             "$FLOW" start . \
               $all $flowlib --wait --log-file "$abs_log_file" > /dev/null 2>&1
-            if [ $? -ne 0 ]; then
+            code=$?
+            if [ $code -ne 0 ]; then
               # flow failed to start
+              printf "flow start exited code %s\n" "$code" > "$abs_out_file"
               return_status=$RUNTEST_ERROR
             elif [ "$shell" != "" ]; then
               # run test script
@@ -338,8 +339,6 @@ runtest() {
             fi
             # stop server
             "$FLOW" stop . 1> /dev/null 2>&1
-
-            trap - SIGINT SIGTERM
         fi
 
         if [ "$cwd" != "" ]; then
@@ -354,7 +353,7 @@ runtest() {
         popd >/dev/null
 
         if [ $return_status -ne $RUNTEST_SUCCESS ]; then
-            mv "$abs_out_file" "$dir"
+            [ -s "$abs_out_file" ] && mv "$abs_out_file" "$dir"
             [ -s "$abs_log_file" ] && mv "$abs_log_file" "$dir"
             return $return_status
         elif [ -s "$abs_diff_file" ]; then
@@ -364,7 +363,6 @@ runtest() {
             mv "$abs_diff_file" "$dir"
             return $RUNTEST_FAILURE
         else
-            rm -rf "$OUT_DIR"
             rm -f "$dir/$out_file"
             rm -f "$dir/$log_file"
             rm -f "$dir/$err_file"
@@ -383,10 +381,23 @@ printf "Running up to %d test(s) in parallel\n" "$num_to_run_in_parallel"
 # Index N of pids should correspond to the test at index N of dirs
 dirs=(tests/*/)
 pids=()
+next_test_index=0
+next_test_to_reap=0
+
+function term_tests() {
+  if (( next_test_to_reap < ${#dirs[@]} )); then
+    local to_kill=(${pids[@]:$next_test_to_reap})
+    #printf "Aborting, killing %s\n" "${to_kill[*]}" >&2;
+    printf "\nAborting, killing running tests...\n" >&2
+    kill -TERM "${to_kill[@]}" 2>/dev/null
+    wait "${to_kill[@]}" 2>/dev/null
+    exit 1
+  fi
+}
+trap term_tests TERM SIGINT
 
 # Starts running a test in the background. If there are no more tests then it
 # does nothing
-next_test_index=0
 start_test() {
     if (( next_test_index < ${#dirs[@]} )); then
         test_dir="${dirs[next_test_index]}"
@@ -401,7 +412,6 @@ for ignore_me in $(seq $num_to_run_in_parallel); do
   start_test
 done
 
-next_test_to_reap=0
 while (( next_test_to_reap < ${#dirs[@]} )); do
     # We reap the tests in order, so that we can output them in a pretty way.
     testname="${dirs[next_test_to_reap]}"

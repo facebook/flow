@@ -13,6 +13,11 @@ function unix_alarm() {
   throw new Error('unix_alarm: not implemented in JS');
 }
 
+//Provides: unix_setitimer
+function unix_setitimer() {
+  throw new Error('unix_setitimer: not implemented in JS');
+}
+
 //Provides: unix_clear_nonblock
 function unix_clear_nonblock() {
   throw new Error('unix_clear_nonblock: not implemented in JS');

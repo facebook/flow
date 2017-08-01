@@ -1,6 +1,6 @@
-Error: File "test.js", line 13, characters 5-5
-sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+File "test.js", line 10, characters 5-5
+Warning: sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
 
-Warning: File "test.js", line 10, characters 5-5
-sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
+File "test.js", line 13, characters 5-5
+Error: sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?
 

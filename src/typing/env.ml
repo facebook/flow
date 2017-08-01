@@ -459,11 +459,11 @@ let bind_entry cx name entry loc =
         | VarScope _ -> Entry.(
           let can_shadow = function
             (* funcs/vars can shadow other funcs/vars -- only in var scope *)
-            | (Var | Let FunctionBinding),
-              (Var | Let FunctionBinding) -> true
+            | (Var _ | Let FunctionBinding),
+              (Var _ | Let FunctionBinding) -> true
             (* vars can shadow function params *)
-            | Var, Let ParamBinding -> true
-            | Var, Const ConstParamBinding -> true
+            | Var _, Let ParamBinding -> true
+            | Var _, Const ConstParamBinding -> true
             | _ -> false
           in
           match entry, prev with
@@ -542,7 +542,8 @@ let bind_declare_fun =
       | Some prev ->
         Entry.(match prev with
 
-        | Value v when (Entry.kind_of_value v) = Var ->
+        | Value v
+          when (match Entry.kind_of_value v with Var _ -> true | _ -> false) ->
           let entry = Value { v with
             value_state = State.Initialized;
             specific = update_type v.specific t;
@@ -580,6 +581,21 @@ let declare_implicit_let kind =
   declare_value_entry (Entry.Let kind)
 let declare_const = declare_value_entry Entry.(Const ConstVarBinding)
 
+let promote_to_const_like cx loc =
+(* Does Dep info says single dependence? *)
+(try
+  let open Dep_mapper in
+  let renamings = Context.renamings cx in
+  let dep_map = Context.dep_map cx in
+  let (d,i) = Scope_builder.LocMap.find loc renamings in
+  let { Dep.key=_; Dep.typeDep=_; Dep.valDep=valDep} =
+    DepMap.find (DepKey.Id (d,i)) dep_map in
+    (match valDep with
+    | Dep.Depends l -> (List.length l) = 1
+    | Dep.Primitive -> true
+    | _ -> false)
+  with _ -> false)
+
 (* helper - update var entry to reflect assignment/initialization *)
 (* note: here is where we understand that a name can be multiply var-bound *)
 let init_value_entry kind cx name ~has_anno specific loc =
@@ -587,7 +603,7 @@ let init_value_entry kind cx name ~has_anno specific loc =
   then Entry.(
     let scope, entry = find_entry cx name loc in
     match kind, entry with
-    | Var, Value ({ Entry.kind = Var; _ } as v)
+    | Var _, Value ({ Entry.kind = Var _; _ } as v)
     | Let _, Value ({ Entry.kind = Let _;
         value_state = State.Undeclared | State.Declared; _ } as v)
     | Const _, Value ({ Entry.kind = Const _;
@@ -596,7 +612,19 @@ let init_value_entry kind cx name ~has_anno specific loc =
       if specific != v.general then
         Flow_js.flow_t cx (specific, v.general);
       (* note that annotation supercedes specific initializer type *)
+      let new_kind =
+        match kind with
+        | Var VarBinding ->
+        if (promote_to_const_like cx loc)
+        then Entry.(Var ConstlikeVarBinding)
+        else kind
+        | Let LetVarBinding ->
+        if (promote_to_const_like cx loc)
+        then Entry.(Let LetConstlikeVarBinding)
+        else kind
+        | _ -> kind in
       let value_binding = { v with
+        Entry.kind = new_kind;
         value_state = State.Initialized;
         specific = if has_anno then v.general else specific
       } in
@@ -609,7 +637,7 @@ let init_value_entry kind cx name ~has_anno specific loc =
       ()
     )
 
-let init_var = init_value_entry Entry.Var
+let init_var = init_value_entry Entry.(Var VarBinding)
 let init_let = init_value_entry Entry.(Let LetVarBinding)
 let init_implicit_let kind = init_value_entry (Entry.Let kind)
 let init_fun = init_implicit_let ~has_anno:false Entry.FunctionBinding
@@ -675,7 +703,7 @@ let same_activation target =
 let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
   (* from value positions, a same-activation ref to var or an explicit let
      before initialization yields undefined. *)
-| { Entry.kind = Var | Let LetVarBinding;
+| { Entry.kind = Var _ | Let LetVarBinding;
     value_state = State.Declared | State.MaybeInitialized as state;
     value_declare_loc; specific; general; _ }
     when lookup_mode = ForValue && same_activation scope
@@ -704,7 +732,7 @@ let tdz_error cx name loc v = Entry.(
 (* helper for read/write tdz checks *)
 (* functions are block-scoped, but also hoisted. forward ref ok *)
 let allow_forward_ref = Scope.Entry.(function
-  | Var | Let FunctionBinding -> true
+  | Var _ | Let FunctionBinding -> true
   | _ -> false
 )
 
@@ -821,7 +849,7 @@ let update_var ?(track_ref=false) op cx name specific loc =
     } as v) when not (allow_forward_ref kind) && same_activation scope ->
     tdz_error cx name loc v;
     None
-  | Value ({ Entry.kind = Let _ | Var; _ } as v) ->
+  | Value ({ Entry.kind = Let _ | Var _; _ } as v) ->
     let change = scope.id, name, op in
     Changeset.change_var change;
     let use_op = match op with
@@ -958,13 +986,13 @@ let merge_env =
   (* propagate var state updates from child entries *)
   let merge_states orig child1 child2 = Entry.(
     match orig.Entry.kind with
-    | Var | Let _
+    | Var _ | Let _
       when
         child1.value_state = State.Initialized &&
         child2.value_state = State.Initialized ->
       (* if both branches have initialized, we can set parent state *)
       State.Initialized
-    | Var | Let _
+    | Var _ | Let _
       when
         child1.value_state >= State.Declared &&
         child2.value_state >= State.Declared &&

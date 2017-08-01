@@ -8,11 +8,14 @@
  *
  *)
 
+type sketchy_null_kind =
+  | SketchyBool
+  | SketchyString
+  | SketchyNumber
+  | SketchyMixed
+
 type lint_kind =
-  | SketchyNullBool
-  | SketchyNullString
-  | SketchyNullNumber
-  | SketchyNullMixed
+  | SketchyNull of sketchy_null_kind
   | UntypedTypeImport
 
 val string_of_kind: lint_kind -> string
@@ -34,6 +37,16 @@ val state_min: lint_state -> lint_state -> lint_state
 val state_max: lint_state -> lint_state -> lint_state
 
 type t
+
+type error_kind =
+| Invalid_setting
+| Malformed_argument
+| Naked_comment
+| Nonexistent_rule
+| Overwritten_argument
+| Redundant_argument
+
+type error = Loc.t * error_kind
 
 val default_settings: t
 

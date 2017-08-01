@@ -34,30 +34,38 @@ let exc ?(prefix="") e =
 
 module Level : sig
   type t =
+    | Off
     | Fatal
     | Error
     | Warn
     | Info
     | Debug
-  val default_filter : t -> bool
-  val set_filter : (t -> bool) -> unit
+  val set_min_level : t -> unit
   val log : t -> ('a, unit, string, string, string, unit) format6 -> 'a
 end = struct
   type t =
+    | Off
     | Fatal
     | Error
     | Warn
     | Info
     | Debug
 
-  let default_filter = function
-    | Debug -> false
-    | _ -> true
+  let int_of_level = function
+    | Off -> 6
+    | Fatal -> 5
+    | Error -> 4
+    | Warn -> 3
+    | Info -> 2
+    | Debug -> 1
 
-  let filter = ref default_filter
-  let set_filter f = filter := f
+  let min_level = ref Info
+  let set_min_level level = min_level := level
 
-  let log level fmt = if !filter level then log fmt else Printf.ifprintf () fmt
+  let log level fmt =
+    if int_of_level level >= int_of_level !min_level
+    then log fmt
+    else Printf.ifprintf () fmt
 end
 
 let fatal fmt = Level.log Level.Fatal fmt

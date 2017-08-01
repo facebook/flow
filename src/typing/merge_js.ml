@@ -110,40 +110,30 @@ let explicit_unchecked_require_strict cx (m, loc, cx_to) =
   Flow_js.flow_t cx (from_t, to_t)
 
 let detect_sketchy_null_checks cx =
-  let add_error ~prop_loc ~null_loc ~falsey_loc kind ~type_str ~value_str =
-    Context.add_error cx (Errors.mk_error
-      ~kind:(Errors.LintError kind)
-      [prop_loc, [(Printf.sprintf "Sketchy null check on %s value." type_str)
-        ^ " Perhaps you meant to check for null instead of for existence?"]]
-      ~extra:[Errors.InfoLeaf [
-        null_loc, ["Potentially null/undefined value."];
-        falsey_loc, [Printf.sprintf "%s value." value_str]
-      ]]
-    )
+  let add_error ~loc ~null_loc kind falsy_loc =
+    let msg = Flow_error.ESketchyNullLint { kind; loc; null_loc; falsy_loc } in
+    Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file:(Context.file cx) msg
+    |> Context.add_error cx
   in
 
-  let detect_function exists_excuses prop_loc exists_check =
+  let detect_function exists_excuses loc exists_check =
     let open ExistsCheck in
 
-    let exists_excuse = Utils_js.LocMap.get prop_loc exists_excuses
+    let exists_excuse = Utils_js.LocMap.get loc exists_excuses
       |> Option.value ~default:empty in
 
     begin match exists_check.null_loc with
       | None -> ()
       | Some null_loc ->
-        let add_error = add_error ~prop_loc ~null_loc in
+        let add_error = add_error ~loc ~null_loc in
         if (Option.is_none exists_excuse.bool_loc) then
-          Option.iter exists_check.bool_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
-            LintSettings.SketchyNullBool ~type_str:"boolean" ~value_str:"Potentially false");
+          Option.iter exists_check.bool_loc ~f:(add_error LintSettings.SketchyBool);
         if (Option.is_none exists_excuse.number_loc) then
-          Option.iter exists_check.number_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
-            LintSettings.SketchyNullNumber ~type_str:"number" ~value_str:"Potentially 0");
+          Option.iter exists_check.number_loc ~f:(add_error LintSettings.SketchyNumber);
         if (Option.is_none exists_excuse.string_loc) then
-          Option.iter exists_check.string_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
-            LintSettings.SketchyNullString ~type_str:"string" ~value_str:"Potentially \"\"");
+          Option.iter exists_check.string_loc ~f:(add_error LintSettings.SketchyString);
         if (Option.is_none exists_excuse.mixed_loc) then
-          Option.iter exists_check.mixed_loc ~f:(fun falsey_loc -> add_error ~falsey_loc
-            LintSettings.SketchyNullMixed ~type_str:"mixed" ~value_str:"Mixed");
+          Option.iter exists_check.mixed_loc ~f:(add_error LintSettings.SketchyMixed);
         ()
     end
   in
@@ -251,11 +241,32 @@ let merge_lib_file cx master_cx =
 
   errs, Context.error_suppressions cx, Context.lint_settings cx
 
-let merge_type r types =
-  match types with
-  | [] -> Type.Locationless.AnyT.t
-  | [t] -> t
-  | t0::t1::ts -> Type.(DefT (r, UnionT (UnionRep.make t0 t1 ts)))
+let lowers_of_tvar =
+  let open Type in
+  let possible_types = Flow_js.possible_types in
+  let finish r = function
+    | [] -> Locationless.AnyT.t
+    | [t] -> t
+    | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts))
+  in
+  let rec merge cx r seen acc = function
+    | [] -> finish r (List.rev acc)
+    | t::ts ->
+      match t with
+      (* Recursively unwrap unions *)
+      | DefT (_, UnionT rep) ->
+        merge cx r seen acc (UnionRep.members rep @ ts)
+      (* Recursively unwrap unseen tvars *)
+      | OpenT (_, id) ->
+        if ISet.mem id seen
+        then merge cx r seen acc ts (* already unwrapped *)
+        else merge cx r (ISet.add id seen) acc (possible_types cx id @ ts)
+      (* Ignore empty *)
+      | DefT (_, EmptyT) -> merge cx r seen acc ts
+      (* Everything else becomes part of the merge typed *)
+      | _ -> merge cx r seen (t::acc) ts
+  in
+  fun cx r id -> merge cx r (ISet.singleton id) [] (possible_types cx id)
 
 (****************** signature contexts *********************)
 
@@ -313,9 +324,6 @@ module ContextOptimizer = struct
     sig_hash = SigHash.empty;
   }
 
-  let lowers_of_tvar cx id r =
-    merge_type r (Flow_js.possible_types cx id)
-
   class context_optimizer = object(self)
     inherit [quotient] Type_visitor.t as super
 
@@ -338,7 +346,7 @@ module ContextOptimizer = struct
         let sig_hash = SigHash.add stable_id sig_hash in
         { quotient with sig_hash }
       else
-        let t = lowers_of_tvar cx id r in
+        let t = lowers_of_tvar cx r id in
         let node = Root { rank = 0; constraints = Resolved t } in
         let reduced_graph = IMap.add id node reduced_graph in
         let stable_id = self#fresh_stable_id in
@@ -385,7 +393,7 @@ module ContextOptimizer = struct
         | None -> quotient
         | Some t ->
           let t = match t with
-          | OpenT (r, id) -> lowers_of_tvar cx id r
+          | OpenT (r, id) -> lowers_of_tvar cx r id
           | t -> t
           in
           let reduced_evaluated = IMap.add id t reduced_evaluated in

@@ -103,19 +103,19 @@ const Legacy_DefaultProps = React.createClass({
     foo: 42,
   },
 });
-class Class_DefaultProps extends React.Component<*, Props_DefaultProps, void> {
+class Class_DefaultProps extends React.Component<{foo: 42}, Props_DefaultProps, void> {
   static defaultProps = {
     foo: 42,
   };
 }
 class ClassExact_DefaultProps
-  extends React.Component<*, $Exact<Props_DefaultProps>, void> {
+  extends React.Component<{|foo: 42|}, $Exact<Props_DefaultProps>, void> {
   static defaultProps = {
     foo: 42,
   };
 }
 class ClassPure_DefaultProps
-  extends React.PureComponent<*, Props_DefaultProps, void> {
+  extends React.PureComponent<{foo: 42}, Props_DefaultProps, void> {
   static defaultProps = {
     foo: 42,
   };
@@ -196,6 +196,18 @@ const DefaultProps:
   boolean1
   boolean2={false}
   {...{number: 42, a: 1, b: 2, c: 3}}
+/>;
+<ManyProps // OK: `number` is overwritten at the end of the element.
+  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  boolean1
+  boolean2={false}
+  number={42}
+/>;
+<ManyProps // Error: `number` cannot be null.
+  boolean1
+  boolean2={false}
+  number={42}
+  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
 />;
 
 <OptionalProps />; // Error: `foo` is required.

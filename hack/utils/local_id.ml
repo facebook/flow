@@ -29,10 +29,11 @@ let to_string x =
   | Some s -> s
   | None -> string_of_int x
 
+let pp fmt x = Format.pp_print_string fmt (to_string x)
+
 let to_int x = x
 
 let get_name x =
-  assert (!track_names);
   match IMap.get x !trace with
   | Some s -> s
   | None -> to_string x

@@ -53,11 +53,11 @@ class ['a] t = object(self)
       | DefT (r, t') ->
           let t'' = self#def_type cx map_cx t' in
           if t' == t'' then t else DefT (r, t'')
-      | EvalT (t', dt, i) ->
+      | EvalT (t', dt, _) ->
           let t'' = self#type_ cx map_cx t' in
           let dt' = self#defer_use_type cx map_cx dt in
           if t' == t'' && dt == dt' then t
-          else EvalT (t'', dt', i)
+          else EvalT (t'', dt', Reason.mk_id ())
       | BoundT t' ->
           let t'' = self#type_param cx map_cx t' in
           if t'' == t' then t
@@ -112,10 +112,16 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else AnnotT t''
-      | OpaqueT (r, id, t') ->
-          let t'' = self#type_ cx map_cx t' in
-          if t'' == t' then t
-          else OpaqueT (r, id, t'')
+      | OpaqueT (r, opaquetype) ->
+          let underlying_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.underlying_t in
+          let super_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.super_t in
+          let opaque_type_args =
+            SMap.ident_map (self#type_ cx map_cx) opaquetype.opaque_type_args in
+          if underlying_t == opaquetype.underlying_t &&
+            super_t == opaquetype.super_t &&
+            opaque_type_args == opaquetype.opaque_type_args
+          then t
+          else OpaqueT (r, {opaquetype with underlying_t; super_t; opaque_type_args})
       | ModuleT (r, exporttypes) ->
           let exporttypes' = self#export_types cx map_cx exporttypes in
           if exporttypes == exporttypes' then t
@@ -180,9 +186,9 @@ class ['a] t = object(self)
       | InstanceT (st, su, impl, instt) ->
           let st' = self#type_ cx map_cx st in
           let su' = self#type_ cx map_cx su in
-          let impl' = ListUtils.ident_map (self#type_ cx map_cx ) impl in
+          let impl' = ListUtils.ident_map (self#type_ cx map_cx) impl in
           let instt' = self#inst_type cx map_cx instt in
-          if st' == st' && su' == su && impl' == impl && instt' == instt then t
+          if st' == st && su' == su && impl' == impl && instt' == instt then t
           else InstanceT (st', su', impl', instt')
       | SingletonStrT _
       | SingletonNumT _
@@ -250,11 +256,21 @@ class ['a] t = object(self)
     let this_t' = self#type_ cx map_cx this_t in
     let return_t' = self#type_ cx map_cx return_t in
     let params_tlist' = ListUtils.ident_map (self#type_ cx map_cx) params_tlist in
-    if this_t' == this_t && return_t' == return_t && params_tlist' == params_tlist then t
+    let rest_param' = match rest_param with
+    | None -> rest_param
+    | Some (name, loc, t) ->
+        let t' = self#type_ cx map_cx t in
+        if t' == t then rest_param else Some (name, loc, t')
+    in
+    if this_t' == this_t &&
+       return_t' == return_t &&
+       params_tlist' == params_tlist &&
+       rest_param' == rest_param then t
     else
       let this_t = this_t' in
       let return_t = return_t' in
       let params_tlist = params_tlist' in
+      let rest_param = rest_param' in
       {this_t; params_tlist; params_names; rest_param; return_t;
        closure_t; is_predicate; changeset; def_reason}
 
@@ -276,7 +292,7 @@ class ['a] t = object(self)
     let m_tmap' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) m_tmap in
     let methods_tmap' =
       if m_tmap == m_tmap' then methods_tmap
-      else Context.make_property_map cx m_tmap in
+      else Context.make_property_map cx m_tmap' in
     if type_args == type_args' && methods_tmap == methods_tmap' && fields_tmap == fields_tmap'
     then t
     else
@@ -302,8 +318,11 @@ class ['a] t = object(self)
       | ObjRest _
       | ArrRest _
       | Default
-      | Become
-      | Refine _ -> t
+      | Become -> t
+      | Refine p ->
+          let p' = self#predicate cx map_cx p in
+          if p' == p then t
+          else Refine p'
 
   method destructor cx map_cx t =
     match t with
@@ -317,10 +336,10 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else Bind t''
-      | SpreadType (b, tlist) ->
+      | SpreadType (options, tlist) ->
           let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
           if tlist' == tlist then t
-          else SpreadType (b, tlist')
+          else SpreadType (options, tlist')
       | ValuesType -> t
 
   method exports cx map_cx id =
@@ -658,12 +677,12 @@ class ['a] t = object(self)
         let react_tool' = self#react_tool cx map_cx react_tool in
         if react_tool' == react_tool then t
         else ReactKitT (r, react_tool')
-    | ObjSpreadT (r, tool, state, t') ->
+    | ObjSpreadT (r, options, tool, state, t') ->
         let tool' = self#object_spread_tool cx map_cx tool in
         let state' = self#object_spread_state cx map_cx state in
         let t'' = self#type_ cx map_cx t' in
         if tool' == tool && state' == state && t'' == t' then t
-        else ObjSpreadT (r, tool', state', t'')
+        else ObjSpreadT (r, options, tool', state', t'')
     | ChoiceKitUseT (r, choice_use_tool) ->
         let choice_use_tool' = self#choice_use_tool cx map_cx choice_use_tool in
         if choice_use_tool' == choice_use_tool then t
@@ -709,6 +728,11 @@ class ['a] t = object(self)
         let resolve_spread' = self#resolve_spread cx map_cx resolve_spread in
         if resolve_spread' == resolve_spread then t
         else ResolveSpreadT (r, resolve_spread')
+    | CondT (r, alt, tout) ->
+        let alt' = self#type_ cx map_cx alt in
+        let tout' = self#type_ cx map_cx tout in
+        if alt' == alt && tout' == tout then t
+        else CondT (r, alt', tout')
 
   method fun_call_type cx map_cx ({call_this_t; call_args_tlist; call_tout;
       call_closure_t; call_strict_arity} as t) =
@@ -895,7 +919,7 @@ class ['a] t = object(self)
     let todo_rev' = ListUtils.ident_map (self#type_ cx map_cx) t.todo_rev in
     let acc' = ListUtils.ident_map (self#resolved cx map_cx) t.acc in
     if todo_rev' == t.todo_rev && acc' == t.acc then t
-    else {todo_rev = todo_rev'; acc = acc'; make_exact = t.make_exact}
+    else {todo_rev = todo_rev'; acc = acc'}
 
   method intersection_preprocess_tool cx map_cx t =
     match t with

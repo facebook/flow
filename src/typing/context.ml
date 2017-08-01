@@ -144,6 +144,9 @@ type local_t = {
   (* The above example assumes that x is a string. If it were a different type
    * it wouldn't be excused. *)
   mutable exists_excuses: ExistsCheck.t Utils_js.LocMap.t;
+
+  mutable dep_map: Dep_mapper.Dep.t Dep_mapper.DepMap.t;
+  mutable renamings : (Loc.t * int) Scope_builder.LocMap.t;
 }
 
 type cacheable_t = local_t
@@ -227,6 +230,9 @@ let make metadata file module_ref = {
 
     exists_checks = Utils_js.LocMap.empty;
     exists_excuses = Utils_js.LocMap.empty;
+
+    dep_map = Dep_mapper.DepMap.empty;
+    renamings = Scope_builder.LocMap.empty;
   }
 }
 
@@ -293,6 +299,8 @@ let max_workers cx = Global.max_workers cx.global
 let jsx cx = cx.local.metadata.jsx
 let exists_checks cx = cx.local.exists_checks
 let exists_excuses cx = cx.local.exists_excuses
+let dep_map cx = cx.local.dep_map
+let renamings cx = cx.local.renamings
 
 let pid_prefix (cx: t) =
   if max_workers cx > 0
@@ -371,6 +379,10 @@ let set_exists_checks cx exists_checks =
   cx.local.exists_checks <- exists_checks
 let set_exists_excuses cx exists_excuses =
   cx.local.exists_excuses <- exists_excuses
+let set_dep_map cx dep_map =
+  cx.local.dep_map <- dep_map
+let set_renamings cx renamings =
+  cx.local.renamings <- renamings
 
 let clear_intermediates cx =
   (* call reset instead of clear to also shrink the bucket tables *)
@@ -378,7 +390,10 @@ let clear_intermediates cx =
   Hashtbl.reset cx.local.annot_table;
   cx.local.all_unresolved <- IMap.empty;
   cx.local.exists_checks <- Utils_js.LocMap.empty;
-  cx.local.exists_excuses <- Utils_js.LocMap.empty
+  cx.local.exists_excuses <- Utils_js.LocMap.empty;
+  cx.local.dep_map <- Dep_mapper.DepMap.empty;
+  cx.local.renamings <- Scope_builder.LocMap.empty
+
 
 (* utils *)
 let iter_props cx id f =
@@ -419,13 +434,6 @@ let make_export_map cx tmap =
 
 (* Copy context from cx_other to cx *)
 let merge_into cx cx_other =
-  (* Map.union: which is faster, union M N or union N M when M > N?
-     union X Y = fold add X Y which means iterate over X, adding to Y
-     So running time is roughly X * log Y.
-
-     Now, when M > N, we have M * log N > N * log M.
-     So do union N M as long as N may override M for overlapping keys.
-  *)
   set_envs cx (IMap.union (envs cx_other) (envs cx));
   set_property_maps cx (
     Type.Properties.Map.union (property_maps cx_other) (property_maps cx));
@@ -438,6 +446,7 @@ let merge_into cx cx_other =
   set_graph cx (IMap.union (graph cx_other) (graph cx));
   set_exists_checks cx (Utils_js.LocMap.union (exists_checks cx_other) (exists_checks cx));
   set_exists_excuses cx (Utils_js.LocMap.union (exists_excuses cx_other) (exists_excuses cx))
+  (* TODO: merge renamings and dep_map as well. *)
 
 let to_cache cx = cx.local
 let from_cache ~options local =

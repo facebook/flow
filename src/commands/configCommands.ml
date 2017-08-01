@@ -9,7 +9,7 @@ module Init = struct
         e.g. %s init /path/to/root\n\
         or %s init\n\
         or %s init --options \"optionA=123;optionB=456\"\n\
-        or %s init --lints \"lintA=on;lintB=off\"\n\n\
+        or %s init --lints \"lintA=on,lintB=off\"\n\n\
         If the root is not specified it is assumed to be the current working directory\n\n\
         This command will create and initialize /path/to/root/.flowconfig\n"
         CommandUtils.exe_name
@@ -23,14 +23,12 @@ module Init = struct
       |> CommandUtils.flowconfig_flags
       |> flag "--options" (optional string)
           ~doc:"Semicolon-delimited list of key=value pairs"
-      |> flag "--lints" (optional string)
-          ~doc:"Semicolon-delimited list of key=value pairs"
       |> anon "root" (optional string)
           ~doc:"Root directory (default: current working directory)"
     )
   }
 
-  let main from flowconfig_flags options lints root () =
+  let main from flowconfig_flags options root () =
     FlowEventLogger.set_from from;
     let root = match root with
     | None -> Sys.getcwd () |> Path.make
@@ -41,13 +39,10 @@ module Init = struct
     | None -> []
     | Some str -> Str.split (Str.regexp ";") str
     in
-    let lints = match lints with
-    | None -> []
-    | Some str -> Str.split (Str.regexp ";") str
-    in
     let ignores = flowconfig_flags.CommandUtils.ignores in
     let includes = flowconfig_flags.CommandUtils.includes in
     let libs = flowconfig_flags.CommandUtils.libs in
+    let lints = flowconfig_flags.CommandUtils.lint_settings in
 
     let file = Server_files_js.config_file root in
     if Sys.file_exists file

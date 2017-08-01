@@ -6,9 +6,15 @@ include_nav_posts: true
 {% for post in site.posts %}
   <div class="blog-post">
     <h3>
-      <a href="{{site.baseurl}}{{post.url}}">
-        {{post.title}}
-      </a>
+      {% if post.medium-link %}
+        <a href="{{post.medium-link}}">
+          {{post.title}}
+        </a>
+      {% else %}
+        <a href="{{site.baseurl}}{{post.url}}">
+          {{post.title}}
+        </a>
+      {% endif %}
     </h3>
 
     <p class="small text-muted">
@@ -25,6 +31,11 @@ include_nav_posts: true
         </div>
       {% else %}
         {{ post.content }}
+        {% if post.medium-link %}
+          <a href="{{post.medium-link}}" >
+            Read more on Medium &rarr;
+          </a>
+        {% endif %}
       {% endif %}
     </div>
 

@@ -1,6 +1,6 @@
 opam-version: "1.2"
 name: "flowtype"
-version: "0.50.0"
+version: "0.51.1"
 maintainer: "gabe@fb.com"
 homepage: "https://flow.org"
 dev-repo: "https://github.com/facebook/flow.git"
@@ -20,7 +20,7 @@ depends: [
   "base-unix"
   "base-bytes"
   "ocamlbuild" {build}
-  "sedlex"
+  "sedlex" { >= "1.99.4" }
 ]
 available: [ocaml-version >= "4.03.0"]
 build: [ [ "env" "FLOW_RELEASE=1" make ] ]

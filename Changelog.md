@@ -1,3 +1,30 @@
+### 0.51.1
+
+* Changed linter (experimental, coming soon) to ignore lint errors in node_modules
+
+### 0.51.0
+
+New Features:
+* Added support for opaque type aliases
+* Added library definitions for the Node.js repl module (thanks @zacharygolba!)
+
+Notable bug fixes:
+* Fixed library definitions for the Node.js cluster module (thanks @Corei13!)
+* Fixed the return type of EventEmitter#setMaxListeners (thanks @ahutchings!)
+* Added missing properties in the Node.js fs module (thanks @ahutchings and @rgbkrk!)
+* Fixed the length property on $ReadOnlyArray to be covariant (thanks @popham!)
+
+Misc:
+* Improved error handling in our test runner
+* Fixed type error in our docs (thanks @stenehall!)
+* Fixed broken link in docs (thanks @vasyan!)
+* Fixed misleading typo in docs (thanks @joelochlann!)
+
+Parser:
+* Fixed end locations of various statement nodes to include terminal rparen
+* Added separate DeclareTypeAlias and DeclareInterface AST nodes, matching Babel
+* Fixed locations of declared vars, classes, and functions in declare export stmts
+
 ### 0.50.0
 
 Likely to cause new Flow errors:

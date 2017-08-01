@@ -373,12 +373,14 @@ module ErrorSet = Set.Make(Error)
 module Cli_output = struct
   type error_flags = {
     color: Tty.color_mode;
+    include_warnings: bool;
     one_line: bool;
     show_all_errors: bool;
   }
 
   let default_error_flags = {
     color = Tty.Color_Auto;
+    include_warnings = false;
     one_line = false;
     show_all_errors = false;
   }
@@ -684,32 +686,65 @@ module Cli_output = struct
       get_pretty_printed_error ~stdin_file ~strip_root ~one_line ~severity error in
     Tty.cprint ~out_channel ~color_mode:color to_print
 
-  let print_errors ~out_channel ~flags ?(stdin_file=None) ~strip_root ~errors ~warnings () =
-    let error_or_errors n = if n != 1 then "errors" else "error" in
-    let truncate = not (flags.show_all_errors) in
-    let one_line = flags.one_line in
-    let color = flags.color in
-    let print_error_if_not_truncated severity e curr =
-      begin if not(truncate) || curr < 50 then
-        print_error_color ~stdin_file ~strip_root ~one_line ~color ~out_channel ~severity e
-      end;
+  let print_errors =
+    let render_counts =
+      let error_or_errors n = if n != 1 then "errors" else "error" in
+      let warning_or_warnings n = if n != 1 then "warnings" else "warning" in
 
-      curr + 1
+      fun ~err_count ~warn_count sep ->
+        (* If there are 0 errors and 0 warnings, just render "0 errors" *)
+        if warn_count = 0 then
+          Printf.sprintf "%d%s%s"
+            err_count sep (error_or_errors err_count)
+        else if err_count = 0 then
+          Printf.sprintf "%d%s%s"
+            warn_count sep (warning_or_warnings warn_count)
+        else (* err_count > 0 and warn_count > 0 *)
+          Printf.sprintf "%d%s%s and %d%s%s"
+            err_count sep (error_or_errors err_count)
+            warn_count sep (warning_or_warnings warn_count)
     in
-    let total = ErrorSet.fold (print_error_if_not_truncated LintSettings.Err) errors 0 in
-    let total = ErrorSet.fold (print_error_if_not_truncated LintSettings.Warn) warnings total in
-    if total > 0 then print_newline ();
-    if truncate && total > 50 then (
-      Printf.fprintf
-        out_channel
-        "... %d more %s (only 50 out of %d errors displayed)\n"
-        (total - 50) (error_or_errors (total - 50)) total;
-      Printf.fprintf
-        out_channel
-        "To see all errors, re-run Flow with --show-all-errors\n";
-      flush out_channel
-    ) else
-      Printf.fprintf out_channel "Found %d %s\n" total (error_or_errors total)
+
+    fun ~out_channel ~flags ?(stdin_file=None) ~include_warnings
+      ~strip_root ~errors ~warnings () ->
+      let truncate = not (flags.show_all_errors) in
+      let one_line = flags.one_line in
+      let color = flags.color in
+      let print_error_if_not_truncated severity e curr =
+        begin if not(truncate) || curr < 50 then
+          print_error_color ~stdin_file ~strip_root ~one_line ~color ~out_channel ~severity e
+        end;
+
+        curr + 1
+      in
+      let err_count = ErrorSet.fold (print_error_if_not_truncated LintSettings.Err) errors 0 in
+      let warn_count, total_count =
+        if include_warnings then
+          let total_count = ErrorSet.fold
+            (print_error_if_not_truncated LintSettings.Warn) warnings err_count
+          in
+          let warn_count = total_count - err_count in
+          warn_count, total_count
+        else (0, err_count)
+      in
+      if total_count > 0 then print_newline ();
+      if truncate && total_count > 50 then (
+        let remaining_errs, remaining_warns = if err_count - 50 < 0
+          then 0, warn_count - (50 - err_count)
+          else err_count - 50, warn_count
+        in
+        Printf.fprintf
+          out_channel
+          "... %s (only 50 out of %s displayed)\n"
+          (render_counts ~err_count:remaining_errs ~warn_count:remaining_warns " more ")
+          (render_counts ~err_count ~warn_count " ");
+        Printf.fprintf
+          out_channel
+          "To see all errors, re-run Flow with --show-all-errors\n";
+        flush out_channel
+      ) else
+        Printf.fprintf out_channel "Found %s\n"
+          (render_counts ~err_count ~warn_count " ")
 end
 
 (* JSON output *)
@@ -816,13 +851,16 @@ module Json_output = struct
       ~severity ~suppression_locs error)
 
   let json_of_errors_with_context
-    ~strip_root ~stdin_file ~suppressed_errors ~errors ~warnings () =
+    ~strip_root ~stdin_file ~include_warnings ~suppressed_errors ~errors ~warnings () =
     let errors = errors
       |> ErrorSet.elements
       |> List.map (fun err -> err, Loc.LocSet.empty) in
-    let warnings = warnings
-      |> ErrorSet.elements
-      |> List.map (fun warn -> warn, Loc.LocSet.empty) in
+    let warnings = if include_warnings
+      then warnings
+        |> ErrorSet.elements
+        |> List.map (fun warn -> warn, Loc.LocSet.empty)
+      else []
+    in
     let f = json_of_error_with_context ~strip_root ~stdin_file in
     Hh_json.JSON_Array (
       List.map (f ~severity:LintSettings.Err) errors @
@@ -831,14 +869,14 @@ module Json_output = struct
       List.map (f ~severity:LintSettings.Err) suppressed_errors
     )
 
-  let full_status_json_of_errors
-    ~strip_root ~suppressed_errors ?(profiling=None) ?(stdin_file=None) ~errors ~warnings () =
+  let full_status_json_of_errors ~strip_root  ~include_warnings ~suppressed_errors
+    ?(profiling=None) ?(stdin_file=None) ~errors ~warnings () =
     let open Hh_json in
 
     let props = [
       "flowVersion", JSON_String Flow_version.version;
       "errors", json_of_errors_with_context
-        ~strip_root ~stdin_file ~suppressed_errors ~errors ~warnings ();
+        ~strip_root ~stdin_file ~include_warnings ~suppressed_errors ~errors ~warnings ();
       "passed", JSON_Bool (ErrorSet.is_empty errors);
     ] in
     let props = match profiling with
@@ -850,14 +888,15 @@ module Json_output = struct
   let print_errors
       ~out_channel
       ~strip_root
+      ~include_warnings
       ~suppressed_errors
       ?(pretty=false) ?(profiling=None) ?(stdin_file=None)
       ~errors
       ~warnings
       () =
     let open Hh_json in
-    let res = full_status_json_of_errors
-      ~strip_root ~profiling ~stdin_file ~suppressed_errors ~errors ~warnings () in
+    let res = full_status_json_of_errors ~strip_root ~profiling ~stdin_file
+      ~include_warnings ~suppressed_errors ~errors ~warnings () in
     output_string out_channel (json_to_string ~pretty res);
     flush out_channel
 end
@@ -884,32 +923,34 @@ module Vim_emacs_output = struct
 
   let print_errors =
     let endline s = if s = "" then "" else s ^ "\n" in
-    let to_pp_string ~strip_root message =
+    let to_pp_string ~strip_root prefix message =
       let loc, msg = to_pp message in
       let loc_str = string_of_loc ~strip_root loc in
-      Printf.sprintf "%s%s" (endline loc_str) (endline msg)
+      Printf.sprintf "%s%s%s" (endline loc_str) prefix (endline msg)
     in
-    let to_string ~strip_root (error : error) : string =
+    let to_string ~strip_root prefix (error : error) : string =
       let {messages; trace; _} = error in
       let messages = append_trace_reasons messages trace in
       let buf = Buffer.create 50 in
       (match messages with
       | [] -> assert false
       | message1 :: rest_of_error ->
-          Buffer.add_string buf (to_pp_string ~strip_root message1);
+          Buffer.add_string buf (to_pp_string ~strip_root prefix message1);
           List.iter begin fun message ->
-            Buffer.add_string buf (to_pp_string ~strip_root message)
+            Buffer.add_string buf (to_pp_string ~strip_root "" message)
           end rest_of_error
       );
       Buffer.contents buf
     in
-    fun ~strip_root oc ~errors ~warnings () ->
+    fun ~strip_root ~include_warnings oc ~errors ~warnings () ->
       let sl = ErrorSet.fold (fun err acc ->
-        ("Error: " ^ (to_string ~strip_root err))::acc
-      ) (errors) [] in
-      let sl = ErrorSet.fold (fun warn acc ->
-        ("Warning: " ^ (to_string ~strip_root warn))::acc
-      ) (warnings) sl in
+          (to_string ~strip_root "Error: " err)::acc
+        ) (errors) [] in
+      let sl = if include_warnings then ErrorSet.fold (fun warn acc ->
+          (to_string ~strip_root "Warning: " warn)::acc
+        ) (warnings) sl
+        else sl
+      in
       let sl = ListUtils.uniq (List.sort String.compare sl) in
       List.iter begin fun s ->
         output_string oc s;

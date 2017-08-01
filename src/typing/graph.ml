@@ -170,7 +170,8 @@ and parts_of_t cx = function
 | OpenT _ -> assert false
 | AbstractT (_, t) -> ["t", Def t]
 | AnnotT source -> ["source", Def source]
-| OpaqueT (_, _, t) -> ["t", Def t]
+| OpaqueT (_, {underlying_t = Some t; _}) -> ["t", Def t]
+| OpaqueT _ -> []
 | DefT (_, (AnyObjT | AnyFunT)) -> []
 | DefT (_, AnyT) -> []
 | AnyWithLowerBoundT t | AnyWithUpperBoundT t -> ["t", Def t]
@@ -360,7 +361,7 @@ and parts_of_use_t cx = function
 | SetPropT (_, _, t) -> ["t", Def t]
 | SetProtoT (_, t) -> ["t", Def t]
 | SpecializeT (_, _, _, args, out) -> ("out", Def out) :: list_parts args
-| ObjSpreadT (_, _, _, out) -> ["out", Def out]
+| ObjSpreadT (_, _, _, _, out) -> ["out", Def out]
 | SubstOnPredT (_, _, t) -> ["t", Def t]
 | SuperT _ -> []
 | TestPropT (_, _, out) -> ["out", Def out]
@@ -369,6 +370,7 @@ and parts_of_use_t cx = function
 | UnifyT (x, y) -> ["x", Def x; "y", Def y]
 | VarianceCheckT (_, args, _) -> list_parts args
 | TypeAppVarianceCheckT _ -> []
+| CondT (_, alt, out) -> ["alt", Def alt; "out", Def out]
 
 and parts_of_arrtype = function
 | ArrayAT (elemt, None)

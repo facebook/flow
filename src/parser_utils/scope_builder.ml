@@ -11,6 +11,7 @@
 
 module LocMap = Map.Make (Loc)
 open Flow_ast_visitor
+open Hoister
 
 class with_or_eval_visitor = object(this)
   inherit [bool] visitor ~init:false as super
@@ -29,171 +30,6 @@ class with_or_eval_visitor = object(this)
   method! with_ (stuff: Ast.Statement.With.t) =
     this#set_acc true;
     stuff
-end
-
-(* Hoister class. Does a shallow visit of statements, looking for binding
-   declarations (currently, variable declarations, parameters, and function
-   declarations) and recording the corresponding bindings in a list. The list
-   can have duplicates, which are handled elsewhere.
-
-   TODO: Ideally implemented as a fold, not a map.
-*)
-module Bindings = struct
-  type t = (Loc.t * string) list
-end
-class hoister = object(this)
-  inherit [Bindings.t] visitor ~init:[] as super
-
-  method private add_binding (loc, x) =
-    (* `event` is a global in old IE and jsxmin lazily avoids renaming it. it
-       should be safe to shadow it, i.e. `function(event){event.target}` can be
-       renamed to `function(a){a.target}`, because code relying on the global
-       would have to have written `function(){event.target}` or
-       `function(event) {(event || window.event).target}`, both of which are
-       compatible with renaming.
-
-       TODO[jsxmin]: remove this. *)
-    if x = "event" then () else
-      this#update_acc (List.cons (loc, x))
-
-  val mutable bad_catch_params = []
-  method bad_catch_params = bad_catch_params
-
-  (* Ignore expressions. This includes, importantly, function expressions (whose
-     ids should not be hoisted) and assignment expressions (whose targets should
-     not be hoisted). *)
-  method! expression (expr: Ast.Expression.t) =
-    expr
-
-  (* The scoping rule for catch clauses is special. Hoisting for the current
-     scope continues in catch blocks, but the catch pattern also introduces a
-     local scope. *)
-  method! catch_clause (clause: Ast.Statement.Try.CatchClause.t') =
-    let open Ast.Statement.Try.CatchClause in
-    let { param; body } = clause in
-    let saved_bindings = this#acc in
-    this#set_acc [];
-    let _, block = body in
-    let _ = this#block block in
-    let local_bindings = this#acc in
-    let open Ast.Pattern in
-    let _, patt = param in
-    begin match patt with
-    | Identifier { Identifier.name; _ } ->
-      let loc, x = name in
-      if List.exists (fun (_loc, x') -> x = x') local_bindings
-      then bad_catch_params <- loc :: bad_catch_params
-    | _ -> ();
-    end;
-    this#set_acc (local_bindings @ saved_bindings);
-    clause
-
-  (* Ignore class declarations, since they are lexical bindings (thus not
-     hoisted). *)
-  method! class_ (cls: Ast.Class.t) =
-    cls
-
-  (* Ignore import declarations, since they are lexical bindings (thus not
-     hoisted). *)
-  method! import_declaration (decl: Ast.Statement.ImportDeclaration.t) =
-    decl
-
-  (* This is visited by function parameters and variable declarations (but not
-     assignment expressions or catch patterns). *)
-  method! pattern ?kind (expr: Ast.Pattern.t) =
-    match Utils.unsafe_opt kind with
-    | Ast.Statement.VariableDeclaration.Var ->
-      let open Ast.Pattern in
-      let _, patt = expr in
-      begin match patt with
-      | Identifier { Identifier.name; _ } ->
-        this#add_binding name
-      | Object _
-      | Array _
-      | Assignment _ -> run (super#pattern ?kind) expr
-      | Expression _ -> ()
-      end;
-      expr
-    | Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const ->
-      expr (* don't hoist let/const bindings *)
-
-  method! function_declaration (expr: Ast.Function.t) =
-    let open Ast.Function in
-    let { id; _ } = expr in
-    begin match id with
-    | Some name ->
-      this#add_binding name
-    | None -> ()
-    end;
-    expr
-
-end
-
-class lexical_hoister = object(this)
-  inherit [Bindings.t] visitor ~init:[] as super
-
-  method private add_binding (loc, x) =
-    this#update_acc (List.cons (loc, x))
-
-  (* Ignore all statements except variable declarations, class declarations, and
-     import declarations. The ignored statements cannot contain lexical
-     bindings in the current scope. *)
-  method! statement (stmt: Ast.Statement.t) =
-    let open Ast.Statement in
-    match stmt with
-    | (_, VariableDeclaration _)
-    | (_, ClassDeclaration _)
-    | (_, ImportDeclaration _) -> super#statement stmt
-    | _ -> stmt
-
-  (* Ignore expressions. This includes, importantly, initializers of variable
-     declarations. *)
-  method! expression (expr: Ast.Expression.t) =
-    expr
-
-  (* This is visited by variable declarations. *)
-  method! variable_declarator_pattern ~kind (expr: Ast.Pattern.t) =
-    match kind with
-    | Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const ->
-      let open Ast.Pattern in
-      let _, patt = expr in
-      begin match patt with
-      | Identifier { Identifier.name; _ } ->
-        this#add_binding name
-      | Object _
-      | Array _
-      | Assignment _ -> run (super#variable_declarator_pattern ~kind) expr
-      | _ -> ()
-      end;
-      expr
-    | Ast.Statement.VariableDeclaration.Var -> expr
-
-  method! class_ (cls: Ast.Class.t) =
-    let open Ast.Class in
-    let {
-      id; body = _; superClass = _;
-      typeParameters = _; superTypeParameters = _; implements = _; classDecorators = _;
-    } = cls in
-    begin match id with
-    | Some name ->
-      this#add_binding name
-    | None -> ()
-    end;
-    cls
-
-  method! import_named_specifier ~ident (local: Ast.Identifier.t option) =
-    this#add_binding ident;
-    local
-
-  method! import_default_specifier (id: Ast.Identifier.t) =
-    this#add_binding id;
-    id
-
-  method! import_namespace_specifier (id: Ast.Identifier.t) =
-    this#add_binding id;
-    id
-
-
 end
 
 (* Visitor class that prepares use-def info, hoisting bindings one scope at a
@@ -215,13 +51,28 @@ end
 
    We try to create the smallest number of name ids possible.
 *)
+module Def = struct
+  type t = {
+    loc: Loc.t;
+    scope: int;
+    name: int;
+  }
+end
+module Scope = struct
+  type t = {
+    lexical: bool;
+    parent: int option;
+  }
+end
 type info = {
-  (* map from identifier locations to name ids *)
-  locals: (Loc.t * int) LocMap.t;
+  (* map from identifier locations to their defs and their enclosing scope ids *)
+  locals: (Def.t * int) LocMap.t;
   (* map from name ids to globals they conflict with *)
   globals: SSet.t IMap.t;
   (* number of distinct name ids *)
   max_distinct: int;
+  (* map of scope ids to local scopes *)
+  scopes: Scope.t IMap.t
 }
 module Acc = struct
   type t = info
@@ -229,12 +80,27 @@ module Acc = struct
     max_distinct = 0;
     globals = IMap.empty;
     locals = LocMap.empty;
+    scopes = IMap.empty;
   }
 end
+
 class scope_builder = object(this)
   inherit [Acc.t] visitor ~init:Acc.init as super
 
   val mutable env = SMap.empty
+  val mutable current_scope_opt = None
+  val mutable scope_counter = 0
+  method private new_scope scope =
+    let new_scope = scope_counter in
+    scope_counter <- scope_counter + 1;
+    this#update_acc (fun acc -> { acc with
+      scopes = IMap.add new_scope scope acc.scopes
+    });
+    new_scope
+  method current_scope =
+    match current_scope_opt with
+    | None -> failwith "global scope"
+    | Some i -> i
 
   val mutable counter = 0
   method private next =
@@ -245,39 +111,47 @@ class scope_builder = object(this)
     });
     result
 
-  method private mk_env =
+  method private mk_env scope bindings =
     List.fold_left (fun map (loc, x) ->
       match SMap.get x map with
       | Some _ -> map
-      | None -> SMap.add x (loc, this#next) map
-    ) SMap.empty
+      | None ->
+        let def = Def.{ loc; scope; name = this#next; } in
+        SMap.add x def map
+    ) SMap.empty bindings
 
-  method private push bindings =
+  method private push ?(lexical=false) bindings =
     let save_counter = counter in
     let old_env = env in
-    env <- SMap.fold SMap.add (this#mk_env (List.rev bindings)) old_env;
-    old_env, save_counter
+    let parent = current_scope_opt in
+    let child = this#new_scope Scope.{ lexical; parent; } in
+    current_scope_opt <- Some child;
+    env <- SMap.fold SMap.add (this#mk_env child (Bindings.to_list bindings)) old_env;
+    parent, old_env, save_counter
 
-  method private pop (old_env, save_counter) =
+  method private pop (parent, old_env, save_counter) =
+    current_scope_opt <- parent;
     env <- old_env;
     counter <- save_counter
 
-  method with_bindings: 'a. Bindings.t -> ('a -> 'a) -> 'a -> 'a = fun bindings visit node ->
-    let saved_state = this#push bindings in
-    let node' = visit node in
-    this#pop saved_state;
-    node'
+  method with_bindings: 'a. ?lexical:bool -> Bindings.t -> ('a -> 'a) -> 'a -> 'a =
+    fun ?lexical bindings visit node ->
+      let saved_state = this#push ?lexical bindings in
+      let node' = visit node in
+      this#pop saved_state;
+      node'
 
-  method private add_global x (_loc, i) =
+  method private add_global x def =
+    let { Def.name; _ } = def in
     this#update_acc (fun acc -> { acc with
       globals =
-        let iglobals = try IMap.find_unsafe i acc.globals with _ -> SSet.empty in
-        IMap.add i (SSet.add x iglobals) acc.globals
+        let iglobals = try IMap.find_unsafe name acc.globals with _ -> SSet.empty in
+        IMap.add name (SSet.add x iglobals) acc.globals
     })
 
-  method private add_local loc (def_loc, i) =
+  method private add_local loc def =
     this#update_acc (fun acc -> { acc with
-      locals = LocMap.add loc (def_loc, i) acc.locals
+      locals = LocMap.add loc (def, this#current_scope) acc.locals
     })
 
   (* catch params for which their catch blocks introduce bindings, and those
@@ -287,7 +161,7 @@ class scope_builder = object(this)
   method! identifier (expr: Ast.Identifier.t) =
     let loc, x = expr in
     begin match SMap.get x env with
-      | Some (def_loc, i) -> this#add_local loc (def_loc, i)
+      | Some def -> this#add_local loc def
       | None -> SMap.iter (fun _ -> this#add_global x) env
     end;
     expr
@@ -301,7 +175,13 @@ class scope_builder = object(this)
   method! block (stmt: Ast.Statement.Block.t) =
     let lexical_hoist = new lexical_hoister in
     let lexical_bindings = lexical_hoist#eval lexical_hoist#block stmt in
-    this#with_bindings lexical_bindings super#block stmt
+    this#with_bindings ~lexical:true lexical_bindings super#block stmt
+
+  (* like block *)
+  method! program (program: Ast.program) =
+    let lexical_hoist = new lexical_hoister in
+    let lexical_bindings = lexical_hoist#eval lexical_hoist#program program in
+    this#with_bindings ~lexical:true lexical_bindings super#program program
 
   method! for_in_statement (stmt: Ast.Statement.ForIn.t) =
     let open Ast.Statement.ForIn in
@@ -311,9 +191,9 @@ class scope_builder = object(this)
     let lexical_bindings = match left with
     | LeftDeclaration (_, decl) ->
       lexical_hoist#eval lexical_hoist#variable_declaration decl
-    | _ -> []
+    | _ -> Bindings.empty
     in
-    this#with_bindings lexical_bindings super#for_in_statement stmt
+    this#with_bindings ~lexical:true lexical_bindings super#for_in_statement stmt
 
   method! for_of_statement (stmt: Ast.Statement.ForOf.t) =
     let open Ast.Statement.ForOf in
@@ -323,9 +203,9 @@ class scope_builder = object(this)
     let lexical_bindings = match left with
     | LeftDeclaration (_, decl) ->
       lexical_hoist#eval lexical_hoist#variable_declaration decl
-    | _ -> []
+    | _ -> Bindings.empty
     in
-    this#with_bindings lexical_bindings super#for_of_statement stmt
+    this#with_bindings ~lexical:true lexical_bindings super#for_of_statement stmt
 
   method! for_statement (stmt: Ast.Statement.For.t) =
     let open Ast.Statement.For in
@@ -335,9 +215,9 @@ class scope_builder = object(this)
     let lexical_bindings = match init with
     | Some (InitDeclaration (_, decl)) ->
       lexical_hoist#eval lexical_hoist#variable_declaration decl
-    | _ -> []
+    | _ -> Bindings.empty
     in
-    this#with_bindings lexical_bindings super#for_statement stmt
+    this#with_bindings ~lexical:true lexical_bindings super#for_statement stmt
 
   method! catch_clause (clause: Ast.Statement.Try.CatchClause.t') =
     let open Ast.Statement.Try.CatchClause in
@@ -348,11 +228,48 @@ class scope_builder = object(this)
       let _, patt = param in
       match patt with
       | Identifier { Identifier.name; _ } ->
-        let loc, x = name in
-        if List.mem loc bad_catch_params then [] else [loc, x]
+        let loc, _x = name in
+        if List.mem loc bad_catch_params then Bindings.empty else
+          Bindings.singleton name
       | _ -> (* TODO *)
-        []
+        Bindings.empty
     ) super#catch_clause clause
+
+  (* helper for function params and body *)
+  method private lambda params body =
+    let open Ast.Function in
+
+    (* hoisting *)
+    let hoist = new hoister in
+    begin
+      let param_list, _rest = params in
+      run_list hoist#function_param_pattern param_list;
+      match body with
+        | BodyBlock (_loc, block) ->
+          run hoist#block block
+        | _ ->
+          ()
+    end;
+
+    (* pushing *)
+    let saved_bad_catch_params = bad_catch_params in
+    bad_catch_params <- hoist#bad_catch_params;
+    let saved_state = this#push hoist#acc in
+
+    let (param_list, rest) = params in
+    run_list this#function_param_pattern param_list;
+    run_opt this#function_rest_element rest;
+
+    begin match body with
+      | BodyBlock (_, block) ->
+        run this#block block
+      | BodyExpression expr ->
+        run this#expression expr
+    end;
+
+    (* popping *)
+    this#pop saved_state;
+    bad_catch_params <- saved_bad_catch_params
 
   method! function_declaration (expr: Ast.Function.t) =
     let contains_with_or_eval =
@@ -367,39 +284,9 @@ class scope_builder = object(this)
         predicate = _; returnType = _; typeParameters = _;
       } = expr in
 
-      run_opt this#identifier id;
+      run_opt this#function_identifier id;
 
-      (* hoisting *)
-      let hoist = new hoister in
-      begin
-        let param_list, _rest = params in
-        run_list hoist#function_param_pattern param_list;
-        match body with
-        | BodyBlock (_loc, block) ->
-          run hoist#block block
-        | _ ->
-          ()
-      end;
-
-      (* pushing *)
-      let saved_bad_catch_params = bad_catch_params in
-      bad_catch_params <- hoist#bad_catch_params;
-      let saved_state = this#push hoist#acc in
-
-      let (param_list, rest) = params in
-      run_list this#function_param_pattern param_list;
-      run_opt this#function_rest_element rest;
-
-      begin match body with
-        | BodyBlock (_, block) ->
-          run this#block block;
-        | BodyExpression expr ->
-          run this#expression expr;
-      end;
-
-      (* popping *)
-      this#pop saved_state;
-      bad_catch_params <- saved_bad_catch_params;
+      this#lambda params body;
     end;
 
     expr
@@ -420,43 +307,60 @@ class scope_builder = object(this)
       } = expr in
 
       (* pushing *)
-      let saved_state = this#push (match id with Some (loc, x) -> [loc, x] | None -> []) in
-      run_opt this#identifier id;
+      let saved_state = this#push (match id with
+        | Some name -> Bindings.singleton name
+        | None -> Bindings.empty
+      ) in
+      run_opt this#function_identifier id;
 
-      (* hoisting *)
-      let hoist = new hoister in
-      begin
-        let param_list, _rest = params in
-        run_list hoist#function_param_pattern param_list;
-        match body with
-        | BodyBlock (_loc, block) ->
-          run hoist#block block
-        | _ ->
-          ()
-      end;
-
-      (* more pushing *)
-      let saved_bad_catch_params = bad_catch_params in
-      bad_catch_params <- hoist#bad_catch_params;
-      let _saved_state = this#push hoist#acc in
-
-      let (param_list, rest) = params in
-      run_list this#function_param_pattern param_list;
-      run_opt this#function_rest_element rest;
-
-      begin match body with
-        | BodyBlock (_, block) ->
-          run this#block block
-        | BodyExpression expr ->
-          run this#expression expr
-      end;
+      this#lambda params body;
 
       (* popping *)
       this#pop saved_state;
-      bad_catch_params <- saved_bad_catch_params;
     end;
 
     expr
+end
+
+module Utils = struct
+  type scope = int
+  type use = Loc.t
+
+  let all_uses { locals; _ } =
+    LocMap.fold (fun use _ uses ->
+      use::uses
+    ) locals []
+
+  let def_of_use { locals; _ } use =
+    let def, _ = LocMap.find use locals in
+    def
+
+  let use_is_def info use =
+    let def = def_of_use info use in
+    def.Def.loc = use
+
+  let uses_of_def { locals; _ } ?(exclude_def=false) def =
+    LocMap.fold (fun use (def', _) uses ->
+      if exclude_def && def'.Def.loc = use then uses
+      else if Def.(def.loc = def'.loc) then use::uses else uses
+    ) locals []
+
+  let uses_of_use info ?exclude_def use =
+    let def = def_of_use info use in
+    uses_of_def info ?exclude_def def
+
+  let def_is_unused info def =
+    uses_of_def info ~exclude_def:true def = []
+
+  let all_defs { locals; _ } =
+    LocMap.fold (fun use (def, _) defs ->
+      if use = def.Def.loc then def::defs else defs
+    ) locals []
+
+  let defs_of_scope info scope =
+    let defs = all_defs info in
+    List.filter (fun def -> scope = def.Def.scope) defs
+
 end
 
 let program ?(ignore_toplevel=false) program =
@@ -465,6 +369,4 @@ let program ?(ignore_toplevel=false) program =
   else
     let hoist = new hoister in
     let bindings = hoist#eval hoist#program program in
-    let lexical_hoist = new lexical_hoister in
-    let lexical_bindings = lexical_hoist#eval lexical_hoist#program program in
-    walk#eval (walk#with_bindings (lexical_bindings @ bindings) walk#program) program
+    walk#eval (walk#with_bindings bindings walk#program) program

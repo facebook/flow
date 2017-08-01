@@ -31,25 +31,33 @@ module DepKey = struct
   | HeapLoc of Loc.t * string (* locations in a heap object,
                                   loc=allocation site, string=prop *)
 
+  let same_file_loc_compare =
+    let open Loc in
+    fun loc1 loc2 ->
+    let k = Loc.pos_cmp loc1.start loc2.start in
+    if k = 0 then Loc.pos_cmp loc1._end loc2._end
+    else k
+
   (* ID < Temp < HeapLoc, and within those based on sub-structure comparison *)
   let compare =
     fun k1 k2 ->
       (match k1, k2 with
       | Id (l1,i1), Id (l2,i2) ->
           if (i1 < i2) then -1
-            else (if (i1 > i2) then 1 else Loc.compare l1 l2)
-      | Temp l1, Temp l2 -> Loc.compare l1 l2
-      | HeapLoc (l1, s1), HeapLoc (l2, s2) ->
-          let lcmp = (Loc.compare l1 l2) in
-          if (lcmp = 0) then
-            String.compare s1 s2
-          else lcmp
+            else (if (i1 > i2) then 1 else same_file_loc_compare l1 l2)
+      | Temp l1, Temp l2 -> same_file_loc_compare l1 l2
       | Id _, Temp _ -> -1
       | Temp _, Id _ -> 1
       | Id _, HeapLoc _ -> -1
       | HeapLoc _, Id _ -> 1
       | Temp _, HeapLoc _ -> -1
-      | HeapLoc _, Temp _ -> 1)
+      | HeapLoc _, Temp _ -> 1
+      | HeapLoc (l1, s1), HeapLoc (l2, s2) ->
+          let lcmp = (same_file_loc_compare l1 l2) in
+          if (lcmp = 0) then
+            String.compare s1 s2
+          else lcmp
+      )
 end
 
 module DepMap = MyMap.Make (DepKey)
@@ -183,9 +191,11 @@ class mapper = object(this)
   val merge_dep = Dep.merge_dep
 
   method! program (program: Ast.program) =
-    let { Scope_builder.locals; globals=_; max_distinct=_ } =
+    let { Scope_builder.locals; globals=_; max_distinct=_; scopes=_ } =
     Scope_builder.program ~ignore_toplevel:true program in
-    renamings <- locals;
+    renamings <- Scope_builder.(
+      LocMap.map (fun ({ Def.loc; name; _ }, _) -> loc, name) locals
+    );
     Scope_builder.LocMap.iter
       (fun _ (def_loc,id) ->
         let open Dep in
@@ -266,8 +276,9 @@ class mapper = object(this)
           valDep = Dep.Incomplete} in
         depMap <- DepMap.add ~combine:merge_dep
           (DepKey.Id (d,i)) dep_right depMap
-   with _ ->
-     Utils_js.prerr_endlinef "map_id_to_incomplete: %s" "id not recognized"
+   with _ -> ()
+     (* Non-renamable vars such as globals do not exist in the scope builder *)
+     (* Utils_js.prerr_endlinef "map_id_to_incomplete: %s" "id not recognized"*)
 
   (* In DepMap, map id @ Loc to Destructure (Temp expr's loc), key *)
   method map_id_to_destructure
@@ -296,8 +307,8 @@ class mapper = object(this)
     | _ ->
     (* If the key is not an identifier, then we cannot do a Destructure kind *)
       this#map_id_to_incomplete loc
-  with _ ->
-    Utils_js.prerr_endlinef "map_id_to_destructure: %s" "id not recognized"
+  with _ -> ()
+    (*Utils_js.prerr_endlinef "map_id_to_destructure: %s" "id not recognized"*)
 
   method assign_to_variable_declarator_pattern
     (pat: Ast.Pattern.t)
@@ -326,8 +337,10 @@ class mapper = object(this)
          (DepKey.Id (d,i)) dep_right depMap
       )
     with _ ->
-      Utils_js.prerr_endlinef
-        "assign_to_variable_declarator_pattern:Identifier %s" "id not recognized")
+    ())
+    (*  Utils_js.prerr_endlinef
+    "assign_to_variable_declarator_pattern:Identifier %s" "id not recognized"
+    *)
   | _, Ast.Pattern.Object o->
     (* Dealing with real destructing depends on actual heap analysis *)
     (* For now, we can just map each of these properties to Destructure *)
@@ -349,8 +362,8 @@ class mapper = object(this)
           (match pattern with
             | loc, Ast.Pattern.Identifier _ -> this#map_id_to_destructure loc key expr
             | _, _ -> ())
-      | RestProperty (_,_) ->
-        Utils_js.prerr_endlinef "%s" "Cannot handle rest properties")
+      | RestProperty (_,_) -> ())
+        (* Utils_js.prerr_endlinef "%s" "Cannot handle rest properties" *)
     in
       List.iter process_prop properties
   | _, Ast.Pattern.Array a ->
@@ -359,8 +372,8 @@ class mapper = object(this)
     let process_elem = fun e ->
      (match e with
      | Element (loc, _) -> this#map_id_to_incomplete loc
-     | RestElement (_,_) ->
-       Utils_js.prerr_endlinef "%s" "Cannot handle rest elements")
+     | RestElement (_,_) -> ())
+       (* Utils_js.prerr_endlinef "%s" "Cannot handle rest elements" *)
     in
     let process_elem_opt = fun e_opt ->
      (match e_opt with
@@ -440,10 +453,10 @@ class mapper = object(this)
                   typeDep = Dep.Depends [DepKey.Temp eloc];
                   valDep = Dep.Depends [DepKey.Temp eloc] } in
                   depMap <- DepMap.add dkey dep depMap
-            | _, _ ->
-              Utils_js.prerr_endlinef "%s" "Only handled Ident : Init")
-          | SpreadProperty _ ->
-              Utils_js.prerr_endlinef "%s" "Not handled SpreadProperty")
+            | _, _ -> ())
+              (* Utils_js.prerr_endlinef "%s" "Only handled Ident : Init" *)
+          | SpreadProperty _ -> ())
+              (* Utils_js.prerr_endlinef "%s" "Not handled SpreadProperty" *)
       properties
       ;
       loc, Ast.Expression.Object o'
@@ -510,8 +523,8 @@ class mapper = object(this)
             (DepKey.Id (d,i)) dep_expr depMap;
           (* the expression v++ depends on v *)
           depMap <- DepMap.add (DepKey.Temp loc) dep_expr depMap
-      with _ ->
-        Utils_js.prerr_endlinef "expression: Update %s" "id not recognized")
+      with _ -> ())
+      (* Utils_js.prerr_endlinef "expression: Update %s" "id not recognized" *)
     (* TODO: deal with heap locations: they should not become incomplete *)
     | loc_e, _ ->
       let open Dep in
@@ -567,8 +580,9 @@ class mapper = object(this)
           depMap <-
             DepMap.add ~combine:merge_dep
               (DepKey.Id (d,i)) dep_right depMap
-        with _ -> Utils_js.prerr_endlinef
-          "assign_to_assignment_pattern:Identifier %s" "id not recognized")
+        with _ -> ())
+        (* Utils_js.prerr_endlinef
+          "assign_to_assignment_pattern:Identifier %s" "id not recognized" *)
 
     | _, Ast.Pattern.Array a ->
     (* This is identical to the corresponding case in
@@ -579,8 +593,8 @@ class mapper = object(this)
       let process_elem = fun e ->
        (match e with
        | Element (loc, _) -> this#map_id_to_incomplete loc
-       | RestElement (_,_) ->
-         Utils_js.prerr_endlinef "%s" "Cannot handle rest elements")
+       | RestElement (_,_) -> ())
+        (* Utils_js.prerr_endlinef "%s" "Cannot handle rest elements" *)
       in
       let process_elem_opt = fun e_opt ->
        (match e_opt with
@@ -615,8 +629,8 @@ class mapper = object(this)
         let var_locs = List.map (fun (l,_) -> l) declarations in
         (* For this decl, let the variable become Incomplete *)
         List.iter this#map_id_to_incomplete var_locs
-      with _ ->
-        Utils_js.prerr_endlinef "%s" "Could not find var loc in for-of")
+      with _ -> ())
+      (*  Utils_js.prerr_endlinef "%s" "Could not find var loc in for-of" *)
       ;
       if decl == decl'
         then left
@@ -646,8 +660,8 @@ class mapper = object(this)
         let var_locs = List.map (fun (l,_) -> l) declarations in
         (* For this decl, let the variable become Incomplete *)
         List.iter this#map_id_to_incomplete var_locs
-      with _ ->
-        Utils_js.prerr_endlinef "%s" "Could not find var loc in for-in")
+      with _ -> ())
+      (*  Utils_js.prerr_endlinef "%s" "Could not find var loc in for-in" *)
       ;
       if decl == decl'
         then left

@@ -151,7 +151,8 @@ let rec gen_type t env = Type.(
   match t with
   | AbstractT (_, t) -> add_str "$Abstract<" env |> gen_type t |> add_str ">"
   | AnnotT t -> gen_type t env
-  | OpaqueT (_, _, t) -> gen_type t env
+  | OpaqueT (_, {underlying_t = Some t; _}) -> gen_type t env
+  | OpaqueT (_, {super_t = Some t; _}) -> gen_type t env
   | DefT (_, AnyFunT) -> add_str "Function" env
   | DefT (_, AnyObjT) -> add_str "Object" env
   | DefT (_, AnyT)
@@ -349,6 +350,7 @@ let rec gen_type t env = Type.(
   | IdxWrapper _
   | ModuleT _
   | TaintT _
+  | OpaqueT _
     -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
 )
 

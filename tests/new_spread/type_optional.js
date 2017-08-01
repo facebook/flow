@@ -16,7 +16,7 @@ declare var j: {...{ p?:T },...{|p :U|}}; (j: { p :  U });
 declare var k: {...{ p :T },...{|p?:U|}}; (k: { p?:T|U });
 declare var l: {...{ p?:T },...{|p?:U|}}; (l: { p?:T|U });
 
-declare var m: {...{|p :T|},...{|p :U|}}; (m: {|p :  U|});
-declare var n: {...{|p?:T|},...{|p :U|}}; (n: {|p :  U|});
-declare var o: {...{|p :T|},...{|p?:U|}}; (o: {|p :T|U|});
-declare var p: {...{|p?:T|},...{|p?:U|}}; (p: {|p?:T|U|});
+declare var m: {|...{|p :T|},...{|p :U|}|}; (m: {|p :  U|});
+declare var n: {|...{|p?:T|},...{|p :U|}|}; (n: {|p :  U|});
+declare var o: {|...{|p :T|},...{|p?:U|}|}; (o: {|p :T|U|});
+declare var p: {|...{|p?:T|},...{|p?:U|}|}; (p: {|p?:T|U|});

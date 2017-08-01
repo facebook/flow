@@ -260,9 +260,17 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "assume", _json_of_t json_cx t
     ]
 
-  | OpaqueT (_, id, t) -> [
-      "type", _json_of_t json_cx t;
-      "id", JSON_String (string_of_int id)
+  | OpaqueT (_, opaquetype) ->
+    let t = match opaquetype.underlying_t with
+    | Some t -> _json_of_t json_cx t
+    | None -> JSON_Null in
+    let st = match opaquetype.super_t with
+    | Some st -> _json_of_t json_cx st
+    | None -> JSON_Null in
+    [
+      "type", t;
+      "id", JSON_String (string_of_int opaquetype.opaque_id);
+      "supertype", st
   ]
 
   | TypeMapT (_, kind, t1, t2) -> [
@@ -657,7 +665,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "cont", JSON_Object (_json_of_cont json_cx cont);
     ]
 
-  | ObjSpreadT (_, _, _, tout) -> [
+  | ObjSpreadT (_, _, _, _, tout) -> [
       "t_out", _json_of_t json_cx tout;
     ]
 
@@ -759,6 +767,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
         ]
       ) rrt_unresolved);
       "resolve_to", json_of_resolve_to json_cx rrt_resolve_to;
+    ]
+  | CondT (_, alternate, t_out) -> [
+      "alternate", _json_of_t json_cx alternate;
+      "t_out", _json_of_t json_cx t_out;
     ]
   )
 )
@@ -1010,9 +1022,9 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | Bind t -> JSON_Object [
       "thisType", _json_of_t json_cx t
     ]
-  | SpreadType (exact, ts) -> JSON_Object [
+  | SpreadType ({ObjectSpread.make_exact; _}, ts) -> JSON_Object [
       "spread", JSON_Array (List.map (_json_of_t json_cx) ts);
-      "exact", JSON_Bool exact;
+      "exact", JSON_Bool make_exact;
     ]
   | ValuesType -> JSON_Object [
       "values", JSON_Bool true;
@@ -1536,7 +1548,8 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, TypeT arg) -> p ~extra:(kid arg) t
   | AnnotT source -> p ~reason:false
       ~extra:(spf "%s" (kid source)) t
-  | OpaqueT (_, _, arg) -> p ~extra:(spf "%s" (kid arg)) t
+  | OpaqueT (_, {underlying_t = Some arg; _}) -> p ~extra:(spf "%s" (kid arg)) t
+  | OpaqueT _ -> p t
   | DefT (_, OptionalT arg)
   | AbstractT (_, arg) -> p ~extra:(kid arg) t
   | EvalT (arg, expr, id) -> p
@@ -1730,14 +1743,21 @@ and dump_use_t_ (depth, tvars) cx t =
       | Resolve tool -> spf "Resolve %s" (resolve tool)
       | Super (s, tool) -> spf "Super (%s, %s)" (slice s) (resolve tool)
     in
-    let state {todo_rev; acc; make_exact} =
-      spf "{todo_rev=[%s]; acc=[%s]; make_exact=%b}"
+    let state {todo_rev; acc} =
+      spf "{todo_rev=[%s]; acc=[%s]}"
         (String.concat "; " (List.map kid todo_rev))
         (String.concat "; " (List.map resolved acc))
-        make_exact
     in
-    fun t s ->
-      spf "(%s, %s)" (tool t) (state s)
+    let options {make_exact; merge_mode} =
+      spf "{make_exact=%b; merge_mode=%s}"
+        make_exact
+        (match merge_mode with
+          | DefaultMM -> "Default"
+          | IgnoreExactAndOwnMM -> "IgnoreExactAndOwn"
+          | DiffMM -> "Diff")
+    in
+    fun o t s ->
+      spf "(%s, %s, %s)" (options o) (tool t) (state s)
   in
 
   if depth = 0 then string_of_use_ctor t
@@ -1861,8 +1881,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | SetProtoT (_, arg) -> p ~extra:(kid arg) t
   | SpecializeT (_, _, cache, args, ret) -> p ~extra:(spf "%s, [%s], %s"
       (specialize_cache cache) (String.concat "; " (List.map kid args)) (kid ret)) t
-  | ObjSpreadT (_, tool, state, arg) -> p ~extra:(spf "%s, %s"
-      (object_spread tool state)
+  | ObjSpreadT (_, options, tool, state, arg) -> p ~extra:(spf "%s, %s"
+      (object_spread options tool state)
       (kid arg)) t
   | TestPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
@@ -1873,6 +1893,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | VarianceCheckT (_, args, pol) -> p ~extra:(spf "[%s], %s"
       (String.concat "; " (List.map kid args)) (Polarity.string pol)) t
   | TypeAppVarianceCheckT _ -> p t
+  | CondT (_, alt, tout) -> p ~extra:(spf "%s, %s" (kid alt) (kid tout)) t
 
 and dump_tvar ?(depth=3) cx id =
   dump_tvar_ (depth, ISet.empty) cx id
@@ -2052,26 +2073,26 @@ let dump_flow_error =
   in
   fun ?(depth=3) cx err ->
     match err with
-    | EIncompatible (l, u) ->
-        spf "EIncompatible (%s, %s)"
-          (dump_t ~depth cx l)
-          (dump_use_t ~depth cx u)
+    | EIncompatible { reason_lower; upper; special = _; } ->
+        spf "EIncompatible { lower_reason = %s; upper = %s; special = _ }"
+          (dump_reason cx reason_lower)
+          (dump_use_t ~depth cx upper)
     | EIncompatibleDefs (reason_l, reason_u) ->
         spf "EIncompatibleDefs (%s, %s)"
           (dump_reason cx reason_l)
           (dump_reason cx reason_u)
-    | EIncompatibleProp { lower; reason_prop } ->
-        spf "EIncompatibleProp { lower = %s; reason_prop = %s }"
-          (dump_t ~depth cx lower)
+    | EIncompatibleProp { reason_prop; reason_obj; special=_ } ->
+        spf "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _ }"
           (dump_reason cx reason_prop)
-    | EIncompatibleGetProp { lower; reason_prop } ->
-        spf "EIncompatibleGetProp { lower = %s; reason_prop = %s }"
-          (dump_t ~depth cx lower)
+          (dump_reason cx reason_obj)
+    | EIncompatibleGetProp { reason_prop; reason_obj; special=_ } ->
+        spf "EIncompatibleGetProp { reason_prop = %s; reason_obj = %s; special = _ }"
           (dump_reason cx reason_prop)
-    | EIncompatibleSetProp { lower; reason_prop } ->
-        spf "EIncompatibleSetProp { lower = %s; reason_prop = %s }"
-          (dump_t ~depth cx lower)
+          (dump_reason cx reason_obj)
+    | EIncompatibleSetProp { reason_prop; reason_obj; special=_ } ->
+        spf "EIncompatibleSetProp { reason_prop = %s; reason_obj = %s; special = _ }"
           (dump_reason cx reason_prop)
+          (dump_reason cx reason_obj)
     | EDebugPrint (reason, _) ->
         spf "EDebugPrint (%s, _)" (dump_reason cx reason)
     | EImportValueAsType (reason, str) ->
@@ -2089,8 +2110,11 @@ let dump_flow_error =
         spf "EOnlyDefaultExport (%s, %s)" (dump_reason cx reason) export_name
     | ENoNamedExport (reason, export_name, _) ->
         spf "ENoNamedExport (%s, %s)" (dump_reason cx reason) export_name
-    | EMissingTypeArgs (reason, _) ->
-        spf "EMissingTypeArgs (%s, _)" (dump_reason cx reason)
+    | EMissingTypeArgs { reason; min_arity; max_arity } ->
+        spf "EMissingTypeArgs { reason=%s; min_arity=%d; max_arity=%d }"
+          (dump_reason cx reason)
+          min_arity
+          max_arity
     | EValueUsedAsType (reason1, reason2) ->
         spf "EValueUsedAsType (%s, %s)"
           (dump_reason cx reason1)
@@ -2145,11 +2169,12 @@ let dump_flow_error =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (match x with Some x -> spf "%S" x | None -> "(computed)")
-    | EPolarityMismatch (tp, p) ->
-        spf "EPolarityMismatch (%s %S, %s)"
-          (Polarity.string tp.polarity)
-          tp.name
-          (Polarity.string p)
+    | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
+        spf "EPolarityMismatch { reason=%s; name=%S; expected_polarity=%s; actual_polarity=%s }"
+          (dump_reason cx reason)
+          name
+          (Polarity.string expected_polarity)
+          (Polarity.string actual_polarity)
     | EStrictLookupFailed ((reason1, reason2), reason, x) ->
         spf "EStrictLookupFailed ((%s, %s), %s, %s)"
           (dump_reason cx reason1)
@@ -2205,10 +2230,10 @@ let dump_flow_error =
         spf "ETupleUnsafeWrite (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EIntersectionSpeculationFailed (l, u, _) ->
-        spf "EIntersectionSpeculationFailed (%s, %s)"
-          (dump_t ~depth cx l)
-          (dump_use_t ~depth cx u)
+    | EIntersectionSpeculationFailed { reason_lower; upper; branches = _ } ->
+        spf "EIntersectionSpeculationFailed { reason_lower = %s; upper = %s; branches = _ }"
+          (dump_reason cx reason_lower)
+          (dump_use_t ~depth cx upper)
     | EUnionSpeculationFailed { reason; reason_op; branches = _ } ->
         spf "EUnionSpeculationFailed { reason = %s; reason_op = %s; branches = _ }"
           (dump_reason cx reason)
@@ -2362,3 +2387,27 @@ let dump_flow_error =
       spf "EUntypedTypeImport (%s, %s)" (string_of_loc loc) module_name
     | EUnusedSuppression loc ->
       spf "EUnusedSuppression (%s)" (string_of_loc loc)
+    | ELintSetting (loc, kind) ->
+      let open LintSettings in
+      let kind_str = match kind with
+      | Invalid_setting -> "Invalid_setting"
+      | Malformed_argument -> "Malformed_argument"
+      | Naked_comment -> "Naked_comment"
+      | Nonexistent_rule -> "Nonexistent_rule"
+      | Overwritten_argument -> "Overwritten_argument"
+      | Redundant_argument -> "Redundant_argument"
+      in
+      spf "ELintSetting (%s, %s)" (string_of_loc loc) kind_str
+    | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
+      let open LintSettings in
+      let kind_str = match kind with
+      | SketchyBool -> "SketchyBool"
+      | SketchyString -> "SketchyString"
+      | SketchyNumber -> "SketchyNumber"
+      | SketchyMixed -> "SketchyMixed"
+      in
+      spf "ESketchyNullLint {kind=%s; loc=%s; null_loc=%s; falsy_loc=%s}"
+        kind_str
+        (string_of_loc loc)
+        (string_of_loc null_loc)
+        (string_of_loc falsy_loc)

@@ -35,11 +35,27 @@ end = struct
 end
 
 type error_message =
-  | EIncompatible of Type.t * Type.use_t
+  | EIncompatible of {
+      reason_lower: reason;
+      special: special_lower option;
+      upper: Type.use_t;
+    }
   | EIncompatibleDefs of reason * reason
-  | EIncompatibleProp of { lower: Type.t; reason_prop: reason }
-  | EIncompatibleGetProp of { lower: Type.t; reason_prop: reason }
-  | EIncompatibleSetProp of { lower: Type.t; reason_prop: reason }
+  | EIncompatibleProp of {
+      reason_prop: reason;
+      reason_obj: reason;
+      special: special_lower option;
+    }
+  | EIncompatibleGetProp of {
+      reason_prop: reason;
+      reason_obj: reason;
+      special: special_lower option;
+    }
+  | EIncompatibleSetProp of {
+      reason_prop: reason;
+      reason_obj: reason;
+      special: special_lower option;
+    }
   | EDebugPrint of reason * string
   | EImportValueAsType of reason * string
   | EImportTypeAsTypeof of reason * string
@@ -48,16 +64,21 @@ type error_message =
   | ENoDefaultExport of reason * string * string option
   | EOnlyDefaultExport of reason * string
   | ENoNamedExport of reason * string * string option
-  | EMissingTypeArgs of reason * Type.typeparam list
+  | EMissingTypeArgs of { reason: reason; min_arity: int; max_arity: int }
   | EValueUsedAsType of (reason * reason)
   | EMutationNotAllowed of { reason: reason; reason_op: reason }
   | EExpectedStringLit of (reason * reason) * string * string Type.literal
   | EExpectedNumberLit of (reason * reason) * Type.number_literal * Type.number_literal Type.literal
   | EExpectedBooleanLit of (reason * reason) * bool * bool option
   | EPropNotFound of (reason * reason) * use_op
-  | EPropAccess of (reason * reason) * string option * Type.property * Type.rw
+  | EPropAccess of (reason * reason) * string option * Type.polarity * Type.rw
   | EPropPolarityMismatch of (reason * reason) * string option * (Type.polarity * Type.polarity)
-  | EPolarityMismatch of Type.typeparam * Type.polarity
+  | EPolarityMismatch of {
+      reason: reason;
+      name: string;
+      expected_polarity: Type.polarity;
+      actual_polarity: Type.polarity;
+    }
   | EStrictLookupFailed of (reason * reason) * reason * string option
   | EFunCallParam of (reason * reason)
   | EFunCallThis of reason * reason * reason
@@ -71,7 +92,11 @@ type error_message =
   | ENonLitArrayToTuple of (reason * reason)
   | ETupleOutOfBounds of (reason * reason) * int * int
   | ETupleUnsafeWrite of (reason * reason)
-  | EIntersectionSpeculationFailed of Type.t * Type.use_t * (reason * error_message) list
+  | EIntersectionSpeculationFailed of {
+      reason_lower: reason;
+      upper: Type.use_t;
+      branches: (reason * error_message) list;
+    }
   | EUnionSpeculationFailed of {
       reason: reason;
       reason_op: reason;
@@ -134,6 +159,13 @@ type error_message =
   (* The string is either the name of a module or "the module that exports `_`". *)
   | EUntypedTypeImport of Loc.t * string
   | EUnusedSuppression of Loc.t
+  | ELintSetting of LintSettings.error
+  | ESketchyNullLint of {
+      kind: LintSettings.sketchy_null_kind;
+      loc: Loc.t;
+      null_loc: Loc.t;
+      falsy_loc: Loc.t;
+    }
 
 and binding_error =
   | ENameAlreadyBound
@@ -200,6 +232,12 @@ and unsupported_syntax =
   | SpreadArgument
   | ImportDynamicArgument
 
+and special_lower =
+  | Possibly_null
+  | Possibly_void
+  | Possibly_null_or_void
+  | Incompatible_intersection
+
 let rec locs_of_use_op acc = function
   | FunCallThis reason -> (loc_of_reason reason)::acc
   | PropertyCompatibility
@@ -218,17 +256,15 @@ let rec locs_of_use_op acc = function
   | MissingTupleElement _ -> acc
 
 let locs_of_error_message = function
-  | EIncompatible (l, u) ->
-      let reason_l = reason_of_t l in
-      let reason_u = reason_of_use_t u in
-      [loc_of_reason reason_l; loc_of_reason reason_u]
+  | EIncompatible { reason_lower; upper; _ } ->
+      let reason_upper = reason_of_use_t upper in
+      [loc_of_reason reason_lower; loc_of_reason reason_upper]
   | EIncompatibleDefs (reason_l, reason_u) ->
       [loc_of_reason reason_l; loc_of_reason reason_u]
-  | EIncompatibleProp { lower; reason_prop }
-  | EIncompatibleGetProp { lower; reason_prop }
-  | EIncompatibleSetProp { lower; reason_prop } ->
-      let reason_l = reason_of_t lower in
-      [loc_of_reason reason_prop; loc_of_reason reason_l]
+  | EIncompatibleProp { reason_prop; reason_obj; _ }
+  | EIncompatibleGetProp { reason_prop; reason_obj; _ }
+  | EIncompatibleSetProp { reason_prop; reason_obj; _ } ->
+      [loc_of_reason reason_prop; loc_of_reason reason_obj]
   | EDebugPrint (reason, _) -> [loc_of_reason reason]
   | EImportValueAsType (reason, _) -> [loc_of_reason reason]
   | EImportTypeAsTypeof (reason, _) -> [loc_of_reason reason]
@@ -237,7 +273,7 @@ let locs_of_error_message = function
   | ENoDefaultExport (reason, _, _) -> [loc_of_reason reason]
   | EOnlyDefaultExport (reason, _) -> [loc_of_reason reason]
   | ENoNamedExport (reason, _, _) -> [loc_of_reason reason]
-  | EMissingTypeArgs (reason, _) -> [loc_of_reason reason]
+  | EMissingTypeArgs { reason; _ } -> [loc_of_reason reason]
   | EValueUsedAsType (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EMutationNotAllowed { reason; reason_op } ->
@@ -254,7 +290,7 @@ let locs_of_error_message = function
       [loc_of_reason reason1; loc_of_reason reason2]
   | EPropPolarityMismatch ((reason1, reason2), _, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | EPolarityMismatch (tp, _) -> [loc_of_reason tp.reason]
+  | EPolarityMismatch { reason; _ } -> [loc_of_reason reason]
   | EStrictLookupFailed ((reason1, reason2), _, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EFunCallParam (reason1, reason2) ->
@@ -280,10 +316,9 @@ let locs_of_error_message = function
       [loc_of_reason reason1; loc_of_reason reason2]
   | ETupleUnsafeWrite (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | EIntersectionSpeculationFailed (l, u, _) ->
-      let reason1 = reason_of_t l in
-      let reason2 = reason_of_use_t u in
-      [loc_of_reason reason1; loc_of_reason reason2]
+  | EIntersectionSpeculationFailed { reason_lower; upper; _ } ->
+      let reason_upper = reason_of_use_t upper in
+      [loc_of_reason reason_lower; loc_of_reason reason_upper]
   | EUnionSpeculationFailed { reason; reason_op; branches = _ } ->
       [loc_of_reason reason; loc_of_reason reason_op]
   | ESpeculationAmbiguous ((reason1, reason2), _, _, _) ->
@@ -356,6 +391,8 @@ let locs_of_error_message = function
   | EDocblockError (loc, _) -> [loc]
   | EUntypedTypeImport (loc, _) -> [loc]
   | EUnusedSuppression (loc) -> [loc]
+  | ELintSetting (loc, _) -> [loc]
+  | ESketchyNullLint { kind = _; loc; null_loc; falsy_loc; } -> [loc; null_loc; falsy_loc]
 
 let loc_of_error ~op msg =
   match op with
@@ -368,8 +405,7 @@ let ordered_reasons rl ru =
   then ru, rl
   else rl, ru
 
-let ordered_reasons_of_types l u =
-  let rl = reason_of_t l in
+let ordered_reasons_of_types rl u =
   let ru = reason_of_use_t u in
   if is_use u then ru, rl else ordered_reasons rl ru
 
@@ -445,26 +481,21 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         (string_of_use_ctor t)
   in
 
-  let err_value = function
-    | DefT (_, NullT) -> " possibly null value"
-    | DefT (_, VoidT) -> " possibly undefined value"
-    | DefT (_, MaybeT _) -> " possibly null or undefined value"
-    | DefT (_, IntersectionT _)
-    | DefT (_, MixedT Empty_intersection) -> " any member of intersection type"
-    | _ -> ""
+  let special_suffix = function
+    | Some Possibly_null -> " possibly null value"
+    | Some Possibly_void -> " possibly undefined value"
+    | Some Possibly_null_or_void -> " possibly null or undefined value"
+    | Some Incompatible_intersection -> " any member of intersection type"
+    | None -> ""
   in
 
-  let err_msg_use l u = spf "%s%s" (err_operation u) (err_value l) in
+  let err_msg_use special u = spf "%s%s" (err_operation u) (special_suffix special) in
 
   let msg_export export_name =
     if export_name = "default"
     then export_name
     else spf "`%s`" export_name
   in
-
-  let poly_minimum_arity xs = List.(
-    xs |> filter (fun typeparam -> typeparam.default = None) |> length
-  ) in
 
   let typecheck_error_with_core_infos ?(suppress_op=false) ?extra core_msgs =
     let core_reasons = List.map fst core_msgs in
@@ -582,25 +613,24 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   in
 
   function
-  | EIncompatible (l, u) ->
-      let rl = reason_of_t l in
-      let ru = reason_of_use_t u in
-      typecheck_error (err_msg_use l u) (ru, rl)
+  | EIncompatible { reason_lower; special; upper } ->
+      let reason_upper = reason_of_use_t upper in
+      typecheck_error (err_msg_use special upper) (reason_upper, reason_lower)
 
   | EIncompatibleDefs (reason_l, reason_u) ->
       typecheck_error "This type is incompatible with" (ordered_reasons reason_l reason_u)
 
-  | EIncompatibleProp { lower; reason_prop } ->
-      let msg = spf "Property not found in%s" (err_value lower) in
-      typecheck_error msg (reason_prop, reason_of_t lower)
+  | EIncompatibleProp { reason_prop; reason_obj; special } ->
+      let msg = spf "Property not found in%s" (special_suffix special) in
+      typecheck_error msg (reason_prop, reason_obj)
 
-  | EIncompatibleGetProp { lower; reason_prop } ->
-      let msg = spf "Property cannot be accessed on%s" (err_value lower) in
-      typecheck_error msg (reason_prop, reason_of_t lower)
+  | EIncompatibleGetProp { reason_prop; reason_obj; special } ->
+      let msg = spf "Property cannot be accessed on%s" (special_suffix special) in
+      typecheck_error msg (reason_prop, reason_obj)
 
-  | EIncompatibleSetProp { lower; reason_prop } ->
-      let msg = spf "Property cannot be assigned on%s" (err_value lower) in
-      typecheck_error msg (reason_prop, reason_of_t lower)
+  | EIncompatibleSetProp { reason_prop; reason_obj; special } ->
+      let msg = spf "Property cannot be assigned on%s" (special_suffix special) in
+      typecheck_error msg (reason_prop, reason_obj)
 
   | EDebugPrint (r, str) ->
       mk_error ~trace_infos [mk_info r [str]]
@@ -658,14 +688,12 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       in
       mk_error ~trace_infos [mk_info r [msg]]
 
-  | EMissingTypeArgs (r, params) ->
-      let min = poly_minimum_arity params in
-      let max = List.length params in
-      let arity, args = if min = max
-        then spf "%d" max, if max = 1 then "argument" else "arguments"
-        else spf "%d-%d" min max, "arguments"
+  | EMissingTypeArgs { reason; min_arity; max_arity } ->
+      let arity, args = if min_arity = max_arity
+        then spf "%d" max_arity, if max_arity = 1 then "argument" else "arguments"
+        else spf "%d-%d" min_arity max_arity, "arguments"
       in
-      mk_error ~trace_infos [mk_info r [spf
+      mk_error ~trace_infos [mk_info reason [spf
         "Application of polymorphic type needs \
          <list of %s %s>. (Can use `*` for inferrable ones)"
         arity args]]
@@ -725,20 +753,18 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         unwrap_use_ops (reasons, [], "Property not found in") use_op in
       typecheck_error ~extra msg reasons
 
-  | EPropAccess (reasons, x, prop, rw) ->
-      prop_polarity_error reasons x
-        (Property.polarity prop)
-        (Polarity.of_rw rw)
+  | EPropAccess (reasons, x, polarity, rw) ->
+      prop_polarity_error reasons x polarity (Polarity.of_rw rw)
 
   | EPropPolarityMismatch (reasons, x, (p1, p2)) ->
       prop_polarity_error reasons x p1 p2
 
-  | EPolarityMismatch (tp, p) ->
-      mk_error ~trace_infos [mk_info tp.reason [spf
+  | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
+      mk_error ~trace_infos [mk_info reason [spf
         "%s position (expected `%s` to occur only %sly)"
-        (Polarity.string p)
-        tp.name
-        (Polarity.string tp.polarity)]]
+        (Polarity.string actual_polarity)
+        name
+        (Polarity.string expected_polarity)]]
 
   | EStrictLookupFailed (reasons, lreason, x) ->
     (* if we're looking something up on the global/builtin object, then tweak
@@ -855,9 +881,11 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         element of the tuple you are mutating. Unsafe mutation of" in
       typecheck_error msg reasons
 
-  | EIntersectionSpeculationFailed (l, u, branches) ->
-      let reasons = ordered_reasons_of_types l u in
-      let msg = if is_use u then err_msg_use l u else "This type is incompatible with" in
+  | EIntersectionSpeculationFailed { reason_lower; upper; branches } ->
+      let reasons = ordered_reasons_of_types reason_lower upper in
+      let msg = if is_use upper
+        then err_msg_use (Some Incompatible_intersection) upper
+        else "This type is incompatible with" in
       let extra = speculation_extras branches in
       typecheck_error msg ~extra reasons
 
@@ -1354,3 +1382,38 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
 
   | EUnusedSuppression loc ->
     mk_error [loc, ["Error suppressing comment"; "Unused suppression"]]
+
+  | ELintSetting (loc, kind) ->
+    let msg = match kind with
+    | LintSettings.Redundant_argument ->
+      "Redundant argument. This argument doesn't change any lint settings."
+    | LintSettings.Overwritten_argument ->
+      "Redundant argument. "
+        ^ "The values set by this argument are overwritten later in this comment."
+    | LintSettings.Naked_comment ->
+      "Malformed lint rule. At least one argument is required."
+    | LintSettings.Nonexistent_rule ->
+      "Nonexistent/misspelled lint rule. Perhaps you have a missing/extra ','?"
+    | LintSettings.Invalid_setting ->
+      "Invalid setting. Valid settings are error, warn, and off."
+    | LintSettings.Malformed_argument ->
+      "Malformed lint rule. Properly formed rules contain a single ':' character. " ^
+        "Perhaps you have a missing/extra ','?"
+    in
+    mk_error ~kind: ParseError [loc, [msg]]
+
+  | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
+    let type_str, value_str = match kind with
+    | LintSettings.SketchyBool -> "boolean", "Potentially false"
+    | LintSettings.SketchyNumber -> "number", "Potentially 0"
+    | LintSettings.SketchyString -> "string", "Potentially \"\""
+    | LintSettings.SketchyMixed -> "mixed", "Mixed"
+    in
+    mk_error
+      ~kind:(LintError (LintSettings.SketchyNull kind))
+      [loc, [(spf "Sketchy null check on %s value." type_str)
+        ^ " Perhaps you meant to check for null instead of for existence?"]]
+      ~extra:[InfoLeaf [
+        null_loc, ["Potentially null/undefined value."];
+        falsy_loc, [spf "%s value." value_str]
+      ]]

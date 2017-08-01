@@ -152,3 +152,15 @@ let split_on_newlines content =
   match List.rev lines with
   | "" :: rest -> List.rev rest
   | _ -> lines
+
+let to_list s =
+  let rec loop acc i =
+    if i < 0 then acc
+    else (loop [@tailcall]) (s.[i] :: acc) (i - 1)
+  in
+  loop [] (String.length s - 1)
+
+let of_list l =
+  let s = Bytes.create (List.length l) in
+  List.iteri (Bytes.set s) l;
+  Bytes.unsafe_to_string s

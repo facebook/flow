@@ -21,6 +21,14 @@ type 'a pos = {
 
 type t = Relative_path.t pos
 
+let pp fmt pos = begin
+  Format.pp_print_string fmt "[";
+  File_pos.pp fmt pos.pos_start;
+  Format.pp_print_string fmt "-";
+  File_pos.pp fmt pos.pos_end;
+  Format.pp_print_string fmt "]";
+end
+
 type absolute = string pos
 
 let none = {

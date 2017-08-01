@@ -215,6 +215,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/types/aliases/":
   title: "Type Aliases"
   description: "Aliasing types for reuse"
+"/docs/types/opaque-types/":
+  title: "Opaque Type Aliases"
+  description: "Enforcing abstraction through the type system"
 "/docs/types/arrays/":
   title: "Array Types"
   description: "Typing arrays and the elements inside of them"

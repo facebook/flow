@@ -65,12 +65,17 @@ let with_timer ?options timer profiling f =
   (match options with
   | Some options when Options.should_profile options ->
       (match Profiling_js.get_finished_timer ~timer profiling with
-      | Some (start_wall_age, wall_duration) ->
-          prerr_endlinef
-            "TimingEvent `%s`: start_wall_age: %f; wall_duration: %f"
-            timer
+      | Some (start_wall_age, wall_duration, cpu_usage, flow_cpu_usage) ->
+          let stats = Printf.sprintf
+            "start_wall_age: %f; wall_duration: %f; cpu_usage: %f; flow_cpu_usage: %f"
             start_wall_age
             wall_duration
+            cpu_usage
+            flow_cpu_usage in
+          prerr_endlinef
+            "TimingEvent `%s`: %s"
+            timer
+            stats
       | _ -> ());
   | _ -> ());
 
@@ -289,24 +294,42 @@ let typecheck
     | None -> fun _ -> ()
     | Some conns ->
         let open Errors in
+        (* All errors are stored in a single set, but warnings are stored per-file.
+         * This is because persistent connection clients subscribe to individual files for
+         * warnings so that they don't get overloaded with the large number of warnings. *)
         let current_errors = ref ErrorSet.empty in
-        let current_warnings = ref ErrorSet.empty in
+        let current_warnings = ref FilenameMap.empty in
         let suppressions = Error_suppressions.union_suppressions suppressions in
         let lint_settings = LintSettingsMap.union_settings lint_settings in
+        let filter = Error_suppressions.filter_suppressed_errors suppressions lint_settings in
         function lazy new_errors ->
-          let new_errors = List.fold_left
-            (fun acc (_, errs) -> Errors.ErrorSet.union acc errs)
-            Errors.ErrorSet.empty
+          (* Collate the errors and diff the warnings. *)
+          let new_errors, new_warnings = List.fold_left
+            (fun (err_acc, warn_acc) (filename, errs) ->
+              let errs, warns, _, _ = filter errs in
+              let err_acc = Errors.ErrorSet.union err_acc errs in
+              let current_file_warns = FilenameMap.get filename !current_warnings
+                |> Option.value ~default:Errors.ErrorSet.empty in
+              let warns = ErrorSet.diff warns current_file_warns in
+              let warn_acc = if ErrorSet.is_empty warns
+                then warn_acc
+                else FilenameMap.add filename warns warn_acc
+              in
+              (err_acc, warn_acc)
+            )
+            (Errors.ErrorSet.empty, FilenameMap.empty)
             new_errors
           in
-          let new_errors, new_warnings, _, _ =
-            Error_suppressions.filter_suppressed_errors suppressions lint_settings new_errors
-          in
+          (* Diff the errors. *)
           let new_errors = ErrorSet.diff new_errors !current_errors in
-          let new_warnings = ErrorSet.diff new_warnings !current_warnings in
+          (* Update the saved errors. *)
           current_errors := ErrorSet.union new_errors !current_errors;
-          current_warnings := ErrorSet.union new_warnings !current_warnings;
-          if not (ErrorSet.is_empty new_errors) || not (ErrorSet.is_empty new_warnings) then
+          (* Update the saved warnings. *)
+          current_warnings := FilenameMap.fold (FilenameMap.add ~combine:ErrorSet.union)
+            new_warnings !current_warnings;
+          (* Send the new errors and warnings. (Filtering of warnings by file is
+           * done inside update_clients.) *)
+          if not (ErrorSet.is_empty new_errors) || not (FilenameMap.is_empty new_warnings) then
             Persistent_connection.update_clients conns ~errors:new_errors ~warnings:new_warnings
   in
 
@@ -612,7 +635,7 @@ let recheck ~options ~workers ~updates env =
         FilenameMap.fold (fun _ -> Errors.ErrorSet.union) new_local_errors Errors.ErrorSet.empty
       in
       Persistent_connection.update_clients env.ServerEnv.connections
-        ~errors:error_set ~warnings:Errors.ErrorSet.empty
+        ~errors:error_set ~warnings:FilenameMap.empty
     in
     let local_errors = merge_error_maps new_local_errors errors.ServerEnv.local_errors in
     { errors with ServerEnv.local_errors }

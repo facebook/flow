@@ -223,14 +223,13 @@ module Watchman_actual = struct
       let remaining = start_t +. timeout -. Unix.time () in
       let timeout = int_of_float remaining in
       let timeout = max timeout 10 in
-      try Timeout.with_timeout
+      Timeout.with_timeout
         ~do_: (fun _ -> Buffered_line_reader.get_next_line reader)
         ~timeout
-        ~on_timeout:(fun _ -> ())
-      with
-      | Timeout.Timeout ->
-        let () = EventLogger.watchman_timeout () in
-        raise Read_payload_too_long
+        ~on_timeout:(fun () ->
+          let () = EventLogger.watchman_timeout () in
+          raise Read_payload_too_long
+        )
 
   (** We filter all responses from get_changes through this. This is to detect
    * Watchman server crashes.
@@ -426,14 +425,13 @@ module Watchman_actual = struct
        * data size) so we don't freeze if watchman sends an inordinate amount of
        * data, or if it is malformed (i.e. doesn't end in a newline). *)
       let timeout = 40 in
-      let output = try Timeout.with_timeout
+      let output = Timeout.with_timeout
         ~do_: (fun _ -> Buffered_line_reader.get_next_line @@ fst env.socket)
         ~timeout
-        ~on_timeout:begin fun _ -> () end
-      with
-        | Timeout.Timeout ->
+        ~on_timeout:begin fun () ->
           let () = Hh_logger.log "Watchman.poll_for_updates timed out" in
           raise Read_payload_too_long
+        end
       in
       sanitize_watchman_response output
 

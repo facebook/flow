@@ -712,8 +712,10 @@ let rec convert cx tparams_map = Ast.Type.(function
     then ExactT (mk_reason (RExactType reason_desc) loc, t)
     else t
   | t::ts ->
+    let open ObjectSpread in
     let reason = mk_reason RObjectType loc in
-    EvalT (t, TypeDestructorT (reason, SpreadType (exact, ts)), mk_id ()))
+    let options = { make_exact = exact; merge_mode = DefaultMM } in
+    EvalT (t, TypeDestructorT (reason, SpreadType (options, ts)), mk_id ()))
 
 | loc, Exists ->
   (* Do not evaluate existential type variables when map is non-empty. This

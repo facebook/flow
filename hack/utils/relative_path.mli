@@ -26,6 +26,8 @@ end
 
 type t = S.t
 
+val pp : Format.formatter -> t -> unit
+
 val default : t
 (* Checks that string indeed has the given prefix before constructing path *)
 val create : prefix -> string -> t

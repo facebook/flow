@@ -76,11 +76,6 @@ module CheckCommand = struct
         exe_name;
   }
 
-  let log_filter = function
-    | Hh_logger.Level.Fatal
-    | Hh_logger.Level.Error -> true
-    | _ -> false
-
   let main
       error_flags include_suppressed options_flags json pretty
       shm_flags ignore_version from path_opt
@@ -93,7 +88,7 @@ module CheckCommand = struct
     if Options.should_profile options then Flow_server_profile.init ();
 
     (* initialize loggers before doing too much, especially anything that might exit *)
-    init_loggers ~from ~options ~default:log_filter ();
+    init_loggers ~from ~options ~min_level:Hh_logger.Level.Error ();
 
     if not ignore_version then assert_version flowconfig;
 
@@ -105,7 +100,8 @@ module CheckCommand = struct
       if include_suppressed then suppressed_errors else [] in
     let printer =
       if json || pretty then Json { pretty } else Cli error_flags in
-    print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
+    let include_warnings = error_flags.Errors.Cli_output.include_warnings in
+    print_errors ~printer ~profiling ~include_warnings ~suppressed_errors options ~errors ~warnings;
     if Errors.ErrorSet.is_empty errors
       then FlowExitStatus.(exit No_error)
       else FlowExitStatus.(exit Type_error)
@@ -164,7 +160,8 @@ module FocusCheckCommand = struct
       if include_suppressed then suppressed_errors else [] in
     let printer =
       if json || pretty then Json { pretty } else Cli error_flags in
-    print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
+    let include_warnings = error_flags.Errors.Cli_output.include_warnings in
+    print_errors ~printer ~profiling ~include_warnings ~suppressed_errors options ~errors ~warnings;
     if Errors.ErrorSet.is_empty errors
       then FlowExitStatus.(exit No_error)
       else FlowExitStatus.(exit Type_error)

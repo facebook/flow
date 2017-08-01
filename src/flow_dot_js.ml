@@ -100,7 +100,7 @@ let stub_metadata ~root ~checked = { Context.
     enable_const_params = false;
     enable_unsafe_getters_and_setters = true;
     enforce_strict_type_args = true;
-    enforce_strict_call_arity = false;
+    enforce_strict_call_arity = true;
     esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_decorators = Options.ESPROPOSAL_ENABLE;
@@ -187,7 +187,9 @@ let check_content ~filename ~content =
   in
   let strip_root = Some root in
   Errors.Json_output.json_of_errors_with_context
-    ~strip_root ~stdin_file ~suppressed_errors:[] ~errors ~warnings ()
+    (* Might as well set include_warnings to true now, to save some debugging headaches
+     * if/when we add lint comments to the online playground. *)
+    ~strip_root ~stdin_file ~include_warnings:true ~suppressed_errors:[] ~errors ~warnings ()
   |> js_of_json
 
 let check filename =

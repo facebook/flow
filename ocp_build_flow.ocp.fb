@@ -102,6 +102,7 @@ begin library "flow-common-errors"
     "flow-common-utils"
     "flow-parser"
     "hh-utils"
+    "hh-utils-collections"
     "hh-utils-json"
     "tp-core"
   ]
@@ -219,7 +220,7 @@ begin library "flow-parser"
   files += [
     "src/parser/lexer.ml" (comp += [
       "-w" "-31-39"
-      "-ppx" "%{sedlex_FULL_SRC_DIR}%/ppx_sedlex"
+      "-ppx" "%{sedlex_FULL_SRC_DIR}%/ppx_sedlex --as-ppx"
     ])
   ]
   requires = [
@@ -292,6 +293,7 @@ begin library "flow-server-protocol"
   requires = [
     "flow-common"
     "flow-common-errors"
+    "flow-common-utils"
     "flow-parser"
     "flow-server-utils"
     "flow-services-autocomplete"
@@ -334,10 +336,10 @@ begin library "flow-server"
     "hh-dfind"
     "hh-procs"
     "hh-socket"
-    "tp-core"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "tp-core"
   ]
 end
 
@@ -355,6 +357,7 @@ begin library "flow-server-env"
     "hh-dfind"
     "hh-procs"
     "hh-utils-collections"
+    "tp-core"
   ]
 end
 
@@ -446,6 +449,7 @@ begin library "flow-services-inference"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+    "tp-core"
   ]
 end
 

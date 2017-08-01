@@ -1,0 +1,96 @@
+Error: decltest.js:2
+  2: declare opaque type Foo<+T>: {p:T}; // Error, invariant use of T
+                                     ^ T. invariant position (expected `T` to occur only covariantly)
+
+Error: importtest.js:7
+  7:     return y;
+                ^ number. This type is incompatible with the expected return type of
+  6: function test1 (y: SuperType) : SuperOpaque { // Error: number ~> SuperOpaque
+                                     ^^^^^^^^^^^ opaque type `SuperOpaque`
+
+Error: importtest.js:15
+ 15:     return x;
+                ^ number. This type is incompatible with the expected return type of
+ 14: function test3 (x: number): Counter {// Error: number ~> Counter
+                                 ^^^^^^^ opaque type `Counter`
+
+Error: importtest.js:27
+ 27:     return x;
+                ^ PolyFoo. This type is incompatible with the expected return type of
+ 26: function test6(x: PolyGood<number>): PolyBar<number> { // Error: PolyFoo ~> PolyBar
+                                          ^^^^^^^^^^^^^^^ PolyBar
+
+Error: importtest.js:30
+ 30: function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
+                                ^^^^^^ number. This type is incompatible with
+ 30: function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
+                                                  ^^^^^^ string
+
+Error: importtest.js:30
+ 30: function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
+                                                  ^^^^^^ string. This type is incompatible with
+ 30: function test7(x: PolyGood<number>): PolyFoo<string> { // Error: number ~> string
+                                ^^^^^^ number
+
+Error: importtest.js:39
+ 39:     return x++; // Error number ~> SuperType
+                ^^^ number. This type is incompatible with
+ 38: function test9(x: SuperType): SuperType { // Error number ~> SuperType
+                       ^^^^^^^^^ opaque type `SuperType`
+
+Error: importtest.js:39
+ 39:     return x++; // Error number ~> SuperType
+                ^^^ number. This type is incompatible with the expected return type of
+ 38: function test9(x: SuperType): SuperType { // Error number ~> SuperType
+                                   ^^^^^^^^^ opaque type `SuperType`
+
+Error: importtest.js:52
+ 52:     return x + y;
+                ^^^^^ string. This type is incompatible with the expected return type of
+ 51: function test12(x: ID, y: ID): number { // Error: string ~> number
+                                    ^^^^^^ number
+
+Error: test.js:7
+  7: export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
+                                                    ^^^^^^^ number. This type is incompatible with
+  7: export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
+                                        ^^^^^^^^^ opaque type `SuperType`
+
+Error: test.js:12
+ 12: export opaque type ClassBad: Bar = Foo; // Error: Foo ~> Bar
+                                        ^^^ Foo. This type is incompatible with
+ 12: export opaque type ClassBad: Bar = Foo; // Error: Foo ~> Bar
+                                  ^^^ Bar
+
+Error: test.js:17
+ 17: export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
+                                                 ^^^^^^^^^^ PolyFoo. This type is incompatible with
+ 17: export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
+                                    ^^^^^^^^^^ PolyBar
+
+Error: test.js:20
+ 20: export opaque type PolyBad2<T>: PolyFoo<T> = PolyBar2<T>; // Error: Incompatible instantiation
+                                 ^ T. This type is incompatible with
+ 20: export opaque type PolyBad2<T>: PolyFoo<T> = PolyBar2<T>; // Error: Incompatible instantiation
+                        ^^^^^^^^ some incompatible instantiation of `T`
+
+Error: test.js:21
+ 21: export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2
+                                                   ^^^^^^^^^^ PolyFoo. This type is incompatible with
+ 21: export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2
+                                     ^^^^^^^^^^^ PolyBar2
+
+Error: test.js:27
+ 27: export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
+                                          ^^^^^^ number. This type is incompatible with
+ 27: export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
+                                                                     ^^^^^^ string
+
+Error: typeapp-test.js:5
+  5:   foo2.p = null; // Error, covariant property p
+       ^^^^ object type. Covariant property `p` incompatible with contravariant use in
+  5:   foo2.p = null; // Error, covariant property p
+       ^^^^^^ assignment of property `p`
+
+
+Found 16 errors

@@ -107,6 +107,7 @@ NATIVE_C_FILES=\
   hack/utils/realpath.c\
   hack/utils/sysinfo.c\
   hack/utils/priorities.c\
+  hack/utils/processor_info.c\
   $(sort $(wildcard src/third-party/lz4/*.c))\
   $(INTERNAL_NATIVE_C_FILES)
 
@@ -276,7 +277,7 @@ test: build-flow copy-flow-files
 test-ocp: build-flow-with-ocp copy-flow-files-ocp
 	${MAKE} do-test
 
-js: $(BUILT_OBJECT_FILES)
+js: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
 	mkdir -p bin
 	# NOTE: temporarily disabling warning 31 because
 	# hack/third-party/core/result.ml and the opam `result` module both define

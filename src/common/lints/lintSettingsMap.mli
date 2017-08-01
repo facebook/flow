@@ -59,7 +59,7 @@ val update_settings:
  * immediately overwritten. (That's done elsewhere.) *)
 val update_settings_and_running:
   LintSettings.t ->
-  (Loc.t -> string -> unit) ->
+  (LintSettings.error -> unit) ->
   Loc.t ->
   (LintSettings.lint_kind * (LintSettings.lint_state * Loc.t)) list list ->
   builder ->

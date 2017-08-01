@@ -10,7 +10,6 @@
 
  module SpanMap = Span.SpanMap
 
-
 (* Supports O(m) operations to add a range of suppression rules, where m is
  * the number of rules. (assuming that the rules are processed in order) *)
 (* A builder is a sorted list of non-overlapping, non-empty, adjacent ranges, with later
@@ -112,8 +111,7 @@ let update_settings_and_running =
         (settings, true) kind_settings
       in
       if all_redundant then
-        err_fun (head |> snd |> snd)
-          "Redundant argument. This argument doesn't change any lint settings.";
+        err_fun ((head |> snd |> snd), LintSettings.Redundant_argument);
       new_settings
     | [] -> settings
   in
