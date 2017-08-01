@@ -94,14 +94,15 @@ module CheckCommand = struct
 
     let shared_mem_config = shm_config shm_flags flowconfig in
 
+    let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
+
     let profiling, errors, warnings, suppressed_errors = Main.check_once
-      ~shared_mem_config options in
+      ~shared_mem_config ~client_include_warnings options in
     let suppressed_errors =
       if include_suppressed then suppressed_errors else [] in
     let printer =
       if json || pretty then Json { pretty } else Cli error_flags in
-    let include_warnings = error_flags.Errors.Cli_output.include_warnings in
-    print_errors ~printer ~profiling ~include_warnings ~suppressed_errors options ~errors ~warnings;
+    print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
     if Errors.ErrorSet.is_empty errors
       then FlowExitStatus.(exit No_error)
       else FlowExitStatus.(exit Type_error)
@@ -151,17 +152,19 @@ module FocusCheckCommand = struct
 
     let shared_mem_config = shm_config shm_flags flowconfig in
 
+    let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
+
     let focus_target = Option.find_map path_opt ~f:(fun file ->
       Some (Loc.SourceFile Path.(to_string (make file))))
     in
+
     let profiling, errors, warnings, suppressed_errors = Main.check_once
-      ~shared_mem_config ?focus_target options in
+      ~shared_mem_config ~client_include_warnings ?focus_target options in
     let suppressed_errors =
       if include_suppressed then suppressed_errors else [] in
     let printer =
       if json || pretty then Json { pretty } else Cli error_flags in
-    let include_warnings = error_flags.Errors.Cli_output.include_warnings in
-    print_errors ~printer ~profiling ~include_warnings ~suppressed_errors options ~errors ~warnings;
+    print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
     if Errors.ErrorSet.is_empty errors
       then FlowExitStatus.(exit No_error)
       else FlowExitStatus.(exit Type_error)

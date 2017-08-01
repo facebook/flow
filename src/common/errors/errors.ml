@@ -705,7 +705,7 @@ module Cli_output = struct
             warn_count sep (warning_or_warnings warn_count)
     in
 
-    fun ~out_channel ~flags ?(stdin_file=None) ~include_warnings
+    fun ~out_channel ~flags ?(stdin_file=None)
       ~strip_root ~errors ~warnings () ->
       let truncate = not (flags.show_all_errors) in
       let one_line = flags.one_line in
@@ -718,15 +718,10 @@ module Cli_output = struct
         curr + 1
       in
       let err_count = ErrorSet.fold (print_error_if_not_truncated LintSettings.Err) errors 0 in
-      let warn_count, total_count =
-        if include_warnings then
-          let total_count = ErrorSet.fold
-            (print_error_if_not_truncated LintSettings.Warn) warnings err_count
-          in
-          let warn_count = total_count - err_count in
-          warn_count, total_count
-        else (0, err_count)
+      let total_count = ErrorSet.fold
+        (print_error_if_not_truncated LintSettings.Warn) warnings err_count
       in
+      let warn_count = total_count - err_count in
       if total_count > 0 then print_newline ();
       if truncate && total_count > 50 then (
         let remaining_errs, remaining_warns = if err_count - 50 < 0
@@ -851,15 +846,13 @@ module Json_output = struct
       ~severity ~suppression_locs error)
 
   let json_of_errors_with_context
-    ~strip_root ~stdin_file ~include_warnings ~suppressed_errors ~errors ~warnings () =
+    ~strip_root ~stdin_file ~suppressed_errors ~errors ~warnings () =
     let errors = errors
       |> ErrorSet.elements
       |> List.map (fun err -> err, Loc.LocSet.empty) in
-    let warnings = if include_warnings
-      then warnings
-        |> ErrorSet.elements
-        |> List.map (fun warn -> warn, Loc.LocSet.empty)
-      else []
+    let warnings = warnings
+      |> ErrorSet.elements
+      |> List.map (fun warn -> warn, Loc.LocSet.empty)
     in
     let f = json_of_error_with_context ~strip_root ~stdin_file in
     Hh_json.JSON_Array (
@@ -869,14 +862,14 @@ module Json_output = struct
       List.map (f ~severity:LintSettings.Err) suppressed_errors
     )
 
-  let full_status_json_of_errors ~strip_root  ~include_warnings ~suppressed_errors
+  let full_status_json_of_errors ~strip_root ~suppressed_errors
     ?(profiling=None) ?(stdin_file=None) ~errors ~warnings () =
     let open Hh_json in
 
     let props = [
       "flowVersion", JSON_String Flow_version.version;
       "errors", json_of_errors_with_context
-        ~strip_root ~stdin_file ~include_warnings ~suppressed_errors ~errors ~warnings ();
+        ~strip_root ~stdin_file ~suppressed_errors ~errors ~warnings ();
       "passed", JSON_Bool (ErrorSet.is_empty errors);
     ] in
     let props = match profiling with
@@ -888,7 +881,6 @@ module Json_output = struct
   let print_errors
       ~out_channel
       ~strip_root
-      ~include_warnings
       ~suppressed_errors
       ?(pretty=false) ?(profiling=None) ?(stdin_file=None)
       ~errors
@@ -896,7 +888,7 @@ module Json_output = struct
       () =
     let open Hh_json in
     let res = full_status_json_of_errors ~strip_root ~profiling ~stdin_file
-      ~include_warnings ~suppressed_errors ~errors ~warnings () in
+      ~suppressed_errors ~errors ~warnings () in
     output_string out_channel (json_to_string ~pretty res);
     flush out_channel
 end
@@ -942,16 +934,17 @@ module Vim_emacs_output = struct
       );
       Buffer.contents buf
     in
-    fun ~strip_root ~include_warnings oc ~errors ~warnings () ->
-      let sl = ErrorSet.fold (fun err acc ->
-          (to_string ~strip_root "Error: " err)::acc
-        ) (errors) [] in
-      let sl = if include_warnings then ErrorSet.fold (fun warn acc ->
-          (to_string ~strip_root "Warning: " warn)::acc
-        ) (warnings) sl
-        else sl
+    fun ~strip_root oc ~errors ~warnings () ->
+      let sl = []
+        |> ErrorSet.fold (fun err acc ->
+            (to_string ~strip_root "Error: " err)::acc
+          ) (errors)
+        |> ErrorSet.fold (fun warn acc ->
+            (to_string ~strip_root "Warning: " warn)::acc
+          ) (warnings)
+        |> List.sort String.compare
+        |> ListUtils.uniq
       in
-      let sl = ListUtils.uniq (List.sort String.compare sl) in
       List.iter begin fun s ->
         output_string oc s;
         output_string oc "\n";

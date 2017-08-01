@@ -126,15 +126,14 @@ let main option_values root error_flags strip_root ignore_flag
 
   let open ServerProt in
   let (in_chan, out_chan) = connect option_values root in
-  send_command out_chan (GEN_FLOW_FILES filenames);
+  let include_warnings = error_flags.Errors.Cli_output.include_warnings in
+  send_command out_chan (GEN_FLOW_FILES (filenames, include_warnings));
   match ((Timeout.input_value in_chan: gen_flow_file_response), out_dir) with
   | (Error (GenFlowFile_TypecheckError {errors; warnings}), _) ->
     let strip_root = if strip_root then Some root else None in
-    let include_warnings = error_flags.Errors.Cli_output.include_warnings in
     Errors.Cli_output.print_errors
       ~out_channel:stderr
       ~flags:error_flags
-      ~include_warnings
       ~strip_root
       ~errors
       ~warnings

@@ -72,7 +72,7 @@ let main option_values root error_flags strip_root json pretty verbose
 
   let include_warnings = error_flags.Errors.Cli_output.include_warnings in
 
-  send_command oc (ServerProt.CHECK_FILE (file, verbose, graphml, all));
+  send_command oc (ServerProt.CHECK_FILE (file, verbose, graphml, all, include_warnings));
   let response = wait_for_response ic in
   let stdin_file = match file with
     | File_input.FileContent (None, contents) ->
@@ -83,7 +83,7 @@ let main option_values root error_flags strip_root json pretty verbose
   in
   let strip_root = if strip_root then Some root else None in
   let print_json = Errors.Json_output.print_errors
-    ~out_channel:stdout ~include_warnings ~strip_root ~pretty ~stdin_file
+    ~out_channel:stdout ~strip_root ~pretty ~stdin_file
     ~suppressed_errors:([]) in
   match response with
   | ServerProt.ERRORS {errors; warnings} ->
@@ -95,7 +95,6 @@ let main option_values root error_flags strip_root json pretty verbose
           ~out_channel:stdout
           ~flags:error_flags
           ~stdin_file
-          ~include_warnings
           ~strip_root
           ~errors
           ~warnings

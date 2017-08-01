@@ -49,6 +49,7 @@ module Opts = struct
     haste_paths_whitelist: string list;
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
+    include_warnings: bool;
     module_system: Options.module_system;
     module_name_mappers: (Str.regexp * string) list;
     node_resolver_dirnames: string list;
@@ -151,6 +152,7 @@ module Opts = struct
     haste_paths_whitelist = ["<PROJECT_ROOT>/.*"];
     haste_use_name_reducers = false;
     ignore_non_literal_requires = false;
+    include_warnings = false;
     module_system = Options.Node;
     module_name_mappers = [];
     node_resolver_dirnames = ["node_modules"];
@@ -344,7 +346,9 @@ end = struct
       if options.weak <> default_options.weak
       then opt o "weak" (string_of_bool options.weak);
       if options.temp_dir <> default_options.temp_dir
-      then opt o "temp_dir" options.temp_dir
+      then opt o "temp_dir" options.temp_dir;
+      if options.include_warnings <> default_options.include_warnings
+      then opt o "include_warnings" (string_of_bool options.include_warnings)
     )
 
   let lints o config =
@@ -479,6 +483,15 @@ let parse_options config lines =
       setter = (fun opts v -> Ok {
         opts with facebook_fbt = Some v;
       });
+    }
+
+    |> define_opt "include_warnings" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        Ok {opts with include_warnings = v;}
+      );
     }
 
     |> define_opt "module.system.haste.name_reducers" {
@@ -926,6 +939,7 @@ let haste_paths_blacklist c = c.options.Opts.haste_paths_blacklist
 let haste_paths_whitelist c = c.options.Opts.haste_paths_whitelist
 let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
+let include_warnings c = c.options.Opts.include_warnings
 let log_file c = c.options.Opts.log_file
 let max_header_tokens c = c.options.Opts.max_header_tokens
 let max_workers c = c.options.Opts.max_workers
