@@ -91,6 +91,7 @@ type reason_desc =
   | RNameProperty of reason_desc
   | RMissingAbstract of reason_desc
   | RFieldInitializer of string
+  | RUntypedModule of string
   | RCustom of string
   | RPolyType of reason_desc
   | RClassType of reason_desc

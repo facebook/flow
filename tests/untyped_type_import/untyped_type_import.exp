@@ -1,10 +1,10 @@
 Error: imports.js:5
   5: import type {FooType} from './untyped_exports.js'; //Error
-                  ^^^^^^^ untyped-type-import: Importing a type from an untyped module is not safe! Did you mean to add `// @flow` to the top of the module that exports `FooType`?
+                  ^^^^^^^ untyped-type-import: Importing a type from an untyped module is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`?
 
 Error: imports.js:6
   6: import typeof {FooObj} from './untyped_exports.js'; //Error
-                    ^^^^^^ untyped-type-import: Importing a type from an untyped module is not safe! Did you mean to add `// @flow` to the top of the module that exports `FooObj`?
+                    ^^^^^^ untyped-type-import: Importing a type from an untyped module is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`?
 
 Error: imports.js:10
  10: import typeof BarObj from './untyped_exports.js'; //Error
@@ -12,11 +12,15 @@ Error: imports.js:10
 
 Error: imports.js:14
  14: import type {BazType} from './untyped_exports.js'; //Error
-                  ^^^^^^^ untyped-type-import: Importing a type from an untyped module is not safe! Did you mean to add `// @flow` to the top of the module that exports `BazType`?
+                  ^^^^^^^ untyped-type-import: Importing a type from an untyped module is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`?
 
 Error: imports.js:15
  15: import typeof {BazObj} from './untyped_exports.js'; //Error
-                    ^^^^^^ untyped-type-import: Importing a type from an untyped module is not safe! Did you mean to add `// @flow` to the top of the module that exports `BazObj`?
+                    ^^^^^^ untyped-type-import: Importing a type from an untyped module is not safe! Did you mean to add `// @flow` to the top of `./untyped_exports.js`?
+
+Error: imports.js:27
+ 27: import typeof BoopObj from './nonexistent.js';
+                                ^^^^^^^^^^^^^^^^^^ ./nonexistent.js. Required module not found
 
 
-Found 5 errors
+Found 6 errors

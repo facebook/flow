@@ -99,7 +99,9 @@ let explicit_decl_require_strict cx (m, loc, resolved_m, cx_to) =
    a resolved-unchecked dependency is superceded by a possibly-checked libdef.
    See unchecked_*_module_vs_lib tests for examples. *)
 let explicit_unchecked_require_strict cx (m, loc, cx_to) =
-  let reason = Reason.(mk_reason (RCustom m) loc) in
+  (* Use a special reason so we can tell the difference between an any-typed type import
+   * from an untyped module and an any-typed type import from a nonexistent module. *)
+  let reason = Reason.(mk_reason (RUntypedModule m) loc) in
   let m_name = Reason.internal_module_name m in
   let from_t = Flow_js.mk_tvar cx reason in
   Flow_js.lookup_builtin cx m_name reason
