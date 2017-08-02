@@ -16,7 +16,6 @@ open Utils_js
 let dts_ext = ".d.ts"
 
 let convert_file error_flags outpath file =
-  let include_warnings = error_flags.Errors.Cli_output.include_warnings in
   let base = Filename.chop_suffix (Filename.basename file) dts_ext in
   let outpath = match outpath with
     | None -> Filename.dirname file | Some p -> p in
@@ -53,7 +52,6 @@ let convert_file error_flags outpath file =
       ~flags:error_flags
       ~strip_root:None
       ~errors:flow_errors
-      ~include_warnings
       (* The convert command only has parse errors. *)
       ~warnings:Errors.ErrorSet.empty
       ();

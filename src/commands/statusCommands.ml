@@ -102,13 +102,13 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
   let rec check_status (args:args) server_flags =
     let name = "flow" in
 
-    let ic, oc = connect server_flags args.root in
-    send_command oc (ServerProt.STATUS args.root);
-    let response = wait_for_response ic in
     let include_warnings = args.error_flags.Errors.Cli_output.include_warnings in
+    let ic, oc = connect server_flags args.root in
+    send_command oc (ServerProt.STATUS (args.root, include_warnings));
+    let response = wait_for_response ic in
     let strip_root = if args.strip_root then Some args.root else None in
     let print_json = Errors.Json_output.print_errors
-      ~out_channel:stdout ~include_warnings ~strip_root ~pretty:args.pretty
+      ~out_channel:stdout ~strip_root ~pretty:args.pretty
       ~suppressed_errors:([])
     in
     match response with
@@ -126,12 +126,11 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       begin if args.output_json then
         print_json ~errors ~warnings ()
       else if args.from = "vim" || args.from = "emacs" then
-        Errors.Vim_emacs_output.print_errors ~strip_root ~include_warnings
+        Errors.Vim_emacs_output.print_errors ~strip_root
           stdout ~errors ~warnings ()
       else
         Errors.Cli_output.print_errors
           ~strip_root
-          ~include_warnings
           ~flags:error_flags
           ~out_channel:stdout
           ~errors

@@ -94,7 +94,7 @@ module VeryUnstable: ClientProtocol = struct
     (* Because the file-tracking portion of the protocol already handles which warnings
      * we display, we don't want the printer removing them. *)
     let json_errors = Errors.Json_output.full_status_json_of_errors
-      ~strip_root:None ~include_warnings:true ~suppressed_errors:([]) ~errors ~warnings () in
+      ~strip_root:None ~suppressed_errors:([]) ~errors ~warnings () in
     let json_message = Json_rpc.jsonrpcize_notification "diagnosticsNotification" [json_errors] in
     let json_string = Hh_json.json_to_string json_message in
     Http_lite.write_message stdout json_string;

@@ -18,12 +18,13 @@ type command =
     File_input.t *
     Verbose.t option *
     bool * (* graphml *)
-    bool (* force *)
+    bool * (* force *)
+    bool (* include_warnings *)
 | COVERAGE of File_input.t * bool (* force *)
 | DUMP_TYPES of File_input.t * bool (* filename, include raw *) * (Path.t option) (* strip_root *)
 | FIND_MODULE of string * string
 | FIND_REFS of File_input.t * int * int (* filename, line, char *)
-| GEN_FLOW_FILES of File_input.t list
+| GEN_FLOW_FILES of File_input.t list * bool (* include_warnings *)
 | GET_DEF of File_input.t * int * int (* filename, line, char *)
 | GET_IMPORTS of string list
 | INFER_TYPE of
@@ -34,7 +35,7 @@ type command =
     bool (* include raw *)
 | KILL
 | PORT of string list
-| STATUS of Path.t
+| STATUS of Path.t * bool (* include_warnings *)
 | FORCE_RECHECK of string list
 | SUGGEST of (string * string list) list
 | CONNECT

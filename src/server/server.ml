@@ -151,6 +151,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     end else begin
       (* collate errors by origin *)
       let errors, warnings, _ = collate_errors env.ServerEnv.errors in
+      let warnings = if Options.should_include_warnings genv.options
+        then warnings
+        else Errors.ErrorSet.empty
+      in
 
       (* TODO: check status.directory *)
       status_log errors;
@@ -305,6 +309,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
   let gen_flow_files ~options env files =
     let errors, warnings, _ = collate_errors env.ServerEnv.errors in
+    let warnings = if Options.should_include_warnings options
+      then warnings
+      else Errors.ErrorSet.empty
+    in
     let result = if Errors.ErrorSet.is_empty errors
       then begin
         let (flow_files, flow_file_cxs, non_flow_files, error) =
@@ -604,11 +612,12 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           autocomplete ~options ~workers ~env client_logging_context fn
         in
         marshal results
-    | ServerProt.CHECK_FILE (fn, verbose, graphml, force) ->
+    | ServerProt.CHECK_FILE (fn, verbose, graphml, force, include_warnings) ->
         Hh_logger.debug "Request: check %s" (File_input.filename_of_file_input fn);
         let options = { options with Options.
           opt_output_graphml = graphml;
           opt_verbose = verbose;
+          opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
         } in
         (check_file ~options ~workers ~env ~force fn: ServerProt.response)
           |> marshal
@@ -637,9 +646,12 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         flush oc;
         let updates = process_updates genv !env (SSet.of_list files) in
         env := recheck genv !env updates
-    | ServerProt.GEN_FLOW_FILES files ->
+    | ServerProt.GEN_FLOW_FILES (files, include_warnings) ->
         Hh_logger.debug "Request: gen-flow-files %s"
           (files |> List.map File_input.filename_of_file_input |> String.concat " ");
+        let options = { options with Options.
+          opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
+        } in
         (gen_flow_files ~options !env files: ServerProt.gen_flow_file_response)
           |> marshal
     | ServerProt.GET_DEF (fn, line, char) ->
@@ -669,8 +681,13 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         Hh_logger.debug "Request: port %s" (String.concat " " files);
         (port files: ServerProt.port_response)
           |> marshal
-    | ServerProt.STATUS client_root ->
+    | ServerProt.STATUS (client_root, include_warnings) ->
         Hh_logger.debug "Request: status";
+        let genv = {genv with
+          options = let open Options in {genv.options with
+            opt_include_warnings = genv.options.opt_include_warnings || include_warnings
+          }
+        } in
         let status: ServerProt.response = get_status genv !env client_root in
         marshal status;
         begin match status with

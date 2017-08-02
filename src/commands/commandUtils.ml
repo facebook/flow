@@ -80,13 +80,18 @@ let collect_error_flags main color include_warnings one_line show_all_errors =
   in
   main { Errors.Cli_output.color; include_warnings; one_line; show_all_errors; }
 
+let include_warnings_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--include-warnings" no_arg
+    ~doc:"Include warnings in the error output (warnings are excluded by default)"
+)
+
 let error_flags prev = CommandSpec.ArgSpec.(
   prev
   |> collect collect_error_flags
   |> flag "--color" (enum ["auto"; "never"; "always"])
       ~doc:"Display terminal output in color. never, always, auto (default: auto)"
-  |> flag "--include-warnings" no_arg
-      ~doc:"Include warnings in the error output (warnings are excluded by default)"
+  |> include_warnings_flag
   |> flag "--one-line" no_arg
       ~doc:"Escapes newlines so that each error prints on one line"
   |> flag "--show-all-errors" no_arg
@@ -423,6 +428,7 @@ module Options_flags = struct
     all: bool;
     debug: bool;
     flowconfig_flags: flowconfig_params;
+    include_warnings: bool;
     max_workers: int option;
     munge_underscore_members: bool;
     no_flowlib: bool;
@@ -455,7 +461,7 @@ let parse_lints_flag =
 let options_flags =
   let collect_options_flags main
     debug profile all weak traces no_flowlib munge_underscore_members max_workers
-    flowconfig_flags verbose strip_root temp_dir quiet =
+    include_warnings flowconfig_flags verbose strip_root temp_dir quiet =
     main { Options_flags.
       debug;
       profile;
@@ -465,6 +471,7 @@ let options_flags =
       no_flowlib;
       munge_underscore_members;
       max_workers;
+      include_warnings;
       flowconfig_flags;
       verbose;
       strip_root;
@@ -492,6 +499,7 @@ let options_flags =
         ~doc:"Treat any class member name with a leading underscore as private"
     |> flag "--max-workers" (optional int)
         ~doc:"Maximum number of workers to create (capped by number of cores)"
+    |> include_warnings_flag
     |> flowconfig_flags
     |> verbose_flags
     |> strip_root_flag
@@ -559,6 +567,7 @@ let make_options ~flowconfig ~lazy_ ~root (options_flags: Options_flags.t) =
     opt_esproposal_export_star_as = FlowConfig.esproposal_export_star_as flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
     opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
+    opt_include_warnings = options_flags.include_warnings || FlowConfig.include_warnings flowconfig;
     opt_esproposal_class_static_fields = FlowConfig.esproposal_class_static_fields flowconfig;
     opt_esproposal_class_instance_fields =
       FlowConfig.esproposal_class_instance_fields flowconfig;

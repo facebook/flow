@@ -514,6 +514,11 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
       let errors, warnings, _, _ =
         Error_suppressions.filter_suppressed_errors error_suppressions lint_settings errors in
 
+      let warnings = if Options.should_include_warnings options
+        then warnings
+        else Errors.ErrorSet.empty
+      in
+
       profiling, Some cx, errors, warnings, info
 
   | Parsing_service_js.Parse_fail fails ->

@@ -187,9 +187,7 @@ let check_content ~filename ~content =
   in
   let strip_root = Some root in
   Errors.Json_output.json_of_errors_with_context
-    (* Might as well set include_warnings to true now, to save some debugging headaches
-     * if/when we add lint comments to the online playground. *)
-    ~strip_root ~stdin_file ~include_warnings:true ~suppressed_errors:[] ~errors ~warnings ()
+    ~strip_root ~stdin_file ~suppressed_errors:[] ~errors ~warnings ()
   |> js_of_json
 
 let check filename =

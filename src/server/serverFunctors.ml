@@ -51,6 +51,7 @@ module ServerMain (Program : SERVER_PROGRAM) : sig
     unit
   val check_once :
     shared_mem_config:SharedMem_js.config ->
+    client_include_warnings:bool ->
     ?focus_target:Loc.filename ->
     Options.t ->
     Profiling_js.t *
@@ -260,12 +261,16 @@ end = struct
 
   let run ~shared_mem_config options = run_internal ~shared_mem_config options
 
-  let check_once ~shared_mem_config ?focus_target options =
+  let check_once ~shared_mem_config ~client_include_warnings ?focus_target options =
     PidLog.disable ();
     let genv, program_init = create_program_init ~shared_mem_config ~focus_target options in
     let profiling, env = program_init () in
-    let errors, suppressed_errors, lint_settings = Program.check_once genv env in
-    profiling, errors, suppressed_errors, lint_settings
+    let errors, warnings, suppressed_errors = Program.check_once genv env in
+    let warnings = if client_include_warnings || Options.should_include_warnings options
+      then warnings
+      else Errors.ErrorSet.empty
+    in
+    profiling, errors, warnings, suppressed_errors
 
   let daemonize =
     let entry = Server_daemon.register_entry_point run_internal in

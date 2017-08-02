@@ -49,6 +49,7 @@ type t = {
   opt_haste_paths_whitelist: string list;
   opt_haste_use_name_reducers: bool;
   opt_ignore_non_literal_requires: bool;
+  opt_include_warnings: bool;
   opt_max_workers: int;
   opt_module: module_system;
   opt_module_name_mappers: (Str.regexp * string) list;
@@ -101,6 +102,7 @@ let root opts = opts.opt_root
 let facebook_fbt opts = opts.opt_facebook_fbt
 let should_ignore_non_literal_requires opts =
   opts.opt_ignore_non_literal_requires
+let should_include_warnings opts = opts.opt_include_warnings
 let should_munge_underscores opts = opts.opt_munge_underscores
 let should_profile opts = opts.opt_profile && not opts.opt_quiet
 let should_strip_root opts = opts.opt_strip_root

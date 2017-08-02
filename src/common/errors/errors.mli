@@ -82,7 +82,6 @@ module Cli_output : sig
     out_channel:out_channel ->
     flags:error_flags ->
     ?stdin_file:stdin_file ->
-    include_warnings: bool ->
     strip_root: Path.t option ->
     errors: ErrorSet.t ->
     warnings: ErrorSet.t ->
@@ -94,7 +93,6 @@ module Json_output : sig
   val json_of_errors_with_context :
     strip_root: Path.t option ->
     stdin_file: stdin_file ->
-    include_warnings: bool ->
     suppressed_errors: (error * Loc.LocSet.t) list ->
     errors: ErrorSet.t ->
     warnings: ErrorSet.t ->
@@ -103,7 +101,6 @@ module Json_output : sig
 
   val full_status_json_of_errors :
     strip_root: Path.t option ->
-    include_warnings: bool ->
     suppressed_errors: (error * Loc.LocSet.t) list ->
     ?profiling:Profiling_js.t option ->
     ?stdin_file:stdin_file ->
@@ -115,7 +112,6 @@ module Json_output : sig
   val print_errors:
     out_channel:out_channel ->
     strip_root: Path.t option ->
-    include_warnings: bool ->
     suppressed_errors: (error * Loc.LocSet.t) list ->
     ?pretty:bool ->
     ?profiling:Profiling_js.t option ->
@@ -132,7 +128,6 @@ module Vim_emacs_output : sig
     Loc.t -> string
   val print_errors:
     strip_root:Path.t option ->
-    include_warnings: bool ->
     out_channel ->
     errors:ErrorSet.t ->
     warnings:ErrorSet.t ->
