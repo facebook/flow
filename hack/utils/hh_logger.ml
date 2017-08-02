@@ -40,6 +40,7 @@ module Level : sig
     | Warn
     | Info
     | Debug
+  val min_level : unit -> t
   val set_min_level : t -> unit
   val log : t -> ('a, unit, string, string, string, unit) format6 -> 'a
 end = struct
@@ -59,11 +60,12 @@ end = struct
     | Info -> 2
     | Debug -> 1
 
-  let min_level = ref Info
-  let set_min_level level = min_level := level
+  let min_level_ref = ref Info
+  let min_level () = !min_level_ref
+  let set_min_level level = min_level_ref := level
 
   let log level fmt =
-    if int_of_level level >= int_of_level !min_level
+    if int_of_level level >= int_of_level !min_level_ref
     then log fmt
     else Printf.ifprintf () fmt
 end

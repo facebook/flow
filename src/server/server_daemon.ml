@@ -19,7 +19,7 @@ type daemon_msg =
 type waiting_channel = daemon_msg Daemon.out_channel
 
 type entry_point = (
-  SharedMem_js.config * Options.t * FlowEventLogger.logging_context,
+  SharedMem_js.config * Options.t * Hh_logger.Level.t * FlowEventLogger.logging_context,
   in_channel,
   daemon_msg
 ) Daemon.entry
@@ -120,9 +120,10 @@ let register_entry_point
 : entry_point =
   Daemon.register_entry_point
     (new_entry_point ())
-    (fun (shared_mem_config, options, logging_context) (ic, waiting_channel) ->
+    (fun (shared_mem_config, options, hh_logger_level, logging_context) (ic, waiting_channel) ->
       ignore(Sys_utils.setsid());
       Daemon.close_in ic;
+      Hh_logger.Level.set_min_level hh_logger_level;
       FlowEventLogger.restore_context logging_context;
       FlowEventLogger.init_flow_command ~version:Flow_version.version;
       main ?waiting_channel:(Some waiting_channel) ~shared_mem_config options)
@@ -163,10 +164,13 @@ let daemonize ~wait ~log_file ~shared_mem_config ~options ?on_spawn main_entry =
     set_close_on_exec stderr
   with Unix_error (EINVAL, _, _) -> ());
   let {Daemon.pid; channels = (waiting_channel_ic, waiting_channel_oc)} =
-    Daemon.spawn
-      (null_fd, log_fd, log_fd)
-      (main_entry)
-      (shared_mem_config, options, FlowEventLogger.get_context ()) in
+    Daemon.spawn (null_fd, log_fd, log_fd) (main_entry) (
+      shared_mem_config,
+      options,
+      Hh_logger.Level.min_level (),
+      FlowEventLogger.get_context ()
+    )
+  in
   (* detach ourselves from the parent process *)
   Daemon.close_out waiting_channel_oc;
   (* let original parent exit *)
