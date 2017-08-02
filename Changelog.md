@@ -1,3 +1,15 @@
+### 0.52.0
+
+New Features:
+* Flowlint - a linter built into Flow that you can configure to complain about things which aren't quite type errors.
+
+Notable bug fixes:
+* Flow now enforces polarity on class supers (e.g. Flow will error on `class B<+T> extends A<T> {}` when `A`'s type parameter is not covariant)
+
+### 0.51.1
+
+* Changed linter (experimental, coming soon) to ignore lint errors in node_modules
+
 ### 0.51.0
 
 New Features:
