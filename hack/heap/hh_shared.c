@@ -148,7 +148,7 @@
  * with the MAP_ANONYMOUS flag. The memfd_create() system call first
  * appeared in Linux 3.17.
  ****************************************************************************/
-#if !defined __APPLE__ && !defined _WIN32
+#ifdef __linux__
   // Linux version for the architecture must support syscall memfd_create
   #ifndef SYS_memfd_create
     #if defined(__x86_64__)
@@ -174,6 +174,11 @@
   static int memfd_create(const char *name, unsigned int flags) {
     return syscall(SYS_memfd_create, name, flags);
   }
+#endif
+
+#ifndef MAP_NORESERVE
+  // This flag was unimplemented in FreeBSD and then later removed
+  #define MAP_NORESERVE 0
 #endif
 
 // The following 'typedef' won't be required anymore
