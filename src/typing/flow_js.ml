@@ -8776,8 +8776,7 @@ and add_lower_edges cx trace ?(opt=false) (id1, bounds1) (id2, bounds2) =
    both of the roots are resolved, they effectively act like the corresponding
    concrete types. *)
 and goto cx trace ~use_op (id1, root1) (id2, root2) =
-  (match root1.constraints, root2.constraints with
-
+  match root1.constraints, root2.constraints with
   | Unresolved bounds1, Unresolved bounds2 ->
     let cond1 = not_linked (id1, bounds1) (id2, bounds2) in
     let cond2 = not_linked (id2, bounds2) (id1, bounds1) in
@@ -8793,22 +8792,24 @@ and goto cx trace ~use_op (id1, root1) (id2, root2) =
       add_upper_edges cx trace (id2, bounds2) (id1, bounds1);
       add_lower_edges cx trace ~opt:true (id2, bounds2) (id1, bounds1);
     );
+    replace_node cx id1 (Goto id2);
 
   | Unresolved bounds1, Resolved t2 ->
     let t2_use = UseT (use_op, t2) in
     edges_and_flows_to_t cx trace ~opt:true (id1, bounds1) t2_use;
     edges_and_flows_from_t cx trace ~opt:true t2 (id1, bounds1);
+    replace_node cx id1 (Goto id2);
 
   | Resolved t1, Unresolved bounds2 ->
     let t1_use = UseT (use_op, t1) in
-    replace_node cx id2 (Root { root2 with constraints = Resolved t1 });
     edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1_use;
     edges_and_flows_from_t cx trace ~opt:true t1 (id2, bounds2);
+    replace_node cx id2 (Goto id1);
 
   | Resolved t1, Resolved t2 ->
+    (* replace node first, in case rec_unify recurses back to these tvars *)
+    replace_node cx id1 (Goto id2);
     rec_unify cx trace ~use_op t1 t2;
-  );
-  replace_node cx id1 (Goto id2)
 
 (* Unify two type variables. This involves finding their roots, and making one
    point to the other. Ranks are used to keep chains short. *)
