@@ -16,6 +16,7 @@ NATIVE_OBJECT_FILES=\
 	hack/utils/nproc.o\
 	hack/utils/realpath.o\
 	hack/utils/sysinfo.o\
+	hack/utils/processor_info.o\
 	hack/utils/priorities.o
 
 RUNNER_DEPS=\
