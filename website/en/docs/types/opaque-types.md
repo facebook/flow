@@ -39,7 +39,7 @@ a colon `:` and a type after the name.
 opaque type Alias: SuperType = Type;
 ```
 
-Any type can can appear as the super type or type of an opaque type alias. 
+Any type can appear as the super type or type of an opaque type alias. 
 
 ```js
 opaque type StringAlias = string;
