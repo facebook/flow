@@ -86,7 +86,8 @@ let write_file strip_root root content perm src_file_path dest_file_path =
   ) with exn -> print_endline "ERROR!"; Unix.close fd; raise exn);
   Unix.close fd
 
-let main option_values root error_flags strip_root ignore_flag include_flag src out_dir () = (
+let main option_values root error_flags strip_root ignore_flag
+  include_flag src out_dir () = (
   let src = expand_path src in
   let root = guess_root (
     match root with
@@ -129,9 +130,11 @@ let main option_values root error_flags strip_root ignore_flag include_flag src 
   match ((Timeout.input_value in_chan: gen_flow_file_response), out_dir) with
   | (Error (GenFlowFile_TypecheckError {errors; warnings}), _) ->
     let strip_root = if strip_root then Some root else None in
+    let include_warnings = error_flags.Errors.Cli_output.include_warnings in
     Errors.Cli_output.print_errors
       ~out_channel:stderr
       ~flags:error_flags
+      ~include_warnings
       ~strip_root
       ~errors
       ~warnings

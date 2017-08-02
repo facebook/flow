@@ -70,6 +70,8 @@ let main option_values root error_flags strip_root json pretty verbose
      be removed. *)
   let all = all || not respect_pragma in
 
+  let include_warnings = error_flags.Errors.Cli_output.include_warnings in
+
   send_command oc (ServerProt.CHECK_FILE (file, verbose, graphml, all));
   let response = wait_for_response ic in
   let stdin_file = match file with
@@ -81,7 +83,7 @@ let main option_values root error_flags strip_root json pretty verbose
   in
   let strip_root = if strip_root then Some root else None in
   let print_json = Errors.Json_output.print_errors
-    ~out_channel:stdout ~strip_root ~pretty ~stdin_file
+    ~out_channel:stdout ~include_warnings ~strip_root ~pretty ~stdin_file
     ~suppressed_errors:([]) in
   match response with
   | ServerProt.ERRORS {errors; warnings} ->
@@ -93,11 +95,14 @@ let main option_values root error_flags strip_root json pretty verbose
           ~out_channel:stdout
           ~flags:error_flags
           ~stdin_file
+          ~include_warnings
           ~strip_root
           ~errors
           ~warnings
           ();
-        FlowExitStatus.(exit Type_error)
+        (* Return a successful exit code if there were only warnings. *)
+        let open FlowExitStatus in
+        if Errors.ErrorSet.is_empty errors then exit No_error else exit Type_error
       )
   | ServerProt.NO_ERRORS ->
       if json then

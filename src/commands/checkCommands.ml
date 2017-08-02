@@ -100,7 +100,8 @@ module CheckCommand = struct
       if include_suppressed then suppressed_errors else [] in
     let printer =
       if json || pretty then Json { pretty } else Cli error_flags in
-    print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
+    let include_warnings = error_flags.Errors.Cli_output.include_warnings in
+    print_errors ~printer ~profiling ~include_warnings ~suppressed_errors options ~errors ~warnings;
     if Errors.ErrorSet.is_empty errors
       then FlowExitStatus.(exit No_error)
       else FlowExitStatus.(exit Type_error)
@@ -159,7 +160,8 @@ module FocusCheckCommand = struct
       if include_suppressed then suppressed_errors else [] in
     let printer =
       if json || pretty then Json { pretty } else Cli error_flags in
-    print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
+    let include_warnings = error_flags.Errors.Cli_output.include_warnings in
+    print_errors ~printer ~profiling ~include_warnings ~suppressed_errors options ~errors ~warnings;
     if Errors.ErrorSet.is_empty errors
       then FlowExitStatus.(exit No_error)
       else FlowExitStatus.(exit Type_error)

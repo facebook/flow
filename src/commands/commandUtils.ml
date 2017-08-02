@@ -70,7 +70,7 @@ let init_loggers ~from ~options ?(min_level=Hh_logger.Level.Info) () =
       | None -> min_level
   )
 
-let collect_error_flags main color one_line show_all_errors =
+let collect_error_flags main color include_warnings one_line show_all_errors =
   let color = match color with
   | Some "never" -> Tty.Color_Never
   | Some "always" -> Tty.Color_Always
@@ -78,13 +78,15 @@ let collect_error_flags main color one_line show_all_errors =
   | None -> Tty.Color_Auto
   | _ -> assert false (* the enum type enforces this *)
   in
-  main { Errors.Cli_output.color; one_line; show_all_errors; }
+  main { Errors.Cli_output.color; include_warnings; one_line; show_all_errors; }
 
 let error_flags prev = CommandSpec.ArgSpec.(
   prev
   |> collect collect_error_flags
   |> flag "--color" (enum ["auto"; "never"; "always"])
       ~doc:"Display terminal output in color. never, always, auto (default: auto)"
+  |> flag "--include-warnings" no_arg
+      ~doc:"Include warnings in the error output (warnings are excluded by default)"
   |> flag "--one-line" no_arg
       ~doc:"Escapes newlines so that each error prints on one line"
   |> flag "--show-all-errors" no_arg
@@ -415,7 +417,7 @@ module Options_flags = struct
     all: bool;
     debug: bool;
     flowconfig_flags: flowconfig_params;
-    (* Defer parsing of the lints flag until after the fowconfig lint settings is known,
+    (* Defer parsing of the lints flag until after the flowconfig lint settings are known,
      * to properly detect redundant settings (and avoid false positives) *)
     lints_flag: string option;
     max_workers: int option;
