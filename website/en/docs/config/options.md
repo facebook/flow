@@ -23,6 +23,7 @@ can be overridden with command line flags.
 * [`esproposal.decorators`](#toc-esproposal-decorators-ignore-warn)
 * [`esproposal.export_star_as`](#toc-esproposal-export-star-as-enable-ignore-warn)
 * [`experimental.const_params`](#toc-experimental-const-params-boolean)
+* [`include_warnings`](#toc-include-warnings-boolean)
 * [`log.file`](#toc-log-file-string)
 * [`max_header_tokens`](#toc-max-header-tokens-integer)
 * [`module.file_ext`](#toc-module-file-ext-string)
@@ -104,9 +105,17 @@ on use since this proposal is still very early-stage.
 
 #### `experimental.const_params` _`(boolean)`_ <a class="toc" id="toc-experimental-const-params-boolean" href="#toc-experimental-const-params-boolean"></a>
 
-Setting this to true makes Flow treat all function parameters as const
+Setting this to `true` makes Flow treat all function parameters as const
 bindings. Reassigning a param is an error which lets Flow be less conservative
 with refinements.
+
+The default value is `false`.
+
+#### `include_warnings` _`(boolean)`_ <a class="toc" id="toc-include-warnings-boolean" href="#toc-include-warnings-boolean"></a>
+
+Setting this to `true` makes Flow commands include warnings in the error output.
+Warnings are hidden by default in the CLI to avoid console spew. (An IDE is a
+much better interface to show warnings.)
 
 The default value is `false`.
 
