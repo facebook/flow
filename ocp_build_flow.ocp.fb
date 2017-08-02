@@ -28,7 +28,6 @@ begin library "flow-commands"
     "flow-common-errors"
     "flow-common-lints"
     "flow-common-utils"
-    "flow-dts"
     "flow-flowlib"
     "flow-parser"
     "flow-parser-utils"
@@ -149,18 +148,6 @@ begin library "flow-common-utils"
   files = begin fb-glob "src/common/utils"
   end
   requires = [
-    "flow-parser"
-    "hh-utils"
-    "hh-utils-collections"
-  ]
-end
-
-begin library "flow-dts"
-  sort = true
-  files = begin fb-glob "src/dts"
-  end
-  requires = [
-    "flow-common-utils"
     "flow-parser"
     "hh-utils"
     "hh-utils-collections"

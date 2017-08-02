@@ -1,6 +1,0 @@
-
-export_modules.js:3:19,30: number
-This type is incompatible with
-export_modules.js:3:9,14: string
-
-Found 1 error
