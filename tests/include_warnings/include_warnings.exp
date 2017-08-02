@@ -29,7 +29,7 @@ Warning: test.js:10
                ^^^^^^ Potentially 0 value.
 
 
-Found 2 errors
+Found 1 error and 1 warning
 
 
 JSON without --include-warnings

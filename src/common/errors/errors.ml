@@ -686,36 +686,65 @@ module Cli_output = struct
       get_pretty_printed_error ~stdin_file ~strip_root ~one_line ~severity error in
     Tty.cprint ~out_channel ~color_mode:color to_print
 
-  let print_errors ~out_channel ~flags ?(stdin_file=None) ~include_warnings
-    ~strip_root ~errors ~warnings () =
-    let error_or_errors n = if n != 1 then "errors" else "error" in
-    let truncate = not (flags.show_all_errors) in
-    let one_line = flags.one_line in
-    let color = flags.color in
-    let print_error_if_not_truncated severity e curr =
-      begin if not(truncate) || curr < 50 then
-        print_error_color ~stdin_file ~strip_root ~one_line ~color ~out_channel ~severity e
-      end;
+  let print_errors =
+    let render_counts =
+      let error_or_errors n = if n != 1 then "errors" else "error" in
+      let warning_or_warnings n = if n != 1 then "warnings" else "warning" in
 
-      curr + 1
+      fun ~err_count ~warn_count sep ->
+        (* If there are 0 errors and 0 warnings, just render "0 errors" *)
+        if warn_count = 0 then
+          Printf.sprintf "%d%s%s"
+            err_count sep (error_or_errors err_count)
+        else if err_count = 0 then
+          Printf.sprintf "%d%s%s"
+            warn_count sep (warning_or_warnings warn_count)
+        else (* err_count > 0 and warn_count > 0 *)
+          Printf.sprintf "%d%s%s and %d%s%s"
+            err_count sep (error_or_errors err_count)
+            warn_count sep (warning_or_warnings warn_count)
     in
-    let total = ErrorSet.fold (print_error_if_not_truncated LintSettings.Err) errors 0 in
-    let total = if include_warnings
-      then ErrorSet.fold (print_error_if_not_truncated LintSettings.Warn) warnings total
-      else total
-    in
-    if total > 0 then print_newline ();
-    if truncate && total > 50 then (
-      Printf.fprintf
-        out_channel
-        "... %d more %s (only 50 out of %d errors displayed)\n"
-        (total - 50) (error_or_errors (total - 50)) total;
-      Printf.fprintf
-        out_channel
-        "To see all errors, re-run Flow with --show-all-errors\n";
-      flush out_channel
-    ) else
-      Printf.fprintf out_channel "Found %d %s\n" total (error_or_errors total)
+
+    fun ~out_channel ~flags ?(stdin_file=None) ~include_warnings
+      ~strip_root ~errors ~warnings () ->
+      let truncate = not (flags.show_all_errors) in
+      let one_line = flags.one_line in
+      let color = flags.color in
+      let print_error_if_not_truncated severity e curr =
+        begin if not(truncate) || curr < 50 then
+          print_error_color ~stdin_file ~strip_root ~one_line ~color ~out_channel ~severity e
+        end;
+
+        curr + 1
+      in
+      let err_count = ErrorSet.fold (print_error_if_not_truncated LintSettings.Err) errors 0 in
+      let warn_count, total_count =
+        if include_warnings then
+          let total_count = ErrorSet.fold
+            (print_error_if_not_truncated LintSettings.Warn) warnings err_count
+          in
+          let warn_count = total_count - err_count in
+          warn_count, total_count
+        else (0, err_count)
+      in
+      if total_count > 0 then print_newline ();
+      if truncate && total_count > 50 then (
+        let remaining_errs, remaining_warns = if err_count - 50 < 0
+          then 0, warn_count - (50 - err_count)
+          else err_count - 50, warn_count
+        in
+        Printf.fprintf
+          out_channel
+          "... %s (only 50 out of %s displayed)\n"
+          (render_counts ~err_count:remaining_errs ~warn_count:remaining_warns " more ")
+          (render_counts ~err_count ~warn_count " ");
+        Printf.fprintf
+          out_channel
+          "To see all errors, re-run Flow with --show-all-errors\n";
+        flush out_channel
+      ) else
+        Printf.fprintf out_channel "Found %s\n"
+          (render_counts ~err_count ~warn_count " ")
 end
 
 (* JSON output *)
