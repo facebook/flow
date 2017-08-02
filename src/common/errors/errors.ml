@@ -884,32 +884,34 @@ module Vim_emacs_output = struct
 
   let print_errors =
     let endline s = if s = "" then "" else s ^ "\n" in
-    let to_pp_string ~strip_root message =
+    let to_pp_string ~strip_root prefix message =
       let loc, msg = to_pp message in
       let loc_str = string_of_loc ~strip_root loc in
-      Printf.sprintf "%s%s" (endline loc_str) (endline msg)
+      Printf.sprintf "%s%s%s" (endline loc_str) prefix (endline msg)
     in
-    let to_string ~strip_root (error : error) : string =
+    let to_string ~strip_root prefix (error : error) : string =
       let {messages; trace; _} = error in
       let messages = append_trace_reasons messages trace in
       let buf = Buffer.create 50 in
       (match messages with
       | [] -> assert false
       | message1 :: rest_of_error ->
-          Buffer.add_string buf (to_pp_string ~strip_root message1);
+          Buffer.add_string buf (to_pp_string ~strip_root prefix message1);
           List.iter begin fun message ->
-            Buffer.add_string buf (to_pp_string ~strip_root message)
+            Buffer.add_string buf (to_pp_string ~strip_root "" message)
           end rest_of_error
       );
       Buffer.contents buf
     in
     fun ~strip_root oc ~errors ~warnings () ->
-      let sl = ErrorSet.fold (fun err acc ->
-        ("Error: " ^ (to_string ~strip_root err))::acc
-      ) (errors) [] in
-      let sl = ErrorSet.fold (fun warn acc ->
-        ("Warning: " ^ (to_string ~strip_root warn))::acc
-      ) (warnings) sl in
+      let sl = []
+        |> ErrorSet.fold (fun err acc ->
+            (to_string ~strip_root "Error: " err)::acc
+          ) (errors)
+        |> ErrorSet.fold (fun warn acc ->
+            (to_string ~strip_root "Warning: " warn)::acc
+          ) (warnings)
+      in
       let sl = ListUtils.uniq (List.sort String.compare sl) in
       List.iter begin fun s ->
         output_string oc s;
