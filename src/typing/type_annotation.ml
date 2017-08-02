@@ -563,7 +563,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       Flow_js.dummy_static reason,
       DefT (mk_reason RPrototype loc, AnyT),
       {
-        this_t = Flow_js.mk_tvar cx (mk_reason RThis loc);
+        this_t = DefT (mk_reason RThis loc, AnyT);
         params_tlist = (List.rev rev_params_tlist);
         params_names = Some params_names;
         rest_param;

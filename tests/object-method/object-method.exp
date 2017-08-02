@@ -16,11 +16,5 @@ Error: test3.js:4
   4:   this.m();
        ^^^^ object literal
 
-Error: test3.js:4
-  4:   this.m();
-            ^ property `m`. Property not found in
-  4:   this.m();
-       ^^^^ object type
 
-
-Found 4 errors
+Found 3 errors
