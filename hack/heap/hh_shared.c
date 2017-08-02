@@ -148,7 +148,7 @@
  * with the MAP_ANONYMOUS flag. The memfd_create() system call first
  * appeared in Linux 3.17.
  ****************************************************************************/
-#if !defined __APPLE__ && !defined _WIN32
+#ifdef __linux__
   // Linux version for the architecture must support syscall memfd_create
   #ifndef SYS_memfd_create
     #if defined(__x86_64__)
@@ -162,7 +162,6 @@
     #endif
   #endif
 
-  #define MEMFD_CREATE 1
   #include <asm/unistd.h>
 
   /* Originally this function would call uname(), parse the linux
@@ -174,6 +173,10 @@
   static int memfd_create(const char *name, unsigned int flags) {
     return syscall(SYS_memfd_create, name, flags);
   }
+#endif
+
+#ifndef MAP_NORESERVE
+  #define MAP_NORESERVE 0
 #endif
 
 // The following 'typedef' won't be required anymore
@@ -543,12 +546,6 @@ void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail) {
 
 static int memfd = -1;
 
-static void raise_failed_anonymous_memfd_init() {
-  static value *exn = NULL;
-  if (!exn) exn = caml_named_value("failed_anonymous_memfd_init");
-  caml_raise_constant(*exn);
-}
-
 static void raise_less_than_minimum_available(uint64_t avail) {
   value arg;
   static value *exn = NULL;
@@ -589,40 +586,44 @@ void assert_avail_exceeds_minimum(char *shm_dir, uint64_t minimum_avail) {
 void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail) {
   if (shm_dir == NULL) {
     // This means that we should try to use the anonymous-y system calls
-#if defined(MEMFD_CREATE)
+#ifdef __linux__
     memfd = memfd_create("fb_heap", 0);
-#endif
-#if defined(__APPLE__)
     if (memfd < 0) {
-      char memname[255];
-      snprintf(memname, sizeof(memname), "/fb_heap.%d", getpid());
-      // the ftruncate below will fail with errno EINVAL if you try to
-      // ftruncate the same sharedmem fd more than once. We're seeing this in
-      // some tests, which might imply that two flow processes with the same
-      // pid are starting up. This shm_unlink should prevent that from
-      // happening. Here's a stackoverflow about it
-      // http://stackoverflow.com/questions/25502229/ftruncate-not-working-on-posix-shared-memory-in-mac-os-x
-      shm_unlink(memname);
-      memfd = shm_open(memname, O_CREAT | O_RDWR, 0666);
-      if (memfd < 0) {
-          uerror("shm_open", Nothing);
-      }
-
-      // shm_open sets FD_CLOEXEC automatically. This is undesirable, because
-      // we want this fd to be open for other processes, so that they can
-      // reconnect to the shared memory.
-      int fcntl_flags = fcntl(memfd, F_GETFD);
-      if (fcntl_flags == -1) {
-        printf("Error with fcntl(memfd): %s\n", strerror(errno));
-        uerror("fcntl", Nothing);
-      }
-      // Unset close-on-exec
-      fcntl(memfd, F_SETFD, fcntl_flags & ~FD_CLOEXEC);
+      uerror("memfd_create", Nothing);
     }
-#endif
+#else
+#ifdef __FreeBSD__
+    // FreeBSD shm_open path is a real FS path, so use the specific anonymous
+    // behaviour instead.
+    memfd = shm_open(SHM_ANON, O_CREAT | O_EXCL | O_RDWR, 0666);
     if (memfd < 0) {
-      raise_failed_anonymous_memfd_init();
+      uerror("shm_open", Nothing);
     }
+#else
+    char memname[255];
+    snprintf(memname, sizeof(memname), "/fb_heap.%d", getpid());
+    // Use O_EXCL to ensure we get a fresh file.  This is required for
+    // ftruncate to success on OS X, but is good practice anyway.
+    // http://stackoverflow.com/questions/25502229/ftruncate-not-working-on-posix-shared-memory-in-mac-os-x
+    memfd = shm_open(memname, O_CREAT | O_EXCL | O_RDWR, 0666);
+    if (memfd < 0) {
+      uerror("shm_open", Nothing);
+    }
+    // Unlink before leaving to anonymize memfd.
+    shm_unlink(memname);
+#endif
+    
+    // shm_open sets FD_CLOEXEC automatically. This is undesirable, because
+    // we want this fd to be open for other processes, so that they can
+    // reconnect to the shared memory.
+    int fcntl_flags = fcntl(memfd, F_GETFD);
+    if (fcntl_flags == -1) {
+      printf("Error with fcntl(memfd): %s\n", strerror(errno));
+      uerror("fcntl", Nothing);
+    }
+    // Unset close-on-exec
+    fcntl(memfd, F_SETFD, fcntl_flags & ~FD_CLOEXEC);
+#endif
   } else {
     assert_avail_exceeds_minimum(shm_dir, minimum_avail);
     if (memfd < 0) {
