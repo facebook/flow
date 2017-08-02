@@ -44,6 +44,8 @@ val is_ignored: options -> string -> bool
 (* true if a file path matches an [include] path in config *)
 val is_included: options -> string -> bool
 
+val is_valid_path: options: options -> string -> bool
+
 val init: options -> string list * SSet.t
 
 val module_ref: Loc.filename -> string

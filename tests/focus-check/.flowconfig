@@ -3,3 +3,5 @@
 
 [options]
 all=false
+module.file_ext=.js
+module.file_ext=.foo

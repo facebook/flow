@@ -10,6 +10,50 @@
 
 open Utils_js
 
+let canonicalize_filenames ~cwd filenames =
+  List.map (fun filename ->
+    let filename = Sys_utils.expanduser filename in (* normalize ~ *)
+    let filename = Files.normalize_path cwd filename in (* normalize ./ and ../ *)
+    match Sys_utils.realpath filename with (* normalize symlinks *)
+    | Some abs -> abs
+    | None ->
+      let msg = Printf.sprintf "File not found: %S" filename in
+      FlowExitStatus.(exit ~msg No_input)
+  ) filenames
+
+let expand_file_list ?options filenames =
+  let paths = List.map Path.make filenames in
+  let next_files = match paths with
+  | [] -> fun () -> []
+  | _ ->
+    let filter =
+      begin match options with
+      | Some options -> Files.is_valid_path ~options
+      | _ -> fun filename -> Filename.check_suffix filename ".js"
+      end in
+    Find.make_next_files
+      ~filter
+      ~others:(List.tl paths)
+      (List.hd paths) in
+    Files.get_all next_files
+
+let get_filenames_from_input input_file filenames =
+  let cwd = Sys.getcwd () in
+  let input_file_filenames = match input_file with
+  | Some "-" ->
+    Sys_utils.lines_of_in_channel stdin
+    |> canonicalize_filenames ~cwd
+  | Some input_file ->
+    Sys_utils.lines_of_file input_file
+    |> canonicalize_filenames ~cwd:(Filename.dirname input_file)
+  | None -> []
+  in
+  let cli_filenames = match filenames with
+  | Some filenames -> canonicalize_filenames ~cwd filenames
+  | None -> []
+  in
+  cli_filenames @ input_file_filenames
+
 let print_version () =
   print_endlinef
     "Flow, a static type checker for JavaScript, version %s"

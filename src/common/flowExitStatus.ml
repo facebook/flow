@@ -34,6 +34,8 @@ type t =
   | Server_client_directory_mismatch
   (* Failed to parse the command line or misuse of command line arguments *)
   | Commandline_usage_error
+  (* No input *)
+  | No_input
   (* Failed to start a server *)
   | Server_start_failed of Unix.process_status
   (* Something went wrong with extracting the flowlib *)
@@ -78,6 +80,7 @@ let error_code = function
   | Out_of_shared_memory -> 15
   (* EX_USAGE -- command line usage error -- from glibc's sysexits.h *)
   | Commandline_usage_error -> 64
+  | No_input -> 66
   | Server_start_failed _ -> 78
   | Missing_flowlib -> 97
   | Socket_error -> 98
@@ -102,6 +105,7 @@ let error_type = function
   | 14 -> Server_client_directory_mismatch
   | 15 -> Out_of_shared_memory
   | 64 -> Commandline_usage_error
+  | 66 -> No_input
   (* The process status is made up *)
   | 78 -> Server_start_failed (Unix.WEXITED (-1))
   | 97 -> Missing_flowlib
@@ -142,6 +146,7 @@ let to_string = function
   | Dfind_unresponsive -> "Dfind_unresponsive"
   | Unknown_error -> "Unknown_error"
   | Commandline_usage_error -> "Commandline_usage_error"
+  | No_input -> "No_input"
 
 exception Exit_with of t
 
