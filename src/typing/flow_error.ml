@@ -92,7 +92,12 @@ type error_message =
   | ENonLitArrayToTuple of (reason * reason)
   | ETupleOutOfBounds of (reason * reason) * int * int
   | ETupleUnsafeWrite of (reason * reason)
-  | EIntersectionSpeculationFailed of {
+  | EIntersectionIncompatibleWithDefT of {
+      reason_lower: reason;
+      reason_upper: reason;
+      branches: (reason * error_message) list;
+    }
+  | EIntersectionIncompatibleWithUseT of {
       reason_lower: reason;
       upper: Type.use_t;
       branches: (reason * error_message) list;
@@ -316,7 +321,9 @@ let locs_of_error_message = function
       [loc_of_reason reason1; loc_of_reason reason2]
   | ETupleUnsafeWrite (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | EIntersectionSpeculationFailed { reason_lower; upper; _ } ->
+  | EIntersectionIncompatibleWithDefT { reason_lower; reason_upper; _ } ->
+      [loc_of_reason reason_lower; loc_of_reason reason_upper]
+  | EIntersectionIncompatibleWithUseT { reason_lower; upper; _ } ->
       let reason_upper = reason_of_use_t upper in
       [loc_of_reason reason_lower; loc_of_reason reason_upper]
   | EUnionSpeculationFailed { reason; reason_op; branches = _ } ->
@@ -881,11 +888,15 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         element of the tuple you are mutating. Unsafe mutation of" in
       typecheck_error msg reasons
 
-  | EIntersectionSpeculationFailed { reason_lower; upper; branches } ->
+  | EIntersectionIncompatibleWithDefT { reason_lower; reason_upper; branches } ->
+      let reasons = ordered_reasons reason_lower reason_upper in
+      let msg = "This type is incompatible with" in
+      let extra = speculation_extras branches in
+      typecheck_error msg ~extra reasons
+
+  | EIntersectionIncompatibleWithUseT { reason_lower; upper; branches } ->
       let reasons = ordered_reasons_of_types reason_lower upper in
-      let msg = if is_use upper
-        then err_msg_use (Some Incompatible_intersection) upper
-        else "This type is incompatible with" in
+      let msg = err_msg_use (Some Incompatible_intersection) upper in
       let extra = speculation_extras branches in
       typecheck_error msg ~extra reasons
 

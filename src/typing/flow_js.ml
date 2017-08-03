@@ -7326,12 +7326,20 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
         let reason_op = mk_union_reason r us in
         add_output cx ~trace (FlowError.EUnionSpeculationFailed { reason; reason_op; branches })
 
-      | IntersectionCases (ls, u) ->
-        add_output cx ~trace (FlowError.EIntersectionSpeculationFailed {
-          reason_lower = mk_intersection_reason r ls;
-          upper = u;
-          branches;
-        })
+      | IntersectionCases (ls, upper) ->
+        let err =
+          let reason_lower = mk_intersection_reason r ls in
+          match upper with
+          | UseT (_, t) ->
+            FlowError.EIntersectionIncompatibleWithDefT {
+              reason_lower;
+              reason_upper = reason_of_t t;
+              branches;
+            }
+          | _ ->
+            FlowError.EIntersectionIncompatibleWithUseT { reason_lower; upper; branches; }
+        in
+        add_output cx ~trace err
     end
 
   in loop (Speculation.NoMatch []) trials

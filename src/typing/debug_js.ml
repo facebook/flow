@@ -2230,8 +2230,12 @@ let dump_flow_error =
         spf "ETupleUnsafeWrite (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EIntersectionSpeculationFailed { reason_lower; upper; branches = _ } ->
-        spf "EIntersectionSpeculationFailed { reason_lower = %s; upper = %s; branches = _ }"
+    | EIntersectionIncompatibleWithDefT { reason_lower; reason_upper; branches = _ } ->
+        spf "EIntersectionIncompatibleWithDefT { reason_lower = %s; reason_upper = %s; branches = _ }"
+          (dump_reason cx reason_lower)
+          (dump_reason cx reason_upper)
+    | EIntersectionIncompatibleWithUseT { reason_lower; upper; branches = _ } ->
+        spf "EIntersectionIncompatibleWithUseT { reason_lower = %s; upper = %s; branches = _ }"
           (dump_reason cx reason_lower)
           (dump_use_t ~depth cx upper)
     | EUnionSpeculationFailed { reason; reason_op; branches = _ } ->
