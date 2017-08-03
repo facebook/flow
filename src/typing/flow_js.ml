@@ -7666,7 +7666,8 @@ and find_or_intro_shadow_prop cx trace x =
 (* other utils *)
 
 and filter cx trace t l pred =
-  if (pred l) then rec_flow_t cx trace (l,t)
+  let l = if pred l then l else DefT (reason_of_t l, EmptyT) in
+  rec_flow_t cx trace (l, t)
 
 and is_typeof_string = function DefT (_, (AnyT | StrT _)) -> true | _ -> false
 and is_typeof_number = function DefT (_, (AnyT | NumT _)) -> true | _ -> false
