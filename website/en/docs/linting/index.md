@@ -81,7 +81,7 @@ Warnings are a new severity level introduced by the linting framework. They are 
     enabled by passing the --include-warnings flag to the Flow server or the
     Flow client, or by setting "include_warnings=true" in the `.flowconfig`.
     This is good for smaller projects that want to see all project warnings at once.
-* Warnings have special [IDE Integration](../ide-integration).
+* Warnings have special [IDE Integration](./ide-integration).
 
 **error:**
 Lints with severity `error` are treated exactly the same as any other Flow error.
