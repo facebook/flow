@@ -62,3 +62,10 @@ function testInvalidTemplateLiteral(x: string | number) {
     return 0;
   }
 }
+
+function testClassIsFunction() {
+  class Foo {}
+  if (typeof Foo === "function") {
+    (Foo: empty); // error, Foo is a class
+  }
+}
