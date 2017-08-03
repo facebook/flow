@@ -5696,13 +5696,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ))
 
     | l, UseT (_, u) ->
-      add_output cx ~trace (FlowError.EIncompatibleDefs (reason_of_t l, reason_of_t u))
+      add_output cx ~trace (FlowError.EIncompatibleDefs {
+        reason_lower = reason_of_t l;
+        reason_upper = reason_of_t u;
+        extras = [];
+      })
 
     | _ ->
       add_output cx ~trace (FlowError.EIncompatible {
         reason_lower = reason_of_t l;
         upper = u;
         special = special_of_t l;
+        extras = [];
       })
   )
 
@@ -7331,13 +7336,18 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
           let reason_lower = mk_intersection_reason r ls in
           match upper with
           | UseT (_, t) ->
-            FlowError.EIntersectionIncompatibleWithDefT {
+            FlowError.EIncompatibleDefs {
               reason_lower;
               reason_upper = reason_of_t t;
-              branches;
+              extras = branches;
             }
           | _ ->
-            FlowError.EIntersectionIncompatibleWithUseT { reason_lower; upper; branches; }
+            FlowError.EIncompatible {
+              reason_lower;
+              special = Some FlowError.Incompatible_intersection;
+              upper;
+              extras = branches;
+            }
         in
         add_output cx ~trace err
     end
@@ -9901,7 +9911,9 @@ and flow cx (lower, upper) =
   with
   | RecursionCheck.LimitExceeded trace ->
     (* log and continue *)
-    let reasons = FlowError.ordered_reasons_of_types (reason_of_t lower) upper in
+    let rl = reason_of_t lower in
+    let ru = reason_of_use_t upper in
+    let reasons = if is_use upper then ru, rl else FlowError.ordered_reasons rl ru in
     add_output cx ~trace (FlowError.ERecursionLimit reasons)
   | ex ->
     (* rethrow *)

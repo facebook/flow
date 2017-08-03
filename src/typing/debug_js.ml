@@ -2073,14 +2073,14 @@ let dump_flow_error =
   in
   fun ?(depth=3) cx err ->
     match err with
-    | EIncompatible { reason_lower; upper; special = _; } ->
-        spf "EIncompatible { lower_reason = %s; upper = %s; special = _ }"
+    | EIncompatible { reason_lower; upper; special = _; extras = _ } ->
+        spf "EIncompatible { reason_lower = %s; upper = %s; special = _; extras = _ }"
           (dump_reason cx reason_lower)
           (dump_use_t ~depth cx upper)
-    | EIncompatibleDefs (reason_l, reason_u) ->
-        spf "EIncompatibleDefs (%s, %s)"
-          (dump_reason cx reason_l)
-          (dump_reason cx reason_u)
+    | EIncompatibleDefs { reason_lower; reason_upper; extras = _ } ->
+        spf "EIncompatibleDefs { reason_lower = %s; reason_upper = %s; extras = _ }"
+          (dump_reason cx reason_lower)
+          (dump_reason cx reason_upper)
     | EIncompatibleProp { reason_prop; reason_obj; special=_ } ->
         spf "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _ }"
           (dump_reason cx reason_prop)
@@ -2230,14 +2230,6 @@ let dump_flow_error =
         spf "ETupleUnsafeWrite (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EIntersectionIncompatibleWithDefT { reason_lower; reason_upper; branches = _ } ->
-        spf "EIntersectionIncompatibleWithDefT { reason_lower = %s; reason_upper = %s; branches = _ }"
-          (dump_reason cx reason_lower)
-          (dump_reason cx reason_upper)
-    | EIntersectionIncompatibleWithUseT { reason_lower; upper; branches = _ } ->
-        spf "EIntersectionIncompatibleWithUseT { reason_lower = %s; upper = %s; branches = _ }"
-          (dump_reason cx reason_lower)
-          (dump_use_t ~depth cx upper)
     | EUnionSpeculationFailed { reason; reason_op; branches = _ } ->
         spf "EUnionSpeculationFailed { reason = %s; reason_op = %s; branches = _ }"
           (dump_reason cx reason)
