@@ -1000,6 +1000,12 @@ Error: typeof.js:69
  69:     (Foo: empty); // error, Foo is a class
                ^^^^^ empty
 
+Error: typeof.js:77
+ 77:     (x: empty); // error
+          ^ Foo. This type is incompatible with
+ 77:     (x: empty); // error
+             ^^^^^ empty
+
 Error: undef.js:31
  31:     var y = x * 1000;
                  ^ null. The operand of an arithmetic operation must be a number.
@@ -1091,4 +1097,4 @@ Error: void.js:85
            ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 187 errors
+Found 188 errors

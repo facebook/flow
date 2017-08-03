@@ -7674,8 +7674,7 @@ and is_typeof_function = function
   | DefT (_, (AnyT | AnyFunT | FunT _ | ClassT _)) -> true
   | _ -> false
 and is_typeof_object = function
-  (* TODO: `typeof (new Foo())` is "object", so shouldn't InstanceT be here? *)
-  | DefT (_, (AnyT | AnyObjT | ObjT _ | ArrT _ | NullT)) -> true
+  | DefT (_, (AnyT | AnyObjT | ObjT _ | ArrT _ | NullT | InstanceT _)) -> true
   | _ -> false
 and is_typeof_array = function DefT (_, (AnyT | ArrT _)) -> true | _ -> false
 and is_typeof_boolean = function DefT (_, (AnyT | BoolT _)) -> true | _ -> false

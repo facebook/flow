@@ -69,3 +69,11 @@ function testClassIsFunction() {
     (Foo: empty); // error, Foo is a class
   }
 }
+
+function testInstanceIsObject() {
+  class Foo {}
+  let x = new Foo();
+  if (typeof x === "object") {
+    (x: empty); // error
+  }
+}
