@@ -30,7 +30,7 @@ flow start --lints "all=warn, untyped-type-import=error, sketchy-null-bool=off"
 
 Lint settings can be specified inside a file using `flowlint` comments. These
 settings apply to a region of a file, or a single line, or part of a line. For
-more details see [Flowlint Comments](../flowlint-comments).
+more details see [Flowlint Comments](./flowlint-comments).
 
 **Example:**
 ```js
