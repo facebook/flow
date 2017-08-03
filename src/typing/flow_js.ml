@@ -5696,13 +5696,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ))
 
     | l, UseT (_, u) ->
-      add_output cx ~trace (FlowError.EIncompatibleDefs (reason_of_t l, reason_of_t u))
+      add_output cx ~trace (FlowError.EIncompatibleDefs {
+        reason_lower = reason_of_t l;
+        reason_upper = reason_of_t u;
+        extras = [];
+      })
 
     | _ ->
       add_output cx ~trace (FlowError.EIncompatible {
         reason_lower = reason_of_t l;
         upper = u;
         special = special_of_t l;
+        extras = [];
       })
   )
 
@@ -7326,12 +7331,25 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
         let reason_op = mk_union_reason r us in
         add_output cx ~trace (FlowError.EUnionSpeculationFailed { reason; reason_op; branches })
 
-      | IntersectionCases (ls, u) ->
-        add_output cx ~trace (FlowError.EIntersectionSpeculationFailed {
-          reason_lower = mk_intersection_reason r ls;
-          upper = u;
-          branches;
-        })
+      | IntersectionCases (ls, upper) ->
+        let err =
+          let reason_lower = mk_intersection_reason r ls in
+          match upper with
+          | UseT (_, t) ->
+            FlowError.EIncompatibleDefs {
+              reason_lower;
+              reason_upper = reason_of_t t;
+              extras = branches;
+            }
+          | _ ->
+            FlowError.EIncompatible {
+              reason_lower;
+              special = Some FlowError.Incompatible_intersection;
+              upper;
+              extras = branches;
+            }
+        in
+        add_output cx ~trace err
     end
 
   in loop (Speculation.NoMatch []) trials
@@ -7666,16 +7684,19 @@ and find_or_intro_shadow_prop cx trace x =
 (* other utils *)
 
 and filter cx trace t l pred =
-  if (pred l) then rec_flow_t cx trace (l,t)
+  let l = if pred l then l else DefT (reason_of_t l, EmptyT) in
+  rec_flow_t cx trace (l, t)
 
-and is_string = function DefT (_, (AnyT | StrT _)) -> true | _ -> false
-and is_number = function DefT (_, (AnyT | NumT _)) -> true | _ -> false
-and is_function = function DefT (_, (AnyT | AnyFunT | FunT _)) -> true | _ -> false
-and is_object = function
-  DefT (_, (AnyT | AnyObjT | ObjT _ | ArrT _ | NullT)) -> true
+and is_typeof_string = function DefT (_, (AnyT | StrT _)) -> true | _ -> false
+and is_typeof_number = function DefT (_, (AnyT | NumT _)) -> true | _ -> false
+and is_typeof_function = function
+  | DefT (_, (AnyT | AnyFunT | FunT _ | ClassT _)) -> true
   | _ -> false
-and is_array = function DefT (_, (AnyT | ArrT _)) -> true | _ -> false
-and is_bool = function DefT (_, (AnyT | BoolT _)) -> true | _ -> false
+and is_typeof_object = function
+  | DefT (_, (AnyT | AnyObjT | ObjT _ | ArrT _ | NullT | InstanceT _)) -> true
+  | _ -> false
+and is_typeof_array = function DefT (_, (AnyT | ArrT _)) -> true | _ -> false
+and is_typeof_boolean = function DefT (_, (AnyT | BoolT _)) -> true | _ -> false
 
 and not_ pred x = not(pred x)
 
@@ -8034,11 +8055,11 @@ and predicate cx trace t l p = match p with
       rec_flow_t cx trace (BoolT.why r, t)
 
     | _ ->
-      filter cx trace t l is_bool
+      filter cx trace t l is_typeof_boolean
     end
 
   | NotP BoolP ->
-    filter cx trace t l (not_ is_bool)
+    filter cx trace t l (not_ is_typeof_boolean)
 
   (***********************)
   (* typeof _ ~ "string" *)
@@ -8054,11 +8075,11 @@ and predicate cx trace t l p = match p with
       rec_flow_t cx trace (StrT.why r, t)
 
     | _ ->
-      filter cx trace t l is_string
+      filter cx trace t l is_typeof_string
     end
 
   | NotP StrP ->
-    filter cx trace t l (not_ is_string)
+    filter cx trace t l (not_ is_typeof_string)
 
   (*********************)
   (* _ ~ "some string" *)
@@ -8098,11 +8119,11 @@ and predicate cx trace t l p = match p with
       rec_flow_t cx trace (NumT.why r, t)
 
     | _ ->
-      filter cx trace t l is_number
+      filter cx trace t l is_typeof_number
     end
 
   | NotP NumP ->
-    filter cx trace t l (not_ is_number)
+    filter cx trace t l (not_ is_typeof_number)
 
   (***********************)
   (* typeof _ ~ "function" *)
@@ -8115,11 +8136,11 @@ and predicate cx trace t l p = match p with
       rec_flow_t cx trace (DefT (replace_reason_const desc r, AnyFunT), t)
 
     | _ ->
-      filter cx trace t l is_function
+      filter cx trace t l is_typeof_function
     end
 
   | NotP FunP ->
-    filter cx trace t l (not_ is_function)
+    filter cx trace t l (not_ is_typeof_function)
 
   (***********************)
   (* typeof _ ~ "object" *)
@@ -8150,11 +8171,11 @@ and predicate cx trace t l p = match p with
       rec_flow_t cx trace (filtered_l, t)
 
     | _ ->
-      filter cx trace t l is_object
+      filter cx trace t l is_typeof_object
     end
 
   | NotP ObjP ->
-    filter cx trace t l (not_ is_object)
+    filter cx trace t l (not_ is_typeof_object)
 
   (*******************)
   (* Array.isArray _ *)
@@ -8169,11 +8190,11 @@ and predicate cx trace t l p = match p with
       rec_flow_t cx trace (filtered_l, t)
 
     | _ ->
-      filter cx trace t l is_array
+      filter cx trace t l is_typeof_array
     end
 
   | NotP ArrP ->
-    filter cx trace t l (not_ is_array)
+    filter cx trace t l (not_ is_typeof_array)
 
   (***********************)
   (* typeof _ ~ "undefined" *)
@@ -9890,7 +9911,9 @@ and flow cx (lower, upper) =
   with
   | RecursionCheck.LimitExceeded trace ->
     (* log and continue *)
-    let reasons = FlowError.ordered_reasons_of_types (reason_of_t lower) upper in
+    let rl = reason_of_t lower in
+    let ru = reason_of_use_t upper in
+    let reasons = if is_use upper then ru, rl else FlowError.ordered_reasons rl ru in
     add_output cx ~trace (FlowError.ERecursionLimit reasons)
   | ex ->
     (* rethrow *)

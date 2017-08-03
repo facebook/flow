@@ -24,7 +24,6 @@ end = struct
     CheckCommands.FocusCheckCommand.command;
     CheckContentsCommand.command;
     ConfigCommands.Init.command;
-    ConvertCommand.command;
     CoverageCommand.command;
     DumpTypesCommand.command;
     FindModuleCommand.command;

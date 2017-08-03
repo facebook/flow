@@ -48,7 +48,7 @@ val full_check:
   profiling:Profiling_js.t ->
   options:Options.t ->
   workers:Worker.t list option ->
-  focus_target:Loc.filename option ->
+  focus_targets:Loc.filename list ->
   should_merge:bool ->
   filename list ->
   ServerEnv.errors ->

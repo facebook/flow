@@ -161,6 +161,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/config/libs/":
   title: ".flowconfig [libs]"
   description: "How to configure Flow to include your lib files"
+"/docs/config/lints/":
+  title: ".flowconfig [lints]"
+  description: "How to configure the Flow linter"
 "/docs/config/options/":
   title: ".flowconfig [options]"
   description: "How to configure Flow's various options"
@@ -330,6 +333,19 @@ docs_additional_reading: "Additional Reading"
   title: "WebStorm"
   description: "Flow integration for the WebStorm editor"
 
+"/docs/linting/":
+  title: "Linting Overview"
+  description: "An introduction to linting in Flow"
+"/docs/linting/flowlint-comments/":
+  title: "Flowlint Comments"
+  description: "Fine-grained control"
+"/docs/linting/ide-integration/":
+  title: "IDE Integration"
+  description: "Warnings in your IDE"
+"/docs/linting/rule-reference/":
+  title: "Lint Rule Reference"
+  description: "More information"
+
 "/try/":
   title: "Try Flow"
   description: "Interactive Flow REPL"
@@ -385,3 +401,7 @@ guides:
     description: >
       Detailed guides, tips, and resources on how to integrate Flow with
       different code editors.
+  linting:
+    title: "Linting"
+    description: >
+      Learn how to configure Flow's linter to find potentially harmful code.

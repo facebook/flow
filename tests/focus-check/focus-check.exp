@@ -7,6 +7,12 @@ Error: a.js:3
   3: (require('./b'): number);
                       ^^^^^^ number
 
+Error: dir/test2.foo:4
+  4: x = 3 + "string";
+         ^^^^^^^^^^^^ string. This type is incompatible with
+  3: var x: number = 3;
+            ^^^^^^ number
+
 Error: test.js:3
   3: ("": number);
       ^^ string. This type is incompatible with
@@ -14,7 +20,29 @@ Error: test.js:3
           ^^^^^^ number
 
 
-Found 2 errors
+Found 3 errors
+
+Full focus-check:
+Error: a.js:3
+  3: (require('./b'): number);
+      ^^^^^^^^^^^^^^ string. This type is incompatible with
+  3: (require('./b'): number);
+                      ^^^^^^ number
+
+Error: dir/test2.foo:4
+  4: x = 3 + "string";
+         ^^^^^^^^^^^^ string. This type is incompatible with
+  3: var x: number = 3;
+            ^^^^^^ number
+
+Error: test.js:3
+  3: ("": number);
+      ^^ string. This type is incompatible with
+  3: ("": number);
+          ^^^^^^ number
+
+
+Found 3 errors
 
 Focused check on a file with local errors but no dependency or reverse dependency:
 Error: test.js:3
@@ -45,5 +73,63 @@ Error: a.js:3
 
 
 Found 1 error
+
+Focused check on two files with overlapping errors:
+Error: a.js:3
+  3: (require('./b'): number);
+      ^^^^^^^^^^^^^^ string. This type is incompatible with
+  3: (require('./b'): number);
+                      ^^^^^^ number
+
+
+Found 1 error
+
+Focused check on multiple files with disjoint sets of errors:
+Error: a.js:3
+  3: (require('./b'): number);
+      ^^^^^^^^^^^^^^ string. This type is incompatible with
+  3: (require('./b'): number);
+                      ^^^^^^ number
+
+Error: test.js:3
+  3: ("": number);
+      ^^ string. This type is incompatible with
+  3: ("": number);
+          ^^^^^^ number
+
+
+Found 2 errors
+
+Focused check on a file and a directory:
+Error: dir/test2.foo:4
+  4: x = 3 + "string";
+         ^^^^^^^^^^^^ string. This type is incompatible with
+  3: var x: number = 3;
+            ^^^^^^ number
+
+Error: test.js:3
+  3: ("": number);
+      ^^ string. This type is incompatible with
+  3: ("": number);
+          ^^^^^^ number
+
+
+Found 2 errors
+
+Focused check on files specified in list.txt:
+Error: a.js:3
+  3: (require('./b'): number);
+      ^^^^^^^^^^^^^^ string. This type is incompatible with
+  3: (require('./b'): number);
+                      ^^^^^^ number
+
+Error: dir/test2.foo:4
+  4: x = 3 + "string";
+         ^^^^^^^^^^^^ string. This type is incompatible with
+  3: var x: number = 3;
+            ^^^^^^ number
+
+
+Found 2 errors
 
 Done!

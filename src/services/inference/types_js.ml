@@ -894,29 +894,31 @@ let recheck ~options ~workers ~updates env =
     errors;
   }
 
-let files_to_infer ~workers ~focus_target parsed_list =
-  match focus_target with
-  | Some f ->
-    if Module_js.is_tracked_file f (* otherwise, f is probably a directory *)
-      && Module_js.checked_file ~audit:Expensive.warn f
-    then
-      (* Calculate the set of files to check. This set includes not only the
-         files to be "rechecked", which is f and all its dependents, but also
-         the dependencies of such files since they may not already be
-         checked. *)
-      let { Module_js.module_name; _ } = Module_js.get_info_unsafe ~audit:Expensive.warn f in
-      let all_dependent_files, _ = Dep_service.dependent_files workers
-        ~unchanged:(FilenameSet.(remove f (of_list parsed_list)))
-        ~new_or_changed:(FilenameSet.singleton f)
-        (* TODO: isn't it possible that _module is not provided by f? *)
-        ~changed_modules:(Modulename.Set.singleton module_name) in
-      let dependency_graph = Dep_service.calc_dependency_graph workers parsed_list in
-      let roots = FilenameSet.add f all_dependent_files in
-      let to_infer = Dep_service.calc_all_dependencies dependency_graph roots in
-      FilenameSet.elements to_infer
-    else (* terminate *)
-      []
-  | _ -> parsed_list
+let files_to_infer ~workers ~focus_targets parsed_list =
+  match focus_targets with
+  | [] -> parsed_list
+  | _ ->
+    let targetsLists = List.map (fun f ->
+      if Module_js.is_tracked_file f (* otherwise, f is probably a directory *)
+        && Module_js.checked_file ~audit:Expensive.warn f
+      then
+        (* Calculate the set of files to check. This set includes not only the
+           files to be "rechecked", which is f and all its dependents, but also
+           the dependencies of such files since they may not already be
+           checked. *)
+        let { Module_js.module_name; _ } = Module_js.get_info_unsafe ~audit:Expensive.warn f in
+        let all_dependent_files, _ = Dep_service.dependent_files workers
+          ~unchanged:(FilenameSet.(remove f (of_list parsed_list)))
+          ~new_or_changed:(FilenameSet.singleton f)
+          (* TODO: isn't it possible that _module is not provided by f? *)
+          ~changed_modules:(Modulename.Set.singleton module_name) in
+        let dependency_graph = Dep_service.calc_dependency_graph workers parsed_list in
+        let roots = FilenameSet.add f all_dependent_files in
+        let to_infer = Dep_service.calc_all_dependencies dependency_graph roots in
+        FilenameSet.elements to_infer
+      else (* terminate *)
+        []) focus_targets in
+    List.flatten targetsLists
 
 (* creates a closure that lists all files in the given root, returned in chunks *)
 let make_next_files ~libs ~file_options root =
@@ -970,8 +972,8 @@ let init ~profiling ~workers options =
 
   profiling, parsed, libs, libs_ok, errors
 
-let full_check ~profiling ~options ~workers ~focus_target ~should_merge parsed errors =
-  let infer_input = files_to_infer ~workers ~focus_target parsed in
+let full_check ~profiling ~options ~workers ~focus_targets ~should_merge parsed errors =
+  let infer_input = files_to_infer ~workers ~focus_targets parsed in
   typecheck
     ~options
     ~profiling

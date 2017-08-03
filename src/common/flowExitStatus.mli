@@ -15,6 +15,7 @@ type t =
   | Out_of_shared_memory
   | Server_client_directory_mismatch
   | Commandline_usage_error
+  | No_input
   | Server_start_failed of Unix.process_status
   | Missing_flowlib
   | Socket_error

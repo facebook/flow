@@ -88,6 +88,7 @@
     - path: "/docs/config/include/"
     - path: "/docs/config/ignore/"
     - path: "/docs/config/libs/"
+    - path: "/docs/config/lints/"
     - path: "/docs/config/options/"
     - path: "/docs/config/version/"
 
@@ -123,3 +124,10 @@
     - path: "/docs/editors/emacs/"
     - path: "/docs/editors/vscode/"
     - path: "/docs/editors/webstorm/"
+
+- id: linting
+  pages:
+    - path: "/docs/linting/"
+    - path: "/docs/linting/flowlint-comments/"
+    - path: "/docs/linting/ide-integration/"
+    - path: "/docs/linting/rule-reference/"

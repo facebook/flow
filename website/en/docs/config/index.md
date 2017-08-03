@@ -13,11 +13,12 @@ not proud of our custom format and plan to support a better format in the
 future. [GitHub issue #153](https://github.com/facebook/flow/issues/153) tracks
 this.
 
-The `.flowconfig` consists of 5 sections:
+The `.flowconfig` consists of 6 sections:
 
 * [`[include]`](include)
 * [`[ignore]`](ignore)
 * [`[libs]`](libs)
+* [`[lints]`](lints)
 * [`[options]`](options)
 * [`[version]`](version)
 

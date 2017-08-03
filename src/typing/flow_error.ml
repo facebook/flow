@@ -39,8 +39,13 @@ type error_message =
       reason_lower: reason;
       special: special_lower option;
       upper: Type.use_t;
+      extras: (Reason.t * error_message) list;
     }
-  | EIncompatibleDefs of reason * reason
+  | EIncompatibleDefs of {
+      reason_lower: reason;
+      reason_upper: reason;
+      extras: (Reason.t * error_message) list;
+    }
   | EIncompatibleProp of {
       reason_prop: reason;
       reason_obj: reason;
@@ -92,11 +97,6 @@ type error_message =
   | ENonLitArrayToTuple of (reason * reason)
   | ETupleOutOfBounds of (reason * reason) * int * int
   | ETupleUnsafeWrite of (reason * reason)
-  | EIntersectionSpeculationFailed of {
-      reason_lower: reason;
-      upper: Type.use_t;
-      branches: (reason * error_message) list;
-    }
   | EUnionSpeculationFailed of {
       reason: reason;
       reason_op: reason;
@@ -259,8 +259,8 @@ let locs_of_error_message = function
   | EIncompatible { reason_lower; upper; _ } ->
       let reason_upper = reason_of_use_t upper in
       [loc_of_reason reason_lower; loc_of_reason reason_upper]
-  | EIncompatibleDefs (reason_l, reason_u) ->
-      [loc_of_reason reason_l; loc_of_reason reason_u]
+  | EIncompatibleDefs { reason_lower; reason_upper; _ } ->
+      [loc_of_reason reason_lower; loc_of_reason reason_upper]
   | EIncompatibleProp { reason_prop; reason_obj; _ }
   | EIncompatibleGetProp { reason_prop; reason_obj; _ }
   | EIncompatibleSetProp { reason_prop; reason_obj; _ } ->
@@ -316,9 +316,6 @@ let locs_of_error_message = function
       [loc_of_reason reason1; loc_of_reason reason2]
   | ETupleUnsafeWrite (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | EIntersectionSpeculationFailed { reason_lower; upper; _ } ->
-      let reason_upper = reason_of_use_t upper in
-      [loc_of_reason reason_lower; loc_of_reason reason_upper]
   | EUnionSpeculationFailed { reason; reason_op; branches = _ } ->
       [loc_of_reason reason; loc_of_reason reason_op]
   | ESpeculationAmbiguous ((reason1, reason2), _, _, _) ->
@@ -404,10 +401,6 @@ let ordered_reasons rl ru =
   if (is_blamable_reason ru && not (is_blamable_reason rl))
   then ru, rl
   else rl, ru
-
-let ordered_reasons_of_types rl u =
-  let ru = reason_of_use_t u in
-  if is_use u then ru, rl else ordered_reasons rl ru
 
 let rec error_of_msg ~trace_reasons ~op ~source_file =
   let open Errors in
@@ -613,12 +606,15 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   in
 
   function
-  | EIncompatible { reason_lower; special; upper } ->
+  | EIncompatible { reason_lower; special; upper; extras } ->
       let reason_upper = reason_of_use_t upper in
-      typecheck_error (err_msg_use special upper) (reason_upper, reason_lower)
+      let extra = speculation_extras extras in
+      typecheck_error ~extra (err_msg_use special upper) (reason_upper, reason_lower)
 
-  | EIncompatibleDefs (reason_l, reason_u) ->
-      typecheck_error "This type is incompatible with" (ordered_reasons reason_l reason_u)
+  | EIncompatibleDefs { reason_lower; reason_upper; extras } ->
+      let reasons = ordered_reasons reason_lower reason_upper in
+      let extra = speculation_extras extras in
+      typecheck_error ~extra "This type is incompatible with" reasons
 
   | EIncompatibleProp { reason_prop; reason_obj; special } ->
       let msg = spf "Property not found in%s" (special_suffix special) in
@@ -880,14 +876,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         "Flow will only let you modify a tuple if it knows exactly which \
         element of the tuple you are mutating. Unsafe mutation of" in
       typecheck_error msg reasons
-
-  | EIntersectionSpeculationFailed { reason_lower; upper; branches } ->
-      let reasons = ordered_reasons_of_types reason_lower upper in
-      let msg = if is_use upper
-        then err_msg_use (Some Incompatible_intersection) upper
-        else "This type is incompatible with" in
-      let extra = speculation_extras branches in
-      typecheck_error msg ~extra reasons
 
   | EUnionSpeculationFailed { reason; reason_op; branches } ->
       let reasons = ordered_reasons reason reason_op in

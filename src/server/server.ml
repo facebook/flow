@@ -40,7 +40,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
          profiling
     ) profiling memory_metrics
 
-  let init ~focus_target genv =
+  let init ~focus_targets genv =
     (* write binary path and version to server log *)
     Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
     Hh_logger.info "version=%s" Flow_version.version;
@@ -62,7 +62,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         profiling, FilenameSet.empty, errors
       else
         let parsed = FilenameSet.elements parsed in
-        Types_js.full_check ~profiling ~workers ~focus_target ~options ~should_merge parsed errors
+        Types_js.full_check ~profiling ~workers ~focus_targets ~options ~should_merge parsed errors
     in
 
     let profiling = sample_init_memory profiling in
