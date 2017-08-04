@@ -1,0 +1,262 @@
+(**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
+
+(* A virtual class that defines the framework for ocaml-stype rules.
+
+   A rule is an ordinary ocaml function of the type
+   env_t -> syntax_t * env_t
+   meaning that it will take an environment e, generate some
+   syntax and produce a new environment e' by adding more stuffs into
+   the old environment. e is used to check the precondition for
+   running a rule. If any precondition is not met, the engine will
+   raise a Fail exception and it will run other rules to populate the
+   environment. For example, if "rule_prop_write" throws a Fail
+   exception, we will need to run "rule_empty_object".
+
+   Suppose we have a rule for reading properties to an object:
+
+   has_var(o); obj_type(o); is_number_prop(o, p);
+   ------------------------------------
+   o.p : number
+
+   We will want to have a rule that first checks
+   1. We have a variable o
+   2. Var o is of an object type
+   3. o has a property p
+   4. property p is a number
+
+   After all the preconditions have been satisfied, the engine will
+   produce a piece of syntax, "o.p" and also populate the environment
+   by adding the expression "o.p" which has type number so that it can
+   run other rules later on which use the expression "o.p" as a
+   precondition.
+
+   A rule is typically written as a function like this:
+
+   let rule_prop_read env =
+     let obj = engine#choose require_var env in
+     engine#assert is_obj_type obj;
+     let prop = engine#choose require_prop obj in
+     engine#assert is_number prop;
+
+     let syntax = mk_syntax in
+     let new_env = mk_new_env env in
+     syntax, new_env
+
+   The first line contains a call named "require_var" meaning that it
+   requires the environment to have a variable. The second line
+   asserts that the variable is an object. The engine ensures that the
+   rule continues executing iff the assert call passes and in this
+   case if the execution passes the second line the "obj" variable
+   created in the first line is guaranteed to be an object type. It
+   does this by throwing exceptions and reruning the function.
+
+   Another power of the engine comes from the engine#choose method.It
+   is very likely that the "obj" variable we get from the environment
+   in the first line is not an object and thus the assertion will
+   fail.Then a backtracking is exercised to ensure that eventually we
+   will get an object from the environment if there's one. The
+   engine#choose method does this backtracking behind the
+   scene. Whenever an assertion fails, the engine will rerun the rule
+   and make sure the results enclosed by engine#choose method will
+   return a different result.
+
+   Notice that a rule can be written in many other ways and we could
+   totally write the property read rule like this:
+
+   let rule_prop_read env =
+     let obj, prop = engine#choose require_obj_with_number_property env in
+     let syntax = mk_syntax in
+     let new_env = mk_new_env env in
+     syntax, new_env
+
+   where the first four lines of the original rule is condensed into a
+   single require call. Nothing prevents a user from writing this
+   and no backtracking is even required in this case, because a user
+   could write "require_obj_with_number_property" in a way that it
+   only returns an object variable and its number property. The
+   major downside with this style is that it doesn't conform with
+   the style of the traditional type rule where preconditions are
+   written separately. With the power of backtracking, users could
+   write rules with simple require and assert functions and we
+   recommend users writting rules this way. *)
+
+(* An exception indicating we want to backtrack *)
+exception Backtrack
+
+(* An exception indicating a rule fails *)
+exception Fail
+
+(* 'a - type of environment element
+   'b - type of the environment
+   'c - type of the syntax *)
+class virtual ['a, 'b, 'c] engine (depth : int) = object(self)
+
+
+  (* The backtracking is implemented using a hash table
+     with a "size" integer which simulates a stack. Whenever
+     a user writes a require function or any other functions
+     that returns multiple values and backtracking is desired,
+     we will put all the candidate values onto the stack.
+     Whenever the function at the top of the stack is called,
+     we will update the "pointer" so that we will give a different
+     candidate value.
+
+     Since a rule can be rerun and thus we could totally run
+     a function that is not at the top of the stack. In that case,
+     we will simply return its old value, because we need to
+     iterate all its children values if we think of the combinatorial
+     search in terms of a tree.
+
+     OCaml's stack doesn't provide the functionality of accessing
+     the values other than its top. So we are using a hash table
+     where the key is an integer serving as an array index if we want
+     to access the values other than the top. The "size" value keeps
+     track of the size of the stack.
+  *)
+  val stack = Array.init 100 (fun _ -> [])
+  val mutable size = 0
+
+
+  (* Main methods for getting all the rules for generating programs *)
+  method virtual get_all_rules : unit -> ('b -> ('c * 'b)) array
+
+  (* The assert function that provides backtracking. A strong
+     assertion is guaranteed to be satisfied using backtracking. *)
+  method backtrack_on_false (b : bool) : unit =
+    if not b then raise Backtrack
+
+  (* The assert function that will abort a rule *)
+  method virtual weak_assert : bool -> unit
+
+  (* Shuffle a list. This is from
+     https://stackoverflow.com/questions/15095541/how-to-shuffle-list-in-on-in-ocaml *)
+  method shuffle (d : 'a list) : 'a list =
+    let nd = List.map (fun c -> (Random.bits (), c)) d in
+    let sond = List.sort compare nd in
+    List.map snd sond
+
+  (* Choose a element from a list using combinatorial search.
+
+     id : This is index in the stack
+     func : This is the function that produces the data
+
+     Whenver this function is called, it will return the "current"
+     candidate value. if we encounter a "Backtrack" exception,
+     we will call "forward" method to move the "pointer" to the
+     next candidate value. If we cannot move the pointer,
+     we throws a Fail exception meaning that the rule fails.
+
+     The id param indicates the level in the stack. This is very
+     important and necessary, because inside a rule the same
+     require functions might be called multiple times. This id
+     param ensures that we don't return the same value for
+     these identical require functions.
+  *)
+
+  method choose
+      (id : int)
+      (func : unit -> 'a list) : 'a =
+    (* The depth is larger than the stack right now. We need to
+       push the candidate values onto the stack
+    *)
+    if id >= size then begin
+      (* push the data onto the stack *)
+      stack.(id) <- (func () |> self#shuffle);
+      size <- size + 1;
+    end;
+
+    (* Get the current value from the stack *)
+    match stack.(id) with
+    | [] -> raise Fail
+    | hd :: _ -> hd
+
+  (* We move the pointer forward so that next time "choose" is
+     called, we give a different result *)
+  method forward () =
+    (* The stack is empty. Abort the rule *)
+    if size = 0 then
+      raise Fail
+    else begin
+      (* remove the old value *)
+      let all_vals = stack.(size - 1) in
+      stack.(size - 1) <- (List.tl all_vals);
+
+      (* If there's no more new candidate value,
+         we pop the function and move the pointer for
+         the next level *)
+      if stack.(size - 1) = [] then begin
+
+        (* pop the empty candidate value list *)
+        size <- size - 1;
+
+        (* Move the pointer for the next candidate value list *)
+        self#forward ()
+      end;
+    end
+
+  (* Clear the stack *)
+  method clear () =
+    size <- 0
+
+  (* method for running a single rule *)
+  method run
+      (rule : 'b -> ('c * 'b))
+      (env : 'b)
+      (retry : bool) : ('c * 'b) =
+
+    (* If we are running a rule for the first time,
+       we clear the stack *)
+    if not retry then self#clear();
+
+    (* run the rule *)
+    try rule env with
+    | Backtrack -> self#forward (); self#run rule env true
+    | Fail -> raise Fail
+
+  (* Main entry function for generating programs.
+
+     rule_iter is the number of time we want to execute all the rules
+  *)
+  method gen_prog (env : 'b) (rule_iter : int) : ('c list * 'b) =
+    let rules = self#get_all_rules () in
+
+    (* run all the rule once *)
+    let rec run_all_rules
+        (rule_index : int)
+        (code : 'c list)
+        (env : 'b)  : ('c list * 'b) =
+      (* We have finished running all the rules. Return the result *)
+      if rule_index >= (Array.length rules) * rule_iter then
+        code, env
+      else
+        let rule = rules.(rule_index mod (Array.length rules)) in
+        (* run the rule *)
+        let result = try Some (self#run rule env false) with
+          | Fail -> None in
+        match result with
+        | None ->
+          (* the rule fails. We continue run the next one *)
+          run_all_rules (rule_index + 1) code env
+        | Some (new_code, new_env) ->
+          (* run the next rule with the new syntax and new env *)
+          run_all_rules
+            (rule_index + 1)
+            (new_code :: code)
+            new_env in
+
+    (* This is the code that controls the level of gen_prog recursion
+       when building the body of some inner statements such as
+       functions.
+       We limit the depth to 3 at this point.*)
+    if depth > 3
+    then [], env
+    else run_all_rules 0 [] env
+end;;
