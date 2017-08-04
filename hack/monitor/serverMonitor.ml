@@ -286,20 +286,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     end
 
   (** Does not return. *)
-  and client_out_of_date_ client_fd _mismatch_info =
-    msg_to_channel client_fd Build_id_mismatch;
-    (* TODO: around July 2017, change this to
-     *   "Build_id_mismatch_ex mismatch_info"
-     * Why that date? Imagine if we make the change and someone has a hh_server
-     * currently running which sends the _ex form. Then they hg update to a
-     * bookmark associated with an older version of hh_client which doesn't yet
-     * recognize the _ex form! They'd get a segfault in their hh_client.
-     * Well, hh_client started recognizing the _ex form around April 2017, so
-     * by July, we needn't worry about bookmarks that old.
-     * Oh, and when we make the change here, we should add a TODO for two months
-     * in the future that monitorConnection.ml:verify_cstate can safely assert
-     * that the Build_id_mismatch form will never arise.
-    *)
+  and client_out_of_date_ client_fd mismatch_info =
+    msg_to_channel client_fd (Build_id_mismatch_ex mismatch_info);
     HackEventLogger.out_of_date ()
 
   (** Kills servers, sends build ID mismatch message to client, and exits.

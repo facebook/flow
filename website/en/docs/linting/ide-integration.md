@@ -10,7 +10,7 @@ might not yet be implemented.
 
 In Nuclide, Flow warnings are distinct from Flow errors and rendered in a different color.
 
-Nuclide v0.244.0 onward has support for working with flow to limit the reported warnings to the working fileset.
+Nuclide v0.243.0 onward has support for working with Flow to limit the reported warnings to the working fileset.
 This allows Nuclide and Flow to work efficiently on large codebases with tens of thousands of unsuppressed warnings.
 
 ### Other Editors <a class="toc" id="toc-other-editors" href="#toc-other-editors"></a>
