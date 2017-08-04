@@ -1114,19 +1114,12 @@ exception SpeculativeError of FlowError.error_message
 let add_output cx ?trace msg =
   if Speculation.speculating ()
   then begin
-    begin match Context.verbose cx with
-    | Some { Verbose.depth; _ } ->
-      prerr_endlinef "\nspeculative_error: %s"
-        (Debug_js.dump_flow_error ~depth cx msg)
-    | _ -> ()
-    end;
+    if Context.is_verbose cx then
+      prerr_endlinef "\nspeculative_error: %s" (Debug_js.dump_flow_error cx msg);
     raise (SpeculativeError msg)
   end else begin
-    begin match Context.verbose cx with
-    | Some { Verbose.depth; _ } ->
-      prerr_endlinef "\nadd_output: %s" (Debug_js.dump_flow_error ~depth cx msg)
-    | _ -> ()
-    end;
+    if Context.is_verbose cx then
+      prerr_endlinef "\nadd_output: %s" (Debug_js.dump_flow_error cx msg);
 
     let trace_reasons = match trace with
     | None -> []
@@ -5652,21 +5645,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx ~trace (FlowError.EIncompatibleGetProp {
         reason_prop = reason_of_propref propref;
         reason_obj = reason_of_t l;
-        special = special_of_t l;
+        special = flow_error_kind_of_lower l;
       })
 
     | _, SetPropT (_, propref, _) ->
       add_output cx ~trace (FlowError.EIncompatibleSetProp {
         reason_prop = reason_of_propref propref;
         reason_obj = reason_of_t l;
-        special = special_of_t l;
+        special = flow_error_kind_of_lower l;
       })
 
     | _, LookupT (_, _, _, propref, _) ->
       add_output cx ~trace (FlowError.EIncompatibleProp {
         reason_prop = reason_of_propref propref;
         reason_obj = reason_of_t l;
-        special = special_of_t l;
+        special = flow_error_kind_of_lower l;
       })
 
     | _, UseT (Addition, u) ->
@@ -5704,20 +5697,50 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _ ->
       add_output cx ~trace (FlowError.EIncompatible {
-        reason_lower = reason_of_t l;
-        upper = u;
-        special = special_of_t l;
+        lower = (reason_of_t l, flow_error_kind_of_lower l);
+        upper = (reason_of_use_t u, flow_error_kind_of_upper u);
         extras = [];
       })
   )
 
-and special_of_t = function
+and flow_error_kind_of_lower = function
   | DefT (_, NullT) -> Some Flow_error.Possibly_null
   | DefT (_, VoidT) -> Some Flow_error.Possibly_void
   | DefT (_, MaybeT _) -> Some Flow_error.Possibly_null_or_void
   | DefT (_, IntersectionT _)
   | DefT (_, MixedT Empty_intersection) -> Some Flow_error.Incompatible_intersection
   | _ -> None
+
+and flow_error_kind_of_upper = function
+  | GetPropT _ -> FlowError.IncompatibleGetPropT
+  | SetPropT _ -> FlowError.IncompatibleSetPropT
+  | MethodT _ -> FlowError.IncompatibleMethodT
+  | CallT _ -> FlowError.IncompatibleCallT
+  | ConstructorT _ -> FlowError.IncompatibleConstructorT
+  | GetElemT _ -> FlowError.IncompatibleGetElemT
+  | SetElemT _ -> FlowError.IncompatibleSetElemT
+  | CallElemT _ -> FlowError.IncompatibleCallElemT
+  | ElemT (_, _, ReadElem _) -> FlowError.IncompatibleElemTRead
+  | ElemT (_, _, WriteElem _) -> FlowError.IncompatibleElemTWrite
+  | ElemT (_, _, CallElem _) -> FlowError.IncompatibleElemTCall
+  | ObjAssignFromT (_, _, _, _, ObjSpreadAssign) -> FlowError.IncompatibleObjAssignFromTSpread
+  | ObjAssignFromT _ -> FlowError.IncompatibleObjAssignFromT
+  | ObjRestT _ -> FlowError.IncompatibleObjRestT
+  | ObjSealT _ -> FlowError.IncompatibleObjSealT
+  | ArrRestT _ -> FlowError.IncompatibleArrRestT
+  | SuperT _ -> FlowError.IncompatibleSuperT
+  | MixinT _ -> FlowError.IncompatibleMixinT
+  | SpecializeT _ -> FlowError.IncompatibleSpecializeT
+  | ThisSpecializeT _ -> FlowError.IncompatibleThisSpecializeT
+  | VarianceCheckT _ -> FlowError.IncompatibleVarianceCheckT
+  | GetKeysT _ -> FlowError.IncompatibleGetKeysT
+  | HasOwnPropT _ -> FlowError.IncompatibleHasOwnPropT
+  | GetValuesT _ -> FlowError.IncompatibleGetValuesT
+  | UnaryMinusT _ -> FlowError.IncompatibleUnaryMinusT
+  | MapTypeT (_, TupleMap, _, _) -> FlowError.IncompatibleMapTypeTTuple
+  | MapTypeT (_, (ObjectMap | ObjectMapi), _, _) -> FlowError.IncompatibleMapTypeTObject
+  | TypeAppVarianceCheckT _ -> FlowError.IncompatibleTypeAppVarianceCheckT
+  | use_t -> FlowError.IncompatibleUnclassified (string_of_use_ctor use_t)
 
 (* some types need to be resolved before proceeding further *)
 and needs_resolution = function
@@ -7343,9 +7366,8 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
             }
           | _ ->
             FlowError.EIncompatible {
-              reason_lower;
-              special = Some FlowError.Incompatible_intersection;
-              upper;
+              lower = (reason_lower, Some FlowError.Incompatible_intersection);
+              upper = (reason_of_use_t upper, flow_error_kind_of_upper upper);
               extras = branches;
             }
         in

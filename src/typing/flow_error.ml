@@ -36,9 +36,8 @@ end
 
 type error_message =
   | EIncompatible of {
-      reason_lower: reason;
-      special: special_lower option;
-      upper: Type.use_t;
+      lower: reason * lower_kind option;
+      upper: reason * upper_kind;
       extras: (Reason.t * error_message) list;
     }
   | EIncompatibleDefs of {
@@ -49,17 +48,17 @@ type error_message =
   | EIncompatibleProp of {
       reason_prop: reason;
       reason_obj: reason;
-      special: special_lower option;
+      special: lower_kind option;
     }
   | EIncompatibleGetProp of {
       reason_prop: reason;
       reason_obj: reason;
-      special: special_lower option;
+      special: lower_kind option;
     }
   | EIncompatibleSetProp of {
       reason_prop: reason;
       reason_obj: reason;
-      special: special_lower option;
+      special: lower_kind option;
     }
   | EDebugPrint of reason * string
   | EImportValueAsType of reason * string
@@ -232,11 +231,42 @@ and unsupported_syntax =
   | SpreadArgument
   | ImportDynamicArgument
 
-and special_lower =
+and lower_kind =
   | Possibly_null
   | Possibly_void
   | Possibly_null_or_void
   | Incompatible_intersection
+
+and upper_kind =
+  | IncompatibleGetPropT
+  | IncompatibleSetPropT
+  | IncompatibleMethodT
+  | IncompatibleCallT
+  | IncompatibleConstructorT
+  | IncompatibleGetElemT
+  | IncompatibleSetElemT
+  | IncompatibleCallElemT
+  | IncompatibleElemTRead
+  | IncompatibleElemTWrite
+  | IncompatibleElemTCall
+  | IncompatibleObjAssignFromTSpread
+  | IncompatibleObjAssignFromT
+  | IncompatibleObjRestT
+  | IncompatibleObjSealT
+  | IncompatibleArrRestT
+  | IncompatibleSuperT
+  | IncompatibleMixinT
+  | IncompatibleSpecializeT
+  | IncompatibleThisSpecializeT
+  | IncompatibleVarianceCheckT
+  | IncompatibleGetKeysT
+  | IncompatibleHasOwnPropT
+  | IncompatibleGetValuesT
+  | IncompatibleUnaryMinusT
+  | IncompatibleMapTypeTTuple
+  | IncompatibleMapTypeTObject
+  | IncompatibleTypeAppVarianceCheckT
+  | IncompatibleUnclassified of string
 
 let rec locs_of_use_op acc = function
   | FunCallThis reason -> (loc_of_reason reason)::acc
@@ -256,8 +286,7 @@ let rec locs_of_use_op acc = function
   | MissingTupleElement _ -> acc
 
 let locs_of_error_message = function
-  | EIncompatible { reason_lower; upper; _ } ->
-      let reason_upper = reason_of_use_t upper in
+  | EIncompatible { lower = (reason_lower, _); upper = (reason_upper, _); _ } ->
       [loc_of_reason reason_lower; loc_of_reason reason_upper]
   | EIncompatibleDefs { reason_lower; reason_upper; _ } ->
       [loc_of_reason reason_lower; loc_of_reason reason_upper]
@@ -413,67 +442,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
 
   let trace_infos = List.map info_of_reason trace_reasons in
 
-  (* only on use-types - guard calls with is_use t *)
-  let err_operation = function
-    | UseT (_, t) ->
-      failwith (spf "err_operation called on def type %s" (string_of_ctor t))
-
-    | GetPropT _ -> "Property cannot be accessed on"
-    | SetPropT _ -> "Property cannot be assigned on"
-    | MethodT _ -> "Method cannot be called on"
-    | CallT _ -> "Function cannot be called on"
-    | ConstructorT _ -> "Constructor cannot be called on"
-    | GetElemT _ -> "Computed property/element cannot be accessed on"
-    | SetElemT _ -> "Computed property/element cannot be assigned on"
-    | CallElemT _ -> "Computed property/element cannot be called on"
-    | ElemT (_, _, ReadElem _) -> "Element cannot be accessed with"
-    | ElemT (_, _, WriteElem _) -> "Element cannot be assigned with"
-    | ElemT (_, _, CallElem _) -> "Element cannot be called with"
-    | ObjAssignFromT (_, _, _, _, ObjSpreadAssign) ->
-      "Expected array instead of"
-    | ObjAssignToT _
-    | ObjAssignFromT _ -> "Expected object instead of"
-    | ObjRestT _ -> "Expected object instead of"
-    | ObjSealT _ -> "Expected object instead of"
-    | ArrRestT _ -> "Expected array instead of"
-    | SuperT _ -> "Cannot inherit"
-    | MixinT _ -> "Expected class instead of"
-    | SpecializeT _ -> "Expected polymorphic type instead of"
-    | ThisSpecializeT _ -> "Expected class instead of"
-    | VarianceCheckT _ -> "Expected polymorphic type instead of"
-    | LookupT _ -> "Property not found in"
-    | GetKeysT _ -> "Expected object instead of"
-    | HasOwnPropT _ -> "Property not found in"
-    | GetValuesT _ -> "Expected object instead of"
-    | UnaryMinusT _ -> "Expected number instead of"
-    | MapTypeT (_, kind, _, _) ->
-      (match kind with
-      | TupleMap -> "Expected Iterable instead of"
-      | ObjectMap
-      | ObjectMapi -> "Expected object instead of")
-    | CallLatentPredT _ -> "Expected predicated function instead of"
-    | ResolveSpreadT (_, {rrt_resolve_to; _}) ->
-      begin match rrt_resolve_to with
-      | ResolveSpreadsToTuple _
-      | ResolveSpreadsToArray _
-      | ResolveSpreadsToArrayLiteral _
-        -> "Expected spread element to be an iterable instead of"
-      | ResolveSpreadsToMultiflowCallFull _
-      | ResolveSpreadsToMultiflowSubtypeFull _
-      | ResolveSpreadsToMultiflowPartial _
-      | ResolveSpreadsToCallT _
-        -> "Expected spread argument to be an iterable instead of"
-      end
-    | TypeAppVarianceCheckT _ -> "Expected polymorphic type instead of"
-    | ObjSpreadT _ -> "Cannot spread properties from"
-    (* unreachable or unclassified use-types. until we have a mechanical way
-       to verify that all legit use types are listed above, we can't afford
-       to throw on a use type, so mark the error instead *)
-    | t ->
-      spf "Type is incompatible with (unclassified use type: %s)"
-        (string_of_use_ctor t)
-  in
-
   let special_suffix = function
     | Some Possibly_null -> " possibly null value"
     | Some Possibly_void -> " possibly undefined value"
@@ -482,7 +450,44 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     | None -> ""
   in
 
-  let err_msg_use special u = spf "%s%s" (err_operation u) (special_suffix special) in
+  (* only on use-types - guard calls with is_use t *)
+  let err_msg_use special u =
+    let msg = match u with
+    | IncompatibleGetPropT -> "Property cannot be accessed on"
+    | IncompatibleSetPropT -> "Property cannot be assigned on"
+    | IncompatibleMethodT -> "Method cannot be called on"
+    | IncompatibleCallT -> "Function cannot be called on"
+    | IncompatibleConstructorT -> "Constructor cannot be called on"
+    | IncompatibleGetElemT -> "Computed property/element cannot be accessed on"
+    | IncompatibleSetElemT -> "Computed property/element cannot be assigned on"
+    | IncompatibleCallElemT -> "Computed property/element cannot be called on"
+    | IncompatibleElemTRead -> "Element cannot be accessed with"
+    | IncompatibleElemTWrite -> "Element cannot be assigned with"
+    | IncompatibleElemTCall -> "Element cannot be called with"
+    | IncompatibleObjAssignFromTSpread -> "Expected array instead of"
+    | IncompatibleObjAssignFromT -> "Expected object instead of"
+    | IncompatibleObjRestT -> "Expected object instead of"
+    | IncompatibleObjSealT -> "Expected object instead of"
+    | IncompatibleArrRestT -> "Expected array instead of"
+    | IncompatibleSuperT -> "Cannot inherit"
+    | IncompatibleMixinT -> "Expected class instead of"
+    | IncompatibleSpecializeT -> "Expected polymorphic type instead of"
+    | IncompatibleThisSpecializeT -> "Expected class instead of"
+    | IncompatibleVarianceCheckT -> "Expected polymorphic type instead of"
+    | IncompatibleGetKeysT -> "Expected object instead of"
+    | IncompatibleHasOwnPropT -> "Property not found in"
+    | IncompatibleGetValuesT -> "Expected object instead of"
+    | IncompatibleUnaryMinusT -> "Expected number instead of"
+    | IncompatibleMapTypeTTuple -> "Expected Iterable instead of"
+    | IncompatibleMapTypeTObject -> "Expected object instead of"
+    | IncompatibleTypeAppVarianceCheckT -> "Expected polymorphic type instead of"
+    (* unreachable or unclassified use-types. until we have a mechanical way
+       to verify that all legit use types are listed above, we can't afford
+       to throw on a use type, so mark the error instead *)
+    | IncompatibleUnclassified ctor ->
+      spf "Type is incompatible with (unclassified use type: %s)" ctor
+    in
+    spf "%s%s" msg (special_suffix special) in
 
   let msg_export export_name =
     if export_name = "default"
@@ -606,10 +611,13 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   in
 
   function
-  | EIncompatible { reason_lower; special; upper; extras } ->
-      let reason_upper = reason_of_use_t upper in
+  | EIncompatible {
+      lower = (reason_lower, lower_kind);
+      upper = (reason_upper, upper_kind);
+      extras;
+    } ->
       let extra = speculation_extras extras in
-      typecheck_error ~extra (err_msg_use special upper) (reason_upper, reason_lower)
+      typecheck_error ~extra (err_msg_use lower_kind upper_kind) (reason_upper, reason_lower)
 
   | EIncompatibleDefs { reason_lower; reason_upper; extras } ->
       let reasons = ordered_reasons reason_lower reason_upper in

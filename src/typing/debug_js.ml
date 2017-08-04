@@ -2071,12 +2071,48 @@ let dump_flow_error =
   | InferJobException _ -> "InferJobException"
   | MergeJobException _ -> "MergeJobException"
   in
-  fun ?(depth=3) cx err ->
+  let dump_upper_kind = function
+  | IncompatibleGetPropT -> "IncompatibleGetPropT"
+  | IncompatibleSetPropT -> "IncompatibleSetPropT"
+  | IncompatibleMethodT -> "IncompatibleMethodT"
+  | IncompatibleCallT -> "IncompatibleCallT"
+  | IncompatibleConstructorT -> "IncompatibleConstructorT"
+  | IncompatibleGetElemT -> "IncompatibleGetElemT"
+  | IncompatibleSetElemT -> "IncompatibleSetElemT"
+  | IncompatibleCallElemT -> "IncompatibleCallElemT"
+  | IncompatibleElemTRead -> "IncompatibleElemTRead"
+  | IncompatibleElemTWrite -> "IncompatibleElemTWrite"
+  | IncompatibleElemTCall -> "IncompatibleElemTCall"
+  | IncompatibleObjAssignFromTSpread -> "IncompatibleObjAssignFromTSpread"
+  | IncompatibleObjAssignFromT -> "IncompatibleObjAssignFromT"
+  | IncompatibleObjRestT -> "IncompatibleObjRestT"
+  | IncompatibleObjSealT -> "IncompatibleObjSealT"
+  | IncompatibleArrRestT -> "IncompatibleArrRestT"
+  | IncompatibleSuperT -> "IncompatibleSuperT"
+  | IncompatibleMixinT -> "IncompatibleMixinT"
+  | IncompatibleSpecializeT -> "IncompatibleSpecializeT"
+  | IncompatibleThisSpecializeT -> "IncompatibleThisSpecializeT"
+  | IncompatibleVarianceCheckT -> "IncompatibleVarianceCheckT"
+  | IncompatibleGetKeysT -> "IncompatibleGetKeysT"
+  | IncompatibleHasOwnPropT -> "IncompatibleHasOwnPropT"
+  | IncompatibleGetValuesT -> "IncompatibleGetValuesT"
+  | IncompatibleUnaryMinusT -> "IncompatibleUnaryMinusT"
+  | IncompatibleMapTypeTTuple -> "IncompatibleMapTypeTTuple"
+  | IncompatibleMapTypeTObject -> "IncompatibleMapTypeTObject"
+  | IncompatibleTypeAppVarianceCheckT -> "IncompatibleTypeAppVarianceCheckT"
+  | IncompatibleUnclassified ctor -> spf "IncompatibleUnclassified %S" ctor
+  in
+  fun cx err ->
     match err with
-    | EIncompatible { reason_lower; upper; special = _; extras = _ } ->
-        spf "EIncompatible { reason_lower = %s; upper = %s; special = _; extras = _ }"
+    | EIncompatible {
+        lower = (reason_lower, _lower_kind);
+        upper = (reason_upper, upper_kind);
+        extras = _;
+      } ->
+        spf "EIncompatible { lower = (%s, _); upper = (%s, %s); extras = _ }"
           (dump_reason cx reason_lower)
-          (dump_use_t ~depth cx upper)
+          (dump_reason cx reason_upper)
+          (dump_upper_kind upper_kind)
     | EIncompatibleDefs { reason_lower; reason_upper; extras = _ } ->
         spf "EIncompatibleDefs { reason_lower = %s; reason_upper = %s; extras = _ }"
           (dump_reason cx reason_lower)
