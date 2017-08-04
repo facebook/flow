@@ -32,16 +32,15 @@ let mk_expr_stmt (expr : E.t') : S.t' =
   S.Expression.(S.Expression {expression = (Loc.none, expr);
                               directive = None})
 
+let mk_ret_stmt (expr : E.t') : t =
+  Stmt (S.Return.(S.Return {argument = Some (Loc.none, expr)}))
+
 let mk_func_def
     (fname : string)
     (pname : string)
     (ptype : T.t')
     (body : t list)
-    (rtype : T.t')
-    (rexpr : E.t') : t =
-
-  let ret_stmt =
-    S.Return.(S.Return {argument = Some (Loc.none, rexpr)}) in
+    (rtype : T.t') : t =
 
   let body =
     let open S.Block in
@@ -49,7 +48,7 @@ let mk_func_def
         | Stmt st -> (Loc.none, st) :: acc
         | Expr e -> (Loc.none, (mk_expr_stmt e)) :: acc
         | Empty -> acc) [] body in
-    {body = stmt_list @ [(Loc.none, ret_stmt)]} in
+    {body = stmt_list} in
 
   let param = let open P.Identifier in
     (Loc.none, P.Identifier {name = (Loc.none, pname);

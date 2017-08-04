@@ -226,15 +226,15 @@ class ruleset_func (depth : int)= object(self)
         | Expr (e, t) -> e, t
         | _ -> failwith "This has to be an expression" in
     self#backtrack_on_false (self#is_subtype ret_expr_type func_return_type);
+    let ret_stmt = Syntax.mk_ret_stmt ret_expr_expr in
 
     let func_def =
       Syntax.mk_func_def
         fname
         pname
         param_type
-        []
-        func_return_type
-        ret_expr_expr in
+        [ret_stmt]
+        func_return_type in
 
     let ret_type = mk_func_type param_type func_return_type in
     let new_env =

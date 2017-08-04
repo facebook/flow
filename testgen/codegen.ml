@@ -227,12 +227,13 @@ let mk_random_code rule_iter =
   let func_engine = new Ruleset_func.ruleset_func 0 in
   let optional_engine = new Ruleset_optional.ruleset_optional 0 in
   let exact_engine = new Ruleset_exact.ruleset_exact 0 in
+  let union_engine = new Ruleset_union.ruleset_union 0 in
   ignore base_engine;
   ignore depth_engine;
   ignore func_engine;
   ignore optional_engine;
   ignore exact_engine;
-  let engine = func_engine in
+  let engine = union_engine in
   let prog, env = engine#gen_prog [] rule_iter in
   (* We add type assertions at the end *)
   let prog = ((add_assert prog) @ (prog |> add_param_assert))

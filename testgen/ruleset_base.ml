@@ -460,15 +460,84 @@ class ruleset_base (depth : int) = object(self)
         | Expr (e, t) -> e, t
         | _ -> failwith "This has to be an expression" in
     self#backtrack_on_false (self#is_subtype ret_expr_type func_return_type);
+    let ret_stmt = Syntax.mk_ret_stmt ret_expr_expr in
 
     let func_def =
       Syntax.mk_func_def
         fname
         pname
         param_type
-        []
-        func_return_type
-        ret_expr_expr in
+        [ret_stmt]
+        func_return_type in
+
+    let ret_type = mk_func_type param_type func_return_type in
+    let new_env =
+      self#add_binding
+        env
+        (Expr ((E.Identifier (Loc.none, fname)), ret_type)) in
+    let new_env = self#add_binding new_env (Type ret_type) in
+    func_def, new_env
+
+  (* A rule for generating function definitions *)
+  method rule_func_mutate (env : env_t) : (Syntax.t * env_t) =
+    let mk_func_type (ptype : T.t') (rtype : T.t') : T.t' =
+      let param_type =
+        (Loc.none, T.Function.Param.({name = None;
+                                      typeAnnotation = (Loc.none, ptype);
+                                      optional = false})) in
+      let ret_type = (Loc.none, rtype) in
+
+      T.Function.(T.Function {params = [param_type], None;
+                              returnType = ret_type;
+                              typeParameters = None}) in
+
+    (* parameter type *)
+    let param_type =
+      match self#choose 0 (fun () -> self#require_type env) with
+      | Type t -> t
+      | _ -> failwith "has to be a type" in
+
+    (* We need to ensure the parameter is an object for mutation *)
+    self#backtrack_on_false (match param_type with
+        | T.Object _ -> true
+        | _ -> false);
+
+    (* We are assuming we only have one parameter for now *)
+    let pname = "param_" ^ (string_of_int depth) in
+
+    let prop = self#choose 1 (fun () -> self#require_prop param_type true) in
+    let pexpr, ptype = match prop with
+        | Expr (e, t) -> e, t
+        | _ -> failwith "This has to be an expression" in
+
+    (* get the expression on the rhs of the update *)
+    let rhs = self#choose 2 (fun () -> self#require_expr env) in
+    let rhs_expr, rhs_type = match rhs with
+        | Expr (e, t) -> e, t
+        | _ -> failwith "This has to be an expression" in
+
+    (* assert that type(rhs) <: type(prop) *)
+    self#weak_assert (self#is_subtype rhs_type ptype);
+
+    (* produce a write syntax *)
+    let write =
+      Syntax.mk_prop_write
+        (Utils.string_of_expr (E.Identifier (Loc.none, pname)))
+        (Utils.string_of_expr pexpr)
+        rhs_expr in
+
+    (* return expression and its type *)
+    let func_return_type = T.Void in
+
+    let fname = Utils.mk_func () in
+
+    let func_def =
+      Syntax.mk_func_def
+        fname
+        pname
+        param_type
+        [write]
+        func_return_type in
 
     let ret_type = mk_func_type param_type func_return_type in
     let new_env =

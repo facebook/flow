@@ -64,6 +64,11 @@ class ruleset_union (depth : int) = object(self)
         let ep = match expr with
           | Expr (e, t) -> (e, t)
           | _ -> failwith "This has to be an expression" in
+
+        (* we don't want functions to be properties of an object *)
+        self#backtrack_on_false (match snd ep with
+            | T.Function _ -> false
+            | _ -> true);
         gen_expr_list (count + 1) limit (ep :: result) in
 
     (* We are getting at most 2 properties *)
@@ -136,79 +141,6 @@ class ruleset_union (depth : int) = object(self)
     let new_env = self#add_binding new_env (Type vtype) in
     var_decl, new_env
 
-  (* A rule for generating function definitions *)
-  method! rule_funcdef (env : env_t) : (Syntax.t * env_t) =
-    let mk_func_type (ptype : T.t') (rtype : T.t') : T.t' =
-      let param_type =
-        (Loc.none, T.Function.Param.({name = None;
-                                      typeAnnotation = (Loc.none, ptype);
-                                      optional = false})) in
-      let ret_type = (Loc.none, rtype) in
-
-      T.Function.(T.Function {params = [param_type], None;
-                              returnType = ret_type;
-                              typeParameters = None}) in
-
-    (* parameter type *)
-    let param_type =
-      match self#choose 0 (fun () -> self#require_type env) with
-      | Type t -> t
-      | _ -> failwith "has to be a type" in
-    self#backtrack_on_false (match param_type with
-        | T.Object _ -> true
-        | _ -> false);
-
-    (* We are assuming we only have one parameter for now *)
-    let pname = "param_" ^ (string_of_int depth) in
-
-    (* We don't support recursion at this point, since in the syntax
-       there's no way to stop recursion *)
-    let fenv = (Expr (E.Identifier (Loc.none, pname), param_type)) :: env in
-
-    (* return expression and its type *)
-    let func_return_type =
-      match self#choose 1 (fun () -> self#require_type fenv) with
-      | Type t -> t
-      | _ -> failwith "Has to be a type" in
-    self#backtrack_on_false (match func_return_type with
-        | T.Object _ -> true
-        | _ -> false);
-
-    let fname = Utils.mk_func () in
-
-    (* This is the code for building function body recursively, but
-       we are not doing it at the moment *)
-    (*
-    let body, _ = if (FRandom.rint 10) > 7 then begin
-        let new_engine = new ruleset_base (depth + 1) in
-        new_engine#gen_prog fenv 2
-      end else [], fenv in
-       *)
-
-    (* return expression and its type *)
-    let ret_expr = self#choose 2 (fun () -> self#require_expr fenv) in
-    let ret_expr_expr, ret_expr_type = match ret_expr with
-        | Expr (e, t) -> e, t
-        | _ -> failwith "This has to be an expression" in
-    self#backtrack_on_false (self#is_subtype ret_expr_type func_return_type);
-
-    let func_def =
-      Syntax.mk_func_def
-        fname
-        pname
-        param_type
-        []
-        func_return_type
-        ret_expr_expr in
-
-    let ret_type = mk_func_type param_type func_return_type in
-    let new_env =
-      self#add_binding
-        env
-        (Expr ((E.Identifier (Loc.none, fname)), ret_type)) in
-    let new_env = self#add_binding new_env (Type ret_type) in
-    func_def, new_env
-
   method! get_all_rules () =
     [|self#rule_num_lit;
       self#rule_str_lit;
@@ -216,7 +148,7 @@ class ruleset_union (depth : int) = object(self)
       self#rule_obj_lit;
       self#rule_vardecl_with_type;
       self#rule_prop_update;
-      self#rule_funcdef;
+      self#rule_func_mutate;
       self#rule_func_call;
       self#rule_prop_read;|]
 end
