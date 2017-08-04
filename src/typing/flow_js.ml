@@ -7681,25 +7681,6 @@ and find_or_intro_shadow_prop cx trace x =
 
   in find
 
-(* other utils *)
-
-and filter cx trace t l pred =
-  let l = if pred l then l else DefT (reason_of_t l, EmptyT) in
-  rec_flow_t cx trace (l, t)
-
-and is_typeof_string = function DefT (_, (AnyT | StrT _)) -> true | _ -> false
-and is_typeof_number = function DefT (_, (AnyT | NumT _)) -> true | _ -> false
-and is_typeof_function = function
-  | DefT (_, (AnyT | AnyFunT | FunT _ | ClassT _)) -> true
-  | _ -> false
-and is_typeof_object = function
-  | DefT (_, (AnyT | AnyObjT | ObjT _ | ArrT _ | NullT | InstanceT _)) -> true
-  | _ -> false
-and is_typeof_array = function DefT (_, (AnyT | ArrT _)) -> true | _ -> false
-and is_typeof_boolean = function DefT (_, (AnyT | BoolT _)) -> true | _ -> false
-
-and not_ pred x = not(pred x)
-
 (* The filter functions return (filtered_type, did_update) pairs. *)
 
 and recurse_into_union filter_fn (r, ts) =
@@ -7938,6 +7919,105 @@ and filter_optional cx ?trace reason opt_t =
     flow_opt_t cx ?trace (opt_t, DefT (reason, OptionalT t))
   )
 
+and filter_boolean t =
+  match t with
+  | DefT (r, MixedT Mixed_truthy) -> DefT (replace_reason_const BoolT.desc r, BoolT (Some true))
+  | DefT (r, MixedT _) -> BoolT.why r
+  | DefT (_, (AnyT | BoolT _)) -> t
+  | _ -> DefT (reason_of_t t, EmptyT)
+
+and filter_not_boolean t =
+  match t with
+  (* TODO: this is wrong, AnyT can be a bool *)
+  | DefT (_, (AnyT | BoolT _)) -> DefT (reason_of_t t, EmptyT)
+  | _ -> t
+
+and filter_string t =
+  match t with
+  | DefT (r, MixedT Mixed_truthy) -> DefT (replace_reason_const StrT.desc r, StrT Truthy)
+  | DefT (r, MixedT _) -> StrT.why r
+  | DefT (_, (AnyT | StrT _)) -> t
+  | _ -> DefT (reason_of_t t, EmptyT)
+
+and filter_not_string t =
+  match t with
+  (* TODO: this is wrong, AnyT can be a string *)
+  | DefT (_, (AnyT | StrT _)) -> DefT (reason_of_t t, EmptyT)
+  | _ -> t
+
+and filter_number t =
+  match t with
+  | DefT (r, MixedT Mixed_truthy) -> DefT (replace_reason_const NumT.desc r, NumT Truthy)
+  | DefT (r, MixedT _) -> NumT.why r
+  | DefT (_, (AnyT | NumT _)) -> t
+  | _ -> DefT (reason_of_t t, EmptyT)
+
+and filter_not_number t =
+  match t with
+  (* TODO: this is wrong, AnyT can be a number *)
+  | DefT (_, (AnyT | NumT _)) -> DefT (reason_of_t t, EmptyT)
+  | _ -> t
+
+and filter_object cx t =
+  match t with
+  | DefT (r, MixedT flavor) ->
+    let reason = replace_reason_const RObject r in
+    let dict = Some {
+      key = StrT.why r;
+      value = DefT (replace_reason_const MixedT.desc r, MixedT Mixed_everything);
+      dict_name = None;
+      dict_polarity = Neutral;
+    } in
+    let proto = ObjProtoT reason in
+    let obj = mk_object_with_proto cx reason ?dict proto in
+    begin match flavor with
+    | Mixed_truthy
+    | Mixed_non_maybe
+    | Mixed_non_null -> obj
+    | Mixed_everything
+    | Mixed_non_void ->
+      let reason = replace_reason_const RUnion (reason_of_t t) in
+      DefT (reason, UnionT (UnionRep.make (NullT.why r) obj []))
+    | Empty_intersection -> DefT (r, EmptyT)
+    end
+  | DefT (_, (AnyT | AnyObjT | ObjT _ | ArrT _ | NullT | InstanceT _)) -> t
+  | _ -> DefT (reason_of_t t, EmptyT)
+
+and filter_not_object t =
+  match t with
+  | DefT (_, (AnyT | AnyObjT | ObjT _ | ArrT _ | NullT | InstanceT _)) ->
+    DefT (reason_of_t t, EmptyT)
+  | _ -> t
+
+and filter_function t =
+  match t with
+  | DefT (r, MixedT _) ->
+    let desc = RFunction RNormal in
+    DefT (replace_reason_const desc r, AnyFunT)
+  | DefT (_, (AnyT | AnyFunT | FunT _ | ClassT _)) -> t
+  | _ -> DefT (reason_of_t t, EmptyT)
+
+and filter_not_function t =
+  match t with
+  | DefT (_, (AnyT | AnyFunT | FunT _ | ClassT _)) -> DefT (reason_of_t t, EmptyT)
+  | _ -> t
+
+and filter_array t =
+  match t with
+  | DefT (r, MixedT _) ->
+    DefT (replace_reason_const RArray r,
+      ArrT (ArrayAT (DefT (r, MixedT Mixed_everything), None))
+    )
+  | DefT (_, (AnyT | ArrT _)) ->
+    t
+  | _ ->
+    DefT (reason_of_t t, EmptyT)
+
+and filter_not_array t =
+  match t with
+  | DefT (_, (AnyT | ArrT _)) -> DefT (reason_of_t t, EmptyT)
+  | _ -> t
+
 and update_sketchy_null cx opt_loc t =
   let open ExistsCheck in
   match t with
@@ -8046,40 +8126,20 @@ and predicate cx trace t l p = match p with
   (***********************)
 
   | BoolP ->
-    begin match l with
-    | DefT (r, MixedT Mixed_truthy) ->
-      let r = replace_reason_const BoolT.desc r in
-      rec_flow_t cx trace (DefT (r, BoolT (Some true)), t)
-
-    | DefT (r, MixedT _) ->
-      rec_flow_t cx trace (BoolT.why r, t)
-
-    | _ ->
-      filter cx trace t l is_typeof_boolean
-    end
+    rec_flow_t cx trace (filter_boolean l, t)
 
   | NotP BoolP ->
-    filter cx trace t l (not_ is_typeof_boolean)
+    rec_flow_t cx trace (filter_not_boolean l, t)
 
   (***********************)
   (* typeof _ ~ "string" *)
   (***********************)
 
   | StrP ->
-    begin match l with
-    | DefT (r, MixedT Mixed_truthy) ->
-      let r = replace_reason_const StrT.desc r in
-      rec_flow_t cx trace (DefT (r, StrT Truthy), t)
-
-    | DefT (r, MixedT _) ->
-      rec_flow_t cx trace (StrT.why r, t)
-
-    | _ ->
-      filter cx trace t l is_typeof_string
-    end
+    rec_flow_t cx trace (filter_string l, t)
 
   | NotP StrP ->
-    filter cx trace t l (not_ is_typeof_string)
+    rec_flow_t cx trace (filter_not_string l, t)
 
   (*********************)
   (* _ ~ "some string" *)
@@ -8110,91 +8170,40 @@ and predicate cx trace t l p = match p with
   (***********************)
 
   | NumP ->
-    begin match l with
-    | DefT (r, MixedT Mixed_truthy) ->
-      let r = replace_reason_const NumT.desc r in
-      rec_flow_t cx trace (DefT (r, NumT Truthy), t)
-
-    | DefT (r, MixedT _) ->
-      rec_flow_t cx trace (NumT.why r, t)
-
-    | _ ->
-      filter cx trace t l is_typeof_number
-    end
+    rec_flow_t cx trace (filter_number l, t)
 
   | NotP NumP ->
-    filter cx trace t l (not_ is_typeof_number)
+    rec_flow_t cx trace (filter_not_number l, t)
 
   (***********************)
   (* typeof _ ~ "function" *)
   (***********************)
 
   | FunP ->
-    begin match l with
-    | DefT (r, MixedT _) ->
-      let desc = RFunction RNormal in
-      rec_flow_t cx trace (DefT (replace_reason_const desc r, AnyFunT), t)
-
-    | _ ->
-      filter cx trace t l is_typeof_function
-    end
+    rec_flow_t cx trace (filter_function l, t)
 
   | NotP FunP ->
-    filter cx trace t l (not_ is_typeof_function)
+    rec_flow_t cx trace (filter_not_function l, t)
 
   (***********************)
   (* typeof _ ~ "object" *)
   (***********************)
 
   | ObjP ->
-    begin match l with
-    | DefT (r, MixedT flavor) ->
-      let reason = replace_reason_const RObject r in
-      let dict = Some {
-        key = StrT.why r;
-        value = DefT (replace_reason_const MixedT.desc r, MixedT Mixed_everything);
-        dict_name = None;
-        dict_polarity = Neutral;
-      } in
-      let proto = ObjProtoT reason in
-      let obj = mk_object_with_proto cx reason ?dict proto in
-      let filtered_l = match flavor with
-      | Mixed_truthy
-      | Mixed_non_maybe
-      | Mixed_non_null -> obj
-      | Mixed_everything
-      | Mixed_non_void ->
-        let reason = replace_reason_const RUnion (reason_of_t t) in
-        DefT (reason, UnionT (UnionRep.make (NullT.why r) obj []))
-      | Empty_intersection -> DefT (r, EmptyT)
-      in
-      rec_flow_t cx trace (filtered_l, t)
-
-    | _ ->
-      filter cx trace t l is_typeof_object
-    end
+    rec_flow_t cx trace (filter_object cx l, t)
 
   | NotP ObjP ->
-    filter cx trace t l (not_ is_typeof_object)
+    rec_flow_t cx trace (filter_not_object l, t)
 
   (*******************)
   (* Array.isArray _ *)
   (*******************)
 
   | ArrP ->
-    begin match l with
-    | DefT (r, MixedT _) ->
-      let filtered_l = DefT (replace_reason_const RArray r,
-        ArrT (ArrayAT (DefT (r, MixedT Mixed_everything), None))
-      ) in
-      rec_flow_t cx trace (filtered_l, t)
-
-    | _ ->
-      filter cx trace t l is_typeof_array
-    end
+    rec_flow_t cx trace (filter_array l, t)
 
   | NotP ArrP ->
-    filter cx trace t l (not_ is_typeof_array)
+    rec_flow_t cx trace (filter_not_array l, t)
 
   (***********************)
   (* typeof _ ~ "undefined" *)
