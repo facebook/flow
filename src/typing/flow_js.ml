@@ -3109,6 +3109,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       when flags.exact && sealed_in_op r flags.sealed ->
       rec_flow cx trace (t, MakeExactT (r, Lower l))
 
+    (* any specializations ~> $Exact<UB>. unwrap exact *)
+    | DefT (_, AnyObjT), UseT (use_op, ExactT (_, t))
+    | DefT (_, AnyFunT), UseT (use_op, ExactT (_, t)) ->
+      rec_flow cx trace (l, UseT (use_op, t))
+
     (* inexact LB ~> $Exact<UB>. error *)
     | _, UseT (_, ExactT (ru, _)) ->
       let reasons = FlowError.ordered_reasons (reason_of_t l) ru in
