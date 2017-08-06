@@ -165,6 +165,7 @@ type error_message =
       null_loc: Loc.t;
       falsy_loc: Loc.t;
     }
+  | EUnknownProperty of Loc.t * string
 
 and binding_error =
   | ENameAlreadyBound
@@ -419,6 +420,7 @@ let locs_of_error_message = function
   | EUnusedSuppression (loc) -> [loc]
   | ELintSetting (loc, _) -> [loc]
   | ESketchyNullLint { kind = _; loc; null_loc; falsy_loc; } -> [loc; null_loc; falsy_loc]
+  | EUnknownProperty (loc, _) -> [loc]
 
 let loc_of_error ~op msg =
   match op with
@@ -1413,3 +1415,9 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         null_loc, ["Potentially null/undefined value."];
         falsy_loc, [spf "%s value." value_str]
       ]]
+  | EUnknownProperty (loc, name) ->
+    mk_error
+      ~kind:(LintError LintSettings.UnknownProperty)
+      [loc, [spf (
+        "Accessing an unknown property here. Did you mean to add `%s` to the type?"
+      ) name]]

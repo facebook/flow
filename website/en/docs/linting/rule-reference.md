@@ -11,6 +11,7 @@ layout: guide
 * [`all`](#toc-all)
 * [`sketchy-null`](#toc-sketchy-null)
 * [`untyped-type-import`](#toc-untyped-type-import)
+* [`unknown-property`](#toc-unknown-property)
 
 #### `all` <a class="toc" id="toc-all" href="#toc-all"></a>
 
@@ -73,3 +74,15 @@ Triggers when you import a type from an untyped file. Importing a type from an
 untyped file results in an `any` alias, which is typically not the intended behavior.
 Enabling this lint brings extra attention to this case and can help improve Flow
 coverage of typed files by limiting the spread of implicit `any` types.
+
+#### `unknown-property` <a class="toc" id="toc-unknown-property" href="#toc-unknown-property"></a>
+Triggers when you access an unknown property on a defined type. Sealed and unsealed
+objects are not affected by this rule. This prevents conditional expressions from
+inferring types for properties that were not explicitly included in the type.
+```
+type FooType = { foo: string };
+let FooObj: FooType = { foo: 'fooStr' };
+
+// bar was not defined in FooType, so this will trigger the lint rule
+if (FooObj.bar != null) { }
+```

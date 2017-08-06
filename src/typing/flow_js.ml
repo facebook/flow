@@ -5558,10 +5558,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx ~trace FlowError.(EInternal (loc, ShadowWriteComputed))
 
     (* LookupT is a non-strict lookup *)
-    | (ObjProtoT _ |
-       FunProtoT _ |
-       DefT (_, MixedT (Mixed_truthy | Mixed_non_maybe))),
-      LookupT (_, NonstrictReturning t_opt, [], _, _) ->
+    | (ObjProtoT reason |
+       FunProtoT reason |
+       DefT (reason, MixedT (Mixed_truthy | Mixed_non_maybe))),
+      LookupT (reason_op, NonstrictReturning t_opt, [], _, _) ->
       (* don't fire
 
          ...unless a default return value is given. Two examples:
@@ -5574,6 +5574,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          a condition, in which case we consider the object's property to be
          `mixed`.
       *)
+
+      let () = match desc_of_reason reason_op, desc_of_reason reason with
+        | RProperty Some name, RObjectType ->
+          let loc = Reason.loc_of_reason reason_op in
+          let message = FlowError.EUnknownProperty (loc, name) in
+          add_output cx ~trace message
+        | _ -> ()
+      in
+
       begin match t_opt with
       | Some (not_found, t) -> rec_unify cx trace t not_found
       | None -> ()

@@ -2443,3 +2443,5 @@ let dump_flow_error =
         (string_of_loc loc)
         (string_of_loc null_loc)
         (string_of_loc falsy_loc)
+    | EUnknownProperty (loc, name) ->
+      spf "EUnknownProperty (%s, %s)" (string_of_loc loc) name
