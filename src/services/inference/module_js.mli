@@ -63,8 +63,10 @@ val is_tracked_file: filename -> bool
 
 (* given a filename, returns resolved requires. unsafe *)
 val get_resolved_requires_unsafe: (filename -> resolved_requires) Expensive.t
-(* given a filename, returns module info. unsafe *)
+
+(* given a filename, returns module info *)
 val get_info_unsafe: (filename -> info) Expensive.t
+val get_info: (filename -> info option) Expensive.t
 
 val checked_file: (filename -> bool) Expensive.t
 

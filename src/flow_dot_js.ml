@@ -87,6 +87,14 @@ let load_lib_files ~master_cx ~metadata files
 
   in result
 
+let stub_docblock = { Docblock.
+  flow = None;
+  preventMunge = None;
+  providesModule = None;
+  isDeclarationFile = false;
+  jsx = None;
+}
+
 let stub_metadata ~root ~checked = { Context.
   local_metadata = { Context.
     checked;
@@ -146,7 +154,28 @@ let set_libs filenames =
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Flow_js.mk_object master_cx reason in
   Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
-  Merge_js.ContextOptimizer.sig_context [master_cx]
+  Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref]
+
+let infer_and_merge ~root filename ast =
+  (* this is a VERY pared-down version of Merge_service.merge_strict_context.
+     it relies on the JS version only supporting libs + 1 file, so every
+     module you can require() must come from a lib; this skips resolving
+     module names and just adds them all to the `decls` list. *)
+  Flow_js.Cache.clear();
+  let metadata = stub_metadata ~root ~checked:true in
+  let master_cx = get_master_cx root in
+  let require_loc_map = calc_requires ast in
+  let decls = SMap.fold (fun module_name loc ->
+    List.cons (module_name, loc, Modulename.String module_name, filename)
+  ) require_loc_map [] in
+  let reqs = Merge_js.Reqs.({ empty with decls }) in
+  let require_loc_maps =
+    Utils_js.FilenameMap.singleton filename require_loc_map in
+  Merge_js.merge_component_strict
+    ~metadata ~lint_settings:None ~require_loc_maps
+    ~get_ast_unsafe:(fun _ -> ast)
+    ~get_docblock_unsafe:(fun _ -> stub_docblock)
+    [filename] reqs [] master_cx
 
 let check_content ~filename ~content =
   let stdin_file = Some (Path.make_unsafe filename, content) in
@@ -154,27 +183,7 @@ let check_content ~filename ~content =
   let filename = Loc.SourceFile filename in
   let errors, warnings = match parse_content filename content with
   | ast, [] ->
-    (* defaults *)
-    let metadata = stub_metadata ~root ~checked:true in
-
-    Flow_js.Cache.clear();
-
-    let require_loc_map = calc_requires ast in
-    let cx =
-      Type_inference_js.infer_ast ~metadata ~filename ~lint_settings:None ast ~require_loc_map in
-
-    (* this is a VERY pared-down version of Merge_service.merge_strict_context.
-       it relies on the JS version only supporting libs + 1 file, so every
-       module you can require() must come from a lib; this skips resolving
-       module names and just adds them all to the `decls` list. *)
-    let decls = SMap.fold (fun module_name loc acc ->
-      (module_name, loc, Modulename.String module_name, cx) :: acc
-    ) require_loc_map [] in
-    let reqs = Merge_js.Reqs.({empty with decls}) in
-
-    let master_cx = get_master_cx root in
-    Merge_js.merge_component_strict reqs [cx] [] master_cx;
-
+    let cx = infer_and_merge ~root filename ast in
     (* Perform a basic suppression step, to eliminate lints from playground output. *)
     let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
       Error_suppressions.empty (LintSettingsMap.default_settings filename) (Context.errors cx)
@@ -221,14 +230,7 @@ let infer_type filename content line col =
     let root = Path.dummy_path in
     match parse_content filename content with
     | ast, [] ->
-      (* defaults *)
-      let metadata = stub_metadata ~root ~checked:true in
-
-      Flow_js.Cache.clear();
-
-      let require_loc_map = calc_requires ast in
-      let cx =
-        Type_inference_js.infer_ast ~metadata ~filename ~lint_settings:None ast ~require_loc_map in
+      let cx = infer_and_merge ~root filename ast in
       let loc = mk_loc filename line col in
       let loc, ground_t, possible_ts = Query_types.(match query_type cx loc with
         | FailureNoMatch -> Loc.none, None, []
@@ -256,14 +258,7 @@ let dump_types js_file js_content =
     let content = Js.to_string js_content in
     match parse_content filename content with
     | ast, [] ->
-      (* defaults *)
-      let metadata = stub_metadata ~root ~checked:true in
-
-      Flow_js.Cache.clear();
-
-      let require_loc_map = calc_requires ast in
-      let cx =
-        Type_inference_js.infer_ast ~metadata ~filename ~lint_settings:None ast ~require_loc_map in
+      let cx = infer_and_merge ~root filename ast in
       let printer = Type_printer.string_of_t in
       let raw_printer _ _ = None in
       let types = Query_types.dump_types printer raw_printer cx in

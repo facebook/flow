@@ -315,45 +315,37 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     in
     let result = if Errors.ErrorSet.is_empty errors
       then begin
-        let (flow_files, flow_file_cxs, non_flow_files, error) =
-          List.fold_left (fun (flow_files, cxs, non_flow_files, error) file ->
-            if error <> None then (flow_files, cxs, non_flow_files, error) else
+        let (flow_files, non_flow_files, error) =
+          List.fold_left (fun (flow_files, non_flow_files, error) file ->
+            if error <> None then (flow_files, non_flow_files, error) else
             match file with
             | File_input.FileContent _ ->
               let error_msg = "This command only works with file paths." in
               let error =
                 Some (ServerProt.GenFlowFile_UnexpectedError error_msg)
               in
-              (flow_files, cxs, non_flow_files, error)
-            | File_input.FileName file_path ->
-              let src_file = Loc.SourceFile file_path in
-              (* TODO: Use InfoHeap as the definitive way to detect @flow vs
-               * non-@flow
-               *)
-              try
-                let cx =
-                  Context_cache.get_context_unsafe ~options src_file
-                    ~audit:Expensive.warn
-                in
-                (src_file::flow_files, cx::cxs, non_flow_files, error)
-              with Not_found ->
-                (flow_files, cxs, src_file::non_flow_files, error)
-          ) ([], [], [], None) files
+              (flow_files, non_flow_files, error)
+            | File_input.FileName fn ->
+              let file = Loc.SourceFile fn in
+              let checked =
+                let open Module_js in
+                match get_info file ~audit:Expensive.warn with
+                | Some info -> info.checked
+                | None -> false
+              in
+              if checked
+              then file::flow_files, non_flow_files, error
+              else flow_files, file::non_flow_files, error
+          ) ([], [], None) files
         in
         begin match error with
         | Some e -> Error e
         | None ->
           try
-            begin
-              try List.iter (fun flow_file_cx ->
-                let master_cx: Context.t =
-                  Merge_service.merge_strict_context ~options [flow_file_cx] in
-                ignore master_cx
-              ) flow_file_cxs
-              with exn -> failwith (
-                spf "Error merging contexts: %s" (Printexc.to_string exn)
-              )
-            end;
+            let flow_file_cxs = List.map (fun file ->
+              let cx, _ = Merge_service.merge_strict_context ~options [file] in
+              cx
+            ) flow_files in
 
             (* Non-@flow files *)
             let result_contents = non_flow_files |> List.map (fun file ->

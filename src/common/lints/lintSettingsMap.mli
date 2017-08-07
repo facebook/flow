@@ -17,9 +17,6 @@ val global_settings: Loc.filename -> LintSettings.t -> t
 (* Given a filename, generate a suppression map that applies the default settings
  * across the entire file. *)
 val default_settings: Loc.filename -> t
-(* This isn't a particularly valid suppression map, but it's fine as long as
- * no-one tries to use it. *)
-val invalid_default: t
 (* Gets the lint settings that apply to a certain location in the code. To
  * resolve ambiguity, this looks at the location of the first character in the
  * provided location. *)
@@ -30,6 +27,8 @@ val get_state: LintSettings.lint_kind -> Loc.t -> t -> LintSettings.lint_state
 val is_suppressed: LintSettings.lint_kind -> Loc.t -> t -> bool
 (* True iff the severity for the provided lint has been explicitly set *)
 val is_explicit: LintSettings.lint_kind -> Loc.t -> t -> bool
+
+val empty: t
 
 val union: t -> t -> t
 (* combines settings collated by filename into one collection *)

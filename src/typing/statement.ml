@@ -1742,8 +1742,8 @@ and statement cx = Ast.Statement.(
     Context.add_import_stmt cx import_decl;
 
     let module_name = (
-      match (snd import_decl.source).Ast.Literal.value with
-      | Ast.Literal.String value -> value
+      match import_decl.source with
+      | _, { Ast.Literal.value = Ast.Literal.String value; _ } -> value
       | _ -> failwith (
           "Internal Parser Error: Invalid import source type! Must be a " ^
           "string literal."
@@ -1757,7 +1757,7 @@ and statement cx = Ast.Statement.(
       | ImportDeclaration.ImportValue -> "import", Type.ImportValue
     ) in
 
-    let module_t = import cx module_name (fst import_decl.source) in
+    let module_t = import cx module_name import_loc in
 
     let get_imported_t get_reason import_kind remote_export_name local_name =
       Flow.mk_tvar_where cx get_reason (fun t ->
@@ -2067,9 +2067,10 @@ and export_statement cx loc
 
         set_module_t cx reason (fun t -> Flow.flow cx (
           import ~reason cx source_module_name loc,
+          let module_t = module_t_of_cx cx in
           match exportKind with
-          | ExportValue -> CopyNamedExportsT(reason, module_t_of_cx cx, t)
-          | ExportType -> CopyTypeExportsT(reason, module_t_of_cx cx, t)
+          | ExportValue -> CopyNamedExportsT(reason, module_t, t)
+          | ExportType -> CopyTypeExportsT(reason, module_t, t)
         ))
       )
 

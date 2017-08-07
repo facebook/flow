@@ -138,6 +138,7 @@ let module_t_of_cx cx =
     let m = Context.module_ref cx in
     let loc = Loc.({ none with source = Some (Context.file cx) }) in
     module_t_of_ref_safe cx m (Reason.mk_reason (RCustom "exports") loc)
+
   | Some t -> t
 
 let set_module_t cx reason f =

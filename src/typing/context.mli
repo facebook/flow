@@ -143,6 +143,8 @@ val set_type_graph: t  -> Graph_explorer.graph -> unit
 val set_all_unresolved: t  -> ISet.t IMap.t -> unit
 val set_globals: t -> SSet.t -> unit
 val set_graph: t -> Constraint.node IMap.t -> unit
+val set_errors: t -> Errors.ErrorSet.t -> unit
+val set_error_suppressions: t -> Error_suppressions.t -> unit
 val set_lint_settings: t -> LintSettingsMap.t -> unit
 val set_module_kind: t -> module_kind -> unit
 val set_property_maps: t -> Type.Properties.map -> unit
@@ -153,6 +155,7 @@ val set_exists_checks: t -> ExistsCheck.t Utils_js.LocMap.t -> unit
 val set_exists_excuses: t -> ExistsCheck.t Utils_js.LocMap.t -> unit
 val set_dep_map: t -> Dep_mapper.Dep.t Dep_mapper.DepMap.t -> unit
 val set_renamings: t -> (Loc.t * int) Scope_builder.LocMap.t -> unit
+val set_module_map: t -> Type.t SMap.t -> unit
 
 val clear_intermediates: t -> unit
 

@@ -1,5 +1,5 @@
 /**
  * @flow
  */
-// error will appear in output, local infer still happens after lib parse err
+// error will not appear in output, because lib parse errors forego merge
 var x: string = 0;

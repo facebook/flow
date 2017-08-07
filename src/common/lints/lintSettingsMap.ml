@@ -137,16 +137,15 @@ let bake =
   List.fold_left (fun map (loc, settings) -> SpanMap.add loc settings map) SpanMap.empty
 
 
-(* Supports O(log(n)) queries to get the relevant suppression for a loc. *)
+(* Supports O(log(n)) queries to get the relevant suppression for a loc. Because
+   these maps are merged together, locations from multiple files may be present
+   in the map. *)
 type t = LintSettings.t SpanMap.t
 
 let global_settings source settings = new_builder source settings |> bake
 
 let default_settings source = global_settings source LintSettings.default_settings
 
-(* This isn't a particularly valid suppression map, but it's fine as long as
- * no-one tries to use it. *)
-let invalid_default = default_settings (Loc.SourceFile "")
 (* Gets the lint settings that apply to a certain location in the code. To
  * resolve ambiguity, this looks at the location of the first character in the
  * provided location. *)
@@ -164,10 +163,12 @@ let is_suppressed lint_kind loc suppression_map =
 let is_explicit lint_kind loc suppression_map =
   settings_at_loc loc suppression_map |> LintSettings.is_explicit lint_kind
 
+let empty = SpanMap.empty
+
 let union a b = SpanMap.union a b
 
 let union_settings settings =
   Utils_js.FilenameMap.fold
     (fun _key -> union)
     settings
-    SpanMap.empty
+    empty

@@ -7,12 +7,14 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
+module FilenameMap = Utils_js.FilenameMap
+
 module Reqs = struct
-  type impl = Context.t * string * string * Context.t
-  type dep_impl = Context.t * string * string * Context.t
-  type unchecked = string * Loc.t * Context.t
-  type res = string * Loc.t * string * Context.t
-  type decl = string * Loc.t * Modulename.t * Context.t
+  type impl = Loc.filename * string * string * Loc.filename
+  type dep_impl = Context.t * string * string * Loc.filename
+  type unchecked = string * Loc.t * Loc.filename
+  type res = string * Loc.t * string * Loc.filename
+  type decl = string * Loc.t * Modulename.t * Loc.filename
   type t = {
     impls: impl list;
     dep_impls: dep_impl list;
@@ -142,6 +144,33 @@ let detect_sketchy_null_checks cx =
 
   Utils_js.LocMap.iter (detect_function (Context.exists_excuses cx)) (Context.exists_checks cx)
 
+let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
+  let open Context in
+
+  let local_metadata = metadata.local_metadata in
+
+  let local_metadata = { local_metadata with jsx = Docblock.jsx docblock_info } in
+
+  let local_metadata = match Docblock.flow docblock_info with
+  | None -> local_metadata
+  | Some Docblock.OptIn -> { local_metadata with checked = true; }
+  | Some Docblock.OptInWeak -> { local_metadata with checked = true; weak = true }
+
+  (* --all (which sets metadata.checked = true) overrides @noflow, so there are
+     currently no scenarios where we'd change checked = true to false. in the
+     future, there may be a case where checked defaults to true (but is not
+     forced to be true ala --all), but for now we do *not* want to force
+     checked = false here. *)
+  | Some Docblock.OptOut -> local_metadata
+  in
+
+  let local_metadata = match Docblock.preventMunge docblock_info with
+  | Some value -> { local_metadata with munge_underscores = not value; }
+  | None -> local_metadata
+  in
+
+  { metadata with local_metadata }
+
 
 (* Merge a component with its "implicit requires" and "explicit requires." The
    implicit requires are those defined in libraries. For the explicit
@@ -175,8 +204,24 @@ let detect_sketchy_null_checks cx =
 
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
-let merge_component_strict reqs cxs dep_cxs master_cx =
+let merge_component_strict ~metadata ~lint_settings ~require_loc_maps
+  ~get_ast_unsafe ~get_docblock_unsafe
+  component reqs dep_cxs master_cx =
+
+  let rev_cxs, impl_cxs = List.fold_left (fun (cxs, impl_cxs) filename ->
+    let ast = get_ast_unsafe filename in
+    let info = get_docblock_unsafe filename in
+    let metadata = apply_docblock_overrides metadata info in
+    let require_loc_map = FilenameMap.find_unsafe filename require_loc_maps in
+    let cx = Type_inference_js.infer_ast ast
+      ~metadata ~filename ~lint_settings ~require_loc_map
+    in
+    cx::cxs, FilenameMap.add filename cx impl_cxs
+  ) ([], FilenameMap.empty) component in
+  let cxs = List.rev rev_cxs in
+
   let cx, other_cxs = List.hd cxs, List.tl cxs in
+
   Flow_js.Cache.clear();
 
   dep_cxs |> List.iter (Context.merge_into cx);
@@ -185,21 +230,39 @@ let merge_component_strict reqs cxs dep_cxs master_cx =
 
   let open Reqs in
 
-  reqs.impls |> List.iter (explicit_impl_require_strict cx);
-  reqs.dep_impls |> List.iter (explicit_impl_require_strict cx);
+  reqs.impls |> List.iter (fun (fn_from, m, r, fn_to) ->
+    let cx_from = FilenameMap.find_unsafe fn_from impl_cxs in
+    let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
+    explicit_impl_require_strict cx (cx_from, m, r, cx_to);
+    Context.add_module cx m (Context.find_module cx_from m)
+  );
 
-  reqs.res |> List.iter (explicit_res_require_strict cx);
+  reqs.dep_impls |> List.iter (fun (cx_from, m, r, fn_to) ->
+    let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
+    explicit_impl_require_strict cx (cx_from, m, r, cx_to)
+  );
 
-  reqs.decls |> List.iter (explicit_decl_require_strict cx);
+  reqs.res |> List.iter (fun (r, loc, f, fn_to) ->
+    let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
+    explicit_res_require_strict cx (r, loc, f, cx_to)
+  );
 
-  reqs.unchecked |> List.iter (explicit_unchecked_require_strict cx);
+  reqs.decls |> List.iter (fun (m, loc, resolved_m, fn_to) ->
+    let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
+    explicit_decl_require_strict cx (m, loc, resolved_m, cx_to)
+  );
+
+  reqs.unchecked |> List.iter (fun (m, loc, fn_to) ->
+    let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
+    explicit_unchecked_require_strict cx (m, loc, cx_to)
+  );
 
   other_cxs |> List.iter (implicit_require_strict cx master_cx);
   implicit_require_strict cx master_cx cx;
 
   detect_sketchy_null_checks cx;
 
-  ()
+  cx
 
 (* After merging dependencies into a context (but before optimizing the
    context), it is important to restore the parts of the context that were
@@ -309,6 +372,7 @@ module ContextOptimizer = struct
   open Type
 
   type quotient = {
+    reduced_module_map : Type.t SMap.t;
     reduced_graph : node IMap.t;
     reduced_property_maps : Properties.map;
     reduced_export_maps : Exports.map;
@@ -318,6 +382,7 @@ module ContextOptimizer = struct
   }
 
   let empty = {
+    reduced_module_map = SMap.empty;
     reduced_graph = IMap.empty;
     reduced_property_maps = Properties.Map.empty;
     reduced_export_maps = Exports.Map.empty;
@@ -339,6 +404,12 @@ module ContextOptimizer = struct
     val mutable stable_propmap_ids = Properties.Map.empty
     val mutable stable_nominal_ids = IMap.empty
     val mutable stable_eval_ids = IMap.empty
+
+    method reduce cx quotient module_ref =
+      let { reduced_module_map; _ } = quotient in
+      let export = Flow_js.lookup_module cx module_ref in
+      let reduced_module_map = SMap.add module_ref export reduced_module_map in
+      self#type_ cx { quotient with reduced_module_map } export
 
     method! tvar cx quotient r id =
       let { reduced_graph; sig_hash; _ } = quotient in
@@ -441,29 +512,14 @@ module ContextOptimizer = struct
   end
 
   (* walk a context from a list of exports *)
-  let reduce_context cx exports =
+  let reduce_context cx module_refs =
     let reducer = new context_optimizer in
-    List.fold_left (fun quotient (f, m, t) ->
-      (* TODO: The hashing of f, m is probably unnecessary at this point. The
-         tests that needed it ('recheck-haste') now pass without it. *)
-      let quotient = {
-        quotient with sig_hash = quotient.sig_hash
-          |> SigHash.add f |> SigHash.add m
-      } in
-      reducer#type_ cx quotient t
-    ) empty exports
-
-  (* string form of a context's own module name paired with the tvar on which a
-     context hosts its own exports *)
-  let export cx =
-    let m = Context.module_ref cx in
-    Context.file cx, m, Flow_js.lookup_module cx m
+    List.fold_left (reducer#reduce cx) empty module_refs
 
   (* reduce a context to a "signature context" *)
-  let sig_context component_cxs =
-    let cx = List.hd component_cxs in
-    let exports = List.map export component_cxs in
-    let quotient = reduce_context cx exports in
+  let sig_context cx module_refs =
+    let quotient = reduce_context cx module_refs in
+    Context.set_module_map cx quotient.reduced_module_map;
     Context.set_graph cx quotient.reduced_graph;
     Context.set_property_maps cx quotient.reduced_property_maps;
     Context.set_export_maps cx quotient.reduced_export_maps;
@@ -472,9 +528,6 @@ module ContextOptimizer = struct
     Context.set_type_graph cx (
       Graph_explorer.new_graph
         (IMap.fold (fun k _ -> ISet.add k) quotient.reduced_graph ISet.empty)
-    );
-    List.tl exports |> List.iter (fun (_, other_m, other_t) ->
-      Context.add_module cx other_m other_t
     );
     quotient.sig_hash
 

@@ -209,19 +209,6 @@ let error_set_of_merge_exception file exc =
   let error = Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file:file msg in
   Errors.ErrorSet.singleton error
 
-let infer ~options ~profiling ~workers ~suppressions ~lint_settings infer_input =
-  with_timer ~options "Infer" profiling (fun () ->
-    let infer_results = Infer_service.infer ~options ~workers infer_input in
-    List.fold_left (fun (errset, suppressions, lint_settings) (file, errs, supps, lint_setts) ->
-      (* TODO update_errset may be able to be replaced by a simpler operation, since infer_results
-       * may only have one entry per file *)
-      let errset = update_errset errset file errs in
-      let suppressions = update_suppressions suppressions file supps in
-      let lint_settings = update_lint_settings lint_settings file lint_setts in
-      errset, suppressions, lint_settings
-    ) (FilenameMap.empty, suppressions, lint_settings) infer_results
-  )
-
 let calc_deps ~options ~profiling ~workers to_merge =
   with_timer ~options "CalcDeps" profiling (fun () ->
     let dependency_graph = Dep_service.calc_dependency_graph workers to_merge in
@@ -236,25 +223,34 @@ let merge
     ~options
     ~profiling
     ~workers
-    ~merge_errors
     dependency_graph
     component_map
-    recheck_map =
+    recheck_map
+    acc
+    =
   with_timer ~options "Merge" profiling (fun () ->
     let merged = Merge_service.merge_strict
       ~intermediate_result_callback ~options ~workers dependency_graph component_map recheck_map
     in
-    List.fold_left (fun merge_errors (file, errors_or_exn) ->
-      let merge_errors = List.fold_left (fun merge_errors file ->
-        FilenameMap.remove file merge_errors
-      ) merge_errors (FilenameMap.find_unsafe file component_map) in
-      let errors = match errors_or_exn with
-      | Ok errors -> errors
-      | Error exc -> error_set_of_merge_exception file exc
+    List.fold_left (fun acc (file, result) ->
+      let component = FilenameMap.find_unsafe file component_map in
+      (* remove all errors, suppressions for rechecked component *)
+      let errors, suppressions, lint_settings =
+        List.fold_left (fun (errors, suppressions, lint_settings) file ->
+          FilenameMap.remove file errors,
+          FilenameMap.remove file suppressions,
+          FilenameMap.remove file lint_settings
+        ) acc component
       in
-      if Errors.ErrorSet.is_empty errors then merge_errors
-      else FilenameMap.add file errors merge_errors
-    ) merge_errors merged
+      match result with
+      | Ok (new_errors, new_suppressions, new_lint_settings) ->
+        update_errset errors file new_errors,
+        update_suppressions suppressions file new_suppressions,
+        update_lint_settings lint_settings file new_lint_settings
+      | Error exc ->
+        let new_errors = error_set_of_merge_exception file exc in
+        update_errset errors file new_errors, suppressions, lint_settings
+    ) acc merged
   )
 
 (* helper *)
@@ -271,9 +267,6 @@ let typecheck
   ~persistent_connections =
   let { ServerEnv.local_errors; merge_errors; suppressions; lint_settings } = errors in
 
-  (* local inference populates context heap, resolved requires heap *)
-  Hh_logger.info "Running local inference";
-
   let infer_input =
     if Options.is_lazy_mode options
     then
@@ -287,58 +280,64 @@ let typecheck
       infer_input
   in
 
-  let profiling, (new_local_errors, suppressions, lint_settings) =
-    infer ~options ~profiling ~workers ~suppressions ~lint_settings infer_input in
+  (* Continue profiling noop Infer to compare with pre-refactor metrics *)
+  let profiling, () = with_timer ~options "Infer" profiling (fun () -> ()) in
 
-  let send_errors_over_connection = match persistent_connections with
+  let send_errors_over_connection =
+    match persistent_connections with
     | None -> fun _ -> ()
     | Some conns ->
-        let open Errors in
-        (* All errors are stored in a single set, but warnings are stored per-file.
-         * This is because persistent connection clients subscribe to individual files for
-         * warnings so that they don't get overloaded with the large number of warnings. *)
-        let current_errors = ref ErrorSet.empty in
-        let current_warnings = ref FilenameMap.empty in
-        let suppressions = Error_suppressions.union_suppressions suppressions in
-        let lint_settings = LintSettingsMap.union_settings lint_settings in
-        let filter = Error_suppressions.filter_suppressed_errors suppressions lint_settings in
-        function lazy new_errors ->
-          (* Collate the errors and diff the warnings. *)
-          let new_errors, new_warnings = List.fold_left
-            (fun (err_acc, warn_acc) (filename, errs) ->
-              let errs, warns, _, _ = filter errs in
-              let err_acc = Errors.ErrorSet.union err_acc errs in
-              let current_file_warns = FilenameMap.get filename !current_warnings
-                |> Option.value ~default:Errors.ErrorSet.empty in
-              let warns = ErrorSet.diff warns current_file_warns in
-              let warn_acc = if ErrorSet.is_empty warns
-                then warn_acc
-                else FilenameMap.add filename warns warn_acc
-              in
-              (err_acc, warn_acc)
-            )
-            (Errors.ErrorSet.empty, FilenameMap.empty)
-            new_errors
-          in
-          (* Diff the errors. *)
-          let new_errors = ErrorSet.diff new_errors !current_errors in
-          (* Update the saved errors. *)
-          current_errors := ErrorSet.union new_errors !current_errors;
-          (* Update the saved warnings. *)
-          current_warnings := FilenameMap.fold (FilenameMap.add ~combine:ErrorSet.union)
-            new_warnings !current_warnings;
-          (* Send the new errors and warnings. (Filtering of warnings by file is
-           * done inside update_clients.) *)
-          if not (ErrorSet.is_empty new_errors) || not (FilenameMap.is_empty new_warnings) then
-            Persistent_connection.update_clients conns ~errors:new_errors ~warnings:new_warnings
-  in
+      (* Each merge step uncovers new errors, warnings, suppressions and lint settings.
 
-  let () =
-    let new_errors = lazy (FilenameMap.bindings new_local_errors) in
-    send_errors_over_connection new_errors
-  in
+         While more suppressions and lint settings may come in later steps, the suppressions and
+         lint settings we've seen so far are sufficient to filter the errors and warnings we've seen
+         so far.
 
-  let local_errors = merge_error_maps new_local_errors local_errors in
+         Intuitively, we will not see an error (or warning) before we've seen all the files involved
+         in that error, and thus all the suppressions which could possibly suppress the error. *)
+      let open Errors in
+      let curr_errors = ref ErrorSet.empty in
+      let curr_warnings = ref ErrorSet.empty in
+      let curr_suppressions = ref Error_suppressions.empty in
+      let curr_lint_settings = ref LintSettingsMap.empty in
+      let filter = Error_suppressions.filter_suppressed_errors in
+      function lazy results ->
+        let new_errors, new_warnings, suppressions, lint_settings =
+          List.fold_left (fun (errs_acc, warns_acc, supps_acc, lints_acc) result ->
+            let file, errs_and_warns, supps, lints = result in
+            let supps_acc = Error_suppressions.union supps_acc supps in
+            let lints_acc = LintSettingsMap.union lints_acc lints in
+            (* Filter errors and warnings based on suppressions we've seen so far. *)
+            let errs, warns, _, _ = filter supps_acc lints_acc errs_and_warns in
+            (* Only add errors we haven't seen before. *)
+            let errs_acc = ErrorSet.fold (fun err acc ->
+              if ErrorSet.mem err !curr_errors
+              then acc
+              else ErrorSet.add err acc
+            ) errs errs_acc in
+            (* Only add warnings we haven't seen before. Note that new warnings are stored by
+               filename, because the clients only receive warnings for files they have open. *)
+            let warns_acc =
+              let acc = Option.value (FilenameMap.get file warns_acc) ~default:ErrorSet.empty in
+              let acc = ErrorSet.fold (fun warn acc ->
+                if ErrorSet.mem warn !curr_warnings
+                then acc
+                else ErrorSet.add warn acc
+              ) warns acc in
+              if ErrorSet.is_empty acc then warns_acc else FilenameMap.add file acc warns_acc
+            in
+            errs_acc, warns_acc, supps_acc, lints_acc
+          ) (ErrorSet.empty, FilenameMap.empty, !curr_suppressions, !curr_lint_settings) results
+        in
+
+        curr_errors := ErrorSet.union new_errors !curr_errors;
+        curr_warnings := FilenameMap.fold (fun _ -> ErrorSet.union) new_warnings !curr_warnings;
+        curr_suppressions := suppressions;
+        curr_lint_settings := lint_settings;
+
+        if not (ErrorSet.is_empty new_errors && FilenameMap.is_empty new_warnings) then
+          Persistent_connection.update_clients conns ~errors:new_errors ~warnings:new_warnings
+  in
 
   (* call supplied function to calculate closure of modules to merge *)
   let profiling, merge_input =
@@ -359,32 +358,40 @@ let typecheck
       calc_deps ~options ~profiling ~workers to_merge in
 
     Hh_logger.info "Merging";
-    let profiling, merge_errors = try
+    let profiling, merge_errors, suppressions, lint_settings = try
       let intermediate_result_callback results =
         let errors = lazy (
-          List.map (fun (file, errors_or_exc) ->
-            match errors_or_exc with
-            | Ok errors -> file, errors
-            | Error exc -> file, error_set_of_merge_exception file exc
+          List.map (fun (file, result) ->
+            match result with
+            | Ok (errors, suppressions, lint_settings) ->
+              file, errors, suppressions, lint_settings
+            | Error exc ->
+              let errors = error_set_of_merge_exception file exc in
+              let suppressions = Error_suppressions.empty in
+              let lint_settings =
+                LintSettingsMap.global_settings file
+                  (Options.lint_settings options)
+              in
+              file, errors, suppressions, lint_settings
           ) (Lazy.force results)
         ) in
         send_errors_over_connection errors
       in
 
-      let profiling, merge_errors =
+      let profiling, (merge_errors, suppressions, lint_settings) =
         merge
           ~intermediate_result_callback
           ~options
           ~profiling
           ~workers
-          ~merge_errors
           dependency_graph
           component_map
           recheck_map
+          (merge_errors, suppressions, lint_settings)
       in
       if Options.should_profile options then Gc.print_stat stderr;
       Hh_logger.info "Done";
-      profiling, merge_errors
+      profiling, merge_errors, suppressions, lint_settings
     with
     (* Unrecoverable exceptions *)
     | SharedMem_js.Out_of_shared_memory
@@ -394,7 +401,7 @@ let typecheck
     (* A catch all suppression is probably a bad idea... *)
     | exc ->
         prerr_endline (Printexc.to_string exc);
-        profiling, merge_errors
+        profiling, merge_errors, suppressions, lint_settings
     in
 
     profiling,
@@ -428,10 +435,12 @@ let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
       ~parsed ~all_dependent_files
       ~persistent_connections
       ~make_merge_input:(fun inferred ->
-        Some (inferred,
-              inferred |> List.fold_left (fun map f ->
-                FilenameMap.add f true map
-              ) FilenameMap.empty)
+        Some (
+          inferred,
+          inferred |> List.fold_left (fun map f ->
+            FilenameMap.add f true map
+          ) FilenameMap.empty
+        )
       ) in
     env := { !env with ServerEnv.
       checked_files = checked;
@@ -449,62 +458,32 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
 
   match parse_result with
   | Parsing_service_js.Parse_ok ast ->
-      (* defaults *)
-      let metadata = Context.metadata_of_options options in
-      let metadata =
-        let checked, weak = Docblock.(
-          match flow info with
-          | None ->
-            (* If the file does not specify a @flow pragma, we still want to try
-               to infer something, but the file might be huge and unannotated,
-               which can cause performance issues (including non-termination).
-               To avoid this case, we infer the file using "weak mode." *)
-            true, true
-          | Some OptIn ->
-            (* Respect @flow pragma *)
-            true, false
-          | Some OptInWeak ->
-            (* Respect @flow weak pragma *)
-            true, true
-          | Some OptOut ->
-            (* Respect @noflow, which `apply_docblock_overrides` does not by
-               default. Again, large files can cause non-termination, so
-               respecting this pragma gives programmers a way to tell Flow to
-               avoid inference on such files. *)
-            false, false
-        ) in
-        let local_metadata = { metadata.Context.local_metadata with Context.checked; weak } in
-        { metadata with Context.local_metadata }
+      (* override docblock info *)
+      let info =
+        let open Docblock in
+        let flow = match flow info with
+        (* If the file does not specify a @flow pragma, we still want to try
+           to infer something, but the file might be huge and unannotated,
+           which can cause performance issues (including non-termination).
+           To avoid this case, we infer the file using "weak mode." *)
+        | None -> OptInWeak
+        (* Respect @flow pragma *)
+        | Some OptIn -> OptIn
+        (* Respect @flow weak pragma *)
+        | Some OptInWeak -> OptInWeak
+        (* Respect @noflow, which `apply_docblock_overrides` does not by
+           default. Again, large files can cause non-termination, so
+           respecting this pragma gives programmers a way to tell Flow to
+           avoid inference on such files. *)
+        | Some OptOut -> OptInWeak
+        in
+        { info with flow = Some flow }
       in
-      (* apply overrides from the docblock *)
-      let metadata = Infer_service.apply_docblock_overrides metadata info in
-      let require_loc_map =
-        Parsing_service_js.calc_requires ~default_jsx:(info.Docblock.jsx = None) ~ast
-      in
-
-      let lint_settings = Some options.Options.opt_lint_settings in
-
-      (* infer *)
-      let profiling, cx = with_timer "Infer" profiling (fun () ->
-        Type_inference_js.infer_ast ~metadata ~filename ~lint_settings ast ~require_loc_map
-      ) in
-
-      (* write graphml of (unmerged) types, if requested *)
-      if Options.output_graphml options then begin
-        let fn = Loc.string_of_filename filename in
-        let graphml = spf "%s.graphml"
-          (if fn = "-" then "contents" else fn) in
-        let lines = Graph.format cx in
-        let oc = open_out graphml in
-        List.iter (output_string oc) lines;
-        close_out oc
-      end;
 
       (* merge *)
-      let profiling, () = with_timer "Merge" profiling (fun () ->
+      let profiling, cx = with_timer "Merge" profiling (fun () ->
         let ensure_checked_dependencies = ensure_checked_dependencies ~options ~workers ~env in
-        Merge_service.merge_contents_context ~options cx require_loc_map
-           ~ensure_checked_dependencies
+        Merge_service.merge_contents_context options filename ast info ~ensure_checked_dependencies
       ) in
 
       (* Filter out suppressed errors *)
@@ -776,9 +755,7 @@ let recheck ~options ~workers ~updates env =
 
 **)
 
-  (* clear contexts and module registrations for new, changed, and deleted files *)
   (* remember old modules *)
-  Context_cache.remove_batch new_or_changed_or_deleted;
   let unchanged_checked = FilenameSet.diff env.ServerEnv.checked_files new_or_changed_or_deleted in
   (* clear out records of files, and names of modules provided by those files *)
   let old_modules = Module_js.clear_files workers ~options new_or_changed_or_deleted in

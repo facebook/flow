@@ -19,15 +19,16 @@ type 'a merge_job =
 
 val merge_strict_context:
   options: Options.t ->
-  Context.t list ->
-  Context.t
-val merge_contents_context:
-  options: Options.t ->
-  Context.t ->
-  Loc.t SMap.t ->
-  ensure_checked_dependencies: (Modulename.Set.t -> unit) ->
-  unit
+  filename list ->
+  Context.t * Context.t
 
+val merge_contents_context:
+  Options.t ->
+  filename ->
+  Ast.program ->
+  Docblock.t ->
+  ensure_checked_dependencies: (Modulename.Set.t -> unit) ->
+  Context.t
 
 val merge_runner:
   job: 'a merge_job ->
@@ -40,10 +41,10 @@ val merge_runner:
   'a merge_results
 
 val merge_strict:
-  intermediate_result_callback: (Errors.ErrorSet.t merge_results Lazy.t -> unit) ->
+  intermediate_result_callback: ((Errors.ErrorSet.t * Error_suppressions.t * LintSettingsMap.t) merge_results Lazy.t -> unit) ->
   options: Options.t ->
   workers: Worker.t list option ->
   FilenameSet.t FilenameMap.t ->
   (filename list) FilenameMap.t ->
   bool FilenameMap.t ->
-  Errors.ErrorSet.t merge_results
+  (Errors.ErrorSet.t * Error_suppressions.t * LintSettingsMap.t) merge_results

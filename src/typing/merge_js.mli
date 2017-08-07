@@ -8,11 +8,11 @@
  *)
 
 module Reqs : sig
-  type impl = Context.t * string * string * Context.t
-  type dep_impl = Context.t * string * string * Context.t
-  type unchecked = string * Loc.t * Context.t
-  type res = string * Loc.t * string * Context.t
-  type decl = string * Loc.t * Modulename.t * Context.t
+  type impl = Loc.filename * string * string * Loc.filename
+  type dep_impl = Context.t * string * string * Loc.filename
+  type unchecked = string * Loc.t * Loc.filename
+  type res = string * Loc.t * string * Loc.filename
+  type decl = string * Loc.t * Modulename.t * Loc.filename
   type t = {
     impls: impl list;
     dep_impls: dep_impl list;
@@ -29,14 +29,21 @@ module Reqs : sig
 end
 
 val merge_component_strict:
+  metadata: Context.metadata ->
+  lint_settings: LintSettings.t option ->
+  require_loc_maps: Loc.t SMap.t Utils_js.FilenameMap.t ->
+  get_ast_unsafe: (Loc.filename -> Ast.program) ->
+  get_docblock_unsafe: (Loc.filename -> Docblock.t) ->
+  (* component *)
+  Loc.filename list ->
+  (* requires *)
   Reqs.t ->
-  (* component cxs *)
-  Context.t list ->
   (* dependency cxs *)
   Context.t list ->
   (* master cx *)
   Context.t ->
-  unit
+  (* merged cx *)
+  Context.t
 
 val restore: Context.t ->
   Context.t list -> Context.t -> unit
@@ -51,5 +58,5 @@ val merge_lib_file:
 val lowers_of_tvar: Context.t -> Reason.t -> Constraint.ident -> Type.t
 
 module ContextOptimizer: sig
-  val sig_context : Context.t list -> SigHash.t
+  val sig_context : Context.t -> string list -> SigHash.t
 end

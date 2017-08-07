@@ -12,26 +12,6 @@ open Utils_js
 
 (****************** shared context heap *********************)
 
-(* map from file names to contexts *)
-module ContextHeap = SharedMem_js.NoCache (Loc.FilenameKey) (struct
-  type t = Context.cacheable_t
-  let prefix = Prefix.make()
-  let description = "Context"
-end)
-
-let add_context = Expensive.wrap (fun file cx -> ContextHeap.add file (Context.to_cache cx))
-
-let get_context_unsafe = Expensive.wrap (fun ~options file ->
-  Context.from_cache ~options (ContextHeap.find_unsafe file)
-)
-
-let add ~audit cx =
-  let cx_file = Context.file cx in
-  add_context ~audit cx_file cx
-
-let remove_batch files =
-  ContextHeap.remove_batch files
-
 module SigContextHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
   type t = Context.cacheable_t
   let prefix = Prefix.make()
@@ -69,9 +49,8 @@ let find_leader file =
 
 (* Add a sig only if it has not changed meaningfully, and return the result of
    that check. *)
-let add_merge_on_diff ~audit component_cxs md5 =
-  let component_files = List.map (Context.file) component_cxs in
-  let leader_f, leader_cx = List.hd component_files, List.hd component_cxs in
+let add_merge_on_diff ~audit leader_cx component_files md5 =
+  let leader_f = Context.file leader_cx in
   let diff = match SigHashHeap.get_old leader_f with
     | Some md5_old -> Loc.check_suffix leader_f Files.flow_ext || md5 <> md5_old
     | None -> true in

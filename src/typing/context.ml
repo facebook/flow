@@ -220,7 +220,7 @@ let make metadata file module_ref = {
     globals = SSet.empty;
 
     error_suppressions = Error_suppressions.empty;
-    lint_settings = LintSettingsMap.invalid_default;
+    lint_settings = LintSettingsMap.empty;
 
     type_table = Type_table.create ();
     annot_table = Hashtbl.create 0;
@@ -346,7 +346,7 @@ let remove_all_errors cx =
 let remove_all_error_suppressions cx =
   cx.local.error_suppressions <- Error_suppressions.empty
 let remove_all_lint_settings cx =
-  cx.local.lint_settings <- LintSettingsMap.invalid_default
+  cx.local.lint_settings <- LintSettingsMap.empty
 let remove_tvar cx id =
   cx.local.graph <- IMap.remove id cx.local.graph
 let set_all_unresolved cx all_unresolved =
@@ -361,6 +361,10 @@ let set_globals cx globals =
   cx.local.globals <- globals
 let set_graph cx graph =
   cx.local.graph <- graph
+let set_errors cx errors =
+  cx.local.errors <- errors
+let set_error_suppressions cx suppressions =
+  cx.local.error_suppressions <- suppressions
 let set_lint_settings cx lint_settings =
   cx.local.lint_settings <- lint_settings
 let set_module_kind cx module_kind =
@@ -383,6 +387,8 @@ let set_dep_map cx dep_map =
   cx.local.dep_map <- dep_map
 let set_renamings cx renamings =
   cx.local.renamings <- renamings
+let set_module_map cx module_map =
+  cx.local.modulemap <- module_map
 
 let clear_intermediates cx =
   (* call reset instead of clear to also shrink the bucket tables *)
@@ -444,6 +450,9 @@ let merge_into cx cx_other =
   set_all_unresolved cx (IMap.union (all_unresolved cx_other) (all_unresolved cx));
   set_globals cx (SSet.union (globals cx_other) (globals cx));
   set_graph cx (IMap.union (graph cx_other) (graph cx));
+  set_errors cx (Errors.ErrorSet.union (errors cx_other) (errors cx));
+  set_error_suppressions cx (Error_suppressions.union (error_suppressions cx_other) (error_suppressions cx));
+  set_lint_settings cx (LintSettingsMap.union (lint_settings cx_other) (lint_settings cx));
   set_exists_checks cx (Utils_js.LocMap.union (exists_checks cx_other) (exists_checks cx));
   set_exists_excuses cx (Utils_js.LocMap.union (exists_excuses cx_other) (exists_excuses cx))
   (* TODO: merge renamings and dep_map as well. *)
