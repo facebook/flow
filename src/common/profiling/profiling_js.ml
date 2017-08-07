@@ -140,7 +140,12 @@
         let total_cpu_time =
           processor_totals.cpu_user +. processor_totals.cpu_nice_user +.
           processor_totals.cpu_system +. processor_totals.cpu_idle in
-        let flow_cpu_usage = flow_cpu_time /. total_cpu_time in
+
+        (* flow_cpu_time and total_cpu_time are calculated using slightly different systems.
+         * flow_cpu_time should always be less than total_cpu_time, so we could in theory just
+         * check the numerator. However, checking the denominator is a slightly safer way to avoid
+         * a division by zero *)
+        let flow_cpu_usage = if total_cpu_time = 0. then 0. else flow_cpu_time /. total_cpu_time in
 
         let result = {
           user; system; worker_user; worker_system; wall; processor_totals; flow_cpu_usage;
