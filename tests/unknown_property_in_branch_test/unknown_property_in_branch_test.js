@@ -22,3 +22,16 @@ if (UnsealedObj.foo != null) {}
 if (UnsealedObj.bar != null) {}
 if (UnsealedObj.baz != null) {}
 if (UnsealedObj.bing != null) {}
+
+// refinement of a mixed type should be allowed
+type Typed2 = { bing: string };
+
+function getBingOrFoo(obj:Typed2|Typed) {
+  if(obj.bing != null) {
+    return obj.bing;
+  }
+  if(obj.foo != null) {
+    return obj.foo;
+  }
+  return null;
+}

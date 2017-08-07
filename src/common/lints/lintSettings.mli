@@ -17,7 +17,7 @@ type sketchy_null_kind =
 type lint_kind =
   | SketchyNull of sketchy_null_kind
   | UntypedTypeImport
-  | UnknownProperty
+  | UnknownPropertyInBranchTest
 
 val string_of_kind: lint_kind -> string
 

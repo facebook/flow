@@ -696,7 +696,7 @@ module rec TypeTerm : sig
      If the property is not found, do nothing. Note that lookups of this kind
      will not add any constraints to the output tvar.
 
-   * NonstrictReturning (Some (default, tout))
+   * NonstrictReturning (Some (default, tout, istest))
      If the property is not found, unify a default type with the *original*
      tvar from the lookup.
 
@@ -718,7 +718,7 @@ module rec TypeTerm : sig
      compatible. *)
   and lookup_kind =
   | Strict of reason
-  | NonstrictReturning of (t * t) option
+  | NonstrictReturning of (t * t * bool) option
   | ShadowRead of reason option * Properties.id Nel.t
   | ShadowWrite of Properties.id Nel.t
 

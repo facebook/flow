@@ -11,7 +11,7 @@ layout: guide
 * [`all`](#toc-all)
 * [`sketchy-null`](#toc-sketchy-null)
 * [`untyped-type-import`](#toc-untyped-type-import)
-* [`unknown-property`](#toc-unknown-property)
+* [`unknown-property-in-branch-test`](#toc-unknown-property-in-branch-test)
 
 #### `all` <a class="toc" id="toc-all" href="#toc-all"></a>
 
@@ -75,7 +75,7 @@ untyped file results in an `any` alias, which is typically not the intended beha
 Enabling this lint brings extra attention to this case and can help improve Flow
 coverage of typed files by limiting the spread of implicit `any` types.
 
-#### `unknown-property` <a class="toc" id="toc-unknown-property" href="#toc-unknown-property"></a>
+#### `unknown-property-in-branch-test` <a class="toc" id="toc-unknown-property-in-branch-test" href="#toc-unknown-property-in-branch-test"></a>
 Triggers when you access an unknown property on a defined type. Sealed and unsealed
 objects are not affected by this rule. This prevents conditional expressions from
 inferring types for properties that were not explicitly included in the type.

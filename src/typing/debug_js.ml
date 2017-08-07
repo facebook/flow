@@ -521,7 +521,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | LookupT (_, rstrict, _, propref, action) ->
     (match rstrict with
       | NonstrictReturning None -> []
-      | NonstrictReturning (Some (default, result)) -> [
+      | NonstrictReturning (Some (default, result, _)) -> [
           "defaultType", _json_of_t json_cx default;
           "resultType", _json_of_t json_cx result;
         ]
@@ -1627,7 +1627,7 @@ and dump_use_t_ (depth, tvars) cx t =
 
   let lookup_kind = function
   | NonstrictReturning None -> "Nonstrict"
-  | NonstrictReturning (Some (t, _)) -> spf "Nonstrict returning %s" (kid t)
+  | NonstrictReturning (Some (t, _, _)) -> spf "Nonstrict returning %s" (kid t)
   | Strict r -> spf "Strict %S" (dump_reason cx r)
   | ShadowRead (_, ids) -> spf "ShadowRead [%s]"
       (String.concat "; " (Nel.to_list ids |> List.map Properties.string_of_id))
@@ -2443,5 +2443,9 @@ let dump_flow_error =
         (string_of_loc loc)
         (string_of_loc null_loc)
         (string_of_loc falsy_loc)
-    | EUnknownProperty (loc, name) ->
-      spf "EUnknownProperty (%s, %s)" (string_of_loc loc) name
+    | ENonstrictLookupFailed ((reason1, reason2), reason, x) ->
+        spf "ENonstrictLookupFailed ((%s, %s), %s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+          (dump_reason cx reason)
+          (match x with Some x -> spf "Some %S" x | None -> "None")

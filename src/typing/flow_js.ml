@@ -3171,7 +3171,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           if sealed_in_op reason_op flags.sealed then
             let name = name_of_propref propref in
             let r = replace_reason_const (RMissingProperty name) reason_op in
-            Some (DefT (r, VoidT), t)
+            Some (DefT (r, VoidT), t, true)
           else
             (* unsealed, so don't return anything on lookup failure *)
             None
@@ -3185,7 +3185,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
              approximation we use for inexact types in those cases. *)
           let name = name_of_propref propref in
           let r = replace_reason_const (RUnknownProperty name) reason_op in
-          Some (DefT (r, MixedT Mixed_everything), t)
+          Some (DefT (r, MixedT Mixed_everything), t, true)
       ) in
       let lookup =
         LookupT (reason_op, lookup_kind, [], propref, RWProp (l, t, Read))
@@ -3862,7 +3862,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let pass = mk_tvar_where cx reason_op (fun t ->
             rec_flow_t cx trace (t, call_tout)
           ) in
-          NonstrictReturning (Some (l, pass))
+          NonstrictReturning (Some (l, pass, false))
         | _ -> Strict reason
       in
       lookup_prop cx trace l reason_op reason_op strict "$call"
@@ -5561,7 +5561,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ObjProtoT reason |
        FunProtoT reason |
        DefT (reason, MixedT (Mixed_truthy | Mixed_non_maybe))),
-      LookupT (reason_op, NonstrictReturning t_opt, [], _, _) ->
+      LookupT (reason_op, NonstrictReturning t_opt, [], named, _) ->
       (* don't fire
 
          ...unless a default return value is given. Two examples:
@@ -5575,16 +5575,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          `mixed`.
       *)
 
-      let () = match desc_of_reason reason_op, desc_of_reason reason with
-        | RProperty Some name, RObjectType ->
-          let loc = Reason.loc_of_reason reason_op in
-          let message = FlowError.EUnknownProperty (loc, name) in
+
+      let () = match desc_of_reason reason_op, desc_of_reason reason, named, t_opt with
+        | RProperty Some _,
+          RObjectType,
+          Named (reason_prop, x),
+          Some (DefT (nonstrict_reason, _), _, true)  ->
+          let message = FlowError.ENonstrictLookupFailed
+            ((reason_prop, nonstrict_reason), reason, Some x) in
           add_output cx ~trace message
         | _ -> ()
       in
 
       begin match t_opt with
-      | Some (not_found, t) -> rec_unify cx trace t not_found
+      | Some (not_found, t, _) -> rec_unify cx trace t not_found
       | None -> ()
       end
 

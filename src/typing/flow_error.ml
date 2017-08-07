@@ -165,7 +165,7 @@ type error_message =
       null_loc: Loc.t;
       falsy_loc: Loc.t;
     }
-  | EUnknownProperty of Loc.t * string
+  | ENonstrictLookupFailed of (reason * reason) * reason * string option
 
 and binding_error =
   | ENameAlreadyBound
@@ -420,7 +420,8 @@ let locs_of_error_message = function
   | EUnusedSuppression (loc) -> [loc]
   | ELintSetting (loc, _) -> [loc]
   | ESketchyNullLint { kind = _; loc; null_loc; falsy_loc; } -> [loc; null_loc; falsy_loc]
-  | EUnknownProperty (loc, _) -> [loc]
+  | ENonstrictLookupFailed ((reason1, reason2), _, _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
 
 let loc_of_error ~op msg =
   match op with
@@ -1415,9 +1416,22 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         null_loc, ["Potentially null/undefined value."];
         falsy_loc, [spf "%s value." value_str]
       ]]
-  | EUnknownProperty (loc, name) ->
-    mk_error
-      ~kind:(LintError LintSettings.UnknownProperty)
-      [loc, [spf (
-        "Accessing an unknown property here. Did you mean to add `%s` to the type?"
-      ) name]]
+  | ENonstrictLookupFailed (reasons, lreason, x) ->
+    (* if we're looking something up on the global/builtin object, then tweak
+       the error to say that `x` doesn't exist. We can tell this is the
+       global object because that should be the only object created with
+       `builtin_reason` instead of an actual location (see `Init_js.init`). *)
+    if is_builtin_reason lreason
+    then
+      let msg = match x with
+      | Some x when is_internal_module_name x -> "Required module not found"
+      | _ -> "Could not resolve name"
+      in
+      mk_error ~kind:(LintError LintSettings.UnknownPropertyInBranchTest) [mk_info (fst reasons) [msg]]
+    else
+      let msg = match x with
+      | Some "$call" -> "Callable signature not found in"
+      | Some "$key" | Some "$value" -> "Indexable signature not found in"
+      | _ -> "Property not found in"
+      in
+      mk_error ~kind:(LintError LintSettings.UnknownPropertyInBranchTest) [mk_info (fst reasons) [msg]]

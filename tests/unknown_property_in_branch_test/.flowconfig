@@ -7,4 +7,4 @@
 [options]
 
 [lints]
-unknown-property=error
+unknown-property-in-branch-test=error

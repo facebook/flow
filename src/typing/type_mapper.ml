@@ -812,11 +812,11 @@ class ['a] t = object(self)
     | Strict _ -> t
     | NonstrictReturning tpairopt ->
         begin match tpairopt with
-        | Some (t1, t2) ->
+        | Some (t1, t2, istest) ->
             let t1' = self#type_ cx map_cx t1 in
             let t2' = self#type_ cx map_cx t2 in
             if t1' == t1 && t2' == t2 then t
-            else NonstrictReturning (Some (t1', t2'))
+            else NonstrictReturning (Some (t1', t2', istest))
         | None -> t
         end
     | ShadowRead (r, pidlist) ->

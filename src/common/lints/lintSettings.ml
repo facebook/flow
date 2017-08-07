@@ -16,7 +16,7 @@ type sketchy_null_kind =
 type lint_kind =
   | SketchyNull of sketchy_null_kind
   | UntypedTypeImport
-  | UnknownProperty
+  | UnknownPropertyInBranchTest
 
 let string_of_sketchy_null_kind = function
   | SketchyBool -> "sketchy-null-bool"
@@ -27,7 +27,7 @@ let string_of_sketchy_null_kind = function
 let string_of_kind = function
   | SketchyNull kind -> string_of_sketchy_null_kind kind
   | UntypedTypeImport -> "untyped-type-import"
-  | UnknownProperty -> "unknown-property"
+  | UnknownPropertyInBranchTest -> "unknown-property-in-branch-test"
 
 let kinds_of_string = function
   | "sketchy-null" -> Some [
@@ -41,7 +41,7 @@ let kinds_of_string = function
   | "sketchy-null-number" -> Some [SketchyNull SketchyNumber]
   | "sketchy-null-mixed" -> Some [SketchyNull SketchyMixed]
   | "untyped-type-import" -> Some [UntypedTypeImport]
-  | "unknown-property" -> Some [UnknownProperty]
+  | "unknown-property-in-branch-test" -> Some [UnknownPropertyInBranchTest]
   | _ -> None
 
 type lint_state =

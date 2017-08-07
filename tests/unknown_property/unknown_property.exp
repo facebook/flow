@@ -1,6 +1,0 @@
-Error: unknown_property.js:8
-  8: if (TypedObj.bing != null) {} // Error
-         ^^^^^^^^^^^^^ unknown-property: Accessing an unknown property here. Did you mean to add `bing` to the type?
-
-
-Found 1 error
