@@ -2491,10 +2491,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
            Loc.source (def_loc_of_reason r) ->
       rec_flow cx trace (l, UseT (use_op, t))
 
-    (* Opaque types may be treated as their supertype when they are a lower bound for a use *)
-    | OpaqueT (_, {super_t = Some t; _}), _ ->
-        rec_flow cx trace (t, u)
-
     (*****************************************************************)
     (* Intersection type preprocessing for certain object predicates *)
     (*****************************************************************)
@@ -5171,6 +5167,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               LookupT (reason, NonstrictReturning None, [], propref,
                 SuperProp p))
         )
+
+    (***********************)
+    (* opaque types part 2 *)
+    (***********************)
+    (* Opaque types may be treated as their supertype when they are a lower bound for a use *)
+    | OpaqueT (_, {super_t = Some t; _}), _ ->
+        rec_flow cx trace (t, u)
 
     (***********************************************************)
     (* addition                                                *)
