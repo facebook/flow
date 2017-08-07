@@ -27,13 +27,13 @@ Triggers when you do an existence check on a value that can be either null/undef
 For example:
 ```js
 const x: ?number = 5;
-if (x) {} //sketchy because x could be either null or 0
+if (x) {} // sketchy because x could be either null or 0.
 
 const y: number = 5;
-if (y) {} //not sketchy because y can't be null, only 0.
+if (y) {} // not sketchy because y can't be null, only 0.
 
 const z: ?{foo: number} = {foo: 5};
-if (z) {} //not sketchy, because z can't be falsey, only null/undefined.
+if (z) {} // not sketchy, because z can't be falsey, only null/undefined.
 ```
 
 Setting `sketchy-null` sets the level for all sketchy null checks, but there are more granular rules for particular types. These are:
@@ -62,7 +62,7 @@ doesn't report a warning.
 
 Suppressing one type of sketchy null check only suppresses that type, so, for example
 ```js
-//flowlint sketchy-null:warn, sketchy-null-bool:off
+// flowlint sketchy-null:warn, sketchy-null-bool:off
 const x: ?(number | bool) = 0;
 if (x) {}
 ```
