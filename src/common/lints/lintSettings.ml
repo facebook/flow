@@ -271,3 +271,12 @@ let of_lines base_settings =
             (* Remove the artificial locations before returning the result *)
             Ok (map (fun (enabled, _loc) -> (enabled, None)) settings)
     )
+
+let to_string settings =
+  let acc = Buffer.create 20 in
+  Buffer.add_string acc (Printf.sprintf "all=%s" (settings |> get_default |> string_of_state));
+  iter (fun kind (state, _) ->
+      Buffer.add_string acc (Printf.sprintf ", %s=%s"
+        (string_of_kind kind) (string_of_state state)))
+    settings;
+  Buffer.contents acc

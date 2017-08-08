@@ -33,6 +33,8 @@ val empty: t
 val union: t -> t -> t
 (* combines settings collated by filename into one collection *)
 val union_settings : t Utils_js.FilenameMap.t -> t
+(* Intended for debugging purposes. *)
+val to_string : t -> string
 
 
 (* Supports O(m) operations to add a range of suppression rules, where m is

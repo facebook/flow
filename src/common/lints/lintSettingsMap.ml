@@ -146,13 +146,25 @@ let global_settings source settings = new_builder source settings |> bake
 
 let default_settings source = global_settings source LintSettings.default_settings
 
+let to_string settings =
+  let loc_to_str = Loc.to_string ~include_source:true in
+  let acc = Buffer.create 100 in
+  let () = SpanMap.iter (fun loc settings ->
+    Buffer.add_string acc (Printf.sprintf "%s: %s\n"
+      (loc_to_str loc) (LintSettings.to_string settings)))
+  settings
+  (* Strip the trailing newline. *)
+  in Buffer.sub acc 0 (Buffer.length acc - 1)
+
 (* Gets the lint settings that apply to a certain location in the code. To
  * resolve ambiguity, this looks at the location of the first character in the
  * provided location. *)
-(* Because of the invariant that the ranges in a LintSettingsMap are adjacent and
- * exhaustive, this should never throw. *)
+(* Because of the invariant that the ranges in a LintSettingsMap are adjacent
+ * and exhaustive, this should never throw. *)
 let settings_at_loc loc suppression_map =
-  SpanMap.find_unsafe (Loc.first_char loc) suppression_map
+  match SpanMap.get (Loc.first_char loc) suppression_map with
+  | Some settings -> settings
+  | None -> failwith "LintSettingsMap invariant violated in settings_at_loc"
 
 let get_state lint_kind loc suppression_map =
   settings_at_loc loc suppression_map |> LintSettings.get_state lint_kind

@@ -79,3 +79,5 @@ val map: (lint_state * Loc.t option -> lint_state * Loc.t option) -> t -> t
 val merge: low_prec:t -> high_prec:t -> t
 
 val of_lines: t -> (int * string) list -> (t, int * string) result
+(* Intended for debugging purposes. *)
+val to_string: t -> string
