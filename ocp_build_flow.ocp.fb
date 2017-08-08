@@ -215,6 +215,14 @@ begin library "flow-parser"
   ]
 end
 
+begin library "flow-parser-test-utils"
+  sort = true
+  dirname = "src/parser/test"
+  files = [
+    "file_utils.ml"
+  ]
+end
+
 begin library "flow-parser-utils"
   sort = true
   files = begin fb-glob "src/parser_utils"
@@ -514,6 +522,7 @@ begin program "flow-parser-hardcoded-test"
   requires = [
     "flow-common-utils"
     "flow-parser"
+    "flow-parser-test-utils"
     "flow-parser-utils"
   ]
   tests = [ "hardcoded_tests" ]
