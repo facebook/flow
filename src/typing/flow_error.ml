@@ -218,7 +218,6 @@ and unsupported_syntax =
   | ReactCreateClassPropertyNonInit
   | RequireDynamicArgument
   | RequireLazyDynamicArgument
-  | CatchParameterAnnotation
   | CatchParameterDeclaration
   | DestructuringObjectPropertyLiteralNonString
   | DestructuringExpressionPattern
@@ -1091,8 +1090,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         | RequireLazyDynamicArgument ->
             "The first arg to requireLazy() must be a literal array of \
              string literals!"
-        | CatchParameterAnnotation ->
-            "type annotations for catch params not yet supported"
         | CatchParameterDeclaration ->
             "unsupported catch parameter declaration"
         | DestructuringObjectPropertyLiteralNonString ->
