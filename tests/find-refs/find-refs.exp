@@ -410,14 +410,26 @@ JSX:
   {
     "source":"locals.js",
     "type":"SourceFile",
-    "start":{"line":47,"column":7,"offset":609},
-    "end":{"line":47,"column":11,"offset":614}
+    "start":{"line":46,"column":5,"offset":577},
+    "end":{"line":46,"column":9,"offset":582}
+  },
+  {
+    "source":"locals.js",
+    "type":"SourceFile",
+    "start":{"line":47,"column":21,"offset":623},
+    "end":{"line":47,"column":25,"offset":628}
   },
   {
     "source":"locals.js",
     "type":"SourceFile",
     "start":{"line":50,"column":1,"offset":667},
     "end":{"line":50,"column":12,"offset":679}
+  },
+  {
+    "source":"locals.js",
+    "type":"SourceFile",
+    "start":{"line":58,"column":8,"offset":803},
+    "end":{"line":58,"column":12,"offset":808}
   }
 ]
 
@@ -464,6 +476,12 @@ Qualified types:
     "type":"SourceFile",
     "start":{"line":47,"column":21,"offset":623},
     "end":{"line":47,"column":25,"offset":628}
+  },
+  {
+    "source":"locals.js",
+    "type":"SourceFile",
+    "start":{"line":50,"column":1,"offset":667},
+    "end":{"line":50,"column":12,"offset":679}
   },
   {
     "source":"locals.js",

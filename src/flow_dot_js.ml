@@ -25,7 +25,7 @@ let parse_content file content =
   Parser_flow.program_file ~fail:false ~parse_options content (Some file)
 
 let calc_requires ast =
-  Require.program ~default_jsx:true ~ast
+  Require.program ~ast
 
 let array_of_list f lst =
   Array.of_list (List.map f lst)

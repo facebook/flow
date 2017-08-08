@@ -84,9 +84,8 @@ let require_t_of_ref_unsafe cx m reason =
   | None ->
     Context.find_require cx m
 
-let require cx ?(internal=false) module_ref loc =
-  if not internal
-  then Type_inference_hooks_js.dispatch_require_hook cx module_ref loc;
+let require cx module_ref loc =
+  Type_inference_hooks_js.dispatch_require_hook cx module_ref loc;
   let reason = mk_reason (RCommonJSExports module_ref) loc in
   Flow.mk_tvar_where cx reason (fun t ->
     Flow.flow cx (

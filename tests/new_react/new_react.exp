@@ -259,46 +259,6 @@ Error: props.js:16
 
 Error: props.js:20
  20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `TestProps`
- 27: (element: $jsx<FooProps>);
-      ^^^^^^^ React$Element. This type is incompatible with
- 27: (element: $jsx<FooProps>);
-               ^^^^^^^^^^^^^^ union: type application of class `React$Element` | string | number | type application of identifier `Iterable`
-  Member 1:
-   13:   | React$Element<Config>
-           ^^^^^^^^^^^^^^^^^^^^^ type application of class `React$Element`. See lib: <BUILTINS>/react.js:13
-  Error:
-   25:     propTypes: { w: React.PropTypes.string.isRequired }
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `w`. Property not found in
-   20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
-  Member 2:
-   14:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:14
-  Error:
-   27: (element: $jsx<FooProps>);
-        ^^^^^^^ React$Element. This type is incompatible with
-   14:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:14
-  Member 3:
-   15:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:15
-  Error:
-   27: (element: $jsx<FooProps>);
-        ^^^^^^^ React$Element. This type is incompatible with
-   15:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:15
-  Member 4:
-   16:   | Iterable<React$Node<Config>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:16
-  Error:
-   16:   | Iterable<React$Node<Config>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:16
-   27: (element: $jsx<FooProps>);
-        ^^^^^^^ React$Element
-
-Error: props.js:20
- 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`. This type is incompatible with
                     v
   4:     propTypes: {
@@ -327,41 +287,17 @@ Error: props.js:20
       6:         z: React.PropTypes.number
                     ^^^^^^^^^^^^^^^^^^^^^^ number
 
+Error: props.js:25
+ 25:     propTypes: { w: React.PropTypes.string.isRequired }
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `w`. Property not found in
+ 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
+
 Error: props2.js:14
  14:         var s: string = this.state.bar;
                              ^^^^^^^^^^^^^^ number. This type is incompatible with
  14:         var s: string = this.state.bar;
                     ^^^^^^ string
-
-Error: props2.js:15
- 15:         return <C {...this.state} foo = {0} />;
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `C`. This type is incompatible with
-                    v
-  3:     propTypes: {
-  4:         foo: React.PropTypes.string.isRequired,
-  5:         bar: React.PropTypes.string.isRequired,
-  6:     }
-         ^ propTypes of React component
-  Property `bar` is incompatible:
-      9:     getInitialState: function(): { bar: number } {
-                                                 ^^^^^^ number. This type is incompatible with
-      5:         bar: React.PropTypes.string.isRequired,
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
-
-Error: props2.js:15
- 15:         return <C {...this.state} foo = {0} />;
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `C`. This type is incompatible with
-                    v
-  3:     propTypes: {
-  4:         foo: React.PropTypes.string.isRequired,
-  5:         bar: React.PropTypes.string.isRequired,
-  6:     }
-         ^ propTypes of React component
-  Property `foo` is incompatible:
-     15:         return <C {...this.state} foo = {0} />;
-                                                  ^ number. This type is incompatible with
-      4:         foo: React.PropTypes.string.isRequired,
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
 Error: props3.js:49
  49:       bad_one: React.PropTypes.imaginaryType,
@@ -389,7 +325,9 @@ Error: props4.js:14
       9:     id: string
                  ^^^^^^ string
 
-Error: props4.js:17
+Error: props4.js:25
+ 25:   <Example foo="foo" />,
+       ^^^^^^^^^^^^^^^^^^^^^ React element `Example`
  17:   props: { bar: string };
               ^^^^^^^^^^^^^^^ property `bar`. Property not found in
  25:   <Example foo="foo" />,
@@ -571,4 +509,4 @@ Error: state6.js:47
                          ^^^^^ State
 
 
-Found 56 errors
+Found 54 errors

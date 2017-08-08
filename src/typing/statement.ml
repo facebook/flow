@@ -3640,7 +3640,7 @@ and jsx_desugar cx name component_t props attributes children eloc =
   | None ->
       (* TODO: children *)
       let reason = mk_reason (RReactElement (Some name)) eloc in
-      let react = require cx ~internal:true "react" eloc in
+      let react = Env.var_ref ~lookup_mode:ForValue cx "React" eloc in
       Flow.mk_tvar_where cx reason (fun tvar ->
         let reason_createElement =
           mk_reason (RProperty (Some "createElement")) eloc in

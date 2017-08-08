@@ -385,8 +385,8 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
     let err = loc, Parse_error.Assertion s in
     Parse_fail (Parse_error err)
 
-let calc_requires ~default_jsx ~ast =
-  Require.program ~default_jsx ~ast
+let calc_requires ~ast =
+  Require.program ~ast
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
@@ -437,7 +437,7 @@ let reducer
                  files. *)
               let require_loc =
                 if types_checked types_mode info
-                then calc_requires ~default_jsx:(info.Docblock.jsx = None) ~ast
+                then calc_requires ~ast
                 else SMap.empty
               in
               ParsingHeaps.add file ast info require_loc;
@@ -499,8 +499,7 @@ let get_defaults ~types_mode ~use_strict options =
 let next_of_filename_set workers filenames =
   MultiWorker.next workers (FilenameSet.elements filenames)
 
-let parse
-  ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
+let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
   workers next
 : results =
   let t = Unix.gettimeofday () in

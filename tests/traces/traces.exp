@@ -122,9 +122,7 @@ Trace:
  17: function g3(ylam: (s:string) => number) { }
                           ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
-Error: Traces2.js:17
- 17:     return <B bar="hey"/>;
-                ^^^^^^^^^^^^^^ React element `B`
+Error: Traces2.js:15
  15:     return <A foo="hey"/>;
                 ^^^^^^^^^^^^^^ property `foo`. Property not found in
  17:     return <B bar="hey"/>;
@@ -147,8 +145,6 @@ Trace:
                     ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, ExtendsT) [extends React$Element] (from [not shown])
 
 Error: Traces2.js:17
- 17:     return <B bar="hey"/>;
-                ^^^^^^^^^^^^^^ React element `B`
  17:     return <B bar="hey"/>;
                 ^^^^^^^^^^^^^^ property `bar`. Property not found in
  15:     return <A foo="hey"/>;

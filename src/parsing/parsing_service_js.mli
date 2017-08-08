@@ -98,7 +98,6 @@ val reparse_with_defaults:
   FilenameSet.t * results
 
 val calc_requires:
-  default_jsx: bool ->
   ast:Ast.program ->
   Loc.t SMap.t
 

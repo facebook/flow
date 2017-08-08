@@ -192,7 +192,9 @@ Error: object_type.js:52
  51:   var testExampleOrOrderOfGetterAndSetterReordered: number =
                                                          ^^^^^^ number
 
-Error: react.js:8
+Error: react.js:15
+ 15: (<Example />); // error: property `a` not found
+      ^^^^^^^^^^^ React element `Example`
                   v
   8:   propTypes: {
   9:     get a() { return React.PropTypes.number.isRequired; },

@@ -13,7 +13,7 @@ open Flow_ast_visitor
 (* Subclass of the AST visitor class that calculates requires. Initializes with
    the scope builder class.
 *)
-class requires_calculator ~default_jsx ~ast = object(this)
+class requires_calculator ~ast = object(this)
   inherit [Loc.t SMap.t] visitor ~init:SMap.empty as super
 
   val locals =
@@ -83,22 +83,8 @@ class requires_calculator ~default_jsx ~ast = object(this)
     | _ -> ()
     end;
     super#declare_export_declaration decl
-
-  method! jsx_element (expr: Ast.JSX.element) =
-    let open Ast.JSX in
-    let require_loc, { Opening.name; _ } = expr.openingElement in
-    begin match name with
-    | Identifier (_, { Identifier.name }) ->
-      if name = "fbt" then ()
-      else begin
-        if default_jsx then this#add_require "react" require_loc
-      end
-    | _ -> ()
-    end;
-    super#jsx_element expr
-
 end
 
-let program ~default_jsx ~ast =
-  let walk = new requires_calculator ~default_jsx ~ast in
+let program ~ast =
+  let walk = new requires_calculator ~ast in
   walk#eval walk#program ast

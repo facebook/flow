@@ -122,10 +122,7 @@ let merge_strict_context ~options component =
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
 let merge_contents_context options file ast info ~ensure_checked_dependencies =
-  let require_loc_map =
-    Parsing_service_js.calc_requires ~ast
-      ~default_jsx:(info.Docblock.jsx = None)
-  in
+  let require_loc_map = Parsing_service_js.calc_requires ~ast in
   let resolved_rs, required =
     SMap.fold (fun r loc (resolved_rs, required) ->
       let resolved_r = Module_js.imported_module

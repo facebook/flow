@@ -154,6 +154,10 @@ Error: call.js:40
  38: function test3(x: { (a: string, b: string): void }) {
                                         ^^^^^^ string
 
+Error: function.js:21
+ 21:   <MyThing />;
+       ^^^^^^^^^^^ identifier `React`. Could not resolve name
+
 Error: function.js:29
  29:   var a: number = x; // Error
                        ^ function type. This type is incompatible with
@@ -315,4 +319,4 @@ Error: rest_type.js:31
                                ^^^^^ empty
 
 
-Found 49 errors
+Found 50 errors

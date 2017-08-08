@@ -8,4 +8,4 @@
  *
  *)
 
-val program: default_jsx:bool -> ast:Ast.program -> Loc.t SMap.t
+val program: ast:Ast.program -> Loc.t SMap.t

@@ -5,7 +5,9 @@ Library type error:
  23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
                                                                   ^^ object literal. See: render_callback.js:23
 
-Error: createElementRequiredProp_string.js:5
+Error: createElementRequiredProp_string.js:20
+ 20:     return (<Cmp/>);
+                 ^^^^^^ React element `Cmp`
               v
   5:   props: {
   6:     test: number,

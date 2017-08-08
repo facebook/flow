@@ -12,7 +12,7 @@ val mk_module_t : Context.t -> Reason.t -> Type.t
 val mk_commonjs_module_t :
   Context.t -> Reason.t -> Reason.t -> Type.t -> Type.t
 val mk_resource_module_t : Context.t -> Loc.t -> string -> Type.t
-val require : Context.t -> ?internal:bool -> SMap.key -> Loc.t -> Type.t
+val require : Context.t -> SMap.key -> Loc.t -> Type.t
 val import :
   ?reason:Reason.t -> Context.t -> SMap.key -> Loc.t -> Type.t
 val import_ns : Context.t -> Reason.t -> SMap.key -> Loc.t -> Type.t

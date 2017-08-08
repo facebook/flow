@@ -1,3 +1,12 @@
+Error: createclass-callsite.js:7
+                  v
+  7:   propTypes: {
+  8:     name: React.PropTypes.string.isRequired,
+  9:   },
+       ^ property `name`. Property not found in
+ 21:         <HelloLocal />
+             ^^^^^^^^^^^^^^ props of React element `HelloLocal`
+
 Error: createclass-callsite.js:20
  20:         <Hello />
              ^^^^^^^^^ React element `Hello`
@@ -9,23 +18,6 @@ Error: createclass-callsite.js:20
  20:         <Hello />
              ^^^^^^^^^ props of React element `Hello`
 
-Error: createclass-callsite.js:21
- 21:         <HelloLocal />
-             ^^^^^^^^^^^^^^ React element `HelloLocal`
-                  v
-  7:   propTypes: {
-  8:     name: React.PropTypes.string.isRequired,
-  9:   },
-       ^ property `name`. Property not found in
- 21:         <HelloLocal />
-             ^^^^^^^^^^^^^^ props of React element `HelloLocal`
-
-Error: es6class-proptypes-callsite.js:6
-  6: class HelloLocal extends React.Component<void, {name: string}, void> {
-                                                    ^^^^^^^^^^^^^^ property `name`. Property not found in
- 21:         <HelloLocal />
-             ^^^^^^^^^^^^^^ props of React element `HelloLocal`
-
 Error: es6class-proptypes-callsite.js:20
  20:         <Hello />
              ^^^^^^^^^ React element `Hello`
@@ -34,9 +26,11 @@ Error: es6class-proptypes-callsite.js:20
  20:         <Hello />
              ^^^^^^^^^ props of React element `Hello`
 
-Error: es6class-types-callsite.js:8
-  8: class HelloLocal extends React.Component<void, Props, void> {
-                                                    ^^^^^ property `name`. Property not found in
+Error: es6class-proptypes-callsite.js:21
+ 21:         <HelloLocal />
+             ^^^^^^^^^^^^^^ React element `HelloLocal`
+  6: class HelloLocal extends React.Component<void, {name: string}, void> {
+                                                    ^^^^^^^^^^^^^^ property `name`. Property not found in
  21:         <HelloLocal />
              ^^^^^^^^^^^^^^ props of React element `HelloLocal`
 
@@ -47,6 +41,14 @@ Error: es6class-types-callsite.js:20
                                              ^^^^^ property `name`. Property not found in. See: es6class-types-module.js:7
  20:         <Hello />
              ^^^^^^^^^ props of React element `Hello`
+
+Error: es6class-types-callsite.js:21
+ 21:         <HelloLocal />
+             ^^^^^^^^^^^^^^ React element `HelloLocal`
+  8: class HelloLocal extends React.Component<void, Props, void> {
+                                                    ^^^^^ property `name`. Property not found in
+ 21:         <HelloLocal />
+             ^^^^^^^^^^^^^^ props of React element `HelloLocal`
 
 
 Found 6 errors
