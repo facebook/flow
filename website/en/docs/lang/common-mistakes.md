@@ -9,7 +9,7 @@ Several of them are the consequence of careful tradeoffs made by the team, where
 
 #### Refinement invalidation
 
-You have to keep in mind in JavaScript, you can modify data structures as you want, and Flow takes that in consideration. As of today, Flow cannot identify side-effects, so you end up with Flow considering that a `console.log()` can modify the content of an array (since nothing prevents you from modifying `console.log`). Therefore, whenever you refine types, some of your assumptions might not be valid anymore (this is especially common within closures).
+You have to keep in mind in JavaScript, you can modify data structures as you want, and Flow takes that in consideration. As of today, Flow cannot identify side-effects, so you end up with Flow considering that a `console.log()` can modify the content of an array (since nothing prevents you from modifying `console.log`). Therefore, whenever you refine types, some of your assumptions might not be valid anymore (this is especially common within closures). This is called [refinement invalidation](https://flow.org/en/docs/lang/refinements/#toc-refinement-invalidations).
 
 #### Invalid subtyping
 
@@ -29,7 +29,7 @@ const res: WithError = {resType: 'withError', error: {code: 404}};
 handleAnswer(res); // Flow will complain here
 ```
 
-The previous snippet of code seems correct, indeed handleAnswer require a `resType`, provided by `res`, and doesn't need the error property. However, you need to consider the case where `handleAnswer` mutates its parameter.
+The previous snippet of code seems correct, indeed `handleAnswer` requires a `resType`, provided by `res`, and doesn't need the error property. However, you need to consider the case where `handleAnswer` mutates its parameter.
 
 ```js
 function handleAnswer(param: WithMaybeError) {
@@ -39,8 +39,7 @@ const res: WithError = {resType: 'withError', error: {code: 404}};
 handleAnswer(res);
 console.log(res.error);
 ```
-The last statement doesn't work anymore, since `res.error` has been set to null, however, res is a WithError, so it should always have an error field. This is the reason why Flow prevents you from doing so. To circumvent this problem, you have to indicate your properties as covariant (or read-only).
-// TODO link doc section
+The last statement doesn't work anymore, since `res.error` has been set to null, however, `res` is a `WithError`, so it should always have an `error` field. This is the reason why Flow prevents you from doing so. To circumvent this problem, you have to indicate your [properties as covariant](https://flow.org/blog/2016/10/04/Property-Variance/) (or read-only).
 ```js
 type WithError = {
     +resType: string,
