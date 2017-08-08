@@ -78,6 +78,7 @@ val evaluated: t -> Type.t IMap.t
 val file: t -> Loc.filename
 val find_props: t -> Type.Properties.id -> Type.Properties.t
 val find_exports: t -> Type.Exports.id -> Type.Exports.t
+val find_require: t -> string -> Type.t
 val find_module: t -> string -> Type.t
 val find_tvar: t -> Constraint.ident -> Constraint.node
 val find_tvar_reason: t -> Constraint.ident -> Reason.t
@@ -126,6 +127,7 @@ val add_error_suppression: t -> Loc.t -> unit
 val add_global: t -> string -> unit
 val add_import_stmt: t -> Ast.Statement.ImportDeclaration.t -> unit
 val add_imported_t: t -> string -> Type.t -> unit
+val add_require: t -> string -> Type.t -> unit
 val add_module: t -> string -> Type.t -> unit
 val add_property_map: t -> Type.Properties.id -> Type.Properties.t -> unit
 val add_export_map: t -> Type.Exports.id -> Type.Exports.t -> unit

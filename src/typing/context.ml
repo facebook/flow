@@ -10,6 +10,7 @@
 
 exception Props_not_found of Type.Properties.id
 exception Exports_not_found of Type.Exports.id
+exception Require_not_found of string
 exception Module_not_found of string
 exception Tvar_not_found of Constraint.ident
 exception Tvar_reason_not_found of Constraint.ident
@@ -119,8 +120,10 @@ type local_t = {
   (* map from frame ids to env snapshots *)
   mutable envs: env IMap.t;
 
+  mutable require_map: Type.t SMap.t;
+
   (* map from module names to their types *)
-  mutable modulemap: Type.t SMap.t;
+  mutable module_map: Type.t SMap.t;
 
   mutable errors: Errors.ErrorSet.t;
   mutable globals: SSet.t;
@@ -214,7 +217,8 @@ let make metadata file module_ref = {
     evaluated = IMap.empty;
     type_graph = Graph_explorer.new_graph ISet.empty;
     all_unresolved = IMap.empty;
-    modulemap = SMap.empty;
+    require_map = SMap.empty;
+    module_map = SMap.empty;
 
     errors = Errors.ErrorSet.empty;
     globals = SSet.empty;
@@ -259,8 +263,11 @@ let find_props cx id =
 let find_exports cx id =
   try Type.Exports.Map.find_unsafe id cx.local.export_maps
   with Not_found -> raise (Exports_not_found id)
+let find_require cx r =
+  try SMap.find_unsafe r cx.local.require_map
+  with Not_found -> raise (Require_not_found r)
 let find_module cx m =
-  try SMap.find_unsafe m cx.local.modulemap
+  try SMap.find_unsafe m cx.local.module_map
   with Not_found -> raise (Module_not_found m)
 let find_tvar cx id =
   try IMap.find_unsafe id cx.local.graph
@@ -279,7 +286,7 @@ let is_weak cx = cx.local.metadata.weak
 let lint_settings cx = cx.local.lint_settings
 let max_trace_depth cx = Global.max_trace_depth cx.global
 let module_kind cx = cx.local.module_kind
-let module_map cx = cx.local.modulemap
+let module_map cx = cx.local.module_map
 let module_ref cx = cx.local.module_ref
 let output_graphml cx = cx.local.metadata.output_graphml
 let property_maps cx = cx.local.property_maps
@@ -329,8 +336,10 @@ let add_import_stmt cx stmt =
   cx.local.import_stmts <- stmt::cx.local.import_stmts
 let add_imported_t cx name t =
   cx.local.imported_ts <- SMap.add name t cx.local.imported_ts
+let add_require cx name tvar =
+  cx.local.require_map <- SMap.add name tvar cx.local.require_map
 let add_module cx name tvar =
-  cx.local.modulemap <- SMap.add name tvar cx.local.modulemap
+  cx.local.module_map <- SMap.add name tvar cx.local.module_map
 let add_property_map cx id pmap =
   cx.local.property_maps <- Type.Properties.Map.add id pmap cx.local.property_maps
 let add_export_map cx id tmap =
@@ -388,7 +397,7 @@ let set_dep_map cx dep_map =
 let set_renamings cx renamings =
   cx.local.renamings <- renamings
 let set_module_map cx module_map =
-  cx.local.modulemap <- module_map
+  cx.local.module_map <- module_map
 
 let clear_intermediates cx =
   (* call reset instead of clear to also shrink the bucket tables *)
@@ -398,7 +407,8 @@ let clear_intermediates cx =
   cx.local.exists_checks <- Utils_js.LocMap.empty;
   cx.local.exists_excuses <- Utils_js.LocMap.empty;
   cx.local.dep_map <- Dep_mapper.DepMap.empty;
-  cx.local.renamings <- Scope_builder.LocMap.empty
+  cx.local.renamings <- Scope_builder.LocMap.empty;
+  cx.local.require_map <- SMap.empty
 
 
 (* utils *)

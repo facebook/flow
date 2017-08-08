@@ -112,9 +112,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
         end
       end
   | Some Gdrequire (name, require_loc) ->
-      let module_t = Flow_js.resolve_type cx (
-        SMap.find_unsafe name (Context.module_map cx)
-      ) in
+      let module_t = Flow_js.resolve_type cx (Context.find_require cx name) in
       (* function just so we don't do the work unless it's actually needed. *)
       let get_imported_file () =
         let filename = Module_js.get_file Expensive.warn (

@@ -10504,7 +10504,7 @@ let enforce_strict cx id required =
      requires/imports. *)
   let skip_ids = ref ISet.empty in
   List.iter (fun r ->
-    let tvar = lookup_module cx r in
+    let tvar = Context.find_require cx r in
     assume_ground cx skip_ids (UseT (UnknownUse, tvar))
   ) required;
 

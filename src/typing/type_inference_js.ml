@@ -427,7 +427,7 @@ let infer_ast ~metadata ~filename ~lint_settings ast ~require_loc_map =
 
   let initial_module_t = ImpExp.module_t_of_cx cx in
   if checked then (
-    SMap.iter (Import_export.add_module_tvar cx) require_loc_map;
+    SMap.iter (Import_export.add_require_tvar cx) require_loc_map;
 
     let init_exports = Flow.mk_object cx reason in
     ImpExp.set_module_exports cx file_loc init_exports;
@@ -479,7 +479,7 @@ let infer_lib_file ~metadata ~exclude_syms ~lint_settings file ast =
   (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
      confident that we don't support them in any sensible way. *)
   let require_loc = Require.program ~default_jsx:false ~ast in
-  SMap.iter (Import_export.add_module_tvar cx) require_loc;
+  SMap.iter (Import_export.add_require_tvar cx) require_loc;
 
   let module_scope = Scope.fresh () in
   Env.init_env ~exclude_syms cx module_scope;
