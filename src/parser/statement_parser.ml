@@ -57,88 +57,68 @@ module Statement
     loc, Statement.Empty
 
   and break env =
-    let start_loc = Peek.loc env in
-    Expect.token env T_BREAK;
-    let label =
-      if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
-      then None
-      else begin
-        let (_, name) as label =
-          Parse.identifier env in
-        if not (SSet.mem name (labels env))
-        then error env (Error.UnknownLabel name);
-        Some label
-      end
-    in
-    let end_loc = match Peek.semicolon_loc env with
-    | Some loc -> loc
-    | None -> (match label with
-      | Some id -> fst id
-      | None -> start_loc) in
-    let loc = Loc.btwn start_loc end_loc in
+    let loc, label = with_loc (fun env ->
+      Expect.token env T_BREAK;
+      let label =
+        if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
+        then None
+        else begin
+          let (_, name) as label =
+            Parse.identifier env in
+          if not (SSet.mem name (labels env))
+          then error env (Error.UnknownLabel name);
+          Some label
+        end
+      in
+      Eat.semicolon env;
+      label
+    ) env in
     if label = None && not (in_loop env || in_switch env)
     then error_at env (loc, Error.IllegalBreak);
-    Eat.semicolon env;
-    loc, Statement.Break {
-      Statement.Break.label = label;
-    }
+    loc, Statement.Break { Statement.Break.label }
 
   and continue env =
-    let start_loc = Peek.loc env in
-    Expect.token env T_CONTINUE;
-    let label =
-      if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
-      then None
-      else begin
-        let (_, name) as label =
-          Parse.identifier env in
-        if not (SSet.mem name (labels env))
-        then error env (Error.UnknownLabel name);
-        Some label
-      end in
-    let end_loc = match Peek.semicolon_loc env with
-    | Some loc -> loc
-    | None -> (match label with
-      | Some id -> fst id
-      | None -> start_loc) in
-    let loc = Loc.btwn start_loc end_loc in
-    if not (in_loop env)
-    then error_at env (loc, Error.IllegalContinue);
-    Eat.semicolon env;
-    loc, Statement.Continue {
-      Statement.Continue.label = label;
-    }
+    let loc, label = with_loc (fun env ->
+      Expect.token env T_CONTINUE;
+      let label =
+        if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
+        then None
+        else begin
+          let (_, name) as label =
+            Parse.identifier env in
+          if not (SSet.mem name (labels env))
+          then error env (Error.UnknownLabel name);
+          Some label
+        end in
+      Eat.semicolon env;
+      label
+    ) env in
+    if not (in_loop env) then error_at env (loc, Error.IllegalContinue);
+    loc, Statement.Continue { Statement.Continue.label }
 
-  and debugger env =
-    let start_loc = Peek.loc env in
+  and debugger = with_loc (fun env ->
     Expect.token env T_DEBUGGER;
-    let end_loc = match Peek.semicolon_loc env with
-    | None -> start_loc
-    | Some loc -> loc in
     Eat.semicolon env;
-    Loc.btwn start_loc end_loc, Statement.Debugger;
+    Statement.Debugger
+  )
 
-  and do_while env =
-    let start_loc = Peek.loc env in
+  and do_while = with_loc (fun env ->
     Expect.token env T_DO;
     let body = Parse.statement (env |> with_in_loop true) in
     Expect.token env T_WHILE;
     Expect.token env T_LPAREN;
     let test = Parse.expression env in
-    let end_loc = Peek.loc env in
     Expect.token env T_RPAREN;
-    let end_loc = match Peek.semicolon_loc env with
-    | None -> end_loc
-    | Some loc -> loc in
     (* The rules of automatic semicolon insertion in ES5 don't mention this,
      * but the semicolon after a do-while loop is optional. This is properly
      * specified in ES6 *)
     if Peek.token env = T_SEMICOLON
     then Eat.semicolon env;
-    Loc.btwn start_loc end_loc, Statement.(DoWhile DoWhile.({
+    Statement.DoWhile { Statement.DoWhile.
       body;
       test;
-    }))
+    }
+  )
 
   and for_ =
     let assert_can_be_forin_or_forof env err = Statement.VariableDeclaration.(function
@@ -166,8 +146,7 @@ module Statement
       | _ -> error env err
     ) in
 
-    fun env ->
-      let start_loc = Peek.loc env in
+    with_loc (fun env ->
       Expect.token env T_FOR;
       let async = allow_await env && Expect.maybe env T_AWAIT in
       Expect.token env T_LPAREN;
@@ -203,12 +182,12 @@ module Statement
           let right = Parse.assignment env in
           Expect.token env T_RPAREN;
           let body = Parse.statement (env |> with_in_loop true) in
-          Loc.btwn start_loc (fst body), Statement.(ForOf ForOf.({
+          Statement.ForOf { Statement.ForOf.
             left;
             right;
             body;
             async;
-          }))
+          }
       | T_IN ->
           assert_can_be_forin_or_forof env Error.InvalidLHSInForIn init;
           let left = Statement.(match init with
@@ -220,12 +199,12 @@ module Statement
           let right = Parse.expression env in
           Expect.token env T_RPAREN;
           let body = Parse.statement (env |> with_in_loop true) in
-          Loc.btwn start_loc (fst body), Statement.(ForIn ForIn.({
+          Statement.ForIn { Statement.ForIn.
             left;
             right;
             body;
             each = false;
-          }))
+          }
       | _ ->
           (* This is a for loop *)
           errs |> List.iter (error_at env);
@@ -239,15 +218,15 @@ module Statement
           | _ -> Some (Parse.expression env) in
           Expect.token env T_RPAREN;
           let body = Parse.statement (env |> with_in_loop true) in
-          Loc.btwn start_loc (fst body), Statement.(For For.({
+          Statement.For { Statement.For.
             init;
             test;
             update;
             body;
-          }))
+          }
+    )
 
-  and if_ env =
-    let start_loc = Peek.loc env in
+  and if_ = with_loc (fun env ->
     Expect.token env T_IF;
     Expect.token env T_LPAREN;
     let test = Parse.expression env in
@@ -262,14 +241,12 @@ module Statement
       Expect.token env T_ELSE;
       Some (Parse.statement env)
     end else None in
-    let end_loc = match alternate with
-    | Some stmt -> fst stmt
-    | None -> fst consequent in
-    Loc.btwn start_loc end_loc, Statement.(If If.({
+    Statement.If { Statement.If.
       test;
       consequent;
       alternate;
-    }))
+    }
+  )
 
   and return = with_loc (fun env ->
     if not (in_function env)
@@ -280,9 +257,9 @@ module Statement
       then None
       else Some (Parse.expression env) in
     Eat.semicolon env;
-    Statement.(Return Return.({
+    Statement.Return { Statement.Return.
       argument;
-    }))
+    }
   )
 
   and switch =
@@ -317,20 +294,19 @@ module Statement
         }))::acc in
         case_list env (seen_default, acc)
 
-    in fun env ->
-      let start_loc = Peek.loc env in
+    in with_loc (fun env ->
       Expect.token env T_SWITCH;
       Expect.token env T_LPAREN;
       let discriminant = Parse.expression env in
       Expect.token env T_RPAREN;
       Expect.token env T_LCURLY;
       let cases = case_list env (false, []) in
-      let end_loc = Peek.loc env in
       Expect.token env T_RCURLY;
-      Loc.btwn start_loc end_loc, Statement.(Switch Switch.({
+      Statement.Switch { Statement.Switch.
         discriminant;
         cases;
-      }))
+      }
+    )
 
   and throw = with_loc (fun env ->
     let start_loc = Peek.loc env in
@@ -342,48 +318,45 @@ module Statement
     Statement.(Throw { Throw.argument; })
   )
 
-  and try_ env =
-    let start_loc = Peek.loc env in
+  and try_ = with_loc (fun env ->
     Expect.token env T_TRY;
     let block = Parse.block_body env in
     let handler = match Peek.token env with
     | T_CATCH ->
-        let start_loc = Peek.loc env in
-        Expect.token env T_CATCH;
-        Expect.token env T_LPAREN;
-        let id = Parse.identifier ~restricted_error:Error.StrictCatchVariable env in
-        let param = fst id, Pattern.Identifier {
-          Pattern.Identifier.name=id;
-                             typeAnnotation=None;
-                             optional=false;
-        } in
-        Expect.token env T_RPAREN;
-        let body = Parse.block_body env in
-        let loc = Loc.btwn start_loc (fst body) in
-        Some (loc, Ast.Statement.Try.CatchClause.({
-          param;
-          body;
-        }))
+        let catch = with_loc (fun env ->
+          Expect.token env T_CATCH;
+          Expect.token env T_LPAREN;
+          let id = Parse.identifier ~restricted_error:Error.StrictCatchVariable env in
+          let param = fst id, Pattern.Identifier { Pattern.Identifier.
+            name = id;
+            typeAnnotation = None;
+            optional = false;
+          } in
+          Expect.token env T_RPAREN;
+          let body = Parse.block_body env in
+          { Ast.Statement.Try.CatchClause.
+            param;
+            body;
+          }
+        ) env in
+        Some catch
     | _ -> None in
     let finalizer = match Peek.token env with
     | T_FINALLY ->
         Expect.token env T_FINALLY;
         Some (Parse.block_body env)
     | _ -> None in
-    let end_loc = match finalizer with
-    | Some finalizer -> fst finalizer
-    | None ->
-        (match handler with
-        | Some handler -> fst handler
-        | None ->
-            (* No catch or finally? That's an error! *)
-            error_at env (fst block, Error.NoCatchOrFinally);
-            fst block) in
-    Loc.btwn start_loc end_loc, Statement.(Try Try.({
+
+    (* No catch or finally? That's an error! *)
+    if handler = None && finalizer = None then
+      error_at env (fst block, Error.NoCatchOrFinally);
+
+    Statement.Try { Statement.Try.
       block;
       handler;
       finalizer;
-    }));
+    }
+  )
 
   and var_or_const = with_loc (fun env ->
     let (_loc, declaration), errs = Declaration.variable env in
@@ -406,31 +379,32 @@ module Statement
     declaration
   )
 
-  and while_ env =
-    let start_loc = Peek.loc env in
+  and while_ = with_loc (fun env ->
     Expect.token env T_WHILE;
     Expect.token env T_LPAREN;
     let test = Parse.expression env in
     Expect.token env T_RPAREN;
     let body = Parse.statement (env |> with_in_loop true) in
-    Loc.btwn start_loc (fst body), Statement.(While While.({
+    Statement.While { Statement.While.
       test;
       body;
-    }));
+    }
+  )
 
   and with_ env =
-    let start_loc = Peek.loc env in
-    Expect.token env T_WITH;
-    Expect.token env T_LPAREN;
-    let _object = Parse.expression env in
-    Expect.token env T_RPAREN;
-    let body = Parse.statement env in
-    let loc = Loc.btwn start_loc (fst body) in
+    let loc, stmt = with_loc (fun env ->
+      Expect.token env T_WITH;
+      Expect.token env T_LPAREN;
+      let _object = Parse.expression env in
+      Expect.token env T_RPAREN;
+      let body = Parse.statement env in
+      Statement.With { Statement.With.
+        _object;
+        body;
+      }
+    ) env in
     strict_error_at env (loc, Error.StrictModeWith);
-    loc, Statement.(With With.({
-      _object;
-      body;
-    }))
+    loc, stmt
 
   and block env =
     let loc, block = Parse.block_body env in
@@ -451,11 +425,8 @@ module Statement
         Statement.(Expression { Expression.expression; directive = None; })
   )
 
-  and expression env =
-    let loc, expression = with_loc Parse.expression env in
-    let loc = match Peek.semicolon_loc env with
-    | Some semicolon_loc -> Loc.btwn loc semicolon_loc
-    | None -> loc in
+  and expression = with_loc (fun env ->
+    let expression = Parse.expression env in
     Eat.semicolon env;
     let directive = if allow_directive env
       then match expression with
@@ -467,10 +438,11 @@ module Statement
       | _ -> None
       else None
     in
-    loc, Statement.(Expression Expression.({
+    Statement.Expression { Statement.Expression.
       expression;
       directive;
-    }))
+    }
+  )
 
   and type_alias_helper env =
     if not (should_parse_types env)
@@ -1316,9 +1288,8 @@ module Statement
           Expect.token env T_RCURLY;
           specifiers
 
-    in fun env ->
+    in with_loc (fun env ->
       let env = env |> with_strict true in
-      let start_loc = Peek.loc env in
       Expect.token env T_IMPORT;
       (* It might turn out that we need to treat this "type" token as an
        * identifier, like import type from "module" *)
@@ -1344,11 +1315,8 @@ module Statement
         Expect.token env (T_STRING (str_loc, value, raw, octal));
         let value = Literal.String value in
         let source = (str_loc, { Literal.value; raw; }) in
-        let end_loc = match Peek.semicolon_loc env with
-        | Some loc -> loc
-        | None -> str_loc in
         Eat.semicolon env;
-        Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
+        Statement.ImportDeclaration {
           importKind;
           source;
           specifiers = [];
@@ -1375,12 +1343,8 @@ module Statement
           ) in
 
           let source = source env in
-          let end_loc = match Peek.semicolon_loc env with
-          | Some loc -> loc
-          | None -> fst source in
-          let source = source in
           Eat.semicolon env;
-          Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
+          Statement.ImportDeclaration {
             importKind;
             source;
             specifiers = default_specifier::additional_specifiers;
@@ -1390,14 +1354,11 @@ module Statement
       | _ ->
           let specifiers = named_or_namespace_specifier env is_type_import in
           let source = source env in
-          let end_loc = match Peek.semicolon_loc env with
-          | Some loc -> loc
-          | None -> fst source in
-          let source = source in
           Eat.semicolon env;
-          Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
+          Statement.ImportDeclaration {
             importKind;
             source;
             specifiers;
           }
+    )
 end
