@@ -169,18 +169,18 @@ module rec Parse : PARSER = struct
     | T_CONTINUE -> continue env
     | T_DEBUGGER -> debugger env
     | T_DO -> do_while env
-    | T_FOR -> _for env
-    | T_IF -> _if env
+    | T_FOR -> for_ env
+    | T_IF -> if_ env
     | T_RETURN -> return env
     | T_SWITCH -> switch env
     | T_THROW -> throw env
-    | T_TRY -> _try env
-    | T_WHILE -> _while env
-    | T_WITH -> _with env
+    | T_TRY -> try_ env
+    | T_WHILE -> while_ env
+    | T_WITH -> with_ env
     | _ when Peek.is_identifier env -> maybe_labeled env
     (* If we see an else then it's definitely an error, but we can probably
      * assume that this is a malformed if statement that is missing the if *)
-    | T_ELSE -> _if env
+    | T_ELSE -> if_ env
     (* There are a bunch of tokens that aren't the start of any valid
      * statement. We list them here in order to skip over them, rather than
      * getting stuck *)

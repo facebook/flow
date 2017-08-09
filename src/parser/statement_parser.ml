@@ -17,12 +17,12 @@ module SSet = Set.Make(String)
 open Parser_common
 
 module type STATEMENT = sig
- val _for: env -> Statement.t
- val _if: env -> Statement.t
+ val for_: env -> Statement.t
+ val if_: env -> Statement.t
  val let_: env -> Statement.t
- val _try: env -> Statement.t
- val _while: env -> Statement.t
- val _with: env -> Statement.t
+ val try_: env -> Statement.t
+ val while_: env -> Statement.t
+ val with_: env -> Statement.t
  val block: env -> Statement.t
  val break: env -> Statement.t
  val continue: env -> Statement.t
@@ -140,7 +140,7 @@ module Statement
       test;
     }))
 
-  and _for =
+  and for_ =
     let assert_can_be_forin_or_forof env err = Statement.VariableDeclaration.(function
       | Some (Statement.For.InitDeclaration (loc, {
         declarations;
@@ -246,7 +246,7 @@ module Statement
             body;
           }))
 
-  and _if env =
+  and if_ env =
     let start_loc = Peek.loc env in
     Expect.token env T_IF;
     Expect.token env T_LPAREN;
@@ -342,7 +342,7 @@ module Statement
     Statement.(Throw { Throw.argument; })
   )
 
-  and _try env =
+  and try_ env =
     let start_loc = Peek.loc env in
     Expect.token env T_TRY;
     let block = Parse.block_body env in
@@ -406,7 +406,7 @@ module Statement
     declaration
   )
 
-  and _while env =
+  and while_ env =
     let start_loc = Peek.loc env in
     Expect.token env T_WHILE;
     Expect.token env T_LPAREN;
@@ -418,7 +418,7 @@ module Statement
       body;
     }));
 
-  and _with env =
+  and with_ env =
     let start_loc = Peek.loc env in
     Expect.token env T_WITH;
     Expect.token env T_LPAREN;
