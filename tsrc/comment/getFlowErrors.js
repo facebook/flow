@@ -23,7 +23,7 @@ export default async function(
     )
   const [err, stdout, stderr] = await execManual(
     cmd,
-    {cwd: root, maxBuffer: 16 * 1024 * 1024}
+    {cwd: root, maxBuffer: Infinity}
   );
 
   // 0 - no errors
