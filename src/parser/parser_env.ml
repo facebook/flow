@@ -374,11 +374,6 @@ module Peek = struct
     | T_SEMICOLON -> false
     | _ -> is_line_terminator env
 
-  let semicolon_loc ?(i=0) env =
-    if token ~i env = T_SEMICOLON
-    then Some (loc ~i env)
-    else None
-
   (* This returns true if the next token is identifier-ish (even if it is an
    * error) *)
   let is_identifier ?(i=0) env =

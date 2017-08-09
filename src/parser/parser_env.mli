@@ -120,7 +120,6 @@ module Peek : sig
   val comments : ?i:int -> env -> Ast.Comment.t list
   val is_line_terminator : env -> bool
   val is_implicit_semicolon : env -> bool
-  val semicolon_loc : ?i:int -> env -> Loc.t option
   val is_identifier : ?i:int -> env -> bool
   val is_literal_property_name : ?i:int -> env -> bool
   val is_function : ?i:int -> env -> bool
