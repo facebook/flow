@@ -1,0 +1,3 @@
+{
+  "presets": ["flow", ["env", { "targets": { "node": 6 } }]]
+}
