@@ -6012,3 +6012,6 @@ language/white-space/mongolian-vowel-separator.js: Missing parse error
 
 language/white-space/mongolian-vowel-separator.js: Missing parse error
 
+=== Summary ===
+Passed: 52898 (95.63%)
+Failed: 2418 (4.37%)

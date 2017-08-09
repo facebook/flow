@@ -223,8 +223,11 @@ module Progress_bar = struct
     bar.count <- succ bar.count
 
   let print (passed, failed) bar =
-    Printf.printf "\r%s [%s] %d/%d (%d passed, %d failed)%!"
-      (percentage bar) (meter bar) bar.count bar.total passed failed
+    let total = float_of_int (passed + failed) in
+    Printf.printf "\r%s [%s] %d/%d -- Passed: %d (%.2f%%), Failed: %d (%.2f%%)%!"
+      (percentage bar) (meter bar) bar.count bar.total
+      passed ((float_of_int passed) /. total *. 100.)
+      failed ((float_of_int failed) /. total *. 100.)
 
   let print_throttled (passed, failed) bar =
     let now = Unix.gettimeofday () in
@@ -273,7 +276,7 @@ let main () =
   let bar =
     if quiet || not (Unix.isatty Unix.stdout) then None
     else Some (Progress_bar.make ~chunks:40 ~frequency:0.1 test_count) in
-  let results = List.fold_left (fun (passed_acc, failed_acc) filename ->
+  let (passed, failed) = List.fold_left (fun (passed_acc, failed_acc) filename ->
     let (passed, failed) =
       run_test [] filename
       |> List.fold_left (fun (passed, failed) { filename; result } ->
@@ -293,7 +296,15 @@ let main () =
     acc
   ) (0, 0) tests in
 
-  Option.iter ~f:(Progress_bar.print_final results) bar;
+  begin match bar with
+  | Some bar -> Progress_bar.print_final (passed, failed) bar
+  | None ->
+      let total = float_of_int (passed + failed) in
+      Printf.printf "=== Summary ===\n";
+      Printf.printf "Passed: %d (%.2f%%)\n" passed ((float_of_int passed) /. total *. 100.);
+      Printf.printf "Failed: %d (%.2f%%)\n" failed ((float_of_int failed) /. total *. 100.)
+  end;
+
   ()
 
 let () = main ()
