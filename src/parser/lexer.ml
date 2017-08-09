@@ -271,37 +271,6 @@ let save_comment
   let lex_comments_acc = (loc, c) :: env.lex_state.lex_comments_acc in
   { env with lex_state = { env.lex_state with lex_comments_acc; } }
 
-let utf16to8 code =
-  if code >= 0x10000
-  then
-  (* 4 bytes *)
-    [
-      Char.chr (0xf0 lor (code lsr 18));
-      Char.chr (0x80 lor ((code lsr 12) land 0x3f));
-      Char.chr (0x80 lor ((code lsr 6) land 0x3f));
-      Char.chr (0x80 lor (code land 0x3f));
-    ]
-  else if code >= 0x800
-  then
-  (* 3 bytes *)
-    [
-      Char.chr (0xe0 lor (code lsr 12));
-      Char.chr (0x80 lor ((code lsr 6) land 0x3f));
-      Char.chr (0x80 lor (code land 0x3f));
-    ]
-  else if code >= 0x80
-  then
-  (* 2 bytes *)
-    [
-      Char.chr (0xc0 lor (code lsr 6));
-      Char.chr (0x80 lor (code land 0x3f));
-    ]
-  else
-  (* 1 byte *)
-    [
-      Char.chr code;
-    ]
-
 let mk_num_singleton number_type num =
   let neg, num = if num.[0] = '-'
     then true, String.sub num 1 (String.length num - 1)
@@ -902,9 +871,10 @@ and string_quote env q buf raw octal lexbuf =
 
   | '\\' ->
     Buffer.add_string raw "\\";
-    let env, octal' = string_escape env buf lexbuf in
+    let env, str, codes, octal' = string_escape env lexbuf in
     let octal = octal' || octal in
-    Buffer.add_string raw (Sedlexing.Utf8.lexeme lexbuf);
+    Buffer.add_string raw str;
+    Array.iter (Wtf8.add_wtf_8 buf) codes;
     string_quote env q buf raw octal lexbuf
 
   | '\n' | eof ->
@@ -922,92 +892,80 @@ and string_quote env q buf raw octal lexbuf =
 
   | _ -> failwith "unreachable"
 
-and string_escape env buf lexbuf =
+and string_escape env lexbuf =
   match%sedlex lexbuf with
-  | eof ->
-    env, false
-
+  | eof
   | '\\' ->
-    Buffer.add_string buf "\\";
-    env, false
+    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let codes = Sedlexing.lexeme lexbuf in
+    env, str, codes, false
 
   | 'x', hex_digit, hex_digit ->
     let str = Sedlexing.Utf8.lexeme lexbuf in
     let code = int_of_string ("0"^str) in (* 0xAB *)
-    List.iter (Buffer.add_char buf) (utf16to8 code);
-    env, false
+    env, str, [|code|], false
 
   | '0'..'7', '0'..'7', '0'..'7' ->
     let str = Sedlexing.Utf8.lexeme lexbuf in
     let code = int_of_string ("0o"^str) in (* 0o012 *)
     (* If the 3 character octal code is larger than 256
      * then it is parsed as a 2 character octal code *)
-    if code < 256
-    then List.iter (Buffer.add_char buf) (utf16to8 code)
-    else begin
+    if code < 256 then
+      env, str, [|code|], true
+    else
       let remainder = code land 7 in
       let code = code lsr 3 in
-      List.iter (Buffer.add_char buf) (utf16to8 code);
-      Buffer.add_char buf (Char.chr (Char.code '0' + remainder))
-    end;
-    env, true
+      env, str, [|code; Char.code '0' + remainder|], true
 
   | '0'..'7', '0'..'7' ->
     let str = Sedlexing.Utf8.lexeme lexbuf in
     let code = int_of_string ("0o"^str) in (* 0o01 *)
-    List.iter (Buffer.add_char buf) (utf16to8 code);
-    env, true
+    env, str, [|code|], true
 
-  | '0' -> Buffer.add_char buf (Char.chr 0x0); env, false
-  | 'b' -> Buffer.add_char buf (Char.chr 0x8); env, false
-  | 'f' -> Buffer.add_char buf (Char.chr 0xC); env, false
-  | 'n' -> Buffer.add_char buf (Char.chr 0xA); env, false
-  | 'r' -> Buffer.add_char buf (Char.chr 0xD); env, false
-  | 't' -> Buffer.add_char buf (Char.chr 0x9); env, false
-  | 'v' -> Buffer.add_char buf (Char.chr 0xB); env, false
+  | '0' -> env, "0", [|0x0|], false
+  | 'b' -> env, "b", [|0x8|], false
+  | 'f' -> env, "f", [|0xC|], false
+  | 'n' -> env, "n", [|0xA|], false
+  | 'r' -> env, "r", [|0xD|], false
+  | 't' -> env, "t", [|0x9|], false
+  | 'v' -> env, "v", [|0xB|], false
   | '0'..'7' ->
     let str = Sedlexing.Utf8.lexeme lexbuf in
     let code = int_of_string ("0o"^str) in (* 0o1 *)
-    List.iter (Buffer.add_char buf) (utf16to8 code);
-    env, true
+    env, str, [|code|], true
 
   | 'u', hex_digit, hex_digit, hex_digit, hex_digit ->
-    let str =
-      let str = Sedlexing.Utf8.lexeme lexbuf in
-      String.sub str 1 (String.length str - 1)
-    in
-    let code = int_of_string ("0x"^str) in
-    List.iter (Buffer.add_char buf) (utf16to8 code);
-    env, false
+    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let hex = String.sub str 1 (String.length str - 1) in
+    let code = int_of_string ("0x"^hex) in
+    env, str, [|code|], false
 
   | "u{", Plus hex_digit, '}' ->
-    let hex_code =
-      let str = Sedlexing.Utf8.lexeme lexbuf in
-      String.sub str 2 (String.length str - 3)
-    in
-    let code = int_of_string ("0x"^hex_code) in
+    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let hex = String.sub str 2 (String.length str - 3) in
+    let code = int_of_string ("0x"^hex) in
     (* 11.8.4.1 *)
     let env = if code > 1114111
       then illegal env (loc_of_lexbuf env lexbuf)
       else env
     in
-    List.iter (Buffer.add_char buf) (utf16to8 code);
-    env, false
+    env, str, [|code|], false
 
   | 'u' | 'x' | '0'..'7' ->
     let str = Sedlexing.Utf8.lexeme lexbuf in
+    let codes = Sedlexing.lexeme lexbuf in
     let env = illegal env (loc_of_lexbuf env lexbuf) in
-    Buffer.add_string buf str;
-    env, false
+    env, str, codes, false
 
   | line_terminator_sequence ->
+    let str = Sedlexing.Utf8.lexeme lexbuf in
     let env = new_line env lexbuf in
-    env, false
+    env, str, [||], false
 
   | any ->
     let str = Sedlexing.Utf8.lexeme lexbuf in
-    Buffer.add_string buf str;
-    env, false
+    let codes = Sedlexing.lexeme lexbuf in
+    env, str, codes, false
 
   | _ -> failwith "unreachable"
 
@@ -1294,7 +1252,7 @@ and jsx_text env mode buf raw lexbuf =
     let n = String.sub s 3 (String.length s - 4) in
     Buffer.add_string raw s;
     let code = int_of_string ("0x" ^ n) in
-    List.iter (Buffer.add_char buf) (utf16to8 code);
+    Wtf8.add_wtf_8 buf code;
     jsx_text env mode buf raw lexbuf
 
   | "&#", Plus digit, ';' ->
@@ -1302,7 +1260,7 @@ and jsx_text env mode buf raw lexbuf =
     let n = String.sub s 2 (String.length s - 3) in
     Buffer.add_string raw s;
     let code = int_of_string n in
-    List.iter (Buffer.add_char buf) (utf16to8 code);
+    Wtf8.add_wtf_8 buf code;
     jsx_text env mode buf raw lexbuf
 
   | "&", htmlentity, ';' ->
@@ -1565,7 +1523,7 @@ and jsx_text env mode buf raw lexbuf =
     | "diams" -> Some 0x2666
     | _ -> None in
     (match code with
-    | Some code -> List.iter (Buffer.add_char buf) (utf16to8 code)
+    | Some code -> Wtf8.add_wtf_8 buf code
     | None -> Buffer.add_string buf ("&" ^ entity ^";"));
     jsx_text env mode buf raw lexbuf
 
@@ -1642,10 +1600,10 @@ and template_part env start cooked raw literal lexbuf =
   | '\\' ->
     Buffer.add_char raw '\\';
     Buffer.add_char literal '\\';
-    let env, _ = string_escape env cooked lexbuf in
-    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let env, str, codes, _ = string_escape env lexbuf in
     Buffer.add_string raw str;
     Buffer.add_string literal str;
+    Array.iter (Wtf8.add_wtf_8 cooked) codes;
     template_part env start cooked raw literal lexbuf
 
   (* ECMAScript 6th Syntax, 11.8.6.1 Static Semantics: TV's and TRV's

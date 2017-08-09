@@ -212,6 +212,7 @@ begin library "flow-parser"
   ]
   requires = [
     "sedlex"
+    "wtf8"
   ]
 end
 
