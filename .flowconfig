@@ -3,6 +3,7 @@
 <PROJECT_ROOT>/src/dts/tests/.*
 <PROJECT_ROOT>/tests/.*
 <PROJECT_ROOT>/website/.*
+<PROJECT_ROOT>/packages/.*
 .*/json5/test/parse-cases/.*
 
 <PROJECT_ROOT>/npm-flow-lib/.*
