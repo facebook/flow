@@ -1,8 +1,8 @@
 Error: test.js:4
   4: (<C />); // error (`x` is a required prop)
       ^^^^^ React element `C`
-  3: class C extends React.PureComponent<void, { x: number }> {}
-                                               ^^^^^^^^^^^^^ property `x`. Property not found in
+  3: class C extends React.PureComponent<{ x: number }> {}
+                                         ^^^^^^^^^^^^^ property `x`. Property not found in
   4: (<C />); // error (`x` is a required prop)
       ^^^^^ props of React element `C`
 

@@ -838,6 +838,7 @@ module rec TypeTerm : sig
   | Bind of t
   | SpreadType of ObjectSpread.options * t list
   | ValuesType
+  | ReactElementPropsType
 
   and type_map =
   | TupleMap
@@ -1526,7 +1527,8 @@ and React : sig
   end
 
   type tool =
-  | CreateElement of TypeTerm.t * TypeTerm.t_out
+  | CreateElement of TypeTerm.t * TypeTerm.call_arg list * TypeTerm.t_out
+  | GetProps of TypeTerm.t_out
   | SimplifyPropType of SimplifyPropType.tool * TypeTerm.t_out
   | CreateClass of CreateClass.tool * CreateClass.knot * TypeTerm.t_out
 end = React

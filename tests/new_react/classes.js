@@ -4,8 +4,7 @@ type DefaultProps = { };
 type Props = { x: number };
 type State = { y: number };
 
-class Foo extends React.Component<DefaultProps, Props, State> {
-  state: State;
+class Foo extends React.Component<Props, State> {
   static defaultProps: DefaultProps;
 
   is_mounted: boolean;

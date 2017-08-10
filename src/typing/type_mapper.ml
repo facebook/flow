@@ -340,7 +340,9 @@ class ['a] t = object(self)
           let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
           if tlist' == tlist then t
           else SpreadType (options, tlist')
-      | ValuesType -> t
+      | ValuesType
+      | ReactElementPropsType
+        -> t
 
   method exports cx map_cx id =
     let exps = Context.find_exports cx id in
@@ -883,11 +885,16 @@ class ['a] t = object(self)
   method react_tool cx map_cx t =
     let open React in
     match t with
-    | CreateElement (t1, t2) ->
-      let t1' = self#type_ cx map_cx t1 in
-      let t2' = self#type_ cx map_cx t2 in
-      if t1' == t1 && t2' == t2 then t
-      else CreateElement (t1', t2')
+    | CreateElement (config, children, tout) ->
+      let config' = self#type_ cx map_cx config in
+      let children' = ListUtils.ident_map (self#call_arg cx map_cx) children in
+      let tout' = self#type_ cx map_cx tout in
+      if config' == config && children' == children && tout' == tout then t
+      else CreateElement (config', children', tout')
+    | GetProps tout ->
+      let tout' = self#type_ cx map_cx tout in
+      if tout' == tout then t
+      else GetProps tout'
     | SimplifyPropType (tool, t') ->
         let tool' = self#simplify_prop_type_tool cx map_cx tool in
         let t'' = self#type_ cx map_cx t' in

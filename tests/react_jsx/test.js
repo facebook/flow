@@ -12,11 +12,9 @@ const any: any = null;
 type Props_NoProps = {};
 
 const Legacy_NoProps = React.createClass({propTypes: {}});
-class Class_NoProps extends React.Component<void, Props_NoProps, void> {}
-class ClassExact_NoProps
-  extends React.Component<void, $Exact<Props_NoProps>, void> {}
-class ClassPure_NoProps
-  extends React.PureComponent<void, Props_NoProps, void> {}
+class Class_NoProps extends React.Component<Props_NoProps> {}
+class ClassExact_NoProps extends React.Component<$Exact<Props_NoProps>> {}
+class ClassPure_NoProps extends React.PureComponent<Props_NoProps> {}
 const Function_NoProps = (props: Props_NoProps) => any;
 const FunctionExact_NoProps = (props: $Exact<Props_NoProps>) => any;
 
@@ -46,11 +44,9 @@ const Legacy_ManyProps = React.createClass({
     number: React.PropTypes.number.isRequired,
   },
 });
-class Class_ManyProps extends React.Component<void, Props_ManyProps, void> {}
-class ClassExact_ManyProps
-  extends React.Component<void, $Exact<Props_ManyProps>, void> {}
-class ClassPure_ManyProps
-  extends React.PureComponent<void, Props_ManyProps, void> {}
+class Class_ManyProps extends React.Component<Props_ManyProps> {}
+class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
 const Function_ManyProps = (props: Props_ManyProps) => any;
 const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
 
@@ -71,12 +67,11 @@ const Legacy_OptionalProps = React.createClass({
     bar: React.PropTypes.number,
   },
 });
-class Class_OptionalProps
-  extends React.Component<void, Props_OptionalProps, void> {}
+class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
 class ClassExact_OptionalProps
-  extends React.Component<void, $Exact<Props_OptionalProps>, void> {}
+  extends React.Component<$Exact<Props_OptionalProps>> {}
 class ClassPure_OptionalProps
-  extends React.PureComponent<void, Props_OptionalProps, void> {}
+  extends React.PureComponent<Props_OptionalProps> {}
 const Function_OptionalProps = (props: Props_OptionalProps) => any;
 const FunctionExact_OptionalProps = (props: $Exact<Props_OptionalProps>) => any;
 
@@ -99,23 +94,22 @@ const Legacy_DefaultProps = React.createClass({
     foo: React.PropTypes.number.isRequired,
     bar: React.PropTypes.number.isRequired,
   },
-  defaultProps: {
+  getDefaultProps: () => ({
     foo: 42,
-  },
+  }),
 });
-class Class_DefaultProps extends React.Component<{foo: 42}, Props_DefaultProps, void> {
+class Class_DefaultProps extends React.Component<Props_DefaultProps> {
   static defaultProps = {
     foo: 42,
   };
 }
 class ClassExact_DefaultProps
-  extends React.Component<{|foo: 42|}, $Exact<Props_DefaultProps>, void> {
+  extends React.Component<$Exact<Props_DefaultProps>> {
   static defaultProps = {
     foo: 42,
   };
 }
-class ClassPure_DefaultProps
-  extends React.PureComponent<{foo: 42}, Props_DefaultProps, void> {
+class ClassPure_DefaultProps extends React.PureComponent<Props_DefaultProps> {
   static defaultProps = {
     foo: 42,
   };

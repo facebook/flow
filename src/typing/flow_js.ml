@@ -3724,16 +3724,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        argument is a class, function, or an intrinsic. *)
 
     | CustomFunT (_, ReactCreateElement),
-      CallT (reason_op, { call_args_tlist = arg1::arg2::_; call_tout; _ }) ->
-      (match arg1, arg2 with
-      | Arg c, Arg o ->
+      CallT (reason_op, { call_args_tlist = args; call_tout; _ }) ->
+      begin match args with
+      | Arg component::Arg config::children ->
         Ops.push reason_op;
-        rec_flow cx trace (c, ReactKitT (reason_op,
-          React.CreateElement (o, call_tout)));
+        rec_flow cx trace (component, ReactKitT (reason_op,
+          React.CreateElement (config, children, call_tout)));
         Ops.pop ()
       | _ ->
-        ignore (extract_non_spread cx ~trace arg1);
-        ignore (extract_non_spread cx ~trace arg2))
+        add_output cx ~trace (FlowError.EReactCreateElementArity reason_op)
+      end
 
     | _, ReactKitT (reason_op, tool) ->
       react_kit cx trace reason_op l tool
@@ -6474,6 +6474,7 @@ and eval_destructor cx ~trace reason curr_t s i =
             let state = { todo_rev; acc = [] } in
             ObjSpreadT (reason, options, tool, state, tvar)
         | ValuesType -> GetValuesT (reason, tvar)
+        | ReactElementPropsType -> ReactKitT (reason, React.GetProps tvar)
         )
     )
   | Some it ->
@@ -9685,13 +9686,13 @@ and react_kit =
     ~rec_flow_t
     ~get_builtin_type
     ~get_builtin_typeapp
-    ~mk_functioncalltype
     ~mk_methodcalltype
     ~mk_instance
     ~mk_object
     ~mk_object_with_map_proto
     ~string_key
     ~mk_tvar
+    ~mk_tvar_where
     ~eval_destructor
     ~sealed_in_op
 

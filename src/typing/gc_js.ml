@@ -370,6 +370,7 @@ and gc_destructor cx state = function
   | NonMaybeType
   | PropertyType _
   | ValuesType
+  | ReactElementPropsType
     -> ()
   | ElementType t -> gc cx state t
   | Bind t -> gc cx state t
@@ -576,9 +577,11 @@ and gc_react_kit cx state =
     fun t k -> tool t; knot k
   ) in
   function
-  | CreateElement (t, t_out) ->
+  | CreateElement (t, args, t_out) ->
       gc cx state t;
+      args |> List.iter (function Arg t | SpreadArg t -> gc cx state t);
       gc cx state t_out
+  | GetProps t_out -> gc cx state t_out
   | SimplifyPropType (tool, t_out) ->
       gc_simplify_prop_type tool;
       gc cx state t_out

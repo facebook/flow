@@ -420,9 +420,13 @@ and parts_of_react_kit =
   | Shape tool -> resolve_object out tool
   ) in
   function
-  | CreateElement (t, out) -> ["t", Def t; "out", Def out]
+  | CreateElement (config, children, out) ->
+    ["config", Def config] @
+    (list_parts (List.map (function Arg t | SpreadArg t -> t) children)) @
+    ["out", Def out]
   | SimplifyPropType (tool, out) -> simplify_prop_type out tool
-  | CreateClass (_, _, out) -> ["out", Def out]
+  | CreateClass (_, _, out)
+  | GetProps out -> ["out", Def out]
 
 and add_bounds cx id { lower; upper; lowertvars; uppertvars } (ts, ns, es) =
   (* NOTE: filtering out non-immediate LB/UBs for readability, but this
