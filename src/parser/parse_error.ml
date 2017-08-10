@@ -93,6 +93,7 @@ type t =
   | PrivateDelete
   | UnboundPrivate of string
   | PrivateNotInClass
+  | SuperPrivate
 
 exception Error of (Loc.t * t) list
 
@@ -228,4 +229,5 @@ module PP =
         "Private fields must be declared before they can be referenced. `#" ^ name
         ^ "` has not been declared."
       | PrivateNotInClass -> "Private fields can only be referenced from within a class."
+      | SuperPrivate -> "You may not access a private field through the `super` keyword."
   end

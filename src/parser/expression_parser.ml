@@ -593,6 +593,11 @@ module Expression
         let open Expression.Member in
         let property = if is_private then PropertyPrivateName id
         else PropertyIdentifier (snd id) in
+        (* super.PrivateName is a syntax error *)
+        begin match left with
+        | _, Ast.Expression.Super when is_private ->
+            error_at env (loc, Error.SuperPrivate)
+        | _ -> () end;
         call env start_loc (loc, Expression.(Member Member.({
           _object = left;
           property;
