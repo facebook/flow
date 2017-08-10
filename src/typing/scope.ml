@@ -109,8 +109,12 @@ module Entry = struct
   type t =
   | Value of value_binding
   | Type of type_binding
+  | Class of Type.class_binding
 
   (* constructors *)
+  let new_class class_binding_id class_private_fields class_private_static_fields =
+    Class { Type.class_binding_id; Type.class_private_fields; Type.class_private_static_fields }
+
   let new_value kind state specific general value_declare_loc =
     Value {
       kind;
@@ -152,22 +156,27 @@ module Entry = struct
   let entry_loc = function
   | Value v -> v.value_declare_loc
   | Type t -> t.type_loc
+  | Class _ -> Loc.none
 
   let assign_loc = function
   | Value v -> v.value_assign_loc
   | Type t -> t.type_loc
+  | Class _ -> Loc.none
 
   let declared_type = function
   | Value v -> v.general
   | Type t -> t._type
+  | Class _ -> assert_false "Internal Error: Class bindings have no type"
 
   let actual_type = function
   | Value v -> v.specific
   | Type t -> t._type
+  | Class _ -> assert_false "Internal Error: Class bindings have no type"
 
   let string_of_kind = function
   | Value v -> string_of_value_kind v.kind
   | Type _ -> "type"
+  | Class c -> spf "Class %i" c.Type.class_binding_id
 
   let kind_of_value (value: value_binding) = value.kind
   let general_of_value (value: value_binding) = value.general
@@ -197,9 +206,11 @@ module Entry = struct
       if Reason.is_internal_name name
       then entry
       else Value { v with specific = v.general }
+    | Class _ -> entry
 
   let reset loc name entry =
     match entry with
+    | Class _
     | Type _ ->
       entry
     | Value v ->
@@ -209,6 +220,7 @@ module Entry = struct
 
   let is_lex = function
     | Type _ -> false
+    | Class _ -> true
     | Value v ->
       match v.kind with
       | Const _ -> true

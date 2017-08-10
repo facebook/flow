@@ -2237,6 +2237,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) in
       rec_flow_t cx trace (IdxWrapper (idx_reason, prop_type), t_out)
 
+    | (IdxWrapper (idx_reason, obj),
+      GetPrivatePropT (reason_op, name, class_bindings, static, t_out)) ->
+      let de_maybed_obj = mk_tvar_where cx idx_reason (fun t ->
+        rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
+      ) in
+      let prop_type = mk_tvar_where cx reason_op (fun t ->
+        rec_flow cx trace (de_maybed_obj,
+        GetPrivatePropT (reason_op, name, class_bindings, static, t))
+      ) in
+      rec_flow_t cx trace (IdxWrapper (idx_reason, prop_type), t_out)
+
     | (IdxWrapper (idx_reason, obj), GetElemT (reason_op, prop, t_out)) ->
       let de_maybed_obj = mk_tvar_where cx idx_reason (fun t ->
         rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
@@ -4267,6 +4278,30 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       set_prop cx trace reason_prop reason_op strict l super x fields tin;
       Ops.pop ();
 
+    | DefT (reason_c, InstanceT _),
+      SetPrivatePropT (reason_op, _, [], _, _) ->
+        add_output cx ~trace (FlowError.EPrivateLookupFailed (reason_op, reason_c))
+
+    | DefT (reason_c, InstanceT (_, _, _, instance)),
+      SetPrivatePropT (reason_op, x, scope::scopes, static, tin) ->
+        if scope.class_binding_id != instance.class_id then
+          rec_flow cx trace (l, SetPrivatePropT (reason_op, x, scopes, static, tin))
+        else
+          let map =
+            (if static then scope.class_private_static_fields
+            else scope.class_private_fields) in
+          begin match SMap.get x (Context.find_props cx map) with
+          | None ->
+              add_output cx ~trace (FlowError.EPrivateLookupFailed (reason_op, reason_c))
+          | Some p ->
+              (match Property.write_t p with
+              | Some t ->
+                  rec_flow_t cx trace (tin, ReposT (reason_op, t))
+              | None ->
+                add_output cx ~trace (FlowError.EPropAccess (
+                  (reason_c, reason_op), Some x, Property.polarity p, Write
+                ))) end
+
     | DefT (_, InstanceT _), SetPropT (reason_op, Computed _, _) ->
       (* Instances don't have proper dictionary support. All computed accesses
          are converted to named property access to `$key` and `$value` during
@@ -4291,6 +4326,30 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         else Strict reason_c
       in
       get_prop cx trace reason_prop reason_op strict l super x fields tout
+
+    | DefT (reason_c, InstanceT _),
+      GetPrivatePropT (reason_op, _, [], _, _) ->
+        add_output cx ~trace (FlowError.EPrivateLookupFailed (reason_op, reason_c))
+
+    | DefT (reason_c, InstanceT (_, _, _, instance)),
+      GetPrivatePropT (reason_op, x, scope::scopes, static, tout) ->
+        if scope.class_binding_id != instance.class_id then
+          rec_flow cx trace (l, GetPrivatePropT (reason_op, x, scopes, static, tout))
+        else
+          let map =
+            (if static then scope.class_private_static_fields
+            else scope.class_private_fields) in
+          begin match SMap.get x (Context.find_props cx map) with
+          | None ->
+              add_output cx ~trace (FlowError.EPrivateLookupFailed (reason_op, reason_c))
+          | Some p ->
+              (match Property.read_t p with
+              | Some t ->
+                  rec_flow cx trace (t, ReposLowerT (reason_op, UseT (UnknownUse, tout)))
+              | None ->
+                add_output cx ~trace (FlowError.EPropAccess (
+                  (reason_c, reason_op), Some x, Property.polarity p, Read
+                ))) end
 
     | DefT (_, InstanceT _), GetPropT (reason_op, Computed _, _) ->
       (* Instances don't have proper dictionary support. All computed accesses
@@ -5362,6 +5421,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* class statics *)
     (*****************)
 
+    (* For GetPrivatePropT and SetPrivatePropT, the instance id is needed to determine whether
+     * or not the private static field exists on that class. Since we look through the scopes for
+     * the type of the field, there is no need to look at the static member of the instance.
+     * Instead, we just flip the boolean flag to true, indicating that when the
+     * InstanceT ~> Set/GetPrivatePropT constraint is processed that we should look at the
+     * private static fields instead of the private instance fields. *)
+    | DefT (reason, ClassT instance), GetPrivatePropT (reason_op, x, scopes, _, tout) ->
+      let u = GetPrivatePropT (reason_op, x, scopes, true, tout) in
+      rec_flow cx trace (instance, ReposLowerT (reason, u))
+
+    | DefT (reason, ClassT instance), SetPrivatePropT (reason_op, x, scopes, _, tout) ->
+      let u = SetPrivatePropT (reason_op, x, scopes, true, tout) in
+      rec_flow cx trace (instance, ReposLowerT (reason, u))
+
     | DefT (reason, ClassT instance), _ when object_use u || object_like_op u ->
       let desc = RStatics (desc_of_reason (reason_of_t instance)) in
       let loc = loc_of_reason reason in
@@ -5656,9 +5729,23 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         special = flow_error_kind_of_lower l;
       })
 
+    | _, GetPrivatePropT (r, _, _, _, _) ->
+      add_output cx ~trace (FlowError.EIncompatibleGetProp {
+        reason_prop = r;
+        reason_obj = reason_of_t l;
+        special = flow_error_kind_of_lower l;
+      })
+
     | _, SetPropT (_, propref, _) ->
       add_output cx ~trace (FlowError.EIncompatibleSetProp {
         reason_prop = reason_of_propref propref;
+        reason_obj = reason_of_t l;
+        special = flow_error_kind_of_lower l;
+      })
+
+    | _, SetPrivatePropT (r, _, _, _, _) ->
+      add_output cx ~trace (FlowError.EIncompatibleSetProp {
+        reason_prop = r;
         reason_obj = reason_of_t l;
         special = flow_error_kind_of_lower l;
       })
@@ -6185,11 +6272,12 @@ and equatable = function
   | _ -> true
 
 and taint_op = function
-  | AdderT _ | GetPropT _ | GetElemT _ | ComparatorT _ -> true
+  | AdderT _ | GetPrivatePropT _ | GetPropT _ | GetElemT _ | ComparatorT _ -> true
   | _ -> false
 
 and result_of_taint_op = function
-  | AdderT (_, _, u) | GetPropT (_, _, u) | GetElemT (_, _, u) -> Some u
+  | AdderT (_, _, u) | GetPrivatePropT (_,_,_,_, u)
+  | GetPropT (_, _, u) | GetElemT (_, _, u) -> Some u
   | ComparatorT _ -> None
   | _ -> assert false
 

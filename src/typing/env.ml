@@ -382,6 +382,24 @@ let find_entry cx name ?desc loc =
   in
   loop !scopes
 
+let get_class_entries () =
+  let rec loop class_bindings = function
+    | [] -> assert_false "empty scope list"
+    | scope::scopes ->
+      match Scope.get_entry (internal_name "class") scope with
+      | Some entry -> loop (entry :: class_bindings) scopes
+      | None ->
+        (* keep looking until we're at the global scope *)
+        match scopes with
+        | [] -> class_bindings
+        | _ -> loop class_bindings scopes
+  in
+  let class_bindings = loop [] !scopes in
+  let to_class_record = function
+  | Entry.Class c -> c
+  | _ -> assert_false "Internal Error: Non-class binding stored with .class" in
+  List.map to_class_record class_bindings
+
 (* Search for the scope which binds the given name, through the
    topmost LexScopes and up to the first VarScope. If the entry
    is not found, return the VarScope where we terminated. *)
@@ -440,10 +458,11 @@ let bind_entry cx name entry loc =
       (* if no entry already exists, this might be our scope *)
       | None -> Entry.(
         match scope.Scope.kind, entry with
-        (* lex scopes can only hold let/const bindings *)
+        (* lex scopes can only hold let/const/class bindings *)
         (* var scope can hold all binding types *)
         | LexScope, Value { Entry.kind = Let _; _ }
         | LexScope, Value { Entry.kind = Const _; _ }
+        | LexScope, Class _
         | VarScope _, _ ->
           let loc = entry_loc entry in
           Type_inference_hooks_js.dispatch_ref_hook cx loc loc;
@@ -480,6 +499,11 @@ let bind_entry cx name entry loc =
         | LexScope -> already_bound_error cx name prev loc
   in
   if not (is_excluded name) then loop !scopes
+
+(* bind class entry *)
+let bind_class cx class_id class_private_fields class_private_static_fields =
+  bind_entry cx (internal_name "class")
+  (Entry.new_class class_id class_private_fields class_private_static_fields) Loc.none
 
 (* bind var entry *)
 let bind_var ?(state=State.Declared) cx name t loc =
@@ -674,6 +698,8 @@ let pseudo_init_declared_type cx name loc =
       Scope.add_entry name entry scope
     | Type _ ->
       assert_false (spf "pseudo_init_declared_type %s: Type entry" name)
+    | Class _ ->
+      assert_false (spf "pseudo_init_declared_type %s: Class entry" name)
   )
 
 (* helper for read/write tdz checks *)
@@ -750,6 +776,8 @@ let read_entry ~track_ref ~lookup_mode ~specific cx name ?desc loc =
 
   | Type t ->
     t._type
+
+  | Class _ -> assert_false "Internal Error: Classes should only be read using get_class_entries"
 
   | Value v ->
     match v with
@@ -884,6 +912,7 @@ let update_var ?(track_ref=false) op cx name specific loc =
     let msg = FlowError.ETypeAliasInValuePosition in
     binding_error msg cx name entry loc;
     None
+  | Class _ -> assert_false "Internal error: update_var called on Class"
   )
 
 (* update var by direct assignment *)

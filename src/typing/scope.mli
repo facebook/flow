@@ -52,7 +52,8 @@ module Entry :
       type_loc : Loc.t;
       _type : Type.t;
     }
-    type t = Value of value_binding | Type of type_binding
+    type t = Value of value_binding | Type of type_binding | Class of Type.class_binding
+    val new_class : int -> Type.Properties.id -> Type.Properties.id -> t
     val new_value : value_kind -> State.t -> Type.t -> Type.t -> Loc.t -> t
     val new_const :
       loc:Loc.t -> ?state:State.t -> ?kind:const_binding_kind -> Type.t -> t

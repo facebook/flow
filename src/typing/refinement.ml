@@ -35,6 +35,7 @@ let rec key = Ast.Expression.(function
   (* foo.bar.baz -> Chain [Id baz; Id bar; Id foo] *)
    property = (
     Member.PropertyIdentifier (_, name)
+    | Member.PropertyPrivateName (_, (_, name))
     | Member.PropertyExpression (_, Ast.Expression.Literal {
         Ast.Literal.value = Ast.Literal.String name;
         _;

@@ -1542,6 +1542,7 @@ and statement cx = Ast.Statement.(
               match entry with
               | Value _ -> acc
               | Type {_type; _} -> SMap.add x _type acc
+              | Class _ -> acc
             ) module_scope.entries SMap.empty in
             type_exports, exports
 
@@ -1549,6 +1550,13 @@ and statement cx = Ast.Statement.(
             assert_false (
               "Internal Error: `declare module.exports` was created as a " ^
               "type binding. This should never happen!"
+            )
+
+          | Some (Class _), _
+          | _, Some (Class _) ->
+            assert_false (
+              "Internal Error: `declare module.exports` was created as a " ^
+              "class binding. This should never happen!"
             )
 
           | Some (Type _), None
@@ -1561,6 +1569,7 @@ and statement cx = Ast.Statement.(
               | Type {_type; _} ->
                 SMap.add x _type ts,
                 vs
+              | Class _ -> (ts, vs)
             ) module_scope.entries (SMap.empty, SMap.empty) in
 
             let reason = repos_reason kind_loc reason in
@@ -2466,8 +2475,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Member {
       Member._object;
-      property = (Member.PropertyIdentifier (ploc, name)
-                | Member.PropertyPrivateName (ploc, (_, name)));
+      property = Member.PropertyIdentifier (ploc, name);
       _
     } -> (
       let expr_reason = mk_reason (RProperty (Some name)) loc in
@@ -2479,6 +2487,21 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
         then AnyT.at ploc
         else get_prop ~is_cond cx expr_reason tobj (prop_reason, name)
+    )
+
+  | Member {
+      Member._object;
+      property = Member.PropertyPrivateName (ploc, (_, name));
+      _
+    } -> (
+      let expr_reason = mk_reason (RProperty (Some name)) loc in
+      match Refinement.get cx (loc, e) loc with
+      | Some t -> t
+      | None ->
+        let tobj = expression cx _object in
+        if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
+        then AnyT.at ploc
+        else get_private_field cx expr_reason tobj name
     )
 
   | Object { Object.properties } ->
@@ -3275,11 +3298,29 @@ and assignment cx loc = Ast.Expression.(function
             let super = super_ cx lhs_loc in
             Flow.flow cx (super, SetPropT (reason, Named (prop_reason, name), t))
 
+        (* _object.#name = e *)
+        | lhs_loc, Ast.Pattern.Expression ((_, Member {
+            Member._object;
+            property = Member.PropertyPrivateName (ploc, (_, name));
+            _
+          }) as expr) ->
+            let o = expression cx _object in
+            (* if we fire this hook, it means the assignment is a sham. *)
+            if not (Type_inference_hooks_js.dispatch_member_hook cx name ploc o)
+            then (
+              let reason = mk_reason (RPropertyAssignment name) lhs_loc in
+
+              (* flow type to object property itself *)
+              let class_entries = Env.get_class_entries () in
+              Flow.flow cx (o, SetPrivatePropT (reason, name, class_entries, false, t));
+              (* TODO (T20813534): We do not need to havoc heap refinements here. *)
+              post_assignment_havoc name expr lhs_loc t
+            )
+
         (* _object.name = e *)
         | lhs_loc, Ast.Pattern.Expression ((_, Member {
             Member._object;
-            property = (Member.PropertyIdentifier (ploc, name)
-                     | Member.PropertyPrivateName (ploc, (_, name)));
+            property = Member.PropertyIdentifier (ploc, name);
             _
           }) as expr) ->
             let o = expression cx _object in
@@ -3291,29 +3332,7 @@ and assignment cx loc = Ast.Expression.(function
 
               (* flow type to object property itself *)
               Flow.flow cx (o, SetPropT (reason, Named (prop_reason, name), t));
-
-              (* types involved in the assignment are computed
-                 in pre-havoc environment. it's the assignment itself
-                 which clears refis *)
-              (* TODO: havoc refinements for this prop name only *)
-              Env.havoc_heap_refinements_with_propname name;
-
-              (* add type refinement if LHS is a pattern we handle *)
-              match Refinement.key expr with
-              | Some key ->
-                (* NOTE: currently, we allow property refinements to propagate
-                   even if they may turn out to be invalid w.r.t. the
-                   underlying object type. If invalid, of course, they produce
-                   errors, but in the future we may want to prevent the
-                   invalid types from flowing downstream as well.
-                   Doing so would require that we defer any subsequent flow
-                   calls that are sensitive to the refined type until the
-                   object and refinement types - `o` and `t` here - are
-                   fully resolved.
-                 *)
-                ignore Env.(set_expr key lhs_loc t t)
-              | None ->
-                ()
+              post_assignment_havoc name expr lhs_loc t
             )
 
         (* _object[index] = e *)
@@ -4240,6 +4259,13 @@ and predicates_of_condition cx e = Ast.(Expression.(
 and condition cx e =
   expression ~is_cond:true cx e
 
+and get_private_field cx reason tobj name =
+  Flow.mk_tvar_where cx reason (fun t ->
+    let class_entries = Env.get_class_entries () in
+    let get_prop_u = GetPrivatePropT (reason, name, class_entries, false, t) in
+    Flow.flow cx (tobj, get_prop_u)
+  )
+
 (* Property lookups become non-strict when processing conditional expressions
    (see above).
 
@@ -4373,18 +4399,18 @@ and mk_class cx loc reason c =
   let class_sig =
     Class_sig.mk cx loc reason self c ~expr:expression
   in
-  class_sig |> Class_sig.generate_tests cx (fun class_sig ->
-    Class_sig.check_super cx class_sig;
-    Class_sig.check_implements cx class_sig;
-    if this_in_class || not (Class_sig.This.is_bound_to_empty class_sig) then
-      Class_sig.toplevels cx class_sig
-      ~decls:toplevel_decls
-      ~stmts:toplevels
-      ~expr:expression
-  );
-  let class_t = Class_sig.classtype cx class_sig in
-  Flow.unify cx self class_t;
-  class_t
+    class_sig |> Class_sig.generate_tests cx (fun class_sig ->
+      Class_sig.check_super cx class_sig;
+      Class_sig.check_implements cx class_sig;
+      if this_in_class || not (Class_sig.This.is_bound_to_empty class_sig) then
+        Class_sig.toplevels cx class_sig
+        ~decls:toplevel_decls
+        ~stmts:toplevels
+        ~expr:expression
+    );
+    let class_t = Class_sig.classtype cx class_sig in
+    Flow.unify cx self class_t;
+    class_t
 
 (* Given a function declaration and types for `this` and `super`, extract a
    signature consisting of type parameters, parameter types, parameter names,
@@ -4531,3 +4557,26 @@ and check_default_pattern cx left right =
         | _ -> ()
       end
     | _ -> ()
+
+and post_assignment_havoc name expr lhs_loc t =
+  (* types involved in the assignment are computed
+     in pre-havoc environment. it's the assignment itself
+     which clears refis *)
+  Env.havoc_heap_refinements_with_propname name;
+
+  (* add type refinement if LHS is a pattern we handle *)
+  match Refinement.key expr with
+  | Some key ->
+    (* NOTE: currently, we allow property refinements to propagate
+       even if they may turn out to be invalid w.r.t. the
+       underlying object type. If invalid, of course, they produce
+       errors, but in the future we may want to prevent the
+       invalid types from flowing downstream as well.
+       Doing so would require that we defer any subsequent flow
+       calls that are sensitive to the refined type until the
+       object and refinement types - `o` and `t` here - are
+       fully resolved.
+     *)
+    ignore Env.(set_expr key lhs_loc t t)
+  | None ->
+    ()

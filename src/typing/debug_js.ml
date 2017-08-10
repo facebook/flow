@@ -417,6 +417,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "propRef", json_of_propref json_cx name;
       "propType", _json_of_t json_cx t
     ]
+  | SetPrivatePropT (_, name, _, _, t)
+  | GetPrivatePropT (_, name, _, _, t) -> [
+      "propRef", JSON_String name;
+      "propType", _json_of_t json_cx t
+  ]
 
   | SetElemT (_, indext, elemt)
   | GetElemT (_, indext, elemt) -> [
@@ -1352,9 +1357,17 @@ let json_of_scope = Scope.(
   in
   let json_of_type json_cx = check_depth json_of_type_impl json_cx in
 
+  let json_of_class json_cx c =
+    let pmap = Context.find_props json_cx.cx c.class_private_fields in
+    JSON_Object [
+      "class_id", JSON_String (string_of_int c.class_binding_id);
+      "class_private_fields", json_of_pmap json_cx pmap;
+    ] in
+
   let json_of_entry_impl json_cx = Entry.(function
     | Value r -> json_of_value json_cx r
     | Type r -> json_of_type json_cx r
+    | Class r -> json_of_class json_cx r
   ) in
   let json_of_entry json_cx = check_depth json_of_entry_impl json_cx in
 
@@ -1807,6 +1820,9 @@ and dump_use_t_ (depth, tvars) cx t =
   | GetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t
+  | GetPrivatePropT (_, prop, _, _, ptype) -> p ~extra:(spf "(%s), %s"
+      (prop)
+      (kid ptype)) t
   | GetProtoT (_, arg) -> p ~extra:(kid arg) t
   | GetStaticsT (_, arg) -> p ~extra:(kid arg) t
   | GuardT (pred, result, sink) -> p ~reason:false
@@ -1877,6 +1893,9 @@ and dump_use_t_ (depth, tvars) cx t =
   | SetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | SetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
+      (kid ptype)) t
+  | SetPrivatePropT (_, prop, _, _, ptype) -> p ~extra:(spf "(%s), %s"
+      (prop)
       (kid ptype)) t
   | SetProtoT (_, arg) -> p ~extra:(kid arg) t
   | SpecializeT (_, _, cache, args, ret) -> p ~extra:(spf "%s, [%s], %s"
@@ -1969,6 +1988,7 @@ let string_of_scope_entry = Scope.(
   fun cx -> Entry.(function
   | Value r -> spf "Value %s" (string_of_value_binding cx r)
   | Type r -> spf "Type %s" (string_of_type_binding cx r)
+  | Class r -> spf "Class %s" (string_of_int r.class_binding_id)
   )
 )
 
@@ -2217,6 +2237,8 @@ let dump_flow_error =
           (dump_reason cx reason2)
           (dump_reason cx reason)
           (match x with Some x -> spf "Some %S" x | None -> "None")
+    | EPrivateLookupFailed (reason1, reason2) ->
+        spf "EPrivateLookupFailed (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EFunCallParam (reason1, reason2) ->
         spf "EFunCallParam (%s, %s)"
           (dump_reason cx reason1)

@@ -19,6 +19,7 @@ type signature = {
   reason: reason;
   super: Type.t;
   fields: field SMap.t;
+  private_fields: field SMap.t;
   (* Multiple function signatures indicates an overloaded method. Note that
      function signatures are stored in reverse definition order. *)
   methods: Func_sig.t Nel.t SMap.t;
@@ -43,6 +44,7 @@ let empty ?(structural=false) id reason tparams tparams_map super implements =
   let empty_sig reason super = {
     reason; super;
     fields = SMap.empty;
+    private_fields = SMap.empty;
     methods = SMap.empty;
     getters = SMap.empty;
     setters = SMap.empty;
@@ -66,6 +68,11 @@ let with_sig ~static f s =
   if static then f s.static else f s.instance
 
 let mutually f = (f ~static:true, f ~static:false)
+
+let add_private_field name fld = map_sig (fun s -> {
+  s with
+  private_fields = SMap.add name fld s.private_fields;
+})
 
 let add_field name fld = map_sig (fun s -> {
   s with
@@ -137,6 +144,7 @@ let subst_sig cx map s = {
   reason = s.reason;
   super = Flow.subst cx map s.super;
   fields = SMap.map (subst_field cx map) s.fields;
+  private_fields = SMap.map (subst_field cx map) s.private_fields;
   methods = SMap.map (Nel.map (Func_sig.subst cx map)) s.methods;
   getters = SMap.map (Func_sig.subst cx map) s.getters;
   setters = SMap.map (Func_sig.subst cx map) s.setters;
@@ -153,6 +161,8 @@ let generate_tests cx f x =
     static = subst_sig cx map x.static;
     instance = subst_sig cx map x.instance;
   })
+
+let to_field (t, polarity, _) = Type.Field (t, polarity)
 
 let elements ?constructor = with_sig (fun s ->
   let methods =
@@ -184,9 +194,7 @@ let elements ?constructor = with_sig (fun s ->
     | _ -> None
   ) getters setters in
 
-  let fields = SMap.map (fun (t, polarity, _) ->
-    Type.Field (t, polarity)
-  ) s.fields in
+  let fields = SMap.map to_field s.fields in
 
   (* Treat getters and setters as fields *)
   let fields = SMap.union getters_and_setters fields in
@@ -513,7 +521,15 @@ let mk cx _loc reason self ~expr =
         static;
         variance;
         _;
-      })
+      }) ->
+        if value <> None
+        then warn_or_ignore_class_properties cx ~static loc;
+
+        let reason = mk_reason (RProperty (Some name)) loc in
+        let polarity = Anno.polarity variance in
+        let field = mk_field cx ~polarity c reason typeAnnotation value in
+        add_private_field ~static name field c
+
     | Body.Property (loc, {
       Property.key = Ast.Expression.Object.Property.Identifier (_, name);
         typeAnnotation;
@@ -710,78 +726,85 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
 
 (* Processes the bodies of instance and static class members. *)
 let toplevels cx ~decls ~stmts ~expr x =
-  let new_entry t = Scope.Entry.new_var ~loc:(Type.loc_of_t t) t in
+  Env.in_lex_scope cx (fun () ->
+    let new_entry t = Scope.Entry.new_var ~loc:(Type.loc_of_t t) t in
 
-  let method_ this super f =
-    let save_return = Abnormal.clear_saved Abnormal.Return in
-    let save_throw = Abnormal.clear_saved Abnormal.Throw in
-    f |> Func_sig.generate_tests cx (
-      Func_sig.toplevels None cx this super ~decls ~stmts ~expr
-    );
-    ignore (Abnormal.swap_saved Abnormal.Return save_return);
-    ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
-  in
+    let method_ this super f =
+      let save_return = Abnormal.clear_saved Abnormal.Return in
+      let save_throw = Abnormal.clear_saved Abnormal.Throw in
+      f |> Func_sig.generate_tests cx (
+        Func_sig.toplevels None cx this super ~decls ~stmts ~expr
+      );
+      ignore (Abnormal.swap_saved Abnormal.Return save_return);
+      ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
+    in
 
-  let field config this super name (field_t, _, value) =
-    match config, value with
-    | Options.ESPROPOSAL_IGNORE, _ -> ()
-    | _, None -> ()
-    | _, Some ((loc, _) as expr) ->
-      let init =
-        let reason = mk_reason (RFieldInitializer name) loc in
-        Func_sig.field_initializer x.tparams_map reason expr field_t
-      in
-      method_ this super init
-  in
+    let field config this super name (field_t, _, value) =
+      match config, value with
+      | Options.ESPROPOSAL_IGNORE, _ -> ()
+      | _, None -> ()
+      | _, Some ((loc, _) as expr) ->
+        let init =
+          let reason = mk_reason (RFieldInitializer name) loc in
+          Func_sig.field_initializer x.tparams_map reason expr field_t
+        in
+        method_ this super init
+    in
 
-  let this = SMap.find_unsafe "this" x.tparams_map in
-  let static = Type.class_type this in
+    let this = SMap.find_unsafe "this" x.tparams_map in
+    let static = Type.class_type this in
 
-  x |> with_sig ~static:true (fun s ->
-    (* process static methods and fields *)
-    let this, super = new_entry static, new_entry s.super in
-    iter_methods (method_ this super) s;
-    let config = Context.esproposal_class_static_fields cx in
-    SMap.iter (field config this super) s.fields
-  );
+    (* Bind private fields to the environment *)
+    let to_field (t, polarity, _) = Type.Field (t, polarity) in
+    let to_prop_map = fun x -> Context.make_property_map cx (SMap.map to_field x) in
+    Env.bind_class cx x.id (to_prop_map x.instance.private_fields)
+    (to_prop_map x.static.private_fields);
 
-  x |> with_sig ~static:false (fun s ->
-    (* process constructor *)
-    begin
-      (* When in a derived constructor, initialize this and super to undefined.
-         For internal names, we can afford to initialize with undefined and
-         fatten the declared type to allow undefined. This works because we
-         always look up the flow-sensitive type of internals, and don't havoc
-         them. However, the same trick wouldn't work for normal uninitialized
-         locals, e.g., so it cannot be used in general to track definite
-         assignments. *)
-      let derived_ctor = Type.(match s.super with
-        | DefT (_, ClassT (ObjProtoT _)) -> false
-        | ObjProtoT _ -> false
-        | _ -> true
-      ) in
-      let new_entry t =
-        if derived_ctor then
-          let open Type in
-          let specific =
-            DefT (replace_reason_const RUninitializedThis (reason_of_t this), VoidT)
-          in
-          Scope.Entry.new_var ~loc:(loc_of_t t) ~specific (Type.optional t)
-        else
-          new_entry t
-      in
-      let this, super = new_entry this, new_entry s.super in
-      x.constructor |> List.iter (method_ this super)
-    end;
-
-    (* process instance methods and fields *)
-    begin
-      let this, super = new_entry this, new_entry s.super in
+    x |> with_sig ~static:true (fun s ->
+      (* process static methods and fields *)
+      let this, super = new_entry static, new_entry s.super in
       iter_methods (method_ this super) s;
-      let config = Context.esproposal_class_instance_fields cx in
+      let config = Context.esproposal_class_static_fields cx in
       SMap.iter (field config this super) s.fields
-    end
-  )
+    );
+
+    x |> with_sig ~static:false (fun s ->
+      (* process constructor *)
+      begin
+        (* When in a derived constructor, initialize this and super to undefined.
+           For internal names, we can afford to initialize with undefined and
+           fatten the declared type to allow undefined. This works because we
+           always look up the flow-sensitive type of internals, and don't havoc
+           them. However, the same trick wouldn't work for normal uninitialized
+           locals, e.g., so it cannot be used in general to track definite
+           assignments. *)
+        let derived_ctor = Type.(match s.super with
+          | DefT (_, ClassT (ObjProtoT _)) -> false
+          | ObjProtoT _ -> false
+          | _ -> true
+        ) in
+        let new_entry t =
+          if derived_ctor then
+            let open Type in
+            let specific =
+              DefT (replace_reason_const RUninitializedThis (reason_of_t this), VoidT)
+            in
+            Scope.Entry.new_var ~loc:(loc_of_t t) ~specific (Type.optional t)
+          else
+            new_entry t
+        in
+        let this, super = new_entry this, new_entry s.super in
+        x.constructor |> List.iter (method_ this super)
+      end;
+
+      (* process instance methods and fields *)
+      begin
+        let this, super = new_entry this, new_entry s.super in
+        iter_methods (method_ this super) s;
+        let config = Context.esproposal_class_instance_fields cx in
+        SMap.iter (field config this super) s.fields
+      end
+  ))
 
 module This = struct
   let is_bound_to_empty x =

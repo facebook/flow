@@ -307,6 +307,7 @@ and parts_of_use_t cx = function
 | GetKeysT (_, out) -> ["out", Def out]
 | GetValuesT (_, out) -> ["out", Def out]
 | GetPropT (_, _, out) -> ["out", Def out]
+| GetPrivatePropT (_, _, _, _, out) -> ["out", Def out]
 | GetProtoT (_, out) -> ["out", Def out]
 | GetStaticsT (_, out) -> ["out", Def out]
 | GuardT (_, t, out) -> ["iftrue", Def t; "out", Def out]
@@ -359,6 +360,7 @@ and parts_of_use_t cx = function
 | SentinelPropTestT (t, _, _, out) -> ["t", Def t; "out", Def out]
 | SetElemT (_, ix, t) -> ["ix", Def ix; "t", Def t]
 | SetPropT (_, _, t) -> ["t", Def t]
+| SetPrivatePropT (_, _, _, _, t) -> ["t", Def t]
 | SetProtoT (_, t) -> ["t", Def t]
 | SpecializeT (_, _, _, args, out) -> ("out", Def out) :: list_parts args
 | ObjSpreadT (_, _, _, _, out) -> ["out", Def out]

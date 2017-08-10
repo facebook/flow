@@ -300,7 +300,14 @@ module rec TypeTerm : sig
     | CallT of reason * funcalltype
     | MethodT of (* call *) reason * (* lookup *) reason * propref * funcalltype
     | SetPropT of reason * propref * t
+    (* The boolean flag indicates whether or not it is a static lookup. We cannot know this when
+     * we generate the constraint, since the lower bound may be an unresolved OpenT. If it
+     * resolves to a ClassT, we flip the flag to true, which causes us to check the private static
+     * fields when the InstanceT ~> SetPrivatePropT constraint is processsed *)
+    | SetPrivatePropT of reason * string * class_binding list * bool * t
     | GetPropT of reason * propref * t
+    (* The same comment on SetPrivatePropT applies here *)
+    | GetPrivatePropT of reason * string * class_binding list * bool * t
     | TestPropT of reason * propref * t
     | SetElemT of reason * t * t
     | GetElemT of reason * t * t
@@ -763,6 +770,13 @@ module rec TypeTerm : sig
     | Set of t
     | GetSet of t * t
     | Method of t
+
+  (* This has to go here so that Type doesnt depend on Scope *)
+  and class_binding = {
+    class_binding_id: ident;
+    class_private_fields: Properties.id;
+    class_private_static_fields: Properties.id;
+  }
 
   and insttype = {
     class_id: ident;
@@ -1696,6 +1710,7 @@ let primitive_promoting_use_t = function
   | CallElemT _
   | GetElemT _
   | GetPropT _
+  | GetPrivatePropT _
   | GetProtoT _
   | MethodT _
   | TestPropT _
@@ -1734,6 +1749,7 @@ let any_propagating_use_t = function
   | GetKeysT _
   | GetValuesT _
   | GetPropT _
+  | GetPrivatePropT _
   | GetProtoT _
   | GetStaticsT _
   | GuardT _
@@ -1790,6 +1806,7 @@ let any_propagating_use_t = function
   | HasOwnPropT _
   | ImplementsT _
   | SetPropT _
+  | SetPrivatePropT _
   | SetProtoT _
   | SuperT _
   | TypeAppVarianceCheckT _
@@ -1880,6 +1897,7 @@ and reason_of_use_t = function
   | GetKeysT (reason, _) -> reason
   | GetValuesT (reason, _) -> reason
   | GetPropT (reason,_,_) -> reason
+  | GetPrivatePropT (reason,_,_,_, _) -> reason
   | GetProtoT (reason,_) -> reason
   | GetStaticsT (reason,_) -> reason
   | GuardT (_, _, t) -> reason_of_t t
@@ -1915,6 +1933,7 @@ and reason_of_use_t = function
   | SentinelPropTestT (_, _, _, result) -> reason_of_t result
   | SetElemT (reason,_,_) -> reason
   | SetPropT (reason,_,_) -> reason
+  | SetPrivatePropT (reason,_,_,_,_) -> reason
   | SetProtoT (reason,_) -> reason
   | SpecializeT(reason,_,_,_,_) -> reason
   | ObjSpreadT (reason, _, _, _, _) -> reason
@@ -2027,6 +2046,8 @@ and mod_reason_of_use_t f = function
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | GetValuesT (reason, t) -> GetValuesT (f reason, t)
   | GetPropT (reason, n, t) -> GetPropT (f reason, n, t)
+  | GetPrivatePropT (reason, name, bindings, static, t) ->
+      GetPrivatePropT (f reason, name, bindings, static, t)
   | GetProtoT (reason, t) -> GetProtoT (f reason, t)
   | GetStaticsT (reason, t) -> GetStaticsT (f reason, t)
   | GuardT (pred, result, t) -> GuardT (pred, result, mod_reason_of_t f t)
@@ -2069,6 +2090,8 @@ and mod_reason_of_use_t f = function
       SentinelPropTestT (l, sense, sentinel, mod_reason_of_t f result)
   | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
   | SetPropT (reason, n, t) -> SetPropT (f reason, n, t)
+  | SetPrivatePropT (reason, n, scopes, static, t) ->
+      SetPrivatePropT (f reason, n, scopes, static, t)
   | SetProtoT (reason, t) -> SetProtoT (f reason, t)
   | SpecializeT(reason_op, reason_tapp, cache, ts, t) ->
       SpecializeT (f reason_op, reason_tapp, cache, ts, t)
@@ -2246,6 +2269,7 @@ let string_of_use_ctor = function
   | GetKeysT _ -> "GetKeysT"
   | GetValuesT _ -> "GetValuesT"
   | GetPropT _ -> "GetPropT"
+  | GetPrivatePropT _ -> "GetPrivatePropT"
   | GetProtoT _ -> "GetProtoT"
   | GetStaticsT _ -> "GetStaticsT"
   | GuardT _ -> "GuardT"
@@ -2296,6 +2320,7 @@ let string_of_use_ctor = function
   | SentinelPropTestT _ -> "SentinelPropTestT"
   | SetElemT _ -> "SetElemT"
   | SetPropT _ -> "SetPropT"
+  | SetPrivatePropT _ -> "SetPrivatePropT"
   | SetProtoT _ -> "SetProtoT"
   | SpecializeT _ -> "SpecializeT"
   | ObjSpreadT _ -> "ObjSpreadT"

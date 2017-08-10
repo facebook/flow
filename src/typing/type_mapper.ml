@@ -421,11 +421,21 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if prop' == prop && t'' == t' then t
         else SetPropT (r, prop', t'')
+    | SetPrivatePropT (r, prop, scopes, static, t') ->
+        let t'' = self#type_ cx map_cx t' in
+        let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
+        if t'' == t' && scopes' == scopes then t
+        else SetPrivatePropT (r, prop, scopes', static, t'')
     | GetPropT (r, prop, t') ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
         if prop' == prop && t'' == t' then t
         else GetPropT (r, prop', t'')
+    | GetPrivatePropT (r, prop, scopes, static, t') ->
+        let t'' = self#type_ cx map_cx t' in
+        let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
+        if t'' == t' && scopes' == scopes then t
+        else GetPrivatePropT (r, prop, scopes', static, t'')
     | TestPropT (r, prop, t') ->
         let prop' = self#prop_ref cx map_cx prop in
         let t'' = self#type_ cx map_cx t' in
@@ -1190,4 +1200,18 @@ class ['a] t = object(self)
         if obj' == obj then x
         else NotNull obj'
     | Null _ -> x) t
+
+  method class_binding cx map_cx binding =
+    let f_tmap = Context.find_props cx binding.class_private_fields in
+    let f_tmap' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) f_tmap in
+    let class_private_fields = if f_tmap == f_tmap' then binding.class_private_fields
+          else Context.make_property_map cx f_tmap' in
+    let s_tmap = Context.find_props cx binding.class_private_static_fields in
+    let s_tmap' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) s_tmap in
+    let class_private_static_fields = if s_tmap == s_tmap' then binding.class_private_static_fields
+          else Context.make_property_map cx s_tmap' in
+    if class_private_fields == binding.class_private_fields &&
+      class_private_static_fields == binding.class_private_static_fields
+    then binding
+    else {binding with class_private_fields; class_private_static_fields}
 end

@@ -84,6 +84,7 @@ type error_message =
       actual_polarity: Type.polarity;
     }
   | EStrictLookupFailed of (reason * reason) * reason * string option
+  | EPrivateLookupFailed of (reason * reason)
   | EFunCallParam of (reason * reason)
   | EFunCallThis of reason * reason * reason
   | EFunReturn of (reason * reason)
@@ -321,6 +322,8 @@ let locs_of_error_message = function
       [loc_of_reason reason1; loc_of_reason reason2]
   | EPolarityMismatch { reason; _ } -> [loc_of_reason reason]
   | EStrictLookupFailed ((reason1, reason2), _, _) ->
+      [loc_of_reason reason1; loc_of_reason reason2]
+  | EPrivateLookupFailed (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EFunCallParam (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
@@ -789,6 +792,9 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | _ -> "Property not found in"
       in
       typecheck_error msg reasons
+
+  | EPrivateLookupFailed reasons ->
+      typecheck_error "Property not found in" reasons
 
   | EFunCallParam (lreason, ureason) ->
       (* Special case: if the lower bound is from a libdef, then flip

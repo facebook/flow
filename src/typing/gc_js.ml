@@ -240,6 +240,7 @@ and gc_use cx state = function
   | GetKeysT (_, t) -> gc cx state t
   | GetValuesT (_, t) -> gc cx state t
   | GetPropT(_, _, t) -> gc cx state t
+  | GetPrivatePropT(_, _, _, _, t) -> gc cx state t
   | GetProtoT (_, t) -> gc cx state t
   | GetStaticsT(_, t) -> gc cx state t
   | GuardT (pred, t1, t2) ->
@@ -286,6 +287,7 @@ and gc_use cx state = function
   | SentinelPropTestT (t, _, _, t_out) -> gc cx state t; gc cx state t_out
   | SetElemT(_, i, t) -> gc cx state i; gc cx state t
   | SetPropT(_, _, t) -> gc cx state t
+  | SetPrivatePropT(_, _, _, _, t) -> gc cx state t
   | SetProtoT (_, t) -> gc cx state t
   | SpecializeT (_, _, _, ts, t) -> List.iter (gc cx state) ts; gc cx state t
   | ObjSpreadT (_, _, tool, state', t) ->
