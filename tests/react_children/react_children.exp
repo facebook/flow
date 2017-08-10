@@ -1,10 +1,182 @@
+Error: api.js:11
+ 11: na(Children.map(a, (x: string) => (x: string))); // Error
+                     ^ number. This type is incompatible with
+204:       children: ChildrenArray<?T>,
+                     ^^^^^^^^^^^^^^^^^ union: read-only array type | ?T. See lib: <BUILTINS>/react.js:204
+  Member 1:
+  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  Error:
+   11: na(Children.map(a, (x: string) => (x: string))); // Error
+                       ^ number. This type is incompatible with
+  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  Member 2:
+  204:       children: ChildrenArray<?T>,
+                                     ^^ ?T. See lib: <BUILTINS>/react.js:204
+  Error:
+   11: na(Children.map(a, (x: string) => (x: string))); // Error
+                              ^^^^^^ string. This type is incompatible with an argument type of
+  205:       fn: (child: $NonMaybeType<T>, index: number) => U,
+                         ^^^^^^^^^^^^^^^^ number. See lib: <BUILTINS>/react.js:205
+
+Error: api.js:11
+ 11: na(Children.map(a, (x: string) => (x: string))); // Error
+                     ^ read-only array type. This type is incompatible with
+204:       children: ChildrenArray<?T>,
+                     ^^^^^^^^^^^^^^^^^ union: read-only array type | ?T. See lib: <BUILTINS>/react.js:204
+  Member 1:
+  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  Error:
+   11: na(Children.map(a, (x: string) => (x: string))); // Error
+                              ^^^^^^ string. This type is incompatible with an argument type of
+  205:       fn: (child: $NonMaybeType<T>, index: number) => U,
+                         ^^^^^^^^^^^^^^^^ number. See lib: <BUILTINS>/react.js:205
+  Member 2:
+  204:       children: ChildrenArray<?T>,
+                                     ^^ ?T. See lib: <BUILTINS>/react.js:204
+  Error:
+   11: na(Children.map(a, (x: string) => (x: string))); // Error
+                              ^^^^^^ string. This type is incompatible with an argument type of
+  205:       fn: (child: $NonMaybeType<T>, index: number) => U,
+                         ^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:205
+
+Error: api.js:11
+ 11: na(Children.map(a, (x: string) => (x: string))); // Error
+                                           ^^^^^^ string. This type is incompatible with
+ 30: function na(x: Array<number>) {}
+                          ^^^^^^ number
+
+Error: api.js:12
+ 12: sa(Children.map(a, (x: number) => (x: number))); // Error
+                                           ^^^^^^ number. This type is incompatible with
+ 31: function sa(x: Array<string>) {}
+                          ^^^^^^ string
+
+Error: api.js:14
+ 14: Children.forEach(a, (x: number) => {}); // Error
+                      ^ read-only array type. This type is incompatible with
+209:       children: ChildrenArray<T>,
+                     ^^^^^^^^^^^^^^^^ union: read-only array type | type parameter `T` of call of method `forEach`. See lib: <BUILTINS>/react.js:209
+  Member 1:
+  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  Error:
+    5: const a: ChildrenArray<?number> = [
+                              ^^^^^^^ null. This type is incompatible with the expected param type of
+   14: Children.forEach(a, (x: number) => {}); // Error
+                               ^^^^^^ number
+  Member 2:
+   14: Children.forEach(a, (x: number) => {}); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type parameter `T` of call of method `forEach`
+  Error:
+   14: Children.forEach(a, (x: number) => {}); // Error
+                        ^ read-only array type. This type is incompatible with
+    5: const a: ChildrenArray<?number> = [
+                               ^^^^^^ number
+
+Error: api.js:16
+ 16: Children.forEach(a, (x: string) => {}); // Error
+                      ^ read-only array type. This type is incompatible with
+209:       children: ChildrenArray<T>,
+                     ^^^^^^^^^^^^^^^^ union: read-only array type | type parameter `T` of call of method `forEach`. See lib: <BUILTINS>/react.js:209
+  Member 1:
+  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  Error:
+    5: const a: ChildrenArray<?number> = [
+                              ^^^^^^^ null. This type is incompatible with the expected param type of
+   16: Children.forEach(a, (x: string) => {}); // Error
+                               ^^^^^^ string
+  Member 2:
+   16: Children.forEach(a, (x: string) => {}); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type parameter `T` of call of method `forEach`
+  Error:
+   16: Children.forEach(a, (x: string) => {}); // Error
+                        ^ read-only array type. This type is incompatible with
+    5: const a: ChildrenArray<?number> = [
+                               ^^^^^^ number
+
+Error: api.js:19
+ 19: s(Children.count(a)); // Error
+       ^^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
+ 29: function s(x: string) {}
+                   ^^^^^^ string
+
+Error: api.js:22
+ 22: s(Children.only(a)); // Error
+                     ^ read-only array type. This type is incompatible with
+214:     only<T>(children: ChildrenArray<?T>): $NonMaybeType<T>;
+                           ^^^^^^^^^^^^^^^^^ union: read-only array type | ?T. See lib: <BUILTINS>/react.js:214
+  Member 1:
+  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  Error:
+   22: s(Children.only(a)); // Error
+         ^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
+   29: function s(x: string) {}
+                     ^^^^^^ string
+  Member 2:
+  214:     only<T>(children: ChildrenArray<?T>): $NonMaybeType<T>;
+                                           ^^ ?T. See lib: <BUILTINS>/react.js:214
+  Error:
+   22: s(Children.only(a)); // Error
+         ^^^^^^^^^^^^^^^^ read-only array type. This type is incompatible with the expected param type of
+   29: function s(x: string) {}
+                     ^^^^^^ string
+
+Error: api.js:25
+ 25: sa(Children.toArray(a)); // Error
+                         ^ number. This type is incompatible with
+215:     toArray<T>(children: ChildrenArray<?T>): Array<$NonMaybeType<T>>;
+                              ^^^^^^^^^^^^^^^^^ union: read-only array type | ?T. See lib: <BUILTINS>/react.js:215
+  Member 1:
+  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  Error:
+   25: sa(Children.toArray(a)); // Error
+                           ^ number. This type is incompatible with
+  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  Member 2:
+  215:     toArray<T>(children: ChildrenArray<?T>): Array<$NonMaybeType<T>>;
+                                              ^^ ?T. See lib: <BUILTINS>/react.js:215
+  Error:
+   25: sa(Children.toArray(a)); // Error
+                           ^ number. This type is incompatible with
+   31: function sa(x: Array<string>) {}
+                            ^^^^^^ string
+
+Error: api.js:25
+ 25: sa(Children.toArray(a)); // Error
+                         ^ read-only array type. This type is incompatible with
+215:     toArray<T>(children: ChildrenArray<?T>): Array<$NonMaybeType<T>>;
+                              ^^^^^^^^^^^^^^^^^ union: read-only array type | ?T. See lib: <BUILTINS>/react.js:215
+  Member 1:
+  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  Error:
+    5: const a: ChildrenArray<?number> = [
+                               ^^^^^^ number. This type is incompatible with
+   31: function sa(x: Array<string>) {}
+                            ^^^^^^ string
+  Member 2:
+  215:     toArray<T>(children: ChildrenArray<?T>): Array<$NonMaybeType<T>>;
+                                              ^^ ?T. See lib: <BUILTINS>/react.js:215
+  Error:
+   25: sa(Children.toArray(a)); // Error
+                           ^ read-only array type. This type is incompatible with
+   31: function sa(x: Array<string>) {}
+                            ^^^^^^ string
+
 Error: builtin_intrinsic.js:24
  24: <builtin>
      ^^^^^^^^^ React element `builtin`
  25:   {{a: 1, b: 2, c: 3}}
         ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-398:       children?: React$Node,
-                      ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:398
+420:       children?: React$Node,
+                      ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:420
   Member 1:
    17:   | void
            ^^^^ undefined. See lib: <BUILTINS>/react.js:17
@@ -2150,4 +2322,4 @@ Error: view.js:40
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
 
 
-Found 100 errors
+Found 110 errors
