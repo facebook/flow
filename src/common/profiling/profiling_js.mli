@@ -11,13 +11,13 @@
 type running
 type finished
 
-val with_profiling: (running -> running * 'a) -> finished * 'a
+val with_profiling: (running -> 'a) -> finished * 'a
 
-val start_timer: timer:string -> running -> running
-val stop_timer: timer:string -> running -> running
+val start_timer: timer:string -> running -> unit
+val stop_timer: timer:string -> running -> unit
 val get_finished_timer: timer:string -> running -> (float * float * float * float) option
 
-val sample_memory: metric:string -> value:float -> running -> running
+val sample_memory: metric:string -> value:float -> running -> unit
 
 val get_timing_json_string: finished -> string
 val get_memory_json_string: finished -> string

@@ -233,12 +233,11 @@ end = struct
     JSON_Object results
 end
 
-type running = {
+type finished = {
   timing: Timing.t;
   memory: Memory.t;
 }
-
-type finished = running
+type running = finished ref
 
 let empty = {
   timing = Timing.empty;
@@ -246,20 +245,20 @@ let empty = {
 }
 
 let start_timer ~timer profile =
-  { profile with timing = Timing.start_timer ~timer profile.timing }
+  profile := { !profile with timing = Timing.start_timer ~timer !profile.timing }
 
 let stop_timer ~timer profile =
-  { profile with timing = Timing.stop_timer ~timer profile.timing }
+  profile := { !profile with timing = Timing.stop_timer ~timer !profile.timing }
 
 let profiling_timer_name = "Profiling"
 let reserved_timer_names = SSet.of_list [ profiling_timer_name ]
 
 let with_profiling f =
-  let profiling, ret = empty
-  |> start_timer ~timer:profiling_timer_name
-  |> f in
-  let profiling = stop_timer ~timer:profiling_timer_name profiling in
-  (profiling, ret)
+  let profiling = ref empty in
+  start_timer ~timer:profiling_timer_name profiling;
+  let ret = f profiling in
+  stop_timer ~timer:profiling_timer_name profiling;
+  (!profiling, ret)
 
 let check_for_reserved_timer_name f ~timer profile =
   if SSet.mem timer reserved_timer_names
@@ -270,10 +269,10 @@ let start_timer = check_for_reserved_timer_name start_timer
 let stop_timer = check_for_reserved_timer_name stop_timer
 
 let get_finished_timer ~timer profile =
-  Timing.get_finished_timer ~timer profile.timing
+  Timing.get_finished_timer ~timer !profile.timing
 
 let sample_memory ~metric ~value profile =
-  { profile with memory = Memory.sample_memory ~metric ~value profile.memory }
+  profile := {!profile with memory = Memory.sample_memory ~metric ~value !profile.memory }
 
 let to_json_properties profile =
   [

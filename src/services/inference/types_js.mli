@@ -14,14 +14,14 @@ val init:
   profiling:Profiling_js.running ->
   workers:Worker.t list option ->
   Options.t ->
-  Profiling_js.running * FilenameSet.t * SSet.t * bool * ServerEnv.errors
+  FilenameSet.t * SSet.t * bool * ServerEnv.errors
 
 val calc_deps:
   options:Options.t ->
   profiling:Profiling_js.running ->
   workers:Worker.t list option ->
   filename list ->
-  Profiling_js.running * (FilenameSet.t FilenameMap.t * filename list FilenameMap.t)
+  FilenameSet.t FilenameMap.t * filename list FilenameMap.t
 
 (* incremental typecheck entry point *)
 val recheck:
@@ -39,7 +39,7 @@ val full_check:
   should_merge:bool ->
   filename list ->
   ServerEnv.errors ->
-  Profiling_js.running * Utils_js.FilenameSet.t * ServerEnv.errors
+  Utils_js.FilenameSet.t * ServerEnv.errors
 
 val typecheck_contents:
   options: Options.t ->

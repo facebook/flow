@@ -33,12 +33,12 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       "hash_table.used_slots", hash_stats.used_slots;
       "hash_table.slots", hash_stats.slots;
     ] in
-    List.fold_left (fun profiling (metric, value) ->
+    List.iter (fun (metric, value) ->
       Profiling_js.sample_memory
         ~metric:("init_done." ^ metric)
         ~value:(float_of_int value)
          profiling
-    ) profiling memory_metrics
+    ) memory_metrics
 
   let init ~focus_targets genv =
     (* write binary path and version to server log *)
@@ -49,29 +49,29 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let workers = genv.ServerEnv.workers in
       let options = genv.ServerEnv.options in
 
-      let profiling, parsed, libs, libs_ok, errors =
+      let parsed, libs, libs_ok, errors =
         Types_js.init ~profiling ~workers options in
 
       (* if any libs errored, we'll infer but not merge client code *)
       let should_merge = libs_ok in
 
       (* compute initial state *)
-      let profiling, checked, errors =
+      let checked, errors =
         if Options.is_lazy_mode options then
-          profiling, FilenameSet.empty, errors
+          FilenameSet.empty, errors
         else
           let parsed = FilenameSet.elements parsed in
           Types_js.full_check ~profiling ~workers ~focus_targets ~options ~should_merge parsed errors
       in
 
-      let profiling = sample_init_memory profiling in
+      sample_init_memory profiling;
 
       SharedMem_js.init_done();
 
       (* Return an env that initializes invariants required and maintained by
          recheck, namely that `files` contains files that parsed successfully, and
          `errors` contains the current set of errors. *)
-      profiling, { ServerEnv.
+      { ServerEnv.
         files = parsed;
         checked_files = checked;
         libs;

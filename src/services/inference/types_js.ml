@@ -57,9 +57,9 @@ let update_lint_settings map file lintsett =
   FilenameMap.add file lintsett map
 
 let with_timer ?options timer profiling f =
-  let profiling = Profiling_js.start_timer ~timer profiling in
+  Profiling_js.start_timer ~timer profiling;
   let ret = f () in
-  let profiling = Profiling_js.stop_timer ~timer profiling in
+  Profiling_js.stop_timer ~timer profiling;
 
   (* If we're profiling then output timing information to stderr *)
   (match options with
@@ -79,7 +79,7 @@ let with_timer ?options timer profiling f =
       | _ -> ());
   | _ -> ());
 
-  (profiling, ret)
+  ret
 
 let collate_parse_results { Parsing_service_js.parse_ok; parse_skips; parse_fails } =
   let local_errors = List.fold_left (fun errors (file, _, fail) ->
@@ -194,14 +194,14 @@ let commit_modules_and_resolve_requires
 
   let { ServerEnv.local_errors; merge_errors; suppressions; lint_settings } = errors in
 
-  let profiling, (changed_modules, local_errors) = commit_modules
+  let changed_modules, local_errors = commit_modules
     ~options profiling ~workers parsed unparsed ~old_modules local_errors new_or_changed in
 
-  let profiling, resolve_errors = resolve_requires
+  let resolve_errors = resolve_requires
     ~options profiling ~workers parsed in
   let local_errors = FilenameMap.union resolve_errors local_errors in
 
-  profiling, changed_modules, { ServerEnv.local_errors; merge_errors; suppressions; lint_settings }
+  changed_modules, { ServerEnv.local_errors; merge_errors; suppressions; lint_settings }
 
 let error_set_of_merge_exception file exc =
   let loc = Loc.({ none with source = Some file }) in
@@ -281,7 +281,7 @@ let typecheck
   in
 
   (* Continue profiling noop Infer to compare with pre-refactor metrics *)
-  let profiling, () = with_timer ~options "Infer" profiling (fun () -> ()) in
+  let () = with_timer ~options "Infer" profiling (fun () -> ()) in
 
   let send_errors_over_connection =
     match persistent_connections with
@@ -340,7 +340,7 @@ let typecheck
   in
 
   (* call supplied function to calculate closure of modules to merge *)
-  let profiling, merge_input =
+  let merge_input =
     with_timer ~options "MakeMergeInput" profiling (fun () ->
       make_merge_input infer_input
     ) in
@@ -354,11 +354,11 @@ let typecheck
        initially.
     *)
     Hh_logger.info "Calculating dependencies";
-    let profiling, (dependency_graph, component_map) =
+    let dependency_graph, component_map =
       calc_deps ~options ~profiling ~workers to_merge in
 
     Hh_logger.info "Merging";
-    let profiling, merge_errors, suppressions, lint_settings = try
+    let merge_errors, suppressions, lint_settings = try
       let intermediate_result_callback results =
         let errors = lazy (
           List.map (fun (file, result) ->
@@ -378,7 +378,7 @@ let typecheck
         send_errors_over_connection errors
       in
 
-      let profiling, (merge_errors, suppressions, lint_settings) =
+      let merge_errors, suppressions, lint_settings =
         merge
           ~intermediate_result_callback
           ~options
@@ -391,7 +391,7 @@ let typecheck
       in
       if Options.should_profile options then Gc.print_stat stderr;
       Hh_logger.info "Done";
-      profiling, merge_errors, suppressions, lint_settings
+      merge_errors, suppressions, lint_settings
     with
     (* Unrecoverable exceptions *)
     | SharedMem_js.Out_of_shared_memory
@@ -401,16 +401,15 @@ let typecheck
     (* A catch all suppression is probably a bad idea... *)
     | exc when not Build_mode.dev ->
         prerr_endline (Printexc.to_string exc);
-        profiling, merge_errors, suppressions, lint_settings
+        merge_errors, suppressions, lint_settings
     in
 
-    profiling,
     FilenameSet.union unchanged_checked (FilenameSet.of_list to_merge),
     { ServerEnv.local_errors; merge_errors; suppressions; lint_settings; }
 
   | None ->
-    profiling, unchanged_checked,
-      { ServerEnv.local_errors; merge_errors; suppressions; lint_settings }
+    unchanged_checked,
+    { ServerEnv.local_errors; merge_errors; suppressions; lint_settings }
 
 (* When checking contents, ensure that dependencies are checked. Might have more
    general utility. *)
@@ -430,7 +429,7 @@ let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
     let all_dependent_files = FilenameSet.empty in
     let persistent_connections = Some (!env.ServerEnv.connections) in
     let _profiling, (checked, errors) = Profiling_js.with_profiling (fun profiling ->
-      let profiling, checked, errors = typecheck ~options ~profiling ~workers ~errors
+      let checked, errors = typecheck ~options ~profiling ~workers ~errors
         ~unchanged_checked ~infer_input
         ~parsed ~all_dependent_files
         ~persistent_connections
@@ -442,7 +441,7 @@ let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
             ) FilenameMap.empty
           )
         ) in
-      profiling, (checked, errors)
+      checked, errors
     ) in
     env := { !env with ServerEnv.
       checked_files = checked;
@@ -454,7 +453,7 @@ let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
 (** TODO: handle case when file+contents don't agree with file system state **)
 let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents filename =
   let profiling, (cx, errors, warnings, info) = Profiling_js.with_profiling begin fun profiling ->
-    let profiling, (errors, parse_result, info) =
+    let errors, parse_result, info =
       parse_contents ~options ~profiling ~check_syntax filename contents in
 
     match parse_result with
@@ -482,7 +481,7 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
         in
 
         (* merge *)
-        let profiling, cx = with_timer "Merge" profiling (fun () ->
+        let cx = with_timer "Merge" profiling (fun () ->
           let ensure_checked_dependencies = ensure_checked_dependencies ~options ~workers ~env in
           Merge_service.merge_contents_context options filename ast info ~ensure_checked_dependencies
         ) in
@@ -499,7 +498,7 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
           else Errors.ErrorSet.empty
         in
 
-        profiling, (Some cx, errors, warnings, info)
+        Some cx, errors, warnings, info
 
     | Parsing_service_js.Parse_fail fails ->
         let errors = match fails with
@@ -512,18 +511,18 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
               Errors.ErrorSet.add err errors
             ) errors errs
         in
-        profiling, (None, errors, Errors.ErrorSet.empty, info)
+        None, errors, Errors.ErrorSet.empty, info
 
     | Parsing_service_js.Parse_skip
        (Parsing_service_js.Skip_non_flow_file
       | Parsing_service_js.Skip_resource_file) ->
         (* should never happen *)
-        profiling, (None, errors, Errors.ErrorSet.empty, info)
+        None, errors, Errors.ErrorSet.empty, info
   end in
   profiling, cx, errors, warnings, info
 
 let init_package_heap ~options ~profiling parsed =
-  let profiling, () = with_timer ~options "PackageHeap" profiling (fun () ->
+  with_timer ~options "PackageHeap" profiling (fun () ->
     FilenameSet.iter (fun filename ->
       match filename with
       | Loc.JsonFile str when Filename.basename str = "package.json" ->
@@ -531,8 +530,7 @@ let init_package_heap ~options ~profiling parsed =
         Module_js.add_package str ast
       | _ -> ()
     ) parsed;
-  ) in
-  profiling
+  )
 
 let init_libs ~options ~profiling ~local_errors ~suppressions ~lint_settings ordered_libs =
   with_timer ~options "InitLibs" profiling (fun () ->
@@ -601,7 +599,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env =
   Hh_logger.info "Parsing";
   (* reparse modified files, updating modified to new_or_changed to reflect
      removal of unchanged files *)
-  let profiling, (new_or_changed, freshparsed, unparsed, new_local_errors) =
+  let new_or_changed, freshparsed, unparsed, new_local_errors =
      reparse ~options ~profiling ~workers modified in
   let new_or_changed_count = FilenameSet.cardinal new_or_changed in
 
@@ -763,7 +761,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env =
   let dependent_file_count = ref 0 in
 
   let freshparsed_list = FilenameSet.elements freshparsed in
-  let profiling, changed_modules, errors =
+  let changed_modules, errors =
     commit_modules_and_resolve_requires
       ~options
       ~profiling
@@ -807,7 +805,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env =
   let parsed = FilenameSet.union freshparsed unchanged in
 
   (* recheck *)
-  let profiling, checked, errors = typecheck
+  let checked, errors = typecheck
     ~options
     ~profiling
     ~workers
@@ -857,7 +855,6 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env =
     )
   in
 
-  profiling,
   (* NOTE: unused fields are left in their initial empty state *)
   ({ env with ServerEnv.
     files = parsed;
@@ -921,20 +918,20 @@ let init ~profiling ~workers options =
   let next_files = make_next_files ~libs ~file_options (Options.root options) in
 
   Hh_logger.info "Parsing";
-  let profiling, (parsed, unparsed, local_errors) =
+  let parsed, unparsed, local_errors =
     parse ~options ~profiling ~workers next_files in
 
   Hh_logger.info "Building package heap";
-  let profiling = init_package_heap ~options ~profiling parsed in
+  let () = init_package_heap ~options ~profiling parsed in
 
   Hh_logger.info "Loading libraries";
-  let profiling, (libs_ok, local_errors, suppressions, lint_settings) =
+  let libs_ok, local_errors, suppressions, lint_settings =
     let suppressions = FilenameMap.empty in
     let lint_settings = FilenameMap.empty in
     init_libs ~options ~profiling ~local_errors ~suppressions ~lint_settings ordered_libs in
 
   Hh_logger.info "Resolving dependencies";
-  let profiling, _, errors =
+  let _, errors =
     let parsed_list = FilenameSet.elements parsed in
     let errors = { ServerEnv.
       local_errors;
@@ -956,7 +953,7 @@ let init ~profiling ~workers options =
       ~errors
   in
 
-  profiling, parsed, libs, libs_ok, errors
+  parsed, libs, libs_ok, errors
 
 let full_check ~profiling ~options ~workers ~focus_targets ~should_merge parsed errors =
   let infer_input = files_to_infer ~workers ~focus_targets parsed in
