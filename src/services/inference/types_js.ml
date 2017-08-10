@@ -399,7 +399,7 @@ let typecheck
     | SharedMem_js.Hash_table_full
     | SharedMem_js.Dep_table_full as exn -> raise exn
     (* A catch all suppression is probably a bad idea... *)
-    | exc ->
+    | exc when not Build_mode.dev ->
         prerr_endline (Printexc.to_string exc);
         profiling, merge_errors, suppressions, lint_settings
     in

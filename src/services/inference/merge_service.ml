@@ -239,7 +239,7 @@ let merge_strict_job ~options ~job (merged, unchanged) elements =
       | SharedMem_js.Hash_table_full
       | SharedMem_js.Dep_table_full as exc -> raise exc
       (* A catch all suppression is probably a bad idea... *)
-      | exc ->
+      | exc when not Build_mode.dev ->
         let file = List.hd component in
         prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
           (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
