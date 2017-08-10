@@ -84,11 +84,11 @@ module FloatMap = MyMap.Make(struct type t = float let compare = compare end)
 
 type distribution = {
   bucket_size: float;
-  buckets: int FloatMap.t;
+  buckets: float FloatMap.t;
 }
 
 type record_entry = {
-  count: int;
+  count: float;
   mean: float;
   variance_sum: float;
   max: float;
@@ -116,7 +116,7 @@ let serialize record = !record
 let deserialize data = ref data
 
 let new_entry = {
-  count = 0;
+  count = 0.0;
   mean = 0.0;
   variance_sum = 0.0;
   max = min_float;
@@ -152,20 +152,20 @@ let track_distribution ?record name ~bucket_size =
 let round_down ~bucket_size value =
   bucket_size *. (floor (value /. bucket_size))
 
-let update_distribution value = function
+let update_distribution ~weight value = function
   | None -> None
   | Some { bucket_size; buckets } ->
       let bucket = round_down ~bucket_size value in
       let bucket_count = match FloatMap.get bucket buckets with
-      | None -> 1
-      | Some count -> count + 1 in
+      | None -> weight
+      | Some count -> count +. weight in
       let buckets = FloatMap.add bucket bucket_count buckets in
       Some { bucket_size; buckets; }
 
-let sample ?record name value =
+let sample ?record ?(weight=1.0) name value =
   let record = get_record record in
   let {
-    count;
+    count = old_count;
     mean = old_mean;
     variance_sum;
     max;
@@ -175,15 +175,17 @@ let sample ?record name value =
     | None -> new_entry
     | Some entry -> entry in
 
-  let count = count + 1 in
-  let mean = old_mean +. ((value -. old_mean) /. (float count)) in
-  (* Knuth's online variance approximation algorithm *)
-  let variance_sum = variance_sum +. (value -. old_mean) *. (value -. mean) in
+  (* Add 1 * weight to the count *)
+  let count = old_count +. weight in
+  let mean = old_mean +. weight *. (value -. old_mean) /. count in
+  (* Knuth's online variance approximation algorithm, updated for weights.
+   * Weighted version from http://people.ds.cam.ac.uk/fanf2/hermes/doc/antiforgery/stats.pdf *)
+  let variance_sum = variance_sum +. weight *. (value -. old_mean) *. (value -. mean) in
 
   let max = Pervasives.max max value in
   let min = Pervasives.min min value in
 
-  let distribution = update_distribution value distribution in
+  let distribution = update_distribution ~weight value distribution in
 
   let entry = { count; mean; variance_sum; max; min; distribution; } in
   record := SMap.add name entry (!record)
@@ -192,7 +194,7 @@ let merge_entries name from into = match (from, into) with
   | None, into -> into
   | from, None -> from
   | Some from, Some into ->
-      let count = from.count + into.count in
+      let count = from.count +. into.count in
 
       (* Using this algorithm to combine the variance sums
        * https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
@@ -200,10 +202,10 @@ let merge_entries name from into = match (from, into) with
       (* d = meanB - meanA *)
       let delta = from.mean -. into.mean in
       (* mean = meanA + delta * (countB/count) *)
-      let mean = into.mean +. (delta *. (float from.count) /. (float count)) in
+      let mean = into.mean +. (delta *. from.count /. count) in
       (* VarSum = VarSumA + VarSumB + delta * delta * countA * countB / count *)
       let variance_sum = from.variance_sum +. into.variance_sum +.
-        delta *. delta *. (float into.count) *. (float from.count) /. (float count) in
+        delta *. delta *. into.count *. from.count /. count in
 
       let max = Pervasives.max from.max into.max in
       let min = Pervasives.min from.min into.min in
@@ -220,7 +222,7 @@ let merge_entries name from into = match (from, into) with
             match (from_count, into_count) with
             | None, into -> into
             | from, None -> from
-            | Some from_count, Some into_count -> Some (from_count + into_count))
+            | Some from_count, Some into_count -> Some (from_count +. into_count))
           from into in
           Some { bucket_size; buckets; } in
       Some { count; mean; variance_sum; max; min; distribution; }
@@ -243,7 +245,19 @@ let get_sum ?record name =
   let record = get_record record in
   match SMap.get name !record with
   | None -> None
-  | Some { count; mean; _; } -> Some (float_of_int count *. mean)
+  | Some { count; mean; _; } -> Some (count *. mean)
+
+let get_mean ?record name =
+  let record = get_record record in
+  match SMap.get name !record with
+  | None -> None
+  | Some { mean; _; } -> Some mean
+
+let get_count ?record name =
+  let record = get_record record in
+  match SMap.get name !record with
+  | None -> None
+  | Some { count; _; } -> Some count
 
 let pretty_num f =
   if f > 1000000000.0
@@ -261,13 +275,13 @@ let print_entry_stats ?record name =
   Printf.eprintf "%s stats -- " name;
   match SMap.get name (!record) with
   | None
-  | Some { count = 0; _; } -> prerr_endline "NO DATA"
+  | Some { count = 0.0; _; } -> prerr_endline "NO DATA"
   | Some { count; mean; variance_sum; max; min; distribution=_; } ->
-      let total = (float count) *. mean in
-      let std_dev = sqrt (variance_sum /. (float count)) in
+      let total = count *. mean in
+      let std_dev = sqrt (variance_sum /. count) in
       Utils.prerr_endlinef
         "samples: %s, total: %s, avg: %s, stddev: %s, max: %s, min: %s)"
-        (pretty_num (float count)) (pretty_num total) (pretty_num mean)
+        (pretty_num count) (pretty_num total) (pretty_num mean)
         (pretty_num std_dev) (pretty_num max) (pretty_num min)
 
 let print_stats ?record () =
@@ -278,9 +292,9 @@ let rec print_buckets ~low ~high ~bucket_size buckets =
   if low <= high
   then begin
     let count = match FloatMap.get low buckets with
-    | None -> 0
+    | None -> 0.0
     | Some count -> count in
-    Printf.eprintf "[%02f: %03d]  " low count;
+    Printf.eprintf "[%02f: %02f]  " low count;
     let low = low +. bucket_size in
     print_buckets ~low ~high ~bucket_size buckets
   end
@@ -290,7 +304,7 @@ let print_entry_distribution ?record name =
   Printf.eprintf "%s distribution -- " name;
   match SMap.get name (!record) with
   | None
-  | Some { count = 0; _; } -> prerr_endline "NO DATA"
+  | Some { count = 0.0; _; } -> prerr_endline "NO DATA"
   | Some { distribution = None; _; } ->
       prerr_endline "NO DATA (did you forget to call track_distribution?)"
   | Some { max; min; distribution = Some { bucket_size; buckets; }; _; } ->
