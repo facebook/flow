@@ -388,9 +388,9 @@ module rec TypeTerm : sig
     (* operations on objects *)
 
     (* Resolves the object into which the properties are assigned *)
-    | ObjAssignToT of reason * t * t * string list * obj_assign_kind
+    | ObjAssignToT of reason * t * t * obj_assign_kind
     (* Resolves the object from which the properties are assigned *)
-    | ObjAssignFromT of reason * t * t * string list * obj_assign_kind
+    | ObjAssignFromT of reason * t * t * obj_assign_kind
     | ObjFreezeT of reason * t
     | ObjRestT of reason * string list * t
     | ObjSealT of reason * t
@@ -1562,11 +1562,29 @@ and ObjectSpread : sig
 
   and options = {
     merge_mode: merge_mode;
+    exclude_props: string list;
   }
 
   and merge_mode =
-    | DefaultMM of bool (* make_exact *)
-    | IgnoreExactAndOwnMM
+    (* The default merge mode implements JavaScript spead semantics. It thinks
+     * about the owness of the properties being merged. This should be used when
+     * you want to expression sound type spread.
+     *
+     * It takes a boolean argument which if true will force the resulting object
+     * created by the spread to be exact. If false then the resulting object
+     * will be inexact. The other merge modes will make the resulting object
+     * exact if all inputs are exact. *)
+    | SoundSpreadMM of bool
+    (* The basic merge mode perofms a simple merge of two object types. It does
+     * not care about whether or not properties are own it just merges objects
+     * into each other. If all of the objects being merged are exact the final
+     * object will also be exact. This should not be used in JavaScript spreads,
+     * in that case it would be unsound! Instead only use this internally when
+     * you want to "magically" combine object types. This is used in a few
+     * places for our React support. *)
+    | BasicMM
+    (* A special case for DiffT. It filters void types from properties.
+     * Otherwise it works very similarly to the basic merge mode. *)
     | DiffMM
 
   (* A union type resolves to a resolved spread with more than one element *)
@@ -1906,8 +1924,8 @@ and reason_of_use_t = function
   | MethodT (reason,_,_,_) -> reason
   | MixinT (reason, _) -> reason
   | NotT (reason, _) -> reason
-  | ObjAssignToT (reason, _, _, _, _) -> reason
-  | ObjAssignFromT (reason, _, _, _, _) -> reason
+  | ObjAssignToT (reason, _, _, _) -> reason
+  | ObjAssignFromT (reason, _, _, _) -> reason
   | ObjFreezeT (reason, _) -> reason
   | ObjRestT (reason, _, _) -> reason
   | ObjSealT (reason, _) -> reason
@@ -2057,10 +2075,10 @@ and mod_reason_of_use_t f = function
       MethodT (f reason_call, reason_lookup, name, ft)
   | MixinT (reason, inst) -> MixinT (f reason, inst)
   | NotT (reason, t) -> NotT (f reason, t)
-  | ObjAssignToT (reason, t, t2, filter, kind) ->
-      ObjAssignToT (f reason, t, t2, filter, kind)
-  | ObjAssignFromT (reason, t, t2, filter, kind) ->
-      ObjAssignFromT (f reason, t, t2, filter, kind)
+  | ObjAssignToT (reason, t, t2, kind) ->
+      ObjAssignToT (f reason, t, t2, kind)
+  | ObjAssignFromT (reason, t, t2, kind) ->
+      ObjAssignFromT (f reason, t, t2, kind)
   | ObjFreezeT (reason, t) -> ObjFreezeT (f reason, t)
   | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
   | ObjSealT (reason, t) -> ObjSealT (f reason, t)
@@ -2398,6 +2416,10 @@ and elemt_of_arrtype reason = function
 let optional t =
   let reason = replace_reason (fun desc -> ROptional desc) (reason_of_t t) in
   DefT (reason, OptionalT t)
+
+let maybe t =
+  let reason = replace_reason (fun desc -> RMaybe desc) (reason_of_t t) in
+  DefT (reason, MaybeT t)
 
 let class_type t =
   let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in

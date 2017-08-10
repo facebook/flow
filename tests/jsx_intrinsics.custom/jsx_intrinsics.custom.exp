@@ -48,7 +48,7 @@ Error: strings.js:13
   4:   div: $JSXIntrinsic<{id: string}>,
                           ^^^^^^^^^^^^ property `id`. Property not found in. See lib: lib/jsx.js:4
  13: React.createElement('div', {}); // This is fine
-                                ^^ object literal
+                                ^^ props of React element
 
 Error: strings.js:14
  14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics

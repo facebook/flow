@@ -327,8 +327,8 @@ and parts_of_use_t cx = function
 | MethodT (_, _, _, funcalltype) -> parts_of_funcalltype funcalltype
 | MixinT (_, t) -> ["t", Def t]
 | NotT (_, out) -> ["out", Def out]
-| ObjAssignToT (_, s, t, _, _) -> ["source", Def s; "t", Def t]
-| ObjAssignFromT (_, p, t, _, _) -> ["proto", Def p; "t", Def t]
+| ObjAssignToT (_, s, t, _) -> ["source", Def s; "t", Def t]
+| ObjAssignFromT (_, p, t, _) -> ["proto", Def p; "t", Def t]
 | ObjFreezeT (_, out) -> ["out", Def out]
 | ObjRestT (_, _, out) -> ["out", Def out]
 | ObjSealT (_, out) -> ["out", Def out]

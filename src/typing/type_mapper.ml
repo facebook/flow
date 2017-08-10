@@ -567,16 +567,16 @@ class ['a] t = object(self)
         let action' = self#lookup_action cx map_cx action in
         if lookup' == lookup && tlist' == tlist && prop' == prop && action' == action then t
         else LookupT (r, lookup', tlist', prop', action')
-    | ObjAssignToT (r, t1, t2, strings, obj_assign) ->
+    | ObjAssignToT (r, t1, t2, obj_assign) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
         if t1' == t1 && t2' == t2 then t
-        else ObjAssignToT (r, t1', t2', strings, obj_assign)
-    | ObjAssignFromT (r, t1, t2, strings, obj_assign) ->
+        else ObjAssignToT (r, t1', t2', obj_assign)
+    | ObjAssignFromT (r, t1, t2, obj_assign) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
         if t1' == t1 && t2' == t2 then t
-        else ObjAssignFromT (r, t1', t2', strings, obj_assign)
+        else ObjAssignFromT (r, t1', t2', obj_assign)
     | ObjFreezeT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t

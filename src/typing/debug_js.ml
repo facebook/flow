@@ -548,17 +548,15 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "action", json_of_lookup_action json_cx action
     ]
 
-  | ObjAssignFromT (_, proto, tvar, prop_names, kind) -> [
+  | ObjAssignFromT (_, proto, tvar, kind) -> [
       "target", _json_of_t json_cx proto;
       "resultType", _json_of_t json_cx tvar;
-      "propNames", JSON_Array (List.map (fun s -> JSON_String s) prop_names);
       "kind", json_of_obj_assign_kind json_cx kind;
   ]
 
-  | ObjAssignToT (_, from, tvar, prop_names, kind) -> [
+  | ObjAssignToT (_, from, tvar, kind) -> [
       "source", _json_of_t json_cx from;
       "resultType", _json_of_t json_cx tvar;
-      "propNames", JSON_Array (List.map (fun s -> JSON_String s) prop_names);
       "kind", json_of_obj_assign_kind json_cx kind;
   ]
 
@@ -1041,20 +1039,22 @@ and json_of_destructor_impl json_cx = Hh_json.(function
     ]
   | SpreadType (options, ts) ->
     let open ObjectSpread in
-    let {merge_mode} = options in
+    let {merge_mode; exclude_props} = options in
     JSON_Object (
       (match merge_mode with
-        | DefaultMM make_exact -> [
-            "mergeMode", JSON_String "Default";
+        | SoundSpreadMM make_exact -> [
+            "mergeMode", JSON_String "SoundSpread";
             "makeExact", JSON_Bool make_exact;
           ]
-        | IgnoreExactAndOwnMM -> [
-            "mergeMode", JSON_String "IgnoreExactAndOwn";
+        | BasicMM -> [
+            "mergeMode", JSON_String "Basic";
           ]
         | DiffMM -> [
             "mergeMode", JSON_String "Diff";
           ]
       ) @ [
+        "excludePropNames",
+          JSON_Array (List.map (fun s -> JSON_String s) exclude_props);
         "spread", JSON_Array (List.map (_json_of_t json_cx) ts);
       ]
     )
@@ -1798,12 +1798,13 @@ and dump_use_t_ (depth, tvars) cx t =
         (String.concat "; " (List.map kid todo_rev))
         (String.concat "; " (List.map resolved acc))
     in
-    let options {merge_mode} =
-      spf "{merge_mode=%s}"
+    let options {merge_mode; exclude_props} =
+      spf "{merge_mode=%s; exclude_props=[%s]}"
         (match merge_mode with
-          | DefaultMM make_exact -> spf "Default; make_exact=%b" make_exact
-          | IgnoreExactAndOwnMM -> "IgnoreExactAndOwn"
+          | SoundSpreadMM make_exact -> spf "SoundSpread; make_exact=%b" make_exact
+          | BasicMM -> "Basic"
           | DiffMM -> "Diff")
+        (String.concat "; " exclude_props)
     in
     fun o t s ->
       spf "(%s, %s, %s)" (options o) (tool t) (state s)
@@ -1880,9 +1881,9 @@ and dump_use_t_ (depth, tvars) cx t =
   | MethodT (_, _, prop, _) -> p ~extra:(spf "(%s)" (propref prop)) t
   | MixinT (_, arg) -> p ~extra:(kid arg) t
   | NotT (_, arg) -> p ~extra:(kid arg) t
-  | ObjAssignToT (_, arg1, arg2, _, _) -> p t
+  | ObjAssignToT (_, arg1, arg2, _) -> p t
       ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
-  | ObjAssignFromT (_, arg1, arg2, _, _) -> p t
+  | ObjAssignFromT (_, arg1, arg2, _) -> p t
       ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
   | ObjFreezeT _ -> p t
   | ObjRestT (_, xs, arg) -> p t

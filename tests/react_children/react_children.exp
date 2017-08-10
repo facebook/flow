@@ -1,46 +1,46 @@
 Error: api.js:11
  11: na(Children.map(a, (x: string) => (x: string))); // Error
                      ^ number. This type is incompatible with
-204:       children: ChildrenArray<?T>,
-                     ^^^^^^^^^^^^^^^^^ union: read-only array type | ?T. See lib: <BUILTINS>/react.js:204
+219:       children: ChildrenArray<?T>,
+                     ^^^^^^^^^^^^^^^^^ union: read-only array type | ?T. See lib: <BUILTINS>/react.js:219
   Member 1:
-  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  216:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:216
   Error:
    11: na(Children.map(a, (x: string) => (x: string))); // Error
                        ^ number. This type is incompatible with
-  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  216:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:216
   Member 2:
-  204:       children: ChildrenArray<?T>,
-                                     ^^ ?T. See lib: <BUILTINS>/react.js:204
+  219:       children: ChildrenArray<?T>,
+                                     ^^ ?T. See lib: <BUILTINS>/react.js:219
   Error:
    11: na(Children.map(a, (x: string) => (x: string))); // Error
                               ^^^^^^ string. This type is incompatible with an argument type of
-  205:       fn: (child: $NonMaybeType<T>, index: number) => U,
-                         ^^^^^^^^^^^^^^^^ number. See lib: <BUILTINS>/react.js:205
+  220:       fn: (child: $NonMaybeType<T>, index: number) => U,
+                         ^^^^^^^^^^^^^^^^ number. See lib: <BUILTINS>/react.js:220
 
 Error: api.js:11
  11: na(Children.map(a, (x: string) => (x: string))); // Error
                      ^ read-only array type. This type is incompatible with
-204:       children: ChildrenArray<?T>,
-                     ^^^^^^^^^^^^^^^^^ union: read-only array type | ?T. See lib: <BUILTINS>/react.js:204
+219:       children: ChildrenArray<?T>,
+                     ^^^^^^^^^^^^^^^^^ union: read-only array type | ?T. See lib: <BUILTINS>/react.js:219
   Member 1:
-  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  216:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:216
   Error:
    11: na(Children.map(a, (x: string) => (x: string))); // Error
                               ^^^^^^ string. This type is incompatible with an argument type of
-  205:       fn: (child: $NonMaybeType<T>, index: number) => U,
-                         ^^^^^^^^^^^^^^^^ number. See lib: <BUILTINS>/react.js:205
+  220:       fn: (child: $NonMaybeType<T>, index: number) => U,
+                         ^^^^^^^^^^^^^^^^ number. See lib: <BUILTINS>/react.js:220
   Member 2:
-  204:       children: ChildrenArray<?T>,
-                                     ^^ ?T. See lib: <BUILTINS>/react.js:204
+  219:       children: ChildrenArray<?T>,
+                                     ^^ ?T. See lib: <BUILTINS>/react.js:219
   Error:
    11: na(Children.map(a, (x: string) => (x: string))); // Error
                               ^^^^^^ string. This type is incompatible with an argument type of
-  205:       fn: (child: $NonMaybeType<T>, index: number) => U,
-                         ^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:205
+  220:       fn: (child: $NonMaybeType<T>, index: number) => U,
+                         ^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:220
 
 Error: api.js:11
  11: na(Children.map(a, (x: string) => (x: string))); // Error
@@ -57,11 +57,11 @@ Error: api.js:12
 Error: api.js:14
  14: Children.forEach(a, (x: number) => {}); // Error
                       ^ read-only array type. This type is incompatible with
-209:       children: ChildrenArray<T>,
-                     ^^^^^^^^^^^^^^^^ union: read-only array type | type parameter `T` of call of method `forEach`. See lib: <BUILTINS>/react.js:209
+224:       children: ChildrenArray<T>,
+                     ^^^^^^^^^^^^^^^^ union: read-only array type | type parameter `T` of call of method `forEach`. See lib: <BUILTINS>/react.js:224
   Member 1:
-  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  216:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:216
   Error:
     5: const a: ChildrenArray<?number> = [
                               ^^^^^^^ null. This type is incompatible with the expected param type of
@@ -79,11 +79,11 @@ Error: api.js:14
 Error: api.js:16
  16: Children.forEach(a, (x: string) => {}); // Error
                       ^ read-only array type. This type is incompatible with
-209:       children: ChildrenArray<T>,
-                     ^^^^^^^^^^^^^^^^ union: read-only array type | type parameter `T` of call of method `forEach`. See lib: <BUILTINS>/react.js:209
+224:       children: ChildrenArray<T>,
+                     ^^^^^^^^^^^^^^^^ union: read-only array type | type parameter `T` of call of method `forEach`. See lib: <BUILTINS>/react.js:224
   Member 1:
-  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  216:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:216
   Error:
     5: const a: ChildrenArray<?number> = [
                               ^^^^^^^ null. This type is incompatible with the expected param type of
@@ -107,19 +107,19 @@ Error: api.js:19
 Error: api.js:22
  22: s(Children.only(a)); // Error
                      ^ read-only array type. This type is incompatible with
-214:     only<T>(children: ChildrenArray<?T>): $NonMaybeType<T>;
-                           ^^^^^^^^^^^^^^^^^ union: read-only array type | ?T. See lib: <BUILTINS>/react.js:214
+229:     only<T>(children: ChildrenArray<?T>): $NonMaybeType<T>;
+                           ^^^^^^^^^^^^^^^^^ union: read-only array type | ?T. See lib: <BUILTINS>/react.js:229
   Member 1:
-  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  216:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:216
   Error:
    22: s(Children.only(a)); // Error
          ^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
    29: function s(x: string) {}
                      ^^^^^^ string
   Member 2:
-  214:     only<T>(children: ChildrenArray<?T>): $NonMaybeType<T>;
-                                           ^^ ?T. See lib: <BUILTINS>/react.js:214
+  229:     only<T>(children: ChildrenArray<?T>): $NonMaybeType<T>;
+                                           ^^ ?T. See lib: <BUILTINS>/react.js:229
   Error:
    22: s(Children.only(a)); // Error
          ^^^^^^^^^^^^^^^^ read-only array type. This type is incompatible with the expected param type of
@@ -129,19 +129,19 @@ Error: api.js:22
 Error: api.js:25
  25: sa(Children.toArray(a)); // Error
                          ^ number. This type is incompatible with
-215:     toArray<T>(children: ChildrenArray<?T>): Array<$NonMaybeType<T>>;
-                              ^^^^^^^^^^^^^^^^^ union: read-only array type | ?T. See lib: <BUILTINS>/react.js:215
+230:     toArray<T>(children: ChildrenArray<?T>): Array<$NonMaybeType<T>>;
+                              ^^^^^^^^^^^^^^^^^ union: read-only array type | ?T. See lib: <BUILTINS>/react.js:230
   Member 1:
-  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  216:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:216
   Error:
    25: sa(Children.toArray(a)); // Error
                            ^ number. This type is incompatible with
-  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  216:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:216
   Member 2:
-  215:     toArray<T>(children: ChildrenArray<?T>): Array<$NonMaybeType<T>>;
-                                              ^^ ?T. See lib: <BUILTINS>/react.js:215
+  230:     toArray<T>(children: ChildrenArray<?T>): Array<$NonMaybeType<T>>;
+                                              ^^ ?T. See lib: <BUILTINS>/react.js:230
   Error:
    25: sa(Children.toArray(a)); // Error
                            ^ number. This type is incompatible with
@@ -151,19 +151,19 @@ Error: api.js:25
 Error: api.js:25
  25: sa(Children.toArray(a)); // Error
                          ^ read-only array type. This type is incompatible with
-215:     toArray<T>(children: ChildrenArray<?T>): Array<$NonMaybeType<T>>;
-                              ^^^^^^^^^^^^^^^^^ union: read-only array type | ?T. See lib: <BUILTINS>/react.js:215
+230:     toArray<T>(children: ChildrenArray<?T>): Array<$NonMaybeType<T>>;
+                              ^^^^^^^^^^^^^^^^^ union: read-only array type | ?T. See lib: <BUILTINS>/react.js:230
   Member 1:
-  201:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:201
+  216:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:216
   Error:
     5: const a: ChildrenArray<?number> = [
                                ^^^^^^ number. This type is incompatible with
    31: function sa(x: Array<string>) {}
                             ^^^^^^ string
   Member 2:
-  215:     toArray<T>(children: ChildrenArray<?T>): Array<$NonMaybeType<T>>;
-                                              ^^ ?T. See lib: <BUILTINS>/react.js:215
+  230:     toArray<T>(children: ChildrenArray<?T>): Array<$NonMaybeType<T>>;
+                                              ^^ ?T. See lib: <BUILTINS>/react.js:230
   Error:
    25: sa(Children.toArray(a)); // Error
                            ^ read-only array type. This type is incompatible with
@@ -175,8 +175,8 @@ Error: builtin_intrinsic.js:24
      ^^^^^^^^^ React element `builtin`
  25:   {{a: 1, b: 2, c: 3}}
         ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-420:       children?: React$Node,
-                      ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:420
+435:       children?: React$Node,
+                      ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:435
   Member 1:
    17:   | void
            ^^^^ undefined. See lib: <BUILTINS>/react.js:17
@@ -325,8 +325,8 @@ Error: fun.js:16
                                                   ^^ function type. Callable signature not found in
                                                                   v-
 158: declare type React$Element<ElementType: React$ElementType> = {|
-159:   +type: ElementType;
-160:   +props: React$ElementProps<ElementType>;
+159:   +type: ElementType,
+160:   +props: React$ElementProps<ElementType>,
 ...:
 163: |};
      -^ object type. See lib: <BUILTINS>/react.js:158
@@ -795,8 +795,8 @@ Error: fun.js:142
                                                          ^^ function type. Callable signature not found in
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -808,8 +808,8 @@ Error: fun.js:142
                                                               ^^^^^^^^^ array type. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1101,8 +1101,8 @@ Error: tabs.js:67
            ^^^^ undefined. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1114,8 +1114,8 @@ Error: tabs.js:67
            ^^^^ null. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1127,8 +1127,8 @@ Error: tabs.js:67
            ^^^^^^^ boolean. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1138,8 +1138,8 @@ Error: tabs.js:67
   Error:
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:158
@@ -1158,8 +1158,8 @@ Error: tabs.js:67
            ^^^^^^^^^^^^^^^^^ array type. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1179,8 +1179,8 @@ Error: tabs.js:68
            ^^^^ undefined. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1192,8 +1192,8 @@ Error: tabs.js:68
            ^^^^ null. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1205,8 +1205,8 @@ Error: tabs.js:68
            ^^^^^^^ boolean. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1216,8 +1216,8 @@ Error: tabs.js:68
   Error:
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:158
@@ -1236,8 +1236,8 @@ Error: tabs.js:68
            ^^^^^^^^^^^^^^^^^ array type. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1257,8 +1257,8 @@ Error: tabs.js:68
            ^^^^ undefined. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1270,8 +1270,8 @@ Error: tabs.js:68
            ^^^^ null. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1283,8 +1283,8 @@ Error: tabs.js:68
            ^^^^^^^ boolean. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1294,8 +1294,8 @@ Error: tabs.js:68
   Error:
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:158
@@ -1314,8 +1314,8 @@ Error: tabs.js:68
            ^^^^^^^^^^^^^^^^^ array type. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1335,8 +1335,8 @@ Error: tabs.js:73
            ^^^^ undefined. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1348,8 +1348,8 @@ Error: tabs.js:73
            ^^^^ null. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1361,8 +1361,8 @@ Error: tabs.js:73
            ^^^^^^^ boolean. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1372,8 +1372,8 @@ Error: tabs.js:73
   Error:
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:158
@@ -1392,8 +1392,8 @@ Error: tabs.js:73
            ^^^^^^^^^^^^^^^^^ array type. This type is incompatible with
                                                                     v-
   158: declare type React$Element<ElementType: React$ElementType> = {|
-  159:   +type: ElementType;
-  160:   +props: React$ElementProps<ElementType>;
+  159:   +type: ElementType,
+  160:   +props: React$ElementProps<ElementType>,
   ...:
   163: |};
        -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1512,8 +1512,8 @@ Error: text.js:26
   Property `children` is incompatible:
                                                                       v-
     158: declare type React$Element<ElementType: React$ElementType> = {|
-    159:   +type: ElementType;
-    160:   +props: React$ElementProps<ElementType>;
+    159:   +type: ElementType,
+    160:   +props: React$ElementProps<ElementType>,
     ...:
     163: |};
          -^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:158

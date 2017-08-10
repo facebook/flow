@@ -1,6 +1,6 @@
 Library type error:
-<BUILTINS>/react.js:249
-249:     callback?: () => void,
+<BUILTINS>/react.js:264
+264:     callback?: () => void,
                     ^^^^^^^^^^ function type. Callable signature not found in
  23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
                                                                   ^^ object literal. See: render_callback.js:23
@@ -447,7 +447,7 @@ Error: default_props_undefined.js:10
 Error: element_with_component_type.js:8
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
       ^^^^^^^^^^^^^ React element `Foo`
-160:   +props: React$ElementProps<ElementType>;
+160:   +props: React$ElementProps<ElementType>,
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in. See lib: <BUILTINS>/react.js:160
   5: class Foo extends React.Component<{a: number}> {}
                                        ^^^^^^^^^^^ object type
@@ -592,6 +592,50 @@ Error: jsx_spread.js:11
       6:     bar: React.PropTypes.string.isRequired,
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
+Error: key.js:12
+ 12: <Foo key={true} />; // Error
+               ^^^^ boolean. This type is incompatible with
+ 12: <Foo key={true} />; // Error
+     ^^^^^^^^^^^^^^^^^^ union: string | number
+  Member 1:
+  169: declare type React$Key = string | number;
+                                ^^^^^^ string. See lib: <BUILTINS>/react.js:169
+  Error:
+   12: <Foo key={true} />; // Error
+                 ^^^^ boolean. This type is incompatible with
+  169: declare type React$Key = string | number;
+                                ^^^^^^ string. See lib: <BUILTINS>/react.js:169
+  Member 2:
+  169: declare type React$Key = string | number;
+                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:169
+  Error:
+   12: <Foo key={true} />; // Error
+                 ^^^^ boolean. This type is incompatible with
+  169: declare type React$Key = string | number;
+                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:169
+
+Error: key.js:21
+ 21: <FooExact key={true} />; // Error
+                    ^^^^ boolean. This type is incompatible with
+ 21: <FooExact key={true} />; // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^ union: string | number
+  Member 1:
+  169: declare type React$Key = string | number;
+                                ^^^^^^ string. See lib: <BUILTINS>/react.js:169
+  Error:
+   21: <FooExact key={true} />; // Error
+                      ^^^^ boolean. This type is incompatible with
+  169: declare type React$Key = string | number;
+                                ^^^^^^ string. See lib: <BUILTINS>/react.js:169
+  Member 2:
+  169: declare type React$Key = string | number;
+                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:169
+  Error:
+   21: <FooExact key={true} />; // Error
+                      ^^^^ boolean. This type is incompatible with
+  169: declare type React$Key = string | number;
+                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:169
+
 Error: proptype_arrayOf.js:13
  13: var fail_missing = <Example />
                         ^^^^^^^^^^^ React element `Example`
@@ -688,8 +732,8 @@ Error: proptype_custom_validator.js:10
 Error: proptype_custom_validator.js:11
  11:       return (0: mixed); // error: should return ?Error
                       ^^^^^ mixed. This type is incompatible with
-282:   href?: string) => ?Error;
-                          ^^^^^ Error. See lib: <BUILTINS>/react.js:282
+297:   href?: string) => ?Error;
+                          ^^^^^ Error. See lib: <BUILTINS>/react.js:297
 
 Error: proptype_func.js:14
  14: var fail_mistyped = <Example func={2} />
@@ -1109,68 +1153,68 @@ Error: proptype_shape.js:24
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-290:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:290
+305:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:305
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-294:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:294
+309:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:309
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-296:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
-                        ^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:296
+311:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+                        ^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:311
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-298:   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:298
+313:   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:313
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-301:   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:301
+316:   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:316
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-290:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:290
+305:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:305
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-292:   (expectedClass: any) => ReactPropsChainableTypeChecker;
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:292
+307:   (expectedClass: any) => ReactPropsChainableTypeChecker;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:307
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-294:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:294
+309:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:309
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-296:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:296
+311:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:311
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-299:     ReactPropsChainableTypeChecker;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:299
+314:     ReactPropsChainableTypeChecker;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:314
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-302:     ReactPropsChainableTypeChecker;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:302
+317:     ReactPropsChainableTypeChecker;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:317
 
 Error: proptypes_sealed.js:18
  18:     (this.props.baz: string);
@@ -1184,23 +1228,123 @@ Error: proptypes_sealed.js:22
  22:     this.props.baz = 0;
          ^^^^^^^^^^ propTypes of React component
 
+Error: ref.js:12
+ 12: <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
+               ^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+ 12: <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: function type | string
+  Member 1:
+  175:   | ((React$ElementRef<ElementType> | null) => mixed)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:175
+  Error:
+   12: <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
+                       ^^^^^^ number. This type is incompatible with an argument type of
+  175:   | ((React$ElementRef<ElementType> | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Foo. See lib: <BUILTINS>/react.js:175
+  Member 2:
+  176:   | string;
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:176
+  Error:
+   12: <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
+                 ^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+  176:   | string;
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:176
+
+Error: ref.js:13
+ 13: <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
+                       ^^^ null. This type is incompatible with
+ 13: <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
+                            ^^^ Foo
+
+Error: ref.js:15
+ 15: <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+                       ^^^ Foo. This type is incompatible with
+ 15: <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+                            ^^^^^^^^^^ union: Bar | null
+  Member 1:
+   15: <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+                              ^^^ Bar
+  Error:
+   15: <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+                         ^^^ Foo. This type is incompatible with
+   15: <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+                              ^^^ Bar
+  Member 2:
+   15: <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+                                    ^^^^ null
+  Error:
+   15: <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+                         ^^^ Foo. This type is incompatible with
+   15: <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+                                    ^^^^ null
+
+Error: ref.js:23
+ 23: <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
+                    ^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+ 23: <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: function type | string
+  Member 1:
+  175:   | ((React$ElementRef<ElementType> | null) => mixed)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:175
+  Error:
+   23: <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
+                            ^^^^^^ number. This type is incompatible with an argument type of
+  175:   | ((React$ElementRef<ElementType> | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FooExact. See lib: <BUILTINS>/react.js:175
+  Member 2:
+  176:   | string;
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:176
+  Error:
+   23: <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
+                      ^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+  176:   | string;
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:176
+
+Error: ref.js:24
+ 24: <FooExact ref={foo => (foo: FooExact)} />; // Error: `FooExact` may be null.
+                            ^^^ null. This type is incompatible with
+ 24: <FooExact ref={foo => (foo: FooExact)} />; // Error: `FooExact` may be null.
+                                 ^^^^^^^^ FooExact
+
+Error: ref.js:26
+ 26: <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
+                            ^^^ FooExact. This type is incompatible with
+ 26: <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
+                                 ^^^^^^^^^^ union: Bar | null
+  Member 1:
+   26: <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
+                                   ^^^ Bar
+  Error:
+   26: <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
+                              ^^^ FooExact. This type is incompatible with
+   26: <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
+                                   ^^^ Bar
+  Member 2:
+   26: <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
+                                         ^^^^ null
+  Error:
+   26: <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
+                              ^^^ FooExact. This type is incompatible with
+   26: <FooExact ref={foo => (foo: Bar | null)} />; // Error: `FooExact` is not `Bar`.
+                                         ^^^^ null
+
 Error: render_callback.js:22
  22: ReactDOM.render(<Example/>, document.querySelector('#site'), 1);
                                                                   ^ number. This type is incompatible with the expected param type of
-249:     callback?: () => void,
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:249
+264:     callback?: () => void,
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:264
 
 Error: render_callback.js:24
  24: ReactDOM.render(<Example/>, document.querySelector('#site'), '');
                                                                   ^^ string. This type is incompatible with the expected param type of
-249:     callback?: () => void,
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:249
+264:     callback?: () => void,
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:264
 
 Error: render_callback.js:25
  25: ReactDOM.render(<Example/>, document.querySelector('#site'), null);
                                                                   ^^^^ null. This type is incompatible with the expected param type of
-249:     callback?: () => void,
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:249
+264:     callback?: () => void,
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:264
 
 Error: undefined_prop.js:7
   7: <MyComponent title={undefined} />;
@@ -1214,4 +1358,4 @@ Error: undefined_prop.js:7
                                                            ^^^^^^ string
 
 
-Found 132 errors
+Found 140 errors
