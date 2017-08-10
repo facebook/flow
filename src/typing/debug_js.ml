@@ -2443,9 +2443,8 @@ let dump_flow_error =
         (string_of_loc loc)
         (string_of_loc null_loc)
         (string_of_loc falsy_loc)
-    | ENonstrictLookupFailed ((reason1, reason2), reason, x) ->
-        spf "ENonstrictLookupFailed ((%s, %s), %s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
+    | ENonstrictLookupFailed (prop_reason, reason, x) ->
+        spf "ENonstrictLookupFailed (%s, %s, %s)"
+          (dump_reason cx prop_reason)
           (dump_reason cx reason)
           (match x with Some x -> spf "Some %S" x | None -> "None")

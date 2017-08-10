@@ -5580,9 +5580,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | RProperty Some _,
           RObjectType,
           Named (reason_prop, x),
-          Some (DefT (nonstrict_reason, _), _, true)  ->
+          Some (DefT (_, _), _, true)  ->
           let message = FlowError.ENonstrictLookupFailed
-            ((reason_prop, nonstrict_reason), reason, Some x) in
+            (reason_prop, reason, Some x) in
           add_output cx ~trace message
         | _ -> ()
       in
