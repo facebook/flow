@@ -93,6 +93,7 @@ begin library "hh-utils-core"
   sort = true
   files = [
     "build_id.ml"
+    "build_mode/prod/build_mode.ml"
     "core.ml"
     "exit_status.ml"
     "get_build_id.c"

@@ -99,6 +99,7 @@ MODULES=\
   hack/third-party/avl\
   hack/third-party/core\
   hack/utils\
+  hack/utils/build_mode/prod\
   hack/utils/collections\
   hack/utils/disk\
   hack/utils/hh_json\
