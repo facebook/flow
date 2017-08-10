@@ -224,8 +224,6 @@ module rec Parse : PARSER = struct
 
   and is_assignable_lhs = Expression.is_assignable_lhs
 
-  and is_private_name = Expression.is_private_name
-
   and identifier ?restricted_error env =
     let loc = Peek.loc env in
     let name = Peek.value env in

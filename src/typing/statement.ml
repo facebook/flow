@@ -2180,6 +2180,9 @@ and object_prop cx map = Ast.Expression.Object.(function
   (* spread prop *)
   | SpreadProperty _ ->
     map
+
+  | Property (_, { Property.key = Property.PrivateName _; _ }) ->
+    failwith "Internal Error: Non-private field with private name"
 )
 
 and prop_map_of_object cx props =
@@ -2463,7 +2466,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Member {
       Member._object;
-      property = Member.PropertyIdentifier (ploc, name);
+      property = (Member.PropertyIdentifier (ploc, name)
+                | Member.PropertyPrivateName (ploc, (_, name)));
       _
     } -> (
       let expr_reason = mk_reason (RProperty (Some name)) loc in
@@ -2664,6 +2668,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let ot = expression cx _object in
       let argts = List.map (expression_or_spread cx) arguments in
       (match property with
+      | Member.PropertyPrivateName (prop_loc, (_, name))
       | Member.PropertyIdentifier (prop_loc, name) ->
         let reason_call = mk_reason (RMethodCall (Some name)) loc in
         method_call cx reason_call prop_loc (callee, ot, name) argts
@@ -3273,7 +3278,8 @@ and assignment cx loc = Ast.Expression.(function
         (* _object.name = e *)
         | lhs_loc, Ast.Pattern.Expression ((_, Member {
             Member._object;
-            property = Member.PropertyIdentifier (ploc, name);
+            property = (Member.PropertyIdentifier (ploc, name)
+                     | Member.PropertyPrivateName (ploc, (_, name)));
             _
           }) as expr) ->
             let o = expression cx _object in

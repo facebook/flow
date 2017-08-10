@@ -244,6 +244,8 @@ class mapper = object(this)
     match elem with
     | Method (loc, meth) -> id this#class_method meth elem (fun meth -> Method (loc, meth))
     | Property (loc, prop) -> id this#class_property prop elem (fun prop -> Property (loc, prop))
+    | PrivateField (loc, field) -> id this#class_private_field field elem
+      (fun field -> PrivateField (loc, field))
 
   method class_method (meth: Ast.Class.Method.t') =
     let open Ast.Class.Method in
@@ -259,6 +261,15 @@ class mapper = object(this)
     let open Ast.Class.Property in
     let { key; value; typeAnnotation; static = _; variance = _; } = prop in
     let key' = this#object_key key in
+    let value' = map_opt this#expression value in
+    let typeAnnotation' = map_opt this#type_annotation typeAnnotation in
+    if key == key' && value == value' && typeAnnotation' == typeAnnotation then prop
+    else { prop with key = key'; value = value'; typeAnnotation = typeAnnotation' }
+
+  method class_private_field (prop: Ast.Class.PrivateField.t') =
+    let open Ast.Class.PrivateField in
+    let { key; value; typeAnnotation; static = _; variance = _; } = prop in
+    let key' = this#private_name key in
     let value' = map_opt this#expression value in
     let typeAnnotation' = map_opt this#type_annotation typeAnnotation in
     if key == key' && value == value' && typeAnnotation' == typeAnnotation then prop
@@ -544,6 +555,8 @@ class mapper = object(this)
 
   method identifier (expr: Ast.Identifier.t) = expr
 
+  method private_name (expr: Ast.PrivateName.t) = expr
+
   method import (expr: Ast.Expression.t) = expr
 
   method if_consequent_statement ~has_else (stmt: Ast.Statement.t) =
@@ -692,11 +705,17 @@ class mapper = object(this)
     | PropertyIdentifier ident ->
       id this#member_property_identifier ident expr
         (fun ident -> PropertyIdentifier ident)
+    | PropertyPrivateName ident ->
+      id this#member_private_name ident expr
+        (fun ident -> PropertyPrivateName ident)
     | PropertyExpression e ->
       id this#member_property_expression e expr (fun e -> PropertyExpression e)
 
   method member_property_identifier (ident: Ast.Identifier.t) =
     this#identifier ident
+
+  method member_private_name (name: Ast.PrivateName.t) =
+    this#private_name name
 
   method member_property_expression (expr: Ast.Expression.t) =
     this#expression expr
@@ -752,6 +771,8 @@ class mapper = object(this)
       id this#literal lit key (fun lit -> Literal (loc, lit))
     | Identifier ident ->
       id this#object_key_identifier ident key (fun ident -> Identifier ident)
+    | PrivateName ident ->
+      id this#private_name ident key (fun ident -> PrivateName ident)
     | Computed expr ->
       id this#expression expr key (fun expr -> Computed expr)
 

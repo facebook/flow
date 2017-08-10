@@ -49,7 +49,7 @@
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":5}},
             "range":[13,16],
             "key":{
-              "type":"PrivateName",
+              "type":"Identifier",
               "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":3}},
               "range":[13,14],
               "name":"#",

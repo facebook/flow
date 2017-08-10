@@ -37,7 +37,6 @@ module type PARSER = sig
   val class_declaration : env -> Expression.t list -> Statement.t
   val class_expression : env -> Expression.t
   val is_assignable_lhs : Expression.t -> bool
-  val is_private_name : string -> bool
 end
 
 let with_loc fn env =

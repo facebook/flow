@@ -69,8 +69,8 @@ module Object
         Loc.btwn start_loc end_loc, Ast.Expression.Object.Property.Computed expr
     | T_POUND when class_body ->
         let loc, id = Expression.private_identifier env in
-        add_declared_private env id;
-        loc, Identifier (loc, id)
+        add_declared_private env (snd id);
+        loc, PrivateName (loc, id)
     | _ ->
         let id, _ = Expression.identifier_or_reserved_keyword env in
         fst id, Identifier id)
@@ -179,6 +179,7 @@ module Object
       let parse_shorthand key = match key with
         | Literal lit -> fst lit, Ast.Expression.Literal (snd lit)
         | Identifier id -> fst id, Ast.Expression.Identifier id
+        | PrivateName _ -> failwith "Internal Error: private name found in object props"
         | Computed expr -> expr
       in
       let parse_method env ~async ~generator =
@@ -312,8 +313,7 @@ module Object
                   (true, private_names)
               | Method ->
                 (seen_constructor, begin match m.key with
-                | Ast.Expression.Object.Property.Identifier (_, x)
-                  when Parse.is_private_name x ->
+                | Ast.Expression.Object.Property.PrivateName _ ->
                     error_at env (loc, Error.PrivateMethod);
                     private_names
                 | _ -> private_names
@@ -324,16 +324,19 @@ module Object
               let open Ast.Expression.Object.Property in
               (seen_constructor, begin match p.Ast.Class.Property.key with
               | Identifier (_, x) when String.equal x "constructor" ||
-                (String.equal x "#constructor") ||
                 (String.equal x "prototype" && p.Ast.Class.Property.static) ->
-                  error_at env (loc, Error.InvalidFieldName (x, String.equal x "prototype"));
+                  error_at env (loc, Error.InvalidFieldName (x, String.equal x "prototype", false));
                   private_names
-              | Identifier (_, x) when Parse.is_private_name x ->
-                  if SSet.mem x private_names then
-                    error_at env (loc, Error.DuplicatePrivateFields x);
-                  SSet.add x private_names
               | _ -> private_names
               end)
+            | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key = (loc, (_, name)); _})
+              when String.equal name "#constructor" ->
+                error_at env (loc, Error.InvalidFieldName (name, false, true));
+                (seen_constructor, private_names)
+            | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key = (loc, (_, name)); _}) ->
+                if SSet.mem name private_names then
+                  error_at env (loc, Error.DuplicatePrivateFields name);
+                (seen_constructor, SSet.add name private_names)
           end in
           elements env seen_constructor' private_names' (element::acc)
 
@@ -405,13 +408,22 @@ module Object
           typeAnnotation, value
         ) env in
         let loc = Loc.btwn start_loc end_loc in
-        Ast.Class.(Body.Property (loc, Property.({
-          key;
-          value;
-          typeAnnotation;
-          static;
-          variance;
-        })))
+        begin match key with
+        | Ast.Expression.Object.Property.PrivateName private_name ->
+          Ast.Class.(Body.PrivateField (loc, PrivateField.({
+            key = private_name;
+            value;
+            typeAnnotation;
+            static;
+            variance;
+          })))
+        | _ -> Ast.Class.(Body.Property (loc, Property.({
+            key;
+            value;
+            typeAnnotation;
+            static;
+            variance;
+          }))) end
       | T_PLING ->
         (* TODO: add support for optional class properties *)
         error_unexpected env;

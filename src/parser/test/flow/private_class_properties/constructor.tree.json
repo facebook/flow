@@ -7,14 +7,6 @@
     {
       "loc":{"source":null,"start":{"line":6,"column":2},"end":{"line":6,"column":26}},
       "message":"Classes may not have private methods."
-    },
-    {
-      "loc":{"source":null,"start":{"line":10,"column":2},"end":{"line":10,"column":22}},
-      "message":"Classes may not have fields named `#constructor`."
-    },
-    {
-      "loc":{"source":null,"start":{"line":14,"column":2},"end":{"line":14,"column":29}},
-      "message":"Classes may not have fields named `#constructor`."
     }
   ],
   "type":"Program",
@@ -46,9 +38,14 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":14}},
               "range":[12,24],
-              "name":"#constructor",
-              "typeAnnotation":null,
-              "optional":false
+              "name":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":14}},
+                "range":[13,24],
+                "name":"constructor",
+                "typeAnnotation":null,
+                "optional":false
+              }
             },
             "value":{
               "type":"FunctionExpression",
@@ -107,9 +104,14 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":6,"column":9},"end":{"line":6,"column":21}},
               "range":[81,93],
-              "name":"#constructor",
-              "typeAnnotation":null,
-              "optional":false
+              "name":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":6,"column":10},"end":{"line":6,"column":21}},
+                "range":[82,93],
+                "name":"constructor",
+                "typeAnnotation":null,
+                "optional":false
+              }
             },
             "value":{
               "type":"FunctionExpression",
@@ -161,16 +163,21 @@
         "range":[139,202],
         "body":[
           {
-            "type":"ClassProperty",
+            "type":"ClassPrivateProperty",
             "loc":{"source":null,"start":{"line":10,"column":2},"end":{"line":10,"column":22}},
             "range":[143,163],
             "key":{
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":10,"column":2},"end":{"line":10,"column":14}},
               "range":[143,155],
-              "name":"#constructor",
-              "typeAnnotation":null,
-              "optional":false
+              "name":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":10,"column":3},"end":{"line":10,"column":14}},
+                "range":[144,155],
+                "name":"constructor",
+                "typeAnnotation":null,
+                "optional":false
+              }
             },
             "value":null,
             "typeAnnotation":{
@@ -183,7 +190,6 @@
                 "range":[157,163]
               }
             },
-            "computed":false,
             "static":false,
             "variance":null
           }
@@ -213,16 +219,21 @@
         "range":[212,282],
         "body":[
           {
-            "type":"ClassProperty",
+            "type":"ClassPrivateProperty",
             "loc":{"source":null,"start":{"line":14,"column":2},"end":{"line":14,"column":29}},
             "range":[216,243],
             "key":{
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":14,"column":9},"end":{"line":14,"column":21}},
               "range":[223,235],
-              "name":"#constructor",
-              "typeAnnotation":null,
-              "optional":false
+              "name":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":14,"column":10},"end":{"line":14,"column":21}},
+                "range":[224,235],
+                "name":"constructor",
+                "typeAnnotation":null,
+                "optional":false
+              }
             },
             "value":null,
             "typeAnnotation":{
@@ -235,7 +246,6 @@
                 "range":[237,243]
               }
             },
-            "computed":false,
             "static":true,
             "variance":null
           }

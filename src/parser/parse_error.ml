@@ -88,7 +88,7 @@ type t =
   | MalformedUnicode
   | DuplicateConstructor
   | DuplicatePrivateFields of string
-  | InvalidFieldName of string * bool
+  | InvalidFieldName of string * bool * bool
   | PrivateMethod
   | PrivateDelete
   | UnboundPrivate of string
@@ -215,16 +215,17 @@ module PP =
       | DuplicateConstructor ->
         "Classes may only have one constructor"
       | DuplicatePrivateFields name ->
-        "Private fields may only be declared once. `" ^ name ^ "` is declared more than once."
-      | InvalidFieldName (name, static) ->
+        "Private fields may only be declared once. `#" ^ name ^ "` is declared more than once."
+      | InvalidFieldName (name, static, private_) ->
         let static_modifier = if static then "static " else "" in
+        let name = if private_ then "#" ^ name else name in
         "Classes may not have " ^ static_modifier ^ "fields named `" ^ name ^ "`."
       | PrivateMethod ->
         "Classes may not have private methods."
       | PrivateDelete ->
         "Private fields may not be deleted."
       | UnboundPrivate name ->
-        "Private fields must be declared before they can be referenced. `" ^ name
+        "Private fields must be declared before they can be referenced. `#" ^ name
         ^ "` has not been declared."
       | PrivateNotInClass -> "Private fields can only be referenced from within a class."
   end

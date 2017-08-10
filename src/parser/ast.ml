@@ -17,6 +17,10 @@ module rec Identifier : sig
   type t = Loc.t * string
 end = Identifier
 
+and PrivateName : sig
+  type t = Loc.t * Identifier.t
+end = PrivateName
+
 and Literal : sig
   module RegExp : sig
     type t = {
@@ -577,6 +581,7 @@ and Expression : sig
       type key =
         | Literal of (Loc.t * Literal.t)
         | Identifier of Identifier.t
+        | PrivateName of PrivateName.t
         | Computed of Expression.t
       type value =
         | Init of Expression.t
@@ -717,6 +722,7 @@ and Expression : sig
   module Member : sig
     type property =
       | PropertyIdentifier of Identifier.t
+      | PropertyPrivateName of PrivateName.t
       | PropertyExpression of Expression.t
     type t = {
       _object: Expression.t;
@@ -996,6 +1002,16 @@ and Class : sig
       variance: Variance.t option;
     }
   end
+  module PrivateField: sig
+    type t = Loc.t * t'
+    and t' = {
+      key: PrivateName.t;
+      value: Expression.t option;
+      typeAnnotation: Type.annotation option;
+      static: bool;
+      variance: Variance.t option;
+    }
+  end
   module Implements : sig
     type t = Loc.t * t'
     and t' = {
@@ -1007,6 +1023,7 @@ and Class : sig
     type element =
       | Method of Method.t
       | Property of Property.t
+      | PrivateField of PrivateField.t
     type t = Loc.t * t'
     and t' = {
       body: element list;

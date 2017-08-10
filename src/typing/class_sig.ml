@@ -472,6 +472,16 @@ let mk cx _loc reason self ~expr =
 
   List.fold_left Ast.Class.(fun c -> function
     (* instance and static methods *)
+    | Body.Property (_, {
+        Property.key = Ast.Expression.Object.Property.PrivateName _;
+        _
+      }) -> failwith "Internal Error: Found non-private field with private name"
+
+    | Body.Method (_, {
+        Method.key = Ast.Expression.Object.Property.PrivateName _;
+        _
+      }) -> failwith "Internal Error: Found method with private name"
+
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Identifier (_, name);
         value = (_, func);
@@ -496,6 +506,14 @@ let mk cx _loc reason self ~expr =
       add method_sig c
 
     (* fields *)
+    | Body.PrivateField(loc, {
+        PrivateField.key = (_, (_, name));
+        typeAnnotation;
+        value;
+        static;
+        variance;
+        _;
+      })
     | Body.Property (loc, {
       Property.key = Ast.Expression.Object.Property.Identifier (_, name);
         typeAnnotation;
@@ -629,6 +647,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       let polarity = Anno.polarity variance in
       Ast.Expression.Object.(match _method, key, value with
       | _, Property.Literal (loc, _), _
+      | _, Property.PrivateName (loc, _), _
       | _, Property.Computed (loc, _), _ ->
           Flow_js.add_output cx (Flow_error.EIllegalName loc);
           x

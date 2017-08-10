@@ -478,6 +478,7 @@ end with type t = Impl.t) = struct
     | loc, Member member -> Member.(
         let property = match member.property with
         | PropertyIdentifier id -> identifier id
+        | PropertyPrivateName name -> private_name name
         | PropertyExpression expr -> expression expr
         in
         node "MemberExpression" loc [|
@@ -562,12 +563,15 @@ end with type t = Impl.t) = struct
   )
 
   and identifier (loc, name) =
-    let node_name = if Parser_flow.Parse.is_private_name name then "PrivateName"
-      else "Identifier" in
-    node node_name loc [|
+    node "Identifier" loc [|
       "name", string name;
       "typeAnnotation", null;
       "optional", bool false;
+    |]
+
+  and private_name (loc, name) =
+    node "PrivateName" loc [|
+      "name", identifier name;
     |]
 
   and pattern_identifier loc {
@@ -737,6 +741,7 @@ end with type t = Impl.t) = struct
 
   and class_element = Class.Body.(function
     | Method m -> class_method m
+    | PrivateField p -> class_private_field p
     | Property p -> class_property p)
 
   and class_method (loc, method_) =
@@ -744,6 +749,7 @@ end with type t = Impl.t) = struct
     let key, computed = Expression.Object.Property.(match key with
       | Literal lit -> literal lit, false
       | Identifier id -> identifier id, false
+      | PrivateName name -> private_name name, false
       | Computed expr -> expression expr, true) in
     let kind = Class.Method.(match kind with
       | Constructor -> "constructor"
@@ -759,10 +765,21 @@ end with type t = Impl.t) = struct
       "decorators", array_of_list expression decorators;
     |]
 
+  and class_private_field (loc, prop) = Class.PrivateField.(
+    node "ClassPrivateProperty" loc [|
+      "key", private_name prop.key;
+      "value", option expression prop.value;
+      "typeAnnotation", option type_annotation prop.typeAnnotation;
+      "static", bool prop.static;
+      "variance", option variance prop.variance;
+    |]
+  )
   and class_property (loc, prop) = Class.Property.(
     let key, computed = (match prop.key with
     | Expression.Object.Property.Literal lit -> literal lit, false
     | Expression.Object.Property.Identifier id -> identifier id, false
+    | Expression.Object.Property.PrivateName _ ->
+        failwith "Internal Error: Private name found in class prop"
     | Expression.Object.Property.Computed expr -> expression expr, true) in
     node "ClassProperty" loc [|
       "key", key;
@@ -842,6 +859,7 @@ end with type t = Impl.t) = struct
       let key, computed = (match prop.key with
       | Literal lit -> literal lit, false
       | Identifier id -> identifier id, false
+      | PrivateName _ -> failwith "Internal Error: Found private field in object props"
       | Computed expr -> expression expr, true)  in
       let value, kind = match prop.value with
       | Init value -> expression value, "init"
@@ -1075,6 +1093,8 @@ end with type t = Impl.t) = struct
     let key = match prop.key with
     | Expression.Object.Property.Literal lit -> literal lit
     | Expression.Object.Property.Identifier id -> identifier id
+    | Expression.Object.Property.PrivateName _ ->
+      failwith "Internal Error: Found private field in object props"
     | Expression.Object.Property.Computed _ ->
       failwith "There should not be computed object type property keys"
     in

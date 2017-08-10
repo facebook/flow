@@ -28,6 +28,7 @@ module Pattern
         let key = Property.(match key with
         | Literal lit -> Pattern.Object.Property.Literal lit
         | Identifier id -> Pattern.Object.Property.Identifier id
+        | PrivateName _ -> failwith "Internal Error: Found object private prop"
         | Computed expr -> Pattern.Object.Property.Computed expr) in
         let pattern = Property.(match value with
         | Init t -> Parse.pattern_from_expr env t
@@ -103,6 +104,7 @@ module Pattern
           match Parse.object_key env with
           | _, Literal lit -> Pattern.Object.Property.Literal lit
           | _, Identifier id -> Pattern.Object.Property.Identifier id
+          | _, PrivateName _ -> failwith "Internal Error: Found object private prop"
           | _, Computed expr -> Pattern.Object.Property.Computed expr
         ) in
         let prop = match Peek.token env with

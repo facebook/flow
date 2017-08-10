@@ -19,8 +19,7 @@ module type EXPRESSION = sig
   val assignment: env -> Expression.t
   val conditional: env -> Expression.t
   val identifier_or_reserved_keyword: env -> Identifier.t * (Loc.t * Parse_error.t) option
-  val private_identifier: env -> Identifier.t
-  val is_private_name: string -> bool
+  val private_identifier: env -> PrivateName.t
   val is_assignable_lhs: Expression.t -> bool
   val left_hand_side: env -> Expression.t
   val number: env -> number_type -> float
@@ -408,9 +407,8 @@ module Expression
           strict_error_at env (loc, Error.StrictDelete)
       | Unary.Delete, (_, Member member) ->
           begin match member.Ast.Expression.Member.property with
-          | Ast.Expression.Member.PropertyIdentifier (_, name) ->
-              if is_private_name name then
-                error_at env (loc, Error.PrivateDelete)
+          | Ast.Expression.Member.PropertyPrivateName _ ->
+              error_at env (loc, Error.PrivateDelete)
           | _ -> () end
       | _ -> ());
       loc, Expression.(Unary Unary.({
@@ -487,11 +485,14 @@ module Expression
         })))
     | T_PERIOD ->
         Expect.token env T_PERIOD;
-        let id, _ = identifier_or_keyword_include_private env in
+        let id, _, is_private = identifier_or_keyword_include_private env in
         let loc = Loc.btwn start_loc (fst id) in
+        let open Expression.Member in
+        let property = if is_private then PropertyPrivateName id
+        else PropertyIdentifier (snd id) in
         call env start_loc (loc, Expression.(Member Member.({
-          _object  = left;
-          property = PropertyIdentifier id;
+          _object = left;
+          property;
           computed = false;
         })))
     | T_TEMPLATE_PART part ->
@@ -587,11 +588,14 @@ module Expression
         })))
     | T_PERIOD ->
         Expect.token env T_PERIOD;
-        let id, _ = identifier_or_keyword_include_private env in
+        let id, _, is_private = identifier_or_keyword_include_private env in
         let loc = Loc.btwn start_loc (fst id) in
+        let open Expression.Member in
+        let property = if is_private then PropertyPrivateName id
+        else PropertyIdentifier (snd id) in
         call env start_loc (loc, Expression.(Member Member.({
-          _object  = left;
-          property = PropertyIdentifier id;
+          _object = left;
+          property;
           computed = false;
         })))
     | T_TEMPLATE_PART part ->
@@ -1022,16 +1026,16 @@ module Expression
 
   and private_identifier env = with_loc (fun env ->
       Expect.token env T_POUND;
-      let (_, id), _ = identifier_or_reserved_keyword env in
-      "#" ^ id) env
-
-  and is_private_name x = String.length x > 0 && String.get x 0 == '#'
+      let id, _ = identifier_or_reserved_keyword env in
+      id) env
 
   and identifier_or_keyword_include_private env =
     match Peek.token env with
     | T_POUND ->
         let (loc, ident) = private_identifier env in
-        add_used_private env ident loc;
-        (loc, ident), None
-    | _ -> identifier_or_reserved_keyword env
+        add_used_private env (snd ident) loc;
+        (loc, ident), None, true
+    | _ ->
+        let (loc, ident), err = identifier_or_reserved_keyword env in
+        (loc, (loc, ident)), err, false
 end
