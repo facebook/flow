@@ -73,7 +73,7 @@ let load_lib_files ~master_cx ~options files =
     fun (exclude_syms, results) file ->
 
       let lib_file = Loc.LibFile file in
-      let lint_settings = options.Options.opt_lint_settings in
+      let lint_severities = options.Options.opt_lint_severities in
       match parse_lib_file options file with
       | Parsing.Parse_ok ast ->
 
@@ -85,11 +85,11 @@ let load_lib_files ~master_cx ~options files =
         in
 
         let cx, syms = Infer.infer_lib_file
-          ~metadata ~exclude_syms ~lint_settings:(Some lint_settings)
+          ~metadata ~exclude_syms ~lint_severities:(Some lint_severities)
           lib_file ast
         in
 
-        let errs, suppressions, lint_settings = Merge_js.merge_lib_file cx master_cx in
+        let errs, suppressions, severity_cover = Merge_js.merge_lib_file cx master_cx in
 
         (if verbose != None then
           prerr_endlinef "load_lib %s: added symbols { %s }"
@@ -98,7 +98,7 @@ let load_lib_files ~master_cx ~options files =
         (* symbols loaded from this file are suppressed
            if found in later ones *)
         let exclude_syms = SSet.union exclude_syms (SSet.of_list syms) in
-        let result = (lib_file, true, errs, suppressions, lint_settings) in
+        let result = (lib_file, true, errs, suppressions, severity_cover) in
         exclude_syms, (result :: results)
 
       | Parsing.Parse_fail fail ->
@@ -109,7 +109,7 @@ let load_lib_files ~master_cx ~options files =
           Inference_utils.set_of_docblock_errors ~source_file:lib_file errs
         in
         let result = lib_file, false, errors, Error_suppressions.empty,
-          LintSettingsMap.global_settings lib_file lint_settings in
+          ExactCover.file_cover lib_file lint_severities in
         exclude_syms, (result :: results)
 
       | Parsing.Parse_skip
@@ -117,8 +117,8 @@ let load_lib_files ~master_cx ~options files =
         (* should never happen *)
         let errs = Errors.ErrorSet.empty in
         let suppressions = Error_suppressions.empty in
-        let lint_settings = LintSettingsMap.global_settings lib_file lint_settings in
-        let result = lib_file, false, errs, suppressions, lint_settings in
+        let severity_cover = ExactCover.file_cover lib_file lint_severities in
+        let result = lib_file, false, errs, suppressions, severity_cover in
         exclude_syms, (result :: results)
 
     ) (SSet.empty, [])

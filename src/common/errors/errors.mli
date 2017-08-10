@@ -14,7 +14,7 @@ type error_kind =
   | InferWarning
   | InternalError
   | DuplicateProviderError
-  | LintError of LintSettings.lint_kind
+  | LintError of Lints.lint_kind
 
 val string_of_kind: error_kind -> string
 

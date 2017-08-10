@@ -16,4 +16,8 @@
 val init :
   options: Options.t ->
   string list ->
-  (Loc.filename * bool * Errors.ErrorSet.t * Error_suppressions.t * LintSettingsMap.t) list
+  (Loc.filename *
+    bool *
+    Errors.ErrorSet.t *
+    Error_suppressions.t *
+    ExactCover.lint_severity_cover) list

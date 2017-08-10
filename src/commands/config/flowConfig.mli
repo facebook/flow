@@ -77,4 +77,4 @@ val required_version: config -> string option
 val weak: config -> bool
 
 (* global defaults for lint suppressions *)
-val lint_settings: config -> LintSettings.t
+val lint_severities: config -> Severity.severity LintSettings.t

@@ -131,13 +131,13 @@ let detect_sketchy_null_checks cx =
       | Some null_loc ->
         let add_error = add_error ~loc ~null_loc in
         if (Option.is_none exists_excuse.bool_loc) then
-          Option.iter exists_check.bool_loc ~f:(add_error LintSettings.SketchyBool);
+          Option.iter exists_check.bool_loc ~f:(add_error Lints.SketchyBool);
         if (Option.is_none exists_excuse.number_loc) then
-          Option.iter exists_check.number_loc ~f:(add_error LintSettings.SketchyNumber);
+          Option.iter exists_check.number_loc ~f:(add_error Lints.SketchyNumber);
         if (Option.is_none exists_excuse.string_loc) then
-          Option.iter exists_check.string_loc ~f:(add_error LintSettings.SketchyString);
+          Option.iter exists_check.string_loc ~f:(add_error Lints.SketchyString);
         if (Option.is_none exists_excuse.mixed_loc) then
-          Option.iter exists_check.mixed_loc ~f:(add_error LintSettings.SketchyMixed);
+          Option.iter exists_check.mixed_loc ~f:(add_error Lints.SketchyMixed);
         ()
     end
   in
@@ -204,7 +204,7 @@ let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
 
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
-let merge_component_strict ~metadata ~lint_settings ~require_loc_maps
+let merge_component_strict ~metadata ~lint_severities ~require_loc_maps
   ~get_ast_unsafe ~get_docblock_unsafe
   component reqs dep_cxs master_cx =
 
@@ -214,7 +214,7 @@ let merge_component_strict ~metadata ~lint_settings ~require_loc_maps
     let metadata = apply_docblock_overrides metadata info in
     let require_loc_map = FilenameMap.find_unsafe filename require_loc_maps in
     let cx = Type_inference_js.infer_ast ast
-      ~metadata ~filename ~lint_settings ~require_loc_map
+      ~metadata ~filename ~lint_severities ~require_loc_map
     in
     cx::cxs, FilenameMap.add filename cx impl_cxs
   ) ([], FilenameMap.empty) component in
@@ -304,7 +304,7 @@ let merge_lib_file cx master_cx =
   let errs = Context.errors cx in
   Context.remove_all_errors cx;
 
-  errs, Context.error_suppressions cx, Context.lint_settings cx
+  errs, Context.error_suppressions cx, Context.severity_cover cx
 
 let lowers_of_tvar =
   let open Type in

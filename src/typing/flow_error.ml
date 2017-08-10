@@ -158,9 +158,9 @@ type error_message =
   (* The string is either the name of a module or "the module that exports `_`". *)
   | EUntypedTypeImport of Loc.t * string
   | EUnusedSuppression of Loc.t
-  | ELintSetting of LintSettings.error
+  | ELintSetting of LintSettings.lint_parse_error
   | ESketchyNullLint of {
-      kind: LintSettings.sketchy_null_kind;
+      kind: Lints.sketchy_null_kind;
       loc: Loc.t;
       null_loc: Loc.t;
       falsy_loc: Loc.t;
@@ -1370,7 +1370,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
 
   | EUntypedTypeImport (loc, module_name) ->
     mk_error
-      ~kind:(LintError LintSettings.UntypedTypeImport)
+      ~kind:(LintError Lints.UntypedTypeImport)
       [loc, [spf (
         "Importing a type from an untyped module is not safe! Did you " ^^
         "mean to add `// @flow` to the top of `%s`?"
@@ -1400,13 +1400,13 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
 
   | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
     let type_str, value_str = match kind with
-    | LintSettings.SketchyBool -> "boolean", "Potentially false"
-    | LintSettings.SketchyNumber -> "number", "Potentially 0"
-    | LintSettings.SketchyString -> "string", "Potentially \"\""
-    | LintSettings.SketchyMixed -> "mixed", "Mixed"
+    | Lints.SketchyBool -> "boolean", "Potentially false"
+    | Lints.SketchyNumber -> "number", "Potentially 0"
+    | Lints.SketchyString -> "string", "Potentially \"\""
+    | Lints.SketchyMixed -> "mixed", "Mixed"
     in
     mk_error
-      ~kind:(LintError (LintSettings.SketchyNull kind))
+      ~kind:(LintError (Lints.SketchyNull kind))
       [loc, [(spf "Sketchy null check on %s value." type_str)
         ^ " Perhaps you meant to check for null instead of for existence?"]]
       ~extra:[InfoLeaf [

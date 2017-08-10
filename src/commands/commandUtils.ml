@@ -280,10 +280,10 @@ type flowconfig_params = {
   ignores: string list;
   includes: string list;
   libs: string list;
-  (* We store lint_settings as a raw string list instead of as a LintSettings.t so we
+  (* We store raw_lint_severities as a string list instead of as a LintSettings.t so we
    * can defer parsing of the lint settings until after the flowconfig lint settings
    * are known, to properly detect redundant settings (and avoid false positives) *)
-  lint_settings: string list;
+  raw_lint_severities: string list;
 }
 
 let list_of_string_arg = function
@@ -294,8 +294,8 @@ let collect_flowconfig_flags main ignores_str includes_str lib_str lints_str =
   let ignores = list_of_string_arg ignores_str in
   let includes = list_of_string_arg includes_str in
   let libs = list_of_string_arg lib_str in
-  let lint_settings = list_of_string_arg lints_str in
-  main { ignores; includes; libs; lint_settings; }
+  let raw_lint_severities = list_of_string_arg lints_str in
+  main { ignores; includes; libs; raw_lint_severities; }
 
 let file_options =
   let default_lib_dir tmp_dir =
@@ -573,11 +573,11 @@ let make_options ~flowconfig ~lazy_ ~root (options_flags: Options_flags.t) =
   let open Options_flags in
   let file_options =
     let no_flowlib = options_flags.no_flowlib in
-    let { includes; ignores; libs; lint_settings=_; } = options_flags.flowconfig_flags in
+    let { includes; ignores; libs; raw_lint_severities=_; } = options_flags.flowconfig_flags in
     file_options ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs flowconfig
   in
-  let lint_settings = parse_lints_flag
-    (FlowConfig.lint_settings flowconfig) options_flags.flowconfig_flags.lint_settings
+  let lint_severities = parse_lints_flag
+    (FlowConfig.lint_severities flowconfig) options_flags.flowconfig_flags.raw_lint_severities
   in
   { Options.
     opt_lazy = lazy_;
@@ -621,7 +621,7 @@ let make_options ~flowconfig ~lazy_ ~root (options_flags: Options_flags.t) =
     opt_haste_paths_whitelist = FlowConfig.haste_paths_whitelist flowconfig;
     opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig;
     opt_file_options = file_options;
-    opt_lint_settings = lint_settings;
+    opt_lint_severities = lint_severities;
   }
 
 let connect server_flags root =

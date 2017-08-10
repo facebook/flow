@@ -90,7 +90,7 @@ val imported_ts: t -> Type.t SMap.t
 val is_checked: t -> bool
 val is_verbose: t -> bool
 val is_weak: t -> bool
-val lint_settings: t -> LintSettingsMap.t
+val severity_cover: t -> ExactCover.lint_severity_cover
 val max_trace_depth: t -> int
 val module_kind: t -> module_kind
 val module_map: t -> Type.t SMap.t
@@ -136,7 +136,7 @@ val add_tvar_reason: t -> Constraint.ident -> Reason.t -> unit
 val add_nominal_id: t -> Constraint.ident -> unit
 val remove_all_errors: t -> unit
 val remove_all_error_suppressions: t -> unit
-val remove_all_lint_settings: t -> unit
+val remove_all_lint_severities: t -> unit
 val remove_tvar: t -> Constraint.ident -> unit
 val set_declare_module_t: t -> Type.t option -> unit
 val set_envs: t -> env IMap.t -> unit
@@ -147,7 +147,7 @@ val set_globals: t -> SSet.t -> unit
 val set_graph: t -> Constraint.node IMap.t -> unit
 val set_errors: t -> Errors.ErrorSet.t -> unit
 val set_error_suppressions: t -> Error_suppressions.t -> unit
-val set_lint_settings: t -> LintSettingsMap.t -> unit
+val set_severity_cover: t -> ExactCover.lint_severity_cover -> unit
 val set_module_kind: t -> module_kind -> unit
 val set_property_maps: t -> Type.Properties.map -> unit
 val set_export_maps: t -> Type.Exports.map -> unit

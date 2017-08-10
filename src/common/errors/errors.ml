@@ -8,13 +8,15 @@
  *
  *)
 
+open Severity
+
 type error_kind =
   | ParseError
   | InferError
   | InferWarning
   | InternalError
   | DuplicateProviderError
-  | LintError of LintSettings.lint_kind
+  | LintError of Lints.lint_kind
 
 let string_of_kind = function
 | ParseError -> "ParseError"
@@ -22,7 +24,7 @@ let string_of_kind = function
 | InferWarning -> "InferWarning"
 | InternalError -> "InternalError"
 | DuplicateProviderError -> "DuplicateProviderError"
-| LintError lint_kind -> "LintError" ^ "-" ^ LintSettings.string_of_kind lint_kind
+| LintError lint_kind -> "LintError" ^ "-" ^ Lints.string_of_kind lint_kind
 
 (* internal rep for core info *)
 type message =
@@ -64,7 +66,7 @@ let infos_to_messages infos =
 let mk_error ?(kind=InferError) ?op_info ?trace_infos ?(extra=[]) infos =
   let infos = match kind, infos with
     | LintError lint_kind, (head_loc, head_str::head_tail)::tail ->
-      let prefix = (LintSettings.string_of_kind lint_kind) ^ ": " in
+      let prefix = (Lints.string_of_kind lint_kind) ^ ": " in
       (head_loc, (prefix ^ head_str)::head_tail)::tail
     | _ -> infos
   in
@@ -392,9 +394,9 @@ module Cli_output = struct
     let c1 = loc._end.column in
     let filename = file_of_source loc.source in
     let severity_style = match severity with
-      | LintSettings.Err -> error_fragment_style
-      | LintSettings.Warn -> warning_fragment_style
-      | LintSettings.Off ->
+      | Err -> error_fragment_style
+      | Warn -> warning_fragment_style
+      | Off ->
         Utils_js.assert_false "CLI output is only called with warnings and errors."
     in
 
@@ -596,9 +598,9 @@ module Cli_output = struct
            module`s with the same name? *)
         | DuplicateProviderError -> "Library duplicate provider error:"
         | LintError lint_kind ->
-          let lint_string = LintSettings.string_of_kind lint_kind in
+          let lint_string = Lints.string_of_kind lint_kind in
           Printf.sprintf "Library lint %s (%s):"
-            (LintSettings.output_string_of_state severity) lint_string
+            (output_string_of_severity severity) lint_string
         in
         [comment_file_style (header^"\n")],
         relative_lib_path ~strip_root filename
@@ -606,13 +608,13 @@ module Cli_output = struct
       | Some Loc.JsonFile filename
       | Some Loc.ResourceFile filename ->
         let heading_style = match severity with
-          | LintSettings.Err -> error_heading_style
-          | LintSettings.Warn -> warning_heading_style
-          | LintSettings.Off ->
+          | Err -> error_heading_style
+          | Warn -> warning_heading_style
+          | Off ->
             Utils_js.assert_false "CLI output is only called with warnings and errors."
         in
         let severity_str = severity
-          |> LintSettings.output_string_of_state
+          |> output_string_of_severity
           |> String.capitalize_ascii
         in
         [heading_style (severity_str ^ ":"); default_style " "], relative_path ~strip_root filename
@@ -717,9 +719,9 @@ module Cli_output = struct
 
         curr + 1
       in
-      let err_count = ErrorSet.fold (print_error_if_not_truncated LintSettings.Err) errors 0 in
+      let err_count = ErrorSet.fold (print_error_if_not_truncated Err) errors 0 in
       let total_count = ErrorSet.fold
-        (print_error_if_not_truncated LintSettings.Warn) warnings err_count
+        (print_error_if_not_truncated Warn) warnings err_count
       in
       let warn_count = total_count - err_count in
       if total_count > 0 then print_newline ();
@@ -811,7 +813,7 @@ module Json_output = struct
       | DuplicateProviderError -> "duplicate provider"
       | LintError _ -> "lint"
     in
-    let severity_str = LintSettings.output_string_of_state severity in
+    let severity_str = output_string_of_severity severity in
     let suppressions = suppression_locs
     |> Loc.LocSet.elements
     |> List.map (fun loc ->
@@ -856,10 +858,10 @@ module Json_output = struct
     in
     let f = json_of_error_with_context ~strip_root ~stdin_file in
     Hh_json.JSON_Array (
-      List.map (f ~severity:LintSettings.Err) errors @
-      List.map (f ~severity:LintSettings.Warn) warnings @
+      List.map (f ~severity:Err) errors @
+      List.map (f ~severity:Warn) warnings @
       (* We want these to show up as "suppressed error"s, not "suppressed off"s *)
-      List.map (f ~severity:LintSettings.Err) suppressed_errors
+      List.map (f ~severity:Err) suppressed_errors
     )
 
   let full_status_json_of_errors ~strip_root ~suppressed_errors

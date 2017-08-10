@@ -2431,7 +2431,7 @@ let dump_flow_error =
       in
       spf "ELintSetting (%s, %s)" (string_of_loc loc) kind_str
     | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
-      let open LintSettings in
+      let open Lints in
       let kind_str = match kind with
       | SketchyBool -> "SketchyBool"
       | SketchyString -> "SketchyString"

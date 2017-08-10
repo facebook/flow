@@ -104,21 +104,21 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         )
         errors
     in
-    let acc_fun lint_settings filename file_errs
+    let acc_fun severity_cover filename file_errs
         (errors, warnings, suppressed_errors, suppressions) =
       let file_errs, file_warns, file_suppressed_errors, suppressions =
-        filter_suppressed_errors suppressions lint_settings file_errs in
+        filter_suppressed_errors suppressions severity_cover file_errs in
       let errors = ErrorSet.union file_errs errors in
       let warnings = FilenameMap.add filename file_warns warnings in
       let suppressed_errors = List.rev_append file_suppressed_errors suppressed_errors in
       (errors, warnings, suppressed_errors, suppressions)
     in
-    fun { ServerEnv.local_errors; merge_errors; suppressions; lint_settings; } ->
+    fun { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set; } ->
       let suppressions = union_suppressions suppressions in
 
       (* union the errors from all files together, filtering suppressed errors *)
-      let lint_settings = LintSettingsMap.union_settings lint_settings in
-      let acc_fun = acc_fun lint_settings in
+      let severity_cover = ExactCover.union_all severity_cover_set in
+      let acc_fun = acc_fun severity_cover in
       let errors, warnings, suppressed_errors, suppressions =
         (ErrorSet.empty, FilenameMap.empty, [], suppressions)
         |> FilenameMap.fold acc_fun local_errors

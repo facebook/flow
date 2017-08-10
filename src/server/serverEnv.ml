@@ -30,8 +30,8 @@ type errors = {
   merge_errors: Errors.ErrorSet.t Utils_js.FilenameMap.t;
   (* error suppressions in the code *)
   suppressions: Error_suppressions.t Utils_js.FilenameMap.t;
-  (* lint settings in the code *)
-  lint_settings: LintSettingsMap.t Utils_js.FilenameMap.t;
+  (* lint severity settings in the code *)
+  severity_cover_set: ExactCover.lint_severity_cover Utils_js.FilenameMap.t;
 }
 
 type env = {

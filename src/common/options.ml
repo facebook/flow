@@ -68,7 +68,7 @@ type t = {
   opt_verbose : Verbose.t option;
   opt_weak : bool;
   opt_max_header_tokens: int;
-  opt_lint_settings: LintSettings.t;
+  opt_lint_severities: Severity.severity LintSettings.t;
 }
 
 let all opts = opts.opt_all
@@ -112,4 +112,4 @@ let temp_dir opts = opts.opt_temp_dir
 let verbose opts = opts.opt_verbose
 let weak_by_default opts = opts.opt_weak
 
-let lint_settings opts = opts.opt_lint_settings
+let lint_severities opts = opts.opt_lint_severities

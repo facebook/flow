@@ -108,9 +108,9 @@ let merge_strict_context ~options component =
   in
 
   let metadata = Context.metadata_of_options options in
-  let lint_settings = Some (Options.lint_settings options) in
+  let lint_severities = Some (Options.lint_severities options) in
   let cx = Merge_js.merge_component_strict
-    ~metadata ~lint_settings ~require_loc_maps
+    ~metadata ~lint_severities ~require_loc_maps
     ~get_ast_unsafe:Parsing_service_js.get_ast_unsafe
     ~get_docblock_unsafe:Parsing_service_js.get_docblock_unsafe
     component file_reqs dep_cxs master_cx
@@ -144,9 +144,9 @@ let merge_contents_context options file ast info ~ensure_checked_dependencies =
   in
 
   let metadata = Context.metadata_of_options options in
-  let lint_settings = Some (Options.lint_settings options) in
+  let lint_severities = Some (Options.lint_severities options) in
   let cx = Merge_js.merge_component_strict
-    ~metadata ~lint_settings ~require_loc_maps
+    ~metadata ~lint_severities ~require_loc_maps
     ~get_ast_unsafe:(fun _ -> ast)
     ~get_docblock_unsafe:(fun _ -> info)
     component file_reqs dep_cxs master_cx
@@ -181,28 +181,28 @@ let merge_strict_component ~options (merged_acc, unchanged_acc) component =
 
     let errors = Context.errors cx in
     let suppressions = Context.error_suppressions cx in
-    let lint_settings = Context.lint_settings cx in
+    let severity_cover = Context.severity_cover cx in
 
     Context.remove_all_errors cx;
     Context.remove_all_error_suppressions cx;
-    Context.remove_all_lint_settings cx;
+    Context.remove_all_lint_severities cx;
 
     Context.clear_intermediates cx;
 
     let diff = Context_cache.add_merge_on_diff ~audit:Expensive.ok
       cx component md5 in
 
-    (file, Ok (errors, suppressions, lint_settings)) :: merged_acc,
+    (file, Ok (errors, suppressions, severity_cover)) :: merged_acc,
     if diff then unchanged_acc else file :: unchanged_acc
   )
   else
     let errors = Errors.ErrorSet.empty in
     let suppressions = Error_suppressions.empty in
-    let lint_settings =
-      LintSettingsMap.global_settings file
-        (Options.lint_settings options)
+    let severity_cover =
+      ExactCover.file_cover file
+        (Options.lint_severities options)
     in
-    (file, Ok (errors, suppressions, lint_settings)) :: merged_acc,
+    (file, Ok (errors, suppressions, severity_cover)) :: merged_acc,
     unchanged_acc
 
 let merge_strict_job ~options ~job (merged, unchanged) elements =

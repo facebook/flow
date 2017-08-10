@@ -30,7 +30,7 @@ end
 
 val merge_component_strict:
   metadata: Context.metadata ->
-  lint_settings: LintSettings.t option ->
+  lint_severities: Severity.severity LintSettings.t option ->
   require_loc_maps: Loc.t SMap.t Utils_js.FilenameMap.t ->
   get_ast_unsafe: (Loc.filename -> Ast.program) ->
   get_docblock_unsafe: (Loc.filename -> Docblock.t) ->
@@ -53,7 +53,7 @@ val clear_master_shared: Context.t -> Context.t -> unit
 val merge_lib_file:
   Context.t ->
   Context.t ->
-  Errors.ErrorSet.t * Error_suppressions.t * LintSettingsMap.t
+  Errors.ErrorSet.t * Error_suppressions.t * ExactCover.lint_severity_cover
 
 val lowers_of_tvar: Context.t -> Reason.t -> Constraint.ident -> Type.t
 

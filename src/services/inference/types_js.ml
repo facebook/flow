@@ -16,13 +16,13 @@ open Utils_js
 
 let clear_errors ?(debug=false) (files: FilenameSet.t) errors =
   FilenameSet.fold
-    (fun file { ServerEnv.local_errors; merge_errors; suppressions; lint_settings; } ->
+    (fun file { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set; } ->
       if debug then prerr_endlinef "clear errors %s" (string_of_filename file);
       { ServerEnv.
         local_errors = FilenameMap.remove file local_errors;
         merge_errors = FilenameMap.remove file merge_errors;
         suppressions = FilenameMap.remove file suppressions;
-        lint_settings = FilenameMap.remove file lint_settings;
+        severity_cover_set = FilenameMap.remove file severity_cover_set;
       }
     ) files errors
 
@@ -53,8 +53,8 @@ let update_suppressions map file errsup =
     then FilenameMap.remove file map
     else FilenameMap.add file errsup map
 
-let update_lint_settings map file lintsett =
-  FilenameMap.add file lintsett map
+let update_severity_cover_set map file severity_cover =
+  FilenameMap.add file severity_cover map
 
 let with_timer ?options timer profiling f =
   Profiling_js.start_timer ~timer profiling;
@@ -192,7 +192,7 @@ let commit_modules_and_resolve_requires
   (* TODO remove after lookup overhaul *)
   Module_js.clear_filename_cache ();
 
-  let { ServerEnv.local_errors; merge_errors; suppressions; lint_settings } = errors in
+  let { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set } = errors in
 
   let changed_modules, local_errors = commit_modules
     ~options profiling ~workers parsed unparsed ~old_modules local_errors new_or_changed in
@@ -201,7 +201,7 @@ let commit_modules_and_resolve_requires
     ~options profiling ~workers parsed in
   let local_errors = FilenameMap.union resolve_errors local_errors in
 
-  changed_modules, { ServerEnv.local_errors; merge_errors; suppressions; lint_settings }
+  changed_modules, { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set }
 
 let error_set_of_merge_exception file exc =
   let loc = Loc.({ none with source = Some file }) in
@@ -235,21 +235,21 @@ let merge
     List.fold_left (fun acc (file, result) ->
       let component = FilenameMap.find_unsafe file component_map in
       (* remove all errors, suppressions for rechecked component *)
-      let errors, suppressions, lint_settings =
-        List.fold_left (fun (errors, suppressions, lint_settings) file ->
+      let errors, suppressions, severity_cover_set =
+        List.fold_left (fun (errors, suppressions, severity_cover_set) file ->
           FilenameMap.remove file errors,
           FilenameMap.remove file suppressions,
-          FilenameMap.remove file lint_settings
+          FilenameMap.remove file severity_cover_set
         ) acc component
       in
       match result with
-      | Ok (new_errors, new_suppressions, new_lint_settings) ->
+      | Ok (new_errors, new_suppressions, new_severity_cover) ->
         update_errset errors file new_errors,
         update_suppressions suppressions file new_suppressions,
-        update_lint_settings lint_settings file new_lint_settings
+        update_severity_cover_set severity_cover_set file new_severity_cover
       | Error exc ->
         let new_errors = error_set_of_merge_exception file exc in
-        update_errset errors file new_errors, suppressions, lint_settings
+        update_errset errors file new_errors, suppressions, severity_cover_set
     ) acc merged
   )
 
@@ -265,7 +265,7 @@ let typecheck
   ~all_dependent_files
   ~make_merge_input
   ~persistent_connections =
-  let { ServerEnv.local_errors; merge_errors; suppressions; lint_settings } = errors in
+  let { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set } = errors in
 
   let infer_input =
     if Options.is_lazy_mode options
@@ -287,11 +287,11 @@ let typecheck
     match persistent_connections with
     | None -> fun _ -> ()
     | Some conns ->
-      (* Each merge step uncovers new errors, warnings, suppressions and lint settings.
+      (* Each merge step uncovers new errors, warnings, suppressions and lint severity covers.
 
-         While more suppressions and lint settings may come in later steps, the suppressions and
-         lint settings we've seen so far are sufficient to filter the errors and warnings we've seen
-         so far.
+         While more suppressions and severity covers may come in later steps, the suppressions and
+         severity covers we've seen so far are sufficient to filter the errors and warnings we've
+         seen so far.
 
          Intuitively, we will not see an error (or warning) before we've seen all the files involved
          in that error, and thus all the suppressions which could possibly suppress the error. *)
@@ -299,14 +299,14 @@ let typecheck
       let curr_errors = ref ErrorSet.empty in
       let curr_warnings = ref ErrorSet.empty in
       let curr_suppressions = ref Error_suppressions.empty in
-      let curr_lint_settings = ref LintSettingsMap.empty in
+      let curr_severity_cover = ref ExactCover.empty in
       let filter = Error_suppressions.filter_suppressed_errors in
       function lazy results ->
-        let new_errors, new_warnings, suppressions, lint_settings =
+        let new_errors, new_warnings, suppressions, severity_cover =
           List.fold_left (fun (errs_acc, warns_acc, supps_acc, lints_acc) result ->
             let file, errs_and_warns, supps, lints = result in
             let supps_acc = Error_suppressions.union supps_acc supps in
-            let lints_acc = LintSettingsMap.union lints_acc lints in
+            let lints_acc = ExactCover.union lints_acc lints in
             (* Filter errors and warnings based on suppressions we've seen so far. *)
             let errs, warns, _, _ = filter supps_acc lints_acc errs_and_warns in
             (* Only add errors we haven't seen before. *)
@@ -327,13 +327,13 @@ let typecheck
               if ErrorSet.is_empty acc then warns_acc else FilenameMap.add file acc warns_acc
             in
             errs_acc, warns_acc, supps_acc, lints_acc
-          ) (ErrorSet.empty, FilenameMap.empty, !curr_suppressions, !curr_lint_settings) results
+          ) (ErrorSet.empty, FilenameMap.empty, !curr_suppressions, !curr_severity_cover) results
         in
 
         curr_errors := ErrorSet.union new_errors !curr_errors;
         curr_warnings := FilenameMap.fold (fun _ -> ErrorSet.union) new_warnings !curr_warnings;
         curr_suppressions := suppressions;
-        curr_lint_settings := lint_settings;
+        curr_severity_cover := severity_cover;
 
         if not (ErrorSet.is_empty new_errors && FilenameMap.is_empty new_warnings) then
           Persistent_connection.update_clients conns ~errors:new_errors ~warnings:new_warnings
@@ -358,27 +358,27 @@ let typecheck
       calc_deps ~options ~profiling ~workers to_merge in
 
     Hh_logger.info "Merging";
-    let merge_errors, suppressions, lint_settings = try
+    let merge_errors, suppressions, severity_cover_set = try
       let intermediate_result_callback results =
         let errors = lazy (
           List.map (fun (file, result) ->
             match result with
-            | Ok (errors, suppressions, lint_settings) ->
-              file, errors, suppressions, lint_settings
+            | Ok (errors, suppressions, severity_cover) ->
+              file, errors, suppressions, severity_cover
             | Error exc ->
               let errors = error_set_of_merge_exception file exc in
               let suppressions = Error_suppressions.empty in
-              let lint_settings =
-                LintSettingsMap.global_settings file
-                  (Options.lint_settings options)
+              let severity_cover =
+                ExactCover.file_cover file
+                  (Options.lint_severities options)
               in
-              file, errors, suppressions, lint_settings
+              file, errors, suppressions, severity_cover
           ) (Lazy.force results)
         ) in
         send_errors_over_connection errors
       in
 
-      let merge_errors, suppressions, lint_settings =
+      let merge_errors, suppressions, severity_cover_set =
         merge
           ~intermediate_result_callback
           ~options
@@ -387,11 +387,11 @@ let typecheck
           dependency_graph
           component_map
           recheck_map
-          (merge_errors, suppressions, lint_settings)
+          (merge_errors, suppressions, severity_cover_set)
       in
       if Options.should_profile options then Gc.print_stat stderr;
       Hh_logger.info "Done";
-      merge_errors, suppressions, lint_settings
+      merge_errors, suppressions, severity_cover_set
     with
     (* Unrecoverable exceptions *)
     | SharedMem_js.Out_of_shared_memory
@@ -401,15 +401,15 @@ let typecheck
     (* A catch all suppression is probably a bad idea... *)
     | exc when not Build_mode.dev ->
         prerr_endline (Printexc.to_string exc);
-        merge_errors, suppressions, lint_settings
+        merge_errors, suppressions, severity_cover_set
     in
 
     FilenameSet.union unchanged_checked (FilenameSet.of_list to_merge),
-    { ServerEnv.local_errors; merge_errors; suppressions; lint_settings; }
+    { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set }
 
   | None ->
     unchanged_checked,
-    { ServerEnv.local_errors; merge_errors; suppressions; lint_settings }
+      { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set }
 
 (* When checking contents, ensure that dependencies are checked. Might have more
    general utility. *)
@@ -488,10 +488,10 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
 
         (* Filter out suppressed errors *)
         let error_suppressions = Context.error_suppressions cx in
-        let lint_settings = Context.lint_settings cx in
+        let severity_cover = Context.severity_cover cx in
         let errors = Context.errors cx in
         let errors, warnings, _, _ =
-          Error_suppressions.filter_suppressed_errors error_suppressions lint_settings errors in
+          Error_suppressions.filter_suppressed_errors error_suppressions severity_cover errors in
 
         let warnings = if Options.should_include_warnings options
           then warnings
@@ -532,19 +532,19 @@ let init_package_heap ~options ~profiling parsed =
     ) parsed;
   )
 
-let init_libs ~options ~profiling ~local_errors ~suppressions ~lint_settings ordered_libs =
+let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_set ordered_libs =
   with_timer ~options "InitLibs" profiling (fun () ->
     let lib_files = Init_js.init ~options ordered_libs in
-    List.fold_left (fun acc (lib_file, ok, errs, suppressions, lint_settings) ->
-      let all_ok, errors_acc, suppressions_acc, lint_settings_acc = acc in
+    List.fold_left (fun acc (lib_file, ok, errs, suppressions, severity_cover) ->
+      let all_ok, errors_acc, suppressions_acc, severity_cover_set_acc = acc in
       let all_ok = if ok then all_ok else false in
       let errors_acc = update_errset errors_acc lib_file errs in
       let suppressions_acc =
         update_suppressions suppressions_acc lib_file suppressions in
-      let lint_settings_acc =
-        update_lint_settings lint_settings_acc lib_file lint_settings in
-      all_ok, errors_acc, suppressions_acc, lint_settings_acc
-    ) (true, local_errors, suppressions, lint_settings) lib_files
+      let severity_cover_set_acc =
+        update_severity_cover_set severity_cover_set_acc lib_file severity_cover in
+      all_ok, errors_acc, suppressions_acc, severity_cover_set_acc
+    ) (true, local_errors, suppressions, severity_cover_set) lib_files
   )
 
 (* We maintain the following invariant across rechecks: The set of
@@ -925,10 +925,10 @@ let init ~profiling ~workers options =
   let () = init_package_heap ~options ~profiling parsed in
 
   Hh_logger.info "Loading libraries";
-  let libs_ok, local_errors, suppressions, lint_settings =
+  let libs_ok, local_errors, suppressions, severity_cover_set =
     let suppressions = FilenameMap.empty in
-    let lint_settings = FilenameMap.empty in
-    init_libs ~options ~profiling ~local_errors ~suppressions ~lint_settings ordered_libs in
+    let severity_cover_set = FilenameMap.empty in
+    init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_set ordered_libs in
 
   Hh_logger.info "Resolving dependencies";
   let _, errors =
@@ -937,7 +937,7 @@ let init ~profiling ~workers options =
       local_errors;
       merge_errors = FilenameMap.empty;
       suppressions;
-      lint_settings;
+      severity_cover_set;
     } in
     let all_files = List.fold_left (fun acc (filename, _) ->
       filename::acc

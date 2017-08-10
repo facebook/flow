@@ -41,10 +41,13 @@ val merge_runner:
   'a merge_results
 
 val merge_strict:
-  intermediate_result_callback: ((Errors.ErrorSet.t * Error_suppressions.t * LintSettingsMap.t) merge_results Lazy.t -> unit) ->
+  intermediate_result_callback:
+    ((Errors.ErrorSet.t *
+      Error_suppressions.t *
+      ExactCover.lint_severity_cover) merge_results Lazy.t -> unit) ->
   options: Options.t ->
   workers: Worker.t list option ->
   FilenameSet.t FilenameMap.t ->
   (filename list) FilenameMap.t ->
   bool FilenameMap.t ->
-  (Errors.ErrorSet.t * Error_suppressions.t * LintSettingsMap.t) merge_results
+  (Errors.ErrorSet.t * Error_suppressions.t * ExactCover.lint_severity_cover) merge_results

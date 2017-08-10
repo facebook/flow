@@ -61,7 +61,7 @@ let load_lib_files ~master_cx ~metadata files
       match parse_content lib_file lib_content with
       | ast, [] ->
         let cx, syms = Type_inference_js.infer_lib_file
-          ~metadata ~exclude_syms ~lint_settings:None
+          ~metadata ~exclude_syms ~lint_severities:None
           lib_file ast
         in
 
@@ -172,7 +172,7 @@ let infer_and_merge ~root filename ast =
   let require_loc_maps =
     Utils_js.FilenameMap.singleton filename require_loc_map in
   Merge_js.merge_component_strict
-    ~metadata ~lint_settings:None ~require_loc_maps
+    ~metadata ~lint_severities:None ~require_loc_maps
     ~get_ast_unsafe:(fun _ -> ast)
     ~get_docblock_unsafe:(fun _ -> stub_docblock)
     [filename] reqs [] master_cx
@@ -186,7 +186,7 @@ let check_content ~filename ~content =
     let cx = infer_and_merge ~root filename ast in
     (* Perform a basic suppression step, to eliminate lints from playground output. *)
     let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
-      Error_suppressions.empty (LintSettingsMap.default_settings filename) (Context.errors cx)
+      Error_suppressions.empty (ExactCover.default_file_cover filename) (Context.errors cx)
     in errors, warnings
   | _, parse_errors ->
     let errors = List.fold_left (fun acc parse_error ->

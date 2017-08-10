@@ -129,7 +129,7 @@ type local_t = {
   mutable globals: SSet.t;
 
   mutable error_suppressions: Error_suppressions.t;
-  mutable lint_settings: LintSettingsMap.t;
+  mutable severity_cover: ExactCover.lint_severity_cover;
 
   type_table: Type_table.t;
   annot_table: (Loc.t, Type.t) Hashtbl.t;
@@ -224,7 +224,7 @@ let make metadata file module_ref = {
     globals = SSet.empty;
 
     error_suppressions = Error_suppressions.empty;
-    lint_settings = LintSettingsMap.empty;
+    severity_cover = ExactCover.empty;
 
     type_table = Type_table.create ();
     annot_table = Hashtbl.create 0;
@@ -283,7 +283,7 @@ let imported_ts cx = cx.local.imported_ts
 let is_checked cx = cx.local.metadata.checked
 let is_verbose cx = cx.local.metadata.verbose <> None
 let is_weak cx = cx.local.metadata.weak
-let lint_settings cx = cx.local.lint_settings
+let severity_cover cx = cx.local.severity_cover
 let max_trace_depth cx = Global.max_trace_depth cx.global
 let module_kind cx = cx.local.module_kind
 let module_map cx = cx.local.module_map
@@ -354,8 +354,8 @@ let remove_all_errors cx =
   cx.local.errors <- Errors.ErrorSet.empty
 let remove_all_error_suppressions cx =
   cx.local.error_suppressions <- Error_suppressions.empty
-let remove_all_lint_settings cx =
-  cx.local.lint_settings <- LintSettingsMap.empty
+let remove_all_lint_severities cx =
+  cx.local.severity_cover <- ExactCover.empty
 let remove_tvar cx id =
   cx.local.graph <- IMap.remove id cx.local.graph
 let set_all_unresolved cx all_unresolved =
@@ -374,8 +374,8 @@ let set_errors cx errors =
   cx.local.errors <- errors
 let set_error_suppressions cx suppressions =
   cx.local.error_suppressions <- suppressions
-let set_lint_settings cx lint_settings =
-  cx.local.lint_settings <- lint_settings
+let set_severity_cover cx severity_cover =
+  cx.local.severity_cover <- severity_cover
 let set_module_kind cx module_kind =
   cx.local.module_kind <- module_kind
 let set_property_maps cx property_maps =
@@ -462,7 +462,7 @@ let merge_into cx cx_other =
   set_graph cx (IMap.union (graph cx_other) (graph cx));
   set_errors cx (Errors.ErrorSet.union (errors cx_other) (errors cx));
   set_error_suppressions cx (Error_suppressions.union (error_suppressions cx_other) (error_suppressions cx));
-  set_lint_settings cx (LintSettingsMap.union (lint_settings cx_other) (lint_settings cx));
+  set_severity_cover cx (ExactCover.union (severity_cover cx_other) (severity_cover cx));
   set_exists_checks cx (Utils_js.LocMap.union (exists_checks cx_other) (exists_checks cx));
   set_exists_excuses cx (Utils_js.LocMap.union (exists_excuses cx_other) (exists_excuses cx))
   (* TODO: merge renamings and dep_map as well. *)
