@@ -5,15 +5,12 @@ Library type error:
  23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
                                                                   ^^ object literal. See: render_callback.js:23
 
-Error: createElementRequiredProp_string.js:20
- 20:     return (<Cmp/>);
+Error: createElementRequiredProp_string.js:17
+ 17:     return (<Cmp/>);
                  ^^^^^^ React element `Cmp`
-              v
-  5:   props: {
-  6:     test: number,
-  7:   };
-       ^ property `test`. Property not found in
- 20:     return (<Cmp/>);
+  4: class Bar extends React.Component<void, {test: number}> {
+                                             ^^^^^^^^^^^^^^ property `test`. Property not found in
+ 17:     return (<Cmp/>);
                  ^^^^^^ props of React element `Cmp`
 
 Error: create_class.js:7
@@ -1068,19 +1065,16 @@ Error: render_callback.js:25
 243:     callback?: () => void
                     ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:243
 
-Error: undefined_prop.js:11
- 11: <MyComponent title={undefined} />;
+Error: undefined_prop.js:7
+  7: <MyComponent title={undefined} />;
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyComponent`. This type is incompatible with
-              v
-  6:   props: {
-  7:     title: string,
-  8:   };
-       ^ object type
+  5: class MyComponent extends React.Component<void, {title: string}> {}
+                                                     ^^^^^^^^^^^^^^^ object type
   Property `title` is incompatible:
-     11: <MyComponent title={undefined} />;
+      7: <MyComponent title={undefined} />;
                              ^^^^^^^^^ undefined. This type is incompatible with
-      7:     title: string,
-                    ^^^^^^ string
+      5: class MyComponent extends React.Component<void, {title: string}> {}
+                                                                 ^^^^^^ string
 
 
 Found 122 errors

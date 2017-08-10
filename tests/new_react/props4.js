@@ -3,19 +3,14 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-class JDiv extends React.Component {
+class JDiv extends React.Component<void, {id: string}> {
   // static defaultProps: { };
-  props: {
-    id: string
-  };
 }
 
 // Should be a type error ('id' takes a string, not a number..)
 <JDiv id={42} />;
 
-class Example extends React.Component {
-  props: { bar: string };
-
+class Example extends React.Component<void, {bar: string}> {
   render() {
     return <div>{this.props.bar}</div>
   }
