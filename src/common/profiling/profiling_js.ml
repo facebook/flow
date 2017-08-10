@@ -233,10 +233,12 @@ end = struct
     JSON_Object results
 end
 
-type t = {
+type running = {
   timing: Timing.t;
   memory: Memory.t;
 }
+
+type finished = running
 
 let empty = {
   timing = Timing.empty;
@@ -248,6 +250,24 @@ let start_timer ~timer profile =
 
 let stop_timer ~timer profile =
   { profile with timing = Timing.stop_timer ~timer profile.timing }
+
+let profiling_timer_name = "Profiling"
+let reserved_timer_names = SSet.of_list [ profiling_timer_name ]
+
+let with_profiling f =
+  let profiling, ret = empty
+  |> start_timer ~timer:profiling_timer_name
+  |> f in
+  let profiling = stop_timer ~timer:profiling_timer_name profiling in
+  (profiling, ret)
+
+let check_for_reserved_timer_name f ~timer profile =
+  if SSet.mem timer reserved_timer_names
+  then failwith (Printf.sprintf "%s is a reserved timer name" timer);
+  f ~timer profile
+
+let start_timer = check_for_reserved_timer_name start_timer
+let stop_timer = check_for_reserved_timer_name stop_timer
 
 let get_finished_timer ~timer profile =
   Timing.get_finished_timer ~timer profile.timing

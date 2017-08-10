@@ -8,17 +8,18 @@
  *
  *)
 
- type t
+type running
+type finished
 
- val empty: t
+val with_profiling: (running -> running * 'a) -> finished * 'a
 
- val start_timer: timer:string -> t -> t
- val stop_timer: timer:string -> t -> t
- val get_finished_timer: timer:string -> t -> (float * float * float * float) option
+val start_timer: timer:string -> running -> running
+val stop_timer: timer:string -> running -> running
+val get_finished_timer: timer:string -> running -> (float * float * float * float) option
 
- val sample_memory: metric:string -> value:float -> t -> t
+val sample_memory: metric:string -> value:float -> running -> running
 
- val get_timing_json_string: t -> string
- val get_memory_json_string: t -> string
+val get_timing_json_string: finished -> string
+val get_memory_json_string: finished -> string
 
- val to_json_properties: t -> (string * Hh_json.json) list
+val to_json_properties: finished -> (string * Hh_json.json) list
