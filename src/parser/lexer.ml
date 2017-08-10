@@ -607,6 +607,7 @@ let rec token (env: Lex_env.t) lexbuf =
   | "/=" -> env, T_DIV_ASSIGN
   | "/" -> env, T_DIV
   | "@" -> env, T_AT
+  | "#" -> env, T_POUND
 
   (* Others *)
   | eof ->

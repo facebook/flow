@@ -200,7 +200,10 @@ type env = {
   lookahead             : Lookahead.t ref;
   token_sink            : (token_sink_result -> unit) option ref;
   parse_options         : parse_options;
-  source               : Loc.filename option;
+  source                : Loc.filename option;
+  (* It is a syntax error to reference private fields not in scope. In order to enforce this,
+   * we keep track of the privates we've seen declared and used. *)
+  privates              : (SSet.t * ((string * Loc.t) list)) list ref;
 }
 
 (* constructor *)
@@ -246,6 +249,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     token_sink = ref token_sink;
     parse_options;
     source;
+    privates = ref [];
   }
 
 (* getters: *)
@@ -283,6 +287,46 @@ let record_export env (loc, export_name) =
   if SSet.mem export_name exports
   then error_at env (loc, Error.DuplicateExport export_name)
   else env.exports := SSet.add export_name !(env.exports)
+
+(* Since private fields out of scope are a parse error, we keep track of the declared and used
+ * private fields.
+ *
+ * Whenever we enter a class, we push new empty lists of declared and used privates.
+ * When we encounter a new declared private, we add it to the top of the declared_privates list
+ * via add_declared_private. We do the same with used_privates via add_used_private.
+ *
+ * When we exit a class, we look for all the unbound private variables. Since class fields
+ * are hoisted to the scope of the class, we may need to look further before we conclude that
+ * a field is out of scope. To do that, we add all of the unbound private fields to the
+ * next used_private list. Once we run out of declared private lists, any leftover used_privates
+ * are unbound private variables. *)
+let enter_class env = env.privates := (SSet.empty, []) :: !(env.privates)
+
+let exit_class env =
+
+  let get_unbound_privates declared_privates used_privates =
+    List.filter (fun x -> not (SSet.mem (fst x) declared_privates)) used_privates in
+
+  match !(env.privates) with
+  | [declared_privates, used_privates] ->
+      let unbound_privates = get_unbound_privates declared_privates used_privates in
+      List.iter (fun (name, loc) -> error_at env (loc, Error.UnboundPrivate name)) unbound_privates;
+      env.privates := []
+  | (loc_declared_privates, loc_used_privates) :: privates ->
+      let unbound_privates = get_unbound_privates loc_declared_privates loc_used_privates in
+      let decl_head, used_head = List.hd privates in
+      env.privates := (decl_head, used_head @ unbound_privates) :: (List.tl privates)
+  | _ -> failwith "Internal Error: `exit_class` called before a matching `enter_class`"
+
+let add_declared_private env name =
+  match !(env.privates) with
+  | [] -> failwith "Internal Error: Tried to add_declared_private with outside of class scope."
+  | (declared, used)::xs -> env.privates := ((SSet.add name declared, used) :: xs)
+
+let add_used_private env name loc =
+  match !(env.privates) with
+  | [] -> error_at env (loc, Error.PrivateNotInClass)
+  | (declared, used)::xs -> env.privates := ((declared, (name, loc) :: used) :: xs)
 
 (* lookahead: *)
 let lookahead ?(i=0) env =
@@ -390,6 +434,7 @@ module Peek = struct
     | T_DECLARE
     | T_ASYNC
     | T_AWAIT
+    | T_POUND
     | T_IDENTIFIER -> true
     | _ -> false
 

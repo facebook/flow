@@ -12,6 +12,7 @@ open Token
 open Parser_env
 open Ast
 module Error = Parse_error
+module SSet = Set.Make(String)
 
 open Parser_common
 
@@ -19,7 +20,7 @@ open Parser_common
  * and classes *)
 
 module type OBJECT = sig
-  val key : env -> Loc.t * Ast.Expression.Object.Property.key
+  val key : ?class_body: bool -> env -> Loc.t * Ast.Expression.Object.Property.key
   val _initializer : env -> Loc.t * Ast.Expression.Object.t
   val class_declaration : env -> Ast.Expression.t list -> Ast.Statement.t
   val class_expression : env -> Ast.Expression.t
@@ -46,7 +47,7 @@ module Object
       then List.rev (decorator_list_helper env [])
       else []
 
-  let key env =
+  let key ?(class_body=false) env =
     Ast.Expression.Object.Property.(match Peek.token env with
     | T_STRING (loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;
@@ -66,6 +67,10 @@ module Object
         let end_loc = Peek.loc env in
         Expect.token env T_RBRACKET;
         Loc.btwn start_loc end_loc, Ast.Expression.Object.Property.Computed expr
+    | T_POUND when class_body ->
+        let loc, id = Expression.private_identifier env in
+        add_declared_private env id;
+        loc, Identifier (loc, id)
     | _ ->
         let id, _ = Expression.identifier_or_reserved_keyword env in
         fst id, Identifier id)
@@ -287,47 +292,57 @@ module Object
     | _ -> List.rev acc
 
   and class_body =
-    let rec elements env seen_constructor acc =
+    let rec elements env seen_constructor private_names acc =
       match Peek.token env with
       | T_EOF
       | T_RCURLY -> List.rev acc
       | T_SEMICOLON ->
           (* Skip empty elements *)
           Expect.token env T_SEMICOLON;
-          elements env seen_constructor acc
+          elements env seen_constructor private_names acc
       | _ ->
           let element = class_element env in
-          let seen_constructor' = begin match element with
+          let seen_constructor', private_names' = begin match element with
           | Ast.Class.Body.Method (loc, m) ->
               let open Ast.Class.Method in
               begin match m.kind with
               | Constructor when not m.static ->
                   if seen_constructor then
                     error_at env (loc, Error.DuplicateConstructor);
-                  true
-              | _ -> seen_constructor
+                  (true, private_names)
+              | Method ->
+                (seen_constructor, begin match m.key with
+                | Ast.Expression.Object.Property.Identifier (_, x)
+                  when Parse.is_private_name x ->
+                    error_at env (loc, Error.PrivateMethod);
+                    private_names
+                | _ -> private_names
+                end)
+              | _ -> (seen_constructor, private_names)
               end
           | Ast.Class.Body.Property (loc, p) ->
               let open Ast.Expression.Object.Property in
-              begin match p.Ast.Class.Property.key with
-              | Literal (_, x) when String.equal x.Ast.Literal.raw "constructor" ||
-                (String.equal x.Ast.Literal.raw "prototype" && p.Ast.Class.Property.static) ->
-                  error_at env (loc, Error.InvalidPropName (x.Ast.Literal.raw,
-                  String.equal x.Ast.Literal.raw "prototype"))
-
+              (seen_constructor, begin match p.Ast.Class.Property.key with
               | Identifier (_, x) when String.equal x "constructor" ||
+                (String.equal x "#constructor") ||
                 (String.equal x "prototype" && p.Ast.Class.Property.static) ->
-                  error_at env (loc, Error.InvalidPropName (x, String.equal x "prototype"))
-              | _ -> ()
-              end;
-              seen_constructor
+                  error_at env (loc, Error.InvalidFieldName (x, String.equal x "prototype"));
+                  private_names
+              | Identifier (_, x) when Parse.is_private_name x ->
+                  if SSet.mem x private_names then
+                    error_at env (loc, Error.DuplicatePrivateFields x);
+                  SSet.add x private_names
+              | _ -> private_names
+              end)
           end in
-          elements env seen_constructor' (element::acc)
+          elements env seen_constructor' private_names' (element::acc)
 
     in fun env ->
       let start_loc = Peek.loc env in
       Expect.token env T_LCURLY;
-      let body = elements env false [] in
+      enter_class env;
+      let body = elements env false SSet.empty [] in
+      exit_class env;
       let end_loc = Peek.loc env in
       Expect.token env T_RCURLY;
       Loc.btwn start_loc end_loc, Ast.Class.Body.({
@@ -463,7 +478,7 @@ module Object
       | false, Some _ -> Declaration.generator env
       | _ -> generator
       in
-      match (async, generator, key env) with
+      match (async, generator, key ~class_body:true env) with
       | false, false,
         (_, (Identifier (_, "get") as key)) ->
           (match Peek.token env with

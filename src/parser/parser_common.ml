@@ -33,10 +33,11 @@ module type PARSER = sig
   val jsx_element : env -> Loc.t * JSX.element
   val pattern : env -> Error.t -> Pattern.t
   val pattern_from_expr : env -> Expression.t -> Pattern.t
-  val object_key : env -> Loc.t * Expression.Object.Property.key
+  val object_key : ?class_body: bool -> env -> Loc.t * Expression.Object.Property.key
   val class_declaration : env -> Expression.t list -> Statement.t
   val class_expression : env -> Expression.t
   val is_assignable_lhs : Expression.t -> bool
+  val is_private_name : string -> bool
 end
 
 let with_loc fn env =

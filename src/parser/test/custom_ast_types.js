@@ -52,6 +52,8 @@ def("DeclareOpaqueType")
   .build("id", "typeParameters", "impltype", "supertype")
   .field("impltype", or(def("Type"), null));
 
+def("PrivateName")
+  .bases("Identifier")
 
 // TODO: should be named NullableClassDeclaration. estree allows a nameless
 // decl inside an `export default` (https://github.com/estree/estree/issues/98),

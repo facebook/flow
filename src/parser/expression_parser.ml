@@ -19,6 +19,8 @@ module type EXPRESSION = sig
   val assignment: env -> Expression.t
   val conditional: env -> Expression.t
   val identifier_or_reserved_keyword: env -> Identifier.t * (Loc.t * Parse_error.t) option
+  val private_identifier: env -> Identifier.t
+  val is_private_name: string -> bool
   val is_assignable_lhs: Expression.t -> bool
   val left_hand_side: env -> Expression.t
   val number: env -> number_type -> float
@@ -404,6 +406,12 @@ module Expression
       Expression.(match operator, argument with
       | Unary.Delete, (_, Identifier _) ->
           strict_error_at env (loc, Error.StrictDelete)
+      | Unary.Delete, (_, Member member) ->
+          begin match member.Ast.Expression.Member.property with
+          | Ast.Expression.Member.PropertyIdentifier (_, name) ->
+              if is_private_name name then
+                error_at env (loc, Error.PrivateDelete)
+          | _ -> () end
       | _ -> ());
       loc, Expression.(Unary Unary.({
         operator;
@@ -479,7 +487,7 @@ module Expression
         })))
     | T_PERIOD ->
         Expect.token env T_PERIOD;
-        let id, _ = identifier_or_reserved_keyword env in
+        let id, _ = identifier_or_keyword_include_private env in
         let loc = Loc.btwn start_loc (fst id) in
         call env start_loc (loc, Expression.(Member Member.({
           _object  = left;
@@ -579,7 +587,7 @@ module Expression
         })))
     | T_PERIOD ->
         Expect.token env T_PERIOD;
-        let id, _ = identifier_or_reserved_keyword env in
+        let id, _ = identifier_or_keyword_include_private env in
         let loc = Loc.btwn start_loc (fst id) in
         call env start_loc (loc, Expression.(Member Member.({
           _object  = left;
@@ -949,6 +957,7 @@ module Expression
     | T_OF
     | T_TYPE
     | T_OPAQUE
+    | T_POUND
       -> Parse.identifier env, None
     | _ ->
       let err = match lex_token with
@@ -1010,4 +1019,19 @@ module Expression
       in
       Eat.token env;
       (lex_loc, lex_value), err
+
+  and private_identifier env = with_loc (fun env ->
+      Expect.token env T_POUND;
+      let (_, id), _ = identifier_or_reserved_keyword env in
+      "#" ^ id) env
+
+  and is_private_name x = String.length x > 0 && String.get x 0 == '#'
+
+  and identifier_or_keyword_include_private env =
+    match Peek.token env with
+    | T_POUND ->
+        let (loc, ident) = private_identifier env in
+        add_used_private env ident loc;
+        (loc, ident), None
+    | _ -> identifier_or_reserved_keyword env
 end

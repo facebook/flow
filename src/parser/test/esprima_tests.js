@@ -1938,7 +1938,19 @@ module.exports = {
         'var x = /\n/',
         'var x = "\n',
         'var if = 42',
-        'i #= 42',
+        {
+          content: 'i #= 42',
+          explanation: "# is no longer illegal in Flow, since we support private class fields. " +
+                       "Instead, it is unexpected since we are not parsing a member expression " +
+                       "or class property.",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ILLEGAL',
+              actual: 'Unexpected token #' 
+            },
+          }
+        },
         'i + 2 = 42',
         '+i = 42',
         '1 + (',

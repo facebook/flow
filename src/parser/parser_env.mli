@@ -85,6 +85,10 @@ val get_unexpected_error : Token.t * string -> Parse_error.t
 val comment_list : env -> Ast.Comment.t list -> unit
 val error_list : env -> (Loc.t * Parse_error.t) list -> unit
 val record_export: env -> Loc.t * string -> unit
+val enter_class : env -> unit
+val exit_class : env -> unit
+val add_declared_private : env -> string -> unit
+val add_used_private : env -> string -> Loc.t -> unit
 
 (* functional operations -- these return shallow copies, so future mutations to
  * the returned env will also affect the original: *)

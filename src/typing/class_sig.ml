@@ -497,7 +497,7 @@ let mk cx _loc reason self ~expr =
 
     (* fields *)
     | Body.Property (loc, {
-        Property.key = Ast.Expression.Object.Property.Identifier (_, name);
+      Property.key = Ast.Expression.Object.Property.Identifier (_, name);
         typeAnnotation;
         value;
         static;

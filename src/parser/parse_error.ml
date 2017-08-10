@@ -87,7 +87,12 @@ type t =
   | ImportSpecifierMissingComma
   | MalformedUnicode
   | DuplicateConstructor
-  | InvalidPropName of string * bool
+  | DuplicatePrivateFields of string
+  | InvalidFieldName of string * bool
+  | PrivateMethod
+  | PrivateDelete
+  | UnboundPrivate of string
+  | PrivateNotInClass
 
 exception Error of (Loc.t * t) list
 
@@ -209,7 +214,17 @@ module PP =
         "Malformed unicode"
       | DuplicateConstructor ->
         "Classes may only have one constructor"
-      | InvalidPropName (name, static) ->
+      | DuplicatePrivateFields name ->
+        "Private fields may only be declared once. `" ^ name ^ "` is declared more than once."
+      | InvalidFieldName (name, static) ->
         let static_modifier = if static then "static " else "" in
-        "Classes may not have " ^ static_modifier ^ "properties named `" ^ name ^ "`"
+        "Classes may not have " ^ static_modifier ^ "fields named `" ^ name ^ "`."
+      | PrivateMethod ->
+        "Classes may not have private methods."
+      | PrivateDelete ->
+        "Private fields may not be deleted."
+      | UnboundPrivate name ->
+        "Private fields must be declared before they can be referenced. `" ^ name
+        ^ "` has not been declared."
+      | PrivateNotInClass -> "Private fields can only be referenced from within a class."
   end

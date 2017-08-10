@@ -562,7 +562,9 @@ end with type t = Impl.t) = struct
   )
 
   and identifier (loc, name) =
-    node "Identifier" loc [|
+    let node_name = if Parser_flow.Parse.is_private_name name then "PrivateName"
+      else "Identifier" in
+    node node_name loc [|
       "name", string name;
       "typeAnnotation", null;
       "optional", bool false;
