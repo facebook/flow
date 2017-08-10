@@ -3007,6 +3007,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       | ResolveSpreadsToMultiflowCallFull (id, _)
       | ResolveSpreadsToMultiflowSubtypeFull (id, _)
+      | ResolveSpreadsToCustomFunCall (id, _, _)
       | ResolveSpreadsToMultiflowPartial (id, _, _, _) ->
         let reason_elemt = reason_of_t elemt in
         ConstFoldExpansion.guard id reason_elemt (fun recursion_depth ->
@@ -3720,20 +3721,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         React.CreateClass (React.CreateClass.Spec [], knot, call_tout)));
       Ops.set ops
 
-    (* When evaluating React.createElement, it's useful to know if the `type`
-       argument is a class, function, or an intrinsic. *)
-
     | CustomFunT (_, ReactCreateElement),
       CallT (reason_op, { call_args_tlist = args; call_tout; _ }) ->
-      begin match args with
-      | Arg component::Arg config::children ->
-        Ops.push reason_op;
-        rec_flow cx trace (component, ReactKitT (reason_op,
-          React.CreateElement (config, children, call_tout)));
-        Ops.pop ()
-      | _ ->
-        add_output cx ~trace (FlowError.EReactCreateElementArity reason_op)
-      end
+      resolve_call_list cx ~trace reason_op args (
+        ResolveSpreadsToCustomFunCall (mk_id (), ReactCreateElement, call_tout))
 
     | _, ReactKitT (reason_op, tool) ->
       react_kit cx trace reason_op l tool
@@ -3932,11 +3923,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          * `{...B, ...T} = A`. We rearrange `DiffT` into the latter form and
          * check that. *)
         let reason = reason_of_t l in
-        let options = { make_exact = false; merge_mode = DiffMM } in
-        let spread = EvalT (t,
-          TypeDestructorT (reason, SpreadType (options, [b])), mk_id ()) in
-        (* Compare it against A. *)
-        rec_flow_t cx trace (spread, a)
+        let options = { merge_mode = DiffMM } in
+        let tool = Resolve Next in
+        let state = { todo_rev = [b]; acc = [] } in
+        rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, a))
 
     | DefT (_, AnyT), ObjTestT (reason_op, _, u) ->
       rec_flow_t cx trace (AnyT.why reason_op, u)
@@ -5889,6 +5879,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   | RObjectPatternRestProp
   | RFunction _
   | RStatics (RFunction _)
+  | RReactElement _
   | RReactElementProps _
   | RJSXElementProps _ -> true
   | _ -> lflags.frozen
@@ -9283,6 +9274,17 @@ and finish_resolve_spread_list =
 
   in
 
+  (* Similar to finish_multiflow_full but for custom functions. *)
+  let finish_custom_fun_call cx ?trace ~reason_op kind tout resolved =
+    (* Multiflows always come out of a flow *)
+    let trace = match trace with
+    | Some trace -> trace
+    | None -> failwith "All multiflows show have a trace" in
+
+    let args, spread_arg = flatten_call_arg cx reason_op resolved in
+    custom_fun_call cx ~trace reason_op kind args spread_arg tout
+  in
+
   (* This is used for things like Function.prototype.apply, whose second arg is
    * basically a spread argument that we'd like to resolve *)
   let finish_call_t cx ?trace ~reason_op funcalltype resolved tin =
@@ -9309,6 +9311,8 @@ and finish_resolve_spread_list =
       finish_multiflow_full cx ?trace ~reason_op ~is_call:true ft resolved
     | ResolveSpreadsToMultiflowSubtypeFull (_, ft) ->
       finish_multiflow_full cx ?trace ~reason_op ~is_call:false ft resolved
+    | ResolveSpreadsToCustomFunCall (_, kind, tout) ->
+      finish_custom_fun_call cx ?trace ~reason_op kind tout resolved
     | ResolveSpreadsToCallT (funcalltype, tin) ->
       finish_call_t cx ?trace ~reason_op funcalltype resolved tin
   )
@@ -9677,7 +9681,6 @@ and continue cx trace t = function
   | Upper u -> rec_flow cx trace (t, u)
   | Lower l -> rec_flow_t cx trace (l, t)
 
-
 and react_kit =
   React_kit.run
     ~add_output
@@ -9695,6 +9698,30 @@ and react_kit =
     ~mk_tvar_where
     ~eval_destructor
     ~sealed_in_op
+    ~union_of_ts
+
+and custom_fun_call cx ?trace reason_op kind args spread_arg tout = match kind with
+  | ReactCreateElement -> (match args with
+    | component::config::children ->
+      Ops.push reason_op;
+      flow_opt cx ?trace (component, ReactKitT (reason_op,
+        React.CreateElement (config, (children, spread_arg), tout)));
+      Ops.pop ()
+    | _ ->
+      add_output cx ?trace (FlowError.EReactCreateElementArity reason_op))
+
+  | ObjectAssign
+  | ObjectGetPrototypeOf
+  | ObjectSetPrototypeOf
+  | ReactPropType _
+  | ReactCreateClass
+  | Merge
+  | MergeDeepInto
+  | MergeInto
+  | Mixin
+  | Idx
+  | DebugPrint
+    -> failwith "implemented elsewhere"
 
 and object_spread =
   let open ObjectSpread in
@@ -9768,7 +9795,7 @@ and object_spread =
         DefT (r, MixedT Mixed_everything), false
       in
       match merge_mode with
-      | DefaultMM ->
+      | DefaultMM _ ->
         begin match p1, p2 with
         | None, None -> None
         | Some p1, Some p2 -> Some (merge_props p1 p2)
@@ -9893,7 +9920,7 @@ and object_spread =
     | x0,x1::xs -> merge (spread2 cx trace reason options) x0 (x1,xs)
   in
 
-  let mk_object cx reason {make_exact; merge_mode} (r, props, dict, flags) =
+  let mk_object cx reason {merge_mode} (r, props, dict, flags) =
     let props = SMap.map (fun (t, own) ->
       (* Spread only copies over own properties. If `not own`, then the property
          might be on a proto object instead, so make the result optional. *)
@@ -9907,27 +9934,29 @@ and object_spread =
     let proto = ObjProtoT reason in
     let flags =
       match merge_mode with
-      (* DiffMM creates object values, so we never need ExactT, but the
-         value itself can be exact if all parts of the spread are exact.
-         This logic is already encoded in `flags`. *)
-      | DiffMM -> flags
+      (* DiffMM and IgnoreExactAndOwnMM creates object values, so we never need
+         ExactT, but the value itself can be exact if all parts of the spread
+         are exact. This logic is already encoded in `flags`. *)
+      | DiffMM
+      | IgnoreExactAndOwnMM -> flags
       (* IgnoreExactAndOwn and Default create object annotations, which
          need to be wrapped in ExactT if make_exact = true. It's OK to
          set exact = make_exact here, because we will already have errored
          if any part of the spread was inexact. *)
-      | IgnoreExactAndOwnMM
-      | DefaultMM ->
+      | DefaultMM make_exact ->
         { sealed = Sealed; frozen = false; exact = make_exact }
     in
     let t = DefT (r, ObjT (mk_objecttype ~flags dict id proto)) in
-    if make_exact then ExactT (reason, t) else t
+    if flags.exact then ExactT (reason, t) else t
   in
 
   let next cx trace reason options {todo_rev; acc} tout x =
-    let {make_exact; _} = options in
+    let {merge_mode} = options in
     Nel.iter (fun (r,_,_,{exact;_}) ->
-      if make_exact && not exact
-      then add_output cx ~trace (FlowError.EIncompatibleWithExact (r, reason));
+      match merge_mode with
+      | DefaultMM make_exact when make_exact && not exact ->
+        add_output cx ~trace (FlowError.EIncompatibleWithExact (r, reason))
+      | _ -> ()
     ) x;
     match todo_rev with
     | [] ->

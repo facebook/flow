@@ -388,6 +388,8 @@ and parts_of_spread_resolve = function
 | ResolveSpreadsToMultiflowCallFull (_, ft)
 | ResolveSpreadsToMultiflowSubtypeFull (_, ft) ->
   parts_of_funtype ft
+| ResolveSpreadsToCustomFunCall (_, _, tout) ->
+  [ "out", Def tout ]
 | ResolveSpreadsToMultiflowPartial (_, ft, _, tout) ->
   (parts_of_funtype ft) @ [ "out", Def tout ]
 | ResolveSpreadsToCallT (fct, tin) ->
@@ -420,9 +422,12 @@ and parts_of_react_kit =
   | Shape tool -> resolve_object out tool
   ) in
   function
-  | CreateElement (config, children, out) ->
+  | CreateElement (config, (children, children_spread), out) ->
     ["config", Def config] @
-    (list_parts (List.map (function Arg t | SpreadArg t -> t) children)) @
+    (list_parts children) @
+    (match children_spread with
+      | Some children_spread -> ["spread", Def children_spread]
+      | None -> []) @
     ["out", Def out]
   | SimplifyPropType (tool, out) -> simplify_prop_type out tool
   | CreateClass (_, _, out)

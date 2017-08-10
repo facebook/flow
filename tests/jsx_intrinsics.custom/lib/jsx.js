@@ -1,4 +1,4 @@
-type $JSXIntrinsic<T> = any; // TODO: next diff = {props: T};
+type $JSXIntrinsic<T> = {props: T};
 
 type $JSXIntrinsics = {
   div: $JSXIntrinsic<{id: string}>,

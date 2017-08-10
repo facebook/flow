@@ -28,6 +28,7 @@ let run cx trace reason_op l u
   ~(mk_tvar_where: Context.t -> reason -> (Type.t -> unit) -> Type.t)
   ~(eval_destructor: Context.t -> trace:Trace.t -> reason -> t -> Type.destructor -> int -> Type.t)
   ~(sealed_in_op: reason -> Type.sealtype -> bool)
+  ~(union_of_ts: reason -> Type.t list -> Type.t)
   =
 
   let err_incompatible reason =
@@ -131,6 +132,35 @@ let run cx trace reason_op l u
     ))
   in
 
+  let get_intrinsic_props t =
+    let component = l in
+    let reason_c = reason_of_t component in
+    let reason_jsx = locationless_reason (RCustom "JSX intrinsics") in
+    (* Get the internal `$JSXIntrinsics` map. *)
+    let intrinsics = get_builtin_type cx ~trace reason_jsx "$JSXIntrinsics" in
+    (* Check that the intrinsic component is a valid key in $JSXIntrinsics. *)
+    rec_flow_t cx trace (component, KeysT (reason_jsx, intrinsics));
+    (* Create a type variable which will represent the specific intrinsic we
+     * find in the intrinsics map. *)
+    let reason_i = locationless_reason (RCustom "JSX intrinsic") in
+    let intrinsic = mk_tvar cx reason_i in
+    (* Get the intrinsic from the map. *)
+    rec_flow cx trace (intrinsics, GetPropT (reason_c, (match component with
+      | DefT (_, StrT (Literal (_, name)))
+        -> Named (reason_c, name)
+      | _ -> Computed component
+    ), intrinsic));
+    (* Flow the intrinsic's props as an upper bound to our output
+     * type variable. *)
+    rec_flow cx trace (intrinsic, LookupT (
+      reason_i,
+      Strict reason_i,
+      [],
+      Named (replace_reason_const (RStringLit "props") reason_op, "props"),
+      LookupProp (UnknownUse, Field (t, Neutral))
+    ))
+  in
+
   (* This function creates a constraint *from* tin *to* props so that props is
    * an upper bound on tin. This is important because when the type of a
    * component's props is inferred (such as when a stateless functional
@@ -158,9 +188,10 @@ let run cx trace reason_op l u
        * opposite direction. *)
       rec_flow_t cx trace (component, component_function tin)
 
-    (* Special case for intrinsic components. *)
-    | DefT (reason, (StrT _ | SingletonStrT _)) ->
-      rec_flow_t cx trace (tin, AnyT.why reason) (* TODO: next diff *)
+    (* Intrinsic components. *)
+    | DefT (_, StrT _) ->
+      (* This is ok since lookup will resolve tin. *)
+      get_intrinsic_props tin
 
     (* any and any specializations *)
     | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
@@ -190,8 +221,7 @@ let run cx trace reason_op l u
       rec_flow_t cx trace (component_function ~with_return_t:false tout, component)
 
     (* Special case for intrinsic components. *)
-    | DefT (reason, (StrT _ | SingletonStrT _)) ->
-      rec_flow_t cx trace (AnyT.why reason, tout) (* TODO: next diff *)
+    | DefT (_, StrT _) -> get_intrinsic_props tout
 
     (* any and any specializations *)
     | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
@@ -201,7 +231,59 @@ let run cx trace reason_op l u
     | _ -> err_incompatible (reason_of_t component)
   in
 
-  let check_config config_input =
+  let coerce_children_args (children, children_spread) =
+    match children, children_spread with
+    (* If we have no children and no variable spread argument then React will
+     * not pass in any value for children. *)
+    | [], None -> None
+    (* If we know that we have exactly one argument and no variable spread
+     * argument then React will pass in that single value. Notable we do not
+     * wrap the type in an array as React returns the single value. *)
+    | t::[], None -> Some t
+    (* If we have two or more known arguments and no spread argument then we
+     * want to create a tuple array type for our children. *)
+    | t::ts, None ->
+      (* Create a reason where the location is between our first and last known
+       * argument. *)
+      let r = replace_reason_const RReactChildren reason_op in
+      Some (DefT (r, ArrT (ArrayAT (union_of_ts r (t::ts), Some (t::ts)))))
+    (* If we only have a spread of unknown length then React may not pass in
+     * children, React may pass in a single child, or React may pass in an array
+     * of children. We need to model all of these possibilities. *)
+    | [], Some spread ->
+      let r = replace_reason
+        (fun desc -> RReactChildrenOrUndefinedOrType desc)
+        (reason_of_t spread)
+      in
+      Some (DefT (r, OptionalT (
+        union_of_ts r [
+          spread;
+          (DefT (r, ArrT (ArrayAT (spread, None))));
+        ]
+      )))
+    (* If we have one children argument and a spread of unknown length then
+     * React may either pass in the unwrapped argument, or an array where the
+     * element type is the union of the known argument and the spread type. *)
+    | t::[], Some spread ->
+      (* Create a reason between our known argument and the spread argument. *)
+      let r = replace_reason_const
+        (RReactChildrenOrType (t |> reason_of_t |> desc_of_reason))
+        reason_op
+      in
+      Some (union_of_ts r [
+        t;
+        (DefT (r, ArrT (ArrayAT (union_of_ts r [spread; t], Some [t]))))
+      ])
+    (* If we have two or more arguments and a spread argument of unknown length
+     * then we want to return an array type where the element type is the union
+     * of all argument types and the spread argument type. *)
+    | t::ts, Some spread ->
+      (* Create a reason between our known argument and the spread argument. *)
+      let r = replace_reason_const RReactChildren reason_op in
+      Some (DefT (r, ArrT (ArrayAT (union_of_ts r (spread::t::ts), Some (t::ts)))))
+  in
+
+  let check_config config_input children_input =
     (* For class components and function components we want to lookup the
      * static default props property so that we may diff it against the props
      * value for our component. *)
@@ -241,15 +323,46 @@ let run cx trace reason_op l u
       | Some defaults -> DiffT (config, defaults)
       | None -> config
     in
+    (* If we have a type for children then we want to combine a new exact object
+     * with just a prop for children with the config input. This ends up looking
+     * like: { ...config_input, ...{| children: children_input |} }. The
+     * resulting object will only be exact if config_input is exact given the
+     * behavior of our merge mode. *)
+    let config_input = match children_input with
+    | None -> config_input
+    | Some children_input ->
+        let mixin =
+          mk_object_with_map_proto cx reason_op
+            ~sealed:true ~exact:true
+            (SMap.singleton "children" (Field (children_input, Neutral)))
+            (ObjProtoT reason_op)
+        in
+        (* We need to use the RReactElement reason description here or else
+         * things break to ensure the directionality is checked correctly. It
+         * also reads better. *)
+        let reason_el = replace_reason (fun desc ->
+          match desc with
+          | RReactElement _ -> desc
+          | _ -> RReactElement None) reason_op
+        in
+        let open ObjectSpread in
+        let options = { merge_mode = IgnoreExactAndOwnMM } in
+        let tool = Resolve Next in
+        let state = { todo_rev = [mixin]; acc = [] } in
+        mk_tvar_where cx reason_el (fun tvar ->
+          rec_flow cx trace (config_input,
+            ObjSpreadT (reason_el, options, tool, state, tvar))
+        )
+    in
     (* Make sure our config has the correct type. *)
-    rec_flow_t cx trace (config_input, config)
+    rec_flow_t cx trace (config_input, config);
   in
 
-  let create_element config _ tout =
+  let create_element config children tout =
     let component = l in
     let elem_reason = replace_reason_const (RReactElement None) reason_op in
     (* Check the types of our config and children. *)
-    check_config config;
+    check_config config (coerce_children_args children);
     (* Set the return type as a React element. *)
     rec_flow_t cx trace (
       get_builtin_typeapp cx ~trace elem_reason "React$Element" [component],

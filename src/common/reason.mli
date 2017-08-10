@@ -125,6 +125,9 @@ type reason_desc =
   | RReactState
   | RReactElementProps of string
   | RReactPropTypes
+  | RReactChildren
+  | RReactChildrenOrType of reason_desc
+  | RReactChildrenOrUndefinedOrType of reason_desc
 
 and reason_desc_function =
   | RAsync

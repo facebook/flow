@@ -491,6 +491,8 @@ and gc_spread_resolve cx state = function
 | ResolveSpreadsToMultiflowCallFull (_, ft)
 | ResolveSpreadsToMultiflowSubtypeFull (_, ft) ->
   gc_funtype cx state ft
+| ResolveSpreadsToCustomFunCall (_, _, tout) ->
+  gc cx state tout
 | ResolveSpreadsToMultiflowPartial (_, ft, _, tout) ->
   gc_funtype cx state ft;
   gc cx state tout
@@ -577,9 +579,10 @@ and gc_react_kit cx state =
     fun t k -> tool t; knot k
   ) in
   function
-  | CreateElement (t, args, t_out) ->
-      gc cx state t;
-      args |> List.iter (function Arg t | SpreadArg t -> gc cx state t);
+  | CreateElement (config, (children, children_spread), t_out) ->
+      gc cx state config;
+      List.iter (gc cx state) children;
+      Option.iter children_spread (gc cx state);
       gc cx state t_out
   | GetProps t_out -> gc cx state t_out
   | SimplifyPropType (tool, t_out) ->

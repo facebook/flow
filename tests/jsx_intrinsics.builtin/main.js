@@ -18,9 +18,6 @@ var c: Element<Class<React.Component<{prop1: string}, void>>> =
 var d: Element<any> = <div not_a_real_attr="asdf" />;
 // However, we don't allow such elements to be viewed as React elements with
 // different component types.
-//
-// FIXME: This does not error like it should. The `$Keys<$JSXIntrinsics>` type
-// probably ends up taking precedence over `span`.
 var e: Element<'span'> = <div not_a_real_attr="asdf" />;
 // No error as long as expectations are consistent, though.
 var f: Element<'div'> = <div not_a_real_attr="asdf" />;

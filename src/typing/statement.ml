@@ -3409,6 +3409,9 @@ and jsx cx = Ast.JSX.(
   function { openingElement; children; _ } ->
   let children =
     children
+    |> List.filter (ExpressionContainer.(function
+      | (_, ExpressionContainer { expression = EmptyExpression _ }) -> false
+      | _ -> true))
     |> List.map (jsx_body cx)
     |> List.fold_left (fun children -> function
       | None -> children
@@ -3458,6 +3461,15 @@ and jsx_title cx openingElement children = Ast.JSX.(
       let o = jsx_mk_props cx reason c name attributes children in
       jsx_desugar cx name c o attributes children eloc
     end
+
+  (* In React we use a string literal type instead of fetching a full component
+   * type from $JSXIntrinsics. React.createElement() then handles intrinsic type
+   * checking. *)
+  | (Identifier (loc, { Identifier.name }), _, _) when jsx_mode = None ->
+    let reason = mk_reason (RReactElement (Some name)) loc in
+    let c = DefT (reason, SingletonStrT name) in
+    let o = jsx_mk_props cx reason c name attributes children in
+    jsx_desugar cx name c o attributes children eloc
 
   | (Identifier (loc, { Identifier.name }), _, _) ->
       (**
@@ -3616,10 +3628,9 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
   let map =
     match children with
     | [] -> map
-    | _ when is_react ->
-        (* TODO: typed children *)
-        let p = Field (AnyT.why reason, Neutral) in
-        SMap.add "children" p map
+    (* We add children to the React.createElement() call for React. Not to the
+     * props as other JSX users may support. *)
+    | _ when is_react -> map
     | _ ->
         let arr = Flow_js.mk_tvar_where cx reason (fun tout ->
           Flow.resolve_spread_list
@@ -3638,7 +3649,6 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
 and jsx_desugar cx name component_t props attributes children eloc =
   match Context.jsx cx with
   | None ->
-      (* TODO: children *)
       let reason = mk_reason (RReactElement (Some name)) eloc in
       let react = Env.var_ref ~lookup_mode:ForValue cx "React" eloc in
       Flow.mk_tvar_where cx reason (fun tvar ->
@@ -3648,7 +3658,10 @@ and jsx_desugar cx name component_t props attributes children eloc =
           reason,
           reason_createElement,
           Named (reason_createElement, "createElement"),
-          Flow.mk_methodcalltype react [Arg component_t; Arg props] tvar
+          Flow.mk_methodcalltype
+            react
+            ([Arg component_t; Arg props] @ List.map (fun c -> Arg c) children)
+            tvar
         ))
       )
   | Some Options.JSXPragma (raw_jsx_expr, jsx_expr) ->
