@@ -866,6 +866,7 @@ module rec TypeTerm : sig
   | ReactCreateClass
   | ReactCreateElement
   | ReactCloneElement
+  | ReactElementFactory of t
 
   (* Facebookisms *)
   | Merge

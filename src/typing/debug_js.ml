@@ -304,7 +304,10 @@ and _json_of_t_impl json_cx t = Hh_json.(
 
   | CustomFunT (_, kind) -> [
       "kind", _json_of_custom_fun_kind kind;
-    ]
+    ] @ (match kind with
+      | ReactElementFactory t -> ["componentType", _json_of_t json_cx t]
+      | _ -> []
+    )
 
   | IdxWrapper (_, t) -> [
       "wrappedObj", _json_of_t json_cx t
@@ -362,6 +365,7 @@ and _json_of_custom_fun_kind kind = Hh_json.JSON_String (match kind with
   | ReactCreateClass -> "React.createClass"
   | ReactCreateElement -> "React.createElement"
   | ReactCloneElement -> "React.cloneElement"
+  | ReactElementFactory _ -> "React.createFactory"
   | Merge -> "merge"
   | MergeDeepInto -> "mergeDeepInto"
   | MergeInto -> "mergeInto"
@@ -1520,6 +1524,7 @@ and dump_t_ (depth, tvars) cx t =
     | ReactPropType p -> spf "ReactPropType (%s)" (react_prop_type p)
     | ReactCreateElement -> "ReactCreateElement"
     | ReactCloneElement -> "ReactCloneElement"
+    | ReactElementFactory _ -> "ReactElementFactory"
     | ReactCreateClass -> "ReactCreateClass"
     | Merge -> "Merge"
     | MergeDeepInto -> "MergeDeepInto"

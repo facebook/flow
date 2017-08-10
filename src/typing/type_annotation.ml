@@ -440,6 +440,11 @@ let rec convert cx tparams_map = Ast.Type.(function
       mk_custom_fun cx loc typeParameters ReactCreateElement
   | "React$CloneElement" ->
       mk_custom_fun cx loc typeParameters ReactCloneElement
+  | "React$ElementFactory" ->
+      check_type_param_arity cx loc typeParameters 1 (fun () ->
+        let t = convert_type_params () |> List.hd in
+        mk_custom_fun cx loc None (ReactElementFactory t)
+      )
   | "React$ElementProps" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in

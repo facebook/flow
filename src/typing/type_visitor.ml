@@ -37,6 +37,9 @@ class ['a] t = object(self)
   | CustomFunT (_, ReactPropType (React.PropType.Primitive (_, t))) ->
     self#type_ cx acc t
 
+  | CustomFunT (_, ReactElementFactory t) ->
+    self#type_ cx acc t
+
   | CustomFunT _ -> acc
 
   | AbstractT (_, t) -> self#type_ cx acc t

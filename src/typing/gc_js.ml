@@ -82,6 +82,7 @@ let rec gc cx state = function
   | BoundT typeparam -> gc_typeparam cx state typeparam
   | ChoiceKitT _ -> ()
   | DefT (_, ClassT t) -> gc cx state t
+  | CustomFunT (_, ReactElementFactory t) -> gc cx state t
   | CustomFunT _ -> ()
   | DefT (_, NumT _)
   | DefT (_, StrT _)
