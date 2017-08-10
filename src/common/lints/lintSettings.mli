@@ -33,9 +33,6 @@ val iter: (lint_kind -> 'a * Loc.t option -> unit) -> 'a t -> unit
 val fold: (lint_kind -> 'a * Loc.t option -> 'b -> 'b) -> 'a t -> 'b -> 'b
 (* Map over all lint kinds with an explicit value *)
 val map: ('a * Loc.t option -> 'a * Loc.t option) -> 'a t -> 'a t
-(* Merge two LintSettings, with rules in higher_precedence overwriting
- * rules in lower_precedencse. *)
-val merge: low_prec:'a t -> high_prec:'a t -> 'a t
 
 (* SEVERITY-SPECIFIC FUNCTIONS *)
 

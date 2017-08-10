@@ -14,9 +14,6 @@ open Severity
 type 'a t = {
   (* The default value associated with a lint if the lint kind isn't found in the map *)
   default_value: 'a;
-  (* Whether default_value has been explicitly set (for example, by `flowlint all=...`
-   * or by `flowlint-enable`) (used in merge)*)
-  all_encountered: bool;
   (* Values for lints that have been explicitly set *)
   (* The Loc.t is for settings defined in comments, and is used to find unused lint
    * suppressions. The Loc.t is set to None for settings coming from the flowconfig or --lints.*)
@@ -25,7 +22,6 @@ type 'a t = {
 
 let of_default default_value = {
   default_value;
-  all_encountered = true;
   explicit_values = LintMap.empty
 }
 
@@ -62,17 +58,10 @@ let map f settings =
   let new_explicit = LintMap.map f settings.explicit_values in
   {settings with explicit_values = new_explicit}
 
-(* Merge two LintSettings, with rules in higher_precedence overwriting
- * rules in lower_precedencse. *)
-let merge ~low_prec ~high_prec =
-  if high_prec.all_encountered then high_prec
-  else fold set_value high_prec low_prec
-
 (* SEVERITY-SPECIFIC FUNCTIONS *)
 
 let default_severities = {
   default_value = Off;
-  all_encountered = false;
   explicit_values = LintMap.empty
 }
 
