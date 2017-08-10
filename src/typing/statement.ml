@@ -3519,8 +3519,17 @@ and jsx_title cx openingElement children = Ast.JSX.(
         component_t name attributes children in
       jsx_desugar cx name component_t o attributes children eloc
 
+  | MemberExpression member, _, None ->
+    let name = jsx_title_member_to_string member in
+    let el = RReactElement (Some name) in
+    let reason = mk_reason el eloc in
+    let c = jsx_title_member_to_expression member in
+    let c = expression cx c in
+    let o = jsx_mk_props cx reason c name attributes children in
+    jsx_desugar cx name c o attributes children eloc
+
   | _ ->
-      (* TODO? covers namespaced names, member expressions as element names *)
+      (* TODO? covers namespaced names as element names *)
       AnyT.at eloc
 )
 
@@ -3718,6 +3727,33 @@ and jsx_trim_text loc value =
   | Some (loc, trimmed) ->
     Some (DefT (mk_reason RJSXText loc, StrT (Type.Literal (None, trimmed))))
   | None -> None
+
+and jsx_title_member_to_string (_, member) = Ast.JSX.MemberExpression.(
+  let (_, { Ast.JSX.Identifier.name }) = member.property in
+  match member._object with
+  | MemberExpression member -> (jsx_title_member_to_string member) ^ "." ^ name
+  | Identifier (_, { Ast.JSX.Identifier.name = obj }) -> obj ^ "." ^ name
+)
+
+and jsx_title_member_to_expression member =
+  let (mloc, member) = member in
+  let _object = Ast.JSX.MemberExpression.(
+    match member._object with
+    | MemberExpression member -> jsx_title_member_to_expression member
+    | Identifier (loc, { Ast.JSX.Identifier.name }) ->
+      (loc, Ast.Expression.Identifier (loc, name))
+  ) in
+  let property = Ast.JSX.MemberExpression.(
+    let (loc, { Ast.JSX.Identifier.name }) = member.property in
+    (loc, name)
+  ) in
+  Ast.Expression.Member.(
+    (mloc, Ast.Expression.Member {
+      _object;
+      property = PropertyIdentifier property;
+      computed = false;
+    })
+  )
 
 (* Given an expression found in a test position, notices certain
    type refinements which follow from the test's success or failure,

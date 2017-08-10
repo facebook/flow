@@ -43,6 +43,10 @@ const AbstractExact_NoProps: React.ComponentType<$Exact<Props_NoProps>> = any;
 <AbstractExact_NoProps />; // OK: There are no props.
 <AbstractExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
 
+const Member_NoProps = {prop: Class_NoProps};
+<Member_NoProps.prop />; // OK: There are no props.
+<Member_NoProps.prop foo={42} />; // OK: Extra props are fine.
+
 /* ========================================================================== *\
  * ManyProps                                                                  *
 \* ========================================================================== */
@@ -560,6 +564,68 @@ const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
 />;
 
+const Member_ManyProps = {prop: Class_ManyProps};
+<Member_ManyProps.prop />; // Error: There are no props.
+<Member_ManyProps.prop // OK: All props are defined.
+  string1="foo"
+  string2={'bar'}
+  boolean1
+  boolean2={false}
+  number={42}
+/>;
+<Member_ManyProps.prop // OK: Other props are allowed.
+  string1="foo"
+  string2={'bar'}
+  boolean1
+  boolean2={false}
+  number={42}
+  a={1}
+  b={2}
+  c={3}
+/>;
+<Member_ManyProps.prop // Error: All props have an incorrect type.
+  string1={null}
+  string2={null}
+  boolean1={null}
+  boolean2={null}
+  number={null}
+/>;
+<Member_ManyProps.prop // OK: All props are defined.
+  string1="foo"
+  string2={'bar'}
+  boolean1
+  boolean2={false}
+  {...{number: 42}}
+/>;
+<Member_ManyProps.prop // OK: All props are defined.
+  {...{string1: 'foo', string2: 'bar'}}
+  {...{boolean1: true, boolean2: false}}
+  {...{number: 42}}
+/>;
+<Member_ManyProps.prop // Error: Missing `number`.
+  {...{string1: 'foo', string2: 'bar'}}
+  {...{boolean1: true, boolean2: false}}
+/>;
+<Member_ManyProps.prop // OK: Extra props are allowed. Error for exact types.
+  string1="foo"
+  string2={'bar'}
+  boolean1
+  boolean2={false}
+  {...{number: 42, a: 1, b: 2, c: 3}}
+/>;
+<Member_ManyProps.prop // OK: `number` is overwritten at the end of the element.
+  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  boolean1
+  boolean2={false}
+  number={42}
+/>;
+<Member_ManyProps.prop // Error: `number` cannot be null.
+  boolean1
+  boolean2={false}
+  number={42}
+  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+/>;
+
 /* ========================================================================== *\
  * OptionalProps                                                              *
 \* ========================================================================== */
@@ -710,6 +776,23 @@ const AbstractExact_OptionalProps:
   bar="nope"
 />;
 
+const Member_OptionalProps = {prop: Class_OptionalProps};
+<Member_OptionalProps.prop />; // Error: `foo` is required.
+<Member_OptionalProps.prop foo={42} />; // OK: `foo` is defined.
+<Member_OptionalProps.prop foo={undefined} />; // OK: `foo` is undefined.
+<Member_OptionalProps.prop // OK: Both props are defined with a correct type.
+  foo={4}
+  bar={2}
+/>;
+<Member_OptionalProps.prop // Error: `foo` has a bad type.
+  foo="nope"
+  bar={2}
+/>;
+<Member_OptionalProps.prop // Error: `bar` has a bad type.
+  foo={4}
+  bar="nope"
+/>;
+
 /* ========================================================================== *\
  * DefaultProps                                                               *
 \* ========================================================================== */
@@ -819,5 +902,17 @@ FunctionExact_DefaultProps.defaultProps = {
   bar={2}
 />;
 <FunctionExact_DefaultProps // Error: It is missing a required non-default prop.
+  foo={1}
+/>;
+
+const Member_DefaultProps = {prop: Class_DefaultProps};
+<Member_DefaultProps.prop // OK: It has all the props.
+  foo={1}
+  bar={2}
+/>;
+<Member_DefaultProps.prop // OK: It is missing a default prop.
+  bar={2}
+/>;
+<Member_DefaultProps.prop // Error: It is missing a required non-default prop.
   foo={1}
 />;
