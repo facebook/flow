@@ -346,6 +346,7 @@ class ['a] t = object(self)
           else SpreadType (options, tlist')
       | ValuesType
       | ReactElementPropsType
+      | ReactElementRefType
         -> t
 
   method exports cx map_cx id =
@@ -904,6 +905,10 @@ class ['a] t = object(self)
       let tout' = self#type_ cx map_cx tout in
       if tout' == tout then t
       else GetProps tout'
+    | GetRef tout ->
+      let tout' = self#type_ cx map_cx tout in
+      if tout' == tout then t
+      else GetRef tout'
     | SimplifyPropType (tool, t') ->
         let tool' = self#simplify_prop_type_tool cx map_cx tool in
         let t'' = self#type_ cx map_cx t' in

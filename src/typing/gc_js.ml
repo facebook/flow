@@ -372,6 +372,7 @@ and gc_destructor cx state = function
   | PropertyType _
   | ValuesType
   | ReactElementPropsType
+  | ReactElementRefType
     -> ()
   | ElementType t -> gc cx state t
   | Bind t -> gc cx state t
@@ -586,6 +587,7 @@ and gc_react_kit cx state =
       Option.iter children_spread (gc cx state);
       gc cx state t_out
   | GetProps t_out -> gc cx state t_out
+  | GetRef t_out -> gc cx state t_out
   | SimplifyPropType (tool, t_out) ->
       gc_simplify_prop_type tool;
       gc cx state t_out

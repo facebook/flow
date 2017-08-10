@@ -1317,6 +1317,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       let msg = match tool with
       | SimplifyPropType (tool, _) -> simplify_prop_type tool
       | GetProps _ -> "Expected React component instead of"
+      | GetRef _ -> "Expected React component instead of"
       | CreateClass (tool, _, _) -> create_class tool
       | CreateElement _ -> "Expected React component instead of"
       in

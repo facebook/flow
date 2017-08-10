@@ -218,6 +218,7 @@ class ['a] t = object(self)
   | PropertyType _
   | ValuesType
   | ReactElementPropsType
+  | ReactElementRefType
     -> acc
   | ElementType t -> self#type_ cx acc t
   | Bind t -> self#type_ cx acc t

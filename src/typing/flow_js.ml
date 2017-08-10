@@ -6479,6 +6479,7 @@ and eval_destructor cx ~trace reason curr_t s i =
             ObjSpreadT (reason, options, tool, state, tvar)
         | ValuesType -> GetValuesT (reason, tvar)
         | ReactElementPropsType -> ReactKitT (reason, React.GetProps tvar)
+        | ReactElementRefType -> ReactKitT (reason, React.GetRef tvar)
         )
     )
   | Some it ->

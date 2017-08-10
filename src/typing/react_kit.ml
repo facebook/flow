@@ -376,6 +376,51 @@ let run cx trace reason_op l u
     )
   in
 
+  let get_instance tout =
+    let component = l in
+    match component with
+    (* Class components or legacy components. *)
+    | DefT (_, ClassT component) -> rec_flow_t cx trace (component, tout)
+
+    (* Stateless functional components. *)
+    | DefT (r, FunT _) -> rec_flow_t cx trace (VoidT.make r, tout)
+
+    (* Stateless functional components, again. This time for callable `ObjT`s. *)
+    | DefT (r, ObjT { props_tmap = id; _ }) when Context.find_props cx id |> SMap.mem "$call" ->
+      rec_flow_t cx trace (VoidT.make r, tout)
+
+    (* Intrinsic components. *)
+    | DefT (reason, (StrT _ | SingletonStrT _)) ->
+      (* Get the internal `$JSXIntrinsics` map. *)
+      let intrinsics =
+        get_builtin_type cx ~trace
+          (locationless_reason (RCustom "JSX intrinsics")) "$JSXIntrinsics" in
+      (* Create a type variable which will represent the specific intrinsic we
+       * find in the intrinsics map. *)
+      let reason_i = locationless_reason (RCustom "JSX intrinsic") in
+      let intrinsic = mk_tvar cx reason_i in
+      (* Get the intrinsic from the map. *)
+      rec_flow cx trace (intrinsics, GetPropT (reason, begin match component with
+        | DefT (_, (StrT (Literal (_, name)) | SingletonStrT name))
+          -> Named (reason, name)
+        | _ -> Computed component
+      end, intrinsic));
+      (* Get the instance from our intrinsic. *)
+      rec_flow cx trace (intrinsic,
+        GetPropT (
+          reason,
+          Named (replace_reason_const (RStringLit "instance") reason, "instance"),
+          tout
+        ));
+
+    (* any and any specializations *)
+    | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
+      rec_flow_t cx trace (AnyT.why reason, tout)
+
+    (* ...otherwise, error. *)
+    | _ -> err_incompatible (reason_of_t component)
+  in
+
   (* In order to create a useful type from the `propTypes` property of a React
      class specification, Flow needs the ReactPropType CustomFunT type. This
      tool evaluates a complex prop type such that a specific CustomFunT is
@@ -977,5 +1022,6 @@ let run cx trace reason_op l u
   | CreateElement (shape, config, children, tout) ->
     create_element shape config children tout
   | GetProps tout -> props_to_tout tout
+  | GetRef tout -> get_instance tout
   | SimplifyPropType (tool, tout) -> simplify_prop_type tout tool
   | CreateClass (tool, knot, tout) -> create_class knot tout tool

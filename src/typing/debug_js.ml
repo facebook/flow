@@ -1064,6 +1064,9 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | ReactElementPropsType -> JSON_Object [
       "reactElementProps", JSON_Bool true
     ]
+  | ReactElementRefType -> JSON_Object [
+      "reactElementRef", JSON_Bool true
+    ]
 )
 
 and json_of_polarity_map json_cx = check_depth json_of_polarity_map_impl json_cx
@@ -1484,6 +1487,7 @@ and dump_t_ (depth, tvars) cx t =
     | SpreadType _ -> "spread"
     | ValuesType -> "values"
     | ReactElementPropsType -> "React element props"
+    | ReactElementRefType -> "React element instance"
     in
     fun expr t -> match expr with
     | DestructuringT (_, selector) ->
@@ -1744,8 +1748,8 @@ and dump_use_t_ (depth, tvars) cx t =
             | Some children_spread -> spf "; ...%s" (kid children_spread)
             | None -> "")
           (kid tout)) t
-    | GetProps tout ->
-      spf "GetProps (%s)" (kid tout)
+    | GetProps tout -> spf "GetProps (%s)" (kid tout)
+    | GetRef tout -> spf "GetRef (%s)" (kid tout)
     | SimplifyPropType (tool, tout) ->
       spf "SimplifyPropType (%s, %s)" (simplify_prop_type tool) (kid tout)
     | CreateClass (tool, knot, tout) ->
@@ -2083,6 +2087,7 @@ let string_of_destructor = function
   | SpreadType _ -> "Spread"
   | ValuesType -> "Values"
   | ReactElementPropsType -> "ReactElementProps"
+  | ReactElementRefType -> "ReactElementRef"
 
 let string_of_default = Default.fold
   ~expr:(fun (loc, _) ->
