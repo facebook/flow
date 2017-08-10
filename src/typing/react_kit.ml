@@ -283,11 +283,17 @@ let run cx trace reason_op l u
       Some (DefT (r, ArrT (ArrayAT (union_of_ts r (spread::t::ts), Some (t::ts)))))
   in
 
-  let check_config config_input children_input =
+  let create_element shape config_input children_args tout =
+    let component = l in
+    (* Create the optional children input type from the children arguments. *)
+    let children_input = coerce_children_args children_args in
     (* For class components and function components we want to lookup the
      * static default props property so that we may diff it against the props
-     * value for our component. *)
-    let defaults = match l with
+     * value for our component.
+     *
+     * Note that we use the shape variable. We will not be using defaultProps if
+     * shape is true because no props are required. *)
+    let defaults = match component with
       | DefT (_, ClassT _)
       | DefT (_, FunT _) ->
         Some (mk_tvar_where cx reason_op (fun tvar ->
@@ -307,9 +313,9 @@ let run cx trace reason_op l u
           let strict = NonstrictReturning (Some
             (DefT (reason_missing, VoidT), tvar)) in
           let propref = Named (reason_prop, name) in
-          let action = RWProp (l, tvar, Read) in
+          let action = RWProp (component, tvar, Read) in
           (* Lookup the `defaultProps` property. *)
-          rec_flow cx trace (l,
+          rec_flow cx trace (component,
             LookupT (reason_op, strict, [], propref, action))
         ))
       (* Everything else will not have default props we should diff out. *)
@@ -317,6 +323,12 @@ let run cx trace reason_op l u
     in
     (* Create a type variable for our config. *)
     let config = mk_tvar_where cx reason_op tin_to_props in
+    (* If we only want to check the shape of the config then wrap our final
+     * config type in a ShapeT. *)
+    let config = if shape
+      then ShapeT config
+      else config
+    in
     (* If we found some default props then we want to diff them against the full
      * props object. *)
     let config = match defaults with
@@ -356,14 +368,8 @@ let run cx trace reason_op l u
     in
     (* Make sure our config has the correct type. *)
     rec_flow_t cx trace (config_input, config);
-  in
-
-  let create_element config children tout =
-    let component = l in
-    let elem_reason = replace_reason_const (RReactElement None) reason_op in
-    (* Check the types of our config and children. *)
-    check_config config (coerce_children_args children);
     (* Set the return type as a React element. *)
+    let elem_reason = replace_reason_const (RReactElement None) reason_op in
     rec_flow_t cx trace (
       get_builtin_typeapp cx ~trace elem_reason "React$Element" [component],
       tout
@@ -968,7 +974,8 @@ let run cx trace reason_op l u
   in
 
   match u with
-  | CreateElement (config, children, tout) -> create_element config children tout
+  | CreateElement (shape, config, children, tout) ->
+    create_element shape config children tout
   | GetProps tout -> props_to_tout tout
   | SimplifyPropType (tool, tout) -> simplify_prop_type tout tool
   | CreateClass (tool, knot, tout) -> create_class knot tout tool

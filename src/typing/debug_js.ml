@@ -361,6 +361,7 @@ and _json_of_custom_fun_kind kind = Hh_json.JSON_String (match kind with
   | ReactPropType _ -> "ReactPropsCheckType"
   | ReactCreateClass -> "React.createClass"
   | ReactCreateElement -> "React.createElement"
+  | ReactCloneElement -> "React.cloneElement"
   | Merge -> "merge"
   | MergeDeepInto -> "mergeDeepInto"
   | MergeInto -> "mergeInto"
@@ -671,7 +672,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t_out", _json_of_t json_cx tout;
     ]
 
-  | ReactKitT (_, React.CreateElement (config, (children, children_spread), t_out)) -> [
+  | ReactKitT (_, React.CreateElement (shape, config, (children, children_spread), t_out)) -> [
+      "shape", JSON_Bool shape;
       "config", _json_of_t json_cx config;
       "children", JSON_Array (List.map (_json_of_t json_cx) children);
       "childrenSpread", (match children_spread with
@@ -1517,6 +1519,7 @@ and dump_t_ (depth, tvars) cx t =
     | ObjectSetPrototypeOf -> "ObjectSetPrototypeOf"
     | ReactPropType p -> spf "ReactPropType (%s)" (react_prop_type p)
     | ReactCreateElement -> "ReactCreateElement"
+    | ReactCloneElement -> "ReactCloneElement"
     | ReactCreateClass -> "ReactCreateClass"
     | Merge -> "Merge"
     | MergeDeepInto -> "MergeDeepInto"
@@ -1728,7 +1731,7 @@ and dump_use_t_ (depth, tvars) cx t =
       fun t k -> spf "%s, %s" (tool t) (knot k)
     ) in
     function
-    | CreateElement (config, (children, children_spread), tout) -> p
+    | CreateElement (_, config, (children, children_spread), tout) -> p
         ~extra:(spf "CreateElement (%s; %s%s) => %s"
           (kid config)
           (String.concat "; " (List.map kid children))
@@ -2430,8 +2433,8 @@ let dump_flow_error =
         spf "EReactKit (%s, %s, _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EReactCreateElementArity reason ->
-        spf "EReactCreateElementArity (%s)" (dump_reason cx reason)
+    | EReactElementFunArity (reason, _, _) ->
+        spf "EReactElementFunArity (%s)" (dump_reason cx reason)
     | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
         spf "EFunctionCallExtraArg (%s, %s, %d)"
           (dump_reason cx  unused_reason)

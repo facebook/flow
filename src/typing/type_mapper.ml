@@ -885,7 +885,7 @@ class ['a] t = object(self)
   method react_tool cx map_cx t =
     let open React in
     match t with
-    | CreateElement (config, (children, children_spread), tout) ->
+    | CreateElement (shape, config, (children, children_spread), tout) ->
       let config' = self#type_ cx map_cx config in
       let children' = ListUtils.ident_map (self#type_ cx map_cx) children in
       let children_spread' = Option.map children_spread (self#type_ cx map_cx) in
@@ -895,7 +895,7 @@ class ['a] t = object(self)
         children' == children &&
         children_spread' == children_spread &&
         tout' == tout
-      ) then t else CreateElement (config', (children', children_spread'), tout')
+      ) then t else CreateElement (shape, config', (children', children_spread'), tout')
     | GetProps tout ->
       let tout' = self#type_ cx map_cx tout in
       if tout' == tout then t

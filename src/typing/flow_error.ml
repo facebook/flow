@@ -146,7 +146,7 @@ type error_message =
   | EIncompatibleWithUseOp of reason * reason * use_op
   | EUnsupportedImplements of reason
   | EReactKit of (reason * reason) * React.tool
-  | EReactCreateElementArity of reason
+  | EReactElementFunArity of reason * string * int
   | EFunctionCallExtraArg of (reason * reason * int)
   | EUnsupportedSetProto of reason
   | EDuplicateModuleProvider of {
@@ -406,7 +406,7 @@ let locs_of_error_message = function
   | EUnsupportedImplements (reason) -> [loc_of_reason reason]
   | EReactKit ((reason1, reason2), _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | EReactCreateElementArity reason -> [loc_of_reason reason]
+  | EReactElementFunArity (reason, _, _) -> [loc_of_reason reason]
   | EFunctionCallExtraArg (reason1, reason2, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EUnsupportedSetProto (reason) -> [loc_of_reason reason]
@@ -1322,9 +1322,9 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       in
       typecheck_error msg reasons
 
-  | EReactCreateElementArity reason ->
+  | EReactElementFunArity (reason, fn, n) ->
       mk_error ~trace_infos [mk_info reason [
-        "React.createElement() must be passed at least two arguments."
+        "React." ^ fn ^ "() must be passed at least " ^ (string_of_int n) ^ " arguments."
       ]]
 
   | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->

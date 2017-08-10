@@ -171,7 +171,7 @@ type reason_desc =
   | RReactStatics
   | RReactDefaultProps
   | RReactState
-  | RReactElementProps of string
+  | RReactElementProps of string option
   | RReactPropTypes
   | RReactChildren
   | RReactChildrenOrType of reason_desc
@@ -487,7 +487,10 @@ let rec string_of_desc = function
   | RReactStatics -> "statics of React class"
   | RReactDefaultProps -> "default props of React component"
   | RReactState -> "state of React component"
-  | RReactElementProps x -> spf "props of React element `%s`" x
+  | RReactElementProps x ->
+    (match x with
+    | Some x -> spf "props of React element `%s`" x
+    | None -> "props of React element")
   | RReactPropTypes -> "propTypes of React component"
   | RReactChildren -> "React children array"
   | RReactChildrenOrType desc ->
