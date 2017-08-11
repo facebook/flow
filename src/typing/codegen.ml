@@ -190,6 +190,10 @@ let rec gen_type t env = Type.(
     add_str "Class<" env
       |> gen_type t
       |> add_str ">"
+  | DefT (_, CharSetT chars) ->
+    add_str "$CharSet<\"" env
+      |> add_str (String_utils.CharSet.to_string chars)
+      |> add_str "\">"
   | CustomFunT (_, ObjectAssign) -> add_str "Object$Assign" env
   | CustomFunT (_, ObjectGetPrototypeOf) -> add_str "Object$GetPrototypeOf" env
   | CustomFunT (_, ObjectSetPrototypeOf) -> add_str "Object$SetPrototypeOf" env

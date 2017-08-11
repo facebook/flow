@@ -1,0 +1,42 @@
+Error: test.js:14
+ 14:   ("aaaa": $CharSet<"ab">); // error
+        ^^^^^^ string literal `aaaa`. This type is incompatible with
+ 14:   ("aaaa": $CharSet<"ab">); // error
+                ^^^^^^^^^^^^^^ character set `ab`
+   14:   ("aaaa": $CharSet<"ab">); // error
+          ^^^^^^ `a` is duplicated
+
+Error: test.js:15
+ 15:   ("c": $CharSet<"ab">); // error
+        ^^^ string literal `c`. This type is incompatible with
+ 15:   ("c": $CharSet<"ab">); // error
+             ^^^^^^^^^^^^^^ character set `ab`
+   15:   ("c": $CharSet<"ab">); // error
+          ^^^ `c` is not a member of the set
+
+Error: test.js:16
+ 16:   ("ac": $CharSet<"ab">); // error
+        ^^^^ string literal `ac`. This type is incompatible with
+ 16:   ("ac": $CharSet<"ab">); // error
+              ^^^^^^^^^^^^^^ character set `ab`
+   16:   ("ac": $CharSet<"ab">); // error
+          ^^^^ `c` is not a member of the set
+
+Error: test.js:20
+ 20:   new C(x);
+             ^ string literal `abcd`. This type is incompatible with
+  6:     constructor(flags?: C$flags): C;
+                             ^^^^^^^ character set `ab`
+   22: g("abcd");
+         ^^^^^^ `c` is not a member of the set
+   22: g("abcd");
+         ^^^^^^ `d` is not a member of the set
+
+Error: test.js:25
+ 25:   (x: "foo");
+        ^ string. Expected string literal `foo`
+ 25:   (x: "foo");
+           ^^^^^ string literal `foo`
+
+
+Found 5 errors

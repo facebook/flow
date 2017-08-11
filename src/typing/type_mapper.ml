@@ -179,6 +179,7 @@ class ['a] t = object(self)
           let arrtype' = self#arr_type cx map_cx arrtype in
           if arrtype == arrtype' then t
           else ArrT arrtype'
+      | CharSetT _ -> t
       | ClassT t' ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t

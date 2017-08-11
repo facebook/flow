@@ -83,9 +83,9 @@ let rec gc cx state = function
   | ChoiceKitT _ -> ()
   | DefT (_, ClassT t) -> gc cx state t
   | CustomFunT _ -> ()
-  | DefT (_, NumT _)
-  | DefT (_, StrT _)
-    -> ()
+  | DefT (_, NumT _) -> ()
+  | DefT (_, StrT _) -> ()
+  | DefT (_, CharSetT _) -> ()
   | DiffT (t1, t2) ->
       gc cx state t1;
       gc cx state t2;

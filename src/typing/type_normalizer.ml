@@ -71,6 +71,10 @@ let rec normalize_type_impl cx ids t = match t with
   | DefT (_, SingletonBoolT b) ->
     DefT (locationless_reason (RCustom "boolean singleton"), SingletonBoolT b)
 
+  (* Fake the signature of $CharSet<"abc"> *)
+  | DefT (_, CharSetT _) ->
+      Locationless.StrT.t (* TODO *)
+
   | DefT (_, FunT (_, _, ft)) ->
       let tins = List.map (normalize_type_impl cx ids) ft.params_tlist in
       let rest_param = Option.map

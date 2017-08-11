@@ -84,6 +84,7 @@ type hash =
   | IdxWrapperH
   | OpenPredH
   | TypeMapH
+  | CharSetH
   | ReposH
   | ReposUpperH
 
@@ -95,6 +96,7 @@ let hash_of_def_ctor = Type.(function
   | AnyT -> AnyH
   | ArrT _ -> ArrH
   | BoolT b -> BoolH b
+  | CharSetT _ -> CharSetH
   | ClassT _ -> ClassH
   | EmptyT -> EmptyH
   | FunT _ -> FunH

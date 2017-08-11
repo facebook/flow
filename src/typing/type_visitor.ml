@@ -140,6 +140,8 @@ class ['a] t = object(self)
     self#list (self#type_ cx) acc tuple_types
   | ArrT EmptyAT -> acc
 
+  | CharSetT _ -> acc
+
   | ClassT t -> self#type_ cx acc t
 
   | InstanceT (static, super, implements, insttype) ->

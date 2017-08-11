@@ -1076,6 +1076,7 @@ module ResolvableTypeJob = struct
     | DefT (_, AnyT)
     | DefT (_, AnyObjT)
     | DefT (_, AnyFunT)
+    | DefT (_, CharSetT _)
       -> acc
 
     | FunProtoBindT _
@@ -3674,6 +3675,33 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let proto = extract_non_spread cx ~trace arg2 in
       rec_flow cx trace (target, SetProtoT (reason_op, proto));
       rec_flow_t cx trace (BoolT.why reason_op, call_tout)
+
+    | DefT (reason, StrT (Literal (_, str))),
+      UseT (_, DefT (reason_op, CharSetT chars)) ->
+        let module CharSet = String_utils.CharSet in
+        let open Flow_error in
+        let invalid, _ = String_utils.fold_left ~f:(fun (invalid, seen) chr ->
+          if not (CharSet.mem chr chars) then
+            InvalidCharSetSet.add (InvalidChar chr) invalid, seen
+          else if CharSet.mem chr seen then
+            InvalidCharSetSet.add (DuplicateChar chr) invalid, seen
+          else
+            invalid, CharSet.add chr seen
+        ) ~acc:(InvalidCharSetSet.empty, CharSet.empty) str in
+        if not (InvalidCharSetSet.is_empty invalid) then
+          add_output cx ~trace (FlowError.EInvalidCharSet {
+            invalid = (
+              replace_reason_const ~keep_def_loc:true (RStringLit str) reason,
+              invalid
+            );
+            valid = reason_op;
+          })
+
+    | DefT (reason, CharSetT _), _ ->
+      rec_flow cx trace (StrT.why reason, u)
+
+    | _, UseT (use_op, DefT (reason, CharSetT _)) ->
+      rec_flow cx trace (l, UseT (use_op, StrT.why reason))
 
     (* React prop type functions are modeled as a custom function type in Flow,
        so that Flow can exploit the extra information to gratuitously hardcode
@@ -6599,6 +6627,7 @@ and check_polarity cx ?trace polarity = function
   | DefT (_, SingletonBoolT _)
   | DefT (_, AnyObjT)
   | DefT (_, AnyFunT)
+  | DefT (_, CharSetT _)
     -> ()
   | TaintT _
   | ExistsT _
@@ -10313,6 +10342,9 @@ end = struct
     | DefT (reason, BoolT _) ->
         extract cx (get_builtin_type cx reason "Boolean")
 
+    | DefT (reason, CharSetT _) ->
+        extract cx (get_builtin_type cx reason "String")
+
     | ReposT (_, t)
     | ReposUpperT (_, t) ->
         extract cx t
@@ -10415,6 +10447,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | DefT (_, NullT)
   | DefT (_, VoidT)
   | DefT (_, AnyT)
+  | DefT (_, CharSetT _)
     -> ()
 
   | TaintT _ ->

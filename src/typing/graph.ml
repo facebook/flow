@@ -178,6 +178,7 @@ and parts_of_t cx = function
 | DefT (_, ArrT arrtype) -> parts_of_arrtype arrtype
 | DefT (_, BoolT _) -> []
 | BoundT _ -> []
+| DefT (_, CharSetT _) -> []
 | DefT (_, ClassT t) -> ["class", Def t]
 | CustomFunT _ | ChoiceKitT _ -> []
 | DefT (_, NumT _)

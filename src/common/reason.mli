@@ -196,7 +196,7 @@ val desc_of_reason: reason -> reason_desc
 (* simple way to get derived reasons whose descriptions are
    simple replacements of the original *)
 val replace_reason: (reason_desc -> reason_desc) -> reason -> reason
-val replace_reason_const: reason_desc -> reason -> reason
+val replace_reason_const: ?keep_def_loc: bool -> reason_desc -> reason -> reason
 
 val repos_reason: Loc.t -> reason -> reason
 

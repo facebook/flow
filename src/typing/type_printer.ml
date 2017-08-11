@@ -131,6 +131,8 @@ let rec type_printer_impl ~size override enclosure cx t =
     | DefT (_, SingletonNumT (_, raw)) -> raw
     | DefT (_, SingletonBoolT b) -> string_of_bool b
 
+    | DefT (_, CharSetT chars) -> spf "$CharSet<%S>" (String_utils.CharSet.to_string chars)
+
     (* reasons for VoidT use "undefined" for more understandable error output.
        For parsable types we need to use "void" though, thus overwrite it. *)
     | DefT (_, VoidT) -> "void"

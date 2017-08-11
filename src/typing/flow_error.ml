@@ -34,6 +34,15 @@ end = struct
   let set _ops = ops := _ops
 end
 
+type invalid_char_set =
+  | DuplicateChar of Char.t
+  | InvalidChar of Char.t
+
+module InvalidCharSetSet = Set.Make(struct
+  type t = invalid_char_set
+  let compare = Pervasives.compare
+end)
+
 type error_message =
   | EIncompatible of {
       lower: reason * lower_kind option;
@@ -116,6 +125,8 @@ type error_message =
   | ETooFewTypeArgs of reason * reason * int
   | EPropertyTypeAnnot of Loc.t
   | EExportsAnnot of Loc.t
+  | ECharSetAnnot of Loc.t
+  | EInvalidCharSet of { invalid: reason * InvalidCharSetSet.t; valid: reason }
   | EUnsupportedKeyInObjectType of Loc.t
   | EPredAnnot of Loc.t
   | ERefineAnnot of Loc.t
@@ -269,6 +280,7 @@ and upper_kind =
   | IncompatibleTypeAppVarianceCheckT
   | IncompatibleUnclassified of string
 
+
 let rec locs_of_use_op acc = function
   | FunCallThis reason -> (loc_of_reason reason)::acc
   | PropertyCompatibility
@@ -369,6 +381,9 @@ let locs_of_error_message = function
       [loc_of_reason reason1; loc_of_reason reason2]
   | EPropertyTypeAnnot (loc) -> [loc]
   | EExportsAnnot (loc) -> [loc]
+  | ECharSetAnnot (loc) -> [loc]
+  | EInvalidCharSet { invalid = (invalid, _); valid } ->
+      [loc_of_reason invalid; loc_of_reason valid]
   | EUnsupportedKeyInObjectType (loc) -> [loc]
   | EPredAnnot (loc) -> [loc]
   | ERefineAnnot (loc) -> [loc]
@@ -994,6 +1009,27 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
 
   | EExportsAnnot loc ->
       mk_error ~trace_infos [loc, ["$Exports requires a string literal"]]
+
+  | ECharSetAnnot loc ->
+      mk_error ~trace_infos [loc, ["$CharSet requires a string literal"]]
+
+  | EInvalidCharSet {
+      invalid = (invalid_reason, invalid_chars);
+      valid = valid_reason;
+    } ->
+      let def_loc = def_loc_of_reason invalid_reason in
+      let extra =
+        InvalidCharSetSet.fold (fun c acc ->
+          match c with
+          | InvalidChar c -> InfoLeaf [def_loc, [spf "`%c` is not a member of the set" c]]::acc
+          | DuplicateChar c -> InfoLeaf [def_loc, [spf "`%c` is duplicated" c]]::acc
+        ) invalid_chars []
+        |> List.rev
+      in
+      mk_error ~trace_infos ~extra [
+        mk_info invalid_reason ["This type is incompatible with"];
+        mk_info valid_reason [];
+      ]
 
   | EUnsupportedKeyInObjectType loc ->
       mk_error ~trace_infos [loc, ["Unsupported key in object type"]]

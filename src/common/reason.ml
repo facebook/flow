@@ -610,8 +610,9 @@ let reasons_overlap r1 r2 =
 let replace_reason f r =
   mk_reason (f (desc_of_reason r)) (loc_of_reason r)
 
-let replace_reason_const desc r =
-  mk_reason desc (loc_of_reason r)
+let replace_reason_const ?(keep_def_loc=false) desc r =
+  let def_loc_opt = if keep_def_loc then r.def_loc_opt else None in
+  mk_reason_with_test_id r.test_id desc (loc_of_reason r) def_loc_opt
 
 (* returns reason with new location and description of original *)
 let repos_reason loc reason =

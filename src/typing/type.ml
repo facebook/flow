@@ -218,6 +218,9 @@ module rec TypeTerm : sig
     | SingletonNumT of number_literal
     (* singleton bool, matches exactly a given boolean literal *)
     | SingletonBoolT of bool
+    (* A subset of StrT that represents a set of characters,
+       e.g. RegExp flags *)
+    | CharSetT of String_utils.CharSet.t
     (* type aliases *)
     | TypeT of t
 
@@ -2155,6 +2158,7 @@ let string_of_def_ctor = function
   | AnyObjT -> "AnyObjT"
   | AnyFunT -> "AnyFunT"
   | BoolT _ -> "BoolT"
+  | CharSetT _ -> "CharSetT"
   | ClassT _ -> "ClassT"
   | EmptyT -> "EmptyT"
   | FunT _ -> "FunT"

@@ -349,6 +349,18 @@ let rec convert cx tparams_map = Ast.Type.(function
       TypeMapT (reason, ObjectMapi, t1, t2)
     )
 
+  | "$CharSet" ->
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      match typeParameters with
+    | Some [(_, StringLiteral { StringLiteral.value; _ })] ->
+        let chars = String_utils.CharSet.of_string value in
+        let char_str = String_utils.CharSet.to_string chars in (* sorts them *)
+        let reason = mk_reason (RCustom (spf "character set `%s`" char_str)) loc in
+        DefT (reason, CharSetT chars)
+      | _ ->
+        error_type cx loc (FlowError.ECharSetAnnot loc)
+    )
+
   | "this" ->
     if SMap.mem "this" tparams_map then
       (* We model a this type like a type parameter. The bound on a this

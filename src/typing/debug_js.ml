@@ -147,6 +147,10 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "kind", JSON_String "EmptyArray";
     ]
 
+  | DefT (_, CharSetT chars) -> [
+      "chars", JSON_String (String_utils.CharSet.to_string chars);
+    ]
+
   | DefT (_, ClassT t) -> [
       "type", _json_of_t json_cx t
     ]
@@ -1556,6 +1560,7 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, ArrT (ROArrayAT (elemt))) -> p
       ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
   | DefT (_, ArrT EmptyAT) -> p ~extra:("EmptyArray") t
+  | DefT (_, CharSetT chars) -> p ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
   | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
   | DefT (_, InstanceT (_, _, _, { class_id; _ })) -> p ~extra:(spf "#%d" class_id) t
   | DefT (_, TypeT arg) -> p ~extra:(kid arg) t
@@ -2332,6 +2337,12 @@ let dump_flow_error =
         spf "EPropertyTypeAnnot (%s)" (string_of_loc loc)
     | EExportsAnnot loc ->
         spf "EExportsAnnot (%s)" (string_of_loc loc)
+    | ECharSetAnnot loc ->
+        spf "ECharSetAnnot (%s)" (string_of_loc loc)
+    | EInvalidCharSet { invalid = (reason, _); valid } ->
+        spf "EInvalidCharSet { invalid = (%s, _); valid = %s }"
+          (dump_reason cx reason)
+          (dump_reason cx valid)
     | EUnsupportedKeyInObjectType loc ->
         spf "EUnsupportedKeyInObjectType (%s)" (string_of_loc loc)
     | EPredAnnot loc ->
