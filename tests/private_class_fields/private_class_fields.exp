@@ -86,5 +86,41 @@ Error: test.js:98
  98:    Static.#r = Static.#q; // Error, no #r on class
         ^^^^^^ Static
 
+Error: test.js:107
+107:   #s: string = 0; // Error, number ~> string
+                    ^ number. This type is incompatible with
+107:   #s: string = 0; // Error, number ~> string
+           ^^^^^^ string
 
-Found 14 errors
+Error: test.js:112
+112:   static #ss: string = 0; // Error, number ~> string
+                            ^ number. This type is incompatible with
+112:   static #ss: string = 0; // Error, number ~> string
+                   ^^^^^^ string
+
+Error: test.js:118
+118:     return this.#t; // Error, string ~> number
+                ^^^^^^^ string. This type is incompatible with the expected return type of
+117:   test2(): number {
+                ^^^^^^ number
+
+Error: test.js:124
+124:     return Annotations.#st; // Error, string ~> number
+                ^^^^^^^^^^^^^^^ string. This type is incompatible with the expected return type of
+123:   test4(): number {
+                ^^^^^^ number
+
+Error: test.js:130
+130:     return this.#r; // Error, number ~> string
+                ^^^^^^^ number. This type is incompatible with the expected return type of
+129:   test6(): string {
+                ^^^^^^ string
+
+Error: test.js:139
+139:     return Annotations.#sr; // Error, number ~> string
+                ^^^^^^^^^^^^^^^ number. This type is incompatible with the expected return type of
+138:   test8(): string {
+                ^^^^^^ string
+
+
+Found 20 errors

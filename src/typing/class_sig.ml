@@ -765,7 +765,8 @@ let toplevels cx ~decls ~stmts ~expr x =
       let this, super = new_entry static, new_entry s.super in
       iter_methods (method_ this super) s;
       let config = Context.esproposal_class_static_fields cx in
-      SMap.iter (field config this super) s.fields
+      SMap.iter (field config this super) s.fields;
+      SMap.iter (field config this super) s.private_fields
     );
 
     x |> with_sig ~static:false (fun s ->
@@ -802,7 +803,8 @@ let toplevels cx ~decls ~stmts ~expr x =
         let this, super = new_entry this, new_entry s.super in
         iter_methods (method_ this super) s;
         let config = Context.esproposal_class_instance_fields cx in
-        SMap.iter (field config this super) s.fields
+        SMap.iter (field config this super) s.fields;
+        SMap.iter (field config this super) s.private_fields;
       end
   ))
 
