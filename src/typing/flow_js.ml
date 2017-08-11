@@ -6433,6 +6433,12 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
   let fields_pmap = Context.find_props cx fields_pmap in
   let methods_pmap = Context.find_props cx methods_pmap in
   fields_pmap |> SMap.iter (fun s p ->
+    let use_op =
+      let use_op = if use_op_is_cycle (s, lreason, reason_struct) use_op
+        then UnknownUse
+        else use_op
+      in PropertyCompatibility (s, lreason, reason_struct, use_op)
+    in
     match p with
     | Field (DefT (_, OptionalT t), polarity) ->
       let propref =
@@ -6457,6 +6463,12 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
   );
   methods_pmap |> SMap.iter (fun s p ->
     if inherited_method s then
+      let use_op =
+        let use_op = if use_op_is_cycle (s, lreason, reason_struct) use_op
+          then UnknownUse
+          else use_op
+        in PropertyCompatibility (s, lreason, reason_struct, use_op)
+      in
       let propref =
         let reason_prop = replace_reason (fun desc ->
           RPropertyOf (s, desc)
