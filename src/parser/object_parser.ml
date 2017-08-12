@@ -129,11 +129,18 @@ module Object
           argument;
         }))
       end else begin
-        (* look for a following identifier to tell whether to parse a function
-         * or not *)
-        let async =
-          Peek.is_literal_property_name ~i:1 env && Declaration.async env in
-        Property (match async , Declaration.generator env, key env with
+        let async = match Peek.token ~i:1 env with
+          | T_COLON (* { async: true } *)
+          | T_LESS_THAN (* { async<T>() {} } *)
+          | T_LPAREN (* { async() {} } *)
+          | T_COMMA (* { async, other, shorthand } *)
+          | T_RCURLY (* { async } *)
+            -> false
+          | _
+            -> Declaration.async env
+        in
+        let generator = Declaration.generator env in
+        Property (match async, generator, key env with
         | false, false, (_, (Property.Identifier (_, "get") as key)) ->
             (match Peek.token env with
             | T_COLON
