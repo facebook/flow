@@ -86,18 +86,6 @@ built-ins/Function/prototype/toString/unicode.js: Unexpected parse error:
 built-ins/Function/prototype/toString/unicode.js: Unexpected parse error:
   (12, 9) to (12, 10): Unexpected token ILLEGAL
 
-built-ins/RegExp/dotall/with-dotall-unicode.js: Unexpected parse error:
-  (19, 23) to (19, 24): Invalid flags supplied to RegExp constructor 'su'
-
-built-ins/RegExp/dotall/with-dotall-unicode.js: Unexpected parse error:
-  (19, 23) to (19, 24): Invalid flags supplied to RegExp constructor 'su'
-
-built-ins/RegExp/dotall/with-dotall.js: Unexpected parse error:
-  (19, 22) to (19, 23): Invalid flags supplied to RegExp constructor 's'
-
-built-ins/RegExp/dotall/with-dotall.js: Unexpected parse error:
-  (19, 22) to (19, 23): Invalid flags supplied to RegExp constructor 's'
-
 built-ins/RegExp/named-groups/non-unicode-property-names.js: Unexpected parse error:
   (13, 51) to (13, 52): Unexpected token ILLEGAL
 
@@ -109,18 +97,6 @@ built-ins/RegExp/named-groups/unicode-property-names.js: Unexpected parse error:
 
 built-ins/RegExp/named-groups/unicode-property-names.js: Unexpected parse error:
   (12, 52) to (12, 53): Unexpected token ILLEGAL
-
-built-ins/RegExp/prototype/dotAll/this-val-regexp.js: Unexpected parse error:
-  (23, 21) to (23, 22): Invalid flags supplied to RegExp constructor 's'
-
-built-ins/RegExp/prototype/dotAll/this-val-regexp.js: Unexpected parse error:
-  (23, 21) to (23, 22): Invalid flags supplied to RegExp constructor 's'
-
-built-ins/RegExp/prototype/flags/s.js: Unexpected parse error:
-  (18, 12) to (18, 13): Invalid flags supplied to RegExp constructor 's'
-
-built-ins/RegExp/prototype/flags/s.js: Unexpected parse error:
-  (18, 12) to (18, 13): Invalid flags supplied to RegExp constructor 's'
 
 language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-async-function-declaration.js: Missing parse error
 
@@ -4421,5 +4397,5 @@ language/white-space/mongolian-vowel-separator.js: Missing parse error
 language/white-space/mongolian-vowel-separator.js: Missing parse error
 
 === Summary ===
-Passed: 53449 (96.62%)
-Failed: 1867 (3.38%)
+Passed: 53457 (96.64%)
+Failed: 1859 (3.36%)
