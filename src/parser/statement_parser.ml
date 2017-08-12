@@ -105,6 +105,13 @@ module Statement
   and do_while = with_loc (fun env ->
     Expect.token env T_DO;
     let body = Parse.statement (env |> with_in_loop true) in
+
+    (* Annex B allows labelled FunctionDeclarations (see
+       sec-labelled-function-declarations), but not in IterationStatement
+       (see sec-semantics-static-semantics-early-errors). *)
+    if not (in_strict_mode env) && is_labelled_function body
+    then function_as_statement_error_at env (fst body);
+
     Expect.token env T_WHILE;
     Expect.token env T_LPAREN;
     let test = Parse.expression env in
@@ -146,6 +153,15 @@ module Statement
       | _ -> error env err
     ) in
 
+    (* Annex B allows labelled FunctionDeclarations (see
+       sec-labelled-function-declarations), but not in IterationStatement
+       (see sec-semantics-static-semantics-early-errors). *)
+    let assert_not_labelled_function env body =
+      if not (in_strict_mode env) && is_labelled_function body
+      then function_as_statement_error_at env (fst body)
+      else ()
+    in
+
     with_loc (fun env ->
       Expect.token env T_FOR;
       let async = allow_await env && Expect.maybe env T_AWAIT in
@@ -182,6 +198,7 @@ module Statement
           let right = Parse.assignment env in
           Expect.token env T_RPAREN;
           let body = Parse.statement (env |> with_in_loop true) in
+          assert_not_labelled_function env body;
           Statement.ForOf { Statement.ForOf.
             left;
             right;
@@ -199,6 +216,7 @@ module Statement
           let right = Parse.expression env in
           Expect.token env T_RPAREN;
           let body = Parse.statement (env |> with_in_loop true) in
+          assert_not_labelled_function env body;
           Statement.ForIn { Statement.ForIn.
             left;
             right;
@@ -218,6 +236,7 @@ module Statement
           | _ -> Some (Parse.expression env) in
           Expect.token env T_RPAREN;
           let body = Parse.statement (env |> with_in_loop true) in
+          assert_not_labelled_function env body;
           Statement.For { Statement.For.
             init;
             test;
@@ -226,27 +245,49 @@ module Statement
           }
     )
 
-  and if_ = with_loc (fun env ->
-    Expect.token env T_IF;
-    Expect.token env T_LPAREN;
-    let test = Parse.expression env in
-    Expect.token env T_RPAREN;
-    let consequent = match Peek.token env with
-    | _ when Peek.is_function env ->
-        strict_error env Error.StrictFunctionStatement;
-        Declaration._function env
-    | _ -> Parse.statement env in
-    let alternate = if Peek.token env = T_ELSE
-    then begin
-      Expect.token env T_ELSE;
-      Some (Parse.statement env)
-    end else None in
-    Statement.If { Statement.If.
-      test;
-      consequent;
-      alternate;
-    }
-  )
+  and if_ =
+    (**
+     * Either the consequent or alternate of an if statement
+     *)
+    let if_branch env =
+      (* Normally this would just be a Statement, but Annex B allows
+         FunctionDeclarations in non-strict mode. See
+         sec-functiondeclarations-in-ifstatement-statement-clauses *)
+      let stmt =
+        if Peek.is_function env then
+          let func = Declaration._function env in
+          if in_strict_mode env then function_as_statement_error_at env (fst func);
+          func
+        else
+          Parse.statement env
+      in
+
+      (* Annex B allows labelled FunctionDeclarations in non-strict mode
+         (see sec-labelled-function-declarations), but not in IfStatement
+         (see sec-if-statement-static-semantics-early-errors). *)
+      if not (in_strict_mode env) && is_labelled_function stmt
+      then function_as_statement_error_at env (fst stmt);
+
+      stmt
+    in
+
+    with_loc (fun env ->
+      Expect.token env T_IF;
+      Expect.token env T_LPAREN;
+      let test = Parse.expression env in
+      Expect.token env T_RPAREN;
+      let consequent = if_branch env in
+      let alternate = if Peek.token env = T_ELSE
+      then begin
+        Expect.token env T_ELSE;
+        Some (if_branch env)
+      end else None in
+      Statement.If { Statement.If.
+        test;
+        consequent;
+        alternate;
+      }
+    )
 
   and return = with_loc (fun env ->
     if not (in_function env)
@@ -385,6 +426,13 @@ module Statement
     let test = Parse.expression env in
     Expect.token env T_RPAREN;
     let body = Parse.statement (env |> with_in_loop true) in
+
+    (* Annex B allows labelled FunctionDeclarations in non-strict mode
+       (see sec-labelled-function-declarations), but not in IterationStatement
+       (see sec-semantics-static-semantics-early-errors). *)
+    if not (in_strict_mode env) && is_labelled_function body
+    then function_as_statement_error_at env (fst body);
+
     Statement.While { Statement.While.
       test;
       body;
@@ -398,6 +446,13 @@ module Statement
       let _object = Parse.expression env in
       Expect.token env T_RPAREN;
       let body = Parse.statement env in
+
+      (* Annex B allows labelled FunctionDeclarations in non-strict mode
+         (see sec-labelled-function-declarations), but not in WithStatement
+         (see sec-with-statement-static-semantics-early-errors). *)
+      if not (in_strict_mode env) && is_labelled_function body
+      then function_as_statement_error_at env (fst body);
+
       Statement.With { Statement.With.
         _object;
         body;
@@ -418,7 +473,23 @@ module Statement
         if SSet.mem name (labels env)
         then error_at env (loc, Error.Redeclaration ("Label", name));
         let env = add_label env name in
-        let body = Parse.statement env in
+        let body =
+          if Peek.is_function env then begin
+            (* labelled FunctionDeclarations are only allowed in non-strict mode
+               (see sec-labelled-function-declarations), but labelled
+               AsyncFunctionDeclarations and GeneratorFunctionDeclarations are
+               never allowed. *)
+            let func = Declaration._function env in
+            let is_error = in_strict_mode env || match func with
+            | _, Ast.Statement.FunctionDeclaration { Ast.Function.async = true; _ }
+            | _, Ast.Statement.FunctionDeclaration { Ast.Function.generator = true; _ } ->
+              true
+            | _ -> false
+            in
+            if is_error then function_as_statement_error_at env (fst func);
+            func
+          end else Parse.statement env
+        in
         Statement.Labeled { Statement.Labeled.label; body; }
     | expression, _ ->
         Eat.semicolon env;

@@ -204,7 +204,30 @@ module rec Parse : PARSER = struct
         error_unexpected env;
         Eat.token env;
         statement env
-    | _ -> expression env)
+    | _ -> expression_statement env)
+
+  (**
+   * ExpressionStatement has a negative lookahead to prevent ambiguities
+   * See https://tc39.github.io/ecma262/#sec-expression-statement
+   *)
+  and expression_statement env =
+    let recover env =
+      error_unexpected env;
+      Eat.token env;
+      Statement.expression env
+    in
+    match Peek.token env with
+    | T_LCURLY -> recover env (* handled by statement *)
+    | T_LET ->
+      if Peek.token ~i:1 env = T_LBRACKET then recover env
+      else Statement.expression env
+    | _ when Peek.is_function env ->
+      let func = Declaration._function env in
+      function_as_statement_error_at env (fst func);
+      func
+    | _ when Peek.is_class env ->
+      recover env
+    | _ -> Statement.expression env
 
   and expression env =
     let expr = Expression.assignment env in

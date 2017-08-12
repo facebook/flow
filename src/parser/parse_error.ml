@@ -63,7 +63,7 @@ type t =
   | NoUninitializedConst
   | NoUninitializedDestructuring
   | NewlineBeforeArrow
-  | StrictFunctionStatement
+  | FunctionAsStatement of { in_strict_mode: bool }
   | AdjacentJSXElements
   | ParameterAfterRestParameter
   | DeclareAsync
@@ -163,8 +163,13 @@ module PP =
       | NoUninitializedConst -> "Const must be initialized"
       | NoUninitializedDestructuring -> "Destructuring assignment must be initialized"
       | NewlineBeforeArrow ->  "Illegal newline before arrow"
-      | StrictFunctionStatement -> "In strict mode code, functions can only be"^
-          " declared at top level or immediately within another function."
+      | FunctionAsStatement { in_strict_mode } ->
+          if in_strict_mode then
+            "In strict mode code, functions can only be declared at top level or "^
+            "immediately within another function."
+          else
+            "In non-strict mode code, functions can only be declared at top level, "^
+            "inside a block, or as the body of an if statement."
       | AdjacentJSXElements -> "Unexpected token <. Remember, adjacent JSX "^
           "elements must be wrapped in an enclosing parent tag"
       | ParameterAfterRestParameter ->

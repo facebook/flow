@@ -492,6 +492,10 @@ let strict_error env e = if in_strict_mode env then error env e
 let strict_error_at env (loc, e) =
   if in_strict_mode env then error_at env (loc, e)
 
+let function_as_statement_error_at env loc =
+  error_at env (loc, Error.FunctionAsStatement {
+    in_strict_mode = in_strict_mode env
+  })
 
 (* Consume zero or more tokens *)
 module Eat = struct

@@ -81,6 +81,7 @@ val error_unexpected : env -> unit
 val error_on_decorators : env -> (Loc.t * 'a) list -> unit
 val strict_error : env -> Parse_error.t -> unit
 val strict_error_at : env -> Loc.t * Parse_error.t -> unit
+val function_as_statement_error_at : env -> Loc.t -> unit
 val get_unexpected_error : Token.t * string -> Parse_error.t
 val comment_list : env -> Ast.Comment.t list -> unit
 val error_list : env -> (Loc.t * Parse_error.t) list -> unit

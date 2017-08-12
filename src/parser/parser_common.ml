@@ -39,6 +39,20 @@ module type PARSER = sig
   val is_assignable_lhs : Expression.t -> bool
 end
 
+(**
+ * The abstract operation IsLabelledFunction
+ *
+ * https://tc39.github.io/ecma262/#sec-islabelledfunction
+ *)
+let rec is_labelled_function = function
+  | _, Ast.Statement.Labeled { Ast.Statement.Labeled.body; _ } ->
+    begin match body with
+    | _, Ast.Statement.FunctionDeclaration _ -> true
+    | _ -> is_labelled_function body
+    end
+  | _ ->
+    false
+
 let with_loc fn env =
   let start_loc = Peek.loc env in
   let result = fn env in
