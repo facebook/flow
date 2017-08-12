@@ -288,6 +288,31 @@ docs_additional_reading: "Additional Reading"
   title: "Comment Types"
   description: "Flow with plain JavaScript code by using a special comment syntax"
 
+"/docs/react/":
+  title: "Getting Started"
+  description: "Learn how to setup React with Flow"
+"/docs/react/components/":
+  title: "Components"
+  description: "Learn how to type React class components and stateless functional components with Flow"
+"/docs/react/events/":
+  title: "Event Handling"
+  description: "The types and best practices for typing React event handlers with Flow"
+"/docs/react/refs/":
+  title: "ref functions"
+  description: "How to use typed Flow's typed React ref functions"
+"/docs/react/children/":
+  title: "Children"
+  description: "Learn how to use Flow to strictly type the children of your React components"
+"/docs/react/hoc/":
+  title: "Higher-order Components"
+  description: "Learn how to use Flow to type React higher-order components"
+"/docs/react/redux/":
+  title: "Redux"
+  description: "Learn how to use Flow with Redux"
+"/docs/react/types/":
+  title: "Type Reference"
+  description: "A reference for all the utility Flow types exported by the React module"
+
 "/docs/frameworks/":
   title: "Frameworks"
   description: "Learn how to use Flow with various frameworks"
