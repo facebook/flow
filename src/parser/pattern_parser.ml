@@ -63,9 +63,17 @@ module Pattern
     let rec elements env acc = Ast.Expression.(function
       | [] -> List.rev acc
       | Some (Spread (loc, { SpreadElement.argument }))::[] ->
-          (* spreads are ok as the last element *)
-          let argument = from_expr env argument in
-          let acc = (Some Pattern.Array.(RestElement (loc, { RestElement.argument; })))::acc in
+          (* AssignmentRestElement must be a valid LeftHandSideExpression
+             https://tc39.github.io/ecma262/#prod-AssignmentRestElement *)
+          let acc =
+            if Parse.is_assignable_lhs argument then
+              let argument = from_expr env argument in
+              (Some Pattern.Array.(RestElement (loc, { RestElement.argument; })))::acc
+            else begin
+              error_at env (loc, Parse_error.InvalidLHSInAssignment);
+              acc
+            end
+          in
           elements env acc []
       | Some (Spread (loc, _))::remaining ->
           error_at env (loc, Parse_error.ElementAfterRestElement);

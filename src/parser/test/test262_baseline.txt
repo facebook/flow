@@ -485,10 +485,6 @@ language/expressions/assignment/dstr-array-rest-elision-invalid.js: Missing pars
 
 language/expressions/assignment/dstr-array-rest-elision-invalid.js: Missing parse error
 
-language/expressions/assignment/dstr-array-rest-init.js: Missing parse error
-
-language/expressions/assignment/dstr-array-rest-init.js: Missing parse error
-
 language/expressions/assignment/dstr-array-rest-iter-rtrn-close-err.js: Unexpected parse error:
   (64, 21) to (64, 22): Unexpected token ]
 
@@ -4385,5 +4381,5 @@ language/white-space/mongolian-vowel-separator.js: Missing parse error
 language/white-space/mongolian-vowel-separator.js: Missing parse error
 
 === Summary ===
-Passed: 53463 (96.65%)
-Failed: 1853 (3.35%)
+Passed: 53465 (96.65%)
+Failed: 1851 (3.35%)
