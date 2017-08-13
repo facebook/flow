@@ -650,10 +650,6 @@ language/expressions/assignment/target-newtarget.js: Missing parse error
 
 language/expressions/assignment/target-newtarget.js: Missing parse error
 
-language/expressions/async-arrow-function/await-as-binding-identifier.js: Missing parse error
-
-language/expressions/async-arrow-function/await-as-binding-identifier.js: Missing parse error
-
 language/expressions/async-arrow-function/early-errors-arrow-NSPL-with-USD.js: Missing parse error
 
 language/expressions/async-arrow-function/early-errors-arrow-NSPL-with-USD.js: Missing parse error
@@ -690,10 +686,6 @@ language/expressions/async-arrow-function/early-errors-arrow-formals-linetermina
 
 language/expressions/async-arrow-function/early-errors-arrow-formals-lineterminator.js: Missing parse error
 
-language/expressions/async-function/await-as-binding-identifier.js: Missing parse error
-
-language/expressions/async-function/await-as-binding-identifier.js: Missing parse error
-
 language/expressions/async-function/early-errors-expression-NSPL-with-USD.js: Missing parse error
 
 language/expressions/async-function/early-errors-expression-NSPL-with-USD.js: Missing parse error
@@ -717,14 +709,6 @@ language/expressions/async-function/early-errors-expression-formals-contains-sup
 language/expressions/async-function/early-errors-expression-formals-contains-super-property.js: Missing parse error
 
 language/expressions/async-function/early-errors-expression-formals-contains-super-property.js: Missing parse error
-
-language/expressions/async-function/named-await-as-binding-identifier.js: Missing parse error
-
-language/expressions/async-function/named-await-as-binding-identifier.js: Missing parse error
-
-language/expressions/async-generator/await-as-binding-identifier.js: Missing parse error
-
-language/expressions/async-generator/await-as-binding-identifier.js: Missing parse error
 
 language/expressions/async-generator/early-errors-expression-NSPL-with-USD.js: Missing parse error
 
@@ -769,10 +753,6 @@ language/expressions/async-generator/early-errors-expression-yield-as-function-b
 language/expressions/async-generator/early-errors-expression-yield-star-after-newline.js: Missing parse error
 
 language/expressions/async-generator/early-errors-expression-yield-star-after-newline.js: Missing parse error
-
-language/expressions/async-generator/named-await-as-binding-identifier.js: Missing parse error
-
-language/expressions/async-generator/named-await-as-binding-identifier.js: Missing parse error
 
 language/expressions/async-generator/named-yield-as-binding-identifier.js: Missing parse error
 
@@ -830,10 +810,6 @@ language/expressions/async-generator/yield-spread-obj.js: Unexpected parse error
 language/expressions/async-generator/yield-spread-obj.js: Unexpected parse error:
   (32, 14) to (32, 15): Unexpected token ,
 
-language/expressions/await/await-BindingIdentifier-nested.js: Missing parse error
-
-language/expressions/await/await-BindingIdentifier-nested.js: Missing parse error
-
 language/expressions/class/accessor-name-inst-computed-yield-expr.js: Unexpected parse error:
   (26, 14) to (26, 15): Unexpected token ]
 
@@ -845,14 +821,6 @@ language/expressions/class/accessor-name-static-computed-yield-expr.js: Unexpect
 
 language/expressions/class/accessor-name-static-computed-yield-expr.js: Unexpected parse error:
   (28, 21) to (28, 22): Unexpected token ]
-
-language/expressions/class/async-gen-method-await-as-binding-identifier.js: Missing parse error
-
-language/expressions/class/async-gen-method-await-as-binding-identifier.js: Missing parse error
-
-language/expressions/class/async-gen-method-static-await-as-binding-identifier.js: Missing parse error
-
-language/expressions/class/async-gen-method-static-await-as-binding-identifier.js: Missing parse error
 
 language/expressions/class/async-gen-method-static-yield-as-binding-identifier.js: Missing parse error
 
@@ -897,14 +865,6 @@ language/expressions/class/async-gen-method-yield-spread-obj.js: Unexpected pars
 
 language/expressions/class/async-gen-method-yield-spread-obj.js: Unexpected parse error:
   (37, 16) to (37, 17): Unexpected token ,
-
-language/expressions/class/async-method-await-as-binding-identifier.js: Missing parse error
-
-language/expressions/class/async-method-await-as-binding-identifier.js: Missing parse error
-
-language/expressions/class/async-method-static-await-as-binding-identifier.js: Missing parse error
-
-language/expressions/class/async-method-static-await-as-binding-identifier.js: Missing parse error
 
 language/expressions/class/gen-method-static-yield-as-binding-identifier.js: Missing parse error
 
@@ -1065,14 +1025,6 @@ language/expressions/object/accessor-name-computed-yield-expr.js: Unexpected par
 
 language/expressions/object/accessor-name-computed-yield-id.js: Unexpected parse error:
   (24, 12) to (24, 13): Unexpected token ]
-
-language/expressions/object/method-definition/async-await-as-binding-identifier.js: Missing parse error
-
-language/expressions/object/method-definition/async-await-as-binding-identifier.js: Missing parse error
-
-language/expressions/object/method-definition/async-gen-await-as-binding-identifier.js: Missing parse error
-
-language/expressions/object/method-definition/async-gen-await-as-binding-identifier.js: Missing parse error
 
 language/expressions/object/method-definition/async-gen-yield-as-binding-identifier.js: Missing parse error
 
@@ -1605,10 +1557,6 @@ language/reserved-words/ident-reference-true.js: Missing parse error
 
 language/reserved-words/ident-reference-true.js: Missing parse error
 
-language/statements/async-function/await-as-binding-identifier.js: Missing parse error
-
-language/statements/async-function/await-as-binding-identifier.js: Missing parse error
-
 language/statements/async-function/early-errors-declaration-NSPL-with-USD.js: Missing parse error
 
 language/statements/async-function/early-errors-declaration-NSPL-with-USD.js: Missing parse error
@@ -1640,10 +1588,6 @@ language/statements/async-function/early-errors-declaration-formals-contains-sup
 language/statements/async-function/early-errors-declaration-formals-contains-super-property.js: Missing parse error
 
 language/statements/async-function/early-errors-declaration-formals-contains-super-property.js: Missing parse error
-
-language/statements/async-generator/await-as-binding-identifier.js: Missing parse error
-
-language/statements/async-generator/await-as-binding-identifier.js: Missing parse error
 
 language/statements/async-generator/yield-as-binding-identifier.js: Missing parse error
 
@@ -1685,14 +1629,6 @@ language/statements/class/accessor-name-static-computed-yield-expr.js: Unexpecte
 language/statements/class/accessor-name-static-computed-yield-expr.js: Unexpected parse error:
   (28, 21) to (28, 22): Unexpected token ]
 
-language/statements/class/async-gen-method-await-as-binding-identifier.js: Missing parse error
-
-language/statements/class/async-gen-method-await-as-binding-identifier.js: Missing parse error
-
-language/statements/class/async-gen-method-static-await-as-binding-identifier.js: Missing parse error
-
-language/statements/class/async-gen-method-static-await-as-binding-identifier.js: Missing parse error
-
 language/statements/class/async-gen-method-static-yield-spread-arr-multiple.js: Unexpected parse error:
   (37, 25) to (37, 26): Unexpected token ]
 
@@ -1728,14 +1664,6 @@ language/statements/class/async-gen-method-yield-spread-obj.js: Unexpected parse
 
 language/statements/class/async-gen-method-yield-spread-obj.js: Unexpected parse error:
   (37, 16) to (37, 17): Unexpected token ,
-
-language/statements/class/async-method-await-as-binding-identifier.js: Missing parse error
-
-language/statements/class/async-method-await-as-binding-identifier.js: Missing parse error
-
-language/statements/class/async-method-static-await-as-binding-identifier.js: Missing parse error
-
-language/statements/class/async-method-static-await-as-binding-identifier.js: Missing parse error
 
 language/statements/class/definition/early-errors-class-method-NSPL-with-USD.js: Missing parse error
 
@@ -3577,5 +3505,5 @@ language/white-space/mongolian-vowel-separator.js: Missing parse error
 language/white-space/mongolian-vowel-separator.js: Missing parse error
 
 === Summary ===
-Passed: 53867 (97.38%)
-Failed: 1449 (2.62%)
+Passed: 53903 (97.45%)
+Failed: 1413 (2.55%)

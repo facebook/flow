@@ -1947,7 +1947,7 @@ module.exports = {
             'root.errors.0.message': {
               type: 'Wrong error message',
               expected: 'Unexpected token ILLEGAL',
-              actual: 'Unexpected token #' 
+              actual: 'Unexpected token #'
             },
           }
         },
@@ -4964,7 +4964,6 @@ module.exports = {
           },
         },
         'function async() { }',
-        'async function foo() { return function await() { }; }',
         {
           content: 'async function foo() { return await foo + await bar + 5; }',
           explanation: 'Works in Babel and the spec appears to allow it',
@@ -4976,7 +4975,6 @@ module.exports = {
             },
           },
         },
-        'async function foo() { var await = 4; }',
         'var x = async function bar() { await foo; }',
         'async function foo() { return await; }',
         'var x = async (a, b) => await a;',

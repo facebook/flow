@@ -263,10 +263,15 @@ module rec Parse : PARSER = struct
     | _ when is_strict_reserved name ->
       strict_error env Error.StrictReservedWord;
       Eat.token env
+    | T_AWAIT ->
+      (* `allow_await` means that `await` is allowed to be a keyword,
+         which makes it illegal to use as an identifier.
+         https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
+      if allow_await env then error env Error.UnexpectedReserved;
+      Eat.token env
     | T_DECLARE
     | T_OF
     | T_ASYNC
-    | T_AWAIT
     | T_OPAQUE
     | T_TYPE as t ->
         (* These aren't real identifiers *)
