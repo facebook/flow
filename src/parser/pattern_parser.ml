@@ -206,6 +206,13 @@ module Pattern
         let element = Pattern.Array.(RestElement (loc, { RestElement.
           argument;
         })) in
+        (* rest elements are always last, the closing ] should be next. but if not,
+           error and keep going so we recover gracefully by parsing the rest of the
+           elements. *)
+        if Peek.token env <> T_RBRACKET then begin
+          error_at env (loc, Parse_error.ElementAfterRestElement);
+          if Peek.token env = T_COMMA then Eat.token env
+        end;
         elements env ((Some element)::acc)
       | _ ->
         let pattern = pattern env restricted_error in

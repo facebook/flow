@@ -348,30 +348,6 @@ language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-w
 
 language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-let-declaration.js: Missing parse error
 
-language/expressions/arrow-function/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/arrow-function/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/arrow-function/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/arrow-function/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/arrow-function/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/arrow-function/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/arrow-function/dstr-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/arrow-function/dstr-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/arrow-function/dstr-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/arrow-function/dstr-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/arrow-function/dstr-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/arrow-function/dstr-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
 language/expressions/arrow-function/syntax/arrowparameters-bindingidentifier-yield.js: Unexpected parse error:
   (14, 15) to (14, 17): Unexpected token =>
 
@@ -750,54 +726,6 @@ language/expressions/async-generator/await-as-binding-identifier.js: Missing par
 
 language/expressions/async-generator/await-as-binding-identifier.js: Missing parse error
 
-language/expressions/async-generator/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/async-generator/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/async-generator/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/async-generator/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/async-generator/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/async-generator/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/async-generator/dstr-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/async-generator/dstr-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/async-generator/dstr-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/async-generator/dstr-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/async-generator/dstr-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/async-generator/dstr-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/async-generator/dstr-named-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/async-generator/dstr-named-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/async-generator/dstr-named-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/async-generator/dstr-named-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/async-generator/dstr-named-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/async-generator/dstr-named-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/async-generator/dstr-named-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/async-generator/dstr-named-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/async-generator/dstr-named-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/async-generator/dstr-named-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/async-generator/dstr-named-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/async-generator/dstr-named-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
 language/expressions/async-generator/early-errors-expression-NSPL-with-USD.js: Missing parse error
 
 language/expressions/async-generator/early-errors-expression-NSPL-with-USD.js: Missing parse error
@@ -978,150 +906,6 @@ language/expressions/class/async-method-static-await-as-binding-identifier.js: M
 
 language/expressions/class/async-method-static-await-as-binding-identifier.js: Missing parse error
 
-language/expressions/class/dstr-async-gen-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-static-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-static-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-static-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-static-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-static-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-static-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-static-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-static-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-static-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-static-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-static-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-async-gen-meth-static-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-static-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-static-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-static-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-static-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-static-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-static-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-meth-static-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-meth-static-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-meth-static-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-meth-static-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-meth-static-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-meth-static-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-meth-static-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-meth-static-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/class/dstr-meth-static-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-meth-static-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/class/dstr-meth-static-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/class/dstr-meth-static-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
 language/expressions/class/gen-method-static-yield-as-binding-identifier.js: Missing parse error
 
 language/expressions/class/gen-method-static-yield-as-identifier-reference.js: Missing parse error
@@ -1166,30 +950,6 @@ language/expressions/class/gen-method-yield-spread-obj.js: Unexpected parse erro
 language/expressions/class/gen-method-yield-spread-obj.js: Unexpected parse error:
   (35, 16) to (35, 17): Unexpected token ,
 
-language/expressions/function/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/function/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/function/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/function/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/function/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/function/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/function/dstr-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/function/dstr-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/function/dstr-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/function/dstr-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/function/dstr-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/function/dstr-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
 language/expressions/function/early-body-super-call.js: Missing parse error
 
 language/expressions/function/early-body-super-call.js: Missing parse error
@@ -1212,30 +972,6 @@ language/expressions/function/param-dflt-yield-non-strict.js: Unexpected parse e
 language/expressions/function/use-strict-with-non-simple-param.js: Missing parse error
 
 language/expressions/function/use-strict-with-non-simple-param.js: Missing parse error
-
-language/expressions/generators/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/generators/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/generators/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/generators/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/generators/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/generators/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/generators/dstr-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/generators/dstr-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/generators/dstr-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/generators/dstr-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/generators/dstr-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/generators/dstr-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
 
 language/expressions/generators/named-yield-as-binding-identifier.js: Missing parse error
 
@@ -1329,78 +1065,6 @@ language/expressions/object/accessor-name-computed-yield-expr.js: Unexpected par
 
 language/expressions/object/accessor-name-computed-yield-id.js: Unexpected parse error:
   (24, 12) to (24, 13): Unexpected token ]
-
-language/expressions/object/dstr-async-gen-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/object/dstr-async-gen-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/object/dstr-async-gen-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/object/dstr-async-gen-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/object/dstr-async-gen-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/object/dstr-async-gen-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/object/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/object/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/object/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/object/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/object/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/object/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/object/dstr-gen-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/object/dstr-gen-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/object/dstr-gen-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/object/dstr-gen-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/object/dstr-gen-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/object/dstr-gen-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/object/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/object/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/object/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/object/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/object/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/object/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/object/dstr-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/object/dstr-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/object/dstr-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/object/dstr-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/object/dstr-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/object/dstr-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/object/dstr-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/object/dstr-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/expressions/object/dstr-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/object/dstr-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/expressions/object/dstr-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/expressions/object/dstr-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
 
 language/expressions/object/method-definition/async-await-as-binding-identifier.js: Missing parse error
 
@@ -1981,30 +1645,6 @@ language/statements/async-generator/await-as-binding-identifier.js: Missing pars
 
 language/statements/async-generator/await-as-binding-identifier.js: Missing parse error
 
-language/statements/async-generator/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/async-generator/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/async-generator/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/async-generator/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/async-generator/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/async-generator/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/async-generator/dstr-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/async-generator/dstr-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/async-generator/dstr-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/async-generator/dstr-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/async-generator/dstr-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/async-generator/dstr-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
 language/statements/async-generator/yield-as-binding-identifier.js: Missing parse error
 
 language/statements/async-generator/yield-as-identifier-reference.js: Missing parse error
@@ -2153,150 +1793,6 @@ language/statements/class/definition/methods-gen-yield-weak-binding.js: Unexpect
 language/statements/class/definition/methods-gen-yield-weak-binding.js: Unexpected parse error:
   (17, 19) to (17, 24): Use of future reserved word in strict mode
 
-language/statements/class/dstr-async-gen-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-static-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-static-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-static-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-static-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-static-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-static-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-static-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-static-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-static-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-static-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-static-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-async-gen-meth-static-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-static-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-static-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-static-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-static-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-static-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-static-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-meth-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-meth-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-meth-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-meth-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-meth-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-meth-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-meth-static-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-meth-static-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-meth-static-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-meth-static-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-meth-static-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-meth-static-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-meth-static-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-meth-static-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/class/dstr-meth-static-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-meth-static-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/class/dstr-meth-static-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/class/dstr-meth-static-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
 language/statements/class/gen-method-static-yield-spread-arr-multiple.js: Unexpected parse error:
   (34, 25) to (34, 26): Unexpected token ]
 
@@ -2392,18 +1888,6 @@ language/statements/class/syntax/early-errors/class-definition-evaluation-block-
 language/statements/class/syntax/early-errors/class-definition-evaluation-scriptbody-duplicate-binding.js: Missing parse error
 
 language/statements/class/syntax/early-errors/class-definition-evaluation-scriptbody-duplicate-binding.js: Missing parse error
-
-language/statements/const/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/const/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/const/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/const/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/const/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/const/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
 
 language/statements/const/redeclaration-error-from-within-strict-mode-function-const.js: Missing parse error
 
@@ -2499,78 +1983,6 @@ language/statements/for-await-of/async-func-decl-dstr-obj-id-init-yield-ident-va
 
 language/statements/for-await-of/async-func-decl-dstr-obj-prop-nested-obj-yield-ident-valid.js: Unexpected parse error:
   (32, 22) to (32, 23): Unexpected token =
-
-language/statements/for-await-of/async-func-dstr-const-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-const-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-const-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-const-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-const-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-const-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-const-async-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-const-async-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-const-async-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-const-async-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-const-async-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-const-async-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-let-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-let-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-let-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-let-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-let-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-let-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-let-async-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-let-async-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-let-async-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-let-async-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-let-async-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-let-async-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-var-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-var-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-var-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-var-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-var-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-var-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-var-async-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-var-async-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-var-async-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-var-async-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-var-async-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-func-dstr-var-async-ary-ptrn-rest-not-final-obj.js: Missing parse error
 
 language/statements/for-await-of/async-gen-decl-dstr-array-elem-init-yield-expr.js: Unexpected parse error:
   (32, 25) to (32, 26): Unexpected token ]
@@ -2718,78 +2130,6 @@ language/statements/for-await-of/async-gen-decl-dstr-obj-prop-nested-obj-yield-e
 
 language/statements/for-await-of/async-gen-decl-dstr-obj-prop-nested-obj-yield-expr.js: Unexpected parse error:
   (32, 22) to (32, 23): Unexpected token =
-
-language/statements/for-await-of/async-gen-dstr-const-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-const-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-const-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-const-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-const-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-const-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-const-async-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-const-async-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-const-async-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-const-async-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-const-async-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-const-async-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-let-async-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-let-async-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-let-async-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-let-async-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-let-async-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-let-async-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-var-async-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-var-async-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-var-async-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-var-async-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-var-async-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-await-of/async-gen-dstr-var-async-ary-ptrn-rest-not-final-obj.js: Missing parse error
 
 language/statements/for-await-of/let-array-with-newline.js: Missing parse error
 
@@ -3069,30 +2409,6 @@ language/statements/for-of/dstr-array-rest-yield-expr.js: Unexpected parse error
 language/statements/for-of/dstr-array-rest-yield-ident-valid.js: Unexpected parse error:
   (33, 16) to (33, 17): Unexpected token ]
 
-language/statements/for-of/dstr-const-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-of/dstr-const-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-of/dstr-const-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-of/dstr-const-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-of/dstr-const-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-of/dstr-const-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-of/dstr-let-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-of/dstr-let-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-of/dstr-let-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-of/dstr-let-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-of/dstr-let-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-of/dstr-let-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
 language/statements/for-of/dstr-obj-id-identifier-yield-expr.js: Missing parse error
 
 language/statements/for-of/dstr-obj-id-identifier-yield-ident-invalid.js: Missing parse error
@@ -3233,18 +2549,6 @@ language/statements/for-of/dstr-obj-rest-not-last-element-invalid.js: Missing pa
 
 language/statements/for-of/dstr-obj-rest-not-last-element-invalid.js: Missing parse error
 
-language/statements/for-of/dstr-var-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-of/dstr-var-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for-of/dstr-var-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-of/dstr-var-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for-of/dstr-var-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for-of/dstr-var-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
 language/statements/for-of/head-const-bound-names-dup.js: Missing parse error
 
 language/statements/for-of/head-const-bound-names-dup.js: Missing parse error
@@ -3279,42 +2583,6 @@ language/statements/for/decl-async-gen.js: Missing parse error
 
 language/statements/for/decl-async-gen.js: Missing parse error
 
-language/statements/for/dstr-const-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for/dstr-const-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for/dstr-const-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for/dstr-const-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for/dstr-const-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for/dstr-const-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for/dstr-let-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for/dstr-let-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for/dstr-let-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for/dstr-let-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for/dstr-let-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for/dstr-let-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for/dstr-var-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for/dstr-var-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/for/dstr-var-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for/dstr-var-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/for/dstr-var-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/for/dstr-var-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
 language/statements/for/head-let-bound-names-in-stmt.js: Missing parse error
 
 language/statements/for/head-let-bound-names-in-stmt.js: Missing parse error
@@ -3342,30 +2610,6 @@ language/statements/function/S14_A5_T2.js: Unexpected parse error:
 language/statements/function/S14_A5_T2.js: Unexpected parse error:
   (23, 9) to (23, 10): Unexpected token ILLEGAL
 
-language/statements/function/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/function/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/function/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/function/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/function/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/function/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/function/dstr-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/function/dstr-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/function/dstr-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/function/dstr-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/function/dstr-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/function/dstr-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
 language/statements/function/early-body-super-call.js: Missing parse error
 
 language/statements/function/early-body-super-call.js: Missing parse error
@@ -3388,30 +2632,6 @@ language/statements/function/param-dflt-yield-non-strict.js: Unexpected parse er
 language/statements/function/use-strict-with-non-simple-param.js: Missing parse error
 
 language/statements/function/use-strict-with-non-simple-param.js: Missing parse error
-
-language/statements/generators/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/generators/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/generators/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/generators/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/generators/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/generators/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/generators/dstr-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/generators/dstr-dflt-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/generators/dstr-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/generators/dstr-dflt-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/generators/dstr-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/generators/dstr-dflt-ary-ptrn-rest-not-final-obj.js: Missing parse error
 
 language/statements/generators/use-strict-with-non-simple-param.js: Missing parse error
 
@@ -3532,18 +2752,6 @@ language/statements/labeled/value-yield-strict.js: Unexpected parse error:
 
 language/statements/labeled/value-yield-strict.js: Unexpected parse error:
   (17, 5) to (17, 6): Unexpected token :
-
-language/statements/let/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/let/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/let/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/let/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/let/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/let/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
 
 language/statements/let/redeclaration-error-from-within-strict-mode-function.js: Missing parse error
 
@@ -4344,18 +3552,6 @@ language/statements/variable/S12.2_A4.js: Unexpected parse error:
 language/statements/variable/S12.2_A4.js: Unexpected parse error:
   (20, 4) to (20, 5): Unexpected token ILLEGAL
 
-language/statements/variable/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/variable/dstr-ary-ptrn-rest-not-final-ary.js: Missing parse error
-
-language/statements/variable/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/variable/dstr-ary-ptrn-rest-not-final-id.js: Missing parse error
-
-language/statements/variable/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
-language/statements/variable/dstr-ary-ptrn-rest-not-final-obj.js: Missing parse error
-
 language/statements/while/S12.6.2_A15.js: Missing parse error
 
 language/statements/while/S12.6.2_A15.js: Missing parse error
@@ -4381,5 +3577,5 @@ language/white-space/mongolian-vowel-separator.js: Missing parse error
 language/white-space/mongolian-vowel-separator.js: Missing parse error
 
 === Summary ===
-Passed: 53465 (96.65%)
-Failed: 1851 (3.35%)
+Passed: 53867 (97.38%)
+Failed: 1449 (2.62%)
