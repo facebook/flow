@@ -11,7 +11,6 @@
 open Token
 open Parser_env
 open Ast
-module Error = Parse_error
 
 module Pattern
   (Parse: Parser_common.PARSER)
@@ -21,61 +20,71 @@ module Pattern
    * This is not the correct thing to do and is only used for assignment
    * expressions. This should be removed and replaced ASAP.
    *)
-  let object_from_expr =
-    let property env prop =
-      Ast.Expression.Object.(match prop with
-      | Property (loc, { Property.key; value; shorthand; _ }) ->
-        let key = Property.(match key with
-        | Literal lit -> Pattern.Object.Property.Literal lit
-        | Identifier id -> Pattern.Object.Property.Identifier id
-        | PrivateName _ -> failwith "Internal Error: Found object private prop"
-        | Computed expr -> Pattern.Object.Property.Computed expr) in
-        let pattern = Property.(match value with
-        | Init t -> Parse.pattern_from_expr env t
-        | Get (loc, f)
-        | Set (loc, f) ->
-          (* these should never happen *)
-          error_at env (loc, Error.UnexpectedIdentifier);
-          loc, Pattern.Expression (loc, Ast.Expression.Function f)
-        ) in
-        Pattern.(Object.Property (loc, Object.Property.({
-          key;
-          pattern;
-          shorthand;
-        })))
-      | SpreadProperty (loc, { SpreadProperty.argument; }) ->
-          let argument = Parse.pattern_from_expr env argument in
-          Pattern.Object.(RestProperty (loc, RestProperty.({
-            argument;
-          }))))
+  let rec object_from_expr =
+    let rec properties env acc = Ast.Expression.Object.(function
+      | [] -> List.rev acc
+      | Property (loc, { Property.key; value; shorthand; _ })::remaining ->
+          let key = Property.(match key with
+          | Literal lit -> Pattern.Object.Property.Literal lit
+          | Identifier id -> Pattern.Object.Property.Identifier id
+          | PrivateName _ -> failwith "Internal Error: Found object private prop"
+          | Computed expr -> Pattern.Object.Property.Computed expr) in
+          let pattern = Property.(match value with
+          | Init t -> from_expr env t
+          | Get (loc, f)
+          | Set (loc, f) ->
+            (* these should never happen *)
+            error_at env (loc, Parse_error.UnexpectedIdentifier);
+            loc, Pattern.Expression (loc, Ast.Expression.Function f)
+          ) in
+          let acc = Pattern.(Object.Property (loc, { Object.Property.
+            key;
+            pattern;
+            shorthand;
+          })) :: acc in
+          properties env acc remaining
+      | SpreadProperty (loc, { SpreadProperty.argument; })::[] ->
+          let acc = Pattern.Object.(RestProperty (loc, { RestProperty.
+            argument = from_expr env argument;
+          })) :: acc in
+          properties env acc []
+      | SpreadProperty (loc, _)::remaining ->
+          error_at env (loc, Parse_error.PropertyAfterRestProperty);
+          properties env acc remaining
+    ) in
 
-    in fun env (loc, obj) ->
-      let properties =
-        List.map (property env) obj.Ast.Expression.Object.properties in
-      loc, Pattern.(Object Object.({
-        properties;
+    fun env (loc, obj) ->
+      loc, Pattern.(Object { Object.
+        properties = properties env [] obj.Ast.Expression.Object.properties;
         typeAnnotation = None;
-      }))
+      })
 
-  let array_from_expr =
-    let element env = Ast.Expression.(function
-      | None -> None
-      | Some (Spread (loc, spread)) ->
-          let argument = Parse.pattern_from_expr env (spread.SpreadElement.argument) in
-          Some Pattern.Array.(RestElement (loc, { RestElement.argument; }))
-      | Some (Expression (loc, expr)) ->
-          Some Pattern.Array.(Element (Parse.pattern_from_expr env (loc, expr)))
+  and array_from_expr =
+    let rec elements env acc = Ast.Expression.(function
+      | [] -> List.rev acc
+      | Some (Spread (loc, { SpreadElement.argument }))::[] ->
+          (* spreads are ok as the last element *)
+          let argument = from_expr env argument in
+          let acc = (Some Pattern.Array.(RestElement (loc, { RestElement.argument; })))::acc in
+          elements env acc []
+      | Some (Spread (loc, _))::remaining ->
+          error_at env (loc, Parse_error.ElementAfterRestElement);
+          elements env acc remaining
+      | Some (Expression (loc, expr))::remaining ->
+          let acc = Some Pattern.Array.(Element (from_expr env (loc, expr))) :: acc in
+          elements env acc remaining
+      | None::remaining ->
+          elements env (None::acc) remaining
     )
+    in
 
-    in fun env (loc, arr) ->
-      let elements =
-        List.map (element env) arr.Ast.Expression.Array.elements in
-      loc, Pattern.(Array Array.({
-        elements;
+    fun env (loc, arr) ->
+      loc, Pattern.(Array { Array.
+        elements = elements env [] arr.Ast.Expression.Array.elements;
         typeAnnotation = None;
-      }))
+      })
 
-  let from_expr env (loc, expr) =
+  and from_expr env (loc, expr) =
     Ast.Expression.(match expr with
     | Object obj -> object_from_expr env (loc, obj)
     | Array arr ->  array_from_expr env (loc, arr)
@@ -89,7 +98,7 @@ module Pattern
     | expr -> loc, Pattern.Expression (loc, expr))
 
   (* Parse object destructuring pattern *)
-  let rec _object restricted_error =
+  let rec object_ restricted_error =
     let rec property env =
       let start_loc = Peek.loc env in
       if Expect.maybe env T_ELLIPSIS
@@ -176,7 +185,7 @@ module Pattern
       }))
 
   (* Parse array destructuring pattern *)
-  and _array restricted_error =
+  and array_ restricted_error =
     let rec elements env acc =
       match Peek.token env with
       | T_EOF
@@ -230,9 +239,9 @@ module Pattern
   and pattern env restricted_error =
     match Peek.token env with
     | T_LCURLY ->
-        _object restricted_error env
+        object_ restricted_error env
     | T_LBRACKET ->
-        _array restricted_error env
+        array_ restricted_error env
     | _ ->
         let loc, id = Parse.identifier_with_type env restricted_error in
         loc, Pattern.Identifier id

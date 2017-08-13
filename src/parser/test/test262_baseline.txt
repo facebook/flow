@@ -477,17 +477,9 @@ language/expressions/assignment/dstr-array-elem-trlg-iter-rest-rtrn-close.js: Un
 language/expressions/assignment/dstr-array-elem-trlg-iter-rest-rtrn-close.js: Unexpected parse error:
   (70, 26) to (70, 27): Unexpected token ]
 
-language/expressions/assignment/dstr-array-rest-before-element.js: Missing parse error
-
-language/expressions/assignment/dstr-array-rest-before-element.js: Missing parse error
-
 language/expressions/assignment/dstr-array-rest-before-elision.js: Missing parse error
 
 language/expressions/assignment/dstr-array-rest-before-elision.js: Missing parse error
-
-language/expressions/assignment/dstr-array-rest-before-rest.js: Missing parse error
-
-language/expressions/assignment/dstr-array-rest-before-rest.js: Missing parse error
 
 language/expressions/assignment/dstr-array-rest-elision-invalid.js: Missing parse error
 
@@ -677,10 +669,6 @@ language/expressions/assignment/dstr-obj-prop-nested-obj-yield-expr.js: Unexpect
 
 language/expressions/assignment/dstr-obj-prop-nested-obj-yield-ident-valid.js: Unexpected parse error:
   (25, 18) to (25, 19): Unexpected token =
-
-language/expressions/assignment/dstr-obj-rest-not-last-element-invalid.js: Missing parse error
-
-language/expressions/assignment/dstr-obj-rest-not-last-element-invalid.js: Missing parse error
 
 language/expressions/assignment/target-cover-newtarget.js: Missing parse error
 
@@ -4397,5 +4385,5 @@ language/white-space/mongolian-vowel-separator.js: Missing parse error
 language/white-space/mongolian-vowel-separator.js: Missing parse error
 
 === Summary ===
-Passed: 53457 (96.64%)
-Failed: 1859 (3.36%)
+Passed: 53463 (96.65%)
+Failed: 1853 (3.35%)
