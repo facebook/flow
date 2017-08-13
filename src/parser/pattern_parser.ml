@@ -9,6 +9,7 @@
  *)
 
 open Token
+open Parser_common
 open Parser_env
 open Ast
 
@@ -24,19 +25,20 @@ module Pattern
     let rec properties env acc = Ast.Expression.Object.(function
       | [] -> List.rev acc
       | Property (loc, { Property.key; value; shorthand; _ })::remaining ->
-          let key = Property.(match key with
-          | Literal lit -> Pattern.Object.Property.Literal lit
-          | Identifier id -> Pattern.Object.Property.Identifier id
-          | PrivateName _ -> failwith "Internal Error: Found object private prop"
-          | Computed expr -> Pattern.Object.Property.Computed expr) in
-          let pattern = Property.(match value with
-          | Init t -> from_expr env t
-          | Get (loc, f)
-          | Set (loc, f) ->
+          let key = match key with
+          | Property.Literal lit -> Pattern.Object.Property.Literal lit
+          | Property.Identifier id -> Pattern.Object.Property.Identifier id
+          | Property.PrivateName _ -> failwith "Internal Error: Found object private prop"
+          | Property.Computed expr -> Pattern.Object.Property.Computed expr
+          in
+          let pattern = match value with
+          | Property.Init t -> from_expr env t
+          | Property.Get (loc, f)
+          | Property.Set (loc, f) ->
             (* these should never happen *)
             error_at env (loc, Parse_error.UnexpectedIdentifier);
             loc, Pattern.Expression (loc, Ast.Expression.Function f)
-          ) in
+          in
           let acc = Pattern.(Object.Property (loc, { Object.Property.
             key;
             pattern;
@@ -53,9 +55,9 @@ module Pattern
           properties env acc remaining
     ) in
 
-    fun env (loc, obj) ->
+    fun env (loc, { Ast.Expression.Object.properties = props }) ->
       loc, Pattern.(Object { Object.
-        properties = properties env [] obj.Ast.Expression.Object.properties;
+        properties = properties env [] props;
         typeAnnotation = None;
       })
 
@@ -79,18 +81,18 @@ module Pattern
           error_at env (loc, Parse_error.ElementAfterRestElement);
           elements env acc remaining
       | Some (Expression (loc, expr))::remaining ->
-          let acc = Some Pattern.Array.(Element (from_expr env (loc, expr))) :: acc in
+          let acc = Some (Pattern.Array.Element (from_expr env (loc, expr))) :: acc in
           elements env acc remaining
       | None::remaining ->
           elements env (None::acc) remaining
     )
     in
 
-    fun env (loc, arr) ->
-      loc, Pattern.(Array { Array.
-        elements = elements env [] arr.Ast.Expression.Array.elements;
+    fun env (loc, { Ast.Expression.Array.elements = elems }) ->
+      loc, Pattern.Array { Pattern.Array.
+        elements = elements env [] elems;
         typeAnnotation = None;
-      })
+      }
 
   and from_expr env (loc, expr) =
     Ast.Expression.(match expr with
@@ -108,15 +110,16 @@ module Pattern
   (* Parse object destructuring pattern *)
   let rec object_ restricted_error =
     let rec property env =
-      let start_loc = Peek.loc env in
-      if Expect.maybe env T_ELLIPSIS
-      then begin
-        let argument = pattern env restricted_error in
-        let loc = Loc.btwn start_loc (fst argument) in
-        Some Pattern.Object.(RestProperty (loc, RestProperty.({
+      if Peek.token env = T_ELLIPSIS then begin
+        let loc, argument = with_loc (fun env ->
+          Expect.token env T_ELLIPSIS;
+          pattern env restricted_error
+        ) env in
+        Some Pattern.Object.(RestProperty (loc, { RestProperty.
           argument
-        })))
+        }))
       end else begin
+        let start_loc = Peek.loc env in
         let key = Ast.Expression.Object.Property.(
           match Parse.object_key env with
           | _, Literal lit -> Pattern.Object.Property.Literal lit
@@ -174,23 +177,17 @@ module Pattern
           then Expect.token env T_COMMA;
           properties env (prop::acc)
         | None -> properties env acc)
-
-    in fun env ->
-      let start_loc = Peek.loc env in
+    in
+    with_loc (fun env ->
       Expect.token env T_LCURLY;
       let properties = properties env [] in
-      let end_loc = Peek.loc env in
       Expect.token env T_RCURLY;
-      let end_loc, typeAnnotation =
-        if Peek.token env = T_COLON then
-          let typeAnnotation = Type.annotation env in
-          fst typeAnnotation, Some typeAnnotation
-        else end_loc, None
+      let typeAnnotation =
+        if Peek.token env = T_COLON then Some (Type.annotation env)
+        else None
       in
-      Loc.btwn start_loc end_loc, Pattern.(Object Object.({
-        properties;
-        typeAnnotation;
-      }))
+      Pattern.Object { Pattern.Object.properties; typeAnnotation; }
+    )
 
   (* Parse array destructuring pattern *)
   and array_ restricted_error =
@@ -202,13 +199,13 @@ module Pattern
         Expect.token env T_COMMA;
         elements env (None::acc)
       | T_ELLIPSIS ->
-        let start_loc = Peek.loc env in
-        Expect.token env T_ELLIPSIS;
-        let argument = pattern env restricted_error in
-        let loc = Loc.btwn start_loc (fst argument) in
-        let element = Pattern.Array.(RestElement (loc, RestElement.({
+        let loc, argument = with_loc (fun env ->
+          Expect.token env T_ELLIPSIS;
+          pattern env restricted_error
+        ) env in
+        let element = Pattern.Array.(RestElement (loc, { RestElement.
           argument;
-        }))) in
+        })) in
         elements env ((Some element)::acc)
       | _ ->
         let pattern = pattern env restricted_error in
@@ -226,23 +223,17 @@ module Pattern
         let element = Pattern.Array.(Element pattern) in
         if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
         elements env ((Some element)::acc)
-
-    in fun env ->
-      let start_loc = Peek.loc env in
+    in
+    with_loc (fun env ->
       Expect.token env T_LBRACKET;
       let elements = elements env [] in
-      let end_loc = Peek.loc env in
       Expect.token env T_RBRACKET;
-      let end_loc, typeAnnotation =
-        if Peek.token env = T_COLON then
-          let typeAnnotation = Type.annotation env in
-          fst typeAnnotation, Some typeAnnotation
-        else end_loc, None
+      let typeAnnotation =
+        if Peek.token env = T_COLON then Some (Type.annotation env)
+        else None
       in
-      Loc.btwn start_loc end_loc, Pattern.(Array Array.({
-        elements;
-        typeAnnotation;
-      }))
+      Pattern.Array { Pattern.Array.elements; typeAnnotation; }
+    )
 
   and pattern env restricted_error =
     match Peek.token env with
