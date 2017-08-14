@@ -316,8 +316,6 @@ language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-w
   Missing parse error
 language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-let-declaration.js (default)
   Missing parse error
-language/expressions/arrow-function/syntax/arrowparameters-bindingidentifier-yield.js (default)
-  Unexpected token => at (14, 15) to (14, 17)
 language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates.js (default)
   Missing parse error
 language/expressions/arrow-function/syntax/early-errors/use-strict-with-non-simple-param.js (strict mode)
@@ -328,8 +326,6 @@ language/expressions/assignment/dstr-array-elem-init-yield-expr.js (strict mode)
   Unexpected token ] at (26, 21) to (26, 22)
 language/expressions/assignment/dstr-array-elem-init-yield-expr.js (default)
   Unexpected token ] at (26, 21) to (26, 22)
-language/expressions/assignment/dstr-array-elem-init-yield-ident-valid.js (default)
-  Unexpected token ] at (25, 21) to (25, 22)
 language/expressions/assignment/dstr-array-elem-iter-rtrn-close-err.js (strict mode)
   Unexpected token ] at (53, 21) to (53, 22)
 language/expressions/assignment/dstr-array-elem-iter-rtrn-close-err.js (default)
@@ -350,8 +346,6 @@ language/expressions/assignment/dstr-array-elem-nested-array-yield-expr.js (stri
   Unexpected token ] at (28, 18) to (28, 19)
 language/expressions/assignment/dstr-array-elem-nested-array-yield-expr.js (default)
   Unexpected token ] at (28, 18) to (28, 19)
-language/expressions/assignment/dstr-array-elem-nested-array-yield-ident-valid.js (default)
-  Unexpected token ] at (25, 18) to (25, 19)
 language/expressions/assignment/dstr-array-elem-nested-obj-yield-expr.js (strict mode)
   Unexpected token = at (26, 14) to (26, 15)
 language/expressions/assignment/dstr-array-elem-nested-obj-yield-expr.js (default)
@@ -364,8 +358,6 @@ language/expressions/assignment/dstr-array-elem-target-yield-expr.js (strict mod
   Unexpected token ] at (28, 18) to (28, 19)
 language/expressions/assignment/dstr-array-elem-target-yield-expr.js (default)
   Unexpected token ] at (28, 18) to (28, 19)
-language/expressions/assignment/dstr-array-elem-target-yield-valid.js (default)
-  Unexpected token ] at (25, 18) to (25, 19)
 language/expressions/assignment/dstr-array-elem-trlg-iter-list-rtrn-close-err.js (strict mode)
   Unexpected token ] at (59, 19) to (59, 20)
 language/expressions/assignment/dstr-array-elem-trlg-iter-list-rtrn-close-err.js (default)
@@ -418,8 +410,6 @@ language/expressions/assignment/dstr-array-rest-nested-array-yield-expr.js (stri
   Unexpected token ] at (28, 21) to (28, 22)
 language/expressions/assignment/dstr-array-rest-nested-array-yield-expr.js (default)
   Unexpected token ] at (28, 21) to (28, 22)
-language/expressions/assignment/dstr-array-rest-nested-array-yield-ident-valid.js (default)
-  Unexpected token ] at (25, 21) to (25, 22)
 language/expressions/assignment/dstr-array-rest-nested-obj-yield-expr.js (strict mode)
   Unexpected token = at (26, 17) to (26, 18)
 language/expressions/assignment/dstr-array-rest-nested-obj-yield-expr.js (default)
@@ -430,14 +420,10 @@ language/expressions/assignment/dstr-array-rest-yield-expr.js (strict mode)
   Unexpected token ] at (27, 20) to (27, 21)
 language/expressions/assignment/dstr-array-rest-yield-expr.js (default)
   Unexpected token ] at (27, 20) to (27, 21)
-language/expressions/assignment/dstr-array-rest-yield-ident-valid.js (default)
-  Unexpected token ] at (25, 20) to (25, 21)
 language/expressions/assignment/dstr-obj-id-identifier-yield-expr.js (default)
   Missing parse error
 language/expressions/assignment/dstr-obj-id-identifier-yield-ident-invalid.js (strict mode)
   Missing parse error
-language/expressions/assignment/dstr-obj-id-identifier-yield-ident-valid.js (default)
-  Unexpected token , at (26, 22) to (26, 23)
 language/expressions/assignment/dstr-obj-id-init-assignment-missing.js (strict mode)
   Unexpected token = at (24, 13) to (24, 14)
 language/expressions/assignment/dstr-obj-id-init-assignment-missing.js (default)
@@ -500,14 +486,10 @@ language/expressions/assignment/dstr-obj-id-init-yield-ident-valid.js (default)
   Unexpected token = at (25, 13) to (25, 14)
 language/expressions/assignment/dstr-obj-id-simple-strict.js (strict mode)
   Missing parse error
-language/expressions/assignment/dstr-obj-prop-elem-init-yield-ident-invalid.js (strict mode)
-  Missing parse error
 language/expressions/assignment/dstr-obj-prop-elem-target-yield-expr.js (strict mode)
   Unexpected token ] at (27, 21) to (27, 22)
 language/expressions/assignment/dstr-obj-prop-elem-target-yield-expr.js (default)
   Unexpected token ] at (27, 21) to (27, 22)
-language/expressions/assignment/dstr-obj-prop-elem-target-yield-ident-valid.js (default)
-  Unexpected token ] at (25, 21) to (25, 22)
 language/expressions/assignment/dstr-obj-prop-nested-array-invalid.js (strict mode)
   Missing parse error
 language/expressions/assignment/dstr-obj-prop-nested-array-invalid.js (default)
@@ -516,8 +498,6 @@ language/expressions/assignment/dstr-obj-prop-nested-array-yield-expr.js (strict
   Unexpected token ] at (26, 24) to (26, 25)
 language/expressions/assignment/dstr-obj-prop-nested-array-yield-expr.js (default)
   Unexpected token ] at (26, 24) to (26, 25)
-language/expressions/assignment/dstr-obj-prop-nested-array-yield-ident-valid.js (default)
-  Unexpected token ] at (25, 24) to (25, 25)
 language/expressions/assignment/dstr-obj-prop-nested-obj-yield-expr.js (strict mode)
   Unexpected token = at (26, 18) to (26, 19)
 language/expressions/assignment/dstr-obj-prop-nested-obj-yield-expr.js (default)
@@ -628,6 +608,8 @@ language/expressions/async-generator/early-errors-expression-formals-contains-su
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-contains-super-property.js (default)
   Missing parse error
+language/expressions/async-generator/early-errors-expression-formals-contains-yield-expr.js (default)
+  Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-contains-yield.js (default)
   Missing parse error
 language/expressions/async-generator/early-errors-expression-yield-as-function-binding-identifier.js (default)
@@ -716,6 +698,8 @@ language/expressions/class/async-gen-method-yield-spread-obj.js (strict mode)
   Unexpected token , at (37, 16) to (37, 17)
 language/expressions/class/async-gen-method-yield-spread-obj.js (default)
   Unexpected token , at (37, 16) to (37, 17)
+language/expressions/class/gen-method-param-dflt-yield.js (default)
+  Missing parse error
 language/expressions/class/gen-method-static-yield-as-binding-identifier.js (default)
   Missing parse error
 language/expressions/class/gen-method-static-yield-as-identifier-reference.js (default)
@@ -748,6 +732,12 @@ language/expressions/class/gen-method-yield-spread-obj.js (strict mode)
   Unexpected token , at (35, 16) to (35, 17)
 language/expressions/class/gen-method-yield-spread-obj.js (default)
   Unexpected token , at (35, 16) to (35, 17)
+language/expressions/class/method-param-dflt-yield.js (default)
+  Missing parse error
+language/expressions/class/static-gen-method-param-dflt-yield.js (default)
+  Missing parse error
+language/expressions/class/static-method-param-dflt-yield.js (default)
+  Missing parse error
 language/expressions/function/early-body-super-call.js (strict mode)
   Missing parse error
 language/expressions/function/early-body-super-call.js (default)
@@ -790,6 +780,8 @@ language/expressions/generators/named-yield-spread-obj.js (strict mode)
   Unexpected token , at (29, 14) to (29, 15)
 language/expressions/generators/named-yield-spread-obj.js (default)
   Unexpected token , at (29, 14) to (29, 15)
+language/expressions/generators/param-dflt-yield.js (default)
+  Missing parse error
 language/expressions/generators/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/expressions/generators/use-strict-with-non-simple-param.js (default)
@@ -826,8 +818,6 @@ language/expressions/object/accessor-name-computed-yield-expr.js (strict mode)
   Unexpected token ] at (24, 14) to (24, 15)
 language/expressions/object/accessor-name-computed-yield-expr.js (default)
   Unexpected token ] at (24, 14) to (24, 15)
-language/expressions/object/accessor-name-computed-yield-id.js (default)
-  Unexpected token ] at (24, 12) to (24, 13)
 language/expressions/object/method-definition/async-gen-yield-as-binding-identifier.js (default)
   Missing parse error
 language/expressions/object/method-definition/async-gen-yield-as-identifier-reference.js (default)
@@ -906,8 +896,6 @@ language/expressions/object/method-definition/generator-param-redecl-let.js (def
   Missing parse error
 language/expressions/object/method-definition/generator-prop-name-yield-expr.js (default)
   Unexpected token ] at (18, 11) to (18, 12)
-language/expressions/object/method-definition/generator-prop-name-yield-id.js (default)
-  Unexpected token ] at (16, 9) to (16, 10)
 language/expressions/object/method-definition/generator-super-call-body.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/generator-super-call-body.js (default)
@@ -920,16 +908,12 @@ language/expressions/object/method-definition/generator-use-strict-with-non-simp
   Missing parse error
 language/expressions/object/method-definition/generator-use-strict-with-non-simple-param.js (default)
   Missing parse error
-language/expressions/object/method-definition/name-param-init-yield.js (default)
-  Unexpected token ) at (15, 18) to (15, 19)
 language/expressions/object/method-definition/name-param-redecl.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/name-param-redecl.js (default)
   Missing parse error
 language/expressions/object/method-definition/name-prop-name-yield-expr.js (default)
   Unexpected token ] at (18, 10) to (18, 11)
-language/expressions/object/method-definition/name-prop-name-yield-id.js (default)
-  Unexpected token ] at (15, 8) to (15, 9)
 language/expressions/object/method-definition/name-super-call-body.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/name-super-call-body.js (default)
@@ -1035,10 +1019,6 @@ language/global-code/super-prop-arrow.js (default)
 language/global-code/super-prop.js (strict mode)
   Missing parse error
 language/global-code/super-prop.js (default)
-  Missing parse error
-language/global-code/yield-non-strict.js (default)
-  Unexpected token = at (23, 8) to (23, 9)
-language/global-code/yield-strict.js (strict mode)
   Missing parse error
 language/identifiers/part-digits-via-escape-hex.js (strict mode)
   Unexpected token ILLEGAL at (10, 5) to (10, 6)
@@ -1261,8 +1241,6 @@ language/module-code/parse-err-hoist-lex-fun.js (default)
 language/module-code/parse-err-hoist-lex-gen.js (strict mode)
   Missing parse error
 language/module-code/parse-err-hoist-lex-gen.js (default)
-  Missing parse error
-language/module-code/parse-err-yield.js (strict mode)
   Missing parse error
 language/module-code/parse-err-yield.js (default)
   Missing parse error
@@ -1696,8 +1674,6 @@ language/statements/for-in/dstr-obj-id-identifier-yield-ident-invalid.js (strict
   Missing parse error
 language/statements/for-in/dstr-obj-id-simple-strict.js (strict mode)
   Missing parse error
-language/statements/for-in/dstr-obj-prop-elem-init-yield-ident-invalid.js (strict mode)
-  Missing parse error
 language/statements/for-in/dstr-obj-prop-nested-array-invalid.js (strict mode)
   Missing parse error
 language/statements/for-in/dstr-obj-prop-nested-array-invalid.js (default)
@@ -1750,8 +1726,6 @@ language/statements/for-of/dstr-array-elem-init-yield-expr.js (strict mode)
   Unexpected token ] at (34, 17) to (34, 18)
 language/statements/for-of/dstr-array-elem-init-yield-expr.js (default)
   Unexpected token ] at (34, 17) to (34, 18)
-language/statements/for-of/dstr-array-elem-init-yield-ident-valid.js (default)
-  Unexpected token ] at (33, 17) to (33, 18)
 language/statements/for-of/dstr-array-elem-iter-rtrn-close-err.js (strict mode)
   Unexpected token ] at (61, 17) to (61, 18)
 language/statements/for-of/dstr-array-elem-iter-rtrn-close-err.js (default)
@@ -1772,8 +1746,6 @@ language/statements/for-of/dstr-array-elem-nested-array-yield-expr.js (strict mo
   Unexpected token ] at (36, 14) to (36, 15)
 language/statements/for-of/dstr-array-elem-nested-array-yield-expr.js (default)
   Unexpected token ] at (36, 14) to (36, 15)
-language/statements/for-of/dstr-array-elem-nested-array-yield-ident-valid.js (default)
-  Unexpected token ] at (33, 14) to (33, 15)
 language/statements/for-of/dstr-array-elem-nested-obj-invalid.js (strict mode)
   Missing parse error
 language/statements/for-of/dstr-array-elem-nested-obj-invalid.js (default)
@@ -1790,8 +1762,6 @@ language/statements/for-of/dstr-array-elem-target-yield-expr.js (strict mode)
   Unexpected token ] at (36, 14) to (36, 15)
 language/statements/for-of/dstr-array-elem-target-yield-expr.js (default)
   Unexpected token ] at (36, 14) to (36, 15)
-language/statements/for-of/dstr-array-elem-target-yield-valid.js (default)
-  Unexpected token ] at (33, 14) to (33, 15)
 language/statements/for-of/dstr-array-elem-trlg-iter-list-rtrn-close-err.js (strict mode)
   Unexpected token ] at (67, 15) to (67, 16)
 language/statements/for-of/dstr-array-elem-trlg-iter-list-rtrn-close-err.js (default)
@@ -1856,8 +1826,6 @@ language/statements/for-of/dstr-array-rest-nested-array-yield-expr.js (strict mo
   Unexpected token ] at (36, 17) to (36, 18)
 language/statements/for-of/dstr-array-rest-nested-array-yield-expr.js (default)
   Unexpected token ] at (36, 17) to (36, 18)
-language/statements/for-of/dstr-array-rest-nested-array-yield-ident-valid.js (default)
-  Unexpected token ] at (33, 17) to (33, 18)
 language/statements/for-of/dstr-array-rest-nested-obj-invalid.js (strict mode)
   Missing parse error
 language/statements/for-of/dstr-array-rest-nested-obj-invalid.js (default)
@@ -1872,14 +1840,10 @@ language/statements/for-of/dstr-array-rest-yield-expr.js (strict mode)
   Unexpected token ] at (35, 16) to (35, 17)
 language/statements/for-of/dstr-array-rest-yield-expr.js (default)
   Unexpected token ] at (35, 16) to (35, 17)
-language/statements/for-of/dstr-array-rest-yield-ident-valid.js (default)
-  Unexpected token ] at (33, 16) to (33, 17)
 language/statements/for-of/dstr-obj-id-identifier-yield-expr.js (default)
   Missing parse error
 language/statements/for-of/dstr-obj-id-identifier-yield-ident-invalid.js (strict mode)
   Missing parse error
-language/statements/for-of/dstr-obj-id-identifier-yield-ident-valid.js (default)
-  Unexpected token , at (33, 24) to (33, 25)
 language/statements/for-of/dstr-obj-id-init-assignment-missing.js (strict mode)
   Unexpected token = at (32, 9) to (32, 10)
 language/statements/for-of/dstr-obj-id-init-assignment-missing.js (default)
@@ -1942,14 +1906,10 @@ language/statements/for-of/dstr-obj-id-init-yield-ident-valid.js (default)
   Unexpected token = at (33, 9) to (33, 10)
 language/statements/for-of/dstr-obj-id-simple-strict.js (strict mode)
   Missing parse error
-language/statements/for-of/dstr-obj-prop-elem-init-yield-ident-invalid.js (strict mode)
-  Missing parse error
 language/statements/for-of/dstr-obj-prop-elem-target-yield-expr.js (strict mode)
   Unexpected token ] at (35, 17) to (35, 18)
 language/statements/for-of/dstr-obj-prop-elem-target-yield-expr.js (default)
   Unexpected token ] at (35, 17) to (35, 18)
-language/statements/for-of/dstr-obj-prop-elem-target-yield-ident-valid.js (default)
-  Unexpected token ] at (33, 17) to (33, 18)
 language/statements/for-of/dstr-obj-prop-nested-array-invalid.js (strict mode)
   Missing parse error
 language/statements/for-of/dstr-obj-prop-nested-array-invalid.js (default)
@@ -1958,8 +1918,6 @@ language/statements/for-of/dstr-obj-prop-nested-array-yield-expr.js (strict mode
   Unexpected token ] at (34, 20) to (34, 21)
 language/statements/for-of/dstr-obj-prop-nested-array-yield-expr.js (default)
   Unexpected token ] at (34, 20) to (34, 21)
-language/statements/for-of/dstr-obj-prop-nested-array-yield-ident-valid.js (default)
-  Unexpected token ] at (33, 20) to (33, 21)
 language/statements/for-of/dstr-obj-prop-nested-obj-invalid.js (strict mode)
   Missing parse error
 language/statements/for-of/dstr-obj-prop-nested-obj-invalid.js (default)
@@ -2050,14 +2008,14 @@ language/statements/function/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/statements/function/use-strict-with-non-simple-param.js (default)
   Missing parse error
+language/statements/generators/param-dflt-yield.js (default)
+  Missing parse error
 language/statements/generators/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/statements/generators/use-strict-with-non-simple-param.js (default)
   Missing parse error
 language/statements/generators/yield-as-binding-identifier.js (default)
   Missing parse error
-language/statements/generators/yield-as-generator-declaration-binding-identifier.js (default)
-  Unexpected token ; at (15, 14) to (15, 15)
 language/statements/generators/yield-as-identifier-reference.js (default)
   Missing parse error
 language/statements/generators/yield-as-parameter.js (default)
@@ -2128,8 +2086,6 @@ language/statements/labeled/value-await-non-module-escaped.js (default)
   Unexpected token ILLEGAL at (15, 2) to (15, 3)
 language/statements/labeled/value-yield-non-strict-escaped.js (default)
   Unexpected token ILLEGAL at (11, 2) to (11, 3)
-language/statements/labeled/value-yield-non-strict.js (default)
-  Unexpected token : at (12, 5) to (12, 6)
 language/statements/let/redeclaration-error-from-within-strict-mode-function.js (default)
   Missing parse error
 language/statements/let/syntax/attempt-to-redeclare-let-binding-with-function-declaration.js (strict mode)
@@ -2777,5 +2733,5 @@ language/white-space/mongolian-vowel-separator.js (strict mode)
 language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 === Summary ===
-Passed: 53916 (97.49%)
-Failed: 1389 (2.51%)
+Passed: 53938 (97.53%)
+Failed: 1367 (2.47%)
