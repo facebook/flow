@@ -45,40 +45,40 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
     Hh_logger.info "version=%s" Flow_version.version;
 
-    let profiling = Profiling_js.empty in
+    Profiling_js.with_profiling begin fun profiling ->
+      let workers = genv.ServerEnv.workers in
+      let options = genv.ServerEnv.options in
 
-    let workers = genv.ServerEnv.workers in
-    let options = genv.ServerEnv.options in
+      let profiling, parsed, libs, libs_ok, errors =
+        Types_js.init ~profiling ~workers options in
 
-    let profiling, parsed, libs, libs_ok, errors =
-      Types_js.init ~profiling ~workers options in
+      (* if any libs errored, we'll infer but not merge client code *)
+      let should_merge = libs_ok in
 
-    (* if any libs errored, we'll infer but not merge client code *)
-    let should_merge = libs_ok in
+      (* compute initial state *)
+      let profiling, checked, errors =
+        if Options.is_lazy_mode options then
+          profiling, FilenameSet.empty, errors
+        else
+          let parsed = FilenameSet.elements parsed in
+          Types_js.full_check ~profiling ~workers ~focus_targets ~options ~should_merge parsed errors
+      in
 
-    (* compute initial state *)
-    let profiling, checked, errors =
-      if Options.is_lazy_mode options then
-        profiling, FilenameSet.empty, errors
-      else
-        let parsed = FilenameSet.elements parsed in
-        Types_js.full_check ~profiling ~workers ~focus_targets ~options ~should_merge parsed errors
-    in
+      let profiling = sample_init_memory profiling in
 
-    let profiling = sample_init_memory profiling in
+      SharedMem_js.init_done();
 
-    SharedMem_js.init_done();
-
-    (* Return an env that initializes invariants required and maintained by
-       recheck, namely that `files` contains files that parsed successfully, and
-       `errors` contains the current set of errors. *)
-    profiling, { ServerEnv.
-      files = parsed;
-      checked_files = checked;
-      libs;
-      errors;
-      connections = Persistent_connection.empty;
-    }
+      (* Return an env that initializes invariants required and maintained by
+         recheck, namely that `files` contains files that parsed successfully, and
+         `errors` contains the current set of errors. *)
+      profiling, { ServerEnv.
+        files = parsed;
+        checked_files = checked;
+        libs;
+        errors;
+        connections = Persistent_connection.empty;
+      }
+    end
 
 
   let status_log errors =

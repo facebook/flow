@@ -424,24 +424,26 @@ let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
         else acc
       | None -> acc (* complain elsewhere about required module not found *)
     ) resolved_requires [] in
-    let profiling = Profiling_js.empty in
     let errors = !env.ServerEnv.errors in
     let unchanged_checked = !env.ServerEnv.checked_files in
     let parsed = FilenameSet.elements !env.ServerEnv.files in
     let all_dependent_files = FilenameSet.empty in
     let persistent_connections = Some (!env.ServerEnv.connections) in
-    let _profiling, checked, errors = typecheck ~options ~profiling ~workers ~errors
-      ~unchanged_checked ~infer_input
-      ~parsed ~all_dependent_files
-      ~persistent_connections
-      ~make_merge_input:(fun inferred ->
-        Some (
-          inferred,
-          inferred |> List.fold_left (fun map f ->
-            FilenameMap.add f true map
-          ) FilenameMap.empty
-        )
-      ) in
+    let _profiling, (checked, errors) = Profiling_js.with_profiling (fun profiling ->
+      let profiling, checked, errors = typecheck ~options ~profiling ~workers ~errors
+        ~unchanged_checked ~infer_input
+        ~parsed ~all_dependent_files
+        ~persistent_connections
+        ~make_merge_input:(fun inferred ->
+          Some (
+            inferred,
+            inferred |> List.fold_left (fun map f ->
+              FilenameMap.add f true map
+            ) FilenameMap.empty
+          )
+        ) in
+      profiling, (checked, errors)
+    ) in
     env := { !env with ServerEnv.
       checked_files = checked;
       errors
@@ -451,74 +453,74 @@ let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
 let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents filename =
-  let profiling = Profiling_js.empty in
+  let profiling, (cx, errors, warnings, info) = Profiling_js.with_profiling begin fun profiling ->
+    let profiling, (errors, parse_result, info) =
+      parse_contents ~options ~profiling ~check_syntax filename contents in
 
-  let profiling, (errors, parse_result, info) =
-    parse_contents ~options ~profiling ~check_syntax filename contents in
-
-  match parse_result with
-  | Parsing_service_js.Parse_ok ast ->
-      (* override docblock info *)
-      let info =
-        let open Docblock in
-        let flow = match flow info with
-        (* If the file does not specify a @flow pragma, we still want to try
-           to infer something, but the file might be huge and unannotated,
-           which can cause performance issues (including non-termination).
-           To avoid this case, we infer the file using "weak mode." *)
-        | None -> OptInWeak
-        (* Respect @flow pragma *)
-        | Some OptIn -> OptIn
-        (* Respect @flow weak pragma *)
-        | Some OptInWeak -> OptInWeak
-        (* Respect @noflow, which `apply_docblock_overrides` does not by
-           default. Again, large files can cause non-termination, so
-           respecting this pragma gives programmers a way to tell Flow to
-           avoid inference on such files. *)
-        | Some OptOut -> OptInWeak
+    match parse_result with
+    | Parsing_service_js.Parse_ok ast ->
+        (* override docblock info *)
+        let info =
+          let open Docblock in
+          let flow = match flow info with
+          (* If the file does not specify a @flow pragma, we still want to try
+            to infer something, but the file might be huge and unannotated,
+            which can cause performance issues (including non-termination).
+            To avoid this case, we infer the file using "weak mode." *)
+          | None -> OptInWeak
+          (* Respect @flow pragma *)
+          | Some OptIn -> OptIn
+          (* Respect @flow weak pragma *)
+          | Some OptInWeak -> OptInWeak
+          (* Respect @noflow, which `apply_docblock_overrides` does not by
+            default. Again, large files can cause non-termination, so
+            respecting this pragma gives programmers a way to tell Flow to
+            avoid inference on such files. *)
+          | Some OptOut -> OptInWeak
+          in
+          { info with flow = Some flow }
         in
-        { info with flow = Some flow }
-      in
 
-      (* merge *)
-      let profiling, cx = with_timer "Merge" profiling (fun () ->
-        let ensure_checked_dependencies = ensure_checked_dependencies ~options ~workers ~env in
-        Merge_service.merge_contents_context options filename ast info ~ensure_checked_dependencies
-      ) in
+        (* merge *)
+        let profiling, cx = with_timer "Merge" profiling (fun () ->
+          let ensure_checked_dependencies = ensure_checked_dependencies ~options ~workers ~env in
+          Merge_service.merge_contents_context options filename ast info ~ensure_checked_dependencies
+        ) in
 
-      (* Filter out suppressed errors *)
-      let error_suppressions = Context.error_suppressions cx in
-      let lint_settings = Context.lint_settings cx in
-      let errors = Context.errors cx in
-      let errors, warnings, _, _ =
-        Error_suppressions.filter_suppressed_errors error_suppressions lint_settings errors in
+        (* Filter out suppressed errors *)
+        let error_suppressions = Context.error_suppressions cx in
+        let lint_settings = Context.lint_settings cx in
+        let errors = Context.errors cx in
+        let errors, warnings, _, _ =
+          Error_suppressions.filter_suppressed_errors error_suppressions lint_settings errors in
 
-      let warnings = if Options.should_include_warnings options
-        then warnings
-        else Errors.ErrorSet.empty
-      in
+        let warnings = if Options.should_include_warnings options
+          then warnings
+          else Errors.ErrorSet.empty
+        in
 
-      profiling, Some cx, errors, warnings, info
+        profiling, (Some cx, errors, warnings, info)
 
-  | Parsing_service_js.Parse_fail fails ->
-      let errors = match fails with
-      | Parsing_service_js.Parse_error err ->
-          let err = Inference_utils.error_of_parse_error ~source_file:filename err in
-          Errors.ErrorSet.add err errors
-      | Parsing_service_js.Docblock_errors errs ->
-          List.fold_left (fun errors err ->
-            let err = Inference_utils.error_of_docblock_error ~source_file:filename err in
+    | Parsing_service_js.Parse_fail fails ->
+        let errors = match fails with
+        | Parsing_service_js.Parse_error err ->
+            let err = Inference_utils.error_of_parse_error ~source_file:filename err in
             Errors.ErrorSet.add err errors
-          ) errors errs
-      in
-      profiling, None, errors, Errors.ErrorSet.empty, info
+        | Parsing_service_js.Docblock_errors errs ->
+            List.fold_left (fun errors err ->
+              let err = Inference_utils.error_of_docblock_error ~source_file:filename err in
+              Errors.ErrorSet.add err errors
+            ) errors errs
+        in
+        profiling, (None, errors, Errors.ErrorSet.empty, info)
 
-  | Parsing_service_js.Parse_skip
-     (Parsing_service_js.Skip_non_flow_file
-    | Parsing_service_js.Skip_resource_file) ->
-      (* should never happen *)
-      profiling, None, errors, Errors.ErrorSet.empty, info
-
+    | Parsing_service_js.Parse_skip
+       (Parsing_service_js.Skip_non_flow_file
+      | Parsing_service_js.Skip_resource_file) ->
+        (* should never happen *)
+        profiling, (None, errors, Errors.ErrorSet.empty, info)
+  end in
+  profiling, cx, errors, warnings, info
 
 let init_package_heap ~options ~profiling parsed =
   let profiling, () = with_timer ~options "PackageHeap" profiling (fun () ->
@@ -551,7 +553,7 @@ let init_libs ~options ~profiling ~local_errors ~suppressions ~lint_settings ord
    `files` contains files that parsed successfully in the previous
    phase (which could be the init phase or a previous recheck phase)
 *)
-let recheck ~options ~workers ~updates env =
+let recheck_with_profiling ~profiling ~options ~workers ~updates env =
   let errors = env.ServerEnv.errors in
   let debug = Options.is_debug_mode options in
 
@@ -564,8 +566,6 @@ let recheck ~options ~workers ~updates env =
     then FilenameSet.add (Loc.with_suffix file Files.flow_ext) updates
     else updates
   ) updates updates in
-
-  let profiling = Profiling_js.empty in
 
   (* split updates into deleted files and modified files *)
   (** NOTE: We use the term "modified" in the same sense as the underlying file
@@ -753,7 +753,7 @@ let recheck ~options ~workers ~updates env =
       2. files that depend on OLD_M need to be rechecked if: OLD_M's current provider
       is a _changed file_
 
-**)
+  **)
 
   (* remember old modules *)
   let unchanged_checked = FilenameSet.diff env.ServerEnv.checked_files new_or_changed_or_deleted in
@@ -857,19 +857,28 @@ let recheck ~options ~workers ~updates env =
     )
   in
 
-  FlowEventLogger.recheck
-    (** TODO: update log to reflect current terminology **)
-    ~modified_count:new_or_changed_count
-    ~deleted_count
-    ~dependent_file_count:!dependent_file_count
-    ~profiling;
-
+  profiling,
   (* NOTE: unused fields are left in their initial empty state *)
-  { env with ServerEnv.
+  ({ env with ServerEnv.
     files = parsed;
     checked_files = checked;
     errors;
-  }
+  },
+  (new_or_changed_count, deleted_count, !dependent_file_count))
+
+let recheck ~options ~workers ~updates env =
+  let profiling, (env, (modified_count, deleted_count, dependent_file_count)) =
+    Profiling_js.with_profiling (fun profiling ->
+      recheck_with_profiling ~profiling ~options ~workers ~updates env
+    )
+  in
+  FlowEventLogger.recheck
+    (** TODO: update log to reflect current terminology **)
+    ~modified_count
+    ~deleted_count
+    ~dependent_file_count
+    ~profiling;
+  env
 
 let files_to_infer ~workers ~focus_targets parsed_list =
   match focus_targets with

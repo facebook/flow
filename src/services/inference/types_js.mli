@@ -11,17 +11,17 @@
 open Utils_js
 
 val init:
-  profiling:Profiling_js.t ->
+  profiling:Profiling_js.running ->
   workers:Worker.t list option ->
   Options.t ->
-  Profiling_js.t * FilenameSet.t * SSet.t * bool * ServerEnv.errors
+  Profiling_js.running * FilenameSet.t * SSet.t * bool * ServerEnv.errors
 
 val calc_deps:
   options:Options.t ->
-  profiling:Profiling_js.t ->
+  profiling:Profiling_js.running ->
   workers:Worker.t list option ->
   filename list ->
-  Profiling_js.t * (FilenameSet.t FilenameMap.t * filename list FilenameMap.t)
+  Profiling_js.running * (FilenameSet.t FilenameMap.t * filename list FilenameMap.t)
 
 (* incremental typecheck entry point *)
 val recheck:
@@ -32,14 +32,14 @@ val recheck:
 
 (* initial (full) check *)
 val full_check:
-  profiling:Profiling_js.t ->
+  profiling:Profiling_js.running ->
   options:Options.t ->
   workers:Worker.t list option ->
   focus_targets:Loc.filename list ->
   should_merge:bool ->
   filename list ->
   ServerEnv.errors ->
-  Profiling_js.t * Utils_js.FilenameSet.t * ServerEnv.errors
+  Profiling_js.running * Utils_js.FilenameSet.t * ServerEnv.errors
 
 val typecheck_contents:
   options: Options.t ->
@@ -48,7 +48,7 @@ val typecheck_contents:
   ?check_syntax: bool ->
   string ->               (* contents *)
   filename ->             (* fake file-/module name *)
-  Profiling_js.t *
+  Profiling_js.finished *
     Context.t option *
     Errors.ErrorSet.t * (* errors *)
     Errors.ErrorSet.t * (* warnings *)
