@@ -85,6 +85,8 @@ your code until you are happy with the upgrade.
 The Flow version you're upgrading from: ${chalk.bold.magenta(currentVersion)}
 The Flow version you're upgrading to:   ${chalk.bold.green(nextVersion)}
 
+We will assume that your code is valid Flow ${chalk.bold.magenta(currentVersion)} code.
+
 We will be running the following steps to upgrade your codebase. Each step will
 print a short message explaining what it does before it runs, but we won't stop
 to ask you for reconfirmation once we begin upgrading.

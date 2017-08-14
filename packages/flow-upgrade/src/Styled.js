@@ -10,7 +10,7 @@ exports.divider = function divider(): string {
 };
 
 exports.sectionHeader = function sectionHeader(header: string): string {
-  return `${chalk.cyan('#')} ${chalk.bold(header)}`;
+  return chalk.bold(`# ${header}`);
 };
 
 exports.upgradeTitle = function upgradeTitle(title: string, n: number): string {
