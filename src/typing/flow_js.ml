@@ -9103,7 +9103,7 @@ and multiflow_partial =
         (* If the rest parameter is consuming N elements, then drop N elements
          * from the rest parameter *)
         let rest_reason = reason_of_t rest_param in
-        mk_tvar_where cx rest_reason (fun tout ->
+        mk_tvar_derivable_where cx rest_reason (fun tout ->
           let i = List.length rev_elems in
           rec_flow cx trace (rest_param, ArrRestT (orig_rest_reason, i, tout))
         )
