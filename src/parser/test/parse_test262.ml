@@ -17,8 +17,10 @@ type error_reason =
   | Missing_parse_error
   | Unexpected_parse_error of (Loc.t * Parser_common.Error.t)
 
+type test_name = string * bool (* filename * strict *)
+
 type test_result = {
-  filename: string;
+  name: test_name;
   result: (unit, error_reason) result;
 }
 
@@ -29,7 +31,7 @@ let is_fixture =
     let len = String.length filename in
     len >= slen && String.sub filename (len - slen) slen = suffix
 
-let tests_of_path path =
+let files_of_path path =
   let filter fn = not (is_fixture fn) in
   File_utils.fold_files ~file_only:true ~filter [path] (fun kind acc ->
     match kind with
@@ -134,6 +136,19 @@ module Frontmatter = struct
     |> opt_cons "es5id" fm.es5id
     |> opt_cons "es6id" fm.es6id
     |> opt_cons "esid" fm.esid
+    |> (fun acc ->
+          let flags = match fm.flags with
+          | Only_strict -> Some "onlyStrict"
+          | No_strict -> Some "noStrict"
+          | Raw -> Some "raw"
+          | Both_strictnesses -> None
+          in
+          match flags with
+          | Some flags ->
+            (Printf.sprintf "flags: [%s]" flags)::acc
+          | None ->
+            acc
+       )
     |> List.rev
     |> String.concat "\n"
 
@@ -149,56 +164,76 @@ let options_by_strictness frontmatter =
   let o = Parser_env.default_parse_options in
   match frontmatter.flags with
   | Both_strictnesses ->
-    [{ o with use_strict = false }; { o with use_strict = true }]
+    failwith "should have been split by split_by_strictness"
   | Only_strict ->
-    [{ o with use_strict = true }]
+    { o with use_strict = true }
   | No_strict
   | Raw ->
-    [{ o with use_strict = false }]
+    { o with use_strict = false }
 
-let run_test acc filename =
+let split_by_strictness frontmatter =
+  let open Frontmatter in
+  match frontmatter.flags with
+  | Both_strictnesses ->
+    [
+      { frontmatter with flags = Only_strict };
+      { frontmatter with flags = No_strict };
+    ]
+  | Only_strict
+  | No_strict
+  | Raw ->
+    [frontmatter]
+
+let parse_test acc filename =
   let content = Sys_utils.cat filename in
   match Frontmatter.of_string content with
   | Some frontmatter ->
-    List.fold_left (fun acc parse_options ->
-      let (_ast, errors) = Parser_flow.program_file
-        ~fail:false ~parse_options:(Some parse_options)
-        content (Some (Loc.SourceFile filename)) in
-      let result = match errors, Frontmatter.negative_phase frontmatter with
-      | [], Some "early" ->
-        (* expected a parse error, didn't get it *)
-        Error Missing_parse_error
-      | _, Some "early" ->
-        (* expected a parse error, got one *)
-        Ok ()
-      | [], Some _
-      | [], None ->
-        (* did not expect a parse error, didn't get one *)
-        Ok ()
-      | err::_, Some _
-      | err::_, None ->
-        (* did not expect a parse error, got one incorrectly *)
-        Error (Unexpected_parse_error err)
-      in
-      { filename; result }::acc
-    ) acc (options_by_strictness frontmatter)
+    List.fold_left (fun acc frontmatter ->
+      let input = (filename, Frontmatter.(frontmatter.flags = Only_strict)) in
+      (input, frontmatter, content)::acc
+    ) acc (split_by_strictness frontmatter)
   | None ->
     acc
 
-let print_error ~strip_root filename err =
+let run_test (name, frontmatter, content) =
+  let (filename, use_strict) = name in
+  let parse_options = Parser_env.({ default_parse_options with use_strict }) in
+  let (_ast, errors) = Parser_flow.program_file
+    ~fail:false ~parse_options:(Some parse_options)
+    content (Some (Loc.SourceFile filename)) in
+  let result = match errors, Frontmatter.negative_phase frontmatter with
+  | [], Some "early" ->
+    (* expected a parse error, didn't get it *)
+    Error Missing_parse_error
+  | _, Some "early" ->
+    (* expected a parse error, got one *)
+    Ok ()
+  | [], Some _
+  | [], None ->
+    (* did not expect a parse error, didn't get one *)
+    Ok ()
+  | err::_, Some _
+  | err::_, None ->
+    (* did not expect a parse error, got one incorrectly *)
+    Error (Unexpected_parse_error err)
+  in
+  { name; result }
+
+let print_error ~strip_root (filename, use_strict) err =
   let filename = match strip_root with
   | Some root ->
     let len = String.length root in
     String.sub filename len (String.length filename - len)
   | None -> filename
   in
+  let strict = if use_strict then "(strict mode)" else "(default)" in
   let cr = if Unix.isatty Unix.stdout then "\r" else "" in
   match err with
   | Missing_parse_error ->
-    Printf.printf "%s%s: Missing parse error\n\n%!" cr filename
+    Printf.printf "%s%s %s\n  Missing parse error\n%!" cr filename strict
   | Unexpected_parse_error (loc, err) ->
-    Printf.printf "%s%s: Unexpected parse error:\n  %s: %s\n\n%!"
-      cr filename (Loc.to_string loc) (Parse_error.PP.error err)
+    Printf.printf "%s%s %s\n  %s at %s\n%!"
+      cr filename strict (Parse_error.PP.error err) (Loc.to_string loc)
 
 module Progress_bar = struct
   type t = {
@@ -270,22 +305,22 @@ let main () =
   let quiet = !verbose_ref = Quiet in
   let _verbose = !verbose_ref = Verbose in
 
-  let tests = tests_of_path path |> List.sort String.compare in
+  let files = files_of_path path |> List.sort String.compare in
+  let tests = List.fold_left parse_test [] files |> List.rev in
   let test_count = List.length tests in
 
   let bar =
     if quiet || not (Unix.isatty Unix.stdout) then None
     else Some (Progress_bar.make ~chunks:40 ~frequency:0.1 test_count) in
-  let (passed, failed) = List.fold_left (fun (passed_acc, failed_acc) filename ->
+
+  let (passed, failed) = List.fold_left (fun (passed_acc, failed_acc) test ->
     let (passed, failed) =
-      run_test [] filename
-      |> List.fold_left (fun (passed, failed) { filename; result } ->
-        match result with
-        | Ok _ -> (succ passed, failed)
-        | Error err ->
-          print_error ~strip_root filename err;
-          (passed, succ failed)
-      ) (0, 0)
+      let { name; result } = run_test test in
+      match result with
+      | Ok _ -> (1, 0)
+      | Error err ->
+        print_error ~strip_root name err;
+        (0, 1)
     in
     let acc = (passed_acc + passed, failed_acc + failed) in
     Option.iter ~f:(fun bar ->
