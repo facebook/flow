@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { MyEnhancedComponent, MyEnhancedFunctionComponent } from './hoc5-comp.js';
+import { MyEnhancedComponent, MyEnhancedFunctionComponent } from './hoc-diff-comp.js';
 
 <MyEnhancedComponent />; // Error: Needs `a` and `b`.
 <MyEnhancedComponent a={1} b={2} />; // OK
