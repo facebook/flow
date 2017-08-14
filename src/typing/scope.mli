@@ -114,8 +114,9 @@ val add_refi : Key_map.key -> refi_binding -> t -> unit
 val remove_refi : Key_map.key -> t -> unit
 val get_refi : Key_map.key -> t -> refi_binding option
 val havoc_refi : Key_map.key -> t -> unit
-val filter_refis_using_propname : string -> 'a Key_map.t -> 'a Key_map.t
-val havoc_refis : ?name:string -> t -> unit
+val filter_refis_using_propname : private_:bool -> string -> 'a Key_map.t -> 'a Key_map.t
+val havoc_refis : ?name:string -> private_:bool -> t -> unit
+val havoc_all_refis : ?name:string -> t -> unit
 val havoc : t -> unit
 val reset : Loc.t -> t -> unit
 val is_lex : t -> bool

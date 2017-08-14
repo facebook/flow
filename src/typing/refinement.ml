@@ -35,7 +35,6 @@ let rec key = Ast.Expression.(function
   (* foo.bar.baz -> Chain [Id baz; Id bar; Id foo] *)
    property = (
     Member.PropertyIdentifier (_, name)
-    | Member.PropertyPrivateName (_, (_, name))
     | Member.PropertyExpression (_, Ast.Expression.Literal {
         Ast.Literal.value = Ast.Literal.String name;
         _;
@@ -48,6 +47,15 @@ let rec key = Ast.Expression.(function
   match key _object with
   | Some (base, chain) ->
     Some (base, Key.Prop name :: chain)
+  | None -> None
+  )
+
+| _, Member {
+    Member._object; property = Member.PropertyPrivateName (_, (_, name)); _
+  } -> (
+  match key _object with
+  | Some (base, chain) ->
+    Some (base, Key.PrivateField name :: chain)
   | None -> None
   )
 

@@ -3313,8 +3313,7 @@ and assignment cx loc = Ast.Expression.(function
               (* flow type to object property itself *)
               let class_entries = Env.get_class_entries () in
               Flow.flow cx (o, SetPrivatePropT (reason, name, class_entries, false, t));
-              (* TODO (T20813534): We do not need to havoc heap refinements here. *)
-              post_assignment_havoc name expr lhs_loc t
+              post_assignment_havoc ~private_:true name expr lhs_loc t
             )
 
         (* _object.name = e *)
@@ -3332,7 +3331,7 @@ and assignment cx loc = Ast.Expression.(function
 
               (* flow type to object property itself *)
               Flow.flow cx (o, SetPropT (reason, Named (prop_reason, name), t));
-              post_assignment_havoc name expr lhs_loc t
+              post_assignment_havoc ~private_:false name expr lhs_loc t
             )
 
         (* _object[index] = e *)
@@ -4558,11 +4557,11 @@ and check_default_pattern cx left right =
       end
     | _ -> ()
 
-and post_assignment_havoc name expr lhs_loc t =
+and post_assignment_havoc ~private_ name expr lhs_loc t =
   (* types involved in the assignment are computed
      in pre-havoc environment. it's the assignment itself
      which clears refis *)
-  Env.havoc_heap_refinements_with_propname name;
+  Env.havoc_heap_refinements_with_propname ~private_ name;
 
   (* add type refinement if LHS is a pattern we handle *)
   match Refinement.key expr with

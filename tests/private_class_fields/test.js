@@ -142,3 +142,47 @@ class Annotations {
     Annotations.#sr = 3;
   }
 }
+
+class RefinementClashes {
+  // Refinements on private fields can be considered separately from the
+  // rest of heap refinements
+ #p: number;
+ p: number;
+ static q: number;
+ static #q: number;
+ test1() {
+   if (this.#p === 3) {
+     (this.p: 3); // Error, this.#p doesn't refine this.p
+     (this.#p: 3);
+     this.p = 4;
+     (this.p: 4);
+     (this.#p: 4); // Error, this.p doesnt refine this.#p
+     (this.#p: 3); // this.p doesnt havoc this.#p
+     this.#p = 3;
+     (this.p: 3); // Error, this.#p doesnt refine this.p
+     (this.p: 4); // this.#p doesnt havoc this.p
+   }
+   (this.#p: 3); // Error, Havoc happens as normal
+ }
+ test2() {
+   if (RefinementClashes.#q === 3) {
+     (RefinementClashes.q: 3); // Error, RefinementClashes.#q doesn't refine RefinementClashes.q
+     (RefinementClashes.#q: 3);
+     RefinementClashes.q = 4;
+     (RefinementClashes.q: 4);
+     (RefinementClashes.#q: 4); // Error, RefinementClashes.q doesnt refine RefinementClashes.#q
+     (RefinementClashes.#q: 3); // RefinementClashes.q doesnt havoc RefinementClashes.#q
+     RefinementClashes.#q = 3;
+     (RefinementClashes.q: 3); // Error, RefinementClashes.#q doesnt refine RefinementClashes.q
+     (RefinementClashes.q: 4); // RefinementClashes.#q doesnt havoc RefinementClashes.q
+   }
+   (RefinementClashes.#q: 3); // Error, Havoc happens as normal
+ }
+ test3(other: RefinementClashes) {
+   if (this.#p === 3) {
+     (this.#p: 3);
+     other.#p = 3;
+     (this.#p: 3); // Error, other.#p does havoc this.#p
+   }
+  }
+}

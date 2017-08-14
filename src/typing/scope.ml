@@ -271,7 +271,7 @@ type t = {
   id: int;
   kind: kind;
   mutable entries: Entry.t SMap.t;
-  mutable refis: refi_binding Key_map.t
+  mutable refis: refi_binding Key_map.t;
 }
 
 (* ctor helper *)
@@ -279,7 +279,7 @@ let fresh_impl kind = {
   id = mk_id ();
   kind;
   entries = SMap.empty;
-  refis = Key_map.empty
+  refis = Key_map.empty;
 }
 
 (* return a fresh scope of the most common kind (var) *)
@@ -348,32 +348,36 @@ let havoc_refi key scope =
     Key_map.filter (fun k _ -> Key.compare key k != 0)
 
 (* helper: filter all refis whose expressions involve the given name *)
-let filter_refis_using_propname propname refis =
+let filter_refis_using_propname ~private_ propname refis =
   refis |> Key_map.filter (fun key _ ->
-    not (Key.uses_propname propname key)
+    not (Key.uses_propname ~private_ propname key)
   )
 
 (* havoc a scope's refinements:
    if name is passed, clear refis whose expressions involve it.
    otherwise, clear them all
  *)
-let havoc_refis ?name scope =
+let havoc_refis ?name ~private_ scope =
   scope.refis <- match name with
   | Some name ->
-    scope.refis |> (filter_refis_using_propname name)
+    scope.refis |> (filter_refis_using_propname ~private_ name)
   | None ->
     Key_map.empty
+
+let havoc_all_refis ?name scope =
+  havoc_refis ?name ~private_:false scope;
+  havoc_refis ?name ~private_:true scope
 
 (* havoc a scope:
    - clear all refinements
    - reset specific types of entries to their general types
  *)
 let havoc scope =
-  havoc_refis scope;
+  havoc_all_refis scope;
   update_entries Entry.havoc scope
 
 let reset loc scope =
-  havoc_refis scope;
+  havoc_all_refis scope;
   update_entries (Entry.reset loc) scope
 
 let is_lex scope =

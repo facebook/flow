@@ -1300,11 +1300,10 @@ let havoc_vars = Scope.(
    If name is passed, clear only those refis that depend on it.
    Real variables are left untouched.
  *)
-let havoc_heap_refinements () =
-  iter_scopes Scope.havoc_refis
+let havoc_heap_refinements () = iter_scopes (Scope.havoc_all_refis)
 
-let havoc_heap_refinements_with_propname name =
-  iter_scopes (Scope.havoc_refis ~name)
+let havoc_heap_refinements_with_propname ~private_ name =
+  iter_scopes (Scope.havoc_refis ~private_ ~name)
 
 (* The following functions are used to narrow the type of variables
    based on dynamic checks. *)
