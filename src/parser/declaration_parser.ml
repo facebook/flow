@@ -19,7 +19,9 @@ module type DECLARATION = sig
   val async: env -> bool
   val generator: env -> bool
   val variance: env -> bool -> bool -> Variance.t option
-  val function_params: env -> Pattern.t list * Function.RestElement.t option
+  val function_params:
+    await:bool -> yield:bool -> env ->
+    Pattern.t list * Function.RestElement.t option
   val function_body: env -> async:bool -> generator:bool -> Loc.t * Function.body * bool
   val is_simple_function_params: Pattern.t list * Function.RestElement.t option -> bool
   val strict_post_check: env -> strict:bool -> simple:bool -> Identifier.t option -> Pattern.t list * Function.RestElement.t option -> unit
@@ -161,7 +163,8 @@ module Declaration
           then Expect.token env T_COMMA;
           param_list env (the_param::acc)
 
-    in fun env ->
+    in fun ~await ~yield env ->
+      let env = env |> with_allow_await await |> with_allow_yield yield in
       Expect.token env T_LPAREN;
       let params = param_list env [] in
       Expect.token env T_RPAREN;
@@ -234,7 +237,15 @@ module Declaration
         in
         (Type.type_parameter_declaration env, Some id)
     ) in
-    let params = function_params env in
+    let params =
+      let yield, await = match async, generator with
+      | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorDeclaration *)
+      | true, false -> false, allow_await env (* #prod-AsyncFunctionDeclaration *)
+      | false, true -> true, false (* #prod-GeneratorDeclaration *)
+      | false, false -> false, false (* #prod-FunctionDeclaration *)
+      in
+      function_params ~await ~yield env
+    in
     let (returnType, predicate) = Type.annotation_and_predicate_opt env in
     let _, body, strict = function_body env ~async ~generator in
     let simple = is_simple_function_params params in

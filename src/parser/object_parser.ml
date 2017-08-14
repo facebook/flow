@@ -85,7 +85,7 @@ module Object
      * in Flow's type system. Since this is a Flow syntax extension, we might
      * as well disallow it until we need it *)
     let typeParameters = None in
-    let params = Declaration.function_params env in
+    let params = Declaration.function_params ~await:false ~yield:false env in
     begin match is_getter, params with
     | true, ([], None) -> ()
     | false, (_, Some _rest) ->
@@ -192,7 +192,15 @@ module Object
       let parse_method env ~async ~generator =
         let start_loc = Peek.loc env in
         let typeParameters = Type.type_parameter_declaration env in
-        let params = Declaration.function_params env in
+        let params =
+          let yield, await = match async, generator with
+          | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
+          | true, false -> false, allow_await env (* #prod-AsyncMethod *)
+          | false, true -> true, false (* #prod-GeneratorMethod *)
+          | false, false -> false, false (* #prod-MethodDefinition *)
+          in
+          Declaration.function_params ~await ~yield env
+        in
         let returnType = Type.annotation_opt env in
         let _, body, strict =
           Declaration.function_body env ~async ~generator in
@@ -440,7 +448,15 @@ module Object
         error_unsupported_variance env variance;
         let func_loc = Peek.loc env in
         let typeParameters = Type.type_parameter_declaration env in
-        let params = Declaration.function_params env in
+        let params =
+          let yield, await = match async, generator with
+          | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
+          | true, false -> false, allow_await env (* #prod-AsyncMethod *)
+          | false, true -> true, false (* #prod-GeneratorMethod *)
+          | false, false -> false, false (* #prod-MethodDefinition *)
+          in
+          Declaration.function_params ~await ~yield env
+        in
         let returnType = Type.annotation_opt env in
         let _, body, strict =
           Declaration.function_body env ~async ~generator in

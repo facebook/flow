@@ -596,9 +596,9 @@ language/expressions/async-generator/early-errors-expression-formals-body-duplic
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-body-duplicate-let.js (default)
   Missing parse error
-language/expressions/async-generator/early-errors-expression-formals-contains-await.js (strict mode)
+language/expressions/async-generator/early-errors-expression-formals-contains-await-expr.js (strict mode)
   Missing parse error
-language/expressions/async-generator/early-errors-expression-formals-contains-await.js (default)
+language/expressions/async-generator/early-errors-expression-formals-contains-await-expr.js (default)
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-contains-super-call.js (strict mode)
   Missing parse error
@@ -607,8 +607,6 @@ language/expressions/async-generator/early-errors-expression-formals-contains-su
 language/expressions/async-generator/early-errors-expression-formals-contains-super-property.js (strict mode)
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-contains-super-property.js (default)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-formals-contains-yield-expr.js (default)
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-contains-yield.js (default)
   Missing parse error
@@ -698,8 +696,6 @@ language/expressions/class/async-gen-method-yield-spread-obj.js (strict mode)
   Unexpected token , at (37, 16) to (37, 17)
 language/expressions/class/async-gen-method-yield-spread-obj.js (default)
   Unexpected token , at (37, 16) to (37, 17)
-language/expressions/class/gen-method-param-dflt-yield.js (default)
-  Missing parse error
 language/expressions/class/gen-method-static-yield-as-binding-identifier.js (default)
   Missing parse error
 language/expressions/class/gen-method-static-yield-as-identifier-reference.js (default)
@@ -734,8 +730,6 @@ language/expressions/class/gen-method-yield-spread-obj.js (default)
   Unexpected token , at (35, 16) to (35, 17)
 language/expressions/class/method-param-dflt-yield.js (default)
   Missing parse error
-language/expressions/class/static-gen-method-param-dflt-yield.js (default)
-  Missing parse error
 language/expressions/class/static-method-param-dflt-yield.js (default)
   Missing parse error
 language/expressions/function/early-body-super-call.js (strict mode)
@@ -754,8 +748,6 @@ language/expressions/function/early-params-super-prop.js (strict mode)
   Missing parse error
 language/expressions/function/early-params-super-prop.js (default)
   Missing parse error
-language/expressions/function/param-dflt-yield-non-strict.js (default)
-  Unexpected token ) at (20, 21) to (20, 22)
 language/expressions/function/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/expressions/function/use-strict-with-non-simple-param.js (default)
@@ -780,8 +772,6 @@ language/expressions/generators/named-yield-spread-obj.js (strict mode)
   Unexpected token , at (29, 14) to (29, 15)
 language/expressions/generators/named-yield-spread-obj.js (default)
   Unexpected token , at (29, 14) to (29, 15)
-language/expressions/generators/param-dflt-yield.js (default)
-  Missing parse error
 language/expressions/generators/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/expressions/generators/use-strict-with-non-simple-param.js (default)
@@ -2002,13 +1992,9 @@ language/statements/function/early-params-super-prop.js (strict mode)
   Missing parse error
 language/statements/function/early-params-super-prop.js (default)
   Missing parse error
-language/statements/function/param-dflt-yield-non-strict.js (default)
-  Unexpected token ) at (20, 22) to (20, 23)
 language/statements/function/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/statements/function/use-strict-with-non-simple-param.js (default)
-  Missing parse error
-language/statements/generators/param-dflt-yield.js (default)
   Missing parse error
 language/statements/generators/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
@@ -2733,5 +2719,5 @@ language/white-space/mongolian-vowel-separator.js (strict mode)
 language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 === Summary ===
-Passed: 53938 (97.53%)
-Failed: 1367 (2.47%)
+Passed: 53945 (97.54%)
+Failed: 1360 (2.46%)

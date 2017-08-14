@@ -621,7 +621,15 @@ module Expression
           | _ -> Some (Parse.identifier ~restricted_error:Error.StrictFunctionName env) in
         id, Type.type_parameter_declaration env
       end in
-    let params = Declaration.function_params env in
+    let params =
+      let yield, await = match async, generator with
+      | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorExpression *)
+      | true, false -> false, true (* #prod-AsyncFunctionExpression *)
+      | false, true -> true, false (* #prod-GeneratorExpression *)
+      | false, false -> false, false (* #prod-FunctionExpression *)
+      in
+      Declaration.function_params ~await ~yield env
+    in
     let returnType, predicate = Type.annotation_and_predicate_opt env in
     let end_loc, body, strict =
       Declaration.function_body env ~async ~generator in
@@ -883,7 +891,11 @@ module Expression
           } in
           ([param], None), None, None
         else
-          let params = Declaration.function_params env in
+          let params =
+            let yield = allow_yield env in
+            let await = allow_await env in
+            Declaration.function_params ~await ~yield env
+          in
           (* There's an ambiguity if you use a function type as the return
            * type for an arrow function. So we disallow anonymous function
            * types in arrow function return types unless the function type is
