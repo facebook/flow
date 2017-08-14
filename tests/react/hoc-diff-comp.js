@@ -13,6 +13,7 @@ type Props = {
 
 class MyComponent extends React.Component<Props> {}
 
+// Need explicit type here, otherwise usage won't typecheck props
 const MyFunctionComponent: React.ComponentType<Props> = (props) => { }
 
 export const MyEnhancedComponent = connect2(connect(MyComponent));
