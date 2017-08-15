@@ -91,19 +91,30 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
   let collate_errors_separate_warnings =
     let open Errors in
     let open Error_suppressions in
-    let add_unused_suppression_warnings suppressions warnings =
+    let add_unused_suppression_warnings checked suppressions warnings =
       (* For each unused suppression, create an warning *)
       Error_suppressions.unused suppressions
       |> List.fold_left
         (fun warnings loc ->
           let source_file = match Loc.source loc with Some x -> x | None -> Loc.SourceFile "-" in
-          let err =
-            let msg = Flow_error.EUnusedSuppression loc in
-            Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file msg in
-          let file_warnings = FilenameMap.get source_file warnings
-            |> Option.value ~default:ErrorSet.empty
-            |> ErrorSet.add err in
-          FilenameMap.add source_file file_warnings warnings
+          (* In lazy mode, dependencies are modules which we typecheck not because we care about
+           * them, but because something important (a focused file or a focused file's dependent)
+           * needs these dependencies. Therefore, we might not typecheck a dependencies' dependents.
+           *
+           * This means there might be an unused suppression comment warning in a dependency which
+           * only shows up in lazy mode. To avoid this, we'll just avoid raising this kind of
+           * warning in any dependency.*)
+          if not (CheckedSet.dependencies checked |> FilenameSet.mem source_file)
+          then begin
+            let err =
+              let msg = Flow_error.EUnusedSuppression loc in
+              Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file msg in
+            let file_warnings = FilenameMap.get source_file warnings
+              |> Option.value ~default:ErrorSet.empty
+              |> ErrorSet.add err in
+            FilenameMap.add source_file file_warnings warnings
+          end else
+            warnings
         )
         warnings
     in
@@ -116,7 +127,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let suppressed_errors = List.rev_append file_suppressed_errors suppressed_errors in
       (errors, warnings, suppressed_errors, suppressions)
     in
-    fun { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set; } ->
+    fun env ->
+      let {
+        ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set;
+      } = env.ServerEnv.errors in
       let suppressions = union_suppressions suppressions in
 
       (* union the errors from all files together, filtering suppressed errors *)
@@ -128,13 +142,14 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         |> FilenameMap.fold acc_fun merge_errors
       in
 
-      let warnings = add_unused_suppression_warnings suppressions warnings in
+      let warnings =
+        add_unused_suppression_warnings env.ServerEnv.checked_files suppressions warnings in
       errors, warnings, suppressed_errors
 
   (* combine error maps into a single error set and a single warning set *)
-  let collate_errors errors =
+  let collate_errors env =
     let open Errors in
-    let errors, warning_map, suppressed_errors = collate_errors_separate_warnings errors in
+    let errors, warning_map, suppressed_errors = collate_errors_separate_warnings env in
     let warnings = FilenameMap.fold (fun _key -> ErrorSet.union) warning_map ErrorSet.empty in
     (errors, warnings, suppressed_errors)
 
@@ -153,7 +168,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       }
     end else begin
       (* collate errors by origin *)
-      let errors, warnings, _ = collate_errors env.ServerEnv.errors in
+      let errors, warnings, _ = collate_errors env in
       let warnings = if Options.should_include_warnings genv.options
         then warnings
         else Errors.ErrorSet.empty
@@ -167,7 +182,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     end
 
   let check_once _genv env =
-    collate_errors env.ServerEnv.errors
+    collate_errors env
 
   let die_nicely () =
     FlowEventLogger.killed ();
@@ -311,7 +326,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Module_js.get_file ~audit:Expensive.warn module_name
 
   let gen_flow_files ~options env files =
-    let errors, warnings, _ = collate_errors env.ServerEnv.errors in
+    let errors, warnings, _ = collate_errors env in
     let warnings = if Options.should_include_warnings options
       then warnings
       else Errors.ErrorSet.empty
@@ -720,7 +735,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let workers = genv.ServerEnv.workers in
     match msg with
       | Persistent_connection_prot.Subscribe ->
-          let current_errors, current_warnings, _ = collate_errors_separate_warnings !env.errors in
+          let current_errors, current_warnings, _ = collate_errors_separate_warnings !env in
           let new_connections = Persistent_connection.subscribe_client
             !env.connections client ~current_errors ~current_warnings
           in
@@ -733,13 +748,13 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           !env
       | Persistent_connection_prot.DidOpen filenames ->
           Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
-          let current_errors, current_warnings, _ = collate_errors_separate_warnings !env.errors in
+          let current_errors, current_warnings, _ = collate_errors_separate_warnings !env in
           let new_connections = Persistent_connection.client_did_open
             !env.connections client ~filenames ~current_errors ~current_warnings in
           { !env with connections = new_connections }
       | Persistent_connection_prot.DidClose filenames ->
           Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
-          let current_errors, current_warnings, _ = collate_errors_separate_warnings !env.errors in
+          let current_errors, current_warnings, _ = collate_errors_separate_warnings !env in
           let new_connections = Persistent_connection.client_did_close
             !env.connections client ~filenames ~current_errors ~current_warnings in
           { !env with connections = new_connections }
