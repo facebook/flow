@@ -71,7 +71,11 @@ module Expression
         }))
       | _ -> expr)
 
-    in let error_callback _ _ = raise Try.Rollback
+    in let error_callback _ = function
+      (* Don't rollback on these errors. *)
+      | Error.StrictReservedWord -> ()
+      (* Everything else causes a rollback *)
+      | _ -> raise Try.Rollback
 
     (* So we may or may not be parsing the first part of an arrow function
      * (the part before the =>). We might end up parsing that whole thing or
@@ -872,6 +876,7 @@ module Expression
     let error_callback _ = Error.(function
       (* Don't rollback on these errors. *)
       | StrictParamName
+      | StrictReservedWord
       | ParameterAfterRestParameter
       | NewlineBeforeArrow -> ()
       (* Everything else causes a rollback *)
