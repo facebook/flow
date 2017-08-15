@@ -96,6 +96,8 @@ type t =
   | PrivateNotInClass
   | SuperPrivate
   | YieldInFormalParameters
+  | AwaitAsIdentifierReference
+  | YieldAsIdentifierReference
 
 exception Error of (Loc.t * t) list
 
@@ -241,4 +243,6 @@ module PP =
       | PrivateNotInClass -> "Private fields can only be referenced from within a class."
       | SuperPrivate -> "You may not access a private field through the `super` keyword."
       | YieldInFormalParameters -> "Yield expression not allowed in formal parameter"
+      | AwaitAsIdentifierReference -> "`await` is an invalid identifier in async functions"
+      | YieldAsIdentifierReference -> "`yield` is an invalid identifier in generators"
   end
