@@ -79,22 +79,22 @@ end = struct
     FlowEventLogger.set_command (Some command_string);
     FlowEventLogger.init_flow_command ~version:Flow_version.version;
 
-    let args =
-      try CommandSpec.args_of_argv command argv
-      with CommandSpec.Failed_to_parse msg ->
-        let msg = Utils_js.spf
-          "%s: %s\n%s"
-          (Filename.basename Sys.executable_name)
-          msg
-          (CommandSpec.string_of_usage command)
-        in
-        FlowExitStatus.(exit ~msg Commandline_usage_error)
-    in
-
-    try CommandSpec.run command args
-    with CommandSpec.Show_help ->
+    try
+      let args = CommandSpec.args_of_argv command argv in
+      CommandSpec.run command args
+    with
+    | CommandSpec.Show_help ->
       print_endline (CommandSpec.string_of_usage command);
       FlowExitStatus.(exit No_error)
+    | CommandSpec.Failed_to_parse (arg_name, msg) ->
+      let msg = Utils_js.spf
+        "%s: %s %s\n%s"
+        (Filename.basename Sys.executable_name)
+        arg_name
+        msg
+        (CommandSpec.string_of_usage command)
+      in
+      FlowExitStatus.(exit ~msg Commandline_usage_error)
 end
 
 let _ =

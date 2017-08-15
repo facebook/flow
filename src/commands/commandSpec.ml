@@ -9,7 +9,7 @@
  *)
 
 exception Show_help
-exception Failed_to_parse of string
+exception Failed_to_parse of string * string
 
 module ArgSpec = struct
   type values_t = string list SMap.t
@@ -21,7 +21,7 @@ module ArgSpec = struct
   | Arg_Rest
 
   type 'a flag_t = {
-    parse : string list option -> 'a;
+    parse : name:string -> string list option -> 'a;
     arg : flag_arg_count;
   }
 
@@ -48,7 +48,7 @@ module ArgSpec = struct
       try Some (SMap.find_unsafe name values : string list)
       with Not_found -> None
     in
-    (values, main (arg_type.parse value))
+    (values, main (arg_type.parse ~name value))
 
   let pop_anon spec =
     match spec.anons with
@@ -56,14 +56,14 @@ module ArgSpec = struct
     | hd::tl -> (Some hd, {spec with anons = tl})
 
   let string = {
-    parse = (function
+    parse = (fun ~name:_ -> function
     | Some [x] -> Some x
     | _ -> None
     );
     arg = Arg;
   }
   let bool = {
-    parse = (function
+    parse = (fun ~name:_ -> function
     | Some ["0"]
     | Some ["false"]
     | None -> Some false
@@ -72,18 +72,18 @@ module ArgSpec = struct
     arg = Arg;
   }
   let int = {
-    parse = (function
+    parse = (fun ~name:_ -> function
     | Some [x] -> Some (int_of_string x)
     | _ -> None
     );
     arg = Arg;
   }
   let enum values = {
-    parse = (function
+    parse = (fun ~name -> function
     | Some [x] ->
         if List.mem x values
         then Some x
-        else raise (Failed_to_parse (Utils_js.spf
+        else raise (Failed_to_parse (name, Utils_js.spf
           "expected one of: %s"
           (String.concat ", " values)
         ))
@@ -93,7 +93,7 @@ module ArgSpec = struct
   }
 
   let no_arg = {
-    parse = (function
+    parse = (fun ~name:_ -> function
     | Some _ -> true
     | None -> false
     );
@@ -101,10 +101,10 @@ module ArgSpec = struct
   }
 
   let required arg_type = {
-    parse = (function
-    | None -> raise (Failed_to_parse "missing required arguments")
-    | value -> match arg_type.parse value with
-      | None -> raise (Failed_to_parse (Utils_js.spf
+    parse = (fun ~name -> function
+    | None -> raise (Failed_to_parse (name, "missing required arguments"))
+    | value -> match arg_type.parse ~name value with
+      | None -> raise (Failed_to_parse (name, Utils_js.spf
           "wrong type for required argument%s"
           (match value with Some [x] -> ": " ^ x | _ -> "")))
       | Some result -> result
@@ -113,20 +113,20 @@ module ArgSpec = struct
   }
 
   let optional arg_type = {
-    parse = (function
+    parse = (fun ~name -> function
     | None -> None
-    | value -> arg_type.parse value);
+    | value -> arg_type.parse ~name value);
     arg = arg_type.arg;
   }
 
   let list_of arg_type = {
-    parse = (function
+    parse = (fun ~name -> function
       | None -> Some []
       | Some values ->
         Some (List.map (fun x ->
-          match arg_type.parse (Some [x]) with
+          match arg_type.parse ~name (Some [x]) with
           | Some result -> result
-          | None -> raise (Failed_to_parse (Utils_js.spf
+          | None -> raise (Failed_to_parse (name, Utils_js.spf
               "wrong type for argument list item: %s" x))
         ) values)
     );
@@ -244,16 +244,10 @@ and parse_flag values spec arg args =
     | ArgSpec.Arg ->
       begin match args with
       | [] ->
-        raise (Failed_to_parse (Utils_js.spf
-          "option %s needs an argument."
-          arg
-        ))
+        raise (Failed_to_parse (arg, "option needs an argument."))
       | value::args ->
         if is_arg value then
-          raise (Failed_to_parse (Utils_js.spf
-            "option %s needs an argument."
-            arg
-          ));
+          raise (Failed_to_parse (arg, "option needs an argument."));
         let values = SMap.add arg [value] values in
         parse values spec args
       end
@@ -266,10 +260,7 @@ and parse_flag values spec arg args =
     | ArgSpec.Arg_Rest -> failwith "Not supported"
   with
   | Not_found ->
-    raise (Failed_to_parse (Utils_js.spf
-      "unknown option '%s'."
-      arg
-    ))
+    raise (Failed_to_parse (arg, "unknown option"))
 
 and parse_anon values spec arg args =
   let (anon, spec) = ArgSpec.pop_anon spec in
@@ -287,7 +278,7 @@ and parse_anon values spec arg args =
   | Some (_, _, ArgSpec.No_Arg) ->
     assert false
   | None ->
-    raise (Failed_to_parse (Utils_js.spf
+    raise (Failed_to_parse ("anon", Utils_js.spf
       "unexpected argument '%s'."
       arg
     ))

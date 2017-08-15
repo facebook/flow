@@ -51,7 +51,7 @@ type ('a, 'b) builder_t = {
 type t
 
 exception Show_help
-exception Failed_to_parse of string
+exception Failed_to_parse of string * string
 
 val usage : ('a, 'b) builder_t -> unit
 
