@@ -133,11 +133,13 @@ module Pattern
             Some (pattern env restricted_error, false)
           | _ ->
             (match key with
-            | Pattern.Object.Property.Identifier name ->
-              let pattern = (fst name, Pattern.Identifier {
-                Pattern.Identifier.name;
-                                   typeAnnotation=None;
-                                   optional=false;
+            | Pattern.Object.Property.Identifier ((id_loc, string_val) as name) ->
+              if is_strict_reserved string_val then
+                strict_error_at env (id_loc, Parse_error.StrictReservedWord);
+              let pattern = (id_loc, Pattern.Identifier { Pattern.Identifier.
+                name;
+                typeAnnotation = None;
+                optional = false;
               }) in
               Some (pattern, true)
             | _ ->
