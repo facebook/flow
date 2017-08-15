@@ -127,9 +127,16 @@ module Expression
     if not (allow_yield env)
     then error env Error.IllegalYield;
     let delegate = Expect.maybe env T_MULT in
-    let has_argument = not (
-      Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
-    ) in
+    let has_argument = match Peek.token env with
+      | T_SEMICOLON
+      | T_RBRACKET
+      | T_RCURLY
+      | T_RPAREN
+      | T_COLON
+      | T_COMMA -> false
+      | _ when Peek.is_implicit_semicolon env -> false
+      | _ -> true
+    in
     let argument =
       if delegate || has_argument
       then Some (assignment env)

@@ -1,0 +1,15 @@
+{
+  'body': {
+    '0': {
+      'params': {
+        '0': {
+          'right': {
+            'name': undefined,
+            'type': 'YieldExpression',
+            'delegate': false,
+          }
+        }
+      }
+    }
+  }
+}
