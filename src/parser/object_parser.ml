@@ -183,9 +183,17 @@ module Object
 
     and init =
       let open Ast.Expression.Object.Property in
-      let parse_shorthand key = match key with
+      let parse_shorthand env key = match key with
         | Literal lit -> fst lit, Ast.Expression.Literal (snd lit)
-        | Identifier id -> fst id, Ast.Expression.Identifier id
+        | Identifier ((loc, name) as id) ->
+            (* per #sec-identifiers-static-semantics-early-errors,
+               "It is a Syntax Error if this phrase is contained in strict mode
+               code and the StringValue of IdentifierName is: "implements",
+               "interface", "let", "package",  "private", "protected", "public",
+               "static", or "yield"." *)
+            if is_strict_reserved name then
+              strict_error_at env (loc, Parse_error.StrictReservedWord);
+            fst id, Ast.Expression.Identifier id
         | PrivateName _ -> failwith "Internal Error: private name found in object props"
         | Computed expr -> expr
       in
@@ -232,7 +240,7 @@ module Object
       let parse_init ~key ~async ~generator env = match Peek.token env with
         | T_RCURLY
         | T_COMMA ->
-          parse_shorthand key, true, false
+          parse_shorthand env key, true, false
         | T_LESS_THAN
         | T_LPAREN ->
           parse_method env ~async ~generator, false, true

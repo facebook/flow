@@ -354,8 +354,6 @@ language/expressions/assignment/dstr-array-rest-nested-obj-yield-ident-valid.js 
   Unexpected token = at (25, 17) to (25, 18)
 language/expressions/assignment/dstr-obj-id-identifier-yield-expr.js (default)
   Missing parse error
-language/expressions/assignment/dstr-obj-id-identifier-yield-ident-invalid.js (strict mode)
-  Missing parse error
 language/expressions/assignment/dstr-obj-id-init-assignment-missing.js (strict mode)
   Unexpected token = at (24, 13) to (24, 14)
 language/expressions/assignment/dstr-obj-id-init-assignment-missing.js (default)
@@ -1308,8 +1306,6 @@ language/statements/for-in/dstr-array-rest-nested-obj-invalid.js (default)
   Missing parse error
 language/statements/for-in/dstr-obj-id-identifier-yield-expr.js (default)
   Missing parse error
-language/statements/for-in/dstr-obj-id-identifier-yield-ident-invalid.js (strict mode)
-  Missing parse error
 language/statements/for-in/dstr-obj-id-simple-strict.js (strict mode)
   Missing parse error
 language/statements/for-in/dstr-obj-prop-nested-array-invalid.js (strict mode)
@@ -1411,8 +1407,6 @@ language/statements/for-of/dstr-array-rest-nested-obj-yield-expr.js (default)
 language/statements/for-of/dstr-array-rest-nested-obj-yield-ident-valid.js (default)
   Unexpected token = at (33, 13) to (33, 14)
 language/statements/for-of/dstr-obj-id-identifier-yield-expr.js (default)
-  Missing parse error
-language/statements/for-of/dstr-obj-id-identifier-yield-ident-invalid.js (strict mode)
   Missing parse error
 language/statements/for-of/dstr-obj-id-init-assignment-missing.js (strict mode)
   Unexpected token = at (32, 9) to (32, 10)
@@ -2275,5 +2269,5 @@ language/white-space/mongolian-vowel-separator.js (strict mode)
 language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 === Summary ===
-Passed: 54167 (97.94%)
-Failed: 1138 (2.06%)
+Passed: 54170 (97.95%)
+Failed: 1135 (2.05%)
