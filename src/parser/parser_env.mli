@@ -60,6 +60,7 @@ val labels : env -> SSet.t
 val comments : env -> Ast.Comment.t list
 val in_loop : env -> bool
 val in_switch : env -> bool
+val in_formal_parameters : env -> bool
 val in_function : env -> bool
 val allow_yield : env -> bool
 val allow_await: env -> bool
@@ -94,6 +95,7 @@ val add_used_private : env -> string -> Loc.t -> unit
 (* functional operations -- these return shallow copies, so future mutations to
  * the returned env will also affect the original: *)
 val with_strict : bool -> env -> env
+val with_in_formal_parameters : bool -> env -> env
 val with_in_function : bool -> env -> env
 val with_allow_yield : bool -> env -> env
 val with_allow_await : bool -> env -> env

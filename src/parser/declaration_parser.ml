@@ -164,7 +164,11 @@ module Declaration
           param_list env (the_param::acc)
 
     in fun ~await ~yield env ->
-      let env = env |> with_allow_await await |> with_allow_yield yield in
+      let env = env
+        |> with_allow_await await
+        |> with_allow_yield yield
+        |> with_in_formal_parameters true
+      in
       Expect.token env T_LPAREN;
       let params = param_list env [] in
       Expect.token env T_RPAREN;

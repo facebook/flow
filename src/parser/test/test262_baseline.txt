@@ -316,10 +316,6 @@ language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-w
   Missing parse error
 language/block-scope/syntax/redeclaration/var-declaration-attempt-to-redeclare-with-let-declaration.js (default)
   Missing parse error
-language/expressions/arrow-function/param-dflt-yield-expr.js (strict mode)
-  Missing parse error
-language/expressions/arrow-function/param-dflt-yield-expr.js (default)
-  Missing parse error
 language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates.js (default)
   Missing parse error
 language/expressions/arrow-function/syntax/early-errors/use-strict-with-non-simple-param.js (strict mode)
@@ -536,10 +532,6 @@ language/expressions/async-generator/early-errors-expression-formals-contains-su
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-contains-super-property.js (default)
   Missing parse error
-language/expressions/async-generator/early-errors-expression-formals-contains-yield-expr.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-formals-contains-yield-expr.js (default)
-  Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-contains-yield.js (default)
   Missing parse error
 language/expressions/async-generator/early-errors-expression-yield-as-function-binding-identifier.js (default)
@@ -564,10 +556,6 @@ language/expressions/class/async-gen-method-yield-as-binding-identifier.js (defa
   Missing parse error
 language/expressions/class/async-gen-method-yield-as-identifier-reference.js (default)
   Missing parse error
-language/expressions/class/gen-method-param-dflt-yield.js (strict mode)
-  Missing parse error
-language/expressions/class/gen-method-param-dflt-yield.js (default)
-  Missing parse error
 language/expressions/class/gen-method-static-yield-as-binding-identifier.js (default)
   Missing parse error
 language/expressions/class/gen-method-static-yield-as-identifier-reference.js (default)
@@ -577,10 +565,6 @@ language/expressions/class/gen-method-yield-as-binding-identifier.js (default)
 language/expressions/class/gen-method-yield-as-identifier-reference.js (default)
   Missing parse error
 language/expressions/class/method-param-dflt-yield.js (default)
-  Missing parse error
-language/expressions/class/static-gen-method-param-dflt-yield.js (strict mode)
-  Missing parse error
-language/expressions/class/static-gen-method-param-dflt-yield.js (default)
   Missing parse error
 language/expressions/class/static-method-param-dflt-yield.js (default)
   Missing parse error
@@ -607,10 +591,6 @@ language/expressions/function/use-strict-with-non-simple-param.js (default)
 language/expressions/generators/named-yield-as-binding-identifier.js (default)
   Missing parse error
 language/expressions/generators/named-yield-as-identifier-reference.js (default)
-  Missing parse error
-language/expressions/generators/param-dflt-yield.js (strict mode)
-  Missing parse error
-language/expressions/generators/param-dflt-yield.js (default)
   Missing parse error
 language/expressions/generators/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
@@ -663,8 +643,6 @@ language/expressions/object/method-definition/gen-yield-as-binding-identifier.js
 language/expressions/object/method-definition/gen-yield-as-identifier-reference.js (default)
   Missing parse error
 language/expressions/object/method-definition/generator-param-id-yield.js (default)
-  Missing parse error
-language/expressions/object/method-definition/generator-param-init-yield.js (default)
   Missing parse error
 language/expressions/object/method-definition/generator-param-redecl-const.js (strict mode)
   Missing parse error
@@ -1087,14 +1065,6 @@ language/statements/class/definition/early-errors-class-method-formals-contains-
 language/statements/class/definition/methods-gen-yield-star-after-newline.js (strict mode)
   Missing parse error
 language/statements/class/definition/methods-gen-yield-star-after-newline.js (default)
-  Missing parse error
-language/statements/class/gen-method-param-dflt-yield.js (strict mode)
-  Missing parse error
-language/statements/class/gen-method-param-dflt-yield.js (default)
-  Missing parse error
-language/statements/class/static-gen-method-param-dflt-yield.js (strict mode)
-  Missing parse error
-language/statements/class/static-gen-method-param-dflt-yield.js (default)
   Missing parse error
 language/statements/class/syntax/early-errors/class-body-has-direct-super-missing-class-heritage.js (strict mode)
   Missing parse error
@@ -1597,10 +1567,6 @@ language/statements/function/early-params-super-prop.js (default)
 language/statements/function/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/statements/function/use-strict-with-non-simple-param.js (default)
-  Missing parse error
-language/statements/generators/param-dflt-yield.js (strict mode)
-  Missing parse error
-language/statements/generators/param-dflt-yield.js (default)
   Missing parse error
 language/statements/generators/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
@@ -2309,5 +2275,5 @@ language/white-space/mongolian-vowel-separator.js (strict mode)
 language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 === Summary ===
-Passed: 54150 (97.91%)
-Failed: 1155 (2.09%)
+Passed: 54167 (97.94%)
+Failed: 1138 (2.06%)

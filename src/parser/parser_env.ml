@@ -183,6 +183,7 @@ type env = {
   in_export             : bool;
   in_loop               : bool;
   in_switch             : bool;
+  in_formal_parameters  : bool;
   in_function           : bool;
   no_in                 : bool;
   no_call               : bool;
@@ -233,6 +234,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     in_export = false;
     in_loop = false;
     in_switch = false;
+    in_formal_parameters = false;
     in_function = false;
     no_in = false;
     no_call = false;
@@ -260,6 +262,7 @@ let comments env = !(env.comments)
 let labels env = env.labels
 let in_loop env = env.in_loop
 let in_switch env = env.in_switch
+let in_formal_parameters env = env.in_formal_parameters
 let in_function env = env.in_function
 let allow_yield env = env.allow_yield
 let allow_await env = env.allow_await
@@ -335,6 +338,7 @@ let lookahead ?(i=0) env =
 
 (* functional operations: *)
 let with_strict in_strict_mode env = { env with in_strict_mode }
+let with_in_formal_parameters in_formal_parameters env = { env with in_formal_parameters }
 let with_in_function in_function env = { env with in_function }
 let with_allow_yield allow_yield env = { env with allow_yield }
 let with_allow_await allow_await env = { env with allow_await }
@@ -365,6 +369,7 @@ let without_error_callback env = { env with error_callback = None }
 
 let add_label env label = { env with labels = SSet.add label env.labels }
 let enter_function env ~async ~generator = { env with
+    in_formal_parameters = false;
     in_function = true;
     in_loop = false;
     in_switch = false;

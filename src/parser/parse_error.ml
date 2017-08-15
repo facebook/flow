@@ -41,7 +41,6 @@ type t =
   | IllegalContinue
   | IllegalBreak
   | IllegalReturn
-  | IllegalYield
   | StrictModeWith
   | StrictCatchVariable
   | StrictVarName
@@ -96,6 +95,7 @@ type t =
   | UnboundPrivate of string
   | PrivateNotInClass
   | SuperPrivate
+  | YieldInFormalParameters
 
 exception Error of (Loc.t * t) list
 
@@ -143,7 +143,6 @@ module PP =
       | IllegalContinue -> "Illegal continue statement"
       | IllegalBreak -> "Illegal break statement"
       | IllegalReturn -> "Illegal return statement"
-      | IllegalYield -> "Illegal yield expression"
       | StrictModeWith ->  "Strict mode code may not include a with statement"
       | StrictCatchVariable ->  "Catch variable may not be eval or arguments in strict mode"
       | StrictVarName ->  "Variable name may not be eval or arguments in strict mode"
@@ -241,4 +240,5 @@ module PP =
         ^ "` has not been declared."
       | PrivateNotInClass -> "Private fields can only be referenced from within a class."
       | SuperPrivate -> "You may not access a private field through the `super` keyword."
+      | YieldInFormalParameters -> "Yield expression not allowed in formal parameter"
   end

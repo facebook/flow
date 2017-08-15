@@ -127,9 +127,8 @@ module Expression
       | _ -> assignment_but_not_arrow_function env
 
   and yield env = with_loc (fun env ->
+    if in_formal_parameters env then error env Error.YieldInFormalParameters;
     Expect.token env T_YIELD;
-    if not (allow_yield env)
-    then error env Error.IllegalYield;
     let delegate = Expect.maybe env T_MULT in
     let has_argument = match Peek.token env with
       | T_SEMICOLON
@@ -878,7 +877,8 @@ module Expression
       | StrictParamName
       | StrictReservedWord
       | ParameterAfterRestParameter
-      | NewlineBeforeArrow -> ()
+      | NewlineBeforeArrow
+      | YieldInFormalParameters -> ()
       (* Everything else causes a rollback *)
       | _ -> raise Try.Rollback) in
 
