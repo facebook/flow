@@ -24,6 +24,66 @@ type test_result = {
   result: (unit, error_reason) result;
 }
 
+module SMap = Map.Make(String)
+
+module Progress_bar = struct
+  type t = {
+    mutable count: int;
+    mutable last_update: float;
+    total: int;
+    chunks: int;
+    frequency: float;
+  }
+
+  let percentage bar =
+    Printf.sprintf "%3d%%" (bar.count * 100 / bar.total)
+
+  let meter bar =
+    let chunks = bar.chunks in
+    let c = bar.count * chunks / bar.total in
+    if c = 0 then String.make chunks ' '
+    else if c = chunks then String.make chunks '='
+    else (String.make (c - 1) '=')^">"^(String.make (chunks - c) ' ')
+
+  let incr bar =
+    bar.count <- succ bar.count
+
+  let to_string (passed, failed) bar =
+    let total = float_of_int (passed + failed) in
+    Printf.sprintf "\r%s [%s] %d/%d -- Passed: %d (%.2f%%), Failed: %d (%.2f%%)%!"
+      (percentage bar) (meter bar) bar.count bar.total
+      passed ((float_of_int passed) /. total *. 100.)
+      failed ((float_of_int failed) /. total *. 100.)
+
+  let print (passed, failed) bar =
+    Printf.printf "\r%s%!" (to_string (passed, failed) bar)
+
+  let print_throttled (passed, failed) bar =
+    let now = Unix.gettimeofday () in
+    if now -. bar.last_update > bar.frequency then begin
+      bar.last_update <- now;
+      print (passed, failed) bar
+    end
+
+  let clear (passed, failed) bar =
+    let len = String.length (to_string (passed, failed) bar) in
+    let spaces = String.make len ' ' in
+    Printf.printf "\r%s\r%!" spaces
+
+  let print_final (passed, failed) bar =
+    print (passed, failed) bar;
+    Printf.printf "\n%!"
+
+  let make ~chunks ~frequency total =
+    {
+      count = 0;
+      last_update = 0.;
+      total;
+      chunks;
+      frequency;
+    }
+end
+
 let is_fixture =
   let suffix = "FIXTURE.js" in
   let slen = String.length suffix in
@@ -40,11 +100,28 @@ let files_of_path path =
   ) []
   |> List.rev
 
+let print_error ~strip_root (filename, use_strict) err =
+  let filename = match strip_root with
+  | Some root ->
+    let len = String.length root in
+    String.sub filename len (String.length filename - len)
+  | None -> filename
+  in
+  let strict = if use_strict then "(strict mode)" else "(default)" in
+  let cr = if Unix.isatty Unix.stdout then "\r" else "" in
+  match err with
+  | Missing_parse_error ->
+    Printf.printf "%s%s %s\n  Missing parse error\n%!" cr filename strict
+  | Unexpected_parse_error (loc, err) ->
+    Printf.printf "%s%s %s\n  %s at %s\n%!"
+      cr filename strict (Parse_error.PP.error err) (Loc.to_string loc)
+
 module Frontmatter = struct
   type t = {
     es5id: string option;
     es6id: string option;
     esid: string option;
+    features: string list;
     flags: strictness;
     negative: negative option;
   }
@@ -65,6 +142,7 @@ module Frontmatter = struct
     let es5id_regexp = Str.regexp "^ *es5id: *\\(.*\\)" in
     let es6id_regexp = Str.regexp "^ *es6id: *\\(.*\\)" in
     let esid_regexp = Str.regexp "^ *esid: *\\(.*\\)" in
+    let features_regexp = Str.regexp "^ *features: *\\[\\(.*\\)\\]" in
     let flags_regexp = Str.regexp "^ *flags: *\\[\\(.*\\)\\]" in
     let only_strict_regexp = Str.regexp_string "onlyStrict" in
     let no_strict_regexp = Str.regexp_string "noStrict" in
@@ -94,6 +172,11 @@ module Frontmatter = struct
         let es5id = opt_matched_group es5id_regexp text in
         let es6id = opt_matched_group es6id_regexp text in
         let esid = opt_matched_group esid_regexp text in
+        let features =
+          match opt_matched_group features_regexp text with
+          | Some str -> Str.split (Str.regexp ", *") str
+          | None -> []
+        in
         let flags =
           match opt_matched_group flags_regexp text with
           | Some flags ->
@@ -120,6 +203,7 @@ module Frontmatter = struct
           es5id;
           es6id;
           esid;
+          features;
           flags;
           negative;
         }
@@ -219,71 +303,34 @@ let run_test (name, frontmatter, content) =
   in
   { name; result }
 
-let print_error ~strip_root (filename, use_strict) err =
-  let filename = match strip_root with
-  | Some root ->
-    let len = String.length root in
-    String.sub filename len (String.length filename - len)
-  | None -> filename
+let incr_result (passed, failed) did_pass =
+  if did_pass then succ passed, failed
+  else passed, succ failed
+
+let fold_test ~strip_root ~bar
+    (passed_acc, failed_acc, features_acc)
+    (name, frontmatter, content) =
+  let passed =
+    let { name; result } = run_test (name, frontmatter, content) in
+    match result with
+    | Ok _ -> true
+    | Error err ->
+      Option.iter ~f:(Progress_bar.clear (passed_acc, failed_acc)) bar;
+      print_error ~strip_root name err;
+      false
   in
-  let strict = if use_strict then "(strict mode)" else "(default)" in
-  let cr = if Unix.isatty Unix.stdout then "\r" else "" in
-  match err with
-  | Missing_parse_error ->
-    Printf.printf "%s%s %s\n  Missing parse error\n%!" cr filename strict
-  | Unexpected_parse_error (loc, err) ->
-    Printf.printf "%s%s %s\n  %s at %s\n%!"
-      cr filename strict (Parse_error.PP.error err) (Loc.to_string loc)
-
-module Progress_bar = struct
-  type t = {
-    mutable count: int;
-    mutable last_update: float;
-    total: int;
-    chunks: int;
-    frequency: float;
-  }
-
-  let percentage bar =
-    Printf.sprintf "%3d%%" (bar.count * 100 / bar.total)
-
-  let meter bar =
-    let chunks = bar.chunks in
-    let c = bar.count * chunks / bar.total in
-    if c = 0 then String.make chunks ' '
-    else if c = chunks then String.make chunks '='
-    else (String.make (c - 1) '=')^">"^(String.make (chunks - c) ' ')
-
-  let incr bar =
-    bar.count <- succ bar.count
-
-  let print (passed, failed) bar =
-    let total = float_of_int (passed + failed) in
-    Printf.printf "\r%s [%s] %d/%d -- Passed: %d (%.2f%%), Failed: %d (%.2f%%)%!"
-      (percentage bar) (meter bar) bar.count bar.total
-      passed ((float_of_int passed) /. total *. 100.)
-      failed ((float_of_int failed) /. total *. 100.)
-
-  let print_throttled (passed, failed) bar =
-    let now = Unix.gettimeofday () in
-    if now -. bar.last_update > bar.frequency then begin
-      bar.last_update <- now;
-      print (passed, failed) bar
-    end
-
-  let print_final (passed, failed) bar =
-    print (passed, failed) bar;
-    Printf.printf "\n%!"
-
-  let make ~chunks ~frequency total =
-    {
-      count = 0;
-      last_update = 0.;
-      total;
-      chunks;
-      frequency;
-    }
-end
+  let passed_acc, failed_acc = incr_result (passed_acc, failed_acc) passed in
+  let features_acc = List.fold_left (fun acc name ->
+    let feature = try SMap.find name acc with Not_found -> (0, 0) in
+    let feature = incr_result feature passed in
+    SMap.add name feature acc
+  ) features_acc frontmatter.Frontmatter.features in
+  Option.iter ~f:(fun bar ->
+    Progress_bar.incr bar;
+    if not passed then Progress_bar.print (passed_acc, failed_acc) bar
+    else Progress_bar.print_throttled (passed_acc, failed_acc) bar
+  ) bar;
+  (passed_acc, failed_acc, features_acc)
 
 let main () =
   let verbose_ref = ref Normal in
@@ -303,7 +350,7 @@ let main () =
   in
   let strip_root = if !strip_root_ref then Some path else None in
   let quiet = !verbose_ref = Quiet in
-  let _verbose = !verbose_ref = Verbose in
+  let verbose = !verbose_ref = Verbose in
 
   let files = files_of_path path |> List.sort String.compare in
   let tests = List.fold_left parse_test [] files |> List.rev in
@@ -313,31 +360,30 @@ let main () =
     if quiet || not (Unix.isatty Unix.stdout) then None
     else Some (Progress_bar.make ~chunks:40 ~frequency:0.1 test_count) in
 
-  let (passed, failed) = List.fold_left (fun (passed_acc, failed_acc) test ->
-    let (passed, failed) =
-      let { name; result } = run_test test in
-      match result with
-      | Ok _ -> (1, 0)
-      | Error err ->
-        print_error ~strip_root name err;
-        (0, 1)
-    in
-    let acc = (passed_acc + passed, failed_acc + failed) in
-    Option.iter ~f:(fun bar ->
-      Progress_bar.incr bar;
-      if failed > 0 then Progress_bar.print acc bar
-      else Progress_bar.print_throttled acc bar
-    ) bar;
-    acc
-  ) (0, 0) tests in
+  let (passed, failed, results_by_feature) = List.fold_left
+    (fold_test ~strip_root ~bar)
+    (0, 0, SMap.empty)
+    tests in
 
   begin match bar with
-  | Some bar -> Progress_bar.print_final (passed, failed) bar
-  | None ->
-      let total = float_of_int (passed + failed) in
-      Printf.printf "=== Summary ===\n";
-      Printf.printf "Passed: %d (%.2f%%)\n" passed ((float_of_int passed) /. total *. 100.);
-      Printf.printf "Failed: %d (%.2f%%)\n" failed ((float_of_int failed) /. total *. 100.)
+  | Some bar -> Progress_bar.clear (passed, failed) bar
+  | None -> ()
+  end;
+
+  let total = float_of_int (passed + failed) in
+  Printf.printf "\n=== Summary ===\n";
+  Printf.printf "Passed: %d (%.2f%%)\n" passed ((float_of_int passed) /. total *. 100.);
+  Printf.printf "Failed: %d (%.2f%%)\n" failed ((float_of_int failed) /. total *. 100.);
+
+  if not (SMap.is_empty results_by_feature) then begin
+    Printf.printf "\nFeatures:\n";
+    SMap.iter (fun name (passed, failed) ->
+      if failed > 0 || verbose then
+      let total = passed + failed in
+      let total_f = float_of_int total in
+      Printf.printf "  %s: %d/%d (%.2f%%)\n"
+        name passed total ((float_of_int passed) /. total_f *. 100.)
+    ) results_by_feature;
   end;
 
   ()

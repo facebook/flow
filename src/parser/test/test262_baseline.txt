@@ -2266,6 +2266,24 @@ language/white-space/mongolian-vowel-separator.js (strict mode)
   Missing parse error
 language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
+
 === Summary ===
 Passed: 54171 (97.95%)
 Failed: 1134 (2.05%)
+
+Features:
+  Reflect: 244/246 (99.19%)
+  Symbol.iterator: 1314/1324 (99.24%)
+  Symbol.toStringTag: 80/82 (97.56%)
+  arrow-function: 18/24 (75.00%)
+  async-functions: 144/217 (66.36%)
+  async-iteration: 6882/7052 (97.59%)
+  class: 124/132 (93.94%)
+  default-parameters: 3332/3334 (99.94%)
+  destructuring-binding: 10325/10699 (96.50%)
+  generator: 390/396 (98.48%)
+  generators: 1281/1343 (95.38%)
+  let: 125/135 (92.59%)
+  object-rest: 610/620 (98.39%)
+  regexp-named-groups: 36/40 (90.00%)
+  super: 28/36 (77.78%)
