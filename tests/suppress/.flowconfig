@@ -9,3 +9,4 @@ lib.js
 suppress_comment=.*\\$FlowFixMe
 suppress_comment=.*\\$FlowIssue
 suppress_comment=\\(.\\|\n\\)*\\$FlowNewLine
+include_warnings=true

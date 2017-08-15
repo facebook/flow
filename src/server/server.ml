@@ -91,18 +91,21 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
   let collate_errors_separate_warnings =
     let open Errors in
     let open Error_suppressions in
-    let add_unused_suppression_errors suppressions errors =
-      (* For each unused suppression, create an error *)
+    let add_unused_suppression_warnings suppressions warnings =
+      (* For each unused suppression, create an warning *)
       Error_suppressions.unused suppressions
       |> List.fold_left
-        (fun errset loc ->
+        (fun warnings loc ->
+          let source_file = match Loc.source loc with Some x -> x | None -> Loc.SourceFile "-" in
           let err =
             let msg = Flow_error.EUnusedSuppression loc in
-            let source_file = match Loc.source loc with Some x -> x | None -> Loc.SourceFile "-" in
             Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file msg in
-          Errors.ErrorSet.add err errset
+          let file_warnings = FilenameMap.get source_file warnings
+            |> Option.value ~default:ErrorSet.empty
+            |> ErrorSet.add err in
+          FilenameMap.add source_file file_warnings warnings
         )
-        errors
+        warnings
     in
     let acc_fun severity_cover filename file_errs
         (errors, warnings, suppressed_errors, suppressions) =
@@ -125,7 +128,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         |> FilenameMap.fold acc_fun merge_errors
       in
 
-      let errors = add_unused_suppression_errors suppressions errors in
+      let warnings = add_unused_suppression_warnings suppressions warnings in
       errors, warnings, suppressed_errors
 
   (* combine error maps into a single error set and a single warning set *)
