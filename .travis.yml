@@ -1,5 +1,5 @@
 sudo: false
-dist: precise
+dist: trusty
 
 env:
   global:
