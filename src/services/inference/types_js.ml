@@ -269,14 +269,18 @@ let typecheck
 
   let infer_input =
     if Options.is_lazy_mode options
-    then
-      let new_files = FilenameSet.of_list infer_input in
-      let roots = FilenameSet.union new_files all_dependent_files in
+    then begin
+      let infer_input = CheckedSet.add ~dependents:all_dependent_files infer_input in
+
+      (* Don't just look up the dependencies of the focused or dependent modules. Also look up
+       * the dependencies of dependencies, since we need to check transitive dependencies *)
+      let roots = CheckedSet.all infer_input in
       let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
       let all_dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
-      let to_infer = FilenameSet.diff all_dependencies unchanged_checked in
-      FilenameSet.elements to_infer
-    else
+      let infer_input = CheckedSet.add ~dependencies:all_dependencies infer_input in
+
+      CheckedSet.diff infer_input unchanged_checked
+    end else
       infer_input
   in
 
@@ -355,7 +359,7 @@ let typecheck
     *)
     Hh_logger.info "Calculating dependencies";
     let dependency_graph, component_map =
-      calc_deps ~options ~profiling ~workers to_merge in
+      calc_deps ~options ~profiling ~workers (CheckedSet.all to_merge |> FilenameSet.elements) in
 
     Hh_logger.info "Merging";
     let merge_errors, suppressions, severity_cover_set = try
@@ -404,7 +408,7 @@ let typecheck
         merge_errors, suppressions, severity_cover_set
     in
 
-    FilenameSet.union unchanged_checked (FilenameSet.of_list to_merge),
+    CheckedSet.union unchanged_checked to_merge,
     { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set }
 
   | None ->
@@ -419,10 +423,11 @@ let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
     let infer_input = Modulename.Set.fold (fun m acc ->
       match Module_js.get_file m ~audit:Expensive.warn with
       | Some f ->
-        if FilenameSet.mem f !env.ServerEnv.files then f :: acc
+        if FilenameSet.mem f !env.ServerEnv.files
+        then CheckedSet.add ~dependencies:(FilenameSet.singleton f) acc
         else acc
       | None -> acc (* complain elsewhere about required module not found *)
-    ) resolved_requires [] in
+    ) resolved_requires CheckedSet.empty in
     let errors = !env.ServerEnv.errors in
     let unchanged_checked = !env.ServerEnv.checked_files in
     let parsed = FilenameSet.elements !env.ServerEnv.files in
@@ -436,7 +441,7 @@ let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
         ~make_merge_input:(fun inferred ->
           Some (
             inferred,
-            inferred |> List.fold_left (fun map f ->
+            inferred |> CheckedSet.fold (fun map f ->
               FilenameMap.add f true map
             ) FilenameMap.empty
           )
@@ -754,7 +759,8 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env =
   **)
 
   (* remember old modules *)
-  let unchanged_checked = FilenameSet.diff env.ServerEnv.checked_files new_or_changed_or_deleted in
+  let unchanged_checked = CheckedSet.remove new_or_changed_or_deleted env.ServerEnv.checked_files in
+
   (* clear out records of files, and names of modules provided by those files *)
   let old_modules = Module_js.clear_files workers ~options new_or_changed_or_deleted in
 
@@ -804,6 +810,10 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env =
 
   let parsed = FilenameSet.union freshparsed unchanged in
 
+  (* Non lazy mode treats every file as focused. Lazy mode treats every modified file as focused. So
+   * either way, each freshparsed file is focused *)
+  let infer_input = CheckedSet.of_focused_list freshparsed_list in
+
   (* recheck *)
   let checked, errors = typecheck
     ~options
@@ -811,7 +821,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env =
     ~workers
     ~errors
     ~unchanged_checked
-    ~infer_input:freshparsed_list
+    ~infer_input
     ~parsed:(FilenameSet.elements parsed)
     ~all_dependent_files
     ~persistent_connections:(Some env.ServerEnv.connections)
@@ -835,20 +845,17 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env =
       (* NOTE: Non-@flow files don't have entries in ResolvedRequiresHeap, so
          don't add then to the set of files to merge! Only inferred files (along
          with dependents) should be merged: see below. *)
-      let inferred = FilenameSet.of_list inferred in
-      let to_merge = FilenameSet.union all_dependent_files inferred in
-      Context_cache.oldify_merge_batch to_merge;
+      let to_merge = CheckedSet.add ~dependents:all_dependent_files inferred in
+      Context_cache.oldify_merge_batch (CheckedSet.all to_merge);
       (** TODO [perf]: Consider `aggressive **)
       SharedMem_js.collect options `gentle;
 
-      let to_merge = FilenameSet.elements to_merge in
-
       (* Definitely recheck inferred and direct_dependent_files. As merging proceeds, other
          files in to_merge may or may not be rechecked. *)
-      let recheck_map = to_merge |> List.fold_left (
-        let roots = FilenameSet.union direct_dependent_files inferred in
+      let recheck_map = to_merge |> CheckedSet.fold (
+        let roots = CheckedSet.add ~dependents:direct_dependent_files inferred in
         fun recheck_map file ->
-          FilenameMap.add file (FilenameSet.mem file roots) recheck_map
+          FilenameMap.add file (CheckedSet.mem file roots) recheck_map
       ) FilenameMap.empty in
 
       Some (to_merge, recheck_map)
@@ -879,9 +886,9 @@ let recheck ~options ~workers ~updates env =
 
 let files_to_infer ~workers ~focus_targets parsed_list =
   match focus_targets with
-  | [] -> parsed_list
-  | _ ->
-    let targetsLists = List.map (fun f ->
+  | None -> CheckedSet.of_focused_list parsed_list
+  | Some focus_targets ->
+    List.fold_left (fun checked f ->
       if Module_js.is_tracked_file f (* otherwise, f is probably a directory *)
         && Module_js.checked_file ~audit:Expensive.warn f
       then
@@ -897,11 +904,15 @@ let files_to_infer ~workers ~focus_targets parsed_list =
           ~changed_modules:(Modulename.Set.singleton module_name) in
         let dependency_graph = Dep_service.calc_dependency_graph workers parsed_list in
         let roots = FilenameSet.add f all_dependent_files in
-        let to_infer = Dep_service.calc_all_dependencies dependency_graph roots in
-        FilenameSet.elements to_infer
+        let dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
+        CheckedSet.add
+          ~focused:(FilenameSet.singleton f)
+          ~dependents:all_dependent_files
+          ~dependencies
+          checked
       else (* terminate *)
-        []) focus_targets in
-    List.flatten targetsLists
+        checked
+    ) CheckedSet.empty focus_targets
 
 (* creates a closure that lists all files in the given root, returned in chunks *)
 let make_next_files ~libs ~file_options root =
@@ -962,7 +973,7 @@ let full_check ~profiling ~options ~workers ~focus_targets ~should_merge parsed 
     ~profiling
     ~workers
     ~errors
-    ~unchanged_checked:FilenameSet.empty
+    ~unchanged_checked:CheckedSet.empty
     ~infer_input
     ~parsed
     ~all_dependent_files:FilenameSet.empty
@@ -970,7 +981,7 @@ let full_check ~profiling ~options ~workers ~focus_targets ~should_merge parsed 
     ~make_merge_input:(fun inferred ->
       if not should_merge then None
       else Some (inferred,
-        inferred |> List.fold_left (fun map f ->
+        inferred |> CheckedSet.fold (fun map f ->
           FilenameMap.add f true map
         ) FilenameMap.empty)
     )

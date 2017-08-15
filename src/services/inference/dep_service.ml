@@ -247,6 +247,9 @@ let calc_dependency_graph workers files =
     FilenameSet.filter (fun f -> FilenameMap.mem f dependency_graph)
   ) dependency_graph
 
+(* `calc_all_dependencies graph files` will return the set of direct and transitive dependencies
+ * of `files`. This set does include `files`.
+ *)
 let calc_all_dependencies =
   let rec loop dependency_graph =
     FilenameSet.fold (fun file acc ->

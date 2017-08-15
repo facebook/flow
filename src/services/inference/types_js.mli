@@ -35,11 +35,11 @@ val full_check:
   profiling:Profiling_js.running ->
   options:Options.t ->
   workers:Worker.t list option ->
-  focus_targets:Loc.filename list ->
+  focus_targets:Loc.filename list option ->
   should_merge:bool ->
   filename list ->
   ServerEnv.errors ->
-  Utils_js.FilenameSet.t * ServerEnv.errors
+  CheckedSet.t * ServerEnv.errors
 
 val typecheck_contents:
   options: Options.t ->

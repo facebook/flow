@@ -304,6 +304,8 @@ begin library "flow-server"
   sort = true
   files = begin fb-glob "src/server"
     excludes = [
+      "checkedSet.mli"
+      "checkedSet.ml"
       "file_input.ml"
       "serverEnv.ml"
       "serverUtils.ml"
@@ -344,11 +346,14 @@ begin library "flow-server-env"
   dirname = "src/server"
   files = [
     "serverEnv.ml"
+    "checkedSet.mli"
+    "checkedSet.ml"
   ]
   requires = [
     "flow-persistent-connection"
     "flow-common"
     "flow-common-utils"
+    "flow-parser"
     "flow-server-protocol"
     "hh-dfind"
     "hh-procs"

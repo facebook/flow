@@ -17,7 +17,7 @@ module Server_files = Server_files_js
 exception State_not_found
 
 module type SERVER_PROGRAM = sig
-  val init : focus_targets:Loc.filename list -> genv -> (Profiling_js.finished * env)
+  val init : focus_targets:Loc.filename list option -> genv -> (Profiling_js.finished * env)
   val check_once : genv -> env ->
     Errors.ErrorSet.t * (* errors *)
     Errors.ErrorSet.t * (* warnings *)
@@ -235,7 +235,7 @@ end = struct
     PidLog.init (Server_files.pids_file ~tmp_dir root);
     PidLog.log ~reason:"main" (Unix.getpid());
 
-    let genv, program_init = create_program_init ~shared_mem_config ~focus_targets:[] options in
+    let genv, program_init = create_program_init ~shared_mem_config ~focus_targets:None options in
 
     (* Open up a server on the socket before we go into program_init -- the
        client will try to connect to the socket as soon as we lock the init
@@ -261,7 +261,7 @@ end = struct
 
   let run ~shared_mem_config options = run_internal ~shared_mem_config options
 
-  let check_once ~shared_mem_config ~client_include_warnings ?(focus_targets=[]) options =
+  let check_once ~shared_mem_config ~client_include_warnings ?focus_targets options =
     PidLog.disable ();
     let genv, program_init = create_program_init ~shared_mem_config ~focus_targets options in
     let profiling, env = program_init () in
