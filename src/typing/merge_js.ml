@@ -465,10 +465,7 @@ module ContextOptimizer = struct
         match IMap.get id (Context.evaluated cx) with
         | None -> quotient
         | Some t ->
-          let t = match t with
-          | OpenT (r, id) -> lowers_of_tvar cx r id
-          | t -> t
-          in
+          let quotient = self#type_ cx quotient t in
           let reduced_evaluated = IMap.add id t reduced_evaluated in
           super#eval_id cx { quotient with reduced_evaluated } id
 
