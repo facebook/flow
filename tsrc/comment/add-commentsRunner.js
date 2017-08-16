@@ -715,31 +715,19 @@ function addCommentToCode(comment: string, code: string, loc: FlowLoc, path): st
      *   <foo id={10*'hello'} />
      * <jsx>
      *
-     * We need to wrap the JSXElemnt in curly braces and stick the comment
-     * inside the curly braces. So the above example turns into
+     * We need to put an empty expression container above the element with our
+     * comment.
      *
      * <jsx>
-     *   {
-     *     // Comment
-     *   <foo id={10*'hello'} />}
+     *   {// Comment
+     *   }
+     *   <foo id={10*'hello'} />
      * <jsx>
      */
-    let formattedComment = formatComment(comment, lines[loc.start.line-1]);
-    // Stick a { before the comment
-    formattedComment[0] = formattedComment[0].replace(/^( *)\//, '$1{\n$1/')
-    let lineWithClosingCurly = lines[ast.loc.end.line-1];
-    // Stick a } after the JSX element
-    lineWithClosingCurly = format(
-      "%s}%s",
-      lineWithClosingCurly.substr(0, ast.loc.end.column),
-      lineWithClosingCurly.substr(ast.loc.end.column),
-    );
     return [].concat(
       lines.slice(0, loc.start.line - 1),
-      formattedComment,
-      lines.slice(loc.start.line-1, ast.loc.end.line-1),
-      [lineWithClosingCurly],
-      lines.slice(ast.loc.end.line)
+      formatComment(comment, lines[loc.start.line-1], true),
+      lines.slice(loc.start.line-1),
     ).join("\n");
   } else if ((inside === 'template') ||
       inside === 'jsx' && ast.type === 'JSXExpressionContainer') {
@@ -822,33 +810,39 @@ function splitAtWord(str: string, max: number): [string, string] {
 }
 
 /* Figures out how to pad the comment and split it into multiple lines */
-function formatComment(comment: string, line: string): Array<string> {
+function formatComment(
+  comment: string,
+  line: string,
+  jsx: boolean = false,
+): Array<string> {
   const match = line.match(/^ */);
   let padding = match ? match[0] : '';
   padding.length > 40 && (padding = "    ");
 
-  const singleLineComment = format("%s// %s", padding, comment);
-  if (singleLineComment.length <= 80) {
-    return [singleLineComment];
+  if (jsx === false) {
+    const singleLineComment = format("%s// %s", padding, comment);
+    if (singleLineComment.length <= 80) {
+      return [singleLineComment];
+    }
   }
 
   const commentLines = [];
-  const firstLinePrefix = format("%s/* ", padding);
+  const firstLinePrefix = format(!jsx ? "%s/* " : "%s{/* ", padding);
   let firstLineComment;
   [firstLineComment, comment] = splitAtWord(comment.trim(), 80 - firstLinePrefix.length);
   commentLines.push(firstLinePrefix + firstLineComment.trim());
 
-  const prefix = format("%s * ", padding);
+  const prefix = format(!jsx ? "%s * " : "%s  * ", padding);
   let commentLine;
   while (comment.length > 0) {
     [commentLine, comment] = splitAtWord(comment.trim(), 80 - prefix.length);
     commentLines.push(prefix + commentLine.trim());
   }
-  if (commentLines[commentLines.length-1].length < 77) {
+  if (commentLines[commentLines.length-1].length < 76) {
     const last = commentLines.pop();
-    commentLines.push(format("%s */", last));
+    commentLines.push(format(!jsx ? "%s */" : "%s */}", last));
   } else {
-    commentLines.push(format("%s */", padding));
+    commentLines.push(format(!jsx ? "%s */" : "%s  */}", padding));
   }
   return commentLines;
 }
