@@ -6663,8 +6663,8 @@ and check_polarity cx ?trace polarity = function
 
   | DefT (_, InstanceT (_, super, _, instance)) ->
     check_polarity cx ?trace polarity super;
-    check_polarity_propmap cx ?trace instance.fields_tmap;
-    check_polarity_propmap cx ?trace instance.methods_tmap
+    check_polarity_propmap cx ?trace polarity instance.fields_tmap;
+    check_polarity_propmap cx ?trace polarity instance.methods_tmap
 
   | DefT (_, FunT (_, _, func)) ->
     let f = check_polarity cx ?trace (Polarity.inv polarity) in
@@ -6675,7 +6675,7 @@ and check_polarity cx ?trace polarity = function
     check_polarity cx ?trace Neutral elemt
 
   | DefT (_, ArrT (TupleAT (_, tuple_types))) ->
-    List.iter (check_polarity cx ?trace  Neutral) tuple_types
+    List.iter (check_polarity cx ?trace Neutral) tuple_types
 
   | DefT (_, ArrT (ROArrayAT (elemt))) ->
     check_polarity cx ?trace polarity elemt
@@ -6683,7 +6683,7 @@ and check_polarity cx ?trace polarity = function
   | DefT (_, ArrT EmptyAT) -> ()
 
   | DefT (_, ObjT obj) ->
-    check_polarity_propmap cx ?trace obj.props_tmap;
+    check_polarity_propmap cx ?trace polarity obj.props_tmap;
     (match obj.dict_t with
     | Some { key; value; dict_polarity; _ } ->
       check_polarity cx ?trace dict_polarity key;
@@ -6730,18 +6730,18 @@ and check_polarity cx ?trace polarity = function
   | TypeMapT _
     -> () (* TODO *)
 
-and check_polarity_propmap cx ?trace id =
+and check_polarity_propmap cx ?trace polarity id =
   let pmap = Context.find_props cx id in
-  SMap.iter (fun _ -> check_polarity_prop cx ?trace) pmap
+  SMap.iter (fun _ -> check_polarity_prop cx ?trace polarity) pmap
 
-and check_polarity_prop cx ?trace = function
-  | Field (t, polarity) -> check_polarity cx ?trace polarity t
-  | Get t -> check_polarity cx ?trace Positive t
-  | Set t -> check_polarity cx ?trace Negative t
+and check_polarity_prop cx ?trace polarity = function
+  | Field (t, p) -> check_polarity cx ?trace (Polarity.mult (polarity, p)) t
+  | Get t -> check_polarity cx ?trace polarity t
+  | Set t -> check_polarity cx ?trace (Polarity.inv polarity) t
   | GetSet (t1, t2) ->
-    check_polarity cx ?trace Positive t1;
-    check_polarity cx ?trace Negative t2
-  | Method t -> check_polarity cx ?trace Positive t
+    check_polarity cx ?trace polarity t1;
+    check_polarity cx ?trace (Polarity.inv polarity) t2
+  | Method t -> check_polarity cx ?trace polarity t
 
 and check_polarity_typeparam cx ?trace polarity tp =
   check_polarity cx ?trace polarity tp.bound
