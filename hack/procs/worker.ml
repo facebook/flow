@@ -395,7 +395,7 @@ let select ds =
     if fds = [] || List.length processing <> List.length ds then
       [], [], []
     else
-      Unix.select fds [] [] ~-.1. in
+      Sys_utils.select_non_intr fds [] [] ~-.1. in
   List.fold_right
     ~f:(fun d { readys ; waiters } ->
       match !d with

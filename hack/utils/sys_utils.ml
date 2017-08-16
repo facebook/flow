@@ -491,3 +491,16 @@ type processor_info = {
 }
 
 external processor_info: unit -> processor_info = "hh_processor_info"
+
+(* We implement timers using sigalarm which means selects can be interrupted. This is a wrapper
+ * around EINTR which continues the select if it gets interrupted by a signal *)
+let rec select_non_intr read write exn timeout =
+  let start_time = Unix.gettimeofday () in
+  try Unix.select read write exn timeout
+  with Unix.Unix_error (Unix.EINTR, _, _) ->
+    (* Negative timeouts mean no timeout *)
+    let timeout =
+      if timeout < 0.0
+      then timeout
+      else max 0.0 (timeout -. (Unix.gettimeofday () -. start_time)) in
+    select_non_intr read write exn timeout
