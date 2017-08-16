@@ -411,11 +411,11 @@ guides:
   #   description: >
   #     Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
   #     tempor incididunt ut labore et dolore.
-  frameworks:
-    title: "Frameworks"
+  react:
+    title: "React"
     description: >
-      Detailed guides, tips, and resources on how to use Flow with popular
-      JavaScript frameworks.
+      Learn how to use Flow to effectively type common and advanced React
+      patterns.
   tools:
     title: "Tools"
     description: >

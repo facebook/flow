@@ -102,11 +102,16 @@
 #   pages:
 #     - path: "/docs/errors/"
 
-- id: frameworks
+- id: react
   pages:
-    - path: "/docs/frameworks/"
-    - path: "/docs/frameworks/react/"
-    - path: "/docs/frameworks/redux/"
+    - path: "/docs/react/"
+    - path: "/docs/react/components/"
+    - path: "/docs/react/events/"
+    - path: "/docs/react/refs/"
+    - path: "/docs/react/children/"
+    - path: "/docs/react/hoc/"
+    - path: "/docs/react/redux/"
+    - path: "/docs/react/types/"
 
 - id: tools
   pages:
