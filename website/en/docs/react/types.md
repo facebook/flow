@@ -269,7 +269,7 @@ instance which is retrieved using
 [`React.ElementRef<typeof Component>`](#toc-react-elementref) or null since
 [React will pass null into a ref function when unmounting][].
 
-[React will pass null into a ref when unmounting]: https://facebook.github.io/react/docs/refs-and-the-dom.html#adding-a-ref-to-a-dom-element
+[React will pass null into a ref function when unmounting]: https://facebook.github.io/react/docs/refs-and-the-dom.html#adding-a-ref-to-a-dom-element
 
 Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component`
 must be the type *of* a React component so you need to use `typeof` as in
