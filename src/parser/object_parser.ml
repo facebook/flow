@@ -575,8 +575,9 @@ module Object
       classDecorators=decorators;
     }))
 
-  let class_expression env =
-    let start_loc = Peek.loc env in
+  let class_expression = with_loc (fun env ->
+    (* 10.2.1 says all parts of a class expression are strict *)
+    let env = env |> with_strict true in
     let decorators = decorator_list env in
     Expect.token env T_CLASS;
     let id, typeParameters = match Peek.token env with
@@ -588,8 +589,7 @@ module Object
           let typeParameters = Type.type_parameter_declaration_with_defaults env in
           id, typeParameters in
     let body, superClass, superTypeParameters, implements = _class env in
-    let loc = Loc.btwn start_loc (fst body) in
-    loc, Ast.Expression.(Class Class.({
+    Ast.Expression.Class { Class.
       id;
       body;
       superClass;
@@ -597,5 +597,6 @@ module Object
       superTypeParameters;
       implements;
       classDecorators=decorators;
-    }))
+    }
+  )
 end

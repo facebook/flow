@@ -528,10 +528,6 @@ language/expressions/async-generator/early-errors-expression-yield-star-after-ne
   Missing parse error
 language/expressions/async-generator/early-errors-expression-yield-star-after-newline.js (default)
   Missing parse error
-language/expressions/class/method-param-dflt-yield.js (default)
-  Missing parse error
-language/expressions/class/static-method-param-dflt-yield.js (default)
-  Missing parse error
 language/expressions/function/early-body-super-call.js (strict mode)
   Missing parse error
 language/expressions/function/early-body-super-call.js (default)
@@ -2202,8 +2198,8 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54204 (98.01%)
-Failed: 1101 (1.99%)
+Passed: 54206 (98.01%)
+Failed: 1099 (1.99%)
 
 Features:
   Reflect: 244/246 (99.19%)
@@ -2213,10 +2209,9 @@ Features:
   async-functions: 144/217 (66.36%)
   async-iteration: 6898/7052 (97.82%)
   class: 124/132 (93.94%)
-  default-parameters: 3332/3334 (99.94%)
   destructuring-binding: 10325/10699 (96.50%)
   generator: 390/396 (98.48%)
-  generators: 1283/1343 (95.53%)
+  generators: 1285/1343 (95.68%)
   let: 125/135 (92.59%)
   object-rest: 610/620 (98.39%)
   regexp-named-groups: 36/40 (90.00%)
