@@ -86,7 +86,15 @@ module CheckCommand = struct
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
     let options = make_options ~flowconfig ~lazy_:false ~root options_flags in
 
-    if Options.should_profile options then Flow_server_profile.init ();
+    if Options.should_profile options
+    then begin
+      Flow_server_profile.init ();
+      let rec sample_processor_info () =
+        Flow_server_profile.processor_sample ();
+        Timer.set_timer ~interval:1.0 ~callback:sample_processor_info |> ignore
+      in
+      sample_processor_info ()
+    end;
 
     (* initialize loggers before doing too much, especially anything that might exit *)
     init_loggers ~from ~options ~min_level:Hh_logger.Level.Error ();
@@ -104,6 +112,7 @@ module CheckCommand = struct
     let printer =
       if json || pretty then Json { pretty } else Cli error_flags in
     print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
+    Flow_server_profile.print_url ();
     if Errors.ErrorSet.is_empty errors
       then FlowExitStatus.(exit No_error)
       else FlowExitStatus.(exit Type_error)
