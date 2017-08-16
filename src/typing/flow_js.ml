@@ -1089,7 +1089,6 @@ module ResolvableTypeJob = struct
     | TaintT _
     | ExistsT _
     | OpenPredT _
-    | TypeMapT _
       ->
       acc
 
@@ -3093,16 +3092,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (DefT (reason, BoolT (Some b)), u)
 
     (************************************************************************)
-    (* mapping over type structures                                         *)
-    (************************************************************************)
-
-    | TypeMapT (r, kind, t1, t2), _ ->
-      rec_flow cx trace (t1, MapTypeT (r, kind, t2, Upper u))
-
-    | _, UseT (_, TypeMapT (r, kind, t1, t2)) ->
-      rec_flow cx trace (t1, MapTypeT (r, kind, t2, Lower l))
-
-    (************************************************************************)
     (* exact object types *)
     (************************************************************************)
 
@@ -3525,7 +3514,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          distinguishing power when the arguments have not been concretized:
          differently typed arguments could be incorrectly summarized by common
          type variables they flow to, causing spurious errors. In particular, we
-         don't cache calls involved in the execution of TypeMapT operations
+         don't cache calls involved in the execution of mapped type operations
          ($TupleMap, $ObjectMap, $ObjectMapi) to avoid this problem.
 
          NOTE: This is probably not the final word on non-termination with
@@ -4877,10 +4866,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* function types can be mapped over a structure  *)
     (**************************************************)
 
-    | DefT (_, AnyT), MapTypeT (reason_op, _, _, k) ->
-      continue cx trace (AnyT.why reason_op) k
+    | DefT (_, (AnyT | AnyObjT)), MapTypeT (reason_op, _, tout) ->
+      rec_flow_t cx trace (AnyT.why reason_op, tout)
 
-    | DefT (_, ArrT arrtype), MapTypeT (reason_op, TupleMap, funt, k) ->
+    | DefT (_, ArrT arrtype), MapTypeT (reason_op, TupleMap funt, tout) ->
       let f x = mk_tvar_where cx reason_op (fun t ->
         let callt = CallT (reason_op, mk_functioncalltype [Arg x] t) in
         rec_flow cx trace (funt, callt)
@@ -4896,18 +4885,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let reason = replace_reason_const RArrayType reason_op in
         DefT (reason, ArrT arrtype)
       in
-      continue cx trace t k
+      rec_flow_t cx trace (t, tout)
 
-    | _, MapTypeT (reason, TupleMap, funt, k) ->
+    | _, MapTypeT (reason, TupleMap funt, tout) ->
       let iter = get_builtin cx ~trace "$iterate" reason in
       let elemt = mk_tvar_where cx reason (fun t ->
         let callt = CallT (reason, mk_functioncalltype [Arg l] t) in
         rec_flow cx trace (iter, callt)
       ) in
       let t = DefT (reason, ArrT (ArrayAT (elemt, None))) in
-      rec_flow cx trace (t, MapTypeT (reason, TupleMap, funt, k))
+      rec_flow cx trace (t, MapTypeT (reason, TupleMap funt, tout))
 
-    | DefT (_, ObjT o), MapTypeT (reason_op, ObjectMap, funt, k) ->
+    | DefT (_, ObjT o), MapTypeT (reason_op, ObjectMap funt, tout) ->
       let map_t t = mk_tvar_where cx reason_op (fun t' ->
         let funtype = mk_functioncalltype [Arg t] t' in
         rec_flow cx trace (funt, CallT (reason_op, funtype))
@@ -4925,9 +4914,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let reason = replace_reason_const RObjectType reason_op in
         DefT (reason, ObjT {o with props_tmap; dict_t})
       in
-      continue cx trace mapped_t k
+      rec_flow_t cx trace (mapped_t, tout)
 
-    | DefT (_, ObjT o), MapTypeT (reason_op, ObjectMapi, funt, k) ->
+    | DefT (_, ObjT o), MapTypeT (reason_op, ObjectMapi funt, tout) ->
       let mapi_t key t = mk_tvar_where cx reason_op (fun t' ->
         let funtype = { (mk_functioncalltype [Arg key; Arg t] t') with
           call_strict_arity = false;
@@ -4951,7 +4940,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let reason = replace_reason_const RObjectType reason_op in
         DefT (reason, ObjT {o with props_tmap; dict_t})
       in
-      continue cx trace mapped_t k
+      rec_flow_t cx trace (mapped_t, tout)
 
     (***********************************************)
     (* functions may have their prototypes written *)
@@ -5860,8 +5849,8 @@ and flow_error_kind_of_upper = function
   | HasOwnPropT _ -> FlowError.IncompatibleHasOwnPropT
   | GetValuesT _ -> FlowError.IncompatibleGetValuesT
   | UnaryMinusT _ -> FlowError.IncompatibleUnaryMinusT
-  | MapTypeT (_, TupleMap, _, _) -> FlowError.IncompatibleMapTypeTTuple
-  | MapTypeT (_, (ObjectMap | ObjectMapi), _, _) -> FlowError.IncompatibleMapTypeTObject
+  | MapTypeT (_, TupleMap _, _) -> FlowError.IncompatibleMapTypeTTuple
+  | MapTypeT (_, (ObjectMap _ | ObjectMapi _), _) -> FlowError.IncompatibleMapTypeTObject
   | TypeAppVarianceCheckT _ -> FlowError.IncompatibleTypeAppVarianceCheckT
   | use_t -> FlowError.IncompatibleUnclassified (string_of_use_ctor use_t)
 
@@ -6602,6 +6591,7 @@ and eval_destructor cx ~trace reason curr_t s i =
             let state = { todo_rev; acc = [] } in
             ObjSpreadT (reason, options, tool, state, tvar)
         | ValuesType -> GetValuesT (reason, tvar)
+        | TypeMap tmap -> MapTypeT (reason, tmap, tvar)
         )
     )
   | Some it ->
@@ -6727,7 +6717,6 @@ and check_polarity cx ?trace polarity = function
   | ChoiceKitT _
   | CustomFunT _
   | OpenPredT _
-  | TypeMapT _
     -> () (* TODO *)
 
 and check_polarity_propmap cx ?trace polarity id =
@@ -10393,7 +10382,6 @@ end = struct
     | ShapeT _
     | TaintT _
     | ThisClassT _
-    | TypeMapT (_, _, _, _)
     | DefT (_, TypeT _)
       ->
         FailureUnhandledType this_t
@@ -10587,10 +10575,6 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
 
   | ExistsT _ ->
     ()
-
-  | TypeMapT (_, _, t1, t2) ->
-    recurse t1;
-    recurse t2
 
   | ReposT (_, t)
   | ReposUpperT (_, t) ->

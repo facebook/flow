@@ -316,27 +316,6 @@ let rec gen_type t env = Type.(
   | DefT (_, UnionT union) -> gen_union_list union env
   | DefT (_, VoidT) -> add_str "void" env
 
-  | TypeMapT (_, TupleMap, t1, t2) ->
-    add_str "$TupleMap<" env
-    |> gen_type t1
-    |> add_str ", "
-    |> gen_type t2
-    |> add_str ">"
-
-  | TypeMapT (_, ObjectMap, t1, t2) ->
-    add_str "$ObjMap<" env
-    |> gen_type t1
-    |> add_str ", "
-    |> gen_type t2
-    |> add_str ">"
-
-  | TypeMapT (_, ObjectMapi, t1, t2) ->
-    add_str "$ObjMapi<" env
-    |> gen_type t1
-    |> add_str ", "
-    |> gen_type t2
-    |> add_str ">"
-
   (**
    * These types can't be expressed in code well so we fail back to `mixed`.
    *

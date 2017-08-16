@@ -154,9 +154,6 @@ let rec gc cx state = function
   | DefT (_, TypeAppT (t, ts)) ->
       gc cx state t;
       ts |> List.iter (gc cx state)
-  | TypeMapT (_, _, t1, t2) ->
-      gc cx state t1;
-      gc cx state t2
   | DefT (_, TypeT t) -> gc cx state t
   | DefT (_, UnionT rep) -> UnionRep.members rep |> List.iter (gc cx state)
   | DefT (_, VoidT) -> ()
@@ -268,7 +265,7 @@ and gc_use cx state = function
       | SuperProp p ->
         Property.iter_t (gc cx state) p)
   | MakeExactT (_, k) -> gc_cont cx state k
-  | MapTypeT (_, _, t, k) -> gc cx state t; gc_cont cx state k
+  | MapTypeT (_, tmap, t) -> gc_type_map cx state tmap; gc cx state t
   | MethodT(_, _, _, funcalltype) -> gc_funcalltype cx state funcalltype
   | MixinT (_, t) -> gc cx state t
   | NotT (_, t) -> gc cx state t
@@ -376,6 +373,7 @@ and gc_destructor cx state = function
   | ElementType t -> gc cx state t
   | Bind t -> gc cx state t
   | SpreadType (_, ts) -> List.iter (gc cx state) ts
+  | TypeMap tmap -> gc_type_map cx state tmap
 
 and gc_pred cx state = function
 
@@ -444,6 +442,9 @@ and gc_object_spread =
 and gc_cont cx state = function
   | Lower t -> gc cx state t
   | Upper u -> gc_use cx state u
+
+and gc_type_map cx state = function
+  | TupleMap t | ObjectMap t | ObjectMapi t -> gc cx state t
 
 and gc_choice_use_tool cx state = function
   | FullyResolveType _ -> ()

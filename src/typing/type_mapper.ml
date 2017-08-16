@@ -142,11 +142,6 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else OpenPredT (r, t'', map1, map2)
-      | TypeMapT (r, tmap, t1, t2) ->
-          let t1' = self#type_ cx map_cx t1 in
-          let t2' = self#type_ cx map_cx t2 in
-          if t1 == t1' && t2 == t2' then t
-          else TypeMapT (r, tmap, t1', t2')
       | ReposT (r, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -342,6 +337,10 @@ class ['a] t = object(self)
           if tlist' == tlist then t
           else SpreadType (options, tlist')
       | ValuesType -> t
+      | TypeMap tmap ->
+          let tmap' = self#type_map cx map_cx tmap in
+          if tmap' == tmap then t
+          else TypeMap tmap'
 
   method exports cx map_cx id =
     let exps = Context.find_exports cx id in
@@ -679,11 +678,11 @@ class ['a] t = object(self)
         let t2' = self#type_ cx map_cx t2 in
         if t1' == t1 && t2' == t2 then t
         else ExportTypeT (r, skip, name, t1', t2')
-    | MapTypeT (r, typemap, t', cont) ->
+    | MapTypeT (r, tmap, t') ->
+        let tmap' = self#type_map cx map_cx tmap in
         let t'' = self#type_ cx map_cx t' in
-        let cont' = self#cont cx map_cx cont in
-        if t'' == t' && cont' == cont then t
-        else MapTypeT (r, typemap, t'', cont')
+        if tmap' == tmap && t'' == t' then t
+        else MapTypeT (r, tmap', t'')
     | ReactKitT (r, react_tool) ->
         let react_tool' = self#react_tool cx map_cx react_tool in
         if react_tool' == react_tool then t
@@ -890,6 +889,21 @@ class ['a] t = object(self)
         let use_t' = self#use_type cx map_cx use_t in
         if use_t' == use_t then t
         else Upper use_t'
+
+  method type_map cx map_cx t =
+    match t with
+    | TupleMap t' ->
+      let t'' = self#type_ cx map_cx t' in
+      if t'' == t' then t
+      else TupleMap t''
+    | ObjectMap t' ->
+      let t'' = self#type_ cx map_cx t' in
+      if t'' == t' then t
+      else ObjectMap t''
+    | ObjectMapi t' ->
+      let t'' = self#type_ cx map_cx t' in
+      if t'' == t' then t
+      else ObjectMapi t''
 
   method react_tool cx map_cx t =
     let open React in

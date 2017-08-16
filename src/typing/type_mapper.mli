@@ -20,6 +20,7 @@ class ['a] t :
       'a -> Type.choice_use_tool -> Type.choice_use_tool
     method class_binding : Context.t -> 'a -> Type.class_binding -> Type.class_binding
     method cont : Context.t -> 'a -> Type.cont -> Type.cont
+    method type_map : Context.t -> 'a -> Type.type_map -> Type.type_map
     method create_class_knot :
       Context.t ->
       'a ->

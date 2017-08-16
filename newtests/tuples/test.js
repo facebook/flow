@@ -309,15 +309,15 @@ export default suite(({addFile, addFiles, addCode}) => [
       }
     `).newErrors(
         `
-          test.js:5
-            5:         return arr;
-                              ^^^ string. This type is incompatible with
+          test.js:4
+            4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
             4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
                                                                                         ^ number literal \`1\`
 
-          test.js:5
-            5:         return arr;
-                              ^^^ string. This type is incompatible with
+          test.js:4
+            4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
             4:       function foo(arr: $TupleMap<[number, number], number => string>): [1, 2] {
                                                                                            ^ number literal \`2\`
         `,

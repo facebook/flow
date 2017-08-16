@@ -83,7 +83,6 @@ type hash =
   | CustomFunH
   | IdxWrapperH
   | OpenPredH
-  | TypeMapH
   | CharSetH
   | ReposH
   | ReposUpperH
@@ -150,7 +149,6 @@ let hash_of_ctor = Type.(function
   | TaintT _ -> TaintH
   | ThisClassT _ -> ThisClassH
   | ThisTypeAppT _ -> ThisTypeAppH
-  | TypeMapT _ -> TypeMapH
 )
 
 type prop_hash =

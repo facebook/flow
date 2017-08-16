@@ -461,21 +461,6 @@ let rec normalize_type_impl cx ids t = match t with
       | Some t -> Some (normalize_type_impl cx ids t) in
     ModuleT (reason, { exporttypes with exports_tmap; cjs_export; })
 
-  | TypeMapT (_, TupleMap, t1, t2) ->
-      let t1 = normalize_type_impl cx ids t1 in
-      let t2 = normalize_type_impl cx ids t2 in
-      TypeMapT (locationless_reason RTupleMap, TupleMap, t1, t2)
-
-  | TypeMapT (_, ObjectMap, t1, t2) ->
-      let t1 = normalize_type_impl cx ids t1 in
-      let t2 = normalize_type_impl cx ids t2 in
-      TypeMapT (locationless_reason RObjectMap, ObjectMap, t1, t2)
-
-  | TypeMapT (_, ObjectMapi, t1, t2) ->
-      let t1 = normalize_type_impl cx ids t1 in
-      let t2 = normalize_type_impl cx ids t2 in
-      TypeMapT (locationless_reason RObjectMapi, ObjectMapi, t1, t2)
-
   | ObjProtoT _ -> ObjProtoT (locationless_reason RDummyPrototype)
 
   | ReposT (_, t)

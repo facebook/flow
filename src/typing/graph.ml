@@ -231,7 +231,6 @@ and parts_of_t cx = function
 | ThisTypeAppT (_, t, this, args) ->
   ("t", Def t) :: ("this", Def this) :: list_parts args
 | DefT (_, TypeAppT (t, args)) -> ("t", Def t) :: list_parts args
-| TypeMapT (_, _, t1, t2) -> ["t", Def t1; "mapfn", Def t2]
 | DefT (_, TypeT t) -> ["t", Def t]
 | DefT (_, UnionT rep) -> list_parts (UnionRep.members rep)
 | DefT (_, VoidT) -> []
@@ -325,7 +324,7 @@ and parts_of_use_t cx = function
 | LookupT (_, _, nexts, _, action) ->
     lookup_action_parts action @ list_parts nexts
 | MakeExactT (_, k) -> ["cont", node_of_cont k]
-| MapTypeT (_, _, t, k) -> ["t", Def t; "cont", node_of_cont k]
+| MapTypeT (_, _, t) -> ["out", Def t]
 | MethodT (_, _, _, funcalltype) -> parts_of_funcalltype funcalltype
 | MixinT (_, t) -> ["t", Def t]
 | NotT (_, out) -> ["out", Def out]

@@ -328,7 +328,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       | [t1; t2] -> t1, t2
       | _ -> assert false in
       let reason = mk_reason RTupleMap loc in
-      TypeMapT (reason, TupleMap, t1, t2)
+      EvalT (t1, TypeDestructorT (reason, TypeMap (TupleMap t2)), mk_id ())
     )
 
   | "$ObjMap" ->
@@ -337,7 +337,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       | [t1; t2] -> t1, t2
       | _ -> assert false in
       let reason = mk_reason RObjectMap loc in
-      TypeMapT (reason, ObjectMap, t1, t2)
+      EvalT (t1, TypeDestructorT (reason, TypeMap (ObjectMap t2)), mk_id ())
     )
 
   | "$ObjMapi" ->
@@ -346,7 +346,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       | [t1; t2] -> t1, t2
       | _ -> assert false in
       let reason = mk_reason RObjectMapi loc in
-      TypeMapT (reason, ObjectMapi, t1, t2)
+      EvalT (t1, TypeDestructorT (reason, TypeMap (ObjectMapi t2)), mk_id ())
     )
 
   | "$CharSet" ->

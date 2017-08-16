@@ -98,11 +98,6 @@ class ['a] t = object(self)
     let acc = self#list (self#type_ cx) acc ts in
     acc
 
-  | TypeMapT (_, _, t1, t2) ->
-    let acc = self#type_ cx acc t1 in
-    let acc = self#type_ cx acc t2 in
-    acc
-
   | ReposT (_, t)
   | ReposUpperT (_, t) ->
     self#type_ cx acc t
@@ -220,6 +215,7 @@ class ['a] t = object(self)
   | ElementType t -> self#type_ cx acc t
   | Bind t -> self#type_ cx acc t
   | SpreadType (_, ts) -> self#list (self#type_ cx) acc ts
+  | TypeMap (TupleMap t | ObjectMap t | ObjectMapi t) -> self#type_ cx acc t
 
   method private use_type_ cx acc = function
   | UseT (_, t) ->
@@ -272,7 +268,7 @@ class ['a] t = object(self)
   | IntersectionPreprocessKitT (_, _)
   | LookupT (_, _, _, _, _)
   | MakeExactT (_, _)
-  | MapTypeT (_, _, _, _)
+  | MapTypeT (_, _, _)
   | MethodT (_, _, _, _)
   | MixinT (_, _)
   | NotT (_, _)

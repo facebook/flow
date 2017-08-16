@@ -190,9 +190,6 @@ module rec TypeTerm : sig
     *)
     | OpenPredT of reason * t * predicate Key_map.t * predicate Key_map.t
 
-    (* Map a FunT over a structure *)
-    | TypeMapT of reason * type_map * t * t
-
     | ReposT of reason * t
     | ReposUpperT of reason * t
 
@@ -458,7 +455,7 @@ module rec TypeTerm : sig
         * t_out
 
     (* Map a FunT over a structure *)
-    | MapTypeT of reason * type_map * t * cont
+    | MapTypeT of reason * type_map * t_out
 
     | ReactKitT of reason * React.tool
 
@@ -855,11 +852,12 @@ module rec TypeTerm : sig
   | Bind of t
   | SpreadType of ObjectSpread.options * t list
   | ValuesType
+  | TypeMap of type_map
 
   and type_map =
-  | TupleMap
-  | ObjectMap
-  | ObjectMapi
+  | TupleMap of t
+  | ObjectMap of t
+  | ObjectMapi of t
 
   and prototype = t
 
@@ -1860,7 +1858,6 @@ let rec reason_of_t = function
   | TaintT (r) -> r
   | ThisClassT (reason, _) -> reason
   | ThisTypeAppT (reason, _, _, _) -> reason
-  | TypeMapT (reason, _, _, _) -> reason
 
 and reason_of_defer_use_t = function
   | DestructuringT (reason, _)
@@ -1916,7 +1913,7 @@ and reason_of_use_t = function
   | IntersectionPreprocessKitT (reason, _) -> reason
   | LookupT(reason, _, _, _, _) -> reason
   | MakeExactT (reason, _) -> reason
-  | MapTypeT (reason, _, _, _) -> reason
+  | MapTypeT (reason, _, _) -> reason
   | MethodT (reason,_,_,_) -> reason
   | MixinT (reason, _) -> reason
   | NotT (reason, _) -> reason
@@ -2002,7 +1999,6 @@ let rec mod_reason_of_t f = function
   | TaintT (r) -> TaintT (f r)
   | ThisClassT (reason, t) -> ThisClassT (f reason, t)
   | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
-  | TypeMapT (reason, kind, t1, t2) -> TypeMapT (f reason, kind, t1, t2)
 
 and mod_reason_of_defer_use_t f = function
   | DestructuringT (reason, s) -> DestructuringT (f reason, s)
@@ -2069,7 +2065,7 @@ and mod_reason_of_use_t f = function
       IntersectionPreprocessKitT (f reason, tool)
   | LookupT (reason, r2, ts, x, t) -> LookupT (f reason, r2, ts, x, t)
   | MakeExactT (reason, t) -> MakeExactT (f reason, t)
-  | MapTypeT (reason, kind, t, k) -> MapTypeT (f reason, kind, t, k)
+  | MapTypeT (reason, kind, t) -> MapTypeT (f reason, kind, t)
   | MethodT (reason_call, reason_lookup, name, ft) ->
       MethodT (f reason_call, reason_lookup, name, ft)
   | MixinT (reason, inst) -> MixinT (f reason, inst)
@@ -2214,7 +2210,6 @@ let string_of_ctor = function
   | TaintT _ -> "TaintT"
   | ThisClassT _ -> "ThisClassT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
-  | TypeMapT _ -> "TypeMapT"
 
 let string_of_internal_use_op = function
   | CopyEnv -> "CopyEnv"

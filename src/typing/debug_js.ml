@@ -39,9 +39,9 @@ let string_of_binary_test_ctor = function
   | SentinelProp _ -> "SentinelProp"
 
 let string_of_type_map = function
-  | TupleMap -> "TupleMap"
-  | ObjectMap -> "ObjectMap"
-  | ObjectMapi -> "ObjectMapi"
+  | TupleMap _ -> "TupleMap"
+  | ObjectMap _ -> "ObjectMap"
+  | ObjectMapi _ -> "ObjectMapi"
 
 let string_of_polarity = function
   | Negative -> "Negative"
@@ -276,12 +276,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "id", JSON_String (string_of_int opaquetype.opaque_id);
       "supertype", st
   ]
-
-  | TypeMapT (_, kind, t1, t2) -> [
-      "kind", JSON_String (string_of_type_map kind);
-      "type", _json_of_t json_cx t1;
-      "funType", _json_of_t json_cx t2;
-    ]
 
   | ModuleT (_, {exports_tmap; cjs_export; has_every_named_export;}) ->
     let tmap = Context.find_exports json_cx.cx exports_tmap in
@@ -668,10 +662,9 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
   | DebugPrintT _reason -> []
 
-  | MapTypeT (_, kind, t, cont) -> [
+  | MapTypeT (_, kind, t) -> [
       "kind", JSON_String (string_of_type_map kind);
       "t", _json_of_t json_cx t;
-      "cont", JSON_Object (_json_of_cont json_cx cont);
     ]
 
   | ObjSpreadT (_, _, _, _, tout) -> [
@@ -1037,6 +1030,20 @@ and json_of_destructor_impl json_cx = Hh_json.(function
     ]
   | ValuesType -> JSON_Object [
       "values", JSON_Bool true;
+    ]
+  | TypeMap tmap -> json_of_type_map json_cx tmap
+)
+
+and json_of_type_map json_cx = check_depth json_of_type_map_impl json_cx
+and json_of_type_map_impl json_cx = Hh_json.(function
+  | TupleMap t -> JSON_Object [
+      "tupleMap", _json_of_t json_cx t
+    ]
+  | ObjectMap t -> JSON_Object [
+      "objectMap", _json_of_t json_cx t
+    ]
+  | ObjectMapi t -> JSON_Object [
+      "objectMapi", _json_of_t json_cx t
     ]
 )
 
@@ -1465,6 +1472,9 @@ and dump_t_ (depth, tvars) cx t =
     | Bind _ -> "bind"
     | SpreadType _ -> "spread"
     | ValuesType -> "values"
+    | TypeMap (TupleMap _) -> "tuple map"
+    | TypeMap (ObjectMap _) -> "object map"
+    | TypeMap (ObjectMapi _) -> "object mapi"
     in
     fun expr t -> match expr with
     | DestructuringT (_, selector) ->
@@ -1601,10 +1611,6 @@ and dump_t_ (depth, tvars) cx t =
   | ChoiceKitT _ -> p t
   | IdxWrapper (_, inner_obj) -> p ~extra:(kid inner_obj) t
   | OpenPredT (_, inner_type, _, _) -> p ~extra:(kid inner_type) t
-  | TypeMapT (_, kind, t1, t2) -> p ~extra:(spf "%s, %s, %s"
-      (string_of_type_map kind)
-      (kid t1)
-      (kid t2)) t
   | ReposT (_, arg)
   | ReposUpperT (_, arg) -> p ~extra:(kid arg) t
 
@@ -2061,6 +2067,9 @@ let string_of_destructor = function
   | Bind _ -> "Bind"
   | SpreadType _ -> "Spread"
   | ValuesType -> "Values"
+  | TypeMap (TupleMap _) -> "TupleMap"
+  | TypeMap (ObjectMap _) -> "ObjectMap"
+  | TypeMap (ObjectMapi _) -> "ObjectMapi"
 
 let string_of_default = Default.fold
   ~expr:(fun (loc, _) ->
