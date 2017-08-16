@@ -622,24 +622,24 @@ module Expression
     let async = Declaration.async env in
     Expect.token env T_FUNCTION;
     let generator = Declaration.generator env in
+    let yield, await = match async, generator with
+    | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorExpression *)
+    | true, false -> false, true (* #prod-AsyncFunctionExpression *)
+    | false, true -> true, false (* #prod-GeneratorExpression *)
+    | false, false -> false, false (* #prod-FunctionExpression *)
+    in
     let id, typeParameters =
       if Peek.token env = T_LPAREN
       then None, None
       else begin
         let id = match Peek.token env with
           | T_LESS_THAN -> None
-          | _ -> Some (Parse.identifier ~restricted_error:Error.StrictFunctionName env) in
+          | _ ->
+            let env = env |> with_allow_await await |> with_allow_yield yield in
+            Some (Parse.identifier ~restricted_error:Error.StrictFunctionName env) in
         id, Type.type_parameter_declaration env
       end in
-    let params =
-      let yield, await = match async, generator with
-      | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorExpression *)
-      | true, false -> false, true (* #prod-AsyncFunctionExpression *)
-      | false, true -> true, false (* #prod-GeneratorExpression *)
-      | false, false -> false, false (* #prod-FunctionExpression *)
-      in
-      Declaration.function_params ~await ~yield env
-    in
+    let params = Declaration.function_params ~await ~yield env in
     let returnType, predicate = Type.annotation_and_predicate_opt env in
     let end_loc, body, strict =
       Declaration.function_body env ~async ~generator in

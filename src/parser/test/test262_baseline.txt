@@ -496,10 +496,6 @@ language/expressions/async-generator/early-errors-expression-NSPL-with-USD.js (s
   Missing parse error
 language/expressions/async-generator/early-errors-expression-NSPL-with-USD.js (default)
   Missing parse error
-language/expressions/async-generator/early-errors-expression-await-as-function-binding-identifier.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-await-as-function-binding-identifier.js (default)
-  Missing parse error
 language/expressions/async-generator/early-errors-expression-body-contains-super-call.js (strict mode)
   Missing parse error
 language/expressions/async-generator/early-errors-expression-body-contains-super-call.js (default)
@@ -2268,8 +2264,8 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54171 (97.95%)
-Failed: 1134 (2.05%)
+Passed: 54173 (97.95%)
+Failed: 1132 (2.05%)
 
 Features:
   Reflect: 244/246 (99.19%)
@@ -2277,7 +2273,7 @@ Features:
   Symbol.toStringTag: 80/82 (97.56%)
   arrow-function: 18/24 (75.00%)
   async-functions: 144/217 (66.36%)
-  async-iteration: 6882/7052 (97.59%)
+  async-iteration: 6884/7052 (97.62%)
   class: 124/132 (93.94%)
   default-parameters: 3332/3334 (99.94%)
   destructuring-binding: 10325/10699 (96.50%)
