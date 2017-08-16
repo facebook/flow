@@ -2384,26 +2384,26 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* upper and lower any types *)
     (*****************************)
 
-    (** UpperBoundT and AnyWithUpperBoundT are very useful types that concisely
-        model subtyping constraints without introducing unwanted effects: they
-        can appear on both sides of a type, but only have effects in one of
-        those sides. In some sense, they are liked bounded AnyT: indeed, AnyT
-        has the same behavior as UpperBoundT(EmptyT) and
-        AnyWithUpperBoundT(MixedT). Thus, these types can be used instead of
+    (** AnyWithLowerBoundT and AnyWithUpperBoundT are mildly useful types that
+        model subtyping constraints without introducing potentially unwanted
+        effects: they can appear on both sides of a type, but only constrain one
+        of those sides. In some sense, they are liked bounded AnyT: indeed, AnyT
+        has the same behavior as AnyWithLowerBound (EmptyT) and
+        AnyWithUpperBoundT (MixedT). Thus, these types can be used instead of
         AnyT when some precise typechecking is required without overconstraining
         the system. A completely static alternative would be achieved with
         bounded type variables, which Flow does not support yet. **)
 
-    | (AnyWithLowerBoundT t, _) ->
-      rec_flow cx trace (t,u)
+    | AnyWithLowerBoundT t, _ ->
+      rec_flow cx trace (t, u)
 
-    | (_, UseT (_, AnyWithLowerBoundT _)) ->
-      ()
+    | _, UseT (use_op, AnyWithLowerBoundT t) ->
+      rec_flow cx trace (l, UseT (use_op, MixedT.why (reason_of_t t)))
 
-    | (AnyWithUpperBoundT _, _) ->
-      ()
+    | AnyWithUpperBoundT t, _ ->
+      rec_flow cx trace (EmptyT.why (reason_of_t t), u)
 
-    | (_, UseT (_, AnyWithUpperBoundT t)) ->
+    | _, UseT (_, AnyWithUpperBoundT t) ->
       rec_flow_t cx trace (l, t)
 
     (*********************)
