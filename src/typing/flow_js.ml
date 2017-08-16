@@ -6114,8 +6114,8 @@ and needs_resolution = function
  * is that we would error on both l and r, saying neither is compatible with
  * `string`.
  *
- * We are less permissive than the spec when it comes to string coersion:
- * only numbers can be coerced, to allow things like `num + '%'`.
+ * Unlike the spec, we do not allow string coersion:
+ * for example, numbers cannot be coerced, so `num + '%'` is invalid.
  *
  * TODO: handle symbols (which raise a TypeError, so should be banned)
  *
@@ -6125,9 +6125,7 @@ and flow_addition cx trace use_op reason flip l r u =
   let (l, r) = if flip then (r, l) else (l, r) in
   let loc = aloc_of_reason reason in
   begin match l, r with
-  | DefT (_, StrT _), DefT (_, StrT _)
-  | DefT (_, StrT _), DefT (_, NumT _)
-  | DefT (_, NumT _), DefT (_, StrT _) ->
+  | DefT (_, StrT _), DefT (_, StrT _) ->
     rec_flow_t cx trace (StrT.at loc, u)
 
   (* unreachable additions are unreachable *)
