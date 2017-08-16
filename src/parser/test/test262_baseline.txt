@@ -524,37 +524,9 @@ language/expressions/async-generator/early-errors-expression-formals-contains-su
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-contains-super-property.js (default)
   Missing parse error
-language/expressions/async-generator/early-errors-expression-formals-contains-yield.js (default)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-yield-as-function-binding-identifier.js (default)
-  Missing parse error
 language/expressions/async-generator/early-errors-expression-yield-star-after-newline.js (strict mode)
   Missing parse error
 language/expressions/async-generator/early-errors-expression-yield-star-after-newline.js (default)
-  Missing parse error
-language/expressions/async-generator/named-yield-as-binding-identifier.js (default)
-  Missing parse error
-language/expressions/async-generator/named-yield-as-identifier-reference.js (default)
-  Missing parse error
-language/expressions/async-generator/yield-as-binding-identifier.js (default)
-  Missing parse error
-language/expressions/async-generator/yield-as-identifier-reference.js (default)
-  Missing parse error
-language/expressions/class/async-gen-method-static-yield-as-binding-identifier.js (default)
-  Missing parse error
-language/expressions/class/async-gen-method-static-yield-as-identifier-reference.js (default)
-  Missing parse error
-language/expressions/class/async-gen-method-yield-as-binding-identifier.js (default)
-  Missing parse error
-language/expressions/class/async-gen-method-yield-as-identifier-reference.js (default)
-  Missing parse error
-language/expressions/class/gen-method-static-yield-as-binding-identifier.js (default)
-  Missing parse error
-language/expressions/class/gen-method-static-yield-as-identifier-reference.js (default)
-  Missing parse error
-language/expressions/class/gen-method-yield-as-binding-identifier.js (default)
-  Missing parse error
-language/expressions/class/gen-method-yield-as-identifier-reference.js (default)
   Missing parse error
 language/expressions/class/method-param-dflt-yield.js (default)
   Missing parse error
@@ -580,29 +552,13 @@ language/expressions/function/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/expressions/function/use-strict-with-non-simple-param.js (default)
   Missing parse error
-language/expressions/generators/named-yield-as-binding-identifier.js (default)
-  Missing parse error
-language/expressions/generators/named-yield-as-identifier-reference.js (default)
-  Missing parse error
 language/expressions/generators/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/expressions/generators/use-strict-with-non-simple-param.js (default)
   Missing parse error
-language/expressions/generators/yield-as-binding-identifier.js (default)
-  Missing parse error
-language/expressions/generators/yield-as-generator-expression-binding-identifier.js (default)
-  Missing parse error
-language/expressions/generators/yield-as-identifier-reference.js (default)
-  Missing parse error
-language/expressions/generators/yield-as-parameter.js (default)
-  Missing parse error
 language/expressions/generators/yield-star-after-newline.js (strict mode)
   Missing parse error
 language/expressions/generators/yield-star-after-newline.js (default)
-  Missing parse error
-language/expressions/object/method-definition/async-gen-yield-as-binding-identifier.js (default)
-  Missing parse error
-language/expressions/object/method-definition/async-gen-yield-as-identifier-reference.js (default)
   Missing parse error
 language/expressions/object/method-definition/early-errors-object-method-NSPL-with-USD.js (strict mode)
   Missing parse error
@@ -629,12 +585,6 @@ language/expressions/object/method-definition/early-errors-object-method-duplica
 language/expressions/object/method-definition/early-errors-object-method-formals-contains-super-call.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/early-errors-object-method-formals-contains-super-call.js (default)
-  Missing parse error
-language/expressions/object/method-definition/gen-yield-as-binding-identifier.js (default)
-  Missing parse error
-language/expressions/object/method-definition/gen-yield-as-identifier-reference.js (default)
-  Missing parse error
-language/expressions/object/method-definition/generator-param-id-yield.js (default)
   Missing parse error
 language/expressions/object/method-definition/generator-param-redecl-const.js (strict mode)
   Missing parse error
@@ -675,8 +625,6 @@ language/expressions/object/method-definition/setter-use-strict-with-non-simple-
 language/expressions/object/method-definition/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/use-strict-with-non-simple-param.js (default)
-  Missing parse error
-language/expressions/object/method-definition/yield-as-parameter.js (default)
   Missing parse error
 language/expressions/object/method-definition/yield-star-after-newline.js (strict mode)
   Missing parse error
@@ -1029,10 +977,6 @@ language/statements/async-function/early-errors-declaration-formals-contains-sup
 language/statements/async-function/early-errors-declaration-formals-contains-super-property.js (strict mode)
   Missing parse error
 language/statements/async-function/early-errors-declaration-formals-contains-super-property.js (default)
-  Missing parse error
-language/statements/async-generator/yield-as-binding-identifier.js (default)
-  Missing parse error
-language/statements/async-generator/yield-as-identifier-reference.js (default)
   Missing parse error
 language/statements/class/definition/early-errors-class-method-NSPL-with-USD.js (strict mode)
   Missing parse error
@@ -1559,12 +1503,6 @@ language/statements/function/use-strict-with-non-simple-param.js (default)
 language/statements/generators/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/statements/generators/use-strict-with-non-simple-param.js (default)
-  Missing parse error
-language/statements/generators/yield-as-binding-identifier.js (default)
-  Missing parse error
-language/statements/generators/yield-as-identifier-reference.js (default)
-  Missing parse error
-language/statements/generators/yield-as-parameter.js (default)
   Missing parse error
 language/statements/generators/yield-star-after-newline.js (strict mode)
   Missing parse error
@@ -2264,8 +2202,8 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54173 (97.95%)
-Failed: 1132 (2.05%)
+Passed: 54204 (98.01%)
+Failed: 1101 (1.99%)
 
 Features:
   Reflect: 244/246 (99.19%)
@@ -2273,12 +2211,12 @@ Features:
   Symbol.toStringTag: 80/82 (97.56%)
   arrow-function: 18/24 (75.00%)
   async-functions: 144/217 (66.36%)
-  async-iteration: 6884/7052 (97.62%)
+  async-iteration: 6898/7052 (97.82%)
   class: 124/132 (93.94%)
   default-parameters: 3332/3334 (99.94%)
   destructuring-binding: 10325/10699 (96.50%)
   generator: 390/396 (98.48%)
-  generators: 1281/1343 (95.38%)
+  generators: 1283/1343 (95.53%)
   let: 125/135 (92.59%)
   object-rest: 610/620 (98.39%)
   regexp-named-groups: 36/40 (90.00%)

@@ -260,14 +260,18 @@ module rec Parse : PARSER = struct
         if no_let env
         then error env (Error.UnexpectedToken name);
       Eat.token env
-    | _ when is_strict_reserved name ->
-      strict_error env Error.StrictReservedWord;
-      Eat.token env
     | T_AWAIT ->
       (* `allow_await` means that `await` is allowed to be a keyword,
          which makes it illegal to use as an identifier.
          https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
       if allow_await env then error env Error.UnexpectedReserved;
+      Eat.token env
+    | T_YIELD ->
+      (* `allow_yield` means that `yield` is allowed to be a keyword,
+         which makes it illegal to use as an identifier.
+         https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
+      if allow_yield env then error env Error.UnexpectedReserved
+      else strict_error env Error.StrictReservedWord;
       Eat.token env
     | T_DECLARE
     | T_OF
@@ -276,6 +280,9 @@ module rec Parse : PARSER = struct
     | T_TYPE as t ->
         (* These aren't real identifiers *)
         Expect.token env t
+    | _ when is_strict_reserved name ->
+      strict_error env Error.StrictReservedWord;
+      Eat.token env
     | _ -> Expect.token env T_IDENTIFIER);
     (match restricted_error with
     | Some err when is_restricted name -> strict_error_at env (loc, err)
