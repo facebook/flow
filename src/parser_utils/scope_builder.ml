@@ -191,7 +191,7 @@ class scope_builder = object(this)
     let lexical_bindings = match left with
     | LeftDeclaration (_, decl) ->
       lexical_hoist#eval lexical_hoist#variable_declaration decl
-    | _ -> Bindings.empty
+    | LeftPattern _ -> Bindings.empty
     in
     this#with_bindings ~lexical:true lexical_bindings super#for_in_statement stmt
 
@@ -203,7 +203,7 @@ class scope_builder = object(this)
     let lexical_bindings = match left with
     | LeftDeclaration (_, decl) ->
       lexical_hoist#eval lexical_hoist#variable_declaration decl
-    | _ -> Bindings.empty
+    | LeftPattern _ -> Bindings.empty
     in
     this#with_bindings ~lexical:true lexical_bindings super#for_of_statement stmt
 

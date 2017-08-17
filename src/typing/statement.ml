@@ -1326,8 +1326,10 @@ and statement cx = Ast.Statement.(
               variable_decl cx decl;
               variable cx kind ~if_uninitialized:StrT.at vdecl
 
-          | ForIn.LeftExpression (loc, Ast.Expression.Identifier ident) ->
-              let name = ident_name ident in
+          | ForIn.LeftPattern (loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
+              name; _
+            }) ->
+              let name = ident_name name in
               ignore Env.(set_var cx name (StrT.at loc) loc)
 
           | _ ->
@@ -1392,8 +1394,10 @@ and statement cx = Ast.Statement.(
               variable_decl cx decl;
               variable cx kind ~if_uninitialized:repos_tvar vdecl
 
-          | ForOf.LeftExpression (loc, Ast.Expression.Identifier ident) ->
-              let name = ident_name ident in
+          | ForOf.LeftPattern (loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
+              name; _
+            }) ->
+              let name = ident_name name in
               ignore Env.(set_var cx name element_tvar loc)
 
           | _ ->

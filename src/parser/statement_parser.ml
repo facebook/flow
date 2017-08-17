@@ -191,7 +191,9 @@ module Statement
           assert_can_be_forin_or_forof env Error.InvalidLHSInForOf init;
           let left = Statement.(match init with
           | Some (For.InitDeclaration decl) -> ForOf.LeftDeclaration decl
-          | Some (For.InitExpression expr) -> ForOf.LeftExpression expr
+          | Some (For.InitExpression expr) ->
+            (* #sec-for-in-and-for-of-statements-static-semantics-early-errors *)
+            ForOf.LeftPattern (Parse.pattern_from_expr env expr)
           | None -> assert false) in
           (* This is a for of loop *)
           Expect.token env T_OF;
@@ -209,7 +211,9 @@ module Statement
           assert_can_be_forin_or_forof env Error.InvalidLHSInForIn init;
           let left = Statement.(match init with
           | Some (For.InitDeclaration decl) -> ForIn.LeftDeclaration decl
-          | Some (For.InitExpression expr) -> ForIn.LeftExpression expr
+          | Some (For.InitExpression expr) ->
+            (* #sec-for-in-and-for-of-statements-static-semantics-early-errors *)
+            ForIn.LeftPattern (Parse.pattern_from_expr env expr)
           | None -> assert false) in
           (* This is a for in loop *)
           Expect.token env T_IN;

@@ -27,7 +27,7 @@
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":32}},
       "range":[14,46],
       "left":{
-        "type":"ObjectExpression",
+        "type":"ObjectPattern",
         "loc":{"source":null,"start":{"line":2,"column":5},"end":{"line":2,"column":21}},
         "range":[19,35],
         "properties":[
@@ -44,10 +44,9 @@
               "optional":false
             },
             "value":{
-              "type":"AssignmentExpression",
+              "type":"AssignmentPattern",
               "loc":{"source":null,"start":{"line":2,"column":10},"end":{"line":2,"column":19}},
               "range":[24,33],
-              "operator":"=",
               "left":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":2,"column":10},"end":{"line":2,"column":11}},
@@ -70,7 +69,8 @@
             "shorthand":false,
             "computed":false
           }
-        ]
+        ],
+        "typeAnnotation":null
       },
       "right":{
         "type":"ArrayExpression",

@@ -68,10 +68,13 @@ class hoister = object(this)
   method bad_catch_params = bad_catch_params
 
   (* Ignore expressions. This includes, importantly, function expressions (whose
-     ids should not be hoisted) and assignment expressions (whose targets should
-     not be hoisted). *)
+     ids should not be hoisted). *)
   method! expression (expr: Ast.Expression.t) =
     expr
+
+  (* Ignore assignment patterns, whose targets should not be hoisted. *)
+  method! assignment_pattern (patt: Ast.Pattern.t) =
+    patt
 
   (* The scoping rule for catch clauses is special. Hoisting for the current
      scope continues in catch blocks, but the catch pattern also introduces a

@@ -181,9 +181,10 @@ end with type t = Impl.t) = struct
       |]
     )
   | loc, ForIn forin -> ForIn.(
-      let left = (match forin.left with
+      let left = match forin.left with
       | LeftDeclaration left -> variable_declaration left
-      | LeftExpression left -> expression left) in
+      | LeftPattern left -> pattern left
+      in
       node "ForInStatement" loc [|
         "left", left;
         "right", expression forin.right;
@@ -197,9 +198,10 @@ end with type t = Impl.t) = struct
         then "ForAwaitStatement"
         else "ForOfStatement"
       in
-      let left = (match forof.left with
+      let left = match forof.left with
       | LeftDeclaration left -> variable_declaration left
-      | LeftExpression left -> expression left) in
+      | LeftPattern left -> pattern left
+      in
       node type_ loc [|
         "left", left;
         "right", expression forof.right;

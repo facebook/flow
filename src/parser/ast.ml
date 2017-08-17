@@ -351,7 +351,7 @@ and Statement : sig
   module ForIn : sig
     type left =
       | LeftDeclaration of (Loc.t * VariableDeclaration.t)
-      | LeftExpression of Expression.t
+      | LeftPattern of Pattern.t
     type t = {
       left: left;
       right: Expression.t;
@@ -362,7 +362,7 @@ and Statement : sig
   module ForOf : sig
     type left =
       | LeftDeclaration of (Loc.t * VariableDeclaration.t)
-      | LeftExpression of Expression.t
+      | LeftPattern of Pattern.t
     type t = {
       left: left;
       right: Expression.t;

@@ -635,15 +635,15 @@ class mapper = object(this)
       if decl == decl'
         then left
         else LeftDeclaration (loc, decl')
-    | LeftExpression expr ->
-      let expr' = super#expression expr in
-      (match expr' with
-      | loc, Ast.Expression.Identifier _ -> this#map_id_to_incomplete loc
-      | _ -> ()) (* TODO: Not sure what kind of bindings can happen here *)
+    | LeftPattern patt ->
+      let patt' = this#for_of_assignment_pattern patt in
+      (match patt' with
+      | loc, Ast.Pattern.Identifier _ -> this#map_id_to_incomplete loc
+      | _ -> ()) (* TODO: object and array patterns can happen here *)
       ;
-      if expr == expr'
+      if patt == patt'
         then left
-        else LeftExpression expr'
+        else LeftPattern patt'
 
   method! for_in_statement_lhs (left: Ast.Statement.ForIn.left) =
     (* Almost identical to the for-of case *)
@@ -666,14 +666,13 @@ class mapper = object(this)
       if decl == decl'
         then left
         else LeftDeclaration (loc, decl')
-    | LeftExpression expr ->
-      let expr' = super#expression expr in
-      (match expr' with
-      | loc, Ast.Expression.Identifier _ -> this#map_id_to_incomplete loc
-      | _ -> ()) (* TODO: Not sure what kind of bindings can happen here *)
+    | LeftPattern patt ->
+      let patt' = this#for_in_assignment_pattern patt in
+      (match patt' with
+      | loc, Ast.Pattern.Identifier _ -> this#map_id_to_incomplete loc
+      | _ -> ()) (* TODO: object and array patterns can happen here *)
       ;
-      if expr == expr'
+      if patt == patt'
         then left
-        else LeftExpression expr'
-
+        else LeftPattern patt'
 end

@@ -366,8 +366,8 @@ class mapper = object(this)
     match left with
     | LeftDeclaration (loc, decl) ->
       id this#variable_declaration decl left (fun decl -> LeftDeclaration (loc, decl))
-    | LeftExpression expr ->
-      id this#expression expr left (fun expr -> LeftExpression expr)
+    | LeftPattern patt ->
+      id this#for_in_assignment_pattern patt left (fun patt -> LeftPattern patt)
 
   method for_of_statement (stuff: Ast.Statement.ForOf.t) =
     let open Ast.Statement.ForOf in
@@ -383,8 +383,8 @@ class mapper = object(this)
     match left with
     | LeftDeclaration (loc, decl) ->
       id this#variable_declaration decl left (fun decl -> LeftDeclaration (loc, decl))
-    | LeftExpression expr ->
-      id this#expression expr left (fun expr -> LeftExpression expr)
+    | LeftPattern patt ->
+      id this#for_of_assignment_pattern patt left (fun patt -> LeftPattern patt)
 
   method for_statement (stmt: Ast.Statement.For.t) =
     let open Ast.Statement.For in
@@ -787,6 +787,12 @@ class mapper = object(this)
 
   method catch_clause_pattern (expr: Ast.Pattern.t) =
     this#binding_pattern expr
+
+  method for_in_assignment_pattern (expr: Ast.Pattern.t) =
+    this#assignment_pattern expr
+
+  method for_of_assignment_pattern (expr: Ast.Pattern.t) =
+    this#assignment_pattern expr
 
   method binding_pattern ?(kind=Ast.Statement.VariableDeclaration.Var) (expr: Ast.Pattern.t) =
     this#pattern ~kind expr
