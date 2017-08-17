@@ -332,8 +332,6 @@ language/expressions/assignment/dstr-array-elem-nested-obj-yield-expr.js (defaul
   Unexpected token = at (26, 14) to (26, 15)
 language/expressions/assignment/dstr-array-elem-nested-obj-yield-ident-valid.js (default)
   Unexpected token = at (25, 14) to (25, 15)
-language/expressions/assignment/dstr-array-elem-target-simple-strict.js (strict mode)
-  Missing parse error
 language/expressions/assignment/dstr-array-rest-before-elision.js (strict mode)
   Missing parse error
 language/expressions/assignment/dstr-array-rest-before-elision.js (default)
@@ -412,8 +410,6 @@ language/expressions/assignment/dstr-obj-id-init-yield-expr.js (default)
   Unexpected token = at (26, 13) to (26, 14)
 language/expressions/assignment/dstr-obj-id-init-yield-ident-valid.js (default)
   Unexpected token = at (25, 13) to (25, 14)
-language/expressions/assignment/dstr-obj-id-simple-strict.js (strict mode)
-  Missing parse error
 language/expressions/assignment/dstr-obj-prop-nested-array-invalid.js (strict mode)
   Missing parse error
 language/expressions/assignment/dstr-obj-prop-nested-array-invalid.js (default)
@@ -1204,8 +1200,6 @@ language/statements/for-in/dstr-array-elem-nested-array-invalid.js (strict mode)
   Missing parse error
 language/statements/for-in/dstr-array-elem-nested-array-invalid.js (default)
   Missing parse error
-language/statements/for-in/dstr-array-elem-target-simple-strict.js (strict mode)
-  Missing parse error
 language/statements/for-in/dstr-array-rest-before-elision.js (strict mode)
   Missing parse error
 language/statements/for-in/dstr-array-rest-before-elision.js (default)
@@ -1217,8 +1211,6 @@ language/statements/for-in/dstr-array-rest-elision-invalid.js (default)
 language/statements/for-in/dstr-array-rest-nested-array-invalid.js (strict mode)
   Missing parse error
 language/statements/for-in/dstr-array-rest-nested-array-invalid.js (default)
-  Missing parse error
-language/statements/for-in/dstr-obj-id-simple-strict.js (strict mode)
   Missing parse error
 language/statements/for-in/dstr-obj-prop-nested-array-invalid.js (strict mode)
   Missing parse error
@@ -1270,8 +1262,6 @@ language/statements/for-of/dstr-array-elem-nested-obj-yield-expr.js (default)
   Unexpected token = at (34, 10) to (34, 11)
 language/statements/for-of/dstr-array-elem-nested-obj-yield-ident-valid.js (default)
   Unexpected token = at (33, 10) to (33, 11)
-language/statements/for-of/dstr-array-elem-target-simple-strict.js (strict mode)
-  Missing parse error
 language/statements/for-of/dstr-array-rest-before-elision.js (strict mode)
   Missing parse error
 language/statements/for-of/dstr-array-rest-before-elision.js (default)
@@ -1350,8 +1340,6 @@ language/statements/for-of/dstr-obj-id-init-yield-expr.js (default)
   Unexpected token = at (34, 9) to (34, 10)
 language/statements/for-of/dstr-obj-id-init-yield-ident-valid.js (default)
   Unexpected token = at (33, 9) to (33, 10)
-language/statements/for-of/dstr-obj-id-simple-strict.js (strict mode)
-  Missing parse error
 language/statements/for-of/dstr-obj-prop-nested-array-invalid.js (strict mode)
   Missing parse error
 language/statements/for-of/dstr-obj-prop-nested-array-invalid.js (default)
@@ -2138,8 +2126,8 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54236 (98.07%)
-Failed: 1069 (1.93%)
+Passed: 54242 (98.08%)
+Failed: 1063 (1.92%)
 
 Features:
   Reflect: 244/246 (99.19%)
@@ -2149,7 +2137,7 @@ Features:
   async-functions: 144/217 (66.36%)
   async-iteration: 6898/7052 (97.82%)
   class: 124/132 (93.94%)
-  destructuring-binding: 10355/10699 (96.78%)
+  destructuring-binding: 10361/10699 (96.84%)
   generator: 390/396 (98.48%)
   generators: 1287/1343 (95.83%)
   let: 125/135 (92.59%)

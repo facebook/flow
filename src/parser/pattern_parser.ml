@@ -99,13 +99,19 @@ module Pattern
     | Object obj -> object_from_expr env (loc, obj)
     | Array arr ->  array_from_expr env (loc, arr)
     | Identifier ((id_loc, string_val) as name) ->
+        (* per #sec-destructuring-assignment-static-semantics-early-errors,
+           it is a syntax error if IsValidSimpleAssignmentTarget of this
+           IdentifierReference is false. That happens when `string_val` is
+           "eval" or "arguments" in strict mode. *)
+        if in_strict_mode env && is_restricted string_val then
+          error_at env (id_loc, Parse_error.StrictLHSAssignment)
         (* per #prod-IdentifierReference, yield is only a valid
            IdentifierReference when [~Yield], and await is only valid
            when [~Await]. but per #sec-identifiers-static-semantics-early-errors,
            they are already invalid in strict mode, which we should have
            already errored about when parsing the expression that we're now
            converting into a pattern. *)
-        if not (in_strict_mode env) then begin
+        else if not (in_strict_mode env) then begin
           if allow_yield env && string_val = "yield" then
             error_at env (id_loc, Parse_error.YieldAsIdentifierReference)
           else if allow_await env && string_val = "await" then
