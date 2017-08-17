@@ -1,3 +1,7 @@
+### 0.53.1
+
+Fixed a bug that sometimes crashed the server during recheck
+
 ### 0.53.0
 
 This release includes major changes to Flow's model for React. The following
