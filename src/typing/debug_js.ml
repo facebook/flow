@@ -301,20 +301,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
     ]
 
   | CustomFunT (_, kind) -> [
-      "kind", JSON_String (match kind with
-      | ObjectAssign -> "Object.assign"
-      | ObjectGetPrototypeOf -> "Object.getPrototypeOf"
-      | ObjectSetPrototypeOf -> "Object.setPrototypeOf"
-      | ReactPropType _ -> "ReactPropsCheckType"
-      | ReactCreateClass -> "React.createClass"
-      | ReactCreateElement -> "React.createElement"
-      | Merge -> "merge"
-      | MergeDeepInto -> "mergeDeepInto"
-      | MergeInto -> "mergeInto"
-      | Mixin -> "mixin"
-      | Idx -> "idx"
-      | DebugPrint -> "$Flow$DebugPrint"
-      );
+      "kind", _json_of_custom_fun_kind kind;
     ]
 
   | IdxWrapper (_, t) -> [
@@ -363,6 +350,21 @@ and _json_of_cont json_cx = Hh_json.(function
       "cont", JSON_String "lower";
       "type", _json_of_t json_cx l
     ]
+)
+
+and _json_of_custom_fun_kind kind = Hh_json.JSON_String (match kind with
+  | ObjectAssign -> "Object.assign"
+  | ObjectGetPrototypeOf -> "Object.getPrototypeOf"
+  | ObjectSetPrototypeOf -> "Object.setPrototypeOf"
+  | ReactPropType _ -> "ReactPropsCheckType"
+  | ReactCreateClass -> "React.createClass"
+  | ReactCreateElement -> "React.createElement"
+  | Merge -> "merge"
+  | MergeDeepInto -> "mergeDeepInto"
+  | MergeInto -> "mergeInto"
+  | Mixin -> "mixin"
+  | Idx -> "idx"
+  | DebugPrint -> "$Flow$DebugPrint"
 )
 
 and _json_of_use_t json_cx = check_depth _json_of_use_t_impl json_cx
@@ -671,9 +673,12 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t_out", _json_of_t json_cx tout;
     ]
 
-  | ReactKitT (_, React.CreateElement (config, children, t_out)) -> [
+  | ReactKitT (_, React.CreateElement (config, (children, children_spread), t_out)) -> [
       "config", _json_of_t json_cx config;
-      "children", JSON_Array (List.map (json_of_funcallarg json_cx) children);
+      "children", JSON_Array (List.map (_json_of_t json_cx) children);
+      "childrenSpread", (match children_spread with
+        | Some children_spread -> _json_of_t json_cx children_spread
+        | None -> JSON_Null);
       "returnType", _json_of_t json_cx t_out;
     ]
 
@@ -797,6 +802,11 @@ and json_of_resolve_to_impl json_cx resolve_to = Hh_json.(JSON_Object (
   | ResolveSpreadsToMultiflowSubtypeFull (id, ft) -> [
     "id", JSON_Number (string_of_int id);
     "funtype", json_of_funtype json_cx ft;
+  ]
+  | ResolveSpreadsToCustomFunCall (id, kind, tout) -> [
+    "id", JSON_Number (string_of_int id);
+    "kind", _json_of_custom_fun_kind kind;
+    "t_out", _json_of_t json_cx tout;
   ]
   | ResolveSpreadsToMultiflowPartial (id, ft, call_reason, tout) -> [
     "id", JSON_Number (string_of_int id);
@@ -1025,14 +1035,32 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | Bind t -> JSON_Object [
       "thisType", _json_of_t json_cx t
     ]
-  | SpreadType ({ObjectSpread.make_exact; _}, ts) -> JSON_Object [
-      "spread", JSON_Array (List.map (_json_of_t json_cx) ts);
-      "exact", JSON_Bool make_exact;
-    ]
+  | SpreadType (options, ts) ->
+    let open ObjectSpread in
+    let {merge_mode} = options in
+    JSON_Object (
+      (match merge_mode with
+        | DefaultMM make_exact -> [
+            "mergeMode", JSON_String "Default";
+            "makeExact", JSON_Bool make_exact;
+          ]
+        | IgnoreExactAndOwnMM -> [
+            "mergeMode", JSON_String "IgnoreExactAndOwn";
+          ]
+        | DiffMM -> [
+            "mergeMode", JSON_String "Diff";
+          ]
+      ) @ [
+        "spread", JSON_Array (List.map (_json_of_t json_cx) ts);
+      ]
+    )
   | ValuesType -> JSON_Object [
       "values", JSON_Bool true;
     ]
   | TypeMap tmap -> json_of_type_map json_cx tmap
+  | ReactElementPropsType -> JSON_Object [
+    "reactElementProps", JSON_Bool true
+  ]
 )
 
 and json_of_type_map json_cx = check_depth json_of_type_map_impl json_cx
@@ -1045,8 +1073,6 @@ and json_of_type_map_impl json_cx = Hh_json.(function
     ]
   | ObjectMapi t -> JSON_Object [
       "objectMapi", _json_of_t json_cx t
-  | ReactElementPropsType -> JSON_Object [
-      "reactElementProps", JSON_Bool true
     ]
 )
 
@@ -1726,10 +1752,13 @@ and dump_use_t_ (depth, tvars) cx t =
       fun t k -> spf "%s, %s" (tool t) (knot k)
     ) in
     function
-    | CreateElement (config, children, tout) -> p
-        ~extra:(spf "CreateElement (%s; %s) => %s"
+    | CreateElement (config, (children, children_spread), tout) -> p
+        ~extra:(spf "CreateElement (%s; %s%s) => %s"
           (kid config)
-          (String.concat "; " (List.map call_arg_kid children))
+          (String.concat "; " (List.map kid children))
+          (match children_spread with
+            | Some children_spread -> spf "; ...%s" (kid children_spread)
+            | None -> "")
           (kid tout)) t
     | GetProps tout ->
       spf "GetProps (%s)" (kid tout)
@@ -1781,11 +1810,10 @@ and dump_use_t_ (depth, tvars) cx t =
         (String.concat "; " (List.map kid todo_rev))
         (String.concat "; " (List.map resolved acc))
     in
-    let options {make_exact; merge_mode} =
-      spf "{make_exact=%b; merge_mode=%s}"
-        make_exact
+    let options {merge_mode} =
+      spf "{merge_mode=%s}"
         (match merge_mode with
-          | DefaultMM -> "Default"
+          | DefaultMM make_exact -> spf "Default; make_exact=%b" make_exact
           | IgnoreExactAndOwnMM -> "IgnoreExactAndOwn"
           | DiffMM -> "Diff")
     in
@@ -1893,8 +1921,9 @@ and dump_use_t_ (depth, tvars) cx t =
       | ResolveSpreadsToCallT (_, tin) ->
         p ~extra:(kid tin) t
       | ResolveSpreadsToMultiflowCallFull _
-      | ResolveSpreadsToMultiflowSubtypeFull _ ->
-        p t)
+      | ResolveSpreadsToMultiflowSubtypeFull _
+      | ResolveSpreadsToCustomFunCall _
+        -> p t)
   | SentinelPropTestT (l, sense, sentinel, result) -> p ~reason:false
       ~extra:(spf "%s, %b, %s, %s"
         (kid l)
@@ -2445,10 +2474,6 @@ let dump_flow_error =
           (dump_reason cx reason2)
     | EReactCreateElementArity reason ->
         spf "EReactCreateElementArity (%s)" (dump_reason cx reason)
-    | EReactConfusingChildrenArgs (reason1, reason2) ->
-        spf "EReactConfusingChildrenArgs (%s, %s)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
     | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
         spf "EFunctionCallExtraArg (%s, %s, %d)"
           (dump_reason cx  unused_reason)

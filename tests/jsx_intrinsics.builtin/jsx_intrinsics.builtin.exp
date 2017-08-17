@@ -34,5 +34,11 @@ Error: main.js:13
   6: class CustomComponent extends React.Component<{prop: string}, void> {}
                                                    ^^^^^^^^^^^^^^ object type
 
+Error: main.js:21
+ 21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
+                               ^^^ React element `div`. Expected string literal `span`, got `div` instead
+ 21: var e: Element<'span'> = <div not_a_real_attr="asdf" />;
+                    ^^^^^^ string literal `span`
 
-Found 4 errors
+
+Found 5 errors

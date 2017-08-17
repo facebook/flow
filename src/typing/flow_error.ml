@@ -159,7 +159,6 @@ type error_message =
   | EUnsupportedImplements of reason
   | EReactKit of (reason * reason) * React.tool
   | EReactCreateElementArity of reason
-  | EReactConfusingChildrenArgs of (reason * reason)
   | EFunctionCallExtraArg of (reason * reason * int)
   | EUnsupportedSetProto of reason
   | EDuplicateModuleProvider of {
@@ -426,8 +425,6 @@ let locs_of_error_message = function
   | EReactKit ((reason1, reason2), _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EReactCreateElementArity reason -> [loc_of_reason reason]
-  | EReactConfusingChildrenArgs (reason1, reason2) ->
-      [loc_of_reason reason1; loc_of_reason reason2]
   | EFunctionCallExtraArg (reason1, reason2, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EUnsupportedSetProto (reason) -> [loc_of_reason reason]
@@ -1371,12 +1368,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       mk_error ~trace_infos [mk_info reason [
         "React.createElement() must be passed at least two arguments."
       ]]
-
-  | EReactConfusingChildrenArgs (reason_op, reason_arg) ->
-      typecheck_error
-        ("Unpredicatable behavior with spread arguments of unknown length when "^
-        "there are less then two non-spread arguments.")
-        (reason_op, reason_arg)
 
   | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->
     let core_msgs = [

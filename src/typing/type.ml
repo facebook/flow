@@ -957,6 +957,8 @@ module rec TypeTerm : sig
    * function with those arguments *)
   | ResolveSpreadsToMultiflowCallFull of int * funtype
   | ResolveSpreadsToMultiflowSubtypeFull of int * funtype
+  (* We can also call custom functions. *)
+  | ResolveSpreadsToCustomFunCall of int * custom_fun_kind * t
 
   (* Once we've finished resolving spreads for a function's arguments,
    * partially apply the arguments to the function and return the resulting
@@ -1542,7 +1544,7 @@ and React : sig
   end
 
   type tool =
-  | CreateElement of TypeTerm.t * TypeTerm.call_arg list * TypeTerm.t_out
+  | CreateElement of TypeTerm.t * (TypeTerm.t list * TypeTerm.t option) * TypeTerm.t_out
   | GetProps of TypeTerm.t_out
   | SimplifyPropType of SimplifyPropType.tool * TypeTerm.t_out
   | CreateClass of CreateClass.tool * CreateClass.knot * TypeTerm.t_out
@@ -1570,12 +1572,11 @@ and ObjectSpread : sig
   }
 
   and options = {
-    make_exact: bool;
     merge_mode: merge_mode;
   }
 
   and merge_mode =
-    | DefaultMM
+    | DefaultMM of bool (* make_exact *)
     | IgnoreExactAndOwnMM
     | DiffMM
 
@@ -2315,6 +2316,7 @@ let string_of_use_ctor = function
     | ResolveSpreadsToMultiflowCallFull _ -> "ResolveSpreadsToMultiflowCallFull"
     | ResolveSpreadsToMultiflowSubtypeFull _ ->
       "ResolveSpreadsToMultiflowSubtypeFull"
+    | ResolveSpreadsToCustomFunCall _ -> "ResolveSpreadsToCustomFunCall"
     | ResolveSpreadsToMultiflowPartial _ -> "ResolveSpreadsToMultiflowPartial"
     | ResolveSpreadsToCallT _ -> "ResolveSpreadsToCallT"
     end

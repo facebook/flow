@@ -910,12 +910,17 @@ class ['a] t = object(self)
   method react_tool cx map_cx t =
     let open React in
     match t with
-    | CreateElement (config, children, tout) ->
+    | CreateElement (config, (children, children_spread), tout) ->
       let config' = self#type_ cx map_cx config in
-      let children' = ListUtils.ident_map (self#call_arg cx map_cx) children in
+      let children' = ListUtils.ident_map (self#type_ cx map_cx) children in
+      let children_spread' = Option.map children_spread (self#type_ cx map_cx) in
       let tout' = self#type_ cx map_cx tout in
-      if config' == config && children' == children && tout' == tout then t
-      else CreateElement (config', children', tout')
+      if (
+        config' == config &&
+        children' == children &&
+        children_spread' == children_spread &&
+        tout' == tout
+      ) then t else CreateElement (config', (children', children_spread'), tout')
     | GetProps tout ->
       let tout' = self#type_ cx map_cx tout in
       if tout' == tout then t
@@ -1138,6 +1143,10 @@ class ['a] t = object(self)
         let funtype' = self#fun_type cx map_cx funtype in
         if funtype' == funtype then t
         else ResolveSpreadsToMultiflowSubtypeFull (i, funtype')
+    | ResolveSpreadsToCustomFunCall (i, kind, tout) ->
+        let tout' = self#type_ cx map_cx tout in
+        if tout' == tout then t
+        else ResolveSpreadsToCustomFunCall (i, kind, tout')
     | ResolveSpreadsToMultiflowPartial (i, funtype, r, t') ->
         let funtype' = self#fun_type cx map_cx funtype in
         let t'' = self#type_ cx map_cx t' in

@@ -173,6 +173,9 @@ type reason_desc =
   | RReactState
   | RReactElementProps of string
   | RReactPropTypes
+  | RReactChildren
+  | RReactChildrenOrType of reason_desc
+  | RReactChildrenOrUndefinedOrType of reason_desc
 
 and reason_desc_function =
   | RAsync
@@ -486,6 +489,11 @@ let rec string_of_desc = function
   | RReactState -> "state of React component"
   | RReactElementProps x -> spf "props of React element `%s`" x
   | RReactPropTypes -> "propTypes of React component"
+  | RReactChildren -> "React children array"
+  | RReactChildrenOrType desc ->
+    spf "React children array or %s" (string_of_desc desc)
+  | RReactChildrenOrUndefinedOrType desc ->
+    spf "React children array, undefined, or %s" (string_of_desc desc)
 
 let string_of_reason ?(strip_root=None) r =
   let spos = string_of_loc ~strip_root (loc_of_reason r) in

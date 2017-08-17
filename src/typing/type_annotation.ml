@@ -733,7 +733,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | t::ts ->
     let open ObjectSpread in
     let reason = mk_reason RObjectType loc in
-    let options = { make_exact = exact; merge_mode = DefaultMM } in
+    let options = { merge_mode = DefaultMM exact } in
     EvalT (t, TypeDestructorT (reason, SpreadType (options, ts)), mk_id ()))
 
 | loc, Exists ->
