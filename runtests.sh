@@ -210,15 +210,16 @@ runtest() {
         # hidden files like .flowconfig.
         cp -R "$dir/." "$OUT_DIR"
         cp "$dir/../assert.sh" "$OUT_PARENT_DIR"
+        mv "$OUT_DIR/$exp_file" "$OUT_PARENT_DIR"
 
         out_file="$name.out"
         log_file="$name.log"
         err_file="$name.err"
         diff_file="$name.diff"
-        abs_out_file="$OUT_DIR/$name.out"
-        abs_log_file="$OUT_DIR/$name.log"
-        abs_err_file="$OUT_DIR/$name.err"
-        abs_diff_file="$OUT_DIR/$name.diff"
+        abs_out_file="$OUT_PARENT_DIR/$name.out"
+        abs_log_file="$OUT_PARENT_DIR/$name.log"
+        abs_err_file="$OUT_PARENT_DIR/$name.err"
+        abs_diff_file="$OUT_PARENT_DIR/$name.diff"
         return_status=$RUNTEST_SUCCESS
 
         # run the tests from inside $OUT_DIR
@@ -345,12 +346,14 @@ runtest() {
             popd >/dev/null
         fi
 
-        if [ $return_status -eq $RUNTEST_SUCCESS ]; then
-          diff -u --strip-trailing-cr "$exp_file" "$out_file" > "$diff_file"
-        fi
-
         # leave $OUT_DIR
         popd >/dev/null
+
+        if [ $return_status -eq $RUNTEST_SUCCESS ]; then
+          pushd "$OUT_PARENT_DIR" >/dev/null
+          diff -u --strip-trailing-cr "$exp_file" "$out_file" > "$diff_file"
+          popd >/dev/null
+        fi
 
         if [ $return_status -ne $RUNTEST_SUCCESS ]; then
             [ -s "$abs_out_file" ] && mv "$abs_out_file" "$dir"
