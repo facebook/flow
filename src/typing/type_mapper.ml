@@ -132,7 +132,11 @@ class ['a] t = object(self)
           let t2' = self#type_ cx map_cx t2 in
           if tlist' == tlist && t1' == t1 && t2' == t2 then t
           else ExtendsT (r, tlist', t1', t2')
-      | ChoiceKitT _
+      | ChoiceKitT _ -> t
+      | CustomFunT (r, ReactElementFactory c) ->
+          let c' = self#type_ cx map_cx c in
+          if c' == c then t
+          else CustomFunT (r, ReactElementFactory c')
       | CustomFunT _ -> t
       | IdxWrapper (r, t') ->
           let t'' = self#type_ cx map_cx t' in

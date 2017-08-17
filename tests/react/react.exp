@@ -1,6 +1,6 @@
 Library type error:
-<BUILTINS>/react.js:225
-225:     callback?: () => void,
+<BUILTINS>/react.js:227
+227:     callback?: () => void,
                     ^^^^^^^^^^ function type. Callable signature not found in
  23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
                                                                   ^^ object literal. See: render_callback.js:23
@@ -688,8 +688,8 @@ Error: proptype_custom_validator.js:10
 Error: proptype_custom_validator.js:11
  11:       return (0: mixed); // error: should return ?Error
                       ^^^^^ mixed. This type is incompatible with
-258:   href?: string) => ?Error;
-                          ^^^^^ Error. See lib: <BUILTINS>/react.js:258
+260:   href?: string) => ?Error;
+                          ^^^^^ Error. See lib: <BUILTINS>/react.js:260
 
 Error: proptype_func.js:14
  14: var fail_mistyped = <Example func={2} />
@@ -1109,68 +1109,68 @@ Error: proptype_shape.js:24
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-266:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:266
+268:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:268
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-270:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:270
+272:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:272
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-272:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
-                        ^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:272
+274:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+                        ^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:274
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-274:   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:274
+276:   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:276
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-277:   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:277
+279:   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:279
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-266:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:266
+268:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:268
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-268:   (expectedClass: any) => ReactPropsChainableTypeChecker;
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:268
+270:   (expectedClass: any) => ReactPropsChainableTypeChecker;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:270
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-270:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:270
+272:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:272
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-272:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:272
+274:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:274
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-275:     ReactPropsChainableTypeChecker;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:275
+277:     ReactPropsChainableTypeChecker;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:277
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-278:     ReactPropsChainableTypeChecker;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:278
+280:     ReactPropsChainableTypeChecker;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:280
 
 Error: proptypes_sealed.js:18
  18:     (this.props.baz: string);
@@ -1187,20 +1187,20 @@ Error: proptypes_sealed.js:22
 Error: render_callback.js:22
  22: ReactDOM.render(<Example/>, document.querySelector('#site'), 1);
                                                                   ^ number. This type is incompatible with the expected param type of
-225:     callback?: () => void,
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:225
+227:     callback?: () => void,
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:227
 
 Error: render_callback.js:24
  24: ReactDOM.render(<Example/>, document.querySelector('#site'), '');
                                                                   ^^ string. This type is incompatible with the expected param type of
-225:     callback?: () => void,
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:225
+227:     callback?: () => void,
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:227
 
 Error: render_callback.js:25
  25: ReactDOM.render(<Example/>, document.querySelector('#site'), null);
                                                                   ^^^^ null. This type is incompatible with the expected param type of
-225:     callback?: () => void,
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:225
+227:     callback?: () => void,
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:227
 
 Error: undefined_prop.js:7
   7: <MyComponent title={undefined} />;

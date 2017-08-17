@@ -927,5 +927,802 @@ Error: create_element.js:205
 203: class N extends React.Component<{}> {}
            ^ N
 
+Error: create_factory.js:18
+              v
+ 18: aFactory({
+ 19:   foo: 42,
+ 20:   bar: 'Hello, world!', // Error: `bar` is a string.
+ 21: });
+     ^ object literal. This type is incompatible with
+ 10: class A extends React.Component<{foo: number, bar: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     20:   bar: 'Hello, world!', // Error: `bar` is a string.
+                ^^^^^^^^^^^^^^^ string. This type is incompatible with
+     10: class A extends React.Component<{foo: number, bar: number}, void> {}
+                                                            ^^^^^^ number
 
-Found 94 errors
+Error: create_factory.js:22
+     v---------
+ 22: bFactory({
+ 23:   foo: 42,
+ 24:   bar: 'Hello, world!', // Error: `bar` is a string.
+ 25: });
+     -^ object literal. This type is incompatible with the expected param type of
+ 11: function B(props: {foo: number, bar: number}) {}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     24:   bar: 'Hello, world!', // Error: `bar` is a string.
+                ^^^^^^^^^^^^^^^ string. This type is incompatible with
+     11: function B(props: {foo: number, bar: number}) {}
+                                              ^^^^^^ number
+
+Error: create_factory.js:26
+ 26: aFactory({foo: 42}); // Error: `bar` is missing.
+     ^^^^^^^^^^^^^^^^^^^ function call
+ 10: class A extends React.Component<{foo: number, bar: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+ 26: aFactory({foo: 42}); // Error: `bar` is missing.
+              ^^^^^^^^^ object literal
+
+Error: create_factory.js:27
+ 27: bFactory({foo: 42}); // Error: `bar` is missing.
+     ^^^^^^^^^^^^^^^^^^^ function call
+ 11: function B(props: {foo: number, bar: number}) {}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+ 27: bFactory({foo: 42}); // Error: `bar` is missing.
+     ^^^^^^^^^^^^^^^^^^^ object literal
+
+Error: create_factory.js:32
+ 32: (aFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 32: (aFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
+                                            ^^^^^^^ boolean
+
+Error: create_factory.js:33
+ 33: (bFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 33: (bFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
+                                            ^^^^^^^ boolean
+
+Error: create_factory.js:34
+ 34: aFactory({foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
+                                ^^^^ property `nope`. Property not found in
+                                                                  v-
+158: declare type React$Element<ElementType: React$ElementType> = {|
+159:   +type: ElementType;
+160:   +props: React$ElementProps<ElementType>;
+...:
+163: |};
+     -^ object type. See lib: <BUILTINS>/react.js:158
+
+Error: create_factory.js:35
+ 35: bFactory({foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
+                                ^^^^ property `nope`. Property not found in
+                                                                  v-
+158: declare type React$Element<ElementType: React$ElementType> = {|
+159:   +type: ElementType;
+160:   +props: React$ElementProps<ElementType>;
+...:
+163: |};
+     -^ object type. See lib: <BUILTINS>/react.js:158
+
+Error: create_factory.js:36
+ 36: aFactory(); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^ function call
+ 10: class A extends React.Component<{foo: number, bar: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+ 36: aFactory(); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^ props of React element
+
+Error: create_factory.js:36
+ 36: aFactory(); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^ function call
+ 10: class A extends React.Component<{foo: number, bar: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+ 36: aFactory(); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^ props of React element
+
+Error: create_factory.js:37
+ 37: bFactory(); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^ function call
+ 11: function B(props: {foo: number, bar: number}) {}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+ 37: bFactory(); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^ props of React element
+
+Error: create_factory.js:37
+ 37: bFactory(); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^ function call
+ 11: function B(props: {foo: number, bar: number}) {}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+ 37: bFactory(); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^ props of React element
+
+Error: create_factory.js:50
+              v
+ 50: cFactory({
+ 51:   foo: 42,
+ 52:   bar: 'Hello, world!', // Error: `bar` is a string.
+ 53: });
+     ^ object literal. This type is incompatible with
+ 39: class C extends React.Component<{foo: number, bar: number}, void> {
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     52:   bar: 'Hello, world!', // Error: `bar` is a string.
+                ^^^^^^^^^^^^^^^ string. This type is incompatible with
+     39: class C extends React.Component<{foo: number, bar: number}, void> {
+                                                            ^^^^^^ number
+
+Error: create_factory.js:54
+     v---------
+ 54: dFactory({
+ 55:   foo: 42,
+ 56:   bar: 'Hello, world!', // Error: `bar` is a string.
+ 57: });
+     -^ object literal. This type is incompatible with the expected param type of
+ 42: function D(props: {foo: number, bar: number}) {}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     56:   bar: 'Hello, world!', // Error: `bar` is a string.
+                ^^^^^^^^^^^^^^^ string. This type is incompatible with
+     42: function D(props: {foo: number, bar: number}) {}
+                                              ^^^^^^ number
+
+Error: create_factory.js:69
+ 69: eFactory({}); // Error
+     ^^^^^^^^^^^^ function call
+ 67: class E extends React.Component<{children: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
+ 69: eFactory({}); // Error
+              ^^ object literal
+
+Error: create_factory.js:71
+ 71: eFactory({}, 1, 2); // Error
+     ^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 67: class E extends React.Component<{children: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     71: eFactory({}, 1, 2); // Error
+         ^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+     67: class E extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
+
+Error: create_factory.js:72
+ 72: eFactory({}, 1, 2, 3); // Error
+     ^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 67: class E extends React.Component<{children: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     72: eFactory({}, 1, 2, 3); // Error
+         ^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+     67: class E extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
+
+Error: create_factory.js:73
+ 73: eFactory({}, [1, 2]); // Error
+     ^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 67: class E extends React.Component<{children: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     73: eFactory({}, [1, 2]); // Error
+                      ^^^^^^ array literal. This type is incompatible with
+     67: class E extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
+
+Error: create_factory.js:74
+ 74: eFactory({}, [1, 2], [3, 4]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 67: class E extends React.Component<{children: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     74: eFactory({}, [1, 2], [3, 4]); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+     67: class E extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
+
+Error: create_factory.js:75
+ 75: eFactory({}, ...[]); // Error
+     ^^^^^^^^^^^^^^^^^^^ function call
+ 67: class E extends React.Component<{children: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
+ 75: eFactory({}, ...[]); // Error
+              ^^ object literal
+
+Error: create_factory.js:77
+ 77: eFactory({}, ...[1, 2]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 67: class E extends React.Component<{children: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     77: eFactory({}, ...[1, 2]); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+     67: class E extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
+
+Error: create_factory.js:78
+ 78: eFactory({}, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 67: class E extends React.Component<{children: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     78: eFactory({}, ...(any: Array<number>)); // Error
+                               ^^^^^^^^^^^^^ React children array, undefined, or array. This type is incompatible with
+     67: class E extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
+
+Error: create_factory.js:78
+ 78: eFactory({}, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 67: class E extends React.Component<{children: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     78: eFactory({}, ...(any: Array<number>)); // Error
+                               ^^^^^^^^^^^^^ undefined. This type is incompatible with
+     67: class E extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
+
+Error: create_factory.js:80
+ 80: eFactory({}, 1, ...[2]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 67: class E extends React.Component<{children: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     80: eFactory({}, 1, ...[2]); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+     67: class E extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
+
+Error: create_factory.js:81
+ 81: eFactory({}, 1, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 67: class E extends React.Component<{children: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     81: eFactory({}, 1, ...(any: Array<number>)); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array or number. This type is incompatible with
+     67: class E extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
+
+Error: create_factory.js:85
+ 85: fFactory({}); // Error
+     ^^^^^^^^^^^^ function call
+ 83: class F extends React.Component<{children: Array<number>}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
+ 85: fFactory({}); // Error
+              ^^ object literal
+
+Error: create_factory.js:86
+ 86: fFactory({}, 1); // Error
+     ^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 83: class F extends React.Component<{children: Array<number>}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     86: fFactory({}, 1); // Error
+                      ^ number. This type is incompatible with
+     83: class F extends React.Component<{children: Array<number>}, void> {}
+                                                    ^^^^^^^^^^^^^ array type
+
+Error: create_factory.js:90
+ 90: fFactory({}, [1, 2], [3, 4]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+ 90: fFactory({}, [1, 2], [3, 4]); // Error
+                  ^^^^^^ array literal. This type is incompatible with
+ 83: class F extends React.Component<{children: Array<number>}, void> {}
+                                                      ^^^^^^ number
+
+Error: create_factory.js:90
+ 90: fFactory({}, [1, 2], [3, 4]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+ 90: fFactory({}, [1, 2], [3, 4]); // Error
+                          ^^^^^^ array literal. This type is incompatible with
+ 83: class F extends React.Component<{children: Array<number>}, void> {}
+                                                      ^^^^^^ number
+
+Error: create_factory.js:91
+ 91: fFactory({}, ...[]); // Error
+     ^^^^^^^^^^^^^^^^^^^ function call
+ 83: class F extends React.Component<{children: Array<number>}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
+ 91: fFactory({}, ...[]); // Error
+              ^^ object literal
+
+Error: create_factory.js:92
+ 92: fFactory({}, ...[1]); // Error
+     ^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 83: class F extends React.Component<{children: Array<number>}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     92: fFactory({}, ...[1]); // Error
+                          ^ number. This type is incompatible with
+     83: class F extends React.Component<{children: Array<number>}, void> {}
+                                                    ^^^^^^^^^^^^^ array type
+
+Error: create_factory.js:94
+ 94: fFactory({}, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 83: class F extends React.Component<{children: Array<number>}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     83: class F extends React.Component<{children: Array<number>}, void> {}
+                                                          ^^^^^^ number. This type is incompatible with
+     83: class F extends React.Component<{children: Array<number>}, void> {}
+                                                    ^^^^^^^^^^^^^ array type
+
+Error: create_factory.js:94
+ 94: fFactory({}, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 83: class F extends React.Component<{children: Array<number>}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     94: fFactory({}, ...(any: Array<number>)); // Error
+                               ^^^^^^^^^^^^^ undefined. This type is incompatible with
+     83: class F extends React.Component<{children: Array<number>}, void> {}
+                                                    ^^^^^^^^^^^^^ array type
+
+Error: create_factory.js:94
+ 94: fFactory({}, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 83: class F extends React.Component<{children: Array<number>}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     94: fFactory({}, ...(any: Array<number>)); // Error
+                                     ^^^^^^ number. This type is incompatible with
+     83: class F extends React.Component<{children: Array<number>}, void> {}
+                                                    ^^^^^^^^^^^^^ array type
+
+Error: create_factory.js:95
+ 95: fFactory({}, 1, ...[]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 83: class F extends React.Component<{children: Array<number>}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     95: fFactory({}, 1, ...[]); // Error
+                      ^ number. This type is incompatible with
+     83: class F extends React.Component<{children: Array<number>}, void> {}
+                                                    ^^^^^^^^^^^^^ array type
+
+Error: create_factory.js:97
+ 97: fFactory({}, 1, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 83: class F extends React.Component<{children: Array<number>}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     97: fFactory({}, 1, ...(any: Array<number>)); // Error
+                      ^ number. This type is incompatible with
+     83: class F extends React.Component<{children: Array<number>}, void> {}
+                                                    ^^^^^^^^^^^^^ array type
+
+Error: create_factory.js:101
+101: gFactory({}); // Error
+     ^^^^^^^^^^^^ function call
+ 99: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
+101: gFactory({}); // Error
+              ^^ object literal
+
+Error: create_factory.js:106
+106: gFactory({}, [1, 2], [3, 4]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+106: gFactory({}, [1, 2], [3, 4]); // Error
+                  ^^^^^^ array literal. This type is incompatible with
+ 99: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                                               ^^^^^^ number
+
+Error: create_factory.js:106
+106: gFactory({}, [1, 2], [3, 4]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+106: gFactory({}, [1, 2], [3, 4]); // Error
+                          ^^^^^^ array literal. This type is incompatible with
+ 99: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                                               ^^^^^^ number
+
+Error: create_factory.js:107
+107: gFactory({}, ...[]); // Error
+     ^^^^^^^^^^^^^^^^^^^ function call
+ 99: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
+107: gFactory({}, ...[]); // Error
+              ^^ object literal
+
+Error: create_factory.js:110
+110: gFactory({}, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+110: gFactory({}, ...(any: Array<number>)); // Error
+                           ^^^^^^^^^^^^^ undefined. This type is incompatible with
+ 99: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                                ^^^^^^^^^^^^^^^^^^^^^^ union: number | array type
+  Member 1:
+   99: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                                  ^^^^^^ number
+  Error:
+  110: gFactory({}, ...(any: Array<number>)); // Error
+                             ^^^^^^^^^^^^^ undefined. This type is incompatible with
+   99: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                                  ^^^^^^ number
+  Member 2:
+   99: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                                           ^^^^^^^^^^^^^ array type
+  Error:
+  110: gFactory({}, ...(any: Array<number>)); // Error
+                             ^^^^^^^^^^^^^ undefined. This type is incompatible with
+   99: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                                           ^^^^^^^^^^^^^ array type
+
+Error: create_factory.js:118
+118: hFactory({}); // Error
+     ^^^^^^^^^^^^ function call
+116: class H extends React.Component<{children: NumberArrayRecursive}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
+118: hFactory({}); // Error
+              ^^ object literal
+
+Error: create_factory.js:124
+124: hFactory({}, ...[]); // Error
+     ^^^^^^^^^^^^^^^^^^^ function call
+116: class H extends React.Component<{children: NumberArrayRecursive}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
+124: hFactory({}, ...[]); // Error
+              ^^ object literal
+
+Error: create_factory.js:127
+127: hFactory({}, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+127: hFactory({}, ...(any: Array<number>)); // Error
+                           ^^^^^^^^^^^^^ undefined. This type is incompatible with
+116: class H extends React.Component<{children: NumberArrayRecursive}, void> {}
+                                                ^^^^^^^^^^^^^^^^^^^^ union: number | array type
+  Member 1:
+  115: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+                                   ^^^^^^ number
+  Error:
+  127: hFactory({}, ...(any: Array<number>)); // Error
+                             ^^^^^^^^^^^^^ undefined. This type is incompatible with
+  115: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+                                   ^^^^^^ number
+  Member 2:
+  115: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+  Error:
+  127: hFactory({}, ...(any: Array<number>)); // Error
+                             ^^^^^^^^^^^^^ undefined. This type is incompatible with
+  115: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+
+Error: create_factory.js:136
+136: iFactory({}, null); // Error
+     ^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+132: class I extends React.Component<{children?: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    136: iFactory({}, null); // Error
+                      ^^^^ null. This type is incompatible with
+    132: class I extends React.Component<{children?: number}, void> {}
+                                                     ^^^^^^ number
+
+Error: create_factory.js:138
+138: iFactory({}, 1, 2); // Error
+     ^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+132: class I extends React.Component<{children?: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    138: iFactory({}, 1, 2); // Error
+         ^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+    132: class I extends React.Component<{children?: number}, void> {}
+                                                     ^^^^^^ number
+
+Error: create_factory.js:141
+141: iFactory({}, ...[1, 2]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+132: class I extends React.Component<{children?: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    141: iFactory({}, ...[1, 2]); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+    132: class I extends React.Component<{children?: number}, void> {}
+                                                     ^^^^^^ number
+
+Error: create_factory.js:142
+142: iFactory({}, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+132: class I extends React.Component<{children?: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    142: iFactory({}, ...(any: Array<number>)); // Error
+                               ^^^^^^^^^^^^^ React children array, undefined, or array. This type is incompatible with
+    132: class I extends React.Component<{children?: number}, void> {}
+                                                     ^^^^^^ number
+
+Error: create_factory.js:144
+144: iFactory({}, 1, ...[2]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+132: class I extends React.Component<{children?: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    144: iFactory({}, 1, ...[2]); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+    132: class I extends React.Component<{children?: number}, void> {}
+                                                     ^^^^^^ number
+
+Error: create_factory.js:145
+145: iFactory({}, 1, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+132: class I extends React.Component<{children?: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    145: iFactory({}, 1, ...(any: Array<number>)); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array or number. This type is incompatible with
+    132: class I extends React.Component<{children?: number}, void> {}
+                                                     ^^^^^^ number
+
+Error: create_factory.js:149
+149: jFactory({}); // Error
+     ^^^^^^^^^^^^ function call
+147: class J extends React.Component<{children: ?number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
+149: jFactory({}); // Error
+              ^^ object literal
+
+Error: create_factory.js:153
+153: jFactory({}, 1, 2); // Error
+     ^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+147: class J extends React.Component<{children: ?number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    153: jFactory({}, 1, 2); // Error
+         ^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+    147: class J extends React.Component<{children: ?number}, void> {}
+                                                     ^^^^^^ number
+
+Error: create_factory.js:154
+154: jFactory({}, ...[]); // Error
+     ^^^^^^^^^^^^^^^^^^^ function call
+147: class J extends React.Component<{children: ?number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
+154: jFactory({}, ...[]); // Error
+              ^^ object literal
+
+Error: create_factory.js:156
+156: jFactory({}, ...[1, 2]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+147: class J extends React.Component<{children: ?number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    156: jFactory({}, ...[1, 2]); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+    147: class J extends React.Component<{children: ?number}, void> {}
+                                                     ^^^^^^ number
+
+Error: create_factory.js:157
+157: jFactory({}, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+147: class J extends React.Component<{children: ?number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    157: jFactory({}, ...(any: Array<number>)); // Error
+                               ^^^^^^^^^^^^^ React children array, undefined, or array. This type is incompatible with
+    147: class J extends React.Component<{children: ?number}, void> {}
+                                                     ^^^^^^ number
+
+Error: create_factory.js:159
+159: jFactory({}, 1, ...[2]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+147: class J extends React.Component<{children: ?number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    159: jFactory({}, 1, ...[2]); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+    147: class J extends React.Component<{children: ?number}, void> {}
+                                                     ^^^^^^ number
+
+Error: create_factory.js:160
+160: jFactory({}, 1, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+147: class J extends React.Component<{children: ?number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    160: jFactory({}, 1, ...(any: Array<number>)); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array or number. This type is incompatible with
+    147: class J extends React.Component<{children: ?number}, void> {}
+                                                     ^^^^^^ number
+
+Error: create_factory.js:167
+167: kFactory({}, '42'); // Error
+     ^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+162: class K extends React.Component<{children: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    167: kFactory({}, '42'); // Error
+                      ^^^^ string. This type is incompatible with
+    162: class K extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
+
+Error: create_factory.js:168
+168: kFactory({children: '42'}); // Error
+              ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+162: class K extends React.Component<{children: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    168: kFactory({children: '42'}); // Error
+                             ^^^^ string. This type is incompatible with
+    162: class K extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
+
+Error: create_factory.js:169
+169: kFactory({children: '42'}, 42); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+162: class K extends React.Component<{children: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    169: kFactory({children: '42'}, 42); // Error
+                             ^^^^ string. This type is incompatible with
+    162: class K extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
+
+Error: create_factory.js:171
+171: kFactory({children: '42'}, '42'); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+162: class K extends React.Component<{children: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    171: kFactory({children: '42'}, '42'); // Error
+                             ^^^^ string. This type is incompatible with
+    162: class K extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ number
+
+Error: create_factory.js:185
+185: lFactory({}, 1); // Error
+     ^^^^^^^^^^^^^^^ function call
+                                     v
+173: class L extends React.Component<{
+174:   foo: number,
+175:   bar: number,
+176:   children: number,
+177: }, void> {
+     ^ property `foo`. Property not found in
+185: lFactory({}, 1); // Error
+     ^^^^^^^^^^^^^^^ React element
+
+Error: create_factory.js:186
+186: lFactory({children: 1}); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^ function call
+                                     v
+173: class L extends React.Component<{
+174:   foo: number,
+175:   bar: number,
+176:   children: number,
+177: }, void> {
+     ^ property `foo`. Property not found in
+186: lFactory({children: 1}); // Error
+              ^^^^^^^^^^^^^ object literal
+
+Error: create_factory.js:187
+187: lFactory({bar: 1}, 2); // Error
+     ^^^^^^^^^^^^^^^^^^^^^ function call
+                                     v
+173: class L extends React.Component<{
+174:   foo: number,
+175:   bar: number,
+176:   children: number,
+177: }, void> {
+     ^ property `foo`. Property not found in
+187: lFactory({bar: 1}, 2); // Error
+     ^^^^^^^^^^^^^^^^^^^^^ React element
+
+Error: create_factory.js:188
+188: lFactory({bar: 1, children: 2}); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+                                     v
+173: class L extends React.Component<{
+174:   foo: number,
+175:   bar: number,
+176:   children: number,
+177: }, void> {
+     ^ property `foo`. Property not found in
+188: lFactory({bar: 1, children: 2}); // Error
+              ^^^^^^^^^^^^^^^^^^^^^ object literal
+
+Error: create_factory.js:189
+189: lFactory({foo: '1', bar: 2}, 3); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+                                     v
+173: class L extends React.Component<{
+174:   foo: number,
+175:   bar: number,
+176:   children: number,
+177: }, void> {
+     ^ object type
+  Property `foo` is incompatible:
+    189: lFactory({foo: '1', bar: 2}, 3); // Error
+                        ^^^ string. This type is incompatible with
+    174:   foo: number,
+                ^^^^^^ number
+
+Error: create_factory.js:190
+190: lFactory({foo: '1', bar: 2, children: 3}); // Error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                                     v
+173: class L extends React.Component<{
+174:   foo: number,
+175:   bar: number,
+176:   children: number,
+177: }, void> {
+     ^ object type
+  Property `foo` is incompatible:
+    190: lFactory({foo: '1', bar: 2, children: 3}); // Error
+                        ^^^ string. This type is incompatible with
+    174:   foo: number,
+                ^^^^^^ number
+
+Error: create_factory.js:191
+191: lFactory({foo: 1, bar: '2'}, 3); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+                                     v
+173: class L extends React.Component<{
+174:   foo: number,
+175:   bar: number,
+176:   children: number,
+177: }, void> {
+     ^ object type
+  Property `bar` is incompatible:
+    191: lFactory({foo: 1, bar: '2'}, 3); // Error
+                                ^^^ string. This type is incompatible with
+    175:   bar: number,
+                ^^^^^^ number
+
+Error: create_factory.js:192
+192: lFactory({foo: 1, bar: '2', children: 3}); // Error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                                     v
+173: class L extends React.Component<{
+174:   foo: number,
+175:   bar: number,
+176:   children: number,
+177: }, void> {
+     ^ object type
+  Property `bar` is incompatible:
+    192: lFactory({foo: 1, bar: '2', children: 3}); // Error
+                                ^^^ string. This type is incompatible with
+    175:   bar: number,
+                ^^^^^^ number
+
+Error: create_factory.js:193
+193: lFactory({foo: 1, bar: 2}, '3'); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+                                     v
+173: class L extends React.Component<{
+174:   foo: number,
+175:   bar: number,
+176:   children: number,
+177: }, void> {
+     ^ object type
+  Property `children` is incompatible:
+    193: lFactory({foo: 1, bar: 2}, '3'); // Error
+                                    ^^^ string. This type is incompatible with
+    176:   children: number,
+                     ^^^^^^ number
+
+Error: create_factory.js:194
+194: lFactory({foo: 1, bar: 2, children: '3'}); // Error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                                     v
+173: class L extends React.Component<{
+174:   foo: number,
+175:   bar: number,
+176:   children: number,
+177: }, void> {
+     ^ object type
+  Property `children` is incompatible:
+    194: lFactory({foo: 1, bar: 2, children: '3'}); // Error
+                                             ^^^ string. This type is incompatible with
+    176:   children: number,
+                     ^^^^^^ number
+
+Error: create_factory.js:200
+200: (mFactory().type: typeof N); // Error
+      ^^^^^^^^^^^^^^^ M. This type is incompatible with
+197: class N extends React.Component<{}> {}
+           ^ N
+
+
+Found 166 errors

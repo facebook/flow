@@ -3751,15 +3751,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* Custom handling for React.createElement() *)
     | CustomFunT (_, ReactCreateElement),
-      CallT (reason_op, { call_args_tlist = args; call_tout; _ }) ->
+      CallT (reason_op, { call_args_tlist = args; call_tout = tout; _ }) ->
       resolve_call_list cx ~trace reason_op args (
-        ResolveSpreadsToCustomFunCall (mk_id (), ReactCreateElement, call_tout))
+        ResolveSpreadsToCustomFunCall (mk_id (), ReactCreateElement, tout))
 
     (* Custom handling for React.cloneElement() *)
     | CustomFunT (_, ReactCloneElement),
-      CallT (reason_op, { call_args_tlist = args; call_tout; _ }) ->
+      CallT (reason_op, { call_args_tlist = args; call_tout = tout; _ }) ->
       resolve_call_list cx ~trace reason_op args (
-        ResolveSpreadsToCustomFunCall (mk_id (), ReactCloneElement, call_tout))
+        ResolveSpreadsToCustomFunCall (mk_id (), ReactCloneElement, tout))
+
+    (* Custom handling for React.createFactory() *)
+    | CustomFunT (_, ReactElementFactory component),
+      CallT (reason_op, { call_args_tlist = args; call_tout = tout; _ }) ->
+      resolve_call_list cx ~trace reason_op args (
+        ResolveSpreadsToCustomFunCall (mk_id (), ReactElementFactory component, tout))
 
     | _, ReactKitT (reason_op, tool) ->
       react_kit cx trace reason_op l tool
@@ -9832,13 +9838,13 @@ and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind wi
     (* React.createElement(component) *)
     | component::[] ->
       Ops.push reason_op;
-      let obj =
+      let config =
         let r = replace_reason_const (RReactElementProps None) reason_op in
         mk_object_with_map_proto
           cx r ~sealed:true ~exact:true ~frozen:true SMap.empty (ObjProtoT r)
       in
       rec_flow cx trace (component, ReactKitT (reason_op,
-        React.CreateElement (false, obj, ([], None), tout)));
+        React.CreateElement (false, config, ([], None), tout)));
       Ops.pop ()
     (* React.createElement(component, config, ...children) *)
     | component::config::children ->
@@ -9885,6 +9891,27 @@ and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind wi
     | _ ->
       (* If we don't have the arguments we need, add an arity error. *)
       add_output cx ~trace (FlowError.EReactElementFunArity (reason_op, "cloneElement", 1)))
+
+  | ReactElementFactory component -> (match args with
+    (* React.createFactory(component)() *)
+    | [] ->
+      Ops.push reason_op;
+      let config =
+        let r = replace_reason_const (RReactElementProps None) reason_op in
+        mk_object_with_map_proto
+          cx r ~sealed:true ~exact:true ~frozen:true SMap.empty (ObjProtoT r)
+      in
+      rec_flow cx trace (component,
+        ReactKitT (reason_op,
+          React.CreateElement (false, config, ([], None), tout)));
+      Ops.pop ()
+    (* React.createFactory(component)(config, ...children) *)
+    | config::children ->
+      Ops.push reason_op;
+      rec_flow cx trace (component,
+        ReactKitT (reason_op,
+          React.CreateElement (false, config, (children, spread_arg), tout)));
+      Ops.pop ())
 
   | ObjectAssign
   | ObjectGetPrototypeOf
