@@ -6597,6 +6597,7 @@ and eval_destructor cx ~trace reason curr_t s i =
         | ValuesType -> GetValuesT (reason, tvar)
         | TypeMap tmap -> MapTypeT (reason, tmap, tvar)
         | ReactElementPropsType -> ReactKitT (reason, React.GetProps tvar)
+        | ReactElementRefType -> ReactKitT (reason, React.GetRef tvar)
         )
     )
   | Some it ->

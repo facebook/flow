@@ -3,8 +3,8 @@ Error: builtin_intrinsic.js:24
      ^^^^^^^^^ React element `builtin`
  25:   {{a: 1, b: 2, c: 3}}
         ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-397:       children?: React$Node,
-                      ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:397
+398:       children?: React$Node,
+                      ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:398
   Member 1:
    17:   | void
            ^^^^ undefined. See lib: <BUILTINS>/react.js:17

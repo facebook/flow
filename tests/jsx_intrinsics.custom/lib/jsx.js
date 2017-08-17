@@ -1,4 +1,4 @@
-type $JSXIntrinsic<T> = {props: T};
+type $JSXIntrinsic<T> = {props: T, instance: any};
 
 type $JSXIntrinsics = {
   div: $JSXIntrinsic<{id: string}>,

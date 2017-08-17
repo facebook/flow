@@ -464,6 +464,13 @@ let rec convert cx tparams_map = Ast.Type.(function
         (mk_reason (RCustom "React element props") loc,
           ReactElementPropsType), mk_id ())
     )
+  | "React$ElementRef" ->
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      let t = convert_type_params () |> List.hd in
+      EvalT (t, TypeDestructorT
+        (mk_reason (RCustom "React element instance") loc,
+          ReactElementRefType), mk_id ())
+    )
   | "$Facebookism$Merge" ->
       mk_custom_fun cx loc typeParameters Merge
   | "$Facebookism$MergeDeepInto" ->

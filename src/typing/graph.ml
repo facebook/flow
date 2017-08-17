@@ -434,6 +434,7 @@ and parts_of_react_kit =
   | SimplifyPropType (tool, out) -> simplify_prop_type out tool
   | CreateClass (_, _, out)
   | GetProps out -> ["out", Def out]
+  | GetRef out -> ["out", Def out]
 
 and add_bounds cx id { lower; upper; lowertvars; uppertvars } (ts, ns, es) =
   (* NOTE: filtering out non-immediate LB/UBs for readability, but this
