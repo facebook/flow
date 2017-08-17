@@ -39,6 +39,7 @@ export function load(version) {
     `/static/${version}/flowlib/dom.js`,
     `/static/${version}/flowlib/node.js`,
     `/static/${version}/flowlib/react.js`,
+    `/static/${version}/flowlib/streams.js`,
   ];
   const flowLoader = new Promise(function(resolve) {
     require([`/static/${version}/flow.js`], resolve);
