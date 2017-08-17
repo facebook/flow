@@ -113,22 +113,32 @@ recursively until we can decide if we have a subtype or not.
 
 #### Subtypes of functions <a class="toc" id="toc-subtypes-of-functions" href="#toc-subtypes-of-functions"></a>
 
-Flow compares two functions by comparing its inputs and outputs. If all the
-inputs and outputs are a subset of the other function, then it is a subtype.
+The subtyping of functions is a bit trickier. So far we've used the rule that one
+type is a subtype of another if it contains all the possible values of the parent.
+It's not clear how to apply this rule to function types.
+
+For functions, we'll adopt a different way of looking at that rule: for a function
+type to be a subtype of another, it should be safe to use in all the places where
+its parent can be used.
+
+Let's say we have a function type:
 
 ```js
-type Func1 = (1 | 2)     => "A" | "B";
-type Func2 = (1 | 2 | 3) => "A" | "B" | "C";
+type Func1 = (1 | 2) => "A" | "B";
 ```
 
-This also applies to the number of parameters in the functions. If one function
-contains a subset of the parameters of the other, then the other is a subtype.
+For another function type to be a subtype of this, it must be usable in any code that
+relies on the `Func1` type. That code expects to be allowed to send `1` or `2` as
+an argument and receive back `"A"` or `"B"` as the result. For another function type
+to be a subtype, it must:
 
-```js
-// @flow
-type Func1 = (number) => void;
-type Func2 = (number, string) => void;
+- Accept _at least_ `1` and `2` as inputs, though it may also accept other values (or additional parameters)
+- Return _at most_ `"A" | "B"`, though it may only return one or the other.
 
-let func1: Func1 = (a: number) => {};
-let func2: Func2 = func1;
-```
+In general, for one function type to be a subtype of another, its inputs must be a supertype
+of the parent's, but its output must be a subtype of the parent's. (The distinction between
+input and output becomes even trickier if some of the function's arguments are themselves functions
+or are written to.)
+
+This subtyping rules for inputs and outputs are called "variance" and are the subject of the next
+section.
