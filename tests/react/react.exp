@@ -1,6 +1,6 @@
 Library type error:
-<BUILTINS>/react.js:227
-227:     callback?: () => void,
+<BUILTINS>/react.js:249
+249:     callback?: () => void,
                     ^^^^^^^^^^ function type. Callable signature not found in
  23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
                                                                   ^^ object literal. See: render_callback.js:23
@@ -460,16 +460,16 @@ Error: element_with_component_type.js:8
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: type `React$StatelessFunctionalComponent` | class type: type application of polymorphic type: class type: React$Component
   Member 1:
-  151:   | React$StatelessFunctionalComponent<Props>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$StatelessFunctionalComponent`. See lib: <BUILTINS>/react.js:151
+  139:   | React$StatelessFunctionalComponent<Props>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$StatelessFunctionalComponent`. See lib: <BUILTINS>/react.js:139
   Error:
-  151:   | React$StatelessFunctionalComponent<Props>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:151
+  139:   | React$StatelessFunctionalComponent<Props>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:139
     5: class Foo extends React.Component<{a: number}> {}
              ^^^ statics of Foo
   Member 2:
-  152:   | Class<React$Component<Props, any>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:152
+  140:   | Class<React$Component<Props, any>>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:140
   Error:
     8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
                                                          ^^^^^^^^^^^ property `b`. Property not found in
@@ -506,16 +506,16 @@ Error: hoc.js:35
   6:   Component: React$ComponentType<{foo: number, bar: number}>,
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: type `React$StatelessFunctionalComponent` | class type: type application of polymorphic type: class type: React$Component
   Member 1:
-  151:   | React$StatelessFunctionalComponent<Props>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$StatelessFunctionalComponent`. See lib: <BUILTINS>/react.js:151
+  139:   | React$StatelessFunctionalComponent<Props>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$StatelessFunctionalComponent`. See lib: <BUILTINS>/react.js:139
   Error:
-  151:   | React$StatelessFunctionalComponent<Props>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:151
+  139:   | React$StatelessFunctionalComponent<Props>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:139
    35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of class expr `Empty`
   Member 2:
-  152:   | Class<React$Component<Props, any>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:152
+  140:   | Class<React$Component<Props, any>>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:140
   Error:
    35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
                                                  ^^^^^^^^^^^^^ object type. This type is incompatible with
@@ -533,8 +533,8 @@ Error: hoc.js:36
   6:   Component: React$ComponentType<{foo: number, bar: number}>,
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: type `React$StatelessFunctionalComponent` | class type: type application of polymorphic type: class type: React$Component
   Member 1:
-  151:   | React$StatelessFunctionalComponent<Props>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$StatelessFunctionalComponent`. See lib: <BUILTINS>/react.js:151
+  139:   | React$StatelessFunctionalComponent<Props>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$StatelessFunctionalComponent`. See lib: <BUILTINS>/react.js:139
   Error:
     6:   Component: React$ComponentType<{foo: number, bar: number}>,
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
@@ -546,13 +546,13 @@ Error: hoc.js:36
        36: myHOC(function Empty(props: {foo: string}) {}); // Error
                                              ^^^^^^ string
   Member 2:
-  152:   | Class<React$Component<Props, any>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:152
+  140:   | Class<React$Component<Props, any>>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:140
   Error:
    36: myHOC(function Empty(props: {foo: string}) {}); // Error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in
-  152:   | Class<React$Component<Props, any>>;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of React$Component. See lib: <BUILTINS>/react.js:152
+  140:   | Class<React$Component<Props, any>>;
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of React$Component. See lib: <BUILTINS>/react.js:140
 
 Error: hoc.js:41
  41: <Wrapped />; // Error: `foo` is required.
@@ -688,8 +688,8 @@ Error: proptype_custom_validator.js:10
 Error: proptype_custom_validator.js:11
  11:       return (0: mixed); // error: should return ?Error
                       ^^^^^ mixed. This type is incompatible with
-260:   href?: string) => ?Error;
-                          ^^^^^ Error. See lib: <BUILTINS>/react.js:260
+282:   href?: string) => ?Error;
+                          ^^^^^ Error. See lib: <BUILTINS>/react.js:282
 
 Error: proptype_func.js:14
  14: var fail_mistyped = <Example func={2} />
@@ -1109,68 +1109,68 @@ Error: proptype_shape.js:24
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-268:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:268
+290:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:290
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-272:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:272
+294:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                     ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:294
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-274:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
-                        ^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:274
+296:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+                        ^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:296
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-276:   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:276
+298:   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:298
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                   ^^^^^ mixed. This type is incompatible with the expected param type of
-279:   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:279
+301:   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:301
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-268:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:268
+290:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:290
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-270:   (expectedClass: any) => ReactPropsChainableTypeChecker;
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:270
+292:   (expectedClass: any) => ReactPropsChainableTypeChecker;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:292
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-272:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:272
+294:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:294
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-274:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:274
+296:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:296
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-277:     ReactPropsChainableTypeChecker;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:277
+299:     ReactPropsChainableTypeChecker;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:299
 
 Error: proptypes_builtins.js:3
   3: type NoFun = mixed => empty;
                            ^^^^^ empty. This type is incompatible with
-280:     ReactPropsChainableTypeChecker;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:280
+302:     ReactPropsChainableTypeChecker;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:302
 
 Error: proptypes_sealed.js:18
  18:     (this.props.baz: string);
@@ -1187,20 +1187,20 @@ Error: proptypes_sealed.js:22
 Error: render_callback.js:22
  22: ReactDOM.render(<Example/>, document.querySelector('#site'), 1);
                                                                   ^ number. This type is incompatible with the expected param type of
-227:     callback?: () => void,
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:227
+249:     callback?: () => void,
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:249
 
 Error: render_callback.js:24
  24: ReactDOM.render(<Example/>, document.querySelector('#site'), '');
                                                                   ^^ string. This type is incompatible with the expected param type of
-227:     callback?: () => void,
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:227
+249:     callback?: () => void,
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:249
 
 Error: render_callback.js:25
  25: ReactDOM.render(<Example/>, document.querySelector('#site'), null);
                                                                   ^^^^ null. This type is incompatible with the expected param type of
-227:     callback?: () => void,
-                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:227
+249:     callback?: () => void,
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:249
 
 Error: undefined_prop.js:7
   7: <MyComponent title={undefined} />;
