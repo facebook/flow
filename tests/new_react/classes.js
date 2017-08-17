@@ -4,8 +4,7 @@ type DefaultProps = { };
 type Props = { x: number };
 type State = { y: number };
 
-class Foo extends React.Component {
-  props: Props;
+class Foo extends React.Component<DefaultProps, Props, State> {
   state: State;
   static defaultProps: DefaultProps;
 

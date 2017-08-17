@@ -2,14 +2,12 @@
 
 import React from 'react';
 
-class Foo extends React.Component {
+class Foo extends React.Component<Object, {required: number}> {
   static defaultProps: Object;
-  props: {required: number};
 }
 
-class Bar extends React.Component {
+class Bar extends React.Component<any, {required: number}> {
   static defaultProps: any;
-  props: {required: number};
 }
 
 <Foo/>;

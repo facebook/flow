@@ -2,11 +2,7 @@
 
 var React = require('react');
 
-class CustomComponent extends React.Component {
-  props: {
-    prop: string
-  };
-}
+class CustomComponent extends React.Component<void, {prop: string}> {}
 
 var a: React$Node<{|prop: string|}> = <CustomComponent prop="asdf" />;
 var b: React$Node<{|prop1: string|}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
