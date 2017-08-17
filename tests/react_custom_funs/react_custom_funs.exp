@@ -1,14 +1,106 @@
+Error: clone_element.js:22
+ 22: React.cloneElement(); // Error: Needs a minimum of two arguments.
+     ^^^^^^^^^^^^^^^^^^^^ call of method `cloneElement`. React.cloneElement() must be passed at least 1 arguments.
+
+Error: clone_element.js:23
+ 23: React.cloneElement('nope'); // Error: Not a valid element type.
+                        ^^^^^^ string. Inexact type is incompatible with exact type
+ 23: React.cloneElement('nope'); // Error: Not a valid element type.
+                        ^^^^^^ exact type: object type
+
+Error: clone_element.js:24
+ 24: React.cloneElement({ type: any }); // Error: Not a valid element type.
+                        ^^^^^^^^^^^^^ property `key`. Property not found in
+ 24: React.cloneElement({ type: any }); // Error: Not a valid element type.
+                        ^^^^^^^^^^^^^ object literal
+
+Error: clone_element.js:24
+ 24: React.cloneElement({ type: any }); // Error: Not a valid element type.
+                        ^^^^^^^^^^^^^ property `props`. Property not found in
+ 24: React.cloneElement({ type: any }); // Error: Not a valid element type.
+                        ^^^^^^^^^^^^^ object literal
+
+Error: clone_element.js:24
+ 24: React.cloneElement({ type: any }); // Error: Not a valid element type.
+                        ^^^^^^^^^^^^^ property `ref`. Property not found in
+ 24: React.cloneElement({ type: any }); // Error: Not a valid element type.
+                        ^^^^^^^^^^^^^ object literal
+
+Error: clone_element.js:28
+ 28: (React.cloneElement(a).type: Class<B>); // Error: `a` has a type of `A`.
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^ A. This type is incompatible with
+ 28: (React.cloneElement(a).type: Class<B>); // Error: `a` has a type of `A`.
+                                        ^ B
+
+Error: clone_element.js:30
+ 30: (React.cloneElement(a).props.bar: empty); // Error: `bar` does not exist.
+                                  ^^^ property `bar`. Property not found in
+ 30: (React.cloneElement(a).props.bar: empty); // Error: `bar` does not exist.
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+
+Error: clone_element.js:31
+ 31: (React.cloneElement(a).props.foo: string); // Error: `foo` is number.
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 31: (React.cloneElement(a).props.foo: string); // Error: `foo` is number.
+                                       ^^^^^^ string
+
+Error: clone_element.js:34
+ 34: (React.cloneElement(b).props.foo: string); // Error: `foo` is number.
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 34: (React.cloneElement(b).props.foo: string); // Error: `foo` is number.
+                                       ^^^^^^ string
+
+Error: clone_element.js:38
+ 38: React.cloneElement(a, {foo: 1, bar: 2}); // OK
+                           ^^^^^^^^^^^^^^^^ property `bar` of object literal. Property not found in
+  8: class A extends React.Component<{foo: number}, void> {}
+                                     ^^^^^^^^^^^^^ object type
+
+Error: clone_element.js:39
+ 39: React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
+                                 ^^^ string. This type is incompatible with
+  8: class A extends React.Component<{foo: number}, void> {}
+                                           ^^^^^^ number
+
+Error: clone_element.js:43
+ 43: React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
+                                 ^^^ string. This type is incompatible with
+  9: class B extends React.Component<{foo: number, bar: number}, void> {}
+                                           ^^^^^^ number
+
+Error: clone_element.js:47
+ 47: React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
+                                      ^^^^ string. This type is incompatible with
+ 10: class C extends React.Component<{children: number}, void> {}
+                                                ^^^^^^ number
+
+Error: clone_element.js:49
+ 49: React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+ 10: class C extends React.Component<{children: number}, void> {}
+                                                ^^^^^^ number
+
+Error: clone_element.js:53
+ 53: React.cloneElement(d, {children: 42}); // Error: `children` is an array.
+                                      ^^ number. This type is incompatible with
+ 11: class D extends React.Component<{children: Array<number>}, void> {}
+                                                ^^^^^^^^^^^^^ array type
+
+Error: clone_element.js:55
+ 55: React.cloneElement(d, {}, 42); // Error: `children` is an array.
+                               ^^ number. This type is incompatible with
+ 11: class D extends React.Component<{children: Array<number>}, void> {}
+                                                ^^^^^^^^^^^^^ array type
+
 Error: create_element.js:7
   7: React.createElement(); // Error: Needs a minimum of two arguments.
-     ^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`. React.createElement() must be passed at least two arguments.
-
-Error: create_element.js:8
-  8: React.createElement('div'); // Error: Needs a minimum of two arguments.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`. React.createElement() must be passed at least two arguments.
+     ^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`. React.createElement() must be passed at least 1 arguments.
 
 Error: create_element.js:9
-  9: React.createElement(42); // Error: Needs a minimum of two arguments.
-     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`. React.createElement() must be passed at least two arguments.
+  9: React.createElement(42); // Error: Number is not a valid component type.
+     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`. Expected React component instead of
+  9: React.createElement(42); // Error: Number is not a valid component type.
+                         ^^ number
 
 Error: create_element.js:11
  11: React.createElement(42, {}); // Error: Number is not a valid component type.
@@ -102,700 +194,738 @@ Error: create_element.js:39
 163: |};
      -^ object type. See lib: <BUILTINS>/react.js:158
 
-Error: create_element.js:49
+Error: create_element.js:40
+ 40: React.createElement(A); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+ 15: class A extends React.Component<{foo: number, bar: number}> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+ 40: React.createElement(A); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^^^^^^^^^^^^^ props of React element
+
+Error: create_element.js:40
+ 40: React.createElement(A); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+ 15: class A extends React.Component<{foo: number, bar: number}> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+ 40: React.createElement(A); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^^^^^^^^^^^^^ props of React element
+
+Error: create_element.js:41
+ 41: React.createElement(B); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+ 16: function B(props: {foo: number, bar: number}) {}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+ 41: React.createElement(B); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^^^^^^^^^^^^^ props of React element
+
+Error: create_element.js:41
+ 41: React.createElement(B); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+ 16: function B(props: {foo: number, bar: number}) {}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+ 41: React.createElement(B); // Error: Missing `foo` and `bar`.
+     ^^^^^^^^^^^^^^^^^^^^^^ props of React element
+
+Error: create_element.js:51
                             v
- 49: React.createElement(C, {
- 50:   foo: 42,
- 51:   bar: 'Hello, world!', // Error: `bar` is a string.
- 52: });
+ 51: React.createElement(C, {
+ 52:   foo: 42,
+ 53:   bar: 'Hello, world!', // Error: `bar` is a string.
+ 54: });
      ^ object literal. This type is incompatible with
- 41: class C extends React.Component<{foo: number, bar: number}> {
+ 43: class C extends React.Component<{foo: number, bar: number}> {
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `bar` is incompatible:
-     51:   bar: 'Hello, world!', // Error: `bar` is a string.
+     53:   bar: 'Hello, world!', // Error: `bar` is a string.
                 ^^^^^^^^^^^^^^^ string. This type is incompatible with
-     41: class C extends React.Component<{foo: number, bar: number}> {
+     43: class C extends React.Component<{foo: number, bar: number}> {
                                                             ^^^^^^ number
 
-Error: create_element.js:53
+Error: create_element.js:55
      v-----------------------
- 53: React.createElement(D, {
- 54:   foo: 42,
- 55:   bar: 'Hello, world!', // Error: `bar` is a string.
- 56: });
+ 55: React.createElement(D, {
+ 56:   foo: 42,
+ 57:   bar: 'Hello, world!', // Error: `bar` is a string.
+ 58: });
      -^ object literal. This type is incompatible with the expected param type of
- 44: function D(props: {foo: number, bar: number}) {}
+ 46: function D(props: {foo: number, bar: number}) {}
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `bar` is incompatible:
-     55:   bar: 'Hello, world!', // Error: `bar` is a string.
+     57:   bar: 'Hello, world!', // Error: `bar` is a string.
                 ^^^^^^^^^^^^^^^ string. This type is incompatible with
-     44: function D(props: {foo: number, bar: number}) {}
+     46: function D(props: {foo: number, bar: number}) {}
                                               ^^^^^^ number
 
-Error: create_element.js:65
- 65: React.createElement(E, {}); // Error
+Error: create_element.js:67
+ 67: React.createElement(E, {}); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 64: class E extends React.Component<{children: number}> {}
+ 66: class E extends React.Component<{children: number}> {}
                                      ^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
- 65: React.createElement(E, {}); // Error
+ 67: React.createElement(E, {}); // Error
                             ^^ object literal
 
-Error: create_element.js:67
- 67: React.createElement(E, {}, 1, 2); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 64: class E extends React.Component<{children: number}> {}
-                                     ^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     67: React.createElement(E, {}, 1, 2); // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
-     64: class E extends React.Component<{children: number}> {}
-                                                    ^^^^^^ number
-
-Error: create_element.js:68
- 68: React.createElement(E, {}, 1, 2, 3); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 64: class E extends React.Component<{children: number}> {}
-                                     ^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     68: React.createElement(E, {}, 1, 2, 3); // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
-     64: class E extends React.Component<{children: number}> {}
-                                                    ^^^^^^ number
-
 Error: create_element.js:69
- 69: React.createElement(E, {}, [1, 2]); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 64: class E extends React.Component<{children: number}> {}
+ 69: React.createElement(E, {}, 1, 2); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 66: class E extends React.Component<{children: number}> {}
                                      ^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-     69: React.createElement(E, {}, [1, 2]); // Error
-                                    ^^^^^^ array literal. This type is incompatible with
-     64: class E extends React.Component<{children: number}> {}
+     69: React.createElement(E, {}, 1, 2); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+     66: class E extends React.Component<{children: number}> {}
                                                     ^^^^^^ number
 
 Error: create_element.js:70
- 70: React.createElement(E, {}, [1, 2], [3, 4]); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 64: class E extends React.Component<{children: number}> {}
+ 70: React.createElement(E, {}, 1, 2, 3); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 66: class E extends React.Component<{children: number}> {}
                                      ^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-     70: React.createElement(E, {}, [1, 2], [3, 4]); // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
-     64: class E extends React.Component<{children: number}> {}
+     70: React.createElement(E, {}, 1, 2, 3); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+     66: class E extends React.Component<{children: number}> {}
                                                     ^^^^^^ number
 
 Error: create_element.js:71
- 71: React.createElement(E, {}, ...[]); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 64: class E extends React.Component<{children: number}> {}
-                                     ^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
- 71: React.createElement(E, {}, ...[]); // Error
-                            ^^ object literal
+ 71: React.createElement(E, {}, [1, 2]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 66: class E extends React.Component<{children: number}> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     71: React.createElement(E, {}, [1, 2]); // Error
+                                    ^^^^^^ array literal. This type is incompatible with
+     66: class E extends React.Component<{children: number}> {}
+                                                    ^^^^^^ number
+
+Error: create_element.js:72
+ 72: React.createElement(E, {}, [1, 2], [3, 4]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 66: class E extends React.Component<{children: number}> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     72: React.createElement(E, {}, [1, 2], [3, 4]); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+     66: class E extends React.Component<{children: number}> {}
+                                                    ^^^^^^ number
 
 Error: create_element.js:73
- 73: React.createElement(E, {}, ...[1, 2]); // Error
+ 73: React.createElement(E, {}, ...[]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+ 66: class E extends React.Component<{children: number}> {}
+                                     ^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
+ 73: React.createElement(E, {}, ...[]); // Error
+                            ^^ object literal
+
+Error: create_element.js:75
+ 75: React.createElement(E, {}, ...[1, 2]); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 64: class E extends React.Component<{children: number}> {}
+ 66: class E extends React.Component<{children: number}> {}
                                      ^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-     73: React.createElement(E, {}, ...[1, 2]); // Error
+     75: React.createElement(E, {}, ...[1, 2]); // Error
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
-     64: class E extends React.Component<{children: number}> {}
-                                                    ^^^^^^ number
-
-Error: create_element.js:74
- 74: React.createElement(E, {}, ...(any: Array<number>)); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 64: class E extends React.Component<{children: number}> {}
-                                     ^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     74: React.createElement(E, {}, ...(any: Array<number>)); // Error
-                                             ^^^^^^^^^^^^^ React children array, undefined, or array. This type is incompatible with
-     64: class E extends React.Component<{children: number}> {}
-                                                    ^^^^^^ number
-
-Error: create_element.js:74
- 74: React.createElement(E, {}, ...(any: Array<number>)); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 64: class E extends React.Component<{children: number}> {}
-                                     ^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     74: React.createElement(E, {}, ...(any: Array<number>)); // Error
-                                             ^^^^^^^^^^^^^ undefined. This type is incompatible with
-     64: class E extends React.Component<{children: number}> {}
+     66: class E extends React.Component<{children: number}> {}
                                                     ^^^^^^ number
 
 Error: create_element.js:76
- 76: React.createElement(E, {}, 1, ...[2]); // Error
+ 76: React.createElement(E, {}, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 66: class E extends React.Component<{children: number}> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     76: React.createElement(E, {}, ...(any: Array<number>)); // Error
+                                             ^^^^^^^^^^^^^ React children array, undefined, or array. This type is incompatible with
+     66: class E extends React.Component<{children: number}> {}
+                                                    ^^^^^^ number
+
+Error: create_element.js:76
+ 76: React.createElement(E, {}, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 66: class E extends React.Component<{children: number}> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     76: React.createElement(E, {}, ...(any: Array<number>)); // Error
+                                             ^^^^^^^^^^^^^ undefined. This type is incompatible with
+     66: class E extends React.Component<{children: number}> {}
+                                                    ^^^^^^ number
+
+Error: create_element.js:78
+ 78: React.createElement(E, {}, 1, ...[2]); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 64: class E extends React.Component<{children: number}> {}
+ 66: class E extends React.Component<{children: number}> {}
                                      ^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-     76: React.createElement(E, {}, 1, ...[2]); // Error
+     78: React.createElement(E, {}, 1, ...[2]); // Error
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
-     64: class E extends React.Component<{children: number}> {}
+     66: class E extends React.Component<{children: number}> {}
                                                     ^^^^^^ number
 
-Error: create_element.js:77
- 77: React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
+Error: create_element.js:79
+ 79: React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 64: class E extends React.Component<{children: number}> {}
+ 66: class E extends React.Component<{children: number}> {}
                                      ^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-     77: React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
+     79: React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array or number. This type is incompatible with
-     64: class E extends React.Component<{children: number}> {}
+     66: class E extends React.Component<{children: number}> {}
                                                     ^^^^^^ number
 
-Error: create_element.js:80
- 80: React.createElement(F, {}); // Error
+Error: create_element.js:82
+ 82: React.createElement(F, {}); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 79: class F extends React.Component<{children: Array<number>}> {}
+ 81: class F extends React.Component<{children: Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
- 80: React.createElement(F, {}); // Error
+ 82: React.createElement(F, {}); // Error
                             ^^ object literal
 
-Error: create_element.js:81
- 81: React.createElement(F, {}, 1); // Error
+Error: create_element.js:83
+ 83: React.createElement(F, {}, 1); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 79: class F extends React.Component<{children: Array<number>}> {}
+ 81: class F extends React.Component<{children: Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-     81: React.createElement(F, {}, 1); // Error
+     83: React.createElement(F, {}, 1); // Error
                                     ^ number. This type is incompatible with
-     79: class F extends React.Component<{children: Array<number>}> {}
+     81: class F extends React.Component<{children: Array<number>}> {}
                                                     ^^^^^^^^^^^^^ array type
-
-Error: create_element.js:85
- 85: React.createElement(F, {}, [1, 2], [3, 4]); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 85: React.createElement(F, {}, [1, 2], [3, 4]); // Error
-                                ^^^^^^ array literal. This type is incompatible with
- 79: class F extends React.Component<{children: Array<number>}> {}
-                                                      ^^^^^^ number
-
-Error: create_element.js:85
- 85: React.createElement(F, {}, [1, 2], [3, 4]); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 85: React.createElement(F, {}, [1, 2], [3, 4]); // Error
-                                        ^^^^^^ array literal. This type is incompatible with
- 79: class F extends React.Component<{children: Array<number>}> {}
-                                                      ^^^^^^ number
-
-Error: create_element.js:86
- 86: React.createElement(F, {}, ...[]); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 79: class F extends React.Component<{children: Array<number>}> {}
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
- 86: React.createElement(F, {}, ...[]); // Error
-                            ^^ object literal
 
 Error: create_element.js:87
- 87: React.createElement(F, {}, ...[1]); // Error
+ 87: React.createElement(F, {}, [1, 2], [3, 4]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+ 87: React.createElement(F, {}, [1, 2], [3, 4]); // Error
+                                ^^^^^^ array literal. This type is incompatible with
+ 81: class F extends React.Component<{children: Array<number>}> {}
+                                                      ^^^^^^ number
+
+Error: create_element.js:87
+ 87: React.createElement(F, {}, [1, 2], [3, 4]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+ 87: React.createElement(F, {}, [1, 2], [3, 4]); // Error
+                                        ^^^^^^ array literal. This type is incompatible with
+ 81: class F extends React.Component<{children: Array<number>}> {}
+                                                      ^^^^^^ number
+
+Error: create_element.js:88
+ 88: React.createElement(F, {}, ...[]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+ 81: class F extends React.Component<{children: Array<number>}> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
+ 88: React.createElement(F, {}, ...[]); // Error
+                            ^^ object literal
+
+Error: create_element.js:89
+ 89: React.createElement(F, {}, ...[1]); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 79: class F extends React.Component<{children: Array<number>}> {}
+ 81: class F extends React.Component<{children: Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-     87: React.createElement(F, {}, ...[1]); // Error
+     89: React.createElement(F, {}, ...[1]); // Error
                                         ^ number. This type is incompatible with
-     79: class F extends React.Component<{children: Array<number>}> {}
+     81: class F extends React.Component<{children: Array<number>}> {}
                                                     ^^^^^^^^^^^^^ array type
 
-Error: create_element.js:89
- 89: React.createElement(F, {}, ...(any: Array<number>)); // Error
+Error: create_element.js:91
+ 91: React.createElement(F, {}, ...(any: Array<number>)); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 79: class F extends React.Component<{children: Array<number>}> {}
+ 81: class F extends React.Component<{children: Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-     79: class F extends React.Component<{children: Array<number>}> {}
+     81: class F extends React.Component<{children: Array<number>}> {}
                                                           ^^^^^^ number. This type is incompatible with
-     79: class F extends React.Component<{children: Array<number>}> {}
+     81: class F extends React.Component<{children: Array<number>}> {}
                                                     ^^^^^^^^^^^^^ array type
 
-Error: create_element.js:89
- 89: React.createElement(F, {}, ...(any: Array<number>)); // Error
+Error: create_element.js:91
+ 91: React.createElement(F, {}, ...(any: Array<number>)); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 79: class F extends React.Component<{children: Array<number>}> {}
+ 81: class F extends React.Component<{children: Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-     89: React.createElement(F, {}, ...(any: Array<number>)); // Error
+     91: React.createElement(F, {}, ...(any: Array<number>)); // Error
                                              ^^^^^^^^^^^^^ undefined. This type is incompatible with
-     79: class F extends React.Component<{children: Array<number>}> {}
+     81: class F extends React.Component<{children: Array<number>}> {}
                                                     ^^^^^^^^^^^^^ array type
 
-Error: create_element.js:89
- 89: React.createElement(F, {}, ...(any: Array<number>)); // Error
+Error: create_element.js:91
+ 91: React.createElement(F, {}, ...(any: Array<number>)); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 79: class F extends React.Component<{children: Array<number>}> {}
+ 81: class F extends React.Component<{children: Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-     89: React.createElement(F, {}, ...(any: Array<number>)); // Error
+     91: React.createElement(F, {}, ...(any: Array<number>)); // Error
                                                    ^^^^^^ number. This type is incompatible with
-     79: class F extends React.Component<{children: Array<number>}> {}
-                                                    ^^^^^^^^^^^^^ array type
-
-Error: create_element.js:90
- 90: React.createElement(F, {}, 1, ...[]); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 79: class F extends React.Component<{children: Array<number>}> {}
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-     90: React.createElement(F, {}, 1, ...[]); // Error
-                                    ^ number. This type is incompatible with
-     79: class F extends React.Component<{children: Array<number>}> {}
+     81: class F extends React.Component<{children: Array<number>}> {}
                                                     ^^^^^^^^^^^^^ array type
 
 Error: create_element.js:92
- 92: React.createElement(F, {}, 1, ...(any: Array<number>)); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
- 79: class F extends React.Component<{children: Array<number>}> {}
+ 92: React.createElement(F, {}, 1, ...[]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 81: class F extends React.Component<{children: Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-     92: React.createElement(F, {}, 1, ...(any: Array<number>)); // Error
+     92: React.createElement(F, {}, 1, ...[]); // Error
                                     ^ number. This type is incompatible with
-     79: class F extends React.Component<{children: Array<number>}> {}
+     81: class F extends React.Component<{children: Array<number>}> {}
                                                     ^^^^^^^^^^^^^ array type
 
-Error: create_element.js:95
- 95: React.createElement(G, {}); // Error
+Error: create_element.js:94
+ 94: React.createElement(F, {}, 1, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+ 81: class F extends React.Component<{children: Array<number>}> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     94: React.createElement(F, {}, 1, ...(any: Array<number>)); // Error
+                                    ^ number. This type is incompatible with
+     81: class F extends React.Component<{children: Array<number>}> {}
+                                                    ^^^^^^^^^^^^^ array type
+
+Error: create_element.js:97
+ 97: React.createElement(G, {}); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 94: class G extends React.Component<{children: number | Array<number>}> {}
+ 96: class G extends React.Component<{children: number | Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
- 95: React.createElement(G, {}); // Error
+ 97: React.createElement(G, {}); // Error
                             ^^ object literal
 
-Error: create_element.js:100
-100: React.createElement(G, {}, [1, 2], [3, 4]); // Error
+Error: create_element.js:102
+102: React.createElement(G, {}, [1, 2], [3, 4]); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-100: React.createElement(G, {}, [1, 2], [3, 4]); // Error
+102: React.createElement(G, {}, [1, 2], [3, 4]); // Error
                                 ^^^^^^ array literal. This type is incompatible with
- 94: class G extends React.Component<{children: number | Array<number>}> {}
+ 96: class G extends React.Component<{children: number | Array<number>}> {}
                                                                ^^^^^^ number
 
-Error: create_element.js:100
-100: React.createElement(G, {}, [1, 2], [3, 4]); // Error
+Error: create_element.js:102
+102: React.createElement(G, {}, [1, 2], [3, 4]); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-100: React.createElement(G, {}, [1, 2], [3, 4]); // Error
+102: React.createElement(G, {}, [1, 2], [3, 4]); // Error
                                         ^^^^^^ array literal. This type is incompatible with
- 94: class G extends React.Component<{children: number | Array<number>}> {}
+ 96: class G extends React.Component<{children: number | Array<number>}> {}
                                                                ^^^^^^ number
 
-Error: create_element.js:101
-101: React.createElement(G, {}, ...[]); // Error
+Error: create_element.js:103
+103: React.createElement(G, {}, ...[]); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 94: class G extends React.Component<{children: number | Array<number>}> {}
+ 96: class G extends React.Component<{children: number | Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
-101: React.createElement(G, {}, ...[]); // Error
+103: React.createElement(G, {}, ...[]); // Error
                             ^^ object literal
 
-Error: create_element.js:104
-104: React.createElement(G, {}, ...(any: Array<number>)); // Error
+Error: create_element.js:106
+106: React.createElement(G, {}, ...(any: Array<number>)); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-104: React.createElement(G, {}, ...(any: Array<number>)); // Error
+106: React.createElement(G, {}, ...(any: Array<number>)); // Error
                                          ^^^^^^^^^^^^^ undefined. This type is incompatible with
- 94: class G extends React.Component<{children: number | Array<number>}> {}
+ 96: class G extends React.Component<{children: number | Array<number>}> {}
                                                 ^^^^^^^^^^^^^^^^^^^^^^ union: number | array type
   Member 1:
-   94: class G extends React.Component<{children: number | Array<number>}> {}
+   96: class G extends React.Component<{children: number | Array<number>}> {}
                                                   ^^^^^^ number
   Error:
-  104: React.createElement(G, {}, ...(any: Array<number>)); // Error
+  106: React.createElement(G, {}, ...(any: Array<number>)); // Error
                                            ^^^^^^^^^^^^^ undefined. This type is incompatible with
-   94: class G extends React.Component<{children: number | Array<number>}> {}
+   96: class G extends React.Component<{children: number | Array<number>}> {}
                                                   ^^^^^^ number
   Member 2:
-   94: class G extends React.Component<{children: number | Array<number>}> {}
+   96: class G extends React.Component<{children: number | Array<number>}> {}
                                                            ^^^^^^^^^^^^^ array type
   Error:
-  104: React.createElement(G, {}, ...(any: Array<number>)); // Error
+  106: React.createElement(G, {}, ...(any: Array<number>)); // Error
                                            ^^^^^^^^^^^^^ undefined. This type is incompatible with
-   94: class G extends React.Component<{children: number | Array<number>}> {}
+   96: class G extends React.Component<{children: number | Array<number>}> {}
                                                            ^^^^^^^^^^^^^ array type
 
-Error: create_element.js:115
-115: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
+Error: create_element.js:117
+117: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-115: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
+117: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
                                  ^^^^^^ array literal. This type is incompatible with
-109: class G2 extends React.Component<{children?: number | Array<number>}> {}
+111: class G2 extends React.Component<{children?: number | Array<number>}> {}
                                                                  ^^^^^^ number
 
-Error: create_element.js:115
-115: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
+Error: create_element.js:117
+117: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-115: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
+117: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
                                          ^^^^^^ array literal. This type is incompatible with
-109: class G2 extends React.Component<{children?: number | Array<number>}> {}
+111: class G2 extends React.Component<{children?: number | Array<number>}> {}
                                                                  ^^^^^^ number
 
-Error: create_element.js:126
-126: React.createElement(H, {}); // Error
+Error: create_element.js:128
+128: React.createElement(H, {}); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-125: class H extends React.Component<{children: NumberArrayRecursive}> {}
+127: class H extends React.Component<{children: NumberArrayRecursive}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
-126: React.createElement(H, {}); // Error
+128: React.createElement(H, {}); // Error
                             ^^ object literal
 
-Error: create_element.js:132
-132: React.createElement(H, {}, ...[]); // Error
+Error: create_element.js:134
+134: React.createElement(H, {}, ...[]); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-125: class H extends React.Component<{children: NumberArrayRecursive}> {}
+127: class H extends React.Component<{children: NumberArrayRecursive}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
-132: React.createElement(H, {}, ...[]); // Error
+134: React.createElement(H, {}, ...[]); // Error
                             ^^ object literal
 
-Error: create_element.js:135
-135: React.createElement(H, {}, ...(any: Array<number>)); // Error
+Error: create_element.js:137
+137: React.createElement(H, {}, ...(any: Array<number>)); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-135: React.createElement(H, {}, ...(any: Array<number>)); // Error
+137: React.createElement(H, {}, ...(any: Array<number>)); // Error
                                          ^^^^^^^^^^^^^ undefined. This type is incompatible with
-125: class H extends React.Component<{children: NumberArrayRecursive}> {}
+127: class H extends React.Component<{children: NumberArrayRecursive}> {}
                                                 ^^^^^^^^^^^^^^^^^^^^ union: number | array type
   Member 1:
-  124: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+  126: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
                                    ^^^^^^ number
   Error:
-  135: React.createElement(H, {}, ...(any: Array<number>)); // Error
+  137: React.createElement(H, {}, ...(any: Array<number>)); // Error
                                            ^^^^^^^^^^^^^ undefined. This type is incompatible with
-  124: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+  126: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
                                    ^^^^^^ number
   Member 2:
-  124: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+  126: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
   Error:
-  135: React.createElement(H, {}, ...(any: Array<number>)); // Error
+  137: React.createElement(H, {}, ...(any: Array<number>)); // Error
                                            ^^^^^^^^^^^^^ undefined. This type is incompatible with
-  124: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+  126: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
 
-Error: create_element.js:143
-143: React.createElement(I, {}, null); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
-140: class I extends React.Component<{children?: number}> {}
-                                     ^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    143: React.createElement(I, {}, null); // Error
-                                    ^^^^ null. This type is incompatible with
-    140: class I extends React.Component<{children?: number}> {}
-                                                     ^^^^^^ number
-
 Error: create_element.js:145
-145: React.createElement(I, {}, 1, 2); // Error
+145: React.createElement(I, {}, null); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
-140: class I extends React.Component<{children?: number}> {}
+142: class I extends React.Component<{children?: number}> {}
                                      ^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-    145: React.createElement(I, {}, 1, 2); // Error
+    145: React.createElement(I, {}, null); // Error
+                                    ^^^^ null. This type is incompatible with
+    142: class I extends React.Component<{children?: number}> {}
+                                                     ^^^^^^ number
+
+Error: create_element.js:147
+147: React.createElement(I, {}, 1, 2); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+142: class I extends React.Component<{children?: number}> {}
+                                     ^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    147: React.createElement(I, {}, 1, 2); // Error
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
-    140: class I extends React.Component<{children?: number}> {}
+    142: class I extends React.Component<{children?: number}> {}
                                                      ^^^^^^ number
 
-Error: create_element.js:148
-148: React.createElement(I, {}, ...[1, 2]); // Error
+Error: create_element.js:150
+150: React.createElement(I, {}, ...[1, 2]); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
-140: class I extends React.Component<{children?: number}> {}
+142: class I extends React.Component<{children?: number}> {}
                                      ^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-    148: React.createElement(I, {}, ...[1, 2]); // Error
+    150: React.createElement(I, {}, ...[1, 2]); // Error
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
-    140: class I extends React.Component<{children?: number}> {}
-                                                     ^^^^^^ number
-
-Error: create_element.js:149
-149: React.createElement(I, {}, ...(any: Array<number>)); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
-140: class I extends React.Component<{children?: number}> {}
-                                     ^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    149: React.createElement(I, {}, ...(any: Array<number>)); // Error
-                                             ^^^^^^^^^^^^^ React children array, undefined, or array. This type is incompatible with
-    140: class I extends React.Component<{children?: number}> {}
+    142: class I extends React.Component<{children?: number}> {}
                                                      ^^^^^^ number
 
 Error: create_element.js:151
-151: React.createElement(I, {}, 1, ...[2]); // Error
+151: React.createElement(I, {}, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+142: class I extends React.Component<{children?: number}> {}
+                                     ^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    151: React.createElement(I, {}, ...(any: Array<number>)); // Error
+                                             ^^^^^^^^^^^^^ React children array, undefined, or array. This type is incompatible with
+    142: class I extends React.Component<{children?: number}> {}
+                                                     ^^^^^^ number
+
+Error: create_element.js:153
+153: React.createElement(I, {}, 1, ...[2]); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
-140: class I extends React.Component<{children?: number}> {}
+142: class I extends React.Component<{children?: number}> {}
                                      ^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-    151: React.createElement(I, {}, 1, ...[2]); // Error
+    153: React.createElement(I, {}, 1, ...[2]); // Error
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
-    140: class I extends React.Component<{children?: number}> {}
+    142: class I extends React.Component<{children?: number}> {}
                                                      ^^^^^^ number
 
-Error: create_element.js:152
-152: React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
+Error: create_element.js:154
+154: React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
-140: class I extends React.Component<{children?: number}> {}
+142: class I extends React.Component<{children?: number}> {}
                                      ^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-    152: React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
+    154: React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array or number. This type is incompatible with
-    140: class I extends React.Component<{children?: number}> {}
+    142: class I extends React.Component<{children?: number}> {}
                                                      ^^^^^^ number
 
-Error: create_element.js:155
-155: React.createElement(J, {}); // Error
+Error: create_element.js:157
+157: React.createElement(J, {}); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-154: class J extends React.Component<{children: ?number}> {}
+156: class J extends React.Component<{children: ?number}> {}
                                      ^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
-155: React.createElement(J, {}); // Error
+157: React.createElement(J, {}); // Error
                             ^^ object literal
 
-Error: create_element.js:159
-159: React.createElement(J, {}, 1, 2); // Error
+Error: create_element.js:161
+161: React.createElement(J, {}, 1, 2); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
-154: class J extends React.Component<{children: ?number}> {}
+156: class J extends React.Component<{children: ?number}> {}
                                      ^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-    159: React.createElement(J, {}, 1, 2); // Error
+    161: React.createElement(J, {}, 1, 2); // Error
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
-    154: class J extends React.Component<{children: ?number}> {}
+    156: class J extends React.Component<{children: ?number}> {}
                                                      ^^^^^^ number
-
-Error: create_element.js:160
-160: React.createElement(J, {}, ...[]); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-154: class J extends React.Component<{children: ?number}> {}
-                                     ^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
-160: React.createElement(J, {}, ...[]); // Error
-                            ^^ object literal
 
 Error: create_element.js:162
-162: React.createElement(J, {}, ...[1, 2]); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
-154: class J extends React.Component<{children: ?number}> {}
-                                     ^^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    162: React.createElement(J, {}, ...[1, 2]); // Error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
-    154: class J extends React.Component<{children: ?number}> {}
-                                                     ^^^^^^ number
+162: React.createElement(J, {}, ...[]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+156: class J extends React.Component<{children: ?number}> {}
+                                     ^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
+162: React.createElement(J, {}, ...[]); // Error
+                            ^^ object literal
 
-Error: create_element.js:163
-163: React.createElement(J, {}, ...(any: Array<number>)); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
-154: class J extends React.Component<{children: ?number}> {}
+Error: create_element.js:164
+164: React.createElement(J, {}, ...[1, 2]); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+156: class J extends React.Component<{children: ?number}> {}
                                      ^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-    163: React.createElement(J, {}, ...(any: Array<number>)); // Error
-                                             ^^^^^^^^^^^^^ React children array, undefined, or array. This type is incompatible with
-    154: class J extends React.Component<{children: ?number}> {}
+    164: React.createElement(J, {}, ...[1, 2]); // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
+    156: class J extends React.Component<{children: ?number}> {}
                                                      ^^^^^^ number
 
 Error: create_element.js:165
-165: React.createElement(J, {}, 1, ...[2]); // Error
+165: React.createElement(J, {}, ...(any: Array<number>)); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+156: class J extends React.Component<{children: ?number}> {}
+                                     ^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    165: React.createElement(J, {}, ...(any: Array<number>)); // Error
+                                             ^^^^^^^^^^^^^ React children array, undefined, or array. This type is incompatible with
+    156: class J extends React.Component<{children: ?number}> {}
+                                                     ^^^^^^ number
+
+Error: create_element.js:167
+167: React.createElement(J, {}, 1, ...[2]); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
-154: class J extends React.Component<{children: ?number}> {}
+156: class J extends React.Component<{children: ?number}> {}
                                      ^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-    165: React.createElement(J, {}, 1, ...[2]); // Error
+    167: React.createElement(J, {}, 1, ...[2]); // Error
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array. This type is incompatible with
-    154: class J extends React.Component<{children: ?number}> {}
+    156: class J extends React.Component<{children: ?number}> {}
                                                      ^^^^^^ number
 
-Error: create_element.js:166
-166: React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
+Error: create_element.js:168
+168: React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
-154: class J extends React.Component<{children: ?number}> {}
+156: class J extends React.Component<{children: ?number}> {}
                                      ^^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-    166: React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
+    168: React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React children array or number. This type is incompatible with
-    154: class J extends React.Component<{children: ?number}> {}
+    156: class J extends React.Component<{children: ?number}> {}
                                                      ^^^^^^ number
-
-Error: create_element.js:172
-172: React.createElement(K, {}, '42'); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
-168: class K extends React.Component<{children: number}> {}
-                                     ^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    172: React.createElement(K, {}, '42'); // Error
-                                    ^^^^ string. This type is incompatible with
-    168: class K extends React.Component<{children: number}> {}
-                                                    ^^^^^^ number
-
-Error: create_element.js:173
-173: React.createElement(K, {children: '42'}); // Error
-                            ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-168: class K extends React.Component<{children: number}> {}
-                                     ^^^^^^^^^^^^^^^^^^ object type
-  Property `children` is incompatible:
-    173: React.createElement(K, {children: '42'}); // Error
-                                           ^^^^ string. This type is incompatible with
-    168: class K extends React.Component<{children: number}> {}
-                                                    ^^^^^^ number
 
 Error: create_element.js:174
-174: React.createElement(K, {children: '42'}, 42); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
-168: class K extends React.Component<{children: number}> {}
+174: React.createElement(K, {}, '42'); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+170: class K extends React.Component<{children: number}> {}
                                      ^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-    174: React.createElement(K, {children: '42'}, 42); // Error
+    174: React.createElement(K, {}, '42'); // Error
+                                    ^^^^ string. This type is incompatible with
+    170: class K extends React.Component<{children: number}> {}
+                                                    ^^^^^^ number
+
+Error: create_element.js:175
+175: React.createElement(K, {children: '42'}); // Error
+                            ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+170: class K extends React.Component<{children: number}> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    175: React.createElement(K, {children: '42'}); // Error
                                            ^^^^ string. This type is incompatible with
-    168: class K extends React.Component<{children: number}> {}
+    170: class K extends React.Component<{children: number}> {}
                                                     ^^^^^^ number
 
 Error: create_element.js:176
-176: React.createElement(K, {children: '42'}, '42'); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
-168: class K extends React.Component<{children: number}> {}
+176: React.createElement(K, {children: '42'}, 42); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+170: class K extends React.Component<{children: number}> {}
                                      ^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-    176: React.createElement(K, {children: '42'}, '42'); // Error
+    176: React.createElement(K, {children: '42'}, 42); // Error
                                            ^^^^ string. This type is incompatible with
-    168: class K extends React.Component<{children: number}> {}
+    170: class K extends React.Component<{children: number}> {}
                                                     ^^^^^^ number
 
-Error: create_element.js:189
-189: React.createElement(L, {}, 1); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-                                     v
-178: class L extends React.Component<{
-179:   foo: number,
-180:   bar: number,
-181:   children: number,
-182: }> {
-     ^ property `foo`. Property not found in
-189: React.createElement(L, {}, 1); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element
-
-Error: create_element.js:190
-190: React.createElement(L, {children: 1}); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-                                     v
-178: class L extends React.Component<{
-179:   foo: number,
-180:   bar: number,
-181:   children: number,
-182: }> {
-     ^ property `foo`. Property not found in
-190: React.createElement(L, {children: 1}); // Error
-                            ^^^^^^^^^^^^^ object literal
+Error: create_element.js:178
+178: React.createElement(K, {children: '42'}, '42'); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+170: class K extends React.Component<{children: number}> {}
+                                     ^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    178: React.createElement(K, {children: '42'}, '42'); // Error
+                                           ^^^^ string. This type is incompatible with
+    170: class K extends React.Component<{children: number}> {}
+                                                    ^^^^^^ number
 
 Error: create_element.js:191
-191: React.createElement(L, {bar: 1}, 2); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+191: React.createElement(L, {}, 1); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
                                      v
-178: class L extends React.Component<{
-179:   foo: number,
-180:   bar: number,
-181:   children: number,
-182: }> {
+180: class L extends React.Component<{
+181:   foo: number,
+182:   bar: number,
+183:   children: number,
+184: }> {
      ^ property `foo`. Property not found in
-191: React.createElement(L, {bar: 1}, 2); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element
+191: React.createElement(L, {}, 1); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element
 
 Error: create_element.js:192
-192: React.createElement(L, {bar: 1, children: 2}); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+192: React.createElement(L, {children: 1}); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
                                      v
-178: class L extends React.Component<{
-179:   foo: number,
-180:   bar: number,
-181:   children: number,
-182: }> {
+180: class L extends React.Component<{
+181:   foo: number,
+182:   bar: number,
+183:   children: number,
+184: }> {
      ^ property `foo`. Property not found in
-192: React.createElement(L, {bar: 1, children: 2}); // Error
-                            ^^^^^^^^^^^^^^^^^^^^^ object literal
+192: React.createElement(L, {children: 1}); // Error
+                            ^^^^^^^^^^^^^ object literal
 
 Error: create_element.js:193
-193: React.createElement(L, {foo: '1', bar: 2}, 3); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+193: React.createElement(L, {bar: 1}, 2); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
                                      v
-178: class L extends React.Component<{
-179:   foo: number,
-180:   bar: number,
-181:   children: number,
-182: }> {
-     ^ object type
-  Property `foo` is incompatible:
-    193: React.createElement(L, {foo: '1', bar: 2}, 3); // Error
-                                      ^^^ string. This type is incompatible with
-    179:   foo: number,
-                ^^^^^^ number
+180: class L extends React.Component<{
+181:   foo: number,
+182:   bar: number,
+183:   children: number,
+184: }> {
+     ^ property `foo`. Property not found in
+193: React.createElement(L, {bar: 1}, 2); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element
 
 Error: create_element.js:194
-194: React.createElement(L, {foo: '1', bar: 2, children: 3}); // Error
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+194: React.createElement(L, {bar: 1, children: 2}); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
                                      v
-178: class L extends React.Component<{
-179:   foo: number,
-180:   bar: number,
-181:   children: number,
-182: }> {
-     ^ object type
-  Property `foo` is incompatible:
-    194: React.createElement(L, {foo: '1', bar: 2, children: 3}); // Error
-                                      ^^^ string. This type is incompatible with
-    179:   foo: number,
-                ^^^^^^ number
+180: class L extends React.Component<{
+181:   foo: number,
+182:   bar: number,
+183:   children: number,
+184: }> {
+     ^ property `foo`. Property not found in
+194: React.createElement(L, {bar: 1, children: 2}); // Error
+                            ^^^^^^^^^^^^^^^^^^^^^ object literal
 
 Error: create_element.js:195
-195: React.createElement(L, {foo: 1, bar: '2'}, 3); // Error
+195: React.createElement(L, {foo: '1', bar: 2}, 3); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
                                      v
-178: class L extends React.Component<{
-179:   foo: number,
-180:   bar: number,
-181:   children: number,
-182: }> {
+180: class L extends React.Component<{
+181:   foo: number,
+182:   bar: number,
+183:   children: number,
+184: }> {
      ^ object type
-  Property `bar` is incompatible:
-    195: React.createElement(L, {foo: 1, bar: '2'}, 3); // Error
-                                              ^^^ string. This type is incompatible with
-    180:   bar: number,
+  Property `foo` is incompatible:
+    195: React.createElement(L, {foo: '1', bar: 2}, 3); // Error
+                                      ^^^ string. This type is incompatible with
+    181:   foo: number,
                 ^^^^^^ number
 
 Error: create_element.js:196
-196: React.createElement(L, {foo: 1, bar: '2', children: 3}); // Error
+196: React.createElement(L, {foo: '1', bar: 2, children: 3}); // Error
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
                                      v
-178: class L extends React.Component<{
-179:   foo: number,
-180:   bar: number,
-181:   children: number,
-182: }> {
+180: class L extends React.Component<{
+181:   foo: number,
+182:   bar: number,
+183:   children: number,
+184: }> {
      ^ object type
-  Property `bar` is incompatible:
-    196: React.createElement(L, {foo: 1, bar: '2', children: 3}); // Error
-                                              ^^^ string. This type is incompatible with
-    180:   bar: number,
+  Property `foo` is incompatible:
+    196: React.createElement(L, {foo: '1', bar: 2, children: 3}); // Error
+                                      ^^^ string. This type is incompatible with
+    181:   foo: number,
                 ^^^^^^ number
 
 Error: create_element.js:197
-197: React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
+197: React.createElement(L, {foo: 1, bar: '2'}, 3); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
                                      v
-178: class L extends React.Component<{
-179:   foo: number,
-180:   bar: number,
-181:   children: number,
-182: }> {
+180: class L extends React.Component<{
+181:   foo: number,
+182:   bar: number,
+183:   children: number,
+184: }> {
      ^ object type
-  Property `children` is incompatible:
-    197: React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
-                                                  ^^^ string. This type is incompatible with
-    181:   children: number,
-                     ^^^^^^ number
+  Property `bar` is incompatible:
+    197: React.createElement(L, {foo: 1, bar: '2'}, 3); // Error
+                                              ^^^ string. This type is incompatible with
+    182:   bar: number,
+                ^^^^^^ number
 
 Error: create_element.js:198
-198: React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
+198: React.createElement(L, {foo: 1, bar: '2', children: 3}); // Error
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
                                      v
-178: class L extends React.Component<{
-179:   foo: number,
-180:   bar: number,
-181:   children: number,
-182: }> {
+180: class L extends React.Component<{
+181:   foo: number,
+182:   bar: number,
+183:   children: number,
+184: }> {
+     ^ object type
+  Property `bar` is incompatible:
+    198: React.createElement(L, {foo: 1, bar: '2', children: 3}); // Error
+                                              ^^^ string. This type is incompatible with
+    182:   bar: number,
+                ^^^^^^ number
+
+Error: create_element.js:199
+199: React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
+                                     v
+180: class L extends React.Component<{
+181:   foo: number,
+182:   bar: number,
+183:   children: number,
+184: }> {
      ^ object type
   Property `children` is incompatible:
-    198: React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
-                                                           ^^^ string. This type is incompatible with
-    181:   children: number,
+    199: React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
+                                                  ^^^ string. This type is incompatible with
+    183:   children: number,
                      ^^^^^^ number
 
+Error: create_element.js:200
+200: React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                                     v
+180: class L extends React.Component<{
+181:   foo: number,
+182:   bar: number,
+183:   children: number,
+184: }> {
+     ^ object type
+  Property `children` is incompatible:
+    200: React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
+                                                           ^^^ string. This type is incompatible with
+    183:   children: number,
+                     ^^^^^^ number
 
-Found 74 errors
+Error: create_element.js:205
+205: (React.createElement(M).type: typeof N); // Error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ M. This type is incompatible with
+203: class N extends React.Component<{}> {}
+           ^ N
+
+
+Found 94 errors

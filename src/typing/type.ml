@@ -880,6 +880,7 @@ module rec TypeTerm : sig
   | ReactPropType of React.PropType.t
   | ReactCreateClass
   | ReactCreateElement
+  | ReactCloneElement
 
   (* Facebookisms *)
   | Merge
@@ -1544,7 +1545,7 @@ and React : sig
   end
 
   type tool =
-  | CreateElement of TypeTerm.t * (TypeTerm.t list * TypeTerm.t option) * TypeTerm.t_out
+  | CreateElement of bool * TypeTerm.t * (TypeTerm.t list * TypeTerm.t option) * TypeTerm.t_out
   | GetProps of TypeTerm.t_out
   | SimplifyPropType of SimplifyPropType.tool * TypeTerm.t_out
   | CreateClass of CreateClass.tool * CreateClass.knot * TypeTerm.t_out

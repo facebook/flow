@@ -424,7 +424,7 @@ and parts_of_react_kit =
   | Shape tool -> resolve_object out tool
   ) in
   function
-  | CreateElement (config, (children, children_spread), out) ->
+  | CreateElement (_, config, (children, children_spread), out) ->
     ["config", Def config] @
     (list_parts children) @
     (match children_spread with

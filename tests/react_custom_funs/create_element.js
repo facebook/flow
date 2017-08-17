@@ -5,8 +5,8 @@ import React from 'react';
 declare var any: any;
 
 React.createElement(); // Error: Needs a minimum of two arguments.
-React.createElement('div'); // Error: Needs a minimum of two arguments.
-React.createElement(42); // Error: Needs a minimum of two arguments.
+React.createElement('div'); // OK
+React.createElement(42); // Error: Number is not a valid component type.
 React.createElement('div', {}); // OK
 React.createElement(42, {}); // Error: Number is not a valid component type.
 React.createElement({}, {}); // Error: Object is not a valid component type.
@@ -37,6 +37,8 @@ React.createElement(B, {foo: 42}); // Error: `bar` is missing.
                                                                // is `number`.
 React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
 React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
+React.createElement(A); // Error: Missing `foo` and `bar`.
+React.createElement(B); // Error: Missing `foo` and `bar`.
 
 class C extends React.Component<{foo: number, bar: number}> {
   static defaultProps = {bar: 42};
@@ -196,3 +198,8 @@ React.createElement(L, {foo: 1, bar: '2'}, 3); // Error
 React.createElement(L, {foo: 1, bar: '2', children: 3}); // Error
 React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
 React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
+
+class M extends React.Component<{}> {}
+class N extends React.Component<{}> {}
+(React.createElement(M).type: typeof M); // OK
+(React.createElement(M).type: typeof N); // Error

@@ -3564,7 +3564,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
 and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
   let is_react = Context.jsx cx = None in
   let reason_props = replace_reason_const
-    (if is_react then RReactElementProps name else RJSXElementProps name)
+    (if is_react then RReactElementProps (Some name) else RJSXElementProps name)
     reason in
   let ignored_attributes = if is_react then react_ignored_attributes else [] in
   (* Use the same reason for proto and the ObjT so we can walk the proto chain

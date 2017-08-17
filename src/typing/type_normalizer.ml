@@ -255,7 +255,8 @@ let rec normalize_type_impl cx ids t = match t with
        <T>(fn: SFC<T>, config: T, children?: any) => React$Element<T>
      3. $JSXIntrinsics
        (no reasonable signature for this) *)
-  | CustomFunT (_, ReactCreateElement) ->
+  | CustomFunT (_, ReactCreateElement)
+  | CustomFunT (_, ReactCloneElement) ->
       let config_name = "Config" in
       let config_tp =
         let reason = locationless_reason (RCustom config_name) in

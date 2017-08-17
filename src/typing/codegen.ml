@@ -212,6 +212,7 @@ let rec gen_type t env = Type.(
     ) env
   | CustomFunT (_, ReactCreateClass) -> add_str "React$CreateClass" env
   | CustomFunT (_, ReactCreateElement) -> add_str "React$CreateElement" env
+  | CustomFunT (_, ReactCloneElement) -> add_str "React$CloneElement" env
   | CustomFunT (_, Merge) -> add_str "$Facebookism$Merge" env
   | CustomFunT (_, MergeDeepInto) -> add_str "$Facebookism$MergeDeepInto" env
   | CustomFunT (_, MergeInto) -> add_str "$Facebookism$MergeInto" env

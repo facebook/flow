@@ -582,7 +582,7 @@ and gc_react_kit cx state =
     fun t k -> tool t; knot k
   ) in
   function
-  | CreateElement (config, (children, children_spread), t_out) ->
+  | CreateElement (_, config, (children, children_spread), t_out) ->
       gc cx state config;
       List.iter (gc cx state) children;
       Option.iter children_spread (gc cx state);

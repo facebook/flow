@@ -123,7 +123,7 @@ type reason_desc =
   | RReactStatics
   | RReactDefaultProps
   | RReactState
-  | RReactElementProps of string
+  | RReactElementProps of string option
   | RReactPropTypes
   | RReactChildren
   | RReactChildrenOrType of reason_desc

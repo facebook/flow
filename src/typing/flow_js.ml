@@ -3749,10 +3749,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         React.CreateClass (React.CreateClass.Spec [], knot, call_tout)));
       Ops.set ops
 
+    (* Custom handling for React.createElement() *)
     | CustomFunT (_, ReactCreateElement),
       CallT (reason_op, { call_args_tlist = args; call_tout; _ }) ->
       resolve_call_list cx ~trace reason_op args (
         ResolveSpreadsToCustomFunCall (mk_id (), ReactCreateElement, call_tout))
+
+    (* Custom handling for React.cloneElement() *)
+    | CustomFunT (_, ReactCloneElement),
+      CallT (reason_op, { call_args_tlist = args; call_tout; _ }) ->
+      resolve_call_list cx ~trace reason_op args (
+        ResolveSpreadsToCustomFunCall (mk_id (), ReactCloneElement, call_tout))
 
     | _, ReactKitT (reason_op, tool) ->
       react_kit cx trace reason_op l tool
@@ -8711,6 +8718,8 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
   | None -> ()
   end;
 
+  (* If the type is the same type or we have already seen this type pair in our
+   * cache then do not continue. *)
   if t1 = t2 then () else (
 
   (* In general, unifying t1 and t2 should have similar effects as flowing t1 to
@@ -9400,7 +9409,7 @@ and finish_resolve_spread_list =
     | None -> failwith "All multiflows show have a trace" in
 
     let args, spread_arg = flatten_call_arg cx reason_op resolved in
-    custom_fun_call cx ~trace reason_op kind args spread_arg tout
+    custom_fun_call cx trace reason_op kind args spread_arg tout
   in
 
   (* This is used for things like Function.prototype.apply, whose second arg is
@@ -9818,15 +9827,64 @@ and react_kit =
     ~sealed_in_op
     ~union_of_ts
 
-and custom_fun_call cx ?trace reason_op kind args spread_arg tout = match kind with
+and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind with
   | ReactCreateElement -> (match args with
+    (* React.createElement(component) *)
+    | component::[] ->
+      Ops.push reason_op;
+      let obj =
+        let r = replace_reason_const (RReactElementProps None) reason_op in
+        mk_object_with_map_proto
+          cx r ~sealed:true ~exact:true ~frozen:true SMap.empty (ObjProtoT r)
+      in
+      rec_flow cx trace (component, ReactKitT (reason_op,
+        React.CreateElement (false, obj, ([], None), tout)));
+      Ops.pop ()
+    (* React.createElement(component, config, ...children) *)
     | component::config::children ->
       Ops.push reason_op;
-      flow_opt cx ?trace (component, ReactKitT (reason_op,
-        React.CreateElement (config, (children, spread_arg), tout)));
+      rec_flow cx trace (component, ReactKitT (reason_op,
+        React.CreateElement (false, config, (children, spread_arg), tout)));
       Ops.pop ()
+    (* React.createElement() *)
     | _ ->
-      add_output cx ?trace (FlowError.EReactCreateElementArity reason_op))
+      (* If we don't have the arguments we need, add an arity error. *)
+      add_output cx ~trace (FlowError.EReactElementFunArity (reason_op, "createElement", 1)))
+
+  | ReactCloneElement -> (match args with
+    (* React.cloneElement(element) *)
+    | element::[] ->
+      Ops.push reason_op;
+      (* Create the expected type for our element with a fresh tvar in the
+       * component position. *)
+      let expected_element =
+        get_builtin_typeapp cx ~trace (reason_of_t element)
+          "React$Element" [mk_tvar cx reason_op] in
+      (* Flow the element arg to our expected element. *)
+      rec_flow_t cx trace (element, expected_element);
+      (* Flow our expected element to the return type. *)
+      rec_flow_t cx trace (expected_element, tout);
+      Ops.pop ()
+    (* React.cloneElement(element, config, ...children) *)
+    | element::config::children ->
+      Ops.push reason_op;
+      (* Create a tvar for our component. *)
+      let component = mk_tvar cx reason_op in
+      (* Flow the element arg to the element type we expect. *)
+      rec_flow_t cx trace (
+        element,
+        get_builtin_typeapp cx ~trace reason_op
+          "React$Element" [component]
+      );
+      (* Create a React element using the config and children. *)
+      rec_flow cx trace (component,
+        ReactKitT (reason_op,
+          React.CreateElement (true, config, (children, spread_arg), tout)));
+      Ops.pop ()
+    (* React.cloneElement() *)
+    | _ ->
+      (* If we don't have the arguments we need, add an arity error. *)
+      add_output cx ~trace (FlowError.EReactElementFunArity (reason_op, "cloneElement", 1)))
 
   | ObjectAssign
   | ObjectGetPrototypeOf
