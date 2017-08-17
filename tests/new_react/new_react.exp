@@ -1,132 +1,256 @@
-Error: bad_default_props.js:14
- 14: class C3 extends React.Component { // error
-                      ^^^^^^^^^^^^^^^ property `Component`. Too few type arguments. Expected at least 2
- 22: declare class React$Component<DefaultProps, Props, State = void> {
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ See type parameters of definition here. See lib: <BUILTINS>/react.js:22
+Library type error:
+<BUILTINS>/react.js:158
+                                                                  v-
+158: declare type React$Element<ElementType: React$ElementType> = {|
+159:   +type: ElementType;
+160:   +props: React$ElementProps<ElementType>;
+...:
+163: |};
+     -^ object type. This type is incompatible with
+ 39: var foo: $jsx<number> = <Foo/>;
+              ^^^^^^^^^^^^ object type. See: classes.js:39
+  Property `type` is incompatible:
+      7: class Foo extends React.Component<Props, State> {
+               ^^^ class type: Foo. This type is incompatible with. See: classes.js:7
+     39: var foo: $jsx<number> = <Foo/>;
+                       ^^^^^^ number. See: classes.js:39
 
-Error: bad_default_props.js:19
- 19: class C4 extends React.Component { // error
-                      ^^^^^^^^^^^^^^^ property `Component`. Too few type arguments. Expected at least 2
- 22: declare class React$Component<DefaultProps, Props, State = void> {
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ See type parameters of definition here. See lib: <BUILTINS>/react.js:22
+Library type error:
+<BUILTINS>/react.js:158
+                                                                  v-
+158: declare type React$Element<ElementType: React$ElementType> = {|
+159:   +type: ElementType;
+160:   +props: React$ElementProps<ElementType>;
+...:
+163: |};
+     -^ object type. This type is incompatible with
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                     ^^^^^^^^^^^^ object type. See: classes.js:79
+  Property `type` is incompatible:
+                         v------------------
+     43: var FooLegacy = React.createClass({
+     44:   is_mounted: (undefined: ?boolean),
+     45: 
+    ...:
+     76: });
+         -^ class type: React component. This type is incompatible with. See: classes.js:43
+     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                              ^^^^^^ number. See: classes.js:79
 
-Error: bad_default_props.js:27
- 27: class C6 extends React.Component { // error
-                      ^^^^^^^^^^^^^^^ property `Component`. Too few type arguments. Expected at least 2
- 22: declare class React$Component<DefaultProps, Props, State = void> {
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ See type parameters of definition here. See lib: <BUILTINS>/react.js:22
+Library type error:
+<BUILTINS>/react.js:160
+160:   +props: React$ElementProps<ElementType>;
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `w`. Property not found in
+                    v
+  4:     propTypes: {
+  5:         x: React.PropTypes.string,
+  6:         z: React.PropTypes.number
+  7:     },
+         ^ propTypes of React component. See: props.js:4
 
-Error: classes.js:16
- 16:     var _: string = this.props.x;
+Error: bad_default_props.js:15
+ 15: class C3 extends React.Component { // error
+                      ^^^^^^^^^^^^^^^ property `Component`. Too few type arguments. Expected at least 1
+ 29: declare class React$Component<Props, State = void> {
+                                   ^^^^^^^^^^^^ See type parameters of definition here. See lib: <BUILTINS>/react.js:29
+
+Error: bad_default_props.js:20
+ 20: class C4 extends React.Component { // error
+                      ^^^^^^^^^^^^^^^ property `Component`. Too few type arguments. Expected at least 1
+ 29: declare class React$Component<Props, State = void> {
+                                   ^^^^^^^^^^^^ See type parameters of definition here. See lib: <BUILTINS>/react.js:29
+
+Error: classes.js:15
+ 15:     var _: string = this.props.x;
                          ^^^^^^^^^^^^ number. This type is incompatible with
- 16:     var _: string = this.props.x;
+ 15:     var _: string = this.props.x;
                 ^^^^^^ string
 
-Error: classes.js:21
- 21:     this.state = { y: "" };
+Error: classes.js:20
+ 20:     this.state = { y: "" };
                       ^^^^^^^^^ object literal. This type is incompatible with
- 21:     this.state = { y: "" };
-         ^^^^^^^^^^ object type
+  7: class Foo extends React.Component<Props, State> {
+                                              ^^^^^ object type
   Property `y` is incompatible:
-     21:     this.state = { y: "" };
+     20:     this.state = { y: "" };
                                ^^ string. This type is incompatible with
       5: type State = { y: number };
                            ^^^^^^ number
 
-Error: classes.js:24
- 24:   setState(o: { y_: string }): void { }
+Error: classes.js:23
+ 23:   setState(o: { y_: string }): void { }
                    ^^^^^^^^^^^^^^ property `y_`. Property not found in
- 32:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:32
+ 38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:38
 
-Error: classes.js:24
- 24:   setState(o: { y_: string }): void { }
+Error: classes.js:23
+ 23:   setState(o: { y_: string }): void { }
                    ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
- 32:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:32
+ 38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:38
 
-Error: classes.js:39
- 39: Foo.defaultProps = 0;
+Error: classes.js:38
+ 38: Foo.defaultProps = 0;
      ^^^^^^^^^^^^^^^^ assignment of property `defaultProps`
- 39: Foo.defaultProps = 0;
+ 38: Foo.defaultProps = 0;
                         ^ number. This type is incompatible with
- 39: Foo.defaultProps = 0;
+ 38: Foo.defaultProps = 0;
      ^^^^^^^^^^^^^^^^ object type
 
-Error: classes.js:40
- 40: var foo: $jsx<number> = <Foo/>;
+Error: classes.js:39
+ 39: var foo: $jsx<number> = <Foo/>;
                              ^^^^^^ React element `Foo`
-  7: class Foo extends React.Component<DefaultProps, Props, State> {
-                                                     ^^^^^ property `x`. Property not found in
- 40: var foo: $jsx<number> = <Foo/>;
+160:   +props: React$ElementProps<ElementType>;
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:160
+ 39: var foo: $jsx<number> = <Foo/>;
+                   ^^^^^^ number
+
+Error: classes.js:39
+ 39: var foo: $jsx<number> = <Foo/>;
+                             ^^^^^^ React element `Foo`
+  7: class Foo extends React.Component<Props, State> {
+                                       ^^^^^ property `x`. Property not found in
+ 39: var foo: $jsx<number> = <Foo/>;
                              ^^^^^^ props of React element `Foo`
 
-Error: classes.js:40
- 40: var foo: $jsx<number> = <Foo/>;
+Error: classes.js:39
+ 39: var foo: $jsx<number> = <Foo/>;
                              ^^^^^^ React element `Foo`
- 40: var foo: $jsx<number> = <Foo/>;
+ 39: var foo: $jsx<number> = <Foo/>;
                    ^^^^^^ number. This type is incompatible with
-  4: type _ReactNode<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: React$Component<DefaultProps, Props, any>> = React$Node<Config>;
-                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See lib: fakelib/type_aliases.js:4
+158: declare type React$Element<ElementType: React$ElementType> = {|
+                                             ^^^^^^^^^^^^^^^^^ union: key set | type application of type `React$ComponentType`. See lib: <BUILTINS>/react.js:158
+  Member 1:
+  139:   | $Keys<$JSXIntrinsics>
+           ^^^^^^^^^^^^^^^^^^^^^ key set. See lib: <BUILTINS>/react.js:139
+  Error:
+   39: var foo: $jsx<number> = <Foo/>;
+                     ^^^^^^ number. This type is incompatible with
+  139:   | $Keys<$JSXIntrinsics>
+           ^^^^^^^^^^^^^^^^^^^^^ key set. See lib: <BUILTINS>/react.js:139
+  Member 2:
+  140:   | React$ComponentType<any>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^ type application of type `React$ComponentType`. See lib: <BUILTINS>/react.js:140
+  Error:
+   39: var foo: $jsx<number> = <Foo/>;
+                     ^^^^^^ number. This type is incompatible with
+  140:   | React$ComponentType<any>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: type `React$StatelessFunctionalComponent` | class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:140
+    Member 1:
+    151:   | React$StatelessFunctionalComponent<Props>
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$StatelessFunctionalComponent`. See lib: <BUILTINS>/react.js:151
+    Error:
+     39: var foo: $jsx<number> = <Foo/>;
+                       ^^^^^^ number. This type is incompatible with
+    151:   | React$StatelessFunctionalComponent<Props>
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:151
+    Member 2:
+    152:   | Class<React$Component<Props, any>>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:152
+    Error:
+     39: var foo: $jsx<number> = <Foo/>;
+                       ^^^^^^ number. This type is incompatible with
+    152:   | Class<React$Component<Props, any>>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:152
 
-Error: classes.js:58
- 58:     var _: string = this.props.x;
+Error: classes.js:57
+ 57:     var _: string = this.props.x;
                          ^^^^^^^^^^^^ number. This type is incompatible with
- 58:     var _: string = this.props.x;
+ 57:     var _: string = this.props.x;
                 ^^^^^^ string
 
-Error: classes.js:65
- 65:   setState(o: { y_: string }): void { },
+Error: classes.js:64
+ 64:   setState(o: { y_: string }): void { },
                    ^^^^^^^^^^^^^^ property `y_`. Property not found in
                       v------------------
- 61:   getInitialState(): { y: string } {
- 62:     return { y: "" };
- 63:   },
+ 60:   getInitialState(): { y: string } {
+ 61:     return { y: "" };
+ 62:   },
        ^ object type
 
-Error: classes.js:65
- 65:   setState(o: { y_: string }): void { },
+Error: classes.js:64
+ 64:   setState(o: { y_: string }): void { },
                    ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
- 32:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:32
+ 38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:38
 
-Error: classes.js:80
- 80: var foo_legacy: $jsx<number> = <FooLegacy/>;
+Error: classes.js:79
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                    ^^^^^^^^^^^^ React element `FooLegacy`
+160:   +props: React$ElementProps<ElementType>;
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:160
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                          ^^^^^^ number
+
+Error: classes.js:79
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ React element `FooLegacy`
                   v
- 47:   propTypes: {
- 48:     x: React.PropTypes.number.isRequired
- 49:   },
+ 46:   propTypes: {
+ 47:     x: React.PropTypes.number.isRequired
+ 48:   },
        ^ property `x`. Property not found in
- 80: var foo_legacy: $jsx<number> = <FooLegacy/>;
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ props of React element `FooLegacy`
 
-Error: classes.js:80
- 80: var foo_legacy: $jsx<number> = <FooLegacy/>;
+Error: classes.js:79
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ React element `FooLegacy`
- 80: var foo_legacy: $jsx<number> = <FooLegacy/>;
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                           ^^^^^^ number. This type is incompatible with
-  4: type _ReactNode<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: React$Component<DefaultProps, Props, any>> = React$Node<Config>;
-                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See lib: fakelib/type_aliases.js:4
+158: declare type React$Element<ElementType: React$ElementType> = {|
+                                             ^^^^^^^^^^^^^^^^^ union: key set | type application of type `React$ComponentType`. See lib: <BUILTINS>/react.js:158
+  Member 1:
+  139:   | $Keys<$JSXIntrinsics>
+           ^^^^^^^^^^^^^^^^^^^^^ key set. See lib: <BUILTINS>/react.js:139
+  Error:
+   79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                            ^^^^^^ number. This type is incompatible with
+  139:   | $Keys<$JSXIntrinsics>
+           ^^^^^^^^^^^^^^^^^^^^^ key set. See lib: <BUILTINS>/react.js:139
+  Member 2:
+  140:   | React$ComponentType<any>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^ type application of type `React$ComponentType`. See lib: <BUILTINS>/react.js:140
+  Error:
+   79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                            ^^^^^^ number. This type is incompatible with
+  140:   | React$ComponentType<any>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: type `React$StatelessFunctionalComponent` | class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:140
+    Member 1:
+    151:   | React$StatelessFunctionalComponent<Props>
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$StatelessFunctionalComponent`. See lib: <BUILTINS>/react.js:151
+    Error:
+     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                              ^^^^^^ number. This type is incompatible with
+    151:   | React$StatelessFunctionalComponent<Props>
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:151
+    Member 2:
+    152:   | Class<React$Component<Props, any>>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:152
+    Error:
+     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                              ^^^^^^ number. This type is incompatible with
+    152:   | Class<React$Component<Props, any>>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:152
 
-Error: classes.js:80
- 80: var foo_legacy: $jsx<number> = <FooLegacy/>;
+Error: classes.js:79
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ React element `FooLegacy`
- 80: var foo_legacy: $jsx<number> = <FooLegacy/>;
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ props of React element `FooLegacy`. Cannot spread properties from
- 79: FooLegacy.defaultProps = 0;
+ 78: FooLegacy.defaultProps = 0;
                               ^ number
 
 Error: import-react.js:16
  16: <HelloMessage name={007} />; // number ~/~> string error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `HelloMessage`. This type is incompatible with
- 14: class HelloMessage extends React.Component<void, { name: string }> {}
-                                                      ^^^^^^^^^^^^^^^^ object type
+ 14: class HelloMessage extends React.Component<{ name: string }> {}
+                                                ^^^^^^^^^^^^^^^^ object type
   Property `name` is incompatible:
      16: <HelloMessage name={007} />; // number ~/~> string error
                              ^^^ number. This type is incompatible with
-     14: class HelloMessage extends React.Component<void, { name: string }> {}
-                                                                  ^^^^^^ string
+     14: class HelloMessage extends React.Component<{ name: string }> {}
+                                                            ^^^^^^ string
 
 Error: new_react.js:17
  17:         var foo: string = this.state;
@@ -281,17 +405,41 @@ Error: props.js:20
       6:         z: React.PropTypes.number
                     ^^^^^^^^^^^^^^^^^^^^^^ number
 
-Error: props.js:25
- 25:     propTypes: { w: React.PropTypes.string.isRequired }
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `w`. Property not found in
- 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
-
 Error: props2.js:14
  14:         var s: string = this.state.bar;
                              ^^^^^^^^^^^^^^ number. This type is incompatible with
  14:         var s: string = this.state.bar;
                     ^^^^^^ string
+
+Error: props2.js:15
+ 15:         return <C {...this.state} foo = {0} />;
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `C`. This type is incompatible with
+                    v
+  3:     propTypes: {
+  4:         foo: React.PropTypes.string.isRequired,
+  5:         bar: React.PropTypes.string.isRequired,
+  6:     }
+         ^ propTypes of React component
+  Property `bar` is incompatible:
+      9:     getInitialState: function(): { bar: number } {
+                                                 ^^^^^^ number. This type is incompatible with
+      5:         bar: React.PropTypes.string.isRequired,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+
+Error: props2.js:15
+ 15:         return <C {...this.state} foo = {0} />;
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `C`. This type is incompatible with
+                    v
+  3:     propTypes: {
+  4:         foo: React.PropTypes.string.isRequired,
+  5:         bar: React.PropTypes.string.isRequired,
+  6:     }
+         ^ propTypes of React component
+  Property `foo` is incompatible:
+     15:         return <C {...this.state} foo = {0} />;
+                                                  ^ number. This type is incompatible with
+      4:         foo: React.PropTypes.string.isRequired,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
 Error: props3.js:49
  49:       bad_one: React.PropTypes.imaginaryType,
@@ -305,23 +453,23 @@ Error: props3.js:50
  50:       bad_two: React.PropTypes.string.inRequired,
                     ^^^^^^^^^^^^^^^^^^^^^^ object type
 
-Error: props4.js:11
- 11: <JDiv id={42} />;
+Error: props4.js:9
+  9: <JDiv id={42} />;
      ^^^^^^^^^^^^^^^^ props of React element `JDiv`. This type is incompatible with
-  6: class JDiv extends React.Component<void, {id: string}> {
-                                              ^^^^^^^^^^^^ object type
+  6: class JDiv extends React.Component<{id: string}> {}
+                                        ^^^^^^^^^^^^ object type
   Property `id` is incompatible:
-     11: <JDiv id={42} />;
+      9: <JDiv id={42} />;
                    ^^ number. This type is incompatible with
-      6: class JDiv extends React.Component<void, {id: string}> {
-                                                       ^^^^^^ string
+      6: class JDiv extends React.Component<{id: string}> {}
+                                                 ^^^^^^ string
 
-Error: props4.js:20
- 20:   <Example foo="foo" />,
+Error: props4.js:18
+ 18:   <Example foo="foo" />,
        ^^^^^^^^^^^^^^^^^^^^^ React element `Example`
- 13: class Example extends React.Component<void, {bar: string}> {
-                                                 ^^^^^^^^^^^^^ property `bar`. Property not found in
- 20:   <Example foo="foo" />,
+ 11: class Example extends React.Component<{ bar: string }> {
+                                           ^^^^^^^^^^^^^^^ property `bar`. Property not found in
+ 18:   <Example foo="foo" />,
        ^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`
 
 Error: state.js:19
@@ -353,8 +501,8 @@ Error: state3.js:13
  14:             x: false // error
  15:         })
              ^ object literal. This type is incompatible with
- 32:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type parameter `State` of call of method `createClass` | function type. See lib: <BUILTINS>/react.js:32
+ 38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type parameter `State` of call of method `createClass` | function type. See lib: <BUILTINS>/react.js:38
   Member 1:
                        v------------------
     2: var TestState = React.createClass({
@@ -369,11 +517,11 @@ Error: state3.js:13
     4:     getInitialState: function(): { x: string; } {
                                              ^^^^^^ string
   Member 2:
-   32:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:32
+   38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:38
   Error:
-   32:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:32
+   38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:38
                              v
    13:         this.setState({
    14:             x: false // error
@@ -385,8 +533,8 @@ Error: state4.js:9
          ^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
   9:     this.setState({ y: 0 });
                        ^^^^^^^^ object literal. This type is incompatible with
- 32:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type parameter `State` of call of method `createClass` | function type. See lib: <BUILTINS>/react.js:32
+ 38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type parameter `State` of call of method `createClass` | function type. See lib: <BUILTINS>/react.js:38
   Member 1:
                v------------------
     3: var C = React.createClass({
@@ -404,11 +552,11 @@ Error: state4.js:9
     6:   },
          ^ object type
   Member 2:
-   32:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:32
+   38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:38
   Error:
-   32:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:32
+   38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:38
     9:     this.setState({ y: 0 });
                          ^^^^^^^^ object literal
 
@@ -435,27 +583,27 @@ Error: state6.js:29
  30:       bar: '42',
  31:     }));
          ^ object literal. This type is incompatible with
- 32:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                                          ^^^^^^^^^^^^^^^^^^^^ union: State | undefined. See lib: <BUILTINS>/react.js:32
+ 38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                                          ^^^^^^^^^^^^^^^^^^^^ union: State | undefined. See lib: <BUILTINS>/react.js:38
   Member 1:
-   13: class MyComponent extends React.Component<void, {prop: number}, State> {
-                                                                       ^^^^^ State
+   13: class MyComponent extends React.Component<{prop: number}, State> {
+                                                                 ^^^^^ State
   Error:
    30:       bar: '42',
                   ^^^^ string. This type is incompatible with
     7: type State = {foo: number, bar: number};
                                        ^^^^^^ number
   Member 2:
-   32:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                                                            ^^^^ undefined. See lib: <BUILTINS>/react.js:32
+   38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                                                            ^^^^ undefined. See lib: <BUILTINS>/react.js:38
   Error:
                                 v------------------------------------
    29:     this.setState(() => ({ // Error: `bar` should be a number.
    30:       bar: '42',
    31:     }));
            ^ object literal. This type is incompatible with
-   32:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                                                            ^^^^ undefined. See lib: <BUILTINS>/react.js:32
+   38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                                                            ^^^^ undefined. See lib: <BUILTINS>/react.js:38
 
 Error: state6.js:33
  33:       console.log(prevState.nope); // Error: `nope` does not exist.
@@ -474,22 +622,22 @@ Error: state6.js:41
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
  41:     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
                              ^^^^^^^^^^^^^ object type. This type is incompatible with
- 32:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: State | function type. See lib: <BUILTINS>/react.js:32
+ 38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: State | function type. See lib: <BUILTINS>/react.js:38
   Member 1:
-   13: class MyComponent extends React.Component<void, {prop: number}, State> {
-                                                                       ^^^^^ State
+   13: class MyComponent extends React.Component<{prop: number}, State> {
+                                                                 ^^^^^ State
   Error:
    41:     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
                                ^^^^^^^^^^^^^ property `$call` of object type. Property not found in
-   13: class MyComponent extends React.Component<void, {prop: number}, State> {
-                                                                       ^^^^^ object type
+   13: class MyComponent extends React.Component<{prop: number}, State> {
+                                                                 ^^^^^ object type
   Member 2:
-   32:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:32
+   38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:38
   Error:
-   13: class MyComponent extends React.Component<void, {prop: number}, State> {
-                                                                       ^^^^^ object type. This type is incompatible with the expected param type of
+   13: class MyComponent extends React.Component<{prop: number}, State> {
+                                                                 ^^^^^ object type. This type is incompatible with the expected param type of
    11: type StateUpdater3 = {(number): number, foo: number, bar: number};
                               ^^^^^^ number
 
@@ -500,4 +648,4 @@ Error: state6.js:47
                          ^^^^^ State
 
 
-Found 53 errors
+Found 58 errors

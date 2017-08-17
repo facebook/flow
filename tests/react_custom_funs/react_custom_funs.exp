@@ -1,0 +1,136 @@
+Error: create_element.js:7
+  7: React.createElement(); // Error: Needs a minimum of two arguments.
+     ^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`. React.createElement() must be passed at least two arguments.
+
+Error: create_element.js:8
+  8: React.createElement('div'); // Error: Needs a minimum of two arguments.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`. React.createElement() must be passed at least two arguments.
+
+Error: create_element.js:9
+  9: React.createElement(42); // Error: Needs a minimum of two arguments.
+     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`. React.createElement() must be passed at least two arguments.
+
+Error: create_element.js:11
+ 11: React.createElement(42, {}); // Error: Number is not a valid component type.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`. Expected React component instead of
+ 11: React.createElement(42, {}); // Error: Number is not a valid component type.
+                         ^^ number
+
+Error: create_element.js:12
+ 12: React.createElement({}, {}); // Error: Object is not a valid component type.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`. Expected React component instead of
+ 12: React.createElement({}, {}); // Error: Object is not a valid component type.
+                         ^^ object literal
+
+Error: create_element.js:20
+                            v
+ 20: React.createElement(A, {
+ 21:   foo: 42,
+ 22:   bar: 'Hello, world!', // Error: `bar` is a string.
+ 23: });
+     ^ object literal. This type is incompatible with
+ 15: class A extends React.Component<{foo: number, bar: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     22:   bar: 'Hello, world!', // Error: `bar` is a string.
+                ^^^^^^^^^^^^^^^ string. This type is incompatible with
+     15: class A extends React.Component<{foo: number, bar: number}, void> {}
+                                                            ^^^^^^ number
+
+Error: create_element.js:24
+     v-----------------------
+ 24: React.createElement(B, {
+ 25:   foo: 42,
+ 26:   bar: 'Hello, world!', // Error: `bar` is a string.
+ 27: });
+     -^ object literal. This type is incompatible with the expected param type of
+ 16: function B(props: {foo: number, bar: number}) {}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     26:   bar: 'Hello, world!', // Error: `bar` is a string.
+                ^^^^^^^^^^^^^^^ string. This type is incompatible with
+     16: function B(props: {foo: number, bar: number}) {}
+                                              ^^^^^^ number
+
+Error: create_element.js:28
+ 28: React.createElement(A, {foo: 42}); // Error: `bar` is missing.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+ 15: class A extends React.Component<{foo: number, bar: number}, void> {}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+ 28: React.createElement(A, {foo: 42}); // Error: `bar` is missing.
+                            ^^^^^^^^^ object literal
+
+Error: create_element.js:29
+ 29: React.createElement(B, {foo: 42}); // Error: `bar` is missing.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+ 16: function B(props: {foo: number, bar: number}) {}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+ 29: React.createElement(B, {foo: 42}); // Error: `bar` is missing.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal
+
+Error: create_element.js:34
+ 34: (React.createElement(A, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 34: (React.createElement(A, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
+                                                          ^^^^^^^ boolean
+
+Error: create_element.js:36
+ 36: (React.createElement(B, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 36: (React.createElement(B, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
+                                                          ^^^^^^^ boolean
+
+Error: create_element.js:38
+ 38: React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
+                                              ^^^^ property `nope`. Property not found in
+                                                                  v-
+158: declare type React$Element<ElementType: React$ElementType> = {|
+159:   +type: ElementType;
+160:   +props: React$ElementProps<ElementType>;
+...:
+163: |};
+     -^ object type. See lib: <BUILTINS>/react.js:158
+
+Error: create_element.js:39
+ 39: React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
+                                              ^^^^ property `nope`. Property not found in
+                                                                  v-
+158: declare type React$Element<ElementType: React$ElementType> = {|
+159:   +type: ElementType;
+160:   +props: React$ElementProps<ElementType>;
+...:
+163: |};
+     -^ object type. See lib: <BUILTINS>/react.js:158
+
+Error: create_element.js:49
+                            v
+ 49: React.createElement(C, {
+ 50:   foo: 42,
+ 51:   bar: 'Hello, world!', // Error: `bar` is a string.
+ 52: });
+     ^ object literal. This type is incompatible with
+ 41: class C extends React.Component<{foo: number, bar: number}, void> {
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     51:   bar: 'Hello, world!', // Error: `bar` is a string.
+                ^^^^^^^^^^^^^^^ string. This type is incompatible with
+     41: class C extends React.Component<{foo: number, bar: number}, void> {
+                                                            ^^^^^^ number
+
+Error: create_element.js:53
+     v-----------------------
+ 53: React.createElement(D, {
+ 54:   foo: 42,
+ 55:   bar: 'Hello, world!', // Error: `bar` is a string.
+ 56: });
+     -^ object literal. This type is incompatible with the expected param type of
+ 44: function D(props: {foo: number, bar: number}) {}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     55:   bar: 'Hello, world!', // Error: `bar` is a string.
+                ^^^^^^^^^^^^^^^ string. This type is incompatible with
+     44: function D(props: {foo: number, bar: number}) {}
+                                              ^^^^^^ number
+
+
+Found 15 errors

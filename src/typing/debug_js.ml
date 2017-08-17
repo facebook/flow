@@ -671,8 +671,9 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t_out", _json_of_t json_cx tout;
     ]
 
-  | ReactKitT (_, React.CreateElement (t, t_out)) -> [
-      "config", _json_of_t json_cx t;
+  | ReactKitT (_, React.CreateElement (config, children, t_out)) -> [
+      "config", _json_of_t json_cx config;
+      "children", JSON_Array (List.map (json_of_funcallarg json_cx) children);
       "returnType", _json_of_t json_cx t_out;
     ]
 
@@ -1044,6 +1045,8 @@ and json_of_type_map_impl json_cx = Hh_json.(function
     ]
   | ObjectMapi t -> JSON_Object [
       "objectMapi", _json_of_t json_cx t
+  | ReactElementPropsType -> JSON_Object [
+      "reactElementProps", JSON_Bool true
     ]
 )
 
@@ -1475,6 +1478,7 @@ and dump_t_ (depth, tvars) cx t =
     | TypeMap (TupleMap _) -> "tuple map"
     | TypeMap (ObjectMap _) -> "object map"
     | TypeMap (ObjectMapi _) -> "object mapi"
+    | ReactElementPropsType -> "React element props"
     in
     fun expr t -> match expr with
     | DestructuringT (_, selector) ->
@@ -1722,8 +1726,13 @@ and dump_use_t_ (depth, tvars) cx t =
       fun t k -> spf "%s, %s" (tool t) (knot k)
     ) in
     function
-    | CreateElement (config, tout) ->
-      spf "CreateElement (%s, %s)" (kid config) (kid tout)
+    | CreateElement (config, children, tout) -> p
+        ~extra:(spf "CreateElement (%s; %s) => %s"
+          (kid config)
+          (String.concat "; " (List.map call_arg_kid children))
+          (kid tout)) t
+    | GetProps tout ->
+      spf "GetProps (%s)" (kid tout)
     | SimplifyPropType (tool, tout) ->
       spf "SimplifyPropType (%s, %s)" (simplify_prop_type tool) (kid tout)
     | CreateClass (tool, knot, tout) ->
@@ -2070,6 +2079,7 @@ let string_of_destructor = function
   | TypeMap (TupleMap _) -> "TupleMap"
   | TypeMap (ObjectMap _) -> "ObjectMap"
   | TypeMap (ObjectMapi _) -> "ObjectMapi"
+  | ReactElementPropsType -> "ReactElementProps"
 
 let string_of_default = Default.fold
   ~expr:(fun (loc, _) ->
@@ -2431,6 +2441,12 @@ let dump_flow_error =
         spf "EUnsupportedImplements (%s)" (dump_reason cx reason)
     | EReactKit ((reason1, reason2), _) ->
         spf "EReactKit (%s, %s, _)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+    | EReactCreateElementArity reason ->
+        spf "EReactCreateElementArity (%s)" (dump_reason cx reason)
+    | EReactConfusingChildrenArgs (reason1, reason2) ->
+        spf "EReactConfusingChildrenArgs (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
     | EFunctionCallExtraArg (unused_reason, def_reason, param_count) ->

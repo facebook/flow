@@ -21,33 +21,33 @@ Error: createclass-callsite.js:20
 Error: es6class-proptypes-callsite.js:20
  20:         <Hello />
              ^^^^^^^^^ React element `Hello`
-  5: class Hello extends React.Component<void, {name: string}, void> {
-                                               ^^^^^^^^^^^^^^ property `name`. Property not found in. See: es6class-proptypes-module.js:5
+  5: class Hello extends React.Component<{name: string}> {
+                                         ^^^^^^^^^^^^^^ property `name`. Property not found in. See: es6class-proptypes-module.js:5
  20:         <Hello />
              ^^^^^^^^^ props of React element `Hello`
 
 Error: es6class-proptypes-callsite.js:21
  21:         <HelloLocal />
              ^^^^^^^^^^^^^^ React element `HelloLocal`
-  6: class HelloLocal extends React.Component<void, {name: string}, void> {
-                                                    ^^^^^^^^^^^^^^ property `name`. Property not found in
+  6: class HelloLocal extends React.Component<{name: string}> {
+                                              ^^^^^^^^^^^^^^ property `name`. Property not found in
  21:         <HelloLocal />
              ^^^^^^^^^^^^^^ props of React element `HelloLocal`
 
-Error: es6class-types-callsite.js:20
- 20:         <Hello />
+Error: es6class-types-callsite.js:18
+ 18:         <Hello />
              ^^^^^^^^^ React element `Hello`
-  7: class Hello extends React.Component<{}, Props, void>{
-                                             ^^^^^ property `name`. Property not found in. See: es6class-types-module.js:7
- 20:         <Hello />
+  7: class Hello extends React.Component<Props> {
+                                         ^^^^^ property `name`. Property not found in. See: es6class-types-module.js:7
+ 18:         <Hello />
              ^^^^^^^^^ props of React element `Hello`
 
-Error: es6class-types-callsite.js:21
- 21:         <HelloLocal />
+Error: es6class-types-callsite.js:19
+ 19:         <HelloLocal />
              ^^^^^^^^^^^^^^ React element `HelloLocal`
-  8: class HelloLocal extends React.Component<void, Props, void> {
-                                                    ^^^^^ property `name`. Property not found in
- 21:         <HelloLocal />
+  8: class HelloLocal extends React.Component<Props> {
+                                              ^^^^^ property `name`. Property not found in
+ 19:         <HelloLocal />
              ^^^^^^^^^^^^^^ props of React element `HelloLocal`
 
 

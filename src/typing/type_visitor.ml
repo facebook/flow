@@ -211,6 +211,7 @@ class ['a] t = object(self)
   | NonMaybeType
   | PropertyType _
   | ValuesType
+  | ReactElementPropsType
     -> acc
   | ElementType t -> self#type_ cx acc t
   | Bind t -> self#type_ cx acc t

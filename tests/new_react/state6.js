@@ -10,7 +10,7 @@ type StateUpdater1 = {(State): $Shape<State>};
 type StateUpdater2 = {(State): $Shape<State>, foo: number, bar: number};
 type StateUpdater3 = {(number): number, foo: number, bar: number};
 
-class MyComponent extends React.Component<void, {prop: number}, State> {
+class MyComponent extends React.Component<{prop: number}, State> {
   state: State = {foo: 1, bar: 2};
 
   componentDidUpdate() {
