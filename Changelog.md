@@ -1,3 +1,96 @@
+### 0.53.0
+
+This release includes major changes to Flow's model for React. The following
+links contain detailed documentation on the new model.
+
+* [Defining components](https://flow.org/en/docs/react/components/)
+* [Event handling](https://flow.org/en/docs/react/events/)
+* [ref functions](https://flow.org/en/docs/react/refs/)
+* [Typing children](https://flow.org/en/docs/react/children/)
+* [Higher-order components](https://flow.org/en/docs/react/hoc/)
+* [Utility type reference](https://flow.org/en/docs/react/types/)
+
+Please use the new [flow-upgrade](https://yarnpkg.com/en/package/flow-upgrade)
+tool to upgrade your codebase to take advantage of these changes!
+
+Likely to cause new Flow errors:
+
+* We are modifying how you define React class components. The React.Component
+  class will now take two type arguments, Props and State (as opposed to the
+  three type arguments including DefaultProps that React.Component took
+  before). When your component has no state, you only need to pass in a single
+  type argument. If your component has default props then add a static
+  defaultProps property.
+
+* Flow used to not type React function refs at all, but now that we are typing
+  refs code that used to just work may now have errors. One such error which can
+  often be overlooked is that the instance React gives you in a function ref may
+  sometimes be null.
+
+* Flow used to completely ignore the type of React children in many
+  places. Intrinsic elements did not check the type of their children (like
+  <div>), the type specified by components for React children would be ignored
+  when you created React elements, and the React.Children API was typed as
+  any.
+
+* In the past when typing children many developers would use an array type
+  (Array<T>) often with the React element type
+  (Array<React.Element<any>>). However, using arrays is problematic because
+  React children are not always an array. To fix this, now use the new
+  React.ChildrenArray<T> type.
+
+New Features:
+
+* Modeling advanced React patterns, like higher-order components, is difficult
+  today because the types you would need are either not provided or
+  undocumented. In this release we added a whole suite of utility types which
+  are all documented on our website.
+
+Notable bug fixes:
+
+* Flow used to have a bug where Flow would consider the following code as valid:
+```
+function MyComponent(props: {foo: number}) {
+  // ...
+}
+<MyComponent foo={undefined} />; // this is now a Flow error
+```
+
+* We now allow JSX class components to use exact object types as their props.
+
+* We now allow member expressions when creating JSX components,
+  e.g. `<TabBarIOS.Item>`.
+
+* We now allow multiple spreads in a JSX element.
+
+* We have added a type argument to `SyntheticEvents` and correctly typed
+  `currentTarget` using that type argument.
+
+Parser:
+
+* We fixed miscellaneous character encoding issues.
+
+Misc:
+
+* This release features a major re-architecture in how Flow typechecks modules
+  against their dependencies. Earlier, Flow would do a "local" (per-module)
+  typechecking pass followed by a global (cross-module) typechecking pass. Now,
+  these passes have been merged. This change vastly improve Flow's memory usage
+  on large codebases.
+
+* We found and fixed a couple of subtle bugs in the typechecking engine that
+  caused stack overflows in some pathological cases.
+
+* We made various improvements to refinements. We now recognize `var`s that are
+  only assigned to once as `const`s, so that we can preserve refinements on them
+  through longer stretches of code. Some `typeof` cases have also been fixed.
+
+* We now support focus-checking multiple files. You can use it to debug issues
+  easier and faster by telling Flow to focus on files of interest.
+
+* This release also includes lots of improvements to core type
+  definitions. Thanks for your contributions!
+
 ### 0.52.0
 
 New Features:
