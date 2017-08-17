@@ -298,8 +298,8 @@ let typecheck
       let open Errors in
       let curr_errors = ref ErrorSet.empty in
       let curr_warnings = ref ErrorSet.empty in
-      let curr_suppressions = ref Error_suppressions.empty in
-      let curr_lint_settings = ref LintSettingsMap.empty in
+      let curr_suppressions = ref (Error_suppressions.union_suppressions suppressions) in
+      let curr_lint_settings = ref (LintSettingsMap.union_settings lint_settings) in
       let filter = Error_suppressions.filter_suppressed_errors in
       function lazy results ->
         let new_errors, new_warnings, suppressions, lint_settings =

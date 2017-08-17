@@ -164,7 +164,10 @@ let to_string settings =
 let settings_at_loc loc suppression_map =
   match SpanMap.get (Loc.first_char loc) suppression_map with
   | Some settings -> settings
-  | None -> failwith "LintSettingsMap invariant violated in settings_at_loc"
+  | None ->
+    let open Utils_js in
+    assert_false (spf "LintSettingsMap invariant violated in settings_at_loc: %s"
+      (Loc.to_string ~include_source:true loc))
 
 let get_state lint_kind loc suppression_map =
   settings_at_loc loc suppression_map |> LintSettings.get_state lint_kind
