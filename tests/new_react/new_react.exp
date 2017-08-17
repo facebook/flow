@@ -2,8 +2,8 @@ Library type error:
 <BUILTINS>/react.js:158
                                                                   v-
 158: declare type React$Element<ElementType: React$ElementType> = {|
-159:   +type: ElementType;
-160:   +props: React$ElementProps<ElementType>;
+159:   +type: ElementType,
+160:   +props: React$ElementProps<ElementType>,
 ...:
 163: |};
      -^ object type. This type is incompatible with
@@ -19,8 +19,8 @@ Library type error:
 <BUILTINS>/react.js:158
                                                                   v-
 158: declare type React$Element<ElementType: React$ElementType> = {|
-159:   +type: ElementType;
-160:   +props: React$ElementProps<ElementType>;
+159:   +type: ElementType,
+160:   +props: React$ElementProps<ElementType>,
 ...:
 163: |};
      -^ object type. This type is incompatible with
@@ -39,7 +39,7 @@ Library type error:
 
 Library type error:
 <BUILTINS>/react.js:160
-160:   +props: React$ElementProps<ElementType>;
+160:   +props: React$ElementProps<ElementType>,
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `w`. Property not found in
                     v
   4:     propTypes: {
@@ -100,7 +100,7 @@ Error: classes.js:38
 Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
                              ^^^^^^ React element `Foo`
-160:   +props: React$ElementProps<ElementType>;
+160:   +props: React$ElementProps<ElementType>,
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:160
  39: var foo: $jsx<number> = <Foo/>;
                    ^^^^^^ number
@@ -177,7 +177,7 @@ Error: classes.js:64
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ React element `FooLegacy`
-160:   +props: React$ElementProps<ElementType>;
+160:   +props: React$ElementProps<ElementType>,
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:160
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                           ^^^^^^ number

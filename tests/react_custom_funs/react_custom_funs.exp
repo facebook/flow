@@ -52,7 +52,7 @@ Error: clone_element.js:34
 
 Error: clone_element.js:38
  38: React.cloneElement(a, {foo: 1, bar: 2}); // OK
-                           ^^^^^^^^^^^^^^^^ property `bar` of object literal. Property not found in
+                           ^^^^^^^^^^^^^^^^ property `bar` of props of React element. Property not found in
   8: class A extends React.Component<{foo: number}, void> {}
                                      ^^^^^^^^^^^^^ object type
 
@@ -120,7 +120,7 @@ Error: create_element.js:20
  21:   foo: 42,
  22:   bar: 'Hello, world!', // Error: `bar` is a string.
  23: });
-     ^ object literal. This type is incompatible with
+     ^ props of React element. This type is incompatible with
  15: class A extends React.Component<{foo: number, bar: number}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `bar` is incompatible:
@@ -135,7 +135,7 @@ Error: create_element.js:24
  25:   foo: 42,
  26:   bar: 'Hello, world!', // Error: `bar` is a string.
  27: });
-     -^ object literal. This type is incompatible with the expected param type of
+     -^ props of React element. This type is incompatible with the expected param type of
  16: function B(props: {foo: number, bar: number}) {}
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `bar` is incompatible:
@@ -150,7 +150,7 @@ Error: create_element.js:28
  15: class A extends React.Component<{foo: number, bar: number}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
  28: React.createElement(A, {foo: 42}); // Error: `bar` is missing.
-                            ^^^^^^^^^ object literal
+                            ^^^^^^^^^ props of React element
 
 Error: create_element.js:29
  29: React.createElement(B, {foo: 42}); // Error: `bar` is missing.
@@ -158,7 +158,7 @@ Error: create_element.js:29
  16: function B(props: {foo: number, bar: number}) {}
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
  29: React.createElement(B, {foo: 42}); // Error: `bar` is missing.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element
 
 Error: create_element.js:34
  34: (React.createElement(A, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
@@ -177,8 +177,8 @@ Error: create_element.js:38
                                               ^^^^ property `nope`. Property not found in
                                                                   v-
 158: declare type React$Element<ElementType: React$ElementType> = {|
-159:   +type: ElementType;
-160:   +props: React$ElementProps<ElementType>;
+159:   +type: ElementType,
+160:   +props: React$ElementProps<ElementType>,
 ...:
 163: |};
      -^ object type. See lib: <BUILTINS>/react.js:158
@@ -188,8 +188,8 @@ Error: create_element.js:39
                                               ^^^^ property `nope`. Property not found in
                                                                   v-
 158: declare type React$Element<ElementType: React$ElementType> = {|
-159:   +type: ElementType;
-160:   +props: React$ElementProps<ElementType>;
+159:   +type: ElementType,
+160:   +props: React$ElementProps<ElementType>,
 ...:
 163: |};
      -^ object type. See lib: <BUILTINS>/react.js:158
@@ -232,7 +232,7 @@ Error: create_element.js:51
  52:   foo: 42,
  53:   bar: 'Hello, world!', // Error: `bar` is a string.
  54: });
-     ^ object literal. This type is incompatible with
+     ^ props of React element. This type is incompatible with
  43: class C extends React.Component<{foo: number, bar: number}> {
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `bar` is incompatible:
@@ -247,7 +247,7 @@ Error: create_element.js:55
  56:   foo: 42,
  57:   bar: 'Hello, world!', // Error: `bar` is a string.
  58: });
-     -^ object literal. This type is incompatible with the expected param type of
+     -^ props of React element. This type is incompatible with the expected param type of
  46: function D(props: {foo: number, bar: number}) {}
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `bar` is incompatible:
@@ -262,7 +262,7 @@ Error: create_element.js:67
  66: class E extends React.Component<{children: number}> {}
                                      ^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
  67: React.createElement(E, {}); // Error
-                            ^^ object literal
+                            ^^ props of React element
 
 Error: create_element.js:69
  69: React.createElement(E, {}, 1, 2); // Error
@@ -314,7 +314,7 @@ Error: create_element.js:73
  66: class E extends React.Component<{children: number}> {}
                                      ^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
  73: React.createElement(E, {}, ...[]); // Error
-                            ^^ object literal
+                            ^^ props of React element
 
 Error: create_element.js:75
  75: React.createElement(E, {}, ...[1, 2]); // Error
@@ -377,7 +377,7 @@ Error: create_element.js:82
  81: class F extends React.Component<{children: Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
  82: React.createElement(F, {}); // Error
-                            ^^ object literal
+                            ^^ props of React element
 
 Error: create_element.js:83
  83: React.createElement(F, {}, 1); // Error
@@ -412,7 +412,7 @@ Error: create_element.js:88
  81: class F extends React.Component<{children: Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
  88: React.createElement(F, {}, ...[]); // Error
-                            ^^ object literal
+                            ^^ props of React element
 
 Error: create_element.js:89
  89: React.createElement(F, {}, ...[1]); // Error
@@ -486,7 +486,7 @@ Error: create_element.js:97
  96: class G extends React.Component<{children: number | Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
  97: React.createElement(G, {}); // Error
-                            ^^ object literal
+                            ^^ props of React element
 
 Error: create_element.js:102
 102: React.createElement(G, {}, [1, 2], [3, 4]); // Error
@@ -510,7 +510,7 @@ Error: create_element.js:103
  96: class G extends React.Component<{children: number | Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
 103: React.createElement(G, {}, ...[]); // Error
-                            ^^ object literal
+                            ^^ props of React element
 
 Error: create_element.js:106
 106: React.createElement(G, {}, ...(any: Array<number>)); // Error
@@ -558,7 +558,7 @@ Error: create_element.js:128
 127: class H extends React.Component<{children: NumberArrayRecursive}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
 128: React.createElement(H, {}); // Error
-                            ^^ object literal
+                            ^^ props of React element
 
 Error: create_element.js:134
 134: React.createElement(H, {}, ...[]); // Error
@@ -566,7 +566,7 @@ Error: create_element.js:134
 127: class H extends React.Component<{children: NumberArrayRecursive}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
 134: React.createElement(H, {}, ...[]); // Error
-                            ^^ object literal
+                            ^^ props of React element
 
 Error: create_element.js:137
 137: React.createElement(H, {}, ...(any: Array<number>)); // Error
@@ -664,7 +664,7 @@ Error: create_element.js:157
 156: class J extends React.Component<{children: ?number}> {}
                                      ^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
 157: React.createElement(J, {}); // Error
-                            ^^ object literal
+                            ^^ props of React element
 
 Error: create_element.js:161
 161: React.createElement(J, {}, 1, 2); // Error
@@ -683,7 +683,7 @@ Error: create_element.js:162
 156: class J extends React.Component<{children: ?number}> {}
                                      ^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
 162: React.createElement(J, {}, ...[]); // Error
-                            ^^ object literal
+                            ^^ props of React element
 
 Error: create_element.js:164
 164: React.createElement(J, {}, ...[1, 2]); // Error
@@ -742,7 +742,7 @@ Error: create_element.js:174
 
 Error: create_element.js:175
 175: React.createElement(K, {children: '42'}); // Error
-                            ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                            ^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with
 170: class K extends React.Component<{children: number}> {}
                                      ^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
@@ -797,7 +797,7 @@ Error: create_element.js:192
 184: }> {
      ^ property `foo`. Property not found in
 192: React.createElement(L, {children: 1}); // Error
-                            ^^^^^^^^^^^^^ object literal
+                            ^^^^^^^^^^^^^ props of React element
 
 Error: create_element.js:193
 193: React.createElement(L, {bar: 1}, 2); // Error
@@ -823,7 +823,7 @@ Error: create_element.js:194
 184: }> {
      ^ property `foo`. Property not found in
 194: React.createElement(L, {bar: 1, children: 2}); // Error
-                            ^^^^^^^^^^^^^^^^^^^^^ object literal
+                            ^^^^^^^^^^^^^^^^^^^^^ props of React element
 
 Error: create_element.js:195
 195: React.createElement(L, {foo: '1', bar: 2}, 3); // Error
@@ -843,7 +843,7 @@ Error: create_element.js:195
 
 Error: create_element.js:196
 196: React.createElement(L, {foo: '1', bar: 2, children: 3}); // Error
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with
                                      v
 180: class L extends React.Component<{
 181:   foo: number,
@@ -875,7 +875,7 @@ Error: create_element.js:197
 
 Error: create_element.js:198
 198: React.createElement(L, {foo: 1, bar: '2', children: 3}); // Error
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with
                                      v
 180: class L extends React.Component<{
 181:   foo: number,
@@ -907,7 +907,7 @@ Error: create_element.js:199
 
 Error: create_element.js:200
 200: React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with
                                      v
 180: class L extends React.Component<{
 181:   foo: number,
@@ -933,7 +933,7 @@ Error: create_factory.js:18
  19:   foo: 42,
  20:   bar: 'Hello, world!', // Error: `bar` is a string.
  21: });
-     ^ object literal. This type is incompatible with
+     ^ props of React element. This type is incompatible with
  10: class A extends React.Component<{foo: number, bar: number}, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `bar` is incompatible:
@@ -948,7 +948,7 @@ Error: create_factory.js:22
  23:   foo: 42,
  24:   bar: 'Hello, world!', // Error: `bar` is a string.
  25: });
-     -^ object literal. This type is incompatible with the expected param type of
+     -^ props of React element. This type is incompatible with the expected param type of
  11: function B(props: {foo: number, bar: number}) {}
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `bar` is incompatible:
@@ -963,7 +963,7 @@ Error: create_factory.js:26
  10: class A extends React.Component<{foo: number, bar: number}, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
  26: aFactory({foo: 42}); // Error: `bar` is missing.
-              ^^^^^^^^^ object literal
+              ^^^^^^^^^ props of React element
 
 Error: create_factory.js:27
  27: bFactory({foo: 42}); // Error: `bar` is missing.
@@ -971,7 +971,7 @@ Error: create_factory.js:27
  11: function B(props: {foo: number, bar: number}) {}
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
  27: bFactory({foo: 42}); // Error: `bar` is missing.
-     ^^^^^^^^^^^^^^^^^^^ object literal
+     ^^^^^^^^^^^^^^^^^^^ props of React element
 
 Error: create_factory.js:32
  32: (aFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
@@ -990,8 +990,8 @@ Error: create_factory.js:34
                                 ^^^^ property `nope`. Property not found in
                                                                   v-
 158: declare type React$Element<ElementType: React$ElementType> = {|
-159:   +type: ElementType;
-160:   +props: React$ElementProps<ElementType>;
+159:   +type: ElementType,
+160:   +props: React$ElementProps<ElementType>,
 ...:
 163: |};
      -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1001,8 +1001,8 @@ Error: create_factory.js:35
                                 ^^^^ property `nope`. Property not found in
                                                                   v-
 158: declare type React$Element<ElementType: React$ElementType> = {|
-159:   +type: ElementType;
-160:   +props: React$ElementProps<ElementType>;
+159:   +type: ElementType,
+160:   +props: React$ElementProps<ElementType>,
 ...:
 163: |};
      -^ object type. See lib: <BUILTINS>/react.js:158
@@ -1045,7 +1045,7 @@ Error: create_factory.js:50
  51:   foo: 42,
  52:   bar: 'Hello, world!', // Error: `bar` is a string.
  53: });
-     ^ object literal. This type is incompatible with
+     ^ props of React element. This type is incompatible with
  39: class C extends React.Component<{foo: number, bar: number}, void> {
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `bar` is incompatible:
@@ -1060,7 +1060,7 @@ Error: create_factory.js:54
  55:   foo: 42,
  56:   bar: 'Hello, world!', // Error: `bar` is a string.
  57: });
-     -^ object literal. This type is incompatible with the expected param type of
+     -^ props of React element. This type is incompatible with the expected param type of
  42: function D(props: {foo: number, bar: number}) {}
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `bar` is incompatible:
@@ -1075,7 +1075,7 @@ Error: create_factory.js:69
  67: class E extends React.Component<{children: number}, void> {}
                                      ^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
  69: eFactory({}); // Error
-              ^^ object literal
+              ^^ props of React element
 
 Error: create_factory.js:71
  71: eFactory({}, 1, 2); // Error
@@ -1127,7 +1127,7 @@ Error: create_factory.js:75
  67: class E extends React.Component<{children: number}, void> {}
                                      ^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
  75: eFactory({}, ...[]); // Error
-              ^^ object literal
+              ^^ props of React element
 
 Error: create_factory.js:77
  77: eFactory({}, ...[1, 2]); // Error
@@ -1190,7 +1190,7 @@ Error: create_factory.js:85
  83: class F extends React.Component<{children: Array<number>}, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
  85: fFactory({}); // Error
-              ^^ object literal
+              ^^ props of React element
 
 Error: create_factory.js:86
  86: fFactory({}, 1); // Error
@@ -1225,7 +1225,7 @@ Error: create_factory.js:91
  83: class F extends React.Component<{children: Array<number>}, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
  91: fFactory({}, ...[]); // Error
-              ^^ object literal
+              ^^ props of React element
 
 Error: create_factory.js:92
  92: fFactory({}, ...[1]); // Error
@@ -1299,7 +1299,7 @@ Error: create_factory.js:101
  99: class G extends React.Component<{children: number | Array<number>}, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
 101: gFactory({}); // Error
-              ^^ object literal
+              ^^ props of React element
 
 Error: create_factory.js:106
 106: gFactory({}, [1, 2], [3, 4]); // Error
@@ -1323,7 +1323,7 @@ Error: create_factory.js:107
  99: class G extends React.Component<{children: number | Array<number>}, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
 107: gFactory({}, ...[]); // Error
-              ^^ object literal
+              ^^ props of React element
 
 Error: create_factory.js:110
 110: gFactory({}, ...(any: Array<number>)); // Error
@@ -1355,7 +1355,7 @@ Error: create_factory.js:118
 116: class H extends React.Component<{children: NumberArrayRecursive}, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
 118: hFactory({}); // Error
-              ^^ object literal
+              ^^ props of React element
 
 Error: create_factory.js:124
 124: hFactory({}, ...[]); // Error
@@ -1363,7 +1363,7 @@ Error: create_factory.js:124
 116: class H extends React.Component<{children: NumberArrayRecursive}, void> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
 124: hFactory({}, ...[]); // Error
-              ^^ object literal
+              ^^ props of React element
 
 Error: create_factory.js:127
 127: hFactory({}, ...(any: Array<number>)); // Error
@@ -1461,7 +1461,7 @@ Error: create_factory.js:149
 147: class J extends React.Component<{children: ?number}, void> {}
                                      ^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
 149: jFactory({}); // Error
-              ^^ object literal
+              ^^ props of React element
 
 Error: create_factory.js:153
 153: jFactory({}, 1, 2); // Error
@@ -1480,7 +1480,7 @@ Error: create_factory.js:154
 147: class J extends React.Component<{children: ?number}, void> {}
                                      ^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
 154: jFactory({}, ...[]); // Error
-              ^^ object literal
+              ^^ props of React element
 
 Error: create_factory.js:156
 156: jFactory({}, ...[1, 2]); // Error
@@ -1539,7 +1539,7 @@ Error: create_factory.js:167
 
 Error: create_factory.js:168
 168: kFactory({children: '42'}); // Error
-              ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+              ^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with
 162: class K extends React.Component<{children: number}, void> {}
                                      ^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
@@ -1594,7 +1594,7 @@ Error: create_factory.js:186
 177: }, void> {
      ^ property `foo`. Property not found in
 186: lFactory({children: 1}); // Error
-              ^^^^^^^^^^^^^ object literal
+              ^^^^^^^^^^^^^ props of React element
 
 Error: create_factory.js:187
 187: lFactory({bar: 1}, 2); // Error
@@ -1620,7 +1620,7 @@ Error: create_factory.js:188
 177: }, void> {
      ^ property `foo`. Property not found in
 188: lFactory({bar: 1, children: 2}); // Error
-              ^^^^^^^^^^^^^^^^^^^^^ object literal
+              ^^^^^^^^^^^^^^^^^^^^^ props of React element
 
 Error: create_factory.js:189
 189: lFactory({foo: '1', bar: 2}, 3); // Error
@@ -1640,7 +1640,7 @@ Error: create_factory.js:189
 
 Error: create_factory.js:190
 190: lFactory({foo: '1', bar: 2, children: 3}); // Error
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with
                                      v
 173: class L extends React.Component<{
 174:   foo: number,
@@ -1672,7 +1672,7 @@ Error: create_factory.js:191
 
 Error: create_factory.js:192
 192: lFactory({foo: 1, bar: '2', children: 3}); // Error
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with
                                      v
 173: class L extends React.Component<{
 174:   foo: number,
@@ -1704,7 +1704,7 @@ Error: create_factory.js:193
 
 Error: create_factory.js:194
 194: lFactory({foo: 1, bar: 2, children: '3'}); // Error
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with
                                      v
 173: class L extends React.Component<{
 174:   foo: number,

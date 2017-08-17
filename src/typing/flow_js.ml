@@ -2879,7 +2879,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (** ObjAssignFromT copies multiple properties from its incoming LB.
         Here we simulate a merged object type by iterating over the
         entire intersection. *)
-    | DefT (_, IntersectionT rep), ObjAssignFromT (_, _, _, _, _) ->
+    | DefT (_, IntersectionT rep), ObjAssignFromT (_, _, _, _) ->
       InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
 
     (** This duplicates the (_, ReposLowerT u) near the end of this pattern
@@ -3953,7 +3953,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (_, UseT (_, ShapeT (o))) ->
         let reason = reason_of_t o in
-        rec_flow cx trace (l, ObjAssignFromT(reason, o, Locationless.AnyT.t, [], ObjAssign))
+        rec_flow cx trace (l, ObjAssignFromT (reason, o, Locationless.AnyT.t, ObjAssign))
 
     | t, UseT (_, DiffT (a, b)) ->
         let open ObjectSpread in
@@ -3964,7 +3964,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          * `{...B, ...T} = A`. We rearrange `DiffT` into the latter form and
          * check that. *)
         let reason = reason_of_t l in
-        let options = { merge_mode = DiffMM } in
+        let options = { merge_mode = DiffMM; exclude_props = [] } in
         let tool = Resolve Next in
         let state = { todo_rev = [b]; acc = [] } in
         rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, a))
@@ -4469,7 +4469,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (**********************************************************************)
 
     (** When some object-like type O1 flows to
-        ObjAssignFromT(_,O2,X,_,ObjAssign), the properties of O1 are copied to
+        ObjAssignFromT(_,O2,X,ObjAssign), the properties of O1 are copied to
         O2, and O2 is linked to X to signal that the copying is done; the
         intention is that when those properties are read through X, they should
         be found (whereas this cannot be guaranteed when those properties are
@@ -4477,12 +4477,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         may not work when O2 is unresolved. In particular, when O2 is
         unresolved, the constraints that copy the properties from O1 may race
         with reads of those properties through X as soon as O2 is resolved. To
-        avoid this race, we make O2 flow to ObjAssignToT(_,O1,X,_,ObjAssign);
+        avoid this race, we make O2 flow to ObjAssignToT(_,O1,X,ObjAssign);
         when O2 is resolved, we make the switch. **)
 
     | DefT (lreason, ObjT { props_tmap = mapr; _ }),
-      ObjAssignFromT (reason_op, proto, t, props_to_skip, ObjAssign) ->
-      let props_to_skip = "$call" :: props_to_skip in
+      ObjAssignFromT (reason_op, proto, t, ObjAssign) ->
+      let props_to_skip = ["$call"] in
       Ops.push reason_op;
       Context.iter_props cx mapr (fun x p ->
         if not (List.mem x props_to_skip) then (
@@ -4509,21 +4509,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (proto, t)
 
     | DefT (lreason, InstanceT (_, _, _, { fields_tmap; methods_tmap; _ })),
-      ObjAssignFromT (reason_op, proto, t, props_to_skip, ObjAssign) ->
+      ObjAssignFromT (reason_op, proto, t, ObjAssign) ->
       let fields_pmap = Context.find_props cx fields_tmap in
       let methods_pmap = Context.find_props cx methods_tmap in
       let pmap = SMap.union fields_pmap methods_pmap in
       pmap |> SMap.iter (fun x p ->
-        if not (List.mem x props_to_skip) then (
-          match Property.read_t p with
-          | Some t ->
-            let propref = Named (reason_op, x) in
-            rec_flow cx trace (proto, SetPropT (reason_op, propref, t))
-          | None ->
-            add_output cx ~trace (FlowError.EPropAccess (
-              (lreason, reason_op), Some x, Property.polarity p, Read
-            ))
-        )
+        match Property.read_t p with
+        | Some t ->
+          let propref = Named (reason_op, x) in
+          rec_flow cx trace (proto, SetPropT (reason_op, propref, t))
+        | None ->
+          add_output cx ~trace (FlowError.EPropAccess (
+            (lreason, reason_op), Some x, Property.polarity p, Read
+          ))
       );
       rec_flow_t cx trace (proto, t)
 
@@ -4531,31 +4529,31 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        existing object destroys all of the keys, turning the result into an
        AnyObjT as well. TODO: wait for `proto` to be resolved, and then call
        `SetPropT (_, _, AnyT)` on all of its props. *)
-    | DefT (_, AnyObjT), ObjAssignFromT (reason, _, t, _, ObjAssign) ->
+    | DefT (_, AnyObjT), ObjAssignFromT (reason, _, t, ObjAssign) ->
       rec_flow_t cx trace (DefT (reason, AnyObjT), t)
 
-    | (ObjProtoT _, ObjAssignFromT (_, proto, t, _, ObjAssign)) ->
+    | (ObjProtoT _, ObjAssignFromT (_, proto, t, ObjAssign)) ->
       rec_flow_t cx trace (proto, t)
 
-    | DefT (arr_r, ArrT arrtype), ObjAssignFromT (r, o, t, xs, ObjSpreadAssign) ->
+    | DefT (arr_r, ArrT arrtype), ObjAssignFromT (r, o, t, ObjSpreadAssign) ->
       begin match arrtype with
       | ArrayAT (elemt, None)
       | ROArrayAT (elemt) ->
         (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
-        rec_flow cx trace (elemt, ObjAssignFromT (r, o, t, xs, ObjAssign))
+        rec_flow cx trace (elemt, ObjAssignFromT (r, o, t, ObjAssign))
       | TupleAT (_, ts)
       | ArrayAT (_, Some ts) ->
         (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
         List.iter (fun from ->
-          rec_flow cx trace (from, ObjAssignFromT (r, o, t, xs, ObjAssign))
+          rec_flow cx trace (from, ObjAssignFromT (r, o, t, ObjAssign))
         ) ts
       | EmptyAT ->
         (* Object.assign(o, ...EmptyAT) -> Object.assign(o, empty) *)
-        rec_flow cx trace (DefT (arr_r, EmptyT), ObjAssignFromT (r, o, t, xs, ObjAssign))
+        rec_flow cx trace (DefT (arr_r, EmptyT), ObjAssignFromT (r, o, t, ObjAssign))
       end
 
-    | (proto, ObjAssignToT(reason, from, t, xs, kind)) ->
-      rec_flow cx trace (from, ObjAssignFromT(reason, proto, t, xs, kind))
+    | (proto, ObjAssignToT(reason, from, t, kind)) ->
+      rec_flow cx trace (from, ObjAssignFromT(reason, proto, t, kind))
 
     (* Object.assign semantics *)
     | DefT (_, (NullT | VoidT)), ObjAssignFromT _ -> ()
@@ -4589,7 +4587,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let o = mk_tvar_where cx reason_op (fun tvar ->
         rec_flow cx trace (
           obj_inst,
-          ObjAssignFromT(reason_op, obj_super, tvar, [], ObjAssign)
+          ObjAssignFromT (reason_op, obj_super, tvar, ObjAssign)
         )
       ) in
 
@@ -4950,7 +4948,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************************************)
 
     | DefT (_, FunT (_, t, _)), SetPropT(reason_op, Named (_, "prototype"), tin) ->
-      rec_flow cx trace (tin, ObjAssignFromT(reason_op, t, Locationless.AnyT.t, [], ObjAssign))
+      rec_flow cx trace (tin, ObjAssignFromT (reason_op, t, Locationless.AnyT.t, ObjAssign))
 
     (*********************************)
     (* ... and their prototypes read *)
@@ -5838,7 +5836,7 @@ and flow_error_kind_of_upper = function
   | ElemT (_, _, ReadElem _) -> FlowError.IncompatibleElemTRead
   | ElemT (_, _, WriteElem _) -> FlowError.IncompatibleElemTWrite
   | ElemT (_, _, CallElem _) -> FlowError.IncompatibleElemTCall
-  | ObjAssignFromT (_, _, _, _, ObjSpreadAssign) -> FlowError.IncompatibleObjAssignFromTSpread
+  | ObjAssignFromT (_, _, _, ObjSpreadAssign) -> FlowError.IncompatibleObjAssignFromTSpread
   | ObjAssignFromT _ -> FlowError.IncompatibleObjAssignFromT
   | ObjRestT _ -> FlowError.IncompatibleObjRestT
   | ObjSealT _ -> FlowError.IncompatibleObjSealT
@@ -6946,7 +6944,7 @@ and chain_objects cx ?trace reason this those =
         t, ObjSpreadAssign
     in
     mk_tvar_where cx reason (fun t ->
-      flow_opt cx ?trace (result, ObjAssignToT(reason, that, t, [], kind));
+      flow_opt cx ?trace (result, ObjAssignToT(reason, that, t, kind));
     )
   ) this those
 
@@ -9964,7 +9962,8 @@ and object_spread =
   in
 
   (* Compute spread result: slice * slice -> slice *)
-  let spread2 cx trace reason {merge_mode; _} (r1,props1,dict1,flags1) (r2,props2,dict2,flags2) =
+  let spread2 cx trace reason options (r1,props1,dict1,flags1) (r2,props2,dict2,flags2) =
+    let {merge_mode; exclude_props; _} = options in
     let union t1 t2 = DefT (reason, UnionT (UnionRep.make t1 t2 [])) in
     let merge_props (t1, own1) (t2, own2) =
       let t1, opt1 = match t1 with DefT (_, OptionalT t) -> t, true | _ -> t1, false in
@@ -9986,6 +9985,10 @@ and object_spread =
       t, own
     in
     let props = SMap.merge (fun x p1 p2 ->
+      (* If this prop has been marked as excluded then return none instead of
+       * trying to merge. *)
+      if List.mem x exclude_props then None
+      else (
       (* Treat dictionaries as optional, own properties. Dictionary reads should
        * be exact. TODO: Forbid writes to indexers through the photo chain.
        * Property accesses which read from dictionaries normally result in a
@@ -9999,7 +10002,7 @@ and object_spread =
         DefT (r, MixedT Mixed_everything), false
       in
       match merge_mode with
-      | DefaultMM _ ->
+      | SoundSpreadMM _ ->
         begin match p1, p2 with
         | None, None -> None
         | Some p1, Some p2 -> Some (merge_props p1 p2)
@@ -10020,13 +10023,13 @@ and object_spread =
         end
       (* The simpler merge implementation that does not take into account the
        * complexities of JavaScript. *)
-      | IgnoreExactAndOwnMM ->
+      | BasicMM ->
         begin match p1, p2 with
         | None, None -> None
         | Some (t, _), None -> Some (t, true)
         | _, Some (t, _) -> Some (t, true)
         end
-      (* The diff merge mode is very similar to IgnoreExactAndOwnMM except that
+      (* The diff merge mode is very similar to BasicMM except that
        * we want undefined to fall through to the property below. *)
       | DiffMM ->
         begin match p1, p2 with
@@ -10047,7 +10050,7 @@ and object_spread =
           ) in
           Some (t, true)
         end
-    ) props1 props2 in
+    )) props1 props2 in
     let dict = Option.merge dict1 dict2 (fun d1 d2 -> {
       dict_name = None;
       key = union d1.key d2.key;
@@ -10124,7 +10127,7 @@ and object_spread =
     | x0,x1::xs -> merge (spread2 cx trace reason options) x0 (x1,xs)
   in
 
-  let mk_object cx reason {merge_mode} (r, props, dict, flags) =
+  let mk_object cx reason {merge_mode; _} (r, props, dict, flags) =
     let props = SMap.map (fun (t, own) ->
       (* Spread only copies over own properties. If `not own`, then the property
          might be on a proto object instead, so make the result optional. *)
@@ -10138,27 +10141,26 @@ and object_spread =
     let proto = ObjProtoT reason in
     let flags =
       match merge_mode with
-      (* DiffMM and IgnoreExactAndOwnMM creates object values, so we never need
-         ExactT, but the value itself can be exact if all parts of the spread
-         are exact. This logic is already encoded in `flags`. *)
-      | DiffMM
-      | IgnoreExactAndOwnMM -> flags
-      (* IgnoreExactAndOwn and Default create object annotations, which
-         need to be wrapped in ExactT if make_exact = true. It's OK to
-         set exact = make_exact here, because we will already have errored
-         if any part of the spread was inexact. *)
-      | DefaultMM make_exact ->
+      (* If all the other object types are exact then we want the resulting
+       * object to also be exact. This logic is encoded in the accumulated
+       * flags. *)
+      | BasicMM
+      | DiffMM -> flags
+      (* We only want to make an exact type if our make_exact option is true.
+       * Otherwise the resulting object should always be inexact. *)
+      | SoundSpreadMM make_exact ->
         { sealed = Sealed; frozen = false; exact = make_exact }
     in
     let t = DefT (r, ObjT (mk_objecttype ~flags dict id proto)) in
+    (* Wrap the final type in an `ExactT` if we have an exact flag *)
     if flags.exact then ExactT (reason, t) else t
   in
 
   let next cx trace reason options {todo_rev; acc} tout x =
-    let {merge_mode} = options in
+    let {merge_mode; _} = options in
     Nel.iter (fun (r,_,_,{exact;_}) ->
       match merge_mode with
-      | DefaultMM make_exact when make_exact && not exact ->
+      | SoundSpreadMM make_exact when make_exact && not exact ->
         add_output cx ~trace (FlowError.EIncompatibleWithExact (r, reason))
       | _ -> ()
     ) x;

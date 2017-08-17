@@ -5,8 +5,8 @@ Error: main.js:4
                ^^^^^^ number. This type is incompatible with
                                                                   v-
 158: declare type React$Element<ElementType: React$ElementType> = {|
-159:   +type: ElementType;
-160:   +props: React$ElementProps<ElementType>;
+159:   +type: ElementType,
+160:   +props: React$ElementProps<ElementType>,
 ...:
 163: |};
      -^ object type. See lib: <BUILTINS>/react.js:158

@@ -270,8 +270,8 @@ and gc_use cx state = function
   | MethodT(_, _, _, funcalltype) -> gc_funcalltype cx state funcalltype
   | MixinT (_, t) -> gc cx state t
   | NotT (_, t) -> gc cx state t
-  | ObjAssignToT (_, t1, t2, _, _) -> gc cx state t1; gc cx state t2
-  | ObjAssignFromT (_, t1, t2, _, _) -> gc cx state t1; gc cx state t2
+  | ObjAssignToT (_, t1, t2, _) -> gc cx state t1; gc cx state t2
+  | ObjAssignFromT (_, t1, t2, _) -> gc cx state t1; gc cx state t2
   | ObjFreezeT (_, t) -> gc cx state t
   | ObjRestT (_, _, t) -> gc cx state t
   | ObjSealT (_, t) -> gc cx state t

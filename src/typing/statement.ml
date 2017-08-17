@@ -2214,7 +2214,7 @@ and object_ cx reason ?(allow_sealed=true) props =
      not sealed. *)
   let mk_spread from_obj to_obj =
     Flow.mk_tvar_where cx reason (fun t ->
-      Flow.flow cx (to_obj, ObjAssignToT(reason, from_obj, t, [], ObjAssign));
+      Flow.flow cx (to_obj, ObjAssignToT(reason, from_obj, t, ObjAssign));
     )
   in
   (* When there's no result, return a new object with specified sealing. When
@@ -3414,24 +3414,15 @@ and assignment cx loc = Ast.Expression.(function
       lhs_t
 )
 
-and clone_object_with_excludes cx reason this that excludes =
+and clone_object cx reason this that =
   Flow.mk_tvar_where cx reason (fun tvar ->
-    let u = ObjRestT(reason, excludes, tvar) in
+    let u = ObjRestT (reason, [], tvar) in
     let t = Flow.tvar_with_constraint cx u in
     Flow.flow cx (
       this,
-      ObjAssignToT(reason, that, t, [], ObjAssign)
+      ObjAssignToT (reason, that, t, ObjAssign)
     )
   )
-
-and clone_object cx reason this that =
-  clone_object_with_excludes cx reason this that []
-
-
-and react_ignored_attributes = [ "key"; "ref"; ]
-
-and react_ignore_attribute aname =
-  List.mem aname react_ignored_attributes
 
 and jsx cx = Ast.JSX.(
   function { openingElement; children; _ } ->
@@ -3566,7 +3557,6 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
   let reason_props = replace_reason_const
     (if is_react then RReactElementProps (Some name) else RJSXElementProps name)
     reason in
-  let ignored_attributes = if is_react then react_ignored_attributes else [] in
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
   let proto = (ObjProtoT reason_props) in
@@ -3579,7 +3569,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
   let mk_spread from_obj to_obj =
     Flow.mk_tvar_where cx reason_props (fun t ->
       Flow.flow cx (to_obj,
-        ObjAssignToT (reason_props, from_obj, t, ignored_attributes, ObjAssign));
+        ObjAssignToT (reason_props, from_obj, t, ObjAssign));
     )
   in
   (* When there's no result, return a new object with specified sealing. When
@@ -3635,12 +3625,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
                 DefT (mk_reason RBoolean aloc, BoolT (Some true))
       in
       let p = Field (atype, Neutral) in
-      (* If this is an ignored React attribute then we do not want to add it to
-       * the map. It is, however, necessary to run our type inference hooks and
-       * call expression even if we throw away the result. *)
-      if is_react && react_ignore_attribute aname
-        then (sealed, map, result)
-        else (sealed, SMap.add aname p map, result)
+      (sealed, SMap.add aname p map, result)
     (* Do nothing for namespaced attributes or ignored React attributes. *)
     | Opening.Attribute _ ->
         (* TODO: attributes with namespaced names *)
@@ -3670,7 +3655,6 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
         let p = Field (arr, Neutral) in
         SMap.add "children" p map
   in
-
   eval_props ~sealed (map, result)
 )
 
