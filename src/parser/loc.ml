@@ -68,19 +68,20 @@ let first_char loc =
   let _end = {start with column = start.column + 1; offset = start.offset + 1} in
   {loc with _end}
 
+let pos_cmp a b =
+  let k = a.line - b.line in if k = 0 then a.column - b.column else k
+
 (* Returns true if loc1 entirely overlaps loc2 *)
 let contains loc1 loc2 =
+  let start_cmp = pos_cmp loc1.start loc2.start in
+  let end_cmp = pos_cmp loc1._end loc2._end in
   loc1.source = loc2.source &&
-  loc1.start.offset <= loc2.start.offset &&
-  loc1._end.offset >= loc2._end.offset
+  start_cmp <= 0 &&
+  end_cmp >= 0
 
 let string_of_filename = function
   | LibFile x | SourceFile x | JsonFile x | ResourceFile x -> x
   | Builtins -> "(global)"
-
-
-let pos_cmp a b =
-  let k = a.line - b.line in if k = 0 then a.column - b.column else k
 
 let compare =
   (* builtins, then libs, then source and json files at the same priority since
