@@ -113,32 +113,34 @@ recursively until we can decide if we have a subtype or not.
 
 #### Subtypes of functions <a class="toc" id="toc-subtypes-of-functions" href="#toc-subtypes-of-functions"></a>
 
-The subtyping of functions is a bit trickier. So far we've used the rule that one
-type is a subtype of another if it contains all the possible values of the parent.
-It's not clear how to apply this rule to function types.
+Subtyping rules for functions are more complicated. So far, we've seen that `A`
+is a subtype of `B` if `B` contains all possible values for `A`. For functions,
+it's not clear how this relationship would apply. To simplify things, you can think
+of a function type `A` being a subtype of a function type `B` if functions of type
+`A` can be used wherever a function of type `B` is expected.
 
-For functions, we'll adopt a different way of looking at that rule: for a function
-type to be a subtype of another, it should be safe to use in all the places where
-its parent can be used.
-
-Let's say we have a function type:
+Let's say we have a function type and a few functions. Which of the functions can
+be used safely in code that expects the given function type?
 
 ```js
-type Func1 = (1 | 2) => "A" | "B";
+type FuncType = (1 | 2) => "A" | "B";
+
+let f1: (1 | 2) => "A" | "B" | "C" = (x) => /* ... */
+let f2: (1 | null) => "A" | "B" = (x) => /* ... */
+let f3: (1 | 2 | 3) => "A" = (x) => /* ... */
 ```
 
-For another function type to be a subtype of this, it must be usable in any code that
-relies on the `Func1` type. That code expects to be allowed to send `1` or `2` as
-an argument and receive back `"A"` or `"B"` as the result. For another function type
-to be a subtype, it must:
+- `f1` can return a value that `FuncType` never does, so code that relies on `FuncType`
+might not be safe if `f1` is used. Its type is not a subtype of `FuncType`.
+- `f2` can't handle all the argument values that `FuncType` does, so code that relies on
+`FuncType` can't safely use `f2`. Its type is also not a subtype of `FuncType`.
+- `f3` can accept all the argument values that `FuncType` does, and only returns
+values that `FuncType` does, so its type is a subtype of `FuncType`.
 
-- Accept _at least_ `1` and `2` as inputs, though it may also accept other values (or additional parameters)
-- Return _at most_ `"A" | "B"`, though it may only return one or the other.
+In general, the function subtyping rule is this: A function type `B` is a subtype
+of a function type `A` only if `B`'s inputs are a superset of `A`'s, and `B`'s outputs
+are a subset of `B`'s. The subtype must accept _at least_ the same inputs as its parent,
+and must return _at most_ the same outputs.
 
-In general, for one function type to be a subtype of another, its inputs must be a supertype
-of the parent's, but its output must be a subtype of the parent's. (The distinction between
-input and output becomes even trickier if some of the function's arguments are themselves functions
-or are written to.)
-
-This subtyping rules for inputs and outputs are called "variance" and are the subject of the next
-section.
+The decision of which direction to apply the subtyping rule on inputs and outputs is
+governed by variance, which is the topic of the next section.
