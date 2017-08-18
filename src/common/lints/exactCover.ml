@@ -12,6 +12,8 @@
 
 module SpanMap = Span.SpanMap
 
+exception Uncovered of string
+
 (* A builder is a sorted list of non-overlapping, non-empty, adjacent ranges,
  * with later ranges appearing at the head of the list and earlier ranges
  * appearing at the tail of the list. *)
@@ -167,7 +169,9 @@ let file_cover source value = new_builder source value |> bake
  * ambiguity, this looks at the location of the first character in the provided
  * location. Errors if queried for a file not contained in this cover. *)
 let find loc cover =
-  SpanMap.find_unsafe (Loc.first_char loc) cover
+  let first_char = Loc.first_char loc in
+  try SpanMap.find_unsafe first_char cover
+  with Not_found -> raise (Uncovered (Loc.to_string ~include_source:true loc))
 
 let union a b = SpanMap.union a b
 

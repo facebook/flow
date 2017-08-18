@@ -302,8 +302,8 @@ let typecheck
       let open Errors in
       let curr_errors = ref ErrorSet.empty in
       let curr_warnings = ref ErrorSet.empty in
-      let curr_suppressions = ref Error_suppressions.empty in
-      let curr_severity_cover = ref ExactCover.empty in
+      let curr_suppressions = ref (Error_suppressions.union_suppressions suppressions) in
+      let curr_severity_cover = ref (ExactCover.union_all severity_cover_set) in
       let filter = Error_suppressions.filter_suppressed_errors in
       function lazy results ->
         let new_errors, new_warnings, suppressions, severity_cover =
