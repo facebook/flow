@@ -116,7 +116,7 @@ recursively until we can decide if we have a subtype or not.
 Subtyping rules for functions are more complicated. So far, we've seen that `A`
 is a subtype of `B` if `B` contains all possible values for `A`. For functions,
 it's not clear how this relationship would apply. To simplify things, you can think
-of a function type `A` being a subtype of a function type `B` if functions of type
+of a function type `A` as being a subtype of a function type `B` if functions of type
 `A` can be used wherever a function of type `B` is expected.
 
 Let's say we have a function type and a few functions. Which of the functions can
@@ -138,7 +138,7 @@ might not be safe if `f1` is used. Its type is not a subtype of `FuncType`.
 values that `FuncType` does, so its type is a subtype of `FuncType`.
 
 In general, the function subtyping rule is this: A function type `B` is a subtype
-of a function type `A` only if `B`'s inputs are a superset of `A`'s, and `B`'s outputs
+of a function type `A` if and only if `B`'s inputs are a superset of `A`'s, and `B`'s outputs
 are a subset of `A`'s. The subtype must accept _at least_ the same inputs as its parent,
 and must return _at most_ the same outputs.
 
