@@ -1044,10 +1044,17 @@ and json_of_destructor_impl json_cx = Hh_json.(function
     let {merge_mode; exclude_props} = options in
     JSON_Object (
       (match merge_mode with
-        | SoundSpreadMM make_exact -> [
+        | SoundSpreadMM target -> [
             "mergeMode", JSON_String "SoundSpread";
-            "makeExact", JSON_Bool make_exact;
-          ]
+          ] @ (match target with
+          | Value -> [
+              "target", JSON_String "Value";
+            ]
+          | Annot { make_exact } -> [
+              "target", JSON_String "Annot";
+              "makeExact", JSON_Bool make_exact;
+            ]
+          )
         | BasicMM -> [
             "mergeMode", JSON_String "Basic";
           ]
@@ -1822,10 +1829,14 @@ and dump_use_t_ (depth, tvars) cx t =
         (String.concat "; " (List.map kid todo_rev))
         (String.concat "; " (List.map resolved acc))
     in
+    let target = function
+      | Annot { make_exact } -> spf "Annot { make_exact=%b }" make_exact
+      | Value -> "Value"
+    in
     let options {merge_mode; exclude_props} =
       spf "{merge_mode=%s; exclude_props=[%s]}"
         (match merge_mode with
-          | SoundSpreadMM make_exact -> spf "SoundSpread; make_exact=%b" make_exact
+          | SoundSpreadMM t -> spf "SoundSpread (%s)" (target t)
           | BasicMM -> "Basic"
           | DiffMM -> "Diff")
         (String.concat "; " exclude_props)

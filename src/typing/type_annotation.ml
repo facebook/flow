@@ -747,7 +747,10 @@ let rec convert cx tparams_map = Ast.Type.(function
   | t::ts ->
     let open ObjectSpread in
     let reason = mk_reason RObjectType loc in
-    let options = { merge_mode = SoundSpreadMM exact; exclude_props = [] } in
+    let options = {
+      merge_mode = SoundSpreadMM (Annot {make_exact = exact });
+      exclude_props = []
+    } in
     EvalT (t, TypeDestructorT (reason, SpreadType (options, ts)), mk_id ()))
 
 | loc, Exists ->

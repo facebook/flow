@@ -1589,7 +1589,7 @@ and ObjectSpread : sig
      * created by the spread to be exact. If false then the resulting object
      * will be inexact. The other merge modes will make the resulting object
      * exact if all inputs are exact. *)
-    | SoundSpreadMM of bool
+    | SoundSpreadMM of spread_target
     (* The basic merge mode perofms a simple merge of two object types. It does
      * not care about whether or not properties are own it just merges objects
      * into each other. If all of the objects being merged are exact the final
@@ -1601,6 +1601,15 @@ and ObjectSpread : sig
     (* A special case for DiffT. It filters void types from properties.
      * Otherwise it works very similarly to the basic merge mode. *)
     | DiffMM
+
+  and spread_target =
+    (* When spreading values, the result is exact if all of the input types are
+     * also exact. If any input type is inexact, the output is inexact. *)
+    | Value
+    (* It's more flexible to allow annotations to specify whether they should be
+     * exact or not. If the spread type is annotated to be exact, any inexact
+     * input types will cause a type error. *)
+    | Annot of { make_exact: bool }
 
   (* A union type resolves to a resolved spread with more than one element *)
   and resolved = slice Nel.t

@@ -10148,8 +10148,12 @@ and object_spread =
       | DiffMM -> flags
       (* We only want to make an exact type if our make_exact option is true.
        * Otherwise the resulting object should always be inexact. *)
-      | SoundSpreadMM make_exact ->
-        { sealed = Sealed; frozen = false; exact = make_exact }
+      | SoundSpreadMM target ->
+        let exact = match target with
+        | Annot { make_exact } -> make_exact
+        | Value -> flags.exact
+        in
+        { sealed = Sealed; frozen = false; exact }
     in
     let t = DefT (r, ObjT (mk_objecttype ~flags dict id proto)) in
     (* Wrap the final type in an `ExactT` if we have an exact flag *)
@@ -10160,7 +10164,7 @@ and object_spread =
     let {merge_mode; _} = options in
     Nel.iter (fun (r,_,_,{exact;_}) ->
       match merge_mode with
-      | SoundSpreadMM make_exact when make_exact && not exact ->
+      | SoundSpreadMM (Annot { make_exact }) when make_exact && not exact ->
         add_output cx ~trace (FlowError.EIncompatibleWithExact (r, reason))
       | _ -> ()
     ) x;
