@@ -3964,7 +3964,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          * `{...B, ...T} = A`. We rearrange `DiffT` into the latter form and
          * check that. *)
         let reason = reason_of_t l in
-        let options = { merge_mode = DiffMM; exclude_props = [] } in
+        let options = { merge_mode = Diff; exclude_props = [] } in
         let tool = Resolve Next in
         let state = { todo_rev = [b]; acc = [] } in
         rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, a))
@@ -10002,7 +10002,7 @@ and object_spread =
         DefT (r, MixedT Mixed_everything), false
       in
       match merge_mode with
-      | SoundSpreadMM _ ->
+      | Spread _ ->
         begin match p1, p2 with
         | None, None -> None
         | Some p1, Some p2 -> Some (merge_props p1 p2)
@@ -10021,17 +10021,12 @@ and object_spread =
             then Some p2
             else Some (merge_props (unknown r1) p2))
         end
-      (* The simpler merge implementation that does not take into account the
-       * complexities of JavaScript. *)
-      | BasicMM ->
-        begin match p1, p2 with
-        | None, None -> None
-        | Some (t, _), None -> Some (t, true)
-        | _, Some (t, _) -> Some (t, true)
-        end
-      (* The diff merge mode is very similar to BasicMM except that
-       * we want undefined to fall through to the property below. *)
-      | DiffMM ->
+      (* Diff mode is used to combine the config object passed to
+       * React.createElement with the default props for the component before
+       * comparing with the component's props type. Any own property in the
+       * config that evaluates to `undefined` should take its value from the
+       * default props instead. *)
+      | Diff ->
         begin match p1, p2 with
         | None, None -> None
         | Some (t, _), None -> Some (t, true)
@@ -10144,13 +10139,12 @@ and object_spread =
       (* If all the other object types are exact then we want the resulting
        * object to also be exact. This logic is encoded in the accumulated
        * flags. *)
-      | BasicMM
-      | DiffMM -> flags
-      (* We only want to make an exact type if our make_exact option is true.
-       * Otherwise the resulting object should always be inexact. *)
-      | SoundSpreadMM target ->
+      | Diff -> flags
+      | Spread target ->
         let exact = match target with
+        (* Type spread result is exact if annotated to be exact *)
         | Annot { make_exact } -> make_exact
+        (* Value spread result is exact if all inputs are exact *)
         | Value -> flags.exact
         in
         { sealed = Sealed; frozen = false; exact }
@@ -10164,7 +10158,7 @@ and object_spread =
     let {merge_mode; _} = options in
     Nel.iter (fun (r,_,_,{exact;_}) ->
       match merge_mode with
-      | SoundSpreadMM (Annot { make_exact }) when make_exact && not exact ->
+      | Spread (Annot { make_exact }) when make_exact && not exact ->
         add_output cx ~trace (FlowError.EIncompatibleWithExact (r, reason))
       | _ -> ()
     ) x;

@@ -1581,34 +1581,18 @@ and ObjectSpread : sig
   }
 
   and merge_mode =
-    (* The default merge mode implements JavaScript spead semantics. It thinks
-     * about the owness of the properties being merged. This should be used when
-     * you want to expression sound type spread.
-     *
-     * It takes a boolean argument which if true will force the resulting object
-     * created by the spread to be exact. If false then the resulting object
-     * will be inexact. The other merge modes will make the resulting object
-     * exact if all inputs are exact. *)
-    | SoundSpreadMM of spread_target
-    (* The basic merge mode perofms a simple merge of two object types. It does
-     * not care about whether or not properties are own it just merges objects
-     * into each other. If all of the objects being merged are exact the final
-     * object will also be exact. This should not be used in JavaScript spreads,
-     * in that case it would be unsound! Instead only use this internally when
-     * you want to "magically" combine object types. This is used in a few
-     * places for our React support. *)
-    | BasicMM
-    (* A special case for DiffT. It filters void types from properties.
-     * Otherwise it works very similarly to the basic merge mode. *)
-    | DiffMM
+    (* Combine objects according to the semantics of object spread properties. *)
+    | Spread of spread_target
+    (* A special case for DiffT. It filters void types from properties. *)
+    | Diff
 
   and spread_target =
     (* When spreading values, the result is exact if all of the input types are
-     * also exact. If any input type is inexact, the output is inexact. *)
+       also exact. If any input type is inexact, the output is inexact. *)
     | Value
     (* It's more flexible to allow annotations to specify whether they should be
-     * exact or not. If the spread type is annotated to be exact, any inexact
-     * input types will cause a type error. *)
+       exact or not. If the spread type is annotated to be exact, any inexact
+       input types will cause a type error. *)
     | Annot of { make_exact: bool }
 
   (* A union type resolves to a resolved spread with more than one element *)
