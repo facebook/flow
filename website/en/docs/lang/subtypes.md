@@ -139,7 +139,7 @@ values that `FuncType` does, so its type is a subtype of `FuncType`.
 
 In general, the function subtyping rule is this: A function type `B` is a subtype
 of a function type `A` only if `B`'s inputs are a superset of `A`'s, and `B`'s outputs
-are a subset of `B`'s. The subtype must accept _at least_ the same inputs as its parent,
+are a subset of `A`'s. The subtype must accept _at least_ the same inputs as its parent,
 and must return _at most_ the same outputs.
 
 The decision of which direction to apply the subtyping rule on inputs and outputs is
