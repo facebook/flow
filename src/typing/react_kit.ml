@@ -416,7 +416,7 @@ let run cx trace reason_op l u
       let options = {
         (* We just want to merge the objects together. In this case we do not
          * care about sound object spread rules. *)
-        merge_mode = BasicMM;
+        merge_mode = SoundSpreadMM Value;
         (* Exclude key and ref from our final object type since we already
          * checked key and ref. We do not want key and ref to exist on our
          * final config_input type in case config is exact. *)
