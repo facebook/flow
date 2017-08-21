@@ -17,8 +17,8 @@ like `react-native` as well.
 
 Flow and Babel work well together, so it doesn't take much to adopt Flow as a
 React user who already uses Babel. If you need to setup Babel with Flow, you can
-follow [this guide](../../tools/babel/).
+follow [this guide](../tools/babel/).
 
 Babel also
-[works out of the box with Create React App](../../tools/create-react-app),
+[works out of the box with Create React App](../tools/create-react-app/),
 just install Flow and create a `.flowconfig`.
