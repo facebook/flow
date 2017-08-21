@@ -252,6 +252,34 @@ let infer_type filename content line col =
       (None, Some (loc, ty, raw_type, reasons))
     | _, _ -> failwith "parse error"
 
+let types_to_json types ~strip_root =
+  let open Hh_json in
+  let open Reason in
+  let types_json = types |> List.map (fun (loc, _ctor, str, raw_t, reasons) ->
+    let json_assoc = (
+      ("type", JSON_String str) ::
+      ("reasons", JSON_Array (List.map (fun r ->
+        let r_loc = loc_of_reason r in
+        let r_def_loc = def_loc_of_reason r in
+        JSON_Object (
+          ("desc", JSON_String (string_of_desc (desc_of_reason r))) ::
+          ("loc", json_of_loc ~strip_root r_loc) ::
+          ((if r_def_loc = r_loc then [] else [
+            "def_loc", json_of_loc ~strip_root r_def_loc
+          ]) @ (Errors.deprecated_json_props_of_loc ~strip_root r_loc))
+        )
+      ) reasons)) ::
+      ("loc", json_of_loc ~strip_root loc) ::
+      (Errors.deprecated_json_props_of_loc ~strip_root loc)
+    ) in
+    let json_assoc = match raw_t with
+      | None -> json_assoc
+      | Some raw_t -> ("raw_type", JSON_String raw_t) :: json_assoc
+    in
+    JSON_Object json_assoc
+  ) in
+  JSON_Array types_json
+
 let dump_types js_file js_content =
     let filename = Loc.SourceFile (Js.to_string js_file) in
     let root = Path.dummy_path in
@@ -264,7 +292,7 @@ let dump_types js_file js_content =
       let types = Query_types.dump_types printer raw_printer cx in
 
       let strip_root = None in
-      let types_json = DumpTypesCommand.types_to_json types ~strip_root in
+      let types_json = types_to_json types ~strip_root in
 
       js_of_json types_json
     | _, _ -> failwith "parse error"
