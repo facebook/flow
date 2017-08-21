@@ -3102,10 +3102,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | ExactT (r, t), _ ->
       rec_flow cx trace (t, MakeExactT (r, Upper u))
 
-    (* exact ObjT LB ~> $Exact<UB>. unify *)
-    | DefT (_, ObjT { flags; _ }), UseT (_, ExactT (r, t))
-      when flags.exact && sealed_in_op r flags.sealed ->
-      rec_flow cx trace (t, MakeExactT (r, Lower l))
+    (* ObjT LB ~> $Exact<UB>. make exact if exact and unsealed *)
+    | DefT (_, ObjT { flags; _ }), UseT (use_op, ExactT (r, t)) ->
+      if flags.exact && sealed_in_op r flags.sealed
+      then rec_flow cx trace (t, MakeExactT (r, Lower l))
+      else begin
+        let reasons = FlowError.ordered_reasons (reason_of_t l) r in
+        add_output cx ~trace (FlowError.EIncompatibleWithExact reasons);
+        (* Continue the Flow even after we've errored. Often, there is more that
+         * is different then just the fact that the upper bound is exact and the
+         * lower bound is not. This could easily hide errors in ObjT ~> ExactT *)
+        rec_flow cx trace (l, UseT (use_op, t))
+      end
 
     (* any specializations ~> $Exact<UB>. unwrap exact *)
     | DefT (_, AnyObjT), UseT (use_op, ExactT (_, t))

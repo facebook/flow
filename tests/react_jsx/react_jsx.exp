@@ -615,6 +615,22 @@ Error: test.js:232
 234:   {...{boolean1: true, boolean2: false}}
 235: />;
      -^ React element `ClassExact_ManyProps`
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                               ^^^^^^^^^^^^^^^ property `number`. Property not found in
+     v------------------------------------------------
+232: <ClassExact_ManyProps // Error: Missing `number`.
+233:   {...{string1: 'foo', string2: 'bar'}}
+234:   {...{boolean1: true, boolean2: false}}
+235: />;
+     -^ props of React element `ClassExact_ManyProps`
+
+Error: test.js:232
+     v------------------------------------------------
+232: <ClassExact_ManyProps // Error: Missing `number`.
+233:   {...{string1: 'foo', string2: 'bar'}}
+234:   {...{boolean1: true, boolean2: false}}
+235: />;
+     -^ React element `ClassExact_ManyProps`
      v------------------------------------------------
 232: <ClassExact_ManyProps // Error: Missing `number`.
 233:   {...{string1: 'foo', string2: 'bar'}}
@@ -659,6 +675,22 @@ Error: test.js:243
      -^ props of React element `ClassExact_ManyProps`. Inexact type is incompatible with exact type
 194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+
+Error: test.js:243
+     v------------------------------------------------------------------------------
+243: <ClassExact_ManyProps // OK: `number` is overwritten at the end of the element.
+244:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+245:   boolean1
+...:
+248: />;
+     -^ props of React element `ClassExact_ManyProps`. This type is incompatible with
+194: class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
+                                                               ^^^^^^^^^^^^^^^ object type
+  Property `number` is incompatible:
+    244:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                              ^^^^^^^ null. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
 
 Error: test.js:249
      v-------------------------------------------------------
@@ -1217,6 +1249,22 @@ Error: test.js:418
 420:   {...{boolean1: true, boolean2: false}}
 421: />;
      -^ React element `FunctionExact_ManyProps`
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                    ^^^^^^^^^^^^^^^ property `number`. Property not found in
+     v---------------------------------------------------
+418: <FunctionExact_ManyProps // Error: Missing `number`.
+419:   {...{string1: 'foo', string2: 'bar'}}
+420:   {...{boolean1: true, boolean2: false}}
+421: />;
+     -^ props of React element `FunctionExact_ManyProps`
+
+Error: test.js:418
+     v---------------------------------------------------
+418: <FunctionExact_ManyProps // Error: Missing `number`.
+419:   {...{string1: 'foo', string2: 'bar'}}
+420:   {...{boolean1: true, boolean2: false}}
+421: />;
+     -^ React element `FunctionExact_ManyProps`
      v---------------------------------------------------
 418: <FunctionExact_ManyProps // Error: Missing `number`.
 419:   {...{string1: 'foo', string2: 'bar'}}
@@ -1261,6 +1309,22 @@ Error: test.js:429
      -^ props of React element `FunctionExact_ManyProps`. Inexact type is incompatible with exact type
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+
+Error: test.js:429
+     v-------------------------------------------------------
+429: <FunctionExact_ManyProps // OK: `number` is overwritten.
+430:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+431:   boolean1
+...:
+434: />;
+     -^ props of React element `FunctionExact_ManyProps`. This type is incompatible with the expected param type of
+380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
+                                                    ^^^^^^^^^^^^^^^ object type
+  Property `number` is incompatible:
+    430:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                              ^^^^^^^ null. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
 
 Error: test.js:435
      v----------------------------------------------------------
@@ -1757,6 +1821,22 @@ Error: test.js:543
 545:   {...{boolean1: true, boolean2: false}}
 546: />;
      -^ React element `AbstractExact_ManyProps`
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                               ^^^^^^^^^^^^^^^ property `number`. Property not found in
+     v---------------------------------------------------
+543: <AbstractExact_ManyProps // Error: Missing `number`.
+544:   {...{string1: 'foo', string2: 'bar'}}
+545:   {...{boolean1: true, boolean2: false}}
+546: />;
+     -^ props of React element `AbstractExact_ManyProps`
+
+Error: test.js:543
+     v---------------------------------------------------
+543: <AbstractExact_ManyProps // Error: Missing `number`.
+544:   {...{string1: 'foo', string2: 'bar'}}
+545:   {...{boolean1: true, boolean2: false}}
+546: />;
+     -^ React element `AbstractExact_ManyProps`
      v---------------------------------------------------
 543: <AbstractExact_ManyProps // Error: Missing `number`.
 544:   {...{string1: 'foo', string2: 'bar'}}
@@ -1801,6 +1881,38 @@ Error: test.js:554
      -^ props of React element `AbstractExact_ManyProps`. Inexact type is incompatible with exact type
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
+
+Error: test.js:554
+     v-------------------------------------------------------
+554: <AbstractExact_ManyProps // OK: `number` is overwritten.
+555:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+556:   boolean1
+...:
+559: />;
+     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                               ^^^^^^^^^^^^^^^ object type
+  Property `number` is incompatible:
+    555:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                              ^^^^^^^ null. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
+
+Error: test.js:554
+     v-------------------------------------------------------
+554: <AbstractExact_ManyProps // OK: `number` is overwritten.
+555:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+556:   boolean1
+...:
+559: />;
+     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with the expected param type of
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                               ^^^^^^^^^^^^^^^ object type
+  Property `number` is incompatible:
+    555:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                              ^^^^^^^ null. This type is incompatible with
+     59:   number: number,
+                   ^^^^^^ number
 
 Error: test.js:560
      v----------------------------------------------------------
@@ -2486,4 +2598,4 @@ Error: test.js:916
      -^ props of React element `Member_DefaultProps.prop`
 
 
-Found 184 errors
+Found 191 errors

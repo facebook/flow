@@ -121,7 +121,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       const params = {x: 23};
       <Bar {...params} />;
     `)
-    .newErrors( // TODO this should fail with an error, but a different one.
+    .newErrors(
       `
         test.js:8
           8:       <Bar {...params} />;
@@ -130,7 +130,18 @@ export default suite(({addFile, addFiles, addCode}) => [
                    ^^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. Inexact type is incompatible with exact type
           6:       function Bar(props: Props) {}
                                        ^^^^^ exact type: object type
-      `
+
+        test.js:8
+          8:       <Bar {...params} />;
+                   ^^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
+          5:       type Props = {|x: string|};
+                                ^^^^^^^^^^^^^ object type
+          Property \`x\` is incompatible:
+              7:       const params = {x: 23};
+                                          ^^ number. This type is incompatible with
+              5:       type Props = {|x: string|};
+                                         ^^^^^^ string
+      `,
     ),
   ]),
   test('Should raise no errors for a JSX element with a valid member expression', [
