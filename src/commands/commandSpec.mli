@@ -20,11 +20,12 @@ module ArgSpec : sig
 
   type flag_metadata = {
     doc : string;
+    env : string option;
     arg_count : flag_arg_count;
   }
 
   val empty : ('a, 'a) t
-  val flag : string -> 'a flag_t -> doc:string -> ('b, 'a -> 'c) t -> ('b, 'c) t
+  val flag : string -> 'a flag_t -> doc:string -> ?env:string -> ('b, 'a -> 'c) t -> ('b, 'c) t
   val anon : string -> 'a flag_t -> doc:string -> ('b, 'a -> 'c) t -> ('b, 'c) t
   val rest : doc:string -> ('a, string list option -> 'b) t -> ('a, 'b) t
   val dummy : 'a -> ('b, 'a -> 'c) t -> ('b, 'c) t

@@ -151,7 +151,8 @@ let json_flags prev = CommandSpec.ArgSpec.(
 let temp_dir_flag prev = CommandSpec.ArgSpec.(
   prev
   |> flag "--temp-dir" string
-      ~doc:"Directory in which to store temp files (default: /tmp/flow/)"
+      ~doc:"Directory in which to store temp files (default: FLOW_TEMP_DIR, or /tmp/flow/)"
+      ~env:"FLOW_TEMP_DIR"
 )
 
 type shared_mem_params = {

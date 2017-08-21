@@ -27,6 +27,7 @@ module ArgSpec = struct
 
   type flag_metadata = {
     doc : string;
+    env : string option;
     arg_count : flag_arg_count;
   }
 
@@ -135,6 +136,7 @@ module ArgSpec = struct
 
   let help_flag = SMap.empty |> SMap.add "--help" {
     doc = "This list of options";
+    env = None;
     arg_count = No_Arg;
   }
 
@@ -152,10 +154,11 @@ module ArgSpec = struct
     anons = [];
   }
 
-  let flag name arg_type ~doc prev = {
+  let flag name arg_type ~doc ?env prev = {
     f = apply_arg name arg_type prev.f;
     flags = prev.flags |> SMap.add name {
       doc;
+      env;
       arg_count = arg_type.arg;
     };
     anons = prev.anons;
@@ -283,6 +286,18 @@ and parse_anon values spec arg args =
       arg
     ))
 
+let init_from_env spec =
+  let flags = spec.ArgSpec.flags in
+  SMap.fold (fun arg flag acc ->
+    match flag.ArgSpec.env with
+    | Some env ->
+      begin
+        try SMap.add arg [Sys.getenv env] acc
+        with Not_found -> acc
+      end
+    | None -> acc
+  ) flags SMap.empty
+
 let usage_string spec =
   let usage = spec.usage in
   let flags = SMap.fold (fun k v a -> (k, v)::a) spec.args.ArgSpec.flags [] in
@@ -308,7 +323,7 @@ let command spec main = {
   cmddoc = spec.doc;
   flags = spec.args.ArgSpec.flags;
   string_of_usage = (fun () -> usage_string spec);
-  args_of_argv = parse SMap.empty spec.args;
+  args_of_argv = parse (init_from_env spec.args) spec.args;
   main = (fun args ->
     let main = ArgSpec.apply spec.args args main in
     main ());

@@ -212,6 +212,8 @@ runtest() {
         cp "$dir/../assert.sh" "$OUT_PARENT_DIR"
         mv "$OUT_DIR/$exp_file" "$OUT_PARENT_DIR"
 
+        export FLOW_TEMP_DIR="$OUT_PARENT_DIR"
+
         out_file="$name.out"
         log_file="$name.log"
         err_file="$name.err"
