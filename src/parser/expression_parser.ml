@@ -469,7 +469,6 @@ module Expression
     | T_IMPORT -> import env start_loc
     | _ when Peek.is_function env -> _function env
     | _ -> primary env in
-    let expr = member env start_loc expr in
     call env start_loc expr
 
   and import env start_loc =
@@ -480,6 +479,7 @@ module Expression
     Expression.(Loc.btwn start_loc (fst arg), Import arg)
 
   and call env start_loc left =
+    let left = member env start_loc left in
     match Peek.token env with
     | T_LPAREN when not (no_call env) ->
         let args_loc, arguments = arguments env in
@@ -488,31 +488,6 @@ module Expression
           callee = left;
           arguments;
         })))
-    | T_LBRACKET ->
-        Expect.token env T_LBRACKET;
-        let expr = Parse.expression env in
-        let last_loc = Peek.loc env in
-        let loc = Loc.btwn start_loc last_loc in
-        Expect.token env T_RBRACKET;
-        call env start_loc (loc, Expression.(Member Member.({
-          _object  = left;
-          property = PropertyExpression expr;
-          computed = true;
-        })))
-    | T_PERIOD ->
-        Expect.token env T_PERIOD;
-        let id, _, is_private = identifier_or_keyword_include_private env in
-        let loc = Loc.btwn start_loc (fst id) in
-        let open Expression.Member in
-        let property = if is_private then PropertyPrivateName id
-        else PropertyIdentifier (snd id) in
-        call env start_loc (loc, Expression.(Member Member.({
-          _object = left;
-          property;
-          computed = false;
-        })))
-    | T_TEMPLATE_PART part ->
-        call env start_loc (tagged_template env start_loc left part)
     | _ -> left
 
   and new_expression env =
