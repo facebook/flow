@@ -151,6 +151,9 @@ module Expression
   ) env
 
   and is_lhs = Expression.(function
+    | _, MetaProperty { MetaProperty.meta = (_, "new"); property = (_, "target") }
+      -> false (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
+
     | _, Identifier _
     | _, Member _
     | _, MetaProperty _
@@ -185,6 +188,9 @@ module Expression
   )
 
   and is_assignable_lhs = Expression.(function
+    | _, MetaProperty { MetaProperty.meta = (_, "new"); property = (_, "target") }
+      -> false (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
+
     | _, Array _
     | _, Identifier _
     | _, Member _

@@ -408,14 +408,6 @@ language/expressions/assignment/dstr-obj-prop-nested-obj-yield-expr.js (default)
   Unexpected token = at (26, 18) to (26, 19)
 language/expressions/assignment/dstr-obj-prop-nested-obj-yield-ident-valid.js (default)
   Unexpected token = at (25, 18) to (25, 19)
-language/expressions/assignment/target-cover-newtarget.js (strict mode)
-  Missing parse error
-language/expressions/assignment/target-cover-newtarget.js (default)
-  Missing parse error
-language/expressions/assignment/target-newtarget.js (strict mode)
-  Missing parse error
-language/expressions/assignment/target-newtarget.js (default)
-  Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-NSPL-with-USD.js (strict mode)
   Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-NSPL-with-USD.js (default)
@@ -613,38 +605,6 @@ language/expressions/object/method-definition/yield-star-after-newline.js (defau
 language/expressions/object/prop-def-invalid-async-prefix.js (strict mode)
   Missing parse error
 language/expressions/object/prop-def-invalid-async-prefix.js (default)
-  Missing parse error
-language/expressions/postfix-decrement/target-cover-newtarget.js (strict mode)
-  Missing parse error
-language/expressions/postfix-decrement/target-cover-newtarget.js (default)
-  Missing parse error
-language/expressions/postfix-decrement/target-newtarget.js (strict mode)
-  Missing parse error
-language/expressions/postfix-decrement/target-newtarget.js (default)
-  Missing parse error
-language/expressions/postfix-increment/target-cover-newtarget.js (strict mode)
-  Missing parse error
-language/expressions/postfix-increment/target-cover-newtarget.js (default)
-  Missing parse error
-language/expressions/postfix-increment/target-newtarget.js (strict mode)
-  Missing parse error
-language/expressions/postfix-increment/target-newtarget.js (default)
-  Missing parse error
-language/expressions/prefix-decrement/target-cover-newtarget.js (strict mode)
-  Missing parse error
-language/expressions/prefix-decrement/target-cover-newtarget.js (default)
-  Missing parse error
-language/expressions/prefix-decrement/target-newtarget.js (strict mode)
-  Missing parse error
-language/expressions/prefix-decrement/target-newtarget.js (default)
-  Missing parse error
-language/expressions/prefix-increment/target-cover-newtarget.js (strict mode)
-  Missing parse error
-language/expressions/prefix-increment/target-cover-newtarget.js (default)
-  Missing parse error
-language/expressions/prefix-increment/target-newtarget.js (strict mode)
-  Missing parse error
-language/expressions/prefix-increment/target-newtarget.js (default)
   Missing parse error
 language/expressions/tagged-template/invalid-escape-sequences.js (strict mode)
   Unexpected token ILLEGAL at (21, 4) to (21, 5)
@@ -2082,8 +2042,8 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54264 (98.12%)
-Failed: 1041 (1.88%)
+Passed: 54284 (98.15%)
+Failed: 1021 (1.85%)
 
 Features:
   Reflect: 244/246 (99.19%)
