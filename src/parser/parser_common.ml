@@ -56,10 +56,8 @@ let rec is_labelled_function = function
 let with_loc fn env =
   let start_loc = Peek.loc env in
   let result = fn env in
-  let end_loc = match last_loc env with
-  | Some loc -> loc
-  | None ->
-      error env (Error.Assertion "did not consume any tokens");
-      Peek.loc env
+  let loc = match last_loc env with
+  | Some end_loc -> Loc.btwn start_loc end_loc
+  | None -> start_loc
   in
-  Loc.btwn start_loc end_loc, result
+  loc, result

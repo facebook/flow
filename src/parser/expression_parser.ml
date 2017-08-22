@@ -37,6 +37,68 @@ module Expression
     let b_prec = match b with Left_assoc x -> x | Right_assoc x -> x in
     a_prec >= b_prec
 
+  let is_assignable_lhs = Expression.(function
+    | _, MetaProperty { MetaProperty.meta = (_, "new"); property = (_, "target") }
+      -> false (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
+
+    | _, Array _
+    | _, Identifier _
+    | _, Member _
+    | _, MetaProperty _
+    | _, Object _
+      -> true
+
+    | _, ArrowFunction _
+    | _, Assignment _
+    | _, Binary _
+    | _, Call _
+    | _, Class _
+    | _, Comprehension _
+    | _, Conditional _
+    | _, Function _
+    | _, Generator _
+    | _, Import _
+    | _, JSXElement _
+    | _, Literal _
+    | _, Logical _
+    | _, New _
+    | _, Sequence _
+    | _, Super
+    | _, TaggedTemplate _
+    | _, TemplateLiteral _
+    | _, This
+    | _, TypeCast _
+    | _, Unary _
+    | _, Update _
+    | _, Yield _
+      -> false
+  )
+
+  type object_cover =
+    | Cover_expr of Ast.Expression.t
+    | Cover_object of Loc.t * Ast.Expression.Object.t * Loc.t list
+
+  let as_expression env = function
+    | Cover_expr expr -> expr
+    | Cover_object (loc, obj, assignment_locs) ->
+        List.iter (fun loc -> error_at env (loc, Parse_error.UnexpectedToken "=")) assignment_locs;
+        loc, Expression.Object obj
+
+  let as_pattern env cover =
+    let expr = as_expression env cover in
+
+    if not (is_assignable_lhs expr)
+    then error_at env (fst expr, Error.InvalidLHSInAssignment);
+
+    (match expr with
+    | loc, Expression.Identifier (_, name)
+      when is_restricted name ->
+        strict_error_at env (loc, Error.StrictLHSAssignment)
+    | _ -> ());
+
+    Parse.pattern_from_expr env expr
+
+
   (* AssignmentExpression :
    *   ConditionalExpression
    *   LeftHandSideExpression = AssignmentExpression
@@ -48,19 +110,10 @@ module Expression
    *)
   let rec assignment =
     let assignment_but_not_arrow_function env =
-      let expr = conditional env in
+      let expr_or_pattern = conditional_cover env in
       (match assignment_op env with
       | Some operator ->
-        if not (is_assignable_lhs expr)
-        then error_at env (fst expr, Error.InvalidLHSInAssignment);
-
-        (match expr with
-        | loc, Expression.Identifier (_, name)
-          when is_restricted name ->
-            strict_error_at env (loc, Error.StrictLHSAssignment)
-        | _ -> ());
-
-        let left = Parse.pattern_from_expr env expr in
+        let left = as_pattern env expr_or_pattern in
         let right = assignment env in
         let loc = Loc.btwn (fst left) (fst right) in
 
@@ -69,7 +122,7 @@ module Expression
           left;
           right;
         }))
-      | _ -> expr)
+      | _ -> as_expression env expr_or_pattern)
 
     in let error_callback _ = function
       (* Don't rollback on these errors. *)
@@ -187,44 +240,6 @@ module Expression
       -> false
   )
 
-  and is_assignable_lhs = Expression.(function
-    | _, MetaProperty { MetaProperty.meta = (_, "new"); property = (_, "target") }
-      -> false (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
-
-    | _, Array _
-    | _, Identifier _
-    | _, Member _
-    | _, MetaProperty _
-    | _, Object _
-      -> true
-
-    | _, ArrowFunction _
-    | _, Assignment _
-    | _, Binary _
-    | _, Call _
-    | _, Class _
-    | _, Comprehension _
-    | _, Conditional _
-    | _, Function _
-    | _, Generator _
-    | _, Import _
-    | _, JSXElement _
-    | _, Literal _
-    | _, Logical _
-    | _, New _
-    | _, Sequence _
-    | _, Super
-    | _, TaggedTemplate _
-    | _, TemplateLiteral _
-    | _, This
-    | _, TypeCast _
-    | _, Unary _
-    | _, Update _
-    | _, Yield _
-      -> false
-  )
-
-
   and assignment_op env =
     let op = Expression.Assignment.(match Peek.token env with
     | T_RSHIFT3_ASSIGN -> Some RShift3Assign
@@ -244,9 +259,9 @@ module Expression
     if op <> None then Eat.token env;
     op
 
-  and conditional env =
+  and conditional_cover env : object_cover =
     let start_loc = Peek.loc env in
-    let expr = logical env in
+    let expr = logical_cover env in
     if Peek.token env = T_PLING
     then begin
       Expect.token env T_PLING;
@@ -256,41 +271,44 @@ module Expression
       Expect.token env T_COLON;
       let end_loc, alternate = with_loc assignment env in
       let loc = Loc.btwn start_loc end_loc in
-      loc, Expression.(Conditional Conditional.({
-        test = expr;
+      Cover_expr (loc, Expression.(Conditional { Conditional.
+        test = as_expression env expr;
         consequent;
         alternate;
       }))
     end else expr
 
-  and logical =
+  and conditional env = as_expression env (conditional_cover env)
+
+  and logical_cover =
     let open Expression in
-    let make_logical left right operator loc =
-      loc, Logical Logical.({operator; left; right;})
+    let make_logical env left right operator loc =
+      let left = as_expression env left in
+      let right = as_expression env right in
+      Cover_expr (loc, Logical {Logical.operator; left; right;})
     in let rec logical_and env left lloc =
       match Peek.token env with
       | T_AND ->
           Expect.token env T_AND;
-          let rloc, right = with_loc binary env in
+          let rloc, right = with_loc binary_cover env in
           let loc = Loc.btwn lloc rloc in
-          logical_and env (make_logical left right Logical.And loc) loc
+          logical_and env (make_logical env left right Logical.And loc) loc
       | _  -> lloc, left
     and logical_or env left lloc =
       match Peek.token env with
       | T_OR ->
           Expect.token env T_OR;
-          let rloc, right = with_loc binary env in
+          let rloc, right = with_loc binary_cover env in
           let rloc, right = logical_and env right rloc in
           let loc = Loc.btwn lloc rloc in
-          logical_or env (make_logical left right Logical.Or loc) loc
-      | _ -> lloc, left
+          logical_or env (make_logical env left right Logical.Or loc) loc
+      | _ -> left
     in fun env ->
-      let loc, left = with_loc binary env in
+      let loc, left = with_loc binary_cover env in
       let loc, left = logical_and env left loc in
-      let _, type_ = logical_or env left loc in
-      type_
+      logical_or env left loc
 
-  and binary =
+  and binary_cover =
     let binary_op env =
       let ret = Expression.Binary.(match Peek.token env with
       (* Most BinaryExpression operators are left associative *)
@@ -344,27 +362,28 @@ module Expression
           collapse_stack (make_binary left right lop loc) loc rest
 
     in let rec helper env stack =
-      let start_loc = Peek.loc env in
-      let is_unary = peek_unary_op env <> None in
-      let right = unary (env |> with_no_in false) in
-      let end_loc = match last_loc env with
-      | Some loc -> loc
-      | None -> fst right
-      in
-      let right_loc = Loc.btwn start_loc end_loc in
+      let right_loc, (is_unary, right) = with_loc (fun env ->
+        let is_unary = peek_unary_op env <> None in
+        let right = unary_cover (env |> with_no_in false) in
+        is_unary, right
+      ) env in
       if Peek.token env = T_LESS_THAN
       then begin
         match right with
-        | _, Expression.JSXElement _ ->
+        | Cover_expr (_, Expression.JSXElement _) ->
             error env Error.AdjacentJSXElements
         | _ -> ()
       end;
-      match binary_op env with
-      | None ->
-        collapse_stack right right_loc stack
-      | Some (rop, rpri) ->
+      match stack, binary_op env with
+      | [], None ->
+        right
+      | _, None ->
+        let right = as_expression env right in
+        Cover_expr (collapse_stack right right_loc stack)
+      | _, Some (rop, rpri) ->
         if is_unary && rop = Expression.Binary.Exp then
           error_at env (right_loc, Error.InvalidLHSInExponentiation);
+        let right = as_expression env right in
         helper env (add_to_stack right (rop, rpri) right_loc stack)
 
     in fun env -> helper env []
@@ -387,7 +406,7 @@ module Expression
     | T_AWAIT when allow_await env -> Some Await
     | _ -> None
 
-  and unary env =
+  and unary_cover env =
     let begin_loc = Peek.loc env in
     let op = peek_unary_op env in
     match op with
@@ -397,7 +416,7 @@ module Expression
         | T_DECR -> Some Decrement
         | _ -> None) in
         match op with
-        | None -> postfix env
+        | None -> postfix_cover env
         | Some operator ->
             Eat.token env;
             let end_loc, argument = with_loc unary env in
@@ -408,7 +427,8 @@ module Expression
               when is_restricted name ->
                 strict_error env Error.StrictLHSPrefix
             | _ -> ());
-            Loc.btwn begin_loc end_loc, Expression.(Update Update.({
+            let loc = Loc.btwn begin_loc end_loc in
+            Cover_expr (loc, Expression.(Update { Update.
               operator;
               prefix = true;
               argument;
@@ -427,14 +447,16 @@ module Expression
               error_at env (loc, Error.PrivateDelete)
           | _ -> () end
       | _ -> ());
-      loc, Expression.(Unary Unary.({
+      Cover_expr (loc, Expression.(Unary { Unary.
         operator;
         prefix = true;
         argument;
       }))
 
-  and postfix env =
-    let argument = left_hand_side env in
+  and unary env = as_expression env (unary_cover env)
+
+  and postfix_cover env =
+    let argument = left_hand_side_cover env in
     (* No line terminator allowed before operator *)
     if Peek.is_line_terminator env
     then argument
@@ -445,6 +467,7 @@ module Expression
     match op with
     | None -> argument
     | Some operator ->
+        let argument = as_expression env argument in
         if not (is_lhs argument)
         then error_at env (fst argument, Error.InvalidLHSInAssignment);
         (match argument with
@@ -454,23 +477,26 @@ module Expression
         | _ -> ());
         let end_loc = Peek.loc env in
         Eat.token env;
-        Loc.btwn (fst argument) end_loc, Expression.(Update Update.({
+        let loc = Loc.btwn (fst argument) end_loc in
+        Cover_expr (loc, Expression.(Update { Update.
           operator;
           prefix = false;
           argument;
         }))
 
-  and left_hand_side env =
+  and left_hand_side_cover env =
     let start_loc = Peek.loc env in
     let allow_new = not (no_new env) in
     let env = with_no_new false env in
     let expr = match Peek.token env with
-    | T_NEW when allow_new -> new_expression env
-    | T_IMPORT -> import env start_loc
-    | T_SUPER -> super env
-    | _ when Peek.is_function env -> _function env
-    | _ -> primary env in
-    call env start_loc expr
+    | T_NEW when allow_new -> Cover_expr (new_expression env)
+    | T_IMPORT -> Cover_expr (import env start_loc)
+    | T_SUPER -> Cover_expr (super env)
+    | _ when Peek.is_function env -> Cover_expr (_function env)
+    | _ -> primary_cover env in
+    call_cover env start_loc expr
+
+  and left_hand_side env = as_expression env (left_hand_side_cover env)
 
   and super env =
     let allowed, call_allowed = match allow_super env with
@@ -514,17 +540,19 @@ module Expression
     Expect.token env T_RPAREN;
     Expression.(Loc.btwn start_loc (fst arg), Import arg)
 
-  and call env start_loc left =
-    let left = member env start_loc left in
+  and call_cover env start_loc left =
+    let left = member_cover env start_loc left in
     match Peek.token env with
     | T_LPAREN when not (no_call env) ->
         let args_loc, arguments = arguments env in
         let loc = Loc.btwn start_loc args_loc in
-        call env start_loc (loc, Expression.(Call Call.({
-          callee = left;
+        call_cover env start_loc (Cover_expr (loc, Expression.(Call { Call.
+          callee = as_expression env left;
           arguments;
         })))
     | _ -> left
+
+  and call env start_loc left = as_expression env (call_cover env start_loc (Cover_expr left))
 
   and new_expression env =
     let start_loc = Peek.loc env in
@@ -601,7 +629,7 @@ module Expression
       Expect.token env T_RPAREN;
       Loc.btwn start_loc end_loc, args
 
-  and member env start_loc left =
+  and member_cover env start_loc left =
     match Peek.token env with
     | T_LBRACKET ->
         Expect.token env T_LBRACKET;
@@ -609,9 +637,9 @@ module Expression
         let last_loc = Peek.loc env in
         Expect.token env T_RBRACKET;
         let loc = Loc.btwn start_loc last_loc in
-        call env start_loc (loc, Expression.(Member Member.({
-          _object  = left;
-          property = PropertyExpression expr;
+        call_cover env start_loc (Cover_expr (loc, Expression.(Member { Member.
+          _object  = as_expression env left;
+          property = Member.PropertyExpression expr;
           computed = true;
         })))
     | T_PERIOD ->
@@ -623,17 +651,20 @@ module Expression
         else PropertyIdentifier (snd id) in
         (* super.PrivateName is a syntax error *)
         begin match left with
-        | _, Ast.Expression.Super when is_private ->
+        | Cover_expr (_, Ast.Expression.Super) when is_private ->
             error_at env (loc, Error.SuperPrivate)
         | _ -> () end;
-        call env start_loc (loc, Expression.(Member Member.({
-          _object = left;
+        call_cover env start_loc (Cover_expr (loc, Expression.(Member { Member.
+          _object = as_expression env left;
           property;
           computed = false;
         })))
     | T_TEMPLATE_PART part ->
-        call env start_loc (tagged_template env start_loc left part)
+        let expr = tagged_template env start_loc (as_expression env left) part in
+        call_cover env start_loc (Cover_expr expr)
     | _ -> left
+
+  and member env start_loc left = as_expression env (member_cover env start_loc (Cover_expr left))
 
   and _function env =
     let start_loc = Peek.loc env in
@@ -709,48 +740,50 @@ module Expression
     Expect.token env (T_NUMBER number_type);
     value
 
-  and primary env =
+  and primary_cover env =
     let loc = Peek.loc env in
     match Peek.token env with
     | T_THIS ->
         Expect.token env T_THIS;
-        loc, Expression.This
+        Cover_expr (loc, Expression.This)
     | T_NUMBER number_type ->
         let raw = Peek.value env in
         let value = Literal.Number (number env number_type) in
-        loc, Expression.(Literal { Literal.value; raw; })
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
     | T_STRING (loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;
         Expect.token env (T_STRING (loc, value, raw, octal));
         let value = Literal.String value in
-        loc, Expression.(Literal { Literal.value; raw; })
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
     | (T_TRUE | T_FALSE) as token ->
         let raw = Peek.value env in
         Expect.token env token;
         let value = (Literal.Boolean (token = T_TRUE)) in
-        loc, Expression.(Literal { Literal.value; raw; })
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
     | T_NULL ->
         let raw = Peek.value env in
         Expect.token env T_NULL;
         let value = Literal.Null in
-        loc, Expression.(Literal { Literal.value; raw; })
-    | T_LPAREN -> group env
-    | T_LCURLY -> object_initializer env
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
+    | T_LPAREN -> Cover_expr (group env)
+    | T_LCURLY ->
+        let loc, obj = Parse.object_initializer env in
+        Cover_object (loc, obj, [])
     | T_LBRACKET ->
         let loc, arr = array_initializer env in
-        loc, Expression.Array arr
+        Cover_expr (loc, Expression.Array arr)
     | T_DIV
-    | T_DIV_ASSIGN -> regexp env
+    | T_DIV_ASSIGN -> Cover_expr (regexp env)
     | T_LESS_THAN ->
         let loc, element = Parse.jsx_element env in
-        loc, Expression.JSXElement element
+        Cover_expr (loc, Expression.JSXElement element)
     | T_TEMPLATE_PART part ->
         let loc, template = template_literal env part in
-        loc, Expression.(TemplateLiteral template)
-    | T_CLASS -> Parse.class_expression env
+        Cover_expr (loc, Expression.TemplateLiteral template)
+    | T_CLASS -> Cover_expr (Parse.class_expression env)
     | _ when Peek.is_identifier env ->
         let id = Parse.identifier env in
-        fst id, Expression.Identifier id
+        Cover_expr (fst id, Expression.Identifier id)
     | t ->
         error_unexpected env;
         (* Let's get rid of the bad token *)
@@ -760,11 +793,9 @@ module Expression
          * expression is as good as anything *)
         let value = Literal.Null in
         let raw = "null" in
-        loc, Expression.(Literal { Literal.value; raw; })
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
 
-  and object_initializer env =
-    let loc, obj = Parse.object_initializer env in
-    loc, Expression.Object obj
+  and primary env = as_expression env (primary_cover env)
 
   and template_literal =
     let rec template_parts env quasis expressions =
