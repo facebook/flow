@@ -81,6 +81,10 @@ module Object
     let generator = Declaration.generator env in
     let key_loc, key = key env in
     let start_loc = Peek.loc env in
+
+    (* #sec-function-definitions-static-semantics-early-errors *)
+    let env = env |> with_allow_super Super_prop in
+
     (* It's not clear how type params on getters & setters would make sense
      * in Flow's type system. Since this is a Flow syntax extension, we might
      * as well disallow it until we need it *)
@@ -201,6 +205,10 @@ module Object
       in
       let parse_method env ~async ~generator =
         let start_loc = Peek.loc env in
+
+        (* #sec-function-definitions-static-semantics-early-errors *)
+        let env = env |> with_allow_super Super_prop in
+
         let typeParameters = Type.type_parameter_declaration env in
         let params =
           let yield, await = match async, generator with
@@ -421,7 +429,7 @@ module Object
                  || (not static) && options.esproposal_class_instance_fields
               then begin
                 Expect.token env T_ASSIGN;
-                Some (Parse.expression env)
+                Some (Parse.expression (env |> with_allow_super Super_prop))
               end else None
             ) else None
           in
@@ -456,6 +464,18 @@ module Object
         init env start_loc decorators key async generator static variance
       | _ ->
         error_unsupported_variance env variance;
+        let kind, env = match static, key with
+          | false, Ast.Expression.Object.Property.Identifier (_, "constructor")
+          | false, Ast.Expression.Object.Property.Literal (_, {
+              Literal.value = Literal.String "constructor";
+              _;
+            }) ->
+            Ast.Class.Method.Constructor,
+            env |> with_allow_super Super_prop_or_call
+          | _ ->
+            Ast.Class.Method.Method,
+            env |> with_allow_super Super_prop
+        in
         let func_loc = Peek.loc env in
         let typeParameters = Type.type_parameter_declaration env in
         let params =
@@ -489,15 +509,6 @@ module Object
           returnType;
           typeParameters;
         }) in
-        let kind = Ast.(match static, key with
-          | false, Expression.Object.Property.Identifier (_, "constructor")
-          | false, Expression.Object.Property.Literal (_, {
-              Literal.value = Literal.String "constructor";
-              _;
-            }) ->
-            Class.Method.Constructor
-          | _ ->
-            Class.Method.Method) in
         Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
           key;
           value;

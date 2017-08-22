@@ -43,6 +43,11 @@ val default_parse_options : parse_options
 
 type env
 
+type allowed_super =
+  | No_super
+  | Super_prop
+  | Super_prop_or_call
+
 (* constructor: *)
 val init_env :
   ?token_sink:(token_sink_result -> unit) option
@@ -65,6 +70,7 @@ val in_function : env -> bool
 val allow_yield : env -> bool
 val allow_await: env -> bool
 val allow_directive : env -> bool
+val allow_super : env -> allowed_super
 val no_in : env -> bool
 val no_call : env -> bool
 val no_let : env -> bool
@@ -100,6 +106,7 @@ val with_in_function : bool -> env -> env
 val with_allow_yield : bool -> env -> env
 val with_allow_await : bool -> env -> env
 val with_allow_directive : bool -> env -> env
+val with_allow_super : allowed_super -> env -> env
 val with_no_let : bool -> env -> env
 val with_in_loop : bool -> env -> env
 val with_no_in : bool -> env -> env

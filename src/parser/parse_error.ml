@@ -16,6 +16,8 @@ type t =
   | UnexpectedString
   | UnexpectedIdentifier
   | UnexpectedReserved
+  | UnexpectedSuper
+  | UnexpectedSuperCall
   | UnexpectedEOS
   | UnexpectedVariance
   | UnexpectedTypeAlias
@@ -117,6 +119,8 @@ module PP =
       | UnexpectedString ->  "Unexpected string"
       | UnexpectedIdentifier ->  "Unexpected identifier"
       | UnexpectedReserved ->  "Unexpected reserved word"
+      | UnexpectedSuper -> "Unexpected `super` outside of a class method"
+      | UnexpectedSuperCall -> "`super()` is only valid in a class constructor"
       | UnexpectedEOS ->  "Unexpected end of input"
       | UnexpectedVariance -> "Unexpected variance sigil"
       | UnexpectedTypeAlias -> "Type aliases are not allowed in untyped mode"

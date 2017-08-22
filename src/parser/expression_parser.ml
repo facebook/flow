@@ -473,17 +473,39 @@ module Expression
     call env start_loc expr
 
   and super env =
+    let allowed, call_allowed = match allow_super env with
+    | No_super -> false, false
+    | Super_prop -> true, false
+    | Super_prop_or_call -> true, true
+    in
     let loc = Peek.loc env in
     Expect.token env T_SUPER;
     let super = loc, Expression.Super in
-    begin match Peek.token env with
+    match Peek.token env with
     | T_PERIOD
-    | T_LBRACKET
-    | T_LPAREN -> call env loc super
+    | T_LBRACKET ->
+      let super =
+        if not allowed then begin
+          error_at env (loc, Parse_error.UnexpectedSuper);
+          loc, Expression.Identifier (loc, "super")
+        end else
+          super
+      in
+      call env loc super
+    | T_LPAREN ->
+      let super =
+        if not call_allowed then begin
+          error_at env (loc, Parse_error.UnexpectedSuperCall);
+          loc, Expression.Identifier (loc, "super")
+        end else
+          super
+      in
+      call env loc super
     | _ ->
-      error_unexpected env;
+      if not allowed
+        then error_at env (loc, Parse_error.UnexpectedSuper)
+        else error_unexpected env;
       super
-    end
 
   and import env start_loc =
     Expect.token env T_IMPORT;
@@ -635,6 +657,10 @@ module Expression
             Some (Parse.identifier ~restricted_error:Error.StrictFunctionName env) in
         id, Type.type_parameter_declaration env
       end in
+
+    (* #sec-function-definitions-static-semantics-early-errors *)
+    let env = env |> with_allow_super No_super in
+
     let params = Declaration.function_params ~await ~yield env in
     let returnType, predicate = Type.annotation_and_predicate_opt env in
     let end_loc, body, strict =

@@ -420,25 +420,9 @@ language/expressions/async-arrow-function/early-errors-arrow-await-in-formals.js
   Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-await-in-formals.js (default)
   Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-body-contains-super-call.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-body-contains-super-call.js (default)
-  Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-body-contains-super-property.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-body-contains-super-property.js (default)
-  Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-formals-body-duplicate.js (strict mode)
   Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-formals-body-duplicate.js (default)
-  Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-formals-contains-super-call.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-formals-contains-super-call.js (default)
-  Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-formals-contains-super-property.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-formals-contains-super-property.js (default)
   Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-formals-lineterminator.js (strict mode)
   Missing parse error
@@ -448,37 +432,13 @@ language/expressions/async-function/early-errors-expression-NSPL-with-USD.js (st
   Missing parse error
 language/expressions/async-function/early-errors-expression-NSPL-with-USD.js (default)
   Missing parse error
-language/expressions/async-function/early-errors-expression-body-contains-super-call.js (strict mode)
-  Missing parse error
-language/expressions/async-function/early-errors-expression-body-contains-super-call.js (default)
-  Missing parse error
-language/expressions/async-function/early-errors-expression-body-contains-super-property.js (strict mode)
-  Missing parse error
-language/expressions/async-function/early-errors-expression-body-contains-super-property.js (default)
-  Missing parse error
 language/expressions/async-function/early-errors-expression-formals-body-duplicate.js (strict mode)
   Missing parse error
 language/expressions/async-function/early-errors-expression-formals-body-duplicate.js (default)
   Missing parse error
-language/expressions/async-function/early-errors-expression-formals-contains-super-call.js (strict mode)
-  Missing parse error
-language/expressions/async-function/early-errors-expression-formals-contains-super-call.js (default)
-  Missing parse error
-language/expressions/async-function/early-errors-expression-formals-contains-super-property.js (strict mode)
-  Missing parse error
-language/expressions/async-function/early-errors-expression-formals-contains-super-property.js (default)
-  Missing parse error
 language/expressions/async-generator/early-errors-expression-NSPL-with-USD.js (strict mode)
   Missing parse error
 language/expressions/async-generator/early-errors-expression-NSPL-with-USD.js (default)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-body-contains-super-call.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-body-contains-super-call.js (default)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-body-contains-super-property.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-body-contains-super-property.js (default)
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-body-duplicate-const.js (strict mode)
   Missing parse error
@@ -492,33 +452,9 @@ language/expressions/async-generator/early-errors-expression-formals-contains-aw
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-contains-await-expr.js (default)
   Missing parse error
-language/expressions/async-generator/early-errors-expression-formals-contains-super-call.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-formals-contains-super-call.js (default)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-formals-contains-super-property.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-formals-contains-super-property.js (default)
-  Missing parse error
 language/expressions/async-generator/early-errors-expression-yield-star-after-newline.js (strict mode)
   Missing parse error
 language/expressions/async-generator/early-errors-expression-yield-star-after-newline.js (default)
-  Missing parse error
-language/expressions/function/early-body-super-call.js (strict mode)
-  Missing parse error
-language/expressions/function/early-body-super-call.js (default)
-  Missing parse error
-language/expressions/function/early-body-super-prop.js (strict mode)
-  Missing parse error
-language/expressions/function/early-body-super-prop.js (default)
-  Missing parse error
-language/expressions/function/early-params-super-call.js (strict mode)
-  Missing parse error
-language/expressions/function/early-params-super-call.js (default)
-  Missing parse error
-language/expressions/function/early-params-super-prop.js (strict mode)
-  Missing parse error
-language/expressions/function/early-params-super-prop.js (default)
   Missing parse error
 language/expressions/function/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
@@ -548,15 +484,7 @@ language/expressions/object/method-definition/early-errors-object-method-await-i
   Missing parse error
 language/expressions/object/method-definition/early-errors-object-method-await-in-formals.js (default)
   Missing parse error
-language/expressions/object/method-definition/early-errors-object-method-body-contains-super-call.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/early-errors-object-method-body-contains-super-call.js (default)
-  Missing parse error
 language/expressions/object/method-definition/early-errors-object-method-duplicate-parameters.js (default)
-  Missing parse error
-language/expressions/object/method-definition/early-errors-object-method-formals-contains-super-call.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/early-errors-object-method-formals-contains-super-call.js (default)
   Missing parse error
 language/expressions/object/method-definition/generator-param-redecl-const.js (strict mode)
   Missing parse error
@@ -565,14 +493,6 @@ language/expressions/object/method-definition/generator-param-redecl-const.js (d
 language/expressions/object/method-definition/generator-param-redecl-let.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/generator-param-redecl-let.js (default)
-  Missing parse error
-language/expressions/object/method-definition/generator-super-call-body.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/generator-super-call-body.js (default)
-  Missing parse error
-language/expressions/object/method-definition/generator-super-call-param.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/generator-super-call-param.js (default)
   Missing parse error
 language/expressions/object/method-definition/generator-use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
@@ -622,22 +542,6 @@ language/global-code/new.target.js (strict mode)
   Unexpected token . at (19, 3) to (19, 4)
 language/global-code/new.target.js (default)
   Unexpected token . at (19, 3) to (19, 4)
-language/global-code/super-call-arrow.js (strict mode)
-  Missing parse error
-language/global-code/super-call-arrow.js (default)
-  Missing parse error
-language/global-code/super-call.js (strict mode)
-  Missing parse error
-language/global-code/super-call.js (default)
-  Missing parse error
-language/global-code/super-prop-arrow.js (strict mode)
-  Missing parse error
-language/global-code/super-prop-arrow.js (default)
-  Missing parse error
-language/global-code/super-prop.js (strict mode)
-  Missing parse error
-language/global-code/super-prop.js (default)
-  Missing parse error
 language/identifiers/part-digits-via-escape-hex.js (strict mode)
   Unexpected token ILLEGAL at (10, 5) to (10, 6)
 language/identifiers/part-digits-via-escape-hex.js (default)
@@ -870,25 +774,9 @@ language/statements/async-function/early-errors-declaration-await-in-formals.js 
   Missing parse error
 language/statements/async-function/early-errors-declaration-await-in-formals.js (default)
   Missing parse error
-language/statements/async-function/early-errors-declaration-body-contains-super-call.js (strict mode)
-  Missing parse error
-language/statements/async-function/early-errors-declaration-body-contains-super-call.js (default)
-  Missing parse error
-language/statements/async-function/early-errors-declaration-body-contains-super-property.js (strict mode)
-  Missing parse error
-language/statements/async-function/early-errors-declaration-body-contains-super-property.js (default)
-  Missing parse error
 language/statements/async-function/early-errors-declaration-formals-body-duplicate.js (strict mode)
   Missing parse error
 language/statements/async-function/early-errors-declaration-formals-body-duplicate.js (default)
-  Missing parse error
-language/statements/async-function/early-errors-declaration-formals-contains-super-call.js (strict mode)
-  Missing parse error
-language/statements/async-function/early-errors-declaration-formals-contains-super-call.js (default)
-  Missing parse error
-language/statements/async-function/early-errors-declaration-formals-contains-super-property.js (strict mode)
-  Missing parse error
-language/statements/async-function/early-errors-declaration-formals-contains-super-property.js (default)
   Missing parse error
 language/statements/class/definition/early-errors-class-method-NSPL-with-USD.js (strict mode)
   Missing parse error
@@ -902,14 +790,6 @@ language/statements/class/definition/early-errors-class-method-await-in-formals.
   Missing parse error
 language/statements/class/definition/early-errors-class-method-await-in-formals.js (default)
   Missing parse error
-language/statements/class/definition/early-errors-class-method-body-contains-super-call.js (strict mode)
-  Missing parse error
-language/statements/class/definition/early-errors-class-method-body-contains-super-call.js (default)
-  Missing parse error
-language/statements/class/definition/early-errors-class-method-formals-contains-super-call.js (strict mode)
-  Missing parse error
-language/statements/class/definition/early-errors-class-method-formals-contains-super-call.js (default)
-  Missing parse error
 language/statements/class/definition/methods-gen-yield-star-after-newline.js (strict mode)
   Missing parse error
 language/statements/class/definition/methods-gen-yield-star-after-newline.js (default)
@@ -918,41 +798,17 @@ language/statements/class/syntax/early-errors/class-body-has-direct-super-missin
   Missing parse error
 language/statements/class/syntax/early-errors/class-body-has-direct-super-missing-class-heritage.js (default)
   Missing parse error
-language/statements/class/syntax/early-errors/class-body-method-contains-direct-super.js (strict mode)
-  Missing parse error
-language/statements/class/syntax/early-errors/class-body-method-contains-direct-super.js (default)
-  Missing parse error
-language/statements/class/syntax/early-errors/class-body-special-method-generator-contains-direct-super.js (strict mode)
-  Missing parse error
-language/statements/class/syntax/early-errors/class-body-special-method-generator-contains-direct-super.js (default)
-  Missing parse error
 language/statements/class/syntax/early-errors/class-body-special-method-generator-propname-constructor.js (strict mode)
   Missing parse error
 language/statements/class/syntax/early-errors/class-body-special-method-generator-propname-constructor.js (default)
-  Missing parse error
-language/statements/class/syntax/early-errors/class-body-special-method-get-contains-direct-super.js (strict mode)
-  Missing parse error
-language/statements/class/syntax/early-errors/class-body-special-method-get-contains-direct-super.js (default)
   Missing parse error
 language/statements/class/syntax/early-errors/class-body-special-method-get-propname-constructor.js (strict mode)
   Missing parse error
 language/statements/class/syntax/early-errors/class-body-special-method-get-propname-constructor.js (default)
   Missing parse error
-language/statements/class/syntax/early-errors/class-body-special-method-set-contains-direct-super.js (strict mode)
-  Missing parse error
-language/statements/class/syntax/early-errors/class-body-special-method-set-contains-direct-super.js (default)
-  Missing parse error
 language/statements/class/syntax/early-errors/class-body-special-method-set-propname-constructor.js (strict mode)
   Missing parse error
 language/statements/class/syntax/early-errors/class-body-special-method-set-propname-constructor.js (default)
-  Missing parse error
-language/statements/class/syntax/early-errors/class-body-static-method-contains-direct-super.js (strict mode)
-  Missing parse error
-language/statements/class/syntax/early-errors/class-body-static-method-contains-direct-super.js (default)
-  Missing parse error
-language/statements/class/syntax/early-errors/class-body-static-method-get-contains-direct-super.js (strict mode)
-  Missing parse error
-language/statements/class/syntax/early-errors/class-body-static-method-get-contains-direct-super.js (default)
   Missing parse error
 language/statements/class/syntax/early-errors/class-body-static-method-get-propname-prototype.js (strict mode)
   Missing parse error
@@ -961,10 +817,6 @@ language/statements/class/syntax/early-errors/class-body-static-method-get-propn
 language/statements/class/syntax/early-errors/class-body-static-method-propname-prototype.js (strict mode)
   Missing parse error
 language/statements/class/syntax/early-errors/class-body-static-method-propname-prototype.js (default)
-  Missing parse error
-language/statements/class/syntax/early-errors/class-body-static-method-set-contains-direct-super.js (strict mode)
-  Missing parse error
-language/statements/class/syntax/early-errors/class-body-static-method-set-contains-direct-super.js (default)
   Missing parse error
 language/statements/class/syntax/early-errors/class-definition-evaluation-block-duplicate-binding.js (strict mode)
   Missing parse error
@@ -1292,22 +1144,6 @@ language/statements/function/S14_A5_T2.js (strict mode)
   Unexpected token ILLEGAL at (23, 9) to (23, 10)
 language/statements/function/S14_A5_T2.js (default)
   Unexpected token ILLEGAL at (23, 9) to (23, 10)
-language/statements/function/early-body-super-call.js (strict mode)
-  Missing parse error
-language/statements/function/early-body-super-call.js (default)
-  Missing parse error
-language/statements/function/early-body-super-prop.js (strict mode)
-  Missing parse error
-language/statements/function/early-body-super-prop.js (default)
-  Missing parse error
-language/statements/function/early-params-super-call.js (strict mode)
-  Missing parse error
-language/statements/function/early-params-super-call.js (default)
-  Missing parse error
-language/statements/function/early-params-super-prop.js (strict mode)
-  Missing parse error
-language/statements/function/early-params-super-prop.js (default)
-  Missing parse error
 language/statements/function/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/statements/function/use-strict-with-non-simple-param.js (default)
@@ -2014,21 +1850,20 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54298 (98.18%)
-Failed: 1007 (1.82%)
+Passed: 54380 (98.33%)
+Failed: 925 (1.67%)
 
 Features:
   Reflect: 244/246 (99.19%)
   Symbol.iterator: 1314/1324 (99.24%)
   Symbol.toStringTag: 80/82 (97.56%)
-  arrow-function: 18/24 (75.00%)
+  arrow-function: 22/24 (91.67%)
   async-functions: 144/217 (66.36%)
-  async-iteration: 6898/7052 (97.82%)
+  async-iteration: 6906/7052 (97.93%)
   class: 124/132 (93.94%)
   destructuring-binding: 10379/10699 (97.01%)
   generator: 390/396 (98.48%)
-  generators: 1287/1343 (95.83%)
+  generators: 1291/1343 (96.13%)
   let: 125/135 (92.59%)
   object-rest: 614/620 (99.03%)
   regexp-named-groups: 36/40 (90.00%)
-  super: 28/36 (77.78%)
