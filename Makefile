@@ -138,6 +138,9 @@ OCP_BUILD_FILES=\
 COPIED_FLOWLIB=\
 	$(foreach lib,$(wildcard lib/*.js),_build/$(lib))
 
+COPIED_PRELUDE=\
+	$(foreach lib,$(wildcard prelude/*.js),_build/$(lib))
+
 JS_STUBS=\
 	$(wildcard js/*.js)
 
@@ -200,7 +203,7 @@ clean-ocp: clean
 	[ -d _obuild ] && ocp-build clean || true
 	rm -f $(OCP_BUILD_FILES)
 
-build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
+build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
 	ocamlbuild \
 		-use-ocamlfind -pkgs sedlex \
 		-no-links  $(INCLUDE_OPTS) $(LIB_OPTS) \
@@ -215,6 +218,7 @@ build-flow-with-ocp: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
 	[ -d _obuild ] || ocp-build init
 	 # Force us to pick up libdef changes - ocp-build is fast so it's fine
 	rm -rf _obuild/flow-flowlib
+	rm -rf _obuild/flow-prelude
 	ocp-build build flow
 	mkdir -p bin
 	cp _obuild/flow/flow.asm$(EXE) bin/flow$(EXE)
@@ -230,7 +234,7 @@ test-parser-ocp: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
 	ocp-build tests flow-parser-hardcoded-test
 	rm -f $(OCP_BUILD_FILES)
 
-build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
+build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
 	ocamlbuild \
 		-use-ocamlfind -pkgs sedlex \
 		-no-links $(INCLUDE_OPTS) $(LIB_OPTS) \
@@ -261,6 +265,11 @@ $(COPIED_FLOWLIB): _build/%.js: %.js
 	mkdir -p $(dir $@)
 	cp $< $@
 	rm -rf _build/src/flowlib
+
+$(COPIED_PRELUDE): _build/%.js: %.js
+	mkdir -p $(dir $@)
+	cp $< $@
+	rm -rf _build/src/prelude
 
 _build/scripts/ppx_gen_flowlibs.native: scripts/ppx_gen_flowlibs.ml
 	ocamlbuild \

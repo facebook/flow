@@ -8,4 +8,4 @@
  *
  *)
 
-val extract_flowlib : Path.t -> unit
+val extract_flowlib : no_flowlib:bool -> Path.t -> unit

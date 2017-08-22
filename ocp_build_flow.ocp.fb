@@ -191,7 +191,7 @@ begin library "flow-flowlib"
     "flow-ppx-gen-flowlib:asm"
   ]
   comp = [
-    "-ppx" "%{flow-ppx-gen-flowlib_FULL_DST_DIR}%/flow-ppx-gen-flowlib.asm lib/"
+    "-ppx" "%{flow-ppx-gen-flowlib_FULL_DST_DIR}%/flow-ppx-gen-flowlib.asm lib/ prelude/"
   ]
 end
 

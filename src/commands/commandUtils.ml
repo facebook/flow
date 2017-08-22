@@ -299,10 +299,10 @@ let collect_flowconfig_flags main ignores_str includes_str lib_str lints_str =
   main { ignores; includes; libs; raw_lint_severities; }
 
 let file_options =
-  let default_lib_dir tmp_dir =
+  let default_lib_dir ~no_flowlib tmp_dir =
     let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
     try
-      Flowlib.extract_flowlib root;
+      Flowlib.extract_flowlib ~no_flowlib root;
       root
     with _ ->
       let msg = "Could not locate flowlib files" in
@@ -352,9 +352,9 @@ let file_options =
   in
   fun ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs flowconfig ->
     let default_lib_dir =
-      if no_flowlib || FlowConfig.no_flowlib flowconfig
-      then None
-      else Some (default_lib_dir temp_dir) in
+      let no_flowlib = no_flowlib || FlowConfig.no_flowlib flowconfig in
+      Some (default_lib_dir ~no_flowlib temp_dir)
+    in
     let ignores = ignores_of_arg
       root
       (FlowConfig.ignores flowconfig)
