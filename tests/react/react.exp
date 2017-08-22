@@ -529,6 +529,8 @@ Error: hoc.js:35
 
 Error: hoc.js:36
  36: myHOC(function Empty(props: {foo: string}) {}); // Error
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+ 36: myHOC(function Empty(props: {foo: string}) {}); // Error
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   6:   Component: React$ComponentType<{foo: number, bar: number}>,
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: type `React$StatelessFunctionalComponent` | class type: type application of polymorphic type: class type: React$Component

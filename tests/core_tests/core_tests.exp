@@ -16,15 +16,11 @@ Error: map.js:23
 
 Error: map.js:24
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                      ^^^^^^^^^^^^^^^^^^^^^^^ constructor call
- 24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                                 ^^^^^ string. This type is incompatible with
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
                     ^^^^^^ number
 
 Error: map.js:24
- 24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                      ^^^^^^^^^^^^^^^^^^^^^^^ constructor call
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                                        ^^^ number. This type is incompatible with
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error

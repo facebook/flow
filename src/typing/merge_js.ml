@@ -215,6 +215,8 @@ let merge_component_strict ~metadata ~lint_severities ~require_loc_maps
     let require_loc_map = FilenameMap.find_unsafe filename require_loc_maps in
     let module_ref = Files.module_ref filename in
     let cx = Flow_js.fresh_context metadata filename module_ref in
+    Context.merge_into cx master_cx;
+    implicit_require_strict cx master_cx cx;
     Type_inference_js.infer_ast cx filename ast
       ~lint_severities ~require_loc_map;
     cx::cxs, FilenameMap.add filename cx impl_cxs
@@ -227,7 +229,6 @@ let merge_component_strict ~metadata ~lint_severities ~require_loc_maps
 
   dep_cxs |> List.iter (Context.merge_into cx);
   other_cxs |> List.iter (Context.merge_into cx);
-  Context.merge_into cx master_cx;
 
   let open Reqs in
 
@@ -259,7 +260,6 @@ let merge_component_strict ~metadata ~lint_severities ~require_loc_maps
   );
 
   other_cxs |> List.iter (implicit_require_strict cx master_cx);
-  implicit_require_strict cx master_cx cx;
 
   detect_sketchy_null_checks cx;
 

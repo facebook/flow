@@ -7,24 +7,8 @@ Error: async.js:12
 Error: async.js:31
  31:   return await p; // error, number != bool
               ^^^^^^^ number. This type is incompatible with
-616: declare function $await<T>(p: Promise<T> | T): T;
-                                   ^^^^^^^^^^^^^^ union: type application of class `Promise` | type parameter `T` of async return. See lib: <BUILTINS>/core.js:616
-  Member 1:
-  616: declare function $await<T>(p: Promise<T> | T): T;
-                                     ^^^^^^^^^^ type application of class `Promise`. See lib: <BUILTINS>/core.js:616
-  Error:
-   31:   return await p; // error, number != bool
-                ^^^^^^^ number. This type is incompatible with
-  616: declare function $await<T>(p: Promise<T> | T): T;
-                                     ^^^^^^^^^^ Promise. See lib: <BUILTINS>/core.js:616
-  Member 2:
-   31:   return await p; // error, number != bool
-                ^^^^^^^ type parameter `T` of async return
-  Error:
-   31:   return await p; // error, number != bool
-                ^^^^^^^ number. This type is incompatible with
-   30: async function f4(p: Promise<number>): Promise<bool> {
-                                                      ^^^^ boolean
+ 30: async function f4(p: Promise<number>): Promise<bool> {
+                                                    ^^^^ boolean
 
 Error: async.js:45
  45:   static async m(a): void { await a; } // error, void != Promise<void>

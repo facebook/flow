@@ -192,6 +192,8 @@ export default suite(({addFile, addFiles, addCode}) => [
 
           test.js:8
             8:       <Bar>{true}{/regex/}</Bar>
+                     ^^^^^ JSX desugared to \`Foo(...)\`
+            8:       <Bar>{true}{/regex/}</Bar>
                                  ^^^^^^^ RegExp. This type is incompatible with the expected param type of
             5:       function Foo(elem: number, props: null, child1: number, child2: string) {}
                                                                                      ^^^^^^ string
