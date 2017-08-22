@@ -998,7 +998,7 @@ module.exports = {
         'x | y ^ z',
         'x | y & z',
         {
-          content: '1 + type + interface + declare + let + eval + super + ' +
+          content: '1 + type + interface + declare + let + eval + ' +
             'async + await',
           explanation: 'Let is fine as an identifier',
           expected_differences: {

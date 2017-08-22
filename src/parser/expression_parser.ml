@@ -467,9 +467,23 @@ module Expression
     let expr = match Peek.token env with
     | T_NEW when allow_new -> new_expression env
     | T_IMPORT -> import env start_loc
+    | T_SUPER -> super env
     | _ when Peek.is_function env -> _function env
     | _ -> primary env in
     call env start_loc expr
+
+  and super env =
+    let loc = Peek.loc env in
+    Expect.token env T_SUPER;
+    let super = loc, Expression.Super in
+    begin match Peek.token env with
+    | T_PERIOD
+    | T_LBRACKET
+    | T_LPAREN -> call env loc super
+    | _ ->
+      error_unexpected env;
+      super
+    end
 
   and import env start_loc =
     Expect.token env T_IMPORT;
@@ -513,6 +527,7 @@ module Expression
       let callee_loc = Peek.loc env in
       let expr = match Peek.token env with
       | T_NEW -> new_expression env
+      | T_SUPER -> super (env |> with_no_call true)
       | _ when Peek.is_function env -> _function env
       | _ -> primary env in
       let callee = member (env |> with_no_call true) callee_loc expr in
@@ -707,10 +722,6 @@ module Expression
         let loc, template = template_literal env part in
         loc, Expression.(TemplateLiteral template)
     | T_CLASS -> Parse.class_expression env
-    | T_SUPER ->
-        let loc = Peek.loc env in
-        Expect.token env T_SUPER;
-        loc, Expression.Super
     | _ when Peek.is_identifier env ->
         let id = Parse.identifier env in
         fst id, Expression.Identifier id

@@ -582,14 +582,6 @@ language/expressions/object/method-definition/name-param-redecl.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/name-param-redecl.js (default)
   Missing parse error
-language/expressions/object/method-definition/name-super-call-body.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/name-super-call-body.js (default)
-  Missing parse error
-language/expressions/object/method-definition/name-super-call-param.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/name-super-call-param.js (default)
-  Missing parse error
 language/expressions/object/method-definition/setter-use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/setter-use-strict-with-non-simple-param.js (default)
@@ -823,10 +815,6 @@ language/module-code/early-lex-and-var.js (strict mode)
 language/module-code/early-lex-and-var.js (default)
   Missing parse error
 language/module-code/early-strict-mode.js (default)
-  Missing parse error
-language/module-code/early-super.js (strict mode)
-  Missing parse error
-language/module-code/early-super.js (default)
   Missing parse error
 language/module-code/instn-resolve-empty-export.js (strict mode)
   Missing parse error
@@ -2026,8 +2014,8 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54292 (98.17%)
-Failed: 1013 (1.83%)
+Passed: 54298 (98.18%)
+Failed: 1007 (1.82%)
 
 Features:
   Reflect: 244/246 (99.19%)
