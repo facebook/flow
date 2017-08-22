@@ -592,7 +592,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     ) updates FilenameSet.empty
 
   (* on notification, execute client commands or recheck files *)
-  let recheck genv env updates =
+  let recheck genv env updates ~serve_ready_clients =
     if FilenameSet.is_empty updates
     then env
     else begin
@@ -601,12 +601,12 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let tmp_dir = Options.temp_dir options in
       let workers = genv.ServerEnv.workers in
       ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
-      let env = Types_js.recheck ~options ~workers ~updates env in
+      let env = Types_js.recheck ~options ~workers ~updates env ~serve_ready_clients in
       ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
       env
     end
 
-  let respond ~genv ~env ~client { ServerProt.client_logging_context; command; } =
+  let respond ~genv ~env ~serve_ready_clients ~client { ServerProt.client_logging_context; command; } =
     let env = ref env in
     let oc = client.oc in
     let marshal msg =
@@ -655,7 +655,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         Marshal.to_channel oc () [];
         flush oc;
         let updates = process_updates genv !env (SSet.of_list files) in
-        env := recheck genv !env updates
+        env := recheck genv !env updates ~serve_ready_clients
     | ServerProt.GEN_FLOW_FILES (files, include_warnings) ->
         Hh_logger.debug "Request: gen-flow-files %s"
           (files |> List.map File_input.filename_of_file_input |> String.concat " ");
@@ -763,11 +763,18 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     | { ServerProt.command = ServerProt.CONNECT; _ } -> false
     | _ -> true
 
-  let handle_client genv env client =
+  let handle_client genv env ~serve_ready_clients ~waiting_requests client =
     let command : ServerProt.command_with_context = Marshal.from_channel client.ic in
-    let env = respond ~genv ~env ~client command in
-    if should_close command then client.close ();
-    env
+    let continuation env =
+      let env = respond ~genv ~env ~serve_ready_clients ~client command in
+      if should_close command then client.close ();
+      env in
+    match command with
+      | { ServerProt.command = ServerProt.STATUS _ | ServerProt.FORCE_RECHECK _; _ } ->
+        (* status and force_recheck commands are processed after recheck is done *)
+        waiting_requests := continuation :: !waiting_requests;
+        env
+      | _ -> continuation env
 
   let handle_persistent_client genv env client =
     let msg, env =

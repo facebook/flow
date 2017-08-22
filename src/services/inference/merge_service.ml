@@ -140,7 +140,11 @@ let merge_contents_context options file ast info ~ensure_checked_dependencies =
   let component = [file] in
 
   let _, master_cx, _, dep_cxs, file_reqs =
-    reqs_of_component ~options component required
+    begin try reqs_of_component ~options component required with
+      | Key_not_found _  ->
+        failwith "not all dependencies are ready yet, aborting..."
+      | e -> raise e
+    end
   in
 
   let metadata = Context.metadata_of_options options in

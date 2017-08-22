@@ -28,7 +28,9 @@ val recheck:
   options:Options.t ->
   workers:Worker.t list option ->
   updates:FilenameSet.t ->
-  ServerEnv.env -> ServerEnv.env
+  ServerEnv.env ->
+  serve_ready_clients:(unit -> unit) ->
+  ServerEnv.env
 
 (* initial (full) check *)
 val full_check:
