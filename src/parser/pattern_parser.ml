@@ -62,26 +62,48 @@ module Pattern
       })
 
   and array_from_expr =
+    (* Convert an Expression to a Pattern if it is a valid
+       DestructuringAssignmentTarget, which must be an Object, Array or
+       IsValidSimpleAssignmentTarget.
+       #sec-destructuring-assignment-static-semantics-early-errors *)
+    let assignment_target env ((loc, _) as expr) =
+      if Parse.is_assignable_lhs expr then
+        Some (from_expr env expr)
+      else begin
+        error_at env (loc, Parse_error.InvalidLHSInAssignment);
+        None
+      end
+    in
+
     let rec elements env acc = Ast.Expression.(function
       | [] -> List.rev acc
       | Some (Spread (loc, { SpreadElement.argument }))::[] ->
-          (* AssignmentRestElement must be a valid LeftHandSideExpression
-             https://tc39.github.io/ecma262/#prod-AssignmentRestElement *)
-          let acc =
-            if Parse.is_assignable_lhs argument then
-              let argument = from_expr env argument in
-              (Some Pattern.Array.(RestElement (loc, { RestElement.argument; })))::acc
-            else begin
-              error_at env (loc, Parse_error.InvalidLHSInAssignment);
-              acc
-            end
+          (* AssignmentRestElement is a DestructuringAssignmentTarget, see
+             #prod-AssignmentRestElement *)
+          let acc = match assignment_target env argument with
+          | Some argument ->
+            (Some Pattern.Array.(RestElement (loc, { RestElement.argument; }))) :: acc
+          | None ->
+            acc
           in
           elements env acc []
       | Some (Spread (loc, _))::remaining ->
           error_at env (loc, Parse_error.ElementAfterRestElement);
           elements env acc remaining
-      | Some (Expression (loc, expr))::remaining ->
-          let acc = Some (Pattern.Array.Element (from_expr env (loc, expr))) :: acc in
+      | Some (Expression (_, Assignment { Assignment.
+          operator = Assignment.Assign; _
+        } as expr))::remaining ->
+          (* AssignmentElement is a `DestructuringAssignmentTarget Initializer`, see
+             #prod-AssignmentElement *)
+          let acc = Some (Pattern.Array.Element (from_expr env expr)) :: acc in
+          elements env acc remaining
+      | Some (Expression expr)::remaining ->
+          (* AssignmentElement is a DestructuringAssignmentTarget, see
+             #prod-AssignmentElement *)
+          let acc = match assignment_target env expr with
+          | Some expr -> (Some (Pattern.Array.Element expr)) :: acc
+          | None -> acc
+          in
           elements env acc remaining
       | None::remaining ->
           elements env (None::acc) remaining
