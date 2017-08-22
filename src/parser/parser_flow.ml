@@ -177,7 +177,6 @@ module rec Parse : PARSER = struct
     | T_TRY -> try_ env
     | T_WHILE -> while_ env
     | T_WITH -> with_ env
-    | _ when Peek.is_identifier env -> maybe_labeled env
     (* If we see an else then it's definitely an error, but we can probably
      * assume that this is a malformed if statement that is missing the if *)
     | T_ELSE -> if_ env
@@ -204,6 +203,11 @@ module rec Parse : PARSER = struct
         error_unexpected env;
         Eat.token env;
         statement env
+    | _ when Peek.is_function env ->
+        let func = Declaration._function env in
+        function_as_statement_error_at env (fst func);
+        func
+    | _ when Peek.is_identifier env -> maybe_labeled env
     | _ -> expression_statement env)
 
   (**

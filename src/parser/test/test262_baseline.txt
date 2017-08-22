@@ -960,14 +960,6 @@ language/statements/for-await-of/async-gen-decl-dstr-obj-prop-nested-obj-yield-e
   Unexpected token = at (32, 22) to (32, 23)
 language/statements/for-await-of/let-array-with-newline.js (default)
   Missing parse error
-language/statements/for-in/decl-async-fun.js (strict mode)
-  Missing parse error
-language/statements/for-in/decl-async-fun.js (default)
-  Missing parse error
-language/statements/for-in/decl-async-gen.js (strict mode)
-  Missing parse error
-language/statements/for-in/decl-async-gen.js (default)
-  Missing parse error
 language/statements/for-in/dstr-array-rest-before-elision.js (strict mode)
   Missing parse error
 language/statements/for-in/dstr-array-rest-before-elision.js (default)
@@ -999,14 +991,6 @@ language/statements/for-in/head-lhs-invalid-asnmt-ptrn-obj.js (default)
 language/statements/for-in/head-lhs-let.js (default)
   Unexpected token in at (27, 10) to (27, 12)
 language/statements/for-in/let-array-with-newline.js (default)
-  Missing parse error
-language/statements/for-of/decl-async-fun.js (strict mode)
-  Missing parse error
-language/statements/for-of/decl-async-fun.js (default)
-  Missing parse error
-language/statements/for-of/decl-async-gen.js (strict mode)
-  Missing parse error
-language/statements/for-of/decl-async-gen.js (default)
   Missing parse error
 language/statements/for-of/dstr-array-elem-nested-obj-yield-expr.js (strict mode)
   Unexpected token = at (34, 10) to (34, 11)
@@ -1115,14 +1099,6 @@ language/statements/for-of/head-lhs-invalid-asnmt-ptrn-obj.js (strict mode)
 language/statements/for-of/head-lhs-invalid-asnmt-ptrn-obj.js (default)
   Missing parse error
 language/statements/for-of/let-array-with-newline.js (default)
-  Missing parse error
-language/statements/for/decl-async-fun.js (strict mode)
-  Missing parse error
-language/statements/for/decl-async-fun.js (default)
-  Missing parse error
-language/statements/for/decl-async-gen.js (strict mode)
-  Missing parse error
-language/statements/for/decl-async-gen.js (default)
   Missing parse error
 language/statements/for/head-let-bound-names-in-stmt.js (strict mode)
   Missing parse error
@@ -1828,19 +1804,7 @@ language/statements/while/S12.6.2_A15.js (strict mode)
   Missing parse error
 language/statements/while/S12.6.2_A15.js (default)
   Missing parse error
-language/statements/while/decl-async-fun.js (strict mode)
-  Missing parse error
-language/statements/while/decl-async-fun.js (default)
-  Missing parse error
-language/statements/while/decl-async-gen.js (strict mode)
-  Missing parse error
-language/statements/while/decl-async-gen.js (default)
-  Missing parse error
 language/statements/while/let-array-with-newline.js (default)
-  Missing parse error
-language/statements/with/decl-async-fun.js (default)
-  Missing parse error
-language/statements/with/decl-async-gen.js (default)
   Missing parse error
 language/statements/with/let-array-with-newline.js (default)
   Missing parse error
@@ -1850,16 +1814,16 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54380 (98.33%)
-Failed: 925 (1.67%)
+Passed: 54398 (98.36%)
+Failed: 907 (1.64%)
 
 Features:
   Reflect: 244/246 (99.19%)
   Symbol.iterator: 1314/1324 (99.24%)
   Symbol.toStringTag: 80/82 (97.56%)
   arrow-function: 22/24 (91.67%)
-  async-functions: 144/217 (66.36%)
-  async-iteration: 6906/7052 (97.93%)
+  async-functions: 153/217 (70.51%)
+  async-iteration: 6915/7052 (98.06%)
   class: 124/132 (93.94%)
   destructuring-binding: 10379/10699 (97.01%)
   generator: 390/396 (98.48%)
