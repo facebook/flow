@@ -15,8 +15,13 @@ module Error = Parse_error
 open Parser_common
 
 module type EXPRESSION = sig
+  type object_cover =
+    | Cover_expr of Expression.t
+    | Cover_object of Loc.t * Expression.Object.t * Loc.t list
+
   val array_initializer: env -> Loc.t * Expression.Array.t
   val assignment: env -> Expression.t
+  val assignment_cover: env -> object_cover
   val conditional: env -> Expression.t
   val identifier_or_reserved_keyword: env -> Identifier.t * (Loc.t * Parse_error.t) option
   val private_identifier: env -> PrivateName.t
@@ -85,7 +90,10 @@ module Expression
         loc, Expression.Object obj
 
   let as_pattern env cover =
-    let expr = as_expression env cover in
+    let expr = match cover with
+    | Cover_expr expr -> expr
+    | Cover_object (loc, obj, _assignment_locs) -> loc, Expression.Object obj
+    in
 
     if not (is_assignable_lhs expr)
     then error_at env (fst expr, Error.InvalidLHSInAssignment);
@@ -108,21 +116,21 @@ module Expression
    *   Originally we were parsing this without backtracking, but
    *   ArrowFunctionExpression got too tricky. Oh well.
    *)
-  let rec assignment =
-    let assignment_but_not_arrow_function env =
+  let rec assignment_cover =
+    let assignment_but_not_arrow_function_cover env =
       let expr_or_pattern = conditional_cover env in
-      (match assignment_op env with
+      match assignment_op env with
       | Some operator ->
         let left = as_pattern env expr_or_pattern in
         let right = assignment env in
         let loc = Loc.btwn (fst left) (fst right) in
 
-        loc, Expression.(Assignment Assignment.({
+        Cover_expr (loc, Expression.(Assignment { Assignment.
           operator;
           left;
           right;
         }))
-      | _ -> as_expression env expr_or_pattern)
+      | _ -> expr_or_pattern
 
     in let error_callback _ = function
       (* Don't rollback on these errors. *)
@@ -138,7 +146,7 @@ module Expression
      * function *)
     in let try_assignment_but_not_arrow_function env =
       let env = env |> with_error_callback error_callback in
-      let ret = assignment_but_not_arrow_function env in
+      let ret = assignment_but_not_arrow_function_cover env in
       match Peek.token env with
       | T_ARROW -> (* x => 123 *)
         raise Try.Rollback
@@ -146,8 +154,8 @@ module Expression
         raise Try.Rollback
       (* async x => 123 -- and we've already parsed async as an identifier
        * expression *)
-      | _ when Peek.is_identifier env -> begin match snd ret with
-        | Expression.Identifier (_, "async")
+      | _ when Peek.is_identifier env -> begin match ret with
+        | Cover_expr (_, Expression.Identifier (_, "async"))
             when not (Peek.is_line_terminator env) ->
           raise Try.Rollback
         | _ -> ret
@@ -155,7 +163,7 @@ module Expression
       | _ -> ret
     in fun env ->
       match Peek.token env, Peek.is_identifier env with
-      | T_YIELD, _ when (allow_yield env) -> yield env
+      | T_YIELD, _ when (allow_yield env) -> Cover_expr (yield env)
       | T_LPAREN, _
       | T_LESS_THAN, _
       | _, true ->
@@ -174,10 +182,13 @@ module Expression
                 (* Well shoot. It doesn't parse cleanly as a normal
                  * expression or as an arrow_function. Let's treat it as a
                  * normal assignment expression gone wrong *)
-                assignment_but_not_arrow_function env
+                assignment_but_not_arrow_function_cover env
           )
         )
-      | _ -> assignment_but_not_arrow_function env
+      | _ -> assignment_but_not_arrow_function_cover env
+
+  and assignment env =
+    as_expression env (assignment_cover env)
 
   and yield env = with_loc (fun env ->
     if in_formal_parameters env then error env Error.YieldInFormalParameters;
@@ -767,8 +778,8 @@ module Expression
         Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
     | T_LPAREN -> Cover_expr (group env)
     | T_LCURLY ->
-        let loc, obj = Parse.object_initializer env in
-        Cover_object (loc, obj, [])
+        let loc, obj, assignments = Parse.object_initializer env in
+        Cover_object (loc, obj, assignments)
     | T_LBRACKET ->
         let loc, arr = array_initializer env in
         Cover_expr (loc, Expression.Array arr)
@@ -996,7 +1007,7 @@ module Expression
         | BodyBlock _ -> false
         | BodyExpression _ -> true) in
       let loc = Loc.btwn start_loc end_loc in
-      loc, Expression.(ArrowFunction Function.({
+      Cover_expr (loc, Expression.(ArrowFunction { Function.
         id = None;
         params;
         body;
