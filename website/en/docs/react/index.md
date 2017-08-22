@@ -8,7 +8,7 @@ teach you how to use Flow to create safer React applications.
 
 In this guide we will assume you know [the React basics][] and focus on adding
 types for patterns you are already familiar with. We will be using examples
-based on `react`, but all of these patterns work in other environments
+based on `react-dom`, but all of these patterns work in other environments
 like `react-native` as well.
 
 [the React basics]: https://facebook.github.io/react/docs/hello-world.html
