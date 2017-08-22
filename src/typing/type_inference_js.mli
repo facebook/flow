@@ -10,12 +10,12 @@
 
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_ast:
-  metadata: Context.metadata ->
-  filename: Loc.filename ->
   lint_severities: Severity.severity LintSettings.t option ->
-  Ast.program ->
   require_loc_map: Loc.t SMap.t ->
-  Context.t
+  Context.t ->
+  Loc.filename ->
+  Ast.program ->
+  unit
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_lib_file:
   metadata: Context.metadata ->

@@ -375,13 +375,12 @@ let scan_for_suppressions cx base_settings comments =
 
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)
-let infer_ast ~metadata ~filename ~lint_severities ast ~require_loc_map =
+let infer_ast ~lint_severities ~require_loc_map cx filename ast =
   Flow_js.Cache.clear();
 
   let _, statements, comments = ast in
 
-  let module_ref = Files.module_ref filename in
-  let cx = Flow_js.fresh_context metadata filename module_ref in
+  let module_ref = Context.module_ref cx in
 
   let dep_mapper = new Dep_mapper.mapper in
   let _ = dep_mapper#program ast in
@@ -463,7 +462,7 @@ let infer_ast ~metadata ~filename ~lint_severities ast ~require_loc_map =
   (* insist that whatever type flows into exports is fully annotated *)
   force_annotations cx require_loc_map;
 
-  cx
+  ()
 
 
 (* infer a parsed library file.

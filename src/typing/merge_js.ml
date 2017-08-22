@@ -213,9 +213,10 @@ let merge_component_strict ~metadata ~lint_severities ~require_loc_maps
     let info = get_docblock_unsafe filename in
     let metadata = apply_docblock_overrides metadata info in
     let require_loc_map = FilenameMap.find_unsafe filename require_loc_maps in
-    let cx = Type_inference_js.infer_ast ast
-      ~metadata ~filename ~lint_severities ~require_loc_map
-    in
+    let module_ref = Files.module_ref filename in
+    let cx = Flow_js.fresh_context metadata filename module_ref in
+    Type_inference_js.infer_ast cx filename ast
+      ~lint_severities ~require_loc_map;
     cx::cxs, FilenameMap.add filename cx impl_cxs
   ) ([], FilenameMap.empty) component in
   let cxs = List.rev rev_cxs in
