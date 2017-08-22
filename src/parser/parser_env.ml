@@ -378,10 +378,21 @@ let enter_function env ~async ~generator = { env with
     allow_yield = generator;
   }
 
+(* #sec-keywords *)
+let is_keyword = function
+  | "await" | "break" | "case" | "catch" | "class" | "const" | "continue"
+  | "debugger" | "default" | "delete" | "do" | "else" | "export" | "extends"
+  | "finally" | "for" | "function" | "if" | "import" | "in" | "instanceof"
+  | "new" | "return" | "super" | "switch" | "this" | "throw" | "try"
+  | "typeof" | "var" | "void" | "while" | "with" | "yield" -> true
+  | _ -> false
+
+(* #sec-future-reserved-words *)
 let is_future_reserved = function
   | "enum" -> true
   | _ -> false
 
+(* #sec-strict-mode-of-ecmascript *)
 let is_strict_reserved = function
   | "interface"
   | "implements"
@@ -393,9 +404,18 @@ let is_strict_reserved = function
   | "yield" -> true
   | _ -> false
 
+(* #sec-strict-mode-of-ecmascript *)
 let is_restricted = function
   | "eval"
   | "arguments" -> true
+  | _ -> false
+
+(* #sec-reserved-words *)
+let is_reserved str_val =
+  is_keyword str_val ||
+  is_future_reserved str_val ||
+  match str_val with
+  | "null" | "true" | "false" -> true
   | _ -> false
 
 (* Answer questions about what comes next *)

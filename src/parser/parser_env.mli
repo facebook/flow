@@ -115,6 +115,7 @@ val without_error_callback : env -> env
 val add_label : env -> string -> env
 val enter_function : env -> async:bool -> generator:bool -> env
 
+val is_reserved : string -> bool
 val is_future_reserved : string -> bool
 val is_strict_reserved : string -> bool
 val is_restricted : string -> bool

@@ -175,8 +175,15 @@ module Pattern
           | _ ->
             (match key with
             | Pattern.Object.Property.Identifier ((id_loc, string_val) as name) ->
-              if is_strict_reserved string_val then
-                strict_error_at env (id_loc, Parse_error.StrictReservedWord);
+              (* #sec-identifiers-static-semantics-early-errors *)
+              begin
+                if is_reserved string_val && string_val <> "yield" && string_val <> "await" then
+                  (* it is a syntax error if `name` is a reserved word other than await or yield *)
+                  error_at env (id_loc, Parse_error.UnexpectedReserved)
+                else if is_strict_reserved string_val then
+                  (* it is a syntax error if `name` is a strict reserved word, in strict mode *)
+                  strict_error_at env (id_loc, Parse_error.StrictReservedWord)
+              end;
               let pattern = (id_loc, Pattern.Identifier { Pattern.Identifier.
                 name;
                 typeAnnotation = None;

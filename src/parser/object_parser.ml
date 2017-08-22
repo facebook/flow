@@ -186,13 +186,15 @@ module Object
       let parse_shorthand env key = match key with
         | Literal lit -> fst lit, Ast.Expression.Literal (snd lit)
         | Identifier ((loc, name) as id) ->
-            (* per #sec-identifiers-static-semantics-early-errors,
-               "It is a Syntax Error if this phrase is contained in strict mode
-               code and the StringValue of IdentifierName is: "implements",
-               "interface", "let", "package",  "private", "protected", "public",
-               "static", or "yield"." *)
-            if is_strict_reserved name then
-              strict_error_at env (loc, Parse_error.StrictReservedWord);
+            (* #sec-identifiers-static-semantics-early-errors *)
+            begin
+              if is_reserved name && name <> "yield" && name <> "await" then
+                (* it is a syntax error if `name` is a reserved word other than await or yield *)
+                error_at env (loc, Parse_error.UnexpectedReserved)
+              else if is_strict_reserved name then
+                (* it is a syntax error if `name` is a strict reserved word, in strict mode *)
+                strict_error_at env (loc, Parse_error.StrictReservedWord)
+            end;
             fst id, Ast.Expression.Identifier id
         | PrivateName _ -> failwith "Internal Error: private name found in object props"
         | Computed expr -> expr

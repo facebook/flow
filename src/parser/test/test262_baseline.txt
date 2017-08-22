@@ -710,10 +710,6 @@ language/import/dup-bound-names.js (strict mode)
   Missing parse error
 language/import/dup-bound-names.js (default)
   Missing parse error
-language/keywords/ident-ref-this.js (strict mode)
-  Missing parse error
-language/keywords/ident-ref-this.js (default)
-  Missing parse error
 language/line-terminators/S7.3_A3.3_T1.js (strict mode)
   Missing parse error
 language/line-terminators/S7.3_A3.3_T1.js (default)
@@ -873,18 +869,6 @@ language/module-code/parse-err-yield.js (default)
 language/reserved-words/await-module.js (strict mode)
   Missing parse error
 language/reserved-words/await-module.js (default)
-  Missing parse error
-language/reserved-words/ident-reference-false.js (strict mode)
-  Missing parse error
-language/reserved-words/ident-reference-false.js (default)
-  Missing parse error
-language/reserved-words/ident-reference-null.js (strict mode)
-  Missing parse error
-language/reserved-words/ident-reference-null.js (default)
-  Missing parse error
-language/reserved-words/ident-reference-true.js (strict mode)
-  Missing parse error
-language/reserved-words/ident-reference-true.js (default)
   Missing parse error
 language/statements/async-function/early-errors-declaration-NSPL-with-USD.js (strict mode)
   Missing parse error
@@ -2042,8 +2026,8 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54284 (98.15%)
-Failed: 1021 (1.85%)
+Passed: 54292 (98.17%)
+Failed: 1013 (1.83%)
 
 Features:
   Reflect: 244/246 (99.19%)
