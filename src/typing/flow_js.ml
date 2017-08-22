@@ -4570,11 +4570,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects can be copied *)
     (*************************)
 
-    | DefT (_, ObjT { props_tmap = mapr; _ }), ObjRestT (reason, xs, t) ->
-      let map = Context.find_props cx mapr in
-      let map = List.fold_left (fun map x -> SMap.remove x map) map xs in
+    (* Note: The story around unsealed objects and rest is not great. One
+       thought is to insert a special kind of shadow property into the host
+       object, which directs all writes (other than those in `xs`) to the
+       unsealed rest result object. For now, the design here is incomplete. *)
+
+    | DefT (_, ObjT { props_tmap; flags; _ }), ObjRestT (reason, xs, t) ->
+      let props = Context.find_props cx props_tmap in
+      let props = List.fold_left (fun map x -> SMap.remove x map) props xs in
+      (* Remove shadow properties from rest result *)
+      let props = SMap.filter (fun x _ -> not (is_internal_name x)) props in
       let proto = ObjProtoT reason in
-      let o = mk_object_with_map_proto cx reason map proto in
+      let sealed = sealed_in_op reason flags.sealed in
+      (* A rest result can not be exact if the source object is unsealed,
+         because we may not have seen all the writes yet. *)
+      let exact = sealed && flags.exact in
+      let o = mk_object_with_map_proto cx reason props proto ~sealed ~exact in
       rec_flow_t cx trace (o, t)
 
     | DefT (reason, InstanceT (_, super, _, insttype)),
