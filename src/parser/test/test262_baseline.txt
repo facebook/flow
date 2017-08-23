@@ -852,30 +852,6 @@ language/statements/if/S12.5_A11.js (strict mode)
   Missing parse error
 language/statements/if/S12.5_A11.js (default)
   Missing parse error
-language/statements/if/if-async-fun-else-async-fun.js (default)
-  Missing parse error
-language/statements/if/if-async-fun-else-stmt.js (default)
-  Missing parse error
-language/statements/if/if-async-fun-no-else.js (default)
-  Missing parse error
-language/statements/if/if-async-gen-else-async-gen.js (default)
-  Missing parse error
-language/statements/if/if-async-gen-else-stmt.js (default)
-  Missing parse error
-language/statements/if/if-async-gen-no-else.js (default)
-  Missing parse error
-language/statements/if/if-gen-else-gen.js (default)
-  Missing parse error
-language/statements/if/if-gen-else-stmt.js (default)
-  Missing parse error
-language/statements/if/if-gen-no-else.js (default)
-  Missing parse error
-language/statements/if/if-stmt-else-async-fun.js (default)
-  Missing parse error
-language/statements/if/if-stmt-else-async-gen.js (default)
-  Missing parse error
-language/statements/if/if-stmt-else-gen.js (default)
-  Missing parse error
 language/statements/if/let-array-with-newline.js (default)
   Missing parse error
 language/statements/labeled/continue.js (strict mode)
@@ -1530,16 +1506,16 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54540 (98.62%)
-Failed: 765 (1.38%)
+Passed: 54552 (98.64%)
+Failed: 753 (1.36%)
 
 Features:
   Reflect: 244/246 (99.19%)
   Symbol.iterator: 1314/1324 (99.24%)
   Symbol.toStringTag: 80/82 (97.56%)
   arrow-function: 22/24 (91.67%)
-  async-functions: 153/217 (70.51%)
-  async-iteration: 6977/7052 (98.94%)
+  async-functions: 157/217 (72.35%)
+  async-iteration: 6981/7052 (98.99%)
   destructuring-binding: 10519/10699 (98.32%)
   generator: 390/396 (98.48%)
   generators: 1321/1343 (98.36%)

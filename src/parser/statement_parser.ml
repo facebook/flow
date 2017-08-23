@@ -56,6 +56,23 @@ module Statement
     | For_expression of object_cover
     | For_declaration of (Loc.t * Ast.Statement.VariableDeclaration.t)
 
+  (* FunctionDeclaration is not a valid Statement, but Annex B sometimes allows it.
+     However, AsyncFunctionDeclaration and GeneratorFunctionDeclaration are never
+     allowed as statements. We still parse them as statements (and raise an error) to
+     recover gracefully. *)
+  let function_as_statement env =
+    let func = Declaration._function env in
+    if in_strict_mode env then
+      function_as_statement_error_at env (fst func)
+    else begin match func with
+      | _, Ast.Statement.FunctionDeclaration { Ast.Function.async = true; _ } ->
+        error_at env (fst func, Parse_error.AsyncFunctionAsStatement)
+      | _, Ast.Statement.FunctionDeclaration { Ast.Function.generator = true; _ } ->
+        error_at env (fst func, Parse_error.GeneratorFunctionAsStatement)
+      | _ -> ()
+    end;
+    func
+
   let rec empty env =
     let loc = Peek.loc env in
     Expect.token env T_SEMICOLON;
@@ -265,9 +282,7 @@ module Statement
          sec-functiondeclarations-in-ifstatement-statement-clauses *)
       let stmt =
         if Peek.is_function env then
-          let func = Declaration._function env in
-          if in_strict_mode env then function_as_statement_error_at env (fst func);
-          func
+          function_as_statement env
         else
           Parse.statement env
       in
@@ -484,21 +499,10 @@ module Statement
         then error_at env (loc, Error.Redeclaration ("Label", name));
         let env = add_label env name in
         let body =
-          if Peek.is_function env then begin
-            (* labelled FunctionDeclarations are only allowed in non-strict mode
-               (see sec-labelled-function-declarations), but labelled
-               AsyncFunctionDeclarations and GeneratorFunctionDeclarations are
-               never allowed. *)
-            let func = Declaration._function env in
-            let is_error = in_strict_mode env || match func with
-            | _, Ast.Statement.FunctionDeclaration { Ast.Function.async = true; _ }
-            | _, Ast.Statement.FunctionDeclaration { Ast.Function.generator = true; _ } ->
-              true
-            | _ -> false
-            in
-            if is_error then function_as_statement_error_at env (fst func);
-            func
-          end else Parse.statement env
+          (* labelled FunctionDeclarations are allowed in non-strict mode
+             (see #sec-labelled-function-declarations) *)
+          if Peek.is_function env then function_as_statement env
+          else Parse.statement env
         in
         Statement.Labeled { Statement.Labeled.label; body; }
     | expression, _ ->

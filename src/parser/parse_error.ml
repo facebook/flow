@@ -65,6 +65,8 @@ type t =
   | NoUninitializedDestructuring
   | NewlineBeforeArrow
   | FunctionAsStatement of { in_strict_mode: bool }
+  | AsyncFunctionAsStatement
+  | GeneratorFunctionAsStatement
   | AdjacentJSXElements
   | ParameterAfterRestParameter
   | ElementAfterRestElement
@@ -177,6 +179,10 @@ module PP =
           else
             "In non-strict mode code, functions can only be declared at top level, "^
             "inside a block, or as the body of an if statement."
+      | AsyncFunctionAsStatement -> "Async functions can only be declared at top level or "^
+          "immediately within another function."
+      | GeneratorFunctionAsStatement -> "Generators can only be declared at top level or "^
+          "immediately within another function."
       | AdjacentJSXElements -> "Unexpected token <. Remember, adjacent JSX "^
           "elements must be wrapped in an enclosing parent tag"
       | ParameterAfterRestParameter ->
