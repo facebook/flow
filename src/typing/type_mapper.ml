@@ -924,7 +924,7 @@ class ['a] t = object(self)
     | CreateElement (shape, config, (children, children_spread), tout) ->
       let config' = self#type_ cx map_cx config in
       let children' = ListUtils.ident_map (self#type_ cx map_cx) children in
-      let children_spread' = Option.map children_spread (self#type_ cx map_cx) in
+      let children_spread' = OptionUtils.ident_map (self#type_ cx map_cx) children_spread in
       let tout' = self#type_ cx map_cx tout in
       if (
         config' == config &&

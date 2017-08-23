@@ -72,8 +72,9 @@ class ['a] t = object(self)
     self#type_ cx acc t
 
   | OpaqueT (_, opaquetype) ->
-    let acc' = Option.fold ~init:acc ~f:(self#type_ cx) opaquetype.underlying_t in
-    Option.fold ~init:acc' ~f:(self#type_ cx) opaquetype.super_t
+    let acc = self#opt (self#type_ cx) acc opaquetype.underlying_t in
+    let acc = self#opt (self#type_ cx) acc opaquetype.super_t in
+    acc
 
   | ModuleT (_, exporttypes) ->
     self#export_types cx acc exporttypes
@@ -341,10 +342,7 @@ class ['a] t = object(self)
   method fun_type cx acc { this_t; params_tlist; rest_param; return_t; _ } =
     let acc = self#type_ cx acc this_t in
     let acc = self#list (self#type_ cx) acc params_tlist in
-    let acc = Option.value_map
-      ~f:(fun (_, _, t) -> self#type_ cx acc t)
-      ~default:acc
-      rest_param in
+    let acc = self#opt (fun acc (_, _, t) -> self#type_ cx acc t) acc rest_param in
     let acc = self#type_ cx acc return_t in
     acc
 
@@ -365,11 +363,8 @@ class ['a] t = object(self)
     List.fold_left
 
   method private opt: 't. ('a -> 't -> 'a) -> 'a -> 't option -> 'a =
-    fun f acc -> function
-    | None -> acc
-    | Some x -> f acc x
+    fun f acc opt -> Option.fold opt ~init:acc ~f
 
   method private smap: 't. ('a -> 't -> 'a) -> 'a -> 't SMap.t -> 'a =
-    fun f acc map ->
-      SMap.fold (fun _ t acc -> f acc t) map acc
+    fun f acc smap -> SMap.fold (fun _ t acc -> f acc t) smap acc
 end
