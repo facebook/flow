@@ -40,7 +40,7 @@ module rec Parse : PARSER = struct
   module Object_cover = Object_cover.Cover (Parse)
   module Expression = Expression_parser.Expression (Parse) (Type) (Declaration) (Object_cover)
   module Object = Object_parser.Object (Parse) (Type) (Declaration) (Expression)
-  module Statement = Statement_parser.Statement (Parse) (Type) (Declaration) (Object)
+  module Statement = Statement_parser.Statement (Parse) (Type) (Declaration) (Object) (Object_cover)
   module Pattern = Pattern_parser.Pattern (Parse) (Type)
   module JSX = Jsx_parser.JSX (Parse)
 
