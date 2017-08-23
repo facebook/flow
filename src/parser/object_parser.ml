@@ -284,7 +284,11 @@ module Object
           parse_value env
       in
 
-      let parse_init ~key ~async ~generator env = match Peek.token env with
+      let parse_init ~key ~async ~generator env =
+        if async || generator then
+          (* the `async` and `*` modifiers are only valid on methods *)
+          parse_method env ~async ~generator, false, true, []
+        else match Peek.token env with
         | T_RCURLY
         | T_COMMA ->
           parse_shorthand env key, true, false, []

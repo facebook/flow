@@ -436,10 +436,6 @@ language/expressions/object/method-definition/yield-star-after-newline.js (stric
   Missing parse error
 language/expressions/object/method-definition/yield-star-after-newline.js (default)
   Missing parse error
-language/expressions/object/prop-def-invalid-async-prefix.js (strict mode)
-  Missing parse error
-language/expressions/object/prop-def-invalid-async-prefix.js (default)
-  Missing parse error
 language/expressions/tagged-template/invalid-escape-sequences.js (strict mode)
   Unexpected token ILLEGAL at (21, 4) to (21, 5)
 language/expressions/tagged-template/invalid-escape-sequences.js (default)
@@ -1534,8 +1530,8 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54538 (98.61%)
-Failed: 767 (1.39%)
+Passed: 54540 (98.62%)
+Failed: 765 (1.38%)
 
 Features:
   Reflect: 244/246 (99.19%)
