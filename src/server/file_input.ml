@@ -22,6 +22,10 @@ let filename_of_file_input = function
   | FileContent (Some fn, _) -> fn
   | FileContent (None, _) -> "-"
 
-let content_of_file_input = function
+let content_of_file_input_unsafe = function
   | FileName fn -> Sys_utils.cat fn
   | FileContent (_, content) -> content
+
+let content_of_file_input file =
+  try Ok (content_of_file_input_unsafe file)
+  with exn -> Error (Printexc.to_string exn)

@@ -34,12 +34,12 @@ let def (state, pos) cx def_loc ref_loc =
    above scheme we will recover all other references as well, including the
    definition itself.) *)
 let result cx state =
-  match !state with
+  Ok begin match !state with
   | Some def_loc ->
-    Hashtbl.find_all (Context.refs_table cx) def_loc
-    |> List.sort_uniq Loc.compare
-  | _ ->
-    []
+    Hashtbl.find_all (Context.refs_table cx) def_loc |>
+    List.sort_uniq Loc.compare
+  | _ -> []
+  end
 
 let set_hooks pos =
   let state = ref None in

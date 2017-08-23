@@ -93,7 +93,7 @@ let token_to_json token_result =
 let main include_tokens pretty file_type_opt from filename () =
   FlowEventLogger.set_from from;
   let file = get_file filename in
-  let content = File_input.content_of_file_input file in
+  let content = File_input.content_of_file_input_unsafe file in
 
   let file_type =
     match file_type_opt with

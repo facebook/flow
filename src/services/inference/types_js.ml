@@ -458,8 +458,8 @@ let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
 
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
-let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents filename =
-  let profiling, (cx, errors, warnings, info) = Profiling_js.with_profiling begin fun profiling ->
+let typecheck_contents_ ~options ~workers ~env ~check_syntax contents filename =
+  let profiling, (cx_opt, errors, warnings, info) = Profiling_js.with_profiling begin fun profiling ->
     let errors, parse_result, info =
       parse_contents ~options ~profiling ~check_syntax filename contents in
 
@@ -526,7 +526,26 @@ let typecheck_contents ~options ~workers ~env ?(check_syntax=false) contents fil
         (* should never happen *)
         None, errors, Errors.ErrorSet.empty, info
   end in
-  profiling, cx, errors, warnings, info
+  profiling, cx_opt, errors, warnings, info
+
+let typecheck_contents ~options ~workers ~env contents filename =
+  let _profiling, _cx_opt, errors, warnings, _info =
+    typecheck_contents_ ~options ~workers ~env ~check_syntax:true contents filename in
+  errors, warnings
+
+let basic_check_contents ~options ~workers ~env contents filename =
+  try
+    let profiling, cx_opt, _errors, _warnings, info =
+      typecheck_contents_ ~options ~workers ~env ~check_syntax:false contents filename in
+    let cx = match cx_opt with
+      | Some cx -> cx
+      | None -> failwith "Couldn't parse file" in
+    Ok (profiling, cx, info)
+  with exn ->
+    let e = spf "%s\n%s"
+      (Printexc.to_string exn)
+      (Printexc.get_backtrace ()) in
+    Error e
 
 let init_package_heap ~options ~profiling parsed =
   with_timer ~options "PackageHeap" profiling (fun () ->

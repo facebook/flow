@@ -71,7 +71,7 @@ let getdef_require (state, user_requested_loc) _cx name require_loc =
    delicate, since in many cases the resulting type lacks location
    information. Edit with caution. *)
 let getdef_get_result profiling client_logging_context ~options cx state =
-  match !state with
+  Ok begin match !state with
   | Some Gdloc loc -> loc
   | Some Gdval v ->
     (* Use `possible_types_of_type` instead of `resolve_type` because we're
@@ -149,6 +149,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
         )
       )
   | None -> Loc.none
+  end
 
 let getdef_set_hooks pos =
   let state = ref None in

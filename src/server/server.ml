@@ -11,6 +11,10 @@
 module TI = Type_inference_js
 module Server = ServerFunctors
 
+open Result
+let try_with f =
+  try f () with exn -> Error (Printexc.to_string exn)
+
 module FlowProgram : Server.SERVER_PROGRAM = struct
   open Utils_js
   open Sys_utils
@@ -201,23 +205,16 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     in
     let state = Autocomplete_js.autocomplete_set_hooks () in
     let results =
-      try
-        let path = Loc.SourceFile path in
-        let profiling, cx, parse_result =
-          match Types_js.typecheck_contents ~options ~workers ~env content path with
-          | profiling, Some cx, _, _, parse_result -> profiling, cx, parse_result
-          | _  -> failwith "Couldn't parse file"
-        in
+      let path = Loc.SourceFile path in
+      Types_js.basic_check_contents ~options ~workers ~env content path >>= fun (profiling, cx, info) ->
+      try_with begin fun () ->
         AutocompleteService_js.autocomplete_get_results
           profiling
           command_context
           cx
           state
-          parse_result
-      with exn ->
-        Hh_logger.warn "Couldn't autocomplete: %s" (Printexc.to_string exn);
-        Ok []
-    in
+          info
+      end in
     Autocomplete_js.autocomplete_unset_hooks ();
     results
 
@@ -237,8 +234,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         in
         if should_check then
           let file = Loc.SourceFile file in
-          let _, _, errors, warnings, _ = Types_js.typecheck_contents
-            ~options ~workers ~env ~check_syntax:true content file in
+          let errors, warnings = Types_js.typecheck_contents ~options ~workers ~env content file in
           convert_errors ~errors ~warnings
         else
           ServerProt.NOT_COVERED
@@ -259,50 +255,37 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       (file_input, line, col, verbose, include_raw) =
     let file = File_input.filename_of_file_input file_input in
     let file = Loc.SourceFile file in
-    let response = (try
-      let content = File_input.content_of_file_input file_input in
-      let options = { options with Options.opt_verbose = verbose } in
-      Ok (Type_info_service.type_at_pos
+    File_input.content_of_file_input file_input >>= fun content ->
+    let options = { options with Options.opt_verbose = verbose } in
+    try_with begin fun () ->
+      Type_info_service.type_at_pos
         ~options ~workers ~env ~client_context ~include_raw
         file content line col
-      )
-    with exn ->
-      let err = spf "%s\n%s"
-        (Printexc.to_string exn)
-        (Printexc.get_backtrace ()) in
-      Error err
-    ) in
-    response
+    end
 
   let dump_types ~options ~workers ~env ~include_raw ~strip_root file_input =
     let file = File_input.filename_of_file_input file_input in
     let file = Loc.SourceFile file in
-    try
-      let content = File_input.content_of_file_input file_input in
-      Ok (Type_info_service.dump_types
+    File_input.content_of_file_input file_input >>= fun content ->
+    try_with begin fun () ->
+      Type_info_service.dump_types
         ~options ~workers ~env ~include_raw ~strip_root file content
-      )
-    with exn ->
-      Error (Printexc.to_string exn)
+    end
 
   let coverage ~options ~workers ~env ~force file_input =
     let file = File_input.filename_of_file_input file_input in
     let file = Loc.SourceFile file in
-    try
-      let content = File_input.content_of_file_input file_input in
-      Ok (Type_info_service.coverage ~options ~workers ~env ~force file content)
-    with exn ->
-      Error (Printexc.to_string exn)
+    File_input.content_of_file_input file_input >>= fun content ->
+    try_with begin fun () ->
+      Type_info_service.coverage ~options ~workers ~env ~force file content
+    end
 
   let suggest =
     let suggest_for_file ~options ~workers ~env result_map (file, region) =
-      (try
-         let insertions = Type_info_service.suggest ~options ~workers ~env
-           (Loc.SourceFile file) region (cat file) in
-         SMap.add file (Ok insertions) result_map
-      with exn ->
-        SMap.add file (Error (Printexc.to_string exn)) result_map
-      )
+      SMap.add file (try_with begin fun () ->
+        Type_info_service.suggest ~options ~workers ~env
+          (Loc.SourceFile file) region (cat file)
+      end) result_map
     in fun ~options ~workers ~env files ->
       List.fold_left (suggest_for_file ~options ~workers ~env) SMap.empty files
 
@@ -396,16 +379,11 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let loc = mk_loc file line col in
     let state = FindRefs_js.set_hooks loc in
     let result =
-      try
-        let content = File_input.content_of_file_input file_input in
-        let cx = match Types_js.typecheck_contents ~options ~workers ~env content file with
-          | _, Some cx, _, _, _ -> cx
-          | _  -> failwith "Couldn't parse file"
-        in
-        Ok (FindRefs_js.result cx state)
-      with exn ->
-        Error (Printexc.to_string exn)
-    in
+      File_input.content_of_file_input file_input >>= fun content ->
+      Types_js.basic_check_contents ~options ~workers ~env content file >>= fun (_profiling, cx, _info) ->
+      try_with begin fun () ->
+        FindRefs_js.result cx state
+      end in
     FindRefs_js.unset_hooks ();
     result
 
@@ -414,22 +392,17 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let file = Loc.SourceFile filename in
     let loc = mk_loc file line col in
     let state = GetDef_js.getdef_set_hooks loc in
-    let result = try
-      let content = File_input.content_of_file_input file_input in
-      let profiling, cx = match Types_js.typecheck_contents ~options ~workers ~env content file with
-        | profiling, Some cx, _, _, _ -> profiling, cx
-        | _  -> failwith "Couldn't parse file"
-      in
-      Ok (GetDef_js.getdef_get_result
-        profiling
-        command_context
-        ~options
-        cx
-        state
-      )
-    with exn ->
-      Error (Printexc.to_string exn)
-    in
+    let result =
+      File_input.content_of_file_input file_input >>= fun content ->
+      Types_js.basic_check_contents ~options ~workers ~env content file >>= fun (profiling, cx, _info) ->
+      try_with begin fun () ->
+        GetDef_js.getdef_get_result
+          profiling
+          command_context
+          ~options
+          cx
+          state
+      end in
     GetDef_js.getdef_unset_hooks ();
     result
 
@@ -600,9 +573,9 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let root = Options.root options in
       let tmp_dir = Options.temp_dir options in
       let workers = genv.ServerEnv.workers in
-      ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
+      Pervasives.ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
       let env = Types_js.recheck ~options ~workers ~updates env ~serve_ready_clients in
-      ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
+      Pervasives.ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
       env
     end
 

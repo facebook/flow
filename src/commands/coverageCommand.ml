@@ -245,7 +245,7 @@ let main
   | Error err ->
       handle_error ~json ~pretty err
   | Ok resp ->
-      let content = File_input.content_of_file_input file in
+      let content = File_input.content_of_file_input_unsafe file in
       handle_response ~json ~pretty ~color ~debug resp content
 
 let command = CommandSpec.command spec main

@@ -43,15 +43,22 @@ val full_check:
   ServerEnv.errors ->
   CheckedSet.t * ServerEnv.errors
 
+val basic_check_contents:
+  options: Options.t ->
+  workers: Worker.t list option ->
+  env: ServerEnv.env ref ->
+  string ->               (* contents *)
+  filename ->             (* fake file-/module name *)
+  (Profiling_js.finished *
+   Context.t *
+   Docblock.t,
+   string) result
+
 val typecheck_contents:
   options: Options.t ->
   workers: Worker.t list option ->
   env: ServerEnv.env ref ->
-  ?check_syntax: bool ->
   string ->               (* contents *)
   filename ->             (* fake file-/module name *)
-  Profiling_js.finished *
-    Context.t option *
-    Errors.ErrorSet.t * (* errors *)
-    Errors.ErrorSet.t * (* warnings *)
-    Docblock.t
+  Errors.ErrorSet.t *     (* errors *)
+  Errors.ErrorSet.t       (* warnings *)

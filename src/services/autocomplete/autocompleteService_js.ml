@@ -246,7 +246,7 @@ let autocomplete_jsx
   cls
   ac_name
   ac_loc
-  parse_result = Flow_js.(
+  docblock = Flow_js.(
     let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
     let component_instance = mk_instance cx reason cls in
     let props_object = mk_tvar_where cx reason (fun tvar ->
@@ -261,21 +261,18 @@ let autocomplete_jsx
       props_object
       ac_name
       ac_loc
-      parse_result
+      docblock
   )
 
 let autocomplete_get_results
-  profiling client_logging_context cx state parse_result =
+  profiling client_logging_context cx state docblock =
   (* FIXME: See #5375467 *)
   Type_normalizer.suggested_type_cache := IMap.empty;
   match !state with
   | Some { ac_type = Acid (env); _; } ->
-      autocomplete_id cx env
+    autocomplete_id cx env
   | Some { ac_name; ac_loc; ac_type = Acmem (this); } ->
-      autocomplete_member
-        profiling client_logging_context cx this ac_name ac_loc
-  parse_result
+    autocomplete_member profiling client_logging_context cx this ac_name ac_loc docblock
   | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
-      autocomplete_jsx
-        profiling client_logging_context cx cls ac_name ac_loc parse_result
+    autocomplete_jsx profiling client_logging_context cx cls ac_name ac_loc docblock
   | None -> Ok []
