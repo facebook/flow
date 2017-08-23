@@ -1,7 +1,7 @@
 Library type error:
 <BUILTINS>/react.js:159
-                                                                  v-
-159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                   v-
+159: declare type React$Element<+ElementType: React$ElementType> = {|
 160:   +type: ElementType,
 161:   +props: React$ElementProps<ElementType>,
 ...:

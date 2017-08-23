@@ -3,8 +3,8 @@ Error: main.js:4
       ^^^^^^^ React element `fbt`
   4: (<fbt />: number); // Error: ReactElement ~> number
                ^^^^^^ number. This type is incompatible with
-                                                                  v-
-159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                   v-
+159: declare type React$Element<+ElementType: React$ElementType> = {|
 160:   +type: ElementType,
 161:   +props: React$ElementProps<ElementType>,
 ...:

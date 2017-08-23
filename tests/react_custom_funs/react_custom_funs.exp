@@ -175,8 +175,8 @@ Error: create_element.js:36
 Error: create_element.js:38
  38: React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                               ^^^^ property `nope`. Property not found in
-                                                                  v-
-159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                   v-
+159: declare type React$Element<+ElementType: React$ElementType> = {|
 160:   +type: ElementType,
 161:   +props: React$ElementProps<ElementType>,
 ...:
@@ -186,8 +186,8 @@ Error: create_element.js:38
 Error: create_element.js:39
  39: React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                               ^^^^ property `nope`. Property not found in
-                                                                  v-
-159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                   v-
+159: declare type React$Element<+ElementType: React$ElementType> = {|
 160:   +type: ElementType,
 161:   +props: React$ElementProps<ElementType>,
 ...:
@@ -988,8 +988,8 @@ Error: create_factory.js:33
 Error: create_factory.js:34
  34: aFactory({foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                 ^^^^ property `nope`. Property not found in
-                                                                  v-
-159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                   v-
+159: declare type React$Element<+ElementType: React$ElementType> = {|
 160:   +type: ElementType,
 161:   +props: React$ElementProps<ElementType>,
 ...:
@@ -999,8 +999,8 @@ Error: create_factory.js:34
 Error: create_factory.js:35
  35: bFactory({foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                 ^^^^ property `nope`. Property not found in
-                                                                  v-
-159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                   v-
+159: declare type React$Element<+ElementType: React$ElementType> = {|
 160:   +type: ElementType,
 161:   +props: React$ElementProps<ElementType>,
 ...:

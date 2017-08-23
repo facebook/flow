@@ -1,8 +1,8 @@
 Error: API.react.js:4
   4: app.setProps({y:42}); // error, y:number but foo expects string in App.react
          ^^^^^^^^ property `setProps`. Property not found in
-                                                                  v-
-159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                   v-
+159: declare type React$Element<+ElementType: React$ElementType> = {|
 160:   +type: ElementType,
 161:   +props: React$ElementProps<ElementType>,
 ...:
@@ -12,8 +12,8 @@ Error: API.react.js:4
 Error: API.react.js:5
   5: app.setState({z:42}); // error, z:number but foo expects string in App.react
          ^^^^^^^^ property `setState`. Property not found in
-                                                                  v-
-159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                   v-
+159: declare type React$Element<+ElementType: React$ElementType> = {|
 160:   +type: ElementType,
 161:   +props: React$ElementProps<ElementType>,
 ...:

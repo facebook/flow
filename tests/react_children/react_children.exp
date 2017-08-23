@@ -279,8 +279,8 @@ Error: component.js:41
 Error: fun.js:16
  16: class Fun extends React.Component<{children: Fn}, void> {}
                                                   ^^ function type. Callable signature not found in
-                                                                  v-
-159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                   v-
+159: declare type React$Element<+ElementType: React$ElementType> = {|
 160:   +type: ElementType,
 161:   +props: React$ElementProps<ElementType>,
 ...:
@@ -749,8 +749,8 @@ Error: fun.js:142
   Error:
    21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                          ^^ function type. Callable signature not found in
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -762,8 +762,8 @@ Error: fun.js:142
   Error:
    21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                               ^^^^^^^^^ array type. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1055,8 +1055,8 @@ Error: tabs.js:67
   Error:
    14:   | void
            ^^^^ undefined. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1068,8 +1068,8 @@ Error: tabs.js:67
   Error:
    15:   | null
            ^^^^ null. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1081,8 +1081,8 @@ Error: tabs.js:67
   Error:
    16:   | boolean
            ^^^^^^^ boolean. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1092,8 +1092,8 @@ Error: tabs.js:67
    17:   | React$Element<typeof Tab>
            ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
   Error:
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1112,8 +1112,8 @@ Error: tabs.js:67
   Error:
    18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
            ^^^^^^^^^^^^^^^^^ array type. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1133,8 +1133,8 @@ Error: tabs.js:68
   Error:
    14:   | void
            ^^^^ undefined. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1146,8 +1146,8 @@ Error: tabs.js:68
   Error:
    15:   | null
            ^^^^ null. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1159,8 +1159,8 @@ Error: tabs.js:68
   Error:
    16:   | boolean
            ^^^^^^^ boolean. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1170,8 +1170,8 @@ Error: tabs.js:68
    17:   | React$Element<typeof Tab>
            ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
   Error:
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1190,8 +1190,8 @@ Error: tabs.js:68
   Error:
    18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
            ^^^^^^^^^^^^^^^^^ array type. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1211,8 +1211,8 @@ Error: tabs.js:68
   Error:
    14:   | void
            ^^^^ undefined. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1224,8 +1224,8 @@ Error: tabs.js:68
   Error:
    15:   | null
            ^^^^ null. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1237,8 +1237,8 @@ Error: tabs.js:68
   Error:
    16:   | boolean
            ^^^^^^^ boolean. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1248,8 +1248,8 @@ Error: tabs.js:68
    17:   | React$Element<typeof Tab>
            ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
   Error:
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1268,8 +1268,8 @@ Error: tabs.js:68
   Error:
    18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
            ^^^^^^^^^^^^^^^^^ array type. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1289,8 +1289,8 @@ Error: tabs.js:73
   Error:
    14:   | void
            ^^^^ undefined. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1302,8 +1302,8 @@ Error: tabs.js:73
   Error:
    15:   | null
            ^^^^ null. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1315,8 +1315,8 @@ Error: tabs.js:73
   Error:
    16:   | boolean
            ^^^^^^^ boolean. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1326,8 +1326,8 @@ Error: tabs.js:73
    17:   | React$Element<typeof Tab>
            ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
   Error:
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1346,8 +1346,8 @@ Error: tabs.js:73
   Error:
    18:   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
            ^^^^^^^^^^^^^^^^^ array type. This type is incompatible with
-                                                                    v-
-  159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                     v-
+  159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
@@ -1466,8 +1466,8 @@ Error: text.js:26
   5: class Text extends React.Component<{children: string}, void> {}
                                         ^^^^^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-                                                                      v-
-    159: declare type React$Element<ElementType: React$ElementType> = {|
+                                                                       v-
+    159: declare type React$Element<+ElementType: React$ElementType> = {|
     160:   +type: ElementType,
     161:   +props: React$ElementProps<ElementType>,
     ...:
