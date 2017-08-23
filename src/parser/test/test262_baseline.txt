@@ -750,10 +750,6 @@ language/statements/do-while/S12.6.1_A15.js (strict mode)
   Missing parse error
 language/statements/do-while/S12.6.1_A15.js (default)
   Missing parse error
-language/statements/do-while/let-array-with-newline.js (default)
-  Missing parse error
-language/statements/for-await-of/let-array-with-newline.js (default)
-  Missing parse error
 language/statements/for-in/dstr-array-rest-before-elision.js (strict mode)
   Missing parse error
 language/statements/for-in/dstr-array-rest-before-elision.js (default)
@@ -784,8 +780,6 @@ language/statements/for-in/head-lhs-invalid-asnmt-ptrn-obj.js (default)
   Missing parse error
 language/statements/for-in/head-lhs-let.js (default)
   Unexpected token in at (27, 10) to (27, 12)
-language/statements/for-in/let-array-with-newline.js (default)
-  Missing parse error
 language/statements/for-of/dstr-array-rest-before-elision.js (strict mode)
   Missing parse error
 language/statements/for-of/dstr-array-rest-before-elision.js (default)
@@ -814,16 +808,12 @@ language/statements/for-of/head-lhs-invalid-asnmt-ptrn-obj.js (strict mode)
   Missing parse error
 language/statements/for-of/head-lhs-invalid-asnmt-ptrn-obj.js (default)
   Missing parse error
-language/statements/for-of/let-array-with-newline.js (default)
-  Missing parse error
 language/statements/for/head-let-bound-names-in-stmt.js (strict mode)
   Missing parse error
 language/statements/for/head-let-bound-names-in-stmt.js (default)
   Missing parse error
 language/statements/for/head-lhs-let.js (default)
   Unexpected token = at (25, 4) to (25, 5)
-language/statements/for/let-array-with-newline.js (default)
-  Missing parse error
 language/statements/function/S13_A7_T1.js (strict mode)
   Unexpected token ILLEGAL at (55, 25) to (55, 26)
 language/statements/function/S13_A7_T1.js (default)
@@ -852,13 +842,9 @@ language/statements/if/S12.5_A11.js (strict mode)
   Missing parse error
 language/statements/if/S12.5_A11.js (default)
   Missing parse error
-language/statements/if/let-array-with-newline.js (default)
-  Missing parse error
 language/statements/labeled/continue.js (strict mode)
   Missing parse error
 language/statements/labeled/continue.js (default)
-  Missing parse error
-language/statements/labeled/let-array-with-newline.js (default)
   Missing parse error
 language/statements/labeled/value-await-module.js (strict mode)
   Missing parse error
@@ -1496,18 +1482,14 @@ language/statements/while/S12.6.2_A15.js (strict mode)
   Missing parse error
 language/statements/while/S12.6.2_A15.js (default)
   Missing parse error
-language/statements/while/let-array-with-newline.js (default)
-  Missing parse error
-language/statements/with/let-array-with-newline.js (default)
-  Missing parse error
 language/white-space/mongolian-vowel-separator.js (strict mode)
   Missing parse error
 language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54552 (98.64%)
-Failed: 753 (1.36%)
+Passed: 54561 (98.65%)
+Failed: 744 (1.35%)
 
 Features:
   Reflect: 244/246 (99.19%)
@@ -1515,7 +1497,7 @@ Features:
   Symbol.toStringTag: 80/82 (97.56%)
   arrow-function: 22/24 (91.67%)
   async-functions: 157/217 (72.35%)
-  async-iteration: 6981/7052 (98.99%)
+  async-iteration: 6982/7052 (99.01%)
   destructuring-binding: 10519/10699 (98.32%)
   generator: 390/396 (98.48%)
   generators: 1321/1343 (98.36%)

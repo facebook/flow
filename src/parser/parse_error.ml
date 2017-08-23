@@ -102,6 +102,7 @@ type t =
   | YieldInFormalParameters
   | AwaitAsIdentifierReference
   | YieldAsIdentifierReference
+  | AmbiguousLetBracket
 
 exception Error of (Loc.t * t) list
 
@@ -255,4 +256,6 @@ module PP =
       | YieldInFormalParameters -> "Yield expression not allowed in formal parameter"
       | AwaitAsIdentifierReference -> "`await` is an invalid identifier in async functions"
       | YieldAsIdentifierReference -> "`yield` is an invalid identifier in generators"
+      | AmbiguousLetBracket -> "`let [` is ambiguous in this position because it is "^
+          "either a `let` binding pattern, or a member expression."
   end
