@@ -51,6 +51,10 @@ module Statement
   (Declaration: Declaration_parser.DECLARATION)
   (Object: Object_parser.OBJECT)
 : STATEMENT = struct
+  type for_lhs =
+    | For_expression of Ast.Expression.t
+    | For_declaration of (Loc.t * Ast.Statement.VariableDeclaration.t)
+
   let rec empty env =
     let loc = Peek.loc env in
     Expect.token env T_SEMICOLON;
@@ -128,8 +132,8 @@ module Statement
   )
 
   and for_ =
-    let assert_can_be_forin_or_forof env err = Statement.VariableDeclaration.(function
-      | Some (Statement.For.InitDeclaration (loc, {
+    let assert_can_be_forin_or_forof env err = function
+      | Some (For_declaration (loc, { Statement.VariableDeclaration.
         declarations;
         _;
       })) ->
@@ -144,14 +148,14 @@ module Statement
            * for (var x = 42 in y) {}
            *)
           (match declarations with
-          | [ (_, { Declarator.init = None; _; }) ] -> ()
+          | [ (_, { Statement.VariableDeclaration.Declarator.init = None; _; }) ] -> ()
           | _ -> error_at env (loc, err))
-      | Some (Statement.For.InitExpression (loc, expr)) ->
+      | Some (For_expression (loc, expr)) ->
           (* Only certain expressions can be the lhs of a for in or for of *)
           if not (Parse.is_assignable_lhs (loc, expr))
           then error_at env (loc, err)
       | _ -> error env err
-    ) in
+    in
 
     (* Annex B allows labelled FunctionDeclarations (see
        sec-labelled-function-declarations), but not in IterationStatement
@@ -173,16 +177,16 @@ module Statement
         | T_SEMICOLON -> None, []
         | T_LET ->
             let loc, (decl, errs) = with_loc Declaration.let_ env in
-            Some (Statement.For.InitDeclaration (loc, decl)), errs
+            Some (For_declaration (loc, decl)), errs
         | T_CONST ->
             let loc, (decl, errs) = with_loc Declaration.const env in
-            Some (Statement.For.InitDeclaration (loc, decl)), errs
+            Some (For_declaration (loc, decl)), errs
         | T_VAR ->
             let loc, (decl, errs) = with_loc Declaration.var env in
-            Some (Statement.For.InitDeclaration (loc, decl)), errs
+            Some (For_declaration (loc, decl)), errs
         | _ ->
             let expr = Parse.expression (env |> with_no_let true) in
-            Some (Statement.For.InitExpression expr), []
+            Some (For_expression expr), []
       in
 
       match Peek.token env with
@@ -190,8 +194,8 @@ module Statement
       | t when t = T_OF || async ->
           assert_can_be_forin_or_forof env Error.InvalidLHSInForOf init;
           let left = Statement.(match init with
-          | Some (For.InitDeclaration decl) -> ForOf.LeftDeclaration decl
-          | Some (For.InitExpression expr) ->
+          | Some (For_declaration decl) -> ForOf.LeftDeclaration decl
+          | Some (For_expression expr) ->
             (* #sec-for-in-and-for-of-statements-static-semantics-early-errors *)
             ForOf.LeftPattern (Parse.pattern_from_expr env expr)
           | None -> assert false) in
@@ -209,12 +213,12 @@ module Statement
           }
       | T_IN ->
           assert_can_be_forin_or_forof env Error.InvalidLHSInForIn init;
-          let left = Statement.(match init with
-          | Some (For.InitDeclaration decl) -> ForIn.LeftDeclaration decl
-          | Some (For.InitExpression expr) ->
+          let left = match init with
+          | Some (For_declaration decl) -> Statement.ForIn.LeftDeclaration decl
+          | Some (For_expression expr) ->
             (* #sec-for-in-and-for-of-statements-static-semantics-early-errors *)
-            ForIn.LeftPattern (Parse.pattern_from_expr env expr)
-          | None -> assert false) in
+            Statement.ForIn.LeftPattern (Parse.pattern_from_expr env expr)
+          | None -> assert false in
           (* This is a for in loop *)
           Expect.token env T_IN;
           let right = Parse.expression env in
@@ -231,6 +235,10 @@ module Statement
           (* This is a for loop *)
           errs |> List.iter (error_at env);
           Expect.token env T_SEMICOLON;
+          let init = match init with
+          | Some (For_declaration decl) -> Some (Statement.For.InitDeclaration decl)
+          | Some (For_expression expr) -> Some (Statement.For.InitExpression expr)
+          | None -> None in
           let test = match Peek.token env with
           | T_SEMICOLON -> None
           | _ -> Some (Parse.expression env) in
