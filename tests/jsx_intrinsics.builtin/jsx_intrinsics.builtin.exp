@@ -1,11 +1,11 @@
 Library type error:
-<BUILTINS>/react.js:158
+<BUILTINS>/react.js:159
                                                                   v-
-158: declare type React$Element<ElementType: React$ElementType> = {|
-159:   +type: ElementType,
-160:   +props: React$ElementProps<ElementType>,
+159: declare type React$Element<ElementType: React$ElementType> = {|
+160:   +type: ElementType,
+161:   +props: React$ElementProps<ElementType>,
 ...:
-163: |};
+164: |};
      -^ object type. This type is incompatible with
  11: var b: Element<typeof CustomComponentNope> =
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: main.js:11
@@ -16,8 +16,8 @@ Library type error:
                ^^^^^^^^^^^^^^^^^^^ CustomComponentNope. See: main.js:7
 
 Library type error:
-<BUILTINS>/react.js:160
-160:   +props: React$ElementProps<ElementType>,
+<BUILTINS>/react.js:161
+161:   +props: React$ElementProps<ElementType>,
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `prop1`. Property not found in
   6: class CustomComponent extends React.Component<{prop: string}, void> {}
                                                    ^^^^^^^^^^^^^^ object type. See: main.js:6

@@ -1,11 +1,11 @@
 Library type error:
-<BUILTINS>/react.js:158
+<BUILTINS>/react.js:159
                                                                   v-
-158: declare type React$Element<ElementType: React$ElementType> = {|
-159:   +type: ElementType,
-160:   +props: React$ElementProps<ElementType>,
+159: declare type React$Element<ElementType: React$ElementType> = {|
+160:   +type: ElementType,
+161:   +props: React$ElementProps<ElementType>,
 ...:
-163: |};
+164: |};
      -^ object type. This type is incompatible with
  39: var foo: $jsx<number> = <Foo/>;
               ^^^^^^^^^^^^ object type. See: classes.js:39
@@ -16,13 +16,13 @@ Library type error:
                        ^^^^^^ number. See: classes.js:39
 
 Library type error:
-<BUILTINS>/react.js:158
+<BUILTINS>/react.js:159
                                                                   v-
-158: declare type React$Element<ElementType: React$ElementType> = {|
-159:   +type: ElementType,
-160:   +props: React$ElementProps<ElementType>,
+159: declare type React$Element<ElementType: React$ElementType> = {|
+160:   +type: ElementType,
+161:   +props: React$ElementProps<ElementType>,
 ...:
-163: |};
+164: |};
      -^ object type. This type is incompatible with
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                      ^^^^^^^^^^^^ object type. See: classes.js:79
@@ -38,8 +38,8 @@ Library type error:
                               ^^^^^^ number. See: classes.js:79
 
 Library type error:
-<BUILTINS>/react.js:160
-160:   +props: React$ElementProps<ElementType>,
+<BUILTINS>/react.js:161
+161:   +props: React$ElementProps<ElementType>,
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `w`. Property not found in
                     v
   4:     propTypes: {
@@ -100,8 +100,8 @@ Error: classes.js:38
 Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
                              ^^^^^^ React element `Foo`
-160:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:160
+161:   +props: React$ElementProps<ElementType>,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:161
  39: var foo: $jsx<number> = <Foo/>;
                    ^^^^^^ number
 
@@ -118,40 +118,40 @@ Error: classes.js:39
                              ^^^^^^ React element `Foo`
  39: var foo: $jsx<number> = <Foo/>;
                    ^^^^^^ number. This type is incompatible with
-158: declare type React$Element<ElementType: React$ElementType> = {|
-                                             ^^^^^^^^^^^^^^^^^ union: key set | type application of polymorphic type: type `React$ComponentType`. See lib: <BUILTINS>/react.js:158
+159: declare type React$Element<ElementType: React$ElementType> = {|
+                                             ^^^^^^^^^^^^^^^^^ union: key set | type application of polymorphic type: type `React$ComponentType`. See lib: <BUILTINS>/react.js:159
   Member 1:
-  151:   | $Keys<$JSXIntrinsics>
-           ^^^^^^^^^^^^^^^^^^^^^ key set. See lib: <BUILTINS>/react.js:151
+  152:   | $Keys<$JSXIntrinsics>
+           ^^^^^^^^^^^^^^^^^^^^^ key set. See lib: <BUILTINS>/react.js:152
   Error:
    39: var foo: $jsx<number> = <Foo/>;
                      ^^^^^^ number. This type is incompatible with
-  151:   | $Keys<$JSXIntrinsics>
-           ^^^^^^^^^^^^^^^^^^^^^ key set. See lib: <BUILTINS>/react.js:151
+  152:   | $Keys<$JSXIntrinsics>
+           ^^^^^^^^^^^^^^^^^^^^^ key set. See lib: <BUILTINS>/react.js:152
   Member 2:
-  152:   | React$ComponentType<any>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$ComponentType`. See lib: <BUILTINS>/react.js:152
+  153:   | React$ComponentType<any>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$ComponentType`. See lib: <BUILTINS>/react.js:153
   Error:
    39: var foo: $jsx<number> = <Foo/>;
                      ^^^^^^ number. This type is incompatible with
-  152:   | React$ComponentType<any>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: type `React$StatelessFunctionalComponent` | class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:152
+  153:   | React$ComponentType<any>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: type `React$StatelessFunctionalComponent` | class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:153
     Member 1:
-    139:   | React$StatelessFunctionalComponent<Props>
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$StatelessFunctionalComponent`. See lib: <BUILTINS>/react.js:139
+    140:   | React$StatelessFunctionalComponent<Props>
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$StatelessFunctionalComponent`. See lib: <BUILTINS>/react.js:140
     Error:
      39: var foo: $jsx<number> = <Foo/>;
                        ^^^^^^ number. This type is incompatible with
-    139:   | React$StatelessFunctionalComponent<Props>
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:139
+    140:   | React$StatelessFunctionalComponent<Props>
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:140
     Member 2:
-    140:   | Class<React$Component<Props, any>>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:140
+    141:   | Class<React$Component<Props, any>>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:141
     Error:
      39: var foo: $jsx<number> = <Foo/>;
                        ^^^^^^ number. This type is incompatible with
-    140:   | Class<React$Component<Props, any>>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:140
+    141:   | Class<React$Component<Props, any>>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:141
 
 Error: classes.js:57
  57:     var _: string = this.props.x;
@@ -177,8 +177,8 @@ Error: classes.js:64
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                     ^^^^^^^^^^^^ React element `FooLegacy`
-160:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:160
+161:   +props: React$ElementProps<ElementType>,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:161
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                           ^^^^^^ number
 
@@ -198,40 +198,40 @@ Error: classes.js:79
                                     ^^^^^^^^^^^^ React element `FooLegacy`
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                           ^^^^^^ number. This type is incompatible with
-158: declare type React$Element<ElementType: React$ElementType> = {|
-                                             ^^^^^^^^^^^^^^^^^ union: key set | type application of polymorphic type: type `React$ComponentType`. See lib: <BUILTINS>/react.js:158
+159: declare type React$Element<ElementType: React$ElementType> = {|
+                                             ^^^^^^^^^^^^^^^^^ union: key set | type application of polymorphic type: type `React$ComponentType`. See lib: <BUILTINS>/react.js:159
   Member 1:
-  151:   | $Keys<$JSXIntrinsics>
-           ^^^^^^^^^^^^^^^^^^^^^ key set. See lib: <BUILTINS>/react.js:151
+  152:   | $Keys<$JSXIntrinsics>
+           ^^^^^^^^^^^^^^^^^^^^^ key set. See lib: <BUILTINS>/react.js:152
   Error:
    79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                             ^^^^^^ number. This type is incompatible with
-  151:   | $Keys<$JSXIntrinsics>
-           ^^^^^^^^^^^^^^^^^^^^^ key set. See lib: <BUILTINS>/react.js:151
+  152:   | $Keys<$JSXIntrinsics>
+           ^^^^^^^^^^^^^^^^^^^^^ key set. See lib: <BUILTINS>/react.js:152
   Member 2:
-  152:   | React$ComponentType<any>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$ComponentType`. See lib: <BUILTINS>/react.js:152
+  153:   | React$ComponentType<any>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$ComponentType`. See lib: <BUILTINS>/react.js:153
   Error:
    79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                             ^^^^^^ number. This type is incompatible with
-  152:   | React$ComponentType<any>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: type `React$StatelessFunctionalComponent` | class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:152
+  153:   | React$ComponentType<any>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: type `React$StatelessFunctionalComponent` | class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:153
     Member 1:
-    139:   | React$StatelessFunctionalComponent<Props>
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$StatelessFunctionalComponent`. See lib: <BUILTINS>/react.js:139
+    140:   | React$StatelessFunctionalComponent<Props>
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$StatelessFunctionalComponent`. See lib: <BUILTINS>/react.js:140
     Error:
      79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                               ^^^^^^ number. This type is incompatible with
-    139:   | React$StatelessFunctionalComponent<Props>
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:139
+    140:   | React$StatelessFunctionalComponent<Props>
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:140
     Member 2:
-    140:   | Class<React$Component<Props, any>>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:140
+    141:   | Class<React$Component<Props, any>>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:141
     Error:
      79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                               ^^^^^^ number. This type is incompatible with
-    140:   | Class<React$Component<Props, any>>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:140
+    141:   | Class<React$Component<Props, any>>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:141
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
@@ -319,7 +319,19 @@ Error: new_react.js:30
 
 Error: new_react.js:32
  32: var x: number = C.displayName;
+                     ^^^^^^^^^^^^^ null. This type is incompatible with
+ 32: var x: number = C.displayName;
+            ^^^^^^ number
+
+Error: new_react.js:32
+ 32: var x: number = C.displayName;
                      ^^^^^^^^^^^^^ string. This type is incompatible with
+ 32: var x: number = C.displayName;
+            ^^^^^^ number
+
+Error: new_react.js:32
+ 32: var x: number = C.displayName;
+                     ^^^^^^^^^^^^^ undefined. This type is incompatible with
  32: var x: number = C.displayName;
             ^^^^^^ number
 
@@ -648,4 +660,4 @@ Error: state6.js:47
                          ^^^^^ State
 
 
-Found 58 errors
+Found 60 errors
