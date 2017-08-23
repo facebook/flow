@@ -68,11 +68,11 @@ Error: test.js:17
  17: export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
                                     ^^^^^^^^^^ PolyBar
 
-Error: test.js:20
- 20: export opaque type PolyBad2<T>: PolyFoo<T> = PolyBar2<T>; // Error: Incompatible instantiation
-                                 ^ T. This type is incompatible with
- 20: export opaque type PolyBad2<T>: PolyFoo<T> = PolyBar2<T>; // Error: Incompatible instantiation
-                        ^^^^^^^^ some incompatible instantiation of `T`
+Error: test.js:19
+ 19: class PolyBar2<T> extends PolyFoo {}
+                               ^^^^^^^ polymorphic type: class type: PolyFoo. Too few type arguments. Expected at least 1
+ 14: export class PolyFoo<T> {}
+                          ^ See type parameters of definition here
 
 Error: test.js:21
  21: export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2

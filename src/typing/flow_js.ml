@@ -3435,7 +3435,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        fall-through case below. The exception is when the PolyT has type
        parameters with defaults. TODO: Get rid of this exception. *)
     | DefT (_, PolyT (ids,t,_)), SpecializeT(reason_op,reason_tapp,cache,None,tvar)
-        when poly_minimum_arity ids < List.length ids ->
+        when Context.enforce_strict_type_args cx ->
       let t_ = instantiate_poly_with_targs cx trace
         ~reason_op ~reason_tapp ?cache (ids,t) [] in
       rec_flow_t cx trace (t_, tvar)

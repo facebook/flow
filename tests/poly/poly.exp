@@ -1,3 +1,9 @@
+Error: annot.js:3
+  3: class B extends A { } // OK, same as above
+                     ^ polymorphic type: class type: A. Too few type arguments. Expected at least 1
+  1: class A<X> { }
+             ^ See type parameters of definition here
+
 Error: annot.js:10
  10:   return (new A: A<{}>) || (new A: A<{x: string}>);
                                         ^^^^^^^^^^^^^^ type application of class `A`. This type is incompatible with the expected return type of
@@ -97,4 +103,4 @@ Error: test.js:8
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `X`
 
 
-Found 11 errors
+Found 12 errors

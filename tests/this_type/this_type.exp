@@ -84,11 +84,11 @@ Error: contra.js:53
  53:   inout_generator: Generator<this,this,this>;
                                             ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
-Error: generics.js:8
-  8: (new ImplicitNumber().val: string) // error: number ~> string
-      ^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
-  8: (new ImplicitNumber().val: string) // error: number ~> string
-                                ^^^^^^ string
+Error: generics.js:6
+  6: class ImplicitNumber extends Implicit { arg: number; }
+                                  ^^^^^^^^ polymorphic type: class type: Implicit. Too few type arguments. Expected at least 1
+  5: class Implicit<X> { arg: X; val: X; }
+                    ^ See type parameters of definition here
 
 Error: import.js:8
   8:   foo(): B1 { return new B1(); } // error
