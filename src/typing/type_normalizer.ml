@@ -360,9 +360,9 @@ let rec normalize_type_impl cx ids t = match t with
       | DefT (_, MaybeT _) -> t
       | _ -> DefT (reason, MaybeT t))
 
-  | DefT (reason, PolyT (xs, t)) ->
+  | DefT (reason, PolyT (xs, t, id)) ->
       let reason = locationless_reason (desc_of_reason reason) in
-      DefT (reason, PolyT (xs, normalize_type_impl cx ids t))
+      DefT (reason, PolyT (xs, normalize_type_impl cx ids t, id))
 
   | DefT (reason, ClassT t) ->
       let reason = locationless_reason (desc_of_reason reason) in

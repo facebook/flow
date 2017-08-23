@@ -1,8 +1,13 @@
-Error: class.js:4
-  4:     yield ""; // error: string ~> number
-               ^^ string. This type is incompatible with
+Error: class.js:2
   2:   *stmt_yield(): Generator<number, void, void> {
-                                ^^^^^^ number
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of Generator<Yield,void,Next>. Has some incompatible type argument with
+  2:   *stmt_yield(): Generator<number, void, void> {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Generator`
+  Type argument `Yield` is incompatible:
+      4:     yield ""; // error: string ~> number
+                   ^^ string. This type is incompatible with
+      2:   *stmt_yield(): Generator<number, void, void> {
+                                    ^^^^^^ number
 
 Error: class.js:15
  15:       (b : string); // error: number ~> string
@@ -12,9 +17,14 @@ Error: class.js:15
 
 Error: class.js:24
  24:     return ""; // error: string ~> number
-                ^^ string. This type is incompatible with
+         ^^^^^^^^^^ type application of generator return. This type is incompatible with the expected return type of
  23:   *stmt_return_err(): Generator<void, number, void> {
-                                           ^^^^^^ number
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Generator`
+  Type argument `Return` is incompatible:
+     24:     return ""; // error: string ~> number
+                    ^^ string. This type is incompatible with
+     23:   *stmt_return_err(): Generator<void, number, void> {
+                                               ^^^^^^ number
 
 Error: class.js:67
  67:     var x: number = yield *inner(); // error: string ~> number
@@ -96,11 +106,16 @@ Error: class_failure.js:19
  19:   (infer_stmt_next : boolean) // error: string ~> boolean
                           ^^^^^^^ boolean
 
-Error: generators.js:3
-  3:   yield ""; // error: string ~> number
-             ^^ string. This type is incompatible with
+Error: generators.js:1
   1: function *stmt_yield(): Generator<number, void, void> {
-                                       ^^^^^^ number
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of Generator<Yield,void,Next>. Has some incompatible type argument with
+  1: function *stmt_yield(): Generator<number, void, void> {
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Generator`
+  Type argument `Yield` is incompatible:
+      3:   yield ""; // error: string ~> number
+                 ^^ string. This type is incompatible with
+      1: function *stmt_yield(): Generator<number, void, void> {
+                                           ^^^^^^ number
 
 Error: generators.js:14
  14:     (b : string); // error: number ~> string
@@ -110,9 +125,14 @@ Error: generators.js:14
 
 Error: generators.js:23
  23:   return ""; // error: string ~> number
-              ^^ string. This type is incompatible with
+       ^^^^^^^^^^ type application of generator return. This type is incompatible with the expected return type of
  22: function *stmt_return_err(): Generator<void, number, void> {
-                                                  ^^^^^^ number
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Generator`
+  Type argument `Return` is incompatible:
+     23:   return ""; // error: string ~> number
+                  ^^ string. This type is incompatible with
+     22: function *stmt_return_err(): Generator<void, number, void> {
+                                                      ^^^^^^ number
 
 Error: generators.js:30
  30: for (var x of infer_stmt()) { (x : string) } // error: number ~> string

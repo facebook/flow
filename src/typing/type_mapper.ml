@@ -202,11 +202,11 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else OptionalT t''
-      | PolyT (tparamlist, t') ->
+      | PolyT (tparamlist, t', _) ->
           let tparamlist' = ListUtils.ident_map (self#type_param cx map_cx) tparamlist in
           let t'' = self#type_ cx map_cx t' in
           if tparamlist == tparamlist' && t' == t'' then t
-          else PolyT (tparamlist', t'')
+          else PolyT (tparamlist', t'', Reason.mk_id ())
       | TypeAppT (t', ts) ->
           let t'' = self#type_ cx map_cx t' in
           let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in
@@ -561,7 +561,7 @@ class ['a] t = object(self)
         let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
         if tlist' == tlist then t
         else VarianceCheckT (r, tlist', p)
-    | TypeAppVarianceCheckT (r1, r2, tpairlist) ->
+    | TypeAppVarianceCheckT (use_op, r1, r2, tpairlist) ->
         let tpairlist' = ListUtils.ident_map (fun ((x,y) as z) ->
           let x' = self#type_ cx map_cx x in
           let y' = self#type_ cx map_cx y in
@@ -569,7 +569,13 @@ class ['a] t = object(self)
           else (x', y'))
           tpairlist in
         if tpairlist' == tpairlist then t
-        else TypeAppVarianceCheckT (r1, r2, tpairlist')
+        else TypeAppVarianceCheckT (use_op, r1, r2, tpairlist')
+    | ConcretizeTypeAppsT (use_op, (ts1, r1), (t2, ts2, r2), flip) ->
+        let ts1' = ListUtils.ident_map (self#type_ cx map_cx) ts1 in
+        let t2' = self#type_ cx map_cx t2 in
+        let ts2' = ListUtils.ident_map (self#type_ cx map_cx) ts2 in
+        if ts1' == ts1 && t2' == t2 && ts2' == ts2 then t
+        else ConcretizeTypeAppsT (use_op, (ts1', r1), (t2', ts2', r2), flip)
     | LookupT (r, lookup, tlist, prop, action) ->
         let lookup' = self#lookup_kind cx map_cx lookup in
         let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in

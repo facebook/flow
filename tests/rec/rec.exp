@@ -1,8 +1,24 @@
 Error: issue-598.js:7
   7: function bar(y: F<number>): F<string> { return y; }
-                                   ^^^^^^ string. This type is incompatible with the expected param type of
+                                                    ^ type application of polymorphic type: type `F`. This type is incompatible with the expected return type of
   7: function bar(y: F<number>): F<string> { return y; }
-                       ^^^^^^ number
+                                 ^^^^^^^^^ type application of polymorphic type: type `F`
+  Type argument `A` is incompatible:
+      7: function bar(y: F<number>): F<string> { return y; }
+                           ^^^^^^ number. This type is incompatible with
+      7: function bar(y: F<number>): F<string> { return y; }
+                                       ^^^^^^ string
+
+Error: issue-598.js:7
+  7: function bar(y: F<number>): F<string> { return y; }
+                                                    ^ type application of polymorphic type: type `F`. This type is incompatible with the expected return type of
+  7: function bar(y: F<number>): F<string> { return y; }
+                                 ^^^^^^^^^ type application of polymorphic type: type `F`
+  Type argument `A` is incompatible:
+      7: function bar(y: F<number>): F<string> { return y; }
+                                       ^^^^^^ string. This type is incompatible with
+      7: function bar(y: F<number>): F<string> { return y; }
+                           ^^^^^^ number
 
 Error: test.js:6
   6: (p.x: string); // error
@@ -47,4 +63,4 @@ Error: test3.js:12
                        ^^^^^^^ object type
 
 
-Found 8 errors
+Found 9 errors

@@ -219,7 +219,7 @@ and parts_of_t cx = function
   end
 | OpenPredT (_, base, _, _) -> ["base", Def base]
 | DefT (_, OptionalT t)
-| DefT (_, PolyT (_, t)) -> ["t", Def t]
+| DefT (_, PolyT (_, t, _)) -> ["t", Def t]
 | ReposT (_, t) -> ["t", Def t]
 | ReposUpperT (_, t) -> ["t", Def t]
 | ShapeT t -> ["t", Def t]
@@ -372,6 +372,7 @@ and parts_of_use_t cx = function
 | UnifyT (x, y) -> ["x", Def x; "y", Def y]
 | VarianceCheckT (_, args, _) -> list_parts args
 | TypeAppVarianceCheckT _ -> []
+| ConcretizeTypeAppsT _ -> []
 | CondT (_, alt, out) -> ["alt", Def alt; "out", Def out]
 
 and parts_of_arrtype = function

@@ -137,7 +137,7 @@ let rec gc cx state = function
       gc_pred_map cx state p_map;
       gc_pred_map cx state n_map
   | DefT (_, OptionalT t) -> gc cx state t
-  | DefT (_, PolyT (typeparams, t)) ->
+  | DefT (_, PolyT (typeparams, t, _)) ->
       typeparams |> List.iter (gc_typeparam cx state);
       gc cx state t
   | ShapeT t -> gc cx state t
@@ -298,11 +298,15 @@ and gc_use cx state = function
   | UnaryMinusT (_, t) -> gc cx state t
   | UnifyT (t1, t2) -> gc cx state t1; gc cx state t2
   | VarianceCheckT (_, ts, _) -> List.iter (gc cx state) ts
-  | TypeAppVarianceCheckT (_, _, targs) ->
+  | TypeAppVarianceCheckT (_, _, _, targs) ->
     List.iter (fun (t1, t2) ->
       gc cx state t1;
       gc cx state t2
     ) targs
+  | ConcretizeTypeAppsT (_, (ts1, _), (t2, ts2, _), _) ->
+    List.iter (gc cx state) ts1;
+    gc cx state t2;
+    List.iter (gc cx state) ts2;
   | CondT (_, alt, tout) ->
       gc cx state alt;
       gc cx state tout

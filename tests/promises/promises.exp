@@ -154,21 +154,31 @@ Error: resolve_global.js:35
 
 Error: resolve_global.js:40
  40:   return 0;
-       ^^^^^^^^^ Promise. Expected polymorphic type instead of
+       ^^^^^^^^^ type application of async return. Expected polymorphic type instead of
  39: async function baz(): Promise<number> {
                            ^^^^^^^^^^^^^^^ class type: Promise
 
 Error: resolve_void.js:3
   3: (Promise.resolve(): Promise<number>); // error
-      ^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+      ^^^^^^^^^^^^^^^^^ type application of class `Promise`. Has some incompatible type argument with
   3: (Promise.resolve(): Promise<number>); // error
-                                 ^^^^^^ number
+                         ^^^^^^^^^^^^^^^ type application of identifier `Promise`
+  Type argument `R` is incompatible:
+      3: (Promise.resolve(): Promise<number>); // error
+          ^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+      3: (Promise.resolve(): Promise<number>); // error
+                                     ^^^^^^ number
 
 Error: resolve_void.js:5
   5: (Promise.resolve(undefined): Promise<number>); // error
-                      ^^^^^^^^^ undefined. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of class `Promise`. Has some incompatible type argument with
   5: (Promise.resolve(undefined): Promise<number>); // error
-                                          ^^^^^^ number
+                                  ^^^^^^^^^^^^^^^ type application of identifier `Promise`
+  Type argument `R` is incompatible:
+      5: (Promise.resolve(undefined): Promise<number>); // error
+                          ^^^^^^^^^ undefined. This type is incompatible with
+      5: (Promise.resolve(undefined): Promise<number>); // error
+                                              ^^^^^^ number
 
 
 Found 28 errors

@@ -157,7 +157,7 @@ class ['a] t = object(self)
 
   | OptionalT t -> self#type_ cx acc t
 
-  | PolyT (typeparams, t) ->
+  | PolyT (typeparams, t, _) ->
     let acc = self#list (self#type_param cx) acc typeparams in
     let acc = self#type_ cx acc t in
     acc
@@ -304,7 +304,8 @@ class ['a] t = object(self)
   | UnaryMinusT (_, _)
   | UnifyT (_, _)
   | VarianceCheckT (_, _, _)
-  | TypeAppVarianceCheckT (_, _, _)
+  | TypeAppVarianceCheckT _
+  | ConcretizeTypeAppsT _
   | CondT _
     -> self#__TODO__ cx acc
 

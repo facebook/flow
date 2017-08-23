@@ -240,7 +240,7 @@ module rec TypeTerm : sig
        it is forced only when polymorphic types are applied. *)
 
     (* polymorphic type *)
-    | PolyT of typeparam list * t
+    | PolyT of typeparam list * t * int
     (* type application *)
     | TypeAppT of t * t list
 
@@ -284,6 +284,7 @@ module rec TypeTerm : sig
     | Internal of internal_use_op
     | MissingTupleElement of int
     | PropertyCompatibility of string * reason * reason * use_op
+    | TypeArgCompatibility of string * reason * reason * use_op
     | TypeRefinement
     | UnknownUse
 
@@ -374,7 +375,25 @@ module rec TypeTerm : sig
     (* variance check on polymorphic types *)
     | VarianceCheckT of reason * t list * polarity
 
-    | TypeAppVarianceCheckT of reason * reason * (t * t) list
+    | TypeAppVarianceCheckT of use_op * reason * reason * (t * t) list
+
+    (* In TypeAppT (c, ts) ~> TypeAppT (c, ts) we need to check both cs against
+     * each other which means that we must concretize them first. *)
+    | ConcretizeTypeAppsT of
+        (* The use_op from our original TypeAppT ~> TypeAppT *)
+        use_op *
+        (* The type args and reason for the TypeAppT that is currently the
+         * lower bound *)
+        (t list * reason) *
+        (* The polymorphic type, its type args, and reason for the TypeAppT that
+         * is currently the upper bound. *)
+        (t * t list * reason) *
+        (* A boolean which answers the question: Is the TypeAppT that is
+         * currently our lower bound in fact our upper bound in the original
+         * TypeAppT ~> TypeAppT? If the answer is yes then we need to flip our
+         * tuples and flow the polymorphic type currently in our upper bound as
+         * the lower bound. See the implementation of flow_js for more clarity. *)
+        bool
 
     (* operation on prototypes *)
     (** LookupT(_, strict, try_ts_on_failure, x, lookup_action) looks for
@@ -1830,6 +1849,7 @@ let any_propagating_use_t = function
   | SuperT _
   | TypeAppVarianceCheckT _
   | VarianceCheckT _
+  | ConcretizeTypeAppsT _
     -> false
 
   (* TODO: Figure out if these should be true or false *)
@@ -1962,7 +1982,8 @@ and reason_of_use_t = function
   | UnaryMinusT (reason, _) -> reason
   | UnifyT (_,t) -> reason_of_t t
   | VarianceCheckT(reason,_,_) -> reason
-  | TypeAppVarianceCheckT (reason, _, _) -> reason
+  | TypeAppVarianceCheckT (_, reason, _, _) -> reason
+  | ConcretizeTypeAppsT (_, _, (_, _, reason), _) -> reason
   | CondT (reason, _, _) -> reason
 
 (* helper: we want the tvar id as well *)
@@ -2122,8 +2143,10 @@ and mod_reason_of_use_t f = function
   | UnifyT (t, t2) -> UnifyT (mod_reason_of_t f t, mod_reason_of_t f t2)
   | VarianceCheckT(reason, ts, polarity) ->
       VarianceCheckT (f reason, ts, polarity)
-  | TypeAppVarianceCheckT (reason_op, reason_tapp, targs) ->
-      TypeAppVarianceCheckT (f reason_op, reason_tapp, targs)
+  | TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ->
+      TypeAppVarianceCheckT (use_op, f reason_op, reason_tapp, targs)
+  | ConcretizeTypeAppsT (use_op, t1, (t2, ts2, r2), targs) ->
+      ConcretizeTypeAppsT (use_op, t1, (t2, ts2, f r2), targs)
   | CondT (reason, alt, tout) -> CondT (f reason, alt, tout)
 
 (* type comparison mod reason *)
@@ -2245,6 +2268,7 @@ let string_of_use_op = function
   | Internal op -> spf "Internal %s" (string_of_internal_use_op op)
   | MissingTupleElement _ -> "MissingTupleElement"
   | PropertyCompatibility _ -> "PropertyCompatibility"
+  | TypeArgCompatibility _ -> "TypeArgCompatibility"
   | TypeRefinement -> "TypeRefinement"
   | UnknownUse -> "UnknownUse"
 
@@ -2350,6 +2374,7 @@ let string_of_use_ctor = function
   | UnifyT _ -> "UnifyT"
   | VarianceCheckT _ -> "VarianceCheckT"
   | TypeAppVarianceCheckT _ -> "TypeAppVarianceCheck"
+  | ConcretizeTypeAppsT _ -> "ConcretizeTypeAppsT"
   | CondT _ -> "CondT"
 
 let string_of_binary_test = function
@@ -2450,12 +2475,12 @@ let extends_type l u =
   let reason = replace_reason (fun desc -> RExtends desc) (reason_of_t u) in
   ExtendsT (reason, [], l, u)
 
-let poly_type tparams t =
+let poly_type ?(id = mk_id ()) tparams t =
   if tparams = []
   then t
   else
     let reason = replace_reason (fun desc -> RPolyType desc) (reason_of_t t) in
-    DefT (reason, PolyT (tparams, t))
+    DefT (reason, PolyT (tparams, t, id))
 
 let typeapp t tparams =
   let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in

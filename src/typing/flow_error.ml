@@ -289,6 +289,8 @@ let rec locs_of_use_op acc = function
     let lower_loc = loc_of_reason lower_obj_reason in
     let upper_loc = loc_of_reason upper_obj_reason in
     locs_of_use_op (lower_loc::upper_loc::acc) use_op
+  | TypeArgCompatibility (_, r1, r2, use_op) ->
+    locs_of_use_op (loc_of_reason r1::loc_of_reason r2::acc) use_op
   | Addition
   | Coercion
   | FunImplicitReturn
@@ -626,6 +628,13 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         "This type is incompatible with the expected param type of"
     in
     (r1, r2), nested_extra, msg
+  | TypeArgCompatibility (type_arg_name, reason_op, reason_tapp, use_op) ->
+    let extra = extra_info_of_use_op
+      l_reason u_reason nested_extra msg
+      (spf "Type argument `%s` is incompatible:" type_arg_name)
+    in
+    let msg = "Has some incompatible type argument with" in
+    unwrap_use_ops ((reason_op, reason_tapp), extra, msg) use_op
   | _ ->
     (l_reason, u_reason), nested_extra, msg
   in

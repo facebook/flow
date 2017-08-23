@@ -207,7 +207,7 @@ let rec type_printer_impl ~size override enclosure cx t =
     | DefT (_, MaybeT t) ->
         spf "?%s" (pp EnclosureMaybe cx t)
 
-    | DefT (_, PolyT (xs, t)) ->
+    | DefT (_, PolyT (xs, t, _)) ->
         let xs_str =
           xs
           |> List.map (fun param -> param.name)
@@ -329,15 +329,15 @@ let rec type_printer_impl ~size override enclosure cx t =
 
 
 and instance_of_poly_type_printer ~size override enclosure cx = function
-  | DefT (_, PolyT (_, ThisClassT (_, t)))
-  | DefT (_, PolyT (_, DefT (_, ClassT t)))
+  | DefT (_, PolyT (_, ThisClassT (_, t), _))
+  | DefT (_, PolyT (_, DefT (_, ClassT t), _))
     -> type_printer ~size override enclosure cx t
 
-  | DefT (_, PolyT (_, DefT (reason, TypeT _)))
+  | DefT (_, PolyT (_, DefT (reason, TypeT _), _))
     -> DescFormat.name_of_type_reason reason
 
   (* NOTE: t = FunT is legit, others probably mean upstream errors *)
-  | DefT (_, PolyT (_, t))
+  | DefT (_, PolyT (_, t, _))
     -> type_printer ~size override enclosure cx t
 
   (* since we're called with args that aren't statically guaranteed
@@ -455,7 +455,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
       let ts = UnionRep.members rep in
       is_printed_type_list_parsable weak cx EnclosureUnion ts
 
-  | DefT (_, PolyT (_, t))
+  | DefT (_, PolyT (_, t, _))
     ->
       (* unwrap PolyT (ClassT t) because class names are parsable as part of a
          polymorphic type declaration. *)
@@ -496,11 +496,11 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
       false
 
 and is_instantiable_poly_type weak cx enclosure = function
-  | DefT (_, PolyT (_, ThisClassT (_, t)))
-  | DefT (_, PolyT (_, DefT (_, ClassT t)))
+  | DefT (_, PolyT (_, ThisClassT (_, t), _))
+  | DefT (_, PolyT (_, DefT (_, ClassT t), _))
     -> is_printed_type_parsable_impl weak cx enclosure t
 
-  | DefT (_, PolyT (_, DefT (_, TypeT _)))
+  | DefT (_, PolyT (_, DefT (_, TypeT _), _))
     -> true
 
   | _ -> false

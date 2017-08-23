@@ -1001,7 +1001,7 @@ module ResolvableTypeJob = struct
         Property.fold_t (fun ts t -> t::ts) ts p
       ) props_tmap ts in
       collect_of_types ?log_unresolved cx reason acc ts
-    | DefT (_, PolyT (_, t)) ->
+    | DefT (_, PolyT (_, t, _)) ->
       collect_of_type ?log_unresolved cx reason acc t
     | BoundT _ ->
       acc
@@ -1651,12 +1651,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* `import typeof` creates a properly-parameterized type alias for the  *)
     (* "typeof" the remote export.                                          *)
     (************************************************************************)
-    | DefT (_, PolyT(typeparams, ((DefT (_, ClassT _) | DefT (_, FunT _)) as lower_t))),
+    | DefT (_, PolyT(typeparams, ((DefT (_, ClassT _) | DefT (_, FunT _)) as lower_t), id)),
       ImportTypeofT(reason, _, t) ->
       let typeof_t = mk_typeof_annotation cx ~trace reason lower_t in
-      rec_flow_t cx trace (poly_type typeparams (DefT (reason, TypeT typeof_t)), t)
+      rec_flow_t cx trace (poly_type ~id typeparams (DefT (reason, TypeT typeof_t)), t)
 
-    | (DefT (_, TypeT _) | DefT (_, PolyT(_, DefT (_, TypeT _)))),
+    | (DefT (_, TypeT _) | DefT (_, PolyT(_, DefT (_, TypeT _), _))),
       ImportTypeofT(reason, export_name, _) ->
       add_output cx ~trace (FlowError.EImportTypeAsTypeof (reason, export_name))
 
@@ -2077,7 +2077,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (AnyT.why reason, t)
 
-    | (DefT (_, PolyT (_, DefT (_, TypeT _))) | DefT (_, TypeT _)),
+    | (DefT (_, PolyT (_, DefT (_, TypeT _), _)) | DefT (_, TypeT _)),
        AssertImportIsValueT(reason, name) ->
       add_output cx ~trace (FlowError.EImportTypeAsValue (reason, name))
 
@@ -2450,29 +2450,80 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           ~trace ~reason_op ~reason_tapp ~cache:[] c ts in
         rec_flow cx trace (t, u)
 
-    | DefT (_, TypeAppT (c1, ts1)), UseT (_, DefT (_, TypeAppT (c2, ts2)))
-      when c1 = c2 && List.length ts1 = List.length ts2 ->
-      let reason_op = reason_of_t l in
-      let reason_tapp = reason_of_use_t u in
+    (* If we have a TypeAppT (c, ts) ~> TypeAppT (c, ts) then we want to
+     * concretize both cs to PolyTs so that we may referentially compare them.
+     * We cannot compare the non-concretized versions since they may have been
+     * reposition, they may be two OpenTs from different locations, or any other
+     * way you can access the same PolyT via different means that results in a
+     * different c being passed to TypeAppT.
+     *
+     * We use the ConcretizeTypeAppsT use type to concretize both the c of our
+     * upper and lower TypeAppT bound. We start by concretizing the upper bound
+     * which we signal by setting the final element in ConcretizeTypeAppsT to
+     * true. *)
+    | DefT (r1, TypeAppT (c1, ts1)),
+      UseT (use_op, DefT (r2, TypeAppT (c2, ts2))) ->
+      rec_flow cx trace (c2, ConcretizeTypeAppsT (use_op, (ts2, r2), (c1, ts1, r1), true))
+
+    (* When we have concretized the c for our upper bound TypeAppT then we want
+     * to concretize the lower bound. We flip all our arguments to
+     * ConcretizeTypeAppsT and set the final element to false to signal that we
+     * have concretized the upper bound's c.
+     *
+     * If the upper bound's c is not a PolyT then we will fall down to an
+     * incompatible use error. *)
+    | DefT (_, PolyT _) as c2,
+      ConcretizeTypeAppsT (use_op, (ts2, r2), (c1, ts1, r1), true) ->
+      rec_flow cx trace (c1, ConcretizeTypeAppsT (use_op, (ts1, r1), (c2, ts2, r2), false))
+
+    (* When we have concretized the c for our lower bound TypeAppT then we can
+     * finally run our TypeAppT ~> TypeAppT logic. If we have referentially the
+     * same PolyT for each TypeAppT then we want to check the type arguments
+     * only. (Checked in the when condition.) If we do not have the same PolyT
+     * for each TypeAppT then we want to expand our TypeAppTs and compare the
+     * expanded results.
+     *
+     * If the lower bound's c is not a PolyT then we will fall down to an
+     * incompatible use error.
+     *
+     * The upper bound's c should always be a PolyT here since we could not have
+     * made it here if it was not given the logic of our earlier case. *)
+    | DefT (_, PolyT (_, _, id1)),
+      ConcretizeTypeAppsT (use_op, (ts1, r1), (DefT (_, PolyT (_, _, id2)), ts2, r2), false)
+      when id1 = id2 && List.length ts1 = List.length ts2 ->
       let targs = List.map2 (fun t1 t2 -> (t1, t2)) ts1 ts2 in
-      rec_flow cx trace (c1,
-        TypeAppVarianceCheckT (reason_op, reason_tapp, targs))
+      rec_flow cx trace (l,
+        TypeAppVarianceCheckT (use_op, r1, r2, targs))
 
-    | DefT (reason_tapp, TypeAppT(c, ts)), _ ->
-        if TypeAppExpansion.push_unless_loop cx (c, ts) then (
-          let reason_op = reason_of_use_t u in
-          let t = mk_typeapp_instance cx ~trace ~reason_op ~reason_tapp c ts in
-          rec_flow cx trace (t, u);
-          TypeAppExpansion.pop ()
-        )
+    (* This is the case which implements the expansion for our
+     * TypeAppT (c, ts) ~> TypeAppT (c, ts) when the cs are unequal. *)
+    | DefT (_, PolyT _) as c1,
+      ConcretizeTypeAppsT (use_op, (ts1, r1), ((DefT (_, PolyT _) as c2), ts2, r2), false) ->
+      if TypeAppExpansion.push_unless_loop cx (c1, ts1) then (
+        let t1 = mk_typeapp_instance cx ~trace ~reason_op:r2 ~reason_tapp:r1 c1 ts1 in
+        if TypeAppExpansion.push_unless_loop cx (c2, ts2) then (
+          let t2 = mk_typeapp_instance cx ~trace ~reason_op:r1 ~reason_tapp:r2 c2 ts2 in
+          rec_flow cx trace (t1, UseT (use_op, t2));
+          TypeAppExpansion.pop ();
+        );
+        TypeAppExpansion.pop ();
+      );
 
-    | _, UseT (use_op, DefT (reason_tapp, TypeAppT(c, ts))) ->
-        if TypeAppExpansion.push_unless_loop cx (c, ts) then (
-          let reason_op = reason_of_t l in
-          let t = mk_typeapp_instance cx ~trace ~reason_op ~reason_tapp c ts in
-          rec_flow cx trace (l, UseT (use_op, t));
-          TypeAppExpansion.pop ()
-        )
+    | DefT (reason_tapp, TypeAppT (c, ts)), _ ->
+      if TypeAppExpansion.push_unless_loop cx (c, ts) then (
+        let reason_op = reason_of_use_t u in
+        let t = mk_typeapp_instance cx ~trace ~reason_op ~reason_tapp c ts in
+        rec_flow cx trace (t, u);
+        TypeAppExpansion.pop ();
+      );
+
+    | _, UseT (use_op, DefT (reason_tapp, TypeAppT (c, ts))) ->
+      if TypeAppExpansion.push_unless_loop cx (c, ts) then (
+        let reason_op = reason_of_t l in
+        let t = mk_typeapp_instance cx ~trace ~reason_op ~reason_tapp c ts in
+        rec_flow cx trace (l, UseT (use_op, t));
+        TypeAppExpansion.pop ();
+      );
 
     (**********************)
     (*    opaque types    *)
@@ -3334,7 +3385,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         UseT (UnknownUse, tvar)
       )
 
-    | DefT (_, PolyT (xs, ThisClassT (_, DefT (_, InstanceT (_, _, _, insttype))))),
+    | DefT (_, PolyT (xs, ThisClassT (_, DefT (_, InstanceT (_, _, _, insttype))), _)),
       MixinT (r, tvar) ->
       let static = ObjProtoT r in
       let super = ObjProtoT r in
@@ -3364,13 +3415,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        to be the same as implicit specialization, which is handled by a
        fall-through case below.The exception is when the PolyT has type
        parameters with defaults. *)
-    | DefT (_, PolyT (ids,t)), SpecializeT(reason_op,reason_tapp,cache,ts,tvar)
+    | DefT (_, PolyT (ids,t,_)), SpecializeT(reason_op,reason_tapp,cache,ts,tvar)
         when ts <> [] || (poly_minimum_arity ids < List.length ids) ->
       let t_ = instantiate_poly_with_targs cx trace
         ~reason_op ~reason_tapp ?cache (ids,t) ts in
       rec_flow_t cx trace (t_, tvar)
 
-    | DefT (_, PolyT (tps, _)), VarianceCheckT(_, ts, polarity) ->
+    | DefT (_, PolyT (tps, _, _)), VarianceCheckT(_, ts, polarity) ->
       variance_check cx ~trace polarity (tps, ts)
 
     (* When we are checking the polarity of a super class where the super class has no type
@@ -3379,7 +3430,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, ClassT _), VarianceCheckT(_, [], polarity) ->
         check_polarity cx ~trace polarity l
 
-    | DefT (_, PolyT (tparams, _)), TypeAppVarianceCheckT (_, reason_tapp, targs) ->
+    | DefT (_, PolyT (tparams, _, _)),
+      TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ->
       let minimum_arity = poly_minimum_arity tparams in
       let maximum_arity = List.length tparams in
       let reason_arity =
@@ -3390,7 +3442,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         add_output cx ~trace
           (FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
       ) else (
-        let unused_targs = List.fold_left (fun targs { default; polarity; _ } ->
+        let unused_targs = List.fold_left (fun targs { name; default; polarity; _ } ->
           match default, targs with
           | None, [] ->
             (* fewer arguments than params but no default *)
@@ -3399,10 +3451,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             []
           | _, [] -> []
           | _, (t1, t2)::targs ->
+            let use_op = use_op_break_cycle
+              (TypeArgCompatibility (name, reason_op, reason_tapp, use_op)) in
             (match polarity with
-            | Positive -> rec_flow_t cx trace (t1, t2)
-            | Negative -> rec_flow_t cx trace (t2, t1)
-            | Neutral -> rec_unify cx trace t1 t2);
+            | Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
+            | Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
+            | Neutral -> rec_unify cx trace ~use_op t1 t2);
             targs
         ) targs tparams in
         assert (unused_targs = []);
@@ -3465,7 +3519,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        polymorphic type at all! For example, we can let a non-generic method be
        overridden with a generic method, as long as the non-generic signature
        can be derived as a specialization of the generic signature. *)
-    | _, UseT (use_op, DefT (_, PolyT (ids, t))) ->
+    | _, UseT (use_op, DefT (_, PolyT (ids, t, _))) ->
         generate_tests cx (reason_of_t l) ids (fun map_ ->
           rec_flow cx trace (l, UseT (use_op, subst cx map_ t))
         )
@@ -3485,7 +3539,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         extends clauses and at function call sites - without explicit type
         arguments, since typically they're easily inferred from context.
       *)
-    | DefT (reason_tapp, (PolyT (ids, t))), _ ->
+    | DefT (reason_tapp, (PolyT (ids, t, _))), _ ->
       let reason_op = reason_of_use_t u in
       begin match u with
       | UseT (_, DefT (_, TypeT _)) ->
@@ -3850,12 +3904,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         in
         match SMap.get s lflds with
         | Some lp ->
-          let use_op =
-            let use_op = if use_op_is_cycle (s, lreason, ureason) use_op
-              then UnknownUse
-              else use_op
-            in PropertyCompatibility (s, lreason, ureason, use_op)
-          in
+          let use_op = use_op_break_cycle
+            (PropertyCompatibility (s, lreason, ureason, use_op)) in
           rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
         | _ ->
           match up with
@@ -5815,7 +5865,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, UseT (FunReturn, u) ->
       add_output cx ~trace (FlowError.EFunReturn (reason_of_t l, reason_of_t u))
 
-    | _, UseT (PropertyCompatibility _ as use_op, u) ->
+    | _, UseT ((PropertyCompatibility _ | TypeArgCompatibility _) as use_op, u) ->
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (
         reason_of_t l, reason_of_t u, use_op
       ))
@@ -5863,6 +5913,7 @@ and flow_error_kind_of_upper = function
   | SuperT _ -> FlowError.IncompatibleSuperT
   | MixinT _ -> FlowError.IncompatibleMixinT
   | SpecializeT _ -> FlowError.IncompatibleSpecializeT
+  | ConcretizeTypeAppsT _ -> FlowError.IncompatibleSpecializeT
   | ThisSpecializeT _ -> FlowError.IncompatibleThisSpecializeT
   | VarianceCheckT _ -> FlowError.IncompatibleVarianceCheckT
   | GetKeysT _ -> FlowError.IncompatibleGetKeysT
@@ -6034,12 +6085,8 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   iter_real_props cx uflds (fun s up ->
     let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
     let propref = Named (reason_prop, s) in
-    let use_op =
-      let use_op = if use_op_is_cycle (s, lreason, ureason) use_op
-        then UnknownUse
-        else use_op
-      in PropertyCompatibility (s, lreason, ureason, use_op)
-    in
+    let use_op = use_op_break_cycle
+      (PropertyCompatibility (s, lreason, ureason, use_op)) in
     match Context.get_prop cx lflds s, ldict with
     | Some lp, _ ->
       if lit then (
@@ -6128,14 +6175,26 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
 
   rec_flow cx trace (DefT (lreason, ObjT l_obj), UseT (use_op, uproto))
 
-and use_op_is_cycle (s, lreason, ureason) use_op =
-  let rec helper = function
-    | PropertyCompatibility (s', lreason', ureason', use_op') ->
-        if s = s' && lreason = lreason' && ureason = ureason' then true
-        else helper use_op'
-    | _ -> false
+and use_op_break_cycle =
+  let rec helper new_use_op use_op = match new_use_op, use_op with
+    | PropertyCompatibility (s1, lr1, ur1, _),
+      PropertyCompatibility (s2, lr2, ur2, _)
+      when new_use_op != use_op && s1 = s2 && lr1 = lr2 && ur1 = ur2 ->
+      PropertyCompatibility (s1, lr1, ur1, UnknownUse)
+
+    | TypeArgCompatibility (s1, lr1, ur1, _),
+      TypeArgCompatibility (s2, lr2, ur2, _)
+      when new_use_op != use_op && s1 = s2 && lr1 = lr2 && ur1 = ur2 ->
+      TypeArgCompatibility (s1, lr1, ur1, UnknownUse)
+
+    | _, PropertyCompatibility (_, _, _, use_op)
+    | _, TypeArgCompatibility (_, _, _, use_op)
+      -> helper new_use_op use_op
+
+    | _ -> new_use_op
   in
-  helper use_op
+  fun use_op ->
+    helper use_op use_op
 
 and is_object_prototype_method = function
   | "isPrototypeOf"
@@ -6443,12 +6502,8 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
   let fields_pmap = Context.find_props cx fields_pmap in
   let methods_pmap = Context.find_props cx methods_pmap in
   fields_pmap |> SMap.iter (fun s p ->
-    let use_op =
-      let use_op = if use_op_is_cycle (s, lreason, reason_struct) use_op
-        then UnknownUse
-        else use_op
-      in PropertyCompatibility (s, lreason, reason_struct, use_op)
-    in
+    let use_op = use_op_break_cycle
+      (PropertyCompatibility (s, lreason, reason_struct, use_op)) in
     match p with
     | Field (DefT (_, OptionalT t), polarity) ->
       let propref =
@@ -6473,12 +6528,8 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
   );
   methods_pmap |> SMap.iter (fun s p ->
     if inherited_method s then
-      let use_op =
-        let use_op = if use_op_is_cycle (s, lreason, reason_struct) use_op
-          then UnknownUse
-          else use_op
-        in PropertyCompatibility (s, lreason, reason_struct, use_op)
-      in
+      let use_op = use_op_break_cycle
+        (PropertyCompatibility (s, lreason, reason_struct, use_op)) in
       let propref =
         let reason_prop = replace_reason (fun desc ->
           RPropertyOf (s, desc)
@@ -6518,7 +6569,7 @@ and subst =
 
       | OpenT _ -> t
 
-      | DefT (reason, PolyT (xs, inner)) ->
+      | DefT (reason, PolyT (xs, inner, _)) ->
         let xs, map, changed = List.fold_left (fun (xs, map, changed) typeparam ->
           let bound = self#type_ cx (map, force) typeparam.bound in
           let default = match typeparam.default with
@@ -6533,7 +6584,7 @@ and subst =
         ) ([], map, false) xs in
         let inner_ = self#type_ cx (map, false) inner in
         let changed = changed || inner_ != inner in
-        if changed then DefT (reason, PolyT (List.rev xs, inner_)) else t
+        if changed then DefT (reason, PolyT (List.rev xs, inner_, mk_id ())) else t
 
       | ThisClassT (reason, this) ->
         let map = SMap.remove "this" map in
@@ -6711,7 +6762,7 @@ and check_polarity cx ?trace polarity = function
   | DefT (_, IntersectionT rep) ->
     List.iter (check_polarity cx ?trace polarity) (InterRep.members rep)
 
-  | DefT (_, PolyT (xs, t)) ->
+  | DefT (_, PolyT (xs, t, _)) ->
     List.iter (check_polarity_typeparam cx ?trace (Polarity.inv polarity)) xs;
     check_polarity cx ?trace polarity t
 
@@ -6877,19 +6928,19 @@ and canonicalize_imported_type cx trace reason t =
   | DefT (_, FunT (_, prototype, _)) ->
     Some (DefT (reason, TypeT prototype))
 
-  | DefT (_, PolyT (typeparams, DefT (_, ClassT inst))) ->
-    Some (poly_type typeparams (DefT (reason, TypeT inst)))
+  | DefT (_, PolyT (typeparams, DefT (_, ClassT inst), id)) ->
+    Some (poly_type ~id typeparams (DefT (reason, TypeT inst)))
 
-  | DefT (_, PolyT (typeparams, DefT (_, FunT (_, prototype, _)))) ->
-    Some (poly_type typeparams (DefT (reason, TypeT prototype)))
+  | DefT (_, PolyT (typeparams, DefT (_, FunT (_, prototype, _)), id)) ->
+    Some (poly_type ~id typeparams (DefT (reason, TypeT prototype)))
 
   (* delay fixing a polymorphic this-abstracted class until it is specialized,
      by transforming the instance type to a type application *)
-  | DefT (_, PolyT (typeparams, ThisClassT _)) ->
+  | DefT (_, PolyT (typeparams, ThisClassT _, id)) ->
     let targs = List.map (fun tp -> BoundT tp) typeparams in
-    Some (poly_type typeparams (class_type (typeapp t targs)))
+    Some (poly_type ~id typeparams (class_type (typeapp t targs)))
 
-  | DefT (_, PolyT (_, DefT (_, TypeT _))) ->
+  | DefT (_, PolyT (_, DefT (_, TypeT _), _)) ->
     Some t
 
   (* fix this-abstracted class when used as a type *)
@@ -8772,7 +8823,10 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
   | t, OpenT (_, id) when ok_unify t ->
     resolve_id cx trace ~use_op id t
 
-  | DefT (_, PolyT (params1, t1)), DefT (_, PolyT (params2, t2))
+  | DefT (_, PolyT (_, _, id1)), DefT (_, PolyT (_, _, id2))
+    when id1 = id2 -> ()
+
+  | DefT (_, PolyT (params1, t1, _)), DefT (_, PolyT (params2, t2, _))
     when List.length params1 = List.length params2 ->
     (** for equal-arity polymorphic types, unify param upper bounds
         with each other, then instances parameterized by these *)
@@ -9643,7 +9697,7 @@ and get_builtin_prop_type cx ?trace reason tool =
 and instantiate_poly_t cx t types =
   if types = [] then (* nothing to do *) t else
   match t with
-  | DefT (_, PolyT (type_params, t_)) -> (
+  | DefT (_, PolyT (type_params, t_, _)) -> (
     try
       let subst_map = List.fold_left2 (fun acc {name; _} type_ ->
         SMap.add name type_ acc
@@ -10433,7 +10487,7 @@ end = struct
         let inst_t = instantiate_poly_t cx c ts in
         let inst_t = instantiate_type inst_t in
         extract cx inst_t
-    | DefT (_, PolyT (_, sub_type)) ->
+    | DefT (_, PolyT (_, sub_type, _)) ->
         (* TODO: replace type parameters with stable/proper names? *)
         extract cx sub_type
     | ThisClassT (_, DefT (_, InstanceT (static, _, _, _)))
@@ -10599,7 +10653,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
       rest_param;
     recurse ~infer:true return_t
 
-  | DefT (_, PolyT (_, t))
+  | DefT (_, PolyT (_, t, _))
   | ThisClassT (_, t) ->
     recurse t
 

@@ -177,7 +177,8 @@ and _json_of_t_impl json_cx t = Hh_json.(
       | Some t -> [ "result", _json_of_t json_cx t ]
       end
 
-  | DefT (_, PolyT (tparams, t)) -> [
+  | DefT (_, PolyT (tparams, t, id)) -> [
+      "id", JSON_Number (string_of_int id);
       "typeParams", JSON_Array (List.map (json_of_typeparam json_cx) tparams);
       "type", _json_of_t json_cx t
     ]
@@ -519,13 +520,20 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "polarity", json_of_polarity json_cx polarity
     ]
 
-  | TypeAppVarianceCheckT (_, _, targs) -> [
+  | TypeAppVarianceCheckT (_, _, _, targs) -> [
       "typeArgs", JSON_Array (List.map (fun (t1, t2) ->
         JSON_Object [
           "t1", _json_of_t json_cx t1;
           "t2", _json_of_t json_cx t2;
         ]
       ) targs)
+    ]
+
+  | ConcretizeTypeAppsT (_, (ts1, _), (t2, ts2, _), will_flip) -> [
+      "willFlip", JSON_Bool will_flip;
+      "currentTypeArgs", JSON_Array (List.map (_json_of_t json_cx) ts1);
+      "currentUpper", _json_of_t json_cx t2;
+      "currentUpperTypeArgs", JSON_Array (List.map (_json_of_t json_cx) ts2);
     ]
 
   | LookupT (_, rstrict, _, propref, action) ->
@@ -1599,9 +1607,10 @@ and dump_t_ (depth, tvars) cx t =
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _ -> p t
-  | DefT (_, PolyT (tps,c)) -> p ~extra:(spf "%s [%s]"
+  | DefT (_, PolyT (tps, c, id)) -> p ~extra:(spf "%s [%s] #%d"
       (kid c)
-      (String.concat "; " (List.map (fun tp -> tp.name) tps))) t
+      (String.concat "; " (List.map (fun tp -> tp.name) tps))
+      id) t
   | ThisClassT (_, inst) -> p ~extra:(kid inst) t
   | BoundT param -> p ~extra:param.name t
   | ExistsT _ -> p t
@@ -1980,6 +1989,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | UnifyT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | VarianceCheckT (_, args, pol) -> p ~extra:(spf "[%s], %s"
       (String.concat "; " (List.map kid args)) (Polarity.string pol)) t
+  | ConcretizeTypeAppsT _ -> p t
   | TypeAppVarianceCheckT _ -> p t
   | CondT (_, alt, tout) -> p ~extra:(spf "%s, %s" (kid alt) (kid tout)) t
 

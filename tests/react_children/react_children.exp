@@ -1,24 +1,44 @@
+Error: api.js:5
+  5: const a: ChildrenArray<?number> = [
+                            ^^^^^^^ null. This type is incompatible with the expected param type of
+ 14: Children.forEach(a, (x: number) => {}); // Error
+                             ^^^^^^ number
+
+Error: api.js:5
+  5: const a: ChildrenArray<?number> = [
+                            ^^^^^^^ null. This type is incompatible with the expected param type of
+ 16: Children.forEach(a, (x: string) => {}); // Error
+                             ^^^^^^ string
+
+Error: api.js:5
+  5: const a: ChildrenArray<?number> = [
+                            ^^^^^^^ undefined. This type is incompatible with the expected param type of
+ 14: Children.forEach(a, (x: number) => {}); // Error
+                             ^^^^^^ number
+
+Error: api.js:5
+  5: const a: ChildrenArray<?number> = [
+                            ^^^^^^^ undefined. This type is incompatible with the expected param type of
+ 16: Children.forEach(a, (x: string) => {}); // Error
+                             ^^^^^^ string
+
+Error: api.js:5
+  5: const a: ChildrenArray<?number> = [
+                             ^^^^^^ number. This type is incompatible with
+ 31: function sa(x: Array<string>) {}
+                          ^^^^^^ string
+
+Error: api.js:5
+  5: const a: ChildrenArray<?number> = [
+                             ^^^^^^ number. This type is incompatible with the expected param type of
+ 16: Children.forEach(a, (x: string) => {}); // Error
+                             ^^^^^^ string
+
 Error: api.js:11
  11: na(Children.map(a, (x: string) => (x: string))); // Error
-                     ^ read-only array type. This type is incompatible with
-220:       children: ChildrenArray<T>,
-                     ^^^^^^^^^^^^^^^^ union: read-only array type | type parameter `T` of call of method `map`. See lib: <BUILTINS>/react.js:220
-  Member 1:
-  217:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:217
-  Error:
-   11: na(Children.map(a, (x: string) => (x: string))); // Error
-                              ^^^^^^ string. This type is incompatible with an argument type of
-  221:       fn: (child: $NonMaybeType<T>, index: number) => U,
-                         ^^^^^^^^^^^^^^^^ number. See lib: <BUILTINS>/react.js:221
-  Member 2:
-   11: na(Children.map(a, (x: string) => (x: string))); // Error
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type parameter `T` of call of method `map`
-  Error:
-   11: na(Children.map(a, (x: string) => (x: string))); // Error
-                       ^ read-only array type. This type is incompatible with
-    5: const a: ChildrenArray<?number> = [
-                               ^^^^^^ number
+                            ^^^^^^ string. This type is incompatible with an argument type of
+221:       fn: (child: $NonMaybeType<T>, index: number) => U,
+                       ^^^^^^^^^^^^^^^^ number. See lib: <BUILTINS>/react.js:221
 
 Error: api.js:11
  11: na(Children.map(a, (x: string) => (x: string))); // Error
@@ -32,50 +52,6 @@ Error: api.js:12
  31: function sa(x: Array<string>) {}
                           ^^^^^^ string
 
-Error: api.js:14
- 14: Children.forEach(a, (x: number) => {}); // Error
-                      ^ read-only array type. This type is incompatible with
-225:       children: ChildrenArray<T>,
-                     ^^^^^^^^^^^^^^^^ union: read-only array type | type parameter `T` of call of method `forEach`. See lib: <BUILTINS>/react.js:225
-  Member 1:
-  217:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:217
-  Error:
-    5: const a: ChildrenArray<?number> = [
-                              ^^^^^^^ null. This type is incompatible with the expected param type of
-   14: Children.forEach(a, (x: number) => {}); // Error
-                               ^^^^^^ number
-  Member 2:
-   14: Children.forEach(a, (x: number) => {}); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type parameter `T` of call of method `forEach`
-  Error:
-   14: Children.forEach(a, (x: number) => {}); // Error
-                        ^ read-only array type. This type is incompatible with
-    5: const a: ChildrenArray<?number> = [
-                               ^^^^^^ number
-
-Error: api.js:16
- 16: Children.forEach(a, (x: string) => {}); // Error
-                      ^ read-only array type. This type is incompatible with
-225:       children: ChildrenArray<T>,
-                     ^^^^^^^^^^^^^^^^ union: read-only array type | type parameter `T` of call of method `forEach`. See lib: <BUILTINS>/react.js:225
-  Member 1:
-  217:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:217
-  Error:
-    5: const a: ChildrenArray<?number> = [
-                              ^^^^^^^ null. This type is incompatible with the expected param type of
-   16: Children.forEach(a, (x: string) => {}); // Error
-                               ^^^^^^ string
-  Member 2:
-   16: Children.forEach(a, (x: string) => {}); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type parameter `T` of call of method `forEach`
-  Error:
-   16: Children.forEach(a, (x: string) => {}); // Error
-                        ^ read-only array type. This type is incompatible with
-    5: const a: ChildrenArray<?number> = [
-                               ^^^^^^ number
-
 Error: api.js:19
  19: s(Children.count(a)); // Error
        ^^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
@@ -84,47 +60,9 @@ Error: api.js:19
 
 Error: api.js:22
  22: s(Children.only(a)); // Error
-                     ^ read-only array type. This type is incompatible with
-230:     only<T>(children: ChildrenArray<T>): $NonMaybeType<T>;
-                           ^^^^^^^^^^^^^^^^ union: read-only array type | type parameter `T` of call of method `only`. See lib: <BUILTINS>/react.js:230
-  Member 1:
-  217:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:217
-  Error:
-   22: s(Children.only(a)); // Error
-         ^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
-   29: function s(x: string) {}
-                     ^^^^^^ string
-  Member 2:
-   22: s(Children.only(a)); // Error
-         ^^^^^^^^^^^^^^^^ type parameter `T` of call of method `only`
-  Error:
-   22: s(Children.only(a)); // Error
-                       ^ read-only array type. This type is incompatible with
-    5: const a: ChildrenArray<?number> = [
-                               ^^^^^^ number
-
-Error: api.js:25
- 25: sa(Children.toArray(a)); // Error
-                         ^ read-only array type. This type is incompatible with
-231:     toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>;
-                              ^^^^^^^^^^^^^^^^ union: read-only array type | type parameter `T` of call of method `toArray`. See lib: <BUILTINS>/react.js:231
-  Member 1:
-  217:   declare export type ChildrenArray<T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ read-only array type. See lib: <BUILTINS>/react.js:217
-  Error:
-    5: const a: ChildrenArray<?number> = [
-                               ^^^^^^ number. This type is incompatible with
-   31: function sa(x: Array<string>) {}
-                            ^^^^^^ string
-  Member 2:
-   25: sa(Children.toArray(a)); // Error
-          ^^^^^^^^^^^^^^^^^^^ type parameter `T` of call of method `toArray`
-  Error:
-   25: sa(Children.toArray(a)); // Error
-                           ^ read-only array type. This type is incompatible with
-    5: const a: ChildrenArray<?number> = [
-                               ^^^^^^ number
+       ^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
+ 29: function s(x: string) {}
+                   ^^^^^^ string
 
 Error: builtin_intrinsic.js:24
  24: <builtin>
@@ -2278,4 +2216,4 @@ Error: view.js:40
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
 
 
-Found 108 errors
+Found 111 errors

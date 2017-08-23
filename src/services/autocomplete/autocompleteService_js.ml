@@ -121,7 +121,7 @@ let rec autocomplete_create_result cx name type_ loc =
         res_name = name;
         res_ty = (print_type cx type_);
         func_details = Some { params; return_ty = return } }
-  | DefT (_, PolyT (_, sub_type)) ->
+  | DefT (_, PolyT (_, sub_type, _)) ->
       let result = autocomplete_create_result cx name sub_type loc in
       (* This is not exactly pretty but we need to replace the type to
          be sure to use the same format for poly types as print_type *)
