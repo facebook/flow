@@ -31,6 +31,8 @@ let spec = {
         ~doc:"Pretty-print JSON output"
     |> flag "--type" (enum ["js"; "json"])
         ~doc:"Type of input file (js or json)"
+    |> flag "--strict" no_arg
+        ~doc:"Parse in strict mode"
     |> CommandUtils.from_flag
     |> anon "file" (optional string) ~doc:"[FILE]"
   )
@@ -90,7 +92,7 @@ let token_to_json token_result =
     ("value", JSON_String token_value);
   ]
 
-let main include_tokens pretty file_type_opt from filename () =
+let main include_tokens pretty file_type_opt use_strict from filename () =
   FlowEventLogger.set_from from;
   let file = get_file filename in
   let content = File_input.content_of_file_input_unsafe file in
@@ -128,7 +130,7 @@ let main include_tokens pretty file_type_opt from filename () =
         esproposal_decorators = true;
         esproposal_export_star_as = true;
         types = true;
-        use_strict = false;
+        use_strict;
       }) in
 
       let (translated_ast, errors) =
