@@ -164,21 +164,25 @@ module Expression
   and yield env = with_loc (fun env ->
     if in_formal_parameters env then error env Error.YieldInFormalParameters;
     Expect.token env T_YIELD;
-    let delegate = Expect.maybe env T_MULT in
-    let has_argument = match Peek.token env with
-      | T_SEMICOLON
-      | T_RBRACKET
-      | T_RCURLY
-      | T_RPAREN
-      | T_COLON
-      | T_COMMA -> false
-      | _ when Peek.is_implicit_semicolon env -> false
-      | _ -> true
+    let argument, delegate =
+      if Peek.is_implicit_semicolon env then None, false
+      else
+        let delegate = Expect.maybe env T_MULT in
+        let has_argument = match Peek.token env with
+          | T_SEMICOLON
+          | T_RBRACKET
+          | T_RCURLY
+          | T_RPAREN
+          | T_COLON
+          | T_COMMA -> false
+          | _ -> true
+        in
+        let argument =
+          if delegate || has_argument
+          then Some (assignment env)
+          else None in
+        argument, delegate
     in
-    let argument =
-      if delegate || has_argument
-      then Some (assignment env)
-      else None in
     Expression.(Yield Yield.({
       argument;
       delegate;

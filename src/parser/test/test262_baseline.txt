@@ -374,10 +374,6 @@ language/expressions/async-generator/early-errors-expression-formals-contains-aw
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-contains-await-expr.js (default)
   Missing parse error
-language/expressions/async-generator/early-errors-expression-yield-star-after-newline.js (strict mode)
-  Missing parse error
-language/expressions/async-generator/early-errors-expression-yield-star-after-newline.js (default)
-  Missing parse error
 language/expressions/function/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/expressions/function/use-strict-with-non-simple-param.js (default)
@@ -385,10 +381,6 @@ language/expressions/function/use-strict-with-non-simple-param.js (default)
 language/expressions/generators/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/expressions/generators/use-strict-with-non-simple-param.js (default)
-  Missing parse error
-language/expressions/generators/yield-star-after-newline.js (strict mode)
-  Missing parse error
-language/expressions/generators/yield-star-after-newline.js (default)
   Missing parse error
 language/expressions/object/method-definition/early-errors-object-method-NSPL-with-USD.js (strict mode)
   Missing parse error
@@ -431,10 +423,6 @@ language/expressions/object/method-definition/setter-use-strict-with-non-simple-
 language/expressions/object/method-definition/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/use-strict-with-non-simple-param.js (default)
-  Missing parse error
-language/expressions/object/method-definition/yield-star-after-newline.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/yield-star-after-newline.js (default)
   Missing parse error
 language/expressions/tagged-template/invalid-escape-sequences.js (strict mode)
   Unexpected token ILLEGAL at (21, 4) to (21, 5)
@@ -708,10 +696,6 @@ language/statements/class/definition/early-errors-class-method-await-in-formals.
   Missing parse error
 language/statements/class/definition/early-errors-class-method-await-in-formals.js (default)
   Missing parse error
-language/statements/class/definition/methods-gen-yield-star-after-newline.js (strict mode)
-  Missing parse error
-language/statements/class/definition/methods-gen-yield-star-after-newline.js (default)
-  Missing parse error
 language/statements/class/syntax/early-errors/class-body-has-direct-super-missing-class-heritage.js (strict mode)
   Missing parse error
 language/statements/class/syntax/early-errors/class-body-has-direct-super-missing-class-heritage.js (default)
@@ -833,10 +817,6 @@ language/statements/function/use-strict-with-non-simple-param.js (default)
 language/statements/generators/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/statements/generators/use-strict-with-non-simple-param.js (default)
-  Missing parse error
-language/statements/generators/yield-star-after-newline.js (strict mode)
-  Missing parse error
-language/statements/generators/yield-star-after-newline.js (default)
   Missing parse error
 language/statements/if/S12.5_A11.js (strict mode)
   Missing parse error
@@ -1488,8 +1468,8 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54561 (98.65%)
-Failed: 744 (1.35%)
+Passed: 54571 (98.67%)
+Failed: 734 (1.33%)
 
 Features:
   Reflect: 244/246 (99.19%)
@@ -1497,10 +1477,10 @@ Features:
   Symbol.toStringTag: 80/82 (97.56%)
   arrow-function: 22/24 (91.67%)
   async-functions: 157/217 (72.35%)
-  async-iteration: 6982/7052 (99.01%)
+  async-iteration: 6984/7052 (99.04%)
   destructuring-binding: 10519/10699 (98.32%)
   generator: 390/396 (98.48%)
-  generators: 1321/1343 (98.36%)
+  generators: 1325/1343 (98.66%)
   let: 129/135 (95.56%)
   object-rest: 614/620 (99.03%)
   regexp-named-groups: 36/40 (90.00%)
