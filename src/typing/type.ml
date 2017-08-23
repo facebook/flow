@@ -79,7 +79,7 @@ module rec TypeTerm : sig
     (* this-abstracted class *)
     | ThisClassT of reason * t
     (* this instantiation *)
-    | ThisTypeAppT of reason * t * t * t list
+    | ThisTypeAppT of reason * t * t * t list option
 
     (* exact *)
     | ExactT of reason * t
@@ -369,7 +369,7 @@ module rec TypeTerm : sig
         The first reason is the reason why we're specializing. The second
         reason points to the type application itself
     **)
-    | SpecializeT of reason * reason * specialize_cache * t list * t
+    | SpecializeT of reason * reason * specialize_cache * t list option * t
     (* operation on this-abstracted classes *)
     | ThisSpecializeT of reason * t * t
     (* variance check on polymorphic types *)

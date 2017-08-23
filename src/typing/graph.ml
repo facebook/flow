@@ -228,8 +228,11 @@ and parts_of_t cx = function
 | DefT (_, SingletonStrT _) -> []
 | TaintT _ -> []
 | ThisClassT (_, t) -> ["this", Def t]
-| ThisTypeAppT (_, t, this, args) ->
-  ("t", Def t) :: ("this", Def this) :: list_parts args
+| ThisTypeAppT (_, t, this, args_opt) ->
+  ("t", Def t) :: ("this", Def this) :: begin match args_opt with
+    | None -> []
+    | Some args -> list_parts args
+  end
 | DefT (_, TypeAppT (t, args)) -> ("t", Def t) :: list_parts args
 | DefT (_, TypeT t) -> ["t", Def t]
 | DefT (_, UnionT rep) -> list_parts (UnionRep.members rep)
@@ -362,7 +365,11 @@ and parts_of_use_t cx = function
 | SetPropT (_, _, t) -> ["t", Def t]
 | SetPrivatePropT (_, _, _, _, t) -> ["t", Def t]
 | SetProtoT (_, t) -> ["t", Def t]
-| SpecializeT (_, _, _, args, out) -> ("out", Def out) :: list_parts args
+| SpecializeT (_, _, _, args_opt, out) ->
+  ("out", Def out) :: begin match args_opt with
+    | None -> []
+    | Some args -> list_parts args
+  end
 | ObjSpreadT (_, _, _, _, out) -> ["out", Def out]
 | SubstOnPredT (_, _, t) -> ["t", Def t]
 | SuperT _ -> []

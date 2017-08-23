@@ -322,19 +322,18 @@ let mk_super cx tparams_map c targs = Type.(
   let params = Anno.extract_type_param_instantiations targs in
   let this = SMap.find_unsafe "this" tparams_map in
   match params with
-  | None
-  | Some [] ->
+  | None ->
       (* No type params, but `c` could still be a polymorphic class that must
          be implicitly instantiated. We need to do this before we try to
          this-specialize `c`. *)
       let reason = reason_of_t c in
       let c = Flow.mk_tvar_derivable_where cx reason (fun tvar ->
-        Flow.flow cx (c, SpecializeT (reason, reason, None, [], tvar))
+        Flow.flow cx (c, SpecializeT (reason, reason, None, None, tvar))
       ) in
-      this_typeapp c this []
+      this_typeapp c this None
   | Some params ->
       let tparams = List.map (Anno.convert cx tparams_map) params in
-      this_typeapp c this tparams
+      this_typeapp c this (Some tparams)
 )
 
 let mk_interface_super cx structural reason tparams_map = Type.(function

@@ -389,12 +389,12 @@ let rec normalize_type_impl cx ids t = match t with
       let ts = List.map (normalize_type_impl cx ids) ts in
       DefT (reason, TypeAppT (c, ts))
 
-  | ThisTypeAppT (reason, c, this, ts) ->
+  | ThisTypeAppT (reason, c, this, ts_opt) ->
       let reason = locationless_reason (desc_of_reason reason) in
       let c = normalize_type_impl cx ids c in
       let this = normalize_type_impl cx ids this in
-      let ts = List.map (normalize_type_impl cx ids) ts in
-      ThisTypeAppT (reason, c, this, ts)
+      let ts_opt = OptionUtils.ident_map (List.map (normalize_type_impl cx ids)) ts_opt in
+      ThisTypeAppT (reason, c, this, ts_opt)
 
   | DefT (_, IntersectionT rep) ->
       let reason = locationless_reason RIntersection in

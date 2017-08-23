@@ -95,10 +95,10 @@ class ['a] t = object(self)
 
   | ThisClassT (_, t) -> self#type_ cx acc t
 
-  | ThisTypeAppT (_, t, this, ts) ->
+  | ThisTypeAppT (_, t, this, ts_opt) ->
     let acc = self#type_ cx acc t in
     let acc = self#type_ cx acc this in
-    let acc = self#list (self#type_ cx) acc ts in
+    let acc = self#opt (self#list (self#type_ cx)) acc ts_opt in
     acc
 
   | ReposT (_, t)

@@ -69,3 +69,11 @@ class MySubclass extends MyClass { // ok, type arg inferred
 function singleton<T>(x: T):Array<T> { return [x]; }
 
 var num_array:Array<number> = singleton(0); // ok, type arg inferred
+
+// empty type args lead to arity errors
+
+var poly: MyClass<> = new MyClass; // error
+
+class MyClass3 { }
+
+var mono: MyClass3<> = new MyClass3; // error

@@ -469,7 +469,9 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | DefT (_, AnyObjT) -> true
   | DefT (_, AnyFunT) -> true
 
-  | ThisTypeAppT (_, t, _, ts)
+  | ThisTypeAppT (_, t, _, None) ->
+      (is_instantiable_poly_type weak cx EnclosureAppT t)
+  | ThisTypeAppT (_, t, _, Some ts)
   | DefT (_, TypeAppT (t, ts))
     ->
       (is_instantiable_poly_type weak cx EnclosureAppT t) &&

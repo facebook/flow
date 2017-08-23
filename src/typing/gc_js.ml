@@ -148,10 +148,10 @@ let rec gc cx state = function
   | ReposUpperT (_, t) -> gc cx state t
   | TaintT _ -> ()
   | ThisClassT (_, t) -> gc cx state t
-  | ThisTypeAppT (_, t, this, ts) ->
+  | ThisTypeAppT (_, t, this, ts_opt) ->
       gc cx state t;
       gc cx state this;
-      List.iter (gc cx state) ts
+      Option.iter ~f:(List.iter (gc cx state)) ts_opt
   | DefT (_, TypeAppT (t, ts)) ->
       gc cx state t;
       ts |> List.iter (gc cx state)
@@ -287,7 +287,7 @@ and gc_use cx state = function
   | SetPropT(_, _, t) -> gc cx state t
   | SetPrivatePropT(_, _, _, _, t) -> gc cx state t
   | SetProtoT (_, t) -> gc cx state t
-  | SpecializeT (_, _, _, ts, t) -> List.iter (gc cx state) ts; gc cx state t
+  | SpecializeT (_, _, _, ts_opt, t) -> Option.iter ~f:(List.iter (gc cx state)) ts_opt; gc cx state t
   | ObjSpreadT (_, _, tool, state', t) ->
       gc_object_spread cx state tool state';
       gc cx state t

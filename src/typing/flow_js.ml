@@ -942,7 +942,22 @@ module ResolvableTypeJob = struct
       if IMap.mem id acc then acc
       else IMap.add id (Binding source) acc
 
-    | ThisTypeAppT (_, poly_t, _, targs)
+    | ThisTypeAppT (_, poly_t, _, targs_opt) ->
+      let targs = match targs_opt with | None -> [] | Some targs -> targs in
+      begin match poly_t with
+      | OpenT (_, id) ->
+        if IMap.mem id acc then
+          collect_of_types ?log_unresolved cx reason acc targs
+        else begin
+          let acc = IMap.add id (Binding poly_t) acc in
+          collect_of_types ?log_unresolved cx reason acc targs
+        end
+
+      | _ ->
+        let ts = poly_t::targs in
+        collect_of_types ?log_unresolved cx reason acc ts
+      end
+
     | DefT (_, TypeAppT (poly_t, targs))
       ->
       begin match poly_t with
@@ -3411,14 +3426,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        operation. (SpecializeT operations are created when processing TypeAppT
        types, so the decision to cache or not originates there.) *)
 
-    (* NOTE: we consider empty targs specialization for polymorphic definitions
-       to be the same as implicit specialization, which is handled by a
-       fall-through case below.The exception is when the PolyT has type
-       parameters with defaults. *)
-    | DefT (_, PolyT (ids,t,_)), SpecializeT(reason_op,reason_tapp,cache,ts,tvar)
-        when ts <> [] || (poly_minimum_arity ids < List.length ids) ->
+    | DefT (_, PolyT (ids,t,_)), SpecializeT(reason_op,reason_tapp,cache,Some ts,tvar) ->
       let t_ = instantiate_poly_with_targs cx trace
         ~reason_op ~reason_tapp ?cache (ids,t) ts in
+      rec_flow_t cx trace (t_, tvar)
+
+    (* NOTE: Implicit specialization of polymorphic definitions is handled by a
+       fall-through case below. The exception is when the PolyT has type
+       parameters with defaults. TODO: Get rid of this exception. *)
+    | DefT (_, PolyT (ids,t,_)), SpecializeT(reason_op,reason_tapp,cache,None,tvar)
+        when poly_minimum_arity ids < List.length ids ->
+      let t_ = instantiate_poly_with_targs cx trace
+        ~reason_op ~reason_tapp ?cache (ids,t) [] in
       rec_flow_t cx trace (t_, tvar)
 
     | DefT (_, PolyT (tps, _, _)), VarianceCheckT(_, ts, polarity) ->
@@ -3463,7 +3482,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       )
 
     (* empty targs specialization of non-polymorphic classes is a no-op *)
-    | (DefT (_, ClassT _) | ThisClassT _), SpecializeT(_,_,_,[],tvar) ->
+    | (DefT (_, ClassT _) | ThisClassT _), SpecializeT(_,_,_,None,tvar) ->
       rec_flow_t cx trace (l, tvar)
 
     | DefT (_, AnyT), SpecializeT (_, _, _, _, tvar) ->
@@ -6766,7 +6785,8 @@ and check_polarity cx ?trace polarity = function
     List.iter (check_polarity_typeparam cx ?trace (Polarity.inv polarity)) xs;
     check_polarity cx ?trace polarity t
 
-  | ThisTypeAppT (_, c, _, ts)
+  | ThisTypeAppT (_, _, _, None) -> ()
+  | ThisTypeAppT (_, c, _, Some ts)
   | DefT (_, TypeAppT (c, ts))
     ->
     check_polarity_typeapp cx ?trace polarity c ts
@@ -6965,11 +6985,12 @@ and instantiate_this_class cx trace reason tc this =
 (* Specialize targs in a class. This is somewhat different from
    mk_typeapp_instance, in that it returns the specialized class type, not the
    specialized instance type. *)
-and specialize_class cx trace ~reason_op ~reason_tapp c ts =
-  if ts = [] then c
-  else mk_tvar_where cx reason_op (fun tvar ->
-    rec_flow cx trace (c, SpecializeT (reason_op, reason_tapp, None, ts, tvar))
-  )
+and specialize_class cx trace ~reason_op ~reason_tapp c = function
+  | None -> c
+  | Some ts ->
+    mk_tvar_where cx reason_op (fun tvar ->
+      rec_flow cx trace (c, SpecializeT (reason_op, reason_tapp, None, Some ts, tvar))
+    )
 
 and mk_object_with_proto cx reason ?dict proto =
   mk_object_with_map_proto cx reason ?dict SMap.empty proto
@@ -9568,7 +9589,7 @@ and get_builtin_typeapp cx ?trace reason x ts =
 and mk_typeapp_instance cx ?trace ~reason_op ~reason_tapp ?cache c ts =
   let c = reposition cx ?trace (loc_of_reason reason_tapp) c in
   let t = mk_tvar cx reason_op in
-  flow_opt cx ?trace (c, SpecializeT(reason_op,reason_tapp, cache, ts, t));
+  flow_opt cx ?trace (c, SpecializeT(reason_op,reason_tapp, cache, Some ts, t));
   mk_instance cx ?trace (reason_of_t c) t
 
 (* NOTE: the for_type flag is true when expecting a type (e.g., when processing
@@ -9694,21 +9715,21 @@ and get_builtin_prop_type cx ?trace reason tool =
   ) in
   get_builtin_type cx ?trace reason x
 
-and instantiate_poly_t cx t types =
-  if types = [] then (* nothing to do *) t else
-  match t with
-  | DefT (_, PolyT (type_params, t_, _)) -> (
-    try
-      let subst_map = List.fold_left2 (fun acc {name; _} type_ ->
-        SMap.add name type_ acc
-      ) SMap.empty type_params types in
-      subst cx subst_map t_
-    with _ ->
-      prerr_endline "Instantiating poly type failed";
-      t
-  )
-  | _ ->
-    assert_false "unexpected args passed to instantiate_poly_t"
+and instantiate_poly_t cx t = function
+  | None -> (* nothing to do *) t
+  | Some types -> match t with
+      | DefT (_, PolyT (type_params, t_, _)) -> (
+        try
+          let subst_map = List.fold_left2 (fun acc {name; _} type_ ->
+            SMap.add name type_ acc
+          ) SMap.empty type_params types in
+          subst cx subst_map t_
+        with _ ->
+          prerr_endline "Instantiating poly type failed";
+          t
+      )
+      | _ ->
+        assert_false "unexpected args passed to instantiate_poly_t"
 
 and instantiate_type t =
   match t with
@@ -9749,7 +9770,7 @@ and resolve_builtin_class cx ?trace = function
     | EmptyAT -> get_builtin cx ?trace "$ReadOnlyArray" reason, DefT (reason, EmptyT)
     in
     let array_t = resolve_type cx builtin in
-    let array_t = instantiate_poly_t cx array_t [elemt] in
+    let array_t = instantiate_poly_t cx array_t (Some [elemt]) in
     instantiate_type array_t
   | t ->
     t
@@ -10481,10 +10502,14 @@ end = struct
           | None -> None
         in
         SuccessModule (named_exports, cjs_export)
-    | ThisTypeAppT (_, c, _, ts)
+    | ThisTypeAppT (_, c, _, ts_opt) ->
+        let c = resolve_type cx c in
+        let inst_t = instantiate_poly_t cx c ts_opt in
+        let inst_t = instantiate_type inst_t in
+        extract cx inst_t
     | DefT (_, TypeAppT (c, ts)) ->
         let c = resolve_type cx c in
-        let inst_t = instantiate_poly_t cx c ts in
+        let inst_t = instantiate_poly_t cx c (Some ts) in
         let inst_t = instantiate_type inst_t in
         extract cx inst_t
     | DefT (_, PolyT (_, sub_type, _)) ->
@@ -10705,10 +10730,10 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
     recurse ~infer:true c;
     List.iter recurse ts
 
-  | ThisTypeAppT (_, c, this, ts) ->
+  | ThisTypeAppT (_, c, this, ts_opt) ->
     recurse ~infer:true c;
     recurse ~infer:true this;
-    List.iter recurse ts
+    Option.iter ~f:(List.iter recurse) ts_opt
 
   | ExactT (_, t)
   | DefT (_, MaybeT t) ->

@@ -192,8 +192,11 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | ThisTypeAppT (_, t, this, targs) -> [
-      "typeArgs", JSON_Array (List.map (_json_of_t json_cx) targs);
+  | ThisTypeAppT (_, t, this, targs_opt) -> (
+      match targs_opt with
+        | Some targs -> [ "typeArgs", JSON_Array (List.map (_json_of_t json_cx) targs) ]
+        | None -> []
+    ) @ [
       "thisArg", _json_of_t json_cx this;
       "type", _json_of_t json_cx t
     ]
@@ -504,9 +507,13 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | SpecializeT (_, _, cache, targs, tvar) -> [
-      "cache", json_of_specialize_cache json_cx cache;
-      "types", JSON_Array (List.map (_json_of_t json_cx) targs);
+  | SpecializeT (_, _, cache, targs_opt, tvar) -> [
+      "cache", json_of_specialize_cache json_cx cache
+    ] @ (
+      match targs_opt with
+        | Some targs -> [ "types", JSON_Array (List.map (_json_of_t json_cx) targs) ]
+        | None -> []
+    ) @ [
       "tvar", _json_of_t json_cx tvar
     ]
 
@@ -1639,9 +1646,12 @@ and dump_t_ (depth, tvars) cx t =
       ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
   | DefT (_, TypeAppT (base, args)) -> p ~extra:(spf "%s, [%s]"
       (kid base) (String.concat "; " (List.map kid args))) t
-  | ThisTypeAppT (_, base, this, args) -> p ~reason:false
-      ~extra:(spf "%s, %s, [%s]" (kid base) (kid this)
-        (String.concat "; " (List.map kid args))) t
+  | ThisTypeAppT (_, base, this, args_opt) -> p ~reason:false
+      ~extra:begin match args_opt with
+        | Some args -> spf "%s, %s, [%s]" (kid base) (kid this)
+            (String.concat "; " (List.map kid args))
+        | None -> spf "%s, %s" (kid base) (kid this)
+      end t
   | ExactT (_, arg) -> p ~extra:(kid arg) t
   | DefT (_, MaybeT arg) -> p ~extra:(kid arg) t
   | TaintT _ -> p t
@@ -1976,8 +1986,12 @@ and dump_use_t_ (depth, tvars) cx t =
       (prop)
       (kid ptype)) t
   | SetProtoT (_, arg) -> p ~extra:(kid arg) t
-  | SpecializeT (_, _, cache, args, ret) -> p ~extra:(spf "%s, [%s], %s"
-      (specialize_cache cache) (String.concat "; " (List.map kid args)) (kid ret)) t
+  | SpecializeT (_, _, cache, args_opt, ret) -> p ~extra:begin match args_opt with
+      | Some args -> spf "%s, [%s], %s"
+          (specialize_cache cache) (String.concat "; " (List.map kid args)) (kid ret)
+      | None -> spf "%s, %s"
+          (specialize_cache cache) (kid ret)
+    end t
   | ObjSpreadT (_, options, tool, state, arg) -> p ~extra:(spf "%s, %s"
       (object_spread options tool state)
       (kid arg)) t

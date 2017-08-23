@@ -67,12 +67,12 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else ThisClassT (r, t'')
-      | ThisTypeAppT (r, t1, t2, tlist) ->
+      | ThisTypeAppT (r, t1, t2, tlist_opt) ->
           let t1' = self#type_ cx map_cx t1 in
           let t2' = self#type_ cx map_cx t2 in
-          let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
-          if t1' == t1 && t2' == t2 && tlist' == tlist then t
-          else ThisTypeAppT(r, t1', t2', tlist')
+          let tlist_opt' = OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) tlist_opt in
+          if t1' == t1 && t2' == t2 && tlist_opt' == tlist_opt then t
+          else ThisTypeAppT(r, t1', t2', tlist_opt')
       | ExactT (r, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -547,11 +547,11 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else NotT (r, t'')
-    | SpecializeT (r1, r2, cache, tlist, t') ->
-        let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
+    | SpecializeT (r1, r2, cache, tlist_opt, t') ->
+        let tlist_opt' = OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) tlist_opt in
         let t'' = self#type_ cx map_cx t' in
-        if tlist' == tlist && t'' == t' then t
-        else SpecializeT (r1, r2, cache, tlist', t'')
+        if tlist_opt' == tlist_opt && t'' == t' then t
+        else SpecializeT (r1, r2, cache, tlist_opt', t'')
     | ThisSpecializeT (r, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in

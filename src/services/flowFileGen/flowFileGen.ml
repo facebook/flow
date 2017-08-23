@@ -259,7 +259,9 @@ class unexported_class_visitor = object(self)
           | DefT (_, ClassT t) when (
               match resolve_type t env with | ObjProtoT _ -> true | _ -> false
             ) -> env
-          | ThisTypeAppT (_, extends, _, ts) ->
+          | ThisTypeAppT (_, extends, _, None) ->
+            add_str " extends " env |> gen_type extends
+          | ThisTypeAppT (_, extends, _, Some ts) ->
             add_str " extends " env
               |> gen_type extends
               |> add_str "<"
