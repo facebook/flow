@@ -15,11 +15,6 @@ module Error = Parse_error
 open Parser_common
 
 module type EXPRESSION = sig
-  type object_cover =
-    | Cover_expr of Expression.t
-    | Cover_object of Loc.t * Expression.Object.t * Loc.t list
-
-  val array_initializer: env -> Loc.t * Expression.Array.t
   val assignment: env -> Expression.t
   val assignment_cover: env -> object_cover
   val conditional: env -> Expression.t
@@ -35,6 +30,7 @@ module Expression
   (Parse: PARSER)
   (Type: Type_parser.TYPE)
   (Declaration: Declaration_parser.DECLARATION)
+  (Object_cover: Object_cover.COVER)
 : EXPRESSION = struct
   type op_precedence = Left_assoc of int | Right_assoc of int
   let is_tighter a b =
@@ -79,33 +75,8 @@ module Expression
       -> false
   )
 
-  type object_cover =
-    | Cover_expr of Ast.Expression.t
-    | Cover_object of Loc.t * Ast.Expression.Object.t * Loc.t list
-
-  let as_expression env = function
-    | Cover_expr expr -> expr
-    | Cover_object (loc, obj, assignment_locs) ->
-        List.iter (fun loc -> error_at env (loc, Parse_error.UnexpectedToken "=")) assignment_locs;
-        loc, Expression.Object obj
-
-  let as_pattern env cover =
-    let expr = match cover with
-    | Cover_expr expr -> expr
-    | Cover_object (loc, obj, _assignment_locs) -> loc, Expression.Object obj
-    in
-
-    if not (is_assignable_lhs expr)
-    then error_at env (fst expr, Error.InvalidLHSInAssignment);
-
-    (match expr with
-    | loc, Expression.Identifier (_, name)
-      when is_restricted name ->
-        strict_error_at env (loc, Error.StrictLHSAssignment)
-    | _ -> ());
-
-    Parse.pattern_from_expr env expr
-
+  let as_expression = Object_cover.as_expression
+  let as_pattern = Object_cover.as_pattern
 
   (* AssignmentExpression :
    *   ConditionalExpression
@@ -270,7 +241,7 @@ module Expression
     if op <> None then Eat.token env;
     op
 
-  and conditional_cover env : object_cover =
+  and conditional_cover env =
     let start_loc = Peek.loc env in
     let expr = logical_cover env in
     if Peek.token env = T_PLING
@@ -779,10 +750,10 @@ module Expression
     | T_LPAREN -> Cover_expr (group env)
     | T_LCURLY ->
         let loc, obj, assignments = Parse.object_initializer env in
-        Cover_object (loc, obj, assignments)
+        Cover_patt ((loc, Expression.Object obj), assignments)
     | T_LBRACKET ->
-        let loc, arr = array_initializer env in
-        Cover_expr (loc, Expression.Array arr)
+        let loc, arr, assignments = array_initializer env in
+        Cover_patt ((loc, Expression.Array arr), assignments)
     | T_DIV
     | T_DIV_ASSIGN -> Cover_expr (regexp env)
     | T_LESS_THAN ->
@@ -878,37 +849,45 @@ module Expression
     ret
 
   and array_initializer =
-    let rec elements env acc =
+    let rec elements env (acc, assignments) =
       match Peek.token env with
       | T_EOF
-      | T_RBRACKET -> List.rev acc
+      | T_RBRACKET -> List.rev acc, List.rev assignments
       | T_COMMA ->
           Expect.token env T_COMMA;
-          elements env (None::acc)
+          elements env (None::acc, assignments)
       | T_ELLIPSIS ->
-          let start_loc = Peek.loc env in
-          Expect.token env T_ELLIPSIS;
-          let argument = assignment env in
-          let loc = Loc.btwn start_loc (fst argument) in
+          let loc, (argument, assignment_locs) = with_loc (fun env ->
+            Expect.token env T_ELLIPSIS;
+            match assignment_cover env with
+            | Cover_expr argument -> argument, []
+            | Cover_patt (argument, assignment_locs) -> argument, assignment_locs
+          ) env in
           let elem = Expression.(Spread (loc, SpreadElement.({
             argument;
           }))) in
           if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
-          elements env ((Some elem)::acc)
+          let acc = Some elem :: acc in
+          let assignments = List.rev_append (List.rev assignment_locs) assignments in
+          elements env (acc, assignments)
       | _ ->
-          let elem = Expression.Expression (assignment env) in
+          let elem, assignment_locs = match assignment_cover env with
+            | Cover_expr elem -> elem, []
+            | Cover_patt (elem, assignment_locs) -> elem, assignment_locs
+          in
           if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
-          elements env ((Some elem)::acc)
+          let acc = Some (Expression.Expression elem) :: acc in
+          let assignments = List.rev_append (List.rev assignment_locs) assignments in
+          elements env (acc, assignments)
 
     in fun env ->
-      let start_loc = Peek.loc env in
-      Expect.token env T_LBRACKET;
-      let elements = elements env [] in
-      let end_loc = Peek.loc env in
-      Expect.token env T_RBRACKET;
-      Loc.btwn start_loc end_loc, Expression.Array.({
-        elements;
-      })
+      let loc, (elements, assignment_locs) = with_loc (fun env ->
+        Expect.token env T_LBRACKET;
+        let res = elements env ([], []) in
+        Expect.token env T_RBRACKET;
+        res
+      ) env in
+      loc, { Expression.Array.elements; }, assignment_locs
 
   and regexp env =
     Eat.push_lex_mode env Lex_mode.REGEXP;

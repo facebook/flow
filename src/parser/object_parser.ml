@@ -124,9 +124,8 @@ module Object
   let _initializer =
     let parse_assignment_cover env =
       match Expression.assignment_cover env with
-      | Expression.Cover_expr expr -> expr, []
-      | Expression.Cover_object (loc, obj, assignment_locs) ->
-        (loc, Ast.Expression.Object obj), assignment_locs
+      | Cover_expr expr -> expr, []
+      | Cover_patt (expr, assignment_locs) -> expr, assignment_locs
     in
     let rec property env =
       let open Ast.Expression.Object in

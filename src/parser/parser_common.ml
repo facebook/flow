@@ -12,6 +12,10 @@ open Parser_env
 open Ast
 module Error = Parse_error
 
+type object_cover =
+  | Cover_expr of Expression.t
+  | Cover_patt of Expression.t * Loc.t list
+
 module type PARSER = sig
   val program : env -> program
   val statement : env -> Statement.t
@@ -20,11 +24,11 @@ module type PARSER = sig
   val statement_list_with_directives : term_fn:(Token.t -> bool) -> env -> Statement.t list * bool
   val module_body : term_fn:(Token.t -> bool) -> env -> Statement.t list
   val expression : env -> Expression.t
+  val expression_or_pattern : env -> object_cover
   val conditional : env -> Expression.t
   val assignment : env -> Expression.t
   val left_hand_side : env -> Expression.t
   val object_initializer : env -> Loc.t * Expression.Object.t * Loc.t list
-  val array_initializer : env -> Loc.t * Expression.Array.t
   val identifier : ?restricted_error:Error.t -> env -> Identifier.t
   val identifier_or_reserved_keyword : env -> (Identifier.t * (Loc.t * Error.t) option)
   val identifier_with_type : env -> ?no_optional:bool -> Error.t -> Loc.t * Pattern.Identifier.t

@@ -37,7 +37,8 @@ let filter_duplicate_errors =
 module rec Parse : PARSER = struct
   module Type = Type_parser.Type (Parse)
   module Declaration = Declaration_parser.Declaration (Parse) (Type)
-  module Expression = Expression_parser.Expression (Parse) (Type) (Declaration)
+  module Object_cover = Object_cover.Cover (Parse)
+  module Expression = Expression_parser.Expression (Parse) (Type) (Declaration) (Object_cover)
   module Object = Object_parser.Object (Parse) (Type) (Declaration) (Expression)
   module Statement = Statement_parser.Statement (Parse) (Type) (Declaration) (Object)
   module Pattern = Pattern_parser.Pattern (Parse) (Type)
@@ -240,6 +241,16 @@ module rec Parse : PARSER = struct
     | _ ->
         expr
 
+  and expression_or_pattern env =
+    let expr_or_pattern = Expression.assignment_cover env in
+    match Peek.token env with
+    | T_COMMA ->
+      let expr = Object_cover.as_expression env expr_or_pattern in
+      let seq = Expression.sequence env [expr] in
+      Cover_expr seq
+    | _ ->
+      expr_or_pattern
+
   and conditional = Expression.conditional
   and assignment = Expression.assignment
   and left_hand_side = Expression.left_hand_side
@@ -247,7 +258,6 @@ module rec Parse : PARSER = struct
   and object_key = Object.key
   and class_declaration = Object.class_declaration
   and class_expression = Object.class_expression
-  and array_initializer = Expression.array_initializer
 
   and is_assignable_lhs = Expression.is_assignable_lhs
 

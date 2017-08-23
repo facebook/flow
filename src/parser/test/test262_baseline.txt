@@ -322,12 +322,6 @@ language/expressions/arrow-function/syntax/early-errors/use-strict-with-non-simp
   Missing parse error
 language/expressions/arrow-function/syntax/early-errors/use-strict-with-non-simple-param.js (default)
   Missing parse error
-language/expressions/assignment/dstr-array-elem-nested-obj-yield-expr.js (strict mode)
-  Unexpected token = at (26, 14) to (26, 15)
-language/expressions/assignment/dstr-array-elem-nested-obj-yield-expr.js (default)
-  Unexpected token = at (26, 14) to (26, 15)
-language/expressions/assignment/dstr-array-elem-nested-obj-yield-ident-valid.js (default)
-  Unexpected token = at (25, 14) to (25, 15)
 language/expressions/assignment/dstr-array-rest-before-elision.js (strict mode)
   Missing parse error
 language/expressions/assignment/dstr-array-rest-before-elision.js (default)
@@ -336,12 +330,6 @@ language/expressions/assignment/dstr-array-rest-elision-invalid.js (strict mode)
   Missing parse error
 language/expressions/assignment/dstr-array-rest-elision-invalid.js (default)
   Missing parse error
-language/expressions/assignment/dstr-array-rest-nested-obj-yield-expr.js (strict mode)
-  Unexpected token = at (26, 17) to (26, 18)
-language/expressions/assignment/dstr-array-rest-nested-obj-yield-expr.js (default)
-  Unexpected token = at (26, 17) to (26, 18)
-language/expressions/assignment/dstr-array-rest-nested-obj-yield-ident-valid.js (default)
-  Unexpected token = at (25, 17) to (25, 18)
 language/expressions/async-arrow-function/early-errors-arrow-NSPL-with-USD.js (strict mode)
   Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-NSPL-with-USD.js (default)
@@ -1748,8 +1736,8 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54431 (98.42%)
-Failed: 874 (1.58%)
+Passed: 54437 (98.43%)
+Failed: 868 (1.57%)
 
 Features:
   Reflect: 244/246 (99.19%)
@@ -1759,9 +1747,9 @@ Features:
   async-functions: 153/217 (70.51%)
   async-iteration: 6915/7052 (98.06%)
   class: 126/132 (95.45%)
-  destructuring-binding: 10412/10699 (97.32%)
+  destructuring-binding: 10418/10699 (97.37%)
   generator: 390/396 (98.48%)
-  generators: 1297/1343 (96.57%)
+  generators: 1301/1343 (96.87%)
   let: 127/135 (94.07%)
   object-rest: 614/620 (99.03%)
   regexp-named-groups: 36/40 (90.00%)
