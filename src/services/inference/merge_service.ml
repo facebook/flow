@@ -44,52 +44,38 @@ type 'a merge_job =
    by requires (when implementations of such requires are not found).
 *)
 let reqs_of_component ~options component required =
-  let sig_cache = new Context_cache.sig_context_cache in
-
-  let orig_dep_cxs, dep_cxs, reqs =
-    List.fold_left (fun (orig_dep_cxs, dep_cxs, reqs) req ->
+  let dep_cxs, reqs =
+    List.fold_left (fun (dep_cxs, reqs) req ->
       let r, loc, resolved_r, file = req in
       Module_js.(match get_file Expensive.ok resolved_r with
       | Some (Loc.ResourceFile f) ->
-        orig_dep_cxs, dep_cxs,
-        Reqs.add_res (r, loc, f, file) reqs
+        dep_cxs, Reqs.add_res (r, loc, f, file) reqs
       | Some dep ->
         let info = get_info_unsafe ~audit:Expensive.ok dep in
         if info.checked && info.parsed then
           (* checked implementation exists *)
+          let m = Files.module_ref dep in
           if List.mem dep component then
             (* impl is part of component *)
-            orig_dep_cxs, dep_cxs,
-            Reqs.add_impl (dep, Files.module_ref dep, r, file) reqs
+            dep_cxs, Reqs.add_impl (dep, m, r, file) reqs
           else
             (* look up impl sig_context *)
             let leader = Context_cache.find_leader dep in
-            match sig_cache#find leader with
-            | Some dep_cx ->
-              orig_dep_cxs, dep_cxs,
-              Reqs.add_dep_impl (dep_cx, Files.module_ref dep, r, file) reqs
-            | None ->
-              let orig_dep_cx, dep_cx =
-                sig_cache#read ~audit:Expensive.ok ~options leader in
-              orig_dep_cx::orig_dep_cxs, dep_cx::dep_cxs,
-              Reqs.add_dep_impl (dep_cx, Files.module_ref dep, r, file) reqs
+            let dep_cx = Context_cache.find_sig ~options leader in
+            dep_cx::dep_cxs, Reqs.add_dep_impl (dep_cx, m, r, file) reqs
         else
           (* unchecked implementation exists *)
-          orig_dep_cxs, dep_cxs,
-          Reqs.add_unchecked (r, loc, file) reqs
+          dep_cxs, Reqs.add_unchecked (r, loc, file) reqs
       | None ->
         (* implementation doesn't exist *)
-        orig_dep_cxs, dep_cxs,
-        Reqs.add_decl (r, loc, resolved_r, file) reqs
+        dep_cxs, Reqs.add_decl (r, loc, resolved_r, file) reqs
       )
-    ) ([], [], Reqs.empty) required
+    ) ([], Reqs.empty) required
   in
 
-  let orig_master_cx, master_cx =
-    sig_cache#read ~audit:Expensive.ok ~options Loc.Builtins
-  in
+  let master_cx = Context_cache.find_sig ~options Loc.Builtins in
 
-  orig_master_cx, master_cx, orig_dep_cxs, dep_cxs, reqs
+  master_cx, dep_cxs, reqs
 
 let merge_strict_context ~options component =
   let required, require_loc_maps =
@@ -103,7 +89,7 @@ let merge_strict_context ~options component =
       required, FilenameMap.add file require_loc_map require_loc_maps
     ) ([], FilenameMap.empty) component in
 
-  let orig_master_cx, master_cx, orig_dep_cxs, dep_cxs, file_reqs =
+  let master_cx, dep_cxs, file_reqs =
     reqs_of_component ~options component required
   in
 
@@ -115,9 +101,8 @@ let merge_strict_context ~options component =
     ~get_docblock_unsafe:Parsing_service_js.get_docblock_unsafe
     component file_reqs dep_cxs master_cx
   in
-  Merge_js.restore cx orig_dep_cxs orig_master_cx;
 
-  cx, orig_master_cx
+  cx, master_cx
 
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
@@ -139,7 +124,7 @@ let merge_contents_context options file ast info ~ensure_checked_dependencies =
 
   let component = [file] in
 
-  let _, master_cx, _, dep_cxs, file_reqs =
+  let master_cx, dep_cxs, file_reqs =
     begin try reqs_of_component ~options component required with
       | Key_not_found _  ->
         failwith "not all dependencies are ready yet, aborting..."
@@ -176,12 +161,12 @@ let merge_strict_component ~options (merged_acc, unchanged_acc) component =
   *)
   let info = Module_js.get_info_unsafe ~audit:Expensive.ok file in
   if info.Module_js.checked then (
-    let cx, orig_master_cx = merge_strict_context ~options component in
+    let cx, master_cx = merge_strict_context ~options component in
 
     let module_refs = List.rev_map Files.module_ref component in
     let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
 
-    Merge_js.clear_master_shared cx orig_master_cx;
+    Merge_js.clear_master_shared cx master_cx;
 
     let errors = Context.errors cx in
     let suppressions = Context.error_suppressions cx in

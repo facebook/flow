@@ -45,9 +45,6 @@ val merge_component_strict:
   (* merged cx *)
   Context.t
 
-val restore: Context.t ->
-  Context.t list -> Context.t -> unit
-
 val clear_master_shared: Context.t -> Context.t -> unit
 
 val merge_lib_file:

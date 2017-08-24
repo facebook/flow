@@ -8,14 +8,8 @@
  *
  *)
 
-class sig_context_cache : object
-  method find: Loc.FilenameKey.t -> Context.t option
-  method read: (options: Options.t -> Loc.FilenameKey.t -> Context.t * Context.t) Expensive.t
-  method read_safe:
-    (options: Options.t -> Loc.FilenameKey.t -> (Context.t * Context.t) option) Expensive.t
-end
-
 val add_sig: (Context.t -> unit) Expensive.t
+val find_sig: options:Options.t -> Loc.FilenameKey.t -> Context.t
 
 val find_leader: Loc.FilenameKey.t -> Loc.FilenameKey.t
 
