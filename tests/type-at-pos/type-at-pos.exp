@@ -555,7 +555,7 @@
   "end":10
 }
 function_expression.js:9:5 = {
-  "type":"{bar(): void}",
+  "type":"{bar: () => void}",
   "reasons":[],
   "loc":{
     "source":"function_expressions.js",
@@ -600,7 +600,7 @@ function_expression.js:13:5 = {
   "end":1
 }
 function_expression.js:17:3 = {
-  "type":"{m<T>(x: T): T}",
+  "type":"{m: <T>(x: T) => T}",
   "reasons":[],
   "loc":{
     "source":"function_expressions.js",

@@ -869,12 +869,19 @@ let run cx trace reason_op l u
         | "componentDidUpdate"
         | "componentWillUnmount"
         | "updateComponent" ->
-          (* Tie the `this` knot with BindT *)
-          Property.read_t v |> Option.iter ~f:(fun t ->
+          let v = match Property.read_t v with
+          | None -> v
+          | Some t ->
+            (* Tie the `this` knot with BindT *)
             let dummy_return = DefT (reason_op, AnyT) in
             let calltype = mk_methodcalltype knot.this [] dummy_return in
-            rec_flow cx trace (t, BindT (reason_op, calltype, true))
-          );
+            rec_flow cx trace (t, BindT (reason_op, calltype, true));
+            (* Because we are creating an instance type, which can be used as an
+               upper bound (e.g., as a super class), it's more flexible to
+               create covariant methods. Otherwise, a subclass could not
+               override the `render` method, say. *)
+            Method t
+          in
           SMap.add k v props, static_props
 
         | _ ->

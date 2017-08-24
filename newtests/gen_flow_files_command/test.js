@@ -400,10 +400,13 @@ export default suite(({addFile, addFiles, flowCmd}) => [
     addFile('object_literal_method.js'),
     flowCmd(['gen-flow-files', '--quiet', 'object_literal_method.js']).stdout(`
       // @flow
-      declare export var a: {bar(): void};
+
+      declare export var a: {bar: () => void};
       declare export var b: {bar: () => void};
-      declare export var c: {m<T>(x: T): T};
+      declare export var c: {m: <T>(x: T) => T};
       declare export var d: {m: <T>(x: T) => T};
+
+
     `)
     .stderr('')
   ]),

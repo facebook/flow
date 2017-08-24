@@ -2106,23 +2106,7 @@ and export_statement cx loc
   )
 
 and object_prop cx map = Ast.Expression.Object.(function
-  (* name = function expr *)
-  | Property (_, { Property.
-      key = Property.Identifier (_, name);
-      value = Property.Init (vloc, Ast.Expression.Function func);
-      _method;
-      _
-    }) ->
-    let {Ast.Function.id; _} = func in
-    let ft = mk_function id cx vloc func in
-    Type_table.set (Context.type_table cx) vloc ft;
-    if _method then
-      Properties.add_method name ft map
-    else begin
-      Properties.add_field name Neutral ft map
-    end
-
-  (* name = non-function expr *)
+  (* named prop *)
   | Property (_, { Property.
       key =
         Property.Identifier (_, name) |
