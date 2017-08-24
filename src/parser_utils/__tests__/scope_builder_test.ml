@@ -80,4 +80,54 @@ let tests = "scope_builder" >::: [
     [[mk_loc (1, 35) (1, 36)];
      [mk_loc (1, 35) (1, 36)];
      []];
+  "var_locs_of_defs_of_all_uses" >:: mk_scope_builder_locs_of_defs_of_all_uses_test
+    "function foo({y}) { \
+       var {x} = y; \
+       return x; \
+     }"
+    [mk_loc (1, 25) (1, 26);
+     mk_loc (1, 14) (1, 15);
+     mk_loc (1, 25) (1, 26);
+     mk_loc (1, 14) (1, 15);
+     mk_loc (1, 9) (1, 12)];
+  "var_uses_of_all_uses" >:: mk_scope_builder_uses_of_all_uses_test
+    "function foo({y}) { \
+       var {x} = y; \
+       return x; \
+     }"
+    [[mk_loc (1, 40) (1, 41)];
+     [mk_loc (1, 30) (1, 31)];
+     [mk_loc (1, 40) (1, 41)];
+     [mk_loc (1, 30) (1, 31)];
+     []];
+  "var_locs_of_defs_of_all_uses2" >:: mk_scope_builder_locs_of_defs_of_all_uses_test
+    "function foo() { \
+       var { x, y } = { x: 0, y: 0 }; \
+       var { x: _x, y: _y } = { x, y }; \
+       return ({ x: _x, y: _y }); \
+     }"
+    [mk_loc (1, 64) (1, 66);
+     mk_loc (1, 57) (1, 59);
+     mk_loc (1, 26) (1, 27);
+     mk_loc (1, 23) (1, 24);
+     mk_loc (1, 64) (1, 66);
+     mk_loc (1, 57) (1, 59);
+     mk_loc (1, 26) (1, 27);
+     mk_loc (1, 23) (1, 24);
+     mk_loc (1, 9) (1, 12)];
+  "let_uses_of_all_uses2" >:: mk_scope_builder_uses_of_all_uses_test
+    "function foo() { \
+       let { x, y } = { x: 0, y: 0 }; \
+       let { x: _x, y: _y } = { x, y }; \
+       return ({ x: _x, y: _y }); \
+     }"
+    [[mk_loc (1, 101) (1, 103)];
+     [mk_loc (1, 94) (1, 96)];
+     [mk_loc (1, 76) (1, 77)];
+     [mk_loc (1, 73) (1, 74)];
+     [mk_loc (1, 101) (1, 103)];
+     [mk_loc (1, 94) (1, 96)];
+     [mk_loc (1, 76) (1, 77)];
+     [mk_loc (1, 73) (1, 74)];
+     []];
 ]

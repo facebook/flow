@@ -162,10 +162,12 @@ class lexical_hoister = object(this)
   method! expression (expr: Ast.Expression.t) =
     expr
 
-  (* This is visited by variable declarations. *)
-  method! variable_declarator_pattern ~kind (expr: Ast.Pattern.t) =
+  (* This is visited by variable declarations, as well as other kinds of
+     patterns that we ignore. *)
+  method! pattern ?kind (expr: Ast.Pattern.t) =
     match kind with
-    | Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const ->
+    | None -> expr
+    | Some (Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const) ->
       let open Ast.Pattern in
       let _, patt = expr in
       begin match patt with
@@ -173,11 +175,11 @@ class lexical_hoister = object(this)
         this#add_binding name
       | Object _
       | Array _
-      | Assignment _ -> run (super#variable_declarator_pattern ~kind) expr
+      | Assignment _ -> run (super#pattern ?kind) expr
       | _ -> ()
       end;
       expr
-    | Ast.Statement.VariableDeclaration.Var -> expr
+    | Some Ast.Statement.VariableDeclaration.Var -> expr
 
   method! class_ (cls: Ast.Class.t) =
     let open Ast.Class in
