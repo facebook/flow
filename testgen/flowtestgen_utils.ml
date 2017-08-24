@@ -102,6 +102,7 @@ let read_file filename =
   String.concat "\n" lines
 
 (* convert an AST into a string for printing *)
+    (*
 let string_of_ast endline func =
   fun (ast) ->
     let layout = func (Loc.none, ast) in
@@ -115,6 +116,199 @@ let string_of_expr =
   string_of_ast false Js_layout_generator.expression;;
 let string_of_type =
   string_of_ast false Js_layout_generator.type_;;
+*)
+
+(* A hacky version of string_of function for AST nodes.
+   This will be replaced once we have a better solution.
+*)
+let rec string_of_pattern (pattern : P.t') =
+  match pattern with
+  | P.Identifier id ->
+    let open P.Identifier in
+    (snd id.name) ^
+    (if id.optional then "?" else "") ^ " " ^
+    (match id.typeAnnotation with
+     | Some (_, (_, t)) -> " : " ^ (string_of_type t)
+     | None -> "")
+  | P.Expression (_, e) -> string_of_expr e
+  | P.Assignment assign ->
+    let open P.Assignment in
+    (string_of_pattern (snd assign.left)) ^
+    " = " ^ 
+    (string_of_expr (snd assign.right))
+  | _ -> failwith "[string_of_pattern] unsupported pattern"
+
+and string_of_expr (expr : E.t') =
+  let string_of_proplist plist =
+    let helper prop = match prop with
+      | E.Object.Property (_, p) ->
+        let open E.Object.Property in
+        (match p.key, p.value with
+         | Identifier (_, name), Init (_, e) -> name ^ " : " ^ (string_of_expr e)
+         | _ -> failwith "Unsupported expression")
+      | _ -> failwith "Unsupported property" in
+    String.concat ", " (List.map helper plist) in
+
+  let string_of_assign_op op =
+    let open E.Assignment in
+    match op with
+    | Assign -> "="
+    | PlusAssign -> "+="
+    | MinusAssign -> "-="
+    | MultAssign -> "*="
+    | ExpAssign -> "^="
+    | DivAssign -> "/="
+    | _ -> failwith "unsupported assign" in
+
+  match expr with
+  | E.Object o ->
+    "{" ^ (string_of_proplist E.Object.(o.properties)) ^ "}"
+  | E.Literal lit -> Ast.Literal.(lit.raw)
+  | E.Assignment assign ->
+    let open E.Assignment in
+    [(string_of_pattern (snd assign.left));
+     (string_of_assign_op assign.operator);
+     (string_of_expr (snd assign.right))]
+    |> String.concat " "
+  | E.Call call ->
+    let open E.Call in
+    let callee_str = string_of_expr (snd call.callee) in
+    let arglist_str =
+      call.arguments
+      |> List.map (fun a -> match a with
+          | E.Expression (_, e) -> e
+          | E.Spread _ -> failwith "[string_of_expr] call does not support spread argument.")
+      |> List.map string_of_expr
+      |> String.concat ", " in
+    callee_str ^ "(" ^ arglist_str ^ ")"
+  | E.Identifier (_, id) -> id
+  | E.Member mem ->
+    let open E.Member in
+    let obj_str = string_of_expr (snd mem._object) in
+    let prop_str = match mem.property with
+      | PropertyIdentifier (_, id) -> id
+      | PropertyExpression (_, e) -> string_of_expr e
+      | PropertyPrivateName (_, (_, id)) -> id in
+    obj_str ^ "." ^ prop_str
+  | E.TypeCast cast ->
+    let open E.TypeCast in
+    (string_of_expr (snd cast.expression)) ^
+    " : " ^
+    (string_of_type (snd (snd cast.typeAnnotation)))
+  | _ -> failwith "unknown expr"
+
+and string_of_stmt (stmt : S.t') =
+  match stmt with
+  | S.Block b ->
+    S.Block.(b.body)
+    |> List.map snd
+    |> List.map string_of_stmt
+    |> String.concat "\n"
+  | S.Empty -> "\n"
+  | S.FunctionDeclaration func ->
+    let open Ast.Function in
+    let fname = match func.id with
+      | Some (_, n) -> n
+      | None -> "" in
+    let params_str =
+      func.params
+      |> fst
+      |> List.map snd
+      |> List.map string_of_pattern 
+      |> String.concat ", " in
+    let body_str = match func.body with
+      | BodyBlock (_, s) -> string_of_stmt (S.Block s)
+      | BodyExpression (_, e) -> string_of_expr e in
+    let ret_type_str = match func.returnType with
+      | Some (_, (_, t)) -> ": " ^ string_of_type t
+      | None -> "" in
+    "function " ^ fname ^ "(" ^ params_str ^ ") " ^ ret_type_str ^ " {\n" ^
+    body_str ^
+    "}\n"
+  | S.Return r ->
+    let open S.Return in
+    (match r.argument with
+     | Some (_, e) -> "return " ^ (string_of_expr e) ^ "\n;"
+     | None -> "return;\n")
+  | S.VariableDeclaration decl ->
+    let open S.VariableDeclaration in
+    let string_of_dtor dtor =
+      let open S.VariableDeclaration.Declarator in
+      let init_str = match dtor.init with
+        | Some (_, e) -> "= " ^ (string_of_expr e)
+        | None -> "" in
+      (string_of_pattern (snd dtor.id)) ^ init_str in
+    let kind_str = match decl.kind with
+      | Var -> "var"
+      | Let -> "let"
+      | Const -> "const" in
+    let dlist = List.map snd decl.declarations in
+    let dlist_str = String.concat ", " (List.map string_of_dtor dlist) in
+    kind_str ^ " " ^ dlist_str ^ "\n"
+  | S.Expression e ->
+    let open S.Expression in
+    (string_of_expr (snd e.expression)) ^ ";\n"
+  | _ -> failwith "[string_of_stmt] Unspported stmt"
+
+and string_of_type (t : T.t') =
+
+  match t with
+  | T.Any -> "any"
+  | T.Mixed -> "mixed"
+  | T.Empty -> "empty"
+  | T.Void -> "void"
+  | T.Null -> "null"
+  | T.Number -> "number"
+  | T.String -> "string"
+  | T.Boolean -> "boolean"
+  | T.Object ot ->
+    let open T.Object in
+    let string_of_prop prop = match prop with
+      | T.Object.Property (_, p) ->
+        let open T.Object.Property in
+        let key_str = match p.key with
+          | E.Object.Property.Literal (_, lit)  -> Ast.Literal.(lit.raw)
+          | E.Object.Property.Identifier (_, name) -> name
+          | E.Object.Property.PrivateName (_, (_, name)) -> name
+          | E.Object.Property.Computed (_, e) -> string_of_expr e in
+        let t_str = match p.value with
+          | Init (_, init_t) -> string_of_type init_t
+          | Get (_, ft) -> string_of_type (T.Function ft)
+          | Set (_, ft) -> string_of_type (T.Function ft) in
+        key_str ^ " : " ^ t_str
+      | _ -> failwith "[string_of_prop] unsupported property" in
+    let prop_str_list = ot.properties
+      |> List.map string_of_prop
+      |> String.concat ", " in
+    if ot.exact then "{|" ^ prop_str_list ^ "|}"
+    else "{" ^ prop_str_list ^ "}"
+  | T.Union ((_, t1), (_, t2), trest) -> 
+    let t_strlist =
+      [(string_of_type t1); (string_of_type t2)]
+      @ (trest |> (List.map snd) |> (List.map string_of_type)) in
+    String.concat " | " t_strlist
+  | T.StringLiteral st -> T.StringLiteral.(st.raw)
+  | T.NumberLiteral nt -> T.NumberLiteral.(nt.raw)
+  | T.BooleanLiteral bt -> T.BooleanLiteral.(bt.raw)
+  | T.Function func ->
+    let open T.Function in
+    let string_of_param param =
+      let open T.Function.Param in
+      let opt_str = if param.optional then "?" else "" in
+      let name_str = match param.name with
+        | Some (_, id) -> id ^ opt_str ^ " : "
+        | None -> "" in
+      name_str ^ (string_of_type (snd param.typeAnnotation)) in
+    let params_str =
+      func.params
+      |> fst
+      |> List.map snd
+      |> List.map string_of_param
+      |> String.concat ", " in
+    let ret_type_str = (string_of_type (snd func.returnType)) in
+    "(" ^ params_str ^ ") => " ^ ret_type_str
+  | _ -> failwith "[string_of_type] unsupported type"
+
 
 (* A generator function for creating functions that makes variables and
  * properties
