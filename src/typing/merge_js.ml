@@ -259,8 +259,6 @@ let merge_component_strict ~metadata ~lint_severities ~require_loc_maps
     explicit_unchecked_require_strict cx (m, loc, cx_to)
   );
 
-  other_cxs |> List.iter (implicit_require_strict cx master_cx);
-
   detect_sketchy_null_checks cx;
 
   cx
