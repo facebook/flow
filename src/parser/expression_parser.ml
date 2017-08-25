@@ -1029,7 +1029,7 @@ module Expression
        should be here. *)
     | T_ASYNC
     | T_DECLARE
-    | T_IDENTIFIER
+    | T_IDENTIFIER _
     | T_OF
     | T_TYPE
     | T_OPAQUE

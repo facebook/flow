@@ -869,7 +869,7 @@ module Statement
           declare_var_statement env
       | T_EXPORT when in_module ->
           declare_export_declaration ~allow_export_type:in_module env
-      | T_IDENTIFIER when Peek.value ~i:1 env = "module" ->
+      | T_IDENTIFIER "module" ->
           declare_module ~in_module env
       | _ when in_module -> (
           match Peek.token env with
@@ -1411,9 +1411,9 @@ module Statement
       | T_COMMA, _ (* `import type, ...` *)
       | _, true -> (* `import type Foo` or `import type from` *)
           let importKind, default_specifier = (
-            match type_ident, Peek.token env, Peek.value env with
-            | Some type_ident, T_COMMA, _ (* `import type,` *)
-            | Some type_ident, T_IDENTIFIER, "from" -> (* `import type from` *)
+            match type_ident, Peek.token env with
+            | Some type_ident, T_COMMA (* `import type,` *)
+            | Some type_ident, T_IDENTIFIER "from" -> (* `import type from` *)
               ImportValue, ImportDefaultSpecifier type_ident
             | _ -> (* Either `import type Foo` or `import Foo` *)
               importKind, ImportDefaultSpecifier (Parse.identifier env)

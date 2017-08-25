@@ -12,7 +12,7 @@ type t =
   | T_NUMBER of number_type
   | T_STRING of (Loc.t * string * string * bool) (* loc, value, raw, octal *)
   | T_TEMPLATE_PART of (Loc.t * template_part * bool) (* loc, value, is_tail *)
-  | T_IDENTIFIER
+  | T_IDENTIFIER of string
   | T_REGEXP of (Loc.t * string * string) (* /pattern/flags *)
   (* Syntax *)
   | T_LCURLY
@@ -160,7 +160,7 @@ let token_to_string = function
   | T_NUMBER _ -> "T_NUMBER"
   | T_STRING _ -> "T_STRING"
   | T_TEMPLATE_PART _ -> "T_TEMPLATE_PART"
-  | T_IDENTIFIER -> "T_IDENTIFIER"
+  | T_IDENTIFIER _ -> "T_IDENTIFIER"
   | T_REGEXP _ -> "T_REGEXP"
   | T_FUNCTION -> "T_FUNCTION"
   | T_IF -> "T_IF"

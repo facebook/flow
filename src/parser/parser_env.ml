@@ -469,7 +469,7 @@ module Peek = struct
     | T_ASYNC
     | T_AWAIT
     | T_POUND
-    | T_IDENTIFIER -> true
+    | T_IDENTIFIER _ -> true
     | _ -> false
 
   let is_literal_property_name ?(i=0) env =
@@ -504,7 +504,7 @@ let get_unexpected_error = Token.(function
   | T_NUMBER _, _ -> Error.UnexpectedNumber
   | T_JSX_TEXT _, _
   | T_STRING _, _ -> Error.UnexpectedString
-  | T_IDENTIFIER, _ -> Error.UnexpectedIdentifier
+  | T_IDENTIFIER _, _ -> Error.UnexpectedIdentifier
   | _, word when is_future_reserved word -> Error.UnexpectedReserved
   | _, word when is_strict_reserved word -> Error.StrictReservedWord
   | _, value -> Error.UnexpectedToken value

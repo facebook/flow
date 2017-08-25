@@ -126,6 +126,8 @@ let get_result_and_clear_state (env, lex_token) =
   | T_TEMPLATE_PART (loc, {literal; _}, _) ->
       loc, literal
   | T_REGEXP (loc, pattern, flags) -> loc, "/" ^ pattern ^ "/" ^ flags
+  | T_IDENTIFIER raw ->
+      loc_of_lexbuf env env.lex_lb, raw
   | _ ->
     loc_of_lexbuf env env.lex_lb,
     Sedlexing.Utf8.lexeme env.lex_lb
@@ -544,13 +546,13 @@ let rec token (env: Lex_env.t) lexbuf =
   (* TODO: Use [Symbol.iterator] instead of @@iterator. *)
   | Opt "@@", js_id_start, Star js_id_continue ->
     begin
-      let str = Sedlexing.Utf8.lexeme lexbuf in
-      let str = if str.[0] = '@' && str.[1] = '@'
-        then String.sub str 2 (String.length str - 2)
-        else str
+      let raw = Sedlexing.Utf8.lexeme lexbuf in
+      let str = if raw.[0] = '@' && raw.[1] = '@'
+        then String.sub raw 2 (String.length raw - 2)
+        else raw
       in
       try env, Hashtbl.find keywords str
-      with Not_found -> env, T_IDENTIFIER
+      with Not_found -> env, T_IDENTIFIER raw
     end
 
   (* Syntax *)
@@ -795,7 +797,7 @@ and type_token env lexbuf =
     begin
       let str = Sedlexing.Utf8.lexeme lexbuf in
       try env, Hashtbl.find type_keywords str
-      with Not_found -> env, T_IDENTIFIER
+      with Not_found -> env, T_IDENTIFIER str
     end
 
   | "%checks" -> env, T_CHECKS

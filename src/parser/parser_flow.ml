@@ -258,7 +258,7 @@ module rec Parse : PARSER = struct
   and identifier ?restricted_error env =
     let loc = Peek.loc env in
     let name = Peek.value env in
-    (match Peek.token env with
+    begin match Peek.token env with
     | T_LET ->
     (* So "let" is disallowed as an identifier in a few situations. 11.6.2.1
      * lists them out. It is always disallowed in strict mode *)
@@ -291,7 +291,12 @@ module rec Parse : PARSER = struct
     | _ when is_strict_reserved name ->
       strict_error env Error.StrictReservedWord;
       Eat.token env
-    | _ -> Expect.token env T_IDENTIFIER);
+    | T_IDENTIFIER _ ->
+      Eat.token env
+    | _ ->
+      error_unexpected env;
+      Eat.token env
+    end;
     (match restricted_error with
     | Some err when is_restricted name -> strict_error_at env (loc, err)
     | _ -> ());
