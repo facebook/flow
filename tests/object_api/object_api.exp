@@ -187,8 +187,8 @@ Error: object_prototype.js:150
 Error: object_prototype.js:151
 151: var xToLocaleString2 : () => number = x.toLocaleString; // error
                                   ^^^^^^ number. This type is incompatible with
-410:     toLocaleString(locales?: string | Array<string>, options?: Date$LocaleOptions): string;
-                                                                                         ^^^^^^ string. See lib: <BUILTINS>/core.js:410
+411:     toLocaleString(locales?: string | Array<string>, options?: Date$LocaleOptions): string;
+                                                                                         ^^^^^^ string. See lib: <BUILTINS>/core.js:411
 
 Error: object_prototype.js:155
 155: var yToLocaleString : number = y.toLocaleString; // error
