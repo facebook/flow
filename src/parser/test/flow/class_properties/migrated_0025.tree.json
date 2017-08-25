@@ -88,7 +88,7 @@
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":3,"column":12},"end":{"line":3,"column":13}},
               "range":[32,33],
-              "name":":",
+              "name":"",
               "typeAnnotation":null,
               "optional":false
             },

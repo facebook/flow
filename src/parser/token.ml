@@ -135,11 +135,19 @@ type t =
   | T_ANY_TYPE
   | T_MIXED_TYPE
   | T_EMPTY_TYPE
-  | T_BOOLEAN_TYPE
+  | T_BOOLEAN_TYPE of bool_or_boolean
   | T_NUMBER_TYPE
   | T_NUMBER_SINGLETON_TYPE of { kind: number_type; value: float; raw: string }
   | T_STRING_TYPE
   | T_VOID_TYPE
+
+(* `bool` and `boolean` are equivalent annotations, but we need to track
+   which one was used for when it might be an identifier, as in
+   `(bool: boolean) => void`. It's lexed as two T_BOOLEAN_TYPEs, then the
+   first one is converted into an identifier. *)
+and bool_or_boolean =
+  | BOOL
+  | BOOLEAN
 
 and number_type =
   | BINARY
@@ -279,7 +287,7 @@ let token_to_string = function
   | T_ANY_TYPE -> "T_ANY_TYPE"
   | T_MIXED_TYPE -> "T_MIXED_TYPE"
   | T_EMPTY_TYPE -> "T_EMPTY_TYPE"
-  | T_BOOLEAN_TYPE -> "T_BOOLEAN_TYPE"
+  | T_BOOLEAN_TYPE _ -> "T_BOOLEAN_TYPE"
   | T_NUMBER_TYPE -> "T_NUMBER_TYPE"
   | T_NUMBER_SINGLETON_TYPE _ -> "T_NUMBER_SINGLETON_TYPE"
   | T_STRING_TYPE -> "T_STRING_TYPE"

@@ -199,14 +199,14 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
             loc, Type.Any
 
   and primitive = function
-    | T_ANY_TYPE     -> Some Type.Any
-    | T_MIXED_TYPE   -> Some Type.Mixed
-    | T_EMPTY_TYPE   -> Some Type.Empty
-    | T_BOOLEAN_TYPE -> Some Type.Boolean
-    | T_NUMBER_TYPE  -> Some Type.Number
-    | T_STRING_TYPE  -> Some Type.String
-    | T_VOID_TYPE    -> Some Type.Void
-    | T_NULL         -> Some Type.Null
+    | T_ANY_TYPE -> Some Type.Any
+    | T_MIXED_TYPE -> Some Type.Mixed
+    | T_EMPTY_TYPE -> Some Type.Empty
+    | T_BOOLEAN_TYPE _ -> Some Type.Boolean
+    | T_NUMBER_TYPE -> Some Type.Number
+    | T_STRING_TYPE -> Some Type.String
+    | T_VOID_TYPE -> Some Type.Void
+    | T_NULL -> Some Type.Null
     | _ -> None
 
   and tuple =

@@ -1082,7 +1082,7 @@ module Expression
       | T_PUBLIC
       | T_YIELD
       | T_ANY_TYPE
-      | T_BOOLEAN_TYPE
+      | T_BOOLEAN_TYPE _
       | T_NUMBER_TYPE
       | T_STRING_TYPE
       | T_VOID_TYPE
@@ -1099,7 +1099,12 @@ module Expression
   and property_name_include_private env =
     let start_loc = Peek.loc env in
     let is_private = Expect.maybe env T_POUND in
-    let (id_loc, ident), _ = identifier_or_reserved_keyword env in
+    let id_loc = Peek.loc env in
+    let ident = match identifier_name (Peek.token env) with
+    | Some name -> name
+    | None -> error_unexpected env; ""
+    in
+    Eat.token env;
     let loc = Loc.btwn start_loc id_loc in
     loc, (id_loc, ident), is_private
 end

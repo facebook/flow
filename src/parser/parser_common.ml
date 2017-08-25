@@ -43,6 +43,80 @@ module type PARSER = sig
   val is_assignable_lhs : Expression.t -> bool
 end
 
+(* IdentifierName: https://tc39.github.io/ecma262/#prod-IdentifierName *)
+let identifier_name token =
+  let open Token in
+  match token with
+  (* obviously, Identifier is a valid IdentifierName *)
+  | T_IDENTIFIER id -> Some id
+  (* keywords are also IdentifierNames *)
+  | T_AWAIT -> Some "await"
+  | T_BREAK -> Some "break"
+  | T_CASE -> Some "case"
+  | T_CATCH -> Some "catch"
+  | T_CLASS -> Some "class"
+  | T_CONST -> Some "const"
+  | T_CONTINUE -> Some "continue"
+  | T_DEBUGGER -> Some "debugger"
+  | T_DEFAULT -> Some "default"
+  | T_DELETE -> Some "delete"
+  | T_DO -> Some "do"
+  | T_ELSE -> Some "else"
+  | T_EXPORT -> Some "export"
+  | T_EXTENDS -> Some "extends"
+  | T_FINALLY -> Some "finally"
+  | T_FOR -> Some "for"
+  | T_FUNCTION -> Some "function"
+  | T_IF -> Some "if"
+  | T_IMPORT -> Some "import"
+  | T_IN -> Some "in"
+  | T_INSTANCEOF -> Some "instanceof"
+  | T_NEW -> Some "new"
+  | T_RETURN -> Some "return"
+  | T_SUPER -> Some "super"
+  | T_SWITCH -> Some "switch"
+  | T_THIS -> Some "this"
+  | T_THROW -> Some "throw"
+  | T_TRY -> Some "try"
+  | T_TYPEOF -> Some "typeof"
+  | T_VAR -> Some "var"
+  | T_VOID -> Some "void"
+  | T_WHILE -> Some "while"
+  | T_WITH -> Some "with"
+  | T_YIELD -> Some "yield"
+  (* FutureReservedWord *)
+  | T_ENUM -> Some "enum"
+  | T_LET -> Some "let"
+  | T_STATIC -> Some "static"
+  | T_INTERFACE -> Some "interface"
+  | T_IMPLEMENTS -> Some "implements"
+  | T_PACKAGE -> Some "package"
+  | T_PRIVATE -> Some "private"
+  | T_PROTECTED -> Some "protected"
+  | T_PUBLIC -> Some "public"
+  (* NullLiteral *)
+  | T_NULL -> Some "null"
+  (* BooleanLiteral *)
+  | T_TRUE -> Some "true"
+  | T_FALSE -> Some "false"
+  (* Flow-specific stuff *)
+  | T_DECLARE -> Some "declare"
+  | T_TYPE -> Some "type"
+  | T_OPAQUE -> Some "opaque"
+  | T_ANY_TYPE -> Some "any"
+  | T_MIXED_TYPE -> Some "mixed"
+  | T_EMPTY_TYPE -> Some "empty"
+  | T_BOOLEAN_TYPE BOOL -> Some "bool"
+  | T_BOOLEAN_TYPE BOOLEAN -> Some "boolean"
+  | T_NUMBER_TYPE -> Some "number"
+  | T_STRING_TYPE -> Some "string"
+  | T_VOID_TYPE -> Some "void"
+  (* Contextual stuff *)
+  | T_OF -> Some "of"
+  | T_ASYNC -> Some "async"
+  (* punctuators, types, literals, etc are not identifiers *)
+  | _ -> None
+
 (**
  * The abstract operation IsLabelledFunction
  *

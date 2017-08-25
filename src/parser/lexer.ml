@@ -370,8 +370,8 @@ let type_keyword_of_string = function
   | "any" -> Some T_ANY_TYPE
   | "mixed" -> Some T_MIXED_TYPE
   | "empty" -> Some T_EMPTY_TYPE
-  | "bool" -> Some T_BOOLEAN_TYPE
-  | "boolean" -> Some T_BOOLEAN_TYPE
+  | "bool" -> Some (T_BOOLEAN_TYPE BOOL)
+  | "boolean" -> Some (T_BOOLEAN_TYPE BOOLEAN)
   | "true" -> Some T_TRUE
   | "false" -> Some T_FALSE
   | "number" -> Some T_NUMBER_TYPE
