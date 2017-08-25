@@ -545,18 +545,17 @@ let rec token (env: Lex_env.t) lexbuf =
     env, T_NUMBER { kind = NORMAL; raw = Sedlexing.Utf8.lexeme lexbuf }
 
   (* Keyword or Identifier *)
-  (* TODO: Use [Symbol.iterator] instead of @@iterator. *)
-  | Opt "@@", js_id_start, Star js_id_continue ->
+  | js_id_start, Star js_id_continue ->
     let raw = Sedlexing.Utf8.lexeme lexbuf in
-    let str = if raw.[0] = '@' && raw.[1] = '@'
-      then String.sub raw 2 (String.length raw - 2)
-      else raw
-    in
-    let token = match keyword_of_string str with
+    let token = match keyword_of_string raw with
     | Some token -> token
     | None -> T_IDENTIFIER raw
     in
     env, token
+
+  (* TODO: Use [Symbol.iterator] instead of @@iterator. *)
+  | "@@iterator" -> env, T_IDENTIFIER "@@iterator"
+  | "@@asyncIterator" -> env, T_IDENTIFIER "@@asyncIterator"
 
   (* Syntax *)
   | "{" -> env, T_LCURLY
