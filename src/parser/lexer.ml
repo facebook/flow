@@ -310,78 +310,75 @@ type jsx_text_mode =
   | JSX_DOUBLE_QUOTED_TEXT
   | JSX_CHILD_TEXT
 
-let keywords = Hashtbl.create 53
-let type_keywords = Hashtbl.create 53
-let _ = List.iter (fun (key, token) -> Hashtbl.add keywords key token)
-  [
-    "function", T_FUNCTION;
-    "if", T_IF;
-    "in", T_IN;
-    "instanceof", T_INSTANCEOF;
-    "return", T_RETURN;
-    "switch", T_SWITCH;
-    "this", T_THIS;
-    "throw", T_THROW;
-    "try", T_TRY;
-    "var", T_VAR;
-    "while", T_WHILE;
-    "with", T_WITH;
-    "const", T_CONST;
-    "let", T_LET ;
-    "null", T_NULL;
-    "false", T_FALSE;
-    "true", T_TRUE;
-    "break", T_BREAK;
-    "case", T_CASE;
-    "catch", T_CATCH;
-    "continue", T_CONTINUE;
-    "default", T_DEFAULT;
-    "do", T_DO;
-    "finally", T_FINALLY;
-    "for", T_FOR;
-    "class", T_CLASS;
-    "extends", T_EXTENDS;
-    "static", T_STATIC;
-    "else", T_ELSE;
-    "new", T_NEW;
-    "delete", T_DELETE;
-    "typeof", T_TYPEOF;
-    "void", T_VOID;
-    "enum", T_ENUM;
-    "export", T_EXPORT ;
-    "import", T_IMPORT;
-    "super", T_SUPER ;
-    "implements", T_IMPLEMENTS;
-    "interface", T_INTERFACE;
-    "package", T_PACKAGE;
-    "private", T_PRIVATE;
-    "protected", T_PROTECTED;
-    "public", T_PUBLIC;
-    "yield", T_YIELD;
-    "debugger", T_DEBUGGER;
-    "declare", T_DECLARE;
-    "type", T_TYPE;
-    "opaque", T_OPAQUE;
-    "of", T_OF;
-    "async", T_ASYNC;
-    "await", T_AWAIT;
-  ]
-let _ = List.iter (fun (key, token) -> Hashtbl.add type_keywords key token)
-  [
-    "static",  T_STATIC;
-    "typeof",  T_TYPEOF;
-    "any",     T_ANY_TYPE;
-    "mixed",   T_MIXED_TYPE;
-    "empty",   T_EMPTY_TYPE;
-    "bool",    T_BOOLEAN_TYPE;
-    "boolean", T_BOOLEAN_TYPE;
-    "true",    T_TRUE;
-    "false",   T_FALSE;
-    "number",  T_NUMBER_TYPE;
-    "string",  T_STRING_TYPE;
-    "void",    T_VOID_TYPE;
-    "null",    T_NULL;
-  ]
+let keyword_of_string = function
+  | "function" -> Some T_FUNCTION
+  | "if" -> Some T_IF
+  | "in" -> Some T_IN
+  | "instanceof" -> Some T_INSTANCEOF
+  | "return" -> Some T_RETURN
+  | "switch" -> Some T_SWITCH
+  | "this" -> Some T_THIS
+  | "throw" -> Some T_THROW
+  | "try" -> Some T_TRY
+  | "var" -> Some T_VAR
+  | "while" -> Some T_WHILE
+  | "with" -> Some T_WITH
+  | "const" -> Some T_CONST
+  | "let" -> Some T_LET
+  | "null" -> Some T_NULL
+  | "false" -> Some T_FALSE
+  | "true" -> Some T_TRUE
+  | "break" -> Some T_BREAK
+  | "case" -> Some T_CASE
+  | "catch" -> Some T_CATCH
+  | "continue" -> Some T_CONTINUE
+  | "default" -> Some T_DEFAULT
+  | "do" -> Some T_DO
+  | "finally" -> Some T_FINALLY
+  | "for" -> Some T_FOR
+  | "class" -> Some T_CLASS
+  | "extends" -> Some T_EXTENDS
+  | "static" -> Some T_STATIC
+  | "else" -> Some T_ELSE
+  | "new" -> Some T_NEW
+  | "delete" -> Some T_DELETE
+  | "typeof" -> Some T_TYPEOF
+  | "void" -> Some T_VOID
+  | "enum" -> Some T_ENUM
+  | "export" -> Some T_EXPORT
+  | "import" -> Some T_IMPORT
+  | "super" -> Some T_SUPER
+  | "implements" -> Some T_IMPLEMENTS
+  | "interface" -> Some T_INTERFACE
+  | "package" -> Some T_PACKAGE
+  | "private" -> Some T_PRIVATE
+  | "protected" -> Some T_PROTECTED
+  | "public" -> Some T_PUBLIC
+  | "yield" -> Some T_YIELD
+  | "debugger" -> Some T_DEBUGGER
+  | "declare" -> Some T_DECLARE
+  | "type" -> Some T_TYPE
+  | "opaque" -> Some T_OPAQUE
+  | "of" -> Some T_OF
+  | "async" -> Some T_ASYNC
+  | "await" -> Some T_AWAIT
+  | _ -> None
+
+let type_keyword_of_string = function
+  | "static" -> Some T_STATIC
+  | "typeof" -> Some T_TYPEOF
+  | "any" -> Some T_ANY_TYPE
+  | "mixed" -> Some T_MIXED_TYPE
+  | "empty" -> Some T_EMPTY_TYPE
+  | "bool" -> Some T_BOOLEAN_TYPE
+  | "boolean" -> Some T_BOOLEAN_TYPE
+  | "true" -> Some T_TRUE
+  | "false" -> Some T_FALSE
+  | "number" -> Some T_NUMBER_TYPE
+  | "string" -> Some T_STRING_TYPE
+  | "void" -> Some T_VOID_TYPE
+  | "null" -> Some T_NULL
+  | _ -> None
 
 let rec token (env: Lex_env.t) lexbuf =
   match%sedlex lexbuf with
@@ -550,15 +547,16 @@ let rec token (env: Lex_env.t) lexbuf =
   (* Keyword or Identifier *)
   (* TODO: Use [Symbol.iterator] instead of @@iterator. *)
   | Opt "@@", js_id_start, Star js_id_continue ->
-    begin
-      let raw = Sedlexing.Utf8.lexeme lexbuf in
-      let str = if raw.[0] = '@' && raw.[1] = '@'
-        then String.sub raw 2 (String.length raw - 2)
-        else raw
-      in
-      try env, Hashtbl.find keywords str
-      with Not_found -> env, T_IDENTIFIER raw
-    end
+    let raw = Sedlexing.Utf8.lexeme lexbuf in
+    let str = if raw.[0] = '@' && raw.[1] = '@'
+      then String.sub raw 2 (String.length raw - 2)
+      else raw
+    in
+    let token = match keyword_of_string str with
+    | Some token -> token
+    | None -> T_IDENTIFIER raw
+    in
+    env, token
 
   (* Syntax *)
   | "{" -> env, T_LCURLY
@@ -799,11 +797,12 @@ and type_token env lexbuf =
 
   (* Keyword or Identifier *)
   | js_id_start, Star js_id_continue ->
-    begin
-      let str = Sedlexing.Utf8.lexeme lexbuf in
-      try env, Hashtbl.find type_keywords str
-      with Not_found -> env, T_IDENTIFIER str
-    end
+    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let token = match type_keyword_of_string str with
+    | Some token -> token
+    | None -> T_IDENTIFIER str
+    in
+    env, token
 
   | "%checks" -> env, T_CHECKS
   (* Syntax *)
