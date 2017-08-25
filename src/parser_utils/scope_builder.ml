@@ -183,6 +183,9 @@ class scope_builder = object(this)
     let lexical_bindings = lexical_hoist#eval lexical_hoist#program program in
     this#with_bindings ~lexical:true lexical_bindings super#program program
 
+  method private scoped_for_in_statement (stmt: Ast.Statement.ForIn.t) =
+    super#for_in_statement stmt
+
   method! for_in_statement (stmt: Ast.Statement.ForIn.t) =
     let open Ast.Statement.ForIn in
     let { left; right = _; body = _; each = _ } = stmt in
@@ -193,7 +196,10 @@ class scope_builder = object(this)
       lexical_hoist#eval lexical_hoist#variable_declaration decl
     | LeftPattern _ -> Bindings.empty
     in
-    this#with_bindings ~lexical:true lexical_bindings super#for_in_statement stmt
+    this#with_bindings ~lexical:true lexical_bindings this#scoped_for_in_statement stmt
+
+  method private scoped_for_of_statement (stmt: Ast.Statement.ForOf.t) =
+    super#for_of_statement stmt
 
   method! for_of_statement (stmt: Ast.Statement.ForOf.t) =
     let open Ast.Statement.ForOf in
@@ -205,7 +211,10 @@ class scope_builder = object(this)
       lexical_hoist#eval lexical_hoist#variable_declaration decl
     | LeftPattern _ -> Bindings.empty
     in
-    this#with_bindings ~lexical:true lexical_bindings super#for_of_statement stmt
+    this#with_bindings ~lexical:true lexical_bindings this#scoped_for_of_statement stmt
+
+  method private scoped_for_statement (stmt: Ast.Statement.For.t) =
+    super#for_statement stmt
 
   method! for_statement (stmt: Ast.Statement.For.t) =
     let open Ast.Statement.For in
@@ -217,7 +226,7 @@ class scope_builder = object(this)
       lexical_hoist#eval lexical_hoist#variable_declaration decl
     | _ -> Bindings.empty
     in
-    this#with_bindings ~lexical:true lexical_bindings super#for_statement stmt
+    this#with_bindings ~lexical:true lexical_bindings this#scoped_for_statement stmt
 
   method! catch_clause (clause: Ast.Statement.Try.CatchClause.t') =
     let open Ast.Statement.Try.CatchClause in
@@ -251,24 +260,19 @@ class scope_builder = object(this)
           ()
     end;
 
-    (* pushing *)
     let saved_bad_catch_params = bad_catch_params in
     bad_catch_params <- hoist#bad_catch_params;
-    let saved_state = this#push hoist#acc in
-
-    let (param_list, rest) = params in
-    run_list this#function_param_pattern param_list;
-    run_opt this#function_rest_element rest;
-
-    begin match body with
+    this#with_bindings hoist#acc (fun () ->
+      let (param_list, rest) = params in
+      run_list this#function_param_pattern param_list;
+      run_opt this#function_rest_element rest;
+      begin match body with
       | BodyBlock (_, block) ->
         run this#block block
       | BodyExpression expr ->
         run this#expression expr
-    end;
-
-    (* popping *)
-    this#pop saved_state;
+      end;
+    ) ();
     bad_catch_params <- saved_bad_catch_params
 
   method! function_declaration (expr: Ast.Function.t) =
@@ -306,17 +310,13 @@ class scope_builder = object(this)
         predicate = _; returnType = _; typeParameters = _;
       } = expr in
 
-      (* pushing *)
-      let saved_state = this#push (match id with
+      let bindings = match id with
         | Some name -> Bindings.singleton name
-        | None -> Bindings.empty
-      ) in
-      run_opt this#function_identifier id;
-
-      this#lambda params body;
-
-      (* popping *)
-      this#pop saved_state;
+        | None -> Bindings.empty in
+      this#with_bindings bindings (fun () ->
+        run_opt this#function_identifier id;
+        this#lambda params body;
+      ) ();
     end;
 
     expr
