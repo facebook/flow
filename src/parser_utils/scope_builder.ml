@@ -8,10 +8,10 @@
  *
  *)
 
-
-module LocMap = Map.Make (Loc)
 open Flow_ast_visitor
 open Hoister
+
+module LocMap = Utils_js.LocMap
 
 class with_or_eval_visitor = object(this)
   inherit [bool] visitor ~init:false as super

@@ -8,6 +8,8 @@
  *
  *)
 
+module LocMap = Utils_js.LocMap
+
 exception Props_not_found of Type.Properties.id
 exception Exports_not_found of Type.Exports.id
 exception Require_not_found of string
@@ -138,7 +140,7 @@ type local_t = {
   mutable declare_module_t: Type.t option;
 
   (* map from exists proposition locations to the types of values running through them *)
-  mutable exists_checks: ExistsCheck.t Utils_js.LocMap.t;
+  mutable exists_checks: ExistsCheck.t LocMap.t;
   (* map from exists proposition locations to the types of excuses for them *)
   (* If a variable appears in something like `x || ''`, the existence check
    * is excused and not considered sketchy. (The program behaves identically to how it would
@@ -146,10 +148,10 @@ type local_t = {
    * common pattern. Excusing it eliminates a lot of noise from the lint rule. *)
   (* The above example assumes that x is a string. If it were a different type
    * it wouldn't be excused. *)
-  mutable exists_excuses: ExistsCheck.t Utils_js.LocMap.t;
+  mutable exists_excuses: ExistsCheck.t LocMap.t;
 
   mutable dep_map: Dep_mapper.Dep.t Dep_mapper.DepMap.t;
-  mutable renamings : (Loc.t * int) Scope_builder.LocMap.t;
+  mutable renamings : (Loc.t * int) LocMap.t;
 }
 
 type cacheable_t = local_t
@@ -232,11 +234,11 @@ let make metadata file module_ref = {
 
     declare_module_t = None;
 
-    exists_checks = Utils_js.LocMap.empty;
-    exists_excuses = Utils_js.LocMap.empty;
+    exists_checks = LocMap.empty;
+    exists_excuses = LocMap.empty;
 
     dep_map = Dep_mapper.DepMap.empty;
-    renamings = Scope_builder.LocMap.empty;
+    renamings = LocMap.empty;
   }
 }
 
@@ -404,10 +406,10 @@ let clear_intermediates cx =
   Type_table.reset cx.local.type_table;
   Hashtbl.reset cx.local.annot_table;
   cx.local.all_unresolved <- IMap.empty;
-  cx.local.exists_checks <- Utils_js.LocMap.empty;
-  cx.local.exists_excuses <- Utils_js.LocMap.empty;
+  cx.local.exists_checks <- LocMap.empty;
+  cx.local.exists_excuses <- LocMap.empty;
   cx.local.dep_map <- Dep_mapper.DepMap.empty;
-  cx.local.renamings <- Scope_builder.LocMap.empty;
+  cx.local.renamings <- LocMap.empty;
   cx.local.require_map <- SMap.empty
 
 
@@ -463,8 +465,8 @@ let merge_into cx cx_other =
   set_errors cx (Errors.ErrorSet.union (errors cx_other) (errors cx));
   set_error_suppressions cx (Error_suppressions.union (error_suppressions cx_other) (error_suppressions cx));
   set_severity_cover cx (ExactCover.union (severity_cover cx_other) (severity_cover cx));
-  set_exists_checks cx (Utils_js.LocMap.union (exists_checks cx_other) (exists_checks cx));
-  set_exists_excuses cx (Utils_js.LocMap.union (exists_excuses cx_other) (exists_excuses cx))
+  set_exists_checks cx (LocMap.union (exists_checks cx_other) (exists_checks cx));
+  set_exists_excuses cx (LocMap.union (exists_excuses cx_other) (exists_excuses cx))
   (* TODO: merge renamings and dep_map as well. *)
 
 let to_cache cx = cx.local

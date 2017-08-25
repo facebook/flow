@@ -9,7 +9,6 @@
  *)
 
 
-module LocMap = Map.Make (Loc)
 open Flow_ast_visitor
 
 (* Hoister class. Does a shallow visit of statements, looking for binding

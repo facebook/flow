@@ -22,7 +22,7 @@ we do introduce HeapLocs for future extension.
 
 (* TODO Ensure physical equality optimization? *)
 
-module LocMap = Map.Make (Loc)
+module LocMap = Utils_js.LocMap
 
 module DepKey = struct
   type t =
@@ -152,7 +152,7 @@ end
 class mapper = object(this)
   inherit Flow_ast_mapper.mapper as super
 
-  val mutable renamings = Scope_builder.LocMap.empty
+  val mutable renamings = LocMap.empty
 
   val mutable depMap = DepMap.empty
 
@@ -164,7 +164,7 @@ class mapper = object(this)
   method has_single_value_dep (loc: Loc.t) =
     let open Dep in
     try
-      let (d,i) = Scope_builder.LocMap.find loc renamings in
+      let (d,i) = LocMap.find loc renamings in
       let { key=_; typeDep=_; valDep=valDep} =
         DepMap.find (DepKey.Id (d,i)) depMap in
         match valDep with
@@ -177,7 +177,7 @@ class mapper = object(this)
   method has_no_open_type_dep (loc: Loc.t) =
    let open Dep in
    try
-    let (d,i) = Scope_builder.LocMap.find loc renamings in
+    let (d,i) = LocMap.find loc renamings in
     let { key=_; typeDep=typeDep; valDep=_} =
       DepMap.find (DepKey.Id (d,i)) depMap in
       match typeDep with
@@ -193,10 +193,9 @@ class mapper = object(this)
   method! program (program: Ast.program) =
     let { Scope_builder.locals; globals=_; max_distinct=_; scopes=_ } =
     Scope_builder.program ~ignore_toplevel:true program in
-    renamings <- Scope_builder.(
-      LocMap.map (fun ({ Def.loc; name; _ }, _) -> loc, name) locals
-    );
-    Scope_builder.LocMap.iter
+    renamings <-
+      LocMap.map (fun ({ Scope_builder.Def.loc; name; _ }, _) -> loc, name) locals;
+    LocMap.iter
       (fun _ (def_loc,id) ->
         let open Dep in
           depMap <- DepMap.add (DepKey.Id (def_loc,id))
@@ -214,7 +213,7 @@ class mapper = object(this)
         let open Ast.Pattern.Identifier in
         let { name = (loc, _); typeAnnotation = ta; _ } = id in
         (try
-          let (d,i) = Scope_builder.LocMap.find loc renamings in
+          let (d,i) = LocMap.find loc renamings in
           match ta with
           | None ->
             (* Currently, we pretend we don't know anything about caller/callee *)
@@ -243,7 +242,7 @@ class mapper = object(this)
       let open Ast.Pattern.Identifier in
       let { name = (loc, _); typeAnnotation = ta; _ } = id in
       (try
-        let (d,i) = Scope_builder.LocMap.find loc renamings in
+        let (d,i) = LocMap.find loc renamings in
         match ta with
         | None ->
         let dep = { key=(DepKey.Id (d,i));
@@ -270,7 +269,7 @@ class mapper = object(this)
   let open Dep in
   fun loc ->
   try
-      let (d,i) = Scope_builder.LocMap.find loc renamings in
+      let (d,i) = LocMap.find loc renamings in
       let dep_right = { key = (DepKey.Id (d,i));
           typeDep = Dep.Incomplete;
           valDep = Dep.Incomplete} in
@@ -287,7 +286,7 @@ class mapper = object(this)
     (expr: Ast.Expression.t option) =
   let open Dep in
   try
-    let (d,i) = Scope_builder.LocMap.find loc renamings in
+    let (d,i) = LocMap.find loc renamings in
     (* syntax guarantees that in destructuring, rhs is not optional *)
     let (loc_e,_) = (match expr with | Some e -> e | None -> raise Not_found) in
     match key with
@@ -320,7 +319,7 @@ class mapper = object(this)
     let open Dep in
     let { name = (loc, _); typeAnnotation = _; _ } = id in
     (try
-      let (d,i) = Scope_builder.LocMap.find loc renamings in
+      let (d,i) = LocMap.find loc renamings in
       (match expr with
       | Some expr' ->
       let (loc_e, _) = expr' in
@@ -401,7 +400,7 @@ class mapper = object(this)
       let open Dep in
       let id' = this#identifier id in
       (try
-        let (d,i) = Scope_builder.LocMap.find loc renamings in
+        let (d,i) = LocMap.find loc renamings in
         let dep = {key = (DepKey.Temp loc);
                     typeDep = Depends [DepKey.Id (d,i)];
                     valDep =  Depends [DepKey.Id (d,i)]} in
@@ -513,7 +512,7 @@ class mapper = object(this)
     (match argument with
     | loc_a, Ast.Expression.Identifier _ ->
       (try
-        let (d,i) = Scope_builder.LocMap.find loc_a renamings in
+        let (d,i) = LocMap.find loc_a renamings in
         (* let dep_id = DepMap.find (DepKey.Id (d,i)) depMap in *)
         let dep_expr = { key = DepKey.Temp loc;
                          valDep = Depends [DepKey.Id (d,i)];
@@ -560,7 +559,7 @@ class mapper = object(this)
       let { name = (loc, _); typeAnnotation = _; _} = id in
       (try
         let (d,i) =
-          Scope_builder.LocMap.find loc renamings in
+          LocMap.find loc renamings in
         let dep_left =
           DepMap.find (DepKey.Id (d,i)) depMap in
         let (loc_e, _) = expr in

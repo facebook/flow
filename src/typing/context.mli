@@ -8,6 +8,8 @@
  *
  *)
 
+module LocMap = Utils_js.LocMap
+
 exception Props_not_found of Type.Properties.id
 exception Exports_not_found of Type.Exports.id
 exception Module_not_found of string
@@ -111,10 +113,10 @@ val type_table: t -> Type_table.t
 val verbose: t -> Verbose.t option
 val max_workers: t -> int
 val jsx: t -> Options.jsx_mode option
-val exists_checks: t -> ExistsCheck.t Utils_js.LocMap.t
-val exists_excuses: t -> ExistsCheck.t Utils_js.LocMap.t
+val exists_checks: t -> ExistsCheck.t LocMap.t
+val exists_excuses: t -> ExistsCheck.t LocMap.t
 val dep_map: t -> Dep_mapper.Dep.t Dep_mapper.DepMap.t
-val renamings: t -> (Loc.t * int) Scope_builder.LocMap.t
+val renamings: t -> (Loc.t * int) LocMap.t
 val pid_prefix: t -> string
 
 val copy_of_context: t -> t
@@ -153,10 +155,10 @@ val set_property_maps: t -> Type.Properties.map -> unit
 val set_export_maps: t -> Type.Exports.map -> unit
 val set_tvar: t -> Constraint.ident -> Constraint.node -> unit
 val set_unused_lint_suppressions: t -> Loc.LocSet.t -> unit
-val set_exists_checks: t -> ExistsCheck.t Utils_js.LocMap.t -> unit
-val set_exists_excuses: t -> ExistsCheck.t Utils_js.LocMap.t -> unit
+val set_exists_checks: t -> ExistsCheck.t LocMap.t -> unit
+val set_exists_excuses: t -> ExistsCheck.t LocMap.t -> unit
 val set_dep_map: t -> Dep_mapper.Dep.t Dep_mapper.DepMap.t -> unit
-val set_renamings: t -> (Loc.t * int) Scope_builder.LocMap.t -> unit
+val set_renamings: t -> (Loc.t * int) LocMap.t -> unit
 val set_module_map: t -> Type.t SMap.t -> unit
 
 val clear_intermediates: t -> unit

@@ -611,7 +611,7 @@ let promote_to_const_like cx loc =
   let open Dep_mapper in
   let renamings = Context.renamings cx in
   let dep_map = Context.dep_map cx in
-  let (d,i) = Scope_builder.LocMap.find loc renamings in
+  let (d,i) = Utils_js.LocMap.find loc renamings in
   let { Dep.key=_; Dep.typeDep=_; Dep.valDep=valDep} =
     DepMap.find (DepKey.Id (d,i)) dep_map in
     (match valDep with

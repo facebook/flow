@@ -10,6 +10,8 @@
 
 open Flow_ast_visitor
 
+module LocMap = Utils_js.LocMap
+
 (* Subclass of the AST visitor class that calculates requires. Initializes with
    the scope builder class.
 *)
@@ -30,14 +32,14 @@ class requires_calculator ~ast = object(this)
     | ((_, Identifier (loc, "require")),
        [Expression (require_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ })])
       ->
-      if not (Scope_builder.LocMap.mem loc locals)
+      if not (LocMap.mem loc locals)
       then this#add_require v require_loc
     | ((_, Identifier (loc, "requireLazy")),
        [Expression (_, Array ({ Array.elements })); Expression (_);])
       ->
       let element = function
         | Some (Expression (require_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ })) ->
-          if not (Scope_builder.LocMap.mem loc locals)
+          if not (LocMap.mem loc locals)
           then this#add_require v require_loc
         | _ -> () in
       List.iter element elements

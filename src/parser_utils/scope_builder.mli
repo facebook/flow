@@ -8,7 +8,6 @@
  *
  *)
 
-module LocMap: Map.S with type key = Loc.t
 module Def: sig
   type t = {
     loc: Loc.t;
@@ -23,7 +22,7 @@ module Scope: sig
   }
 end
 type info = {
-  locals: (Def.t * int) LocMap.t;
+  locals: (Def.t * int) Utils_js.LocMap.t;
   globals: SSet.t IMap.t;
   max_distinct: int;
   scopes: Scope.t IMap.t;
