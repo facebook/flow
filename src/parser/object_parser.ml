@@ -48,7 +48,8 @@ module Object
       else []
 
   let key ?(class_body=false) env =
-    Ast.Expression.Object.Property.(match Peek.token env with
+    let open Ast.Expression.Object.Property in
+    match Peek.token env with
     | T_STRING (loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;
         Expect.token env (T_STRING (loc, value, raw, octal));
@@ -68,12 +69,13 @@ module Object
         Expect.token env T_RBRACKET;
         Loc.btwn start_loc end_loc, Ast.Expression.Object.Property.Computed expr
     | T_POUND when class_body ->
-        let loc, id = Expression.private_identifier env in
+        let loc, id, _is_private = Expression.property_name_include_private env in
         add_declared_private env (snd id);
         loc, PrivateName (loc, id)
     | _ ->
-        let id, _ = Expression.identifier_or_reserved_keyword env in
-        fst id, Identifier id)
+        let loc, id, is_private = Expression.property_name_include_private env in
+        if is_private then error_at env (loc, Parse_error.PrivateNotInClass);
+        loc, Identifier id
 
   let getter_or_setter env is_getter =
     (* this is a getter or setter, it cannot be async *)

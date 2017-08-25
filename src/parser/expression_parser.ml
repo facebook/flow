@@ -19,7 +19,7 @@ module type EXPRESSION = sig
   val assignment_cover: env -> object_cover
   val conditional: env -> Expression.t
   val identifier_or_reserved_keyword: env -> Identifier.t * (Loc.t * Parse_error.t) option
-  val private_identifier: env -> PrivateName.t
+  val property_name_include_private: env -> Loc.t * Identifier.t * bool
   val is_assignable_lhs: Expression.t -> bool
   val left_hand_side: env -> Expression.t
   val number: env -> number_type -> float
@@ -630,11 +630,12 @@ module Expression
         })))
     | T_PERIOD ->
         Expect.token env T_PERIOD;
-        let id, _, is_private = identifier_or_keyword_include_private env in
-        let loc = Loc.btwn start_loc (fst id) in
+        let id_loc, id, is_private = property_name_include_private env in
+        if is_private then add_used_private env (snd id) id_loc;
+        let loc = Loc.btwn start_loc id_loc in
         let open Expression.Member in
-        let property = if is_private then PropertyPrivateName id
-        else PropertyIdentifier (snd id) in
+        let property = if is_private then PropertyPrivateName (id_loc, id)
+        else PropertyIdentifier id in
         (* super.PrivateName is a syntax error *)
         begin match left with
         | Cover_expr (_, Ast.Expression.Super) when is_private ->
@@ -1096,18 +1097,10 @@ module Expression
       Eat.token env;
       (lex_loc, lex_value), err
 
-  and private_identifier env = with_loc (fun env ->
-      Expect.token env T_POUND;
-      let id, _ = identifier_or_reserved_keyword env in
-      id) env
-
-  and identifier_or_keyword_include_private env =
-    match Peek.token env with
-    | T_POUND ->
-        let (loc, ident) = private_identifier env in
-        add_used_private env (snd ident) loc;
-        (loc, ident), None, true
-    | _ ->
-        let (loc, ident), err = identifier_or_reserved_keyword env in
-        (loc, (loc, ident)), err, false
+  and property_name_include_private env =
+    let start_loc = Peek.loc env in
+    let is_private = Expect.maybe env T_POUND in
+    let (id_loc, ident), _ = identifier_or_reserved_keyword env in
+    let loc = Loc.btwn start_loc id_loc in
+    loc, (id_loc, ident), is_private
 end

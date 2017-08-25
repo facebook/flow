@@ -1,24 +1,8 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":8}},
-      "message":"Unexpected token #"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":8},"end":{"line":2,"column":9}},
-      "message":"Unexpected identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":10}},
-      "message":"Unexpected token :"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
-      "message":"Unexpected token number"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":18}},
-      "message":"Unexpected token }"
+      "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":9}},
+      "message":"Private fields can only be referenced from within a class."
     }
   ],
   "type":"Program",
@@ -72,42 +56,20 @@
                 "properties":[
                   {
                     "type":"ObjectTypeProperty",
-                    "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":10}},
-                    "range":[17,20],
+                    "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":17}},
+                    "range":[17,27],
                     "key":{
                       "type":"Identifier",
-                      "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":8}},
-                      "range":[17,18],
-                      "name":"#",
+                      "loc":{"source":null,"start":{"line":2,"column":8},"end":{"line":2,"column":9}},
+                      "range":[18,19],
+                      "name":"q",
                       "typeAnnotation":null,
                       "optional":false
                     },
                     "value":{
-                      "type":"AnyTypeAnnotation",
-                      "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":10}},
-                      "range":[19,20]
-                    },
-                    "optional":false,
-                    "static":false,
-                    "variance":null,
-                    "kind":"init"
-                  },
-                  {
-                    "type":"ObjectTypeProperty",
-                    "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":18}},
-                    "range":[19,28],
-                    "key":{
-                      "type":"Identifier",
-                      "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":10}},
-                      "range":[19,20],
-                      "name":":",
-                      "typeAnnotation":null,
-                      "optional":false
-                    },
-                    "value":{
-                      "type":"AnyTypeAnnotation",
-                      "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":18}},
-                      "range":[27,28]
+                      "type":"NumberTypeAnnotation",
+                      "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
+                      "range":[21,27]
                     },
                     "optional":false,
                     "static":false,
