@@ -513,7 +513,13 @@ end = struct
       begin match case.expected with
       | Some (Module _) -> (* TODO *) Case_skipped None
       | Some (Tree tree) ->
-          let expected = fst (Parser_flow.json_file ~fail:true tree None) in
+          let expected, json_errors = Parser_flow.json_file ~fail:false tree None in
+          if json_errors <> [] then begin
+            let (loc, err) = List.hd json_errors in
+            let str = Printf.sprintf "Unable to parse .tree.json: %s: %s"
+              (Loc.to_string loc) (Parse_error.PP.error err) in
+            Case_error [str]
+          end else
           let expected = match diff with
           | Some str ->
             let diffs = fst (Parser_flow.json_file ~fail:true str None) in
