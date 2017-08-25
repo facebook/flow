@@ -118,6 +118,7 @@ let string_of_type =
   string_of_ast false Js_layout_generator.type_;;
 *)
 
+
 (* A hacky version of string_of function for AST nodes.
    This will be replaced once we have a better solution.
 *)
