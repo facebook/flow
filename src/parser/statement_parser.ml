@@ -664,9 +664,9 @@ module Statement
           Expect.token env T_EXTENDS;
           supers env []
         end else [] in
-      let mixins = if Peek.value env = "mixins"
+      let mixins = if Peek.token env = T_IDENTIFIER "mixins"
         then begin
-          Expect.contextual env "mixins";
+          Eat.token env;
           supers env []
         end else [] in
       let body = Type._object ~allow_static:true env in
@@ -827,7 +827,7 @@ module Statement
     fun ?(in_module=false) env ->
       let start_loc = Peek.loc env in
       Expect.token env T_DECLARE;
-      Expect.contextual env "module";
+      Expect.token env (T_IDENTIFIER "module");
       if in_module || Peek.token env = T_PERIOD
       then
         let loc, exports = with_loc declare_module_exports env in
@@ -837,7 +837,7 @@ module Statement
 
   and declare_module_exports env =
     Expect.token env T_PERIOD;
-    Expect.contextual env "exports";
+    Expect.token env (T_IDENTIFIER "exports");
     let type_annot = Type.annotation env in
     Eat.semicolon env;
     Statement.DeclareModuleExports type_annot
@@ -886,7 +886,7 @@ module Statement
     )
 
   and export_source env =
-    Expect.contextual env "from";
+    Expect.token env (T_IDENTIFIER "from");
     match Peek.token env with
     | T_STRING (loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;
@@ -895,9 +895,8 @@ module Statement
         loc, { Literal.value; raw; }
     | _ ->
         (* Just make up a string for the error case *)
-        let raw = Peek.value env in
-        let value = Literal.String raw in
-        let ret = Peek.loc env, { Literal.value; raw; } in
+        let value = Literal.String "" in
+        let ret = Peek.loc env, { Literal.value; raw = ""; } in
         error_unexpected env;
         ret
 
@@ -935,9 +934,9 @@ module Statement
         List.rev specifiers, List.rev errs
     | _ ->
         let local, err = Parse.identifier_or_reserved_keyword env in
-        let exported, err, end_loc = if Peek.value env = "as"
+        let exported, err, end_loc = if Peek.token env = T_IDENTIFIER "as"
         then begin
-          Expect.contextual env "as";
+          Eat.token env;
           let name, _ = Parse.identifier_or_reserved_keyword env in
           (record_export env (fst name, extract_ident_name name));
           Some name, None, fst name
@@ -1094,9 +1093,9 @@ module Statement
           let parse_export_star_as =
             (parse_options env).esproposal_export_star_as
           in
-          if Peek.value env = "as"
+          if Peek.token env = T_IDENTIFIER "as"
           then (
-            Expect.contextual env "as";
+            Eat.token env;
             if parse_export_star_as
             then Some (Parse.identifier env)
             else (error env Error.UnexpectedTypeDeclaration; None)
@@ -1125,7 +1124,7 @@ module Statement
         let specifiers, errs = export_specifiers_and_errs env [] [] in
         let specifiers = Some (ExportSpecifiers specifiers) in
         Expect.token env T_RCURLY;
-        let source = if Peek.value env = "from"
+        let source = if Peek.token env = T_IDENTIFIER "from"
         then Some (export_source env)
         else begin
           errs |> List.iter (error_at env);
@@ -1211,9 +1210,9 @@ module Statement
           (parse_options env).esproposal_export_star_as
         in
         let local_name =
-          if Peek.value env = "as"
+          if Peek.token env = T_IDENTIFIER "as"
           then (
-            Expect.contextual env "as";
+            Eat.token env;
             if parse_export_star_as
             then Some (Parse.identifier env)
             else (error env Error.UnexpectedTypeDeclaration; None)
@@ -1267,7 +1266,7 @@ module Statement
         let specifiers, errs = export_specifiers_and_errs env [] [] in
         let specifiers = Some (Statement.ExportNamedDeclaration.ExportSpecifiers specifiers) in
         Expect.token env T_RCURLY;
-        let source = if Peek.value env = "from"
+        let source = if Peek.token env = T_IDENTIFIER "from"
         then Some (export_source env)
         else begin
           errs |> List.iter (error_at env);
@@ -1287,7 +1286,7 @@ module Statement
     let open Statement.ImportDeclaration in
 
     let source env =
-      Expect.contextual env "from";
+      Expect.token env (T_IDENTIFIER "from");
       match Peek.token env with
       | T_STRING (loc, value, raw, octal) ->
           if octal then strict_error env Error.StrictOctalLiteral;
@@ -1296,9 +1295,8 @@ module Statement
           loc, { Literal.value; raw; }
       | _ ->
           (* Just make up a string for the error case *)
-          let raw = Peek.value env in
-          let value = Literal.String raw in
-          let ret = Peek.loc env, { Literal.value; raw; } in
+          let value = Literal.String "" in
+          let ret = Peek.loc env, { Literal.value; raw = ""; } in
           error_unexpected env;
           ret
 
@@ -1318,7 +1316,7 @@ module Statement
           else false, None
         in
         let specifier =
-          if Peek.value env = "as" then (
+          if Peek.token env = T_IDENTIFIER "as" then (
             let as_ident = Parse.identifier env in
             if starts_w_type && not (Peek.is_identifier env) then (
               (* `import {type as ,` or `import {type as }` *)
@@ -1345,8 +1343,8 @@ module Statement
             let remote, err = Parse.identifier_or_reserved_keyword env in
             (match err with Some err -> error_at env err | None -> ());
             let local =
-              if Peek.value env = "as" then (
-                Expect.contextual env "as";
+              if Peek.token env = T_IDENTIFIER "as" then (
+                Eat.token env;
                 Some (Parse.identifier env)
               ) else None
             in
@@ -1364,7 +1362,7 @@ module Statement
       match Peek.token env with
       | T_MULT ->
           Expect.token env T_MULT;
-          Expect.contextual env "as";
+          Expect.token env (T_IDENTIFIER "as");
           let id = Parse.identifier env in
           [ImportNamespaceSpecifier (Loc.btwn start_loc (fst id), id)]
       | _ ->

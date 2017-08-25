@@ -611,11 +611,6 @@ module Expect = struct
       Eat.token env;
       true
     end else false
-
-  let contextual env str =
-    if Peek.value env <> str
-    then error_unexpected env;
-    Eat.token env
 end
 
 (* This module allows you to try parsing and rollback if you need. This is not

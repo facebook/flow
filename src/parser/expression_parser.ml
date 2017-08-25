@@ -547,18 +547,18 @@ module Expression
     if in_function env && Peek.token env = T_PERIOD then begin
       Expect.token env T_PERIOD;
       let meta = start_loc, "new" in
-      if Peek.value env = "target" then
+      match Peek.token env with
+      | T_IDENTIFIER "target" ->
         let property = Parse.identifier env in
         let end_loc = fst property in
         Loc.btwn start_loc end_loc, Expression.(MetaProperty MetaProperty.({
           meta;
           property;
         }))
-      else begin
+      | _ ->
         error_unexpected env;
         Eat.token env; (* skip unknown identifier *)
         start_loc, Expression.Identifier meta (* return `new` identifier *)
-      end
     end else
       let callee_loc = Peek.loc env in
       let expr = match Peek.token env with
@@ -741,13 +741,14 @@ module Expression
         let value = Literal.String value in
         Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
     | (T_TRUE | T_FALSE) as token ->
-        let raw = Peek.value env in
         Expect.token env token;
-        let value = (Literal.Boolean (token = T_TRUE)) in
+        let truthy = token = T_TRUE in
+        let raw = if truthy then "true" else "false" in
+        let value = Literal.Boolean truthy in
         Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
     | T_NULL ->
-        let raw = Peek.value env in
         Expect.token env T_NULL;
+        let raw = "null" in
         let value = Literal.Null in
         Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
     | T_LPAREN -> Cover_expr (group env)
@@ -897,8 +898,8 @@ module Expression
     let loc = Peek.loc env in
     let raw, pattern, raw_flags = match Peek.token env with
       | T_REGEXP (_, pattern, flags) ->
-          let raw = Peek.value env in
           Eat.token env;
+          let raw = "/" ^ pattern ^ "/" ^ flags in
           raw, pattern, flags
       | _ -> assert false in
     Eat.pop_lex_mode env;

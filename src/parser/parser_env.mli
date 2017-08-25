@@ -152,7 +152,6 @@ end
 module Expect : sig
   val token : env -> Token.t -> unit
   val maybe : env -> Token.t -> bool
-  val contextual : env -> string -> unit
 end
 
 module Try : sig
