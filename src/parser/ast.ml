@@ -152,10 +152,7 @@ and Type : sig
   end
 
   module BooleanLiteral : sig
-    type t = {
-      value: bool;
-      raw: string;
-    }
+    type t = bool
   end
 
   type t = Loc.t * t'

@@ -144,7 +144,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 | loc, NumberLiteral { NumberLiteral.value; raw; _ }  ->
   mk_singleton_number loc value raw
 
-| loc, BooleanLiteral { BooleanLiteral.value; _ }  ->
+| loc, BooleanLiteral value  ->
   mk_singleton_boolean loc value
 
 (* TODO *)

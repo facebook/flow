@@ -1199,12 +1199,11 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and boolean_literal_type (loc, s) = Type.BooleanLiteral.(
+  and boolean_literal_type (loc, value) =
     node "BooleanLiteralTypeAnnotation" loc [|
-      "value", bool s.value;
-      "raw", string s.raw;
+      "value", bool value;
+      "raw", string (if value then "true" else "false");
     |]
-  )
 
   and exists_type loc = node "ExistsTypeAnnotation" loc [||]
 

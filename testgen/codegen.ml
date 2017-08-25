@@ -70,9 +70,8 @@ let rec mk_literal_expr (t : T.t') : E.t' =
     let value = T.NumberLiteral.(lit.value) in
     let raw = T.NumberLiteral.(lit.raw) in
     E.Literal (Ast.Literal.({value = Number value; raw}))
-  | T.BooleanLiteral lit ->
-    let value = T.BooleanLiteral.(lit.value) in
-    let raw = T.BooleanLiteral.(lit.raw) in
+  | T.BooleanLiteral value ->
+    let raw = if value then "true" else "false" in
     E.Literal (Ast.Literal.({value = Boolean value; raw}))
   | T.Tuple tlist ->
     let elements = List.map (fun (_, tt) ->

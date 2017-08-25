@@ -187,13 +187,9 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           raw;
         }
     | (T_TRUE | T_FALSE) as token ->
-        let raw = Peek.value env in
         Expect.token env token;
         let value = token = T_TRUE in
-        loc, Type.BooleanLiteral {
-          Type.BooleanLiteral.value;
-          raw;
-        }
+        loc, Type.BooleanLiteral value
     | token ->
         match primitive token with
         | Some t ->
