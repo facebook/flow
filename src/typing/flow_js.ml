@@ -786,17 +786,18 @@ module Cache = struct
      those representing the result): the cache would be useless if we considered
      those type variables as part of the identity of the operation. *)
   module PolyInstantiation = struct
-    type cache_key = reason * op_reason
+    type cache_key = Loc.t * reason * op_reason
     and op_reason = reason Nel.t
 
     let cache: (cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
 
-    let find cx typeparam op_reason =
+    let find cx reason_tapp typeparam op_reason =
+      let loc = def_loc_of_reason reason_tapp in
       try
-        Hashtbl.find cache (typeparam.reason, op_reason)
+        Hashtbl.find cache (loc, typeparam.reason, op_reason)
       with _ ->
         let t = ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) in
-        Hashtbl.add cache (typeparam.reason, op_reason) t;
+        Hashtbl.add cache (loc, typeparam.reason, op_reason) t;
         t
   end
 
@@ -6879,7 +6880,7 @@ and instantiate_poly_with_targs
           DefT (reason_op, AnyT), []
       | _, t::ts ->
           t, ts in
-      let t_ = cache_instantiate cx trace ?cache typeparam reason_op t in
+      let t_ = cache_instantiate cx trace ?cache typeparam reason_op reason_tapp t in
       rec_flow_t cx trace (t_, subst cx map typeparam.bound);
       SMap.add typeparam.name t_ map, ts
     )
@@ -6891,11 +6892,11 @@ and instantiate_poly_with_targs
    reason for specialization, either return the type argument or, when directed,
    look up the instantiation cache for an existing type argument for the same
    purpose and unify it with the supplied type argument. *)
-and cache_instantiate cx trace ?cache typeparam reason_op t =
+and cache_instantiate cx trace ?cache typeparam reason_op reason_tapp t =
   match cache with
   | None -> t
   | Some rs ->
-    let t_ = Cache.PolyInstantiation.find cx typeparam (reason_op, rs) in
+    let t_ = Cache.PolyInstantiation.find cx reason_tapp typeparam (reason_op, rs) in
     rec_unify cx trace t t_;
     t_
 
