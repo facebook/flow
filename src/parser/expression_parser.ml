@@ -22,7 +22,7 @@ module type EXPRESSION = sig
   val property_name_include_private: env -> Loc.t * Identifier.t * bool
   val is_assignable_lhs: Expression.t -> bool
   val left_hand_side: env -> Expression.t
-  val number: env -> number_type -> float
+  val number: env -> number_type -> string -> float
   val sequence: env -> Expression.t list -> Expression.t
 end
 
@@ -701,30 +701,29 @@ module Expression
       typeParameters;
     }))
 
-  and number env number_type =
-    let value = Peek.value env in
-    let value = match number_type with
+  and number env kind raw =
+    let value = match kind with
     | LEGACY_OCTAL ->
       strict_error env Error.StrictOctalLiteral;
-      begin try Int64.to_float (Int64.of_string ("0o"^value))
-      with Failure _ -> failwith ("Invalid legacy octal "^value)
+      begin try Int64.to_float (Int64.of_string ("0o"^raw))
+      with Failure _ -> failwith ("Invalid legacy octal "^raw)
       end
     | BINARY
     | OCTAL ->
-      begin try Int64.to_float (Int64.of_string value)
-      with Failure _ -> failwith ("Invalid binary/octal "^value)
+      begin try Int64.to_float (Int64.of_string raw)
+      with Failure _ -> failwith ("Invalid binary/octal "^raw)
       end
     | NORMAL ->
-      begin try Lexer.FloatOfString.float_of_string value
+      begin try Lexer.FloatOfString.float_of_string raw
       with
       | _ when Sys.win32 ->
         error env Parse_error.WindowsFloatOfString;
         789.0
       | Failure _ ->
-        failwith ("Invalid number "^value)
+        failwith ("Invalid number "^raw)
       end
     in
-    Expect.token env (T_NUMBER number_type);
+    Expect.token env (T_NUMBER { kind; raw });
     value
 
   and primary_cover env =
@@ -733,9 +732,8 @@ module Expression
     | T_THIS ->
         Expect.token env T_THIS;
         Cover_expr (loc, Expression.This)
-    | T_NUMBER number_type ->
-        let raw = Peek.value env in
-        let value = Literal.Number (number env number_type) in
+    | T_NUMBER { kind; raw } ->
+        let value = Literal.Number (number env kind raw) in
         Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
     | T_STRING (loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;

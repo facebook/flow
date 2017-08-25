@@ -122,11 +122,14 @@ let get_result_and_clear_state (env, lex_token) =
   let (lex_loc, lex_value) = match lex_token with
   | T_STRING (loc, _, raw, _) ->
       loc, raw
+  | T_JSX_IDENTIFIER { raw } -> loc_of_lexbuf env env.lex_lb, raw
   | T_JSX_TEXT (loc, _, raw) -> loc, raw
   | T_TEMPLATE_PART (loc, {literal; _}, _) ->
       loc, literal
   | T_REGEXP (loc, pattern, flags) -> loc, "/" ^ pattern ^ "/" ^ flags
-  | T_IDENTIFIER raw ->
+  | T_IDENTIFIER raw
+  | T_NUMBER { raw; _ }
+  | T_NUMBER_SINGLETON_TYPE { raw; _ } ->
       loc_of_lexbuf env env.lex_lb, raw
   | _ ->
     loc_of_lexbuf env env.lex_lb,
@@ -273,10 +276,10 @@ let save_comment
   let lex_comments_acc = (loc, c) :: env.lex_state.lex_comments_acc in
   { env with lex_state = { env.lex_state with lex_comments_acc; } }
 
-let mk_num_singleton number_type num =
-  let neg, num = if num.[0] = '-'
-    then true, String.sub num 1 (String.length num - 1)
-    else false, num
+let mk_num_singleton number_type raw =
+  let neg, num = if raw.[0] = '-'
+    then true, String.sub raw 1 (String.length raw - 1)
+    else false, raw
   in
   (* convert singleton number type into a float *)
   let value = match number_type with
@@ -295,7 +298,7 @@ let mk_num_singleton number_type num =
     end
   in
   let value = if neg then ~-.value else value in
-  T_NUMBER_SINGLETON_TYPE (number_type, value)
+  T_NUMBER_SINGLETON_TYPE { kind = number_type; value; raw }
 
 let recover env lexbuf ~f =
   let env = illegal env (loc_of_lexbuf env lexbuf) in
@@ -485,62 +488,64 @@ let rec token (env: Lex_env.t) lexbuf =
   | binnumber, (letter | '2'..'9'), Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
-    | binnumber -> env, T_NUMBER BINARY
+    | binnumber ->
+      env, T_NUMBER { kind = BINARY; raw = Sedlexing.Utf8.lexeme lexbuf }
     | _ -> failwith "unreachable"
     )
 
   | binnumber ->
-    env, T_NUMBER BINARY
+    env, T_NUMBER { kind = BINARY; raw = Sedlexing.Utf8.lexeme lexbuf }
 
   | octnumber, (letter | '8'..'9'), Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
-    | octnumber -> env, T_NUMBER OCTAL
+    | octnumber -> env, T_NUMBER { kind = OCTAL; raw = Sedlexing.Utf8.lexeme lexbuf }
     | _ -> failwith "unreachable"
     )
 
   | octnumber ->
-    env, T_NUMBER OCTAL
+    env, T_NUMBER { kind = OCTAL; raw = Sedlexing.Utf8.lexeme lexbuf }
 
   | legacyoctnumber, (letter | '8'..'9'), Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
-    | legacyoctnumber -> env, T_NUMBER LEGACY_OCTAL
+    | legacyoctnumber -> env, T_NUMBER { kind = LEGACY_OCTAL; raw = Sedlexing.Utf8.lexeme lexbuf }
     | _ -> failwith "unreachable"
     )
 
   | legacyoctnumber ->
-    env, T_NUMBER LEGACY_OCTAL
+    env, T_NUMBER { kind = LEGACY_OCTAL; raw = Sedlexing.Utf8.lexeme lexbuf }
 
   | hexnumber, non_hex_letter, Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
-    | hexnumber -> env, T_NUMBER NORMAL
+    | hexnumber -> env, T_NUMBER { kind = NORMAL; raw = Sedlexing.Utf8.lexeme lexbuf }
     | _ -> failwith "unreachable"
     )
 
   | hexnumber ->
-    env, T_NUMBER NORMAL
+    env, T_NUMBER { kind = NORMAL; raw = Sedlexing.Utf8.lexeme lexbuf }
 
   | scinumber, word ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
-    | scinumber -> env, T_NUMBER NORMAL
+    | scinumber -> env, T_NUMBER { kind = NORMAL; raw = Sedlexing.Utf8.lexeme lexbuf }
     | _ -> failwith "unreachable"
     )
 
   | scinumber ->
-    env, T_NUMBER NORMAL
+    env, T_NUMBER { kind = NORMAL; raw = Sedlexing.Utf8.lexeme lexbuf }
 
   | (wholenumber | floatnumber), word ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
-    | wholenumber | floatnumber -> env, T_NUMBER NORMAL
+    | wholenumber | floatnumber ->
+      env, T_NUMBER { kind = NORMAL; raw = Sedlexing.Utf8.lexeme lexbuf }
     | _ -> failwith "unreachable"
     )
 
   | wholenumber | floatnumber ->
-    env, T_NUMBER NORMAL
+    env, T_NUMBER { kind = NORMAL; raw = Sedlexing.Utf8.lexeme lexbuf }
 
   (* Keyword or Identifier *)
   (* TODO: Use [Symbol.iterator] instead of @@iterator. *)
@@ -752,7 +757,7 @@ and type_token env lexbuf =
       with _ when Sys.win32 ->
         let loc = loc_of_lexbuf env lexbuf in
         let env = lex_error env loc Parse_error.WindowsFloatOfString in
-        env, T_NUMBER_SINGLETON_TYPE (NORMAL, 789.0)
+        env, T_NUMBER_SINGLETON_TYPE { kind = NORMAL; value = 789.0; raw = "789" }
       end
     | _ -> failwith "unreachable"
     )
@@ -763,7 +768,7 @@ and type_token env lexbuf =
     with _ when Sys.win32 ->
       let loc = loc_of_lexbuf env lexbuf in
       let env = lex_error env loc Parse_error.WindowsFloatOfString in
-      env, T_NUMBER_SINGLETON_TYPE (NORMAL, 789.0)
+      env, T_NUMBER_SINGLETON_TYPE { kind = NORMAL; value = 789.0; raw = "789" }
     end
 
   | Opt neg, scinumber, word ->
@@ -1169,7 +1174,8 @@ and jsx_tag env lexbuf =
   | ':' -> env, T_COLON
   | '.' -> env, T_PERIOD
   | '=' -> env, T_ASSIGN
-  | js_id_start, Star ('-' | js_id_continue) -> env, T_JSX_IDENTIFIER
+  | js_id_start, Star ('-' | js_id_continue) ->
+    env, T_JSX_IDENTIFIER { raw = Sedlexing.Utf8.lexeme lexbuf }
 
   | "'" | '"' ->
     let quote = Sedlexing.Utf8.lexeme lexbuf in

@@ -55,10 +55,9 @@ module Object
         Expect.token env (T_STRING (loc, value, raw, octal));
         let value = Literal.String value in
         loc, Literal (loc, { Literal.value; raw; })
-    | T_NUMBER number_type ->
-        let raw = Peek.value env in
+    | T_NUMBER { kind; raw } ->
         let loc = Peek.loc env in
-        let value = Expression.number env number_type in
+        let value = Expression.number env kind raw in
         let value = Literal.Number value in
         loc,  Literal (loc, { Literal.value; raw; })
     | T_LBRACKET ->

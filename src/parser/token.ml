@@ -9,7 +9,7 @@
  *)
 
 type t =
-  | T_NUMBER of number_type
+  | T_NUMBER of { kind: number_type; raw: string }
   | T_STRING of (Loc.t * string * string * bool) (* loc, value, raw, octal *)
   | T_TEMPLATE_PART of (Loc.t * template_part * bool) (* loc, value, is_tail *)
   | T_IDENTIFIER of string
@@ -129,7 +129,7 @@ type t =
   | T_ERROR
   | T_EOF
   (* JSX *)
-  | T_JSX_IDENTIFIER
+  | T_JSX_IDENTIFIER of { raw: string }
   | T_JSX_TEXT of (Loc.t * string * string) (* loc, value, raw *)
   (* Type primitives *)
   | T_ANY_TYPE
@@ -137,7 +137,7 @@ type t =
   | T_EMPTY_TYPE
   | T_BOOLEAN_TYPE
   | T_NUMBER_TYPE
-  | T_NUMBER_SINGLETON_TYPE of number_type * float
+  | T_NUMBER_SINGLETON_TYPE of { kind: number_type; value: float; raw: string }
   | T_STRING_TYPE
   | T_VOID_TYPE
 
@@ -273,7 +273,7 @@ let token_to_string = function
   (* Extra tokens *)
   | T_ERROR -> "T_ERROR"
   | T_EOF -> "T_EOF"
-  | T_JSX_IDENTIFIER -> "T_JSX_IDENTIFIER"
+  | T_JSX_IDENTIFIER _ -> "T_JSX_IDENTIFIER"
   | T_JSX_TEXT _ -> "T_JSX_TEXT"
   (* Type primitives *)
   | T_ANY_TYPE -> "T_ANY_TYPE"

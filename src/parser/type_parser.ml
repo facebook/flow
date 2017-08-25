@@ -177,10 +177,9 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           Type.StringLiteral.value;
           raw;
         }
-    | T_NUMBER_SINGLETON_TYPE (number_type, value) ->
-        let raw = Peek.value env in
-        Expect.token env (T_NUMBER_SINGLETON_TYPE (number_type, value));
-        if number_type = LEGACY_OCTAL
+    | T_NUMBER_SINGLETON_TYPE { kind; value; raw } ->
+        Expect.token env (T_NUMBER_SINGLETON_TYPE { kind; value; raw });
+        if kind = LEGACY_OCTAL
         then strict_error env Error.StrictOctalLiteral;
         loc, Type.NumberLiteral {
           Type.NumberLiteral.value;

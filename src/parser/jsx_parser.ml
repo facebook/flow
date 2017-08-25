@@ -45,8 +45,11 @@ module JSX (Parse: Parser_common.PARSER) = struct
 
   let identifier env =
     let loc = Peek.loc env in
-    let name = Peek.value env in
-    Expect.token env T_JSX_IDENTIFIER;
+    let name = match Peek.token env with
+    | T_JSX_IDENTIFIER { raw } -> raw
+    | _ -> error_unexpected env; ""
+    in
+    Eat.token env;
     loc, JSX.Identifier.({ name; })
 
   let name =
