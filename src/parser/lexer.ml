@@ -161,9 +161,11 @@ let new_line env lexbuf =
 module FloatOfString : sig
   val float_of_string: string -> float
 end = struct
+  type base = Hex | Bin | Oct
   type t = {
+    base: base option;
     negative: bool;
-    mantissa: int;
+    mantissa: float;
     exponent: int;
     decimal_exponent: int option;
     todo: char list;
@@ -180,8 +182,9 @@ end = struct
     let todo = ref [] in
     String.iter (fun c -> todo := c::(!todo)) str;
     {
+      base = None;
       negative = false;
-      mantissa = 0;
+      mantissa = 0.0;
       exponent = 0;
       decimal_exponent = None;
       todo = List.rev (!todo);
@@ -193,10 +196,37 @@ end = struct
     | '-'::_ -> { (eat f) with negative = true; }
     | _ -> f
 
-  let parse_hex_symbol f =
+  let parse_symbol f =
     match f.todo with
-    | '0'::('x' | 'X')::_ -> f |> eat |> eat
+    | '0'::('x' | 'X')::_ -> { (f |> eat |> eat) with base = Some (Hex) }
+    | '0'::('b' | 'B')::_ -> { (f |> eat |> eat) with base = Some (Bin) }
+    | '0'::('o' | 'O')::_ -> { (f |> eat |> eat) with base = Some (Oct) }
     | _ -> raise No_good
+
+  let value_hex c =
+    let ref_char_code =
+      if c >= '0' && c <= '9'
+      then Char.code '0'
+      else if c >= 'A' && c <= 'F'
+      then Char.code 'A' - 10
+      else if c >= 'a' && c <= 'f'
+      then Char.code 'a' - 10
+      else raise No_good in
+    Char.code c - ref_char_code
+
+  let value_bin c =
+    let ref_char_code =
+      if c >= '0' && c <= '1'
+      then Char.code '0'
+      else raise No_good in
+    Char.code c - ref_char_code
+
+  let value_oct c =
+    let ref_char_code =
+      if c >= '0' && c <= '7'
+      then Char.code '0'
+      else raise No_good in
+    Char.code c - ref_char_code
 
   let parse_exponent f =
     let todo_str = f.todo
@@ -208,6 +238,12 @@ end = struct
     { f with exponent; todo = [] }
 
   let rec parse_body f =
+    let (num_bits, value_func) =
+      match f.base with
+        | Some (Hex) -> (4, value_hex)
+        | Some (Bin) -> (1, value_bin)
+        | Some (Oct) -> (3, value_oct)
+        | _ -> raise No_good in
     match f.todo with
     | [] -> f
     (* _ is just ignored *)
@@ -219,24 +255,16 @@ end = struct
     | ('p' | 'P')::_ ->
         parse_exponent (eat f)
     | c::_ ->
-        let ref_char_code =
-          if c >= '0' && c <= '9'
-          then Char.code '0'
-          else if c >= 'A' && c <= 'F'
-          then Char.code 'A' - 10
-          else if c >= 'a' && c <= 'f'
-          then Char.code 'a' - 10
-          else raise No_good in
-        let value = (Char.code c) - ref_char_code in
+        let value = value_func c in
         let decimal_exponent = match f.decimal_exponent with
         | None -> None
-        | Some e -> Some (e - 4) in
-        let mantissa = (f.mantissa lsl 4) + value in
+        | Some e -> Some (e - num_bits) in
+        let mantissa = (ldexp f.mantissa num_bits) +. (float_of_int value) in
         parse_body { (eat f) with decimal_exponent; mantissa; }
 
   let float_of_t f =
     assert (f.todo = []);
-    let ret = float_of_int f.mantissa in
+    let ret = f.mantissa in
     let exponent = match f.decimal_exponent with
     | None -> f.exponent
     | Some decimal_exponent -> f.exponent + decimal_exponent in
@@ -250,11 +278,11 @@ end = struct
 
   let float_of_string str =
     try Pervasives.float_of_string str
-    with e when Sys.win32 ->
+    with e ->
       try
         start str
           |> parse_sign
-          |> parse_hex_symbol
+          |> parse_symbol
           |> parse_body
           |> float_of_t
       with No_good -> raise e
@@ -281,12 +309,12 @@ let mk_num_singleton number_type num =
   (* convert singleton number type into a float *)
   let value = match number_type with
   | LEGACY_OCTAL ->
-    begin try Int64.to_float (Int64.of_string ("0o"^num))
+    begin try FloatOfString.float_of_string ("0o"^num)
     with Failure _ -> failwith ("Invalid legacy octal "^num)
     end
   | BINARY
   | OCTAL ->
-    begin try Int64.to_float (Int64.of_string num)
+    begin try FloatOfString.float_of_string num
     with Failure _ -> failwith ("Invalid binary/octal "^num)
     end
   | NORMAL ->
