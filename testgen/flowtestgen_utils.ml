@@ -135,7 +135,7 @@ let rec string_of_pattern (pattern : P.t') =
   | P.Assignment assign ->
     let open P.Assignment in
     (string_of_pattern (snd assign.left)) ^
-    " = " ^ 
+    " = " ^
     (string_of_expr (snd assign.right))
   | _ -> failwith "[string_of_pattern] unsupported pattern"
 
@@ -215,7 +215,7 @@ and string_of_stmt (stmt : S.t') =
       func.params
       |> fst
       |> List.map snd
-      |> List.map string_of_pattern 
+      |> List.map string_of_pattern
       |> String.concat ", " in
     let body_str = match func.body with
       | BodyBlock (_, s) -> string_of_stmt (S.Block s)
@@ -283,14 +283,14 @@ and string_of_type (t : T.t') =
       |> String.concat ", " in
     if ot.exact then "{|" ^ prop_str_list ^ "|}"
     else "{" ^ prop_str_list ^ "}"
-  | T.Union ((_, t1), (_, t2), trest) -> 
+  | T.Union ((_, t1), (_, t2), trest) ->
     let t_strlist =
       [(string_of_type t1); (string_of_type t2)]
       @ (trest |> (List.map snd) |> (List.map string_of_type)) in
     String.concat " | " t_strlist
   | T.StringLiteral st -> T.StringLiteral.(st.raw)
   | T.NumberLiteral nt -> T.NumberLiteral.(nt.raw)
-  | T.BooleanLiteral bt -> T.BooleanLiteral.(bt.raw)
+  | T.BooleanLiteral bt -> if bt then "true" else "false"
   | T.Function func ->
     let open T.Function in
     let string_of_param param =
