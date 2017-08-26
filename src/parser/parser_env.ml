@@ -427,6 +427,12 @@ let is_reserved str_val =
   | "null" | "true" | "false" -> true
   | _ -> false
 
+let is_reserved_type str_val =
+  match str_val with
+  | "any" | "bool" | "boolean" | "empty" | "false" | "mixed" | "null"
+  | "number" | "static" | "string" | "true" | "typeof" | "void" -> true
+  | _ -> false
+
 (* Answer questions about what comes next *)
 module Peek = struct
   open Loc

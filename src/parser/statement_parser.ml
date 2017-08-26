@@ -534,7 +534,7 @@ module Statement
     then error env Error.UnexpectedTypeAlias;
     Expect.token env T_TYPE;
     Eat.push_lex_mode env Lex_mode.TYPE;
-    let id = Parse.identifier env in
+    let id = Type.type_identifier env in
     let typeParameters = Type.type_parameter_declaration_with_defaults env in
     Expect.token env T_ASSIGN;
     let right = Type._type env in

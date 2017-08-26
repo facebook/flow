@@ -11,10 +11,12 @@
 open Token
 open Parser_env
 open Ast
+open Parser_common
 module Error = Parse_error
 
 module type TYPE = sig
   val _type : env -> Ast.Type.t
+  val type_identifier : env -> Loc.t * string
   val type_parameter_declaration : env -> Ast.Type.ParameterDeclaration.t option
   val type_parameter_declaration_with_defaults : env -> Ast.Type.ParameterDeclaration.t option
   val type_parameter_instantiation : env -> Ast.Type.ParameterInstantiation.t option
@@ -586,14 +588,29 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         properties;
       })
 
+  and type_identifier env =
+    let loc = Peek.loc env in
+    let name = match identifier_name (Peek.token env) with
+    | Some name ->
+      if is_reserved_type name then error_at env (loc, Parse_error.UnexpectedReservedType);
+      name
+    | None ->
+      error_unexpected env;
+      ""
+    in
+    Eat.token env;
+    loc, name
+
+  and bounded_type env = with_loc (fun env ->
+    let _, name = type_identifier env in
+    let bound = if Peek.token env = T_COLON then Some (annotation env) else None in
+    name, bound
+  ) env
+
   and type_parameter_declaration =
     let rec params env ~allow_default ~require_default acc = Type.ParameterDeclaration.TypeParam.(
       let variance = variance env in
-      let loc, {
-        Pattern.Identifier.name = (_, name);
-        typeAnnotation = bound;
-        _;
-      } = Parse.identifier_with_type env Error.StrictParamName in
+      let loc, (name, bound) = bounded_type env in
       let default, require_default = match allow_default, Peek.token env with
       | false, _ -> None, false
       | true, T_ASSIGN ->
@@ -735,6 +752,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     ret
 
   let _type = wrap _type
+  let type_identifier = wrap type_identifier
   let type_parameter_declaration_with_defaults =
     wrap (type_parameter_declaration ~allow_default:true)
   let type_parameter_declaration =

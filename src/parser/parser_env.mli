@@ -126,6 +126,7 @@ val is_reserved : string -> bool
 val is_future_reserved : string -> bool
 val is_strict_reserved : string -> bool
 val is_restricted : string -> bool
+val is_reserved_type : string -> bool
 
 module Peek : sig
   val token : ?i:int -> env -> Token.t

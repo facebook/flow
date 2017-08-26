@@ -16,6 +16,7 @@ type t =
   | UnexpectedString
   | UnexpectedIdentifier
   | UnexpectedReserved
+  | UnexpectedReservedType
   | UnexpectedSuper
   | UnexpectedSuperCall
   | UnexpectedEOS
@@ -122,6 +123,7 @@ module PP =
       | UnexpectedString ->  "Unexpected string"
       | UnexpectedIdentifier ->  "Unexpected identifier"
       | UnexpectedReserved ->  "Unexpected reserved word"
+      | UnexpectedReservedType -> "Unexpected reserved type"
       | UnexpectedSuper -> "Unexpected `super` outside of a class method"
       | UnexpectedSuperCall -> "`super()` is only valid in a class constructor"
       | UnexpectedEOS ->  "Unexpected end of input"
