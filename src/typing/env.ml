@@ -609,9 +609,9 @@ let promote_to_const_like cx loc =
 (* Does Dep info says single dependence? *)
 (try
   let open Dep_mapper in
-  let renamings = Context.renamings cx in
+  let use_def_map = Context.use_def_map cx in
   let dep_map = Context.dep_map cx in
-  let d = Utils_js.LocMap.find loc renamings in
+  let d = Utils_js.LocMap.find loc use_def_map in
   let { Dep.key=_; Dep.typeDep=_; Dep.valDep=valDep} =
     DepMap.find (DepKey.Id d) dep_map in
     (match valDep with

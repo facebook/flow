@@ -384,8 +384,8 @@ let infer_ast ~lint_severities ~require_loc_map cx filename ast =
 
   let dep_mapper = new Dep_mapper.mapper in
   let _ = dep_mapper#program ast in
-  let _ = Context.set_dep_map cx dep_mapper#depMap in
-  let _ = Context.set_renamings cx dep_mapper#renamings in
+  let _ = Context.set_dep_map cx dep_mapper#dep_map in
+  let _ = Context.set_use_def_map cx dep_mapper#use_def_map in
 
   let checked = Context.is_checked cx in
 

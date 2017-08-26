@@ -151,7 +151,7 @@ type local_t = {
   mutable exists_excuses: ExistsCheck.t LocMap.t;
 
   mutable dep_map: Dep_mapper.Dep.t Dep_mapper.DepMap.t;
-  mutable renamings : Loc.t LocMap.t;
+  mutable use_def_map : Loc.t LocMap.t;
 }
 
 type cacheable_t = local_t
@@ -238,7 +238,7 @@ let make metadata file module_ref = {
     exists_excuses = LocMap.empty;
 
     dep_map = Dep_mapper.DepMap.empty;
-    renamings = LocMap.empty;
+    use_def_map = LocMap.empty;
   }
 }
 
@@ -309,7 +309,7 @@ let jsx cx = cx.local.metadata.jsx
 let exists_checks cx = cx.local.exists_checks
 let exists_excuses cx = cx.local.exists_excuses
 let dep_map cx = cx.local.dep_map
-let renamings cx = cx.local.renamings
+let use_def_map cx = cx.local.use_def_map
 
 let pid_prefix (cx: t) =
   if max_workers cx > 0
@@ -396,8 +396,8 @@ let set_exists_excuses cx exists_excuses =
   cx.local.exists_excuses <- exists_excuses
 let set_dep_map cx dep_map =
   cx.local.dep_map <- dep_map
-let set_renamings cx renamings =
-  cx.local.renamings <- renamings
+let set_use_def_map cx use_def_map =
+  cx.local.use_def_map <- use_def_map
 let set_module_map cx module_map =
   cx.local.module_map <- module_map
 
@@ -409,7 +409,7 @@ let clear_intermediates cx =
   cx.local.exists_checks <- LocMap.empty;
   cx.local.exists_excuses <- LocMap.empty;
   cx.local.dep_map <- Dep_mapper.DepMap.empty;
-  cx.local.renamings <- LocMap.empty;
+  cx.local.use_def_map <- LocMap.empty;
   cx.local.require_map <- SMap.empty
 
 
@@ -467,7 +467,7 @@ let merge_into cx cx_other =
   set_severity_cover cx (ExactCover.union (severity_cover cx_other) (severity_cover cx));
   set_exists_checks cx (LocMap.union (exists_checks cx_other) (exists_checks cx));
   set_exists_excuses cx (LocMap.union (exists_excuses cx_other) (exists_excuses cx))
-  (* TODO: merge renamings and dep_map as well. *)
+  (* TODO: merge use_def_map and dep_map as well. *)
 
 let to_cache cx = cx.local
 let from_cache ~options local =
