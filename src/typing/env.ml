@@ -612,7 +612,7 @@ let promote_to_const_like cx loc =
   let use_def_map = Context.use_def_map cx in
   let dep_map = Context.dep_map cx in
   let d = Utils_js.LocMap.find loc use_def_map in
-  let { Dep.key=_; Dep.typeDep=_; Dep.valDep=valDep} =
+  let { Dep.typeDep=_; valDep } =
     DepMap.find (DepKey.Id d) dep_map in
     (match valDep with
     | Dep.Depends l -> (List.length l) = 1

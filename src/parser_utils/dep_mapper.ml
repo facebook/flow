@@ -70,50 +70,43 @@ module Dep = struct
     | NoInfo
     | Destructure of DepKey.t * string
   type t = {
-    key: DepKey.t; (* to simplify printing, join_tvar, join *)
     typeDep: depkind; (* for tvar dependence - not all cases of depkind apply! *)
     valDep: depkind; (* for value dependence - not all cases of depkind apply! *)
   }
 
   let merge_dep =
-   fun cur_t new_t ->
-   let merge_typeDep =
-     fun type_dep_cur key_new type_dep_new ->
+   let merge_typeDep key type_dep_cur type_dep_new =
      match type_dep_cur, type_dep_new with
      | _, Incomplete -> Incomplete
      | Annotation _, _ -> type_dep_cur
      | NoInfo, _ -> type_dep_new
      | Incomplete, _ -> type_dep_cur
-     | Depends tlist, _ -> Depends (List.cons key_new tlist)
+     | Depends tlist, _ -> Depends (List.cons key tlist)
      | Primitive, Primitive -> Primitive
      | Primitive, _ -> Incomplete
      | _,_ -> type_dep_cur
   in
-  let merge_valDep =
-    fun val_dep_cur key_new val_dep_new ->
+  let merge_valDep key val_dep_cur val_dep_new =
     match val_dep_cur, val_dep_new with
     | _, Incomplete -> Incomplete
     | Incomplete, _ -> val_dep_cur
     | NoInfo, NoInfo -> NoInfo
     | NoInfo, Destructure (k,s) -> Destructure (k,s)
-    | NoInfo, Primitive -> Depends [key_new]
-    | NoInfo, _ -> Depends [key_new]
+    | NoInfo, Primitive -> Depends [key]
+    | NoInfo, _ -> Depends [key]
     | Destructure _, _ -> Incomplete
     | Primitive, _ -> Incomplete
-    | Depends tlist, _ -> Depends (List.cons key_new tlist)
+    | Depends tlist, _ -> Depends (List.cons key tlist)
     | _, _ -> val_dep_cur
   in
-   let { key=key_new; typeDep=type_dep_new; valDep=val_dep_new} = new_t in
-   let { key=key_cur; typeDep=type_dep_cur; valDep=val_dep_cur} = cur_t in
-   { key = key_cur;
-     typeDep = merge_typeDep type_dep_cur key_new type_dep_new;
-     valDep = merge_valDep val_dep_cur key_new val_dep_new }
+  fun key cur_t new_t ->
+    let { typeDep=type_dep_new; valDep=val_dep_new} = new_t in
+    let { typeDep=type_dep_cur; valDep=val_dep_cur} = cur_t in
+    { typeDep = merge_typeDep key type_dep_cur type_dep_new;
+      valDep = merge_valDep key val_dep_cur val_dep_new }
 
   let print_dep =
-   fun dep ->
-   let {key;typeDep;valDep}=dep in
-   let key_to_string =
-     fun key ->
+   let key_to_string key =
        match key with
        | DepKey.Id d ->
            String.concat " "
@@ -125,8 +118,7 @@ module Dep = struct
        String.concat " "
          ["{"; "HEAPLOC"; Loc.to_string l; s; "}"]
    in
-   let kind_to_string =
-     fun kind ->
+   let kind_to_string kind =
      match kind with
      | NoInfo -> "noinfo"
      | Depends slist ->
@@ -140,6 +132,8 @@ module Dep = struct
        String.concat " "
          ["destruct"; (key_to_string k)]
    in
+   fun key dep ->
+     let { typeDep; valDep } = dep in
      String.concat " "
        [key_to_string key;
        "->";
@@ -161,7 +155,7 @@ class mapper = object(this)
     let open Dep in
     try
       let d = LocMap.find loc use_def_map in
-      let { key=_; typeDep=_; valDep=valDep} =
+      let { typeDep = _; valDep } =
         DepMap.find (DepKey.Id d) dep_map in
         match valDep with
         | Depends l -> (List.length l) = 1
@@ -174,7 +168,7 @@ class mapper = object(this)
    let open Dep in
    try
     let d = LocMap.find loc use_def_map in
-    let { key=_; typeDep=typeDep; valDep=_} =
+    let { typeDep; valDep = _ } =
       DepMap.find (DepKey.Id d) dep_map in
       match typeDep with
       | Annotation _ -> true
@@ -193,192 +187,180 @@ class mapper = object(this)
     LocMap.iter
       (fun _ def_loc ->
         let open Dep in
-          dep_map <- DepMap.add (DepKey.Id def_loc)
-                     { key = (DepKey.Id def_loc);
-                       typeDep = NoInfo;
-                       valDep = NoInfo } dep_map)
+        let dep = { typeDep = NoInfo;
+                    valDep = NoInfo } in
+        dep_map <- DepMap.add (DepKey.Id def_loc) dep dep_map)
       use_def_map;
     super#program program
 
   method! function_param_pattern (expr: Ast.Pattern.t) =
-    (* Utils_js.print_endlinef "%s" "function_pattern"; *)
     let open Dep in
     (match expr with
     | _, Ast.Pattern.Identifier id ->
         let open Ast.Pattern.Identifier in
         let { name = (loc, _); typeAnnotation = ta; _ } = id in
         (try
-          let d = LocMap.find loc use_def_map in
-          match ta with
-          | None ->
-            (* Currently, we pretend we don't know anything about caller/callee *)
-            let dep = { key=(DepKey.Id d);
-                         typeDep= Incomplete;
-                         valDep= Incomplete} in
-            dep_map <-
-              DepMap.add ~combine:merge_dep (* update_dep *)
-                (DepKey.Id d) dep dep_map
-          | Some some_ta ->
-            let dep = { key=(DepKey.Id d);
-                         typeDep=( Annotation (some_ta, [] ));
-                         valDep= Incomplete } in
-            dep_map <-
-              DepMap.add ~combine:merge_dep (* update_dep *)
-                (DepKey.Id d) dep dep_map
+           let d = LocMap.find loc use_def_map in
+           let key = DepKey.Id d in
+           match ta with
+             | None ->
+               (* Currently, we pretend we don't know anything about caller/callee *)
+               let dep = { typeDep = Incomplete;
+                           valDep = Incomplete } in
+               dep_map <-
+                 DepMap.add ~combine:(merge_dep key) (* update_dep *)
+                 key dep dep_map
+             | Some some_ta ->
+               let dep = { typeDep = Annotation (some_ta, []);
+                           valDep = Incomplete } in
+               dep_map <-
+                 DepMap.add ~combine:(merge_dep key) (* update_dep *)
+                 key dep dep_map
          with _ -> ())
     | _, _ -> ());  (* Other interesting cases in Pattern applicable here? *)
     super#function_param_pattern expr
 
   method! variable_declarator_pattern ~kind (expr: Ast.Pattern.t) =
-    (* Utils_js.print_endlinef "%s" "vardecl_pattern"; *)
     let open Dep in
     (match expr with
     | _, Ast.Pattern.Identifier id ->
       let open Ast.Pattern.Identifier in
       let { name = (loc, _); typeAnnotation = ta; _ } = id in
       (try
-        let d = LocMap.find loc use_def_map in
-        match ta with
-        | None ->
-        let dep = { key=(DepKey.Id d);
-                     typeDep= NoInfo;
-                     valDep =  NoInfo} in
-        (* different from fun param!! *)
-        dep_map <-
-          DepMap.add ~combine:merge_dep (* update_dep *)
-            (DepKey.Id d) dep dep_map
-        | Some some_ta -> (* annotation *)
-        let dep = { key=(DepKey.Id d);
-                     typeDep=(Annotation (some_ta, [] ));
-                     valDep = NoInfo} in
-        dep_map <-
-          DepMap.add ~combine:merge_dep (* update_dep *)
-            (DepKey.Id d) dep dep_map
-      with _ -> ())
+         let d = LocMap.find loc use_def_map in
+         let key = DepKey.Id d in
+         match ta with
+           | None ->
+             let dep = { typeDep = NoInfo;
+                         valDep = NoInfo } in
+             (* different from fun param!! *)
+             dep_map <-
+               DepMap.add ~combine:(merge_dep key) (* update_dep *)
+               key dep dep_map
+           | Some some_ta -> (* annotation *)
+             let dep = { typeDep = Annotation (some_ta, []);
+                         valDep = NoInfo } in
+             dep_map <-
+               DepMap.add ~combine:(merge_dep key) (* update_dep *)
+               key dep dep_map
+       with _ -> ())
     | _, _ -> ())
     ;
     super#variable_declarator_pattern ~kind expr
 
- (* In DepMap, map id @ loc to Incomplete.*)
-  method map_id_to_incomplete =
-  let open Dep in
-  fun loc ->
-  try
+  (* In DepMap, map id @ loc to Incomplete.*)
+  method map_id_to_incomplete
+    (loc: Loc.t) =
+    let open Dep in
+    try
       let d = LocMap.find loc use_def_map in
-      let dep_right = { key = (DepKey.Id d);
-          typeDep = Dep.Incomplete;
-          valDep = Dep.Incomplete} in
-        dep_map <- DepMap.add ~combine:merge_dep
-          (DepKey.Id d) dep_right dep_map
-   with _ -> ()
-     (* Non-renamable vars such as globals do not exist in the scope builder *)
-     (* Utils_js.prerr_endlinef "map_id_to_incomplete: %s" "id not recognized"*)
+      let key = DepKey.Id d in
+      let dep_right = { typeDep = Dep.Incomplete;
+                        valDep = Dep.Incomplete } in
+      dep_map <-
+        DepMap.add ~combine:(merge_dep key)
+        key dep_right dep_map
+    with _ -> ()
+    (* Non-renamable vars such as globals do not exist in the scope builder *)
 
   (* In DepMap, map id @ Loc to Destructure (Temp expr's loc), key *)
   method map_id_to_destructure
     (loc: Loc.t)
     (key: Ast.Pattern.Object.Property.key)
     (expr: Ast.Expression.t option) =
-  let open Dep in
-  try
-    let d = LocMap.find loc use_def_map in
-    (* syntax guarantees that in destructuring, rhs is not optional *)
-    let (loc_e,_) = (match expr with | Some e -> e | None -> raise Not_found) in
-    match key with
-    | Ast.Pattern.Object.Property.Identifier iden ->
-      let _, real_name = iden in
-      let dep_right = { key = (DepKey.Id d);
-        typeDep = Incomplete;
-        valDep = Destructure (DepKey.Temp loc_e, real_name) }
-      in
-        dep_map <- DepMap.add ~combine:merge_dep
-          (DepKey.Id d) dep_right dep_map
-      (* Remark: we cannot really pretend rhs is a Destructure expr and 'depend'
-      on that Destructure. Here is no syntactic representation such as *s or s->p.
-      Also, we destructure into multiple names at once, var {a:c,b:d} = s; So, we
-      just say c |-> Destructure s,a, and d |-> Destructure s,b.
-      *)
-    | _ ->
-    (* If the key is not an identifier, then we cannot do a Destructure kind *)
-      this#map_id_to_incomplete loc
-  with _ -> ()
-    (*Utils_js.prerr_endlinef "map_id_to_destructure: %s" "id not recognized"*)
+    let open Dep in
+    try
+      let d = LocMap.find loc use_def_map in
+      (* syntax guarantees that in destructuring, rhs is not optional *)
+      let (loc_e,_) = (match expr with | Some e -> e | None -> raise Not_found) in
+      match key with
+        | Ast.Pattern.Object.Property.Identifier iden ->
+          let _, real_name = iden in
+          let key = DepKey.Id d in
+          let dep_right = { typeDep = Incomplete;
+                            valDep = Destructure (DepKey.Temp loc_e, real_name) } in
+          dep_map <-
+            DepMap.add ~combine:(merge_dep key)
+            key dep_right dep_map
+        (* Remark: we cannot really pretend rhs is a Destructure expr and
+           'depend' on that Destructure. Here is no syntactic representation
+           such as *s or s->p.  Also, we destructure into multiple names at
+           once, var {a:c,b:d} = s; So, we just say c |-> Destructure s,a, and d
+           |-> Destructure s,b.  *)
+        | _ ->
+          (* If the key is not an identifier, then we cannot do a Destructure kind *)
+          this#map_id_to_incomplete loc
+    with _ -> ()
 
   method assign_to_variable_declarator_pattern
     (pat: Ast.Pattern.t)
     (expr: Ast.Expression.t option) =
-  (* Utils_js.print_endlinef "%s" "assign_to_vardecl_pat"; *)
-  match pat with
-  | _, Ast.Pattern.Identifier id ->
-    let open Ast.Pattern.Identifier in
-    let open Dep in
-    let { name = (loc, _); typeAnnotation = _; _ } = id in
-    (try
-      let d = LocMap.find loc use_def_map in
-      (match expr with
-      | Some expr' ->
-      let (loc_e, _) = expr' in
-      let dep_right = DepMap.find (DepKey.Temp loc_e) dep_map in
-        dep_map <- DepMap.add ~combine:merge_dep
-          (DepKey.Id d) dep_right dep_map
-      | None ->
-      let dep_right = {  (* treat no-rhs-expression as uninitialized *)
-          key = (DepKey.Id d);
-          typeDep = Dep.NoInfo;
-          valDep = Dep.NoInfo
-        } in
-        dep_map <- DepMap.add ~combine:merge_dep
-         (DepKey.Id d) dep_right dep_map
-      )
-    with _ ->
-    ())
-    (*  Utils_js.prerr_endlinef
-    "assign_to_variable_declarator_pattern:Identifier %s" "id not recognized"
-    *)
-  | _, Ast.Pattern.Object o->
-    (* Dealing with real destructing depends on actual heap analysis *)
-    (* For now, we can just map each of these properties to Destructure *)
-    let open Ast.Pattern.Object in
-    let { properties; typeAnnotation=_} = o in
-    let process_prop = fun p ->
-      (match p with
-      | Property (loc,{Property.key=key; pattern; Property.shorthand=shorthand}) ->
-        (* Note that if pattern is present then shorthand=false, and we use the
-        pattern as the "name" being declared, or otherwise use the key.
-        *)
-        if shorthand then
-          (* The key could be complex, but we only care if it is in the use_def_map table.
-          If it is not an identifier, it will not be in the use_def_map table anyway.
-          The loc here is the location of the key.
-          *)
-          this#map_id_to_destructure loc key expr
-        else
-          (match pattern with
-            | loc, Ast.Pattern.Identifier _ -> this#map_id_to_destructure loc key expr
-            | _, _ -> ())
-      | RestProperty (_,_) -> ())
-        (* Utils_js.prerr_endlinef "%s" "Cannot handle rest properties" *)
-    in
-      List.iter process_prop properties
-  | _, Ast.Pattern.Array a ->
-    let open Ast.Pattern.Array in
-    let { elements; typeAnnotation=_} = a in
-    let process_elem = fun e ->
-     (match e with
-     | Element (loc, _) -> this#map_id_to_incomplete loc
-     | RestElement (_,_) -> ())
-       (* Utils_js.prerr_endlinef "%s" "Cannot handle rest elements" *)
-    in
-    let process_elem_opt = fun e_opt ->
-     (match e_opt with
-       | Some e -> process_elem e
-       | None -> ()) in
-    List.iter process_elem_opt elements
-  | _, _ -> () (* Deal with other names getting values? *)
+    match pat with
+      | _, Ast.Pattern.Identifier id ->
+        let open Ast.Pattern.Identifier in
+        let open Dep in
+        let { name = (loc, _); typeAnnotation = _; _ } = id in
+        (try
+           let d = LocMap.find loc use_def_map in
+           let key = DepKey.Id d in
+           (match expr with
+             | Some expr' ->
+               let (loc_e, _) = expr' in
+               let dep_right = DepMap.find (DepKey.Temp loc_e) dep_map in
+               dep_map <-
+                 DepMap.add ~combine:(merge_dep key)
+                 key dep_right dep_map
+             | None ->
+               (* treat no-rhs-expression as uninitialized *)
+               let dep_right = { typeDep = Dep.NoInfo;
+                                 valDep = Dep.NoInfo } in
+               dep_map <-
+                 DepMap.add ~combine:(merge_dep key)
+                 key dep_right dep_map
+           )
+         with _ ->
+           ())
+      | _, Ast.Pattern.Object o->
+        (* Dealing with real destructing depends on actual heap analysis *)
+        (* For now, we can just map each of these properties to Destructure *)
+        let open Ast.Pattern.Object in
+        let { properties; typeAnnotation=_} = o in
+        let process_prop = fun p ->
+          (match p with
+            | Property (loc,{Property.key=key; pattern; Property.shorthand=shorthand}) ->
+              (* Note that if pattern is present then shorthand=false, and we
+                 use the pattern as the "name" being declared, or otherwise use
+                 the key.  *)
+              if shorthand then
+                (* The key could be complex, but we only care if it is in the
+                   use_def_map table.  If it is not an identifier, it will not be in
+                   the use_def_map table anyway.  The loc here is the location of the
+                   key.  *)
+                this#map_id_to_destructure loc key expr
+              else
+                (match pattern with
+                  | loc, Ast.Pattern.Identifier _ -> this#map_id_to_destructure loc key expr
+                  | _, _ -> ())
+            | RestProperty (_,_) -> ())
+        in
+        List.iter process_prop properties
+      | _, Ast.Pattern.Array a ->
+        let open Ast.Pattern.Array in
+        let { elements; typeAnnotation=_} = a in
+        let process_elem = fun e ->
+          (match e with
+            | Element (loc, _) -> this#map_id_to_incomplete loc
+            | RestElement (_,_) -> ())
+        in
+        let process_elem_opt = fun e_opt ->
+          (match e_opt with
+            | Some e -> process_elem e
+            | None -> ()) in
+        List.iter process_elem_opt elements
+      | _, _ -> () (* Deal with other names getting values? *)
 
   method! variable_declarator ~kind
     (decl: Ast.Statement.VariableDeclaration.Declarator.t) =
-    (* Utils_js.print_endlinef "%s" "vardecl"; *)
     let open Ast.Statement.VariableDeclaration.Declarator in
     let decl' = super#variable_declarator ~kind decl in (* calls var_decl_pattern *)
     let (_, { id = patt ; init = e }) = decl' in
@@ -391,39 +373,34 @@ class mapper = object(this)
     match expr with
 
     | loc, Identifier id ->
-      (* Utils_js.print_endlinef "%s" "expression-identifier"; *)
       let open Dep in
       let id' = this#identifier id in
       (try
-        let d = LocMap.find loc use_def_map in
-        let dep = {key = (DepKey.Temp loc);
-                    typeDep = Depends [DepKey.Id d];
-                    valDep =  Depends [DepKey.Id d]} in
-        dep_map <- DepMap.add (DepKey.Temp loc) dep dep_map
+         let d = LocMap.find loc use_def_map in
+         let dep = { typeDep = Depends [DepKey.Id d];
+                     valDep =  Depends [DepKey.Id d] } in
+         dep_map <- DepMap.add (DepKey.Temp loc) dep dep_map
        with _ ->
-        let dep = { key = (DepKey.Temp loc) ;
-                     typeDep = Incomplete ;
+         let dep = { typeDep = Incomplete ;
                      valDep = Incomplete } in
-        dep_map <- DepMap.add (DepKey.Temp loc) dep dep_map
-       )
-       ; if (id == id') then expr else loc, Identifier id'
+         dep_map <- DepMap.add (DepKey.Temp loc) dep dep_map
+      )
+      ;
+      if id == id' then expr else loc, Identifier id'
 
     | loc, Literal l ->
-      (* Utils_js.print_endlinef "%s" "expression-literal"; *)
       let l' = this#literal l in
-      let dep = { key = DepKey.Temp loc;
-                  typeDep = Dep.Primitive;
-                  valDep = Dep.Primitive} in
+      let dep = { typeDep = Dep.Primitive;
+                  valDep = Dep.Primitive } in
       dep_map <- DepMap.add (DepKey.Temp loc) dep dep_map
-      ; loc, Literal l'
+      ;
+      loc, Literal l'
 
     | loc, Ast.Expression.Object o ->
-      (* Utils_js.print_endlinef "%s" "expression-object"; *)
       let open Dep in
       let o' = super#object_ o in
       (* Initialize dependence info for the AST node *)
-      let dep = { key = DepKey.Temp loc;
-                  typeDep = Dep.Object;
+      let dep = { typeDep = Dep.Object;
                   valDep = Dep.Object } in
       dep_map <- DepMap.add (DepKey.Temp loc) dep dep_map
       ;
@@ -443,25 +420,20 @@ class mapper = object(this)
               Property.Identifier (_, name) ->
               let dkey = DepKey.HeapLoc (loc, name) in
               let dep =
-                { Dep.key = dkey;
-                  typeDep = Dep.Depends [DepKey.Temp eloc];
+                { typeDep = Dep.Depends [DepKey.Temp eloc];
                   valDep = Dep.Depends [DepKey.Temp eloc] } in
                   dep_map <- DepMap.add dkey dep dep_map
             | _, _ -> ())
-              (* Utils_js.prerr_endlinef "%s" "Only handled Ident : Init" *)
           | SpreadProperty _ -> ())
-              (* Utils_js.prerr_endlinef "%s" "Not handled SpreadProperty" *)
       properties
       ;
       loc, Ast.Expression.Object o'
 
     | loc, Assignment a ->
-      (* Utils_js.print_endlinef "%s" "expression-assignment"; *)
       let a' = this#assignment a in
       loc, Assignment a'
 
     | loc, Binary b ->
-      (* Utils_js.print_endlinef "%s" "expression-binary"; *)
       let open Ast.Expression.Binary in
       let open Dep in
       let { operator = o; left; right } = b in
@@ -469,72 +441,59 @@ class mapper = object(this)
       let right' = this#expression right in
       let left_loc, _ = left' in
       let right_loc, _ = right' in
-      let dep =
-        {key = (DepKey.Temp loc);
-         typeDep =
-           Depends [DepKey.Temp left_loc; DepKey.Temp right_loc];
-         valDep =
-           Depends [DepKey.Temp left_loc; DepKey.Temp right_loc] }
-      in
+      let dep = { typeDep = Depends [DepKey.Temp left_loc; DepKey.Temp right_loc];
+                  valDep = Depends [DepKey.Temp left_loc; DepKey.Temp right_loc] } in
       dep_map <- DepMap.add (DepKey.Temp loc) dep dep_map
       ;
       if left == left' && right == right' then expr
       else loc, Binary { operator = o; left = left'; right = right' }
 
     | loc, TypeCast x ->
-      (* Utils_js.print_endlinef "%s" "expression-typecast"; *)
       let open Ast.Expression.TypeCast in
       let open Dep in
       let { expression=e; typeAnnotation=ta } = x in
       let e' = this#expression e in
       let loc_e',_ = e' in
-      let dep = { key = DepKey.Temp loc;
-        typeDep = Annotation (ta, []);
-        valDep = Depends [DepKey.Temp loc_e']} in
+      let dep = { typeDep = Annotation (ta, []);
+                  valDep = Depends [DepKey.Temp loc_e'] } in
       dep_map <- DepMap.add (DepKey.Temp loc) dep dep_map
       ;
-      if e' = e then expr
+      if e' == e then expr
       else loc, TypeCast { expression = e'; typeAnnotation= ta }
 
-    (* TODO Member: in the best case, we can retrieve the right HeapLocs
-     *)
+    (* TODO Member: in the best case, we can retrieve the right HeapLocs *)
 
     | loc, Update x ->
-    (* Utils_js.print_endlinef "%s" "expression-update"; *)
-    let open Ast.Expression.Update in
-    let x' = this#update_expression x in
-    let { argument; operator = _; prefix = _ } = x' in
-    (match argument with
-    | loc_a, Ast.Expression.Identifier _ ->
-      (try
-        let d = LocMap.find loc_a use_def_map in
-        (* let dep_id = DepMap.find (DepKey.Id (d,i)) dep_map in *)
-        let dep_expr = { key = DepKey.Temp loc;
-                         valDep = Depends [DepKey.Id d];
-                         typeDep = Depends [DepKey.Id d]} in (* number? *)
-          (* v++ augments the dependence of v onto itself as expr *)
-          dep_map <- DepMap.add ~combine:merge_dep
-            (DepKey.Id d) dep_expr dep_map;
-          (* the expression v++ depends on v *)
-          dep_map <- DepMap.add (DepKey.Temp loc) dep_expr dep_map
-      with _ -> ())
-      (* Utils_js.prerr_endlinef "expression: Update %s" "id not recognized" *)
-    (* TODO: deal with heap locations: they should not become incomplete *)
-    | loc_e, _ ->
-      let open Dep in
-      let dep = { key = DepKey.Temp loc;
-                valDep = Incomplete;
-                typeDep = Incomplete } in
-      dep_map <- DepMap.add (DepKey.Temp loc_e) dep dep_map
-    )
-    ;
-    loc, Update x'
+      let open Ast.Expression.Update in
+      let x' = this#update_expression x in
+      let { argument; operator = _; prefix = _ } = x' in
+      (match argument with
+        | loc_a, Ast.Expression.Identifier _ ->
+          (try
+             let d = LocMap.find loc_a use_def_map in
+             let key = DepKey.Temp loc in
+             let dep_expr = { valDep = Depends [DepKey.Id d];
+                              typeDep = Depends [DepKey.Id d] } in (* number? *)
+             (* v++ augments the dependence of v onto itself as expr *)
+             dep_map <-
+               DepMap.add ~combine:(merge_dep key)
+               key dep_expr dep_map;
+             (* the expression v++ depends on v *)
+             dep_map <- DepMap.add (DepKey.Temp loc) dep_expr dep_map
+           with _ -> ())
+        (* TODO: deal with heap locations: they should not become incomplete *)
+        | loc_e, _ ->
+          let open Dep in
+          let dep = { valDep = Incomplete;
+                  typeDep = Incomplete } in
+          dep_map <- DepMap.add (DepKey.Temp loc_e) dep dep_map
+      )
+      ;
+      loc, Update x'
 
     | loc,_ ->
-      (* Utils_js.print_endlinef "%s" "expression-other"; *)
       let open Dep in
-      let dep = { key = DepKey.Temp loc;
-                  valDep = Incomplete;
+      let dep = { valDep = Incomplete;
                   typeDep = Incomplete } in
       dep_map <- DepMap.add (DepKey.Temp loc) dep dep_map;
       super#expression expr
@@ -543,63 +502,57 @@ class mapper = object(this)
     (pat: Ast.Pattern.t)
     (expr: Ast.Expression.t)
     (op : Ast.Expression.Assignment.operator) =
-    (* Utils_js.print_endlinef "%s" "assign_to_assignment"; *)
     match pat with
     | _, Ast.Pattern.Identifier id ->
       (* Similar, but not identical to the corresponding case in
-       * assign_to_variable_declarator_pattern. 1. The rhs expression
-       * is not optional. 2. The += syntax can occur here. 3. We
-       * ignore the type annotation here. *)
+       * assign_to_variable_declarator_pattern. 1. The rhs expression is not
+       * optional. 2. The += syntax can occur here. 3. We ignore the type
+       * annotation here. *)
       let open Ast.Pattern.Identifier in
       let { name = (loc, _); typeAnnotation = _; _} = id in
       (try
-        let d =
-          LocMap.find loc use_def_map in
-        let dep_left =
-          DepMap.find (DepKey.Id d) dep_map in
-        let (loc_e, _) = expr in
-        let dep_right =
-          DepMap.find (DepKey.Temp loc_e) dep_map in
-        match op with
-        | Ast.Expression.Assignment.Assign ->
-          (* treat as = assignment *)
-          dep_map <-
-            DepMap.add ~combine:merge_dep
-              (DepKey.Id d) dep_right dep_map
-        | _ ->
-          (* treat as += assignment *)
-          dep_map <-
-            DepMap.add ~combine:merge_dep
-              (DepKey.Id d) dep_left dep_map;
-          dep_map <-
-            DepMap.add ~combine:merge_dep
-              (DepKey.Id d) dep_right dep_map
-        with _ -> ())
-        (* Utils_js.prerr_endlinef
-          "assign_to_assignment_pattern:Identifier %s" "id not recognized" *)
+         let d = LocMap.find loc use_def_map in
+         let key = DepKey.Id d in
+         let dep_left =
+           DepMap.find (DepKey.Id d) dep_map in
+         let (loc_e, _) = expr in
+         let dep_right =
+           DepMap.find (DepKey.Temp loc_e) dep_map in
+         match op with
+           | Ast.Expression.Assignment.Assign ->
+             (* treat as = assignment *)
+             dep_map <-
+               DepMap.add ~combine:(merge_dep key)
+               key dep_right dep_map
+           | _ ->
+             (* treat as += assignment *)
+             dep_map <-
+               DepMap.add ~combine:(merge_dep key)
+               key dep_left dep_map;
+             dep_map <-
+               DepMap.add ~combine:(merge_dep key)
+               key dep_right dep_map
+       with _ -> ())
 
     | _, Ast.Pattern.Array a ->
-    (* This is identical to the corresponding case in
-     * assign_to_variable_declarator_pattern.  TODO - refactor.
-     *)
+      (* This is identical to the corresponding case in
+       * assign_to_variable_declarator_pattern.  TODO - refactor.  *)
       let open Ast.Pattern.Array in
       let { elements; typeAnnotation=_} = a in
       let process_elem = fun e ->
-       (match e with
-       | Element (loc, _) -> this#map_id_to_incomplete loc
-       | RestElement (_,_) -> ())
-        (* Utils_js.prerr_endlinef "%s" "Cannot handle rest elements" *)
+        (match e with
+          | Element (loc, _) -> this#map_id_to_incomplete loc
+          | RestElement (_,_) -> ())
       in
       let process_elem_opt = fun e_opt ->
-       (match e_opt with
-         | Some e -> process_elem e
-         | None -> ()) in
+        (match e_opt with
+          | Some e -> process_elem e
+          | None -> ()) in
       List.iter process_elem_opt elements
 
     | _, _ -> ()  (* TODO deal with the case e.p = e'. Update or havoc *)
 
   method! assignment (expr: Ast.Expression.Assignment.t) =
-    (* Utils_js.print_endlinef "%s" "assignment"; *)
     let open Ast.Expression.Assignment in
     let { operator = op; left; right } = expr in
     let left' = this#assignment_pattern left in
@@ -615,16 +568,15 @@ class mapper = object(this)
     match left with
     | LeftDeclaration (loc, decl) ->
       let decl' = super#variable_declaration decl in
-      (* Even though variable_declarator is handled elsewhere,
-        For the For-of case, it does not see the rhs assignment.
-        So we need to havoc that declarator here. *)
+      (* Even though variable_declarator is handled elsewhere, For the For-of
+         case, it does not see the rhs assignment.  So we need to havoc that
+         declarator here. *)
       (try
-        let {declarations; _} = decl' in
-        let var_locs = List.map (fun (l,_) -> l) declarations in
-        (* For this decl, let the variable become Incomplete *)
-        List.iter this#map_id_to_incomplete var_locs
-      with _ -> ())
-      (*  Utils_js.prerr_endlinef "%s" "Could not find var loc in for-of" *)
+         let {declarations; _} = decl' in
+         let var_locs = List.map (fun (l,_) -> l) declarations in
+         (* For this decl, let the variable become Incomplete *)
+         List.iter this#map_id_to_incomplete var_locs
+       with _ -> ())
       ;
       if decl == decl'
         then left
@@ -632,12 +584,12 @@ class mapper = object(this)
     | LeftPattern patt ->
       let patt' = this#for_of_assignment_pattern patt in
       (match patt' with
-      | loc, Ast.Pattern.Identifier _ -> this#map_id_to_incomplete loc
-      | _ -> ()) (* TODO: object and array patterns can happen here *)
+        | loc, Ast.Pattern.Identifier _ -> this#map_id_to_incomplete loc
+        | _ -> ()) (* TODO: object and array patterns can happen here *)
       ;
       if patt == patt'
-        then left
-        else LeftPattern patt'
+      then left
+      else LeftPattern patt'
 
   method! for_in_statement_lhs (left: Ast.Statement.ForIn.left) =
     (* Almost identical to the for-of case *)
@@ -646,16 +598,15 @@ class mapper = object(this)
     match left with
     | LeftDeclaration (loc, decl) ->
       let decl' = super#variable_declaration decl in
-      (* Even though variable_declarator is handled elsewhere,
-        For the For-In case, it does not see the rhs assignment.
-        So we need to havoc that declarator here. *)
+      (* Even though variable_declarator is handled elsewhere, For the For-In
+         case, it does not see the rhs assignment.  So we need to havoc that
+         declarator here. *)
       (try
-        let {declarations; _} = decl' in
-        let var_locs = List.map (fun (l,_) -> l) declarations in
-        (* For this decl, let the variable become Incomplete *)
-        List.iter this#map_id_to_incomplete var_locs
-      with _ -> ())
-      (*  Utils_js.prerr_endlinef "%s" "Could not find var loc in for-in" *)
+         let {declarations; _} = decl' in
+         let var_locs = List.map (fun (l,_) -> l) declarations in
+         (* For this decl, let the variable become Incomplete *)
+         List.iter this#map_id_to_incomplete var_locs
+       with _ -> ())
       ;
       if decl == decl'
         then left
@@ -663,10 +614,10 @@ class mapper = object(this)
     | LeftPattern patt ->
       let patt' = this#for_in_assignment_pattern patt in
       (match patt' with
-      | loc, Ast.Pattern.Identifier _ -> this#map_id_to_incomplete loc
-      | _ -> ()) (* TODO: object and array patterns can happen here *)
+        | loc, Ast.Pattern.Identifier _ -> this#map_id_to_incomplete loc
+        | _ -> ()) (* TODO: object and array patterns can happen here *)
       ;
       if patt == patt'
-        then left
-        else LeftPattern patt'
+      then left
+      else LeftPattern patt'
 end
