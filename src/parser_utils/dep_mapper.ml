@@ -26,7 +26,7 @@ module LocMap = Utils_js.LocMap
 
 module DepKey = struct
   type t =
-  | Id of Loc.t * int (* uniquely resolved name def_loc, id *)
+  | Id of Loc.t (* uniquely resolved name def_loc, id *)
   | Temp of Loc.t (* expression node in AST *)
   | HeapLoc of Loc.t * string (* locations in a heap object,
                                   loc=allocation site, string=prop *)
@@ -42,9 +42,7 @@ module DepKey = struct
   let compare =
     fun k1 k2 ->
       (match k1, k2 with
-      | Id (l1,i1), Id (l2,i2) ->
-          if (i1 < i2) then -1
-            else (if (i1 > i2) then 1 else same_file_loc_compare l1 l2)
+      | Id l1, Id l2 -> same_file_loc_compare l1 l2
       | Temp l1, Temp l2 -> same_file_loc_compare l1 l2
       | Id _, Temp _ -> -1
       | Temp _, Id _ -> 1
@@ -117,9 +115,9 @@ module Dep = struct
    let key_to_string =
      fun key ->
        match key with
-       | DepKey.Id (d,i) ->
+       | DepKey.Id d ->
            String.concat " "
-             ["{"; "DEFLOC"; Loc.to_string d; "ID"; string_of_int i; "}"]
+             ["{"; "DEFLOC"; Loc.to_string d; "}"]
        | DepKey.Temp l ->
            String.concat " "
              ["{"; "LOC"; Loc.to_string l; "}"]
@@ -164,9 +162,9 @@ class mapper = object(this)
   method has_single_value_dep (loc: Loc.t) =
     let open Dep in
     try
-      let (d,i) = LocMap.find loc renamings in
+      let d = LocMap.find loc renamings in
       let { key=_; typeDep=_; valDep=valDep} =
-        DepMap.find (DepKey.Id (d,i)) depMap in
+        DepMap.find (DepKey.Id d) depMap in
         match valDep with
         | Depends l -> (List.length l) = 1
         | Primitive -> true
@@ -177,9 +175,9 @@ class mapper = object(this)
   method has_no_open_type_dep (loc: Loc.t) =
    let open Dep in
    try
-    let (d,i) = LocMap.find loc renamings in
+    let d = LocMap.find loc renamings in
     let { key=_; typeDep=typeDep; valDep=_} =
-      DepMap.find (DepKey.Id (d,i)) depMap in
+      DepMap.find (DepKey.Id d) depMap in
       match typeDep with
       | Annotation _ -> true
       | Primitive -> true
@@ -193,13 +191,12 @@ class mapper = object(this)
   method! program (program: Ast.program) =
     let { Scope_api.locals; globals=_; max_distinct=_; scopes=_ } =
     Scope_builder.program ~ignore_toplevel:true program in
-    renamings <-
-      LocMap.map (fun ({ Scope_api.Def.loc; name; _ }, _) -> loc, name) locals;
+    renamings <- LocMap.map (fun ({ Scope_api.Def.loc; _ }, _) -> loc) locals;
     LocMap.iter
-      (fun _ (def_loc,id) ->
+      (fun _ def_loc ->
         let open Dep in
-          depMap <- DepMap.add (DepKey.Id (def_loc,id))
-                     { key = (DepKey.Id (def_loc,id));
+          depMap <- DepMap.add (DepKey.Id def_loc)
+                     { key = (DepKey.Id def_loc);
                        typeDep = NoInfo;
                        valDep = NoInfo } depMap)
       renamings;
@@ -213,23 +210,23 @@ class mapper = object(this)
         let open Ast.Pattern.Identifier in
         let { name = (loc, _); typeAnnotation = ta; _ } = id in
         (try
-          let (d,i) = LocMap.find loc renamings in
+          let d = LocMap.find loc renamings in
           match ta with
           | None ->
             (* Currently, we pretend we don't know anything about caller/callee *)
-            let dep = { key=(DepKey.Id (d,i));
+            let dep = { key=(DepKey.Id d);
                          typeDep= Incomplete;
                          valDep= Incomplete} in
             depMap <-
               DepMap.add ~combine:merge_dep (* update_dep *)
-                (DepKey.Id (d,i)) dep depMap
+                (DepKey.Id d) dep depMap
           | Some some_ta ->
-            let dep = { key=(DepKey.Id (d,i));
+            let dep = { key=(DepKey.Id d);
                          typeDep=( Annotation (some_ta, [] ));
                          valDep= Incomplete } in
             depMap <-
               DepMap.add ~combine:merge_dep (* update_dep *)
-                (DepKey.Id (d,i)) dep depMap
+                (DepKey.Id d) dep depMap
          with _ -> ())
     | _, _ -> ());  (* Other interesting cases in Pattern applicable here? *)
     super#function_param_pattern expr
@@ -242,23 +239,23 @@ class mapper = object(this)
       let open Ast.Pattern.Identifier in
       let { name = (loc, _); typeAnnotation = ta; _ } = id in
       (try
-        let (d,i) = LocMap.find loc renamings in
+        let d = LocMap.find loc renamings in
         match ta with
         | None ->
-        let dep = { key=(DepKey.Id (d,i));
+        let dep = { key=(DepKey.Id d);
                      typeDep= NoInfo;
                      valDep =  NoInfo} in
         (* different from fun param!! *)
         depMap <-
           DepMap.add ~combine:merge_dep (* update_dep *)
-            (DepKey.Id (d,i)) dep depMap
+            (DepKey.Id d) dep depMap
         | Some some_ta -> (* annotation *)
-        let dep = { key=(DepKey.Id (d,i));
+        let dep = { key=(DepKey.Id d);
                      typeDep=(Annotation (some_ta, [] ));
                      valDep = NoInfo} in
         depMap <-
           DepMap.add ~combine:merge_dep (* update_dep *)
-            (DepKey.Id (d,i)) dep depMap
+            (DepKey.Id d) dep depMap
       with _ -> ())
     | _, _ -> ())
     ;
@@ -269,12 +266,12 @@ class mapper = object(this)
   let open Dep in
   fun loc ->
   try
-      let (d,i) = LocMap.find loc renamings in
-      let dep_right = { key = (DepKey.Id (d,i));
+      let d = LocMap.find loc renamings in
+      let dep_right = { key = (DepKey.Id d);
           typeDep = Dep.Incomplete;
           valDep = Dep.Incomplete} in
         depMap <- DepMap.add ~combine:merge_dep
-          (DepKey.Id (d,i)) dep_right depMap
+          (DepKey.Id d) dep_right depMap
    with _ -> ()
      (* Non-renamable vars such as globals do not exist in the scope builder *)
      (* Utils_js.prerr_endlinef "map_id_to_incomplete: %s" "id not recognized"*)
@@ -286,18 +283,18 @@ class mapper = object(this)
     (expr: Ast.Expression.t option) =
   let open Dep in
   try
-    let (d,i) = LocMap.find loc renamings in
+    let d = LocMap.find loc renamings in
     (* syntax guarantees that in destructuring, rhs is not optional *)
     let (loc_e,_) = (match expr with | Some e -> e | None -> raise Not_found) in
     match key with
     | Ast.Pattern.Object.Property.Identifier iden ->
       let _, real_name = iden in
-      let dep_right = { key = (DepKey.Id (d,i));
+      let dep_right = { key = (DepKey.Id d);
         typeDep = Incomplete;
         valDep = Destructure (DepKey.Temp loc_e, real_name) }
       in
         depMap <- DepMap.add ~combine:merge_dep
-          (DepKey.Id (d,i)) dep_right depMap
+          (DepKey.Id d) dep_right depMap
       (* Remark: we cannot really pretend rhs is a Destructure expr and 'depend'
       on that Destructure. Here is no syntactic representation such as *s or s->p.
       Also, we destructure into multiple names at once, var {a:c,b:d} = s; So, we
@@ -319,21 +316,21 @@ class mapper = object(this)
     let open Dep in
     let { name = (loc, _); typeAnnotation = _; _ } = id in
     (try
-      let (d,i) = LocMap.find loc renamings in
+      let d = LocMap.find loc renamings in
       (match expr with
       | Some expr' ->
       let (loc_e, _) = expr' in
       let dep_right = DepMap.find (DepKey.Temp loc_e) depMap in
         depMap <- DepMap.add ~combine:merge_dep
-          (DepKey.Id (d,i)) dep_right depMap
+          (DepKey.Id d) dep_right depMap
       | None ->
       let dep_right = {  (* treat no-rhs-expression as uninitialized *)
-          key = (DepKey.Id (d,i));
+          key = (DepKey.Id d);
           typeDep = Dep.NoInfo;
           valDep = Dep.NoInfo
         } in
         depMap <- DepMap.add ~combine:merge_dep
-         (DepKey.Id (d,i)) dep_right depMap
+         (DepKey.Id d) dep_right depMap
       )
     with _ ->
     ())
@@ -400,10 +397,10 @@ class mapper = object(this)
       let open Dep in
       let id' = this#identifier id in
       (try
-        let (d,i) = LocMap.find loc renamings in
+        let d = LocMap.find loc renamings in
         let dep = {key = (DepKey.Temp loc);
-                    typeDep = Depends [DepKey.Id (d,i)];
-                    valDep =  Depends [DepKey.Id (d,i)]} in
+                    typeDep = Depends [DepKey.Id d];
+                    valDep =  Depends [DepKey.Id d]} in
         depMap <- DepMap.add (DepKey.Temp loc) dep depMap
        with _ ->
         let dep = { key = (DepKey.Temp loc) ;
@@ -512,14 +509,14 @@ class mapper = object(this)
     (match argument with
     | loc_a, Ast.Expression.Identifier _ ->
       (try
-        let (d,i) = LocMap.find loc_a renamings in
+        let d = LocMap.find loc_a renamings in
         (* let dep_id = DepMap.find (DepKey.Id (d,i)) depMap in *)
         let dep_expr = { key = DepKey.Temp loc;
-                         valDep = Depends [DepKey.Id (d,i)];
-                         typeDep = Depends [DepKey.Id (d,i)]} in (* number? *)
+                         valDep = Depends [DepKey.Id d];
+                         typeDep = Depends [DepKey.Id d]} in (* number? *)
           (* v++ augments the dependence of v onto itself as expr *)
           depMap <- DepMap.add ~combine:merge_dep
-            (DepKey.Id (d,i)) dep_expr depMap;
+            (DepKey.Id d) dep_expr depMap;
           (* the expression v++ depends on v *)
           depMap <- DepMap.add (DepKey.Temp loc) dep_expr depMap
       with _ -> ())
@@ -558,10 +555,10 @@ class mapper = object(this)
       let open Ast.Pattern.Identifier in
       let { name = (loc, _); typeAnnotation = _; _} = id in
       (try
-        let (d,i) =
+        let d =
           LocMap.find loc renamings in
         let dep_left =
-          DepMap.find (DepKey.Id (d,i)) depMap in
+          DepMap.find (DepKey.Id d) depMap in
         let (loc_e, _) = expr in
         let dep_right =
           DepMap.find (DepKey.Temp loc_e) depMap in
@@ -570,15 +567,15 @@ class mapper = object(this)
           (* treat as = assignment *)
           depMap <-
             DepMap.add ~combine:merge_dep
-              (DepKey.Id (d,i)) dep_right depMap
+              (DepKey.Id d) dep_right depMap
         | _ ->
           (* treat as += assignment *)
           depMap <-
             DepMap.add ~combine:merge_dep
-              (DepKey.Id (d,i)) dep_left depMap;
+              (DepKey.Id d) dep_left depMap;
           depMap <-
             DepMap.add ~combine:merge_dep
-              (DepKey.Id (d,i)) dep_right depMap
+              (DepKey.Id d) dep_right depMap
         with _ -> ())
         (* Utils_js.prerr_endlinef
           "assign_to_assignment_pattern:Identifier %s" "id not recognized" *)

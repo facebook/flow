@@ -151,7 +151,7 @@ type local_t = {
   mutable exists_excuses: ExistsCheck.t LocMap.t;
 
   mutable dep_map: Dep_mapper.Dep.t Dep_mapper.DepMap.t;
-  mutable renamings : (Loc.t * int) LocMap.t;
+  mutable renamings : Loc.t LocMap.t;
 }
 
 type cacheable_t = local_t
