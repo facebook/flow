@@ -167,7 +167,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         let t = primary env in
         Loc.btwn start_loc (fst t), Type.Typeof t
     | T_LBRACKET -> tuple env
-    | T_IDENTIFIER _ ->
+    | T_IDENTIFIER _
+    | T_STATIC (* `static` is reserved in strict mode, but still an identifier *) ->
         let loc, g = generic env in
         loc, Type.Generic g
     | T_STRING (loc, value, raw, octal)  ->
@@ -302,7 +303,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       | T_RPAREN ->
           (* () or is definitely a param list *)
           ParamList ([], None)
-      | T_IDENTIFIER _ ->
+      | T_IDENTIFIER _
+      | T_STATIC (* `static` is reserved in strict mode, but still an identifier *) ->
           (* This could be a function parameter or a generic type *)
           function_param_or_generic_type env
       | token ->
