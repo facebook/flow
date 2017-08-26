@@ -19,7 +19,7 @@ class requires_calculator ~ast = object(this)
   inherit [Loc.t SMap.t] visitor ~init:SMap.empty as super
 
   val locals =
-    let { Scope_builder.locals; _ } = Scope_builder.program ast in
+    let { Scope_api.locals; _ } = Scope_builder.program ast in
     locals
 
   method private add_require s loc =
