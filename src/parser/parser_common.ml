@@ -43,79 +43,83 @@ module type PARSER = sig
   val is_assignable_lhs : Expression.t -> bool
 end
 
-(* IdentifierName: https://tc39.github.io/ecma262/#prod-IdentifierName *)
-let identifier_name token =
+(* IdentifierName - https://tc39.github.io/ecma262/#prod-IdentifierName *)
+let identifier_name env =
   let open Token in
-  match token with
+  let loc = Peek.loc env in
+  let name = match Peek.token env with
   (* obviously, Identifier is a valid IdentifierName *)
-  | T_IDENTIFIER id -> Some id
+  | T_IDENTIFIER id -> id
   (* keywords are also IdentifierNames *)
-  | T_AWAIT -> Some "await"
-  | T_BREAK -> Some "break"
-  | T_CASE -> Some "case"
-  | T_CATCH -> Some "catch"
-  | T_CLASS -> Some "class"
-  | T_CONST -> Some "const"
-  | T_CONTINUE -> Some "continue"
-  | T_DEBUGGER -> Some "debugger"
-  | T_DEFAULT -> Some "default"
-  | T_DELETE -> Some "delete"
-  | T_DO -> Some "do"
-  | T_ELSE -> Some "else"
-  | T_EXPORT -> Some "export"
-  | T_EXTENDS -> Some "extends"
-  | T_FINALLY -> Some "finally"
-  | T_FOR -> Some "for"
-  | T_FUNCTION -> Some "function"
-  | T_IF -> Some "if"
-  | T_IMPORT -> Some "import"
-  | T_IN -> Some "in"
-  | T_INSTANCEOF -> Some "instanceof"
-  | T_NEW -> Some "new"
-  | T_RETURN -> Some "return"
-  | T_SUPER -> Some "super"
-  | T_SWITCH -> Some "switch"
-  | T_THIS -> Some "this"
-  | T_THROW -> Some "throw"
-  | T_TRY -> Some "try"
-  | T_TYPEOF -> Some "typeof"
-  | T_VAR -> Some "var"
-  | T_VOID -> Some "void"
-  | T_WHILE -> Some "while"
-  | T_WITH -> Some "with"
-  | T_YIELD -> Some "yield"
+  | T_AWAIT -> "await"
+  | T_BREAK -> "break"
+  | T_CASE -> "case"
+  | T_CATCH -> "catch"
+  | T_CLASS -> "class"
+  | T_CONST -> "const"
+  | T_CONTINUE -> "continue"
+  | T_DEBUGGER -> "debugger"
+  | T_DEFAULT -> "default"
+  | T_DELETE -> "delete"
+  | T_DO -> "do"
+  | T_ELSE -> "else"
+  | T_EXPORT -> "export"
+  | T_EXTENDS -> "extends"
+  | T_FINALLY -> "finally"
+  | T_FOR -> "for"
+  | T_FUNCTION -> "function"
+  | T_IF -> "if"
+  | T_IMPORT -> "import"
+  | T_IN -> "in"
+  | T_INSTANCEOF -> "instanceof"
+  | T_NEW -> "new"
+  | T_RETURN -> "return"
+  | T_SUPER -> "super"
+  | T_SWITCH -> "switch"
+  | T_THIS -> "this"
+  | T_THROW -> "throw"
+  | T_TRY -> "try"
+  | T_TYPEOF -> "typeof"
+  | T_VAR -> "var"
+  | T_VOID -> "void"
+  | T_WHILE -> "while"
+  | T_WITH -> "with"
+  | T_YIELD -> "yield"
   (* FutureReservedWord *)
-  | T_ENUM -> Some "enum"
-  | T_LET -> Some "let"
-  | T_STATIC -> Some "static"
-  | T_INTERFACE -> Some "interface"
-  | T_IMPLEMENTS -> Some "implements"
-  | T_PACKAGE -> Some "package"
-  | T_PRIVATE -> Some "private"
-  | T_PROTECTED -> Some "protected"
-  | T_PUBLIC -> Some "public"
+  | T_ENUM -> "enum"
+  | T_LET -> "let"
+  | T_STATIC -> "static"
+  | T_INTERFACE -> "interface"
+  | T_IMPLEMENTS -> "implements"
+  | T_PACKAGE -> "package"
+  | T_PRIVATE -> "private"
+  | T_PROTECTED -> "protected"
+  | T_PUBLIC -> "public"
   (* NullLiteral *)
-  | T_NULL -> Some "null"
+  | T_NULL -> "null"
   (* BooleanLiteral *)
-  | T_TRUE -> Some "true"
-  | T_FALSE -> Some "false"
+  | T_TRUE -> "true"
+  | T_FALSE -> "false"
   (* Flow-specific stuff *)
-  | T_DECLARE -> Some "declare"
-  | T_TYPE -> Some "type"
-  | T_OPAQUE -> Some "opaque"
-  | T_ANY_TYPE -> Some "any"
-  | T_MIXED_TYPE -> Some "mixed"
-  | T_EMPTY_TYPE -> Some "empty"
-  | T_BOOLEAN_TYPE BOOL -> Some "bool"
-  | T_BOOLEAN_TYPE BOOLEAN -> Some "boolean"
-  | T_NUMBER_TYPE -> Some "number"
-  | T_STRING_TYPE -> Some "string"
-  | T_VOID_TYPE -> Some "void"
+  | T_DECLARE -> "declare"
+  | T_TYPE -> "type"
+  | T_OPAQUE -> "opaque"
+  | T_ANY_TYPE -> "any"
+  | T_MIXED_TYPE -> "mixed"
+  | T_EMPTY_TYPE -> "empty"
+  | T_BOOLEAN_TYPE BOOL -> "bool"
+  | T_BOOLEAN_TYPE BOOLEAN -> "boolean"
+  | T_NUMBER_TYPE -> "number"
+  | T_STRING_TYPE -> "string"
+  | T_VOID_TYPE -> "void"
   (* Contextual stuff *)
-  | T_OF -> Some "of"
-  | T_ASYNC -> Some "async"
+  | T_OF -> "of"
+  | T_ASYNC -> "async"
   (* punctuators, types, literals, etc are not identifiers *)
-  | _ -> None
+  | _ -> error_unexpected env; ""
+  in
+  Eat.token env;
+  loc, name
 
 (**
  * The abstract operation IsLabelledFunction

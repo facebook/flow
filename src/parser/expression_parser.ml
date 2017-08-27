@@ -1099,12 +1099,7 @@ module Expression
   and property_name_include_private env =
     let start_loc = Peek.loc env in
     let is_private = Expect.maybe env T_POUND in
-    let id_loc = Peek.loc env in
-    let ident = match identifier_name (Peek.token env) with
-    | Some name -> name
-    | None -> error_unexpected env; ""
-    in
-    Eat.token env;
+    let id_loc, ident = identifier_name env in
     let loc = Loc.btwn start_loc id_loc in
     loc, (id_loc, ident), is_private
 end

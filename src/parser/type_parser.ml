@@ -590,16 +590,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       })
 
   and type_identifier env =
-    let loc = Peek.loc env in
-    let name = match identifier_name (Peek.token env) with
-    | Some name ->
-      if is_reserved_type name then error_at env (loc, Parse_error.UnexpectedReservedType);
-      name
-    | None ->
-      error_unexpected env;
-      ""
-    in
-    Eat.token env;
+    let loc, name = identifier_name env in
+    if is_reserved_type name then error_at env (loc, Parse_error.UnexpectedReservedType);
     loc, name
 
   and bounded_type env = with_loc (fun env ->
