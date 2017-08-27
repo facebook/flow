@@ -285,7 +285,13 @@ module rec Parse : PARSER = struct
     | T_OF
     | T_ASYNC
     | T_OPAQUE
-    | T_TYPE as t ->
+    | T_TYPE
+    | T_ANY_TYPE
+    | T_MIXED_TYPE
+    | T_EMPTY_TYPE
+    | T_BOOLEAN_TYPE _
+    | T_NUMBER_TYPE
+    | T_STRING_TYPE as t ->
         (* These aren't real identifiers *)
         Expect.token env t
     | _ when is_strict_reserved name ->

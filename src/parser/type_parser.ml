@@ -255,8 +255,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     let param env =
       match Peek.token ~i:1 env with
       | T_COLON | T_PLING ->
-          let name, _ = Parse.identifier_or_reserved_keyword env in
-          function_param_with_id env name
+          let id = Parse.identifier env in
+          function_param_with_id env id
       | _ ->
           let typeAnnotation = _type env in
           anonymous_function_param env typeAnnotation
@@ -349,14 +349,15 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     ret
 
   and function_param_or_generic_type env =
-    let id = Parse.identifier env in
-    match Peek.token env with
+    match Peek.token ~i:1 env with
     | T_PLING (* optional param *)
     | T_COLON ->
+        let id = Parse.identifier env in
         let param = function_param_with_id env id in
         ignore (Expect.maybe env T_COMMA);
         ParamList (function_param_list_without_parens env [param])
     | _ ->
+        let id = type_identifier env in
         Type (
           generic_type_with_identifier env id
           |> postfix_with env
@@ -462,7 +463,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       let id =
         if Peek.token ~i:1 env = T_COLON
         then begin
-          let id, _ = Parse.identifier_or_reserved_keyword env in
+          let id = Parse.identifier env in
           Expect.token env T_COLON;
           Some id
         end else None in
@@ -675,14 +676,14 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           }))
         end else None
 
-  and generic env = raw_generic_with_identifier env (Parse.identifier env)
+  and generic env = raw_generic_with_identifier env (type_identifier env)
 
   and raw_generic_with_identifier =
     let rec identifier env (q_loc, qualification) =
       if Peek.token env = T_PERIOD
       then begin
         Expect.token env T_PERIOD;
-        let id = Parse.identifier env in
+        let id = type_identifier env in
         let loc = Loc.btwn q_loc (fst id) in
         let qualification = Type.Generic.Identifier.(Qualified (loc, {
           qualification;
