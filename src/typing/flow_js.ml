@@ -5609,8 +5609,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* conditional type switch *)
     (***************************)
 
-    (* Use our alternate if our lower bound is void. *)
-    | DefT (_, VoidT), CondT (_, alt, tout) -> rec_flow_t cx trace (alt, tout)
+    (* Use our alternate if our lower bound is empty. *)
+    | DefT (_, EmptyT), CondT (_, alt, tout) -> rec_flow_t cx trace (alt, tout)
     (* Otherwise continue by Flowing out lower bound to tout. *)
     | _, CondT (_, _, tout) -> rec_flow_t cx trace (l, tout)
 
@@ -7947,6 +7947,12 @@ and filter_optional cx ?trace reason opt_t =
     flow_opt_t cx ?trace (opt_t, DefT (reason, OptionalT t))
   )
 
+(* filter out undefined and null from a type *)
+and filter_maybe cx ?trace reason maybe_t =
+  mk_tvar_where cx reason (fun t ->
+    flow_opt_t cx ?trace (maybe_t, DefT (reason, MaybeT t))
+  )
+
 and update_sketchy_null cx opt_loc t =
   let open ExistsCheck in
   match t with
@@ -9942,6 +9948,7 @@ and react_kit =
     ~eval_destructor
     ~sealed_in_op
     ~union_of_ts
+    ~filter_maybe
 
 and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind with
   | ReactCreateElement -> (match args with
@@ -10152,7 +10159,8 @@ and object_spread =
         | Some (t1, _), Some (t2, _) ->
           (* Use CondT to replace void with t1. *)
           let t = mk_tvar_where cx reason (fun tvar ->
-            rec_flow cx trace (t2, CondT (reason, t1, tvar))
+            rec_flow cx trace (filter_optional cx ~trace reason t2,
+              CondT (reason, t1, tvar))
           ) in
           Some (t, true)
         end

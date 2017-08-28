@@ -591,7 +591,7 @@ module rec TypeTerm : sig
     | ResolveSpreadT of reason * resolve_spread_type
 
     (* `CondT (reason, alternate, tout)` will flow `alternate` to `tout` when
-     * the lower bound is an `EmptyT`. *)
+     * the lower bound is empty. *)
     | CondT of reason * t * t_out
 
   and specialize_cache = reason list option

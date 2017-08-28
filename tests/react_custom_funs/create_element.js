@@ -27,6 +27,10 @@ React.createElement(B, {
 });
 React.createElement(A, {foo: 42}); // Error: `bar` is missing.
 React.createElement(B, {foo: 42}); // Error: `bar` is missing.
+React.createElement(A, undefined); // Error: `foo` and `bar` are missing.
+React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
+React.createElement(A, null); // Error: `foo` and `bar` are missing.
+React.createElement(B, null); // Error: `foo` and `bar` are missing.
 (React.createElement(A, {foo: 1, bar: 2}).type: Class<A>); // OK
 (React.createElement(B, {foo: 1, bar: 2}).type: typeof B); // OK
 (React.createElement(A, {foo: 1, bar: 2}).props.foo: number); // OK
@@ -65,8 +69,14 @@ React.createElement(any, {whateverYouWant: 'yes'}); // OK
 
 class E extends React.Component<{children: number}> {}
 React.createElement(E, {}); // Error
+React.createElement(E, undefined); // Error
+React.createElement(E, null); // Error
 React.createElement(E, {}, 1); // OK
+React.createElement(E, undefined, 1); // OK
+React.createElement(E, null, 1); // OK
 React.createElement(E, {}, 1, 2); // Error
+React.createElement(E, undefined, 1, 2); // Error
+React.createElement(E, null, 1, 2); // Error
 React.createElement(E, {}, 1, 2, 3); // Error
 React.createElement(E, {}, [1, 2]); // Error
 React.createElement(E, {}, [1, 2], [3, 4]); // Error
@@ -80,8 +90,14 @@ React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
 
 class F extends React.Component<{children: Array<number>}> {}
 React.createElement(F, {}); // Error
+React.createElement(F, undefined); // Error
+React.createElement(F, null); // Error
 React.createElement(F, {}, 1); // Error
+React.createElement(F, undefined, 1); // Error
+React.createElement(F, null, 1); // Error
 React.createElement(F, {}, 1, 2); // OK
+React.createElement(F, undefined, 1, 2); // OK
+React.createElement(F, null, 1, 2); // OK
 React.createElement(F, {}, 1, 2, 3); // OK
 React.createElement(F, {}, [1, 2]); // OK
 React.createElement(F, {}, [1, 2], [3, 4]); // Error

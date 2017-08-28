@@ -6,6 +6,8 @@ declare var any: any;
 
 React.createFactory(any)(); // OK
 React.createFactory(any)({}); // OK
+React.createFactory(any)(undefined); // OK
+React.createFactory(any)(null); // OK
 
 class A extends React.Component<{foo: number, bar: number}, void> {}
 function B(props: {foo: number, bar: number}) {}
@@ -25,6 +27,10 @@ bFactory({
 });
 aFactory({foo: 42}); // Error: `bar` is missing.
 bFactory({foo: 42}); // Error: `bar` is missing.
+aFactory(undefined); // Error: `foo` and `bar` are missing.
+bFactory(undefined); // Error: `foo` and `bar` are missing.
+aFactory(null); // Error: `foo` and `bar` are missing.
+bFactory(null); // Error: `foo` and `bar` are missing.
 (aFactory({foo: 1, bar: 2}).type: Class<A>); // OK
 (bFactory({foo: 1, bar: 2}).type: typeof B); // OK
 (aFactory({foo: 1, bar: 2}).props.foo: number); // OK
@@ -67,8 +73,14 @@ anyFactory({whateverYouWant: 'yes'}); // OK
 class E extends React.Component<{children: number}, void> {}
 const eFactory = React.createFactory(E);
 eFactory({}); // Error
+eFactory(undefined); // Error
+eFactory(null); // Error
 eFactory({}, 1); // OK
+eFactory(undefined, 1); // OK
+eFactory(null, 1); // OK
 eFactory({}, 1, 2); // Error
+eFactory(undefined, 1, 2); // Error
+eFactory(null, 1, 2); // Error
 eFactory({}, 1, 2, 3); // Error
 eFactory({}, [1, 2]); // Error
 eFactory({}, [1, 2], [3, 4]); // Error
@@ -83,8 +95,14 @@ eFactory({}, 1, ...(any: Array<number>)); // Error
 class F extends React.Component<{children: Array<number>}, void> {}
 const fFactory = React.createFactory(F);
 fFactory({}); // Error
+fFactory(undefined); // Error
+fFactory(null); // Error
 fFactory({}, 1); // Error
+fFactory(undefined, 1); // Error
+fFactory(null, 1); // Error
 fFactory({}, 1, 2); // OK
+fFactory(undefined, 1, 2); // OK
+fFactory(null, 1, 2); // OK
 fFactory({}, 1, 2, 3); // OK
 fFactory({}, [1, 2]); // OK
 fFactory({}, [1, 2], [3, 4]); // Error

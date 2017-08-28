@@ -34,26 +34,40 @@ React.cloneElement(a); // OK: `a` is an element.
 (React.cloneElement(b).props.foo: string); // Error: `foo` is number.
 
 React.cloneElement(a, {}); // OK
+React.cloneElement(a, undefined); // OK
+React.cloneElement(a, null); // OK
 React.cloneElement(a, {foo: 1}); // OK
 React.cloneElement(a, {foo: 1, bar: 2}); // OK
 React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
 React.cloneElement(b, {}); // OK
+React.cloneElement(b, undefined); // OK
+React.cloneElement(b, null); // OK
 React.cloneElement(b, {foo: 1}); // OK
 React.cloneElement(b, {foo: 1, bar: 2}); // OK
 React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
 
 React.cloneElement(c, {}); // OK
+React.cloneElement(c, undefined); // OK
+React.cloneElement(c, null); // OK
 React.cloneElement(c, {children: 42}); // OK
 React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
 React.cloneElement(c, {}, 42); // OK
+React.cloneElement(c, undefined, 42); // OK
+React.cloneElement(c, null, 42); // OK
 React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
+React.cloneElement(c, undefined, 1, 2, 3); // Error: `children` is not an array.
+React.cloneElement(c, null, 1, 2, 3); // Error: `children` is not an array.
 React.cloneElement(c, {}, ...[]); // OK
 
 React.cloneElement(d, {}); // OK
 React.cloneElement(d, {children: 42}); // Error: `children` is an array.
 React.cloneElement(d, {children: [1, 2, 3]}); // OK
 React.cloneElement(d, {}, 42); // Error: `children` is an array.
+React.cloneElement(d, undefined, 42); // Error: `children` is an array.
+React.cloneElement(d, null, 42); // Error: `children` is an array.
 React.cloneElement(d, {}, 1, 2, 3); // OK
+React.cloneElement(d, undefined, 1, 2, 3); // OK
+React.cloneElement(d, null, 1, 2, 3); // OK
 
 React.cloneElement(e, {}); // OK
 React.cloneElement(e, {foo: 1}); // OK

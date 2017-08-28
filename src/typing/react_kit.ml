@@ -29,6 +29,7 @@ let run cx trace reason_op l u
   ~(eval_destructor: Context.t -> trace:Trace.t -> reason -> t -> Type.destructor -> int -> Type.t)
   ~(sealed_in_op: reason -> Type.sealtype -> bool)
   ~(union_of_ts: reason -> Type.t list -> Type.t)
+  ~(filter_maybe: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t)
   =
   let err_incompatible reason =
     add_output cx ~trace (Flow_error.EReactKit
@@ -284,6 +285,20 @@ let run cx trace reason_op l u
 
   let create_element shape config_input children_args tout =
     let component = l in
+    (* If our config input is void or null then we want to replace it with an
+     * empty object. *)
+    let config_input =
+      let reason = reason_of_t config_input in
+      let empty_object = mk_object_with_map_proto
+        cx reason
+        ~sealed:true ~exact:true ~frozen:true
+        SMap.empty (ObjProtoT reason)
+      in
+      mk_tvar_where cx reason (fun tout ->
+        rec_flow cx trace (filter_maybe cx ~trace reason config_input,
+          CondT (reason, empty_object, tout))
+      )
+    in
     (* Create the optional children input type from the children arguments. *)
     let children_input = coerce_children_args children_args in
     (* Create a type variable for our config. *)
