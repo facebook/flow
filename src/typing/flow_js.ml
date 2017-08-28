@@ -4636,6 +4636,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Object.assign semantics *)
     | DefT (_, (NullT | VoidT)), ObjAssignFromT _ -> ()
 
+    (* {...mixed} is the equivalent of {...{[string]: mixed}} *)
+    | DefT (reason, MixedT _), ObjAssignFromT _ ->
+      let dict = {
+        dict_name = None;
+        key = StrT.make reason;
+        value = l;
+        dict_polarity = Neutral;
+      } in
+      let o = mk_object_with_map_proto cx reason
+        SMap.empty
+        (ObjProtoT reason)
+        ~dict
+        ~sealed:true ~exact:true
+      in
+      rec_flow cx trace (o, u)
+
     (*************************)
     (* objects can be copied *)
     (*************************)
@@ -10339,9 +10355,21 @@ and object_spread =
       rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, tout))
     | DefT (_, (AnyT | AnyObjT)) ->
       rec_flow_t cx trace (AnyT.why reason, tout)
+    (* {...mixed} is treated as {...{[string]: mixed}}. Any JavaScript value can
+     * be spread with different semantics. If any JavaScript value were to
+     * throw some runtime error when spread then this would be unsound. *)
+    | DefT (r, MixedT _) as t ->
+      let flags = { frozen = true; sealed = Sealed; exact = true } in
+      let x = Nel.one (reason, SMap.empty, Some ({
+        dict_name = None;
+        key = StrT.make r;
+        value = t;
+        dict_polarity = Neutral;
+      }), flags) in
+      resolved cx trace reason options tool state tout x
+    (* Mirroring Object.assign() and {...null} semantics, treat null/void as
+     * empty objects. *)
     | DefT (_, (NullT | VoidT)) ->
-      (* Mirroring Object.assign() and {...null} semantics, treat null/void as
-       * empty objects. *)
       let flags = { frozen = true; sealed = Sealed; exact = true } in
       let x = Nel.one (reason, SMap.empty, None, flags) in
       resolved cx trace reason options tool state tout x

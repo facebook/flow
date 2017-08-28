@@ -225,6 +225,63 @@ Error: type_intersection.js:15
      11: type O2 = {...{p:A}&{p:B}};
                                 ^ B
 
+Error: type_mixed.js:5
+  5: (o1.someProp: empty); // Error: mixed ~> empty
+      ^^^^^^^^^^^ mixed. This type is incompatible with
+  5: (o1.someProp: empty); // Error: mixed ~> empty
+                   ^^^^^ empty
+
+Error: type_mixed.js:9
+  9: (o2.someProp: empty); // Error: mixed ~> empty
+      ^^^^^^^^^^^ mixed. This type is incompatible with
+  9: (o2.someProp: empty); // Error: mixed ~> empty
+                   ^^^^^ empty
+
+Error: type_mixed.js:13
+ 13: (o3.a: empty); // Error: number ~> empty
+      ^^^^ number. This type is incompatible with
+ 13: (o3.a: empty); // Error: number ~> empty
+            ^^^^^ empty
+
+Error: type_mixed.js:14
+ 14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+      ^^^^ mixed. This type is incompatible with
+ 14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+            ^^^^^ empty
+
+Error: type_mixed.js:14
+ 14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+      ^^^^ number. This type is incompatible with
+ 14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+            ^^^^^ empty
+
+Error: type_mixed.js:14
+ 14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+      ^^^^ undefined. This type is incompatible with
+ 14: (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
+            ^^^^^ empty
+
+Error: type_mixed.js:15
+ 15: (o3.c: empty); // Error: mixed ~> empty
+      ^^^^ mixed. This type is incompatible with
+ 15: (o3.c: empty); // Error: mixed ~> empty
+            ^^^^^ empty
+
+Error: type_mixed.js:17
+ 17: function fn<O>(obj: {...O}) {
+                         ^^^^^^ object type. Cannot spread properties from
+     v----------------------------
+ 17: function fn<O>(obj: {...O}) {
+ 18:   (obj.someProp: empty); // Error: mixed ~> empty
+ 19: }
+     ^ some incompatible instantiation of `O`
+
+Error: type_mixed.js:18
+ 18:   (obj.someProp: empty); // Error: mixed ~> empty
+        ^^^^^^^^^^^^ O. This type is incompatible with
+ 18:   (obj.someProp: empty); // Error: mixed ~> empty
+                      ^^^^^ empty
+
 Error: type_string.js:1
   1: type O1 = {..."foo"}; // error
                ^^^^^^^^^^ object type. Cannot spread properties from
@@ -336,4 +393,4 @@ Error: type_void.js:56
                           ^ T
 
 
-Found 42 errors
+Found 51 errors
