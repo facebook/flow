@@ -94,7 +94,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":33}},
             "range":[32,33],
-            "name":"(",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -102,7 +102,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":33}},
             "range":[32,33],
-            "name":"(",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }
@@ -115,7 +115,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":33},"end":{"line":1,"column":34}},
             "range":[33,34],
-            "name":")",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -123,7 +123,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":33},"end":{"line":1,"column":34}},
             "range":[33,34],
-            "name":")",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }
@@ -136,7 +136,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":35}},
             "range":[34,35],
-            "name":":",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -144,7 +144,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":35}},
             "range":[34,35],
-            "name":":",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }

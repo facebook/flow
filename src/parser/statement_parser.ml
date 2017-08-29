@@ -927,35 +927,39 @@ module Statement
 
   and extract_ident_name (_, name) = name
 
-  and export_specifiers_and_errs env specifiers errs =
+  and export_specifiers env specifiers =
     match Peek.token env with
     | T_EOF
     | T_RCURLY ->
-        List.rev specifiers, List.rev errs
+        List.rev specifiers
     | _ ->
-        let local, err = Parse.identifier_or_reserved_keyword env in
-        let exported, err, end_loc = if Peek.token env = T_IDENTIFIER "as"
-        then begin
-          Eat.token env;
-          let name, _ = Parse.identifier_or_reserved_keyword env in
-          (record_export env (fst name, extract_ident_name name));
-          Some name, None, fst name
-        end else begin
-          let loc = fst local in
-          record_export env (loc, extract_ident_name local);
-          None, err, loc
-        end in
-        let loc = Loc.btwn (fst local) end_loc in
-        let specifier = loc, {
-          Statement.ExportNamedDeclaration.ExportSpecifier.local;
-          exported;
-        } in
+        let specifier = with_loc (fun env ->
+          let local = identifier_name env in
+          let exported =
+            if Expect.maybe env (T_IDENTIFIER "as") then begin
+              let exported = identifier_name env in
+              record_export env exported;
+              Some exported
+            end else begin
+              record_export env local;
+              None
+            end
+          in
+          { Statement.ExportNamedDeclaration.ExportSpecifier.local; exported; }
+        ) env in
         if Peek.token env = T_COMMA
         then Expect.token env T_COMMA;
-        let errs = match err with
-        | Some err -> err::errs
-        | None -> errs in
-        export_specifiers_and_errs env (specifier::specifiers) errs
+        export_specifiers env (specifier::specifiers)
+
+  and assert_export_specifier_identifiers env specifiers =
+    let open Statement.ExportNamedDeclaration.ExportSpecifier in
+    List.iter (function
+      | _, { local = id; exported = None; } ->
+        Parse.assert_identifier_name_is_identifier
+          ~restricted_error:Parse_error.StrictVarName env id
+      | _ ->
+        ()
+    ) specifiers
 
   and export_declaration ~decorators = with_loc (fun env ->
     let env = env |> with_strict true |> with_in_export true in
@@ -1121,19 +1125,20 @@ module Statement
           | _ -> Statement.ExportValue
         ) in
         Expect.token env T_LCURLY;
-        let specifiers, errs = export_specifiers_and_errs env [] [] in
-        let specifiers = Some (ExportSpecifiers specifiers) in
+        let specifiers = export_specifiers env [] in
         Expect.token env T_RCURLY;
-        let source = if Peek.token env = T_IDENTIFIER "from"
-        then Some (export_source env)
-        else begin
-          errs |> List.iter (error_at env);
-          None
-        end in
+        let source =
+          if Peek.token env = T_IDENTIFIER "from" then
+            Some (export_source env)
+          else begin
+            assert_export_specifier_identifiers env specifiers;
+            None
+          end
+        in
         Eat.semicolon env;
         Statement.ExportNamedDeclaration {
           declaration = None;
-          specifiers;
+          specifiers = Some (ExportSpecifiers specifiers);
           source;
           exportKind;
         }
@@ -1263,20 +1268,21 @@ module Statement
           | _ -> ()
         );
         Expect.token env T_LCURLY;
-        let specifiers, errs = export_specifiers_and_errs env [] [] in
-        let specifiers = Some (Statement.ExportNamedDeclaration.ExportSpecifiers specifiers) in
+        let specifiers = export_specifiers env [] in
         Expect.token env T_RCURLY;
-        let source = if Peek.token env = T_IDENTIFIER "from"
-        then Some (export_source env)
-        else begin
-          errs |> List.iter (error_at env);
-          None
-        end in
+        let source =
+          if Peek.token env = T_IDENTIFIER "from" then
+            Some (export_source env)
+          else begin
+            assert_export_specifier_identifiers env specifiers;
+            None
+          end
+        in
         Eat.semicolon env;
         Statement.DeclareExportDeclaration {
           default = false;
           declaration = None;
-          specifiers;
+          specifiers = Some (Statement.ExportNamedDeclaration.ExportSpecifiers specifiers);
           source;
         }
     )
@@ -1305,57 +1311,45 @@ module Statement
       | T_EOF
       | T_RCURLY -> List.rev acc
       | _ ->
-        if not preceding_comma then error_at env (
-          Peek.loc env, Error.ImportSpecifierMissingComma
-        );
-        let remote, err = Parse.identifier_or_reserved_keyword env in
-        let (starts_w_type, type_kind) =
-          let v = snd remote in
-          if v = "type" then true, Some ImportType
-          else if v = "typeof" then true, Some ImportTypeof
-          else false, None
+        if not preceding_comma then error env Error.ImportSpecifierMissingComma;
+        let remote = identifier_name env in
+        let starts_w_type, kind =
+          match snd remote with
+          | "type" -> true, Some ImportType
+          | "typeof" -> true, Some ImportTypeof
+          | _ -> false, None
         in
         let specifier =
-          if Peek.token env = T_IDENTIFIER "as" then (
+          if Peek.token env = T_IDENTIFIER "as" then begin
             let as_ident = Parse.identifier env in
-            if starts_w_type && not (Peek.is_identifier env) then (
+            if starts_w_type && not (Peek.is_identifier env) then begin
               (* `import {type as ,` or `import {type as }` *)
-              (if is_type_import then error_at env (
-                fst remote,
-                Error.ImportTypeShorthandOnlyInPureImport
-              ));
-              ImportNamedSpecifier {
-                local = None;
-                remote = as_ident;
-                kind = type_kind;
-              }
-            ) else (
+              if is_type_import then
+                error_at env (fst remote, Error.ImportTypeShorthandOnlyInPureImport);
+              { remote = as_ident; local = None; kind }
+            end else begin
               (* `import {type as foo` *)
               let local = Some (Parse.identifier env) in
-              ImportNamedSpecifier {local; remote; kind = None; }
-            )
-          ) else if starts_w_type && Peek.is_identifier env then (
+              { remote; local; kind = None; }
+            end
+          end else if starts_w_type && Peek.is_identifier env then begin
             (* `import {type foo` *)
-            (if is_type_import then error_at env (
-              fst remote,
-              Error.ImportTypeShorthandOnlyInPureImport
-            ));
-            let remote, err = Parse.identifier_or_reserved_keyword env in
-            (match err with Some err -> error_at env err | None -> ());
+            if is_type_import then
+              error_at env (fst remote, Error.ImportTypeShorthandOnlyInPureImport);
+            let remote = identifier_name env in
             let local =
-              if Peek.token env = T_IDENTIFIER "as" then (
-                Eat.token env;
-                Some (Parse.identifier env)
-              ) else None
+              if Expect.maybe env (T_IDENTIFIER "as")
+              then Some (Type.type_identifier env)
+              else None
             in
-            ImportNamedSpecifier { local; remote; kind = type_kind; }
-          ) else (
-            (match err with Some err -> error_at env err | None -> ());
-            ImportNamedSpecifier { local = None; remote; kind = None; }
-          )
+            { remote; local; kind }
+          end else begin
+            Parse.assert_identifier_name_is_identifier env remote;
+            { remote; local = None; kind = None; }
+          end
         in
         let preceding_comma = Expect.maybe env T_COMMA in
-        specifier_list ~preceding_comma env is_type_import (specifier::acc)
+        specifier_list ~preceding_comma env is_type_import (ImportNamedSpecifier specifier::acc)
 
     in let named_or_namespace_specifier env is_type_import =
       let start_loc = Peek.loc env in

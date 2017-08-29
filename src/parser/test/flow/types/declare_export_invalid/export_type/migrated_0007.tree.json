@@ -119,7 +119,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":40},"end":{"line":1,"column":41}},
             "range":[40,41],
-            "name":"(",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -127,7 +127,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":40},"end":{"line":1,"column":41}},
             "range":[40,41],
-            "name":"(",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }
@@ -140,7 +140,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":41},"end":{"line":1,"column":42}},
             "range":[41,42],
-            "name":")",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -148,7 +148,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":41},"end":{"line":1,"column":42}},
             "range":[41,42],
-            "name":")",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }
@@ -161,7 +161,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":42},"end":{"line":1,"column":43}},
             "range":[42,43],
-            "name":":",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -169,7 +169,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":42},"end":{"line":1,"column":43}},
             "range":[42,43],
-            "name":":",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }

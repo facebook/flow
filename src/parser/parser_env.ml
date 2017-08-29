@@ -294,6 +294,7 @@ let error_at env (loc, e) =
 let comment_list env =
   List.iter (fun c -> env.comments := c :: !(env.comments))
 let record_export env (loc, export_name) =
+  if export_name = "" then () else (* empty identifiers signify an error, don't export it *)
   let exports = !(env.exports) in
   if SSet.mem export_name exports
   then error_at env (loc, Error.DuplicateExport export_name)

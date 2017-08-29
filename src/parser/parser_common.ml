@@ -30,7 +30,6 @@ module type PARSER = sig
   val left_hand_side : env -> Expression.t
   val object_initializer : env -> Loc.t * Expression.Object.t * Loc.t list
   val identifier : ?restricted_error:Error.t -> env -> Identifier.t
-  val identifier_or_reserved_keyword : env -> (Identifier.t * (Loc.t * Error.t) option)
   val identifier_with_type : env -> ?no_optional:bool -> Error.t -> Loc.t * Pattern.Identifier.t
   val assert_identifier_name_is_identifier :
     ?restricted_error:Error.t -> env -> Loc.t * string -> unit

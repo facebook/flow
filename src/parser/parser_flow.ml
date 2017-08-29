@@ -290,8 +290,6 @@ module rec Parse : PARSER = struct
     assert_identifier_name_is_identifier ?restricted_error env id;
     id
 
-  and identifier_or_reserved_keyword = Expression.identifier_or_reserved_keyword
-
   and identifier_with_type =
     let with_loc_helper no_optional restricted_error env =
       let name = identifier ~restricted_error env in

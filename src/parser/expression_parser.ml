@@ -18,7 +18,6 @@ module type EXPRESSION = sig
   val assignment: env -> Expression.t
   val assignment_cover: env -> object_cover
   val conditional: env -> Expression.t
-  val identifier_or_reserved_keyword: env -> Identifier.t * (Loc.t * Parse_error.t) option
   val property_name_include_private: env -> Loc.t * Identifier.t * bool
   val is_assignable_lhs: Expression.t -> bool
   val left_hand_side: env -> Expression.t
@@ -1015,86 +1014,6 @@ module Expression
       Loc.btwn first_loc last_loc, Expression.(Sequence Sequence.({
         expressions;
       }))
-
-  (* You can do things like
-   * var x = { if : 4 }
-   * x.if
-   *)
-  and identifier_or_reserved_keyword env =
-    let lex_token = Peek.token env in
-    let lex_value = Peek.value env in
-    let lex_loc = Peek.loc env in
-    match lex_token with
-    (* Anything that is a special token in Flow but not in the ES6 spec
-       should be here. *)
-    | T_ASYNC
-    | T_DECLARE
-    | T_IDENTIFIER _
-    | T_OF
-    | T_TYPE
-    | T_OPAQUE
-    | T_POUND
-      -> Parse.identifier env, None
-    | _ ->
-      let err = match lex_token with
-      | T_FUNCTION
-      | T_IF
-      | T_IN
-      | T_INSTANCEOF
-      | T_RETURN
-      | T_SWITCH
-      | T_THIS
-      | T_THROW
-      | T_TRY
-      | T_VAR
-      | T_WHILE
-      | T_WITH
-      | T_CONST
-      | T_LET
-      | T_NULL
-      | T_FALSE
-      | T_TRUE
-      | T_BREAK
-      | T_CASE
-      | T_CATCH
-      | T_CONTINUE
-      | T_DEFAULT
-      | T_DO
-      | T_FINALLY
-      | T_FOR
-      | T_CLASS
-      | T_EXTENDS
-      | T_STATIC
-      | T_ELSE
-      | T_NEW
-      | T_DELETE
-      | T_TYPEOF
-      | T_VOID
-      | T_ENUM
-      | T_EXPORT
-      | T_IMPORT
-      | T_SUPER
-      | T_IMPLEMENTS
-      | T_INTERFACE
-      | T_PACKAGE
-      | T_PRIVATE
-      | T_PROTECTED
-      | T_PUBLIC
-      | T_YIELD
-      | T_ANY_TYPE
-      | T_BOOLEAN_TYPE _
-      | T_NUMBER_TYPE
-      | T_STRING_TYPE
-      | T_VOID_TYPE
-      | T_AWAIT
-      | T_DEBUGGER ->
-          Some (lex_loc, get_unexpected_error (lex_token, lex_value))
-      | _ ->
-          error_unexpected env;
-          None
-      in
-      Eat.token env;
-      (lex_loc, lex_value), err
 
   and property_name_include_private env =
     let start_loc = Peek.loc env in
