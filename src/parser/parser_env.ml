@@ -153,7 +153,6 @@ type token_sink_result = {
   token_loc: Loc.t;
   token: Token.t;
   token_context: Lex_mode.t;
-  token_value: string;
 }
 
 type parse_options = {
@@ -402,6 +401,12 @@ let is_future_reserved = function
   | "enum" -> true
   | _ -> false
 
+let token_is_future_reserved = Token.(function
+  | T_IDENTIFIER name when is_future_reserved name -> true
+  | T_ENUM -> true
+  | _ -> false
+)
+
 (* #sec-strict-mode-of-ecmascript *)
 let is_strict_reserved = function
   | "interface"
@@ -414,11 +419,31 @@ let is_strict_reserved = function
   | "yield" -> true
   | _ -> false
 
+let token_is_strict_reserved = Token.(function
+  | T_IDENTIFIER name when is_strict_reserved name -> true
+  | T_INTERFACE
+  | T_IMPLEMENTS
+  | T_PACKAGE
+  | T_PRIVATE
+  | T_PROTECTED
+  | T_PUBLIC
+  | T_STATIC
+  | T_YIELD
+    -> true
+  | _
+    -> false
+)
+
 (* #sec-strict-mode-of-ecmascript *)
 let is_restricted = function
   | "eval"
   | "arguments" -> true
   | _ -> false
+
+let token_is_restricted = Token.(function
+  | T_IDENTIFIER name when is_restricted name -> true
+  | _ -> false
+)
 
 (* #sec-reserved-words *)
 let is_reserved str_val =
@@ -440,7 +465,6 @@ module Peek = struct
   open Token
 
   let token ?(i=0) env = Lex_result.token (lookahead ~i env)
-  let value ?(i=0) env = Lex_result.value (lookahead ~i env)
   let loc ?(i=0) env = Lex_result.loc (lookahead ~i env)
   let errors ?(i=0) env = Lex_result.errors (lookahead ~i env)
   let comments ?(i=0) env = Lex_result.comments (lookahead ~i env)
@@ -462,12 +486,10 @@ module Peek = struct
   (* This returns true if the next token is identifier-ish (even if it is an
    * error) *)
   let is_identifier ?(i=0) env =
-    let name = value ~i env in
     match token ~i env with
-    | _ when
-      is_strict_reserved name ||
-      is_restricted name ||
-      is_future_reserved name-> true
+    | t when token_is_strict_reserved t -> true
+    | t when token_is_future_reserved t -> true
+    | t when token_is_restricted t -> true
     | T_LET
     | T_TYPE
     | T_OPAQUE
@@ -506,16 +528,17 @@ let error env e =
   let loc = Peek.loc env in
   error_at env (loc, e)
 
-let get_unexpected_error = Token.(function
-  | T_EOF, _ -> Error.UnexpectedEOS
-  | T_NUMBER _, _ -> Error.UnexpectedNumber
-  | T_JSX_TEXT _, _
-  | T_STRING _, _ -> Error.UnexpectedString
-  | T_IDENTIFIER _, _ -> Error.UnexpectedIdentifier
-  | _, word when is_future_reserved word -> Error.UnexpectedReserved
-  | _, word when is_strict_reserved word -> Error.StrictReservedWord
-  | _, value -> Error.UnexpectedToken value
-)
+let get_unexpected_error token =
+  let open Token in
+  match token with
+  | T_EOF -> Error.UnexpectedEOS
+  | T_NUMBER _ -> Error.UnexpectedNumber
+  | T_JSX_TEXT _
+  | T_STRING _ -> Error.UnexpectedString
+  | T_IDENTIFIER _ -> Error.UnexpectedIdentifier
+  | t when token_is_future_reserved t -> Error.UnexpectedReserved
+  | t when token_is_strict_reserved t -> Error.StrictReservedWord
+  | _ -> Error.UnexpectedToken (value_of_token token)
 
 let error_unexpected env =
   (* So normally we consume the lookahead lex result when Eat.token calls
@@ -524,7 +547,7 @@ let error_unexpected env =
    * consuming that token, so we should process any lexing errors before
    * complaining about the unexpected token *)
   error_list env (Peek.errors env);
-  error env (get_unexpected_error (Peek.token env, Peek.value env))
+  error env (get_unexpected_error (Peek.token env))
 
 let error_on_decorators env = List.iter
   (fun decorator -> error_at env ((fst decorator), Error.UnsupportedDecorator))
@@ -546,12 +569,9 @@ module Eat = struct
     (match !(env.token_sink) with
       | None -> ()
       | Some token_sink ->
-          let token_loc = Peek.loc env in
-          let token = Peek.token env in
-          let token_value = Peek.value env in
           token_sink {
-            token_loc;
-            token;
+            token_loc = Peek.loc env;
+            token = Peek.token env;
             (**
              * The lex mode is useful because it gives context to some
              * context-sensitive tokens.
@@ -563,7 +583,6 @@ module Eat = struct
              * ...etc...
              *)
             token_context=(lex_mode env);
-            token_value;
           }
     );
 

@@ -28,7 +28,6 @@ type token_sink_result = {
   token_loc: Loc.t;
   token: Token.t;
   token_context: Lex_mode.t;
-  token_value: string;
 }
 
 type parse_options = {
@@ -124,12 +123,13 @@ val enter_function : env -> async:bool -> generator:bool -> env
 val is_reserved : string -> bool
 val is_future_reserved : string -> bool
 val is_strict_reserved : string -> bool
+val token_is_strict_reserved : Token.t -> bool
 val is_restricted : string -> bool
 val is_reserved_type : string -> bool
+val token_is_restricted : Token.t -> bool
 
 module Peek : sig
   val token : ?i:int -> env -> Token.t
-  val value : ?i:int -> env -> string
   val loc : ?i:int -> env -> Loc.t
   val errors : ?i:int -> env -> (Loc.t * Parse_error.t) list
   val comments : ?i:int -> env -> Ast.Comment.t list

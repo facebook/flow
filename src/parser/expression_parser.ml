@@ -772,8 +772,7 @@ module Expression
     | t ->
         error_unexpected env;
         (* Let's get rid of the bad token *)
-        if t = T_ERROR
-        then Eat.token env;
+        begin match t with T_ERROR _ -> Eat.token env | _ -> () end;
         (* Really no idea how to recover from this. I suppose a null
          * expression is as good as anything *)
         let value = Literal.Null in

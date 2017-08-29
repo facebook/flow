@@ -119,26 +119,16 @@ let loc_of_curr env (lexbuf: Sedlexing.lexbuf) =
 
 let get_result_and_clear_state (env, lex_token) =
   let env, state = get_and_clear_state env in
-  let (lex_loc, lex_value) = match lex_token with
-  | T_STRING (loc, _, raw, _) ->
-      loc, raw
-  | T_JSX_IDENTIFIER { raw } -> loc_of_lexbuf env env.lex_lb, raw
-  | T_JSX_TEXT (loc, _, raw) -> loc, raw
-  | T_TEMPLATE_PART (loc, {literal; _}, _) ->
-      loc, literal
-  | T_REGEXP (loc, pattern, flags) -> loc, "/" ^ pattern ^ "/" ^ flags
-  | T_IDENTIFIER raw
-  | T_NUMBER { raw; _ }
-  | T_NUMBER_SINGLETON_TYPE { raw; _ } ->
-      loc_of_lexbuf env env.lex_lb, raw
-  | _ ->
-    loc_of_lexbuf env env.lex_lb,
-    Sedlexing.Utf8.lexeme env.lex_lb
+  let lex_loc = match lex_token with
+  | T_STRING (loc, _, _, _) -> loc
+  | T_JSX_TEXT (loc, _, _) -> loc
+  | T_TEMPLATE_PART (loc, _, _) -> loc
+  | T_REGEXP (loc, _, _) -> loc
+  | _ -> loc_of_lexbuf env env.lex_lb
   in
   env, {
     Lex_result.lex_token;
     lex_loc;
-    lex_value;
     lex_errors = List.rev state.lex_errors_acc;
     lex_comments = List.rev state.lex_comments_acc;
   }
@@ -449,7 +439,7 @@ let rec token (env: Lex_env.t) lexbuf =
       let env, _ = line_comment env (Buffer.create 127) lexbuf in
       token env lexbuf
     else
-      env, T_ERROR
+      env, T_ERROR "#!"
 
   (* Values *)
   | "'" | '"' ->
@@ -625,7 +615,7 @@ let rec token (env: Lex_env.t) lexbuf =
 
   | any ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
-    env, T_ERROR
+    env, T_ERROR (Sedlexing.Utf8.lexeme lexbuf)
 
   | _ -> failwith "unreachable"
 
@@ -857,7 +847,7 @@ and type_token env lexbuf =
     env, T_EOF
 
   | any ->
-    env, T_ERROR
+    env, T_ERROR (Sedlexing.Utf8.lexeme lexbuf)
 
   | _ -> failwith "unreachable"
 
@@ -1065,7 +1055,7 @@ and regexp env lexbuf =
 
   | any ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
-    env, T_ERROR
+    env, T_ERROR (Sedlexing.Utf8.lexeme lexbuf)
 
   | _ -> failwith "unreachable"
 
@@ -1191,7 +1181,7 @@ and jsx_tag env lexbuf =
     env, T_JSX_TEXT (Loc.btwn start _end, value, raw)
 
   | any ->
-    env, T_ERROR
+    env, T_ERROR (Sedlexing.Utf8.lexeme lexbuf)
 
   | _ -> failwith "unreachable"
 

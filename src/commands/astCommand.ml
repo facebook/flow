@@ -61,7 +61,6 @@ let token_to_json token_result =
     token_loc=loc;
     token;
     token_context;
-    token_value;
   } = token_result in
 
   JSON_Object [
@@ -89,7 +88,7 @@ let token_to_json token_result =
       int_ loc.start.offset;
       int_ loc._end.offset;
     ]);
-    ("value", JSON_String token_value);
+    ("value", JSON_String (Token.value_of_token token));
   ]
 
 let main include_tokens pretty file_type_opt use_strict from filename () =
