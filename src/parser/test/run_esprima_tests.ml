@@ -609,7 +609,7 @@ end = struct
     let tests = tests_of_path path in
     let results = List.fold_left (fun results { test_name; cases; } ->
       if not quiet then print [C.Bold C.White, spf "=== %s ===\n" test_name];
-      let test_results = SMap.fold (fun key case results ->
+      let test_results, _ = SMap.fold (fun key case (results, shown_header) ->
         (* print [C.Normal C.Default, spf "[ ] %s\r" key]; *)
         match run_case case with
         | Case_ok ->
@@ -617,7 +617,7 @@ end = struct
             C.Normal C.Green, "[\xE2\x9C\x93] PASS";
             C.Normal C.Default, spf ": %s\n" key
           ];
-          { results with ok = results.ok + 1 }
+          { results with ok = results.ok + 1 }, shown_header
         | Case_skipped reason ->
           begin match reason with
           | Some ""
@@ -628,9 +628,9 @@ end = struct
                 C.Normal C.Default, spf ": %s - %s\n" key reason
               ]
           end;
-          { results with skipped = results.skipped + 1 }
+          { results with skipped = results.skipped + 1 }, shown_header
         | Case_error errs ->
-          if quiet then print [C.Bold C.White, spf "=== %s ===\n" test_name];
+          if quiet && not shown_header then print [C.Bold C.White, spf "=== %s ===\n" test_name];
           print [
             C.Normal C.Red, "[\xE2\x9C\x97] FAIL";
             C.Normal C.Default, spf ": %s\n" key
@@ -640,8 +640,8 @@ end = struct
           ) errs;
           flush stdout;
           if record then record_tree path test_name key case;
-          { results with failed = results.failed + 1 }
-      ) cases { ok = 0; skipped = 0; failed = 0; } in
+          { results with failed = results.failed + 1 }, true
+      ) cases ({ ok = 0; skipped = 0; failed = 0; }, false) in
       if not quiet then print_endline "";
       let results = add_results results test_results in
       if test_results.failed > 0 then
