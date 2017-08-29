@@ -140,7 +140,7 @@ function injectProp<Props: {}>(
 
 This [generic function type](../../types/generics/) will take a React component
 and return a React component with the exact same type for props. To add a
-prop we will use [an intersection](../../types/intersection/):
+prop we will use [an intersection](../../types/intersections/):
 
 ```js
 import * as React from 'react';
