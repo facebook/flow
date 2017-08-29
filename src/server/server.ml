@@ -374,18 +374,40 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     result
 
   let find_refs ~options ~workers ~env (file_input, line, col) =
+    (* We will likely use these when we extend find refs to work globally
+     * rather than just locally, so it's probably simplest to just leave
+     * them here for now *)
+    let _ = options, workers, env in
     let filename = File_input.filename_of_file_input file_input in
     let file = Loc.SourceFile filename in
     let loc = mk_loc file line col in
-    let state = FindRefs_js.set_hooks loc in
-    let result =
+    let scope_info_result =
+      let open Parsing_service_js in
       File_input.content_of_file_input file_input >>= fun content ->
-      Types_js.basic_check_contents ~options ~workers ~env content file >>= fun (_profiling, cx, _info) ->
-      try_with begin fun () ->
-        FindRefs_js.result cx state
-      end in
-    FindRefs_js.unset_hooks ();
-    result
+      let max_tokens = docblock_max_tokens in
+      let _errors, docblock = get_docblock ~max_tokens file content in
+      let types_mode = TypesAllowed in
+      let use_strict = true in
+      let result = do_parse ~fail:false ~types_mode ~use_strict ~info:docblock content file in
+      match result with
+        | Parse_ok ast -> Ok (Scope_builder.program ast)
+        (* The parse should not fail; we have passes ~fail:false *)
+        | Parse_fail _ -> Error "Parse unexpectedly failed"
+        | Parse_skip _ -> Error "Parse unexpectedly skipped"
+    in
+    match scope_info_result with
+      | Ok scope_info ->
+          let all_uses = Scope_api.all_uses scope_info in
+          let matching_uses = List.filter (fun use -> Loc.contains use loc) all_uses in
+          begin match matching_uses with
+            | [] -> Ok []
+            | [use] ->
+                let def = Scope_api.def_of_use scope_info use in
+                let unsorted = Scope_api.uses_of_def scope_info ~exclude_def:false def in
+                Ok (List.fast_sort Loc.compare unsorted)
+            | _ -> Error "Multiple identifiers were unexpectedly matched"
+          end
+      | Error e -> Error e
 
   let get_def ~options ~workers ~env command_context (file_input, line, col) =
     let filename = File_input.filename_of_file_input file_input in
