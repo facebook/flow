@@ -97,7 +97,7 @@ module CheckCommand = struct
     end;
 
     (* initialize loggers before doing too much, especially anything that might exit *)
-    init_loggers ~from ~options ~min_level:Hh_logger.Level.Error ();
+    LoggingUtils.init_loggers ~from ~options ~min_level:Hh_logger.Level.Error ();
 
     if not ignore_version then assert_version flowconfig;
 
@@ -163,7 +163,7 @@ module FocusCheckCommand = struct
     let options = make_options ~flowconfig ~lazy_:false ~root options_flags in
 
     (* initialize loggers before doing too much, especially anything that might exit *)
-    init_loggers ~from ~options ();
+    LoggingUtils.init_loggers ~from ~options ();
 
     (* do this after loggers are initialized, so we can complain properly *)
     let file_options = Options.file_options options in

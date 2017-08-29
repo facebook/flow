@@ -43,7 +43,7 @@ let main lazy_ options_flags shm_flags ignore_version from path_opt () =
   let options = make_options ~flowconfig ~lazy_ ~root options_flags in
 
   (* initialize loggers before doing too much, especially anything that might exit *)
-  init_loggers ~from ~options ();
+  LoggingUtils.init_loggers ~from ~options ();
 
   if not ignore_version then assert_version flowconfig;
 

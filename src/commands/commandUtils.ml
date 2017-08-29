@@ -95,25 +95,6 @@ let sleep seconds =
         then timeout_go_boom ()
         else Unix.sleep seconds
 
-(* TODO: min_level should probably default to warn, but was historically info *)
-let init_loggers ~from ~options ?(min_level=Hh_logger.Level.Info) () =
-  FlowEventLogger.set_from from;
-  Hh_logger.Level.set_min_level (
-    if Options.is_quiet options then
-      Hh_logger.Level.Off
-    else if Options.verbose options != None || Options.is_debug_mode options then
-      Hh_logger.Level.Debug
-    else match Sys_utils.get_env "FLOW_LOG_LEVEL" with
-      | Some "off" -> Hh_logger.Level.Off
-      | Some "fatal" -> Hh_logger.Level.Fatal
-      | Some "error" -> Hh_logger.Level.Error
-      | Some "warn" -> Hh_logger.Level.Warn
-      | Some "info" -> Hh_logger.Level.Info
-      | Some "debug" -> Hh_logger.Level.Debug
-      | Some _ (* ignore invalid values *)
-      | None -> min_level
-  )
-
 let collect_error_flags main color include_warnings one_line show_all_errors =
   let color = match color with
   | Some "never" -> Tty.Color_Never

@@ -51,7 +51,7 @@ let main
   let options = make_options ~flowconfig ~lazy_ ~root options_flags in
 
   (* initialize loggers before doing too much, especially anything that might exit *)
-  init_loggers ~from ~options ();
+  LoggingUtils.init_loggers ~from ~options ();
 
   if not ignore_version then assert_version flowconfig;
 
@@ -81,6 +81,8 @@ let main
         "Logs will go to %s\n%!" log_file
     end
   in
-  Main.daemonize ~wait ~log_file ~shared_mem_config ~on_spawn options
+  (* A quiet `flow start` doesn't imply a quiet `flow server` *)
+  let server_options = { options with Options.opt_quiet = false } in
+  Main.daemonize ~wait ~log_file ~shared_mem_config ~on_spawn server_options
 
 let command = CommandSpec.command spec main

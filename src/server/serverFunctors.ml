@@ -293,6 +293,10 @@ end = struct
 
   let run ~shared_mem_config options = run_internal ~shared_mem_config options
 
+  let run_from_daemonize ?waiting_channel ~shared_mem_config options =
+    LoggingUtils.set_hh_logger_min_level options;
+    run_internal ?waiting_channel ~shared_mem_config options
+
   let check_once ~shared_mem_config ~client_include_warnings ?focus_targets options =
     PidLog.disable ();
     let genv, program_init = create_program_init ~shared_mem_config ~focus_targets options in
@@ -305,7 +309,7 @@ end = struct
     profiling, errors, warnings, suppressed_errors
 
   let daemonize =
-    let entry = Server_daemon.register_entry_point run_internal in
+    let entry = Server_daemon.register_entry_point run_from_daemonize in
     fun ~wait ~log_file ~shared_mem_config ?on_spawn options ->
       Server_daemon.daemonize ~wait ~log_file ~shared_mem_config ?on_spawn ~options entry
 end

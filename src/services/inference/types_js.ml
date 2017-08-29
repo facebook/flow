@@ -14,10 +14,10 @@ open Utils_js
 
 (****************** typecheck job helpers *********************)
 
-let clear_errors ?(debug=false) (files: FilenameSet.t) errors =
+let clear_errors (files: FilenameSet.t) errors =
   FilenameSet.fold
     (fun file { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set; } ->
-      if debug then prerr_endlinef "clear errors %s" (string_of_filename file);
+      Hh_logger.debug "clear errors %s" (string_of_filename file);
       { ServerEnv.
         local_errors = FilenameMap.remove file local_errors;
         merge_errors = FilenameMap.remove file merge_errors;
@@ -72,7 +72,7 @@ let with_timer ?options timer profiling f =
             wall_duration
             cpu_usage
             flow_cpu_usage in
-          prerr_endlinef
+          Hh_logger.info
             "TimingEvent `%s`: %s"
             timer
             stats
@@ -579,7 +579,6 @@ let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_se
 *)
 let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_ready_clients =
   let errors = env.ServerEnv.errors in
-  let debug = Options.is_debug_mode options in
 
   (* If foo.js is updated and foo.js.flow exists, then mark foo.js.flow as
    * updated too. This is because sometimes we decide what foo.js.flow
@@ -604,12 +603,12 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
 
   (* log modified and deleted files *)
   if deleted_count + modified_count > 0 then (
-    prerr_endlinef "recheck %d modified, %d deleted files"
+    Hh_logger.info "recheck %d modified, %d deleted files"
       modified_count deleted_count;
     let log_files files msg n =
-      prerr_endlinef "%s files:" msg;
+      Hh_logger.info "%s files:" msg;
       let _ = FilenameSet.fold (fun f i ->
-        prerr_endlinef "%d/%d: %s" i n (string_of_filename f);
+        Hh_logger.info "%d/%d: %s" i n (string_of_filename f);
         i + 1
       ) files 1
       in ()
@@ -632,8 +631,8 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
   (* clear errors for new, changed and deleted files *)
   let errors =
     errors
-    |> clear_errors ~debug new_or_changed
-    |> clear_errors ~debug deleted
+    |> clear_errors new_or_changed
+    |> clear_errors deleted
   in
 
   (* record reparse errors *)
@@ -654,7 +653,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
   let new_or_changed_or_deleted = FilenameSet.union new_or_changed deleted in
   let unchanged = FilenameSet.diff old_parsed new_or_changed_or_deleted in
 
-  if debug then prerr_endlinef
+  Hh_logger.debug
     "recheck: old = %d, del = %d, fresh = %d, unmod = %d"
     (FilenameSet.cardinal old_parsed)
     (FilenameSet.cardinal deleted)
