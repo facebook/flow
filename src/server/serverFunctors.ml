@@ -150,11 +150,7 @@ end = struct
     let raw_updates = DfindLib.get_changes dfind in
     if SSet.is_empty raw_updates then env else begin
       let updates = Program.process_updates genv env raw_updates in
-      Persistent_connection.send_start_recheck env.connections;
       let env = Program.recheck genv env updates ~serve_ready_clients in
-      Persistent_connection.send_end_recheck env.connections;
-      let errors, warnings, _ = Program.collate_errors_separate_warnings env in
-      Persistent_connection.update_clients env.connections ~errors ~warnings;
       recheck_loop ~dfind genv env ~serve_ready_clients
     end
 

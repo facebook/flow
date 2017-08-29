@@ -569,6 +569,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     if FilenameSet.is_empty updates
     then env
     else begin
+      Persistent_connection.send_start_recheck env.connections;
       let options = genv.ServerEnv.options in
       let root = Options.root options in
       let tmp_dir = Options.temp_dir options in
@@ -576,6 +577,9 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       Pervasives.ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
       let env = Types_js.recheck ~options ~workers ~updates env ~serve_ready_clients in
       Pervasives.ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
+      Persistent_connection.send_end_recheck env.connections;
+      let errors, warnings, _ = collate_errors_separate_warnings env in
+      Persistent_connection.update_clients env.connections ~errors ~warnings;
       env
     end
 
