@@ -255,58 +255,40 @@ module rec Parse : PARSER = struct
 
   and is_assignable_lhs = Expression.is_assignable_lhs
 
-  and identifier ?restricted_error env =
-    let loc = Peek.loc env in
-    let name = Peek.value env in
-    begin match Peek.token env with
-    | T_LET ->
-    (* So "let" is disallowed as an identifier in a few situations. 11.6.2.1
-     * lists them out. It is always disallowed in strict mode *)
-      if in_strict_mode env
-      then strict_error env Error.StrictReservedWord
-      else
-        if no_let env
-        then error env (Error.UnexpectedToken name);
-      Eat.token env
-    | T_AWAIT ->
+  and assert_identifier_name_is_identifier ?restricted_error env (loc, name) =
+    match name with
+    | "let" ->
+      (* "let" is disallowed as an identifier in a few situations. 11.6.2.1
+       * lists them out. It is always disallowed in strict mode *)
+      if in_strict_mode env then
+        strict_error_at env (loc, Error.StrictReservedWord)
+      else if no_let env then
+        error_at env (loc, Error.UnexpectedToken name)
+    | "await" ->
       (* `allow_await` means that `await` is allowed to be a keyword,
          which makes it illegal to use as an identifier.
          https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
-      if allow_await env then error env Error.UnexpectedReserved;
-      Eat.token env
-    | T_YIELD ->
+      if allow_await env then error_at env (loc, Error.UnexpectedReserved)
+    | "yield" ->
       (* `allow_yield` means that `yield` is allowed to be a keyword,
          which makes it illegal to use as an identifier.
          https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
-      if allow_yield env then error env Error.UnexpectedReserved
-      else strict_error env Error.StrictReservedWord;
-      Eat.token env
-    | T_DECLARE
-    | T_OF
-    | T_ASYNC
-    | T_OPAQUE
-    | T_TYPE
-    | T_ANY_TYPE
-    | T_MIXED_TYPE
-    | T_EMPTY_TYPE
-    | T_BOOLEAN_TYPE _
-    | T_NUMBER_TYPE
-    | T_STRING_TYPE as t ->
-        (* These aren't real identifiers *)
-        Expect.token env t
+      if allow_yield env then error_at env (loc, Error.UnexpectedReserved)
+      else strict_error_at env (loc, Error.StrictReservedWord)
     | _ when is_strict_reserved name ->
-      strict_error env Error.StrictReservedWord;
-      Eat.token env
-    | T_IDENTIFIER _ ->
-      Eat.token env
+      strict_error_at env (loc, Error.StrictReservedWord)
+    | _ when is_reserved name ->
+      error_at env (loc, Error.UnexpectedToken name)
     | _ ->
-      error_unexpected env;
-      Eat.token env
-    end;
-    (match restricted_error with
-    | Some err when is_restricted name -> strict_error_at env (loc, err)
-    | _ -> ());
-    loc, name
+      begin match restricted_error with
+      | Some err when is_restricted name -> strict_error_at env (loc, err)
+      | _ -> ()
+      end
+
+  and identifier ?restricted_error env =
+    let id = identifier_name env in
+    assert_identifier_name_is_identifier ?restricted_error env id;
+    id
 
   and identifier_or_reserved_keyword = Expression.identifier_or_reserved_keyword
 

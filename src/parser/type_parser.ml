@@ -463,7 +463,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       let id =
         if Peek.token ~i:1 env = T_COLON
         then begin
-          let id = Parse.identifier env in
+          let id = identifier_name env in
           Expect.token env T_COLON;
           Some id
         end else None in

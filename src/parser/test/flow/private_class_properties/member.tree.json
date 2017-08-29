@@ -92,7 +92,7 @@
                       "type":"Identifier",
                       "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":5}},
                       "range":[45,46],
-                      "name":"#",
+                      "name":"",
                       "typeAnnotation":null,
                       "optional":false
                     },
