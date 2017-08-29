@@ -547,7 +547,7 @@ module Expression
       Expect.token env T_PERIOD;
       let meta = start_loc, "new" in
       match Peek.token env with
-      | T_IDENTIFIER "target" ->
+      | T_IDENTIFIER { raw = "target"; _ } ->
         let property = Parse.identifier env in
         let end_loc = fst property in
         Loc.btwn start_loc end_loc, Expression.(MetaProperty MetaProperty.({

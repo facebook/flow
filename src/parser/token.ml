@@ -12,7 +12,7 @@ type t =
   | T_NUMBER of { kind: number_type; raw: string }
   | T_STRING of (Loc.t * string * string * bool) (* loc, value, raw, octal *)
   | T_TEMPLATE_PART of (Loc.t * template_part * bool) (* loc, value, is_tail *)
-  | T_IDENTIFIER of string
+  | T_IDENTIFIER of { loc: Loc.t; value: string; raw: string }
   | T_REGEXP of (Loc.t * string * string) (* /pattern/flags *)
   (* Syntax *)
   | T_LCURLY
@@ -297,7 +297,7 @@ let value_of_token = function
   | T_NUMBER { raw; _ } -> raw
   | T_STRING (_, _, raw, _) -> raw
   | T_TEMPLATE_PART (_, { literal; _ }, _) -> literal
-  | T_IDENTIFIER raw -> raw
+  | T_IDENTIFIER { raw; _ } -> raw
   | T_REGEXP (_, pattern, flags) -> "/" ^ pattern ^ "/" ^ flags
   | T_LCURLY -> "{"
   | T_RCURLY -> "}"

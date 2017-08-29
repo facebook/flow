@@ -664,11 +664,10 @@ module Statement
           Expect.token env T_EXTENDS;
           supers env []
         end else [] in
-      let mixins = if Peek.token env = T_IDENTIFIER "mixins"
-        then begin
-          Eat.token env;
-          supers env []
-        end else [] in
+      let mixins = match Peek.token env with
+      | T_IDENTIFIER { raw = "mixins"; _ } -> Eat.token env; supers env []
+      | _ -> []
+      in
       let body = Type._object ~allow_static:true env in
       Statement.Interface.({
         id;
@@ -827,7 +826,7 @@ module Statement
     fun ?(in_module=false) env ->
       let start_loc = Peek.loc env in
       Expect.token env T_DECLARE;
-      Expect.token env (T_IDENTIFIER "module");
+      Expect.identifier env "module";
       if in_module || Peek.token env = T_PERIOD
       then
         let loc, exports = with_loc declare_module_exports env in
@@ -837,7 +836,7 @@ module Statement
 
   and declare_module_exports env =
     Expect.token env T_PERIOD;
-    Expect.token env (T_IDENTIFIER "exports");
+    Expect.identifier env "exports";
     let type_annot = Type.annotation env in
     Eat.semicolon env;
     Statement.DeclareModuleExports type_annot
@@ -869,7 +868,7 @@ module Statement
           declare_var_statement env
       | T_EXPORT when in_module ->
           declare_export_declaration ~allow_export_type:in_module env
-      | T_IDENTIFIER "module" ->
+      | T_IDENTIFIER { raw = "module"; _ } ->
           declare_module ~in_module env
       | _ when in_module -> (
           match Peek.token env with
@@ -886,7 +885,7 @@ module Statement
     )
 
   and export_source env =
-    Expect.token env (T_IDENTIFIER "from");
+    Expect.identifier env "from";
     match Peek.token env with
     | T_STRING (loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;
@@ -936,14 +935,15 @@ module Statement
         let specifier = with_loc (fun env ->
           let local = identifier_name env in
           let exported =
-            if Expect.maybe env (T_IDENTIFIER "as") then begin
+            match Peek.token env with
+            | T_IDENTIFIER { raw = "as"; _ } ->
+              Eat.token env;
               let exported = identifier_name env in
               record_export env exported;
               Some exported
-            end else begin
+            | _ ->
               record_export env local;
               None
-            end
           in
           { Statement.ExportNamedDeclaration.ExportSpecifier.local; exported; }
         ) env in
@@ -1097,13 +1097,14 @@ module Statement
           let parse_export_star_as =
             (parse_options env).esproposal_export_star_as
           in
-          if Peek.token env = T_IDENTIFIER "as"
-          then (
+          match Peek.token env with
+          | T_IDENTIFIER { raw = "as"; _ } ->
             Eat.token env;
             if parse_export_star_as
             then Some (Parse.identifier env)
             else (error env Error.UnexpectedTypeDeclaration; None)
-          ) else None
+          | _ ->
+            None
         in
         let specifiers =
           Some (ExportBatchSpecifier (loc, local_name))
@@ -1128,12 +1129,12 @@ module Statement
         let specifiers = export_specifiers env [] in
         Expect.token env T_RCURLY;
         let source =
-          if Peek.token env = T_IDENTIFIER "from" then
+          match Peek.token env with
+          | T_IDENTIFIER { raw = "from"; _ } ->
             Some (export_source env)
-          else begin
+          | _ ->
             assert_export_specifier_identifiers env specifiers;
             None
-          end
         in
         Eat.semicolon env;
         Statement.ExportNamedDeclaration {
@@ -1215,13 +1216,14 @@ module Statement
           (parse_options env).esproposal_export_star_as
         in
         let local_name =
-          if Peek.token env = T_IDENTIFIER "as"
-          then (
+          match Peek.token env with
+          | T_IDENTIFIER { raw = "as"; _ } ->
             Eat.token env;
             if parse_export_star_as
             then Some (Parse.identifier env)
             else (error env Error.UnexpectedTypeDeclaration; None)
-          ) else None
+          | _ ->
+            None
         in
         let specifiers = Statement.ExportNamedDeclaration.(
           Some (ExportBatchSpecifier (loc, local_name))
@@ -1271,12 +1273,12 @@ module Statement
         let specifiers = export_specifiers env [] in
         Expect.token env T_RCURLY;
         let source =
-          if Peek.token env = T_IDENTIFIER "from" then
+          match Peek.token env with
+          | T_IDENTIFIER { raw = "from"; _ } ->
             Some (export_source env)
-          else begin
+          | _ ->
             assert_export_specifier_identifiers env specifiers;
             None
-          end
         in
         Eat.semicolon env;
         Statement.DeclareExportDeclaration {
@@ -1292,7 +1294,7 @@ module Statement
     let open Statement.ImportDeclaration in
 
     let source env =
-      Expect.token env (T_IDENTIFIER "from");
+      Expect.identifier env "from";
       match Peek.token env with
       | T_STRING (loc, value, raw, octal) ->
           if octal then strict_error env Error.StrictOctalLiteral;
@@ -1320,7 +1322,11 @@ module Statement
           | _ -> false, None
         in
         let specifier =
-          if Peek.token env = T_IDENTIFIER "as" then begin
+          let is_as = match Peek.token env with
+            | T_IDENTIFIER { raw = "as"; _ } -> true
+            | _ -> false
+          in
+          if is_as then begin
             let as_ident = Parse.identifier env in
             if starts_w_type && not (Peek.is_identifier env) then begin
               (* `import {type as ,` or `import {type as }` *)
@@ -1338,9 +1344,12 @@ module Statement
               error_at env (fst remote, Error.ImportTypeShorthandOnlyInPureImport);
             let remote = identifier_name env in
             let local =
-              if Expect.maybe env (T_IDENTIFIER "as")
-              then Some (Type.type_identifier env)
-              else None
+              match Peek.token env with
+              | T_IDENTIFIER { raw = "as"; _ } ->
+                Eat.token env;
+                Some (Type.type_identifier env)
+              | _ ->
+                None
             in
             { remote; local; kind }
           end else begin
@@ -1356,7 +1365,7 @@ module Statement
       match Peek.token env with
       | T_MULT ->
           Expect.token env T_MULT;
-          Expect.token env (T_IDENTIFIER "as");
+          Expect.identifier env "as";
           let id = Parse.identifier env in
           [ImportNamespaceSpecifier (Loc.btwn start_loc (fst id), id)]
       | _ ->
@@ -1405,7 +1414,7 @@ module Statement
           let importKind, default_specifier = (
             match type_ident, Peek.token env with
             | Some type_ident, T_COMMA (* `import type,` *)
-            | Some type_ident, T_IDENTIFIER "from" -> (* `import type from` *)
+            | Some type_ident, T_IDENTIFIER { raw = "from"; _ } -> (* `import type from` *)
               ImportValue, ImportDefaultSpecifier type_ident
             | _ -> (* Either `import type Foo` or `import Foo` *)
               importKind, ImportDefaultSpecifier (Parse.identifier env)

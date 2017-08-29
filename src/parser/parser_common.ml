@@ -50,7 +50,7 @@ let identifier_name env =
   let loc = Peek.loc env in
   let name = match Peek.token env with
   (* obviously, Identifier is a valid IdentifierName *)
-  | T_IDENTIFIER id -> id
+  | T_IDENTIFIER { value; _ } -> value
   (* keywords are also IdentifierNames *)
   | T_AWAIT -> "await"
   | T_BREAK -> "break"

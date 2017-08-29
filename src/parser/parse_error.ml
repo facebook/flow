@@ -44,6 +44,7 @@ type t =
   | IllegalContinue
   | IllegalBreak
   | IllegalReturn
+  | IllegalUnicodeEscape
   | StrictModeWith
   | StrictCatchVariable
   | StrictVarName
@@ -154,6 +155,7 @@ module PP =
       | IllegalContinue -> "Illegal continue statement"
       | IllegalBreak -> "Illegal break statement"
       | IllegalReturn -> "Illegal return statement"
+      | IllegalUnicodeEscape -> "Illegal Unicode escape"
       | StrictModeWith ->  "Strict mode code may not include a with statement"
       | StrictCatchVariable ->  "Catch variable may not be eval or arguments in strict mode"
       | StrictVarName ->  "Variable name may not be eval or arguments in strict mode"

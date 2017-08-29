@@ -402,7 +402,7 @@ let is_future_reserved = function
   | _ -> false
 
 let token_is_future_reserved = Token.(function
-  | T_IDENTIFIER name when is_future_reserved name -> true
+  | T_IDENTIFIER { raw; _ } when is_future_reserved raw -> true
   | T_ENUM -> true
   | _ -> false
 )
@@ -420,7 +420,7 @@ let is_strict_reserved = function
   | _ -> false
 
 let token_is_strict_reserved = Token.(function
-  | T_IDENTIFIER name when is_strict_reserved name -> true
+  | T_IDENTIFIER { raw; _ } when is_strict_reserved raw -> true
   | T_INTERFACE
   | T_IMPLEMENTS
   | T_PACKAGE
@@ -441,7 +441,7 @@ let is_restricted = function
   | _ -> false
 
 let token_is_restricted = Token.(function
-  | T_IDENTIFIER name when is_restricted name -> true
+  | T_IDENTIFIER { raw; _ } when is_restricted raw -> true
   | _ -> false
 )
 
@@ -627,6 +627,13 @@ end
 module Expect = struct
   let token env t =
     if Peek.token env <> t then error_unexpected env;
+    Eat.token env
+
+  let identifier env name =
+    begin match Peek.token env with
+    | Token.T_IDENTIFIER { raw; _ } when raw = name -> ()
+    | _ -> error_unexpected env
+    end;
     Eat.token env
 
   (* If the next token is t, then eat it and return true

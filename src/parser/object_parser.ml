@@ -152,8 +152,9 @@ module Object
             -> Declaration.async env
         in
         let generator = Declaration.generator env in
-        match async, generator, key env with
-        | false, false, (_, (Property.Identifier (_, "get") as key)) ->
+        match async, generator, Peek.token env with
+        | false, false, T_IDENTIFIER { raw = "get"; _ } ->
+            let _, key = key env in
             begin match Peek.token env with
             | T_ASSIGN
             | T_COLON
@@ -163,7 +164,8 @@ module Object
             | T_RCURLY -> init env start_loc key false false
             | _ -> get env start_loc, []
             end
-        | false, false, (_, (Property.Identifier (_, "set") as key)) ->
+        | false, false, T_IDENTIFIER { raw = "set"; _ } ->
+            let _, key = key env in
             begin match Peek.token env with
             | T_ASSIGN
             | T_COLON
@@ -173,7 +175,8 @@ module Object
             | T_RCURLY -> init env start_loc key false false
             | _ -> set env start_loc, []
             end
-        | async, generator, (_, key) ->
+        | async, generator, _ ->
+            let _, key = key env in
             init env start_loc key async generator
       end
 
@@ -563,7 +566,7 @@ module Object
           decorators;
         })))
 
-    in fun env -> Ast.Expression.Object.Property.(
+    in fun env ->
       let start_loc = Peek.loc env in
       let decorators = decorator_list env in
       let static =
@@ -580,9 +583,9 @@ module Object
       | false, Some _ -> Declaration.generator env
       | _ -> generator
       in
-      match (async, generator, key ~class_body:true env) with
-      | false, false,
-        (_, (Identifier (_, "get") as key)) ->
+      match async, generator, Peek.token env with
+      | false, false, T_IDENTIFIER { raw = "get"; _ } ->
+          let _, key = key ~class_body:true env in
           (match Peek.token env with
           | T_LESS_THAN
           | T_COLON
@@ -593,8 +596,8 @@ module Object
           | _ ->
             error_unsupported_variance env variance;
             get env start_loc decorators static)
-      | false, false,
-        (_, (Identifier (_, "set") as key)) ->
+      | false, false, T_IDENTIFIER { raw = "set"; _ } ->
+          let _, key = key ~class_body:true env in
           (match Peek.token env with
           | T_LESS_THAN
           | T_COLON
@@ -605,9 +608,9 @@ module Object
           | _ ->
             error_unsupported_variance env variance;
             set env start_loc decorators static)
-      | _, _, (_, key) ->
+      | _, _, _ ->
+          let _, key = key ~class_body:true env in
           init env start_loc decorators key async generator static variance
-    )
 
   let class_declaration env decorators =
     (* 10.2.1 says all parts of a class definition are strict *)

@@ -88,10 +88,12 @@ let neg = [%sedlex.regexp? '-', Star whitespace]
 
 let line_terminator_sequence = [%sedlex.regexp? '\n' | '\r' | "\r\n"]
 
-(* TODO: allow \u{} *)
-let js_id_start = [%sedlex.regexp? '$' | '_' | id_start]
+let hex_quad = [%sedlex.regexp? hex_digit, hex_digit, hex_digit, hex_digit]
+let unicode_escape = [%sedlex.regexp? "\\u", hex_quad]
+let codepoint_escape = [%sedlex.regexp? "\\u{", Plus hex_digit, '}']
+let js_id_start = [%sedlex.regexp? '$' | '_' | id_start | unicode_escape | codepoint_escape]
 let js_id_continue = [%sedlex.regexp?
-  '$' | '_' | 0x200C | 0x200D | id_continue
+  '$' | '_' | 0x200C | 0x200D | id_continue | unicode_escape | codepoint_escape
 ]
 
 let loc_of_offsets env start_offset end_offset =
@@ -291,6 +293,56 @@ let mk_num_singleton number_type raw =
   let value = if neg then ~-.value else value in
   T_NUMBER_SINGLETON_TYPE { kind = number_type; value; raw }
 
+let decode_identifier =
+  let assert_valid_unicode_in_identifier env loc code =
+    let lexbuf = Sedlexing.from_int_array [|code|] in
+    match%sedlex lexbuf with
+    | js_id_start -> env
+    | js_id_continue -> env
+    | any
+    | eof -> lex_error env loc Parse_error.IllegalUnicodeEscape
+    | _ -> failwith "unreachable"
+  in
+  let loc_and_lexeme env offset lexbuf  =
+    let start_offset = offset + Sedlexing.lexeme_start lexbuf in
+    let end_offset = offset + Sedlexing.lexeme_end lexbuf in
+    let loc = loc_of_offsets env start_offset end_offset in
+    loc, lexeme lexbuf
+  in
+  let rec id_char env offset buf lexbuf =
+    match%sedlex lexbuf with
+    | unicode_escape ->
+      let loc, str = loc_and_lexeme env offset lexbuf in
+      let hex = String.sub str 2 (String.length str - 2) in
+      let code = int_of_string ("0x"^hex) in
+      let env = assert_valid_unicode_in_identifier env loc code in
+      Wtf8.add_wtf_8 buf code;
+      id_char env offset buf lexbuf
+
+    | codepoint_escape ->
+      let loc, str = loc_and_lexeme env offset lexbuf in
+      let hex = String.sub str 3 (String.length str - 4) in
+      let code = int_of_string ("0x"^hex) in
+      let env = assert_valid_unicode_in_identifier env loc code in
+      Wtf8.add_wtf_8 buf code;
+      id_char env offset buf lexbuf
+
+    | eof ->
+      env, Buffer.contents buf
+
+    | any ->
+      let x = lexeme lexbuf in
+      Buffer.add_string buf x;
+      id_char env offset buf lexbuf
+
+    | _ -> failwith "unreachable"
+  in
+  fun env raw ->
+    let offset = Sedlexing.lexeme_start env.lex_lb in
+    let lexbuf = Sedlexing.Utf8.from_string raw in
+    let buf = Buffer.create (String.length raw) in
+    id_char env offset buf lexbuf
+
 let recover env lexbuf ~f =
   let env = illegal env (loc_of_lexbuf env lexbuf) in
   Sedlexing.rollback lexbuf;
@@ -404,7 +456,7 @@ let string_escape env lexbuf =
     let code = int_of_string ("0o"^str) in (* 0o1 *)
     env, str, [|code|], true
 
-  | 'u', hex_digit, hex_digit, hex_digit, hex_digit ->
+  | 'u', hex_quad ->
     let str = lexeme lexbuf in
     let hex = String.sub str 1 (String.length str - 1) in
     let code = int_of_string ("0x"^hex) in
@@ -747,11 +799,18 @@ let token (env: Lex_env.t) lexbuf : result =
   | "yield" -> Token (env, T_YIELD)
 
   (* Identifiers *)
-  | js_id_start, Star js_id_continue -> Token (env, T_IDENTIFIER (lexeme lexbuf))
+  | js_id_start, Star js_id_continue ->
+    let loc = loc_of_lexbuf env lexbuf in
+    let raw = lexeme lexbuf in
+    let env, value = decode_identifier env raw in
+    Token (env, T_IDENTIFIER { loc; value; raw })
 
   (* TODO: Use [Symbol.iterator] instead of @@iterator. *)
-  | "@@iterator" -> Token (env, T_IDENTIFIER "@@iterator")
-  | "@@asyncIterator" -> Token (env, T_IDENTIFIER "@@asyncIterator")
+  | "@@iterator"
+  | "@@asyncIterator" ->
+    let loc = loc_of_lexbuf env lexbuf in
+    let raw = lexeme lexbuf in
+    Token (env, T_IDENTIFIER { loc; value = raw; raw })
 
   (* Syntax *)
   | "{" -> Token (env, T_LCURLY)
@@ -1571,7 +1630,11 @@ let type_token env lexbuf =
   | "void" -> Token (env, T_VOID_TYPE)
 
   (* Identifiers *)
-  | js_id_start, Star js_id_continue -> Token (env, T_IDENTIFIER (lexeme lexbuf))
+  | js_id_start, Star js_id_continue ->
+    let loc = loc_of_lexbuf env lexbuf in
+    let raw = lexeme lexbuf in
+    let env, value = decode_identifier env raw in
+    Token (env, T_IDENTIFIER { loc; value; raw })
 
   | "%checks" -> Token (env, T_CHECKS)
   (* Syntax *)
