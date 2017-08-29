@@ -392,12 +392,7 @@ module Statement
         let catch = with_loc (fun env ->
           Expect.token env T_CATCH;
           Expect.token env T_LPAREN;
-          let id = Parse.identifier ~restricted_error:Error.StrictCatchVariable env in
-          let param = fst id, Pattern.Identifier { Pattern.Identifier.
-            name = id;
-            typeAnnotation = None;
-            optional = false;
-          } in
+          let param = Parse.pattern env Error.StrictCatchVariable in
           Expect.token env T_RPAREN;
           let body = Parse.block_body env in
           { Ast.Statement.Try.CatchClause.
