@@ -12,6 +12,7 @@
 open Token
 open Lex_env
 
+let lexeme = Sedlexing.Utf8.lexeme
 
 let letter = [%sedlex.regexp? 'a'..'z' | 'A'..'Z' | '_' | '$']
 let digit = [%sedlex.regexp? '0'..'9']
@@ -391,7 +392,7 @@ let rec token (env: Lex_env.t) lexbuf =
     token env lexbuf
 
   | "/*", Star whitespace, (":" | "::" | "flow-include") ->
-    let pattern = Sedlexing.Utf8.lexeme lexbuf in
+    let pattern = lexeme lexbuf in
     if not (is_comment_syntax_enabled env) then
       let start = loc_of_lexbuf env lexbuf in
       let buf = Buffer.create 127 in
@@ -443,7 +444,7 @@ let rec token (env: Lex_env.t) lexbuf =
 
   (* Values *)
   | "'" | '"' ->
-    let quote = Sedlexing.Utf8.lexeme lexbuf in
+    let quote = lexeme lexbuf in
     let start = loc_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let raw = Buffer.create 127 in
@@ -457,7 +458,7 @@ let rec token (env: Lex_env.t) lexbuf =
     let cooked = Buffer.create 127 in
     let raw = Buffer.create 127 in
     let literal = Buffer.create 127 in
-    Buffer.add_string literal (Sedlexing.Utf8.lexeme lexbuf);
+    Buffer.add_string literal (lexeme lexbuf);
 
     let start = loc_of_lexbuf env lexbuf in
     let env, loc, is_tail =
@@ -476,67 +477,67 @@ let rec token (env: Lex_env.t) lexbuf =
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | binnumber ->
-      env, T_NUMBER { kind = BINARY; raw = Sedlexing.Utf8.lexeme lexbuf }
+      env, T_NUMBER { kind = BINARY; raw = lexeme lexbuf }
     | _ -> failwith "unreachable"
     )
 
   | binnumber ->
-    env, T_NUMBER { kind = BINARY; raw = Sedlexing.Utf8.lexeme lexbuf }
+    env, T_NUMBER { kind = BINARY; raw = lexeme lexbuf }
 
   | octnumber, (letter | '8'..'9'), Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
-    | octnumber -> env, T_NUMBER { kind = OCTAL; raw = Sedlexing.Utf8.lexeme lexbuf }
+    | octnumber -> env, T_NUMBER { kind = OCTAL; raw = lexeme lexbuf }
     | _ -> failwith "unreachable"
     )
 
   | octnumber ->
-    env, T_NUMBER { kind = OCTAL; raw = Sedlexing.Utf8.lexeme lexbuf }
+    env, T_NUMBER { kind = OCTAL; raw = lexeme lexbuf }
 
   | legacyoctnumber, (letter | '8'..'9'), Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
-    | legacyoctnumber -> env, T_NUMBER { kind = LEGACY_OCTAL; raw = Sedlexing.Utf8.lexeme lexbuf }
+    | legacyoctnumber -> env, T_NUMBER { kind = LEGACY_OCTAL; raw = lexeme lexbuf }
     | _ -> failwith "unreachable"
     )
 
   | legacyoctnumber ->
-    env, T_NUMBER { kind = LEGACY_OCTAL; raw = Sedlexing.Utf8.lexeme lexbuf }
+    env, T_NUMBER { kind = LEGACY_OCTAL; raw = lexeme lexbuf }
 
   | hexnumber, non_hex_letter, Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
-    | hexnumber -> env, T_NUMBER { kind = NORMAL; raw = Sedlexing.Utf8.lexeme lexbuf }
+    | hexnumber -> env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf }
     | _ -> failwith "unreachable"
     )
 
   | hexnumber ->
-    env, T_NUMBER { kind = NORMAL; raw = Sedlexing.Utf8.lexeme lexbuf }
+    env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf }
 
   | scinumber, word ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
-    | scinumber -> env, T_NUMBER { kind = NORMAL; raw = Sedlexing.Utf8.lexeme lexbuf }
+    | scinumber -> env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf }
     | _ -> failwith "unreachable"
     )
 
   | scinumber ->
-    env, T_NUMBER { kind = NORMAL; raw = Sedlexing.Utf8.lexeme lexbuf }
+    env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf }
 
   | (wholenumber | floatnumber), word ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | wholenumber | floatnumber ->
-      env, T_NUMBER { kind = NORMAL; raw = Sedlexing.Utf8.lexeme lexbuf }
+      env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf }
     | _ -> failwith "unreachable"
     )
 
   | wholenumber | floatnumber ->
-    env, T_NUMBER { kind = NORMAL; raw = Sedlexing.Utf8.lexeme lexbuf }
+    env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf }
 
   (* Keyword or Identifier *)
   | js_id_start, Star js_id_continue ->
-    let raw = Sedlexing.Utf8.lexeme lexbuf in
+    let raw = lexeme lexbuf in
     let token = match keyword_of_string raw with
     | Some token -> token
     | None -> T_IDENTIFIER raw
@@ -615,7 +616,7 @@ let rec token (env: Lex_env.t) lexbuf =
 
   | any ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
-    env, T_ERROR (Sedlexing.Utf8.lexeme lexbuf)
+    env, T_ERROR (lexeme lexbuf)
 
   | _ -> failwith "unreachable"
 
@@ -640,7 +641,7 @@ and type_token env lexbuf =
     type_token env lexbuf
 
   | "/*", Star whitespace, (":" | "::" | "flow-include") ->
-    let pattern = Sedlexing.Utf8.lexeme lexbuf in
+    let pattern = lexeme lexbuf in
     if not (is_comment_syntax_enabled env) then
       let start = loc_of_lexbuf env lexbuf in
       let buf = Buffer.create 127 in
@@ -682,7 +683,7 @@ and type_token env lexbuf =
     type_token env lexbuf
 
   | "'" | '"' ->
-    let quote = Sedlexing.Utf8.lexeme lexbuf in
+    let quote = lexeme lexbuf in
     let start = loc_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let raw = Buffer.create 127 in
@@ -700,46 +701,46 @@ and type_token env lexbuf =
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | Opt neg, binnumber ->
-      let num = Sedlexing.Utf8.lexeme lexbuf in
+      let num = lexeme lexbuf in
       env, mk_num_singleton BINARY num
     | _ -> failwith "unreachable"
     )
 
   | Opt neg, binnumber ->
-    let num = Sedlexing.Utf8.lexeme lexbuf in
+    let num = lexeme lexbuf in
     env, mk_num_singleton BINARY num
 
   | Opt neg, octnumber, (letter | '8'..'9'), Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | Opt neg, octnumber ->
-      let num = Sedlexing.Utf8.lexeme lexbuf in
+      let num = lexeme lexbuf in
       env, mk_num_singleton OCTAL num
     | _ -> failwith "unreachable"
     )
 
   | Opt neg, octnumber ->
-    let num = Sedlexing.Utf8.lexeme lexbuf in
+    let num = lexeme lexbuf in
     env, mk_num_singleton OCTAL num
 
   | Opt neg, legacyoctnumber, (letter | '8'..'9'), Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | Opt neg, legacyoctnumber ->
-      let num = Sedlexing.Utf8.lexeme lexbuf in
+      let num = lexeme lexbuf in
       env, mk_num_singleton LEGACY_OCTAL num
     | _ -> failwith "unreachable"
     )
 
   | Opt neg, legacyoctnumber ->
-    let num = Sedlexing.Utf8.lexeme lexbuf in
+    let num = lexeme lexbuf in
     env, mk_num_singleton LEGACY_OCTAL num
 
   | Opt neg, hexnumber, non_hex_letter, Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | Opt neg, hexnumber ->
-      let num = Sedlexing.Utf8.lexeme lexbuf in
+      let num = lexeme lexbuf in
       begin try env, mk_num_singleton NORMAL num
       with _ when Sys.win32 ->
         let loc = loc_of_lexbuf env lexbuf in
@@ -750,7 +751,7 @@ and type_token env lexbuf =
     )
 
   | Opt neg, hexnumber ->
-    let num = Sedlexing.Utf8.lexeme lexbuf in
+    let num = lexeme lexbuf in
     begin try env, mk_num_singleton NORMAL num
     with _ when Sys.win32 ->
       let loc = loc_of_lexbuf env lexbuf in
@@ -762,31 +763,31 @@ and type_token env lexbuf =
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | Opt neg, scinumber ->
-      let num = Sedlexing.Utf8.lexeme lexbuf in
+      let num = lexeme lexbuf in
       env, mk_num_singleton NORMAL num
     | _ -> failwith "unreachable"
     )
 
   | Opt neg, scinumber ->
-    let num = Sedlexing.Utf8.lexeme lexbuf in
+    let num = lexeme lexbuf in
     env, mk_num_singleton NORMAL num
 
   | Opt neg, (wholenumber | floatnumber), word ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | Opt neg, wholenumber | floatnumber ->
-      let num = Sedlexing.Utf8.lexeme lexbuf in
+      let num = lexeme lexbuf in
       env, mk_num_singleton NORMAL num
     | _ -> failwith "unreachable"
     )
 
   | Opt neg, (wholenumber | floatnumber) ->
-    let num = Sedlexing.Utf8.lexeme lexbuf in
+    let num = lexeme lexbuf in
     env, mk_num_singleton NORMAL num
 
   (* Keyword or Identifier *)
   | js_id_start, Star js_id_continue ->
-    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let str = lexeme lexbuf in
     let token = match type_keyword_of_string str with
     | Some token -> token
     | None -> T_IDENTIFIER str
@@ -847,7 +848,7 @@ and type_token env lexbuf =
     env, T_EOF
 
   | any ->
-    env, T_ERROR (Sedlexing.Utf8.lexeme lexbuf)
+    env, T_ERROR (lexeme lexbuf)
 
   | _ -> failwith "unreachable"
 
@@ -856,7 +857,7 @@ and type_token env lexbuf =
 and string_quote env q buf raw octal lexbuf =
   match%sedlex lexbuf with
   | "'" | '"' ->
-    let q' = Sedlexing.Utf8.lexeme lexbuf in
+    let q' = lexeme lexbuf in
     Buffer.add_string raw q';
     if q = q'
     then env, loc_of_lexbuf env lexbuf, octal
@@ -874,14 +875,14 @@ and string_quote env q buf raw octal lexbuf =
     string_quote env q buf raw octal lexbuf
 
   | '\n' | eof ->
-    let x = Sedlexing.Utf8.lexeme lexbuf in
+    let x = lexeme lexbuf in
     Buffer.add_string raw x;
     let env = illegal env (loc_of_lexbuf env lexbuf) in
     Buffer.add_string buf x;
     env, loc_of_lexbuf env lexbuf, octal
 
   | any ->
-    let x = Sedlexing.Utf8.lexeme lexbuf in
+    let x = lexeme lexbuf in
     Buffer.add_string raw x;
     Buffer.add_string buf x;
     string_quote env q buf raw octal lexbuf
@@ -892,17 +893,17 @@ and string_escape env lexbuf =
   match%sedlex lexbuf with
   | eof
   | '\\' ->
-    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let str = lexeme lexbuf in
     let codes = Sedlexing.lexeme lexbuf in
     env, str, codes, false
 
   | 'x', hex_digit, hex_digit ->
-    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let str = lexeme lexbuf in
     let code = int_of_string ("0"^str) in (* 0xAB *)
     env, str, [|code|], false
 
   | '0'..'7', '0'..'7', '0'..'7' ->
-    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let str = lexeme lexbuf in
     let code = int_of_string ("0o"^str) in (* 0o012 *)
     (* If the 3 character octal code is larger than 256
      * then it is parsed as a 2 character octal code *)
@@ -914,7 +915,7 @@ and string_escape env lexbuf =
       env, str, [|code; Char.code '0' + remainder|], true
 
   | '0'..'7', '0'..'7' ->
-    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let str = lexeme lexbuf in
     let code = int_of_string ("0o"^str) in (* 0o01 *)
     env, str, [|code|], true
 
@@ -926,18 +927,18 @@ and string_escape env lexbuf =
   | 't' -> env, "t", [|0x9|], false
   | 'v' -> env, "v", [|0xB|], false
   | '0'..'7' ->
-    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let str = lexeme lexbuf in
     let code = int_of_string ("0o"^str) in (* 0o1 *)
     env, str, [|code|], true
 
   | 'u', hex_digit, hex_digit, hex_digit, hex_digit ->
-    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let str = lexeme lexbuf in
     let hex = String.sub str 1 (String.length str - 1) in
     let code = int_of_string ("0x"^hex) in
     env, str, [|code|], false
 
   | "u{", Plus hex_digit, '}' ->
-    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let str = lexeme lexbuf in
     let hex = String.sub str 2 (String.length str - 3) in
     let code = int_of_string ("0x"^hex) in
     (* 11.8.4.1 *)
@@ -948,18 +949,18 @@ and string_escape env lexbuf =
     env, str, [|code|], false
 
   | 'u' | 'x' | '0'..'7' ->
-    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let str = lexeme lexbuf in
     let codes = Sedlexing.lexeme lexbuf in
     let env = illegal env (loc_of_lexbuf env lexbuf) in
     env, str, codes, false
 
   | line_terminator_sequence ->
-    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let str = lexeme lexbuf in
     let env = new_line env lexbuf in
     env, str, [||], false
 
   | any ->
-    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let str = lexeme lexbuf in
     let codes = Sedlexing.lexeme lexbuf in
     env, str, codes, false
 
@@ -969,7 +970,7 @@ and comment env buf lexbuf =
   match%sedlex lexbuf with
   | line_terminator_sequence ->
     let env = new_line env lexbuf in
-    Buffer.add_string buf (Sedlexing.Utf8.lexeme lexbuf);
+    Buffer.add_string buf (lexeme lexbuf);
     comment env buf lexbuf
 
   | "*/" ->
@@ -989,7 +990,7 @@ and comment env buf lexbuf =
     )
 
   | any ->
-    Buffer.add_string buf (Sedlexing.Utf8.lexeme lexbuf);
+    Buffer.add_string buf (lexeme lexbuf);
     comment env buf lexbuf
 
   | _ ->
@@ -1014,7 +1015,7 @@ and line_comment env buf lexbuf =
     env, { Loc.source; start; _end; }
 
   | any ->
-    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let str = lexeme lexbuf in
     Buffer.add_string buf str;
     line_comment env buf lexbuf
 
@@ -1055,7 +1056,7 @@ and regexp env lexbuf =
 
   | any ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
-    env, T_ERROR (Sedlexing.Utf8.lexeme lexbuf)
+    env, T_ERROR (lexeme lexbuf)
 
   | _ -> failwith "unreachable"
 
@@ -1072,13 +1073,13 @@ and regexp_body env buf lexbuf =
     env, ""
 
   | '\\', any ->
-    let s = Sedlexing.Utf8.lexeme lexbuf in
+    let s = lexeme lexbuf in
     Buffer.add_string buf s;
     regexp_body env buf lexbuf
 
   | '/', Plus letter ->
     let flags =
-      let str = Sedlexing.Utf8.lexeme lexbuf in
+      let str = lexeme lexbuf in
       String.sub str 1 (String.length str - 1)
     in
     env, flags
@@ -1097,7 +1098,7 @@ and regexp_body env buf lexbuf =
     env, ""
 
   | any ->
-    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let str = lexeme lexbuf in
     Buffer.add_string buf str;
     regexp_body env buf lexbuf
 
@@ -1122,7 +1123,7 @@ and regexp_class env buf lexbuf =
     env
 
   | any ->
-    let str = Sedlexing.Utf8.lexeme lexbuf in
+    let str = lexeme lexbuf in
     Buffer.add_string buf str;
     regexp_class env buf lexbuf
 
@@ -1163,10 +1164,10 @@ and jsx_tag env lexbuf =
   | '.' -> env, T_PERIOD
   | '=' -> env, T_ASSIGN
   | js_id_start, Star ('-' | js_id_continue) ->
-    env, T_JSX_IDENTIFIER { raw = Sedlexing.Utf8.lexeme lexbuf }
+    env, T_JSX_IDENTIFIER { raw = lexeme lexbuf }
 
   | "'" | '"' ->
-    let quote = Sedlexing.Utf8.lexeme lexbuf in
+    let quote = lexeme lexbuf in
     let start = loc_of_lexbuf env lexbuf in
     let buf = Buffer.create 127 in
     let raw = Buffer.create 127 in
@@ -1181,14 +1182,14 @@ and jsx_tag env lexbuf =
     env, T_JSX_TEXT (Loc.btwn start _end, value, raw)
 
   | any ->
-    env, T_ERROR (Sedlexing.Utf8.lexeme lexbuf)
+    env, T_ERROR (lexeme lexbuf)
 
   | _ -> failwith "unreachable"
 
 and jsx_child env start buf raw lexbuf =
   match%sedlex lexbuf with
   | line_terminator_sequence ->
-    let lt = Sedlexing.Utf8.lexeme lexbuf in
+    let lt = lexeme lexbuf in
     Buffer.add_string raw lt;
     Buffer.add_string buf lt;
     let env = new_line env lexbuf in
@@ -1203,7 +1204,7 @@ and jsx_child env start buf raw lexbuf =
   | '{' -> env, T_LCURLY
 
   | any ->
-    let c = Sedlexing.Utf8.lexeme lexbuf in
+    let c = lexeme lexbuf in
     Buffer.add_string raw c;
     Buffer.add_string buf c;
     let env, _end =
@@ -1217,7 +1218,7 @@ and jsx_child env start buf raw lexbuf =
 and jsx_text env mode buf raw lexbuf =
   match%sedlex lexbuf with
   | "'" | '"' | '<' | '{' ->
-    let c = Sedlexing.Utf8.lexeme lexbuf in
+    let c = lexeme lexbuf in
     begin match mode, c with
     | JSX_SINGLE_QUOTED_TEXT, "'"
     | JSX_DOUBLE_QUOTED_TEXT, "\"" ->
@@ -1238,14 +1239,14 @@ and jsx_text env mode buf raw lexbuf =
     env, loc_of_lexbuf env lexbuf
 
   | line_terminator_sequence ->
-    let lt = Sedlexing.Utf8.lexeme lexbuf in
+    let lt = lexeme lexbuf in
     Buffer.add_string raw lt;
     Buffer.add_string buf lt;
     let env = new_line env lexbuf in
     jsx_text env mode buf raw lexbuf
 
   | "&#x", Plus hex_digit, ';' ->
-    let s = Sedlexing.Utf8.lexeme lexbuf in
+    let s = lexeme lexbuf in
     let n = String.sub s 3 (String.length s - 4) in
     Buffer.add_string raw s;
     let code = int_of_string ("0x" ^ n) in
@@ -1253,7 +1254,7 @@ and jsx_text env mode buf raw lexbuf =
     jsx_text env mode buf raw lexbuf
 
   | "&#", Plus digit, ';' ->
-    let s = Sedlexing.Utf8.lexeme lexbuf in
+    let s = lexeme lexbuf in
     let n = String.sub s 2 (String.length s - 3) in
     Buffer.add_string raw s;
     let code = int_of_string n in
@@ -1261,7 +1262,7 @@ and jsx_text env mode buf raw lexbuf =
     jsx_text env mode buf raw lexbuf
 
   | "&", htmlentity, ';' ->
-    let s = Sedlexing.Utf8.lexeme lexbuf in
+    let s = lexeme lexbuf in
     let entity = String.sub s 1 (String.length s - 2) in
     Buffer.add_string raw s;
     let code = match entity with
@@ -1525,7 +1526,7 @@ and jsx_text env mode buf raw lexbuf =
     jsx_text env mode buf raw lexbuf
 
   | any ->
-    let c = Sedlexing.Utf8.lexeme lexbuf in
+    let c = lexeme lexbuf in
     Buffer.add_string raw c;
     Buffer.add_string buf c;
     jsx_text env mode buf raw lexbuf
@@ -1614,7 +1615,7 @@ and template_part env start cooked raw literal lexbuf =
     template_part env start cooked raw literal lexbuf
 
   | "\n" | "\r" ->
-    let lf = Sedlexing.Utf8.lexeme lexbuf in
+    let lf = lexeme lexbuf in
     Buffer.add_string raw lf;
     Buffer.add_string literal lf;
     Buffer.add_char cooked '\n';
@@ -1622,7 +1623,7 @@ and template_part env start cooked raw literal lexbuf =
     template_part env start cooked raw literal lexbuf
 
   | any ->
-    let c = Sedlexing.Utf8.lexeme lexbuf in
+    let c = lexeme lexbuf in
     Buffer.add_string raw c;
     Buffer.add_string literal c;
     Buffer.add_string cooked c;
