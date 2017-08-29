@@ -24,7 +24,7 @@ Error: test.js:6
   6: var k: K = { x: "", y: "" }; // error: x should be number
                 ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
   3: interface J extends I, I_ { }
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ I_
+                            ^^ I_
   Property `x` is incompatible:
       2: interface I_ { x: number }
                            ^^^^^^ number. This type is incompatible with
@@ -35,7 +35,7 @@ Error: test.js:6
   6: var k: K = { x: "", y: "" }; // error: x should be number
                 ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
   3: interface J extends I, I_ { }
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ I_
+                            ^^ I_
   Property `x` is incompatible:
       6: var k: K = { x: "", y: "" }; // error: x should be number
                          ^^ string. This type is incompatible with
@@ -50,7 +50,7 @@ Error: test.js:7
 
 Error: test.js:11
  11: declare class D extends C, Other { } // error: multiple extends
-                             ^ A class cannot extend multiple classes!
+                                ^^^^^ A class cannot extend multiple classes!
 
 Error: test.js:19
  19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers

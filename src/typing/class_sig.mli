@@ -4,17 +4,23 @@ type t
 
 type field = Type.t * Type.polarity * Ast.Expression.t option
 
+type super =
+  | Interface of { extends: Type.t list; callable: bool; }
+  | Class of {
+      extends: Type.t option;
+      mixins: Type.t list; (* declare class only *)
+      implements: Type.t list
+    }
+
 (** 1. Constructors **)
 
 (** Create signature with no elements. *)
 val empty:
-  ?structural:bool ->
   int -> (* id *)
   Reason.t ->
   Type.typeparam list ->
   Type.t SMap.t -> (* tparams_map *)
-  Type.t -> (* super *)
-  Type.t list -> (* implements *)
+  super ->
   t
 
 (** Add constructor to signature.

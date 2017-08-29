@@ -209,10 +209,10 @@ Error: proto.js:7
                       ^^^^^ empty
 
 Error: proto.js:13
- 13: (C1_proto.bind: empty); // TODO error: function ~> empty
-               ^^^^ property `bind`. Property not found in
- 13: (C1_proto.bind: empty); // TODO error: function ~> empty
-      ^^^^^^^^ Object
+ 13: (C1_proto.bind: empty); // error: function ~> empty
+      ^^^^^^^^^^^^^ function type. This type is incompatible with
+ 13: (C1_proto.bind: empty); // error: function ~> empty
+                     ^^^^^ empty
 
 Error: proto.js:17
  17: (inst1_proto.m: empty); // TODO error: function ~> empty

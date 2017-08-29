@@ -46,3 +46,5 @@ val extract_type_param_instantiations:
   Ast.Type.t list option
 
 val polarity: Ast.Variance.t option -> Type.polarity
+
+val qualified_name: Ast.Type.Generic.Identifier.t -> string

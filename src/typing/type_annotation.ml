@@ -17,6 +17,16 @@ open Env.LookupMode
 
 (* AST helpers *)
 
+let qualified_name =
+  let rec loop acc = Ast.Type.Generic.Identifier.(function
+    | Unqualified (_, name) ->
+      let parts = List.rev (name::acc) in
+      String.concat "." parts
+    | Qualified (_, { qualification; id = (_, name) }) ->
+      loop (name::acc) qualification
+  ) in
+  loop []
+
 let ident_name (_, name) = name
 
 let optional_ident_name = function

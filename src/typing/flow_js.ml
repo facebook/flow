@@ -5280,7 +5280,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Implements                                                  *)
     (***************************************************************)
 
-    | ObjProtoT _, ImplementsT _ -> ()
+    | (ObjProtoT _ | FunProtoT _), ImplementsT _ -> ()
 
     | DefT (reason_inst, InstanceT (_, super, _, {
         fields_tmap;
@@ -5645,7 +5645,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace
         (next, LookupT (reason, strict, try_ts_on_failure, propref, t))
 
-    | ObjProtoT _,
+    | (ObjProtoT _ | FunProtoT _),
       LookupT (reason_op, _, [], Named (_, "__proto__"), RWProp (l, t, rw)) ->
       (* __proto__ is a getter/setter on Object.prototype *)
       let u = match rw with

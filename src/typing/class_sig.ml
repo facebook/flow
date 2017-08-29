@@ -40,7 +40,15 @@ type t = {
   instance: signature;
 }
 
-let empty ?(structural=false) id reason tparams tparams_map super implements =
+type super =
+  | Interface of { extends: Type.t list; callable: bool; }
+  | Class of {
+      extends: Type.t option;
+      mixins: Type.t list; (* declare class only *)
+      implements: Type.t list
+    }
+
+let empty id reason tparams tparams_map super =
   let empty_sig reason super = {
     reason; super;
     fields = SMap.empty;
@@ -49,11 +57,56 @@ let empty ?(structural=false) id reason tparams tparams_map super implements =
     getters = SMap.empty;
     setters = SMap.empty;
   } in
+  let structural, super, ssuper, implements =
+    let open Type in
+    let super_reason = replace_reason (fun d -> RSuperOf d) reason in
+    match super with
+    | Interface {extends; callable} ->
+      let super, ssuper = match extends with
+      | [] ->
+        (* An interface with no explicit extends inherits from the object
+           prototype, unless it has a callable property, in which case it is
+           a function and extends from the function prototype. *)
+        let super =
+          if callable
+          then FunProtoT super_reason
+          else ObjProtoT super_reason
+        in
+        super, ObjProtoT super_reason
+      | t0::ts ->
+        (* Interfaces support multiple inheritance. *)
+        let super = match ts with
+        | [] -> t0
+        | t1::ts -> DefT (super_reason, IntersectionT (InterRep.make t0 t1 ts))
+        in
+        super, class_type super
+      in
+      true, super, ssuper, []
+    | Class {extends; mixins; implements} ->
+      (* Class statics inherit properties from the function prototype, like
+         bind, call, and apply. Despite this, classes are generally not callable
+         without new (exceptions include cast functions like Number). *)
+      let super, ssuper = match extends with
+      | None -> ObjProtoT super_reason, FunProtoT super_reason
+      | Some t -> t, class_type t
+      in
+      (* Classes also support multiple inheritance through mixins. Note that
+         mixins override explicit extends. *)
+      let super = match mixins with
+      | [] -> super
+      | t0::ts ->
+        let t1, ts = match ts with
+        | [] -> super, []
+        | t1::ts -> t1, ts@[super]
+        in
+        DefT (super_reason, IntersectionT (InterRep.make t0 t1 ts))
+      in
+      false, super, ssuper, implements
+  in
   let constructor = [] in
   let static =
-    let super = Type.class_type super in
     let reason = replace_reason (fun desc -> RStatics desc) reason in
-    empty_sig reason super
+    empty_sig reason ssuper
   in
   let instance = empty_sig reason super in
   { id; structural; tparams; tparams_map; constructor; static; instance;
@@ -336,47 +389,32 @@ let mk_super cx tparams_map c targs = Type.(
       this_typeapp c this (Some tparams)
 )
 
-let mk_interface_super cx structural reason tparams_map = Type.(function
-  | (None, None) ->
-      ObjProtoT (locationless_reason RObjectClassName)
-  | (None, _) ->
-      assert false (* type args with no head expr *)
-  | (Some id, targs) ->
-      let desc, lookup_mode =
-        if structural then "extends", Env.LookupMode.ForType
-        else "mixins", Env.LookupMode.ForValue in
-      let i = Anno.convert_qualification ~lookup_mode cx desc id in
-      if structural then
-        let params = Anno.extract_type_param_instantiations targs in
-        Anno.mk_nominal_type cx reason tparams_map (i, params)
-      else mk_super cx tparams_map i targs
-)
+let mk_interface_super cx structural tparams_map (r, id, targs) =
+  let desc, lookup_mode =
+    if structural then "extends", Env.LookupMode.ForType
+    else "mixins", Env.LookupMode.ForValue in
+  let i = Anno.convert_qualification ~lookup_mode cx desc id in
+  if structural then
+    let params = Anno.extract_type_param_instantiations targs in
+    Anno.mk_nominal_type cx r tparams_map (i, params)
+  else mk_super cx tparams_map i targs
 
-let mk_extends cx tparams_map ~expr = Type.(function
-  | (None, None) ->
-      ObjProtoT (locationless_reason RObjectClassName)
-  | (None, _) ->
-      assert false (* type args with no head expr *)
-  | (Some e, targs) ->
-      let c = expr cx e in
-      mk_super cx tparams_map c targs
-)
+let mk_extends cx tparams_map ~expr = function
+  | None, None -> None
+  | None, _ -> assert false (* type args with no head expr *)
+  | Some e, targs ->
+    let c = expr cx e in
+    Some (mk_super cx tparams_map c targs)
 
-let mk_mixins cx reason tparams_map = Type.(function
-  | (None, None) ->
-      ObjProtoT (locationless_reason RObjectClassName)
-  | (None, _) ->
-      assert false (* type args with no head expr *)
-  | (Some id, targs) ->
-      let i =
-        let lookup_mode = Env.LookupMode.ForValue in
-        Anno.convert_qualification ~lookup_mode cx "mixins" id
-      in
-      let props_bag = Flow.mk_tvar_derivable_where cx reason (fun tvar ->
-        Flow.flow cx (i, MixinT (reason, tvar))
-      ) in
-      mk_super cx tparams_map props_bag targs
-)
+let mk_mixins cx tparams_map (r, id, targs) =
+  let i =
+    let lookup_mode = Env.LookupMode.ForValue in
+    Anno.convert_qualification ~lookup_mode cx "mixins" id
+  in
+  let props_bag = Flow.mk_tvar_derivable_where cx r (fun tvar ->
+    Flow.flow cx (i, Type.MixinT (r, tvar))
+  ) in
+  mk_super cx tparams_map props_bag targs
 
 let warn_or_ignore_decorators cx = function
 | [] -> ()
@@ -435,7 +473,8 @@ let mk cx _loc reason self ~expr =
   in
 
   let class_sig =
-    let super =
+    let id = Flow.mk_nominal cx in
+    let extends =
       mk_extends cx tparams_map ~expr (superClass, superTypeParameters)
     in
     let implements = List.map (fun (_, i) ->
@@ -445,8 +484,8 @@ let mk cx _loc reason self ~expr =
       let params = Anno.extract_type_param_instantiations typeParameters in
       Anno.mk_nominal_type cx reason tparams_map (c, params)
     ) implements in
-    let id = Flow.mk_nominal cx in
-    empty id reason tparams tparams_map super implements
+    let super = Class { extends; mixins = []; implements } in
+    empty id reason tparams tparams_map super
   in
 
   (* In case there is no constructor, pick up a default one. *)
@@ -572,22 +611,27 @@ let mk cx _loc reason self ~expr =
         c
   ) class_sig elements
 
-let rec extract_extends cx structural = function
-  | [] -> [None,None]
-  | [_, {Ast.Type.Generic.id; typeParameters}] ->
-      [Some id, typeParameters]
-  | (loc, {Ast.Type.Generic.id; typeParameters})::others ->
-      if structural
-      then (Some id, typeParameters)::(extract_extends cx structural others)
+let extract_extends cx structural =
+  let rec loop acc first = function
+    | [] -> List.rev acc
+    | (loc, {Ast.Type.Generic.id; typeParameters})::rest ->
+      if structural || first then
+        let name = Anno.qualified_name id in
+        let r = mk_reason (RCustom name) loc in
+        loop ((r, id, typeParameters)::acc) false rest
       else (
-        Flow_js.add_output cx
-          Flow_error.(EUnsupportedSyntax (loc, ClassExtendsMultiple));
-        []
+        Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
+          (loc, ClassExtendsMultiple));
+        loop acc false []
       )
+  in
+  loop [] true
 
 let extract_mixins _cx =
-  List.map (fun (_, {Ast.Type.Generic.id; typeParameters}) ->
-    (Some id, typeParameters)
+  List.map (fun (loc, {Ast.Type.Generic.id; typeParameters}) ->
+    let name = Anno.qualified_name id in
+    let r = mk_reason (RCustom name) loc in
+    r, id, typeParameters
   )
 
 let mk_interface cx loc reason structural self = Ast.Statement.(
@@ -609,30 +653,30 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
 
   let iface_sig =
     let id = Flow.mk_nominal cx in
-    let extends = extract_extends cx structural extends in
-    let mixins = extract_mixins cx mixins in
-    let super_reason = replace_reason (fun desc -> RSuperOf desc) reason in
-    (* mixins override extends *)
-    let interface_supers =
-      List.map (mk_mixins cx super_reason tparams_map) mixins @
-      List.map (mk_interface_super cx structural super_reason tparams_map)
-        extends
+    let extends = List.map
+      (mk_interface_super cx structural tparams_map)
+      (extract_extends cx structural extends)
     in
-
-    let callable = List.exists Ast.Type.Object.(function
-      | CallProperty (_, { CallProperty.static; _ }) -> not static
-      | _ -> false
-    ) properties in
-
-    let interface_supers = if callable
-      then Type.FunProtoT (locationless_reason RObjectClassName) :: interface_supers
-      else interface_supers in
-    let super = Type.(match interface_supers with
-      | [] -> AnyT.why super_reason (* Is this case even possible? *)
-      | [t] -> t
-      | t0::t1::ts -> DefT (super_reason, IntersectionT (InterRep.make t0 t1 ts))
-    ) in
-    empty ~structural id reason tparams tparams_map super []
+    let mixins = List.map
+      (mk_mixins cx tparams_map)
+      (extract_mixins cx mixins)
+    in
+    let super =
+      if structural then
+        let callable = List.exists Ast.Type.Object.(function
+          | CallProperty (_, { CallProperty.static; _ }) -> not static
+          | _ -> false
+        ) properties in
+        Interface { extends; callable }
+      else
+        let extends = match extends with
+        | [] -> None
+        | [t] -> Some t
+        | _ -> failwith "declare class with multiple extends"
+        in
+        Class { extends; mixins; implements = [] }
+    in
+    empty id reason tparams tparams_map super
   in
 
   let iface_sig =
