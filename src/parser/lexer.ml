@@ -301,76 +301,6 @@ type jsx_text_mode =
   | JSX_DOUBLE_QUOTED_TEXT
   | JSX_CHILD_TEXT
 
-let keyword_of_string = function
-  | "function" -> Some T_FUNCTION
-  | "if" -> Some T_IF
-  | "in" -> Some T_IN
-  | "instanceof" -> Some T_INSTANCEOF
-  | "return" -> Some T_RETURN
-  | "switch" -> Some T_SWITCH
-  | "this" -> Some T_THIS
-  | "throw" -> Some T_THROW
-  | "try" -> Some T_TRY
-  | "var" -> Some T_VAR
-  | "while" -> Some T_WHILE
-  | "with" -> Some T_WITH
-  | "const" -> Some T_CONST
-  | "let" -> Some T_LET
-  | "null" -> Some T_NULL
-  | "false" -> Some T_FALSE
-  | "true" -> Some T_TRUE
-  | "break" -> Some T_BREAK
-  | "case" -> Some T_CASE
-  | "catch" -> Some T_CATCH
-  | "continue" -> Some T_CONTINUE
-  | "default" -> Some T_DEFAULT
-  | "do" -> Some T_DO
-  | "finally" -> Some T_FINALLY
-  | "for" -> Some T_FOR
-  | "class" -> Some T_CLASS
-  | "extends" -> Some T_EXTENDS
-  | "static" -> Some T_STATIC
-  | "else" -> Some T_ELSE
-  | "new" -> Some T_NEW
-  | "delete" -> Some T_DELETE
-  | "typeof" -> Some T_TYPEOF
-  | "void" -> Some T_VOID
-  | "enum" -> Some T_ENUM
-  | "export" -> Some T_EXPORT
-  | "import" -> Some T_IMPORT
-  | "super" -> Some T_SUPER
-  | "implements" -> Some T_IMPLEMENTS
-  | "interface" -> Some T_INTERFACE
-  | "package" -> Some T_PACKAGE
-  | "private" -> Some T_PRIVATE
-  | "protected" -> Some T_PROTECTED
-  | "public" -> Some T_PUBLIC
-  | "yield" -> Some T_YIELD
-  | "debugger" -> Some T_DEBUGGER
-  | "declare" -> Some T_DECLARE
-  | "type" -> Some T_TYPE
-  | "opaque" -> Some T_OPAQUE
-  | "of" -> Some T_OF
-  | "async" -> Some T_ASYNC
-  | "await" -> Some T_AWAIT
-  | _ -> None
-
-let type_keyword_of_string = function
-  | "static" -> Some T_STATIC
-  | "typeof" -> Some T_TYPEOF
-  | "any" -> Some T_ANY_TYPE
-  | "mixed" -> Some T_MIXED_TYPE
-  | "empty" -> Some T_EMPTY_TYPE
-  | "bool" -> Some (T_BOOLEAN_TYPE BOOL)
-  | "boolean" -> Some (T_BOOLEAN_TYPE BOOLEAN)
-  | "true" -> Some T_TRUE
-  | "false" -> Some T_FALSE
-  | "number" -> Some T_NUMBER_TYPE
-  | "string" -> Some T_STRING_TYPE
-  | "void" -> Some T_VOID_TYPE
-  | "null" -> Some T_NULL
-  | _ -> None
-
 let rec token (env: Lex_env.t) lexbuf =
   match%sedlex lexbuf with
   | line_terminator_sequence ->
@@ -535,14 +465,61 @@ let rec token (env: Lex_env.t) lexbuf =
   | wholenumber | floatnumber ->
     env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf }
 
-  (* Keyword or Identifier *)
-  | js_id_start, Star js_id_continue ->
-    let raw = lexeme lexbuf in
-    let token = match keyword_of_string raw with
-    | Some token -> token
-    | None -> T_IDENTIFIER raw
-    in
-    env, token
+  (* Keywords *)
+  | "async" -> env, T_ASYNC
+  | "await" -> env, T_AWAIT
+  | "break" -> env, T_BREAK
+  | "case" -> env, T_CASE
+  | "catch" -> env, T_CATCH
+  | "class" -> env, T_CLASS
+  | "const" -> env, T_CONST
+  | "continue" -> env, T_CONTINUE
+  | "debugger" -> env, T_DEBUGGER
+  | "declare" -> env, T_DECLARE
+  | "default" -> env, T_DEFAULT
+  | "delete" -> env, T_DELETE
+  | "do" -> env, T_DO
+  | "else" -> env, T_ELSE
+  | "enum" -> env, T_ENUM
+  | "export" -> env, T_EXPORT
+  | "extends" -> env, T_EXTENDS
+  | "false" -> env, T_FALSE
+  | "finally" -> env, T_FINALLY
+  | "for" -> env, T_FOR
+  | "function" -> env, T_FUNCTION
+  | "if" -> env, T_IF
+  | "implements" -> env, T_IMPLEMENTS
+  | "import" -> env, T_IMPORT
+  | "in" -> env, T_IN
+  | "instanceof" -> env, T_INSTANCEOF
+  | "interface" -> env, T_INTERFACE
+  | "let" -> env, T_LET
+  | "new" -> env, T_NEW
+  | "null" -> env, T_NULL
+  | "of" -> env, T_OF
+  | "opaque" -> env, T_OPAQUE
+  | "package" -> env, T_PACKAGE
+  | "private" -> env, T_PRIVATE
+  | "protected" -> env, T_PROTECTED
+  | "public" -> env, T_PUBLIC
+  | "return" -> env, T_RETURN
+  | "static" -> env, T_STATIC
+  | "super" -> env, T_SUPER
+  | "switch" -> env, T_SWITCH
+  | "this" -> env, T_THIS
+  | "throw" -> env, T_THROW
+  | "true" -> env, T_TRUE
+  | "try" -> env, T_TRY
+  | "type" -> env, T_TYPE
+  | "typeof" -> env, T_TYPEOF
+  | "var" -> env, T_VAR
+  | "void" -> env, T_VOID
+  | "while" -> env, T_WHILE
+  | "with" -> env, T_WITH
+  | "yield" -> env, T_YIELD
+
+  (* Identifiers *)
+  | js_id_start, Star js_id_continue -> env, T_IDENTIFIER (lexeme lexbuf)
 
   (* TODO: Use [Symbol.iterator] instead of @@iterator. *)
   | "@@iterator" -> env, T_IDENTIFIER "@@iterator"
@@ -785,14 +762,23 @@ and type_token env lexbuf =
     let num = lexeme lexbuf in
     env, mk_num_singleton NORMAL num
 
-  (* Keyword or Identifier *)
-  | js_id_start, Star js_id_continue ->
-    let str = lexeme lexbuf in
-    let token = match type_keyword_of_string str with
-    | Some token -> token
-    | None -> T_IDENTIFIER str
-    in
-    env, token
+  (* Keywords *)
+  | "any" -> env, T_ANY_TYPE
+  | "bool" -> env, (T_BOOLEAN_TYPE BOOL)
+  | "boolean" -> env, (T_BOOLEAN_TYPE BOOLEAN)
+  | "empty" -> env, T_EMPTY_TYPE
+  | "false" -> env, T_FALSE
+  | "mixed" -> env, T_MIXED_TYPE
+  | "null" -> env, T_NULL
+  | "number" -> env, T_NUMBER_TYPE
+  | "static" -> env, T_STATIC
+  | "string" -> env, T_STRING_TYPE
+  | "true" -> env, T_TRUE
+  | "typeof" -> env, T_TYPEOF
+  | "void" -> env, T_VOID_TYPE
+
+  (* Identifiers *)
+  | js_id_start, Star js_id_continue -> env, T_IDENTIFIER (lexeme lexbuf)
 
   | "%checks" -> env, T_CHECKS
   (* Syntax *)
