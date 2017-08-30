@@ -86,7 +86,7 @@ let whitespace = [%sedlex.regexp?
    (only for types! regular numbers use T_MINUS!) *)
 let neg = [%sedlex.regexp? '-', Star whitespace]
 
-let line_terminator_sequence = [%sedlex.regexp? '\n' | '\r' | "\r\n"]
+let line_terminator_sequence = [%sedlex.regexp? '\n' | '\r' | "\r\n" | 0x2028 | 0x2029]
 
 let hex_quad = [%sedlex.regexp? hex_digit, hex_digit, hex_digit, hex_digit]
 let unicode_escape = [%sedlex.regexp? "\\u", hex_quad]

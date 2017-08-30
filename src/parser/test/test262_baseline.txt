@@ -408,14 +408,6 @@ language/import/dup-bound-names.js (strict mode)
   Missing parse error
 language/import/dup-bound-names.js (default)
   Missing parse error
-language/line-terminators/S7.3_A3.3_T1.js (strict mode)
-  Missing parse error
-language/line-terminators/S7.3_A3.3_T1.js (default)
-  Missing parse error
-language/line-terminators/S7.3_A3.4_T1.js (strict mode)
-  Missing parse error
-language/line-terminators/S7.3_A3.4_T1.js (default)
-  Missing parse error
 language/literals/numeric/non-octal-decimal-integer-strict.js (strict mode)
   Missing parse error
 language/literals/regexp/early-err-dup-flag.js (strict mode)
@@ -998,8 +990,8 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54806 (99.10%)
-Failed: 499 (0.90%)
+Passed: 54810 (99.10%)
+Failed: 495 (0.90%)
 
 Features:
   arrow-function: 22/24 (91.67%)
