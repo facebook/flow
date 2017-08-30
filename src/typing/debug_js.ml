@@ -363,6 +363,8 @@ and _json_of_custom_fun_kind kind = Hh_json.JSON_String (match kind with
   | ObjectAssign -> "Object.assign"
   | ObjectGetPrototypeOf -> "Object.getPrototypeOf"
   | ObjectSetPrototypeOf -> "Object.setPrototypeOf"
+  | Compose false -> "Compose"
+  | Compose true -> "ComposeReverse"
   | ReactPropType _ -> "ReactPropsCheckType"
   | ReactCreateClass -> "React.createClass"
   | ReactCreateElement -> "React.createElement"
@@ -1571,6 +1573,8 @@ and dump_t_ (depth, tvars) cx t =
     | ObjectAssign -> "ObjectAssign"
     | ObjectGetPrototypeOf -> "ObjectGetPrototypeOf"
     | ObjectSetPrototypeOf -> "ObjectSetPrototypeOf"
+    | Compose false -> "Compose"
+    | Compose true -> "ComposeReverse"
     | ReactPropType p -> spf "ReactPropType (%s)" (react_prop_type p)
     | ReactCreateElement -> "ReactCreateElement"
     | ReactCloneElement -> "ReactCloneElement"

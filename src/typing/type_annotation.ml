@@ -438,6 +438,11 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "Object$SetPrototypeOf" ->
       mk_custom_fun cx loc typeParameters ObjectSetPrototypeOf
 
+  | "$Compose" ->
+      mk_custom_fun cx loc typeParameters (Compose false)
+  | "$ComposeReverse" ->
+      mk_custom_fun cx loc typeParameters (Compose true)
+
   | "React$PropType$Primitive" ->
       check_type_param_arity cx loc typeParameters 1 (fun () ->
         let t = convert_type_params () |> List.hd in

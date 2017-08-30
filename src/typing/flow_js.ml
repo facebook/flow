@@ -3831,24 +3831,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         React.CreateClass (React.CreateClass.Spec [], knot, call_tout)));
       Ops.set ops
 
-    (* Custom handling for React.createElement() *)
-    | CustomFunT (_, ReactCreateElement),
-      CallT (reason_op, { call_args_tlist = args; call_tout = tout; _ }) ->
-      resolve_call_list cx ~trace reason_op args (
-        ResolveSpreadsToCustomFunCall (mk_id (), ReactCreateElement, tout))
-
-    (* Custom handling for React.cloneElement() *)
-    | CustomFunT (_, ReactCloneElement),
-      CallT (reason_op, { call_args_tlist = args; call_tout = tout; _ }) ->
-      resolve_call_list cx ~trace reason_op args (
-        ResolveSpreadsToCustomFunCall (mk_id (), ReactCloneElement, tout))
-
-    (* Custom handling for React.createFactory() *)
-    | CustomFunT (_, ReactElementFactory component),
-      CallT (reason_op, { call_args_tlist = args; call_tout = tout; _ }) ->
-      resolve_call_list cx ~trace reason_op args (
-        ResolveSpreadsToCustomFunCall (mk_id (), ReactElementFactory component, tout))
-
     | _, ReactKitT (reason_op, tool) ->
       react_kit cx trace reason_op l tool
 
@@ -3886,9 +3868,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) call_args_tlist;
       rec_flow_t cx trace (VoidT.why reason_op, call_tout);
 
+    | CustomFunT (_, (
+          Compose _
+        | ReactCreateElement
+        | ReactCloneElement
+        | ReactElementFactory _
+       as kind)),
+      CallT (reason_op, { call_args_tlist = args; call_tout = tout; _ }) ->
+      resolve_call_list cx ~trace reason_op args (
+        ResolveSpreadsToCustomFunCall (mk_id (), kind, tout))
+
     | CustomFunT (reason, _), _ when function_like_op u ->
       rec_flow cx trace (DefT (reason, AnyFunT), u)
-
 
     (*********************************************)
     (* object types deconstruct into their parts *)
@@ -9951,6 +9942,17 @@ and react_kit =
     ~filter_maybe
 
 and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind with
+  | Compose reverse ->
+    let tin = mk_tvar cx reason_op in
+    let tvar = mk_tvar cx reason_op in
+    run_compose cx trace reverse args spread_arg tin tvar;
+    let funt = FunT (
+      dummy_static reason_op,
+      dummy_prototype,
+      mk_functiontype [tin] ~rest_param:None ~def_reason:reason_op tvar
+    ) in
+    rec_flow_t cx trace (DefT (reason_op, funt), tout)
+
   | ReactCreateElement -> (match args with
     (* React.createElement(component) *)
     | component::[] ->
@@ -10042,6 +10044,87 @@ and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind wi
   | Idx
   | DebugPrint
     -> failwith "implemented elsewhere"
+
+(* Creates the appropriate constraints for the compose() function and its
+ * reversed variant. *)
+and run_compose cx trace reverse fns spread_fn tin tout =
+  match reverse, fns, spread_fn with
+    (* Call the tail functions in our array first and call our head function
+     * last after that. *)
+    | false, fn::fns, _ ->
+      let reason = reason_of_t fn in
+      let tvar = mk_tvar_where cx reason (fun tvar ->
+        run_compose cx trace reverse fns spread_fn tin tvar) in
+      rec_flow cx trace (fn,
+        CallT (reason, mk_functioncalltype [Arg tvar] tout))
+
+    (* If the compose function is reversed then we want to call the tail
+     * functions in our array after we call the head function. *)
+    | true, fn::fns, _ ->
+      let reason = reason_of_t fn in
+      let tvar = mk_tvar_where cx reason (fun tvar ->
+        rec_flow cx trace (fn,
+          CallT (reason, mk_functioncalltype [Arg tin] tvar))) in
+      run_compose cx trace reverse fns spread_fn tvar tout
+
+    (* If there are no functions and no spread function then we are an identity
+     * function. *)
+    | _, [], None ->
+      rec_flow_t cx trace (tin, tout)
+
+    (* Correctly implementing spreads of unknown arity for the compose function
+     * is a little tricky. Let's look at a couple of cases.
+     *
+     *     const fn = (x: number): string => x.toString();
+     *     declare var fns: Array<typeof fn>;
+     *     const x = 42;
+     *     compose(...fns)(x);
+     *
+     * This would be invalid. We could have 0 or 1 fn in our fns array, but 2 fn
+     * would be wrong because string is incompatible with number. It breaks down
+     * as such:
+     *
+     * 1. x = 42
+     * 2. fn(x) = '42'
+     * 3. fn(fn(x)) is an error because '42' is not a number.
+     *
+     * To get an error in this case we would only need to call the spread
+     * argument twice. Now let's look at a case where things get recursive:
+     *
+     *     type Fn = <O>(O) => $PropertyType<O, 'p'>;
+     *     declare var fns: Array<Fn>;
+     *     const x = { p: { p: 42 } };
+     *     compose(...fns)(x);
+     *
+     * 1. x = { p: { p: 42 } }
+     * 2. fn(x) = { p: 42 }
+     * 3. fn(fn(x)) = 42
+     * 4. fn(fn(fn(x))) throws an error because the p property is not in 42.
+     *
+     * Here we would need to call fn 3 times before getting an error. Now
+     * consider:
+     *
+     *     type Fn = <O>(O) => $PropertyType<O, 'p'>;
+     *     declare var fns: Array<Fn>;
+     *     type X = { p: X };
+     *     declare var x: X;
+     *     compose(...fns)(x);
+     *
+     * This is valid.
+     *
+     * To implement spreads in compose functions we first add a constraint based
+     * on tin and tout assuming that the spread is empty. Then we emit recursive
+     * constraints:
+     *
+     *     spread_fn(tin) ~> tout
+     *     spread_fn(tout) ~> tin
+     *
+     * The implementation of Flow should be able to terminate these recursive
+     * constraints. If it doesn't then we have a bug. *)
+    | _, [], Some spread_fn ->
+      run_compose cx trace reverse [] None tin tout;
+      run_compose cx trace reverse [spread_fn] None tin tout;
+      run_compose cx trace reverse [spread_fn] None tout tin
 
 and object_spread =
   let open ObjectSpread in

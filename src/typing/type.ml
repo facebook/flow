@@ -896,6 +896,9 @@ module rec TypeTerm : sig
   | ObjectGetPrototypeOf
   | ObjectSetPrototypeOf
 
+  (* common community functions *)
+  | Compose of bool
+
   (* 3rd party libs *)
   | ReactPropType of React.PropType.t
   | ReactCreateClass

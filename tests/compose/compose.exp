@@ -1,0 +1,122 @@
+Error: basic.js:6
+  6: (compose(n => n.toString())(42): empty); // Error: string ~> empty
+                   ^ number. Could not resolve name
+
+Error: basic.js:8
+  8: (composeReverse(n => n.toString())(42): empty); // Error: string ~> empty
+                          ^ number. Could not resolve name
+
+Error: basic.js:10
+      v-------
+ 10: (compose(
+ 11:   n => n * 5, // Error: string cannot be multiplied.
+ 12:   n => n.toString(),
+ 13: )(42): empty); // Error: number ~> empty
+     ----^ number. This type is incompatible with
+ 13: )(42): empty); // Error: number ~> empty
+            ^^^^^ empty
+
+Error: basic.js:12
+ 12:   n => n.toString(),
+            ^ number. Could not resolve name
+
+Error: basic.js:17
+ 17:   n => n.toString(),
+            ^ number. Could not resolve name
+
+Error: recompose.js:23
+ 23:     c: Math.round(props.p), // Error: string ~> number
+            ^^^^ identifier `Math`. Could not resolve name
+
+Error: spread.js:8
+      v-------
+  8: (compose(
+  9:   ...fns1,
+ 10: )(42): empty); // Error: number ~> empty
+     ----^ number. This type is incompatible with
+ 10: )(42): empty); // Error: number ~> empty
+            ^^^^^ empty
+
+Error: spread.js:12
+      v-------
+ 12: (compose(
+ 13:   ...fns1, // Error: string ~> number
+ 14: )('foo'): empty); // Error: string ~> empty and number ~> empty
+     -------^ number. This type is incompatible with
+ 14: )('foo'): empty); // Error: string ~> empty and number ~> empty
+               ^^^^^ empty
+
+Error: spread.js:12
+      v-------
+ 12: (compose(
+ 13:   ...fns1, // Error: string ~> number
+ 14: )('foo'): empty); // Error: string ~> empty and number ~> empty
+     -------^ string. This type is incompatible with
+ 14: )('foo'): empty); // Error: string ~> empty and number ~> empty
+               ^^^^^ empty
+
+Error: spread.js:13
+ 13:   ...fns1, // Error: string ~> number
+          ^^^^ string. This type is incompatible with the expected param type of
+  4: declare var fns1: Array<(number) => number>;
+                              ^^^^^^ number
+
+Error: spread.js:16
+      v-------
+ 16: (compose(
+ 17:   ...fns2, // Error: string ~> number
+ 18: )(42): empty); // Error: number ~> empty and string ~> empty
+     ----^ number. This type is incompatible with
+ 18: )(42): empty); // Error: number ~> empty and string ~> empty
+            ^^^^^ empty
+
+Error: spread.js:16
+      v-------
+ 16: (compose(
+ 17:   ...fns2, // Error: string ~> number
+ 18: )(42): empty); // Error: number ~> empty and string ~> empty
+     ----^ string. This type is incompatible with
+ 18: )(42): empty); // Error: number ~> empty and string ~> empty
+            ^^^^^ empty
+
+Error: spread.js:17
+ 17:   ...fns2, // Error: string ~> number
+          ^^^^ array
+ 17:   ...fns2, // Error: string ~> number
+          ^^^^ string. This type is incompatible with the expected param type of
+  5: declare var fns2: Array<(number) => string>;
+                              ^^^^^^ number
+
+Error: spread.js:21
+      v-------
+ 21: (compose(
+ 22:   ...fns3, // Error: Cannot get p on number
+ 23: )(x1): empty); // Error: number ~> empty and object ~> empty
+     ----^ number. This type is incompatible with
+ 23: )(x1): empty); // Error: number ~> empty and object ~> empty
+            ^^^^^ empty
+
+Error: spread.js:21
+      v-------
+ 21: (compose(
+ 22:   ...fns3, // Error: Cannot get p on number
+ 23: )(x1): empty); // Error: number ~> empty and object ~> empty
+     ----^ object literal. This type is incompatible with
+ 23: )(x1): empty); // Error: number ~> empty and object ~> empty
+            ^^^^^ empty
+
+Error: spread.js:22
+ 22:   ...fns3, // Error: Cannot get p on number
+          ^^^^ number. Could not resolve name
+
+Error: spread.js:27
+      v--------
+ 27: ((compose(
+ 28:   ...fns3,
+ 29: ))(x2): empty); // Error: object ~> empty
+     -----^ object type. This type is incompatible with
+ 29: ))(x2): empty); // Error: object ~> empty
+             ^^^^^ empty
+
+
+Found 17 errors

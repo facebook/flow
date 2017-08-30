@@ -471,6 +471,7 @@ let rec normalize_type_impl cx ids t = match t with
 
   | FunProtoT _
   | ExtendsT (_, _, _, _)
+  | CustomFunT (_, Compose _)
   ->
     (** TODO **)
     failwith (spf "Unsupported type in normalize_type_impl: %s" (string_of_ctor t))
