@@ -77,15 +77,15 @@ Error: headers.js:9
                                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:881
 
 Error: headers.js:10
- 10: e.append({'Content-Type', 'image/jpeg'}); // not correct
+ 10: e.append({'Content-Type': 'image/jpeg'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`
- 10: e.append({'Content-Type', 'image/jpeg'}); // not correct
+ 10: e.append({'Content-Type': 'image/jpeg'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 881:     append(name: string, value: string): void;
                                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:881
 
 Error: headers.js:10
- 10: e.append({'Content-Type', 'image/jpeg'}); // not correct
+ 10: e.append({'Content-Type': 'image/jpeg'}); // not correct
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 881:     append(name: string, value: string): void;
                       ^^^^^^ string. See lib: <BUILTINS>/bom.js:881
@@ -99,15 +99,15 @@ Error: headers.js:12
                                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:888
 
 Error: headers.js:13
- 13: e.set({'Content-Type', 'image/jpeg'}); // not correct
+ 13: e.set({'Content-Type': 'image/jpeg'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`
- 13: e.set({'Content-Type', 'image/jpeg'}); // not correct
+ 13: e.set({'Content-Type': 'image/jpeg'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 888:     set(name: string, value: string): void;
                                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:888
 
 Error: headers.js:13
- 13: e.set({'Content-Type', 'image/jpeg'}); // not correct
+ 13: e.set({'Content-Type': 'image/jpeg'}); // not correct
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 888:     set(name: string, value: string): void;
                    ^^^^^^ string. See lib: <BUILTINS>/bom.js:888
@@ -565,9 +565,9 @@ Error: urlsearchparams.js:4
                                         ^^^^^^^^^^^^^^^ URLSearchParams. See lib: <BUILTINS>/bom.js:894
 
 Error: urlsearchparams.js:5
-  5: const c = new URLSearchParams({'key1', 'value1'}); // not correct
+  5: const c = new URLSearchParams({'key1': 'value1'}); // not correct
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
-  5: const c = new URLSearchParams({'key1', 'value1'}); // not correct
+  5: const c = new URLSearchParams({'key1': 'value1'}); // not correct
                                    ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
 894:     constructor(query?: string | URLSearchParams): void;
                              ^^^^^^^^^^^^^^^^^^^^^^^^ union: string | URLSearchParams. See lib: <BUILTINS>/bom.js:894
@@ -575,7 +575,7 @@ Error: urlsearchparams.js:5
   894:     constructor(query?: string | URLSearchParams): void;
                                ^^^^^^ string. See lib: <BUILTINS>/bom.js:894
   Error:
-    5: const c = new URLSearchParams({'key1', 'value1'}); // not correct
+    5: const c = new URLSearchParams({'key1': 'value1'}); // not correct
                                      ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
   894:     constructor(query?: string | URLSearchParams): void;
                                ^^^^^^ string. See lib: <BUILTINS>/bom.js:894
@@ -583,7 +583,7 @@ Error: urlsearchparams.js:5
   894:     constructor(query?: string | URLSearchParams): void;
                                         ^^^^^^^^^^^^^^^ URLSearchParams. See lib: <BUILTINS>/bom.js:894
   Error:
-    5: const c = new URLSearchParams({'key1', 'value1'}); // not correct
+    5: const c = new URLSearchParams({'key1': 'value1'}); // not correct
                                      ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
   894:     constructor(query?: string | URLSearchParams): void;
                                         ^^^^^^^^^^^^^^^ URLSearchParams. See lib: <BUILTINS>/bom.js:894
@@ -597,15 +597,15 @@ Error: urlsearchparams.js:9
                                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:895
 
 Error: urlsearchparams.js:10
- 10: e.append({'key1', 'value1'}); // not correct
+ 10: e.append({'key1': 'value1'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`
- 10: e.append({'key1', 'value1'}); // not correct
+ 10: e.append({'key1': 'value1'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 895:     append(name: string, value: string): void;
                                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:895
 
 Error: urlsearchparams.js:10
- 10: e.append({'key1', 'value1'}); // not correct
+ 10: e.append({'key1': 'value1'}); // not correct
               ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 895:     append(name: string, value: string): void;
                       ^^^^^^ string. See lib: <BUILTINS>/bom.js:895
@@ -619,15 +619,15 @@ Error: urlsearchparams.js:12
                                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:903
 
 Error: urlsearchparams.js:13
- 13: e.set({'key1', 'value1'}); // not correct
+ 13: e.set({'key1': 'value1'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`
- 13: e.set({'key1', 'value1'}); // not correct
+ 13: e.set({'key1': 'value1'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 903:     set(name: string, value: string): void;
                                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:903
 
 Error: urlsearchparams.js:13
- 13: e.set({'key1', 'value1'}); // not correct
+ 13: e.set({'key1': 'value1'}); // not correct
            ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 903:     set(name: string, value: string): void;
                    ^^^^^^ string. See lib: <BUILTINS>/bom.js:903

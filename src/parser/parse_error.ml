@@ -105,6 +105,8 @@ type t =
   | AwaitAsIdentifierReference
   | YieldAsIdentifierReference
   | AmbiguousLetBracket
+  | LiteralShorthandProperty
+  | ComputedShorthandProperty
 
 exception Error of (Loc.t * t) list
 
@@ -262,4 +264,6 @@ module PP =
       | YieldAsIdentifierReference -> "`yield` is an invalid identifier in generators"
       | AmbiguousLetBracket -> "`let [` is ambiguous in this position because it is "^
           "either a `let` binding pattern, or a member expression."
+      | LiteralShorthandProperty -> "Literals cannot be used as shorthand properties."
+      | ComputedShorthandProperty -> "Computed properties must have a value."
   end

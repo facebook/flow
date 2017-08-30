@@ -614,10 +614,6 @@ language/statements/class/syntax/early-errors/class-definition-evaluation-script
   Missing parse error
 language/statements/const/redeclaration-error-from-within-strict-mode-function-const.js (default)
   Missing parse error
-language/statements/do-while/S12.6.1_A15.js (strict mode)
-  Missing parse error
-language/statements/do-while/S12.6.1_A15.js (default)
-  Missing parse error
 language/statements/for-in/dstr-array-rest-before-elision.js (strict mode)
   Missing parse error
 language/statements/for-in/dstr-array-rest-before-elision.js (default)
@@ -689,10 +685,6 @@ language/statements/function/use-strict-with-non-simple-param.js (default)
 language/statements/generators/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/statements/generators/use-strict-with-non-simple-param.js (default)
-  Missing parse error
-language/statements/if/S12.5_A11.js (strict mode)
-  Missing parse error
-language/statements/if/S12.5_A11.js (default)
   Missing parse error
 language/statements/labeled/continue.js (strict mode)
   Missing parse error
@@ -980,18 +972,14 @@ language/statements/try/early-catch-var.js (strict mode)
   Missing parse error
 language/statements/try/early-catch-var.js (default)
   Missing parse error
-language/statements/while/S12.6.2_A15.js (strict mode)
-  Missing parse error
-language/statements/while/S12.6.2_A15.js (default)
-  Missing parse error
 language/white-space/mongolian-vowel-separator.js (strict mode)
   Missing parse error
 language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54810 (99.10%)
-Failed: 495 (0.90%)
+Passed: 54816 (99.12%)
+Failed: 489 (0.88%)
 
 Features:
   arrow-function: 22/24 (91.67%)

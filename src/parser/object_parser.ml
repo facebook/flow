@@ -200,10 +200,15 @@ module Object
         shorthand = false;
       }))
 
+    (* #prod-PropertyDefinition *)
     and init =
       let open Ast.Expression.Object.Property in
+
+      (* #prod-IdentifierReference *)
       let parse_shorthand env key = match key with
-        | Literal lit -> fst lit, Ast.Expression.Literal (snd lit)
+        | Literal (loc, lit) ->
+            error_at env (loc, Parse_error.LiteralShorthandProperty);
+            loc, Ast.Expression.Literal lit
         | Identifier ((loc, name) as id) ->
             (* #sec-identifiers-static-semantics-early-errors *)
             begin
@@ -214,10 +219,14 @@ module Object
                 (* it is a syntax error if `name` is a strict reserved word, in strict mode *)
                 strict_error_at env (loc, Parse_error.StrictReservedWord)
             end;
-            fst id, Ast.Expression.Identifier id
+            loc, Ast.Expression.Identifier id
         | PrivateName _ -> failwith "Internal Error: private name found in object props"
-        | Computed expr -> expr
+        | Computed expr ->
+            error_at env (fst expr, Parse_error.ComputedShorthandProperty);
+            expr
       in
+
+      (* #prod-MethodDefinition *)
       let parse_method env ~async ~generator =
         let start_loc = Peek.loc env in
 
@@ -258,10 +267,14 @@ module Object
         })) in
         value
       in
+
+      (* PropertyName `:` AssignmentExpression *)
       let parse_value env =
         Expect.token env T_COLON;
         parse_assignment_cover env
       in
+
+      (* #prod-CoverInitializedName *)
       let parse_assignment_pattern ~key env =
         let open Ast.Expression.Object in
 
