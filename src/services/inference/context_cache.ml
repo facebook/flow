@@ -19,13 +19,15 @@ module SigContextHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
 end)
 
 let add_sig_context = Expensive.wrap (fun file cx -> SigContextHeap.add file (Context.to_cache cx))
-let find_unsafe_sig_context = Expensive.wrap (fun ~options file ->
-  Context.from_cache ~options (SigContextHeap.find_unsafe file)
-)
 
 let add_sig ~audit cx =
   let cx_file = Context.file cx in
   add_sig_context ~audit cx_file cx
+
+let find_sig ~options file =
+  match SigContextHeap.get file with
+  | Some cx -> Context.from_cache ~options cx
+  | None -> raise (Key_not_found ("SigContextHeap", string_of_filename file))
 
 module SigHashHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
   type t = SigHash.t
@@ -75,30 +77,3 @@ let revive_merge_batch files =
   LeaderHeap.revive_batch files;
   SigContextHeap.revive_batch files;
   SigHashHeap.revive_batch files
-
-(* Similar to above, but for "signature contexts." The only differences are that
-   the underlying heap is SigContextHeap instead of ContextHeap, and that `read`
-   returns both the original and the copied version of a context. *)
-class sig_context_cache = object(self)
-  val cached_merge_contexts = Hashtbl.create 0
-
-  (* find a context in the cache *)
-  method find file =
-    try Some (Hashtbl.find cached_merge_contexts file)
-    with _ -> None
-
-  (* read a context from shared memory, copy its graph, and cache the context *)
-  method read ~audit ~options file =
-    let orig_cx =
-      try find_unsafe_sig_context ~audit ~options file
-      with Not_found ->
-        raise (Key_not_found ("SigContextHeap", (string_of_filename file)))
-    in
-    let cx = Context.copy_of_context orig_cx in
-    Hashtbl.add cached_merge_contexts file cx;
-    orig_cx, cx
-
-  method read_safe ~audit ~options file =
-    try Some (self#read ~audit ~options file)
-    with Key_not_found _ -> None
-end

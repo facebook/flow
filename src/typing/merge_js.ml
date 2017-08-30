@@ -263,23 +263,6 @@ let merge_component_strict ~metadata ~lint_severities ~require_loc_maps
 
   cx
 
-(* After merging dependencies into a context (but before optimizing the
-   context), it is important to restore the parts of the context that were
-   copied from other, already optimized contexts (dep_cxs and master_cx, see
-   above comment for details on what they mean). Indeed, merging is an
-   imperative process, and there is no guarantee that those parts of the context
-   would have remained unchanged.
-
-   Restoration maintains consistency for "diamond-shaped" dependency relations:
-   it forces two contexts B and C that depend on the same context A to agree on
-   the meaning of the parts of A they share (and that meaning is dictated by A
-   itself), and so some context D that depends on both B and C (and perhaps A
-   too) is never confused when merging them.
-*)
-let restore cx dep_cxs master_cx =
-  dep_cxs |> List.iter (Context.merge_into cx);
-  Context.merge_into cx master_cx
-
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global
    declarations, is an implicit dependency for every file, and so will be
