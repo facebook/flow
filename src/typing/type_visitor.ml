@@ -218,6 +218,7 @@ class ['a] t = object(self)
   | ObjectAssign
   | ObjectGetPrototypeOf
   | ObjectSetPrototypeOf
+  | Compose _
   | ReactPropType _
   | ReactCreateClass
   | ReactCreateElement
