@@ -107,6 +107,7 @@ type t =
   | AmbiguousLetBracket
   | LiteralShorthandProperty
   | ComputedShorthandProperty
+  | MethodInDestructuring
 
 exception Error of (Loc.t * t) list
 
@@ -266,4 +267,5 @@ module PP =
           "either a `let` binding pattern, or a member expression."
       | LiteralShorthandProperty -> "Literals cannot be used as shorthand properties."
       | ComputedShorthandProperty -> "Computed properties must have a value."
+      | MethodInDestructuring -> "Object pattern can't contain methods"
   end

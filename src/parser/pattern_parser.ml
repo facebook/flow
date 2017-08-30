@@ -24,7 +24,7 @@ module Pattern
   let rec object_from_expr =
     let rec properties env acc = Ast.Expression.Object.(function
       | [] -> List.rev acc
-      | Property (loc, { Property.key; value; shorthand; _ })::remaining ->
+      | Property (loc, { Property.key; value; shorthand; _method; _ })::remaining ->
           let key = match key with
           | Property.Literal lit -> Pattern.Object.Property.Literal lit
           | Property.Identifier id -> Pattern.Object.Property.Identifier id
@@ -32,7 +32,9 @@ module Pattern
           | Property.Computed expr -> Pattern.Object.Property.Computed expr
           in
           let pattern = match value with
-          | Property.Init t -> from_expr env t
+          | Property.Init t ->
+              if _method then error_at env (fst t, Parse_error.MethodInDestructuring);
+              from_expr env t
           | Property.Get (loc, f)
           | Property.Set (loc, f) ->
             (* these should never happen *)

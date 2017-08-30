@@ -638,10 +638,6 @@ language/statements/for-in/head-let-bound-names-in-stmt.js (strict mode)
   Missing parse error
 language/statements/for-in/head-let-bound-names-in-stmt.js (default)
   Missing parse error
-language/statements/for-in/head-lhs-invalid-asnmt-ptrn-obj.js (strict mode)
-  Missing parse error
-language/statements/for-in/head-lhs-invalid-asnmt-ptrn-obj.js (default)
-  Missing parse error
 language/statements/for-in/head-lhs-let.js (default)
   Unexpected token in at (27, 10) to (27, 12)
 language/statements/for-of/dstr-array-rest-before-elision.js (strict mode)
@@ -667,10 +663,6 @@ language/statements/for-of/head-let-bound-names-dup.js (default)
 language/statements/for-of/head-let-bound-names-in-stmt.js (strict mode)
   Missing parse error
 language/statements/for-of/head-let-bound-names-in-stmt.js (default)
-  Missing parse error
-language/statements/for-of/head-lhs-invalid-asnmt-ptrn-obj.js (strict mode)
-  Missing parse error
-language/statements/for-of/head-lhs-invalid-asnmt-ptrn-obj.js (default)
   Missing parse error
 language/statements/for/head-let-bound-names-in-stmt.js (strict mode)
   Missing parse error
@@ -978,8 +970,8 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54816 (99.12%)
-Failed: 489 (0.88%)
+Passed: 54820 (99.12%)
+Failed: 485 (0.88%)
 
 Features:
   arrow-function: 22/24 (91.67%)
