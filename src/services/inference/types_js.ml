@@ -255,7 +255,6 @@ let merge
 
 (* helper *)
 let typecheck
-  ?serve_ready_clients
   ~options
   ~profiling
   ~workers
@@ -365,7 +364,6 @@ let typecheck
     Hh_logger.info "Merging";
     let merge_errors, suppressions, severity_cover_set = try
       let intermediate_result_callback results =
-        Option.call ~f:serve_ready_clients ();
         let errors = lazy (
           List.map (fun (file, result) ->
             match result with
@@ -436,7 +434,7 @@ let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
     let all_dependent_files = FilenameSet.empty in
     let persistent_connections = Some (!env.ServerEnv.connections) in
     let _profiling, (checked, errors) = Profiling_js.with_profiling (fun profiling ->
-      let checked, errors = typecheck ?serve_ready_clients:None ~options ~profiling ~workers ~errors
+      let checked, errors = typecheck ~options ~profiling ~workers ~errors
         ~unchanged_checked ~infer_input
         ~parsed ~all_dependent_files
         ~persistent_connections
@@ -577,7 +575,7 @@ let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_se
    `files` contains files that parsed successfully in the previous
    phase (which could be the init phase or a previous recheck phase)
 *)
-let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_ready_clients =
+let recheck_with_profiling ~profiling ~options ~workers ~updates env =
   let errors = env.ServerEnv.errors in
   let debug = Options.is_debug_mode options in
 
@@ -837,7 +835,6 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
 
   (* recheck *)
   let checked, errors = typecheck
-    ~serve_ready_clients
     ~options
     ~profiling
     ~workers
@@ -892,10 +889,10 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
   },
   (new_or_changed_count, deleted_count, !dependent_file_count))
 
-let recheck ~options ~workers ~updates env ~serve_ready_clients =
+let recheck ~options ~workers ~updates env =
   let profiling, (env, (modified_count, deleted_count, dependent_file_count)) =
     Profiling_js.with_profiling (fun profiling ->
-      recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_ready_clients
+      recheck_with_profiling ~profiling ~options ~workers ~updates env
     )
   in
   FlowEventLogger.recheck
@@ -991,7 +988,6 @@ let init ~profiling ~workers options =
 let full_check ~profiling ~options ~workers ~focus_targets ~should_merge parsed errors =
   let infer_input = files_to_infer ~workers ~focus_targets parsed in
   typecheck
-    ?serve_ready_clients:None
     ~options
     ~profiling
     ~workers
