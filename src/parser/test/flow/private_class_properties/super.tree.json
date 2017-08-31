@@ -31,17 +31,12 @@
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":12}},
             "range":[12,22],
             "key":{
-              "type":"PrivateName",
-              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":4}},
-              "range":[12,14],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
-                "range":[13,14],
-                "name":"p",
-                "typeAnnotation":null,
-                "optional":false
-              }
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
+              "range":[13,14],
+              "name":"p",
+              "typeAnnotation":null,
+              "optional":false
             },
             "value":null,
             "typeAnnotation":{

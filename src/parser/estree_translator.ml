@@ -768,8 +768,9 @@ end with type t = Impl.t) = struct
     |]
 
   and class_private_field (loc, prop) = Class.PrivateField.(
+    let (_, key) = prop.key in
     node "ClassPrivateProperty" loc [|
-      "key", private_name prop.key;
+      "key", identifier key;
       "value", option expression prop.value;
       "typeAnnotation", option type_annotation prop.typeAnnotation;
       "static", bool prop.static;
