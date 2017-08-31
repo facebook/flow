@@ -38,7 +38,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":14}},
               "range":[12,24],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":14}},
                 "range":[13,24],
@@ -104,7 +104,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":6,"column":9},"end":{"line":6,"column":21}},
               "range":[81,93],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":6,"column":10},"end":{"line":6,"column":21}},
                 "range":[82,93],
@@ -170,7 +170,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":10,"column":2},"end":{"line":10,"column":14}},
               "range":[143,155],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":10,"column":3},"end":{"line":10,"column":14}},
                 "range":[144,155],
@@ -226,7 +226,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":14,"column":9},"end":{"line":14,"column":21}},
               "range":[223,235],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":14,"column":10},"end":{"line":14,"column":21}},
                 "range":[224,235],

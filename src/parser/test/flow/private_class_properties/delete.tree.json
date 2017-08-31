@@ -38,7 +38,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":4}},
               "range":[12,14],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
                 "range":[13,14],
@@ -107,7 +107,7 @@
                           "type":"PrivateName",
                           "loc":{"source":null,"start":{"line":4,"column":16},"end":{"line":4,"column":18}},
                           "range":[57,59],
-                          "name":{
+                          "id":{
                             "type":"Identifier",
                             "loc":{"source":null,"start":{"line":4,"column":17},"end":{"line":4,"column":18}},
                             "range":[58,59],
@@ -144,7 +144,7 @@
                           "type":"PrivateName",
                           "loc":{"source":null,"start":{"line":5,"column":18},"end":{"line":5,"column":20}},
                           "range":[110,112],
-                          "name":{
+                          "id":{
                             "type":"Identifier",
                             "loc":{"source":null,"start":{"line":5,"column":19},"end":{"line":5,"column":20}},
                             "range":[111,112],

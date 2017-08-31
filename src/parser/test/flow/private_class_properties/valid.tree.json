@@ -28,7 +28,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":4}},
               "range":[12,14],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
                 "range":[13,14],
@@ -59,7 +59,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":4}},
               "range":[25,27],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":3,"column":3},"end":{"line":3,"column":4}},
                 "range":[26,27],
