@@ -58,7 +58,7 @@ def("PrivateName")
 
 def("ClassPrivateProperty")
   .bases("ClassProperty")
-  .field("key", def("PrivateName"))
+  .field("key", def("Identifier"))
 
 
 // TODO: should be named NullableClassDeclaration. estree allows a nameless
