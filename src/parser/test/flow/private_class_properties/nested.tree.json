@@ -50,7 +50,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":4}},
               "range":[12,14],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
                 "range":[13,14],

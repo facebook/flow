@@ -573,7 +573,7 @@ end with type t = Impl.t) = struct
 
   and private_name (loc, name) =
     node "PrivateName" loc [|
-      "name", identifier name;
+      "id", identifier name;
     |]
 
   and pattern_identifier loc {

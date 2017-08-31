@@ -38,7 +38,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":4}},
               "range":[12,14],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
                 "range":[13,14],
@@ -106,7 +106,7 @@
                           "type":"PrivateName",
                           "loc":{"source":null,"start":{"line":3,"column":23},"end":{"line":3,"column":25}},
                           "range":[46,48],
-                          "name":{
+                          "id":{
                             "type":"Identifier",
                             "loc":{"source":null,"start":{"line":3,"column":24},"end":{"line":3,"column":25}},
                             "range":[47,48],
@@ -149,7 +149,7 @@
                           "type":"PrivateName",
                           "loc":{"source":null,"start":{"line":3,"column":36},"end":{"line":3,"column":38}},
                           "range":[59,61],
-                          "name":{
+                          "id":{
                             "type":"Identifier",
                             "loc":{"source":null,"start":{"line":3,"column":37},"end":{"line":3,"column":38}},
                             "range":[60,61],
@@ -192,7 +192,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":4}},
               "range":[85,87],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":4,"column":3},"end":{"line":4,"column":4}},
                 "range":[86,87],
@@ -248,7 +248,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":8,"column":2},"end":{"line":8,"column":4}},
               "range":[111,113],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":8,"column":3},"end":{"line":8,"column":4}},
                 "range":[112,113],
@@ -404,7 +404,7 @@
                                               "type":"PrivateName",
                                               "loc":{"source":null,"start":{"line":13,"column":10},"end":{"line":13,"column":12}},
                                               "range":[210,212],
-                                              "name":{
+                                              "id":{
                                                 "type":"Identifier",
                                                 "loc":{"source":null,"start":{"line":13,"column":11},"end":{"line":13,"column":12}},
                                                 "range":[211,212],
@@ -450,7 +450,7 @@
                                               "type":"PrivateName",
                                               "loc":{"source":null,"start":{"line":14,"column":10},"end":{"line":14,"column":12}},
                                               "range":[228,230],
-                                              "name":{
+                                              "id":{
                                                 "type":"Identifier",
                                                 "loc":{"source":null,"start":{"line":14,"column":11},"end":{"line":14,"column":12}},
                                                 "range":[229,230],
@@ -519,7 +519,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":18,"column":2},"end":{"line":18,"column":4}},
               "range":[273,275],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":18,"column":3},"end":{"line":18,"column":4}},
                 "range":[274,275],
@@ -575,7 +575,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":22,"column":2},"end":{"line":22,"column":4}},
               "range":[299,301],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":22,"column":3},"end":{"line":22,"column":4}},
                 "range":[300,301],
@@ -656,7 +656,7 @@
                                   "type":"PrivateName",
                                   "loc":{"source":null,"start":{"line":25,"column":6},"end":{"line":25,"column":8}},
                                   "range":[355,357],
-                                  "name":{
+                                  "id":{
                                     "type":"Identifier",
                                     "loc":{"source":null,"start":{"line":25,"column":7},"end":{"line":25,"column":8}},
                                     "range":[356,357],
@@ -724,7 +724,7 @@
                                               "type":"PrivateName",
                                               "loc":{"source":null,"start":{"line":27,"column":13},"end":{"line":27,"column":15}},
                                               "range":[394,396],
-                                              "name":{
+                                              "id":{
                                                 "type":"Identifier",
                                                 "loc":{"source":null,"start":{"line":27,"column":14},"end":{"line":27,"column":15}},
                                                 "range":[395,396],
@@ -805,7 +805,7 @@
                                               "type":"PrivateName",
                                               "loc":{"source":null,"start":{"line":29,"column":10},"end":{"line":29,"column":12}},
                                               "range":[445,447],
-                                              "name":{
+                                              "id":{
                                                 "type":"Identifier",
                                                 "loc":{"source":null,"start":{"line":29,"column":11},"end":{"line":29,"column":12}},
                                                 "range":[446,447],
@@ -851,7 +851,7 @@
                                               "type":"PrivateName",
                                               "loc":{"source":null,"start":{"line":30,"column":10},"end":{"line":30,"column":12}},
                                               "range":[471,473],
-                                              "name":{
+                                              "id":{
                                                 "type":"Identifier",
                                                 "loc":{"source":null,"start":{"line":30,"column":11},"end":{"line":30,"column":12}},
                                                 "range":[472,473],
@@ -970,7 +970,7 @@
                                               "type":"PrivateName",
                                               "loc":{"source":null,"start":{"line":35,"column":13},"end":{"line":35,"column":15}},
                                               "range":[549,551],
-                                              "name":{
+                                              "id":{
                                                 "type":"Identifier",
                                                 "loc":{"source":null,"start":{"line":35,"column":14},"end":{"line":35,"column":15}},
                                                 "range":[550,551],
@@ -1051,7 +1051,7 @@
                                               "type":"PrivateName",
                                               "loc":{"source":null,"start":{"line":37,"column":10},"end":{"line":37,"column":12}},
                                               "range":[602,604],
-                                              "name":{
+                                              "id":{
                                                 "type":"Identifier",
                                                 "loc":{"source":null,"start":{"line":37,"column":11},"end":{"line":37,"column":12}},
                                                 "range":[603,604],
@@ -1097,7 +1097,7 @@
                                               "type":"PrivateName",
                                               "loc":{"source":null,"start":{"line":38,"column":10},"end":{"line":38,"column":12}},
                                               "range":[628,630],
-                                              "name":{
+                                              "id":{
                                                 "type":"Identifier",
                                                 "loc":{"source":null,"start":{"line":38,"column":11},"end":{"line":38,"column":12}},
                                                 "range":[629,630],
@@ -1166,7 +1166,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":42,"column":2},"end":{"line":42,"column":4}},
               "range":[664,666],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":42,"column":3},"end":{"line":42,"column":4}},
                 "range":[665,666],
@@ -1214,7 +1214,7 @@
           "type":"PrivateName",
           "loc":{"source":null,"start":{"line":45,"column":5},"end":{"line":45,"column":7}},
           "range":[683,685],
-          "name":{
+          "id":{
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":45,"column":6},"end":{"line":45,"column":7}},
             "range":[684,685],

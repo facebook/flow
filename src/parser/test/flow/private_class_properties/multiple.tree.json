@@ -38,7 +38,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":4}},
               "range":[12,14],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
                 "range":[13,14],
@@ -69,7 +69,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":4}},
               "range":[25,27],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":3,"column":3},"end":{"line":3,"column":4}},
                 "range":[26,27],
@@ -100,7 +100,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":4}},
               "range":[38,40],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":4,"column":3},"end":{"line":4,"column":4}},
                 "range":[39,40],
@@ -131,7 +131,7 @@
               "type":"PrivateName",
               "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":11}},
               "range":[95,97],
-              "name":{
+              "id":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":5,"column":10},"end":{"line":5,"column":11}},
                 "range":[96,97],
