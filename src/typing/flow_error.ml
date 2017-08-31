@@ -1432,8 +1432,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     mk_error
       ~kind:(LintError Lints.UntypedTypeImport)
       [loc, [spf (
-        "Importing a type from an untyped module is not safe! Did you " ^^
-        "mean to add `// @flow` to the top of `%s`?"
+        "Importing a type from an untyped module makes it `any` and is not safe! "^^
+        "Did you mean to add `// @flow` to the top of `%s`?"
       ) module_name]]
 
   | EUnusedSuppression loc ->
