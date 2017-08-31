@@ -1,3 +1,41 @@
+### 0.54.0
+
+Likely to cause new Flow errors:
+* Extending a polymorphic class must now explicitly specify the parent class's type args. That is, `class A<T> {}; class B extends A {}` is now an error, but `class C extends A<string> {}` or `class D<T> extends A<T> {}` is ok.
+* Improved accuracy of type checking calls of built-in methods (e.g. Object, Array, Promise)
+
+Notable Changes:
+* Implemented private class fields, part of the [Class Fields](https://github.com/tc39/proposal-class-fields) proposal.
+* Implemented "phantom" types (e.g. `type T<Phantom> = any; type X = T<string>; type Y = T<number>`, where `X` and `Y` are incompatible even though `T` doesn't use `Phantom`)
+* Unused suppression errors are now warnings instead
+* Improved errors involving polymorphic types, so that they now point to the source of the conflict, rather than the nested type args that are incompatible. This was a major source of errors in files other than where the problem was.
+* Improved errors involving structural subtyping, so that they now reference the objects that are incompatible in addition to the incompatible properties
+* Improved errors when an inexact object type flows into an exact type
+* Made rest parameters in object destructuring patterns sealed, and exact if possible
+* Improved definitions for some node `fs` functions
+* Improved performance by removing unnecessary caching
+
+Misc:
+* Improved accuracy of type checking of React children in React.createClass
+* Fixed a bug related to instantiating a polymorphic type (e.g. `type t = T<U>`) with empty type args (e.g. `var x: T<>`)
+* Fixed polarity checking for property maps
+* Fixed a bug where polymorphic types were incorrectly checked for equality
+* Improved React definitions
+* Added a FLOW_TEMP_DIR env, equivalent to passing --temp-dir
+* Added a minimal libdef that defines the few things Flow can't run without, even when using no_flowlibs=true
+
+Parser:
+* Added `flow ast --strict` to parse in strict mode without "use strict"
+* Added support for the RegExp dotAll ('s' flag) [proposal](https://github.com/tc39/proposal-regexp-dotall-flag)
+* Added support for the private class fields [proposal](https://github.com/tc39/proposal-class-fields)
+* Added support for destructuring defaults in assignments (e.g. given `({ x = 1 } = {})`, `x` is 1)
+* Fixed issues related to `let`, `yield`, `await`, `async`, `super` and other reserved words
+* Fixed issues related to declarations in statement positions
+* Fixed issues related to destructuring patterns
+* Fixed issues related to IdentifierReferences, like shorthand object notation
+* Fixed issues related to class parsing, particularly `new.target` and async methods
+
+
 ### 0.53.1
 
 Fixed a bug that sometimes crashed the server during recheck
