@@ -35,17 +35,12 @@
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":12}},
             "range":[12,22],
             "key":{
-              "type":"PrivateName",
-              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":4}},
-              "range":[12,14],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
-                "range":[13,14],
-                "name":"p",
-                "typeAnnotation":null,
-                "optional":false
-              }
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
+              "range":[13,14],
+              "name":"p",
+              "typeAnnotation":null,
+              "optional":false
             },
             "value":null,
             "typeAnnotation":{
@@ -66,17 +61,12 @@
             "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":12}},
             "range":[25,35],
             "key":{
-              "type":"PrivateName",
-              "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":4}},
-              "range":[25,27],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":3,"column":3},"end":{"line":3,"column":4}},
-                "range":[26,27],
-                "name":"q",
-                "typeAnnotation":null,
-                "optional":false
-              }
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":3,"column":3},"end":{"line":3,"column":4}},
+              "range":[26,27],
+              "name":"q",
+              "typeAnnotation":null,
+              "optional":false
             },
             "value":null,
             "typeAnnotation":{
@@ -97,17 +87,12 @@
             "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":12}},
             "range":[38,48],
             "key":{
-              "type":"PrivateName",
-              "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":4}},
-              "range":[38,40],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":4,"column":3},"end":{"line":4,"column":4}},
-                "range":[39,40],
-                "name":"p",
-                "typeAnnotation":null,
-                "optional":false
-              }
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":4,"column":3},"end":{"line":4,"column":4}},
+              "range":[39,40],
+              "name":"p",
+              "typeAnnotation":null,
+              "optional":false
             },
             "value":null,
             "typeAnnotation":{
@@ -128,17 +113,12 @@
             "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":19}},
             "range":[88,105],
             "key":{
-              "type":"PrivateName",
-              "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":11}},
-              "range":[95,97],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":5,"column":10},"end":{"line":5,"column":11}},
-                "range":[96,97],
-                "name":"q",
-                "typeAnnotation":null,
-                "optional":false
-              }
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":5,"column":10},"end":{"line":5,"column":11}},
+              "range":[96,97],
+              "name":"q",
+              "typeAnnotation":null,
+              "optional":false
             },
             "value":null,
             "typeAnnotation":{
