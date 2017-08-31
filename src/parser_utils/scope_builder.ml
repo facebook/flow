@@ -119,13 +119,14 @@ class scope_builder = object(this)
       this#pop saved_state;
       node'
 
-  method private add_global x def =
-    let { Def.name; _ } = def in
-    this#update_acc (fun acc -> { acc with
-      globals =
-        let iglobals = try IMap.find_unsafe name acc.globals with _ -> SSet.empty in
-        IMap.add name (SSet.add x iglobals) acc.globals
-    })
+  method private add_global x =
+    SMap.iter (fun _ { Def.name; _ } ->
+      this#update_acc (fun acc -> { acc with
+        globals =
+          let iglobals = try IMap.find_unsafe name acc.globals with _ -> SSet.empty in
+          IMap.add name (SSet.add x iglobals) acc.globals
+      })
+    ) env
 
   method private add_local loc def =
     this#update_acc (fun acc -> { acc with
@@ -140,7 +141,7 @@ class scope_builder = object(this)
     let loc, x = expr in
     begin match SMap.get x env with
       | Some def -> this#add_local loc def
-      | None -> SMap.iter (fun _ -> this#add_global x) env
+      | None -> this#add_global x
     end;
     expr
 
