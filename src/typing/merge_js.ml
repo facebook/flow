@@ -387,6 +387,7 @@ module ContextOptimizer = struct
     val mutable stable_nominal_ids = IMap.empty
     val mutable stable_eval_ids = IMap.empty
     val mutable stable_opaque_ids = IMap.empty
+    val mutable stable_poly_ids = IMap.empty
 
     method reduce cx quotient module_ref =
       let { reduced_module_map; _ } = quotient in
@@ -497,6 +498,20 @@ module ContextOptimizer = struct
             id
           | Some id -> id
           else opaque_id
+        in
+        let sig_hash = SigHash.add id sig_hash in
+        super#type_ cx { quotient with sig_hash } t
+      | DefT (_, PolyT (_, _, poly_id)) ->
+        let { sig_hash; _ } = quotient in
+        let id =
+          if Context.mem_nominal_id cx poly_id
+          then match IMap.get poly_id stable_poly_ids with
+          | None ->
+            let id = self#fresh_stable_id in
+            stable_poly_ids <- IMap.add poly_id id stable_poly_ids;
+            id
+          | Some id -> id
+          else poly_id
         in
         let sig_hash = SigHash.add id sig_hash in
         super#type_ cx { quotient with sig_hash } t

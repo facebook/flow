@@ -2478,7 +2478,7 @@ let extends_type l u =
   let reason = replace_reason (fun desc -> RExtends desc) (reason_of_t u) in
   ExtendsT (reason, [], l, u)
 
-let poly_type ?(id = mk_id ()) tparams t =
+let poly_type id tparams t =
   if tparams = []
   then t
   else

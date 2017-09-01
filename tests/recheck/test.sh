@@ -89,13 +89,20 @@ assert_ok "$FLOW" force-recheck j1.js
 assert_errors "$FLOW" status .
 rm j*.js
 
-# Test K kills the server, so do Test L first
 printf "\nTest l:\n"
 cp tmp1l/l1.js ./
 assert_ok "$FLOW" force-recheck l1.js
 assert_ok "$FLOW" status .
 rm l*.js
 
+printf "\nTest m:\n"
+cp tmp1m/m1.js ./
+assert_ok "$FLOW" force-recheck m1.js
+sleep 2;
+assert_errors "$FLOW" status .
+rm m*.js
+
+# TODO: move this to another file, as it kills the server
 printf "\nTest k:\n"
 cp tmplibk/libk1.js lib/
 cp tmpk/k.js ./

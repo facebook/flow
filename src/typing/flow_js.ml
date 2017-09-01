@@ -1670,7 +1670,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, PolyT(typeparams, ((DefT (_, ClassT _) | DefT (_, FunT _)) as lower_t), id)),
       ImportTypeofT(reason, _, t) ->
       let typeof_t = mk_typeof_annotation cx ~trace reason lower_t in
-      rec_flow_t cx trace (poly_type ~id typeparams (DefT (reason, TypeT typeof_t)), t)
+      rec_flow_t cx trace (poly_type id typeparams (DefT (reason, TypeT typeof_t)), t)
 
     | (DefT (_, TypeT _) | DefT (_, PolyT(_, DefT (_, TypeT _), _))),
       ImportTypeofT(reason, export_name, _) ->
@@ -3407,7 +3407,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let super = ObjProtoT r in
       let instance = DefT (r, InstanceT (static, super, [], insttype)) in
       rec_flow cx trace (
-        poly_type xs (this_class_type instance),
+        poly_type (mk_nominal cx) xs (this_class_type instance),
         UseT (UnknownUse, tvar)
       )
 
@@ -6957,16 +6957,16 @@ and canonicalize_imported_type cx trace reason t =
     Some (DefT (reason, TypeT prototype))
 
   | DefT (_, PolyT (typeparams, DefT (_, ClassT inst), id)) ->
-    Some (poly_type ~id typeparams (DefT (reason, TypeT inst)))
+    Some (poly_type id typeparams (DefT (reason, TypeT inst)))
 
   | DefT (_, PolyT (typeparams, DefT (_, FunT (_, prototype, _)), id)) ->
-    Some (poly_type ~id typeparams (DefT (reason, TypeT prototype)))
+    Some (poly_type id typeparams (DefT (reason, TypeT prototype)))
 
   (* delay fixing a polymorphic this-abstracted class until it is specialized,
      by transforming the instance type to a type application *)
   | DefT (_, PolyT (typeparams, ThisClassT _, id)) ->
     let targs = List.map (fun tp -> BoundT tp) typeparams in
-    Some (poly_type ~id typeparams (class_type (typeapp t targs)))
+    Some (poly_type id typeparams (class_type (typeapp t targs)))
 
   | DefT (_, PolyT (_, DefT (_, TypeT _), _)) ->
     Some t

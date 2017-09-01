@@ -217,13 +217,13 @@ let generate_tests cx f x =
 
 let to_field (t, polarity, _) = Type.Field (t, polarity)
 
-let elements ?constructor = with_sig (fun s ->
+let elements cx ?constructor = with_sig (fun s ->
   let methods =
     (* If this is an overloaded method, create an intersection, attributed
        to the first declared function signature. If there is a single
        function signature for this method, simply return the method type. *)
     SMap.map Type.(fun xs ->
-      match Nel.rev_map Func_sig.methodtype xs with
+      match Nel.rev_map (Func_sig.methodtype cx) xs with
       | t, [] -> t
       | t0, t1::ts -> DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts))
     ) s.methods
@@ -276,7 +276,7 @@ let arg_polarities x =
 let insttype ~static cx s =
   let class_id = if static then 0 else s.id in
   let constructor = if static then None else
-    let ts = List.rev_map Func_sig.methodtype s.constructor in
+    let ts = List.rev_map (Func_sig.methodtype cx) s.constructor in
     match ts with
     | [] -> None
     | [t] -> Some t
@@ -285,7 +285,7 @@ let insttype ~static cx s =
       let t = DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts)) in
       Some t
   in
-  let inited_fields, fields, methods = elements ?constructor ~static s in
+  let inited_fields, fields, methods = elements cx ?constructor ~static s in
   { Type.
     class_id;
     type_args = s.tparams_map;
@@ -366,7 +366,7 @@ let classtype cx ?(check_polarity=true) x =
   let open Type in
   (if check_polarity then Flow.check_polarity cx Positive this);
   let t = if structural then class_type this else this_class_type this in
-  poly_type tparams t
+  poly_type (Flow.mk_nominal cx) tparams t
 
 let mk_super cx tparams_map c targs = Type.(
   (* A super class must be parameterized by This, so that it can be

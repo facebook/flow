@@ -53,7 +53,6 @@ type hash =
   | OptionalH
   | AbstractH
   | EvalH
-  | PolyH
   | TypeAppH
   | ThisClassH
   | ThisTypeAppH
@@ -88,6 +87,7 @@ type hash =
 
 let hash_of_def_ctor = Type.(function
   | InstanceT _ -> failwith "undefined hash of InstanceT"
+  | PolyT _ -> failwith "undefined hash of PolyT"
 
   | AnyFunT -> AnyFunH
   | AnyObjT -> AnyObjH
@@ -105,7 +105,6 @@ let hash_of_def_ctor = Type.(function
   | NumT n -> NumH n
   | ObjT _ -> ObjH
   | OptionalT _ -> OptionalH
-  | PolyT _ -> PolyH
   | SingletonBoolT b -> SingletonBoolH b
   | SingletonNumT n -> SingletonNumH n
   | SingletonStrT s -> SingletonStrH s
