@@ -596,11 +596,16 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let root = Options.root options in
       let tmp_dir = Options.temp_dir options in
       let workers = genv.ServerEnv.workers in
+
       Pervasives.ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
       let env = Types_js.recheck ~options ~workers ~updates env ~serve_ready_clients in
-      Pervasives.ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
-      Persistent_connection.send_end_recheck env.connections;
+      (* Unfortunately, collate_errors is currently a little expensive. As the checked repo grows,
+       * collate_errors can easily take a couple of seconds. So we need to run it before we release
+       * the recheck lock *)
       let errors, warnings, _ = collate_errors_separate_warnings env in
+      Pervasives.ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
+
+      Persistent_connection.send_end_recheck env.connections;
       Persistent_connection.update_clients env.connections ~errors ~warnings;
       env
     end
