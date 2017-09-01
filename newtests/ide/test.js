@@ -703,4 +703,31 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
         ],
       ),
   ]),
+
+  /* This is a regression test for a bug where we would drop new connections
+   * that appeared during a recheck */
+  test('connect during recheck', [
+    // For some reason this order of actions triggered the bug
+    ideStart()
+      .addCode('var x = 123')
+      .ideNoNewMessagesAfterSleep(100)
+      .because('Starting the IDE does not fire any messages'),
+    ideNotification('subscribeToDiagnostics')
+      .ideNewMessagesWithTimeout(
+        5000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      )
+      .because('There are no errors'),
+  ]),
 ]);

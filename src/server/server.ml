@@ -768,9 +768,11 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let env = respond ~genv ~env ~serve_ready_clients ~client command in
       if should_close command then client.close ();
       env in
-    match command with
-      | { ServerProt.command = ServerProt.STATUS _ | ServerProt.FORCE_RECHECK _; _ } ->
-        (* status and force_recheck commands are processed after recheck is done *)
+    match command.ServerProt.command with
+      | ServerProt.STATUS _
+      | ServerProt.FORCE_RECHECK _
+      | ServerProt.CONNECT ->
+        (* these commands must be processed after recheck is done *)
         waiting_requests := continuation :: !waiting_requests;
         env
       | _ -> continuation env
