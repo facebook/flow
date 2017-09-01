@@ -119,6 +119,200 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                                   ^^^^^^ number
         `,
       ),
+    addCode('var notAnError: number = 123;')
+      .ideNewMessagesWithTimeout(
+        5000,
+        [
+          {
+            "method": "startRecheck",
+            "params": []
+          },
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          },
+          {
+            "method": "endRecheck",
+            "params": []
+          },
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [
+                  {
+                    "kind": "infer",
+                    "level": "error",
+                    "suppressions": [],
+                    "message": [
+                      {
+                        "context": "var existingError: number = true;",
+                        "descr": "boolean",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "existingError.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 1,
+                            "column": 29,
+                            "offset": 28
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 32,
+                            "offset": 32
+                          }
+                        },
+                        "path": "existingError.js",
+                        "line": 1,
+                        "endline": 1,
+                        "start": 29,
+                        "end": 32
+                      },
+                      {
+                        "context": null,
+                        "descr": "This type is incompatible with",
+                        "type": "Comment",
+                        "path": "",
+                        "line": 0,
+                        "endline": 0,
+                        "start": 1,
+                        "end": 0
+                      },
+                      {
+                        "context": "var existingError: number = true;",
+                        "descr": "number",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "existingError.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 1,
+                            "column": 20,
+                            "offset": 19
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 25,
+                            "offset": 25
+                          }
+                        },
+                        "path": "existingError.js",
+                        "line": 1,
+                        "endline": 1,
+                        "start": 20,
+                        "end": 25
+                      }
+                    ]
+                  }
+                ],
+                "passed": false
+              }
+            ]
+          },
+          {
+            "method": "startRecheck",
+            "params": []
+          },
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          },
+          {
+            "method": "endRecheck",
+            "params": []
+          },
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [
+                  {
+                    "kind": "infer",
+                    "level": "error",
+                    "suppressions": [],
+                    "message": [
+                      {
+                        "context": "var existingError: number = true;",
+                        "descr": "boolean",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "existingError.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 1,
+                            "column": 29,
+                            "offset": 28
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 32,
+                            "offset": 32
+                          }
+                        },
+                        "path": "existingError.js",
+                        "line": 1,
+                        "endline": 1,
+                        "start": 29,
+                        "end": 32
+                      },
+                      {
+                        "context": null,
+                        "descr": "This type is incompatible with",
+                        "type": "Comment",
+                        "path": "",
+                        "line": 0,
+                        "endline": 0,
+                        "start": 1,
+                        "end": 0
+                      },
+                      {
+                        "context": "var existingError: number = true;",
+                        "descr": "number",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "existingError.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 1,
+                            "column": 20,
+                            "offset": 19
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 25,
+                            "offset": 25
+                          }
+                        },
+                        "path": "existingError.js",
+                        "line": 1,
+                        "endline": 1,
+                        "start": 20,
+                        "end": 25
+                      }
+                    ]
+                  }
+                ],
+                "passed": false
+              }
+            ]
+          }
+        ],
+      ).because('No errors should be streamed during the recheck'),
     addCode('var newError: string = 123;')
       .ideNewMessagesWithTimeout(
         5000,
@@ -156,19 +350,19 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                           "source": "test.js",
                           "type": "SourceFile",
                           "start": {
-                            "line": 3,
+                            "line": 5,
                             "column": 24,
-                            "offset": 36
+                            "offset": 67
                           },
                           "end": {
-                            "line": 3,
+                            "line": 5,
                             "column": 26,
-                            "offset": 39
+                            "offset": 70
                           }
                         },
                         "path": "test.js",
-                        "line": 3,
-                        "endline": 3,
+                        "line": 5,
+                        "endline": 5,
                         "start": 24,
                         "end": 26
                       },
@@ -190,19 +384,19 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                           "source": "test.js",
                           "type": "SourceFile",
                           "start": {
-                            "line": 3,
+                            "line": 5,
                             "column": 15,
-                            "offset": 27
+                            "offset": 58
                           },
                           "end": {
-                            "line": 3,
+                            "line": 5,
                             "column": 20,
-                            "offset": 33
+                            "offset": 64
                           }
                         },
                         "path": "test.js",
-                        "line": 3,
-                        "endline": 3,
+                        "line": 5,
+                        "endline": 5,
                         "start": 15,
                         "end": 20
                       }
@@ -301,19 +495,19 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                           "source": "test.js",
                           "type": "SourceFile",
                           "start": {
-                            "line": 3,
+                            "line": 5,
                             "column": 24,
-                            "offset": 36
+                            "offset": 67
                           },
                           "end": {
-                            "line": 3,
+                            "line": 5,
                             "column": 26,
-                            "offset": 39
+                            "offset": 70
                           }
                         },
                         "path": "test.js",
-                        "line": 3,
-                        "endline": 3,
+                        "line": 5,
+                        "endline": 5,
                         "start": 24,
                         "end": 26
                       },
@@ -335,19 +529,19 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                           "source": "test.js",
                           "type": "SourceFile",
                           "start": {
-                            "line": 3,
+                            "line": 5,
                             "column": 15,
-                            "offset": 27
+                            "offset": 58
                           },
                           "end": {
-                            "line": 3,
+                            "line": 5,
                             "column": 20,
-                            "offset": 33
+                            "offset": 64
                           }
                         },
                         "path": "test.js",
-                        "line": 3,
-                        "endline": 3,
+                        "line": 5,
+                        "endline": 5,
                         "start": 15,
                         "end": 20
                       }
@@ -460,19 +654,19 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                           "source": "test.js",
                           "type": "SourceFile",
                           "start": {
-                            "line": 3,
+                            "line": 5,
                             "column": 24,
-                            "offset": 36
+                            "offset": 67
                           },
                           "end": {
-                            "line": 3,
+                            "line": 5,
                             "column": 26,
-                            "offset": 39
+                            "offset": 70
                           }
                         },
                         "path": "test.js",
-                        "line": 3,
-                        "endline": 3,
+                        "line": 5,
+                        "endline": 5,
                         "start": 24,
                         "end": 26
                       },
@@ -494,19 +688,19 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
                           "source": "test.js",
                           "type": "SourceFile",
                           "start": {
-                            "line": 3,
+                            "line": 5,
                             "column": 15,
-                            "offset": 27
+                            "offset": 58
                           },
                           "end": {
-                            "line": 3,
+                            "line": 5,
                             "column": 20,
-                            "offset": 33
+                            "offset": 64
                           }
                         },
                         "path": "test.js",
-                        "line": 3,
-                        "endline": 3,
+                        "line": 5,
+                        "endline": 5,
                         "start": 15,
                         "end": 20
                       }
