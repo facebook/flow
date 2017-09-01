@@ -128,16 +128,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             "params": []
           },
           {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "errors": [],
-                "passed": true
-              }
-            ]
-          },
-          {
             "method": "endRecheck",
             "params": []
           },
@@ -220,16 +210,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
           {
             "method": "startRecheck",
             "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "errors": [],
-                "passed": true
-              }
-            ]
           },
           {
             "method": "endRecheck",
@@ -320,16 +300,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
           {
             "method": "startRecheck",
             "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "errors": [],
-                "passed": true
-              }
-            ]
           },
           {
             "method": "diagnosticsNotification",
@@ -555,16 +525,6 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
           {
             "method": "startRecheck",
             "params": []
-          },
-          {
-            "method": "diagnosticsNotification",
-            "params": [
-              {
-                "flowVersion": "<VERSION STUBBED FOR TEST>",
-                "errors": [],
-                "passed": true
-              }
-            ]
           },
           {
             "method": "endRecheck",

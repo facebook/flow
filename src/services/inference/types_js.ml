@@ -641,7 +641,8 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
       let error_set: Errors.ErrorSet.t =
         FilenameMap.fold (fun _ -> Errors.ErrorSet.union) new_local_errors Errors.ErrorSet.empty
       in
-      Persistent_connection.update_clients env.ServerEnv.connections
+      if Errors.ErrorSet.cardinal error_set > 0
+      then Persistent_connection.update_clients env.ServerEnv.connections
         ~errors:error_set ~warnings:FilenameMap.empty
     in
     let local_errors = merge_error_maps new_local_errors errors.ServerEnv.local_errors in
