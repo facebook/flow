@@ -32,11 +32,6 @@ module type SERVER_PROGRAM = sig
     waiting_requests:(ServerEnv.env -> ServerEnv.env) list ref ->
     client -> env
   val handle_persistent_client : genv -> env -> Persistent_connection.single_client -> env
-  val collate_errors_separate_warnings :
-    ServerEnv.env ->
-    Errors.ErrorSet.t * (* errors *)
-      Errors.ErrorSet.t FilenameMap.t * (* warnings *)
-      (Errors.error * Loc.LocSet.t) list (* suppressed errors *)
 end
 
 (*****************************************************************************)
