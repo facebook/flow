@@ -679,7 +679,7 @@ and statement cx = Ast.Statement.(
       let supertype = Option.map supertype (Anno.convert cx typeparams_map) in
       let opaquetype = { underlying_t = t;
                          super_t = supertype;
-                         opaque_id = mk_id ();
+                         opaque_id = Flow.mk_nominal cx;
                          opaque_arg_polarities;
                          opaque_type_args = typeparams_map;
                          opaque_name = name} in

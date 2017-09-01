@@ -211,6 +211,9 @@ Error: j2.js:5
 
 Found 1 error
 
+Test l:
+No errors!
+
 Test k:
 Error: k.js:4
   4: (x.p: string);

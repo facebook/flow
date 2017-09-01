@@ -386,6 +386,7 @@ module ContextOptimizer = struct
     val mutable stable_propmap_ids = Properties.Map.empty
     val mutable stable_nominal_ids = IMap.empty
     val mutable stable_eval_ids = IMap.empty
+    val mutable stable_opaque_ids = IMap.empty
 
     method reduce cx quotient module_ref =
       let { reduced_module_map; _ } = quotient in
@@ -482,6 +483,21 @@ module ContextOptimizer = struct
             id
           | Some id -> id
           else class_id in
+        let sig_hash = SigHash.add id sig_hash in
+        super#type_ cx { quotient with sig_hash } t
+      | OpaqueT (_, opaquetype) ->
+        let { sig_hash; _ } = quotient in
+        let id =
+          let {opaque_id; _} = opaquetype in
+          if Context.mem_nominal_id cx opaque_id
+          then match IMap.get opaque_id stable_opaque_ids with
+          | None ->
+            let id = self#fresh_stable_id in
+            stable_opaque_ids <- IMap.add opaque_id id stable_opaque_ids;
+            id
+          | Some id -> id
+          else opaque_id
+        in
         let sig_hash = SigHash.add id sig_hash in
         super#type_ cx { quotient with sig_hash } t
       | _ ->
