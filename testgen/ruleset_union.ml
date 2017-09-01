@@ -19,8 +19,8 @@ module FRandom = Utils.FRandom;;
 module Syntax = Syntax_base;;
 open Ruleset_base;;
 
-class ruleset_union (depth : int) = object(self)
-  inherit Ruleset_base.ruleset_base depth
+class ruleset_union = object(self)
+  inherit Ruleset_base.ruleset_base
 
   method! weak_assert b = self#backtrack_on_false b
 
@@ -110,8 +110,8 @@ class ruleset_union (depth : int) = object(self)
             | _ -> true);
         gen_expr_list (count + 1) limit (ep :: result) in
 
-    (* We are getting at most 2 properties *)
-    let elist = gen_expr_list 0 ((FRandom.rint 2) + 1) [] in
+    (* We are getting 2 properties *)
+    let elist = gen_expr_list 0 1 [] in
     let props =
       let count = ref 0 in
       let mk_prop () =
@@ -198,7 +198,8 @@ class ruleset_union (depth : int) = object(self)
           | _ -> failwith "This has to be a type" in
         gen_type_list (count + 1) limit (ptype :: result) in
 
-    let prop_types = gen_type_list 0 ((FRandom.rint 2) + 1) [] in
+    (* let prop_types = gen_type_list 0 ((FRandom.rint 2) + 1) [] in *)
+    let prop_types = gen_type_list 0 1 [] in
     let props =
       let count = ref 0 in
       let mk_prop () =
@@ -292,7 +293,7 @@ class ruleset_union (depth : int) = object(self)
     (* Printf.printf "After: %s\n" (Flowtestgen_utils.string_of_type param_type); *)
 
     (* We are assuming we only have one parameter for now *)
-    let pname = "param_" ^ (string_of_int depth) in
+    let pname = "param" in 
 
     let prop = self#choose 1 (fun () -> self#require_prop param_type true) in
     let pexpr, ptype = match prop with
@@ -353,16 +354,18 @@ class ruleset_union (depth : int) = object(self)
       self#rule_func_mutate;
       self#rule_func_call;
       self#rule_prop_read;
+      (*
       self#rule_vardecl_with_type;
       self#rule_prop_update;
       self#rule_func_mutate;
       self#rule_func_call;
       self#rule_prop_read;
+         *)
       |]
 end
 
-class ruleset_random_union (depth : int) = object
-  inherit ruleset_union depth
+class ruleset_random_union = object
+  inherit ruleset_union
   method! weak_assert b =
     if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
 end

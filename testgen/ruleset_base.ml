@@ -59,12 +59,23 @@ let print_env (env : env_t) : unit =
    body for inner statements such as function definitions. This might
    change in the future when we have better strategy.
  *)
-class ruleset_base (depth : int) = object(self)
+class ruleset_base = object(self)
 
 
   (* ESSENTIAL: Users have to inherit from the engine type and
      implement the get_all_rules method *)
-  inherit [env_elt_t, env_t, Syntax.t] Engine.engine depth
+  inherit [env_elt_t, env_t, Syntax.t] Engine.engine
+
+  method print_stack () : unit =
+    Printf.printf "Stack: ============\n";
+    for i = size - 1 downto 0 do
+      List.iter (fun elt -> Printf.printf "%s\t" (str_of_env_elt elt)) stack.(i);
+      Printf.printf "\n----------------\n";
+    done
+
+  method print_env (env : env_t) : unit = print_env env
+
+  method print_syntax (s : Syntax.t) : unit = Printf.printf "%s\n" (Syntax.str_of_syntax s)
 
   (* We have a small chance to bypass this assertion *)
   method weak_assert b =
@@ -427,7 +438,7 @@ class ruleset_base (depth : int) = object(self)
       | _ -> failwith "has to be a type" in
 
     (* We are assuming we only have one parameter for now *)
-    let pname = "param_" ^ (string_of_int depth) in
+    let pname = "param" in
 
     (* We don't support recursion at this point, since in the syntax
        there's no way to stop recursion *)
@@ -503,7 +514,7 @@ class ruleset_base (depth : int) = object(self)
         | _ -> false);
 
     (* We are assuming we only have one parameter for now *)
-    let pname = "param_" ^ (string_of_int depth) in
+    let pname = "param" in
 
     let prop = self#choose 1 (fun () -> self#require_prop param_type true) in
     let pexpr, ptype = match prop with
@@ -711,8 +722,8 @@ class ruleset_base (depth : int) = object(self)
     all_rules
 end;;
 
-class ruleset_random_base (depth : int) = object
-  inherit ruleset_base depth
+class ruleset_random_base = object
+  inherit ruleset_base
   method! weak_assert b =
     if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
 end

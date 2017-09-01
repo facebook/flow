@@ -19,8 +19,8 @@ module FRandom = Utils.FRandom;;
 module Syntax = Syntax_base;;
 open Ruleset_base;;
 
-class ruleset_func (depth : int)= object(self)
-  inherit Ruleset_base.ruleset_base depth
+class ruleset_func = object(self)
+  inherit Ruleset_base.ruleset_base
 
   method! weak_assert b = self#backtrack_on_false b
 
@@ -193,7 +193,7 @@ class ruleset_func (depth : int)= object(self)
         | _ -> false);
 
     (* We are assuming we only have one parameter for now *)
-    let pname = "param_" ^ (string_of_int depth) in
+    let pname = "param" in
 
     (* We don't support recursion at this point, since in the syntax
        there's no way to stop recursion *)
@@ -254,8 +254,8 @@ class ruleset_func (depth : int)= object(self)
 end
 
 
-class ruleset_random_func (depth : int) = object
-  inherit ruleset_func depth
+class ruleset_random_func = object
+  inherit ruleset_func
   method! weak_assert b =
     if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
 end

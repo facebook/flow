@@ -19,8 +19,8 @@ module FRandom = Utils.FRandom;;
 module Syntax = Syntax_base;;
 open Ruleset_base;;
 
-class ruleset_depth (depth : int) = object(self)
-  inherit Ruleset_base.ruleset_base depth
+class ruleset_depth = object(self)
+  inherit Ruleset_base.ruleset_base
 
   method! weak_assert b = self#backtrack_on_false b
 
@@ -169,8 +169,8 @@ class ruleset_depth (depth : int) = object(self)
       self#rule_prop_update;|]
 end
 
-class ruleset_random_depth (depth : int) = object
-  inherit ruleset_depth depth
+class ruleset_random_depth = object
+  inherit ruleset_depth
   method! weak_assert b =
     if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
 end

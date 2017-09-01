@@ -165,19 +165,17 @@ let main () =
       stdout
     else
       open_out no_error_file in
-  let total_prog = Config.(config.num_prog) in
-  printf "Generating %d programs...\n" total_prog;
-  for i = 1 to total_prog do
-    (* Generate codes and then type check *)
-    let code = Codegen.mk_random_code Config.(config.rule_iter) in
-    let content = code in
+  printf "Generating programs...\n";
+  let all_prog = Codegen.mk_code Config.(config.num_prog) Config.(config.random) in
+  printf "Generated %d programs.\n" (List.length all_prog);
+  List.iter (fun content ->
     let type_run_result =
       if Config.(config.type_check)
-      then type_check code
+      then type_check content
       else None in
     match type_run_result with
     | None ->
-      (match test_code code with
+      (match test_code content with
        | None -> no_error_count := !no_error_count + 1;
          fprintf no_error_oc "// Good program ==========\n%s\n" content;
        | Some test_error_msg ->
@@ -190,8 +188,7 @@ let main () =
       printf "TYPE ERROR.\n";
       type_error_count := !type_error_count + 1;
       fprintf flow_error_oc "//===================\n%s\n" content;
-      fprintf flow_error_oc "/*\nError: \n%s\n*/\n" type_error_msg
-  done;
+      fprintf flow_error_oc "/*\nError: \n%s\n*/\n" type_error_msg) all_prog;
   printf "Done!\n";
 
   (* print type error message *)

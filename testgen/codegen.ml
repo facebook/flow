@@ -205,8 +205,8 @@ let move_func (prog : Syntax.t list) =
   let all_non_func = List.filter (fun p -> not (is_func p)) prog in
   all_func @ all_non_func
 
-(* Main entry functions for generating random code *)
-let mk_random_code rule_iter =
+(* Main entry functions for generating code *)
+let mk_code prog_num random = 
   (*  TODO:
       Pick the right engine based on the config. I can't get this to
       compile at this point and I'll fix the problem later.The config
@@ -221,20 +221,24 @@ let mk_random_code rule_iter =
     | _ -> new Ruleset_base.ruleset_base 0 in
      *)
 
-  let base_engine = new Ruleset_base.ruleset_base 0 in
-  let depth_engine = new Ruleset_depth.ruleset_depth 0 in
-  let func_engine = new Ruleset_func.ruleset_func 0 in
-  let optional_engine = new Ruleset_optional.ruleset_optional 0 in
-  let exact_engine = new Ruleset_exact.ruleset_exact 0 in
-  let union_engine = new Ruleset_union.ruleset_union 0 in
+  let base_engine = new Ruleset_base.ruleset_base in
+  let depth_engine = new Ruleset_depth.ruleset_depth in
+  let func_engine = new Ruleset_func.ruleset_func in
+  let optional_engine = new Ruleset_optional.ruleset_optional in
+  let exact_engine = new Ruleset_exact.ruleset_exact in
+  let union_engine = new Ruleset_union.ruleset_union in
   ignore base_engine;
   ignore depth_engine;
   ignore func_engine;
   ignore optional_engine;
   ignore exact_engine;
   let engine = union_engine in
-  let prog, env = engine#gen_prog [] rule_iter in
-  (* We add type assertions at the end *)
-  let prog = ((add_assert prog) @ (prog |> add_param_assert))
-           |> move_func in
-  Printf.sprintf "%s\n" ((string_of_prog prog) ^ (Ruleset_base.str_of_env env))
+  (if random
+   then engine#gen_random_prog prog_num
+   else engine#gen_prog prog_num)
+  |> (List.map (fun (slist, env) ->
+      (* We add type assertions at the end *)
+      let prog = ((add_assert slist) @ (slist |> add_param_assert))
+                 |> move_func in
+      Printf.sprintf "%s\n" ((string_of_prog prog) ^ (Ruleset_base.str_of_env env))))
+

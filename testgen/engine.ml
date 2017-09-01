@@ -97,7 +97,7 @@ exception Fail
 (* 'a - type of environment element
    'b - type of the environment
    'c - type of the syntax *)
-class virtual ['a, 'b, 'c] engine (depth : int) = object(self)
+class virtual ['a, 'b, 'c] engine = object(self)
 
 
   (* The backtracking is implemented using a hash table
@@ -143,6 +143,11 @@ class virtual ['a, 'b, 'c] engine (depth : int) = object(self)
     let sond = List.sort compare nd in
     List.map snd sond
 
+  (* A method for printing the stack *)
+  method virtual print_stack : unit -> unit
+  method virtual print_env : 'b -> unit
+  method virtual print_syntax : 'c -> unit
+
   (* Choose a element from a list using combinatorial search.
 
      id : This is index in the stack
@@ -169,7 +174,7 @@ class virtual ['a, 'b, 'c] engine (depth : int) = object(self)
     *)
     if id >= size then begin
       (* push the data onto the stack *)
-      stack.(id) <- (func () |> self#shuffle);
+      stack.(id) <- (func ());
       size <- size + 1;
     end;
 
@@ -209,23 +214,87 @@ class virtual ['a, 'b, 'c] engine (depth : int) = object(self)
   (* method for running a single rule *)
   method run
       (rule : 'b -> ('c * 'b))
-      (env : 'b)
-      (retry : bool) : ('c * 'b) =
-
-    (* If we are running a rule for the first time,
-       we clear the stack *)
-    if not retry then self#clear();
+      (env : 'b) : ('c * 'b) =
 
     (* run the rule *)
     try rule env with
-    | Backtrack -> self#forward (); self#run rule env true
+    | Backtrack -> self#forward (); self#run rule env
     | Fail -> raise Fail
 
-  (* Main entry function for generating programs.
+    (* Run the rule until we run out of choices *)
+  method run_exhaustive
+      (rule : 'b -> ('c * 'b))
+      (env : 'b) : ('c * 'b) list =
+    self#clear ();
+    let rec helper all_result =
+      let r = try Some (self#run rule env) with
+        | Fail -> None in
+      match r with
+      | None -> all_result
+      | Some r ->
+        if size > 0 then begin
+          try
+            self#forward ();
+            helper (r :: all_result)
+          with
+          | Fail -> r :: all_result
+        end
+        else r :: all_result in
 
-     rule_iter is the number of time we want to execute all the rules
+    helper []
+
+  (* Main function for generating programs exhaustively.
+     Limit is an integer used to limit the number of programs at the end.
   *)
-  method gen_prog (env : 'b) (rule_iter : int) : ('c list * 'b) =
+  method gen_prog (limit : int) : ('c list * 'b) list =
+    let rules = self#get_all_rules () in
+    (* This is the main queue for storying environments and corresponding syntax *)
+    let queue = Queue.create () in
+
+    (* This is used to store temporary results *)
+    let tmp_queue = Queue.create () in
+
+    (* We start with empty syntax and empty environment *)
+    Queue.push ([], []) queue;
+
+    (* Run a rule through all the results in the queue *)
+    let helper (rule : 'b -> ('c * 'b)) : unit = 
+      (*
+       *)
+      Printf.printf "Queue size : %d\n" (Queue.length queue);
+      Queue.iter (fun (slist, env) ->
+          self#print_env env;
+          Printf.printf "Syntax:\n";
+          List.iter (fun s -> self#print_syntax s) slist) queue;
+
+      Queue.iter (fun (slist, env) ->
+          let result = self#run_exhaustive rule env in
+          if result = [] then
+            (* We failed. Put the old syntax and env back into the queue *)
+            Queue.push (slist, env) tmp_queue
+          else
+            List.iter (fun (s, e) -> Queue.push (s :: slist, e) tmp_queue) result) queue;
+
+      (* transfer the run results into the queue *)
+      Queue.clear queue;
+      Queue.transfer tmp_queue queue in
+
+    let rec limit_result count acc all_result = match all_result with
+      | [] -> acc
+      | _ when count >= limit -> acc
+      | hd :: tl -> limit_result (count + 1) (hd :: acc) tl in
+
+    (* Run all the rules *)
+    Array.iter (fun rule -> helper rule) rules;
+
+    (* We limit the number of results at the end *)
+    Queue.fold (fun acc elt -> elt :: acc) [] queue 
+    |> limit_result 0 []
+
+
+  (* This is the main function for generating programs randomly.
+     Num_prog is an integer representing the number of programs at the end *)
+  method gen_random_prog (num_prog : int) : ('c list * 'b) list =
     let rules = self#get_all_rules () in
 
     (* run all the rule once *)
@@ -234,12 +303,13 @@ class virtual ['a, 'b, 'c] engine (depth : int) = object(self)
         (code : 'c list)
         (env : 'b)  : ('c list * 'b) =
       (* We have finished running all the rules. Return the result *)
-      if rule_index >= (Array.length rules) * rule_iter then
+      if rule_index >= (Array.length rules) then
         code, env
       else
         let rule = rules.(rule_index mod (Array.length rules)) in
         (* run the rule *)
-        let result = try Some (self#run rule env false) with
+        self#clear ();
+        let result = try Some (self#run rule env) with
           | Fail -> None in
         match result with
         | None ->
@@ -252,11 +322,9 @@ class virtual ['a, 'b, 'c] engine (depth : int) = object(self)
             (new_code :: code)
             new_env in
 
-    (* This is the code that controls the level of gen_prog recursion
-       when building the body of some inner statements such as
-       functions.
-       We limit the depth to 3 at this point.*)
-    if depth > 3
-    then [], env
-    else run_all_rules 0 [] env
+    let rec helper count acc =
+      if count >= num_prog then acc
+      else helper (count + 1) ((run_all_rules 0 [] []) :: acc) in
+
+    helper 0 []
 end;;
