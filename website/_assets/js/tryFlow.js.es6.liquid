@@ -348,11 +348,11 @@ function createEditor(
       ))
       .then(typeAtPos => {
         typeAtPosNode.title = typeAtPos ? typeAtPos[1].c : '';
-        typeAtPosNode.innerHTML = typeAtPos ? typeAtPos[1].c : '';
+        typeAtPosNode.textContent = typeAtPos ? typeAtPos[1].c : '';
       })
       .catch(() => {
         typeAtPosNode.title = '';
-        typeAtPosNode.innerHTML = '';
+        typeAtPosNode.textContent = '';
       });
     });
 
