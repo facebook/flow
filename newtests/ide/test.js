@@ -292,7 +292,8 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
             ]
           }
         ],
-      ).because('No errors should be streamed during the recheck'),
+      )
+      .because('No errors should be streamed during the recheck'),
     addCode('var newError: string = 123;')
       .ideNewMessagesWithTimeout(
         5000,
@@ -729,5 +730,429 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
         ],
       )
       .because('There are no errors'),
+  ]),
+
+
+  test('didOpen before subscribe', [
+    addFile('fileWithWarning.js'),
+    ideStart(),
+    ideNotification('didOpen', 'fileWithWarning.js')
+      .ideNoNewMessagesAfterSleep(500)
+      .because('We have not subscribed yet, so there is no response on open'),
+
+    ideNotification('subscribeToDiagnostics')
+      .ideNewMessagesWithTimeout(
+        5000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [
+                  {
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": "var x: ?boolean = true;",
+                            "descr": "Potentially null/undefined value.",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "fileWithWarning.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 8,
+                                "offset": 37
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 15,
+                                "offset": 45
+                              }
+                            },
+                            "path": "fileWithWarning.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 8,
+                            "end": 15
+                          },
+                          {
+                            "context": "var x: ?boolean = true;",
+                            "descr": "Potentially false value.",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "fileWithWarning.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 9,
+                                "offset": 38
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 15,
+                                "offset": 45
+                              }
+                            },
+                            "path": "fileWithWarning.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 9,
+                            "end": 15
+                          }
+                        ]
+                      }
+                    ],
+                    "kind": "lint",
+                    "level": "warning",
+                    "suppressions": [],
+                    "message": [
+                      {
+                        "context": "if (x) {",
+                        "descr": "sketchy-null-bool: Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "fileWithWarning.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 3,
+                            "column": 5,
+                            "offset": 58
+                          },
+                          "end": {
+                            "line": 3,
+                            "column": 5,
+                            "offset": 59
+                          }
+                        },
+                        "path": "fileWithWarning.js",
+                        "line": 3,
+                        "endline": 3,
+                        "start": 5,
+                        "end": 5
+                      }
+                    ]
+                  }
+                ],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      )
+      .because('We report warnings on subscribe for the open file'),
+  ]),
+
+  test('didOpen after subscribe', [
+    addFile('fileWithWarning.js'),
+    ideStart(),
+    ideNotification('subscribeToDiagnostics')
+      .ideNewMessagesWithTimeout(
+        5000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      )
+      .because('We do not report warnings in files that are not open'),
+
+    ideNotification('didOpen', 'fileWithWarning.js')
+      .ideNewMessagesWithTimeout(
+        5000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [
+                  {
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": "var x: ?boolean = true;",
+                            "descr": "Potentially null/undefined value.",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "fileWithWarning.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 8,
+                                "offset": 37
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 15,
+                                "offset": 45
+                              }
+                            },
+                            "path": "fileWithWarning.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 8,
+                            "end": 15
+                          },
+                          {
+                            "context": "var x: ?boolean = true;",
+                            "descr": "Potentially false value.",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "fileWithWarning.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 9,
+                                "offset": 38
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 15,
+                                "offset": 45
+                              }
+                            },
+                            "path": "fileWithWarning.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 9,
+                            "end": 15
+                          }
+                        ]
+                      }
+                    ],
+                    "kind": "lint",
+                    "level": "warning",
+                    "suppressions": [],
+                    "message": [
+                      {
+                        "context": "if (x) {",
+                        "descr": "sketchy-null-bool: Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "fileWithWarning.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 3,
+                            "column": 5,
+                            "offset": 58
+                          },
+                          "end": {
+                            "line": 3,
+                            "column": 5,
+                            "offset": 59
+                          }
+                        },
+                        "path": "fileWithWarning.js",
+                        "line": 3,
+                        "endline": 3,
+                        "start": 5,
+                        "end": 5
+                      }
+                    ]
+                  }
+                ],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      )
+      .because('We should receive the warning when we open the file'),
+
+      ideNotification('didOpen', 'fileWithWarning.js')
+        .ideNoNewMessagesAfterSleep(500)
+        .because(
+          'When we open an already open file, we dont get the current errors',
+        ),
+  ]),
+
+  test('didClose before subscribe', [
+    addFile('fileWithWarning.js'),
+    ideStart(),
+    ideNotification('didOpen', 'fileWithWarning.js')
+      .ideNotification('didClose', 'fileWithWarning.js')
+      .ideNoNewMessagesAfterSleep(500)
+      .because(
+        'We have not subscribed yet, so there is no response on open or close',
+      ),
+
+    ideNotification('subscribeToDiagnostics')
+      .ideNewMessagesWithTimeout(
+        5000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      )
+      .because('We closed the file, so we dont report the warning'),
+  ]),
+
+  test('didClose after subscribe', [
+    addFile('fileWithWarning.js'),
+    ideStart(),
+    ideNotification('subscribeToDiagnostics')
+      .ideNewMessagesWithTimeout(
+        5000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      )
+      .because('Subscribing gives us the current errors'),
+
+    ideNotification('didOpen', 'fileWithWarning.js')
+      .ideNewMessagesWithTimeout(
+        5000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [
+                  {
+                    "extra": [
+                      {
+                        "message": [
+                          {
+                            "context": "var x: ?boolean = true;",
+                            "descr": "Potentially null/undefined value.",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "fileWithWarning.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 8,
+                                "offset": 37
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 15,
+                                "offset": 45
+                              }
+                            },
+                            "path": "fileWithWarning.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 8,
+                            "end": 15
+                          },
+                          {
+                            "context": "var x: ?boolean = true;",
+                            "descr": "Potentially false value.",
+                            "type": "Blame",
+                            "loc": {
+                              "source": "fileWithWarning.js",
+                              "type": "SourceFile",
+                              "start": {
+                                "line": 2,
+                                "column": 9,
+                                "offset": 38
+                              },
+                              "end": {
+                                "line": 2,
+                                "column": 15,
+                                "offset": 45
+                              }
+                            },
+                            "path": "fileWithWarning.js",
+                            "line": 2,
+                            "endline": 2,
+                            "start": 9,
+                            "end": 15
+                          }
+                        ]
+                      }
+                    ],
+                    "kind": "lint",
+                    "level": "warning",
+                    "suppressions": [],
+                    "message": [
+                      {
+                        "context": "if (x) {",
+                        "descr": "sketchy-null-bool: Sketchy null check on boolean value. Perhaps you meant to check for null instead of for existence?",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "fileWithWarning.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 3,
+                            "column": 5,
+                            "offset": 58
+                          },
+                          "end": {
+                            "line": 3,
+                            "column": 5,
+                            "offset": 59
+                          }
+                        },
+                        "path": "fileWithWarning.js",
+                        "line": 3,
+                        "endline": 3,
+                        "start": 5,
+                        "end": 5
+                      }
+                    ]
+                  }
+                ],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      )
+      .because('When we open a new file we get the current errors'),
+
+    ideNotification('didClose', 'fileWithWarning.js')
+      .ideNewMessagesWithTimeout(
+        5000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      )
+      .because('When we close a new file we get the current errors'),
+
+    ideNotification('didClose', 'fileWithWarning.js')
+      .ideNoNewMessagesAfterSleep(500)
+      .because(
+        'When we close an already closed file, we dont get the current errors',
+      ),
   ]),
 ]);
