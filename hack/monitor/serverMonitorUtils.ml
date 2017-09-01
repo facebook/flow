@@ -96,9 +96,6 @@ type ide_client_type =
 let send_ide_client_type oc (t : ide_client_type)=
   Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc) t
 
-exception Server_shutting_down
-exception Last_server_died
-
 (* Message we send to the --waiting-client *)
 let ready = "ready"
 
