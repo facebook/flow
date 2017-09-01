@@ -1,11 +1,14 @@
 /* @flow */
 
 import type {FlowResult} from '../flowResult';
+import type {IDEMessage} from './ide';
 
 export interface StepEnvWriteable {
   reportStdout(output: string): void;
   reportStderr(output: string): void;
   reportExitCode(code: number): void;
+  setIDEMessages(messages: Array<IDEMessage>): void;
+  setIDEStderr(stderr: string): void;
   setNewErrors(errors: FlowResult): void;
   setServerPid(pid: ?number): void;
   triggerFlowCheck(): void;
@@ -15,6 +18,8 @@ export interface StepEnvReadable {
   getStdout(): string;
   getStderr(): string;
   getExitCodes(): Array<number>;
+  getIDEMessages(): Array<IDEMessage>;
+  getIDEStderr(): string;
   getOldErrors(): FlowResult;
   getNewErrors(): FlowResult;
   getServerPid(): ?number;
@@ -30,6 +35,8 @@ export function newEnv(
   let newErrors = oldErrors;
   let serverPid = undefined;
   let shouldRunFlow = false;
+  let ideMessages = [];
+  let ideStderr = "";
 
   const envWrite = {
     reportStdout(output) {
@@ -42,6 +49,14 @@ export function newEnv(
 
     reportExitCode(code) {
       exitCodes.push(code);
+    },
+
+    setIDEMessages(messages) {
+      ideMessages = messages;
+    },
+
+    setIDEStderr(stderr) {
+      ideStderr = stderr;
     },
 
     setNewErrors(errors) {
@@ -68,6 +83,14 @@ export function newEnv(
 
     getExitCodes() {
       return exitCodes.slice();
+    },
+
+    getIDEMessages() {
+      return ideMessages;
+    },
+
+    getIDEStderr() {
+      return ideStderr;
     },
 
     getOldErrors() {

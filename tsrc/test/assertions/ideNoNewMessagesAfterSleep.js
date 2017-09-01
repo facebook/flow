@@ -4,22 +4,22 @@ import {format} from 'util';
 
 import colors from 'colors/safe';
 
-import {difference, prettyPrint} from '../../flowResult';
-
 import type {
   AssertionLocation,
   ErrorAssertion,
   ErrorAssertionResult
 } from './assertionTypes';
-import type {FlowResult} from '../../flowResult';
 
-export default function(assertLoc: ?AssertionLocation): ErrorAssertion {
+export default function(
+  timeoutMs: number,
+  assertLoc: ?AssertionLocation,
+): ErrorAssertion {
   return (
     reason: ?string,
     env,
   ): ErrorAssertionResult => {
-    const brandNew = difference(env.getNewErrors(), env.getOldErrors());
-    if (!brandNew.passed) {
+    const actual = env.getIDEMessages();
+    if (actual.length > 0) {
       const locMessage = assertLoc == null ? [] : [format(
         colors.white("%s line %d col %d"),
         assertLoc.filename,
@@ -27,11 +27,11 @@ export default function(assertLoc: ?AssertionLocation): ErrorAssertion {
         assertLoc.column,
       )];
       const keyMessage = [
-        colors.green("Actual new errors (+)") +
-        colors.grey(" didn't match expected no new errors")
+        colors.green("Actual IDE messages (+)") +
+        colors.grey(" didn't match expected no new IDE messages")
       ];
       const errorMessages =
-        prettyPrint(brandNew)
+        JSON.stringify(actual, null, 2)
           .split("\n")
           .map(line => colors.green("+ " + line));
       const reasonMessage = reason == null ? [] : [format(
@@ -45,8 +45,8 @@ export default function(assertLoc: ?AssertionLocation): ErrorAssertion {
         errorMessages,
       );
       const suggestion = {
-        method: 'newErrors',
-        args: [prettyPrint(brandNew)],
+        method: 'ideNewMessagesWithTimeout',
+        args: [timeoutMs * 10, actual],
       };
 
       return {type: 'fail', messages, assertLoc, suggestion};
