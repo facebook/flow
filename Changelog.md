@@ -71,7 +71,7 @@ Likely to cause new Flow errors:
 
 * Flow used to completely ignore the type of React children in many
   places. Intrinsic elements did not check the type of their children (like
-  <div>), the type specified by components for React children would be ignored
+  `<div>`), the type specified by components for React children would be ignored
   when you created React elements, and the React.Children API was typed as
   any.
 
