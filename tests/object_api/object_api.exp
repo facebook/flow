@@ -79,8 +79,8 @@ Error: object_prototype.js:38
 Error: object_prototype.js:39
  39: var xToString2 : () => number = x.toString; // error
                             ^^^^^^ number. This type is incompatible with
- 70:     toString(): string;
-                     ^^^^^^ string. See lib: <BUILTINS>/core.js:70
+ 71:     toString(): string;
+                     ^^^^^^ string. See lib: <BUILTINS>/core.js:71
 
 Error: object_prototype.js:43
  43: var yToString : number = y.toString; // error
@@ -97,14 +97,14 @@ Error: object_prototype.js:49
 Error: object_prototype.js:51
  51: (123).toString('foo'); // error
                     ^^^^^ string. This type is incompatible with the expected param type of
-160:     toString(radix?: number): string;
-                          ^^^^^^ number. See lib: <BUILTINS>/core.js:160
+161:     toString(radix?: number): string;
+                          ^^^^^^ number. See lib: <BUILTINS>/core.js:161
 
 Error: object_prototype.js:52
  52: (123).toString(null); // error
                     ^^^^ null. This type is incompatible with the expected param type of
-160:     toString(radix?: number): string;
-                          ^^^^^^ number. See lib: <BUILTINS>/core.js:160
+161:     toString(radix?: number): string;
+                          ^^^^^^ number. See lib: <BUILTINS>/core.js:161
 
 Error: object_prototype.js:68
  68: b.hasOwnProperty = function() { return false; };
@@ -121,8 +121,8 @@ Error: object_prototype.js:71
 Error: object_prototype.js:72
  72: var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
                                               ^^^^^^ number. This type is incompatible with
- 66:     hasOwnProperty(prop: any): boolean;
-                                    ^^^^^^^ boolean. See lib: <BUILTINS>/core.js:66
+ 67:     hasOwnProperty(prop: any): boolean;
+                                    ^^^^^^^ boolean. See lib: <BUILTINS>/core.js:67
 
 Error: object_prototype.js:76
  76: var yHasOwnProperty : number = y.hasOwnProperty; // error
@@ -145,8 +145,8 @@ Error: object_prototype.js:96
 Error: object_prototype.js:97
  97: var xPropertyIsEnumerable2 : (prop: string) => number =
                                                     ^^^^^^ number. This type is incompatible with
- 68:     propertyIsEnumerable(prop: any): boolean;
-                                          ^^^^^^^ boolean. See lib: <BUILTINS>/core.js:68
+ 69:     propertyIsEnumerable(prop: any): boolean;
+                                          ^^^^^^^ boolean. See lib: <BUILTINS>/core.js:69
 
 Error: object_prototype.js:102
 102: var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
@@ -187,8 +187,8 @@ Error: object_prototype.js:150
 Error: object_prototype.js:151
 151: var xToLocaleString2 : () => number = x.toLocaleString; // error
                                   ^^^^^^ number. This type is incompatible with
-423:     toLocaleString(locales?: string | Array<string>, options?: Date$LocaleOptions): string;
-                                                                                         ^^^^^^ string. See lib: <BUILTINS>/core.js:423
+424:     toLocaleString(locales?: string | Array<string>, options?: Date$LocaleOptions): string;
+                                                                                         ^^^^^^ string. See lib: <BUILTINS>/core.js:424
 
 Error: object_prototype.js:155
 155: var yToLocaleString : number = y.toLocaleString; // error
