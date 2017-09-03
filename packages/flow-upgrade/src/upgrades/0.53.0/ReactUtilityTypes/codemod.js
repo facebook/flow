@@ -68,16 +68,48 @@ module.exports = (j, root) => {
   function visitImportDeclaration(path) {
     const node = path.node;
 
-    // import React from 'react'; ==> import * as React from 'react';
     if (
       node.importKind === 'value' &&
       node.source &&
       node.source.type === 'Literal' &&
       node.source.value === 'react' &&
-      node.specifiers.length === 1 &&
       node.specifiers[0].type === 'ImportDefaultSpecifier'
     ) {
-      node.specifiers[0] = j.importNamespaceSpecifier(node.specifiers[0].local);
+      const reactImportName = node.specifiers[0].local;
+      if (node.specifiers.length === 1) {
+        // import React from 'react'; ==> import * as React from 'react';
+        node.specifiers[0] = j.importNamespaceSpecifier(reactImportName);
+      } else {
+        // import React, { Component as ReactComponent } from 'react';
+        // class SomeComponent extends ReactComponent {}
+        // ==>
+        // import * as React from 'react';
+        // class SomeComponent extends React.Component {}
+        const namedImportsToQualifiedIdentifiers = new Map();
+        const namedImports = node.specifiers
+          .slice(1)
+          .map(sp => [sp.imported.name, sp.local.name]);
+        namedImports.forEach(([importName, localName]) => {
+          namedImportsToQualifiedIdentifiers.set(localName, importName);
+        });
+        node.specifiers = [j.importNamespaceSpecifier(reactImportName)];
+
+        root
+          .find(j.Identifier)
+          .filter(path =>
+            namedImportsToQualifiedIdentifiers.has(path.node.name)
+          )
+          .forEach(path => {
+            path.replace(
+              j.qualifiedTypeIdentifier(
+                j.identifier(reactImportName.name),
+                j.identifier(
+                  namedImportsToQualifiedIdentifiers.get(path.node.name)
+                )
+              )
+            );
+          });
+      }
     }
 
     // Continue traversal if we do not want to apply a transformation to
