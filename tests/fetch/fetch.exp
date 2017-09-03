@@ -502,8 +502,8 @@ Error: response.js:30
   918: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                                                                   ^^^^^^^^^^^^^^^^ union: $TypedArray | DataView. See lib: <BUILTINS>/bom.js:918
     Member 1:
-    631: type $ArrayBufferView = $TypedArray | DataView;
-                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:631
+    644: type $ArrayBufferView = $TypedArray | DataView;
+                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:644
     Error:
                                           v
      30: const i: Response = new Response({
@@ -512,11 +512,11 @@ Error: response.js:30
     ...:
      35: }); // incorrect
          ^ object literal. This type is incompatible with
-    631: type $ArrayBufferView = $TypedArray | DataView;
-                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:631
+    644: type $ArrayBufferView = $TypedArray | DataView;
+                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:644
     Member 2:
-    631: type $ArrayBufferView = $TypedArray | DataView;
-                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:631
+    644: type $ArrayBufferView = $TypedArray | DataView;
+                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:644
     Error:
                                           v
      30: const i: Response = new Response({
@@ -525,8 +525,8 @@ Error: response.js:30
     ...:
      35: }); // incorrect
          ^ object literal. This type is incompatible with
-    631: type $ArrayBufferView = $TypedArray | DataView;
-                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:631
+    644: type $ArrayBufferView = $TypedArray | DataView;
+                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:644
 
 Error: response.js:42
  42: h.text().then((t: Buffer) => t); // incorrect
