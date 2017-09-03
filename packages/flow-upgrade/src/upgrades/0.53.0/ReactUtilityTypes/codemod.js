@@ -73,6 +73,7 @@ module.exports = (j, root) => {
       node.source &&
       node.source.type === 'Literal' &&
       node.source.value === 'react' &&
+      node.specifiers.length >= 1 &&
       node.specifiers[0].type === 'ImportDefaultSpecifier'
     ) {
       const reactImportName = node.specifiers[0].local;
