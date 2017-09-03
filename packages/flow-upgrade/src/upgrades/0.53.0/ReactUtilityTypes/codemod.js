@@ -87,12 +87,12 @@ module.exports = (j, root) => {
         // import * as React from 'react';
         // class SomeComponent extends React.Component {}
         const namedImportsToQualifiedIdentifiers = new Map();
-        const namedImports = node.specifiers
+        node.specifiers
           .slice(1)
-          .map(sp => [sp.imported.name, sp.local.name]);
-        namedImports.forEach(([importName, localName]) => {
-          namedImportsToQualifiedIdentifiers.set(localName, importName);
-        });
+          .map(sp => [sp.imported.name, sp.local.name])
+          .forEach(([importName, localName]) => {
+            namedImportsToQualifiedIdentifiers.set(localName, importName);
+          });
         node.specifiers = [j.importNamespaceSpecifier(reactImportName)];
 
         root
