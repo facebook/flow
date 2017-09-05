@@ -1478,6 +1478,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | ChoiceKitT (_, Trigger), ChoiceKitUseT (reason, TryFlow (i, spec)) ->
       speculative_matches cx trace reason i spec
 
+    | ChoiceKitT (_, Trigger), ChoiceKitUseT (r, EvalDestructor (id, d, tout)) ->
+      (match find_graph cx id with
+      | Resolved t ->
+        let eval = EvalT (t, TypeDestructorT (r, d), mk_id ()) in
+        rec_flow_t cx trace (eval, tout)
+      | Unresolved _ ->
+        add_output cx ~trace FlowError.(EInternal
+          (loc_of_reason r, UnexpectedUnresolved id));
+        rec_flow_t cx trace (AnyT.why r, tout))
+
     (* Intersection types need a preprocessing step before they can be checked;
        this step brings it closer to parity with the checking of union types,
        where the preprocessing effectively happens "automatically." This
@@ -6659,6 +6669,15 @@ and eval_destructor cx ~trace reason curr_t s i =
     mk_tvar_where cx reason (fun tvar ->
       Context.set_evaluated cx (IMap.add i tvar evaluated);
       match curr_t with
+      (* The type this annotation resolves to might be a union-like type which
+         requires special handling (see below). However, the tvar inside the
+         AnnotT might not be resolved yet. *)
+      | AnnotT t ->
+        (* Use full type resolution to wait for the tvar to become resolved. *)
+        let _, id = open_tvar t in
+        let k = tvar_with_constraint cx ~trace
+          (choice_kit_use reason (EvalDestructor (id, s, tvar))) in
+        resolve_bindings_init cx trace reason [(id,t)] k
       (* If we are destructuring a union, evaluating the destructor on the union
          itself may have the effect of splitting the union into separate lower
          bounds, which prevents the speculative match process from working.

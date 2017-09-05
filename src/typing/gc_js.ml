@@ -456,6 +456,10 @@ and gc_type_map cx state = function
 and gc_choice_use_tool cx state = function
   | FullyResolveType _ -> ()
   | TryFlow (_, spec) -> gc_spec cx state spec
+  | EvalDestructor (id, d, tout) ->
+    gc_id cx state id;
+    gc_destructor cx state d;
+    gc cx state tout
 
 and gc_spec cx state = function
   | UnionCases (t, ts) ->
