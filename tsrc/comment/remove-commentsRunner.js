@@ -2,7 +2,7 @@
 
 import {join} from 'path';
 
-import getFlowErrors from './getFlowErrors';
+import {getFlowErrorsWithWarnings} from './getFlowErrors';
 
 import {readFile, writeFile} from '../async';
 
@@ -15,7 +15,7 @@ type Loc = {
 };
 
 async function getErrors(args: Args): Promise<Map<string, Array<Loc>>> {
-  const result = await getFlowErrors(
+  const result = await getFlowErrorsWithWarnings(
     args.bin,
     args.errorCheckCommand,
     args.root,
