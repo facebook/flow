@@ -19,20 +19,20 @@ Error: caching_bug.js:21
 Error: iterator_result.js:23
  23:         return { done, value: "still going..." }; // Error string ~> void
                       ^^^^ boolean. Expected boolean literal `false`, got `true` instead
-497:   | { done: false, value: Yield };
-                 ^^^^^ boolean literal `false`. See lib: <BUILTINS>/core.js:497
+511:   | { done: false, value: Yield };
+                 ^^^^^ boolean literal `false`. See lib: <BUILTINS>/core.js:511
 
 Error: iterator_result.js:25
  25:         return { done }; // Error void ~> string
                       ^^^^ boolean. Expected boolean literal `true`, got `false` instead
-496:   | { done: true, value?: Return }
-                 ^^^^ boolean literal `true`. See lib: <BUILTINS>/core.js:496
+510:   | { done: true, value?: Return }
+                 ^^^^ boolean literal `true`. See lib: <BUILTINS>/core.js:510
 
 Error: map.js:13
  13: function mapTest4(map: Map<number, string>): Iterable<string> {
                                                            ^^^^^^ string. This type is incompatible with
-544:     @@iterator(): Iterator<[K, V]>;
-                                ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:544
+558:     @@iterator(): Iterator<[K, V]>;
+                                ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:558
 
 Error: set.js:13
  13: function setTest4(set: Set<string>): Iterable<number> {
@@ -43,8 +43,8 @@ Error: set.js:13
 Error: string.js:5
   5: ("hi": Iterable<number>); // Error - string is a Iterable<string>
                      ^^^^^^ number. This type is incompatible with
-291:     @@iterator(): Iterator<string>;
-                                ^^^^^^ string. See lib: <BUILTINS>/core.js:291
+305:     @@iterator(): Iterator<string>;
+                                ^^^^^^ string. See lib: <BUILTINS>/core.js:305
 
 
 Found 8 errors
