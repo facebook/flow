@@ -929,6 +929,7 @@ module rec TypeTerm : sig
   and choice_use_tool =
   | FullyResolveType of ident
   | TryFlow of int * spec
+  | EvalDestructor of int * destructor * t_out
 
   and intersection_preprocess_tool =
   | ConcretizeTypes of t list * t list * t * use_t
@@ -2297,6 +2298,7 @@ let string_of_use_ctor = function
     spf "ChoiceKitUseT %s" begin match tool with
     | FullyResolveType _ -> "FullyResolveType"
     | TryFlow _ -> "TryFlow"
+    | EvalDestructor _ -> "EvalDestructor"
     end
   | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"
   | CJSRequireT _ -> "CJSRequireT"
@@ -2478,7 +2480,7 @@ let extends_type l u =
   let reason = replace_reason (fun desc -> RExtends desc) (reason_of_t u) in
   ExtendsT (reason, [], l, u)
 
-let poly_type ?(id = mk_id ()) tparams t =
+let poly_type id tparams t =
   if tparams = []
   then t
   else

@@ -29,15 +29,25 @@ Error: annot.js:8
 
 Error: annot.js:10
  10: var arr: Array<number> = [1,2,"..."];
-                                   ^^^^^ string. This type is incompatible with
+                              ^^^^^^^^^^^ array literal. Has some incompatible type argument with
  10: var arr: Array<number> = [1,2,"..."];
-                    ^^^^^^ number
+              ^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     10: var arr: Array<number> = [1,2,"..."];
+                                       ^^^^^ string. This type is incompatible with
+     10: var arr: Array<number> = [1,2,"..."];
+                        ^^^^^^ number
 
 Error: annot.js:13
  13: var array: number[] = [1,2,"..."];
-                                ^^^^^ string. This type is incompatible with
+                           ^^^^^^^^^^^ array literal. Has some incompatible type argument with
  13: var array: number[] = [1,2,"..."];
-                ^^^^^^ number
+                ^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     13: var array: number[] = [1,2,"..."];
+                                    ^^^^^ string. This type is incompatible with
+     13: var array: number[] = [1,2,"..."];
+                    ^^^^^^ number
 
 Error: annot.js:27
  27: var test_obj: ObjType = { 'bar-foo': '23' };

@@ -1478,6 +1478,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | ChoiceKitT (_, Trigger), ChoiceKitUseT (reason, TryFlow (i, spec)) ->
       speculative_matches cx trace reason i spec
 
+    | ChoiceKitT (_, Trigger), ChoiceKitUseT (r, EvalDestructor (id, d, tout)) ->
+      (match find_graph cx id with
+      | Resolved t ->
+        let eval = EvalT (t, TypeDestructorT (r, d), mk_id ()) in
+        rec_flow_t cx trace (eval, tout)
+      | Unresolved _ ->
+        add_output cx ~trace FlowError.(EInternal
+          (loc_of_reason r, UnexpectedUnresolved id));
+        rec_flow_t cx trace (AnyT.why r, tout))
+
     (* Intersection types need a preprocessing step before they can be checked;
        this step brings it closer to parity with the checking of union types,
        where the preprocessing effectively happens "automatically." This
@@ -1670,7 +1680,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, PolyT(typeparams, ((DefT (_, ClassT _) | DefT (_, FunT _)) as lower_t), id)),
       ImportTypeofT(reason, _, t) ->
       let typeof_t = mk_typeof_annotation cx ~trace reason lower_t in
-      rec_flow_t cx trace (poly_type ~id typeparams (DefT (reason, TypeT typeof_t)), t)
+      rec_flow_t cx trace (poly_type id typeparams (DefT (reason, TypeT typeof_t)), t)
 
     | (DefT (_, TypeT _) | DefT (_, PolyT(_, DefT (_, TypeT _), _))),
       ImportTypeofT(reason, export_name, _) ->
@@ -3407,7 +3417,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let super = ObjProtoT r in
       let instance = DefT (r, InstanceT (static, super, [], insttype)) in
       rec_flow cx trace (
-        poly_type xs (this_class_type instance),
+        poly_type (mk_nominal cx) xs (this_class_type instance),
         UseT (UnknownUse, tvar)
       )
 
@@ -4053,15 +4063,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* Arrays can flow to arrays *)
     | DefT (r1, ArrT (ArrayAT (t1, ts1))),
-      UseT (_, DefT (_, ArrT (ArrayAT (t2, ts2)))) ->
+      UseT (use_op, DefT (r2, ArrT (ArrayAT (t2, ts2)))) ->
+      let use_op = use_op_break_cycle (TypeArgCompatibility ("T", r1, r2, use_op)) in
       let lit1 = (desc_of_reason r1) = RArrayLit in
       let ts1 = Option.value ~default:[] ts1 in
       let ts2 = Option.value ~default:[] ts2 in
-      array_flow cx trace lit1 r1 (ts1, t1, ts2, t2)
+      array_flow cx trace use_op lit1 r1 (ts1, t1, ts2, t2)
 
     (* Tuples can flow to tuples with the same arity *)
     | DefT (r1, ArrT (TupleAT (_, ts1))),
-      UseT (_, DefT (r2, ArrT (TupleAT (_, ts2)))) ->
+      UseT (use_op, DefT (r2, ArrT (TupleAT (_, ts2)))) ->
       let fresh = (desc_of_reason r1) = RArrayLit in
       let l1 = List.length ts1 in
       let l2 = List.length ts2 in
@@ -4070,7 +4081,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       iter2opt (fun t1 t2 ->
         match t1, t2 with
         | Some t1, Some t2 ->
-          flow_to_mutable_child cx trace fresh t1 t2
+          flow_to_mutable_child cx trace use_op fresh t1 t2
         | _ -> ()
       ) (ts1, ts2);
 
@@ -6659,6 +6670,15 @@ and eval_destructor cx ~trace reason curr_t s i =
     mk_tvar_where cx reason (fun tvar ->
       Context.set_evaluated cx (IMap.add i tvar evaluated);
       match curr_t with
+      (* The type this annotation resolves to might be a union-like type which
+         requires special handling (see below). However, the tvar inside the
+         AnnotT might not be resolved yet. *)
+      | AnnotT t ->
+        (* Use full type resolution to wait for the tvar to become resolved. *)
+        let _, id = open_tvar t in
+        let k = tvar_with_constraint cx ~trace
+          (choice_kit_use reason (EvalDestructor (id, s, tvar))) in
+        resolve_bindings_init cx trace reason [(id,t)] k
       (* If we are destructuring a union, evaluating the destructor on the union
          itself may have the effect of splitting the union into separate lower
          bounds, which prevents the speculative match process from working.
@@ -6957,16 +6977,16 @@ and canonicalize_imported_type cx trace reason t =
     Some (DefT (reason, TypeT prototype))
 
   | DefT (_, PolyT (typeparams, DefT (_, ClassT inst), id)) ->
-    Some (poly_type ~id typeparams (DefT (reason, TypeT inst)))
+    Some (poly_type id typeparams (DefT (reason, TypeT inst)))
 
   | DefT (_, PolyT (typeparams, DefT (_, FunT (_, prototype, _)), id)) ->
-    Some (poly_type ~id typeparams (DefT (reason, TypeT prototype)))
+    Some (poly_type id typeparams (DefT (reason, TypeT prototype)))
 
   (* delay fixing a polymorphic this-abstracted class until it is specialized,
      by transforming the instance type to a type application *)
   | DefT (_, PolyT (typeparams, ThisClassT _, id)) ->
     let targs = List.map (fun tp -> BoundT tp) typeparams in
-    Some (poly_type ~id typeparams (class_type (typeapp t targs)))
+    Some (poly_type id typeparams (class_type (typeapp t targs)))
 
   | DefT (_, PolyT (_, DefT (_, TypeT _), _)) ->
     Some t
@@ -9002,10 +9022,10 @@ and naive_unify cx trace ?(use_op=UnknownUse) t1 t2 =
    in which case covariant typing is sound (since no alias
    will break if the subtyped child value is replaced by a
    non-subtyped value *)
-and flow_to_mutable_child cx trace fresh t1 t2 =
+and flow_to_mutable_child cx trace use_op fresh t1 t2 =
   if fresh
-  then rec_flow_t cx trace (t1, t2)
-  else rec_unify cx trace t1 t2
+  then rec_flow cx trace (t1, UseT (use_op, t2))
+  else rec_unify cx trace ~use_op t1 t2
 
 (* Subtyping of arrays is complicated by tuples. Currently, there are three
    different kinds of types, all encoded by arrays:
@@ -9051,26 +9071,26 @@ and flow_to_mutable_child cx trace fresh t1 t2 =
    * Array<X>[T1, T2] ~> Array<Y>[U1, U2] checks [T1, T2] ~> Array<Y>[U1, U2]
 
 *)
-and array_flow cx trace lit1 r1 ?(index=0) = function
+and array_flow cx trace use_op lit1 r1 ?(index=0) = function
   (* empty array / array literal / tuple flowing to array / array literal /
      tuple (includes several cases, analyzed below) *)
   | [], e1, _, e2 ->
     (* if lower bound is an empty array / array literal *)
     if index = 0 then
       (* general element1 = general element2 *)
-      flow_to_mutable_child cx trace lit1 e1 e2
+      flow_to_mutable_child cx trace use_op lit1 e1 e2
     (* otherwise, lower bound is an empty tuple (nothing to do) *)
 
   (* non-empty array literal / tuple ~> empty array / array literal / tuple *)
   | _, e1, [], e2 ->
     (* general element1 < general element2 *)
-    rec_flow_t cx trace (e1, e2)
+    rec_flow cx trace (e1, UseT (use_op, e2))
 
   (* non-empty array literal / tuple ~> non-empty array literal / tuple *)
   | t1 :: ts1, e1, t2 :: ts2, e2 ->
     (* specific element1 = specific element2 *)
-    flow_to_mutable_child cx trace lit1 t1 t2;
-    array_flow cx trace lit1 r1 ~index:(index+1) (ts1,e1, ts2,e2)
+    flow_to_mutable_child cx trace use_op lit1 t1 t2;
+    array_flow cx trace use_op lit1 r1 ~index:(index+1) (ts1,e1, ts2,e2)
 
 (* TODO: either ensure that array_unify is the same as array_flow both ways, or
    document why not. *)

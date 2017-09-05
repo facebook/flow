@@ -541,7 +541,11 @@ class ['a] t = object(self)
       | IntersectionCases (ts, use) ->
         let acc = List.fold_left (self#type_ cx) acc ts in
         let acc = self#use_type_ cx acc use in
-        acc))
+        acc)
+    | EvalDestructor (_, d, tout) ->
+      let acc = self#destructor cx acc d in
+      let acc = self#type_ cx acc tout in
+      acc)
 
   | IntersectionPreprocessKitT (_, tool) -> (match tool with
     | ConcretizeTypes (ts1, ts2, t, use) ->

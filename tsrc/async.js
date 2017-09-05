@@ -226,9 +226,9 @@ export function isRunning(pid: number): Promise<boolean> {
   });
 }
 
-export function sleep(timeout: number): Promise<void> {
+export function sleep(timeoutMs: number): Promise<void> {
   return new Promise((resolve) => {
-    setTimeout(resolve, timeout);
+    setTimeout(resolve, timeoutMs);
   });
 }
 

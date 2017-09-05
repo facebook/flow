@@ -164,11 +164,11 @@ let functiontype cx this_t {reason; kind; tparams; params; return_t; _} =
     def_reason = reason;
   } in
   let t = DefT (reason, FunT (static, prototype, funtype)) in
-  let t = poly_type tparams t in
+  let t = poly_type (Flow.mk_nominal cx) tparams t in
   Flow.unify cx t knot;
   t
 
-let methodtype {reason; tparams; params; return_t; _} =
+let methodtype cx {reason; tparams; params; return_t; _} =
   let params_tlist = Func_params.tlist params in
   let params_names = Func_params.names params in
   let rest_param = Func_params.rest params in
@@ -179,7 +179,7 @@ let methodtype {reason; tparams; params; return_t; _} =
     Flow.mk_boundfunctiontype
       params_tlist ~rest_param ~def_reason ~params_names return_t
   )) in
-  poly_type tparams t
+  poly_type (Flow.mk_nominal cx) tparams t
 
 let gettertype ({return_t; _}: t) = return_t
 

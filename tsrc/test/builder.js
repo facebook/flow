@@ -1,10 +1,15 @@
 /* @flow */
 
-import {execSync} from 'child_process';
+import {execSync, spawn} from 'child_process';
 import {randomBytes} from 'crypto';
 import {tmpdir} from 'os';
 import {basename, dirname, extname, join, sep as dir_sep} from 'path';
 import {format} from 'util';
+import EventEmitter from 'events';
+
+import * as rpc from 'vscode-jsonrpc';
+
+import type {IDEMessage, RpcConnection} from './ide';
 
 import {
   appendFile,
@@ -24,12 +29,20 @@ import type {SuiteResult} from './runTestSuite';
 
 type CheckCommand = 'check' | 'status';
 
+
 export class TestBuilder {
   bin: string;
   dir: string;
   errorCheckCommand: CheckCommand;
   flowConfigFilename: string;
   server: ?number;
+  ide: null | {
+    connection: RpcConnection;
+    process: child_process$ChildProcess;
+    messages: Array<IDEMessage>;
+    stderr: Array<string>;
+    emitter: EventEmitter;
+  } = null;
   sourceDir: string;
   suiteName: string;
   tmpDir: string;
@@ -276,6 +289,132 @@ export class TestBuilder {
     }
   }
 
+  async createIDEConnection(): Promise<void> {
+    if (this.ide == null) {
+      // No-op if the server is already running
+      await this.startFlowServer();
+      const ideProcess = spawn(
+        this.bin,
+        [
+          'ide',
+          '--protocol', 'very-unstable',
+          '--no-auto-start',
+          '--strip-root',
+          '--temp-dir', this.tmpDir,
+          '--root', this.dir,
+        ],
+        {
+          // Useful for debugging flow ide
+          // stdio: ["pipe", "pipe", process.stderr],
+          cwd: this.dir,
+        }
+      );
+      const connection = rpc.createMessageConnection(
+        new rpc.StreamMessageReader(ideProcess.stdout),
+        new rpc.StreamMessageWriter(ideProcess.stdin),
+      );
+      connection.listen();
+
+      ideProcess.on('exit', () => this.cleanupIDEConnection());
+      ideProcess.on('close', () => this.cleanupIDEConnection());
+
+      const emitter = new EventEmitter;
+
+      const messages = [];
+      connection.onNotification((method: string, ...params: Array<mixed>) => {
+        params.forEach(param => {
+          if (typeof param === "object" && param && param.flowVersion) {
+            param.flowVersion = "<VERSION STUBBED FOR TEST>";
+          }
+        });
+        messages.push({method, params});
+        emitter.emit('notification', {method, params});
+      });
+
+      const stderr = [];
+      ideProcess.stderr.on('data', (data) => stderr.push(data.toString()));
+
+      this.ide = { process: ideProcess, connection, messages, stderr, emitter };
+    }
+  }
+
+  cleanupIDEConnection(): void {
+    const ide = this.ide;
+    if (ide != null) {
+      ide.process.stdin.end();
+      ide.process.kill();
+      ide.connection.dispose();
+      this.ide = null;
+    }
+  }
+
+  sendIDENotification(methodName: string, args: Array<mixed>): void {
+    if (this.ide != null) {
+      this.ide.connection.sendNotification(methodName, ...args);
+    }
+  }
+
+  async sendIDERequest(methodName: string, args: Array<mixed>): Promise<void> {
+    const ide = this.ide;
+    if (ide != null) {
+      ide.messages.push(
+        await ide.connection.sendRequest(methodName, ...args),
+      );
+    }
+  }
+
+  ideNewMessagesWithTimeout(
+    timeoutMs: number,
+    expected: $ReadOnlyArray<IDEMessage>,
+  ): Promise<void> {
+    const ide = this.ide;
+    const messages = [...expected];
+
+    return new Promise(resolve => {
+      if (ide == null || expected.length === 0) {
+        resolve();
+        return; // Flow doesn't know resolve doesn't return
+      }
+
+      const onNotification = message => {
+        const next = messages.shift();
+        if (next != message || messages.length === 0) {
+          done();
+        }
+      };
+      const done = () => {
+        this.ide &&
+          this.ide.emitter.removeListener('notification', onNotification);
+        resolve();
+      }
+
+      setTimeout(done, timeoutMs);
+
+      ide.emitter.on('notification', onNotification);
+    });
+  }
+
+  getIDEMessages(): Array<IDEMessage> {
+    return this.ide ? [...this.ide.messages] : [];
+  }
+
+  getIDEStderr(): string {
+    return this.ide ? this.ide.stderr.join("") : "";
+  }
+
+  clearIDEMessages(): void {
+    this.ide && (this.ide.messages.splice(0, this.ide.messages.length));
+  }
+
+  clearIDEStderr(): void {
+    this.ide && (this.ide.stderr.splice(0, this.ide.stderr.length));
+  }
+
+  cleanup(): void {
+    this.cleanupIDEConnection();
+    this.stopFlowServerSync();
+  }
+
   async waitForServerToDie(timeout: number): Promise<void> {
     const pid = this.server;
     if (pid == null) {
@@ -331,8 +470,7 @@ export default class Builder {
   }
 
   cleanup = () => {
-    Builder.builders.forEach(builder => builder.stopFlowServerSync());
-    process.removeListener('exit', this.cleanup);
+    Builder.builders.forEach(builder => builder.cleanup());
   }
 
   baseDirForSuite(suiteName: string): string {

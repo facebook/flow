@@ -43,9 +43,9 @@ export default async function(
   function printStatus(status: 'RUN' | 'PASS' | 'FAIL' | 'ERROR'): void {
     let statusText = colors.grey.bold("[ ] RUN")+":  ";
     if (status === 'PASS') {
-      statusText = colors.green.bold("[✓] PASS")+": ";
+      statusText = colors.green.bold("[\u2713] PASS")+": "; // checkmark unicode
     } else if (status === 'FAIL') {
-      statusText = colors.red.bold("[✗] FAIL")+": ";
+      statusText = colors.red.bold("[\u2717] FAIL")+": "; // x unicode
     } else if (status === 'ERROR') {
       statusText = colors.bgRed(colors.white.bold("[!] ERROR"))+":";
     }
@@ -113,6 +113,8 @@ export default async function(
         if (flowErrors == null && step.needsFlowCheck()) {
           flowErrors = await testBuilder.getFlowErrors();
         }
+        testBuilder.clearIDEMessages();
+        testBuilder.clearIDEStderr();
         let { envRead, envWrite } = newEnv(flowErrors || noErrors);
 
         await step.performActions(testBuilder, envWrite);
@@ -127,6 +129,9 @@ export default async function(
         } else {
           flowErrors = null;
         }
+
+        envWrite.setIDEMessages(testBuilder.getIDEMessages());
+        envWrite.setIDEStderr(testBuilder.getIDEStderr());
 
         // expose the pid of the server to the env, so that assertions can check
         // on the server status

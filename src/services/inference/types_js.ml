@@ -450,9 +450,16 @@ let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
         ) in
       checked, errors
     ) in
+
+    (* During a normal initialization or recheck, we update the env with the errors and
+     * calculate the collated errors. However, this code is for when the server is in lazy mode,
+     * is trying to using typecheck_contents, and is making sure the dependencies are checked. Since
+     * we're messing with env.errors, we also need to set collated_errors to None. This will force
+     * us to recompute them the next time someone needs them *)
+    !env.ServerEnv.collated_errors := None;
     env := { !env with ServerEnv.
       checked_files = checked;
-      errors
+      errors;
     }
   end
 
@@ -641,7 +648,8 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
       let error_set: Errors.ErrorSet.t =
         FilenameMap.fold (fun _ -> Errors.ErrorSet.union) new_local_errors Errors.ErrorSet.empty
       in
-      Persistent_connection.update_clients env.ServerEnv.connections
+      if Errors.ErrorSet.cardinal error_set > 0
+      then Persistent_connection.update_clients env.ServerEnv.connections
         ~errors:error_set ~warnings:FilenameMap.empty
     in
     let local_errors = merge_error_maps new_local_errors errors.ServerEnv.local_errors in

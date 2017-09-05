@@ -19,7 +19,6 @@ type t =
   | Out_of_time
   | Out_of_retries
   | Server_already_exists
-  | Server_initializing
   | Type_error
   | Build_id_mismatch
   | Monitor_connection_failure
@@ -78,13 +77,12 @@ exception Exit_with of t
 let exit_code = function
   | Interrupted ->                 -6
   | No_error ->                     0
-  | Build_terminated ->             1
-  | Kill_error ->                   1
-  | Server_initializing ->          1
-  | Server_shutting_down ->         1
+  | Build_terminated ->             1 (* used in clientBuild *)
+  | Kill_error ->                   1 (* used in clientStop/Start/Restart *)
+  | Server_shutting_down ->         1 (* used in server *)
   | Build_error ->                  2 (* used in clientBuild *)
   | Type_error ->                   2 (* used in clientCheck *)
-  | Uncaught_exception ->           2 (* used in server *)
+  | Uncaught_exception ->           2 (* used in server and clientIde *)
   | Hhconfig_changed ->             4
   | Unused_server ->                5
   | No_server_running ->            6
@@ -151,7 +149,6 @@ let to_string = function
   | Out_of_time -> "Out_of_time"
   | Out_of_retries -> "Out_of_retries"
   | Server_already_exists -> "Server_already_exists"
-  | Server_initializing -> "Server_initializing"
   | Server_shutting_down -> "Server_shutting_down"
   | Type_error -> "Type_error"
   | Build_id_mismatch -> "Build_id_mismatch"

@@ -83,7 +83,7 @@ val functiontype: Context.t ->
   t -> Type.t
 
 (** Create a function type for class/interface methods. *)
-val methodtype: t -> Type.t
+val methodtype: Context.t -> t -> Type.t
 
 (** Create a type of the return expression of a getter function.
 

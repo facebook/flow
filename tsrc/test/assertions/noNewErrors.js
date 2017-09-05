@@ -6,7 +6,11 @@ import colors from 'colors/safe';
 
 import {difference, prettyPrint} from '../../flowResult';
 
-import type {AssertionLocation, ErrorAssertion, ErrorAssertionResult} from './assertionTypes';
+import type {
+  AssertionLocation,
+  ErrorAssertion,
+  ErrorAssertionResult
+} from './assertionTypes';
 import type {FlowResult} from '../../flowResult';
 
 export default function(assertLoc: ?AssertionLocation): ErrorAssertion {

@@ -44,55 +44,21 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
          profiling
     ) memory_metrics
 
-  let init ~focus_targets genv =
-    (* write binary path and version to server log *)
-    Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
-    Hh_logger.info "version=%s" Flow_version.version;
 
-    Profiling_js.with_profiling begin fun profiling ->
-      let workers = genv.ServerEnv.workers in
-      let options = genv.ServerEnv.options in
-
-      let parsed, libs, libs_ok, errors =
-        Types_js.init ~profiling ~workers options in
-
-      (* if any libs errored, we'll infer but not merge client code *)
-      let should_merge = libs_ok in
-
-      (* compute initial state *)
-      let checked, errors =
-        if Options.is_lazy_mode options then
-          CheckedSet.empty, errors
-        else
-          let parsed = FilenameSet.elements parsed in
-          Types_js.full_check ~profiling ~workers ~focus_targets ~options ~should_merge parsed errors
-      in
-
-      sample_init_memory profiling;
-
-      SharedMem_js.init_done();
-
-      (* Return an env that initializes invariants required and maintained by
-         recheck, namely that `files` contains files that parsed successfully, and
-         `errors` contains the current set of errors. *)
-      { ServerEnv.
-        files = parsed;
-        checked_files = checked;
-        libs;
-        errors;
-        connections = Persistent_connection.empty;
-      }
-    end
-
-
-  let status_log errors =
-    if Errors.ErrorSet.is_empty errors
-      then Hh_logger.info "Status: OK"
-      else Hh_logger.info "Status: Error";
-    flush stdout
-
-  (* combine error maps into a single error set and a filtered warning map *)
-  let collate_errors_separate_warnings =
+  (* combine error maps into a single error set and a filtered warning map
+   *
+   * This can be a little expensive for large repositories and can take a couple of seconds.
+   * Therefore there are a few things we want to do:
+   *
+   * 1. Memoize the result in env. This means subsequent calls to commands like `flow status` can
+   *    be fast
+   * 2. Eagerly calculate `collate_errors` after init or a recheck, so that the server still has
+   *    the init or recheck lock. If we improve how clients can tell if a server is busy or stuck
+   *    then we can probably relax this.
+   * 3. Throw away the collated errors when lazy mode's typecheck_contents adds more dependents or
+   *    dependencies to the checked set
+   **)
+  let regenerate_collated_errors =
     let open Errors in
     let open Error_suppressions in
     let add_unused_suppression_warnings checked suppressions warnings =
@@ -140,22 +106,85 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       (* union the errors from all files together, filtering suppressed errors *)
       let severity_cover = ExactCover.union_all severity_cover_set in
       let acc_fun = acc_fun severity_cover in
-      let errors, warnings, suppressed_errors, suppressions =
+      let collated_errorset, warnings, collated_suppressed_errors, suppressions =
         (ErrorSet.empty, FilenameMap.empty, [], suppressions)
         |> FilenameMap.fold acc_fun local_errors
         |> FilenameMap.fold acc_fun merge_errors
       in
 
-      let warnings =
+      let collated_warning_map =
         add_unused_suppression_warnings env.ServerEnv.checked_files suppressions warnings in
-      errors, warnings, suppressed_errors
+      { collated_errorset; collated_warning_map; collated_suppressed_errors }
+
+  let get_collated_errors_separate_warnings env =
+    let open ServerEnv in
+    let collated_errors = match !(env.collated_errors) with
+    | None ->
+      let collated_errors = regenerate_collated_errors env in
+      env.collated_errors := Some collated_errors;
+      collated_errors
+    | Some collated_errors ->
+      collated_errors
+    in
+    let { collated_errorset; collated_warning_map; collated_suppressed_errors } = collated_errors in
+    (collated_errorset, collated_warning_map, collated_suppressed_errors)
 
   (* combine error maps into a single error set and a single warning set *)
-  let collate_errors env =
+  let get_collated_errors env =
     let open Errors in
-    let errors, warning_map, suppressed_errors = collate_errors_separate_warnings env in
+    let errors, warning_map, suppressed_errors = get_collated_errors_separate_warnings env in
     let warnings = FilenameMap.fold (fun _key -> ErrorSet.union) warning_map ErrorSet.empty in
     (errors, warnings, suppressed_errors)
+
+  let init ~focus_targets genv =
+    (* write binary path and version to server log *)
+    Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
+    Hh_logger.info "version=%s" Flow_version.version;
+
+    Profiling_js.with_profiling begin fun profiling ->
+      let workers = genv.ServerEnv.workers in
+      let options = genv.ServerEnv.options in
+
+      let parsed, libs, libs_ok, errors =
+        Types_js.init ~profiling ~workers options in
+
+      (* if any libs errored, we'll infer but not merge client code *)
+      let should_merge = libs_ok in
+
+      (* compute initial state *)
+      let checked, errors =
+        if Options.is_lazy_mode options then
+          CheckedSet.empty, errors
+        else
+          let parsed = FilenameSet.elements parsed in
+          Types_js.full_check ~profiling ~workers ~focus_targets ~options ~should_merge parsed errors
+      in
+
+      sample_init_memory profiling;
+
+      SharedMem_js.init_done();
+
+      (* Return an env that initializes invariants required and maintained by
+         recheck, namely that `files` contains files that parsed successfully, and
+         `errors` contains the current set of errors. *)
+      let env = { ServerEnv.
+        files = parsed;
+        checked_files = checked;
+        libs;
+        errors;
+        collated_errors = ref None;
+        connections = Persistent_connection.empty;
+      } in
+      env.collated_errors := Some (regenerate_collated_errors env);
+      env
+    end
+
+
+  let status_log errors =
+    if Errors.ErrorSet.is_empty errors
+      then Hh_logger.info "Status: OK"
+      else Hh_logger.info "Status: Error";
+    flush stdout
 
   let convert_errors ~errors ~warnings =
     if Errors.ErrorSet.is_empty errors && Errors.ErrorSet.is_empty warnings then
@@ -172,7 +201,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       }
     end else begin
       (* collate errors by origin *)
-      let errors, warnings, _ = collate_errors env in
+      let errors, warnings, _ = get_collated_errors env in
       let warnings = if Options.should_include_warnings genv.options
         then warnings
         else Errors.ErrorSet.empty
@@ -186,7 +215,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     end
 
   let check_once _genv env =
-    collate_errors env
+    get_collated_errors env
 
   let die_nicely () =
     FlowEventLogger.killed ();
@@ -309,7 +338,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Module_js.get_file ~audit:Expensive.warn module_name
 
   let gen_flow_files ~options env files =
-    let errors, warnings, _ = collate_errors env in
+    let errors, warnings, _ = get_collated_errors env in
     let warnings = if Options.should_include_warnings options
       then warnings
       else Errors.ErrorSet.empty
@@ -596,11 +625,17 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let root = Options.root options in
       let tmp_dir = Options.temp_dir options in
       let workers = genv.ServerEnv.workers in
+
       Pervasives.ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
       let env = Types_js.recheck ~options ~workers ~updates env ~serve_ready_clients in
+      (* Unfortunately, regenerate_collated_errors is currently a little expensive. As the checked
+       * repo grows, regenerate_collated_errors can easily take a couple of seconds. So we need to
+       * run it before we release the recheck lock *)
+      env.collated_errors := Some (regenerate_collated_errors env);
       Pervasives.ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
+
       Persistent_connection.send_end_recheck env.connections;
-      let errors, warnings, _ = collate_errors_separate_warnings env in
+      let errors, warnings, _ = get_collated_errors_separate_warnings env in
       Persistent_connection.update_clients env.connections ~errors ~warnings;
       env
     end
@@ -734,7 +769,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let workers = genv.ServerEnv.workers in
     match msg with
       | Persistent_connection_prot.Subscribe ->
-          let current_errors, current_warnings, _ = collate_errors_separate_warnings !env in
+          let current_errors, current_warnings, _ = get_collated_errors_separate_warnings !env in
           let new_connections = Persistent_connection.subscribe_client
             !env.connections client ~current_errors ~current_warnings
           in
@@ -747,13 +782,13 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           !env
       | Persistent_connection_prot.DidOpen filenames ->
           Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
-          let current_errors, current_warnings, _ = collate_errors_separate_warnings !env in
+          let current_errors, current_warnings, _ = get_collated_errors_separate_warnings !env in
           let new_connections = Persistent_connection.client_did_open
             !env.connections client ~filenames ~current_errors ~current_warnings in
           { !env with connections = new_connections }
       | Persistent_connection_prot.DidClose filenames ->
           Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
-          let current_errors, current_warnings, _ = collate_errors_separate_warnings !env in
+          let current_errors, current_warnings, _ = get_collated_errors_separate_warnings !env in
           let new_connections = Persistent_connection.client_did_close
             !env.connections client ~filenames ~current_errors ~current_warnings in
           { !env with connections = new_connections }
@@ -768,9 +803,11 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let env = respond ~genv ~env ~serve_ready_clients ~client command in
       if should_close command then client.close ();
       env in
-    match command with
-      | { ServerProt.command = ServerProt.STATUS _ | ServerProt.FORCE_RECHECK _; _ } ->
-        (* status and force_recheck commands are processed after recheck is done *)
+    match command.ServerProt.command with
+      | ServerProt.STATUS _
+      | ServerProt.FORCE_RECHECK _
+      | ServerProt.CONNECT ->
+        (* these commands must be processed after recheck is done *)
         waiting_requests := continuation :: !waiting_requests;
         env
       | _ -> continuation env

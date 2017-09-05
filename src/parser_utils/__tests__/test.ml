@@ -12,6 +12,7 @@ open OUnit2
 
 let tests = "parser_utils" >::: [
   Scope_builder_test.tests;
+  Comment_attacher_test.tests;
 ]
 
 let () = run_test_tt_main tests

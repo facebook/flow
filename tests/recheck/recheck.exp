@@ -211,6 +211,35 @@ Error: j2.js:5
 
 Found 1 error
 
+Test l:
+No errors!
+
+Test m:
+Error: m3.js:6
+  6: (x: T<number>);
+      ^ type application of polymorphic type: type `T`. Has some incompatible type argument with
+  6: (x: T<number>);
+         ^^^^^^^^^ type application of type `T`
+  Type argument `X` is incompatible:
+      5: export var x: T<string> = null;
+                         ^^^^^^ string. This type is incompatible with. See: m1.js:5
+      6: (x: T<number>);
+               ^^^^^^ number
+
+Error: m3.js:6
+  6: (x: T<number>);
+      ^ type application of polymorphic type: type `T`. Has some incompatible type argument with
+  6: (x: T<number>);
+         ^^^^^^^^^ type application of type `T`
+  Type argument `X` is incompatible:
+      6: (x: T<number>);
+               ^^^^^^ number. This type is incompatible with
+      5: export var x: T<string> = null;
+                         ^^^^^^ string. See: m1.js:5
+
+
+Found 2 errors
+
 Test k:
 Error: k.js:4
   4: (x.p: string);

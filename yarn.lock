@@ -1329,6 +1329,10 @@ verror@1.3.6:
   dependencies:
     extsprintf "1.0.2"
 
+vscode-jsonrpc@^3.3.0:
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/vscode-jsonrpc/-/vscode-jsonrpc-3.3.1.tgz#b7857be58b97af664a8cdd071c91891d6c7d6a67"
+
 walker@~1.0.5:
   version "1.0.7"
   resolved "https://registry.yarnpkg.com/walker/-/walker-1.0.7.tgz#2f7f9b8fd10d677262b18a884e28d19618e028fb"

@@ -373,6 +373,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | DefT (_, NumT _)
   | DefT (_, StrT _)
   | DefT (_, BoolT _)
+  | DefT (_, MixedT _)
   | DefT (_, AnyT)
   | DefT (_, NullT)
   | DefT (_, SingletonStrT _)

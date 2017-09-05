@@ -709,6 +709,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "tool", JSON_String (match tool with
       | FullyResolveType _ -> "fullyResolveType"
       | TryFlow _ -> "tryFlow"
+      | EvalDestructor _ -> "evalDestructor"
       );
     ]
 
@@ -1889,6 +1890,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | ChoiceKitUseT (_, TryFlow (_, spec)) ->
       p ~extra:(try_flow spec) t
   | ChoiceKitUseT (_, FullyResolveType id) -> p ~extra:(tvar id) t
+  | ChoiceKitUseT (_, EvalDestructor (_, _, arg)) -> p ~extra:(kid arg) t
   | CJSExtractNamedExportsT _ -> p t
   | CJSRequireT _ -> p t
   | ComparatorT (_, arg) -> p ~extra:(kid arg) t
@@ -2192,6 +2194,7 @@ let dump_flow_error =
   | InterfaceTypeSpread -> "InterfaceTypeSpread"
   | InferJobException _ -> "InferJobException"
   | MergeJobException _ -> "MergeJobException"
+  | UnexpectedUnresolved _ -> "UnexpectedUnresolved"
   in
   let dump_upper_kind = function
   | IncompatibleGetPropT -> "IncompatibleGetPropT"

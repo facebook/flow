@@ -48,13 +48,11 @@ type hash =
   | FunProtoCallH
   | ObjH
   | ObjProtoH
-  | OpaqueH
   | ArrH
   | ClassH
   | OptionalH
   | AbstractH
   | EvalH
-  | PolyH
   | TypeAppH
   | ThisClassH
   | ThisTypeAppH
@@ -89,6 +87,7 @@ type hash =
 
 let hash_of_def_ctor = Type.(function
   | InstanceT _ -> failwith "undefined hash of InstanceT"
+  | PolyT _ -> failwith "undefined hash of PolyT"
 
   | AnyFunT -> AnyFunH
   | AnyObjT -> AnyObjH
@@ -106,7 +105,6 @@ let hash_of_def_ctor = Type.(function
   | NumT n -> NumH n
   | ObjT _ -> ObjH
   | OptionalT _ -> OptionalH
-  | PolyT _ -> PolyH
   | SingletonBoolT b -> SingletonBoolH b
   | SingletonNumT n -> SingletonNumH n
   | SingletonStrT s -> SingletonStrH s
@@ -119,6 +117,7 @@ let hash_of_def_ctor = Type.(function
 
 let hash_of_ctor = Type.(function
   | OpenT _ -> failwith "undefined hash of OpenT"
+  | OpaqueT _ -> failwith "undefined hash of OpaqueT"
 
   | AbstractT _ -> AbstractH
   | AnnotT _ -> AnnotH
@@ -141,7 +140,6 @@ let hash_of_ctor = Type.(function
   | KeysT _ -> KeysH
   | ModuleT _ -> ModuleH
   | ObjProtoT _ -> ObjProtoH
-  | OpaqueT _ -> OpaqueH
   | OpenPredT _ -> OpenPredH
   | ReposT _ -> ReposH
   | ReposUpperT _ -> ReposUpperH

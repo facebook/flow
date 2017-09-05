@@ -622,7 +622,8 @@ let rec convert cx tparams_map = Ast.Type.(function
         def_reason = reason;
       }))
   in
-  poly_type tparams ft
+  let id = Flow_js.mk_nominal cx in
+  poly_type id tparams ft
 
 | loc, Object { Object.exact; properties } ->
   let reason_desc = RObjectType in
