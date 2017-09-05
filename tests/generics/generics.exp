@@ -24,9 +24,14 @@ Error: generics.js:28
 
 Error: generics.js:38
  38: h1.foo(["..."]);
-             ^^^^^ string. This type is incompatible with
+            ^^^^^^^ array literal. Has some incompatible type argument with
  39: var h2:F<Array<Array<Array<number>>>> = h1;
-                                ^^^^^^ number
+                          ^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     38: h1.foo(["..."]);
+                 ^^^^^ string. This type is incompatible with
+     39: var h2:F<Array<Array<Array<number>>>> = h1;
+                                    ^^^^^^ number
 
 Error: generics.js:41
  41: var obj : Object<string, string> = {} // error, arity 0

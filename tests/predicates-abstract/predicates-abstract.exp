@@ -38,23 +38,33 @@ Error: sanity-filter-union.js:16
  14: declare var ab: Array<A|B|C>;
                            ^ object type
 
-Error: sanity-filter.js:6
-  6: declare var a: Array<mixed>;
-                          ^^^^^ string. This type is incompatible with
+Error: sanity-filter.js:8
   8: (b: Array<number>);
-               ^^^^^^ number
-
-Error: sanity-filter.js:12
- 12: declare var c: Array<mixed>;
-                          ^^^^^ mixed. This type is incompatible with
- 14: (d: Array<string>);
-               ^^^^^^ string
+      ^ array type. Has some incompatible type argument with
+  8: (b: Array<number>);
+         ^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+      6: declare var a: Array<mixed>;
+                              ^^^^^ string. This type is incompatible with
+      8: (b: Array<number>);
+                   ^^^^^^ number
 
 Error: sanity-filter.js:13
  13: const d = my_filter(c, is_string_regular);
                             ^^^^^^^^^^^^^^^^^ function. Function is incompatible with
   3: declare function my_filter<T, P: $Pred<1>>(v: Array<T>, cb: P): Array<$Refine<T,P,1>>;
                                       ^^^^^^^^ abstract predicate function
+
+Error: sanity-filter.js:14
+ 14: (d: Array<string>);
+      ^ array type. Has some incompatible type argument with
+ 14: (d: Array<string>);
+         ^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     12: declare var c: Array<mixed>;
+                              ^^^^^ mixed. This type is incompatible with
+     14: (d: Array<string>);
+                   ^^^^^^ string
 
 Error: sanity-refine.js:4
   4: declare function refine<T, P: $Pred<1>>(v: T, cb: P): $Refine<T,P,2>;

@@ -175,7 +175,7 @@ Error: jsx.js:40
        ------^ polymorphic type: function type
   Error:
    40: (<ExpectsChildrenTuple>{123}</ExpectsChildrenTuple>); // Error: number ~> string
-                               ^^^ number. This type is incompatible with
+                               ^^^ number. This type is incompatible with the expected param type of
    37: declare function ExpectsChildrenTuple(props: any, children: [string]): string;
                                                                     ^^^^^^ string
   Member 2:
@@ -239,9 +239,14 @@ Error: jsx.js:46
        ------^ polymorphic type: function type
   Error:
    46: (<ExpectsChildrenArray>{123}</ExpectsChildrenArray>); // Error: number ~> string
-                               ^^^ number. This type is incompatible with
+        ^^^^^^^^^^^^^^^^^^^^^^ rest parameter array of JSX desugared to `JSX(...)`. This type is incompatible with the expected param type of
    43: declare function ExpectsChildrenArray(props: any, children: Array<string>): string;
-                                                                         ^^^^^^ string
+                                                                   ^^^^^^^^^^^^^ array type
+    Type argument `T` is incompatible:
+       46: (<ExpectsChildrenArray>{123}</ExpectsChildrenArray>); // Error: number ~> string
+                                   ^^^ number. This type is incompatible with
+       43: declare function ExpectsChildrenArray(props: any, children: Array<string>): string;
+                                                                             ^^^^^^ string
   Member 2:
                            v
    18: declare function JSX<
@@ -290,11 +295,14 @@ Error: spread.js:28
 
 Error: spread.js:28
  28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
- 28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
-                                         ^^^^^ string. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rest parameter array of function call. Has some incompatible type argument with
  14: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
-                                                               ^^^^^^ number
+                                                         ^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     28: funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
+                                             ^^^^^ string. This type is incompatible with
+     14: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
+                                                                   ^^^^^^ number
 
 
 Found 24 errors

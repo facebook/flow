@@ -138,71 +138,131 @@ Error: logical.js:371
 369: function logical12b(y: number): number {
                             ^^^^^^ number
 
-Error: logical.js:381
+Error: logical.js:380
+                v
+380:     return [
 381:         {x: x && "bar"},
-             ^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+382:         {x: true && "bar"},
+...:
+389:     ];
+         ^ array literal. This type is incompatible with the expected return type of
 379: function logical13(x: number): Array<{x: string}> {
-                                          ^^^^^^^^^^^ object type
-  Property `x` is incompatible:
+                                    ^^^^^^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
     381:         {x: x && "bar"},
-                     ^ number. This type is incompatible with
+                 ^^^^^^^^^^^^^^^ object literal. This type is incompatible with
     379: function logical13(x: number): Array<{x: string}> {
-                                                  ^^^^^^ string
+                                              ^^^^^^^^^^^ object type
+      Property `x` is incompatible:
+        381:         {x: x && "bar"},
+                         ^ number. This type is incompatible with
+        379: function logical13(x: number): Array<{x: string}> {
+                                                      ^^^^^^ string
 
-Error: logical.js:383
-383:         {x: true && false},
-             ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+Error: logical.js:380
+                v
+380:     return [
+381:         {x: x && "bar"},
+382:         {x: true && "bar"},
+...:
+389:     ];
+         ^ array literal. This type is incompatible with the expected return type of
 379: function logical13(x: number): Array<{x: string}> {
-                                          ^^^^^^^^^^^ object type
-  Property `x` is incompatible:
+                                    ^^^^^^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
     383:         {x: true && false},
-                             ^^^^^ boolean. This type is incompatible with
+                 ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
     379: function logical13(x: number): Array<{x: string}> {
-                                                  ^^^^^^ string
+                                              ^^^^^^^^^^^ object type
+      Property `x` is incompatible:
+        383:         {x: true && false},
+                                 ^^^^^ boolean. This type is incompatible with
+        379: function logical13(x: number): Array<{x: string}> {
+                                                      ^^^^^^ string
 
-Error: logical.js:384
-384:         {x: false && false},
-             ^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+Error: logical.js:380
+                v
+380:     return [
+381:         {x: x && "bar"},
+382:         {x: true && "bar"},
+...:
+389:     ];
+         ^ array literal. This type is incompatible with the expected return type of
 379: function logical13(x: number): Array<{x: string}> {
-                                          ^^^^^^^^^^^ object type
-  Property `x` is incompatible:
+                                    ^^^^^^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
     384:         {x: false && false},
-                     ^^^^^ boolean. This type is incompatible with
+                 ^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
     379: function logical13(x: number): Array<{x: string}> {
-                                                  ^^^^^^ string
+                                              ^^^^^^^^^^^ object type
+      Property `x` is incompatible:
+        384:         {x: false && false},
+                         ^^^^^ boolean. This type is incompatible with
+        379: function logical13(x: number): Array<{x: string}> {
+                                                      ^^^^^^ string
 
-Error: logical.js:397
+Error: logical.js:396
+                v
+396:     return [
 397:         {x: x || "bar"},
-             ^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+398:         {x: false || "bar"},
+...:
+405:     ];
+         ^ array literal. This type is incompatible with the expected return type of
 395: function logical14(x: number): Array<{x: string}> {
-                                          ^^^^^^^^^^^ object type
-  Property `x` is incompatible:
+                                    ^^^^^^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
     397:         {x: x || "bar"},
-                     ^ number. This type is incompatible with
+                 ^^^^^^^^^^^^^^^ object literal. This type is incompatible with
     395: function logical14(x: number): Array<{x: string}> {
-                                                  ^^^^^^ string
+                                              ^^^^^^^^^^^ object type
+      Property `x` is incompatible:
+        397:         {x: x || "bar"},
+                         ^ number. This type is incompatible with
+        395: function logical14(x: number): Array<{x: string}> {
+                                                      ^^^^^^ string
 
-Error: logical.js:399
-399:         {x: false || true},
-             ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+Error: logical.js:396
+                v
+396:     return [
+397:         {x: x || "bar"},
+398:         {x: false || "bar"},
+...:
+405:     ];
+         ^ array literal. This type is incompatible with the expected return type of
 395: function logical14(x: number): Array<{x: string}> {
-                                          ^^^^^^^^^^^ object type
-  Property `x` is incompatible:
+                                    ^^^^^^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
     399:         {x: false || true},
-                              ^^^^ boolean. This type is incompatible with
+                 ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
     395: function logical14(x: number): Array<{x: string}> {
-                                                  ^^^^^^ string
+                                              ^^^^^^^^^^^ object type
+      Property `x` is incompatible:
+        399:         {x: false || true},
+                                  ^^^^ boolean. This type is incompatible with
+        395: function logical14(x: number): Array<{x: string}> {
+                                                      ^^^^^^ string
 
-Error: logical.js:400
-400:         {x: true || false},
-             ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+Error: logical.js:396
+                v
+396:     return [
+397:         {x: x || "bar"},
+398:         {x: false || "bar"},
+...:
+405:     ];
+         ^ array literal. This type is incompatible with the expected return type of
 395: function logical14(x: number): Array<{x: string}> {
-                                          ^^^^^^^^^^^ object type
-  Property `x` is incompatible:
+                                    ^^^^^^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
     400:         {x: true || false},
-                     ^^^^ boolean. This type is incompatible with
+                 ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
     395: function logical14(x: number): Array<{x: string}> {
-                                                  ^^^^^^ string
+                                              ^^^^^^^^^^^ object type
+      Property `x` is incompatible:
+        400:         {x: true || false},
+                         ^^^^ boolean. This type is incompatible with
+        395: function logical14(x: number): Array<{x: string}> {
+                                                      ^^^^^^ string
 
 Error: logical.js:510
 510:   return (x.y && x.z); // error: x.y is a string

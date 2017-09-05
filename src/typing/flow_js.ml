@@ -4063,15 +4063,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* Arrays can flow to arrays *)
     | DefT (r1, ArrT (ArrayAT (t1, ts1))),
-      UseT (_, DefT (_, ArrT (ArrayAT (t2, ts2)))) ->
+      UseT (use_op, DefT (r2, ArrT (ArrayAT (t2, ts2)))) ->
+      let use_op = use_op_break_cycle (TypeArgCompatibility ("T", r1, r2, use_op)) in
       let lit1 = (desc_of_reason r1) = RArrayLit in
       let ts1 = Option.value ~default:[] ts1 in
       let ts2 = Option.value ~default:[] ts2 in
-      array_flow cx trace lit1 r1 (ts1, t1, ts2, t2)
+      array_flow cx trace use_op lit1 r1 (ts1, t1, ts2, t2)
 
     (* Tuples can flow to tuples with the same arity *)
     | DefT (r1, ArrT (TupleAT (_, ts1))),
-      UseT (_, DefT (r2, ArrT (TupleAT (_, ts2)))) ->
+      UseT (use_op, DefT (r2, ArrT (TupleAT (_, ts2)))) ->
       let fresh = (desc_of_reason r1) = RArrayLit in
       let l1 = List.length ts1 in
       let l2 = List.length ts2 in
@@ -4080,7 +4081,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       iter2opt (fun t1 t2 ->
         match t1, t2 with
         | Some t1, Some t2 ->
-          flow_to_mutable_child cx trace fresh t1 t2
+          flow_to_mutable_child cx trace use_op fresh t1 t2
         | _ -> ()
       ) (ts1, ts2);
 
@@ -9021,10 +9022,10 @@ and naive_unify cx trace ?(use_op=UnknownUse) t1 t2 =
    in which case covariant typing is sound (since no alias
    will break if the subtyped child value is replaced by a
    non-subtyped value *)
-and flow_to_mutable_child cx trace fresh t1 t2 =
+and flow_to_mutable_child cx trace use_op fresh t1 t2 =
   if fresh
-  then rec_flow_t cx trace (t1, t2)
-  else rec_unify cx trace t1 t2
+  then rec_flow cx trace (t1, UseT (use_op, t2))
+  else rec_unify cx trace ~use_op t1 t2
 
 (* Subtyping of arrays is complicated by tuples. Currently, there are three
    different kinds of types, all encoded by arrays:
@@ -9070,26 +9071,26 @@ and flow_to_mutable_child cx trace fresh t1 t2 =
    * Array<X>[T1, T2] ~> Array<Y>[U1, U2] checks [T1, T2] ~> Array<Y>[U1, U2]
 
 *)
-and array_flow cx trace lit1 r1 ?(index=0) = function
+and array_flow cx trace use_op lit1 r1 ?(index=0) = function
   (* empty array / array literal / tuple flowing to array / array literal /
      tuple (includes several cases, analyzed below) *)
   | [], e1, _, e2 ->
     (* if lower bound is an empty array / array literal *)
     if index = 0 then
       (* general element1 = general element2 *)
-      flow_to_mutable_child cx trace lit1 e1 e2
+      flow_to_mutable_child cx trace use_op lit1 e1 e2
     (* otherwise, lower bound is an empty tuple (nothing to do) *)
 
   (* non-empty array literal / tuple ~> empty array / array literal / tuple *)
   | _, e1, [], e2 ->
     (* general element1 < general element2 *)
-    rec_flow_t cx trace (e1, e2)
+    rec_flow cx trace (e1, UseT (use_op, e2))
 
   (* non-empty array literal / tuple ~> non-empty array literal / tuple *)
   | t1 :: ts1, e1, t2 :: ts2, e2 ->
     (* specific element1 = specific element2 *)
-    flow_to_mutable_child cx trace lit1 t1 t2;
-    array_flow cx trace lit1 r1 ~index:(index+1) (ts1,e1, ts2,e2)
+    flow_to_mutable_child cx trace use_op lit1 t1 t2;
+    array_flow cx trace use_op lit1 r1 ~index:(index+1) (ts1,e1, ts2,e2)
 
 (* TODO: either ensure that array_unify is the same as array_flow both ways, or
    document why not. *)

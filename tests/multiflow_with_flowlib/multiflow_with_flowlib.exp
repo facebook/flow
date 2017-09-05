@@ -8,11 +8,14 @@ Error: spread.js:14
 
 Error: spread.js:14
  14: funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
- 14: funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);
-                                              ^^^^^ string. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rest parameter array of function call. Has some incompatible type argument with
   5: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
-                                                               ^^^^^^ number
+                                                         ^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     14: funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);
+                                                  ^^^^^ string. This type is incompatible with
+      5: function funWithRestArray(x: 'hi', y: 123, ...rest: Array<number>) {}
+                                                                   ^^^^^^ number
 
 
 Found 2 errors
