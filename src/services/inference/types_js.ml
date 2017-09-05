@@ -450,9 +450,16 @@ let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
         ) in
       checked, errors
     ) in
+
+    (* During a normal initialization or recheck, we update the env with the errors and
+     * calculate the collated errors. However, this code is for when the server is in lazy mode,
+     * is trying to using typecheck_contents, and is making sure the dependencies are checked. Since
+     * we're messing with env.errors, we also need to set collated_errors to None. This will force
+     * us to recompute them the next time someone needs them *)
+    !env.ServerEnv.collated_errors := None;
     env := { !env with ServerEnv.
       checked_files = checked;
-      errors
+      errors;
     }
   end
 
