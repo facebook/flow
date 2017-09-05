@@ -1,3 +1,8 @@
+### 0.54.1
+
+Notable bug fixes:
+ * Fixed an issue where the server becomes temporarily unresponsive after a recheck and the client consumes all its retries.
+
 ### 0.54.0
 
 Likely to cause new Flow errors:
