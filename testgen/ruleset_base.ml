@@ -29,6 +29,7 @@ module Syntax = Syntax_base;;
 type env_elt_t =
   | Expr of E.t' * T.t'
   | Type of T.t'
+  | Int of int
 type env_t = env_elt_t list
 
 (* string of functions *)
@@ -42,6 +43,7 @@ let str_of_env_elt (elt : env_elt_t) : string = match elt with
     Printf.sprintf
       "%s"
       (Utils.string_of_type t)
+  | Int i -> string_of_int i
 
 let str_of_env (env : env_t) : string =
   "\n/*\nEnv:\n" ^
@@ -296,6 +298,7 @@ class ruleset_base = object(self)
                   properties = Property (Loc.none, new_prop) :: o_type.properties}
       else
         T.Object o_type in
+    Printf.printf "[prop_update]       putting %s : %s\n" (Utils.string_of_expr oexpr) (Utils.string_of_type ret_type);
 
     let new_env = self#add_binding env (Expr (oexpr, ret_type)) in
     let new_env = self#add_binding new_env (Type ret_type) in
@@ -718,7 +721,6 @@ class ruleset_base = object(self)
 
   (* A rule for adding runtime checks *)
   method rule_runtime_check (env : env_t) : (Syntax.t * env_t) =
-
     let mk_prop_read (obj : E.t') (prop : E.t') : E.t' =
       let open E.Member in
       E.Member {_object = (Loc.none, obj);
@@ -730,9 +732,12 @@ class ruleset_base = object(self)
       let pexpr, ptype = match prop with
         | Expr (e, t) -> e, t
         | _ -> failwith "This has to be an expression" in
-      match ptype with
+      let prop_elt = match ptype with
       | T.Object t -> get_prop pexpr t (depth + 1)
-      | _ -> Expr (mk_prop_read oname pexpr, ptype) in
+      | _ -> Expr (pexpr, ptype) in
+      match prop_elt with
+      | Expr (e, t) -> Expr (mk_prop_read oname e, t)
+      | _ -> failwith "This has to be an expression." in
 
     let var = self#choose 0 (fun () -> self#require_var env) in
     let vexpr, vtype = match var with
@@ -754,9 +759,7 @@ class ruleset_base = object(self)
         | T.Union _ -> false
         | _ -> true);
 
-    let check = Syntax.mk_runtime_check fexpr ftype in
-
-    check, env
+    Syntax.mk_runtime_check fexpr ftype, env
 
   method get_all_rules () =
     let all_rules = [|self#rule_num_lit;

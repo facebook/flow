@@ -72,7 +72,7 @@ let mk_code prog_num random =
   ignore optional_engine;
   ignore exact_engine;
   ignore union_engine;
-  let engine = union_engine in
+  let engine = depth_engine in
   (if random
    then engine#gen_random_prog prog_num
    else engine#gen_prog prog_num)
