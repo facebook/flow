@@ -79,12 +79,14 @@ val mk_boundfunctiontype :
   Type.t -> Type.funtype
 
 val mk_functiontype :
+  reason ->
   Type.t list ->
   rest_param:(string option * Loc.t * Type.t) option -> def_reason: Reason.t ->
   ?frame:int -> ?params_names:string list -> ?is_predicate:bool ->
   Type.t -> Type.funtype
 
 val mk_functioncalltype :
+  reason ->
   Type.call_arg list ->
   ?frame:int ->
   ?call_strict_arity:bool ->

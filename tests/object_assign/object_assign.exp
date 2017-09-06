@@ -1,9 +1,5 @@
 Error: A.js:13
  13: var bad: number = Bad.foo();
-                       ^^^ property `foo`. Could not resolve name
-
-Error: A.js:13
- 13: var bad: number = Bad.foo();
                        ^^^^^^^^^ string. This type is incompatible with
  13: var bad: number = Bad.foo();
               ^^^^^^ number
@@ -15,21 +11,29 @@ Error: A.js:21
                ^^^^^^ number
 
 Error: B.js:7
-  7: var good: number = A.Good.foo();
+  7: var good: number = A.Good.foo(); // string ~> number
                         ^^^^^^^^^^^^ string. This type is incompatible with
-  7: var good: number = A.Good.foo();
+  7: var good: number = A.Good.foo(); // string ~> number
                ^^^^^^ number
 
 Error: B.js:10
- 10: var bad_: number = f(); // Calling the function is fine
+ 10: var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
+                        ^^^ function call
+ 13: var bad: number = Bad.foo();
+                       ^^^ property `foo`. Property not found in. See: A.js:13
+ 10: var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
+                        ^^^ global object
+
+Error: B.js:10
+ 10: var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
                         ^^^ string. This type is incompatible with
- 10: var bad_: number = f(); // Calling the function is fine
+ 10: var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
                ^^^^^^ number
 
 Error: B.js:12
- 12: var bad: number = A.Bad.foo(); // Method call is not fine
+ 12: var bad: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
                        ^^^^^^^^^^^ string. This type is incompatible with
- 12: var bad: number = A.Bad.foo(); // Method call is not fine
+ 12: var bad: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
               ^^^^^^ number
 
 Error: non_objects.js:3

@@ -896,7 +896,7 @@ and statement cx = Ast.Statement.(
         Flow.get_builtin_typeapp cx reason "Promise" [
           Flow.mk_tvar_derivable_where cx reason (fun tvar ->
             let funt = Flow.get_builtin cx "$await" reason in
-            let callt = Flow.mk_functioncalltype [Arg t] tvar in
+            let callt = Flow.mk_functioncalltype reason [Arg t] tvar in
             let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
             Flow.flow cx (funt, CallT (reason, callt))
           )
@@ -2603,7 +2603,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       DefT (reason, FunT (
         Flow.dummy_static reason,
         Flow.dummy_prototype,
-        Flow.mk_functiontype
+        Flow.mk_functiontype reason
           [] ~rest_param:None ~def_reason:reason ~params_names:[] proto
       ))
     )
@@ -2837,7 +2837,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason = mk_reason (RCustom "encaps tag") loc in
       let reason_array = replace_reason_const RArray reason in
       let ret = Flow.mk_tvar cx reason in
-      let ft = Flow.mk_functioncalltype
+      let ft = Flow.mk_functioncalltype reason
         [ Arg (DefT (reason_array, ArrT (ArrayAT (StrT.why reason, None))));
           SpreadArg (AnyT.why reason) ]
         ret
@@ -3025,7 +3025,7 @@ and func_call cx reason ?(call_strict_arity=true) func_t argts =
   Env.havoc_heap_refinements ();
   Flow.mk_tvar_where cx reason (fun t ->
     let frame = Env.peek_frame () in
-    let app = Flow.mk_functioncalltype argts t ~frame ~call_strict_arity in
+    let app = Flow.mk_functioncalltype reason argts t ~frame ~call_strict_arity in
     Flow.flow cx (func_t, CallT(reason, app))
   )
 

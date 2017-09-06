@@ -55,8 +55,8 @@ let dummy_this =
   let reason = locationless_reason RDummyThis in
   DefT (reason, AnyT)
 
-let global_this =
-  let reason = builtin_reason (RCustom "global object") in
+let global_this reason =
+  let reason = replace_reason_const (RCustom "global object") reason in
   ObjProtoT reason
 
 (* A method type is a function type with `this` specified. *)
@@ -94,8 +94,8 @@ let mk_boundfunctiontype = mk_methodtype dummy_this
    causes problems when they are given to methods in which `this` is used
    non-trivially: indeed, calling them directly would cause `this` to be bound
    to the global object, which is typically unintended. *)
-let mk_functiontype = mk_methodtype global_this
-let mk_functioncalltype = mk_methodcalltype global_this
+let mk_functiontype reason = mk_methodtype (global_this reason)
+let mk_functioncalltype reason = mk_methodcalltype (global_this reason)
 
 (* An object type has two flags, sealed and exact. A sealed object type cannot
    be extended. An exact object type accurately describes objects without
@@ -373,7 +373,7 @@ let rec merge_type cx =
           DefT (reason, FunT (
             dummy_static reason,
             dummy_prototype,
-            mk_functiontype tins ~rest_param ~def_reason:reason tout
+            mk_functiontype reason tins ~rest_param ~def_reason:reason tout
           ))
       end
 
@@ -6766,7 +6766,8 @@ and eval_destructor cx ~trace reason curr_t s i =
             ObjSpreadT (reason, options, tool, state, tvar)
         | ValuesType -> GetValuesT (reason, tvar)
         | CallType args ->
-          let call = mk_functioncalltype (List.map (fun arg -> Arg arg) args) tvar in
+          let args = List.map (fun arg -> Arg arg) args in
+          let call = mk_functioncalltype reason args tvar in
           let call = {call with call_strict_arity = false} in
           CallT (reason, call)
         | TypeMap tmap -> MapTypeT (reason, tmap, tvar)
@@ -10034,11 +10035,11 @@ and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind wi
   | Compose reverse ->
     let tin = mk_tvar cx reason_op in
     let tvar = mk_tvar cx reason_op in
-    run_compose cx trace reverse args spread_arg tin tvar;
+    run_compose cx trace reason_op reverse args spread_arg tin tvar;
     let funt = FunT (
       dummy_static reason_op,
       dummy_prototype,
-      mk_functiontype [tin] ~rest_param:None ~def_reason:reason_op tvar
+      mk_functiontype reason_op [tin] ~rest_param:None ~def_reason:reason_op tvar
     ) in
     rec_flow_t cx trace (DefT (reason_op, funt), tout)
 
@@ -10136,16 +10137,16 @@ and custom_fun_call cx trace reason_op kind args spread_arg tout = match kind wi
 
 (* Creates the appropriate constraints for the compose() function and its
  * reversed variant. *)
-and run_compose cx trace reverse fns spread_fn tin tout =
+and run_compose cx trace reason_op reverse fns spread_fn tin tout =
   match reverse, fns, spread_fn with
     (* Call the tail functions in our array first and call our head function
      * last after that. *)
     | false, fn::fns, _ ->
       let reason = reason_of_t fn in
       let tvar = mk_tvar_where cx reason (fun tvar ->
-        run_compose cx trace reverse fns spread_fn tin tvar) in
+        run_compose cx trace reason_op reverse fns spread_fn tin tvar) in
       rec_flow cx trace (fn,
-        CallT (reason, mk_functioncalltype [Arg tvar] tout))
+        CallT (reason, mk_functioncalltype reason_op[Arg tvar] tout))
 
     (* If the compose function is reversed then we want to call the tail
      * functions in our array after we call the head function. *)
@@ -10153,8 +10154,8 @@ and run_compose cx trace reverse fns spread_fn tin tout =
       let reason = reason_of_t fn in
       let tvar = mk_tvar_where cx reason (fun tvar ->
         rec_flow cx trace (fn,
-          CallT (reason, mk_functioncalltype [Arg tin] tvar))) in
-      run_compose cx trace reverse fns spread_fn tvar tout
+          CallT (reason, mk_functioncalltype reason_op[Arg tin] tvar))) in
+      run_compose cx trace reason_op reverse fns spread_fn tvar tout
 
     (* If there are no functions and no spread function then we are an identity
      * function. *)
@@ -10211,9 +10212,9 @@ and run_compose cx trace reverse fns spread_fn tin tout =
      * The implementation of Flow should be able to terminate these recursive
      * constraints. If it doesn't then we have a bug. *)
     | _, [], Some spread_fn ->
-      run_compose cx trace reverse [] None tin tout;
-      run_compose cx trace reverse [spread_fn] None tin tout;
-      run_compose cx trace reverse [spread_fn] None tout tin
+      run_compose cx trace reason_op reverse [] None tin tout;
+      run_compose cx trace reason_op reverse [spread_fn] None tin tout;
+      run_compose cx trace reason_op reverse [spread_fn] None tout tin
 
 and object_spread =
   let open ObjectSpread in
