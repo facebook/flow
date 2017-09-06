@@ -5846,14 +5846,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason = mk_reason desc loc in
       rec_flow cx trace (instance, GetStaticsT (reason, u))
 
-    | (DefT (_, NullT) | ObjProtoT _),
+    | DefT (_, NullT),
       UseT (use_op, ExtendsT (reason, next::try_ts_on_failure, l, u)) ->
       (* When seaching for a nominal superclass fails, we always try to look it
          up in the next element in the list try_ts_on_failure. *)
       rec_flow cx trace
         (next, UseT (use_op, ExtendsT (reason, try_ts_on_failure, l, u)))
 
-    | (DefT (_, NullT) | ObjProtoT _),
+    | DefT (_, NullT),
       UseT (use_op, ExtendsT (_, [], l, DefT (reason_inst, InstanceT (_, super, _, {
         fields_tmap;
         methods_tmap;
@@ -5864,7 +5864,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (fields_tmap, methods_tmap);
       rec_flow cx trace (l, UseT (use_op, super))
 
-    | (DefT (_, NullT) | ObjProtoT _),
+    | DefT (_, NullT),
       UseT (use_op, ExtendsT (_, [], t, tc)) ->
       let reason_l, reason_u = Flow_error.ordered_reasons (reason_of_t t) (reason_of_t tc) in
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (reason_l, reason_u, use_op))
@@ -5926,6 +5926,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let use_desc = true in
       let obj_proto = get_builtin_type cx ~trace reason ~use_desc "Object" in
       rec_flow cx trace (obj_proto, u)
+
+    | _, UseT (use_op, ObjProtoT reason) ->
+      let use_desc = true in
+      let obj_proto = get_builtin_type cx ~trace reason ~use_desc "Object" in
+      rec_flow cx trace (l, UseT (use_op, obj_proto))
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
@@ -6396,7 +6401,6 @@ and ground_subtype = function
   | DefT (_, VoidT), UseT (_, DefT (_, VoidT))
   | DefT (_, EmptyT), _
   | _, UseT (_, DefT (_, MixedT _))
-  | _, UseT (_, ObjProtoT _)
     -> true
 
   | DefT (_, AnyT), u -> not (any_propagating_use_t u)
