@@ -13,7 +13,8 @@ module Flow = Flow_js
 
 open Reason
 
-type field = Type.t * Type.polarity * Ast.Expression.t option
+type field = Type.polarity * field'
+and field' = Annot of Type.t | Infer of Func_sig.t
 
 type signature = {
   reason: reason;
@@ -206,9 +207,11 @@ let add_setter name fsig = map_sig (fun s -> {
 let mk_method cx ~expr x loc func =
   Func_sig.mk cx x.tparams_map ~expr loc func
 
-let mk_field cx ~polarity x reason typeAnnotation value =
-  let t = Anno.mk_type_annotation cx x.tparams_map reason typeAnnotation in
-  (t, polarity, value)
+let mk_field cx ~polarity x reason typeAnnotation init =
+  polarity, match init with
+  | None -> Annot (Anno.mk_type_annotation cx x.tparams_map reason typeAnnotation)
+  | Some expr -> Infer (
+    Func_sig.field_initializer cx x.tparams_map reason expr typeAnnotation)
 
 let mem_constructor {constructor; _} = constructor <> []
 
@@ -219,8 +222,11 @@ let iter_methods f s =
   SMap.iter (fun _ -> f) s.getters;
   SMap.iter (fun _ -> f) s.setters
 
-let subst_field cx map (t, polarity, value) =
-  Flow.subst cx map t, polarity, value
+(* TODO? *)
+let subst_field cx map (polarity, field) =
+  polarity, match field with
+  | Annot t -> Annot (Flow.subst cx map t)
+  | Infer fsig -> Infer (Func_sig.subst cx map fsig)
 
 let subst_sig cx map s = {
   reason = s.reason;
@@ -244,7 +250,12 @@ let generate_tests cx f x =
     instance = subst_sig cx map x.instance;
   })
 
-let to_field (t, polarity, _) = Type.Field (t, polarity)
+let to_field (polarity, field) =
+  let t = match field with
+  | Annot t -> t
+  | Infer fsig -> Func_sig.gettertype fsig
+  in
+  Type.Field (t, polarity)
 
 let elements cx ?constructor = with_sig (fun s ->
   let methods =
@@ -287,12 +298,11 @@ let elements cx ?constructor = with_sig (fun s ->
 
   (* Only un-initialized fields require annotations, so determine now
    * (syntactically) which fields have initializers *)
-  let initialized_field_names =
-    s.fields
-    |> SMap.filter (fun _ (_, _, init_expr) -> init_expr <> None)
-    |> SMap.keys
-    |> SSet.of_list
-  in
+  let initialized_field_names = SMap.fold (fun x (_, field) acc ->
+    match field with
+    | Annot _ -> acc
+    | Infer _ -> SSet.add x acc
+  ) s.fields SSet.empty in
 
   initialized_field_names, fields, methods
 )
@@ -535,7 +545,7 @@ let mk cx _loc reason self ~expr =
   let class_sig =
     let reason = replace_reason (fun desc -> RNameProperty desc) reason in
     let t = Type.StrT.why reason in
-    add_field ~static:true "name" (t, Type.Neutral, None) class_sig
+    add_field ~static:true "name" (Type.Neutral, Annot t) class_sig
   in
 
   (* NOTE: We used to mine field declarations from field assignments in a
@@ -722,7 +732,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
   let iface_sig =
     let reason = replace_reason (fun desc -> RNameProperty desc) reason in
     let t = Type.StrT.why reason in
-    add_field ~static:true "name" (t, Type.Neutral, None) iface_sig
+    add_field ~static:true "name" (Type.Neutral, Annot t) iface_sig
   in
 
   let iface_sig = List.fold_left Ast.Type.Object.(fun x -> function
@@ -738,8 +748,8 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       let v = Anno.convert cx tparams_map value in
       let polarity = Anno.polarity variance in
       x
-        |> add_field ~static "$key" (k, polarity, None)
-        |> add_field ~static "$value" (v, polarity, None)
+        |> add_field ~static "$key" (polarity, Annot k)
+        |> add_field ~static "$value" (polarity, Annot v)
     | Property (loc, { Property.key; value; static; _method; optional; variance; }) ->
       if optional && _method
       then Flow_js.add_output cx Flow_error.(EInternal (loc, OptionalMethod));
@@ -768,7 +778,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
           Ast.Type.Object.Property.Init value ->
           let t = Anno.convert cx tparams_map value in
           let t = if optional then Type.optional t else t in
-          add_field ~static name (t, polarity, None) x
+          add_field ~static name (polarity, Annot t) x
 
       (* unsafe getter property *)
       | _, Property.Identifier (_, name),
@@ -822,23 +832,17 @@ let toplevels cx ~decls ~stmts ~expr x =
       ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
     in
 
-    let field config this super name (field_t, _, value) =
+    let field config this super _name (_, value) =
       match config, value with
       | Options.ESPROPOSAL_IGNORE, _ -> ()
-      | _, None -> ()
-      | _, Some ((loc, _) as expr) ->
-        let init =
-          let reason = mk_reason (RFieldInitializer name) loc in
-          Func_sig.field_initializer x.tparams_map reason expr field_t
-        in
-        method_ this super init
+      | _, Annot _ -> ()
+      | _, Infer fsig -> method_ this super fsig
     in
 
     let this = SMap.find_unsafe "this" x.tparams_map in
     let static = Type.class_type this in
 
     (* Bind private fields to the environment *)
-    let to_field (t, polarity, _) = Type.Field (t, polarity) in
     let to_prop_map = fun x -> Context.make_property_map cx (SMap.map to_field x) in
     Env.bind_class cx x.id (to_prop_map x.instance.private_fields)
     (to_prop_map x.static.private_fields);

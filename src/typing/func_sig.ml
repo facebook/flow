@@ -105,14 +105,14 @@ let default_constructor reason = {
   return_t = VoidT.why reason;
 }
 
-let field_initializer tparams_map reason expr return_t = {
+let field_initializer cx tparams_map reason expr annot = {
   reason;
   kind = FieldInit expr;
   tparams = [];
   tparams_map;
   params = Func_params.empty;
   body = empty_body;
-  return_t;
+  return_t = Anno.mk_type_annotation cx tparams_map reason annot;
 }
 
 let subst cx map x =

@@ -2,7 +2,8 @@
 
 type t
 
-type field = Type.t * Type.polarity * Ast.Expression.t option
+type field = Type.polarity * field'
+and field' = Annot of Type.t | Infer of Func_sig.t
 
 type super =
   | Interface of {
