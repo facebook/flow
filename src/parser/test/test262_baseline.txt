@@ -278,14 +278,6 @@ language/expressions/arrow-function/syntax/early-errors/use-strict-with-non-simp
   Missing parse error
 language/expressions/arrow-function/syntax/early-errors/use-strict-with-non-simple-param.js (default)
   Missing parse error
-language/expressions/assignment/dstr-array-rest-before-elision.js (strict mode)
-  Missing parse error
-language/expressions/assignment/dstr-array-rest-before-elision.js (default)
-  Missing parse error
-language/expressions/assignment/dstr-array-rest-elision-invalid.js (strict mode)
-  Missing parse error
-language/expressions/assignment/dstr-array-rest-elision-invalid.js (default)
-  Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-NSPL-with-USD.js (strict mode)
   Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-NSPL-with-USD.js (default)
@@ -614,14 +606,6 @@ language/statements/class/syntax/early-errors/class-definition-evaluation-script
   Missing parse error
 language/statements/const/redeclaration-error-from-within-strict-mode-function-const.js (default)
   Missing parse error
-language/statements/for-in/dstr-array-rest-before-elision.js (strict mode)
-  Missing parse error
-language/statements/for-in/dstr-array-rest-before-elision.js (default)
-  Missing parse error
-language/statements/for-in/dstr-array-rest-elision-invalid.js (strict mode)
-  Missing parse error
-language/statements/for-in/dstr-array-rest-elision-invalid.js (default)
-  Missing parse error
 language/statements/for-in/head-const-bound-names-dup.js (strict mode)
   Missing parse error
 language/statements/for-in/head-const-bound-names-dup.js (default)
@@ -640,14 +624,6 @@ language/statements/for-in/head-let-bound-names-in-stmt.js (default)
   Missing parse error
 language/statements/for-in/head-lhs-let.js (default)
   Unexpected token in at (27, 10) to (27, 12)
-language/statements/for-of/dstr-array-rest-before-elision.js (strict mode)
-  Missing parse error
-language/statements/for-of/dstr-array-rest-before-elision.js (default)
-  Missing parse error
-language/statements/for-of/dstr-array-rest-elision-invalid.js (strict mode)
-  Missing parse error
-language/statements/for-of/dstr-array-rest-elision-invalid.js (default)
-  Missing parse error
 language/statements/for-of/head-const-bound-names-dup.js (strict mode)
   Missing parse error
 language/statements/for-of/head-const-bound-names-dup.js (default)
@@ -970,13 +946,12 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 54820 (99.12%)
-Failed: 485 (0.88%)
+Passed: 54832 (99.14%)
+Failed: 473 (0.86%)
 
 Features:
   arrow-function: 22/24 (91.67%)
   async-functions: 157/217 (72.35%)
   async-iteration: 6984/7052 (99.04%)
-  destructuring-binding: 10687/10699 (99.89%)
   generators: 1339/1343 (99.70%)
   let: 131/135 (97.04%)
