@@ -1,5 +1,9 @@
 Error: A.js:13
  13: var bad: number = Bad.foo();
+                       ^^^ property `foo`. Could not resolve name
+
+Error: A.js:13
+ 13: var bad: number = Bad.foo();
                        ^^^^^^^^^ string. This type is incompatible with
  13: var bad: number = Bad.foo();
               ^^^^^^ number
@@ -15,14 +19,6 @@ Error: B.js:7
                         ^^^^^^^^^^^^ string. This type is incompatible with
   7: var good: number = A.Good.foo();
                ^^^^^^ number
-
-Error: B.js:10
- 10: var bad_: number = f(); // Calling the function is fine
-                        ^^^ function call. This function call's `this` type is incompatible with
- 13: var bad: number = Bad.foo();
-                       ^^^ object literal. See: A.js:13
-  The call's `this` type is:
-  global object
 
 Error: B.js:10
  10: var bad_: number = f(); // Calling the function is fine

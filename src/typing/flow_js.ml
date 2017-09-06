@@ -5924,8 +5924,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Object library call *)
     (***********************)
 
-    | (ObjProtoT reason, (GetPropT _ | SetPropT _ | MethodT _)) ->
-      rec_flow cx trace (get_builtin_type cx ~trace reason "Object",u)
+    | ObjProtoT reason, _ ->
+      let use_desc = true in
+      let obj_proto = get_builtin_type cx ~trace reason ~use_desc "Object" in
+      rec_flow cx trace (obj_proto, u)
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
