@@ -6296,7 +6296,8 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
           rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
       )));
 
-  rec_flow cx trace (DefT (lreason, ObjT l_obj), UseT (use_op, uproto))
+  rec_flow cx trace (uproto,
+    ReposUseT (ureason, false, use_op, DefT (lreason, ObjT l_obj)))
 
 and is_object_prototype_method = function
   | "isPrototypeOf"
