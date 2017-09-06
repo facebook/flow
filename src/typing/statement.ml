@@ -2194,9 +2194,9 @@ and object_ cx reason ?(allow_sealed=true) props =
   Ast.Expression.Object.(
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
-  let proto = ObjProtoT reason in
+  let obj_proto = ObjProtoT reason in
   (* Return an object with specified sealing. *)
-  let mk_object ?(sealed=false) map =
+  let mk_object ?(proto=obj_proto) ?(sealed=false) map =
     Flow.mk_object_with_map_proto cx reason ~sealed map proto
   in
   (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
@@ -2213,13 +2213,13 @@ and object_ cx reason ?(allow_sealed=true) props =
      When building an object incrementally, only the final call to this function
      may be with sealed=true, so we will always have an unsealed object to copy
      properties to. *)
-  let eval_object ?(sealed=false) (map, result) =
+  let eval_object ?(proto=obj_proto) ?(sealed=false) (map, result) =
     match result with
-    | None -> mk_object ~sealed map
+    | None -> mk_object ~proto ~sealed map
     | Some result ->
       let result =
         if not (SMap.is_empty map)
-        then mk_spread (mk_object map) result
+        then mk_spread (mk_object ~proto map) result
         else result
       in
       if not sealed then result else
@@ -2228,13 +2228,13 @@ and object_ cx reason ?(allow_sealed=true) props =
         )
   in
 
-  let sealed, map, result = List.fold_left (fun (sealed, map, result) t ->
-    match t with
+  let sealed, map, proto, result = List.fold_left (
+    fun (sealed, map, proto, result) -> function
     | SpreadProperty (_, { SpreadProperty.argument }) ->
         let spread = expression cx argument in
         let obj = eval_object (map, result) in
         let result = mk_spread spread obj in
-        false, SMap.empty, Some result
+        false, SMap.empty, proto, Some result
     | Property (_, { Property.
         key = Property.Computed k;
         value = Property.Init v;
@@ -2246,16 +2246,30 @@ and object_ cx reason ?(allow_sealed=true) props =
         Flow.flow cx (obj, SetElemT (reason, k, v));
         (* TODO: vulnerable to race conditions? *)
         let result = obj in
-        sealed, SMap.empty, Some result
-    | t ->
-        sealed, object_prop cx map t, result
-  ) (allow_sealed, SMap.empty, None) props in
+        sealed, SMap.empty, proto, Some result
+    | Property (_, { Property.
+        key =
+          Property.Identifier (_, "__proto__") |
+          Property.Literal (_, {
+            Ast.Literal.value = Ast.Literal.String "__proto__";
+            _;
+          });
+        value = Property.Init v;
+        _method = false;
+        shorthand = false;
+      }) ->
+        (* TODO: assert `t` is null or object-like *)
+        let t = expression cx v in
+        sealed, map, Some t, result
+    | prop ->
+        sealed, object_prop cx map prop, proto, result
+  ) (allow_sealed, SMap.empty, None, None) props in
 
   let sealed = match result with
     | Some _ -> sealed
     | None -> sealed && not (SMap.is_empty map)
   in
-  eval_object ~sealed (map, result)
+  eval_object ?proto ~sealed (map, result)
 )
 
 and variable cx kind
@@ -4319,11 +4333,13 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
   let reason = mk_reason (RCustom (spf "Object.%s" m)) loc in
   match (m, args_) with
   | ("create", [ Expression e ]) ->
+    (* TODO: assert `proto` is null or object-like *)
     let proto = expression cx e in
     Flow.mk_object_with_proto cx reason proto
 
   | ("create", [ Expression e;
                  Expression (_, Object { Object.properties }) ]) ->
+    (* TODO: assert `proto` is null or object-like *)
     let proto = expression cx e in
     let pmap = prop_map_of_object cx properties in
     let map = SMap.fold (fun x p acc ->

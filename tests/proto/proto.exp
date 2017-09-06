@@ -1,0 +1,60 @@
+Error: literal.js:2
+  2: (o.p: empty); // error: number ~> empty
+      ^^^ number. This type is incompatible with
+  2: (o.p: empty); // error: number ~> empty
+           ^^^^^ empty
+
+Error: literal.js:3
+  3: (o.q: empty); // error: number ~> empty
+      ^^^ number. This type is incompatible with
+  3: (o.q: empty); // error: number ~> empty
+           ^^^^^ empty
+
+Error: literal.js:6
+  6: (o_get.q: empty); // error: property `q` not found
+            ^ property `q`. Property not found in
+  6: (o_get.q: empty); // error: property `q` not found
+      ^^^^^ object literal
+
+Error: literal.js:10
+ 10: (o_set.__proto__: empty); // error: read from contravariant prop
+      ^^^^^ object literal. Contravariant property `__proto__` incompatible with covariant use in
+ 10: (o_set.__proto__: empty); // error: read from contravariant prop
+      ^^^^^^^^^^^^^^^ property `__proto__`
+
+Error: literal.js:13
+ 13: (o_method.__proto__: empty); // error: function ~> empty
+      ^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+ 13: (o_method.__proto__: empty); // error: function ~> empty
+                          ^^^^^ empty
+
+Error: literal.js:17
+ 17: (o_shorthand.q: empty); // error: property `q` not found
+                  ^ property `q`. Property not found in
+ 17: (o_shorthand.q: empty); // error: property `q` not found
+      ^^^^^^^^^^^ object literal
+
+Error: literal.js:20
+ 20: var o_computed = { ["__proto__"]: 0 }; // TODO: computed props use SetElem :/
+                      ^^^^^^^^^^^^^^^^^^^^ object literal. Prototype mutation not allowed
+
+Error: literal.js:21
+ 21: (o_computed.__proto__: empty); // TODO: error: number ~> empty
+      ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+ 21: (o_computed.__proto__: empty); // TODO: error: number ~> empty
+                            ^^^^^ empty
+
+Error: literal.js:24
+ 24: (o_loop.p: empty); // error: number ~> empty
+      ^^^^^^^^ number. This type is incompatible with
+ 24: (o_loop.p: empty); // error: number ~> empty
+                ^^^^^ empty
+
+Error: literal.js:25
+ 25: (o_loop.q: empty); // error: property `q` not found
+             ^ property `q`. Property not found in possibly undefined value
+ 23: var o_loop = { p: 0, __proto__: o_loop };
+                                     ^^^^^^ uninitialized variable
+
+
+Found 10 errors
