@@ -778,6 +778,16 @@ module Cache = struct
          corresponding typing rules are already sufficiently robust. *)
       | OpenT _, _ | _, UseT (_, OpenT _) -> false
       | _ ->
+        (* Use ops are purely for better error messages: they should have no
+           effect on type checking. However, recursively nested use ops can pose
+           non-termination problems. To ensure proper caching, we hash use ops
+           to just their top-level structure. *)
+        let u = match u with
+          | UseT (PropertyCompatibility (s, r1, r2, use_op), t) when use_op <> UnknownUse ->
+            UseT (PropertyCompatibility (s, r1, r2, UnknownUse), t)
+          | UseT (TypeArgCompatibility (s, r1, r2, use_op), t) when use_op <> UnknownUse ->
+            UseT (TypeArgCompatibility (s, r1, r2, UnknownUse), t)
+          | _ -> u in
         let found = FlowSet.cache (l, u) cache in
         if found && Context.is_verbose cx then
           prerr_endlinef "%sFlowConstraint cache hit on (%s, %s)"
@@ -3514,8 +3524,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             []
           | _, [] -> []
           | _, (t1, t2)::targs ->
-            let use_op = use_op_break_cycle
-              (TypeArgCompatibility (name, reason_op, reason_tapp, use_op)) in
+            let use_op = TypeArgCompatibility (name, reason_op, reason_tapp, use_op) in
             (match polarity with
             | Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
             | Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
@@ -3958,8 +3967,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         in
         match SMap.get s lflds with
         | Some lp ->
-          let use_op = use_op_break_cycle
-            (PropertyCompatibility (s, lreason, ureason, use_op)) in
+          let use_op = PropertyCompatibility (s, lreason, ureason, use_op) in
           rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
         | _ ->
           match up with
@@ -4097,7 +4105,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Arrays can flow to arrays *)
     | DefT (r1, ArrT (ArrayAT (t1, ts1))),
       UseT (use_op, DefT (r2, ArrT (ArrayAT (t2, ts2)))) ->
-      let use_op = use_op_break_cycle (TypeArgCompatibility ("T", r1, r2, use_op)) in
+      let use_op = TypeArgCompatibility ("T", r1, r2, use_op) in
       let lit1 = (desc_of_reason r1) = RArrayLit in
       let ts1 = Option.value ~default:[] ts1 in
       let ts2 = Option.value ~default:[] ts2 in
@@ -6140,8 +6148,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   iter_real_props cx uflds (fun s up ->
     let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
     let propref = Named (reason_prop, s) in
-    let use_op = use_op_break_cycle
-      (PropertyCompatibility (s, lreason, ureason, use_op)) in
+    let use_op = PropertyCompatibility (s, lreason, ureason, use_op) in
     match Context.get_prop cx lflds s, ldict with
     | Some lp, _ ->
       if lit then (
@@ -6229,27 +6236,6 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
       )));
 
   rec_flow cx trace (DefT (lreason, ObjT l_obj), UseT (use_op, uproto))
-
-and use_op_break_cycle =
-  let rec helper new_use_op use_op = match new_use_op, use_op with
-    | PropertyCompatibility (s1, lr1, ur1, _),
-      PropertyCompatibility (s2, lr2, ur2, _)
-      when new_use_op != use_op && s1 = s2 && lr1 = lr2 && ur1 = ur2 ->
-      PropertyCompatibility (s1, lr1, ur1, UnknownUse)
-
-    | TypeArgCompatibility (s1, lr1, ur1, _),
-      TypeArgCompatibility (s2, lr2, ur2, _)
-      when new_use_op != use_op && s1 = s2 && lr1 = lr2 && ur1 = ur2 ->
-      TypeArgCompatibility (s1, lr1, ur1, UnknownUse)
-
-    | _, PropertyCompatibility (_, _, _, use_op)
-    | _, TypeArgCompatibility (_, _, _, use_op)
-      -> helper new_use_op use_op
-
-    | _ -> new_use_op
-  in
-  fun use_op ->
-    helper use_op use_op
 
 and is_object_prototype_method = function
   | "isPrototypeOf"
@@ -6557,8 +6543,7 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
   let fields_pmap = Context.find_props cx fields_pmap in
   let methods_pmap = Context.find_props cx methods_pmap in
   fields_pmap |> SMap.iter (fun s p ->
-    let use_op = use_op_break_cycle
-      (PropertyCompatibility (s, lreason, reason_struct, use_op)) in
+    let use_op = PropertyCompatibility (s, lreason, reason_struct, use_op) in
     match p with
     | Field (DefT (_, OptionalT t), polarity) ->
       let propref =
@@ -6583,8 +6568,7 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
   );
   methods_pmap |> SMap.iter (fun s p ->
     if inherited_method s then
-      let use_op = use_op_break_cycle
-        (PropertyCompatibility (s, lreason, reason_struct, use_op)) in
+      let use_op = PropertyCompatibility (s, lreason, reason_struct, use_op) in
       let propref =
         let reason_prop = replace_reason (fun desc ->
           RPropertyOf (s, desc)
