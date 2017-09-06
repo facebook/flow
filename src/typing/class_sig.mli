@@ -7,10 +7,14 @@ type field = Type.t * Type.polarity * Ast.Expression.t option
 type super =
   | Interface of { extends: Type.t list; callable: bool; }
   | Class of {
-      extends: Type.t option;
+      extends: extends;
       mixins: Type.t list; (* declare class only *)
       implements: Type.t list
     }
+
+and extends =
+  | Explicit of Type.t
+  | Implicit of { null: bool }
 
 (** 1. Constructors **)
 

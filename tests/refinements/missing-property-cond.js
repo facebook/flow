@@ -60,3 +60,7 @@ function foo9() {
   }
   (actual: Foo9Expected);
 }
+
+function foo10() {
+  if (null.q) {} // error: property `q` on null
+}

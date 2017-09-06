@@ -152,6 +152,9 @@ let run cx trace reason_op l u
     ), intrinsic));
     (* Flow the intrinsic's props as an upper bound to our output
      * type variable. *)
+    (* TODO: if intrinsic is null, we will treat it like prototype termination,
+     * but we should error like a GetPropT would instead. Can this use GetPropT
+     * instead? *)
     rec_flow cx trace (intrinsic, LookupT (
       reason_i,
       Strict reason_i,
@@ -366,6 +369,8 @@ let run cx trace reason_op l u
       let kind = NonstrictReturning None in
       let propref = Named (reason_key, "key") in
       let action = RWProp (config_input, key_t, Read) in
+      (* TODO: if config_input is null, we will treat it like prototype termination,
+       * but we should be treating a null config like an empty config. *)
       rec_flow cx trace (config_input,
         LookupT (reason_key, kind, [], propref, action))
     in
@@ -385,6 +390,8 @@ let run cx trace reason_op l u
       let kind = NonstrictReturning None in
       let propref = Named (reason_ref, "ref") in
       let action = RWProp (config_input, ref_t, Read) in
+      (* TODO: if config_input is null, we will treat it like prototype termination,
+       * but we should be treating a null config like an empty config. *)
       rec_flow cx trace (config_input,
         LookupT (reason_ref, kind, [], propref, action))
     in

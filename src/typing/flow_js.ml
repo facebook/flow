@@ -3291,6 +3291,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        result of the read cannot be used in any interesting way. *)
     (**************************************************************************)
 
+    (* TestPropT emits a LookupT constraint directly, but LookupT behavior for a
+       NullT lower bound is different from GetPropT. For lookups, a NullT
+       indicates the end of the prototype chain. We want to error instead, so
+       handle the null case here. *)
+    | DefT (lreason, NullT), TestPropT (_, propref, _) ->
+      add_output cx ~trace (FlowError.EIncompatibleGetProp {
+        reason_prop = reason_of_propref propref;
+        reason_obj = lreason;
+        special = flow_error_kind_of_lower l;
+      })
+
     | _, TestPropT (reason_op, propref, tout) ->
       let t = tvar_with_constraint cx ~trace ~derivable:true
         (ReposLowerT (reason_op, UseT (UnknownUse, tout)))
@@ -5665,8 +5676,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         does not.
      *)
 
-    | (ObjProtoT _,
-       LookupT (reason, strict, next::try_ts_on_failure, propref, t)) ->
+    | (DefT (_, NullT) | ObjProtoT _),
+      LookupT (reason, strict, next::try_ts_on_failure, propref, t) ->
       (* When s is not found, we always try to look it up in the next element in
          the list try_ts_on_failure. *)
       rec_flow cx trace
@@ -5694,14 +5705,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (** TODO: Ditto above comment for Function.prototype *)
       rec_flow cx trace (get_builtin_type cx ~trace reason_op "Function", u)
 
-    | (ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
+    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
         Strict strict_reason, [], (Named (reason_prop, x) as propref), action) ->
       add_output cx ~trace (FlowError.EStrictLookupFailed
         ((reason_prop, strict_reason), reason, Some x));
       let p = Field (AnyT.why reason_op, Neutral) in
       perform_lookup_action cx trace propref p reason reason_op action
 
-    | (ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
+    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
         Strict strict_reason, [], (Computed elem_t as propref), action) ->
       (match elem_t with
       | OpenT _ ->
@@ -5720,7 +5731,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         add_output cx ~trace (FlowError.EStrictLookupFailed
           ((reason_prop, strict_reason), reason, None)))
 
-    | (ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
+    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
         ShadowRead (strict, rev_proto_ids), [], (Named (reason_prop, x) as propref), action) ->
       (* Emit error if this is a strict read. See `lookup_kinds` in types.ml. *)
       (match strict with
@@ -5733,7 +5744,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let p = find_or_intro_shadow_prop cx trace x (Nel.rev rev_proto_ids) in
       perform_lookup_action cx trace propref p reason reason_op action
 
-    | (ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
+    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
         ShadowWrite rev_proto_ids, [], (Named (_, x) as propref), action) ->
       let id, proto_ids = Nel.rev rev_proto_ids in
       let pmap = Context.find_props cx id in
@@ -5770,19 +5781,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       perform_lookup_action cx trace propref p reason reason_op action
 
-    | (ObjProtoT _ | FunProtoT _),
+    | (DefT (_, NullT) | ObjProtoT _ | FunProtoT _),
       LookupT (_, ShadowRead _, [], Computed elem_t, _) ->
       let loc = loc_of_t elem_t in
       add_output cx ~trace FlowError.(EInternal (loc, ShadowReadComputed))
 
-    | (ObjProtoT _ | FunProtoT _),
+    | (DefT (_, NullT) | ObjProtoT _ | FunProtoT _),
       LookupT (_, ShadowWrite _, [], Computed elem_t, _) ->
       let loc = loc_of_t elem_t in
       add_output cx ~trace FlowError.(EInternal (loc, ShadowWriteComputed))
 
     (* LookupT is a non-strict lookup *)
-    | (ObjProtoT _ |
+    | (DefT (_, NullT) |
+       ObjProtoT _ |
        FunProtoT _ |
+       (* TODO: why would mixed appear here? *)
        DefT (_, MixedT (Mixed_truthy | Mixed_non_maybe))),
       LookupT (_, NonstrictReturning t_opt, [], _, _) ->
       (* don't fire
@@ -5803,20 +5816,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     (* SuperT only involves non-strict lookups *)
-    | (ObjProtoT _, SuperT _)
-    | (FunProtoT _, SuperT _) -> ()
+    | (DefT (_, NullT) | ObjProtoT _ | FunProtoT _), SuperT _ -> ()
 
     (** ExtendsT searches for a nominal superclass. The search terminates with
         either failure at the root or a structural subtype check. **)
 
-    | ObjProtoT _,
+    | (DefT (_, NullT) | ObjProtoT _),
       UseT (use_op, ExtendsT (reason, next::try_ts_on_failure, l, u)) ->
       (* When seaching for a nominal superclass fails, we always try to look it
          up in the next element in the list try_ts_on_failure. *)
       rec_flow cx trace
         (next, UseT (use_op, ExtendsT (reason, try_ts_on_failure, l, u)))
 
-    | ObjProtoT _,
+    | (DefT (_, NullT) | ObjProtoT _),
       UseT (use_op, ExtendsT (_, [], l, DefT (reason_inst, InstanceT (_, super, _, {
         fields_tmap;
         methods_tmap;
@@ -5827,7 +5839,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (fields_tmap, methods_tmap);
       rec_flow cx trace (l, UseT (use_op, super))
 
-    | (ObjProtoT _, UseT (use_op, ExtendsT (_, [], t, tc))) ->
+    | (DefT (_, NullT) | ObjProtoT _),
+      UseT (use_op, ExtendsT (_, [], t, tc)) ->
       let reason_l, reason_u = Flow_error.ordered_reasons (reason_of_t t) (reason_of_t tc) in
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (reason_l, reason_u, use_op))
 

@@ -43,10 +43,14 @@ type t = {
 type super =
   | Interface of { extends: Type.t list; callable: bool; }
   | Class of {
-      extends: Type.t option;
+      extends: extends;
       mixins: Type.t list; (* declare class only *)
       implements: Type.t list
     }
+
+and extends =
+  | Explicit of Type.t
+  | Implicit of { null: bool }
 
 let empty id reason tparams tparams_map super =
   let empty_sig reason super = {
@@ -87,8 +91,16 @@ let empty id reason tparams tparams_map super =
          bind, call, and apply. Despite this, classes are generally not callable
          without new (exceptions include cast functions like Number). *)
       let super, ssuper = match extends with
-      | None -> ObjProtoT super_reason, FunProtoT super_reason
-      | Some t -> t, class_type t
+      | Explicit t -> t, class_type t
+      | Implicit { null } ->
+        (* The builtin Object class represents the top of the prototype chain,
+           so it's super type should be `null` to signify the end. *)
+        let super =
+          if null
+          then NullT.make super_reason
+          else ObjProtoT super_reason
+        in
+        super, FunProtoT super_reason
       in
       (* Classes also support multiple inheritance through mixins. Note that
          mixins override explicit extends. *)
@@ -400,11 +412,11 @@ let mk_interface_super cx structural tparams_map (r, id, targs) =
   else mk_super cx tparams_map i targs
 
 let mk_extends cx tparams_map ~expr = function
-  | None, None -> None
+  | None, None -> Implicit { null = false }
   | None, _ -> assert false (* type args with no head expr *)
   | Some e, targs ->
     let c = expr cx e in
-    Some (mk_super cx tparams_map c targs)
+    Explicit (mk_super cx tparams_map c targs)
 
 let mk_mixins cx tparams_map (r, id, targs) =
   let i =
@@ -634,8 +646,15 @@ let extract_mixins _cx =
     r, id, typeParameters
   )
 
+let is_object_builtin_libdef (loc, name) =
+  name = "Object" &&
+  match Loc.source loc with
+  | None -> false
+  | Some source -> Loc.source_is_lib_file source
+
 let mk_interface cx loc reason structural self = Ast.Statement.(
   fun { Interface.
+    id = ident;
     typeParameters;
     body = (_, { Ast.Type.Object.properties; _ });
     extends;
@@ -670,8 +689,8 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
         Interface { extends; callable }
       else
         let extends = match extends with
-        | [] -> None
-        | [t] -> Some t
+        | [] -> Implicit { null = is_object_builtin_libdef ident }
+        | [t] -> Explicit t
         | _ -> failwith "declare class with multiple extends"
         in
         Class { extends; mixins; implements = [] }
