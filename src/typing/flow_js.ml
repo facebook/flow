@@ -3167,6 +3167,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        it would be in practice.
      *)
 
+    | DefT (_, (SingletonStrT _ | SingletonNumT _ | SingletonBoolT _)),
+      ReposLowerT (reason_op, u) ->
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+
     | DefT (reason, SingletonStrT key), _ ->
       rec_flow cx trace (DefT (reason, StrT (Literal (None, key))), u)
 
@@ -4985,17 +4989,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (AnyT.why reason_op, tout)
 
     | DefT (_, ArrT arrtype), MapTypeT (reason_op, TupleMap funt, tout) ->
-      let f x = mk_tvar_where cx reason_op (fun t ->
-        let callt = CallT (reason_op, mk_functioncalltype [Arg x] t) in
-        rec_flow cx trace (funt, callt)
-      ) in
-
+      let f x = EvalT (funt, TypeDestructorT (reason_op, CallType [x]), mk_id ()) in
       let arrtype = match arrtype with
       | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Option.map ~f:(List.map f) ts)
       | TupleAT (elemt, ts) -> TupleAT (f elemt, List.map f ts)
       | ROArrayAT (elemt) -> ROArrayAT (f elemt)
       | EmptyAT -> EmptyAT in
-
       let t =
         let reason = replace_reason_const RArrayType reason_op in
         DefT (reason, ArrT arrtype)
@@ -5004,18 +5003,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, MapTypeT (reason, TupleMap funt, tout) ->
       let iter = get_builtin cx ~trace "$iterate" reason in
-      let elemt = mk_tvar_where cx reason (fun t ->
-        let callt = CallT (reason, mk_functioncalltype [Arg l] t) in
-        rec_flow cx trace (iter, callt)
-      ) in
+      let elemt = EvalT (iter, TypeDestructorT (reason, CallType [l]), mk_id ()) in
       let t = DefT (reason, ArrT (ArrayAT (elemt, None))) in
       rec_flow cx trace (t, MapTypeT (reason, TupleMap funt, tout))
 
     | DefT (_, ObjT o), MapTypeT (reason_op, ObjectMap funt, tout) ->
-      let map_t t = mk_tvar_where cx reason_op (fun t' ->
-        let funtype = mk_functioncalltype [Arg t] t' in
-        rec_flow cx trace (funt, CallT (reason_op, funtype))
-      ) in
+      let map_t t = EvalT (funt, TypeDestructorT (reason_op, CallType [t]), mk_id ()) in
       let props_tmap =
         Context.find_props cx o.props_tmap
         |> Properties.map_fields map_t
@@ -5032,12 +5025,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (mapped_t, tout)
 
     | DefT (_, ObjT o), MapTypeT (reason_op, ObjectMapi funt, tout) ->
-      let mapi_t key t = mk_tvar_where cx reason_op (fun t' ->
-        let funtype = { (mk_functioncalltype [Arg key; Arg t] t') with
-          call_strict_arity = false;
-        } in
-        rec_flow cx trace (funt, CallT (reason_op, funtype))
-      ) in
+      let mapi_t key t = EvalT (funt, TypeDestructorT (reason_op, CallType [key; t]), mk_id ()) in
       let mapi_field key t =
         let reason = replace_reason_const (RStringLit key) reason_op in
         mapi_t (DefT (reason, SingletonStrT key)) t
