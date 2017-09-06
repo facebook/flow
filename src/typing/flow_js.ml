@@ -6621,17 +6621,16 @@ and structural_subtype cx trace ?(use_op=UnknownUse) lower reason_struct
           LookupProp (use_op, p)))
   );
   methods_pmap |> SMap.iter (fun s p ->
-    if inherited_method s then
-      let use_op = PropertyCompatibility (s, lreason, reason_struct, use_op) in
-      let propref =
-        let reason_prop = replace_reason (fun desc ->
-          RPropertyOf (s, desc)
-        ) reason_struct in
-        Named (reason_prop, s)
-      in
-      rec_flow cx trace (lower,
-        LookupT (reason_struct, Strict lreason, [], propref,
-          LookupProp (use_op, p)))
+    let use_op = PropertyCompatibility (s, lreason, reason_struct, use_op) in
+    let propref =
+      let reason_prop = replace_reason (fun desc ->
+        RPropertyOf (s, desc)
+      ) reason_struct in
+      Named (reason_prop, s)
+    in
+    rec_flow cx trace (lower,
+      LookupT (reason_struct, Strict lreason, [], propref,
+        LookupProp (use_op, p)))
   );
 
 (*****************)
