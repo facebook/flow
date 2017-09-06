@@ -5590,13 +5590,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* property exists, but is not something we can use for refinement *)
         rec_flow_t cx trace (l, result)
 
-    (***********************)
-    (* Object library call *)
-    (***********************)
-
-    | (ObjProtoT reason, (GetPropT _ | SetPropT _ | MethodT _)) ->
-      rec_flow cx trace (get_builtin_type cx ~trace reason "Object",u)
-
     (*********************)
     (* functions statics *)
     (*********************)
@@ -5926,6 +5919,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let use_desc = true in
       let fun_proto = get_builtin_type cx ~trace reason ~use_desc "Function" in
       rec_flow cx trace (l, UseT (use_op, fun_proto))
+
+    (***********************)
+    (* Object library call *)
+    (***********************)
+
+    | (ObjProtoT reason, (GetPropT _ | SetPropT _ | MethodT _)) ->
+      rec_flow cx trace (get_builtin_type cx ~trace reason "Object",u)
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
