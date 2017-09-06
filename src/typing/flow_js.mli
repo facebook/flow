@@ -127,12 +127,12 @@ val add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit
 val builtins: Context.t -> Type.t
 val get_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
 val lookup_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.t -> unit
-val get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t
+val get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t
 val resolve_builtin_class: Context.t -> ?trace:Trace.t -> Type.t -> Type.t
 val set_builtin: Context.t -> ?trace:Trace.t -> string -> Type.t -> unit
 
-val mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?for_type:bool -> Type.t -> Type.t
-val mk_typeof_annotation: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
+val mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?for_type:bool -> ?use_desc:bool -> Type.t -> Type.t
+val mk_typeof_annotation: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
 (* strict *)
 val enforce_strict: Context.t -> Constraint.ident -> string list -> unit

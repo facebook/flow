@@ -67,7 +67,7 @@ let rec gc cx state = function
   (** def types **)
 
   | AbstractT (_, t) -> gc cx state t
-  | AnnotT t -> gc cx state t
+  | AnnotT (t, _) -> gc cx state t
   | OpaqueT (_, opaquetype) ->
       Option.iter ~f:(gc cx state) opaquetype.underlying_t;
       Option.iter ~f:(gc cx state) opaquetype.super_t
@@ -282,7 +282,7 @@ and gc_use cx state = function
   | ReactKitT (_, tool) -> gc_react_kit cx state tool
   | RefineT (_, pred, t) -> gc_pred cx state pred; gc cx state t
   | ReposLowerT (_, _, u) -> gc_use cx state u
-  | ReposUseT (_, _, t) -> gc cx state t
+  | ReposUseT (_, _, _, t) -> gc cx state t
   | SentinelPropTestT (t, _, _, t_out) -> gc cx state t; gc cx state t_out
   | SetElemT(_, i, t) -> gc cx state i; gc cx state t
   | SetPropT(_, _, t) -> gc cx state t

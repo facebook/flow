@@ -150,7 +150,7 @@ let gen_separated_list list sep gen_fn env =
 let rec gen_type t env = Type.(
   match t with
   | AbstractT (_, t) -> add_str "$Abstract<" env |> gen_type t |> add_str ">"
-  | AnnotT t -> gen_type t env
+  | AnnotT (t, _) -> gen_type t env
   | OpaqueT (_, {underlying_t = Some t; _}) -> gen_type t env
   | OpaqueT (_, {super_t = Some t; _}) -> gen_type t env
   | DefT (_, AnyFunT) -> add_str "Function" env

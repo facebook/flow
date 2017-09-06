@@ -957,7 +957,7 @@ module ResolvableTypeJob = struct
         else IMap.add id (OpenUnresolved (log_unresolved, id)) acc
       end
 
-    | AnnotT source ->
+    | AnnotT (source, _) ->
       let _, id = open_tvar source in
       if IMap.mem id acc then acc
       else IMap.add id (Binding source) acc
@@ -1387,7 +1387,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
            since they come from annotations and other types that have the 0->1
            property, but does not work in general because for arbitrary tvars,
            concretization may never happen or may happen more than once. *)
-        rec_flow cx trace (result, ReposUseT (reason, use_op, l))
+        let use_desc = false in
+        rec_flow cx trace (result, ReposUseT (reason, use_desc, use_op, l))
       end
 
     | EvalT (t, DestructuringT (reason, s), i), _ ->
@@ -1548,7 +1549,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (VoidT.why r, u);
       rec_flow cx trace (t, u);
 
-    | AnnotT source_t, IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
+    | AnnotT (source_t, _), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
       rec_flow cx trace (source_t, u)
 
     | t, IntersectionPreprocessKitT (reason,
@@ -1612,40 +1613,58 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Special cases where we want to recursively concretize types within the
        lower bound. *)
 
-    | DefT (r, UnionT rep), ReposUseT (reason, use_op, l) ->
-      let rep = UnionRep.map annot rep in
-      let u = DefT (repos_reason (loc_of_reason reason) r, UnionT rep) in
-      rec_flow cx trace (l, UseT (use_op, u))
+    | DefT (r, UnionT rep), ReposUseT (reason, use_desc, use_op, l) ->
+      let rep = UnionRep.map (annot use_desc) rep in
+      let r = repos_reason (loc_of_reason reason) r in
+      let r =
+        if use_desc
+        then replace_reason_const (desc_of_reason reason) r
+        else r
+      in
+      rec_flow cx trace (l, UseT (use_op, DefT (r, UnionT rep)))
 
-    | DefT (r, MaybeT u), ReposUseT (reason, use_op, l) ->
-      let u = DefT (repos_reason (loc_of_reason reason) r, MaybeT (annot u)) in
-      rec_flow cx trace (l, UseT (use_op, u))
+    | DefT (r, MaybeT u), ReposUseT (reason, use_desc, use_op, l) ->
+      let r = repos_reason (loc_of_reason reason) r in
+      let r =
+        if use_desc
+        then replace_reason_const (desc_of_reason reason) r
+        else r
+      in
+      rec_flow cx trace (l, UseT (use_op, DefT (r, MaybeT (annot use_desc u))))
 
-    | DefT (r, OptionalT u), ReposUseT (reason, use_op, l) ->
-      let u = DefT (repos_reason (loc_of_reason reason) r, OptionalT (annot u)) in
-      rec_flow cx trace (l, UseT (use_op, u))
+    | DefT (r, OptionalT u), ReposUseT (reason, use_desc, use_op, l) ->
+      let r = repos_reason (loc_of_reason reason) r in
+      let r =
+        if use_desc
+        then replace_reason_const (desc_of_reason reason) r
+        else r
+      in
+      rec_flow cx trace (l, UseT (use_op, DefT (r, OptionalT (annot use_desc u))))
 
     (* Waits for a def type to become concrete, repositions it as an upper UseT
        using the stored reason. This can be used to store a reason as it flows
        through a tvar. *)
 
-    | u, ReposUseT (reason, use_op, l) ->
-      let u = reposition cx ~trace (loc_of_reason reason) u in
+    | (u_def, ReposUseT (reason, use_desc, use_op, l)) ->
+      let loc = loc_of_reason reason in
+      let desc = if use_desc then Some (desc_of_reason reason) else None in
+      let u = reposition cx ~trace loc ?desc u_def in
       rec_flow cx trace (l, UseT (use_op, u))
 
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
 
-    | _, UseT (use_op, AnnotT source_t) ->
+    | _, UseT (use_op, AnnotT (source_t, use_desc)) ->
       let reason = reason_of_t source_t in
-      rec_flow cx trace (source_t, ReposUseT (reason, use_op, l))
+      rec_flow cx trace (source_t, ReposUseT (reason, use_desc, use_op, l))
 
     (* The source component of an annotation flows out of the annotated
        site to downstream uses. *)
 
-    | AnnotT source_t, u ->
+    | AnnotT (source_t, use_desc), u ->
       let loc = loc_of_t source_t in
-      rec_flow cx trace (reposition ~trace cx loc source_t, u)
+      let desc = if use_desc then Some (desc_of_t source_t) else None in
+      rec_flow cx trace (reposition ~trace cx loc ?desc source_t, u)
 
     (****************************************************************)
     (* BecomeT unifies a tvar with an incoming concrete lower bound *)
@@ -6707,7 +6726,7 @@ and eval_destructor cx ~trace reason curr_t s i =
       (* The type this annotation resolves to might be a union-like type which
          requires special handling (see below). However, the tvar inside the
          AnnotT might not be resolved yet. *)
-      | AnnotT t ->
+      | AnnotT (t, _) ->
         (* Use full type resolution to wait for the tvar to become resolved. *)
         let _, id = open_tvar t in
         let k = tvar_with_constraint cx ~trace
@@ -7723,7 +7742,7 @@ and optimize_spec cx = function
 and guess_and_record_sentinel_prop cx ts =
 
   let props_of_object = function
-    | AnnotT (OpenT (_, id)) ->
+    | AnnotT (OpenT (_, id), _) ->
       let constraints = find_graph cx id in
       begin match constraints with
       | Resolved (DefT (_, ObjT { props_tmap; _ })) ->
@@ -7734,7 +7753,7 @@ and guess_and_record_sentinel_prop cx ts =
     | _ -> SMap.empty in
 
   let is_singleton_type = function
-    | AnnotT (OpenT (_, id)) ->
+    | AnnotT (OpenT (_, id), _) ->
       let constraints = find_graph cx id in
       begin match constraints with
       | Resolved (DefT (_,
@@ -7764,7 +7783,7 @@ and guess_and_record_sentinel_prop cx ts =
     (* Record the guessed sentinel properties for each object *)
     let keys = SMap.fold (fun s _ keys -> SSet.add s keys) acc SSet.empty in
     List.iter (function
-      | AnnotT (OpenT (_, id)) ->
+      | AnnotT (OpenT (_, id), _) ->
         let constraints = find_graph cx id in
         begin match constraints with
         | Resolved (DefT (_, ObjT { props_tmap; _ })) ->
@@ -9669,13 +9688,13 @@ and mk_typeapp_instance cx ?trace ~reason_op ~reason_tapp ?cache c ts =
 (* NOTE: the for_type flag is true when expecting a type (e.g., when processing
    an annotation), and false when expecting a runtime value (e.g., when
    processing an extends). *)
-and mk_instance cx ?trace instance_reason ?(for_type=true) c =
+and mk_instance cx ?trace instance_reason ?(for_type=true) ?(use_desc=false) c =
   if for_type then
     (* Make an annotation. *)
     AnnotT (mk_tvar_where cx instance_reason (fun t ->
       (* this part is similar to making a runtime value *)
       flow_opt_t cx ?trace (c, DefT (instance_reason, TypeT t))
-    ))
+    ), use_desc)
   else
     mk_tvar_derivable_where cx instance_reason (fun t ->
       flow_opt_t cx ?trace (c, class_type t)
@@ -9771,20 +9790,20 @@ and reposition cx ?trace loc ?desc t =
 
 (* given the type of a value v, return the type term
    representing the `typeof v` annotation expression *)
-and mk_typeof_annotation cx ?trace reason t =
+and mk_typeof_annotation cx ?trace reason ?(use_desc=false) t =
   match t with
   | OpenT _ ->
     let source = mk_tvar_where cx reason (fun t' ->
       flow_opt cx ?trace (t, BecomeT (reason, t'))
     ) in
-    AnnotT source
+    AnnotT (source, use_desc)
   | _ ->
     let loc = loc_of_reason reason in
     reposition cx ?trace loc t
 
-and get_builtin_type cx ?trace reason x =
+and get_builtin_type cx ?trace reason ?(use_desc=false) x =
   let t = get_builtin cx ?trace x reason in
-  mk_instance cx ?trace reason t
+  mk_instance cx ?trace reason ~use_desc t
 
 and get_builtin_prop_type cx ?trace reason tool =
   let x = React.PropType.(match tool with
@@ -10640,7 +10659,7 @@ end = struct
           []
         in
         extract cx (DefT (reason, IntersectionT rep))
-    | AnnotT source ->
+    | AnnotT (source, _) ->
         let source_t = resolve_type cx source in
         extract cx source_t
     | DefT (_, InstanceT (_, super, _,

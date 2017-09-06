@@ -150,7 +150,7 @@ module rec TypeTerm : sig
         as the wrapped tvars are 0->1. If instead the possible types of a
         wrapped tvar are T1 and T2, then the current rules would flow T1 | T2 to
         upper bounds, and would flow lower bounds to T1 & T2. **)
-    | AnnotT of t
+    | AnnotT of t * bool (* use_desc *)
 
     (* Opaque type aliases. The opaquetype.opaque_id is its unique id, opaquetype.underlying_t is
      * the underlying type, which we only allow access to when inside the file the opaque type
@@ -323,7 +323,7 @@ module rec TypeTerm : sig
 
     (* repositioning *)
     | ReposLowerT of reason * bool (* use_desc *) * use_t
-    | ReposUseT of reason * use_op * t
+    | ReposUseT of reason * bool (* use_desc *) * use_op * t
 
     (* operations on runtime types, such as classes and functions *)
     | ConstructorT of reason * call_arg list * t
@@ -1876,7 +1876,7 @@ let any_propagating_use_t = function
 let rec reason_of_t = function
   | OpenT (reason,_) -> reason
   | AbstractT (reason, _) -> reason
-  | AnnotT assume_t -> reason_of_t assume_t
+  | AnnotT (assume_t, _) -> reason_of_t assume_t
   | AnyWithLowerBoundT (t) -> reason_of_t t
   | AnyWithUpperBoundT (t) -> reason_of_t t
   | MergedT (reason, _) -> reason
@@ -1975,7 +1975,7 @@ and reason_of_use_t = function
   | ReactKitT (reason, _) -> reason
   | RefineT (reason, _, _) -> reason
   | ReposLowerT (reason, _, _) -> reason
-  | ReposUseT (reason, _, _) -> reason
+  | ReposUseT (reason, _, _, _) -> reason
   | ResolveSpreadT (reason, _) -> reason
   | SentinelPropTestT (_, _, _, result) -> reason_of_t result
   | SetElemT (reason,_,_) -> reason
@@ -2016,8 +2016,8 @@ let def_loc_of_t t = def_loc_of_reason (reason_of_t t)
 let rec mod_reason_of_t f = function
   | OpenT (reason, t) -> OpenT (f reason, t)
   | AbstractT (reason, t) -> AbstractT (f reason, t)
-  | AnnotT assume_t ->
-      AnnotT (mod_reason_of_t f assume_t)
+  | AnnotT (assume_t, use_desc) ->
+      AnnotT (mod_reason_of_t f assume_t, use_desc)
   | AnyWithLowerBoundT t -> AnyWithLowerBoundT (mod_reason_of_t f t)
   | AnyWithUpperBoundT t -> AnyWithUpperBoundT (mod_reason_of_t f t)
   | MergedT (reason, uses) -> MergedT (f reason, uses)
@@ -2132,7 +2132,7 @@ and mod_reason_of_use_t f = function
   | ReactKitT (reason, tool) -> ReactKitT (f reason, tool)
   | RefineT (reason, p, t) -> RefineT (f reason, p, t)
   | ReposLowerT (reason, use_desc, t) -> ReposLowerT (f reason, use_desc, t)
-  | ReposUseT (reason, use_op, t) -> ReposUseT (f reason, use_op, t)
+  | ReposUseT (reason, use_desc, use_op, t) -> ReposUseT (f reason, use_desc, use_op, t)
   | ResolveSpreadT (reason_op, resolve) -> ResolveSpreadT (f reason_op, resolve)
   | SentinelPropTestT (l, sense, sentinel, result) ->
       SentinelPropTestT (l, sense, sentinel, mod_reason_of_t f result)
@@ -2502,6 +2502,6 @@ let this_typeapp t this tparams =
   let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in
   ThisTypeAppT (reason, t, this, tparams)
 
-let annot = function
-| OpenT _ as t -> AnnotT t
+let annot use_desc = function
+| OpenT _ as t -> AnnotT (t, use_desc)
 | t -> t

@@ -427,8 +427,8 @@ let rec normalize_type_impl cx ids t = match t with
   | DiffT (t1, t2) ->
       DiffT (normalize_type_impl cx ids t1, normalize_type_impl cx ids t2)
 
-  | AnnotT t ->
-      AnnotT (normalize_type_impl cx ids t)
+  | AnnotT (t, use_desc) ->
+      AnnotT (normalize_type_impl cx ids t, use_desc)
 
   | OpaqueT (r, opaquetype) ->
       OpaqueT (r, { opaquetype with
