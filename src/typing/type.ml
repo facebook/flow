@@ -322,7 +322,7 @@ module rec TypeTerm : sig
     | SetProtoT of reason * t
 
     (* repositioning *)
-    | ReposLowerT of reason * use_t
+    | ReposLowerT of reason * bool (* use_desc *) * use_t
     | ReposUseT of reason * use_op * t
 
     (* operations on runtime types, such as classes and functions *)
@@ -1974,7 +1974,7 @@ and reason_of_use_t = function
   | PredicateT (_, t) -> reason_of_t t
   | ReactKitT (reason, _) -> reason
   | RefineT (reason, _, _) -> reason
-  | ReposLowerT (reason, _) -> reason
+  | ReposLowerT (reason, _, _) -> reason
   | ReposUseT (reason, _, _) -> reason
   | ResolveSpreadT (reason, _) -> reason
   | SentinelPropTestT (_, _, _, result) -> reason_of_t result
@@ -2131,7 +2131,7 @@ and mod_reason_of_use_t f = function
   | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
   | ReactKitT (reason, tool) -> ReactKitT (f reason, tool)
   | RefineT (reason, p, t) -> RefineT (f reason, p, t)
-  | ReposLowerT (reason, t) -> ReposLowerT (f reason, t)
+  | ReposLowerT (reason, use_desc, t) -> ReposLowerT (f reason, use_desc, t)
   | ReposUseT (reason, use_op, t) -> ReposUseT (f reason, use_op, t)
   | ResolveSpreadT (reason_op, resolve) -> ResolveSpreadT (f reason_op, resolve)
   | SentinelPropTestT (l, sense, sentinel, result) ->

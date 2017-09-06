@@ -281,7 +281,7 @@ and gc_use cx state = function
   | PredicateT (pred, t) -> gc_pred cx state pred; gc cx state t
   | ReactKitT (_, tool) -> gc_react_kit cx state tool
   | RefineT (_, pred, t) -> gc_pred cx state pred; gc cx state t
-  | ReposLowerT (_, u) -> gc_use cx state u
+  | ReposLowerT (_, _, u) -> gc_use cx state u
   | ReposUseT (_, _, t) -> gc cx state t
   | SentinelPropTestT (t, _, _, t_out) -> gc cx state t; gc cx state t_out
   | SetElemT(_, i, t) -> gc cx state i; gc cx state t

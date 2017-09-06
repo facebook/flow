@@ -342,7 +342,7 @@ and parts_of_use_t cx = function
 | PredicateT (_, out) -> ["out", Def out]
 | ReactKitT (_, tool) -> parts_of_react_kit tool
 | RefineT (_, _, t) -> ["t", Def t]
-| ReposLowerT (_, u) -> ["upper", Use u]
+| ReposLowerT (_, _, u) -> ["upper", Use u]
 | ReposUseT (_, _, l) ->  ["lower", Def l]
 | ResolveSpreadT (_, {
     rrt_resolved;

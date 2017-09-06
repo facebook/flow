@@ -566,7 +566,7 @@ let rec assume_ground cx ?(depth=1) ids t =
      when extracting (parts of) requires/imports. As such, they need to be
      kept in sync as module system conventions evolve. *)
 
-  | ReposLowerT (_, use_t) ->
+  | ReposLowerT (_, _, use_t) ->
     assume_ground cx ~depth:(depth + 1) ids use_t
 
   | ImportModuleNsT (_, t)
@@ -2287,9 +2287,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* The set of valid uses of an idx() callback parameter. In general this
        should be limited to the various forms of property access operations. *)
-    | (IdxWrapper (idx_reason, obj), ReposLowerT (reason_op, u)) ->
+    | (IdxWrapper (idx_reason, obj), ReposLowerT (reason_op, use_desc, u)) ->
       let repositioned_obj = mk_tvar_where cx reason_op (fun t ->
-        rec_flow cx trace (obj, ReposLowerT (reason_op, UseT (UnknownUse, t)))
+        rec_flow cx trace (obj, ReposLowerT (reason_op, use_desc, UseT (UnknownUse, t)))
       ) in
       rec_flow cx trace (IdxWrapper(idx_reason, repositioned_obj), u)
 
@@ -2337,10 +2337,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (r, (NullT | VoidT)), UseT (use_op, DefT (_, MaybeT tout)) ->
       rec_flow cx trace (EmptyT.why r, UseT (use_op, tout))
 
-    | DefT (_, MaybeT _), ReposLowerT (reason_op, u) ->
+    | DefT (_, MaybeT _), ReposLowerT (reason_op, use_desc, u) ->
       (* Don't split the maybe type into its constituent members. Instead,
          reposition the entire maybe type. *)
-      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+      let loc = loc_of_reason reason_op in
+      let desc = if use_desc then Some (desc_of_reason reason_op) else None in
+      rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
     | DefT (_, MaybeT t), UseT (_, DefT (_, MaybeT _)) ->
       rec_flow cx trace (t, u)
@@ -2359,10 +2361,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (r, VoidT), UseT (use_op, DefT (_, OptionalT tout)) ->
       rec_flow cx trace (EmptyT.why r, UseT (use_op, tout))
 
-    | DefT (_, OptionalT _), ReposLowerT (reason_op, u) ->
+    | DefT (_, OptionalT _), ReposLowerT (reason_op, use_desc, u) ->
       (* Don't split the optional type into its constituent members. Instead,
          reposition the entire optional type. *)
-      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+      let loc = loc_of_reason reason_op in
+      let desc = if use_desc then Some (desc_of_reason reason_op) else None in
+      rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
     | DefT (r, OptionalT t), _ ->
       rec_flow cx trace (VoidT.why r, u);
@@ -2506,8 +2510,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let t_out = mk_instance cx ~trace reason_op ~for_type:false c in
       rec_flow cx trace (l, UseT (use_op, t_out))
 
-    | DefT (_, TypeAppT _), ReposLowerT (reason_op, u) ->
-        rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+    | DefT (_, TypeAppT _), ReposLowerT (reason_op, use_desc, u) ->
+        let loc = loc_of_reason reason_op in
+        let desc = if use_desc then Some (desc_of_reason reason_op) else None in
+        rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
     | DefT (reason_tapp, TypeAppT(c, ts)), MethodT _ ->
         let reason_op = reason_of_use_t u in
@@ -2602,8 +2608,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* Repositioning should happen before opaque types are considered so that we can
      * have the "most recent" location when we do look at the opaque type *)
-    | OpaqueT _, ReposLowerT (reason_op, u) ->
-      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+    | OpaqueT _, ReposLowerT (reason_op, use_desc, u) ->
+      let loc = loc_of_reason reason_op in
+      let desc = if use_desc then Some (desc_of_reason reason_op) else None in
+      rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
     (* If the type is still in the same file it was defined, we allow it to
      * expose its underlying type information *)
@@ -2701,7 +2709,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | _ -> replace_reason_const RUnknownString reason_s in
       (* check that o has key x *)
       let u = HasOwnPropT(reason_next, literal) in
-      rec_flow cx trace (o, ReposLowerT(reason_op, u))
+      rec_flow cx trace (o, ReposLowerT(reason_op, false, u))
 
 
     | KeysT (reason1, o1), _ ->
@@ -2833,10 +2841,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* union and intersection types *)
     (********************************)
 
-    | DefT (_, UnionT _), ReposLowerT (reason_op, u) ->
+    | DefT (_, UnionT _), ReposLowerT (reason_op, use_desc, u) ->
       (* Don't split the union type into its constituent members. Instead,
          reposition the entire union type. *)
-      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+      let loc = loc_of_reason reason_op in
+      let desc = if use_desc then Some (desc_of_reason reason_op) else None in
+      rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
     | DefT (_, UnionT _), ObjSpreadT (reason_op, options, tool, state, tout) ->
       object_spread cx trace reason_op options tool state tout l
@@ -3001,8 +3011,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (** This duplicates the (_, ReposLowerT u) near the end of this pattern
         match but has to appear here to preempt the (IntersectionT, _) in
         between so that we reposition the entire intersection. *)
-    | DefT (_, IntersectionT _), ReposLowerT (reason_op, u) ->
-      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+    | DefT (_, IntersectionT _), ReposLowerT (reason_op, use_desc, u) ->
+      let loc = loc_of_reason reason_op in
+      let desc = if use_desc then Some (desc_of_reason reason_op) else None in
+      rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
     | DefT (_, IntersectionT _), ObjSpreadT (reason_op, options, tool, state, tout) ->
       object_spread cx trace reason_op options tool state tout l
@@ -3200,8 +3212,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      *)
 
     | DefT (_, (SingletonStrT _ | SingletonNumT _ | SingletonBoolT _)),
-      ReposLowerT (reason_op, u) ->
-      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+      ReposLowerT (reason_op, use_desc, u) ->
+      let loc = loc_of_reason reason_op in
+      let desc = if use_desc then Some (desc_of_reason reason_op) else None in
+      rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
     | DefT (reason, SingletonStrT key), _ ->
       rec_flow cx trace (DefT (reason, StrT (Literal (None, key))), u)
@@ -3304,7 +3318,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, TestPropT (reason_op, propref, tout) ->
       let t = tvar_with_constraint cx ~trace ~derivable:true
-        (ReposLowerT (reason_op, UseT (UnknownUse, tout)))
+        (ReposLowerT (reason_op, false, UseT (UnknownUse, tout)))
       in
       let lookup_kind = NonstrictReturning (match l with
         | DefT (_, ObjT { flags; _ })
@@ -3565,11 +3579,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, AnyT), ThisSpecializeT (_, _, tvar) ->
       rec_flow_t cx trace (l, tvar)
 
-    | DefT (_, PolyT _), ReposLowerT (reason_op, u) ->
-      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+    | DefT (_, PolyT _), ReposLowerT (reason_op, use_desc, u) ->
+      let loc = loc_of_reason reason_op in
+      let desc = if use_desc then Some (desc_of_reason reason_op) else None in
+      rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
-    | (ThisClassT _, ReposLowerT (reason_op, u)) ->
-      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+    | (ThisClassT _, ReposLowerT (reason_op, use_desc, u)) ->
+      let loc = loc_of_reason reason_op in
+      let desc = if use_desc then Some (desc_of_reason reason_op) else None in
+      rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
     (* When do we consider a polymorphic type <X:U> T to be a subtype of another
        polymorphic type <X:U'> T'? This is the subject of a long line of
@@ -3990,7 +4008,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let u =
               LookupT (ureason, Strict lreason, [], propref,
                 LookupProp (use_op, up)) in
-            rec_flow cx trace (super, ReposLowerT (lreason, u))
+            rec_flow cx trace (super, ReposLowerT (lreason, false, u))
       );
 
       rec_flow cx trace (l, UseT (use_op, uproto))
@@ -4104,7 +4122,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (AnyT.why reason_op, u)
 
     | (_, ObjTestT(reason_op, default, u)) ->
-      let u = ReposLowerT(reason_op, UseT (UnknownUse, u)) in
+      let u = ReposLowerT(reason_op, false, UseT (UnknownUse, u)) in
       if object_like l
       then rec_flow cx trace (l, u)
       else rec_flow cx trace (default, u)
@@ -4180,7 +4198,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
            structural test at the use site. *)
         let u = UseT (use_op,
           ExtendsT (reason_op, try_ts_on_failure @ implements, l, u)) in
-        rec_flow cx trace (super, ReposLowerT (reason, u))
+        rec_flow cx trace (super, ReposLowerT (reason, false, u))
 
     (********************************************************)
     (* runtime types derive static types through annotation *)
@@ -4369,7 +4387,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | _ -> kind
         in
         let u = LookupT (reason_op, kind, try_ts_on_failure, propref, action) in
-        rec_flow cx trace (super, ReposLowerT (lreason, u))
+        rec_flow cx trace (super, ReposLowerT (lreason, false, u))
       | Some p ->
         (* TODO: Replace AbstractT with abstract fields, then reuse
            perform_lookup_action here. *)
@@ -4497,7 +4515,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | Some p ->
               (match Property.read_t p with
               | Some t ->
-                  rec_flow cx trace (t, ReposLowerT (reason_op, UseT (UnknownUse, tout)))
+                  rec_flow cx trace (t, ReposLowerT (reason_op, false, UseT (UnknownUse, tout)))
               | None ->
                 add_output cx ~trace (FlowError.EPropAccess (
                   (reason_c, reason_op), Some x, Property.polarity p, Read
@@ -4733,7 +4751,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Spread fields from super into an object *)
       let obj_super = mk_tvar_where cx reason_op (fun tvar ->
         let u = ObjRestT (reason_op, xs, tvar) in
-        rec_flow cx trace (super, ReposLowerT (reason, u))
+        rec_flow cx trace (super, ReposLowerT (reason, false, u))
       ) in
 
       (* Spread fields from the instance into another object *)
@@ -4863,7 +4881,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (reason_obj, ObjT o), GetPropT (reason_op, propref, tout) ->
       let tout = tvar_with_constraint ~trace cx
-        (ReposLowerT (reason_op, UseT (UnknownUse, tout)))
+        (ReposLowerT (reason_op, false, UseT (UnknownUse, tout)))
       in
       read_obj_prop cx trace o propref reason_obj reason_op tout
 
@@ -5328,7 +5346,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       })),
       ImplementsT t ->
       structural_subtype cx trace t reason_inst (fields_tmap, methods_tmap);
-      rec_flow cx trace (super, ReposLowerT (reason_inst, ImplementsT t))
+      rec_flow cx trace (super, ReposLowerT (reason_inst, false, ImplementsT t))
 
     | _, ImplementsT _ ->
       add_output cx ~trace (FlowError.EUnsupportedImplements (reason_of_t l))
@@ -5576,7 +5594,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*********************)
 
     | DefT (reason, FunT (static, _, _)), _ when object_like_op u ->
-      rec_flow cx trace (static, ReposLowerT (reason, u))
+      rec_flow cx trace (static, ReposLowerT (reason, false, u))
 
     (*****************)
     (* class statics *)
@@ -5590,11 +5608,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * private static fields instead of the private instance fields. *)
     | DefT (reason, ClassT instance), GetPrivatePropT (reason_op, x, scopes, _, tout) ->
       let u = GetPrivatePropT (reason_op, x, scopes, true, tout) in
-      rec_flow cx trace (instance, ReposLowerT (reason, u))
+      rec_flow cx trace (instance, ReposLowerT (reason, false, u))
 
     | DefT (reason, ClassT instance), SetPrivatePropT (reason_op, x, scopes, _, tout) ->
       let u = SetPrivatePropT (reason_op, x, scopes, true, tout) in
-      rec_flow cx trace (instance, ReposLowerT (reason, u))
+      rec_flow cx trace (instance, ReposLowerT (reason, false, u))
 
     | DefT (reason, ClassT instance), _ when object_use u || object_like_op u ->
       let desc = RStatics (desc_of_reason (reason_of_t instance)) in
@@ -5602,7 +5620,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason = mk_reason desc loc in
       let static = mk_tvar cx reason in
       rec_flow cx trace (instance, GetStaticsT (reason, static));
-      rec_flow cx trace (static, ReposLowerT (reason, u))
+      rec_flow cx trace (static, ReposLowerT (reason, false, u))
 
     (**********************************************)
     (* classes as functions, functions as classes *)
@@ -5660,8 +5678,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        the location stored in the ReposLowerT, which is usually the location
        where that lower bound was used; the lower bound's location (which is
        being overwritten) is where it was defined. *)
-    | (_, ReposLowerT (reason_op, u)) ->
-      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
+    | (_, ReposLowerT (reason_op, use_desc, u)) ->
+      let loc = loc_of_reason reason_op in
+      let desc = if use_desc then Some (desc_of_reason reason_op) else None in
+      rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
     (***************)
     (* unsupported *)
@@ -7807,7 +7827,7 @@ and lookup_prop cx trace l reason_prop reason_op strict x action =
 
 and get_prop cx trace reason_prop reason_op strict l super x map tout =
   let ops = Ops.clear () in
-  let u = ReposLowerT (reason_op, UseT (UnknownUse, tout)) in
+  let u = ReposLowerT (reason_op, false, UseT (UnknownUse, tout)) in
   begin match SMap.get x map with
   | Some p ->
     (match Property.read_t p with
@@ -8403,7 +8423,7 @@ and instanceof_test cx trace result = function
       (** Recursively check whether super(C) extends A, with enough context. **)
       let pred = LeftP(InstanceofTest, right) in
       let u = PredicateT(pred, result) in
-      rec_flow cx trace (super_c, ReposLowerT (reason, u))
+      rec_flow cx trace (super_c, ReposLowerT (reason, false, u))
 
   | true,
     ObjProtoT _,
@@ -8445,7 +8465,7 @@ and instanceof_test cx trace result = function
     then ()
     else
       let u = PredicateT(NotP(LeftP(InstanceofTest, right)), result) in
-      rec_flow cx trace (super_c, ReposLowerT (reason, u))
+      rec_flow cx trace (super_c, ReposLowerT (reason, false, u))
 
   | false,
     ObjProtoT _,
@@ -9191,7 +9211,7 @@ and multiflow_partial =
         let u = UseT (FunCallParam, tout) in
         match desc_of_t tin with
         | RTypeParam _ -> u
-        | _ -> ReposLowerT (reason_of_t tin, u)
+        | _ -> ReposLowerT (reason_of_t tin, false, u)
       in
       flow_opt cx ~trace (tin, tout);
       multiflow_non_spreads cx ~trace (tins,touts)
@@ -9662,10 +9682,17 @@ and mk_instance cx ?trace instance_reason ?(for_type=true) c =
     )
 
 (* set the position of the given def type from a reason *)
-and reposition cx ?trace loc t =
+and reposition cx ?trace loc ?desc t =
+  let mod_reason reason =
+    let reason = repos_reason loc reason in
+    match desc with
+    | Some d -> replace_reason_const d reason
+    | None -> reason
+  in
   let rec recurse seen = function
   | OpenT (r, id) as t ->
-    let reason = repos_reason loc (reason_of_t t) in
+    let reason = mod_reason r in
+    let use_desc = Option.is_some desc in
     let constraints = find_graph cx id in
     begin match constraints with
     | Resolved t ->
@@ -9702,7 +9729,7 @@ and reposition cx ?trace loc t =
         in
         mk_tvar_where cx reason (fun tvar ->
           Cache.(repos_cache := Repos_cache.add reason t tvar !repos_cache);
-          flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
+          flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (UnknownUse, tvar)))
         )
     end
   | EvalT _ as t ->
@@ -9712,9 +9739,10 @@ and reposition cx ?trace loc t =
          resulting tvar, i.e., flowing repositioned *lower bounds* to the
          resulting tvar. (Another way of thinking about this is that a `EvalT`
          is just as transparent as its resulting tvar.) *)
-      let reason = repos_reason loc (reason_of_t t) in
+      let reason = mod_reason (reason_of_t t) in
+      let use_desc = Option.is_some desc in
       mk_tvar_where cx reason (fun tvar ->
-        flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
+        flow_opt cx ?trace (t, ReposLowerT (reason, use_desc, UseT (UnknownUse, tvar)))
       )
   | DefT (r, MaybeT t) ->
       (* repositions both the MaybeT and the nested type. MaybeT represets `?T`.
@@ -9722,13 +9750,13 @@ and reposition cx ?trace loc t =
          of the MaybeT for NullT and VoidT but don't reposition `t`, so that any
          errors on the NullT or VoidT point at ?T, but errors on the T point at
          T. *)
-      let r = repos_reason loc r in
+      let r = mod_reason r in
       DefT (r, MaybeT (recurse seen t))
   | DefT (r, OptionalT t) ->
-      let r = repos_reason loc r in
+      let r = mod_reason r in
       DefT (r, OptionalT (recurse seen t))
   | DefT (r, UnionT rep) ->
-      let r = repos_reason loc r in
+      let r = mod_reason r in
       let rep = UnionRep.map (recurse seen) rep in
       DefT (r, UnionT rep)
   | OpaqueT (r, opaquetype) ->
@@ -9737,7 +9765,7 @@ and reposition cx ?trace loc t =
         underlying_t = OptionUtils.ident_map (recurse seen) opaquetype.underlying_t;
         super_t = OptionUtils.ident_map (recurse seen) opaquetype.super_t; })
   | t ->
-      mod_reason_of_t (repos_reason loc) t
+      mod_reason_of_t mod_reason t
   in
   recurse IMap.empty t
 

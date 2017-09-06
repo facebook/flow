@@ -14,7 +14,7 @@ open React
 
 let run cx trace reason_op l u
   ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
-  ~(reposition: Context.t -> ?trace:Trace.t -> Loc.t -> Type.t -> Type.t)
+  ~(reposition: Context.t -> ?trace:Trace.t -> Loc.t -> ?desc:reason_desc -> Type.t -> Type.t)
   ~(rec_flow: Context.t -> Trace.t -> (Type.t * Type.use_t) -> unit)
   ~(rec_flow_t: Context.t -> Trace.t -> ?use_op:Type.use_op -> (Type.t * Type.t) -> unit)
   ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t)

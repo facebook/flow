@@ -483,10 +483,10 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else SetProtoT (r, t'')
-    | ReposLowerT (r, use) ->
+    | ReposLowerT (r, use_desc, use) ->
         let use' = self#use_type cx map_cx use in
         if use' == use then t
-        else ReposLowerT (r, use')
+        else ReposLowerT (r, use_desc, use')
     | ReposUseT (r, use_op, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t

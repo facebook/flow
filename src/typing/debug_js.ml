@@ -417,8 +417,9 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "funType", json_of_funcalltype json_cx funtype
     ]
 
-  | ReposLowerT (_, use_t) -> [
-      "type", _json_of_use_t json_cx use_t
+  | ReposLowerT (_, use_desc, use_t) -> [
+      "type", _json_of_use_t json_cx use_t;
+      "useDesc", JSON_Bool use_desc;
     ]
 
   | ReposUseT (_, op, t) -> [
@@ -1965,7 +1966,8 @@ and dump_use_t_ (depth, tvars) cx t =
       ~extra:(spf "%s, %s" (string_of_predicate pred) (kid arg)) t
   | ReactKitT (_, tool) -> p ~extra:(react_kit tool) t
   | RefineT _ -> p t
-  | ReposLowerT (_, arg) -> p ~extra:(use_kid arg) t
+  | ReposLowerT (_, use_desc, arg) -> p t
+      ~extra:(spf "use_desc=%b, %s" use_desc (use_kid arg))
   | ReposUseT (_, _, arg) -> p ~extra:(kid arg) t
   | ResolveSpreadT (_, {rrt_resolve_to; _;}) ->
       (match rrt_resolve_to with

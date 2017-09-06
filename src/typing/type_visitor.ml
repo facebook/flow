@@ -277,7 +277,7 @@ class ['a] t = object(self)
   | SetProtoT (_, t) ->
     self#type_ cx acc t
 
-  | ReposLowerT (_, u) -> self#use_type_ cx acc u
+  | ReposLowerT (_, _, u) -> self#use_type_ cx acc u
   | ReposUseT (_, _, t) -> self#type_ cx acc t
 
   | ConstructorT (_, args, t) ->
