@@ -223,7 +223,7 @@ Error: proto.js:17
  17: (inst1_proto.m: empty); // TODO error: function ~> empty
                   ^ property `m`. Property not found in
  17: (inst1_proto.m: empty); // TODO error: function ~> empty
-      ^^^^^^^^^^^ Object
+      ^^^^^^^^^^^ super of C1
 
 
 Found 37 errors

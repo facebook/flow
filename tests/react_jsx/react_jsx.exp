@@ -1397,86 +1397,6 @@ Error: test.js:461
 463:   string2={null}
 ...:
 467: />;
-     -^ props of React element `Abstract_ManyProps`. This type is incompatible with
-442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
-                                                   ^^^^^^^^^^^^^^^ object type
-  Property `boolean1` is incompatible:
-    464:   boolean1={null}
-                     ^^^^ null. This type is incompatible with
-     57:   boolean1: boolean,
-                     ^^^^^^^ boolean
-
-Error: test.js:461
-     v--------------------------------------------------------------
-461: <Abstract_ManyProps // Error: All props have an incorrect type.
-462:   string1={null}
-463:   string2={null}
-...:
-467: />;
-     -^ props of React element `Abstract_ManyProps`. This type is incompatible with
-442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
-                                                   ^^^^^^^^^^^^^^^ object type
-  Property `boolean2` is incompatible:
-    465:   boolean2={null}
-                     ^^^^ null. This type is incompatible with
-     58:   boolean2: boolean,
-                     ^^^^^^^ boolean
-
-Error: test.js:461
-     v--------------------------------------------------------------
-461: <Abstract_ManyProps // Error: All props have an incorrect type.
-462:   string1={null}
-463:   string2={null}
-...:
-467: />;
-     -^ props of React element `Abstract_ManyProps`. This type is incompatible with
-442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
-                                                   ^^^^^^^^^^^^^^^ object type
-  Property `number` is incompatible:
-    466:   number={null}
-                   ^^^^ null. This type is incompatible with
-     59:   number: number,
-                   ^^^^^^ number
-
-Error: test.js:461
-     v--------------------------------------------------------------
-461: <Abstract_ManyProps // Error: All props have an incorrect type.
-462:   string1={null}
-463:   string2={null}
-...:
-467: />;
-     -^ props of React element `Abstract_ManyProps`. This type is incompatible with
-442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
-                                                   ^^^^^^^^^^^^^^^ object type
-  Property `string1` is incompatible:
-    462:   string1={null}
-                    ^^^^ null. This type is incompatible with
-     55:   string1: string,
-                    ^^^^^^ string
-
-Error: test.js:461
-     v--------------------------------------------------------------
-461: <Abstract_ManyProps // Error: All props have an incorrect type.
-462:   string1={null}
-463:   string2={null}
-...:
-467: />;
-     -^ props of React element `Abstract_ManyProps`. This type is incompatible with
-442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
-                                                   ^^^^^^^^^^^^^^^ object type
-  Property `string2` is incompatible:
-    463:   string2={null}
-                    ^^^^ null. This type is incompatible with
-     56:   string2: string,
-                    ^^^^^^ string
-
-Error: test.js:461
-     v--------------------------------------------------------------
-461: <Abstract_ManyProps // Error: All props have an incorrect type.
-462:   string1={null}
-463:   string2={null}
-...:
-467: />;
      -^ props of React element `Abstract_ManyProps`. This type is incompatible with the expected param type of
 442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
                                                    ^^^^^^^^^^^^^^^ object type
@@ -1565,22 +1485,6 @@ Error: test.js:480
 482:   {...{boolean1: true, boolean2: false}}
 483: />;
      -^ props of React element `Abstract_ManyProps`
-
-Error: test.js:491
-     v----------------------------------------------------------------------------
-491: <Abstract_ManyProps // OK: `number` is overwritten at the end of the element.
-492:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-493:   boolean1
-...:
-496: />;
-     -^ props of React element `Abstract_ManyProps`. This type is incompatible with
-442: const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
-                                                   ^^^^^^^^^^^^^^^ object type
-  Property `number` is incompatible:
-    492:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                              ^^^^^^^ null. This type is incompatible with
-     59:   number: number,
-                   ^^^^^^ number
 
 Error: test.js:491
      v----------------------------------------------------------------------------
@@ -1881,22 +1785,6 @@ Error: test.js:554
      -^ props of React element `AbstractExact_ManyProps`. Inexact type is incompatible with exact type
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
-
-Error: test.js:554
-     v-------------------------------------------------------
-554: <AbstractExact_ManyProps // OK: `number` is overwritten.
-555:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-556:   boolean1
-...:
-559: />;
-     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with
-504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                               ^^^^^^^^^^^^^^^ object type
-  Property `number` is incompatible:
-    555:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                              ^^^^^^^ null. This type is incompatible with
-     59:   number: number,
-                   ^^^^^^ number
 
 Error: test.js:554
      v-------------------------------------------------------
@@ -2365,21 +2253,6 @@ Error: test.js:752
 753:   foo="nope"
 754:   bar={2}
 755: />;
-     -^ props of React element `Abstract_OptionalProps`. This type is incompatible with
-744: const Abstract_OptionalProps: React.ComponentType<Props_OptionalProps> = any;
-                                                       ^^^^^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-    753:   foo="nope"
-               ^^^^^^ string. This type is incompatible with
-    633: type Props_OptionalProps = {foo: ?number, bar?: number};
-                                           ^^^^^^ number
-
-Error: test.js:752
-     v------------------------------------------------------
-752: <Abstract_OptionalProps // Error: `foo` has a bad type.
-753:   foo="nope"
-754:   bar={2}
-755: />;
      -^ props of React element `Abstract_OptionalProps`. This type is incompatible with the expected param type of
 744: const Abstract_OptionalProps: React.ComponentType<Props_OptionalProps> = any;
                                                        ^^^^^^^^^^^^^^^^^^^ object type
@@ -2388,21 +2261,6 @@ Error: test.js:752
                ^^^^^^ string. This type is incompatible with
     633: type Props_OptionalProps = {foo: ?number, bar?: number};
                                            ^^^^^^ number
-
-Error: test.js:756
-     v------------------------------------------------------
-756: <Abstract_OptionalProps // Error: `bar` has a bad type.
-757:   foo={4}
-758:   bar="nope"
-759: />;
-     -^ props of React element `Abstract_OptionalProps`. This type is incompatible with
-744: const Abstract_OptionalProps: React.ComponentType<Props_OptionalProps> = any;
-                                                       ^^^^^^^^^^^^^^^^^^^ object type
-  Property `bar` is incompatible:
-    758:   bar="nope"
-               ^^^^^^ string. This type is incompatible with
-    633: type Props_OptionalProps = {foo: ?number, bar?: number};
-                                                         ^^^^^^ number
 
 Error: test.js:756
      v------------------------------------------------------
@@ -2598,4 +2456,4 @@ Error: test.js:916
      -^ props of React element `Member_DefaultProps.prop`
 
 
-Found 191 errors
+Found 182 errors

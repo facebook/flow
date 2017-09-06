@@ -37,10 +37,10 @@ let filter_duplicate_errors =
 module rec Parse : PARSER = struct
   module Type = Type_parser.Type (Parse)
   module Declaration = Declaration_parser.Declaration (Parse) (Type)
-  module Object_cover = Object_cover.Cover (Parse)
-  module Expression = Expression_parser.Expression (Parse) (Type) (Declaration) (Object_cover)
-  module Object = Object_parser.Object (Parse) (Type) (Declaration) (Expression)
-  module Statement = Statement_parser.Statement (Parse) (Type) (Declaration) (Object) (Object_cover)
+  module Pattern_cover = Pattern_cover.Cover (Parse)
+  module Expression = Expression_parser.Expression (Parse) (Type) (Declaration) (Pattern_cover)
+  module Object = Object_parser.Object (Parse) (Type) (Declaration) (Expression) (Pattern_cover)
+  module Statement = Statement_parser.Statement (Parse) (Type) (Declaration) (Object) (Pattern_cover)
   module Pattern = Pattern_parser.Pattern (Parse) (Type)
   module JSX = Jsx_parser.JSX (Parse)
 
@@ -239,7 +239,7 @@ module rec Parse : PARSER = struct
     let expr_or_pattern = Expression.assignment_cover env in
     match Peek.token env with
     | T_COMMA ->
-      let expr = Object_cover.as_expression env expr_or_pattern in
+      let expr = Pattern_cover.as_expression env expr_or_pattern in
       let seq = Expression.sequence env [expr] in
       Cover_expr seq
     | _ ->

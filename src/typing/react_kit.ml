@@ -14,13 +14,13 @@ open React
 
 let run cx trace reason_op l u
   ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
-  ~(reposition: Context.t -> ?trace:Trace.t -> Loc.t -> Type.t -> Type.t)
+  ~(reposition: Context.t -> ?trace:Trace.t -> Loc.t -> ?desc:reason_desc -> Type.t -> Type.t)
   ~(rec_flow: Context.t -> Trace.t -> (Type.t * Type.use_t) -> unit)
   ~(rec_flow_t: Context.t -> Trace.t -> ?use_op:Type.use_op -> (Type.t * Type.t) -> unit)
-  ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t)
+  ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
   ~(get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
   ~(mk_methodcalltype: Type.t -> Type.call_arg list -> ?frame:int -> ?call_strict_arity:bool -> Type.t -> Type.funcalltype)
-  ~(mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?for_type:bool -> Type.t -> Type.t)
+  ~(mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?for_type:bool -> ?use_desc:bool -> Type.t -> Type.t)
   ~(mk_object: Context.t -> reason -> Type.t)
   ~(mk_object_with_map_proto: Context.t -> reason -> ?sealed:bool -> ?exact:bool -> ?frozen:bool -> ?dict:Type.dicttype -> Type.Properties.t -> Type.t -> Type.t)
   ~(string_key: string -> reason -> Type.t)
@@ -152,6 +152,9 @@ let run cx trace reason_op l u
     ), intrinsic));
     (* Flow the intrinsic's props as an upper bound to our output
      * type variable. *)
+    (* TODO: if intrinsic is null, we will treat it like prototype termination,
+     * but we should error like a GetPropT would instead. Can this use GetPropT
+     * instead? *)
     rec_flow cx trace (intrinsic, LookupT (
       reason_i,
       Strict reason_i,
@@ -366,6 +369,8 @@ let run cx trace reason_op l u
       let kind = NonstrictReturning None in
       let propref = Named (reason_key, "key") in
       let action = RWProp (config_input, key_t, Read) in
+      (* TODO: if config_input is null, we will treat it like prototype termination,
+       * but we should be treating a null config like an empty config. *)
       rec_flow cx trace (config_input,
         LookupT (reason_key, kind, [], propref, action))
     in
@@ -385,6 +390,8 @@ let run cx trace reason_op l u
       let kind = NonstrictReturning None in
       let propref = Named (reason_ref, "ref") in
       let action = RWProp (config_input, ref_t, Read) in
+      (* TODO: if config_input is null, we will treat it like prototype termination,
+       * but we should be treating a null config like an empty config. *)
       rec_flow cx trace (config_input,
         LookupT (reason_ref, kind, [], propref, action))
     in

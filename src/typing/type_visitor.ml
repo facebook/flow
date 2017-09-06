@@ -65,7 +65,7 @@ class ['a] t = object(self)
 
   | KeysT (_, t) -> self#type_ cx acc t
 
-  | AnnotT t ->
+  | AnnotT (t, _) ->
     self#type_ cx acc t
 
   | OpaqueT (_, opaquetype) ->
@@ -277,8 +277,8 @@ class ['a] t = object(self)
   | SetProtoT (_, t) ->
     self#type_ cx acc t
 
-  | ReposLowerT (_, u) -> self#use_type_ cx acc u
-  | ReposUseT (_, _, t) -> self#type_ cx acc t
+  | ReposLowerT (_, _, u) -> self#use_type_ cx acc u
+  | ReposUseT (_, _, _, t) -> self#type_ cx acc t
 
   | ConstructorT (_, args, t) ->
     let acc = List.fold_left (self#call_arg cx) acc args in
@@ -286,7 +286,7 @@ class ['a] t = object(self)
     acc
 
   | SuperT (_, inst) -> self#inst_type cx acc inst
-  | ImplementsT (t) -> self#type_ cx acc t
+  | ImplementsT (_, t) -> self#type_ cx acc t
   | MixinT (_, t) -> self#type_ cx acc t
 
   | AdderT (_, a, b) ->

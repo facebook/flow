@@ -169,7 +169,7 @@ and add_parts cx id parts state =
 and parts_of_t cx = function
 | OpenT _ -> assert false
 | AbstractT (_, t) -> ["t", Def t]
-| AnnotT source -> ["source", Def source]
+| AnnotT (source, _) -> ["source", Def source]
 | OpaqueT (_, {underlying_t = Some t; _}) -> ["t", Def t]
 | OpaqueT _ -> []
 | DefT (_, (AnyObjT | AnyFunT)) -> []
@@ -318,7 +318,7 @@ and parts_of_use_t cx = function
 | HasOwnPropT _ -> []
 | IdxUnMaybeifyT (_, out) -> ["out", Def out]
 | IdxUnwrap (_, out) -> ["out", Def out]
-| ImplementsT t -> ["instance", Def t]
+| ImplementsT (_, t) -> ["instance", Def t]
 | ImportDefaultT (_, _, _, out) -> ["out", Def out]
 | ImportModuleNsT (_, out) -> ["out", Def out]
 | ImportNamedT (_, _, _, out) -> ["out", Def out]
@@ -342,8 +342,8 @@ and parts_of_use_t cx = function
 | PredicateT (_, out) -> ["out", Def out]
 | ReactKitT (_, tool) -> parts_of_react_kit tool
 | RefineT (_, _, t) -> ["t", Def t]
-| ReposLowerT (_, u) -> ["upper", Use u]
-| ReposUseT (_, _, l) ->  ["lower", Def l]
+| ReposLowerT (_, _, u) -> ["upper", Use u]
+| ReposUseT (_, _, _, l) ->  ["lower", Def l]
 | ResolveSpreadT (_, {
     rrt_resolved;
     rrt_unresolved;

@@ -131,7 +131,7 @@ let gen_class_body =
     | _ -> failwith "Internal Error: Unexpected method type, expected a field"
     in
     match resolve_type t env with
-    | AnnotT t ->
+    | AnnotT (t, _) ->
       let p = Field (t, Positive) in
       gen_method ~static method_name p env
     | DefT (_, FunT (_static, _super, ft)) ->

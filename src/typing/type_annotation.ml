@@ -554,8 +554,9 @@ let rec convert cx tparams_map = Ast.Type.(function
         DefT (fun_reason, FunT (
           Flow_js.dummy_static static_reason,
           DefT (mk_reason RPrototype loc, AnyT),
-          Flow_js.mk_functiontype tins ~rest_param:None ~def_reason:fun_reason
-            ~params_names:key_strs ~is_predicate:true tout
+          Flow_js.mk_functiontype fun_reason tins tout
+            ~rest_param:None ~def_reason:fun_reason
+            ~params_names:key_strs ~is_predicate:true
         ))
 
       | _ ->

@@ -22,7 +22,7 @@ let fake_fun params_names param_ts rest_param ret_t =
   DefT (reason, FunT (
     Flow_js.dummy_static reason,
     Flow_js.dummy_prototype,
-    Flow_js.mk_functiontype param_ts ~rest_param ~def_reason ?params_names ret_t
+    Flow_js.mk_functiontype reason param_ts ~rest_param ~def_reason ?params_names ret_t
   ))
 
 let fake_instance name =
@@ -88,7 +88,7 @@ let rec normalize_type_impl cx ids t = match t with
       DefT (reason, FunT (
         Flow_js.dummy_static reason,
         Flow_js.dummy_prototype,
-        Flow_js.mk_functiontype
+        Flow_js.mk_functiontype reason
           tins ~rest_param ~def_reason ?params_names ?is_predicate tout
       ))
 
@@ -427,8 +427,8 @@ let rec normalize_type_impl cx ids t = match t with
   | DiffT (t1, t2) ->
       DiffT (normalize_type_impl cx ids t1, normalize_type_impl cx ids t2)
 
-  | AnnotT t ->
-      AnnotT (normalize_type_impl cx ids t)
+  | AnnotT (t, use_desc) ->
+      AnnotT (normalize_type_impl cx ids t, use_desc)
 
   | OpaqueT (r, opaquetype) ->
       OpaqueT (r, { opaquetype with

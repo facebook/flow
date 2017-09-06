@@ -248,6 +248,12 @@ Error: missing-property-cond.js:41
  41:   if (typeof o.bar === 'string') {} // error
                   ^ mixed
 
+Error: missing-property-cond.js:65
+ 65:   if (null.q) {} // error: property `q` on null
+                ^ property `q`. Property cannot be accessed on possibly null value
+ 65:   if (null.q) {} // error: property `q` on null
+           ^^^^ null
+
 Error: mixed.js:8
   8:     takesString(x); // error
                      ^ number. This type is incompatible with the expected param type of
@@ -1097,4 +1103,4 @@ Error: void.js:85
            ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 188 errors
+Found 189 errors
