@@ -1,4 +1,4 @@
-{"path":"library.js","line":5,"endline":7,"start":17,"end":3}
+{"path":"library.js","line":5,"endline":5,"start":17,"end":46}
 default import points to default export = {"path":"helpers/exports_default.js","line":5,"endline":5,"start":16,"end":16}
 local reference points to default import = {"path":"helpers/exports_default.js","line":3,"endline":3,"start":11,"end":15}
 named import points to named export = {"path":"helpers/exports_named.js","line":3,"endline":3,"start":14,"end":16}

@@ -1422,8 +1422,13 @@ and statement cx = Ast.Statement.(
       ()
 
   | (loc, FunctionDeclaration func) ->
-      let {Ast.Function.id; _} = func in
-      let fn_type = mk_function None cx loc func in
+      let {Ast.Function.id; params; returnType; _} = func in
+      let sig_loc = match params, returnType with
+      | _, Some (end_loc, _)
+      | (end_loc, _), None
+         -> Loc.btwn loc end_loc
+      in
+      let fn_type = mk_function None cx sig_loc func in
       (**
        * Use the loc for the function name in the types table. When the function
        * has no name (i.e. for `export default function() ...`), generate a loc
@@ -2804,7 +2809,12 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         expressions
 
   | Function func ->
-      let {Ast.Function.id; predicate; _} = func in
+      let {Ast.Function.id; params; returnType; predicate; _} = func in
+      let sig_loc = match params, returnType with
+      | _, Some (end_loc, _)
+      | (end_loc, _), None
+         -> Loc.btwn loc end_loc
+      in
 
       (match predicate with
       | Some (_, Ast.Type.Predicate.Inferred) ->
@@ -2813,7 +2823,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           )
       | _ -> ());
 
-      mk_function id cx loc func
+      mk_function id cx sig_loc func
 
   | ArrowFunction func ->
       mk_arrow cx loc func

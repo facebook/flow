@@ -153,7 +153,7 @@ Error: test4.js:2
   2: (function foo(x: number) { }: I); // error, property `foo` not found function
                                    ^ property `foo` of I. Property not found in
   2: (function foo(x: number) { }: I); // error, property `foo` not found function
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
+      ^^^^^^^^^^^^^^^^^^^^^^^ function
 
 Error: test4.js:9
   9: new C().bar((x: string) => { }); // error, number ~/~> string
