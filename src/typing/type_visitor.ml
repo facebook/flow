@@ -209,6 +209,7 @@ class ['a] t = object(self)
   | ElementType t -> self#type_ cx acc t
   | Bind t -> self#type_ cx acc t
   | SpreadType (_, ts) -> self#list (self#type_ cx) acc ts
+  | CallType args -> self#list (self#type_ cx) acc args
   | TypeMap (TupleMap t | ObjectMap t | ObjectMapi t) -> self#type_ cx acc t
 
   method private custom_fun_kind cx acc = function

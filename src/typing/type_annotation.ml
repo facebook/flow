@@ -332,6 +332,14 @@ let rec convert cx tparams_map = Ast.Type.(function
       AbstractT (reason, t)
     )
 
+  | "$Call" ->
+    (match convert_type_params () with
+    | fn::args ->
+       let reason = mk_reason RFunctionCall loc in
+       EvalT (fn, TypeDestructorT (reason, CallType args), mk_id ())
+    | _ ->
+      error_type cx loc (FlowError.ETypeParamMinArity (loc, 1)))
+
   | "$TupleMap" ->
     check_type_param_arity cx loc typeParameters 2 (fun () ->
       let t1, t2 = match convert_type_params () with

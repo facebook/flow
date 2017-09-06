@@ -6717,6 +6717,10 @@ and eval_destructor cx ~trace reason curr_t s i =
             let state = { todo_rev; acc = [] } in
             ObjSpreadT (reason, options, tool, state, tvar)
         | ValuesType -> GetValuesT (reason, tvar)
+        | CallType args ->
+          let call = mk_functioncalltype (List.map (fun arg -> Arg arg) args) tvar in
+          let call = {call with call_strict_arity = false} in
+          CallT (reason, call)
         | TypeMap tmap -> MapTypeT (reason, tmap, tvar)
         | ReactElementPropsType -> ReactKitT (reason, React.GetProps tvar)
         | ReactElementRefType -> ReactKitT (reason, React.GetRef tvar)

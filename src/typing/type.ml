@@ -871,6 +871,7 @@ module rec TypeTerm : sig
   | Bind of t
   | SpreadType of ObjectSpread.options * t list
   | ValuesType
+  | CallType of t list
   | TypeMap of type_map
   | ReactElementPropsType
   | ReactElementRefType

@@ -1085,25 +1085,28 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | ValuesType -> JSON_Object [
       "values", JSON_Bool true;
     ]
+  | CallType args -> JSON_Object [
+      "args", JSON_Array (List.map (_json_of_t json_cx) args);
+    ]
   | TypeMap tmap -> json_of_type_map json_cx tmap
   | ReactElementPropsType -> JSON_Object [
-    "reactElementProps", JSON_Bool true
-  ]
+      "reactElementProps", JSON_Bool true
+    ]
   | ReactElementRefType -> JSON_Object [
-    "reactElementRef", JSON_Bool true
-  ]
+      "reactElementRef", JSON_Bool true
+    ]
 )
 
 and json_of_type_map json_cx = check_depth json_of_type_map_impl json_cx
 and json_of_type_map_impl json_cx = Hh_json.(function
   | TupleMap t -> JSON_Object [
-      "tupleMap", _json_of_t json_cx t
+      "tupleMap", _json_of_t json_cx t;
     ]
   | ObjectMap t -> JSON_Object [
-      "objectMap", _json_of_t json_cx t
+      "objectMap", _json_of_t json_cx t;
     ]
   | ObjectMapi t -> JSON_Object [
-      "objectMapi", _json_of_t json_cx t
+      "objectMapi", _json_of_t json_cx t;
     ]
 )
 
@@ -1532,6 +1535,7 @@ and dump_t_ (depth, tvars) cx t =
     | Bind _ -> "bind"
     | SpreadType _ -> "spread"
     | ValuesType -> "values"
+    | CallType _ -> "function call"
     | TypeMap (TupleMap _) -> "tuple map"
     | TypeMap (ObjectMap _) -> "object map"
     | TypeMap (ObjectMapi _) -> "object mapi"
@@ -2155,6 +2159,7 @@ let string_of_destructor = function
   | Bind _ -> "Bind"
   | SpreadType _ -> "Spread"
   | ValuesType -> "Values"
+  | CallType _ -> "CallType"
   | TypeMap (TupleMap _) -> "TupleMap"
   | TypeMap (ObjectMap _) -> "ObjectMap"
   | TypeMap (ObjectMapi _) -> "ObjectMapi"
