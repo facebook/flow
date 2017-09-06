@@ -337,6 +337,7 @@ and parts_of_use_t cx = function
 | ObjFreezeT (_, out) -> ["out", Def out]
 | ObjRestT (_, _, out) -> ["out", Def out]
 | ObjSealT (_, out) -> ["out", Def out]
+| ObjTestProtoT (_, out) -> ["out", Def out]
 | ObjTestT (_, d, t) -> ["default", Def d; "out", Def t]
 | OrT (_, r, out) -> ["right", Def r; "out", Def out]
 | PredicateT (_, out) -> ["out", Def out]

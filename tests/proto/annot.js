@@ -36,3 +36,5 @@ type O_loop = { p: 0, __proto__: O_loop };
 declare var o_loop: O_loop;
 (o_loop.p: empty); // error: number ~> empty
 (o_loop.q: empty); // TODO: error (pruned at constraint cache)
+
+type O_invalid = { __proto__: number }; // error: number is not a valid proto

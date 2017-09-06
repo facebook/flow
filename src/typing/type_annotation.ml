@@ -697,8 +697,11 @@ let rec convert cx tparams_map = Ast.Type.(function
           let t = convert cx tparams_map value in
           if name = "__proto__" && not (_method || optional) && variance = None
           then
-            (* TODO: assert t is null or object-like *)
-            props, Some t
+            let reason = mk_reason RPrototype (fst value) in
+            let proto = Flow_js.mk_tvar_where cx reason (fun tout ->
+              Flow_js.flow cx (t, ObjTestProtoT (reason, tout))
+            ) in
+            props, Some (Flow_js.mk_typeof_annotation cx reason proto)
           else
             let t = if optional then Type.optional t else t in
             let polarity = if _method then Positive else polarity variance in

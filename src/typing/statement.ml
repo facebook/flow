@@ -2258,8 +2258,10 @@ and object_ cx reason ?(allow_sealed=true) props =
         _method = false;
         shorthand = false;
       }) ->
-        (* TODO: assert `t` is null or object-like *)
-        let t = expression cx v in
+        let reason = mk_reason RPrototype (fst v) in
+        let t = Flow.mk_tvar_where cx reason (fun t ->
+          Flow.flow cx (expression cx v, ObjTestProtoT (reason, t))
+        ) in
         sealed, map, Some t, result
     | prop ->
         sealed, object_prop cx map prop, proto, result
@@ -4333,14 +4335,22 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
   let reason = mk_reason (RCustom (spf "Object.%s" m)) loc in
   match (m, args_) with
   | ("create", [ Expression e ]) ->
-    (* TODO: assert `proto` is null or object-like *)
-    let proto = expression cx e in
+    let proto =
+      let reason = mk_reason RPrototype (fst e) in
+      Flow.mk_tvar_where cx reason (fun t ->
+        Flow.flow cx (expression cx e, ObjTestProtoT (reason, t))
+      )
+    in
     Flow.mk_object_with_proto cx reason proto
 
   | ("create", [ Expression e;
                  Expression (_, Object { Object.properties }) ]) ->
-    (* TODO: assert `proto` is null or object-like *)
-    let proto = expression cx e in
+    let proto =
+      let reason = mk_reason RPrototype (fst e) in
+      Flow.mk_tvar_where cx reason (fun t ->
+        Flow.flow cx (expression cx e, ObjTestProtoT (reason, t))
+      )
+    in
     let pmap = prop_map_of_object cx properties in
     let map = SMap.fold (fun x p acc ->
       match Property.read_t p with

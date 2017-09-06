@@ -363,6 +363,8 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc t2 in
     acc
 
+  | ObjTestProtoT (_, t) -> self#type_ cx acc t
+
   | ObjFreezeT (_, t)
   | ObjRestT (_, _, t)
   | ObjSealT (_, t)

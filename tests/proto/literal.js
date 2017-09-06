@@ -20,6 +20,8 @@ var o_shorthand = { __proto__ };
 var o_computed = { ["__proto__"]: 0 }; // TODO: computed props use SetElem :/
 (o_computed.__proto__: empty); // TODO: error: number ~> empty
 
-var o_loop = { p: 0, __proto__: o_loop };
+var o_loop = { p: 0, __proto__: o_loop }; // error: void (undefined o_loop) is not a valid proto
 (o_loop.p: empty); // error: number ~> empty
 (o_loop.q: empty); // error: property `q` not found
+
+var o_invalid = { __proto__: 0 }; // error: 0 is not a valid proto

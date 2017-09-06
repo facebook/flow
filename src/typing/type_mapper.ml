@@ -618,6 +618,10 @@ class ['a] t = object(self)
         let t2' = self#type_ cx map_cx t2 in
         if t1' == t1 && t2' == t2 then t
         else ObjTestT (r, t1', t2')
+    | ObjTestProtoT (r, t') ->
+        let t'' = self#type_ cx map_cx t' in
+        if t'' == t' then t
+        else ObjTestProtoT (r, t'')
     | ArrRestT (r, i, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
