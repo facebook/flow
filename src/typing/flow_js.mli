@@ -140,6 +140,7 @@ val merge_type: Context.t -> (Type.t * Type.t) -> Type.t
 val resolve_type: Context.t -> Type.t -> Type.t
 val possible_types: Context.t -> Constraint.ident -> Type.t list
 val possible_types_of_type: Context.t -> Type.t -> Type.t list
+val possible_uses: Context.t -> Constraint.ident -> Type.use_t list
 
 module Members : sig
   type t =

@@ -53,6 +53,9 @@ class ['a] t = object(self)
   | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t -> self#type_ cx acc t
 
+  | MergedT (_, uses) ->
+    List.fold_left (self#use_type_ cx) acc uses
+
   | ShapeT t -> self#type_ cx acc t
 
   | DiffT (t1, t2) ->

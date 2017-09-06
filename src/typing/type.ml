@@ -97,6 +97,9 @@ module rec TypeTerm : sig
     | AnyWithLowerBoundT of t (* any supertype of t *)
     | AnyWithUpperBoundT of t (* any subtype of t *)
 
+    (* a merged tvar that had no lowers *)
+    | MergedT of reason * use_t list
+
     (* constrains some properties of an object *)
     | ShapeT of t
     | DiffT of t * t
@@ -1876,6 +1879,7 @@ let rec reason_of_t = function
   | AnnotT assume_t -> reason_of_t assume_t
   | AnyWithLowerBoundT (t) -> reason_of_t t
   | AnyWithUpperBoundT (t) -> reason_of_t t
+  | MergedT (reason, _) -> reason
   | BoundT typeparam -> typeparam.reason
   | ChoiceKitT (reason, _) -> reason
   | CustomFunT (reason, _) -> reason
@@ -2016,6 +2020,7 @@ let rec mod_reason_of_t f = function
       AnnotT (mod_reason_of_t f assume_t)
   | AnyWithLowerBoundT t -> AnyWithLowerBoundT (mod_reason_of_t f t)
   | AnyWithUpperBoundT t -> AnyWithUpperBoundT (mod_reason_of_t f t)
+  | MergedT (reason, uses) -> MergedT (f reason, uses)
   | BoundT { reason; name; bound; polarity; default; } ->
       BoundT { reason = f reason; name; bound; polarity; default; }
   | ChoiceKitT (reason, tool) -> ChoiceKitT (f reason, tool)
@@ -2228,6 +2233,7 @@ let string_of_ctor = function
   | AnnotT _ -> "AnnotT"
   | AnyWithLowerBoundT _ -> "AnyWithLowerBoundT"
   | AnyWithUpperBoundT _ -> "AnyWithUpperBoundT"
+  | MergedT _ -> "MergedT"
   | BoundT _ -> "BoundT"
   | ChoiceKitT (_, tool) ->
     spf "ChoiceKitT %s" begin match tool with

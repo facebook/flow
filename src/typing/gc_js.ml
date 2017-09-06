@@ -76,6 +76,7 @@ let rec gc cx state = function
   | DefT (_, AnyT) -> ()
   | AnyWithLowerBoundT (t) -> gc cx state t
   | AnyWithUpperBoundT (t) -> gc cx state t
+  | MergedT (_, uses) -> List.iter (gc_use cx state) uses
   | DefT (_, ArrT arraytype) ->
       gc_arraytype cx state arraytype
   | DefT (_, BoolT _) -> ()

@@ -65,6 +65,7 @@ type hash =
   | UnionH
   | AnyWithLowerBoundH
   | AnyWithUpperBoundH
+  | MergedH
   | AnyObjH
   | AnyFunH
   | ShapeH
@@ -204,6 +205,7 @@ let hash_of_ctor = Type.(function
   | AnnotT _ -> AnnotH
   | AnyWithLowerBoundT _ -> AnyWithLowerBoundH
   | AnyWithUpperBoundT _ -> AnyWithUpperBoundH
+  | MergedT _ -> MergedH
   | BoundT _ -> BoundH
   | ChoiceKitT _ -> ChoiceKitH
   | CustomFunT _ -> CustomFunH

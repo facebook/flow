@@ -231,6 +231,10 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
+  | MergedT (_, uses) -> [
+      "uses", JSON_Array (List.map (_json_of_use_t json_cx) uses);
+    ]
+
   | DefT (_, AnyObjT)
   | DefT (_, AnyFunT) ->
     []
@@ -1670,6 +1674,9 @@ and dump_t_ (depth, tvars) cx t =
       (String.concat "; " (List.map kid (UnionRep.members rep)))) t
   | AnyWithLowerBoundT arg
   | AnyWithUpperBoundT arg -> p ~reason:false ~extra:(kid arg) t
+  | MergedT (_, uses) -> p ~extra:("[" ^
+      (String.concat ", " (List.map (dump_use_t cx) uses))
+    ^ "]") t
   | DefT (_, AnyObjT)
   | DefT (_, AnyFunT) -> p t
   | ShapeT arg -> p ~reason:false ~extra:(kid arg) t

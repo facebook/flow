@@ -255,15 +255,17 @@ let havoc_call_env = Scope.(
     if func_frame = 0 || call_frame = 0 || Changeset.is_empty changeset
     then ()
     else
-      let func_env = IMap.find_unsafe func_frame (Context.envs cx) in
-      let call_env = IMap.find_unsafe call_frame (Context.envs cx) in
-      overlapped_call_scopes func_env call_env |>
-        List.iter (fun ({ id; _ } as scope) ->
-          Changeset.include_scopes [id] changeset |>
-            Changeset.iter_writes
-              (havoc_entry cx scope)
-              (havoc_refi cx scope)
-      )
+      let func_env = IMap.get func_frame (Context.envs cx) in
+      let call_env = IMap.get call_frame (Context.envs cx) in
+      Option.iter (Option.both func_env call_env) ~f:(fun (func_env, call_env) ->
+        overlapped_call_scopes func_env call_env |>
+          List.iter (fun ({ id; _ } as scope) ->
+            Changeset.include_scopes [id] changeset |>
+              Changeset.iter_writes
+                (havoc_entry cx scope)
+                (havoc_refi cx scope)
+        )
+      );
 )
 
 (********************************************************************)
@@ -292,6 +294,13 @@ let possible_types cx id = types_of (find_graph cx id)
 let possible_types_of_type cx = function
   | OpenT (_, id) -> possible_types cx id
   | _ -> []
+
+let uses_of constraints =
+  match constraints with
+  | Unresolved { upper; _ } -> UseTypeMap.keys upper
+  | Resolved t -> [UseT (UnknownUse, t)]
+
+let possible_uses cx id = uses_of (find_graph cx id)
 
 let rec list_map2 f ts1 ts2 = match (ts1,ts2) with
   | ([],_) | (_,[]) -> []
@@ -1095,6 +1104,9 @@ module ResolvableTypeJob = struct
     | DefT (_, CharSetT _)
       -> acc
 
+    | MergedT (_, uses) ->
+      List.fold_left (collect_of_use ?log_unresolved cx reason) acc uses
+
     | FunProtoBindT _
     | FunProtoCallT _
     | FunProtoApplyT _
@@ -1112,13 +1124,13 @@ module ResolvableTypeJob = struct
      types are only needed for choice-making on intersections. We care about
      calls in particular because one of the biggest uses of intersections is
      function overloading. More uses will be added over time. *)
-  and collect_of_use ~log_unresolved cx reason acc = function
+  and collect_of_use ?log_unresolved cx reason acc = function
   | UseT (_, t) ->
-    collect_of_type ~log_unresolved cx reason acc t
+    collect_of_type ?log_unresolved cx reason acc t
   | CallT (_, fct) ->
     let arg_types =
       List.map (function Arg t | SpreadArg t -> t) fct.call_args_tlist in
-    collect_of_types ~log_unresolved cx reason acc (arg_types @ [fct.call_tout])
+    collect_of_types ?log_unresolved cx reason acc (arg_types @ [fct.call_tout])
   | _ -> acc
 
 end
@@ -1430,6 +1442,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Resolved t2 ->
           rec_flow cx trace (t1, UseT (use_op, t2))
       );
+
+    (*****************)
+    (* any with uses *)
+    (*****************)
+
+    | MergedT (reason, _), _ ->
+      rec_flow cx trace (EmptyT.why reason, u)
+
+    | _, UseT (_, MergedT (_, uses)) ->
+      List.iter (fun u -> rec_flow cx trace (l, u)) uses
 
     (****************)
     (* eval, contd. *)
@@ -6838,6 +6860,7 @@ and check_polarity cx ?trace polarity = function
   | ChoiceKitT _
   | CustomFunT _
   | OpenPredT _
+  | MergedT _
     -> () (* TODO *)
 
 and check_polarity_propmap cx ?trace polarity id =
@@ -8829,10 +8852,11 @@ and resolve_id cx trace ~use_op id t =
 
    However, unifying with any-like types is sometimes desirable /
    intentional. Thus, we limit the set of types on which unification is banned
-   to just AnyWithUpperBoundT and AnyWithLowerBoundT, which are internal types.
+   to just AnyWithUpperBoundT, AnyWithLowerBoundT, and MergedT which are
+   internal types.
 *)
 and ok_unify = function
-  | AnyWithUpperBoundT _ | AnyWithLowerBoundT _ -> false
+  | AnyWithUpperBoundT _ | AnyWithLowerBoundT _ | MergedT _ -> false
   | _ -> true
 
 and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
@@ -10710,6 +10734,7 @@ end = struct
     | AbstractT _
     | AnyWithLowerBoundT _
     | AnyWithUpperBoundT _
+    | MergedT _
     | DefT (_, ArrT _)
     | BoundT _
     | ChoiceKitT (_, _)
@@ -10944,6 +10969,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | ChoiceKitT _
   | CustomFunT _
   | OpenPredT _
+  | MergedT _
   ->
     () (* TODO *)
 

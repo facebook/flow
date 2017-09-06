@@ -158,6 +158,7 @@ let rec gen_type t env = Type.(
   | DefT (_, AnyT)
   | AnyWithLowerBoundT _
   | AnyWithUpperBoundT _
+  | MergedT _
     -> add_str "any" env
   | DefT (_, ArrT arrtype) ->
     (match arrtype with
