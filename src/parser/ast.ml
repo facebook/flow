@@ -63,8 +63,15 @@ and Type : sig
         argument: Param.t
       }
     end
+    module Params : sig
+      type t = Loc.t * t'
+      and t' = {
+        params: Param.t list;
+        rest: RestParam.t option;
+      }
+    end
     type t = {
-      params: Param.t list * RestParam.t option;
+      params: Params.t;
       returnType: Type.t;
       typeParameters: Type.ParameterDeclaration.t option;
     }
@@ -1044,12 +1051,19 @@ and Function : sig
       argument: Pattern.t;
     }
   end
+  module Params : sig
+    type t = Loc.t * t'
+    and t' = {
+      params: Pattern.t list;
+      rest: RestElement.t option;
+    }
+  end
   type body =
     | BodyBlock of (Loc.t * Statement.Block.t)
     | BodyExpression of Expression.t
   type t = {
     id: Identifier.t option;
-    params: Pattern.t list * RestElement.t option;
+    params: Params.t;
     body: body;
     async: bool;
     generator: bool;

@@ -574,7 +574,11 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   end
 
-| loc, Function { Function.params = (params, rest); returnType; typeParameters } ->
+| loc, Function { Function.
+    params = (_, { Function.Params.params; rest });
+    returnType;
+    typeParameters;
+  } ->
   let tparams, tparams_map =
     mk_type_param_declarations cx ~tparams_map typeParameters in
 

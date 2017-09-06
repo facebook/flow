@@ -30,9 +30,10 @@ class ruleset_func (depth : int)= object(self)
     let open T.Function in
     let get_type_list (f : T.Function.t) : T.t' list =
       let open T.Function.Param in
+      let (_, { T.Function.Params.params; rest = _ }) = f.params in
       List.map
         (fun param -> (snd param).typeAnnotation |> snd)
-        (fst f.params) @ [f.returnType |> snd] in
+        params @ [f.returnType |> snd] in
 
     let rec func_subtype_helper l1 l2 = match l1, l2 with
       | [], [] -> true
@@ -179,7 +180,7 @@ class ruleset_func (depth : int)= object(self)
                                       optional = false})) in
       let ret_type = (Loc.none, rtype) in
 
-      T.Function.(T.Function {params = [param_type], None;
+      T.Function.(T.Function {params = (Loc.none, { Params.params = [param_type]; rest = None });
                               returnType = ret_type;
                               typeParameters = None}) in
 

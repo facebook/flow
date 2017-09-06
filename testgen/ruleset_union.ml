@@ -263,7 +263,7 @@ class ruleset_union (depth : int) = object(self)
                                       optional = false})) in
       let ret_type = (Loc.none, rtype) in
 
-      T.Function.(T.Function {params = [param_type], None;
+      T.Function.(T.Function {params = (Loc.none, { Params.params = [param_type]; rest = None });
                               returnType = ret_type;
                               typeParameters = None}) in
 

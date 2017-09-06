@@ -22,7 +22,7 @@ module type TYPE = sig
   val type_parameter_instantiation : env -> Ast.Type.ParameterInstantiation.t option
   val generic : env -> Loc.t * Ast.Type.Generic.t
   val _object : allow_static:bool -> env -> Loc.t * Type.Object.t
-  val function_param_list : env -> Type.Function.Param.t list * Type.Function.RestParam.t option
+  val function_param_list : env -> Type.Function.Params.t
   val annotation : env -> Ast.Type.annotation
   val annotation_opt : env -> Ast.Type.annotation option
   val predicate_opt : env -> Ast.Type.Predicate.t option
@@ -31,7 +31,7 @@ end
 
 module Type (Parse: Parser_common.PARSER) : TYPE = struct
   type param_list_or_type =
-    | ParamList of (Type.Function.Param.t list * Type.Function.RestParam.t option)
+    | ParamList of Type.Function.Params.t'
     | Type of Type.t
 
   let rec _type env = union env
@@ -121,7 +121,10 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | T_ARROW when not (no_anon_function_type env)->
       let start_loc, typeParameters, params =
         let param = anonymous_function_param env param in
-        fst param, None, ([param], None)
+        fst param, None, (fst param, { Ast.Type.Function.Params.
+          params = [param];
+          rest = None;
+        })
       in
       function_with_params env start_loc typeParameters params
     | _ -> param
@@ -278,7 +281,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           end else
             None
         in
-        List.rev acc, rest
+        { Ast.Type.Function.Params.params = List.rev acc; rest; }
       | _ ->
         let acc = (param env)::acc in
         if Peek.token env <> T_RPAREN
@@ -288,10 +291,12 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     in fun env -> param_list env
 
   and function_param_list env =
-    Expect.token env T_LPAREN;
-    let ret = function_param_list_without_parens env [] in
-    Expect.token env T_RPAREN;
-    ret
+    with_loc (fun env ->
+      Expect.token env T_LPAREN;
+      let ret = function_param_list_without_parens env [] in
+      Expect.token env T_RPAREN;
+      ret
+    ) env
 
   and param_list_or_type env =
     Expect.token env T_LPAREN;
@@ -304,7 +309,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           ParamList (function_param_list_without_parens env [])
       | T_RPAREN ->
           (* () or is definitely a param list *)
-          ParamList ([], None)
+          ParamList ({ Ast.Type.Function.Params.params = []; rest = None })
       | T_IDENTIFIER _
       | T_STATIC (* `static` is reserved in strict mode, but still an identifier *) ->
           (* This could be a function parameter or a generic type *)
@@ -368,9 +373,9 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
   and function_or_group env =
     let start_loc = Peek.loc env in
-    match param_list_or_type env with
-    | ParamList params -> function_with_params env start_loc None params
-    | Type _type -> _type
+    match with_loc param_list_or_type env with
+    | loc, ParamList params -> function_with_params env start_loc None (loc, params)
+    | _, Type _type -> _type
 
   and _function env =
     let start_loc = Peek.loc env in
@@ -378,7 +383,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     let params = function_param_list env in
     function_with_params env start_loc typeParameters params
 
-  and function_with_params env start_loc typeParameters params =
+  and function_with_params env start_loc typeParameters (params: Ast.Type.Function.Params.t) =
     Expect.token env T_ARROW;
     let returnType = _type env in
     let end_loc = fst returnType in
@@ -441,11 +446,11 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       let (key_loc, key) = key in
       let (_, { Type.Function.params; _ }) = value in
       begin match is_getter, params with
-      | true, ([], None) -> ()
-      | false, (_, Some _rest) ->
+      | true, (_, { Type.Function.Params.params = []; rest = None }) -> ()
+      | false, (_, { Type.Function.Params.rest = Some _; _ }) ->
           (* rest params don't make sense on a setter *)
           error_at env (key_loc, Error.SetterArity)
-      | false, ([_], _) -> ()
+      | false, (_, { Type.Function.Params.params = [_]; _ }) -> ()
       | true, _ -> error_at env (key_loc, Error.GetterArity)
       | false, _ -> error_at env (key_loc, Error.SetterArity)
       end;

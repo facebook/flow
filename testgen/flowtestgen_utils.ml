@@ -212,8 +212,8 @@ and string_of_stmt (stmt : S.t') =
       | Some (_, n) -> n
       | None -> "" in
     let params_str =
-      func.params
-      |> fst
+      let (_, { Ast.Function.Params.params; rest = _ }) = func.params in
+      params
       |> List.map snd
       |> List.map string_of_pattern
       |> String.concat ", " in
@@ -301,8 +301,8 @@ and string_of_type (t : T.t') =
         | None -> "" in
       name_str ^ (string_of_type (snd param.typeAnnotation)) in
     let params_str =
-      func.params
-      |> fst
+      let (_, { T.Function.Params.params; rest = _ }) = func.params in
+      params
       |> List.map snd
       |> List.map string_of_param
       |> String.concat ", " in

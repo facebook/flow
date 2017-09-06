@@ -163,11 +163,12 @@ let add_param_assert (prog : Syntax.t list) =
     (* get the list of parameters *)
     let param_list =
       let open P.Identifier in
+      let (_, { F.Params.params; rest = _ }) = F.(func.params) in
       List.fold_right (fun p acc -> match p with
           | _, P.Identifier {name = (_, n);
                              typeAnnotation = Some (_, (_, t));
                              optional = _} -> (n, t) :: acc
-          | _ -> acc) (fst F.(func.params)) [] in
+          | _ -> acc) params [] in
 
     (* construct the actual runtime checks *)
     let checks =

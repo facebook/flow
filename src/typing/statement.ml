@@ -4497,7 +4497,7 @@ and declare_function_to_function_declaration cx id typeAnnotation predicate =
   | Some (loc, Ast.Type.Predicate.Declared e) -> begin
       match typeAnnotation with
       | (_, (_, Ast.Type.Function
-        { Ast.Type.Function.params = (params, rest);
+        { Ast.Type.Function.params = (params_loc, { Ast.Type.Function.Params.params; rest });
           Ast.Type.Function.returnType;
           Ast.Type.Function.typeParameters;
         })) ->
@@ -4534,7 +4534,7 @@ and declare_function_to_function_declaration cx id typeAnnotation predicate =
           let returnType = Some (loc, returnType) in
           Some (Ast.Statement.FunctionDeclaration Ast.Function.({
             id = Some id;
-            params = (params, rest);
+            params = (params_loc, { Params.params; rest });
             body = body;
             async = false;
             generator = false;
