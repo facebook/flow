@@ -2494,3 +2494,7 @@ let typeapp t tparams =
 let this_typeapp t this tparams =
   let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in
   ThisTypeAppT (reason, t, this, tparams)
+
+let annot = function
+| OpenT _ as t -> AnnotT t
+| t -> t

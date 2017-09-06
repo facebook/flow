@@ -1573,26 +1573,33 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | ReposUpperT (_, l), _ ->
       rec_flow cx trace (l, u)
 
+    (***************)
+    (* annotations *)
+    (***************)
+
+    (* Special cases where we want to recursively concretize types within the
+       lower bound. *)
+
+    | DefT (r, UnionT rep), ReposUseT (reason, use_op, l) ->
+      let rep = UnionRep.map annot rep in
+      let u = DefT (repos_reason (loc_of_reason reason) r, UnionT rep) in
+      rec_flow cx trace (l, UseT (use_op, u))
+
+    | DefT (r, MaybeT u), ReposUseT (reason, use_op, l) ->
+      let u = DefT (repos_reason (loc_of_reason reason) r, MaybeT (annot u)) in
+      rec_flow cx trace (l, UseT (use_op, u))
+
+    | DefT (r, OptionalT u), ReposUseT (reason, use_op, l) ->
+      let u = DefT (repos_reason (loc_of_reason reason) r, OptionalT (annot u)) in
+      rec_flow cx trace (l, UseT (use_op, u))
+
     (* Waits for a def type to become concrete, repositions it as an upper UseT
        using the stored reason. This can be used to store a reason as it flows
        through a tvar. *)
 
-    | (DefT (r, UnionT rep), ReposUseT (reason, use_op, l)) ->
-      (* Don't reposition union members when the union appears as an upper
-         bound. This improves error messages when an incompatible lower bound
-         does not satisfy any member of the union. The "overall" error points to
-         the reposition target (an annotation) but the detailed member
-         information points to the type definition. *)
-      let u_def = DefT (repos_reason (loc_of_reason reason) r, UnionT rep) in
-      rec_flow cx trace (l, UseT (use_op, u_def))
-
-    | (u_def, ReposUseT (reason, use_op, l)) ->
-      let u = reposition cx ~trace (loc_of_reason reason) u_def in
+    | u, ReposUseT (reason, use_op, l) ->
+      let u = reposition cx ~trace (loc_of_reason reason) u in
       rec_flow cx trace (l, UseT (use_op, u))
-
-    (***************)
-    (* annotations *)
-    (***************)
 
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
