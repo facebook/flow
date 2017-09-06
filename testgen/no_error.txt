@@ -1,25 +1,20 @@
 // Good program ==========
-var v_3  : {p_0 : number}= {p_0 : 1.1}
-v_3.p_0 = 1.1;
-f6(v_3);
-assert_type(v_3, {p_0 : 1.1});
+var v_0 = 1.1
+assert_type(v_0, 1.1);
 function f6(param  : {p_0 : number | string}) : void {
-assert_type(param, {p_0 : 1.1});
+assert_type(param, {p_0 : [1.1, "foo"]});
 
-param.p_0 = 1.1;
+param.p_0 = v_0;
 }
 
 /*
 Env:
-{p_0 : number}
-1.1 : number
-v_3.p_0 : number
-void
-f6(v_3) : void
 ({p_0 : number | string}) => void
 f6 : ({p_0 : number | string}) => void
-v_3 : {p_0 : number}
-{p_0 : 1.1} : {p_0 : number}
+1.1 : number
+v_0 : number
+{p_0 : string}
+{p_0 : "foo"} : {p_0 : string}
 {p_0 : number | string}
 number | string
 string
@@ -30,292 +25,81 @@ number
 
 
 // Good program ==========
-var v_3  : {p_0 : number}= {p_0 : 1.1}
-v_3.p_0 = 1.1;
-f6({p_0 : 1.1});
-assert_type(v_3, {p_0 : 1.1});
-function f6(param  : {p_0 : number | string}) : void {
-assert_type(param, {p_0 : 1.1});
-
-param.p_0 = 1.1;
-}
-
-/*
-Env:
-{p_0 : number}
-1.1 : number
-v_3.p_0 : number
-void
-f6({p_0 : 1.1}) : void
-({p_0 : number | string}) => void
-f6 : ({p_0 : number | string}) => void
-v_3 : {p_0 : number}
-{p_0 : 1.1} : {p_0 : number}
-{p_0 : number | string}
-number | string
-string
-"foo" : string
-number
-*/
-
-
-
-// Good program ==========
-var v_4  : {p_0 : string}= {p_0 : "foo"}
-v_4.p_0 = "foo";
-assert_type(v_4, {p_0 : "foo"});
-
-/*
-Env:
-{p_0 : string}
-{p_0 : "foo"} : {p_0 : string}
-number | string
-v_4.p_0 : string
-v_4 : {p_0 : string}
-1.1 : number
-number
-"foo" : string
-string
-*/
-
-
-
-// Good program ==========
-var v_5  : {p_0 : number}= {p_0 : 1.1}
-v_5.p_0 = 1.1;
-assert_type(v_5, {p_0 : 1.1});
-
-/*
-Env:
-{p_0 : number}
-1.1 : number
-v_5.p_0 : number
-v_5 : {p_0 : number}
-{p_0 : 1.1} : {p_0 : number}
-{p_0 : string}
-number | string
-string
-"foo" : string
-number
-*/
-
-
-
-// Good program ==========
-var v_6  : {p_0 : string}= {p_0 : "foo"}
-v_6.p_0 = "foo";
-assert_type(v_6, {p_0 : "foo"});
-
-/*
-Env:
-{p_0 : string}
-1.1 : number
-number
-"foo" : string
-v_6.p_0 : string
-v_6 : {p_0 : string}
-{p_0 : "foo"} : {p_0 : string}
-{p_0 : number}
-number | string
-string
-*/
-
-
-
-// Good program ==========
-var v_7  : {p_0 : number}= {p_0 : 1.1}
-v_7.p_0 = 1.1;
-assert_type(v_7, {p_0 : 1.1});
-
-/*
-Env:
-{p_0 : number}
-{p_0 : 1.1} : {p_0 : number}
-number | string
-string
-"foo" : string
-v_7.p_0 : number
-v_7 : {p_0 : number}
-1.1 : number
-number
-*/
-
-
-
-// Good program ==========
-var v_9  : {p_0 : string}= {p_0 : "foo"}
-v_9.p_0 = "foo";
-f12({p_0 : "foo"});
-assert_type(v_9, {p_0 : "foo"});
-function f12(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : "foo"});
-
-param.p_0 = 1.1;
-}
-
-/*
-Env:
-{p_0 : string}
-1.1 : number
-number
-"foo" : string
-v_9.p_0 : string
-void
-f12({p_0 : "foo"}) : void
-({p_0 : string | number}) => void
-f12 : ({p_0 : string | number}) => void
-v_9 : {p_0 : string}
-{p_0 : "foo"} : {p_0 : string}
-{p_0 : string | number}
-string | number
-string
-*/
-
-
-
-// Good program ==========
-var v_10  : {p_0 : string | number}= {p_0 : 1.1}
-v_10.p_0 = 1.1;
-f20({p_0 : 1.1});
-assert_type(v_10, {p_0 : 1.1});
-function f20(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : 1.1});
-
-param.p_0 = 1.1;
-}
-
-/*
-Env:
-{p_0 : string | number}
-{p_0 : 1.1} : {p_0 : number}
-{p_0 : number}
-1.1 : number
-number
-"foo" : string
-string
-v_10.p_0 : string | number
-void
-f20({p_0 : 1.1}) : void
-({p_0 : string | number}) => void
-f20 : ({p_0 : string | number}) => void
-v_10 : {p_0 : string | number}
-string | number
-*/
-
-
-
-// Good program ==========
-var v_10  : {p_0 : string | number}= {p_0 : 1.1}
-v_10.p_0 = "foo";
-f23({p_0 : 1.1});
-assert_type(v_10, {p_0 : "foo"});
-function f23(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : 1.1});
+var v_0 = 1.1
+assert_type(v_0, 1.1);
+function f5(param  : {p_0 : number | string}) : void {
+assert_type(param, {p_0 : [1.1, "foo"]});
 
 param.p_0 = "foo";
 }
 
 /*
 Env:
-{p_0 : string | number}
-{p_0 : 1.1} : {p_0 : number}
-{p_0 : number}
+({p_0 : number | string}) => void
+f5 : ({p_0 : number | string}) => void
 1.1 : number
-number
-"foo" : string
+v_0 : number
+{p_0 : string}
+{p_0 : "foo"} : {p_0 : string}
+{p_0 : number | string}
+number | string
 string
-v_10.p_0 : string | number
+"foo" : string
+number
+*/
+
+
+
+// Good program ==========
+var v_5 = {p_0 : 1.1}
+f9(v_5);
+assert_type(v_5.p_0, 1.1);
+function f9(param  : {p_0 : number | string}) : void {
+assert_type(param, {p_0 : [1.1, "foo"]});
+
+param.p_0 = 1.1;
+}
+
+/*
+Env:
+{p_0 : number}
+v_5 : {p_0 : number}
+{p_0 : 1.1} : {p_0 : number}
+{p_0 : number | string}
+number | string
+string
+"foo" : string
+v_5.p_0 : number
 void
-f23({p_0 : 1.1}) : void
-({p_0 : string | number}) => void
-f23 : ({p_0 : string | number}) => void
-v_10 : {p_0 : string | number}
-string | number
+f9(v_5) : void
+({p_0 : number | string}) => void
+f9 : ({p_0 : number | string}) => void
+1.1 : number
+number
 */
 
 
 
 // Good program ==========
-var v_12  : {p_0 : string}= {p_0 : "foo"}
-v_12.p_0 = "foo";
-assert_type(v_12, {p_0 : "foo"});
+var v_4 = "foo"
+assert_type(v_4, "foo");
+function f12(param  : {p_0 : number | string}) : void {
+assert_type(param, {p_0 : [1.1, "foo"]});
+
+param.p_0 = 1.1;
+}
 
 /*
 Env:
-{p_0 : string}
-{p_0 : "foo"} : {p_0 : string}
-string | number
-v_12.p_0 : string
-v_12 : {p_0 : string}
+({p_0 : number | string}) => void
+f12 : ({p_0 : number | string}) => void
 1.1 : number
 number
 "foo" : string
-string
-*/
-
-
-
-// Good program ==========
-var v_13  : {p_0 : number}= {p_0 : 1.1}
-v_13.p_0 = 1.1;
-assert_type(v_13, {p_0 : 1.1});
-
-/*
-Env:
-{p_0 : number}
-1.1 : number
-v_13.p_0 : number
-v_13 : {p_0 : number}
-{p_0 : 1.1} : {p_0 : number}
-{p_0 : string}
-string | number
-string
-"foo" : string
-number
-*/
-
-
-
-// Good program ==========
-var v_14  : {p_0 : string}= {p_0 : "foo"}
-v_14.p_0 = "foo";
-assert_type(v_14, {p_0 : "foo"});
-
-/*
-Env:
-{p_0 : string}
-1.1 : number
-number
-"foo" : string
-v_14.p_0 : string
-v_14 : {p_0 : string}
-{p_0 : "foo"} : {p_0 : string}
-{p_0 : number}
-string | number
-string
-*/
-
-
-
-// Good program ==========
-var v_15  : {p_0 : number}= {p_0 : 1.1}
-v_15.p_0 = 1.1;
-assert_type(v_15, {p_0 : 1.1});
-
-/*
-Env:
+v_4 : string
 {p_0 : number}
 {p_0 : 1.1} : {p_0 : number}
-string | number
+{p_0 : number | string}
+number | string
 string
-"foo" : string
-v_15.p_0 : number
-v_15 : {p_0 : number}
-1.1 : number
-number
 */
-
-
-
-// 13 programs without error written to no_error.txt.
-

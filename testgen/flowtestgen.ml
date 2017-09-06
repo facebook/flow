@@ -23,39 +23,56 @@ type run_result = string option;;
 let assert_func = "
 // from http://tinyurl.com/y93dykzv
 const util = require('util');
-  function assert_type(actual, expected) {
+function assert_type(actual, expected) {
     if(typeof(actual) != 'object' || typeof(expected) != 'object') {
-      if(actual != expected) {
-        var expected_str = 'null';
-        if(expected != null) {
-          expected_str = expected.toString();
-        }
+        if(Array.isArray(expected)) {
+            if(expected.indexOf(actual) === -1) {
+                var message = '';
+                var expected_str = expected.toString();
 
-        var actual_str = 'null';
-        if(actual != null) {
-          actual_str = actual.toString();
+                var actual_str = 'null';
+                if(actual != null) {
+                    actual_str = actual.toString();
+                }
+                message = message.concat('Not contain: ',
+                                         'Actual : ',
+                                         actual_str,
+                                         ' != Expected: ',
+                                         expected_str);
+                console.log(message);
+                throw new Error(message);
+            }
+        } else if(actual != expected) {
+            var expected_str = 'null';
+            if(expected != null) {
+                expected_str = expected.toString();
+            }
+
+            var actual_str = 'null';
+            if(actual != null) {
+                actual_str = actual.toString();
+            }
+            var message = '';
+            message = message.concat('Not equal: ',
+                                     'Actual : ',
+                                     actual_str,
+                                     ' != Expected: ',
+                                     expected_str);
+            console.log(message);
+            throw new Error(message);
         }
-        var message = '';
-        message = message.concat('Not equal: ',
-                  'Actual : ',
-                  actual_str,
-                  ' != Expected: ',
-                  expected_str);
-        console.log(message);
-        throw new Error(message);
-      }
     } else {
-      for(var prop in expected) {
-          if(expected.hasOwnProperty(prop)) {
-              if(!actual.hasOwnProperty(prop)) {
-                  var message = '';
-                  message = message.concat('Missing property: ', prop.toString());
-                  console.log(message);
-                  throw new Error(message);
-              }
-              assert_type(actual[prop], expected[prop]);
-          }
-      }
+        for(var prop in expected) {
+            if(expected.hasOwnProperty(prop)) {
+                if(!actual.hasOwnProperty(prop)) {
+                    var message = '';
+                    message = message.concat('Missing property: ', prop.toString());
+                    console.log(message);
+                    throw new Error(message);
+                }
+                assert_type(actual[prop], expected[prop]);
+            }
+        }
     }
 }\n\n
 ";;

@@ -343,18 +343,67 @@ class ruleset_union = object(self)
     let new_env = self#add_binding new_env (Type ret_type) in
     func_def, new_env
 
+  method! rule_func_call (env : env_t) : (Syntax.t * env_t) =
+    (* require a function from the environment.*)
+    let func = self#choose 0 (fun () -> self#require_expr env) in
+    let func_expr, func_type = match func with
+        | Expr (e, t) -> e, t
+        | _ -> failwith "This has to be an expression" in
+    self#backtrack_on_false (match func_type with
+        | T.Function _ -> true
+        | _ -> false);
+
+    (* get the type of the parameter assuming we only have one param *)
+    let f_ptype =
+      let open T.Function in
+      match func_type with
+      | T.Function {params = plist, _;
+                    returnType = _;
+                    typeParameters = _} ->
+        T.Function.Param.((plist |> List.hd |> snd).typeAnnotation)
+      | _ -> failwith "This has to a function type" in
+
+    (* parameter *)
+    let param = self#choose 1 (fun () -> self#require_expr env) in
+    let param_expr, param_type = match param with
+        | Expr (e, t) -> e, t
+        | _ -> failwith "This has to be an expression" in
+    self#backtrack_on_false (match param_expr with
+        | E.Identifier _ -> true
+        | _ -> false);
+    self#weak_assert (self#is_subtype param_type (snd f_ptype));
+
+    let func_call = Syntax.mk_func_call func_expr param_expr in
+
+    let ret_type = T.Function.(match func_type with
+        | T.Function {params = _;
+                      returnType = (_, rt);
+                      typeParameters =_} -> rt
+        | _ -> failwith "This has to be a function type") in
+    let new_env =
+      self#add_binding
+        env
+        (Expr ((match func_call with
+             | Syntax.Expr e -> e
+             | _ -> failwith "This has to be an expression"),
+               ret_type)) in
+
+    let new_env = self#add_binding new_env (Type ret_type) in
+    func_call, new_env
+
   method! get_all_rules () =
     [|self#rule_num_lit;
       self#rule_str_lit;
       self#rule_union_type;
       self#rule_obj_type;
       self#rule_obj_lit;
-      self#rule_vardecl_with_type;
-      self#rule_prop_update;
+      self#rule_vardecl;
       self#rule_func_mutate;
       self#rule_func_call;
       self#rule_prop_read;
+      self#rule_runtime_check;
       (*
+      self#rule_prop_update;
       self#rule_vardecl_with_type;
       self#rule_prop_update;
       self#rule_func_mutate;

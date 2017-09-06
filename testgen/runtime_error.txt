@@ -1,178 +1,29 @@
 //===================
-var v_2  : {p_0 : number | string}= {p_0 : 1.1}
-v_2.p_0 = 1.1;
-f9({p_0 : 1.1});
-assert_type(v_2, {p_0 : "foo"});
-function f9(param  : {p_0 : number | string}) : void {
-assert_type(param, {p_0 : 1.1});
+var v_5 = {p_0 : 1.1}
+f8(v_5);
+assert_type(v_5.p_0, 1.1);
+function f8(param  : {p_0 : number | string}) : void {
+assert_type(param, {p_0 : [1.1, "foo"]});
 
 param.p_0 = "foo";
 }
 
 /*
 Env:
-{p_0 : number | string}
-{p_0 : 1.1} : {p_0 : number}
 {p_0 : number}
-1.1 : number
-number
-"foo" : string
-string
-v_2.p_0 : number | string
-void
-f9({p_0 : 1.1}) : void
-({p_0 : number | string}) => void
-f9 : ({p_0 : number | string}) => void
-v_2 : {p_0 : number | string}
+v_5 : {p_0 : number}
+{p_0 : 1.1} : {p_0 : number}
+{p_0 : number | string}
 number | string
-*/
-
-
-
-/*
-Error: 
-Failed to run program:
-Not equal: Actual : 1.1 != Expected: foo
-
-*/
-//===================
-var v_2  : {p_0 : number | string}= {p_0 : 1.1}
-v_2.p_0 = 1.1;
-f8({p_0 : 1.1});
-assert_type(v_2, {p_0 : 1.1});
-function f8(param  : {p_0 : number | string}) : void {
-assert_type(param, {p_0 : "foo"});
-
-param.p_0 = 1.1;
-}
-
-/*
-Env:
-{p_0 : number | string}
-{p_0 : 1.1} : {p_0 : number}
-{p_0 : number}
-1.1 : number
-number
-"foo" : string
 string
-v_2.p_0 : number | string
+"foo" : string
+v_5.p_0 : number
 void
-f8({p_0 : 1.1}) : void
+f8(v_5) : void
 ({p_0 : number | string}) => void
 f8 : ({p_0 : number | string}) => void
-v_2 : {p_0 : number | string}
-number | string
-*/
-
-
-
-/*
-Error: 
-Failed to run program:
-Not equal: Actual : 1.1 != Expected: foo
-
-*/
-//===================
-var v_2  : {p_0 : number | string}= {p_0 : 1.1}
-v_2.p_0 = "foo";
-f11({p_0 : 1.1});
-assert_type(v_2, {p_0 : "foo"});
-function f11(param  : {p_0 : number | string}) : void {
-assert_type(param, {p_0 : "foo"});
-
-param.p_0 = "foo";
-}
-
-/*
-Env:
-{p_0 : number | string}
-{p_0 : 1.1} : {p_0 : number}
-{p_0 : number}
 1.1 : number
 number
-"foo" : string
-string
-v_2.p_0 : number | string
-void
-f11({p_0 : 1.1}) : void
-({p_0 : number | string}) => void
-f11 : ({p_0 : number | string}) => void
-v_2 : {p_0 : number | string}
-number | string
-*/
-
-
-
-/*
-Error: 
-Failed to run program:
-Not equal: Actual : 1.1 != Expected: foo
-
-*/
-//===================
-var v_2  : {p_0 : number | string}= {p_0 : 1.1}
-v_2.p_0 = "foo";
-f10({p_0 : 1.1});
-assert_type(v_2, {p_0 : "foo"});
-function f10(param  : {p_0 : number | string}) : void {
-assert_type(param, {p_0 : "foo"});
-
-param.p_0 = 1.1;
-}
-
-/*
-Env:
-{p_0 : number | string}
-{p_0 : 1.1} : {p_0 : number}
-{p_0 : number}
-1.1 : number
-number
-"foo" : string
-string
-v_2.p_0 : number | string
-void
-f10({p_0 : 1.1}) : void
-({p_0 : number | string}) => void
-f10 : ({p_0 : number | string}) => void
-v_2 : {p_0 : number | string}
-number | string
-*/
-
-
-
-/*
-Error: 
-Failed to run program:
-Not equal: Actual : 1.1 != Expected: foo
-
-*/
-//===================
-var v_9  : {p_0 : string}= {p_0 : "foo"}
-v_9.p_0 = "foo";
-f13(v_9);
-assert_type(v_9, {p_0 : "foo"});
-function f13(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : 1.1});
-
-param.p_0 = "foo";
-}
-
-/*
-Env:
-{p_0 : string}
-1.1 : number
-number
-"foo" : string
-v_9.p_0 : string
-void
-f13(v_9) : void
-({p_0 : string | number}) => void
-f13 : ({p_0 : string | number}) => void
-v_9 : {p_0 : string}
-{p_0 : "foo"} : {p_0 : string}
-{p_0 : string | number}
-string | number
-string
 */
 
 
@@ -184,217 +35,31 @@ Not equal: Actual : foo != Expected: 1.1
 
 */
 //===================
-var v_9  : {p_0 : string}= {p_0 : "foo"}
-v_9.p_0 = "foo";
-f13({p_0 : "foo"});
-assert_type(v_9, {p_0 : "foo"});
-function f13(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : 1.1});
-
-param.p_0 = "foo";
-}
-
-/*
-Env:
-{p_0 : string}
-1.1 : number
-number
-"foo" : string
-v_9.p_0 : string
-void
-f13({p_0 : "foo"}) : void
-({p_0 : string | number}) => void
-f13 : ({p_0 : string | number}) => void
-v_9 : {p_0 : string}
-{p_0 : "foo"} : {p_0 : string}
-{p_0 : string | number}
-string | number
-string
-*/
-
-
-
-/*
-Error: 
-Failed to run program:
-Not equal: Actual : foo != Expected: 1.1
-
-*/
-//===================
-var v_9  : {p_0 : string}= {p_0 : "foo"}
-v_9.p_0 = "foo";
-f12(v_9);
-assert_type(v_9, {p_0 : "foo"});
-function f12(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : "foo"});
-
-param.p_0 = 1.1;
-}
-
-/*
-Env:
-{p_0 : string}
-1.1 : number
-number
-"foo" : string
-v_9.p_0 : string
-void
-f12(v_9) : void
-({p_0 : string | number}) => void
-f12 : ({p_0 : string | number}) => void
-v_9 : {p_0 : string}
-{p_0 : "foo"} : {p_0 : string}
-{p_0 : string | number}
-string | number
-string
-*/
-
-
-
-/*
-Error: 
-Failed to run program:
-Not equal: Actual : 1.1 != Expected: foo
-
-*/
-//===================
-var v_8  : {p_0 : string | number}= {p_0 : "foo"}
-v_8.p_0 = 1.1;
-f15({p_0 : "foo"});
-assert_type(v_8, {p_0 : "foo"});
-function f15(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : 1.1});
-
-param.p_0 = "foo";
-}
-
-/*
-Env:
-{p_0 : string | number}
-{p_0 : "foo"} : {p_0 : string}
-{p_0 : string}
-1.1 : number
-number
-"foo" : string
-string
-v_8.p_0 : string | number
-void
-f15({p_0 : "foo"}) : void
-({p_0 : string | number}) => void
-f15 : ({p_0 : string | number}) => void
-v_8 : {p_0 : string | number}
-string | number
-*/
-
-
-
-/*
-Error: 
-Failed to run program:
-Not equal: Actual : foo != Expected: 1.1
-
-*/
-//===================
-var v_8  : {p_0 : string | number}= {p_0 : "foo"}
-v_8.p_0 = 1.1;
-f14({p_0 : "foo"});
-assert_type(v_8, {p_0 : "foo"});
-function f14(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : 1.1});
-
-param.p_0 = 1.1;
-}
-
-/*
-Env:
-{p_0 : string | number}
-{p_0 : "foo"} : {p_0 : string}
-{p_0 : string}
-1.1 : number
-number
-"foo" : string
-string
-v_8.p_0 : string | number
-void
-f14({p_0 : "foo"}) : void
-({p_0 : string | number}) => void
-f14 : ({p_0 : string | number}) => void
-v_8 : {p_0 : string | number}
-string | number
-*/
-
-
-
-/*
-Error: 
-Failed to run program:
-Not equal: Actual : foo != Expected: 1.1
-
-*/
-//===================
-var v_8  : {p_0 : string | number}= {p_0 : "foo"}
-v_8.p_0 = "foo";
-f17({p_0 : "foo"});
-assert_type(v_8, {p_0 : "foo"});
+var v_20 = {p_0 : "foo"}
+f17(v_20);
+assert_type(v_20.p_0, "foo");
 function f17(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : 1.1});
+assert_type(param, {p_0 : ["foo", 1.1]});
 
-param.p_0 = "foo";
+param.p_0 = 1.1;
 }
 
 /*
 Env:
-{p_0 : string | number}
-{p_0 : "foo"} : {p_0 : string}
 {p_0 : string}
-1.1 : number
-number
-"foo" : string
-string
-v_8.p_0 : string | number
+v_20 : {p_0 : string}
+{p_0 : "foo"} : {p_0 : string}
+{p_0 : string | number}
+string | number
+v_20.p_0 : string
 void
-f17({p_0 : "foo"}) : void
+f17(v_20) : void
 ({p_0 : string | number}) => void
 f17 : ({p_0 : string | number}) => void
-v_8 : {p_0 : string | number}
-string | number
-*/
-
-
-
-/*
-Error: 
-Failed to run program:
-Not equal: Actual : foo != Expected: 1.1
-
-*/
-//===================
-var v_8  : {p_0 : string | number}= {p_0 : "foo"}
-v_8.p_0 = "foo";
-f16({p_0 : "foo"});
-assert_type(v_8, {p_0 : 1.1});
-function f16(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : 1.1});
-
-param.p_0 = 1.1;
-}
-
-/*
-Env:
-{p_0 : string | number}
-{p_0 : "foo"} : {p_0 : string}
-{p_0 : string}
 1.1 : number
 number
 "foo" : string
 string
-v_8.p_0 : string | number
-void
-f16({p_0 : "foo"}) : void
-({p_0 : string | number}) => void
-f16 : ({p_0 : string | number}) => void
-v_8 : {p_0 : string | number}
-string | number
 */
 
 
@@ -402,16 +67,15 @@ string | number
 /*
 Error: 
 Failed to run program:
-Not equal: Actual : foo != Expected: 1.1
+Not equal: Actual : 1.1 != Expected: foo
 
 */
 //===================
-var v_11  : {p_0 : number}= {p_0 : 1.1}
-v_11.p_0 = 1.1;
-f19(v_11);
-assert_type(v_11, {p_0 : 1.1});
-function f19(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : 1.1});
+var v_23 = {p_0 : 1.1}
+f24(v_23);
+assert_type(v_23.p_0, 1.1);
+function f24(param  : {p_0 : string | number}) : void {
+assert_type(param, {p_0 : ["foo", 1.1]});
 
 param.p_0 = "foo";
 }
@@ -419,18 +83,18 @@ param.p_0 = "foo";
 /*
 Env:
 {p_0 : number}
-1.1 : number
-v_11.p_0 : number
-void
-f19(v_11) : void
-({p_0 : string | number}) => void
-f19 : ({p_0 : string | number}) => void
-v_11 : {p_0 : number}
+v_23 : {p_0 : number}
 {p_0 : 1.1} : {p_0 : number}
 {p_0 : string | number}
 string | number
 string
 "foo" : string
+v_23.p_0 : number
+void
+f24(v_23) : void
+({p_0 : string | number}) => void
+f24 : ({p_0 : string | number}) => void
+1.1 : number
 number
 */
 
@@ -442,190 +106,5 @@ Failed to run program:
 Not equal: Actual : foo != Expected: 1.1
 
 */
-//===================
-var v_11  : {p_0 : number}= {p_0 : 1.1}
-v_11.p_0 = 1.1;
-f19({p_0 : 1.1});
-assert_type(v_11, {p_0 : 1.1});
-function f19(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : "foo"});
-
-param.p_0 = "foo";
-}
-
-/*
-Env:
-{p_0 : number}
-1.1 : number
-v_11.p_0 : number
-void
-f19({p_0 : 1.1}) : void
-({p_0 : string | number}) => void
-f19 : ({p_0 : string | number}) => void
-v_11 : {p_0 : number}
-{p_0 : 1.1} : {p_0 : number}
-{p_0 : string | number}
-string | number
-string
-"foo" : string
-number
-*/
-
-
-
-/*
-Error: 
-Failed to run program:
-Not equal: Actual : 1.1 != Expected: foo
-
-*/
-//===================
-var v_11  : {p_0 : number}= {p_0 : 1.1}
-v_11.p_0 = 1.1;
-f18(v_11);
-assert_type(v_11, {p_0 : 1.1});
-function f18(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : "foo"});
-
-param.p_0 = 1.1;
-}
-
-/*
-Env:
-{p_0 : number}
-1.1 : number
-v_11.p_0 : number
-void
-f18(v_11) : void
-({p_0 : string | number}) => void
-f18 : ({p_0 : string | number}) => void
-v_11 : {p_0 : number}
-{p_0 : 1.1} : {p_0 : number}
-{p_0 : string | number}
-string | number
-string
-"foo" : string
-number
-*/
-
-
-
-/*
-Error: 
-Failed to run program:
-Not equal: Actual : 1.1 != Expected: foo
-
-*/
-//===================
-var v_11  : {p_0 : number}= {p_0 : 1.1}
-v_11.p_0 = 1.1;
-f18({p_0 : 1.1});
-assert_type(v_11, {p_0 : 1.1});
-function f18(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : "foo"});
-
-param.p_0 = 1.1;
-}
-
-/*
-Env:
-{p_0 : number}
-1.1 : number
-v_11.p_0 : number
-void
-f18({p_0 : 1.1}) : void
-({p_0 : string | number}) => void
-f18 : ({p_0 : string | number}) => void
-v_11 : {p_0 : number}
-{p_0 : 1.1} : {p_0 : number}
-{p_0 : string | number}
-string | number
-string
-"foo" : string
-number
-*/
-
-
-
-/*
-Error: 
-Failed to run program:
-Not equal: Actual : 1.1 != Expected: foo
-
-*/
-//===================
-var v_10  : {p_0 : string | number}= {p_0 : 1.1}
-v_10.p_0 = 1.1;
-f21({p_0 : 1.1});
-assert_type(v_10, {p_0 : 1.1});
-function f21(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : "foo"});
-
-param.p_0 = "foo";
-}
-
-/*
-Env:
-{p_0 : string | number}
-{p_0 : 1.1} : {p_0 : number}
-{p_0 : number}
-1.1 : number
-number
-"foo" : string
-string
-v_10.p_0 : string | number
-void
-f21({p_0 : 1.1}) : void
-({p_0 : string | number}) => void
-f21 : ({p_0 : string | number}) => void
-v_10 : {p_0 : string | number}
-string | number
-*/
-
-
-
-/*
-Error: 
-Failed to run program:
-Not equal: Actual : 1.1 != Expected: foo
-
-*/
-//===================
-var v_10  : {p_0 : string | number}= {p_0 : 1.1}
-v_10.p_0 = "foo";
-f22({p_0 : 1.1});
-assert_type(v_10, {p_0 : 1.1});
-function f22(param  : {p_0 : string | number}) : void {
-assert_type(param, {p_0 : 1.1});
-
-param.p_0 = 1.1;
-}
-
-/*
-Env:
-{p_0 : string | number}
-{p_0 : 1.1} : {p_0 : number}
-{p_0 : number}
-1.1 : number
-number
-"foo" : string
-string
-v_10.p_0 : string | number
-void
-f22({p_0 : 1.1}) : void
-({p_0 : string | number}) => void
-f22 : ({p_0 : string | number}) => void
-v_10 : {p_0 : string | number}
-string | number
-*/
-
-
-
-/*
-Error: 
-Failed to run program:
-Not equal: Actual : foo != Expected: 1.1
-
-*/
-// 17 runtime errors written to runtime_error.txt
+// 3 runtime errors written to runtime_error.txt
 

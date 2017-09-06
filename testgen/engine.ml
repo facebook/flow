@@ -260,12 +260,12 @@ class virtual ['a, 'b, 'c] engine = object(self)
     (* Run a rule through all the results in the queue *)
     let helper (rule : 'b -> ('c * 'b)) : unit = 
       (*
-       *)
       Printf.printf "Queue size : %d\n" (Queue.length queue);
       Queue.iter (fun (slist, env) ->
           self#print_env env;
           Printf.printf "Syntax:\n";
           List.iter (fun s -> self#print_syntax s) slist) queue;
+       *)
 
       Queue.iter (fun (slist, env) ->
           let result = self#run_exhaustive rule env in

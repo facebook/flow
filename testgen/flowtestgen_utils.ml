@@ -196,6 +196,15 @@ and string_of_expr (expr : E.t') =
     (string_of_expr (snd cast.expression)) ^
     " : " ^
     (string_of_type (snd (snd cast.typeAnnotation)))
+  | E.Array array ->
+    let open E.Array in
+    "[" ^
+    (List.map (fun elt -> match elt with
+         | Some (E.Expression (_, e)) -> string_of_expr e
+         | Some (E.Spread (_, e)) -> string_of_expr (E.SpreadElement.((snd e.argument)))
+         | None -> "") array.elements
+     |> (String.concat ", ")) ^
+      "]"
   | _ -> failwith "unknown expr"
 
 and string_of_stmt (stmt : S.t') =

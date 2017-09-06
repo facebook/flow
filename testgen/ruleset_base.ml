@@ -183,6 +183,11 @@ class ruleset_base = object(self)
         | Expr _ -> elt :: acc
         | _ -> acc) env []
 
+  method require_var (env : env_t) : env_elt_t list =
+    List.fold_right (fun elt acc -> match elt with
+        | Expr (E.Identifier _, _) -> elt :: acc
+        | _ -> acc) env []
+
   method require_type (env : env_t) : env_elt_t list =
     List.fold_right (fun elt acc -> match elt with
         | Type _ -> elt :: acc
@@ -704,6 +709,48 @@ class ruleset_base = object(self)
     let new_env =
       self#add_binding env (Type ret_type) in
     Syntax.Empty, new_env
+
+  (* A rule for adding runtime checks *)
+  method rule_runtime_check (env : env_t) : (Syntax.t * env_t) =
+
+    let mk_prop_read (obj : E.t') (prop : E.t') : E.t' =
+      let open E.Member in
+      E.Member {_object = (Loc.none, obj);
+                property = PropertyExpression (Loc.none, prop);
+                computed = false} in
+
+    let rec get_prop (oname : E.t') (ot : T.Object.t) (depth : int) : env_elt_t =
+      let prop = self#choose depth (fun () -> self#require_prop (T.Object ot) true) in
+      let pexpr, ptype = match prop with
+        | Expr (e, t) -> e, t
+        | _ -> failwith "This has to be an expression" in
+      match ptype with
+      | T.Object t -> get_prop pexpr t (depth + 1)
+      | _ -> Expr (mk_prop_read oname pexpr, ptype) in
+
+    let var = self#choose 0 (fun () -> self#require_var env) in
+    let vexpr, vtype = match var with
+      | Expr (e, t) -> e, t
+      | _ -> failwith "This has to be an expression." in
+    self#backtrack_on_false (match vtype with
+        | T.Function _ -> false
+        | T.Union _ -> false
+        | _ -> true);
+
+    let final_expr = match vtype with
+      | T.Object ot -> get_prop vexpr ot 1
+      | _ -> var in
+    let fexpr, ftype = match final_expr with
+      | Expr (e, t) -> e, t
+      | _ -> failwith "This has to be an expression." in
+    self#backtrack_on_false (match ftype with
+        | T.Function _ -> false
+        | T.Union _ -> false
+        | _ -> true);
+
+    let check = Syntax.mk_runtime_check fexpr ftype in
+
+    check, env
 
   method get_all_rules () =
     let all_rules = [|self#rule_num_lit;
