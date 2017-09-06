@@ -4037,11 +4037,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, UseT (use_op, uproto))
 
     (* For some object `x` and constructor `C`, if `x instanceof C`, then the
-       object is a subtype. *)
-    | DefT (lreason, ObjT { proto_t; _ }),
-      UseT (_, DefT (_, InstanceT (_, _, _, { structural = false; _ }))) ->
-      let l = reposition cx ~trace (loc_of_reason lreason) proto_t in
-      rec_flow cx trace (l, u)
+       object is a subtype. We use `ExtendsT` to walk the proto chain of the
+       object, in case it includes a nominal type. *)
+    | DefT (_, ObjT _), UseT (use_op, (DefT (_, InstanceT _) as u)) ->
+      rec_flow cx trace (l, UseT (use_op, extends_type l u))
 
     (****************************************)
     (* You can cast an object to a function *)
@@ -5834,6 +5833,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (** ExtendsT searches for a nominal superclass. The search terminates with
         either failure at the root or a structural subtype check. **)
+
+    | DefT (_, AnyObjT), UseT (_, ExtendsT _) -> ()
+
+    | DefT (lreason, ObjT { proto_t; _ }), UseT (_, ExtendsT _) ->
+      let l = reposition cx ~trace (loc_of_reason lreason) proto_t in
+      rec_flow cx trace (l, u)
 
     | DefT (reason, ClassT instance), UseT (_, (ExtendsT _ as u)) ->
       let desc = RStatics (desc_of_reason (reason_of_t instance)) in
