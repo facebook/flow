@@ -519,6 +519,17 @@ module ContextOptimizer = struct
         let { sig_hash; _ } = quotient in
         let sig_hash = SigHash.add_type t sig_hash in
         super#type_ cx { quotient with sig_hash } t
+
+    method! use_type_ cx quotient use =
+      let quotient = { quotient with
+        sig_hash = SigHash.add (reason_of_use_t use) quotient.sig_hash
+      } in
+      match use with
+      | UseT (_, t) -> self#type_ cx quotient t
+      | _ ->
+        let { sig_hash; _ } = quotient in
+        let sig_hash = SigHash.add_use use sig_hash in
+        super#use_type_ cx { quotient with sig_hash } use
   end
 
   (* walk a context from a list of exports *)

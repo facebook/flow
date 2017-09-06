@@ -232,7 +232,7 @@ class ['a] t = object(self)
   | DebugPrint
     -> acc
 
-  method private use_type_ cx (acc: 'a) = function
+  method use_type_ cx (acc: 'a) = function
   | UseT (_, t) ->
     self#type_ cx acc t
 
