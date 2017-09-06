@@ -5594,13 +5594,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* property exists, but is not something we can use for refinement *)
         rec_flow_t cx trace (l, result)
 
-    (*************************)
-    (* Function library call *)
-    (*************************)
-
-    | (FunProtoT reason, (GetPropT _ | SetPropT _ | MethodT _)) ->
-      rec_flow cx trace (get_builtin_type cx ~trace reason "Function",u)
-
     (***********************)
     (* Object library call *)
     (***********************)
@@ -5917,6 +5910,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (reason, BoolT _), u when primitive_promoting_use_t u ->
       rec_flow cx trace (get_builtin_type cx ~trace reason "Boolean",u)
+
+    (*************************)
+    (* Function library call *)
+    (*************************)
+
+    | (FunProtoT reason, (GetPropT _ | SetPropT _ | MethodT _)) ->
+      rec_flow cx trace (get_builtin_type cx ~trace reason "Function",u)
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
