@@ -210,6 +210,7 @@ and parts_of_t cx = function
 | DefT (_, MixedT _) -> []
 | ModuleT (_, exporttypes) -> parts_of_exporttypes cx exporttypes
 | DefT (_, NullT) -> []
+| NullProtoT _ -> []
 | ObjProtoT _ -> []
 | DefT (_, ObjT { props_tmap; dict_t; proto_t; _ }) ->
   ("proto", Def proto_t) ::

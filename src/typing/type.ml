@@ -89,6 +89,10 @@ module rec TypeTerm : sig
     | FunProtoT of reason      (* Function.prototype *)
     | ObjProtoT of reason       (* Object.prototype *)
 
+    (* Signifies the end of the prototype chain. Distinct from NullT when it
+       appears as an upper bound of an object type, otherwise the same. *)
+    | NullProtoT of reason
+
     | FunProtoApplyT of reason  (* Function.prototype.apply *)
     | FunProtoBindT of reason   (* Function.prototype.bind *)
     | FunProtoCallT of reason   (* Function.prototype.call *)
@@ -1703,6 +1707,11 @@ module ObjProtoT = Primitive (struct
   let make r = ObjProtoT r
 end)
 
+module NullProtoT = Primitive (struct
+  let desc = RNull
+  let make r = NullProtoT r
+end)
+
 (* USE WITH CAUTION!!! Locationless types should not leak to errors, otherwise
    they will cause error printing to crash.
 
@@ -1899,6 +1908,7 @@ let rec reason_of_t = function
   | IdxWrapper (reason, _) -> reason
   | KeysT (reason, _) -> reason
   | ModuleT (reason, _) -> reason
+  | NullProtoT reason -> reason
   | ObjProtoT reason -> reason
   | OpaqueT (reason, _) -> reason
   | OpenPredT (reason, _, _, _) -> reason
@@ -2043,6 +2053,7 @@ let rec mod_reason_of_t f = function
   | IdxWrapper (reason, t) -> IdxWrapper (f reason, t)
   | KeysT (reason, t) -> KeysT (f reason, t)
   | ModuleT (reason, exports) -> ModuleT (f reason, exports)
+  | NullProtoT reason -> NullProtoT (f reason)
   | ObjProtoT (reason) -> ObjProtoT (f reason)
   | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
@@ -2258,6 +2269,7 @@ let string_of_ctor = function
   | IdxWrapper _ -> "IdxWrapper"
   | KeysT _ -> "KeysT"
   | ModuleT _ -> "ModuleT"
+  | NullProtoT _ -> "NullProtoT"
   | ObjProtoT _ -> "ObjProtoT"
   | OpaqueT _ -> "OpaqueT"
   | OpenPredT _ -> "OpenPredT"

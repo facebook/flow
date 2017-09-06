@@ -80,6 +80,7 @@ class ['a] t = object(self)
       | TaintT _
       | FunProtoT _
       | ObjProtoT _
+      | NullProtoT _
       | FunProtoApplyT _
       | FunProtoBindT _
       | FunProtoCallT _ -> t

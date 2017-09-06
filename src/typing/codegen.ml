@@ -263,7 +263,7 @@ let rec gen_type t env = Type.(
     (* TODO: Consider polarity and print the literal type when appropriate *)
     add_str "number" env
   | DefT (_, NumT (Truthy|AnyLiteral)) -> add_str "number" env
-  | DefT (_, NullT) -> add_str "null" env
+  | DefT (_, NullT) | NullProtoT _ -> add_str "null" env
   | DefT (_, ObjT {flags = _; dict_t; props_tmap; proto_t = _;}) -> (
     let env = add_str "{" env in
 

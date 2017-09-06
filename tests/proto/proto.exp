@@ -173,5 +173,23 @@ Error: literal.js:27
  27: var o_invalid = { __proto__: 0 }; // error: 0 is not a valid proto
                                   ^ number. Invalid prototype. Expected an object or null.
 
+Error: null.js:5
+  5: o_null.toString(); // property `toString` not found
+            ^^^^^^^^ property `toString`. Property not found in
+  5: o_null.toString(); // property `toString` not found
+     ^^^^^^ object literal
 
-Found 28 errors
+Error: null.js:13
+ 13: (o_shadow.p: string);
+      ^^^^^^^^^^ number. This type is incompatible with
+ 13: (o_shadow.p: string);
+                  ^^^^^^ string
+
+Error: null.js:18
+ 18:   (o_nonstrict.p: empty); // error: mixed ~> empty
+        ^^^^^^^^^^^^^ property `p` of unknown type. This type is incompatible with
+ 18:   (o_nonstrict.p: empty); // error: mixed ~> empty
+                       ^^^^^ empty
+
+
+Found 31 errors

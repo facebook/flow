@@ -107,6 +107,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
     -> []
 
   | TaintT _
+  | NullProtoT _
   | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
@@ -1630,6 +1631,7 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, NullT)
   | DefT (_, VoidT)
       -> p t
+  | NullProtoT _
   | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _

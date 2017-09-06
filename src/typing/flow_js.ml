@@ -1121,6 +1121,7 @@ module ResolvableTypeJob = struct
     | FunProtoCallT _
     | FunProtoApplyT _
     | FunProtoT _
+    | NullProtoT _
     | ObjProtoT _
     | CustomFunT (_, _)
 
@@ -3249,6 +3250,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (reason, SingletonBoolT b), _ ->
       rec_flow cx trace (DefT (reason, BoolT (Some b)), u)
 
+    (* NullProtoT is necessary as an upper bound, to distinguish between
+       (ObjT _, NullProtoT _) constraints and (ObjT _, DefT (_, NullT)), but as
+       a lower bound, it's the same as DefT (_, NullT) *)
+    | NullProtoT reason, _ ->
+      rec_flow cx trace (DefT (reason, NullT), u)
+
     (************************************************************************)
     (* exact object types *)
     (************************************************************************)
@@ -3328,16 +3335,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        result of the read cannot be used in any interesting way. *)
     (**************************************************************************)
 
-    (* TestPropT emits a LookupT constraint directly, but LookupT behavior for a
-       NullT lower bound is different from GetPropT. For lookups, a NullT
-       indicates the end of the prototype chain. We want to error instead, so
-       handle the null case here. *)
-    | DefT (lreason, NullT), TestPropT (_, propref, _) ->
-      add_output cx ~trace (FlowError.EIncompatibleGetProp {
-        reason_prop = reason_of_propref propref;
-        reason_obj = lreason;
-        special = flow_error_kind_of_lower l;
-      })
+    | DefT (_, NullT), TestPropT (reason_op, propref, tout) ->
+      (* The wildcard TestPropT implementation forwards the lower bound to
+         LookupT. This is unfortunate, because LookupT is designed to terminate
+         (successfully) on NullT, but property accesses on null should be type
+         errors. Ideally, we should prevent LookupT constraints from being
+         syntax-driven, in order to preserve the delicate invariants that
+         surround it. *)
+      rec_flow cx trace (l, GetPropT (reason_op, propref, tout))
 
     | _, TestPropT (reason_op, propref, tout) ->
       let t = tvar_with_constraint cx ~trace ~derivable:true
@@ -3997,6 +4002,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       if lflds = uflds then ()
       else flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj)
 
+
+    | DefT (_, ObjT _), UseT (_, NullProtoT _) -> ()
+
     (* InstanceT -> ObjT *)
 
     | DefT (lreason, InstanceT (_, super, _, {
@@ -4153,7 +4161,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (AnyT.why reason_op, u)
 
     | DefT (_, NullT), ObjTestProtoT (reason_op, u) ->
-      rec_flow_t cx trace (NullT.why reason_op, u)
+      rec_flow_t cx trace (NullProtoT.why reason_op, u)
 
     | _, ObjTestProtoT (reason_op, u) ->
       let proto =
@@ -5735,15 +5743,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (** TODO: Ditto above comment for Function.prototype *)
       rec_flow cx trace (get_builtin_type cx ~trace reason_op "Function", u)
 
-    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
-        Strict strict_reason, [], (Named (reason_prop, x) as propref), action) ->
+    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason),
+      LookupT (reason_op, Strict strict_reason, [],
+        (Named (reason_prop, x) as propref), action) ->
       add_output cx ~trace (FlowError.EStrictLookupFailed
         ((reason_prop, strict_reason), reason, Some x));
       let p = Field (AnyT.why reason_op, Neutral) in
       perform_lookup_action cx trace propref p reason reason_op action
 
-    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
-        Strict strict_reason, [], (Computed elem_t as propref), action) ->
+    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason),
+      LookupT (reason_op, Strict strict_reason, [],
+        (Computed elem_t as propref), action) ->
       (match elem_t with
       | OpenT _ ->
         let loc = loc_of_t elem_t in
@@ -5761,8 +5771,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         add_output cx ~trace (FlowError.EStrictLookupFailed
           ((reason_prop, strict_reason), reason, None)))
 
-    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
-        ShadowRead (strict, rev_proto_ids), [], (Named (reason_prop, x) as propref), action) ->
+    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason),
+      LookupT (reason_op, ShadowRead (strict, rev_proto_ids), [],
+        (Named (reason_prop, x) as propref), action) ->
       (* Emit error if this is a strict read. See `lookup_kinds` in types.ml. *)
       (match strict with
       | None -> ()
@@ -5846,7 +5857,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     (* SuperT only involves non-strict lookups *)
-    | (DefT (_, NullT) | ObjProtoT _ | FunProtoT _), SuperT _ -> ()
+    | (DefT (_, NullT), SuperT _)
+    | (ObjProtoT _, SuperT _)
+    | (FunProtoT _, SuperT _) -> ()
 
     (** ExtendsT searches for a nominal superclass. The search terminates with
         either failure at the root or a structural subtype check. **)
@@ -6916,6 +6929,7 @@ and check_polarity cx ?trace polarity = function
   | ShapeT _
   | DiffT _
   | KeysT _
+  | NullProtoT _
   | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
@@ -10826,6 +10840,7 @@ end = struct
     | IdxWrapper (_, _)
     | KeysT (_, _)
     | DefT (_, MixedT _)
+    | NullProtoT _
     | ObjProtoT _
     | OpaqueT _
     | OpenPredT (_, _, _, _)
@@ -11032,6 +11047,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | ReposUpperT (_, t) ->
     recurse ~infer:true t
 
+  | NullProtoT _
   | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _

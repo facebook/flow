@@ -126,6 +126,7 @@ let rec gc cx state = function
   | DefT (_, MaybeT t) -> gc cx state t
   | ModuleT (_, exporttypes) -> gc_exporttypes cx state exporttypes
   | DefT (_, NullT) -> ()
+  | NullProtoT _ -> ()
   | ObjProtoT _ -> ()
   | DefT (_, ObjT objtype) ->
       let id = objtype.props_tmap in

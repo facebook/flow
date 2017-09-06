@@ -322,6 +322,7 @@ let rec type_printer_impl ~size override enclosure cx t =
 
     | FunProtoCallT _
     | ObjProtoT _
+    | NullProtoT _
     | AbstractT _
     | DiffT (_, _)
     | ExtendsT (_, _, _, _)

@@ -134,6 +134,12 @@ Error: cond_prop.js:48
  48:         (t.quux: string); // error, consider { foo: {}, bar: "" }
               ^ object type
 
+Error: cond_prop.js:54
+ 54:     if (o.p) {} // error: property `p` not found on null
+               ^ property `p`. Property cannot be accessed on possibly null value
+ 54:     if (o.p) {} // error: property `p` not found on null
+             ^ null
+
 Error: eq.js:5
   5:     if (x == y) {} // error, string & number are not comparable (unsafe casting)
              ^ string. This type cannot be compared to
@@ -1103,4 +1109,4 @@ Error: void.js:85
            ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 189 errors
+Found 190 errors
