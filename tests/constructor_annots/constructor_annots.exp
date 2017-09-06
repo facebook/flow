@@ -10,7 +10,7 @@ Error: constructors.js:22
  22: exports.Foo2 = (Foo: Class<IFoo>);
                                 ^^^^ statics of IFoo. This type is incompatible with
  22: exports.Foo2 = (Foo: Class<IFoo>);
-                     ^^^ statics of function
+                     ^^^ function
   Property `y` is incompatible:
       5: Foo.y = 0; // has static property y
                  ^ number. This type is incompatible with

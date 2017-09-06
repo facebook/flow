@@ -5,7 +5,11 @@ type t
 type field = Type.t * Type.polarity * Ast.Expression.t option
 
 type super =
-  | Interface of { extends: Type.t list; callable: bool; }
+  | Interface of {
+      extends: Type.t list;
+      callable: bool;
+      static_callable: bool;
+    }
   | Class of {
       extends: extends;
       mixins: Type.t list; (* declare class only *)

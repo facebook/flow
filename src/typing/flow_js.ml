@@ -5320,9 +5320,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* TODO: similar concern as above *)
     | DefT (reason, FunT (statics, _, _)),
-      UseT (use_op, DefT (reason_inst, InstanceT (_, super, _, {
+      UseT (_, DefT (reason_inst, InstanceT (_, _, _, {
         fields_tmap;
-        methods_tmap;
         structural = true;
         _;
       }))) ->
@@ -5330,11 +5329,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (quick_error_fun_as_obj cx trace reason statics reason_inst
           (SMap.filter (fun x _ -> x = "constructor")
             (Context.find_props cx fields_tmap)))
-      then (
-        structural_subtype cx trace ~use_op l reason_inst
-          (fields_tmap, methods_tmap);
-        rec_flow cx trace (l, UseT (use_op, super))
-      )
+      then
+        rec_flow cx trace (statics, u)
 
     (***************************************************************)
     (* Enable structural subtyping for upperbounds like interfaces *)
@@ -5853,6 +5849,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (** ExtendsT searches for a nominal superclass. The search terminates with
         either failure at the root or a structural subtype check. **)
 
+    | DefT (reason, ClassT instance), UseT (_, (ExtendsT _ as u)) ->
+      let desc = RStatics (desc_of_reason (reason_of_t instance)) in
+      let loc = loc_of_reason reason in
+      let reason = mk_reason desc loc in
+      rec_flow cx trace (instance, GetStaticsT (reason, u))
+
     | (DefT (_, NullT) | ObjProtoT _),
       UseT (use_op, ExtendsT (reason, next::try_ts_on_failure, l, u)) ->
       (* When seaching for a nominal superclass fails, we always try to look it
@@ -5919,6 +5921,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let use_desc = true in
       let fun_proto = get_builtin_type cx ~trace reason ~use_desc "Function" in
       rec_flow cx trace (fun_proto, u)
+
+    | _, UseT (use_op, FunProtoT reason) ->
+      let use_desc = true in
+      let fun_proto = get_builtin_type cx ~trace reason ~use_desc "Function" in
+      rec_flow cx trace (l, UseT (use_op, fun_proto))
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
@@ -6389,7 +6396,6 @@ and ground_subtype = function
   | DefT (_, EmptyT), _
   | _, UseT (_, DefT (_, MixedT _))
   | _, UseT (_, ObjProtoT _)
-  | _, UseT (_, FunProtoT _)
     -> true
 
   | DefT (_, AnyT), u -> not (any_propagating_use_t u)

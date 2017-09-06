@@ -41,7 +41,11 @@ type t = {
 }
 
 type super =
-  | Interface of { extends: Type.t list; callable: bool; }
+  | Interface of {
+      extends: Type.t list;
+      callable: bool;
+      static_callable: bool;
+    }
   | Class of {
       extends: extends;
       mixins: Type.t list; (* declare class only *)
@@ -65,18 +69,10 @@ let empty id reason tparams tparams_map super =
     let open Type in
     let super_reason = replace_reason (fun d -> RSuperOf d) reason in
     match super with
-    | Interface {extends; callable} ->
+    | Interface {extends; callable; static_callable} ->
       let super, ssuper = match extends with
       | [] ->
-        (* An interface with no explicit extends inherits from the object
-           prototype, unless it has a callable property, in which case it is
-           a function and extends from the function prototype. *)
-        let super =
-          if callable
-          then FunProtoT super_reason
-          else ObjProtoT super_reason
-        in
-        super, ObjProtoT super_reason
+        ObjProtoT super_reason, ObjProtoT super_reason
       | t0::ts ->
         (* Interfaces support multiple inheritance. *)
         let super = match ts with
@@ -84,6 +80,27 @@ let empty id reason tparams tparams_map super =
         | t1::ts -> DefT (super_reason, IntersectionT (InterRep.make t0 t1 ts))
         in
         super, class_type super
+      in
+      (* If the interface definition includes a callable property, add the
+         function prototype to the super type. *)
+      let super =
+        if callable
+        then
+          let rep = InterRep.make super (FunProtoT super_reason) [] in
+          DefT (super_reason, IntersectionT rep)
+        else super
+      in
+      (* This case exists to support the constructor_annots case (see
+         tests/constructor_annots), which allows users to case a function F to a
+         class-like type described by an interface with a static callable
+         property with (F: Class<I>). We should remove this feature and make
+         static callable properties on interfaces an error. *)
+      let ssuper =
+        if static_callable
+        then
+          let rep = InterRep.make ssuper (FunProtoT super_reason) [] in
+          DefT (super_reason, IntersectionT rep)
+        else ssuper
       in
       true, super, ssuper, []
     | Class {extends; mixins; implements} ->
@@ -686,7 +703,11 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
           | CallProperty (_, { CallProperty.static; _ }) -> not static
           | _ -> false
         ) properties in
-        Interface { extends; callable }
+        let static_callable = List.exists Ast.Type.Object.(function
+          | CallProperty (_, { CallProperty.static; _ }) -> static
+          | _ -> false
+        ) properties in
+        Interface { extends; callable; static_callable }
       else
         let extends = match extends with
         | [] -> Implicit { null = is_object_builtin_libdef ident }

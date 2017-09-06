@@ -143,7 +143,6 @@ let generate_tests cx f x =
 let functiontype cx this_t {reason; kind; tparams; params; return_t; _} =
   let knot = Flow.mk_tvar cx reason in
   let static =
-    let reason = replace_reason (fun desc -> RStatics desc) reason in
     let props = SMap.singleton "$call" (Method knot) in
     let proto = FunProtoT reason in
     Flow.mk_object_with_map_proto cx reason props proto
