@@ -175,6 +175,7 @@ and parts_of_t cx = function
 | DefT (_, (AnyObjT | AnyFunT)) -> []
 | DefT (_, AnyT) -> []
 | AnyWithLowerBoundT t | AnyWithUpperBoundT t -> ["t", Def t]
+| MergedT _ -> []
 | DefT (_, ArrT arrtype) -> parts_of_arrtype arrtype
 | DefT (_, BoolT _) -> []
 | BoundT _ -> []

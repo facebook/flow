@@ -230,7 +230,7 @@ class scope_builder = object(this)
     (* hoisting *)
     let hoist = new hoister in
     begin
-      let param_list, _rest = params in
+      let (_loc, { Params.params = param_list; rest = _rest }) = params in
       run_list hoist#function_param_pattern param_list;
       match body with
         | BodyBlock (_loc, block) ->
@@ -242,7 +242,7 @@ class scope_builder = object(this)
     let saved_bad_catch_params = bad_catch_params in
     bad_catch_params <- hoist#bad_catch_params;
     this#with_bindings hoist#acc (fun () ->
-      let (param_list, rest) = params in
+      let (_loc, { Params.params = param_list; rest }) = params in
       run_list this#function_param_pattern param_list;
       run_opt this#function_rest_element rest;
       begin match body with

@@ -19,12 +19,10 @@ module type DECLARATION = sig
   val async: env -> bool
   val generator: env -> bool
   val variance: env -> bool -> bool -> Variance.t option
-  val function_params:
-    await:bool -> yield:bool -> env ->
-    Pattern.t list * Function.RestElement.t option
+  val function_params: await:bool -> yield:bool -> env -> Ast.Function.Params.t
   val function_body: env -> async:bool -> generator:bool -> Loc.t * Function.body * bool
-  val is_simple_function_params: Pattern.t list * Function.RestElement.t option -> bool
-  val strict_post_check: env -> strict:bool -> simple:bool -> Identifier.t option -> Pattern.t list * Function.RestElement.t option -> unit
+  val is_simple_function_params: Ast.Function.Params.t -> bool
+  val strict_post_check: env -> strict:bool -> simple:bool -> Identifier.t option -> Ast.Function.Params.t -> unit
   val concise_function_body: env -> async:bool -> generator:bool -> Function.body * bool
   val variable: env -> Statement.t * (Loc.t * Error.t) list
   val variable_declaration_list: env -> Statement.VariableDeclaration.Declarator.t list * (Loc.t * Error.t) list
@@ -100,7 +98,7 @@ module Declaration
   (* Strict is true if we were already in strict mode or if we are newly in
    * strict mode due to a directive in the function.
    * Simple is the IsSimpleParameterList thing from the ES6 spec *)
-  let strict_post_check env ~strict ~simple id (params, rest) =
+  let strict_post_check env ~strict ~simple id (_, { Ast.Function.Params.params; rest }) =
     if strict || not simple
     then
       (* If we are doing this check due to strict mode than there are two
@@ -156,14 +154,14 @@ module Declaration
           in
           if Peek.token env <> T_RPAREN
           then error env Error.ParameterAfterRestParameter;
-          List.rev acc, rest
+          { Ast.Function.Params.params = List.rev acc; rest }
       | _ ->
           let the_param = param env in
           if Peek.token env <> T_RPAREN
           then Expect.token env T_COMMA;
           param_list env (the_param::acc)
 
-    in fun ~await ~yield env ->
+    in fun ~await ~yield -> with_loc (fun env ->
       let env = env
         |> with_allow_await await
         |> with_allow_yield yield
@@ -173,6 +171,7 @@ module Declaration
       let params = param_list env [] in
       Expect.token env T_RPAREN;
       params
+    )
 
   let function_body env ~async ~generator =
     let env = enter_function env ~async ~generator in
@@ -218,7 +217,7 @@ module Declaration
     | _, Pattern.Identifier _ ->  true
     | _ -> false
 
-    in fun (params, rest) ->
+    in fun (_, { Ast.Function.Params.params; rest }) ->
       rest = None && List.for_all is_simple_param params
 
   let _function env =

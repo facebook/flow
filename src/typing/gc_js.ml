@@ -76,6 +76,7 @@ let rec gc cx state = function
   | DefT (_, AnyT) -> ()
   | AnyWithLowerBoundT (t) -> gc cx state t
   | AnyWithUpperBoundT (t) -> gc cx state t
+  | MergedT (_, uses) -> List.iter (gc_use cx state) uses
   | DefT (_, ArrT arraytype) ->
       gc_arraytype cx state arraytype
   | DefT (_, BoolT _) -> ()
@@ -380,6 +381,7 @@ and gc_destructor cx state = function
   | ElementType t -> gc cx state t
   | Bind t -> gc cx state t
   | SpreadType (_, ts) -> List.iter (gc cx state) ts
+  | CallType args -> List.iter (gc cx state) args
   | TypeMap tmap -> gc_type_map cx state tmap
 
 and gc_pred cx state = function

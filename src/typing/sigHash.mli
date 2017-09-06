@@ -12,5 +12,6 @@ type t
 val empty: t
 val add: 'a -> t -> t
 val add_type: Type.t -> t -> t
+val add_use: Type.use_t -> t -> t
 val add_props_map: Type.Properties.t -> t -> t
 val add_exports_map: Type.Exports.t -> t -> t

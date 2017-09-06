@@ -416,6 +416,9 @@ let rec normalize_type_impl cx ids t = match t with
   | AnyWithLowerBoundT t ->
       AnyWithLowerBoundT (normalize_type_impl cx ids t)
 
+  | MergedT (r, uses) ->
+      MergedT (r, uses)
+
   | DefT (_, AnyObjT) -> DefT (locationless_reason RAnyObject, AnyObjT)
   | DefT (_, AnyFunT) -> DefT (locationless_reason RAnyFunction, AnyFunT)
 

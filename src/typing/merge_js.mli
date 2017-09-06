@@ -52,7 +52,7 @@ val merge_lib_file:
   Context.t ->
   Errors.ErrorSet.t * Error_suppressions.t * ExactCover.lint_severity_cover
 
-val lowers_of_tvar: Context.t -> Reason.t -> Constraint.ident -> Type.t
+val merge_tvar: Context.t -> Reason.t -> Constraint.ident -> Type.t
 
 module ContextOptimizer: sig
   val sig_context : Context.t -> string list -> SigHash.t

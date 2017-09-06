@@ -53,6 +53,9 @@ class ['a] t = object(self)
   | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t -> self#type_ cx acc t
 
+  | MergedT (_, uses) ->
+    List.fold_left (self#use_type_ cx) acc uses
+
   | ShapeT t -> self#type_ cx acc t
 
   | DiffT (t1, t2) ->
@@ -209,6 +212,7 @@ class ['a] t = object(self)
   | ElementType t -> self#type_ cx acc t
   | Bind t -> self#type_ cx acc t
   | SpreadType (_, ts) -> self#list (self#type_ cx) acc ts
+  | CallType args -> self#list (self#type_ cx) acc args
   | TypeMap (TupleMap t | ObjectMap t | ObjectMapi t) -> self#type_ cx acc t
 
   method private custom_fun_kind cx acc = function
@@ -231,7 +235,7 @@ class ['a] t = object(self)
   | DebugPrint
     -> acc
 
-  method private use_type_ cx (acc: 'a) = function
+  method use_type_ cx (acc: 'a) = function
   | UseT (_, t) ->
     self#type_ cx acc t
 

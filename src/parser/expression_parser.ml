@@ -942,7 +942,7 @@ module Expression
                                typeAnnotation=None;
                                optional=false;
           } in
-          ([param], None), None, None
+          (loc, { Ast.Function.Params.params = [param]; rest = None }), None, None
         else
           let params =
             let yield = allow_yield env in
@@ -965,8 +965,8 @@ module Expression
        * param or an empty param list then we can disable the rollback and
        * instead generate errors as if we were parsing an arrow function *)
       let env = match params with
-        | _, Some _
-        | [], _ -> without_error_callback env
+        | _, { Ast.Function.Params.rest = Some _; _ }
+        | _, { Ast.Function.Params.params = []; _ } -> without_error_callback env
         | _ -> env
       in
 

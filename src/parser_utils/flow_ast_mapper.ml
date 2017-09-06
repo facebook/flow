@@ -425,12 +425,20 @@ class mapper = object(this)
 
   method function_type (ft: Ast.Type.Function.t) =
     let open Ast.Type.Function in
-    let { params = (ps, rpo) ; returnType; typeParameters; } = ft in
+    let {
+      params = (params_loc, { Params.params = ps; rest = rpo });
+      returnType;
+      typeParameters;
+    } = ft in
     let ps' = map_list this#function_param_type ps in
     let rpo' = map_opt this#function_rest_param_type rpo in
     let returnType' = this#type_ returnType in
     if ps' == ps && rpo' == rpo && returnType' == returnType then ft
-    else { params = (ps', rpo'); returnType = returnType'; typeParameters }
+    else {
+      params = (params_loc, { Params.params = ps'; rest = rpo' });
+      returnType = returnType';
+      typeParameters
+    }
 
   method label_identifier (ident: Ast.Identifier.t) =
     this#identifier ident
@@ -523,11 +531,11 @@ class mapper = object(this)
     } = expr in
     let ident' = map_opt this#function_identifier ident in
     let params' =
-      let (param_list, rest) = params in
-      let param_list' = map_list this#function_param_pattern param_list in
+      let (loc, { Params.params = params_list; rest }) = params in
+      let params_list' = map_list this#function_param_pattern params_list in
       let rest' = map_opt this#function_rest_element rest in
-      if param_list == param_list' && rest == rest' then params
-      else (param_list', rest')
+      if params_list == params_list' && rest == rest' then params
+      else (loc, { Params.params = params_list'; rest = rest' })
     in
     let returnType' = map_opt this#type_annotation returnType in
     let body' = match body with

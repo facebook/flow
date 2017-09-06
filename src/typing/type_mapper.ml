@@ -91,6 +91,10 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else AnyWithUpperBoundT t''
+      | MergedT (r, uses) ->
+          let uses' = ListUtils.ident_map (self#use_type cx map_cx) uses in
+          if uses == uses' then t
+          else MergedT (r, uses')
       | ShapeT t' ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -341,6 +345,10 @@ class ['a] t = object(self)
           if tlist' == tlist then t
           else SpreadType (options, tlist')
       | ValuesType -> t
+      | CallType args ->
+          let args' = ListUtils.ident_map (self#type_ cx map_cx) args in
+          if args' == args then t
+          else CallType args'
       | TypeMap tmap ->
           let tmap' = self#type_map cx map_cx tmap in
           if tmap' == tmap then t

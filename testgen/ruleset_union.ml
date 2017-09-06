@@ -264,7 +264,7 @@ class ruleset_union = object(self)
                                       optional = false})) in
       let ret_type = (Loc.none, rtype) in
 
-      T.Function.(T.Function {params = [param_type], None;
+      T.Function.(T.Function {params = (Loc.none, { Params.params = [param_type]; rest = None });
                               returnType = ret_type;
                               typeParameters = None}) in
 
@@ -355,12 +355,11 @@ class ruleset_union = object(self)
 
     (* get the type of the parameter assuming we only have one param *)
     let f_ptype =
-      let open T.Function in
       match func_type with
-      | T.Function {params = plist, _;
-                    returnType = _;
-                    typeParameters = _} ->
-        T.Function.Param.((plist |> List.hd |> snd).typeAnnotation)
+      | T.Function ft ->
+        let ft_param = T.Function.(ft.params) |> snd in
+        let params = T.Function.Params.(ft_param.params) |> List.hd |> snd in
+        T.Function.Param.(params.typeAnnotation)
       | _ -> failwith "This has to a function type" in
 
     (* parameter *)

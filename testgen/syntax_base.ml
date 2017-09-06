@@ -133,7 +133,7 @@ let mk_func_def
 
   let func = let open Ast.Function in
     {id = Some (Loc.none, fname);
-     params = ([param], None);
+     params = (Loc.none, { Params.params = [param]; rest = None });
      body = Ast.Function.BodyBlock (Loc.none, body);
      async = false;
      generator = false;

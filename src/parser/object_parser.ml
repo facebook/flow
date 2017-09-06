@@ -92,11 +92,11 @@ module Object
     let typeParameters = None in
     let params = Declaration.function_params ~await:false ~yield:false env in
     begin match is_getter, params with
-    | true, ([], None) -> ()
-    | false, (_, Some _rest) ->
+    | true, (_, { Ast.Function.Params.params = []; rest = None }) -> ()
+    | false, (_, { Ast.Function.Params.rest = Some _; _ }) ->
         (* rest params don't make sense on a setter *)
         error_at env (key_loc, Error.SetterArity)
-    | false, ([_], _) -> ()
+    | false, (_, { Ast.Function.Params.params = [_]; _ }) -> ()
     | true, _ -> error_at env (key_loc, Error.GetterArity)
     | false, _ -> error_at env (key_loc, Error.SetterArity)
     end;

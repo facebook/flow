@@ -241,7 +241,7 @@ and meta_expression cmap = Ast.Expression.(function
       concat_fold (fun cmap -> function
         | Object.Property (loc, {
             Object.Property.value = Object.Property.Init (_, Function {
-              Ast.Function.params = (params, _); body; _
+              Ast.Function.params = (_, { Ast.Function.Params.params; _ }); body; _
             });
             key = Ast.Expression.Object.Property.Identifier _;
             _
@@ -266,8 +266,14 @@ and meta_expression cmap = Ast.Expression.(function
   | _, Assignment { Assignment.right; _ } ->
       meta_expression cmap right
 
-  | loc, Function { Ast.Function.params = (params, _); body; _ }
-  | loc, ArrowFunction { Ast.Function.params = (params, _); body; _ } ->
+  | loc, Function { Ast.Function.
+      params = (_, { Ast.Function.Params.params; _ });
+      body; _
+    }
+  | loc, ArrowFunction { Ast.Function.
+      params = (_, { Ast.Function.Params.params; _ });
+      body; _
+    } ->
       meta_fbody cmap loc params body
 
   | _ -> cmap, []
@@ -292,7 +298,10 @@ and meta_statement cmap = Ast.Statement.(function
       concat_fold Ast.Class.(fun cmap -> function
         | Body.Method (loc, {
             Method.key = Ast.Expression.Object.Property.Identifier _;
-            value = _, { Ast.Function.params = (params, _); body; _ };
+            value = _, { Ast.Function.
+              params = (_, { Ast.Function.Params.params; _ });
+              body; _
+            };
             kind = Method.Method | Method.Constructor;
             static = false;
             decorators = _;
@@ -301,7 +310,10 @@ and meta_statement cmap = Ast.Statement.(function
         | _ -> cmap, []
       ) cmap elements
 
-  | loc, FunctionDeclaration { Ast.Function.params = (params, _); body; _ } ->
+  | loc, FunctionDeclaration { Ast.Function.
+      params = (_, { Ast.Function.Params.params; _ });
+      body; _
+    } ->
       meta_fbody cmap loc params body
 
   | _ -> cmap, [] (* TODO *)

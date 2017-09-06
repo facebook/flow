@@ -404,6 +404,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
         ignore (Hh_logger.log
           "check_and_run_loop_ threw with Unix.ECHILD. Exiting");
         Exit_status.exit Exit_status.No_server_running
+      | Exit_status.Exit_with _ as e -> raise e
       | e ->
         Hh_logger.log "check_and_run_loop_ threw with exception: %s"
           (Printexc.to_string e);

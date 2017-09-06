@@ -255,15 +255,17 @@ let havoc_call_env = Scope.(
     if func_frame = 0 || call_frame = 0 || Changeset.is_empty changeset
     then ()
     else
-      let func_env = IMap.find_unsafe func_frame (Context.envs cx) in
-      let call_env = IMap.find_unsafe call_frame (Context.envs cx) in
-      overlapped_call_scopes func_env call_env |>
-        List.iter (fun ({ id; _ } as scope) ->
-          Changeset.include_scopes [id] changeset |>
-            Changeset.iter_writes
-              (havoc_entry cx scope)
-              (havoc_refi cx scope)
-      )
+      let func_env = IMap.get func_frame (Context.envs cx) in
+      let call_env = IMap.get call_frame (Context.envs cx) in
+      Option.iter (Option.both func_env call_env) ~f:(fun (func_env, call_env) ->
+        overlapped_call_scopes func_env call_env |>
+          List.iter (fun ({ id; _ } as scope) ->
+            Changeset.include_scopes [id] changeset |>
+              Changeset.iter_writes
+                (havoc_entry cx scope)
+                (havoc_refi cx scope)
+        )
+      );
 )
 
 (********************************************************************)
@@ -292,6 +294,13 @@ let possible_types cx id = types_of (find_graph cx id)
 let possible_types_of_type cx = function
   | OpenT (_, id) -> possible_types cx id
   | _ -> []
+
+let uses_of constraints =
+  match constraints with
+  | Unresolved { upper; _ } -> UseTypeMap.keys upper
+  | Resolved t -> [UseT (UnknownUse, t)]
+
+let possible_uses cx id = uses_of (find_graph cx id)
 
 let rec list_map2 f ts1 ts2 = match (ts1,ts2) with
   | ([],_) | (_,[]) -> []
@@ -1095,6 +1104,9 @@ module ResolvableTypeJob = struct
     | DefT (_, CharSetT _)
       -> acc
 
+    | MergedT (_, uses) ->
+      List.fold_left (collect_of_use ?log_unresolved cx reason) acc uses
+
     | FunProtoBindT _
     | FunProtoCallT _
     | FunProtoApplyT _
@@ -1112,13 +1124,13 @@ module ResolvableTypeJob = struct
      types are only needed for choice-making on intersections. We care about
      calls in particular because one of the biggest uses of intersections is
      function overloading. More uses will be added over time. *)
-  and collect_of_use ~log_unresolved cx reason acc = function
+  and collect_of_use ?log_unresolved cx reason acc = function
   | UseT (_, t) ->
-    collect_of_type ~log_unresolved cx reason acc t
+    collect_of_type ?log_unresolved cx reason acc t
   | CallT (_, fct) ->
     let arg_types =
       List.map (function Arg t | SpreadArg t -> t) fct.call_args_tlist in
-    collect_of_types ~log_unresolved cx reason acc (arg_types @ [fct.call_tout])
+    collect_of_types ?log_unresolved cx reason acc (arg_types @ [fct.call_tout])
   | _ -> acc
 
 end
@@ -1431,6 +1443,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           rec_flow cx trace (t1, UseT (use_op, t2))
       );
 
+    (*****************)
+    (* any with uses *)
+    (*****************)
+
+    | MergedT (reason, _), _ ->
+      rec_flow cx trace (EmptyT.why reason, u)
+
+    | _, UseT (_, MergedT (_, uses)) ->
+      List.iter (fun u -> rec_flow cx trace (l, u)) uses
+
     (****************)
     (* eval, contd. *)
     (****************)
@@ -1573,26 +1595,33 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | ReposUpperT (_, l), _ ->
       rec_flow cx trace (l, u)
 
+    (***************)
+    (* annotations *)
+    (***************)
+
+    (* Special cases where we want to recursively concretize types within the
+       lower bound. *)
+
+    | DefT (r, UnionT rep), ReposUseT (reason, use_op, l) ->
+      let rep = UnionRep.map annot rep in
+      let u = DefT (repos_reason (loc_of_reason reason) r, UnionT rep) in
+      rec_flow cx trace (l, UseT (use_op, u))
+
+    | DefT (r, MaybeT u), ReposUseT (reason, use_op, l) ->
+      let u = DefT (repos_reason (loc_of_reason reason) r, MaybeT (annot u)) in
+      rec_flow cx trace (l, UseT (use_op, u))
+
+    | DefT (r, OptionalT u), ReposUseT (reason, use_op, l) ->
+      let u = DefT (repos_reason (loc_of_reason reason) r, OptionalT (annot u)) in
+      rec_flow cx trace (l, UseT (use_op, u))
+
     (* Waits for a def type to become concrete, repositions it as an upper UseT
        using the stored reason. This can be used to store a reason as it flows
        through a tvar. *)
 
-    | (DefT (r, UnionT rep), ReposUseT (reason, use_op, l)) ->
-      (* Don't reposition union members when the union appears as an upper
-         bound. This improves error messages when an incompatible lower bound
-         does not satisfy any member of the union. The "overall" error points to
-         the reposition target (an annotation) but the detailed member
-         information points to the type definition. *)
-      let u_def = DefT (repos_reason (loc_of_reason reason) r, UnionT rep) in
-      rec_flow cx trace (l, UseT (use_op, u_def))
-
-    | (u_def, ReposUseT (reason, use_op, l)) ->
-      let u = reposition cx ~trace (loc_of_reason reason) u_def in
+    | u, ReposUseT (reason, use_op, l) ->
+      let u = reposition cx ~trace (loc_of_reason reason) u in
       rec_flow cx trace (l, UseT (use_op, u))
-
-    (***************)
-    (* annotations *)
-    (***************)
 
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
@@ -3159,6 +3188,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        from the latter kind of flow, but it's unclear how difficult
        it would be in practice.
      *)
+
+    | DefT (_, (SingletonStrT _ | SingletonNumT _ | SingletonBoolT _)),
+      ReposLowerT (reason_op, u) ->
+      rec_flow cx trace (reposition cx ~trace (loc_of_reason reason_op) l, u)
 
     | DefT (reason, SingletonStrT key), _ ->
       rec_flow cx trace (DefT (reason, StrT (Literal (None, key))), u)
@@ -4978,17 +5011,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (AnyT.why reason_op, tout)
 
     | DefT (_, ArrT arrtype), MapTypeT (reason_op, TupleMap funt, tout) ->
-      let f x = mk_tvar_where cx reason_op (fun t ->
-        let callt = CallT (reason_op, mk_functioncalltype [Arg x] t) in
-        rec_flow cx trace (funt, callt)
-      ) in
-
+      let f x = EvalT (funt, TypeDestructorT (reason_op, CallType [x]), mk_id ()) in
       let arrtype = match arrtype with
       | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Option.map ~f:(List.map f) ts)
       | TupleAT (elemt, ts) -> TupleAT (f elemt, List.map f ts)
       | ROArrayAT (elemt) -> ROArrayAT (f elemt)
       | EmptyAT -> EmptyAT in
-
       let t =
         let reason = replace_reason_const RArrayType reason_op in
         DefT (reason, ArrT arrtype)
@@ -4997,18 +5025,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, MapTypeT (reason, TupleMap funt, tout) ->
       let iter = get_builtin cx ~trace "$iterate" reason in
-      let elemt = mk_tvar_where cx reason (fun t ->
-        let callt = CallT (reason, mk_functioncalltype [Arg l] t) in
-        rec_flow cx trace (iter, callt)
-      ) in
+      let elemt = EvalT (iter, TypeDestructorT (reason, CallType [l]), mk_id ()) in
       let t = DefT (reason, ArrT (ArrayAT (elemt, None))) in
       rec_flow cx trace (t, MapTypeT (reason, TupleMap funt, tout))
 
     | DefT (_, ObjT o), MapTypeT (reason_op, ObjectMap funt, tout) ->
-      let map_t t = mk_tvar_where cx reason_op (fun t' ->
-        let funtype = mk_functioncalltype [Arg t] t' in
-        rec_flow cx trace (funt, CallT (reason_op, funtype))
-      ) in
+      let map_t t = EvalT (funt, TypeDestructorT (reason_op, CallType [t]), mk_id ()) in
       let props_tmap =
         Context.find_props cx o.props_tmap
         |> Properties.map_fields map_t
@@ -5025,12 +5047,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (mapped_t, tout)
 
     | DefT (_, ObjT o), MapTypeT (reason_op, ObjectMapi funt, tout) ->
-      let mapi_t key t = mk_tvar_where cx reason_op (fun t' ->
-        let funtype = { (mk_functioncalltype [Arg key; Arg t] t') with
-          call_strict_arity = false;
-        } in
-        rec_flow cx trace (funt, CallT (reason_op, funtype))
-      ) in
+      let mapi_t key t = EvalT (funt, TypeDestructorT (reason_op, CallType [key; t]), mk_id ()) in
       let mapi_field key t =
         let reason = replace_reason_const (RStringLit key) reason_op in
         mapi_t (DefT (reason, SingletonStrT key)) t
@@ -6710,6 +6727,10 @@ and eval_destructor cx ~trace reason curr_t s i =
             let state = { todo_rev; acc = [] } in
             ObjSpreadT (reason, options, tool, state, tvar)
         | ValuesType -> GetValuesT (reason, tvar)
+        | CallType args ->
+          let call = mk_functioncalltype (List.map (fun arg -> Arg arg) args) tvar in
+          let call = {call with call_strict_arity = false} in
+          CallT (reason, call)
         | TypeMap tmap -> MapTypeT (reason, tmap, tvar)
         | ReactElementPropsType -> ReactKitT (reason, React.GetProps tvar)
         | ReactElementRefType -> ReactKitT (reason, React.GetRef tvar)
@@ -6839,6 +6860,7 @@ and check_polarity cx ?trace polarity = function
   | ChoiceKitT _
   | CustomFunT _
   | OpenPredT _
+  | MergedT _
     -> () (* TODO *)
 
 and check_polarity_propmap cx ?trace polarity id =
@@ -8830,10 +8852,11 @@ and resolve_id cx trace ~use_op id t =
 
    However, unifying with any-like types is sometimes desirable /
    intentional. Thus, we limit the set of types on which unification is banned
-   to just AnyWithUpperBoundT and AnyWithLowerBoundT, which are internal types.
+   to just AnyWithUpperBoundT, AnyWithLowerBoundT, and MergedT which are
+   internal types.
 *)
 and ok_unify = function
-  | AnyWithUpperBoundT _ | AnyWithLowerBoundT _ -> false
+  | AnyWithUpperBoundT _ | AnyWithLowerBoundT _ | MergedT _ -> false
   | _ -> true
 
 and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
@@ -10711,6 +10734,7 @@ end = struct
     | AbstractT _
     | AnyWithLowerBoundT _
     | AnyWithUpperBoundT _
+    | MergedT _
     | DefT (_, ArrT _)
     | BoundT _
     | ChoiceKitT (_, _)
@@ -10945,6 +10969,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | ChoiceKitT _
   | CustomFunT _
   | OpenPredT _
+  | MergedT _
   ->
     () (* TODO *)
 

@@ -97,9 +97,10 @@ class ruleset_base = object(self)
     let open T.Function in
     let get_type_list (f : T.Function.t) : T.t' list =
       let open T.Function.Param in
+      let (_, { T.Function.Params.params; rest = _ }) = f.params in
       List.map
         (fun param -> (snd param).typeAnnotation |> snd)
-        (fst f.params) @ [f.returnType |> snd] in
+        params @ [f.returnType |> snd] in
 
     let rec func_subtype_helper l1 l2 = match l1, l2 with
       | [], [] -> true
@@ -432,7 +433,7 @@ class ruleset_base = object(self)
                                       optional = false})) in
       let ret_type = (Loc.none, rtype) in
 
-      T.Function.(T.Function {params = [param_type], None;
+      T.Function.(T.Function {params = (Loc.none, { Params.params = [param_type]; rest = None });
                               returnType = ret_type;
                               typeParameters = None}) in
 
@@ -503,7 +504,7 @@ class ruleset_base = object(self)
                                       optional = false})) in
       let ret_type = (Loc.none, rtype) in
 
-      T.Function.(T.Function {params = [param_type], None;
+      T.Function.(T.Function {params = (Loc.none, { Params.params = [param_type]; rest = None });
                               returnType = ret_type;
                               typeParameters = None}) in
 
@@ -578,7 +579,7 @@ class ruleset_base = object(self)
     let f_ptype =
       let open T.Function in
       match func_type with
-      | T.Function {params = plist, _;
+      | T.Function {params = (_, { Params.params = plist; rest = _ });
                     returnType = _;
                     typeParameters = _} ->
         T.Function.Param.((plist |> List.hd |> snd).typeAnnotation)
@@ -675,9 +676,14 @@ class ruleset_base = object(self)
       let param = T.Function.Param.({name = None;
                                      typeAnnotation = (Loc.none, param_type);
                                      optional = false}) in
-      T.Function.(T.Function {params = [(Loc.none, param)], None;
-                              returnType = (Loc.none, func_ret_type);
-                              typeParameters = None}) in
+      T.Function.(T.Function {
+        params = (Loc.none, { Params.
+          params = [(Loc.none, param)];
+          rest = None;
+        });
+        returnType = (Loc.none, func_ret_type);
+        typeParameters = None;
+      }) in
     let new_env =
       self#add_binding env (Type ret_type) in
     Syntax.Empty, new_env
