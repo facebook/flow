@@ -500,10 +500,10 @@ class ['a] t = object(self)
         let instt' = self#inst_type cx map_cx instt in
         if instt' == instt then t
         else SuperT (r, instt')
-    | ImplementsT t' ->
+    | ImplementsT (use_op, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
-        else ImplementsT t''
+        else ImplementsT (use_op, t'')
     | MixinT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t

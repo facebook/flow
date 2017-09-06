@@ -318,7 +318,7 @@ and parts_of_use_t cx = function
 | HasOwnPropT _ -> []
 | IdxUnMaybeifyT (_, out) -> ["out", Def out]
 | IdxUnwrap (_, out) -> ["out", Def out]
-| ImplementsT t -> ["instance", Def t]
+| ImplementsT (_, t) -> ["instance", Def t]
 | ImportDefaultT (_, _, _, out) -> ["out", Def out]
 | ImportModuleNsT (_, out) -> ["out", Def out]
 | ImportNamedT (_, _, _, out) -> ["out", Def out]

@@ -2994,6 +2994,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, IntersectionT rep), SuperT _ ->
       InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
 
+    (** structural subtype multiple inheritance **)
+    | DefT (_, IntersectionT rep), ImplementsT _ ->
+      InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
+
     (** object types: an intersection may satisfy an object UB without
         any particular member of the intersection doing so completely.
         Here we trap object UBs with more than one property, and
@@ -5336,22 +5340,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Enable structural subtyping for upperbounds like interfaces *)
     (***************************************************************)
 
-    | _,
-      UseT (use_op, DefT (reason_inst, InstanceT (_, super, _, {
-        fields_tmap;
-        methods_tmap;
-        structural = true;
-        _;
-      }))) ->
-      structural_subtype cx trace ~use_op l reason_inst
-        (fields_tmap, methods_tmap);
-      rec_flow cx trace (l, UseT (use_op, super))
+    | _, UseT (use_op, (DefT (_,InstanceT (_,_,_,{structural=true;_})) as i)) ->
+      rec_flow cx trace (i, ImplementsT (use_op, l))
 
-    (***************************************************************)
-    (* Implements                                                  *)
-    (***************************************************************)
-
-    | (ObjProtoT _ | FunProtoT _), ImplementsT _ -> ()
+    | (ObjProtoT _ | FunProtoT _ | DefT (_, NullT)), ImplementsT _ -> ()
 
     | DefT (reason_inst, InstanceT (_, super, _, {
         fields_tmap;
@@ -5359,9 +5351,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         structural = true;
         _;
       })),
-      ImplementsT t ->
-      structural_subtype cx trace t reason_inst (fields_tmap, methods_tmap);
-      rec_flow cx trace (super, ReposLowerT (reason_inst, false, ImplementsT t))
+      ImplementsT (use_op, t) ->
+      structural_subtype cx trace ~use_op t reason_inst (fields_tmap, methods_tmap);
+      rec_flow cx trace (super,
+        ReposLowerT (reason_inst, false, ImplementsT (use_op, t)))
 
     | _, ImplementsT _ ->
       add_output cx ~trace (FlowError.EUnsupportedImplements (reason_of_t l))

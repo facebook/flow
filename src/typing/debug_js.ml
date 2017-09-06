@@ -470,7 +470,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "instance", json_of_insttype json_cx instance
     ]
 
-  | ImplementsT t -> [
+  | ImplementsT (op, t) -> [
+      "use", JSON_String (string_of_use_op op);
       "instance", _json_of_t json_cx t;
     ]
 
@@ -1999,7 +2000,7 @@ and dump_use_t_ (depth, tvars) cx t =
       t
   | SubstOnPredT _ -> p t
   | SuperT _ -> p t
-  | ImplementsT arg -> p ~reason:false ~extra:(kid arg) t
+  | ImplementsT (_, arg) -> p ~reason:false ~extra:(kid arg) t
   | SetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | SetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)

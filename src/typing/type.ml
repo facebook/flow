@@ -328,7 +328,7 @@ module rec TypeTerm : sig
     (* operations on runtime types, such as classes and functions *)
     | ConstructorT of reason * call_arg list * t
     | SuperT of reason * insttype
-    | ImplementsT of t
+    | ImplementsT of use_op * t
     | MixinT of reason * t
 
     (* overloaded +, could be subsumed by general overloading *)
@@ -1951,7 +1951,7 @@ and reason_of_use_t = function
   | HasOwnPropT (reason, _) -> reason
   | IdxUnMaybeifyT (reason, _) -> reason
   | IdxUnwrap (reason, _) -> reason
-  | ImplementsT t -> reason_of_t t
+  | ImplementsT (_, t) -> reason_of_t t
   | ImportDefaultT (reason, _, _, _) -> reason
   | ImportModuleNsT (reason, _) -> reason
   | ImportNamedT (reason, _, _, _) -> reason
@@ -2102,7 +2102,7 @@ and mod_reason_of_use_t f = function
   | HasOwnPropT (reason, prop) -> HasOwnPropT (f reason, prop)
   | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
   | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
-  | ImplementsT t -> ImplementsT (mod_reason_of_t f t)
+  | ImplementsT (use_op, t) -> ImplementsT (use_op, mod_reason_of_t f t)
   | ImportDefaultT (reason, import_kind, name, t) ->
       ImportDefaultT (f reason, import_kind, name, t)
   | ImportModuleNsT (reason, t) -> ImportModuleNsT (f reason, t)

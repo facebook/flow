@@ -249,7 +249,7 @@ and gc_use cx state = function
   | HasOwnPropT _ -> ()
   | IdxUnMaybeifyT (_, t_out) -> gc cx state t_out
   | IdxUnwrap (_, t_out) -> gc cx state t_out
-  | ImplementsT t -> gc cx state t
+  | ImplementsT (_, t) -> gc cx state t
   | ImportDefaultT (_, _, _, t) -> gc cx state t
   | ImportModuleNsT (_, t) -> gc cx state t
   | ImportNamedT (_, _, _, t) -> gc cx state t

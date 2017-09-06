@@ -286,7 +286,7 @@ class ['a] t = object(self)
     acc
 
   | SuperT (_, inst) -> self#inst_type cx acc inst
-  | ImplementsT (t) -> self#type_ cx acc t
+  | ImplementsT (_, t) -> self#type_ cx acc t
   | MixinT (_, t) -> self#type_ cx acc t
 
   | AdderT (_, a, b) ->

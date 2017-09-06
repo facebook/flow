@@ -375,7 +375,7 @@ let thistype cx x =
 let check_implements cx x =
   let this = thistype cx x in
   List.iter (fun i ->
-    Flow.flow cx (i, Type.ImplementsT this)
+    Flow.flow cx (i, Type.(ImplementsT (UnknownUse, this)))
   ) x.implements
 
 let check_super cx x =
