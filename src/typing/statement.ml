@@ -2534,7 +2534,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         Flow_js.mk_tvar_where cx reason (fun tout ->
           let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), tout)) in
           let reason_op = reason in
-          Flow.resolve_spread_list cx ~reason_op elem_spread_list resolve_to
+          Flow.resolve_spread_list cx ~use_op:UnknownUse ~reason_op elem_spread_list resolve_to
         )
     )
 
@@ -3667,6 +3667,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
         let arr = Flow_js.mk_tvar_where cx reason (fun tout ->
           Flow.resolve_spread_list
             cx
+            ~use_op:UnknownUse
             ~reason_op:reason
             (List.map (fun child -> UnresolvedArg child) children)
             (ResolveSpreadsToArrayLiteral (mk_id (), tout))
