@@ -32,7 +32,7 @@ Error: A.js:29
 
 Error: B.js:5
   5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
             ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `$call` is incompatible:

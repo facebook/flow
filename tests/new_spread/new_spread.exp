@@ -314,11 +314,8 @@ Error: type_mixed.js:15
 Error: type_mixed.js:17
  17: function fn<O>(obj: {...O}) {
                          ^^^^^^ object type. Cannot spread properties from
-     v----------------------------
  17: function fn<O>(obj: {...O}) {
- 18:   (obj.someProp: empty); // Error: mixed ~> empty
- 19: }
-     ^ some incompatible instantiation of `O`
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `O`
 
 Error: type_mixed.js:18
  18:   (obj.someProp: empty); // Error: mixed ~> empty

@@ -107,6 +107,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
     -> []
 
   | TaintT _
+  | NullProtoT _
   | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
@@ -599,6 +600,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | ObjSealT (_, t) -> [
       "type", _json_of_t json_cx t
+    ]
+
+  | ObjTestProtoT (_, res) -> [
+      "returnType", _json_of_t json_cx res
     ]
 
   | ObjTestT (_, default, res) -> [
@@ -1626,6 +1631,7 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, NullT)
   | DefT (_, VoidT)
       -> p t
+  | NullProtoT _
   | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
@@ -1963,6 +1969,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | ObjRestT (_, xs, arg) -> p t
       ~extra:(spf "[%s], %s" (String.concat "; " xs) (kid arg))
   | ObjSealT _ -> p t
+  | ObjTestProtoT _ -> p t
   | ObjTestT _ -> p t
   | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | PredicateT (pred, arg) -> p ~reason:false
@@ -2596,3 +2603,5 @@ let dump_flow_error =
         (string_of_loc loc)
         (string_of_loc null_loc)
         (string_of_loc falsy_loc)
+    | EInvalidPrototype reason ->
+        spf "EInvalidPrototype (%s)" (dump_reason cx reason)

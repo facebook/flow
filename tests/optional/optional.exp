@@ -2,7 +2,7 @@ Error: generic.js:1
   1: function x<T>(x: T = 0) {}
                           ^ number. This type is incompatible with
   1: function x<T>(x: T = 0) {}
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
+     ^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
 
 Error: generic.js:4
   4:   x<T>(x: T = 0) {}
@@ -14,7 +14,7 @@ Error: loop.js:5
   5: function f<T:*>(x:T,y?:T) { x = y }
                                      ^ undefined. This type is incompatible with
   5: function f<T:*>(x:T,y?:T) { x = y }
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
+     ^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
 
 Error: nullable.js:17
  17:     x.y++; // should error

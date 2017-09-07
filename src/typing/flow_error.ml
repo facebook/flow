@@ -178,6 +178,7 @@ type error_message =
       null_loc: Loc.t;
       falsy_loc: Loc.t;
     }
+  | EInvalidPrototype of reason
 
 and binding_error =
   | ENameAlreadyBound
@@ -442,6 +443,7 @@ let locs_of_error_message = function
   | EUnusedSuppression (loc) -> [loc]
   | ELintSetting (loc, _) -> [loc]
   | ESketchyNullLint { kind = _; loc; null_loc; falsy_loc; } -> [loc; null_loc; falsy_loc]
+  | EInvalidPrototype reason -> [loc_of_reason reason]
 
 let loc_of_error ~op msg =
   match op with
@@ -1476,3 +1478,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         null_loc, ["Potentially null/undefined value."];
         falsy_loc, [spf "%s value." value_str]
       ]]
+  | EInvalidPrototype reason ->
+      mk_error ~trace_infos [mk_info reason [
+        "Invalid prototype. Expected an object or null."]]

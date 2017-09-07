@@ -32,6 +32,7 @@ class ['a] t = object(self)
   | FunProtoBindT _
   | FunProtoCallT _
   | ObjProtoT _
+  | NullProtoT _
     -> acc
 
   | CustomFunT (_, kind) -> self#custom_fun_kind cx acc kind
@@ -362,6 +363,8 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc t1 in
     let acc = self#type_ cx acc t2 in
     acc
+
+  | ObjTestProtoT (_, t) -> self#type_ cx acc t
 
   | ObjFreezeT (_, t)
   | ObjRestT (_, _, t)

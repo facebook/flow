@@ -210,6 +210,7 @@ and parts_of_t cx = function
 | DefT (_, MixedT _) -> []
 | ModuleT (_, exporttypes) -> parts_of_exporttypes cx exporttypes
 | DefT (_, NullT) -> []
+| NullProtoT _ -> []
 | ObjProtoT _ -> []
 | DefT (_, ObjT { props_tmap; dict_t; proto_t; _ }) ->
   ("proto", Def proto_t) ::
@@ -337,6 +338,7 @@ and parts_of_use_t cx = function
 | ObjFreezeT (_, out) -> ["out", Def out]
 | ObjRestT (_, _, out) -> ["out", Def out]
 | ObjSealT (_, out) -> ["out", Def out]
+| ObjTestProtoT (_, out) -> ["out", Def out]
 | ObjTestT (_, d, t) -> ["default", Def d; "out", Def t]
 | OrT (_, r, out) -> ["right", Def r; "out", Def out]
 | PredicateT (_, out) -> ["out", Def out]

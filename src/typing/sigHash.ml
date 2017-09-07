@@ -48,6 +48,7 @@ type hash =
   | FunProtoCallH
   | ObjH
   | ObjProtoH
+  | NullProtoH
   | ArrH
   | ClassH
   | OptionalH
@@ -131,6 +132,7 @@ type hash =
   | ObjRestH
   | ObjSealH
   | ObjTestH
+  | ObjTestProtoH
   | ArrRestH
   | UnifyH
   | BecomeH
@@ -222,6 +224,7 @@ let hash_of_ctor = Type.(function
   | IdxWrapper _ -> IdxWrapperH
   | KeysT _ -> KeysH
   | ModuleT _ -> ModuleH
+  | NullProtoT _ -> NullProtoH
   | ObjProtoT _ -> ObjProtoH
   | OpenPredT _ -> OpenPredH
   | ReposT _ -> ReposH
@@ -281,6 +284,7 @@ let hash_of_use_ctor = Type.(function
   | ObjRestT _ -> ObjRestH
   | ObjSealT _ -> ObjSealH
   | ObjTestT _ -> ObjTestH
+  | ObjTestProtoT _ -> ObjTestProtoH
   | ArrRestT _ -> ArrRestH
   | UnifyT _ -> UnifyH
   | BecomeT _ -> BecomeH

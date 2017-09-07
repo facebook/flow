@@ -1422,8 +1422,13 @@ and statement cx = Ast.Statement.(
       ()
 
   | (loc, FunctionDeclaration func) ->
-      let {Ast.Function.id; _} = func in
-      let fn_type = mk_function None cx loc func in
+      let {Ast.Function.id; params; returnType; _} = func in
+      let sig_loc = match params, returnType with
+      | _, Some (end_loc, _)
+      | (end_loc, _), None
+         -> Loc.btwn loc end_loc
+      in
+      let fn_type = mk_function None cx sig_loc func in
       (**
        * Use the loc for the function name in the types table. When the function
        * has no name (i.e. for `export default function() ...`), generate a loc
@@ -2189,9 +2194,9 @@ and object_ cx reason ?(allow_sealed=true) props =
   Ast.Expression.Object.(
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
-  let proto = ObjProtoT reason in
+  let obj_proto = ObjProtoT reason in
   (* Return an object with specified sealing. *)
-  let mk_object ?(sealed=false) map =
+  let mk_object ?(proto=obj_proto) ?(sealed=false) map =
     Flow.mk_object_with_map_proto cx reason ~sealed map proto
   in
   (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
@@ -2208,13 +2213,13 @@ and object_ cx reason ?(allow_sealed=true) props =
      When building an object incrementally, only the final call to this function
      may be with sealed=true, so we will always have an unsealed object to copy
      properties to. *)
-  let eval_object ?(sealed=false) (map, result) =
+  let eval_object ?(proto=obj_proto) ?(sealed=false) (map, result) =
     match result with
-    | None -> mk_object ~sealed map
+    | None -> mk_object ~proto ~sealed map
     | Some result ->
       let result =
         if not (SMap.is_empty map)
-        then mk_spread (mk_object map) result
+        then mk_spread (mk_object ~proto map) result
         else result
       in
       if not sealed then result else
@@ -2223,13 +2228,13 @@ and object_ cx reason ?(allow_sealed=true) props =
         )
   in
 
-  let sealed, map, result = List.fold_left (fun (sealed, map, result) t ->
-    match t with
+  let sealed, map, proto, result = List.fold_left (
+    fun (sealed, map, proto, result) -> function
     | SpreadProperty (_, { SpreadProperty.argument }) ->
         let spread = expression cx argument in
         let obj = eval_object (map, result) in
         let result = mk_spread spread obj in
-        false, SMap.empty, Some result
+        false, SMap.empty, proto, Some result
     | Property (_, { Property.
         key = Property.Computed k;
         value = Property.Init v;
@@ -2241,16 +2246,32 @@ and object_ cx reason ?(allow_sealed=true) props =
         Flow.flow cx (obj, SetElemT (reason, k, v));
         (* TODO: vulnerable to race conditions? *)
         let result = obj in
-        sealed, SMap.empty, Some result
-    | t ->
-        sealed, object_prop cx map t, result
-  ) (allow_sealed, SMap.empty, None) props in
+        sealed, SMap.empty, proto, Some result
+    | Property (_, { Property.
+        key =
+          Property.Identifier (_, "__proto__") |
+          Property.Literal (_, {
+            Ast.Literal.value = Ast.Literal.String "__proto__";
+            _;
+          });
+        value = Property.Init v;
+        _method = false;
+        shorthand = false;
+      }) ->
+        let reason = mk_reason RPrototype (fst v) in
+        let t = Flow.mk_tvar_where cx reason (fun t ->
+          Flow.flow cx (expression cx v, ObjTestProtoT (reason, t))
+        ) in
+        sealed, map, Some t, result
+    | prop ->
+        sealed, object_prop cx map prop, proto, result
+  ) (allow_sealed, SMap.empty, None, None) props in
 
   let sealed = match result with
     | Some _ -> sealed
     | None -> sealed && not (SMap.is_empty map)
   in
-  eval_object ~sealed (map, result)
+  eval_object ?proto ~sealed (map, result)
 )
 
 and variable cx kind
@@ -2513,7 +2534,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         Flow_js.mk_tvar_where cx reason (fun tout ->
           let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), tout)) in
           let reason_op = reason in
-          Flow.resolve_spread_list cx ~reason_op elem_spread_list resolve_to
+          Flow.resolve_spread_list cx ~use_op:UnknownUse ~reason_op elem_spread_list resolve_to
         )
     )
 
@@ -2804,7 +2825,12 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         expressions
 
   | Function func ->
-      let {Ast.Function.id; predicate; _} = func in
+      let {Ast.Function.id; params; returnType; predicate; _} = func in
+      let sig_loc = match params, returnType with
+      | _, Some (end_loc, _)
+      | (end_loc, _), None
+         -> Loc.btwn loc end_loc
+      in
 
       (match predicate with
       | Some (_, Ast.Type.Predicate.Inferred) ->
@@ -2813,7 +2839,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           )
       | _ -> ());
 
-      mk_function id cx loc func
+      mk_function id cx sig_loc func
 
   | ArrowFunction func ->
       mk_arrow cx loc func
@@ -3641,6 +3667,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
         let arr = Flow_js.mk_tvar_where cx reason (fun tout ->
           Flow.resolve_spread_list
             cx
+            ~use_op:UnknownUse
             ~reason_op:reason
             (List.map (fun child -> UnresolvedArg child) children)
             (ResolveSpreadsToArrayLiteral (mk_id (), tout))
@@ -4309,12 +4336,22 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
   let reason = mk_reason (RCustom (spf "Object.%s" m)) loc in
   match (m, args_) with
   | ("create", [ Expression e ]) ->
-    let proto = expression cx e in
+    let proto =
+      let reason = mk_reason RPrototype (fst e) in
+      Flow.mk_tvar_where cx reason (fun t ->
+        Flow.flow cx (expression cx e, ObjTestProtoT (reason, t))
+      )
+    in
     Flow.mk_object_with_proto cx reason proto
 
   | ("create", [ Expression e;
                  Expression (_, Object { Object.properties }) ]) ->
-    let proto = expression cx e in
+    let proto =
+      let reason = mk_reason RPrototype (fst e) in
+      Flow.mk_tvar_where cx reason (fun t ->
+        Flow.flow cx (expression cx e, ObjTestProtoT (reason, t))
+      )
+    in
     let pmap = prop_map_of_object cx properties in
     let map = SMap.fold (fun x p acc ->
       match Property.read_t p with

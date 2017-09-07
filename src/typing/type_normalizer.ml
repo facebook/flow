@@ -470,6 +470,8 @@ let rec normalize_type_impl cx ids t = match t with
       | Some t -> Some (normalize_type_impl cx ids t) in
     ModuleT (reason, { exporttypes with exports_tmap; cjs_export; })
 
+  | NullProtoT _ -> NullProtoT (locationless_reason RNull)
+
   | ObjProtoT _ -> ObjProtoT (locationless_reason RDummyPrototype)
 
   | ReposT (_, t)

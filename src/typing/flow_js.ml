@@ -1121,6 +1121,7 @@ module ResolvableTypeJob = struct
     | FunProtoCallT _
     | FunProtoApplyT _
     | FunProtoT _
+    | NullProtoT _
     | ObjProtoT _
     | CustomFunT (_, _)
 
@@ -3071,7 +3072,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       let rrt_resolved = (ResolvedAnySpreadArg r)::rrt_resolved in
       resolve_spread_list_rec
-        cx ~trace ~reason_op
+        cx ~trace ~use_op:FunCallParam ~reason_op
         (rrt_resolved, rrt_unresolved) rrt_resolve_to
 
     | _,
@@ -3081,6 +3082,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rrt_resolve_to;
       }) ->
       let reason = reason_of_t l in
+
+      let use_op = FunCallParam in
 
       let r, arrtype = match l with
       | DefT (r, ArrT arrtype) ->
@@ -3135,7 +3138,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let rrt_resolved =
               ResolvedSpreadArg(reason, arrtype)::rrt_resolved in
             resolve_spread_list_rec
-              cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to
+              cx ~trace ~use_op ~reason_op
+              (rrt_resolved, rrt_unresolved) rrt_resolve_to
           | 1 ->
             (* To avoid infinite recursion, let's deconstruct to a simplier case
              * where we no longer resolve to a tuple but instead just resolve to
@@ -3161,7 +3165,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let rrt_resolved =
               ResolvedSpreadArg(reason, arrtype)::rrt_resolved in
             resolve_spread_list_rec
-              cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to
+              cx ~trace ~use_op ~reason_op
+              (rrt_resolved, rrt_unresolved) rrt_resolve_to
           | _ ->
             (* Avoid infinite recursion *)
             ()
@@ -3179,7 +3184,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let rrt_resolved =
               ResolvedSpreadArg(reason, arrtype)::rrt_resolved in
             resolve_spread_list_rec
-              cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to
+              cx ~trace ~use_op ~reason_op
+              (rrt_resolved, rrt_unresolved) rrt_resolve_to
           | 1 ->
             (* Consider
              *
@@ -3210,14 +3216,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let rrt_resolved =
              ResolvedSpreadArg(reason, new_arrtype)::rrt_resolved in
             resolve_spread_list_rec
-             cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to
+             cx ~trace ~use_op ~reason_op
+             (rrt_resolved, rrt_unresolved) rrt_resolve_to
           | _ -> ()
         )
 
       | _ ->
         let rrt_resolved = ResolvedSpreadArg(reason, arrtype)::rrt_resolved in
         resolve_spread_list_rec
-          cx ~trace ~reason_op (rrt_resolved, rrt_unresolved) rrt_resolve_to
+          cx ~trace ~use_op ~reason_op
+          (rrt_resolved, rrt_unresolved) rrt_resolve_to
       end
 
     (* singleton lower bounds are equivalent to the corresponding
@@ -3248,6 +3256,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (reason, SingletonBoolT b), _ ->
       rec_flow cx trace (DefT (reason, BoolT (Some b)), u)
+
+    (* NullProtoT is necessary as an upper bound, to distinguish between
+       (ObjT _, NullProtoT _) constraints and (ObjT _, DefT (_, NullT)), but as
+       a lower bound, it's the same as DefT (_, NullT) *)
+    | NullProtoT reason, _ ->
+      rec_flow cx trace (DefT (reason, NullT), u)
 
     (************************************************************************)
     (* exact object types *)
@@ -3328,16 +3342,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        result of the read cannot be used in any interesting way. *)
     (**************************************************************************)
 
-    (* TestPropT emits a LookupT constraint directly, but LookupT behavior for a
-       NullT lower bound is different from GetPropT. For lookups, a NullT
-       indicates the end of the prototype chain. We want to error instead, so
-       handle the null case here. *)
-    | DefT (lreason, NullT), TestPropT (_, propref, _) ->
-      add_output cx ~trace (FlowError.EIncompatibleGetProp {
-        reason_prop = reason_of_propref propref;
-        reason_obj = lreason;
-        special = flow_error_kind_of_lower l;
-      })
+    | DefT (_, NullT), TestPropT (reason_op, propref, tout) ->
+      (* The wildcard TestPropT implementation forwards the lower bound to
+         LookupT. This is unfortunate, because LookupT is designed to terminate
+         (successfully) on NullT, but property accesses on null should be type
+         errors. Ideally, we should prevent LookupT constraints from being
+         syntax-driven, in order to preserve the delicate invariants that
+         surround it. *)
+      rec_flow cx trace (l, GetPropT (reason_op, propref, tout))
 
     | _, TestPropT (reason_op, propref, tout) ->
       let t = tvar_with_constraint cx ~trace ~derivable:true
@@ -3744,7 +3756,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let args = List.rev (match rest2 with
       | Some (_, _, rest) -> (SpreadArg rest) :: args
       | None -> args) in
-      multiflow_subtype cx trace reason args ft;
+      multiflow_subtype cx trace ~use_op:FunCallParam reason args ft;
 
       (* Well-formedness adjustment: If this is predicate function subtyping,
          make sure to apply a latent substitution on the right-hand use to
@@ -3803,7 +3815,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (o2, UseT (FunCallThis reason_callsite, o1));
       if call_strict_arity
       then multiflow_call cx trace reason_callsite tins2 ft
-      else multiflow_subtype cx trace reason_callsite tins2 ft;
+      else multiflow_subtype cx trace ~use_op:FunCallParam reason_callsite tins2 ft;
       Ops.pop ();
 
       (* flow return type of function to the tvar holding the return type of the
@@ -3979,7 +3991,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | ReactElementFactory _
        as kind)),
       CallT (reason_op, { call_args_tlist = args; call_tout = tout; _ }) ->
-      resolve_call_list cx ~trace reason_op args (
+      resolve_call_list cx ~trace ~use_op:FunCallParam reason_op args (
         ResolveSpreadsToCustomFunCall (mk_id (), kind, tout))
 
     | CustomFunT (reason, _), _ when function_like_op u ->
@@ -3996,6 +4008,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       if lflds = uflds then ()
       else flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj)
+
+
+    | DefT (_, ObjT _), UseT (_, NullProtoT _) -> ()
 
     (* InstanceT -> ObjT *)
 
@@ -4037,11 +4052,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, UseT (use_op, uproto))
 
     (* For some object `x` and constructor `C`, if `x instanceof C`, then the
-       object is a subtype. *)
-    | DefT (lreason, ObjT { proto_t; _ }),
-      UseT (_, DefT (_, InstanceT (_, _, _, { structural = false; _ }))) ->
-      let l = reposition cx ~trace (loc_of_reason lreason) proto_t in
-      rec_flow cx trace (l, u)
+       object is a subtype. We use `ExtendsT` to walk the proto chain of the
+       object, in case it includes a nominal type. *)
+    | DefT (_, ObjT _), UseT (use_op, (DefT (_, InstanceT _) as u)) ->
+      rec_flow cx trace (l, UseT (use_op, extends_type l u))
 
     (****************************************)
     (* You can cast an object to a function *)
@@ -4144,11 +4158,28 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, AnyT), ObjTestT (reason_op, _, u) ->
       rec_flow_t cx trace (AnyT.why reason_op, u)
 
-    | (_, ObjTestT(reason_op, default, u)) ->
-      let u = ReposLowerT(reason_op, false, UseT (UnknownUse, u)) in
+    | _, ObjTestT (reason_op, default, u) ->
+      let u = ReposLowerT (reason_op, false, UseT (UnknownUse, u)) in
       if object_like l
       then rec_flow cx trace (l, u)
       else rec_flow cx trace (default, u)
+
+    | DefT (_, (AnyT | AnyObjT)), ObjTestProtoT (reason_op, u) ->
+      rec_flow_t cx trace (AnyT.why reason_op, u)
+
+    | DefT (_, NullT), ObjTestProtoT (reason_op, u) ->
+      rec_flow_t cx trace (NullProtoT.why reason_op, u)
+
+    | _, ObjTestProtoT (reason_op, u) ->
+      let proto =
+        if object_like l
+        then reposition cx ~trace (loc_of_reason reason_op) l
+        else
+          let () = add_output cx ~trace
+            (FlowError.EInvalidPrototype (reason_of_t l)) in
+          ObjProtoT.why reason_op
+      in
+      rec_flow_t cx trace (proto, u)
 
     (********************************************)
     (* array types deconstruct into their parts *)
@@ -5229,7 +5260,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          * it early *)
         let t = mk_tvar_where cx reason_op (fun t ->
           let resolve_to = ResolveSpreadsToCallT (funtype, t) in
-          resolve_call_list cx ~trace reason_op call_args_tlist resolve_to
+          resolve_call_list cx ~trace ~use_op:FunCallParam reason_op call_args_tlist resolve_to
         ) in
         rec_flow_t cx trace (func, t)
 
@@ -5271,7 +5302,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
         let resolve_to =
           ResolveSpreadsToMultiflowPartial (mk_id (), ft, reason_op, call_tout) in
-        resolve_call_list cx ~trace reason tins2 resolve_to;
+        resolve_call_list cx ~trace ~use_op:FunCallParam reason tins2 resolve_to;
         Ops.pop ()
 
     | DefT (_, (AnyT | AnyFunT)),
@@ -5719,15 +5750,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (** TODO: Ditto above comment for Function.prototype *)
       rec_flow cx trace (get_builtin_type cx ~trace reason_op "Function", u)
 
-    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
-        Strict strict_reason, [], (Named (reason_prop, x) as propref), action) ->
+    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason),
+      LookupT (reason_op, Strict strict_reason, [],
+        (Named (reason_prop, x) as propref), action) ->
       add_output cx ~trace (FlowError.EStrictLookupFailed
         ((reason_prop, strict_reason), reason, Some x));
       let p = Field (AnyT.why reason_op, Neutral) in
       perform_lookup_action cx trace propref p reason reason_op action
 
-    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
-        Strict strict_reason, [], (Computed elem_t as propref), action) ->
+    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason),
+      LookupT (reason_op, Strict strict_reason, [],
+        (Computed elem_t as propref), action) ->
       (match elem_t with
       | OpenT _ ->
         let loc = loc_of_t elem_t in
@@ -5745,8 +5778,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         add_output cx ~trace (FlowError.EStrictLookupFailed
           ((reason_prop, strict_reason), reason, None)))
 
-    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
-        ShadowRead (strict, rev_proto_ids), [], (Named (reason_prop, x) as propref), action) ->
+    | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason),
+      LookupT (reason_op, ShadowRead (strict, rev_proto_ids), [],
+        (Named (reason_prop, x) as propref), action) ->
       (* Emit error if this is a strict read. See `lookup_kinds` in types.ml. *)
       (match strict with
       | None -> ()
@@ -5830,10 +5864,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     (* SuperT only involves non-strict lookups *)
-    | (DefT (_, NullT) | ObjProtoT _ | FunProtoT _), SuperT _ -> ()
+    | (DefT (_, NullT), SuperT _)
+    | (ObjProtoT _, SuperT _)
+    | (FunProtoT _, SuperT _) -> ()
 
     (** ExtendsT searches for a nominal superclass. The search terminates with
         either failure at the root or a structural subtype check. **)
+
+    | DefT (_, AnyObjT), UseT (_, ExtendsT _) -> ()
+
+    | DefT (lreason, ObjT { proto_t; _ }), UseT (_, ExtendsT _) ->
+      let l = reposition cx ~trace (loc_of_reason lreason) proto_t in
+      rec_flow cx trace (l, u)
 
     | DefT (reason, ClassT instance), UseT (_, (ExtendsT _ as u)) ->
       let desc = RStatics (desc_of_reason (reason_of_t instance)) in
@@ -5841,14 +5883,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason = mk_reason desc loc in
       rec_flow cx trace (instance, GetStaticsT (reason, u))
 
-    | (DefT (_, NullT) | ObjProtoT _),
+    | DefT (_, NullT),
       UseT (use_op, ExtendsT (reason, next::try_ts_on_failure, l, u)) ->
       (* When seaching for a nominal superclass fails, we always try to look it
          up in the next element in the list try_ts_on_failure. *)
       rec_flow cx trace
         (next, UseT (use_op, ExtendsT (reason, try_ts_on_failure, l, u)))
 
-    | (DefT (_, NullT) | ObjProtoT _),
+    | DefT (_, NullT),
       UseT (use_op, ExtendsT (_, [], l, DefT (reason_inst, InstanceT (_, super, _, {
         fields_tmap;
         methods_tmap;
@@ -5859,7 +5901,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (fields_tmap, methods_tmap);
       rec_flow cx trace (l, UseT (use_op, super))
 
-    | (DefT (_, NullT) | ObjProtoT _),
+    | DefT (_, NullT),
       UseT (use_op, ExtendsT (_, [], t, tc)) ->
       let reason_l, reason_u = Flow_error.ordered_reasons (reason_of_t t) (reason_of_t tc) in
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (reason_l, reason_u, use_op))
@@ -5921,6 +5963,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let use_desc = true in
       let obj_proto = get_builtin_type cx ~trace reason ~use_desc "Object" in
       rec_flow cx trace (obj_proto, u)
+
+    | _, UseT (use_op, ObjProtoT reason) ->
+      let use_desc = true in
+      let obj_proto = get_builtin_type cx ~trace reason ~use_desc "Object" in
+      rec_flow cx trace (l, UseT (use_op, obj_proto))
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
@@ -6291,7 +6338,8 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
           rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
       )));
 
-  rec_flow cx trace (DefT (lreason, ObjT l_obj), UseT (use_op, uproto))
+  rec_flow cx trace (uproto,
+    ReposUseT (ureason, false, use_op, DefT (lreason, ObjT l_obj)))
 
 and is_object_prototype_method = function
   | "isPrototypeOf"
@@ -6390,7 +6438,6 @@ and ground_subtype = function
   | DefT (_, VoidT), UseT (_, DefT (_, VoidT))
   | DefT (_, EmptyT), _
   | _, UseT (_, DefT (_, MixedT _))
-  | _, UseT (_, ObjProtoT _)
     -> true
 
   | DefT (_, AnyT), u -> not (any_propagating_use_t u)
@@ -6889,6 +6936,7 @@ and check_polarity cx ?trace polarity = function
   | ShapeT _
   | DiffT _
   | KeysT _
+  | NullProtoT _
   | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
@@ -9180,21 +9228,21 @@ and array_unify cx trace = function
 (* Process spread arguments and then apply the arguments to the parameters *)
 and multiflow_call cx trace reason_op args ft =
   let resolve_to = ResolveSpreadsToMultiflowCallFull (mk_id (), ft) in
-  resolve_call_list cx ~trace reason_op args resolve_to
+  resolve_call_list cx ~trace ~use_op:FunCallParam reason_op args resolve_to
 
 (* Process spread arguments and then apply the arguments to the parameters *)
-and multiflow_subtype cx trace reason_op args ft =
+and multiflow_subtype cx trace ~use_op reason_op args ft =
   let resolve_to = ResolveSpreadsToMultiflowSubtypeFull (mk_id (), ft) in
-  resolve_call_list cx ~trace reason_op args resolve_to
+  resolve_call_list cx ~trace ~use_op reason_op args resolve_to
 
 (* Like multiflow_partial, but if there is no spread argument, it flows VoidT to
  * all unused parameters *)
 and multiflow_full
-  cx ~trace reason_op ~is_call ~def_reason
+  cx ~trace ~use_op reason_op ~is_call ~def_reason
   ~spread_arg ~rest_param (arglist, parlist) =
 
   let unused_parameters, _ = multiflow_partial
-    cx ~trace reason_op ~is_call ~def_reason
+    cx ~trace ~use_op reason_op ~is_call ~def_reason
     ~spread_arg ~rest_param (arglist, parlist) in
 
   List.iter (fun param ->
@@ -9211,7 +9259,7 @@ and multiflow_full
  * all the regular arguments. There may also be a rest parameter.
  *)
 and multiflow_partial =
-  let rec multiflow_non_spreads cx ~trace (arglist, parlist) =
+  let rec multiflow_non_spreads cx ~trace ~use_op (arglist, parlist) =
     match (arglist, parlist) with
     (* Do not complain on too many arguments.
        This pattern is ubiqutous and causes a lot of noise when complained about.
@@ -9230,20 +9278,22 @@ and multiflow_partial =
          instead, let it flow through transparently, so that we point at the
          place that constrained the type arg. this is pretty hacky. *)
       let tout =
-        let u = UseT (FunCallParam, tout) in
+        let u = UseT (use_op, tout) in
         match desc_of_t tin with
         | RTypeParam _ -> u
         | _ -> ReposLowerT (reason_of_t tin, false, u)
       in
       flow_opt cx ~trace (tin, tout);
-      multiflow_non_spreads cx ~trace (tins,touts)
+      multiflow_non_spreads cx ~trace ~use_op (tins,touts)
 
 
   in
-  fun cx ~trace reason_op ~is_call ~def_reason ~spread_arg ~rest_param (arglist, parlist) ->
+  fun cx ~trace ~use_op ~is_call ~def_reason ~spread_arg ~rest_param
+    reason_op (arglist, parlist) ->
+
     (* Handle all the non-spread arguments and all the non-rest parameters *)
     let unused_arglist, unused_parlist =
-      multiflow_non_spreads cx ~trace (arglist, parlist) in
+      multiflow_non_spreads cx ~trace ~use_op (arglist, parlist) in
 
     (* If there is a spread argument, it will consume all the unused parameters *)
     let unused_parlist = match spread_arg with
@@ -9312,36 +9362,37 @@ and multiflow_partial =
 
       let arg_array = mk_tvar_where cx arg_array_reason (fun tout ->
         let resolve_to = (ResolveSpreadsToArrayLiteral (mk_id (), tout)) in
-        resolve_spread_list cx ~reason_op:arg_array_reason elems resolve_to
+        resolve_spread_list cx ~use_op ~reason_op:arg_array_reason elems resolve_to
       ) in
       rec_flow_t cx trace (arg_array, rest_param);
 
       unused_parlist, Some (name, loc, unused_rest_param)
     end
 
-and resolve_call_list cx ~trace reason_op args resolve_to =
+and resolve_call_list cx ~trace ~use_op reason_op args resolve_to =
   let unresolved = List.map
     (function
     | Arg t -> UnresolvedArg t
     | SpreadArg t -> UnresolvedSpreadArg t)
     args in
-  resolve_spread_list_rec cx ~trace ~reason_op ([], unresolved) resolve_to
+  resolve_spread_list_rec cx ~trace ~use_op ~reason_op ([], unresolved) resolve_to
 
-and resolve_spread_list cx ~reason_op list resolve_to =
-  resolve_spread_list_rec cx ~reason_op ([], list) resolve_to
+and resolve_spread_list cx ~use_op ~reason_op list resolve_to =
+  resolve_spread_list_rec cx ~use_op ~reason_op ([], list) resolve_to
 
 (* This function goes through the unresolved elements to find the next rest
  * element to resolve *)
 and resolve_spread_list_rec
-  cx ?trace ~reason_op (resolved, unresolved) resolve_to =
+  cx ?trace ~use_op ~reason_op (resolved, unresolved) resolve_to =
   match resolved, unresolved with
   | resolved, [] ->
       finish_resolve_spread_list
-        cx ?trace ~reason_op (List.rev resolved) resolve_to
+        cx ?trace ~use_op ~reason_op (List.rev resolved) resolve_to
   | resolved, UnresolvedArg(next)::unresolved ->
       resolve_spread_list_rec
         cx
         ?trace
+        ~use_op
         ~reason_op
         (ResolvedArg(next)::resolved, unresolved)
         resolve_to
@@ -9549,7 +9600,7 @@ and finish_resolve_spread_list =
   (* This is used for things like Function.prototype.bind, which partially
    * apply arguments and then return the new function. *)
   let finish_multiflow_partial
-    cx ?trace ~reason_op ft call_reason resolved tout =
+    cx ?trace ~use_op ~reason_op ft call_reason resolved tout =
     (* Multiflows always come out of a flow *)
     let trace = match trace with
     | Some trace -> trace
@@ -9560,7 +9611,7 @@ and finish_resolve_spread_list =
     let args, spread_arg = flatten_call_arg cx reason_op resolved in
 
     let params_tlist, rest_param = multiflow_partial
-      cx ~trace reason_op ~is_call:true ~def_reason ~spread_arg ~rest_param
+      cx ~trace ~use_op reason_op ~is_call:true ~def_reason ~spread_arg ~rest_param
       (args, params_tlist) in
 
     (* e.g. "bound function type", positioned at reason_op *)
@@ -9581,7 +9632,7 @@ and finish_resolve_spread_list =
 
   (* This is used for things like function application, where all the arguments
    * are applied to a function *)
-  let finish_multiflow_full cx ?trace ~reason_op ~is_call ft resolved =
+  let finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_call ft resolved =
     (* Multiflows always come out of a flow *)
     let trace = match trace with
     | Some trace -> trace
@@ -9591,7 +9642,7 @@ and finish_resolve_spread_list =
 
     let args, spread_arg = flatten_call_arg cx reason_op resolved in
     multiflow_full
-      cx ~trace reason_op ~is_call ~def_reason
+      cx ~trace ~use_op reason_op ~is_call ~def_reason
       ~spread_arg ~rest_param (args, params_tlist)
 
   in
@@ -9619,7 +9670,7 @@ and finish_resolve_spread_list =
     flow_opt cx ?trace (tin, call_t)
 
   in
-  fun cx ?trace ~reason_op resolved resolve_to -> (
+  fun cx ?trace ~use_op ~reason_op resolved resolve_to -> (
     match resolve_to with
     | ResolveSpreadsToTuple (_, tout)->
       finish_array cx ?trace ~reason_op ~resolve_to:`Tuple resolved tout
@@ -9628,11 +9679,11 @@ and finish_resolve_spread_list =
     | ResolveSpreadsToArray (_, tout) ->
       finish_array cx ?trace ~reason_op ~resolve_to:`Array resolved tout
     | ResolveSpreadsToMultiflowPartial (_, ft, call_reason, tout) ->
-      finish_multiflow_partial cx ?trace ~reason_op ft call_reason resolved tout
+      finish_multiflow_partial cx ?trace ~use_op ~reason_op ft call_reason resolved tout
     | ResolveSpreadsToMultiflowCallFull (_, ft) ->
-      finish_multiflow_full cx ?trace ~reason_op ~is_call:true ft resolved
+      finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_call:true ft resolved
     | ResolveSpreadsToMultiflowSubtypeFull (_, ft) ->
-      finish_multiflow_full cx ?trace ~reason_op ~is_call:false ft resolved
+      finish_multiflow_full cx ?trace ~use_op ~reason_op ~is_call:false ft resolved
     | ResolveSpreadsToCustomFunCall (_, kind, tout) ->
       finish_custom_fun_call cx ?trace ~reason_op kind tout resolved
     | ResolveSpreadsToCallT (funcalltype, tin) ->
@@ -10799,6 +10850,7 @@ end = struct
     | IdxWrapper (_, _)
     | KeysT (_, _)
     | DefT (_, MixedT _)
+    | NullProtoT _
     | ObjProtoT _
     | OpaqueT _
     | OpenPredT (_, _, _, _)
@@ -11005,6 +11057,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | ReposUpperT (_, t) ->
     recurse ~infer:true t
 
+  | NullProtoT _
   | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _

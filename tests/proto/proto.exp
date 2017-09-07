@@ -1,0 +1,195 @@
+Error: annot.js:3
+  3: (o.p: empty); // error: number ~> empty
+      ^^^ number. This type is incompatible with
+  3: (o.p: empty); // error: number ~> empty
+           ^^^^^ empty
+
+Error: annot.js:4
+  4: (o.q: empty); // error: string ~> empty
+      ^^^ string. This type is incompatible with
+  4: (o.q: empty); // error: string ~> empty
+           ^^^^^ empty
+
+Error: annot.js:8
+  8: ({p: 0, q: 0}: O); // error: number ~> string
+      ^^^^^^^^^^^^ object literal. This type is incompatible with
+  8: ({p: 0, q: 0}: O); // error: number ~> string
+                    ^ object type
+  Property `q` is incompatible:
+      8: ({p: 0, q: 0}: O); // error: number ~> string
+                    ^ number. This type is incompatible with
+      1: type O = {p: number, __proto__: {q: string}};
+                                             ^^^^^^ string
+
+Error: annot.js:9
+  9: ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+  9: ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
+                                 ^ object type
+  Property `q` is incompatible:
+      1: type O = {p: number, __proto__: {q: string}};
+                                             ^^^^^^ string. This type is incompatible with
+      9: ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
+                                ^ number
+
+Error: annot.js:9
+  9: ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+  9: ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
+                                 ^ object type
+  Property `q` is incompatible:
+      9: ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
+                                ^ number. This type is incompatible with
+      1: type O = {p: number, __proto__: {q: string}};
+                                             ^^^^^^ string
+
+Error: annot.js:10
+ 10: ({p: 0}: O); // error, property `q` not found
+              ^ property `q`. Property not found in
+ 10: ({p: 0}: O); // error, property `q` not found
+      ^^^^^^ object literal
+
+Error: annot.js:15
+ 15: (o_optional.q: empty); // error: property `q` not found
+                 ^ property `q`. Property not found in
+ 15: (o_optional.q: empty); // error: property `q` not found
+      ^^^^^^^^^^ object type
+
+Error: annot.js:16
+ 16: (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
+      ^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+ 16: (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
+                            ^^^^^ empty
+
+Error: annot.js:16
+ 16: (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
+      ^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+ 16: (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
+                            ^^^^^ empty
+
+Error: annot.js:21
+ 21: (o_variance.q: empty); // error: property `q` not found
+                 ^ property `q`. Property not found in
+ 21: (o_variance.q: empty); // error: property `q` not found
+      ^^^^^^^^^^ object type
+
+Error: annot.js:22
+ 22: (o_variance.__proto__: empty); // error: object type ~> empty
+      ^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+ 22: (o_variance.__proto__: empty); // error: object type ~> empty
+                            ^^^^^ empty
+
+Error: annot.js:27
+ 27: (o_callable.q: empty); // error: property `q` not found
+                 ^ property `q`. Property not found in
+ 27: (o_callable.q: empty); // error: property `q` not found
+      ^^^^^^^^^^ object type
+
+Error: annot.js:28
+ 28: (o_callable.__proto__: empty); // error: object type ~> empty
+      ^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+ 28: (o_callable.__proto__: empty); // error: object type ~> empty
+                            ^^^^^ empty
+
+Error: annot.js:33
+ 33: (o_method.__proto__: empty); // error: function ~> empty
+      ^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+ 33: (o_method.__proto__: empty); // error: function ~> empty
+                          ^^^^^ empty
+
+Error: annot.js:37
+ 37: (o_loop.p: empty); // error: number ~> empty
+      ^^^^^^^^ number literal `0`. This type is incompatible with
+ 37: (o_loop.p: empty); // error: number ~> empty
+                ^^^^^ empty
+
+Error: annot.js:40
+ 40: type O_invalid = { __proto__: number }; // error: number is not a valid proto
+                                   ^^^^^^ number. Invalid prototype. Expected an object or null.
+
+Error: literal.js:2
+  2: (o.p: empty); // error: number ~> empty
+      ^^^ number. This type is incompatible with
+  2: (o.p: empty); // error: number ~> empty
+           ^^^^^ empty
+
+Error: literal.js:3
+  3: (o.q: empty); // error: number ~> empty
+      ^^^ number. This type is incompatible with
+  3: (o.q: empty); // error: number ~> empty
+           ^^^^^ empty
+
+Error: literal.js:6
+  6: (o_get.q: empty); // error: property `q` not found
+            ^ property `q`. Property not found in
+  6: (o_get.q: empty); // error: property `q` not found
+      ^^^^^ object literal
+
+Error: literal.js:10
+ 10: (o_set.__proto__: empty); // error: read from contravariant prop
+      ^^^^^ object literal. Contravariant property `__proto__` incompatible with covariant use in
+ 10: (o_set.__proto__: empty); // error: read from contravariant prop
+      ^^^^^^^^^^^^^^^ property `__proto__`
+
+Error: literal.js:13
+ 13: (o_method.__proto__: empty); // error: function ~> empty
+      ^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+ 13: (o_method.__proto__: empty); // error: function ~> empty
+                          ^^^^^ empty
+
+Error: literal.js:17
+ 17: (o_shorthand.q: empty); // error: property `q` not found
+                  ^ property `q`. Property not found in
+ 17: (o_shorthand.q: empty); // error: property `q` not found
+      ^^^^^^^^^^^ object literal
+
+Error: literal.js:20
+ 20: var o_computed = { ["__proto__"]: 0 }; // TODO: computed props use SetElem :/
+                      ^^^^^^^^^^^^^^^^^^^^ object literal. Prototype mutation not allowed
+
+Error: literal.js:21
+ 21: (o_computed.__proto__: empty); // TODO: error: number ~> empty
+      ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+ 21: (o_computed.__proto__: empty); // TODO: error: number ~> empty
+                            ^^^^^ empty
+
+Error: literal.js:23
+ 23: var o_loop = { p: 0, __proto__: o_loop }; // error: void (undefined o_loop) is not a valid proto
+                                     ^^^^^^ uninitialized variable. Invalid prototype. Expected an object or null.
+
+Error: literal.js:24
+ 24: (o_loop.p: empty); // error: number ~> empty
+      ^^^^^^^^ number. This type is incompatible with
+ 24: (o_loop.p: empty); // error: number ~> empty
+                ^^^^^ empty
+
+Error: literal.js:25
+ 25: (o_loop.q: empty); // error: property `q` not found
+             ^ property `q`. Property not found in
+ 25: (o_loop.q: empty); // error: property `q` not found
+      ^^^^^^ object literal
+
+Error: literal.js:27
+ 27: var o_invalid = { __proto__: 0 }; // error: 0 is not a valid proto
+                                  ^ number. Invalid prototype. Expected an object or null.
+
+Error: null.js:5
+  5: o_null.toString(); // property `toString` not found
+            ^^^^^^^^ property `toString`. Property not found in
+  5: o_null.toString(); // property `toString` not found
+     ^^^^^^ object literal
+
+Error: null.js:13
+ 13: (o_shadow.p: string);
+      ^^^^^^^^^^ number. This type is incompatible with
+ 13: (o_shadow.p: string);
+                  ^^^^^^ string
+
+Error: null.js:18
+ 18:   (o_nonstrict.p: empty); // error: mixed ~> empty
+        ^^^^^^^^^^^^^ property `p` of unknown type. This type is incompatible with
+ 18:   (o_nonstrict.p: empty); // error: mixed ~> empty
+                       ^^^^^ empty
+
+
+Found 31 errors

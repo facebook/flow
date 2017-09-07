@@ -88,8 +88,8 @@ Error: test.js:19
 Error: test.js:19
  19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
                         ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
- 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-            ^^^^^^^^^ B
+ 16: interface B<Z> extends A<string>, A_<Z> { z: Z }
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B
   Property `z` is incompatible:
      19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
                   ^^^^^^ number. This type is incompatible with
@@ -99,8 +99,8 @@ Error: test.js:19
 Error: test.js:19
  19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
                         ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
- 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-            ^^^^^^^^^ B
+ 16: interface B<Z> extends A<string>, A_<Z> { z: Z }
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B
   Property `z` is incompatible:
      19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
                                                ^^ string. This type is incompatible with
@@ -153,7 +153,7 @@ Error: test4.js:2
   2: (function foo(x: number) { }: I); // error, property `foo` not found function
                                    ^ property `foo` of I. Property not found in
   2: (function foo(x: number) { }: I); // error, property `foo` not found function
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
+      ^^^^^^^^^^^^^^^^^^^^^^^ function
 
 Error: test4.js:9
   9: new C().bar((x: string) => { }); // error, number ~/~> string

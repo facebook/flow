@@ -89,6 +89,10 @@ module rec TypeTerm : sig
     | FunProtoT of reason      (* Function.prototype *)
     | ObjProtoT of reason       (* Object.prototype *)
 
+    (* Signifies the end of the prototype chain. Distinct from NullT when it
+       appears as an upper bound of an object type, otherwise the same. *)
+    | NullProtoT of reason
+
     | FunProtoApplyT of reason  (* Function.prototype.apply *)
     | FunProtoBindT of reason   (* Function.prototype.bind *)
     | FunProtoCallT of reason   (* Function.prototype.call *)
@@ -423,6 +427,8 @@ module rec TypeTerm : sig
     | ObjFreezeT of reason * t
     | ObjRestT of reason * string list * t
     | ObjSealT of reason * t
+    (* test that something is a valid proto (object-like or null) *)
+    | ObjTestProtoT of reason * t_out
     (* test that something is object-like, returning a default type otherwise *)
     | ObjTestT of reason * t * t
 
@@ -1701,6 +1707,11 @@ module ObjProtoT = Primitive (struct
   let make r = ObjProtoT r
 end)
 
+module NullProtoT = Primitive (struct
+  let desc = RNull
+  let make r = NullProtoT r
+end)
+
 (* USE WITH CAUTION!!! Locationless types should not leak to errors, otherwise
    they will cause error printing to crash.
 
@@ -1817,6 +1828,7 @@ let any_propagating_use_t = function
   | ObjRestT _
   | ObjSealT _
   | ObjSpreadT _
+  | ObjTestProtoT _
   | ObjTestT _
   | OrT _
   | PredicateT _
@@ -1896,6 +1908,7 @@ let rec reason_of_t = function
   | IdxWrapper (reason, _) -> reason
   | KeysT (reason, _) -> reason
   | ModuleT (reason, _) -> reason
+  | NullProtoT reason -> reason
   | ObjProtoT reason -> reason
   | OpaqueT (reason, _) -> reason
   | OpenPredT (reason, _, _, _) -> reason
@@ -1969,6 +1982,7 @@ and reason_of_use_t = function
   | ObjFreezeT (reason, _) -> reason
   | ObjRestT (reason, _, _) -> reason
   | ObjSealT (reason, _) -> reason
+  | ObjTestProtoT (reason, _) -> reason
   | ObjTestT (reason, _, _) -> reason
   | OrT (reason, _, _) -> reason
   | PredicateT (_, t) -> reason_of_t t
@@ -2039,6 +2053,7 @@ let rec mod_reason_of_t f = function
   | IdxWrapper (reason, t) -> IdxWrapper (f reason, t)
   | KeysT (reason, t) -> KeysT (f reason, t)
   | ModuleT (reason, exports) -> ModuleT (f reason, exports)
+  | NullProtoT reason -> NullProtoT (f reason)
   | ObjProtoT (reason) -> ObjProtoT (f reason)
   | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
@@ -2126,6 +2141,7 @@ and mod_reason_of_use_t f = function
   | ObjFreezeT (reason, t) -> ObjFreezeT (f reason, t)
   | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
   | ObjSealT (reason, t) -> ObjSealT (f reason, t)
+  | ObjTestProtoT (reason, t) -> ObjTestProtoT (f reason, t)
   | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
   | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
@@ -2253,6 +2269,7 @@ let string_of_ctor = function
   | IdxWrapper _ -> "IdxWrapper"
   | KeysT _ -> "KeysT"
   | ModuleT _ -> "ModuleT"
+  | NullProtoT _ -> "NullProtoT"
   | ObjProtoT _ -> "ObjProtoT"
   | OpaqueT _ -> "OpaqueT"
   | OpenPredT _ -> "OpenPredT"
@@ -2352,6 +2369,7 @@ let string_of_use_ctor = function
   | ObjFreezeT _ -> "ObjFreezeT"
   | ObjRestT _ -> "ObjRestT"
   | ObjSealT _ -> "ObjSealT"
+  | ObjTestProtoT _ -> "ObjTestProtoT"
   | ObjTestT _ -> "ObjTestT"
   | OrT _ -> "OrT"
   | PredicateT _ -> "PredicateT"

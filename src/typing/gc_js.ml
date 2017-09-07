@@ -126,6 +126,7 @@ let rec gc cx state = function
   | DefT (_, MaybeT t) -> gc cx state t
   | ModuleT (_, exporttypes) -> gc_exporttypes cx state exporttypes
   | DefT (_, NullT) -> ()
+  | NullProtoT _ -> ()
   | ObjProtoT _ -> ()
   | DefT (_, ObjT objtype) ->
       let id = objtype.props_tmap in
@@ -276,6 +277,7 @@ and gc_use cx state = function
   | ObjFreezeT (_, t) -> gc cx state t
   | ObjRestT (_, _, t) -> gc cx state t
   | ObjSealT (_, t) -> gc cx state t
+  | ObjTestProtoT (_, t) -> gc cx state t
   | ObjTestT (_, t1, t2) -> gc cx state t1; gc cx state t2
   | OrT (_, t1, t2) -> gc cx state t1; gc cx state t2
   | PredicateT (pred, t) -> gc_pred cx state pred; gc cx state t
