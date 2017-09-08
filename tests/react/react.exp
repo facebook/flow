@@ -279,11 +279,8 @@ Error: create_class_initial_state_sealed.js:45
   Error:
    45:     this.setState({ q: 0 }); // property `q` not found
                          ^^^^^^^^ property `q` of object literal. Property not found in
-                        v------------------
    41:   getInitialState(): { p: number } {
-   42:     return { p: 0 };
-   43:   },
-         ^ object type
+                        ^^^^^^^^^^^^^^^^^ object type
   Member 2:
    38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:38
@@ -323,11 +320,8 @@ Error: create_class_initial_state_sealed.js:81
   Error:
    81:     this.setState({ baz: 0 }); // property `baz`  not found
                          ^^^^^^^^^^ property `baz` of object literal. Property not found in
-                          v--------------------
    73:     getInitialState(): { foo: number } {
-   74:       return { foo: 0 };
-   75:     },
-           ^ object type
+                          ^^^^^^^^^^^^^^^^^^^ object type
   Member 2:
    38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:38
@@ -531,7 +525,7 @@ Error: hoc.js:36
  36: myHOC(function Empty(props: {foo: string}) {}); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  36: myHOC(function Empty(props: {foo: string}) {}); // Error
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   6:   Component: React$ComponentType<{foo: number, bar: number}>,
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: type `React$StatelessFunctionalComponent` | class type: type application of polymorphic type: class type: React$Component
   Member 1:
@@ -552,7 +546,7 @@ Error: hoc.js:36
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:141
   Error:
    36: myHOC(function Empty(props: {foo: string}) {}); // Error
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in
   141:   | Class<React$Component<Props, any>>;
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of React$Component. See lib: <BUILTINS>/react.js:141
 
@@ -981,27 +975,60 @@ Error: proptype_arrayOf.js:14
 
 Error: proptype_arrayOf.js:15
  15: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
- 15: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
-                                                 ^^^^^ string. This type is incompatible with
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+                  v
+  5:   propTypes: {
   6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
-                                      ^^^^^^^^^^^^^^^^^^^^^^ number
+  7:   },
+       ^ propTypes of React component
+  Property `arr` is incompatible:
+     15: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
+                                                 ^^^^^^^^^^ array literal. Has some incompatible type argument with
+      6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+      Type argument `T` is incompatible:
+         15: var fail_mistyped_elems = <Example arr={[1, "foo"]} />
+                                                         ^^^^^ string. This type is incompatible with
+          6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
+                                              ^^^^^^^^^^^^^^^^^^^^^^ number
 
 Error: proptype_arrayOf.js:20
  20: var todo_required = <Example arr={[null]} />
-                         ^^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
- 20: var todo_required = <Example arr={[null]} />
-                                        ^^^^ null. This type is incompatible with
+                         ^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+                  v
+  5:   propTypes: {
   6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
-                                      ^^^^^^^^^^^^^^^^^^^^^^ number
+  7:   },
+       ^ propTypes of React component
+  Property `arr` is incompatible:
+     20: var todo_required = <Example arr={[null]} />
+                                           ^^^^^^ array literal. Has some incompatible type argument with
+      6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+      Type argument `T` is incompatible:
+         20: var todo_required = <Example arr={[null]} />
+                                                ^^^^ null. This type is incompatible with
+          6:     arr: React.PropTypes.arrayOf(React.PropTypes.number).isRequired,
+                                              ^^^^^^^^^^^^^^^^^^^^^^ number
 
 Error: proptype_arrayOf.js:30
  30: (<OptionalExample arr={[""]} />); // error: string ~> number
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `OptionalExample`
- 30: (<OptionalExample arr={[""]} />); // error: string ~> number
-                             ^^ string. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `OptionalExample`. This type is incompatible with
+                  v
+ 23:   propTypes: {
  24:     arr: React.PropTypes.arrayOf(React.PropTypes.number),
-                                      ^^^^^^^^^^^^^^^^^^^^^^ number
+ 25:   }
+       ^ propTypes of React component
+  Property `arr` is incompatible:
+     30: (<OptionalExample arr={[""]} />); // error: string ~> number
+                                ^^^^ array literal. Has some incompatible type argument with
+     24:     arr: React.PropTypes.arrayOf(React.PropTypes.number),
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+      Type argument `T` is incompatible:
+         30: (<OptionalExample arr={[""]} />); // error: string ~> number
+                                     ^^ string. This type is incompatible with
+         24:     arr: React.PropTypes.arrayOf(React.PropTypes.number),
+                                              ^^^^^^^^^^^^^^^^^^^^^^ number
 
 Error: proptype_arrayOf.js:38
  38: (<AnyExample arr={0} />); // error: still needs to be an array

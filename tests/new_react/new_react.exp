@@ -162,11 +162,8 @@ Error: classes.js:57
 Error: classes.js:64
  64:   setState(o: { y_: string }): void { },
                    ^^^^^^^^^^^^^^ property `y_`. Property not found in
-                      v------------------
  60:   getInitialState(): { y: string } {
- 61:     return { y: "" };
- 62:   },
-       ^ object type
+                      ^^^^^^^^^^^^^^^^^ object type
 
 Error: classes.js:64
  64:   setState(o: { y_: string }): void { },
@@ -558,11 +555,8 @@ Error: state4.js:9
   Error:
     9:     this.setState({ y: 0 });
                          ^^^^^^^^ property `y` of object literal. Property not found in
-                          v--------------------------
     4:   getInitialState: function(): { x: number } {
-    5:     return { x: 0 };
-    6:   },
-         ^ object type
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Member 2:
    38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:38

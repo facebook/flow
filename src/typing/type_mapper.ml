@@ -80,6 +80,7 @@ class ['a] t = object(self)
       | TaintT _
       | FunProtoT _
       | ObjProtoT _
+      | NullProtoT _
       | FunProtoApplyT _
       | FunProtoBindT _
       | FunProtoCallT _ -> t
@@ -91,6 +92,10 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else AnyWithUpperBoundT t''
+      | MergedT (r, uses) ->
+          let uses' = ListUtils.ident_map (self#use_type cx map_cx) uses in
+          if uses == uses' then t
+          else MergedT (r, uses')
       | ShapeT t' ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -108,10 +113,10 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else AbstractT (r, t'')
-      | AnnotT t' ->
+      | AnnotT (t', use_desc) ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
-          else AnnotT t''
+          else AnnotT (t'', use_desc)
       | OpaqueT (r, opaquetype) ->
           let underlying_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.underlying_t in
           let super_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.super_t in
@@ -341,6 +346,10 @@ class ['a] t = object(self)
           if tlist' == tlist then t
           else SpreadType (options, tlist')
       | ValuesType -> t
+      | CallType args ->
+          let args' = ListUtils.ident_map (self#type_ cx map_cx) args in
+          if args' == args then t
+          else CallType args'
       | TypeMap tmap ->
           let tmap' = self#type_map cx map_cx tmap in
           if tmap' == tmap then t
@@ -475,14 +484,14 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else SetProtoT (r, t'')
-    | ReposLowerT (r, use) ->
+    | ReposLowerT (r, use_desc, use) ->
         let use' = self#use_type cx map_cx use in
         if use' == use then t
-        else ReposLowerT (r, use')
-    | ReposUseT (r, use_op, t') ->
+        else ReposLowerT (r, use_desc, use')
+    | ReposUseT (r, use_desc, use_op, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
-        else ReposUseT (r, use_op, t'')
+        else ReposUseT (r, use_desc, use_op, t'')
     | ConstructorT (r, callargs, t') ->
         let callargs' = ListUtils.ident_map (self#call_arg cx map_cx) callargs in
         let t'' = self#type_ cx map_cx t' in
@@ -492,10 +501,10 @@ class ['a] t = object(self)
         let instt' = self#inst_type cx map_cx instt in
         if instt' == instt then t
         else SuperT (r, instt')
-    | ImplementsT t' ->
+    | ImplementsT (use_op, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
-        else ImplementsT t''
+        else ImplementsT (use_op, t'')
     | MixinT (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
@@ -610,6 +619,10 @@ class ['a] t = object(self)
         let t2' = self#type_ cx map_cx t2 in
         if t1' == t1 && t2' == t2 then t
         else ObjTestT (r, t1', t2')
+    | ObjTestProtoT (r, t') ->
+        let t'' = self#type_ cx map_cx t' in
+        if t'' == t' then t
+        else ObjTestProtoT (r, t'')
     | ArrRestT (r, i, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
@@ -1001,6 +1014,11 @@ class ['a] t = object(self)
         let spec' = self#spec cx map_cx spec in
         if spec' == spec then t
         else TryFlow (i, spec')
+    | EvalDestructor (id, d, tout) ->
+        let d' = self#destructor cx map_cx d in
+        let tout' = self#type_ cx map_cx tout in
+        if d' == d && tout' == tout then t
+        else EvalDestructor (id, d', tout')
 
   method resolve_spread cx map_cx ({rrt_resolved; rrt_unresolved; rrt_resolve_to} as t)=
     let rrt_resolved' = ListUtils.ident_map (self#resolved_param cx map_cx) rrt_resolved in

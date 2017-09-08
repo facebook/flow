@@ -1,3 +1,14 @@
+Error: fun.js:5
+  5: var f0: F = () => 0; // error: number ~> void
+                 ^^^^^^^ function. This type is incompatible with
+  5: var f0: F = () => 0; // error: number ~> void
+             ^ F
+  Property `$call` is incompatible:
+      5: var f0: F = () => 0; // error: number ~> void
+                           ^ number. This type is incompatible with
+      2:   (): void;
+               ^^^^ undefined
+
 Error: indexer.js:9
   9:   [k2: number]: number; // error: not supported (yet)
        ^^^^^^^^^^^^^^^^^^^^ multiple indexers are not supported
@@ -142,7 +153,7 @@ Error: test4.js:2
   2: (function foo(x: number) { }: I); // error, property `foo` not found function
                                    ^ property `foo` of I. Property not found in
   2: (function foo(x: number) { }: I); // error, property `foo` not found function
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
+      ^^^^^^^^^^^^^^^^^^^^^^^ function
 
 Error: test4.js:9
   9: new C().bar((x: string) => { }); // error, number ~/~> string
@@ -167,4 +178,4 @@ Error: test4.js:9
                        ^^^^^^ string
 
 
-Found 21 errors
+Found 22 errors

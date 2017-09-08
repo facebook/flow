@@ -22,7 +22,7 @@ let fake_fun params_names param_ts rest_param ret_t =
   DefT (reason, FunT (
     Flow_js.dummy_static reason,
     Flow_js.dummy_prototype,
-    Flow_js.mk_functiontype param_ts ~rest_param ~def_reason ?params_names ret_t
+    Flow_js.mk_functiontype reason param_ts ~rest_param ~def_reason ?params_names ret_t
   ))
 
 let fake_instance name =
@@ -88,7 +88,7 @@ let rec normalize_type_impl cx ids t = match t with
       DefT (reason, FunT (
         Flow_js.dummy_static reason,
         Flow_js.dummy_prototype,
-        Flow_js.mk_functiontype
+        Flow_js.mk_functiontype reason
           tins ~rest_param ~def_reason ?params_names ?is_predicate tout
       ))
 
@@ -272,12 +272,14 @@ let rec normalize_type_impl cx ids t = match t with
       let config = BoundT config_tp in
       let any = DefT (locationless_reason RAny, AnyT) in
       let react_element =
+        let id = Flow_js.mk_nominal cx in
         let instance = fake_instance "React$Element" in
-        typeapp (poly_type [config_tp] (class_type instance)) [config]
+        typeapp (poly_type id [config_tp] (class_type instance)) [config]
       in
       let component_class =
+        let id = Flow_js.mk_nominal cx in
         let instance = fake_instance "ReactClass" in
-        typeapp (poly_type [config_tp] (class_type instance)) [config]
+        typeapp (poly_type id [config_tp] (class_type instance)) [config]
       in
       let stateless_functional_component =
         let params_names = Some ["config"; "context"] in
@@ -285,14 +287,16 @@ let rec normalize_type_impl cx ids t = match t with
         fake_fun params_names param_ts None react_element
       in
       let t1 =
+        let id = Flow_js.mk_nominal cx in
         let params_names = Some ["name"; "config"; "children"] in
         let param_ts = [component_class; config; any] in
-        poly_type [config_tp] (fake_fun params_names param_ts None react_element)
+        poly_type id [config_tp] (fake_fun params_names param_ts None react_element)
       in
       let t2 =
+        let id = Flow_js.mk_nominal cx in
         let params_names = Some ["fn"; "config"; "children"] in
         let param_ts = [stateless_functional_component; config; any] in
-        poly_type [config_tp] (fake_fun params_names param_ts None react_element)
+        poly_type id [config_tp] (fake_fun params_names param_ts None react_element)
       in
       DefT (locationless_reason RIntersectionType,
         IntersectionT (InterRep.make t1 t2 [])
@@ -412,6 +416,9 @@ let rec normalize_type_impl cx ids t = match t with
   | AnyWithLowerBoundT t ->
       AnyWithLowerBoundT (normalize_type_impl cx ids t)
 
+  | MergedT (r, uses) ->
+      MergedT (r, uses)
+
   | DefT (_, AnyObjT) -> DefT (locationless_reason RAnyObject, AnyObjT)
   | DefT (_, AnyFunT) -> DefT (locationless_reason RAnyFunction, AnyFunT)
 
@@ -420,8 +427,8 @@ let rec normalize_type_impl cx ids t = match t with
   | DiffT (t1, t2) ->
       DiffT (normalize_type_impl cx ids t1, normalize_type_impl cx ids t2)
 
-  | AnnotT t ->
-      AnnotT (normalize_type_impl cx ids t)
+  | AnnotT (t, use_desc) ->
+      AnnotT (normalize_type_impl cx ids t, use_desc)
 
   | OpaqueT (r, opaquetype) ->
       OpaqueT (r, { opaquetype with
@@ -462,6 +469,8 @@ let rec normalize_type_impl cx ids t = match t with
       | None -> None
       | Some t -> Some (normalize_type_impl cx ids t) in
     ModuleT (reason, { exporttypes with exports_tmap; cjs_export; })
+
+  | NullProtoT _ -> NullProtoT (locationless_reason RNull)
 
   | ObjProtoT _ -> ObjProtoT (locationless_reason RDummyPrototype)
 

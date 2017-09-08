@@ -134,6 +134,12 @@ Error: cond_prop.js:48
  48:         (t.quux: string); // error, consider { foo: {}, bar: "" }
               ^ object type
 
+Error: cond_prop.js:54
+ 54:     if (o.p) {} // error: property `p` not found on null
+               ^ property `p`. Property cannot be accessed on possibly null value
+ 54:     if (o.p) {} // error: property `p` not found on null
+             ^ null
+
 Error: eq.js:5
   5:     if (x == y) {} // error, string & number are not comparable (unsafe casting)
              ^ string. This type cannot be compared to
@@ -247,6 +253,12 @@ Error: missing-property-cond.js:41
                     ^^^ property `bar`. Property not found in
  41:   if (typeof o.bar === 'string') {} // error
                   ^ mixed
+
+Error: missing-property-cond.js:65
+ 65:   if (null.q) {} // error: property `q` on null
+                ^ property `q`. Property cannot be accessed on possibly null value
+ 65:   if (null.q) {} // error: property `q` on null
+           ^^^^ null
 
 Error: mixed.js:8
   8:     takesString(x); // error
@@ -1097,4 +1109,4 @@ Error: void.js:85
            ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 188 errors
+Found 190 errors

@@ -67,7 +67,7 @@ let rec gc cx state = function
   (** def types **)
 
   | AbstractT (_, t) -> gc cx state t
-  | AnnotT t -> gc cx state t
+  | AnnotT (t, _) -> gc cx state t
   | OpaqueT (_, opaquetype) ->
       Option.iter ~f:(gc cx state) opaquetype.underlying_t;
       Option.iter ~f:(gc cx state) opaquetype.super_t
@@ -76,6 +76,7 @@ let rec gc cx state = function
   | DefT (_, AnyT) -> ()
   | AnyWithLowerBoundT (t) -> gc cx state t
   | AnyWithUpperBoundT (t) -> gc cx state t
+  | MergedT (_, uses) -> List.iter (gc_use cx state) uses
   | DefT (_, ArrT arraytype) ->
       gc_arraytype cx state arraytype
   | DefT (_, BoolT _) -> ()
@@ -125,6 +126,7 @@ let rec gc cx state = function
   | DefT (_, MaybeT t) -> gc cx state t
   | ModuleT (_, exporttypes) -> gc_exporttypes cx state exporttypes
   | DefT (_, NullT) -> ()
+  | NullProtoT _ -> ()
   | ObjProtoT _ -> ()
   | DefT (_, ObjT objtype) ->
       let id = objtype.props_tmap in
@@ -248,7 +250,7 @@ and gc_use cx state = function
   | HasOwnPropT _ -> ()
   | IdxUnMaybeifyT (_, t_out) -> gc cx state t_out
   | IdxUnwrap (_, t_out) -> gc cx state t_out
-  | ImplementsT t -> gc cx state t
+  | ImplementsT (_, t) -> gc cx state t
   | ImportDefaultT (_, _, _, t) -> gc cx state t
   | ImportModuleNsT (_, t) -> gc cx state t
   | ImportNamedT (_, _, _, t) -> gc cx state t
@@ -275,13 +277,14 @@ and gc_use cx state = function
   | ObjFreezeT (_, t) -> gc cx state t
   | ObjRestT (_, _, t) -> gc cx state t
   | ObjSealT (_, t) -> gc cx state t
+  | ObjTestProtoT (_, t) -> gc cx state t
   | ObjTestT (_, t1, t2) -> gc cx state t1; gc cx state t2
   | OrT (_, t1, t2) -> gc cx state t1; gc cx state t2
   | PredicateT (pred, t) -> gc_pred cx state pred; gc cx state t
   | ReactKitT (_, tool) -> gc_react_kit cx state tool
   | RefineT (_, pred, t) -> gc_pred cx state pred; gc cx state t
-  | ReposLowerT (_, u) -> gc_use cx state u
-  | ReposUseT (_, _, t) -> gc cx state t
+  | ReposLowerT (_, _, u) -> gc_use cx state u
+  | ReposUseT (_, _, _, t) -> gc cx state t
   | SentinelPropTestT (t, _, _, t_out) -> gc cx state t; gc cx state t_out
   | SetElemT(_, i, t) -> gc cx state i; gc cx state t
   | SetPropT(_, _, t) -> gc cx state t
@@ -380,6 +383,7 @@ and gc_destructor cx state = function
   | ElementType t -> gc cx state t
   | Bind t -> gc cx state t
   | SpreadType (_, ts) -> List.iter (gc cx state) ts
+  | CallType args -> List.iter (gc cx state) args
   | TypeMap tmap -> gc_type_map cx state tmap
 
 and gc_pred cx state = function
@@ -456,6 +460,10 @@ and gc_type_map cx state = function
 and gc_choice_use_tool cx state = function
   | FullyResolveType _ -> ()
   | TryFlow (_, spec) -> gc_spec cx state spec
+  | EvalDestructor (id, d, tout) ->
+    gc_id cx state id;
+    gc_destructor cx state d;
+    gc cx state tout
 
 and gc_spec cx state = function
   | UnionCases (t, ts) ->

@@ -764,3 +764,33 @@ object_special_cases.js:6:32 = {
   "start":30,
   "end":34
 }
+mixed.js:18:17 = {
+  "type":"{kind: 'B', metadata: {[key: string]: mixed,}} | {kind: 'A', metadata: {[key: string]: mixed,}}",
+  "reasons":[
+    {
+      "desc":"union type",
+      "loc":{
+        "source":"mixed.js",
+        "type":"SourceFile",
+        "start":{"line":18,"column":17,"offset":220},
+        "end":{"line":18,"column":18,"offset":222}
+      },
+      "path":"mixed.js",
+      "line":18,
+      "endline":18,
+      "start":17,
+      "end":18
+    }
+  ],
+  "loc":{
+    "source":"mixed.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":17,"offset":220},
+    "end":{"line":18,"column":18,"offset":222}
+  },
+  "path":"mixed.js",
+  "line":18,
+  "endline":18,
+  "start":17,
+  "end":18
+}

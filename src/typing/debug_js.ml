@@ -107,6 +107,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
     -> []
 
   | TaintT _
+  | NullProtoT _
   | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
@@ -231,6 +232,10 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
+  | MergedT (_, uses) -> [
+      "uses", JSON_Array (List.map (_json_of_use_t json_cx) uses);
+    ]
+
   | DefT (_, AnyObjT)
   | DefT (_, AnyFunT) ->
     []
@@ -264,8 +269,9 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "result", _json_of_t json_cx t
     ]
 
-  | AnnotT t -> [
-      "assume", _json_of_t json_cx t
+  | AnnotT (t, use_desc) -> [
+      "assume", _json_of_t json_cx t;
+      "useDesc", JSON_Bool use_desc;
     ]
 
   | OpaqueT (_, opaquetype) ->
@@ -413,13 +419,15 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "funType", json_of_funcalltype json_cx funtype
     ]
 
-  | ReposLowerT (_, use_t) -> [
-      "type", _json_of_use_t json_cx use_t
+  | ReposLowerT (_, use_desc, use_t) -> [
+      "type", _json_of_use_t json_cx use_t;
+      "useDesc", JSON_Bool use_desc;
     ]
 
-  | ReposUseT (_, op, t) -> [
+  | ReposUseT (_, use_desc, op, t) -> [
       "use", JSON_String (string_of_use_op op);
-      "type", _json_of_t json_cx t
+      "type", _json_of_t json_cx t;
+      "useDesc", JSON_Bool use_desc;
     ]
 
   | SetPropT (_, name, t)
@@ -463,7 +471,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "instance", json_of_insttype json_cx instance
     ]
 
-  | ImplementsT t -> [
+  | ImplementsT (op, t) -> [
+      "use", JSON_String (string_of_use_op op);
       "instance", _json_of_t json_cx t;
     ]
 
@@ -593,6 +602,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
+  | ObjTestProtoT (_, res) -> [
+      "returnType", _json_of_t json_cx res
+    ]
+
   | ObjTestT (_, default, res) -> [
       "defaultType", _json_of_t json_cx default;
       "resultType", _json_of_t json_cx res
@@ -709,6 +722,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "tool", JSON_String (match tool with
       | FullyResolveType _ -> "fullyResolveType"
       | TryFlow _ -> "tryFlow"
+      | EvalDestructor _ -> "evalDestructor"
       );
     ]
 
@@ -1084,25 +1098,28 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | ValuesType -> JSON_Object [
       "values", JSON_Bool true;
     ]
+  | CallType args -> JSON_Object [
+      "args", JSON_Array (List.map (_json_of_t json_cx) args);
+    ]
   | TypeMap tmap -> json_of_type_map json_cx tmap
   | ReactElementPropsType -> JSON_Object [
-    "reactElementProps", JSON_Bool true
-  ]
+      "reactElementProps", JSON_Bool true
+    ]
   | ReactElementRefType -> JSON_Object [
-    "reactElementRef", JSON_Bool true
-  ]
+      "reactElementRef", JSON_Bool true
+    ]
 )
 
 and json_of_type_map json_cx = check_depth json_of_type_map_impl json_cx
 and json_of_type_map_impl json_cx = Hh_json.(function
   | TupleMap t -> JSON_Object [
-      "tupleMap", _json_of_t json_cx t
+      "tupleMap", _json_of_t json_cx t;
     ]
   | ObjectMap t -> JSON_Object [
-      "objectMap", _json_of_t json_cx t
+      "objectMap", _json_of_t json_cx t;
     ]
   | ObjectMapi t -> JSON_Object [
-      "objectMapi", _json_of_t json_cx t
+      "objectMapi", _json_of_t json_cx t;
     ]
 )
 
@@ -1531,6 +1548,7 @@ and dump_t_ (depth, tvars) cx t =
     | Bind _ -> "bind"
     | SpreadType _ -> "spread"
     | ValuesType -> "values"
+    | CallType _ -> "function call"
     | TypeMap (TupleMap _) -> "tuple map"
     | TypeMap (ObjectMap _) -> "object map"
     | TypeMap (ObjectMapi _) -> "object mapi"
@@ -1613,6 +1631,7 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, NullT)
   | DefT (_, VoidT)
       -> p t
+  | NullProtoT _
   | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
@@ -1640,8 +1659,8 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
   | DefT (_, InstanceT (_, _, _, { class_id; _ })) -> p ~extra:(spf "#%d" class_id) t
   | DefT (_, TypeT arg) -> p ~extra:(kid arg) t
-  | AnnotT source -> p ~reason:false
-      ~extra:(spf "%s" (kid source)) t
+  | AnnotT (source, use_desc) -> p t ~reason:false
+      ~extra:(spf "use_desc=%b, %s" use_desc (kid source))
   | OpaqueT (_, {underlying_t = Some arg; _}) -> p ~extra:(spf "%s" (kid arg)) t
   | OpaqueT _ -> p t
   | DefT (_, OptionalT arg)
@@ -1665,6 +1684,9 @@ and dump_t_ (depth, tvars) cx t =
       (String.concat "; " (List.map kid (UnionRep.members rep)))) t
   | AnyWithLowerBoundT arg
   | AnyWithUpperBoundT arg -> p ~reason:false ~extra:(kid arg) t
+  | MergedT (_, uses) -> p ~extra:("[" ^
+      (String.concat ", " (List.map (dump_use_t cx) uses))
+    ^ "]") t
   | DefT (_, AnyObjT)
   | DefT (_, AnyFunT) -> p t
   | ShapeT arg -> p ~reason:false ~extra:(kid arg) t
@@ -1889,6 +1911,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | ChoiceKitUseT (_, TryFlow (_, spec)) ->
       p ~extra:(try_flow spec) t
   | ChoiceKitUseT (_, FullyResolveType id) -> p ~extra:(tvar id) t
+  | ChoiceKitUseT (_, EvalDestructor (_, _, arg)) -> p ~extra:(kid arg) t
   | CJSExtractNamedExportsT _ -> p t
   | CJSRequireT _ -> p t
   | ComparatorT (_, arg) -> p ~extra:(kid arg) t
@@ -1946,14 +1969,17 @@ and dump_use_t_ (depth, tvars) cx t =
   | ObjRestT (_, xs, arg) -> p t
       ~extra:(spf "[%s], %s" (String.concat "; " xs) (kid arg))
   | ObjSealT _ -> p t
+  | ObjTestProtoT _ -> p t
   | ObjTestT _ -> p t
   | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | PredicateT (pred, arg) -> p ~reason:false
       ~extra:(spf "%s, %s" (string_of_predicate pred) (kid arg)) t
   | ReactKitT (_, tool) -> p ~extra:(react_kit tool) t
   | RefineT _ -> p t
-  | ReposLowerT (_, arg) -> p ~extra:(use_kid arg) t
-  | ReposUseT (_, _, arg) -> p ~extra:(kid arg) t
+  | ReposLowerT (_, use_desc, arg) -> p t
+      ~extra:(spf "use_desc=%b, %s" use_desc (use_kid arg))
+  | ReposUseT (_, use_desc, use_op, arg) -> p t
+      ~extra:(spf "use_desc=%b, %s" use_desc (use_kid (UseT (use_op, arg))))
   | ResolveSpreadT (_, {rrt_resolve_to; _;}) ->
       (match rrt_resolve_to with
       | ResolveSpreadsToTuple (_, tout)
@@ -1981,7 +2007,7 @@ and dump_use_t_ (depth, tvars) cx t =
       t
   | SubstOnPredT _ -> p t
   | SuperT _ -> p t
-  | ImplementsT arg -> p ~reason:false ~extra:(kid arg) t
+  | ImplementsT (_, arg) -> p ~reason:false ~extra:(kid arg) t
   | SetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | SetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
@@ -2153,6 +2179,7 @@ let string_of_destructor = function
   | Bind _ -> "Bind"
   | SpreadType _ -> "Spread"
   | ValuesType -> "Values"
+  | CallType _ -> "CallType"
   | TypeMap (TupleMap _) -> "TupleMap"
   | TypeMap (ObjectMap _) -> "ObjectMap"
   | TypeMap (ObjectMapi _) -> "ObjectMapi"
@@ -2192,6 +2219,7 @@ let dump_flow_error =
   | InterfaceTypeSpread -> "InterfaceTypeSpread"
   | InferJobException _ -> "InferJobException"
   | MergeJobException _ -> "MergeJobException"
+  | UnexpectedUnresolved _ -> "UnexpectedUnresolved"
   in
   let dump_upper_kind = function
   | IncompatibleGetPropT -> "IncompatibleGetPropT"
@@ -2575,3 +2603,5 @@ let dump_flow_error =
         (string_of_loc loc)
         (string_of_loc null_loc)
         (string_of_loc falsy_loc)
+    | EInvalidPrototype reason ->
+        spf "EInvalidPrototype (%s)" (dump_reason cx reason)

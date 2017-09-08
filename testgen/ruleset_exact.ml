@@ -21,8 +21,8 @@ open Ruleset_base;;
 (* ESSENTIAL: Syntax type and related functions *)
 module Syntax = Syntax_base;;
 
-class ruleset_exact (depth : int) = object(self)
-  inherit ruleset_base depth as super
+class ruleset_exact = object(self)
+  inherit ruleset_base as super
 
   method! weak_assert b = self#backtrack_on_false b
 
@@ -93,8 +93,8 @@ class ruleset_exact (depth : int) = object(self)
       self#rule_prop_update;|]
   end
 
-  class ruleset_random_exact (depth : int) = object
-    inherit ruleset_exact depth
+  class ruleset_random_exact = object
+    inherit ruleset_exact
     method! weak_assert b =
       if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
   end

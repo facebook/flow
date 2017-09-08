@@ -41,10 +41,7 @@ module LocMap = MyMap.Make(Loc)
 type filename = Loc.filename
 let string_of_filename = Loc.string_of_filename
 
-module FilenameSet = struct
-  include Set.Make(Loc.FilenameKey)
-  let of_list = List.fold_left (fun s f -> add f s) empty
-end
+module FilenameSet = Set.Make(Loc.FilenameKey)
 
 module FilenameMap = MyMap.Make (Loc.FilenameKey)
 

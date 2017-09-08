@@ -169,12 +169,13 @@ and add_parts cx id parts state =
 and parts_of_t cx = function
 | OpenT _ -> assert false
 | AbstractT (_, t) -> ["t", Def t]
-| AnnotT source -> ["source", Def source]
+| AnnotT (source, _) -> ["source", Def source]
 | OpaqueT (_, {underlying_t = Some t; _}) -> ["t", Def t]
 | OpaqueT _ -> []
 | DefT (_, (AnyObjT | AnyFunT)) -> []
 | DefT (_, AnyT) -> []
 | AnyWithLowerBoundT t | AnyWithUpperBoundT t -> ["t", Def t]
+| MergedT _ -> []
 | DefT (_, ArrT arrtype) -> parts_of_arrtype arrtype
 | DefT (_, BoolT _) -> []
 | BoundT _ -> []
@@ -209,6 +210,7 @@ and parts_of_t cx = function
 | DefT (_, MixedT _) -> []
 | ModuleT (_, exporttypes) -> parts_of_exporttypes cx exporttypes
 | DefT (_, NullT) -> []
+| NullProtoT _ -> []
 | ObjProtoT _ -> []
 | DefT (_, ObjT { props_tmap; dict_t; proto_t; _ }) ->
   ("proto", Def proto_t) ::
@@ -317,7 +319,7 @@ and parts_of_use_t cx = function
 | HasOwnPropT _ -> []
 | IdxUnMaybeifyT (_, out) -> ["out", Def out]
 | IdxUnwrap (_, out) -> ["out", Def out]
-| ImplementsT t -> ["instance", Def t]
+| ImplementsT (_, t) -> ["instance", Def t]
 | ImportDefaultT (_, _, _, out) -> ["out", Def out]
 | ImportModuleNsT (_, out) -> ["out", Def out]
 | ImportNamedT (_, _, _, out) -> ["out", Def out]
@@ -336,13 +338,14 @@ and parts_of_use_t cx = function
 | ObjFreezeT (_, out) -> ["out", Def out]
 | ObjRestT (_, _, out) -> ["out", Def out]
 | ObjSealT (_, out) -> ["out", Def out]
+| ObjTestProtoT (_, out) -> ["out", Def out]
 | ObjTestT (_, d, t) -> ["default", Def d; "out", Def t]
 | OrT (_, r, out) -> ["right", Def r; "out", Def out]
 | PredicateT (_, out) -> ["out", Def out]
 | ReactKitT (_, tool) -> parts_of_react_kit tool
 | RefineT (_, _, t) -> ["t", Def t]
-| ReposLowerT (_, u) -> ["upper", Use u]
-| ReposUseT (_, _, l) ->  ["lower", Def l]
+| ReposLowerT (_, _, u) -> ["upper", Use u]
+| ReposUseT (_, _, _, l) ->  ["lower", Def l]
 | ResolveSpreadT (_, {
     rrt_resolved;
     rrt_unresolved;

@@ -32,6 +32,7 @@ class ['a] t = object(self)
   | FunProtoBindT _
   | FunProtoCallT _
   | ObjProtoT _
+  | NullProtoT _
     -> acc
 
   | CustomFunT (_, kind) -> self#custom_fun_kind cx acc kind
@@ -53,6 +54,9 @@ class ['a] t = object(self)
   | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t -> self#type_ cx acc t
 
+  | MergedT (_, uses) ->
+    List.fold_left (self#use_type_ cx) acc uses
+
   | ShapeT t -> self#type_ cx acc t
 
   | DiffT (t1, t2) ->
@@ -62,7 +66,7 @@ class ['a] t = object(self)
 
   | KeysT (_, t) -> self#type_ cx acc t
 
-  | AnnotT t ->
+  | AnnotT (t, _) ->
     self#type_ cx acc t
 
   | OpaqueT (_, opaquetype) ->
@@ -209,6 +213,7 @@ class ['a] t = object(self)
   | ElementType t -> self#type_ cx acc t
   | Bind t -> self#type_ cx acc t
   | SpreadType (_, ts) -> self#list (self#type_ cx) acc ts
+  | CallType args -> self#list (self#type_ cx) acc args
   | TypeMap (TupleMap t | ObjectMap t | ObjectMapi t) -> self#type_ cx acc t
 
   method private custom_fun_kind cx acc = function
@@ -231,7 +236,7 @@ class ['a] t = object(self)
   | DebugPrint
     -> acc
 
-  method private use_type_ cx (acc: 'a) = function
+  method use_type_ cx (acc: 'a) = function
   | UseT (_, t) ->
     self#type_ cx acc t
 
@@ -273,8 +278,8 @@ class ['a] t = object(self)
   | SetProtoT (_, t) ->
     self#type_ cx acc t
 
-  | ReposLowerT (_, u) -> self#use_type_ cx acc u
-  | ReposUseT (_, _, t) -> self#type_ cx acc t
+  | ReposLowerT (_, _, u) -> self#use_type_ cx acc u
+  | ReposUseT (_, _, _, t) -> self#type_ cx acc t
 
   | ConstructorT (_, args, t) ->
     let acc = List.fold_left (self#call_arg cx) acc args in
@@ -282,7 +287,7 @@ class ['a] t = object(self)
     acc
 
   | SuperT (_, inst) -> self#inst_type cx acc inst
-  | ImplementsT (t) -> self#type_ cx acc t
+  | ImplementsT (_, t) -> self#type_ cx acc t
   | MixinT (_, t) -> self#type_ cx acc t
 
   | AdderT (_, a, b) ->
@@ -358,6 +363,8 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc t1 in
     let acc = self#type_ cx acc t2 in
     acc
+
+  | ObjTestProtoT (_, t) -> self#type_ cx acc t
 
   | ObjFreezeT (_, t)
   | ObjRestT (_, _, t)
@@ -541,7 +548,11 @@ class ['a] t = object(self)
       | IntersectionCases (ts, use) ->
         let acc = List.fold_left (self#type_ cx) acc ts in
         let acc = self#use_type_ cx acc use in
-        acc))
+        acc)
+    | EvalDestructor (_, d, tout) ->
+      let acc = self#destructor cx acc d in
+      let acc = self#type_ cx acc tout in
+      acc)
 
   | IntersectionPreprocessKitT (_, tool) -> (match tool with
     | ConcretizeTypes (ts1, ts2, t, use) ->

@@ -8,7 +8,7 @@ Error: This.js:29
  29:   return this.x
                    ^ property `x`. Property not found in
  29:   return this.x
-              ^^^^ Object
+              ^^^^ global object
 
 Error: This.js:33
  33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
@@ -20,13 +20,13 @@ Error: This.js:41
  41:   return this.x
                    ^ property `x`. Property not found in
  41:   return this.x
-              ^^^^ Object
+              ^^^^ global object
 
 Error: This.js:48
  48:     var a2 = () => { return this.x };
                                       ^ property `x`. Property not found in
  48:     var a2 = () => { return this.x };
-                                 ^^^^ Object
+                                 ^^^^ global object
 
 Error: This.js:49
  49:     return a2()

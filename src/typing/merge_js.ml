@@ -288,32 +288,36 @@ let merge_lib_file cx master_cx =
 
   errs, Context.error_suppressions cx, Context.severity_cover cx
 
-let lowers_of_tvar =
+let merge_tvar =
   let open Type in
   let possible_types = Flow_js.possible_types in
-  let finish r = function
-    | [] -> Locationless.AnyT.t
-    | [t] -> t
-    | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts))
-  in
-  let rec merge cx r seen acc = function
-    | [] -> finish r (List.rev acc)
+  let rec collect_lowers cx seen acc = function
+    | [] -> List.rev acc
     | t::ts ->
       match t with
       (* Recursively unwrap unions *)
       | DefT (_, UnionT rep) ->
-        merge cx r seen acc (UnionRep.members rep @ ts)
+        collect_lowers cx seen acc (UnionRep.members rep @ ts)
       (* Recursively unwrap unseen tvars *)
       | OpenT (_, id) ->
         if ISet.mem id seen
-        then merge cx r seen acc ts (* already unwrapped *)
-        else merge cx r (ISet.add id seen) acc (possible_types cx id @ ts)
+        then collect_lowers cx seen acc ts (* already unwrapped *)
+        else collect_lowers cx (ISet.add id seen) acc (possible_types cx id @ ts)
       (* Ignore empty *)
-      | DefT (_, EmptyT) -> merge cx r seen acc ts
+      | DefT (_, EmptyT) -> collect_lowers cx seen acc ts
       (* Everything else becomes part of the merge typed *)
-      | _ -> merge cx r seen (t::acc) ts
+      | _ -> collect_lowers cx seen (t::acc) ts
   in
-  fun cx r id -> merge cx r (ISet.singleton id) [] (possible_types cx id)
+  fun cx r id ->
+    let lowers = collect_lowers cx (ISet.singleton id) [] (possible_types cx id) in
+    match lowers with
+      | [t] -> t
+      | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts))
+      | [] ->
+        let uses = Flow_js.possible_uses cx id in
+        if uses = []
+          then Locationless.AnyT.t
+          else MergedT (r, uses)
 
 (****************** signature contexts *********************)
 
@@ -386,6 +390,8 @@ module ContextOptimizer = struct
     val mutable stable_propmap_ids = Properties.Map.empty
     val mutable stable_nominal_ids = IMap.empty
     val mutable stable_eval_ids = IMap.empty
+    val mutable stable_opaque_ids = IMap.empty
+    val mutable stable_poly_ids = IMap.empty
 
     method reduce cx quotient module_ref =
       let { reduced_module_map; _ } = quotient in
@@ -401,7 +407,7 @@ module ContextOptimizer = struct
         let sig_hash = SigHash.add stable_id sig_hash in
         { quotient with sig_hash }
       else
-        let t = lowers_of_tvar cx r id in
+        let t = merge_tvar cx r id in
         let node = Root { rank = 0; constraints = Resolved t } in
         let reduced_graph = IMap.add id node reduced_graph in
         let stable_id = self#fresh_stable_id in
@@ -484,10 +490,50 @@ module ContextOptimizer = struct
           else class_id in
         let sig_hash = SigHash.add id sig_hash in
         super#type_ cx { quotient with sig_hash } t
+      | OpaqueT (_, opaquetype) ->
+        let { sig_hash; _ } = quotient in
+        let id =
+          let {opaque_id; _} = opaquetype in
+          if Context.mem_nominal_id cx opaque_id
+          then match IMap.get opaque_id stable_opaque_ids with
+          | None ->
+            let id = self#fresh_stable_id in
+            stable_opaque_ids <- IMap.add opaque_id id stable_opaque_ids;
+            id
+          | Some id -> id
+          else opaque_id
+        in
+        let sig_hash = SigHash.add id sig_hash in
+        super#type_ cx { quotient with sig_hash } t
+      | DefT (_, PolyT (_, _, poly_id)) ->
+        let { sig_hash; _ } = quotient in
+        let id =
+          if Context.mem_nominal_id cx poly_id
+          then match IMap.get poly_id stable_poly_ids with
+          | None ->
+            let id = self#fresh_stable_id in
+            stable_poly_ids <- IMap.add poly_id id stable_poly_ids;
+            id
+          | Some id -> id
+          else poly_id
+        in
+        let sig_hash = SigHash.add id sig_hash in
+        super#type_ cx { quotient with sig_hash } t
       | _ ->
         let { sig_hash; _ } = quotient in
         let sig_hash = SigHash.add_type t sig_hash in
         super#type_ cx { quotient with sig_hash } t
+
+    method! use_type_ cx quotient use =
+      let quotient = { quotient with
+        sig_hash = SigHash.add (reason_of_use_t use) quotient.sig_hash
+      } in
+      match use with
+      | UseT (_, t) -> self#type_ cx quotient t
+      | _ ->
+        let { sig_hash; _ } = quotient in
+        let sig_hash = SigHash.add_use use sig_hash in
+        super#use_type_ cx { quotient with sig_hash } use
   end
 
   (* walk a context from a list of exports *)

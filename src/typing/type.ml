@@ -89,6 +89,10 @@ module rec TypeTerm : sig
     | FunProtoT of reason      (* Function.prototype *)
     | ObjProtoT of reason       (* Object.prototype *)
 
+    (* Signifies the end of the prototype chain. Distinct from NullT when it
+       appears as an upper bound of an object type, otherwise the same. *)
+    | NullProtoT of reason
+
     | FunProtoApplyT of reason  (* Function.prototype.apply *)
     | FunProtoBindT of reason   (* Function.prototype.bind *)
     | FunProtoCallT of reason   (* Function.prototype.call *)
@@ -96,6 +100,9 @@ module rec TypeTerm : sig
     (* generalizations of AnyT *)
     | AnyWithLowerBoundT of t (* any supertype of t *)
     | AnyWithUpperBoundT of t (* any subtype of t *)
+
+    (* a merged tvar that had no lowers *)
+    | MergedT of reason * use_t list
 
     (* constrains some properties of an object *)
     | ShapeT of t
@@ -147,7 +154,7 @@ module rec TypeTerm : sig
         as the wrapped tvars are 0->1. If instead the possible types of a
         wrapped tvar are T1 and T2, then the current rules would flow T1 | T2 to
         upper bounds, and would flow lower bounds to T1 & T2. **)
-    | AnnotT of t
+    | AnnotT of t * bool (* use_desc *)
 
     (* Opaque type aliases. The opaquetype.opaque_id is its unique id, opaquetype.underlying_t is
      * the underlying type, which we only allow access to when inside the file the opaque type
@@ -319,13 +326,13 @@ module rec TypeTerm : sig
     | SetProtoT of reason * t
 
     (* repositioning *)
-    | ReposLowerT of reason * use_t
-    | ReposUseT of reason * use_op * t
+    | ReposLowerT of reason * bool (* use_desc *) * use_t
+    | ReposUseT of reason * bool (* use_desc *) * use_op * t
 
     (* operations on runtime types, such as classes and functions *)
     | ConstructorT of reason * call_arg list * t
     | SuperT of reason * insttype
-    | ImplementsT of t
+    | ImplementsT of use_op * t
     | MixinT of reason * t
 
     (* overloaded +, could be subsumed by general overloading *)
@@ -420,6 +427,8 @@ module rec TypeTerm : sig
     | ObjFreezeT of reason * t
     | ObjRestT of reason * string list * t
     | ObjSealT of reason * t
+    (* test that something is a valid proto (object-like or null) *)
+    | ObjTestProtoT of reason * t_out
     (* test that something is object-like, returning a default type otherwise *)
     | ObjTestT of reason * t * t
 
@@ -871,6 +880,7 @@ module rec TypeTerm : sig
   | Bind of t
   | SpreadType of ObjectSpread.options * t list
   | ValuesType
+  | CallType of t list
   | TypeMap of type_map
   | ReactElementPropsType
   | ReactElementRefType
@@ -929,6 +939,7 @@ module rec TypeTerm : sig
   and choice_use_tool =
   | FullyResolveType of ident
   | TryFlow of int * spec
+  | EvalDestructor of int * destructor * t_out
 
   and intersection_preprocess_tool =
   | ConcretizeTypes of t list * t list * t * use_t
@@ -1696,6 +1707,11 @@ module ObjProtoT = Primitive (struct
   let make r = ObjProtoT r
 end)
 
+module NullProtoT = Primitive (struct
+  let desc = RNull
+  let make r = NullProtoT r
+end)
+
 (* USE WITH CAUTION!!! Locationless types should not leak to errors, otherwise
    they will cause error printing to crash.
 
@@ -1812,6 +1828,7 @@ let any_propagating_use_t = function
   | ObjRestT _
   | ObjSealT _
   | ObjSpreadT _
+  | ObjTestProtoT _
   | ObjTestT _
   | OrT _
   | PredicateT _
@@ -1871,9 +1888,10 @@ let any_propagating_use_t = function
 let rec reason_of_t = function
   | OpenT (reason,_) -> reason
   | AbstractT (reason, _) -> reason
-  | AnnotT assume_t -> reason_of_t assume_t
+  | AnnotT (assume_t, _) -> reason_of_t assume_t
   | AnyWithLowerBoundT (t) -> reason_of_t t
   | AnyWithUpperBoundT (t) -> reason_of_t t
+  | MergedT (reason, _) -> reason
   | BoundT typeparam -> typeparam.reason
   | ChoiceKitT (reason, _) -> reason
   | CustomFunT (reason, _) -> reason
@@ -1890,6 +1908,7 @@ let rec reason_of_t = function
   | IdxWrapper (reason, _) -> reason
   | KeysT (reason, _) -> reason
   | ModuleT (reason, _) -> reason
+  | NullProtoT reason -> reason
   | ObjProtoT reason -> reason
   | OpaqueT (reason, _) -> reason
   | OpenPredT (reason, _, _, _) -> reason
@@ -1945,7 +1964,7 @@ and reason_of_use_t = function
   | HasOwnPropT (reason, _) -> reason
   | IdxUnMaybeifyT (reason, _) -> reason
   | IdxUnwrap (reason, _) -> reason
-  | ImplementsT t -> reason_of_t t
+  | ImplementsT (_, t) -> reason_of_t t
   | ImportDefaultT (reason, _, _, _) -> reason
   | ImportModuleNsT (reason, _) -> reason
   | ImportNamedT (reason, _, _, _) -> reason
@@ -1963,13 +1982,14 @@ and reason_of_use_t = function
   | ObjFreezeT (reason, _) -> reason
   | ObjRestT (reason, _, _) -> reason
   | ObjSealT (reason, _) -> reason
+  | ObjTestProtoT (reason, _) -> reason
   | ObjTestT (reason, _, _) -> reason
   | OrT (reason, _, _) -> reason
   | PredicateT (_, t) -> reason_of_t t
   | ReactKitT (reason, _) -> reason
   | RefineT (reason, _, _) -> reason
-  | ReposLowerT (reason, _) -> reason
-  | ReposUseT (reason, _, _) -> reason
+  | ReposLowerT (reason, _, _) -> reason
+  | ReposUseT (reason, _, _, _) -> reason
   | ResolveSpreadT (reason, _) -> reason
   | SentinelPropTestT (_, _, _, result) -> reason_of_t result
   | SetElemT (reason,_,_) -> reason
@@ -2010,10 +2030,11 @@ let def_loc_of_t t = def_loc_of_reason (reason_of_t t)
 let rec mod_reason_of_t f = function
   | OpenT (reason, t) -> OpenT (f reason, t)
   | AbstractT (reason, t) -> AbstractT (f reason, t)
-  | AnnotT assume_t ->
-      AnnotT (mod_reason_of_t f assume_t)
+  | AnnotT (assume_t, use_desc) ->
+      AnnotT (mod_reason_of_t f assume_t, use_desc)
   | AnyWithLowerBoundT t -> AnyWithLowerBoundT (mod_reason_of_t f t)
   | AnyWithUpperBoundT t -> AnyWithUpperBoundT (mod_reason_of_t f t)
+  | MergedT (reason, uses) -> MergedT (f reason, uses)
   | BoundT { reason; name; bound; polarity; default; } ->
       BoundT { reason = f reason; name; bound; polarity; default; }
   | ChoiceKitT (reason, tool) -> ChoiceKitT (f reason, tool)
@@ -2032,6 +2053,7 @@ let rec mod_reason_of_t f = function
   | IdxWrapper (reason, t) -> IdxWrapper (f reason, t)
   | KeysT (reason, t) -> KeysT (f reason, t)
   | ModuleT (reason, exports) -> ModuleT (f reason, exports)
+  | NullProtoT reason -> NullProtoT (f reason)
   | ObjProtoT (reason) -> ObjProtoT (f reason)
   | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
@@ -2095,7 +2117,7 @@ and mod_reason_of_use_t f = function
   | HasOwnPropT (reason, prop) -> HasOwnPropT (f reason, prop)
   | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
   | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
-  | ImplementsT t -> ImplementsT (mod_reason_of_t f t)
+  | ImplementsT (use_op, t) -> ImplementsT (use_op, mod_reason_of_t f t)
   | ImportDefaultT (reason, import_kind, name, t) ->
       ImportDefaultT (f reason, import_kind, name, t)
   | ImportModuleNsT (reason, t) -> ImportModuleNsT (f reason, t)
@@ -2119,13 +2141,14 @@ and mod_reason_of_use_t f = function
   | ObjFreezeT (reason, t) -> ObjFreezeT (f reason, t)
   | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
   | ObjSealT (reason, t) -> ObjSealT (f reason, t)
+  | ObjTestProtoT (reason, t) -> ObjTestProtoT (f reason, t)
   | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
   | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
   | ReactKitT (reason, tool) -> ReactKitT (f reason, tool)
   | RefineT (reason, p, t) -> RefineT (f reason, p, t)
-  | ReposLowerT (reason, t) -> ReposLowerT (f reason, t)
-  | ReposUseT (reason, use_op, t) -> ReposUseT (f reason, use_op, t)
+  | ReposLowerT (reason, use_desc, t) -> ReposLowerT (f reason, use_desc, t)
+  | ReposUseT (reason, use_desc, use_op, t) -> ReposUseT (f reason, use_desc, use_op, t)
   | ResolveSpreadT (reason_op, resolve) -> ResolveSpreadT (f reason_op, resolve)
   | SentinelPropTestT (l, sense, sentinel, result) ->
       SentinelPropTestT (l, sense, sentinel, mod_reason_of_t f result)
@@ -2226,6 +2249,7 @@ let string_of_ctor = function
   | AnnotT _ -> "AnnotT"
   | AnyWithLowerBoundT _ -> "AnyWithLowerBoundT"
   | AnyWithUpperBoundT _ -> "AnyWithUpperBoundT"
+  | MergedT _ -> "MergedT"
   | BoundT _ -> "BoundT"
   | ChoiceKitT (_, tool) ->
     spf "ChoiceKitT %s" begin match tool with
@@ -2245,6 +2269,7 @@ let string_of_ctor = function
   | IdxWrapper _ -> "IdxWrapper"
   | KeysT _ -> "KeysT"
   | ModuleT _ -> "ModuleT"
+  | NullProtoT _ -> "NullProtoT"
   | ObjProtoT _ -> "ObjProtoT"
   | OpaqueT _ -> "OpaqueT"
   | OpenPredT _ -> "OpenPredT"
@@ -2297,6 +2322,7 @@ let string_of_use_ctor = function
     spf "ChoiceKitUseT %s" begin match tool with
     | FullyResolveType _ -> "FullyResolveType"
     | TryFlow _ -> "TryFlow"
+    | EvalDestructor _ -> "EvalDestructor"
     end
   | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"
   | CJSRequireT _ -> "CJSRequireT"
@@ -2343,6 +2369,7 @@ let string_of_use_ctor = function
   | ObjFreezeT _ -> "ObjFreezeT"
   | ObjRestT _ -> "ObjRestT"
   | ObjSealT _ -> "ObjSealT"
+  | ObjTestProtoT _ -> "ObjTestProtoT"
   | ObjTestT _ -> "ObjTestT"
   | OrT _ -> "OrT"
   | PredicateT _ -> "PredicateT"
@@ -2478,7 +2505,7 @@ let extends_type l u =
   let reason = replace_reason (fun desc -> RExtends desc) (reason_of_t u) in
   ExtendsT (reason, [], l, u)
 
-let poly_type ?(id = mk_id ()) tparams t =
+let poly_type id tparams t =
   if tparams = []
   then t
   else
@@ -2492,3 +2519,7 @@ let typeapp t tparams =
 let this_typeapp t this tparams =
   let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in
   ThisTypeAppT (reason, t, this, tparams)
+
+let annot use_desc = function
+| OpenT _ as t -> AnnotT (t, use_desc)
+| t -> t

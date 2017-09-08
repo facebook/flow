@@ -50,10 +50,10 @@ module Statement
   (Type: Type_parser.TYPE)
   (Declaration: Declaration_parser.DECLARATION)
   (Object: Object_parser.OBJECT)
-  (Object_cover : Object_cover.COVER)
+  (Pattern_cover : Pattern_cover.COVER)
 : STATEMENT = struct
   type for_lhs =
-    | For_expression of object_cover
+    | For_expression of pattern_cover
     | For_declaration of (Loc.t * Ast.Statement.VariableDeclaration.t)
 
   (* FunctionDeclaration is not a valid Statement, but Annex B sometimes allows it.
@@ -208,7 +208,7 @@ module Statement
             ForOf.LeftDeclaration decl
           | Some (For_expression expr) ->
             (* #sec-for-in-and-for-of-statements-static-semantics-early-errors *)
-            let patt = Object_cover.as_pattern ~err:Error.InvalidLHSInForOf env expr in
+            let patt = Pattern_cover.as_pattern ~err:Error.InvalidLHSInForOf env expr in
             ForOf.LeftPattern patt
           | None -> assert false) in
           (* This is a for of loop *)
@@ -230,7 +230,7 @@ module Statement
             Statement.ForIn.LeftDeclaration decl
           | Some (For_expression expr) ->
             (* #sec-for-in-and-for-of-statements-static-semantics-early-errors *)
-            let patt = Object_cover.as_pattern ~err:Error.InvalidLHSInForIn env expr in
+            let patt = Pattern_cover.as_pattern ~err:Error.InvalidLHSInForIn env expr in
             Statement.ForIn.LeftPattern patt
           | None -> assert false in
           (* This is a for in loop *)
@@ -252,7 +252,7 @@ module Statement
           let init = match init with
           | Some (For_declaration decl) -> Some (Statement.For.InitDeclaration decl)
           | Some (For_expression expr) ->
-            Some (Statement.For.InitExpression (Object_cover.as_expression env expr))
+            Some (Statement.For.InitExpression (Pattern_cover.as_expression env expr))
           | None -> None in
           let test = match Peek.token env with
           | T_SEMICOLON -> None

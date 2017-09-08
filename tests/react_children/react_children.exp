@@ -24,15 +24,20 @@ Error: api.js:5
 
 Error: api.js:5
   5: const a: ChildrenArray<?number> = [
-                             ^^^^^^ number. This type is incompatible with
- 31: function sa(x: Array<string>) {}
-                          ^^^^^^ string
-
-Error: api.js:5
-  5: const a: ChildrenArray<?number> = [
                              ^^^^^^ number. This type is incompatible with the expected param type of
  16: Children.forEach(a, (x: string) => {}); // Error
                              ^^^^^^ string
+
+Error: api.js:11
+ 11: na(Children.map(a, (x: string) => (x: string))); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. This type is incompatible with the expected param type of
+ 30: function na(x: Array<number>) {}
+                    ^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     11: na(Children.map(a, (x: string) => (x: string))); // Error
+                                               ^^^^^^ string. This type is incompatible with
+     30: function na(x: Array<number>) {}
+                              ^^^^^^ number
 
 Error: api.js:11
  11: na(Children.map(a, (x: string) => (x: string))); // Error
@@ -40,17 +45,16 @@ Error: api.js:11
 221:       fn: (child: $NonMaybeType<T>, index: number) => U,
                        ^^^^^^^^^^^^^^^^ number. See lib: <BUILTINS>/react.js:221
 
-Error: api.js:11
- 11: na(Children.map(a, (x: string) => (x: string))); // Error
-                                           ^^^^^^ string. This type is incompatible with
- 30: function na(x: Array<number>) {}
-                          ^^^^^^ number
-
 Error: api.js:12
  12: sa(Children.map(a, (x: number) => (x: number))); // Error
-                                           ^^^^^^ number. This type is incompatible with
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. This type is incompatible with the expected param type of
  31: function sa(x: Array<string>) {}
-                          ^^^^^^ string
+                    ^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     12: sa(Children.map(a, (x: number) => (x: number))); // Error
+                                               ^^^^^^ number. This type is incompatible with
+     31: function sa(x: Array<string>) {}
+                              ^^^^^^ string
 
 Error: api.js:19
  19: s(Children.count(a)); // Error
@@ -63,6 +67,17 @@ Error: api.js:22
        ^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
  29: function s(x: string) {}
                    ^^^^^^ string
+
+Error: api.js:25
+ 25: sa(Children.toArray(a)); // Error
+        ^^^^^^^^^^^^^^^^^^^ array type. This type is incompatible with the expected param type of
+ 31: function sa(x: Array<string>) {}
+                    ^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+      5: const a: ChildrenArray<?number> = [
+                                 ^^^^^^ number. This type is incompatible with
+     31: function sa(x: Array<string>) {}
+                              ^^^^^^ string
 
 Error: builtin_intrinsic.js:24
  24: <builtin>
@@ -457,27 +472,51 @@ Error: fun.js:71
 
 Error: fun.js:77
  77: <FunArrayOnly>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArrayOnly>;
-     ^^^^^^^^^^^^^^ React element `FunArrayOnly`
- 77: <FunArrayOnly>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArrayOnly>;
-                    ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+     ^^^^^^^^^^^^^^ React element `FunArrayOnly`. This type is incompatible with
  20: class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
-                                                                 ^^ function type
+                                                ^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     77: <FunArrayOnly>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArrayOnly>;
+         ^^^^^^^^^^^^^^ React children array. Has some incompatible type argument with
+     20: class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
+                                                               ^^^^^^^^^ array type
+      Type argument `T` is incompatible:
+         77: <FunArrayOnly>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArrayOnly>;
+                            ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+         20: class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
+                                                                         ^^ function type
 
 Error: fun.js:77
  77: <FunArrayOnly>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArrayOnly>;
-     ^^^^^^^^^^^^^^ React element `FunArrayOnly`
- 77: <FunArrayOnly>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArrayOnly>;
-                                          ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+     ^^^^^^^^^^^^^^ React element `FunArrayOnly`. This type is incompatible with
  20: class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
-                                                                 ^^ function type
+                                                ^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     77: <FunArrayOnly>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArrayOnly>;
+         ^^^^^^^^^^^^^^ React children array. Has some incompatible type argument with
+     20: class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
+                                                               ^^^^^^^^^ array type
+      Type argument `T` is incompatible:
+         77: <FunArrayOnly>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArrayOnly>;
+                                                  ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+         20: class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
+                                                                         ^^ function type
 
 Error: fun.js:80
  80: <FunArrayOnly>{[() => 42, () => 42]}{() => 42}</FunArrayOnly>;
-     ^^^^^^^^^^^^^^ React element `FunArrayOnly`
- 80: <FunArrayOnly>{[() => 42, () => 42]}{() => 42}</FunArrayOnly>;
-                    ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+     ^^^^^^^^^^^^^^ React element `FunArrayOnly`. This type is incompatible with
  20: class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
-                                                                 ^^ function type
+                                                ^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     80: <FunArrayOnly>{[() => 42, () => 42]}{() => 42}</FunArrayOnly>;
+         ^^^^^^^^^^^^^^ React children array. Has some incompatible type argument with
+     20: class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
+                                                               ^^^^^^^^^ array type
+      Type argument `T` is incompatible:
+         80: <FunArrayOnly>{[() => 42, () => 42]}{() => 42}</FunArrayOnly>;
+                            ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+         20: class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
+                                                                         ^^ function type
 
 Error: fun.js:83
  83: <FunArrayOnly>
@@ -492,27 +531,36 @@ Error: fun.js:83
 
 Error: fun.js:108
 108: <FunArray>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArray>;
-     ^^^^^^^^^^ React element `FunArray`
-108: <FunArray>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArray>;
-                ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+     ^^^^^^^^^^ React children array. Has some incompatible type argument with
  21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                  ^^ function type
+                                                            ^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+    108: <FunArray>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArray>;
+                    ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+     21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                                      ^^ function type
 
 Error: fun.js:108
 108: <FunArray>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArray>;
-     ^^^^^^^^^^ React element `FunArray`
-108: <FunArray>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArray>;
-                                      ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+     ^^^^^^^^^^ React children array. Has some incompatible type argument with
  21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                  ^^ function type
+                                                            ^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+    108: <FunArray>{[() => 42, () => 42]}{[() => 42, () => 42]}</FunArray>;
+                                          ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+     21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                                      ^^ function type
 
 Error: fun.js:111
 111: <FunArray>{[() => 42, () => 42]}{() => 42}</FunArray>;
-     ^^^^^^^^^^ React element `FunArray`
-111: <FunArray>{[() => 42, () => 42]}{() => 42}</FunArray>;
-                ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+     ^^^^^^^^^^ React children array. Has some incompatible type argument with
  21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                                  ^^ function type
+                                                            ^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+    111: <FunArray>{[() => 42, () => 42]}{() => 42}</FunArray>;
+                    ^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+     21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                                      ^^ function type
 
 Error: fun.js:134
 134: <FunArray>{}</FunArray>; // Error: `void` is not allowed.
@@ -1542,27 +1590,69 @@ Error: tuple.js:12
 
 Error: tuple.js:13
  13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-     ^^^^^^^ React element `Tuple`
+     ^^^^^^^ React element `Tuple`. This type is incompatible with
   6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                           ^^^^^^^ boolean. This type is incompatible with
- 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-            ^^ JSX text
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                               ^^^^^^^ boolean. This type is incompatible with
+     13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+                ^^ JSX text
 
 Error: tuple.js:13
  13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-     ^^^^^^^ React element `Tuple`
+     ^^^^^^^ React element `Tuple`. This type is incompatible with
   6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                                    ^^^^^^ string. This type is incompatible with
- 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-               ^^^^ boolean
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                        ^^^^^^ string. This type is incompatible with
+     13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+                   ^^^^ boolean
 
 Error: tuple.js:13
  13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-     ^^^^^^^ React element `Tuple`
+     ^^^^^^^ React element `Tuple`. This type is incompatible with
   6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                                            ^^^^^^ number. This type is incompatible with
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                                ^^^^^^ number. This type is incompatible with
+     13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+                        ^^^ JSX text
+
+Error: tuple.js:13
  13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-                    ^^^ JSX text
+     ^^^^^^^ React element `Tuple`. This type is incompatible with
+  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+                ^^ JSX text. This type is incompatible with
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                               ^^^^^^^ boolean
+
+Error: tuple.js:13
+ 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+     ^^^^^^^ React element `Tuple`. This type is incompatible with
+  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+                   ^^^^ boolean. This type is incompatible with
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                        ^^^^^^ string
+
+Error: tuple.js:13
+ 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+     ^^^^^^^ React element `Tuple`. This type is incompatible with
+  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
+                        ^^^ JSX text. This type is incompatible with
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                                ^^^^^^ number
 
 Error: tuple.js:13
  13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
@@ -1571,30 +1661,6 @@ Error: tuple.js:13
      ^^^^^^^ React children array. Tuple arity mismatch. This tuple has 4 elements and cannot flow to the 3 elements of
   6:   extends React.Component<{children: [boolean, string, number]}, void> {}
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
-
-Error: tuple.js:13
- 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-     ^^^^^^^ React element `Tuple`
- 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-            ^^ JSX text. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                           ^^^^^^^ boolean
-
-Error: tuple.js:13
- 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-     ^^^^^^^ React element `Tuple`
- 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-               ^^^^ boolean. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                                    ^^^^^^ string
-
-Error: tuple.js:13
- 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-     ^^^^^^^ React element `Tuple`
- 13: <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
-                    ^^^ JSX text. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                                            ^^^^^^ number
 
 Error: tuple.js:14
  14: <Tuple>{true}foo{42}  </Tuple>; // Error: Spaces add items.
@@ -1606,27 +1672,33 @@ Error: tuple.js:14
 
 Error: tuple.js:16
  16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
+     ^^^^^^^ React element `Tuple`. This type is incompatible with
+  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
+                 ^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                               ^^^^^^^ boolean
+
+Error: tuple.js:16
+ 16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
+     ^^^^^^^ React element `Tuple`. This type is incompatible with
+  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
+                                    ^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+      6:   extends React.Component<{children: [boolean, string, number]}, void> {}
+                                                        ^^^^^^ string
+
+Error: tuple.js:16
+ 16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
      ^^^^^^^ React element `Tuple`
  16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
      ^^^^^^^ React children array. Tuple arity mismatch. This tuple has 2 elements and cannot flow to the 3 elements of
   6:   extends React.Component<{children: [boolean, string, number]}, void> {}
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^ tuple type
-
-Error: tuple.js:16
- 16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
-     ^^^^^^^ React element `Tuple`
- 16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
-             ^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                           ^^^^^^^ boolean
-
-Error: tuple.js:16
- 16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
-     ^^^^^^^ React element `Tuple`
- 16: <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
-                                ^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
-  6:   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                                    ^^^^^^ string
 
 Error: tuple.js:18
  18: <Tuple>{[true, 'foo', 42, null]}</Tuple>; // Error: One to many

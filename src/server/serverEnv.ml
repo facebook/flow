@@ -34,6 +34,12 @@ type errors = {
   severity_cover_set: ExactCover.lint_severity_cover Utils_js.FilenameMap.t;
 }
 
+type collated_errors = {
+  collated_errorset: Errors.ErrorSet.t;
+  collated_warning_map: Errors.ErrorSet.t Utils_js.FilenameMap.t;
+  collated_suppressed_errors: (Errors.error * Loc.LocSet.t) list;
+}
+
 type env = {
     (* All the files that we at least parse. *)
     files: Utils_js.FilenameSet.t;
@@ -41,6 +47,7 @@ type env = {
     checked_files: CheckedSet.t;
     libs: SSet.t; (* a subset of `files` *)
     errors: errors;
+    collated_errors: collated_errors option ref;
     connections: Persistent_connection.t;
 }
 

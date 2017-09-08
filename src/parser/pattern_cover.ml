@@ -13,8 +13,11 @@ open Parser_common
 open Parser_env
 
 module type COVER = sig
-  val as_expression : env -> object_cover -> Expression.t
-  val as_pattern : ?err:Parse_error.t -> env -> object_cover -> Pattern.t
+  val as_expression : env -> pattern_cover -> Expression.t
+  val as_pattern : ?err:Parse_error.t -> env -> pattern_cover -> Pattern.t
+  val empty_errors : pattern_errors
+  val rev_append_errors : pattern_errors -> pattern_errors -> pattern_errors
+  val rev_errors : pattern_errors -> pattern_errors
 end
 
 module Cover
@@ -22,14 +25,16 @@ module Cover
 : COVER = struct
   let as_expression env = function
     | Cover_expr expr -> expr
-    | Cover_patt (expr, assignment_locs) ->
-        List.iter (fun loc -> error_at env (loc, Parse_error.UnexpectedToken "=")) assignment_locs;
+    | Cover_patt (expr, { if_expr; if_patt = _ }) ->
+        List.iter (error_at env) if_expr;
         expr
 
   let as_pattern ?(err = Parse_error.InvalidLHSInAssignment) env cover =
     let expr = match cover with
     | Cover_expr expr -> expr
-    | Cover_patt (expr, _assignment_locs) -> expr
+    | Cover_patt (expr, { if_expr = _; if_patt }) ->
+        List.iter (error_at env) if_patt;
+        expr
     in
 
     if not (Parse.is_assignable_lhs expr)
@@ -42,4 +47,11 @@ module Cover
     | _ -> ());
 
     Parse.pattern_from_expr env expr
+
+  let empty_errors = { if_patt = []; if_expr = [] }
+  let rev_append_errors a b =
+    { if_patt = List.rev_append a.if_patt b.if_patt;
+      if_expr = List.rev_append a.if_expr b.if_expr; }
+  let rev_errors a =
+    { if_patt = List.rev a.if_patt; if_expr = List.rev a.if_expr }
 end

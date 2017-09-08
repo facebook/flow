@@ -247,7 +247,7 @@ let rec type_printer_impl ~size override enclosure cx t =
         end
 
     (* The following types are not syntax-supported in all cases *)
-    | AnnotT t -> pp EnclosureNone cx t
+    | AnnotT (t, _) -> pp EnclosureNone cx t
     | OpaqueT (_, {opaque_name; _}) -> opaque_name
     | KeysT (_, t) -> spf "$Keys<%s>" (pp EnclosureNone cx t)
     | ShapeT t -> spf "$Shape<%s>" (pp EnclosureNone cx t)
@@ -322,9 +322,11 @@ let rec type_printer_impl ~size override enclosure cx t =
 
     | FunProtoCallT _
     | ObjProtoT _
+    | NullProtoT _
     | AbstractT _
     | DiffT (_, _)
-    | ExtendsT (_, _, _, _) ->
+    | ExtendsT (_, _, _, _)
+    | MergedT _ ->
         assert_false (spf "Missing printer for %s" (string_of_ctor t))
 
 
@@ -373,6 +375,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | DefT (_, NumT _)
   | DefT (_, StrT _)
   | DefT (_, BoolT _)
+  | DefT (_, MixedT _)
   | DefT (_, AnyT)
   | DefT (_, NullT)
   | DefT (_, SingletonStrT _)
@@ -384,7 +387,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     ->
       true
 
-  | AnnotT t ->
+  | AnnotT (t, _) ->
       is_printed_type_parsable_impl weak cx enclosure t
 
   | OpaqueT _ -> true

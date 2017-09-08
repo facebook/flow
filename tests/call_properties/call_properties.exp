@@ -32,7 +32,7 @@ Error: A.js:29
 
 Error: B.js:5
   5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of function. This type is incompatible with
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
             ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `$call` is incompatible:
@@ -119,7 +119,7 @@ Error: E.js:2
 
 Error: F.js:6
   6: var b: { (x: number): number } = (x) => "hi"
-                                      ^^^^^^^^^^^ statics of function. This type is incompatible with
+                                      ^^^^^^^^^^^ function. This type is incompatible with
   6: var b: { (x: number): number } = (x) => "hi"
             ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `$call` is incompatible:

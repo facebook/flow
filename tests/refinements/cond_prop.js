@@ -49,4 +49,8 @@ let tests = [
       }
     }
   },
+
+  function(o: null|{}) {
+    if (o.p) {} // error: property `p` not found on null
+  },
 ]

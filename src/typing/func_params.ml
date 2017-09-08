@@ -105,7 +105,7 @@ let mk cx type_params_map ~expr func =
     | _ ->
       add_param_with_default params pattern None
   in
-  let {Ast.Function.params = (params, rest); _} = func in
+  let {Ast.Function.params = (_, { Ast.Function.Params.params; rest }); _} = func in
   let params = List.fold_left add_param empty params in
   let params = match rest with
     | Some (_, { Ast.Function.RestElement.argument }) ->
@@ -134,7 +134,7 @@ let convert cx type_params_map func = Ast.Type.Function.(
     Flow.flow cx (t, AssertRestParamT reason);
     { params with rest = Some (name, t, loc) }
   in
-  let (params, rest) = func.params in
+  let (_, { Params.params; rest }) = func.params in
   let params = List.fold_left add_param empty params in
   let params = match rest with
   | Some (_, { RestParam.argument }) -> add_rest params argument

@@ -9,6 +9,12 @@ import sortedStdout from './assertions/sortedStdout';
 import exitCodes from './assertions/exitCodes';
 import serverRunning from './assertions/serverRunning';
 import noop from './assertions/noop';
+import ideNoNewMessagesAfterSleep
+  from './assertions/ideNoNewMessagesAfterSleep';
+import ideNewMessagesWithTimeout from './assertions/ideNewMessagesWithTimeout';
+import ideStderr from './assertions/ideStderr';
+
+import {sleep} from '../async';
 
 import type {
   AssertionLocation,
@@ -18,6 +24,7 @@ import type {
 import type {TestBuilder} from './builder';
 import type {FlowResult} from '../flowResult';
 import type {StepEnvReadable, StepEnvWriteable} from './stepEnv';
+import type {IDEMessage} from './ide';
 
 type Action =
   (builder: TestBuilder, envWrite: StepEnvWriteable) => Promise<void>;
@@ -135,6 +142,21 @@ class TestStepFirstOrSecondStage extends TestStep {
     return this._cloneWithAssertion(serverRunning(expected, assertLoc));
   }
 
+  /* This is mainly useful for debugging. Actual tests probably shouldn't
+   * test the stderr output. But when you're working on `flow ide`, you can
+   * log things to stderr and use this assertion to see what's being logged
+   *
+   *   addCode('foo')
+   *     .ideNoNewMessagesAfterSleep(500)
+   *     .ideStderr('Foo')
+   */
+  ideStderr(expected: string): TestStepSecondStage {
+    const assertLoc = searchStackForTestAssertion();
+    const ret = this._cloneWithAssertion(ideStderr(expected, assertLoc));
+    ret._needsFlowCheck = true;
+    return ret;
+  }
+
   _cloneWithAssertion(assertion: ErrorAssertion) {
     const ret = new TestStepSecondStage(this);
     ret._assertions.push(assertion);
@@ -194,6 +216,59 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         env.triggerFlowCheck();
       }
     );
+
+  ideStart: () => TestStepFirstStage =
+    () => this._cloneWithAction(
+      async (builder, env) => {
+        await builder.createIDEConnection();
+        env.triggerFlowCheck();
+      }
+    );
+
+  ideNotification: (string, ...params: Array<mixed>) => TestStepFirstStage =
+    (method, ...params) => this._cloneWithAction(
+      async (builder, env) => builder.sendIDENotification(
+        method,
+        params,
+      )
+    );
+
+  ideRequest: (string, ...params: Array<mixed>) => TestStepFirstStage =
+    (method, ...params) => this._cloneWithAction(
+      (builder, env) => builder.sendIDERequest(method, params),
+    );
+
+  // Sleep timeoutMs milliseconds and assert there were no ide messages
+  ideNoNewMessagesAfterSleep: (number) => TestStepSecondStage =
+    (timeoutMs) => {
+      const assertLoc = searchStackForTestAssertion();
+
+      const ret = this
+        ._cloneWithAction((builder, env) => sleep(timeoutMs))
+        ._cloneWithAssertion(ideNoNewMessagesAfterSleep(timeoutMs, assertLoc));
+      ret._needsFlowCheck = true;
+      return ret;
+    };
+
+  // Wait for the expected output, and timeout after timeousMs milliseconds
+  ideNewMessagesWithTimeout:
+    (number, $ReadOnlyArray<IDEMessage>) => TestStepSecondStage =
+    (timeoutMs, expected) => {
+      const assertLoc = searchStackForTestAssertion();
+
+      const ret = this
+        ._cloneWithAction(
+          (builder, env) => builder.ideNewMessagesWithTimeout(
+            timeoutMs,
+            expected,
+          )
+        )
+        ._cloneWithAssertion(
+          ideNewMessagesWithTimeout(timeoutMs, expected, assertLoc)
+        );
+      ret._needsFlowCheck = true;
+      return ret;
+    };
 
   flowCmd: (args: Array<string>, stdinFile?: string) => TestStepFirstStage =
     (args, stdinFile) => {

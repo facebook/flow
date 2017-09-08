@@ -29,6 +29,7 @@ module Syntax = Syntax_base;;
 type env_elt_t =
   | Expr of E.t' * T.t'
   | Type of T.t'
+  | Int of int
 type env_t = env_elt_t list
 
 (* string of functions *)
@@ -42,6 +43,7 @@ let str_of_env_elt (elt : env_elt_t) : string = match elt with
     Printf.sprintf
       "%s"
       (Utils.string_of_type t)
+  | Int i -> string_of_int i
 
 let str_of_env (env : env_t) : string =
   "\n/*\nEnv:\n" ^
@@ -59,12 +61,23 @@ let print_env (env : env_t) : unit =
    body for inner statements such as function definitions. This might
    change in the future when we have better strategy.
  *)
-class ruleset_base (depth : int) = object(self)
+class ruleset_base = object(self)
 
 
   (* ESSENTIAL: Users have to inherit from the engine type and
      implement the get_all_rules method *)
-  inherit [env_elt_t, env_t, Syntax.t] Engine.engine depth
+  inherit [env_elt_t, env_t, Syntax.t] Engine.engine
+
+  method print_stack () : unit =
+    Printf.printf "Stack: ============\n";
+    for i = size - 1 downto 0 do
+      List.iter (fun elt -> Printf.printf "%s\t" (str_of_env_elt elt)) stack.(i);
+      Printf.printf "\n----------------\n";
+    done
+
+  method print_env (env : env_t) : unit = print_env env
+
+  method print_syntax (s : Syntax.t) : unit = Printf.printf "%s\n" (Syntax.str_of_syntax s)
 
   (* We have a small chance to bypass this assertion *)
   method weak_assert b =
@@ -86,9 +99,10 @@ class ruleset_base (depth : int) = object(self)
     let open T.Function in
     let get_type_list (f : T.Function.t) : T.t' list =
       let open T.Function.Param in
+      let (_, { T.Function.Params.params; rest = _ }) = f.params in
       List.map
         (fun param -> (snd param).typeAnnotation |> snd)
-        (fst f.params) @ [f.returnType |> snd] in
+        params @ [f.returnType |> snd] in
 
     let rec func_subtype_helper l1 l2 = match l1, l2 with
       | [], [] -> true
@@ -170,6 +184,11 @@ class ruleset_base (depth : int) = object(self)
   method require_expr (env : env_t) : env_elt_t list =
     List.fold_right (fun elt acc -> match elt with
         | Expr _ -> elt :: acc
+        | _ -> acc) env []
+
+  method require_var (env : env_t) : env_elt_t list =
+    List.fold_right (fun elt acc -> match elt with
+        | Expr (E.Identifier _, _) -> elt :: acc
         | _ -> acc) env []
 
   method require_type (env : env_t) : env_elt_t list =
@@ -279,6 +298,7 @@ class ruleset_base (depth : int) = object(self)
                   properties = Property (Loc.none, new_prop) :: o_type.properties}
       else
         T.Object o_type in
+    Printf.printf "[prop_update]       putting %s : %s\n" (Utils.string_of_expr oexpr) (Utils.string_of_type ret_type);
 
     let new_env = self#add_binding env (Expr (oexpr, ret_type)) in
     let new_env = self#add_binding new_env (Type ret_type) in
@@ -416,7 +436,7 @@ class ruleset_base (depth : int) = object(self)
                                       optional = false})) in
       let ret_type = (Loc.none, rtype) in
 
-      T.Function.(T.Function {params = [param_type], None;
+      T.Function.(T.Function {params = (Loc.none, { Params.params = [param_type]; rest = None });
                               returnType = ret_type;
                               typeParameters = None}) in
 
@@ -427,7 +447,7 @@ class ruleset_base (depth : int) = object(self)
       | _ -> failwith "has to be a type" in
 
     (* We are assuming we only have one parameter for now *)
-    let pname = "param_" ^ (string_of_int depth) in
+    let pname = "param" in
 
     (* We don't support recursion at this point, since in the syntax
        there's no way to stop recursion *)
@@ -487,7 +507,7 @@ class ruleset_base (depth : int) = object(self)
                                       optional = false})) in
       let ret_type = (Loc.none, rtype) in
 
-      T.Function.(T.Function {params = [param_type], None;
+      T.Function.(T.Function {params = (Loc.none, { Params.params = [param_type]; rest = None });
                               returnType = ret_type;
                               typeParameters = None}) in
 
@@ -503,7 +523,7 @@ class ruleset_base (depth : int) = object(self)
         | _ -> false);
 
     (* We are assuming we only have one parameter for now *)
-    let pname = "param_" ^ (string_of_int depth) in
+    let pname = "param" in
 
     let prop = self#choose 1 (fun () -> self#require_prop param_type true) in
     let pexpr, ptype = match prop with
@@ -562,7 +582,7 @@ class ruleset_base (depth : int) = object(self)
     let f_ptype =
       let open T.Function in
       match func_type with
-      | T.Function {params = plist, _;
+      | T.Function {params = (_, { Params.params = plist; rest = _ });
                     returnType = _;
                     typeParameters = _} ->
         T.Function.Param.((plist |> List.hd |> snd).typeAnnotation)
@@ -659,9 +679,14 @@ class ruleset_base (depth : int) = object(self)
       let param = T.Function.Param.({name = None;
                                      typeAnnotation = (Loc.none, param_type);
                                      optional = false}) in
-      T.Function.(T.Function {params = [(Loc.none, param)], None;
-                              returnType = (Loc.none, func_ret_type);
-                              typeParameters = None}) in
+      T.Function.(T.Function {
+        params = (Loc.none, { Params.
+          params = [(Loc.none, param)];
+          rest = None;
+        });
+        returnType = (Loc.none, func_ret_type);
+        typeParameters = None;
+      }) in
     let new_env =
       self#add_binding env (Type ret_type) in
     Syntax.Empty, new_env
@@ -694,6 +719,48 @@ class ruleset_base (depth : int) = object(self)
       self#add_binding env (Type ret_type) in
     Syntax.Empty, new_env
 
+  (* A rule for adding runtime checks *)
+  method rule_runtime_check (env : env_t) : (Syntax.t * env_t) =
+    let mk_prop_read (obj : E.t') (prop : E.t') : E.t' =
+      let open E.Member in
+      E.Member {_object = (Loc.none, obj);
+                property = PropertyExpression (Loc.none, prop);
+                computed = false} in
+
+    let rec get_prop (oname : E.t') (ot : T.Object.t) (depth : int) : env_elt_t =
+      let prop = self#choose depth (fun () -> self#require_prop (T.Object ot) true) in
+      let pexpr, ptype = match prop with
+        | Expr (e, t) -> e, t
+        | _ -> failwith "This has to be an expression" in
+      let prop_elt = match ptype with
+      | T.Object t -> get_prop pexpr t (depth + 1)
+      | _ -> Expr (pexpr, ptype) in
+      match prop_elt with
+      | Expr (e, t) -> Expr (mk_prop_read oname e, t)
+      | _ -> failwith "This has to be an expression." in
+
+    let var = self#choose 0 (fun () -> self#require_var env) in
+    let vexpr, vtype = match var with
+      | Expr (e, t) -> e, t
+      | _ -> failwith "This has to be an expression." in
+    self#backtrack_on_false (match vtype with
+        | T.Function _ -> false
+        | T.Union _ -> false
+        | _ -> true);
+
+    let final_expr = match vtype with
+      | T.Object ot -> get_prop vexpr ot 1
+      | _ -> var in
+    let fexpr, ftype = match final_expr with
+      | Expr (e, t) -> e, t
+      | _ -> failwith "This has to be an expression." in
+    self#backtrack_on_false (match ftype with
+        | T.Function _ -> false
+        | T.Union _ -> false
+        | _ -> true);
+
+    Syntax.mk_runtime_check fexpr ftype, env
+
   method get_all_rules () =
     let all_rules = [|self#rule_num_lit;
                       self#rule_str_lit;
@@ -711,8 +778,8 @@ class ruleset_base (depth : int) = object(self)
     all_rules
 end;;
 
-class ruleset_random_base (depth : int) = object
-  inherit ruleset_base depth
+class ruleset_random_base = object
+  inherit ruleset_base
   method! weak_assert b =
     if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
 end

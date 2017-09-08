@@ -16,7 +16,7 @@ open Parser_common
 
 module type EXPRESSION = sig
   val assignment: env -> Expression.t
-  val assignment_cover: env -> object_cover
+  val assignment_cover: env -> pattern_cover
   val conditional: env -> Expression.t
   val property_name_include_private: env -> Loc.t * Identifier.t * bool
   val is_assignable_lhs: Expression.t -> bool
@@ -29,7 +29,7 @@ module Expression
   (Parse: PARSER)
   (Type: Type_parser.TYPE)
   (Declaration: Declaration_parser.DECLARATION)
-  (Object_cover: Object_cover.COVER)
+  (Pattern_cover: Pattern_cover.COVER)
 : EXPRESSION = struct
   type op_precedence = Left_assoc of int | Right_assoc of int
   let is_tighter a b =
@@ -74,8 +74,8 @@ module Expression
       -> false
   )
 
-  let as_expression = Object_cover.as_expression
-  let as_pattern = Object_cover.as_pattern
+  let as_expression = Pattern_cover.as_expression
+  let as_pattern = Pattern_cover.as_pattern
 
   (* AssignmentExpression :
    *   ConditionalExpression
@@ -752,11 +752,11 @@ module Expression
         Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
     | T_LPAREN -> Cover_expr (group env)
     | T_LCURLY ->
-        let loc, obj, assignments = Parse.object_initializer env in
-        Cover_patt ((loc, Expression.Object obj), assignments)
+        let loc, obj, errs = Parse.object_initializer env in
+        Cover_patt ((loc, Expression.Object obj), errs)
     | T_LBRACKET ->
-        let loc, arr, assignments = array_initializer env in
-        Cover_patt ((loc, Expression.Array arr), assignments)
+        let loc, arr, errs = array_initializer env in
+        Cover_patt ((loc, Expression.Array arr), errs)
     | T_DIV
     | T_DIV_ASSIGN -> Cover_expr (regexp env)
     | T_LESS_THAN ->
@@ -851,45 +851,58 @@ module Expression
     ret
 
   and array_initializer =
-    let rec elements env (acc, assignments) =
+    let rec elements env (acc, errs) =
       match Peek.token env with
       | T_EOF
-      | T_RBRACKET -> List.rev acc, List.rev assignments
+      | T_RBRACKET -> List.rev acc, Pattern_cover.rev_errors errs
       | T_COMMA ->
           Expect.token env T_COMMA;
-          elements env (None::acc, assignments)
+          elements env (None::acc, errs)
       | T_ELLIPSIS ->
-          let loc, (argument, assignment_locs) = with_loc (fun env ->
+          let loc, (argument, new_errs) = with_loc (fun env ->
             Expect.token env T_ELLIPSIS;
             match assignment_cover env with
-            | Cover_expr argument -> argument, []
-            | Cover_patt (argument, assignment_locs) -> argument, assignment_locs
+            | Cover_expr argument -> argument, Pattern_cover.empty_errors
+            | Cover_patt (argument, new_errs) -> argument, new_errs
           ) env in
           let elem = Expression.(Spread (loc, SpreadElement.({
             argument;
           }))) in
-          if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
+          let is_last = Peek.token env = T_RBRACKET in
+
+          (* if this array is interpreted as a pattern, the spread becomes an AssignmentRestElement
+             which must be the last element. We can easily error about additional elements since
+             they will be in the element list, but a trailing elision, like `[...x,]`, is not part
+             of the AST. so, keep track of the error so we can raise it if this is a pattern. *)
+          let new_errs =
+            if not is_last && Peek.token ~i:1 env = T_RBRACKET then
+              let if_patt = (loc, Parse_error.ElementAfterRestElement)::new_errs.if_patt in
+              { new_errs with if_patt }
+            else new_errs
+          in
+
+          if not is_last then Expect.token env T_COMMA;
           let acc = Some elem :: acc in
-          let assignments = List.rev_append (List.rev assignment_locs) assignments in
-          elements env (acc, assignments)
+          let errs = Pattern_cover.rev_append_errors new_errs errs in
+          elements env (acc, errs)
       | _ ->
-          let elem, assignment_locs = match assignment_cover env with
-            | Cover_expr elem -> elem, []
-            | Cover_patt (elem, assignment_locs) -> elem, assignment_locs
+          let elem, new_errs = match assignment_cover env with
+            | Cover_expr elem -> elem, Pattern_cover.empty_errors
+            | Cover_patt (elem, new_errs) -> elem, new_errs
           in
           if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
           let acc = Some (Expression.Expression elem) :: acc in
-          let assignments = List.rev_append (List.rev assignment_locs) assignments in
-          elements env (acc, assignments)
+          let errs = Pattern_cover.rev_append_errors new_errs errs in
+          elements env (acc, errs)
 
     in fun env ->
-      let loc, (elements, assignment_locs) = with_loc (fun env ->
+      let loc, (elements, errs) = with_loc (fun env ->
         Expect.token env T_LBRACKET;
-        let res = elements env ([], []) in
+        let res = elements env ([], Pattern_cover.empty_errors) in
         Expect.token env T_RBRACKET;
         res
       ) env in
-      loc, { Expression.Array.elements; }, assignment_locs
+      loc, { Expression.Array.elements; }, errs
 
   and regexp env =
     Eat.push_lex_mode env Lex_mode.REGEXP;
@@ -942,7 +955,7 @@ module Expression
                                typeAnnotation=None;
                                optional=false;
           } in
-          ([param], None), None, None
+          (loc, { Ast.Function.Params.params = [param]; rest = None }), None, None
         else
           let params =
             let yield = allow_yield env in
@@ -965,8 +978,8 @@ module Expression
        * param or an empty param list then we can disable the rollback and
        * instead generate errors as if we were parsing an arrow function *)
       let env = match params with
-        | _, Some _
-        | [], _ -> without_error_callback env
+        | _, { Ast.Function.Params.rest = Some _; _ }
+        | _, { Ast.Function.Params.params = []; _ } -> without_error_callback env
         | _ -> env
       in
 

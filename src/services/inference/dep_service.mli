@@ -15,6 +15,7 @@ val dependent_files:
   unchanged:FilenameSet.t ->
   new_or_changed:FilenameSet.t ->
   changed_modules:Modulename.Set.t ->
+  (* (transitive_dependents, direct_dependents) of changed_modules *)
   FilenameSet.t * FilenameSet.t
 
 val file_dependencies: (filename -> FilenameSet.t) Expensive.t

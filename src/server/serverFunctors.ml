@@ -32,11 +32,6 @@ module type SERVER_PROGRAM = sig
     waiting_requests:(ServerEnv.env -> ServerEnv.env) list ref ->
     client -> env
   val handle_persistent_client : genv -> env -> Persistent_connection.single_client -> env
-  val collate_errors_separate_warnings :
-    ServerEnv.env ->
-    Errors.ErrorSet.t * (* errors *)
-      Errors.ErrorSet.t FilenameMap.t * (* warnings *)
-      (Errors.error * Loc.LocSet.t) list (* suppressed errors *)
 end
 
 (*****************************************************************************)
@@ -185,6 +180,12 @@ end = struct
     if !waiting_requests <> []
     then process_waiting_requests env ~waiting_requests
 
+  let serve_queue ~genv ~env ~ready_sockets ~serve_ready_clients ~waiting_requests =
+    while not (Queue.is_empty ready_sockets) do
+      let socket = Queue.pop ready_sockets in
+      serve_client genv env ~serve_ready_clients ~waiting_requests socket;
+    done
+
   let serve ~dfind ~genv ~env socket =
     let env = ref env in
     let waiting_requests = ref [] in
@@ -192,16 +193,39 @@ end = struct
       assert_lock genv;
       (* we want to defer processing certain commands until recheck is done *)
       ServerPeriodical.call_before_sleeping();
-      let ready_sockets = ref (sleep_and_check socket !env.connections) in
+      let ready_sockets = Queue.create () in
+      let add_ready_socket socket = Queue.push socket ready_sockets in
+      sleep_and_check socket !env.connections
+      |> List.iter ~f:add_ready_socket;
+
+      (* serve_ready_clients could in theory keep serving clients as they pop up until there are no
+       * more clients to serve. However, we likely have a recheck waiting, so we don't really want
+       * a while loop in here. So instead we'd like to just serve the clients who are ready when
+       * serve_ready_clients is called.
+       *
+       * Though deduping clients is a little tricky. So we're going to fudge this one more time and
+       * say that "serve_ready_clients" is going to serve all the clients who are ready when
+       * serve_ready_clients is called and maybe a few more who are ready after the existing queue
+       * is processed
+       *)
       let rec serve_ready_clients () =
-        (* Process list of ready sockets. This list is never mutated during this
-           processing, so we don't need to worry about doing this in a loop. *)
-        List.iter !ready_sockets (serve_client genv env ~serve_ready_clients ~waiting_requests);
-        (* Prepare new list of ready sockets. *)
-        ready_sockets := quick_check socket;
+        (* Drain the queue *)
+        serve_queue ~genv ~env ~ready_sockets ~serve_ready_clients ~waiting_requests;
+
+        (* If serve_queue is not empty, quick check will add duplicate sockets to the queue *)
+        assert (Queue.is_empty ready_sockets);
+
+        (* Add any waiting clients *)
+        quick_check socket
+        |> List.iter ~f:add_ready_socket;
+
+        (* Drain the queue again *)
+        serve_queue ~genv ~env ~ready_sockets ~serve_ready_clients ~waiting_requests;
       in
       env := recheck_loop ~dfind genv !env ~serve_ready_clients;
-      List.iter !ready_sockets (serve_client genv env ~serve_ready_clients ~waiting_requests);
+
+      serve_queue ~genv ~env ~ready_sockets ~serve_ready_clients ~waiting_requests;
+
       (* Done processing ready sockets! Now, process waiting connections that
          were collected when processing ready sockets. *)
       process_waiting_requests env ~waiting_requests;

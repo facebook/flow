@@ -19,8 +19,8 @@ module FRandom = Utils.FRandom;;
 module Syntax = Syntax_base;;
 open Ruleset_base;;
 
-class ruleset_func (depth : int)= object(self)
-  inherit Ruleset_base.ruleset_base depth
+class ruleset_func = object(self)
+  inherit Ruleset_base.ruleset_base
 
   method! weak_assert b = self#backtrack_on_false b
 
@@ -30,9 +30,10 @@ class ruleset_func (depth : int)= object(self)
     let open T.Function in
     let get_type_list (f : T.Function.t) : T.t' list =
       let open T.Function.Param in
+      let (_, { T.Function.Params.params; rest = _ }) = f.params in
       List.map
         (fun param -> (snd param).typeAnnotation |> snd)
-        (fst f.params) @ [f.returnType |> snd] in
+        params @ [f.returnType |> snd] in
 
     let rec func_subtype_helper l1 l2 = match l1, l2 with
       | [], [] -> true
@@ -179,7 +180,7 @@ class ruleset_func (depth : int)= object(self)
                                       optional = false})) in
       let ret_type = (Loc.none, rtype) in
 
-      T.Function.(T.Function {params = [param_type], None;
+      T.Function.(T.Function {params = (Loc.none, { Params.params = [param_type]; rest = None });
                               returnType = ret_type;
                               typeParameters = None}) in
 
@@ -193,7 +194,7 @@ class ruleset_func (depth : int)= object(self)
         | _ -> false);
 
     (* We are assuming we only have one parameter for now *)
-    let pname = "param_" ^ (string_of_int depth) in
+    let pname = "param" in
 
     (* We don't support recursion at this point, since in the syntax
        there's no way to stop recursion *)
@@ -254,8 +255,8 @@ class ruleset_func (depth : int)= object(self)
 end
 
 
-class ruleset_random_func (depth : int) = object
-  inherit ruleset_func depth
+class ruleset_random_func = object
+  inherit ruleset_func
   method! weak_assert b =
     if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
 end

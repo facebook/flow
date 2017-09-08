@@ -178,6 +178,7 @@ type error_message =
       null_loc: Loc.t;
       falsy_loc: Loc.t;
     }
+  | EInvalidPrototype of reason
 
 and binding_error =
   | ENameAlreadyBound
@@ -216,6 +217,7 @@ and internal_error =
   | InterfaceTypeSpread
   | InferJobException of exn
   | MergeJobException of exn
+  | UnexpectedUnresolved of int
 
 and unsupported_syntax =
   | ComprehensionExpression
@@ -441,6 +443,7 @@ let locs_of_error_message = function
   | EUnusedSuppression (loc) -> [loc]
   | ELintSetting (loc, _) -> [loc]
   | ESketchyNullLint { kind = _; loc; null_loc; falsy_loc; } -> [loc; null_loc; falsy_loc]
+  | EInvalidPrototype reason -> [loc_of_reason reason]
 
 let loc_of_error ~op msg =
   match op with
@@ -1110,6 +1113,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
           "infer_job exception: "^(Utils_js.fmt_exc exc)
       | MergeJobException exc ->
           "merge_job exception: "^(Utils_js.fmt_exc exc)
+      | UnexpectedUnresolved id ->
+          spf "unexpected unresolved tvar: %d" id
       in
       mk_error ~trace_infos ~kind:InternalError [loc, [
         spf "Internal error: %s" msg
@@ -1432,8 +1437,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     mk_error
       ~kind:(LintError Lints.UntypedTypeImport)
       [loc, [spf (
-        "Importing a type from an untyped module is not safe! Did you " ^^
-        "mean to add `// @flow` to the top of `%s`?"
+        "Importing a type from an untyped module makes it `any` and is not safe! "^^
+        "Did you mean to add `// @flow` to the top of `%s`?"
       ) module_name]]
 
   | EUnusedSuppression loc ->
@@ -1473,3 +1478,6 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         null_loc, ["Potentially null/undefined value."];
         falsy_loc, [spf "%s value." value_str]
       ]]
+  | EInvalidPrototype reason ->
+      mk_error ~trace_infos [mk_info reason [
+        "Invalid prototype. Expected an object or null."]]

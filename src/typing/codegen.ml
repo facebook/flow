@@ -150,7 +150,7 @@ let gen_separated_list list sep gen_fn env =
 let rec gen_type t env = Type.(
   match t with
   | AbstractT (_, t) -> add_str "$Abstract<" env |> gen_type t |> add_str ">"
-  | AnnotT t -> gen_type t env
+  | AnnotT (t, _) -> gen_type t env
   | OpaqueT (_, {underlying_t = Some t; _}) -> gen_type t env
   | OpaqueT (_, {super_t = Some t; _}) -> gen_type t env
   | DefT (_, AnyFunT) -> add_str "Function" env
@@ -158,6 +158,7 @@ let rec gen_type t env = Type.(
   | DefT (_, AnyT)
   | AnyWithLowerBoundT _
   | AnyWithUpperBoundT _
+  | MergedT _
     -> add_str "any" env
   | DefT (_, ArrT arrtype) ->
     (match arrtype with
@@ -262,7 +263,7 @@ let rec gen_type t env = Type.(
     (* TODO: Consider polarity and print the literal type when appropriate *)
     add_str "number" env
   | DefT (_, NumT (Truthy|AnyLiteral)) -> add_str "number" env
-  | DefT (_, NullT) -> add_str "null" env
+  | DefT (_, NullT) | NullProtoT _ -> add_str "null" env
   | DefT (_, ObjT {flags = _; dict_t; props_tmap; proto_t = _;}) -> (
     let env = add_str "{" env in
 

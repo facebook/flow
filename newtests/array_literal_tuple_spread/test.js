@@ -260,9 +260,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:3
             3: const arr: Array<number> = [..."hello"];
-                                ^^^^^^ number. This type is incompatible with
-          291:     @@iterator(): Iterator<string>;
-                                          ^^^^^^ string. See lib: [LIB] core.js:291
+                                          ^^^^^^^^^^^^ array literal. Has some incompatible type argument with
+            3: const arr: Array<number> = [..."hello"];
+                          ^^^^^^^^^^^^^ array type
+            Type argument \`T\` is incompatible:
+              291:     @@iterator(): Iterator<string>;
+                                              ^^^^^^ string. This type is incompatible with. See lib: [LIB] core.js:291
+                3: const arr: Array<number> = [..."hello"];
+                                    ^^^^^^ number
         `,
       )
       .because('String is an Iterable<string>'),
@@ -275,11 +280,16 @@ export default suite(({addFile, addFiles, addCode}) => [
       const arr: Array<number> = [...foo()];
     `).newErrors(
         `
-          test.js:4
-            4:       function *foo(): Generator<string, void, void> {
-                                                ^^^^^^ string. This type is incompatible with
+          test.js:7
             7:       const arr: Array<number> = [...foo()];
-                                      ^^^^^^ number
+                                                ^^^^^^^^^^ array literal. Has some incompatible type argument with
+            7:       const arr: Array<number> = [...foo()];
+                                ^^^^^^^^^^^^^ array type
+            Type argument \`T\` is incompatible:
+                4:       function *foo(): Generator<string, void, void> {
+                                                    ^^^^^^ string. This type is incompatible with
+                7:       const arr: Array<number> = [...foo()];
+                                          ^^^^^^ number
         `,
       )
       .because('Generators are iterables too!'),
@@ -291,11 +301,16 @@ export default suite(({addFile, addFiles, addCode}) => [
       }
     `).newErrors(
         `
-          test.js:4
+          test.js:5
+            5:         return [...iter];
+                              ^^^^^^^^^ array literal. This type is incompatible with the expected return type of
             4:       function test(iter: Iterable<string>): Array<number> {
-                                                  ^^^^^^ string. This type is incompatible with
-            4:       function test(iter: Iterable<string>): Array<number> {
-                                                                  ^^^^^^ number
+                                                            ^^^^^^^^^^^^^ array type
+            Type argument \`T\` is incompatible:
+                4:       function test(iter: Iterable<string>): Array<number> {
+                                                      ^^^^^^ string. This type is incompatible with
+                4:       function test(iter: Iterable<string>): Array<number> {
+                                                                      ^^^^^^ number
         `,
       )
       .because('Spec says you can spread iterables')
