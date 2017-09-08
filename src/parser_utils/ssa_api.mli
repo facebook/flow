@@ -8,12 +8,10 @@
  *
  *)
 
-open OUnit2
+module LocMap = Utils_js.LocMap
 
-let tests = "parser_utils" >::: [
-  Scope_builder_test.tests;
-  Comment_attacher_test.tests;
-  Ssa_builder_test.tests;
-]
+type values = Loc.t list LocMap.t
 
-let () = run_test_tt_main tests
+val uninitialized: Loc.t (* TODO: replace this with something more robust *)
+val values_of_loc: values -> Loc.t -> Loc.t list
+val print_values: values -> string
