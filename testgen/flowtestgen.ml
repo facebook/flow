@@ -23,39 +23,56 @@ type run_result = string option;;
 let assert_func = "
 // from http://tinyurl.com/y93dykzv
 const util = require('util');
-  function assert_type(actual, expected) {
+function assert_type(actual, expected) {
     if(typeof(actual) != 'object' || typeof(expected) != 'object') {
-      if(actual != expected) {
-        var expected_str = 'null';
-        if(expected != null) {
-          expected_str = expected.toString();
-        }
+        if(Array.isArray(expected)) {
+            if(expected.indexOf(actual) === -1) {
+                var message = '';
+                var expected_str = expected.toString();
 
-        var actual_str = 'null';
-        if(actual != null) {
-          actual_str = actual.toString();
+                var actual_str = 'null';
+                if(actual != null) {
+                    actual_str = actual.toString();
+                }
+                message = message.concat('Not contain: ',
+                                         'Actual : ',
+                                         actual_str,
+                                         ' != Expected: ',
+                                         expected_str);
+                console.log(message);
+                throw new Error(message);
+            }
+        } else if(actual != expected) {
+            var expected_str = 'null';
+            if(expected != null) {
+                expected_str = expected.toString();
+            }
+
+            var actual_str = 'null';
+            if(actual != null) {
+                actual_str = actual.toString();
+            }
+            var message = '';
+            message = message.concat('Not equal: ',
+                                     'Actual : ',
+                                     actual_str,
+                                     ' != Expected: ',
+                                     expected_str);
+            console.log(message);
+            throw new Error(message);
         }
-        var message = '';
-        message = message.concat('Not equal: ',
-                  'Actual : ',
-                  actual_str,
-                  ' != Expected: ',
-                  expected_str);
-        console.log(message);
-        throw new Error(message);
-      }
     } else {
-      for(var prop in expected) {
-          if(expected.hasOwnProperty(prop)) {
-              if(!actual.hasOwnProperty(prop)) {
-                  var message = '';
-                  message = message.concat('Missing property: ', prop.toString());
-                  console.log(message);
-                  throw new Error(message);
-              }
-              assert_type(actual[prop], expected[prop]);
-          }
-      }
+        for(var prop in expected) {
+            if(expected.hasOwnProperty(prop)) {
+                if(!actual.hasOwnProperty(prop)) {
+                    var message = '';
+                    message = message.concat('Missing property: ', prop.toString());
+                    console.log(message);
+                    throw new Error(message);
+                }
+                assert_type(actual[prop], expected[prop]);
+            }
+        }
     }
 }\n\n
 ";;
@@ -165,19 +182,17 @@ let main () =
       stdout
     else
       open_out no_error_file in
-  let total_prog = Config.(config.num_prog) in
-  printf "Generating %d programs...\n" total_prog;
-  for i = 1 to total_prog do
-    (* Generate codes and then type check *)
-    let code = Codegen.mk_random_code Config.(config.rule_iter) in
-    let content = code in
+  printf "Generating programs...\n";
+  let all_prog = Codegen.mk_code Config.(config.num_prog) Config.(config.random) in
+  printf "Generated %d programs.\n" (List.length all_prog);
+  List.iter (fun content ->
     let type_run_result =
       if Config.(config.type_check)
-      then type_check code
+      then type_check content
       else None in
     match type_run_result with
     | None ->
-      (match test_code code with
+      (match test_code content with
        | None -> no_error_count := !no_error_count + 1;
          fprintf no_error_oc "// Good program ==========\n%s\n" content;
        | Some test_error_msg ->
@@ -190,8 +205,7 @@ let main () =
       printf "TYPE ERROR.\n";
       type_error_count := !type_error_count + 1;
       fprintf flow_error_oc "//===================\n%s\n" content;
-      fprintf flow_error_oc "/*\nError: \n%s\n*/\n" type_error_msg
-  done;
+      fprintf flow_error_oc "/*\nError: \n%s\n*/\n" type_error_msg) all_prog;
   printf "Done!\n";
 
   (* print type error message *)

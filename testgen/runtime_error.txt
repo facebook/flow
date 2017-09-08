@@ -1,45 +1,32 @@
 //===================
-var v_655: {p_0: number} = {p_0: 1.1};
-v_655.p_0 = 1.1;
-var v_656: {p_0: number} = {p_0: 1.1};
-v_656.p_0 = 1.1;
-var v_657: {p_0: number, p_1?: string} = v_656;
-v_657.p_1 = "foo";
-var v_658: {p_0?: number} = v_657;
-v_655.p_0 = v_655.p_0;
-var v_659: {p_0?: number, p_1?: number} = v_656;
-v_659.p_0 = v_655.p_0;
-assert_type(v_655, {p_0: 1.1});
-assert_type(v_656, {p_0: 1.1});
-assert_type(v_657, {p_0: 1.1, p_1: "foo"});
-assert_type(v_658, {p_0: 1.1});
-assert_type(v_659, {p_0: 1.1, p_1: 1.1});
+var v_5 = {p_0 : 1.1}
+f8(v_5);
+assert_type(v_5.p_0, 1.1);
+function f8(param  : {p_0 : number | string}) : void {
+assert_type(param, {p_0 : [1.1, "foo"]});
+
+param.p_0 = "foo";
+}
+
 /*
 Env:
-v_659 : {p_0?: number, p_1?: number}
-"foo" : string
-{p_0: v_655.p_0} : {p_0: number}
-v_657 : {p_0: number, p_1?: string}
-number
-v_658 : {p_0?: number}
-v_655 : {p_0: number}
-{p_0?: number}
-{p_0: number}
-{p_0: "foo", p_1: 1.1} : {p_0: string, p_1: number}
-v_656 : {p_0: number}
-{p_0: number, p_1?: string}
-{p_0: string}
-{p_0: number, p_1?: number}
-{p_0?: string}
-v_655.p_0 : number
-{p_0: "foo"} : {p_0: string}
-{p_0: string, p_1: number}
+{p_0 : number}
+v_5 : {p_0 : number}
+{p_0 : 1.1} : {p_0 : number}
+{p_0 : number | string}
+number | string
 string
-{p_0: 1.1} : {p_0: number}
-{p_0?: string, p_1: number}
+"foo" : string
+v_5.p_0 : number
+void
+f8(v_5) : void
+({p_0 : number | string}) => void
+f8 : ({p_0 : number | string}) => void
 1.1 : number
-{p_0?: number, p_1?: number}
+number
 */
+
+
 
 /*
 Error: 
@@ -48,41 +35,31 @@ Not equal: Actual : foo != Expected: 1.1
 
 */
 //===================
-var v_300: {p_0?: number, p_1?: string} = {p_0: 1.1};
-v_300.p_0 = 1.1;
-var v_301: {p_0?: number} = {p_0: 1.1, p_1: "foo"};
-v_301.p_0 = 1.1;
-var v_302: {p_0?: string} = {p_0: "foo"};
-v_302.p_0 = "foo";
-var v_303: {p_0?: number, p_1?: string} = v_301;
-v_303.p_1 = "foo";
-var v_304: {p_0: number} = {p_0: 1.1};
-v_304.p_0 = 1.1;
-assert_type(v_300, {p_0: 1.1, p_1: "foo"});
-assert_type(v_301, {p_0: 1.1});
-assert_type(v_302, {p_0: "foo"});
-assert_type(v_303, {p_0: 1.1, p_1: "foo"});
-assert_type(v_304, {p_0: 1.1});
+var v_20 = {p_0 : "foo"}
+f17(v_20);
+assert_type(v_20.p_0, "foo");
+function f17(param  : {p_0 : string | number}) : void {
+assert_type(param, {p_0 : ["foo", 1.1]});
+
+param.p_0 = 1.1;
+}
+
 /*
 Env:
-v_304 : {p_0: number}
-v_300 : {p_0?: number, p_1?: string}
-{p_0: string}
-v_301 : {p_0?: number}
-{p_0: "foo"} : {p_0: string}
-"foo" : string
-number
-string
-{p_0?: number}
-v_302 : {p_0?: string}
-{p_0?: string}
-v_303 : {p_0?: number, p_1?: string}
-{p_0?: number, p_1?: string}
-{p_0: 1.1} : {p_0: number}
+{p_0 : string}
+v_20 : {p_0 : string}
+{p_0 : "foo"} : {p_0 : string}
+{p_0 : string | number}
+string | number
+v_20.p_0 : string
+void
+f17(v_20) : void
+({p_0 : string | number}) => void
+f17 : ({p_0 : string | number}) => void
 1.1 : number
-{p_0: 1.1, p_1: "foo"} : {p_0: number, p_1: string}
-{p_0: number, p_1: string}
-{p_0: number}
+number
+"foo" : string
+string
 */
 
 
@@ -90,6 +67,44 @@ v_303 : {p_0?: number, p_1?: string}
 /*
 Error: 
 Failed to run program:
-Missing property: p_1
+Not equal: Actual : 1.1 != Expected: foo
 
 */
+//===================
+var v_23 = {p_0 : 1.1}
+f24(v_23);
+assert_type(v_23.p_0, 1.1);
+function f24(param  : {p_0 : string | number}) : void {
+assert_type(param, {p_0 : ["foo", 1.1]});
+
+param.p_0 = "foo";
+}
+
+/*
+Env:
+{p_0 : number}
+v_23 : {p_0 : number}
+{p_0 : 1.1} : {p_0 : number}
+{p_0 : string | number}
+string | number
+string
+"foo" : string
+v_23.p_0 : number
+void
+f24(v_23) : void
+({p_0 : string | number}) => void
+f24 : ({p_0 : string | number}) => void
+1.1 : number
+number
+*/
+
+
+
+/*
+Error: 
+Failed to run program:
+Not equal: Actual : foo != Expected: 1.1
+
+*/
+// 3 runtime errors written to runtime_error.txt
+
