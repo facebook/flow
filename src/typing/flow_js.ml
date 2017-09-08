@@ -10599,6 +10599,9 @@ and object_spread =
         dict_polarity = Neutral;
       }), flags) in
       resolved cx trace reason options tool state tout x
+    (* If we see an empty then propagate empty to tout. *)
+    | DefT (r, EmptyT) ->
+      rec_flow_t cx trace (EmptyT.make r, tout)
     (* Mirroring Object.assign() and {...null} semantics, treat null/void as
      * empty objects. *)
     | DefT (_, (NullT | VoidT)) ->
