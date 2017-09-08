@@ -19,8 +19,8 @@ module FRandom = Utils.FRandom;;
 module Syntax = Syntax_base;;
 open Ruleset_base;;
 
-class ruleset_union (depth : int) = object(self)
-  inherit Ruleset_base.ruleset_base depth
+class ruleset_union = object(self)
+  inherit Ruleset_base.ruleset_base
 
   method! weak_assert b = self#backtrack_on_false b
 
@@ -110,8 +110,8 @@ class ruleset_union (depth : int) = object(self)
             | _ -> true);
         gen_expr_list (count + 1) limit (ep :: result) in
 
-    (* We are getting at most 2 properties *)
-    let elist = gen_expr_list 0 ((FRandom.rint 2) + 1) [] in
+    (* We are getting 2 properties *)
+    let elist = gen_expr_list 0 1 [] in
     let props =
       let count = ref 0 in
       let mk_prop () =
@@ -151,38 +151,6 @@ class ruleset_union (depth : int) = object(self)
     let new_env = self#add_binding new_env (Type ret_type) in
     lit, new_env
 
-  (* Rule for declaring a variable with init and type annotation *)
-  method! rule_vardecl_with_type (env : env_t) : (Syntax.t * env_t) =
-    (* require an expression from the environment *)
-    let rhs = self#choose 0 (fun () -> self#require_expr env) in
-    let rhs_expr, rhs_type = match rhs with
-        | Expr (e, t) -> e, t
-        | _ -> failwith "This has to be an expression" in
-
-    (* For fast search on depth-subtyping *)
-    self#backtrack_on_false (match rhs_expr, rhs_type with
-        | E.Identifier _, _ -> true
-        | _, T.Object _ -> true
-        | _ -> false);
-
-    (* require a type from the environment.*)
-    let vtype = self#choose 1 (fun () -> self#require_type env) in
-    let vtype = match vtype with
-      | Type t -> t
-      | _ -> failwith "This has to a type" in
-
-    (* assert the subtyping relationhips between the rhs and lhs *)
-    self#weak_assert (self#is_subtype rhs_type vtype);
-    let vname = Utils.mk_var () in
-    let var_decl = Syntax.mk_vardecl ~etype:vtype vname rhs_expr in
-    let new_env =
-      self#add_binding
-        env
-        (Expr ((E.Identifier (Loc.none, vname)), vtype)) in
-    let new_env = self#add_binding new_env (Type vtype) in
-    var_decl, new_env
-
-
   (* A rule for adding object types *)
   method! rule_obj_type (env : env_t) : (Syntax.t * env_t) =
     (* a helper function for generating object property types *)
@@ -198,7 +166,8 @@ class ruleset_union (depth : int) = object(self)
           | _ -> failwith "This has to be a type" in
         gen_type_list (count + 1) limit (ptype :: result) in
 
-    let prop_types = gen_type_list 0 ((FRandom.rint 2) + 1) [] in
+    (* let prop_types = gen_type_list 0 ((FRandom.rint 2) + 1) [] in *)
+    let prop_types = gen_type_list 0 1 [] in
     let props =
       let count = ref 0 in
       let mk_prop () =
@@ -254,93 +223,52 @@ class ruleset_union (depth : int) = object(self)
       self#add_binding env (Type ret_type) in
     Syntax.Empty, new_env
 
-  (* A rule for generating function definitions *)
-  method! rule_func_mutate (env : env_t) : (Syntax.t * env_t) =
-    let mk_func_type (ptype : T.t') (rtype : T.t') : T.t' =
-      let param_type =
-        (Loc.none, T.Function.Param.({name = None;
-                                      typeAnnotation = (Loc.none, ptype);
-                                      optional = false})) in
-      let ret_type = (Loc.none, rtype) in
-
-      T.Function.(T.Function {params = (Loc.none, { Params.params = [param_type]; rest = None });
-                              returnType = ret_type;
-                              typeParameters = None}) in
-
-    (* parameter type *)
-    let param_type =
-      match self#choose 0 (fun () -> self#require_type env) with
-      | Type t -> t
-      | _ -> failwith "has to be a type" in
-
-    (* Printf.printf "Before: %s\n" (Flowtestgen_utils.string_of_type param_type); *)
-
-    (* We need to ensure the parameter is an object for mutation *)
-    self#backtrack_on_false (match param_type with
-        | T.Object {T.Object.properties=p; _} ->
-          (List.length p) = 1  &&  (* find object ty with one prop only *)
-          let prop = List.hd p in
-          (match prop with  (* and force that prop be a union *)
-            | T.Object.Property (_, {T.Object.Property.value=v; _}) ->
-                (match v with
-                  | T.Object.Property.Init (_, T.Union _) -> true
-                  | _ -> false )
-            | _ -> false
-            )
+  method! rule_func_call (env : env_t) : (Syntax.t * env_t) =
+    (* require a function from the environment.*)
+    let func = self#choose 0 (fun () -> self#require_expr env) in
+    let func_expr, func_type = match func with
+        | Expr (e, t) -> e, t
+        | _ -> failwith "This has to be an expression" in
+    self#backtrack_on_false (match func_type with
+        | T.Function _ -> true
         | _ -> false);
 
-    (* Printf.printf "After: %s\n" (Flowtestgen_utils.string_of_type param_type); *)
+    (* get the type of the parameter assuming we only have one param *)
+    let f_ptype =
+      match func_type with
+      | T.Function ft ->
+        let ft_param = T.Function.(ft.params) |> snd in
+        let params = T.Function.Params.(ft_param.params) |> List.hd |> snd in
+        T.Function.Param.(params.typeAnnotation)
+      | _ -> failwith "This has to a function type" in
 
-    (* We are assuming we only have one parameter for now *)
-    let pname = "param_" ^ (string_of_int depth) in
-
-    let prop = self#choose 1 (fun () -> self#require_prop param_type true) in
-    let pexpr, ptype = match prop with
+    (* parameter *)
+    let param = self#choose 1 (fun () -> self#require_expr env) in
+    let param_expr, param_type = match param with
         | Expr (e, t) -> e, t
         | _ -> failwith "This has to be an expression" in
+    self#backtrack_on_false (match param_expr with
+        | E.Identifier _ -> true
+        | _ -> false);
+    self#weak_assert (self#is_subtype param_type (snd f_ptype));
 
-    (* get the expression on the rhs of the update *)
-    let rhs = self#choose 2 (fun () -> self#require_expr env) in
-    let rhs_expr, rhs_type = match rhs with
-        | Expr (e, t) -> e, t
-        | _ -> failwith "This has to be an expression" in
+    let func_call = Syntax.mk_func_call func_expr param_expr in
 
-    (* Printf.printf "Before assert: pexpr=%s rhs_expr=%s\n"
-      (Flowtestgen_utils.string_of_expr pexpr)
-      (Flowtestgen_utils.string_of_expr rhs_expr); *)
-
-    (* assert that type(rhs) <: type(prop) *)
-    self#weak_assert (self#is_subtype rhs_type ptype);
-
-    (* Printf.printf "After assert\n"; *)
-
-    (* produce a write syntax *)
-    let write =
-      Syntax.mk_prop_write
-        (Utils.string_of_expr (E.Identifier (Loc.none, pname)))
-        (Utils.string_of_expr pexpr)
-        rhs_expr in
-
-    (* return expression and its type *)
-    let func_return_type = T.Void in
-
-    let fname = Utils.mk_func () in
-
-    let func_def =
-      Syntax.mk_func_def
-        fname
-        pname
-        param_type
-        [write]
-        func_return_type in
-
-    let ret_type = mk_func_type param_type func_return_type in
+    let ret_type = T.Function.(match func_type with
+        | T.Function {params = _;
+                      returnType = (_, rt);
+                      typeParameters =_} -> rt
+        | _ -> failwith "This has to be a function type") in
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, fname)), ret_type)) in
+        (Expr ((match func_call with
+             | Syntax.Expr e -> e
+             | _ -> failwith "This has to be an expression"),
+               ret_type)) in
+
     let new_env = self#add_binding new_env (Type ret_type) in
-    func_def, new_env
+    func_call, new_env
 
   method! get_all_rules () =
     [|self#rule_num_lit;
@@ -348,21 +276,25 @@ class ruleset_union (depth : int) = object(self)
       self#rule_union_type;
       self#rule_obj_type;
       self#rule_obj_lit;
+      self#rule_vardecl_with_type; (*make it challenging*)
+      self#rule_vardecl;
+      self#rule_func_mutate;
+      self#rule_func_call;
+      self#rule_prop_read;
+      self#rule_runtime_check;
+      (*
+      self#rule_prop_update;
       self#rule_vardecl_with_type;
       self#rule_prop_update;
       self#rule_func_mutate;
       self#rule_func_call;
       self#rule_prop_read;
-      self#rule_vardecl_with_type;
-      self#rule_prop_update;
-      self#rule_func_mutate;
-      self#rule_func_call;
-      self#rule_prop_read;
+         *)
       |]
 end
 
-class ruleset_random_union (depth : int) = object
-  inherit ruleset_union depth
+class ruleset_random_union = object
+  inherit ruleset_union
   method! weak_assert b =
     if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
 end

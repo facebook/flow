@@ -27,6 +27,77 @@ let str_of_syntax (s : t) : string =
   | Stmt s -> Utils.string_of_stmt s
   | Empty -> ""
 
+(* Make a literal expression.*)
+let rec mk_literal_expr (t : T.t') : E.t' =
+  match t with
+  | T.Number ->
+    E.Literal (Ast.Literal.({value = Number 1.1; raw = "1.1"}))
+  | T.String ->
+    E.Literal (Ast.Literal.({value = String "foo"; raw = "\"foo\""}))
+  | T.Boolean ->
+    E.Literal (Ast.Literal.({value = Boolean false; raw = "false"}))
+  | T.Union (t1, t2, rest) ->
+    let elements = (t1 :: t2 :: rest)
+                   |> List.map snd
+                   |> List.map mk_literal_expr
+                   |> List.map (fun e -> Some (E.Expression (Loc.none, e))) in
+    E.Array.(E.Array {elements})
+  | T.Object obj_t -> mk_obj_literal_expr obj_t
+  | T.StringLiteral lit ->
+    let value = T.StringLiteral.(lit.value) in
+    let raw = T.StringLiteral.(lit.raw) in
+    E.Literal (Ast.Literal.({value = String value; raw}))
+  | T.NumberLiteral lit ->
+    let value = T.NumberLiteral.(lit.value) in
+    let raw = T.NumberLiteral.(lit.raw) in
+    E.Literal (Ast.Literal.({value = Number value; raw}))
+  | T.BooleanLiteral value ->
+    let raw = if value then "true" else "false" in
+    E.Literal (Ast.Literal.({value = Boolean value; raw}))
+  | T.Tuple tlist ->
+    let elements = List.map (fun (_, tt) ->
+        let e = mk_literal_expr tt in
+        Some (E.Expression (Loc.none, e))) tlist in
+    E.Array.(E.Array {elements})
+  | T.Array t -> mk_literal_expr (T.Tuple [t; t; t; t; t;])
+  | _ ->
+    E.Literal (Ast.Literal.({value = Null; raw = "null"}))
+
+(* Make an object literal based on its type *)
+and mk_obj_literal_expr (t : T.Object.t) : E.t' =
+  let prop_init_list =
+    List.map (fun p ->
+        let open T.Object.Property in
+        match p with
+        | T.Object.Property (_, {key = k;
+                                 value = Init (_, ptype);
+                                 optional = o;
+                                 static = _;
+                                 _method = _;
+                                 variance = _}) -> (k, o, mk_literal_expr ptype)
+        | _ -> failwith "Unsupported property") T.Object.(t.properties)
+    (* Randomly remove some optional properties *)
+    (* |> List.filter (fun (_, o, _) -> (not o) || FRandom.rbool ()) *)
+    |> List.map (fun (key, _, expr_t) ->
+       let open E.Object.Property in
+       E.Object.Property (Loc.none, {key;
+                                     value = Init (Loc.none, expr_t);
+                                     _method = false;
+                                     shorthand = false})) in
+  E.Object.(E.Object {properties = prop_init_list})
+
+(* Check the expression is of the given type *)
+let mk_runtime_check (expr : E.t') (etype : T.t') : t =
+  (* Make a variable decalration first *)
+  let callee = E.Identifier (Loc.none, "assert_type") in
+  let arguments =
+    [E.Expression (Loc.none, expr);
+     E.Expression (Loc.none, (mk_literal_expr etype))] in
+  let call = let open E.Call in
+    E.Call {callee = (Loc.none, callee); arguments} in
+  Stmt (S.Expression.(S.Expression {expression = (Loc.none, call);
+                                           directive = None}))
+
 (* ESSENTIAL: functions for making syntax *)
 let mk_expr_stmt (expr : E.t') : S.t' =
   S.Expression.(S.Expression {expression = (Loc.none, expr);
@@ -41,6 +112,11 @@ let mk_func_def
     (ptype : T.t')
     (body : t list)
     (rtype : T.t') : t =
+
+  (* Add a runtime check for the parameter *)
+  let body = body @ (match ptype with
+      | T.Function _ -> []
+      | _ -> [(mk_runtime_check (E.Identifier (Loc.none, pname)) ptype)]) in
 
   let body =
     let open S.Block in
