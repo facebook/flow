@@ -167,31 +167,21 @@ class ssa_builder = object(this)
     ) ssa_env
 
   method private mk_ssa_env =
-    List.fold_left (fun map (_loc, x) ->
-      match SMap.get x map with
-      | Some _ -> map
-      | None ->
-        SMap.add x (ref Val.uninitialized) map
-    ) SMap.empty
+    SMap.map (fun _ -> ref Val.uninitialized)
 
   method private mk_havoc_env =
-    List.fold_left (fun map (_loc, x) ->
-      match SMap.get x map with
-      | Some _ -> map
-      | None ->
-        SMap.add x Havoc.{ unresolved = Val.mk_unresolved (); locs = [] } map
-    ) SMap.empty
+    SMap.map (fun _ -> Havoc.{ unresolved = Val.mk_unresolved (); locs = [] })
 
   method private push_ssa_env bindings =
     let old_ssa_env = ssa_env in
     let old_havoc_env = havoc_env in
-    let bindings = Bindings.to_list bindings in
+    let bindings = Bindings.to_map bindings in
     ssa_env <- SMap.fold SMap.add (this#mk_ssa_env bindings) old_ssa_env;
     havoc_env <- SMap.fold SMap.add (this#mk_havoc_env bindings) old_havoc_env;
     bindings, old_ssa_env, old_havoc_env
 
   method private resolve_havoc_env =
-    List.iter (fun (_loc, x) ->
+    SMap.iter (fun x _loc ->
       let { Havoc.unresolved; locs } = SMap.find x havoc_env in
       Val.(resolve ~unresolved (PHI (List.map (fun loc -> Loc loc) locs)))
     )
