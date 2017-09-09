@@ -1073,7 +1073,6 @@ module ResolvableTypeJob = struct
 
     | AnyWithUpperBoundT t
     | AnyWithLowerBoundT t
-    | AbstractT (_, t)
     | ExactT (_, t)
     | DefT (_, TypeT t)
     | DefT (_, ClassT t)
@@ -4443,44 +4442,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let u = LookupT (reason_op, kind, try_ts_on_failure, propref, action) in
         rec_flow cx trace (super, ReposLowerT (lreason, false, u))
       | Some p ->
-        (* TODO: Replace AbstractT with abstract fields, then reuse
-           perform_lookup_action here. *)
-        (match action with
-        | RWProp (_, t2, rw) ->
-          (* The type of the property in the super class is abstract. The type
-             of the property in this class may be abstract or not.  We want to
-             unify just the underlying types, ignoring the abstract part.  *)
-          let p, t2 = match p, t2 with
-          | Field (AbstractT (_, t1), polarity), AbstractT (_, t2)
-          | Field (AbstractT (_, t1), polarity), t2 -> Field (t1, polarity), t2
-          | _ -> p, t2
-          in
-          (match rw, Property.access rw p with
-          | Read, Some t1 -> rec_flow_t cx trace (t1, t2)
-          | Write, Some t1 -> rec_flow_t cx trace (t2, t1)
-          | _, None ->
-            add_output cx ~trace (FlowError.EPropAccess (
-              (lreason, reason_op), Some x, Property.polarity p, rw)
-            ))
-        | LookupProp (use_op, up) ->
-          let p, up = match p, up with
-          | Field (AbstractT (_, t), polarity), Field (AbstractT (_, ut), upolarity) ->
-            Field (t, polarity), Field (ut, upolarity)
-          | Field (AbstractT (_, t), polarity), up ->
-            Field (t, polarity), up
-          | _ -> p, up
-          in
-          rec_flow_p cx trace ~use_op lreason reason_op propref (p, up)
-        | SuperProp lp ->
-          let p, lp = match p, lp with
-          | Field (AbstractT (_, t), polarity), Field (AbstractT (_, lt), lpolarity) ->
-            Field (t, polarity), Field (lt, lpolarity)
-          | Field (AbstractT (_, t), polarity), lp ->
-            Field (t, polarity), lp
-          | _ -> p, lp
-          in
-          rec_flow_p cx trace reason_op lreason propref (lp, p)))
-
+        perform_lookup_action cx trace propref p lreason reason_op action)
     | DefT (_, InstanceT _), LookupT (reason_op, _, _, Computed _, _) ->
       (* Instances don't have proper dictionary support. All computed accesses
          are converted to named property access to `$key` and `$value` during
@@ -5401,20 +5363,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         for the inherited properties are non-strict: they are not required to
         exist. **)
 
-    | (DefT (_, InstanceT (_, _, _, instance_super)),
+    | (DefT (_, InstanceT _),
        SuperT (reason,instance))
       ->
-        Context.iter_props cx instance_super.fields_tmap (fun x p ->
-          match p with
-          | Field (AbstractT (_, t), _)
-            when not (Context.has_prop cx instance.fields_tmap x) ->
-            (* when abstract fields are not implemented, make them void *)
-            let reason = reason_of_t t in
-            let desc_void = RMissingAbstract (desc_of_reason reason) in
-            let reason_void = replace_reason_const desc_void reason in
-            rec_unify cx trace (DefT (reason_void, VoidT)) t
-          | _ -> ()
-        );
         let strict = NonstrictReturning None in
         Context.iter_props cx instance.fields_tmap (fun x p ->
           let reason_prop = replace_reason_const (RProperty (Some x)) reason in
@@ -6864,7 +6815,6 @@ and check_polarity cx ?trace polarity = function
     -> ()
 
   | DefT (_, OptionalT t)
-  | AbstractT (_, t)
   | ExactT (_, t)
   | DefT (_, MaybeT t)
   | AnyWithLowerBoundT t
@@ -10832,7 +10782,6 @@ end = struct
     | OpaqueT (_, {super_t = Some t; _})
       -> extract cx t
 
-    | AbstractT _
     | AnyWithLowerBoundT _
     | AnyWithUpperBoundT _
     | MergedT _
@@ -11066,7 +11015,6 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _
-  | AbstractT _
   | EvalT _
   | ExtendsT _
   | ChoiceKitT _

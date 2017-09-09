@@ -168,7 +168,6 @@ and add_parts cx id parts state =
 
 and parts_of_t cx = function
 | OpenT _ -> assert false
-| AbstractT (_, t) -> ["t", Def t]
 | AnnotT (source, _) -> ["source", Def source]
 | OpaqueT (_, {underlying_t = Some t; _}) -> ["t", Def t]
 | OpaqueT _ -> []

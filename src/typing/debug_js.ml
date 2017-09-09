@@ -163,8 +163,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "instance", json_of_insttype json_cx instance
     ]
 
-  | DefT (_, OptionalT t)
-  | AbstractT (_, t) -> [
+  | DefT (_, OptionalT t) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -1663,8 +1662,7 @@ and dump_t_ (depth, tvars) cx t =
       ~extra:(spf "use_desc=%b, %s" use_desc (kid source))
   | OpaqueT (_, {underlying_t = Some arg; _}) -> p ~extra:(spf "%s" (kid arg)) t
   | OpaqueT _ -> p t
-  | DefT (_, OptionalT arg)
-  | AbstractT (_, arg) -> p ~extra:(kid arg) t
+  | DefT (_, OptionalT arg) -> p ~extra:(kid arg) t
   | EvalT (arg, expr, id) -> p
       ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
   | DefT (_, TypeAppT (base, args)) -> p ~extra:(spf "%s, [%s]"

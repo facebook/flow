@@ -111,8 +111,6 @@ module rec TypeTerm : sig
     (* collects the keys of an object *)
     | KeysT of reason * t
 
-    | AbstractT of reason * t
-
     (* annotations *)
     (** A type that annotates a storage location performs two functions:
 
@@ -1887,7 +1885,6 @@ let any_propagating_use_t = function
 
 let rec reason_of_t = function
   | OpenT (reason,_) -> reason
-  | AbstractT (reason, _) -> reason
   | AnnotT (assume_t, _) -> reason_of_t assume_t
   | AnyWithLowerBoundT (t) -> reason_of_t t
   | AnyWithUpperBoundT (t) -> reason_of_t t
@@ -2029,7 +2026,6 @@ let def_loc_of_t t = def_loc_of_reason (reason_of_t t)
 (* TODO make a type visitor *)
 let rec mod_reason_of_t f = function
   | OpenT (reason, t) -> OpenT (f reason, t)
-  | AbstractT (reason, t) -> AbstractT (f reason, t)
   | AnnotT (assume_t, use_desc) ->
       AnnotT (mod_reason_of_t f assume_t, use_desc)
   | AnyWithLowerBoundT t -> AnyWithLowerBoundT (mod_reason_of_t f t)
@@ -2245,7 +2241,6 @@ let string_of_def_ctor = function
 
 let string_of_ctor = function
   | OpenT _ -> "OpenT"
-  | AbstractT _ -> "AbstractT"
   | AnnotT _ -> "AnnotT"
   | AnyWithLowerBoundT _ -> "AnyWithLowerBoundT"
   | AnyWithUpperBoundT _ -> "AnyWithUpperBoundT"

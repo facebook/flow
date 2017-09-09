@@ -66,7 +66,6 @@ let rec gc cx state = function
 
   (** def types **)
 
-  | AbstractT (_, t) -> gc cx state t
   | AnnotT (t, _) -> gc cx state t
   | OpaqueT (_, opaquetype) ->
       Option.iter ~f:(gc cx state) opaquetype.underlying_t;

@@ -37,8 +37,6 @@ class ['a] t = object(self)
 
   | CustomFunT (_, kind) -> self#custom_fun_kind cx acc kind
 
-  | AbstractT (_, t) -> self#type_ cx acc t
-
   | EvalT (t, defer_use_t, id) ->
     let acc = self#type_ cx acc t in
     let acc = self#defer_use_type cx acc defer_use_t in

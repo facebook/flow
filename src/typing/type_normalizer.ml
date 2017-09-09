@@ -440,10 +440,6 @@ let rec normalize_type_impl cx ids t = match t with
   | KeysT (_, t) ->
       KeysT (locationless_reason RKeySet, normalize_type_impl cx ids t)
 
-  | AbstractT (reason, t) ->
-      let reason = locationless_reason (desc_of_reason reason) in
-      AbstractT (reason, normalize_type_impl cx ids t)
-
   | EvalT (_, _, id) ->
       let evaluated = Context.evaluated cx in
       begin match IMap.get id evaluated with

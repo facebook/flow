@@ -109,10 +109,6 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else KeysT (r, t'')
-      | AbstractT (r, t') ->
-          let t'' = self#type_ cx map_cx t' in
-          if t'' == t' then t
-          else AbstractT (r, t'')
       | AnnotT (t', use_desc) ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t

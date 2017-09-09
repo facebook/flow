@@ -52,7 +52,6 @@ type hash =
   | ArrH
   | ClassH
   | OptionalH
-  | AbstractH
   | EvalH
   | TypeAppH
   | ThisClassH
@@ -203,7 +202,6 @@ let hash_of_ctor = Type.(function
   | OpenT _ -> failwith "undefined hash of OpenT"
   | OpaqueT _ -> failwith "undefined hash of OpaqueT"
 
-  | AbstractT _ -> AbstractH
   | AnnotT _ -> AnnotH
   | AnyWithLowerBoundT _ -> AnyWithLowerBoundH
   | AnyWithUpperBoundT _ -> AnyWithUpperBoundH
