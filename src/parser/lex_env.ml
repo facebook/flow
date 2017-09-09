@@ -26,7 +26,7 @@ and bol = {
 
 and lex_state = {
   lex_errors_acc: (Loc.t * Parse_error.t) list;
-  lex_comments_acc: Ast.Comment.t list;
+  lex_comments_acc: Loc.t Ast.Comment.t list;
 }
 
 let empty_lex_state = {

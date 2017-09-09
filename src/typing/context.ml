@@ -86,7 +86,7 @@ type local_t = {
 
   mutable module_kind: module_kind;
 
-  mutable import_stmts: Ast.Statement.ImportDeclaration.t list;
+  mutable import_stmts: Loc.t Ast.Statement.ImportDeclaration.t list;
   mutable imported_ts: Type.t SMap.t;
 
   (* map from tvar ids to nodes (type info structures) *)

@@ -20,11 +20,11 @@ open Parser_common
  * and classes *)
 
 module type OBJECT = sig
-  val key : ?class_body: bool -> env -> Loc.t * Ast.Expression.Object.Property.key
-  val _initializer : env -> Loc.t * Ast.Expression.Object.t * pattern_errors
-  val class_declaration : env -> Ast.Expression.t list -> Ast.Statement.t
-  val class_expression : env -> Ast.Expression.t
-  val decorator_list : env -> Ast.Expression.t list
+  val key : ?class_body: bool -> env -> Loc.t * Loc.t Ast.Expression.Object.Property.key
+  val _initializer : env -> Loc.t * Loc.t Ast.Expression.Object.t * pattern_errors
+  val class_declaration : env -> Loc.t Ast.Expression.t list -> Loc.t Ast.Statement.t
+  val class_expression : env -> Loc.t Ast.Expression.t
+  val decorator_list : env -> Loc.t Ast.Expression.t list
 end
 
 module Object

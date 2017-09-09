@@ -285,7 +285,7 @@ end = struct
   let rec test_tree
     (path: path_part list)
     (actual: Hh_json.json)
-    (expected: Ast.Expression.t)
+    (expected: Loc.t Ast.Expression.t)
     (errors: string list)
   : string list =
     let open Ast.Expression in
@@ -409,7 +409,7 @@ end = struct
 
   let has_prop
       (needle: string)
-      (haystack: Ast.Expression.Object.property list) =
+      (haystack: Loc.t Ast.Expression.Object.property list) =
     List.exists Ast.Expression.(function
       | Object.Property (_, prop) -> fst (prop_name_and_value prop) = needle
       | _ -> false

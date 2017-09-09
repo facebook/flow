@@ -74,8 +74,8 @@ val mk: Context.t ->
   Loc.t ->
   Reason.t ->
   Type.t -> (* self *)
-  expr:(Context.t -> Ast.Expression.t -> Type.t) ->
-  Ast.Class.t ->
+  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
+  Loc.t Ast.Class.t ->
   t
 
 (** Create signature from interface AST. *)
@@ -84,7 +84,7 @@ val mk_interface: Context.t ->
   Reason.t ->
   bool -> (* structural *)
   Type.t -> (* self *)
-  Ast.Statement.Interface.t ->
+  Loc.t Ast.Statement.Interface.t ->
   t
 
 (** 1. Manipulation *)
@@ -103,9 +103,9 @@ val generate_tests: Context.t ->
 
 (** Evaluate the class body. *)
 val toplevels: Context.t ->
-  decls:(Context.t -> Ast.Statement.t list -> unit) ->
-  stmts:(Context.t -> Ast.Statement.t list -> unit) ->
-  expr:(Context.t -> Ast.Expression.t -> Type.t) ->
+  decls:(Context.t -> Loc.t Ast.Statement.t list -> unit) ->
+  stmts:(Context.t -> Loc.t Ast.Statement.t list -> unit) ->
+  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
   t -> unit
 
 (** 1. Type Conversion *)
@@ -117,5 +117,5 @@ val classtype: Context.t ->
 
 module This: sig
   val is_bound_to_empty: t -> bool
-  val in_class: Ast.Class.t -> bool
+  val in_class: Loc.t Ast.Class.t -> bool
 end

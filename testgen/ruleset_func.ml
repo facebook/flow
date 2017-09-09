@@ -25,10 +25,10 @@ class ruleset_func = object(self)
   method! weak_assert b = self#backtrack_on_false b
 
   method! is_subtype_func
-      (f1 : T.Function.t)
-      (f2 : T.Function.t) : bool =
+      (f1 : Loc.t T.Function.t)
+      (f2 : Loc.t T.Function.t) : bool =
     let open T.Function in
-    let get_type_list (f : T.Function.t) : T.t' list =
+    let get_type_list (f : Loc.t T.Function.t) : Loc.t T.t' list =
       let open T.Function.Param in
       let (_, { T.Function.Params.params; rest = _ }) = f.params in
       List.map
@@ -59,7 +59,7 @@ class ruleset_func = object(self)
 
   (* A helper funtions for wrapping an expression and a type
      into an object for mutation and expose type errors. *)
-  method wrap_in_obj (expr : E.t') (etype : T.t') : (E.t' * T.t') =
+  method wrap_in_obj (expr : Loc.t E.t') (etype : Loc.t T.t') : (Loc.t E.t' * Loc.t T.t') =
     let pname = "p_0" in
     let obj_expr =
       let prop =
@@ -90,7 +90,7 @@ class ruleset_func = object(self)
     let rec gen_expr_list
         (count : int)
         (limit : int)
-        (result : (E.t' * T.t') list) : (E.t' * T.t') list =
+        (result : (Loc.t E.t' * Loc.t T.t') list) : (Loc.t E.t' * Loc.t T.t') list =
       if count = limit then result
       else
         let expr = self#choose count (fun () -> self#require_expr env) in
@@ -173,7 +173,7 @@ class ruleset_func = object(self)
 
   (* A rule for generating function definitions *)
   method! rule_funcdef (env : env_t) : (Syntax.t * env_t) =
-    let mk_func_type (ptype : T.t') (rtype : T.t') : T.t' =
+    let mk_func_type (ptype : Loc.t T.t') (rtype : Loc.t T.t') : Loc.t T.t' =
       let param_type =
         (Loc.none, T.Function.Param.({name = None;
                                       typeAnnotation = (Loc.none, ptype);

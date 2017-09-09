@@ -12,7 +12,7 @@ type param =
 type t = {
   list: param list;
   rest: binding option;
-  defaults: Ast.Expression.t Default.t SMap.t;
+  defaults: Loc.t Ast.Expression.t Default.t SMap.t;
 }
 
 let empty = {
@@ -21,7 +21,7 @@ let empty = {
   defaults = SMap.empty
 }
 
-(* Ast.Function.t -> Func_params.t *)
+(* Loc.t Ast.Function.t -> Func_params.t *)
 let mk cx type_params_map ~expr func =
   let add_param_with_default params pattern default = Ast.Pattern.(
     match pattern with

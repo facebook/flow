@@ -25,7 +25,7 @@ class requires_calculator ~ast = object(this)
   method private add_require s loc =
     this#update_acc (SMap.add s loc)
 
-  method! call (expr: Ast.Expression.Call.t) =
+  method! call (expr: Loc.t Ast.Expression.Call.t) =
     let open Ast.Expression in
     let { Call.callee; arguments } = expr in
     begin match callee, arguments with
@@ -47,7 +47,7 @@ class requires_calculator ~ast = object(this)
     end;
     super#call expr
 
-  method! import (expr: Ast.Expression.t) =
+  method! import (expr: Loc.t Ast.Expression.t) =
     let open Ast.Expression in
     begin match expr with
     | require_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ } ->
@@ -56,7 +56,7 @@ class requires_calculator ~ast = object(this)
     end;
     super#expression expr
 
-  method! import_declaration (decl: Ast.Statement.ImportDeclaration.t) =
+  method! import_declaration (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
     let open Ast.Statement.ImportDeclaration in
     let { importKind = _; source; specifiers = _ } = decl in
     begin match source with
@@ -66,7 +66,7 @@ class requires_calculator ~ast = object(this)
     end;
     super#import_declaration decl
 
-  method! export_named_declaration (decl: Ast.Statement.ExportNamedDeclaration.t) =
+  method! export_named_declaration (decl: Loc.t Ast.Statement.ExportNamedDeclaration.t) =
     let open Ast.Statement.ExportNamedDeclaration in
     let { exportKind = _; source; specifiers = _; declaration = _ } = decl in
     begin match source with
@@ -76,7 +76,7 @@ class requires_calculator ~ast = object(this)
     end;
     super#export_named_declaration decl
 
-  method! declare_export_declaration (decl: Ast.Statement.DeclareExportDeclaration.t) =
+  method! declare_export_declaration (decl: Loc.t Ast.Statement.DeclareExportDeclaration.t) =
     let open Ast.Statement.DeclareExportDeclaration in
     let { default = _; source; specifiers = _; declaration = _ } = decl in
     begin match source with

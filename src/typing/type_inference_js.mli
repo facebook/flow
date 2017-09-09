@@ -14,7 +14,7 @@ val infer_ast:
   require_loc_map: Loc.t SMap.t ->
   Context.t ->
   Loc.filename ->
-  Ast.program ->
+  Loc.t Ast.program ->
   unit
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_lib_file:
@@ -22,5 +22,5 @@ val infer_lib_file:
   exclude_syms: SSet.t ->
   lint_severities: Severity.severity LintSettings.t option ->
   Utils_js.filename ->
-  Ast.program ->
+  Loc.t Ast.program ->
   Context.t * string list

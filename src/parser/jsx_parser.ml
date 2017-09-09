@@ -178,8 +178,8 @@ module JSX (Parse: Parser_common.PARSER) = struct
       })
 
     type element_or_closing =
-      | Closing of JSX.Closing.t
-      | ChildElement of (Loc.t * JSX.element)
+      | Closing of Loc.t JSX.Closing.t
+      | ChildElement of (Loc.t * Loc.t JSX.element)
 
 
     let rec child env =

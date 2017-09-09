@@ -16,7 +16,7 @@ exception Docblock_not_found of string
 exception Requires_not_found of string
 
 type result =
-  | Parse_ok of Ast.program
+  | Parse_ok of Loc.t Ast.program
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -57,7 +57,7 @@ let empty_result = {
 
 (* shared heap for parsed ASTs by filename *)
 module ASTHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
-    type t = Ast.program
+    type t = Loc.t Ast.program
     let prefix = Prefix.make()
     let description = "AST"
 end)
@@ -162,7 +162,7 @@ let parse_json_file ~fail content file =
       directive = None;
     }
   in
-  let comments = ([]: Comment.t list) in
+  let comments = ([]: Loc.t Comment.t list) in
   (loc, [statement], comments)
 
 (* Avoid lexing unbounded in perverse cases *)

@@ -28,9 +28,9 @@ end
 module Translate (Impl : Translator) (Config : Config) : (sig
   type t
   val program:
-    Loc.t * Ast.Statement.t list * (Loc.t * Ast.Comment.t') list ->
+    Loc.t * Loc.t Ast.Statement.t list * (Loc.t * Ast.Comment.t') list ->
     t
-  val expression: Ast.Expression.t -> t
+  val expression: Loc.t Ast.Expression.t -> t
   val errors: (Loc.t * Parse_error.t) list -> t
 end with type t = Impl.t) = struct
   type t = Impl.t
@@ -1235,7 +1235,7 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and jsx_element (loc, (element: JSX.element)) = JSX.(
+  and jsx_element (loc, (element: Loc.t JSX.element)) = JSX.(
     node "JSXElement" loc [|
       "openingElement", jsx_opening element.openingElement;
       "closingElement", option jsx_closing element.closingElement;

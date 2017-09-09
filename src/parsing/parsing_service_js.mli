@@ -16,7 +16,7 @@ type types_mode =
 
 (* result of individual parse *)
 type result =
-  | Parse_ok of Ast.program
+  | Parse_ok of Loc.t Ast.program
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -98,15 +98,15 @@ val reparse_with_defaults:
   FilenameSet.t * results
 
 val calc_requires:
-  ast:Ast.program ->
+  ast:Loc.t Ast.program ->
   Loc.t SMap.t
 
 val has_ast: filename -> bool
 
-val get_ast: filename -> Ast.program option
+val get_ast: filename -> Loc.t Ast.program option
 
 (* after parsing, retrieves ast and docblock by filename (unsafe) *)
-val get_ast_unsafe: filename -> Ast.program
+val get_ast_unsafe: filename -> Loc.t Ast.program
 val get_docblock_unsafe: filename -> Docblock.t
 val get_requires_unsafe: filename -> Loc.t SMap.t
 

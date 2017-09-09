@@ -8,9 +8,9 @@
  *
  *)
 
-val key: Ast.Expression.t -> Key.t option
+val key: Loc.t Ast.Expression.t -> Key.t option
 val get:
   Context.t ->
-  Ast.Expression.t ->
+  Loc.t Ast.Expression.t ->
   Loc.t ->
   Type.t option

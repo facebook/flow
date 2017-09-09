@@ -25,7 +25,7 @@ class ruleset_union = object(self)
   method! weak_assert b = self#backtrack_on_false b
 
   (* check t1 <: t2 *)
-  method! is_subtype (t1 : T.t') (t2 : T.t') : bool =
+  method! is_subtype (t1 : Loc.t T.t') (t2 : Loc.t T.t') : bool =
     match t1, t2 with
     | (t, T.Union ((_, tu1), (_, tu2), tlist)) ->  (* t should be one of the branches of Union *)
       List.mem t (tu1 :: tu2 :: (List.map snd tlist))
@@ -39,8 +39,8 @@ class ruleset_union = object(self)
     In general this is unsound, and Flow allows this only in certain
     situations.
    *)
-  method! is_subtype_obj (o1 : T.Object.t) (o2 : T.Object.t) =
-    let get_prop_set (o : T.Object.t) =
+  method! is_subtype_obj (o1 : Loc.t T.Object.t) (o2 : Loc.t T.Object.t) =
+    let get_prop_set (o : Loc.t T.Object.t) =
       let tbl = Hashtbl.create 1000 in
       let open T.Object.Property in
       List.iter (fun p -> match p with
@@ -65,7 +65,7 @@ class ruleset_union = object(self)
 
   (* A helper funtions for wrapping an expression and a type
      into an object for mutation and expose type errors. *)
-  method wrap_in_obj (expr : E.t') (etype : T.t') : (E.t' * T.t') =
+  method wrap_in_obj (expr : Loc.t E.t') (etype : Loc.t T.t') : (Loc.t E.t' * Loc.t T.t') =
     let pname = "p_0" in
     let obj_expr =
       let prop =
@@ -96,7 +96,7 @@ class ruleset_union = object(self)
     let rec gen_expr_list
         (count : int)
         (limit : int)
-        (result : (E.t' * T.t') list) : (E.t' * T.t') list =
+        (result : (Loc.t E.t' * Loc.t T.t') list) : (Loc.t E.t' * Loc.t T.t') list =
       if count = limit then result
       else
         let expr = self#choose count (fun () -> self#require_expr env) in
@@ -157,7 +157,7 @@ class ruleset_union = object(self)
     let rec gen_type_list
         (count : int)
         (limit : int)
-        (result : T.t' list) : T.t' list =
+        (result : Loc.t T.t' list) : Loc.t T.t' list =
       if count = limit then result
       else
         let ptype = self#choose count (fun () -> self#require_type env) in
@@ -200,7 +200,7 @@ class ruleset_union = object(self)
     let rec gen_type_list
         (count : int)
         (limit : int)
-        (result : T.t' list) : T.t' list =
+        (result : Loc.t T.t' list) : Loc.t T.t' list =
       if count = limit then result
       else
         let ptype = self#choose count (fun () -> self#require_type env) in
