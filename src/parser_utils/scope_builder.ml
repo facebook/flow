@@ -130,10 +130,6 @@ class scope_builder = object(this)
       locals = LocMap.add loc (def, this#current_scope) acc.locals
     })
 
-  (* catch params for which their catch blocks introduce bindings, and those
-     bindings conflict with the catch params *)
-  val mutable bad_catch_params = []
-
   method! identifier (expr: Loc.t Ast.Identifier.t) =
     let loc, x = expr in
     begin match SMap.get x env with
@@ -212,10 +208,7 @@ class scope_builder = object(this)
       let open Ast.Pattern in
       let _, patt = param in
       match patt with
-      | Identifier { Identifier.name; _ } ->
-        let loc, _x = name in
-        if List.mem loc bad_catch_params then Bindings.empty else
-          Bindings.singleton name
+      | Identifier { Identifier.name; _ } -> Bindings.singleton name
       | _ -> (* TODO *)
         Bindings.empty
     ) super#catch_clause clause
@@ -236,8 +229,6 @@ class scope_builder = object(this)
           ()
     end;
 
-    let saved_bad_catch_params = bad_catch_params in
-    bad_catch_params <- hoist#bad_catch_params;
     this#with_bindings hoist#acc (fun () ->
       let (_loc, { Params.params = param_list; rest }) = params in
       run_list this#function_param_pattern param_list;
@@ -248,8 +239,7 @@ class scope_builder = object(this)
       | BodyExpression expr ->
         run this#expression expr
       end;
-    ) ();
-    bad_catch_params <- saved_bad_catch_params
+    ) ()
 
   method! function_declaration (expr: Loc.t Ast.Function.t) =
     let contains_with_or_eval =

@@ -68,9 +68,6 @@ class hoister = object(this)
     if x = "event" then () else
       this#update_acc (Bindings.add entry)
 
-  val mutable bad_catch_params = []
-  method bad_catch_params = bad_catch_params
-
   (* Ignore expressions. This includes, importantly, function expressions (whose
      ids should not be hoisted). *)
   method! expression (expr: Loc.t Ast.Expression.t) =
@@ -79,29 +76,6 @@ class hoister = object(this)
   (* Ignore assignment patterns, whose targets should not be hoisted. *)
   method! assignment_pattern (patt: Loc.t Ast.Pattern.t) =
     patt
-
-  (* The scoping rule for catch clauses is special. Hoisting for the current
-     scope continues in catch blocks, but the catch pattern also introduces a
-     local scope. *)
-  method! catch_clause (clause: Loc.t Ast.Statement.Try.CatchClause.t') =
-    let open Ast.Statement.Try.CatchClause in
-    let { param; body } = clause in
-    let saved_bindings = this#acc in
-    this#set_acc Bindings.empty;
-    let _, block = body in
-    let _ = this#block block in
-    let local_bindings = this#acc in
-    let open Ast.Pattern in
-    let _, patt = param in
-    begin match patt with
-    | Identifier { Identifier.name; _ } ->
-      let loc, x = name in
-      if Bindings.exists (fun (_loc, x') -> x = x') local_bindings
-      then bad_catch_params <- loc :: bad_catch_params
-    | _ -> ();
-    end;
-    this#set_acc (Bindings.push local_bindings saved_bindings);
-    clause
 
   (* Ignore class declarations, since they are lexical bindings (thus not
      hoisted). *)
