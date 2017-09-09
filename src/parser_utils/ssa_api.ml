@@ -11,6 +11,7 @@
 module LocMap = Utils_js.LocMap
 
 type read_loc = Loc.t
+type write_loc = Loc.t
 type write_locs = Loc.t list
 type values = write_locs LocMap.t
 
@@ -18,6 +19,9 @@ let uninitialized = Loc.none (* TODO: replace this with something more robust *)
 
 let write_locs_of_read_loc values loc =
   LocMap.find loc values
+
+let is_dead_write_loc values loc =
+  not (LocMap.exists (fun _read_loc write_locs -> List.mem loc write_locs) values)
 
 let print_write_loc loc =
   if loc = uninitialized then "(uninitialized)"
