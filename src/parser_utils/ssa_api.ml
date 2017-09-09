@@ -10,11 +10,13 @@
 
 module LocMap = Utils_js.LocMap
 
-type values = Loc.t list LocMap.t
+type read_loc = Loc.t
+type write_locs = Loc.t list
+type values = write_locs LocMap.t
 
 let uninitialized = Loc.none (* TODO: replace this with something more robust *)
 
-let values_of_loc values loc =
+let write_locs_of_read_loc values loc =
   LocMap.find loc values
 
 let print_write_loc loc =

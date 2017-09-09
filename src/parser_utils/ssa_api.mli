@@ -10,8 +10,10 @@
 
 module LocMap = Utils_js.LocMap
 
-type values = Loc.t list LocMap.t
+type read_loc = Loc.t
+type write_locs = Loc.t list
+type values = write_locs LocMap.t
 
 val uninitialized: Loc.t (* TODO: replace this with something more robust *)
-val values_of_loc: values -> Loc.t -> Loc.t list
+val write_locs_of_read_loc: values -> read_loc -> write_locs
 val print_values: values -> string
