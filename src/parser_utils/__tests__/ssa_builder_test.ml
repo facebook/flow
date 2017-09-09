@@ -25,6 +25,9 @@ let mk_ssa_builder_test contents expected_values =
       expected_values values
   end
 
+let mk_write pos1 pos2 =
+  Ssa_api.Write (mk_loc pos1 pos2)
+
 let tests = "ssa_builder" >::: [
   "let" >:: mk_ssa_builder_test
     "function foo() { \
@@ -34,7 +37,7 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 35) (1, 36)) [
-        mk_loc (1, 21) (1, 22);
+        mk_write (1, 21) (1, 22);
       ]
     );
   "let_update" >:: mk_ssa_builder_test
@@ -46,10 +49,10 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 28) (1, 29)) [
-        mk_loc (1, 21) (1, 22);
+        mk_write (1, 21) (1, 22);
       ] |>
       add (mk_loc (1, 40) (1, 41)) [
-        mk_loc (1, 28) (1, 29);
+        mk_write (1, 28) (1, 29);
       ]
     );
   "if" >:: mk_ssa_builder_test
@@ -64,11 +67,11 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 44) (1, 47)) [
-        mk_loc (1, 31) (1, 34);
+        mk_write (1, 31) (1, 34);
       ] |>
       add (mk_loc (1, 77) (1, 80)) [
-        mk_loc (1, 31) (1, 34);
-        mk_loc (1, 51) (1, 54);
+        mk_write (1, 31) (1, 34);
+        mk_write (1, 51) (1, 54);
       ]
     );
   "if_let" >:: mk_ssa_builder_test
@@ -83,10 +86,10 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 44) (1, 47)) [
-        mk_loc (1, 31) (1, 34);
+        mk_write (1, 31) (1, 34);
       ] |>
       add (mk_loc (1, 81) (1, 84)) [
-        mk_loc (1, 31) (1, 34);
+        mk_write (1, 31) (1, 34);
       ]
     );
   "while" >:: mk_ssa_builder_test
@@ -101,12 +104,12 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 47) (1, 50)) [
-        mk_loc (1, 31) (1, 34);
-        mk_loc (1, 54) (1, 57);
+        mk_write (1, 31) (1, 34);
+        mk_write (1, 54) (1, 57);
       ] |>
       add (mk_loc (1, 71) (1, 74)) [
-        mk_loc (1, 31) (1, 34);
-        mk_loc (1, 54) (1, 57);
+        mk_write (1, 31) (1, 34);
+        mk_write (1, 54) (1, 57);
       ]
     );
   "while_let" >:: mk_ssa_builder_test
@@ -121,10 +124,10 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 47) (1, 50)) [
-        mk_loc (1, 31) (1, 34);
+        mk_write (1, 31) (1, 34);
       ] |>
       add (mk_loc (1, 75) (1, 78)) [
-        mk_loc (1, 31) (1, 34);
+        mk_write (1, 31) (1, 34);
       ]
     );
   "for" >:: mk_ssa_builder_test
@@ -139,16 +142,16 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 58) (1, 61)) [
-        mk_loc (1, 49) (1, 52);
-        mk_loc (1, 67) (1, 70);
+        mk_write (1, 49) (1, 52);
+        mk_write (1, 67) (1, 70);
       ] |>
       add (mk_loc (1, 73) (1, 76)) [
-        mk_loc (1, 49) (1, 52);
-        mk_loc (1, 67) (1, 70);
+        mk_write (1, 49) (1, 52);
+        mk_write (1, 67) (1, 70);
       ] |>
       add (mk_loc (1, 101) (1, 104)) [
-        mk_loc (1, 31) (1, 34);
-        mk_loc (1, 84) (1, 87);
+        mk_write (1, 31) (1, 34);
+        mk_write (1, 84) (1, 87);
       ]
     );
   "for_let" >:: mk_ssa_builder_test
@@ -163,16 +166,16 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 58) (1, 61)) [
-        mk_loc (1, 49) (1, 52);
-        mk_loc (1, 67) (1, 70);
+        mk_write (1, 49) (1, 52);
+        mk_write (1, 67) (1, 70);
       ] |>
       add (mk_loc (1, 73) (1, 76)) [
-        mk_loc (1, 49) (1, 52);
-        mk_loc (1, 67) (1, 70);
+        mk_write (1, 49) (1, 52);
+        mk_write (1, 67) (1, 70);
       ] |>
       add (mk_loc (1, 101) (1, 104)) [
-        mk_loc (1, 31) (1, 34);
-        mk_loc (1, 84) (1, 87);
+        mk_write (1, 31) (1, 34);
+        mk_write (1, 84) (1, 87);
       ]
     );
   "switch" >:: mk_ssa_builder_test
@@ -191,28 +194,28 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 33) (1, 34)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 47) (1, 48)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 54) (1, 55)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 66) (1, 67)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 77) (1, 78)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 50) (1, 51);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 50) (1, 51);
       ] |>
       add (mk_loc (1, 97) (1, 98)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 73) (1, 74);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 73) (1, 74);
       ] |>
       add (mk_loc (1, 113) (1, 114)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 93) (1, 94);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 93) (1, 94);
       ]
     );
   "try" >:: mk_ssa_builder_test
@@ -229,12 +232,12 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 75) (1, 78)) [
-        mk_loc (1, 31) (1, 34);
-        mk_loc (1, 46) (1, 49);
+        mk_write (1, 31) (1, 34);
+        mk_write (1, 46) (1, 49);
       ] |>
       add (mk_loc (1, 89) (1, 92)) [
-        mk_loc (1, 18) (1, 21);
-        mk_loc (1, 69) (1, 72);
+        mk_write (1, 18) (1, 21);
+        mk_write (1, 69) (1, 72);
       ]
     );
   "closure" >:: mk_ssa_builder_test
@@ -252,15 +255,15 @@ let tests = "ssa_builder" >::: [
       empty |>
       add (mk_loc (1, 63) (1, 66)) [
         Ssa_api.uninitialized;
-        mk_loc (1, 31) (1, 34);
-        mk_loc (1, 70) (1, 73)
+        mk_write (1, 31) (1, 34);
+        mk_write (1, 70) (1, 73)
       ] |>
       add (mk_loc (1, 79) (1, 82)) [
-        mk_loc (1, 49) (1, 52);
+        mk_write (1, 49) (1, 52);
       ] |>
       add (mk_loc (1, 93) (1, 96)) [
-        mk_loc (1, 18) (1, 21);
-        mk_loc (1, 57) (1, 60);
+        mk_write (1, 18) (1, 21);
+        mk_write (1, 57) (1, 60);
       ]
     );
   "break_while" >:: mk_ssa_builder_test
@@ -277,11 +280,11 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 32) (1, 33)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 70) (1, 71)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 37) (1, 38);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 37) (1, 38);
       ]
     );
   "continue_while" >:: mk_ssa_builder_test
@@ -298,12 +301,12 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 32) (1, 33)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 37) (1, 38);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 37) (1, 38);
       ] |>
       add (mk_loc (1, 73) (1, 74)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 37) (1, 38);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 37) (1, 38);
       ]
     );
   "break_for" >:: mk_ssa_builder_test
@@ -319,11 +322,11 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 30) (1, 31)) [
-        mk_loc (1, 23) (1, 24);
+        mk_write (1, 23) (1, 24);
       ] |>
       add (mk_loc (1, 78) (1, 79)) [
-        mk_loc (1, 23) (1, 24);
-        mk_loc (1, 45) (1, 46);
+        mk_write (1, 23) (1, 24);
+        mk_write (1, 45) (1, 46);
       ]
     );
   "continue_for" >:: mk_ssa_builder_test
@@ -339,15 +342,15 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 30) (1, 31)) [
-        mk_loc (1, 23) (1, 24);
-        mk_loc (1, 38) (1, 39);
+        mk_write (1, 23) (1, 24);
+        mk_write (1, 38) (1, 39);
       ] |>
       add (mk_loc (1, 38) (1, 39)) [
-        mk_loc (1, 45) (1, 46);
+        mk_write (1, 45) (1, 46);
       ] |>
       add (mk_loc (1, 81) (1, 82)) [
-        mk_loc (1, 23) (1, 24);
-        mk_loc (1, 38) (1, 39);
+        mk_write (1, 23) (1, 24);
+        mk_write (1, 38) (1, 39);
       ]
     );
   "break_switch" >:: mk_ssa_builder_test
@@ -367,28 +370,28 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 33) (1, 34)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 47) (1, 48)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 54) (1, 55)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 73) (1, 74)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 84) (1, 85)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 104) (1, 105)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 80) (1, 81);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 80) (1, 81);
       ] |>
       add (mk_loc (1, 120) (1, 121)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 50) (1, 51);
-        mk_loc (1, 100) (1, 101);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 50) (1, 51);
+        mk_write (1, 100) (1, 101);
       ]
     );
   "break_labeled" >:: mk_ssa_builder_test
@@ -404,10 +407,10 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 34) (1, 35)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 70) (1, 71)) [
-        mk_loc (1, 30) (1, 31);
+        mk_write (1, 30) (1, 31);
       ]
     );
   "break_labeled_while" >:: mk_ssa_builder_test
@@ -424,11 +427,11 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 35) (1, 36)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 75) (1, 76)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 40) (1, 41);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 40) (1, 41);
       ]
     );
   "break_if" >:: mk_ssa_builder_test
@@ -445,13 +448,13 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 34) (1, 35)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 45) (1, 46)) [
-        mk_loc (1, 30) (1, 31);
+        mk_write (1, 30) (1, 31);
       ] |>
       add (mk_loc (1, 91) (1, 92)) [
-        mk_loc (1, 30) (1, 31);
+        mk_write (1, 30) (1, 31);
       ]
     );
   "break_if_partial" >:: mk_ssa_builder_test
@@ -467,17 +470,17 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 34) (1, 35)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 45) (1, 46)) [
-        mk_loc (1, 30) (1, 31);
+        mk_write (1, 30) (1, 31);
       ] |>
       add (mk_loc (1, 61) (1, 62)) [
-        mk_loc (1, 30) (1, 31);
+        mk_write (1, 30) (1, 31);
       ] |>
       add (mk_loc (1, 77) (1, 78)) [
-        mk_loc (1, 30) (1, 31);
-        mk_loc (1, 57) (1, 58);
+        mk_write (1, 30) (1, 31);
+        mk_write (1, 57) (1, 58);
       ]
     );
   "continue_if_partial" >:: mk_ssa_builder_test
@@ -493,25 +496,25 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 32) (1, 33)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 37) (1, 38);
-        mk_loc (1, 65) (1, 66);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 37) (1, 38);
+        mk_write (1, 65) (1, 66);
       ] |>
       add (mk_loc (1, 41) (1, 42)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 37) (1, 38);
-        mk_loc (1, 65) (1, 66);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 37) (1, 38);
+        mk_write (1, 65) (1, 66);
       ] |>
       add (mk_loc (1, 52) (1, 53)) [
-        mk_loc (1, 37) (1, 38);
+        mk_write (1, 37) (1, 38);
       ] |>
       add (mk_loc (1, 69) (1, 70)) [
-        mk_loc (1, 37) (1, 38);
+        mk_write (1, 37) (1, 38);
       ] |>
       add (mk_loc (1, 85) (1, 86)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 37) (1, 38);
-        mk_loc (1, 65) (1, 66);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 37) (1, 38);
+        mk_write (1, 65) (1, 66);
       ]
     );
   "continue_labeled_while" >:: mk_ssa_builder_test
@@ -528,12 +531,12 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 35) (1, 36)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 40) (1, 41);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 40) (1, 41);
       ] |>
       add (mk_loc (1, 78) (1, 79)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 40) (1, 41);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 40) (1, 41);
       ]
     );
   "continue_labeled_do_while" >:: mk_ssa_builder_test
@@ -550,10 +553,10 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 71) (1, 72)) [
-        mk_loc (1, 33) (1, 34);
+        mk_write (1, 33) (1, 34);
       ] |>
       add (mk_loc (1, 81) (1, 82)) [
-        mk_loc (1, 33) (1, 34);
+        mk_write (1, 33) (1, 34);
       ]
     );
   "labeled_break_do_while" >:: mk_ssa_builder_test
@@ -572,7 +575,7 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 90) (1, 91)) [
-        mk_loc (1, 35) (1, 36);
+        mk_write (1, 35) (1, 36);
       ]
     );
   "labeled_break_try_catch" >:: mk_ssa_builder_test
@@ -592,19 +595,19 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 38) (1, 39)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 63) (1, 64)) [
-        mk_loc (1, 54) (1, 55);
+        mk_write (1, 54) (1, 55);
       ] |>
       add (mk_loc (1, 95) (1, 96)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 34) (1, 35);
-        mk_loc (1, 59) (1, 60);
-        mk_loc (1, 91) (1, 92);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 34) (1, 35);
+        mk_write (1, 59) (1, 60);
+        mk_write (1, 91) (1, 92);
       ] |>
       add (mk_loc (1, 111) (1, 112)) [
-        mk_loc (1, 91) (1, 92);
+        mk_write (1, 91) (1, 92);
       ]
     );
   "nested_labeled_break_try_catch" >:: mk_ssa_builder_test
@@ -629,19 +632,19 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 45) (1, 46)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 70) (1, 71)) [
-        mk_loc (1, 61) (1, 62);
+        mk_write (1, 61) (1, 62);
       ] |>
       add (mk_loc (1, 102) (1, 103)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 41) (1, 42);
-        mk_loc (1, 66) (1, 67);
-        mk_loc (1, 98) (1, 99);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 41) (1, 42);
+        mk_write (1, 66) (1, 67);
+        mk_write (1, 98) (1, 99);
       ] |>
       add (mk_loc (1, 142) (1, 143)) [
-        mk_loc (1, 98) (1, 99);
+        mk_write (1, 98) (1, 99);
       ]
     );
   "throw" >:: mk_ssa_builder_test
@@ -657,13 +660,13 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 29) (1, 30)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ] |>
       add (mk_loc (1, 47) (1, 48)) [
-        mk_loc (1, 34) (1, 35);
+        mk_write (1, 34) (1, 35);
       ] |>
       add (mk_loc (1, 66) (1, 67)) [
-        mk_loc (1, 18) (1, 19);
+        mk_write (1, 18) (1, 19);
       ]
     );
   "nested_while" >:: mk_ssa_builder_test
@@ -683,22 +686,22 @@ let tests = "ssa_builder" >::: [
     LocMap.(
       empty |>
       add (mk_loc (1, 32) (1, 33)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 90) (1, 91);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 90) (1, 91);
       ] |>
       add (mk_loc (1, 48) (1, 49)) [
-        mk_loc (1, 37) (1, 38);
+        mk_write (1, 37) (1, 38);
       ] |>
       add (mk_loc (1, 76) (1, 77)) [
-        mk_loc (1, 62) (1, 63);
+        mk_write (1, 62) (1, 63);
       ] |>
       add (mk_loc (1, 94) (1, 95)) [
-        mk_loc (1, 62) (1, 63);
+        mk_write (1, 62) (1, 63);
       ] |>
       add (mk_loc (1, 109) (1, 110)) [
-        mk_loc (1, 18) (1, 19);
-        mk_loc (1, 37) (1, 38);
-        mk_loc (1, 90) (1, 91);
+        mk_write (1, 18) (1, 19);
+        mk_write (1, 37) (1, 38);
+        mk_write (1, 90) (1, 91);
       ]
     );
 ]

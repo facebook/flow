@@ -21,6 +21,7 @@ open Scope_builder
    during traversal, but will be known by the time traversal is complete. *)
 module Val = struct
   type t =
+    | Uninitialized
     | Loc of Loc.t
     | PHI of t list
     | REF of t option ref
@@ -30,7 +31,7 @@ module Val = struct
 
   let empty = PHI []
 
-  let uninitialized = Loc Ssa_api.uninitialized (* TODO: replace this with something more robust *)
+  let uninitialized = Uninitialized
 
   let merge t1 t2 =
     PHI [t1;t2]
@@ -46,6 +47,7 @@ module Val = struct
         r := Some (erase r t)
       | _ -> failwith "Only an unresolved REF can be resolved"
   and erase r t = match t with
+    | Uninitialized -> t
     | Loc _ -> t
     | PHI ts -> PHI (List.map (erase r) ts)
     | REF r' ->
@@ -57,7 +59,8 @@ module Val = struct
 
   (* Simplification converts a Val.t to a list of locations. *)
   let rec simplify t = match t with
-    | Loc loc -> [loc]
+    | Uninitialized -> [Ssa_api.Uninitialized]
+    | Loc loc -> [Ssa_api.Write loc]
     | PHI ts ->
       let locs' = List.fold_left (fun locs' t ->
         let locs = simplify t in
