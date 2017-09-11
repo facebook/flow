@@ -1357,6 +1357,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (********)
 
     | EvalT (t, TypeDestructorT (reason, s), i), _ ->
+      let t = match t with
+        | OpenT (_, id) ->
+          let _, constraints = find_constraints cx id in
+          (match constraints with
+            | Resolved t -> t
+            | _ -> t)
+        | _ -> t
+      in
       rec_flow cx trace (eval_destructor cx ~trace reason t s i, u)
 
     | _, UseT (use_op, EvalT (t, TypeDestructorT (reason, s), i)) ->
@@ -1369,7 +1377,23 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          For example, when t is { x: number }, we want $PropertyType(t) to be
          number, not some open tvar that is a supertype of number (since the
          latter would accept more than number, e.g. string). Similarly, when t
-         is ?string, we want the $NonMaybeType(t) to be string. *)
+         is ?string, we want the $NonMaybeType(t) to be string.
+
+         However, in practice we are loose and allow extra lower bounds to flow
+         into the result if t itself is open. We do this because if t is open
+         then it may never resolve, or it may resolve multiple times producing a
+         result with the same characteristics.
+
+         We can avoid being loose if the tvar is resolved, so we unwrap resolved
+         tvars. *)
+      let t = match t with
+        | OpenT (_, id) ->
+          let _, constraints = find_constraints cx id in
+          (match constraints with
+            | Resolved t -> t
+            | _ -> t)
+        | _ -> t
+      in
       let result = eval_destructor cx ~trace reason t s i in
       begin match t with
       | OpenT _ ->
