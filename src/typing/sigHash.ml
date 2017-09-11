@@ -154,7 +154,7 @@ type hash =
   | ExportTypeH
   | MapTypeH
   | ReactKitH
-  | ObjSpreadH
+  | ObjKitH
   | ChoiceKitUseH
   | IntersectionPreprocessKitH
   | DebugPrintH
@@ -305,7 +305,7 @@ let hash_of_use_ctor = Type.(function
   | ExportTypeT _ -> ExportTypeH
   | MapTypeT _ -> MapTypeH
   | ReactKitT _ -> ReactKitH
-  | ObjSpreadT _ -> ObjSpreadH
+  | ObjKitT _ -> ObjKitH
   | ChoiceKitUseT _ -> ChoiceKitUseH
   | IntersectionPreprocessKitT _ -> IntersectionPreprocessKitH
   | DebugPrintT _ -> DebugPrintH

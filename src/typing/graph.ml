@@ -372,7 +372,7 @@ and parts_of_use_t cx = function
     | None -> []
     | Some args -> list_parts args
   end
-| ObjSpreadT (_, _, _, _, out) -> ["out", Def out]
+| ObjKitT (_, _, _, out) -> ["out", Def out]
 | SubstOnPredT (_, _, t) -> ["t", Def t]
 | SuperT _ -> []
 | TestPropT (_, _, out) -> ["out", Def out]

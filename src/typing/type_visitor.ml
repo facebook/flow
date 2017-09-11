@@ -452,23 +452,26 @@ class ['a] t = object(self)
       let acc = self#type_ cx acc tout in
       acc)
 
-  | ObjSpreadT (_, _, tool, state, tout) ->
-    let open ObjectSpread in
-    let acc = match tool with
-      | Resolve r -> self#object_spread_resolve cx acc r
+  | ObjKitT (_, resolve_tool, tool, tout) ->
+    let open Object in
+    let acc =
+      match resolve_tool with
+      | Resolve r -> self#object_kit_resolve cx acc r
       | Super (s, r) ->
-        let acc = self#object_spread_slice cx acc s in
-        let acc = self#object_spread_resolve cx acc r in
+        let acc = self#object_kit_slice cx acc s in
+        let acc = self#object_kit_resolve cx acc r in
         acc
     in
-    let acc =
-      let { todo_rev; acc = object_spread_acc } = state in
-      let acc = List.fold_left (self#type_ cx) acc todo_rev in
-      let acc = List.fold_left
-        (Nel.fold_left (self#object_spread_slice cx))
-        acc object_spread_acc
-      in
-      acc
+    let acc = match tool with
+      | Spread (_, state) ->
+        let open Object.Spread in
+        let { todo_rev; acc = object_spread_acc } = state in
+        let acc = List.fold_left (self#type_ cx) acc todo_rev in
+        let acc = List.fold_left
+          (Nel.fold_left (self#object_kit_slice cx))
+          acc object_spread_acc
+        in
+        acc
     in
     let acc = self#type_ cx acc tout in
     acc
@@ -681,15 +684,17 @@ class ['a] t = object(self)
   | ObjectMap t
   | ObjectMapi t -> self#type_ cx acc t
 
-  method private object_spread_resolve cx acc = function
-  | ObjectSpread.Next -> acc
-  | ObjectSpread.List0 (ts, _) -> Nel.fold_left (self#type_ cx) acc ts
-  | ObjectSpread.List (ts, rs, _) ->
-    let acc = List.fold_left (self#type_ cx) acc ts in
-    let acc = Nel.fold_left (Nel.fold_left (self#object_spread_slice cx)) acc rs in
-    acc
+  method private object_kit_resolve cx acc =
+    let open Object in
+    function
+    | Next -> acc
+    | List0 (ts, _) -> Nel.fold_left (self#type_ cx) acc ts
+    | List (ts, rs, _) ->
+      let acc = List.fold_left (self#type_ cx) acc ts in
+      let acc = Nel.fold_left (Nel.fold_left (self#object_kit_slice cx)) acc rs in
+      acc
 
-  method private object_spread_slice cx acc (_, props, dict, _) =
+  method private object_kit_slice cx acc (_, props, dict, _) =
     let acc = self#smap (fun acc (t, _) -> self#type_ cx acc t) acc props in
     let acc = self#opt (self#dict_type cx) acc dict in
     acc

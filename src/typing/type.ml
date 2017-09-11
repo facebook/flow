@@ -483,14 +483,9 @@ module rec TypeTerm : sig
     (* Map a FunT over a structure *)
     | MapTypeT of reason * type_map * t_out
 
-    | ReactKitT of reason * React.tool
+    | ObjKitT of reason * Object.resolve_tool * Object.tool * t_out
 
-    | ObjSpreadT of
-        reason
-        * ObjectSpread.options
-        * ObjectSpread.tool
-        * ObjectSpread.state
-        * t_out
+    | ReactKitT of reason * React.tool
 
     | ChoiceKitUseT of reason * choice_use_tool
 
@@ -876,7 +871,7 @@ module rec TypeTerm : sig
   | PropertyType of string
   | ElementType of t
   | Bind of t
-  | SpreadType of ObjectSpread.options * t list
+  | SpreadType of Object.Spread.options * t list
   | ValuesType
   | CallType of t list
   | TypeMap of type_map
@@ -1490,6 +1485,63 @@ and UseTypeMap : MyMap.S with type key = TypeTerm.use_t = MyMap.Make (struct
   let compare = Pervasives.compare
 end)
 
+and Object : sig
+  type resolve_tool =
+    (* Each part of a spread must be resolved in order to compute the result *)
+    | Resolve of resolve
+    (* In order to resolve an InstanceT, all supers must also be resolved to
+       collect class properties, which are own. *)
+    | Super of slice * resolve
+
+  and resolve =
+    | Next
+    (* Resolve each element of a union or intersection *)
+    | List0 of TypeTerm.t Nel.t * join
+    | List of TypeTerm.t list * resolved Nel.t * join
+
+  and join = And | Or
+
+  (* A union type resolves to a resolved spread with more than one element *)
+  and resolved = slice Nel.t
+
+  and slice = reason * props * dict * TypeTerm.flags
+
+  and props = prop SMap.t
+  and prop = TypeTerm.t * bool (* own *)
+
+  and dict = TypeTerm.dicttype option
+
+  module Spread : sig
+    type state = {
+      todo_rev: TypeTerm.t list;
+      acc: resolved list;
+    }
+
+    and options = {
+      merge_mode: merge_mode;
+      exclude_props: string list;
+    }
+
+    and merge_mode =
+      (* Combine objects according to the semantics of object spread properties. *)
+      | Sound of target
+      (* A special case for DiffT. It filters void types from properties. *)
+      | Diff
+
+    and target =
+      (* When spreading values, the result is exact if all of the input types are
+         also exact. If any input type is inexact, the output is inexact. *)
+      | Value
+      (* It's more flexible to allow annotations to specify whether they should be
+         exact or not. If the spread type is annotated to be exact, any inexact
+         input types will cause a type error. *)
+      | Annot of { make_exact: bool }
+  end
+
+  type tool =
+    | Spread of Spread.options * Spread.state
+end = Object
+
 and React : sig
   module PropType : sig
     type t =
@@ -1584,58 +1636,6 @@ and React : sig
   | SimplifyPropType of SimplifyPropType.tool * TypeTerm.t_out
   | CreateClass of CreateClass.tool * CreateClass.knot * TypeTerm.t_out
 end = React
-
-and ObjectSpread : sig
-  type tool =
-    (* Each part of a spread must be resolved in order to compute the result *)
-    | Resolve of resolve
-    (* In order to resolve an InstanceT, all supers must also be resolved to
-       collect class properties, which are own. *)
-    | Super of slice * resolve
-
-  and resolve =
-    | Next
-    (* Resolve each element of a union or intersection *)
-    | List0 of TypeTerm.t Nel.t * join
-    | List of TypeTerm.t list * resolved Nel.t * join
-
-  and join = And | Or
-
-  and state = {
-    todo_rev: TypeTerm.t list;
-    acc: resolved list;
-  }
-
-  and options = {
-    merge_mode: merge_mode;
-    exclude_props: string list;
-  }
-
-  and merge_mode =
-    (* Combine objects according to the semantics of object spread properties. *)
-    | Spread of spread_target
-    (* A special case for DiffT. It filters void types from properties. *)
-    | Diff
-
-  and spread_target =
-    (* When spreading values, the result is exact if all of the input types are
-       also exact. If any input type is inexact, the output is inexact. *)
-    | Value
-    (* It's more flexible to allow annotations to specify whether they should be
-       exact or not. If the spread type is annotated to be exact, any inexact
-       input types will cause a type error. *)
-    | Annot of { make_exact: bool }
-
-  (* A union type resolves to a resolved spread with more than one element *)
-  and resolved = slice Nel.t
-
-  and slice = reason * props * dict * TypeTerm.flags
-
-  and props = prop SMap.t
-  and prop = TypeTerm.t * bool (* own *)
-
-  and dict = TypeTerm.dicttype option
-end = ObjectSpread
 
 include TypeTerm
 
@@ -1825,7 +1825,7 @@ let any_propagating_use_t = function
   | ObjFreezeT _
   | ObjRestT _
   | ObjSealT _
-  | ObjSpreadT _
+  | ObjKitT _
   | ObjTestProtoT _
   | ObjTestT _
   | OrT _
@@ -1994,7 +1994,7 @@ and reason_of_use_t = function
   | SetPrivatePropT (reason,_,_,_,_) -> reason
   | SetProtoT (reason,_) -> reason
   | SpecializeT(reason,_,_,_,_) -> reason
-  | ObjSpreadT (reason, _, _, _, _) -> reason
+  | ObjKitT (reason, _, _, _) -> reason
   | SubstOnPredT (reason, _, _) -> reason
   | SuperT (reason,_) -> reason
   | TestPropT (reason, _, _) -> reason
@@ -2155,8 +2155,8 @@ and mod_reason_of_use_t f = function
   | SetProtoT (reason, t) -> SetProtoT (f reason, t)
   | SpecializeT(reason_op, reason_tapp, cache, ts, t) ->
       SpecializeT (f reason_op, reason_tapp, cache, ts, t)
-  | ObjSpreadT (reason, options, tool, state, k) ->
-      ObjSpreadT (f reason, options, tool, state, k)
+  | ObjKitT (reason, resolve_tool, tool, tout) ->
+      ObjKitT (f reason, resolve_tool, tool, tout)
   | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
   | SuperT (reason, inst) -> SuperT (f reason, inst)
   | TestPropT (reason, n, t) -> TestPropT (f reason, n, t)
@@ -2390,7 +2390,7 @@ let string_of_use_ctor = function
   | SetPrivatePropT _ -> "SetPrivatePropT"
   | SetProtoT _ -> "SetProtoT"
   | SpecializeT _ -> "SpecializeT"
-  | ObjSpreadT _ -> "ObjSpreadT"
+  | ObjKitT _ -> "ObjKitT"
   | SubstOnPredT _ -> "SubstOnPredT"
   | SuperT _ -> "SuperT"
   | TestPropT _ -> "TestPropT"

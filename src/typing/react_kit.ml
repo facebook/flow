@@ -417,7 +417,8 @@ let run cx trace reason_op l u
      * and remove key and ref since we already checked key and ref. Finally in
      * this block we will flow the final config to our props type. *)
     let () =
-      let open ObjectSpread in
+      let open Object in
+      let open Object.Spread in
       (* We need to treat config input as a literal here so we ensure it has the
        * RReactElement or RReactElementProps reason. *)
       let reason_el = replace_reason (fun desc ->
@@ -438,7 +439,7 @@ let run cx trace reason_op l u
       let options = {
         (* We just want to merge the objects together. In this case we do not
          * care about sound object spread rules. *)
-        merge_mode = Spread Value;
+        merge_mode = Sound Value;
         (* Exclude key and ref from our final object type since we already
          * checked key and ref. We do not want key and ref to exist on our
          * final config_input type in case config is exact. *)
@@ -449,7 +450,7 @@ let run cx trace reason_op l u
       (* Flow the spread of config_input and config_input_mixin to config which
        * will perform the final config to props check. *)
       rec_flow cx trace (config_input,
-        ObjSpreadT (reason_el, options, tool, state, config))
+        ObjKitT (reason_el, tool, Spread (options, state), config))
     in
     (* Set the return type as a React element. *)
     let elem_reason = replace_reason_const (RReactElement None) reason_op in
