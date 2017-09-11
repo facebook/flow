@@ -10,26 +10,26 @@
 
 val extract_destructured_bindings :
   (Loc.t * string) list ->
-  Ast.Pattern.t' ->
+  Loc.t Ast.Pattern.t' ->
   (Loc.t * string) list
 
 val destructuring :
   Context.t ->
-  expr:(Context.t -> Ast.Expression.t -> Type.t) ->
+  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
   f:(Loc.t ->
     string ->
-    Ast.Expression.t Default.t option ->
+    Loc.t Ast.Expression.t Default.t option ->
     Type.t -> unit) ->
   Type.t ->
-  Ast.Expression.t option ->
-  Ast.Expression.t Default.t option ->
-  Ast.Pattern.t -> unit
+  Loc.t Ast.Expression.t option ->
+  Loc.t Ast.Expression.t Default.t option ->
+  Loc.t Ast.Pattern.t -> unit
 val type_of_pattern :
-  'a * Ast.Pattern.t' ->
-  Ast.Type.annotation option
+  'a * Loc.t Ast.Pattern.t' ->
+  Loc.t Ast.Type.annotation option
 val destructuring_assignment :
   Context.t ->
-  expr:(Context.t -> Ast.Expression.t -> Type.t) ->
+  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
   Type.t ->
-  Ast.Expression.t ->
-  Ast.Pattern.t -> unit
+  Loc.t Ast.Expression.t ->
+  Loc.t Ast.Pattern.t -> unit

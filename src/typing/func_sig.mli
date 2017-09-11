@@ -7,16 +7,16 @@ type t
 (** Create signature from function AST. *)
 val mk: Context.t ->
   Type.t SMap.t -> (* type params map *)
-  expr:(Context.t -> Ast.Expression.t -> Type.t) ->
+  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
   Loc.t ->
-  Ast.Function.t ->
+  Loc.t Ast.Function.t ->
   t
 
 (** Create signature from function type AST. *)
 val convert: Context.t ->
   Type.t SMap.t -> (* type params map *)
   Loc.t ->
-  Ast.Type.Function.t ->
+  Loc.t Ast.Type.Function.t ->
   t
 
 (** Create signature for a default constructor.
@@ -38,8 +38,8 @@ val field_initializer:
   Context.t ->
   Type.t SMap.t -> (* type params map *)
   Reason.t ->
-  Ast.Expression.t -> (* init *)
-  Ast.Type.annotation option -> (* return type *)
+  Loc.t Ast.Expression.t -> (* init *)
+  Loc.t Ast.Type.annotation option -> (* return type *)
   t
 
 (** 1. Manipulation *)
@@ -67,13 +67,13 @@ val generate_tests: Context.t ->
     statements in the function body, and provides an implicit return type if
     necessary *)
 val toplevels:
-  Ast.Identifier.t option -> (* id *)
+  Loc.t Ast.Identifier.t option -> (* id *)
   Context.t ->
   Scope.Entry.t -> (* this *)
   Scope.Entry.t -> (* super *)
-  decls:(Context.t -> Ast.Statement.t list -> unit) ->
-  stmts:(Context.t -> Ast.Statement.t list -> unit) ->
-  expr:(Context.t -> Ast.Expression.t -> Type.t) ->
+  decls:(Context.t -> Loc.t Ast.Statement.t list -> unit) ->
+  stmts:(Context.t -> Loc.t Ast.Statement.t list -> unit) ->
+  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
   t -> unit
 
 (** 1. Type Conversion *)
@@ -101,4 +101,4 @@ val settertype: t -> Type.t
 (** 1. Util *)
 
 (** The location of the return type for a function. *)
-val return_loc: Ast.Function.t -> Loc.t
+val return_loc: Loc.t Ast.Function.t -> Loc.t

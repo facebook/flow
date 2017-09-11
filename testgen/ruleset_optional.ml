@@ -24,8 +24,8 @@ class ruleset_optional = object(self)
 
   method! weak_assert b = self#backtrack_on_false b
 
-  method! is_subtype_obj (o1 : T.Object.t) (o2 : T.Object.t) =
-    let get_prop_set (o : T.Object.t) =
+  method! is_subtype_obj (o1 : Loc.t T.Object.t) (o2 : Loc.t T.Object.t) =
+    let get_prop_set (o : Loc.t T.Object.t) =
       let tbl = Hashtbl.create 1000 in
 
       (* hash table for storing optional properties *)
@@ -66,7 +66,7 @@ class ruleset_optional = object(self)
     let rec gen_expr_list
         (count : int)
         (limit : int)
-        (result : (E.t' * T.t') list) : (E.t' * T.t') list =
+        (result : (Loc.t E.t' * Loc.t T.t') list) : (Loc.t E.t' * Loc.t T.t') list =
       if count = limit then result
       else
         let expr = self#choose count (fun () -> self#require_expr env) in
@@ -119,7 +119,7 @@ class ruleset_optional = object(self)
     let rec gen_type_list
         (count : int)
         (limit : int)
-        (result : T.t' list) : T.t' list =
+        (result : Loc.t T.t' list) : Loc.t T.t' list =
       if count = limit then result
       else
         let ptype = self#choose count (fun () -> self#require_type env) in
@@ -273,7 +273,7 @@ class ruleset_optional = object(self)
   (* A rule for adding primitive types *)
   method rule_obj_type_copy (env : env_t) : (Syntax.t * env_t) =
     (* a helper function for generating object property types *)
-    let get_prop (o : T.t') =
+    let get_prop (o : Loc.t T.t') =
       let open T.Object.Property in
       let o = match o with
         | T.Object ot -> ot

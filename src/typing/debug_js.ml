@@ -163,8 +163,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "instance", json_of_insttype json_cx instance
     ]
 
-  | DefT (_, OptionalT t)
-  | AbstractT (_, t) -> [
+  | DefT (_, OptionalT t) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -702,7 +701,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t", _json_of_t json_cx t;
     ]
 
-  | ObjSpreadT (_, _, _, _, tout) -> [
+  | ObjKitT (_, _, _, tout) -> [
       "t_out", _json_of_t json_cx tout;
     ]
 
@@ -1071,12 +1070,12 @@ and json_of_destructor_impl json_cx = Hh_json.(function
       "thisType", _json_of_t json_cx t
     ]
   | SpreadType (options, ts) ->
-    let open ObjectSpread in
+    let open Object.Spread in
     let {merge_mode; exclude_props} = options in
     JSON_Object (
       (match merge_mode with
-        | Spread target -> [
-            "mergeMode", JSON_String "Spread";
+        | Sound target -> [
+            "mergeMode", JSON_String "Sound";
           ] @ (match target with
           | Value -> [
               "target", JSON_String "Value";
@@ -1663,8 +1662,7 @@ and dump_t_ (depth, tvars) cx t =
       ~extra:(spf "use_desc=%b, %s" use_desc (kid source))
   | OpaqueT (_, {underlying_t = Some arg; _}) -> p ~extra:(spf "%s" (kid arg)) t
   | OpaqueT _ -> p t
-  | DefT (_, OptionalT arg)
-  | AbstractT (_, arg) -> p ~extra:(kid arg) t
+  | DefT (_, OptionalT arg) -> p ~extra:(kid arg) t
   | EvalT (arg, expr, id) -> p
       ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
   | DefT (_, TypeAppT (base, args)) -> p ~extra:(spf "%s, [%s]"
@@ -1844,8 +1842,8 @@ and dump_use_t_ (depth, tvars) cx t =
     else spf "{%s}" xs
   in
 
-  let object_spread =
-    let open ObjectSpread in
+  let object_kit =
+    let open Object in
     let join = function And -> "And" | Or -> "Or" in
     let resolved xs =
       spf "[%s]" (String.concat "; " (List.map slice (Nel.to_list xs)))
@@ -1862,28 +1860,35 @@ and dump_use_t_ (depth, tvars) cx t =
           (String.concat "; " (List.map resolved (Nel.to_list done_rev)))
           (join j)
     in
-    let tool = function
+    let resolve_tool = function
       | Resolve tool -> spf "Resolve %s" (resolve tool)
       | Super (s, tool) -> spf "Super (%s, %s)" (slice s) (resolve tool)
     in
-    let state {todo_rev; acc} =
-      spf "{todo_rev=[%s]; acc=[%s]}"
-        (String.concat "; " (List.map kid todo_rev))
-        (String.concat "; " (List.map resolved acc))
+    let spread options state =
+      let open Object.Spread in
+      let options =
+        let {merge_mode; exclude_props} = options in
+        spf "{merge_mode=%s; exclude_props=[%s]}"
+          (match merge_mode with
+            | Sound target -> spf "Sound (%s)" (match target with
+              | Annot { make_exact } -> spf "Annot { make_exact=%b }" make_exact
+              | Value -> "Value")
+            | Diff -> "Diff")
+          (String.concat "; " exclude_props)
+      in
+      let state =
+        let {todo_rev; acc} = state in
+        spf "{todo_rev=[%s]; acc=[%s]}"
+          (String.concat "; " (List.map kid todo_rev))
+          (String.concat "; " (List.map resolved acc))
+      in
+      spf "(%s, %s)" options state
     in
-    let target = function
-      | Annot { make_exact } -> spf "Annot { make_exact=%b }" make_exact
-      | Value -> "Value"
+    let tool = function
+      | Spread (options, state) -> spread options state
     in
-    let options {merge_mode; exclude_props} =
-      spf "{merge_mode=%s; exclude_props=[%s]}"
-        (match merge_mode with
-          | Spread t -> spf "Spread (%s)" (target t)
-          | Diff -> "Diff")
-        (String.concat "; " exclude_props)
-    in
-    fun o t s ->
-      spf "(%s, %s, %s)" (options o) (tool t) (state s)
+    fun a b ->
+      spf "(%s, %s)" (resolve_tool a) (tool b)
   in
 
   if depth = 0 then string_of_use_ctor t
@@ -2022,9 +2027,9 @@ and dump_use_t_ (depth, tvars) cx t =
       | None -> spf "%s, %s"
           (specialize_cache cache) (kid ret)
     end t
-  | ObjSpreadT (_, options, tool, state, arg) -> p ~extra:(spf "%s, %s"
-      (object_spread options tool state)
-      (kid arg)) t
+  | ObjKitT (_, resolve_tool, tool, tout) -> p ~extra:(spf "%s, %s"
+      (object_kit resolve_tool tool)
+      (kid tout)) t
   | TestPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t
@@ -2514,8 +2519,8 @@ let dump_flow_error =
         spf "EIndeterminateModuleType (%s)" (string_of_loc loc)
     | EUnreachable loc ->
         spf "EUnreachable (%s)" (string_of_loc loc)
-    | EInvalidSpread { reason; reason_op } ->
-        spf "EInvalidSpread { reason = %s; reason_op = %s }"
+    | EInvalidObjectKit { reason; reason_op; _ } ->
+        spf "EInvalidObjectKit { reason = %s; reason_op = %s }"
           (dump_reason cx reason)
           (dump_reason cx reason_op)
     | EInvalidTypeof (loc, name) ->

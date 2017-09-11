@@ -25,7 +25,7 @@ val merge_strict_context:
 val merge_contents_context:
   Options.t ->
   filename ->
-  Ast.program ->
+  Loc.t Ast.program ->
   Docblock.t ->
   ensure_checked_dependencies: (Modulename.Set.t -> unit) ->
   Context.t

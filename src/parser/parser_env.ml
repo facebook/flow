@@ -179,7 +179,7 @@ type allowed_super =
 
 type env = {
   errors                : (Loc.t * Error.t) list ref;
-  comments              : Comment.t list ref;
+  comments              : Loc.t Comment.t list ref;
   labels                : SSet.t;
   exports               : SSet.t ref;
   last_lex_result       : Lex_result.t option ref;
@@ -657,7 +657,7 @@ module Try = struct
 
   type saved_state = {
     saved_errors          : (Loc.t * Error.t) list;
-    saved_comments        : Ast.Comment.t list;
+    saved_comments        : Loc.t Ast.Comment.t list;
     saved_last_lex_result : Lex_result.t option;
     saved_lex_mode_stack  : Lex_mode.t list;
     saved_lex_env         : Lex_env.t;

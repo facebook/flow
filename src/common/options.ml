@@ -23,7 +23,7 @@ type jsx_mode =
    * when interpreting JSX syntax. Otherwise, the usual rules of JSX are
    * followed: children are varargs after a props argument.
    *)
-  | JSXPragma of (string * Ast.Expression.t)
+  | JSXPragma of (string * Loc.t Ast.Expression.t)
   (**
    * Alternate mode for interpreting JSX syntax. The element name is treated
    * as a function to be directly invoked, e.g. <Foo /> -> Foo({}).

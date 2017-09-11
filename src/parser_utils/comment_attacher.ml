@@ -22,12 +22,12 @@ type attachment_pos =
 
 type info = {
   (* Resulting map of node loc to list of comments and attachment type *)
-  attached_comments: ((attachment_pos * Ast.Comment.t) list) Utils_js.LocMap.t;
-  unattached_comments: Ast.Comment.t list;
+  attached_comments: ((attachment_pos * Loc.t Ast.Comment.t) list) Utils_js.LocMap.t;
+  unattached_comments: Loc.t Ast.Comment.t list;
 }
 module Acc = struct
   type t = info
-  let init (comments: Ast.Comment.t list) = {
+  let init (comments: Loc.t Ast.Comment.t list) = {
     attached_comments = Utils_js.LocMap.empty;
     (* Sort comments into  *)
     unattached_comments = List.sort
@@ -59,27 +59,27 @@ class comment_attacher ~comments = object(this)
         this#check_loc node_loc
       end
 
-  method! statement (stmt: Ast.Statement.t) =
+  method! statement (stmt: Loc.t Ast.Statement.t) =
     let (loc, _) = stmt in
     this#check_loc loc;
     super#statement stmt
 
-  method! expression (expr: Ast.Expression.t) =
+  method! expression (expr: Loc.t Ast.Expression.t) =
     let (loc, _) = expr in
     this#check_loc loc;
     super#expression expr
 
-  method! identifier (expr: Ast.Identifier.t) =
+  method! identifier (expr: Loc.t Ast.Identifier.t) =
     let (loc, _) = expr in
     this#check_loc loc;
     super#identifier expr
 
-  method! object_property (prop: Ast.Expression.Object.Property.t) =
+  method! object_property (prop: Loc.t Ast.Expression.Object.Property.t) =
     let (loc, _) = prop in
     this#check_loc loc;
     super#object_property prop
 
-  method! class_element (elem: Ast.Class.Body.element) =
+  method! class_element (elem: Loc.t Ast.Class.Body.element) =
     let open Ast.Class.Body in
     begin match elem with
     | Method (loc, _)

@@ -236,6 +236,24 @@ Error: type_contra.js:13
  13: (o2.p: T); // errors: unknown ~> T
             ^ T
 
+Error: type_empty.js:5
+  5: (42: O); // Error: number ~> empty
+      ^^ number. This type is incompatible with
+  5: (42: O); // Error: number ~> empty
+          ^ empty
+
+Error: type_empty.js:9
+  9:   (x: number); // Error: mixed ~> number,
+        ^ object type. This type is incompatible with
+  9:   (x: number); // Error: mixed ~> number,
+           ^^^^^^ number
+
+Error: type_empty.js:14
+ 14:   fn({}); // Error: object ~> empty
+          ^^ object literal. This type is incompatible with the expected param type of
+ 13: function fn2<T>(fn: ({...T}) => void) {
+                          ^^^^^^ some incompatible instantiation of `T`
+
 Error: type_generic.js:3
   3: (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
       ^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
@@ -310,12 +328,6 @@ Error: type_mixed.js:15
       ^^^^ mixed. This type is incompatible with
  15: (o3.c: empty); // Error: mixed ~> empty
             ^^^^^ empty
-
-Error: type_mixed.js:17
- 17: function fn<O>(obj: {...O}) {
-                         ^^^^^^ object type. Cannot spread properties from
- 17: function fn<O>(obj: {...O}) {
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `O`
 
 Error: type_mixed.js:18
  18:   (obj.someProp: empty); // Error: mixed ~> empty
@@ -434,4 +446,4 @@ Error: type_void.js:56
                           ^ T
 
 
-Found 55 errors
+Found 57 errors

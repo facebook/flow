@@ -168,7 +168,6 @@ and add_parts cx id parts state =
 
 and parts_of_t cx = function
 | OpenT _ -> assert false
-| AbstractT (_, t) -> ["t", Def t]
 | AnnotT (source, _) -> ["source", Def source]
 | OpaqueT (_, {underlying_t = Some t; _}) -> ["t", Def t]
 | OpaqueT _ -> []
@@ -373,7 +372,7 @@ and parts_of_use_t cx = function
     | None -> []
     | Some args -> list_parts args
   end
-| ObjSpreadT (_, _, _, _, out) -> ["out", Def out]
+| ObjKitT (_, _, _, out) -> ["out", Def out]
 | SubstOnPredT (_, _, t) -> ["t", Def t]
 | SuperT _ -> []
 | TestPropT (_, _, out) -> ["out", Def out]

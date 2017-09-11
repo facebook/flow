@@ -73,12 +73,12 @@ class ['a] t :
       Context.t -> 'a -> Type.lookup_kind -> Type.lookup_kind
     method obj_type :
       Context.t -> 'a -> Type.objtype -> Type.objtype
-    method object_spread_state :
+    method object_kit_resolve_tool :
       Context.t ->
-      'a -> Type.ObjectSpread.state -> Type.ObjectSpread.state
-    method object_spread_tool :
+      'a -> Type.Object.resolve_tool -> Type.Object.resolve_tool
+    method object_kit_tool :
       Context.t ->
-      'a -> Type.ObjectSpread.tool -> Type.ObjectSpread.tool
+      'a -> Type.Object.tool -> Type.Object.tool
     method predicate :
       Context.t -> 'a -> Type.predicate -> Type.predicate
     method prop_ref :
@@ -87,7 +87,7 @@ class ['a] t :
       Context.t -> 'a -> Type.React.tool -> Type.React.tool
     method resolve :
       Context.t ->
-      'a -> Type.ObjectSpread.resolve -> Type.ObjectSpread.resolve
+      'a -> Type.Object.resolve -> Type.Object.resolve
     method resolve_array :
       Context.t ->
       'a -> Type.React.resolve_array -> Type.React.resolve_array
@@ -99,7 +99,7 @@ class ['a] t :
       'a -> Type.resolve_spread_type -> Type.resolve_spread_type
     method resolved :
       Context.t ->
-      'a -> Type.ObjectSpread.resolved -> Type.ObjectSpread.resolved
+      'a -> Type.Object.resolved -> Type.Object.resolved
     method resolved_object :
       Context.t ->
       'a -> Type.React.resolved_object -> Type.React.resolved_object

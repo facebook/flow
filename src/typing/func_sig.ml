@@ -19,7 +19,7 @@ type kind =
   | Async
   | Generator
   | AsyncGenerator
-  | FieldInit of Ast.Expression.t
+  | FieldInit of Loc.t Ast.Expression.t
   | Predicate
 
 type t = {
@@ -28,7 +28,7 @@ type t = {
   tparams: Type.typeparam list;
   tparams_map: Type.t SMap.t;
   params: Func_params.t;
-  body: Ast.Function.body;
+  body: Loc.t Ast.Function.body;
   return_t: Type.t;
 }
 

@@ -176,13 +176,20 @@ module Watchman_actual = struct
       Query env
 
   let subscribe mode env =
-    let mode = match mode with
-    | All_changes -> []
-    | Defer_changes -> ["defer", J.strlist ["hg.update"]]
-    | Drop_changes -> ["drop", J.strlist ["hg.update"]]
+    let since, mode = match mode with
+    | All_changes -> Hh_json.JSON_String env.clockspec, []
+    | Defer_changes -> Hh_json.JSON_String env.clockspec, ["defer", J.strlist ["hg.update"]]
+    | Drop_changes -> Hh_json.JSON_String env.clockspec, ["drop", J.strlist ["hg.update"]]
+    | Scm_aware ->
+        Hh_logger.log "Making Scm_aware subscription";
+        let scm = Hh_json.JSON_Object
+          [("mergebase-with", Hh_json.JSON_String "master")] in
+        let since = Hh_json.JSON_Object
+          [("scm", scm); ("drop", J.strlist ["hg.update"]);] in
+        since, []
     in
     request_json
-      ~extra_kv:((["since", Hh_json.JSON_String env.clockspec] @ mode) @
+      ~extra_kv:((["since", since] @ mode) @
                  ["empty_on_fresh_instance",
                  Hh_json.JSON_Bool true])
       ~expression_terms:env.settings.expression_terms
@@ -563,16 +570,33 @@ module Watchman_actual = struct
     | `Leave ->
       State_leave (name, metadata)
 
+  let make_mergebase_changed_response env data =
+    let open Hh_json.Access in
+    let accessor = return data in
+    accessor >>=
+      get_obj "clock" >>=
+      get_string "clock" >>= fun (clock, _) ->
+    accessor >>= get_obj "clock" >>=
+      get_obj "scm" >>=
+      get_string "mergebase" >>= fun (mergebase, keytrace) ->
+    let files = set_of_list @@ extract_file_names env data in
+    env.clockspec <- clock;
+    let response = Changed_merge_base (mergebase, files) in
+    Result.Ok ((env, response), keytrace)
+
   let transform_asynchronous_get_changes_response env data =
-    env.clockspec <- J.get_string_val "clock" data;
-    assert_no_fresh_instance data;
-    try env, make_state_change_response `Enter
-      (J.get_string_val "state-enter" data) data with
-    | Not_found ->
-    try env, make_state_change_response `Leave
-      (J.get_string_val "state-leave" data) data with
-    | Not_found ->
-      env, Files_changed (set_of_list @@ extract_file_names env data)
+    match make_mergebase_changed_response env data with
+    | Result.Ok ((env, response), _) -> env, response
+    | Result.Error _ ->
+      env.clockspec <- J.get_string_val "clock" data;
+      assert_no_fresh_instance data;
+      try env, make_state_change_response `Enter
+        (J.get_string_val "state-enter" data) data with
+      | Not_found ->
+      try env, make_state_change_response `Leave
+        (J.get_string_val "state-leave" data) data with
+      | Not_found ->
+        env, Files_changed (set_of_list @@ extract_file_names env data)
 
   let get_changes ?deadline instance =
     let timeout = Option.map deadline ~f:(fun deadline ->
@@ -713,13 +737,20 @@ module Watchman_mock = struct
   let init _ = !Mocking.init
   let get_changes ?deadline instance =
     let _ = deadline in
-    instance, !Mocking.changes
+    let result = !Mocking.changes in
+    Mocking.changes := Watchman_unavailable;
+    instance, result
 
   let get_changes_synchronously ~timeout instance =
     let _ = timeout in
-    instance, !Mocking.changes_synchronously
+    let result = !Mocking.changes_synchronously in
+    Mocking.changes_synchronously := SSet.empty;
+    instance, result
 
-  let get_all_files _ = !Mocking.all_files
+  let get_all_files _ =
+    let result = !Mocking.all_files in
+    Mocking.all_files := [];
+    result
 
   let crash_marker_path _ =
     raise Not_available_in_mocking

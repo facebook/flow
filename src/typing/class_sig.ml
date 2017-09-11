@@ -905,7 +905,7 @@ module This = struct
   class detector = object
     inherit Flow_ast_mapper.mapper as super
 
-    method! generic_identifier_type (git: Ast.Type.Generic.Identifier.t) =
+    method! generic_identifier_type (git: Loc.t Ast.Type.Generic.Identifier.t) =
       let open Ast.Type.Generic.Identifier in
       match git with
       | Unqualified (_, "this") -> raise FoundInClass

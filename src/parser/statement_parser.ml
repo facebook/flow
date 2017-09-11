@@ -17,32 +17,32 @@ module SSet = Set.Make(String)
 open Parser_common
 
 module type STATEMENT = sig
- val for_: env -> Statement.t
- val if_: env -> Statement.t
- val let_: env -> Statement.t
- val try_: env -> Statement.t
- val while_: env -> Statement.t
- val with_: env -> Statement.t
- val block: env -> Statement.t
- val break: env -> Statement.t
- val continue: env -> Statement.t
- val debugger: env -> Statement.t
- val declare: ?in_module:bool -> env -> Statement.t
- val declare_export_declaration: ?allow_export_type:bool -> env -> Statement.t
- val declare_opaque_type : env -> Statement.t
- val do_while: env -> Statement.t
- val empty: env -> Statement.t
- val export_declaration: decorators:Expression.t list -> env -> Statement.t
- val expression: env -> Statement.t
- val import_declaration: env -> Statement.t
- val interface: env -> Statement.t
- val maybe_labeled: env -> Statement.t
- val opaque_type : env -> Statement.t
- val return: env -> Statement.t
- val switch: env -> Statement.t
- val throw: env -> Statement.t
- val type_alias: env -> Statement.t
- val var_or_const: env -> Statement.t
+ val for_: env -> Loc.t Statement.t
+ val if_: env -> Loc.t Statement.t
+ val let_: env -> Loc.t Statement.t
+ val try_: env -> Loc.t Statement.t
+ val while_: env -> Loc.t Statement.t
+ val with_: env -> Loc.t Statement.t
+ val block: env -> Loc.t Statement.t
+ val break: env -> Loc.t Statement.t
+ val continue: env -> Loc.t Statement.t
+ val debugger: env -> Loc.t Statement.t
+ val declare: ?in_module:bool -> env -> Loc.t Statement.t
+ val declare_export_declaration: ?allow_export_type:bool -> env -> Loc.t Statement.t
+ val declare_opaque_type : env -> Loc.t Statement.t
+ val do_while: env -> Loc.t Statement.t
+ val empty: env -> Loc.t Statement.t
+ val export_declaration: decorators:Loc.t Expression.t list -> env -> Loc.t Statement.t
+ val expression: env -> Loc.t Statement.t
+ val import_declaration: env -> Loc.t Statement.t
+ val interface: env -> Loc.t Statement.t
+ val maybe_labeled: env -> Loc.t Statement.t
+ val opaque_type : env -> Loc.t Statement.t
+ val return: env -> Loc.t Statement.t
+ val switch: env -> Loc.t Statement.t
+ val throw: env -> Loc.t Statement.t
+ val type_alias: env -> Loc.t Statement.t
+ val var_or_const: env -> Loc.t Statement.t
 end
 
 module Statement
@@ -54,7 +54,7 @@ module Statement
 : STATEMENT = struct
   type for_lhs =
     | For_expression of pattern_cover
-    | For_declaration of (Loc.t * Ast.Statement.VariableDeclaration.t)
+    | For_declaration of (Loc.t * Loc.t Ast.Statement.VariableDeclaration.t)
 
   (* FunctionDeclaration is not a valid Statement, but Annex B sometimes allows it.
      However, AsyncFunctionDeclaration and GeneratorFunctionDeclaration are never

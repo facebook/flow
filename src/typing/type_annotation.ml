@@ -325,13 +325,6 @@ let rec convert cx tparams_map = Ast.Type.(function
           error_type cx loc (FlowError.EExportsAnnot loc)
     )
 
-  | "$Abstract" ->
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
-      let t = convert_type_params () |> List.hd in
-      let reason = mk_reason (RAbstract (desc_of_t t)) loc in
-      AbstractT (reason, t)
-    )
-
   | "$Call" ->
     (match convert_type_params () with
     | fn::args ->
@@ -801,10 +794,10 @@ let rec convert cx tparams_map = Ast.Type.(function
     then ExactT (mk_reason (RExactType reason_desc) loc, t)
     else t
   | t::ts ->
-    let open ObjectSpread in
+    let open Type.Object.Spread in
     let reason = mk_reason RObjectType loc in
     let options = {
-      merge_mode = Spread (Annot {make_exact = exact });
+      merge_mode = Sound (Annot {make_exact = exact});
       exclude_props = []
     } in
     EvalT (t, TypeDestructorT (reason, SpreadType (options, ts)), mk_id ()))

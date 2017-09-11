@@ -45,7 +45,7 @@ let move_func (prog : Syntax.t list) =
   all_func @ all_non_func
 
 (* Main entry functions for generating code *)
-let mk_code prog_num random = 
+let mk_code prog_num random =
   (*  TODO:
       Pick the right engine based on the config. I can't get this to
       compile at this point and I'll fix the problem later.The config
@@ -71,8 +71,8 @@ let mk_code prog_num random =
   ignore func_engine;
   ignore optional_engine;
   ignore exact_engine;
-  ignore union_engine;
-  let engine = depth_engine in
+  (* ignore union_engine; *)
+  let engine = union_engine in
   (if random
    then engine#gen_random_prog prog_num
    else engine#gen_prog prog_num)
@@ -80,4 +80,3 @@ let mk_code prog_num random =
       (* We add type assertions at the end *)
       let prog = slist |> move_func in
       Printf.sprintf "%s\n" ((string_of_prog prog) ^ (Ruleset_base.str_of_env env))))
-

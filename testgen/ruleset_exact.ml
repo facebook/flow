@@ -26,7 +26,7 @@ class ruleset_exact = object(self)
 
   method! weak_assert b = self#backtrack_on_false b
 
-  method! is_subtype_obj (o1 : T.Object.t) (o2 : T.Object.t) =
+  method! is_subtype_obj (o1 : Loc.t T.Object.t) (o2 : Loc.t T.Object.t) =
     let open T.Object in
     if (o1.exact && o2.exact) then
       o1 = o2
@@ -41,7 +41,7 @@ class ruleset_exact = object(self)
     let rec gen_expr_list
         (count : int)
         (limit : int)
-        (result : (E.t' * T.t') list) : (E.t' * T.t') list =
+        (result : (Loc.t E.t' * Loc.t T.t') list) : (Loc.t E.t' * Loc.t T.t') list =
       if count = limit then result
       else
         let expr = self#choose count (fun () -> self#require_expr env) in

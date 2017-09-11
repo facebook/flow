@@ -38,3 +38,4 @@ val uses_of_use: info -> ?exclude_def:bool -> use -> use list
 val def_is_unused: info -> Def.t -> bool
 val all_defs: info -> Def.t list
 val defs_of_scope: info -> scope -> Def.t list
+val is_local_use: info -> use -> bool

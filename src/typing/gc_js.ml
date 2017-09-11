@@ -66,7 +66,6 @@ let rec gc cx state = function
 
   (** def types **)
 
-  | AbstractT (_, t) -> gc cx state t
   | AnnotT (t, _) -> gc cx state t
   | OpaqueT (_, opaquetype) ->
       Option.iter ~f:(gc cx state) opaquetype.underlying_t;
@@ -291,9 +290,9 @@ and gc_use cx state = function
   | SetPrivatePropT(_, _, _, _, t) -> gc cx state t
   | SetProtoT (_, t) -> gc cx state t
   | SpecializeT (_, _, _, ts_opt, t) -> Option.iter ~f:(List.iter (gc cx state)) ts_opt; gc cx state t
-  | ObjSpreadT (_, _, tool, state', t) ->
-      gc_object_spread cx state tool state';
-      gc cx state t
+  | ObjKitT (_, resolve_tool, tool, t) ->
+    gc_object_kit cx state resolve_tool tool;
+    gc cx state t
   | SubstOnPredT (_, _, t) -> gc cx state t
   | SuperT (_, instance) -> gc_insttype cx state instance
   | TestPropT(_, _, t) -> gc cx state t
@@ -422,8 +421,8 @@ and gc_pred cx state = function
 and gc_pred_map cx state pred_map =
   Key_map.iter (fun _ p -> gc_pred cx state p) pred_map
 
-and gc_object_spread =
-  let open ObjectSpread in
+and gc_object_kit =
+  let open Object in
   let gc_slice cx state (_, props, dict, _) =
     SMap.iter (fun _ (t, _) -> gc cx state t) props;
     Option.iter dict (gc_dicttype cx state)
@@ -439,16 +438,22 @@ and gc_object_spread =
       List.iter (gc cx state) todo;
       Nel.iter (gc_resolved cx state) acc
   in
-  let gc_tool cx state = function
+  let gc_resolve_tool cx state = function
     | Resolve tool -> gc_resolve cx state tool
     | Super (slice, tool) ->
       gc_slice cx state slice;
       gc_resolve cx state tool
   in
-  fun cx state tool {todo_rev; acc} ->
-    gc_tool cx state tool;
+  let gc_tool cx state = function
+  | Spread (_, spread_state) ->
+    let open Object.Spread in
+    let {todo_rev; acc} = spread_state in
     List.iter (gc cx state) todo_rev;
     List.iter (gc_resolved cx state) acc
+  in
+  fun cx state resolve_tool tool ->
+    gc_resolve_tool cx state resolve_tool;
+    gc_tool cx state tool
 
 and gc_cont cx state = function
   | Lower t -> gc cx state t

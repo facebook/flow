@@ -258,7 +258,7 @@ class virtual ['a, 'b, 'c] engine = object(self)
     Queue.push ([], []) queue;
 
     (* Run a rule through all the results in the queue *)
-    let helper (rule : 'b -> ('c * 'b)) : unit = 
+    let helper (rule : 'b -> ('c * 'b)) : unit =
       (*
       Printf.printf "Queue size : %d\n" (Queue.length queue);
       Queue.iter (fun (slist, env) ->
@@ -288,7 +288,7 @@ class virtual ['a, 'b, 'c] engine = object(self)
     Array.iter (fun rule -> helper rule) rules;
 
     (* We limit the number of results at the end *)
-    Queue.fold (fun acc elt -> elt :: acc) [] queue 
+    Queue.fold (fun acc elt -> elt :: acc) [] queue
     |> limit_result 0 []
 
 

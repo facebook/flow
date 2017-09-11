@@ -101,9 +101,13 @@ module ArgSpec = struct
     arg = No_Arg;
   }
 
-  let required arg_type = {
+  let required ?default arg_type = {
     parse = (fun ~name -> function
-    | None -> raise (Failed_to_parse (name, "missing required arguments"))
+    | None ->
+        begin match default with
+        | Some default -> default
+        | None -> raise (Failed_to_parse (name, "missing required arguments"))
+        end
     | value -> match arg_type.parse ~name value with
       | None -> raise (Failed_to_parse (name, Utils_js.spf
           "wrong type for required argument%s"
@@ -132,6 +136,43 @@ module ArgSpec = struct
         ) values)
     );
     arg = Arg_List;
+  }
+
+  let delimited delim arg_type = {
+    parse = (fun ~name -> function
+    | Some [x] ->
+      let args = Str.split (Str.regexp_string delim) x in
+      Some (List.map (fun arg ->
+        match arg_type.parse ~name (Some [arg]) with
+        | None ->
+          raise (Failed_to_parse (name, Utils_js.spf "wrong type for value: %s" arg))
+        | Some result ->
+          result
+      ) args)
+    | _ -> None
+    );
+    arg = Arg;
+  }
+
+  let key_value delim (key_type, value_type) = {
+    parse = (fun ~name -> function
+    | Some [x] ->
+      let key, value = match Str.bounded_split (Str.regexp_string delim) x 2 with
+      | [key; value] -> key, Some [value]
+      | [key] -> key, None
+      | _ -> raise (Failed_to_parse (name, Utils_js.spf "unexpected value: %s" x))
+      in
+      let key = match key_type.parse ~name (Some [key]) with
+      | None ->
+        raise (Failed_to_parse (name, Utils_js.spf "wrong type for key: %s" key))
+      | Some result ->
+        result
+      in
+      let value = value_type.parse ~name value in
+      Some (key, value)
+    | _ -> None
+    );
+    arg = Arg;
   }
 
   let help_flag = SMap.empty |> SMap.add "--help" {

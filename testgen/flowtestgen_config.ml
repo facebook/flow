@@ -73,7 +73,7 @@ let load_config () : t =
          ~default:dc.type_check
          conf
          "type_check");
-    random = 
+    random =
       (Config_utils.get_bool
          ~default:dc.random
          conf

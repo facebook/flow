@@ -18,18 +18,18 @@ module SSet = Set.Make(String)
 module type DECLARATION = sig
   val async: env -> bool
   val generator: env -> bool
-  val variance: env -> bool -> bool -> Variance.t option
-  val function_params: await:bool -> yield:bool -> env -> Ast.Function.Params.t
-  val function_body: env -> async:bool -> generator:bool -> Loc.t * Function.body * bool
-  val is_simple_function_params: Ast.Function.Params.t -> bool
-  val strict_post_check: env -> strict:bool -> simple:bool -> Identifier.t option -> Ast.Function.Params.t -> unit
-  val concise_function_body: env -> async:bool -> generator:bool -> Function.body * bool
-  val variable: env -> Statement.t * (Loc.t * Error.t) list
-  val variable_declaration_list: env -> Statement.VariableDeclaration.Declarator.t list * (Loc.t * Error.t) list
-  val let_: env -> Statement.VariableDeclaration.t * (Loc.t * Error.t) list
-  val const: env -> Statement.VariableDeclaration.t * (Loc.t * Error.t) list
-  val var: env -> Statement.VariableDeclaration.t * (Loc.t * Error.t) list
-  val _function: env -> Statement.t
+  val variance: env -> bool -> bool -> Loc.t Variance.t option
+  val function_params: await:bool -> yield:bool -> env -> Loc.t Ast.Function.Params.t
+  val function_body: env -> async:bool -> generator:bool -> Loc.t * Loc.t Function.body * bool
+  val is_simple_function_params: Loc.t Ast.Function.Params.t -> bool
+  val strict_post_check: env -> strict:bool -> simple:bool -> Loc.t Identifier.t option -> Loc.t Ast.Function.Params.t -> unit
+  val concise_function_body: env -> async:bool -> generator:bool -> Loc.t Function.body * bool
+  val variable: env -> Loc.t Statement.t * (Loc.t * Error.t) list
+  val variable_declaration_list: env -> Loc.t Statement.VariableDeclaration.Declarator.t list * (Loc.t * Error.t) list
+  val let_: env -> Loc.t Statement.VariableDeclaration.t * (Loc.t * Error.t) list
+  val const: env -> Loc.t Statement.VariableDeclaration.t * (Loc.t * Error.t) list
+  val var: env -> Loc.t Statement.VariableDeclaration.t * (Loc.t * Error.t) list
+  val _function: env -> Loc.t Statement.t
 end
 
 module Declaration

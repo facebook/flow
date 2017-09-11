@@ -32,7 +32,7 @@ val merge_component_strict:
   metadata: Context.metadata ->
   lint_severities: Severity.severity LintSettings.t option ->
   require_loc_maps: Loc.t SMap.t Utils_js.FilenameMap.t ->
-  get_ast_unsafe: (Loc.filename -> Ast.program) ->
+  get_ast_unsafe: (Loc.filename -> Loc.t Ast.program) ->
   get_docblock_unsafe: (Loc.filename -> Docblock.t) ->
   (* component *)
   Loc.filename list ->

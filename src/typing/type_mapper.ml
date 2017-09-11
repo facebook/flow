@@ -109,10 +109,6 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else KeysT (r, t'')
-      | AbstractT (r, t') ->
-          let t'' = self#type_ cx map_cx t' in
-          if t'' == t' then t
-          else AbstractT (r, t'')
       | AnnotT (t', use_desc) ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -713,12 +709,12 @@ class ['a] t = object(self)
         let react_tool' = self#react_tool cx map_cx react_tool in
         if react_tool' == react_tool then t
         else ReactKitT (r, react_tool')
-    | ObjSpreadT (r, options, tool, state, t') ->
-        let tool' = self#object_spread_tool cx map_cx tool in
-        let state' = self#object_spread_state cx map_cx state in
-        let t'' = self#type_ cx map_cx t' in
-        if tool' == tool && state' == state && t'' == t' then t
-        else ObjSpreadT (r, options, tool', state', t'')
+    | ObjKitT (r, resolve_tool, tool, tout) ->
+        let resolve_tool' = self#object_kit_resolve_tool cx map_cx resolve_tool in
+        let tool' = self#object_kit_tool cx map_cx tool in
+        let tout' = self#type_ cx map_cx tout in
+        if resolve_tool' == resolve_tool && tool' == tool && tout' == tout then t
+        else ObjKitT (r, resolve_tool', tool', tout')
     | ChoiceKitUseT (r, choice_use_tool) ->
         let choice_use_tool' = self#choice_use_tool cx map_cx choice_use_tool in
         if choice_use_tool' == choice_use_tool then t
@@ -965,8 +961,8 @@ class ['a] t = object(self)
         if tool' == tool && knot' == knot && t'' == t' then t
         else CreateClass (tool', knot', t'')
 
-  method object_spread_tool cx map_cx t =
-    let open ObjectSpread in
+  method object_kit_resolve_tool cx map_cx t =
+    let open Object in
     match t with
     | Resolve r ->
         let r' = self#resolve cx map_cx r in
@@ -979,12 +975,15 @@ class ['a] t = object(self)
         if r' == r && props' == props then t
         else Super ((reason, props', dict', flags), r')
 
-  method object_spread_state cx map_cx t =
-    let open ObjectSpread in
-    let todo_rev' = ListUtils.ident_map (self#type_ cx map_cx) t.todo_rev in
-    let acc' = ListUtils.ident_map (self#resolved cx map_cx) t.acc in
-    if todo_rev' == t.todo_rev && acc' == t.acc then t
-    else {todo_rev = todo_rev'; acc = acc'}
+  method object_kit_tool cx map_cx tool =
+    let open Object in
+    match tool with
+    | Spread (options, state) ->
+      let open Object.Spread in
+      let todo_rev' = ListUtils.ident_map (self#type_ cx map_cx) state.todo_rev in
+      let acc' = ListUtils.ident_map (self#resolved cx map_cx) state.acc in
+      if todo_rev' == state.todo_rev && acc' == state.acc then tool
+      else Spread (options, {todo_rev = todo_rev'; acc = acc'})
 
   method intersection_preprocess_tool cx map_cx t =
     match t with
@@ -1095,7 +1094,7 @@ class ['a] t = object(self)
     else {this = this'; static = static'; state_t = state_t'; default_t = default_t'}
 
   method resolve cx map_cx t =
-    let open ObjectSpread in
+    let open Object in
     match t with
     | Next -> t
     | List0 (tnelist, join) ->

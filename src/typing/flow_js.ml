@@ -1073,7 +1073,6 @@ module ResolvableTypeJob = struct
 
     | AnyWithUpperBoundT t
     | AnyWithLowerBoundT t
-    | AbstractT (_, t)
     | ExactT (_, t)
     | DefT (_, TypeT t)
     | DefT (_, ClassT t)
@@ -1358,6 +1357,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (********)
 
     | EvalT (t, TypeDestructorT (reason, s), i), _ ->
+      let t = match t with
+        | OpenT (_, id) ->
+          let _, constraints = find_constraints cx id in
+          (match constraints with
+            | Resolved t -> t
+            | _ -> t)
+        | _ -> t
+      in
       rec_flow cx trace (eval_destructor cx ~trace reason t s i, u)
 
     | _, UseT (use_op, EvalT (t, TypeDestructorT (reason, s), i)) ->
@@ -1370,7 +1377,23 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          For example, when t is { x: number }, we want $PropertyType(t) to be
          number, not some open tvar that is a supertype of number (since the
          latter would accept more than number, e.g. string). Similarly, when t
-         is ?string, we want the $NonMaybeType(t) to be string. *)
+         is ?string, we want the $NonMaybeType(t) to be string.
+
+         However, in practice we are loose and allow extra lower bounds to flow
+         into the result if t itself is open. We do this because if t is open
+         then it may never resolve, or it may resolve multiple times producing a
+         result with the same characteristics.
+
+         We can avoid being loose if the tvar is resolved, so we unwrap resolved
+         tvars. *)
+      let t = match t with
+        | OpenT (_, id) ->
+          let _, constraints = find_constraints cx id in
+          (match constraints with
+            | Resolved t -> t
+            | _ -> t)
+        | _ -> t
+      in
       let result = eval_destructor cx ~trace reason t s i in
       begin match t with
       | OpenT _ ->
@@ -2868,8 +2891,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let desc = if use_desc then Some (desc_of_reason reason_op) else None in
       rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
-    | DefT (_, UnionT _), ObjSpreadT (reason_op, options, tool, state, tout) ->
-      object_spread cx trace reason_op options tool state tout l
+    | DefT (_, UnionT _), ObjKitT (reason, resolve_tool, tool, tout) ->
+      object_kit cx trace reason resolve_tool tool tout l
 
     (* cases where there is no loss of precision *)
 
@@ -3040,8 +3063,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let desc = if use_desc then Some (desc_of_reason reason_op) else None in
       rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
-    | DefT (_, IntersectionT _), ObjSpreadT (reason_op, options, tool, state, tout) ->
-      object_spread cx trace reason_op options tool state tout l
+    | DefT (_, IntersectionT _), ObjKitT (reason, resolve_tool, tool, tout) ->
+      object_kit cx trace reason resolve_tool tool tout l
 
     (** All other pairs with an intersection lower bound come here. Before
         further processing, we ensure that the upper bound is concretized. See
@@ -4142,7 +4165,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (l, ObjAssignFromT (reason, o, Locationless.AnyT.t, ObjAssign))
 
     | t, UseT (_, DiffT (a, b)) ->
-        let open ObjectSpread in
+        let open Object in
+        let open Object.Spread in
         (* To implement `DiffT` we combine the properties from the type we are
          * subtracting (`b`) and our lower bound (`t`) then compare that to the
          * type we are subtracting from (`a`). In other terms, if the following
@@ -4153,7 +4177,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let options = { merge_mode = Diff; exclude_props = [] } in
         let tool = Resolve Next in
         let state = { todo_rev = [b]; acc = [] } in
-        rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, a))
+        rec_flow cx trace (t, ObjKitT (reason, tool, Spread (options, state), a))
 
     | DefT (_, AnyT), ObjTestT (reason_op, _, u) ->
       rec_flow_t cx trace (AnyT.why reason_op, u)
@@ -4443,44 +4467,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let u = LookupT (reason_op, kind, try_ts_on_failure, propref, action) in
         rec_flow cx trace (super, ReposLowerT (lreason, false, u))
       | Some p ->
-        (* TODO: Replace AbstractT with abstract fields, then reuse
-           perform_lookup_action here. *)
-        (match action with
-        | RWProp (_, t2, rw) ->
-          (* The type of the property in the super class is abstract. The type
-             of the property in this class may be abstract or not.  We want to
-             unify just the underlying types, ignoring the abstract part.  *)
-          let p, t2 = match p, t2 with
-          | Field (AbstractT (_, t1), polarity), AbstractT (_, t2)
-          | Field (AbstractT (_, t1), polarity), t2 -> Field (t1, polarity), t2
-          | _ -> p, t2
-          in
-          (match rw, Property.access rw p with
-          | Read, Some t1 -> rec_flow_t cx trace (t1, t2)
-          | Write, Some t1 -> rec_flow_t cx trace (t2, t1)
-          | _, None ->
-            add_output cx ~trace (FlowError.EPropAccess (
-              (lreason, reason_op), Some x, Property.polarity p, rw)
-            ))
-        | LookupProp (use_op, up) ->
-          let p, up = match p, up with
-          | Field (AbstractT (_, t), polarity), Field (AbstractT (_, ut), upolarity) ->
-            Field (t, polarity), Field (ut, upolarity)
-          | Field (AbstractT (_, t), polarity), up ->
-            Field (t, polarity), up
-          | _ -> p, up
-          in
-          rec_flow_p cx trace ~use_op lreason reason_op propref (p, up)
-        | SuperProp lp ->
-          let p, lp = match p, lp with
-          | Field (AbstractT (_, t), polarity), Field (AbstractT (_, lt), lpolarity) ->
-            Field (t, polarity), Field (lt, lpolarity)
-          | Field (AbstractT (_, t), polarity), lp ->
-            Field (t, polarity), lp
-          | _ -> p, lp
-          in
-          rec_flow_p cx trace reason_op lreason propref (lp, p)))
-
+        perform_lookup_action cx trace propref p lreason reason_op action)
     | DefT (_, InstanceT _), LookupT (reason_op, _, _, Computed _, _) ->
       (* Instances don't have proper dictionary support. All computed accesses
          are converted to named property access to `$key` and `$value` during
@@ -5087,12 +5074,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, AnyT), ArrRestT (reason, _, tout) ->
       rec_flow_t cx trace (AnyT.why reason, tout)
 
-    (**********************)
-    (* object type spread *)
-    (**********************)
+    (**************)
+    (* object kit *)
+    (**************)
 
-    | _, ObjSpreadT (reason_op, options, tool, state, tout) ->
-      object_spread cx trace reason_op options tool state tout l
+    | _, ObjKitT (reason, resolve_tool, tool, tout) ->
+      object_kit cx trace reason resolve_tool tool tout l
 
     (**************************************************)
     (* function types can be mapped over a structure  *)
@@ -5401,20 +5388,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         for the inherited properties are non-strict: they are not required to
         exist. **)
 
-    | (DefT (_, InstanceT (_, _, _, instance_super)),
+    | (DefT (_, InstanceT _),
        SuperT (reason,instance))
       ->
-        Context.iter_props cx instance_super.fields_tmap (fun x p ->
-          match p with
-          | Field (AbstractT (_, t), _)
-            when not (Context.has_prop cx instance.fields_tmap x) ->
-            (* when abstract fields are not implemented, make them void *)
-            let reason = reason_of_t t in
-            let desc_void = RMissingAbstract (desc_of_reason reason) in
-            let reason_void = replace_reason_const desc_void reason in
-            rec_unify cx trace (DefT (reason_void, VoidT)) t
-          | _ -> ()
-        );
         let strict = NonstrictReturning None in
         Context.iter_props cx instance.fields_tmap (fun x p ->
           let reason_prop = replace_reason_const (RProperty (Some x)) reason in
@@ -6413,7 +6389,7 @@ and ground_subtype = function
   | (_, ReposLowerT _) -> false
   | (_, ReposUseT _) -> false
 
-  | (_, ObjSpreadT _) -> false
+  | (_, ObjKitT _) -> false
 
   | (_, ChoiceKitUseT _) -> false
 
@@ -6807,10 +6783,11 @@ and eval_destructor cx ~trace reason curr_t s i =
         | ElementType t -> GetElemT(reason, t, tvar)
         | Bind t -> BindT(reason, mk_methodcalltype t [] tvar, true)
         | SpreadType (options, todo_rev) ->
-            let open ObjectSpread in
+            let open Object in
+            let open Object.Spread in
             let tool = Resolve Next in
             let state = { todo_rev; acc = [] } in
-            ObjSpreadT (reason, options, tool, state, tvar)
+            ObjKitT (reason, tool, Spread (options, state), tvar)
         | ValuesType -> GetValuesT (reason, tvar)
         | CallType args ->
           let args = List.map (fun arg -> Arg arg) args in
@@ -6864,7 +6841,6 @@ and check_polarity cx ?trace polarity = function
     -> ()
 
   | DefT (_, OptionalT t)
-  | AbstractT (_, t)
   | ExactT (_, t)
   | DefT (_, MaybeT t)
   | AnyWithLowerBoundT t
@@ -10267,8 +10243,12 @@ and run_compose cx trace reason_op reverse fns spread_fn tin tout =
       run_compose cx trace reason_op reverse [spread_fn] None tin tout;
       run_compose cx trace reason_op reverse [spread_fn] None tout tin
 
-and object_spread =
-  let open ObjectSpread in
+and object_kit =
+  let open Object in
+
+  (*******************************)
+  (* Shared Object Kit Utilities *)
+  (*******************************)
 
   let read_prop r flags x p =
     let t = match Property.read_t p with
@@ -10303,121 +10283,201 @@ and object_spread =
     fun x0 (x1,xs) -> loop (f' x0 x1) xs
   in
 
-  (* Compute spread result: slice * slice -> slice *)
-  let spread2 cx trace reason options (r1,props1,dict1,flags1) (r2,props2,dict2,flags2) =
-    let {merge_mode; exclude_props; _} = options in
-    let union t1 t2 = DefT (reason, UnionT (UnionRep.make t1 t2 [])) in
-    let merge_props (t1, own1) (t2, own2) =
-      let t1, opt1 = match t1 with DefT (_, OptionalT t) -> t, true | _ -> t1, false in
-      let t2, opt2 = match t2 with DefT (_, OptionalT t) -> t, true | _ -> t2, false in
-      (* An own, non-optional property definitely overwrites earlier properties.
-         Otherwise, the type might come from either side. *)
-      let t, own =
-        if own2 && not opt2 then t2, own2
-        else union t1 t2, own1 || own2
+  (*****************)
+  (* Object Spread *)
+  (*****************)
+
+  let object_spread =
+    let open Object.Spread in
+
+    (* Compute spread result: slice * slice -> slice *)
+    let spread2 cx trace reason options
+      (r1, props1, dict1, flags1)
+      (r2, props2, dict2, flags2) =
+      let {merge_mode; exclude_props; _} = options in
+      let union t1 t2 = DefT (reason, UnionT (UnionRep.make t1 t2 [])) in
+      let merge_props (t1, own1) (t2, own2) =
+        let t1, opt1 = match t1 with DefT (_, OptionalT t) -> t, true | _ -> t1, false in
+        let t2, opt2 = match t2 with DefT (_, OptionalT t) -> t, true | _ -> t2, false in
+        (* An own, non-optional property definitely overwrites earlier properties.
+           Otherwise, the type might come from either side. *)
+        let t, own =
+          if own2 && not opt2 then t2, own2
+          else union t1 t2, own1 || own2
+        in
+        (* If either property is own, the result is non-optional unless the own
+           property is itself optional. Non-own implies optional (see mk_object),
+           so we don't need to handle those cases here. *)
+        let opt =
+          if own1 && own2 then opt1 && opt2
+          else own1 && opt1 || own2 && opt2
+        in
+        let t = if opt then optional t else t in
+        t, own
       in
-      (* If either property is own, the result is non-optional unless the own
-         property is itself optional. Non-own implies optional (see mk_object),
-         so we don't need to handle those cases here. *)
-      let opt =
-        if own1 && own2 then opt1 && opt2
-        else own1 && opt1 || own2 && opt2
-      in
-      let t = if opt then optional t else t in
-      t, own
+      let props = SMap.merge (fun x p1 p2 ->
+        (* If this prop has been marked as excluded then return none instead of
+         * trying to merge. *)
+        if List.mem x exclude_props then None
+        else (
+        (* Treat dictionaries as optional, own properties. Dictionary reads should
+         * be exact. TODO: Forbid writes to indexers through the photo chain.
+         * Property accesses which read from dictionaries normally result in a
+         * non-optional result, but that leads to confusing spread results. For
+         * example, `p` in `{...{|p:T|},...{[]:U}` should `T|U`, not `U`. *)
+        let read_dict r d = optional (read_dict r d), true in
+        (* Due to width subtyping, failing to read from an inexact object does not
+           imply non-existence, but rather an unknown result. *)
+        let unknown r =
+          let r = replace_reason_const (RUnknownProperty (Some x)) r in
+          DefT (r, MixedT Mixed_everything), false
+        in
+        match merge_mode with
+        | Sound _ ->
+          begin match p1, p2 with
+          | None, None -> None
+          | Some p1, Some p2 -> Some (merge_props p1 p2)
+          | Some p1, None ->
+            (match dict2 with
+            | Some d2 -> Some (merge_props p1 (read_dict r2 d2))
+            | None ->
+              if flags2.exact
+              then Some p1
+              else Some (merge_props p1 (unknown r2)))
+          | None, Some p2 ->
+            (match dict1 with
+            | Some d1 -> Some (merge_props (read_dict r1 d1) p2)
+            | None ->
+              if flags1.exact
+              then Some p2
+              else Some (merge_props (unknown r1) p2))
+          end
+        (* Diff mode is used to combine the config object passed to
+         * React.createElement with the default props for the component before
+         * comparing with the component's props type. Any own property in the
+         * config that evaluates to `undefined` should take its value from the
+         * default props instead. *)
+        | Diff ->
+          begin match p1, p2 with
+          | None, None -> None
+          | Some (t, _), None -> Some (t, true)
+          | None, Some (t, _) -> Some (t, true)
+          (* If a property is defined in both objects, and the first property's
+           * type includes void then we want to replace every occurence of void
+           * with the second property's type. This is consistent with the behavior
+           * of function default arguments. If you call a function, `f`, like:
+           * `f(undefined)` and there is a default value for the first argument,
+           * then we will ignore the void type and use the type for the default
+           * parameter instead. *)
+          | Some (t1, _), Some (t2, _) ->
+            (* Use CondT to replace void with t1. *)
+            let t = mk_tvar_where cx reason (fun tvar ->
+              rec_flow cx trace (filter_optional cx ~trace reason t2,
+                CondT (reason, t1, tvar))
+            ) in
+            Some (t, true)
+          end
+      )) props1 props2 in
+      let dict = Option.merge dict1 dict2 (fun d1 d2 -> {
+        dict_name = None;
+        key = union d1.key d2.key;
+        value = union (read_dict r1 d1) (read_dict r2 d2);
+        dict_polarity = Neutral
+      }) in
+      let flags = {
+        frozen = flags1.frozen && flags2.frozen;
+        sealed = Sealed;
+        exact =
+          flags1.exact && flags2.exact &&
+          sealed_in_op reason flags1.sealed &&
+          sealed_in_op reason flags2.sealed;
+      } in
+      reason, props, dict, flags
     in
-    let props = SMap.merge (fun x p1 p2 ->
-      (* If this prop has been marked as excluded then return none instead of
-       * trying to merge. *)
-      if List.mem x exclude_props then None
-      else (
-      (* Treat dictionaries as optional, own properties. Dictionary reads should
-       * be exact. TODO: Forbid writes to indexers through the photo chain.
-       * Property accesses which read from dictionaries normally result in a
-       * non-optional result, but that leads to confusing spread results. For
-       * example, `p` in `{...{|p:T|},...{[]:U}` should `T|U`, not `U`. *)
-      let read_dict r d = optional (read_dict r d), true in
-      (* Due to width subtyping, failing to read from an inexact object does not
-         imply non-existence, but rather an unknown result. *)
-      let unknown r =
-        let r = replace_reason_const (RUnknownProperty (Some x)) r in
-        DefT (r, MixedT Mixed_everything), false
+
+    let spread cx trace reason options = function
+      | x, [] -> x
+      | x0, x1::xs -> merge (spread2 cx trace reason options) x0 (x1, xs)
+    in
+
+    let mk_object cx reason {merge_mode; _} (r, props, dict, flags) =
+      let props = SMap.map (fun (t, own) ->
+        (* Spread only copies over own properties. If `not own`, then the property
+           might be on a proto object instead, so make the result optional. *)
+        let t = match t with
+        | DefT (_, OptionalT _) -> t
+        | _ -> if own then t else optional t
+        in
+        Field (t, Neutral)
+      ) props in
+      let id = Context.make_property_map cx props in
+      let proto = ObjProtoT reason in
+      let flags =
+        match merge_mode with
+        (* If all the other object types are exact then we want the resulting
+         * object to also be exact. This logic is encoded in the accumulated
+         * flags. *)
+        | Diff -> flags
+        | Sound target ->
+          let exact = match target with
+          (* Type spread result is exact if annotated to be exact *)
+          | Annot { make_exact } -> make_exact
+          (* Value spread result is exact if all inputs are exact *)
+          | Value -> flags.exact
+          in
+          { sealed = Sealed; frozen = false; exact }
       in
-      match merge_mode with
-      | Spread _ ->
-        begin match p1, p2 with
-        | None, None -> None
-        | Some p1, Some p2 -> Some (merge_props p1 p2)
-        | Some p1, None ->
-          (match dict2 with
-          | Some d2 -> Some (merge_props p1 (read_dict r2 d2))
-          | None ->
-            if flags2.exact
-            then Some p1
-            else Some (merge_props p1 (unknown r2)))
-        | None, Some p2 ->
-          (match dict1 with
-          | Some d1 -> Some (merge_props (read_dict r1 d1) p2)
-          | None ->
-            if flags1.exact
-            then Some p2
-            else Some (merge_props (unknown r1) p2))
-        end
-      (* Diff mode is used to combine the config object passed to
-       * React.createElement with the default props for the component before
-       * comparing with the component's props type. Any own property in the
-       * config that evaluates to `undefined` should take its value from the
-       * default props instead. *)
-      | Diff ->
-        begin match p1, p2 with
-        | None, None -> None
-        | Some (t, _), None -> Some (t, true)
-        | None, Some (t, _) -> Some (t, true)
-        (* If a property is defined in both objects, and the first property's
-         * type includes void then we want to replace every occurence of void
-         * with the second property's type. This is consistent with the behavior
-         * of function default arguments. If you call a function, `f`, like:
-         * `f(undefined)` and there is a default value for the first argument,
-         * then we will ignore the void type and use the type for the default
-         * parameter instead. *)
-        | Some (t1, _), Some (t2, _) ->
-          (* Use CondT to replace void with t1. *)
-          let t = mk_tvar_where cx reason (fun tvar ->
-            rec_flow cx trace (filter_optional cx ~trace reason t2,
-              CondT (reason, t1, tvar))
-          ) in
-          Some (t, true)
-        end
-    )) props1 props2 in
-    let dict = Option.merge dict1 dict2 (fun d1 d2 -> {
-      dict_name = None;
-      key = union d1.key d2.key;
-      value = union (read_dict r1 d1) (read_dict r2 d2);
-      dict_polarity = Neutral
-    }) in
-    let flags = {
-      frozen = flags1.frozen && flags2.frozen;
-      sealed = Sealed;
-      exact =
-        flags1.exact && flags2.exact &&
-        sealed_in_op reason flags1.sealed &&
-        sealed_in_op reason flags2.sealed;
-    } in
-    reason, props, dict, flags
+      let t = DefT (r, ObjT (mk_objecttype ~flags dict id proto)) in
+      (* Wrap the final type in an `ExactT` if we have an exact flag *)
+      if flags.exact then ExactT (reason, t) else t
+    in
+
+    fun options state cx trace reason tout x ->
+      let {merge_mode; _} = options in
+      let {todo_rev; acc} = state in
+      Nel.iter (fun (r, _, _, {exact; _}) ->
+        match merge_mode with
+        | Sound (Annot { make_exact }) when make_exact && not exact ->
+          add_output cx ~trace (FlowError.EIncompatibleWithExact (r, reason))
+        | _ -> ()
+      ) x;
+      match todo_rev with
+      | [] ->
+        let t = match spread cx trace reason options (Nel.rev (x, acc)) with
+        | x, [] -> mk_object cx reason options x
+        | x0, x1::xs ->
+          DefT (reason, UnionT (UnionRep.make
+            (mk_object cx reason options x0)
+            (mk_object cx reason options x1)
+            (List.map (mk_object cx reason options) xs)))
+        in
+        rec_flow_t cx trace (t, tout)
+      | t::todo_rev ->
+        let tool = Resolve Next in
+        let state = {todo_rev; acc = x::acc} in
+        rec_flow cx trace (t, ObjKitT (reason, tool, Spread (options, state), tout))
+  in
+
+  (*********************)
+  (* Object Resolution *)
+  (*********************)
+
+  let next = function
+  | Spread (options, state) -> object_spread options state
   in
 
   (* Intersect two object slices: slice * slice -> slice
    *
-   * In general it is unsound to combine intersection types, but since spread
-   * makes a copy and only reads from its arguments, it is safe in this specific
+   * In general it is unsound to combine intersection types, but since object
+   * kit utilities never write to their arguments, it is safe in this specific
    * case.
    *
    * {...{p:T}&{q:U}} = {...{p:T,q:U}}
    * {...{p:T}&{p:U}} = {...{p:T&U}}
-   * {...A&(B|C)} = {...{A&B)|(A&C)}
-   * {...(A|B)&C} = {...{A&C)|(B&C)}
+   * {...A&(B|C)} = {...(A&B)|(A&C)}
+   * {...(A|B)&C} = {...(A&C)|(B&C)}
    *)
-  let intersect2 reason (r1,props1,dict1,flags1) (r2,props2,dict2,flags2) =
+  let intersect2 reason (r1, props1, dict1, flags1) (r2, props2, dict2, flags2) =
     let intersection t1 t2 = DefT (reason, IntersectionT (InterRep.make t1 t2 [])) in
     let merge_props (t1, own1) (t2, own2) =
       let t1, t2, opt = match t1, t2 with
@@ -10460,74 +10520,12 @@ and object_spread =
     r, props, dict, flags
   in
 
-  let spread cx trace reason options = function
-    | x,[] -> x
-    | x0,x1::xs -> merge (spread2 cx trace reason options) x0 (x1,xs)
-  in
-
-  let mk_object cx reason {merge_mode; _} (r, props, dict, flags) =
-    let props = SMap.map (fun (t, own) ->
-      (* Spread only copies over own properties. If `not own`, then the property
-         might be on a proto object instead, so make the result optional. *)
-      let t = match t with
-      | DefT (_, OptionalT _) -> t
-      | _ -> if own then t else optional t
-      in
-      Field (t, Neutral)
-    ) props in
-    let id = Context.make_property_map cx props in
-    let proto = ObjProtoT reason in
-    let flags =
-      match merge_mode with
-      (* If all the other object types are exact then we want the resulting
-       * object to also be exact. This logic is encoded in the accumulated
-       * flags. *)
-      | Diff -> flags
-      | Spread target ->
-        let exact = match target with
-        (* Type spread result is exact if annotated to be exact *)
-        | Annot { make_exact } -> make_exact
-        (* Value spread result is exact if all inputs are exact *)
-        | Value -> flags.exact
-        in
-        { sealed = Sealed; frozen = false; exact }
-    in
-    let t = DefT (r, ObjT (mk_objecttype ~flags dict id proto)) in
-    (* Wrap the final type in an `ExactT` if we have an exact flag *)
-    if flags.exact then ExactT (reason, t) else t
-  in
-
-  let next cx trace reason options {todo_rev; acc} tout x =
-    let {merge_mode; _} = options in
-    Nel.iter (fun (r,_,_,{exact;_}) ->
-      match merge_mode with
-      | Spread (Annot { make_exact }) when make_exact && not exact ->
-        add_output cx ~trace (FlowError.EIncompatibleWithExact (r, reason))
-      | _ -> ()
-    ) x;
-    match todo_rev with
-    | [] ->
-      let t = match spread cx trace reason options (Nel.rev (x, acc)) with
-      | x,[] -> mk_object cx reason options x
-      | x0,x1::xs ->
-        DefT (reason, UnionT (UnionRep.make
-          (mk_object cx reason options x0)
-          (mk_object cx reason options x1)
-          (List.map (mk_object cx reason options) xs)))
-      in
-      rec_flow_t cx trace (t, tout)
-    | t::todo_rev ->
-      let tool = Resolve Next in
-      let state = {todo_rev; acc = x::acc} in
-      rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, tout))
-  in
-
-  let resolved cx trace reason options tool state tout x =
-    match tool with
-    | Next -> next cx trace reason options state tout x
+  let resolved cx trace reason resolve_tool tool tout x =
+    match resolve_tool with
+    | Next -> next tool cx trace reason tout x
     | List0 ((t, todo), join) ->
-      let tool = Resolve (List (todo, Nel.one x, join)) in
-      rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, tout))
+      let resolve_tool = Resolve (List (todo, Nel.one x, join)) in
+      rec_flow cx trace (t, ObjKitT (reason, resolve_tool, tool, tout))
     | List (todo, done_rev, join) ->
       match todo with
       | [] ->
@@ -10535,11 +10533,11 @@ and object_spread =
         | Or -> Nel.cons x done_rev |> Nel.concat
         | And -> merge (intersect2 reason) x done_rev
         in
-        next cx trace reason options state tout x
+        next tool cx trace reason tout x
       | t::todo ->
         let done_rev = Nel.cons x done_rev in
-        let tool = Resolve (List (todo, done_rev, join)) in
-        rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, tout))
+        let resolve_tool = Resolve (List (todo, done_rev, join)) in
+        rec_flow cx trace (t, ObjKitT (reason, resolve_tool, tool, tout))
   in
 
   let object_slice cx r id dict flags =
@@ -10570,26 +10568,35 @@ and object_spread =
     object_slice cx r id dict flags
   in
 
-  let resolve cx trace reason options state tout tool = function
+  let resolve cx trace reason resolve_tool tool tout = function
+    (* We extract the props from an ObjT. *)
     | DefT (r, ObjT {props_tmap; dict_t; flags; _}) ->
       let x = Nel.one (object_slice cx r props_tmap dict_t flags) in
-      resolved cx trace reason options tool state tout x
+      resolved cx trace reason resolve_tool tool tout x
+    (* We take the fields from an InstanceT excluding methods (because methods
+     * are always on the prototype). We also want to resolve fields from the
+     * InstanceT's super class so we recurse. *)
     | DefT (r, InstanceT (_, super, _, {fields_tmap; _})) ->
-      let tool = Super (interface_slice cx r fields_tmap, tool) in
-      rec_flow cx trace (super, ObjSpreadT (reason, options, tool, state, tout))
+      let resolve_tool = Super (interface_slice cx r fields_tmap, resolve_tool) in
+      rec_flow cx trace (super, ObjKitT (reason, resolve_tool, tool, tout))
+    (* Resolve each member of a union. *)
     | DefT (_, UnionT rep) ->
       let t, todo = UnionRep.members_nel rep in
-      let tool = Resolve (List0 (todo, Or)) in
-      rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, tout))
+      let resolve_tool = Resolve (List0 (todo, Or)) in
+      rec_flow cx trace (t, ObjKitT (reason, resolve_tool, tool, tout))
+    (* Resolve each member of an intersection. *)
     | DefT (_, IntersectionT rep) ->
       let t, todo = InterRep.members_nel rep in
-      let tool = Resolve (List0 (todo, And)) in
-      rec_flow cx trace (t, ObjSpreadT (reason, options, tool, state, tout))
-    | DefT (_, (AnyT | AnyObjT)) ->
-      rec_flow_t cx trace (AnyT.why reason, tout)
-    (* {...mixed} is treated as {...{[string]: mixed}}. Any JavaScript value can
-     * be spread with different semantics. If any JavaScript value were to
-     * throw some runtime error when spread then this would be unsound. *)
+      let resolve_tool = Resolve (List0 (todo, And)) in
+      rec_flow cx trace (t, ObjKitT (reason, resolve_tool, tool, tout))
+    (* Mirroring Object.assign() and {...null} semantics, treat null/void as
+     * empty objects. *)
+    | DefT (_, (NullT | VoidT)) ->
+      let flags = { frozen = true; sealed = Sealed; exact = true } in
+      let x = Nel.one (reason, SMap.empty, None, flags) in
+      resolved cx trace reason resolve_tool tool tout x
+    (* mixed is treated as {[string]: mixed}. Any JavaScript value may be
+     * treated as an object and so this is safe. *)
     | DefT (r, MixedT _) as t ->
       let flags = { frozen = true; sealed = Sealed; exact = true } in
       let x = Nel.one (reason, SMap.empty, Some ({
@@ -10598,39 +10605,39 @@ and object_spread =
         value = t;
         dict_polarity = Neutral;
       }), flags) in
-      resolved cx trace reason options tool state tout x
-    (* Mirroring Object.assign() and {...null} semantics, treat null/void as
-     * empty objects. *)
-    | DefT (_, (NullT | VoidT)) ->
-      let flags = { frozen = true; sealed = Sealed; exact = true } in
-      let x = Nel.one (reason, SMap.empty, None, flags) in
-      resolved cx trace reason options tool state tout x
-    (* Other types have reasonable spread implementations, like FunT, which
-       would spread its statics. Since spread is currently limited to types, an
-       arbitrary subset of possible types are implemented. *)
+      resolved cx trace reason resolve_tool tool tout x
+    (* If we see an empty then propagate empty to tout. *)
+    | DefT (r, EmptyT) ->
+      rec_flow_t cx trace (EmptyT.make r, tout)
+    (* Propagate any. *)
+    | DefT (_, (AnyT | AnyObjT)) ->
+      rec_flow_t cx trace (AnyT.why reason, tout)
+    (* Other types have reasonable object representations that may be added as
+     * new uses of the object kit resolution code is found. *)
     | t ->
-      add_output cx ~trace (FlowError.EInvalidSpread {
+      add_output cx ~trace (FlowError.EInvalidObjectKit {
+        tool;
         reason = reason_of_t t;
         reason_op = reason;
       })
   in
 
-  let super cx trace reason options state tout acc tool = function
+  let super cx trace reason resolve_tool tool tout acc = function
     | DefT (r, InstanceT (_, super, _, {fields_tmap; _})) ->
       let slice = interface_slice cx r fields_tmap in
       let acc = intersect2 reason acc slice in
-      let tool = Super (acc, tool) in
-      rec_flow cx trace (super, ObjSpreadT (reason, options, tool, state, tout))
+      let resolve_tool = Super (acc, resolve_tool) in
+      rec_flow cx trace (super, ObjKitT (reason, resolve_tool, tool, tout))
     | DefT (_, (AnyT | AnyObjT)) ->
       rec_flow_t cx trace (AnyT.why reason, tout)
     | _ ->
-      next cx trace reason options state tout (Nel.one acc)
+      next tool cx trace reason tout (Nel.one acc)
   in
 
-  fun cx trace reason options tool state tout l ->
-    match tool with
-    | Resolve tool -> resolve cx trace reason options state tout tool l
-    | Super (acc, tool) -> super cx trace reason options state tout acc tool l
+  fun cx trace reason resolve_tool tool tout l ->
+    match resolve_tool with
+    | Resolve resolve_tool -> resolve cx trace reason resolve_tool tool tout l
+    | Super (acc, resolve_tool) -> super cx trace reason resolve_tool tool tout acc l
 
 (************* end of slab **************************************************)
 
@@ -10829,7 +10836,6 @@ end = struct
     | OpaqueT (_, {super_t = Some t; _})
       -> extract cx t
 
-    | AbstractT _
     | AnyWithLowerBoundT _
     | AnyWithUpperBoundT _
     | MergedT _
@@ -11063,7 +11069,6 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _
-  | AbstractT _
   | EvalT _
   | ExtendsT _
   | ChoiceKitT _

@@ -23,7 +23,8 @@ type run_result = string option;;
 let assert_func = "
 // from http://tinyurl.com/y93dykzv
 const util = require('util');
-function assert_type(actual, expected) {
+function assert_type(actual: any, expected: any) {
+>>>>>>> 7178f55b7263546e72870a273e1ccb9052226da7
     if(typeof(actual) != 'object' || typeof(expected) != 'object') {
         if(Array.isArray(expected)) {
             if(expected.indexOf(actual) === -1) {

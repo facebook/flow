@@ -15,14 +15,14 @@ module Error = Parse_error
 open Parser_common
 
 module type EXPRESSION = sig
-  val assignment: env -> Expression.t
+  val assignment: env -> Loc.t Expression.t
   val assignment_cover: env -> pattern_cover
-  val conditional: env -> Expression.t
-  val property_name_include_private: env -> Loc.t * Identifier.t * bool
-  val is_assignable_lhs: Expression.t -> bool
-  val left_hand_side: env -> Expression.t
+  val conditional: env -> Loc.t Expression.t
+  val property_name_include_private: env -> Loc.t * Loc.t Identifier.t * bool
+  val is_assignable_lhs: Loc.t Expression.t -> bool
+  val left_hand_side: env -> Loc.t Expression.t
   val number: env -> number_type -> string -> float
-  val sequence: env -> Expression.t list -> Expression.t
+  val sequence: env -> Loc.t Expression.t list -> Loc.t Expression.t
 end
 
 module Expression

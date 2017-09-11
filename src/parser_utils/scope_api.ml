@@ -73,3 +73,6 @@ let all_defs { locals; _ } =
 let defs_of_scope info scope =
   let defs = all_defs info in
   List.filter (fun def -> scope = def.Def.scope) defs
+
+let is_local_use { locals; _ } use =
+  LocMap.mem use locals
