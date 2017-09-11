@@ -37,9 +37,11 @@ module ArgSpec : sig
   val int : int option flag_t
   val enum : string list -> string option flag_t
 
-  val required : 'a option flag_t -> 'a flag_t
+  val required : ?default:'a -> 'a option flag_t -> 'a flag_t
   val optional : 'a option flag_t -> 'a option flag_t
   val list_of : 'a option flag_t -> 'a list option flag_t
+  val delimited : string -> 'a option flag_t -> 'a list option flag_t
+  val key_value : string -> ('a option flag_t * 'b flag_t) -> ('a * 'b) option flag_t
 end
 
 type ('a, 'b) builder_t = {
