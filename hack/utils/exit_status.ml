@@ -45,6 +45,7 @@ type t =
    * deleted and do an incremental check.
    *)
   | Watchman_fresh_instance
+  | Watchman_invalid_result
   | File_heap_stale
   | Hhconfig_deleted
   | Hhconfig_changed
@@ -116,6 +117,7 @@ let exit_code = function
   | Redecl_heap_overflow ->         107
   | EventLogger_restart_out_of_retries -> 108
   | Watchman_fresh_instance ->      109
+  | Watchman_invalid_result ->      110
   | IDE_malformed_request ->        201
   | IDE_no_server ->                202
   | IDE_out_of_retries ->           203
@@ -171,6 +173,7 @@ let to_string = function
   | CantRunAI -> "CantRunAI"
   | Watchman_failed -> "Watchman_failed"
   | Watchman_fresh_instance -> "Watchman_fresh_instance"
+  | Watchman_invalid_result -> "Watchman_invalid_result"
   | Hhconfig_deleted -> "Hhconfig_deleted"
   | Hhconfig_changed -> "Hhconfig_changed"
   | Server_name_not_found -> "Server_name_not_found"

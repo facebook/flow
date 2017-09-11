@@ -23,6 +23,7 @@ module Types = struct
      * know which files were changed. This is useful for the monitor to
      * aggressively kill the server. *)
     | Drop_changes
+    | Scm_aware
 
   type init_settings = {
     (** None for query mode, otherwise specify subscriptions mode. *)
@@ -53,6 +54,7 @@ module Types = struct
      *)
     | State_enter of string * Hh_json.json option
     | State_leave of string * Hh_json.json option
+    | Changed_merge_base of string * SSet.t
     | Files_changed of SSet.t
 
   type changes =
