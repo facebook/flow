@@ -315,8 +315,7 @@ let read_file file =
   buf
 
 let write_file ~file s =
-  let chan = open_out file in
-  (output_string chan s; close_out chan)
+  Disk.write_file ~file ~contents:s
 
 let append_file ~file s =
   let chan = open_out_gen [Open_wronly; Open_append; Open_creat] 0o666 file in

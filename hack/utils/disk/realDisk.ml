@@ -6,3 +6,7 @@ let cat filename =
   let content = Buffer.contents buf in
   close_in ic;
   content
+
+let write_file ~file ~contents =
+  let chan = open_out file in
+  (output_string chan contents; close_out chan)
