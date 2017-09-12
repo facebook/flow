@@ -86,6 +86,12 @@ let close_out_no_fail fn oc =
 
 let cat = Disk.cat
 
+let cat_or_failed file =
+  try Some (Disk.cat file) with
+  | Sys_error _
+  | Failure _ ->
+    None
+
 let cat_no_fail filename =
   let ic = open_in_bin_no_fail filename in
   let len = in_channel_length ic in
