@@ -124,10 +124,6 @@ Work in progress
 
 Work in progress
 
-## `$Abstract<T>` <a class="toc" id="toc-abstract" href="#toc-abstract"></a>
-
-Work in progress
-
 ## `$PropertyType<T, x>` <a class="toc" id="toc-propertytype" href="#toc-propertytype"></a>
 
 A $PropertyType is the type at a given key.
@@ -277,7 +273,7 @@ This is where `ObjMap<T, F>` comes in handy.
 // @flow
 
 // let's write a typelevel function that takes a `() => V` and returns a `V` (its return type)
-type ExtractReturnType = <V>(() => V) => V 
+type ExtractReturnType = <V>(() => V) => V
 
 function run<A, O: {[key: string]: () => A}>(o: O): $ObjMap<O, ExtractReturnType> {
   return Object.keys(o).reduce((acc, k) => Object.assign(acc, { [k]: o[k]() }), {});
@@ -292,7 +288,7 @@ const o = {
   a: () => true,
   b: () => 'foo'
 };
-      
+
 (run(o).a: boolean); // Ok
 (run(o).b: string);  // Ok
 // $ExpectError
