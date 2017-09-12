@@ -116,7 +116,6 @@ begin library "hh-utils"
   files = [
     "buffered_line_reader.ml"
     "http_lite.ml"
-    "config_file.ml"
     "file_pos.ml"
     "findUtils.ml"
     "local_id.ml"
