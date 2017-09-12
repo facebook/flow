@@ -132,6 +132,7 @@ class lexical_hoister = object(this)
     match stmt with
     | (_, VariableDeclaration _)
     | (_, ClassDeclaration _)
+    | (_, ExportNamedDeclaration _)
     | (_, ImportDeclaration _) -> super#statement stmt
     | _ -> stmt
 

@@ -45,3 +45,7 @@ assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 55 2
 
 # printf "\nQualified types:\n"
 # assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 58 9
+
+printf "\nExports:\n"
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 64 20
+assert_ok "$FLOW" find-refs --json --pretty --strip-root locals.js 65 6
