@@ -102,6 +102,7 @@ MODULES=\
   hack/utils/build_mode/prod\
   hack/utils/collections\
   hack/utils/disk\
+  hack/utils/hashlib\
   hack/utils/hh_json\
   $(INOTIFY)\
   $(FSNOTIFY)\

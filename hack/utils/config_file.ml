@@ -35,7 +35,9 @@ let parse fn =
     with e ->
       Hh_logger.exc ~prefix:".hhconfig deleted: " e;
       Exit_status.(exit Hhconfig_deleted) in
-  parse_contents contents
+  let parsed = parse_contents contents in
+  let hash = Sha1.digest contents in
+  hash, parsed
 
 module Getters = struct
 
