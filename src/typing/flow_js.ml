@@ -22,7 +22,6 @@
    is guaranteed to exist, and is usually reached in very few steps. *)
 
 open Utils_js
-open Root_finder
 open Reason
 open Constraint
 open Type
@@ -162,6 +161,25 @@ let rec find_graph cx id =
 and find_constraints cx id =
   let root_id, root = find_root cx id in
   root_id, root.constraints
+
+(* Find the root of a type variable, potentially traversing a chain of type
+   variables, while short-circuiting all the type variables in the chain to the
+   root during traversal to speed up future traversals. *)
+and find_root cx id =
+  match IMap.get id (Context.graph cx) with
+  | Some (Goto next_id) ->
+      let root_id, root = find_root cx next_id in
+      if root_id != next_id then Context.set_tvar cx id (Goto root_id) else ();
+      root_id, root
+
+  | Some (Root root) ->
+      id, root
+
+  | None ->
+      let msg = spf "find_root: tvar %d not found in file %s" id
+        (Debug_js.string_of_file cx)
+      in
+      assert_false msg
 
 (* Replace the node associated with a type variable in the graph. *)
 and replace_node cx id node = Context.set_tvar cx id node
@@ -6682,8 +6700,6 @@ and subst =
       | ExistsT reason ->
         if force then mk_tvar cx reason
         else t
-
-      | OpenT _ -> t
 
       | DefT (reason, PolyT (xs, inner, _)) ->
         let xs, map, changed = List.fold_left (fun (xs, map, changed) typeparam ->

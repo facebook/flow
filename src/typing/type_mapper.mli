@@ -134,6 +134,8 @@ class ['a] t :
       Type.React.CreateClass.stack_head * Type.t list *
       Type.React.CreateClass.spec Type.React.CreateClass.maybe_known
       list
+    method tvar :
+      Context.t -> 'a -> Reason.t -> Constraint.ident -> Constraint.ident
     method type_ : Context.t -> 'a -> Type.t -> Type.t
     method type_param :
       Context.t -> 'a -> Type.typeparam -> Type.typeparam
