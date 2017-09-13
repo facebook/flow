@@ -158,12 +158,8 @@ Error: fs/fs.js:13
  14:   (data : string);
  15: });
      -^ call of method `readFile`. Could not decide which case to select
-                                v
-901:   declare function readFile(
-902:     path: string | Buffer | URL | number,
-903:     callback: (err: ?ErrnoError, data: Buffer) => void
-904:   ): void;
-       ------^ intersection type. See lib: <BUILTINS>/node.js:901
+ 13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
+     ^^^^^^^^^^^ intersection type
   Case 3 may work:
                                   v
   910:   declare function readFile(

@@ -12,8 +12,8 @@ Error: test.js:2
 Error: test.js:8
   8: o.foo = 0; // future widening is constrained
              ^ number. This type is incompatible with
-  2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
-                    ^^^^^^ string
+  8: o.foo = 0; // future widening is constrained
+     ^^^^^ string
 
 Error: test.js:12
  12: bar({foo: ""});
@@ -29,8 +29,8 @@ Error: test.js:12
 Error: test2.js:3
   3: a.foo = null; // But this is an error
              ^^^^ null. This type is incompatible with
-  1: var a: { foo?: string } = {};
-                    ^^^^^^ string
+  3: a.foo = null; // But this is an error
+     ^^^^^ string
 
 Error: test2.js:10
  10: var d: { foo?: string } = { foo: null }; // But this is an error

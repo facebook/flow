@@ -1,8 +1,8 @@
 Error: A.js:13
  13: A.x = A.y;
            ^^^ string. This type is incompatible with
-  6: var A = {x:true, ...{}};
-                ^^^^ boolean
+ 13: A.x = A.y;
+     ^^^ boolean
 
 Error: A.js:14
  14: f(A.x); // A.x is now a string, by def assign
@@ -53,8 +53,8 @@ Error: F.js:5
 Error: G.js:2
   2: a.length = 123;
                 ^^^ number. This type is incompatible with
-  1: var a = { length: "duck" };
-                       ^^^^^^ string
+  2: a.length = 123;
+     ^^^^^^^^ string
 
 Error: G.js:3
   3: a.length();
@@ -63,8 +63,6 @@ Error: G.js:3
      ^^^^^^^^^^ number
 
 Error: G.js:6
-  6: b.length = "duck";
-     ^^^^^^^^ assignment of property `length`
   6: b.length = "duck";
                 ^^^^^^ string. This type is incompatible with
   6: b.length = "duck";

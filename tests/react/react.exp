@@ -32,8 +32,6 @@ Error: create_class.js:8
 
 Error: create_class.js:15
  15:     this.p = 0; // error: number ~> string
-         ^^^^^^ assignment of property `p`
- 15:     this.p = 0; // error: number ~> string
                   ^ number. This type is incompatible with
  15:     this.p = 0; // error: number ~> string
          ^^^^^^ string

@@ -289,6 +289,7 @@ module rec TypeTerm : sig
     | Internal of internal_use_op
     | MissingTupleElement of int
     | PropertyCompatibility of string * reason * reason * use_op
+    | SetProperty of reason
     | TypeArgCompatibility of string * reason * reason * use_op
     | TypeRefinement
     | UnknownUse
@@ -2293,6 +2294,7 @@ let string_of_use_op = function
   | Internal op -> spf "Internal %s" (string_of_internal_use_op op)
   | MissingTupleElement _ -> "MissingTupleElement"
   | PropertyCompatibility _ -> "PropertyCompatibility"
+  | SetProperty _ -> "SetProperty"
   | TypeArgCompatibility _ -> "TypeArgCompatibility"
   | TypeRefinement -> "TypeRefinement"
   | UnknownUse -> "UnknownUse"

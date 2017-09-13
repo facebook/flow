@@ -19,8 +19,8 @@ Error: classes.js:15
 Error: classes.js:20
  20:     this.state = { y: "" };
                       ^^^^^^^^^ object literal. This type is incompatible with
-  7: class Foo extends React.Component<Props, State> {
-                                              ^^^^^ object type
+ 20:     this.state = { y: "" };
+         ^^^^^^^^^^ object type
   Property `y` is incompatible:
      20:     this.state = { y: "" };
                                ^^ string. This type is incompatible with
@@ -45,8 +45,6 @@ Error: classes.js:23
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:38
 
 Error: classes.js:38
- 38: Foo.defaultProps = 0;
-     ^^^^^^^^^^^^^^^^ assignment of property `defaultProps`
  38: Foo.defaultProps = 0;
                         ^ number. This type is incompatible with
  38: Foo.defaultProps = 0;

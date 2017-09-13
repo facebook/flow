@@ -89,9 +89,9 @@ Error: D.js:11
  12:   function (x: number): string { return "hi"; };
                     ^^^^^^ number
 
-Error: D.js:20
- 20: function e(x: { (): string; (x: number): string }): () => number {
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection. This type is incompatible with
+Error: D.js:21
+ 21:   return x;
+              ^ intersection. This type is incompatible with
  20: function e(x: { (): string; (x: number): string }): () => number {
                                                          ^^^^^^^^^^^^ function type
   Member 1:

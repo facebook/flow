@@ -8,8 +8,6 @@ inconsistent use of library definitions
 
 Error: declare_class.js:8
   8: C.x = "";
-     ^^^ assignment of property `x`
-  8: C.x = "";
            ^^ string. This type is incompatible with
   8: C.x = "";
      ^^^ number

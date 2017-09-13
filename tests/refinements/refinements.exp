@@ -176,14 +176,14 @@ Error: eq.js:19
 Error: hasOwnProperty.js:4
   4:   x.y(); // error: could be undefined
        ^^^^^ call of method `y`. Function cannot be called on possibly undefined value
-  3: function foo(x:{y?:() => void}) {
-                        ^^^^^^^^^^ undefined
+  4:   x.y(); // error: could be undefined
+       ^^^ undefined
 
 Error: hasOwnProperty.js:6
   6:     x.y(); // error: still could be undefined
          ^^^^^ call of method `y`. Function cannot be called on possibly undefined value
-  3: function foo(x:{y?:() => void}) {
-                        ^^^^^^^^^^ undefined
+  6:     x.y(); // error: still could be undefined
+         ^^^ undefined
 
 Error: hasOwnProperty.js:9
   9:     x.z(); // error: unreachable, but we don't help you here
@@ -992,8 +992,8 @@ Error: typeof.js:12
 Error: typeof.js:23
  23:   BAZ.stuff(123); // error, refinement is gone
        ^^^^^^^^^^^^^^ call of method `stuff`. Function cannot be called on possibly undefined value
-  3: declare var BAZ: {stuff?: (x: number) => void} | void;
-                               ^^^^^^^^^^^^^^^^^^^ undefined. See lib: lib.js:3
+ 23:   BAZ.stuff(123); // error, refinement is gone
+       ^^^^^^^^^ undefined
 
 Error: typeof.js:23
  23:   BAZ.stuff(123); // error, refinement is gone
@@ -1010,8 +1010,8 @@ Error: typeof.js:26
 Error: typeof.js:30
  30:     BAZ.stuff(123); // error, refinement is gone
          ^^^^^^^^^^^^^^ call of method `stuff`. Function cannot be called on possibly undefined value
-  3: declare var BAZ: {stuff?: (x: number) => void} | void;
-                               ^^^^^^^^^^^^^^^^^^^ undefined. See lib: lib.js:3
+ 30:     BAZ.stuff(123); // error, refinement is gone
+         ^^^^^^^^^ undefined
 
 Error: typeof.js:49
  49:   if (typeof x === "foo") { // error

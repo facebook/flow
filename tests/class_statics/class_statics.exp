@@ -24,8 +24,6 @@ Error: test.js:10
 
 Error: test.js:13
  13:     B.x = 0; // error
-         ^^^ assignment of property `x`
- 13:     B.x = 0; // error
                ^ number. This type is incompatible with
  13:     B.x = 0; // error
          ^^^ string
@@ -38,11 +36,9 @@ Error: test.js:15
 
 Error: test.js:17
  17:     B.y = 0; // error
-         ^^^ assignment of property `y`
- 17:     B.y = 0; // error
                ^ number. This type is incompatible with
-  3:   static y: string;
-                 ^^^^^^ string
+ 17:     B.y = 0; // error
+         ^^^ string
 
 Error: test.js:18
  18:     B.bar(0); // error

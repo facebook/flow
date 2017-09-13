@@ -3307,7 +3307,7 @@ and assignment cx loc = Ast.Expression.(function
             _
           }) ->
             let reason =
-              mk_reason (RPropertyAssignment name) lhs_loc in
+              mk_reason (RPropertyAssignment (Some name)) lhs_loc in
             let prop_reason = mk_reason (RProperty (Some name)) ploc in
             let super = super_ cx lhs_loc in
             Flow.flow cx (super, SetPropT (reason, Named (prop_reason, name), t))
@@ -3322,7 +3322,7 @@ and assignment cx loc = Ast.Expression.(function
             (* if we fire this hook, it means the assignment is a sham. *)
             if not (Type_inference_hooks_js.dispatch_member_hook cx name ploc o)
             then (
-              let reason = mk_reason (RPropertyAssignment name) lhs_loc in
+              let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
 
               (* flow type to object property itself *)
               let class_entries = Env.get_class_entries () in
@@ -3340,7 +3340,7 @@ and assignment cx loc = Ast.Expression.(function
             (* if we fire this hook, it means the assignment is a sham. *)
             if not (Type_inference_hooks_js.dispatch_member_hook cx name ploc o)
             then (
-              let reason = mk_reason (RPropertyAssignment name) lhs_loc in
+              let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
               let prop_reason = mk_reason (RProperty (Some name)) ploc in
 
               (* flow type to object property itself *)
@@ -3354,10 +3354,7 @@ and assignment cx loc = Ast.Expression.(function
             property = Member.PropertyExpression index;
             _
           }) ->
-            let reason =
-              let desc = RCustom "assignment of computed property/element" in
-              mk_reason desc lhs_loc
-            in
+            let reason = mk_reason (RPropertyAssignment None) lhs_loc in
             let a = expression cx _object in
             let i = expression cx index in
             Flow.flow cx (a, SetElemT (reason, i, t));

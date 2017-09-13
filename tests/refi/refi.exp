@@ -91,8 +91,8 @@ Error: heap.js:62
 Error: heap.js:105
 105:       x.y = 123; // error
                  ^^^ number. This type is incompatible with
-103:     var x : {y: ?string} = {y: null};
-                      ^^^^^^ string
+105:       x.y = 123; // error
+           ^^^ string
 
 Error: heap.js:107
 107:     (x.y: string); // error, this got widened to a number

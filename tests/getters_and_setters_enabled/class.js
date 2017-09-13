@@ -8,7 +8,7 @@ class Foo {
   get goodGetterNoAnnotation() { return 4; }
   get goodGetterWithAnnotation(): number { return 4; }
 
-  set goodSetterNoAnnotation(x) { z = x; }
+  set goodSetterNoAnnotation(x) { z = x; } // TODO: bad error position
   set goodSetterWithAnnotation(x: number) { z = x; }
 
   get propWithMatchingGetterAndSetter(): number { return 4; }

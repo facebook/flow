@@ -293,6 +293,7 @@ let rec locs_of_use_op acc = function
     let lower_loc = loc_of_reason lower_obj_reason in
     let upper_loc = loc_of_reason upper_obj_reason in
     locs_of_use_op (lower_loc::upper_loc::acc) use_op
+  | SetProperty reason -> (loc_of_reason reason)::acc
   | TypeArgCompatibility (_, r1, r2, use_op) ->
     locs_of_use_op (loc_of_reason r1::loc_of_reason r2::acc) use_op
   | Addition
@@ -661,6 +662,10 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       else "This type is incompatible with an argument type of"
     in
     reasons', extra, msg
+  | SetProperty reason_op ->
+    let rl, ru = reasons in
+    let ru = replace_reason_const (desc_of_reason ru) reason_op in
+    (rl, ru), extra, msg
   | _ ->
     reasons, extra, msg
   in

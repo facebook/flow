@@ -53,8 +53,6 @@ Error: method_shadow.js:43
 
 Error: method_shadow.js:51
  51:         this.x = x; // err, m's T != H's T
-             ^^^^^^ assignment of property `x`
- 51:         this.x = x; // err, m's T != H's T
                       ^ T. This type is incompatible with
  51:         this.x = x; // err, m's T != H's T
              ^^^^^^ some incompatible instantiation of `T`
