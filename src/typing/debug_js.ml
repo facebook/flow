@@ -2410,8 +2410,8 @@ let dump_flow_error =
         spf "EComparison (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | ETupleArityMismatch ((reason1, reason2), arity1, arity2) ->
-        spf "ETupleArityMismatch (%s, %s, %d, %d)"
+    | ETupleArityMismatch ((reason1, reason2), arity1, arity2, _) ->
+        spf "ETupleArityMismatch (%s, %s, %d, %d, _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           arity1 arity2

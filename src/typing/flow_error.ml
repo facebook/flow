@@ -103,7 +103,7 @@ type error_message =
   | EAdditionMixed of reason
   | ECoercion of (reason * reason)
   | EComparison of (reason * reason)
-  | ETupleArityMismatch of (reason * reason) * int * int
+  | ETupleArityMismatch of (reason * reason) * int * int * use_op
   | ENonLitArrayToTuple of (reason * reason)
   | ETupleOutOfBounds of (reason * reason) * int * int
   | ETupleUnsafeWrite of (reason * reason)
@@ -368,8 +368,8 @@ let locs_of_error_message = function
       [loc_of_reason reason1; loc_of_reason reason2]
   | EComparison (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | ETupleArityMismatch ((reason1, reason2), _, _) ->
-      [loc_of_reason reason1; loc_of_reason reason2]
+  | ETupleArityMismatch ((reason1, reason2), _, _, use_op) ->
+      (loc_of_reason reason1)::(loc_of_reason reason2)::(locs_of_use_op [] use_op)
   | ENonLitArrayToTuple (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | ETupleOutOfBounds ((reason1, reason2), _, _) ->
@@ -932,13 +932,16 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | EComparison reasons ->
       typecheck_error "This type cannot be compared to" reasons
 
-  | ETupleArityMismatch (reasons, l1, l2) ->
+  | ETupleArityMismatch (reasons, l1, l2, use_op) ->
       let msg = spf
         "Tuple arity mismatch. This tuple has %d elements and cannot flow to \
         the %d elements of"
         l1
         l2 in
-      typecheck_error msg reasons
+      let reasons, extra, msg =
+        unwrap_use_ops ~force:true (reasons, [], msg) use_op
+      in
+      typecheck_error msg ~extra reasons
 
   | ENonLitArrayToTuple reasons ->
       let msg =

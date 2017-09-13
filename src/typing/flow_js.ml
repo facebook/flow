@@ -4243,7 +4243,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let l1 = List.length ts1 in
       let l2 = List.length ts2 in
       if l1 <> l2 then
-        add_output cx ~trace (FlowError.ETupleArityMismatch ((r1, r2), l1, l2));
+        add_output cx ~trace (FlowError.ETupleArityMismatch
+          ((r1, r2), l1, l2, use_op));
       iter2opt (fun t1 t2 ->
         match t1, t2 with
         | Some t1, Some t2 ->
@@ -9026,7 +9027,8 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
     let l1 = List.length ts1 in
     let l2 = List.length ts2 in
     if l1 <> l2 then
-      add_output cx ~trace (FlowError.ETupleArityMismatch ((r1, r2), l1, l2));
+      add_output cx ~trace (FlowError.ETupleArityMismatch
+        ((r1, r2), l1, l2, use_op));
     iter2opt (fun t1 t2 ->
       match t1, t2 with
       | Some t1, Some t2 -> rec_unify cx trace t1 t2
