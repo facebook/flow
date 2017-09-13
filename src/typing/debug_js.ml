@@ -358,8 +358,9 @@ and _json_of_cont json_cx = Hh_json.(function
       "cont", JSON_String "upper";
       "type", _json_of_use_t json_cx u
     ]
-  | Lower l -> [
+  | Lower (op, l) -> [
       "cont", JSON_String "lower";
+      "use", JSON_String (string_of_use_op op);
       "type", _json_of_t json_cx l
     ]
 )
@@ -1762,8 +1763,11 @@ and dump_use_t_ (depth, tvars) cx t =
   in
 
   let try_flow = function
-    | UnionCases (t, ts) ->
-        spf "(%s, [%s])" (kid t) (String.concat "; " (List.map kid ts))
+    | UnionCases (use_op, t, ts) ->
+        spf "(%s, %s, [%s])"
+          (string_of_use_op use_op)
+          (kid t)
+          (String.concat "; " (List.map kid ts))
     | IntersectionCases (ts, use_t) ->
         spf "([%s], %s)" (String.concat "; " (List.map kid ts)) (use_kid use_t)
   in
@@ -2272,8 +2276,8 @@ let dump_flow_error =
         spf "EIncompatibleDefs { reason_lower = %s; reason_upper = %s; extras = _ }"
           (dump_reason cx reason_lower)
           (dump_reason cx reason_upper)
-    | EIncompatibleProp { reason_prop; reason_obj; special=_ } ->
-        spf "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _ }"
+    | EIncompatibleProp { reason_prop; reason_obj; special=_; use_op=_ } ->
+        spf "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _; use_op = _ }"
           (dump_reason cx reason_prop)
           (dump_reason cx reason_obj)
     | EIncompatibleGetProp { reason_prop; reason_obj; special=_ } ->
@@ -2355,8 +2359,8 @@ let dump_flow_error =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (match x with Some x -> spf "%S" x | None -> "(computed)")
-    | EPropPolarityMismatch ((reason1, reason2), x, _) ->
-        spf "EPropPolarityMismatch ((%s, %s), %s, _)"
+    | EPropPolarityMismatch ((reason1, reason2), x, _, _) ->
+        spf "EPropPolarityMismatch ((%s, %s), %s, _, _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (match x with Some x -> spf "%S" x | None -> "(computed)")
@@ -2366,12 +2370,13 @@ let dump_flow_error =
           name
           (Polarity.string expected_polarity)
           (Polarity.string actual_polarity)
-    | EStrictLookupFailed ((reason1, reason2), reason, x) ->
-        spf "EStrictLookupFailed ((%s, %s), %s, %s)"
+    | EStrictLookupFailed ((reason1, reason2), reason, x, use_op) ->
+        spf "EStrictLookupFailed ((%s, %s), %s, %s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (dump_reason cx reason)
           (match x with Some x -> spf "Some %S" x | None -> "None")
+          (match use_op with Some _ -> "Some use_op" | None -> "None")
     | EPrivateLookupFailed (reason1, reason2) ->
         spf "EPrivateLookupFailed (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EFunCallParam (reason1, reason2) ->
@@ -2405,8 +2410,8 @@ let dump_flow_error =
         spf "EComparison (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | ETupleArityMismatch ((reason1, reason2), arity1, arity2) ->
-        spf "ETupleArityMismatch (%s, %s, %d, %d)"
+    | ETupleArityMismatch ((reason1, reason2), arity1, arity2, _) ->
+        spf "ETupleArityMismatch (%s, %s, %d, %d, _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           arity1 arity2
@@ -2423,16 +2428,17 @@ let dump_flow_error =
         spf "ETupleUnsafeWrite (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EUnionSpeculationFailed { reason; reason_op; branches = _ } ->
-        spf "EUnionSpeculationFailed { reason = %s; reason_op = %s; branches = _ }"
+    | EUnionSpeculationFailed { use_op; reason; reason_op; branches = _ } ->
+        spf "EUnionSpeculationFailed { use_op = %s; reason = %s; reason_op = %s; branches = _ }"
+          (string_of_use_op use_op)
           (dump_reason cx reason)
           (dump_reason cx reason_op)
     | ESpeculationAmbiguous ((reason1, reason2), _, _, _) ->
         spf "ESpeculationAmbiguous ((%s, %s), _, _, _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EIncompatibleWithExact (reason1, reason2) ->
-        spf "EIncompatibleWithExact (%s, %s)"
+    | EIncompatibleWithExact ((reason1, reason2), _) ->
+        spf "EIncompatibleWithExact ((%s, %s), _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
     | EUnsupportedExact (reason1, reason2) ->

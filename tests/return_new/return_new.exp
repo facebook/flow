@@ -18,15 +18,20 @@ Error: test.js:8
 
 Error: test.js:23
  23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
-                       ^^^^^^^^^^^ property `x`. Property not found in
+          ^^^^^^^^^ new object. This type is incompatible with
  23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
-          ^^^^^^^^^ new object
+                       ^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
+                           ^^^^^^^^^^^ property `x`. Property not found in
+     23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
+              ^^^^^^^^^ new object
 
 Error: test2.js:7
   7: d.x = ""; // error, string ~/~ number (but property x is found)
            ^^ string. This type is incompatible with
-  2:   constructor(): { x: number }; // OK
-                           ^^^^^^ number
+  7: d.x = ""; // error, string ~/~ number (but property x is found)
+     ^^^ number
 
 Error: test2.js:9
   9: (new D: D); // error, new D is an object, D not in proto chain

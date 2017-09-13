@@ -1,22 +1,16 @@
 Error: instanceof.js:17
  17:     if (g instanceof X1) g.foo = '1337';  // oops
-                              ^^^^^ assignment of property `foo`
- 17:     if (g instanceof X1) g.foo = '1337';  // oops
                                       ^^^^^^ string. This type is incompatible with
  17:     if (g instanceof X1) g.foo = '1337';  // oops
                               ^^^^^ number
 
 Error: instanceof.js:34
  34:     if (g.bar instanceof X1) g.bar.foo = '1337';  // oops
-                                  ^^^^^^^^^ assignment of property `foo`
- 34:     if (g.bar instanceof X1) g.bar.foo = '1337';  // oops
                                               ^^^^^^ string. This type is incompatible with
  34:     if (g.bar instanceof X1) g.bar.foo = '1337';  // oops
                                   ^^^^^^^^^ number
 
 Error: instanceof.js:51
- 51:     if (g.baz.bar instanceof X1) g.baz.bar.foo = '1337';  // oops
-                                      ^^^^^^^^^^^^^ assignment of property `foo`
  51:     if (g.baz.bar instanceof X1) g.baz.bar.foo = '1337';  // oops
                                                       ^^^^^^ string. This type is incompatible with
  51:     if (g.baz.bar instanceof X1) g.baz.bar.foo = '1337';  // oops

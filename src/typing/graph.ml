@@ -119,7 +119,7 @@ let put_u u id (iset, ttbl, utbl) =
 type tnode = Def of Type.t | Use of Type.use_t
 
 let node_of_cont = function
-| Lower t -> Def t
+| Lower (_, t) -> Def t
 | Upper u -> Use u
 
 let list_parts = List.mapi (fun i t -> spf "#%d" i, Def t)

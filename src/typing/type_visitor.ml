@@ -542,7 +542,7 @@ class ['a] t = object(self)
   | ChoiceKitUseT (_, tool) -> (match tool with
     | FullyResolveType _ -> acc
     | TryFlow (_, spec) -> (match spec with
-      | UnionCases (t, ts) ->
+      | UnionCases (_, t, ts) ->
         let acc = self#type_ cx acc t in
         let acc = List.fold_left (self#type_ cx) acc ts in
         acc
@@ -676,7 +676,7 @@ class ['a] t = object(self)
   | CallElem (_, fn) -> self#fun_call_type cx acc fn
 
   method private cont cx acc = function
-  | Lower l -> self#type_ cx acc l
+  | Lower (_, l) -> self#type_ cx acc l
   | Upper u -> self#use_type_ cx acc u
 
   method private type_map cx acc = function

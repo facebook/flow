@@ -339,7 +339,7 @@ let run cx trace reason_op l u
             let strict = NonstrictReturning (Some
               (DefT (reason_missing, VoidT), tvar)) in
             let propref = Named (reason_prop, name) in
-            let action = RWProp (component, tvar, Read) in
+            let action = LookupProp (UnknownUse, Field (tvar, Positive)) in
             (* Lookup the `defaultProps` property. *)
             rec_flow cx trace (component,
               LookupT (reason_op, strict, [], propref, action))
@@ -368,7 +368,7 @@ let run cx trace reason_op l u
       (* Flow the config input key type to the key type. *)
       let kind = NonstrictReturning None in
       let propref = Named (reason_key, "key") in
-      let action = RWProp (config_input, key_t, Read) in
+      let action = LookupProp (UnknownUse, Field (key_t, Positive)) in
       (* TODO: if config_input is null, we will treat it like prototype termination,
        * but we should be treating a null config like an empty config. *)
       rec_flow cx trace (config_input,
@@ -389,7 +389,7 @@ let run cx trace reason_op l u
       (* Flow the config input ref type to the ref type. *)
       let kind = NonstrictReturning None in
       let propref = Named (reason_ref, "ref") in
-      let action = RWProp (config_input, ref_t, Read) in
+      let action = LookupProp (UnknownUse, Field (ref_t, Positive)) in
       (* TODO: if config_input is null, we will treat it like prototype termination,
        * but we should be treating a null config like an empty config. *)
       rec_flow cx trace (config_input,

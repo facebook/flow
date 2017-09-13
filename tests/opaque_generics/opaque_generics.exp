@@ -42,28 +42,6 @@ Error: importtest-polarity.js:30
      29: function test7(x: Invariant<number | string>) : Invariant<number> { // Error: number | string != number
                                                                    ^^^^^^ number
 
-Error: importtest-polarity.js:38
- 38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                                                                       ^^^^ null. This type is incompatible with
- 38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                    ^^^^^^^^^^^^^^^ union: number | string
-  Member 1:
-   38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                      ^^^^^^ number
-  Error:
-   38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                                                                         ^^^^ null. This type is incompatible with
-   38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                      ^^^^^^ number
-  Member 2:
-   38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                               ^^^^^^ string
-  Error:
-   38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                                                                                         ^^^^ null. This type is incompatible with
-   38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
-                                                               ^^^^^^ string
-
 Error: importtest-polarity.js:39
  39:     return x;
                 ^ type application of type `All`. This type is incompatible with the expected return type of
@@ -85,6 +63,33 @@ Error: importtest-polarity.js:39
                                                 ^^^^^^ string. This type is incompatible with
      38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
                                                                                                  ^^^^^^ number
+
+Error: importtest-polarity.js:39
+ 39:     return x;
+                ^ type application of type `All`. This type is incompatible with the expected return type of
+ 38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of type `All`
+  Type argument `U` is incompatible:
+     38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                                                                           ^^^^ null. This type is incompatible with
+     38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                        ^^^^^^^^^^^^^^^ union: number | string
+      Member 1:
+       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                          ^^^^^^ number
+      Error:
+       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                                                                             ^^^^ null. This type is incompatible with
+       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                          ^^^^^^ number
+      Member 2:
+       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                   ^^^^^^ string
+      Error:
+       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                                                                             ^^^^ null. This type is incompatible with
+       38: function test9(x: All<number, number | string, number | string>) : All<number | string, number, number | string | null> { // Errors: number != number | string (invariant), number | string ~> number (covariant), number | string ~> number | string | null (contravariant)
+                                                                   ^^^^^^ string
 
 Error: importtest.js:7
   7:     return x;

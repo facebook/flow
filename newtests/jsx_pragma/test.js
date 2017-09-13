@@ -265,10 +265,15 @@ export default suite(({addFile, addFiles, addCode}) => [
           test.js:8
             8:       <Bar y="hi" />;
                      ^^^^^^^^^^^^^^ JSX desugared to \`Foo(...)\`
-            5:       function Foo(elem: number, props: {x: string}) {}
-                                                       ^^^^^^^^^^^ property \`x\`. Property not found in
             8:       <Bar y="hi" />;
-                     ^^^^^^^^^^^^^^ props of JSX element \`Bar\`
+                     ^^^^^^^^^^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
+            5:       function Foo(elem: number, props: {x: string}) {}
+                                                       ^^^^^^^^^^^ object type
+            Property \`x\` is incompatible:
+                5:       function Foo(elem: number, props: {x: string}) {}
+                                                           ^^^^^^^^^^^ property \`x\`. Property not found in
+                8:       <Bar y="hi" />;
+                         ^^^^^^^^^^^^^^ props of JSX element \`Bar\`
         `,
       ),
   ]),

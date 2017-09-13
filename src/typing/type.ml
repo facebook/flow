@@ -285,10 +285,12 @@ module rec TypeTerm : sig
     | FunCallParam
     | FunCallThis of reason
     | FunImplicitReturn
+    | FunParam of { lower: reason; upper: reason; use_op: use_op }
     | FunReturn
     | Internal of internal_use_op
     | MissingTupleElement of int
     | PropertyCompatibility of string * reason * reason * use_op
+    | SetProperty of reason
     | TypeArgCompatibility of string * reason * reason * use_op
     | TypeRefinement
     | UnknownUse
@@ -709,7 +711,9 @@ module rec TypeTerm : sig
   (* Obj.assign(target, ...source) *)
   | ObjSpreadAssign
 
-  and cont = Lower of t | Upper of use_t
+  and cont =
+    | Lower of use_op * t
+    | Upper of use_t
 
   (* LookupT is a general-purpose tool for traversing prototype chains in search
      of properties. In all cases, if the property is found somewhere along the
@@ -940,7 +944,7 @@ module rec TypeTerm : sig
   | PropExistsTest of bool * string * t * t
 
   and spec =
-  | UnionCases of t * t list
+  | UnionCases of use_op * t * t list
   | IntersectionCases of t list * use_t
 
   (* A dependent predicate type consisting of:
@@ -2287,10 +2291,12 @@ let string_of_use_op = function
   | FunCallParam -> "FunCallParam"
   | FunCallThis _ -> "FunCallThis"
   | FunImplicitReturn -> "FunImplicitReturn"
+  | FunParam _ -> "FunParam"
   | FunReturn -> "FunReturn"
   | Internal op -> spf "Internal %s" (string_of_internal_use_op op)
   | MissingTupleElement _ -> "MissingTupleElement"
   | PropertyCompatibility _ -> "PropertyCompatibility"
+  | SetProperty _ -> "SetProperty"
   | TypeArgCompatibility _ -> "TypeArgCompatibility"
   | TypeRefinement -> "TypeRefinement"
   | UnknownUse -> "UnknownUse"

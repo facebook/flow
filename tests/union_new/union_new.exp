@@ -98,7 +98,7 @@ Error: test10.js:62
 
 Error: test11.js:12
  12: length({ kind: "cons" }); // missing `next`
-            ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+            ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
   5: function length(list: List) {
                            ^^^^ union: Nil | Cons
   Member 1:
@@ -113,14 +113,19 @@ Error: test11.js:12
    16: type List = Nil | Cons;
                          ^^^^ Cons
   Error:
-   16: type List = Nil | Cons;
-                         ^^^^ property `next`. Property not found in
    12: length({ kind: "cons" }); // missing `next`
-              ^^^^^^^^^^^^^^^^ object literal
+              ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+   16: type List = Nil | Cons;
+                         ^^^^ object type
+    Property `next` is incompatible:
+       16: type List = Nil | Cons;
+                             ^^^^ property `next`. Property not found in
+       12: length({ kind: "cons" }); // missing `next`
+                  ^^^^^^^^^^^^^^^^ object literal
 
 Error: test11.js:14
  14: length({ kind: "empty" }); // `kind` not found
-            ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+            ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
   5: function length(list: List) {
                            ^^^^ union: Nil | Cons
   Member 1:

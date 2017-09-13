@@ -1,3 +1,9 @@
+Error: class.js:11
+ 11:   set goodSetterNoAnnotation(x) { z = x; } // TODO: bad error position
+                                           ^ string. This type is incompatible with
+  5: var z: number = 123;
+            ^^^^^^ number
+
 Error: class.js:34
  34:   set [z](x: string) {}
        ^^^^^^^^^^^^^^^^^^^^^ computed property keys not supported
@@ -18,17 +24,7 @@ Error: class.js:45
  45: var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
                                ^^^^^^ string
 
-Error: class.js:52
- 52: foo.goodSetterNoAnnotation = "hello"; // Error string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `goodSetterNoAnnotation`
- 11:   set goodSetterNoAnnotation(x) { z = x; }
-                                           ^ string. This type is incompatible with
-  5: var z: number = 123;
-            ^^^^^^ number
-
 Error: class.js:53
- 53: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `goodSetterWithAnnotation`
  53: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
                                     ^^^^^^^ string. This type is incompatible with
  53: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
@@ -54,8 +50,6 @@ Error: class.js:57
 
 Error: class.js:58
  58: foo.propOverriddenWithSetter = 123; // Error number ~> string
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `propOverriddenWithSetter`
- 58: foo.propOverriddenWithSetter = 123; // Error number ~> string
                                     ^^^ number. This type is incompatible with
  58: foo.propOverriddenWithSetter = 123; // Error number ~> string
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
@@ -67,8 +61,6 @@ Error: declare_class.js:37
                                ^^^^^^ string
 
 Error: declare_class.js:42
- 42: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `goodSetterWithAnnotation`
  42: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
                                     ^^^^^^^ string. This type is incompatible with
  42: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
@@ -93,8 +85,6 @@ Error: declare_class.js:46
                                       ^^^^^^ number
 
 Error: declare_class.js:47
- 47: foo.propOverriddenWithSetter = 123; // Error number ~> string
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `propOverriddenWithSetter`
  47: foo.propOverriddenWithSetter = 123; // Error number ~> string
                                     ^^^ number. This type is incompatible with
  47: foo.propOverriddenWithSetter = 123; // Error number ~> string
@@ -129,8 +119,8 @@ Error: object.js:45
 Error: object.js:52
  52: obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
                                     ^^^^^^^ string. This type is incompatible with
- 16:   set goodSetterWithAnnotation(x: number) { z = x; },
-                                       ^^^^^^ number
+ 52: obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
 
 Error: object.js:54
  54: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
@@ -147,8 +137,8 @@ Error: object.js:54
 Error: object.js:59
  59: obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
                                            ^^^^^^^ C. This type is incompatible with
- 29:   set exampleOfOrderOfGetterAndSetter(x: B) {},
-                                              ^ B
+ 59: obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B
 
 Error: object.js:63
  63:   obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
@@ -165,8 +155,8 @@ Error: object_type.js:36
 Error: object_type.js:41
  41:   obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
                                       ^^^^^^^ string. This type is incompatible with
- 13:   set goodSetterWithAnnotation(x: number): void,
-                                       ^^^^^^ number
+ 41:   obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
 
 Error: object_type.js:43
  43:   var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
@@ -183,8 +173,8 @@ Error: object_type.js:43
 Error: object_type.js:48
  48:   obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
                                              ^^^^^^^ C. This type is incompatible with
- 26:   set exampleOfOrderOfGetterAndSetter(x: B): void,
-                                              ^ B
+ 48:   obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B
 
 Error: object_type.js:52
  52:     obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
@@ -195,15 +185,25 @@ Error: object_type.js:52
 Error: react.js:15
  15: (<Example />); // error: property `a` not found
       ^^^^^^^^^^^ React element `Example`
+ 15: (<Example />); // error: property `a` not found
+      ^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
                   v
   8:   propTypes: {
   9:     get a() { return React.PropTypes.number.isRequired; },
  10:     set b(x: number) { this.c = x; },
  11:     c: React.PropTypes.string,
  12:   }
-       ^ property `a`. Property not found in
- 15: (<Example />); // error: property `a` not found
-      ^^^^^^^^^^^ props of React element `Example`
+       ^ propTypes of React component
+  Property `a` is incompatible:
+                      v
+      8:   propTypes: {
+      9:     get a() { return React.PropTypes.number.isRequired; },
+     10:     set b(x: number) { this.c = x; },
+     11:     c: React.PropTypes.string,
+     12:   }
+           ^ property `a`. Property not found in
+     15: (<Example />); // error: property `a` not found
+          ^^^^^^^^^^^ props of React element `Example`
 
 Error: react.js:17
  17: (<Example a="bad" />); // error: number ~> string

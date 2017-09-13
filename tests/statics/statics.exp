@@ -24,8 +24,6 @@ Error: class_statics.js:9
 
 Error: class_statics.js:10
  10: C.x = 0;
-     ^^^ assignment of property `x`
- 10: C.x = 0;
            ^ number. This type is incompatible with
  10: C.x = 0;
      ^^^ string

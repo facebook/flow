@@ -56,3 +56,10 @@ import type { wut4 } from 'wutland';
 
 // Qualified types
 (null: React.Component);
+
+// Exports
+export const exportedConst = 5;
+export function exportedFunction(): void {}
+
+console.log(exportedConst);
+exportedFunction();

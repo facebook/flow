@@ -9,7 +9,6 @@
  *)
 
 open Type
-open Root_finder
 
 let maybe_known f x =
   let open React.CreateClass in
@@ -27,29 +26,11 @@ let maybe_known f x =
  *)
 
 class ['a] t = object(self)
-  val mutable seen_tvars = ISet.empty
-
   method type_ cx (map_cx: 'a) t =
     match t with
-      | OpenT (_, id) ->
-          if not (ISet.mem id seen_tvars)
-          then begin
-            seen_tvars <- ISet.add id seen_tvars;
-            let open Constraint in
-            let rid, root = find_root cx id in
-            match root.constraints with
-              | Resolved t' ->
-                  let t'' = self#type_ cx map_cx t' in
-                  if t'' != t' then
-                    let node = Resolved t'' in
-                    Context.set_tvar cx rid (Root {rank = root.rank; constraints = node})
-              | Unresolved bounds ->
-                  let bounds' = self#bounds cx map_cx bounds in
-                  if bounds != bounds' then
-                    let node = Unresolved bounds' in
-                    Context.set_tvar cx rid (Root {rank = root.rank; constraints = node})
-          end;
-          t
+      | OpenT (r, id) ->
+          let id' = self#tvar cx map_cx r id in
+          if id' == id then t else OpenT (r, id')
       | DefT (r, t') ->
           let t'' = self#def_type cx map_cx t' in
           if t' == t'' then t else DefT (r, t'')
@@ -155,6 +136,8 @@ class ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else ReposUpperT (r, t'')
+
+  method tvar _cx _map_cx _r id = id
 
   method def_type cx map_cx t =
     match t with
@@ -903,10 +886,10 @@ class ['a] t = object(self)
 
   method cont cx map_cx t =
     match t with
-    | Lower t' ->
+    | Lower (use_op, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
-        else Lower t''
+        else Lower (use_op, t'')
     | Upper use_t ->
         let use_t' = self#use_type cx map_cx use_t in
         if use_t' == use_t then t
@@ -1118,11 +1101,11 @@ class ['a] t = object(self)
 
   method spec cx map_cx t =
     match t with
-    | UnionCases (t', tlist) ->
+    | UnionCases (use_op, t', tlist) ->
         let t'' = self#type_ cx map_cx t' in
         let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
         if t'' == t' && tlist' == tlist then t
-        else UnionCases (t'', tlist')
+        else UnionCases (use_op, t'', tlist')
     | IntersectionCases (tlist, use_t) ->
         let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
         let use_t' = self#use_type cx map_cx use_t in

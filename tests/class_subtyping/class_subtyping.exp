@@ -18,17 +18,27 @@ Error: test3.js:6
 
 Error: test4.js:7
   7: foo((new C: C<O>), { f_: 0 });
-                   ^ property `f`. Property not found in
+                        ^^^^^^^^^ object literal. This type is incompatible with the expected param type of
   7: foo((new C: C<O>), { f_: 0 });
-                        ^^^^^^^^^ object literal
+                   ^ object type
+  Property `f` is incompatible:
+      7: foo((new C: C<O>), { f_: 0 });
+                       ^ property `f`. Property not found in
+      7: foo((new C: C<O>), { f_: 0 });
+                            ^^^^^^^^^ object literal
 
 Error: test4.js:13
  13: foo(new D, { f_: 0 });
      ^^^^^^^^^^^^^^^^^^^^^ function call
-  9: class D extends C<O> {
-                       ^ property `f`. Property not found in
  13: foo(new D, { f_: 0 });
-                ^^^^^^^^^ object literal
+                ^^^^^^^^^ object literal. This type is incompatible with the expected param type of
+  9: class D extends C<O> {
+                       ^ object type
+  Property `f` is incompatible:
+      9: class D extends C<O> {
+                           ^ property `f`. Property not found in
+     13: foo(new D, { f_: 0 });
+                    ^^^^^^^^^ object literal
 
 
 Found 5 errors

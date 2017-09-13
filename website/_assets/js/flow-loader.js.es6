@@ -34,12 +34,13 @@ export function load(version) {
   }
   const libs = [
     `/static/${version}/flowlib/core.js`,
-    `/static/${version}/flowlib/bom.js`,
-    `/static/${version}/flowlib/cssom.js`,
-    `/static/${version}/flowlib/dom.js`,
-    `/static/${version}/flowlib/node.js`,
+    // `/static/${version}/flowlib/bom.js`,
+    // `/static/${version}/flowlib/cssom.js`,
+    // `/static/${version}/flowlib/dom.js`,
+    // `/static/${version}/flowlib/node.js`,
     `/static/${version}/flowlib/react.js`,
-    `/static/${version}/flowlib/streams.js`,
+    // `/static/${version}/flowlib/react-dom.js`,
+    // `/static/${version}/flowlib/streams.js`,
   ];
   const flowLoader = new Promise(function(resolve) {
     require([`/static/${version}/flow.js`], resolve);

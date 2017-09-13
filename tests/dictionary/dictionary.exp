@@ -7,8 +7,8 @@ Error: any.js:5
 Error: dictionary.js:47
  47:   o.p = new A; // error, A ~> B
              ^^^^^ A. This type is incompatible with
- 45:   o: {[k:string]:B},
-                      ^ B
+ 47:   o.p = new A; // error, A ~> B
+       ^^^ B
 
 Error: dictionary.js:58
  58:   (o.p: C); // error, C ~> B
@@ -565,16 +565,26 @@ Error: test.js:4
   4: var o: { foo: QueryFunction } = {
             ^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `foo` is incompatible:
-      6:     return params.count; // error, number ~/~ string
-                    ^^^^^^^^^^^^ number. This type is incompatible with
-      2: type QueryFunction = (params: Params) => string;
-                                                  ^^^^^^ string
+      5:   foo(params) {
+              ^^^^^^^^ function. This type is incompatible with
+      4: var o: { foo: QueryFunction } = {
+                       ^^^^^^^^^^^^^ function type
+      This parameter is incompatible:
+          6:     return params.count; // error, number ~/~ string
+                        ^^^^^^^^^^^^ number. This type is incompatible with
+          2: type QueryFunction = (params: Params) => string;
+                                                      ^^^^^^ string
 
-Error: test_client.js:4
-  4:   return params.count; // error, number ~/~ string
-              ^^^^^^^^^^^^ number. This type is incompatible with
-  2: type QueryFunction = (params: Params) => string;
-                                              ^^^^^^ string. See: test.js:2
+Error: test_client.js:3
+  3: o.foo = function (params) {
+             ^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+  3: o.foo = function (params) {
+     ^^^^^ function type
+  This parameter is incompatible:
+      4:   return params.count; // error, number ~/~ string
+                  ^^^^^^^^^^^^ number. This type is incompatible with
+      2: type QueryFunction = (params: Params) => string;
+                                                  ^^^^^^ string. See: test.js:2
 
 
 Found 68 errors

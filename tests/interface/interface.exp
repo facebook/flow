@@ -5,9 +5,14 @@ Error: fun.js:5
              ^ F
   Property `$call` is incompatible:
       5: var f0: F = () => 0; // error: number ~> void
-                           ^ number. This type is incompatible with
+                     ^^^^^^^ function. This type is incompatible with
       2:   (): void;
-               ^^^^ undefined
+           ^^^^^^^^ function type
+      This parameter is incompatible:
+          5: var f0: F = () => 0; // error: number ~> void
+                               ^ number. This type is incompatible with
+          2:   (): void;
+                   ^^^^ undefined
 
 Error: indexer.js:9
   9:   [k2: number]: number; // error: not supported (yet)
@@ -151,9 +156,14 @@ Error: test3.js:6
 
 Error: test4.js:2
   2: (function foo(x: number) { }: I); // error, property `foo` not found function
-                                   ^ property `foo` of I. Property not found in
+      ^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   2: (function foo(x: number) { }: I); // error, property `foo` not found function
-      ^^^^^^^^^^^^^^^^^^^^^^^ function
+                                   ^ I
+  Property `foo` is incompatible:
+      2: (function foo(x: number) { }: I); // error, property `foo` not found function
+                                       ^ property `foo` of I. Property not found in
+      2: (function foo(x: number) { }: I); // error, property `foo` not found function
+          ^^^^^^^^^^^^^^^^^^^^^^^ function
 
 Error: test4.js:9
   9: new C().bar((x: string) => { }); // error, number ~/~> string
@@ -164,18 +174,28 @@ Error: test4.js:9
     5:   bar(i: I): void;
          ^^^^^^^^^^^^^^^ function type
   Error:
-    5:   bar(i: I): void;
-                ^ property `foo` of I. Property not found in
     9: new C().bar((x: string) => { }); // error, number ~/~> string
-                   ^^^^^^^^^^^^^^^^^^ function
+                   ^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+    5:   bar(i: I): void;
+                ^ I
+    Property `foo` is incompatible:
+        5:   bar(i: I): void;
+                    ^ property `foo` of I. Property not found in
+        9: new C().bar((x: string) => { }); // error, number ~/~> string
+                       ^^^^^^^^^^^^^^^^^^ function
   Member 2:
     6:   bar(f: (x: number) => void): void;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
   Error:
-    6:   bar(f: (x: number) => void): void;
-                    ^^^^^^ number. This type is incompatible with the expected param type of
     9: new C().bar((x: string) => { }); // error, number ~/~> string
-                       ^^^^^^ string
+                   ^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+    6:   bar(f: (x: number) => void): void;
+                ^^^^^^^^^^^^^^^^^^^ function type
+    This parameter is incompatible:
+        6:   bar(f: (x: number) => void): void;
+                        ^^^^^^ number. This type is incompatible with
+        9: new C().bar((x: string) => { }); // error, number ~/~> string
+                           ^^^^^^ string
 
 
 Found 22 errors

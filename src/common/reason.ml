@@ -128,7 +128,7 @@ type reason_desc =
   | RRestParameter of string
   | RIdentifier of string
   | RIdentifierAssignment of string
-  | RPropertyAssignment of string
+  | RPropertyAssignment of string option
   | RProperty of string option
   | RShadowProperty of string
   | RPropertyOf of string * reason_desc
@@ -438,7 +438,8 @@ let rec string_of_desc = function
   | RRestParameter x -> spf "rest parameter `%s`" x
   | RProperty (Some x) -> spf "property `%s`" x
   | RProperty None -> "computed property"
-  | RPropertyAssignment x -> spf "assignment of property `%s`" x
+  | RPropertyAssignment (Some x) -> spf "assignment of property `%s`" x
+  | RPropertyAssignment None -> "assignment of computed property/element"
   | RShadowProperty x -> spf ".%s" x
   | RPropertyOf (x, d) -> spf "property `%s` of %s" x (string_of_desc d)
   | RPropertyIsAString x -> spf "property `%s` is a string" x

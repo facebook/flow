@@ -60,7 +60,7 @@ Error: logical.js:281
 
 Error: logical.js:291
 291:     return x || y || false;
-                          ^^^^^ boolean. This type is incompatible with
+                          ^^^^^ boolean. This type is incompatible with the expected return type of
 290: ): number | string { // expected `: number | string | boolean`
         ^^^^^^^^^^^^^^^ union: number | string
   Member 1:
@@ -82,7 +82,7 @@ Error: logical.js:291
 
 Error: logical.js:315
 315:     return x && y && false;
-                          ^^^^^ boolean. This type is incompatible with
+                          ^^^^^ boolean. This type is incompatible with the expected return type of
 314: ): number | string { // expected `: number | string | boolean`
         ^^^^^^^^^^^^^^^ union: number | string
   Member 1:

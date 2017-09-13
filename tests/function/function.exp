@@ -215,20 +215,16 @@ Error: function.js:43
 Error: function.js:48
  48:     x.length = 'foo'; // error, it's a number
                     ^^^^^ string. This type is incompatible with
-102:     length: number;
-                 ^^^^^^ number. See lib: <BUILTINS>/core.js:102
+ 48:     x.length = 'foo'; // error, it's a number
+         ^^^^^^^^ number
 
 Error: function.js:49
- 49:     y.length = 'foo'; // error, it's a number
-         ^^^^^^^^ assignment of property `length`
  49:     y.length = 'foo'; // error, it's a number
                     ^^^^^ string. This type is incompatible with
  49:     y.length = 'foo'; // error, it's a number
          ^^^^^^^^ number
 
 Error: function.js:50
- 50:     z.length = 'foo'; // error, it's a number
-         ^^^^^^^^ assignment of property `length`
  50:     z.length = 'foo'; // error, it's a number
                     ^^^^^ string. This type is incompatible with
  50:     z.length = 'foo'; // error, it's a number
@@ -237,20 +233,16 @@ Error: function.js:50
 Error: function.js:52
  52:     x.name = 123; // error, it's a string
                   ^^^ number. This type is incompatible with
-103:     name: string;
-               ^^^^^^ string. See lib: <BUILTINS>/core.js:103
+ 52:     x.name = 123; // error, it's a string
+         ^^^^^^ string
 
 Error: function.js:53
- 53:     y.name = 123; // error, it's a string
-         ^^^^^^ assignment of property `name`
  53:     y.name = 123; // error, it's a string
                   ^^^ number. This type is incompatible with
  53:     y.name = 123; // error, it's a string
          ^^^^^^ string
 
 Error: function.js:54
- 54:     z.name = 123; // error, it's a string
-         ^^^^^^ assignment of property `name`
  54:     z.name = 123; // error, it's a string
                   ^^^ number. This type is incompatible with
  54:     z.name = 123; // error, it's a string
@@ -274,11 +266,16 @@ Error: rest.js:53
  53: (empty_rest(): empty); // Error Array ~> empty
                     ^^^^^ empty
 
-Error: rest.js:59
- 59:     return args; // Error: Array ~> number
-                ^^^^ rest parameter array of function type. This type is incompatible with the expected return type of
+Error: rest.js:58
+ 58:   return function(...args) {
+              ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected return type of
  57: ): (...args: Args) => number {
-                           ^^^^^^ number
+        ^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+  This parameter is incompatible:
+     59:     return args; // Error: Array ~> number
+                    ^^^^ rest parameter array of function type. This type is incompatible with
+     57: ): (...args: Args) => number {
+                               ^^^^^^ number
 
 Error: rest.js:64
  64: requires_first_param(); // Error: missing first arg

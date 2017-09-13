@@ -80,7 +80,7 @@ type reason_desc =
   | RRestParameter of string
   | RIdentifier of string
   | RIdentifierAssignment of string
-  | RPropertyAssignment of string
+  | RPropertyAssignment of string option
   | RProperty of string option
   | RShadowProperty of string
   | RPropertyOf of string * reason_desc

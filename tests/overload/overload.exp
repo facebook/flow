@@ -2,7 +2,7 @@ Error: overload.js:7
   7: var x1: number = "".match(0)[0];
                       ^^^^^^^^^^^ call of method `match`
   7: var x1: number = "".match(0)[0];
-                               ^ number. This type is incompatible with
+                               ^ number. This type is incompatible with the expected param type of
 304:     match(regexp: string | RegExp): ?Array<string>;
                        ^^^^^^^^^^^^^^^ union: string | RegExp. See lib: <BUILTINS>/core.js:304
   Member 1:
@@ -148,10 +148,15 @@ Error: overload.js:32
      30: declare var x: { a: boolean; } & { b: string };
                                           ^^^^^^^^^^^^^ object type
     Error:
-     16:     bar(x: { a: number }): number;
-                    ^^^^^^^^^^^^^ property `a`. Property not found in
      30: declare var x: { a: boolean; } & { b: string };
-                                          ^^^^^^^^^^^^^ object type
+                                          ^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
+     16:     bar(x: { a: number }): number;
+                    ^^^^^^^^^^^^^ object type
+      Property `a` is incompatible:
+         16:     bar(x: { a: number }): number;
+                        ^^^^^^^^^^^^^ property `a`. Property not found in
+         30: declare var x: { a: boolean; } & { b: string };
+                                              ^^^^^^^^^^^^^ object type
   Member 2:
    17:     bar(x: { a: string }): string;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
@@ -177,10 +182,15 @@ Error: overload.js:32
      30: declare var x: { a: boolean; } & { b: string };
                                           ^^^^^^^^^^^^^ object type
     Error:
-     17:     bar(x: { a: string }): string;
-                    ^^^^^^^^^^^^^ property `a`. Property not found in
      30: declare var x: { a: boolean; } & { b: string };
-                                          ^^^^^^^^^^^^^ object type
+                                          ^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
+     17:     bar(x: { a: string }): string;
+                    ^^^^^^^^^^^^^ object type
+      Property `a` is incompatible:
+         17:     bar(x: { a: string }): string;
+                        ^^^^^^^^^^^^^ property `a`. Property not found in
+         30: declare var x: { a: boolean; } & { b: string };
+                                              ^^^^^^^^^^^^^ object type
 
 Error: test2.js:7
   7: (foo.bar('hmmm'): number); // error

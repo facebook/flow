@@ -30,7 +30,7 @@ Error: boolean.js:29
  29: bar(1); // error
      ^^^^^^ function call
  29: bar(1); // error
-         ^ number. This type is incompatible with
+         ^ number. This type is incompatible with the expected param type of
  19: function bar(x: MyOwnBooleanLOL): false {
                      ^^^^^^^^^^^^^^^ union: boolean literal `true` | boolean literal `false`
   Member 1:

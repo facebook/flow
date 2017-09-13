@@ -400,19 +400,27 @@ module ContextOptimizer = struct
       self#type_ cx { quotient with reduced_module_map } export
 
     method! tvar cx quotient r id =
-      let { reduced_graph; sig_hash; _ } = quotient in
-      if (IMap.mem id reduced_graph)
-      then
-        let stable_id = IMap.find_unsafe id stable_tvar_ids in
-        let sig_hash = SigHash.add stable_id sig_hash in
-        { quotient with sig_hash }
+      let root_id, _ = Flow_js.find_constraints cx id in
+      if id == root_id then
+        let { reduced_graph; sig_hash; _ } = quotient in
+        if IMap.mem id reduced_graph then
+          let stable_id = IMap.find_unsafe root_id stable_tvar_ids in
+          let sig_hash = SigHash.add stable_id sig_hash in
+          { quotient with sig_hash }
+        else
+          let t = merge_tvar cx r id in
+          let node = Root { rank = 0; constraints = Resolved t } in
+          let reduced_graph = IMap.add id node reduced_graph in
+          let () =
+            let stable_id = self#fresh_stable_id in
+            stable_tvar_ids <- IMap.add id stable_id stable_tvar_ids
+          in
+          self#type_ cx { quotient with reduced_graph } t
       else
-        let t = merge_tvar cx r id in
-        let node = Root { rank = 0; constraints = Resolved t } in
-        let reduced_graph = IMap.add id node reduced_graph in
-        let stable_id = self#fresh_stable_id in
-        stable_tvar_ids <- IMap.add id stable_id stable_tvar_ids;
-        self#type_ cx { quotient with reduced_graph } t
+        let quotient = self#tvar cx quotient r root_id in
+        let node = Goto root_id in
+        let reduced_graph = IMap.add id node quotient.reduced_graph in
+        { quotient with reduced_graph }
 
     method! props cx quotient id =
       let { reduced_property_maps; sig_hash; _ } = quotient in

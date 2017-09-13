@@ -305,15 +305,25 @@ Error: destructuring.js:25
  25: bar({x:"",y:0});
      ^^^^^^^^^^^^^^^ function call
  23:     var o:{x: string; y: number;} = z;
-               ^^^^^^^^^^^^^^^^^^^^^^^ property `x`. Property not found in
+                                         ^ rest of object pattern. This type is incompatible with
  23:     var o:{x: string; y: number;} = z;
-                                         ^ rest of object pattern
+               ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     23:     var o:{x: string; y: number;} = z;
+                   ^^^^^^^^^^^^^^^^^^^^^^^ property `x`. Property not found in
+     23:     var o:{x: string; y: number;} = z;
+                                             ^ rest of object pattern
 
 Error: destructuring.js:28
  28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `z`. Property not found in
+                                                    ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
  28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
-                                                    ^^^^^^^^^^^^^^^^ object literal
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `z` is incompatible:
+     28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `z`. Property not found in
+     28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
+                                                        ^^^^^^^^^^^^^^^^ object literal
 
 Error: destructuring.js:31
  31: qux({a:""});

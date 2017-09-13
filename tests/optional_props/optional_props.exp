@@ -1,14 +1,19 @@
 Error: test.js:2
   2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
-            ^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+                               ^ object type. This type is incompatible with
   2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
-                               ^ object type
+            ^^^^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+      2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
+                ^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+      2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
+                                   ^ object type
 
 Error: test.js:8
   8: o.foo = 0; // future widening is constrained
              ^ number. This type is incompatible with
-  2: var y: { foo?: string } = x; // OK in TypeScript, not OK in Flow
-                    ^^^^^^ string
+  8: o.foo = 0; // future widening is constrained
+     ^^^^^ string
 
 Error: test.js:12
  12: bar({foo: ""});
@@ -24,8 +29,8 @@ Error: test.js:12
 Error: test2.js:3
   3: a.foo = null; // But this is an error
              ^^^^ null. This type is incompatible with
-  1: var a: { foo?: string } = {};
-                    ^^^^^^ string
+  3: a.foo = null; // But this is an error
+     ^^^^^ string
 
 Error: test2.js:10
  10: var d: { foo?: string } = { foo: null }; // But this is an error
@@ -44,11 +49,16 @@ Error: test3.js:54
  54:         this.x.b = 'hello';
              ^^^^^^ object literal
 
-Error: test3_exact_annot.js:5
-  5: const b: { a: number, b?: number } = a; // error: property `b` not found
-              ^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in
+Error: test3_exact_annot.js:4
   4: const a: {| a: number |} = { a: 1 };
-              ^^^^^^^^^^^^^^^ object type
+              ^^^^^^^^^^^^^^^ object type. This type is incompatible with
+  5: const b: { a: number, b?: number } = a; // error: property `b` not found
+              ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `b` is incompatible:
+      5: const b: { a: number, b?: number } = a; // error: property `b` not found
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in
+      4: const a: {| a: number |} = { a: 1 };
+                  ^^^^^^^^^^^^^^^ object type
 
 Error: test3_exact_annot.js:7
   7: (a.b: number); // error: property `b` not found

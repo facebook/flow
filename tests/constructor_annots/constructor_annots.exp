@@ -1,7 +1,5 @@
 Error: constructors.js:3
   3:   this.x = 0; // constructs objects with property x
-       ^^^^^^ assignment of property `x`
-  3:   this.x = 0; // constructs objects with property x
                 ^ number. This type is incompatible with
   3:   this.x = 0; // constructs objects with property x
        ^^^^^^ boolean

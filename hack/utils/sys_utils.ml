@@ -86,6 +86,12 @@ let close_out_no_fail fn oc =
 
 let cat = Disk.cat
 
+let cat_or_failed file =
+  try Some (Disk.cat file) with
+  | Sys_error _
+  | Failure _ ->
+    None
+
 let cat_no_fail filename =
   let ic = open_in_bin_no_fail filename in
   let len = in_channel_length ic in
@@ -309,8 +315,7 @@ let read_file file =
   buf
 
 let write_file ~file s =
-  let chan = open_out file in
-  (output_string chan s; close_out chan)
+  Disk.write_file ~file ~contents:s
 
 let append_file ~file s =
   let chan = open_out_gen [Open_wronly; Open_append; Open_creat] 0o666 file in

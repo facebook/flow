@@ -54,47 +54,57 @@ Error: FormData.js:17
 
 Error: FormData.js:21
  21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
-                                     ^^^^^^ number. This type is incompatible with
-321:     getAll(name: string): Array<FormDataEntryValue>;
-                                     ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:321
-  Member 1:
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Error:
-   21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
-                                       ^^^^^^ number. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Member 2:
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
-  Error:
-   21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
-                                       ^^^^^^ number. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
+                                               ^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
+ 21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+                                         ^^^^^^ number. This type is incompatible with
+    321:     getAll(name: string): Array<FormDataEntryValue>;
+                                         ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:321
+      Member 1:
+      314: type FormDataEntryValue = string | File
+                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
+      Error:
+       21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+                                           ^^^^^^ number. This type is incompatible with
+      314: type FormDataEntryValue = string | File
+                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
+      Member 2:
+      314: type FormDataEntryValue = string | File
+                                              ^^^^ File. See lib: <BUILTINS>/bom.js:314
+      Error:
+       21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+                                           ^^^^^^ number. This type is incompatible with
+      314: type FormDataEntryValue = string | File
+                                              ^^^^ File. See lib: <BUILTINS>/bom.js:314
 
 Error: FormData.js:22
  22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
-                              ^^^^ Blob. This type is incompatible with
-321:     getAll(name: string): Array<FormDataEntryValue>;
-                                     ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:321
-  Member 1:
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Error:
-   22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
-                                ^^^^ Blob. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Member 2:
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
-  Error:
-   22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
-                                ^^^^ Blob. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
+                                             ^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
+ 22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+                                  ^^^^ Blob. This type is incompatible with
+    321:     getAll(name: string): Array<FormDataEntryValue>;
+                                         ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:321
+      Member 1:
+      314: type FormDataEntryValue = string | File
+                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
+      Error:
+       22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+                                    ^^^^ Blob. This type is incompatible with
+      314: type FormDataEntryValue = string | File
+                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
+      Member 2:
+      314: type FormDataEntryValue = string | File
+                                              ^^^^ File. See lib: <BUILTINS>/bom.js:314
+      Error:
+       22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+                                    ^^^^ Blob. This type is incompatible with
+      314: type FormDataEntryValue = string | File
+                                              ^^^^ File. See lib: <BUILTINS>/bom.js:314
 
 Error: FormData.js:23
  23: a.getAll(23); // incorrect
@@ -580,9 +590,14 @@ Error: MutationObserver.js:11
 
 Error: MutationObserver.js:12
  12: new MutationObserver((n: number) => {}); // incorrect
-                              ^^^^^^ number. This type is incompatible with an argument type of
+                          ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
 363:     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => any): void;
-                                     ^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/bom.js:363
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:363
+  This parameter is incompatible:
+    363:     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => any): void;
+                                         ^^^^^^^^^^^^^^^^^^^^^ array type. This type is incompatible with. See lib: <BUILTINS>/bom.js:363
+     12: new MutationObserver((n: number) => {}); // incorrect
+                                  ^^^^^^ number
 
 Error: MutationObserver.js:18
  18: o.observe(); // incorrect
@@ -737,65 +752,95 @@ Error: MutationObserver.js:21
  21: o.observe(div, {}); // incorrect
      ^^^^^^^^^^^^^^^^^^ call of method `observe`
  21: o.observe(div, {}); // incorrect
-                    ^^ object literal. This type is incompatible with
+                    ^^ object literal. This type is incompatible with the expected param type of
 355: declare type MutationObserverInit = MutationObserverInitRequired & {
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s). See lib: <BUILTINS>/bom.js:355
   Member 1:
   351:     | { childList: true }
              ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
   Error:
-  351:     | { childList: true }
-             ^^^^^^^^^^^^^^^^^^^ property `childList`. Property not found in. See lib: <BUILTINS>/bom.js:351
    21: o.observe(div, {}); // incorrect
-                      ^^ object literal
+                      ^^ object literal. This type is incompatible with
+  351:     | { childList: true }
+             ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
+    Property `childList` is incompatible:
+      351:     | { childList: true }
+                 ^^^^^^^^^^^^^^^^^^^ property `childList`. Property not found in. See lib: <BUILTINS>/bom.js:351
+       21: o.observe(div, {}); // incorrect
+                          ^^ object literal
   Member 2:
   352:     | { attributes: true }
              ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
   Error:
-  352:     | { attributes: true }
-             ^^^^^^^^^^^^^^^^^^^^ property `attributes`. Property not found in. See lib: <BUILTINS>/bom.js:352
    21: o.observe(div, {}); // incorrect
-                      ^^ object literal
+                      ^^ object literal. This type is incompatible with
+  352:     | { attributes: true }
+             ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
+    Property `attributes` is incompatible:
+      352:     | { attributes: true }
+                 ^^^^^^^^^^^^^^^^^^^^ property `attributes`. Property not found in. See lib: <BUILTINS>/bom.js:352
+       21: o.observe(div, {}); // incorrect
+                          ^^ object literal
   Member 3:
   353:     | { characterData: true }
              ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
   Error:
-  353:     | { characterData: true }
-             ^^^^^^^^^^^^^^^^^^^^^^^ property `characterData`. Property not found in. See lib: <BUILTINS>/bom.js:353
    21: o.observe(div, {}); // incorrect
-                      ^^ object literal
+                      ^^ object literal. This type is incompatible with
+  353:     | { characterData: true }
+             ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
+    Property `characterData` is incompatible:
+      353:     | { characterData: true }
+                 ^^^^^^^^^^^^^^^^^^^^^^^ property `characterData`. Property not found in. See lib: <BUILTINS>/bom.js:353
+       21: o.observe(div, {}); // incorrect
+                          ^^ object literal
 
 Error: MutationObserver.js:22
  22: o.observe(div, { subtree: true }); // incorrect
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `observe`
  22: o.observe(div, { subtree: true }); // incorrect
-                    ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                    ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 355: declare type MutationObserverInit = MutationObserverInitRequired & {
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s). See lib: <BUILTINS>/bom.js:355
   Member 1:
   351:     | { childList: true }
              ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
   Error:
-  351:     | { childList: true }
-             ^^^^^^^^^^^^^^^^^^^ property `childList`. Property not found in. See lib: <BUILTINS>/bom.js:351
    22: o.observe(div, { subtree: true }); // incorrect
-                      ^^^^^^^^^^^^^^^^^ object literal
+                      ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+  351:     | { childList: true }
+             ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
+    Property `childList` is incompatible:
+      351:     | { childList: true }
+                 ^^^^^^^^^^^^^^^^^^^ property `childList`. Property not found in. See lib: <BUILTINS>/bom.js:351
+       22: o.observe(div, { subtree: true }); // incorrect
+                          ^^^^^^^^^^^^^^^^^ object literal
   Member 2:
   352:     | { attributes: true }
              ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
   Error:
-  352:     | { attributes: true }
-             ^^^^^^^^^^^^^^^^^^^^ property `attributes`. Property not found in. See lib: <BUILTINS>/bom.js:352
    22: o.observe(div, { subtree: true }); // incorrect
-                      ^^^^^^^^^^^^^^^^^ object literal
+                      ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+  352:     | { attributes: true }
+             ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
+    Property `attributes` is incompatible:
+      352:     | { attributes: true }
+                 ^^^^^^^^^^^^^^^^^^^^ property `attributes`. Property not found in. See lib: <BUILTINS>/bom.js:352
+       22: o.observe(div, { subtree: true }); // incorrect
+                          ^^^^^^^^^^^^^^^^^ object literal
   Member 3:
   353:     | { characterData: true }
              ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
   Error:
-  353:     | { characterData: true }
-             ^^^^^^^^^^^^^^^^^^^^^^^ property `characterData`. Property not found in. See lib: <BUILTINS>/bom.js:353
    22: o.observe(div, { subtree: true }); // incorrect
-                      ^^^^^^^^^^^^^^^^^ object literal
+                      ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+  353:     | { characterData: true }
+             ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
+    Property `characterData` is incompatible:
+      353:     | { characterData: true }
+                 ^^^^^^^^^^^^^^^^^^^^^^^ property `characterData`. Property not found in. See lib: <BUILTINS>/bom.js:353
+       22: o.observe(div, { subtree: true }); // incorrect
+                          ^^^^^^^^^^^^^^^^^ object literal
 
 Error: MutationObserver.js:23
  23: o.observe(div, { attributes: true, attributeFilter: true }); // incorrect

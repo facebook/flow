@@ -4,11 +4,16 @@ Error: client.js:3
   3: var bar: string = ns.foo
               ^^^^^^ string
 
-Error: namespace.js:2
-  2: type T = (x:number) => void;
-                 ^^^^^^ number. This type is incompatible with the expected param type of
+Error: namespace.js:3
   3: var f: T = function(x:string): void { }
-                           ^^^^^^ string
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+  3: var f: T = function(x:string): void { }
+            ^ function type
+  This parameter is incompatible:
+      2: type T = (x:number) => void;
+                     ^^^^^^ number. This type is incompatible with
+      3: var f: T = function(x:string): void { }
+                               ^^^^^^ string
 
 Error: namespace.js:11
  11: var y:number = bar(0, x => "");
@@ -18,25 +23,30 @@ Error: namespace.js:11
 
 Error: namespace.js:15
  15: var s2:Seq = [[""]];
-                    ^^ string. This type is incompatible with
+                   ^^^^ array literal. Has some incompatible type argument with
  13: type Seq = number | Array<Seq>;
-                               ^^^ union: number | array type
-  Member 1:
-   13: type Seq = number | Array<Seq>;
-                  ^^^^^^ number
-  Error:
-   15: var s2:Seq = [[""]];
-                      ^^ string. This type is incompatible with
-   13: type Seq = number | Array<Seq>;
-                  ^^^^^^ number
-  Member 2:
-   13: type Seq = number | Array<Seq>;
-                           ^^^^^^^^^^ array type
-  Error:
-   15: var s2:Seq = [[""]];
-                      ^^ string. This type is incompatible with
-   13: type Seq = number | Array<Seq>;
-                           ^^^^^^^^^^ array type
+                         ^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     15: var s2:Seq = [[""]];
+                        ^^ string. This type is incompatible with
+     13: type Seq = number | Array<Seq>;
+                                   ^^^ union: number | array type
+      Member 1:
+       13: type Seq = number | Array<Seq>;
+                      ^^^^^^ number
+      Error:
+       15: var s2:Seq = [[""]];
+                          ^^ string. This type is incompatible with
+       13: type Seq = number | Array<Seq>;
+                      ^^^^^^ number
+      Member 2:
+       13: type Seq = number | Array<Seq>;
+                               ^^^^^^^^^^ array type
+      Error:
+       15: var s2:Seq = [[""]];
+                          ^^ string. This type is incompatible with
+       13: type Seq = number | Array<Seq>;
+                               ^^^^^^^^^^ array type
 
 Error: namespace.js:17
  17: module.exports = { foo: ("": number) };
