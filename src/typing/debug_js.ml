@@ -2433,8 +2433,8 @@ let dump_flow_error =
         spf "ESpeculationAmbiguous ((%s, %s), _, _, _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EIncompatibleWithExact (reason1, reason2) ->
-        spf "EIncompatibleWithExact (%s, %s)"
+    | EIncompatibleWithExact ((reason1, reason2), _) ->
+        spf "EIncompatibleWithExact ((%s, %s), _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
     | EUnsupportedExact (reason1, reason2) ->

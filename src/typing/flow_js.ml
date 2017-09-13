@@ -2740,7 +2740,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       if literal_eq expected actual
       then ()
       else
-        let reasons = FlowError.ordered_reasons rl ru in
+        let reasons = FlowError.ordered_reasons (rl, ru) in
         add_output cx ~trace
           (FlowError.EExpectedStringLit (reasons, expected, actual))
 
@@ -2748,7 +2748,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       if number_literal_eq expected actual
       then ()
       else
-        let reasons = FlowError.ordered_reasons rl ru in
+        let reasons = FlowError.ordered_reasons (rl, ru) in
         add_output cx ~trace
           (FlowError.EExpectedNumberLit (reasons, expected, actual))
 
@@ -2756,7 +2756,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       if boolean_literal_eq expected actual
       then ()
       else
-        let reasons = FlowError.ordered_reasons rl ru in
+        let reasons = FlowError.ordered_reasons (rl, ru) in
         add_output cx ~trace
           (FlowError.EExpectedBooleanLit (reasons, expected, actual))
 
@@ -3319,8 +3319,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       if flags.exact && sealed_in_op r flags.sealed
       then rec_flow cx trace (t, MakeExactT (r, Lower (use_op, l)))
       else begin
-        let reasons = FlowError.ordered_reasons (reason_of_t l) r in
-        add_output cx ~trace (FlowError.EIncompatibleWithExact reasons);
+        let reasons = FlowError.ordered_reasons (reason_of_t l, r) in
+        add_output cx ~trace (FlowError.EIncompatibleWithExact (reasons, use_op));
         (* Continue the Flow even after we've errored. Often, there is more that
          * is different then just the fact that the upper bound is exact and the
          * lower bound is not. This could easily hide errors in ObjT ~> ExactT *)
@@ -3333,9 +3333,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, UseT (use_op, t))
 
     (* inexact LB ~> $Exact<UB>. error *)
-    | _, UseT (_, ExactT (ru, _)) ->
-      let reasons = FlowError.ordered_reasons (reason_of_t l) ru in
-      add_output cx ~trace (FlowError.EIncompatibleWithExact reasons)
+    | _, UseT (use_op, ExactT (ru, _)) ->
+      let reasons = FlowError.ordered_reasons (reason_of_t l, ru) in
+      add_output cx ~trace (FlowError.EIncompatibleWithExact (reasons, use_op))
 
     (* LB ~> MakeExactT (_, UB) exactifies LB, then flows result to UB *)
 
@@ -4317,7 +4317,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* non-class/function values used in annotations are errors *)
     | _, UseT (_, DefT (ru, TypeT _)) ->
-      let reasons = FlowError.ordered_reasons (reason_of_t l) ru in
+      let reasons = FlowError.ordered_reasons (reason_of_t l, ru) in
       add_output cx ~trace (FlowError.EValueUsedAsType reasons)
 
     | DefT (rl, ClassT l), UseT (use_op, DefT (_, ClassT u)) ->
@@ -5900,7 +5900,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (_, NullT),
       UseT (use_op, ExtendsT (_, [], t, tc)) ->
-      let reason_l, reason_u = Flow_error.ordered_reasons (reason_of_t t) (reason_of_t tc) in
+      let reason_l, reason_u = Flow_error.ordered_reasons (reason_of_t t, reason_of_t tc) in
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (reason_l, reason_u, use_op))
 
     (**********************)
@@ -6195,7 +6195,7 @@ and flow_comparator cx trace reason l r =
   | DefT (_, StrT _), DefT (_, StrT _) -> ()
   | (_, _) when numeric l && numeric r -> ()
   | (_, _) ->
-    let reasons = FlowError.ordered_reasons (reason_of_t l) (reason_of_t r) in
+    let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
     add_output cx ~trace (FlowError.EComparison reasons)
 
 (**
@@ -6209,7 +6209,7 @@ and flow_eq cx trace reason l r =
   if needs_resolution r then rec_flow cx trace (r, EqT(reason, l))
   else if equatable (l, r) then ()
   else
-    let reasons = FlowError.ordered_reasons (reason_of_t l) (reason_of_t r) in
+    let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
     add_output cx ~trace (FlowError.EComparison reasons)
 
 
@@ -10012,7 +10012,11 @@ and flow cx (lower, upper) =
     (* log and continue *)
     let rl = reason_of_t lower in
     let ru = reason_of_use_t upper in
-    let reasons = if is_use upper then ru, rl else FlowError.ordered_reasons rl ru in
+    let reasons =
+      if is_use upper
+      then ru, rl
+      else FlowError.ordered_reasons (rl, ru)
+    in
     add_output cx ~trace (FlowError.ERecursionLimit reasons)
   | ex ->
     (* rethrow *)
@@ -10056,7 +10060,7 @@ and unify cx t1 t2 =
   with
   | RecursionCheck.LimitExceeded trace ->
     (* log and continue *)
-    let reasons = FlowError.ordered_reasons (reason_of_t t1) (reason_of_t t2) in
+    let reasons = FlowError.ordered_reasons (reason_of_t t1, reason_of_t t2) in
     add_output cx ~trace (FlowError.ERecursionLimit reasons)
   | ex ->
     (* rethrow *)
@@ -10466,7 +10470,8 @@ and object_kit =
       Nel.iter (fun (r, _, _, {exact; _}) ->
         match merge_mode with
         | Sound (Annot { make_exact }) when make_exact && not exact ->
-          add_output cx ~trace (FlowError.EIncompatibleWithExact (r, reason))
+          add_output cx ~trace (FlowError.
+            EIncompatibleWithExact ((r, reason), UnknownUse))
         | _ -> ()
       ) x;
       match todo_rev with

@@ -696,15 +696,15 @@ Error: test.js:213
                     ^^^^^^ string
 
 Error: test.js:220
-     v--------------------------------------------------
-220: <ClassExact_ManyProps // OK: All props are defined.
+     v-------------------------------------------------------------------------
+220: <ClassExact_ManyProps // OK: All props are defined. Error for exact types.
 221:   string1="foo"
 222:   string2={'bar'}
 ...:
 226: />;
      -^ React element `ClassExact_ManyProps`
-     v--------------------------------------------------
-220: <ClassExact_ManyProps // OK: All props are defined.
+     v-------------------------------------------------------------------------
+220: <ClassExact_ManyProps // OK: All props are defined. Error for exact types.
 221:   string1="foo"
 222:   string2={'bar'}
 ...:
@@ -714,15 +714,15 @@ Error: test.js:220
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
 Error: test.js:227
-     v--------------------------------------------------
-227: <ClassExact_ManyProps // OK: All props are defined.
+     v-------------------------------------------------------------------------
+227: <ClassExact_ManyProps // OK: All props are defined. Error for exact types.
 228:   {...{string1: 'foo', string2: 'bar'}}
 229:   {...{boolean1: true, boolean2: false}}
 230:   {...{number: 42}}
 231: />;
      -^ React element `ClassExact_ManyProps`
-     v--------------------------------------------------
-227: <ClassExact_ManyProps // OK: All props are defined.
+     v-------------------------------------------------------------------------
+227: <ClassExact_ManyProps // OK: All props are defined. Error for exact types.
 228:   {...{string1: 'foo', string2: 'bar'}}
 229:   {...{boolean1: true, boolean2: false}}
 230:   {...{number: 42}}
@@ -791,15 +791,15 @@ Error: test.js:236
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
 Error: test.js:243
-     v------------------------------------------------------------------------------
-243: <ClassExact_ManyProps // OK: `number` is overwritten at the end of the element.
+     v-----------------------------------------------------------------------------------------------------
+243: <ClassExact_ManyProps // OK: `number` is overwritten at the end of the element. Error for exact types.
 244:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
 245:   boolean1
 ...:
 248: />;
      -^ React element `ClassExact_ManyProps`
-     v------------------------------------------------------------------------------
-243: <ClassExact_ManyProps // OK: `number` is overwritten at the end of the element.
+     v-----------------------------------------------------------------------------------------------------
+243: <ClassExact_ManyProps // OK: `number` is overwritten at the end of the element. Error for exact types.
 244:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
 245:   boolean1
 ...:
@@ -809,8 +809,8 @@ Error: test.js:243
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
 Error: test.js:243
-     v------------------------------------------------------------------------------
-243: <ClassExact_ManyProps // OK: `number` is overwritten at the end of the element.
+     v-----------------------------------------------------------------------------------------------------
+243: <ClassExact_ManyProps // OK: `number` is overwritten at the end of the element. Error for exact types.
 244:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
 245:   boolean1
 ...:
@@ -825,15 +825,15 @@ Error: test.js:243
                    ^^^^^^ number
 
 Error: test.js:249
-     v-------------------------------------------------------
-249: <ClassExact_ManyProps // Error: `number` cannot be null.
+     v------------------------------------------------------------------------------
+249: <ClassExact_ManyProps // Error: `number` cannot be null. Error for exact types.
 250:   boolean1
 251:   boolean2={false}
 ...:
 254: />;
      -^ React element `ClassExact_ManyProps`
-     v-------------------------------------------------------
-249: <ClassExact_ManyProps // Error: `number` cannot be null.
+     v------------------------------------------------------------------------------
+249: <ClassExact_ManyProps // Error: `number` cannot be null. Error for exact types.
 250:   boolean1
 251:   boolean2={false}
 ...:
@@ -1432,15 +1432,15 @@ Error: test.js:399
                     ^^^^^^ string
 
 Error: test.js:406
-     v-----------------------------------------------------
-406: <FunctionExact_ManyProps // OK: All props are defined.
+     v----------------------------------------------------------------------------
+406: <FunctionExact_ManyProps // OK: All props are defined. Error for exact types.
 407:   string1="foo"
 408:   string2={'bar'}
 ...:
 412: />;
      -^ React element `FunctionExact_ManyProps`
-     v-----------------------------------------------------
-406: <FunctionExact_ManyProps // OK: All props are defined.
+     v----------------------------------------------------------------------------
+406: <FunctionExact_ManyProps // OK: All props are defined. Error for exact types.
 407:   string1="foo"
 408:   string2={'bar'}
 ...:
@@ -1450,15 +1450,15 @@ Error: test.js:406
                                              ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
 Error: test.js:413
-     v-----------------------------------------------------
-413: <FunctionExact_ManyProps // OK: All props are defined.
+     v----------------------------------------------------------------------------
+413: <FunctionExact_ManyProps // OK: All props are defined. Error for exact types.
 414:   {...{string1: 'foo', string2: 'bar'}}
 415:   {...{boolean1: true, boolean2: false}}
 416:   {...{number: 42}}
 417: />;
      -^ React element `FunctionExact_ManyProps`
-     v-----------------------------------------------------
-413: <FunctionExact_ManyProps // OK: All props are defined.
+     v----------------------------------------------------------------------------
+413: <FunctionExact_ManyProps // OK: All props are defined. Error for exact types.
 414:   {...{string1: 'foo', string2: 'bar'}}
 415:   {...{boolean1: true, boolean2: false}}
 416:   {...{number: 42}}
@@ -1468,14 +1468,14 @@ Error: test.js:413
                                              ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
 Error: test.js:418
-     v---------------------------------------------------
-418: <FunctionExact_ManyProps // Error: Missing `number`.
+     v--------------------------------------------------------------------------
+418: <FunctionExact_ManyProps // Error: Missing `number`. Error for exact types.
 419:   {...{string1: 'foo', string2: 'bar'}}
 420:   {...{boolean1: true, boolean2: false}}
 421: />;
      -^ React element `FunctionExact_ManyProps`
-     v---------------------------------------------------
-418: <FunctionExact_ManyProps // Error: Missing `number`.
+     v--------------------------------------------------------------------------
+418: <FunctionExact_ManyProps // Error: Missing `number`. Error for exact types.
 419:   {...{string1: 'foo', string2: 'bar'}}
 420:   {...{boolean1: true, boolean2: false}}
 421: />;
@@ -1484,14 +1484,14 @@ Error: test.js:418
                                              ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
 Error: test.js:418
-     v---------------------------------------------------
-418: <FunctionExact_ManyProps // Error: Missing `number`.
+     v--------------------------------------------------------------------------
+418: <FunctionExact_ManyProps // Error: Missing `number`. Error for exact types.
 419:   {...{string1: 'foo', string2: 'bar'}}
 420:   {...{boolean1: true, boolean2: false}}
 421: />;
      -^ React element `FunctionExact_ManyProps`
-     v---------------------------------------------------
-418: <FunctionExact_ManyProps // Error: Missing `number`.
+     v--------------------------------------------------------------------------
+418: <FunctionExact_ManyProps // Error: Missing `number`. Error for exact types.
 419:   {...{string1: 'foo', string2: 'bar'}}
 420:   {...{boolean1: true, boolean2: false}}
 421: />;
@@ -1501,8 +1501,8 @@ Error: test.js:418
   Property `number` is incompatible:
     380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                                         ^^^^^^^^^^^^^^^ property `number`. Property not found in
-         v---------------------------------------------------
-    418: <FunctionExact_ManyProps // Error: Missing `number`.
+         v--------------------------------------------------------------------------
+    418: <FunctionExact_ManyProps // Error: Missing `number`. Error for exact types.
     419:   {...{string1: 'foo', string2: 'bar'}}
     420:   {...{boolean1: true, boolean2: false}}
     421: />;
@@ -1527,15 +1527,15 @@ Error: test.js:422
                                              ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
 Error: test.js:429
-     v-------------------------------------------------------
-429: <FunctionExact_ManyProps // OK: `number` is overwritten.
+     v------------------------------------------------------------------------------
+429: <FunctionExact_ManyProps // OK: `number` is overwritten. Error for exact types.
 430:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
 431:   boolean1
 ...:
 434: />;
      -^ React element `FunctionExact_ManyProps`
-     v-------------------------------------------------------
-429: <FunctionExact_ManyProps // OK: `number` is overwritten.
+     v------------------------------------------------------------------------------
+429: <FunctionExact_ManyProps // OK: `number` is overwritten. Error for exact types.
 430:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
 431:   boolean1
 ...:
@@ -1545,8 +1545,8 @@ Error: test.js:429
                                              ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
 Error: test.js:429
-     v-------------------------------------------------------
-429: <FunctionExact_ManyProps // OK: `number` is overwritten.
+     v------------------------------------------------------------------------------
+429: <FunctionExact_ManyProps // OK: `number` is overwritten. Error for exact types.
 430:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
 431:   boolean1
 ...:
@@ -1561,15 +1561,15 @@ Error: test.js:429
                    ^^^^^^ number
 
 Error: test.js:435
-     v----------------------------------------------------------
-435: <FunctionExact_ManyProps // Error: `number` cannot be null.
+     v---------------------------------------------------------------------------------
+435: <FunctionExact_ManyProps // Error: `number` cannot be null. Error for exact types.
 436:   boolean1
 437:   boolean2={false}
 ...:
 440: />;
      -^ React element `FunctionExact_ManyProps`
-     v----------------------------------------------------------
-435: <FunctionExact_ManyProps // Error: `number` cannot be null.
+     v---------------------------------------------------------------------------------
+435: <FunctionExact_ManyProps // Error: `number` cannot be null. Error for exact types.
 436:   boolean1
 437:   boolean2={false}
 ...:
@@ -2131,15 +2131,15 @@ Error: test.js:524
                     ^^^^^^ string
 
 Error: test.js:531
-     v-----------------------------------------------------
-531: <AbstractExact_ManyProps // OK: All props are defined.
+     v----------------------------------------------------------------------------
+531: <AbstractExact_ManyProps // OK: All props are defined. Error for exact types.
 532:   string1="foo"
 533:   string2={'bar'}
 ...:
 537: />;
      -^ React element `AbstractExact_ManyProps`
-     v-----------------------------------------------------
-531: <AbstractExact_ManyProps // OK: All props are defined.
+     v----------------------------------------------------------------------------
+531: <AbstractExact_ManyProps // OK: All props are defined. Error for exact types.
 532:   string1="foo"
 533:   string2={'bar'}
 ...:
@@ -2149,15 +2149,15 @@ Error: test.js:531
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
 Error: test.js:538
-     v-----------------------------------------------------
-538: <AbstractExact_ManyProps // OK: All props are defined.
+     v----------------------------------------------------------------------------
+538: <AbstractExact_ManyProps // OK: All props are defined. Error for exact types.
 539:   {...{string1: 'foo', string2: 'bar'}}
 540:   {...{boolean1: true, boolean2: false}}
 541:   {...{number: 42}}
 542: />;
      -^ React element `AbstractExact_ManyProps`
-     v-----------------------------------------------------
-538: <AbstractExact_ManyProps // OK: All props are defined.
+     v----------------------------------------------------------------------------
+538: <AbstractExact_ManyProps // OK: All props are defined. Error for exact types.
 539:   {...{string1: 'foo', string2: 'bar'}}
 540:   {...{boolean1: true, boolean2: false}}
 541:   {...{number: 42}}
@@ -2251,15 +2251,15 @@ Error: test.js:547
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
 Error: test.js:554
-     v-------------------------------------------------------
-554: <AbstractExact_ManyProps // OK: `number` is overwritten.
+     v------------------------------------------------------------------------------
+554: <AbstractExact_ManyProps // OK: `number` is overwritten. Error for exact types.
 555:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
 556:   boolean1
 ...:
 559: />;
      -^ React element `AbstractExact_ManyProps`
-     v-------------------------------------------------------
-554: <AbstractExact_ManyProps // OK: `number` is overwritten.
+     v------------------------------------------------------------------------------
+554: <AbstractExact_ManyProps // OK: `number` is overwritten. Error for exact types.
 555:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
 556:   boolean1
 ...:
@@ -2269,8 +2269,8 @@ Error: test.js:554
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ exact type: Props_ManyProps
 
 Error: test.js:554
-     v-------------------------------------------------------
-554: <AbstractExact_ManyProps // OK: `number` is overwritten.
+     v------------------------------------------------------------------------------
+554: <AbstractExact_ManyProps // OK: `number` is overwritten. Error for exact types.
 555:   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
 556:   boolean1
 ...:
@@ -2285,15 +2285,15 @@ Error: test.js:554
                    ^^^^^^ number
 
 Error: test.js:560
-     v----------------------------------------------------------
-560: <AbstractExact_ManyProps // Error: `number` cannot be null.
+     v---------------------------------------------------------------------------------
+560: <AbstractExact_ManyProps // Error: `number` cannot be null. Error for exact types.
 561:   boolean1
 562:   boolean2={false}
 ...:
 565: />;
      -^ React element `AbstractExact_ManyProps`
-     v----------------------------------------------------------
-560: <AbstractExact_ManyProps // Error: `number` cannot be null.
+     v---------------------------------------------------------------------------------
+560: <AbstractExact_ManyProps // Error: `number` cannot be null. Error for exact types.
 561:   boolean1
 562:   boolean2={false}
 ...:

@@ -94,13 +94,14 @@ export default suite(({addFile, addFiles, addCode}) => [
     `)
     .newErrors(  // TODO should not raise any errors.
       `
-        test.js:8      8:       <Bar {...params} />;
+        test.js:8
+          8:       <Bar {...params} />;
                    ^^^^^^^^^^^^^^^^^^^ JSX desugared to \`Bar(...)\`
           8:       <Bar {...params} />;
                    ^^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. Inexact type is incompatible with exact type
           6:       function Bar(props: Props) {}
                                        ^^^^^ exact type: object type
-      `
+      `,
     ),
   ]),
   test('Should raise no errors if two separate JSX spreads together provide all required attributes', [

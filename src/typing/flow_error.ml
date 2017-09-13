@@ -113,7 +113,7 @@ type error_message =
       branches: (reason * error_message) list
     }
   | ESpeculationAmbiguous of (reason * reason) * (int * reason) * (int * reason) * reason list
-  | EIncompatibleWithExact of (reason * reason)
+  | EIncompatibleWithExact of (reason * reason) * use_op
   | EUnsupportedExact of (reason * reason)
   | EIdxArity of reason
   | EIdxUse1 of reason
@@ -379,8 +379,8 @@ let locs_of_error_message = function
       [loc_of_reason reason; loc_of_reason reason_op]
   | ESpeculationAmbiguous ((reason1, reason2), _, _, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | EIncompatibleWithExact (reason1, reason2) ->
-      [loc_of_reason reason1; loc_of_reason reason2]
+  | EIncompatibleWithExact ((reason1, reason2), use_op) ->
+      (loc_of_reason reason1)::(loc_of_reason reason2)::(locs_of_use_op [] use_op)
   | EUnsupportedExact (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EIdxArity (reason) -> [loc_of_reason reason]
@@ -460,11 +460,12 @@ let loc_of_error ~op msg =
   | Some reason -> loc_of_reason reason
   | None -> List.hd (locs_of_error_message msg)
 
-(* decide reason order based on UB's flavor and blamability *)
-let ordered_reasons rl ru =
+(* Decide reason order based on UB's flavor and blamability.
+   If the order is unchanged, maintain reference equality. *)
+let ordered_reasons ((rl, ru) as reasons) =
   if (is_blamable_reason ru && not (is_blamable_reason rl))
   then ru, rl
-  else rl, ru
+  else reasons
 
 let rec error_of_msg ~trace_reasons ~op ~source_file =
   let open Errors in
@@ -584,21 +585,14 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     typecheck_error msg reasons
   in
 
-  let extra_info_of_use_op l_reason u_reason nested_extra msg wrapper_msg =
-    let infos = [
-      mk_info l_reason [msg];
-      mk_info u_reason []
-    ] in
-    [
-      InfoNode (
-        [Loc.none, [wrapper_msg]],
-        [
-          if nested_extra = []
-          then InfoLeaf infos
-          else InfoNode (infos, nested_extra)
-        ]
-      )
-    ]
+  let extra_info_of_use_op (rl, ru) extra msg wrapper_msg =
+    let infos = [mk_info rl [msg]; mk_info ru []] in
+    [InfoNode (
+      [Loc.none, [wrapper_msg]],
+      [if extra = []
+       then InfoLeaf infos
+       else InfoNode (infos, extra)]
+    )]
   in
 
   let speculation_extras branches =
@@ -620,37 +614,47 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     ) branches
   in
 
-  let rec unwrap_use_ops ((l_reason, u_reason), nested_extra, msg) = function
-  | PropertyCompatibility
-      (prop_name, lower_obj_reason, upper_obj_reason, use_op) ->
-    let extra = extra_info_of_use_op
-      l_reason u_reason nested_extra msg
-      (spf "Property `%s` is incompatible:" prop_name)
+  (* NB: Some use_ops, like FunReturn, completely replace the `msg` argument.
+     Sometimes we call unwrap_use_ops from an error variant that has some
+     interesting information in `msg`, like EIncompatibleWithExact. In those
+     cases, it's more valuable to preserve the input msg than to replace it.
+
+     To support those cases, callers can pass a `force` argument. A better
+     alternative would be to somehow combine the messages, so an exact error
+     with a function param would say something like "inexact argument
+     incompatible with exact parameter."
+
+     Note that `force` is not recursive, as the input message is consumed by
+     `extra_info_of_use_op` and will appear in the output. *)
+  let rec unwrap_use_ops ?(force=false) (reasons, extra, msg) = function
+  | PropertyCompatibility (x, rl', ru', use_op) ->
+    let extra =
+      extra_info_of_use_op reasons extra msg
+        (spf "Property `%s` is incompatible:" x)
     in
-    let obj_reasons = ordered_reasons lower_obj_reason upper_obj_reason in
+    let obj_reasons = ordered_reasons (rl', ru') in
     let msg = "This type is incompatible with" in
     unwrap_use_ops (obj_reasons, extra, msg) use_op
-  | FunReturn ->
-    let msg =
-      "This type is incompatible with the expected return type of" in
-    (l_reason, u_reason), nested_extra, msg
-  | FunCallParam ->
-    let r1, r2, msg = if is_lib_reason l_reason then
-      u_reason, l_reason, "This type is incompatible with an argument type of"
-    else
-      l_reason, u_reason,
-        "This type is incompatible with the expected param type of"
-    in
-    (r1, r2), nested_extra, msg
-  | TypeArgCompatibility (type_arg_name, reason_op, reason_tapp, use_op) ->
-    let extra = extra_info_of_use_op
-      l_reason u_reason nested_extra msg
-      (spf "Type argument `%s` is incompatible:" type_arg_name)
+  | TypeArgCompatibility (x, reason_op, reason_tapp, use_op) ->
+    let extra =
+      extra_info_of_use_op reasons extra msg
+        (spf "Type argument `%s` is incompatible:" x)
     in
     let msg = "Has some incompatible type argument with" in
     unwrap_use_ops ((reason_op, reason_tapp), extra, msg) use_op
+  | FunReturn when not force ->
+    let msg = "This type is incompatible with the expected return type of" in
+    reasons, extra, msg
+  | FunCallParam when not force ->
+    let reasons' = ordered_reasons reasons in
+    let msg =
+      if reasons' == reasons
+      then "This type is incompatible with the expected param type of"
+      else "This type is incompatible with an argument type of"
+    in
+    reasons', extra, msg
   | _ ->
-    (l_reason, u_reason), nested_extra, msg
+    reasons, extra, msg
   in
 
   function
@@ -663,7 +667,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       typecheck_error ~extra (err_msg_use lower_kind upper_kind) (reason_upper, reason_lower)
 
   | EIncompatibleDefs { reason_lower; reason_upper; extras } ->
-      let reasons = ordered_reasons reason_lower reason_upper in
+      let reasons = ordered_reasons (reason_lower, reason_upper) in
       let extra = speculation_extras extras in
       typecheck_error ~extra "This type is incompatible with" reasons
 
@@ -945,7 +949,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       typecheck_error msg reasons
 
   | EUnionSpeculationFailed { reason; reason_op; branches } ->
-      let reasons = ordered_reasons reason reason_op in
+      let reasons = ordered_reasons (reason, reason_op) in
       let msg = "This type is incompatible with" in
       let extra = speculation_extras branches in
       typecheck_error msg ~extra reasons
@@ -977,8 +981,12 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         (info_of_reason r)
       ]
 
-  | EIncompatibleWithExact reasons ->
-      typecheck_error "Inexact type is incompatible with exact type" reasons
+  | EIncompatibleWithExact (reasons, use_op) ->
+      let msg = "Inexact type is incompatible with exact type" in
+      let reasons, extra, msg =
+        unwrap_use_ops ~force:true (reasons, [], msg) use_op
+      in
+      typecheck_error ~extra msg reasons
 
   | EUnsupportedExact reasons ->
       typecheck_error "Unsupported exact type" reasons
