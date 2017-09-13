@@ -180,7 +180,7 @@ Trace:
 
 Error: Traces2.js:14
  14: function f(b): Element<*> {
-                    ^^^^^^^^^^ object type. This type is incompatible with
+                    ^^^^^^^^^^ object type. This type is incompatible with the expected return type of
                                                                    v-
 159: declare type React$Element<+ElementType: React$ElementType> = {|
 160:   +type: ElementType,

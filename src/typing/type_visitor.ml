@@ -676,7 +676,7 @@ class ['a] t = object(self)
   | CallElem (_, fn) -> self#fun_call_type cx acc fn
 
   method private cont cx acc = function
-  | Lower l -> self#type_ cx acc l
+  | Lower (_, l) -> self#type_ cx acc l
   | Upper u -> self#use_type_ cx acc u
 
   method private type_map cx acc = function

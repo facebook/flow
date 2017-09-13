@@ -63,7 +63,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:7
           7:       <Bar x={23} />;
-                   ^^^^^^^^^^^^^^ props of JSX element \`Bar\`. This type is incompatible with
+                   ^^^^^^^^^^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
           6:       function Bar(props: Props) {}
                                        ^^^^^ object type
           Property \`x\` is incompatible:
@@ -71,7 +71,7 @@ export default suite(({addFile, addFiles, addCode}) => [
                                ^^ number. This type is incompatible with
               5:       type Props = {|x: string|};
                                          ^^^^^^ string
-      `
+      `,
     ),
   ]),
   test('Should raise no errors if a JSX spread provides all required attributes for an inexact type', [
@@ -218,7 +218,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:9
           9:       <Foo><Bar /></Foo>
-                   ^^^^^ props of JSX element \`Foo\`. This type is incompatible with
+                   ^^^^^ props of JSX element \`Foo\`. This type is incompatible with the expected param type of
           6:       function Foo(props: FooProps) {}
                                        ^^^^^^^^ object type
           Property \`children\` is incompatible:
@@ -268,7 +268,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       `
         test.js:7
           7:       <Bar>{42}</Bar>
-                   ^^^^^ props of JSX element \`Bar\`. This type is incompatible with
+                   ^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
           6:       function Bar(props: Props) {}
                                        ^^^^^ object type
           Property \`children\` is incompatible:
@@ -279,7 +279,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
         test.js:7
           7:       <Bar>{42}</Bar>
-                   ^^^^^ props of JSX element \`Bar\`. This type is incompatible with
+                   ^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
           6:       function Bar(props: Props) {}
                                        ^^^^^ object type
           Property \`children\` is incompatible:

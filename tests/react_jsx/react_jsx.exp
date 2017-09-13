@@ -1236,7 +1236,7 @@ Error: test.js:381
 381: <FunctionExact_ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `FunctionExact_ManyProps`
 381: <FunctionExact_ManyProps />; // Error: There are no props.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `FunctionExact_ManyProps`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `FunctionExact_ManyProps`. This type is incompatible with the expected param type of
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `boolean1` is incompatible:
@@ -1249,7 +1249,7 @@ Error: test.js:381
 381: <FunctionExact_ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `FunctionExact_ManyProps`
 381: <FunctionExact_ManyProps />; // Error: There are no props.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `FunctionExact_ManyProps`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `FunctionExact_ManyProps`. This type is incompatible with the expected param type of
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `boolean2` is incompatible:
@@ -1262,7 +1262,7 @@ Error: test.js:381
 381: <FunctionExact_ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `FunctionExact_ManyProps`
 381: <FunctionExact_ManyProps />; // Error: There are no props.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `FunctionExact_ManyProps`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `FunctionExact_ManyProps`. This type is incompatible with the expected param type of
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `number` is incompatible:
@@ -1275,7 +1275,7 @@ Error: test.js:381
 381: <FunctionExact_ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `FunctionExact_ManyProps`
 381: <FunctionExact_ManyProps />; // Error: There are no props.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `FunctionExact_ManyProps`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `FunctionExact_ManyProps`. This type is incompatible with the expected param type of
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `string1` is incompatible:
@@ -1288,7 +1288,7 @@ Error: test.js:381
 381: <FunctionExact_ManyProps />; // Error: There are no props.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `FunctionExact_ManyProps`
 381: <FunctionExact_ManyProps />; // Error: There are no props.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `FunctionExact_ManyProps`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `FunctionExact_ManyProps`. This type is incompatible with the expected param type of
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `string2` is incompatible:
@@ -1358,7 +1358,7 @@ Error: test.js:399
 401:   string2={null}
 ...:
 405: />;
-     -^ props of React element `FunctionExact_ManyProps`. This type is incompatible with
+     -^ props of React element `FunctionExact_ManyProps`. This type is incompatible with the expected param type of
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `boolean1` is incompatible:
@@ -1374,7 +1374,7 @@ Error: test.js:399
 401:   string2={null}
 ...:
 405: />;
-     -^ props of React element `FunctionExact_ManyProps`. This type is incompatible with
+     -^ props of React element `FunctionExact_ManyProps`. This type is incompatible with the expected param type of
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `boolean2` is incompatible:
@@ -1390,7 +1390,7 @@ Error: test.js:399
 401:   string2={null}
 ...:
 405: />;
-     -^ props of React element `FunctionExact_ManyProps`. This type is incompatible with
+     -^ props of React element `FunctionExact_ManyProps`. This type is incompatible with the expected param type of
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `number` is incompatible:
@@ -1406,7 +1406,7 @@ Error: test.js:399
 401:   string2={null}
 ...:
 405: />;
-     -^ props of React element `FunctionExact_ManyProps`. This type is incompatible with
+     -^ props of React element `FunctionExact_ManyProps`. This type is incompatible with the expected param type of
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `string1` is incompatible:
@@ -1422,7 +1422,7 @@ Error: test.js:399
 401:   string2={null}
 ...:
 405: />;
-     -^ props of React element `FunctionExact_ManyProps`. This type is incompatible with
+     -^ props of React element `FunctionExact_ManyProps`. This type is incompatible with the expected param type of
 380: const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
                                              ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `string2` is incompatible:
@@ -1931,6 +1931,71 @@ Error: test.js:506
     506: <AbstractExact_ManyProps />; // Error: There are no props.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `AbstractExact_ManyProps`
 
+Error: test.js:506
+506: <AbstractExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `AbstractExact_ManyProps`
+506: <AbstractExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `AbstractExact_ManyProps`. This type is incompatible with the expected param type of
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `boolean1` is incompatible:
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ property `boolean1`. Property not found in
+    506: <AbstractExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `AbstractExact_ManyProps`
+
+Error: test.js:506
+506: <AbstractExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `AbstractExact_ManyProps`
+506: <AbstractExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `AbstractExact_ManyProps`. This type is incompatible with the expected param type of
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `boolean2` is incompatible:
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ property `boolean2`. Property not found in
+    506: <AbstractExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `AbstractExact_ManyProps`
+
+Error: test.js:506
+506: <AbstractExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `AbstractExact_ManyProps`
+506: <AbstractExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `AbstractExact_ManyProps`. This type is incompatible with the expected param type of
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `number` is incompatible:
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ property `number`. Property not found in
+    506: <AbstractExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `AbstractExact_ManyProps`
+
+Error: test.js:506
+506: <AbstractExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `AbstractExact_ManyProps`
+506: <AbstractExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `AbstractExact_ManyProps`. This type is incompatible with the expected param type of
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `string1` is incompatible:
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ property `string1`. Property not found in
+    506: <AbstractExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `AbstractExact_ManyProps`
+
+Error: test.js:506
+506: <AbstractExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `AbstractExact_ManyProps`
+506: <AbstractExact_ManyProps />; // Error: There are no props.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `AbstractExact_ManyProps`. This type is incompatible with the expected param type of
+504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `string2` is incompatible:
+    504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ property `string2`. Property not found in
+    506: <AbstractExact_ManyProps />; // Error: There are no props.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `AbstractExact_ManyProps`
+
 Error: test.js:514
      v--------------------------------------------------------------
 514: <AbstractExact_ManyProps // Error: Other props are not allowed.
@@ -1992,7 +2057,7 @@ Error: test.js:524
 526:   string2={null}
 ...:
 530: />;
-     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with
+     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with the expected param type of
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `boolean1` is incompatible:
@@ -2008,7 +2073,7 @@ Error: test.js:524
 526:   string2={null}
 ...:
 530: />;
-     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with
+     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with the expected param type of
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `boolean2` is incompatible:
@@ -2024,7 +2089,7 @@ Error: test.js:524
 526:   string2={null}
 ...:
 530: />;
-     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with
+     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with the expected param type of
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `number` is incompatible:
@@ -2040,7 +2105,7 @@ Error: test.js:524
 526:   string2={null}
 ...:
 530: />;
-     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with
+     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with the expected param type of
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `string1` is incompatible:
@@ -2056,7 +2121,7 @@ Error: test.js:524
 526:   string2={null}
 ...:
 530: />;
-     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with
+     -^ props of React element `AbstractExact_ManyProps`. This type is incompatible with the expected param type of
 504: const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `string2` is incompatible:
@@ -2685,7 +2750,7 @@ Error: test.js:728
 728: <FunctionExact_OptionalProps />; // Error: `foo` is required.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `FunctionExact_OptionalProps`
 728: <FunctionExact_OptionalProps />; // Error: `foo` is required.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `FunctionExact_OptionalProps`. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `FunctionExact_OptionalProps`. This type is incompatible with the expected param type of
 727: const FunctionExact_OptionalProps = (props: $Exact<Props_OptionalProps>) => any;
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `foo` is incompatible:
@@ -2700,7 +2765,7 @@ Error: test.js:735
 736:   foo="nope"
 737:   bar={2}
 738: />;
-     -^ props of React element `FunctionExact_OptionalProps`. This type is incompatible with
+     -^ props of React element `FunctionExact_OptionalProps`. This type is incompatible with the expected param type of
 727: const FunctionExact_OptionalProps = (props: $Exact<Props_OptionalProps>) => any;
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `foo` is incompatible:
@@ -2715,7 +2780,7 @@ Error: test.js:739
 740:   foo={4}
 741:   bar="nope"
 742: />;
-     -^ props of React element `FunctionExact_OptionalProps`. This type is incompatible with
+     -^ props of React element `FunctionExact_OptionalProps`. This type is incompatible with the expected param type of
 727: const FunctionExact_OptionalProps = (props: $Exact<Props_OptionalProps>) => any;
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `bar` is incompatible:
@@ -2793,13 +2858,26 @@ Error: test.js:763
     763: <AbstractExact_OptionalProps />; // Error: `foo` is required.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `AbstractExact_OptionalProps`
 
+Error: test.js:763
+763: <AbstractExact_OptionalProps />; // Error: `foo` is required.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `AbstractExact_OptionalProps`
+763: <AbstractExact_OptionalProps />; // Error: `foo` is required.
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `AbstractExact_OptionalProps`. This type is incompatible with the expected param type of
+762:   React.ComponentType<$Exact<Props_OptionalProps>> = any;
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `foo` is incompatible:
+    762:   React.ComponentType<$Exact<Props_OptionalProps>> = any;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+    763: <AbstractExact_OptionalProps />; // Error: `foo` is required.
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `AbstractExact_OptionalProps`
+
 Error: test.js:770
      v-----------------------------------------------------------
 770: <AbstractExact_OptionalProps // Error: `foo` has a bad type.
 771:   foo="nope"
 772:   bar={2}
 773: />;
-     -^ props of React element `AbstractExact_OptionalProps`. This type is incompatible with
+     -^ props of React element `AbstractExact_OptionalProps`. This type is incompatible with the expected param type of
 762:   React.ComponentType<$Exact<Props_OptionalProps>> = any;
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `foo` is incompatible:
@@ -2814,7 +2892,7 @@ Error: test.js:774
 775:   foo={4}
 776:   bar="nope"
 777: />;
-     -^ props of React element `AbstractExact_OptionalProps`. This type is incompatible with
+     -^ props of React element `AbstractExact_OptionalProps`. This type is incompatible with the expected param type of
 762:   React.ComponentType<$Exact<Props_OptionalProps>> = any;
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `bar` is incompatible:
@@ -2994,7 +3072,7 @@ Error: test.js:904
 904: <FunctionExact_DefaultProps // Error: It is missing a required non-default prop.
 905:   foo={1}
 906: />;
-     -^ props of React element `FunctionExact_DefaultProps`. This type is incompatible with
+     -^ props of React element `FunctionExact_DefaultProps`. This type is incompatible with the expected param type of
 891: function FunctionExact_DefaultProps(props: $Exact<Props_DefaultProps>) {
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `bar` is incompatible:
@@ -3029,4 +3107,4 @@ Error: test.js:916
          -^ props of React element `Member_DefaultProps.prop`
 
 
-Found 190 errors
+Found 196 errors

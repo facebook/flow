@@ -709,7 +709,9 @@ module rec TypeTerm : sig
   (* Obj.assign(target, ...source) *)
   | ObjSpreadAssign
 
-  and cont = Lower of t | Upper of use_t
+  and cont =
+    | Lower of use_op * t
+    | Upper of use_t
 
   (* LookupT is a general-purpose tool for traversing prototype chains in search
      of properties. In all cases, if the property is found somewhere along the

@@ -710,7 +710,7 @@ Error: hoc2.js:6
 
 Error: hoc2.js:6
   6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
                                          v-
  17: function MyFunctionComponent(props: {|
  18:   a: number,
@@ -726,7 +726,7 @@ Error: hoc2.js:6
 
 Error: hoc2.js:6
   6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
                                          v-
  17: function MyFunctionComponent(props: {|
  18:   a: number,
@@ -848,7 +848,7 @@ Error: hoc2.js:30
  30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedFunctionComponent`
   6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
                                          v-
  17: function MyFunctionComponent(props: {|
  18:   a: number,
@@ -871,7 +871,7 @@ Error: hoc2.js:30
  30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedFunctionComponent`
   6:   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
                                          v-
  17: function MyFunctionComponent(props: {|
  18:   a: number,

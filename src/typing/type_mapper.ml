@@ -886,10 +886,10 @@ class ['a] t = object(self)
 
   method cont cx map_cx t =
     match t with
-    | Lower t' ->
+    | Lower (use_op, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
-        else Lower t''
+        else Lower (use_op, t'')
     | Upper use_t ->
         let use_t' = self#use_type cx map_cx use_t in
         if use_t' == use_t then t

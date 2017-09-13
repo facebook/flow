@@ -456,7 +456,7 @@ and gc_object_kit =
     gc_tool cx state tool
 
 and gc_cont cx state = function
-  | Lower t -> gc cx state t
+  | Lower (_, t) -> gc cx state t
   | Upper u -> gc_use cx state u
 
 and gc_type_map cx state = function

@@ -358,8 +358,9 @@ and _json_of_cont json_cx = Hh_json.(function
       "cont", JSON_String "upper";
       "type", _json_of_use_t json_cx u
     ]
-  | Lower l -> [
+  | Lower (op, l) -> [
       "cont", JSON_String "lower";
+      "use", JSON_String (string_of_use_op op);
       "type", _json_of_t json_cx l
     ]
 )

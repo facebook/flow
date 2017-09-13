@@ -3317,7 +3317,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ObjT LB ~> $Exact<UB>. make exact if exact and unsealed *)
     | DefT (_, ObjT { flags; _ }), UseT (use_op, ExactT (r, t)) ->
       if flags.exact && sealed_in_op r flags.sealed
-      then rec_flow cx trace (t, MakeExactT (r, Lower l))
+      then rec_flow cx trace (t, MakeExactT (r, Lower (use_op, l)))
       else begin
         let reasons = FlowError.ordered_reasons (reason_of_t l) r in
         add_output cx ~trace (FlowError.EIncompatibleWithExact reasons);
@@ -3345,7 +3345,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (DefT (r, ObjT exactobj), u)
 
     (* exactify incoming UB object type, flow to LB *)
-    | DefT (ru, ObjT obj_u), MakeExactT (reason_op, Lower (DefT (rl, ObjT obj_l))) ->
+    | DefT (ru, ObjT obj_u), MakeExactT (reason_op, Lower (use_op, DefT (rl, ObjT obj_l))) ->
       (* check for extra props in LB, then forward to standard obj ~> obj *)
       let xl = { obj_l with flags = { obj_l.flags with exact = true } } in
       let ru = repos_reason (loc_of_reason reason_op) ru in
@@ -3357,7 +3357,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let err = FlowError.EPropNotFound ((rl, ru), UnknownUse) in
           add_output cx ~trace err
       );
-      rec_flow_t cx trace (DefT (rl, ObjT xl), DefT (ru, ObjT xu))
+      rec_flow cx trace (DefT (rl, ObjT xl), UseT (use_op, DefT (ru, ObjT xu)))
 
     | DefT (_, AnyT), MakeExactT (reason_op, k) ->
       continue cx trace (AnyT.why reason_op) k
@@ -10063,8 +10063,8 @@ and unify cx t1 t2 =
     raise ex
 
 and continue cx trace t = function
+  | Lower (use_op, l) -> rec_flow cx trace (l, UseT (use_op, t))
   | Upper u -> rec_flow cx trace (t, u)
-  | Lower l -> rec_flow_t cx trace (l, t)
 
 and react_kit =
   React_kit.run
