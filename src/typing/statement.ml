@@ -1687,7 +1687,7 @@ and statement cx = Ast.Statement.(
           | _, VariableDeclaration {VariableDeclaration.declarations; _} ->
             let decl_to_bindings accum (_, decl) =
               let id = snd decl.VariableDeclaration.Declarator.id in
-              List.rev (extract_destructured_bindings accum id)
+              List.rev (Ast_utils.bindings_of_pattern accum id)
             in
             let bound_names = List.fold_left decl_to_bindings [] declarations in
             bound_names |> List.map (fun (loc, name) ->
@@ -1731,7 +1731,7 @@ and statement cx = Ast.Statement.(
           | _, VariableDeclaration {VariableDeclaration.declarations; _} ->
             let decl_to_bindings accum (_, decl) =
               let id = snd decl.VariableDeclaration.Declarator.id in
-              List.rev (extract_destructured_bindings accum id)
+              List.rev (Ast_utils.bindings_of_pattern accum id)
             in
             let bound_names = List.fold_left decl_to_bindings [] declarations in
             bound_names |> List.map (fun (loc, name) ->
