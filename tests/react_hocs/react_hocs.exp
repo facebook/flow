@@ -1,13 +1,13 @@
 Error: Bad.js:11
  11: const Bad = (props: Props) => null;
                  ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-140:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:140
+138:   | React$StatelessFunctionalComponent<Props>
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
   Property `$call` is incompatible:
      11: const Bad = (props: Props) => null;
                      ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-    125:   (props: Props, context: any): React$Node,
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:125
+    123:   (props: Props, context: any): React$Node,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:123
       This parameter is incompatible:
                                      v-
          15: ): (React.ComponentType<{|
@@ -26,13 +26,13 @@ Error: Bad.js:11
 Error: Bad.js:11
  11: const Bad = (props: Props) => null;
                  ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-140:   | React$StatelessFunctionalComponent<Props>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:140
+138:   | React$StatelessFunctionalComponent<Props>
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
   Property `$call` is incompatible:
      11: const Bad = (props: Props) => null;
                      ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-    125:   (props: Props, context: any): React$Node,
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:125
+    123:   (props: Props, context: any): React$Node,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:123
       This parameter is incompatible:
                                      v-
          15: ): (React.ComponentType<{|

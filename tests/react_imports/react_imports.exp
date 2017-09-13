@@ -10,69 +10,69 @@ Error: commonjs-pascal.js:6
   6: ({}: React.Node); // Error
           ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | type application of identifier `Iterable`
   Member 1:
-   17:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:17
+   15:   | void
+           ^^^^ undefined. See lib: <BUILTINS>/react.js:15
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   17:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:17
+   15:   | void
+           ^^^^ undefined. See lib: <BUILTINS>/react.js:15
   Member 2:
-   18:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:18
+   16:   | null
+           ^^^^ null. See lib: <BUILTINS>/react.js:16
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   18:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:18
+   16:   | null
+           ^^^^ null. See lib: <BUILTINS>/react.js:16
   Member 3:
-   19:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:19
+   17:   | boolean
+           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:17
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   19:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:19
+   17:   | boolean
+           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:17
   Member 4:
-   20:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:20
+   18:   | number
+           ^^^^^^ number. See lib: <BUILTINS>/react.js:18
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   20:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:20
+   18:   | number
+           ^^^^^^ number. See lib: <BUILTINS>/react.js:18
   Member 5:
-   21:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:21
+   19:   | string
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:19
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   21:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:21
+   19:   | string
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:19
   Member 6:
-   22:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:22
+   20:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:20
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   22:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:22
+   20:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:20
     Property `key` is incompatible:
-       22:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:22
+       20:   | React$Element<any>
+               ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:20
         6: ({}: React.Node); // Error
             ^^ object literal
   Member 7:
-   23:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:23
+   21:   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:21
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   23:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:23
+   21:   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:21
     Property `@@iterator` is incompatible:
-       23:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:23
+       21:   | Iterable<React$Node>;
+               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:21
         6: ({}: React.Node); // Error
             ^^ object literal
 
@@ -94,69 +94,69 @@ Error: commonjs.js:6
   6: ({}: React.Node); // Error
           ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | type application of identifier `Iterable`
   Member 1:
-   17:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:17
+   15:   | void
+           ^^^^ undefined. See lib: <BUILTINS>/react.js:15
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   17:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:17
+   15:   | void
+           ^^^^ undefined. See lib: <BUILTINS>/react.js:15
   Member 2:
-   18:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:18
+   16:   | null
+           ^^^^ null. See lib: <BUILTINS>/react.js:16
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   18:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:18
+   16:   | null
+           ^^^^ null. See lib: <BUILTINS>/react.js:16
   Member 3:
-   19:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:19
+   17:   | boolean
+           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:17
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   19:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:19
+   17:   | boolean
+           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:17
   Member 4:
-   20:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:20
+   18:   | number
+           ^^^^^^ number. See lib: <BUILTINS>/react.js:18
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   20:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:20
+   18:   | number
+           ^^^^^^ number. See lib: <BUILTINS>/react.js:18
   Member 5:
-   21:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:21
+   19:   | string
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:19
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   21:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:21
+   19:   | string
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:19
   Member 6:
-   22:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:22
+   20:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:20
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   22:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:22
+   20:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:20
     Property `key` is incompatible:
-       22:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:22
+       20:   | React$Element<any>
+               ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:20
         6: ({}: React.Node); // Error
             ^^ object literal
   Member 7:
-   23:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:23
+   21:   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:21
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   23:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:23
+   21:   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:21
     Property `@@iterator` is incompatible:
-       23:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:23
+       21:   | Iterable<React$Node>;
+               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:21
         6: ({}: React.Node); // Error
             ^^ object literal
 
@@ -178,77 +178,77 @@ Error: es-default-pascal.js:6
   6: ({}: React.Node); // Error: Not in default export.
           ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | type application of identifier `Iterable`
   Member 1:
-   17:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:17
+   15:   | void
+           ^^^^ undefined. See lib: <BUILTINS>/react.js:15
   Error:
     6: ({}: React.Node); // Error: Not in default export.
         ^^ object literal. This type is incompatible with
-   17:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:17
+   15:   | void
+           ^^^^ undefined. See lib: <BUILTINS>/react.js:15
   Member 2:
-   18:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:18
+   16:   | null
+           ^^^^ null. See lib: <BUILTINS>/react.js:16
   Error:
     6: ({}: React.Node); // Error: Not in default export.
         ^^ object literal. This type is incompatible with
-   18:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:18
+   16:   | null
+           ^^^^ null. See lib: <BUILTINS>/react.js:16
   Member 3:
-   19:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:19
+   17:   | boolean
+           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:17
   Error:
     6: ({}: React.Node); // Error: Not in default export.
         ^^ object literal. This type is incompatible with
-   19:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:19
+   17:   | boolean
+           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:17
   Member 4:
-   20:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:20
+   18:   | number
+           ^^^^^^ number. See lib: <BUILTINS>/react.js:18
   Error:
     6: ({}: React.Node); // Error: Not in default export.
         ^^ object literal. This type is incompatible with
-   20:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:20
+   18:   | number
+           ^^^^^^ number. See lib: <BUILTINS>/react.js:18
   Member 5:
-   21:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:21
+   19:   | string
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:19
   Error:
     6: ({}: React.Node); // Error: Not in default export.
         ^^ object literal. This type is incompatible with
-   21:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:21
+   19:   | string
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:19
   Member 6:
-   22:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:22
+   20:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:20
   Error:
     6: ({}: React.Node); // Error: Not in default export.
         ^^ object literal. This type is incompatible with
-   22:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:22
+   20:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:20
     Property `key` is incompatible:
-       22:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:22
+       20:   | React$Element<any>
+               ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:20
         6: ({}: React.Node); // Error: Not in default export.
             ^^ object literal
   Member 7:
-   23:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:23
+   21:   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:21
   Error:
     6: ({}: React.Node); // Error: Not in default export.
         ^^ object literal. This type is incompatible with
-   23:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:23
+   21:   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:21
     Property `@@iterator` is incompatible:
-       23:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:23
+       21:   | Iterable<React$Node>;
+               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:21
         6: ({}: React.Node); // Error: Not in default export.
             ^^ object literal
 
 Error: es-default-pascal.js:7
   7: (null: React.Missing); // Error: Not in default export.
             ^^^^^^^^^^^^^ Missing. Property not found in
-254:   declare var exports: $Exports<'react'>;
-                            ^^^^^^^^^^^^^^^^^ exports of module `react`. See lib: <BUILTINS>/react.js:254
+252:   declare var exports: $Exports<'react'>;
+                            ^^^^^^^^^^^^^^^^^ exports of module `react`. See lib: <BUILTINS>/react.js:252
 
 Error: es-default.js:4
   4: (React.Component: number); // Error
@@ -260,34 +260,34 @@ Error: es-default.js:5
   5: ('Hello, world!': React.Node); // Error: Not in default export.
                        ^^^^^^^^^^ Node. Property not found in
                               v-
-234:   declare export default {|
-235:     +DOM: typeof DOM,
-236:     +PropTypes: typeof PropTypes,
+232:   declare export default {|
+233:     +DOM: typeof DOM,
+234:     +PropTypes: typeof PropTypes,
 ...:
-248:   |};
-       -^ object type. See lib: <BUILTINS>/react.js:234
+246:   |};
+       -^ object type. See lib: <BUILTINS>/react.js:232
 
 Error: es-default.js:6
   6: ({}: React.Node); // Error: Not in default export.
           ^^^^^^^^^^ Node. Property not found in
                               v-
-234:   declare export default {|
-235:     +DOM: typeof DOM,
-236:     +PropTypes: typeof PropTypes,
+232:   declare export default {|
+233:     +DOM: typeof DOM,
+234:     +PropTypes: typeof PropTypes,
 ...:
-248:   |};
-       -^ object type. See lib: <BUILTINS>/react.js:234
+246:   |};
+       -^ object type. See lib: <BUILTINS>/react.js:232
 
 Error: es-default.js:7
   7: (null: React.Missing); // Error: Not in default export.
             ^^^^^^^^^^^^^ Missing. Property not found in
                               v-
-234:   declare export default {|
-235:     +DOM: typeof DOM,
-236:     +PropTypes: typeof PropTypes,
+232:   declare export default {|
+233:     +DOM: typeof DOM,
+234:     +PropTypes: typeof PropTypes,
 ...:
-248:   |};
-       -^ object type. See lib: <BUILTINS>/react.js:234
+246:   |};
+       -^ object type. See lib: <BUILTINS>/react.js:232
 
 Error: es-namespace-pascal.js:4
   4: (React.Component: number); // Error
@@ -301,69 +301,69 @@ Error: es-namespace-pascal.js:6
   6: ({}: React.Node); // Error
           ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | type application of identifier `Iterable`
   Member 1:
-   17:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:17
+   15:   | void
+           ^^^^ undefined. See lib: <BUILTINS>/react.js:15
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   17:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:17
+   15:   | void
+           ^^^^ undefined. See lib: <BUILTINS>/react.js:15
   Member 2:
-   18:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:18
+   16:   | null
+           ^^^^ null. See lib: <BUILTINS>/react.js:16
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   18:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:18
+   16:   | null
+           ^^^^ null. See lib: <BUILTINS>/react.js:16
   Member 3:
-   19:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:19
+   17:   | boolean
+           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:17
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   19:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:19
+   17:   | boolean
+           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:17
   Member 4:
-   20:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:20
+   18:   | number
+           ^^^^^^ number. See lib: <BUILTINS>/react.js:18
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   20:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:20
+   18:   | number
+           ^^^^^^ number. See lib: <BUILTINS>/react.js:18
   Member 5:
-   21:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:21
+   19:   | string
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:19
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   21:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:21
+   19:   | string
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:19
   Member 6:
-   22:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:22
+   20:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:20
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   22:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:22
+   20:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:20
     Property `key` is incompatible:
-       22:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:22
+       20:   | React$Element<any>
+               ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:20
         6: ({}: React.Node); // Error
             ^^ object literal
   Member 7:
-   23:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:23
+   21:   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:21
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   23:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:23
+   21:   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:21
     Property `@@iterator` is incompatible:
-       23:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:23
+       21:   | Iterable<React$Node>;
+               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:21
         6: ({}: React.Node); // Error
             ^^ object literal
 
@@ -385,69 +385,69 @@ Error: es-namespace.js:6
   6: ({}: React.Node); // Error
           ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | type application of identifier `Iterable`
   Member 1:
-   17:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:17
+   15:   | void
+           ^^^^ undefined. See lib: <BUILTINS>/react.js:15
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   17:   | void
-           ^^^^ undefined. See lib: <BUILTINS>/react.js:17
+   15:   | void
+           ^^^^ undefined. See lib: <BUILTINS>/react.js:15
   Member 2:
-   18:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:18
+   16:   | null
+           ^^^^ null. See lib: <BUILTINS>/react.js:16
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   18:   | null
-           ^^^^ null. See lib: <BUILTINS>/react.js:18
+   16:   | null
+           ^^^^ null. See lib: <BUILTINS>/react.js:16
   Member 3:
-   19:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:19
+   17:   | boolean
+           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:17
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   19:   | boolean
-           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:19
+   17:   | boolean
+           ^^^^^^^ boolean. See lib: <BUILTINS>/react.js:17
   Member 4:
-   20:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:20
+   18:   | number
+           ^^^^^^ number. See lib: <BUILTINS>/react.js:18
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   20:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:20
+   18:   | number
+           ^^^^^^ number. See lib: <BUILTINS>/react.js:18
   Member 5:
-   21:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:21
+   19:   | string
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:19
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   21:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:21
+   19:   | string
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:19
   Member 6:
-   22:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:22
+   20:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:20
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   22:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:22
+   20:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:20
     Property `key` is incompatible:
-       22:   | React$Element<any>
-               ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:22
+       20:   | React$Element<any>
+               ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:20
         6: ({}: React.Node); // Error
             ^^ object literal
   Member 7:
-   23:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:23
+   21:   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:21
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
-   23:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:23
+   21:   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:21
     Property `@@iterator` is incompatible:
-       23:   | Iterable<React$Node>;
-               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:23
+       21:   | Iterable<React$Node>;
+               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:21
         6: ({}: React.Node); // Error
             ^^ object literal
 
