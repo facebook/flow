@@ -1,3 +1,57 @@
+Error: Bad.js:11
+ 11: const Bad = (props: Props) => null;
+                 ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+140:   | React$StatelessFunctionalComponent<Props>
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:140
+  Property `$call` is incompatible:
+     11: const Bad = (props: Props) => null;
+                     ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+    125:   (props: Props, context: any): React$Node,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:125
+      This parameter is incompatible:
+                                     v-
+         15: ): (React.ComponentType<{|
+         16:   ...Props,
+         17:   ...ExtraProps,
+         18: |}>) => React.ComponentType<Props> {
+             -^ object type. This type is incompatible with. See: hocs.js:15
+         11: const Bad = (props: Props) => null;
+                                 ^^^^^ object type
+          Property `bar` is incompatible:
+             18:     bar: buz,
+                          ^^^ string. This type is incompatible with
+              8:   bar: number,
+                        ^^^^^^ number
+
+Error: Bad.js:11
+ 11: const Bad = (props: Props) => null;
+                 ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+140:   | React$StatelessFunctionalComponent<Props>
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:140
+  Property `$call` is incompatible:
+     11: const Bad = (props: Props) => null;
+                     ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+    125:   (props: Props, context: any): React$Node,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:125
+      This parameter is incompatible:
+                                     v-
+         15: ): (React.ComponentType<{|
+         16:   ...Props,
+         17:   ...ExtraProps,
+         18: |}>) => React.ComponentType<Props> {
+             -^ object type. This type is incompatible with. See: hocs.js:15
+         11: const Bad = (props: Props) => null;
+                                 ^^^^^ object type
+          Property `foo` is incompatible:
+             11: const Bad = (props: Props) => null;
+                                     ^^^^^ property `foo`. Property not found in
+                                         v-
+             15: ): (React.ComponentType<{|
+             16:   ...Props,
+             17:   ...ExtraProps,
+             18: |}>) => React.ComponentType<Props> {
+                 -^ object type. See: hocs.js:15
+
 Error: Good.js:15
  15:   mapProps(({ foo, buz, qux }) => ({
                    ^^^ property `foo`. Property not found in
@@ -25,40 +79,6 @@ Error: Good.js:18
          ^^^ string. This type is incompatible with
   9:   qux: number,
             ^^^^^^ number
-
-Error: hocs.js:15
-                             v-
- 15: ): (React.ComponentType<{|
- 16:   ...Props,
- 17:   ...ExtraProps,
- 18: |}>) => React.ComponentType<Props> {
-     -^ object type. This type is incompatible with the expected param type of
- 11: const Bad = (props: Props) => null;
-                         ^^^^^ object type. See: Bad.js:11
-  Property `bar` is incompatible:
-     18:     bar: buz,
-                  ^^^ string. This type is incompatible with. See: Bad.js:18
-      8:   bar: number,
-                ^^^^^^ number. See: Bad.js:8
-
-Error: hocs.js:15
-                             v-
- 15: ): (React.ComponentType<{|
- 16:   ...Props,
- 17:   ...ExtraProps,
- 18: |}>) => React.ComponentType<Props> {
-     -^ object type. This type is incompatible with the expected param type of
- 11: const Bad = (props: Props) => null;
-                         ^^^^^ object type. See: Bad.js:11
-  Property `foo` is incompatible:
-     11: const Bad = (props: Props) => null;
-                             ^^^^^ property `foo`. Property not found in. See: Bad.js:11
-                                 v-
-     15: ): (React.ComponentType<{|
-     16:   ...Props,
-     17:   ...ExtraProps,
-     18: |}>) => React.ComponentType<Props> {
-         -^ object type
 
 
 Found 7 errors

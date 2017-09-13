@@ -30,11 +30,16 @@ Error: async2.js:13
  13:     var c: string = a; // Error: number ~> string
                 ^^^^^^ string
 
-Error: async2.js:26
- 26:   async function voidoid1() {
-                                ^ Promise. This type is incompatible with
+Error: async2.js:32
  32:   var voidoid3: () => void = voidoid1; // error, void != Promise<void>
-                           ^^^^ undefined
+                                  ^^^^^^^^ async function. This type is incompatible with
+ 32:   var voidoid3: () => void = voidoid1; // error, void != Promise<void>
+                     ^^^^^^^^^^ function type
+  This parameter is incompatible:
+     26:   async function voidoid1() {
+                                    ^ Promise. This type is incompatible with
+     32:   var voidoid3: () => void = voidoid1; // error, void != Promise<void>
+                               ^^^^ undefined
 
 Error: async2.js:50
  50:   async function voidoid5(): void { // error, void != Promise<void>

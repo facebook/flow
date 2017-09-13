@@ -60,9 +60,14 @@ Error: checkPropTypes.js:10
 
 Error: checkPropTypes.js:12
  12: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string
-                                                                                               ^^^ number. This type is incompatible with the expected param type of
+                                                                                         ^^^^^^^^^ function. This type is incompatible with the expected param type of
 191:     getStack: ?(() => ?string)
-                            ^^^^^^ string. See lib: <BUILTINS>/react.js:191
+                     ^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:191
+  This parameter is incompatible:
+     12: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string
+                                                                                                   ^^^ number. This type is incompatible with
+    191:     getStack: ?(() => ?string)
+                                ^^^^^^ string. See lib: <BUILTINS>/react.js:191
 
 Error: propTypes.js:15
  15: <D />; // errors: properties `name` and `title` not found

@@ -1,33 +1,3 @@
-Error: api.js:5
-  5: const a: ChildrenArray<?number> = [
-                            ^^^^^^^ null. This type is incompatible with the expected param type of
- 14: Children.forEach(a, (x: number) => {}); // Error
-                             ^^^^^^ number
-
-Error: api.js:5
-  5: const a: ChildrenArray<?number> = [
-                            ^^^^^^^ null. This type is incompatible with the expected param type of
- 16: Children.forEach(a, (x: string) => {}); // Error
-                             ^^^^^^ string
-
-Error: api.js:5
-  5: const a: ChildrenArray<?number> = [
-                            ^^^^^^^ undefined. This type is incompatible with the expected param type of
- 14: Children.forEach(a, (x: number) => {}); // Error
-                             ^^^^^^ number
-
-Error: api.js:5
-  5: const a: ChildrenArray<?number> = [
-                            ^^^^^^^ undefined. This type is incompatible with the expected param type of
- 16: Children.forEach(a, (x: string) => {}); // Error
-                             ^^^^^^ string
-
-Error: api.js:5
-  5: const a: ChildrenArray<?number> = [
-                             ^^^^^^ number. This type is incompatible with the expected param type of
- 16: Children.forEach(a, (x: string) => {}); // Error
-                             ^^^^^^ string
-
 Error: api.js:11
  11: na(Children.map(a, (x: string) => (x: string))); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. This type is incompatible with the expected param type of
@@ -41,9 +11,14 @@ Error: api.js:11
 
 Error: api.js:11
  11: na(Children.map(a, (x: string) => (x: string))); // Error
-                            ^^^^^^ string. This type is incompatible with an argument type of
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
 221:       fn: (child: $NonMaybeType<T>, index: number) => U,
-                       ^^^^^^^^^^^^^^^^ number. See lib: <BUILTINS>/react.js:221
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:221
+  This parameter is incompatible:
+    221:       fn: (child: $NonMaybeType<T>, index: number) => U,
+                           ^^^^^^^^^^^^^^^^ number. This type is incompatible with. See lib: <BUILTINS>/react.js:221
+     11: na(Children.map(a, (x: string) => (x: string))); // Error
+                                ^^^^^^ string
 
 Error: api.js:12
  12: sa(Children.map(a, (x: number) => (x: number))); // Error
@@ -55,6 +30,61 @@ Error: api.js:12
                                                ^^^^^^ number. This type is incompatible with
      31: function sa(x: Array<string>) {}
                               ^^^^^^ string
+
+Error: api.js:14
+ 14: Children.forEach(a, (x: number) => {}); // Error
+                         ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+226:       fn: (child: T, index: number) => mixed,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:226
+  This parameter is incompatible:
+      5: const a: ChildrenArray<?number> = [
+                                ^^^^^^^ null. This type is incompatible with
+     14: Children.forEach(a, (x: number) => {}); // Error
+                                 ^^^^^^ number
+
+Error: api.js:14
+ 14: Children.forEach(a, (x: number) => {}); // Error
+                         ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+226:       fn: (child: T, index: number) => mixed,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:226
+  This parameter is incompatible:
+      5: const a: ChildrenArray<?number> = [
+                                ^^^^^^^ undefined. This type is incompatible with
+     14: Children.forEach(a, (x: number) => {}); // Error
+                                 ^^^^^^ number
+
+Error: api.js:16
+ 16: Children.forEach(a, (x: string) => {}); // Error
+                         ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+226:       fn: (child: T, index: number) => mixed,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:226
+  This parameter is incompatible:
+      5: const a: ChildrenArray<?number> = [
+                                ^^^^^^^ null. This type is incompatible with
+     16: Children.forEach(a, (x: string) => {}); // Error
+                                 ^^^^^^ string
+
+Error: api.js:16
+ 16: Children.forEach(a, (x: string) => {}); // Error
+                         ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+226:       fn: (child: T, index: number) => mixed,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:226
+  This parameter is incompatible:
+      5: const a: ChildrenArray<?number> = [
+                                ^^^^^^^ undefined. This type is incompatible with
+     16: Children.forEach(a, (x: string) => {}); // Error
+                                 ^^^^^^ string
+
+Error: api.js:16
+ 16: Children.forEach(a, (x: string) => {}); // Error
+                         ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+226:       fn: (child: T, index: number) => mixed,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:226
+  This parameter is incompatible:
+      5: const a: ChildrenArray<?number> = [
+                                 ^^^^^^ number. This type is incompatible with
+     16: Children.forEach(a, (x: string) => {}); // Error
+                                 ^^^^^^ string
 
 Error: api.js:19
  19: s(Children.count(a)); // Error
@@ -329,10 +359,20 @@ Error: fun.js:37
  16: class Fun extends React.Component<{children: Fn}, void> {}
                                        ^^^^^^^^^^^^^^ object type
   Property `children` is incompatible:
-     42:     return '42'; // Error: Must return a number.
-                    ^^^^ string. This type is incompatible with
-     14: type Fn = (Data) => number;
-                             ^^^^^^ number
+            v--------
+     38:   {data => {
+     39:     (data.foo: number); // OK: `foo` is a number.
+     40:     (data.bar: string); // Error: `bar` is a number.
+    ...:
+     43:   }}
+           ^ function. This type is incompatible with
+     16: class Fun extends React.Component<{children: Fn}, void> {}
+                                                      ^^ function type
+      This parameter is incompatible:
+         42:     return '42'; // Error: Must return a number.
+                        ^^^^ string. This type is incompatible with
+         14: type Fn = (Data) => number;
+                                 ^^^^^^ number
 
 Error: fun.js:40
  40:     (data.bar: string); // Error: `bar` is a number.

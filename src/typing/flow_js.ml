@@ -805,6 +805,8 @@ module Cache = struct
             UseT (PropertyCompatibility (s, r1, r2, UnknownUse), t)
           | UseT (TypeArgCompatibility (s, r1, r2, use_op), t) when use_op <> UnknownUse ->
             UseT (TypeArgCompatibility (s, r1, r2, UnknownUse), t)
+          | UseT (FunParam { lower; upper; use_op }, t) when use_op <> UnknownUse ->
+            UseT (FunParam { lower; upper; use_op = UnknownUse }, t)
           | _ -> u in
         let found = FlowSet.cache (l, u) cache in
         if found && Context.is_verbose cx then
@@ -3788,10 +3790,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* function types deconstruct into their parts *)
     (***********************************************)
 
-    | DefT (_, FunT (_, _,
+    | DefT (lreason, FunT (_, _,
         ({ this_t = o1; params_tlist = _; params_names = p1;
           rest_param = _; is_predicate = ip1; return_t = t1; _ } as ft))),
-      UseT (use_op, DefT (reason, FunT (_, _,
+      UseT (use_op, DefT (ureason, FunT (_, _,
         { this_t = o2; params_tlist = tins2; params_names = p2;
           rest_param = rest2; is_predicate = ip2; return_t = t2; _ })))
       ->
@@ -3800,7 +3802,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let args = List.rev (match rest2 with
       | Some (_, _, rest) -> (SpreadArg rest) :: args
       | None -> args) in
-      multiflow_subtype cx trace ~use_op:FunCallParam reason args ft;
+      let use_op = FunParam { lower = lreason; upper = ureason; use_op } in
+      multiflow_subtype cx trace ~use_op ureason args ft;
 
       (* Well-formedness adjustment: If this is predicate function subtyping,
          make sure to apply a latent substitution on the right-hand use to
@@ -6038,7 +6041,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         extras = [];
       })
 
-    | _, UseT ((PropertyCompatibility _ | TypeArgCompatibility _) as use_op, u) ->
+    | _, UseT (FunParam _ as use_op, u)
+    | _, UseT (PropertyCompatibility _ as use_op, u)
+    | _, UseT (TypeArgCompatibility _ as use_op, u) ->
       add_output cx ~trace (FlowError.EIncompatibleWithUseOp (
         reason_of_t l, reason_of_t u, use_op
       ))

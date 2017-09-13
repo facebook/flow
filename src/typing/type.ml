@@ -285,6 +285,7 @@ module rec TypeTerm : sig
     | FunCallParam
     | FunCallThis of reason
     | FunImplicitReturn
+    | FunParam of { lower: reason; upper: reason; use_op: use_op }
     | FunReturn
     | Internal of internal_use_op
     | MissingTupleElement of int
@@ -2290,6 +2291,7 @@ let string_of_use_op = function
   | FunCallParam -> "FunCallParam"
   | FunCallThis _ -> "FunCallThis"
   | FunImplicitReturn -> "FunImplicitReturn"
+  | FunParam _ -> "FunParam"
   | FunReturn -> "FunReturn"
   | Internal op -> spf "Internal %s" (string_of_internal_use_op op)
   | MissingTupleElement _ -> "MissingTupleElement"

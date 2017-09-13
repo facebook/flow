@@ -12,9 +12,14 @@ Error: advanced_arrows.js:11
 
 Error: arrows.js:7
   7:     images = images.sort((a, b) => (a.width - b.width) + "");
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with the expected param type of
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
 272:     sort(compareFn?: (a: T, b: T) => number): Array<T>;
-                                          ^^^^^^ number. See lib: <BUILTINS>/core.js:272
+                          ^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:272
+  This parameter is incompatible:
+      7:     images = images.sort((a, b) => (a.width - b.width) + "");
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+    272:     sort(compareFn?: (a: T, b: T) => number): Array<T>;
+                                              ^^^^^^ number. See lib: <BUILTINS>/core.js:272
 
 
 Found 3 errors

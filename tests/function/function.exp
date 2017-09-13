@@ -266,11 +266,16 @@ Error: rest.js:53
  53: (empty_rest(): empty); // Error Array ~> empty
                     ^^^^^ empty
 
-Error: rest.js:59
- 59:     return args; // Error: Array ~> number
-                ^^^^ rest parameter array of function type. This type is incompatible with the expected return type of
+Error: rest.js:58
+ 58:   return function(...args) {
+              ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected return type of
  57: ): (...args: Args) => number {
-                           ^^^^^^ number
+        ^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+  This parameter is incompatible:
+     59:     return args; // Error: Array ~> number
+                    ^^^^ rest parameter array of function type. This type is incompatible with
+     57: ): (...args: Args) => number {
+                               ^^^^^^ number
 
 Error: rest.js:64
  64: requires_first_param(); // Error: missing first arg

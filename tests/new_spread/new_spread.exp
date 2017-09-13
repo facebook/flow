@@ -1,46 +1,66 @@
-Error: cross_module/fn.js:3
-  3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
-                                         ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
+Error: cross_module/app.js:5
   5: const app = fn((o: {a: number, b: number}) => {});
-                        ^^^^^^^^^^^^^^^^^^^^^^ object type. See: cross_module/app.js:5
-  Property `a` is incompatible:
-      5: const app = fn((o: {a: number, b: number}) => {});
-                                ^^^^^^ number. This type is incompatible with. See: cross_module/app.js:5
-      6: app({a: 'foo', b: 2});
-                 ^^^^^ string. See: cross_module/app.js:6
-
-Error: cross_module/fn.js:3
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
   3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
-                                         ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: cross_module/fn.js:3
+  This parameter is incompatible:
+      3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
+                                             ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See: cross_module/fn.js:3
+      5: const app = fn((o: {a: number, b: number}) => {});
+                            ^^^^^^^^^^^^^^^^^^^^^^ object type
+      Property `a` is incompatible:
+          5: const app = fn((o: {a: number, b: number}) => {});
+                                    ^^^^^^ number. This type is incompatible with
+          6: app({a: 'foo', b: 2});
+                     ^^^^^ string
+
+Error: cross_module/app.js:5
   5: const app = fn((o: {a: number, b: number}) => {});
-                        ^^^^^^^^^^^^^^^^^^^^^^ object type. See: cross_module/app.js:5
-  Property `a` is incompatible:
-      6: app({a: 'foo', b: 2});
-                 ^^^^^ string. This type is incompatible with. See: cross_module/app.js:6
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+  3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: cross_module/fn.js:3
+  This parameter is incompatible:
+      3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
+                                             ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See: cross_module/fn.js:3
       5: const app = fn((o: {a: number, b: number}) => {});
-                                ^^^^^^ number. See: cross_module/app.js:5
+                            ^^^^^^^^^^^^^^^^^^^^^^ object type
+      Property `a` is incompatible:
+          6: app({a: 'foo', b: 2});
+                     ^^^^^ string. This type is incompatible with
+          5: const app = fn((o: {a: number, b: number}) => {});
+                                    ^^^^^^ number
 
-Error: cross_module/fn.js:3
-  3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
-                                         ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
+Error: cross_module/app.js:8
   8: export default fn((o: {a: number, b: number}) => {});
-                           ^^^^^^^^^^^^^^^^^^^^^^ object type. See: cross_module/app.js:8
-  Property `a` is incompatible:
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+  3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: cross_module/fn.js:3
+  This parameter is incompatible:
+      3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
+                                             ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See: cross_module/fn.js:3
       8: export default fn((o: {a: number, b: number}) => {});
-                                   ^^^^^^ number. This type is incompatible with. See: cross_module/app.js:8
-      5: app({a: 'foo', b: 2});
-                 ^^^^^ string. See: cross_module/use.js:5
+                               ^^^^^^^^^^^^^^^^^^^^^^ object type
+      Property `a` is incompatible:
+          8: export default fn((o: {a: number, b: number}) => {});
+                                       ^^^^^^ number. This type is incompatible with
+          5: app({a: 'foo', b: 2});
+                     ^^^^^ string. See: cross_module/use.js:5
 
-Error: cross_module/fn.js:3
-  3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
-                                         ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
+Error: cross_module/app.js:8
   8: export default fn((o: {a: number, b: number}) => {});
-                           ^^^^^^^^^^^^^^^^^^^^^^ object type. See: cross_module/app.js:8
-  Property `a` is incompatible:
-      5: app({a: 'foo', b: 2});
-                 ^^^^^ string. This type is incompatible with. See: cross_module/use.js:5
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+  3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See: cross_module/fn.js:3
+  This parameter is incompatible:
+      3: export default function fn<A>(arg: ({...A, c: number}) => void): A => void {
+                                             ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See: cross_module/fn.js:3
       8: export default fn((o: {a: number, b: number}) => {});
-                                   ^^^^^^ number. See: cross_module/app.js:8
+                               ^^^^^^^^^^^^^^^^^^^^^^ object type
+      Property `a` is incompatible:
+          5: app({a: 'foo', b: 2});
+                     ^^^^^ string. This type is incompatible with. See: cross_module/use.js:5
+          8: export default fn((o: {a: number, b: number}) => {});
+                                       ^^^^^^ number
 
 Error: type.js:7
   7: declare var nil: {||};

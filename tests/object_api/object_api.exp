@@ -88,9 +88,14 @@ Error: object_prototype.js:38
 
 Error: object_prototype.js:39
  39: var xToString2 : () => number = x.toString; // error
-                            ^^^^^^ number. This type is incompatible with
- 57:     toString(): string;
-                     ^^^^^^ string. See lib: <BUILTINS>/core.js:57
+                                     ^^^^^^^^^^ function type. This type is incompatible with
+ 39: var xToString2 : () => number = x.toString; // error
+                      ^^^^^^^^^^^^ function type
+  This parameter is incompatible:
+     57:     toString(): string;
+                         ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/core.js:57
+     39: var xToString2 : () => number = x.toString; // error
+                                ^^^^^^ number
 
 Error: object_prototype.js:43
  43: var yToString : number = y.toString; // error
@@ -130,9 +135,14 @@ Error: object_prototype.js:71
 
 Error: object_prototype.js:72
  72: var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
-                                              ^^^^^^ number. This type is incompatible with
- 53:     hasOwnProperty(prop: any): boolean;
-                                    ^^^^^^^ boolean. See lib: <BUILTINS>/core.js:53
+                                                       ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+ 72: var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ function type
+  This parameter is incompatible:
+     53:     hasOwnProperty(prop: any): boolean;
+                                        ^^^^^^^ boolean. This type is incompatible with. See lib: <BUILTINS>/core.js:53
+     72: var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
+                                                  ^^^^^^ number
 
 Error: object_prototype.js:76
  76: var yHasOwnProperty : number = y.hasOwnProperty; // error
@@ -152,11 +162,16 @@ Error: object_prototype.js:96
  96: var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
                                  ^^^^^^ number
 
-Error: object_prototype.js:97
+Error: object_prototype.js:98
+ 98:   x.propertyIsEnumerable; // error
+       ^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
  97: var xPropertyIsEnumerable2 : (prop: string) => number =
-                                                    ^^^^^^ number. This type is incompatible with
- 55:     propertyIsEnumerable(prop: any): boolean;
-                                          ^^^^^^^ boolean. See lib: <BUILTINS>/core.js:55
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^ function type
+  This parameter is incompatible:
+     55:     propertyIsEnumerable(prop: any): boolean;
+                                              ^^^^^^^ boolean. This type is incompatible with. See lib: <BUILTINS>/core.js:55
+     97: var xPropertyIsEnumerable2 : (prop: string) => number =
+                                                        ^^^^^^ number
 
 Error: object_prototype.js:102
 102: var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
@@ -196,9 +211,14 @@ Error: object_prototype.js:150
 
 Error: object_prototype.js:151
 151: var xToLocaleString2 : () => number = x.toLocaleString; // error
-                                  ^^^^^^ number. This type is incompatible with
-410:     toLocaleString(locales?: string | Array<string>, options?: Date$LocaleOptions): string;
-                                                                                         ^^^^^^ string. See lib: <BUILTINS>/core.js:410
+                                           ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+151: var xToLocaleString2 : () => number = x.toLocaleString; // error
+                            ^^^^^^^^^^^^ function type
+  This parameter is incompatible:
+    410:     toLocaleString(locales?: string | Array<string>, options?: Date$LocaleOptions): string;
+                                                                                             ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/core.js:410
+    151: var xToLocaleString2 : () => number = x.toLocaleString; // error
+                                      ^^^^^^ number
 
 Error: object_prototype.js:155
 155: var yToLocaleString : number = y.toLocaleString; // error

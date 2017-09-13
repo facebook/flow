@@ -590,9 +590,14 @@ Error: MutationObserver.js:11
 
 Error: MutationObserver.js:12
  12: new MutationObserver((n: number) => {}); // incorrect
-                              ^^^^^^ number. This type is incompatible with an argument type of
+                          ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
 363:     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => any): void;
-                                     ^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/bom.js:363
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/bom.js:363
+  This parameter is incompatible:
+    363:     constructor(callback: (arr: Array<MutationRecord>, observer: MutationObserver) => any): void;
+                                         ^^^^^^^^^^^^^^^^^^^^^ array type. This type is incompatible with. See lib: <BUILTINS>/bom.js:363
+     12: new MutationObserver((n: number) => {}); // incorrect
+                                  ^^^^^^ number
 
 Error: MutationObserver.js:18
  18: o.observe(); // incorrect

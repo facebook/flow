@@ -1,8 +1,13 @@
 Error: annot.js:4
   4: var bar: (str:number, i:number)=> string = foo;
-                   ^^^^^^ number. This type is incompatible with the expected param type of
-  1: function foo(str:string, i:number):string {
-                      ^^^^^^ string
+                                                ^^^ function. This type is incompatible with
+  4: var bar: (str:number, i:number)=> string = foo;
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+  This parameter is incompatible:
+      4: var bar: (str:number, i:number)=> string = foo;
+                       ^^^^^^ number. This type is incompatible with
+      1: function foo(str:string, i:number):string {
+                          ^^^^^^ string
 
 Error: annot.js:6
   6: var qux = function(str:string, i:number):number { return foo(str,i); }

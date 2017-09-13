@@ -288,17 +288,97 @@ Error: path2d.js:9
   1417:   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
                                                                                           ^^^^^^ number. See lib: <BUILTINS>/dom.js:1417
 
-Error: registerElement.js:52
- 52:           oldVal: string, // Error: This might be null
-                       ^^^^^^ string. This type is incompatible with an argument type of
-531:       oldAttributeValue: null,
-                              ^^^^ null. See lib: <BUILTINS>/dom.js:531
+Error: registerElement.js:48
+                                                    v
+ 48:     document.registerElement('custom-element', {
+ 49:       prototype: {
+ 50:         attributeChangedCallback(
+...:
+ 56:     });
+         ^ object literal. This type is incompatible with the expected param type of
+719:   registerElement(type: string, options?: ElementRegistrationOptions): any;
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:719
+  Property `prototype` is incompatible:
+                          v
+     49:       prototype: {
+     50:         attributeChangedCallback(
+     51:           localName: string,
+    ...:
+     55:       },
+               ^ object literal. This type is incompatible with
+                        v
+    522:   +prototype?: {
+    523:     // from https://www.w3.org/TR/custom-elements/#types-of-callbacks
+    524:     +createdCallback?: () => mixed;
+    ...:
+    549:   };
+           ^ object type. See lib: <BUILTINS>/dom.js:522
+      Property `attributeChangedCallback` is incompatible:
+                                             v
+         50:         attributeChangedCallback(
+         51:           localName: string,
+         52:           oldVal: string, // Error: This might be null
+         53:           newVal: string, // Error: This might be null
+         54:           namespace: string) {}
+                       -----------------^ function. This type is incompatible with
+                  v
+        529:     ((
+        530:       attributeLocalName: string,
+        531:       oldAttributeValue: null,
+        ...:
+        534:     ) => mixed) &
+                 ---------^ function type. See lib: <BUILTINS>/dom.js:529
+          This parameter is incompatible:
+            531:       oldAttributeValue: null,
+                                          ^^^^ null. This type is incompatible with. See lib: <BUILTINS>/dom.js:531
+             52:           oldVal: string, // Error: This might be null
+                                   ^^^^^^ string
 
-Error: registerElement.js:53
- 53:           newVal: string, // Error: This might be null
-                       ^^^^^^ string. This type is incompatible with an argument type of
-546:       newAttributeValue: null,
-                              ^^^^ null. See lib: <BUILTINS>/dom.js:546
+Error: registerElement.js:48
+                                                    v
+ 48:     document.registerElement('custom-element', {
+ 49:       prototype: {
+ 50:         attributeChangedCallback(
+...:
+ 56:     });
+         ^ object literal. This type is incompatible with the expected param type of
+719:   registerElement(type: string, options?: ElementRegistrationOptions): any;
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:719
+  Property `prototype` is incompatible:
+                          v
+     49:       prototype: {
+     50:         attributeChangedCallback(
+     51:           localName: string,
+    ...:
+     55:       },
+               ^ object literal. This type is incompatible with
+                        v
+    522:   +prototype?: {
+    523:     // from https://www.w3.org/TR/custom-elements/#types-of-callbacks
+    524:     +createdCallback?: () => mixed;
+    ...:
+    549:   };
+           ^ object type. See lib: <BUILTINS>/dom.js:522
+      Property `attributeChangedCallback` is incompatible:
+                                             v
+         50:         attributeChangedCallback(
+         51:           localName: string,
+         52:           oldVal: string, // Error: This might be null
+         53:           newVal: string, // Error: This might be null
+         54:           namespace: string) {}
+                       -----------------^ function. This type is incompatible with
+                  v
+        543:     ((
+        544:       attributeLocalName: string,
+        545:       oldAttributeValue: string,
+        ...:
+        548:     ) => mixed);
+                 ---------^ function type. See lib: <BUILTINS>/dom.js:543
+          This parameter is incompatible:
+            546:       newAttributeValue: null,
+                                          ^^^^ null. This type is incompatible with. See lib: <BUILTINS>/dom.js:546
+             53:           newVal: string, // Error: This might be null
+                                   ^^^^^^ string
 
 Error: traversal.js:29
  29:     document.createNodeIterator({}); // invalid
@@ -1002,45 +1082,12 @@ Error: traversal.js:33
 
 Error: traversal.js:186
 186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
-                                                                ^^^^^^^^ string. This type is incompatible with
-      v--------------------------------
-3196: typeof NodeFilter.FILTER_ACCEPT |
-3197: typeof NodeFilter.FILTER_REJECT |
-3198: typeof NodeFilter.FILTER_SKIP;
-      ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3196
-  Member 1:
-  3196: typeof NodeFilter.FILTER_ACCEPT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3196
-  Error:
-  186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
-                                                                  ^^^^^^^^ string. This type is incompatible with
-  3196: typeof NodeFilter.FILTER_ACCEPT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3196
-  Member 2:
-  3197: typeof NodeFilter.FILTER_REJECT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_REJECT'). See lib: <BUILTINS>/dom.js:3197
-  Error:
-  186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
-                                                                  ^^^^^^^^ string. This type is incompatible with
-  3197: typeof NodeFilter.FILTER_REJECT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3197
-  Member 3:
-  3198: typeof NodeFilter.FILTER_SKIP;
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3198
-  Error:
-  186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
-                                                                  ^^^^^^^^ string. This type is incompatible with
-  3198: typeof NodeFilter.FILTER_SKIP;
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3198
-
-Error: traversal.js:188
-188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                                                        ^^^^^^^^^^^^^^^^ function. This type is incompatible with
 3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3200
-  Property `acceptNode` is incompatible:
-    188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                  ^^^^^^^^ string. This type is incompatible with
+                                 ^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:3200
+  This parameter is incompatible:
+    186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
+                                                                    ^^^^^^^^ string. This type is incompatible with
           v--------------------------------
     3196: typeof NodeFilter.FILTER_ACCEPT |
     3197: typeof NodeFilter.FILTER_REJECT |
@@ -1050,26 +1097,69 @@ Error: traversal.js:188
       3196: typeof NodeFilter.FILTER_ACCEPT |
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3196
       Error:
-      188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                    ^^^^^^^^ string. This type is incompatible with
+      186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
+                                                                      ^^^^^^^^ string. This type is incompatible with
       3196: typeof NodeFilter.FILTER_ACCEPT |
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3196
       Member 2:
       3197: typeof NodeFilter.FILTER_REJECT |
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_REJECT'). See lib: <BUILTINS>/dom.js:3197
       Error:
-      188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                    ^^^^^^^^ string. This type is incompatible with
+      186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
+                                                                      ^^^^^^^^ string. This type is incompatible with
       3197: typeof NodeFilter.FILTER_REJECT |
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3197
       Member 3:
       3198: typeof NodeFilter.FILTER_SKIP;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3198
       Error:
-      188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                    ^^^^^^^^ string. This type is incompatible with
+      186:     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
+                                                                      ^^^^^^^^ string. This type is incompatible with
       3198: typeof NodeFilter.FILTER_SKIP;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3198
+
+Error: traversal.js:188
+188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3200
+  Property `acceptNode` is incompatible:
+    188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                          ^^^^^^^^^^^^^^^^ function. This type is incompatible with
+    3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
+                                                                        ^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:3200
+      This parameter is incompatible:
+        188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                      ^^^^^^^^ string. This type is incompatible with
+              v--------------------------------
+        3196: typeof NodeFilter.FILTER_ACCEPT |
+        3197: typeof NodeFilter.FILTER_REJECT |
+        3198: typeof NodeFilter.FILTER_SKIP;
+              ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3196
+          Member 1:
+          3196: typeof NodeFilter.FILTER_ACCEPT |
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3196
+          Error:
+          188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                        ^^^^^^^^ string. This type is incompatible with
+          3196: typeof NodeFilter.FILTER_ACCEPT |
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3196
+          Member 2:
+          3197: typeof NodeFilter.FILTER_REJECT |
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_REJECT'). See lib: <BUILTINS>/dom.js:3197
+          Error:
+          188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                        ^^^^^^^^ string. This type is incompatible with
+          3197: typeof NodeFilter.FILTER_REJECT |
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3197
+          Member 3:
+          3198: typeof NodeFilter.FILTER_SKIP;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3198
+          Error:
+          188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                        ^^^^^^^^ string. This type is incompatible with
+          3198: typeof NodeFilter.FILTER_SKIP;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3198
 
 Error: traversal.js:189
 189:     document.createNodeIterator(document_body, -1, {}); // invalid
@@ -1444,45 +1534,12 @@ Error: traversal.js:189
 
 Error: traversal.js:193
 193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
-                                                              ^^^^^^^^ string. This type is incompatible with
-      v--------------------------------
-3196: typeof NodeFilter.FILTER_ACCEPT |
-3197: typeof NodeFilter.FILTER_REJECT |
-3198: typeof NodeFilter.FILTER_SKIP;
-      ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3196
-  Member 1:
-  3196: typeof NodeFilter.FILTER_ACCEPT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3196
-  Error:
-  193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
-                                                                ^^^^^^^^ string. This type is incompatible with
-  3196: typeof NodeFilter.FILTER_ACCEPT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3196
-  Member 2:
-  3197: typeof NodeFilter.FILTER_REJECT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_REJECT'). See lib: <BUILTINS>/dom.js:3197
-  Error:
-  193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
-                                                                ^^^^^^^^ string. This type is incompatible with
-  3197: typeof NodeFilter.FILTER_REJECT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3197
-  Member 3:
-  3198: typeof NodeFilter.FILTER_SKIP;
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3198
-  Error:
-  193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
-                                                                ^^^^^^^^ string. This type is incompatible with
-  3198: typeof NodeFilter.FILTER_SKIP;
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3198
-
-Error: traversal.js:195
-195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                                                      ^^^^^^^^^^^^^^^^ function. This type is incompatible with
 3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3200
-  Property `acceptNode` is incompatible:
-    195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                ^^^^^^^^ string. This type is incompatible with
+                                 ^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:3200
+  This parameter is incompatible:
+    193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
+                                                                  ^^^^^^^^ string. This type is incompatible with
           v--------------------------------
     3196: typeof NodeFilter.FILTER_ACCEPT |
     3197: typeof NodeFilter.FILTER_REJECT |
@@ -1492,26 +1549,69 @@ Error: traversal.js:195
       3196: typeof NodeFilter.FILTER_ACCEPT |
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3196
       Error:
-      195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                  ^^^^^^^^ string. This type is incompatible with
+      193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
+                                                                    ^^^^^^^^ string. This type is incompatible with
       3196: typeof NodeFilter.FILTER_ACCEPT |
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3196
       Member 2:
       3197: typeof NodeFilter.FILTER_REJECT |
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_REJECT'). See lib: <BUILTINS>/dom.js:3197
       Error:
-      195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                  ^^^^^^^^ string. This type is incompatible with
+      193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
+                                                                    ^^^^^^^^ string. This type is incompatible with
       3197: typeof NodeFilter.FILTER_REJECT |
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3197
       Member 3:
       3198: typeof NodeFilter.FILTER_SKIP;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3198
       Error:
-      195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                  ^^^^^^^^ string. This type is incompatible with
+      193:     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
+                                                                    ^^^^^^^^ string. This type is incompatible with
       3198: typeof NodeFilter.FILTER_SKIP;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3198
+
+Error: traversal.js:195
+195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3200
+  Property `acceptNode` is incompatible:
+    195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                        ^^^^^^^^^^^^^^^^ function. This type is incompatible with
+    3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
+                                                                        ^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:3200
+      This parameter is incompatible:
+        195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                    ^^^^^^^^ string. This type is incompatible with
+              v--------------------------------
+        3196: typeof NodeFilter.FILTER_ACCEPT |
+        3197: typeof NodeFilter.FILTER_REJECT |
+        3198: typeof NodeFilter.FILTER_SKIP;
+              ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3196
+          Member 1:
+          3196: typeof NodeFilter.FILTER_ACCEPT |
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3196
+          Error:
+          195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                      ^^^^^^^^ string. This type is incompatible with
+          3196: typeof NodeFilter.FILTER_ACCEPT |
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3196
+          Member 2:
+          3197: typeof NodeFilter.FILTER_REJECT |
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_REJECT'). See lib: <BUILTINS>/dom.js:3197
+          Error:
+          195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                      ^^^^^^^^ string. This type is incompatible with
+          3197: typeof NodeFilter.FILTER_REJECT |
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3197
+          Member 3:
+          3198: typeof NodeFilter.FILTER_SKIP;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3198
+          Error:
+          195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                      ^^^^^^^^ string. This type is incompatible with
+          3198: typeof NodeFilter.FILTER_SKIP;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3198
 
 Error: traversal.js:196
 196:     document.createTreeWalker(document_body, -1, {}); // invalid

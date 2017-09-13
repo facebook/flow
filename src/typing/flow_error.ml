@@ -296,6 +296,8 @@ let rec locs_of_use_op acc = function
   | SetProperty reason -> (loc_of_reason reason)::acc
   | TypeArgCompatibility (_, r1, r2, use_op) ->
     locs_of_use_op (loc_of_reason r1::loc_of_reason r2::acc) use_op
+  | FunParam { lower; upper; use_op } ->
+    locs_of_use_op (loc_of_reason lower::loc_of_reason upper::acc) use_op
   | Addition
   | Coercion
   | FunImplicitReturn
@@ -662,6 +664,12 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       else "This type is incompatible with an argument type of"
     in
     reasons', extra, msg
+  | FunParam { lower; upper; use_op } ->
+    let extra =
+      extra_info_of_use_op reasons extra msg "This parameter is incompatible:"
+    in
+    let msg = "This type is incompatible with" in
+    unwrap_use_ops ((lower, upper), extra, msg) use_op
   | SetProperty reason_op ->
     let rl, ru = reasons in
     let ru = replace_reason_const (desc_of_reason ru) reason_op in
