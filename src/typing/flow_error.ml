@@ -617,8 +617,9 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       l_reason u_reason nested_extra msg
       (spf "Property `%s` is incompatible:" prop_name)
     in
+    let obj_reasons = ordered_reasons lower_obj_reason upper_obj_reason in
     let msg = "This type is incompatible with" in
-    unwrap_use_ops ((lower_obj_reason, upper_obj_reason), extra, msg) use_op
+    unwrap_use_ops (obj_reasons, extra, msg) use_op
   | FunReturn ->
     let msg =
       "This type is incompatible with the expected return type of" in

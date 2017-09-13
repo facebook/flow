@@ -1,43 +1,4 @@
 Library type error:
-<BUILTINS>/react.js:159
-                                                                   v-
-159: declare type React$Element<+ElementType: React$ElementType> = {|
-160:   +type: ElementType,
-161:   +props: React$ElementProps<ElementType>,
-...:
-164: |};
-     -^ object type. This type is incompatible with
- 39: var foo: $jsx<number> = <Foo/>;
-              ^^^^^^^^^^^^ object type. See: classes.js:39
-  Property `type` is incompatible:
-      7: class Foo extends React.Component<Props, State> {
-               ^^^ class type: Foo. This type is incompatible with. See: classes.js:7
-     39: var foo: $jsx<number> = <Foo/>;
-                       ^^^^^^ number. See: classes.js:39
-
-Library type error:
-<BUILTINS>/react.js:159
-                                                                   v-
-159: declare type React$Element<+ElementType: React$ElementType> = {|
-160:   +type: ElementType,
-161:   +props: React$ElementProps<ElementType>,
-...:
-164: |};
-     -^ object type. This type is incompatible with
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                     ^^^^^^^^^^^^ object type. See: classes.js:79
-  Property `type` is incompatible:
-                         v------------------
-     43: var FooLegacy = React.createClass({
-     44:   is_mounted: (undefined: ?boolean),
-     45: 
-    ...:
-     76: });
-         -^ class type: React component. This type is incompatible with. See: classes.js:43
-     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                              ^^^^^^ number. See: classes.js:79
-
-Library type error:
 <BUILTINS>/react.js:161
 161:   +props: React$ElementProps<ElementType>,
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `w`. Property not found in
@@ -96,6 +57,22 @@ Error: classes.js:38
                         ^ number. This type is incompatible with
  38: Foo.defaultProps = 0;
      ^^^^^^^^^^^^^^^^ object type
+
+Error: classes.js:39
+ 39: var foo: $jsx<number> = <Foo/>;
+              ^^^^^^^^^^^^ object type. This type is incompatible with
+                                                                   v-
+159: declare type React$Element<+ElementType: React$ElementType> = {|
+160:   +type: ElementType,
+161:   +props: React$ElementProps<ElementType>,
+...:
+164: |};
+     -^ object type. See lib: <BUILTINS>/react.js:159
+  Property `type` is incompatible:
+      7: class Foo extends React.Component<Props, State> {
+               ^^^ class type: Foo. This type is incompatible with
+     39: var foo: $jsx<number> = <Foo/>;
+                       ^^^^^^ number
 
 Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
@@ -170,6 +147,27 @@ Error: classes.js:64
                    ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
  38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:38
+
+Error: classes.js:79
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                     ^^^^^^^^^^^^ object type. This type is incompatible with
+                                                                   v-
+159: declare type React$Element<+ElementType: React$ElementType> = {|
+160:   +type: ElementType,
+161:   +props: React$ElementProps<ElementType>,
+...:
+164: |};
+     -^ object type. See lib: <BUILTINS>/react.js:159
+  Property `type` is incompatible:
+                         v------------------
+     43: var FooLegacy = React.createClass({
+     44:   is_mounted: (undefined: ?boolean),
+     45: 
+    ...:
+     76: });
+         -^ class type: React component. This type is incompatible with
+     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                              ^^^^^^ number
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;

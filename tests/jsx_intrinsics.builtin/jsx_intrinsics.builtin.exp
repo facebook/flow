@@ -1,21 +1,4 @@
 Library type error:
-<BUILTINS>/react.js:159
-                                                                   v-
-159: declare type React$Element<+ElementType: React$ElementType> = {|
-160:   +type: ElementType,
-161:   +props: React$ElementProps<ElementType>,
-...:
-164: |};
-     -^ object type. This type is incompatible with
- 11: var b: Element<typeof CustomComponentNope> =
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: main.js:11
-  Property `type` is incompatible:
-      6: class CustomComponent extends React.Component<{prop: string}, void> {}
-               ^^^^^^^^^^^^^^^ CustomComponent. This type is incompatible with. See: main.js:6
-      7: class CustomComponentNope extends React.Component<{prop: string}, void> {}
-               ^^^^^^^^^^^^^^^^^^^ CustomComponentNope. See: main.js:7
-
-Library type error:
 <BUILTINS>/react.js:161
 161:   +props: React$ElementProps<ElementType>,
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `prop1`. Property not found in
@@ -27,6 +10,22 @@ Error: main.js:6
                                                    ^^^^^^^^^^^^^^ property `prop`. Property not found in
  13: var c: Element<Class<React.Component<{prop1: string}, void>>> =
                                           ^^^^^^^^^^^^^^^ object type
+
+Error: main.js:11
+ 11: var b: Element<typeof CustomComponentNope> =
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                                                   v-
+159: declare type React$Element<+ElementType: React$ElementType> = {|
+160:   +type: ElementType,
+161:   +props: React$ElementProps<ElementType>,
+...:
+164: |};
+     -^ object type. See lib: <BUILTINS>/react.js:159
+  Property `type` is incompatible:
+      6: class CustomComponent extends React.Component<{prop: string}, void> {}
+               ^^^^^^^^^^^^^^^ CustomComponent. This type is incompatible with
+      7: class CustomComponentNope extends React.Component<{prop: string}, void> {}
+               ^^^^^^^^^^^^^^^^^^^ CustomComponentNope
 
 Error: main.js:13
  13: var c: Element<Class<React.Component<{prop1: string}, void>>> =

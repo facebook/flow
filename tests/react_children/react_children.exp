@@ -1078,15 +1078,15 @@ Error: tabs.js:67
    17:   | React$Element<typeof Tab>
            ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
   Error:
+   17:   | React$Element<typeof Tab>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
                                                                      v-
   159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
   164: |};
-       -^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:159
-   17:   | React$Element<typeof Tab>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+       -^ object type. See lib: <BUILTINS>/react.js:159
     Property `type` is incompatible:
        11: class NotTab extends React.Component<{}, void> {}
                  ^^^^^^ NotTab. This type is incompatible with
@@ -1156,15 +1156,15 @@ Error: tabs.js:68
    17:   | React$Element<typeof Tab>
            ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
   Error:
+   17:   | React$Element<typeof Tab>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
                                                                      v-
   159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
   164: |};
-       -^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:159
-   17:   | React$Element<typeof Tab>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+       -^ object type. See lib: <BUILTINS>/react.js:159
     Property `type` is incompatible:
        11: class NotTab extends React.Component<{}, void> {}
                  ^^^^^^ NotTab. This type is incompatible with
@@ -1234,15 +1234,15 @@ Error: tabs.js:68
    17:   | React$Element<typeof Tab>
            ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
   Error:
+   17:   | React$Element<typeof Tab>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
                                                                      v-
   159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
   164: |};
-       -^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:159
-   17:   | React$Element<typeof Tab>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+       -^ object type. See lib: <BUILTINS>/react.js:159
     Property `type` is incompatible:
        11: class NotTab extends React.Component<{}, void> {}
                  ^^^^^^ NotTab. This type is incompatible with
@@ -1312,15 +1312,15 @@ Error: tabs.js:73
    17:   | React$Element<typeof Tab>
            ^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `React$Element`
   Error:
+   17:   | React$Element<typeof Tab>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
                                                                      v-
   159: declare type React$Element<+ElementType: React$ElementType> = {|
   160:   +type: ElementType,
   161:   +props: React$ElementProps<ElementType>,
   ...:
   164: |};
-       -^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:159
-   17:   | React$Element<typeof Tab>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+       -^ object type. See lib: <BUILTINS>/react.js:159
     Property `type` is incompatible:
        11: class NotTab extends React.Component<{}, void> {}
                  ^^^^^^ NotTab. This type is incompatible with
