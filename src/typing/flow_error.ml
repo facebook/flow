@@ -86,7 +86,7 @@ type error_message =
   | EExpectedBooleanLit of (reason * reason) * bool * bool option
   | EPropNotFound of (reason * reason) * use_op
   | EPropAccess of (reason * reason) * string option * Type.polarity * Type.rw
-  | EPropPolarityMismatch of (reason * reason) * string option * (Type.polarity * Type.polarity)
+  | EPropPolarityMismatch of (reason * reason) * string option * (Type.polarity * Type.polarity) * use_op
   | EPolarityMismatch of {
       reason: reason;
       name: string;
@@ -341,8 +341,8 @@ let locs_of_error_message = function
       (loc_of_reason reason1)::(loc_of_reason reason2)::(locs_of_use_op [] use_op)
   | EPropAccess ((reason1, reason2), _, _, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | EPropPolarityMismatch ((reason1, reason2), _, _) ->
-      [loc_of_reason reason1; loc_of_reason reason2]
+  | EPropPolarityMismatch ((reason1, reason2), _, _, use_op) ->
+      (loc_of_reason reason1)::(loc_of_reason reason2)::(locs_of_use_op [] use_op)
   | EPolarityMismatch { reason; _ } -> [loc_of_reason reason]
   | EStrictLookupFailed ((reason1, reason2), _, _, use_op) ->
       let use_op_locs = match use_op with
@@ -572,17 +572,15 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     typecheck_error_with_core_infos ?suppress_op ?extra core_msgs
   in
 
-  let prop_polarity_error reasons x p1 p2 =
+  let prop_polarity_error_msg x p1 p2 =
     let prop_name = match x with
     | Some x -> spf "property `%s`" x
     | None -> "computed property"
     in
-    let msg = spf "%s %s incompatible with %s use in"
+    spf "%s %s incompatible with %s use in"
       (String.capitalize_ascii (Polarity.string p1))
       prop_name
       (Polarity.string p2)
-    in
-    typecheck_error msg reasons
   in
 
   let extra_info_of_use_op (rl, ru) extra msg wrapper_msg =
@@ -812,10 +810,13 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       typecheck_error ~extra msg reasons
 
   | EPropAccess (reasons, x, polarity, rw) ->
-      prop_polarity_error reasons x polarity (Polarity.of_rw rw)
+      let msg = prop_polarity_error_msg x polarity (Polarity.of_rw rw) in
+      typecheck_error msg reasons
 
-  | EPropPolarityMismatch (reasons, x, (p1, p2)) ->
-      prop_polarity_error reasons x p1 p2
+  | EPropPolarityMismatch (reasons, x, (p1, p2), use_op) ->
+      let msg = prop_polarity_error_msg x p1 p2 in
+      let reasons, extra, msg = unwrap_use_ops (reasons, [], msg) use_op in
+      typecheck_error ~extra msg reasons
 
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
       mk_error ~trace_infos [mk_info reason [spf

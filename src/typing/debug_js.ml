@@ -2356,8 +2356,8 @@ let dump_flow_error =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (match x with Some x -> spf "%S" x | None -> "(computed)")
-    | EPropPolarityMismatch ((reason1, reason2), x, _) ->
-        spf "EPropPolarityMismatch ((%s, %s), %s, _)"
+    | EPropPolarityMismatch ((reason1, reason2), x, _, _) ->
+        spf "EPropPolarityMismatch ((%s, %s), %s, _, _)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (match x with Some x -> spf "%S" x | None -> "(computed)")

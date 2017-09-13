@@ -21,9 +21,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:50
            50: (roA: RWA);
-                ^^^ object type. Covariant property \`p\` incompatible with invariant use in
+                ^^^ object type. This type is incompatible with
            50: (roA: RWA);
                      ^^^ object type
+            Property \`p\` is incompatible:
+               50: (roA: RWA);
+                    ^^^ object type. Covariant property \`p\` incompatible with invariant use in
+               50: (roA: RWA);
+                         ^^^ object type
         `,
       ),
     addCode('(droA: dRWA);')
@@ -43,9 +48,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:54
            54: (woA: RWA);
-                ^^^ object type. Contravariant property \`p\` incompatible with invariant use in
+                ^^^ object type. This type is incompatible with
            54: (woA: RWA);
                      ^^^ object type
+            Property \`p\` is incompatible:
+               54: (woA: RWA);
+                    ^^^ object type. Contravariant property \`p\` incompatible with invariant use in
+               54: (woA: RWA);
+                         ^^^ object type
         `,
       ),
     addCode('(dwoA: dRWA);')
@@ -97,9 +107,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:66
            66: (roB: RWA);
-                ^^^ object type. Covariant property \`p\` incompatible with invariant use in
+                ^^^ object type. This type is incompatible with
            66: (roB: RWA);
                      ^^^ object type
+            Property \`p\` is incompatible:
+               66: (roB: RWA);
+                    ^^^ object type. Covariant property \`p\` incompatible with invariant use in
+               66: (roB: RWA);
+                         ^^^ object type
         `,
       ),
     addCode('(droB: dRWA);')
@@ -119,12 +134,6 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:70
            70: (woB: RWA);
-                ^^^ object type. Contravariant property \`p\` incompatible with invariant use in
-           70: (woB: RWA);
-                     ^^^ object type
-
-          test.js:70
-           70: (woB: RWA);
                 ^^^ object type. This type is incompatible with
            70: (woB: RWA);
                      ^^^ object type
@@ -133,6 +142,17 @@ export default suite(({addFile, addFiles, addCode}) => [
                                       ^ A. This type is incompatible with
                14:     type WOB = {-p: B}
                                        ^ B
+
+          test.js:70
+           70: (woB: RWA);
+                ^^^ object type. This type is incompatible with
+           70: (woB: RWA);
+                     ^^^ object type
+            Property \`p\` is incompatible:
+               70: (woB: RWA);
+                    ^^^ object type. Contravariant property \`p\` incompatible with invariant use in
+               70: (woB: RWA);
+                         ^^^ object type
         `,
       ),
     addCode('(dwoB: dRWA);')
@@ -172,9 +192,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:54
            54: (woA: ROA);
-                ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
+                ^^^ object type. This type is incompatible with
            54: (woA: ROA);
                      ^^^ object type
+            Property \`p\` is incompatible:
+               54: (woA: ROA);
+                    ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
+               54: (woA: ROA);
+                         ^^^ object type
         `,
       ),
     addCode('(dwoA: dROA);')
@@ -206,9 +231,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:70
            70: (woB: ROA);
-                ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
+                ^^^ object type. This type is incompatible with
            70: (woB: ROA);
                      ^^^ object type
+            Property \`p\` is incompatible:
+               70: (woB: ROA);
+                    ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
+               70: (woB: ROA);
+                         ^^^ object type
         `,
       ),
     addCode('(dwoB: dROA);')
@@ -238,9 +268,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:50
            50: (roA: WOA);
-                ^^^ object type. Covariant property \`p\` incompatible with contravariant use in
+                ^^^ object type. This type is incompatible with
            50: (roA: WOA);
                      ^^^ object type
+            Property \`p\` is incompatible:
+               50: (roA: WOA);
+                    ^^^ object type. Covariant property \`p\` incompatible with contravariant use in
+               50: (roA: WOA);
+                         ^^^ object type
         `,
       ),
     addCode('(droA: dWOA);')
@@ -295,9 +330,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:66
            66: (roB: WOA);
-                ^^^ object type. Covariant property \`p\` incompatible with contravariant use in
+                ^^^ object type. This type is incompatible with
            66: (roB: WOA);
                      ^^^ object type
+            Property \`p\` is incompatible:
+               66: (roB: WOA);
+                    ^^^ object type. Covariant property \`p\` incompatible with contravariant use in
+               66: (roB: WOA);
+                         ^^^ object type
         `,
       ),
     addCode('(droB: dWOA);')
@@ -400,12 +440,6 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:50
            50: (roA: RWB);
-                ^^^ object type. Covariant property \`p\` incompatible with invariant use in
-           50: (roA: RWB);
-                     ^^^ object type
-
-          test.js:50
-           50: (roA: RWB);
                 ^^^ object type. This type is incompatible with
            50: (roA: RWB);
                      ^^^ object type
@@ -414,6 +448,17 @@ export default suite(({addFile, addFiles, addCode}) => [
                                        ^ A. This type is incompatible with
                12:     type RWB = {p: B}
                                       ^ B
+
+          test.js:50
+           50: (roA: RWB);
+                ^^^ object type. This type is incompatible with
+           50: (roA: RWB);
+                     ^^^ object type
+            Property \`p\` is incompatible:
+               50: (roA: RWB);
+                    ^^^ object type. Covariant property \`p\` incompatible with invariant use in
+               50: (roA: RWB);
+                         ^^^ object type
         `,
       ),
     addCode('(droA: dRWB);')
@@ -439,9 +484,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:54
            54: (woA: RWB);
-                ^^^ object type. Contravariant property \`p\` incompatible with invariant use in
+                ^^^ object type. This type is incompatible with
            54: (woA: RWB);
                      ^^^ object type
+            Property \`p\` is incompatible:
+               54: (woA: RWB);
+                    ^^^ object type. Contravariant property \`p\` incompatible with invariant use in
+               54: (woA: RWB);
+                         ^^^ object type
         `,
       ),
     addCode('(dwoA: dRWB);')
@@ -544,9 +594,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:54
            54: (woA: ROB);
-                ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
+                ^^^ object type. This type is incompatible with
            54: (woA: ROB);
                      ^^^ object type
+            Property \`p\` is incompatible:
+               54: (woA: ROB);
+                    ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
+               54: (woA: ROB);
+                         ^^^ object type
         `,
       ),
     addCode('(dwoA: dROB);')
@@ -576,9 +631,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:50
            50: (roA: WOB);
-                ^^^ object type. Covariant property \`p\` incompatible with contravariant use in
+                ^^^ object type. This type is incompatible with
            50: (roA: WOB);
                      ^^^ object type
+            Property \`p\` is incompatible:
+               50: (roA: WOB);
+                    ^^^ object type. Covariant property \`p\` incompatible with contravariant use in
+               50: (roA: WOB);
+                         ^^^ object type
         `,
       ),
     addCode('(droA: dWOB);')
@@ -609,9 +669,19 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:44
            44: (([roA]: Array<{+p:A}>): Array<{p:A}>);
-                              ^^^^^^ object type. Covariant property \`p\` incompatible with invariant use in
+                        ^^^^^^^^^^^^^ array type. Has some incompatible type argument with
            44: (([roA]: Array<{+p:A}>): Array<{p:A}>);
-                                              ^^^^^ object type
+                                        ^^^^^^^^^^^^ array type
+            Type argument \`T\` is incompatible:
+               44: (([roA]: Array<{+p:A}>): Array<{p:A}>);
+                                  ^^^^^^ object type. This type is incompatible with
+               44: (([roA]: Array<{+p:A}>): Array<{p:A}>);
+                                                  ^^^^^ object type
+                Property \`p\` is incompatible:
+                   44: (([roA]: Array<{+p:A}>): Array<{p:A}>);
+                                      ^^^^^^ object type. Covariant property \`p\` incompatible with invariant use in
+                   44: (([roA]: Array<{+p:A}>): Array<{p:A}>);
+                                                      ^^^^^ object type
         `,
       ),
 
@@ -620,9 +690,19 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:46
            46: (([woA]: Array<{-p:A}>): Array<{p:A}>);
-                              ^^^^^^ object type. Contravariant property \`p\` incompatible with invariant use in
+                        ^^^^^^^^^^^^^ array type. Has some incompatible type argument with
            46: (([woA]: Array<{-p:A}>): Array<{p:A}>);
-                                              ^^^^^ object type
+                                        ^^^^^^^^^^^^ array type
+            Type argument \`T\` is incompatible:
+               46: (([woA]: Array<{-p:A}>): Array<{p:A}>);
+                                  ^^^^^^ object type. This type is incompatible with
+               46: (([woA]: Array<{-p:A}>): Array<{p:A}>);
+                                                  ^^^^^ object type
+                Property \`p\` is incompatible:
+                   46: (([woA]: Array<{-p:A}>): Array<{p:A}>);
+                                      ^^^^^^ object type. Contravariant property \`p\` incompatible with invariant use in
+                   46: (([woA]: Array<{-p:A}>): Array<{p:A}>);
+                                                      ^^^^^ object type
         `,
       ),
 
@@ -631,9 +711,19 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:48
            48: (([rwA]: Array<{p:A}>): Array<{+p:A}>);
-                              ^^^^^ object type. Invariant property \`p\` incompatible with covariant use in
+                        ^^^^^^^^^^^^ array type. Has some incompatible type argument with
            48: (([rwA]: Array<{p:A}>): Array<{+p:A}>);
-                                             ^^^^^^ object type
+                                       ^^^^^^^^^^^^^ array type
+            Type argument \`T\` is incompatible:
+               48: (([rwA]: Array<{p:A}>): Array<{+p:A}>);
+                                  ^^^^^ object type. This type is incompatible with
+               48: (([rwA]: Array<{p:A}>): Array<{+p:A}>);
+                                                 ^^^^^^ object type
+                Property \`p\` is incompatible:
+                   48: (([rwA]: Array<{p:A}>): Array<{+p:A}>);
+                                      ^^^^^ object type. Invariant property \`p\` incompatible with covariant use in
+                   48: (([rwA]: Array<{p:A}>): Array<{+p:A}>);
+                                                     ^^^^^^ object type
         `,
       ),
 
@@ -645,9 +735,19 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:52
            52: (([woA]: Array<{-p:A}>): Array<{+p:A}>);
-                              ^^^^^^ object type. Contravariant property \`p\` incompatible with covariant use in
+                        ^^^^^^^^^^^^^ array type. Has some incompatible type argument with
            52: (([woA]: Array<{-p:A}>): Array<{+p:A}>);
-                                              ^^^^^^ object type
+                                        ^^^^^^^^^^^^^ array type
+            Type argument \`T\` is incompatible:
+               52: (([woA]: Array<{-p:A}>): Array<{+p:A}>);
+                                  ^^^^^^ object type. This type is incompatible with
+               52: (([woA]: Array<{-p:A}>): Array<{+p:A}>);
+                                                  ^^^^^^ object type
+                Property \`p\` is incompatible:
+                   52: (([woA]: Array<{-p:A}>): Array<{+p:A}>);
+                                      ^^^^^^ object type. Contravariant property \`p\` incompatible with covariant use in
+                   52: (([woA]: Array<{-p:A}>): Array<{+p:A}>);
+                                                      ^^^^^^ object type
         `,
       ),
 
@@ -656,9 +756,19 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:54
            54: (([rwA]: Array<{p:A}>): Array<{-p:A}>);
-                              ^^^^^ object type. Invariant property \`p\` incompatible with contravariant use in
+                        ^^^^^^^^^^^^ array type. Has some incompatible type argument with
            54: (([rwA]: Array<{p:A}>): Array<{-p:A}>);
-                                             ^^^^^^ object type
+                                       ^^^^^^^^^^^^^ array type
+            Type argument \`T\` is incompatible:
+               54: (([rwA]: Array<{p:A}>): Array<{-p:A}>);
+                                  ^^^^^ object type. This type is incompatible with
+               54: (([rwA]: Array<{p:A}>): Array<{-p:A}>);
+                                                 ^^^^^^ object type
+                Property \`p\` is incompatible:
+                   54: (([rwA]: Array<{p:A}>): Array<{-p:A}>);
+                                      ^^^^^ object type. Invariant property \`p\` incompatible with contravariant use in
+                   54: (([rwA]: Array<{p:A}>): Array<{-p:A}>);
+                                                     ^^^^^^ object type
         `,
       ),
 
@@ -667,9 +777,19 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:56
            56: (([roA]: Array<{+p:A}>): Array<{-p:A}>);
-                              ^^^^^^ object type. Covariant property \`p\` incompatible with contravariant use in
+                        ^^^^^^^^^^^^^ array type. Has some incompatible type argument with
            56: (([roA]: Array<{+p:A}>): Array<{-p:A}>);
-                                              ^^^^^^ object type
+                                        ^^^^^^^^^^^^^ array type
+            Type argument \`T\` is incompatible:
+               56: (([roA]: Array<{+p:A}>): Array<{-p:A}>);
+                                  ^^^^^^ object type. This type is incompatible with
+               56: (([roA]: Array<{+p:A}>): Array<{-p:A}>);
+                                                  ^^^^^^ object type
+                Property \`p\` is incompatible:
+                   56: (([roA]: Array<{+p:A}>): Array<{-p:A}>);
+                                      ^^^^^^ object type. Covariant property \`p\` incompatible with contravariant use in
+                   56: (([roA]: Array<{+p:A}>): Array<{-p:A}>);
+                                                      ^^^^^^ object type
         `,
       ),
 

@@ -9104,8 +9104,8 @@ and unify_props cx trace ~use_op x r1 r2 p1 p2 =
       Polarity.compat (polarity1, polarity2) &&
       Polarity.compat (polarity2, polarity1)
     ) then
-      add_output cx ~trace
-        (FlowError.EPropPolarityMismatch ((r1, r2), Some x, (polarity1, polarity2)))
+      add_output cx ~trace (FlowError.EPropPolarityMismatch
+        ((r1, r2), Some x, (polarity1, polarity2), use_op))
 
 (* If some property `x` exists in one object but not another, ensure the
    property is compatible with a dictionary, or error if none. *)
@@ -9975,7 +9975,8 @@ and rec_flow_p cx trace ?(use_op=UnknownUse) lreason ureason propref = function
     | None, Some _ ->
       add_output cx ~trace (FlowError.EPropPolarityMismatch (
         (lreason, ureason), x,
-        (Property.polarity lp, Property.polarity up)))
+        (Property.polarity lp, Property.polarity up),
+        use_op))
     | _ -> ());
     (match Property.write_t lp, Property.write_t up with
     | Some lt, Some ut ->
@@ -9983,7 +9984,8 @@ and rec_flow_p cx trace ?(use_op=UnknownUse) lreason ureason propref = function
     | None, Some _ ->
       add_output cx ~trace (FlowError.EPropPolarityMismatch (
         (lreason, ureason), x,
-        (Property.polarity lp, Property.polarity up)))
+        (Property.polarity lp, Property.polarity up),
+        use_op))
     | _ -> ())
 
 (* Ideally this function would not be required: either we call `flow` from
