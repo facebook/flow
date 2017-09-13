@@ -55,6 +55,12 @@ class mapper = object(this)
     | (loc, DeclareExportDeclaration decl) ->
       id this#declare_export_declaration decl stmt (fun decl -> loc, DeclareExportDeclaration decl)
 
+    | (loc, DeclareModule m) ->
+      id this#declare_module m stmt (fun m -> loc, DeclareModule m)
+
+    | (loc, DeclareModuleExports annot) ->
+      id this#declare_module_exports annot stmt (fun annot -> loc, DeclareModuleExports annot)
+
     | (loc, DoWhile stuff) ->
       id this#do_while stuff stmt (fun stuff -> loc, DoWhile stuff)
 
@@ -117,8 +123,6 @@ class mapper = object(this)
     | (_loc, DeclareClass _) -> stmt
     | (_loc, DeclareFunction _) -> stmt
     | (_loc, DeclareInterface _) -> stmt
-    | (_loc, DeclareModule _) -> stmt
-    | (_loc, DeclareModuleExports _) -> stmt
     | (_loc, DeclareTypeAlias _) -> stmt
     | (_loc, DeclareOpaqueType _) -> stmt
     | (_loc, DeclareVariable _) -> stmt
@@ -305,6 +309,18 @@ class mapper = object(this)
   (* TODO *)
   method declare_export_declaration_decl (decl: Loc.t Ast.Statement.DeclareExportDeclaration.declaration) =
     decl
+
+  method declare_module (m: Loc.t Ast.Statement.DeclareModule.t) =
+    let open Ast.Statement.DeclareModule in
+    let { id; body; kind } = m in
+    let loc, block = body in
+    let block' = this#block block in
+    if block == block' then m
+    else { id; body = (loc, block'); kind }
+
+  (* TODO *)
+  method declare_module_exports (annot: Loc.t Ast.Type.annotation) =
+    annot
 
   method do_while (stuff: Loc.t Ast.Statement.DoWhile.t) =
     let open Ast.Statement.DoWhile in
