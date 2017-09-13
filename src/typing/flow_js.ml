@@ -2989,7 +2989,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* Try the branches of the union in turn, with the goal of selecting the
            correct branch. This process is reused for intersections as well. See
            comments on try_union and try_intersection. *)
-        try_union cx trace l r rep
+        try_union cx trace use_op l r rep
     )
 
     (* maybe and optional types are just special union types *)
@@ -7270,7 +7270,7 @@ and chain_objects cx ?trace reason this those =
     unique identifier, called the speculation_id. This identifier keeps track of
     unresolved tvars encountered when trying to fully resolve types. **)
 
-and try_union cx trace l reason rep =
+and try_union cx trace use_op l reason rep =
   let ts = UnionRep.members rep in
   let speculation_id = mk_id() in
   Speculation.init_speculation cx speculation_id;
@@ -7284,7 +7284,7 @@ and try_union cx trace l reason rep =
   (* fully resolve the collected types *)
   resolve_bindings_init cx trace reason (bindings_of_jobs cx trace imap) @@
   (* ...and then begin the choice-making process *)
-    try_flow_continuation cx trace reason speculation_id (UnionCases(l, ts))
+    try_flow_continuation cx trace reason speculation_id (UnionCases (use_op, l, ts))
 
 and try_intersection cx trace u reason rep =
   let ts = InterRep.members rep in
@@ -7711,10 +7711,10 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
       reason, msg
     ) ts in
     begin match spec with
-      | UnionCases (l, us) ->
+      | UnionCases (use_op, l, us) ->
         let reason = reason_of_t l in
         let reason_op = mk_union_reason r us in
-        add_output cx ~trace (FlowError.EUnionSpeculationFailed { reason; reason_op; branches })
+        add_output cx ~trace (FlowError.EUnionSpeculationFailed { use_op; reason; reason_op; branches })
 
       | IntersectionCases (ls, upper) ->
         let err =
@@ -7765,13 +7765,16 @@ and blame_unresolved cx trace prev_i i cases case_r r tvars =
   ))
 
 and trials_of_spec = function
-  | UnionCases (l, us) ->
+  | UnionCases (_use_op, l, us) ->
+    (* NB: Even though we know the use_op for the original constraint, don't
+       embed it in the nested constraints to avoid unnecessary verbosity. We
+       will unwrap the original use_op once in EUnionSpeculationFailed. *)
     List.mapi (fun i u -> (i, reason_of_t l, l, UseT (UnknownUse, u))) us
   | IntersectionCases (ls, u) ->
     List.mapi (fun i l -> (i, reason_of_use_t u, l, u)) ls
 
 and choices_of_spec = function
-  | UnionCases (_, ts)
+  | UnionCases (_, _, ts)
   | IntersectionCases (ts, _)
     -> ts
 
@@ -7788,7 +7791,7 @@ and ignore_of_spec = function
    checking sentinel properties first, we force immediate match failures in the
    vast majority of cases without having to do any useless additional work. *)
 and optimize_spec cx = function
-  | UnionCases (l, ts) -> begin match l with
+  | UnionCases (_, l, ts) -> begin match l with
     | DefT (_, ObjT _) -> guess_and_record_sentinel_prop cx ts
     | _ -> ()
     end

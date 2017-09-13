@@ -1763,8 +1763,11 @@ and dump_use_t_ (depth, tvars) cx t =
   in
 
   let try_flow = function
-    | UnionCases (t, ts) ->
-        spf "(%s, [%s])" (kid t) (String.concat "; " (List.map kid ts))
+    | UnionCases (use_op, t, ts) ->
+        spf "(%s, %s, [%s])"
+          (string_of_use_op use_op)
+          (kid t)
+          (String.concat "; " (List.map kid ts))
     | IntersectionCases (ts, use_t) ->
         spf "([%s], %s)" (String.concat "; " (List.map kid ts)) (use_kid use_t)
   in
@@ -2425,8 +2428,9 @@ let dump_flow_error =
         spf "ETupleUnsafeWrite (%s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
-    | EUnionSpeculationFailed { reason; reason_op; branches = _ } ->
-        spf "EUnionSpeculationFailed { reason = %s; reason_op = %s; branches = _ }"
+    | EUnionSpeculationFailed { use_op; reason; reason_op; branches = _ } ->
+        spf "EUnionSpeculationFailed { use_op = %s; reason = %s; reason_op = %s; branches = _ }"
+          (string_of_use_op use_op)
           (dump_reason cx reason)
           (dump_reason cx reason_op)
     | ESpeculationAmbiguous ((reason1, reason2), _, _, _) ->

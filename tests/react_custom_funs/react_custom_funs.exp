@@ -837,25 +837,30 @@ Error: create_element.js:122
 122: React.createElement(G, {}, ...(any: Array<number>)); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
 122: React.createElement(G, {}, ...(any: Array<number>)); // Error
-                                         ^^^^^^^^^^^^^ undefined. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
 112: class G extends React.Component<{children: number | Array<number>}> {}
-                                                ^^^^^^^^^^^^^^^^^^^^^^ union: number | array type
-  Member 1:
-  112: class G extends React.Component<{children: number | Array<number>}> {}
-                                                  ^^^^^^ number
-  Error:
-  122: React.createElement(G, {}, ...(any: Array<number>)); // Error
-                                           ^^^^^^^^^^^^^ undefined. This type is incompatible with
-  112: class G extends React.Component<{children: number | Array<number>}> {}
-                                                  ^^^^^^ number
-  Member 2:
-  112: class G extends React.Component<{children: number | Array<number>}> {}
-                                                           ^^^^^^^^^^^^^ array type
-  Error:
-  122: React.createElement(G, {}, ...(any: Array<number>)); // Error
-                                           ^^^^^^^^^^^^^ undefined. This type is incompatible with
-  112: class G extends React.Component<{children: number | Array<number>}> {}
-                                                           ^^^^^^^^^^^^^ array type
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    122: React.createElement(G, {}, ...(any: Array<number>)); // Error
+                                             ^^^^^^^^^^^^^ undefined. This type is incompatible with
+    112: class G extends React.Component<{children: number | Array<number>}> {}
+                                                    ^^^^^^^^^^^^^^^^^^^^^^ union: number | array type
+      Member 1:
+      112: class G extends React.Component<{children: number | Array<number>}> {}
+                                                      ^^^^^^ number
+      Error:
+      122: React.createElement(G, {}, ...(any: Array<number>)); // Error
+                                               ^^^^^^^^^^^^^ undefined. This type is incompatible with
+      112: class G extends React.Component<{children: number | Array<number>}> {}
+                                                      ^^^^^^ number
+      Member 2:
+      112: class G extends React.Component<{children: number | Array<number>}> {}
+                                                               ^^^^^^^^^^^^^ array type
+      Error:
+      122: React.createElement(G, {}, ...(any: Array<number>)); // Error
+                                               ^^^^^^^^^^^^^ undefined. This type is incompatible with
+      112: class G extends React.Component<{children: number | Array<number>}> {}
+                                                               ^^^^^^^^^^^^^ array type
 
 Error: create_element.js:133
 133: React.createElement(G2, {}, [1, 2], [3, 4]); // Error
@@ -909,25 +914,30 @@ Error: create_element.js:153
 153: React.createElement(H, {}, ...(any: Array<number>)); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
 153: React.createElement(H, {}, ...(any: Array<number>)); // Error
-                                         ^^^^^^^^^^^^^ undefined. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
 143: class H extends React.Component<{children: NumberArrayRecursive}> {}
-                                                ^^^^^^^^^^^^^^^^^^^^ union: number | array type
-  Member 1:
-  142: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
-                                   ^^^^^^ number
-  Error:
-  153: React.createElement(H, {}, ...(any: Array<number>)); // Error
-                                           ^^^^^^^^^^^^^ undefined. This type is incompatible with
-  142: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
-                                   ^^^^^^ number
-  Member 2:
-  142: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-  Error:
-  153: React.createElement(H, {}, ...(any: Array<number>)); // Error
-                                           ^^^^^^^^^^^^^ undefined. This type is incompatible with
-  142: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    153: React.createElement(H, {}, ...(any: Array<number>)); // Error
+                                             ^^^^^^^^^^^^^ undefined. This type is incompatible with
+    143: class H extends React.Component<{children: NumberArrayRecursive}> {}
+                                                    ^^^^^^^^^^^^^^^^^^^^ union: number | array type
+      Member 1:
+      142: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+                                       ^^^^^^ number
+      Error:
+      153: React.createElement(H, {}, ...(any: Array<number>)); // Error
+                                               ^^^^^^^^^^^^^ undefined. This type is incompatible with
+      142: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+                                       ^^^^^^ number
+      Member 2:
+      142: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+      Error:
+      153: React.createElement(H, {}, ...(any: Array<number>)); // Error
+                                               ^^^^^^^^^^^^^ undefined. This type is incompatible with
+      142: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
 
 Error: create_element.js:161
 161: React.createElement(I, {}, null); // Error
@@ -1998,25 +2008,30 @@ Error: create_factory.js:128
 128: gFactory({}, ...(any: Array<number>)); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
 128: gFactory({}, ...(any: Array<number>)); // Error
-                           ^^^^^^^^^^^^^ undefined. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
 117: class G extends React.Component<{children: number | Array<number>}, void> {}
-                                                ^^^^^^^^^^^^^^^^^^^^^^ union: number | array type
-  Member 1:
-  117: class G extends React.Component<{children: number | Array<number>}, void> {}
-                                                  ^^^^^^ number
-  Error:
-  128: gFactory({}, ...(any: Array<number>)); // Error
-                             ^^^^^^^^^^^^^ undefined. This type is incompatible with
-  117: class G extends React.Component<{children: number | Array<number>}, void> {}
-                                                  ^^^^^^ number
-  Member 2:
-  117: class G extends React.Component<{children: number | Array<number>}, void> {}
-                                                           ^^^^^^^^^^^^^ array type
-  Error:
-  128: gFactory({}, ...(any: Array<number>)); // Error
-                             ^^^^^^^^^^^^^ undefined. This type is incompatible with
-  117: class G extends React.Component<{children: number | Array<number>}, void> {}
-                                                           ^^^^^^^^^^^^^ array type
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    128: gFactory({}, ...(any: Array<number>)); // Error
+                               ^^^^^^^^^^^^^ undefined. This type is incompatible with
+    117: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                                    ^^^^^^^^^^^^^^^^^^^^^^ union: number | array type
+      Member 1:
+      117: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                                      ^^^^^^ number
+      Error:
+      128: gFactory({}, ...(any: Array<number>)); // Error
+                                 ^^^^^^^^^^^^^ undefined. This type is incompatible with
+      117: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                                      ^^^^^^ number
+      Member 2:
+      117: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                                               ^^^^^^^^^^^^^ array type
+      Error:
+      128: gFactory({}, ...(any: Array<number>)); // Error
+                                 ^^^^^^^^^^^^^ undefined. This type is incompatible with
+      117: class G extends React.Component<{children: number | Array<number>}, void> {}
+                                                               ^^^^^^^^^^^^^ array type
 
 Error: create_factory.js:136
 136: hFactory({}); // Error
@@ -2048,25 +2063,30 @@ Error: create_factory.js:145
 145: hFactory({}, ...(any: Array<number>)); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
 145: hFactory({}, ...(any: Array<number>)); // Error
-                           ^^^^^^^^^^^^^ undefined. This type is incompatible with
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
 134: class H extends React.Component<{children: NumberArrayRecursive}, void> {}
-                                                ^^^^^^^^^^^^^^^^^^^^ union: number | array type
-  Member 1:
-  133: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
-                                   ^^^^^^ number
-  Error:
-  145: hFactory({}, ...(any: Array<number>)); // Error
-                             ^^^^^^^^^^^^^ undefined. This type is incompatible with
-  133: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
-                                   ^^^^^^ number
-  Member 2:
-  133: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
-  Error:
-  145: hFactory({}, ...(any: Array<number>)); // Error
-                             ^^^^^^^^^^^^^ undefined. This type is incompatible with
-  133: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+    145: hFactory({}, ...(any: Array<number>)); // Error
+                               ^^^^^^^^^^^^^ undefined. This type is incompatible with
+    134: class H extends React.Component<{children: NumberArrayRecursive}, void> {}
+                                                    ^^^^^^^^^^^^^^^^^^^^ union: number | array type
+      Member 1:
+      133: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+                                       ^^^^^^ number
+      Error:
+      145: hFactory({}, ...(any: Array<number>)); // Error
+                                 ^^^^^^^^^^^^^ undefined. This type is incompatible with
+      133: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+                                       ^^^^^^ number
+      Member 2:
+      133: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+      Error:
+      145: hFactory({}, ...(any: Array<number>)); // Error
+                                 ^^^^^^^^^^^^^ undefined. This type is incompatible with
+      133: type NumberArrayRecursive = number | Array<NumberArrayRecursive>;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
 
 Error: create_factory.js:154
 154: iFactory({}, null); // Error

@@ -542,7 +542,7 @@ class ['a] t = object(self)
   | ChoiceKitUseT (_, tool) -> (match tool with
     | FullyResolveType _ -> acc
     | TryFlow (_, spec) -> (match spec with
-      | UnionCases (t, ts) ->
+      | UnionCases (_, t, ts) ->
         let acc = self#type_ cx acc t in
         let acc = List.fold_left (self#type_ cx) acc ts in
         acc

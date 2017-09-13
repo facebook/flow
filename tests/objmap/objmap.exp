@@ -248,52 +248,65 @@ Error: identity.js:43
  43: (foo.a: empty); // Error: number ~> empty
              ^^^^^ empty
 
-Error: identity.js:62
+Error: identity.js:61
+      v
+ 61: ({
  62:   foo: true, // Error: boolean ~> number | string
-            ^^^^ boolean. This type is incompatible with
+ 63: }: $ObjMap<
+     ^ object literal. This type is incompatible with
         v-------
  63: }: $ObjMap<
  64:   {
  65:     foo: number | string,
 ...:
  68: >);
-     ^ union: number | string
-  Member 1:
-          v-------
-   63: }: $ObjMap<
-   64:   {
-   65:     foo: number | string,
-  ...:
-   68: >);
-       ^ number
-  Error:
-   62:   foo: true, // Error: boolean ~> number | string
-              ^^^^ boolean. This type is incompatible with
-          v-------
-   63: }: $ObjMap<
-   64:   {
-   65:     foo: number | string,
-  ...:
-   68: >);
-       ^ number
-  Member 2:
-          v-------
-   63: }: $ObjMap<
-   64:   {
-   65:     foo: number | string,
-  ...:
-   68: >);
-       ^ string
-  Error:
-   62:   foo: true, // Error: boolean ~> number | string
-              ^^^^ boolean. This type is incompatible with
-          v-------
-   63: }: $ObjMap<
-   64:   {
-   65:     foo: number | string,
-  ...:
-   68: >);
-       ^ string
+     ^ object type
+  Property `foo` is incompatible:
+     62:   foo: true, // Error: boolean ~> number | string
+                ^^^^ boolean. This type is incompatible with
+            v-------
+     63: }: $ObjMap<
+     64:   {
+     65:     foo: number | string,
+    ...:
+     68: >);
+         ^ union: number | string
+      Member 1:
+              v-------
+       63: }: $ObjMap<
+       64:   {
+       65:     foo: number | string,
+      ...:
+       68: >);
+           ^ number
+      Error:
+       62:   foo: true, // Error: boolean ~> number | string
+                  ^^^^ boolean. This type is incompatible with
+              v-------
+       63: }: $ObjMap<
+       64:   {
+       65:     foo: number | string,
+      ...:
+       68: >);
+           ^ number
+      Member 2:
+              v-------
+       63: }: $ObjMap<
+       64:   {
+       65:     foo: number | string,
+      ...:
+       68: >);
+           ^ string
+      Error:
+       62:   foo: true, // Error: boolean ~> number | string
+                  ^^^^ boolean. This type is incompatible with
+              v-------
+       63: }: $ObjMap<
+       64:   {
+       65:     foo: number | string,
+      ...:
+       68: >);
+           ^ string
 
 Error: identity.js:70
       v

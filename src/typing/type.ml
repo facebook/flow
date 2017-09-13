@@ -942,7 +942,7 @@ module rec TypeTerm : sig
   | PropExistsTest of bool * string * t * t
 
   and spec =
-  | UnionCases of t * t list
+  | UnionCases of use_op * t * t list
   | IntersectionCases of t list * use_t
 
   (* A dependent predicate type consisting of:

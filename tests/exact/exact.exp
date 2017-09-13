@@ -81,7 +81,7 @@ Error: unsealed.js:14
  14: f(o); // error: o incompatible with exact type
      ^^^^ function call
  14: f(o); // error: o incompatible with exact type
-       ^ object literal. This type is incompatible with
+       ^ object literal. This type is incompatible with the expected param type of
   4: function f(o: {p: string} | $Exact<{}>): string {
                    ^^^^^^^^^^^^^^^^^^^^^^^^ union: object type | exact type: object type
   Member 1:

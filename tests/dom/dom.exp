@@ -14,7 +14,7 @@ Error: Element.js:14
  14:     element.scrollIntoView({ behavior: 'invalid' });
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  14:     element.scrollIntoView({ behavior: 'invalid' });
-                                ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                                ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 1162:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: boolean | object type. See lib: <BUILTINS>/dom.js:1162
   Member 1:
@@ -43,7 +43,7 @@ Error: Element.js:15
  15:     element.scrollIntoView({ block: 'invalid' });
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  15:     element.scrollIntoView({ block: 'invalid' });
-                                ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                                ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 1162:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: boolean | object type. See lib: <BUILTINS>/dom.js:1162
   Member 1:
@@ -72,7 +72,7 @@ Error: Element.js:16
  16:     element.scrollIntoView(1);
          ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  16:     element.scrollIntoView(1);
-                                ^ number. This type is incompatible with
+                                ^ number. This type is incompatible with the expected param type of
 1162:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: boolean | object type. See lib: <BUILTINS>/dom.js:1162
   Member 1:
@@ -96,7 +96,7 @@ Error: HTMLElement.js:14
  14:     element.scrollIntoView({ behavior: 'invalid' });
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  14:     element.scrollIntoView({ behavior: 'invalid' });
-                                ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                                ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 1162:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: boolean | object type. See lib: <BUILTINS>/dom.js:1162
   Member 1:
@@ -125,7 +125,7 @@ Error: HTMLElement.js:15
  15:     element.scrollIntoView({ block: 'invalid' });
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  15:     element.scrollIntoView({ block: 'invalid' });
-                                ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                                ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 1162:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: boolean | object type. See lib: <BUILTINS>/dom.js:1162
   Member 1:
@@ -154,7 +154,7 @@ Error: HTMLElement.js:16
  16:     element.scrollIntoView(1);
          ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  16:     element.scrollIntoView(1);
-                                ^ number. This type is incompatible with
+                                ^ number. This type is incompatible with the expected param type of
 1162:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: boolean | object type. See lib: <BUILTINS>/dom.js:1162
   Member 1:
@@ -1035,36 +1035,41 @@ Error: traversal.js:186
 
 Error: traversal.js:188
 188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                              ^^^^^^^^ string. This type is incompatible with
-      v--------------------------------
-3196: typeof NodeFilter.FILTER_ACCEPT |
-3197: typeof NodeFilter.FILTER_REJECT |
-3198: typeof NodeFilter.FILTER_SKIP;
-      ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3196
-  Member 1:
-  3196: typeof NodeFilter.FILTER_ACCEPT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3196
-  Error:
-  188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                ^^^^^^^^ string. This type is incompatible with
-  3196: typeof NodeFilter.FILTER_ACCEPT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3196
-  Member 2:
-  3197: typeof NodeFilter.FILTER_REJECT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_REJECT'). See lib: <BUILTINS>/dom.js:3197
-  Error:
-  188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                ^^^^^^^^ string. This type is incompatible with
-  3197: typeof NodeFilter.FILTER_REJECT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3197
-  Member 3:
-  3198: typeof NodeFilter.FILTER_SKIP;
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3198
-  Error:
-  188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                                ^^^^^^^^ string. This type is incompatible with
-  3198: typeof NodeFilter.FILTER_SKIP;
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3198
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3200
+  Property `acceptNode` is incompatible:
+    188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                  ^^^^^^^^ string. This type is incompatible with
+          v--------------------------------
+    3196: typeof NodeFilter.FILTER_ACCEPT |
+    3197: typeof NodeFilter.FILTER_REJECT |
+    3198: typeof NodeFilter.FILTER_SKIP;
+          ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3196
+      Member 1:
+      3196: typeof NodeFilter.FILTER_ACCEPT |
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3196
+      Error:
+      188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                    ^^^^^^^^ string. This type is incompatible with
+      3196: typeof NodeFilter.FILTER_ACCEPT |
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3196
+      Member 2:
+      3197: typeof NodeFilter.FILTER_REJECT |
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_REJECT'). See lib: <BUILTINS>/dom.js:3197
+      Error:
+      188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                    ^^^^^^^^ string. This type is incompatible with
+      3197: typeof NodeFilter.FILTER_REJECT |
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3197
+      Member 3:
+      3198: typeof NodeFilter.FILTER_SKIP;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3198
+      Error:
+      188:     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                    ^^^^^^^^ string. This type is incompatible with
+      3198: typeof NodeFilter.FILTER_SKIP;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3198
 
 Error: traversal.js:189
 189:     document.createNodeIterator(document_body, -1, {}); // invalid
@@ -1396,7 +1401,7 @@ Error: traversal.js:189
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ polymorphic type: function type. See lib: <BUILTINS>/dom.js:925
   Error:
   189:     document.createNodeIterator(document_body, -1, {}); // invalid
-                                                          ^^ object literal. This type is incompatible with
+                                                          ^^ object literal. This type is incompatible with the expected param type of
   925:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: -1, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Node>;
                                                                                        ^^^^^^^^^^^^^^^^^^^ union: NodeFilterCallback | object type. See lib: <BUILTINS>/dom.js:925
     Member 1:
@@ -1472,36 +1477,41 @@ Error: traversal.js:193
 
 Error: traversal.js:195
 195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                            ^^^^^^^^ string. This type is incompatible with
-      v--------------------------------
-3196: typeof NodeFilter.FILTER_ACCEPT |
-3197: typeof NodeFilter.FILTER_REJECT |
-3198: typeof NodeFilter.FILTER_SKIP;
-      ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3196
-  Member 1:
-  3196: typeof NodeFilter.FILTER_ACCEPT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3196
-  Error:
-  195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                              ^^^^^^^^ string. This type is incompatible with
-  3196: typeof NodeFilter.FILTER_ACCEPT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3196
-  Member 2:
-  3197: typeof NodeFilter.FILTER_REJECT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_REJECT'). See lib: <BUILTINS>/dom.js:3197
-  Error:
-  195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                              ^^^^^^^^ string. This type is incompatible with
-  3197: typeof NodeFilter.FILTER_REJECT |
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3197
-  Member 3:
-  3198: typeof NodeFilter.FILTER_SKIP;
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3198
-  Error:
-  195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
-                                                                              ^^^^^^^^ string. This type is incompatible with
-  3198: typeof NodeFilter.FILTER_SKIP;
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3198
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3200
+  Property `acceptNode` is incompatible:
+    195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                ^^^^^^^^ string. This type is incompatible with
+          v--------------------------------
+    3196: typeof NodeFilter.FILTER_ACCEPT |
+    3197: typeof NodeFilter.FILTER_REJECT |
+    3198: typeof NodeFilter.FILTER_SKIP;
+          ----------------------------^ union: typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof-annotation '<<object>>.FILTER_REJECT') | typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3196
+      Member 1:
+      3196: typeof NodeFilter.FILTER_ACCEPT |
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: <BUILTINS>/dom.js:3196
+      Error:
+      195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                  ^^^^^^^^ string. This type is incompatible with
+      3196: typeof NodeFilter.FILTER_ACCEPT |
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `1`. See lib: <BUILTINS>/dom.js:3196
+      Member 2:
+      3197: typeof NodeFilter.FILTER_REJECT |
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_REJECT'). See lib: <BUILTINS>/dom.js:3197
+      Error:
+      195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                  ^^^^^^^^ string. This type is incompatible with
+      3197: typeof NodeFilter.FILTER_REJECT |
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `2`. See lib: <BUILTINS>/dom.js:3197
+      Member 3:
+      3198: typeof NodeFilter.FILTER_SKIP;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ typeof-annotation '<<object>>.FILTER_SKIP'). See lib: <BUILTINS>/dom.js:3198
+      Error:
+      195:     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
+                                                                                  ^^^^^^^^ string. This type is incompatible with
+      3198: typeof NodeFilter.FILTER_SKIP;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number literal `3`. See lib: <BUILTINS>/dom.js:3198
 
 Error: traversal.js:196
 196:     document.createTreeWalker(document_body, -1, {}); // invalid
@@ -1833,7 +1843,7 @@ Error: traversal.js:196
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ polymorphic type: function type. See lib: <BUILTINS>/dom.js:933
   Error:
   196:     document.createTreeWalker(document_body, -1, {}); // invalid
-                                                        ^^ object literal. This type is incompatible with
+                                                        ^^ object literal. This type is incompatible with the expected param type of
   933:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: -1, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Node>;
                                                                                      ^^^^^^^^^^^^^^^^^^^ union: NodeFilterCallback | object type. See lib: <BUILTINS>/dom.js:933
     Member 1:
@@ -1862,7 +1872,7 @@ Error: traversal.js:196
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ polymorphic type: function type. See lib: <BUILTINS>/dom.js:937
   Error:
   196:     document.createTreeWalker(document_body, -1, {}); // invalid
-                                                        ^^ object literal. This type is incompatible with
+                                                        ^^ object literal. This type is incompatible with the expected param type of
   937:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: number, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Node>;
                                                                                          ^^^^^^^^^^^^^^^^^^^ union: NodeFilterCallback | object type. See lib: <BUILTINS>/dom.js:937
     Member 1:

@@ -16,7 +16,7 @@ Error: element_type.js:18
 
 Error: non_maybe_type.js:5
   5:   else return 0; // this should be an error
-                   ^ number. This type is incompatible with
+                   ^ number. This type is incompatible with the expected return type of
   3: function foo(x: ?string): $NonMaybeType<?string> {
                                ^^^^^^^^^^^^^^^^^^^^^^ union: non-maybe type(s)
   Member 1:

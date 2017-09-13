@@ -104,7 +104,7 @@ Error: crypto/crypto.js:16
  16:     hmac.write(123); // 2 errors: not a string or a Buffer
          ^^^^^^^^^^^^^^^ call of method `write`
  16:     hmac.write(123); // 2 errors: not a string or a Buffer
-                    ^^^ number. This type is incompatible with
+                    ^^^ number. This type is incompatible with the expected param type of
 1470:     chunk: Buffer | string,
                  ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1470
   Member 1:

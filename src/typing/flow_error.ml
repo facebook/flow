@@ -108,6 +108,7 @@ type error_message =
   | ETupleOutOfBounds of (reason * reason) * int * int
   | ETupleUnsafeWrite of (reason * reason)
   | EUnionSpeculationFailed of {
+      use_op: use_op;
       reason: reason;
       reason_op: reason;
       branches: (reason * error_message) list
@@ -375,8 +376,8 @@ let locs_of_error_message = function
       [loc_of_reason reason1; loc_of_reason reason2]
   | ETupleUnsafeWrite (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | EUnionSpeculationFailed { reason; reason_op; branches = _ } ->
-      [loc_of_reason reason; loc_of_reason reason_op]
+  | EUnionSpeculationFailed { use_op; reason; reason_op; branches = _ } ->
+      (loc_of_reason reason)::(loc_of_reason reason_op)::(locs_of_use_op [] use_op)
   | ESpeculationAmbiguous ((reason1, reason2), _, _, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EIncompatibleWithExact ((reason1, reason2), use_op) ->
@@ -949,10 +950,13 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         element of the tuple you are mutating. Unsafe mutation of" in
       typecheck_error msg reasons
 
-  | EUnionSpeculationFailed { reason; reason_op; branches } ->
-      let reasons = ordered_reasons (reason, reason_op) in
-      let msg = "This type is incompatible with" in
-      let extra = speculation_extras branches in
+  | EUnionSpeculationFailed { use_op; reason; reason_op; branches } ->
+      let reasons, extra, msg =
+        let reasons = ordered_reasons (reason, reason_op) in
+        let extra = speculation_extras branches in
+        let msg = "This type is incompatible with" in
+        unwrap_use_ops (reasons, extra, msg) use_op
+      in
       typecheck_error msg ~extra reasons
 
   | ESpeculationAmbiguous ((case_r, r), (prev_i, prev_case), (i, case), case_rs) ->

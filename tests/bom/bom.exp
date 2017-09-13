@@ -54,47 +54,57 @@ Error: FormData.js:17
 
 Error: FormData.js:21
  21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
-                                     ^^^^^^ number. This type is incompatible with
-321:     getAll(name: string): Array<FormDataEntryValue>;
-                                     ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:321
-  Member 1:
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Error:
-   21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
-                                       ^^^^^^ number. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Member 2:
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
-  Error:
-   21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
-                                       ^^^^^^ number. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
+                                               ^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
+ 21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+                                         ^^^^^^ number. This type is incompatible with
+    321:     getAll(name: string): Array<FormDataEntryValue>;
+                                         ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:321
+      Member 1:
+      314: type FormDataEntryValue = string | File
+                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
+      Error:
+       21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+                                           ^^^^^^ number. This type is incompatible with
+      314: type FormDataEntryValue = string | File
+                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
+      Member 2:
+      314: type FormDataEntryValue = string | File
+                                              ^^^^ File. See lib: <BUILTINS>/bom.js:314
+      Error:
+       21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+                                           ^^^^^^ number. This type is incompatible with
+      314: type FormDataEntryValue = string | File
+                                              ^^^^ File. See lib: <BUILTINS>/bom.js:314
 
 Error: FormData.js:22
  22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
-                              ^^^^ Blob. This type is incompatible with
-321:     getAll(name: string): Array<FormDataEntryValue>;
-                                     ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:321
-  Member 1:
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Error:
-   22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
-                                ^^^^ Blob. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                 ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
-  Member 2:
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
-  Error:
-   22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
-                                ^^^^ Blob. This type is incompatible with
-  314: type FormDataEntryValue = string | File
-                                          ^^^^ File. See lib: <BUILTINS>/bom.js:314
+                                             ^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
+ 22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+                                  ^^^^ Blob. This type is incompatible with
+    321:     getAll(name: string): Array<FormDataEntryValue>;
+                                         ^^^^^^^^^^^^^^^^^^ union: string | File. See lib: <BUILTINS>/bom.js:321
+      Member 1:
+      314: type FormDataEntryValue = string | File
+                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
+      Error:
+       22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+                                    ^^^^ Blob. This type is incompatible with
+      314: type FormDataEntryValue = string | File
+                                     ^^^^^^ string. See lib: <BUILTINS>/bom.js:314
+      Member 2:
+      314: type FormDataEntryValue = string | File
+                                              ^^^^ File. See lib: <BUILTINS>/bom.js:314
+      Error:
+       22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+                                    ^^^^ Blob. This type is incompatible with
+      314: type FormDataEntryValue = string | File
+                                              ^^^^ File. See lib: <BUILTINS>/bom.js:314
 
 Error: FormData.js:23
  23: a.getAll(23); // incorrect
@@ -737,7 +747,7 @@ Error: MutationObserver.js:21
  21: o.observe(div, {}); // incorrect
      ^^^^^^^^^^^^^^^^^^ call of method `observe`
  21: o.observe(div, {}); // incorrect
-                    ^^ object literal. This type is incompatible with
+                    ^^ object literal. This type is incompatible with the expected param type of
 355: declare type MutationObserverInit = MutationObserverInitRequired & {
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s). See lib: <BUILTINS>/bom.js:355
   Member 1:
@@ -784,7 +794,7 @@ Error: MutationObserver.js:22
  22: o.observe(div, { subtree: true }); // incorrect
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `observe`
  22: o.observe(div, { subtree: true }); // incorrect
-                    ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                    ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 355: declare type MutationObserverInit = MutationObserverInitRequired & {
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s). See lib: <BUILTINS>/bom.js:355
   Member 1:

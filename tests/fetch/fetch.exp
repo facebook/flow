@@ -24,7 +24,7 @@ Error: headers.js:3
   3: const a = new Headers("'Content-Type': 'image/jpeg'"); // not correct
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
   3: const a = new Headers("'Content-Type': 'image/jpeg'"); // not correct
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with the expected param type of
 880:     constructor(init?: HeadersInit): void;
                             ^^^^^^^^^^^ union: Headers | object type. See lib: <BUILTINS>/bom.js:880
   Member 1:
@@ -48,7 +48,7 @@ Error: headers.js:4
   4: const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
   4: const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
 880:     constructor(init?: HeadersInit): void;
                             ^^^^^^^^^^^ union: Headers | object type. See lib: <BUILTINS>/bom.js:880
   Member 1:
@@ -276,7 +276,7 @@ Error: request.js:8
   8: const f: Request = new Request({}) // incorrect
                         ^^^^^^^^^^^^^^^ constructor call
   8: const f: Request = new Request({}) // incorrect
-                                    ^^ object literal. This type is incompatible with
+                                    ^^ object literal. This type is incompatible with the expected param type of
 971:     constructor(input: RequestInfo, init?: RequestOptions): void;
                             ^^^^^^^^^^^ union: Request | URL | string. See lib: <BUILTINS>/bom.js:971
   Member 1:
@@ -324,26 +324,36 @@ Error: request.js:54
 ...:
  59: }) // incorrect - headers is string
      -^ constructor call
+                                                          v
+ 54: const l: Request = new Request('http://example.org', {
+ 55:   method: 'GET',
  56:   headers: 'Content-Type: image/jpeg',
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-927:     headers?: HeadersInit;
-                   ^^^^^^^^^^^ union: Headers | object type. See lib: <BUILTINS>/bom.js:927
-  Member 1:
-  873: type HeadersInit = Headers | {[key: string]: string};
-                          ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:873
-  Error:
-   56:   headers: 'Content-Type: image/jpeg',
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-  873: type HeadersInit = Headers | {[key: string]: string};
-                          ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:873
-  Member 2:
-  873: type HeadersInit = Headers | {[key: string]: string};
-                                    ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:873
-  Error:
-   56:   headers: 'Content-Type: image/jpeg',
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-  873: type HeadersInit = Headers | {[key: string]: string};
-                                    ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:873
+...:
+ 59: }) // incorrect - headers is string
+     ^ object literal. This type is incompatible with the expected param type of
+971:     constructor(input: RequestInfo, init?: RequestOptions): void;
+                                                ^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:971
+  Property `headers` is incompatible:
+     56:   headers: 'Content-Type: image/jpeg',
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+    927:     headers?: HeadersInit;
+                       ^^^^^^^^^^^ union: Headers | object type. See lib: <BUILTINS>/bom.js:927
+      Member 1:
+      873: type HeadersInit = Headers | {[key: string]: string};
+                              ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:873
+      Error:
+       56:   headers: 'Content-Type: image/jpeg',
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+      873: type HeadersInit = Headers | {[key: string]: string};
+                              ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:873
+      Member 2:
+      873: type HeadersInit = Headers | {[key: string]: string};
+                                        ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:873
+      Error:
+       56:   headers: 'Content-Type: image/jpeg',
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+      873: type HeadersInit = Headers | {[key: string]: string};
+                                        ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:873
 
 Error: request.js:63
  63: new Request('/', { method: null }); // incorrect
@@ -385,26 +395,35 @@ Error: response.js:11
  13:     headers: "'Content-Type': 'image/jpeg'"
  14: }); // incorrect
      -^ constructor call
+                                                      v
+ 11: const f: Response = new Response("responsebody", {
+ 12:     status: 404,
  13:     headers: "'Content-Type': 'image/jpeg'"
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-941:     headers?: HeadersInit
-                   ^^^^^^^^^^^ union: Headers | object type. See lib: <BUILTINS>/bom.js:941
-  Member 1:
-  873: type HeadersInit = Headers | {[key: string]: string};
-                          ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:873
-  Error:
-   13:     headers: "'Content-Type': 'image/jpeg'"
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-  873: type HeadersInit = Headers | {[key: string]: string};
-                          ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:873
-  Member 2:
-  873: type HeadersInit = Headers | {[key: string]: string};
-                                    ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:873
-  Error:
-   13:     headers: "'Content-Type': 'image/jpeg'"
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-  873: type HeadersInit = Headers | {[key: string]: string};
-                                    ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:873
+ 14: }); // incorrect
+     ^ object literal. This type is incompatible with the expected param type of
+945:     constructor(input?: ?BodyInit, init?: ResponseOptions): void;
+                                               ^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:945
+  Property `headers` is incompatible:
+     13:     headers: "'Content-Type': 'image/jpeg'"
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+    941:     headers?: HeadersInit
+                       ^^^^^^^^^^^ union: Headers | object type. See lib: <BUILTINS>/bom.js:941
+      Member 1:
+      873: type HeadersInit = Headers | {[key: string]: string};
+                              ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:873
+      Error:
+       13:     headers: "'Content-Type': 'image/jpeg'"
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+      873: type HeadersInit = Headers | {[key: string]: string};
+                              ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:873
+      Member 2:
+      873: type HeadersInit = Headers | {[key: string]: string};
+                                        ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:873
+      Error:
+       13:     headers: "'Content-Type': 'image/jpeg'"
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+      873: type HeadersInit = Headers | {[key: string]: string};
+                                        ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:873
 
 Error: response.js:30
                          v-------------
@@ -420,7 +439,7 @@ Error: response.js:30
  32:     headers: new Headers({
 ...:
  35: }); // incorrect
-     ^ object literal. This type is incompatible with
+     ^ object literal. This type is incompatible with the expected param type of
 945:     constructor(input?: ?BodyInit, init?: ResponseOptions): void;
                               ^^^^^^^^ union: string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView. See lib: <BUILTINS>/bom.js:945
   Member 1:
@@ -544,7 +563,7 @@ Error: urlsearchparams.js:4
   4: const b = new URLSearchParams(['key1', 'value1']); // not correct
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
   4: const b = new URLSearchParams(['key1', 'value1']); // not correct
-                                   ^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with
+                                   ^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
 894:     constructor(query?: string | URLSearchParams): void;
                              ^^^^^^^^^^^^^^^^^^^^^^^^ union: string | URLSearchParams. See lib: <BUILTINS>/bom.js:894
   Member 1:
@@ -568,7 +587,7 @@ Error: urlsearchparams.js:5
   5: const c = new URLSearchParams({'key1': 'value1'}); // not correct
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
   5: const c = new URLSearchParams({'key1': 'value1'}); // not correct
-                                   ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+                                   ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 894:     constructor(query?: string | URLSearchParams): void;
                              ^^^^^^^^^^^^^^^^^^^^^^^^ union: string | URLSearchParams. See lib: <BUILTINS>/bom.js:894
   Member 1:

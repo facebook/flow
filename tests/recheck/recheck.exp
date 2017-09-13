@@ -118,7 +118,7 @@ Found 1 error
 Test e:
 Error: e2.js:6
   6:   return { type: 'QUX' };
-              ^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+              ^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected return type of
   5: const f = (): Action => {
                    ^^^^^^ union: object type(s)
   Member 1:

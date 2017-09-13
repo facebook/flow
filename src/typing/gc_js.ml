@@ -471,7 +471,7 @@ and gc_choice_use_tool cx state = function
     gc cx state tout
 
 and gc_spec cx state = function
-  | UnionCases (t, ts) ->
+  | UnionCases (_, t, ts) ->
     gc cx state t;
     List.iter (gc cx state) ts
   | IntersectionCases (ts, u) ->
