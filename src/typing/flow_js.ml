@@ -8973,6 +8973,9 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
    * cache then do not continue. *)
   if t1 = t2 then () else (
 
+  (* limit recursion depth *)
+  RecursionCheck.check trace;
+
   (* In general, unifying t1 and t2 should have similar effects as flowing t1 to
      t2 and flowing t2 to t1. This also means that any restrictions on such
      flows should also be enforced here. In particular, we don't expect t1 or t2
