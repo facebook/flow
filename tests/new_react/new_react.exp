@@ -737,7 +737,7 @@ Error: state6.js:41
                                                                  ^^^^^ State
   Error:
    41:     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
-                               ^^^^^^^^^^^^^ property `$call` of object type. Property not found in
+                               ^^^^^^^^^^^^^ property `$call` of object type. Callable signature not found in
    13: class MyComponent extends React.Component<{prop: number}, State> {
                                                                  ^^^^^ object type
   Member 2:

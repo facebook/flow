@@ -7995,13 +7995,17 @@ and write_obj_prop cx trace o propref reason_obj reason_op tin =
   | None ->
     match propref with
     | Named (reason_prop, _) ->
-      if sealed_in_op reason_op o.flags.sealed
+      let sealed = sealed_in_op reason_op o.flags.sealed in
+      if sealed && o.flags.exact
       then
-        let err =
-          FlowError.EPropNotFound ((reason_prop, reason_obj), UnknownUse) in
-        add_output cx ~trace err
+        add_output cx ~trace (FlowError.EPropNotFound
+          ((reason_prop, reason_obj), UnknownUse))
       else
-        let strict = ShadowWrite (Nel.one o.props_tmap) in
+        let strict =
+          if sealed
+          then Strict reason_obj
+          else ShadowWrite (Nel.one o.props_tmap)
+        in
         rec_flow cx trace (o.proto_t,
           LookupT (reason_op, strict, [], propref, RWProp (l, tin, Write)))
     | Computed elem_t ->
