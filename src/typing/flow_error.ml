@@ -573,15 +573,24 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     typecheck_error_with_core_infos ?suppress_op ?extra core_msgs
   in
 
-  let prop_polarity_error_msg x p1 p2 =
+  let prop_polarity_error_msg x reasons p1 p2 =
     let prop_name = match x with
     | Some x -> spf "property `%s`" x
     | None -> "computed property"
     in
-    spf "%s %s incompatible with %s use in"
-      (String.capitalize_ascii (Polarity.string p1))
-      prop_name
-      (Polarity.string p2)
+    let reasons' = ordered_reasons reasons in
+    let msg =
+      if reasons' == reasons then
+        spf "%s %s incompatible with %s use in"
+          (String.capitalize_ascii (Polarity.string p1))
+          prop_name
+          (Polarity.string p2)
+      else
+        spf "Incompatible with %s %s"
+          (Polarity.string p1)
+          prop_name
+    in
+    reasons', msg
   in
 
   let extra_info_of_use_op (rl, ru) extra msg wrapper_msg =
@@ -811,11 +820,11 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       typecheck_error ~extra msg reasons
 
   | EPropAccess (reasons, x, polarity, rw) ->
-      let msg = prop_polarity_error_msg x polarity (Polarity.of_rw rw) in
+      let reasons, msg = prop_polarity_error_msg x reasons polarity (Polarity.of_rw rw) in
       typecheck_error msg reasons
 
   | EPropPolarityMismatch (reasons, x, (p1, p2), use_op) ->
-      let msg = prop_polarity_error_msg x p1 p2 in
+      let reasons, msg = prop_polarity_error_msg x reasons p1 p2 in
       let reasons, extra, msg = unwrap_use_ops (reasons, [], msg) use_op in
       typecheck_error ~extra msg reasons
 
