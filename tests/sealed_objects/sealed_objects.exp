@@ -6,9 +6,14 @@ Error: test.js:2
 
 Error: test.js:7
   7: var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `y`. Property not found in
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
   7: var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `y` is incompatible:
+      7: var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `y`. Property not found in
+      7: var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
 Error: test.js:19
  19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error

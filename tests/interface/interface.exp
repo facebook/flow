@@ -151,9 +151,14 @@ Error: test3.js:6
 
 Error: test4.js:2
   2: (function foo(x: number) { }: I); // error, property `foo` not found function
-                                   ^ property `foo` of I. Property not found in
+      ^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   2: (function foo(x: number) { }: I); // error, property `foo` not found function
-      ^^^^^^^^^^^^^^^^^^^^^^^ function
+                                   ^ I
+  Property `foo` is incompatible:
+      2: (function foo(x: number) { }: I); // error, property `foo` not found function
+                                       ^ property `foo` of I. Property not found in
+      2: (function foo(x: number) { }: I); // error, property `foo` not found function
+          ^^^^^^^^^^^^^^^^^^^^^^^ function
 
 Error: test4.js:9
   9: new C().bar((x: string) => { }); // error, number ~/~> string
@@ -164,10 +169,15 @@ Error: test4.js:9
     5:   bar(i: I): void;
          ^^^^^^^^^^^^^^^ function type
   Error:
-    5:   bar(i: I): void;
-                ^ property `foo` of I. Property not found in
     9: new C().bar((x: string) => { }); // error, number ~/~> string
-                   ^^^^^^^^^^^^^^^^^^ function
+                   ^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+    5:   bar(i: I): void;
+                ^ I
+    Property `foo` is incompatible:
+        5:   bar(i: I): void;
+                    ^ property `foo` of I. Property not found in
+        9: new C().bar((x: string) => { }); // error, number ~/~> string
+                       ^^^^^^^^^^^^^^^^^^ function
   Member 2:
     6:   bar(f: (x: number) => void): void;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type

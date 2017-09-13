@@ -53,18 +53,28 @@ Error: commonjs-pascal.js:6
    22:   | React$Element<any>
            ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:22
   Error:
-   22:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:22
     6: ({}: React.Node); // Error
-        ^^ object literal
+        ^^ object literal. This type is incompatible with
+   22:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:22
+    Property `key` is incompatible:
+       22:   | React$Element<any>
+               ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:22
+        6: ({}: React.Node); // Error
+            ^^ object literal
   Member 7:
    23:   | Iterable<React$Node>;
            ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:23
   Error:
-   23:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:23
     6: ({}: React.Node); // Error
-        ^^ object literal
+        ^^ object literal. This type is incompatible with
+   23:   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:23
+    Property `@@iterator` is incompatible:
+       23:   | Iterable<React$Node>;
+               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:23
+        6: ({}: React.Node); // Error
+            ^^ object literal
 
 Error: commonjs-pascal.js:7
   7: (null: React.Missing); // Error
@@ -127,18 +137,28 @@ Error: commonjs.js:6
    22:   | React$Element<any>
            ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:22
   Error:
-   22:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:22
     6: ({}: React.Node); // Error
-        ^^ object literal
+        ^^ object literal. This type is incompatible with
+   22:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:22
+    Property `key` is incompatible:
+       22:   | React$Element<any>
+               ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:22
+        6: ({}: React.Node); // Error
+            ^^ object literal
   Member 7:
    23:   | Iterable<React$Node>;
            ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:23
   Error:
-   23:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:23
     6: ({}: React.Node); // Error
-        ^^ object literal
+        ^^ object literal. This type is incompatible with
+   23:   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:23
+    Property `@@iterator` is incompatible:
+       23:   | Iterable<React$Node>;
+               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:23
+        6: ({}: React.Node); // Error
+            ^^ object literal
 
 Error: commonjs.js:7
   7: (null: React.Missing); // Error
@@ -201,18 +221,28 @@ Error: es-default-pascal.js:6
    22:   | React$Element<any>
            ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:22
   Error:
-   22:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:22
     6: ({}: React.Node); // Error: Not in default export.
-        ^^ object literal
+        ^^ object literal. This type is incompatible with
+   22:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:22
+    Property `key` is incompatible:
+       22:   | React$Element<any>
+               ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:22
+        6: ({}: React.Node); // Error: Not in default export.
+            ^^ object literal
   Member 7:
    23:   | Iterable<React$Node>;
            ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:23
   Error:
-   23:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:23
     6: ({}: React.Node); // Error: Not in default export.
-        ^^ object literal
+        ^^ object literal. This type is incompatible with
+   23:   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:23
+    Property `@@iterator` is incompatible:
+       23:   | Iterable<React$Node>;
+               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:23
+        6: ({}: React.Node); // Error: Not in default export.
+            ^^ object literal
 
 Error: es-default-pascal.js:7
   7: (null: React.Missing); // Error: Not in default export.
@@ -314,18 +344,28 @@ Error: es-namespace-pascal.js:6
    22:   | React$Element<any>
            ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:22
   Error:
-   22:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:22
     6: ({}: React.Node); // Error
-        ^^ object literal
+        ^^ object literal. This type is incompatible with
+   22:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:22
+    Property `key` is incompatible:
+       22:   | React$Element<any>
+               ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:22
+        6: ({}: React.Node); // Error
+            ^^ object literal
   Member 7:
    23:   | Iterable<React$Node>;
            ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:23
   Error:
-   23:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:23
     6: ({}: React.Node); // Error
-        ^^ object literal
+        ^^ object literal. This type is incompatible with
+   23:   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:23
+    Property `@@iterator` is incompatible:
+       23:   | Iterable<React$Node>;
+               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:23
+        6: ({}: React.Node); // Error
+            ^^ object literal
 
 Error: es-namespace-pascal.js:7
   7: (null: React.Missing); // Error
@@ -388,18 +428,28 @@ Error: es-namespace.js:6
    22:   | React$Element<any>
            ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:22
   Error:
-   22:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:22
     6: ({}: React.Node); // Error
-        ^^ object literal
+        ^^ object literal. This type is incompatible with
+   22:   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:22
+    Property `key` is incompatible:
+       22:   | React$Element<any>
+               ^^^^^^^^^^^^^^^^^^ property `key`. Property not found in. See lib: <BUILTINS>/react.js:22
+        6: ({}: React.Node); // Error
+            ^^ object literal
   Member 7:
    23:   | Iterable<React$Node>;
            ^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:23
   Error:
-   23:   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:23
     6: ({}: React.Node); // Error
-        ^^ object literal
+        ^^ object literal. This type is incompatible with
+   23:   | Iterable<React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/react.js:23
+    Property `@@iterator` is incompatible:
+       23:   | Iterable<React$Node>;
+               ^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:23
+        6: ({}: React.Node); // Error
+            ^^ object literal
 
 Error: es-namespace.js:7
   7: (null: React.Missing); // Error

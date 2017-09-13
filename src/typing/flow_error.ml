@@ -58,6 +58,7 @@ type error_message =
       reason_prop: reason;
       reason_obj: reason;
       special: lower_kind option;
+      use_op: use_op option;
     }
   | EIncompatibleGetProp of {
       reason_prop: reason;
@@ -92,7 +93,7 @@ type error_message =
       expected_polarity: Type.polarity;
       actual_polarity: Type.polarity;
     }
-  | EStrictLookupFailed of (reason * reason) * reason * string option
+  | EStrictLookupFailed of (reason * reason) * reason * string option * use_op option
   | EPrivateLookupFailed of (reason * reason)
   | EFunCallParam of (reason * reason)
   | EFunCallThis of reason * reason * reason
@@ -308,7 +309,12 @@ let locs_of_error_message = function
       [loc_of_reason reason_lower; loc_of_reason reason_upper]
   | EIncompatibleDefs { reason_lower; reason_upper; _ } ->
       [loc_of_reason reason_lower; loc_of_reason reason_upper]
-  | EIncompatibleProp { reason_prop; reason_obj; _ }
+  | EIncompatibleProp { reason_prop; reason_obj; use_op; _ } ->
+      let use_op_locs = match use_op with
+      | Some use_op -> locs_of_use_op [] use_op
+      | None -> []
+      in
+      (loc_of_reason reason_prop)::(loc_of_reason reason_obj)::use_op_locs
   | EIncompatibleGetProp { reason_prop; reason_obj; _ }
   | EIncompatibleSetProp { reason_prop; reason_obj; _ } ->
       [loc_of_reason reason_prop; loc_of_reason reason_obj]
@@ -338,8 +344,12 @@ let locs_of_error_message = function
   | EPropPolarityMismatch ((reason1, reason2), _, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EPolarityMismatch { reason; _ } -> [loc_of_reason reason]
-  | EStrictLookupFailed ((reason1, reason2), _, _) ->
-      [loc_of_reason reason1; loc_of_reason reason2]
+  | EStrictLookupFailed ((reason1, reason2), _, _, use_op) ->
+      let use_op_locs = match use_op with
+      | Some use_op -> locs_of_use_op [] use_op
+      | None -> []
+      in
+      (loc_of_reason reason1)::(loc_of_reason reason2)::use_op_locs
   | EPrivateLookupFailed (reason1, reason2) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EFunCallParam (reason1, reason2) ->
@@ -657,9 +667,16 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       let extra = speculation_extras extras in
       typecheck_error ~extra "This type is incompatible with" reasons
 
-  | EIncompatibleProp { reason_prop; reason_obj; special } ->
+  | EIncompatibleProp { reason_prop; reason_obj; special; use_op } ->
+      let reasons = (reason_prop, reason_obj) in
       let msg = spf "Property not found in%s" (special_suffix special) in
-      typecheck_error msg (reason_prop, reason_obj)
+      begin match use_op with
+      | Some use_op ->
+        let reasons, extra, msg = unwrap_use_ops (reasons, [], msg) use_op in
+        typecheck_error ~extra msg reasons
+      | None ->
+        typecheck_error msg reasons
+      end
 
   | EIncompatibleGetProp { reason_prop; reason_obj; special } ->
       let msg = spf "Property cannot be accessed on%s" (special_suffix special) in
@@ -803,7 +820,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         name
         (Polarity.string expected_polarity)]]
 
-  | EStrictLookupFailed (reasons, lreason, x) ->
+  | EStrictLookupFailed (reasons, lreason, x, use_op) ->
     (* if we're looking something up on the global/builtin object, then tweak
        the error to say that `x` doesn't exist. We can tell this is the
        global object because that should be the only object created with
@@ -821,7 +838,13 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       | Some "$key" | Some "$value" -> "Indexable signature not found in"
       | _ -> "Property not found in"
       in
-      typecheck_error msg reasons
+      begin match use_op with
+      | Some use_op ->
+        let reasons, extra, msg = unwrap_use_ops (reasons, [], msg) use_op in
+        typecheck_error ~extra msg reasons
+      | None ->
+        typecheck_error msg reasons
+      end
 
   | EPrivateLookupFailed reasons ->
       typecheck_error "Property not found in" reasons

@@ -120,27 +120,47 @@ Error: identity.js:24
 
 Error: identity.js:29
  29: ({}: Foo); // Error: `a` and `b` are not defined.
-          ^^^ property `a`. Property not found in
+      ^^ object literal. This type is incompatible with
  29: ({}: Foo); // Error: `a` and `b` are not defined.
-      ^^ object literal
+          ^^^ object type
+  Property `a` is incompatible:
+     29: ({}: Foo); // Error: `a` and `b` are not defined.
+              ^^^ property `a`. Property not found in
+     29: ({}: Foo); // Error: `a` and `b` are not defined.
+          ^^ object literal
 
 Error: identity.js:29
  29: ({}: Foo); // Error: `a` and `b` are not defined.
-          ^^^ property `b`. Property not found in
+      ^^ object literal. This type is incompatible with
  29: ({}: Foo); // Error: `a` and `b` are not defined.
-      ^^ object literal
+          ^^^ object type
+  Property `b` is incompatible:
+     29: ({}: Foo); // Error: `a` and `b` are not defined.
+              ^^^ property `b`. Property not found in
+     29: ({}: Foo); // Error: `a` and `b` are not defined.
+          ^^ object literal
 
 Error: identity.js:31
  31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                 ^^^ property `a`. Property not found in
+            ^^ object type. This type is incompatible with
  31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-            ^^ object type
+                 ^^^ object type
+  Property `a` is incompatible:
+     31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
+                     ^^^ property `a`. Property not found in
+     31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
+                ^^ object type
 
 Error: identity.js:31
  31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                 ^^^ property `b`. Property not found in
+            ^^ object type. This type is incompatible with
  31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
-            ^^ object type
+                 ^^^ object type
+  Property `b` is incompatible:
+     31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
+                     ^^^ property `b`. Property not found in
+     31: ((any: {}): Foo); // Error: `a` and `b` are not defined.
+                ^^ object type
 
 Error: identity.js:38
  38: (foo: {

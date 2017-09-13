@@ -6,9 +6,14 @@ Error: c.js:5
 
 Error: object_assign.js:7
   7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
-                       ^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
   7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal
+                       ^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+      7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
+                           ^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+      7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal
 
 Error: object_create.js:12
  12: ({ foo: "foo" }: C);

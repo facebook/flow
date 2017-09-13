@@ -46,37 +46,65 @@ export default suite(({addFile, addFiles, addCode}) => [
 
     addCode('(cVal: CT);').noNewErrors(),
     addCode('(cVal.D: DT);').noNewErrors(),
-    addCode('(cVal: DT);').newErrors(`
-      test.js:18
-       18: (cVal: DT);
-                  ^^ property ${'`'}C${'`'}. Property not found in
-       18: (cVal: DT);
-            ^^^^ object literal
-    `),
-    addCode('(cVal.D: CT);').newErrors(`
-      test.js:20
-       20: (cVal.D: CT);
-                    ^^ property ${'`'}D${'`'}. Property not found in
-       20: (cVal.D: CT);
-            ^^^^^^ object literal
-    `),
+    addCode('(cVal: DT);').newErrors(
+                            `
+                              test.js:18
+                               18: (cVal: DT);
+                                    ^^^^ object literal. This type is incompatible with
+                               18: (cVal: DT);
+                                          ^^ object type
+                                Property \`C\` is incompatible:
+                                   18: (cVal: DT);
+                                              ^^ property \`C\`. Property not found in
+                                   18: (cVal: DT);
+                                        ^^^^ object literal
+                            `,
+                          ),
+    addCode('(cVal.D: CT);').newErrors(
+                              `
+                                test.js:20
+                                 20: (cVal.D: CT);
+                                      ^^^^^^ object literal. This type is incompatible with
+                                 20: (cVal.D: CT);
+                                              ^^ object type
+                                  Property \`D\` is incompatible:
+                                     20: (cVal.D: CT);
+                                                  ^^ property \`D\`. Property not found in
+                                     20: (cVal.D: CT);
+                                          ^^^^^^ object literal
+                              `,
+                            ),
 
     addCode('(dVal: DT);').noNewErrors(),
     addCode('(dVal.C: CT);').noNewErrors(),
-    addCode('(dVal: CT);').newErrors(`
-      test.js:26
-       26: (dVal: CT);
-                  ^^ property ${'`'}D${'`'}. Property not found in
-       26: (dVal: CT);
-            ^^^^ object literal
-    `),
-    addCode('(dVal.C: DT);').newErrors(`
-      test.js:28
-       28: (dVal.C: DT);
-                    ^^ property ${'`'}C${'`'}. Property not found in
-       28: (dVal.C: DT);
-            ^^^^^^ object literal
-    `),
+    addCode('(dVal: CT);').newErrors(
+                            `
+                              test.js:26
+                               26: (dVal: CT);
+                                    ^^^^ object literal. This type is incompatible with
+                               26: (dVal: CT);
+                                          ^^ object type
+                                Property \`D\` is incompatible:
+                                   26: (dVal: CT);
+                                              ^^ property \`D\`. Property not found in
+                                   26: (dVal: CT);
+                                        ^^^^ object literal
+                            `,
+                          ),
+    addCode('(dVal.C: DT);').newErrors(
+                              `
+                                test.js:28
+                                 28: (dVal.C: DT);
+                                      ^^^^^^ object literal. This type is incompatible with
+                                 28: (dVal.C: DT);
+                                              ^^ object type
+                                  Property \`C\` is incompatible:
+                                     28: (dVal.C: DT);
+                                                  ^^ property \`C\`. Property not found in
+                                     28: (dVal.C: DT);
+                                          ^^^^^^ object literal
+                              `,
+                            ),
   ]),
 
   /**

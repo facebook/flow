@@ -49,10 +49,15 @@ Error: child_process/execSync.js:8
   266:   ): string;
          --------^ function type. See lib: <BUILTINS>/node.js:263
   Error:
-  265:     options: {encoding: buffer$NonBufferEncoding} & child_process$execSyncOpts
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `encoding`. Property not found in. See lib: <BUILTINS>/node.js:265
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
-                       ^^^^^^^^^^^^^^^^ object literal
+                       ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
+  265:     options: {encoding: buffer$NonBufferEncoding} & child_process$execSyncOpts
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/node.js:265
+    Property `encoding` is incompatible:
+      265:     options: {encoding: buffer$NonBufferEncoding} & child_process$execSyncOpts
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `encoding`. Property not found in. See lib: <BUILTINS>/node.js:265
+        8: (execSync('ls', {timeout: '250'})); // error, no signatures match
+                           ^^^^^^^^^^^^^^^^ object literal
   Member 2:
                                   v
   268:   declare function execSync(

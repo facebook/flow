@@ -34,9 +34,19 @@ Error: sanity-filter-union.js:14
 
 Error: sanity-filter-union.js:16
  16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
-                                                           ^ property `v`. Property not found in
- 14: declare var ab: Array<A|B|C>;
-                           ^ object type
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
+ 16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
+                                                     ^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     14: declare var ab: Array<A|B|C>;
+                               ^ object type. This type is incompatible with
+     16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
+                                                               ^ object type
+      Property `v` is incompatible:
+         16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
+                                                                   ^ property `v`. Property not found in
+         14: declare var ab: Array<A|B|C>;
+                                   ^ object type
 
 Error: sanity-filter.js:8
   8: (b: Array<number>);

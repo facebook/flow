@@ -744,26 +744,41 @@ Error: MutationObserver.js:21
   351:     | { childList: true }
              ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
   Error:
-  351:     | { childList: true }
-             ^^^^^^^^^^^^^^^^^^^ property `childList`. Property not found in. See lib: <BUILTINS>/bom.js:351
    21: o.observe(div, {}); // incorrect
-                      ^^ object literal
+                      ^^ object literal. This type is incompatible with
+  351:     | { childList: true }
+             ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
+    Property `childList` is incompatible:
+      351:     | { childList: true }
+                 ^^^^^^^^^^^^^^^^^^^ property `childList`. Property not found in. See lib: <BUILTINS>/bom.js:351
+       21: o.observe(div, {}); // incorrect
+                          ^^ object literal
   Member 2:
   352:     | { attributes: true }
              ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
   Error:
-  352:     | { attributes: true }
-             ^^^^^^^^^^^^^^^^^^^^ property `attributes`. Property not found in. See lib: <BUILTINS>/bom.js:352
    21: o.observe(div, {}); // incorrect
-                      ^^ object literal
+                      ^^ object literal. This type is incompatible with
+  352:     | { attributes: true }
+             ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
+    Property `attributes` is incompatible:
+      352:     | { attributes: true }
+                 ^^^^^^^^^^^^^^^^^^^^ property `attributes`. Property not found in. See lib: <BUILTINS>/bom.js:352
+       21: o.observe(div, {}); // incorrect
+                          ^^ object literal
   Member 3:
   353:     | { characterData: true }
              ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
   Error:
-  353:     | { characterData: true }
-             ^^^^^^^^^^^^^^^^^^^^^^^ property `characterData`. Property not found in. See lib: <BUILTINS>/bom.js:353
    21: o.observe(div, {}); // incorrect
-                      ^^ object literal
+                      ^^ object literal. This type is incompatible with
+  353:     | { characterData: true }
+             ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
+    Property `characterData` is incompatible:
+      353:     | { characterData: true }
+                 ^^^^^^^^^^^^^^^^^^^^^^^ property `characterData`. Property not found in. See lib: <BUILTINS>/bom.js:353
+       21: o.observe(div, {}); // incorrect
+                          ^^ object literal
 
 Error: MutationObserver.js:22
  22: o.observe(div, { subtree: true }); // incorrect
@@ -776,26 +791,41 @@ Error: MutationObserver.js:22
   351:     | { childList: true }
              ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
   Error:
-  351:     | { childList: true }
-             ^^^^^^^^^^^^^^^^^^^ property `childList`. Property not found in. See lib: <BUILTINS>/bom.js:351
    22: o.observe(div, { subtree: true }); // incorrect
-                      ^^^^^^^^^^^^^^^^^ object literal
+                      ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+  351:     | { childList: true }
+             ^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:351
+    Property `childList` is incompatible:
+      351:     | { childList: true }
+                 ^^^^^^^^^^^^^^^^^^^ property `childList`. Property not found in. See lib: <BUILTINS>/bom.js:351
+       22: o.observe(div, { subtree: true }); // incorrect
+                          ^^^^^^^^^^^^^^^^^ object literal
   Member 2:
   352:     | { attributes: true }
              ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
   Error:
-  352:     | { attributes: true }
-             ^^^^^^^^^^^^^^^^^^^^ property `attributes`. Property not found in. See lib: <BUILTINS>/bom.js:352
    22: o.observe(div, { subtree: true }); // incorrect
-                      ^^^^^^^^^^^^^^^^^ object literal
+                      ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+  352:     | { attributes: true }
+             ^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:352
+    Property `attributes` is incompatible:
+      352:     | { attributes: true }
+                 ^^^^^^^^^^^^^^^^^^^^ property `attributes`. Property not found in. See lib: <BUILTINS>/bom.js:352
+       22: o.observe(div, { subtree: true }); // incorrect
+                          ^^^^^^^^^^^^^^^^^ object literal
   Member 3:
   353:     | { characterData: true }
              ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
   Error:
-  353:     | { characterData: true }
-             ^^^^^^^^^^^^^^^^^^^^^^^ property `characterData`. Property not found in. See lib: <BUILTINS>/bom.js:353
    22: o.observe(div, { subtree: true }); // incorrect
-                      ^^^^^^^^^^^^^^^^^ object literal
+                      ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+  353:     | { characterData: true }
+             ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
+    Property `characterData` is incompatible:
+      353:     | { characterData: true }
+                 ^^^^^^^^^^^^^^^^^^^^^^^ property `characterData`. Property not found in. See lib: <BUILTINS>/bom.js:353
+       22: o.observe(div, { subtree: true }); // incorrect
+                          ^^^^^^^^^^^^^^^^^ object literal
 
 Error: MutationObserver.js:23
  23: o.observe(div, { attributes: true, attributeFilter: true }); // incorrect

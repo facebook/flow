@@ -1411,10 +1411,15 @@ Error: traversal.js:189
     3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3200
     Error:
-    3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `acceptNode`. Property not found in. See lib: <BUILTINS>/dom.js:3200
     189:     document.createNodeIterator(document_body, -1, {}); // invalid
-                                                            ^^ object literal
+                                                            ^^ object literal. This type is incompatible with
+    3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3200
+      Property `acceptNode` is incompatible:
+        3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `acceptNode`. Property not found in. See lib: <BUILTINS>/dom.js:3200
+        189:     document.createNodeIterator(document_body, -1, {}); // invalid
+                                                                ^^ object literal
   Member 42:
   936:   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: number, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Node>;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ polymorphic type: function type. See lib: <BUILTINS>/dom.js:936
@@ -1843,10 +1848,15 @@ Error: traversal.js:196
     3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3200
     Error:
-    3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `acceptNode`. Property not found in. See lib: <BUILTINS>/dom.js:3200
     196:     document.createTreeWalker(document_body, -1, {}); // invalid
-                                                          ^^ object literal
+                                                          ^^ object literal. This type is incompatible with
+    3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3200
+      Property `acceptNode` is incompatible:
+        3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `acceptNode`. Property not found in. See lib: <BUILTINS>/dom.js:3200
+        196:     document.createTreeWalker(document_body, -1, {}); // invalid
+                                                              ^^ object literal
   Member 42:
   937:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: number, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Node>;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ polymorphic type: function type. See lib: <BUILTINS>/dom.js:937
@@ -1867,10 +1877,15 @@ Error: traversal.js:196
     3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3200
     Error:
-    3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
-                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `acceptNode`. Property not found in. See lib: <BUILTINS>/dom.js:3200
     196:     document.createTreeWalker(document_body, -1, {}); // invalid
-                                                          ^^ object literal
+                                                          ^^ object literal. This type is incompatible with
+    3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:3200
+      Property `acceptNode` is incompatible:
+        3200: type NodeFilterInterface = NodeFilterCallback | { acceptNode: NodeFilterCallback }
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `acceptNode`. Property not found in. See lib: <BUILTINS>/dom.js:3200
+        196:     document.createTreeWalker(document_body, -1, {}); // invalid
+                                                              ^^ object literal
   Member 43:
   941:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: void): TreeWalker<RootNodeT, Node>;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ polymorphic type: function type. See lib: <BUILTINS>/dom.js:941

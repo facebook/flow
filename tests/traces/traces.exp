@@ -129,20 +129,26 @@ Error: Traces2.js:7
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
 Trace:
 * path 1:
- 11:   propTypes: { bar: React.PropTypes.string.isRequired }
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ObjProtoT [object literal]
   7:   propTypes: { foo: React.PropTypes.string.isRequired }
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> LookupT [propTypes of React component] (from path 2)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ObjT [propTypes of React component]
+ 11:   propTypes: { bar: React.PropTypes.string.isRequired }
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnknownUse, ObjT) [propTypes of React component] (from path 2)
 * path 2:
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ObjT [propTypes of React component]
-  7:   propTypes: { foo: React.PropTypes.string.isRequired }
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(PropertyCompatibility, ObjT) [propTypes of React component] (from path 3)
+161:   +props: React$ElementProps<ElementType>,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [React element props] (from path 3). See lib: <BUILTINS>/react.js:161
 * path 3:
-161:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ OpenT [React element props]. See lib: <BUILTINS>/react.js:161
-161:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(PropertyCompatibility, OpenT) [React element props] (from [not shown]). See lib: <BUILTINS>/react.js:161
+             v------------------
+ 10: var B = React.createClass({
+ 11:   propTypes: { bar: React.PropTypes.string.isRequired }
+ 12: });
+     -^ InstanceT [React$Component]
+             v------------------
+ 10: var B = React.createClass({
+ 11:   propTypes: { bar: React.PropTypes.string.isRequired }
+ 12: });
+     -^ ~> UseT(UnknownUse, ExtendsT) [extends React$Component] (from [not shown])
 
 Error: Traces2.js:11
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
@@ -172,5 +178,42 @@ Trace:
  12: });
      -^ ~> UseT(UnknownUse, ExtendsT) [extends React$Component] (from [not shown])
 
+Error: Traces2.js:14
+ 14: function f(b): Element<*> {
+                    ^^^^^^^^^^ object type. This type is incompatible with
+                                                                   v-
+159: declare type React$Element<+ElementType: React$ElementType> = {|
+160:   +type: ElementType,
+161:   +props: React$ElementProps<ElementType>,
+...:
+164: |};
+     -^ object type. See lib: <BUILTINS>/react.js:159
+Trace:
+* path 1:
+ 11:   propTypes: { bar: React.PropTypes.string.isRequired }
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ObjProtoT [object literal]
+  7:   propTypes: { foo: React.PropTypes.string.isRequired }
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> LookupT [propTypes of React component] (from path 2)
+* path 2:
+ 11:   propTypes: { bar: React.PropTypes.string.isRequired }
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ObjT [propTypes of React component]
+  7:   propTypes: { foo: React.PropTypes.string.isRequired }
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(PropertyCompatibility, ObjT) [propTypes of React component] (from path 3)
+* path 3:
+161:   +props: React$ElementProps<ElementType>,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ OpenT [React element props]. See lib: <BUILTINS>/react.js:161
+161:   +props: React$ElementProps<ElementType>,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(PropertyCompatibility, OpenT) [React element props] (from [not shown]). See lib: <BUILTINS>/react.js:161
+  Property `props` is incompatible:
+     11:   propTypes: { bar: React.PropTypes.string.isRequired }
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component. This type is incompatible with
+      7:   propTypes: { foo: React.PropTypes.string.isRequired }
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
+      Property `foo` is incompatible:
+          7:   propTypes: { foo: React.PropTypes.string.isRequired }
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in
+         11:   propTypes: { bar: React.PropTypes.string.isRequired }
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component
 
-Found 7 errors
+
+Found 8 errors

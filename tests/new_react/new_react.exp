@@ -1,14 +1,3 @@
-Library type error:
-<BUILTINS>/react.js:161
-161:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `w`. Property not found in
-                    v
-  4:     propTypes: {
-  5:         x: React.PropTypes.string,
-  6:         z: React.PropTypes.number
-  7:     },
-         ^ propTypes of React component. See: props.js:4
-
 Error: bad_default_props.js:15
  15: class C3 extends React.Component { // error
                       ^^^^^^^^^^^^^^^ property `Component`. Too few type arguments. Expected at least 1
@@ -40,9 +29,14 @@ Error: classes.js:20
 
 Error: classes.js:23
  23:   setState(o: { y_: string }): void { }
-                   ^^^^^^^^^^^^^^ property `y_`. Property not found in
+                   ^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
  38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:38
+  Property `y_` is incompatible:
+     23:   setState(o: { y_: string }): void { }
+                       ^^^^^^^^^^^^^^ property `y_`. Property not found in
+     38:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:38
 
 Error: classes.js:23
  23:   setState(o: { y_: string }): void { }
@@ -85,14 +79,6 @@ Error: classes.js:39
 Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
                              ^^^^^^ React element `Foo`
-  7: class Foo extends React.Component<Props, State> {
-                                       ^^^^^ property `x`. Property not found in
- 39: var foo: $jsx<number> = <Foo/>;
-                             ^^^^^^ props of React element `Foo`
-
-Error: classes.js:39
- 39: var foo: $jsx<number> = <Foo/>;
-                             ^^^^^^ React element `Foo`
  39: var foo: $jsx<number> = <Foo/>;
                    ^^^^^^ number. This type is incompatible with
 159: declare type React$Element<+ElementType: React$ElementType> = {|
@@ -130,17 +116,35 @@ Error: classes.js:39
     141:   | Class<React$Component<Props, any>>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:141
 
+Error: classes.js:39
+ 39: var foo: $jsx<number> = <Foo/>;
+                             ^^^^^^ React element `Foo`
+ 39: var foo: $jsx<number> = <Foo/>;
+                             ^^^^^^ props of React element `Foo`. This type is incompatible with
+  7: class Foo extends React.Component<Props, State> {
+                                       ^^^^^ object type
+  Property `x` is incompatible:
+      7: class Foo extends React.Component<Props, State> {
+                                           ^^^^^ property `x`. Property not found in
+     39: var foo: $jsx<number> = <Foo/>;
+                                 ^^^^^^ props of React element `Foo`
+
 Error: classes.js:57
  57:     var _: string = this.props.x;
                          ^^^^^^^^^^^^ number. This type is incompatible with
  57:     var _: string = this.props.x;
                 ^^^^^^ string
 
-Error: classes.js:64
- 64:   setState(o: { y_: string }): void { },
-                   ^^^^^^^^^^^^^^ property `y_`. Property not found in
+Error: classes.js:60
  60:   getInitialState(): { y: string } {
-                      ^^^^^^^^^^^^^^^^^ object type
+                      ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
+ 64:   setState(o: { y_: string }): void { },
+                   ^^^^^^^^^^^^^^ object type
+  Property `y_` is incompatible:
+     64:   setState(o: { y_: string }): void { },
+                       ^^^^^^^^^^^^^^ property `y_`. Property not found in
+     60:   getInitialState(): { y: string } {
+                          ^^^^^^^^^^^^^^^^^ object type
 
 Error: classes.js:64
  64:   setState(o: { y_: string }): void { },
@@ -176,17 +180,6 @@ Error: classes.js:79
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:161
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                           ^^^^^^ number
-
-Error: classes.js:79
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ React element `FooLegacy`
-                  v
- 46:   propTypes: {
- 47:     x: React.PropTypes.number.isRequired
- 48:   },
-       ^ property `x`. Property not found in
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ props of React element `FooLegacy`
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
@@ -235,6 +228,25 @@ Error: classes.js:79
                                     ^^^^^^^^^^^^ props of React element `FooLegacy`. Cannot spread properties from
  78: FooLegacy.defaultProps = 0;
                               ^ number
+
+Error: classes.js:79
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                    ^^^^^^^^^^^^ React element `FooLegacy`
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                    ^^^^^^^^^^^^ props of React element `FooLegacy`. This type is incompatible with
+                  v
+ 46:   propTypes: {
+ 47:     x: React.PropTypes.number.isRequired
+ 48:   },
+       ^ propTypes of React component
+  Property `x` is incompatible:
+                      v
+     46:   propTypes: {
+     47:     x: React.PropTypes.number.isRequired
+     48:   },
+           ^ property `x`. Property not found in
+     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                        ^^^^^^^^^^^^ props of React element `FooLegacy`
 
 Error: import-react.js:16
  16: <HelloMessage name={007} />; // number ~/~> string error
@@ -302,15 +314,25 @@ Error: new_react.js:29
 Error: new_react.js:30
  30: var element_ = <C/>;
                     ^^^^ React element `C`
+ 30: var element_ = <C/>;
+                    ^^^^ props of React element `C`. This type is incompatible with
                     v
   5:     propTypes: {
   6:         x: React.PropTypes.string.isRequired,
   7:         y: React.PropTypes.array,
   8:         z: React.PropTypes.number
   9:     },
-         ^ property `x`. Property not found in
- 30: var element_ = <C/>;
-                    ^^^^ props of React element `C`
+         ^ propTypes of React component
+  Property `x` is incompatible:
+                        v
+      5:     propTypes: {
+      6:         x: React.PropTypes.string.isRequired,
+      7:         y: React.PropTypes.array,
+      8:         z: React.PropTypes.number
+      9:     },
+             ^ property `x`. Property not found in
+     30: var element_ = <C/>;
+                        ^^^^ props of React element `C`
 
 Error: new_react.js:32
  32: var x: number = C.displayName;
@@ -337,20 +359,70 @@ Error: propTypes.js:13
  15:   {label:"",value:undefined},
  16: ]}/>; // error (label is required, value not required)
      ---^ React element `C`
-                                       v----------------
+     v---------------
+ 13: <C statistics={[
+ 14:   {},
+ 15:   {label:"",value:undefined},
+ 16: ]}/>; // error (label is required, value not required)
+     ---^ props of React element `C`. This type is incompatible with
+                  v
+  5:   propTypes: {
   6:     statistics: PropTypes.arrayOf(PropTypes.shape({
   7:       label: PropTypes.string.isRequired,
-  8:       value: PropTypes.number,
-  9:     })).isRequired,
-         -^ property `label`. Property not found in
- 14:   {},
-       ^^ object literal
+...:
+ 10:   }
+       ^ propTypes of React component
+  Property `statistics` is incompatible:
+                        v
+     13: <C statistics={[
+     14:   {},
+     15:   {label:"",value:undefined},
+     16: ]}/>; // error (label is required, value not required)
+         ^ array literal. Has some incompatible type argument with
+                         v----------------------------------
+      6:     statistics: PropTypes.arrayOf(PropTypes.shape({
+      7:       label: PropTypes.string.isRequired,
+      8:       value: PropTypes.number,
+      9:     })).isRequired,
+             -------------^ array type
+      Type argument `T` is incompatible:
+         14:   {},
+               ^^ object literal. This type is incompatible with
+                                               v----------------
+          6:     statistics: PropTypes.arrayOf(PropTypes.shape({
+          7:       label: PropTypes.string.isRequired,
+          8:       value: PropTypes.number,
+          9:     })).isRequired,
+                 -^ object type
+          Property `label` is incompatible:
+                                                   v----------------
+              6:     statistics: PropTypes.arrayOf(PropTypes.shape({
+              7:       label: PropTypes.string.isRequired,
+              8:       value: PropTypes.number,
+              9:     })).isRequired,
+                     -^ property `label`. Property not found in
+             14:   {},
+                   ^^ object literal
 
 Error: propTypes.js:18
+                                                         v
  18: var props: Array<{label: string, value?: number}> = [
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `label`. Property not found in
  19:   {},
-       ^^ object literal
+ 20:   {label:"",value:undefined},
+ 21: ]; // error (same as ^)
+     ^ array literal. Has some incompatible type argument with
+ 18: var props: Array<{label: string, value?: number}> = [
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     19:   {},
+           ^^ object literal. This type is incompatible with
+     18: var props: Array<{label: string, value?: number}> = [
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+      Property `label` is incompatible:
+         18: var props: Array<{label: string, value?: number}> = [
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `label`. Property not found in
+         19:   {},
+               ^^ object literal
 
 Error: props.js:14
  14:         var a: number = this.props.x; // error
@@ -411,6 +483,35 @@ Error: props.js:20
                                                          ^^^^^ boolean. This type is incompatible with
       6:         z: React.PropTypes.number
                     ^^^^^^^^^^^^^^^^^^^^^^ number
+
+Error: props.js:27
+ 27: (element: $jsx<Class<FooProps>>);
+               ^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                                                   v-
+159: declare type React$Element<+ElementType: React$ElementType> = {|
+160:   +type: ElementType,
+161:   +props: React$ElementProps<ElementType>,
+...:
+164: |};
+     -^ object type. See lib: <BUILTINS>/react.js:159
+  Property `props` is incompatible:
+                        v
+      4:     propTypes: {
+      5:         x: React.PropTypes.string,
+      6:         z: React.PropTypes.number
+      7:     },
+             ^ propTypes of React component. This type is incompatible with
+    161:   +props: React$ElementProps<ElementType>,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component. See lib: <BUILTINS>/react.js:161
+      Property `w` is incompatible:
+        161:   +props: React$ElementProps<ElementType>,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `w`. Property not found in. See lib: <BUILTINS>/react.js:161
+                            v
+          4:     propTypes: {
+          5:         x: React.PropTypes.string,
+          6:         z: React.PropTypes.number
+          7:     },
+                 ^ propTypes of React component
 
 Error: props2.js:14
  14:         var s: string = this.state.bar;
@@ -474,10 +575,15 @@ Error: props4.js:9
 Error: props4.js:18
  18:   <Example foo="foo" />,
        ^^^^^^^^^^^^^^^^^^^^^ React element `Example`
- 11: class Example extends React.Component<{ bar: string }> {
-                                           ^^^^^^^^^^^^^^^ property `bar`. Property not found in
  18:   <Example foo="foo" />,
-       ^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`
+       ^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+ 11: class Example extends React.Component<{ bar: string }> {
+                                           ^^^^^^^^^^^^^^^ object type
+  Property `bar` is incompatible:
+     11: class Example extends React.Component<{ bar: string }> {
+                                               ^^^^^^^^^^^^^^^ property `bar`. Property not found in
+     18:   <Example foo="foo" />,
+           ^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`
 
 Error: state.js:19
  19:                 {this.state.bar.qux}

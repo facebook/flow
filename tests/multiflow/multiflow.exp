@@ -104,10 +104,15 @@ Error: jsx.js:34
    15: ): Elem;
        ------^ polymorphic type: function type
   Error:
-   33: declare function ExpectsProps(props: { name: string }, children: any): string;
-                                            ^^^^^^^^^^^^^^^^ property `name`. Property not found in
    10:   C: (props: {}, children: Children) => Elem
-                    ^^ object type
+                    ^^ object type. This type is incompatible with the expected param type of
+   33: declare function ExpectsProps(props: { name: string }, children: any): string;
+                                            ^^^^^^^^^^^^^^^^ object type
+    Property `name` is incompatible:
+       33: declare function ExpectsProps(props: { name: string }, children: any): string;
+                                                ^^^^^^^^^^^^^^^^ property `name`. Property not found in
+       10:   C: (props: {}, children: Children) => Elem
+                        ^^ object type
   Member 2:
                            v
    18: declare function JSX<

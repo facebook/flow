@@ -53,10 +53,15 @@ Error: exact_basics.js:71
 Error: exact_basics.js:85
  85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
- 76: declare function takesSubtypeOfPerson2(person2: Person2): void;
-                                                     ^^^^^^^ property `first`. Property not found in
  85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
-                           ^^^^^^^^^^^^^^^^^^^^^^ object type
+                           ^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
+ 76: declare function takesSubtypeOfPerson2(person2: Person2): void;
+                                                     ^^^^^^^ object type
+  Property `first` is incompatible:
+     76: declare function takesSubtypeOfPerson2(person2: Person2): void;
+                                                         ^^^^^^^ property `first`. Property not found in
+     85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
+                               ^^^^^^^^^^^^^^^^^^^^^^ object type
 
 Error: exact_basics.js:94
  94: takesPersonPred(returnsExactlyPersonPred()); // error
@@ -83,10 +88,15 @@ Error: unsealed.js:14
     4: function f(o: {p: string} | $Exact<{}>): string {
                      ^^^^^^^^^^^ object type
   Error:
-    4: function f(o: {p: string} | $Exact<{}>): string {
-                     ^^^^^^^^^^^ property `p`. Property not found in
    14: f(o); // error: o incompatible with exact type
-         ^ object literal
+         ^ object literal. This type is incompatible with
+    4: function f(o: {p: string} | $Exact<{}>): string {
+                     ^^^^^^^^^^^ object type
+    Property `p` is incompatible:
+        4: function f(o: {p: string} | $Exact<{}>): string {
+                         ^^^^^^^^^^^ property `p`. Property not found in
+       14: f(o); // error: o incompatible with exact type
+             ^ object literal
   Member 2:
     4: function f(o: {p: string} | $Exact<{}>): string {
                                    ^^^^^^^^^^ exact type: object type

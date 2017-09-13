@@ -77,26 +77,41 @@ Error: cond_prop.js:11
     3: type Type = Name | ListType | NonNullType;
                    ^^^^ Name
   Error:
-    3: type Type = Name | ListType | NonNullType;
-                   ^^^^ property `kind`. Property not found in
    11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                               ^^^^^^^^^^^^ object type
+                               ^^^^^^^^^^^^ object type. This type is incompatible with
+    3: type Type = Name | ListType | NonNullType;
+                   ^^^^ object type
+    Property `kind` is incompatible:
+        3: type Type = Name | ListType | NonNullType;
+                       ^^^^ property `kind`. Property not found in
+       11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
+                                   ^^^^^^^^^^^^ object type
   Member 2:
     3: type Type = Name | ListType | NonNullType;
                           ^^^^^^^^ ListType
   Error:
-    3: type Type = Name | ListType | NonNullType;
-                          ^^^^^^^^ property `kind`. Property not found in
    11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                               ^^^^^^^^^^^^ object type
+                               ^^^^^^^^^^^^ object type. This type is incompatible with
+    3: type Type = Name | ListType | NonNullType;
+                          ^^^^^^^^ object type
+    Property `kind` is incompatible:
+        3: type Type = Name | ListType | NonNullType;
+                              ^^^^^^^^ property `kind`. Property not found in
+       11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
+                                   ^^^^^^^^^^^^ object type
   Member 3:
     3: type Type = Name | ListType | NonNullType;
                                      ^^^^^^^^^^^ NonNullType
   Error:
-    3: type Type = Name | ListType | NonNullType;
-                                     ^^^^^^^^^^^ property `kind`. Property not found in
    11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                               ^^^^^^^^^^^^ object type
+                               ^^^^^^^^^^^^ object type. This type is incompatible with
+    3: type Type = Name | ListType | NonNullType;
+                                     ^^^^^^^^^^^ object type
+    Property `kind` is incompatible:
+        3: type Type = Name | ListType | NonNullType;
+                                         ^^^^^^^^^^^ property `kind`. Property not found in
+       11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
+                                   ^^^^^^^^^^^^ object type
 
 Error: cond_prop.js:19
  19:     return x.result; // error

@@ -45,9 +45,14 @@ Error: annot.js:9
 
 Error: annot.js:10
  10: ({p: 0}: O); // error, property `q` not found
-              ^ property `q`. Property not found in
+      ^^^^^^ object literal. This type is incompatible with
  10: ({p: 0}: O); // error, property `q` not found
-      ^^^^^^ object literal
+              ^ object type
+  Property `q` is incompatible:
+     10: ({p: 0}: O); // error, property `q` not found
+                  ^ property `q`. Property not found in
+     10: ({p: 0}: O); // error, property `q` not found
+          ^^^^^^ object literal
 
 Error: annot.js:15
  15: (o_optional.q: empty); // error: property `q` not found

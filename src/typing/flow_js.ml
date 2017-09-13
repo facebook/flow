@@ -5747,8 +5747,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason),
       LookupT (reason_op, Strict strict_reason, [],
         (Named (reason_prop, x) as propref), action) ->
+      let use_op = use_op_of_lookup_action action in
       add_output cx ~trace (FlowError.EStrictLookupFailed
-        ((reason_prop, strict_reason), reason, Some x));
+        ((reason_prop, strict_reason), reason, Some x, use_op));
       let p = Field (AnyT.why reason_op, Neutral) in
       perform_lookup_action cx trace propref p reason reason_op action
 
@@ -5769,8 +5770,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         perform_lookup_action cx trace propref p reason reason_op action
       | _ ->
         let reason_prop = reason_of_t elem_t in
+        let use_op = use_op_of_lookup_action action in
         add_output cx ~trace (FlowError.EStrictLookupFailed
-          ((reason_prop, strict_reason), reason, None)))
+          ((reason_prop, strict_reason), reason, None, use_op)))
 
     | (DefT (reason, NullT) | ObjProtoT reason | FunProtoT reason),
       LookupT (reason_op, ShadowRead (strict, rev_proto_ids), [],
@@ -5779,8 +5781,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (match strict with
       | None -> ()
       | Some strict_reason ->
+        let use_op = use_op_of_lookup_action action in
         add_output cx ~trace (FlowError.EStrictLookupFailed
-          ((reason_prop, strict_reason), reason, Some x)));
+          ((reason_prop, strict_reason), reason, Some x, use_op)));
 
       (* Install shadow prop (if necessary) and link up proto chain. *)
       let p = find_or_intro_shadow_prop cx trace x (Nel.rev rev_proto_ids) in
@@ -5997,11 +6000,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         special = flow_error_kind_of_lower l;
       })
 
-    | _, LookupT (_, _, _, propref, _) ->
+    | _, LookupT (_, _, _, propref, lookup_action) ->
+      let use_op = match lookup_action with
+      | LookupProp (use_op, _) -> Some use_op
+      | _ -> None
+      in
       add_output cx ~trace (FlowError.EIncompatibleProp {
         reason_prop = reason_of_propref propref;
         reason_obj = reason_of_t l;
         special = flow_error_kind_of_lower l;
+        use_op;
       })
 
     | _, UseT (Addition, u) ->
@@ -6084,6 +6092,10 @@ and flow_error_kind_of_upper = function
   | MapTypeT (_, (ObjectMap _ | ObjectMapi _), _) -> FlowError.IncompatibleMapTypeTObject
   | TypeAppVarianceCheckT _ -> FlowError.IncompatibleTypeAppVarianceCheckT
   | use_t -> FlowError.IncompatibleUnclassified (string_of_use_ctor use_t)
+
+and use_op_of_lookup_action = function
+  | LookupProp (use_op, _) -> Some use_op
+  | _ -> None
 
 (* some types need to be resolved before proceeding further *)
 and needs_resolution = function

@@ -64,28 +64,43 @@ Test c:
 Error: c2.js:6
   6:   foo({ y: 0 });
        ^^^^^^^^^^^^^ function call
-  3: export function foo(props: { x: number }) { }
-                                ^^^^^^^^^^^^^ property `x`. Property not found in. See: c1.js:3
   6:   foo({ y: 0 });
-           ^^^^^^^^ object literal
+           ^^^^^^^^ object literal. This type is incompatible with the expected param type of
+  3: export function foo(props: { x: number }) { }
+                                ^^^^^^^^^^^^^ object type. See: c1.js:3
+  Property `x` is incompatible:
+      3: export function foo(props: { x: number }) { }
+                                    ^^^^^^^^^^^^^ property `x`. Property not found in. See: c1.js:3
+      6:   foo({ y: 0 });
+               ^^^^^^^^ object literal
 
 Error: c3.js:5
   5: bar({ x: 0 });
      ^^^^^^^^^^^^^ function call
-  5: export function bar(props: { y: number }) {
-                                ^^^^^^^^^^^^^ property `y`. Property not found in. See: c2.js:5
   5: bar({ x: 0 });
-         ^^^^^^^^ object literal
+         ^^^^^^^^ object literal. This type is incompatible with the expected param type of
+  5: export function bar(props: { y: number }) {
+                                ^^^^^^^^^^^^^ object type. See: c2.js:5
+  Property `y` is incompatible:
+      5: export function bar(props: { y: number }) {
+                                    ^^^^^^^^^^^^^ property `y`. Property not found in. See: c2.js:5
+      5: bar({ x: 0 });
+             ^^^^^^^^ object literal
 
 
 Found 2 errors
 Error: c3.js:5
   5: bar({ x: 0 });
      ^^^^^^^^^^^^^ function call
-  5: export function bar(props: { y: number }) {
-                                ^^^^^^^^^^^^^ property `y`. Property not found in. See: c2.js:5
   5: bar({ x: 0 });
-         ^^^^^^^^ object literal
+         ^^^^^^^^ object literal. This type is incompatible with the expected param type of
+  5: export function bar(props: { y: number }) {
+                                ^^^^^^^^^^^^^ object type. See: c2.js:5
+  Property `y` is incompatible:
+      5: export function bar(props: { y: number }) {
+                                    ^^^^^^^^^^^^^ property `y`. Property not found in. See: c2.js:5
+      5: bar({ x: 0 });
+             ^^^^^^^^ object literal
 
 
 Found 1 error

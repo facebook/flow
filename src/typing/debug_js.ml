@@ -2272,8 +2272,8 @@ let dump_flow_error =
         spf "EIncompatibleDefs { reason_lower = %s; reason_upper = %s; extras = _ }"
           (dump_reason cx reason_lower)
           (dump_reason cx reason_upper)
-    | EIncompatibleProp { reason_prop; reason_obj; special=_ } ->
-        spf "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _ }"
+    | EIncompatibleProp { reason_prop; reason_obj; special=_; use_op=_ } ->
+        spf "EIncompatibleProp { reason_prop = %s; reason_obj = %s; special = _; use_op = _ }"
           (dump_reason cx reason_prop)
           (dump_reason cx reason_obj)
     | EIncompatibleGetProp { reason_prop; reason_obj; special=_ } ->
@@ -2366,12 +2366,13 @@ let dump_flow_error =
           name
           (Polarity.string expected_polarity)
           (Polarity.string actual_polarity)
-    | EStrictLookupFailed ((reason1, reason2), reason, x) ->
-        spf "EStrictLookupFailed ((%s, %s), %s, %s)"
+    | EStrictLookupFailed ((reason1, reason2), reason, x, use_op) ->
+        spf "EStrictLookupFailed ((%s, %s), %s, %s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (dump_reason cx reason)
           (match x with Some x -> spf "Some %S" x | None -> "None")
+          (match use_op with Some _ -> "Some use_op" | None -> "None")
     | EPrivateLookupFailed (reason1, reason2) ->
         spf "EPrivateLookupFailed (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EFunCallParam (reason1, reason2) ->

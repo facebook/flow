@@ -24,9 +24,14 @@ Error: test3.js:17
 
 Error: test6.js:10
  10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `abc`. Property not found in
+      ^ object literal. This type is incompatible with
  10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
-      ^ object literal
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `abc` is incompatible:
+     10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `abc`. Property not found in
+     10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
+          ^ object literal
 
 Error: test7.js:6
   6:     ({...x}: void); // error, Object

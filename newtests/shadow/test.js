@@ -155,9 +155,14 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7: var o: {p: string} = Object.create(proto);
-                      ^^^^^^^^^^^ property \`p\`. Property not found in
+                                    ^^^^^^^^^^^^^^^^^^^^ Object.create. This type is incompatible with
             7: var o: {p: string} = Object.create(proto);
-                                    ^^^^^^^^^^^^^^^^^^^^ Object.create
+                      ^^^^^^^^^^^ object type
+            Property \`p\` is incompatible:
+                7: var o: {p: string} = Object.create(proto);
+                          ^^^^^^^^^^^ property \`p\`. Property not found in
+                7: var o: {p: string} = Object.create(proto);
+                                        ^^^^^^^^^^^^^^^^^^^^ Object.create
         `,
       ),
 
