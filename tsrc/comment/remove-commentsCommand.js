@@ -10,6 +10,7 @@ export type Args = {
   bin: string,
   errorCheckCommand: 'check' | 'status',
   root: string,
+  includeFlowtest: boolean,
 };
 
 export default class RemoveCommentsCommand extends Base<Args> {
@@ -21,6 +22,7 @@ export default class RemoveCommentsCommand extends Base<Args> {
       bin: findFlowBin(argv.bin),
       errorCheckCommand: argv.check,
       root: resolve(process.cwd(), argv._[0]),
+      includeFlowtest: !!argv['include-flowtest'],
     };
   }
 
@@ -43,6 +45,12 @@ Queries Flow for the unused error suppressions for ROOT. Then removes them from 
     return [
       commonFlags.bin,
       commonFlags.errorCheckCommand,
+      {
+        type: "boolean",
+        name: "include-flowtest",
+        description: "Also remove comments from files that end in " +
+          "-flowtest.js or are in a __flowtests__ directory",
+      }
     ];
   }
 }

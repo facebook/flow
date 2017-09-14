@@ -105,14 +105,44 @@ async function removeUnusedErrorSuppressions(
   await writeFile(filename, contents);
 }
 
+/* A flowtest is a file that ends in -flowtest.js or which is in a directory
+ * named __flowtests__
+ */
+function isFlowtest(filename) {
+  return filename.match(/-flowtest\.js$/) ||
+         filename.match(/[/\\]__flowtests__[/\\]/);
+}
+
 export default async function(args: Args): Promise<void> {
-  const errors = await getErrors(args);
-  await Promise.all(
-    Array.from(errors.entries()).map(removeUnusedErrorSuppressions)
-  );
+  let ignoredFileCount = 0;
+  let ignoredErrorCount = 0;
+  let removedErrorCount = 0;
+  const rawErrors = await getErrors(args);
+  const errors = Array.from(rawErrors.entries())
+    // Filter out flowtests
+    .filter(([filename, errors]) => {
+      if (!args.includeFlowtest && isFlowtest(filename)) {
+        ignoredFileCount++;
+        ignoredErrorCount += errors.length;
+        return false;
+      } else {
+        removedErrorCount += errors.length;
+      }
+      return true;
+    });
+  await Promise.all(errors.map(removeUnusedErrorSuppressions));
   console.log(
     "Removed %d comments in %d files",
-    Array.from(errors.values()).reduce((sum, errors) => sum + errors.length, 0),
-    errors.size,
+    removedErrorCount,
+    errors.length,
   );
+  if (ignoredFileCount > 0) {
+    console.log(
+      "Ignored %d comments in %d files due to -flowtest.js suffix or " +
+        "__flowtests__ directory. Run with `--include-flowtest` to also " +
+        "remove those files.",
+      ignoredErrorCount,
+      ignoredFileCount
+    );
+  }
 }
