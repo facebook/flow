@@ -136,6 +136,22 @@ let temp_dir_flag prev = CommandSpec.ArgSpec.(
       ~env:"FLOW_TEMP_DIR"
 )
 
+let collect_lazy_flags main lazy_ lazy_mode =
+  main (match lazy_mode with
+  | None when lazy_ -> Some Options.LAZY_MODE_FILESYSTEM
+  | Some "fs" -> Some Options.LAZY_MODE_FILESYSTEM
+  | Some "ide" -> Some Options.LAZY_MODE_IDE
+  | _ -> None)
+
+let lazy_flags prev = CommandSpec.ArgSpec.(
+  prev
+  |> collect collect_lazy_flags
+  |> flag "--lazy" no_arg
+      ~doc:"EXPERIMENTAL: Don't run a full check"
+  |> flag "--lazy-mode" (enum ["fs"; "ide"])
+      ~doc:"EXPERIMENTAL: Which type of lazy mode to use: fs or ide (default: fs, implies --lazy)"
+)
+
 type shared_mem_params = {
   shm_dirs: string option;
   shm_min_avail: int option;
@@ -545,7 +561,7 @@ let options_and_json_flags =
     |> options_flags
     |> json_flags
 
-let make_options ~flowconfig ~lazy_ ~root (options_flags: Options_flags.t) =
+let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
   let temp_dir =
     options_flags.Options_flags.temp_dir
     |> Option.value ~default:(FlowConfig.temp_dir flowconfig)
@@ -562,7 +578,7 @@ let make_options ~flowconfig ~lazy_ ~root (options_flags: Options_flags.t) =
     (FlowConfig.lint_severities flowconfig) options_flags.flowconfig_flags.raw_lint_severities
   in
   { Options.
-    opt_lazy = lazy_;
+    opt_lazy_mode = lazy_mode;
     opt_root = root;
     opt_debug = options_flags.debug;
     opt_verbose = options_flags.verbose;

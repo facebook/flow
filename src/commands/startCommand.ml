@@ -26,8 +26,7 @@ let spec = { CommandSpec.
           ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
       |> flag "--wait" no_arg
           ~doc:"Wait for the server to finish initializing"
-      |> flag "--lazy" no_arg
-          ~doc:"EXPERIMENTAL: Don't run a full check"
+      |> lazy_flags
       |> shm_flags
       |> ignore_version_flag
       |> from_flag
@@ -43,12 +42,12 @@ let spec = { CommandSpec.
 }
 
 let main
-    options_flags json pretty log_file wait lazy_
+    options_flags json pretty log_file wait lazy_mode
     shm_flags ignore_version from path_opt () =
 
   let root = CommandUtils.guess_root path_opt in
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-  let options = make_options ~flowconfig ~lazy_ ~root options_flags in
+  let options = make_options ~flowconfig ~lazy_mode ~root options_flags in
 
   (* initialize loggers before doing too much, especially anything that might exit *)
   LoggingUtils.init_loggers ~from ~options ();
