@@ -85,16 +85,21 @@ export default async function(
     );
     const stepResults = [];
     try {
-      // flowErrors contains the current flow errors. If a step doesn't care
-      // about flow errors, we won't check for the current flow errors and
-      // flowErrors will contain null
-      let flowErrors = noErrors;
+      /* flowErrors contains the current flow errors. If a step doesn't care
+       * about flow errors, we won't check for the current flow errors and
+       * flowErrors will contain null.
+       *
+       * In non-lazy mode, we can just assume we start with 0 errors and avoid
+       * the initial check. In lazy mode, we must do the initial check
+       */
+      let flowErrors = test.lazyMode === null ? noErrors : null;
 
       let testBuilder: TestBuilder = await builder.createFreshTest(
         bin,
         suiteName,
         testNum,
         test.flowConfigFilename,
+        test.lazyMode,
       );
 
       for (const step of steps) {

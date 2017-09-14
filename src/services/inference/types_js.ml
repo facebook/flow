@@ -580,6 +580,36 @@ let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_se
     ) (true, local_errors, suppressions, severity_cover_set) lib_files
   )
 
+let files_to_infer ~workers ~focus_targets parsed_list =
+  match focus_targets with
+  | None -> CheckedSet.of_focused_list parsed_list
+  | Some focus_targets ->
+    List.fold_left (fun checked f ->
+      if Module_js.is_tracked_file f (* otherwise, f is probably a directory *)
+        && Module_js.checked_file ~audit:Expensive.warn f
+      then
+        (* Calculate the set of files to check. This set includes not only the
+           files to be "rechecked", which is f and all its dependents, but also
+           the dependencies of such files since they may not already be
+           checked. *)
+        let { Module_js.module_name; _ } = Module_js.get_info_unsafe ~audit:Expensive.warn f in
+        let all_dependent_files, _ = Dep_service.dependent_files workers
+          ~unchanged:(FilenameSet.(remove f (of_list parsed_list)))
+          ~new_or_changed:(FilenameSet.singleton f)
+          (* TODO: isn't it possible that _module is not provided by f? *)
+          ~changed_modules:(Modulename.Set.singleton module_name) in
+        let dependency_graph = Dep_service.calc_dependency_graph workers parsed_list in
+        let roots = FilenameSet.add f all_dependent_files in
+        let dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
+        CheckedSet.add
+          ~focused:(FilenameSet.singleton f)
+          ~dependents:all_dependent_files
+          ~dependencies
+          checked
+      else (* terminate *)
+        checked
+    ) CheckedSet.empty focus_targets
+
 (* We maintain the following invariant across rechecks: The set of
    `files` contains files that parsed successfully in the previous
    phase (which could be the init phase or a previous recheck phase)
@@ -837,10 +867,46 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
     ~next:(MultiWorker.next workers (FilenameSet.elements direct_dependent_files));
 
   let parsed = FilenameSet.union freshparsed unchanged in
+  let parsed_list = FilenameSet.elements parsed in
 
-  (* Non lazy mode treats every file as focused. Lazy mode treats every modified file as focused. So
-   * either way, each freshparsed file is focused *)
-  let infer_input = CheckedSet.of_focused_list freshparsed_list in
+  let infer_input, all_dependent_files = match Options.lazy_mode options with
+  | None (* Non lazy mode treats every file as focused. *)
+  | Some Options.LAZY_MODE_FILESYSTEM -> (* FS mode treats every modified file as focused *)
+    CheckedSet.of_focused_list freshparsed_list, all_dependent_files
+  | Some Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
+    (* Unfortunately, our checked_files set might be out of date. This update could have added
+     * some new dependents or dependencies. So we need to recalculate those.
+     *
+     * To calculate dependents and dependencies, we need to know what are the focused files. We
+     * define the focused files to be the union of
+     *
+     *   1. The files that were previously focused
+     *   2. Modified files that are currently open in the IDE
+     *
+     * Remember that the IDE might open a new file or keep open a deleted file, so the focused set
+     * might be missing that file. If that file reappears, we must remember to refocus on it.
+     **)
+    let old_focused = CheckedSet.focused env.ServerEnv.checked_files in
+    let open_in_ide =
+      let opened_files = Persistent_connection.get_opened_files env.ServerEnv.connections in
+      FilenameSet.filter Loc.(function
+        | SourceFile fn | LibFile fn | JsonFile fn | ResourceFile fn -> SSet.mem fn opened_files
+        | Builtins -> false) freshparsed
+    in
+    let focus_targets = Some (FilenameSet.union old_focused open_in_ide |> FilenameSet.elements) in
+
+    let updated_checked_files = files_to_infer ~workers ~focus_targets parsed_list in
+    let infer_input =
+      CheckedSet.filter ~f:(fun fn -> FilenameSet.mem fn freshparsed) updated_checked_files in
+
+    (* It's possible that all_dependent_files contains foo.js, which is a dependent of a dependency.
+     * That's fine if foo.js is a focused file or a transitive dependent of a focused file. But if
+     * it's just some random other dependent then we need to filter it out. *)
+    let focused_or_dependents = FilenameSet.union
+      (CheckedSet.focused updated_checked_files) (CheckedSet.dependents updated_checked_files) in
+    let all_dependent_files = FilenameSet.inter all_dependent_files focused_or_dependents in
+    infer_input, all_dependent_files
+  in
 
   (* recheck *)
   let checked, errors = typecheck
@@ -851,7 +917,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
     ~errors
     ~unchanged_checked
     ~infer_input
-    ~parsed:(FilenameSet.elements parsed)
+    ~parsed:parsed_list
     ~all_dependent_files
     ~persistent_connections:(Some env.ServerEnv.connections)
     ~make_merge_input:(fun inferred ->
@@ -912,36 +978,6 @@ let recheck ~options ~workers ~updates env ~serve_ready_clients =
     ~dependent_file_count
     ~profiling;
   env
-
-let files_to_infer ~workers ~focus_targets parsed_list =
-  match focus_targets with
-  | None -> CheckedSet.of_focused_list parsed_list
-  | Some focus_targets ->
-    List.fold_left (fun checked f ->
-      if Module_js.is_tracked_file f (* otherwise, f is probably a directory *)
-        && Module_js.checked_file ~audit:Expensive.warn f
-      then
-        (* Calculate the set of files to check. This set includes not only the
-           files to be "rechecked", which is f and all its dependents, but also
-           the dependencies of such files since they may not already be
-           checked. *)
-        let { Module_js.module_name; _ } = Module_js.get_info_unsafe ~audit:Expensive.warn f in
-        let all_dependent_files, _ = Dep_service.dependent_files workers
-          ~unchanged:(FilenameSet.(remove f (of_list parsed_list)))
-          ~new_or_changed:(FilenameSet.singleton f)
-          (* TODO: isn't it possible that _module is not provided by f? *)
-          ~changed_modules:(Modulename.Set.singleton module_name) in
-        let dependency_graph = Dep_service.calc_dependency_graph workers parsed_list in
-        let roots = FilenameSet.add f all_dependent_files in
-        let dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
-        CheckedSet.add
-          ~focused:(FilenameSet.singleton f)
-          ~dependents:all_dependent_files
-          ~dependencies
-          checked
-      else (* terminate *)
-        checked
-    ) CheckedSet.empty focus_targets
 
 (* creates a closure that lists all files in the given root, returned in chunks *)
 let make_next_files ~libs ~file_options root =

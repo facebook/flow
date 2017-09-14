@@ -55,6 +55,10 @@ let send_errors =
     in
     send_message (Prot.Errors {errors; warnings}) connection
 
+let send_errors_if_subscribed client ~errors ~warnings =
+  if client.subscribed
+  then send_errors ~errors ~warnings client
+
 let send_single_start_recheck connection =
   send_message (Prot.StartRecheck) connection
 
@@ -133,42 +137,37 @@ let subscribe_client connections client ~current_errors ~current_warnings =
     modify_item connections client (fun c -> { c with subscribed = true })
   end
 
-let client_did_open connections client ~filenames ~current_errors ~current_warnings =
+let client_did_open connections client ~filenames =
   Hh_logger.info "Client opened %d file(s)" (Nel.length filenames);
   let new_opened_files = Nel.fold_left (Fn.flip SSet.add) client.opened_files filenames in
   (* SSet.add ensures physical equality if the set is unchanged,
    * so == is appropriate. *)
   if new_opened_files == client.opened_files then
     (* noop *)
-    connections
+    None
   else
     let update_opened_files c = {c with opened_files = new_opened_files} in
-    (* Update the client's warnings to include the new files if they are subscribed. *)
-    if client.subscribed then begin
-      (* Create a temporary new_client to send the updated warning set to. *)
-      let new_client = update_opened_files client in
-      send_errors ~errors:current_errors ~warnings:current_warnings new_client
-    end;
-    modify_item connections client update_opened_files
+    let new_client = update_opened_files client in
+    let new_connections = modify_item connections client update_opened_files in
+    Some (new_connections, new_client)
 
-let client_did_close connections client ~filenames ~current_errors ~current_warnings =
+let client_did_close connections client ~filenames =
   Hh_logger.info "Client closed %d file(s)" (Nel.length filenames);
   let new_opened_files = Nel.fold_left (Fn.flip SSet.remove) client.opened_files filenames in
   (* SSet.remove ensures physical equality if the set is unchanged,
    * so == is appropriate. *)
   if new_opened_files == client.opened_files then
     (* noop *)
-    connections
+    None
   else
     let update_opened_files c = {c with opened_files = new_opened_files} in
-    (* Update the client's warnings to include the new files if they are subscribed. *)
-    if client.subscribed then begin
-      (* Create a temporary new_client to send the updated warning set to. *)
-      let new_client = update_opened_files client in
-      send_errors ~errors:current_errors ~warnings:current_warnings new_client
-    end;
-    modify_item connections client update_opened_files
+    let new_client = update_opened_files client in
+    let new_connections = modify_item connections client update_opened_files in
+    Some (new_connections, new_client)
 
 let get_logging_context client = client.logging_context
 
 let input_value client = Marshal_tools.from_fd_with_preamble client.infd
+
+let get_opened_files clients =
+  List.fold_left (fun acc client -> SSet.union acc (client.opened_files)) SSet.empty clients

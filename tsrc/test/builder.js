@@ -35,6 +35,7 @@ export class TestBuilder {
   dir: string;
   errorCheckCommand: CheckCommand;
   flowConfigFilename: string;
+  lazyMode: 'ide' | 'fs' | null;
   server: ?number;
   ide: null | {
     connection: RpcConnection;
@@ -54,9 +55,11 @@ export class TestBuilder {
     suiteName: string,
     testNum: number,
     flowConfigFilename: string,
+    lazyMode: 'ide' | 'fs' | null,
   ) {
     this.bin = bin;
-    this.errorCheckCommand = errorCheckCommand;
+    // If we're testing lazy mode, then we must use status
+    this.errorCheckCommand = lazyMode == null ? errorCheckCommand : 'status';
     this.suiteName = suiteName;
     this.dir = join(
       baseDir,
@@ -72,6 +75,7 @@ export class TestBuilder {
       String(testNum),
     );
     this.flowConfigFilename = flowConfigFilename;
+    this.lazyMode = lazyMode;
   }
 
   getFileName(): string {
@@ -236,10 +240,14 @@ export class TestBuilder {
   }
 
   async startFlowServer(): Promise<void> {
+    const lazyMode = this.lazyMode === null
+      ? ""
+      : format('--lazy-mode "%s"', this.lazyMode);
     const [err, stdout, stderr] = await execManual(format(
-      "%s start --json --strip-root --temp-dir %s --wait %s",
+      "%s start --json --strip-root --temp-dir %s --wait %s %s",
       this.bin,
       this.tmpDir,
+      lazyMode,
       this.dir,
     ));
 
@@ -378,7 +386,9 @@ export class TestBuilder {
 
       const onNotification = message => {
         const next = messages.shift();
-        if (next != message || messages.length === 0) {
+        // While we could end early if the message doesn't match, let's wait for
+        // either the timeout or the same number of messages
+        if (messages.length === 0) {
           done();
         }
       };
@@ -387,6 +397,9 @@ export class TestBuilder {
           this.ide.emitter.removeListener('notification', onNotification);
         resolve();
       }
+
+      // If we've already received some notifications then process them.
+      ide.messages.forEach(onNotification);
 
       setTimeout(done, timeoutMs);
 
@@ -482,6 +495,7 @@ export default class Builder {
     suiteName: string,
     testNum: number,
     flowConfigFilename: string,
+    lazyMode: 'fs' | 'ide' | null,
   ): Promise<TestBuilder> {
     const testBuilder = new TestBuilder(
       bin,
@@ -490,6 +504,7 @@ export default class Builder {
       suiteName,
       testNum,
       flowConfigFilename,
+      lazyMode,
     );
     Builder.builders.push(testBuilder);
     await testBuilder.createFreshDir();

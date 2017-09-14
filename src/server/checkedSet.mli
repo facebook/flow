@@ -26,6 +26,8 @@ val fold: ('a -> Loc.filename -> 'a) -> 'a -> t -> 'a
 val union: t -> t -> t
 val diff: t -> t -> t
 
+val filter: f:(Loc.filename -> bool) -> t -> t
+
 val all: t -> Utils_js.FilenameSet.t
 val focused: t -> Utils_js.FilenameSet.t
 val dependents: t -> Utils_js.FilenameSet.t

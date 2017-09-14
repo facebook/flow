@@ -66,6 +66,8 @@ let union = FilenameMap.union ~combine:(fun _ a b -> Some (combine a b))
 
 let diff a b = FilenameMap.filter (fun k _ -> not (FilenameMap.mem k b)) a
 
+let filter ~f checked = FilenameMap.filter (fun k _ -> f k) checked
+
 let filter_into_set ~f checked = FilenameMap.fold
   (fun key kind acc -> if f kind then FilenameSet.add key acc else acc)
   checked
