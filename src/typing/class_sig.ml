@@ -298,10 +298,7 @@ let elements cx ?constructor s =
   (* Treat getters and setters as fields *)
   let fields = SMap.union getters_and_setters fields in
 
-  (* TODO: Use Type.Method instead *)
-  let methods = SMap.map (fun t ->
-    Type.Field (t, Type.Positive)
-  ) methods in
+  let methods = SMap.map (fun t -> Type.Method t) methods in
 
   (* Only un-initialized fields require annotations, so determine now
    * (syntactically) which fields have initializers *)

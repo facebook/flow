@@ -23,8 +23,8 @@ export default suite(({addFile, addFiles, flowCmd}) => [
             foo: string;
           }
           declare export class Base<A, B, C> {
-            static +baseStaticMethod: (a: number, b: string) => number;
-            static +overriddenStaticMethod: (a: {b: number, c: number}) => number;
+            static baseStaticMethod(a: number, b: string): number;
+            static overriddenStaticMethod(a: {b: number, c: number}): number;
 
             baseInst: Base<number, string, mixed>;
             childInst: Child<string, number>;
@@ -33,7 +33,7 @@ export default suite(({addFile, addFiles, flowCmd}) => [
           }
 
           declare export class Child<A, B> extends Base<A, B, mixed> {
-            static +overriddenStaticMethod: (a: {b: number}) => number;
+            static overriddenStaticMethod(a: {b: number}): number;
 
             notExported: Class0<number>;
             overriddenMethod(a: {b: number}): number;
