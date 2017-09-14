@@ -399,7 +399,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     ->
       true
 
-  | DefT (_, ArrT (ArrayAT (t, None)))
+  | DefT (_, ArrT (ArrayAT (t, None) | ROArrayAT t))
     ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
   | DefT (_, ArrT (ArrayAT (_, Some ts) | TupleAT (_, ts)))
