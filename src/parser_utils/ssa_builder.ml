@@ -33,8 +33,27 @@ module Val = struct
 
   let uninitialized = Uninitialized
 
-  let merge t1 t2 =
-    PHI [t1;t2]
+  let merge =
+    (* Merging can easily lead to exponential blowup in size of terms if we're
+       not careful. Ideally we'd keep terms in "normal form," as sets of
+       "atomic" terms, so that merging would correspond to set union. (Atomic
+       terms include Uninitialized, Loc _, and REF { contents = None }.) For now
+       we implement something simpler, where merging optimizes only the special
+       case where one term is physically contained in the other. (This implies
+       that the set of atomic terms denoted by one term is contained in the set
+       of atomic terms denoted by the other.) *)
+    let rec occurs t1 t2 =
+      t1 == t2 || begin match t2 with
+        | Uninitialized -> false
+        | Loc _ -> false
+        | PHI ts -> List.exists (occurs t1) ts
+        | REF { contents = None } -> false
+        | REF { contents = Some t } -> occurs t1 t
+      end in
+    fun t1 t2 ->
+      if occurs t1 t2 then t2
+      else if occurs t2 t1 then t1
+      else PHI [t1;t2]
 
   (* Resolving unresolved to t essentially models an equation of the form
      unresolved = t, where unresolved is a reference to an unknown and t is the
@@ -49,11 +68,15 @@ module Val = struct
   and erase r t = match t with
     | Uninitialized -> t
     | Loc _ -> t
-    | PHI ts -> PHI (List.map (erase r) ts)
+    | PHI ts ->
+      let ts' = ListUtils.ident_map (erase r) ts in
+      if ts' == ts then t else PHI ts'
     | REF r' ->
-      if r == r' then PHI []
+      if r == r' then empty
       else begin
-        r' := Option.map !r' (erase r);
+        let t_opt = !r' in
+        let t_opt' = OptionUtils.ident_map (erase r) t_opt in
+        if t_opt != t_opt' then r' := t_opt';
         t
       end
 
