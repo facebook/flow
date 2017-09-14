@@ -184,10 +184,10 @@ let gen_class_body =
   )) in
 
   fun static fields methods env -> Codegen.(
-    let (static_fields, static_methods) = Type.(
+    let static_fields = Type.(
       match static with
-      | DefT (_, InstanceT (_, _, _, {fields_tmap; methods_tmap; _;})) ->
-        (find_props fields_tmap env, find_props methods_tmap env)
+      | DefT (_, ObjT {props_tmap; _}) ->
+        find_props props_tmap env
       | t -> failwith (
         spf
           "Internal Error: Unexpected class static type: %s"
@@ -195,19 +195,17 @@ let gen_class_body =
       )
     ) in
 
-    let fields_count = SMap.cardinal fields in
     let static_fields_count = SMap.cardinal static_fields in
+    let fields_count = SMap.cardinal fields in
     let methods_count = SMap.cardinal methods in
-    let static_methods_count = SMap.cardinal static_methods in
     let total_members_count =
-      fields_count + static_fields_count + methods_count + static_methods_count
+      static_fields_count + fields_count + methods_count
     in
 
     let env = add_str " {" env in
     if total_members_count = 0 then add_str "}" env else (
       add_str "\n" env
         |> SMap.fold (gen_field ~static:true) static_fields
-        |> SMap.fold (gen_method ~static:true) static_methods
         |> add_str "\n"
         |> SMap.fold (gen_field ~static:false) fields
         |> SMap.fold (gen_method ~static:false) methods

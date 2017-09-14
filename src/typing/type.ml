@@ -331,7 +331,7 @@ module rec TypeTerm : sig
 
     (* operations on runtime types, such as classes and functions *)
     | ConstructorT of reason * call_arg list * t
-    | SuperT of reason * insttype
+    | SuperT of reason * derived_type
     | ImplementsT of use_op * t
     | MixinT of reason * t
 
@@ -714,6 +714,13 @@ module rec TypeTerm : sig
   and cont =
     | Lower of use_op * t
     | Upper of use_t
+
+  (* Instance types are represented as an InstanceT while statics are ObjT.
+     However, both need to be checked for compatibility with the super type at
+     declaration time. *)
+ and derived_type =
+    | DerivedInstance of insttype
+    | DerivedStatics of objtype
 
   (* LookupT is a general-purpose tool for traversing prototype chains in search
      of properties. In all cases, if the property is found somewhere along the

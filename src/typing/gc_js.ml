@@ -127,12 +127,7 @@ let rec gc cx state = function
   | DefT (_, NullT) -> ()
   | NullProtoT _ -> ()
   | ObjProtoT _ -> ()
-  | DefT (_, ObjT objtype) ->
-      let id = objtype.props_tmap in
-      Context.iter_props cx id (fun _ ->
-        Property.iter_t (gc cx state));
-      Option.iter objtype.dict_t (gc_dicttype cx state);
-      gc cx state objtype.proto_t
+  | DefT (_, ObjT objtype) -> gc_objtype cx state objtype
   | OpenPredT (_, t, p_map, n_map) ->
       gc cx state t;
       gc_pred_map cx state p_map;
@@ -294,7 +289,8 @@ and gc_use cx state = function
     gc_object_kit cx state resolve_tool tool;
     gc cx state t
   | SubstOnPredT (_, _, t) -> gc cx state t
-  | SuperT (_, instance) -> gc_insttype cx state instance
+  | SuperT (_, DerivedInstance i) -> gc_insttype cx state i
+  | SuperT (_, DerivedStatics o) -> gc_objtype cx state o
   | TestPropT(_, _, t) -> gc cx state t
   | ThisSpecializeT (_, this, t) -> gc cx state this; gc cx state t
   | UnaryMinusT (_, t) -> gc cx state t
@@ -330,6 +326,12 @@ and gc_use cx state = function
       ) rrt_unresolved;
       gc_spread_resolve cx state rrt_resolve_to
 
+and gc_objtype cx state objtype =
+  let id = objtype.props_tmap in
+  Context.iter_props cx id (fun _ ->
+    Property.iter_t (gc cx state));
+  Option.iter objtype.dict_t (gc_dicttype cx state);
+  gc cx state objtype.proto_t
 
 and gc_insttype cx state instance =
   instance.type_args |> SMap.iter (fun _ -> gc cx state);
