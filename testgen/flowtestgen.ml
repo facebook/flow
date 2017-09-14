@@ -24,7 +24,6 @@ let assert_func = "
 // from http://tinyurl.com/y93dykzv
 const util = require('util');
 function assert_type(actual: any, expected: any) {
->>>>>>> 7178f55b7263546e72870a273e1ccb9052226da7
     if(typeof(actual) != 'object' || typeof(expected) != 'object') {
         if(Array.isArray(expected)) {
             if(expected.indexOf(actual) === -1) {
@@ -75,7 +74,21 @@ function assert_type(actual: any, expected: any) {
             }
         }
     }
-}\n\n
+}
+  
+function check_opt_prop(obj_list : any, actual : any, expected : any) {
+    var len = obj_list.length;
+    for(var i = 0; i < len; ++i) {
+        if(obj_list[i] === undefined) {
+            return;
+        }
+    }
+    if(actual === undefined) {
+        return;
+    }
+    assert_type(actual, expected);
+}
+\n\n
 ";;
 
 let runtime_error_file = "runtime_error.txt";;
@@ -184,11 +197,25 @@ let main () =
     else
       open_out no_error_file in
   printf "Generating programs...\n";
-  let all_prog = Codegen.mk_code Config.(config.num_prog) Config.(config.random) in
+  let base_engine = new Ruleset_base.ruleset_base in
+  let depth_engine = new Ruleset_depth.ruleset_depth in
+  let func_engine = new Ruleset_func.ruleset_func in
+  let optional_engine = new Ruleset_optional.ruleset_optional in
+  let exact_engine = new Ruleset_exact.ruleset_exact in
+  let union_engine = new Ruleset_union.ruleset_union in
+  ignore base_engine;
+  ignore depth_engine;
+  ignore func_engine;
+  ignore optional_engine;
+  ignore exact_engine;
+  ignore union_engine;
+  let engine = union_engine in
+  let all_prog = Codegen.mk_code engine Config.(config.num_prog) Config.(config.random) in
+  let is_type_check = (engine#get_name ()) = "union" in
   printf "Generated %d programs.\n" (List.length all_prog);
   List.iter (fun content ->
     let type_run_result =
-      if Config.(config.type_check)
+      if is_type_check
       then type_check content
       else None in
     match type_run_result with

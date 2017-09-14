@@ -98,6 +98,34 @@ let mk_runtime_check (expr : Loc.t E.t') (etype : Loc.t T.t') : t =
   Stmt (S.Expression.(S.Expression {expression = (Loc.none, call);
                                            directive = None}))
 
+(* Check the expression is of the given type *)
+let mk_check_opt_prop (expr : Loc.t E.t') (etype : Loc.t T.t') : t =
+  (* Make a variable decalration first *)
+  let callee = E.Identifier (Loc.none, "check_opt_prop") in
+
+  let rec get_obj (read : Loc.t E.t') (acc : Loc.t E.t' list) =
+    let open E.Member in
+    match read with
+    | E.Member {_object = (_, obj);
+                property = _;
+                computed = _} -> get_obj obj (obj :: acc)
+    | _ -> List.rev acc in
+
+  (* We want to make sure the parent is not undefined *)
+  let parent_array =
+    let elements =
+      (get_obj expr [])
+      |> List.map (fun e -> Some (E.Expression (Loc.none, e))) in
+    E.Array.(E.Array {elements}) in
+  let arguments =
+    [E.Expression (Loc.none, parent_array);
+     E.Expression (Loc.none, expr);
+     E.Expression (Loc.none, (mk_literal_expr etype))] in
+  let call = let open E.Call in
+    E.Call {callee = (Loc.none, callee); arguments} in
+  Stmt (S.Expression.(S.Expression {expression = (Loc.none, call);
+                                    directive = None}))
+
 (* ESSENTIAL: functions for making syntax *)
 let mk_expr_stmt (expr : Loc.t E.t') : Loc.t S.t' =
   S.Expression.(S.Expression {expression = (Loc.none, expr);
@@ -112,11 +140,6 @@ let mk_func_def
     (ptype : Loc.t T.t')
     (body : t list)
     (rtype : Loc.t T.t') : t =
-
-  (* Add a runtime check for the parameter *)
-  let body = body @ (match ptype with
-      | T.Function _ -> []
-      | _ -> [(mk_runtime_check (E.Identifier (Loc.none, pname)) ptype)]) in
 
   (* Add a runtime check for the parameter *)
   let body = body @ (match ptype with

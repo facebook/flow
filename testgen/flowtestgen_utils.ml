@@ -14,6 +14,14 @@ module E = Ast.Expression;;
 module T = Ast.Type;;
 module P = Ast.Pattern;;
 
+(*
+class renamer(target : string,  = object(this)
+  inherit Flow_ast_mapper.mapper as super
+  method! expression (expr : Loc.t E.t) =
+end
+   *)
+  
+
 module StrSet = Set.Make(struct
     type t = string
     let compare = Pervasives.compare
@@ -83,6 +91,13 @@ module FRandom = struct
     let index = rint (Array.length arr) in
     Array.get arr index
 end;;
+
+
+(* Generate a sequence of numbers *)
+let sequence i j =
+  let rec helper n acc =
+    if n < i then acc else helper (n - 1) (n :: acc) in
+  helper j [];;
 
 (* Read all lines from the in_channel *)
 let read_all ic : string list =
@@ -285,7 +300,8 @@ and string_of_type (t : Loc.t T.t') =
           | Init (_, init_t) -> string_of_type init_t
           | Get (_, ft) -> string_of_type (T.Function ft)
           | Set (_, ft) -> string_of_type (T.Function ft) in
-        key_str ^ " : " ^ t_str
+        let opt = if p.optional then "?" else "" in
+        key_str ^ opt ^ " : " ^ t_str
       | _ -> failwith "[string_of_prop] unsupported property" in
     let prop_str_list = ot.properties
       |> List.map string_of_prop
