@@ -24,7 +24,6 @@ let assert_func = "
 // from http://tinyurl.com/y93dykzv
 const util = require('util');
 function assert_type(actual: any, expected: any) {
->>>>>>> 7178f55b7263546e72870a273e1ccb9052226da7
     if(typeof(actual) != 'object' || typeof(expected) != 'object') {
         if(Array.isArray(expected)) {
             if(expected.indexOf(actual) === -1) {
@@ -75,7 +74,15 @@ function assert_type(actual: any, expected: any) {
             }
         }
     }
-}\n\n
+}
+  
+function check_opt_prop(actual : any, expected : any) {
+    if(actual === undefined) {
+        return;
+    }
+    assert_type(actual, expected);
+}
+\n\n
 ";;
 
 let runtime_error_file = "runtime_error.txt";;

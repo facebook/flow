@@ -216,6 +216,71 @@ class ruleset_base = object(self)
       | _ -> failwith "Input type is not an object type" in
       props
 
+  (* Getting only optional properties *)
+  method require_optional_prop (ot : Loc.t T.t') : env_elt_t list =
+    let open T.Object.Property in
+    let props = match ot with
+      | T.Object o ->
+        List.fold_right (fun p acc -> match p with
+            | T.Object.Property (_, {key = E.Object.Property.Identifier (_, name);
+                                     value = Init (_, t);
+                                     optional = true;
+                                     static = _;
+                                     _method = _;
+                                     variance = _;}) ->
+                Expr (E.Identifier (Loc.none, name), t) :: acc
+            | _ -> acc) T.Object.(o.properties) []
+      | _ -> failwith "Input type is not an object type" in
+      props
+
+  (* A function for generating literal expressions and types *)
+  method gen_obj_lit (prop_num : int) (option_num : int) (env : env_t) : (Syntax.t * env_elt_t) = 
+
+    (* a helper function for generating expression for object
+       properties *)
+    let rec gen_expr_list
+        (count : int)
+        (limit : int)
+        (result : (Loc.t E.t' * Loc.t T.t') list) : (Loc.t E.t' * Loc.t T.t') list =
+      if count = limit then result
+      else
+        let expr = self#choose count (fun () -> self#require_expr env) in
+        let ep = match expr with
+          | Expr (e, t) -> (e, t)
+          | _ -> failwith "This has to be an expression" in
+        self#backtrack_on_false ((snd ep) = T.Number || (snd ep) = T.String);
+        gen_expr_list (count + 1) limit (ep :: result) in
+
+    (* We are getting 1 property *)
+    let elist = gen_expr_list 0 (prop_num + option_num) [] in
+    let props =
+      let count = ref 0 in
+      let mk_prop () =
+        let r = "p_" ^ (string_of_int !count) in
+        let index = !count in
+        count := !count + 1;
+        r, index in
+      List.map (fun e -> let pname, index = mk_prop () in pname, e, index) elist in
+
+    (* get the literal syntax and its type *)
+    let lit = Syntax.mk_obj_lit (List.map (fun (n, e, _) -> n, e) props) in
+    let lit_expr = (match lit with
+        | Syntax.Expr e -> e
+        | _ -> failwith "[rule_obj_lit] Literal has to be an expr") in
+    let ret_type =
+      let prop_types =
+        List.map (fun (name, (_, e), index) ->
+            let open T.Object.Property in
+            T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Loc.none, name);
+                                          value = Init (Loc.none, e);
+                                          optional = if index >= prop_num then true else false;
+                                          static = false;
+                                          _method = false;
+                                          variance = None})) props in
+      let open T.Object in
+      T.Object {exact = false; properties = prop_types} in
+    lit, Expr (lit_expr, ret_type)
+
   (* ESSENTIAL: rules *)
   (* Property read rule *)
   method rule_prop_read (env : env_t) : (Syntax.t * env_t) =
@@ -350,54 +415,43 @@ class ruleset_base = object(self)
   (* A rule for generating object literals *)
   method rule_obj_lit (env : env_t) : (Syntax.t * env_t) =
 
-    (* a helper function for generating expression for object
-       properties *)
-    let rec gen_expr_list
-        (count : int)
-        (limit : int)
-        (result : (Loc.t E.t' * Loc.t T.t') list) : (Loc.t E.t' * Loc.t T.t') list =
-      if count = limit then result
-      else
-        let expr = self#choose count (fun () -> self#require_expr env) in
-        let ep = match expr with
-          | Expr (e, t) -> (e, t)
-          | _ -> failwith "This has to be an expression" in
-        gen_expr_list (count + 1) limit (ep :: result) in
+    let lit, lit_expr, ret_type = match self#gen_obj_lit ((FRandom.rint 2) + 1) 0 env with
+      | s, Expr (e, t) -> s, e, t
+      | _ -> failwith "This can only be an expression." in
+    let new_env =
+      self#add_binding
+        env
+        (Expr (lit_expr, ret_type)) in
+    let new_env = self#add_binding new_env (Type ret_type) in
+    lit, new_env
 
-    (* We are getting at most 2 properties *)
-    let elist = gen_expr_list 0 ((FRandom.rint 2) + 1) [] in
-    let props =
-      let count = ref 0 in
-      let mk_prop () =
-        let r = "p_" ^ (string_of_int !count) in
-        count := !count + 1;
-        r in
-      List.map (fun e -> mk_prop (), e) elist in
+  (* A rule for generating object literals *)
+  method rule_obj_lit1 (env : env_t) : (Syntax.t * env_t) =
 
-    (* get the literal syntax and its type *)
-    let lit = Syntax.mk_obj_lit props in
-    let lit_expr = (match lit with
-         | Syntax.Expr e -> e
-         | _ -> failwith "[rule_obj_lit] Literal has to be an expr") in
-    let ret_type =
-      let prop_types =
-        List.map (fun e ->
-            let open T.Object.Property in
-            T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Loc.none, fst e);
-                                          value = Init (Loc.none, snd (snd e));
-                                          optional = false;
-                                          static = false;
-                                          _method = false;
-                                          variance = None})) props in
-      let open T.Object in
-      T.Object {exact = false; properties = prop_types} in
+    let lit, lit_expr, ret_type = match self#gen_obj_lit 1 0 env with
+      | s, Expr (e, t) -> s, e, t
+      | _ -> failwith "This can only be an expression." in
 
     let new_env =
       self#add_binding
         env
         (Expr (lit_expr, ret_type)) in
     let new_env = self#add_binding new_env (Type ret_type) in
-    Syntax.Empty, new_env
+    lit, new_env
+
+  (* A rule for generating object literals *)
+  method rule_obj_lit2 (env : env_t) : (Syntax.t * env_t) =
+
+    let lit, lit_expr, ret_type = match self#gen_obj_lit 2 0 env with
+      | s, Expr (e, t) -> s, e, t
+      | _ -> failwith "This can only be an expression." in
+
+    let new_env =
+      self#add_binding
+        env
+        (Expr (lit_expr, ret_type)) in
+    let new_env = self#add_binding new_env (Type ret_type) in
+    lit, new_env
 
   (* A rule for generating number literals *)
   method rule_num_lit (env : env_t) : (Syntax.t * env_t) =
@@ -661,6 +715,39 @@ class ruleset_base = object(self)
       self#add_binding env (Type ret_type) in
     Syntax.Empty, new_env
 
+  (* A rule for adding object types *)
+  method rule_obj_type1 (env : env_t) : (Syntax.t * env_t) =
+
+    let _, ret_type = match self#gen_obj_lit 1 0 env with
+      | s, Expr (_, t) -> s, t
+      | _ -> failwith "This can only be an expression." in
+
+    let new_env =
+      self#add_binding env (Type ret_type) in
+    Syntax.Empty, new_env
+
+  (* A rule for adding object types *)
+  method rule_obj_type1_opt1 (env : env_t) : (Syntax.t * env_t) =
+
+    let _, ret_type = match self#gen_obj_lit 1 1 env with
+      | s, Expr (_, t) -> s, t
+      | _ -> failwith "This can only be an expression." in
+
+    let new_env =
+      self#add_binding env (Type ret_type) in
+    Syntax.Empty, new_env
+
+  (* A rule for adding object types *)
+  method rule_obj_type2 (env : env_t) : (Syntax.t * env_t) =
+
+    let _, ret_type = match self#gen_obj_lit 2 0 env with
+      | s, Expr (_, t) -> s, t
+      | _ -> failwith "This can only be an expression." in
+
+    let new_env =
+      self#add_binding env (Type ret_type) in
+    Syntax.Empty, new_env
+
   (* A rule for adding function types *)
   method rule_func_type (env : env_t) : (Syntax.t * env_t) =
     (* parameter type *)
@@ -760,6 +847,48 @@ class ruleset_base = object(self)
         | _ -> true);
 
     Syntax.mk_runtime_check fexpr ftype, env
+
+  (* A rule for adding runtime checks *)
+  method rule_check_optional_prop (env : env_t) : (Syntax.t * env_t) =
+    let mk_prop_read (obj : Loc.t E.t') (prop : Loc.t E.t') : Loc.t E.t' =
+      let open E.Member in
+      E.Member {_object = (Loc.none, obj);
+                property = PropertyExpression (Loc.none, prop);
+                computed = false} in
+
+    let rec get_prop (oname : Loc.t E.t') (ot : Loc.t T.Object.t) (depth : int) : env_elt_t =
+      let prop = self#choose depth (fun () -> self#require_optional_prop (T.Object ot)) in
+      let pexpr, ptype = match prop with
+        | Expr (e, t) -> e, t
+        | _ -> failwith "This has to be an expression" in
+      let prop_elt = match ptype with
+      | T.Object t -> get_prop pexpr t (depth + 1)
+      | _ -> Expr (pexpr, ptype) in
+      match prop_elt with
+      | Expr (e, t) -> Expr (mk_prop_read oname e, t)
+      | _ -> failwith "This has to be an expression." in
+
+    let var = self#choose 0 (fun () -> self#require_var env) in
+    let vexpr, vtype = match var with
+      | Expr (e, t) -> e, t
+      | _ -> failwith "This has to be an expression." in
+    self#backtrack_on_false (match vtype with
+        | T.Function _ -> false
+        | T.Union _ -> false
+        | _ -> true);
+
+    let final_expr = match vtype with
+      | T.Object ot -> get_prop vexpr ot 1
+      | _ -> var in
+    let fexpr, ftype = match final_expr with
+      | Expr (e, t) -> e, t
+      | _ -> failwith "This has to be an expression." in
+    self#backtrack_on_false (match ftype with
+        | T.Function _ -> false
+        | T.Union _ -> false
+        | _ -> true);
+
+    Syntax.mk_check_opt_prop fexpr ftype, env
 
   method get_all_rules () =
     let all_rules = [|self#rule_num_lit;

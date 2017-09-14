@@ -71,7 +71,7 @@ let mk_code prog_num random =
   ignore func_engine;
   ignore optional_engine;
   ignore exact_engine;
-  (* ignore union_engine; *)
+  ignore union_engine;
   let engine = union_engine in
   (if random
    then engine#gen_random_prog prog_num
