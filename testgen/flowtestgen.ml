@@ -209,7 +209,7 @@ let main () =
   ignore optional_engine;
   ignore exact_engine;
   ignore union_engine;
-  let engine = union_engine in
+  let engine = depth_engine in
   let all_prog = Codegen.mk_code engine Config.(config.num_prog) Config.(config.random) in
   let is_type_check = (engine#get_name ()) = "union" in
   printf "Generated %d programs.\n" (List.length all_prog);

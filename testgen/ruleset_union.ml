@@ -65,7 +65,6 @@ class ruleset_union = object(self)
           subtype := false) s2;
     !subtype
 
-
   method! rule_func_call (env : env_t) : (Syntax.t * env_t) =
     (* require a function from the environment.*)
     let func = self#choose 0 (fun () -> self#require_expr env) in
@@ -137,7 +136,6 @@ class ruleset_union = object(self)
       self#rule_func_call;
       self#rule_runtime_check;
       (*
-
       self#rule_vardecl_with_type; (*make it challenging*)
       self#rule_prop_update;
       self#rule_vardecl_with_type;

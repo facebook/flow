@@ -219,8 +219,6 @@ class ruleset_func = object(self)
       self#rule_func_call;
       self#rule_funcdef;
       self#rule_func_call;
-      (*
-         *)
     |]
 end
 
