@@ -1099,6 +1099,9 @@ and json_of_destructor_impl json_cx = Hh_json.(function
         "spread", JSON_Array (List.map (_json_of_t json_cx) ts);
       ]
     )
+  | RestType t -> JSON_Object [
+      "restType", _json_of_t json_cx t;
+    ]
   | ValuesType -> JSON_Object [
       "values", JSON_Bool true;
     ]
@@ -1551,6 +1554,7 @@ and dump_t_ (depth, tvars) cx t =
     | ElementType _ -> "element type"
     | Bind _ -> "bind"
     | SpreadType _ -> "spread"
+    | RestType _ -> "rest"
     | ValuesType -> "values"
     | CallType _ -> "function call"
     | TypeMap (TupleMap _) -> "tuple map"
@@ -1892,8 +1896,15 @@ and dump_use_t_ (depth, tvars) cx t =
       in
       spf "(%s, %s)" options state
     in
+    let rest state =
+      let open Object.Rest in
+      match state with
+        | One t -> spf "One (%s)" (kid t)
+        | Done o -> spf "Done (%s)" (resolved o)
+    in
     let tool = function
       | Spread (options, state) -> spread options state
+      | Rest state -> rest state
     in
     fun a b ->
       spf "(%s, %s)" (resolve_tool a) (tool b)
@@ -2191,6 +2202,7 @@ let string_of_destructor = function
   | ElementType _ -> "ElementType"
   | Bind _ -> "Bind"
   | SpreadType _ -> "Spread"
+  | RestType _ -> "Rest"
   | ValuesType -> "Values"
   | CallType _ -> "CallType"
   | TypeMap (TupleMap _) -> "TupleMap"

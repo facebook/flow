@@ -1350,6 +1350,11 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       let open Object in
       let msg = match tool with
         | Spread _ -> "Cannot spread properties from"
+        | Rest state ->
+          let open Object.Rest in
+          (match state with
+            | One _ -> "Cannot remove properties from"
+            | Done _ -> "Cannot remove properties with")
       in
       typecheck_error msg (reason_op, reason)
 

@@ -324,6 +324,10 @@ class ['a] t = object(self)
           let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
           if tlist' == tlist then t
           else SpreadType (options, tlist')
+      | RestType x ->
+          let x' = self#type_ cx map_cx x in
+          if x' == x then t
+          else RestType x'
       | ValuesType -> t
       | CallType args ->
           let args' = ListUtils.ident_map (self#type_ cx map_cx) args in
@@ -971,6 +975,20 @@ class ['a] t = object(self)
       let acc' = ListUtils.ident_map (self#resolved cx map_cx) state.acc in
       if todo_rev' == state.todo_rev && acc' == state.acc then tool
       else Spread (options, {todo_rev = todo_rev'; acc = acc'})
+    | Rest state ->
+      let open Object.Rest in
+      let state' = match state with
+        | One t ->
+          let t' = self#type_ cx map_cx t in
+          if t == t' then state
+          else One t'
+        | Done o ->
+          let o' = self#resolved cx map_cx o in
+          if o == o' then state
+          else Done o'
+      in
+      if state == state' then tool
+      else Rest state'
 
   method intersection_preprocess_tool cx map_cx t =
     match t with

@@ -135,6 +135,7 @@ type reason_desc =
   | RPropertyIsAString of string
   | RMissingProperty of string option
   | RUnknownProperty of string option
+  | RUndefinedProperty of string
   | RSomeProperty
   | RNameProperty of reason_desc
   | RMissingAbstract of reason_desc
@@ -447,6 +448,7 @@ let rec string_of_desc = function
   | RMissingProperty None -> "computed property does not exist"
   | RUnknownProperty (Some x) -> spf "property `%s` of unknown type" x
   | RUnknownProperty None -> "computed property of unknown type"
+  | RUndefinedProperty x -> spf "undefined property `%s`" x
   | RSomeProperty -> "some property"
   | RNameProperty d -> spf "property `name` of %s" (string_of_desc d)
   | RMissingAbstract d ->
