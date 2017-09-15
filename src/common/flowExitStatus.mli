@@ -29,3 +29,4 @@ val exit: ?msg:string -> t -> 'a
 val error_code: t -> int
 val error_type: int -> t
 val to_string: t -> string
+val set_json_mode: pretty:bool -> unit

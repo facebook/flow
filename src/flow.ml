@@ -87,6 +87,13 @@ end = struct
       print_endline (CommandSpec.string_of_usage command);
       FlowExitStatus.(exit No_error)
     | CommandSpec.Failed_to_parse (arg_name, msg) ->
+      begin try
+        let json_arg = List.find (fun s ->
+          String_utils.string_starts_with s "--pretty" || String_utils.string_starts_with s "--json")
+          argv in
+        let pretty = String_utils.string_starts_with json_arg "--pretty" in
+        FlowExitStatus.set_json_mode ~pretty
+      with Not_found -> () end;
       let msg = Utils_js.spf
         "%s: %s %s\n%s"
         (Filename.basename Sys.executable_name)

@@ -123,8 +123,13 @@ let error_flags prev = CommandSpec.ArgSpec.(
       ~doc:"Print all errors (the default is to truncate after 50 errors)"
 )
 
+let collect_json_flags main json pretty =
+  if json || pretty then FlowExitStatus.set_json_mode ~pretty;
+  main json pretty
+
 let json_flags prev = CommandSpec.ArgSpec.(
   prev
+  |> collect collect_json_flags
   |> flag "--json" no_arg ~doc:"Output results in JSON format"
   |> flag "--pretty" no_arg ~doc:"Pretty-print JSON output (implies --json)"
 )
