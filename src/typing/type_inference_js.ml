@@ -375,7 +375,7 @@ let scan_for_suppressions cx base_settings comments =
 
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)
-let infer_ast ~lint_severities ~require_loc_map cx filename ast =
+let infer_ast ~lint_severities ~file_sig cx filename ast =
   Flow_js.Cache.clear();
 
   let _, statements, comments = ast in
@@ -423,6 +423,8 @@ let infer_ast ~lint_severities ~require_loc_map cx filename ast =
 
   let file_loc = Loc.({ none with source = Some filename }) in
   let reason = Reason.mk_reason (Reason.RCustom "exports") file_loc in
+
+  let require_loc_map = File_sig.(file_sig.module_sig.requires) in
 
   let initial_module_t = ImpExp.module_t_of_cx cx in
   if checked then (
@@ -480,8 +482,8 @@ let infer_lib_file ~metadata ~exclude_syms ~lint_severities file ast =
     (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
        confident that we don't support them in any sensible way. *)
     let open File_sig in
-    let { module_sig; _ } = program ~ast in
-    SMap.iter (Import_export.add_require_tvar cx) module_sig.requires
+    let file_sig = program ~ast in
+    SMap.iter (Import_export.add_require_tvar cx) file_sig.module_sig.requires
   in
 
   let module_scope = Scope.fresh () in

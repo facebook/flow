@@ -27,14 +27,14 @@ and module_kind =
   | CommonJS of { clobbered: Loc.t option }
   | ES of { named: Loc.t SMap.t; batch: Loc.t SMap.t }
 
-let initial_module_sig = {
+let empty_module_sig = {
   requires = SMap.empty;
   module_kind = CommonJS { clobbered = None };
   type_exports = SMap.empty;
 }
 
-let initial_file_sig = {
-  module_sig = initial_module_sig;
+let empty_file_sig = {
+  module_sig = empty_module_sig;
   declare_modules = SMap.empty;
 }
 
@@ -74,7 +74,7 @@ let add_es_exports named_bindings batch_bindings msig =
    the scope builder class.
 *)
 class requires_calculator ~ast = object(this)
-  inherit [t] visitor ~init:initial_file_sig as super
+  inherit [t] visitor ~init:empty_file_sig as super
 
   val locals =
     let { Scope_api.locals; _ } = Scope_builder.program ast in
@@ -245,7 +245,7 @@ class requires_calculator ~ast = object(this)
     | Literal (_, { Ast.Literal.value = Ast.Literal.String name; _ }) -> name
     | Literal _ -> failwith "declare module literal id must be a string"
     ) in
-    curr_declare_module <- Some (initial_module_sig);
+    curr_declare_module <- Some (empty_module_sig);
     let ret = super#declare_module loc m in
     begin match curr_declare_module with
     | None -> failwith "lost curr_declare_module"

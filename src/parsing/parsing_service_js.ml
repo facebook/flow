@@ -68,38 +68,38 @@ module DocblockHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
     let description = "Docblock"
 end)
 
-module RequiresHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
-    type t = Loc.t SMap.t
+module FileSigHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
+    type t = File_sig.t
     let prefix = Prefix.make()
     let description = "Requires"
 end)
 
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
-  let add file ast info require_loc =
+  let add file ast info file_sig =
     ASTHeap.add file ast;
     DocblockHeap.add file info;
-    RequiresHeap.add file require_loc
+    FileSigHeap.add file file_sig
 
   let oldify_batch files =
     ASTHeap.oldify_batch files;
     DocblockHeap.oldify_batch files;
-    RequiresHeap.oldify_batch files
+    FileSigHeap.oldify_batch files
 
   let remove_batch files =
     ASTHeap.remove_batch files;
     DocblockHeap.remove_batch files;
-    RequiresHeap.remove_batch files
+    FileSigHeap.remove_batch files
 
   let remove_old_batch files =
     ASTHeap.remove_old_batch files;
     DocblockHeap.remove_old_batch files;
-    RequiresHeap.remove_old_batch files
+    FileSigHeap.remove_old_batch files
 
   let revive_batch files =
     ASTHeap.revive_batch files;
     DocblockHeap.revive_batch files;
-    RequiresHeap.revive_batch files
+    FileSigHeap.revive_batch files
 end
 
 (* TODO: add TypesForbidden (disables types even on files with @flow) and
@@ -385,10 +385,8 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
     let err = loc, Parse_error.Assertion s in
     Parse_fail (Parse_error err)
 
-let calc_requires ~ast =
-  let open File_sig in
-  let { module_sig; _ } = program ~ast in
-  module_sig.requires
+let calc_file_sig ~ast =
+  File_sig.program ~ast
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
@@ -433,16 +431,16 @@ let reducer
               && (ASTHeap.get_old file = Some ast)
             then parse_results
             else begin
-              (* Only calculate requires for files which will actually be
+              (* Only calculate file sigs for files which will actually be
                  inferred. The only files which are parsed (thus, Parse_ok) but
                  not inferred are .flow files with no @flow pragma and .json
                  files. *)
-              let require_loc =
+              let file_sig =
                 if types_checked types_mode info
-                then calc_requires ~ast
-                else SMap.empty
+                then calc_file_sig ~ast
+                else File_sig.empty_file_sig
               in
-              ParsingHeaps.add file ast info require_loc;
+              ParsingHeaps.add file ast info file_sig;
               let parse_ok = FilenameSet.add file parse_results.parse_ok in
               { parse_results with parse_ok; }
             end
@@ -571,8 +569,8 @@ let get_docblock_unsafe file =
   try DocblockHeap.find_unsafe file
   with Not_found -> raise (Docblock_not_found (Loc.string_of_filename file))
 
-let get_requires_unsafe file =
-  try RequiresHeap.find_unsafe file
+let get_file_sig_unsafe file =
+  try FileSigHeap.find_unsafe file
   with Not_found -> raise (Requires_not_found (Loc.string_of_filename file))
 
 let remove_batch files =

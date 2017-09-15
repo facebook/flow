@@ -23,4 +23,7 @@ and module_kind =
   | CommonJS of { clobbered: Loc.t option }
   | ES of { named: Loc.t SMap.t; batch: Loc.t SMap.t }
 
+val empty_file_sig: t
+val empty_module_sig: module_sig
+
 val program: ast:Loc.t Ast.program -> t

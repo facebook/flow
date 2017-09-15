@@ -11,7 +11,7 @@
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_ast:
   lint_severities: Severity.severity LintSettings.t option ->
-  require_loc_map: Loc.t SMap.t ->
+  file_sig: File_sig.t ->
   Context.t ->
   Loc.filename ->
   Loc.t Ast.program ->
