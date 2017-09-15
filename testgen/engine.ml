@@ -148,6 +148,9 @@ class virtual ['a, 'b, 'c] engine = object(self)
   method virtual print_env : 'b -> unit
   method virtual print_syntax : 'c -> unit
 
+  (* A mehod for getting the name of an engine *)
+  method virtual get_name : unit -> string
+
   (* Choose a element from a list using combinatorial search.
 
      id : This is index in the stack

@@ -22,6 +22,8 @@ open Ruleset_base;;
 class ruleset_depth = object(self)
   inherit Ruleset_base.ruleset_base
 
+  method! get_name () : string = "depth"
+
   method! weak_assert b = self#backtrack_on_false b
 
   method! is_subtype_obj (o1 : Loc.t T.Object.t) (o2 : Loc.t T.Object.t) =
@@ -116,18 +118,6 @@ class ruleset_depth = object(self)
       let o_type = match otype with
         | T.Object o -> o
         | _ -> failwith "Has to be an object type" in
-      if pexpr = E.Identifier (Loc.none, "_number_prop_") then
-        let new_prop = let open T.Object.Property in
-          {key = E.Object.Property.Identifier (Loc.none, (Utils.string_of_expr pexpr));
-           value = Init (Loc.none, T.Number);
-           optional = false;
-           static = false;
-           _method = false;
-           variance = None} in
-        let open T.Object in
-        T.Object {exact = o_type.exact;
-                  properties = Property (Loc.none, new_prop) :: o_type.properties}
-      else
         T.Object o_type in
 
     let new_env = self#add_binding env (Expr (oexpr, ret_type)) in
@@ -135,56 +125,10 @@ class ruleset_depth = object(self)
     (write, new_env)
 
   (* A rule for generating object literals *)
-  method! rule_obj_lit (env : env_t) : (Syntax.t * env_t) =
+  method! rule_obj_lit (prop_num : int) (opt_num : int) (env : env_t) : (Syntax.t * env_t) =
 
-    (* a helper function for generating expression for object
-       properties *)
-    let rec gen_expr_list
-        (depth : int)
-        (count : int)
-        (limit : int)
-        (result : (Loc.t E.t' * Loc.t T.t') list) : (Loc.t E.t' * Loc.t T.t') list =
-      if count = limit then result
-      else
-        let expr = self#choose (depth + count) (fun () -> self#require_expr env) in
-        let ep = match expr with
-          | Expr (e, t) -> (e, t)
-          | _ -> failwith "This has to be an expression" in
-        self#backtrack_on_false ((snd ep) = T.Number);
-        gen_expr_list depth (count + 1) limit (ep :: result) in
+    let lit, lit_expr, ret_type = self#gen_obj_lit prop_num opt_num env in
 
-    (* We are getting at most 2 properties *)
-    let prop_num = match self#choose 0 (fun () -> [Int 1; Int 2]) with
-      | Int i -> i
-      | _ -> failwith "This has to be an integer." in
-    let elist = gen_expr_list 1 0 prop_num [] in
-    let props =
-      let count = ref 0 in
-      let mk_prop () =
-        let r = "p_" ^ (string_of_int !count) in
-        count := !count + 1;
-        r in
-      List.map (fun e -> mk_prop (), e) elist in
-
-    (* get the literal syntax and its type *)
-    let lit = Syntax.mk_obj_lit props in
-    let lit_expr = (match lit with
-         | Syntax.Expr e -> e
-         | _ -> failwith "[rule_obj_lit] Literal has to be an expr") in
-    let ret_type =
-      let prop_types =
-        List.map (fun e ->
-            let open T.Object.Property in
-            T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Loc.none, fst e);
-                                          value = Init (Loc.none, snd (snd e));
-                                          optional = false;
-                                          static = false;
-                                          _method = false;
-                                          variance = None})) props in
-      let open T.Object in
-      T.Object {exact = false; properties = prop_types} in
-
-    (* Randomly wrap them into an object *)
     let wrap_expr, wrap_ret_type = self#wrap_in_obj lit_expr ret_type in
     let new_env =
       self#add_binding
@@ -229,9 +173,9 @@ class ruleset_depth = object(self)
 
   method! get_all_rules () =
     [|self#rule_num_lit;
-      self#rule_obj_lit;
-      self#rule_obj_lit;
+      self#rule_obj_lit 2 0;
       self#rule_vardecl_with_type;
+      self#rule_obj_lit 1 0;
       self#rule_vardecl_with_type;
       self#rule_prop_update;
       self#rule_runtime_check;
