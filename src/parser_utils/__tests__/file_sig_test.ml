@@ -20,6 +20,14 @@ let substring_loc s loc =
   let {start={offset=a; _}; _end={offset=b; _}; _} = loc in
   String.sub s a (b - a)
 
+let call_opt x = function Some f -> f x | None -> ()
+
+let assert_require ?assert_loc ?assert_cjs ?assert_es require =
+  let { loc; cjs_requires; es_imports } = require in
+  call_opt loc assert_loc;
+  call_opt cjs_requires assert_cjs;
+  call_opt es_imports assert_es
+
 let assert_cjs module_kind f =
   match module_kind with
   | ES _ -> assert_failure "Expected CommonJS, got ES"
@@ -31,6 +39,30 @@ let assert_es module_kind f =
   | ES { named; batch } -> f named batch
 
 let tests = "require" >::: [
+  "cjs_require" >:: begin fun ctxt ->
+    let source = "const Foo = require('foo')" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_loc:(fun loc ->
+        assert_equal ~ctxt "'foo'" (substring_loc source loc))
+      ~assert_cjs:(fun requires ->
+        assert_equal ~ctxt 1 (List.length requires))
+  end;
+
+  "es_import" >:: begin fun ctxt ->
+    let source = "import Foo from 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_loc:(fun loc ->
+        assert_equal ~ctxt "'foo'" (substring_loc source loc))
+      ~assert_es:(fun imports ->
+        assert_equal ~ctxt 1 (List.length imports))
+  end;
+
   "cjs_default" >:: begin fun ctxt ->
     let {module_sig = {module_kind; _}; _} = visit "" in
     assert_cjs module_kind (assert_equal ~ctxt None)

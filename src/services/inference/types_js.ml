@@ -166,7 +166,7 @@ let resolve_requires ~options profiling ~workers parsed =
     MultiWorker.call workers
       ~job: (List.fold_left (fun errors_acc filename ->
         let file_sig = Parsing_service_js.get_file_sig_unsafe filename in
-        let require_loc = File_sig.(file_sig.module_sig.requires) in
+        let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
         let errors =
           Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
             ~node_modules_containers
@@ -858,7 +858,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
     ~job: (fun () files ->
       List.iter (fun f ->
         let file_sig = Parsing_service_js.get_file_sig_unsafe f in
-        let require_loc = File_sig.(file_sig.module_sig.requires) in
+        let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
         let errors = Module_js.add_parsed_resolved_requires ~audit:Expensive.ok ~options
           ~node_modules_containers f require_loc in
         ignore errors (* TODO: why, FFS, why? *)

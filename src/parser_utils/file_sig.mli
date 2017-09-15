@@ -14,9 +14,15 @@ type t = {
 }
 
 and module_sig = {
-  requires: Loc.t SMap.t;
+  requires: require SMap.t;
   module_kind: module_kind;
   type_exports: Loc.t SMap.t;
+}
+
+and require = {
+  loc: Loc.t;
+  cjs_requires: Loc.t list;
+  es_imports: Loc.t list;
 }
 
 and module_kind =
@@ -25,5 +31,7 @@ and module_kind =
 
 val empty_file_sig: t
 val empty_module_sig: module_sig
+
+val require_loc_map: module_sig -> Loc.t SMap.t
 
 val program: ast:Loc.t Ast.program -> t

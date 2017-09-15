@@ -424,7 +424,7 @@ let infer_ast ~lint_severities ~file_sig cx filename ast =
   let file_loc = Loc.({ none with source = Some filename }) in
   let reason = Reason.mk_reason (Reason.RCustom "exports") file_loc in
 
-  let require_loc_map = File_sig.(file_sig.module_sig.requires) in
+  let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
 
   let initial_module_t = ImpExp.module_t_of_cx cx in
   if checked then (
@@ -483,7 +483,8 @@ let infer_lib_file ~metadata ~exclude_syms ~lint_severities file ast =
        confident that we don't support them in any sensible way. *)
     let open File_sig in
     let file_sig = program ~ast in
-    SMap.iter (Import_export.add_require_tvar cx) file_sig.module_sig.requires
+    let require_loc_map = require_loc_map file_sig.module_sig in
+    SMap.iter (Import_export.add_require_tvar cx) require_loc_map
   in
 
   let module_scope = Scope.fresh () in

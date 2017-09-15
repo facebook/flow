@@ -81,7 +81,7 @@ let merge_strict_context ~options component =
   let required, file_sigs =
     List.fold_left (fun (required, file_sigs) file ->
       let file_sig = Parsing_service_js.get_file_sig_unsafe file in
-      let require_loc_map = File_sig.(file_sig.module_sig.requires) in
+      let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
       let required = SMap.fold (fun r loc ->
         let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
           file r in
@@ -110,7 +110,7 @@ let merge_strict_context ~options component =
 let merge_contents_context options file ast info ~ensure_checked_dependencies =
   let file_sig = Parsing_service_js.calc_file_sig ~ast in
   let resolved_rs, required =
-    let require_loc_map = File_sig.(file_sig.module_sig.requires) in
+    let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
     SMap.fold (fun r loc (resolved_rs, required) ->
       let resolved_r = Module_js.imported_module
         ~options

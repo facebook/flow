@@ -162,7 +162,7 @@ let infer_and_merge ~root filename ast =
   let metadata = stub_metadata ~root ~checked:true in
   let master_cx = get_master_cx root in
   let file_sig = File_sig.program ~ast in
-  let require_loc_map = File_sig.(file_sig.module_sig.requires) in
+  let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
   let decls = SMap.fold (fun module_name loc ->
     List.cons (module_name, loc, Modulename.String module_name, filename)
   ) require_loc_map [] in

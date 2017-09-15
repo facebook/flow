@@ -18,9 +18,15 @@ type t = {
 }
 
 and module_sig = {
-  requires: Loc.t SMap.t;
+  requires: require SMap.t;
   module_kind: module_kind;
   type_exports: Loc.t SMap.t;
+}
+
+and require = {
+  loc: Loc.t;
+  cjs_requires: Loc.t list;
+  es_imports: Loc.t list;
 }
 
 and module_kind =
@@ -38,6 +44,11 @@ let empty_file_sig = {
   declare_modules = SMap.empty;
 }
 
+let require_loc_map msig =
+  SMap.fold (fun name {loc; _} acc ->
+    SMap.add name loc acc
+  ) msig.requires SMap.empty
+
 let add_declare_module name m loc fsig = {
   fsig with
   declare_modules = SMap.add name (loc, m) fsig.declare_modules;
@@ -47,10 +58,22 @@ let update_sig f fsig = { fsig with module_sig = f fsig.module_sig }
 
 let set_module_kind module_kind msig = { msig with module_kind }
 
-let add_require name loc msig = {
-  msig with
-  requires = SMap.add name loc msig.requires;
+let add_cjs_require name loc msig =
+  let require =
+    match SMap.get name msig.requires with
+    | Some r -> { r with loc; cjs_requires = loc::r.cjs_requires }
+    | None -> { loc; cjs_requires = [loc]; es_imports = [] }
+  in
+  { msig with requires = SMap.add name require msig.requires;
 }
+
+let add_es_import name loc msig =
+  let require =
+    match SMap.get name msig.requires with
+    | Some r -> { r with loc; es_imports = loc::r.es_imports }
+    | None -> { loc; cjs_requires = []; es_imports = [loc] }
+  in
+  { msig with requires = SMap.add name require msig.requires }
 
 let add_type_export name loc msig = {
   msig with
@@ -89,8 +112,11 @@ class requires_calculator ~ast = object(this)
     | None ->
       this#update_acc (update_sig f)
 
-  method private add_require r loc =
-    this#update_module_sig (add_require r loc)
+  method private add_cjs_require r loc =
+    this#update_module_sig (add_cjs_require r loc)
+
+  method private add_es_import r loc =
+    this#update_module_sig (add_es_import r loc)
 
   method private add_type_export name loc =
     this#update_module_sig (add_type_export name loc)
@@ -109,14 +135,14 @@ class requires_calculator ~ast = object(this)
        [Expression (require_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ })])
       ->
       if not (LocMap.mem loc locals)
-      then this#add_require v require_loc
+      then this#add_cjs_require v require_loc
     | ((_, Identifier (loc, "requireLazy")),
        [Expression (_, Array ({ Array.elements })); Expression (_);])
       ->
       let element = function
         | Some (Expression (require_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ })) ->
           if not (LocMap.mem loc locals)
-          then this#add_require v require_loc
+          then this#add_cjs_require v require_loc
         | _ -> () in
       List.iter element elements
     | _ -> ()
@@ -126,8 +152,8 @@ class requires_calculator ~ast = object(this)
   method! import (expr: Loc.t Ast.Expression.t) =
     let open Ast.Expression in
     begin match expr with
-    | require_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ } ->
-      this#add_require v require_loc
+    | import_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ } ->
+      this#add_es_import v import_loc
     | _ -> ()
     end;
     super#expression expr
@@ -136,8 +162,8 @@ class requires_calculator ~ast = object(this)
     let open Ast.Statement.ImportDeclaration in
     let { importKind = _; source; specifiers = _ } = decl in
     begin match source with
-    | require_loc, { Ast.Literal.value = Ast.Literal.String v; raw = _ } ->
-      this#add_require v require_loc
+    | import_loc, { Ast.Literal.value = Ast.Literal.String v; raw = _ } ->
+      this#add_es_import v import_loc
     | _ -> ()
     end;
     super#import_declaration decl
@@ -155,8 +181,8 @@ class requires_calculator ~ast = object(this)
     let open Ast.Statement.ExportNamedDeclaration in
     let { exportKind = _; source; specifiers; declaration} = decl in
     begin match source with
-    | Some (require_loc, { Ast.Literal.value = Ast.Literal.String v; raw = _ }) ->
-      this#add_require v require_loc
+    | Some (import_loc, { Ast.Literal.value = Ast.Literal.String v; raw = _ }) ->
+      this#add_es_import v import_loc
     | _ -> ()
     end;
     begin match declaration with
@@ -191,8 +217,8 @@ class requires_calculator ~ast = object(this)
     let open Ast.Statement.DeclareExportDeclaration in
     let { default; source; specifiers; declaration } = decl in
     begin match source with
-    | Some (require_loc, { Ast.Literal.value = Ast.Literal.String v; raw = _ }) ->
-      this#add_require v require_loc
+    | Some (import_loc, { Ast.Literal.value = Ast.Literal.String v; raw = _ }) ->
+      this#add_es_import v import_loc
     | _ -> ()
     end;
     begin match declaration with
