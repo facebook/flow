@@ -8,4 +8,19 @@
  *
  *)
 
-val program: ast:Loc.t Ast.program -> Loc.t SMap.t
+type t = {
+  module_sig: module_sig;
+  declare_modules: (Loc.t * module_sig) SMap.t
+}
+
+and module_sig = {
+  requires: Loc.t SMap.t;
+  module_kind: module_kind;
+  type_exports: Loc.t SMap.t;
+}
+
+and module_kind =
+  | CommonJS of { clobbered: Loc.t option }
+  | ES of { named: Loc.t SMap.t; batch: Loc.t SMap.t }
+
+val program: ast:Loc.t Ast.program -> t

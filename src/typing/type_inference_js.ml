@@ -475,10 +475,14 @@ let infer_lib_file ~metadata ~exclude_syms ~lint_severities file ast =
   Flow_js.Cache.clear();
 
   let cx = Flow_js.fresh_context metadata file Files.lib_module_ref in
-  (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
-     confident that we don't support them in any sensible way. *)
-  let require_loc = Require.program ~ast in
-  SMap.iter (Import_export.add_require_tvar cx) require_loc;
+
+  let () =
+    (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
+       confident that we don't support them in any sensible way. *)
+    let open Require in
+    let { module_sig; _ } = program ~ast in
+    SMap.iter (Import_export.add_require_tvar cx) module_sig.requires
+  in
 
   let module_scope = Scope.fresh () in
   Env.init_env ~exclude_syms cx module_scope;

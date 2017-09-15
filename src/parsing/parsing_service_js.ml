@@ -386,7 +386,9 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
     Parse_fail (Parse_error err)
 
 let calc_requires ~ast =
-  Require.program ~ast
+  let open Require in
+  let { module_sig; _ } = program ~ast in
+  module_sig.requires
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
