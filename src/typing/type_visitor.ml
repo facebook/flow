@@ -121,11 +121,7 @@ class ['a] t = object(self)
     let acc = self#fun_type cx acc funtype in
     acc
 
-  | ObjT { dict_t; props_tmap; proto_t; _ } ->
-    let acc = self#opt (self#dict_type cx) acc dict_t in
-    let acc = self#props cx acc props_tmap in
-    let acc = self#type_ cx acc proto_t in
-    acc
+  | ObjT objtype -> self#obj_type cx acc objtype
 
   | ArrT (arrtype) -> self#arr_type cx acc arrtype
 
@@ -284,7 +280,8 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc t in
     acc
 
-  | SuperT (_, inst) -> self#inst_type cx acc inst
+  | SuperT (_, DerivedInstance i) -> self#inst_type cx acc i
+  | SuperT (_, DerivedStatics o) -> self#obj_type cx acc o
   | ImplementsT (_, t) -> self#type_ cx acc t
   | MixinT (_, t) -> self#type_ cx acc t
 
@@ -606,6 +603,12 @@ class ['a] t = object(self)
     let acc = self#list (self#type_ cx) acc params_tlist in
     let acc = self#opt (fun acc (_, _, t) -> self#type_ cx acc t) acc rest_param in
     let acc = self#type_ cx acc return_t in
+    acc
+
+  method private obj_type cx acc { dict_t; props_tmap; proto_t; _ } =
+    let acc = self#opt (self#dict_type cx) acc dict_t in
+    let acc = self#props cx acc props_tmap in
+    let acc = self#type_ cx acc proto_t in
     acc
 
   method private arr_type cx acc = function

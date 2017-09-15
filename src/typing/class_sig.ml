@@ -150,18 +150,9 @@ let map_sig ~static f s =
 let with_sig ~static f s =
   if static then f s.static else f s.instance
 
-let mutually f = (f ~static:true, f ~static:false)
-
 let add_private_field name fld = map_sig (fun s -> {
   s with
   private_fields = SMap.add name fld s.private_fields;
-})
-
-let add_field name fld = map_sig (fun s -> {
-  s with
-  fields = SMap.add name fld s.fields;
-  getters = SMap.remove name s.getters;
-  setters = SMap.remove name s.setters;
 })
 
 let add_constructor fsig s =
@@ -174,8 +165,17 @@ let add_default_constructor reason s =
 let append_constructor fsig s =
   {s with constructor = fsig::s.constructor}
 
-let add_method name fsig = map_sig (fun s -> {
+let add_field ~static name fld = map_sig ~static (fun s -> {
   s with
+  fields = SMap.add name fld s.fields;
+  methods = if static then SMap.remove name s.methods else s.methods;
+  getters = SMap.remove name s.getters;
+  setters = SMap.remove name s.setters;
+})
+
+let add_method ~static name fsig = map_sig ~static (fun s -> {
+  s with
+  fields = if static then SMap.remove name s.fields else s.fields;
   methods = SMap.add name (Nel.one fsig) s.methods;
   getters = SMap.remove name s.getters;
   setters = SMap.remove name s.setters;
@@ -184,24 +184,30 @@ let add_method name fsig = map_sig (fun s -> {
 (* Appending a method builds a list of function signatures. This implements the
    bahvior of interfaces and declared classes, which interpret duplicate
    definitions as branches of a single overloaded method. *)
-let append_method name fsig = map_sig (fun s ->
-  let methods = match SMap.get name s.methods with
-  | Some fsigs -> SMap.add name (Nel.cons fsig fsigs) s.methods
-  | None -> SMap.add name (Nel.one fsig) s.methods
-  in
-  {s with methods}
-)
-
-let add_getter name fsig = map_sig (fun s -> {
+let append_method ~static name fsig = map_sig ~static (fun s -> {
   s with
-  getters = SMap.add name fsig s.getters;
-  methods = SMap.remove name s.methods;
+  fields = if static then SMap.remove name s.fields else s.fields;
+  methods = (
+    match SMap.get name s.methods with
+    | Some fsigs -> SMap.add name (Nel.cons fsig fsigs) s.methods
+    | None -> SMap.add name (Nel.one fsig) s.methods
+  );
+  getters = SMap.remove name s.getters;
+  setters = SMap.remove name s.setters;
 })
 
-let add_setter name fsig = map_sig (fun s -> {
+let add_getter ~static name fsig = map_sig ~static (fun s -> {
   s with
-  setters = SMap.add name fsig s.setters;
+  fields = if static then SMap.remove name s.fields else s.fields;
   methods = SMap.remove name s.methods;
+  getters = SMap.add name fsig s.getters;
+})
+
+let add_setter ~static name fsig = map_sig ~static (fun s -> {
+  s with
+  fields = if static then SMap.remove name s.fields else s.fields;
+  methods = SMap.remove name s.methods;
+  setters = SMap.add name fsig s.setters;
 })
 
 let mk_method cx ~expr x loc func =
@@ -257,7 +263,7 @@ let to_field (polarity, field) =
   in
   Type.Field (t, polarity)
 
-let elements cx ?constructor = with_sig (fun s ->
+let elements cx ?constructor s =
   let methods =
     (* If this is an overloaded method, create an intersection, attributed
        to the first declared function signature. If there is a single
@@ -292,9 +298,7 @@ let elements cx ?constructor = with_sig (fun s ->
   (* Treat getters and setters as fields *)
   let fields = SMap.union getters_and_setters fields in
 
-  let methods = SMap.map (fun t ->
-    Type.Field (t, Type.Positive)
-  ) methods in
+  let methods = SMap.map (fun t -> Type.Method t) methods in
 
   (* Only un-initialized fields require annotations, so determine now
    * (syntactically) which fields have initializers *)
@@ -305,16 +309,33 @@ let elements cx ?constructor = with_sig (fun s ->
   ) s.fields SSet.empty in
 
   initialized_field_names, fields, methods
-)
 
 let arg_polarities x =
   List.fold_left Type.(fun acc tp ->
     SMap.add tp.name tp.polarity acc
   ) SMap.empty x.tparams
 
-let insttype ~static cx s =
-  let class_id = if static then 0 else s.id in
-  let constructor = if static then None else
+let statictype cx s =
+  let _, fields, methods = elements cx s in
+  let props = SMap.union fields methods
+    ~combine:(fun _ _ ->
+      Utils_js.assert_false (Utils_js.spf
+        "static fields and methods must be disjoint: %s"
+        (Debug_js.dump_reason cx s.reason)))
+  in
+  (* Statics are not exact, because we allow width subtyping between them.
+     Specifically, given class A and class B extends A, Class<B> <: Class<A>. *)
+  let static =
+    Flow.mk_object_with_map_proto cx s.reason props s.super
+      ~sealed:true ~exact:false
+  in
+  let open Type in
+  match static with
+  | DefT (_, ObjT o) -> o
+  | _ -> failwith "statics must be an ObjT"
+
+let insttype cx s =
+  let constructor =
     let ts = List.rev_map (Func_sig.methodtype cx) s.constructor in
     match ts with
     | [] -> None
@@ -324,9 +345,9 @@ let insttype ~static cx s =
       let t = DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts)) in
       Some t
   in
-  let inited_fields, fields, methods = elements cx ?constructor ~static s in
+  let inited_fields, fields, methods = elements cx ?constructor s.instance in
   { Type.
-    class_id;
+    class_id = s.id;
     type_args = s.tparams_map;
     arg_polarities = arg_polarities s;
     fields_tmap = Context.make_property_map cx fields;
@@ -373,14 +394,13 @@ let thistype cx x =
   let x = remove_this x in
   let {
     implements;
-    static = {reason = sreason; super = ssuper; _};
+    static = {reason = sreason; _};
     instance = {reason; super; _};
     _;
   } = x in
   let open Type in
-  let sinsttype, insttype = mutually (insttype cx x) in
-  let static = DefT (sreason, InstanceT (Flow.dummy_prototype, ssuper, [], sinsttype)) in
-  DefT (reason, InstanceT (static, super, implements, insttype))
+  let static = DefT (sreason, ObjT (statictype cx x.static)) in
+  DefT (reason, InstanceT (static, super, implements, insttype cx x))
 
 let check_implements cx x =
   let this = thistype cx x in
@@ -391,11 +411,11 @@ let check_implements cx x =
 let check_super cx x =
   let x = remove_this x in
   let reason = x.instance.reason in
-  mutually (fun ~static ->
-    let super = with_sig ~static (fun s -> s.super) x in
-    let insttype = insttype ~static cx x in
-    Flow.flow cx (super, Type.SuperT (reason, insttype))
-  ) |> ignore
+  let open Type in
+  Flow.flow cx (x.static.super,
+    SuperT (reason, DerivedStatics (statictype cx x.static)));
+  Flow.flow cx (x.instance.super,
+    SuperT (reason, DerivedInstance (insttype cx x)))
 
 (* TODO: Ideally we should check polarity for all class types, but this flag is
    flipped off for interface/declare class currently. *)

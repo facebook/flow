@@ -794,3 +794,33 @@ mixed.js:18:17 = {
   "start":17,
   "end":18
 }
+array.js:6:15 = {
+  "type":"Array<{|+nums: number|}>",
+  "reasons":[],
+  "loc":{
+    "source":"array.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":14,"offset":123},
+    "end":{"line":6,"column":25,"offset":135}
+  },
+  "path":"array.js",
+  "line":6,
+  "endline":6,
+  "start":14,
+  "end":25
+}
+array.js:10:15 = {
+  "type":"$ReadOnlyArray<{|+nums: number|}>",
+  "reasons":[],
+  "loc":{
+    "source":"array.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":14,"offset":165},
+    "end":{"line":10,"column":33,"offset":185}
+  },
+  "path":"array.js",
+  "line":10,
+  "endline":10,
+  "start":14,
+  "end":33
+}

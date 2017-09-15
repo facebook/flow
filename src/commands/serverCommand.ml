@@ -21,8 +21,7 @@ let spec = { CommandSpec.
   doc = "Runs a Flow server in the foreground";
   args = CommandSpec.ArgSpec.(
       empty
-      |> flag "--lazy" no_arg
-          ~doc:"EXPERIMENTAL: Don't run a full check"
+      |> lazy_flags
       |> options_flags
       |> shm_flags
       |> ignore_version_flag
@@ -37,10 +36,10 @@ let spec = { CommandSpec.
       exe_name;
 }
 
-let main lazy_ options_flags shm_flags ignore_version from path_opt () =
+let main lazy_mode options_flags shm_flags ignore_version from path_opt () =
   let root = CommandUtils.guess_root path_opt in
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-  let options = make_options ~flowconfig ~lazy_ ~root options_flags in
+  let options = make_options ~flowconfig ~lazy_mode ~root options_flags in
 
   (* initialize loggers before doing too much, especially anything that might exit *)
   LoggingUtils.init_loggers ~from ~options ();

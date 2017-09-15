@@ -763,7 +763,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     end;
     !env
 
-  let respond_to_persistent_client genv env client msg =
+  let respond_to_persistent_client genv env ~serve_ready_clients client msg =
     let env = ref env in
     let options = genv.ServerEnv.options in
     let workers = genv.ServerEnv.workers in
@@ -782,16 +782,64 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           !env
       | Persistent_connection_prot.DidOpen filenames ->
           Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
-          let current_errors, current_warnings, _ = get_collated_errors_separate_warnings !env in
-          let new_connections = Persistent_connection.client_did_open
-            !env.connections client ~filenames ~current_errors ~current_warnings in
-          { !env with connections = new_connections }
+
+          begin match Persistent_connection.client_did_open !env.connections client ~filenames with
+          | None -> !env (* No new files were opened, so do nothing *)
+          | Some (connections, client) ->
+            let env = {!env with connections} in
+
+            match Options.lazy_mode options with
+            | Some Options.LAZY_MODE_IDE ->
+              (* LAZY_MODE_IDE is a lazy mode which infers the focused files based on what the IDE
+               * opens. So when an IDE opens a new file, that file is now focused.
+               *
+               * If the newly opened file was previously unchecked or checked as a dependency, then
+               * we will do a new recheck.
+               *
+               * If the newly opened file was already checked, then we'll just send the errors to
+               * the client
+               *)
+              let file_options = Options.file_options options in
+              let focused = Nel.fold_left
+                (fun acc fn ->
+                  FilenameSet.add (Files.filename_from_string ~options:file_options fn) acc)
+                FilenameSet.empty
+                filenames in
+              let checked_files = CheckedSet.add ~focused env.checked_files in
+
+              let new_focused_files = focused
+                |> Fn.flip FilenameSet.diff (CheckedSet.focused env.checked_files)
+                |> Fn.flip FilenameSet.diff (CheckedSet.dependents env.checked_files) in
+
+              let env = { env with checked_files } in
+              if not (FilenameSet.is_empty new_focused_files)
+              then
+                (* Rechecking will send errors to the clients *)
+                recheck genv env new_focused_files ~serve_ready_clients
+              else begin
+                (* This open doesn't trigger a recheck, but we'll still send down the errors *)
+                let errors, warnings, _ = get_collated_errors_separate_warnings env in
+                Persistent_connection.send_errors_if_subscribed client ~errors ~warnings;
+                env
+              end
+            | Some Options.LAZY_MODE_FILESYSTEM
+            | None ->
+              (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
+               * a new file is opened is to send the errors to the client *)
+              let errors, warnings, _ = get_collated_errors_separate_warnings env in
+              Persistent_connection.send_errors_if_subscribed client ~errors ~warnings;
+              env
+            end
+
       | Persistent_connection_prot.DidClose filenames ->
           Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
-          let current_errors, current_warnings, _ = get_collated_errors_separate_warnings !env in
-          let new_connections = Persistent_connection.client_did_close
-            !env.connections client ~filenames ~current_errors ~current_warnings in
-          { !env with connections = new_connections }
+          begin match Persistent_connection.client_did_close !env.connections client ~filenames with
+          | None -> !env (* No new files were closed, so do nothing *)
+          | Some (connections, client) ->
+            let errors, warnings, _ = get_collated_errors_separate_warnings !env in
+            Persistent_connection.send_errors_if_subscribed client ~errors ~warnings;
+            {!env with connections}
+          end
 
   let should_close = function
     | { ServerProt.command = ServerProt.CONNECT; _ } -> false
@@ -812,7 +860,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         env
       | _ -> continuation env
 
-  let handle_persistent_client genv env client =
+  let handle_persistent_client genv env ~serve_ready_clients client =
     let msg, env =
       try
         Some (Persistent_connection.input_value client), env
@@ -823,7 +871,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
             None, {env with connections = new_connections}
     in
     match msg with
-      | Some msg -> respond_to_persistent_client genv env client msg
+      | Some msg -> respond_to_persistent_client genv env ~serve_ready_clients client msg
       | None -> env
 
 end

@@ -476,10 +476,14 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if callargs' == callargs && t'' == t' then t
         else ConstructorT (r, callargs', t'')
-    | SuperT (r, instt) ->
-        let instt' = self#inst_type cx map_cx instt in
-        if instt' == instt then t
-        else SuperT (r, instt')
+    | SuperT (r, DerivedInstance i) ->
+        let i' = self#inst_type cx map_cx i in
+        if i' == i then t
+        else SuperT (r, DerivedInstance i')
+    | SuperT (r, DerivedStatics o) ->
+        let o' = self#obj_type cx map_cx o in
+        if o' == o then t
+        else SuperT (r, DerivedStatics o')
     | ImplementsT (use_op, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t

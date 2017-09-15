@@ -125,42 +125,6 @@ let gen_imports env =
   (imported_ts, SMap.fold mark_declared_classes imported_ts env)
 
 let gen_class_body =
-  let rec gen_method ~static method_name p env = Codegen.(Type.(
-    let t = match p with
-    | Field (t, Positive) -> t
-    | _ -> failwith "Internal Error: Unexpected method type, expected a field"
-    in
-    match resolve_type t env with
-    | AnnotT (t, _) ->
-      let p = Field (t, Positive) in
-      gen_method ~static method_name p env
-    | DefT (_, FunT (_static, _super, ft)) ->
-      let {params_tlist; params_names; rest_param; return_t; _;} = ft in
-      let is_empty_constructor =
-        method_name = "constructor"
-        && (not static)
-        && List.length params_tlist = 0
-        && match resolve_type return_t env with DefT (_, VoidT) -> true | _ -> false
-      in
-      if is_empty_constructor then env else (
-        add_str "  " env
-          |> gen_if static (add_str "static ")
-          |> add_str method_name
-          |> gen_tparams_list
-          |> add_str "("
-          |> gen_func_params params_names params_tlist rest_param
-          |> add_str "): "
-          |> gen_type return_t
-          |> add_str ";\n"
-      )
-    | DefT (_, PolyT (tparams, t, _)) ->
-      let p = Field (t, Positive) in
-      add_tparams tparams env |> gen_method ~static method_name p
-    | t -> failwith (
-      spf "Internal Error: Unexpected method type: %s" (string_of_ctor t)
-    )
-  )) in
-
   let gen_field ~static field_name p env = Codegen.(Type.(
     (**
      * All classes have an implicit `static name: string` field on them.
@@ -175,7 +139,23 @@ let gen_class_body =
       | _ -> false
     ) in
 
-    if is_static_name_field then env else (
+    let is_empty_constructor = not static && field_name = "constructor" && (
+      match p with
+      | Method t ->
+        (match resolve_type t env with
+        | DefT (_, FunT (_, _, { params_tlist; return_t; _ })) ->
+          List.length params_tlist = 0 && (
+            match resolve_type return_t env with
+            | DefT (_, VoidT) -> true
+            | _ -> false
+          )
+        | _ -> false)
+      | _ -> false
+    ) in
+
+    if is_static_name_field || is_empty_constructor
+    then env
+    else (
       add_str "  " env
         |> gen_if static (add_str "static ")
         |> gen_prop field_name p
@@ -184,10 +164,10 @@ let gen_class_body =
   )) in
 
   fun static fields methods env -> Codegen.(
-    let (static_fields, static_methods) = Type.(
+    let static_fields = Type.(
       match static with
-      | DefT (_, InstanceT (_, _, _, {fields_tmap; methods_tmap; _;})) ->
-        (find_props fields_tmap env, find_props methods_tmap env)
+      | DefT (_, ObjT {props_tmap; _}) ->
+        find_props props_tmap env
       | t -> failwith (
         spf
           "Internal Error: Unexpected class static type: %s"
@@ -195,22 +175,20 @@ let gen_class_body =
       )
     ) in
 
-    let fields_count = SMap.cardinal fields in
     let static_fields_count = SMap.cardinal static_fields in
+    let fields_count = SMap.cardinal fields in
     let methods_count = SMap.cardinal methods in
-    let static_methods_count = SMap.cardinal static_methods in
     let total_members_count =
-      fields_count + static_fields_count + methods_count + static_methods_count
+      static_fields_count + fields_count + methods_count
     in
 
     let env = add_str " {" env in
     if total_members_count = 0 then add_str "}" env else (
       add_str "\n" env
         |> SMap.fold (gen_field ~static:true) static_fields
-        |> SMap.fold (gen_method ~static:true) static_methods
         |> add_str "\n"
         |> SMap.fold (gen_field ~static:false) fields
-        |> SMap.fold (gen_method ~static:false) methods
+        |> SMap.fold (gen_field ~static:false) methods
         |> add_str "}"
   )
 )

@@ -47,27 +47,27 @@ val add_constructor: Func_sig.t -> t -> t
 val append_constructor: Func_sig.t -> t -> t
 
 (** Add field to signature. *)
-val add_field: string -> field -> static:bool -> t -> t
+val add_field: static:bool -> string -> field -> t -> t
 
 (** Add method to signature.
 
     Overwrites any existing synonymous method. This implements the behavior of
     classes, which permit duplicate definitions where latter definitions
     overwrite former ones. *)
-val add_method: string -> Func_sig.t -> static:bool -> t -> t
+val add_method: static:bool -> string -> Func_sig.t -> t -> t
 
 (** Add method override to signature.
 
     Does not overwrite existing synonymous methods. This implements the
     behavior of interfaces, which interpret duplicate definitions as branches
     of a single overloaded method. *)
-val append_method: string -> Func_sig.t -> static:bool -> t -> t
+val append_method: static:bool -> string -> Func_sig.t -> t -> t
 
 (** Add getter to signature. *)
-val add_getter: string -> Func_sig.t -> static:bool -> t -> t
+val add_getter: static:bool -> string -> Func_sig.t -> t -> t
 
 (** Add setter to signature. *)
-val add_setter: string -> Func_sig.t -> static:bool -> t -> t
+val add_setter: static:bool -> string -> Func_sig.t -> t -> t
 
 (** Create signature from class AST. *)
 val mk: Context.t ->

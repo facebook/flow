@@ -5407,38 +5407,41 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         for the inherited properties are non-strict: they are not required to
         exist. **)
 
-    | (DefT (_, InstanceT _),
-       SuperT (reason,instance))
-      ->
+    | DefT (_, InstanceT _),
+      SuperT (reason, derived_type) ->
+      let check_super x p =
         let strict = NonstrictReturning None in
-        Context.iter_props cx instance.fields_tmap (fun x p ->
-          let reason_prop = replace_reason_const (RProperty (Some x)) reason in
-          lookup_prop cx trace l reason_prop reason strict x (SuperProp p)
-        );
-        Context.iter_props cx instance.methods_tmap (fun x p ->
-          if inherited_method x then
-            let reason_prop = replace_reason_const (RProperty (Some x)) reason in
-            lookup_prop cx trace l reason_prop reason strict x (SuperProp p)
+        let reason_prop = replace_reason_const (RProperty (Some x)) reason in
+        lookup_prop cx trace l reason_prop reason strict x (SuperProp p)
+      in
+      (match derived_type with
+      | DerivedInstance {fields_tmap; methods_tmap; _} ->
+        Context.iter_props cx fields_tmap check_super;
+        Context.iter_props cx methods_tmap (fun x p ->
+          if inherited_method x then check_super x p
         )
+      | DerivedStatics {props_tmap; _} ->
+        Context.iter_props cx props_tmap (fun x p ->
+          if inherited_method x then check_super x p
+        ))
 
-    | DefT (_, ObjT _), SuperT (reason, instance)
-    | DefT (_, AnyObjT), SuperT (reason, instance)
-      ->
-        Context.iter_props cx instance.fields_tmap (fun x p ->
-          let reason_prop = replace_reason_const (RProperty (Some x)) reason in
-          let propref = Named (reason_prop, x) in
-          rec_flow cx trace (l,
-            LookupT (reason, NonstrictReturning None, [], propref,
-              SuperProp p))
-        );
-        Context.iter_props cx instance.methods_tmap (fun x p ->
-          let reason_prop = replace_reason_const (RProperty (Some x)) reason in
-          let propref = Named (reason_prop, x) in
-          if inherited_method x then
-            rec_flow cx trace (l,
-              LookupT (reason, NonstrictReturning None, [], propref,
-                SuperProp p))
+    | DefT (_, ObjT _), SuperT (reason, derived_type)
+    | DefT (_, AnyObjT), SuperT (reason, derived_type) ->
+      let check_super x p =
+        let strict = NonstrictReturning None in
+        let reason_prop = replace_reason_const (RProperty (Some x)) reason in
+        lookup_prop cx trace l reason_prop reason strict x (SuperProp p)
+      in
+      (match derived_type with
+      | DerivedInstance {fields_tmap; methods_tmap; _} ->
+        Context.iter_props cx fields_tmap check_super;
+        Context.iter_props cx methods_tmap (fun x p ->
+          if inherited_method x then check_super x p
         )
+      | DerivedStatics {props_tmap; _} ->
+        Context.iter_props cx props_tmap (fun x p ->
+          if inherited_method x then check_super x p
+        ))
 
     (***********************)
     (* opaque types part 2 *)
@@ -8972,6 +8975,9 @@ and __unify cx ?(use_op=UnknownUse) t1 t2 trace =
   (* If the type is the same type or we have already seen this type pair in our
    * cache then do not continue. *)
   if t1 = t2 then () else (
+
+  (* limit recursion depth *)
+  RecursionCheck.check trace;
 
   (* In general, unifying t1 and t2 should have similar effects as flowing t1 to
      t2 and flowing t2 to t1. This also means that any restrictions on such

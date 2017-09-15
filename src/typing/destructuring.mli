@@ -8,11 +8,6 @@
  *
  *)
 
-val extract_destructured_bindings :
-  (Loc.t * string) list ->
-  Loc.t Ast.Pattern.t' ->
-  (Loc.t * string) list
-
 val destructuring :
   Context.t ->
   expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->

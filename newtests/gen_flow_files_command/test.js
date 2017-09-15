@@ -9,41 +9,44 @@ import {suite, test} from '../../tsrc/test/Tester';
 export default suite(({addFile, addFiles, flowCmd}) => [
   test('named class exports', [
     addFile('named_class_exports', 'named_class_exports.js'),
-    flowCmd(['gen-flow-files', '--quiet', 'named_class_exports.js']).stdout(`
-      // @flow
+    flowCmd(['gen-flow-files', '--quiet', 'named_class_exports.js'])
+      .stdout(
+        `
+          // @flow
 
-      declare class Class0 {
+          declare class Class0 {
 
-        map<U>(f: (x: T) => U): Class0<U>;
-      }
-      declare interface Class1 {
+            map<U>(f: (x: T) => U): Class0<U>;
+          }
+          declare interface Class1 {
 
-        foo: string;
-      }
-      declare export class Base<A, B, C> {
-        static baseStaticMethod(a: number, b: string): number;
-        static overriddenStaticMethod(a: {b: number, c: number}): number;
+            foo: string;
+          }
+          declare export class Base<A, B, C> {
+            static baseStaticMethod(a: number, b: string): number;
+            static overriddenStaticMethod(a: {b: number, c: number}): number;
 
-        baseInst: Base<number, string, mixed>;
-        childInst: Child<string, number>;
-        baseMethod(a: number, b: string): number;
-        overriddenMethod(a: {b: number, c: number}): number;
-      }
+            baseInst: Base<number, string, mixed>;
+            childInst: Child<string, number>;
+            baseMethod(a: number, b: string): number;
+            overriddenMethod(a: {b: number, c: number}): number;
+          }
 
-      declare export class Child<A, B> extends Base<A, B, mixed> {
-        static overriddenStaticMethod(a: {b: number}): number;
+          declare export class Child<A, B> extends Base<A, B, mixed> {
+            static overriddenStaticMethod(a: {b: number}): number;
 
-        notExported: Class0<number>;
-        overriddenMethod(a: {b: number}): number;
-      }
+            notExported: Class0<number>;
+            overriddenMethod(a: {b: number}): number;
+          }
 
-      declare export class Foo implements Class1 {
+          declare export class Foo implements Class1 {
 
-        foo: string;
-      }
+            foo: string;
+          }
 
 
-    `)
+        `,
+      )
     .stderr('')
   ]),
 

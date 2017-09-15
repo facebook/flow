@@ -17,6 +17,10 @@ type module_system =
   | Node
   | Haste
 
+type lazy_mode =
+| LAZY_MODE_FILESYSTEM
+| LAZY_MODE_IDE
+
 type jsx_mode =
   (**
    * Specifies a function that should be invoked instead of React.createElement
@@ -57,7 +61,7 @@ type t = {
   opt_munge_underscores: bool;
   opt_output_graphml: bool;
   opt_profile : bool;
-  opt_lazy: bool;
+  opt_lazy_mode: lazy_mode option;
   opt_quiet : bool;
   opt_root : Path.t;
   opt_strip_root : bool;
@@ -89,7 +93,8 @@ let haste_paths_whitelist opts = opts.opt_haste_paths_whitelist
 let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
 let file_options opts = opts.opt_file_options
 let is_debug_mode opts = opts.opt_debug
-let is_lazy_mode opts = opts.opt_lazy
+let is_lazy_mode opts = opts.opt_lazy_mode <> None
+let lazy_mode opts = opts.opt_lazy_mode
 let is_quiet opts = opts.opt_quiet
 let max_header_tokens opts = opts.opt_max_header_tokens
 let max_trace_depth opts = opts.opt_traces

@@ -84,7 +84,7 @@ module CheckCommand = struct
 
     let root = CommandUtils.guess_root path_opt in
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-    let options = make_options ~flowconfig ~lazy_:false ~root options_flags in
+    let options = make_options ~flowconfig ~lazy_mode:None ~root options_flags in
 
     if Options.should_profile options
     then begin
@@ -160,7 +160,7 @@ module FocusCheckCommand = struct
     | x::_ -> Some x in
     let root = CommandUtils.guess_root file_opt in
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-    let options = make_options ~flowconfig ~lazy_:false ~root options_flags in
+    let options = make_options ~flowconfig ~lazy_mode:None ~root options_flags in
 
     (* initialize loggers before doing too much, especially anything that might exit *)
     LoggingUtils.init_loggers ~from ~options ();

@@ -539,10 +539,15 @@ Error: element_with_component_type.js:8
       138:   | React$StatelessFunctionalComponent<Props>
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$StatelessFunctionalComponent`. See lib: <BUILTINS>/react.js:138
       Error:
-      138:   | React$StatelessFunctionalComponent<Props>
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:138
         5: class Foo extends React.Component<{a: number}> {}
-                 ^^^ statics of Foo
+                 ^^^ statics of Foo. This type is incompatible with
+      138:   | React$StatelessFunctionalComponent<Props>
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
+        Property `$call` is incompatible:
+          138:   | React$StatelessFunctionalComponent<Props>
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:138
+            5: class Foo extends React.Component<{a: number}> {}
+                     ^^^ statics of Foo
       Member 2:
       139:   | Class<React$Component<Props, any>>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:139
@@ -639,10 +644,15 @@ Error: hoc.js:35
   138:   | React$StatelessFunctionalComponent<Props>
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: type `React$StatelessFunctionalComponent`. See lib: <BUILTINS>/react.js:138
   Error:
-  138:   | React$StatelessFunctionalComponent<Props>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:138
    35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of class expr `Empty`
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of class expr `Empty`. This type is incompatible with
+  138:   | React$StatelessFunctionalComponent<Props>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
+    Property `$call` is incompatible:
+      138:   | React$StatelessFunctionalComponent<Props>
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:138
+       35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of class expr `Empty`
   Member 2:
   139:   | Class<React$Component<Props, any>>;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:139
@@ -692,9 +702,14 @@ Error: hoc.js:36
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ class type: type application of polymorphic type: class type: React$Component. See lib: <BUILTINS>/react.js:139
   Error:
    36: myHOC(function Empty(props: {foo: string}) {}); // Error
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   139:   | Class<React$Component<Props, any>>;
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of React$Component. See lib: <BUILTINS>/react.js:139
+    Property `$call` is incompatible:
+       36: myHOC(function Empty(props: {foo: string}) {}); // Error
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in
+      139:   | Class<React$Component<Props, any>>;
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of React$Component. See lib: <BUILTINS>/react.js:139
 
 Error: hoc.js:41
  41: <Wrapped />; // Error: `foo` is required.

@@ -250,6 +250,13 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
       return ret;
     };
 
+  sleep: (number) => TestStepFirstStage =
+    (timeoutMs) => this._cloneWithAction(
+      async (builder, env) => {
+        await sleep(timeoutMs);
+      }
+    );
+
   // Wait for the expected output, and timeout after timeousMs milliseconds
   ideNewMessagesWithTimeout:
     (number, $ReadOnlyArray<IDEMessage>) => TestStepSecondStage =

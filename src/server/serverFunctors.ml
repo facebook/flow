@@ -31,7 +31,9 @@ module type SERVER_PROGRAM = sig
     serve_ready_clients:(unit -> unit) ->
     waiting_requests:(ServerEnv.env -> ServerEnv.env) list ref ->
     client -> env
-  val handle_persistent_client : genv -> env -> Persistent_connection.single_client -> env
+  val handle_persistent_client : genv -> env ->
+    serve_ready_clients:(unit -> unit) ->
+    Persistent_connection.single_client -> env
 end
 
 (*****************************************************************************)
@@ -169,7 +171,7 @@ end = struct
     | New_client fd ->
       env := handle_connection genv !env ~serve_ready_clients ~waiting_requests fd
     | Existing_client client ->
-      env := Program.handle_persistent_client genv !env client
+      env := Program.handle_persistent_client genv !env ~serve_ready_clients client
 
   (* Waiting connections must be processed in a loop, since processing a waiting
      connection can add more waiting connections. *)
