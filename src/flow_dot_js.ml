@@ -25,7 +25,7 @@ let parse_content file content =
   Parser_flow.program_file ~fail:false ~parse_options content (Some file)
 
 let calc_requires ast =
-  let open Require in
+  let open File_sig in
   let { module_sig; _ } = program ~ast in
   module_sig.requires
 

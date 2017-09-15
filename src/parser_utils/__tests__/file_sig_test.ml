@@ -9,7 +9,7 @@
  *)
 
 open OUnit2
-open Require
+open File_sig
 
 let visit ?parse_options source =
   let ast, _ = Parser_flow.program ~parse_options source in

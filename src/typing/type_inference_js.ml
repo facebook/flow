@@ -479,7 +479,7 @@ let infer_lib_file ~metadata ~exclude_syms ~lint_severities file ast =
   let () =
     (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
        confident that we don't support them in any sensible way. *)
-    let open Require in
+    let open File_sig in
     let { module_sig; _ } = program ~ast in
     SMap.iter (Import_export.add_require_tvar cx) module_sig.requires
   in
