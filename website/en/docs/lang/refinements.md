@@ -98,7 +98,7 @@ function method(value: { prop?: string }) {
 }
 ```
 
-### Refinement Invalidations
+### Refinement Invalidations <a class="toc" id="toc-refinement-invalidations" href="#toc-refinement-invalidations"></a>
 
 It is also possible to invalidate refinements, for example:
 
