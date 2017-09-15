@@ -1,3 +1,49 @@
+### 0.55.0
+
+Likely to cause new Flow errors:
+
+* Fixed a bug that caused unsoundness with `$ObjMap`.
+
+New Features:
+
+* Flow is now capable of servicing some requests while it is rechecking. This should improve the IDE experience on large codebases.
+* Added $Call utility type.
+* Added $Compose and $ComposeReverse utility types.
+* Added support for spreading `mixed` into an object type.
+
+Notable bug fixes:
+
+* Improve results from the find-refs command.
+* Allow null and undefined as React.createElement() config (fixes #4658).
+
+Misc:
+
+* Miscellaneous code cleanup.
+* Located error messages related to functions at only the signature, rather than the entire range of the function body.
+* Improved error messages when `this` types are incompatible.
+* Properly check subtype relationships between callable objects.
+* Fixed a bug that caused `mixed` not to be properly printed from `type-at-pos`.
+* Improved error messages regarding incompatible Array type parameters.
+* Preserve some inference information across module boundaries.
+* Support assignments to shorthand method properties in object literals.
+
+Typedefs:
+
+* Added captureStream() to HTMLCanvasElement and HTMLMediaElement.
+* Added HTMLOptGroupElement return type for document.createElement().
+* Added Recoverable and context to the `repl` module.
+* Fixed return type for AudioContext.createMediaStreamDestination().
+
+Parser:
+
+* Various fixes to improve test262 compliance:
+  * Correctly disallowed various illegal constructs in destructuring patterns.
+  * Allow destructuring in `catch`.
+  * Added \u2028 and \u2029 to the list of line terminators.
+  * Allow unicode escape codes in identifiers.
+* Improved parse errors when using private properties outside of classes.
+* Disallowed reserved words as function param names in types (e.g. `(switch: number) => void`).
+
 ### 0.54.1
 
 Notable bug fixes:
