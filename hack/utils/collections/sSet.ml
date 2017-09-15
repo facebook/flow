@@ -9,3 +9,5 @@
  *)
 
 include Set.Make (StringKey)
+let to_string sset =
+  "{" ^ (String.concat "," (elements sset)) ^ "}"
