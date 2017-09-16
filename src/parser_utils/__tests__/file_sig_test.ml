@@ -22,11 +22,20 @@ let substring_loc s loc =
 
 let call_opt x = function Some f -> f x | None -> ()
 
-let assert_require ?assert_loc ?assert_cjs ?assert_es require =
-  let { loc; cjs_requires; es_imports } = require in
+let assert_require
+  ?assert_loc ?assert_cjs ?assert_es
+  ?assert_named ?assert_ns ?assert_types
+  ?assert_typesof ?assert_typesof_ns
+  { loc; cjs_requires; es_imports; named; ns; types; typesof; typesof_ns } =
   call_opt loc assert_loc;
   call_opt cjs_requires assert_cjs;
-  call_opt es_imports assert_es
+  call_opt es_imports assert_es;
+  call_opt named assert_named;
+  call_opt ns assert_ns;
+  call_opt types assert_types;
+  call_opt typesof assert_typesof;
+  call_opt typesof_ns assert_typesof_ns;
+  ()
 
 let assert_cjs module_kind f =
   match module_kind with
@@ -52,7 +61,7 @@ let tests = "require" >::: [
   end;
 
   "es_import" >:: begin fun ctxt ->
-    let source = "import Foo from 'foo'" in
+    let source = "import 'foo'" in
     let {module_sig = {requires; _}; _} = visit source in
     assert_equal ~ctxt 1 (SMap.cardinal requires);
     let require = SMap.find_unsafe "foo" requires in
@@ -61,6 +70,170 @@ let tests = "require" >::: [
         assert_equal ~ctxt "'foo'" (substring_loc source loc))
       ~assert_es:(fun imports ->
         assert_equal ~ctxt 1 (List.length imports))
+  end;
+
+
+  "es_import_default" >:: begin fun ctxt ->
+    let source = "import Foo from 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_named:(fun named ->
+        assert_equal ~ctxt 1 (SMap.cardinal named);
+        let locals = SMap.find_unsafe "default" named in
+        assert_equal ~ctxt 1 (SSet.cardinal locals);
+        assert_equal ~ctxt true (SSet.mem "Foo" locals))
+  end;
+
+  "es_import_named" >:: begin fun ctxt ->
+    let source = "import {A} from 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_named:(fun named ->
+        assert_equal ~ctxt 1 (SMap.cardinal named);
+        let locals = SMap.find_unsafe "A" named in
+        assert_equal ~ctxt 1 (SSet.cardinal locals);
+        assert_equal ~ctxt true (SSet.mem "A" locals))
+  end;
+
+  "es_import_renamed" >:: begin fun ctxt ->
+    let source = "import {A as B} from 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_named:(fun named ->
+        let locals = SMap.find_unsafe "A" named in
+        assert_equal ~ctxt true (SSet.mem "B" locals))
+  end;
+
+  "es_import_named_type" >:: begin fun ctxt ->
+    let source = "import {type A} from 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_types:(fun types ->
+        assert_equal ~ctxt 1 (SMap.cardinal types);
+        let locals = SMap.find_unsafe "A" types in
+        assert_equal ~ctxt 1 (SSet.cardinal locals);
+        assert_equal ~ctxt true (SSet.mem "A" locals))
+  end;
+
+  "es_import_named_typeof" >:: begin fun ctxt ->
+    let source = "import {typeof A} from 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_typesof:(fun typesof ->
+        assert_equal ~ctxt 1 (SMap.cardinal typesof);
+        let locals = SMap.find_unsafe "A" typesof in
+        assert_equal ~ctxt 1 (SSet.cardinal locals);
+        assert_equal ~ctxt true (SSet.mem "A" locals))
+  end;
+
+  "es_import_ns" >:: begin fun ctxt ->
+    let source = "import * as Foo from 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_ns:(fun ns ->
+        assert_equal ~ctxt 1 (SMap.cardinal ns);
+        let loc, rest = SMap.find_unsafe "Foo" ns in
+        assert_equal ~ctxt 0 (List.length rest);
+        assert_equal "* as Foo" (substring_loc source loc))
+  end;
+
+  "es_import_type" >:: begin fun ctxt ->
+    let source = "import type A from 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_types:(fun types ->
+        assert_equal ~ctxt 1 (SMap.cardinal types);
+        let locals = SMap.find_unsafe "default" types in
+        assert_equal ~ctxt 1 (SSet.cardinal locals);
+        assert_equal ~ctxt true (SSet.mem "A" locals))
+  end;
+
+  "es_import_type_named" >:: begin fun ctxt ->
+    let source = "import type {A} from 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_types:(fun types ->
+        assert_equal ~ctxt 1 (SMap.cardinal types);
+        let locals = SMap.find_unsafe "A" types in
+        assert_equal ~ctxt 1 (SSet.cardinal locals);
+        assert_equal ~ctxt true (SSet.mem "A" locals))
+  end;
+
+  "es_import_type_renamed" >:: begin fun ctxt ->
+    let source = "import type {A as B} from 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_types:(fun types ->
+        let locals = SMap.find_unsafe "A" types in
+        assert_equal ~ctxt true (SSet.mem "B" locals))
+  end;
+
+  "es_import_typeof" >:: begin fun ctxt ->
+    let source = "import typeof A from 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_typesof:(fun typesof ->
+        assert_equal ~ctxt 1 (SMap.cardinal typesof);
+        let locals = SMap.find_unsafe "default" typesof in
+        assert_equal ~ctxt 1 (SSet.cardinal locals);
+        assert_equal ~ctxt true (SSet.mem "A" locals))
+  end;
+
+  "es_import_typeof_named" >:: begin fun ctxt ->
+    let source = "import typeof {A} from 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_typesof:(fun typesof ->
+        assert_equal ~ctxt 1 (SMap.cardinal typesof);
+        let locals = SMap.find_unsafe "A" typesof in
+        assert_equal ~ctxt 1 (SSet.cardinal locals);
+        assert_equal ~ctxt true (SSet.mem "A" locals))
+  end;
+
+  "es_import_typeof_renamed" >:: begin fun ctxt ->
+    let source = "import typeof {A as B} from 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_typesof:(fun typesof ->
+        let locals = SMap.find_unsafe "A" typesof in
+        assert_equal ~ctxt true (SSet.mem "B" locals))
+  end;
+
+  "es_import_typesof_ns" >:: begin fun ctxt ->
+    let source = "import typeof * as Foo from 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_typesof_ns:(fun typesof_ns ->
+        assert_equal ~ctxt 1 (SMap.cardinal typesof_ns);
+        let loc, rest = SMap.find_unsafe "Foo" typesof_ns in
+        assert_equal ~ctxt 0 (List.length rest);
+        assert_equal "* as Foo" (substring_loc source loc))
   end;
 
   "cjs_default" >:: begin fun ctxt ->

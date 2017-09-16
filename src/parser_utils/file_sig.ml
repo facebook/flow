@@ -27,6 +27,11 @@ and require = {
   loc: Loc.t;
   cjs_requires: Loc.t list;
   es_imports: Loc.t list;
+  named: SSet.t SMap.t;
+  ns: Loc.t Nel.t SMap.t;
+  types: SSet.t SMap.t;
+  typesof: SSet.t SMap.t;
+  typesof_ns: Loc.t Nel.t SMap.t;
 }
 
 and module_kind =
@@ -44,6 +49,30 @@ let empty_file_sig = {
   declare_modules = SMap.empty;
 }
 
+let mk_require
+  ?(cjs_requires = []) ?(es_imports = [])
+  ?(named = SMap.empty)
+  ?(ns = SMap.empty)
+  ?(types = SMap.empty)
+  ?(typesof = SMap.empty)
+  ?(typesof_ns = SMap.empty)
+  loc =
+  { loc; cjs_requires; es_imports; named; ns; types; typesof; typesof_ns }
+
+let merge_requires =
+  let sset_union _ a b = Some (SSet.union a b) in
+  let nel_append _ a b = Some (Nel.rev_append a b) in
+  fun r1 r2 -> {
+    loc = r2.loc;
+    cjs_requires = List.rev_append r2.cjs_requires r1.cjs_requires;
+    es_imports = List.rev_append r2.es_imports r2.es_imports;
+    named = SMap.union r1.named r2.named ~combine:sset_union;
+    ns = SMap.union r1.ns r2.ns ~combine:nel_append;
+    types = SMap.union r1.types r2.types ~combine:sset_union;
+    typesof = SMap.union r1.typesof r2.typesof ~combine:sset_union;
+    typesof_ns = SMap.union r1.typesof_ns r2.typesof_ns ~combine:nel_append;
+  }
+
 let require_loc_map msig =
   SMap.fold (fun name {loc; _} acc ->
     SMap.add name loc acc
@@ -59,21 +88,14 @@ let update_sig f fsig = { fsig with module_sig = f fsig.module_sig }
 let set_module_kind module_kind msig = { msig with module_kind }
 
 let add_cjs_require name loc msig =
-  let require =
-    match SMap.get name msig.requires with
-    | Some r -> { r with loc; cjs_requires = loc::r.cjs_requires }
-    | None -> { loc; cjs_requires = [loc]; es_imports = [] }
-  in
-  { msig with requires = SMap.add name require msig.requires;
-}
+  let require = mk_require loc ~cjs_requires:[loc] in
+  let requires = SMap.add name require msig.requires ~combine:merge_requires in
+  { msig with requires }
 
-let add_es_import name loc msig =
-  let require =
-    match SMap.get name msig.requires with
-    | Some r -> { r with loc; es_imports = loc::r.es_imports }
-    | None -> { loc; cjs_requires = []; es_imports = [loc] }
-  in
-  { msig with requires = SMap.add name require msig.requires }
+let add_es_import name ?named ?ns ?types ?typesof ?typesof_ns loc msig =
+  let require = mk_require loc ~es_imports:[loc] ?named ?ns ?types ?typesof ?typesof_ns in
+  let requires = SMap.add name require msig.requires ~combine:merge_requires in
+  { msig with requires }
 
 let add_type_export name loc msig = {
   msig with
@@ -115,8 +137,8 @@ class requires_calculator ~ast = object(this)
   method private add_cjs_require r loc =
     this#update_module_sig (add_cjs_require r loc)
 
-  method private add_es_import r loc =
-    this#update_module_sig (add_es_import r loc)
+  method private add_es_import r ?named ?ns ?types ?typesof ?typesof_ns loc =
+    this#update_module_sig (add_es_import r ?named ?ns ?types ?typesof ?typesof_ns loc)
 
   method private add_type_export name loc =
     this#update_module_sig (add_type_export name loc)
@@ -154,18 +176,52 @@ class requires_calculator ~ast = object(this)
     begin match expr with
     | import_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ } ->
       this#add_es_import v import_loc
+    (* TODO: match statement.ml support for template literals *)
     | _ -> ()
     end;
     super#expression expr
 
   method! import_declaration (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
     let open Ast.Statement.ImportDeclaration in
-    let { importKind = _; source; specifiers = _ } = decl in
-    begin match source with
-    | import_loc, { Ast.Literal.value = Ast.Literal.String v; raw = _ } ->
-      this#add_es_import v import_loc
-    | _ -> ()
-    end;
+    let { importKind; source; specifiers } = decl in
+    let loc, name =  match source with
+    | loc, { Ast.Literal.value = Ast.Literal.String name; _ } -> loc, name
+    | _ -> failwith "import declaration source must be a string literal"
+    in
+    let named = ref SMap.empty in
+    let ns = ref SMap.empty in
+    let types = ref SMap.empty in
+    let typesof = ref SMap.empty in
+    let typesof_ns = ref SMap.empty in
+    let ref_of_kind = function
+      | ImportType -> types
+      | ImportTypeof -> typesof
+      | ImportValue -> named
+    in
+    let add_named remote local ref =
+      let locals = SSet.singleton local in
+      ref := SMap.add remote locals !ref ~combine:SSet.union
+    in
+    let add_ns local loc ref =
+      let locs = Nel.one loc in
+      ref := SMap.add local locs !ref ~combine:Nel.rev_append
+    in
+    List.iter (function
+      | ImportNamespaceSpecifier (loc, (_, local)) ->
+        add_ns local loc (
+          match importKind with
+          | ImportType -> failwith "unsupported syntax: import type *"
+          | ImportTypeof -> typesof_ns
+          | ImportValue -> ns)
+      | ImportDefaultSpecifier (_, local) ->
+        add_named "default" local (ref_of_kind importKind)
+      | ImportNamedSpecifier {local; remote = (_, remote); kind} ->
+        let importKind = match kind with Some k -> k | None -> importKind in
+        let local = match local with Some (_, x) -> x | None -> remote in
+        add_named remote local (ref_of_kind importKind)
+    ) specifiers;
+    this#add_es_import name loc
+      ~named:!named ~ns:!ns ~types:!types ~typesof:!typesof ~typesof_ns:!typesof_ns;
     super#import_declaration decl
 
   method! export_default_declaration_decl (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.declaration) =
