@@ -6406,6 +6406,15 @@ and ground_subtype = function
   | DefT (_, AnyT), u -> not (any_propagating_use_t u)
   | _, UseT (_, DefT (_, AnyT)) -> true
 
+  (* opt: avoid builtin lookups *)
+  | ObjProtoT _, UseT (_, ObjProtoT _)
+  | FunProtoT _, UseT (_, FunProtoT _)
+  | FunProtoT _, UseT (_, ObjProtoT _)
+  | DefT (_, ObjT {proto_t = ObjProtoT _; _}), UseT (_, ObjProtoT _)
+  | DefT (_, ObjT {proto_t = FunProtoT _; _}), UseT (_, FunProtoT _)
+  | DefT (_, ObjT {proto_t = FunProtoT _; _}), UseT (_, ObjProtoT _)
+    -> true
+
   | _ ->
     false
 
