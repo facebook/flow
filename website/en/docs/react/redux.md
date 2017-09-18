@@ -197,5 +197,4 @@ function reducer(state: State, action: Action): State {
 
 ### Flow + Redux resources <a class="toc" id="toc-flow-redux-resources" href="#toc-flow-redux-resources"></a>
 
-- [Using Redux with Flow](http://frantic.im/using-redux-with-flow) - Alex Kotliarskyi
 - [Redux and Flowtype](https://medium.com/@cdebotton/redux-and-flowtype-69ff1dd09036#.fsrm1amlk) - Christian de Botton
