@@ -165,7 +165,7 @@ The type of props for this component is:
 { foo: number } & Props
 ```
 
-This uses [an intersection](../../types/intersection/) to say that the type for
+This uses [an intersection](../../types/intersections/) to say that the type for
 props is everything in `Props` (which is the props type for our output
 component) *except* for `foo` which has a type of `number`.
 
