@@ -6,13 +6,13 @@ Error: importtest.js:7
   7:     return y;
                 ^ number. This type is incompatible with the expected return type of
   6: function test1 (y: SuperType) : SuperOpaque { // Error: number ~> SuperOpaque
-                                     ^^^^^^^^^^^ opaque type `SuperOpaque`
+                                     ^^^^^^^^^^^ SuperOpaque
 
 Error: importtest.js:15
  15:     return x;
                 ^ number. This type is incompatible with the expected return type of
  14: function test3 (x: number): Counter {// Error: number ~> Counter
-                                 ^^^^^^^ opaque type `Counter`
+                                 ^^^^^^^ Counter
 
 Error: importtest.js:27
  27:     return x;
@@ -36,13 +36,13 @@ Error: importtest.js:39
  39:     return x++; // Error number ~> SuperType
                 ^^^ number. This type is incompatible with
  38: function test9(x: SuperType): SuperType { // Error number ~> SuperType
-                       ^^^^^^^^^ opaque type `SuperType`
+                       ^^^^^^^^^ SuperType
 
 Error: importtest.js:39
  39:     return x++; // Error number ~> SuperType
                 ^^^ number. This type is incompatible with the expected return type of
  38: function test9(x: SuperType): SuperType { // Error number ~> SuperType
-                                   ^^^^^^^^^ opaque type `SuperType`
+                                   ^^^^^^^^^ SuperType
 
 Error: importtest.js:52
  52:     return x + y;
@@ -54,7 +54,7 @@ Error: test.js:7
   7: export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
                                                     ^^^^^^^ number. This type is incompatible with
   7: export opaque type SuperOpaqueBad: SuperType = Counter; // Error: number ~> SuperType
-                                        ^^^^^^^^^ opaque type `SuperType`
+                                        ^^^^^^^^^ SuperType
 
 Error: test.js:12
  12: export opaque type ClassBad: Bar = Foo; // Error: Foo ~> Bar

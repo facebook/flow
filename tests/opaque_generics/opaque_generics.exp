@@ -137,15 +137,15 @@ Error: importtest.js:15
 
 Error: importtest.js:23
  23:     return x;
-                ^ opaque type `Container`. This type is incompatible with the expected return type of
+                ^ Container. This type is incompatible with the expected return type of
  22: function test5(x : Container<string>) : Box<string> { // Error: Container ~> Box
-                                             ^^^^^^^^^^^ opaque type `Box`
+                                             ^^^^^^^^^^^ Box
 
 Error: importtest.js:27
  27:     return x;
-                ^ opaque type `Box`. This type is incompatible with the expected return type of
+                ^ Box. This type is incompatible with the expected return type of
  26: function test6(x : Box<string>) : Container<string> { // Error: Box ~> Container
-                                       ^^^^^^^^^^^^^^^^^ opaque type `Container`
+                                       ^^^^^^^^^^^^^^^^^ Container
 
 Error: test-polarity.js:12
  12: opaque type Bad1<-T> = Foo<T>; // Error: Foo expects covariant type

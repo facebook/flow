@@ -28,7 +28,7 @@ Error: Profile.js:22
    22:     (this.props.user.pic.id: empty); // Error: string ~> empty
                                 ^^ property `id`. Property cannot be accessed on
    17:     +pic: ProfilePic_imageRef & {|
-                 ^^^^^^^^^^^^^^^^^^^ opaque type `ProfilePic_imageRef`. See: Profile.graphql.js:17
+                 ^^^^^^^^^^^^^^^^^^^ ProfilePic_imageRef. See: Profile.graphql.js:17
   Member 2:
                                        v-
    17:     +pic: ProfilePic_imageRef & {|
@@ -50,7 +50,7 @@ Error: Profile.js:23
      23:     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
      46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ opaque type `ProfilePic_imageRef`. See: Relay.js:46
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ProfilePic_imageRef. See: Relay.js:46
 
 Error: ProfilePic.js:17
  17:     (this.props.image.url: empty); // Error: string ~> empty
@@ -187,7 +187,7 @@ Error: main.js:19
      20:   |},
            -^ object type. This type is incompatible with. See: Profile.graphql.js:13
      46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ opaque type `Profile_userRef`. See: Relay.js:46
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Profile_userRef. See: Relay.js:46
 
 Error: main.js:20
  20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
@@ -214,7 +214,7 @@ Error: main.js:20
      20:   |},
            -^ object type. This type is incompatible with. See: Profile.graphql.js:13
      46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ opaque type `Profile_userRef`. See: Relay.js:46
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Profile_userRef. See: Relay.js:46
 
 Error: main.js:21
  21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
@@ -236,7 +236,7 @@ Error: main.js:21
      21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
                                ^^^^^ mixed. This type is incompatible with
      46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ opaque type `Profile_userRef`. See: Relay.js:46
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Profile_userRef. See: Relay.js:46
 
 
 Found 20 errors

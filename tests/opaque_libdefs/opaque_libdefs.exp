@@ -2,11 +2,11 @@ Error: test.js:8
   8: function flowsSomethingToQueue(x: number): Queue { return x; } // Error number ~> Queue
                                                                ^ number. This type is incompatible with the expected return type of
   8: function flowsSomethingToQueue(x: number): Queue { return x; } // Error number ~> Queue
-                                                ^^^^^ opaque type `Queue`
+                                                ^^^^^ Queue
 
 Error: test.js:9
   9: function flowsQueueToSomething(q: Queue): number {return q; } // Error Queue ~> number
-                                                              ^ opaque type `Queue`. This type is incompatible with the expected return type of
+                                                              ^ Queue. This type is incompatible with the expected return type of
   9: function flowsQueueToSomething(q: Queue): number {return q; } // Error Queue ~> number
                                                ^^^^^^ number
 
@@ -14,7 +14,7 @@ Error: test.js:13
  13: counter_to_number(y); // Error: number ~> Counter
                        ^ number. This type is incompatible with the expected param type of
   8: declare function counter_to_number(c: Counter): number;
-                                           ^^^^^^^ opaque type `Counter`. See lib: flow-typed/decls.js:8
+                                           ^^^^^^^ Counter. See lib: flow-typed/decls.js:8
 
 Error: test.js:22
  22:     return x; // Error: string ~> number, number ~> string

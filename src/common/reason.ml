@@ -429,7 +429,7 @@ let rec string_of_desc = function
   | RObjectMap -> "object map"
   | RObjectMapi -> "object mapi"
   | RType x -> spf "type `%s`" x
-  | ROpaqueType x -> spf "opaque type `%s`" x
+  | ROpaqueType x -> x
   | RTypeParam (x,d) -> spf "type parameter `%s` of %s" x (string_of_desc d)
   | RIdentifier x -> spf "identifier `%s`" x
   | RIdentifierAssignment x -> spf "assignment of identifier `%s`" x
