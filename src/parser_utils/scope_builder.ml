@@ -90,10 +90,12 @@ class scope_builder = object(this)
     result
 
   method private mk_env parent_env scope =
-    SMap.mapi (fun x loc -> match SMap.get x parent_env with
+    List.fold_left (fun map (loc, x) ->
+      let def = match SMap.get x parent_env with
         | Some def -> Def.{ def with loc; scope; }
-        | None -> Def.{ loc; scope; name = this#next; }
-    )
+        | None -> Def.{ loc; scope; name = this#next; } in
+      SMap.add x def map
+    ) SMap.empty
 
   method private push ?(lexical=false) bindings =
     let save_counter = counter in
@@ -101,7 +103,7 @@ class scope_builder = object(this)
     let parent = current_scope_opt in
     let child = this#new_scope Scope.{ lexical; parent; } in
     current_scope_opt <- Some child;
-    env <- SMap.fold SMap.add (this#mk_env old_env child (Bindings.to_map bindings)) old_env;
+    env <- SMap.fold SMap.add (this#mk_env old_env child (Bindings.to_list bindings)) old_env;
     parent, old_env, save_counter
 
   method private pop (parent, old_env, save_counter) =

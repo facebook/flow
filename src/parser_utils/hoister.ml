@@ -26,7 +26,8 @@ module Bindings: sig
   val add: entry -> t -> t
   val push: t -> t -> t
   val exists: (entry -> bool) -> t -> bool
-  val to_map: t -> Loc.t SMap.t (* TODO: multiple declarations *)
+  val to_list: t -> entry list
+  val to_map: t -> Loc.t SMap.t
 end = struct
   type entry = Loc.t * string
   type t = entry list
@@ -35,12 +36,17 @@ end = struct
   let add = List.cons
   let push = List.append
   let exists = List.exists
+  let to_list t =
+    let _xs, list = List.fold_left (fun acc entry ->
+      let xs, list = acc in
+      let _loc, x = entry in
+      if SSet.mem x xs then acc (* TODO: multiple declarations *)
+      else SSet.add x xs, entry::list
+    ) (SSet.empty, []) (List.rev t) in
+    List.rev list
   let to_map t =
-    List.fold_left (fun map (loc, x) ->
-      match SMap.get x map with
-        | Some _ -> map (* multiple declarations *)
-        | None -> SMap.add x loc map
-    ) SMap.empty (List.rev t)
+    let list = to_list t in
+    List.fold_left (fun map (loc, x) -> SMap.add x loc map) SMap.empty list
 end
 
 (* TODO: It should be possible to vastly simplify hoisting by overriding the
