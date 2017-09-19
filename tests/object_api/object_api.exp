@@ -58,15 +58,25 @@ Error: object_keys.js:18
 
 Error: object_keys.js:25
  25: (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
-      ^^^^^^^^^^^^^^^^^^^^^^ string literal `prop`. Expected string literal `error`, got `prop` instead
+      ^^^^^^^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
  25: (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
-                                    ^^^^^^^ string literal `error`
+                              ^^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     25: (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
+          ^^^^^^^^^^^^^^^^^^^^^^ string literal `prop`. Expected string literal `error`, got `prop` instead
+     25: (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
+                                        ^^^^^^^ string literal `error`
 
 Error: object_keys.js:32
  32: (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
-      ^^^^^^^^^^^^^^^^^^^^^^ string literal `bar_prop`. Expected string literal `error`, got `bar_prop` instead
+      ^^^^^^^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
  32: (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
-                                    ^^^^^^^ string literal `error`
+                              ^^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     32: (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
+          ^^^^^^^^^^^^^^^^^^^^^^ string literal `bar_prop`. Expected string literal `error`, got `bar_prop` instead
+     32: (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
+                                        ^^^^^^^ string literal `error`
 
 Error: object_missing.js:5
   5:     Object.doesNotExist();

@@ -2334,38 +2334,41 @@ let dump_flow_error =
         spf "EMutationNotAllowed { reason = %s; reason_op = %s }"
           (dump_reason cx reason)
           (dump_reason cx reason_op)
-    | EExpectedStringLit ((reason1, reason2), expected, literal) ->
+    | EExpectedStringLit ((reason1, reason2), expected, literal, use_op) ->
         let literal = match literal with
         | Literal (_, str) -> spf "%S" str
         | Truthy -> "truthy"
         | AnyLiteral -> "any"
         in
-        spf "EExpectedStringLit ((%s, %s), %S, %S)"
+        spf "EExpectedStringLit ((%s, %s), %S, %S, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           expected
           literal
-    | EExpectedNumberLit ((reason1, reason2), (_, expected), literal) ->
+          (string_of_use_op use_op)
+    | EExpectedNumberLit ((reason1, reason2), (_, expected), literal, use_op) ->
         let literal = match literal with
         | Literal (_, (_, raw)) -> spf "%S" raw
         | Truthy -> "truthy"
         | AnyLiteral -> "any"
         in
-        spf "EExpectedNumberLit ((%s, %s), %s, %s)"
+        spf "EExpectedNumberLit ((%s, %s), %s, %s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           expected
           literal
-    | EExpectedBooleanLit ((reason1, reason2), expected, literal) ->
+          (string_of_use_op use_op)
+    | EExpectedBooleanLit ((reason1, reason2), expected, literal, use_op) ->
         let literal = match literal with
         | Some b -> spf "%b" b
         | None -> "any"
         in
-        spf "EExpectedBooleanLit ((%s, %s), %b, %s)"
+        spf "EExpectedBooleanLit ((%s, %s), %b, %s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           expected
           literal
+          (string_of_use_op use_op)
     | EPropNotFound ((prop_reason, obj_reason), _use_op) ->
         spf "EPropNotFound (%s, %s)"
           (dump_reason cx prop_reason)

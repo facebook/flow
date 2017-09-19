@@ -18,15 +18,25 @@ Error: caching_bug.js:21
 
 Error: iterator_result.js:23
  23:         return { done, value: "still going..." }; // Error string ~> void
-                      ^^^^ boolean. Expected boolean literal `false`, got `true` instead
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
 497:   | { done: false, value: Yield };
-                 ^^^^^ boolean literal `false`. See lib: <BUILTINS>/core.js:497
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/core.js:497
+  Property `done` is incompatible:
+     23:         return { done, value: "still going..." }; // Error string ~> void
+                          ^^^^ boolean. Expected boolean literal `false`, got `true` instead
+    497:   | { done: false, value: Yield };
+                     ^^^^^ boolean literal `false`. See lib: <BUILTINS>/core.js:497
 
 Error: iterator_result.js:25
  25:         return { done }; // Error void ~> string
-                      ^^^^ boolean. Expected boolean literal `true`, got `false` instead
+                    ^^^^^^^^ object literal. This type is incompatible with
 496:   | { done: true, value?: Return }
-                 ^^^^ boolean literal `true`. See lib: <BUILTINS>/core.js:496
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/core.js:496
+  Property `done` is incompatible:
+     25:         return { done }; // Error void ~> string
+                          ^^^^ boolean. Expected boolean literal `true`, got `false` instead
+    496:   | { done: true, value?: Return }
+                     ^^^^ boolean literal `true`. See lib: <BUILTINS>/core.js:496
 
 Error: map.js:13
  13: function mapTest4(map: Map<number, string>): Iterable<string> {

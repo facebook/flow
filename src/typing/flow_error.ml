@@ -81,9 +81,13 @@ type error_message =
   | EMissingTypeArgs of { reason: reason; min_arity: int; max_arity: int }
   | EValueUsedAsType of (reason * reason)
   | EMutationNotAllowed of { reason: reason; reason_op: reason }
-  | EExpectedStringLit of (reason * reason) * string * string Type.literal
-  | EExpectedNumberLit of (reason * reason) * Type.number_literal * Type.number_literal Type.literal
-  | EExpectedBooleanLit of (reason * reason) * bool * bool option
+  | EExpectedStringLit of (reason * reason) * string * string Type.literal * use_op
+  | EExpectedNumberLit of
+      (reason * reason) *
+      Type.number_literal *
+      Type.number_literal Type.literal *
+      use_op
+  | EExpectedBooleanLit of (reason * reason) * bool * bool option * use_op
   | EPropNotFound of (reason * reason) * use_op
   | EPropAccess of (reason * reason) * string option * Type.polarity * Type.rw
   | EPropPolarityMismatch of (reason * reason) * string option * (Type.polarity * Type.polarity) * use_op
@@ -335,11 +339,11 @@ let locs_of_error_message = function
       [loc_of_reason reason1; loc_of_reason reason2]
   | EMutationNotAllowed { reason; reason_op } ->
       [loc_of_reason reason_op; loc_of_reason reason]
-  | EExpectedStringLit ((reason1, reason2), _, _) ->
+  | EExpectedStringLit ((reason1, reason2), _, _, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | EExpectedNumberLit ((reason1, reason2), _, _) ->
+  | EExpectedNumberLit ((reason1, reason2), _, _, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
-  | EExpectedBooleanLit ((reason1, reason2), _, _) ->
+  | EExpectedBooleanLit ((reason1, reason2), _, _, _) ->
       [loc_of_reason reason1; loc_of_reason reason2]
   | EPropNotFound ((reason1, reason2), use_op) ->
       (loc_of_reason reason1)::(loc_of_reason reason2)::(locs_of_use_op [] use_op)
@@ -791,7 +795,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | EMutationNotAllowed { reason; reason_op } ->
       typecheck_error "Mutation not allowed on" (reason_op, reason)
 
-  | EExpectedStringLit (reasons, expected, actual) ->
+  | EExpectedStringLit (reasons, expected, actual, use_op) ->
       let msg = match actual with
       | Literal (None, actual) ->
           spf "Expected string literal `%s`, got `%s` instead"
@@ -805,9 +809,10 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             actual
             expected
       in
-      typecheck_error msg reasons
+      let reasons, extra, msg = unwrap_use_ops ~force:true (reasons, [], msg) use_op in
+      typecheck_error ~extra msg reasons
 
-  | EExpectedNumberLit (reasons, (expected, _), actual) ->
+  | EExpectedNumberLit (reasons, (expected, _), actual, use_op) ->
       let msg = match actual with
       | Literal (None, (actual, _)) ->
           spf "Expected number literal `%.16g`, got `%.16g` instead"
@@ -821,16 +826,18 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             actual
             expected
       in
-      typecheck_error msg reasons
+      let reasons, extra, msg = unwrap_use_ops ~force:true (reasons, [], msg) use_op in
+      typecheck_error ~extra msg reasons
 
-  | EExpectedBooleanLit (reasons, expected, actual) ->
+  | EExpectedBooleanLit (reasons, expected, actual, use_op) ->
       let msg = match actual with
       | Some actual ->
           spf "Expected boolean literal `%b`, got `%b` instead"
             expected actual
       | None -> spf "Expected boolean literal `%b`" expected
       in
-      typecheck_error msg reasons
+      let reasons, extra, msg = unwrap_use_ops ~force:true (reasons, [], msg) use_op in
+      typecheck_error ~extra msg reasons
 
   | EPropNotFound (reasons, use_op) ->
       let reasons, extra, msg =

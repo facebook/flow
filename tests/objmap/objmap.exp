@@ -386,8 +386,8 @@ Error: issue-2674.js:7
 Error: issue-2674.js:8
   8: a.FOO = 'BAR'; // error
              ^^^^^ string. Expected string literal `FOO`, got `BAR` instead
-  3: type A = $ObjMapi<{ FOO: null }, <K>(k: K) => K>;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string literal `FOO`
+  8: a.FOO = 'BAR'; // error
+     ^^^^^ string literal `FOO`
 
 Error: issue-2674.js:14
  14: (b.FOO : 'BAR'); // error
@@ -398,8 +398,8 @@ Error: issue-2674.js:14
 Error: issue-2674.js:15
  15: b.FOO = 'BAR'; // error
              ^^^^^ string. Expected string literal `FOO`, got `BAR` instead
- 10: type B = $ObjMap<{ FOO: null }, <K>(k: K) => 'FOO'>;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string literal `FOO`
+ 15: b.FOO = 'BAR'; // error
+     ^^^^^ string literal `FOO`
 
 Error: issue-2674.js:17
  17: type C = $TupleMap<[mixed, mixed], <K>(k: K) => 'FOO'>;

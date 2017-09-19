@@ -2738,29 +2738,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         necessity we allow all string types to flow to StrT (whereas only
         exactly matching string literal types may flow to SingletonStrT).  **)
 
-    | DefT (rl, StrT actual), UseT (_, DefT (ru, SingletonStrT expected)) ->
+    | DefT (rl, StrT actual), UseT (use_op, DefT (ru, SingletonStrT expected)) ->
       if literal_eq expected actual
       then ()
       else
         let reasons = FlowError.ordered_reasons (rl, ru) in
         add_output cx ~trace
-          (FlowError.EExpectedStringLit (reasons, expected, actual))
+          (FlowError.EExpectedStringLit (reasons, expected, actual, use_op))
 
-    | DefT (rl, NumT actual), UseT (_, DefT (ru, SingletonNumT expected)) ->
+    | DefT (rl, NumT actual), UseT (use_op, DefT (ru, SingletonNumT expected)) ->
       if number_literal_eq expected actual
       then ()
       else
         let reasons = FlowError.ordered_reasons (rl, ru) in
         add_output cx ~trace
-          (FlowError.EExpectedNumberLit (reasons, expected, actual))
+          (FlowError.EExpectedNumberLit (reasons, expected, actual, use_op))
 
-    | DefT (rl, BoolT actual), UseT (_, DefT (ru, SingletonBoolT expected)) ->
+    | DefT (rl, BoolT actual), UseT (use_op, DefT (ru, SingletonBoolT expected)) ->
       if boolean_literal_eq expected actual
       then ()
       else
         let reasons = FlowError.ordered_reasons (rl, ru) in
         add_output cx ~trace
-          (FlowError.EExpectedBooleanLit (reasons, expected, actual))
+          (FlowError.EExpectedBooleanLit (reasons, expected, actual, use_op))
 
     (*****************************************************)
     (* keys (NOTE: currently we only support string keys *)

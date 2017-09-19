@@ -126,17 +126,27 @@ Error: e2.js:6
            ^^^^^^^^^^^^^^^ object type. See: e1.js:4
   Error:
     6:   return { type: 'QUX' };
-                        ^^^^^ string. Expected string literal `FOO`, got `QUX` instead
+                ^^^^^^^^^^^^^^^ object literal. This type is incompatible with
     4:   | { type: 'FOO' }
-                   ^^^^^ string literal `FOO`. See: e1.js:4
+           ^^^^^^^^^^^^^^^ object type. See: e1.js:4
+    Property `type` is incompatible:
+        6:   return { type: 'QUX' };
+                            ^^^^^ string. Expected string literal `FOO`, got `QUX` instead
+        4:   | { type: 'FOO' }
+                       ^^^^^ string literal `FOO`. See: e1.js:4
   Member 2:
     5:   | { type: 'BAR' }
            ^^^^^^^^^^^^^^^ object type. See: e1.js:5
   Error:
     6:   return { type: 'QUX' };
-                        ^^^^^ string. Expected string literal `BAR`, got `QUX` instead
+                ^^^^^^^^^^^^^^^ object literal. This type is incompatible with
     5:   | { type: 'BAR' }
-                   ^^^^^ string literal `BAR`. See: e1.js:5
+           ^^^^^^^^^^^^^^^ object type. See: e1.js:5
+    Property `type` is incompatible:
+        6:   return { type: 'QUX' };
+                            ^^^^^ string. Expected string literal `BAR`, got `QUX` instead
+        5:   | { type: 'BAR' }
+                       ^^^^^ string literal `BAR`. See: e1.js:5
 
 
 Found 1 error
