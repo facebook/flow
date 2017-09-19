@@ -66,15 +66,11 @@ Error: headers.js:4
 
 Error: headers.js:9
   9: e.append('Content-Type'); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`
-  9: e.append('Content-Type'); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 881:     append(name: string, value: string): void;
                                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:881
 
 Error: headers.js:10
- 10: e.append({'Content-Type': 'image/jpeg'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`
  10: e.append({'Content-Type': 'image/jpeg'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 881:     append(name: string, value: string): void;
@@ -88,15 +84,11 @@ Error: headers.js:10
 
 Error: headers.js:12
  12: e.set('Content-Type'); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^ call of method `set`
- 12: e.set('Content-Type'); // not correct
      ^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 888:     set(name: string, value: string): void;
                                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:888
 
 Error: headers.js:13
- 13: e.set({'Content-Type': 'image/jpeg'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`
  13: e.set({'Content-Type': 'image/jpeg'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 888:     set(name: string, value: string): void;
@@ -599,15 +591,11 @@ Error: urlsearchparams.js:5
 
 Error: urlsearchparams.js:9
   9: e.append('key1'); // not correct
-     ^^^^^^^^^^^^^^^^ call of method `append`
-  9: e.append('key1'); // not correct
      ^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 895:     append(name: string, value: string): void;
                                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:895
 
 Error: urlsearchparams.js:10
- 10: e.append({'key1': 'value1'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`
  10: e.append({'key1': 'value1'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 895:     append(name: string, value: string): void;
@@ -621,15 +609,11 @@ Error: urlsearchparams.js:10
 
 Error: urlsearchparams.js:12
  12: e.set('key1'); // not correct
-     ^^^^^^^^^^^^^ call of method `set`
- 12: e.set('key1'); // not correct
      ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 903:     set(name: string, value: string): void;
                                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:903
 
 Error: urlsearchparams.js:13
- 13: e.set({'key1': 'value1'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`
  13: e.set({'key1': 'value1'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 903:     set(name: string, value: string): void;

@@ -68,8 +68,6 @@ Error: class.js:122
 
 Error: class.js:125
 125: examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
-125: examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
                                               ^^ string. This type is incompatible with
 503: type Iterator<+T> = $Iterator<T,void,void>;
                                           ^^^^ undefined. See lib: <BUILTINS>/core.js:503
@@ -175,8 +173,6 @@ Error: generators.js:87
               ^^^^^^ number
 
 Error: generators.js:94
- 94: delegate_next_iterable([]).next(""); // error: Iterator has no next value
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
  94: delegate_next_iterable([]).next(""); // error: Iterator has no next value
                                      ^^ string. This type is incompatible with
 503: type Iterator<+T> = $Iterator<T,void,void>;

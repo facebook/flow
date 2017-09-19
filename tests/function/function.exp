@@ -6,8 +6,6 @@ Error: apply.js:2
 
 Error: apply.js:12
  12: test.apply("", [""]); // error: void ~> number
-     ^^^^^^^^^^^^^^^^^^^^ call of method `apply`
- 12: test.apply("", [""]); // error: void ~> number
      ^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
   1: function test(a: string, b: number): number {
                                  ^^^^^^ number
@@ -105,8 +103,6 @@ Error: call.js:4
               ^^^^ Number
 
 Error: call.js:14
- 14: test.call("", ""); // error: void ~> number
-     ^^^^^^^^^^^^^^^^^ call of method `call`
  14: test.call("", ""); // error: void ~> number
      ^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
   3: function test(a: string, b: number): number {

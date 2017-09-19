@@ -49,8 +49,6 @@ object type
 
 Error: strings.js:13
  13: React.createElement('div', {}); // This is fine
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 13: React.createElement('div', {}); // This is fine
                                 ^^ props of React element. This type is incompatible with
   4:   div: $JSXIntrinsic<{id: string}>,
                           ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
@@ -62,8 +60,6 @@ Error: strings.js:13
 
 Error: strings.js:14
  14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
                          ^^^^^ property `bad`. Property not found in
 object type
 
@@ -73,8 +69,6 @@ Error: strings.js:14
 object type
 
 Error: strings.js:15
- 15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
  15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
                          ^^^ some string with unknown value. Property not found in
 object type

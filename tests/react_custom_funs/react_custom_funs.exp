@@ -185,8 +185,6 @@ Error: create_element.js:24
 
 Error: create_element.js:28
  28: React.createElement(A, {foo: 42}); // Error: `bar` is missing.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 28: React.createElement(A, {foo: 42}); // Error: `bar` is missing.
                             ^^^^^^^^^ props of React element. This type is incompatible with
  15: class A extends React.Component<{foo: number, bar: number}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -209,8 +207,6 @@ Error: create_element.js:29
 
 Error: create_element.js:30
  30: React.createElement(A, undefined); // Error: `foo` and `bar` are missing.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 30: React.createElement(A, undefined); // Error: `foo` and `bar` are missing.
                             ^^^^^^^^^ props of React element. This type is incompatible with
  15: class A extends React.Component<{foo: number, bar: number}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -221,8 +217,6 @@ Error: create_element.js:30
                                 ^^^^^^^^^ props of React element
 
 Error: create_element.js:30
- 30: React.createElement(A, undefined); // Error: `foo` and `bar` are missing.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
  30: React.createElement(A, undefined); // Error: `foo` and `bar` are missing.
                             ^^^^^^^^^ props of React element. This type is incompatible with
  15: class A extends React.Component<{foo: number, bar: number}> {}
@@ -257,8 +251,6 @@ Error: create_element.js:31
 
 Error: create_element.js:32
  32: React.createElement(A, null); // Error: `foo` and `bar` are missing.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 32: React.createElement(A, null); // Error: `foo` and `bar` are missing.
                             ^^^^ props of React element. This type is incompatible with
  15: class A extends React.Component<{foo: number, bar: number}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -269,8 +261,6 @@ Error: create_element.js:32
                                 ^^^^ props of React element
 
 Error: create_element.js:32
- 32: React.createElement(A, null); // Error: `foo` and `bar` are missing.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
  32: React.createElement(A, null); // Error: `foo` and `bar` are missing.
                             ^^^^ props of React element. This type is incompatible with
  15: class A extends React.Component<{foo: number, bar: number}> {}
@@ -339,8 +329,6 @@ Error: create_element.js:43
 
 Error: create_element.js:44
  44: React.createElement(A); // Error: Missing `foo` and `bar`.
-     ^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 44: React.createElement(A); // Error: Missing `foo` and `bar`.
      ^^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with
  15: class A extends React.Component<{foo: number, bar: number}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -351,8 +339,6 @@ Error: create_element.js:44
          ^^^^^^^^^^^^^^^^^^^^^^ props of React element
 
 Error: create_element.js:44
- 44: React.createElement(A); // Error: Missing `foo` and `bar`.
-     ^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
  44: React.createElement(A); // Error: Missing `foo` and `bar`.
      ^^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with
  15: class A extends React.Component<{foo: number, bar: number}> {}
@@ -417,8 +403,6 @@ Error: create_element.js:59
 
 Error: create_element.js:71
  71: React.createElement(E, {}); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 71: React.createElement(E, {}); // Error
                             ^^ props of React element. This type is incompatible with
  70: class E extends React.Component<{children: number}> {}
                                      ^^^^^^^^^^^^^^^^^^ object type
@@ -430,8 +414,6 @@ Error: create_element.js:71
 
 Error: create_element.js:72
  72: React.createElement(E, undefined); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 72: React.createElement(E, undefined); // Error
                             ^^^^^^^^^ props of React element. This type is incompatible with
  70: class E extends React.Component<{children: number}> {}
                                      ^^^^^^^^^^^^^^^^^^ object type
@@ -442,8 +424,6 @@ Error: create_element.js:72
                                 ^^^^^^^^^ props of React element
 
 Error: create_element.js:73
- 73: React.createElement(E, null); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
  73: React.createElement(E, null); // Error
                             ^^^^ props of React element. This type is incompatible with
  70: class E extends React.Component<{children: number}> {}
@@ -522,8 +502,6 @@ Error: create_element.js:82
 
 Error: create_element.js:83
  83: React.createElement(E, {}, ...[]); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 83: React.createElement(E, {}, ...[]); // Error
                             ^^ props of React element. This type is incompatible with
  70: class E extends React.Component<{children: number}> {}
                                      ^^^^^^^^^^^^^^^^^^ object type
@@ -590,8 +568,6 @@ Error: create_element.js:89
 
 Error: create_element.js:92
  92: React.createElement(F, {}); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 92: React.createElement(F, {}); // Error
                             ^^ props of React element. This type is incompatible with
  91: class F extends React.Component<{children: Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -603,8 +579,6 @@ Error: create_element.js:92
 
 Error: create_element.js:93
  93: React.createElement(F, undefined); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 93: React.createElement(F, undefined); // Error
                             ^^^^^^^^^ props of React element. This type is incompatible with
  91: class F extends React.Component<{children: Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -615,8 +589,6 @@ Error: create_element.js:93
                                 ^^^^^^^^^ props of React element
 
 Error: create_element.js:94
- 94: React.createElement(F, null); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
  94: React.createElement(F, null); // Error
                             ^^^^ props of React element. This type is incompatible with
  91: class F extends React.Component<{children: Array<number>}> {}
@@ -693,8 +665,6 @@ Error: create_element.js:103
                                                               ^^^^^^ number
 
 Error: create_element.js:104
-104: React.createElement(F, {}, ...[]); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
 104: React.createElement(F, {}, ...[]); // Error
                             ^^ props of React element. This type is incompatible with
  91: class F extends React.Component<{children: Array<number>}> {}
@@ -773,8 +743,6 @@ Error: create_element.js:110
 
 Error: create_element.js:113
 113: React.createElement(G, {}); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-113: React.createElement(G, {}); // Error
                             ^^ props of React element. This type is incompatible with
 112: class G extends React.Component<{children: number | Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -808,8 +776,6 @@ Error: create_element.js:118
 
 Error: create_element.js:119
 119: React.createElement(G, {}, ...[]); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-119: React.createElement(G, {}, ...[]); // Error
                             ^^ props of React element. This type is incompatible with
 112: class G extends React.Component<{children: number | Array<number>}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -820,8 +786,6 @@ Error: create_element.js:119
                                 ^^ props of React element
 
 Error: create_element.js:122
-122: React.createElement(G, {}, ...(any: Array<number>)); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
 122: React.createElement(G, {}, ...(any: Array<number>)); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
 112: class G extends React.Component<{children: number | Array<number>}> {}
@@ -872,8 +836,6 @@ Error: create_element.js:133
 
 Error: create_element.js:144
 144: React.createElement(H, {}); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-144: React.createElement(H, {}); // Error
                             ^^ props of React element. This type is incompatible with
 143: class H extends React.Component<{children: NumberArrayRecursive}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -885,8 +847,6 @@ Error: create_element.js:144
 
 Error: create_element.js:150
 150: React.createElement(H, {}, ...[]); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-150: React.createElement(H, {}, ...[]); // Error
                             ^^ props of React element. This type is incompatible with
 143: class H extends React.Component<{children: NumberArrayRecursive}> {}
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -897,8 +857,6 @@ Error: create_element.js:150
                                 ^^ props of React element
 
 Error: create_element.js:153
-153: React.createElement(H, {}, ...(any: Array<number>)); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
 153: React.createElement(H, {}, ...(any: Array<number>)); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
 143: class H extends React.Component<{children: NumberArrayRecursive}> {}
@@ -993,8 +951,6 @@ Error: create_element.js:170
 
 Error: create_element.js:173
 173: React.createElement(J, {}); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-173: React.createElement(J, {}); // Error
                             ^^ props of React element. This type is incompatible with
 172: class J extends React.Component<{children: ?number}> {}
                                      ^^^^^^^^^^^^^^^^^^^ object type
@@ -1016,8 +972,6 @@ Error: create_element.js:177
                                                      ^^^^^^ number
 
 Error: create_element.js:178
-178: React.createElement(J, {}, ...[]); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
 178: React.createElement(J, {}, ...[]); // Error
                             ^^ props of React element. This type is incompatible with
 172: class J extends React.Component<{children: ?number}> {}
@@ -1118,8 +1072,6 @@ Error: create_element.js:194
 
 Error: create_element.js:207
 207: React.createElement(L, {}, 1); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-207: React.createElement(L, {}, 1); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
                                      v
 196: class L extends React.Component<{
@@ -1140,8 +1092,6 @@ Error: create_element.js:207
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element
 
 Error: create_element.js:208
-208: React.createElement(L, {children: 1}); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
 208: React.createElement(L, {children: 1}); // Error
                             ^^^^^^^^^^^^^ props of React element. This type is incompatible with
                                      v
@@ -1164,8 +1114,6 @@ Error: create_element.js:208
 
 Error: create_element.js:209
 209: React.createElement(L, {bar: 1}, 2); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
-209: React.createElement(L, {bar: 1}, 2); // Error
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element. This type is incompatible with
                                      v
 196: class L extends React.Component<{
@@ -1186,8 +1134,6 @@ Error: create_element.js:209
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element
 
 Error: create_element.js:210
-210: React.createElement(L, {bar: 1, children: 2}); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
 210: React.createElement(L, {bar: 1, children: 2}); // Error
                             ^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with
                                      v

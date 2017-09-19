@@ -705,11 +705,6 @@ Error: state5.js:5
                 ^^^^^^^^^^ undefined
 
 Error: state6.js:29
-         v---------------------------------------------------------
- 29:     this.setState(() => ({ // Error: `bar` should be a number.
- 30:       bar: '42',
- 31:     }));
-         --^ call of method `setState`
                        v-------------------------------------------
  29:     this.setState(() => ({ // Error: `bar` should be a number.
  30:       bar: '42',

@@ -475,6 +475,11 @@ let ordered_reasons ((rl, ru) as reasons) =
   then ru, rl
   else reasons
 
+let is_useless_op op_reason error_reason =
+  match desc_of_reason op_reason with
+  | RMethodCall _ -> reasons_overlap op_reason error_reason
+  | _ -> false
+
 (* Ops telling us that we're in the middle of a function call are
    redundant when we already know that an arg didn't match a param. *)
 let suppress_fun_call_param_op op =
@@ -574,6 +579,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       match op, core_reasons with
       | Some r, r1::_ ->
         if r = r1 then None
+        else if is_useless_op r r1 then None
         else if List.for_all (reasons_overlap r) core_reasons then None
         else Some (info_of_reason r)
       | _ -> None

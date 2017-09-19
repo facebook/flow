@@ -24,17 +24,15 @@ Error: test.js:22
 
 Error: test.js:23
  23: var q: number = c.qux(0);
-                     ^^^^^^^^ call of method `qux`
+                     ^^^^^^^^ string. This type is incompatible with
+ 23: var q: number = c.qux(0);
+            ^^^^^^ number
+
+Error: test.js:23
  23: var q: number = c.qux(0);
                            ^ number. This type is incompatible with
  22: var c: C<string> = new C; // error, since T = string is incompatible with number
               ^^^^^^ string
-
-Error: test.js:23
- 23: var q: number = c.qux(0);
-                     ^^^^^^^^ string. This type is incompatible with
- 23: var q: number = c.qux(0);
-            ^^^^^^ number
 
 
 Found 6 errors
