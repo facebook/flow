@@ -20,6 +20,8 @@ let default_shm_dirs =
 (* Half a gig *)
 let default_shm_min_avail = 1024 * 1024 * 512
 
+let version_regex = Str.regexp_string "<VERSION>"
+
 let map_add map (key, value) = SMap.add key value map
 
 let multi_error (errs:(int * string) list) =
@@ -417,6 +419,8 @@ let trim_labeled_lines lines =
   |> List.map (fun (label, line) -> (label, String.trim line))
   |> List.filter (fun (_, s) -> s <> "")
 
+let less_or_equal_curr_version = Version_regex.less_than_or_equal_to_version (Flow_version.version)
+
 (* parse [include] lines *)
 let parse_includes config lines =
   let includes = trim_lines lines in
@@ -432,6 +436,7 @@ let parse_ignores config lines =
 
 let parse_options config lines =
   let open Opts in
+  let (>>=) = Result.(>>=) in
   let options = parse config.options lines
     |> define_opt "emoji" {
       initializer_ = USE_DEFAULT;
@@ -696,10 +701,15 @@ let parse_options config lines =
         {opts with suppress_comments = [];}
       );
       flags = [ALLOW_DUPLICATE];
-      optparser = optparse_regexp;
-      setter = (fun opts v -> Ok {
-        opts with suppress_comments = v::(opts.suppress_comments);
-      });
+      optparser = optparse_string;
+      setter = (fun opts v ->
+        Str.split_delim version_regex v
+        |> String.concat (">=" ^ less_or_equal_curr_version)
+        |> String.escaped
+        |> Result.return
+        >>= optparse_regexp
+        >>= fun v -> Ok { opts with suppress_comments = v::(opts.suppress_comments) }
+      );
     }
 
     |> define_opt "suppress_type" {
