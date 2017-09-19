@@ -26,8 +26,8 @@ module Bindings: sig
   val add: entry -> t -> t
   val push: t -> t -> t
   val exists: (entry -> bool) -> t -> bool
-  val to_assoc: t -> (string * Loc.t) list
-  val to_map: t -> Loc.t SMap.t
+  val to_assoc: t -> (string * Loc.t list) list
+  val to_map: t -> Loc.t list SMap.t
 end = struct
   type entry = Loc.t Ast.Identifier.t
   type t = entry list
@@ -37,16 +37,19 @@ end = struct
   let push = List.append
   let exists = List.exists
   let to_assoc t =
-    let _xs, assoc = List.fold_left (fun acc entry ->
-      let xs, assoc = acc in
-      let loc, x = entry in
-      if SSet.mem x xs then acc (* TODO: multiple declarations *)
-      else SSet.add x xs, (x, loc)::assoc
-    ) (SSet.empty, []) (List.rev t) in
-    List.rev assoc
+    let xs, map = List.fold_left (fun (xs, map) (loc, x) ->
+      match SMap.get x map with
+        | Some locs -> xs, SMap.add x (loc::locs) map
+        | None -> x::xs, SMap.add x [loc] map
+    ) ([], SMap.empty) (List.rev t) in
+    List.rev_map (fun x -> x, List.rev @@ SMap.find x map) xs
   let to_map t =
-    let assoc = to_assoc t in
-    List.fold_left (fun map (x, loc) -> SMap.add x loc map) SMap.empty assoc
+    let map = List.fold_left (fun map (loc, x) ->
+      match SMap.get x map with
+        | Some locs -> SMap.add x (loc::locs) map
+        | None -> SMap.add x [loc] map
+    ) SMap.empty (List.rev t) in
+    SMap.map List.rev map
 end
 
 (* TODO: It should be possible to vastly simplify hoisting by overriding the

@@ -15,10 +15,11 @@ type use = Loc.t
 
 module Def = struct
   type t = {
-    loc: Loc.t;
+    locs: Loc.t list;
     scope: int;
     name: int;
   }
+  let mem_loc x t = List.mem x t.locs
 end
 
 module Scope = struct
@@ -50,12 +51,12 @@ let def_of_use { locals; _ } use =
 
 let use_is_def info use =
   let def = def_of_use info use in
-  def.Def.loc = use
+  Def.mem_loc use def
 
 let uses_of_def { locals; _ } ?(exclude_def=false) def =
   LocMap.fold (fun use (def', _) uses ->
-    if exclude_def && def'.Def.loc = use then uses
-    else if Def.(def.loc = def'.loc) then use::uses else uses
+    if exclude_def && Def.mem_loc use def' then uses
+    else if Def.(def.locs = def'.locs) then use::uses else uses
   ) locals []
 
 let uses_of_use info ?exclude_def use =
@@ -67,7 +68,7 @@ let def_is_unused info def =
 
 let all_defs { locals; _ } =
   LocMap.fold (fun use (def, _) defs ->
-    if use = def.Def.loc then def::defs else defs
+    if Def.mem_loc use def then def::defs else defs
   ) locals []
 
 let defs_of_scope info scope =

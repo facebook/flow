@@ -12,7 +12,7 @@ type scope = int
 type use = Loc.t
 module Def: sig
   type t = {
-    loc: Loc.t;
+    locs: Loc.t list;
     scope: int;
     name: int;
   }

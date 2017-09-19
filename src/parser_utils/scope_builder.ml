@@ -90,10 +90,10 @@ class scope_builder = object(this)
     result
 
   method private mk_env parent_env scope =
-    List.fold_left (fun map (x, loc) ->
+    List.fold_left (fun map (x, locs) ->
       let def = match SMap.get x parent_env with
-        | Some def -> Def.{ def with loc; scope; }
-        | None -> Def.{ loc; scope; name = this#next; } in
+        | Some def -> Def.{ def with locs; scope; }
+        | None -> Def.{ locs; scope; name = this#next; } in
       SMap.add x def map
     ) SMap.empty
 

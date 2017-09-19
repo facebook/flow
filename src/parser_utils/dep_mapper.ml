@@ -183,7 +183,11 @@ class mapper = object(this)
   method! program (program: Loc.t Ast.program) =
     let { Scope_api.locals; globals=_; max_distinct=_; scopes=_ } =
     Scope_builder.program ~ignore_toplevel:true program in
-    use_def_map <- LocMap.map (fun ({ Scope_api.Def.loc; _ }, _) -> loc) locals;
+    use_def_map <- LocMap.map (fun ({ Scope_api.Def.locs; _ }, _) ->
+      (* TODO: investigate whether picking the first location where there could
+         be multiple is fine in principle *)
+      List.hd locs
+    ) locals;
     LocMap.iter
       (fun _ def_loc ->
         let open Dep in

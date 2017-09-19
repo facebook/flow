@@ -30,9 +30,9 @@ let mk_scope_builder_locs_of_defs_of_all_uses_test contents expected_locs_of_def
     let all_uses = Scope_api.all_uses info in
     let defs = List.map (Scope_api.def_of_use info) all_uses in
     let locs_of_defs = List.map (
-      fun { Scope_api.Def.loc; _ } -> loc
+      fun { Scope_api.Def.locs; _ } -> locs
     ) defs in
-    let printer = print_list Loc.to_string in
+    let printer = print_list @@ print_list Loc.to_string in
     assert_equal ~ctxt
       ~cmp:(eq printer)
       ~printer
@@ -69,9 +69,9 @@ let tests = "scope_builder" >::: [
        let x = 0; \
        return x; \
      }"
-    [mk_loc (1, 21) (1, 22);
-     mk_loc (1, 21) (1, 22);
-     mk_loc (1, 9) (1, 12)];
+    [[mk_loc (1, 21) (1, 22)];
+     [mk_loc (1, 21) (1, 22)];
+     [mk_loc (1, 9) (1, 12)]];
   "let_uses_of_all_uses" >:: mk_scope_builder_uses_of_all_uses_test
     "function foo() { \
        let x = 0; \
@@ -85,11 +85,11 @@ let tests = "scope_builder" >::: [
        var {x} = y; \
        return x; \
      }"
-    [mk_loc (1, 25) (1, 26);
-     mk_loc (1, 14) (1, 15);
-     mk_loc (1, 25) (1, 26);
-     mk_loc (1, 14) (1, 15);
-     mk_loc (1, 9) (1, 12)];
+    [[mk_loc (1, 25) (1, 26)];
+     [mk_loc (1, 14) (1, 15)];
+     [mk_loc (1, 25) (1, 26)];
+     [mk_loc (1, 14) (1, 15)];
+     [mk_loc (1, 9) (1, 12)]];
   "var_uses_of_all_uses" >:: mk_scope_builder_uses_of_all_uses_test
     "function foo({y}) { \
        var {x} = y; \
@@ -106,15 +106,15 @@ let tests = "scope_builder" >::: [
        var { x: _x, y: _y } = { x, y }; \
        return ({ x: _x, y: _y }); \
      }"
-    [mk_loc (1, 64) (1, 66);
-     mk_loc (1, 57) (1, 59);
-     mk_loc (1, 26) (1, 27);
-     mk_loc (1, 23) (1, 24);
-     mk_loc (1, 64) (1, 66);
-     mk_loc (1, 57) (1, 59);
-     mk_loc (1, 26) (1, 27);
-     mk_loc (1, 23) (1, 24);
-     mk_loc (1, 9) (1, 12)];
+    [[mk_loc (1, 64) (1, 66)];
+     [mk_loc (1, 57) (1, 59)];
+     [mk_loc (1, 26) (1, 27)];
+     [mk_loc (1, 23) (1, 24)];
+     [mk_loc (1, 64) (1, 66)];
+     [mk_loc (1, 57) (1, 59)];
+     [mk_loc (1, 26) (1, 27)];
+     [mk_loc (1, 23) (1, 24)];
+     [mk_loc (1, 9) (1, 12)]];
   "let_uses_of_all_uses2" >:: mk_scope_builder_uses_of_all_uses_test
     "function foo() { \
        let { x, y } = { x: 0, y: 0 }; \
