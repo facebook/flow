@@ -873,7 +873,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       in
       begin match use_op with
       | Some use_op ->
-        let reasons, extra, msg = unwrap_use_ops (reasons, [], msg) use_op in
+        let reasons, extra, msg = unwrap_use_ops ~force:true (reasons, [], msg) use_op in
         typecheck_error ~extra msg reasons
       | None ->
         typecheck_error msg reasons
