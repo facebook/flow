@@ -4130,8 +4130,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           NonstrictReturning (Some (l, pass))
         | _ -> Strict reason
       in
-      lookup_prop cx trace l reason_op reason strict "$call"
-        (RWProp (l, tvar, Read));
+      let action = match u with
+      | UseT (use_op, (DefT (_, (FunT _ | AnyFunT)) as u_def)) ->
+        let use_op = PropertyCompatibility ("$call", reason, reason_op, use_op) in
+        LookupProp (use_op, Field (u_def, Positive))
+      | _ -> RWProp (l, tvar, Read)
+      in
+      lookup_prop cx trace l reason_op reason strict "$call" action;
       rec_flow cx trace (tvar, u)
 
     (******************************)

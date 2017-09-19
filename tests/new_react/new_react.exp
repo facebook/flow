@@ -649,13 +649,21 @@ Error: state3.js:13
    36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:36
   Error:
-   36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:36
                              v
    13:         this.setState({
    14:             x: false // error
    15:         })
-               ^ object literal
+               ^ object literal. This type is incompatible with
+   36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:36
+    Callable property is incompatible:
+       36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:36
+                                 v
+       13:         this.setState({
+       14:             x: false // error
+       15:         })
+                   ^ object literal
 
 Error: state4.js:9
   9:     this.setState({ y: 0 });
@@ -681,10 +689,15 @@ Error: state4.js:9
    36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:36
   Error:
-   36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:36
     9:     this.setState({ y: 0 });
-                         ^^^^^^^^ object literal
+                         ^^^^^^^^ object literal. This type is incompatible with
+   36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:36
+    Callable property is incompatible:
+       36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:36
+        9:     this.setState({ y: 0 });
+                             ^^^^^^^^ object literal
 
 Error: state4.js:10
  10:     return <div>{this.state.z}</div>
@@ -771,14 +784,19 @@ Error: state6.js:41
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:36
   Error:
    41:     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
-                               ^^^^^^^^^^^^^ function type. This type is incompatible with
+                               ^^^^^^^^^^^^^ object type. This type is incompatible with
    36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:36
-    This parameter is incompatible:
-       13: class MyComponent extends React.Component<{prop: number}, State> {
-                                                                     ^^^^^ object type. This type is incompatible with
+    Callable property is incompatible:
        11: type StateUpdater3 = {(number): number, foo: number, bar: number};
-                                  ^^^^^^ number
+                                 ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+       36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:36
+        This parameter is incompatible:
+           13: class MyComponent extends React.Component<{prop: number}, State> {
+                                                                         ^^^^^ object type. This type is incompatible with
+           11: type StateUpdater3 = {(number): number, foo: number, bar: number};
+                                      ^^^^^^ number
 
 Error: state6.js:47
  47: ((() => {}): $Shape<State>); // Error: Functions are not a valid object shape.

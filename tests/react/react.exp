@@ -1,10 +1,3 @@
-Library type error:
-<BUILTINS>/react-dom.js:18
- 18:     callback?: () => void,
-                    ^^^^^^^^^^ function type. Callable signature not found in
- 23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
-                                                                  ^^ object literal. See: render_callback.js:23
-
 Error: createElementRequiredProp_string.js:17
  17:     return (<Cmp/>);
                  ^^^^^^ React element `Cmp`
@@ -342,10 +335,15 @@ Error: create_class_initial_state_sealed.js:45
    36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:36
   Error:
-   36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:36
    45:     this.setState({ q: 0 }); // property `q` not found
-                         ^^^^^^^^ object literal
+                         ^^^^^^^^ object literal. This type is incompatible with
+   36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:36
+    Callable property is incompatible:
+       36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:36
+       45:     this.setState({ q: 0 }); // property `q` not found
+                             ^^^^^^^^ object literal
 
 Error: create_class_initial_state_sealed.js:48
  48:     (this.state.q: empty); // property `q` not found
@@ -383,10 +381,15 @@ Error: create_class_initial_state_sealed.js:81
    36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:36
   Error:
-   36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:36
    81:     this.setState({ baz: 0 }); // property `baz`  not found
-                         ^^^^^^^^^^ object literal
+                         ^^^^^^^^^^ object literal. This type is incompatible with
+   36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:36
+    Callable property is incompatible:
+       36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:36
+       81:     this.setState({ baz: 0 }); // property `baz`  not found
+                             ^^^^^^^^^^ object literal
 
 Error: create_class_initial_state_sealed.js:84
  84:     (this.state.baz: empty); // property `baz` not found
@@ -2360,6 +2363,17 @@ Error: render_callback.js:22
                                                                   ^ number. This type is incompatible with the expected param type of
  18:     callback?: () => void,
                     ^^^^^^^^^^ function type. See lib: <BUILTINS>/react-dom.js:18
+
+Error: render_callback.js:23
+ 23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
+                                                                  ^^ object literal. This type is incompatible with the expected param type of
+ 18:     callback?: () => void,
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react-dom.js:18
+  Callable property is incompatible:
+     18:     callback?: () => void,
+                        ^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react-dom.js:18
+     23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
+                                                                      ^^ object literal
 
 Error: render_callback.js:24
  24: ReactDOM.render(<Example/>, document.querySelector('#site'), '');
