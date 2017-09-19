@@ -20,33 +20,33 @@ open Flow_ast_visitor
 *)
 module Bindings: sig
   type t
-  type entry = Loc.t * string
+  type entry = Loc.t Ast.Identifier.t
   val empty: t
   val singleton: entry -> t
   val add: entry -> t -> t
   val push: t -> t -> t
   val exists: (entry -> bool) -> t -> bool
-  val to_list: t -> entry list
+  val to_assoc: t -> (string * Loc.t) list
   val to_map: t -> Loc.t SMap.t
 end = struct
-  type entry = Loc.t * string
+  type entry = Loc.t Ast.Identifier.t
   type t = entry list
   let empty = []
   let singleton x = [x]
   let add = List.cons
   let push = List.append
   let exists = List.exists
-  let to_list t =
-    let _xs, list = List.fold_left (fun acc entry ->
-      let xs, list = acc in
-      let _loc, x = entry in
+  let to_assoc t =
+    let _xs, assoc = List.fold_left (fun acc entry ->
+      let xs, assoc = acc in
+      let loc, x = entry in
       if SSet.mem x xs then acc (* TODO: multiple declarations *)
-      else SSet.add x xs, entry::list
+      else SSet.add x xs, (x, loc)::assoc
     ) (SSet.empty, []) (List.rev t) in
-    List.rev list
+    List.rev assoc
   let to_map t =
-    let list = to_list t in
-    List.fold_left (fun map (loc, x) -> SMap.add x loc map) SMap.empty list
+    let assoc = to_assoc t in
+    List.fold_left (fun map (x, loc) -> SMap.add x loc map) SMap.empty assoc
 end
 
 (* TODO: It should be possible to vastly simplify hoisting by overriding the
