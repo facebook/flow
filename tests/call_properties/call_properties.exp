@@ -35,7 +35,7 @@ Error: B.js:5
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
             ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `$call` is incompatible:
+  Callable property is incompatible:
       5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
       5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
@@ -51,7 +51,7 @@ Error: B.js:8
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
             ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `$call` is incompatible:
+  Callable property is incompatible:
       8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
       8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
@@ -152,7 +152,7 @@ Error: F.js:6
                                       ^^^^^^^^^^^ function. This type is incompatible with
   6: var b: { (x: number): number } = (x) => "hi"
             ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `$call` is incompatible:
+  Callable property is incompatible:
       6: var b: { (x: number): number } = (x) => "hi"
                                           ^^^^^^^^^^^ function. This type is incompatible with
       6: var b: { (x: number): number } = (x) => "hi"

@@ -640,8 +640,13 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   let rec unwrap_use_ops ?(force=false) (reasons, extra, msg) = function
   | PropertyCompatibility (x, rl', ru', use_op) ->
     let extra =
+      let prop =
+        if x = "$call" then "Callable property"
+        else if x = "$key" || x = "$value" then "Indexable signature"
+        else spf "Property `%s`" x
+      in
       extra_info_of_use_op reasons extra msg
-        (spf "Property `%s` is incompatible:" x)
+        (spf "%s is incompatible:" prop)
     in
     let obj_reasons = ordered_reasons (rl', ru') in
     let msg = "This type is incompatible with" in

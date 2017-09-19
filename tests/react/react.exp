@@ -543,7 +543,7 @@ Error: element_with_component_type.js:8
                  ^^^ statics of Foo. This type is incompatible with
       138:   | React$StatelessFunctionalComponent<Props>
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-        Property `$call` is incompatible:
+        Callable property is incompatible:
           138:   | React$StatelessFunctionalComponent<Props>
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:138
             5: class Foo extends React.Component<{a: number}> {}
@@ -648,7 +648,7 @@ Error: hoc.js:35
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of class expr `Empty`. This type is incompatible with
   138:   | React$StatelessFunctionalComponent<Props>
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-    Property `$call` is incompatible:
+    Callable property is incompatible:
       138:   | React$StatelessFunctionalComponent<Props>
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:138
        35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
@@ -682,7 +682,7 @@ Error: hoc.js:36
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   138:   | React$StatelessFunctionalComponent<Props>
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-    Property `$call` is incompatible:
+    Callable property is incompatible:
        36: myHOC(function Empty(props: {foo: string}) {}); // Error
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
       123:   (props: Props, context: any): React$Node,
@@ -705,7 +705,7 @@ Error: hoc.js:36
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   139:   | Class<React$Component<Props, any>>;
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of React$Component. See lib: <BUILTINS>/react.js:139
-    Property `$call` is incompatible:
+    Callable property is incompatible:
        36: myHOC(function Empty(props: {foo: string}) {}); // Error
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in
       139:   | Class<React$Component<Props, any>>;
@@ -837,7 +837,7 @@ Error: hoc2.js:17
      --^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v-------------------------------------
      17: function MyFunctionComponent(props: {|
      18:   a: number,
@@ -873,7 +873,7 @@ Error: hoc2.js:17
      --^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v-------------------------------------
      17: function MyFunctionComponent(props: {|
      18:   a: number,
@@ -983,7 +983,7 @@ Error: hoc2.js:30
      --^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v-------------------------------------
      17: function MyFunctionComponent(props: {|
      18:   a: number,
@@ -1026,7 +1026,7 @@ Error: hoc2.js:30
      --^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v-------------------------------------
      17: function MyFunctionComponent(props: {|
      18:   a: number,
@@ -1067,7 +1067,7 @@ Error: hoc3.js:17
      -^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
      18:   a: number,
@@ -1167,7 +1167,7 @@ Error: hoc3.js:30
      -^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
      18:   a: number,
@@ -1210,7 +1210,7 @@ Error: hoc3.js:30
      -^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
      18:   a: number,
@@ -1251,7 +1251,7 @@ Error: hoc4.js:17
      -^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
      18:   a: number,
@@ -1351,7 +1351,7 @@ Error: hoc4.js:30
      -^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
      18:   a: number,
@@ -1394,7 +1394,7 @@ Error: hoc4.js:30
      -^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
      18:   a: number,
