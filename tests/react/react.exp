@@ -313,8 +313,6 @@ Error: create_class_initial_state_sealed.js:35
 
 Error: create_class_initial_state_sealed.js:45
  45:     this.setState({ q: 0 }); // property `q` not found
-         ^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
- 45:     this.setState({ q: 0 }); // property `q` not found
                        ^^^^^^^^ object literal. This type is incompatible with the expected param type of
  36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type parameter `State` of call of method `createClass` | function type. See lib: <BUILTINS>/react.js:36
@@ -358,8 +356,6 @@ Error: create_class_initial_state_sealed.js:66
                           ^^^^^ empty
 
 Error: create_class_initial_state_sealed.js:81
- 81:     this.setState({ baz: 0 }); // property `baz`  not found
-         ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
  81:     this.setState({ baz: 0 }); // property `baz`  not found
                        ^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
  36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
@@ -671,8 +667,6 @@ Error: hoc.js:35
                                                   ^^^^^^ number
 
 Error: hoc.js:36
- 36: myHOC(function Empty(props: {foo: string}) {}); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  36: myHOC(function Empty(props: {foo: string}) {}); // Error
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
   6:   Component: React$ComponentType<{foo: number, bar: number}>,

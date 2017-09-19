@@ -36,8 +36,6 @@ Error: exact_basics.js:49
 
 Error: exact_basics.js:61
  61: takesExactlyPerson(returnsSubtypeOfPerson());  // error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
- 61: takesExactlyPerson(returnsSubtypeOfPerson());  // error
                         ^^^^^^^^^^^^^^^^^^^^^^^^ object type. Inexact type is incompatible with exact type
  43: declare function takesExactlyPerson(person: ExactPerson): void;
                                                  ^^^^^^^^^^^ exact type: object type
@@ -51,8 +49,6 @@ Error: exact_basics.js:71
                                                  ^^^^^^^^^^^ object type
 
 Error: exact_basics.js:85
- 85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
                            ^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
  76: declare function takesSubtypeOfPerson2(person2: Person2): void;
@@ -78,8 +74,6 @@ Error: prop_test.js:28
               ^^ object type
 
 Error: unsealed.js:14
- 14: f(o); // error: o incompatible with exact type
-     ^^^^ function call
  14: f(o); // error: o incompatible with exact type
        ^ object literal. This type is incompatible with the expected param type of
   4: function f(o: {p: string} | $Exact<{}>): string {
@@ -126,8 +120,6 @@ Error: use_ops.js:2
                      ^^^^^^^^^^^^^ exact type: object type
 
 Error: use_ops.js:6
-  6: f(o); // error: inexact arg incompatible with exact param (error should indicate exactness issue)
-     ^^^^ function call
   6: f(o); // error: inexact arg incompatible with exact param (error should indicate exactness issue)
        ^ object type. Inexact type is incompatible with exact type
   4: function f(o: {| p: null |}) {}

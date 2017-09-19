@@ -198,8 +198,6 @@ Error: create_element.js:28
 
 Error: create_element.js:29
  29: React.createElement(B, {foo: 42}); // Error: `bar` is missing.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 29: React.createElement(B, {foo: 42}); // Error: `bar` is missing.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with the expected param type of
  16: function B(props: {foo: number, bar: number}) {}
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -237,8 +235,6 @@ Error: create_element.js:30
 
 Error: create_element.js:31
  31: React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 31: React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with the expected param type of
  16: function B(props: {foo: number, bar: number}) {}
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -249,8 +245,6 @@ Error: create_element.js:31
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element
 
 Error: create_element.js:31
- 31: React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
  31: React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with the expected param type of
  16: function B(props: {foo: number, bar: number}) {}
@@ -289,8 +283,6 @@ Error: create_element.js:32
 
 Error: create_element.js:33
  33: React.createElement(B, null); // Error: `foo` and `bar` are missing.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 33: React.createElement(B, null); // Error: `foo` and `bar` are missing.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with the expected param type of
  16: function B(props: {foo: number, bar: number}) {}
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -301,8 +293,6 @@ Error: create_element.js:33
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element
 
 Error: create_element.js:33
- 33: React.createElement(B, null); // Error: `foo` and `bar` are missing.
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
  33: React.createElement(B, null); // Error: `foo` and `bar` are missing.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with the expected param type of
  16: function B(props: {foo: number, bar: number}) {}
@@ -375,8 +365,6 @@ Error: create_element.js:44
 
 Error: create_element.js:45
  45: React.createElement(B); // Error: Missing `foo` and `bar`.
-     ^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 45: React.createElement(B); // Error: Missing `foo` and `bar`.
      ^^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with the expected param type of
  16: function B(props: {foo: number, bar: number}) {}
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -387,8 +375,6 @@ Error: create_element.js:45
          ^^^^^^^^^^^^^^^^^^^^^^ props of React element
 
 Error: create_element.js:45
- 45: React.createElement(B); // Error: Missing `foo` and `bar`.
-     ^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
  45: React.createElement(B); // Error: Missing `foo` and `bar`.
      ^^^^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with the expected param type of
  16: function B(props: {foo: number, bar: number}) {}
@@ -1369,8 +1355,6 @@ Error: create_factory.js:28
 
 Error: create_factory.js:29
  29: bFactory({foo: 42}); // Error: `bar` is missing.
-     ^^^^^^^^^^^^^^^^^^^ function call
- 29: bFactory({foo: 42}); // Error: `bar` is missing.
      ^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with the expected param type of
  13: function B(props: {foo: number, bar: number}) {}
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -1408,8 +1392,6 @@ Error: create_factory.js:30
 
 Error: create_factory.js:31
  31: bFactory(undefined); // Error: `foo` and `bar` are missing.
-     ^^^^^^^^^^^^^^^^^^^ function call
- 31: bFactory(undefined); // Error: `foo` and `bar` are missing.
      ^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with the expected param type of
  13: function B(props: {foo: number, bar: number}) {}
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -1420,8 +1402,6 @@ Error: create_factory.js:31
          ^^^^^^^^^^^^^^^^^^^ props of React element
 
 Error: create_factory.js:31
- 31: bFactory(undefined); // Error: `foo` and `bar` are missing.
-     ^^^^^^^^^^^^^^^^^^^ function call
  31: bFactory(undefined); // Error: `foo` and `bar` are missing.
      ^^^^^^^^^^^^^^^^^^^ props of React element. This type is incompatible with the expected param type of
  13: function B(props: {foo: number, bar: number}) {}
@@ -1460,8 +1440,6 @@ Error: create_factory.js:32
 
 Error: create_factory.js:33
  33: bFactory(null); // Error: `foo` and `bar` are missing.
-     ^^^^^^^^^^^^^^ function call
- 33: bFactory(null); // Error: `foo` and `bar` are missing.
      ^^^^^^^^^^^^^^ props of React element. This type is incompatible with the expected param type of
  13: function B(props: {foo: number, bar: number}) {}
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -1472,8 +1450,6 @@ Error: create_factory.js:33
          ^^^^^^^^^^^^^^ props of React element
 
 Error: create_factory.js:33
- 33: bFactory(null); // Error: `foo` and `bar` are missing.
-     ^^^^^^^^^^^^^^ function call
  33: bFactory(null); // Error: `foo` and `bar` are missing.
      ^^^^^^^^^^^^^^ props of React element. This type is incompatible with the expected param type of
  13: function B(props: {foo: number, bar: number}) {}
@@ -1546,8 +1522,6 @@ Error: create_factory.js:42
 
 Error: create_factory.js:43
  43: bFactory(); // Error: Missing `foo` and `bar`.
-     ^^^^^^^^^^ function call
- 43: bFactory(); // Error: Missing `foo` and `bar`.
      ^^^^^^^^^^ props of React element. This type is incompatible with the expected param type of
  13: function B(props: {foo: number, bar: number}) {}
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
@@ -1558,8 +1532,6 @@ Error: create_factory.js:43
          ^^^^^^^^^^ props of React element
 
 Error: create_factory.js:43
- 43: bFactory(); // Error: Missing `foo` and `bar`.
-     ^^^^^^^^^^ function call
  43: bFactory(); // Error: Missing `foo` and `bar`.
      ^^^^^^^^^^ props of React element. This type is incompatible with the expected param type of
  13: function B(props: {foo: number, bar: number}) {}

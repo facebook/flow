@@ -63,8 +63,6 @@ No errors!
 Test c:
 Error: c2.js:6
   6:   foo({ y: 0 });
-       ^^^^^^^^^^^^^ function call
-  6:   foo({ y: 0 });
            ^^^^^^^^ object literal. This type is incompatible with the expected param type of
   3: export function foo(props: { x: number }) { }
                                 ^^^^^^^^^^^^^ object type. See: c1.js:3
@@ -75,8 +73,6 @@ Error: c2.js:6
                ^^^^^^^^ object literal
 
 Error: c3.js:5
-  5: bar({ x: 0 });
-     ^^^^^^^^^^^^^ function call
   5: bar({ x: 0 });
          ^^^^^^^^ object literal. This type is incompatible with the expected param type of
   5: export function bar(props: { y: number }) {
@@ -90,8 +86,6 @@ Error: c3.js:5
 
 Found 2 errors
 Error: c3.js:5
-  5: bar({ x: 0 });
-     ^^^^^^^^^^^^^ function call
   5: bar({ x: 0 });
          ^^^^^^^^ object literal. This type is incompatible with the expected param type of
   5: export function bar(props: { y: number }) {

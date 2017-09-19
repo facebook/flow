@@ -620,11 +620,6 @@ Error: state3.js:11
                     ^^^^^^ number
 
 Error: state3.js:13
-             v--------------
- 13:         this.setState({
- 14:             x: false // error
- 15:         })
-             -^ call of method `setState`
                            v
  13:         this.setState({
  14:             x: false // error
@@ -666,8 +661,6 @@ Error: state3.js:13
                    ^ object literal
 
 Error: state4.js:9
-  9:     this.setState({ y: 0 });
-         ^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
   9:     this.setState({ y: 0 });
                        ^^^^^^^^ object literal. This type is incompatible with the expected param type of
  36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
@@ -765,8 +758,6 @@ Error: state6.js:36
                        ^^^^^ object type
 
 Error: state6.js:41
- 41:     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
  41:     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
                              ^^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
  36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),

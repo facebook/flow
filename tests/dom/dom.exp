@@ -12,8 +12,6 @@ Error: CanvasRenderingContext2D.js:11
 
 Error: Element.js:14
  14:     element.scrollIntoView({ behavior: 'invalid' });
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
- 14:     element.scrollIntoView({ behavior: 'invalid' });
                                 ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 1162:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: boolean | object type. See lib: <BUILTINS>/dom.js:1162
@@ -40,8 +38,6 @@ Error: Element.js:14
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/dom.js:1162
 
 Error: Element.js:15
- 15:     element.scrollIntoView({ block: 'invalid' });
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  15:     element.scrollIntoView({ block: 'invalid' });
                                 ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 1162:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
@@ -70,8 +66,6 @@ Error: Element.js:15
 
 Error: Element.js:16
  16:     element.scrollIntoView(1);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
- 16:     element.scrollIntoView(1);
                                 ^ number. This type is incompatible with the expected param type of
 1162:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: boolean | object type. See lib: <BUILTINS>/dom.js:1162
@@ -93,8 +87,6 @@ Error: Element.js:16
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/dom.js:1162
 
 Error: HTMLElement.js:14
- 14:     element.scrollIntoView({ behavior: 'invalid' });
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  14:     element.scrollIntoView({ behavior: 'invalid' });
                                 ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 1162:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
@@ -123,8 +115,6 @@ Error: HTMLElement.js:14
 
 Error: HTMLElement.js:15
  15:     element.scrollIntoView({ block: 'invalid' });
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
- 15:     element.scrollIntoView({ block: 'invalid' });
                                 ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 1162:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: boolean | object type. See lib: <BUILTINS>/dom.js:1162
@@ -151,8 +141,6 @@ Error: HTMLElement.js:15
                                                                                                      ^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/dom.js:1162
 
 Error: HTMLElement.js:16
- 16:     element.scrollIntoView(1);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  16:     element.scrollIntoView(1);
                                 ^ number. This type is incompatible with the expected param type of
 1162:   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'end') })): void;

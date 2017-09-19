@@ -29,8 +29,6 @@ Error: test4.js:7
 
 Error: test4.js:13
  13: foo(new D, { f_: 0 });
-     ^^^^^^^^^^^^^^^^^^^^^ function call
- 13: foo(new D, { f_: 0 });
                 ^^^^^^^^^ object literal. This type is incompatible with the expected param type of
   9: class D extends C<O> {
                        ^ object type

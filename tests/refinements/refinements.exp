@@ -68,8 +68,6 @@ Error: bool.js:44
 
 Error: cond_prop.js:11
  11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
- 11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
                              ^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
   9: function getTypeASTName(typeAST: Type): string {
                                       ^^^^ union: Name | ListType | NonNullType

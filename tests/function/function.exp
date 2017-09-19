@@ -156,8 +156,6 @@ Error: call.js:40
 
 Error: call.js:47
  47:     f({x: "foo"}); // error, "foo" !~> "bar"
-         ^^^^^^^^^^^^^ function call
- 47:     f({x: "foo"}); // error, "foo" !~> "bar"
            ^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
  46:     function f(y: { x: "bar" }): void {}
                        ^^^^^^^^^^^^ object type
@@ -169,8 +167,6 @@ Error: call.js:47
 
 Error: call.js:53
  53:     f({x: 234}); // error, 234 !~> 123
-         ^^^^^^^^^^^ function call
- 53:     f({x: 234}); // error, 234 !~> 123
            ^^^^^^^^ object literal. This type is incompatible with the expected param type of
  52:     function f(y: { x: 123 }): void {}
                        ^^^^^^^^^^ object type
@@ -181,8 +177,6 @@ Error: call.js:53
                                 ^^^ number literal `123`
 
 Error: call.js:59
- 59:     f({x: true}); // error, true !~> false
-         ^^^^^^^^^^^^ function call
  59:     f({x: true}); // error, true !~> false
            ^^^^^^^^^ object literal. This type is incompatible with the expected param type of
  58:     function f(y: { x: false }): void {}

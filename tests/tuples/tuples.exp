@@ -18,8 +18,6 @@ Error: optional.js:6
 
 Error: too-few.js:5
   5: foo([ {} ]); // error, too few elements in array passed to a tuple
-     ^^^^^^^^^^^ function call
-  5: foo([ {} ]); // error, too few elements in array passed to a tuple
          ^^^^^^ array literal. Tuple arity mismatch. This tuple has 1 elements and cannot flow to the 2 elements of
   3: function foo(a: [Object, Object]) {}
                      ^^^^^^^^^^^^^^^^ tuple type

@@ -1,6 +1,22 @@
 Error: overload.js:7
   7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^ call of method `match`
+                      ^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly null value
+  7: var x1: number = "".match(0)[0];
+                      ^^^^^^^^^^^ null
+
+Error: overload.js:7
+  7: var x1: number = "".match(0)[0];
+                      ^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly undefined value
+  7: var x1: number = "".match(0)[0];
+                      ^^^^^^^^^^^ undefined
+
+Error: overload.js:7
+  7: var x1: number = "".match(0)[0];
+                      ^^^^^^^^^^^^^^ string. This type is incompatible with
+  7: var x1: number = "".match(0)[0];
+             ^^^^^^ number
+
+Error: overload.js:7
   7: var x1: number = "".match(0)[0];
                                ^ number. This type is incompatible with the expected param type of
 304:     match(regexp: string | RegExp): ?Array<string>;
@@ -21,24 +37,6 @@ Error: overload.js:7
                                  ^ number. This type is incompatible with
   304:     match(regexp: string | RegExp): ?Array<string>;
                                   ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:304
-
-Error: overload.js:7
-  7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly null value
-  7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^ null
-
-Error: overload.js:7
-  7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly undefined value
-  7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^ undefined
-
-Error: overload.js:7
-  7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^^^^ string. This type is incompatible with
-  7: var x1: number = "".match(0)[0];
-             ^^^^^^ number
 
 Error: overload.js:8
   8: var x2: number = "".match(/pattern/)[0];

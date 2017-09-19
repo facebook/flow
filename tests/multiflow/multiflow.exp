@@ -1,7 +1,5 @@
 Error: apply.js:12
  12: apply(noRest, ['hi', 456]); // Error - 456 ~> 123
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
- 12: apply(noRest, ['hi', 456]); // Error - 456 ~> 123
                           ^^^ number. Expected number literal `123`, got `456` instead
  10: function noRest(x: 'hi', y: 123): true { return true; }
                                  ^^^ number literal `123`
@@ -39,8 +37,6 @@ Error: apply.js:21
                                 ^^^^^^^^^^^ tuple type
 
 Error: apply.js:31
- 31: applyType(noRest, ['hi', 456]); // Error - 456 ~> 123
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  31: applyType(noRest, ['hi', 456]); // Error - 456 ~> 123
                               ^^^ number. Expected number literal `123`, got `456` instead
  10: function noRest(x: 'hi', y: 123): true { return true; }

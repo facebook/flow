@@ -750,8 +750,6 @@ Error: MutationObserver.js:20
 
 Error: MutationObserver.js:21
  21: o.observe(div, {}); // incorrect
-     ^^^^^^^^^^^^^^^^^^ call of method `observe`
- 21: o.observe(div, {}); // incorrect
                     ^^ object literal. This type is incompatible with the expected param type of
 355: declare type MutationObserverInit = MutationObserverInitRequired & {
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s). See lib: <BUILTINS>/bom.js:355
@@ -796,8 +794,6 @@ Error: MutationObserver.js:21
                           ^^ object literal
 
 Error: MutationObserver.js:22
- 22: o.observe(div, { subtree: true }); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `observe`
  22: o.observe(div, { subtree: true }); // incorrect
                     ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 355: declare type MutationObserverInit = MutationObserverInitRequired & {
