@@ -72,17 +72,27 @@ let style_num = function
   | NormalWithBG (text, bg) -> (text_num text) ^ ";" ^ (background_num bg)
   | BoldWithBG (text, bg) -> (text_num text) ^ ";" ^ (background_num bg) ^ ";1"
 
+let supports_color =
+  let memo = ref None in
+  fun () ->
+    match !memo with Some x -> x | None -> begin
+      let value = match Sys_utils.getenv_term () with
+      | None -> false
+      | Some term -> Unix.isatty Unix.stdout && term <> "dumb"
+      in
+      memo := Some value;
+      value
+    end
+
+(* See https://github.com/yarnpkg/yarn/issues/405. *)
+let supports_emoji () = Sys.os_type <> "Win32" && supports_color ()
+
 let print_one ?(color_mode=Color_Auto) ?(out_channel=stdout) c s =
   let should_color = match color_mode with
     | Color_Always -> true
     | Color_Never -> false
-    | Color_Auto ->
-      begin
-        match Sys_utils.getenv_term () with
-          | None -> false
-          | Some term ->
-            Unix.isatty Unix.stdout && term <> "dumb"
-      end in
+    | Color_Auto -> supports_color ()
+  in
   if should_color
   then Printf.fprintf out_channel "\x1b[%sm%s\x1b[0m" (style_num c) (s)
   else Printf.fprintf out_channel "%s" s

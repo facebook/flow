@@ -57,10 +57,9 @@ let re_list =
 let is_valid_line s =
   List.exists (fun re -> matches_re re s) re_list
 
-
 let msg_of_tail env tail_env =
   let line = Tail.last_line tail_env in
-  let use_emoji = env.emoji && Utils_js.can_emoji in
+  let use_emoji = env.emoji && Tty.supports_emoji () in
   if matches_re parsing_re line then
     Printf.sprintf "[%sparsing]"
       (if use_emoji then (* Ghost *) "\xf0\x9f\x91\xbb  " else "")

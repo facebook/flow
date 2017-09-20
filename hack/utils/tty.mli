@@ -61,3 +61,9 @@ val read_choice : string -> char list -> char
 
 (* Only print if we are attached to a tty *)
 val eprintf : ('a, out_channel, unit) format -> 'a
+
+(* Whether the terminal supports color *)
+val supports_color : unit -> bool
+
+(* Whether the terminal supports emoji *)
+val supports_emoji : unit -> bool
