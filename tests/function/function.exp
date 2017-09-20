@@ -6,8 +6,6 @@ Error: apply.js:2
 
 Error: apply.js:12
  12: test.apply("", [""]); // error: void ~> number
-     ^^^^^^^^^^^^^^^^^^^^ call of method `apply`
- 12: test.apply("", [""]); // error: void ~> number
      ^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
   1: function test(a: string, b: number): number {
                                  ^^^^^^ number
@@ -106,8 +104,6 @@ Error: call.js:4
 
 Error: call.js:14
  14: test.call("", ""); // error: void ~> number
-     ^^^^^^^^^^^^^^^^^ call of method `call`
- 14: test.call("", ""); // error: void ~> number
      ^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
   3: function test(a: string, b: number): number {
                                  ^^^^^^ number
@@ -153,6 +149,39 @@ Error: call.js:40
                         ^^^ number. This type is incompatible with the expected param type of
  38: function test3(x: { (a: string, b: string): void }) {
                                         ^^^^^^ string
+
+Error: call.js:47
+ 47:     f({x: "foo"}); // error, "foo" !~> "bar"
+           ^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
+ 46:     function f(y: { x: "bar" }): void {}
+                       ^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     47:     f({x: "foo"}); // error, "foo" !~> "bar"
+                   ^^^^^ string. Expected string literal `bar`, got `foo` instead
+     46:     function f(y: { x: "bar" }): void {}
+                                ^^^^^ string literal `bar`
+
+Error: call.js:53
+ 53:     f({x: 234}); // error, 234 !~> 123
+           ^^^^^^^^ object literal. This type is incompatible with the expected param type of
+ 52:     function f(y: { x: 123 }): void {}
+                       ^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     53:     f({x: 234}); // error, 234 !~> 123
+                   ^^^ number. Expected number literal `123`, got `234` instead
+     52:     function f(y: { x: 123 }): void {}
+                                ^^^ number literal `123`
+
+Error: call.js:59
+ 59:     f({x: true}); // error, true !~> false
+           ^^^^^^^^^ object literal. This type is incompatible with the expected param type of
+ 58:     function f(y: { x: false }): void {}
+                       ^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     59:     f({x: true}); // error, true !~> false
+                   ^^^^ boolean. Expected boolean literal `false`, got `true` instead
+     58:     function f(y: { x: false }): void {}
+                                ^^^^^ boolean literal `false`
 
 Error: function.js:21
  21:   <MyThing />;
@@ -316,4 +345,4 @@ Error: rest_type.js:31
                                ^^^^^ empty
 
 
-Found 50 errors
+Found 53 errors

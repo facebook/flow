@@ -3,7 +3,7 @@ Error: Bad.js:11
                  ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
      11: const Bad = (props: Props) => null;
                      ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
     123:   (props: Props, context: any): React$Node,
@@ -28,7 +28,7 @@ Error: Bad.js:11
                  ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
      11: const Bad = (props: Props) => null;
                      ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
     123:   (props: Props, context: any): React$Node,

@@ -1099,6 +1099,9 @@ and json_of_destructor_impl json_cx = Hh_json.(function
         "spread", JSON_Array (List.map (_json_of_t json_cx) ts);
       ]
     )
+  | RestType t -> JSON_Object [
+      "restType", _json_of_t json_cx t;
+    ]
   | ValuesType -> JSON_Object [
       "values", JSON_Bool true;
     ]
@@ -1551,6 +1554,7 @@ and dump_t_ (depth, tvars) cx t =
     | ElementType _ -> "element type"
     | Bind _ -> "bind"
     | SpreadType _ -> "spread"
+    | RestType _ -> "rest"
     | ValuesType -> "values"
     | CallType _ -> "function call"
     | TypeMap (TupleMap _) -> "tuple map"
@@ -1892,8 +1896,15 @@ and dump_use_t_ (depth, tvars) cx t =
       in
       spf "(%s, %s)" options state
     in
+    let rest state =
+      let open Object.Rest in
+      match state with
+        | One t -> spf "One (%s)" (kid t)
+        | Done o -> spf "Done (%s)" (resolved o)
+    in
     let tool = function
       | Spread (options, state) -> spread options state
+      | Rest state -> rest state
     in
     fun a b ->
       spf "(%s, %s)" (resolve_tool a) (tool b)
@@ -2191,6 +2202,7 @@ let string_of_destructor = function
   | ElementType _ -> "ElementType"
   | Bind _ -> "Bind"
   | SpreadType _ -> "Spread"
+  | RestType _ -> "Rest"
   | ValuesType -> "Values"
   | CallType _ -> "CallType"
   | TypeMap (TupleMap _) -> "TupleMap"
@@ -2322,38 +2334,41 @@ let dump_flow_error =
         spf "EMutationNotAllowed { reason = %s; reason_op = %s }"
           (dump_reason cx reason)
           (dump_reason cx reason_op)
-    | EExpectedStringLit ((reason1, reason2), expected, literal) ->
+    | EExpectedStringLit ((reason1, reason2), expected, literal, use_op) ->
         let literal = match literal with
         | Literal (_, str) -> spf "%S" str
         | Truthy -> "truthy"
         | AnyLiteral -> "any"
         in
-        spf "EExpectedStringLit ((%s, %s), %S, %S)"
+        spf "EExpectedStringLit ((%s, %s), %S, %S, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           expected
           literal
-    | EExpectedNumberLit ((reason1, reason2), (_, expected), literal) ->
+          (string_of_use_op use_op)
+    | EExpectedNumberLit ((reason1, reason2), (_, expected), literal, use_op) ->
         let literal = match literal with
         | Literal (_, (_, raw)) -> spf "%S" raw
         | Truthy -> "truthy"
         | AnyLiteral -> "any"
         in
-        spf "EExpectedNumberLit ((%s, %s), %s, %s)"
+        spf "EExpectedNumberLit ((%s, %s), %s, %s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           expected
           literal
-    | EExpectedBooleanLit ((reason1, reason2), expected, literal) ->
+          (string_of_use_op use_op)
+    | EExpectedBooleanLit ((reason1, reason2), expected, literal, use_op) ->
         let literal = match literal with
         | Some b -> spf "%b" b
         | None -> "any"
         in
-        spf "EExpectedBooleanLit ((%s, %s), %b, %s)"
+        spf "EExpectedBooleanLit ((%s, %s), %b, %s, %s)"
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           expected
           literal
+          (string_of_use_op use_op)
     | EPropNotFound ((prop_reason, obj_reason), _use_op) ->
         spf "EPropNotFound (%s, %s)"
           (dump_reason cx prop_reason)

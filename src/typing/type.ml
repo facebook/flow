@@ -883,6 +883,7 @@ module rec TypeTerm : sig
   | ElementType of t
   | Bind of t
   | SpreadType of Object.Spread.options * t list
+  | RestType of t
   | ValuesType
   | CallType of t list
   | TypeMap of type_map
@@ -1549,8 +1550,15 @@ and Object : sig
       | Annot of { make_exact: bool }
   end
 
+  module Rest : sig
+    type state =
+      | One of TypeTerm.t
+      | Done of resolved
+  end
+
   type tool =
     | Spread of Spread.options * Spread.state
+    | Rest of Rest.state
 end = Object
 
 and React : sig

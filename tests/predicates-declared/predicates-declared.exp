@@ -34,8 +34,6 @@ Error: sanity-is-string-bug.js:13
 
 Error: sanity-parameter-mismatch.js:10
  10: foo(3, 3);
-     ^^^^^^^^^ function call
- 10: foo(3, 3);
             ^ number. This type is incompatible with the expected param type of
   7:   types: string | Array<string>
               ^^^^^^^^^^^^^^^^^^^^^^ union: string | array type

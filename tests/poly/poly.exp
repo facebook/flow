@@ -17,8 +17,6 @@ Error: annot.js:10
 
 Error: implicit_bounded_instantiation.js:19
  19: a.meth(42); // Error: number ~> Middle
-     ^^^^^^^^^^ call of method `meth`
- 19: a.meth(42); // Error: number ~> Middle
             ^^ number. This type is incompatible with
   7: class C<T: Middle> {
                 ^^^^^^ Middle

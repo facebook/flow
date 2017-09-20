@@ -56,10 +56,10 @@ class mapper = object(this)
       id this#declare_export_declaration decl stmt (fun decl -> loc, DeclareExportDeclaration decl)
 
     | (loc, DeclareModule m) ->
-      id this#declare_module m stmt (fun m -> loc, DeclareModule m)
+      id (this#declare_module loc) m stmt (fun m -> loc, DeclareModule m)
 
     | (loc, DeclareModuleExports annot) ->
-      id this#declare_module_exports annot stmt (fun annot -> loc, DeclareModuleExports annot)
+      id (this#declare_module_exports loc) annot stmt (fun annot -> loc, DeclareModuleExports annot)
 
     | (loc, DoWhile stuff) ->
       id this#do_while stuff stmt (fun stuff -> loc, DoWhile stuff)
@@ -310,7 +310,7 @@ class mapper = object(this)
   method declare_export_declaration_decl (decl: Loc.t Ast.Statement.DeclareExportDeclaration.declaration) =
     decl
 
-  method declare_module (m: Loc.t Ast.Statement.DeclareModule.t) =
+  method declare_module _loc (m: Loc.t Ast.Statement.DeclareModule.t) =
     let open Ast.Statement.DeclareModule in
     let { id; body; kind } = m in
     let loc, block = body in
@@ -319,7 +319,7 @@ class mapper = object(this)
     else { id; body = (loc, block'); kind }
 
   (* TODO *)
-  method declare_module_exports (annot: Loc.t Ast.Type.annotation) =
+  method declare_module_exports _loc (annot: Loc.t Ast.Type.annotation) =
     annot
 
   method do_while (stuff: Loc.t Ast.Statement.DoWhile.t) =

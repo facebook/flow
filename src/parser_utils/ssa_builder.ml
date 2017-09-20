@@ -19,7 +19,20 @@ open Scope_builder
    single write, or a "join" of writes (in compiler terminology, a PHI node), or
    a reference to something that is unknown at a particular point in the AST
    during traversal, but will be known by the time traversal is complete. *)
-module Val = struct
+module Val : sig
+  type t
+
+  val mk_unresolved: unit -> t
+  val empty: t
+  val uninitialized: t
+  val merge: t -> t -> t
+
+  val one: Loc.t -> t
+  val all: Loc.t list -> t
+
+  val resolve: unresolved:t -> t -> unit
+  val simplify: t -> Ssa_api.write_loc list
+end = struct
   type t =
     | Uninitialized
     | Loc of Loc.t
@@ -54,6 +67,12 @@ module Val = struct
       if occurs t1 t2 then t2
       else if occurs t2 t1 then t1
       else PHI [t1;t2]
+
+  let one loc =
+    Loc loc
+
+  let all locs =
+    PHI (List.map (fun loc -> Loc loc) locs)
 
   (* Resolving unresolved to t essentially models an equation of the form
      unresolved = t, where unresolved is a reference to an unknown and t is the
@@ -209,7 +228,7 @@ class ssa_builder = object(this)
   method private resolve_havoc_env =
     SMap.iter (fun x _loc ->
       let { Havoc.unresolved; locs } = SMap.find x havoc_env in
-      Val.(resolve ~unresolved (PHI (List.map (fun loc -> Loc loc) locs)))
+      Val.resolve ~unresolved (Val.all locs)
     )
 
   method private pop_ssa_env (bindings, old_ssa_env, old_havoc_env) =
@@ -318,7 +337,7 @@ class ssa_builder = object(this)
     let loc, x = ident in
     begin match SMap.get x ssa_env, SMap.get x havoc_env with
       | Some val_ref, Some havoc ->
-        val_ref := Val.(Loc loc);
+        val_ref := Val.one loc;
         Havoc.(havoc.locs <- loc :: havoc.locs)
       | _ -> ()
     end;
@@ -855,3 +874,14 @@ let program program =
   let ssa_walk = new ssa_builder in
   ignore @@ ssa_walk#program program;
   ssa_walk#values
+
+let program_with_scope ?(ignore_toplevel=false) program =
+  let ssa_walk = new ssa_builder in
+  if ignore_toplevel then begin
+    ignore @@ ssa_walk#program program;
+    ssa_walk#acc, ssa_walk#values
+  end else
+    let hoist = new hoister in
+    let bindings = hoist#eval hoist#program program in
+    ignore @@ ssa_walk#with_bindings bindings ssa_walk#program program;
+    ssa_walk#acc, ssa_walk#values

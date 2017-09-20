@@ -286,7 +286,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $Keys<T> is the set of keys of T *)
   (** TODO: remove $Enum **)
-  | "$Keys" | "$Enum"->
+  | "$Keys" | "$Enum" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       KeysT (mk_reason RKeySet loc, t)
@@ -305,6 +305,15 @@ let rec convert cx tparams_map = Ast.Type.(function
       let t = List.hd (convert_type_params ()) in
       let desc = RExactType (desc_of_t t) in
       ExactT (mk_reason desc loc, t)
+    )
+
+  | "$Rest" ->
+    check_type_param_arity cx loc typeParameters 2 (fun () ->
+      let t1, t2 = match convert_type_params () with
+      | [t1; t2] -> t1, t2
+      | _ -> assert false in
+      EvalT (t1, TypeDestructorT
+        (mk_reason RObjectType loc, RestType t2), mk_id ())
     )
 
   (* $Exports<'M'> is the type of the exports of module 'M' *)

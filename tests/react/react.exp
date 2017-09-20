@@ -1,10 +1,3 @@
-Library type error:
-<BUILTINS>/react-dom.js:18
- 18:     callback?: () => void,
-                    ^^^^^^^^^^ function type. Callable signature not found in
- 23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
-                                                                  ^^ object literal. See: render_callback.js:23
-
 Error: createElementRequiredProp_string.js:17
  17:     return (<Cmp/>);
                  ^^^^^^ React element `Cmp`
@@ -320,8 +313,6 @@ Error: create_class_initial_state_sealed.js:35
 
 Error: create_class_initial_state_sealed.js:45
  45:     this.setState({ q: 0 }); // property `q` not found
-         ^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
- 45:     this.setState({ q: 0 }); // property `q` not found
                        ^^^^^^^^ object literal. This type is incompatible with the expected param type of
  36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type parameter `State` of call of method `createClass` | function type. See lib: <BUILTINS>/react.js:36
@@ -342,10 +333,15 @@ Error: create_class_initial_state_sealed.js:45
    36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:36
   Error:
-   36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:36
    45:     this.setState({ q: 0 }); // property `q` not found
-                         ^^^^^^^^ object literal
+                         ^^^^^^^^ object literal. This type is incompatible with
+   36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:36
+    Callable property is incompatible:
+       36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:36
+       45:     this.setState({ q: 0 }); // property `q` not found
+                             ^^^^^^^^ object literal
 
 Error: create_class_initial_state_sealed.js:48
  48:     (this.state.q: empty); // property `q` not found
@@ -360,8 +356,6 @@ Error: create_class_initial_state_sealed.js:66
                           ^^^^^ empty
 
 Error: create_class_initial_state_sealed.js:81
- 81:     this.setState({ baz: 0 }); // property `baz`  not found
-         ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
  81:     this.setState({ baz: 0 }); // property `baz`  not found
                        ^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
  36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
@@ -383,10 +377,15 @@ Error: create_class_initial_state_sealed.js:81
    36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:36
   Error:
-   36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:36
    81:     this.setState({ baz: 0 }); // property `baz`  not found
-                         ^^^^^^^^^^ object literal
+                         ^^^^^^^^^^ object literal. This type is incompatible with
+   36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:36
+    Callable property is incompatible:
+       36:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react.js:36
+       81:     this.setState({ baz: 0 }); // property `baz`  not found
+                             ^^^^^^^^^^ object literal
 
 Error: create_class_initial_state_sealed.js:84
  84:     (this.state.baz: empty); // property `baz` not found
@@ -543,7 +542,7 @@ Error: element_with_component_type.js:8
                  ^^^ statics of Foo. This type is incompatible with
       138:   | React$StatelessFunctionalComponent<Props>
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-        Property `$call` is incompatible:
+        Callable property is incompatible:
           138:   | React$StatelessFunctionalComponent<Props>
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:138
             5: class Foo extends React.Component<{a: number}> {}
@@ -648,7 +647,7 @@ Error: hoc.js:35
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of class expr `Empty`. This type is incompatible with
   138:   | React$StatelessFunctionalComponent<Props>
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-    Property `$call` is incompatible:
+    Callable property is incompatible:
       138:   | React$StatelessFunctionalComponent<Props>
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in. See lib: <BUILTINS>/react.js:138
        35: myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
@@ -669,8 +668,6 @@ Error: hoc.js:35
 
 Error: hoc.js:36
  36: myHOC(function Empty(props: {foo: string}) {}); // Error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
- 36: myHOC(function Empty(props: {foo: string}) {}); // Error
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
   6:   Component: React$ComponentType<{foo: number, bar: number}>,
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of polymorphic type: type `React$StatelessFunctionalComponent` | class type: type application of polymorphic type: class type: React$Component
@@ -682,7 +679,7 @@ Error: hoc.js:36
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   138:   | React$StatelessFunctionalComponent<Props>
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-    Property `$call` is incompatible:
+    Callable property is incompatible:
        36: myHOC(function Empty(props: {foo: string}) {}); // Error
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
       123:   (props: Props, context: any): React$Node,
@@ -705,7 +702,7 @@ Error: hoc.js:36
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   139:   | Class<React$Component<Props, any>>;
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of React$Component. See lib: <BUILTINS>/react.js:139
-    Property `$call` is incompatible:
+    Callable property is incompatible:
        36: myHOC(function Empty(props: {foo: string}) {}); // Error
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `$call`. Callable signature not found in
       139:   | Class<React$Component<Props, any>>;
@@ -837,7 +834,7 @@ Error: hoc2.js:17
      --^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v-------------------------------------
      17: function MyFunctionComponent(props: {|
      18:   a: number,
@@ -873,7 +870,7 @@ Error: hoc2.js:17
      --^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v-------------------------------------
      17: function MyFunctionComponent(props: {|
      18:   a: number,
@@ -983,7 +980,7 @@ Error: hoc2.js:30
      --^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v-------------------------------------
      17: function MyFunctionComponent(props: {|
      18:   a: number,
@@ -1026,7 +1023,7 @@ Error: hoc2.js:30
      --^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v-------------------------------------
      17: function MyFunctionComponent(props: {|
      18:   a: number,
@@ -1067,7 +1064,7 @@ Error: hoc3.js:17
      -^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
      18:   a: number,
@@ -1167,7 +1164,7 @@ Error: hoc3.js:30
      -^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
      18:   a: number,
@@ -1210,7 +1207,7 @@ Error: hoc3.js:30
      -^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
      18:   a: number,
@@ -1251,7 +1248,7 @@ Error: hoc4.js:17
      -^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
      18:   a: number,
@@ -1351,7 +1348,7 @@ Error: hoc4.js:30
      -^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
      18:   a: number,
@@ -1394,7 +1391,7 @@ Error: hoc4.js:30
      -^ function. This type is incompatible with
 138:   | React$StatelessFunctionalComponent<Props>
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:138
-  Property `$call` is incompatible:
+  Callable property is incompatible:
          v------------------------------------
      17: function MyFunctionComponent(props: {
      18:   a: number,
@@ -1839,9 +1836,19 @@ Error: proptype_oneOf.js:20
  20: (<Example bool={false} />); // error: false ~> true
       ^^^^^^^^^^^^^^^^^^^^^^^^ React element `Example`
  20: (<Example bool={false} />); // error: false ~> true
-                     ^^^^^ boolean. Expected boolean literal `true`, got `false` instead
-  8:     bool: React.PropTypes.oneOf([true]),
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ boolean literal `true`
+      ^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`. This type is incompatible with
+                  v
+  5:   propTypes: {
+  6:     str: React.PropTypes.oneOf(["foo", "bar"]),
+  7:     num: React.PropTypes.oneOf([0, 1, 2]),
+...:
+ 10:   },
+       ^ propTypes of React component
+  Property `bool` is incompatible:
+     20: (<Example bool={false} />); // error: false ~> true
+                         ^^^^^ boolean. Expected boolean literal `true`, got `false` instead
+      8:     bool: React.PropTypes.oneOf([true]),
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ boolean literal `true`
 
 Error: proptype_oneOf.js:24
  24: (<Example mixed={"baz"} />); // error: 'baz' not in enum
@@ -2360,6 +2367,17 @@ Error: render_callback.js:22
                                                                   ^ number. This type is incompatible with the expected param type of
  18:     callback?: () => void,
                     ^^^^^^^^^^ function type. See lib: <BUILTINS>/react-dom.js:18
+
+Error: render_callback.js:23
+ 23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
+                                                                  ^^ object literal. This type is incompatible with the expected param type of
+ 18:     callback?: () => void,
+                    ^^^^^^^^^^ function type. See lib: <BUILTINS>/react-dom.js:18
+  Callable property is incompatible:
+     18:     callback?: () => void,
+                        ^^^^^^^^^^ function type. Callable signature not found in. See lib: <BUILTINS>/react-dom.js:18
+     23: ReactDOM.render(<Example/>, document.querySelector('#site'), {});
+                                                                      ^^ object literal
 
 Error: render_callback.js:24
  24: ReactDOM.render(<Example/>, document.querySelector('#site'), '');

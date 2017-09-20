@@ -110,6 +110,87 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
     addFile('existingError.js')
       .ideStart()
       .ideNotification('subscribeToDiagnostics')
+      .ideNewMessagesWithTimeout(
+        5000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [
+                  {
+                    "kind": "infer",
+                    "level": "error",
+                    "suppressions": [],
+                    "message": [
+                      {
+                        "context": "var existingError: number = true;",
+                        "descr": "boolean",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "existingError.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 1,
+                            "column": 29,
+                            "offset": 28
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 32,
+                            "offset": 32
+                          }
+                        },
+                        "path": "existingError.js",
+                        "line": 1,
+                        "endline": 1,
+                        "start": 29,
+                        "end": 32
+                      },
+                      {
+                        "context": null,
+                        "descr": "This type is incompatible with",
+                        "type": "Comment",
+                        "path": "",
+                        "line": 0,
+                        "endline": 0,
+                        "start": 1,
+                        "end": 0
+                      },
+                      {
+                        "context": "var existingError: number = true;",
+                        "descr": "number",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "existingError.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 1,
+                            "column": 20,
+                            "offset": 19
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 25,
+                            "offset": 25
+                          }
+                        },
+                        "path": "existingError.js",
+                        "line": 1,
+                        "endline": 1,
+                        "start": 20,
+                        "end": 25
+                      }
+                    ]
+                  }
+                ],
+                "passed": false
+              }
+            ]
+          }
+        ],
+      )
       .newErrors(
         `
           existingError.js:1

@@ -106,9 +106,14 @@ Error: test11.js:12
                    ^^^ Nil
   Error:
    12: length({ kind: "cons" }); // missing `next`
-                      ^^^^^^ string. Expected string literal `nil`, got `cons` instead
-   17: type Nil = { kind: "nil" };
-                          ^^^^^ string literal `nil`
+              ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+   16: type List = Nil | Cons;
+                   ^^^ object type
+    Property `kind` is incompatible:
+       12: length({ kind: "cons" }); // missing `next`
+                          ^^^^^^ string. Expected string literal `nil`, got `cons` instead
+       17: type Nil = { kind: "nil" };
+                              ^^^^^ string literal `nil`
   Member 2:
    16: type List = Nil | Cons;
                          ^^^^ Cons
@@ -133,17 +138,27 @@ Error: test11.js:14
                    ^^^ Nil
   Error:
    14: length({ kind: "empty" }); // `kind` not found
-                      ^^^^^^^ string. Expected string literal `nil`, got `empty` instead
-   17: type Nil = { kind: "nil" };
-                          ^^^^^ string literal `nil`
+              ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+   16: type List = Nil | Cons;
+                   ^^^ object type
+    Property `kind` is incompatible:
+       14: length({ kind: "empty" }); // `kind` not found
+                          ^^^^^^^ string. Expected string literal `nil`, got `empty` instead
+       17: type Nil = { kind: "nil" };
+                              ^^^^^ string literal `nil`
   Member 2:
    16: type List = Nil | Cons;
                          ^^^^ Cons
   Error:
    14: length({ kind: "empty" }); // `kind` not found
-                      ^^^^^^^ string. Expected string literal `cons`, got `empty` instead
-   18: type Cons = { kind: "cons", next: List };
-                           ^^^^^^ string literal `cons`
+              ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+   16: type List = Nil | Cons;
+                         ^^^^ object type
+    Property `kind` is incompatible:
+       14: length({ kind: "empty" }); // `kind` not found
+                          ^^^^^^^ string. Expected string literal `cons`, got `empty` instead
+       18: type Cons = { kind: "cons", next: List };
+                               ^^^^^^ string literal `cons`
 
 Error: test14.js:12
  12:   union({ x: c.get() });

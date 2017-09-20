@@ -15,14 +15,12 @@ exception Exports_not_found of Type.Exports.id
 exception Require_not_found of string
 exception Module_not_found of string
 exception Tvar_not_found of Constraint.ident
-exception Tvar_reason_not_found of Constraint.ident
 
 type env = Scope.t list
 
 type local_metadata = {
   checked: bool;
   munge_underscores: bool;
-  output_graphml: bool;
   verbose: Verbose.t option;
   weak: bool;
   jsx: Options.jsx_mode option;
@@ -91,9 +89,6 @@ type local_t = {
 
   (* map from tvar ids to nodes (type info structures) *)
   mutable graph: Constraint.node IMap.t;
-
-  (* map from tvar ids to reasons *)
-  mutable tvar_reasons: Reason.t IMap.t;
 
   (* set of "nominal" ids (created by Flow_js.mk_nominal_id) *)
   (** Nominal ids are used to identify classes and to check nominal subtyping
@@ -186,7 +181,6 @@ let metadata_of_options options =
   let local_metadata = {
     checked = Options.all options;
     munge_underscores = Options.should_munge_underscores options;
-    output_graphml = Options.output_graphml options;
     verbose = Options.verbose options;
     weak = Options.weak_by_default options;
     jsx = None;
@@ -211,7 +205,6 @@ let make metadata file module_ref = {
     imported_ts = SMap.empty;
 
     graph = IMap.empty;
-    tvar_reasons = IMap.empty;
     nominal_ids = ISet.empty;
     envs = IMap.empty;
     property_maps = Type.Properties.Map.empty;
@@ -274,9 +267,6 @@ let find_module cx m =
 let find_tvar cx id =
   try IMap.find_unsafe id cx.local.graph
   with Not_found -> raise (Tvar_not_found id)
-let find_tvar_reason cx id =
-  try IMap.find_unsafe id cx.local.tvar_reasons
-  with Not_found -> raise (Tvar_reason_not_found id)
 let mem_nominal_id cx id = ISet.mem id cx.local.nominal_ids
 let globals cx = cx.local.globals
 let graph cx = cx.local.graph
@@ -290,7 +280,6 @@ let max_trace_depth cx = Global.max_trace_depth cx.global
 let module_kind cx = cx.local.module_kind
 let module_map cx = cx.local.module_map
 let module_ref cx = cx.local.module_ref
-let output_graphml cx = cx.local.metadata.output_graphml
 let property_maps cx = cx.local.property_maps
 let refs_table cx = cx.local.refs_table
 let export_maps cx = cx.local.export_maps
@@ -348,8 +337,6 @@ let add_export_map cx id tmap =
   cx.local.export_maps <- Type.Exports.Map.add id tmap cx.local.export_maps
 let add_tvar cx id bounds =
   cx.local.graph <- IMap.add id bounds cx.local.graph
-let add_tvar_reason cx id reason =
-  cx.local.tvar_reasons <- IMap.add id reason cx.local.tvar_reasons
 let add_nominal_id cx id =
   cx.local.nominal_ids <- ISet.add id cx.local.nominal_ids
 let remove_all_errors cx =

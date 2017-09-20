@@ -3,7 +3,7 @@ Error: fun.js:5
                  ^^^^^^^ function. This type is incompatible with
   5: var f0: F = () => 0; // error: number ~> void
              ^ F
-  Property `$call` is incompatible:
+  Callable property is incompatible:
       5: var f0: F = () => 0; // error: number ~> void
                      ^^^^^^^ function. This type is incompatible with
       2:   (): void;

@@ -384,6 +384,7 @@ and gc_destructor cx state = function
   | ElementType t -> gc cx state t
   | Bind t -> gc cx state t
   | SpreadType (_, ts) -> List.iter (gc cx state) ts
+  | RestType t -> gc cx state t
   | CallType args -> List.iter (gc cx state) args
   | TypeMap tmap -> gc_type_map cx state tmap
 
@@ -452,6 +453,11 @@ and gc_object_kit =
     let {todo_rev; acc} = spread_state in
     List.iter (gc cx state) todo_rev;
     List.iter (gc_resolved cx state) acc
+  | Rest rest_state ->
+    let open Object.Rest in
+    (match rest_state with
+      | One t -> gc cx state t
+      | Done o -> gc_resolved cx state o)
   in
   fun cx state resolve_tool tool ->
     gc_resolve_tool cx state resolve_tool;

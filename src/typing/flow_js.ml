@@ -127,9 +127,6 @@ let mk_tvar cx reason =
   let tvar = mk_id () in
   let graph = Context.graph cx in
   Context.add_tvar cx tvar (Constraint.new_unresolved_root ());
-  if Context.output_graphml cx then
-    (* only need to remember tvar -> reason for diagnostics *)
-    Context.add_tvar_reason cx tvar reason;
   (if Context.is_verbose cx then prerr_endlinef
     "TVAR %d (%d): %s" tvar (IMap.cardinal graph)
     (Debug_js.string_of_reason cx reason));
@@ -2738,29 +2735,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         necessity we allow all string types to flow to StrT (whereas only
         exactly matching string literal types may flow to SingletonStrT).  **)
 
-    | DefT (rl, StrT actual), UseT (_, DefT (ru, SingletonStrT expected)) ->
+    | DefT (rl, StrT actual), UseT (use_op, DefT (ru, SingletonStrT expected)) ->
       if literal_eq expected actual
       then ()
       else
         let reasons = FlowError.ordered_reasons (rl, ru) in
         add_output cx ~trace
-          (FlowError.EExpectedStringLit (reasons, expected, actual))
+          (FlowError.EExpectedStringLit (reasons, expected, actual, use_op))
 
-    | DefT (rl, NumT actual), UseT (_, DefT (ru, SingletonNumT expected)) ->
+    | DefT (rl, NumT actual), UseT (use_op, DefT (ru, SingletonNumT expected)) ->
       if number_literal_eq expected actual
       then ()
       else
         let reasons = FlowError.ordered_reasons (rl, ru) in
         add_output cx ~trace
-          (FlowError.EExpectedNumberLit (reasons, expected, actual))
+          (FlowError.EExpectedNumberLit (reasons, expected, actual, use_op))
 
-    | DefT (rl, BoolT actual), UseT (_, DefT (ru, SingletonBoolT expected)) ->
+    | DefT (rl, BoolT actual), UseT (use_op, DefT (ru, SingletonBoolT expected)) ->
       if boolean_literal_eq expected actual
       then ()
       else
         let reasons = FlowError.ordered_reasons (rl, ru) in
         add_output cx ~trace
-          (FlowError.EExpectedBooleanLit (reasons, expected, actual))
+          (FlowError.EExpectedBooleanLit (reasons, expected, actual, use_op))
 
     (*****************************************************)
     (* keys (NOTE: currently we only support string keys *)
@@ -4130,8 +4127,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           NonstrictReturning (Some (l, pass))
         | _ -> Strict reason
       in
-      lookup_prop cx trace l reason_op reason strict "$call"
-        (RWProp (l, tvar, Read));
+      let action = match u with
+      | UseT (use_op, (DefT (_, (FunT _ | AnyFunT)) as u_def)) ->
+        let use_op = PropertyCompatibility ("$call", reason, reason_op, use_op) in
+        LookupProp (use_op, Field (u_def, Positive))
+      | _ -> RWProp (l, tvar, Read)
+      in
+      lookup_prop cx trace l reason_op reason strict "$call" action;
       rec_flow cx trace (tvar, u)
 
     (******************************)
@@ -6462,6 +6464,15 @@ and ground_subtype = function
   | DefT (_, AnyT), u -> not (any_propagating_use_t u)
   | _, UseT (_, DefT (_, AnyT)) -> true
 
+  (* opt: avoid builtin lookups *)
+  | ObjProtoT _, UseT (_, ObjProtoT _)
+  | FunProtoT _, UseT (_, FunProtoT _)
+  | FunProtoT _, UseT (_, ObjProtoT _)
+  | DefT (_, ObjT {proto_t = ObjProtoT _; _}), UseT (_, ObjProtoT _)
+  | DefT (_, ObjT {proto_t = FunProtoT _; _}), UseT (_, FunProtoT _)
+  | DefT (_, ObjT {proto_t = FunProtoT _; _}), UseT (_, ObjProtoT _)
+    -> true
+
   | _ ->
     false
 
@@ -6829,6 +6840,12 @@ and eval_destructor cx ~trace reason curr_t s i =
             let tool = Resolve Next in
             let state = { todo_rev; acc = [] } in
             ObjKitT (reason, tool, Spread (options, state), tvar)
+        | RestType t ->
+          let open Object in
+          let open Object.Rest in
+          let tool = Resolve Next in
+          let state = One t in
+          ObjKitT (reason, tool, Rest state, tvar)
         | ValuesType -> GetValuesT (reason, tvar)
         | CallType args ->
           let args = List.map (fun arg -> Arg arg) args in
@@ -10325,6 +10342,18 @@ and object_kit =
       DefT (reason, MixedT Mixed_everything)
   in
 
+  (* Treat dictionaries as optional, own properties. Dictionary reads should
+   * be exact. TODO: Forbid writes to indexers through the photo chain.
+   * Property accesses which read from dictionaries normally result in a
+   * non-optional result, but that leads to confusing spread results. For
+   * example, `p` in `{...{|p:T|},...{[]:U}` should `T|U`, not `U`. *)
+  let get_prop r p dict =
+    match p, dict with
+    | Some _, _ -> p
+    | None, Some d -> Some (optional (read_dict r d), true)
+    | None, None -> None
+  in
+
   (* Lift a pairwise function like spread2 to a function over a resolved list *)
   let merge (f: slice -> slice -> slice) =
     let f' (x0: resolved) (x1: resolved) =
@@ -10376,12 +10405,6 @@ and object_kit =
          * trying to merge. *)
         if List.mem x exclude_props then None
         else (
-        (* Treat dictionaries as optional, own properties. Dictionary reads should
-         * be exact. TODO: Forbid writes to indexers through the photo chain.
-         * Property accesses which read from dictionaries normally result in a
-         * non-optional result, but that leads to confusing spread results. For
-         * example, `p` in `{...{|p:T|},...{[]:U}` should `T|U`, not `U`. *)
-        let read_dict r d = optional (read_dict r d), true in
         (* Due to width subtyping, failing to read from an inexact object does not
            imply non-existence, but rather an unknown result. *)
         let unknown r =
@@ -10390,24 +10413,17 @@ and object_kit =
         in
         match merge_mode with
         | Sound _ ->
-          begin match p1, p2 with
+          (match get_prop r1 p1 dict1, get_prop r2 p2 dict2 with
           | None, None -> None
           | Some p1, Some p2 -> Some (merge_props p1 p2)
           | Some p1, None ->
-            (match dict2 with
-            | Some d2 -> Some (merge_props p1 (read_dict r2 d2))
-            | None ->
-              if flags2.exact
-              then Some p1
-              else Some (merge_props p1 (unknown r2)))
+            if flags2.exact
+            then Some p1
+            else Some (merge_props p1 (unknown r2))
           | None, Some p2 ->
-            (match dict1 with
-            | Some d1 -> Some (merge_props (read_dict r1 d1) p2)
-            | None ->
-              if flags1.exact
-              then Some p2
-              else Some (merge_props (unknown r1) p2))
-          end
+            if flags1.exact
+            then Some p2
+            else Some (merge_props (unknown r1) p2))
         (* Diff mode is used to combine the config object passed to
          * React.createElement with the default props for the component before
          * comparing with the component's props type. Any own property in the
@@ -10515,12 +10531,126 @@ and object_kit =
         rec_flow cx trace (t, ObjKitT (reason, tool, Spread (options, state), tout))
   in
 
+  (***************)
+  (* Object Rest *)
+  (***************)
+
+  let object_rest =
+    let open Object.Rest in
+
+    let optional = function
+    | (DefT (_, OptionalT _)) as t -> t
+    | t -> Type.optional t
+    in
+
+    (* Subtract the second slice from the first slice and return the difference
+     * slice. The runtime implementation of this type operation is:
+     *
+     *     const result = {};
+     *
+     *     for (const p in props1) {
+     *       if (hasOwnProperty(props1, p)) {
+     *         if (!hasOwnProperty(props2, p)) {
+     *           result[p] = props1[p];
+     *         }
+     *       }
+     *     }
+     *
+     * The resulting object only has a property if the property is own in props1 and
+     * it is not an own property of props2.
+     *)
+    let rest cx trace reason
+      (r1, props1, dict1, flags1)
+      (r2, props2, dict2, flags2) =
+      let props = SMap.merge (fun k p1 p2 ->
+        match get_prop r1 p1 dict1, get_prop r2 p2 dict2, flags2.exact with
+        (* If the object we are using to subtract has an optional property, non-own
+         * property, or is inexact then we should add this prop to our result, but
+         * make it optional as we cannot know for certain whether or not at runtime
+         * the property would be subtracted. *)
+        | Some (t1, _), Some ((DefT (_, OptionalT _) as t2), _), _
+        | Some (t1, _), Some (t2, false), _
+        | Some (t1, _), Some (t2, _), false ->
+          rec_flow_t cx trace (t1, optional t2);
+          Some (Field (optional t1, Neutral))
+        (* Otherwise if the object we are using to subtract has a non-optional own
+         * property and the object is exact then we never add that property to our
+         * source object. *)
+        | None, Some (t2, _), _ ->
+          let reason = replace_reason_const (RUndefinedProperty k) r1 in
+          rec_flow_t cx trace (VoidT.make reason, t2);
+          None
+        | Some (t1, _), Some (t2, _), _ ->
+          rec_flow_t cx trace (t1, t2);
+          None
+        (* If we have some property in our first object and none in our second
+         * object, but our second object is inexact then we want to make our
+         * property optional and flow that type to mixed. *)
+        | Some (t1, _), None, false ->
+          rec_flow_t cx trace (t1, MixedT.make r2);
+          Some (Field (optional t1, Neutral))
+        (* If neither object has the prop then we don't add a prop to our
+         * result here. *)
+        | None, None, _ -> None
+        (* If our first object has a prop and our second object does not have that
+         * prop then we will copy over that prop. If the first object's prop is
+         * non-own then sometimes we may not copy it over so we mark it
+         * as optional. *)
+        | Some (t, true), None, _ -> Some (Field (t, Neutral))
+        | Some (t, false), None, _ -> Some (Field (optional t, Neutral))
+      ) props1 props2 in
+      let dict = match dict1, dict2 with
+        | None, None -> None
+        | Some dict, None -> Some dict
+        | None, Some _ -> None
+        (* If our first and second objects have a dictionary then we use our first
+         * dictionary, but we make the value optional since any set of keys may have
+         * been removed. *)
+        | Some dict1, Some dict2 ->
+          rec_flow_t cx trace (dict1.value, dict2.value);
+          Some ({
+            dict_name = None;
+            key = dict1.key;
+            value = optional dict1.value;
+            dict_polarity = Neutral;
+          })
+      in
+      let flags = {
+        frozen = false;
+        sealed = Sealed;
+        exact = flags1.exact && sealed_in_op reason flags1.sealed;
+      } in
+      let id = Context.make_property_map cx props in
+      let proto = ObjProtoT r1 in
+      let t = DefT (r1, ObjT (mk_objecttype ~flags dict id proto)) in
+      (* Wrap the final type in an `ExactT` if we have an exact flag *)
+      if flags.exact then ExactT (r1, t) else t
+    in
+
+    fun state cx trace reason tout x ->
+      match state with
+      | One t ->
+        let tool = Resolve Next in
+        let state = Done x in
+        rec_flow cx trace (t, ObjKitT (reason, tool, Rest state, tout))
+      | Done base ->
+        let xs = Nel.map_concat (fun slice ->
+          Nel.map (rest cx trace reason slice) x
+        ) base in
+        let t = match xs with
+          | (x, []) -> x
+          | (x0, x1::xs) -> DefT (reason, UnionT (UnionRep.make x0 x1 xs))
+        in
+        rec_flow_t cx trace (t, tout)
+  in
+
   (*********************)
   (* Object Resolution *)
   (*********************)
 
   let next = function
   | Spread (options, state) -> object_spread options state
+  | Rest state -> object_rest state
   in
 
   (* Intersect two object slices: slice * slice -> slice

@@ -601,8 +601,6 @@ Error: MutationObserver.js:12
 
 Error: MutationObserver.js:18
  18: o.observe(); // incorrect
-     ^^^^^^^^^^^ call of method `observe`
- 18: o.observe(); // incorrect
      ^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 355: declare type MutationObserverInit = MutationObserverInitRequired & {
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s). See lib: <BUILTINS>/bom.js:355
@@ -633,8 +631,6 @@ Error: MutationObserver.js:18
 
 Error: MutationObserver.js:18
  18: o.observe(); // incorrect
-     ^^^^^^^^^^^ call of method `observe`
- 18: o.observe(); // incorrect
      ^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
                                                                         v
 355: declare type MutationObserverInit = MutationObserverInitRequired & {
@@ -646,15 +642,11 @@ Error: MutationObserver.js:18
 
 Error: MutationObserver.js:18
  18: o.observe(); // incorrect
-     ^^^^^^^^^^^ call of method `observe`
- 18: o.observe(); // incorrect
      ^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 364:     observe(target: Node, options: MutationObserverInit): void;
                          ^^^^ Node. See lib: <BUILTINS>/bom.js:364
 
 Error: MutationObserver.js:19
- 19: o.observe('invalid'); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^ call of method `observe`
  19: o.observe('invalid'); // incorrect
      ^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 355: declare type MutationObserverInit = MutationObserverInitRequired & {
@@ -685,8 +677,6 @@ Error: MutationObserver.js:19
              ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:353
 
 Error: MutationObserver.js:19
- 19: o.observe('invalid'); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^ call of method `observe`
  19: o.observe('invalid'); // incorrect
      ^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
                                                                         v
@@ -705,8 +695,6 @@ Error: MutationObserver.js:19
 
 Error: MutationObserver.js:20
  20: o.observe(div); // incorrect
-     ^^^^^^^^^^^^^^ call of method `observe`
- 20: o.observe(div); // incorrect
      ^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 355: declare type MutationObserverInit = MutationObserverInitRequired & {
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s). See lib: <BUILTINS>/bom.js:355
@@ -737,8 +725,6 @@ Error: MutationObserver.js:20
 
 Error: MutationObserver.js:20
  20: o.observe(div); // incorrect
-     ^^^^^^^^^^^^^^ call of method `observe`
- 20: o.observe(div); // incorrect
      ^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
                                                                         v
 355: declare type MutationObserverInit = MutationObserverInitRequired & {
@@ -749,8 +735,6 @@ Error: MutationObserver.js:20
      ^ object type. See lib: <BUILTINS>/bom.js:355
 
 Error: MutationObserver.js:21
- 21: o.observe(div, {}); // incorrect
-     ^^^^^^^^^^^^^^^^^^ call of method `observe`
  21: o.observe(div, {}); // incorrect
                     ^^ object literal. This type is incompatible with the expected param type of
 355: declare type MutationObserverInit = MutationObserverInitRequired & {
@@ -796,8 +780,6 @@ Error: MutationObserver.js:21
                           ^^ object literal
 
 Error: MutationObserver.js:22
- 22: o.observe(div, { subtree: true }); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `observe`
  22: o.observe(div, { subtree: true }); // incorrect
                     ^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 355: declare type MutationObserverInit = MutationObserverInitRequired & {

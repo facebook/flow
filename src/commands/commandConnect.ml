@@ -263,7 +263,7 @@ let rec connect env retries start_time tail_env =
         FlowExitStatus.(exit ~msg Server_initializing)
       end
   | Result.Error CCS.Server_rechecking ->
-      let msg = "flow is rechecking; this should not take long" in
+      let msg = "flow is rechecking" in
       if not env.quiet then Printf.eprintf
         "%s %s %s%!" msg tail_msg (Tty.spinner());
       rate_limit retries;

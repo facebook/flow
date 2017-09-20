@@ -123,8 +123,13 @@ let error_flags prev = CommandSpec.ArgSpec.(
       ~doc:"Print all errors (the default is to truncate after 50 errors)"
 )
 
+let collect_json_flags main json pretty =
+  if json || pretty then FlowExitStatus.set_json_mode ~pretty;
+  main json pretty
+
 let json_flags prev = CommandSpec.ArgSpec.(
   prev
+  |> collect collect_json_flags
   |> flag "--json" no_arg ~doc:"Output results in JSON format"
   |> flag "--pretty" no_arg ~doc:"Pretty-print JSON output (implies --json)"
 )
@@ -588,7 +593,6 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_quiet = options_flags.Options_flags.quiet;
     opt_module_name_mappers = FlowConfig.module_name_mappers flowconfig;
     opt_modules_are_use_strict = FlowConfig.modules_are_use_strict flowconfig;
-    opt_output_graphml = false;
     opt_profile = options_flags.profile;
     opt_strip_root = options_flags.strip_root;
     opt_module = FlowConfig.module_system flowconfig;

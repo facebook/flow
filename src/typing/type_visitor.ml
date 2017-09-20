@@ -207,6 +207,7 @@ class ['a] t = object(self)
   | ElementType t -> self#type_ cx acc t
   | Bind t -> self#type_ cx acc t
   | SpreadType (_, ts) -> self#list (self#type_ cx) acc ts
+  | RestType t -> self#type_ cx acc t
   | CallType args -> self#list (self#type_ cx) acc args
   | TypeMap (TupleMap t | ObjectMap t | ObjectMapi t) -> self#type_ cx acc t
 
@@ -469,6 +470,11 @@ class ['a] t = object(self)
           acc object_spread_acc
         in
         acc
+      | Rest state ->
+        let open Object.Rest in
+        (match state with
+          | One t -> self#type_ cx acc t
+          | Done o -> Nel.fold_left (self#object_kit_slice cx) acc o)
     in
     let acc = self#type_ cx acc tout in
     acc

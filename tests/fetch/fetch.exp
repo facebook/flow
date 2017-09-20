@@ -22,8 +22,6 @@ Error: fetch.js:25
 
 Error: headers.js:3
   3: const a = new Headers("'Content-Type': 'image/jpeg'"); // not correct
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
-  3: const a = new Headers("'Content-Type': 'image/jpeg'"); // not correct
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with the expected param type of
 880:     constructor(init?: HeadersInit): void;
                             ^^^^^^^^^^^ union: Headers | object type. See lib: <BUILTINS>/bom.js:880
@@ -45,8 +43,6 @@ Error: headers.js:3
                                     ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:873
 
 Error: headers.js:4
-  4: const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
   4: const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
 880:     constructor(init?: HeadersInit): void;
@@ -70,15 +66,11 @@ Error: headers.js:4
 
 Error: headers.js:9
   9: e.append('Content-Type'); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`
-  9: e.append('Content-Type'); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 881:     append(name: string, value: string): void;
                                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:881
 
 Error: headers.js:10
- 10: e.append({'Content-Type': 'image/jpeg'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`
  10: e.append({'Content-Type': 'image/jpeg'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 881:     append(name: string, value: string): void;
@@ -92,15 +84,11 @@ Error: headers.js:10
 
 Error: headers.js:12
  12: e.set('Content-Type'); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^ call of method `set`
- 12: e.set('Content-Type'); // not correct
      ^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 888:     set(name: string, value: string): void;
                                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:888
 
 Error: headers.js:13
- 13: e.set({'Content-Type': 'image/jpeg'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`
  13: e.set({'Content-Type': 'image/jpeg'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 888:     set(name: string, value: string): void;
@@ -274,8 +262,6 @@ Error: request.js:6
 
 Error: request.js:8
   8: const f: Request = new Request({}) // incorrect
-                        ^^^^^^^^^^^^^^^ constructor call
-  8: const f: Request = new Request({}) // incorrect
                                     ^^ object literal. This type is incompatible with the expected param type of
 971:     constructor(input: RequestInfo, init?: RequestOptions): void;
                             ^^^^^^^^^^^ union: Request | URL | string. See lib: <BUILTINS>/bom.js:971
@@ -327,13 +313,6 @@ Error: request.js:26
                                     ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/bom.js:989
 
 Error: request.js:54
-                        v----------------------------------
- 54: const l: Request = new Request('http://example.org', {
- 55:   method: 'GET',
- 56:   headers: 'Content-Type: image/jpeg',
-...:
- 59: }) // incorrect - headers is string
-     -^ constructor call
                                                           v
  54: const l: Request = new Request('http://example.org', {
  55:   method: 'GET',
@@ -399,12 +378,6 @@ Error: response.js:9
                       ^^^^^^ number. See lib: <BUILTINS>/bom.js:939
 
 Error: response.js:11
-                         v-----------------------------
- 11: const f: Response = new Response("responsebody", {
- 12:     status: 404,
- 13:     headers: "'Content-Type': 'image/jpeg'"
- 14: }); // incorrect
-     -^ constructor call
                                                       v
  11: const f: Response = new Response("responsebody", {
  12:     status: 404,
@@ -436,13 +409,6 @@ Error: response.js:11
                                         ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:873
 
 Error: response.js:30
-                         v-------------
- 30: const i: Response = new Response({
- 31:     status: 404,
- 32:     headers: new Headers({
-...:
- 35: }); // incorrect
-     -^ constructor call
                                       v
  30: const i: Response = new Response({
  31:     status: 404,
@@ -581,8 +547,6 @@ Error: response.js:44
 
 Error: urlsearchparams.js:4
   4: const b = new URLSearchParams(['key1', 'value1']); // not correct
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
-  4: const b = new URLSearchParams(['key1', 'value1']); // not correct
                                    ^^^^^^^^^^^^^^^^^^ array literal. This type is incompatible with the expected param type of
 894:     constructor(query?: string | URLSearchParams): void;
                              ^^^^^^^^^^^^^^^^^^^^^^^^ union: string | URLSearchParams. See lib: <BUILTINS>/bom.js:894
@@ -604,8 +568,6 @@ Error: urlsearchparams.js:4
                                         ^^^^^^^^^^^^^^^ URLSearchParams. See lib: <BUILTINS>/bom.js:894
 
 Error: urlsearchparams.js:5
-  5: const c = new URLSearchParams({'key1': 'value1'}); // not correct
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
   5: const c = new URLSearchParams({'key1': 'value1'}); // not correct
                                    ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 894:     constructor(query?: string | URLSearchParams): void;
@@ -629,15 +591,11 @@ Error: urlsearchparams.js:5
 
 Error: urlsearchparams.js:9
   9: e.append('key1'); // not correct
-     ^^^^^^^^^^^^^^^^ call of method `append`
-  9: e.append('key1'); // not correct
      ^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 895:     append(name: string, value: string): void;
                                      ^^^^^^ string. See lib: <BUILTINS>/bom.js:895
 
 Error: urlsearchparams.js:10
- 10: e.append({'key1': 'value1'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`
  10: e.append({'key1': 'value1'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 895:     append(name: string, value: string): void;
@@ -651,15 +609,11 @@ Error: urlsearchparams.js:10
 
 Error: urlsearchparams.js:12
  12: e.set('key1'); // not correct
-     ^^^^^^^^^^^^^ call of method `set`
- 12: e.set('key1'); // not correct
      ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 903:     set(name: string, value: string): void;
                                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:903
 
 Error: urlsearchparams.js:13
- 13: e.set({'key1': 'value1'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`
  13: e.set({'key1': 'value1'}); // not correct
      ^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
 903:     set(name: string, value: string): void;

@@ -24,9 +24,6 @@ let parse_content file content =
   }) in
   Parser_flow.program_file ~fail:false ~parse_options content (Some file)
 
-let calc_requires ast =
-  Require.program ~ast
-
 let array_of_list f lst =
   Array.of_list (List.map f lst)
 
@@ -99,7 +96,6 @@ let stub_metadata ~root ~checked = { Context.
   local_metadata = { Context.
     checked;
     munge_underscores = false;
-    output_graphml = false;
     verbose = None;
     weak = false;
     jsx = None;
@@ -164,15 +160,15 @@ let infer_and_merge ~root filename ast =
   Flow_js.Cache.clear();
   let metadata = stub_metadata ~root ~checked:true in
   let master_cx = get_master_cx root in
-  let require_loc_map = calc_requires ast in
+  let file_sig = File_sig.program ~ast in
+  let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
   let decls = SMap.fold (fun module_name loc ->
     List.cons (module_name, loc, Modulename.String module_name, filename)
   ) require_loc_map [] in
   let reqs = Merge_js.Reqs.({ empty with decls }) in
-  let require_loc_maps =
-    Utils_js.FilenameMap.singleton filename require_loc_map in
+  let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
   Merge_js.merge_component_strict
-    ~metadata ~lint_severities:None ~require_loc_maps
+    ~metadata ~lint_severities:None ~file_sigs
     ~get_ast_unsafe:(fun _ -> ast)
     ~get_docblock_unsafe:(fun _ -> stub_docblock)
     [filename] reqs [] master_cx

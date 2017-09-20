@@ -296,17 +296,6 @@ Error: component.js:40
            41:   {{a: 1, b: 2, c: 3}}
                   ^^^^^^^^^^^^^^^^^^ object literal
 
-Error: fun.js:16
- 16: class Fun extends React.Component<{children: Fn}, void> {}
-                                                  ^^ function type. Callable signature not found in
-                                                                   v-
-157: declare type React$Element<+ElementType: React$ElementType> = {|
-158:   +type: ElementType,
-159:   +props: React$ElementProps<ElementType>,
-...:
-162: |};
-     -^ object type. See lib: <BUILTINS>/react.js:157
-
 Error: fun.js:23
  23: <Fun />; // Error: `children` is required.
      ^^^^^^^ React element `Fun`
@@ -477,6 +466,32 @@ Error: fun.js:53
                ^^ number. This type is incompatible with
      16: class Fun extends React.Component<{children: Fn}, void> {}
                                                       ^^ function type
+
+Error: fun.js:54
+ 54: <Fun><intrinsic/></Fun>; // Error: elements are not allowed.
+     ^^^^^ React element `Fun`. This type is incompatible with
+ 16: class Fun extends React.Component<{children: Fn}, void> {}
+                                       ^^^^^^^^^^^^^^ object type
+  Property `children` is incompatible:
+     16: class Fun extends React.Component<{children: Fn}, void> {}
+                                                      ^^ function type. This type is incompatible with
+                                                                       v-
+    157: declare type React$Element<+ElementType: React$ElementType> = {|
+    158:   +type: ElementType,
+    159:   +props: React$ElementProps<ElementType>,
+    ...:
+    162: |};
+         -^ object type. See lib: <BUILTINS>/react.js:157
+      Callable property is incompatible:
+         16: class Fun extends React.Component<{children: Fn}, void> {}
+                                                          ^^ function type. Callable signature not found in
+                                                                           v-
+        157: declare type React$Element<+ElementType: React$ElementType> = {|
+        158:   +type: ElementType,
+        159:   +props: React$ElementProps<ElementType>,
+        ...:
+        162: |};
+             -^ object type. See lib: <BUILTINS>/react.js:157
 
 Error: fun.js:56
  56: <Obj />; // Error: `children` is required.
@@ -864,7 +879,7 @@ Error: fun.js:142
                                                              ^^ Fn
       Error:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                                             ^^ function type. Callable signature not found in
+                                                             ^^ function type. This type is incompatible with
                                                                          v-
       157: declare type React$Element<+ElementType: React$ElementType> = {|
       158:   +type: ElementType,
@@ -872,6 +887,16 @@ Error: fun.js:142
       ...:
       162: |};
            -^ object type. See lib: <BUILTINS>/react.js:157
+        Callable property is incompatible:
+           21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+                                                                 ^^ function type. Callable signature not found in
+                                                                             v-
+          157: declare type React$Element<+ElementType: React$ElementType> = {|
+          158:   +type: ElementType,
+          159:   +props: React$ElementProps<ElementType>,
+          ...:
+          162: |};
+               -^ object type. See lib: <BUILTINS>/react.js:157
       Member 2:
        21: class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
                                                                   ^^^^^^^^^ array type

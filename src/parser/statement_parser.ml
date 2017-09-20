@@ -735,6 +735,7 @@ module Statement
       | T_RCURLY -> (module_kind, List.rev acc)
       | _ ->
         let stmt = declare ~in_module:true env in
+        (* TODO: This is a semantic analysis and shouldn't be in the parser *)
         let module_kind = Statement.(
           let (loc, stmt) = stmt in
           match (module_kind, stmt) with

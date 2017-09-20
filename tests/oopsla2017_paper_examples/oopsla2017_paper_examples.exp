@@ -31,8 +31,6 @@ Error: example6.js:9
 
 Error: example7.js:14
  14: stringIsString({ type: "string", val: 0 }); // error
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
- 14: stringIsString({ type: "string", val: 0 }); // error
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
   9: function stringIsString(x: Correlated) {
                                 ^^^^^^^^^^ union: object type(s)
@@ -54,9 +52,14 @@ Error: example7.js:14
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Error:
    14: stringIsString({ type: "string", val: 0 }); // error
-                              ^^^^^^^^ string. Expected string literal `number`, got `string` instead
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
     7:   | { type: "number", val: number };
-                   ^^^^^^^^ string literal `number`
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+    Property `type` is incompatible:
+       14: stringIsString({ type: "string", val: 0 }); // error
+                                  ^^^^^^^^ string. Expected string literal `number`, got `string` instead
+        7:   | { type: "number", val: number };
+                       ^^^^^^^^ string literal `number`
 
 
 Found 4 errors

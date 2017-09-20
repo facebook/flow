@@ -78,15 +78,16 @@ let reqs_of_component ~options component required =
   master_cx, dep_cxs, reqs
 
 let merge_strict_context ~options component =
-  let required, require_loc_maps =
-    List.fold_left (fun (required, require_loc_maps) file ->
-      let require_loc_map = Parsing_service_js.get_requires_unsafe file in
+  let required, file_sigs =
+    List.fold_left (fun (required, file_sigs) file ->
+      let file_sig = Parsing_service_js.get_file_sig_unsafe file in
+      let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
       let required = SMap.fold (fun r loc ->
         let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
           file r in
         List.cons (r, loc, resolved_r, file)
       ) require_loc_map required in
-      required, FilenameMap.add file require_loc_map require_loc_maps
+      required, FilenameMap.add file file_sig file_sigs
     ) ([], FilenameMap.empty) component in
 
   let master_cx, dep_cxs, file_reqs =
@@ -96,7 +97,7 @@ let merge_strict_context ~options component =
   let metadata = Context.metadata_of_options options in
   let lint_severities = Some (Options.lint_severities options) in
   let cx = Merge_js.merge_component_strict
-    ~metadata ~lint_severities ~require_loc_maps
+    ~metadata ~lint_severities ~file_sigs
     ~get_ast_unsafe:Parsing_service_js.get_ast_unsafe
     ~get_docblock_unsafe:Parsing_service_js.get_docblock_unsafe
     component file_reqs dep_cxs master_cx
@@ -107,8 +108,9 @@ let merge_strict_context ~options component =
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
 let merge_contents_context options file ast info ~ensure_checked_dependencies =
-  let require_loc_map = Parsing_service_js.calc_requires ~ast in
+  let file_sig = Parsing_service_js.calc_file_sig ~ast in
   let resolved_rs, required =
+    let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
     SMap.fold (fun r loc (resolved_rs, required) ->
       let resolved_r = Module_js.imported_module
         ~options
@@ -118,7 +120,7 @@ let merge_contents_context options file ast info ~ensure_checked_dependencies =
       (r, loc, resolved_r, file) :: required
     ) require_loc_map (Modulename.Set.empty, [])
   in
-  let require_loc_maps = FilenameMap.singleton file require_loc_map in
+  let file_sigs = FilenameMap.singleton file file_sig in
 
   ensure_checked_dependencies resolved_rs;
 
@@ -135,7 +137,7 @@ let merge_contents_context options file ast info ~ensure_checked_dependencies =
   let metadata = Context.metadata_of_options options in
   let lint_severities = Some (Options.lint_severities options) in
   let cx = Merge_js.merge_component_strict
-    ~metadata ~lint_severities ~require_loc_maps
+    ~metadata ~lint_severities ~file_sigs
     ~get_ast_unsafe:(fun _ -> ast)
     ~get_docblock_unsafe:(fun _ -> info)
     component file_reqs dep_cxs master_cx
