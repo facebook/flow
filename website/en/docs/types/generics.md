@@ -380,7 +380,7 @@ type Item<T: number = 1> = {
   prop: T,
 };
 
-let foo: Item<> = { prop:1 };
+let foo: Item<> = { prop: 1 };
 let bar: Item<2> = { prop: 2 };
 ```
 
