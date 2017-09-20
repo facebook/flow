@@ -35,8 +35,6 @@ let spec = {
     |> strip_root_flag
     |> json_flags
     |> verbose_flags
-    |> flag "--graphml" no_arg
-        ~doc:"Output GraphML for checked content (<FILE>.graphml or contents.graphml)"
     |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
     |> flag "--all" no_arg ~doc:"Ignore absence of an @flow pragma"
     |> anon "filename" (optional string) ~doc:"Filename"
@@ -44,7 +42,7 @@ let spec = {
 }
 
 let main option_values root error_flags strip_root json pretty verbose
-  graphml respect_pragma all file () =
+  respect_pragma all file () =
   let file = get_file_from_filename_or_stdin file None in
   let root = guess_root (
     match root with
@@ -72,7 +70,7 @@ let main option_values root error_flags strip_root json pretty verbose
 
   let include_warnings = error_flags.Errors.Cli_output.include_warnings in
 
-  send_command oc (ServerProt.CHECK_FILE (file, verbose, graphml, all, include_warnings));
+  send_command oc (ServerProt.CHECK_FILE (file, verbose, all, include_warnings));
   let response = wait_for_response ic in
   let stdin_file = match file with
     | File_input.FileContent (None, contents) ->

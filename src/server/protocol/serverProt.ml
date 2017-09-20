@@ -17,7 +17,6 @@ type command =
 | CHECK_FILE of
     File_input.t *
     Verbose.t option *
-    bool * (* graphml *)
     bool * (* force *)
     bool (* include_warnings *)
 | COVERAGE of File_input.t * bool (* force *)

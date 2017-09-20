@@ -593,7 +593,6 @@ let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
     opt_quiet = options_flags.Options_flags.quiet;
     opt_module_name_mappers = FlowConfig.module_name_mappers flowconfig;
     opt_modules_are_use_strict = FlowConfig.modules_are_use_strict flowconfig;
-    opt_output_graphml = false;
     opt_profile = options_flags.profile;
     opt_strip_root = options_flags.strip_root;
     opt_module = FlowConfig.module_system flowconfig;

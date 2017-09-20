@@ -14,7 +14,6 @@ exception Props_not_found of Type.Properties.id
 exception Exports_not_found of Type.Exports.id
 exception Module_not_found of string
 exception Tvar_not_found of Constraint.ident
-exception Tvar_reason_not_found of Constraint.ident
 
 type env = Scope.t list
 
@@ -24,7 +23,6 @@ type cacheable_t
 type local_metadata = {
   checked: bool;
   munge_underscores: bool;
-  output_graphml: bool;
   verbose: Verbose.t option;
   weak: bool;
   jsx: Options.jsx_mode option;
@@ -83,7 +81,6 @@ val find_exports: t -> Type.Exports.id -> Type.Exports.t
 val find_require: t -> string -> Type.t
 val find_module: t -> string -> Type.t
 val find_tvar: t -> Constraint.ident -> Constraint.node
-val find_tvar_reason: t -> Constraint.ident -> Reason.t
 val mem_nominal_id: t -> Constraint.ident -> bool
 val globals: t -> SSet.t
 val graph: t -> Constraint.node IMap.t
@@ -97,7 +94,6 @@ val max_trace_depth: t -> int
 val module_kind: t -> module_kind
 val module_map: t -> Type.t SMap.t
 val module_ref: t -> string
-val output_graphml: t -> bool
 val property_maps: t -> Type.Properties.map
 val refs_table: t -> (Loc.t, Loc.t) Hashtbl.t
 val export_maps: t -> Type.Exports.map
@@ -134,7 +130,6 @@ val add_module: t -> string -> Type.t -> unit
 val add_property_map: t -> Type.Properties.id -> Type.Properties.t -> unit
 val add_export_map: t -> Type.Exports.id -> Type.Exports.t -> unit
 val add_tvar: t -> Constraint.ident -> Constraint.node -> unit
-val add_tvar_reason: t -> Constraint.ident -> Reason.t -> unit
 val add_nominal_id: t -> Constraint.ident -> unit
 val remove_all_errors: t -> unit
 val remove_all_error_suppressions: t -> unit

@@ -59,7 +59,6 @@ type t = {
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
-  opt_output_graphml: bool;
   opt_profile : bool;
   opt_lazy_mode: lazy_mode option;
   opt_quiet : bool;
@@ -102,7 +101,6 @@ let max_workers opts = opts.opt_max_workers
 let module_name_mappers opts = opts.opt_module_name_mappers
 let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
-let output_graphml opts = opts.opt_output_graphml
 let root opts = opts.opt_root
 let facebook_fbt opts = opts.opt_facebook_fbt
 let should_ignore_non_literal_requires opts =

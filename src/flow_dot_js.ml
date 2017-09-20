@@ -96,7 +96,6 @@ let stub_metadata ~root ~checked = { Context.
   local_metadata = { Context.
     checked;
     munge_underscores = false;
-    output_graphml = false;
     verbose = None;
     weak = false;
     jsx = None;

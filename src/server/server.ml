@@ -656,10 +656,9 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           autocomplete ~options ~workers ~env client_logging_context fn
         in
         marshal results
-    | ServerProt.CHECK_FILE (fn, verbose, graphml, force, include_warnings) ->
+    | ServerProt.CHECK_FILE (fn, verbose, force, include_warnings) ->
         Hh_logger.debug "Request: check %s" (File_input.filename_of_file_input fn);
         let options = { options with Options.
-          opt_output_graphml = graphml;
           opt_verbose = verbose;
           opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
         } in
