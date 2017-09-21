@@ -17,7 +17,7 @@ module Server_files = Server_files_js
 exception State_not_found
 
 module type SERVER_PROGRAM = sig
-  val init : focus_targets:Loc.filename list option -> genv -> (Profiling_js.finished * env)
+  val init : focus_targets:FilenameSet.t option -> genv -> (Profiling_js.finished * env)
   val check_once : genv -> env ->
     Errors.ErrorSet.t * (* errors *)
     Errors.ErrorSet.t * (* warnings *)
@@ -47,7 +47,7 @@ module ServerMain (Program : SERVER_PROGRAM) : sig
   val check_once :
     shared_mem_config:SharedMem_js.config ->
     client_include_warnings:bool ->
-    ?focus_targets:Loc.filename list ->
+    ?focus_targets:FilenameSet.t ->
     Options.t ->
     Profiling_js.finished *
       Errors.ErrorSet.t * (* errors *)

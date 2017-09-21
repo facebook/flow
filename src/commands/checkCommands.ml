@@ -182,10 +182,10 @@ module FocusCheckCommand = struct
 
     let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
 
-    let filenames = SSet.elements filenames in
-    let focus_targets = List.map (fun file ->
-      (Loc.SourceFile Path.(to_string (make file)))) filenames
-    in
+    let focus_targets = SSet.fold
+      (fun file acc -> FilenameSet.add (Loc.SourceFile Path.(to_string (make file))) acc)
+      filenames
+      FilenameSet.empty in
 
     let profiling, errors, warnings, suppressed_errors = Main.check_once
       ~shared_mem_config ~client_include_warnings ~focus_targets options in
