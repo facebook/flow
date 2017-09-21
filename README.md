@@ -124,7 +124,7 @@ This produces a `bin` folder containing the `flow` binary.
 In order to make the flow.js file, you first need to install js_of_ocaml:
 
 ```
-opam install -y js_of_ocaml
+opam install -y js_of_ocaml.2.8.1
 ```
 
 After that, making flow.js is easy:
