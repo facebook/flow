@@ -270,23 +270,25 @@ let pretty_num f =
   then Printf.sprintf "%d" (int_of_float f)
   else Printf.sprintf "%f" f
 
-let print_entry_stats ?record name =
+let print_entry_stats ?record ?print_raw name =
+  let print_raw = Option.value print_raw ~default:prerr_endline in
   let record = get_record record in
-  Printf.eprintf "%s stats -- " name;
+  let prefix = Printf.sprintf "%s stats --" name in
   match SMap.get name (!record) with
   | None
-  | Some { count = 0.0; _; } -> prerr_endline "NO DATA"
+  | Some { count = 0.0; _; } -> Printf.ksprintf print_raw "%s NO DATA" prefix
   | Some { count; mean; variance_sum; max; min; distribution=_; } ->
       let total = count *. mean in
       let std_dev = sqrt (variance_sum /. count) in
-      Utils.prerr_endlinef
-        "samples: %s, total: %s, avg: %s, stddev: %s, max: %s, min: %s)"
+      Printf.ksprintf print_raw
+        "%s samples: %s, total: %s, avg: %s, stddev: %s, max: %s, min: %s)"
+        prefix
         (pretty_num count) (pretty_num total) (pretty_num mean)
         (pretty_num std_dev) (pretty_num max) (pretty_num min)
 
-let print_stats ?record () =
+let print_stats ?record ?print_raw () =
   let record = get_record record in
-  SMap.iter (fun name _ -> print_entry_stats ~record name) (!record)
+  SMap.iter (fun name _ -> print_entry_stats ~record ?print_raw name) (!record)
 
 let rec print_buckets ~low ~high ~bucket_size buckets =
   if low <= high

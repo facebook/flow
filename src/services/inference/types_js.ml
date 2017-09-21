@@ -359,6 +359,7 @@ let typecheck
        recheck_map maps each file in to_merge to whether it should be rechecked
        initially.
     *)
+    Hh_logger.info "to_merge: %s" (CheckedSet.debug_counts_to_string to_merge);
     Hh_logger.info "Calculating dependencies";
     let dependency_graph, component_map =
       calc_deps ~options ~profiling ~workers (CheckedSet.all to_merge |> FilenameSet.elements) in
@@ -411,7 +412,10 @@ let typecheck
         merge_errors, suppressions, severity_cover_set
     in
 
-    CheckedSet.union unchanged_checked to_merge,
+    let checked = CheckedSet.union unchanged_checked to_merge in
+    Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked);
+
+    checked,
     { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set }
 
   | None ->
@@ -581,35 +585,51 @@ let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_se
     ) (true, local_errors, suppressions, severity_cover_set) lib_files
   )
 
-let files_to_infer ~workers ~focus_targets parsed_list =
-  match focus_targets with
-  | None -> CheckedSet.of_focused_list parsed_list
-  | Some focus_targets ->
-    List.fold_left (fun checked f ->
-      if Module_js.is_tracked_file f (* otherwise, f is probably a directory *)
-        && Module_js.checked_file ~audit:Expensive.warn f
-      then
-        (* Calculate the set of files to check. This set includes not only the
-           files to be "rechecked", which is f and all its dependents, but also
-           the dependencies of such files since they may not already be
-           checked. *)
-        let { Module_js.module_name; _ } = Module_js.get_info_unsafe ~audit:Expensive.warn f in
-        let all_dependent_files, _ = Dep_service.dependent_files workers
-          ~unchanged:(FilenameSet.(remove f (of_list parsed_list)))
-          ~new_or_changed:(FilenameSet.singleton f)
-          (* TODO: isn't it possible that _module is not provided by f? *)
-          ~changed_modules:(Modulename.Set.singleton module_name) in
-        let dependency_graph = Dep_service.calc_dependency_graph workers parsed_list in
-        let roots = FilenameSet.add f all_dependent_files in
-        let dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
-        CheckedSet.add
-          ~focused:(FilenameSet.singleton f)
-          ~dependents:all_dependent_files
-          ~dependencies
-          checked
-      else (* terminate *)
-        checked
-    ) CheckedSet.empty focus_targets
+(* Given a set of focused files and a set of parsed files, calculate all the dependents and
+ * dependencies and return them as a CheckedSet
+ *
+ * This is pretty darn expensive for large repos (on the order of a few seconds). What is taking
+ * all that time?
+ *
+ * - Around 75% of the time is dependent_files looking up the dependents
+ * - Around 20% of the time is calc_dependency_graph building the dependency graph
+ **)
+let focused_files_to_infer ~workers ~focused ~parsed =
+  let dependency_graph = Dep_service.calc_dependency_graph workers (FilenameSet.elements parsed) in
+
+  let focused = focused |> FilenameSet.filter (fun f ->
+    Module_js.is_tracked_file f (* otherwise, f is probably a directory *)
+    && Module_js.checked_file ~audit:Expensive.warn f)
+  in
+
+  let changed_modules = FilenameSet.fold (fun f changed_modules ->
+    let { Module_js.module_name; _ } = Module_js.get_info_unsafe ~audit:Expensive.warn f in
+    Modulename.Set.add module_name changed_modules
+  ) focused Modulename.Set.empty in
+
+  let unchanged = FilenameSet.diff parsed focused in
+
+  let dependents, _ = Dep_service.dependent_files workers
+    ~unchanged
+    ~new_or_changed:focused
+    (* TODO: (glevi) T21987218 isn't it possible that _module is not provided by f? *)
+    ~changed_modules
+  in
+
+  let roots = FilenameSet.union focused dependents in
+  let dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
+
+  CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty
+
+let files_to_infer ~options ~workers ~focused ~profiling ~parsed =
+  with_timer ~options "FilesToInfer" profiling (fun () ->
+    match focused with
+    | None ->
+      CheckedSet.add ~focused:parsed CheckedSet.empty
+    | Some focused ->
+      focused_files_to_infer ~workers ~focused ~parsed
+
+  )
 
 (* We maintain the following invariant across rechecks: The set of
    `files` contains files that parsed successfully in the previous
@@ -895,11 +915,13 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
         | SourceFile fn | LibFile fn | JsonFile fn | ResourceFile fn -> SSet.mem fn opened_files
         | Builtins -> false) freshparsed
     in
-    let focus_targets = Some (FilenameSet.union old_focused open_in_ide |> FilenameSet.elements) in
+    let focused = FilenameSet.union old_focused open_in_ide in
+    let updated_checked_files = focused_files_to_infer ~workers ~focused ~parsed in
 
-    let updated_checked_files = files_to_infer ~workers ~focus_targets parsed_list in
     let infer_input =
       CheckedSet.filter ~f:(fun fn -> FilenameSet.mem fn freshparsed) updated_checked_files in
+
+
 
     (* It's possible that all_dependent_files contains foo.js, which is a dependent of a dependency.
      * That's fine if foo.js is a focused file or a transitive dependent of a focused file. But if
@@ -1034,7 +1056,8 @@ let init ~profiling ~workers options =
   parsed, libs, libs_ok, errors
 
 let full_check ~profiling ~options ~workers ~focus_targets ~should_merge parsed errors =
-  let infer_input = files_to_infer ~workers ~focus_targets parsed in
+  let infer_input = files_to_infer
+    ~options ~workers ~focused:focus_targets ~profiling ~parsed:(FilenameSet.of_list parsed) in
   typecheck
     ?serve_ready_clients:None
     ~options

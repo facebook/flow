@@ -9,6 +9,18 @@
 
 const versionCache = {};
 
+const TRY_LIB_CONTENTS = `
+declare type $JSXIntrinsics = {
+  [string]: {
+    instance: any,
+    props: {
+      children?: React$Node,
+      [key: string]: any,
+    },
+  },
+};
+`.slice(1);
+
 function get(url) {
   return new Promise(function(resolve, reject) {
     var req = new XMLHttpRequest();
@@ -56,7 +68,8 @@ export function load(version) {
       contents.forEach(function(nameAndContent) {
         self.flow.registerFile(nameAndContent[0], nameAndContent[1]);
       });
-      self.flow.setLibs(libs);
+      self.flow.registerFile('try-lib.js', TRY_LIB_CONTENTS);
+      self.flow.setLibs([...libs, 'try-lib.js']);
       versionCache[version] = self.flow;
       return flow;
     })

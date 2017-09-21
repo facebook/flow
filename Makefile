@@ -17,7 +17,7 @@ else
   UNAME_S=$(shell uname -s)
 endif
 
--include facebook/Makefile
+-include facebook/Makefile.defs
 
 ################################################################################
 #                              OS-dependent stuff                              #
@@ -355,3 +355,5 @@ flow.docdir/index.html: flow.odocl
 	ocamlbuild $(INCLUDE_OPTS) -use-ocamlfind flow.docdir/index.html
 
 doc: flow.docdir/index.html
+
+-include facebook/Makefile

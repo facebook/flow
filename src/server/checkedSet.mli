@@ -34,3 +34,4 @@ val dependents: t -> Utils_js.FilenameSet.t
 val dependencies: t -> Utils_js.FilenameSet.t
 
 val debug_to_string: t -> string
+val debug_counts_to_string: t -> string

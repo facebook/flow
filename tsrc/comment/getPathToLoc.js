@@ -2,7 +2,7 @@
 
 import type {FlowLoc} from '../flowResult';
 
-type PathNode = {
+export type PathNode = {
   ast: Object,
   key: string,
 };

@@ -10,8 +10,6 @@
 
 (* See exactCover.mli for a high-level explanation. *)
 
-module SpanMap = Span.SpanMap
-
 exception Uncovered of string
 
 (* A builder is a sorted list of non-overlapping, non-empty, adjacent ranges,

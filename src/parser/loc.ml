@@ -47,6 +47,10 @@ let btwn_exclusive loc1 loc2 = {
   _end = loc2.start;
 }
 
+let string_of_filename = function
+  | LibFile x | SourceFile x | JsonFile x | ResourceFile x -> x
+  | Builtins -> "(global)"
+
 (* Returns the position immediately before the start of the given loc. If the
    given loc is at the beginning of a line, return the position of the first
    char on the same line. *)
@@ -68,22 +72,7 @@ let first_char loc =
   let _end = {start with column = start.column + 1; offset = start.offset + 1} in
   {loc with _end}
 
-let pos_cmp a b =
-  let k = a.line - b.line in if k = 0 then a.column - b.column else k
-
-(* Returns true if loc1 entirely overlaps loc2 *)
-let contains loc1 loc2 =
-  let start_cmp = pos_cmp loc1.start loc2.start in
-  let end_cmp = pos_cmp loc1._end loc2._end in
-  loc1.source = loc2.source &&
-  start_cmp <= 0 &&
-  end_cmp >= 0
-
-let string_of_filename = function
-  | LibFile x | SourceFile x | JsonFile x | ResourceFile x -> x
-  | Builtins -> "(global)"
-
-let compare =
+let source_cmp =
   (* builtins, then libs, then source and json files at the same priority since
      JSON files are basically source files. We don't actually read resource
      files so they come last *)
@@ -94,23 +83,43 @@ let compare =
   | JsonFile _ -> 3
   | ResourceFile _ -> 4
   in
-  let source_cmp a b =
-    match a, b with
-    | Some _, None -> -1
-    | None, Some _ -> 1
-    | None, None -> 0
-    | Some fn1, Some fn2 ->
-      let k = (order_of_filename fn1) - (order_of_filename fn2) in
-      if k <> 0 then k
-      else String.compare (string_of_filename fn1) (string_of_filename fn2)
-  in
-  fun loc1 loc2 ->
-    let k = source_cmp loc1.source loc2.source in
-    if k = 0 then
-      let k = pos_cmp loc1.start loc2.start in
-      if k = 0 then pos_cmp loc1._end loc2._end
-      else k
+  fun a b -> match a, b with
+  | Some _, None -> -1
+  | None, Some _ -> 1
+  | None, None -> 0
+  | Some fn1, Some fn2 ->
+    let k = (order_of_filename fn1) - (order_of_filename fn2) in
+    if k <> 0 then k
+    else String.compare (string_of_filename fn1) (string_of_filename fn2)
+
+let pos_cmp a b =
+  let k = a.line - b.line in if k = 0 then a.column - b.column else k
+
+(**
+ * If `a` spans (completely contains) `b`, then returns 0.
+ * If `b` starts before `a` (even if it ends inside), returns < 0.
+ * If `b` ends after `a` (even if it starts inside), returns > 0.
+ *)
+let span_compare a b =
+  let k = source_cmp a.source b.source in
+  if k = 0 then
+    let k = pos_cmp a.start b.start in
+    if k <= 0 then
+      let k = pos_cmp a._end b._end in
+      if k >= 0 then 0 else -1
+    else 1
+  else k
+
+(* Returns true if loc1 entirely overlaps loc2 *)
+let contains loc1 loc2 = span_compare loc1 loc2 = 0
+
+let compare loc1 loc2 =
+  let k = source_cmp loc1.source loc2.source in
+  if k = 0 then
+    let k = pos_cmp loc1.start loc2.start in
+    if k = 0 then pos_cmp loc1._end loc2._end
     else k
+  else k
 
 (**
  * This is mostly useful for debugging purposes.

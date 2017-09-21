@@ -9,8 +9,6 @@
  *)
 
 open Utils_js
-open Span
-
 
 (**************************)
 
@@ -19,7 +17,7 @@ let unwrap_comment = Ast.Comment.(function
 )
 
 let add_comment start _end cloc cstr cmap =
-  let span = make_span start _end in
+  let span = { Loc.none with Loc.start; _end } in
   SpanMap.add span (cloc, cstr) cmap
 
 let make_comment_map progspan = function

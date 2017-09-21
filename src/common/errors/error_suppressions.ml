@@ -13,7 +13,6 @@
  *)
 
 open Severity
-open Span
 open Utils_js
 
 type error_suppressions = Loc.LocSet.t SpanMap.t

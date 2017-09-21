@@ -1,5 +1,5 @@
 [ignore]
-<PROJECT_ROOT>/tmp*
+<PROJECT_ROOT>/other_root/other_root_dependent\.js$
 
 [options]
 all=false

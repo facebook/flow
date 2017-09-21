@@ -9,7 +9,7 @@ let rec mkdtemp ~retries =
     let name = Random_id.(short_string_with_alphabet alphanumeric_alphabet) in
     let tmp_dir = Path.concat tmp_dir name in
     try
-      let () = Unix.mkdir (Path.to_string tmp_dir) 0o740 in
+      let () = Sys_utils.mkdir_p (Path.to_string tmp_dir) in
       tmp_dir
     with
     | Unix.Unix_error _ ->

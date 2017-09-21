@@ -4,6 +4,60 @@ Error: issue-1462-i.js:21
  16: function print(x: number) {
                        ^^^^^^ number
 
+Error: issue-824.js:21
+ 21:     return this.foo(p);
+                         ^ intersection type. This type is incompatible with the expected param type of
+ 10:   static foo(p: K): bool {
+                     ^ union: B | C
+  Member 1:
+    3: type K = B | C;
+                ^ B
+  Error:
+   21:     return this.foo(p);
+                           ^ intersection. This type is incompatible with
+    3: type K = B | C;
+                ^ B
+    Member 1:
+     13:   static bar(p: I & K): bool {
+                         ^ I
+    Error:
+     13:   static bar(p: I & K): bool {
+                         ^ object type. This type is incompatible with
+      3: type K = B | C;
+                  ^ B
+    Member 2:
+     13:   static bar(p: I & K): bool {
+                             ^ K
+    Error:
+     13:   static bar(p: I & K): bool {
+                             ^ C. This type is incompatible with
+      3: type K = B | C;
+                  ^ B
+  Member 2:
+    3: type K = B | C;
+                    ^ C
+  Error:
+   21:     return this.foo(p);
+                           ^ intersection. This type is incompatible with
+    3: type K = B | C;
+                    ^ C
+    Member 1:
+     13:   static bar(p: I & K): bool {
+                         ^ I
+    Error:
+     13:   static bar(p: I & K): bool {
+                         ^ object type. This type is incompatible with
+      3: type K = B | C;
+                      ^ C
+    Member 2:
+     13:   static bar(p: I & K): bool {
+                             ^ K
+    Error:
+     13:   static bar(p: I & K): bool {
+                             ^ B. This type is incompatible with
+      3: type K = B | C;
+                      ^ C
+
 Error: test1.js:39
  39: const fun_result = fun(() => "");
                             ^^^^^^^^ function. Could not decide which case to select
@@ -356,4 +410,4 @@ Error: test9.js:12
                   ^ null. The operand of an arithmetic operation must be a number.
 
 
-Found 25 errors
+Found 26 errors

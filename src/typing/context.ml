@@ -445,7 +445,7 @@ let merge_into cx cx_other =
   set_export_maps cx (
     Type.Exports.Map.union (export_maps cx_other) (export_maps cx));
   set_evaluated cx (IMap.union (evaluated cx_other) (evaluated cx));
-  set_type_graph cx (Graph_explorer.union_finished (type_graph cx_other) (type_graph cx));
+  set_type_graph cx (Graph_explorer.union (type_graph cx_other) (type_graph cx));
   set_all_unresolved cx (IMap.union (all_unresolved cx_other) (all_unresolved cx));
   set_globals cx (SSet.union (globals cx_other) (globals cx));
   set_graph cx (IMap.union (graph cx_other) (graph cx));

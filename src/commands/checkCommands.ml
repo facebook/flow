@@ -135,6 +135,7 @@ module FocusCheckCommand = struct
         |> shm_flags
         |> ignore_version_flag
         |> from_flag
+        |> root_flag
         |> flag "--input-file" string
           ~doc:("File containing list of files to transform, one per line. If -, list of files is "^
             "read from the standard input.")
@@ -144,21 +145,26 @@ module FocusCheckCommand = struct
       "Usage: %s focus-check [OPTION]... [FILES/DIRS]\n\n\
         EXPERIMENTAL: Does a focused Flow check on the input files/directories (and each of their \
         dependents and dependencies) and prints the results.\n\n\
-        Flow will search upward for a .flowconfig file, at the first file specified.\n\
-        If no file is specified, a focus check is ran on the current directory.\n"
+        If --root is not specified, Flow will search upward for a .flowconfig file from the first \
+        file or dir in FILES/DIR.\n\
+        If --root is not specified and FILES/DIR is omitted, a focus check is ran on the current \
+        directory.\n"
         exe_name;
   }
 
   let main
       error_flags include_suppressed options_flags json pretty
-      shm_flags ignore_version from input_file filenames
+      shm_flags ignore_version from root input_file filenames
       () =
 
     let filenames = get_filenames_from_input input_file filenames in
-    let file_opt = match filenames with
-    | [] -> None
-    | x::_ -> Some x in
-    let root = CommandUtils.guess_root file_opt in
+
+    (* If --root is explicitly set, then use that as the root. Otherwise, use the first file *)
+    let root = CommandUtils.guess_root (
+      if root <> None
+      then root
+      else match filenames with [] -> None | x::_ -> Some x
+    ) in
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
     let options = make_options ~flowconfig ~lazy_mode:None ~root options_flags in
 
@@ -176,10 +182,10 @@ module FocusCheckCommand = struct
 
     let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
 
-    let filenames = SSet.elements filenames in
-    let focus_targets = List.map (fun file ->
-      (Loc.SourceFile Path.(to_string (make file)))) filenames
-    in
+    let focus_targets = SSet.fold
+      (fun file acc -> FilenameSet.add (Loc.SourceFile Path.(to_string (make file))) acc)
+      filenames
+      FilenameSet.empty in
 
     let profiling, errors, warnings, suppressed_errors = Main.check_once
       ~shared_mem_config ~client_include_warnings ~focus_targets options in
