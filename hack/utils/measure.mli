@@ -30,7 +30,7 @@ val get_sum: ?record:record -> string -> float option
 val get_mean: ?record:record -> string -> float option
 val get_count: ?record:record -> string -> float option
 
-val print_entry_stats: ?record:record -> string -> unit
-val print_stats: ?record:record -> unit -> unit
+val print_entry_stats: ?record:record -> ?print_raw:(string -> unit) -> string -> unit
+val print_stats: ?record:record -> ?print_raw:(string -> unit) -> unit -> unit
 val print_entry_distribution: ?record:record -> string -> unit
 val print_distributions: ?record:record -> unit -> unit
