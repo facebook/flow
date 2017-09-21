@@ -24,6 +24,7 @@ module Unix = struct
   let getcwd () = Disk.getcwd ()
   let chdir = Disk.chdir
   let mkdir = Disk.mkdir
+  let rename = Disk.rename
 end
 
 module Sys = struct
@@ -31,4 +32,6 @@ module Sys = struct
   let getcwd () = Disk.getcwd ()
   let chdir = Disk.chdir
   let is_directory = Disk.is_directory
+  let rename = Disk.rename
+  let file_exists = Disk.file_exists
 end

@@ -33,6 +33,16 @@ let is_directory x =
   | Sys_error _ ->
     false
 
+let file_exists = Sys.file_exists
 let getcwd = Sys.getcwd
 let chdir = Sys.chdir
 let mkdir = Unix.mkdir
+let rename old target =
+  if not (file_exists old) then
+    raise (No_such_file_or_directory old)
+  else if not (file_exists (Filename.dirname target)) then
+    raise (No_such_file_or_directory (Filename.dirname target))
+  else
+    try Sys.rename old target with
+    | Sys_error s when s = "Directory not empty" ->
+      raise (Rename_target_dir_not_empty target)

@@ -6,6 +6,8 @@ module Hashtbl = struct
   let find_opt t x = try Some (find t x) with
   | Not_found ->
     None
+
+  let empty t = (length t) = 0
 end;;
 
 
@@ -132,6 +134,16 @@ let is_directory x =
 
 let cat = get
 
+let file_exists x =
+  try
+    match get_file x root with
+    | Actual_file_with_contents _
+    | Directory _ ->
+      true
+  with
+  | No_such_file_or_directory _ ->
+    false
+
 let write_file ~file ~contents = set ~create_parent_dirs:false file contents
 
 let mkdir path _perm =
@@ -139,3 +151,24 @@ let mkdir path _perm =
   ignore (mkdir_p (Filename.basename path) parent)
 
 let mkdir_p path = ignore (mkdir_p path root)
+
+let rename old target =
+  if not (file_exists old) then
+    raise (No_such_file_or_directory old)
+  else if not (file_exists (Filename.dirname target)) then
+    raise (No_such_file_or_directory (Filename.dirname target))
+  else
+    let old_parent = get_dir (Filename.dirname old) root in
+    let old_file = get_file old root in
+    (** What if the last character in target is a "/"? What to do? *)
+    let target_parent = get_dir (Filename.dirname target) root in
+    match old_file, Hashtbl.find_opt target_parent (Filename.basename target) with
+    | Directory _, Some (Directory target_files) when not (Hashtbl.empty target_files) ->
+      raise (Rename_target_dir_not_empty target)
+    | Directory _, Some (Directory _)
+    | _, None ->
+      (** Rename one directory to the other. *)
+      Hashtbl.replace target_parent (Filename.basename target) old_file;
+      Hashtbl.remove old_parent (Filename.basename old);
+    | _, _ ->
+      failwith "Not sure what to do here"
