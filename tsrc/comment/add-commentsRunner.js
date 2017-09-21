@@ -15,6 +15,7 @@ import {
 import getPathToLoc from './getPathToLoc';
 import getFlowErrors from './getFlowErrors';
 
+import type {PathNode} from './getPathToLoc';
 import type {Args} from './add-commentsCommand';
 import type {FlowLoc, FlowError, FlowMessage} from '../flowResult';
 
@@ -671,7 +672,7 @@ async function addCommentsToSource(
   return commentCount;
 }
 
-function addCommentToCode(comment: string, code: string, loc: FlowLoc, path): string {
+function addCommentToCode(comment: string, code: string, loc: FlowLoc, path: Array<PathNode>): string {
   /* First of all, we want to know if we can add a comment to the line before
    * the error. So we need to see if we're in a JSX children block or inside a
    * template string when we reach the line with the error */
