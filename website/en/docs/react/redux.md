@@ -127,36 +127,45 @@ function bar(value: boolean): BarAction {
 ##### Typing Redux thunk actions <a class="toc" id="toc-typing-redux-thunk-actions" href="#toc-typing-redux-thunk-actions"></a>
 
 In order to type your Redux [thunk actions](http://redux.js.org/docs/advanced/AsyncActions.html#async-action-creators),
-you'll add types for `ThunkAction` as a function `Dispatch`, and `GetState`. `GetState` is a function that returns an `Object`. `Dispatch` accepts a disjoint union of `Action`, `ThunkAction`, `PromiseAction` and `Array<Action>` and can return `any`.
+you'll add types for `ThunkAction` as a function `Dispatch`, and `GetState`. `GetState` is a function that returns `State`.
+`Dispatch` is an intersection of several dispatch flavors: the plain version, the version that works for thunks,
+and the version that works for Promises. Of course you can define only the ones you need.
 
 ```js
-type Dispatch = (action: Action | ThunkAction | PromiseAction) => any;
+import type { Store } from 'redux';
+
+// plain redux
+type PlainDispatch = (action: Action) => Action;
+
+// redux-thunk
+type ThunkDispatch = <R>(action: ThunkAction<R>) => R;
+type ThunkAction<R> = (dispatch: Dispatch, GetState) => R;
 type GetState = () => State;
-type ThunkAction = (dispatch: Dispatch, getState: GetState) => any;
-type PromiseAction = Promise<Action>;
+
+// redux-promise-middleware
+type PromiseDispatch = <R>(action: PromiseAction<R>) => Promise<{ value: R, action: Action }>;
+type PromiseAction<R> = { payload: Promise<R> } | { payload: { promise: Promise<R> }};
+
+// Intersection of all dispatch methods
+type Dispatch = PlainDispatch & ThunkDispatch & PromiseDispatch;
+
+// This is the type of our Redux Store
+type AppStore = Store<State, Action, Dispatch>;
 ```
 
-Then to type a thunk action creator, add a return type of a `ThunkAction` to your action creator.
+Then to type a thunk action creator, add a return type of a `ThunkAction` to your action creator
+with the appropriate specialization.
 
 ```js
-type Action =
-  | { type: "FOO", foo: number }
-  | { type: "BAR", bar: boolean };
-
-type GetState = () => State;
-type PromiseAction = Promise<Action>;
-type ThunkAction = (dispatch: Dispatch, getState: GetState) => any;
-type Dispatch = (action: Action | ThunkAction | PromiseAction | Array<Action>) => any;
-
-
-function foo(): ThunkAction {
+function foo(): ThunkAction<string> {
   return (dispatch, getState) => {
-    const baz = getState().baz
-    dispatch({ type: "BAR", bar: true })
-    doSomethingAsync(baz)
+    const baz = getState().baz;
+    dispatch({ type: "BAR", bar: true });
+    return doSomethingAsync(baz)
       .then(value => {
-        dispatch({ type: "FOO", foo: value })
-      })
+        dispatch({ type: "FOO", foo: value });
+        return value;
+      });
     }
 }
 ```
