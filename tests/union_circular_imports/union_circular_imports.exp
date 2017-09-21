@@ -1,0 +1,24 @@
+Error: two.js:4
+  4: const x: Two = false;
+                    ^^^^^ boolean. This type is incompatible with
+  4: const x: Two = false;
+              ^^^ union: string | One
+  Member 1:
+    3: export type Two = string | One;
+                         ^^^^^^ string
+  Error:
+    4: const x: Two = false;
+                      ^^^^^ boolean. This type is incompatible with
+    3: export type Two = string | One;
+                         ^^^^^^ string
+  Member 2:
+    3: export type Two = string | One;
+                                  ^^^ One
+  Error:
+    4: const x: Two = false;
+                      ^^^^^ boolean. This type is incompatible with
+    3: export type Two = string | One;
+                                  ^^^ number
+
+
+Found 1 error

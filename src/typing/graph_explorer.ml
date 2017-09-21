@@ -80,16 +80,22 @@ let new_graph finished = {
   finished;
 }
 
-(* Merge finished from other_graph to graph.
-
-   We don't care about merging explored_nodes and unexplored_nodes from
+(* When other_graph belongs to a dependency, merge finished from other_graph to
+   graph.  We don't care about merging explored_nodes and unexplored_nodes from
    other_graph, since those were local to other_graph and should have been
    cleared in any case to optimize space. On the other hand, we do care about
    preserving the explored_nodes and unexplored_nodes in graph, since they may
    still be in use.
+
+   When other_graph does *not* belong to a dependency (instead, it belongs to a
+   file in the same cycle as graph), we need to merge explored_nodes and
+   unexplored_nodes as well.
 *)
-let union_finished other_graph graph =
-  { graph with finished = ISet.union other_graph.finished graph.finished }
+let union other_graph graph =
+  { finished = ISet.union other_graph.finished graph.finished;
+    unexplored_nodes = IMap.union other_graph.unexplored_nodes graph.unexplored_nodes;
+    explored_nodes = IMap.union other_graph.explored_nodes graph.explored_nodes;
+  }
 
 let find_unexplored id graph =
   IMap.find_unsafe id graph.unexplored_nodes
