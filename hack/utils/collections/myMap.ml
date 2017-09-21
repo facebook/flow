@@ -27,6 +27,8 @@ module Make(Ord: Map.OrderedType) : S with type key = Ord.t = struct
   let equal x y = compare x y = 0
 
   let keys m = fold (fun k _ acc -> k :: acc) m []
+  let ordered_keys m = List.map fst (bindings m)
+
   let values m = fold (fun _ v acc -> v :: acc) m []
   let elements m = fold (fun k v acc -> (k,v)::acc) m []
 
