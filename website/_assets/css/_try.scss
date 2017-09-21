@@ -66,10 +66,13 @@ html.site-fullscreen .content {
       padding: 7px 15px;
     }
 
+    .right {
+      padding-right: 5px;
+      float: right;
+    }
+
+    .keymap,
     .version {
-      position: absolute;
-      right: 5px;
-      top: 0px;
       line-height: 36px;
     }
   }

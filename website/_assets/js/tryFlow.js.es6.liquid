@@ -272,7 +272,8 @@ function createEditor(
     'codemirror/addon/lint/lint',
     'codemirror/mode/javascript/javascript',
     'codemirror/mode/xml/xml',
-    'codemirror/mode/jsx/jsx'
+    'codemirror/mode/jsx/jsx',
+    'codemirror/keymap/vim',
   ], function() {
     const location = window.location;
 
@@ -321,8 +322,23 @@ function createEditor(
       }
     );
     const versionTabNode = document.createElement('li');
-    versionTabNode.className = "version";
+    versionTabNode.className = "right version";
     versionTabNode.appendChild(versionSelector);
+
+    const keymapSelector = document.createElement('select');
+    ['default', 'vim'].forEach(
+      function(keymap) {
+        const option = document.createElement('option');
+        option.value = keymap;
+        option.text = keymap;
+        // Set initial selection (does not need to be "reactive" to changes)
+        option.selected = keymap === 'default';
+        keymapSelector.add(option, null);
+      }
+    );
+    const keymapTabNode = document.createElement('li');
+    keymapTabNode.className = "right keymap";
+    keymapTabNode.appendChild(keymapSelector);
 
     const toolbarNode = document.createElement('ul');
     toolbarNode.className = "toolbar";
@@ -330,6 +346,7 @@ function createEditor(
     toolbarNode.appendChild(jsonTabNode);
     toolbarNode.appendChild(astTabNode);
     toolbarNode.appendChild(versionTabNode);
+    toolbarNode.appendChild(keymapTabNode);
 
     const errorsNode = document.createElement('pre');
     errorsNode.className = "errors";
@@ -436,6 +453,10 @@ function createEditor(
         removeClass(resultsNode, 'show-loading');
       });
       editor.setOption('flow', flowProxy);
+    });
+
+    keymapTabNode.addEventListener('change', function(evt) {
+      editor.setOption('keyMap', evt.target.value);
     });
   });
 }
