@@ -30,6 +30,7 @@ let spec = {
     |> include_flag
     |> root_flag
     |> json_flags
+    |> from_flag
     |> flag "--all" no_arg
       ~doc:"Even list ignored files and lib files"
     |> flag "--explain" no_arg
@@ -145,9 +146,10 @@ let concat_get_next get_nexts =
   in concat
 
 let main
-  strip_root ignore_flag include_flag root_flag json pretty all reason
+  strip_root ignore_flag include_flag root_flag json pretty from all reason
   root_or_files () =
 
+  FlowEventLogger.set_from from;
   let root = guess_root (
     match root_flag with
     | Some root -> Some root

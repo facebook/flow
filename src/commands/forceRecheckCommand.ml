@@ -26,6 +26,7 @@ let spec = {
     empty
     |> server_flags
     |> root_flag
+    |> from_flag
     |> anon "files" (required (list_of string))
         ~doc:"Specify files to recheck"
   )
@@ -56,7 +57,8 @@ let rec find_parent_that_exists path =
     else find_parent_that_exists newpath
   end
 
-let main server_flags root files () =
+let main server_flags root from files () =
+  FlowEventLogger.set_from from;
   let root = guess_root (
     match root, files with
     | Some root, _ -> Some root

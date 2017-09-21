@@ -44,6 +44,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         |> json_flags
         |> error_flags
         |> strip_root_flag
+        |> from_flag
         |> dummy false (* match --version below *)
         |> anon "root" (optional string) ~doc:"Root directory"
       )
@@ -84,6 +85,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         |> json_flags
         |> error_flags
         |> strip_root_flag
+        |> from_flag
         |> flag "--version" no_arg
             ~doc:"(Deprecated, use `flow version` instead) Print version number and exit"
         |> anon "root" (optional string) ~doc:"Root directory"
@@ -159,7 +161,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     end else
       FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries)
 
-  let main server_flags json pretty error_flags strip_root version root () =
+  let main server_flags json pretty error_flags strip_root from version root () =
+    FlowEventLogger.set_from from;
     if version then (
       prerr_endline "Warning: \
         `flow --version` is deprecated in favor of `flow version`";
