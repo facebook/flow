@@ -25,6 +25,7 @@ val contains : t -> t -> bool
 val filename_map : (string -> string) -> filename -> filename
 val string_of_filename : filename -> string
 val pos_cmp : position -> position -> int
+val span_compare : t -> t -> int
 val compare : t -> t -> int
 val to_string : ?include_source:bool -> t -> string
 val source : t -> filename option
