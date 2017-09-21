@@ -4,12 +4,12 @@ Error: main.js:4
   4: (<fbt />: number); // Error: ReactElement ~> number
                ^^^^^^ number. This type is incompatible with
                                                                    v-
-157: declare type React$Element<+ElementType: React$ElementType> = {|
-158:   +type: ElementType,
-159:   +props: React$ElementProps<ElementType>,
+158: declare type React$Element<+ElementType: React$ElementType> = {|
+159:   +type: ElementType,
+160:   +props: React$ElementProps<ElementType>,
 ...:
-162: |};
-     -^ object type. See lib: <BUILTINS>/react.js:157
+163: |};
+     -^ object type. See lib: <BUILTINS>/react.js:158
 
 
 Found 1 error

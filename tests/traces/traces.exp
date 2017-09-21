@@ -136,8 +136,8 @@ Trace:
 * path 2:
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ObjT [propTypes of React component]
-159:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [React element props] (from path 3). See lib: <BUILTINS>/react.js:159
+160:   +props: React$ElementProps<ElementType>,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [React element props] (from path 3). See lib: <BUILTINS>/react.js:160
 * path 3:
              v------------------
  10: var B = React.createClass({
@@ -164,8 +164,8 @@ Trace:
 * path 2:
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ObjT [propTypes of React component]
-159:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [React element props] (from path 3). See lib: <BUILTINS>/react.js:159
+160:   +props: React$ElementProps<ElementType>,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [React element props] (from path 3). See lib: <BUILTINS>/react.js:160
 * path 3:
              v------------------
  10: var B = React.createClass({
@@ -182,12 +182,12 @@ Error: Traces2.js:14
  14: function f(b): Element<*> {
                     ^^^^^^^^^^ object type. This type is incompatible with the expected return type of
                                                                    v-
-157: declare type React$Element<+ElementType: React$ElementType> = {|
-158:   +type: ElementType,
-159:   +props: React$ElementProps<ElementType>,
+158: declare type React$Element<+ElementType: React$ElementType> = {|
+159:   +type: ElementType,
+160:   +props: React$ElementProps<ElementType>,
 ...:
-162: |};
-     -^ object type. See lib: <BUILTINS>/react.js:157
+163: |};
+     -^ object type. See lib: <BUILTINS>/react.js:158
 Trace:
 * path 1:
  11:   propTypes: { bar: React.PropTypes.string.isRequired }
@@ -200,10 +200,10 @@ Trace:
   7:   propTypes: { foo: React.PropTypes.string.isRequired }
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(PropertyCompatibility, ObjT) [propTypes of React component] (from path 3)
 * path 3:
-159:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ OpenT [React element props]. See lib: <BUILTINS>/react.js:159
-159:   +props: React$ElementProps<ElementType>,
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(PropertyCompatibility, OpenT) [React element props] (from [not shown]). See lib: <BUILTINS>/react.js:159
+160:   +props: React$ElementProps<ElementType>,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ OpenT [React element props]. See lib: <BUILTINS>/react.js:160
+160:   +props: React$ElementProps<ElementType>,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(PropertyCompatibility, OpenT) [React element props] (from [not shown]). See lib: <BUILTINS>/react.js:160
   Property `props` is incompatible:
      11:   propTypes: { bar: React.PropTypes.string.isRequired }
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ propTypes of React component. This type is incompatible with
