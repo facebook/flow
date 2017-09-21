@@ -359,6 +359,7 @@ let typecheck
        recheck_map maps each file in to_merge to whether it should be rechecked
        initially.
     *)
+    Hh_logger.info "to_merge: %s" (CheckedSet.debug_counts_to_string to_merge);
     Hh_logger.info "Calculating dependencies";
     let dependency_graph, component_map =
       calc_deps ~options ~profiling ~workers (CheckedSet.all to_merge |> FilenameSet.elements) in
@@ -411,7 +412,10 @@ let typecheck
         merge_errors, suppressions, severity_cover_set
     in
 
-    CheckedSet.union unchanged_checked to_merge,
+    let checked = CheckedSet.union unchanged_checked to_merge in
+    Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked);
+
+    checked,
     { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set }
 
   | None ->
