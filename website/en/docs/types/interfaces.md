@@ -48,7 +48,7 @@ class.
 ```js
 // @flow
 interface Serializable {
-  serialize(): string
+  serialize(): string;
 }
 
 class Foo implements Serializable {
@@ -89,7 +89,7 @@ You can add methods to interfaces following the same syntax as object methods.
 
 ```js
 interface MyInterface {
-  method(value: string): number
+  method(value: string): number;
 }
 ```
 
@@ -100,7 +100,7 @@ properties.
 
 ```js
 interface MyInterface {
-  property: string
+  property: string;
 }
 ```
 
@@ -108,7 +108,7 @@ Interface properties can be optional as well.
 
 ```js
 interface MyInterface {
-  property?: string
+  property?: string;
 }
 ```
 
@@ -119,7 +119,7 @@ way as with objects.
 
 ```js
 interface MyInterface {
-  [key: string]: number
+  [key: string]: number;
 }
 ```
 
@@ -129,8 +129,8 @@ Interfaces can also have their own [generics](../generics/).
 
 ```js
 interface MyInterface<A, B, C> {
-  property: A,
-  method(val: B): C,
+  property: A;
+  method(val: B): C;
 }
 ```
 
@@ -140,9 +140,9 @@ When you use an interface you need to pass parameters for each of its generics.
 ```js
 // @flow
 interface MyInterface<A, B, C> {
-  foo: A,
-  bar: B,
-  baz: C,
+  foo: A;
+  bar: B;
+  baz: C;
 }
 
 var val: MyInterface<number, boolean, string> = {
@@ -162,8 +162,8 @@ can add modifiers to make them covariant (read-only) or contravariant
 
 ```js
 interface MyInterface {
-  +covariant: number,     // read-only
-  -contravariant: number  // write-only
+  +covariant: number;     // read-only
+  -contravariant: number; // write-only
 }
 ```
 
@@ -174,7 +174,7 @@ property name.
 
 ```js
 interface MyInterface {
-  +readOnly: number | string
+  +readOnly: number | string;
 }
 ```
 
