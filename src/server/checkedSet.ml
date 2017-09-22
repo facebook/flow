@@ -94,3 +94,12 @@ let debug_to_string =
       (checked |> focused |> string_of_set)
       (checked |> dependents |> string_of_set)
       (checked |> dependencies |> string_of_set)
+
+let debug_counts_to_string checked =
+  let focused, dependents, dependencies = FilenameMap.fold (
+    fun _ kind (focused, dependents, dependencies) -> match kind with
+    | Focused -> (focused + 1, dependents, dependencies)
+    | Dependent -> (focused, dependents + 1, dependencies)
+    | Dependency -> (focused, dependents, dependencies + 1)
+  ) checked (0, 0, 0) in
+  Printf.sprintf "Focused: %d, Dependents: %d, Dependencies: %d" focused dependents dependencies
