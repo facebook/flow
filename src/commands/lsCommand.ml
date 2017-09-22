@@ -196,8 +196,8 @@ let main
       if reason
       then
         files
-        |> List.map normalize_filename
         |> List.map (is_included ~root ~options ~libs)
+        |> List.map (fun (f, r) -> normalize_filename f, r)
         |> json_of_files_with_explanations
       else JSON_Array (
         List.map (fun f -> JSON_String (normalize_filename f)) files

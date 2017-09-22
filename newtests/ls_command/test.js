@@ -155,22 +155,22 @@ export default suite(({addFile, flowCmd, removeFile}) => [
         `
           {
             "../other/explicitly_included.js": {
-              "explanation": "ImplicitlyIgnored"
+              "explanation": "ExplicitlyIncluded"
             },
             "../other/implicitly_ignored.js": {
               "explanation": "ImplicitlyIgnored"
             },
             "explicit_lib.js": {
-              "explanation": "ImplicitlyIgnored"
+              "explanation": "ExplicitLib"
             },
             "explicitly_ignored.js": {
-              "explanation": "ImplicitlyIgnored"
+              "explanation": "ExplicitlyIgnored"
             },
             "flow-typed/implicit_lib.js": {
-              "explanation": "ImplicitlyIgnored"
+              "explanation": "ImplicitLib"
             },
             "implicitly_included.js": {
-              "explanation": "ImplicitlyIgnored"
+              "explanation": "ImplicitlyIncluded"
             }
           }
         `,
