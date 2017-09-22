@@ -31,6 +31,7 @@ let spec = {
     |> root_flag
     |> json_flags
     |> strip_root_flag
+    |> from_flag
     |> anon "module" (required string)
         ~doc:"Module reference to resolve"
     |> anon "file" (required string)
@@ -38,7 +39,8 @@ let spec = {
   )
 }
 
-let main option_values root json pretty strip_root moduleref filename () =
+let main option_values root json pretty strip_root from moduleref filename () =
+  FlowEventLogger.set_from from;
   let root = guess_root (
     match root with Some root -> Some root | None -> Some filename
   ) in

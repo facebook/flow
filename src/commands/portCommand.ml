@@ -29,12 +29,14 @@ let spec = {
     empty
     |> server_flags
     |> root_flag
+    |> from_flag
     |> anon "files" (required (list_of string))
         ~doc:"File(s) to port"
   )
 }
 
-let main option_values root files () =
+let main option_values root from files () =
+  FlowEventLogger.set_from from;
   let root = guess_root (
     match root with
     | Some root -> Some root

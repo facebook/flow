@@ -33,6 +33,7 @@ let spec = {
     empty
     |> server_flags
     |> root_flag
+    |> from_flag
     |> flag "--protocol" (required (enum protocol_options))
         ~doc:("Indicates the protocol to be used. One of: " ^ protocol_options_string)
     |> strip_root_flag
@@ -368,7 +369,8 @@ end
 module VeryUnstableProtocol = ProtocolFunctor(VeryUnstable)
 module HumanReadableProtocol = ProtocolFunctor(HumanReadable)
 
-let main option_values root protocol strip_root () =
+let main option_values root from protocol strip_root () =
+  FlowEventLogger.set_from from;
   let root = CommandUtils.guess_root root in
   let strip_root = if strip_root then Some root else None in
   let ic, oc = connect option_values root in

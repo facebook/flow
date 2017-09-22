@@ -35,14 +35,16 @@ let spec = {
     |> strip_root_flag
     |> json_flags
     |> verbose_flags
+    |> from_flag
     |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
     |> flag "--all" no_arg ~doc:"Ignore absence of an @flow pragma"
     |> anon "filename" (optional string) ~doc:"Filename"
   )
 }
 
-let main option_values root error_flags strip_root json pretty verbose
+let main option_values root error_flags strip_root json pretty verbose from
   respect_pragma all file () =
+  FlowEventLogger.set_from from;
   let file = get_file_from_filename_or_stdin file None in
   let root = guess_root (
     match root with

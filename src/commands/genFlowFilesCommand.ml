@@ -58,6 +58,7 @@ let spec = {
     |> strip_root_flag
     |> ignore_flag
     |> include_flag
+    |> from_flag
     |> anon "src" (required string)
         ~doc:"The path to a file or directory to generate .js.flow files for"
     |> flag "--out-dir" string
@@ -87,7 +88,8 @@ let write_file strip_root root content perm src_file_path dest_file_path =
   Unix.close fd
 
 let main option_values root error_flags strip_root ignore_flag
-  include_flag src out_dir () = (
+  include_flag from src out_dir () = (
+  FlowEventLogger.set_from from;
   let src = expand_path src in
   let root = guess_root (
     match root with

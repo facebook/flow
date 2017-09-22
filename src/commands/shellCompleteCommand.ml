@@ -25,6 +25,7 @@ module Command(CommandList : COMMAND_LIST) = struct
         CommandUtils.exe_name;
     args = CommandSpec.ArgSpec.(
       empty
+      |> CommandUtils.from_flag
       |> flag "--current" (optional int)
           ~doc:"Current term in the argument list being completed."
       |> rest ~doc:"Command to complete"
@@ -58,7 +59,8 @@ module Command(CommandList : COMMAND_LIST) = struct
           )
       | _ -> "ARGUMENT"
 
-  let main current rest () =
+  let main from current rest () =
+    FlowEventLogger.set_from from;
     let current = match current with Some x -> x | None -> 0 in
     let rest = match rest with Some x -> x | None -> [] in
     if current <= 1 then (
