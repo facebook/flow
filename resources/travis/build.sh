@@ -23,6 +23,10 @@ printf "travis_fold:start:flow_check\nRunning flow check\n"
 bin/flow check
 printf "travis_fold:end:flow_check\n"
 
+printf "travis_fold:start:test_tool\nRunning tests for tool\n"
+yarn run test-tool
+printf "travis_fold:end:test_tool\n"
+
 printf "travis_fold:start:runtests\nRunning flow tests\n"
 FLOW_RUNTESTS_PARALLELISM=4 ./runtests.sh bin/flow
 printf "travis_fold:end:runtests\n"

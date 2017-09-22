@@ -289,6 +289,7 @@ copy-flow-files-ocp: build-flow-with-ocp
 do-test:
 	./runtests.sh bin/flow$(EXE)
 	bin/flow$(EXE) check
+	./node_modules/.bin/jest --config .jest-tool.config.js
 	./tool test
 
 test: build-flow copy-flow-files
