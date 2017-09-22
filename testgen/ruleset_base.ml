@@ -80,6 +80,7 @@ class ruleset_base = object(self)
   method print_env (env : env_t) : unit = print_env env
 
   method print_syntax (s : Syntax.t) : unit = Printf.printf "%s\n" (Syntax.str_of_syntax s)
+  method combine_syntax (slist : Syntax.t list) : string = Syntax.combine_syntax slist
 
   (* We have a small chance to bypass this assertion *)
   method weak_assert b =
@@ -492,6 +493,20 @@ class ruleset_base = object(self)
         (Expr ((match lit with
          | Syntax.Expr e -> e
          | _ -> failwith "Literal has to be an expr"),
+        ret_type)) in
+    let new_env = self#add_binding new_env (Type ret_type) in
+    Syntax.Empty, new_env
+
+  (* A rule for generating number literals *)
+  method rule_bool_lit (env : env_t) : (Syntax.t * env_t) =
+    let lit = Syntax.mk_literal T.Boolean in
+    let ret_type = T.Boolean in
+    let new_env =
+      self#add_binding
+        env
+        (Expr ((match lit with
+         | Syntax.Expr e -> e
+         | _ -> failwith "[rule_num_list] Literal has to be an expr"),
         ret_type)) in
     let new_env = self#add_binding new_env (Type ret_type) in
     Syntax.Empty, new_env
