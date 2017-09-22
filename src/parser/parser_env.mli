@@ -51,7 +51,7 @@ type allowed_super =
 val init_env :
   ?token_sink:(token_sink_result -> unit) option
   -> ?parse_options:parse_options option
-  -> Loc.filename option
+  -> File_key.t option
   -> string
   -> env
 
@@ -77,7 +77,7 @@ val no_anon_function_type : env -> bool
 val no_new : env -> bool
 val errors : env -> (Loc.t * Parse_error.t) list
 val parse_options : env -> parse_options
-val source : env -> Loc.filename option
+val source : env -> File_key.t option
 val should_parse_types : env -> bool
 
 (* mutators: *)

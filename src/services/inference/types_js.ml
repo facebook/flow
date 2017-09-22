@@ -17,7 +17,7 @@ open Utils_js
 let clear_errors (files: FilenameSet.t) errors =
   FilenameSet.fold
     (fun file { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set; } ->
-      Hh_logger.debug "clear errors %s" (string_of_filename file);
+      Hh_logger.debug "clear errors %s" (File_key.to_string file);
       { ServerEnv.
         local_errors = FilenameMap.remove file local_errors;
         merge_errors = FilenameMap.remove file merge_errors;
@@ -556,7 +556,7 @@ let init_package_heap ~options ~profiling parsed =
   with_timer ~options "PackageHeap" profiling (fun () ->
     FilenameSet.iter (fun filename ->
       match filename with
-      | Loc.JsonFile str when Filename.basename str = "package.json" ->
+      | File_key.JsonFile str when Filename.basename str = "package.json" ->
         let ast = Parsing_service_js.get_ast_unsafe filename in
         Module_js.add_package str ast
       | _ -> ()
@@ -654,9 +654,9 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
    * updated too. This is because sometimes we decide what foo.js.flow
    * provides based on the existence of foo.js *)
   let updates = FilenameSet.fold (fun file updates ->
-    if not (Loc.check_suffix file Files.flow_ext) &&
-      Parsing_service_js.has_ast (Loc.with_suffix file Files.flow_ext)
-    then FilenameSet.add (Loc.with_suffix file Files.flow_ext) updates
+    if not (File_key.check_suffix file Files.flow_ext) &&
+      Parsing_service_js.has_ast (File_key.with_suffix file Files.flow_ext)
+    then FilenameSet.add (File_key.with_suffix file Files.flow_ext) updates
     else updates
   ) updates updates in
 
@@ -666,7 +666,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
       state, a modified file could be any of "new," "changed," or "unchanged."
   **)
   let modified, deleted = FilenameSet.partition (fun f ->
-    Sys.file_exists (string_of_filename f)
+    Sys.file_exists (File_key.to_string f)
   ) updates in
   let deleted_count = FilenameSet.cardinal deleted in
   let modified_count = FilenameSet.cardinal modified in
@@ -678,7 +678,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
     let log_files files msg n =
       Hh_logger.info "%s files:" msg;
       let _ = FilenameSet.fold (fun f i ->
-        Hh_logger.info "%d/%d: %s" i n (string_of_filename f);
+        Hh_logger.info "%d/%d: %s" i n (File_key.to_string f);
         i + 1
       ) files 1
       in ()
@@ -927,9 +927,13 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
     let old_focused = CheckedSet.focused env.ServerEnv.checked_files in
     let open_in_ide =
       let opened_files = Persistent_connection.get_opened_files env.ServerEnv.connections in
-      FilenameSet.filter Loc.(function
-        | SourceFile fn | LibFile fn | JsonFile fn | ResourceFile fn -> SSet.mem fn opened_files
-        | Builtins -> false) freshparsed
+      FilenameSet.filter (function
+        | File_key.SourceFile fn
+        | File_key.LibFile fn
+        | File_key.JsonFile fn
+        | File_key.ResourceFile fn -> SSet.mem fn opened_files
+        | File_key.Builtins -> false
+      ) freshparsed
     in
     let focused = FilenameSet.union old_focused open_in_ide in
     let updated_checked_files = focused_files_to_infer ~workers ~focused ~parsed in
@@ -967,7 +971,7 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
       dependent_file_count := n;
 
       let _ = FilenameSet.fold (fun f i ->
-        Hh_logger.info "%d/%d: %s" i n (string_of_filename f);
+        Hh_logger.info "%d/%d: %s" i n (File_key.to_string f);
         i + 1
       ) all_dependent_files 1 in
       Hh_logger.info "Merge prep";

@@ -28,17 +28,17 @@ type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 type error =
   | ModuleDuplicateProviderError of {
     module_name: string;
-    provider: Loc.filename;
-    conflict: Loc.filename;
+    provider: File_key.t;
+    conflict: File_key.t;
   }
 
 
-val eponymous_module: filename -> Modulename.t
+val eponymous_module: File_key.t -> Modulename.t
 
 (* export and import functions for the module system *)
 val exported_module:
   options: Options.t ->
-  filename -> Docblock.t -> Modulename.t
+  File_key.t -> Docblock.t -> Modulename.t
 
 type resolution_acc = {
   mutable paths: SSet.t;
@@ -47,28 +47,28 @@ type resolution_acc = {
 val imported_module:
   options: Options.t ->
   node_modules_containers: SSet.t ->
-  filename -> Loc.t -> ?resolution_acc:resolution_acc -> string -> Modulename.t
+  File_key.t -> Loc.t -> ?resolution_acc:resolution_acc -> string -> Modulename.t
 
 val find_resolved_module:
-  (filename -> string -> Modulename.t) Expensive.t
+  (File_key.t -> string -> Modulename.t) Expensive.t
 
 val module_exists: Modulename.t -> bool
 
-val get_file_unsafe: (Modulename.t -> filename) Expensive.t
+val get_file_unsafe: (Modulename.t -> File_key.t) Expensive.t
 
 (* given a module name, returns either (Some filename) or None *)
-val get_file: (Modulename.t -> filename option) Expensive.t
+val get_file: (Modulename.t -> File_key.t option) Expensive.t
 
-val is_tracked_file: filename -> bool
+val is_tracked_file: File_key.t -> bool
 
 (* given a filename, returns resolved requires. unsafe *)
-val get_resolved_requires_unsafe: (filename -> resolved_requires) Expensive.t
+val get_resolved_requires_unsafe: (File_key.t -> resolved_requires) Expensive.t
 
 (* given a filename, returns module info *)
-val get_info_unsafe: (filename -> info) Expensive.t
-val get_info: (filename -> info option) Expensive.t
+val get_info_unsafe: (File_key.t -> info) Expensive.t
+val get_info: (File_key.t -> info option) Expensive.t
 
-val checked_file: (filename -> bool) Expensive.t
+val checked_file: (File_key.t -> bool) Expensive.t
 
 (* add module records for given files;
    returns the set of modules added
@@ -76,9 +76,9 @@ val checked_file: (filename -> bool) Expensive.t
 val introduce_files:
   Worker.t list option ->
   options: Options.t ->
-  filename list ->
-  (filename * Docblock.t) list ->
-    (Modulename.t * filename option) list
+  File_key.t list ->
+  (File_key.t * Docblock.t) list ->
+    (Modulename.t * File_key.t option) list
 
 (* remove module records being tracked for given files;
    returns the set of modules removed
@@ -87,15 +87,15 @@ val clear_files:
   Worker.t list option ->
   options:Options.t ->
   FilenameSet.t ->
-    (Modulename.t * filename option) list
+    (Modulename.t * File_key.t option) list
 
 (* repick providers for old and new modules *)
 val commit_modules:
   Worker.t list option ->
   options: Options.t ->
-  filename list ->                    (* parsed / unparsed files *)
-  (Modulename.t * filename option) list ->      (* dirty modules *)
-    Utils_js.filename list *            (* providers *)
+  File_key.t list ->                    (* parsed / unparsed files *)
+  (Modulename.t * File_key.t option) list -> (* dirty modules *)
+    File_key.t list *                   (* providers *)
     Modulename.Set.t *                  (* changed modules *)
     error list FilenameMap.t            (* filenames to error sets *)
 
@@ -103,7 +103,7 @@ val commit_modules:
 val add_parsed_resolved_requires:
   (options:Options.t ->
    node_modules_containers: SSet.t ->
-   filename -> Loc.t SMap.t -> Errors.ErrorSet.t) Expensive.t
+   File_key.t -> Loc.t SMap.t -> Errors.ErrorSet.t) Expensive.t
 (* remove resolved requires from store *)
 val remove_batch_resolved_requires: FilenameSet.t -> unit
 

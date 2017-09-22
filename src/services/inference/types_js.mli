@@ -20,8 +20,8 @@ val calc_deps:
   options:Options.t ->
   profiling:Profiling_js.running ->
   workers:Worker.t list option ->
-  filename list ->
-  FilenameSet.t FilenameMap.t * filename list FilenameMap.t
+  File_key.t list ->
+  FilenameSet.t FilenameMap.t * File_key.t list FilenameMap.t
 
 (* incremental typecheck entry point *)
 val recheck:
@@ -37,9 +37,9 @@ val full_check:
   profiling:Profiling_js.running ->
   options:Options.t ->
   workers:Worker.t list option ->
-  focus_targets:Utils_js.FilenameSet.t option ->
+  focus_targets:FilenameSet.t option ->
   should_merge:bool ->
-  filename list ->
+  File_key.t list ->
   ServerEnv.errors ->
   CheckedSet.t * ServerEnv.errors
 
@@ -48,7 +48,7 @@ val basic_check_contents:
   workers: Worker.t list option ->
   env: ServerEnv.env ref ->
   string ->               (* contents *)
-  filename ->             (* fake file-/module name *)
+  File_key.t ->           (* fake file-/module name *)
   (Profiling_js.finished *
    Context.t *
    Docblock.t,
@@ -59,6 +59,6 @@ val typecheck_contents:
   workers: Worker.t list option ->
   env: ServerEnv.env ref ->
   string ->               (* contents *)
-  filename ->             (* fake file-/module name *)
+  File_key.t ->           (* fake file-/module name *)
   Errors.ErrorSet.t *     (* errors *)
   Errors.ErrorSet.t       (* warnings *)

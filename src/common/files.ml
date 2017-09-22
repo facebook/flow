@@ -34,11 +34,11 @@ let global_file_name = "(global)"
 let flow_ext = ".flow"
 
 let has_flow_ext file =
-  Loc.check_suffix file flow_ext
+  File_key.check_suffix file flow_ext
 
 let chop_flow_ext file =
   if has_flow_ext file
-  then Some (Loc.chop_suffix file flow_ext)
+  then Some (File_key.chop_suffix file flow_ext)
   else None
 
 let is_directory path = try Sys.is_directory path with Sys_error _ -> false
@@ -272,7 +272,7 @@ let init (options: options) =
 (* Local reference to the module exported by a file. Like other local references
    to modules imported by the file, it is a member of Context.module_map. *)
 let module_ref file =
-  Loc.string_of_filename file
+  File_key.to_string file
 
 let lib_module_ref = ""
 
@@ -407,13 +407,13 @@ let relative_path =
 let get_flowtyped_path root =
   make_path_absolute root "flow-typed"
 
-(* helper: make different kinds of Loc.filename from a path string *)
+(* helper: make different kinds of File_key.t from a path string *)
 let filename_from_string ~options p =
   let resource_file_exts = options.module_resource_exts in
   match Utils_js.extension_of_filename p with
-  | Some ".json" -> Loc.JsonFile p
-  | Some ext when SSet.mem ext resource_file_exts -> Loc.ResourceFile p
-  | _ -> Loc.SourceFile p
+  | Some ".json" -> File_key.JsonFile p
+  | Some ext when SSet.mem ext resource_file_exts -> File_key.ResourceFile p
+  | _ -> File_key.SourceFile p
 
 let mkdirp path_str perm =
   let parts = Str.split dir_sep path_str in

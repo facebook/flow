@@ -9,34 +9,16 @@
  *)
 
 type position = { line : int; column : int; offset : int; }
-type filename =
-    LibFile of string
-  | SourceFile of string
-  | JsonFile of string
-  | ResourceFile of string
-  | Builtins
-type t = { source : filename option; start : position; _end : position; }
+type t = { source : File_key.t option; start : position; _end : position; }
 val none : t
 val btwn : t -> t -> t
 val btwn_exclusive : t -> t -> t
 val char_before : t -> t
 val first_char: t -> t
 val contains : t -> t -> bool
-val filename_map : (string -> string) -> filename -> filename
-val string_of_filename : filename -> string
 val pos_cmp : position -> position -> int
 val span_compare : t -> t -> int
 val compare : t -> t -> int
 val to_string : ?include_source:bool -> t -> string
-val source : t -> filename option
-val source_is_lib_file : filename -> bool
-val check_suffix : filename -> string -> bool
-val chop_suffix : filename -> string -> filename
-val with_suffix : filename -> string -> filename
-module FilenameKey :
-  sig
-    type t = filename
-    val to_string : filename -> string
-    val compare : 'a -> 'a -> int
-  end
+val source : t -> File_key.t option
 module LocSet : Set.S with type elt = t

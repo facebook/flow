@@ -697,7 +697,7 @@ let is_object_builtin_libdef (loc, name) =
   name = "Object" &&
   match Loc.source loc with
   | None -> false
-  | Some source -> Loc.source_is_lib_file source
+  | Some source -> File_key.is_lib_file source
 
 let mk_interface cx loc reason structural self = Ast.Statement.(
   fun { Interface.

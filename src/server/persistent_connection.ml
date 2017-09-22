@@ -41,9 +41,12 @@ let send_errors =
         | None -> get_first_contained warn_map filenames
     in
     fun filename warn_map ->
-      let open Loc in
-      get_first_contained warn_map
-        [SourceFile filename; LibFile filename; JsonFile filename; ResourceFile filename]
+      get_first_contained warn_map [
+        File_key.SourceFile filename;
+        File_key.LibFile filename;
+        File_key.JsonFile filename;
+        File_key.ResourceFile filename;
+      ]
   in
 
   fun ~errors ~warnings connection ->

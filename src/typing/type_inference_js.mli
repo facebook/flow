@@ -13,7 +13,7 @@ val infer_ast:
   lint_severities: Severity.severity LintSettings.t option ->
   file_sig: File_sig.t ->
   Context.t ->
-  Loc.filename ->
+  File_key.t ->
   Loc.t Ast.program ->
   unit
 (* Lint suppressions are handled iff lint_severities is Some. *)
@@ -21,6 +21,6 @@ val infer_lib_file:
   metadata: Context.metadata ->
   exclude_syms: SSet.t ->
   lint_severities: Severity.severity LintSettings.t option ->
-  Utils_js.filename ->
+  File_key.t ->
   Loc.t Ast.program ->
   Context.t * string list

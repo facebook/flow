@@ -66,7 +66,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       Error_suppressions.unused suppressions
       |> List.fold_left
         (fun warnings loc ->
-          let source_file = match Loc.source loc with Some x -> x | None -> Loc.SourceFile "-" in
+          let source_file = match Loc.source loc with Some x -> x | None -> File_key.SourceFile "-" in
           (* In lazy mode, dependencies are modules which we typecheck not because we care about
            * them, but because something important (a focused file or a focused file's dependent)
            * needs these dependencies. Therefore, we might not typecheck a dependencies' dependents.
@@ -234,7 +234,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     in
     let state = Autocomplete_js.autocomplete_set_hooks () in
     let results =
-      let path = Loc.SourceFile path in
+      let path = File_key.SourceFile path in
       Types_js.basic_check_contents ~options ~workers ~env content path >>= fun (profiling, cx, info) ->
       try_with begin fun () ->
         AutocompleteService_js.autocomplete_get_results
@@ -257,12 +257,12 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
             true
           else
             let (_, docblock) = Parsing_service_js.(
-              get_docblock docblock_max_tokens (Loc.SourceFile file) content)
+              get_docblock docblock_max_tokens (File_key.SourceFile file) content)
             in
             Docblock.is_flow docblock
         in
         if should_check then
-          let file = Loc.SourceFile file in
+          let file = File_key.SourceFile file in
           let errors, warnings = Types_js.typecheck_contents ~options ~workers ~env content file in
           convert_errors ~errors ~warnings
         else
@@ -283,7 +283,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       client_context
       (file_input, line, col, verbose, include_raw) =
     let file = File_input.filename_of_file_input file_input in
-    let file = Loc.SourceFile file in
+    let file = File_key.SourceFile file in
     File_input.content_of_file_input file_input >>= fun content ->
     let options = { options with Options.opt_verbose = verbose } in
     try_with begin fun () ->
@@ -294,7 +294,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
   let dump_types ~options ~workers ~env ~include_raw ~strip_root file_input =
     let file = File_input.filename_of_file_input file_input in
-    let file = Loc.SourceFile file in
+    let file = File_key.SourceFile file in
     File_input.content_of_file_input file_input >>= fun content ->
     try_with begin fun () ->
       Type_info_service.dump_types
@@ -303,7 +303,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
   let coverage ~options ~workers ~env ~force file_input =
     let file = File_input.filename_of_file_input file_input in
-    let file = Loc.SourceFile file in
+    let file = File_key.SourceFile file in
     File_input.content_of_file_input file_input >>= fun content ->
     try_with begin fun () ->
       Type_info_service.coverage ~options ~workers ~env ~force file content
@@ -313,7 +313,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let suggest_for_file ~options ~workers ~env result_map (file, region) =
       SMap.add file (try_with begin fun () ->
         Type_info_service.suggest ~options ~workers ~env
-          (Loc.SourceFile file) region (cat file)
+          (File_key.SourceFile file) region (cat file)
       end) result_map
     in fun ~options ~workers ~env files ->
       List.fold_left (suggest_for_file ~options ~workers ~env) SMap.empty files
@@ -323,7 +323,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
   let port = Port_service_js.port_files
 
   let find_module ~options (moduleref, filename) =
-    let file = Loc.SourceFile filename in
+    let file = File_key.SourceFile filename in
     let metadata =
       let open Context in
       let metadata = metadata_of_options options in
@@ -356,7 +356,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
               in
               (flow_files, non_flow_files, error)
             | File_input.FileName fn ->
-              let file = Loc.SourceFile fn in
+              let file = File_key.SourceFile fn in
               let checked =
                 let open Module_js in
                 match get_info file ~audit:Expensive.warn with
@@ -379,12 +379,12 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
             (* Non-@flow files *)
             let result_contents = non_flow_files |> List.map (fun file ->
-              (Loc.string_of_filename file, ServerProt.GenFlowFile_NonFlowFile)
+              (File_key.to_string file, ServerProt.GenFlowFile_NonFlowFile)
             ) in
 
             (* Codegen @flow files *)
             let result_contents = List.fold_left2 (fun results file cx ->
-              let file_path = Loc.string_of_filename file in
+              let file_path = File_key.to_string file in
               try
                 let code = FlowFileGen.flow_file cx in
                 (file_path, ServerProt.GenFlowFile_FlowFile code)::results
@@ -408,7 +408,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
      * them here for now *)
     let _ = options, workers, env in
     let filename = File_input.filename_of_file_input file_input in
-    let file = Loc.SourceFile filename in
+    let file = File_key.SourceFile filename in
     let loc = mk_loc file line col in
     let scope_info_result =
       let open Parsing_service_js in
@@ -440,7 +440,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
   let get_def ~options ~workers ~env command_context (file_input, line, col) =
     let filename = File_input.filename_of_file_input file_input in
-    let file = Loc.SourceFile filename in
+    let file = File_key.SourceFile filename in
     let loc = mk_loc file line col in
     let state = GetDef_js.getdef_set_hooks loc in
     let result =
@@ -461,7 +461,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let file_options = Options.file_options options in
     let path = Path.to_string (Path.make module_name_str) in
     if Files.is_flow_file ~options:file_options path
-    then Modulename.Filename (Loc.SourceFile path)
+    then Modulename.Filename (File_key.SourceFile path)
     else Modulename.String module_name_str
 
   let get_imports ~options module_names =
@@ -525,7 +525,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     end;
 
     let is_incompatible filename_str =
-      let filename = Loc.JsonFile filename_str in
+      let filename = File_key.JsonFile filename_str in
       let filename_set = FilenameSet.singleton filename in
       let ast_opt =
         (*
@@ -573,7 +573,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let is_changed_lib filename =
       let is_lib = SSet.mem filename all_libs || filename = flow_typed_path in
       is_lib &&
-        let file = Loc.LibFile filename in
+        let file = File_key.LibFile filename in
         let old_ast = Parsing_service_js.get_ast file in
         let new_ast =
           let filename_set = FilenameSet.singleton file in
@@ -676,7 +676,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         marshal types
     | ServerProt.FIND_MODULE (moduleref, filename) ->
         Hh_logger.debug "Request: find-module %s %s" moduleref filename;
-        (find_module ~options (moduleref, filename): filename option)
+        (find_module ~options (moduleref, filename): File_key.t option)
           |> marshal
     | ServerProt.FIND_REFS (fn, line, char) ->
         Hh_logger.debug "Request: find-refs %s:%d:%d"

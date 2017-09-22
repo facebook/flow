@@ -52,11 +52,11 @@ end with type t = Impl.t) = struct
 
   let loc location =
     let source = match Loc.source location with
-    | Some Loc.LibFile src
-    | Some Loc.SourceFile src
-    | Some Loc.JsonFile src
-    | Some Loc.ResourceFile src -> string src
-    | Some Loc.Builtins -> string "(global)"
+    | Some File_key.LibFile src
+    | Some File_key.SourceFile src
+    | Some File_key.JsonFile src
+    | Some File_key.ResourceFile src -> string src
+    | Some File_key.Builtins -> string "(global)"
     | None -> null
     in
     obj [|

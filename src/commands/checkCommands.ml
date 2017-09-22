@@ -183,7 +183,7 @@ module FocusCheckCommand = struct
     let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
 
     let focus_targets = SSet.fold
-      (fun file acc -> FilenameSet.add (Loc.SourceFile Path.(to_string (make file))) acc)
+      (fun file acc -> FilenameSet.add (File_key.SourceFile Path.(to_string (make file))) acc)
       filenames
       FilenameSet.empty in
 

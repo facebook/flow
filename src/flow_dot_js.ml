@@ -54,7 +54,7 @@ let load_lib_files ~master_cx ~metadata files
 
     fun (exclude_syms, result) file ->
       let lib_content = Sys_utils.cat file in
-      let lib_file = Loc.LibFile file in
+      let lib_file = File_key.LibFile file in
       match parse_content lib_file lib_content with
       | ast, [] ->
         let cx, syms = Type_inference_js.infer_lib_file
@@ -128,7 +128,7 @@ let get_master_cx =
     | None ->
       let cx = Flow_js.fresh_context
         (stub_metadata ~root ~checked:false)
-        Loc.Builtins
+        File_key.Builtins
         Files.lib_module_ref in
       master_cx := Some (root, cx);
       cx
@@ -137,7 +137,7 @@ let set_libs filenames =
   let root = Path.dummy_path in
   let master_cx = get_master_cx root in
   let metadata = stub_metadata ~root ~checked:true in
-  let _: (Loc.filename * bool) list = load_lib_files
+  let _: (File_key.t * bool) list = load_lib_files
     ~master_cx
     ~metadata
     filenames
@@ -176,7 +176,7 @@ let infer_and_merge ~root filename ast =
 let check_content ~filename ~content =
   let stdin_file = Some (Path.make_unsafe filename, content) in
   let root = Path.dummy_path in
-  let filename = Loc.SourceFile filename in
+  let filename = File_key.SourceFile filename in
   let errors, warnings = match parse_content filename content with
   | ast, [] ->
     let cx = infer_and_merge ~root filename ast in
@@ -222,7 +222,7 @@ let mk_loc file line col =
   }
 
 let infer_type filename content line col =
-    let filename = Loc.SourceFile filename in
+    let filename = File_key.SourceFile filename in
     let root = Path.dummy_path in
     match parse_content filename content with
     | ast, [] ->
@@ -277,7 +277,7 @@ let types_to_json types ~strip_root =
   JSON_Array types_json
 
 let dump_types js_file js_content =
-    let filename = Loc.SourceFile (Js.to_string js_file) in
+    let filename = File_key.SourceFile (Js.to_string js_file) in
     let root = Path.dummy_path in
     let content = Js.to_string js_content in
     match parse_content filename content with

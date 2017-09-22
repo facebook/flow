@@ -2178,7 +2178,7 @@ let string_of_reason cx reason =
   Reason.string_of_reason ~strip_root reason
 
 let string_of_file cx =
-  let filename = Loc.string_of_filename (Context.file cx) in
+  let filename = File_key.to_string (Context.file cx) in
   match Context.is_verbose cx with
   | false -> filename
   | true ->
@@ -2591,8 +2591,8 @@ let dump_flow_error =
     | EDuplicateModuleProvider { module_name; provider; conflict } ->
         spf "EDuplicateModuleProvider (%S, %s, %s)"
           module_name
-          (string_of_filename provider)
-          (string_of_filename conflict)
+          (File_key.to_string provider)
+          (File_key.to_string conflict)
     | EParseError (loc, _parse_error) ->
       spf "EParseError (%s, _)"
         (string_of_loc loc)

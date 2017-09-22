@@ -54,7 +54,7 @@ let main option_values root json pretty strip_root from modules () =
         let req = match req with
           | Modulename.String s -> s
           | Modulename.Filename f ->
-            let f = Loc.string_of_filename f in
+            let f = File_key.to_string f in
             if strip_root then Files.relative_path (Path.to_string root) f
             else f
         in

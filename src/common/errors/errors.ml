@@ -207,7 +207,7 @@ let read_lines_in_file loc filename stdin_file =
 
 let file_of_source source =
   match source with
-    | Some Loc.LibFile filename ->
+    | Some File_key.LibFile filename ->
         let filename =
           if is_short_lib filename
           then begin
@@ -215,11 +215,11 @@ let file_of_source source =
             String.sub filename prefix_len (String.length filename - prefix_len)
           end else filename in
         Some filename
-    | Some Loc.SourceFile filename
-    | Some Loc.JsonFile filename
-    | Some Loc.ResourceFile filename ->
+    | Some File_key.SourceFile filename
+    | Some File_key.JsonFile filename
+    | Some File_key.ResourceFile filename ->
         Some filename
-    | Some Loc.Builtins -> None
+    | Some File_key.Builtins -> None
     | None -> None
 
 let loc_of_error (err: error) =
@@ -426,13 +426,13 @@ module Cli_output = struct
       ]
     | None, _ ->
         let original_filename, is_lib = match filename, loc.source with
-        | Some filename, Some Loc.LibFile _
-        | None, Some Loc.LibFile filename -> filename,true
+        | Some filename, Some File_key.LibFile _
+        | None, Some File_key.LibFile filename -> filename,true
         | Some filename, _
-        | None, Some Loc.SourceFile filename
-        | None, Some Loc.JsonFile filename
-        | None, Some Loc.ResourceFile filename -> filename, false
-        | None, Some Loc.Builtins
+        | None, Some File_key.SourceFile filename
+        | None, Some File_key.JsonFile filename
+        | None, Some File_key.ResourceFile filename -> filename, false
+        | None, Some File_key.Builtins
         | None, None ->
           failwith "Should only have lib and source files at this point" in
         [comment_style s] @
@@ -440,7 +440,7 @@ module Cli_output = struct
         [default_style "\n"];
     | Some code_lines, Some filename ->
         let is_lib = match loc.source with
-        | Some Loc.LibFile _ -> true
+        | Some File_key.LibFile _ -> true
         | _ -> false in
         begin match code_lines with
         | code_line, [] ->
@@ -587,7 +587,7 @@ module Cli_output = struct
   let print_error_header ~strip_root ~kind ~severity message =
     let loc, _ = to_pp message in
     let prefix, relfilename = match loc.Loc.source with
-      | Some Loc.LibFile filename ->
+      | Some File_key.LibFile filename ->
         let header = match kind with
         | ParseError -> "Library parse error:"
         | InferError -> "Library type error:"
@@ -604,9 +604,9 @@ module Cli_output = struct
         in
         [comment_file_style (header^"\n")],
         relative_lib_path ~strip_root filename
-      | Some Loc.SourceFile filename
-      | Some Loc.JsonFile filename
-      | Some Loc.ResourceFile filename ->
+      | Some File_key.SourceFile filename
+      | Some File_key.JsonFile filename
+      | Some File_key.ResourceFile filename ->
         let heading_style = match severity with
           | Err -> error_heading_style
           | Warn -> warning_heading_style
@@ -618,7 +618,7 @@ module Cli_output = struct
           |> String.capitalize_ascii
         in
         [heading_style (severity_str ^ ":"); default_style " "], relative_path ~strip_root filename
-      | Some Loc.Builtins -> [], "[No file]"
+      | Some File_key.Builtins -> [], "[No file]"
       | None -> [], "[No file]"
     in
     let file_loc = Printf.sprintf "%s:%d" relfilename Loc.(loc.start.line) in
@@ -900,7 +900,7 @@ module Vim_emacs_output = struct
   let string_of_loc ~strip_root loc = Loc.(
     match loc.source with
     | None
-    | Some Builtins -> ""
+    | Some File_key.Builtins -> ""
     | Some file ->
       let file = Reason.string_of_source ~strip_root file in
       let line = loc.start.line in

@@ -778,7 +778,7 @@ module rec TypeTerm : sig
     | Computed of t
 
   and sealtype =
-    | UnsealedInFile of Loc.filename option
+    | UnsealedInFile of File_key.t option
     | Sealed
 
   and flags = {

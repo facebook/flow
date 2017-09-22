@@ -53,7 +53,7 @@ type module_kind =
   | CommonJSModule of Loc.t option
   | ESModule
 
-val make: metadata -> Loc.filename -> string -> t
+val make: metadata -> File_key.t -> string -> t
 val metadata_of_options: Options.t -> metadata
 
 val to_cache: t -> cacheable_t
@@ -75,7 +75,7 @@ val esproposal_class_instance_fields: t -> Options.esproposal_feature_mode
 val esproposal_decorators: t -> Options.esproposal_feature_mode
 val esproposal_export_star_as: t -> Options.esproposal_feature_mode
 val evaluated: t -> Type.t IMap.t
-val file: t -> Loc.filename
+val file: t -> File_key.t
 val find_props: t -> Type.Properties.id -> Type.Properties.t
 val find_exports: t -> Type.Exports.id -> Type.Exports.t
 val find_require: t -> string -> Type.t

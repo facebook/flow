@@ -10,7 +10,7 @@
 
 
 type t = {
-  lex_source            : Loc.filename option;
+  lex_source            : File_key.t option;
   lex_lb                : Sedlexing.lexbuf;
   lex_bol               : bol;
   lex_in_comment_syntax : bool;
@@ -70,7 +70,7 @@ let debug_string_of_lexbuf _lb = ""
 let debug_string_of_lex_env (env: t) =
   let source = match (source env) with
     | None -> "None"
-    | Some x -> Printf.sprintf "Some %S" (Loc.string_of_filename x)
+    | Some x -> Printf.sprintf "Some %S" (File_key.to_string x)
   in
   Printf.sprintf
     "{\n  \

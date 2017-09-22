@@ -16,7 +16,7 @@
 val init :
   options: Options.t ->
   string list ->
-  (Loc.filename *
+  (File_key.t *
     bool *
     Errors.ErrorSet.t *
     Error_suppressions.t *

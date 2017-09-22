@@ -48,15 +48,15 @@ let main option_values root json pretty strip_root from moduleref filename () =
   let ic, oc = connect option_values root in
 
   send_command oc (ServerProt.FIND_MODULE (moduleref, filename));
-  let response: Loc.filename option = Timeout.input_value ic in
+  let response: File_key.t option = Timeout.input_value ic in
   let result = match response with
-    | Some Loc.LibFile file
-    | Some Loc.SourceFile file
-    | Some Loc.JsonFile file
-    | Some Loc.ResourceFile file ->
+    | Some File_key.LibFile file
+    | Some File_key.SourceFile file
+    | Some File_key.JsonFile file
+    | Some File_key.ResourceFile file ->
         if strip_root then Files.relative_path (Path.to_string root) file
         else file
-    | Some Loc.Builtins -> "(global)"
+    | Some File_key.Builtins -> "(global)"
     | None -> "(unknown)" in
   if json || pretty
   then (

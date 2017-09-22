@@ -12,12 +12,12 @@ open Utils_js
 module Reqs = Merge_js.Reqs
 
 
-type 'a merge_results = (filename * ('a, exn) result) list
+type 'a merge_results = (File_key.t * ('a, exn) result) list
 type 'a merge_job =
   options:Options.t ->
-  'a merge_results * filename list ->
-  filename list ->
-  'a merge_results * filename list
+  'a merge_results * File_key.t list ->
+  File_key.t list ->
+  'a merge_results * File_key.t list
 
 (* To merge the contexts of a component with their dependencies, we call the
    functions `merge_component_strict` and `restore` defined in merge_js.ml
@@ -48,7 +48,7 @@ let reqs_of_component ~options component required =
     List.fold_left (fun (dep_cxs, reqs) req ->
       let r, loc, resolved_r, file = req in
       Module_js.(match get_file Expensive.ok resolved_r with
-      | Some (Loc.ResourceFile f) ->
+      | Some (File_key.ResourceFile f) ->
         dep_cxs, Reqs.add_res (r, loc, f, file) reqs
       | Some dep ->
         let info = get_info_unsafe ~audit:Expensive.ok dep in
@@ -73,7 +73,7 @@ let reqs_of_component ~options component required =
     ) ([], Reqs.empty) required
   in
 
-  let master_cx = Context_cache.find_sig ~options Loc.Builtins in
+  let master_cx = Context_cache.find_sig ~options File_key.Builtins in
 
   master_cx, dep_cxs, reqs
 
@@ -211,14 +211,14 @@ let merge_strict_job ~options ~job (merged, unchanged) elements =
       (* A component may have several files: there's always at least one, and
          multiple files indicate a cycle. *)
       let files = component
-      |> List.map string_of_filename
+      |> List.map File_key.to_string
       |> String.concat "\n\t"
       in
       try Profile_utils.checktime ~options ~limit:1.0
         ~msg:(fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) files t)
         ~log:(fun merge_time ->
           let length = List.length component in
-          let leader = List.hd component |> string_of_filename in
+          let leader = List.hd component |> File_key.to_string in
           Flow_server_profile.merge ~length ~merge_time ~leader)
         ~f:(fun () ->
           (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)

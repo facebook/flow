@@ -11,18 +11,18 @@
 open Utils_js
 
 type element =
-| Skip of filename
-| Component of filename list
+| Skip of File_key.t
+| Component of File_key.t list
 
-type 'a merge_result = (filename * 'a) list
+type 'a merge_result = (File_key.t * 'a) list
 
 val make :
   (* dependency graph *)
   FilenameSet.t FilenameMap.t ->
   (* leader map *)
-  filename FilenameMap.t ->
+  File_key.t FilenameMap.t ->
   (* component map *)
-  filename list FilenameMap.t ->
+  File_key.t list FilenameMap.t ->
   (* recheck_leader_map *)
   bool FilenameMap.t ->
   unit ->
@@ -32,8 +32,8 @@ val join :
   (* intermediate result callback *)
   ('a merge_result Lazy.t -> unit) ->
   (* merged, unchanged *)
-  'a merge_result * filename list ->
+  'a merge_result * File_key.t list ->
   (* accumulators *)
-  'a merge_result * filename list ->
+  'a merge_result * File_key.t list ->
   (* accumulated results *)
-  'a merge_result * filename list
+  'a merge_result * File_key.t list

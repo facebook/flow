@@ -286,7 +286,7 @@ let run_test (name, frontmatter, content) =
   let parse_options = Parser_env.({ default_parse_options with use_strict }) in
   let (_ast, errors) = Parser_flow.program_file
     ~fail:false ~parse_options:(Some parse_options)
-    content (Some (Loc.SourceFile filename)) in
+    content (Some (File_key.SourceFile filename)) in
   let result = match errors, Frontmatter.negative_phase frontmatter with
   | [], Some "early" ->
     (* expected a parse error, didn't get it *)
