@@ -233,7 +233,50 @@ export default suite(({addFile, flowCmd, removeFile}) => [
         `,
       )
       .because('flow ls will combine command line with the input file'),
-  ])
+  ]),
+  test('Non-existent files and directories', [
+    flowCmd(['ls', '--strip-root', 'foobar'])
+      .stderr(
+        `
+          Could not find file or directory foobar; canceling search for .flowconfig.
+          See "flow init --help" for more info
+
+        `,
+      )
+      .because('We try to use foobar to infer the root, so we complain when it doesnt exist'),
+    flowCmd(['ls', '--strip-root', '--root', 'src', 'foobar', 'src/implicitly_included.js'])
+      .stderr(``)
+      .stdout(
+        `
+          implicitly_included.js
+
+        `,
+      )
+      .because('We just filter out non-existent files'),
+    flowCmd(['ls', '--strip-root', '--imaginary', '--root', 'src', 'foobar', 'src/implicitly_included.js', 'src/flow-typed/baz.js'])
+      .stderr(``)
+      .stdout(
+        `
+          ../foobar
+          implicitly_included.js
+          flow-typed/baz.js
+
+        `,
+      )
+      .because('With --imaginary we include non-existent files. Non-existent files are never considered to be libs.'),
+    flowCmd(['ls', '--strip-root', '--explain', '--imaginary', '--root', 'src', 'foobar', 'src/baz', 'src/implicitly_included.js', 'src/flow-typed/baz'])
+      .stderr(``)
+      .stdout(
+        `
+          ImplicitlyIgnored     ../foobar
+          ImplicitlyIncluded    baz
+          ImplicitlyIncluded    implicitly_included.js
+          ImplicitlyIncluded    flow-typed/baz
+
+        `,
+      )
+      .because('--explain should work with --imaginary as expected. Non-existent files are never considered to be libs.'),
+  ]),
 ]).beforeEach(({addFile, addFiles, removeFile}) => [
   addFile('src/_flowconfig', 'src/.flowconfig')
     .addFiles(...files)
