@@ -48,7 +48,7 @@ class.
 ```js
 // @flow
 interface Serializable {
-  serialize(): string;
+  serialize(): string
 }
 
 class Foo implements Serializable {
@@ -89,7 +89,7 @@ You can add methods to interfaces following the same syntax as object methods.
 
 ```js
 interface MyInterface {
-  method(value: string): number;
+  method(value: string): number
 }
 ```
 
@@ -100,7 +100,7 @@ properties.
 
 ```js
 interface MyInterface {
-  property: string;
+  property: string
 }
 ```
 
@@ -108,7 +108,7 @@ Interface properties can be optional as well.
 
 ```js
 interface MyInterface {
-  property?: string;
+  property?: string
 }
 ```
 
@@ -119,7 +119,7 @@ way as with objects.
 
 ```js
 interface MyInterface {
-  [key: string]: number;
+  [key: string]: number
 }
 ```
 
@@ -162,8 +162,8 @@ can add modifiers to make them covariant (read-only) or contravariant
 
 ```js
 interface MyInterface {
-  +covariant: number;     // read-only
-  -contravariant: number; // write-only
+  +covariant: number,     // read-only
+  -contravariant: number  // write-only
 }
 ```
 
@@ -174,7 +174,7 @@ property name.
 
 ```js
 interface MyInterface {
-  +readOnly: number | string;
+  +readOnly: number | string
 }
 ```
 
@@ -183,8 +183,8 @@ This allows you to pass a more specific type in place of that property.
 ```js
 // @flow
 // $ExpectError
-interface Invariant {  property: number | string; }
-interface Covariant { +readOnly: number | string; }
+interface Invariant {  property: number | string }
+interface Covariant { +readOnly: number | string }
 
 var value1: Invariant = { property: 42 }; // Error!
 var value2: Covariant = { readOnly: 42 }; // Works!
@@ -195,8 +195,8 @@ when used. Which can be useful over normal properties.
 
 ```js
 // @flow
-interface Invariant {  property: number | string; }
-interface Covariant { +readOnly: number | string; }
+interface Invariant {  property: number | string }
+interface Covariant { +readOnly: number | string }
 
 function method1(value: Invariant) {
   value.property;        // Works!
@@ -225,8 +225,8 @@ This allows you to pass a less specific type in place of that property.
 
 ```js
 // @flow
-interface Invariant     {  property: number; }
-interface Contravariant { -writeOnly: number; }
+interface Invariant     {  property: number }
+interface Contravariant { -writeOnly: number }
 
 var numberOrString = Math.random() > 0.5 ? 42 : 'forty-two';
 
@@ -239,8 +239,8 @@ Because of how contravariance works, contravariant properties also become
 write-only when used. Which can be useful over normal properties.
 
 ```js
-interface Invariant     {   property: number; }
-interface Contravariant { -writeOnly: number; }
+interface Invariant     {   property: number }
+interface Contravariant { -writeOnly: number }
 
 function method1(value: Invariant) {
   value.property;        // Works!
