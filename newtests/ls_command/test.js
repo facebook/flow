@@ -15,7 +15,7 @@ const files = [
   'src/flow-typed/implicit_lib.js',
 ];
 
-export default suite(({flowCmd, removeFile}) => [
+export default suite(({addFile, flowCmd, removeFile}) => [
   test('No --all flag and implicit root', [
     flowCmd(['ls'])
       .stderr(
@@ -176,6 +176,64 @@ export default suite(({flowCmd, removeFile}) => [
         `,
       ),
   ]),
+  test('Listing files over stdin', [
+    addFile('stdin_file.txt'),
+    flowCmd(['ls', '--strip-root', '--root', 'src', '--all', '--input-file', '-'], 'stdin_file.txt')
+      .stderr('')
+      .sortedStdout(
+        `
+          ../other/explicitly_included.js
+          explicit_lib.js
+          explicitly_ignored.js
+          flow-typed/implicit_lib.js
+          implicitly_included.js
+        `,
+      )
+      .because('Same as if we passed src/ and other/explicitly_include.js from the command line'),
+
+    flowCmd(['ls', '--strip-root', '--root', 'src', '--all', '--input-file', '-', 'other/implicitly_ignored.js'], 'stdin_file.txt')
+      .stderr('')
+      .sortedStdout(
+        `
+          ../other/explicitly_included.js
+          ../other/implicitly_ignored.js
+          explicit_lib.js
+          explicitly_ignored.js
+          flow-typed/implicit_lib.js
+          implicitly_included.js
+        `,
+      )
+      .because('flow ls will combine command line with the input file'),
+  ]),
+  test('Input file on disk', [
+    addFile('stdin_file.txt'),
+    flowCmd(['ls', '--strip-root', '--root', 'src', '--all', '--input-file', 'stdin_file.txt'])
+      .stderr('')
+      .sortedStdout(
+        `
+          ../other/explicitly_included.js
+          explicit_lib.js
+          explicitly_ignored.js
+          flow-typed/implicit_lib.js
+          implicitly_included.js
+        `,
+      )
+      .because('Same as if we passed src/ and other/explicitly_include.js from the command line'),
+
+    flowCmd(['ls', '--strip-root', '--root', 'src', '--all', '--input-file', 'stdin_file.txt', 'other/implicitly_ignored.js'])
+      .stderr('')
+      .sortedStdout(
+        `
+          ../other/explicitly_included.js
+          ../other/implicitly_ignored.js
+          explicit_lib.js
+          explicitly_ignored.js
+          flow-typed/implicit_lib.js
+          implicitly_included.js
+        `,
+      )
+      .because('flow ls will combine command line with the input file'),
+  ])
 ]).beforeEach(({addFile, addFiles, removeFile}) => [
   addFile('src/_flowconfig', 'src/.flowconfig')
     .addFiles(...files)

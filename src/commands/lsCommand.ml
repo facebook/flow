@@ -35,6 +35,9 @@ let spec = {
       ~doc:"Even list ignored files and lib files"
     |> flag "--explain" no_arg
       ~doc:"Output what kind of file each file is and why Flow cares about it"
+    |> flag "--input-file" string
+      ~doc:("File containing list of files to ls, one per line. If -, list of files is "^
+        "read from the standard input.")
     |> anon "files or dirs" (list_of string)
       ~doc:"Lists only these files or files in these directories"
   )
@@ -147,25 +150,32 @@ let concat_get_next get_nexts =
 
 let main
   strip_root ignore_flag include_flag root_flag json pretty from all reason
-  root_or_files () =
+  input_file root_or_files () =
+
+  let files_or_dirs = get_filenames_from_input input_file root_or_files in
 
   FlowEventLogger.set_from from;
   let root = guess_root (
     match root_flag with
     | Some root -> Some root
-    | None -> (match root_or_files with
-      | Some (first_file::_) -> Some first_file
+    | None -> (match files_or_dirs with
+      | first_file::_ ->
+        (* If the first_file doesn't exist or if we can't find a .flowconfig, we'll error. If
+         * --strip-root is passed, we want the error to contain a relative path. *)
+        let first_file = if strip_root
+          then Files.relative_path (Sys.getcwd ()) first_file
+          else first_file in
+        Some first_file
       | _ -> None)
   ) in
 
   let options = make_options ~root ~ignore_flag ~include_flag in
   let _, libs = Files.init options in
   (* `flow ls` and `flow ls dir` will list out all the flow files *)
-  let next_files = (match root_or_files with
-  | None
-  | Some [] ->
+  let next_files = (match files_or_dirs with
+  | [] ->
       get_ls_files ~root ~all ~options ~libs None
-  | Some files_or_dirs ->
+  | files_or_dirs ->
       files_or_dirs
       |> List.map (fun f -> get_ls_files ~root ~all ~options ~libs (Some f))
       |> concat_get_next) in
