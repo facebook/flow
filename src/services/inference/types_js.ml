@@ -622,7 +622,7 @@ let unfocused_files_to_infer ~options ~workers ~parsed =
   let root = Options.root options in
   let file_options = Options.file_options options in
   let focused = FilenameSet.filter (fun fn ->
-    not (Files.is_within_node_modules ~root ~options:file_options (Loc.string_of_filename fn))
+    not (Files.is_within_node_modules ~root ~options:file_options (File_key.to_string fn))
   ) parsed in
 
   (* Calculate dependencies to figure out which node_modules stuff we depend on *)
