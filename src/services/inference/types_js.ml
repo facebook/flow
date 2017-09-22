@@ -270,20 +270,16 @@ let typecheck
   let { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set } = errors in
 
   let infer_input =
-    if Options.is_lazy_mode options
-    then begin
-      let infer_input = CheckedSet.add ~dependents:all_dependent_files infer_input in
+    let infer_input = CheckedSet.add ~dependents:all_dependent_files infer_input in
 
-      (* Don't just look up the dependencies of the focused or dependent modules. Also look up
-       * the dependencies of dependencies, since we need to check transitive dependencies *)
-      let roots = CheckedSet.all infer_input in
-      let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
-      let all_dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
-      let infer_input = CheckedSet.add ~dependencies:all_dependencies infer_input in
+    (* Don't just look up the dependencies of the focused or dependent modules. Also look up
+     * the dependencies of dependencies, since we need to check transitive dependencies *)
+    let roots = CheckedSet.all infer_input in
+    let dependency_graph = Dep_service.calc_dependency_graph workers parsed in
+    let all_dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
+    let infer_input = CheckedSet.add ~dependencies:all_dependencies infer_input in
 
-      CheckedSet.diff infer_input unchanged_checked
-    end else
-      infer_input
+    CheckedSet.diff infer_input unchanged_checked
   in
 
   (* Continue profiling noop Infer to compare with pre-refactor metrics *)
@@ -425,48 +421,45 @@ let typecheck
 (* When checking contents, ensure that dependencies are checked. Might have more
    general utility. *)
 let ensure_checked_dependencies ~options ~workers ~env resolved_requires =
-  if Options.is_lazy_mode options
-  then begin
-    let infer_input = Modulename.Set.fold (fun m acc ->
-      match Module_js.get_file m ~audit:Expensive.warn with
-      | Some f ->
-        if FilenameSet.mem f !env.ServerEnv.files
-        then CheckedSet.add ~dependencies:(FilenameSet.singleton f) acc
-        else acc
-      | None -> acc (* complain elsewhere about required module not found *)
-    ) resolved_requires CheckedSet.empty in
-    let errors = !env.ServerEnv.errors in
-    let unchanged_checked = !env.ServerEnv.checked_files in
-    let parsed = FilenameSet.elements !env.ServerEnv.files in
-    let all_dependent_files = FilenameSet.empty in
-    let persistent_connections = Some (!env.ServerEnv.connections) in
-    let _profiling, (checked, errors) = Profiling_js.with_profiling (fun profiling ->
-      let checked, errors = typecheck ?serve_ready_clients:None ~options ~profiling ~workers ~errors
-        ~unchanged_checked ~infer_input
-        ~parsed ~all_dependent_files
-        ~persistent_connections
-        ~make_merge_input:(fun inferred ->
-          Some (
-            inferred,
-            inferred |> CheckedSet.fold (fun map f ->
-              FilenameMap.add f true map
-            ) FilenameMap.empty
-          )
-        ) in
-      checked, errors
-    ) in
+  let infer_input = Modulename.Set.fold (fun m acc ->
+    match Module_js.get_file m ~audit:Expensive.warn with
+    | Some f ->
+      if FilenameSet.mem f !env.ServerEnv.files
+      then CheckedSet.add ~dependencies:(FilenameSet.singleton f) acc
+      else acc
+    | None -> acc (* complain elsewhere about required module not found *)
+  ) resolved_requires CheckedSet.empty in
+  let errors = !env.ServerEnv.errors in
+  let unchanged_checked = !env.ServerEnv.checked_files in
+  let parsed = FilenameSet.elements !env.ServerEnv.files in
+  let all_dependent_files = FilenameSet.empty in
+  let persistent_connections = Some (!env.ServerEnv.connections) in
+  let _profiling, (checked, errors) = Profiling_js.with_profiling (fun profiling ->
+    let checked, errors = typecheck ?serve_ready_clients:None ~options ~profiling ~workers ~errors
+      ~unchanged_checked ~infer_input
+      ~parsed ~all_dependent_files
+      ~persistent_connections
+      ~make_merge_input:(fun inferred ->
+        Some (
+          inferred,
+          inferred |> CheckedSet.fold (fun map f ->
+            FilenameMap.add f true map
+          ) FilenameMap.empty
+        )
+      ) in
+    checked, errors
+  ) in
 
-    (* During a normal initialization or recheck, we update the env with the errors and
-     * calculate the collated errors. However, this code is for when the server is in lazy mode,
-     * is trying to using typecheck_contents, and is making sure the dependencies are checked. Since
-     * we're messing with env.errors, we also need to set collated_errors to None. This will force
-     * us to recompute them the next time someone needs them *)
-    !env.ServerEnv.collated_errors := None;
-    env := { !env with ServerEnv.
-      checked_files = checked;
-      errors;
-    }
-  end
+  (* During a normal initialization or recheck, we update the env with the errors and
+   * calculate the collated errors. However, this code is for when the server is in lazy mode,
+   * is trying to using typecheck_contents, and is making sure the dependencies are checked. Since
+   * we're messing with env.errors, we also need to set collated_errors to None. This will force
+   * us to recompute them the next time someone needs them *)
+  !env.ServerEnv.collated_errors := None;
+  env := { !env with ServerEnv.
+    checked_files = checked;
+    errors;
+  }
 
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
@@ -621,11 +614,30 @@ let focused_files_to_infer ~workers ~focused ~parsed =
 
   CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty
 
+(* Without a set of focused files, we just focus on every parsed file. We won't focus on
+ * node_modules. If a node module is a dependency, then we'll just treat it as a dependency.
+ * Otherwise, we'll ignore it. *)
+let unfocused_files_to_infer ~options ~workers ~parsed =
+  (* All the non-node_modules files *)
+  let root = Options.root options in
+  let file_options = Options.file_options options in
+  let focused = FilenameSet.filter (fun fn ->
+    not (Files.is_within_node_modules ~root ~options:file_options (Loc.string_of_filename fn))
+  ) parsed in
+
+  (* Calculate dependencies to figure out which node_modules stuff we depend on *)
+  let dependency_graph = Dep_service.calc_dependency_graph workers (FilenameSet.elements parsed) in
+  let dependencies = Dep_service.calc_all_dependencies dependency_graph focused in
+  CheckedSet.add
+    ~focused
+    ~dependencies
+    CheckedSet.empty
+
 let files_to_infer ~options ~workers ~focused ~profiling ~parsed =
   with_timer ~options "FilesToInfer" profiling (fun () ->
     match focused with
     | None ->
-      CheckedSet.add ~focused:parsed CheckedSet.empty
+      unfocused_files_to_infer ~options ~workers ~parsed
     | Some focused ->
       focused_files_to_infer ~workers ~focused ~parsed
 
@@ -891,10 +903,14 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
   let parsed = FilenameSet.union freshparsed unchanged in
   let parsed_list = FilenameSet.elements parsed in
 
-  let infer_input, all_dependent_files = match Options.lazy_mode options with
+  Hh_logger.info "Recalculating dependency graph";
+  let updated_checked_files, all_dependent_files = match Options.lazy_mode options with
   | None (* Non lazy mode treats every file as focused. *)
   | Some Options.LAZY_MODE_FILESYSTEM -> (* FS mode treats every modified file as focused *)
-    CheckedSet.of_focused_list freshparsed_list, all_dependent_files
+    let old_focus_targets = FilenameSet.diff (CheckedSet.focused env.ServerEnv.checked_files) deleted in
+    let parsed = FilenameSet.union old_focus_targets freshparsed in
+    let updated_checked_files = unfocused_files_to_infer ~options ~workers ~parsed in
+    updated_checked_files, all_dependent_files
   | Some Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
     (* Unfortunately, our checked_files set might be out of date. This update could have added
      * some new dependents or dependencies. So we need to recalculate those.
@@ -918,19 +934,17 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
     let focused = FilenameSet.union old_focused open_in_ide in
     let updated_checked_files = focused_files_to_infer ~workers ~focused ~parsed in
 
-    let infer_input =
-      CheckedSet.filter ~f:(fun fn -> FilenameSet.mem fn freshparsed) updated_checked_files in
-
-
-
     (* It's possible that all_dependent_files contains foo.js, which is a dependent of a dependency.
      * That's fine if foo.js is a focused file or a transitive dependent of a focused file. But if
      * it's just some random other dependent then we need to filter it out. *)
     let focused_or_dependents = FilenameSet.union
       (CheckedSet.focused updated_checked_files) (CheckedSet.dependents updated_checked_files) in
     let all_dependent_files = FilenameSet.inter all_dependent_files focused_or_dependents in
-    infer_input, all_dependent_files
+    updated_checked_files, all_dependent_files
   in
+
+  let infer_input =
+    CheckedSet.filter ~f:(fun fn -> FilenameSet.mem fn freshparsed) updated_checked_files in
 
   (* recheck *)
   let checked, errors = typecheck

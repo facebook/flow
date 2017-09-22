@@ -437,4 +437,12 @@ let mkdirp path_str perm =
       with Unix_error (EEXIST, "mkdir", _) -> ()
     );
     new_path_str
-  ) path_prefix parts);
+  ) path_prefix parts)
+
+(* Given a path, we want to know if it's in a node_modules/ directory or not. *)
+let is_within_node_modules ~root ~options path =
+  (* We use paths that are relative to the root, so that we ignore ancestor directories *)
+  let path = relative_path (Path.to_string root) path in
+  let directories = Str.split dir_sep path |> SSet.of_list in
+  let node_resolver_dirnames = node_resolver_dirnames options |> SSet.of_list in
+  not (SSet.inter directories node_resolver_dirnames |> SSet.is_empty)

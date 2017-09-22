@@ -96,3 +96,5 @@ val get_flowtyped_path: Path.t -> Path.t
 val filename_from_string: options: options -> string -> Loc.filename
 
 val mkdirp: string -> Unix.file_perm -> unit
+
+val is_within_node_modules: root:Path.t -> options: options -> string -> bool
