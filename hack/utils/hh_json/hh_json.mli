@@ -25,6 +25,7 @@ exception Syntax_error of string
 val json_to_string : ?pretty:bool -> json -> string
 val json_to_multiline : json -> string
 val json_to_output: out_channel -> json ->  unit
+val json_to_multiline_output: out_channel -> json ->  unit
 val json_of_string : ?strict:bool -> string -> json
 val json_of_file : ?strict:bool -> string -> json
 val json_truncate : ?max_string_length:int -> ?max_child_count:int
