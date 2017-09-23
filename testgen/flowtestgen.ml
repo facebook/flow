@@ -14,145 +14,12 @@
 module Utils = Flowtestgen_utils;;
 module Config = Flowtestgen_config;;
 module FRandom = Utils.FRandom;;
+module Syntax = Syntax_base;;
 open Printf;;
-
-(* Whether the program runs successfully. None means no error
-   message and the run is successful *)
-type run_result = string option;;
-
-let assert_func = "
-// from http://tinyurl.com/y93dykzv
-const util = require('util');
-function assert_type(actual: any, expected: any) {
-    if(typeof(actual) != 'object' || typeof(expected) != 'object') {
-        if(Array.isArray(expected)) {
-            if(expected.indexOf(actual) === -1) {
-                var message = '';
-                var expected_str = expected.toString();
-
-                var actual_str = 'null';
-                if(actual != null) {
-                    actual_str = actual.toString();
-                }
-                message = message.concat('Not contain: ',
-                                         'Actual : ',
-                                         actual_str,
-                                         ' != Expected: ',
-                                         expected_str);
-                console.log(message);
-                throw new Error(message);
-            }
-        } else if(actual != expected) {
-            var expected_str = 'null';
-            if(expected != null) {
-                expected_str = expected.toString();
-            }
-
-            var actual_str = 'null';
-            if(actual != null) {
-                actual_str = actual.toString();
-            }
-            var message = '';
-            message = message.concat('Not equal: ',
-                                     'Actual : ',
-                                     actual_str,
-                                     ' != Expected: ',
-                                     expected_str);
-            console.log(message);
-            throw new Error(message);
-        }
-    } else {
-        for(var prop in expected) {
-            if(expected.hasOwnProperty(prop)) {
-                if(!actual.hasOwnProperty(prop)) {
-                    var message = '';
-                    message = message.concat('Missing property: ', prop.toString());
-                    console.log(message);
-                    throw new Error(message);
-                }
-                assert_type(actual[prop], expected[prop]);
-            }
-        }
-    }
-}
-  
-function check_opt_prop(obj_list : any, actual : any, expected : any) {
-    var len = obj_list.length;
-    for(var i = 0; i < len; ++i) {
-        if(obj_list[i] === undefined) {
-            return;
-        }
-    }
-    if(actual === undefined) {
-        return;
-    }
-    assert_type(actual, expected);
-}
-\n\n
-";;
 
 let runtime_error_file = "runtime_error.txt";;
 let type_error_file = "type_error.txt";;
 let no_error_file = "no_error.txt";;
-
-
-(* Run a system command with a given code as input *)
-let run_cmd
-    (code : string)
-    (cmd : string)
-    (exit_code_handler : (int -> string -> run_result)) : run_result =
-  let content = code in
-  let ic, oc = Unix.open_process cmd in
-  let out_str = sprintf "/* @flow */\n%s\n" (assert_func ^ content) in
-  fprintf oc "%s" out_str;
-  close_out oc;
-  let lines = Utils.read_all ic in
-  close_in ic;
-  let exit_code = match (Unix.close_process (ic, oc)) with
-    | Unix.WEXITED code -> code
-    | _ -> failwith "Command exited abnormally." in
-  exit_code_handler exit_code (String.concat "\n" lines);;
-
-(* Exit code handler for flow type checking *)
-let type_check_exit_handler
-    (exit_code : int)
-    (output : string) : run_result =
-  if exit_code = 0 then None
-  else
-    let error_type =
-      exit_code
-      |> FlowExitStatus.error_type
-      |> FlowExitStatus.to_string in
-    let msg = error_type ^ ":\n" ^ output ^ "\n" in
-    Some msg;;
-
-(* type check a piece of code.
- * Return true if this code doesn't have type error.
- *
- * We decided to run Flow using shell command, because it is much
- * easier than using the APIs. If the performance starts to hurt,
- * we will change it to using the APIs.
- *)
-let type_check (code : string) : run_result =
-  (* Check if we have .flowconfig file *)
-  let cmd = "flow check-contents" in
-  run_cmd code cmd type_check_exit_handler;;
-
-
-(* Exit handler for running the program *)
-let run_exit_handler
-    (exit_code : int)
-    (output : string) : run_result =
-  if exit_code = 0 then None
-  else
-    let msg = "Failed to run program:\n" ^ output ^ "\n" in
-    Some msg;;
-
-(* Run the code and see if it has runtime error *)
-let test_code (code : string) : run_result =
-  (* Check if we have flow-remove-types *)
-  let exe = "./node_modules/.bin/babel" in
-  run_cmd code (exe ^ " --presets flow | node") run_exit_handler;;
 
 let check_file (filename : string) (cmd : string) =
   if not (Sys.file_exists filename) then begin
@@ -172,6 +39,23 @@ let sys_init () =
   check_file
     ".babelrc"
     "echo '{\"presets\": [\"flow\"]}' | > .babelrc";;
+
+let move_func (prog : Syntax.t list) =
+  let is_func s = match s with
+      | Syntax.Stmt (Ast.Statement.FunctionDeclaration _) -> true
+      | _ -> false in
+
+  let all_func = List.filter is_func prog in
+  let all_non_func = List.filter (fun p -> not (is_func p)) prog in
+  all_func @ all_non_func
+
+(* Main entry functions for generating code *)
+let mk_code engine prog_num =
+  engine#gen_prog prog_num
+  |> (List.map (fun (slist, env) ->
+      (* We add type assertions at the end *)
+      let prog = slist |> move_func in
+      Printf.sprintf "%s\n%!" ((Syntax.combine_syntax prog) ^ (Ruleset_base.str_of_env env))))
 
 (* Generate some ASTs from scratch and then type check them. *)
 let main () =
@@ -196,77 +80,78 @@ let main () =
       stdout
     else
       open_out no_error_file in
-  printf "Generating programs...\n";
+  printf "Generating programs...\n%!";
   let base_engine = new Ruleset_base.ruleset_base in
   let depth_engine = new Ruleset_depth.ruleset_depth in
   let func_engine = new Ruleset_func.ruleset_func in
   let optional_engine = new Ruleset_optional.ruleset_optional in
   let exact_engine = new Ruleset_exact.ruleset_exact in
   let union_engine = new Ruleset_union.ruleset_union in
+  let rtest_engine = new Ruleset_rtest.ruleset_rtest in
   ignore base_engine;
   ignore depth_engine;
   ignore func_engine;
   ignore optional_engine;
   ignore exact_engine;
   ignore union_engine;
-  let engine = depth_engine in
-  let all_prog = Codegen.mk_code engine Config.(config.num_prog) Config.(config.random) in
-  let is_type_check = (engine#get_name ()) = "union" in
-  printf "Generated %d programs.\n" (List.length all_prog);
+  ignore rtest_engine;
+  let engine = func_engine in
+  let all_prog = mk_code engine Config.(config.num_prog) in
+  printf "Generated %d programs.\n%!" (List.length all_prog);
   List.iter (fun content ->
     let type_run_result =
-      if is_type_check
-      then type_check content
+      if Utils.is_typecheck (engine#get_name ())
+      then Utils.type_check content
       else None in
     match type_run_result with
     | None ->
-      (match test_code content with
+      (match Utils.test_code content with
        | None -> no_error_count := !no_error_count + 1;
-         fprintf no_error_oc "// Good program ==========\n%s\n" content;
+         fprintf no_error_oc "// Good program ==========\n%s\n%!" content;
        | Some test_error_msg ->
-         printf "RUNTIME ERROR.\n";
+         printf "RUNTIME ERROR.\n%!";
          runtime_error_count := !runtime_error_count + 1;
          fprintf runtime_error_oc
-           "//===================\n%s\n" content;
-         fprintf runtime_error_oc "/*\nError: \n%s\n*/\n" test_error_msg)
+           "//===================\n%s\n%!" content;
+         fprintf runtime_error_oc "/*\nError: \n%s\n*/\n%!" test_error_msg)
     | Some type_error_msg ->
-      printf "TYPE ERROR.\n";
+      printf "TYPE ERROR.\n%!";
       type_error_count := !type_error_count + 1;
-      fprintf flow_error_oc "//===================\n%s\n" content;
-      fprintf flow_error_oc "/*\nError: \n%s\n*/\n" type_error_msg) all_prog;
-  printf "Done!\n";
+      fprintf flow_error_oc "//===================\n%s\n%!" content;
+      fprintf flow_error_oc "/*\nError: \n%s\n*/\n%!" type_error_msg) all_prog;
+  printf "Done!\n%!";
 
   (* print type error message *)
   let type_count_str =
     sprintf
-      "%d type errors written to %s\n"
+      "%d type errors written to %s\n%!"
       !type_error_count
       type_error_file in
-  fprintf flow_error_oc "// %s\n" type_count_str;
+  fprintf flow_error_oc "// %s\n%!" type_count_str;
   if not Config.(config.log_to_console) then
     close_out flow_error_oc;
-  printf "%s" type_count_str;
+  printf "%s%!" type_count_str;
 
   (* print runtime error message *)
   let runtime_count_str =
     sprintf
-      "%d runtime errors written to %s\n"
+      "%d runtime errors written to %s\n%!"
       !runtime_error_count
       runtime_error_file in
-  fprintf runtime_error_oc "// %s\n" runtime_count_str;
+  fprintf runtime_error_oc "// %s\n%!" runtime_count_str;
   if not Config.(config.log_to_console) then
     close_out runtime_error_oc;
-  printf "%s" runtime_count_str;
+  printf "%s%!" runtime_count_str;
 
   (* Print no error message *)
   let noerror_count_str =
     sprintf
-      "%d programs without error written to %s.\n"
+      "%d programs without error written to %s.\n%!"
       !no_error_count
       no_error_file in
-  fprintf no_error_oc "// %s\n" noerror_count_str;
+  fprintf no_error_oc "// %s\n%!" noerror_count_str;
   if not Config.(config.log_to_console) then
     close_out no_error_oc;
-  printf "%s" noerror_count_str;;
+  printf "%s%!" noerror_count_str;;
 
 main ();;

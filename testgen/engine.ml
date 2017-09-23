@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
+module Utils = Flowtestgen_utils;;
 
 (* A virtual class that defines the framework for ocaml-stype rules.
 
@@ -124,6 +125,10 @@ class virtual ['a, 'b, 'c] engine = object(self)
   val stack = Array.init 100 (fun _ -> [])
   val mutable size = 0
 
+  (* This is used to keep track of the most recent used stack
+     level in order to do the correct forward at the right level *)
+  val mutable last_stack_lvl = -1
+
 
   (* Main methods for getting all the rules for generating programs *)
   method virtual get_all_rules : unit -> ('b -> ('c * 'b)) array
@@ -147,6 +152,7 @@ class virtual ['a, 'b, 'c] engine = object(self)
   method virtual print_stack : unit -> unit
   method virtual print_env : 'b -> unit
   method virtual print_syntax : 'c -> unit
+  method virtual combine_syntax : 'c list -> string
 
   (* A mehod for getting the name of an engine *)
   method virtual get_name : unit -> string
@@ -184,15 +190,17 @@ class virtual ['a, 'b, 'c] engine = object(self)
     (* Get the current value from the stack *)
     match stack.(id) with
     | [] -> raise Fail
-    | hd :: _ -> hd
+    | hd :: _ -> last_stack_lvl <- id; hd
 
   (* We move the pointer forward so that next time "choose" is
      called, we give a different result *)
   method forward () =
     (* The stack is empty. Abort the rule *)
-    if size = 0 then
+    if size = 0 || last_stack_lvl = -1 then
       raise Fail
     else begin
+      size <- min (last_stack_lvl + 1) size;
+
       (* remove the old value *)
       let all_vals = stack.(size - 1) in
       stack.(size - 1) <- (List.tl all_vals);
@@ -212,7 +220,8 @@ class virtual ['a, 'b, 'c] engine = object(self)
 
   (* Clear the stack *)
   method clear () =
-    size <- 0
+    size <- 0;
+    last_stack_lvl <- -1
 
   (* method for running a single rule *)
   method run
@@ -221,7 +230,9 @@ class virtual ['a, 'b, 'c] engine = object(self)
 
     (* run the rule *)
     try rule env with
-    | Backtrack -> self#forward (); self#run rule env
+    | Backtrack ->
+      self#forward ();
+      self#run rule env
     | Fail -> raise Fail
 
     (* Run the rule until we run out of choices *)
@@ -271,12 +282,23 @@ class virtual ['a, 'b, 'c] engine = object(self)
        *)
 
       Queue.iter (fun (slist, env) ->
-          let result = self#run_exhaustive rule env in
-          if result = [] then
-            (* We failed. Put the old syntax and env back into the queue *)
-            Queue.push (slist, env) tmp_queue
-          else
-            List.iter (fun (s, e) -> Queue.push (s :: slist, e) tmp_queue) result) queue;
+          (* type check the program *)
+          let prog = self#combine_syntax slist in
+          let type_check_result =
+            if Utils.is_typecheck (self#get_name ()) then
+              Utils.type_check prog
+            else
+              None in
+          match type_check_result with
+          | Some _ -> Printf.printf "Failed to type check: \n%s\n%!" prog
+          | None ->
+            let result = self#run_exhaustive rule env in
+            if result = [] then
+              (* We failed. Put the old syntax and env back into the queue *)
+              Queue.push (slist, env) tmp_queue
+            else
+              List.iter (fun (s, e) -> Queue.push (s :: slist, e) tmp_queue) result)
+        queue;
 
       (* transfer the run results into the queue *)
       Queue.clear queue;
@@ -294,40 +316,4 @@ class virtual ['a, 'b, 'c] engine = object(self)
     Queue.fold (fun acc elt -> elt :: acc) [] queue
     |> limit_result 0 []
 
-
-  (* This is the main function for generating programs randomly.
-     Num_prog is an integer representing the number of programs at the end *)
-  method gen_random_prog (num_prog : int) : ('c list * 'b) list =
-    let rules = self#get_all_rules () in
-
-    (* run all the rule once *)
-    let rec run_all_rules
-        (rule_index : int)
-        (code : 'c list)
-        (env : 'b)  : ('c list * 'b) =
-      (* We have finished running all the rules. Return the result *)
-      if rule_index >= (Array.length rules) then
-        code, env
-      else
-        let rule = rules.(rule_index mod (Array.length rules)) in
-        (* run the rule *)
-        self#clear ();
-        let result = try Some (self#run rule env) with
-          | Fail -> None in
-        match result with
-        | None ->
-          (* the rule fails. We continue run the next one *)
-          run_all_rules (rule_index + 1) code env
-        | Some (new_code, new_env) ->
-          (* run the next rule with the new syntax and new env *)
-          run_all_rules
-            (rule_index + 1)
-            (new_code :: code)
-            new_env in
-
-    let rec helper count acc =
-      if count >= num_prog then acc
-      else helper (count + 1) ((run_all_rules 0 [] []) :: acc) in
-
-    helper 0 []
 end;;

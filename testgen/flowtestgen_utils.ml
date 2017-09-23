@@ -14,14 +14,6 @@ module E = Ast.Expression;;
 module T = Ast.Type;;
 module P = Ast.Pattern;;
 
-(*
-class renamer(target : string,  = object(this)
-  inherit Flow_ast_mapper.mapper as super
-  method! expression (expr : Loc.t E.t) =
-end
-   *)
-  
-
 module StrSet = Set.Make(struct
     type t = string
     let compare = Pervasives.compare
@@ -586,3 +578,135 @@ module Config = struct
     let content = read_file filename in
     load_json_config_string ~filename content;;
 end
+
+
+let assert_func = "
+// from http://tinyurl.com/y93dykzv
+const util = require('util');
+function assert_type(actual: any, expected: any) {
+    if(typeof(actual) != 'object' || typeof(expected) != 'object') {
+        if(Array.isArray(expected)) {
+            if(expected.indexOf(actual) === -1) {
+                var message = '';
+                var expected_str = expected.toString();
+
+                var actual_str = 'null';
+                if(actual != null) {
+                    actual_str = actual.toString();
+                }
+                message = message.concat('Not contain: ',
+                                         'Actual : ',
+                                         actual_str,
+                                         ' != Expected: ',
+                                         expected_str);
+                console.log(message);
+                throw new Error(message);
+            }
+        } else if(actual != expected) {
+            var expected_str = 'null';
+            if(expected != null) {
+                expected_str = expected.toString();
+            }
+
+            var actual_str = 'null';
+            if(actual != null) {
+                actual_str = actual.toString();
+            }
+            var message = '';
+            message = message.concat('Not equal: ',
+                                     'Actual : ',
+                                     actual_str,
+                                     ' != Expected: ',
+                                     expected_str);
+            console.log(message);
+            throw new Error(message);
+        }
+    } else {
+        for(var prop in expected) {
+            if(expected.hasOwnProperty(prop)) {
+                if(!actual.hasOwnProperty(prop)) {
+                    var message = '';
+                    message = message.concat('Missing property: ', prop.toString());
+                    console.log(message);
+                    throw new Error(message);
+                }
+                assert_type(actual[prop], expected[prop]);
+            }
+        }
+    }
+}
+
+function check_opt_prop(obj_list : any, actual : any, expected : any) {
+    var len = obj_list.length;
+    for(var i = 0; i < len; ++i) {
+        if(obj_list[i] === undefined) {
+            return;
+        }
+    }
+    if(actual === undefined) {
+        return;
+    }
+    assert_type(actual, expected);
+}
+\n\n
+";;
+
+(* Run a system command with a given code as input *)
+let run_cmd
+    (code : string)
+    (cmd : string)
+    (exit_code_handler : (int -> string -> string option)) : string option =
+  let content = code in
+  let ic, oc = Unix.open_process cmd in
+  let out_str = Printf.sprintf "/* @flow */\n%s\n" (assert_func ^ content) in
+  Printf.fprintf oc "%s" out_str;
+  close_out oc;
+  let lines = read_all ic in
+  close_in ic;
+  let exit_code = match (Unix.close_process (ic, oc)) with
+    | Unix.WEXITED code -> code
+    | _ -> failwith "Command exited abnormally." in
+  exit_code_handler exit_code (String.concat "\n" lines);;
+
+(* Exit code handler for flow type checking *)
+let type_check_exit_handler
+    (exit_code : int)
+    (output : string) : string option =
+  if exit_code = 0 then None
+  else
+    let error_type =
+      exit_code
+      |> FlowExitStatus.error_type
+      |> FlowExitStatus.to_string in
+    let msg = error_type ^ ":\n" ^ output ^ "\n" in
+    Some msg;;
+
+(* type check a piece of code.
+ * Return true if this code doesn't have type error.
+ *
+ * We decided to run Flow using shell command, because it is much
+ * easier than using the APIs. If the performance starts to hurt,
+ * we will change it to using the APIs.
+ *)
+let type_check (code : string) : string option =
+  (* Check if we have .flowconfig file *)
+  let cmd = "flow check-contents" in
+  run_cmd code cmd type_check_exit_handler;;
+
+
+(* Exit handler for running the program *)
+let run_exit_handler
+    (exit_code : int)
+    (output : string) : string option =
+  if exit_code = 0 then None
+  else
+    let msg = "Failed to run program:\n" ^ output ^ "\n" in
+    Some msg;;
+
+(* Run the code and see if it has runtime error *)
+let test_code (code : string) : string option =
+  (* Check if we have flow-remove-types *)
+  let exe = "./node_modules/.bin/babel" in
+  run_cmd code (exe ^ " --presets flow | node") run_exit_handler;;
+
+let is_typecheck engine_name = engine_name = "union"

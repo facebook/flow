@@ -182,6 +182,9 @@ let mk_literal (t : Loc.t T.t') : t = match t with
   | T.String ->
     let lit = Ast.Literal.({value = String "foo"; raw = "\"foo\""}) in
     Expr (E.Literal lit)
+  | T.Boolean ->
+    let lit = Ast.Literal.({value = Boolean false; raw = "false"}) in
+    Expr (E.Literal lit)
   | _ -> failwith "Unsupported"
 
 let mk_prop_read
@@ -242,3 +245,20 @@ let mk_obj_lit (plist : (string * (Loc.t E.t' * Loc.t T.t')) list) : t =
                                     shorthand = false})) plist in
   let open E.Object in
   Expr (E.Object {properties = props})
+
+let combine_syntax (prog : t list) : string =
+  String.concat
+    ""
+    ((List.filter (fun c -> match c with
+         | Stmt _ -> true
+         | Expr (E.Call _) -> true
+         | _ -> false) prog)
+     |> (List.map (fun c -> match c with
+         | Empty -> failwith "This cannot be empty"
+         | Stmt _ -> c
+         | Expr e ->
+           let open S.Expression in
+           Stmt
+             (S.Expression {expression = (Loc.none, e);
+                            directive = None})))
+     |> List.rev |> (List.map str_of_syntax))
