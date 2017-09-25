@@ -26,7 +26,7 @@ let run cx trace reason_op l u
   ~(string_key: string -> reason -> Type.t)
   ~(mk_tvar: Context.t -> reason -> Type.t)
   ~(mk_tvar_where: Context.t -> reason -> (Type.t -> unit) -> Type.t)
-  ~(eval_destructor: Context.t -> trace:Trace.t -> reason -> t -> Type.destructor -> int -> Type.t)
+  ~(mk_type_destructor: Context.t -> trace:Trace.t -> reason -> t -> Type.destructor -> int -> bool * Type.t)
   ~(sealed_in_op: reason -> Type.sealtype -> bool)
   ~(union_of_ts: reason -> Type.t list -> Type.t)
   ~(filter_maybe: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t)
@@ -911,7 +911,7 @@ let run cx trace reason_op l u
           let bound_v = Property.map_t (fun t ->
             let destructor = Bind knot.this in
             let id = mk_id () in
-            ignore (eval_destructor cx ~trace reason_op t destructor id);
+            ignore (mk_type_destructor cx ~trace reason_op t destructor id);
             EvalT (t, TypeDestructorT (reason_op, destructor), id)
           ) v in
           SMap.add k bound_v props, static_props

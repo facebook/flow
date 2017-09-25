@@ -309,6 +309,11 @@ and _json_of_t_impl json_cx t = Hh_json.(
       );
     ]
 
+  | TypeDestructorTriggerT (_, s, t) -> [
+      "destructor", json_of_destructor json_cx s;
+      "type", _json_of_t json_cx t;
+    ]
+
   | CustomFunT (_, kind) -> [
       "kind", _json_of_custom_fun_kind kind;
     ] @ (match kind with
@@ -1538,6 +1543,22 @@ and dump_t_ (depth, tvars) cx t =
   let kid = dump_t_ (depth-1, tvars) cx in
   let tvar id = dump_tvar_ (depth-1, tvars) cx id in
 
+  let string_of_destructor = function
+  | NonMaybeType -> "non-maybe type"
+  | PropertyType x -> spf "property type `%s`" x
+  | ElementType _ -> "element type"
+  | Bind _ -> "bind"
+  | SpreadType _ -> "spread"
+  | RestType _ -> "rest"
+  | ValuesType -> "values"
+  | CallType _ -> "function call"
+  | TypeMap (TupleMap _) -> "tuple map"
+  | TypeMap (ObjectMap _) -> "object map"
+  | TypeMap (ObjectMapi _) -> "object mapi"
+  | ReactElementPropsType -> "React element props"
+  | ReactElementRefType -> "React element instance"
+  in
+
   let defer_use =
     let string_of_selector = function
     | Prop name -> spf "prop `%s`" name
@@ -1547,21 +1568,6 @@ and dump_t_ (depth, tvars) cx t =
     | Default -> "default"
     | Become -> "become"
     | Refine _ -> "refine"
-    in
-    let string_of_destructor = function
-    | NonMaybeType -> "non-maybe type"
-    | PropertyType x -> spf "property type `%s`" x
-    | ElementType _ -> "element type"
-    | Bind _ -> "bind"
-    | SpreadType _ -> "spread"
-    | RestType _ -> "rest"
-    | ValuesType -> "values"
-    | CallType _ -> "function call"
-    | TypeMap (TupleMap _) -> "tuple map"
-    | TypeMap (ObjectMap _) -> "object map"
-    | TypeMap (ObjectMapi _) -> "object mapi"
-    | ReactElementPropsType -> "React element props"
-    | ReactElementRefType -> "React element instance"
     in
     fun expr t -> match expr with
     | DestructuringT (_, selector) ->
@@ -1707,6 +1713,8 @@ and dump_t_ (depth, tvars) cx t =
     (String.concat "; " (List.map kid nexts)) (kid l) (kid u)) t
   | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
   | ChoiceKitT _ -> p t
+  | TypeDestructorTriggerT (_, s, x) -> p ~extra:(spf "%s on upper, %s"
+    (string_of_destructor s) (kid x)) t
   | IdxWrapper (_, inner_obj) -> p ~extra:(kid inner_obj) t
   | OpenPredT (_, inner_type, _, _) -> p ~extra:(kid inner_type) t
   | ReposT (_, arg)

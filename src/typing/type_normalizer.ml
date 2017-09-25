@@ -120,8 +120,9 @@ let rec normalize_type_impl cx ids t = match t with
       let params_names = Some ["thisArg"] in
       fake_fun params_names tins rest_param any
 
-  | ChoiceKitT (_, _) ->
-      Locationless.AnyT.t
+  | ChoiceKitT (_, _)
+  | TypeDestructorTriggerT _
+    -> Locationless.AnyT.t
 
   (* Fake the signature of $Facebookism$Merge: *)
   (* (...objects: Array<Object>): Object *)

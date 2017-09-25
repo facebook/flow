@@ -115,6 +115,11 @@ class ['a] t = object(self)
           if tlist' == tlist && t1' == t1 && t2' == t2 then t
           else ExtendsT (r, tlist', t1', t2')
       | ChoiceKitT _ -> t
+      | TypeDestructorTriggerT (r, d, x) ->
+          let d' = self#destructor cx map_cx d in
+          let x' = self#type_ cx map_cx x in
+          if d == d' && x == x' then t
+          else TypeDestructorTriggerT (r, d', x')
       | CustomFunT (r, ReactElementFactory c) ->
           let c' = self#type_ cx map_cx c in
           if c' == c then t
