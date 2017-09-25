@@ -6320,6 +6320,11 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
            robust. Tracked by #11299251. *)
         if not (Speculation.speculating ()) then
           Context.set_prop cx lflds s up;
+      (* Don't lookup $call in the prototype chain. Instead of going through
+       * LookupT add an EStrictLookupFailed error here. *)
+      | _ when s = "$call" ->
+        add_output cx ~trace (FlowError.EStrictLookupFailed
+          ((reason_prop, lreason), lreason, Some s, Some use_op))
       | _ ->
         (* otherwise, look up the property in the prototype *)
         let strict = match sealed_in_op ureason lflags.sealed, ldict with
