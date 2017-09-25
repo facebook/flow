@@ -11,6 +11,8 @@ module type S = sig
   val write_file : file:string -> contents:string -> unit
   val file_exists : string -> bool
   val mkdir_p : string -> unit
+  (** Delete the given path - if it is a directory, delete recurisvely. *)
+  val rm_dir_tree : string -> unit
   val is_directory : string -> bool
   val getcwd : unit -> string
   val chdir : string -> unit
