@@ -21,6 +21,30 @@ export interface MyInterface { /* ... */ };
 import type Foo, {MyObject, MyInterface} from './exports';
 ```
 
+You can also mix named type imports with normal imports:
+
+**`exports2.js`**
+```js
+// @flow
+export default class Foo{};
+export const myValue = /* ... */;
+export type MyType = /* ... */;
+```
+
+**`imports2.js`**
+```js
+// @flow
+import Foo, { myValue, type MyType } from './exports2';
+```
+
+Note though that this second style *always* results in runtime import, even if all imports are types:
+
+```js
+// @flow
+import type { MyObject } from './exports'; // -> entire line stripped from output
+import { type MyType } from './exports2'; // -> `import './exports2'`
+```
+
 > ***Don't forget to mention `@flow` on top of file, otherwise flow won't report error.***.
 
 ### Importing and exporting values <a class="toc" id="toc-importing-and-exporting-values" href="#toc-importing-and-exporting-values"></a>
