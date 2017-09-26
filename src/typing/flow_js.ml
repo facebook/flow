@@ -5120,7 +5120,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (t, MapTypeT (reason, TupleMap funt, tout))
 
     | DefT (_, ObjT o), MapTypeT (reason_op, ObjectMap funt, tout) ->
-      let map_t t = EvalT (funt, TypeDestructorT (reason_op, CallType [t]), mk_id ()) in
+      let map_t t =
+        let t, opt = match t with
+        | DefT (_, OptionalT t) -> t, true
+        | _ -> t, false
+        in
+        let t = EvalT (funt, TypeDestructorT (reason_op, CallType [t]), mk_id ()) in
+        if opt
+          then optional t
+          else t
+      in
       let props_tmap =
         Context.find_props cx o.props_tmap
         |> Properties.map_fields map_t
@@ -5137,7 +5146,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (mapped_t, tout)
 
     | DefT (_, ObjT o), MapTypeT (reason_op, ObjectMapi funt, tout) ->
-      let mapi_t key t = EvalT (funt, TypeDestructorT (reason_op, CallType [key; t]), mk_id ()) in
+      let mapi_t key t =
+        let t, opt = match t with
+        | DefT (_, OptionalT t) -> t, true
+        | _ -> t, false
+        in
+        let t = EvalT (funt, TypeDestructorT (reason_op, CallType [key; t]), mk_id ()) in
+        if opt
+          then optional t
+          else t
+      in
       let mapi_field key t =
         let reason = replace_reason_const (RStringLit key) reason_op in
         mapi_t (DefT (reason, SingletonStrT key)) t
