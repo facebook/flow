@@ -190,4 +190,4 @@ For example: `bash runtests.sh bin/flow class | grep -v 'SKIP'`
 * Stack Overflow: Ask a question with the [flowtype tag](http://stackoverflow.com/questions/tagged/flowtype)
 
 ## License
-Flow is BSD-licensed. We also provide an additional patent grant.
+Flow is MIT-licensed.

@@ -15,7 +15,7 @@ authors: [
   "James Kyle"
 ]
 doc: "https://flow.org/en/docs/getting-started/"
-license: "BSD3"
+license: "MIT"
 depends: [
   "base-unix"
   "base-bytes"
