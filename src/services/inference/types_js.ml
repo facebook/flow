@@ -269,6 +269,11 @@ let typecheck
   ~persistent_connections =
   let { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set } = errors in
 
+  (* The infer_input passed into typecheck basically tells us what the caller wants to typecheck.
+   * However, due to laziness, it's possible that certain dependents or dependencies have not been
+   * checked yet. So we need to caluclate all the transitive dependents and transitive dependencies
+   * and add them to infer_input, unless they're already checked and in unchanged_checked
+   *)
   let infer_input =
     let infer_input = CheckedSet.add ~dependents:all_dependent_files infer_input in
 
