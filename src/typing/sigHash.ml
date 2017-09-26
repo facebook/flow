@@ -79,6 +79,7 @@ type hash =
   | ModuleH
   | ExtendsH
   | ChoiceKitH
+  | TvarDestructorH
   | CustomFunH
   | IdxWrapperH
   | OpenPredH
@@ -208,6 +209,7 @@ let hash_of_ctor = Type.(function
   | MergedT _ -> MergedH
   | BoundT _ -> BoundH
   | ChoiceKitT _ -> ChoiceKitH
+  | TypeDestructorTriggerT _ -> TvarDestructorH
   | CustomFunT _ -> CustomFunH
   | DefT (_, t) -> hash_of_def_ctor t
   | DiffT _ -> DiffH

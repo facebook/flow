@@ -127,7 +127,7 @@ val mk_default: Context.t -> reason ->
 val lookup_module: Context.t -> string -> Type.t
 
 (* contexts *)
-val fresh_context: Context.metadata -> Loc.filename -> string -> Context.t
+val fresh_context: Context.metadata -> File_key.t -> string -> Context.t
 val add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit
 
 (* builtins *)

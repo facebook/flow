@@ -137,7 +137,7 @@ module FocusCheckCommand = struct
         |> from_flag
         |> root_flag
         |> flag "--input-file" string
-          ~doc:("File containing list of files to transform, one per line. If -, list of files is "^
+          ~doc:("File containing list of files to check, one per line. If -, list of files is "^
             "read from the standard input.")
         |> anon "root" (list_of string) ~doc:"Root directory"
       );
@@ -183,7 +183,7 @@ module FocusCheckCommand = struct
     let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
 
     let focus_targets = SSet.fold
-      (fun file acc -> FilenameSet.add (Loc.SourceFile Path.(to_string (make file))) acc)
+      (fun file acc -> FilenameSet.add (File_key.SourceFile Path.(to_string (make file))) acc)
       filenames
       FilenameSet.empty in
 

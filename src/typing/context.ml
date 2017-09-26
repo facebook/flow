@@ -78,7 +78,7 @@ module Global = struct
 end
 
 type local_t = {
-  file: Loc.filename;
+  file: File_key.t;
   module_ref: string;
   metadata: local_metadata;
 

@@ -331,6 +331,7 @@ let rec gen_type t env = Type.(
    *       (i.e. raise, etc).
    *)
   | ChoiceKitT _
+  | TypeDestructorTriggerT _
   | DefT (_, EmptyT)
   | EvalT _
   | ExistsT _

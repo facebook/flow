@@ -169,8 +169,8 @@ type error_message =
   | EUnsupportedSetProto of reason
   | EDuplicateModuleProvider of {
       module_name: string;
-      provider: Loc.filename;
-      conflict: Loc.filename
+      provider: File_key.t;
+      conflict: File_key.t
     }
   | EParseError of Loc.t * Parse_error.t
   | EDocblockError of Loc.t * docblock_error

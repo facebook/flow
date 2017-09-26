@@ -239,7 +239,7 @@ let do_patch lines insertions =
   patch 1 0 lines insertions;
   String.concat "\n" (Array.to_list lines)
 
-let string_of_source ?(strip_root=None) = Loc.(function
+let string_of_source ?(strip_root=None) = File_key.(function
   | Builtins -> "(builtins)"
   | LibFile file ->
     begin match strip_root with
@@ -279,7 +279,7 @@ let string_of_loc_pos loc = Loc.(
 let string_of_loc ?(strip_root=None) loc = Loc.(
   match loc.source with
   | None
-  | Some Builtins -> ""
+  | Some File_key.Builtins -> ""
   | Some file ->
     spf "%s:%s" (string_of_source ~strip_root file) (string_of_loc_pos loc)
 )
@@ -292,11 +292,11 @@ let json_of_loc ?(strip_root=None) loc = Hh_json.(Loc.(
       | None -> JSON_Null
     );
     "type", (match loc.source with
-    | Some LibFile _ -> JSON_String "LibFile"
-    | Some SourceFile _ -> JSON_String "SourceFile"
-    | Some JsonFile _ -> JSON_String "JsonFile"
-    | Some ResourceFile _ -> JSON_String "ResourceFile"
-    | Some Builtins -> JSON_String "Builtins"
+    | Some File_key.LibFile _ -> JSON_String "LibFile"
+    | Some File_key.SourceFile _ -> JSON_String "SourceFile"
+    | Some File_key.JsonFile _ -> JSON_String "JsonFile"
+    | Some File_key.ResourceFile _ -> JSON_String "ResourceFile"
+    | Some File_key.Builtins -> JSON_String "Builtins"
     | None -> JSON_Null);
     "start", JSON_Object [
       "line", int_ loc.start.line;
@@ -428,7 +428,7 @@ let rec string_of_desc = function
   | RTupleMap -> "tuple map"
   | RObjectMap -> "object map"
   | RObjectMapi -> "object mapi"
-  | RType x -> spf "type `%s`" x
+  | RType x -> x
   | ROpaqueType x -> x
   | RTypeParam (x,d) -> spf "type parameter `%s` of %s" x (string_of_desc d)
   | RIdentifier x -> spf "identifier `%s`" x
@@ -597,19 +597,20 @@ let derivable_reason r =
   { r with derivable = true }
 
 let builtin_reason desc =
-  mk_reason desc Loc.({ none with source = Some Builtins })
+  mk_reason desc { Loc.none with Loc.source = Some File_key.Builtins }
   |> derivable_reason
 
 let is_builtin_reason r =
-  Loc.(r.loc.source = Some Builtins)
+  Loc.(r.loc.source = Some File_key.Builtins)
 
 let is_lib_reason r =
+  (* TODO: use File_key.is_lib_file *)
   Loc.(match r.loc.source with
-  | Some LibFile _ -> true
-  | Some Builtins -> true
-  | Some SourceFile _ -> false
-  | Some JsonFile _ -> false
-  | Some ResourceFile _ -> false
+  | Some File_key.LibFile _ -> true
+  | Some File_key.Builtins -> true
+  | Some File_key.SourceFile _ -> false
+  | Some File_key.JsonFile _ -> false
+  | Some File_key.ResourceFile _ -> false
   | None -> false)
 
 let is_blamable_reason r =

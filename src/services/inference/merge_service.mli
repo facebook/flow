@@ -10,21 +10,21 @@
 
 open Utils_js
 
-type 'a merge_results = (filename * ('a, exn) result) list
+type 'a merge_results = (File_key.t * ('a, exn) result) list
 type 'a merge_job =
   options:Options.t ->
-  'a merge_results * filename list ->
-  filename list ->
-  'a merge_results * filename list
+  'a merge_results * File_key.t list ->
+  File_key.t list ->
+  'a merge_results * File_key.t list
 
 val merge_strict_context:
   options: Options.t ->
-  filename list ->
+  File_key.t list ->
   Context.t * Context.t
 
 val merge_contents_context:
   Options.t ->
-  filename ->
+  File_key.t ->
   Loc.t Ast.program ->
   Docblock.t ->
   ensure_checked_dependencies: (Modulename.Set.t -> unit) ->
@@ -36,7 +36,7 @@ val merge_runner:
   options: Options.t ->
   workers: Worker.t list option ->
   FilenameSet.t FilenameMap.t ->
-  (filename list) FilenameMap.t ->
+  (File_key.t list) FilenameMap.t ->
   bool FilenameMap.t ->
   'a merge_results
 
@@ -48,6 +48,6 @@ val merge_strict:
   options: Options.t ->
   workers: Worker.t list option ->
   FilenameSet.t FilenameMap.t ->
-  (filename list) FilenameMap.t ->
+  (File_key.t list) FilenameMap.t ->
   bool FilenameMap.t ->
   (Errors.ErrorSet.t * Error_suppressions.t * ExactCover.lint_severity_cover) merge_results

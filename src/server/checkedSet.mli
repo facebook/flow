@@ -10,9 +10,9 @@
 
 type t
 val empty: t
-val of_focused_list: Loc.filename list -> t
+val of_focused_list: File_key.t list -> t
 
-val mem: Loc.filename -> t -> bool
+val mem: File_key.t -> t -> bool
 val add:
   ?focused:Utils_js.FilenameSet.t ->
   ?dependents:Utils_js.FilenameSet.t ->
@@ -21,12 +21,12 @@ val add:
   t
 val remove: Utils_js.FilenameSet.t -> t -> t
 
-val fold: ('a -> Loc.filename -> 'a) -> 'a -> t -> 'a
+val fold: ('a -> File_key.t -> 'a) -> 'a -> t -> 'a
 
 val union: t -> t -> t
 val diff: t -> t -> t
 
-val filter: f:(Loc.filename -> bool) -> t -> t
+val filter: f:(File_key.t -> bool) -> t -> t
 
 val all: t -> Utils_js.FilenameSet.t
 val focused: t -> Utils_js.FilenameSet.t

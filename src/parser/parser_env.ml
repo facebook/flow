@@ -206,7 +206,7 @@ type env = {
   lookahead             : Lookahead.t ref;
   token_sink            : (token_sink_result -> unit) option ref;
   parse_options         : parse_options;
-  source                : Loc.filename option;
+  source                : File_key.t option;
   (* It is a syntax error to reference private fields not in scope. In order to enforce this,
    * we keep track of the privates we've seen declared and used. *)
   privates              : (SSet.t * ((string * Loc.t) list)) list ref;

@@ -12,7 +12,7 @@ open Utils_js
 
 (****************** shared context heap *********************)
 
-module SigContextHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
+module SigContextHeap = SharedMem_js.WithCache (File_key) (struct
   type t = Context.cacheable_t
   let prefix = Prefix.make()
   let description = "SigContext"
@@ -27,16 +27,16 @@ let add_sig ~audit cx =
 let find_sig ~options file =
   match SigContextHeap.get file with
   | Some cx -> Context.from_cache ~options cx
-  | None -> raise (Key_not_found ("SigContextHeap", string_of_filename file))
+  | None -> raise (Key_not_found ("SigContextHeap", File_key.to_string file))
 
-module SigHashHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
+module SigHashHeap = SharedMem_js.WithCache (File_key) (struct
   type t = SigHash.t
   let prefix = Prefix.make()
   let description = "SigHash"
 end)
 
-module LeaderHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
-  type t = filename
+module LeaderHeap = SharedMem_js.WithCache (File_key) (struct
+  type t = File_key.t
   let prefix = Prefix.make()
   let description = "Leader"
 end)
@@ -44,7 +44,7 @@ end)
 let find_leader file =
   match LeaderHeap.get file with
   | Some leader -> leader
-  | None -> raise (Key_not_found ("LeaderHeap", (string_of_filename file)))
+  | None -> raise (Key_not_found ("LeaderHeap", (File_key.to_string file)))
 
 (* While merging, we must keep LeaderHeap, SigContextHeap, and SigHashHeap in
    sync, sometimes creating new entries and sometimes reusing old entries. *)
@@ -54,7 +54,7 @@ let find_leader file =
 let add_merge_on_diff ~audit leader_cx component_files md5 =
   let leader_f = Context.file leader_cx in
   let diff = match SigHashHeap.get_old leader_f with
-    | Some md5_old -> Loc.check_suffix leader_f Files.flow_ext || md5 <> md5_old
+    | Some md5_old -> File_key.check_suffix leader_f Files.flow_ext || md5 <> md5_old
     | None -> true in
   if diff then begin
     List.iter (fun f -> LeaderHeap.add f leader_f) component_files;

@@ -425,5 +425,17 @@ Error: objmap.js:16
  16:   (o.foo: string); // error, number ~> string
                ^^^^^^ string
 
+Error: optional.js:13
+ 13: (o3.b: Array<number | void>); // Error: void ~> array
+      ^^^^ undefined. This type is incompatible with
+ 13: (o3.b: Array<number | void>); // Error: void ~> array
+            ^^^^^^^^^^^^^^^^^^^^ array type
 
-Found 25 errors
+Error: optional.js:17
+ 17: (o6.b: Array<number | void>); // Error: void ~> array
+      ^^^^ undefined. This type is incompatible with
+ 17: (o6.b: Array<number | void>); // Error: void ~> array
+            ^^^^^^^^^^^^^^^^^^^^ array type
+
+
+Found 27 errors

@@ -24,11 +24,11 @@
 *)
 type t =
 | String of string
-| Filename of Loc.filename
+| Filename of File_key.t
 
 let to_string = function
   | String m -> m
-  | Filename f -> Loc.string_of_filename f
+  | Filename f -> File_key.to_string f
 
 let compare = Pervasives.compare
 

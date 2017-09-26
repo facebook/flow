@@ -30,10 +30,17 @@ let spec = {
     |> include_flag
     |> root_flag
     |> json_flags
+    |> from_flag
     |> flag "--all" no_arg
       ~doc:"Even list ignored files and lib files"
+    |> flag "--imaginary" no_arg
+      ~doc:"Even list non-existent specified files (normally they are silently dropped). \
+            Non-existent files are never considered to be libs."
     |> flag "--explain" no_arg
       ~doc:"Output what kind of file each file is and why Flow cares about it"
+    |> flag "--input-file" string
+      ~doc:("File containing list of files to ls, one per line. If -, list of files is "^
+        "read from the standard input.")
     |> anon "files or dirs" (list_of string)
       ~doc:"Lists only these files or files in these directories"
   )
@@ -110,14 +117,14 @@ let make_options ~root ~ignore_flag ~include_flag =
 (* Directories will return a closure that returns every file under that
    directory. Individual files will return a closure that returns just that file
  *)
-let get_ls_files ~root ~all ~options ~libs = function
+let get_ls_files ~root ~all ~options ~libs ~imaginary = function
 | None ->
     Files.make_next_files ~root ~all ~subdir:None ~options ~libs
 | Some dir when try Sys.is_directory dir with _ -> false ->
     let subdir = Some (Path.make dir) in
     Files.make_next_files ~root ~all ~subdir ~options ~libs
 | Some file ->
-    if all || (Sys.file_exists file && Files.wanted ~options libs file)
+    if all || ((Sys.file_exists file || imaginary) && Files.wanted ~options libs file)
     then begin
       let file = file |> Path.make |> Path.to_string in
       let rec cb = ref begin fun () ->
@@ -145,27 +152,35 @@ let concat_get_next get_nexts =
   in concat
 
 let main
-  strip_root ignore_flag include_flag root_flag json pretty all reason
-  root_or_files () =
+  strip_root ignore_flag include_flag root_flag json pretty from all imaginary reason
+  input_file root_or_files () =
 
+  let files_or_dirs = get_filenames_from_input ~allow_imaginary:true input_file root_or_files in
+
+  FlowEventLogger.set_from from;
   let root = guess_root (
     match root_flag with
     | Some root -> Some root
-    | None -> (match root_or_files with
-      | Some (first_file::_) -> Some first_file
+    | None -> (match files_or_dirs with
+      | first_file::_ ->
+        (* If the first_file doesn't exist or if we can't find a .flowconfig, we'll error. If
+         * --strip-root is passed, we want the error to contain a relative path. *)
+        let first_file = if strip_root
+          then Files.relative_path (Sys.getcwd ()) first_file
+          else first_file in
+        Some first_file
       | _ -> None)
   ) in
 
   let options = make_options ~root ~ignore_flag ~include_flag in
   let _, libs = Files.init options in
   (* `flow ls` and `flow ls dir` will list out all the flow files *)
-  let next_files = (match root_or_files with
-  | None
-  | Some [] ->
-      get_ls_files ~root ~all ~options ~libs None
-  | Some files_or_dirs ->
+  let next_files = (match files_or_dirs with
+  | [] ->
+      get_ls_files ~root ~all ~options ~libs ~imaginary None
+  | files_or_dirs ->
       files_or_dirs
-      |> List.map (fun f -> get_ls_files ~root ~all ~options ~libs (Some f))
+      |> List.map (fun f -> get_ls_files ~root ~all ~options ~libs ~imaginary (Some f))
       |> concat_get_next) in
 
   let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
@@ -181,8 +196,8 @@ let main
       if reason
       then
         files
-        |> List.map normalize_filename
         |> List.map (is_included ~root ~options ~libs)
+        |> List.map (fun (f, r) -> normalize_filename f, r)
         |> json_of_files_with_explanations
       else JSON_Array (
         List.map (fun f -> JSON_String (normalize_filename f)) files

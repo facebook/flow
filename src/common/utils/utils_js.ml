@@ -30,14 +30,9 @@ let string_of_float_trunc x =
 
 module LocMap = MyMap.Make(Loc)
 
-(* alias stuff from `Loc` so that it can be used by doing `open Utils_js`
-   instead of `open Loc`, which pollutes too much. *)
-type filename = Loc.filename
-let string_of_filename = Loc.string_of_filename
+module FilenameSet = Set.Make(File_key)
 
-module FilenameSet = Set.Make(Loc.FilenameKey)
-
-module FilenameMap = MyMap.Make (Loc.FilenameKey)
+module FilenameMap = MyMap.Make (File_key)
 
 module PathMap : MyMap.S with type key = Path.t = MyMap.Make (struct
   type t = Path.t

@@ -32,6 +32,7 @@ let spec = {
     |> root_flag
     |> json_flags
     |> strip_root_flag
+    |> from_flag
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
     |> flag "--raw" no_arg
@@ -95,7 +96,8 @@ let handle_error err ~json ~pretty ~strip_root =
     prerr_endline err
   )
 
-let main option_values root json pretty strip_root path include_raw filename () =
+let main option_values root json pretty strip_root from path include_raw filename () =
+  FlowEventLogger.set_from from;
   let json = json || pretty || include_raw in
   let file = get_file_from_filename_or_stdin path filename in
   let root = guess_root (

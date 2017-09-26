@@ -99,7 +99,7 @@ let check err severity_cover suppressions =
   let is_in_dependency = match Errors.infos_of_error err with
     | (primary_loc,_)::_ ->
       Option.value_map (Loc.source primary_loc) ~default:false ~f:(fun filename ->
-        String_utils.is_substring "/node_modules/" (Loc.string_of_filename filename))
+        String_utils.is_substring "/node_modules/" (File_key.to_string filename))
     | [] -> false
   in
   let result = if is_in_dependency && (Option.is_some lint_kind)

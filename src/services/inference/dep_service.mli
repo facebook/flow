@@ -18,11 +18,11 @@ val dependent_files:
   (* (transitive_dependents, direct_dependents) of changed_modules *)
   FilenameSet.t * FilenameSet.t
 
-val file_dependencies: (filename -> FilenameSet.t) Expensive.t
+val file_dependencies: (File_key.t -> FilenameSet.t) Expensive.t
 
 val calc_dependency_graph:
   Worker.t list option -> (* workers *)
-  filename list -> (* files *)
+  File_key.t list -> (* files *)
   FilenameSet.t FilenameMap.t
 
 val calc_all_dependencies:

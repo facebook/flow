@@ -1063,6 +1063,7 @@ module ResolvableTypeJob = struct
 
     | EvalT _
     | ChoiceKitT (_, _)
+    | TypeDestructorTriggerT _
     | ModuleT (_, _)
     | ExtendsT _
       ->
@@ -1373,64 +1374,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* eval *)
     (********)
 
-    | EvalT (t, TypeDestructorT (reason, s), i), _ ->
-      let t = match t with
-        | OpenT (_, id) ->
-          let _, constraints = find_constraints cx id in
-          (match constraints with
-            | Resolved t -> t
-            | _ -> t)
-        | _ -> t
-      in
-      rec_flow cx trace (eval_destructor cx ~trace reason t s i, u)
+    | EvalT (t, TypeDestructorT (reason, d), id), _ ->
+      let _, result = mk_type_destructor cx ~trace reason t d id in
+      rec_flow cx trace (result, u)
 
-    | _, UseT (use_op, EvalT (t, TypeDestructorT (reason, s), i)) ->
-      (* When checking a lower bound against a destructed type, we need to take
-         some care. In particular, we do not want the destructed type to be
-         "open" when t is not itself open, i.e., we do not want any "extra"
-         lower bounds to be able to flow to the destructed type than what t
-         itself allows.
-
-         For example, when t is { x: number }, we want $PropertyType(t) to be
-         number, not some open tvar that is a supertype of number (since the
-         latter would accept more than number, e.g. string). Similarly, when t
-         is ?string, we want the $NonMaybeType(t) to be string.
-
-         However, in practice we are loose and allow extra lower bounds to flow
-         into the result if t itself is open. We do this because if t is open
-         then it may never resolve, or it may resolve multiple times producing a
-         result with the same characteristics.
-
-         We can avoid being loose if the tvar is resolved, so we unwrap resolved
-         tvars. *)
-      let t = match t with
-        | OpenT (_, id) ->
-          let _, constraints = find_constraints cx id in
-          (match constraints with
-            | Resolved t -> t
-            | _ -> t)
-        | _ -> t
-      in
-      let result = eval_destructor cx ~trace reason t s i in
-      begin match t with
-      | OpenT _ ->
-        (* TODO: If t itself is an open tvar, we can afford to be looser for
-           now. The additional looseness is not entirely justifiable (e.g., we
-           should still prevent "extra" lower bounds from flowing into the
-           destructed type that did not originate from lower bounds flowing to
-           t), and we should do more work to avoid it, but it's at least not as
-           egregious as the case when t is not open. *)
-        rec_flow cx trace (l, UseT (use_op, result))
-      | _ ->
-        (* With the same "slingshot" trick used by AnnotT, hold the lower bound
-           at bay until result itself gets concretized, and then flow the lower
-           bound to that concrete type. Note: this works for type destructors
-           since they come from annotations and other types that have the 0->1
-           property, but does not work in general because for arbitrary tvars,
-           concretization may never happen or may happen more than once. *)
-        let use_desc = false in
-        rec_flow cx trace (result, ReposUseT (reason, use_desc, use_op, l))
-      end
+    | _, UseT (use_op, EvalT (t, TypeDestructorT (reason, d), id)) ->
+      let slingshot, result = mk_type_destructor cx ~trace reason t d id in
+      if slingshot
+        then rec_flow cx trace (result, ReposUseT (reason, false, use_op, l))
+        else rec_flow cx trace (l, UseT (use_op, result))
 
     | EvalT (t, DestructuringT (reason, s), i), _ ->
       rec_flow cx trace (eval_selector cx ~trace reason t s i, u)
@@ -1512,6 +1464,45 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, UseT (use_op, EvalT (t, DestructuringT (reason, s), i)) ->
       rec_flow cx trace (l, UseT (use_op, eval_selector cx ~trace reason t s i))
 
+    (***************************)
+    (* type destructor trigger *)
+    (***************************)
+
+    (* For evaluating type destructors we add a trigger, TypeDestructorTriggerT,
+     * to both sides of a type. When TypeDestructorTriggerT sees a new upper or
+     * lower bound we destruct that bound and flow the result in the same
+     * direction to some tout type. *)
+
+    (* Don't let two TypeDestructorTriggerTs reach each other or else we quickly
+     * run into non-termination scenarios. *)
+    | TypeDestructorTriggerT _, UseT (_, TypeDestructorTriggerT _) -> ()
+
+    | l, UseT (_, TypeDestructorTriggerT (reason, d, tout)) ->
+      eval_destructor cx ~trace reason l d tout
+
+    | TypeDestructorTriggerT (reason, d, tout), UseT (use_op, u) ->
+      (* With the same "slingshot" trick used by AnnotT, hold the lower bound
+       * at bay until result itself gets concretized, and then flow the lower
+       * bound to that concrete type. *)
+      let t = mk_tvar_where cx reason (fun t -> eval_destructor cx ~trace reason u d t) in
+      let use_desc = false in
+      rec_flow cx trace (t, ReposUseT (reason, use_desc, use_op, tout))
+
+    (* Ignore any non-type uses. The implementation of type destructors operate
+     * solely on types and not arbitrary uses. We also don't want to add errors
+     * for arbitrary uses that get added to the subject of our trigger in type
+     * destruction evaluation.
+     *
+     * This may be a risky behavior when considering tvars with *only* non-type
+     * uses. However, such tvars are rare and often come from non-sensical
+     * programs.
+     *
+     * Type destructors, currently, may only be created as type annotations.
+     * This means that the type is either always 0->1, or it is a polymorphic
+     * type argument which will be instantiated with an open tvar. Polymorphic
+     * type arguments will also always get some type upper bound with the
+     * default type being MixedT. We destruct these upper bounds. *)
+    | TypeDestructorTriggerT _, _ -> ()
 
     (************************)
     (* Full type resolution *)
@@ -5125,11 +5116,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, MapTypeT (reason, TupleMap funt, tout) ->
       let iter = get_builtin cx ~trace "$iterate" reason in
       let elemt = EvalT (iter, TypeDestructorT (reason, CallType [l]), mk_id ()) in
-      let t = DefT (reason, ArrT (ArrayAT (elemt, None))) in
+      let t = DefT (reason, ArrT (ROArrayAT elemt)) in
       rec_flow cx trace (t, MapTypeT (reason, TupleMap funt, tout))
 
     | DefT (_, ObjT o), MapTypeT (reason_op, ObjectMap funt, tout) ->
-      let map_t t = EvalT (funt, TypeDestructorT (reason_op, CallType [t]), mk_id ()) in
+      let map_t t =
+        let t, opt = match t with
+        | DefT (_, OptionalT t) -> t, true
+        | _ -> t, false
+        in
+        let t = EvalT (funt, TypeDestructorT (reason_op, CallType [t]), mk_id ()) in
+        if opt
+          then optional t
+          else t
+      in
       let props_tmap =
         Context.find_props cx o.props_tmap
         |> Properties.map_fields map_t
@@ -5146,7 +5146,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (mapped_t, tout)
 
     | DefT (_, ObjT o), MapTypeT (reason_op, ObjectMapi funt, tout) ->
-      let mapi_t key t = EvalT (funt, TypeDestructorT (reason_op, CallType [key; t]), mk_id ()) in
+      let mapi_t key t =
+        let t, opt = match t with
+        | DefT (_, OptionalT t) -> t, true
+        | _ -> t, false
+        in
+        let t = EvalT (funt, TypeDestructorT (reason_op, CallType [key; t]), mk_id ()) in
+        if opt
+          then optional t
+          else t
+      in
       let mapi_field key t =
         let reason = replace_reason_const (RStringLit key) reason_op in
         mapi_t (DefT (reason, SingletonStrT key)) t
@@ -6320,6 +6329,11 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
            robust. Tracked by #11299251. *)
         if not (Speculation.speculating ()) then
           Context.set_prop cx lflds s up;
+      (* Don't lookup $call in the prototype chain. Instead of going through
+       * LookupT add an EStrictLookupFailed error here. *)
+      | _ when s = "$call" ->
+        add_output cx ~trace (FlowError.EStrictLookupFailed
+          ((reason_prop, lreason), lreason, Some s, Some use_op))
       | _ ->
         (* otherwise, look up the property in the prototype *)
         let strict = match sealed_in_op ureason lflags.sealed, ldict with
@@ -6339,7 +6353,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   | None -> ()
   | Some { key; value; dict_polarity; _ } ->
     iter_real_props cx lflds (fun s lp ->
-      if not (Context.has_prop cx uflds s)
+      if not (Context.has_prop cx uflds s || is_dictionary_exempt s)
       then (
         rec_flow_t cx trace (string_key s lreason, key);
         let lp = match lp with
@@ -6793,72 +6807,98 @@ and eval_selector cx ?trace reason curr_t s i =
   | Some it ->
     it
 
-and eval_destructor cx ~trace reason curr_t s i =
+and mk_type_destructor cx ~trace reason t d id =
   let evaluated = Context.evaluated cx in
-  match IMap.get i evaluated with
-  | None ->
-    mk_tvar_where cx reason (fun tvar ->
-      Context.set_evaluated cx (IMap.add i tvar evaluated);
-      match curr_t with
-      (* The type this annotation resolves to might be a union-like type which
-         requires special handling (see below). However, the tvar inside the
-         AnnotT might not be resolved yet. *)
-      | AnnotT (t, _) ->
-        (* Use full type resolution to wait for the tvar to become resolved. *)
-        let _, id = open_tvar t in
-        let k = tvar_with_constraint cx ~trace
-          (choice_kit_use reason (EvalDestructor (id, s, tvar))) in
-        resolve_bindings_init cx trace reason [(id,t)] k
-      (* If we are destructuring a union, evaluating the destructor on the union
-         itself may have the effect of splitting the union into separate lower
-         bounds, which prevents the speculative match process from working.
-         Instead, we preserve the union by pushing down the destructor onto the
-         branches of the unions. *)
-      | DefT (r, UnionT rep) ->
-        rec_flow_t cx trace (DefT (r, UnionT (rep |> UnionRep.map (fun t ->
-          EvalT (t, TypeDestructorT (reason, s), mk_id ())
-        ))), tvar)
-      | DefT (r, MaybeT t) ->
-        let destructor = TypeDestructorT (reason, s) in
-        let rep = UnionRep.make
-          (EvalT (NullT.why r, destructor, mk_id ()))
-          (EvalT (VoidT.why r, destructor, mk_id ()))
-          [EvalT (t, destructor, mk_id ())]
-        in
-        rec_flow_t cx trace (DefT (r, UnionT rep), tvar)
-      | _ ->
-        rec_flow cx trace (curr_t, match s with
-        | NonMaybeType ->
-            let maybe_r = replace_reason (fun desc -> RMaybe desc) reason in
-            UseT (UnknownUse, DefT (maybe_r, MaybeT tvar))
-        | PropertyType x -> GetPropT(reason, Named (reason, x), tvar)
-        | ElementType t -> GetElemT(reason, t, tvar)
-        | Bind t -> BindT(reason, mk_methodcalltype t [] tvar, true)
-        | SpreadType (options, todo_rev) ->
-            let open Object in
-            let open Object.Spread in
-            let tool = Resolve Next in
-            let state = { todo_rev; acc = [] } in
-            ObjKitT (reason, tool, Spread (options, state), tvar)
-        | RestType t ->
-          let open Object in
-          let open Object.Rest in
-          let tool = Resolve Next in
-          let state = One t in
-          ObjKitT (reason, tool, Rest state, tvar)
-        | ValuesType -> GetValuesT (reason, tvar)
-        | CallType args ->
-          let args = List.map (fun arg -> Arg arg) args in
-          let call = mk_functioncalltype reason args tvar in
-          let call = {call with call_strict_arity = false} in
-          CallT (reason, call)
-        | TypeMap tmap -> MapTypeT (reason, tmap, tvar)
-        | ReactElementPropsType -> ReactKitT (reason, React.GetProps tvar)
-        | ReactElementRefType -> ReactKitT (reason, React.GetRef tvar)
-        )
+  (* As an optimization, unwrap resolved tvars so that they are only evaluated
+   * once to an annotation instead of a tvar that gets a bound on both sides. *)
+  let t = match t with
+    | OpenT (_, id) ->
+      let _, constraints = find_constraints cx id in
+      (match constraints with
+        | Resolved t -> t
+        | _ -> t)
+    | _ -> t
+  in
+  match t, IMap.get id evaluated with
+  (* The OpenT branch is a correct implementation of type destructors for all
+   * types. However, because it adds a constraint to both sides of a type we may
+   * end up doing some work twice. So as an optimization for concrete types
+   * we have a fall-through branch that only evaluates our type destructor once.
+   * The second branch then uses AnnotT to both concretize the result for use
+   * as a lower or upper bound and prevent new bounds from being added to
+   * the result. *)
+  | OpenT _, Some t -> false, t
+  | OpenT _, None ->
+    false, mk_tvar_where cx reason (fun tvar ->
+      Context.set_evaluated cx (IMap.add id tvar evaluated);
+      let x = TypeDestructorTriggerT (reason, d, tvar) in
+      rec_flow_t cx trace (t, x);
+      rec_flow_t cx trace (x, t);
     )
-  | Some it ->
-    it
+  | _, Some t -> true, t
+  | _, None ->
+    true, mk_tvar_where cx reason (fun tvar ->
+      Context.set_evaluated cx (IMap.add id tvar evaluated);
+      eval_destructor cx ~trace reason t d tvar;
+    )
+
+and eval_destructor cx ~trace reason t d tout = match t with
+(* The type this annotation resolves to might be a union-like type which
+   requires special handling (see below). However, the tout inside the
+   AnnotT might not be resolved yet. *)
+| AnnotT (t, _) ->
+  (* Use full type resolution to wait for the tout to become resolved. *)
+  let _, id = open_tvar t in
+  let k = tvar_with_constraint cx ~trace
+    (choice_kit_use reason (EvalDestructor (id, d, tout))) in
+  resolve_bindings_init cx trace reason [(id, t)] k
+(* If we are destructuring a union, evaluating the destructor on the union
+   itself may have the effect of splitting the union into separate lower
+   bounds, which prevents the speculative match process from working.
+   Instead, we preserve the union by pushing down the destructor onto the
+   branches of the unions. *)
+| DefT (r, UnionT rep) ->
+  rec_flow_t cx trace (DefT (r, UnionT (rep |> UnionRep.map (fun t ->
+    EvalT (t, TypeDestructorT (reason, d), mk_id ())
+  ))), tout)
+| DefT (r, MaybeT t) ->
+  let destructor = TypeDestructorT (reason, d) in
+  let rep = UnionRep.make
+    (EvalT (NullT.why r, destructor, mk_id ()))
+    (EvalT (VoidT.why r, destructor, mk_id ()))
+    [EvalT (t, destructor, mk_id ())]
+  in
+  rec_flow_t cx trace (DefT (r, UnionT rep), tout)
+| _ ->
+  rec_flow cx trace (t, match d with
+  | NonMaybeType ->
+    let maybe_r = replace_reason (fun desc -> RMaybe desc) reason in
+    UseT (UnknownUse, DefT (maybe_r, MaybeT tout))
+  | PropertyType x -> GetPropT (reason, Named (reason, x), tout)
+  | ElementType t -> GetElemT (reason, t, tout)
+  | Bind t -> BindT (reason, mk_methodcalltype t [] tout, true)
+  | SpreadType (options, todo_rev) ->
+    let open Object in
+    let open Object.Spread in
+    let tool = Resolve Next in
+    let state = { todo_rev; acc = [] } in
+    ObjKitT (reason, tool, Spread (options, state), tout)
+  | RestType t ->
+    let open Object in
+    let open Object.Rest in
+    let tool = Resolve Next in
+    let state = One t in
+    ObjKitT (reason, tool, Rest state, tout)
+  | ValuesType -> GetValuesT (reason, tout)
+  | CallType args ->
+    let args = List.map (fun arg -> Arg arg) args in
+    let call = mk_functioncalltype reason args tout in
+    let call = {call with call_strict_arity = false} in
+    CallT (reason, call)
+  | TypeMap tmap -> MapTypeT (reason, tmap, tout)
+  | ReactElementPropsType -> ReactKitT (reason, React.GetProps tout)
+  | ReactElementRefType -> ReactKitT (reason, React.GetRef tout)
+  )
 
 and match_this_binding map f =
   match SMap.find_unsafe "this" map with
@@ -6979,6 +7019,7 @@ and check_polarity cx ?trace polarity = function
   | EvalT _
   | ExtendsT _
   | ChoiceKitT _
+  | TypeDestructorTriggerT _
   | CustomFunT _
   | OpenPredT _
   | MergedT _
@@ -10126,7 +10167,7 @@ and react_kit =
     ~string_key
     ~mk_tvar
     ~mk_tvar_where
-    ~eval_destructor
+    ~mk_type_destructor
     ~sealed_in_op
     ~union_of_ts
     ~filter_maybe
@@ -11029,6 +11070,7 @@ end = struct
     | DefT (_, ArrT _)
     | BoundT _
     | ChoiceKitT (_, _)
+    | TypeDestructorTriggerT _
     | DefT (_, ClassT _)
     | CustomFunT (_, _)
     | DiffT (_, _)
@@ -11259,6 +11301,7 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | EvalT _
   | ExtendsT _
   | ChoiceKitT _
+  | TypeDestructorTriggerT _
   | CustomFunT _
   | OpenPredT _
   | MergedT _

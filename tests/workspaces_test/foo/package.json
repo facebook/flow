@@ -1,0 +1,10 @@
+{
+  "name": "foo",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "bar": "0.0.1",
+    "root_lib": "1.0.0",
+    "workspace_lib": "2.0.0"
+  }
+}

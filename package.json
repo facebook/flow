@@ -3,6 +3,7 @@
   "license": "BSD-3-Clause",
   "version": "0.1.0",
   "dependencies": {
+    "babel-jest": "^21.0.2",
     "babel-plugin-syntax-async-functions": "^6.8.0",
     "babel-plugin-syntax-flow": "^6.8.0",
     "babel-plugin-syntax-trailing-function-commas": "^6.8.0",
@@ -18,6 +19,7 @@
     "diff": "~3.2.0",
     "flow-parser": "~0.21.0",
     "glob": "^7.0.3",
+    "jest": "^21.1.0",
     "minimist": "~1.2.0",
     "mkdirp": "^0.5.1",
     "ncp": "~2.0.0",
@@ -43,6 +45,7 @@
     ]
   },
   "scripts": {
-    "test": "make test"
+    "test": "make test",
+    "test-tool": "jest --config .jest-tool.config.js"
   }
 }

@@ -81,6 +81,9 @@ let rec gc cx state = function
   | DefT (_, BoolT _) -> ()
   | BoundT typeparam -> gc_typeparam cx state typeparam
   | ChoiceKitT _ -> ()
+  | TypeDestructorTriggerT (_, s, t) ->
+      gc_destructor cx state s;
+      gc cx state t
   | DefT (_, ClassT t) -> gc cx state t
   | CustomFunT (_, ReactElementFactory t) -> gc cx state t
   | CustomFunT _ -> ()

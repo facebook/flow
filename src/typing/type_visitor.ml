@@ -26,6 +26,11 @@ class ['a] t = object(self)
 
   | ChoiceKitT (_, Trigger) -> acc
 
+  | TypeDestructorTriggerT (_, d, t) ->
+    let acc = self#destructor cx acc d in
+    let acc = self#type_ cx acc t in
+    acc
+
   | TaintT _
   | FunProtoT _
   | FunProtoApplyT _

@@ -153,7 +153,6 @@ class virtual ['a, 'b, 'c] engine = object(self)
   method virtual print_env : 'b -> unit
   method virtual print_syntax : 'c -> unit
   method virtual combine_syntax : 'c list -> string
-         
   (* A mehod for getting the name of an engine *)
   method virtual get_name : unit -> string
 

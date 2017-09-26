@@ -10,11 +10,11 @@
 module FilenameMap = Utils_js.FilenameMap
 
 module Reqs = struct
-  type impl = Loc.filename * string * string * Loc.filename
-  type dep_impl = Context.t * string * string * Loc.filename
-  type unchecked = string * Loc.t * Loc.filename
-  type res = string * Loc.t * string * Loc.filename
-  type decl = string * Loc.t * Modulename.t * Loc.filename
+  type impl = File_key.t * string * string * File_key.t
+  type dep_impl = Context.t * string * string * File_key.t
+  type unchecked = string * Loc.t * File_key.t
+  type res = string * Loc.t * string * File_key.t
+  type decl = string * Loc.t * Modulename.t * File_key.t
   type t = {
     impls: impl list;
     dep_impls: dep_impl list;

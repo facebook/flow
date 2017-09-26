@@ -320,6 +320,9 @@ let rec type_printer_impl ~size override enclosure cx t =
     | ChoiceKitT _ ->
         "ChoiceKit"
 
+    | TypeDestructorTriggerT _ ->
+        "TvarDestructor"
+
     | FunProtoCallT _
     | ObjProtoT _
     | NullProtoT _

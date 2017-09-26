@@ -86,7 +86,7 @@ let dependencies = filter_into_set ~f:(fun kind -> kind = Dependency)
 let debug_to_string =
   let string_of_set set =
     Utils_js.FilenameSet.elements set
-    |> List.map (fun f -> spf "\"%s\"" (Loc.string_of_filename f))
+    |> List.map (fun f -> spf "\"%s\"" (File_key.to_string f))
     |> String.concat "\n"
   in
   fun checked ->

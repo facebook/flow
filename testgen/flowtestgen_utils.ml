@@ -568,7 +568,7 @@ module Config = struct
         json_str
         (match filename with
          | None -> None
-         | Some f -> (Some (Loc.JsonFile f))) in
+         | Some f -> (Some (File_key.JsonFile f))) in
     to_config (match (fst expr_ast) with
         | (_, E.Object o) -> o
         | _ -> failwith "Can only be an object")
@@ -635,7 +635,6 @@ function assert_type(actual: any, expected: any) {
         }
     }
 }
-  
 function check_opt_prop(obj_list : any, actual : any, expected : any) {
     var len = obj_list.length;
     for(var i = 0; i < len; ++i) {

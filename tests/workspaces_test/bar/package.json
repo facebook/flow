@@ -1,0 +1,9 @@
+{
+  "name": "bar",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "root_lib": "1.0.0",
+    "workspace_lib": "1.0.0"
+  }
+}

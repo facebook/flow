@@ -176,6 +176,9 @@ module rec TypeTerm : sig
     (* toolkit for making choices *)
     | ChoiceKitT of reason * choice_tool
 
+    (* upper bound trigger for type destructors *)
+    | TypeDestructorTriggerT of reason * destructor * t
+
     (* Sigil representing functions that the type system is not expressive
        enough to annotate, so we customize their behavior internally. *)
     | CustomFunT of reason * custom_fun_kind
@@ -778,7 +781,7 @@ module rec TypeTerm : sig
     | Computed of t
 
   and sealtype =
-    | UnsealedInFile of Loc.filename option
+    | UnsealedInFile of File_key.t option
     | Sealed
 
   and flags = {
@@ -1910,6 +1913,7 @@ let rec reason_of_t = function
   | MergedT (reason, _) -> reason
   | BoundT typeparam -> typeparam.reason
   | ChoiceKitT (reason, _) -> reason
+  | TypeDestructorTriggerT (reason, _, _) -> reason
   | CustomFunT (reason, _) -> reason
   | DefT (reason, _) -> reason
   | DiffT (t, _) -> reason_of_t t
@@ -2053,6 +2057,7 @@ let rec mod_reason_of_t f = function
   | BoundT { reason; name; bound; polarity; default; } ->
       BoundT { reason = f reason; name; bound; polarity; default; }
   | ChoiceKitT (reason, tool) -> ChoiceKitT (f reason, tool)
+  | TypeDestructorTriggerT (reason, d, t) -> TypeDestructorTriggerT (f reason, d, t)
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
   | DefT (reason, t) -> DefT (f reason, t)
   | DiffT (t1, t2) -> DiffT (mod_reason_of_t f t1, t2)
@@ -2269,6 +2274,7 @@ let string_of_ctor = function
     spf "ChoiceKitT %s" begin match tool with
     | Trigger -> "Trigger"
     end
+  | TypeDestructorTriggerT _ -> "TypeDestructorTriggerT"
   | CustomFunT _ -> "CustomFunT"
   | DefT (_, t) -> string_of_def_ctor t
   | DiffT _ -> "DiffT"

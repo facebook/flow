@@ -29,7 +29,7 @@ let parse_lib_file options file =
   (* lib files are always "use strict" *)
   let use_strict = true in
   try
-    let lib_file = Loc.LibFile file in
+    let lib_file = File_key.LibFile file in
     let filename_set = FilenameSet.singleton lib_file in
     let next = Parsing.next_of_filename_set (* workers *) None filename_set in
     let results =
@@ -72,7 +72,7 @@ let load_lib_files ~master_cx ~options files =
 
     fun (exclude_syms, results) file ->
 
-      let lib_file = Loc.LibFile file in
+      let lib_file = File_key.LibFile file in
       let lint_severities = options.Options.opt_lint_severities in
       match parse_lib_file options file with
       | Parsing.Parse_ok ast ->
@@ -138,7 +138,7 @@ let init ~options lib_files =
       let local_metadata = { metadata.local_metadata with checked = false; weak = false; } in
       { metadata with local_metadata }
     in
-    Flow.fresh_context metadata Loc.Builtins Files.lib_module_ref
+    Flow.fresh_context metadata File_key.Builtins Files.lib_module_ref
   in
 
   let result = load_lib_files ~master_cx ~options lib_files in

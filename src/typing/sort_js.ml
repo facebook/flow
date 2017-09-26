@@ -31,13 +31,13 @@ type topsort_state = {
   (* visit ordering *)
   mutable indices: int FilenameMap.t;
   (* nodes in a strongly connected component *)
-  mutable stack: filename list;
+  mutable stack: File_key.t list;
   (* back edges to earliest visited nodes *)
   mutable lowlinks: int FilenameMap.t;
   (* heights *)
   mutable heights: int FilenameMap.t;
   (* components *)
-  mutable components: filename list FilenameMap.t;
+  mutable components: File_key.t list FilenameMap.t;
 }
 
 let initial_state files = {
@@ -166,7 +166,7 @@ let log =
       if List.length mc > 1
       then
         let files = mc
-        |> List.map string_of_filename
+        |> List.map File_key.to_string
         |> String.concat "\n\t"
         in
         prerr_endlinef "cycle detected among the following files:\n\t%s" files

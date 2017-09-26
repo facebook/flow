@@ -112,9 +112,9 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
        addition to others computed by direct_dependents downstream). *)
     let resolution_path_files =
       if resolved_requires.phantom_dependents |> SSet.exists (fun f ->
-        FilenameSet.mem (Loc.SourceFile f) root_fileset ||
-        FilenameSet.mem (Loc.JsonFile f) root_fileset ||
-        FilenameSet.mem (Loc.ResourceFile f) root_fileset
+        FilenameSet.mem (File_key.SourceFile f) root_fileset ||
+        FilenameSet.mem (File_key.JsonFile f) root_fileset ||
+        FilenameSet.mem (File_key.ResourceFile f) root_fileset
       ) then FilenameSet.add f resolution_path_files
       else resolution_path_files in
     modules, module_dependent_map, resolution_path_files

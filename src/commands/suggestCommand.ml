@@ -30,6 +30,7 @@ let spec = {
     empty
     |> server_flags
     |> root_flag
+    |> from_flag
     |> anon "files" (required (list_of string)) ~doc:"Files"
   )
 }
@@ -45,7 +46,8 @@ let parse_suggest_cmd file =
   else
     (file, [])
 
-let main option_values root files () =
+let main option_values root from files () =
+  FlowEventLogger.set_from from;
   let files_and_regions = List.map parse_suggest_cmd files in
   let root = guess_root (
     match root with
