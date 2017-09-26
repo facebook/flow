@@ -38,9 +38,7 @@ let spec = {
             Non-existent files are never considered to be libs."
     |> flag "--explain" no_arg
       ~doc:"Output what kind of file each file is and why Flow cares about it"
-    |> flag "--input-file" string
-      ~doc:("File containing list of files to ls, one per line. If -, list of files is "^
-        "read from the standard input.")
+    |> input_file_flag "ls"
     |> anon "files or dirs" (list_of string)
       ~doc:"Lists only these files or files in these directories"
   )
