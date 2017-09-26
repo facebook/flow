@@ -65,6 +65,8 @@ export class TestStep {
   _reason: ?string;
   _needsFlowServer: boolean;
   _needsFlowCheck: boolean;
+  _startsIde: boolean;
+  _readsIdeMessages: boolean;
 
   constructor(step?: TestStep) {
     this._actions = step == null ? [] : step._actions.slice();
@@ -72,6 +74,8 @@ export class TestStep {
     this._needsFlowCheck = step == null ? false : step._needsFlowCheck;
     this._needsFlowServer = step == null ? false : step._needsFlowServer;
     this._reason = step == null ? null : step._reason;
+    this._startsIde = step == null ? false : step._startsIde;
+    this._readsIdeMessages = step == null ? false : step._readsIdeMessages;
   }
 
   async performActions(
@@ -99,6 +103,14 @@ export class TestStep {
 
   needsFlowCheck(): boolean {
     return this._needsFlowCheck;
+  }
+
+  startsIde(): boolean {
+    return this._startsIde;
+  }
+
+  readsIdeMessages(): boolean {
+    return this._readsIdeMessages;
   }
 }
 
@@ -218,20 +230,27 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     );
 
   ideStart: () => TestStepFirstStage =
-    () => this._cloneWithAction(
-      async (builder, env) => {
-        await builder.createIDEConnection();
-        env.triggerFlowCheck();
-      }
-    );
+    () => {
+      const ret = this._cloneWithAction(
+        async (builder, env) => {
+          await builder.createIDEConnection();
+          env.triggerFlowCheck();
+        }
+      );
+      ret._startsIde = true;
+      return ret;
+    }
 
   ideNotification: (string, ...params: Array<mixed>) => TestStepFirstStage =
-    (method, ...params) => this._cloneWithAction(
-      async (builder, env) => builder.sendIDENotification(
-        method,
-        params,
-      )
-    );
+    (method, ...params) => {
+      const ret = this._cloneWithAction(
+        async (builder, env) => builder.sendIDENotification(
+          method,
+          params,
+        )
+      );
+      return ret;
+    }
 
   ideRequest: (string, ...params: Array<mixed>) => TestStepFirstStage =
     (method, ...params) => this._cloneWithAction(
@@ -246,7 +265,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
       const ret = this
         ._cloneWithAction((builder, env) => sleep(timeoutMs))
         ._cloneWithAssertion(ideNoNewMessagesAfterSleep(timeoutMs, assertLoc));
-      ret._needsFlowCheck = true;
+      ret._readsIdeMessages = true;
       return ret;
     };
 
@@ -273,7 +292,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         ._cloneWithAssertion(
           ideNewMessagesWithTimeout(timeoutMs, expected, assertLoc)
         );
-      ret._needsFlowCheck = true;
+      ret._readsIdeMessages = true;
       return ret;
     };
 

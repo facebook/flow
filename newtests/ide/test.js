@@ -763,8 +763,8 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
   ]),
 
   test('autocomplete', [
-    ideStart(),
-    ideRequest('autocomplete', 'test.js', 1, 12, "({x: 123}).;")
+    ideStart()
+      .ideRequest('autocomplete', 'test.js', 1, 12, "({x: 123}).;")
       .ideNewMessagesWithTimeout(
         5000,
         [
@@ -816,8 +816,8 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
   test('didOpen before subscribe', [
     addFile('fileWithWarning.js'),
-    ideStart(),
-    ideNotification('didOpen', 'fileWithWarning.js')
+    ideStart()
+      .ideNotification('didOpen', 'fileWithWarning.js')
       .ideNoNewMessagesAfterSleep(500)
       .because('We have not subscribed yet, so there is no response on open'),
 
@@ -928,8 +928,8 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
   test('didOpen after subscribe', [
     addFile('fileWithWarning.js'),
-    ideStart(),
-    ideNotification('subscribeToDiagnostics')
+    ideStart()
+      .ideNotification('subscribeToDiagnostics')
       .ideNewMessagesWithTimeout(
         5000,
         [
@@ -1060,8 +1060,8 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
   test('didClose before subscribe', [
     addFile('fileWithWarning.js'),
-    ideStart(),
-    ideNotification('didOpen', 'fileWithWarning.js')
+    ideStart()
+      .ideNotification('didOpen', 'fileWithWarning.js')
       .ideNotification('didClose', 'fileWithWarning.js')
       .ideNoNewMessagesAfterSleep(500)
       .because(
@@ -1089,8 +1089,8 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
 
   test('didClose after subscribe', [
     addFile('fileWithWarning.js'),
-    ideStart(),
-    ideNotification('subscribeToDiagnostics')
+    ideStart()
+      .ideNotification('subscribeToDiagnostics')
       .ideNewMessagesWithTimeout(
         5000,
         [
