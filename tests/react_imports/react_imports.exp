@@ -8,7 +8,7 @@ Error: commonjs-pascal.js:6
   6: ({}: React.Node); // Error
       ^^ object literal. This type is incompatible with
   6: ({}: React.Node); // Error
-          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | React$Portal | type application of identifier `Iterable`
+          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of React$Element | React$Portal | type application of identifier `Iterable`
   Member 1:
    15:   | void
            ^^^^ undefined. See lib: <BUILTINS>/react.js:15
@@ -51,7 +51,7 @@ Error: commonjs-pascal.js:6
            ^^^^^^ string. See lib: <BUILTINS>/react.js:19
   Member 6:
    20:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:20
+           ^^^^^^^^^^^^^^^^^^ type application of React$Element. See lib: <BUILTINS>/react.js:20
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
@@ -100,7 +100,7 @@ Error: commonjs.js:6
   6: ({}: React.Node); // Error
       ^^ object literal. This type is incompatible with
   6: ({}: React.Node); // Error
-          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | React$Portal | type application of identifier `Iterable`
+          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of React$Element | React$Portal | type application of identifier `Iterable`
   Member 1:
    15:   | void
            ^^^^ undefined. See lib: <BUILTINS>/react.js:15
@@ -143,7 +143,7 @@ Error: commonjs.js:6
            ^^^^^^ string. See lib: <BUILTINS>/react.js:19
   Member 6:
    20:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:20
+           ^^^^^^^^^^^^^^^^^^ type application of React$Element. See lib: <BUILTINS>/react.js:20
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
@@ -192,7 +192,7 @@ Error: es-default-pascal.js:6
   6: ({}: React.Node); // Error: Not in default export.
       ^^ object literal. This type is incompatible with
   6: ({}: React.Node); // Error: Not in default export.
-          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | React$Portal | type application of identifier `Iterable`
+          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of React$Element | React$Portal | type application of identifier `Iterable`
   Member 1:
    15:   | void
            ^^^^ undefined. See lib: <BUILTINS>/react.js:15
@@ -235,7 +235,7 @@ Error: es-default-pascal.js:6
            ^^^^^^ string. See lib: <BUILTINS>/react.js:19
   Member 6:
    20:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:20
+           ^^^^^^^^^^^^^^^^^^ type application of React$Element. See lib: <BUILTINS>/react.js:20
   Error:
     6: ({}: React.Node); // Error: Not in default export.
         ^^ object literal. This type is incompatible with
@@ -323,7 +323,7 @@ Error: es-namespace-pascal.js:6
   6: ({}: React.Node); // Error
       ^^ object literal. This type is incompatible with
   6: ({}: React.Node); // Error
-          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | React$Portal | type application of identifier `Iterable`
+          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of React$Element | React$Portal | type application of identifier `Iterable`
   Member 1:
    15:   | void
            ^^^^ undefined. See lib: <BUILTINS>/react.js:15
@@ -366,7 +366,7 @@ Error: es-namespace-pascal.js:6
            ^^^^^^ string. See lib: <BUILTINS>/react.js:19
   Member 6:
    20:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:20
+           ^^^^^^^^^^^^^^^^^^ type application of React$Element. See lib: <BUILTINS>/react.js:20
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with
@@ -415,7 +415,7 @@ Error: es-namespace.js:6
   6: ({}: React.Node); // Error
       ^^ object literal. This type is incompatible with
   6: ({}: React.Node); // Error
-          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of type `React$Element` | React$Portal | type application of identifier `Iterable`
+          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of React$Element | React$Portal | type application of identifier `Iterable`
   Member 1:
    15:   | void
            ^^^^ undefined. See lib: <BUILTINS>/react.js:15
@@ -458,7 +458,7 @@ Error: es-namespace.js:6
            ^^^^^^ string. See lib: <BUILTINS>/react.js:19
   Member 6:
    20:   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ type application of type `React$Element`. See lib: <BUILTINS>/react.js:20
+           ^^^^^^^^^^^^^^^^^^ type application of React$Element. See lib: <BUILTINS>/react.js:20
   Error:
     6: ({}: React.Node); // Error
         ^^ object literal. This type is incompatible with

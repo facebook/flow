@@ -428,7 +428,7 @@ let rec string_of_desc = function
   | RTupleMap -> "tuple map"
   | RObjectMap -> "object map"
   | RObjectMapi -> "object mapi"
-  | RType x -> spf "type `%s`" x
+  | RType x -> x
   | ROpaqueType x -> x
   | RTypeParam (x,d) -> spf "type parameter `%s` of %s" x (string_of_desc d)
   | RIdentifier x -> spf "identifier `%s`" x

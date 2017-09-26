@@ -236,9 +236,9 @@ No errors!
 Test m:
 Error: m3.js:6
   6: (x: T<number>);
-      ^ type application of polymorphic type: type `T`. Has some incompatible type argument with
+      ^ type application of polymorphic type: T. Has some incompatible type argument with
   6: (x: T<number>);
-         ^^^^^^^^^ type application of type `T`
+         ^^^^^^^^^ type application of T
   Type argument `X` is incompatible:
       5: export var x: T<string> = null;
                          ^^^^^^ string. This type is incompatible with. See: m1.js:5
@@ -247,9 +247,9 @@ Error: m3.js:6
 
 Error: m3.js:6
   6: (x: T<number>);
-      ^ type application of polymorphic type: type `T`. Has some incompatible type argument with
+      ^ type application of polymorphic type: T. Has some incompatible type argument with
   6: (x: T<number>);
-         ^^^^^^^^^ type application of type `T`
+         ^^^^^^^^^ type application of T
   Type argument `X` is incompatible:
       6: (x: T<number>);
                ^^^^^^ number. This type is incompatible with

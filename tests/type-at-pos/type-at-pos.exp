@@ -243,7 +243,7 @@
   "type":"E<number>",
   "reasons":[
     {
-      "desc":"type application of polymorphic type: type `E`",
+      "desc":"type application of polymorphic type: E",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
@@ -273,7 +273,7 @@
   "type":"F<number>",
   "reasons":[
     {
-      "desc":"type application of polymorphic type: type `F`",
+      "desc":"type application of polymorphic type: F",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
@@ -303,7 +303,7 @@
   "type":"O<number>",
   "reasons":[
     {
-      "desc":"type application of polymorphic type: type `O`",
+      "desc":"type application of polymorphic type: O",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
@@ -333,7 +333,7 @@
   "type":"(unknown)",
   "reasons":[
     {
-      "desc":"type application of type `Mono`",
+      "desc":"type application of Mono",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
