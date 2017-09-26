@@ -31,26 +31,26 @@ Error: function.js:7
 Error: intrinsic.js:6
   6: (any: React$ElementRef<'foo'>).yep2; // Error
                                     ^^^^ property `yep2`. Property not found in
-  6: (any: React$ElementRef<'foo'>).yep2; // Error
-                            ^^^^^ object type
+  4:     instance: {yep1: true},
+                   ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
 
 Error: intrinsic.js:7
   7: (any: React$ElementRef<'foo'>).nope; // Error
                                     ^^^^ property `nope`. Property not found in
-  7: (any: React$ElementRef<'foo'>).nope; // Error
-                            ^^^^^ object type
+  4:     instance: {yep1: true},
+                   ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
 
 Error: intrinsic.js:8
   8: (any: React$ElementRef<'bar'>).yep1; // Error
                                     ^^^^ property `yep1`. Property not found in
-  8: (any: React$ElementRef<'bar'>).yep1; // Error
-                            ^^^^^ object type
+  8:     instance: {yep2: true},
+                   ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:8
 
 Error: intrinsic.js:10
  10: (any: React$ElementRef<'bar'>).nope; // Error
                                     ^^^^ property `nope`. Property not found in
- 10: (any: React$ElementRef<'bar'>).nope; // Error
-                            ^^^^^ object type
+  8:     instance: {yep2: true},
+                   ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:8
 
 
 Found 9 errors
