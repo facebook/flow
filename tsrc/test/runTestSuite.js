@@ -102,6 +102,38 @@ export default async function(
         test.lazyMode,
       );
 
+      let firstIdeStartStep = null;
+      let lastIdeAssertionStep = null;
+      for (let i = 0; i < steps.length; i++) {
+        const step = steps[i];
+        if (firstIdeStartStep == null && step.startsIde()) {
+          firstIdeStartStep = i;
+        }
+        if (step.readsIdeMessages()) {
+          lastIdeAssertionStep = i;
+        }
+      }
+
+      if (firstIdeStartStep !== null && lastIdeAssertionStep !== null) {
+        for (let i = firstIdeStartStep; i <= lastIdeAssertionStep; i++) {
+          const step = steps[i];
+          if (!step.readsIdeMessages()) {
+            throw new Error(format(
+              "Testing flow ide is really tricky. To be safe, make sure that " +
+              "every step before the first ideStart and the last " +
+              "ideNewMessagesWithTimeout/ideNoNewMessagesAfterSleep calls " +
+              "either ideNewMessagesWithTimeout or " +
+              "ideNoNewMessagesAfterSleep.\n\n. " +
+              "Test '%s' step %d/%d should call either " +
+              "ideNewMessagesWithTimeout or ideNoNewMessagesAfterSleep.",
+              test.name,
+              i+1,
+              steps.length
+            ));
+          }
+        }
+      }
+
       for (const step of steps) {
         if (!(step instanceof TestStep)) {
           throw new Error(format("Expected a TestStep, instead got", step));
