@@ -122,7 +122,7 @@ let get_ls_files ~root ~all ~options ~libs ~imaginary = function
     let subdir = Some (Path.make dir) in
     Files.make_next_files ~root ~all ~subdir ~options ~libs
 | Some file ->
-    if all || ((Sys.file_exists file || imaginary) && Files.wanted ~options libs file)
+    if (Sys.file_exists file || imaginary) && (all || Files.wanted ~options libs file)
     then begin
       let file = file |> Path.make |> Path.to_string in
       let rec cb = ref begin fun () ->
