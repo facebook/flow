@@ -18,17 +18,43 @@ import {glob as glob_glob} from 'glob';
 import mkdirp_mkdirp from 'mkdirp';
 import rimraf_rimraf from 'rimraf';
 
+import {splitIntoChunks} from './string';
+
 import type {ReadStream, WriteStream} from 'fs';
 
-export function exec(cmd: string, options?: Object): Promise<string> {
+export type ExecOpts = child_process$execOpts & {
+  stdin?: string,
+}
+
+// Based on nothing but a few experiments on my laptop, this seems like a pretty safe size.
+const STDIN_WRITE_CHUNK_SIZE = 10000;
+
+export function exec(cmd: string, options?: ExecOpts): Promise<string> {
   return new Promise((resolve, reject) => {
-    cp_exec(cmd, options, (err, stdout, stderr) => {
+    const cp = cp_exec(cmd, options, (err, stdout, stderr) => {
       if (err == null) {
         resolve(stdout.toString());
       } else {
         reject([err, stdout, stderr]);
       }
-    })
+    });
+    if (options != null && options.stdin != null) {
+      // If we just write a giant string it can lead to a crash
+      const chunks = splitIntoChunks(options.stdin, STDIN_WRITE_CHUNK_SIZE);
+      const write = (chunkIndex: number) => {
+        if (chunkIndex >= chunks.length) {
+          cp.stdin.end();
+          return;
+        }
+        const canContinue = cp.stdin.write(chunks[chunkIndex]);
+        if (canContinue) {
+          write(chunkIndex + 1);
+        } else {
+          cp.stdin.once('drain', () => write(chunkIndex + 1));
+        }
+      };
+      write(0);
+    }
   });
 }
 
