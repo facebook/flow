@@ -14,10 +14,12 @@ import {
 } from '../flowResult';
 import getPathToLoc from './getPathToLoc';
 import getFlowErrors from './getFlowErrors';
+import getContext, {NORMAL, JSX, TEMPLATE} from './getContext';
 
 import type {PathNode} from './getPathToLoc';
 import type {Args} from './add-commentsCommand';
 import type {FlowLoc, FlowError, FlowMessage} from '../flowResult';
+import type {Context} from './getContext';
 
 const unselectedBox = "[ ]";
 const selectedBox = "[✓]";
@@ -693,41 +695,17 @@ function addCommentToCode(comment: string, code: string, loc: FlowLoc, path: Arr
   /* First of all, we want to know if we can add a comment to the line before
    * the error. So we need to see if we're in a JSX children block or inside a
    * template string when we reach the line with the error */
-  let inside: null | 'jsx' | 'template' = null;
-  let ast = path[0].ast;
-  for (let i = 0; i < path.length; i++) {
-    ast = path[i].ast;
-    if (ast.loc && ast.loc.start.line >= loc.start.line) {
-      // We've reached the line
-      break;
-    }
-
-    if (i < path.length - 1 &&
-        ast.type === 'JSXElement' &&
-        path[i+1].key === 'children') {
-      // We've entered a JSX children block
-      inside = 'jsx';
-      i++;
-    } else if (i < path.length - 1 &&
-        ast.type === 'TemplateLiteral' &&
-        path[i+1].key === 'expressions') {
-      // We've entered a template string
-      inside = 'template';
-      i++;
-    } else if (inside !== 'jsx' || ast.type != 'JSXText') {
-      inside = null;
-    }
-  }
+  const [inside, ast] = getContext(loc, path);
 
   const lines = code.split("\n");
-  if (inside === null) {
+  if (inside === NORMAL) {
     // This is easy, just add the comment to the preceding line
     return [].concat(
       lines.slice(0, loc.start.line - 1),
       formatComment(comment, lines[loc.start.line-1]),
       lines.slice(loc.start.line-1),
     ).join("\n");
-  } else if (inside === 'jsx' && ast.type === 'JSXElement') {
+  } else if (inside === JSX && ast.type === 'JSXElement') {
     /* Ok, so we have something like
      * <jsx>
      *   <foo id={10*'hello'} />
@@ -747,8 +725,8 @@ function addCommentToCode(comment: string, code: string, loc: FlowLoc, path: Arr
       formatComment(comment, lines[loc.start.line-1], true),
       lines.slice(loc.start.line-1),
     ).join("\n");
-  } else if ((inside === 'template') ||
-      inside === 'jsx' && ast.type === 'JSXExpressionContainer') {
+  } else if ((inside === TEMPLATE) ||
+      inside === JSX && ast.type === 'JSXExpressionContainer') {
     /* Ok, so we have something like
      *
      * <jsx>
@@ -779,7 +757,7 @@ function addCommentToCode(comment: string, code: string, loc: FlowLoc, path: Arr
      *     10 * 'hello'}
      * `;
      */
-    const start_col = inside === 'jsx' ?
+    const start_col = inside === JSX ?
       ast.loc.start.column + 1 :
       ast.loc.start.column;
     const line = lines[loc.start.line-1];
