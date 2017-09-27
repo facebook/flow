@@ -28,11 +28,16 @@ let sys_init () =
   check_file ".flowconfig" "flow init";
   check_file "package.json" "npm init -f";
   check_file
+    "./node_modules/.bin/flow-remove-types"
+    "npm install flow-remove-types";;
+  (*
+  check_file
     "./node_modules/.bin/babel"
     "npm install babel-cli babel-preset-flow";
   check_file
     ".babelrc"
     "echo '{\"presets\": [\"flow\"]}' | > .babelrc";;
+     *)
 
 let move_func (prog : Syntax.t list) =
   let is_func s = match s with
