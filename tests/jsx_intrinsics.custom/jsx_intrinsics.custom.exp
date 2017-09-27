@@ -17,8 +17,9 @@ Error: main.js:9
 
 Error: strings.js:6
   6: var Bad = 'bad';
-               ^^^^^ string. Property not found in
-object type
+               ^^^^^ React element `bad`. Property not found in
+  6: var Bad = 'bad';
+               ^^^^^ object type
 
 Error: strings.js:9
   9: <Div />; // This is fine
@@ -33,19 +34,13 @@ Error: strings.js:9
       9: <Div />; // This is fine
          ^^^^^^^ props of React element `Div`
 
-Error: strings.js:10
- 10: <Bad />; // Error: 'bad' not in JSXIntrinsics
-     ^^^^^^^ React element `Bad`
-  6: var Bad = 'bad';
-               ^^^^^ property `bad`. Property not found in
-object type
-
 Error: strings.js:11
  11: <Str />; // Error: string ~> keys of JSXIntrinsics
      ^^^^^^^ React element `Str`
   7: var Str: string = 'str';
-              ^^^^^^ some string with unknown value. Property not found in
-object type
+              ^^^^^^ string. Property not found in
+  7: var Str: string = 'str';
+              ^^^^^^ object type
 
 Error: strings.js:13
  13: React.createElement('div', {}); // This is fine
@@ -60,18 +55,15 @@ Error: strings.js:13
 
 Error: strings.js:14
  14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-                         ^^^^^ property `bad`. Property not found in
-object type
-
-Error: strings.js:14
+                         ^^^^^ React element `bad`. Property not found in
  14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-                         ^^^^^ string. Property not found in
-object type
+                         ^^^^^ object type
 
 Error: strings.js:15
  15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
-                         ^^^ some string with unknown value. Property not found in
-object type
+                         ^^^ string. Property not found in
+ 15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
+                         ^^^ object type
 
 Error: strings.js:18
  18: <Div id={42} />; // Not an error but should be eventually
@@ -85,4 +77,4 @@ Error: strings.js:18
                                    ^^^^^^ string. See lib: lib/jsx.js:4
 
 
-Found 11 errors
+Found 9 errors

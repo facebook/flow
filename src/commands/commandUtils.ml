@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -158,6 +155,13 @@ let lazy_flags prev = CommandSpec.ArgSpec.(
       ~doc:"EXPERIMENTAL: Don't run a full check"
   |> flag "--lazy-mode" (enum ["fs"; "ide"])
       ~doc:"EXPERIMENTAL: Which type of lazy mode to use: fs or ide (default: fs, implies --lazy)"
+)
+
+let input_file_flag verb prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--input-file" string
+    ~doc:("File containing list of files to " ^ verb ^ ", one per line. If -, list of files is " ^
+          "read from the standard input.")
 )
 
 type shared_mem_params = {

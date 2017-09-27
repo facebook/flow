@@ -37,22 +37,22 @@ Error: all.js:19
 Error: all.js:24
  24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
      ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-611:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                       ^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:611
+608:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+                       ^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:608
   Property `@@iterator` is incompatible:
-    611:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                           ^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in possibly undefined value. See lib: <BUILTINS>/core.js:611
+    608:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+                           ^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in possibly undefined value. See lib: <BUILTINS>/core.js:608
      24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
          ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters)
 
 Error: all.js:27
  27: Promise.all(0); // Error: expected array instead of number
                  ^ number. This type is incompatible with
-611:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                       ^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:611
+608:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+                       ^^^^^^^^^^^^^^^ $Iterable. See lib: <BUILTINS>/core.js:608
   Property `@@iterator` is incompatible:
-    611:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                           ^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/core.js:611
+    608:     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+                           ^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/core.js:608
      27: Promise.all(0); // Error: expected array instead of number
                      ^ number
 

@@ -1,6 +1,6 @@
 {
   "name": "flow-dev-tools",
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "version": "0.1.0",
   "dependencies": {
     "babel-jest": "^21.0.2",

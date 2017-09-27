@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open CommandUtils
@@ -136,9 +133,7 @@ module FocusCheckCommand = struct
         |> ignore_version_flag
         |> from_flag
         |> root_flag
-        |> flag "--input-file" string
-          ~doc:("File containing list of files to check, one per line. If -, list of files is "^
-            "read from the standard input.")
+        |> input_file_flag "check"
         |> anon "root" (list_of string) ~doc:"Root directory"
       );
     usage = Printf.sprintf

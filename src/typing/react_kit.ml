@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Reason
@@ -132,35 +129,41 @@ let run cx trace reason_op l u
     ))
   in
 
-  let get_intrinsic_props t =
-    let component = l in
-    let reason_c = reason_of_t component in
-    let reason_jsx = locationless_reason (RCustom "JSX intrinsics") in
-    (* Get the internal `$JSXIntrinsics` map. *)
-    let intrinsics = get_builtin_type cx ~trace reason_jsx "$JSXIntrinsics" in
-    (* Check that the intrinsic component is a valid key in $JSXIntrinsics. *)
-    rec_flow_t cx trace (component, KeysT (reason_jsx, intrinsics));
+  let get_intrinsic artifact literal prop =
+    let reason = reason_of_t l in
+    (* Get the internal $JSXIntrinsics map. *)
+    let intrinsics = get_builtin_type cx ~trace reason "$JSXIntrinsics" in
+    (* GetPropT with a non-literal when there is not a dictionary will propagate
+     * any. Run the HasOwnPropT check to give the user an error if they use a
+     * non-literal without a dictionary. *)
+    (match literal with
+      | Literal _ -> ()
+      | _ -> rec_flow cx trace (intrinsics, HasOwnPropT (reason, literal)));
     (* Create a type variable which will represent the specific intrinsic we
      * find in the intrinsics map. *)
-    let reason_i = locationless_reason (RCustom "JSX intrinsic") in
-    let intrinsic = mk_tvar cx reason_i in
+    let intrinsic = mk_tvar cx reason in
     (* Get the intrinsic from the map. *)
-    rec_flow cx trace (intrinsics, GetPropT (reason_c, (match component with
-      | DefT (_, StrT (Literal (_, name)))
-        -> Named (reason_c, name)
-      | _ -> Computed component
+    rec_flow cx trace (intrinsics, GetPropT (reason, (match literal with
+      | Literal (_, name) ->
+        Named (replace_reason_const (RReactElement (Some name)) reason, name)
+      | _ -> Computed l
     ), intrinsic));
-    (* Flow the intrinsic's props as an upper bound to our output
-     * type variable. *)
+    (* Get the artifact from the intrinsic. *)
+    let propref =
+      let name = match artifact with
+      | `Props -> "props"
+      | `Instance -> "instance"
+      in
+      Named (replace_reason_const (RCustom name) reason_op, name)
+    in
     (* TODO: if intrinsic is null, we will treat it like prototype termination,
-     * but we should error like a GetPropT would instead. Can this use GetPropT
-     * instead? *)
+     * but we should error like a GetPropT would instead. *)
     rec_flow cx trace (intrinsic, LookupT (
-      reason_i,
-      Strict reason_i,
+      reason_op,
+      Strict reason_op,
       [],
-      Named (replace_reason_const (RStringLit "props") reason_op, "props"),
-      LookupProp (UnknownUse, Field (t, Neutral))
+      propref,
+      LookupProp (UnknownUse, prop)
     ))
   in
 
@@ -192,9 +195,7 @@ let run cx trace reason_op l u
       rec_flow_t cx trace (component, component_function tin)
 
     (* Intrinsic components. *)
-    | DefT (_, StrT _) ->
-      (* This is ok since lookup will resolve tin. *)
-      get_intrinsic_props tin
+    | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (tin, Negative))
 
     (* any and any specializations *)
     | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
@@ -224,7 +225,7 @@ let run cx trace reason_op l u
       rec_flow_t cx trace (component_function ~with_return_t:false tout, component)
 
     (* Special case for intrinsic components. *)
-    | DefT (_, StrT _) -> get_intrinsic_props tout
+    | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (tout, Positive))
 
     (* any and any specializations *)
     | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
@@ -474,28 +475,7 @@ let run cx trace reason_op l u
       rec_flow_t cx trace (VoidT.make r, tout)
 
     (* Intrinsic components. *)
-    | DefT (reason, (StrT _ | SingletonStrT _)) ->
-      (* Get the internal `$JSXIntrinsics` map. *)
-      let intrinsics =
-        get_builtin_type cx ~trace
-          (locationless_reason (RCustom "JSX intrinsics")) "$JSXIntrinsics" in
-      (* Create a type variable which will represent the specific intrinsic we
-       * find in the intrinsics map. *)
-      let reason_i = locationless_reason (RCustom "JSX intrinsic") in
-      let intrinsic = mk_tvar cx reason_i in
-      (* Get the intrinsic from the map. *)
-      rec_flow cx trace (intrinsics, GetPropT (reason, begin match component with
-        | DefT (_, (StrT (Literal (_, name)) | SingletonStrT name))
-          -> Named (reason, name)
-        | _ -> Computed component
-      end, intrinsic));
-      (* Get the instance from our intrinsic. *)
-      rec_flow cx trace (intrinsic,
-        GetPropT (
-          reason,
-          Named (replace_reason_const (RStringLit "instance") reason, "instance"),
-          tout
-        ));
+    | DefT (_, StrT lit) -> get_intrinsic `Instance lit (Field (tout, Positive))
 
     (* any and any specializations *)
     | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->

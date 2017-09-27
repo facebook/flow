@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -38,9 +35,7 @@ let spec = {
             Non-existent files are never considered to be libs."
     |> flag "--explain" no_arg
       ~doc:"Output what kind of file each file is and why Flow cares about it"
-    |> flag "--input-file" string
-      ~doc:("File containing list of files to ls, one per line. If -, list of files is "^
-        "read from the standard input.")
+    |> input_file_flag "ls"
     |> anon "files or dirs" (list_of string)
       ~doc:"Lists only these files or files in these directories"
   )

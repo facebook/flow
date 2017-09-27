@@ -87,6 +87,13 @@ let rpartition s c =
     String.sub s (sep_idx + 1) (String.length s - sep_idx - 1) in
   first, second
 
+let zero_code, nine_code = Char.code '0', Char.code '9'
+
+let is_decimal_digit =
+  fun chr ->
+    let code = Char.code chr in
+    zero_code <= code && code <= nine_code
+
 let is_lowercase_char =
   let a_code, z_code = Char.code 'a', Char.code 'z' in
   fun chr ->

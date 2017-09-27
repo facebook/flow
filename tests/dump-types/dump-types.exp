@@ -1278,8 +1278,8 @@
         "def_loc":{
           "source":"[LIB] core.js",
           "type":"LibFile",
-          "start":{"line":16,"column":24,"offset":489},
-          "end":{"line":16,"column":27,"offset":493}
+          "start":{"line":13,"column":24,"offset":358},
+          "end":{"line":13,"column":27,"offset":362}
         },
         "path":"test.js",
         "line":12,
@@ -3555,8 +3555,8 @@
         "def_loc":{
           "source":"[LIB] core.js",
           "type":"LibFile",
-          "start":{"line":16,"column":24,"offset":489},
-          "end":{"line":16,"column":27,"offset":493}
+          "start":{"line":13,"column":24,"offset":358},
+          "end":{"line":13,"column":27,"offset":362}
         },
         "path":"test.js",
         "line":12,

@@ -29,6 +29,47 @@ export default suite(({
       ),
 
     addCode('var x: string = 123')
+      .ideNewMessagesWithTimeout(
+        5000,
+        [
+          {
+            "method": "startRecheck",
+            "params": []
+          },
+          {
+            "method": "endRecheck",
+            "params": []
+          },
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          },
+          {
+            "method": "startRecheck",
+            "params": []
+          },
+          {
+            "method": "endRecheck",
+            "params": []
+          },
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      )
       .noNewErrors()
       .because('The IDE has not opened test.js yet'),
 
@@ -759,6 +800,331 @@ export default suite(({
         ],
       ),
     addFile('errorsWithFlowPragma.js', 'errors.js')
+      .ideNewMessagesWithTimeout(
+        5000,
+        [
+          {
+            "method": "startRecheck",
+            "params": []
+          },
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [
+                  {
+                    "kind": "infer",
+                    "level": "error",
+                    "suppressions": [],
+                    "message": [
+                      {
+                        "context": "var x: string = 123;",
+                        "descr": "number",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "errors.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 2,
+                            "column": 17,
+                            "offset": 25
+                          },
+                          "end": {
+                            "line": 2,
+                            "column": 19,
+                            "offset": 28
+                          }
+                        },
+                        "path": "errors.js",
+                        "line": 2,
+                        "endline": 2,
+                        "start": 17,
+                        "end": 19
+                      },
+                      {
+                        "context": null,
+                        "descr": "This type is incompatible with",
+                        "type": "Comment",
+                        "path": "",
+                        "line": 0,
+                        "endline": 0,
+                        "start": 1,
+                        "end": 0
+                      },
+                      {
+                        "context": "var x: string = 123;",
+                        "descr": "string",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "errors.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 2,
+                            "column": 8,
+                            "offset": 16
+                          },
+                          "end": {
+                            "line": 2,
+                            "column": 13,
+                            "offset": 22
+                          }
+                        },
+                        "path": "errors.js",
+                        "line": 2,
+                        "endline": 2,
+                        "start": 8,
+                        "end": 13
+                      }
+                    ]
+                  }
+                ],
+                "passed": false
+              }
+            ]
+          },
+          {
+            "method": "endRecheck",
+            "params": []
+          },
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [
+                  {
+                    "kind": "infer",
+                    "level": "error",
+                    "suppressions": [],
+                    "message": [
+                      {
+                        "context": "var x: string = 123;",
+                        "descr": "number",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "errors.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 2,
+                            "column": 17,
+                            "offset": 25
+                          },
+                          "end": {
+                            "line": 2,
+                            "column": 19,
+                            "offset": 28
+                          }
+                        },
+                        "path": "errors.js",
+                        "line": 2,
+                        "endline": 2,
+                        "start": 17,
+                        "end": 19
+                      },
+                      {
+                        "context": null,
+                        "descr": "This type is incompatible with",
+                        "type": "Comment",
+                        "path": "",
+                        "line": 0,
+                        "endline": 0,
+                        "start": 1,
+                        "end": 0
+                      },
+                      {
+                        "context": "var x: string = 123;",
+                        "descr": "string",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "errors.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 2,
+                            "column": 8,
+                            "offset": 16
+                          },
+                          "end": {
+                            "line": 2,
+                            "column": 13,
+                            "offset": 22
+                          }
+                        },
+                        "path": "errors.js",
+                        "line": 2,
+                        "endline": 2,
+                        "start": 8,
+                        "end": 13
+                      }
+                    ]
+                  }
+                ],
+                "passed": false
+              }
+            ]
+          },
+          {
+            "method": "startRecheck",
+            "params": []
+          },
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [
+                  {
+                    "kind": "infer",
+                    "level": "error",
+                    "suppressions": [],
+                    "message": [
+                      {
+                        "context": "var x: string = 123;",
+                        "descr": "number",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "errors.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 2,
+                            "column": 17,
+                            "offset": 25
+                          },
+                          "end": {
+                            "line": 2,
+                            "column": 19,
+                            "offset": 28
+                          }
+                        },
+                        "path": "errors.js",
+                        "line": 2,
+                        "endline": 2,
+                        "start": 17,
+                        "end": 19
+                      },
+                      {
+                        "context": null,
+                        "descr": "This type is incompatible with",
+                        "type": "Comment",
+                        "path": "",
+                        "line": 0,
+                        "endline": 0,
+                        "start": 1,
+                        "end": 0
+                      },
+                      {
+                        "context": "var x: string = 123;",
+                        "descr": "string",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "errors.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 2,
+                            "column": 8,
+                            "offset": 16
+                          },
+                          "end": {
+                            "line": 2,
+                            "column": 13,
+                            "offset": 22
+                          }
+                        },
+                        "path": "errors.js",
+                        "line": 2,
+                        "endline": 2,
+                        "start": 8,
+                        "end": 13
+                      }
+                    ]
+                  }
+                ],
+                "passed": false
+              }
+            ]
+          },
+          {
+            "method": "endRecheck",
+            "params": []
+          },
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [
+                  {
+                    "kind": "infer",
+                    "level": "error",
+                    "suppressions": [],
+                    "message": [
+                      {
+                        "context": "var x: string = 123;",
+                        "descr": "number",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "errors.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 2,
+                            "column": 17,
+                            "offset": 25
+                          },
+                          "end": {
+                            "line": 2,
+                            "column": 19,
+                            "offset": 28
+                          }
+                        },
+                        "path": "errors.js",
+                        "line": 2,
+                        "endline": 2,
+                        "start": 17,
+                        "end": 19
+                      },
+                      {
+                        "context": null,
+                        "descr": "This type is incompatible with",
+                        "type": "Comment",
+                        "path": "",
+                        "line": 0,
+                        "endline": 0,
+                        "start": 1,
+                        "end": 0
+                      },
+                      {
+                        "context": "var x: string = 123;",
+                        "descr": "string",
+                        "type": "Blame",
+                        "loc": {
+                          "source": "errors.js",
+                          "type": "SourceFile",
+                          "start": {
+                            "line": 2,
+                            "column": 8,
+                            "offset": 16
+                          },
+                          "end": {
+                            "line": 2,
+                            "column": 13,
+                            "offset": 22
+                          }
+                        },
+                        "path": "errors.js",
+                        "line": 2,
+                        "endline": 2,
+                        "start": 8,
+                        "end": 13
+                      }
+                    ]
+                  }
+                ],
+                "passed": false
+              }
+            ]
+          }
+        ],
+      )
       .newErrors(
         `
           errors.js:2

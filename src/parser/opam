@@ -13,7 +13,7 @@ authors: [
 ]
 homepage: "https://github.com/facebook/flow/tree/master/src/parser"
 bug-reports: "https://github.com/facebook/flow/issues"
-license: "BSD3"
+license: "MIT"
 
 build: [ "sh" "-c" "cd src/parser && make ocamlfind-install" ]
 
