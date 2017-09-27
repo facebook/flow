@@ -10,6 +10,7 @@ import type {Args} from './remove-commentsCommand';
 import type {FlowLoc, FlowResult, FlowError, FlowMessage} from '../flowResult';
 
 type Loc = {
+  // both of these are offsets into the file
   start: number,
   end: number,
 };
@@ -38,11 +39,6 @@ async function getErrors(args: Args): Promise<Map<string, Array<Loc>>> {
     }
   }
 
-  // Group errors by file and sort by reverse location in the file
-  for (const file of errorsByFile.keys()) {
-    const fileErrors = errorsByFile.get(file);
-    fileErrors && fileErrors.sort((e1, e2) => e2.start - e1.start);
-  }
   return errorsByFile;
 }
 
@@ -50,6 +46,19 @@ async function removeUnusedErrorSuppressions(
   [filename, errors]: [string, Array<Loc>],
 ): Promise<void> {
   let contents = await readFile(filename);
+  contents = removeUnusedErrorSuppressionsFromText(contents, errors);
+  await writeFile(filename, contents);
+}
+
+// Exported for testing
+export function removeUnusedErrorSuppressionsFromText(
+  contents: string,
+  errors: Array<Loc>,
+): string {
+  // Sort in reverse order so that we remove comments later in the file first. Otherwise, the
+  // removal of comments earlier in the file would outdate the locations for comments later in the
+  // file.
+  errors.sort((loc1, loc2) => loc2.start - loc1.start);
 
   /* This is the most confusing part of this command. A simple version of this
    * code would just remove exact characters of a comment. This might leave
@@ -102,7 +111,7 @@ async function removeUnusedErrorSuppressions(
     }
     contents = contents.slice(0, start) + contents.slice(end+1);
   }
-  await writeFile(filename, contents);
+  return contents;
 }
 
 /* A flowtest is a file that ends in -flowtest.js or which is in a directory
