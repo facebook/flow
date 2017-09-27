@@ -648,28 +648,45 @@ async function addCommentsToSource(
   source: string,
   locs: Array<FlowLoc>,
 ): Promise<number> {
-  locs
-    .sort((l1, l2) => l2.start.line - l1.start.line);
-
   const codeBuffer = await readFile(source);
+
+  const [code, commentCount] = await addCommentsToCode(
+    args.comment,
+    codeBuffer.toString(),
+    locs,
+    args.bin,
+  );
+  await writeFile(source, code);
+  return commentCount;
+}
+
+export async function addCommentsToCode(
+  comment: ?string,
+  code: string,
+  locs: Array<FlowLoc>,
+  flowBinPath: string,
+): Promise<[string, number]> /* [resulting code, number of comments inserted] */ {
+  locs.sort((l1, l2) => l2.start.line - l1.start.line);
+
   const stdout = await exec(
-    format("%s ast %s", args.bin, source),
-    {maxBuffer: 16 * 1024 * 1024},
+    format("%s ast", flowBinPath),
+    {
+      maxBuffer: 16 * 1024 * 1024,
+      stdin: code,
+    },
   );
   const ast = JSON.parse(stdout);
 
-  let code = codeBuffer.toString();
   let commentCount = 0;
   for (const loc of locs) {
     const path = getPathToLoc(loc, ast);
 
     if (path != null) {
-      code = addCommentToCode(args.comment || '', code, loc, path);
+      code = addCommentToCode(comment || '', code, loc, path);
       commentCount++;
     }
   }
-  await writeFile(source, code);
-  return commentCount;
+  return [code, commentCount];
 }
 
 function addCommentToCode(comment: string, code: string, loc: FlowLoc, path: Array<PathNode>): string {
