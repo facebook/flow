@@ -1,13 +1,17 @@
 import {removeUnusedErrorSuppressionsFromText} from './remove-commentsRunner';
 
-test('removeUnusedErrorSuppressionsFromText', () => {
+import * as path from 'path';
+
+test('removeUnusedErrorSuppressionsFromText', async () => {
+  const flowBinPath = path.resolve(process.env.FLOW_BIN);
+
   const errorLocs = [
     // Deliberately make these out of order to test that this is handled properly
     [3, 3, 4, 35],
     [1, 4, 1, 47],
     [7, 5, 8, 20],
   ].map((args) => makeLoc(testInput, ...args));
-  expect(removeUnusedErrorSuppressionsFromText(testInput, errorLocs)).toEqual(testOutput);
+  expect(await removeUnusedErrorSuppressionsFromText(testInput, errorLocs, flowBinPath)).toEqual(testOutput);
 });
 
 const testInput =

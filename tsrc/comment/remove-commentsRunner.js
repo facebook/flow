@@ -3,11 +3,15 @@
 import {join} from 'path';
 
 import {getFlowErrorsWithWarnings} from './getFlowErrors';
+import getAst from './getAst';
+import getPathToLoc from './getPathToLoc';
+import getContext, {NORMAL, JSX, TEMPLATE} from './getContext';
 
 import {readFile, writeFile} from '../utils/async';
 
 import type {Args} from './remove-commentsCommand';
 import type {FlowLoc, FlowResult, FlowError, FlowMessage} from '../flowResult';
+import type {Context} from './getContext';
 
 async function getErrors(args: Args): Promise<Map<string, Array<FlowLoc>>> {
   const result: FlowResult = await getFlowErrorsWithWarnings(
@@ -40,22 +44,27 @@ async function getErrors(args: Args): Promise<Map<string, Array<FlowLoc>>> {
 }
 
 async function removeUnusedErrorSuppressions(
-  [filename, errors]: [string, Array<FlowLoc>],
+  filename: string,
+  errors: Array<FlowLoc>,
+  flowBinPath: string,
 ): Promise<void> {
   let contents = await readFile(filename);
-  contents = removeUnusedErrorSuppressionsFromText(contents, errors);
+  contents = await removeUnusedErrorSuppressionsFromText(contents, errors, flowBinPath);
   await writeFile(filename, contents);
 }
 
 // Exported for testing
-export function removeUnusedErrorSuppressionsFromText(
+export async function removeUnusedErrorSuppressionsFromText(
   contents: string,
   errors: Array<FlowLoc>,
-): string {
+  flowBinPath: string,
+): Promise<string> {
   // Sort in reverse order so that we remove comments later in the file first. Otherwise, the
   // removal of comments earlier in the file would outdate the locations for comments later in the
   // file.
   errors.sort((loc1, loc2) => loc2.start.offset - loc1.start.offset);
+
+  const ast = await getAst(contents, flowBinPath)
 
   /* This is the most confusing part of this command. A simple version of this
    * code would just remove exact characters of a comment. This might leave
@@ -71,10 +80,18 @@ export function removeUnusedErrorSuppressionsFromText(
    * in the case where there is nothing before or after it
    */
   const edible = /[\t ]/;
-  for (let {start: startLoc, end: endLoc} of errors) {
+  for (const error of errors) {
+    const path = getPathToLoc(error, ast);
+    let context: Context;
+    if (path == null) {
+      context = NORMAL;
+    } else {
+      [context] = getContext(error, path);
+    }
+
     const length = contents.length;
-    const origStart = startLoc.offset;
-    const origEnd = endLoc.offset - 1;
+    const origStart = error.start.offset;
+    const origEnd = error.end.offset - 1;
     let start = origStart;
     let end = origEnd;
     while (start > 0) {
@@ -137,7 +154,9 @@ export default async function(args: Args): Promise<void> {
       }
       return true;
     });
-  await Promise.all(errors.map(removeUnusedErrorSuppressions));
+  await Promise.all(errors.map(
+    ([filename, errors]) => removeUnusedErrorSuppressions(filename, errors, args.bin)
+  ));
   console.log(
     "Removed %d comments in %d files",
     removedErrorCount,
