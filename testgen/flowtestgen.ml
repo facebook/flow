@@ -92,7 +92,7 @@ let main () =
   ignore optional_engine;
   ignore exact_engine;
   ignore union_engine;
-  let engine = union_engine in
+  let engine = func_engine in
   let all_prog = mk_code engine Config.(config.num_prog) in
   printf "Generated %d programs.\n%!" (List.length all_prog);
   List.iter (fun content ->

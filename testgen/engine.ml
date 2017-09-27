@@ -283,7 +283,7 @@ class virtual ['a, 'b, 'c] engine = object(self)
           let prog = self#combine_syntax slist in
           let type_check_result = Utils.type_check prog in
           match type_check_result with
-          | Some msg -> Logging.log_type_error prog msg
+          | Some msg -> Logging.log_early_type_error prog msg
           | None ->
             let result = self#run_exhaustive rule env in
             if result = [] then
