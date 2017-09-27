@@ -185,5 +185,5 @@ end
 class ruleset_random_depth = object
   inherit ruleset_depth
   method! weak_assert b =
-    if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
+    if (not b) && ((FRandom.rint 3) > 0) then raise Engine.Backtrack
 end

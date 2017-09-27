@@ -150,5 +150,5 @@ end
 class ruleset_random_union = object
   inherit ruleset_union
   method! weak_assert b =
-    if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
+    if (not b) && ((FRandom.rint 5) > 0) then raise Engine.Backtrack
 end
