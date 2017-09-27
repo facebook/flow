@@ -3,7 +3,7 @@
 import {join, relative, resolve} from 'path';
 import {format} from 'util';
 
-import {exec, exists, mkdirp, readFile, unlink, writeFile} from '../async';
+import {exec, exists, mkdirp, readFile, unlink, writeFile} from '../utils/async';
 import {getTestsDir, defaultFlowConfigName} from '../constants';
 
 import type {Args} from './new-testCommand';

@@ -1,7 +1,7 @@
 /* @flow */
 
 import {format} from 'util';
-import {execManual} from '../async';
+import {execManual} from '../utils/async';
 
 import type {FlowResult} from '../flowResult';
 

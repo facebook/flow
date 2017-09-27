@@ -4,7 +4,7 @@ import {join} from 'path';
 
 import {getFlowErrorsWithWarnings} from './getFlowErrors';
 
-import {readFile, writeFile} from '../async';
+import {readFile, writeFile} from '../utils/async';
 
 import type {Args} from './remove-commentsCommand';
 import type {FlowLoc, FlowResult, FlowError, FlowMessage} from '../flowResult';

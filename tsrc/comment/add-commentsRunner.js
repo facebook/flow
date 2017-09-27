@@ -5,7 +5,7 @@ import {format} from 'util';
 
 import * as blessed from 'blessed'
 
-import {exec, readFile, writeFile} from '../async';
+import {exec, readFile, writeFile} from '../utils/async';
 import {
   mainLocOfError,
   prettyPrintError,

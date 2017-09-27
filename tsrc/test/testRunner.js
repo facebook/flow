@@ -7,7 +7,7 @@ import {basename, dirname, resolve} from 'path';
 import {spawn} from 'child_process';
 
 import {getTestsDir} from '../constants';
-import {drain, rimraf, symlink} from '../async';
+import {drain, rimraf, symlink} from '../utils/async';
 import Builder from './builder';
 import {findTestsByName, findTestsByRun, loadSuite} from './findTests';
 import RunQueue from './RunQueue';

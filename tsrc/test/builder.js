@@ -22,7 +22,7 @@ import {
   sleep,
   unlink,
   writeFile,
-} from '../async';
+} from '../utils/async';
 import {getTestsDir} from '../constants';
 
 import type {SuiteResult} from './runTestSuite';
