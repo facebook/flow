@@ -45,7 +45,6 @@
     ]
   },
   "scripts": {
-    "test": "make test",
-    "test-tool": "jest --config .jest-tool.config.js"
+    "test": "make test"
   }
 }

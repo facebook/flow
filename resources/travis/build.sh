@@ -24,7 +24,7 @@ bin/flow check
 printf "travis_fold:end:flow_check\n"
 
 printf "travis_fold:start:test_tool\nRunning tests for tool\n"
-yarn run test-tool
+FLOW_BIN=bin/flow ./node_modules/.bin/jest --config .jest-tool.config.js
 printf "travis_fold:end:test_tool\n"
 
 printf "travis_fold:start:runtests\nRunning flow tests\n"
