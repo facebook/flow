@@ -309,23 +309,23 @@ Error: create_element.js:42
  42: React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                               ^^^^ property `nope`. Property not found in
                                                                    v-
-158: declare type React$Element<+ElementType: React$ElementType> = {|
-159:   +type: ElementType,
-160:   +props: React$ElementProps<ElementType>,
+156: declare type React$Element<+ElementType: React$ElementType> = {|
+157:   +type: ElementType,
+158:   +props: React$ElementProps<ElementType>,
 ...:
-163: |};
-     -^ object type. See lib: <BUILTINS>/react.js:158
+161: |};
+     -^ object type. See lib: <BUILTINS>/react.js:156
 
 Error: create_element.js:43
  43: React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                               ^^^^ property `nope`. Property not found in
                                                                    v-
-158: declare type React$Element<+ElementType: React$ElementType> = {|
-159:   +type: ElementType,
-160:   +props: React$ElementProps<ElementType>,
+156: declare type React$Element<+ElementType: React$ElementType> = {|
+157:   +type: ElementType,
+158:   +props: React$ElementProps<ElementType>,
 ...:
-163: |};
-     -^ object type. See lib: <BUILTINS>/react.js:158
+161: |};
+     -^ object type. See lib: <BUILTINS>/react.js:156
 
 Error: create_element.js:44
  44: React.createElement(A); // Error: Missing `foo` and `bar`.
@@ -1422,23 +1422,23 @@ Error: create_factory.js:40
  40: aFactory({foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                 ^^^^ property `nope`. Property not found in
                                                                    v-
-158: declare type React$Element<+ElementType: React$ElementType> = {|
-159:   +type: ElementType,
-160:   +props: React$ElementProps<ElementType>,
+156: declare type React$Element<+ElementType: React$ElementType> = {|
+157:   +type: ElementType,
+158:   +props: React$ElementProps<ElementType>,
 ...:
-163: |};
-     -^ object type. See lib: <BUILTINS>/react.js:158
+161: |};
+     -^ object type. See lib: <BUILTINS>/react.js:156
 
 Error: create_factory.js:41
  41: bFactory({foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                 ^^^^ property `nope`. Property not found in
                                                                    v-
-158: declare type React$Element<+ElementType: React$ElementType> = {|
-159:   +type: ElementType,
-160:   +props: React$ElementProps<ElementType>,
+156: declare type React$Element<+ElementType: React$ElementType> = {|
+157:   +type: ElementType,
+158:   +props: React$ElementProps<ElementType>,
 ...:
-163: |};
-     -^ object type. See lib: <BUILTINS>/react.js:158
+161: |};
+     -^ object type. See lib: <BUILTINS>/react.js:156
 
 Error: create_factory.js:42
  42: aFactory(); // Error: Missing `foo` and `bar`.
