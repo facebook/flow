@@ -276,6 +276,15 @@ export default suite(({addFile, flowCmd, removeFile}) => [
         `,
       )
       .because('--explain should work with --imaginary as expected. Non-existent files are never considered to be libs.'),
+    flowCmd(['ls', '--all', '--strip-root', '--root', 'src', 'foobar', 'src/implicitly_included.js'])
+      .stderr(``)
+      .stdout(
+        `
+          implicitly_included.js
+
+        `,
+      )
+      .because('We just filter out non-existent files. --all does not imply --imaginary'),
   ]),
 ]).beforeEach(({addFile, addFiles, removeFile}) => [
   addFile('src/_flowconfig', 'src/.flowconfig')
