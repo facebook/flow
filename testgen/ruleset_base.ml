@@ -81,7 +81,7 @@ class ruleset_base = object(self)
 
   (* We have a small chance to bypass this assertion *)
   method weak_assert b =
-    if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
+    if (not b) && ((FRandom.rint 5) > 0) then raise Engine.Backtrack
 
   (* check t1 <: t2 *)
   method is_subtype (t1 : Loc.t T.t') (t2 : Loc.t T.t') : bool =
@@ -877,5 +877,5 @@ end;;
 class ruleset_random_base = object
   inherit ruleset_base
   method! weak_assert b =
-    if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
+    if (not b) && ((FRandom.rint 5) > 0) then raise Engine.Backtrack
 end
