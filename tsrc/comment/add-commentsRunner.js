@@ -5,7 +5,7 @@ import {format} from 'util';
 
 import * as blessed from 'blessed'
 
-import {exec, readFile, writeFile} from '../utils/async';
+import {readFile, writeFile} from '../utils/async';
 import {
   mainLocOfError,
   prettyPrintError,
@@ -15,6 +15,7 @@ import {
 import getPathToLoc from './getPathToLoc';
 import getFlowErrors from './getFlowErrors';
 import getContext, {NORMAL, JSX, TEMPLATE} from './getContext';
+import getAst from './getAst';
 
 import type {PathNode} from './getPathToLoc';
 import type {Args} from './add-commentsCommand';
@@ -670,14 +671,7 @@ export async function addCommentsToCode(
 ): Promise<[string, number]> /* [resulting code, number of comments inserted] */ {
   locs.sort((l1, l2) => l2.start.line - l1.start.line);
 
-  const stdout = await exec(
-    format("%s ast", flowBinPath),
-    {
-      maxBuffer: 16 * 1024 * 1024,
-      stdin: code,
-    },
-  );
-  const ast = JSON.parse(stdout);
+  const ast = await getAst(code, flowBinPath);
 
   let commentCount = 0;
   for (const loc of locs) {
