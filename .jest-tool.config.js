@@ -1,3 +1,4 @@
 module.exports = {
-  rootDir: 'tsrc'
+  rootDir: 'tsrc',
+  testEnvironment: 'node'
 }
