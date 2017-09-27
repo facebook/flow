@@ -136,9 +136,7 @@ module FocusCheckCommand = struct
         |> ignore_version_flag
         |> from_flag
         |> root_flag
-        |> flag "--input-file" string
-          ~doc:("File containing list of files to check, one per line. If -, list of files is "^
-            "read from the standard input.")
+        |> input_file_flag "check"
         |> anon "root" (list_of string) ~doc:"Root directory"
       );
     usage = Printf.sprintf

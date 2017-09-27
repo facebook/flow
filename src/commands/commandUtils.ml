@@ -160,6 +160,13 @@ let lazy_flags prev = CommandSpec.ArgSpec.(
       ~doc:"EXPERIMENTAL: Which type of lazy mode to use: fs or ide (default: fs, implies --lazy)"
 )
 
+let input_file_flag verb prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--input-file" string
+    ~doc:("File containing list of files to " ^ verb ^ ", one per line. If -, list of files is " ^
+          "read from the standard input.")
+)
+
 type shared_mem_params = {
   shm_dirs: string option;
   shm_min_avail: int option;
