@@ -44,8 +44,16 @@ const foo = 4;
 
 function makeLoc(contents, startLine, startCol, endLine, endCol) {
   return {
-    start: posToOffset(contents, startLine, startCol),
-    end: posToOffset(contents, endLine, endCol),
+    start: {
+      line: startLine,
+      column: startCol,
+      offset: posToOffset(contents, startLine, startCol),
+    },
+    end: {
+      line: endLine,
+      column: endCol,
+      offset: posToOffset(contents, endLine, endCol),
+    },
   };
 }
 

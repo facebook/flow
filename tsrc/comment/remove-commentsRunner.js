@@ -9,14 +9,8 @@ import {readFile, writeFile} from '../utils/async';
 import type {Args} from './remove-commentsCommand';
 import type {FlowLoc, FlowResult, FlowError, FlowMessage} from '../flowResult';
 
-type Loc = {
-  // both of these are offsets into the file
-  start: number,
-  end: number,
-};
-
-async function getErrors(args: Args): Promise<Map<string, Array<Loc>>> {
-  const result = await getFlowErrorsWithWarnings(
+async function getErrors(args: Args): Promise<Map<string, Array<FlowLoc>>> {
+  const result: FlowResult = await getFlowErrorsWithWarnings(
     args.bin,
     args.errorCheckCommand,
     args.root,
@@ -29,13 +23,16 @@ async function getErrors(args: Args): Promise<Map<string, Array<Loc>>> {
 
   const errorsByFile = new Map();;
   for (const error of errors) {
-    if (error.message[0].loc && error.message[0].loc.source) {
-      const start = error.message[0].loc.start.offset;
-      const end = error.message[0].loc.end.offset;
-      const file = join(args.root, error.message[0].loc.source);
-      const fileErrors = errorsByFile.get(file) || [];
-      fileErrors.push({start, end});
-      errorsByFile.set(file, fileErrors);
+    const message = error.message[0];
+    const loc = message.loc;
+    if (loc) {
+      const source = loc.source;
+      if (source) {
+        const file = join(args.root, source);
+        const fileErrors: Array<FlowLoc> = errorsByFile.get(file) || [];
+        fileErrors.push(loc);
+        errorsByFile.set(file, fileErrors);
+      }
     }
   }
 
@@ -43,7 +40,7 @@ async function getErrors(args: Args): Promise<Map<string, Array<Loc>>> {
 }
 
 async function removeUnusedErrorSuppressions(
-  [filename, errors]: [string, Array<Loc>],
+  [filename, errors]: [string, Array<FlowLoc>],
 ): Promise<void> {
   let contents = await readFile(filename);
   contents = removeUnusedErrorSuppressionsFromText(contents, errors);
@@ -53,12 +50,12 @@ async function removeUnusedErrorSuppressions(
 // Exported for testing
 export function removeUnusedErrorSuppressionsFromText(
   contents: string,
-  errors: Array<Loc>,
+  errors: Array<FlowLoc>,
 ): string {
   // Sort in reverse order so that we remove comments later in the file first. Otherwise, the
   // removal of comments earlier in the file would outdate the locations for comments later in the
   // file.
-  errors.sort((loc1, loc2) => loc2.start - loc1.start);
+  errors.sort((loc1, loc2) => loc2.start.offset - loc1.start.offset);
 
   /* This is the most confusing part of this command. A simple version of this
    * code would just remove exact characters of a comment. This might leave
@@ -74,9 +71,10 @@ export function removeUnusedErrorSuppressionsFromText(
    * in the case where there is nothing before or after it
    */
   const edible = /[\t ]/;
-  for (let {start: origStart, end: origEnd} of errors) {
+  for (let {start: startLoc, end: endLoc} of errors) {
     const length = contents.length;
-    origEnd--;
+    const origStart = startLoc.offset;
+    const origEnd = endLoc.offset - 1;
     let start = origStart;
     let end = origEnd;
     while (start > 0) {
