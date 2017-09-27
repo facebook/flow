@@ -129,8 +129,8 @@ Interfaces can also have their own [generics](../generics/).
 
 ```js
 interface MyInterface<A, B, C> {
-  property: A,
-  method(val: B): C,
+  property: A;
+  method(val: B): C;
 }
 ```
 
@@ -140,9 +140,9 @@ When you use an interface you need to pass parameters for each of its generics.
 ```js
 // @flow
 interface MyInterface<A, B, C> {
-  foo: A,
-  bar: B,
-  baz: C,
+  foo: A;
+  bar: B;
+  baz: C;
 }
 
 var val: MyInterface<number, boolean, string> = {
@@ -183,8 +183,8 @@ This allows you to pass a more specific type in place of that property.
 ```js
 // @flow
 // $ExpectError
-interface Invariant {  property: number | string; }
-interface Covariant { +readOnly: number | string; }
+interface Invariant {  property: number | string }
+interface Covariant { +readOnly: number | string }
 
 var value1: Invariant = { property: 42 }; // Error!
 var value2: Covariant = { readOnly: 42 }; // Works!
@@ -195,8 +195,8 @@ when used. Which can be useful over normal properties.
 
 ```js
 // @flow
-interface Invariant {  property: number | string; }
-interface Covariant { +readOnly: number | string; }
+interface Invariant {  property: number | string }
+interface Covariant { +readOnly: number | string }
 
 function method1(value: Invariant) {
   value.property;        // Works!
@@ -225,8 +225,8 @@ This allows you to pass a less specific type in place of that property.
 
 ```js
 // @flow
-interface Invariant     {  property: number; }
-interface Contravariant { -writeOnly: number; }
+interface Invariant     {  property: number }
+interface Contravariant { -writeOnly: number }
 
 var numberOrString = Math.random() > 0.5 ? 42 : 'forty-two';
 
@@ -239,8 +239,8 @@ Because of how contravariance works, contravariant properties also become
 write-only when used. Which can be useful over normal properties.
 
 ```js
-interface Invariant     {   property: number; }
-interface Contravariant { -writeOnly: number; }
+interface Invariant     {   property: number }
+interface Contravariant { -writeOnly: number }
 
 function method1(value: Invariant) {
   value.property;        // Works!
