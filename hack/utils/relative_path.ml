@@ -17,13 +17,17 @@ type prefix =
   | Root
   | Hhi
   | Dummy
+  | Tmp
+
 
 let root = ref None
 let hhi = ref None
+let tmp = ref None
 
 let path_ref_of_prefix = function
   | Root -> root
   | Hhi -> hhi
+  | Tmp -> tmp
   | Dummy -> ref (Some "")
 
 let path_of_prefix x =
@@ -32,6 +36,7 @@ let path_of_prefix x =
 let string_of_prefix = function
   | Root -> "root"
   | Hhi -> "hhi"
+  | Tmp -> "tmp"
   | Dummy -> ""
 
 let set_path_prefix prefix v =
@@ -66,6 +71,10 @@ module S = struct
 end
 
 let to_absolute (p, rest) = path_of_prefix p ^ rest
+
+let to_tmp (_, rest) = (Tmp, rest)
+
+let to_root (_, rest) = (Root, rest)
 
 let pp fmt rp = Format.pp_print_string fmt (S.to_string rp)
 

@@ -14,6 +14,7 @@ type prefix =
   | Root
   | Hhi
   | Dummy
+  | Tmp
 
 val set_path_prefix : prefix -> Path.t -> unit
 val path_of_prefix : prefix -> string
@@ -36,6 +37,8 @@ val from_root : string -> t
 val prefix : t -> prefix
 val suffix : t -> string
 val to_absolute : t -> string
+val to_tmp : t -> t
+val to_root : t -> t
 
 module Set : module type of Reordered_argument_set(Set.Make(S))
 module Map : module type of Reordered_argument_map(MyMap.Make(S))
