@@ -632,7 +632,6 @@ function assert_type(actual: any, expected: any) {
         }
     }
 }
-
 function check_opt_prop(obj_list : any, actual : any, expected : any) {
     var len = obj_list.length;
     for(var i = 0; i < len; ++i) {
@@ -703,7 +702,11 @@ let run_exit_handler
 (* Run the code and see if it has runtime error *)
 let test_code (code : string) : string option =
   (* Check if we have flow-remove-types *)
+  (*
   let exe = "./node_modules/.bin/babel" in
   run_cmd code (exe ^ " --presets flow | node") run_exit_handler;;
+     *)
+  let exe = "./node_modules/.bin/flow-remove-types" in
+  run_cmd code (exe ^ " -a -p | node") run_exit_handler;;
 
 let is_typecheck engine_name = engine_name = "union"

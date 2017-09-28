@@ -45,5 +45,5 @@ class ruleset_exact = object(self)
   class ruleset_random_exact = object
     inherit ruleset_exact
     method! weak_assert b =
-      if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
+      if (not b) && ((FRandom.rint 3) > 0) then raise Engine.Backtrack
   end
