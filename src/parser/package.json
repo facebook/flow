@@ -1,6 +1,6 @@
 {
   "name": "flow-parser",
-  "version": "0.55.0",
+  "version": "0.56.0",
   "description": "JavaScript parser written in OCaml. Produces SpiderMonkey AST",
   "homepage": "https://flow.org",
   "license": "BSD-3-Clause",
