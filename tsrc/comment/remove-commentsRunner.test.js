@@ -8,8 +8,10 @@ test('removeUnusedErrorSuppressionsFromText', async () => {
   const errorLocs = [
     // Deliberately make these out of order to test that this is handled properly
     [3, 3, 4, 35],
+    [10, 6, 10, 64],
     [1, 4, 1, 47],
-    [7, 5, 8, 20],
+    [13, 5, 13, 51],
+    [7, 4, 8, 20],
   ].map((args) => makeLoc(testInput, ...args));
   expect(await removeUnusedErrorSuppressionsFromText(testInput, errorLocs, flowBinPath)).toEqual(testOutput);
 });
@@ -21,28 +23,30 @@ const bar = 4;
  * comment with some whitespace */
 const foo = 4;
 <div>
-  { /* comment
-    * inside jsx */  }
+  {/* comment
+    * inside jsx */}
   <span>
+    {/* another comment inside jsx, with trailing whitespace */ }
     foo
   </span>
+  { /* and yet another, with leading whitespace */}
 </div>
 `;
 
 
-// There are a couple oddities about this -- first, the removal of the first comment leaves a
-// newline around. This is probably an edge case related to removing the first line in the file.
-// Second, the whitespace surrounding the JSX comment is not removed, even though it probably should
-// be (along with the curly braces).
+// It's odd that the removal of the first comment leaves the empty line around. I suspect it's just
+// an edge case that occurs only when there is a comment on the first line. Probably not worth
+// fixing since that's a pretty rare occurrence.
 const testOutput =
 `
 const bar = 4;
 const foo = 4;
 <div>
-  {   }
   <span>
+    { }
     foo
   </span>
+  { }
 </div>
 `;
 

@@ -90,10 +90,17 @@ export async function removeUnusedErrorSuppressionsFromText(
     }
 
     const length = contents.length;
-    const origStart = error.start.offset;
-    const origEnd = error.end.offset - 1;
+    let origStart = error.start.offset;
+    let origEnd = error.end.offset - 1;
+
+    if (context === JSX && contents[origStart-1] === '{' && contents[origEnd+1] === '}') {
+      origStart--;
+      origEnd++;
+    }
+
     let start = origStart;
     let end = origEnd;
+
     while (start > 0) {
       // Eat whitespace towards the start of the line
       if (contents[start-1].match(edible)) {
