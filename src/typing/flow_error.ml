@@ -680,6 +680,12 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | FunReturn when not force ->
     let msg = "This type is incompatible with the expected return type of" in
     extra, (* suppress_op *) false, typecheck_msgs msg reasons
+  | FunImplicitReturn when not force ->
+    let lreason, ureason = reasons in
+    let msg = spf "This type is incompatible with an implicitly-returned %s"
+      (string_of_desc (desc_of_reason lreason))
+    in
+    extra, (* suppress_op *) false, [ureason, [msg]]
   | FunCallParam ->
     let reasons, msg =
       if not force then
