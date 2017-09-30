@@ -329,20 +329,20 @@ Error: process/nextTick.js:22
 Error: process/nextTick.js:27
  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
            ^^^^^^ string. This type is incompatible with
-1937:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1937
+1985:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1985
 
 Error: process/nextTick.js:27
  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
                       ^^^^^^ number. This type is incompatible with
-1937:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1937
+1985:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1985
 
 Error: process/nextTick.js:27
  27:   (a: string, b: number, c: boolean) => {} // Error: too few arguments
                                  ^^^^^^^ boolean. This type is incompatible with
-1937:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
-                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1937
+1985:   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+                          ^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). See lib: <BUILTINS>/node.js:1985
 
 
 Found 40 errors
