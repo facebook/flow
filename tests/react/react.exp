@@ -77,54 +77,17 @@ Error: create_class.js:118
 118:     (this.state.foo: empty); // string ~> empty
                           ^^^^^ empty
 
-Error: create_class.js:132
-132:   componentWillMount() {
-                         ^^ function. This type is incompatible with
- 45:   componentWillMount(): void;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:45
-  This parameter is incompatible:
-    134:     return 0; // number ~> void
-                    ^ number. This type is incompatible with
-     45:   componentWillMount(): void;
-                                 ^^^^ undefined. See lib: <BUILTINS>/react.js:45
-
 Error: create_class.js:133
 133:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
 133:     (this.props.foo: empty); // string ~> empty
                           ^^^^^ empty
 
-Error: create_class.js:136
-136:   componentDidMount() {
-                        ^^ function. This type is incompatible with
- 46:   componentDidMount(): void;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:46
-  This parameter is incompatible:
-    138:     return 0; // number ~> void
-                    ^ number. This type is incompatible with
-     46:   componentDidMount(): void;
-                                ^^^^ undefined. See lib: <BUILTINS>/react.js:46
-
 Error: create_class.js:137
 137:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
 137:     (this.props.foo: empty); // string ~> empty
                           ^^^^^ empty
-
-Error: create_class.js:140
-140:   componentWillReceiveProps(nextProps) {
-                                ^^^^^^^^^^^ function. This type is incompatible with
-       v-------------------------
- 47:   componentWillReceiveProps(
- 48:     nextProps: Props,
- 49:     nextContext: any,
- 50:   ): void;
-       ------^ function type. See lib: <BUILTINS>/react.js:47
-  This parameter is incompatible:
-    143:     return 0; // number ~> void
-                    ^ number. This type is incompatible with
-     50:   ): void;
-              ^^^^ undefined. See lib: <BUILTINS>/react.js:50
 
 Error: create_class.js:141
 141:     (this.props.foo: empty); // string ~> empty
@@ -178,22 +141,6 @@ Error: create_class.js:149
 149:     (nextState.bar: empty); // number ~> empty
                          ^^^^^ empty
 
-Error: create_class.js:152
-152:   componentWillUpdate(nextProps, nextState) {
-                          ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-       v-------------------
- 56:   componentWillUpdate(
- 57:     nextProps: Props,
- 58:     nextState: State,
- 59:     nextContext: any,
- 60:   ): void;
-       ------^ function type. See lib: <BUILTINS>/react.js:56
-  This parameter is incompatible:
-    157:     return 0; // number ~> void
-                    ^ number. This type is incompatible with
-     60:   ): void;
-              ^^^^ undefined. See lib: <BUILTINS>/react.js:60
-
 Error: create_class.js:153
 153:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
@@ -218,22 +165,6 @@ Error: create_class.js:156
 156:     (nextState.bar: empty); // number ~> empty
                          ^^^^^ empty
 
-Error: create_class.js:159
-159:   componentDidUpdate(nextProps, nextState) {
-                         ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-       v------------------
- 61:   componentDidUpdate(
- 62:     prevProps: Props,
- 63:     prevState: State,
- 64:     prevContext: any,
- 65:   ): void;
-       ------^ function type. See lib: <BUILTINS>/react.js:61
-  This parameter is incompatible:
-    164:     return 0; // number ~> void
-                    ^ number. This type is incompatible with
-     65:   ): void;
-              ^^^^ undefined. See lib: <BUILTINS>/react.js:65
-
 Error: create_class.js:160
 160:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
@@ -257,17 +188,6 @@ Error: create_class.js:163
           ^^^^^^^^^^^^^ number. This type is incompatible with
 163:     (nextState.bar: empty); // number ~> empty
                          ^^^^^ empty
-
-Error: create_class.js:166
-166:   componentWillUnmount() {
-                           ^^ function. This type is incompatible with
- 66:   componentWillUnmount(): void;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:66
-  This parameter is incompatible:
-    169:     return 0; // number ~> void
-                    ^ number. This type is incompatible with
-     66:   componentWillUnmount(): void;
-                                   ^^^^ undefined. See lib: <BUILTINS>/react.js:66
 
 Error: create_class.js:167
 167:     (this.props.foo: empty); // string ~> empty
@@ -2445,4 +2365,4 @@ Error: undefined_prop.js:7
                                                            ^^^^^^ string
 
 
-Found 176 errors
+Found 170 errors
