@@ -199,6 +199,12 @@ class ssa_builder = object(this)
     list_iter3 (fun val_ref value1 value2 ->
       val_ref := Val.merge value1 value2
     ) ssa_env env1 env2
+  method merge_self_ssa_env (env: Env.t): unit =
+    let env = SMap.values env in
+    let ssa_env = SMap.values ssa_env in
+    List.iter2 (fun val_ref value ->
+      val_ref := Val.merge !val_ref value
+    ) ssa_env env
   method reset_ssa_env (env0: Env.t): unit =
     let env0 = SMap.values env0 in
     let ssa_env = SMap.values ssa_env in
@@ -462,9 +468,8 @@ class ssa_builder = object(this)
     let else_completion_state = this#run_to_completion (fun () ->
       ignore @@ Flow_ast_mapper.map_opt this#statement alternate
     ) in
-    let env2 = this#ssa_env in
     (* merge environments *)
-    this#merge_ssa_env env1 env2;
+    this#merge_self_ssa_env env1;
     (* merge completions *)
     let if_completion_states = then_completion_state, [else_completion_state] in
     this#merge_completion_states if_completion_states;
@@ -490,10 +495,9 @@ class ssa_builder = object(this)
       let continues = (AbruptCompletion.continue None)::possible_labeled_continues in
       let open Ast.Statement.While in
       let { test; body } = stmt in
-      let env0 = this#ssa_env in
       (* placeholder for environment at the end of the loop body *)
       let env1 = this#fresh_ssa_env in
-      this#merge_ssa_env env0 env1;
+      this#merge_self_ssa_env env1;
       ignore @@ this#expression test;
       let env2 = this#ssa_env in
       let loop_completion_state = this#run_to_completion (fun () ->
@@ -535,9 +539,8 @@ class ssa_builder = object(this)
       let continues = (AbruptCompletion.continue None)::possible_labeled_continues in
       let open Ast.Statement.DoWhile in
       let { body; test } = stmt in
-      let env0 = this#ssa_env in
       let env1 = this#fresh_ssa_env in
-      this#merge_ssa_env env0 env1;
+      this#merge_self_ssa_env env1;
       let loop_completion_state = this#run_to_completion (fun () ->
         ignore @@ this#statement body
       ) in
@@ -582,9 +585,8 @@ class ssa_builder = object(this)
       let open Ast.Statement.For in
       let { init; test; update; body } = stmt in
       ignore @@ Flow_ast_mapper.map_opt this#for_statement_init init;
-      let env0 = this#ssa_env in
       let env1 = this#fresh_ssa_env in
-      this#merge_ssa_env env0 env1;
+      this#merge_self_ssa_env env1;
       ignore @@ Flow_ast_mapper.map_opt this#expression test;
       let env2 = this#ssa_env in
       let loop_completion_state = this#run_to_completion (fun () ->
@@ -634,9 +636,8 @@ class ssa_builder = object(this)
       let open Ast.Statement.ForIn in
       let { left; right; body; each = _ } = stmt in
       ignore @@ this#expression right;
-      let env0 = this#ssa_env in
       let env1 = this#fresh_ssa_env in
-      this#merge_ssa_env env0 env1;
+      this#merge_self_ssa_env env1;
       let env2 = this#ssa_env in
       ignore @@ this#for_in_statement_lhs left;
       let loop_completion_state = this#run_to_completion (fun () ->
@@ -682,9 +683,8 @@ class ssa_builder = object(this)
       let open Ast.Statement.ForOf in
       let { left; right; body; async = _ } = stmt in
       ignore @@ this#expression right;
-      let env0 = this#ssa_env in
       let env1 = this#fresh_ssa_env in
-      this#merge_ssa_env env0 env1;
+      this#merge_self_ssa_env env1;
       let env2 = this#ssa_env in
       ignore @@ this#for_of_statement_lhs left;
       let loop_completion_state = this#run_to_completion (fun () ->
@@ -737,12 +737,11 @@ class ssa_builder = object(this)
       let open Ast.Statement.Switch in
       let { discriminant; cases } = switch in
       ignore @@ this#expression discriminant;
-      let env0 = this#ssa_env in
-      let env1, env2, case_completion_states = List.fold_left (fun acc stuff ->
+      let env, case_completion_states = List.fold_left (fun acc stuff ->
         let _loc, case = stuff in
         this#ssa_switch_case acc case
-      ) (env0, this#empty_ssa_env, []) cases in
-      this#merge_ssa_env env1 env2;
+      ) (this#empty_ssa_env, []) cases in
+      this#merge_self_ssa_env env;
       (* In general, cases are non-exhaustive. TODO: optimize with `default`. *)
       let switch_completion_states = None, case_completion_states in
       let completion_state = this#run_to_completion (fun () ->
@@ -752,18 +751,18 @@ class ssa_builder = object(this)
     );
     switch
 
-  method private ssa_switch_case (env1, env2, case_completion_states) (case: Loc.t Ast.Statement.Switch.Case.t') =
+  method private ssa_switch_case (env, case_completion_states) (case: Loc.t Ast.Statement.Switch.Case.t') =
     let open Ast.Statement.Switch.Case in
     let { test; consequent } = case in
-    this#reset_ssa_env env1;
     ignore @@ Flow_ast_mapper.map_opt this#expression test;
-    let env1' = this#ssa_env in
-    this#merge_ssa_env env1' env2;
+    let env0 = this#ssa_env in
+    this#merge_ssa_env env0 env;
     let case_completion_state = this#run_to_completion (fun () ->
       ignore @@ this#statement_list consequent
     ) in
-    let env2' = this#ssa_env in
-    (env1', env2', case_completion_state :: case_completion_states)
+    let env' = this#ssa_env in
+    this#reset_ssa_env env0;
+    (env', case_completion_state :: case_completion_states)
 
   (****************************************)
   (* [PRE] try { s1 } catch { s2 } [POST] *)
