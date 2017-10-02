@@ -160,6 +160,14 @@ module Havoc = struct
   }
 end
 
+let rec list_iter3 f l1 l2 l3 =
+  match l1, l2, l3 with
+    | [], [], [] -> ()
+    | x1::l1, x2::l2, x3::l3 ->
+      f x1 x2 x3;
+      list_iter3 f l1 l2 l3
+    | _ -> assert false
+
 class ssa_builder = object(this)
   inherit scope_builder as super
 
@@ -178,35 +186,52 @@ class ssa_builder = object(this)
   val mutable havoc_env: Havoc.t SMap.t = SMap.empty
   method ssa_env: Env.t =
     SMap.map (fun val_ref -> !val_ref) ssa_env
+  method merge_remote_ssa_env (env: Env.t): unit =
+    (* NOTE: env might have more keys than ssa_env, since the environment it
+       describes might be nested inside the current environment *)
+    SMap.iter (fun x val_ref ->
+      val_ref := Val.merge !val_ref (SMap.find x env)
+    ) ssa_env
   method merge_ssa_env (env1: Env.t) (env2: Env.t): unit =
-    SMap.iter (fun x val_ref ->
-      val_ref := Val.merge (SMap.find x env1) (SMap.find x env2)
-    ) ssa_env
+    let env1 = SMap.values env1 in
+    let env2 = SMap.values env2 in
+    let ssa_env = SMap.values ssa_env in
+    list_iter3 (fun val_ref value1 value2 ->
+      val_ref := Val.merge value1 value2
+    ) ssa_env env1 env2
   method reset_ssa_env (env0: Env.t): unit =
-    SMap.iter (fun x val_ref ->
-      val_ref := SMap.find x env0
-    ) ssa_env
+    let env0 = SMap.values env0 in
+    let ssa_env = SMap.values ssa_env in
+    List.iter2 (fun val_ref value ->
+      val_ref := value
+    ) ssa_env env0
   method fresh_ssa_env: Env.t =
     SMap.map (fun _ -> Val.mk_unresolved ()) ssa_env
   method assert_ssa_env (env0: Env.t): unit =
-    SMap.iter (fun x val_ref ->
-      Val.resolve ~unresolved:(SMap.find x env0) !val_ref
-    ) ssa_env
+    let env0 = SMap.values env0 in
+    let ssa_env = SMap.values ssa_env in
+    List.iter2 (fun val_ref value ->
+      Val.resolve ~unresolved:value !val_ref
+    ) ssa_env env0
   method empty_ssa_env: Env.t =
     SMap.map (fun _ -> Val.empty) ssa_env
   method havoc_current_ssa_env: unit =
-    SMap.iter (fun x val_ref ->
+    let havoc_env = SMap.values havoc_env in
+    let ssa_env = SMap.values ssa_env in
+    List.iter2 (fun val_ref havoc ->
       (* NOTE: havoc_env should already have all writes to x, so the only
          additional thing that could come from ssa_env is "uninitialized." On
          the other hand, we *dont* want to include "uninitialized" if it's no
          longer in ssa_env, since that means that x has been initialized (and
          there's no going back). *)
-      val_ref := Val.merge !val_ref (SMap.find x havoc_env).Havoc.unresolved
-    ) ssa_env
+      val_ref := Val.merge !val_ref havoc.Havoc.unresolved
+    ) ssa_env havoc_env
   method havoc_uninitialized_ssa_env: unit =
-    SMap.iter (fun x val_ref ->
-      val_ref := Val.merge Val.uninitialized (SMap.find x havoc_env).Havoc.unresolved
-    ) ssa_env
+    let havoc_env = SMap.values havoc_env in
+    let ssa_env = SMap.values ssa_env in
+    List.iter2 (fun val_ref havoc ->
+      val_ref := Val.merge Val.uninitialized havoc.Havoc.unresolved
+    ) ssa_env havoc_env
 
   method private mk_ssa_env =
     SMap.map (fun _ -> ref Val.uninitialized)
@@ -309,7 +334,7 @@ class ssa_builder = object(this)
         filter abrupt_completion
       ) abrupt_completion_envs in
       List.iter (fun (_abrupt_completion, env) ->
-        this#merge_ssa_env this#ssa_env env
+        this#merge_remote_ssa_env env
       ) matching;
       abrupt_completion_envs <- non_matching
     in fun filter -> function
