@@ -40,6 +40,7 @@ end
 module ServerMain (Program : SERVER_PROGRAM) : sig
   val run :
     shared_mem_config:SharedMem_js.config ->
+    log_file:string ->
     Options.t ->
     unit
   val check_once :
@@ -311,7 +312,11 @@ end = struct
 
     serve ~dfind ~genv ~env socket
 
-  let run ~shared_mem_config options = run_internal ~shared_mem_config options
+  let run ~shared_mem_config ~log_file options =
+    let log_fd = Server_daemon.open_log_file log_file in
+    Hh_logger.set_log (Unix.out_channel_of_descr log_fd);
+    Hh_logger.info "Logs will go to %s" log_file;
+    run_internal ~shared_mem_config options
 
   let run_from_daemonize ?waiting_channel ~shared_mem_config options =
     LoggingUtils.set_hh_logger_min_level options;

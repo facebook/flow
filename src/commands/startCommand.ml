@@ -19,8 +19,7 @@ let spec = { CommandSpec.
   args = CommandSpec.ArgSpec.(
       empty
       |> options_and_json_flags
-      |> flag "--log-file" string
-          ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
+      |> log_file_flag
       |> flag "--wait" no_arg
           ~doc:"Wait for the server to finish initializing"
       |> lazy_flags
