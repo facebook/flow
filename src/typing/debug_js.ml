@@ -1101,7 +1101,12 @@ and json_of_destructor_impl json_cx = Hh_json.(function
         "spread", JSON_Array (List.map (_json_of_t json_cx) ts);
       ]
     )
-  | RestType t -> JSON_Object [
+  | RestType (merge_mode, t) ->
+    let open Object.Rest in
+    JSON_Object [
+      "mergeMode", JSON_String (match merge_mode with
+        | Sound -> "Sound"
+        | IgnoreExactAndOwn -> "IgnoreExactAndOwn");
       "restType", _json_of_t json_cx t;
     ]
   | ValuesType -> JSON_Object [
@@ -1901,15 +1906,19 @@ and dump_use_t_ (depth, tvars) cx t =
       in
       spf "(%s, %s)" options state
     in
-    let rest state =
+    let rest merge_mode state =
       let open Object.Rest in
-      match state with
-        | One t -> spf "One (%s)" (kid t)
-        | Done o -> spf "Done (%s)" (resolved o)
+      spf "({merge_mode=%s}, %s)"
+        (match merge_mode with
+          | Sound -> "Sound"
+          | IgnoreExactAndOwn -> "IgnoreExactAndOwn")
+        (match state with
+          | One t -> spf "One (%s)" (kid t)
+          | Done o -> spf "Done (%s)" (resolved o))
     in
     let tool = function
       | Spread (options, state) -> spread options state
-      | Rest state -> rest state
+      | Rest (options, state) -> rest options state
     in
     fun a b ->
       spf "(%s, %s)" (resolve_tool a) (tool b)

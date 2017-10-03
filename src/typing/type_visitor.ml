@@ -209,7 +209,7 @@ class ['a] t = object(self)
   | ElementType t -> self#type_ cx acc t
   | Bind t -> self#type_ cx acc t
   | SpreadType (_, ts) -> self#list (self#type_ cx) acc ts
-  | RestType t -> self#type_ cx acc t
+  | RestType (_, t) -> self#type_ cx acc t
   | CallType args -> self#list (self#type_ cx) acc args
   | TypeMap (TupleMap t | ObjectMap t | ObjectMapi t) -> self#type_ cx acc t
 
@@ -472,7 +472,7 @@ class ['a] t = object(self)
           acc object_spread_acc
         in
         acc
-      | Rest state ->
+      | Rest (_, state) ->
         let open Object.Rest in
         (match state with
           | One t -> self#type_ cx acc t

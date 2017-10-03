@@ -1385,7 +1385,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       let open Object in
       let msg = match tool with
         | Spread _ -> "Cannot spread properties from"
-        | Rest state ->
+        | Rest (_, state) ->
           let open Object.Rest in
           (match state with
             | One _ -> "Cannot remove properties from"

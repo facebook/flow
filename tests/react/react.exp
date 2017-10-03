@@ -1181,13 +1181,8 @@ Error: hoc4.js:17
       This parameter is incompatible:
          32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
-                                                 v
-         17: function MyFunctionComponent(props: {
-         18:   a: number,
-         19:   b: number,
-         20:   prop: number,
-         21: }) {}
-             ^ object type
+          7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
           Property `a` is incompatible:
              32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
                                                 ^^^^^ string. This type is incompatible with
@@ -1199,21 +1194,11 @@ Error: hoc4.js:26
      ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
  26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
      ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with
-                                               v
- 11: class MyComponent extends React.Component<{
- 12:   a: number,
- 13:   b: number,
- 14:   prop: number,
- 15: }> {}
-     ^ object type
+  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `a` is incompatible:
-                                                   v
-     11: class MyComponent extends React.Component<{
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: }> {}
-         ^ property `a`. Property not found in
+      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
      26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
          ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
 
@@ -1222,34 +1207,45 @@ Error: hoc4.js:26
      ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
  26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
      ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with
-                                               v
- 11: class MyComponent extends React.Component<{
- 12:   a: number,
- 13:   b: number,
- 14:   prop: number,
- 15: }> {}
-     ^ object type
+  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `b` is incompatible:
-                                                   v
-     11: class MyComponent extends React.Component<{
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: }> {}
-         ^ property `b`. Property not found in
+      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in
+     26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+         ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
+
+Error: hoc4.js:26
+ 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+     ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
+ 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+     ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with the expected param type of
+  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
+     26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+         ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
+
+Error: hoc4.js:26
+ 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+     ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
+ 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+     ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with the expected param type of
+  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `b` is incompatible:
+      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in
      26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
          ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
 
 Error: hoc4.js:28
  28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with
-                                               v
- 11: class MyComponent extends React.Component<{
- 12:   a: number,
- 13:   b: number,
- 14:   prop: number,
- 15: }> {}
-     ^ object type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with the expected param type of
+  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `a` is incompatible:
      28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
                                 ^^^^^ string. This type is incompatible with
@@ -1281,21 +1277,11 @@ Error: hoc4.js:30
       This parameter is incompatible:
          30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
-                                                 v
-         17: function MyFunctionComponent(props: {
-         18:   a: number,
-         19:   b: number,
-         20:   prop: number,
-         21: }) {}
-             ^ object type
+          7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
           Property `a` is incompatible:
-                                                     v
-             17: function MyFunctionComponent(props: {
-             18:   a: number,
-             19:   b: number,
-             20:   prop: number,
-             21: }) {}
-                 ^ property `a`. Property not found in
+              7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
              30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`
 
@@ -1324,21 +1310,11 @@ Error: hoc4.js:30
       This parameter is incompatible:
          30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
-                                                 v
-         17: function MyFunctionComponent(props: {
-         18:   a: number,
-         19:   b: number,
-         20:   prop: number,
-         21: }) {}
-             ^ object type
+          7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
           Property `b` is incompatible:
-                                                     v
-             17: function MyFunctionComponent(props: {
-             18:   a: number,
-             19:   b: number,
-             20:   prop: number,
-             21: }) {}
-                 ^ property `b`. Property not found in
+              7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in
              30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`
 
@@ -2365,4 +2341,4 @@ Error: undefined_prop.js:7
                                                            ^^^^^^ string
 
 
-Found 170 errors
+Found 172 errors

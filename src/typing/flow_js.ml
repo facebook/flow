@@ -6880,12 +6880,12 @@ and eval_destructor cx ~trace reason t d tout = match t with
     let tool = Resolve Next in
     let state = { todo_rev; acc = [] } in
     ObjKitT (reason, tool, Spread (options, state), tout)
-  | RestType t ->
+  | RestType (options, t) ->
     let open Object in
     let open Object.Rest in
     let tool = Resolve Next in
     let state = One t in
-    ObjKitT (reason, tool, Rest state, tout)
+    ObjKitT (reason, tool, Rest (options, state), tout)
   | ValuesType -> GetValuesT (reason, tout)
   | CallType args ->
     let args = List.map (fun arg -> Arg arg) args in
@@ -10597,45 +10597,46 @@ and object_kit =
      * The resulting object only has a property if the property is own in props1 and
      * it is not an own property of props2.
      *)
-    let rest cx trace reason
+    let rest cx trace reason merge_mode
       (r1, props1, dict1, flags1)
       (r2, props2, dict2, flags2) =
       let props = SMap.merge (fun k p1 p2 ->
-        match get_prop r1 p1 dict1, get_prop r2 p2 dict2, flags2.exact with
+        match merge_mode, get_prop r1 p1 dict1, get_prop r2 p2 dict2, flags2.exact with
         (* If the object we are using to subtract has an optional property, non-own
          * property, or is inexact then we should add this prop to our result, but
          * make it optional as we cannot know for certain whether or not at runtime
          * the property would be subtracted. *)
-        | Some (t1, _), Some ((DefT (_, OptionalT _) as t2), _), _
-        | Some (t1, _), Some (t2, false), _
-        | Some (t1, _), Some (t2, _), false ->
+        | _, Some (t1, _), Some ((DefT (_, OptionalT _) as t2), _), _
+        | Sound, Some (t1, _), Some (t2, false), _
+        | Sound, Some (t1, _), Some (t2, _), false ->
           rec_flow_t cx trace (t1, optional t2);
           Some (Field (optional t1, Neutral))
         (* Otherwise if the object we are using to subtract has a non-optional own
          * property and the object is exact then we never add that property to our
          * source object. *)
-        | None, Some (t2, _), _ ->
+        | _, None, Some (t2, _), _ ->
           let reason = replace_reason_const (RUndefinedProperty k) r1 in
           rec_flow_t cx trace (VoidT.make reason, t2);
           None
-        | Some (t1, _), Some (t2, _), _ ->
+        | _, Some (t1, _), Some (t2, _), _ ->
           rec_flow_t cx trace (t1, t2);
           None
         (* If we have some property in our first object and none in our second
          * object, but our second object is inexact then we want to make our
          * property optional and flow that type to mixed. *)
-        | Some (t1, _), None, false ->
+        | Sound, Some (t1, _), None, false ->
           rec_flow_t cx trace (t1, MixedT.make r2);
           Some (Field (optional t1, Neutral))
         (* If neither object has the prop then we don't add a prop to our
          * result here. *)
-        | None, None, _ -> None
+        | _, None, None, _ -> None
         (* If our first object has a prop and our second object does not have that
          * prop then we will copy over that prop. If the first object's prop is
          * non-own then sometimes we may not copy it over so we mark it
          * as optional. *)
-        | Some (t, true), None, _ -> Some (Field (t, Neutral))
-        | Some (t, false), None, _ -> Some (Field (optional t, Neutral))
+        | IgnoreExactAndOwn, Some (t, _), None, _ -> Some (Field (t, Neutral))
+        | _, Some (t, true), None, _ -> Some (Field (t, Neutral))
+        | Sound, Some (t, false), None, _ -> Some (Field (optional t, Neutral))
       ) props1 props2 in
       let dict = match dict1, dict2 with
         | None, None -> None
@@ -10665,15 +10666,15 @@ and object_kit =
       if flags.exact then ExactT (r1, t) else t
     in
 
-    fun state cx trace reason tout x ->
+    fun options state cx trace reason tout x ->
       match state with
       | One t ->
         let tool = Resolve Next in
         let state = Done x in
-        rec_flow cx trace (t, ObjKitT (reason, tool, Rest state, tout))
+        rec_flow cx trace (t, ObjKitT (reason, tool, Rest (options, state), tout))
       | Done base ->
         let xs = Nel.map_concat (fun slice ->
-          Nel.map (rest cx trace reason slice) x
+          Nel.map (rest cx trace reason options slice) x
         ) base in
         let t = match xs with
           | (x, []) -> x
@@ -10688,7 +10689,7 @@ and object_kit =
 
   let next = function
   | Spread (options, state) -> object_spread options state
-  | Rest state -> object_rest state
+  | Rest (options, state) -> object_rest options state
   in
 
   (* Intersect two object slices: slice * slice -> slice
