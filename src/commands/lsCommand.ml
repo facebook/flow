@@ -48,6 +48,7 @@ type file_result =
   | ExplicitlyIgnored
   | ImplicitLib
   | ExplicitLib
+  | ConfigFile
 
 let string_of_file_result = function
 | ImplicitlyIncluded -> "ImplicitlyIncluded"
@@ -56,6 +57,7 @@ let string_of_file_result = function
 | ExplicitlyIgnored -> "ExplicitlyIgnored"
 | ImplicitLib -> "ImplicitLib"
 | ExplicitLib -> "ExplicitLib"
+| ConfigFile -> "ConfigFile"
 
 let string_of_file_result_with_padding = function
 | ImplicitlyIncluded -> "ImplicitlyIncluded"
@@ -64,8 +66,9 @@ let string_of_file_result_with_padding = function
 | ExplicitlyIgnored  -> "ExplicitlyIgnored "
 | ImplicitLib        -> "ImplicitLib       "
 | ExplicitLib        -> "ExplicitLib       "
+| ConfigFile         -> "ConfigFile        "
 
-let is_included ~root ~options ~libs raw_file =
+let explain ~root ~options ~libs raw_file =
   let file = raw_file |> Path.make |> Path.to_string in
   let root_str = Path.to_string root in
   let result =
@@ -76,7 +79,9 @@ let is_included ~root ~options ~libs raw_file =
       if String_utils.string_starts_with file (Path.to_string flowtyped_path)
       then ImplicitLib
       else ExplicitLib
-    end else if Files.is_ignored options file
+    end else if Server_files_js.config_file root = file
+    then ConfigFile
+    else if Files.is_ignored options file
     then ExplicitlyIgnored
     else if Files.is_included options file
     then ExplicitlyIncluded
@@ -146,6 +151,18 @@ let concat_get_next get_nexts =
 
   in concat
 
+(* Append a constant list of files to the get_next function *)
+let get_next_append_const get_next const =
+  let const = ref const in
+  fun () ->
+    match get_next () with
+    | [] ->
+      let ret = !const in
+      const := [];
+      ret
+    | ret ->
+      ret
+
 let main
   strip_root ignore_flag include_flag root_flag json pretty from all imaginary reason
   input_file root_or_files () =
@@ -182,6 +199,15 @@ let main
       |> concat_get_next) in
 
   let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+  let config_file_absolute = Server_files_js.config_file root in
+  let config_file_relative = Files.relative_path root_str config_file_absolute in
+  let include_config_file = files_or_dirs = [] || List.exists (fun file_or_dir ->
+      file_or_dir = config_file_relative || String_utils.string_starts_with root_str file_or_dir
+    ) files_or_dirs in
+  let next_files = if include_config_file
+    then get_next_append_const next_files [ config_file_absolute ]
+    else next_files in
+
   let normalize_filename filename =
     if not strip_root then filename
     else Files.relative_path root_str filename
@@ -194,7 +220,7 @@ let main
       if reason
       then
         files
-        |> List.map (is_included ~root ~options ~libs)
+        |> List.map (explain ~root ~options ~libs)
         |> List.map (fun (f, r) -> normalize_filename f, r)
         |> json_of_files_with_explanations
       else JSON_Array (
@@ -204,7 +230,7 @@ let main
   end) else begin
     let f = if reason
     then begin fun filename ->
-      let f, r = is_included ~root ~options ~libs filename in
+      let f, r = explain ~root ~options ~libs filename in
       Printf.printf
         "%s    %s\n%!"
         (string_of_file_result_with_padding r)

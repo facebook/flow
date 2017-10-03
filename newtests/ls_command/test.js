@@ -31,6 +31,7 @@ export default suite(({addFile, flowCmd, removeFile}) => [
       .stderr('')
       .sortedStdout(
         `
+          .flowconfig
           explicit_lib.js
           flow-typed/implicit_lib.js
           implicitly_included.js
@@ -43,6 +44,7 @@ export default suite(({addFile, flowCmd, removeFile}) => [
       .sortedStdout(
         `
           ../other/explicitly_included.js
+          .flowconfig
           explicit_lib.js
           flow-typed/implicit_lib.js
           implicitly_included.js
@@ -76,6 +78,7 @@ export default suite(({addFile, flowCmd, removeFile}) => [
       .sortedStdout(
         `
           ../other/explicitly_included.js
+          .flowconfig
           explicit_lib.js
           flow-typed/implicit_lib.js
           implicitly_included.js
@@ -93,8 +96,8 @@ export default suite(({addFile, flowCmd, removeFile}) => [
       .stderr('')
       .sortedStdout(
         `
-
           ../other/explicitly_included.js
+          .flowconfig
           explicit_lib.js
           explicitly_ignored.js
           flow-typed/implicit_lib.js
@@ -129,13 +132,14 @@ export default suite(({addFile, flowCmd, removeFile}) => [
        '--strip-root',
        '--root', 'src',
        '--all',
-     ].concat(files))
+     ].concat(files).concat(['src/.flowconfig']))
       .stderr('')
       .stdout(
         `
           [
             "../other/explicitly_included.js",
             "../other/implicitly_ignored.js",
+            ".flowconfig",
             "explicit_lib.js",
             "explicitly_ignored.js",
             "flow-typed/implicit_lib.js",
@@ -152,7 +156,7 @@ export default suite(({addFile, flowCmd, removeFile}) => [
        '--root', 'src',
        '--all',
        '--explain'
-     ].concat(files))
+     ].concat(files).concat(['src/.flowconfig']))
       .stderr('')
       .stdout(
         `
@@ -162,6 +166,9 @@ export default suite(({addFile, flowCmd, removeFile}) => [
             },
             "../other/implicitly_ignored.js": {
               "explanation": "ImplicitlyIgnored"
+            },
+            ".flowconfig": {
+              "explanation": "ConfigFile"
             },
             "explicit_lib.js": {
               "explanation": "ExplicitLib"
@@ -186,6 +193,7 @@ export default suite(({addFile, flowCmd, removeFile}) => [
       .sortedStdout(
         `
           ../other/explicitly_included.js
+          .flowconfig
           explicit_lib.js
           explicitly_ignored.js
           flow-typed/implicit_lib.js
@@ -200,6 +208,7 @@ export default suite(({addFile, flowCmd, removeFile}) => [
         `
           ../other/explicitly_included.js
           ../other/implicitly_ignored.js
+          .flowconfig
           explicit_lib.js
           explicitly_ignored.js
           flow-typed/implicit_lib.js
@@ -215,6 +224,7 @@ export default suite(({addFile, flowCmd, removeFile}) => [
       .sortedStdout(
         `
           ../other/explicitly_included.js
+          .flowconfig
           explicit_lib.js
           explicitly_ignored.js
           flow-typed/implicit_lib.js
@@ -229,6 +239,7 @@ export default suite(({addFile, flowCmd, removeFile}) => [
         `
           ../other/explicitly_included.js
           ../other/implicitly_ignored.js
+          .flowconfig
           explicit_lib.js
           explicitly_ignored.js
           flow-typed/implicit_lib.js
