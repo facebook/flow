@@ -7,8 +7,6 @@
 
 open Flow_ast_visitor
 
-module LocMap = Utils_js.LocMap
-
 type t = {
   module_sig: module_sig;
   declare_modules: (Loc.t * module_sig) SMap.t
@@ -118,9 +116,7 @@ let add_es_exports named_bindings batch_bindings msig =
 class requires_calculator ~ast = object(this)
   inherit [t] visitor ~init:empty_file_sig as super
 
-  val locals =
-    let { Scope_api.locals; _ } = Scope_builder.program ast in
-    locals
+  val scope_info = Scope_builder.program ast
 
   val mutable curr_declare_module: module_sig option = None;
 
@@ -153,14 +149,14 @@ class requires_calculator ~ast = object(this)
     | ((_, Identifier (loc, "require")),
        [Expression (require_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ })])
       ->
-      if not (LocMap.mem loc locals)
+      if not (Scope_api.is_local_use scope_info loc)
       then this#add_cjs_require v require_loc
     | ((_, Identifier (loc, "requireLazy")),
        [Expression (_, Array ({ Array.elements })); Expression (_);])
       ->
       let element = function
         | Some (Expression (require_loc, Literal { Ast.Literal.value = Ast.Literal.String v; raw = _ })) ->
-          if not (LocMap.mem loc locals)
+          if not (Scope_api.is_local_use scope_info loc)
           then this#add_cjs_require v require_loc
         | _ -> () in
       List.iter element elements
@@ -312,7 +308,7 @@ class requires_calculator ~ast = object(this)
       })) ->
       (* expressions not allowed in declare module body *)
       assert (curr_declare_module = None);
-      if not (LocMap.mem module_loc locals)
+      if not (Scope_api.is_local_use scope_info module_loc)
       then this#set_module_kind (CommonJS { clobbered = Some assign_loc })
     | _ -> ()
     end;
