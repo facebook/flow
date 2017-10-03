@@ -49,7 +49,7 @@ type.
 
 For cases like this where it's useful to assert the absence of a property,
 Flow provides a special syntax for
-["exact" object types](../../types/objects/#toc-exact-object-types).
+[exact object types](../../types/objects/#toc-exact-object-types).
 
 ```js
 // @flow
@@ -60,17 +60,8 @@ function method(obj: {| foo: string |} | {| bar: number |}) {
 }
 ```
 
-[Exact object types](../../types/objects/#toc-exact-object-types) disable width
-subtyping, and do not allow additional properties to exist.
+Exact object types disable width subtyping, and do not allow additional
+properties to exist.
 
 Using exact object types lets Flow know that no extra properties will exist at
 runtime, which allows [refinements](../refinements/) to get more specific.
-
-```js
-// @flow
-function method(obj: {| foo: string |} | {| bar: number |}) {
-  if (obj.foo) {
-    (obj.foo: string); // Works!
-  }
-}
-```

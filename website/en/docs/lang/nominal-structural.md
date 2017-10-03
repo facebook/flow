@@ -2,8 +2,8 @@
 layout: guide
 ---
 
-An important attribute of every type system is whether they are structural or
-nominal, they can even be mixed within a single type system. So it's important
+An important attribute of a type system is whether it is structural or
+nominal (or sometimes a combination of both). It's important
 to know the difference.
 
 A type is something like a string, a boolean, an object, or a class. They have
@@ -34,7 +34,7 @@ different names.
 
 #### Structural typing <a class="toc" id="toc-structural-typing" href="#toc-structural-typing"></a>
 
-Languages like OCaml, Haskell, and Elm have primarily structural type systems.
+Languages like OCaml, Scala, and Elm sometimes use structural typing.
 
 ```js
 class Foo { method(input: string) { /* ... */ } }
@@ -44,7 +44,7 @@ let foo: Foo = new Bar(); // Works!
 ```
 
 Here you can see a pseudo-example of a structural type system passing when
-you're trying to put a Bar where a `Foo` is required because their structure is
+you're trying to put a `Bar` where a `Foo` is required because their structure is
 exactly the same.
 
 But as soon as you change the shape it will start to cause errors.
@@ -59,7 +59,7 @@ let foo: Foo = new Bar(); // Error!
 It can get a little bit more complicated than this.
 
 We've demonstrated both nominal and structure typing of classes, but there are
-also other complex types like objects and functions which can also be either
+other complex types like objects and functions which can also be either
 nominal or structural. Even further, they can be different within the same type
 system (most of the languages listed before has features of both).
 
@@ -123,19 +123,18 @@ chosen based on how objects, functions, and classes are already used in
 JavaScript.
 
 The JavaScript language is a bunch of object-oriented ideas and functional
-ideas mixed together. Developer's usage of JavaScript tends to be mixed as
-well. Classes (or constructor functions) being the more object-oriented side
-and functions (as lambdas) and objects tend to be more on the functional side,
-developers use both simultaneously.
+ideas mixed together. JavaScript developers tend to use both simultaneously,
+with classes (or constructor functions) being more object-oriented, and
+functions (as lambdas) and objects being more functional.
 
-Object oriented languages tend to be more nominally typed (C++, Java, Swift),
-while functional languages tend to be more structurally typed (OCaml, Haskell,
+Object-oriented languages tend to be more nominally typed (C++, Java, Swift),
+while functional languages tend to more often make use of structural typing (OCaml, Scala,
 Elm).
 
 When someone writes a class, they are declaring a _thing_. This thing might
 have the same structure as something else but they still serve different
-purposes. Imagine two component classes that both have `render()` methods,
-these components could still have totally different purposes, but in a
+purposes. Imagine two component classes that both have `render()` methods.
+These components could have totally different purposes, but in a
 structural type system they'd be considered exactly the same.
 
 Flow chooses what is natural for JavaScript, and should behave the way you

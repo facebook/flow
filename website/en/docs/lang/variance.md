@@ -74,7 +74,7 @@ method(new SanFrancisco()); // okay
 ---
 
 As a result of having weak dynamic typing, JavaScript doesn't have any of
-these, you can use any type at any time.
+these; you can use any type at any time.
 
 ## Variance in Classes <a class="toc" id="toc-variance-in-classes" href="#toc-variance-in-classes"></a>
 
@@ -141,7 +141,7 @@ which could easily cause an error at runtime.
 
 #### Less specific inputs — Good <a class="toc" id="toc-less-specific-inputs-good" href="#toc-less-specific-inputs-good"></a>
 
-Next, we'll have another SubClass that accepts a value of a less specific type.
+Next, we'll have another `SubClass` that accepts a value of a less specific type.
 
 ```js
 class SubClass extends BaseClass {
