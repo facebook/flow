@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 module Config = Flowtestgen_config;;
@@ -89,4 +86,3 @@ let close () =
   if not Config.(config.log_to_console) then close_out type_error_out;
   if not Config.(config.log_to_console) then close_out runtime_error_out;
   if not Config.(config.log_to_console) then close_out no_error_out;;
-

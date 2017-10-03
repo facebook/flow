@@ -1,7 +1,7 @@
 site_title: "Flow"
 site_description: "A Static Type Checker for JavaScript"
 blog_title: "Flow Blog"
-site_license: "Distributed under BSD License"
+site_license: "Distributed under MIT License"
 site_code_of_conduct: "Code of Conduct"
 site_edit_this_page: "Edit this page"
 
