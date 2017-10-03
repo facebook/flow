@@ -21,7 +21,8 @@ module type SERVER_PROGRAM = sig
     (Errors.error * Loc.LocSet.t) list (* suppressed errors *)
   (* filter and relativize updated file paths *)
   val process_updates : genv -> env -> SSet.t -> FilenameSet.t
-  val recheck: genv -> env -> FilenameSet.t -> serve_ready_clients:(unit -> unit) -> env
+  val recheck: genv -> env ->
+    ?force_focus:bool -> serve_ready_clients:(unit -> unit) -> FilenameSet.t -> env
   val get_watch_paths: Options.t -> Path.t list
   val name: string
   val handle_client : genv -> env ->
@@ -144,7 +145,7 @@ end = struct
     let raw_updates = DfindLib.get_changes dfind in
     if SSet.is_empty raw_updates then env else begin
       let updates = Program.process_updates genv env raw_updates in
-      let env = Program.recheck genv env updates ~serve_ready_clients in
+      let env = Program.recheck genv env ~serve_ready_clients updates in
       recheck_loop ~dfind genv env ~serve_ready_clients
     end
 

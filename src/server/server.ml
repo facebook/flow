@@ -613,7 +613,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     ) updates FilenameSet.empty
 
   (* on notification, execute client commands or recheck files *)
-  let recheck genv env updates ~serve_ready_clients =
+  let recheck genv env ?(force_focus=false) ~serve_ready_clients updates =
     if FilenameSet.is_empty updates
     then env
     else begin
@@ -624,7 +624,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let workers = genv.ServerEnv.workers in
 
       Pervasives.ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
-      let env = Types_js.recheck ~options ~workers ~updates env ~serve_ready_clients in
+      let env = Types_js.recheck ~options ~workers ~updates env ~force_focus ~serve_ready_clients in
       (* Unfortunately, regenerate_collated_errors is currently a little expensive. As the checked
        * repo grows, regenerate_collated_errors can easily take a couple of seconds. So we need to
        * run it before we release the recheck lock *)
@@ -680,12 +680,13 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           (File_input.filename_of_file_input fn) line char;
         (find_refs ~options ~workers ~env (fn, line, char): ServerProt.find_refs_response)
           |> marshal
-    | ServerProt.FORCE_RECHECK (files) ->
-        Hh_logger.debug "Request: force-recheck %s" (String.concat " " files);
+    | ServerProt.FORCE_RECHECK (files, force_focus) ->
+        Hh_logger.debug
+          "Request: force-recheck %s (focus = %b)" (String.concat " " files) force_focus;
         Marshal.to_channel oc () [];
         flush oc;
         let updates = process_updates genv !env (SSet.of_list files) in
-        env := recheck genv !env updates ~serve_ready_clients
+        env := recheck genv !env ~force_focus ~serve_ready_clients updates
     | ServerProt.GEN_FLOW_FILES (files, include_warnings) ->
         Hh_logger.debug "Request: gen-flow-files %s"
           (files |> List.map File_input.filename_of_file_input |> String.concat " ");
@@ -811,7 +812,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
               if not (FilenameSet.is_empty new_focused_files)
               then
                 (* Rechecking will send errors to the clients *)
-                recheck genv env new_focused_files ~serve_ready_clients
+                recheck genv env ~serve_ready_clients new_focused_files
               else begin
                 (* This open doesn't trigger a recheck, but we'll still send down the errors *)
                 let errors, warnings, _ = get_collated_errors_separate_warnings env in

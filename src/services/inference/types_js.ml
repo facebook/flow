@@ -616,16 +616,20 @@ let focused_files_to_infer ~workers ~focused ~parsed =
 
   CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty
 
+let filter_out_node_modules ~options =
+  let root = Options.root options in
+  let file_options = Options.file_options options in
+  FilenameSet.filter (fun fn ->
+    let filename_str = File_key.to_string fn in
+    not (Files.is_within_node_modules ~root ~options:file_options filename_str)
+  )
+
 (* Without a set of focused files, we just focus on every parsed file. We won't focus on
  * node_modules. If a node module is a dependency, then we'll just treat it as a dependency.
  * Otherwise, we'll ignore it. *)
 let unfocused_files_to_infer ~options ~workers ~parsed =
   (* All the non-node_modules files *)
-  let root = Options.root options in
-  let file_options = Options.file_options options in
-  let focused = FilenameSet.filter (fun fn ->
-    not (Files.is_within_node_modules ~root ~options:file_options (File_key.to_string fn))
-  ) parsed in
+  let focused = filter_out_node_modules ~options parsed in
 
   (* Calculate dependencies to figure out which node_modules stuff we depend on *)
   let dependency_graph = Dep_service.calc_dependency_graph workers (FilenameSet.elements parsed) in
@@ -649,7 +653,8 @@ let files_to_infer ~options ~workers ~focused ~profiling ~parsed =
    `files` contains files that parsed successfully in the previous
    phase (which could be the init phase or a previous recheck phase)
 *)
-let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_ready_clients =
+let recheck_with_profiling
+  ~profiling ~options ~workers ~updates env ~force_focus ~serve_ready_clients =
   let errors = env.ServerEnv.errors in
 
   (* If foo.js is updated and foo.js.flow exists, then mark foo.js.flow as
@@ -922,11 +927,15 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
      *
      *   1. The files that were previously focused
      *   2. Modified files that are currently open in the IDE
+     *   3. If this is a `flow force-recheck --focus A.js B.js C.js`, then A.js, B.js and C.js
      *
      * Remember that the IDE might open a new file or keep open a deleted file, so the focused set
      * might be missing that file. If that file reappears, we must remember to refocus on it.
      **)
     let old_focused = CheckedSet.focused env.ServerEnv.checked_files in
+    let forced_focus = if force_focus
+      then filter_out_node_modules ~options freshparsed
+      else FilenameSet.empty in
     let open_in_ide =
       let opened_files = Persistent_connection.get_opened_files env.ServerEnv.connections in
       FilenameSet.filter (function
@@ -937,7 +946,9 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
         | File_key.Builtins -> false
       ) freshparsed
     in
-    let focused = FilenameSet.union old_focused open_in_ide in
+    let focused = old_focused
+      |> FilenameSet.union open_in_ide
+      |> FilenameSet.union forced_focus in
     let updated_checked_files = focused_files_to_infer ~workers ~focused ~parsed in
 
     (* It's possible that all_dependent_files contains foo.js, which is a dependent of a dependency.
@@ -1009,10 +1020,11 @@ let recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_read
   },
   (new_or_changed_count, deleted_count, !dependent_file_count))
 
-let recheck ~options ~workers ~updates env ~serve_ready_clients =
+let recheck ~options ~workers ~updates env ~force_focus ~serve_ready_clients =
   let profiling, (env, (modified_count, deleted_count, dependent_file_count)) =
     Profiling_js.with_profiling (fun profiling ->
-      recheck_with_profiling ~profiling ~options ~workers ~updates env ~serve_ready_clients
+      recheck_with_profiling
+        ~profiling ~options ~workers ~updates env ~force_focus ~serve_ready_clients
     )
   in
   FlowEventLogger.recheck

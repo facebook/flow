@@ -26,6 +26,7 @@ val recheck:
   workers:Worker.t list option ->
   updates:FilenameSet.t ->
   ServerEnv.env ->
+  force_focus:bool ->
   serve_ready_clients:(unit -> unit) ->
   ServerEnv.env
 

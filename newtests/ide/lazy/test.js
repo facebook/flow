@@ -1777,4 +1777,92 @@ export default suite(({
       )
       .because('We should be back at our starting state'),
   ]).lazy('ide'),
+
+  test('flow force-recheck --focus', [
+    ideStart()
+      .ideNotification('subscribeToDiagnostics')
+      .ideNotification('didOpen', 'focused.js')
+      .ideNewMessagesWithTimeout(
+        5000,
+        [
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          },
+          {
+            "method": "startRecheck",
+            "params": []
+          },
+          {
+            "method": "endRecheck",
+            "params": []
+          },
+          {
+            "method": "diagnosticsNotification",
+            "params": [
+              {
+                "flowVersion": "<VERSION STUBBED FOR TEST>",
+                "errors": [],
+                "passed": true
+              }
+            ]
+          }
+        ],
+      ),
+    addFiles('focused.js', 'dependency.js', 'otherDependent.js')
+      .flowCmd(['status', '--strip-root'])
+      .stdout(
+        `
+          Error: dependency.js:3
+            3: var dependencyError: string = 123;
+                                             ^^^ number. This type is incompatible with
+            3: var dependencyError: string = 123;
+                                    ^^^^^^ string
+
+          Error: focused.js:3
+            3: var focusedError: string = 123;
+                                          ^^^ number. This type is incompatible with
+            3: var focusedError: string = 123;
+                                 ^^^^^^ string
+
+
+          Found 2 errors
+
+        `,
+      ).because("otherDependent's errors are ignored due to lazy mode"),
+    flowCmd(['force-recheck', '--focus', 'dependency.js'])
+      .flowCmd(['status', '--strip-root'])
+      .stdout(
+        `
+
+          Error: dependency.js:3
+            3: var dependencyError: string = 123;
+                                             ^^^ number. This type is incompatible with
+            3: var dependencyError: string = 123;
+                                    ^^^^^^ string
+
+          Error: focused.js:3
+            3: var focusedError: string = 123;
+                                          ^^^ number. This type is incompatible with
+            3: var focusedError: string = 123;
+                                 ^^^^^^ string
+
+          Error: otherDependent.js:3
+            3: var otherDependentError: string = 123;
+                                                 ^^^ number. This type is incompatible with
+            3: var otherDependentError: string = 123;
+                                        ^^^^^^ string
+
+
+          Found 3 errors
+
+        `,
+      ).because('force-recheck --focus promotes dependency to focused, so we see the error in otherDependent'),
+  ]).lazy('ide'),
 ]);
