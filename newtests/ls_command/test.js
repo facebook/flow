@@ -31,8 +31,9 @@ export default suite(({addFile, flowCmd, removeFile}) => [
       .stderr('')
       .sortedStdout(
         `
+          explicit_lib.js
+          flow-typed/implicit_lib.js
           implicitly_included.js
-
         `,
       )
       .because('Infers root and only shows included files in src directory'),
@@ -41,8 +42,9 @@ export default suite(({addFile, flowCmd, removeFile}) => [
       .stderr('')
       .sortedStdout(
         `
-
           ../other/explicitly_included.js
+          explicit_lib.js
+          flow-typed/implicit_lib.js
           implicitly_included.js
         `,
       )
@@ -63,7 +65,7 @@ export default suite(({addFile, flowCmd, removeFile}) => [
       .sortedStdout('')
       .because("Won't show files that don't exist")
   ]),
-  test('Explicit root will not filter',[
+  test('Explicit root will not filter out files in other/',[
     flowCmd([
       'ls',
       '--strip-root',
@@ -74,8 +76,9 @@ export default suite(({addFile, flowCmd, removeFile}) => [
       .sortedStdout(
         `
           ../other/explicitly_included.js
+          explicit_lib.js
+          flow-typed/implicit_lib.js
           implicitly_included.js
-
         `,
       ),
   ]),

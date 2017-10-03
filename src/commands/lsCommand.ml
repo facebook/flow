@@ -29,7 +29,7 @@ let spec = {
     |> json_flags
     |> from_flag
     |> flag "--all" no_arg
-      ~doc:"Even list ignored files and lib files"
+      ~doc:"Even list ignored files"
     |> flag "--imaginary" no_arg
       ~doc:"Even list non-existent specified files (normally they are silently dropped). \
             Non-existent files are never considered to be libs."
@@ -168,14 +168,17 @@ let main
   ) in
 
   let options = make_options ~root ~ignore_flag ~include_flag in
+  (* Turn on --no-flowlib by default, so that flow ls never reports flowlib files *)
+  let options = { options with Files.default_lib_dir = None; } in
   let _, libs = Files.init options in
-  (* `flow ls` and `flow ls dir` will list out all the flow files *)
+  (* `flow ls` and `flow ls dir` will list out all the flow files. We want to include lib files, so
+   * we pass in ~libs:SSet.empty, which means we won't filter out any lib files *)
   let next_files = (match files_or_dirs with
   | [] ->
-      get_ls_files ~root ~all ~options ~libs ~imaginary None
+      get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary None
   | files_or_dirs ->
       files_or_dirs
-      |> List.map (fun f -> get_ls_files ~root ~all ~options ~libs ~imaginary (Some f))
+      |> List.map (fun f -> get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary (Some f))
       |> concat_get_next) in
 
   let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
