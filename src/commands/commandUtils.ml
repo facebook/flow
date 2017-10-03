@@ -273,6 +273,12 @@ let ignore_version_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Ignore the version constraint in .flowconfig"
 )
 
+let log_file_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--log-file" string
+      ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
+)
+
 let assert_version flowconfig =
   match FlowConfig.required_version flowconfig with
   | None -> ()

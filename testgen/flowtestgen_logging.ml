@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 module Config = Flowtestgen_config;;
@@ -48,11 +45,11 @@ let reset () =
   type_error_count := 0;
   runtime_error_count := 0;;
 
-let log_no_error code = 
+let log_no_error code =
   no_error_count := !no_error_count + 1;
   fprintf no_error_out "// Good program ==========\n%s\n%!" code;;
 
-let log_type_error code msg = 
+let log_type_error code msg =
   type_error_count := !type_error_count + 1;
   printf "TYPE ERROR.\n%!";
   fprintf type_error_out "//====================\n%s\n%!" code;
@@ -70,7 +67,6 @@ let log_runtime_error code msg =
   fprintf runtime_error_out "//====================\n%s\n%!" code;
   fprintf runtime_error_out "/*\nRuntime Error: \n%s\n*/\n%!" msg;;
 
-let print_stats () =
   let early_type_count_str =
     sprintf
       "%d early type errors written to %s\n%!"
@@ -111,4 +107,3 @@ let close () =
   if not Config.(config.log_to_console) then close_out type_error_out;
   if not Config.(config.log_to_console) then close_out runtime_error_out;
   if not Config.(config.log_to_console) then close_out no_error_out;;
-  

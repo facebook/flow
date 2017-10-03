@@ -19,6 +19,8 @@ val register_entry_point :
     unit) ->
   entry_point
 
+val open_log_file: string -> Unix.file_descr
+
 val daemonize :
   wait:bool ->
   log_file:string ->

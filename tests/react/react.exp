@@ -77,54 +77,17 @@ Error: create_class.js:118
 118:     (this.state.foo: empty); // string ~> empty
                           ^^^^^ empty
 
-Error: create_class.js:132
-132:   componentWillMount() {
-                         ^^ function. This type is incompatible with
- 45:   componentWillMount(): void;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:45
-  This parameter is incompatible:
-    134:     return 0; // number ~> void
-                    ^ number. This type is incompatible with
-     45:   componentWillMount(): void;
-                                 ^^^^ undefined. See lib: <BUILTINS>/react.js:45
-
 Error: create_class.js:133
 133:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
 133:     (this.props.foo: empty); // string ~> empty
                           ^^^^^ empty
 
-Error: create_class.js:136
-136:   componentDidMount() {
-                        ^^ function. This type is incompatible with
- 46:   componentDidMount(): void;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:46
-  This parameter is incompatible:
-    138:     return 0; // number ~> void
-                    ^ number. This type is incompatible with
-     46:   componentDidMount(): void;
-                                ^^^^ undefined. See lib: <BUILTINS>/react.js:46
-
 Error: create_class.js:137
 137:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
 137:     (this.props.foo: empty); // string ~> empty
                           ^^^^^ empty
-
-Error: create_class.js:140
-140:   componentWillReceiveProps(nextProps) {
-                                ^^^^^^^^^^^ function. This type is incompatible with
-       v-------------------------
- 47:   componentWillReceiveProps(
- 48:     nextProps: Props,
- 49:     nextContext: any,
- 50:   ): void;
-       ------^ function type. See lib: <BUILTINS>/react.js:47
-  This parameter is incompatible:
-    143:     return 0; // number ~> void
-                    ^ number. This type is incompatible with
-     50:   ): void;
-              ^^^^ undefined. See lib: <BUILTINS>/react.js:50
 
 Error: create_class.js:141
 141:     (this.props.foo: empty); // string ~> empty
@@ -178,22 +141,6 @@ Error: create_class.js:149
 149:     (nextState.bar: empty); // number ~> empty
                          ^^^^^ empty
 
-Error: create_class.js:152
-152:   componentWillUpdate(nextProps, nextState) {
-                          ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-       v-------------------
- 56:   componentWillUpdate(
- 57:     nextProps: Props,
- 58:     nextState: State,
- 59:     nextContext: any,
- 60:   ): void;
-       ------^ function type. See lib: <BUILTINS>/react.js:56
-  This parameter is incompatible:
-    157:     return 0; // number ~> void
-                    ^ number. This type is incompatible with
-     60:   ): void;
-              ^^^^ undefined. See lib: <BUILTINS>/react.js:60
-
 Error: create_class.js:153
 153:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
@@ -218,22 +165,6 @@ Error: create_class.js:156
 156:     (nextState.bar: empty); // number ~> empty
                          ^^^^^ empty
 
-Error: create_class.js:159
-159:   componentDidUpdate(nextProps, nextState) {
-                         ^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-       v------------------
- 61:   componentDidUpdate(
- 62:     prevProps: Props,
- 63:     prevState: State,
- 64:     prevContext: any,
- 65:   ): void;
-       ------^ function type. See lib: <BUILTINS>/react.js:61
-  This parameter is incompatible:
-    164:     return 0; // number ~> void
-                    ^ number. This type is incompatible with
-     65:   ): void;
-              ^^^^ undefined. See lib: <BUILTINS>/react.js:65
-
 Error: create_class.js:160
 160:     (this.props.foo: empty); // string ~> empty
           ^^^^^^^^^^^^^^ string. This type is incompatible with
@@ -257,17 +188,6 @@ Error: create_class.js:163
           ^^^^^^^^^^^^^ number. This type is incompatible with
 163:     (nextState.bar: empty); // number ~> empty
                          ^^^^^ empty
-
-Error: create_class.js:166
-166:   componentWillUnmount() {
-                           ^^ function. This type is incompatible with
- 66:   componentWillUnmount(): void;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:66
-  This parameter is incompatible:
-    169:     return 0; // number ~> void
-                    ^ number. This type is incompatible with
-     66:   componentWillUnmount(): void;
-                                   ^^^^ undefined. See lib: <BUILTINS>/react.js:66
 
 Error: create_class.js:167
 167:     (this.props.foo: empty); // string ~> empty
@@ -500,20 +420,20 @@ Error: element_with_component_type.js:8
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
                                                                    v-
-156: declare type React$Element<+ElementType: React$ElementType> = {|
-157:   +type: ElementType,
-158:   +props: React$ElementProps<ElementType>,
+157: declare type React$Element<+ElementType: React$ElementType> = {|
+158:   +type: ElementType,
+159:   +props: React$ElementProps<ElementType>,
 ...:
-161: |};
-     -^ object type. See lib: <BUILTINS>/react.js:156
+162: |};
+     -^ object type. See lib: <BUILTINS>/react.js:157
   Property `props` is incompatible:
       5: class Foo extends React.Component<{a: number}> {}
                                            ^^^^^^^^^^^ object type. This type is incompatible with
-    158:   +props: React$ElementProps<ElementType>,
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:158
+    159:   +props: React$ElementProps<ElementType>,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:159
       Property `b` is incompatible:
-        158:   +props: React$ElementProps<ElementType>,
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in. See lib: <BUILTINS>/react.js:158
+        159:   +props: React$ElementProps<ElementType>,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in. See lib: <BUILTINS>/react.js:159
           5: class Foo extends React.Component<{a: number}> {}
                                                ^^^^^^^^^^^ object type
 
@@ -523,12 +443,12 @@ Error: element_with_component_type.js:8
   8: (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
                                                                    v-
-156: declare type React$Element<+ElementType: React$ElementType> = {|
-157:   +type: ElementType,
-158:   +props: React$ElementProps<ElementType>,
+157: declare type React$Element<+ElementType: React$ElementType> = {|
+158:   +type: ElementType,
+159:   +props: React$ElementProps<ElementType>,
 ...:
-161: |};
-     -^ object type. See lib: <BUILTINS>/react.js:156
+162: |};
+     -^ object type. See lib: <BUILTINS>/react.js:157
   Property `type` is incompatible:
       5: class Foo extends React.Component<{a: number}> {}
                ^^^ class type: Foo. This type is incompatible with
@@ -1261,13 +1181,8 @@ Error: hoc4.js:17
       This parameter is incompatible:
          32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
-                                                 v
-         17: function MyFunctionComponent(props: {
-         18:   a: number,
-         19:   b: number,
-         20:   prop: number,
-         21: }) {}
-             ^ object type
+          7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
           Property `a` is incompatible:
              32: <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
                                                 ^^^^^ string. This type is incompatible with
@@ -1279,21 +1194,11 @@ Error: hoc4.js:26
      ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
  26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
      ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with
-                                               v
- 11: class MyComponent extends React.Component<{
- 12:   a: number,
- 13:   b: number,
- 14:   prop: number,
- 15: }> {}
-     ^ object type
+  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `a` is incompatible:
-                                                   v
-     11: class MyComponent extends React.Component<{
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: }> {}
-         ^ property `a`. Property not found in
+      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
      26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
          ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
 
@@ -1302,34 +1207,45 @@ Error: hoc4.js:26
      ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
  26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
      ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with
-                                               v
- 11: class MyComponent extends React.Component<{
- 12:   a: number,
- 13:   b: number,
- 14:   prop: number,
- 15: }> {}
-     ^ object type
+  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `b` is incompatible:
-                                                   v
-     11: class MyComponent extends React.Component<{
-     12:   a: number,
-     13:   b: number,
-     14:   prop: number,
-     15: }> {}
-         ^ property `b`. Property not found in
+      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in
+     26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+         ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
+
+Error: hoc4.js:26
+ 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+     ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
+ 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+     ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with the expected param type of
+  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `a` is incompatible:
+      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
+     26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+         ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
+
+Error: hoc4.js:26
+ 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+     ^^^^^^^^^^^^^^^^^^^^^^^ React element `MyEnhancedComponent`
+ 26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
+     ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with the expected param type of
+  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `b` is incompatible:
+      7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in
      26: <MyEnhancedComponent />; // Error: Needs `a` and `b`.
          ^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`
 
 Error: hoc4.js:28
  28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with
-                                               v
- 11: class MyComponent extends React.Component<{
- 12:   a: number,
- 13:   b: number,
- 14:   prop: number,
- 15: }> {}
-     ^ object type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedComponent`. This type is incompatible with the expected param type of
+  7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Property `a` is incompatible:
      28: <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
                                 ^^^^^ string. This type is incompatible with
@@ -1361,21 +1277,11 @@ Error: hoc4.js:30
       This parameter is incompatible:
          30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
-                                                 v
-         17: function MyFunctionComponent(props: {
-         18:   a: number,
-         19:   b: number,
-         20:   prop: number,
-         21: }) {}
-             ^ object type
+          7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
           Property `a` is incompatible:
-                                                     v
-             17: function MyFunctionComponent(props: {
-             18:   a: number,
-             19:   b: number,
-             20:   prop: number,
-             21: }) {}
-                 ^ property `a`. Property not found in
+              7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a`. Property not found in
              30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`
 
@@ -1404,21 +1310,11 @@ Error: hoc4.js:30
       This parameter is incompatible:
          30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`. This type is incompatible with
-                                                 v
-         17: function MyFunctionComponent(props: {
-         18:   a: number,
-         19:   b: number,
-         20:   prop: number,
-         21: }) {}
-             ^ object type
+          7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
           Property `b` is incompatible:
-                                                     v
-             17: function MyFunctionComponent(props: {
-             18:   a: number,
-             19:   b: number,
-             20:   prop: number,
-             21: }) {}
-                 ^ property `b`. Property not found in
+              7: ): React.ComponentType<$Diff<TProps, {prop: number}>> {
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `b`. Property not found in
              30: <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `MyEnhancedFunctionComponent`
 
@@ -1450,21 +1346,21 @@ Error: key.js:12
  12: <Foo key={true} />; // Error
      ^^^^^^^^^^^^^^^^^^ union: string | number
   Member 1:
-  167: declare type React$Key = string | number;
-                                ^^^^^^ string. See lib: <BUILTINS>/react.js:167
+  168: declare type React$Key = string | number;
+                                ^^^^^^ string. See lib: <BUILTINS>/react.js:168
   Error:
    12: <Foo key={true} />; // Error
                  ^^^^ boolean. This type is incompatible with
-  167: declare type React$Key = string | number;
-                                ^^^^^^ string. See lib: <BUILTINS>/react.js:167
+  168: declare type React$Key = string | number;
+                                ^^^^^^ string. See lib: <BUILTINS>/react.js:168
   Member 2:
-  167: declare type React$Key = string | number;
-                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:167
+  168: declare type React$Key = string | number;
+                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:168
   Error:
    12: <Foo key={true} />; // Error
                  ^^^^ boolean. This type is incompatible with
-  167: declare type React$Key = string | number;
-                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:167
+  168: declare type React$Key = string | number;
+                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:168
 
 Error: key.js:21
  21: <FooExact key={true} />; // Error
@@ -1472,21 +1368,21 @@ Error: key.js:21
  21: <FooExact key={true} />; // Error
      ^^^^^^^^^^^^^^^^^^^^^^^ union: string | number
   Member 1:
-  167: declare type React$Key = string | number;
-                                ^^^^^^ string. See lib: <BUILTINS>/react.js:167
+  168: declare type React$Key = string | number;
+                                ^^^^^^ string. See lib: <BUILTINS>/react.js:168
   Error:
    21: <FooExact key={true} />; // Error
                       ^^^^ boolean. This type is incompatible with
-  167: declare type React$Key = string | number;
-                                ^^^^^^ string. See lib: <BUILTINS>/react.js:167
+  168: declare type React$Key = string | number;
+                                ^^^^^^ string. See lib: <BUILTINS>/react.js:168
   Member 2:
-  167: declare type React$Key = string | number;
-                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:167
+  168: declare type React$Key = string | number;
+                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:168
   Error:
    21: <FooExact key={true} />; // Error
                       ^^^^ boolean. This type is incompatible with
-  167: declare type React$Key = string | number;
-                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:167
+  168: declare type React$Key = string | number;
+                                         ^^^^^^ number. See lib: <BUILTINS>/react.js:168
 
 Error: portals.js:12
  12:       document.getElementById('portal'),
@@ -1617,8 +1513,8 @@ Error: proptype_custom_validator.js:6
   This parameter is incompatible:
      11:       return (0: mixed); // error: should return ?Error
                           ^^^^^ mixed. This type is incompatible with
-    265:   href?: string) => ?Error;
-                              ^^^^^ Error. See lib: <BUILTINS>/react.js:265
+    266:   href?: string) => ?Error;
+                              ^^^^^ Error. See lib: <BUILTINS>/react.js:266
 
 Error: proptype_custom_validator.js:8
   8:       (propName: empty); // error: propName is a string
@@ -2131,8 +2027,8 @@ Error: proptypes_builtins.js:7
   7: (React.PropTypes.arrayOf : NoFun);
                                 ^^^^^ function type
   This parameter is incompatible:
-    273:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:273
+    274:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:274
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
@@ -2144,8 +2040,8 @@ Error: proptypes_builtins.js:7
   This parameter is incompatible:
       3: type NoFun = mixed => empty;
                       ^^^^^ mixed. This type is incompatible with
-    273:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                         ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:273
+    274:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                         ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:274
 
 Error: proptypes_builtins.js:11
  11: (React.PropTypes.instanceOf : NoFun);
@@ -2153,8 +2049,8 @@ Error: proptypes_builtins.js:11
  11: (React.PropTypes.instanceOf : NoFun);
                                    ^^^^^ function type
   This parameter is incompatible:
-    275:   (expectedClass: any) => ReactPropsChainableTypeChecker;
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:275
+    276:   (expectedClass: any) => ReactPropsChainableTypeChecker;
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:276
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
@@ -2164,8 +2060,8 @@ Error: proptypes_builtins.js:15
  15: (React.PropTypes.objectOf : NoFun);
                                  ^^^^^ function type
   This parameter is incompatible:
-    277:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:277
+    278:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:278
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
@@ -2177,8 +2073,8 @@ Error: proptypes_builtins.js:15
   This parameter is incompatible:
       3: type NoFun = mixed => empty;
                       ^^^^^ mixed. This type is incompatible with
-    277:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
-                         ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:277
+    278:   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+                         ^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:278
 
 Error: proptypes_builtins.js:19
  19: (React.PropTypes.oneOf : NoFun);
@@ -2186,8 +2082,8 @@ Error: proptypes_builtins.js:19
  19: (React.PropTypes.oneOf : NoFun);
                               ^^^^^ function type
   This parameter is incompatible:
-    279:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:279
+    280:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:280
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
@@ -2199,8 +2095,8 @@ Error: proptypes_builtins.js:19
   This parameter is incompatible:
       3: type NoFun = mixed => empty;
                       ^^^^^ mixed. This type is incompatible with
-    279:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
-                            ^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:279
+    280:   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+                            ^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:280
 
 Error: proptypes_builtins.js:23
  23: (React.PropTypes.oneOfType : NoFun);
@@ -2208,8 +2104,8 @@ Error: proptypes_builtins.js:23
  23: (React.PropTypes.oneOfType : NoFun);
                                   ^^^^^ function type
   This parameter is incompatible:
-    282:     ReactPropsChainableTypeChecker;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:282
+    283:     ReactPropsChainableTypeChecker;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:283
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
@@ -2221,8 +2117,8 @@ Error: proptypes_builtins.js:23
   This parameter is incompatible:
       3: type NoFun = mixed => empty;
                       ^^^^^ mixed. This type is incompatible with
-    281:   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:281
+    282:   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. See lib: <BUILTINS>/react.js:282
 
 Error: proptypes_builtins.js:27
  27: (React.PropTypes.shape : NoFun);
@@ -2230,8 +2126,8 @@ Error: proptypes_builtins.js:27
  27: (React.PropTypes.shape : NoFun);
                               ^^^^^ function type
   This parameter is incompatible:
-    285:     ReactPropsChainableTypeChecker;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:285
+    286:     ReactPropsChainableTypeChecker;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/react.js:286
       3: type NoFun = mixed => empty;
                                ^^^^^ empty
 
@@ -2243,8 +2139,8 @@ Error: proptypes_builtins.js:27
   This parameter is incompatible:
       3: type NoFun = mixed => empty;
                       ^^^^^ mixed. This type is incompatible with
-    284:   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:284
+    285:   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react.js:285
 
 Error: proptypes_sealed.js:18
  18:     (this.props.baz: string);
@@ -2264,26 +2160,26 @@ Error: ref.js:12
  12: <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: function type | string
   Member 1:
-  173:   | ((React$ElementRef<ElementType> | null) => mixed)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:173
+  174:   | ((React$ElementRef<ElementType> | null) => mixed)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:174
   Error:
    12: <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
                  ^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-  173:   | ((React$ElementRef<ElementType> | null) => mixed)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:173
+  174:   | ((React$ElementRef<ElementType> | null) => mixed)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:174
     This parameter is incompatible:
-      173:   | ((React$ElementRef<ElementType> | null) => mixed)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Foo. This type is incompatible with. See lib: <BUILTINS>/react.js:173
+      174:   | ((React$ElementRef<ElementType> | null) => mixed)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Foo. This type is incompatible with. See lib: <BUILTINS>/react.js:174
        12: <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
                            ^^^^^^ number
   Member 2:
-  174:   | string;
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:174
+  175:   | string;
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:175
   Error:
    12: <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
                  ^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-  174:   | string;
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:174
+  175:   | string;
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:175
 
 Error: ref.js:13
  13: <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
@@ -2319,26 +2215,26 @@ Error: ref.js:23
  23: <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: function type | string
   Member 1:
-  173:   | ((React$ElementRef<ElementType> | null) => mixed)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:173
+  174:   | ((React$ElementRef<ElementType> | null) => mixed)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:174
   Error:
    23: <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
                       ^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-  173:   | ((React$ElementRef<ElementType> | null) => mixed)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:173
+  174:   | ((React$ElementRef<ElementType> | null) => mixed)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:174
     This parameter is incompatible:
-      173:   | ((React$ElementRef<ElementType> | null) => mixed)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FooExact. This type is incompatible with. See lib: <BUILTINS>/react.js:173
+      174:   | ((React$ElementRef<ElementType> | null) => mixed)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FooExact. This type is incompatible with. See lib: <BUILTINS>/react.js:174
        23: <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
                                 ^^^^^^ number
   Member 2:
-  174:   | string;
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:174
+  175:   | string;
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:175
   Error:
    23: <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
                       ^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
-  174:   | string;
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:174
+  175:   | string;
+           ^^^^^^ string. See lib: <BUILTINS>/react.js:175
 
 Error: ref.js:24
  24: <FooExact ref={foo => (foo: FooExact)} />; // Error: `FooExact` may be null.
@@ -2445,4 +2341,4 @@ Error: undefined_prop.js:7
                                                            ^^^^^^ string
 
 
-Found 176 errors
+Found 172 errors

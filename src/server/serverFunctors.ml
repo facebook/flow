@@ -21,7 +21,8 @@ module type SERVER_PROGRAM = sig
     (Errors.error * Loc.LocSet.t) list (* suppressed errors *)
   (* filter and relativize updated file paths *)
   val process_updates : genv -> env -> SSet.t -> FilenameSet.t
-  val recheck: genv -> env -> FilenameSet.t -> serve_ready_clients:(unit -> unit) -> env
+  val recheck: genv -> env ->
+    ?force_focus:bool -> serve_ready_clients:(unit -> unit) -> FilenameSet.t -> env
   val get_watch_paths: Options.t -> Path.t list
   val name: string
   val handle_client : genv -> env ->
@@ -39,6 +40,7 @@ end
 module ServerMain (Program : SERVER_PROGRAM) : sig
   val run :
     shared_mem_config:SharedMem_js.config ->
+    log_file:string ->
     Options.t ->
     unit
   val check_once :
@@ -144,7 +146,7 @@ end = struct
     let raw_updates = DfindLib.get_changes dfind in
     if SSet.is_empty raw_updates then env else begin
       let updates = Program.process_updates genv env raw_updates in
-      let env = Program.recheck genv env updates ~serve_ready_clients in
+      let env = Program.recheck genv env ~serve_ready_clients updates in
       recheck_loop ~dfind genv env ~serve_ready_clients
     end
 
@@ -310,7 +312,11 @@ end = struct
 
     serve ~dfind ~genv ~env socket
 
-  let run ~shared_mem_config options = run_internal ~shared_mem_config options
+  let run ~shared_mem_config ~log_file options =
+    let log_fd = Server_daemon.open_log_file log_file in
+    Hh_logger.set_log (Unix.out_channel_of_descr log_fd);
+    Hh_logger.info "Logs will go to %s" log_file;
+    run_internal ~shared_mem_config options
 
   let run_from_daemonize ?waiting_channel ~shared_mem_config options =
     LoggingUtils.set_hh_logger_min_level options;

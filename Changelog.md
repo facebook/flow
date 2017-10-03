@@ -1,3 +1,27 @@
+### 0.56.0
+
+New Features:
+
+* Added a `$Rest<A,B>` type, which models the semantics of object rest
+* Added support for `null` prototypes, a la Object.create(null)
+* Added support `__proto__` property in object literals and object type annotations
+
+Notable bug fixes:
+
+* Improved support for React higher-order components, e.g. Relay fragment containers
+* Improved performance of `flow focus-check` for multiple files
+* Fixed type-at-post support for $ReadOnlyArray types
+* Fixed many cases where error messages were reported far away from the root cause.
+* Fixed find-refs for named exports
+
+Misc:
+
+* Added experimental lazy mode for IDEs
+* Added `<VERSION>` token for `suppress_comment` option in `.flowconfig`
+* Removed support for $Abstract utility type
+* Removed support for `flow typecheck-contents --graphml`
+
+
 ### 0.55.0
 
 Likely to cause new Flow errors:

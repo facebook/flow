@@ -23,6 +23,7 @@ let spec = { CommandSpec.
       |> shm_flags
       |> ignore_version_flag
       |> from_flag
+      |> log_file_flag
       |> anon "root" (optional string) ~doc:"Root directory"
     );
   usage = Printf.sprintf
@@ -33,7 +34,7 @@ let spec = { CommandSpec.
       exe_name;
 }
 
-let main lazy_mode options_flags shm_flags ignore_version from path_opt () =
+let main lazy_mode options_flags shm_flags ignore_version from log_file path_opt () =
   let root = CommandUtils.guess_root path_opt in
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
   let options = make_options ~flowconfig ~lazy_mode ~root options_flags in
@@ -45,6 +46,16 @@ let main lazy_mode options_flags shm_flags ignore_version from path_opt () =
 
   let shared_mem_config = shm_config shm_flags flowconfig in
 
-  Main.run ~shared_mem_config options
+  let log_file = match log_file with
+    | Some s ->
+        let dirname = Path.make (Filename.dirname s) in
+        let basename = Filename.basename s in
+        Path.concat dirname basename
+    | None ->
+        CommandUtils.log_file ~tmp_dir:(Options.temp_dir options) root flowconfig
+  in
+  let log_file = Path.to_string log_file in
+
+  Main.run ~shared_mem_config ~log_file options
 
 let command = CommandSpec.command spec main

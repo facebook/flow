@@ -3,19 +3,18 @@
 import {join} from 'path';
 
 import {getFlowErrorsWithWarnings} from './getFlowErrors';
+import getAst from './getAst';
+import getPathToLoc from './getPathToLoc';
+import getContext, {NORMAL, JSX, TEMPLATE} from './getContext';
 
-import {readFile, writeFile} from '../async';
+import {readFile, writeFile} from '../utils/async';
 
 import type {Args} from './remove-commentsCommand';
 import type {FlowLoc, FlowResult, FlowError, FlowMessage} from '../flowResult';
+import type {Context} from './getContext';
 
-type Loc = {
-  start: number,
-  end: number,
-};
-
-async function getErrors(args: Args): Promise<Map<string, Array<Loc>>> {
-  const result = await getFlowErrorsWithWarnings(
+async function getErrors(args: Args): Promise<Map<string, Array<FlowLoc>>> {
+  const result: FlowResult = await getFlowErrorsWithWarnings(
     args.bin,
     args.errorCheckCommand,
     args.root,
@@ -28,28 +27,44 @@ async function getErrors(args: Args): Promise<Map<string, Array<Loc>>> {
 
   const errorsByFile = new Map();;
   for (const error of errors) {
-    if (error.message[0].loc && error.message[0].loc.source) {
-      const start = error.message[0].loc.start.offset;
-      const end = error.message[0].loc.end.offset;
-      const file = join(args.root, error.message[0].loc.source);
-      const fileErrors = errorsByFile.get(file) || [];
-      fileErrors.push({start, end});
-      errorsByFile.set(file, fileErrors);
+    const message = error.message[0];
+    const loc = message.loc;
+    if (loc) {
+      const source = loc.source;
+      if (source) {
+        const file = join(args.root, source);
+        const fileErrors: Array<FlowLoc> = errorsByFile.get(file) || [];
+        fileErrors.push(loc);
+        errorsByFile.set(file, fileErrors);
+      }
     }
   }
 
-  // Group errors by file and sort by reverse location in the file
-  for (const file of errorsByFile.keys()) {
-    const fileErrors = errorsByFile.get(file);
-    fileErrors && fileErrors.sort((e1, e2) => e2.start - e1.start);
-  }
   return errorsByFile;
 }
 
 async function removeUnusedErrorSuppressions(
-  [filename, errors]: [string, Array<Loc>],
+  filename: string,
+  errors: Array<FlowLoc>,
+  flowBinPath: string,
 ): Promise<void> {
   let contents = await readFile(filename);
+  contents = await removeUnusedErrorSuppressionsFromText(contents, errors, flowBinPath);
+  await writeFile(filename, contents);
+}
+
+// Exported for testing
+export async function removeUnusedErrorSuppressionsFromText(
+  contents: string,
+  errors: Array<FlowLoc>,
+  flowBinPath: string,
+): Promise<string> {
+  // Sort in reverse order so that we remove comments later in the file first. Otherwise, the
+  // removal of comments earlier in the file would outdate the locations for comments later in the
+  // file.
+  errors.sort((loc1, loc2) => loc2.start.offset - loc1.start.offset);
+
+  const ast = await getAst(contents, flowBinPath)
 
   /* This is the most confusing part of this command. A simple version of this
    * code would just remove exact characters of a comment. This might leave
@@ -65,11 +80,27 @@ async function removeUnusedErrorSuppressions(
    * in the case where there is nothing before or after it
    */
   const edible = /[\t ]/;
-  for (let {start: origStart, end: origEnd} of errors) {
+  for (const error of errors) {
+    const path = getPathToLoc(error, ast);
+    let context: Context;
+    if (path == null) {
+      context = NORMAL;
+    } else {
+      [context] = getContext(error, path);
+    }
+
     const length = contents.length;
-    origEnd--;
+    let origStart = error.start.offset;
+    let origEnd = error.end.offset - 1;
+
+    if (context === JSX && contents[origStart-1] === '{' && contents[origEnd+1] === '}') {
+      origStart--;
+      origEnd++;
+    }
+
     let start = origStart;
     let end = origEnd;
+
     while (start > 0) {
       // Eat whitespace towards the start of the line
       if (contents[start-1].match(edible)) {
@@ -102,7 +133,7 @@ async function removeUnusedErrorSuppressions(
     }
     contents = contents.slice(0, start) + contents.slice(end+1);
   }
-  await writeFile(filename, contents);
+  return contents;
 }
 
 /* A flowtest is a file that ends in -flowtest.js or which is in a directory
@@ -130,7 +161,9 @@ export default async function(args: Args): Promise<void> {
       }
       return true;
     });
-  await Promise.all(errors.map(removeUnusedErrorSuppressions));
+  await Promise.all(errors.map(
+    ([filename, errors]) => removeUnusedErrorSuppressions(filename, errors, args.bin)
+  ));
   console.log(
     "Removed %d comments in %d files",
     removedErrorCount,

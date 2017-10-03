@@ -32,7 +32,7 @@ type command =
 | KILL
 | PORT of string list
 | STATUS of Path.t * bool (* include_warnings *)
-| FORCE_RECHECK of string list
+| FORCE_RECHECK of string list * bool (* focus *)
 | SUGGEST of (string * string list) list
 | CONNECT
 

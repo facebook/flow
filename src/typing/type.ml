@@ -883,7 +883,7 @@ module rec TypeTerm : sig
   | ElementType of t
   | Bind of t
   | SpreadType of Object.Spread.options * t list
-  | RestType of t
+  | RestType of Object.Rest.merge_mode * t
   | ValuesType
   | CallType of t list
   | TypeMap of type_map
@@ -1554,11 +1554,15 @@ and Object : sig
     type state =
       | One of TypeTerm.t
       | Done of resolved
+
+    type merge_mode =
+      | Sound
+      | IgnoreExactAndOwn
   end
 
   type tool =
     | Spread of Spread.options * Spread.state
-    | Rest of Rest.state
+    | Rest of Rest.merge_mode * Rest.state
 end = Object
 
 and React : sig
@@ -2511,6 +2515,9 @@ let optional t =
 let maybe t =
   let reason = replace_reason (fun desc -> RMaybe desc) (reason_of_t t) in
   DefT (reason, MaybeT t)
+
+let exact t =
+  ExactT (reason_of_t t, t)
 
 let class_type t =
   let reason = replace_reason (fun desc -> RClassType desc) (reason_of_t t) in

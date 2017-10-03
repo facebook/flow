@@ -47,9 +47,7 @@ Error: async2.js:50
 
 Error: async2.js:57
  57:   : Promise<number> { // error, number != void
-         ^^^^^^^^^^^^^^^ type application of Promise<void>. Has some incompatible type argument with
- 57:   : Promise<number> { // error, number != void
-         ^^^^^^^^^^^^^^^ type application of identifier `Promise`
+         ^^^^^^^^^^^^^^^ type application of identifier `Promise`. This type is incompatible with an implicitly-returned type application of Promise<void>
   Type argument `R` is incompatible:
      57:   : Promise<number> { // error, number != void
              ^^^^^^^^^^^^^^^ undefined. This type is incompatible with

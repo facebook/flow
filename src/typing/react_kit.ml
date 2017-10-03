@@ -468,11 +468,12 @@ let run cx trace reason_op l u
     | DefT (_, ClassT component) -> rec_flow_t cx trace (component, tout)
 
     (* Stateless functional components. *)
-    | DefT (r, FunT _) -> rec_flow_t cx trace (VoidT.make r, tout)
+    | DefT (r, FunT _) ->
+      rec_flow_t cx trace (VoidT.make (replace_reason_const RVoid r), tout)
 
     (* Stateless functional components, again. This time for callable `ObjT`s. *)
     | DefT (r, ObjT { props_tmap = id; _ }) when Context.find_props cx id |> SMap.mem "$call" ->
-      rec_flow_t cx trace (VoidT.make r, tout)
+      rec_flow_t cx trace (VoidT.make (replace_reason_const RVoid r), tout)
 
     (* Intrinsic components. *)
     | DefT (_, StrT lit) -> get_intrinsic `Instance lit (Field (tout, Positive))

@@ -3,7 +3,7 @@
 import { dirname, normalize, relative, resolve } from 'path';
 import { format } from 'util';
 
-import { exists, glob, readFile } from '../async';
+import { exists, glob, readFile } from '../utils/async';
 import Builder from './builder';
 import {getTestsDir} from '../constants';
 import Suite from './Suite';

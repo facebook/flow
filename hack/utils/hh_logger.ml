@@ -15,8 +15,19 @@ let timestamp_string () =
   Printf.sprintf "[%d-%02d-%02d %02d:%02d:%02d]"
     year (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
 
+(* We might want to log to both stderr and a file. Shelling out to tee isn't cross-platform.
+ * We could dup2 stderr to a pipe and have a child process write to both original stderr and the
+ * file, but that's kind of overkill. This is good enough *)
+let dupe_log_oc = ref None
+let set_log fd =
+  dupe_log_oc := Some fd
+
 let print_raw s =
-  Printf.eprintf "%s %s%!" (timestamp_string ()) s
+  let time = timestamp_string () in
+  begin match !dupe_log_oc with
+  | None -> ()
+  | Some dupe_log_oc -> Printf.fprintf dupe_log_oc "%s %s%!" time s end;
+  Printf.eprintf "%s %s%!" time s
 
 (* wraps print_raw in order to take a format string & add a newline *)
 let print fmt = Printf.ksprintf print_raw (fmt^^"\n")

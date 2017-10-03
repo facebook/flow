@@ -272,13 +272,14 @@ let rec convert cx tparams_map = Ast.Type.(function
       ShapeT t
     )
 
-  (* $Diff<T,S> *)
+  (* $Diff<T, S> *)
   | "$Diff" ->
     check_type_param_arity cx loc typeParameters 2 (fun () ->
       let t1, t2 = match convert_type_params () with
       | [t1; t2] -> t1, t2
       | _ -> assert false in
-      DiffT (t1, t2)
+      EvalT (t1, TypeDestructorT (mk_reason RObjectType loc,
+        RestType (Type.Object.Rest.IgnoreExactAndOwn, t2)), mk_id ())
     )
 
   (* $Keys<T> is the set of keys of T *)
@@ -309,8 +310,8 @@ let rec convert cx tparams_map = Ast.Type.(function
       let t1, t2 = match convert_type_params () with
       | [t1; t2] -> t1, t2
       | _ -> assert false in
-      EvalT (t1, TypeDestructorT
-        (mk_reason RObjectType loc, RestType t2), mk_id ())
+      EvalT (t1, TypeDestructorT (mk_reason RObjectType loc,
+        RestType (Type.Object.Rest.Sound, t2)), mk_id ())
     )
 
   (* $Exports<'M'> is the type of the exports of module 'M' *)

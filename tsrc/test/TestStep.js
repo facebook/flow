@@ -14,7 +14,7 @@ import ideNoNewMessagesAfterSleep
 import ideNewMessagesWithTimeout from './assertions/ideNewMessagesWithTimeout';
 import ideStderr from './assertions/ideStderr';
 
-import {sleep} from '../async';
+import {sleep} from '../utils/async';
 
 import type {
   AssertionLocation,

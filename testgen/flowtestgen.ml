@@ -74,15 +74,15 @@ let main () =
     if Config.(config.random)
     then new Ruleset_func.ruleset_func
     else new Ruleset_func.ruleset_random_func in
-  let optional_engine = 
+  let optional_engine =
     if Config.(config.random)
     then new Ruleset_optional.ruleset_optional
     else new Ruleset_optional.ruleset_random_optional in
-  let exact_engine = 
+  let exact_engine =
     if Config.(config.random)
     then new Ruleset_exact.ruleset_exact
     else new Ruleset_exact.ruleset_random_exact in
-  let union_engine = 
+  let union_engine =
     if Config.(config.random)
     then new Ruleset_union.ruleset_union
     else new Ruleset_union.ruleset_random_union in
@@ -92,7 +92,7 @@ let main () =
   ignore optional_engine;
   ignore exact_engine;
   ignore union_engine;
-  let engine = func_engine in
+  let engine = union_engine in
   let all_prog = mk_code engine Config.(config.num_prog) in
   printf "Generated %d programs.\n%!" (List.length all_prog);
   List.iter (fun content ->

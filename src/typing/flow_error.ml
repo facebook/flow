@@ -587,12 +587,11 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     mk_error ?op_info ~trace_infos ?extra msg_infos
   in
 
-  let typecheck_error msg ?suppress_op ?extra (r1, r2) =
+  let typecheck_msgs msg (r1, r2) = [r1, [msg]; r2, []] in
+
+  let typecheck_error msg ?suppress_op ?extra reasons =
     (* make core info from reasons, message, and optional extra infos *)
-    let core_msgs = [
-      r1, [msg];
-      r2, [];
-    ] in
+    let core_msgs = typecheck_msgs msg reasons in
     typecheck_error_with_core_infos ?suppress_op ?extra core_msgs
   in
 
@@ -680,7 +679,13 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
     unwrap_use_ops ((reason_op, reason_tapp), extra, msg) use_op
   | FunReturn when not force ->
     let msg = "This type is incompatible with the expected return type of" in
-    reasons, extra, msg, (* suppress_op *) false
+    extra, (* suppress_op *) false, typecheck_msgs msg reasons
+  | FunImplicitReturn when not force ->
+    let lreason, ureason = reasons in
+    let msg = spf "This type is incompatible with an implicitly-returned %s"
+      (string_of_desc (desc_of_reason lreason))
+    in
+    extra, (* suppress_op *) false, [ureason, [msg]]
   | FunCallParam ->
     let reasons, msg =
       if not force then
@@ -695,7 +700,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         reasons, msg
     in
     let suppress_op = suppress_fun_call_param_op op in
-    reasons, extra, msg, suppress_op
+    extra, suppress_op, typecheck_msgs msg reasons
   | FunParam { lower; upper; use_op } ->
     let extra =
       extra_info_of_use_op reasons extra msg "This parameter is incompatible:"
@@ -705,9 +710,9 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
   | SetProperty reason_op ->
     let rl, ru = reasons in
     let ru = replace_reason_const (desc_of_reason ru) reason_op in
-    (rl, ru), extra, msg, (* suppress_op *) false
+    extra, (* suppress_op *) false, typecheck_msgs msg (rl, ru)
   | _ ->
-    reasons, extra, msg, (* suppress_op *) false
+    extra, (* suppress_op *) false, typecheck_msgs msg reasons
   in
 
   function
@@ -729,8 +734,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       let msg = spf "Property not found in%s" (special_suffix special) in
       begin match use_op with
       | Some use_op ->
-        let reasons, extra, msg, suppress_op = unwrap_use_ops (reasons, [], msg) use_op in
-        typecheck_error ~extra ~suppress_op msg reasons
+        let extra, suppress_op, msgs = unwrap_use_ops (reasons, [], msg) use_op in
+        typecheck_error_with_core_infos ~extra ~suppress_op msgs
       | None ->
         typecheck_error msg reasons
       end
@@ -832,9 +837,9 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             actual
             expected
       in
-      let reasons, extra, msg, suppress_op =
+      let extra, suppress_op, msgs =
         unwrap_use_ops ~force:true (reasons, [], msg) use_op in
-      typecheck_error ~extra ~suppress_op msg reasons
+      typecheck_error_with_core_infos ~extra ~suppress_op msgs
 
   | EExpectedNumberLit (reasons, (expected, _), actual, use_op) ->
       let msg = match actual with
@@ -850,9 +855,9 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             actual
             expected
       in
-      let reasons, extra, msg, suppress_op =
+      let extra, suppress_op, msgs =
         unwrap_use_ops ~force:true (reasons, [], msg) use_op in
-      typecheck_error ~extra ~suppress_op msg reasons
+      typecheck_error_with_core_infos ~extra ~suppress_op msgs
 
   | EExpectedBooleanLit (reasons, expected, actual, use_op) ->
       let msg = match actual with
@@ -861,14 +866,14 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
             expected actual
       | None -> spf "Expected boolean literal `%b`" expected
       in
-      let reasons, extra, msg, suppress_op =
+      let extra, suppress_op, msgs =
         unwrap_use_ops ~force:true (reasons, [], msg) use_op in
-      typecheck_error ~extra ~suppress_op msg reasons
+      typecheck_error_with_core_infos ~extra ~suppress_op msgs
 
   | EPropNotFound (reasons, use_op) ->
-      let reasons, extra, msg, suppress_op =
+      let extra, suppress_op, msgs =
         unwrap_use_ops (reasons, [], "Property not found in") use_op in
-      typecheck_error ~extra ~suppress_op msg reasons
+      typecheck_error_with_core_infos ~extra ~suppress_op msgs
 
   | EPropAccess (reasons, x, polarity, rw) ->
       let reasons, msg = prop_polarity_error_msg x reasons polarity (Polarity.of_rw rw) in
@@ -876,8 +881,8 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
 
   | EPropPolarityMismatch (reasons, x, (p1, p2), use_op) ->
       let reasons, msg = prop_polarity_error_msg x reasons p1 p2 in
-      let reasons, extra, msg, suppress_op = unwrap_use_ops (reasons, [], msg) use_op in
-      typecheck_error ~extra ~suppress_op msg reasons
+      let extra, suppress_op, msgs = unwrap_use_ops (reasons, [], msg) use_op in
+      typecheck_error_with_core_infos ~extra ~suppress_op msgs
 
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
       mk_error ~trace_infos [mk_info reason [spf
@@ -906,9 +911,9 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       in
       begin match use_op with
       | Some use_op ->
-        let reasons, extra, msg, suppress_op =
+        let extra, suppress_op, msgs =
           unwrap_use_ops ~force:true (reasons, [], msg) use_op in
-        typecheck_error ~extra ~suppress_op msg reasons
+        typecheck_error_with_core_infos ~extra ~suppress_op msgs
       | None ->
         typecheck_error msg reasons
       end
@@ -981,10 +986,10 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
         the %d elements of"
         l1
         l2 in
-      let reasons, extra, msg, suppress_op =
+      let extra, suppress_op, msgs =
         unwrap_use_ops ~force:true (reasons, [], msg) use_op
       in
-      typecheck_error ~extra ~suppress_op msg reasons
+      typecheck_error_with_core_infos ~extra ~suppress_op msgs
 
   | ENonLitArrayToTuple reasons ->
       let msg =
@@ -1006,13 +1011,13 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       typecheck_error msg reasons
 
   | EUnionSpeculationFailed { use_op; reason; reason_op; branches } ->
-      let reasons, extra, msg, suppress_op =
+      let extra, suppress_op, msgs =
         let reasons = ordered_reasons (reason, reason_op) in
         let extra = speculation_extras branches in
         let msg = "This type is incompatible with" in
         unwrap_use_ops (reasons, extra, msg) use_op
       in
-      typecheck_error ~extra ~suppress_op msg reasons
+      typecheck_error_with_core_infos ~extra ~suppress_op msgs
 
   | ESpeculationAmbiguous ((case_r, r), (prev_i, prev_case), (i, case), case_rs) ->
       let infos = List.map info_of_reason case_rs in
@@ -1043,10 +1048,10 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
 
   | EIncompatibleWithExact (reasons, use_op) ->
       let msg = "Inexact type is incompatible with exact type" in
-      let reasons, extra, msg, suppress_op =
+      let extra, suppress_op, msgs =
         unwrap_use_ops ~force:true (reasons, [], msg) use_op
       in
-      typecheck_error ~extra ~suppress_op msg reasons
+      typecheck_error_with_core_infos ~extra ~suppress_op msgs
 
   | EUnsupportedExact reasons ->
       typecheck_error "Unsupported exact type" reasons
@@ -1380,7 +1385,7 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       let open Object in
       let msg = match tool with
         | Spread _ -> "Cannot spread properties from"
-        | Rest state ->
+        | Rest (_, state) ->
           let open Object.Rest in
           (match state with
             | One _ -> "Cannot remove properties from"
@@ -1428,10 +1433,10 @@ let rec error_of_msg ~trace_reasons ~op ~source_file =
       mk_error ~trace_infos [loc, [msg]]
 
   | EIncompatibleWithUseOp (l_reason, u_reason, use_op) ->
-      let reasons, extra, msg, _suppress_op =
+      let extra, _suppress_op, msgs =
         let msg = "This type is incompatible with" in
         unwrap_use_ops ((l_reason, u_reason), [], msg) use_op in
-      typecheck_error ~extra ~suppress_op:true msg reasons
+      typecheck_error_with_core_infos ~extra ~suppress_op:true msgs
 
   | EUnsupportedImplements reason ->
       mk_error ~trace_infos [mk_info reason [
