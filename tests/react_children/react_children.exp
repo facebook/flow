@@ -112,17 +112,13 @@ Error: api.js:25
 Error: builtin_intrinsic.js:24
  24: <builtin>
      ^^^^^^^^^ React element `builtin`. This type is incompatible with
-                v
-173:     props: {
-174:       children?: React$Node,
-175:       [key: string]: any,
-176:     },
-         ^ object type. See lib: <BUILTINS>/react-dom.js:173
+314: type ReactDOM$HTMLElementJSXIntrinsic = {instance: HTMLElement, props: {children?: React$Node, [key: string]: any}};
+                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/react-dom.js:314
   Property `children` is incompatible:
      25:   {{a: 1, b: 2, c: 3}}
             ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-    174:       children?: React$Node,
-                          ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of React$Element | React$Portal | type application of identifier `Iterable`. See lib: <BUILTINS>/react-dom.js:174
+    314: type ReactDOM$HTMLElementJSXIntrinsic = {instance: HTMLElement, props: {children?: React$Node, [key: string]: any}};
+                                                                                            ^^^^^^^^^^ union: undefined | null | boolean | number | string | type application of React$Element | React$Portal | type application of identifier `Iterable`. See lib: <BUILTINS>/react-dom.js:314
       Member 1:
        13:   | void
                ^^^^ undefined. See lib: <BUILTINS>/react.js:13
