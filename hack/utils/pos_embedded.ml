@@ -185,6 +185,13 @@ let make_from_file_pos ~pos_file ~pos_start ~pos_end =
 let set_file pos_file pos =
   { pos with pos_file }
 
+let print_verbose_absolute p =
+  let a, b, c = File_pos.line_beg_offset p.pos_start in
+  let d, e, f = File_pos.line_beg_offset p.pos_end in
+  Printf.sprintf "Pos('%s', <%d,%d,%d>, <%d,%d,%d>)" p.pos_file a b c d e f
+
+let print_verbose_relative p = print_verbose_absolute (to_absolute p)
+
 module Map = MyMap.Make (struct
   type path = t
   (* The definition below needs to refer to the t in the outer scope, but MyMap
