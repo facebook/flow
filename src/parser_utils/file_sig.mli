@@ -60,13 +60,18 @@ and require = {
    * result: {A:{A}, B:{C}} *)
   types: SSet.t SMap.t;
 
+  (* map from local name to location of namespace type imports
+   * source: import type * as X from "foo";
+   * result: {X:[loc]} *)
+  types_ns: Loc.t Nel.t SMap.t;
+
   (* map from remote name to local names of typeof imports
    * source: import typeof {A, B as C} from "foo";
    * source: import {typeof A, typeof B as C} from "foo";
    * result: {A:{A}, B:{C}} *)
   typesof: SSet.t SMap.t;
 
-  (* map from local name to location of namespace type imports
+  (* map from local name to location of namespace typeof imports
    * source: import typeof * as X from "foo";
    * result: {X:[loc]} *)
   typesof_ns: Loc.t Nel.t SMap.t;
