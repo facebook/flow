@@ -60,6 +60,7 @@ type reason_desc =
   | RStringLit of string
   | RNumberLit of string
   | RBooleanLit of bool
+  | RMatchingProp of string * reason_desc
   | RObject
   | RObjectLit
   | RObjectType
@@ -363,6 +364,8 @@ let rec string_of_desc = function
   | RStringLit x -> spf "string literal `%s`" x
   | RNumberLit x -> spf "number literal `%s`" x
   | RBooleanLit b -> spf "boolean literal `%s`" (string_of_bool b)
+  | RMatchingProp (k, v) ->
+    spf "object with property `%s` that matches %s" k (string_of_desc v)
   | RObject -> "object"
   | RObjectLit -> "object literal"
   | RObjectType -> "object type"

@@ -83,6 +83,10 @@ class ['a] t = object(self)
           let t2' = self#type_ cx map_cx t2 in
           if t1 == t1' && t2 == t2' then t
           else DiffT (t1', t2')
+      | MatchingPropT (r, x, t') ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then t
+          else MatchingPropT (r, x, t'')
       | KeysT (r, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -717,11 +721,11 @@ class ['a] t = object(self)
         if ipt' == ipt then t
         else IntersectionPreprocessKitT (r, ipt')
     | DebugPrintT _ -> t
-    | SentinelPropTestT (t1, b, sentinel, t2) ->
+    | SentinelPropTestT (r, t1, key, b, sentinel, t2) ->
         let t1' = self#type_ cx map_cx t1 in
         let t2' = self#type_ cx map_cx t2 in
         if t1' == t1 && t2' == t2 then t
-        else SentinelPropTestT (t1', b, sentinel, t2')
+        else SentinelPropTestT (r, t1', key, b, sentinel, t2')
     | IdxUnwrap (r, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
@@ -878,6 +882,10 @@ class ['a] t = object(self)
         let prop' = Property.ident_map_t (self#type_ cx map_cx) prop in
         if prop == prop' then t
         else SuperProp prop'
+    | MatchProp t' ->
+      let t'' = self#type_ cx map_cx t' in
+      if t'' == t' then t
+      else MatchProp t'
 
   method elem_action cx map_cx t =
     match t with

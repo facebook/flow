@@ -91,6 +91,7 @@ let rec gc cx state = function
   | DiffT (t1, t2) ->
       gc cx state t1;
       gc cx state t2;
+  | MatchingPropT (_, _, t) -> gc cx state t
   | DefT (_, EmptyT) -> ()
   | EvalT (t, defer_use_t, id) ->
       gc cx state t;
@@ -261,7 +262,10 @@ and gc_use cx state = function
         gc cx state t
       | LookupProp (_, p)
       | SuperProp p ->
-        Property.iter_t (gc cx state) p)
+        Property.iter_t (gc cx state) p
+      | MatchProp t ->
+        gc cx state t
+      )
   | MakeExactT (_, k) -> gc_cont cx state k
   | MapTypeT (_, tmap, t) -> gc_type_map cx state tmap; gc cx state t
   | MethodT(_, _, _, funcalltype) -> gc_funcalltype cx state funcalltype
@@ -280,7 +284,7 @@ and gc_use cx state = function
   | RefineT (_, pred, t) -> gc_pred cx state pred; gc cx state t
   | ReposLowerT (_, _, u) -> gc_use cx state u
   | ReposUseT (_, _, _, t) -> gc cx state t
-  | SentinelPropTestT (t, _, _, t_out) -> gc cx state t; gc cx state t_out
+  | SentinelPropTestT (_, t, _, _, _, t_out) -> gc cx state t; gc cx state t_out
   | SetElemT(_, i, t) -> gc cx state i; gc cx state t
   | SetPropT(_, _, t) -> gc cx state t
   | SetPrivatePropT(_, _, _, _, t) -> gc cx state t

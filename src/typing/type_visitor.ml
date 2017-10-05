@@ -64,6 +64,8 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc t2 in
     acc
 
+  | MatchingPropT (_, _, t) -> self#type_ cx acc t
+
   | KeysT (_, t) -> self#type_ cx acc t
 
   | AnnotT (t, _) ->
@@ -483,7 +485,7 @@ class ['a] t = object(self)
 
   | DebugPrintT _ -> acc
 
-  | SentinelPropTestT (t, _, _, tout) ->
+  | SentinelPropTestT (_, t, _, _, _, tout) ->
     let acc = self#type_ cx acc t in
     let acc = self#type_ cx acc tout in
     acc
@@ -679,6 +681,8 @@ class ['a] t = object(self)
   | LookupProp (_, prop)
   | SuperProp prop ->
     self#prop cx acc prop
+  | MatchProp t ->
+    self#type_ cx acc t
 
   method private elem_action cx acc = function
   | ReadElem t

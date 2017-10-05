@@ -1,3 +1,9 @@
+Error: sanity-filter-union.js:6
+  6: declare function my_filter<T, P: $Pred<1>>(v: Array<T>, cb: P): Array<$Refine<T,P,1>>;
+                                                                           ^^^^^^^^^^^^^^ object with property `kind` that matches string literal `A`. Expected string literal `B`, got `A` instead
+  9: type B = { kind: 'B', v: string }
+                      ^^^ string literal `B`
+
 Error: sanity-filter-union.js:16
  16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ array type. Has some incompatible type argument with
@@ -142,4 +148,4 @@ Error: sanity-refine.js:30
          ^^^^^^ number
 
 
-Found 12 errors
+Found 13 errors

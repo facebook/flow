@@ -104,6 +104,7 @@ module rec TypeTerm : sig
     (* constrains some properties of an object *)
     | ShapeT of t
     | DiffT of t * t
+    | MatchingPropT of reason * string * t
 
     (* collects the keys of an object *)
     | KeysT of reason * t
@@ -496,7 +497,7 @@ module rec TypeTerm : sig
 
     | DebugPrintT of reason
 
-    | SentinelPropTestT of t * bool * sentinel_value * t_out
+    | SentinelPropTestT of reason * t * string * bool * sentinel_value * t_out
 
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
@@ -765,6 +766,7 @@ module rec TypeTerm : sig
   | RWProp of t (* original target *) * t (* in/out type *) * rw
   | LookupProp of use_op * Property.t
   | SuperProp of Property.t
+  | MatchProp of t
 
   and rw = Read | Write
 
@@ -1931,6 +1933,7 @@ let rec reason_of_t = function
   | ModuleT (reason, _) -> reason
   | NullProtoT reason -> reason
   | ObjProtoT reason -> reason
+  | MatchingPropT (reason, _, _) -> reason
   | OpaqueT (reason, _) -> reason
   | OpenPredT (reason, _, _, _) -> reason
   | ReposT (reason, _) -> reason
@@ -2012,7 +2015,7 @@ and reason_of_use_t = function
   | ReposLowerT (reason, _, _) -> reason
   | ReposUseT (reason, _, _, _) -> reason
   | ResolveSpreadT (reason, _) -> reason
-  | SentinelPropTestT (_, _, _, result) -> reason_of_t result
+  | SentinelPropTestT (_, _, _, _, _, result) -> reason_of_t result
   | SetElemT (reason,_,_) -> reason
   | SetPropT (reason,_,_) -> reason
   | SetPrivatePropT (reason,_,_,_,_) -> reason
@@ -2076,6 +2079,7 @@ let rec mod_reason_of_t f = function
   | ModuleT (reason, exports) -> ModuleT (f reason, exports)
   | NullProtoT reason -> NullProtoT (f reason)
   | ObjProtoT (reason) -> ObjProtoT (f reason)
+  | MatchingPropT (reason, k, v) -> MatchingPropT (f reason, k, v)
   | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
   | ReposT (reason, t) -> ReposT (f reason, t)
@@ -2171,8 +2175,8 @@ and mod_reason_of_use_t f = function
   | ReposLowerT (reason, use_desc, t) -> ReposLowerT (f reason, use_desc, t)
   | ReposUseT (reason, use_desc, use_op, t) -> ReposUseT (f reason, use_desc, use_op, t)
   | ResolveSpreadT (reason_op, resolve) -> ResolveSpreadT (f reason_op, resolve)
-  | SentinelPropTestT (l, sense, sentinel, result) ->
-      SentinelPropTestT (l, sense, sentinel, mod_reason_of_t f result)
+  | SentinelPropTestT (reason_op, l, key, sense, sentinel, result) ->
+    SentinelPropTestT (reason_op, l, key, sense, sentinel, mod_reason_of_t f result)
   | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
   | SetPropT (reason, n, t) -> SetPropT (f reason, n, t)
   | SetPrivatePropT (reason, n, scopes, static, t) ->
@@ -2292,6 +2296,7 @@ let string_of_ctor = function
   | ModuleT _ -> "ModuleT"
   | NullProtoT _ -> "NullProtoT"
   | ObjProtoT _ -> "ObjProtoT"
+  | MatchingPropT _ -> "MatchingPropT"
   | OpaqueT _ -> "OpaqueT"
   | OpenPredT _ -> "OpenPredT"
   | ReposT _ -> "ReposT"
