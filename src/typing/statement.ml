@@ -504,6 +504,7 @@ and statement cx = Ast.Statement.(
      [Pre] if c S1 else S2 [Post]
   *)
   | (loc, If { If.test; consequent; alternate }) ->
+      let loc_test, _ = test in
       let _, preds, not_preds, xts =
         predicates_of_condition cx test in
 
@@ -515,7 +516,7 @@ and statement cx = Ast.Statement.(
       (* swap in a refined clone of initial env for then *)
       Env.(
         update_env cx loc (clone_env start_env);
-        ignore (refine_with_preds cx loc preds xts)
+        ignore (refine_with_preds cx loc_test preds xts)
       );
 
       let exception_then = Abnormal.catch_control_flow_exception
@@ -528,7 +529,7 @@ and statement cx = Ast.Statement.(
       (* then swap in a refined clone of initial env for else *)
       Env.(
         update_env cx loc (clone_env start_env);
-        ignore (refine_with_preds cx loc not_preds xts)
+        ignore (refine_with_preds cx loc_test not_preds xts)
       );
 
       let exception_else = match alternate with

@@ -1,111 +1,66 @@
 Error: disjoint_union.js:8
-       v--------------------------------------
   8:   if (shape.type === 'square') { // error
-  9:     return shape.width * shape.height;
- 10:   } else if (shape.type === 'circle') { // ok
- 11:     return Math.PI * Math.pow(shape.radius, 2);
- 12:   }
-       ^ object with property `type` that matches string literal `square`. This type is incompatible with
+           ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. This type is incompatible with
   7: function area(shape: Shape): number {
                           ^^^^^ union: object type(s)
   Member 1:
     4:   {type: 'rectangle', width: number, height: number} |
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Error:
-         v--------------------------------------
     8:   if (shape.type === 'square') { // error
-    9:     return shape.width * shape.height;
-   10:   } else if (shape.type === 'circle') { // ok
-   11:     return Math.PI * Math.pow(shape.radius, 2);
-   12:   }
-         ^ object with property `type` that matches string literal `square`. Expected string literal `rectangle`, got `square` instead
+             ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. Expected string literal `rectangle`, got `square` instead
     4:   {type: 'rectangle', width: number, height: number} |
                 ^^^^^^^^^^^ string literal `rectangle`
   Member 2:
     5:   {type: 'circle', radius: number};
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Error:
-         v--------------------------------------
     8:   if (shape.type === 'square') { // error
-    9:     return shape.width * shape.height;
-   10:   } else if (shape.type === 'circle') { // ok
-   11:     return Math.PI * Math.pow(shape.radius, 2);
-   12:   }
-         ^ object with property `type` that matches string literal `square`. Expected string literal `circle`, got `square` instead
+             ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. Expected string literal `circle`, got `square` instead
     5:   {type: 'circle', radius: number};
                 ^^^^^^^^ string literal `circle`
 
 Error: disjoint_union.js:21
-       v--------------------------------------
  21:   if (shape.type === 'square') { // error
- 22:     return shape.width * shape.height;
- 23:   } else if (shape.type === 'circle') { // ok
- 24:     return Math.PI * Math.pow(shape.radius, 2);
- 25:   }
-       ^ object with property `type` that matches string literal `square`. This type is incompatible with
+           ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. This type is incompatible with
  20: function area2(shape: ExactShape): number {
                            ^^^^^^^^^^ union: exact type: object type(s)
   Member 1:
    17:   {|type: 'rectangle', width: number, height: number|} |
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: object type
   Error:
-         v--------------------------------------
    21:   if (shape.type === 'square') { // error
-   22:     return shape.width * shape.height;
-   23:   } else if (shape.type === 'circle') { // ok
-   24:     return Math.PI * Math.pow(shape.radius, 2);
-   25:   }
-         ^ object with property `type` that matches string literal `square`. Expected string literal `rectangle`, got `square` instead
+             ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. Expected string literal `rectangle`, got `square` instead
    17:   {|type: 'rectangle', width: number, height: number|} |
                  ^^^^^^^^^^^ string literal `rectangle`
   Member 2:
    18:   {|type: 'circle', radius: number|};
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: object type
   Error:
-         v--------------------------------------
    21:   if (shape.type === 'square') { // error
-   22:     return shape.width * shape.height;
-   23:   } else if (shape.type === 'circle') { // ok
-   24:     return Math.PI * Math.pow(shape.radius, 2);
-   25:   }
-         ^ object with property `type` that matches string literal `square`. Expected string literal `circle`, got `square` instead
+             ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. Expected string literal `circle`, got `square` instead
    18:   {|type: 'circle', radius: number|};
                  ^^^^^^^^ string literal `circle`
 
 Error: disjoint_union.js:34
-       v--------------------------------------
  34:   if (shape.type === 'square') { // error
- 35:     return shape.width * shape.height;
- 36:   } else if (shape.type === 'circle') { // ok
- 37:     return Math.PI * Math.pow(shape.radius, 2);
- 38:   }
-       ^ object with property `type` that matches string literal `square`. This type is incompatible with
+           ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. This type is incompatible with
  33: function area3(shape: ReadOnlyShape): number {
                            ^^^^^^^^^^^^^ union: object type(s)
   Member 1:
    30:   {+type: 'rectangle', width: number, height: number} |
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Error:
-         v--------------------------------------
    34:   if (shape.type === 'square') { // error
-   35:     return shape.width * shape.height;
-   36:   } else if (shape.type === 'circle') { // ok
-   37:     return Math.PI * Math.pow(shape.radius, 2);
-   38:   }
-         ^ object with property `type` that matches string literal `square`. Expected string literal `rectangle`, got `square` instead
+             ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. Expected string literal `rectangle`, got `square` instead
    30:   {+type: 'rectangle', width: number, height: number} |
                  ^^^^^^^^^^^ string literal `rectangle`
   Member 2:
    31:   {+type: 'circle', radius: number};
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
   Error:
-         v--------------------------------------
    34:   if (shape.type === 'square') { // error
-   35:     return shape.width * shape.height;
-   36:   } else if (shape.type === 'circle') { // ok
-   37:     return Math.PI * Math.pow(shape.radius, 2);
-   38:   }
-         ^ object with property `type` that matches string literal `square`. Expected string literal `circle`, got `square` instead
+             ^^^^^^^^^^^^^^^^^^^^^^^ object with property `type` that matches string literal `square`. Expected string literal `circle`, got `square` instead
    31:   {+type: 'circle', radius: number};
                  ^^^^^^^^ string literal `circle`
 
