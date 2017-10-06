@@ -206,17 +206,19 @@ class requires_calculator ~ast = object(this)
     Option.iter ~f:(fun (_, local) ->
       add_named "default" local (ref_of_kind importKind)
     ) default;
-    List.iter (function
+    Option.iter ~f:(function
       | ImportNamespaceSpecifier (loc, (_, local)) ->
         add_ns local loc (
           match importKind with
           | ImportType -> types_ns
           | ImportTypeof -> typesof_ns
           | ImportValue -> ns)
-      | ImportNamedSpecifier {local; remote = (_, remote); kind} ->
-        let importKind = match kind with Some k -> k | None -> importKind in
-        let local = match local with Some (_, x) -> x | None -> remote in
-        add_named remote local (ref_of_kind importKind)
+      | ImportNamedSpecifiers named_specifiers ->
+        List.iter (function {local; remote = (_, remote); kind} ->
+          let importKind = match kind with Some k -> k | None -> importKind in
+          let local = match local with Some (_, x) -> x | None -> remote in
+          add_named remote local (ref_of_kind importKind)
+        ) named_specifiers
     ) specifiers;
     this#add_es_import name loc
       ~named:!named ~ns:!ns ~types:!types ~types_ns:!types_ns ~typesof:!typesof ~typesof_ns:!typesof_ns;

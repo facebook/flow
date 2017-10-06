@@ -1351,21 +1351,22 @@ module Statement
           end
         in
         let preceding_comma = Expect.maybe env T_COMMA in
-        specifier_list ~preceding_comma env is_type_import (ImportNamedSpecifier specifier::acc)
+        specifier_list ~preceding_comma env is_type_import (specifier::acc)
 
-    in let named_or_namespace_specifier env is_type_import =
+    in let named_or_namespace_specifier env import_kind =
       let start_loc = Peek.loc env in
       match Peek.token env with
       | T_MULT ->
           Expect.token env T_MULT;
           Expect.identifier env "as";
           let id = Parse.identifier env in
-          [ImportNamespaceSpecifier (Loc.btwn start_loc (fst id), id)]
+          ImportNamespaceSpecifier (Loc.btwn start_loc (fst id), id)
       | _ ->
           Expect.token env T_LCURLY;
+          let is_type_import = import_kind <> ImportValue in
           let specifiers = specifier_list env is_type_import [] in
           Expect.token env T_RCURLY;
-          specifiers
+          ImportNamedSpecifiers specifiers
 
     in with_loc (fun env ->
       let env = env |> with_strict true in
@@ -1385,7 +1386,6 @@ module Statement
           ImportTypeof, None
         | _ -> ImportValue, None
       in
-      let is_type_import = importKind <> ImportValue in
       match Peek.token env, Peek.is_identifier env with
       (* import "ModuleName"; *)
       | T_STRING (str_loc, value, raw, octal), _
@@ -1398,7 +1398,7 @@ module Statement
         Statement.ImportDeclaration {
           importKind;
           source;
-          specifiers = [];
+          specifiers = None;
           default = None;
         }
 
@@ -1418,8 +1418,8 @@ module Statement
             match Peek.token env with
             | T_COMMA -> (* `import Foo, ...` *)
                 Expect.token env T_COMMA;
-                named_or_namespace_specifier env is_type_import
-            | _ -> []
+                Some (named_or_namespace_specifier env importKind)
+            | _ -> None
           ) in
 
           let source = source env in
@@ -1433,7 +1433,7 @@ module Statement
 
       (* `import [type] { ... } ...` or `import [typeof] * as ...` *)
       | _ ->
-          let specifiers = named_or_namespace_specifier env is_type_import in
+          let specifiers = Some (named_or_namespace_specifier env importKind) in
           let source = source env in
           Eat.semicolon env;
           Statement.ImportDeclaration {

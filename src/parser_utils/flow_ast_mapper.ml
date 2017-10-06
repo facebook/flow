@@ -600,7 +600,7 @@ class mapper = object(this)
     let { importKind; source; specifiers; default } = decl in
     match importKind with
     | ImportValue ->
-      let specifiers' = map_list this#import_specifier specifiers in
+      let specifiers' = map_opt this#import_specifier specifiers in
       let default' = map_opt this#import_default_specifier default in
       if specifiers == specifiers' && default == default' then decl
       else { importKind; source; specifiers = specifiers'; default = default' }
@@ -609,23 +609,30 @@ class mapper = object(this)
   method import_specifier (specifier: Loc.t Ast.Statement.ImportDeclaration.specifier) =
     let open Ast.Statement.ImportDeclaration in
     match specifier with
-    | ImportNamedSpecifier { kind; local; remote } ->
-      begin match kind with
-      | None ->
-        let ident = match local with
-          | None -> remote
-          | Some ident -> ident in
-        id (this#import_named_specifier ~ident) local specifier
-          (fun local -> ImportNamedSpecifier { kind = None; local; remote })
-      | Some _importKind -> specifier (* TODO *)
-      end
+    | ImportNamedSpecifiers named_specifiers ->
+      let named_specifiers' = map_list this#import_named_specifier named_specifiers in
+      if named_specifiers == named_specifiers' then specifier
+      else ImportNamedSpecifiers named_specifiers'
     | ImportNamespaceSpecifier (loc, ident) ->
       id this#import_namespace_specifier ident specifier
         (fun ident -> ImportNamespaceSpecifier (loc, ident))
 
-  method import_named_specifier ~ident (local: Loc.t Ast.Identifier.t option) =
-    id (this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let)
-      ident local (fun ident -> Some ident)
+  method import_named_specifier (specifier: Loc.t Ast.Statement.ImportDeclaration.named_specifier) =
+    let open Ast.Statement.ImportDeclaration in
+    let { kind; local; remote } = specifier in
+    begin match kind with
+    | None ->
+      let ident = match local with
+        | None -> remote
+        | Some ident -> ident
+      in
+      let local' = id (this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let)
+        ident local (fun ident -> Some ident)
+      in
+      if local == local' then specifier
+      else { kind; local = local'; remote }
+    | Some _importKind -> specifier (* TODO *)
+    end
 
   method import_default_specifier (id: Loc.t Ast.Identifier.t) =
     this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
