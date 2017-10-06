@@ -497,7 +497,7 @@ module rec TypeTerm : sig
 
     | DebugPrintT of reason
 
-    | SentinelPropTestT of reason * t * string * bool * sentinel_value * t_out
+    | SentinelPropTestT of reason * t * key * bool * sentinel_value * t_out
 
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
@@ -641,7 +641,13 @@ module rec TypeTerm : sig
     (* e1 instanceof e2 *)
     | InstanceofTest
     (* e1.key === e2 *)
-    | SentinelProp of string
+    (* e1["key"] === e2 *)
+    (* e1[n] === e2 where `n` is a numeric literal *)
+    | SentinelProp of key
+
+  and key =
+    | StringKey of string
+    | NumberKey of float
 
   and 'a literal =
     | Literal of bool option * 'a
@@ -950,7 +956,7 @@ module rec TypeTerm : sig
 
   and intersection_preprocess_tool =
   | ConcretizeTypes of t list * t list * t * use_t
-  | SentinelPropTest of bool * string * t * t * t
+  | SentinelPropTest of bool * key * t * t * t
   | PropExistsTest of bool * string * t * t
 
   and spec =
@@ -2427,10 +2433,13 @@ let string_of_use_ctor = function
   | ConcretizeTypeAppsT _ -> "ConcretizeTypeAppsT"
   | CondT _ -> "CondT"
 
+let string_of_key = function
+  | StringKey s -> s
+  | NumberKey n -> Pervasives.string_of_float n
+
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"
-  | SentinelProp key -> "sentinel prop " ^ key
-
+  | SentinelProp key -> "sentinel prop " ^ (string_of_key key)
 
 let rec string_of_predicate = function
   | AndP (p1,p2) ->
@@ -2498,6 +2507,19 @@ and extract_setter_type = function
 and extract_getter_type = function
   | DefT (_, FunT (_, _, { return_t; _; })) -> return_t
   | _ -> failwith "Getter property with unexpected type"
+
+and tuple_length reason ts =
+  let r =
+    let desc = RTupleLength (List.length ts) in
+    replace_reason_const desc reason
+  in
+  let t =
+    let n = List.length ts in
+    let float = Pervasives.float_of_int n in
+    let string = Pervasives.string_of_int n in
+    NumT (Literal (None, (float, string)))
+  in
+  DefT (r, t)
 
 and elemt_of_arrtype reason = function
 | ArrayAT (elemt, _)

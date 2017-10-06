@@ -5597,7 +5597,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           if not sense
           then () (* provably unreachable, so prune *)
           else
-            let l = matching_sentinel_prop reason key (SingletonStrT sentinel) in
+            let l =
+              let k = string_of_key key in
+              matching_sentinel_prop reason k (SingletonStrT sentinel)
+            in
             rec_flow_t cx trace (l, result)
         | _ ->
           rec_flow_t cx trace (l, result)
@@ -5611,7 +5614,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           if not sense
           then () (* provably unreachable, so prune *)
           else
-            let l = matching_sentinel_prop reason key (SingletonNumT sentinel_lit) in
+            let l =
+              let k = string_of_key key in
+              matching_sentinel_prop reason k (SingletonNumT sentinel_lit)
+            in
             rec_flow_t cx trace (l, result)
         | _ ->
           rec_flow_t cx trace (l, result)
@@ -5624,7 +5630,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           if not sense
           then () (* provably unreachable, so prune *)
           else
-            let l = matching_sentinel_prop reason key (SingletonBoolT sentinel) in
+            let l =
+              let k = string_of_key key in
+              matching_sentinel_prop reason k (SingletonBoolT sentinel)
+            in
             rec_flow_t cx trace (l, result)
         | _ ->
             rec_flow_t cx trace (l, result)
@@ -5958,6 +5967,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (reason, ArrT (ArrayAT(t, _))),
       (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ->
       rec_flow cx trace (get_builtin_typeapp cx ~trace reason "Array" [t], u)
+
+    | DefT (_, ArrT (TupleAT (_, ts))),
+      LookupT (reason, _, _, Named (_, "length"), RWProp (_, t, Read)) ->
+      rec_flow_t cx trace (tuple_length reason ts, t)
 
     | DefT (reason, ArrT (TupleAT _ | ROArrayAT _ | EmptyAT as arrtype)),
       (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ->
@@ -8658,6 +8671,15 @@ and sentinel_prop_test key cx trace result (sense, obj, t) =
   sentinel_prop_test_generic key cx trace result obj (sense, obj, t)
 
 and sentinel_prop_test_generic key cx trace result orig_obj =
+  let desc_of_sentinel sentinel =
+    match sentinel with
+    | SentinelStr s -> RStringLit s
+    | SentinelNum (_, n) -> RNumberLit n
+    | SentinelBool b -> RBooleanLit b
+    | SentinelNull -> RNull
+    | SentinelVoid -> RVoid
+  in
+
   (** Evaluate a refinement predicate of the form
 
       obj.key eq value
@@ -8690,25 +8712,22 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       result. **)
 
   let flow_sentinel sense props_tmap obj sentinel =
-    match Context.get_prop cx props_tmap key with
+    let k = string_of_key key in
+    match Context.get_prop cx props_tmap k with
     | Some p ->
       (match Property.read_t p with
       | Some t ->
-        let desc = RMatchingProp (key, match sentinel with
-          | SentinelStr s -> RStringLit s
-          | SentinelNum (_, n) -> RNumberLit n
-          | SentinelBool b -> RBooleanLit b
-          | SentinelNull -> RNull
-          | SentinelVoid -> RVoid
-        ) in
-        let reason = replace_reason_const desc (reason_of_t result) in
+        let reason =
+          let desc = RMatchingProp (k, desc_of_sentinel sentinel) in
+          replace_reason_const desc (reason_of_t result)
+        in
         let test = SentinelPropTestT (reason, orig_obj, key, sense, sentinel, result) in
         rec_flow cx trace (t, test)
       | None ->
         let reason_obj = reason_of_t obj in
         let reason = reason_of_t result in
         add_output cx ~trace (FlowError.EPropAccess (
-          (reason_obj, reason), Some key, Property.polarity p, Read
+          (reason_obj, reason), Some k, Property.polarity p, Read
         ))
       )
     | None ->
@@ -8741,6 +8760,36 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
         (* TODO: add test for sentinel test on implements *)
         flow_sentinel sense fields_tmap obj s
 
+      (* tuple.length ===/!== literal value *)
+      | DefT (reason, ArrT (TupleAT (_, ts))) -> (
+        match key with
+        | StringKey k ->
+          if k = "length" then (
+            let test =
+              let desc = RMatchingProp (k, desc_of_sentinel s) in
+              let r = replace_reason_const desc (reason_of_t result) in
+              SentinelPropTestT (r, orig_obj, key, sense, s, result)
+            in
+            rec_flow cx trace (tuple_length reason ts, test)
+          ) else (
+            rec_flow_t cx trace (orig_obj, result)
+          )
+        | NumberKey k ->
+          let i = (Pervasives.int_of_float k) in
+          if Pervasives.float_of_int i = k then (
+            let t = try List.nth ts i with _ ->
+              DefT (mk_reason RTupleOutOfBoundsAccess (loc_of_t result), VoidT)
+            in
+            let test =
+              let desc = RMatchingProp (string_of_key key, desc_of_sentinel s) in
+              let r = replace_reason_const desc (reason_of_t result) in
+              SentinelPropTestT (r, orig_obj, key, sense, s, result)
+            in
+            rec_flow cx trace (t, test)
+          ) else (
+            (* no refinement on non-integer indices *)
+            rec_flow_t cx trace (orig_obj, result)
+          ))
       | DefT (_, IntersectionT rep) ->
         (* For an intersection of object types, try the test for each object
            type in turn, while recording the original intersection so that we

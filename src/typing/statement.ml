@@ -3847,42 +3847,67 @@ and predicates_of_condition cx e = Ast.(Expression.(
      and `foo` is refined to eliminate branches that don't have a `false` bar
      property (by this function). *)
   let condition_of_maybe_sentinel cx ~sense ~strict expr val_t =
-    match strict, expr with
-    | true,
-      (expr_loc, Member {
-        Member._object;
-        property = Member.PropertyIdentifier (prop_loc, prop_name);
-        _
-      }) ->
+    let strict_refine obj_t = function
+      | expr_loc, Member {
+          Member.property = Member.PropertyExpression (prop_loc,
+            Ast.Expression.Literal {
+              Ast.Literal.value = Ast.Literal.Number f; raw } as index);
+          _
+        } ->
+        let prop_t =
+          if Type_inference_hooks_js.dispatch_member_hook cx
+            (Pervasives.string_of_float f) prop_loc obj_t
+          then AnyT.at prop_loc
+          else
+            let expr_reason = mk_reason (RProperty (Some raw)) expr_loc in
+            Flow.mk_tvar_where cx expr_reason (fun t ->
+              let i = expression cx index in
+              Flow.flow cx (obj_t, GetElemT (expr_reason, i, t)))
+        in
+        let sentinel = NumberKey f in
+        Some (prop_t, sentinel)
 
+      | expr_loc, Member {
+          Member.property = (
+            Member.PropertyIdentifier (prop_loc, prop_name)
+            | Member.PropertyExpression (prop_loc, Ast.Expression.Literal {
+                Ast.Literal.value = Ast.Literal.String prop_name; _ }));
+          _
+        } ->
+        let prop_t =
+          if Type_inference_hooks_js.dispatch_member_hook cx
+            prop_name prop_loc obj_t
+          then AnyT.at prop_loc
+          else
+            let expr_r = mk_reason (RProperty (Some prop_name)) expr_loc in
+            let prop_r = mk_reason (RProperty (Some prop_name)) prop_loc in
+            get_prop ~is_cond:true cx expr_r obj_t (prop_r, prop_name)
+        in
+        let sentinel = StringKey prop_name in
+        Some (prop_t, sentinel)
+      | _ -> None
+    in
+
+    match strict, expr with
+    | true, (_, Member { Member._object; _ }) -> (
       (* use `expression` instead of `condition` because `_object` is the object
          in a member expression; if it itself is a member expression, it must
-         exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here as
-         `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
+         exist (so ~is_cond:false). e.g. `foo.bar[1.0]` yields
+         `_object = foo.bar` where `bar` must exist. *)
       let obj_t = expression cx _object in
 
-      let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
-      let expr_reason = mk_reason (RProperty (Some prop_name)) expr_loc in
-      let prop_t = match Refinement.get cx expr expr_loc with
-      | Some t -> t
-      | None ->
-        if Type_inference_hooks_js.dispatch_member_hook cx
-          prop_name prop_loc obj_t
-        then AnyT.at prop_loc
-        else get_prop ~is_cond:true cx
-          expr_reason obj_t (prop_reason, prop_name)
-      in
-
-      (* refine the object (`foo.bar` in the example) based on the prop. *)
-      let refinement = match Refinement.key _object with
-      | None -> None
-      | Some name ->
-          let pred = LeftP (SentinelProp prop_name, val_t) in
-          Some (name, obj_t, pred, sense)
-      in
-      prop_t, refinement
-    | _ ->
-      condition cx expr, None
+      match strict_refine obj_t expr with
+      | Some (prop_t, sentinel) ->
+        (* refine the object (`foo.bar` in the example) based on the prop. *)
+        let refinement = match Refinement.key _object with
+        | None -> None
+        | Some name ->
+            let pred = LeftP (SentinelProp sentinel, val_t) in
+            Some (name, obj_t, pred, sense)
+        in
+        prop_t, refinement
+      | None -> condition cx expr, None)
+    | _ -> condition cx expr, None
   in
 
   (* inspect a null equality test *)

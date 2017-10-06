@@ -73,6 +73,7 @@ type reason_desc =
   | RTupleType
   | RTupleElement
   | RTupleOutOfBoundsAccess
+  | RTupleLength of int
   | RFunction of reason_desc_function
   | RFunctionType
   | RFunctionBody
@@ -378,6 +379,7 @@ let rec string_of_desc = function
   | RTupleType -> "tuple type"
   | RTupleElement -> "tuple element"
   | RTupleOutOfBoundsAccess -> "undefined (out of bounds tuple access)"
+  | RTupleLength i -> spf "tuple length of %d" i
   | RFunction func -> spf "%sfunction" (function_desc_prefix func)
   | RFunctionType -> "function type"
   | RFunctionBody -> "function body"
