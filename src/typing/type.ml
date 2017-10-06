@@ -1301,11 +1301,8 @@ and UnionRep : sig
 
   val rev_append: t -> t -> t
 
-  (** map rep r to rep r' along type mapping f *)
-  val map: (TypeTerm.t -> TypeTerm.t) -> t -> t
-
-  (** map rep r to rep r' along type mapping f. drops history. if nothing would
-      be changed, returns the physically-identical rep. *)
+  (** map rep r to rep r' along type mapping f. if nothing would be changed,
+      returns the physically-identical rep. *)
   val ident_map: (TypeTerm.t -> TypeTerm.t) -> t -> t
 
   (** quick membership test: Some true/false or None = needs full check *)
@@ -1389,17 +1386,12 @@ end = struct
     | t0::t1::ts -> make t0 t1 ts
     | _ -> failwith "impossible"
 
-  let map f (t0, t1, ts, _)  = make (f t0) (f t1) (List.map f ts)
-
   let ident_map f ((t0, t1, ts, _) as rep) =
     let t0_ = f t0 in
     let t1_ = f t1 in
-    let changed = t0_ != t0 || t1_ != t1 in
-    let rev_ts, changed = List.fold_left (fun (rev_ts, changed) t ->
-      let t_ = f t in
-      t_::rev_ts, changed || t_ != t
-    ) ([], changed) ts in
-    if changed then make t0_ t1_ (List.rev rev_ts) else rep
+    let ts_ = ListUtils.ident_map f ts in
+    let changed = t0_ != t0 || t1_ != t1 || ts_ != ts in
+    if changed then make t0_ t1_ ts_ else rep
 
   let quick_mem t (t0, t1, ts, enum) =
     let t = canon t in

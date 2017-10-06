@@ -6891,7 +6891,7 @@ and eval_destructor cx ~trace reason t d tout = match t with
    Instead, we preserve the union by pushing down the destructor onto the
    branches of the unions. *)
 | DefT (r, UnionT rep) ->
-  rec_flow_t cx trace (DefT (r, UnionT (rep |> UnionRep.map (fun t ->
+  rec_flow_t cx trace (DefT (r, UnionT (rep |> UnionRep.ident_map (fun t ->
     EvalT (t, TypeDestructorT (reason, d), mk_id ())
   ))), tout)
 | DefT (r, MaybeT t) ->
@@ -9966,7 +9966,7 @@ and reposition cx ?trace loc ?desc t =
       DefT (r, OptionalT (recurse seen t))
   | DefT (r, UnionT rep) ->
       let r = mod_reason r in
-      let rep = UnionRep.map (recurse seen) rep in
+      let rep = UnionRep.ident_map (recurse seen) rep in
       DefT (r, UnionT rep)
   | OpaqueT (r, opaquetype) ->
       let r = repos_reason loc r in
