@@ -67,6 +67,7 @@ export class TestStep {
   _needsFlowCheck: boolean;
   _startsIde: boolean;
   _readsIdeMessages: boolean;
+  _allowServerToDie: boolean;
 
   constructor(step?: TestStep) {
     this._actions = step == null ? [] : step._actions.slice();
@@ -76,6 +77,7 @@ export class TestStep {
     this._reason = step == null ? null : step._reason;
     this._startsIde = step == null ? false : step._startsIde;
     this._readsIdeMessages = step == null ? false : step._readsIdeMessages;
+    this._allowServerToDie = step == null ? false : step._allowServerToDie;
   }
 
   async performActions(
@@ -111,6 +113,10 @@ export class TestStep {
 
   readsIdeMessages(): boolean {
     return this._readsIdeMessages;
+  }
+
+  allowFlowServerToDie(): boolean {
+    return this._allowServerToDie;
   }
 }
 
@@ -343,6 +349,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         }
       );
       ret._needsFlowServer = true;
+      ret._allowServerToDie = true;
       return ret;
     };
 
