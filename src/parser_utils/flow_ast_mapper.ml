@@ -597,12 +597,13 @@ class mapper = object(this)
 
   method import_declaration (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
     let open Ast.Statement.ImportDeclaration in
-    let { importKind; source; specifiers } = decl in
+    let { importKind; source; specifiers; default } = decl in
     match importKind with
     | ImportValue ->
       let specifiers' = map_list this#import_specifier specifiers in
-      if specifiers == specifiers' then decl
-      else { importKind; source; specifiers = specifiers'; }
+      let default' = map_opt this#import_default_specifier default in
+      if specifiers == specifiers' && default == default' then decl
+      else { importKind; source; specifiers = specifiers'; default = default' }
     | ImportType | ImportTypeof -> decl (* TODO *)
 
   method import_specifier (specifier: Loc.t Ast.Statement.ImportDeclaration.specifier) =
@@ -618,15 +619,13 @@ class mapper = object(this)
           (fun local -> ImportNamedSpecifier { kind = None; local; remote })
       | Some _importKind -> specifier (* TODO *)
       end
-    | ImportDefaultSpecifier ident ->
-      id this#import_default_specifier ident specifier
-        (fun ident -> ImportDefaultSpecifier ident)
     | ImportNamespaceSpecifier (loc, ident) ->
       id this#import_namespace_specifier ident specifier
         (fun ident -> ImportNamespaceSpecifier (loc, ident))
 
   method import_named_specifier ~ident (local: Loc.t Ast.Identifier.t option) =
-    id (this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let) ident local (fun ident -> Some ident)
+    id (this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let)
+      ident local (fun ident -> Some ident)
 
   method import_default_specifier (id: Loc.t Ast.Identifier.t) =
     this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id

@@ -179,7 +179,7 @@ class requires_calculator ~ast = object(this)
 
   method! import_declaration (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
     let open Ast.Statement.ImportDeclaration in
-    let { importKind; source; specifiers } = decl in
+    let { importKind; source; specifiers; default } = decl in
     let loc, name =  match source with
     | loc, { Ast.Literal.value = Ast.Literal.String name; _ } -> loc, name
     | _ -> failwith "import declaration source must be a string literal"
@@ -203,6 +203,9 @@ class requires_calculator ~ast = object(this)
       let locs = Nel.one loc in
       ref := SMap.add local locs !ref ~combine:Nel.rev_append
     in
+    Option.iter ~f:(fun (_, local) ->
+      add_named "default" local (ref_of_kind importKind)
+    ) default;
     List.iter (function
       | ImportNamespaceSpecifier (loc, (_, local)) ->
         add_ns local loc (
@@ -210,8 +213,6 @@ class requires_calculator ~ast = object(this)
           | ImportType -> types_ns
           | ImportTypeof -> typesof_ns
           | ImportValue -> ns)
-      | ImportDefaultSpecifier (_, local) ->
-        add_named "default" local (ref_of_kind importKind)
       | ImportNamedSpecifier {local; remote = (_, remote); kind} ->
         let importKind = match kind with Some k -> k | None -> importKind in
         let local = match local with Some (_, x) -> x | None -> remote in

@@ -469,7 +469,6 @@ and Statement : sig
 
     type 'M specifier =
       | ImportNamedSpecifier of 'M named_specifier
-      | ImportDefaultSpecifier of 'M Identifier.t
       | ImportNamespaceSpecifier of ('M * 'M Identifier.t)
     and 'M named_specifier = {
       kind: importKind option;
@@ -480,6 +479,7 @@ and Statement : sig
     type 'M t = {
       importKind: importKind;
       source: ('M * Literal.t); (* Always a string literal *)
+      default: 'M Identifier.t option;
       specifiers: 'M specifier list;
     }
   end

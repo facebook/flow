@@ -1399,6 +1399,7 @@ module Statement
           importKind;
           source;
           specifiers = [];
+          default = None;
         }
 
       (* import [type] SomeDefault ... *)
@@ -1408,9 +1409,9 @@ module Statement
             match type_ident, Peek.token env with
             | Some type_ident, T_COMMA (* `import type,` *)
             | Some type_ident, T_IDENTIFIER { raw = "from"; _ } -> (* `import type from` *)
-              ImportValue, ImportDefaultSpecifier type_ident
+              ImportValue, type_ident
             | _ -> (* Either `import type Foo` or `import Foo` *)
-              importKind, ImportDefaultSpecifier (Parse.identifier env)
+              importKind, Parse.identifier env
           ) in
 
           let additional_specifiers = (
@@ -1426,7 +1427,8 @@ module Statement
           Statement.ImportDeclaration {
             importKind;
             source;
-            specifiers = default_specifier::additional_specifiers;
+            specifiers = additional_specifiers;
+            default = Some default_specifier;
           }
 
       (* `import [type] { ... } ...` or `import [typeof] * as ...` *)
@@ -1438,6 +1440,7 @@ module Statement
             importKind;
             source;
             specifiers;
+            default = None;
           }
     )
 end
