@@ -1649,7 +1649,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        lower bound. *)
 
     | DefT (r, UnionT rep), ReposUseT (reason, use_desc, use_op, l) ->
-      let rep = UnionRep.map (annot use_desc) rep in
+      let rep = UnionRep.ident_map (annot use_desc) rep in
       let r = repos_reason (loc_of_reason reason) r in
       let r =
         if use_desc
