@@ -179,8 +179,13 @@ Error: main.js:19
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
   Property `user` is incompatible:
-     19: <Profile user={user} foo={42} />; // Error: You must pass in a ref
-                        ^^^^ object type. This type is incompatible with
+           v-
+     13:   {|
+     14:     +$$typeof: Relay.$$TypeofFragment,
+     15:     +id: string,
+    ...:
+     20:   |},
+           -^ object type. This type is incompatible with. See: Profile.graphql.js:13
      46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Profile_userRef. See: Relay.js:46
 
@@ -201,8 +206,13 @@ Error: main.js:20
  46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
   Property `user` is incompatible:
-     20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
-                        ^^^^ object type. This type is incompatible with
+           v-
+     13:   {|
+     14:     +$$typeof: Relay.$$TypeofFragment,
+     15:     +id: string,
+    ...:
+     20:   |},
+           -^ object type. This type is incompatible with. See: Profile.graphql.js:13
      46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Profile_userRef. See: Relay.js:46
 

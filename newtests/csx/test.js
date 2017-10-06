@@ -135,8 +135,8 @@ export default suite(({addFile, addFiles, addCode}) => [
         test.js:8
           8:       <Bar {...params} />;
                    ^^^^^^^^^^^^^^^^^^^ props of JSX element \`Bar\`. This type is incompatible with the expected param type of
-          6:       function Bar(props: Props) {}
-                                       ^^^^^ object type
+          5:       type Props = {|x: string|};
+                                ^^^^^^^^^^^^^ object type
           Property \`x\` is incompatible:
               7:       const params = {x: 23};
                                           ^^ number. This type is incompatible with

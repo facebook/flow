@@ -178,11 +178,16 @@ Trace:
  12: });
      -^ ~> UseT(UnknownUse, ExtendsT) [extends React$Component] (from [not shown])
 
-Error: Traces2.js:18
- 18:     return <B bar="hey"/>;
-                ^^^^^^^^^^^^^^ object type. This type is incompatible with the expected return type of
+Error: Traces2.js:14
  14: function f(b): Element<*> {
-                    ^^^^^^^^^^ object type
+                    ^^^^^^^^^^ object type. This type is incompatible with the expected return type of
+                                                                   v-
+157: declare type React$Element<+ElementType: React$ElementType> = {|
+158:   +type: ElementType,
+159:   +props: React$ElementProps<ElementType>,
+...:
+162: |};
+     -^ object type. See lib: <BUILTINS>/react.js:157
 Trace:
 * path 1:
  11:   propTypes: { bar: React.PropTypes.string.isRequired }

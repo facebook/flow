@@ -61,9 +61,11 @@ Error: exact_basics.js:85
 
 Error: exact_basics.js:94
  94: takesPersonPred(returnsExactlyPersonPred()); // error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: PersonPred. Unsupported exact type
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  94: takesPersonPred(returnsExactlyPersonPred()); // error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: PersonPred. Unsupported exact type
+ 91: declare function returnsExactlyPersonPred(): $Exact<PersonPred>;
+                                                         ^^^^^^^^^^ function type
 
 Error: prop_test.js:28
  28:   return pc.state;      // error, since (pc: $Exact<Person>).first may be ""

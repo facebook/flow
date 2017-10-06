@@ -61,6 +61,22 @@ Error: classes.js:38
 
 Error: classes.js:39
  39: var foo: $jsx<number> = <Foo/>;
+              ^^^^^^^^^^^^ object type. This type is incompatible with
+                                                                   v-
+157: declare type React$Element<+ElementType: React$ElementType> = {|
+158:   +type: ElementType,
+159:   +props: React$ElementProps<ElementType>,
+...:
+162: |};
+     -^ object type. See lib: <BUILTINS>/react.js:157
+  Property `type` is incompatible:
+      7: class Foo extends React.Component<Props, State> {
+               ^^^ class type: Foo. This type is incompatible with
+     39: var foo: $jsx<number> = <Foo/>;
+                       ^^^^^^ number
+
+Error: classes.js:39
+ 39: var foo: $jsx<number> = <Foo/>;
                              ^^^^^^ React element `Foo`
 159:   +props: React$ElementProps<ElementType>,
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element props. Expected React component instead of. See lib: <BUILTINS>/react.js:159
@@ -112,17 +128,6 @@ Error: classes.js:39
      39: var foo: $jsx<number> = <Foo/>;
                                  ^^^^^^ props of React element `Foo`
 
-Error: classes.js:39
- 39: var foo: $jsx<number> = <Foo/>;
-                             ^^^^^^ object type. This type is incompatible with
- 39: var foo: $jsx<number> = <Foo/>;
-              ^^^^^^^^^^^^ object type
-  Property `type` is incompatible:
-      7: class Foo extends React.Component<Props, State> {
-               ^^^ class type: Foo. This type is incompatible with
-     39: var foo: $jsx<number> = <Foo/>;
-                       ^^^^^^ number
-
 Error: classes.js:57
  57:     var _: string = this.props.x;
                          ^^^^^^^^^^^^ number. This type is incompatible with
@@ -154,6 +159,27 @@ Error: classes.js:64
                    ^^^^^^^^^^^^^^ property `y_` of object type. Property not found in
  35:     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:35
+
+Error: classes.js:79
+ 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                     ^^^^^^^^^^^^ object type. This type is incompatible with
+                                                                   v-
+157: declare type React$Element<+ElementType: React$ElementType> = {|
+158:   +type: ElementType,
+159:   +props: React$ElementProps<ElementType>,
+...:
+162: |};
+     -^ object type. See lib: <BUILTINS>/react.js:157
+  Property `type` is incompatible:
+                         v------------------
+     43: var FooLegacy = React.createClass({
+     44:   is_mounted: (undefined: ?boolean),
+     45: 
+    ...:
+     76: });
+         -^ class type: React component. This type is incompatible with
+     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                              ^^^^^^ number
 
 Error: classes.js:79
  79: var foo_legacy: $jsx<number> = <FooLegacy/>;
@@ -221,22 +247,6 @@ Error: classes.js:79
            ^ property `x`. Property not found in
      79: var foo_legacy: $jsx<number> = <FooLegacy/>;
                                         ^^^^^^^^^^^^ props of React element `FooLegacy`
-
-Error: classes.js:79
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                                    ^^^^^^^^^^^^ object type. This type is incompatible with
- 79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                     ^^^^^^^^^^^^ object type
-  Property `type` is incompatible:
-                         v------------------
-     43: var FooLegacy = React.createClass({
-     44:   is_mounted: (undefined: ?boolean),
-     45: 
-    ...:
-     76: });
-         -^ class type: React component. This type is incompatible with
-     79: var foo_legacy: $jsx<number> = <FooLegacy/>;
-                              ^^^^^^ number
 
 Error: import-react.js:16
  16: <HelloMessage name={007} />; // number ~/~> string error
@@ -476,9 +486,14 @@ Error: props.js:20
 
 Error: props.js:27
  27: (element: $jsx<Class<FooProps>>);
-      ^^^^^^^ object type. This type is incompatible with
- 27: (element: $jsx<Class<FooProps>>);
-               ^^^^^^^^^^^^^^^^^^^^^ object type
+               ^^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+                                                                   v-
+157: declare type React$Element<+ElementType: React$ElementType> = {|
+158:   +type: ElementType,
+159:   +props: React$ElementProps<ElementType>,
+...:
+162: |};
+     -^ object type. See lib: <BUILTINS>/react.js:157
   Property `props` is incompatible:
                         v
       4:     propTypes: {
