@@ -858,17 +858,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       | _ -> continuation env
 
   let handle_persistent_client genv env ~serve_ready_clients client =
-    let msg, env =
-      try
-        Some (Persistent_connection.input_value client), env
-      with
-        | End_of_file ->
-            print_endline "Lost connection to client";
-            let new_connections = Persistent_connection.remove_client env.connections client in
-            None, {env with connections = new_connections}
-    in
-    match msg with
-      | Some msg -> respond_to_persistent_client genv env ~serve_ready_clients client msg
-      | None -> env
+    match Persistent_connection.input_value client with
+    | None -> env
+    | Some msg -> respond_to_persistent_client genv env ~serve_ready_clients client msg
 
 end

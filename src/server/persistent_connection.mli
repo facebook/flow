@@ -16,6 +16,7 @@ val empty: t
 
 val add_client: t -> ServerUtils.client -> FlowEventLogger.logging_context -> (t * single_client)
 val remove_client: t -> single_client -> t
+val filter_broken: t -> t
 
 (* Send updates to all clients that are subscribed *)
 val update_clients: t -> errors:Errors.ErrorSet.t ->
@@ -41,5 +42,5 @@ val client_did_open: t -> single_client -> filenames:string Nel.t -> (t * single
 val client_did_close: t -> single_client -> filenames:string Nel.t -> (t * single_client) option
 val get_logging_context: single_client -> FlowEventLogger.logging_context
 
-val input_value: single_client -> Prot.request
+val input_value: single_client -> Prot.request option
 val get_opened_files: t -> SSet.t

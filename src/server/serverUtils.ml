@@ -12,8 +12,9 @@ type client = {
 }
 
 let shutdown_client (_ic, oc) =
-  let cli = Unix.descr_of_out_channel oc in
   try
+    (* descr_of_out_channel fails with "Bad file descriptor" for a closed socket *)
+    let cli = Unix.descr_of_out_channel oc in
     Unix.shutdown cli Unix.SHUTDOWN_ALL;
     close_out oc
   with _ -> ()
