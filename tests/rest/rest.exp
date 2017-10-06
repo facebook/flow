@@ -79,11 +79,11 @@ Error: type.js:16
 Error: type.js:16
  16: ({}: O1); // Error: missing x
       ^^ object literal. This type is incompatible with
-  8: type O1 = $Rest<{|x: X, y: Y|}, {|y: Y|}>;
-                     ^^^^^^^^^^^^^^ object type
+ 16: ({}: O1); // Error: missing x
+          ^^ object type
   Property `x` is incompatible:
-      8: type O1 = $Rest<{|x: X, y: Y|}, {|y: Y|}>;
-                         ^^^^^^^^^^^^^^ property `x`. Property not found in
+     16: ({}: O1); // Error: missing x
+              ^^ property `x`. Property not found in
      16: ({}: O1); // Error: missing x
           ^^ object literal
 
@@ -295,11 +295,11 @@ Error: type.js:46
 Error: type.js:46
  46: ({}: O4); // Error: missing x
       ^^ object literal. This type is incompatible with
- 38: type O4 = $Rest<{|x: X, y: Y|}, {|y?: Y|}>;
-                     ^^^^^^^^^^^^^^ object type
+ 46: ({}: O4); // Error: missing x
+          ^^ object type
   Property `x` is incompatible:
-     38: type O4 = $Rest<{|x: X, y: Y|}, {|y?: Y|}>;
-                         ^^^^^^^^^^^^^^ property `x`. Property not found in
+     46: ({}: O4); // Error: missing x
+              ^^ property `x`. Property not found in
      46: ({}: O4); // Error: missing x
           ^^ object literal
 
@@ -1050,28 +1050,28 @@ Error: type_union.js:34
    33: type O5 = $Rest<{|x: X, y: Y|}, {|x: X|} | {|y: Y|}>;
                        ^^^^^^^^^^^^^^ object type
   Error:
-    7: declare var o: {||};
-                      ^^^^ object type. This type is incompatible with
+   34: (o: O5); // Error: missing x and missing y
+        ^ object type. This type is incompatible with
    33: type O5 = $Rest<{|x: X, y: Y|}, {|x: X|} | {|y: Y|}>;
                        ^^^^^^^^^^^^^^ object type
     Property `x` is incompatible:
        33: type O5 = $Rest<{|x: X, y: Y|}, {|x: X|} | {|y: Y|}>;
                            ^^^^^^^^^^^^^^ property `x`. Property not found in
-        7: declare var o: {||};
-                          ^^^^ object type
+       34: (o: O5); // Error: missing x and missing y
+            ^ object type
   Member 2:
    33: type O5 = $Rest<{|x: X, y: Y|}, {|x: X|} | {|y: Y|}>;
                        ^^^^^^^^^^^^^^ object type
   Error:
-    7: declare var o: {||};
-                      ^^^^ object type. This type is incompatible with
+   34: (o: O5); // Error: missing x and missing y
+        ^ object type. This type is incompatible with
    33: type O5 = $Rest<{|x: X, y: Y|}, {|x: X|} | {|y: Y|}>;
                        ^^^^^^^^^^^^^^ object type
     Property `y` is incompatible:
        33: type O5 = $Rest<{|x: X, y: Y|}, {|x: X|} | {|y: Y|}>;
                            ^^^^^^^^^^^^^^ property `y`. Property not found in
-        7: declare var o: {||};
-                          ^^^^ object type
+       34: (o: O5); // Error: missing x and missing y
+            ^ object type
 
 Error: type_union.js:37
  37: ({x, y}: O5); // Error: x and y are not allowed together

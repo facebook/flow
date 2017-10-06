@@ -1,24 +1,14 @@
 Error: API.react.js:4
   4: app.setProps({y:42}); // error, y:number but foo expects string in App.react
          ^^^^^^^^ property `setProps`. Property not found in
-                                                                   v-
-157: declare type React$Element<+ElementType: React$ElementType> = {|
-158:   +type: ElementType,
-159:   +props: React$ElementProps<ElementType>,
-...:
-162: |};
-     -^ object type. See lib: <BUILTINS>/react.js:157
+  4: app.setProps({y:42}); // error, y:number but foo expects string in App.react
+     ^^^ object type
 
 Error: API.react.js:5
   5: app.setState({z:42}); // error, z:number but foo expects string in App.react
          ^^^^^^^^ property `setState`. Property not found in
-                                                                   v-
-157: declare type React$Element<+ElementType: React$ElementType> = {|
-158:   +type: ElementType,
-159:   +props: React$ElementProps<ElementType>,
-...:
-162: |};
-     -^ object type. See lib: <BUILTINS>/react.js:157
+  5: app.setState({z:42}); // error, z:number but foo expects string in App.react
+     ^^^ object type
 
 Error: App.react.js:36
  36:         {foo(z,x)} // error, since z: number
