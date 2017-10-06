@@ -4378,14 +4378,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* function types derive objects through explicit instantiation *)
     (****************************************************************)
 
-    | DefT (reason, FunT (_, proto, ({
+    | DefT (_, FunT (_, proto, ({
         this_t = this;
         return_t = ret;
         _ } as ft))),
       ConstructorT (reason_op, args, t) ->
       (* TODO: closure *)
       (** create new object **)
-      let reason_c = replace_reason_const RNewObject reason in
+      let reason_c = replace_reason_const RNewObject reason_op in
       let proto_reason = reason_of_t proto in
       let sealed = UnsealedInFile (Loc.source (loc_of_reason proto_reason)) in
       let flags = { default_flags with sealed } in
@@ -4398,11 +4398,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       multiflow_call cx trace reason_op args ft;
       Ops.pop ();
       (** if ret is object-like, return ret; otherwise return new_obj **)
-      let reason_o = replace_reason_const RConstructorReturn reason in
+      let reason_o = replace_reason_const RConstructorReturn reason_op in
       rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
 
-    | DefT (reason, AnyFunT), ConstructorT (reason_op, args, t) ->
-      let reason_o = replace_reason_const RConstructorReturn reason in
+    | DefT (_, AnyFunT), ConstructorT (reason_op, args, t) ->
+      let reason_o = replace_reason_const RConstructorReturn reason_op in
       call_args_iter
         (fun t -> rec_flow_t cx trace (t, AnyT.why reason_op))
         args;
