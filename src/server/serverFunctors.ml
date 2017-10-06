@@ -320,7 +320,6 @@ end = struct
     run_internal ~shared_mem_config options
 
   let run_from_daemonize ?waiting_channel ~shared_mem_config options =
-    LoggingUtils.set_hh_logger_min_level options;
     run_internal ?waiting_channel ~shared_mem_config options
 
   let check_once ~shared_mem_config ~client_include_warnings ?focus_targets options =
