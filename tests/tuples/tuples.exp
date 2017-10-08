@@ -40,5 +40,11 @@ Error: tuples.js:6
   6: var f: [number, string] = [123, 456];
                      ^^^^^^ string
 
+Error: tuples.js:7
+  7: (f[0.5]: number);
+      ^^^^^^ undefined (out of bounds tuple access). This type is incompatible with
+  7: (f[0.5]: number);
+              ^^^^^^ number
 
-Found 7 errors
+
+Found 8 errors

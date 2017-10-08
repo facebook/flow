@@ -5051,7 +5051,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | None -> false, value
           | Some ts ->
               let index = int_of_float float_value in
-              begin
+              if float_value = (float_of_int index)
+              then begin
                 try true, List.nth ts index
                 with _ ->
                 if is_tuple then begin
@@ -5062,6 +5063,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                   add_output cx ~trace error;
                   true, DefT (mk_reason RTupleOutOfBoundsAccess (loc_of_reason reason), VoidT)
                 end else true, value
+              end else begin
+                true, DefT (mk_reason RTupleOutOfBoundsAccess (loc_of_reason reason), VoidT)
               end
           end
       | _ -> false, value
