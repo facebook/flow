@@ -6,6 +6,7 @@
  *)
 module Utils = Flowtestgen_utils;;
 module Logging = Flowtestgen_logging;;
+module Config = Flowtestgen_config;;
 
 (* A virtual class that defines the framework for ocaml-stype rules.
 
@@ -281,7 +282,11 @@ class virtual ['a, 'b, 'c] engine = object(self)
       Queue.iter (fun (slist, env) ->
           (* type check the program *)
           let prog = self#combine_syntax slist in
-          let type_check_result = Utils.type_check prog in
+          let type_check_result =
+            if Utils.is_typecheck (self#get_name ()) || Config.(config.random) then
+              Utils.type_check prog
+            else
+              None in
           match type_check_result with
           | Some msg -> Logging.log_early_type_error prog msg
           | None ->
