@@ -67,6 +67,8 @@ let log_runtime_error code msg =
   fprintf runtime_error_out "//====================\n%s\n%!" code;
   fprintf runtime_error_out "/*\nRuntime Error: \n%s\n*/\n%!" msg;;
 
+
+let print_stats () =
   let early_type_count_str =
     sprintf
       "%d early type errors written to %s\n%!"
