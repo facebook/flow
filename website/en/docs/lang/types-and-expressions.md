@@ -69,30 +69,30 @@ of values. But still Flow checks _every_ possible value. In this way Flow is
 checking too many things or _over-approximating_ what will be valid code.
 
 By checking every possible value, Flow might catch errors that will not
-actually occur when the code is run. Flow does this in order to be _"complete"_.
+actually occur when the code is run. Flow does this in order to be _"sound"_.
 
-In type systems, ***completeness*** is the ability for a type checker to catch
+In type systems, ***soundness*** is the ability for a type checker to catch
 every single error that _might_ happen at runtime. This comes at the cost of
 sometimes catching errors that will not actually happen at runtime.
 
-On the flip-side, ***soundness*** is the ability for a type checker to only
+On the flip-side, ***completeness*** is the ability for a type checker to only
 ever catch errors that _would_ happen at runtime. This comes at the cost of
 sometimes missing errors that will happen at runtime.
 
-In an ideal world, every type checker would be both complete _and_ sound so
+In an ideal world, every type checker would be both sound _and_ complete so
 that it catches _every_ error that _will_ happen at runtime.
 
 Flow tries to be as sound and complete as possible. But because JavaScript was
 not designed around a type system, Flow sometimes has to make a tradeoff. When
-this happens Flow tends to favor completeness over soundness, ensuring that
+this happens Flow tends to favor soundness over completeness, ensuring that
 code doesn't have any bugs.
 
-Completeness is fine as long as Flow isn't being too noisy and preventing you from
-being productive. Sometimes when completeness would get in your way too much, Flow
-will favor soundness instead. There's only a handful of cases where Flow
+Soundness is fine as long as Flow isn't being too noisy and preventing you from
+being productive. Sometimes when soundness would get in your way too much, Flow
+will favor completeness instead. There's only a handful of cases where Flow
 does this.
 
-Other type systems will favor soundness instead, only reporting real errors
+Other type systems will favor completeness instead, only reporting real errors
 in favor of possibly missing errors. Unit/Integration testing is an extreme
 form of this approach. Often this comes at the cost of missing the errors that
 are the most complicated to find, leaving that part up to the developer.
