@@ -1,5 +1,5 @@
 function remove<A, B>(a: A): [$Rest<A, {p: B}>, B] {
-  const {...o, p} = a;
+  const {p, ...o} = a;
   return [o, p];
 }
 
