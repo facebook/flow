@@ -4,12 +4,6 @@ Error: test.js:2
  10:   static x: string; // error?
                  ^^^^^^ string
 
-Error: test.js:4
-  4:   static foo(x: number) { }
-                     ^^^^^^ number. This type is incompatible with the expected param type of
- 11:   static foo(x: string) { } // error?
-                     ^^^^^^ string
-
 Error: test.js:7
   7: A.qux = function(x: string) { } // error?
        ^^^ property `qux`. Property not found in
@@ -22,9 +16,18 @@ Error: test.js:10
   2:   static x: number;
                  ^^^^^^ number
 
+Error: test.js:11
+ 11:   static foo(x: string) { } // error?
+       ^^^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
+  4:   static foo(x: number) { }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^ function
+  This parameter is incompatible:
+      4:   static foo(x: number) { }
+                         ^^^^^^ number. This type is incompatible with
+     11:   static foo(x: string) { } // error?
+                         ^^^^^^ string
+
 Error: test.js:13
- 13:     B.x = 0; // error
-         ^^^ assignment of property `x`
  13:     B.x = 0; // error
                ^ number. This type is incompatible with
  13:     B.x = 0; // error
@@ -38,11 +41,9 @@ Error: test.js:15
 
 Error: test.js:17
  17:     B.y = 0; // error
-         ^^^ assignment of property `y`
- 17:     B.y = 0; // error
                ^ number. This type is incompatible with
-  3:   static y: string;
-                 ^^^^^^ string
+ 17:     B.y = 0; // error
+         ^^^ string
 
 Error: test.js:18
  18:     B.bar(0); // error

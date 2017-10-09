@@ -1,12 +1,9 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
-*)
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *)
 
 exception Key_not_found of (* message *) string * (* key *) string
 
@@ -15,12 +12,6 @@ let print_endlinef fmt = Printf.ksprintf print_endline fmt
 let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 
 let exe_name = Filename.basename Sys.executable_name
-
-(* See https://github.com/yarnpkg/yarn/issues/405. *)
-let can_emoji =
-  Sys.os_type <> "Win32" &&
-  Unix.isatty Unix.stdout &&
-  (try Sys.getenv "TERM" with Not_found -> "dumb") <> "dumb"
 
 (* JSON numbers must not end in a `.`, but string_of_float returns things like
    `1.` instead of `1.0`, so we want to truncate the `.` *)
@@ -36,17 +27,9 @@ let string_of_float_trunc x =
 
 module LocMap = MyMap.Make(Loc)
 
-(* alias stuff from `Loc` so that it can be used by doing `open Utils_js`
-   instead of `open Loc`, which pollutes too much. *)
-type filename = Loc.filename
-let string_of_filename = Loc.string_of_filename
+module FilenameSet = Set.Make(File_key)
 
-module FilenameSet = struct
-  include Set.Make(Loc.FilenameKey)
-  let of_list = List.fold_left (fun s f -> add f s) empty
-end
-
-module FilenameMap = MyMap.Make (Loc.FilenameKey)
+module FilenameMap = MyMap.Make (File_key)
 
 module PathMap : MyMap.S with type key = Path.t = MyMap.Make (struct
   type t = Path.t

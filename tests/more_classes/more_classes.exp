@@ -1,7 +1,5 @@
 Error: Bar.js:15
  15:     new Qux().w = "?";
-         ^^^^^^^^^^^ assignment of property `w`
- 15:     new Qux().w = "?";
                        ^^^ string. This type is incompatible with
  15:     new Qux().w = "?";
          ^^^^^^^^^^^ number
@@ -34,11 +32,19 @@ Error: Foo.js:18
  14:   bar(z:string,u:string):string {
                       ^^^^^^ string. See: Bar.js:14
 
-Error: Qux.js:9
-  9:   fooqux(x:number) { }
-                ^^^^^^ number. This type is incompatible with the expected param type of
+Error: Foo.js:21
+       v-----------------
  21:   fooqux(x:string) {
-                ^^^^^^ string. See: Foo.js:21
+ 22:     this.x;
+ 23:   }
+       ^ function. This type is incompatible with
+  9:   fooqux(x:number) { }
+       ^^^^^^^^^^^^^^^^^^^^ function. See: Qux.js:9
+  This parameter is incompatible:
+      9:   fooqux(x:number) { }
+                    ^^^^^^ number. This type is incompatible with. See: Qux.js:9
+     21:   fooqux(x:string) {
+                    ^^^^^^ string
 
 
 Found 7 errors

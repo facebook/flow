@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2015, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2015-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 comp = [ "-thread" ]
@@ -93,6 +90,7 @@ begin library "hh-utils-core"
   sort = true
   files = [
     "build_id.ml"
+    "build_mode/prod/build_mode.ml"
     "core.ml"
     "exit_status.ml"
     "get_build_id.c"
@@ -115,7 +113,6 @@ begin library "hh-utils"
   files = [
     "buffered_line_reader.ml"
     "http_lite.ml"
-    "config_file.ml"
     "file_pos.ml"
     "findUtils.ml"
     "local_id.ml"

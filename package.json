@@ -1,8 +1,9 @@
 {
   "name": "flow-dev-tools",
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "version": "0.1.0",
   "dependencies": {
+    "babel-jest": "^21.0.2",
     "babel-plugin-syntax-async-functions": "^6.8.0",
     "babel-plugin-syntax-flow": "^6.8.0",
     "babel-plugin-syntax-trailing-function-commas": "^6.8.0",
@@ -18,6 +19,7 @@
     "diff": "~3.2.0",
     "flow-parser": "~0.21.0",
     "glob": "^7.0.3",
+    "jest": "^21.1.0",
     "minimist": "~1.2.0",
     "mkdirp": "^0.5.1",
     "ncp": "~2.0.0",
@@ -25,7 +27,8 @@
     "rimraf": "^2.5.2",
     "sane": "^1.4.0",
     "source-map-support": "~0.4.0",
-    "twit": "^2.1.5"
+    "twit": "^2.1.5",
+    "vscode-jsonrpc": "^3.3.0"
   },
   "babel": {
     "presets": [

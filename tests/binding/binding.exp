@@ -338,11 +338,16 @@ Error: scope.js:86
  85:   var a: number = 0;
               ^^^^^^ number
 
-Error: scope.js:93
- 93:   ): number {
-          ^^^^^^ number. This type is incompatible with
+Error: scope.js:92
  92:     x: () => string = f // error: number ~> string
-                  ^^^^^^ string
+                           ^ function. This type is incompatible with
+ 92:     x: () => string = f // error: number ~> string
+            ^^^^^^^^^^^^ function type
+  This parameter is incompatible:
+     93:   ): number {
+              ^^^^^^ number. This type is incompatible with
+     92:     x: () => string = f // error: number ~> string
+                      ^^^^^^ string
 
 Error: scope.js:103
 103:     return x(); // error: string ~> number

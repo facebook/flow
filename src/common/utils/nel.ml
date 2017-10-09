@@ -1,3 +1,10 @@
+(**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *)
+
 (* Non-empty list *)
 
 type 'a t = 'a * 'a list
@@ -42,6 +49,11 @@ let rev_map f (x, xs) =
   match List.rev_map f (x::xs) with
   | [] -> failwith "impossible"
   | x::xs -> (x, xs)
+
+let rev_append xs ys =
+  match List.rev_append (to_list xs) (to_list ys) with
+  | [] -> failwith "impossible"
+  | z::zs -> (z, zs)
 
 let length (_, xs) = 1 + List.length xs
 

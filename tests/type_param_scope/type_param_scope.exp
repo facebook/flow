@@ -18,8 +18,6 @@ Error: default_params.js:10
 
 Error: method_shadow.js:42
  42: g.m(true); // err, bool ~> number|string
-     ^^^^^^^^^ call of method `m`
- 42: g.m(true); // err, bool ~> number|string
          ^^^^ boolean. This type is incompatible with
  40: declare var g: G<number|string>;
                       ^^^^^^^^^^^^^ union: number | string
@@ -42,13 +40,16 @@ Error: method_shadow.js:42
 
 Error: method_shadow.js:43
  43: (g.m(""): G<number>); // err, string ~> number
-          ^^ string. This type is incompatible with
+      ^^^^^^^ type application of class `G`. Has some incompatible type argument with
  43: (g.m(""): G<number>); // err, string ~> number
-                 ^^^^^^ number
+               ^^^^^^^^^ type application of polymorphic type: class type: G
+  Type argument `T` is incompatible:
+     43: (g.m(""): G<number>); // err, string ~> number
+              ^^ string. This type is incompatible with
+     43: (g.m(""): G<number>); // err, string ~> number
+                     ^^^^^^ number
 
 Error: method_shadow.js:51
- 51:         this.x = x; // err, m's T != H's T
-             ^^^^^^ assignment of property `x`
  51:         this.x = x; // err, m's T != H's T
                       ^ T. This type is incompatible with
  51:         this.x = x; // err, m's T != H's T

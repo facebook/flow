@@ -3,11 +3,5 @@ libs/parse_error.js:8
   8:   methodB: () => any
        ^^^^^^^ Unexpected identifier
 
-Error: a.js:5
-  5: var x: string = 0;
-                     ^ number. This type is incompatible with
-  5: var x: string = 0;
-            ^^^^^^ string
 
-
-Found 2 errors
+Found 1 error

@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 
@@ -28,9 +25,9 @@ end
 module Translate (Impl : Translator) (Config : Config) : (sig
   type t
   val program:
-    Loc.t * Ast.Statement.t list * (Loc.t * Ast.Comment.t') list ->
+    Loc.t * Loc.t Ast.Statement.t list * (Loc.t * Ast.Comment.t') list ->
     t
-  val expression: Ast.Expression.t -> t
+  val expression: Loc.t Ast.Expression.t -> t
   val errors: (Loc.t * Parse_error.t) list -> t
 end with type t = Impl.t) = struct
   type t = Impl.t
@@ -52,11 +49,11 @@ end with type t = Impl.t) = struct
 
   let loc location =
     let source = match Loc.source location with
-    | Some Loc.LibFile src
-    | Some Loc.SourceFile src
-    | Some Loc.JsonFile src
-    | Some Loc.ResourceFile src -> string src
-    | Some Loc.Builtins -> string "(global)"
+    | Some File_key.LibFile src
+    | Some File_key.SourceFile src
+    | Some File_key.JsonFile src
+    | Some File_key.ResourceFile src -> string src
+    | Some File_key.Builtins -> string "(global)"
     | None -> null
     in
     obj [|
@@ -181,9 +178,10 @@ end with type t = Impl.t) = struct
       |]
     )
   | loc, ForIn forin -> ForIn.(
-      let left = (match forin.left with
+      let left = match forin.left with
       | LeftDeclaration left -> variable_declaration left
-      | LeftExpression left -> expression left) in
+      | LeftPattern left -> pattern left
+      in
       node "ForInStatement" loc [|
         "left", left;
         "right", expression forin.right;
@@ -197,9 +195,10 @@ end with type t = Impl.t) = struct
         then "ForAwaitStatement"
         else "ForOfStatement"
       in
-      let left = (match forof.left with
+      let left = match forof.left with
       | LeftDeclaration left -> variable_declaration left
-      | LeftExpression left -> expression left) in
+      | LeftPattern left -> pattern left
+      in
       node type_ loc [|
         "left", left;
         "right", expression forof.right;
@@ -286,14 +285,21 @@ end with type t = Impl.t) = struct
         |]
       )
     | loc, ImportDeclaration import -> ImportDeclaration.(
-        let specifiers = import.specifiers |> List.map (function
-          | ImportDefaultSpecifier id ->
-              import_default_specifier id
-          | ImportNamedSpecifier {local; remote; kind;} ->
-              import_named_specifier local remote kind
-          | ImportNamespaceSpecifier id ->
-              import_namespace_specifier id
-        ) in
+        let specifiers = match import.specifiers with
+          | Some (ImportNamedSpecifiers specifiers) ->
+              List.map (fun {local; remote; kind;} ->
+                import_named_specifier local remote kind
+              ) specifiers
+          | Some (ImportNamespaceSpecifier id) ->
+              [import_namespace_specifier id]
+          | None ->
+              []
+        in
+
+        let specifiers = match import.default with
+          | Some default -> (import_default_specifier default)::specifiers
+          | None -> specifiers
+        in
 
         let import_kind = match import.importKind with
         | ImportType -> "type"
@@ -478,6 +484,7 @@ end with type t = Impl.t) = struct
     | loc, Member member -> Member.(
         let property = match member.property with
         | PropertyIdentifier id -> identifier id
+        | PropertyPrivateName name -> private_name name
         | PropertyExpression expr -> expression expr
         in
         node "MemberExpression" loc [|
@@ -566,6 +573,11 @@ end with type t = Impl.t) = struct
       "name", string name;
       "typeAnnotation", null;
       "optional", bool false;
+    |]
+
+  and private_name (loc, name) =
+    node "PrivateName" loc [|
+      "id", identifier name;
     |]
 
   and pattern_identifier loc {
@@ -735,6 +747,7 @@ end with type t = Impl.t) = struct
 
   and class_element = Class.Body.(function
     | Method m -> class_method m
+    | PrivateField p -> class_private_field p
     | Property p -> class_property p)
 
   and class_method (loc, method_) =
@@ -742,6 +755,7 @@ end with type t = Impl.t) = struct
     let key, computed = Expression.Object.Property.(match key with
       | Literal lit -> literal lit, false
       | Identifier id -> identifier id, false
+      | PrivateName name -> private_name name, false
       | Computed expr -> expression expr, true) in
     let kind = Class.Method.(match kind with
       | Constructor -> "constructor"
@@ -757,10 +771,22 @@ end with type t = Impl.t) = struct
       "decorators", array_of_list expression decorators;
     |]
 
+  and class_private_field (loc, prop) = Class.PrivateField.(
+    let (_, key) = prop.key in
+    node "ClassPrivateProperty" loc [|
+      "key", identifier key;
+      "value", option expression prop.value;
+      "typeAnnotation", option type_annotation prop.typeAnnotation;
+      "static", bool prop.static;
+      "variance", option variance prop.variance;
+    |]
+  )
   and class_property (loc, prop) = Class.Property.(
     let key, computed = (match prop.key with
     | Expression.Object.Property.Literal lit -> literal lit, false
     | Expression.Object.Property.Identifier id -> identifier id, false
+    | Expression.Object.Property.PrivateName _ ->
+        failwith "Internal Error: Private name found in class prop"
     | Expression.Object.Property.Computed expr -> expression expr, true) in
     node "ClassProperty" loc [|
       "key", key;
@@ -812,16 +838,17 @@ end with type t = Impl.t) = struct
         pattern_identifier loc pattern_id
     | _loc, Expression expr -> expression expr)
 
-  and function_params = function
-    | params, Some (rest_loc, { Function.RestElement.argument }) ->
+  and function_params = Ast.Function.Params.(function
+    | _, { params; rest = Some (rest_loc, { Function.RestElement.argument }) } ->
       let rest = node "RestElement" rest_loc [|
         "argument", pattern argument;
       |] in
       let rev_params = params |> List.map pattern |> List.rev in
       let params = List.rev (rest::rev_params) in
       array (Array.of_list params)
-    | params, None ->
+    | _, { params; rest = None } ->
       array_of_list pattern params
+  )
 
   and array_pattern_element = Pattern.Array.(function
     | Element p -> pattern p
@@ -840,6 +867,7 @@ end with type t = Impl.t) = struct
       let key, computed = (match prop.key with
       | Literal lit -> literal lit, false
       | Identifier id -> identifier id, false
+      | PrivateName _ -> failwith "Internal Error: Found private field in object props"
       | Computed expr -> expression expr, true)  in
       let value, kind = match prop.value with
       | Init value -> expression value, "init"
@@ -1019,7 +1047,7 @@ end with type t = Impl.t) = struct
     |]
 
   and function_type (loc, fn) = Type.Function.(
-    let params, rest = fn.params in
+    let (_, { Params.params; rest }) = fn.params in
     node "FunctionTypeAnnotation" loc [|
       "params", array_of_list function_type_param params;
       "returnType", _type fn.returnType;
@@ -1073,6 +1101,8 @@ end with type t = Impl.t) = struct
     let key = match prop.key with
     | Expression.Object.Property.Literal lit -> literal lit
     | Expression.Object.Property.Identifier id -> identifier id
+    | Expression.Object.Property.PrivateName _ ->
+      failwith "Internal Error: Found private field in object props"
     | Expression.Object.Property.Computed _ ->
       failwith "There should not be computed object type property keys"
     in
@@ -1175,12 +1205,11 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and boolean_literal_type (loc, s) = Type.BooleanLiteral.(
+  and boolean_literal_type (loc, value) =
     node "BooleanLiteralTypeAnnotation" loc [|
-      "value", bool s.value;
-      "raw", string s.raw;
+      "value", bool value;
+      "raw", string (if value then "true" else "false");
     |]
-  )
 
   and exists_type loc = node "ExistsTypeAnnotation" loc [||]
 
@@ -1210,7 +1239,7 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and jsx_element (loc, (element: JSX.element)) = JSX.(
+  and jsx_element (loc, (element: Loc.t JSX.element)) = JSX.(
     node "JSXElement" loc [|
       "openingElement", jsx_opening element.openingElement;
       "closingElement", option jsx_closing element.closingElement;

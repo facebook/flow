@@ -68,35 +68,48 @@ Error: bool.js:44
 
 Error: cond_prop.js:11
  11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
- 11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                             ^^^^^^^^^^^^ object type. This type is incompatible with
+                             ^^^^^^^^^^^^ object type. This type is incompatible with the expected param type of
   9: function getTypeASTName(typeAST: Type): string {
                                       ^^^^ union: Name | ListType | NonNullType
   Member 1:
     3: type Type = Name | ListType | NonNullType;
                    ^^^^ Name
   Error:
-    3: type Type = Name | ListType | NonNullType;
-                   ^^^^ property `kind`. Property not found in
    11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                               ^^^^^^^^^^^^ object type
+                               ^^^^^^^^^^^^ object type. This type is incompatible with
+    3: type Type = Name | ListType | NonNullType;
+                   ^^^^ object type
+    Property `kind` is incompatible:
+        3: type Type = Name | ListType | NonNullType;
+                       ^^^^ property `kind`. Property not found in
+       11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
+                                   ^^^^^^^^^^^^ object type
   Member 2:
     3: type Type = Name | ListType | NonNullType;
                           ^^^^^^^^ ListType
   Error:
-    3: type Type = Name | ListType | NonNullType;
-                          ^^^^^^^^ property `kind`. Property not found in
    11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                               ^^^^^^^^^^^^ object type
+                               ^^^^^^^^^^^^ object type. This type is incompatible with
+    3: type Type = Name | ListType | NonNullType;
+                          ^^^^^^^^ object type
+    Property `kind` is incompatible:
+        3: type Type = Name | ListType | NonNullType;
+                              ^^^^^^^^ property `kind`. Property not found in
+       11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
+                                   ^^^^^^^^^^^^ object type
   Member 3:
     3: type Type = Name | ListType | NonNullType;
                                      ^^^^^^^^^^^ NonNullType
   Error:
-    3: type Type = Name | ListType | NonNullType;
-                                     ^^^^^^^^^^^ property `kind`. Property not found in
    11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
-                               ^^^^^^^^^^^^ object type
+                               ^^^^^^^^^^^^ object type. This type is incompatible with
+    3: type Type = Name | ListType | NonNullType;
+                                     ^^^^^^^^^^^ object type
+    Property `kind` is incompatible:
+        3: type Type = Name | ListType | NonNullType;
+                                         ^^^^^^^^^^^ property `kind`. Property not found in
+       11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
+                                   ^^^^^^^^^^^^ object type
 
 Error: cond_prop.js:19
  19:     return x.result; // error
@@ -134,6 +147,12 @@ Error: cond_prop.js:48
  48:         (t.quux: string); // error, consider { foo: {}, bar: "" }
               ^ object type
 
+Error: cond_prop.js:54
+ 54:     if (o.p) {} // error: property `p` not found on null
+               ^ property `p`. Property cannot be accessed on possibly null value
+ 54:     if (o.p) {} // error: property `p` not found on null
+             ^ null
+
 Error: eq.js:5
   5:     if (x == y) {} // error, string & number are not comparable (unsafe casting)
              ^ string. This type cannot be compared to
@@ -155,14 +174,14 @@ Error: eq.js:19
 Error: hasOwnProperty.js:4
   4:   x.y(); // error: could be undefined
        ^^^^^ call of method `y`. Function cannot be called on possibly undefined value
-  3: function foo(x:{y?:() => void}) {
-                        ^^^^^^^^^^ undefined
+  4:   x.y(); // error: could be undefined
+       ^^^ undefined
 
 Error: hasOwnProperty.js:6
   6:     x.y(); // error: still could be undefined
          ^^^^^ call of method `y`. Function cannot be called on possibly undefined value
-  3: function foo(x:{y?:() => void}) {
-                        ^^^^^^^^^^ undefined
+  6:     x.y(); // error: still could be undefined
+         ^^^ undefined
 
 Error: hasOwnProperty.js:9
   9:     x.z(); // error: unreachable, but we don't help you here
@@ -247,6 +266,12 @@ Error: missing-property-cond.js:41
                     ^^^ property `bar`. Property not found in
  41:   if (typeof o.bar === 'string') {} // error
                   ^ mixed
+
+Error: missing-property-cond.js:65
+ 65:   if (null.q) {} // error: property `q` on null
+                ^ property `q`. Property cannot be accessed on possibly null value
+ 65:   if (null.q) {} // error: property `q` on null
+           ^^^^ null
 
 Error: mixed.js:8
   8:     takesString(x); // error
@@ -965,8 +990,8 @@ Error: typeof.js:12
 Error: typeof.js:23
  23:   BAZ.stuff(123); // error, refinement is gone
        ^^^^^^^^^^^^^^ call of method `stuff`. Function cannot be called on possibly undefined value
-  3: declare var BAZ: {stuff?: (x: number) => void} | void;
-                               ^^^^^^^^^^^^^^^^^^^ undefined. See lib: lib.js:3
+ 23:   BAZ.stuff(123); // error, refinement is gone
+       ^^^^^^^^^ undefined
 
 Error: typeof.js:23
  23:   BAZ.stuff(123); // error, refinement is gone
@@ -983,8 +1008,8 @@ Error: typeof.js:26
 Error: typeof.js:30
  30:     BAZ.stuff(123); // error, refinement is gone
          ^^^^^^^^^^^^^^ call of method `stuff`. Function cannot be called on possibly undefined value
-  3: declare var BAZ: {stuff?: (x: number) => void} | void;
-                               ^^^^^^^^^^^^^^^^^^^ undefined. See lib: lib.js:3
+ 30:     BAZ.stuff(123); // error, refinement is gone
+         ^^^^^^^^^ undefined
 
 Error: typeof.js:49
  49:   if (typeof x === "foo") { // error
@@ -1097,4 +1122,4 @@ Error: void.js:85
            ^^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 188 errors
+Found 190 errors

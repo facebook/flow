@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* AST handling for destructuring exprs *)
@@ -14,50 +11,6 @@
 open Utils_js
 open Reason
 open Type
-
-(**
- * Given a LHS destructuring pattern, extract a list of (loc, identifier-name)
- * tuples from the pattern that represent new bindings. This is primarily useful
- * for exporting a destructuring variable declaration.
- *)
-let rec extract_destructured_bindings accum pattern = Ast.Pattern.(
-  match pattern with
-  | Identifier { Identifier.name; _ } ->
-    name::accum
-
-  | Object n ->
-    let props = n.Object.properties in
-    List.fold_left extract_obj_prop_pattern_bindings accum props
-
-  | Array n ->
-    let elems = n.Array.elements in
-    List.fold_left extract_arr_elem_pattern_bindings accum elems
-
-  | Assignment a ->
-    extract_destructured_bindings accum (snd a.Assignment.left)
-
-  | Expression _ ->
-    failwith "Parser Error: Expression patterns don't exist in JS."
-)
-
-and extract_obj_prop_pattern_bindings accum = Ast.Pattern.(function
-  | Object.Property (_, prop) ->
-    let (_, rhs_pattern) = prop.Object.Property.pattern in
-    extract_destructured_bindings accum rhs_pattern
-
-  | Object.RestProperty _ ->
-    failwith "Unsupported: Destructuring object spread properties"
-)
-
-and extract_arr_elem_pattern_bindings accum = Ast.Pattern.Array.(function
-  | Some (Element (_, pattern)) ->
-    extract_destructured_bindings accum pattern
-
-  | Some (RestElement (_, {RestElement.argument = (_, pattern)})) ->
-    extract_destructured_bindings accum pattern
-
-  | None -> accum
-)
 
 (* Destructuring visitor for tree-shaped patterns, parameteric over an action f
    to perform at the leaves. A type for the pattern is passed, which is taken

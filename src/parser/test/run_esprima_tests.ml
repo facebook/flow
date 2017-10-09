@@ -1,77 +1,9 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
-
-module File_utils : sig
-  type file_kind =
-  | Dir of string
-  | File of string
-
-  val fold_files:
-    ?max_depth:int -> ?filter:(string -> bool) -> ?file_only:bool ->
-    string list ->
-    (file_kind -> 'a -> 'a) ->
-    'a ->
-    'a
-end = struct
-  type file_kind =
-  | Dir of string
-  | File of string
-
-  let lstat_kind file =
-    let open Unix in
-    try Some (lstat file).st_kind
-    with Unix_error (ENOENT, _, _) ->
-      prerr_endline ("File not found: "^file);
-      None
-
-  module FileSet = Set.Make(struct
-    type t = file_kind
-    let compare a b =
-      match a, b with
-      | Dir a', Dir b'
-      | File a', File b' -> String.compare a' b'
-      | Dir _, File _ -> 1
-      | File _, Dir _ -> -1
-  end)
-
-  let fold_files (type t)
-      ?max_depth ?(filter=(fun _ -> true)) ?(file_only = false)
-      (paths: string list) (action: file_kind -> t -> t) (init: t) =
-    let rec fold depth acc dir =
-      let acc = if not file_only && filter dir
-        then action (Dir dir) acc
-        else acc
-      in
-      if max_depth = Some depth then
-        acc
-      else
-        let files =
-          Sys.readdir dir
-          |> Array.fold_left (fun acc file ->
-            let open Unix in
-            let abs = Filename.concat dir file in
-            match lstat_kind abs with
-            | Some S_REG -> FileSet.add (File abs) acc
-            | Some S_DIR -> FileSet.add (Dir abs) acc
-            | _ -> acc
-          ) FileSet.empty
-        in
-        FileSet.fold
-          (fun entry acc ->
-             match entry with
-             | File file when filter file -> action (File file) acc
-             | Dir file -> fold (depth+1) acc file
-             | _ -> acc)
-          files acc in
-    List.fold_left (fold 0) init paths
-end
 
 module String_utils = struct
   let spf = Printf.sprintf
@@ -350,7 +282,7 @@ end = struct
   let rec test_tree
     (path: path_part list)
     (actual: Hh_json.json)
-    (expected: Ast.Expression.t)
+    (expected: Loc.t Ast.Expression.t)
     (errors: string list)
   : string list =
     let open Ast.Expression in
@@ -474,7 +406,7 @@ end = struct
 
   let has_prop
       (needle: string)
-      (haystack: Ast.Expression.Object.property list) =
+      (haystack: Loc.t Ast.Expression.Object.property list) =
     List.exists Ast.Expression.(function
       | Object.Property (_, prop) -> fst (prop_name_and_value prop) = needle
       | _ -> false
@@ -578,7 +510,13 @@ end = struct
       begin match case.expected with
       | Some (Module _) -> (* TODO *) Case_skipped None
       | Some (Tree tree) ->
-          let expected = fst (Parser_flow.json_file ~fail:true tree None) in
+          let expected, json_errors = Parser_flow.json_file ~fail:false tree None in
+          if json_errors <> [] then begin
+            let (loc, err) = List.hd json_errors in
+            let str = Printf.sprintf "Unable to parse .tree.json: %s: %s"
+              (Loc.to_string loc) (Parse_error.PP.error err) in
+            Case_error [str]
+          end else
           let expected = match diff with
           | Some str ->
             let diffs = fst (Parser_flow.json_file ~fail:true str None) in
@@ -668,7 +606,7 @@ end = struct
     let tests = tests_of_path path in
     let results = List.fold_left (fun results { test_name; cases; } ->
       if not quiet then print [C.Bold C.White, spf "=== %s ===\n" test_name];
-      let test_results = SMap.fold (fun key case results ->
+      let test_results, _ = SMap.fold (fun key case (results, shown_header) ->
         (* print [C.Normal C.Default, spf "[ ] %s\r" key]; *)
         match run_case case with
         | Case_ok ->
@@ -676,7 +614,7 @@ end = struct
             C.Normal C.Green, "[\xE2\x9C\x93] PASS";
             C.Normal C.Default, spf ": %s\n" key
           ];
-          { results with ok = results.ok + 1 }
+          { results with ok = results.ok + 1 }, shown_header
         | Case_skipped reason ->
           begin match reason with
           | Some ""
@@ -687,9 +625,9 @@ end = struct
                 C.Normal C.Default, spf ": %s - %s\n" key reason
               ]
           end;
-          { results with skipped = results.skipped + 1 }
+          { results with skipped = results.skipped + 1 }, shown_header
         | Case_error errs ->
-          if quiet then print [C.Bold C.White, spf "=== %s ===\n" test_name];
+          if quiet && not shown_header then print [C.Bold C.White, spf "=== %s ===\n" test_name];
           print [
             C.Normal C.Red, "[\xE2\x9C\x97] FAIL";
             C.Normal C.Default, spf ": %s\n" key
@@ -699,8 +637,8 @@ end = struct
           ) errs;
           flush stdout;
           if record then record_tree path test_name key case;
-          { results with failed = results.failed + 1 }
-      ) cases { ok = 0; skipped = 0; failed = 0; } in
+          { results with failed = results.failed + 1 }, true
+      ) cases ({ ok = 0; skipped = 0; failed = 0; }, false) in
       if not quiet then print_endline "";
       let results = add_results results test_results in
       if test_results.failed > 0 then

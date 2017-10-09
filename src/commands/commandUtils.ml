@@ -1,24 +1,24 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
 
-let canonicalize_filenames ~cwd filenames =
+let canonicalize_filenames ?(allow_imaginary=false) ~cwd filenames =
   List.map (fun filename ->
     let filename = Sys_utils.expanduser filename in (* normalize ~ *)
     let filename = Files.normalize_path cwd filename in (* normalize ./ and ../ *)
     match Sys_utils.realpath filename with (* normalize symlinks *)
     | Some abs -> abs
     | None ->
-      let msg = Printf.sprintf "File not found: %S" filename in
-      FlowExitStatus.(exit ~msg No_input)
+      if allow_imaginary
+      then filename
+      else
+        let msg = Printf.sprintf "File not found: %S" filename in
+        FlowExitStatus.(exit ~msg No_input)
   ) filenames
 
 let expand_file_list ?options filenames =
@@ -37,19 +37,19 @@ let expand_file_list ?options filenames =
       (List.hd paths) in
     Files.get_all next_files
 
-let get_filenames_from_input input_file filenames =
+let get_filenames_from_input ?(allow_imaginary=false) input_file filenames =
   let cwd = Sys.getcwd () in
   let input_file_filenames = match input_file with
   | Some "-" ->
     Sys_utils.lines_of_in_channel stdin
-    |> canonicalize_filenames ~cwd
+    |> canonicalize_filenames ~allow_imaginary ~cwd
   | Some input_file ->
     Sys_utils.lines_of_file input_file
-    |> canonicalize_filenames ~cwd:(Filename.dirname input_file)
+    |> canonicalize_filenames ~allow_imaginary ~cwd:(Filename.dirname input_file)
   | None -> []
   in
   let cli_filenames = match filenames with
-  | Some filenames -> canonicalize_filenames ~cwd filenames
+  | Some filenames -> canonicalize_filenames ~allow_imaginary ~cwd filenames
   | None -> []
   in
   cli_filenames @ input_file_filenames
@@ -95,25 +95,6 @@ let sleep seconds =
         then timeout_go_boom ()
         else Unix.sleep seconds
 
-(* TODO: min_level should probably default to warn, but was historically info *)
-let init_loggers ~from ~options ?(min_level=Hh_logger.Level.Info) () =
-  FlowEventLogger.set_from from;
-  Hh_logger.Level.set_min_level (
-    if Options.is_quiet options then
-      Hh_logger.Level.Off
-    else if Options.verbose options != None || Options.is_debug_mode options then
-      Hh_logger.Level.Debug
-    else match Sys_utils.get_env "FLOW_LOG_LEVEL" with
-      | Some "off" -> Hh_logger.Level.Off
-      | Some "fatal" -> Hh_logger.Level.Fatal
-      | Some "error" -> Hh_logger.Level.Error
-      | Some "warn" -> Hh_logger.Level.Warn
-      | Some "info" -> Hh_logger.Level.Info
-      | Some "debug" -> Hh_logger.Level.Debug
-      | Some _ (* ignore invalid values *)
-      | None -> min_level
-  )
-
 let collect_error_flags main color include_warnings one_line show_all_errors =
   let color = match color with
   | Some "never" -> Tty.Color_Never
@@ -142,8 +123,13 @@ let error_flags prev = CommandSpec.ArgSpec.(
       ~doc:"Print all errors (the default is to truncate after 50 errors)"
 )
 
+let collect_json_flags main json pretty =
+  if json || pretty then FlowExitStatus.set_json_mode ~pretty;
+  main json pretty
+
 let json_flags prev = CommandSpec.ArgSpec.(
   prev
+  |> collect collect_json_flags
   |> flag "--json" no_arg ~doc:"Output results in JSON format"
   |> flag "--pretty" no_arg ~doc:"Pretty-print JSON output (implies --json)"
 )
@@ -151,7 +137,31 @@ let json_flags prev = CommandSpec.ArgSpec.(
 let temp_dir_flag prev = CommandSpec.ArgSpec.(
   prev
   |> flag "--temp-dir" string
-      ~doc:"Directory in which to store temp files (default: /tmp/flow/)"
+      ~doc:"Directory in which to store temp files (default: FLOW_TEMP_DIR, or /tmp/flow/)"
+      ~env:"FLOW_TEMP_DIR"
+)
+
+let collect_lazy_flags main lazy_ lazy_mode =
+  main (match lazy_mode with
+  | None when lazy_ -> Some Options.LAZY_MODE_FILESYSTEM
+  | Some "fs" -> Some Options.LAZY_MODE_FILESYSTEM
+  | Some "ide" -> Some Options.LAZY_MODE_IDE
+  | _ -> None)
+
+let lazy_flags prev = CommandSpec.ArgSpec.(
+  prev
+  |> collect collect_lazy_flags
+  |> flag "--lazy" no_arg
+      ~doc:"EXPERIMENTAL: Don't run a full check"
+  |> flag "--lazy-mode" (enum ["fs"; "ide"])
+      ~doc:"EXPERIMENTAL: Which type of lazy mode to use: fs or ide (default: fs, implies --lazy)"
+)
+
+let input_file_flag verb prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--input-file" string
+    ~doc:("File containing list of files to " ^ verb ^ ", one per line. If -, list of files is " ^
+          "read from the standard input.")
 )
 
 type shared_mem_params = {
@@ -263,6 +273,12 @@ let ignore_version_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Ignore the version constraint in .flowconfig"
 )
 
+let log_file_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--log-file" string
+      ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
+)
+
 let assert_version flowconfig =
   match FlowConfig.required_version flowconfig with
   | None -> ()
@@ -280,10 +296,10 @@ type flowconfig_params = {
   ignores: string list;
   includes: string list;
   libs: string list;
-  (* We store lint_settings as a raw string list instead of as a LintSettings.t so we
+  (* We store raw_lint_severities as a string list instead of as a LintSettings.t so we
    * can defer parsing of the lint settings until after the flowconfig lint settings
    * are known, to properly detect redundant settings (and avoid false positives) *)
-  lint_settings: string list;
+  raw_lint_severities: string list;
 }
 
 let list_of_string_arg = function
@@ -294,14 +310,14 @@ let collect_flowconfig_flags main ignores_str includes_str lib_str lints_str =
   let ignores = list_of_string_arg ignores_str in
   let includes = list_of_string_arg includes_str in
   let libs = list_of_string_arg lib_str in
-  let lint_settings = list_of_string_arg lints_str in
-  main { ignores; includes; libs; lint_settings; }
+  let raw_lint_severities = list_of_string_arg lints_str in
+  main { ignores; includes; libs; raw_lint_severities; }
 
 let file_options =
-  let default_lib_dir tmp_dir =
+  let default_lib_dir ~no_flowlib tmp_dir =
     let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
     try
-      Flowlib.extract_flowlib root;
+      Flowlib.extract_flowlib ~no_flowlib root;
       root
     with _ ->
       let msg = "Could not locate flowlib files" in
@@ -351,9 +367,9 @@ let file_options =
   in
   fun ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs flowconfig ->
     let default_lib_dir =
-      if no_flowlib || FlowConfig.no_flowlib flowconfig
-      then None
-      else Some (default_lib_dir temp_dir) in
+      let no_flowlib = no_flowlib || FlowConfig.no_flowlib flowconfig in
+      Some (default_lib_dir ~no_flowlib temp_dir)
+    in
     let ignores = ignores_of_arg
       root
       (FlowConfig.ignores flowconfig)
@@ -563,7 +579,7 @@ let options_and_json_flags =
     |> options_flags
     |> json_flags
 
-let make_options ~flowconfig ~lazy_ ~root (options_flags: Options_flags.t) =
+let make_options ~flowconfig ~lazy_mode ~root (options_flags: Options_flags.t) =
   let temp_dir =
     options_flags.Options_flags.temp_dir
     |> Option.value ~default:(FlowConfig.temp_dir flowconfig)
@@ -573,14 +589,14 @@ let make_options ~flowconfig ~lazy_ ~root (options_flags: Options_flags.t) =
   let open Options_flags in
   let file_options =
     let no_flowlib = options_flags.no_flowlib in
-    let { includes; ignores; libs; lint_settings=_; } = options_flags.flowconfig_flags in
+    let { includes; ignores; libs; raw_lint_severities=_; } = options_flags.flowconfig_flags in
     file_options ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs flowconfig
   in
-  let lint_settings = parse_lints_flag
-    (FlowConfig.lint_settings flowconfig) options_flags.flowconfig_flags.lint_settings
+  let lint_severities = parse_lints_flag
+    (FlowConfig.lint_severities flowconfig) options_flags.flowconfig_flags.raw_lint_severities
   in
   { Options.
-    opt_lazy = lazy_;
+    opt_lazy_mode = lazy_mode;
     opt_root = root;
     opt_debug = options_flags.debug;
     opt_verbose = options_flags.verbose;
@@ -590,7 +606,6 @@ let make_options ~flowconfig ~lazy_ ~root (options_flags: Options_flags.t) =
     opt_quiet = options_flags.Options_flags.quiet;
     opt_module_name_mappers = FlowConfig.module_name_mappers flowconfig;
     opt_modules_are_use_strict = FlowConfig.modules_are_use_strict flowconfig;
-    opt_output_graphml = false;
     opt_profile = options_flags.profile;
     opt_strip_root = options_flags.strip_root;
     opt_module = FlowConfig.module_system flowconfig;
@@ -621,7 +636,7 @@ let make_options ~flowconfig ~lazy_ ~root (options_flags: Options_flags.t) =
     opt_haste_paths_whitelist = FlowConfig.haste_paths_whitelist flowconfig;
     opt_haste_use_name_reducers = FlowConfig.haste_use_name_reducers flowconfig;
     opt_file_options = file_options;
-    opt_lint_settings = lint_settings;
+    opt_lint_severities = lint_severities;
   }
 
 let connect server_flags root =

@@ -2,13 +2,16 @@ Library type error:
 lib/test.js:0
 inconsistent use of library definitions
   8:   foo(): string;
-              ^^^^^^ string. This type is incompatible with
+       ^^^^^^^^^^^^^ function type. This type is incompatible with
   2:   foo(): number;
-              ^^^^^^ number
+       ^^^^^^^^^^^^^ function type
+  This parameter is incompatible:
+      8:   foo(): string;
+                  ^^^^^^ string. This type is incompatible with
+      2:   foo(): number;
+                  ^^^^^^ number
 
 Error: declare_class.js:8
-  8: C.x = "";
-     ^^^ assignment of property `x`
   8: C.x = "";
            ^^ string. This type is incompatible with
   8: C.x = "";

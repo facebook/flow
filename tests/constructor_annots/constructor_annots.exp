@@ -1,7 +1,5 @@
 Error: constructors.js:3
   3:   this.x = 0; // constructs objects with property x
-       ^^^^^^ assignment of property `x`
-  3:   this.x = 0; // constructs objects with property x
                 ^ number. This type is incompatible with
   3:   this.x = 0; // constructs objects with property x
        ^^^^^^ boolean
@@ -10,7 +8,7 @@ Error: constructors.js:22
  22: exports.Foo2 = (Foo: Class<IFoo>);
                                 ^^^^ statics of IFoo. This type is incompatible with
  22: exports.Foo2 = (Foo: Class<IFoo>);
-                     ^^^ statics of function
+                     ^^^ function
   Property `y` is incompatible:
       5: Foo.y = 0; // has static property y
                  ^ number. This type is incompatible with
@@ -21,7 +19,7 @@ Error: test.js:2
   2: var x: string = new Foo().x; // error, found number instead of string
                                ^ property `x`. Property not found in
   2: var x: string = new Foo().x; // error, found number instead of string
-                         ^^^ new object
+                     ^^^^^^^^^ new object
 
 Error: test.js:3
   3: var y: string = Foo.y; // error, found number instead of string

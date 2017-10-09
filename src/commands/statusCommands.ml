@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open CommandInfo
@@ -44,6 +41,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         |> json_flags
         |> error_flags
         |> strip_root_flag
+        |> from_flag
         |> dummy false (* match --version below *)
         |> anon "root" (optional string) ~doc:"Root directory"
       )
@@ -84,6 +82,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         |> json_flags
         |> error_flags
         |> strip_root_flag
+        |> from_flag
         |> flag "--version" no_arg
             ~doc:"(Deprecated, use `flow version` instead) Print version number and exit"
         |> anon "root" (optional string) ~doc:"Root directory"
@@ -159,7 +158,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     end else
       FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries)
 
-  let main server_flags json pretty error_flags strip_root version root () =
+  let main server_flags json pretty error_flags strip_root from version root () =
+    FlowEventLogger.set_from from;
     if version then (
       prerr_endline "Warning: \
         `flow --version` is deprecated in favor of `flow version`";

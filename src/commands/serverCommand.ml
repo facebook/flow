@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -21,12 +18,12 @@ let spec = { CommandSpec.
   doc = "Runs a Flow server in the foreground";
   args = CommandSpec.ArgSpec.(
       empty
-      |> flag "--lazy" no_arg
-          ~doc:"EXPERIMENTAL: Don't run a full check"
+      |> lazy_flags
       |> options_flags
       |> shm_flags
       |> ignore_version_flag
       |> from_flag
+      |> log_file_flag
       |> anon "root" (optional string) ~doc:"Root directory"
     );
   usage = Printf.sprintf
@@ -37,18 +34,28 @@ let spec = { CommandSpec.
       exe_name;
 }
 
-let main lazy_ options_flags shm_flags ignore_version from path_opt () =
+let main lazy_mode options_flags shm_flags ignore_version from log_file path_opt () =
   let root = CommandUtils.guess_root path_opt in
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-  let options = make_options ~flowconfig ~lazy_ ~root options_flags in
+  let options = make_options ~flowconfig ~lazy_mode ~root options_flags in
 
   (* initialize loggers before doing too much, especially anything that might exit *)
-  init_loggers ~from ~options ();
+  LoggingUtils.init_loggers ~from ~options ();
 
   if not ignore_version then assert_version flowconfig;
 
   let shared_mem_config = shm_config shm_flags flowconfig in
 
-  Main.run ~shared_mem_config options
+  let log_file = match log_file with
+    | Some s ->
+        let dirname = Path.make (Filename.dirname s) in
+        let basename = Filename.basename s in
+        Path.concat dirname basename
+    | None ->
+        CommandUtils.log_file ~tmp_dir:(Options.temp_dir options) root flowconfig
+  in
+  let log_file = Path.to_string log_file in
+
+  Main.run ~shared_mem_config ~log_file options
 
 let command = CommandSpec.command spec main

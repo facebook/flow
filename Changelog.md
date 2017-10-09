@@ -1,3 +1,213 @@
+### 0.56.0
+
+New Features:
+
+* Added a `$Rest<A,B>` type, which models the semantics of object rest
+* Added support for `null` prototypes, a la Object.create(null)
+* Added support `__proto__` property in object literals and object type annotations
+
+Notable bug fixes:
+
+* Improved support for React higher-order components, e.g. Relay fragment containers
+* Improved performance of `flow focus-check` for multiple files
+* Fixed type-at-post support for $ReadOnlyArray types
+* Fixed many cases where error messages were reported far away from the root cause.
+* Fixed find-refs for named exports
+
+Misc:
+
+* Added experimental lazy mode for IDEs
+* Added `<VERSION>` token for `suppress_comment` option in `.flowconfig`
+* Removed support for $Abstract utility type
+* Removed support for `flow typecheck-contents --graphml`
+
+
+### 0.55.0
+
+Likely to cause new Flow errors:
+
+* Fixed a bug that caused unsoundness with `$ObjMap`.
+
+New Features:
+
+* Flow is now capable of servicing some requests while it is rechecking. This should improve the IDE experience on large codebases.
+* Added $Call utility type.
+* Added $Compose and $ComposeReverse utility types.
+* Added support for spreading `mixed` into an object type.
+
+Notable bug fixes:
+
+* Improve results from the find-refs command.
+* Allow null and undefined as React.createElement() config (fixes #4658).
+
+Misc:
+
+* Miscellaneous code cleanup.
+* Located error messages related to functions at only the signature, rather than the entire range of the function body.
+* Improved error messages when `this` types are incompatible.
+* Properly check subtype relationships between callable objects.
+* Fixed a bug that caused `mixed` not to be properly printed from `type-at-pos`.
+* Improved error messages regarding incompatible Array type parameters.
+* Preserve some inference information across module boundaries.
+* Support assignments to shorthand method properties in object literals.
+
+Typedefs:
+
+* Added captureStream() to HTMLCanvasElement and HTMLMediaElement.
+* Added HTMLOptGroupElement return type for document.createElement().
+* Added Recoverable and context to the `repl` module.
+* Fixed return type for AudioContext.createMediaStreamDestination().
+
+Parser:
+
+* Various fixes to improve test262 compliance:
+  * Correctly disallowed various illegal constructs in destructuring patterns.
+  * Allow destructuring in `catch`.
+  * Added \u2028 and \u2029 to the list of line terminators.
+  * Allow unicode escape codes in identifiers.
+* Improved parse errors when using private properties outside of classes.
+* Disallowed reserved words as function param names in types (e.g. `(switch: number) => void`).
+
+### 0.54.1
+
+Notable bug fixes:
+ * Fixed an issue where the server becomes temporarily unresponsive after a recheck and the client consumes all its retries.
+
+### 0.54.0
+
+Likely to cause new Flow errors:
+* Extending a polymorphic class must now explicitly specify the parent class's type args. That is, `class A<T> {}; class B extends A {}` is now an error, but `class C extends A<string> {}` or `class D<T> extends A<T> {}` is ok.
+* Improved accuracy of type checking calls of built-in methods (e.g. Object, Array, Promise)
+
+Notable Changes:
+* Implemented private class fields, part of the [Class Fields](https://github.com/tc39/proposal-class-fields) proposal.
+* Implemented "phantom" types (e.g. `type T<Phantom> = any; type X = T<string>; type Y = T<number>`, where `X` and `Y` are incompatible even though `T` doesn't use `Phantom`)
+* Unused suppression errors are now warnings instead
+* Improved errors involving polymorphic types, so that they now point to the source of the conflict, rather than the nested type args that are incompatible. This was a major source of errors in files other than where the problem was.
+* Improved errors involving structural subtyping, so that they now reference the objects that are incompatible in addition to the incompatible properties
+* Improved errors when an inexact object type flows into an exact type
+* Made rest parameters in object destructuring patterns sealed, and exact if possible
+* Improved definitions for some node `fs` functions
+* Improved performance by removing unnecessary caching
+
+Misc:
+* Improved accuracy of type checking of React children in React.createClass
+* Fixed a bug related to instantiating a polymorphic type (e.g. `type t = T<U>`) with empty type args (e.g. `var x: T<>`)
+* Fixed polarity checking for property maps
+* Fixed a bug where polymorphic types were incorrectly checked for equality
+* Improved React definitions
+* Added a FLOW_TEMP_DIR env, equivalent to passing --temp-dir
+* Added a minimal libdef that defines the few things Flow can't run without, even when using no_flowlibs=true
+
+Parser:
+* Added `flow ast --strict` to parse in strict mode without "use strict"
+* Added support for the RegExp dotAll ('s' flag) [proposal](https://github.com/tc39/proposal-regexp-dotall-flag)
+* Added support for the private class fields [proposal](https://github.com/tc39/proposal-class-fields)
+* Added support for destructuring defaults in assignments (e.g. given `({ x = 1 } = {})`, `x` is 1)
+* Fixed issues related to `let`, `yield`, `await`, `async`, `super` and other reserved words
+* Fixed issues related to declarations in statement positions
+* Fixed issues related to destructuring patterns
+* Fixed issues related to IdentifierReferences, like shorthand object notation
+* Fixed issues related to class parsing, particularly `new.target` and async methods
+
+
+### 0.53.1
+
+Fixed a bug that sometimes crashed the server during recheck
+
+### 0.53.0
+
+This release includes major changes to Flow's model for React. The following
+links contain detailed documentation on the new model.
+
+* [Defining components](https://flow.org/en/docs/react/components/)
+* [Event handling](https://flow.org/en/docs/react/events/)
+* [ref functions](https://flow.org/en/docs/react/refs/)
+* [Typing children](https://flow.org/en/docs/react/children/)
+* [Higher-order components](https://flow.org/en/docs/react/hoc/)
+* [Utility type reference](https://flow.org/en/docs/react/types/)
+
+Please use the new [flow-upgrade](https://yarnpkg.com/en/package/flow-upgrade)
+tool to upgrade your codebase to take advantage of these changes!
+
+Likely to cause new Flow errors:
+
+* We are modifying how you define React class components. The React.Component
+  class will now take two type arguments, Props and State (as opposed to the
+  three type arguments including DefaultProps that React.Component took
+  before). When your component has no state, you only need to pass in a single
+  type argument. If your component has default props then add a static
+  defaultProps property.
+
+* Flow used to not type React function refs at all, but now that we are typing
+  refs code that used to just work may now have errors. One such error which can
+  often be overlooked is that the instance React gives you in a function ref may
+  sometimes be null.
+
+* Flow used to completely ignore the type of React children in many
+  places. Intrinsic elements did not check the type of their children (like
+  `<div>`), the type specified by components for React children would be ignored
+  when you created React elements, and the React.Children API was typed as
+  any.
+
+* In the past when typing children many developers would use an array type
+  (Array<T>) often with the React element type
+  (Array<React.Element<any>>). However, using arrays is problematic because
+  React children are not always an array. To fix this, now use the new
+  React.ChildrenArray<T> type.
+
+New Features:
+
+* Modeling advanced React patterns, like higher-order components, is difficult
+  today because the types you would need are either not provided or
+  undocumented. In this release we added a whole suite of utility types which
+  are all documented on our website.
+
+Notable bug fixes:
+
+* Flow used to have a bug where Flow would consider the following code as valid:
+```
+function MyComponent(props: {foo: number}) {
+  // ...
+}
+<MyComponent foo={undefined} />; // this is now a Flow error
+```
+
+* We now allow JSX class components to use exact object types as their props.
+
+* We now allow member expressions when creating JSX components,
+  e.g. `<TabBarIOS.Item>`.
+
+* We now allow multiple spreads in a JSX element.
+
+* We have added a type argument to `SyntheticEvents` and correctly typed
+  `currentTarget` using that type argument.
+
+Parser:
+
+* We fixed miscellaneous character encoding issues.
+
+Misc:
+
+* This release features a major re-architecture in how Flow typechecks modules
+  against their dependencies. Earlier, Flow would do a "local" (per-module)
+  typechecking pass followed by a global (cross-module) typechecking pass. Now,
+  these passes have been merged. This change vastly improve Flow's memory usage
+  on large codebases.
+
+* We found and fixed a couple of subtle bugs in the typechecking engine that
+  caused stack overflows in some pathological cases.
+
+* We made various improvements to refinements. We now recognize `var`s that are
+  only assigned to once as `const`s, so that we can preserve refinements on them
+  through longer stretches of code. Some `typeof` cases have also been fixed.
+
+* We now support focus-checking multiple files. You can use it to debug issues
+  easier and faster by telling Flow to focus on files of interest.
+
+* This release also includes lots of improvements to core type
+  definitions. Thanks for your contributions!
+
 ### 0.52.0
 
 New Features:

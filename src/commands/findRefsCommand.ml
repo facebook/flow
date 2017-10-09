@@ -1,12 +1,9 @@
 (**
  * Copyright (c) 2014, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
-*)
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *)
 
 (***********************************************************************)
 (* flow find-refs command *)
@@ -31,6 +28,7 @@ let spec = {
     |> root_flag
     |> json_flags
     |> strip_root_flag
+    |> from_flag
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
     |> anon "args" (required (list_of string))
@@ -60,7 +58,8 @@ let parse_args path args =
    - path is a user-specified path to use as incoming content source path
    - args is mandatory command args; see parse_args above
     *)
-let main option_values root json pretty strip_root path args () =
+let main option_values root json pretty strip_root from path args () =
+  FlowEventLogger.set_from from;
   let (file, line, column) = parse_args path args in
   let root = guess_root (
     match root with

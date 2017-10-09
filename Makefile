@@ -17,7 +17,7 @@ else
   UNAME_S=$(shell uname -s)
 endif
 
--include facebook/Makefile
+-include facebook/Makefile.defs
 
 ################################################################################
 #                              OS-dependent stuff                              #
@@ -86,6 +86,7 @@ MODULES=\
   src/services/port\
   src/services/type_info\
   src/third-party/lz4\
+  src/third-party/wtf8\
   src/typing\
   hack/dfind\
   hack/find\
@@ -98,6 +99,7 @@ MODULES=\
   hack/third-party/avl\
   hack/third-party/core\
   hack/utils\
+  hack/utils/build_mode/prod\
   hack/utils/collections\
   hack/utils/disk\
   hack/utils/hh_json\
@@ -135,6 +137,9 @@ OCP_BUILD_FILES=\
 
 COPIED_FLOWLIB=\
 	$(foreach lib,$(wildcard lib/*.js),_build/$(lib))
+
+COPIED_PRELUDE=\
+	$(foreach lib,$(wildcard prelude/*.js),_build/$(lib))
 
 JS_STUBS=\
 	$(wildcard js/*.js)
@@ -198,7 +203,7 @@ clean-ocp: clean
 	[ -d _obuild ] && ocp-build clean || true
 	rm -f $(OCP_BUILD_FILES)
 
-build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
+build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
 	ocamlbuild \
 		-use-ocamlfind -pkgs sedlex \
 		-no-links  $(INCLUDE_OPTS) $(LIB_OPTS) \
@@ -213,6 +218,7 @@ build-flow-with-ocp: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
 	[ -d _obuild ] || ocp-build init
 	 # Force us to pick up libdef changes - ocp-build is fast so it's fine
 	rm -rf _obuild/flow-flowlib
+	rm -rf _obuild/flow-prelude
 	ocp-build build flow
 	mkdir -p bin
 	cp _obuild/flow/flow.asm$(EXE) bin/flow$(EXE)
@@ -228,7 +234,7 @@ test-parser-ocp: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
 	ocp-build tests flow-parser-hardcoded-test
 	rm -f $(OCP_BUILD_FILES)
 
-build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB)
+build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
 	ocamlbuild \
 		-use-ocamlfind -pkgs sedlex \
 		-no-links $(INCLUDE_OPTS) $(LIB_OPTS) \
@@ -260,6 +266,11 @@ $(COPIED_FLOWLIB): _build/%.js: %.js
 	cp $< $@
 	rm -rf _build/src/flowlib
 
+$(COPIED_PRELUDE): _build/%.js: %.js
+	mkdir -p $(dir $@)
+	cp $< $@
+	rm -rf _build/src/prelude
+
 _build/scripts/ppx_gen_flowlibs.native: scripts/ppx_gen_flowlibs.ml
 	ocamlbuild \
 		-use-ocamlfind -pkgs sedlex,compiler-libs.common,unix \
@@ -278,7 +289,14 @@ copy-flow-files-ocp: build-flow-with-ocp
 do-test:
 	./runtests.sh bin/flow$(EXE)
 	bin/flow$(EXE) check
+	${MAKE} do-test-tool
 	./tool test
+
+do-test-tool:
+	FLOW_BIN=bin/flow ./node_modules/.bin/jest --config .jest-tool.config.js
+
+test-tool: build-flow copy-flow-files
+	${MAKE} do-test-tool
 
 test: build-flow copy-flow-files
 	${MAKE} do-test
@@ -344,3 +362,5 @@ flow.docdir/index.html: flow.odocl
 	ocamlbuild $(INCLUDE_OPTS) -use-ocamlfind flow.docdir/index.html
 
 doc: flow.docdir/index.html
+
+-include facebook/Makefile

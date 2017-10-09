@@ -243,7 +243,7 @@
   "type":"E<number>",
   "reasons":[
     {
-      "desc":"type application of polymorphic type: type `E`",
+      "desc":"type application of polymorphic type: E",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
@@ -273,7 +273,7 @@
   "type":"F<number>",
   "reasons":[
     {
-      "desc":"type application of polymorphic type: type `F`",
+      "desc":"type application of polymorphic type: F",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
@@ -303,7 +303,7 @@
   "type":"O<number>",
   "reasons":[
     {
-      "desc":"type application of polymorphic type: type `O`",
+      "desc":"type application of polymorphic type: O",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
@@ -333,7 +333,7 @@
   "type":"(unknown)",
   "reasons":[
     {
-      "desc":"type application of type `Mono`",
+      "desc":"type application of Mono",
       "loc":{
         "source":"generics.js",
         "type":"SourceFile",
@@ -555,7 +555,7 @@
   "end":10
 }
 function_expression.js:9:5 = {
-  "type":"{bar(): void}",
+  "type":"{bar: () => void}",
   "reasons":[],
   "loc":{
     "source":"function_expressions.js",
@@ -600,7 +600,7 @@ function_expression.js:13:5 = {
   "end":1
 }
 function_expression.js:17:3 = {
-  "type":"{m<T>(x: T): T}",
+  "type":"{m: <T>(x: T) => T}",
   "reasons":[],
   "loc":{
     "source":"function_expressions.js",
@@ -763,4 +763,64 @@ object_special_cases.js:6:32 = {
   "endline":6,
   "start":30,
   "end":34
+}
+mixed.js:18:17 = {
+  "type":"{kind: 'A', metadata: {[key: string]: mixed,}} | {kind: 'B', metadata: {[key: string]: mixed,}}",
+  "reasons":[
+    {
+      "desc":"union type",
+      "loc":{
+        "source":"mixed.js",
+        "type":"SourceFile",
+        "start":{"line":18,"column":17,"offset":220},
+        "end":{"line":18,"column":18,"offset":222}
+      },
+      "path":"mixed.js",
+      "line":18,
+      "endline":18,
+      "start":17,
+      "end":18
+    }
+  ],
+  "loc":{
+    "source":"mixed.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":17,"offset":220},
+    "end":{"line":18,"column":18,"offset":222}
+  },
+  "path":"mixed.js",
+  "line":18,
+  "endline":18,
+  "start":17,
+  "end":18
+}
+array.js:6:15 = {
+  "type":"Array<{|+nums: number|}>",
+  "reasons":[],
+  "loc":{
+    "source":"array.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":14,"offset":123},
+    "end":{"line":6,"column":25,"offset":135}
+  },
+  "path":"array.js",
+  "line":6,
+  "endline":6,
+  "start":14,
+  "end":25
+}
+array.js:10:15 = {
+  "type":"$ReadOnlyArray<{|+nums: number|}>",
+  "reasons":[],
+  "loc":{
+    "source":"array.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":14,"offset":165},
+    "end":{"line":10,"column":33,"offset":185}
+  },
+  "path":"array.js",
+  "line":10,
+  "endline":10,
+  "start":14,
+  "end":33
 }

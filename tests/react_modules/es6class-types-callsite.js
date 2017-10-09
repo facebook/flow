@@ -5,15 +5,13 @@ import type {Node} from 'react';
 
 type Props = {name: string};
 
-class HelloLocal extends React.Component<void, Props, void> {
-  props: Props;
-
+class HelloLocal extends React.Component<Props> {
   render(): Node {
     return <div>{this.props.name}</div>;
   }
 }
 
-class Callsite extends React.Component<void, Props, void> {
+class Callsite extends React.Component<Props> {
   render(): Node {
     return (
       <div>

@@ -58,8 +58,8 @@ Nested functions:
   {
     "source":"locals.js",
     "type":"SourceFile",
-    "start":{"line":10,"column":1,"offset":109},
-    "end":{"line":14,"column":1,"offset":159}
+    "start":{"line":10,"column":10,"offset":118},
+    "end":{"line":10,"column":12,"offset":121}
   },
   {
     "source":"locals.js",
@@ -72,8 +72,8 @@ Nested functions:
   {
     "source":"locals.js",
     "type":"SourceFile",
-    "start":{"line":11,"column":3,"offset":128},
-    "end":{"line":12,"column":3,"offset":148}
+    "start":{"line":11,"column":12,"offset":137},
+    "end":{"line":11,"column":14,"offset":140}
   },
   {
     "source":"locals.js",
@@ -102,28 +102,6 @@ Classes:
     "type":"SourceFile",
     "start":{"line":20,"column":17,"offset":214},
     "end":{"line":20,"column":17,"offset":215}
-  }
-]
-
-Type aliases:
-[
-  {
-    "source":"locals.js",
-    "type":"SourceFile",
-    "start":{"line":23,"column":6,"offset":242},
-    "end":{"line":23,"column":6,"offset":243}
-  },
-  {
-    "source":"locals.js",
-    "type":"SourceFile",
-    "start":{"line":24,"column":10,"offset":263},
-    "end":{"line":24,"column":10,"offset":264}
-  },
-  {
-    "source":"locals.js",
-    "type":"SourceFile",
-    "start":{"line":25,"column":6,"offset":271},
-    "end":{"line":25,"column":6,"offset":272}
   }
 ]
 
@@ -347,80 +325,6 @@ Destructuring:
   }
 ]
 
-Not in scope:
-[
-  {
-    "source":"locals.js",
-    "type":"SourceFile",
-    "start":{"line":41,"column":1,"offset":540},
-    "end":{"line":41,"column":4,"offset":544}
-  },
-  {
-    "source":"locals.js",
-    "type":"SourceFile",
-    "start":{"line":42,"column":1,"offset":546},
-    "end":{"line":42,"column":4,"offset":550}
-  }
-]
-[
-  {
-    "source":"locals.js",
-    "type":"SourceFile",
-    "start":{"line":41,"column":1,"offset":540},
-    "end":{"line":41,"column":4,"offset":544}
-  },
-  {
-    "source":"locals.js",
-    "type":"SourceFile",
-    "start":{"line":42,"column":1,"offset":546},
-    "end":{"line":42,"column":4,"offset":550}
-  }
-]
-[
-  {
-    "source":"locals.js",
-    "type":"SourceFile",
-    "start":{"line":42,"column":8,"offset":553},
-    "end":{"line":42,"column":11,"offset":557}
-  },
-  {
-    "source":"locals.js",
-    "type":"SourceFile",
-    "start":{"line":43,"column":1,"offset":559},
-    "end":{"line":43,"column":4,"offset":563}
-  }
-]
-[
-  {
-    "source":"locals.js",
-    "type":"SourceFile",
-    "start":{"line":42,"column":8,"offset":553},
-    "end":{"line":42,"column":11,"offset":557}
-  },
-  {
-    "source":"locals.js",
-    "type":"SourceFile",
-    "start":{"line":43,"column":1,"offset":559},
-    "end":{"line":43,"column":4,"offset":563}
-  }
-]
-
-JSX:
-[
-  {
-    "source":"locals.js",
-    "type":"SourceFile",
-    "start":{"line":47,"column":7,"offset":609},
-    "end":{"line":47,"column":11,"offset":614}
-  },
-  {
-    "source":"locals.js",
-    "type":"SourceFile",
-    "start":{"line":50,"column":1,"offset":667},
-    "end":{"line":50,"column":12,"offset":679}
-  }
-]
-
 Imports:
 [
   {
@@ -436,39 +340,33 @@ Imports:
     "end":{"line":55,"column":5,"offset":767}
   }
 ]
+
+Exports:
 [
   {
     "source":"locals.js",
     "type":"SourceFile",
-    "start":{"line":54,"column":15,"offset":739},
-    "end":{"line":54,"column":18,"offset":743}
+    "start":{"line":61,"column":14,"offset":846},
+    "end":{"line":61,"column":26,"offset":859}
   },
   {
     "source":"locals.js",
     "type":"SourceFile",
-    "start":{"line":55,"column":8,"offset":769},
-    "end":{"line":55,"column":11,"offset":773}
+    "start":{"line":64,"column":13,"offset":922},
+    "end":{"line":64,"column":25,"offset":935}
   }
 ]
-
-Qualified types:
 [
   {
     "source":"locals.js",
     "type":"SourceFile",
-    "start":{"line":46,"column":5,"offset":577},
-    "end":{"line":46,"column":9,"offset":582}
+    "start":{"line":62,"column":17,"offset":881},
+    "end":{"line":62,"column":32,"offset":897}
   },
   {
     "source":"locals.js",
     "type":"SourceFile",
-    "start":{"line":47,"column":21,"offset":623},
-    "end":{"line":47,"column":25,"offset":628}
-  },
-  {
-    "source":"locals.js",
-    "type":"SourceFile",
-    "start":{"line":58,"column":8,"offset":803},
-    "end":{"line":58,"column":12,"offset":808}
+    "start":{"line":65,"column":1,"offset":938},
+    "end":{"line":65,"column":16,"offset":954}
   }
 ]

@@ -1,0 +1,242 @@
+Error: Profile.js:19
+ 19:     (this.props.foo: empty); // Error: number ~> empty
+          ^^^^^^^^^^^^^^ number. This type is incompatible with
+ 19:     (this.props.foo: empty); // Error: number ~> empty
+                          ^^^^^ empty
+
+Error: Profile.js:20
+ 20:     (this.props.user.id: empty); // Error: string ~> empty
+          ^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 20:     (this.props.user.id: empty); // Error: string ~> empty
+                              ^^^^^ empty
+
+Error: Profile.js:21
+ 21:     (this.props.user.name: empty); // Error: string ~> empty
+          ^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 21:     (this.props.user.name: empty); // Error: string ~> empty
+                                ^^^^^ empty
+
+Error: Profile.js:22
+ 22:     (this.props.user.pic.id: empty); // Error: string ~> empty
+          ^^^^^^^^^^^^^^^^^^^^^^ property `id`. Property cannot be accessed on any member of intersection type
+ 22:     (this.props.user.pic.id: empty); // Error: string ~> empty
+          ^^^^^^^^^^^^^^^^^^^ intersection
+  Member 1:
+   17:     +pic: ProfilePic_imageRef & {|
+                 ^^^^^^^^^^^^^^^^^^^ ProfilePic_imageRef. See: Profile.graphql.js:17
+  Error:
+   22:     (this.props.user.pic.id: empty); // Error: string ~> empty
+                                ^^ property `id`. Property cannot be accessed on
+   17:     +pic: ProfilePic_imageRef & {|
+                 ^^^^^^^^^^^^^^^^^^^ ProfilePic_imageRef. See: Profile.graphql.js:17
+  Member 2:
+                                       v-
+   17:     +pic: ProfilePic_imageRef & {|
+   18:       +id: string,
+   19:     |},
+           -^ exact type: object type. See: Profile.graphql.js:17
+  Error:
+   22:     (this.props.user.pic.id: empty); // Error: string ~> empty
+            ^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+   22:     (this.props.user.pic.id: empty); // Error: string ~> empty
+                                    ^^^^^ empty
+
+Error: Profile.js:23
+ 23:     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `ProfilePic`. This type is incompatible with the expected param type of
+ 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
+  Property `image` is incompatible:
+     23:     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ProfilePic_imageRef. See: Relay.js:46
+
+Error: ProfilePic.js:17
+ 17:     (this.props.image.url: empty); // Error: string ~> empty
+          ^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 17:     (this.props.image.url: empty); // Error: string ~> empty
+                                ^^^^^ empty
+
+Error: main.js:15
+ 15: <Profile user={userRef} />; // Error: Missing foo
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `Profile`
+ 15: <Profile user={userRef} />; // Error: Missing foo
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
+ 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
+  Property `foo` is incompatible:
+     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in. See: Relay.js:46
+     15: <Profile user={userRef} />; // Error: Missing foo
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`
+
+Error: main.js:15
+ 15: <Profile user={userRef} />; // Error: Missing foo
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `Profile`
+ 15: <Profile user={userRef} />; // Error: Missing foo
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with the expected param type of
+ 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
+  Property `foo` is incompatible:
+     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in. See: Relay.js:46
+     15: <Profile user={userRef} />; // Error: Missing foo
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`
+
+Error: main.js:16
+ 16: <Profile foo={42} />; // Error: Missing user
+     ^^^^^^^^^^^^^^^^^^^^ React element `Profile`
+ 16: <Profile foo={42} />; // Error: Missing user
+     ^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
+ 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
+  Property `user` is incompatible:
+     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `user`. Property not found in. See: Relay.js:46
+     16: <Profile foo={42} />; // Error: Missing user
+         ^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`
+
+Error: main.js:16
+ 16: <Profile foo={42} />; // Error: Missing user
+     ^^^^^^^^^^^^^^^^^^^^ React element `Profile`
+ 16: <Profile foo={42} />; // Error: Missing user
+     ^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with the expected param type of
+ 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
+  Property `user` is incompatible:
+     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `user`. Property not found in. See: Relay.js:46
+     16: <Profile foo={42} />; // Error: Missing user
+         ^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`
+
+Error: main.js:17
+ 17: <Profile user={userRef} foo="bar" />; // Error: string ~> number
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with the expected param type of
+ 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
+  Property `foo` is incompatible:
+     17: <Profile user={userRef} foo="bar" />; // Error: string ~> number
+                                     ^^^^^ string. This type is incompatible with
+     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. See: Relay.js:46
+
+Error: main.js:18
+ 18: <Profile />; // Error: Missing user and foo
+     ^^^^^^^^^^^ React element `Profile`
+ 18: <Profile />; // Error: Missing user and foo
+     ^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
+ 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
+  Property `foo` is incompatible:
+     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in. See: Relay.js:46
+     18: <Profile />; // Error: Missing user and foo
+         ^^^^^^^^^^^ props of React element `Profile`
+
+Error: main.js:18
+ 18: <Profile />; // Error: Missing user and foo
+     ^^^^^^^^^^^ React element `Profile`
+ 18: <Profile />; // Error: Missing user and foo
+     ^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with
+ 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
+  Property `user` is incompatible:
+     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `user`. Property not found in. See: Relay.js:46
+     18: <Profile />; // Error: Missing user and foo
+         ^^^^^^^^^^^ props of React element `Profile`
+
+Error: main.js:18
+ 18: <Profile />; // Error: Missing user and foo
+     ^^^^^^^^^^^ React element `Profile`
+ 18: <Profile />; // Error: Missing user and foo
+     ^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with the expected param type of
+ 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
+  Property `foo` is incompatible:
+     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `foo`. Property not found in. See: Relay.js:46
+     18: <Profile />; // Error: Missing user and foo
+         ^^^^^^^^^^^ props of React element `Profile`
+
+Error: main.js:18
+ 18: <Profile />; // Error: Missing user and foo
+     ^^^^^^^^^^^ React element `Profile`
+ 18: <Profile />; // Error: Missing user and foo
+     ^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with the expected param type of
+ 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
+  Property `user` is incompatible:
+     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `user`. Property not found in. See: Relay.js:46
+     18: <Profile />; // Error: Missing user and foo
+         ^^^^^^^^^^^ props of React element `Profile`
+
+Error: main.js:19
+ 19: <Profile user={user} foo={42} />; // Error: You must pass in a ref
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with the expected param type of
+ 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
+  Property `user` is incompatible:
+           v-
+     13:   {|
+     14:     +$$typeof: Relay.$$TypeofFragment,
+     15:     +id: string,
+    ...:
+     20:   |},
+           -^ object type. This type is incompatible with. See: Profile.graphql.js:13
+     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Profile_userRef. See: Relay.js:46
+
+Error: main.js:20
+ 20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with the expected param type of
+ 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
+  Property `foo` is incompatible:
+     20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
+                                  ^^^^^ string. This type is incompatible with
+     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. See: Relay.js:46
+
+Error: main.js:20
+ 20: <Profile user={user} foo="bar" />; // Error: You must pass in a ref and string ~> number
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with the expected param type of
+ 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
+  Property `user` is incompatible:
+           v-
+     13:   {|
+     14:     +$$typeof: Relay.$$TypeofFragment,
+     15:     +id: string,
+    ...:
+     20:   |},
+           -^ object type. This type is incompatible with. See: Profile.graphql.js:13
+     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Profile_userRef. See: Relay.js:46
+
+Error: main.js:21
+ 21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with the expected param type of
+ 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
+  Property `foo` is incompatible:
+     21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
+                                                   ^^^^^ mixed. This type is incompatible with
+     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. See: Relay.js:46
+
+Error: main.js:21
+ 21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `Profile`. This type is incompatible with the expected param type of
+ 46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: Relay.js:46
+  Property `user` is incompatible:
+     21: <Profile user={(null: mixed)} foo={(null: mixed)} />; // Error: mixed ~> ref and mixed ~> number
+                               ^^^^^ mixed. This type is incompatible with
+     46: ): React.ComponentType<$ObjMap<Props, GetPropFragmentRef>> {
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Profile_userRef. See: Relay.js:46
+
+
+Found 20 errors

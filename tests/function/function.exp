@@ -6,8 +6,6 @@ Error: apply.js:2
 
 Error: apply.js:12
  12: test.apply("", [""]); // error: void ~> number
-     ^^^^^^^^^^^^^^^^^^^^ call of method `apply`
- 12: test.apply("", [""]); // error: void ~> number
      ^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
   1: function test(a: string, b: number): number {
                                  ^^^^^^ number
@@ -41,8 +39,8 @@ Error: apply.js:25
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
   1: function test(a: string, b: number): number {
                                  ^^^^^^ number. This type is incompatible with
-291:     @@iterator(): Iterator<string>;
-                                ^^^^^^ string. See lib: <BUILTINS>/core.js:291
+288:     @@iterator(): Iterator<string>;
+                                ^^^^^^ string. See lib: <BUILTINS>/core.js:288
 
 Error: apply.js:32
  32: (test.call.apply(test, [0, 123, 'foo']): void);
@@ -106,8 +104,6 @@ Error: call.js:4
 
 Error: call.js:14
  14: test.call("", ""); // error: void ~> number
-     ^^^^^^^^^^^^^^^^^ call of method `call`
- 14: test.call("", ""); // error: void ~> number
      ^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
   3: function test(a: string, b: number): number {
                                  ^^^^^^ number
@@ -153,6 +149,43 @@ Error: call.js:40
                         ^^^ number. This type is incompatible with the expected param type of
  38: function test3(x: { (a: string, b: string): void }) {
                                         ^^^^^^ string
+
+Error: call.js:47
+ 47:     f({x: "foo"}); // error, "foo" !~> "bar"
+           ^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
+ 46:     function f(y: { x: "bar" }): void {}
+                       ^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     47:     f({x: "foo"}); // error, "foo" !~> "bar"
+                   ^^^^^ string. Expected string literal `bar`, got `foo` instead
+     46:     function f(y: { x: "bar" }): void {}
+                                ^^^^^ string literal `bar`
+
+Error: call.js:53
+ 53:     f({x: 234}); // error, 234 !~> 123
+           ^^^^^^^^ object literal. This type is incompatible with the expected param type of
+ 52:     function f(y: { x: 123 }): void {}
+                       ^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     53:     f({x: 234}); // error, 234 !~> 123
+                   ^^^ number. Expected number literal `123`, got `234` instead
+     52:     function f(y: { x: 123 }): void {}
+                                ^^^ number literal `123`
+
+Error: call.js:59
+ 59:     f({x: true}); // error, true !~> false
+           ^^^^^^^^^ object literal. This type is incompatible with the expected param type of
+ 58:     function f(y: { x: false }): void {}
+                       ^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     59:     f({x: true}); // error, true !~> false
+                   ^^^^ boolean. Expected boolean literal `false`, got `true` instead
+     58:     function f(y: { x: false }): void {}
+                                ^^^^^ boolean literal `false`
+
+Error: function.js:21
+ 21:   <MyThing />;
+       ^^^^^^^^^^^ identifier `React`. Could not resolve name
 
 Error: function.js:29
  29:   var a: number = x; // Error
@@ -211,20 +244,16 @@ Error: function.js:43
 Error: function.js:48
  48:     x.length = 'foo'; // error, it's a number
                     ^^^^^ string. This type is incompatible with
-102:     length: number;
-                 ^^^^^^ number. See lib: <BUILTINS>/core.js:102
+ 48:     x.length = 'foo'; // error, it's a number
+         ^^^^^^^^ number
 
 Error: function.js:49
- 49:     y.length = 'foo'; // error, it's a number
-         ^^^^^^^^ assignment of property `length`
  49:     y.length = 'foo'; // error, it's a number
                     ^^^^^ string. This type is incompatible with
  49:     y.length = 'foo'; // error, it's a number
          ^^^^^^^^ number
 
 Error: function.js:50
- 50:     z.length = 'foo'; // error, it's a number
-         ^^^^^^^^ assignment of property `length`
  50:     z.length = 'foo'; // error, it's a number
                     ^^^^^ string. This type is incompatible with
  50:     z.length = 'foo'; // error, it's a number
@@ -233,20 +262,16 @@ Error: function.js:50
 Error: function.js:52
  52:     x.name = 123; // error, it's a string
                   ^^^ number. This type is incompatible with
-103:     name: string;
-               ^^^^^^ string. See lib: <BUILTINS>/core.js:103
+ 52:     x.name = 123; // error, it's a string
+         ^^^^^^ string
 
 Error: function.js:53
- 53:     y.name = 123; // error, it's a string
-         ^^^^^^ assignment of property `name`
  53:     y.name = 123; // error, it's a string
                   ^^^ number. This type is incompatible with
  53:     y.name = 123; // error, it's a string
          ^^^^^^ string
 
 Error: function.js:54
- 54:     z.name = 123; // error, it's a string
-         ^^^^^^ assignment of property `name`
  54:     z.name = 123; // error, it's a string
                   ^^^ number. This type is incompatible with
  54:     z.name = 123; // error, it's a string
@@ -270,11 +295,16 @@ Error: rest.js:53
  53: (empty_rest(): empty); // Error Array ~> empty
                     ^^^^^ empty
 
-Error: rest.js:59
- 59:     return args; // Error: Array ~> number
-                ^^^^ rest parameter array of function type. This type is incompatible with the expected return type of
+Error: rest.js:58
+ 58:   return function(...args) {
+              ^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected return type of
  57: ): (...args: Args) => number {
-                           ^^^^^^ number
+        ^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+  This parameter is incompatible:
+     59:     return args; // Error: Array ~> number
+                    ^^^^ rest parameter array of function type. This type is incompatible with
+     57: ): (...args: Args) => number {
+                               ^^^^^^ number
 
 Error: rest.js:64
  64: requires_first_param(); // Error: missing first arg
@@ -315,4 +345,4 @@ Error: rest_type.js:31
                                ^^^^^ empty
 
 
-Found 49 errors
+Found 53 errors

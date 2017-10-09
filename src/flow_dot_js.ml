@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 let parse_content file content =
@@ -23,9 +20,6 @@ let parse_content file content =
     use_strict = false;
   }) in
   Parser_flow.program_file ~fail:false ~parse_options content (Some file)
-
-let calc_requires ast =
-  Require.program ~default_jsx:true ~ast
 
 let array_of_list f lst =
   Array.of_list (List.map f lst)
@@ -57,11 +51,11 @@ let load_lib_files ~master_cx ~metadata files
 
     fun (exclude_syms, result) file ->
       let lib_content = Sys_utils.cat file in
-      let lib_file = Loc.LibFile file in
+      let lib_file = File_key.LibFile file in
       match parse_content lib_file lib_content with
       | ast, [] ->
         let cx, syms = Type_inference_js.infer_lib_file
-          ~metadata ~exclude_syms ~lint_settings:None
+          ~metadata ~exclude_syms ~lint_severities:None
           lib_file ast
         in
 
@@ -87,11 +81,18 @@ let load_lib_files ~master_cx ~metadata files
 
   in result
 
+let stub_docblock = { Docblock.
+  flow = None;
+  preventMunge = None;
+  providesModule = None;
+  isDeclarationFile = false;
+  jsx = None;
+}
+
 let stub_metadata ~root ~checked = { Context.
   local_metadata = { Context.
     checked;
     munge_underscores = false;
-    output_graphml = false;
     verbose = None;
     weak = false;
     jsx = None;
@@ -124,7 +125,7 @@ let get_master_cx =
     | None ->
       let cx = Flow_js.fresh_context
         (stub_metadata ~root ~checked:false)
-        Loc.Builtins
+        File_key.Builtins
         Files.lib_module_ref in
       master_cx := Some (root, cx);
       cx
@@ -133,7 +134,7 @@ let set_libs filenames =
   let root = Path.dummy_path in
   let master_cx = get_master_cx root in
   let metadata = stub_metadata ~root ~checked:true in
-  let _: (Loc.filename * bool) list = load_lib_files
+  let _: (File_key.t * bool) list = load_lib_files
     ~master_cx
     ~metadata
     filenames
@@ -146,38 +147,39 @@ let set_libs filenames =
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Flow_js.mk_object master_cx reason in
   Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
-  Merge_js.ContextOptimizer.sig_context [master_cx]
+  Merge_js.ContextOptimizer.sig_context master_cx [Files.lib_module_ref]
+
+let infer_and_merge ~root filename ast =
+  (* this is a VERY pared-down version of Merge_service.merge_strict_context.
+     it relies on the JS version only supporting libs + 1 file, so every
+     module you can require() must come from a lib; this skips resolving
+     module names and just adds them all to the `decls` list. *)
+  Flow_js.Cache.clear();
+  let metadata = stub_metadata ~root ~checked:true in
+  let master_cx = get_master_cx root in
+  let file_sig = File_sig.program ~ast in
+  let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
+  let decls = SMap.fold (fun module_name loc ->
+    List.cons (module_name, loc, Modulename.String module_name, filename)
+  ) require_loc_map [] in
+  let reqs = Merge_js.Reqs.({ empty with decls }) in
+  let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
+  Merge_js.merge_component_strict
+    ~metadata ~lint_severities:None ~file_sigs
+    ~get_ast_unsafe:(fun _ -> ast)
+    ~get_docblock_unsafe:(fun _ -> stub_docblock)
+    [filename] reqs [] master_cx
 
 let check_content ~filename ~content =
   let stdin_file = Some (Path.make_unsafe filename, content) in
   let root = Path.dummy_path in
-  let filename = Loc.SourceFile filename in
+  let filename = File_key.SourceFile filename in
   let errors, warnings = match parse_content filename content with
   | ast, [] ->
-    (* defaults *)
-    let metadata = stub_metadata ~root ~checked:true in
-
-    Flow_js.Cache.clear();
-
-    let require_loc_map = calc_requires ast in
-    let cx =
-      Type_inference_js.infer_ast ~metadata ~filename ~lint_settings:None ast ~require_loc_map in
-
-    (* this is a VERY pared-down version of Merge_service.merge_strict_context.
-       it relies on the JS version only supporting libs + 1 file, so every
-       module you can require() must come from a lib; this skips resolving
-       module names and just adds them all to the `decls` list. *)
-    let decls = SMap.fold (fun module_name loc acc ->
-      (module_name, loc, Modulename.String module_name, cx) :: acc
-    ) require_loc_map [] in
-    let reqs = Merge_js.Reqs.({empty with decls}) in
-
-    let master_cx = get_master_cx root in
-    Merge_js.merge_component_strict reqs [cx] [] master_cx;
-
+    let cx = infer_and_merge ~root filename ast in
     (* Perform a basic suppression step, to eliminate lints from playground output. *)
     let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
-      Error_suppressions.empty (LintSettingsMap.default_settings filename) (Context.errors cx)
+      Error_suppressions.empty (ExactCover.default_file_cover filename) (Context.errors cx)
     in errors, warnings
   | _, parse_errors ->
     let errors = List.fold_left (fun acc parse_error ->
@@ -217,18 +219,11 @@ let mk_loc file line col =
   }
 
 let infer_type filename content line col =
-    let filename = Loc.SourceFile filename in
+    let filename = File_key.SourceFile filename in
     let root = Path.dummy_path in
     match parse_content filename content with
     | ast, [] ->
-      (* defaults *)
-      let metadata = stub_metadata ~root ~checked:true in
-
-      Flow_js.Cache.clear();
-
-      let require_loc_map = calc_requires ast in
-      let cx =
-        Type_inference_js.infer_ast ~metadata ~filename ~lint_settings:None ast ~require_loc_map in
+      let cx = infer_and_merge ~root filename ast in
       let loc = mk_loc filename line col in
       let loc, ground_t, possible_ts = Query_types.(match query_type cx loc with
         | FailureNoMatch -> Loc.none, None, []
@@ -250,26 +245,47 @@ let infer_type filename content line col =
       (None, Some (loc, ty, raw_type, reasons))
     | _, _ -> failwith "parse error"
 
+let types_to_json types ~strip_root =
+  let open Hh_json in
+  let open Reason in
+  let types_json = types |> List.map (fun (loc, _ctor, str, raw_t, reasons) ->
+    let json_assoc = (
+      ("type", JSON_String str) ::
+      ("reasons", JSON_Array (List.map (fun r ->
+        let r_loc = loc_of_reason r in
+        let r_def_loc = def_loc_of_reason r in
+        JSON_Object (
+          ("desc", JSON_String (string_of_desc (desc_of_reason r))) ::
+          ("loc", json_of_loc ~strip_root r_loc) ::
+          ((if r_def_loc = r_loc then [] else [
+            "def_loc", json_of_loc ~strip_root r_def_loc
+          ]) @ (Errors.deprecated_json_props_of_loc ~strip_root r_loc))
+        )
+      ) reasons)) ::
+      ("loc", json_of_loc ~strip_root loc) ::
+      (Errors.deprecated_json_props_of_loc ~strip_root loc)
+    ) in
+    let json_assoc = match raw_t with
+      | None -> json_assoc
+      | Some raw_t -> ("raw_type", JSON_String raw_t) :: json_assoc
+    in
+    JSON_Object json_assoc
+  ) in
+  JSON_Array types_json
+
 let dump_types js_file js_content =
-    let filename = Loc.SourceFile (Js.to_string js_file) in
+    let filename = File_key.SourceFile (Js.to_string js_file) in
     let root = Path.dummy_path in
     let content = Js.to_string js_content in
     match parse_content filename content with
     | ast, [] ->
-      (* defaults *)
-      let metadata = stub_metadata ~root ~checked:true in
-
-      Flow_js.Cache.clear();
-
-      let require_loc_map = calc_requires ast in
-      let cx =
-        Type_inference_js.infer_ast ~metadata ~filename ~lint_settings:None ast ~require_loc_map in
+      let cx = infer_and_merge ~root filename ast in
       let printer = Type_printer.string_of_t in
       let raw_printer _ _ = None in
       let types = Query_types.dump_types printer raw_printer cx in
 
       let strip_root = None in
-      let types_json = DumpTypesCommand.types_to_json types ~strip_root in
+      let types_json = types_to_json types ~strip_root in
 
       js_of_json types_json
     | _, _ -> failwith "parse error"

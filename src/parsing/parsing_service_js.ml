@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -16,7 +13,7 @@ exception Docblock_not_found of string
 exception Requires_not_found of string
 
 type result =
-  | Parse_ok of Ast.program
+  | Parse_ok of Loc.t Ast.program
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -41,10 +38,10 @@ type results = {
   parse_ok: FilenameSet.t;
 
   (* list of skipped files *)
-  parse_skips: (filename * Docblock.t) list;
+  parse_skips: (File_key.t * Docblock.t) list;
 
   (* list of failed files *)
-  parse_fails: (filename * Docblock.t * parse_failure) list;
+  parse_fails: (File_key.t * Docblock.t * parse_failure) list;
 }
 
 let empty_result = {
@@ -56,50 +53,50 @@ let empty_result = {
 (**************************** internal *********************************)
 
 (* shared heap for parsed ASTs by filename *)
-module ASTHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
-    type t = Ast.program
+module ASTHeap = SharedMem_js.WithCache (File_key) (struct
+    type t = Loc.t Ast.program
     let prefix = Prefix.make()
     let description = "AST"
 end)
 
-module DocblockHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
+module DocblockHeap = SharedMem_js.WithCache (File_key) (struct
     type t = Docblock.t
     let prefix = Prefix.make()
     let description = "Docblock"
 end)
 
-module RequiresHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
-    type t = Loc.t SMap.t
+module FileSigHeap = SharedMem_js.WithCache (File_key) (struct
+    type t = File_sig.t
     let prefix = Prefix.make()
     let description = "Requires"
 end)
 
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
-  let add file ast info require_loc =
+  let add file ast info file_sig =
     ASTHeap.add file ast;
     DocblockHeap.add file info;
-    RequiresHeap.add file require_loc
+    FileSigHeap.add file file_sig
 
   let oldify_batch files =
     ASTHeap.oldify_batch files;
     DocblockHeap.oldify_batch files;
-    RequiresHeap.oldify_batch files
+    FileSigHeap.oldify_batch files
 
   let remove_batch files =
     ASTHeap.remove_batch files;
     DocblockHeap.remove_batch files;
-    RequiresHeap.remove_batch files
+    FileSigHeap.remove_batch files
 
   let remove_old_batch files =
     ASTHeap.remove_old_batch files;
     DocblockHeap.remove_old_batch files;
-    RequiresHeap.remove_old_batch files
+    FileSigHeap.remove_old_batch files
 
   let revive_batch files =
     ASTHeap.revive_batch files;
     DocblockHeap.revive_batch files;
-    RequiresHeap.revive_batch files
+    FileSigHeap.revive_batch files
 end
 
 (* TODO: add TypesForbidden (disables types even on files with @flow) and
@@ -162,7 +159,7 @@ let parse_json_file ~fail content file =
       directive = None;
     }
   in
-  let comments = ([]: Comment.t list) in
+  let comments = ([]: Loc.t Comment.t list) in
   (loc, [statement], comments)
 
 (* Avoid lexing unbounded in perverse cases *)
@@ -302,7 +299,7 @@ let extract_docblock =
     let lb =
       try Sedlexing.Utf8.from_string content
       with Sedlexing.MalFormed ->
-        Hh_logger.warn "File %s is malformed" (Loc.string_of_filename filename);
+        Hh_logger.warn "File %s is malformed" (File_key.to_string filename);
         Sedlexing.Utf8.from_string "" in
     let env =
       Lex_env.new_lex_env (Some filename) lb ~enable_types_in_comments:false in
@@ -325,7 +322,7 @@ let extract_docblock =
           Some (map_n string_of_comment (max_tokens - i) comments)
       else None in
     let info =
-      let filename_str = Loc.string_of_filename filename in
+      let filename_str = File_key.to_string filename in
       if Filename.check_suffix filename_str Files.flow_ext
       then { default_info with isDeclarationFile = true; }
       else default_info in
@@ -340,8 +337,8 @@ let get_docblock
   ~max_tokens file content
 : docblock_error list * Docblock.t =
   match file with
-  | Loc.ResourceFile _
-  | Loc.JsonFile _ -> [], Docblock.default_info
+  | File_key.ResourceFile _
+  | File_key.JsonFile _ -> [], Docblock.default_info
   | _ -> extract_docblock ~max_tokens file content
 
 (* Allow types based on `types_mode`, using the @flow annotation in the
@@ -360,9 +357,9 @@ let types_checked types_mode info =
 let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
   try (
     match file with
-    | Loc.JsonFile _ ->
+    | File_key.JsonFile _ ->
       Parse_ok (parse_json_file ~fail content file)
-    | Loc.ResourceFile _ ->
+    | File_key.ResourceFile _ ->
       Parse_skip Skip_resource_file
     | _ ->
       let types =
@@ -385,8 +382,8 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
     let err = loc, Parse_error.Assertion s in
     Parse_fail (Parse_error err)
 
-let calc_requires ~default_jsx ~ast =
-  Require.program ~default_jsx ~ast
+let calc_file_sig ~ast =
+  File_sig.program ~ast
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
@@ -401,7 +398,7 @@ let reducer
    * file, let's skip it. We don't need to notify our caller, since they'll
    * probably get the delete event anyway *)
   let content =
-    let filename_string = string_of_filename file in
+    let filename_string = File_key.to_string file in
     try Some (cat filename_string)
     with e ->
       prerr_endlinef
@@ -420,7 +417,7 @@ let reducer
              * drop a .flow file, even if it is unchanged, since it might have
              * been added to the modified set simply because a corresponding
              * implementation file was also added. *)
-            if not (Loc.check_suffix file Files.flow_ext)
+            if not (File_key.check_suffix file Files.flow_ext)
               (* In --lazy mode, a file is parsed initially but not
                  checked, and reparsing it later triggers a check even if the
                  file hasn't changed.
@@ -431,16 +428,16 @@ let reducer
               && (ASTHeap.get_old file = Some ast)
             then parse_results
             else begin
-              (* Only calculate requires for files which will actually be
+              (* Only calculate file sigs for files which will actually be
                  inferred. The only files which are parsed (thus, Parse_ok) but
                  not inferred are .flow files with no @flow pragma and .json
                  files. *)
-              let require_loc =
+              let file_sig =
                 if types_checked types_mode info
-                then calc_requires ~default_jsx:(info.Docblock.jsx = None) ~ast
-                else SMap.empty
+                then calc_file_sig ~ast
+                else File_sig.empty_file_sig
               in
-              ParsingHeaps.add file ast info require_loc;
+              ParsingHeaps.add file ast info file_sig;
               let parse_ok = FilenameSet.add file parse_results.parse_ok in
               { parse_results with parse_ok; }
             end
@@ -499,8 +496,7 @@ let get_defaults ~types_mode ~use_strict options =
 let next_of_filename_set workers filenames =
   MultiWorker.next workers (FilenameSet.elements filenames)
 
-let parse
-  ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
+let parse ~types_mode ~use_strict ~profile ~max_header_tokens ~lazy_mode
   workers next
 : results =
   let t = Unix.gettimeofday () in
@@ -564,15 +560,15 @@ let get_ast = ASTHeap.get
 
 let get_ast_unsafe file =
   try ASTHeap.find_unsafe file
-  with Not_found -> raise (Ast_not_found (Loc.string_of_filename file))
+  with Not_found -> raise (Ast_not_found (File_key.to_string file))
 
 let get_docblock_unsafe file =
   try DocblockHeap.find_unsafe file
-  with Not_found -> raise (Docblock_not_found (Loc.string_of_filename file))
+  with Not_found -> raise (Docblock_not_found (File_key.to_string file))
 
-let get_requires_unsafe file =
-  try RequiresHeap.find_unsafe file
-  with Not_found -> raise (Requires_not_found (Loc.string_of_filename file))
+let get_file_sig_unsafe file =
+  try FileSigHeap.find_unsafe file
+  with Not_found -> raise (Requires_not_found (File_key.to_string file))
 
 let remove_batch files =
   ParsingHeaps.remove_batch files

@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -38,6 +35,7 @@ let spec = {
     |> root_flag
     |> json_flags
     |> strip_root_flag
+    |> from_flag
     |> anon "args" (optional (list_of string)) ~doc:"[FILE] [LINE COL]"
   )
 }
@@ -70,7 +68,8 @@ let parse_args = function
       CommandSpec.usage spec;
       FlowExitStatus.(exit Commandline_usage_error)
 
-let main option_values root json pretty strip_root args () =
+let main option_values root json pretty strip_root from args () =
+  FlowEventLogger.set_from from;
   let file = parse_args args in
   let root = guess_root (
     match root with

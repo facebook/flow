@@ -305,15 +305,25 @@ Error: destructuring.js:25
  25: bar({x:"",y:0});
      ^^^^^^^^^^^^^^^ function call
  23:     var o:{x: string; y: number;} = z;
-               ^^^^^^^^^^^^^^^^^^^^^^^ property `x`. Property not found in
+                                         ^ rest of object pattern. This type is incompatible with
  23:     var o:{x: string; y: number;} = z;
-                                         ^ rest of object pattern
+               ^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `x` is incompatible:
+     23:     var o:{x: string; y: number;} = z;
+                   ^^^^^^^^^^^^^^^^^^^^^^^ property `x`. Property not found in
+     23:     var o:{x: string; y: number;} = z;
+                                             ^ rest of object pattern
 
 Error: destructuring.js:28
  28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `z`. Property not found in
+                                                    ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
  28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
-                                                    ^^^^^^^^^^^^^^^^ object literal
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+  Property `z` is incompatible:
+     28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `z`. Property not found in
+     28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
+                                                        ^^^^^^^^^^^^^^^^ object literal
 
 Error: destructuring.js:31
  31: qux({a:""});
@@ -366,6 +376,12 @@ Error: destructuring.js:45
  45:   (x.baz: string); // error, baz doesn't exist
         ^ object literal
 
+Error: destructuring.js:46
+ 46:   (rest.baz: string); // error, rest is sealed
+             ^^^ property `baz`. Property not found in
+ 46:   (rest.baz: string); // error, rest is sealed
+        ^^^^ rest of object pattern
+
 Error: destructuring.js:64
  64: var bp1_err: string = baseprop1; // Error: number ~> string
                            ^^^^^^^^^ number. This type is incompatible with
@@ -404,6 +420,24 @@ Error: eager.js:2
   2: ({x} = null); // error, property `x` can not be accessed on `null`
             ^^^^ null
 
+Error: object_rest.js:5
+  5: o1_rest.x = 0; // error: rest result is sealed
+             ^ property `x`. Property not found in
+  5: o1_rest.x = 0; // error: rest result is sealed
+     ^^^^^^^ rest of object pattern
+
+Error: object_rest.js:11
+ 11: o2_rest.x = 0; // error: rest result is sealed
+             ^ property `x`. Property not found in
+ 11: o2_rest.x = 0; // error: rest result is sealed
+     ^^^^^^^ rest of object pattern
+
+Error: object_rest.js:16
+ 16: o3_rest.x = 0; // error: rest result is sealed
+             ^ property `x`. Property not found in
+ 16: o3_rest.x = 0; // error: rest result is sealed
+     ^^^^^^^ rest of object pattern
+
 Error: string_lit.js:2
   2: (val: void); // error: string ~> void
       ^^^ string. This type is incompatible with
@@ -417,4 +451,4 @@ Error: unannotated.js:8
        ^ object literal
 
 
-Found 64 errors
+Found 68 errors

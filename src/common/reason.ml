@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* This module defines a general notion of trace, which is used in modules
@@ -63,6 +60,7 @@ type reason_desc =
   | RStringLit of string
   | RNumberLit of string
   | RBooleanLit of bool
+  | RMatchingProp of string * reason_desc
   | RObject
   | RObjectLit
   | RObjectType
@@ -128,13 +126,14 @@ type reason_desc =
   | RRestParameter of string
   | RIdentifier of string
   | RIdentifierAssignment of string
-  | RPropertyAssignment of string
+  | RPropertyAssignment of string option
   | RProperty of string option
   | RShadowProperty of string
   | RPropertyOf of string * reason_desc
   | RPropertyIsAString of string
   | RMissingProperty of string option
   | RUnknownProperty of string option
+  | RUndefinedProperty of string
   | RSomeProperty
   | RNameProperty of reason_desc
   | RMissingAbstract of reason_desc
@@ -171,8 +170,11 @@ type reason_desc =
   | RReactStatics
   | RReactDefaultProps
   | RReactState
-  | RReactElementProps of string
+  | RReactElementProps of string option
   | RReactPropTypes
+  | RReactChildren
+  | RReactChildrenOrType of reason_desc
+  | RReactChildrenOrUndefinedOrType of reason_desc
 
 and reason_desc_function =
   | RAsync
@@ -235,7 +237,7 @@ let do_patch lines insertions =
   patch 1 0 lines insertions;
   String.concat "\n" (Array.to_list lines)
 
-let string_of_source ?(strip_root=None) = Loc.(function
+let string_of_source ?(strip_root=None) = File_key.(function
   | Builtins -> "(builtins)"
   | LibFile file ->
     begin match strip_root with
@@ -275,7 +277,7 @@ let string_of_loc_pos loc = Loc.(
 let string_of_loc ?(strip_root=None) loc = Loc.(
   match loc.source with
   | None
-  | Some Builtins -> ""
+  | Some File_key.Builtins -> ""
   | Some file ->
     spf "%s:%s" (string_of_source ~strip_root file) (string_of_loc_pos loc)
 )
@@ -288,11 +290,11 @@ let json_of_loc ?(strip_root=None) loc = Hh_json.(Loc.(
       | None -> JSON_Null
     );
     "type", (match loc.source with
-    | Some LibFile _ -> JSON_String "LibFile"
-    | Some SourceFile _ -> JSON_String "SourceFile"
-    | Some JsonFile _ -> JSON_String "JsonFile"
-    | Some ResourceFile _ -> JSON_String "ResourceFile"
-    | Some Builtins -> JSON_String "Builtins"
+    | Some File_key.LibFile _ -> JSON_String "LibFile"
+    | Some File_key.SourceFile _ -> JSON_String "SourceFile"
+    | Some File_key.JsonFile _ -> JSON_String "JsonFile"
+    | Some File_key.ResourceFile _ -> JSON_String "ResourceFile"
+    | Some File_key.Builtins -> JSON_String "Builtins"
     | None -> JSON_Null);
     "start", JSON_Object [
       "line", int_ loc.start.line;
@@ -362,6 +364,8 @@ let rec string_of_desc = function
   | RStringLit x -> spf "string literal `%s`" x
   | RNumberLit x -> spf "number literal `%s`" x
   | RBooleanLit b -> spf "boolean literal `%s`" (string_of_bool b)
+  | RMatchingProp (k, v) ->
+    spf "object with property `%s` that matches %s" k (string_of_desc v)
   | RObject -> "object"
   | RObjectLit -> "object literal"
   | RObjectType -> "object type"
@@ -424,8 +428,8 @@ let rec string_of_desc = function
   | RTupleMap -> "tuple map"
   | RObjectMap -> "object map"
   | RObjectMapi -> "object mapi"
-  | RType x -> spf "type `%s`" x
-  | ROpaqueType x -> spf "opaque type `%s`" x
+  | RType x -> x
+  | ROpaqueType x -> x
   | RTypeParam (x,d) -> spf "type parameter `%s` of %s" x (string_of_desc d)
   | RIdentifier x -> spf "identifier `%s`" x
   | RIdentifierAssignment x -> spf "assignment of identifier `%s`" x
@@ -435,7 +439,8 @@ let rec string_of_desc = function
   | RRestParameter x -> spf "rest parameter `%s`" x
   | RProperty (Some x) -> spf "property `%s`" x
   | RProperty None -> "computed property"
-  | RPropertyAssignment x -> spf "assignment of property `%s`" x
+  | RPropertyAssignment (Some x) -> spf "assignment of property `%s`" x
+  | RPropertyAssignment None -> "assignment of computed property/element"
   | RShadowProperty x -> spf ".%s" x
   | RPropertyOf (x, d) -> spf "property `%s` of %s" x (string_of_desc d)
   | RPropertyIsAString x -> spf "property `%s` is a string" x
@@ -443,6 +448,7 @@ let rec string_of_desc = function
   | RMissingProperty None -> "computed property does not exist"
   | RUnknownProperty (Some x) -> spf "property `%s` of unknown type" x
   | RUnknownProperty None -> "computed property of unknown type"
+  | RUndefinedProperty x -> spf "undefined property `%s`" x
   | RSomeProperty -> "some property"
   | RNameProperty d -> spf "property `name` of %s" (string_of_desc d)
   | RMissingAbstract d ->
@@ -484,8 +490,16 @@ let rec string_of_desc = function
   | RReactStatics -> "statics of React class"
   | RReactDefaultProps -> "default props of React component"
   | RReactState -> "state of React component"
-  | RReactElementProps x -> spf "props of React element `%s`" x
+  | RReactElementProps x ->
+    (match x with
+    | Some x -> spf "props of React element `%s`" x
+    | None -> "props of React element")
   | RReactPropTypes -> "propTypes of React component"
+  | RReactChildren -> "React children array"
+  | RReactChildrenOrType desc ->
+    spf "React children array or %s" (string_of_desc desc)
+  | RReactChildrenOrUndefinedOrType desc ->
+    spf "React children array, undefined, or %s" (string_of_desc desc)
 
 let string_of_reason ?(strip_root=None) r =
   let spos = string_of_loc ~strip_root (loc_of_reason r) in
@@ -583,19 +597,20 @@ let derivable_reason r =
   { r with derivable = true }
 
 let builtin_reason desc =
-  mk_reason desc Loc.({ none with source = Some Builtins })
+  mk_reason desc { Loc.none with Loc.source = Some File_key.Builtins }
   |> derivable_reason
 
 let is_builtin_reason r =
-  Loc.(r.loc.source = Some Builtins)
+  Loc.(r.loc.source = Some File_key.Builtins)
 
 let is_lib_reason r =
+  (* TODO: use File_key.is_lib_file *)
   Loc.(match r.loc.source with
-  | Some LibFile _ -> true
-  | Some Builtins -> true
-  | Some SourceFile _ -> false
-  | Some JsonFile _ -> false
-  | Some ResourceFile _ -> false
+  | Some File_key.LibFile _ -> true
+  | Some File_key.Builtins -> true
+  | Some File_key.SourceFile _ -> false
+  | Some File_key.JsonFile _ -> false
+  | Some File_key.ResourceFile _ -> false
   | None -> false)
 
 let is_blamable_reason r =
@@ -610,8 +625,9 @@ let reasons_overlap r1 r2 =
 let replace_reason f r =
   mk_reason (f (desc_of_reason r)) (loc_of_reason r)
 
-let replace_reason_const desc r =
-  mk_reason desc (loc_of_reason r)
+let replace_reason_const ?(keep_def_loc=false) desc r =
+  let def_loc_opt = if keep_def_loc then r.def_loc_opt else None in
+  mk_reason_with_test_id r.test_id desc (loc_of_reason r) def_loc_opt
 
 (* returns reason with new location and description of original *)
 let repos_reason loc reason =

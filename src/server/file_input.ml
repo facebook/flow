@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 type t =
@@ -22,6 +19,10 @@ let filename_of_file_input = function
   | FileContent (Some fn, _) -> fn
   | FileContent (None, _) -> "-"
 
-let content_of_file_input = function
+let content_of_file_input_unsafe = function
   | FileName fn -> Sys_utils.cat fn
   | FileContent (_, content) -> content
+
+let content_of_file_input file =
+  try Ok (content_of_file_input_unsafe file)
+  with exn -> Error (Printexc.to_string exn)

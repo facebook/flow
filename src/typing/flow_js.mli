@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Reason
@@ -25,7 +22,7 @@ val tvar_with_constraint: Context.t -> ?trace:Trace.t -> ?derivable:bool -> Type
 
 val unify: Context.t -> Type.t -> Type.t -> unit
 
-val reposition: Context.t -> ?trace:Trace.t -> Loc.t -> Type.t -> Type.t
+val reposition: Context.t -> ?trace:Trace.t -> Loc.t -> ?desc:reason_desc -> Type.t -> Type.t
 
 (* constraint utils *)
 val filter_optional: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
@@ -42,7 +39,13 @@ val mk_tvar_derivable_where: Context.t -> reason -> (Type.t -> unit) -> Type.t
 
 val get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
 
-val resolve_spread_list: Context.t -> reason_op:Reason.t -> Type.unresolved_param list -> Type.spread_resolve -> unit
+val resolve_spread_list:
+  Context.t ->
+  use_op:Type.use_op ->
+  reason_op:Reason.t ->
+  Type.unresolved_param list ->
+  Type.spread_resolve ->
+  unit
 
 (* polymorphism *)
 
@@ -79,12 +82,14 @@ val mk_boundfunctiontype :
   Type.t -> Type.funtype
 
 val mk_functiontype :
+  reason ->
   Type.t list ->
   rest_param:(string option * Loc.t * Type.t) option -> def_reason: Reason.t ->
   ?frame:int -> ?params_names:string list -> ?is_predicate:bool ->
   Type.t -> Type.funtype
 
 val mk_functioncalltype :
+  reason ->
   Type.call_arg list ->
   ?frame:int ->
   ?call_strict_arity:bool ->
@@ -119,7 +124,7 @@ val mk_default: Context.t -> reason ->
 val lookup_module: Context.t -> string -> Type.t
 
 (* contexts *)
-val fresh_context: Context.metadata -> Loc.filename -> string -> Context.t
+val fresh_context: Context.metadata -> File_key.t -> string -> Context.t
 val add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit
 
 (* builtins *)
@@ -127,12 +132,12 @@ val add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit
 val builtins: Context.t -> Type.t
 val get_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
 val lookup_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.t -> unit
-val get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t
+val get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t
 val resolve_builtin_class: Context.t -> ?trace:Trace.t -> Type.t -> Type.t
 val set_builtin: Context.t -> ?trace:Trace.t -> string -> Type.t -> unit
 
-val mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?for_type:bool -> Type.t -> Type.t
-val mk_typeof_annotation: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
+val mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?for_type:bool -> ?use_desc:bool -> Type.t -> Type.t
+val mk_typeof_annotation: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
 (* strict *)
 val enforce_strict: Context.t -> Constraint.ident -> string list -> unit
@@ -140,6 +145,7 @@ val merge_type: Context.t -> (Type.t * Type.t) -> Type.t
 val resolve_type: Context.t -> Type.t -> Type.t
 val possible_types: Context.t -> Constraint.ident -> Type.t list
 val possible_types_of_type: Context.t -> Type.t -> Type.t list
+val possible_uses: Context.t -> Constraint.ident -> Type.use_t list
 
 module Members : sig
   type t =

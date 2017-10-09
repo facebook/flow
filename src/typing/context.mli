@@ -1,18 +1,16 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
+
+module LocMap = Utils_js.LocMap
 
 exception Props_not_found of Type.Properties.id
 exception Exports_not_found of Type.Exports.id
 exception Module_not_found of string
 exception Tvar_not_found of Constraint.ident
-exception Tvar_reason_not_found of Constraint.ident
 
 type env = Scope.t list
 
@@ -22,7 +20,6 @@ type cacheable_t
 type local_metadata = {
   checked: bool;
   munge_underscores: bool;
-  output_graphml: bool;
   verbose: Verbose.t option;
   weak: bool;
   jsx: Options.jsx_mode option;
@@ -53,7 +50,7 @@ type module_kind =
   | CommonJSModule of Loc.t option
   | ESModule
 
-val make: metadata -> Loc.filename -> string -> t
+val make: metadata -> File_key.t -> string -> t
 val metadata_of_options: Options.t -> metadata
 
 val to_cache: t -> cacheable_t
@@ -75,26 +72,25 @@ val esproposal_class_instance_fields: t -> Options.esproposal_feature_mode
 val esproposal_decorators: t -> Options.esproposal_feature_mode
 val esproposal_export_star_as: t -> Options.esproposal_feature_mode
 val evaluated: t -> Type.t IMap.t
-val file: t -> Loc.filename
+val file: t -> File_key.t
 val find_props: t -> Type.Properties.id -> Type.Properties.t
 val find_exports: t -> Type.Exports.id -> Type.Exports.t
+val find_require: t -> string -> Type.t
 val find_module: t -> string -> Type.t
 val find_tvar: t -> Constraint.ident -> Constraint.node
-val find_tvar_reason: t -> Constraint.ident -> Reason.t
 val mem_nominal_id: t -> Constraint.ident -> bool
 val globals: t -> SSet.t
 val graph: t -> Constraint.node IMap.t
-val import_stmts: t -> Ast.Statement.ImportDeclaration.t list
+val import_stmts: t -> Loc.t Ast.Statement.ImportDeclaration.t list
 val imported_ts: t -> Type.t SMap.t
 val is_checked: t -> bool
 val is_verbose: t -> bool
 val is_weak: t -> bool
-val lint_settings: t -> LintSettingsMap.t
+val severity_cover: t -> ExactCover.lint_severity_cover
 val max_trace_depth: t -> int
 val module_kind: t -> module_kind
 val module_map: t -> Type.t SMap.t
 val module_ref: t -> string
-val output_graphml: t -> bool
 val property_maps: t -> Type.Properties.map
 val refs_table: t -> (Loc.t, Loc.t) Hashtbl.t
 val export_maps: t -> Type.Exports.map
@@ -110,10 +106,10 @@ val type_table: t -> Type_table.t
 val verbose: t -> Verbose.t option
 val max_workers: t -> int
 val jsx: t -> Options.jsx_mode option
-val exists_checks: t -> ExistsCheck.t Utils_js.LocMap.t
-val exists_excuses: t -> ExistsCheck.t Utils_js.LocMap.t
+val exists_checks: t -> ExistsCheck.t LocMap.t
+val exists_excuses: t -> ExistsCheck.t LocMap.t
 val dep_map: t -> Dep_mapper.Dep.t Dep_mapper.DepMap.t
-val renamings: t -> (Loc.t * int) Scope_builder.LocMap.t
+val use_def_map: t -> Loc.t LocMap.t
 val pid_prefix: t -> string
 
 val copy_of_context: t -> t
@@ -124,17 +120,17 @@ val add_env: t -> int -> env -> unit
 val add_error: t -> Errors.error -> unit
 val add_error_suppression: t -> Loc.t -> unit
 val add_global: t -> string -> unit
-val add_import_stmt: t -> Ast.Statement.ImportDeclaration.t -> unit
+val add_import_stmt: t -> Loc.t Ast.Statement.ImportDeclaration.t -> unit
 val add_imported_t: t -> string -> Type.t -> unit
+val add_require: t -> string -> Type.t -> unit
 val add_module: t -> string -> Type.t -> unit
 val add_property_map: t -> Type.Properties.id -> Type.Properties.t -> unit
 val add_export_map: t -> Type.Exports.id -> Type.Exports.t -> unit
 val add_tvar: t -> Constraint.ident -> Constraint.node -> unit
-val add_tvar_reason: t -> Constraint.ident -> Reason.t -> unit
 val add_nominal_id: t -> Constraint.ident -> unit
 val remove_all_errors: t -> unit
 val remove_all_error_suppressions: t -> unit
-val remove_all_lint_settings: t -> unit
+val remove_all_lint_severities: t -> unit
 val remove_tvar: t -> Constraint.ident -> unit
 val set_declare_module_t: t -> Type.t option -> unit
 val set_envs: t -> env IMap.t -> unit
@@ -143,16 +139,19 @@ val set_type_graph: t  -> Graph_explorer.graph -> unit
 val set_all_unresolved: t  -> ISet.t IMap.t -> unit
 val set_globals: t -> SSet.t -> unit
 val set_graph: t -> Constraint.node IMap.t -> unit
-val set_lint_settings: t -> LintSettingsMap.t -> unit
+val set_errors: t -> Errors.ErrorSet.t -> unit
+val set_error_suppressions: t -> Error_suppressions.t -> unit
+val set_severity_cover: t -> ExactCover.lint_severity_cover -> unit
 val set_module_kind: t -> module_kind -> unit
 val set_property_maps: t -> Type.Properties.map -> unit
 val set_export_maps: t -> Type.Exports.map -> unit
 val set_tvar: t -> Constraint.ident -> Constraint.node -> unit
 val set_unused_lint_suppressions: t -> Loc.LocSet.t -> unit
-val set_exists_checks: t -> ExistsCheck.t Utils_js.LocMap.t -> unit
-val set_exists_excuses: t -> ExistsCheck.t Utils_js.LocMap.t -> unit
+val set_exists_checks: t -> ExistsCheck.t LocMap.t -> unit
+val set_exists_excuses: t -> ExistsCheck.t LocMap.t -> unit
 val set_dep_map: t -> Dep_mapper.Dep.t Dep_mapper.DepMap.t -> unit
-val set_renamings: t -> (Loc.t * int) Scope_builder.LocMap.t -> unit
+val set_use_def_map: t -> Loc.t LocMap.t -> unit
+val set_module_map: t -> Type.t SMap.t -> unit
 
 val clear_intermediates: t -> unit
 

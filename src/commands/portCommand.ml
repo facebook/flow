@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -29,12 +26,14 @@ let spec = {
     empty
     |> server_flags
     |> root_flag
+    |> from_flag
     |> anon "files" (required (list_of string))
         ~doc:"File(s) to port"
   )
 }
 
-let main option_values root files () =
+let main option_values root from files () =
+  FlowEventLogger.set_from from;
   let root = guess_root (
     match root with
     | Some root -> Some root

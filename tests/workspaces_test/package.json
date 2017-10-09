@@ -1,0 +1,12 @@
+{
+  "name": "workspace_test",
+  "private": true,
+  "dependencies": {
+    "root_lib": "1.0.0",
+    "workspace_lib": "1.0.0"
+  },
+  "workspaces": [
+    "bar",
+    "foo"
+  ]
+}

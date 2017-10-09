@@ -2,7 +2,7 @@ Error: generic.js:1
   1: function x<T>(x: T = 0) {}
                           ^ number. This type is incompatible with
   1: function x<T>(x: T = 0) {}
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
+     ^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
 
 Error: generic.js:4
   4:   x<T>(x: T = 0) {}
@@ -14,7 +14,7 @@ Error: loop.js:5
   5: function f<T:*>(x:T,y?:T) { x = y }
                                      ^ undefined. This type is incompatible with
   5: function f<T:*>(x:T,y?:T) { x = y }
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
+     ^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
 
 Error: nullable.js:17
  17:     x.y++; // should error
@@ -84,9 +84,14 @@ Error: optional.js:10
 
 Error: optional_param2.js:7
   7: var j:I<number> = i.map(id => id);
-                                   ^^ undefined. This type is incompatible with
+                       ^^^^^^^^^^^^^^^ type application of class `I`. Has some incompatible type argument with
   7: var j:I<number> = i.map(id => id);
-             ^^^^^^ number
+           ^^^^^^^^^ type application of polymorphic type: class type: I
+  Type argument `V` is incompatible:
+      7: var j:I<number> = i.map(id => id);
+                                       ^^ undefined. This type is incompatible with
+      7: var j:I<number> = i.map(id => id);
+                 ^^^^^^ number
 
 Error: optional_param4.js:12
  12: foo(true); // ERROR boolean ~> number
@@ -96,11 +101,14 @@ Error: optional_param4.js:12
 
 Error: optional_param4.js:13
  13: foo(123, true); // ERROR boolean ~> string
-     ^^^^^^^^^^^^^^ function call
- 13: foo(123, true); // ERROR boolean ~> string
-              ^^^^ boolean. This type is incompatible with
+     ^^^^^^^^^^^^^^ rest parameter array of function call. Has some incompatible type argument with
   3: function foo(x?: number, ...y: Array<string>): [?number, Array<string>] {
-                                          ^^^^^^ string
+                                    ^^^^^^^^^^^^^ array type
+  Type argument `T` is incompatible:
+     13: foo(123, true); // ERROR boolean ~> string
+                  ^^^^ boolean. This type is incompatible with
+      3: function foo(x?: number, ...y: Array<string>): [?number, Array<string>] {
+                                              ^^^^^^ string
 
 Error: undefined.js:8
   8:     return x.duck;

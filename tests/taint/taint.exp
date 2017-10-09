@@ -120,8 +120,6 @@ Error: function.js:12
 
 Error: globals.js:5
   5:     fakeDocument.location = x; // error
-         ^^^^^^^^^^^^^^^^^^^^^ assignment of property `location`
-  5:     fakeDocument.location = x; // error
                                  ^ taint. This type is incompatible with
   5:     fakeDocument.location = x; // error
          ^^^^^^^^^^^^^^^^^^^^^ FakeLocation

@@ -1,50 +1,90 @@
-Error: test.js:3
-  3: interface IFoo { foo: string }
-                           ^^^^^^ string. This type is incompatible with
-  6: class C2 implements IFoo { foo: number } // error: number <~> string
-                                     ^^^^^^ number
-
 Error: test.js:5
   5: class C1 implements IFoo {} // error: property `foo` not found
-                         ^^^^ property `foo` of IFoo. Property not found in
+           ^^ C1. This type is incompatible with
   5: class C1 implements IFoo {} // error: property `foo` not found
-           ^^ C1
+                         ^^^^ IFoo
+  Property `foo` is incompatible:
+      5: class C1 implements IFoo {} // error: property `foo` not found
+                             ^^^^ property `foo` of IFoo. Property not found in
+      5: class C1 implements IFoo {} // error: property `foo` not found
+               ^^ C1
 
 Error: test.js:6
   6: class C2 implements IFoo { foo: number } // error: number <~> string
-                                     ^^^^^^ number. This type is incompatible with
-  3: interface IFoo { foo: string }
-                           ^^^^^^ string
+           ^^ C2. This type is incompatible with
+  6: class C2 implements IFoo { foo: number } // error: number <~> string
+                         ^^^^ IFoo
+  Property `foo` is incompatible:
+      3: interface IFoo { foo: string }
+                               ^^^^^^ string. This type is incompatible with
+      6: class C2 implements IFoo { foo: number } // error: number <~> string
+                                         ^^^^^^ number
+
+Error: test.js:6
+  6: class C2 implements IFoo { foo: number } // error: number <~> string
+           ^^ C2. This type is incompatible with
+  6: class C2 implements IFoo { foo: number } // error: number <~> string
+                         ^^^^ IFoo
+  Property `foo` is incompatible:
+      6: class C2 implements IFoo { foo: number } // error: number <~> string
+                                         ^^^^^^ number. This type is incompatible with
+      3: interface IFoo { foo: string }
+                               ^^^^^^ string
 
 Error: test.js:13
  13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-                         ^^^^ property `foo` of IFoo. Property not found in
+           ^^ C4. This type is incompatible with
  13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-           ^^ C4
+                         ^^^^ IFoo
+  Property `foo` is incompatible:
+     13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+                             ^^^^ property `foo` of IFoo. Property not found in
+     13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+               ^^ C4
 
 Error: test.js:13
  13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-                               ^^^^ property `bar` of IBar. Property not found in
+           ^^ C4. This type is incompatible with
  13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
-           ^^ C4
+                               ^^^^ IBar
+  Property `bar` is incompatible:
+     13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+                                   ^^^^ property `bar` of IBar. Property not found in
+     13: class C4 implements IFoo, IBar {} // error: properties `foo`, `bar` not found
+               ^^ C4
 
 Error: test.js:18
  18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
-                         ^^^^^^^ property `bar` of IFooBar. Property not found in
+           ^^ C5. This type is incompatible with
  18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
-           ^^ C5
+                         ^^^^^^^ IFoo
+  Property `foo` is incompatible:
+     18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
+                             ^^^^^^^ property `foo` of IFoo. Property not found in
+     18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
+               ^^ C5
 
 Error: test.js:18
  18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
-                         ^^^^^^^ property `foo` of IFoo. Property not found in
+           ^^ C5. This type is incompatible with
  18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
-           ^^ C5
+                         ^^^^^^^ IFooBar
+  Property `bar` is incompatible:
+     18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
+                             ^^^^^^^ property `bar` of IFooBar. Property not found in
+     18: class C5 implements IFooBar {} // error: properties `foo`, `bar` not found
+               ^^ C5
 
 Error: test.js:21
  21: (new C5: IBar); // error: property `bar` not found (despite IBar < IFooBar)
-              ^^^^ property `bar` of IBar. Property not found in
+      ^^^^^^ C5. This type is incompatible with
  21: (new C5: IBar); // error: property `bar` not found (despite IBar < IFooBar)
-      ^^^^^^ C5
+              ^^^^ IBar
+  Property `bar` is incompatible:
+     21: (new C5: IBar); // error: property `bar` not found (despite IBar < IFooBar)
+                  ^^^^ property `bar` of IBar. Property not found in
+     21: (new C5: IBar); // error: property `bar` not found (despite IBar < IFooBar)
+          ^^^^^^ C5
 
 Error: test.js:26
  26: class C7 implements C1 {} // error: C1 is a class, expected an interface

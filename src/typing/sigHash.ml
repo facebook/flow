@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* Hash of signatures.
@@ -48,13 +45,12 @@ type hash =
   | FunProtoCallH
   | ObjH
   | ObjProtoH
-  | OpaqueH
+  | MatchingPropH
+  | NullProtoH
   | ArrH
   | ClassH
   | OptionalH
-  | AbstractH
   | EvalH
-  | PolyH
   | TypeAppH
   | ThisClassH
   | ThisTypeAppH
@@ -67,6 +63,7 @@ type hash =
   | UnionH
   | AnyWithLowerBoundH
   | AnyWithUpperBoundH
+  | MergedH
   | AnyObjH
   | AnyFunH
   | ShapeH
@@ -80,21 +77,106 @@ type hash =
   | ModuleH
   | ExtendsH
   | ChoiceKitH
+  | TvarDestructorH
   | CustomFunH
   | IdxWrapperH
   | OpenPredH
-  | TypeMapH
+  | CharSetH
   | ReposH
   | ReposUpperH
+  | BindH
+  | CallH
+  | MethodH
+  | SetPropH
+  | SetPrivatePropH
+  | GetPropH
+  | GetPrivatePropH
+  | TestPropH
+  | SetElemH
+  | GetElemH
+  | CallElemH
+  | GetStaticsH
+  | GetProtoH
+  | SetProtoH
+  | ReposLowerH
+  | ReposUseH
+  | ConstructorH
+  | SuperH
+  | ImplementsH
+  | MixinH
+  | AdderH
+  | ComparatorH
+  | UnaryMinusH
+  | AssertArithmeticOperandH
+  | AssertBinaryInLHSH
+  | AssertBinaryInRHSH
+  | AssertForInRHSH
+  | AssertRestParamH
+  | PredicateH
+  | GuardH
+  | EqH
+  | AndH
+  | OrH
+  | NotH
+  | SpecializeH
+  | ThisSpecializeH
+  | VarianceCheckH
+  | TypeAppVarianceCheckH
+  | ConcretizeTypeAppsH
+  | LookupH
+  | ObjAssignToH
+  | ObjAssignFromH
+  | ObjFreezeH
+  | ObjRestH
+  | ObjSealH
+  | ObjTestH
+  | ObjTestProtoH
+  | ArrRestH
+  | UnifyH
+  | BecomeH
+  | GetKeysH
+  | HasOwnPropH
+  | GetValuesH
+  | ElemH
+  | MakeExactH
+  | CJSRequireH
+  | ImportModuleNsH
+  | ImportDefaultH
+  | ImportNamedH
+  | ImportTypeH
+  | ImportTypeofH
+  | AssertImportIsValueH
+  | CJSExtractNamedExportsH
+  | CopyNamedExportsH
+  | CopyTypeExportsH
+  | ExportNamedH
+  | ExportTypeH
+  | MapTypeH
+  | ReactKitH
+  | ObjKitH
+  | ChoiceKitUseH
+  | IntersectionPreprocessKitH
+  | DebugPrintH
+  | SentinelPropTestH
+  | IdxUnwrapH
+  | IdxUnMaybeifyH
+  | CallLatentPredH
+  | CallOpenPredH
+  | SubstOnPredH
+  | RefineH
+  | ResolveSpreadH
+  | CondH
 
 let hash_of_def_ctor = Type.(function
   | InstanceT _ -> failwith "undefined hash of InstanceT"
+  | PolyT _ -> failwith "undefined hash of PolyT"
 
   | AnyFunT -> AnyFunH
   | AnyObjT -> AnyObjH
   | AnyT -> AnyH
   | ArrT _ -> ArrH
   | BoolT b -> BoolH b
+  | CharSetT _ -> CharSetH
   | ClassT _ -> ClassH
   | EmptyT -> EmptyH
   | FunT _ -> FunH
@@ -105,7 +187,6 @@ let hash_of_def_ctor = Type.(function
   | NumT n -> NumH n
   | ObjT _ -> ObjH
   | OptionalT _ -> OptionalH
-  | PolyT _ -> PolyH
   | SingletonBoolT b -> SingletonBoolH b
   | SingletonNumT n -> SingletonNumH n
   | SingletonStrT s -> SingletonStrH s
@@ -118,13 +199,15 @@ let hash_of_def_ctor = Type.(function
 
 let hash_of_ctor = Type.(function
   | OpenT _ -> failwith "undefined hash of OpenT"
+  | OpaqueT _ -> failwith "undefined hash of OpaqueT"
 
-  | AbstractT _ -> AbstractH
   | AnnotT _ -> AnnotH
   | AnyWithLowerBoundT _ -> AnyWithLowerBoundH
   | AnyWithUpperBoundT _ -> AnyWithUpperBoundH
+  | MergedT _ -> MergedH
   | BoundT _ -> BoundH
   | ChoiceKitT _ -> ChoiceKitH
+  | TypeDestructorTriggerT _ -> TvarDestructorH
   | CustomFunT _ -> CustomFunH
   | DefT (_, t) -> hash_of_def_ctor t
   | DiffT _ -> DiffH
@@ -139,8 +222,9 @@ let hash_of_ctor = Type.(function
   | IdxWrapper _ -> IdxWrapperH
   | KeysT _ -> KeysH
   | ModuleT _ -> ModuleH
+  | NullProtoT _ -> NullProtoH
   | ObjProtoT _ -> ObjProtoH
-  | OpaqueT _ -> OpaqueH
+  | MatchingPropT _ -> MatchingPropH
   | OpenPredT _ -> OpenPredH
   | ReposT _ -> ReposH
   | ReposUpperT _ -> ReposUpperH
@@ -148,7 +232,93 @@ let hash_of_ctor = Type.(function
   | TaintT _ -> TaintH
   | ThisClassT _ -> ThisClassH
   | ThisTypeAppT _ -> ThisTypeAppH
-  | TypeMapT _ -> TypeMapH
+)
+
+let hash_of_use_ctor = Type.(function
+  | UseT _ -> failwith "undefined hash of UseT"
+
+  | BindT _ -> BindH
+  | CallT _ -> CallH
+  | MethodT _ -> MethodH
+  | SetPropT _ -> SetPropH
+  | SetPrivatePropT _ -> SetPrivatePropH
+  | GetPropT _ -> GetPropH
+  | GetPrivatePropT _ -> GetPrivatePropH
+  | TestPropT _ -> TestPropH
+  | SetElemT _ -> SetElemH
+  | GetElemT _ -> GetElemH
+  | CallElemT _ -> CallElemH
+  | GetStaticsT _ -> GetStaticsH
+  | GetProtoT _ -> GetProtoH
+  | SetProtoT _ -> SetProtoH
+  | ReposLowerT _ -> ReposLowerH
+  | ReposUseT _ -> ReposUseH
+  | ConstructorT _ -> ConstructorH
+  | SuperT _ -> SuperH
+  | ImplementsT _ -> ImplementsH
+  | MixinT _ -> MixinH
+  | AdderT _ -> AdderH
+  | ComparatorT _ -> ComparatorH
+  | UnaryMinusT _ -> UnaryMinusH
+  | AssertArithmeticOperandT _ -> AssertArithmeticOperandH
+  | AssertBinaryInLHST _ -> AssertBinaryInLHSH
+  | AssertBinaryInRHST _ -> AssertBinaryInRHSH
+  | AssertForInRHST _ -> AssertForInRHSH
+  | AssertRestParamT _ -> AssertRestParamH
+  | PredicateT _ -> PredicateH
+  | GuardT _ -> GuardH
+  | EqT _ -> EqH
+  | AndT _ -> AndH
+  | OrT _ -> OrH
+  | NotT _ -> NotH
+  | SpecializeT _ -> SpecializeH
+  | ThisSpecializeT _ -> ThisSpecializeH
+  | VarianceCheckT _ -> VarianceCheckH
+  | TypeAppVarianceCheckT _ -> TypeAppVarianceCheckH
+  | ConcretizeTypeAppsT _ -> ConcretizeTypeAppsH
+  | LookupT _ -> LookupH
+  | ObjAssignToT _ -> ObjAssignToH
+  | ObjAssignFromT _ -> ObjAssignFromH
+  | ObjFreezeT _ -> ObjFreezeH
+  | ObjRestT _ -> ObjRestH
+  | ObjSealT _ -> ObjSealH
+  | ObjTestT _ -> ObjTestH
+  | ObjTestProtoT _ -> ObjTestProtoH
+  | ArrRestT _ -> ArrRestH
+  | UnifyT _ -> UnifyH
+  | BecomeT _ -> BecomeH
+  | GetKeysT _ -> GetKeysH
+  | HasOwnPropT _ -> HasOwnPropH
+  | GetValuesT _ -> GetValuesH
+  | ElemT _ -> ElemH
+  | MakeExactT _ -> MakeExactH
+  | CJSRequireT _ -> CJSRequireH
+  | ImportModuleNsT _ -> ImportModuleNsH
+  | ImportDefaultT _ -> ImportDefaultH
+  | ImportNamedT _ -> ImportNamedH
+  | ImportTypeT _ -> ImportTypeH
+  | ImportTypeofT _ -> ImportTypeofH
+  | AssertImportIsValueT _ -> AssertImportIsValueH
+  | CJSExtractNamedExportsT _ -> CJSExtractNamedExportsH
+  | CopyNamedExportsT _ -> CopyNamedExportsH
+  | CopyTypeExportsT _ -> CopyTypeExportsH
+  | ExportNamedT _ -> ExportNamedH
+  | ExportTypeT _ -> ExportTypeH
+  | MapTypeT _ -> MapTypeH
+  | ReactKitT _ -> ReactKitH
+  | ObjKitT _ -> ObjKitH
+  | ChoiceKitUseT _ -> ChoiceKitUseH
+  | IntersectionPreprocessKitT _ -> IntersectionPreprocessKitH
+  | DebugPrintT _ -> DebugPrintH
+  | SentinelPropTestT _ -> SentinelPropTestH
+  | IdxUnwrap _ -> IdxUnwrapH
+  | IdxUnMaybeifyT _ -> IdxUnMaybeifyH
+  | CallLatentPredT _ -> CallLatentPredH
+  | CallOpenPredT _ -> CallOpenPredH
+  | SubstOnPredT _ -> SubstOnPredH
+  | RefineT _ -> RefineH
+  | ResolveSpreadT _ -> ResolveSpreadH
+  | CondT _ -> CondH
 )
 
 type prop_hash =
@@ -174,6 +344,9 @@ let add x t =
 
 let add_type type_ =
   add (hash_of_ctor type_)
+
+let add_use use =
+  add (hash_of_use_ctor use)
 
 let add_props_map pmap =
   SMap.fold (fun k p h -> h |> add k |>  add (hash_of_prop p)) pmap

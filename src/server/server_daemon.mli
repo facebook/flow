@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 type daemon_msg =
@@ -21,6 +18,8 @@ val register_entry_point :
     Options.t ->
     unit) ->
   entry_point
+
+val open_log_file: string -> Unix.file_descr
 
 val daemonize :
   wait:bool ->

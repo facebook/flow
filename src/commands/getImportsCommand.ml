@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -31,6 +28,7 @@ let spec = {
     |> root_flag
     |> json_flags
     |> strip_root_flag
+    |> from_flag
     |> anon "modules" (required (list_of string))
         ~doc:"Module name(s) to find"
   )
@@ -38,7 +36,8 @@ let spec = {
 
 let extract_location req req_locs = SMap.find_unsafe req req_locs
 
-let main option_values root json pretty strip_root modules () =
+let main option_values root json pretty strip_root from modules () =
+  FlowEventLogger.set_from from;
   let root = guess_root root in
 
   let ic, oc = connect option_values root in
@@ -52,7 +51,7 @@ let main option_values root json pretty strip_root modules () =
         let req = match req with
           | Modulename.String s -> s
           | Modulename.Filename f ->
-            let f = Loc.string_of_filename f in
+            let f = File_key.to_string f in
             if strip_root then Files.relative_path (Path.to_string root) f
             else f
         in

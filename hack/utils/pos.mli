@@ -96,3 +96,7 @@ val make_from_file_pos :
 val set_file : Relative_path.t -> t -> t
 
 module Map : MyMap.S with type key = t
+
+
+val print_verbose_absolute : absolute -> string
+val print_verbose_relative : t -> string

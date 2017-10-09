@@ -103,7 +103,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
             "range":[36,37],
-            "name":"{",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -111,7 +111,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
             "range":[36,37],
-            "name":"{",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }

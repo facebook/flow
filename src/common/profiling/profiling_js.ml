@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
  module Timing : sig
@@ -140,7 +137,12 @@
         let total_cpu_time =
           processor_totals.cpu_user +. processor_totals.cpu_nice_user +.
           processor_totals.cpu_system +. processor_totals.cpu_idle in
-        let flow_cpu_usage = flow_cpu_time /. total_cpu_time in
+
+        (* flow_cpu_time and total_cpu_time are calculated using slightly different systems.
+         * flow_cpu_time should always be less than total_cpu_time, so we could in theory just
+         * check the numerator. However, checking the denominator is a slightly safer way to avoid
+         * a division by zero *)
+        let flow_cpu_usage = if total_cpu_time = 0. then 0. else flow_cpu_time /. total_cpu_time in
 
         let result = {
           user; system; worker_user; worker_system; wall; processor_totals; flow_cpu_usage;
@@ -228,10 +230,11 @@ end = struct
     JSON_Object results
 end
 
-type t = {
+type finished = {
   timing: Timing.t;
   memory: Memory.t;
 }
+type running = finished ref
 
 let empty = {
   timing = Timing.empty;
@@ -239,16 +242,34 @@ let empty = {
 }
 
 let start_timer ~timer profile =
-  { profile with timing = Timing.start_timer ~timer profile.timing }
+  profile := { !profile with timing = Timing.start_timer ~timer !profile.timing }
 
 let stop_timer ~timer profile =
-  { profile with timing = Timing.stop_timer ~timer profile.timing }
+  profile := { !profile with timing = Timing.stop_timer ~timer !profile.timing }
+
+let profiling_timer_name = "Profiling"
+let reserved_timer_names = SSet.of_list [ profiling_timer_name ]
+
+let with_profiling f =
+  let profiling = ref empty in
+  start_timer ~timer:profiling_timer_name profiling;
+  let ret = f profiling in
+  stop_timer ~timer:profiling_timer_name profiling;
+  (!profiling, ret)
+
+let check_for_reserved_timer_name f ~timer profile =
+  if SSet.mem timer reserved_timer_names
+  then failwith (Printf.sprintf "%s is a reserved timer name" timer);
+  f ~timer profile
+
+let start_timer = check_for_reserved_timer_name start_timer
+let stop_timer = check_for_reserved_timer_name stop_timer
 
 let get_finished_timer ~timer profile =
-  Timing.get_finished_timer ~timer profile.timing
+  Timing.get_finished_timer ~timer !profile.timing
 
 let sample_memory ~metric ~value profile =
-  { profile with memory = Memory.sample_memory ~metric ~value profile.memory }
+  profile := {!profile with memory = Memory.sample_memory ~metric ~value !profile.memory }
 
 let to_json_properties profile =
   [

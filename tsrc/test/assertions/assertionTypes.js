@@ -15,7 +15,10 @@ type AssertionMethod =
   | 'stderr'
   | 'sortedStdout'
   | 'exitCodes'
-  | 'serverRunning';
+  | 'serverRunning'
+  | 'ideNewMessagesWithTimeout'
+  | 'ideNoNewMessagesAfterSleep'
+  | 'ideStderr';
 
 export type Suggestion = {
   method: AssertionMethod,

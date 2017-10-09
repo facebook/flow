@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* utilities for supported filenames *)
@@ -33,8 +30,8 @@ val node_modules_containers: SSet.t ref
 val global_file_name: string
 val flow_ext: string
 
-val has_flow_ext: Loc.filename -> bool
-val chop_flow_ext: Loc.filename -> Loc.filename option
+val has_flow_ext: File_key.t -> bool
+val chop_flow_ext: File_key.t -> File_key.t option
 
 val is_json_file: string -> bool
 val is_flow_file: options: options -> string -> bool
@@ -48,7 +45,7 @@ val is_valid_path: options: options -> string -> bool
 
 val init: options -> string list * SSet.t
 
-val module_ref: Loc.filename -> string
+val module_ref: File_key.t -> string
 val lib_module_ref: string
 
 (* regexp for Filename constants *)
@@ -93,6 +90,8 @@ val is_prefix: string -> string -> bool
 
 val get_flowtyped_path: Path.t -> Path.t
 
-val filename_from_string: options: options -> string -> Loc.filename
+val filename_from_string: options: options -> string -> File_key.t
 
 val mkdirp: string -> Unix.file_perm -> unit
+
+val is_within_node_modules: root:Path.t -> options: options -> string -> bool

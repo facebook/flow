@@ -30,15 +30,47 @@ Error: importer.js:24
 
 Error: importer.js:29
  29: var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
-                          ^^^^^^ string. This type is incompatible with
- 15: export interface IFoo { prop: number };
-                                   ^^^^^^ number. See: types_only.js:15
+                   ^^^^^^^^^^^^^^ object literal. This type is incompatible with
+ 29: var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
+            ^^^^ IFoo
+  Property `prop` is incompatible:
+     29: var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
+                              ^^^^^^ string. This type is incompatible with
+     15: export interface IFoo { prop: number };
+                                       ^^^^^^ number. See: types_only.js:15
+
+Error: importer.js:29
+ 29: var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
+                   ^^^^^^^^^^^^^^ object literal. This type is incompatible with
+ 29: var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
+            ^^^^ IFoo
+  Property `prop` is incompatible:
+     15: export interface IFoo { prop: number };
+                                       ^^^^^^ number. This type is incompatible with. See: types_only.js:15
+     29: var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
+                              ^^^^^^ string
 
 Error: importer.js:32
  32: var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
-                           ^^ number. This type is incompatible with
-  5: export interface IFoo2 { prop: string };
-                                    ^^^^^^ string. See: types_only2.js:5
+                    ^^^^^^^^^^ object literal. This type is incompatible with
+ 32: var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
+            ^^^^^ IFoo2
+  Property `prop` is incompatible:
+     32: var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
+                               ^^ number. This type is incompatible with
+      5: export interface IFoo2 { prop: string };
+                                        ^^^^^^ string. See: types_only2.js:5
+
+Error: importer.js:32
+ 32: var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
+                    ^^^^^^^^^^ object literal. This type is incompatible with
+ 32: var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
+            ^^^^^ IFoo2
+  Property `prop` is incompatible:
+      5: export interface IFoo2 { prop: string };
+                                        ^^^^^^ string. This type is incompatible with. See: types_only2.js:5
+     32: var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
+                               ^^ number
 
 Error: types_only.js:5
   5: var b: inlinedType1 = 'asdf'; // Error: string ~> number
@@ -51,18 +83,6 @@ Error: types_only.js:11
              ^^^^^^^^^^^^^^^ standaloneType2. type referenced from value position
  10: type standaloneType2 = number;
           ^^^^^^^^^^^^^^^ type standaloneType2
-
-Error: types_only.js:15
- 15: export interface IFoo { prop: number };
-                                   ^^^^^^ number. This type is incompatible with
- 29: var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
-                          ^^^^^^ string. See: importer.js:29
-
-Error: types_only2.js:5
-  5: export interface IFoo2 { prop: string };
-                                    ^^^^^^ string. This type is incompatible with
- 32: var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
-                           ^^ number. See: importer.js:32
 
 
 Found 11 errors

@@ -1,126 +1,80 @@
-Error: main.js:12
- 12: var b: React$Node<{|prop1: string|}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `CustomComponent`
- 12: var b: React$Node<{|prop1: string|}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
- 12: var b: React$Node<{|prop1: string|}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of class `React$Element` | string | number | type application of identifier `Iterable`
-  Member 1:
-   13:   | React$Element<Config>
-           ^^^^^^^^^^^^^^^^^^^^^ type application of class `React$Element`. See lib: <BUILTINS>/react.js:13
-  Error:
-   12: var b: React$Node<{|prop1: string|}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `prop`. Property not found in
-   12: var b: React$Node<{|prop1: string|}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                         ^^^^^^^^^^^^^^^^^ object type
-  Member 2:
-   14:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:14
-  Error:
-   12: var b: React$Node<{|prop1: string|}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
-   14:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:14
-  Member 3:
-   15:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:15
-  Error:
-   12: var b: React$Node<{|prop1: string|}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
-   15:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:15
-  Member 4:
-   16:   | Iterable<React$Node<Config>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:16
-  Error:
-   16:   | Iterable<React$Node<Config>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:16
-   12: var b: React$Node<{|prop1: string|}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Element
-
-Error: main.js:15
- 15: <div id={42} />; // Error: (`id` prop) number ~> string
-     ^^^^^^^^^^^^^^^ props of React element `div`. This type is incompatible with
-  5:   div: $JSXIntrinsic<{id: string}>,
-                          ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:5
+Error: main.js:6
+  6: <div id={42} />; // Error: (`id` prop) number ~> string
+      ^^^ props of React element `div`. This type is incompatible with
+  4:   div: $JSXIntrinsic<{id: string}>,
+                          ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
   Property `id` is incompatible:
-     15: <div id={42} />; // Error: (`id` prop) number ~> string
+      6: <div id={42} />; // Error: (`id` prop) number ~> string
                   ^^ number. This type is incompatible with
-      5:   div: $JSXIntrinsic<{id: string}>,
-                                   ^^^^^^ string. See lib: lib/jsx.js:5
+      4:   div: $JSXIntrinsic<{id: string}>,
+                                   ^^^^^^ string. See lib: lib/jsx.js:4
 
-Error: main.js:17
- 17: var d: React$Node<{|id: number|}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                                         ^^^^^^^^^^^^^^^^^ React element `div`
- 17: var d: React$Node<{|id: number|}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                                         ^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
- 17: var d: React$Node<{|id: number|}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^ union: type application of class `React$Element` | string | number | type application of identifier `Iterable`
-  Member 1:
-   13:   | React$Element<Config>
-           ^^^^^^^^^^^^^^^^^^^^^ type application of class `React$Element`. See lib: <BUILTINS>/react.js:13
-  Error:
-   17: var d: React$Node<{|id: number|}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                                           ^^^^^^^^^^^^^^^^^ props of React element `div`. This type is incompatible with
-   17: var d: React$Node<{|id: number|}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                         ^^^^^^^^^^^^^^ object type
-    Property `id` is incompatible:
-       17: var d: React$Node<{|id: number|}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                                                       ^^^^^^ string. This type is incompatible with
-       17: var d: React$Node<{|id: number|}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                                   ^^^^^^ number
-  Member 2:
-   14:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:14
-  Error:
-   17: var d: React$Node<{|id: number|}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                                           ^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
-   14:   | string
-           ^^^^^^ string. See lib: <BUILTINS>/react.js:14
-  Member 3:
-   15:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:15
-  Error:
-   17: var d: React$Node<{|id: number|}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                                           ^^^^^^^^^^^^^^^^^ React$Element. This type is incompatible with
-   15:   | number
-           ^^^^^^ number. See lib: <BUILTINS>/react.js:15
-  Member 4:
-   16:   | Iterable<React$Node<Config>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `Iterable`. See lib: <BUILTINS>/react.js:16
-  Error:
-   16:   | Iterable<React$Node<Config>>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/react.js:16
-   17: var d: React$Node<{|id: number|}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                                           ^^^^^^^^^^^^^^^^^ React$Element
+Error: main.js:9
+  9: (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+  9: (<div id="foo" />.props.id: number); // Error: (`id` prop) number ~> string
+                                 ^^^^^^ number
 
-Error: strings.js:10
- 10: <Bad />; // Error: 'bad' not in JSXIntrinsics
-     ^^^^^^^ React element `Bad`
+Error: strings.js:6
   6: var Bad = 'bad';
-               ^^^^^ property `bad`. Property not found in
- 10: <Bad />; // Error: 'bad' not in JSXIntrinsics
-     ^^^^^^^ object type
+               ^^^^^ React element `bad`. Property not found in
+  6: var Bad = 'bad';
+               ^^^^^ object type
+
+Error: strings.js:9
+  9: <Div />; // This is fine
+     ^^^^^^^ React element `Div`
+  9: <Div />; // This is fine
+     ^^^^^^^ props of React element `Div`. This type is incompatible with
+  4:   div: $JSXIntrinsic<{id: string}>,
+                          ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
+  Property `id` is incompatible:
+      4:   div: $JSXIntrinsic<{id: string}>,
+                              ^^^^^^^^^^^^ property `id`. Property not found in. See lib: lib/jsx.js:4
+      9: <Div />; // This is fine
+         ^^^^^^^ props of React element `Div`
 
 Error: strings.js:11
  11: <Str />; // Error: string ~> keys of JSXIntrinsics
      ^^^^^^^ React element `Str`
   7: var Str: string = 'str';
-              ^^^^^^ some string with unknown value. Property not found in
- 11: <Str />; // Error: string ~> keys of JSXIntrinsics
-     ^^^^^^^ object type
+              ^^^^^^ string. Property not found in
+  7: var Str: string = 'str';
+              ^^^^^^ object type
+
+Error: strings.js:13
+ 13: React.createElement('div', {}); // This is fine
+                                ^^ props of React element. This type is incompatible with
+  4:   div: $JSXIntrinsic<{id: string}>,
+                          ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
+  Property `id` is incompatible:
+      4:   div: $JSXIntrinsic<{id: string}>,
+                              ^^^^^^^^^^^^ property `id`. Property not found in. See lib: lib/jsx.js:4
+     13: React.createElement('div', {}); // This is fine
+                                    ^^ props of React element
 
 Error: strings.js:14
  14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-                         ^^^^^ property `bad`. Property not found in
+                         ^^^^^ React element `bad`. Property not found in
  14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                         ^^^^^ object type
 
 Error: strings.js:15
  15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
-                         ^^^ some string with unknown value. Property not found in
+                         ^^^ string. Property not found in
  15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+                         ^^^ object type
+
+Error: strings.js:18
+ 18: <Div id={42} />; // Not an error but should be eventually
+     ^^^^^^^^^^^^^^^ props of React element `Div`. This type is incompatible with
+  4:   div: $JSXIntrinsic<{id: string}>,
+                          ^^^^^^^^^^^^ object type. See lib: lib/jsx.js:4
+  Property `id` is incompatible:
+     18: <Div id={42} />; // Not an error but should be eventually
+                  ^^ number. This type is incompatible with
+      4:   div: $JSXIntrinsic<{id: string}>,
+                                   ^^^^^^ string. See lib: lib/jsx.js:4
 
 
-Found 7 errors
+Found 9 errors

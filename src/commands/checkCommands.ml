@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open CommandUtils
@@ -84,12 +81,20 @@ module CheckCommand = struct
 
     let root = CommandUtils.guess_root path_opt in
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-    let options = make_options ~flowconfig ~lazy_:false ~root options_flags in
+    let options = make_options ~flowconfig ~lazy_mode:None ~root options_flags in
 
-    if Options.should_profile options then Flow_server_profile.init ();
+    if Options.should_profile options
+    then begin
+      Flow_server_profile.init ();
+      let rec sample_processor_info () =
+        Flow_server_profile.processor_sample ();
+        Timer.set_timer ~interval:1.0 ~callback:sample_processor_info |> ignore
+      in
+      sample_processor_info ()
+    end;
 
     (* initialize loggers before doing too much, especially anything that might exit *)
-    init_loggers ~from ~options ~min_level:Hh_logger.Level.Error ();
+    LoggingUtils.init_loggers ~from ~options ~min_level:Hh_logger.Level.Error ();
 
     if not ignore_version then assert_version flowconfig;
 
@@ -104,6 +109,7 @@ module CheckCommand = struct
     let printer =
       if json || pretty then Json { pretty } else Cli error_flags in
     print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
+    Flow_server_profile.print_url ();
     if Errors.ErrorSet.is_empty errors
       then FlowExitStatus.(exit No_error)
       else FlowExitStatus.(exit Type_error)
@@ -126,35 +132,39 @@ module FocusCheckCommand = struct
         |> shm_flags
         |> ignore_version_flag
         |> from_flag
-        |> flag "--input-file" string
-          ~doc:("File containing list of files to transform, one per line. If -, list of files is "^
-            "read from the standard input.")
+        |> root_flag
+        |> input_file_flag "check"
         |> anon "root" (list_of string) ~doc:"Root directory"
       );
     usage = Printf.sprintf
       "Usage: %s focus-check [OPTION]... [FILES/DIRS]\n\n\
         EXPERIMENTAL: Does a focused Flow check on the input files/directories (and each of their \
         dependents and dependencies) and prints the results.\n\n\
-        Flow will search upward for a .flowconfig file, at the first file specified.\n\
-        If no file is specified, a focus check is ran on the current directory.\n"
+        If --root is not specified, Flow will search upward for a .flowconfig file from the first \
+        file or dir in FILES/DIR.\n\
+        If --root is not specified and FILES/DIR is omitted, a focus check is ran on the current \
+        directory.\n"
         exe_name;
   }
 
   let main
       error_flags include_suppressed options_flags json pretty
-      shm_flags ignore_version from input_file filenames
+      shm_flags ignore_version from root input_file filenames
       () =
 
     let filenames = get_filenames_from_input input_file filenames in
-    let file_opt = match filenames with
-    | [] -> None
-    | x::_ -> Some x in
-    let root = CommandUtils.guess_root file_opt in
+
+    (* If --root is explicitly set, then use that as the root. Otherwise, use the first file *)
+    let root = CommandUtils.guess_root (
+      if root <> None
+      then root
+      else match filenames with [] -> None | x::_ -> Some x
+    ) in
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
-    let options = make_options ~flowconfig ~lazy_:false ~root options_flags in
+    let options = make_options ~flowconfig ~lazy_mode:None ~root options_flags in
 
     (* initialize loggers before doing too much, especially anything that might exit *)
-    init_loggers ~from ~options ();
+    LoggingUtils.init_loggers ~from ~options ();
 
     (* do this after loggers are initialized, so we can complain properly *)
     let file_options = Options.file_options options in
@@ -167,10 +177,10 @@ module FocusCheckCommand = struct
 
     let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
 
-    let filenames = SSet.elements filenames in
-    let focus_targets = List.map (fun file ->
-      (Loc.SourceFile Path.(to_string (make file)))) filenames
-    in
+    let focus_targets = SSet.fold
+      (fun file acc -> FilenameSet.add (File_key.SourceFile Path.(to_string (make file))) acc)
+      filenames
+      FilenameSet.empty in
 
     let profiling, errors, warnings, suppressed_errors = Main.check_once
       ~shared_mem_config ~client_include_warnings ~focus_targets options in

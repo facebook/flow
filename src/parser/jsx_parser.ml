@@ -1,11 +1,8 @@
-(*
+(**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Token
@@ -45,8 +42,11 @@ module JSX (Parse: Parser_common.PARSER) = struct
 
   let identifier env =
     let loc = Peek.loc env in
-    let name = Peek.value env in
-    Expect.token env T_JSX_IDENTIFIER;
+    let name = match Peek.token env with
+    | T_JSX_IDENTIFIER { raw } -> raw
+    | _ -> error_unexpected env; ""
+    in
+    Eat.token env;
     loc, JSX.Identifier.({ name; })
 
   let name =
@@ -175,8 +175,8 @@ module JSX (Parse: Parser_common.PARSER) = struct
       })
 
     type element_or_closing =
-      | Closing of JSX.Closing.t
-      | ChildElement of (Loc.t * JSX.element)
+      | Closing of Loc.t JSX.Closing.t
+      | ChildElement of (Loc.t * Loc.t JSX.element)
 
 
     let rec child env =

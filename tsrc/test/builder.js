@@ -1,10 +1,15 @@
 /* @flow */
 
-import {execSync} from 'child_process';
+import {execSync, spawn} from 'child_process';
 import {randomBytes} from 'crypto';
 import {tmpdir} from 'os';
 import {basename, dirname, extname, join, sep as dir_sep} from 'path';
 import {format} from 'util';
+import EventEmitter from 'events';
+
+import * as rpc from 'vscode-jsonrpc';
+
+import type {IDEMessage, RpcConnection} from './ide';
 
 import {
   appendFile,
@@ -17,22 +22,33 @@ import {
   sleep,
   unlink,
   writeFile,
-} from '../async';
+} from '../utils/async';
 import {getTestsDir} from '../constants';
 
 import type {SuiteResult} from './runTestSuite';
 
 type CheckCommand = 'check' | 'status';
 
+
 export class TestBuilder {
   bin: string;
   dir: string;
   errorCheckCommand: CheckCommand;
   flowConfigFilename: string;
-  server: ?number;
+  lazyMode: 'ide' | 'fs' | null;
+  server: null | child_process$ChildProcess = null;
+  ide: null | {
+    connection: RpcConnection;
+    process: child_process$ChildProcess;
+    messages: Array<IDEMessage>;
+    stderr: Array<string>;
+    emitter: EventEmitter;
+  } = null;
   sourceDir: string;
   suiteName: string;
   tmpDir: string;
+  testErrors = [];
+  allowFlowServerToDie = false;
 
   constructor(
     bin: string,
@@ -41,9 +57,11 @@ export class TestBuilder {
     suiteName: string,
     testNum: number,
     flowConfigFilename: string,
+    lazyMode: 'ide' | 'fs' | null,
   ) {
     this.bin = bin;
-    this.errorCheckCommand = errorCheckCommand;
+    // If we're testing lazy mode, then we must use status
+    this.errorCheckCommand = lazyMode == null ? errorCheckCommand : 'status';
     this.suiteName = suiteName;
     this.dir = join(
       baseDir,
@@ -59,6 +77,7 @@ export class TestBuilder {
       String(testNum),
     );
     this.flowConfigFilename = flowConfigFilename;
+    this.lazyMode = lazyMode;
   }
 
   getFileName(): string {
@@ -223,73 +242,242 @@ export class TestBuilder {
   }
 
   async startFlowServer(): Promise<void> {
-    const [err, stdout, stderr] = await execManual(format(
-      "%s start --json --strip-root --temp-dir %s --wait %s",
-      this.bin,
-      this.tmpDir,
-      this.dir,
-    ));
-
-    if (!err) {
-      const response = JSON.parse(stdout.toString());
-      this.server = response.pid;
-    } else if (err.code === 11) {
-      // Already a server running...that's cool
-    } else {
-      throw new Error(format('Flow start failed!', err, stdout, stderr));
+    if (this.server !== null) {
+      return;
     }
-  }
-
-  async stopFlowServer(): Promise<void> {
-    const server = this.server;
-    if (server != null ) {
-      this.server = null;
-      const [err, stdout, stderr] = await execManual(format(
-        "%s stop %s",
-        this.bin,
+    const lazyMode = this.lazyMode === null
+      ? []
+      : ['--lazy-mode', this.lazyMode];
+    const serverProcess = spawn(
+      this.bin,
+      [
+        'server',
+        '--strip-root',
+        '--debug',
+        '--temp-dir', this.tmpDir,
+      ].concat(lazyMode)
+      .concat([
         this.dir,
-      ));
+      ]),
+      {
+        // Useful for debugging flow server
+        // stdio: ["pipe", "pipe", process.stderr],
+        cwd: this.dir,
+        env: { ...process.env, 'OCAMLRUNPARAM': 'b' },
+      }
+    );
+    this.server = serverProcess;
 
-      if (err != null) {
-        try {
-          process.kill(server);
-        } catch (e) {
-          console.log("Failed to kill server %s", server);
+    const stderr = [];
+    serverProcess.stderr.on('data', (data) => {
+      stderr.push(data.toString());
+    });
+
+    serverProcess.on('exit', (code, signal) => {
+      if (this.server != null && !this.allowFlowServerToDie) {
+        this.testErrors.push(format(
+          "flow server mysteriously died. Code: %d, Signal: %s, stderr:\n%s",
+          code,
+          signal,
+          stderr.join(""),
+        ));
+      }
+      this.stopFlowServer();
+    });
+
+    // Wait for the server to be ready
+    await new Promise((resolve, reject) => {
+      function resolveOnReady(data) {
+        if (stderr.concat([data]).join('').match(/Server is READY/)) {
+          serverProcess.stderr.removeListener('data', resolveOnReady);
+          resolve();
         }
       }
-    }
+      serverProcess.stderr.on('data', resolveOnReady);
+    });
   }
 
-  stopFlowServerSync(): void {
+  stopFlowServer(): void {
     const server = this.server;
     if (server != null) {
       this.server = null;
-      try {
-        execSync(format("%s stop %s", this.bin, this.dir));
-      } catch (e) {
-        try {
-          process.kill(server);
-        } catch (e) {
-          console.log("Failed to kill server %s", server);
+      server.stdin.end();
+      server.kill();
+    }
+  }
+
+  async createIDEConnection(): Promise<void> {
+    if (this.ide == null) {
+      // No-op if the server is already running
+      await this.startFlowServer();
+      const ideProcess = spawn(
+        this.bin,
+        [
+          'ide',
+          '--protocol', 'very-unstable',
+          '--no-auto-start',
+          '--strip-root',
+          '--temp-dir', this.tmpDir,
+          '--root', this.dir,
+        ],
+        {
+          // Useful for debugging flow ide
+          // stdio: ["pipe", "pipe", process.stderr],
+          cwd: this.dir,
+          env: { ...process.env, 'OCAMLRUNPARAM': 'b' },
         }
+      );
+      const connection = rpc.createMessageConnection(
+        new rpc.StreamMessageReader(ideProcess.stdout),
+        new rpc.StreamMessageWriter(ideProcess.stdin),
+      );
+      connection.listen();
+
+      ideProcess.on('exit', (code, signal) => {
+        if (this.ide != null) {
+          this.testErrors.push(format(
+            "flow ide mysteriously died. Code: %d, Signal: %s, stderr:\n%s",
+            code,
+            signal,
+            this.getIDEStderr(),
+          ));
+        }
+        this.cleanupIDEConnection();
+      });
+      ideProcess.on('close', () => this.cleanupIDEConnection());
+
+      const emitter = new EventEmitter;
+
+      const messages = [];
+      connection.onNotification((method: string, ...params: Array<mixed>) => {
+        params.forEach(param => {
+          if (typeof param === "object" && param && param.flowVersion) {
+            param.flowVersion = "<VERSION STUBBED FOR TEST>";
+          }
+        });
+        messages.push({method, params});
+        emitter.emit('notification', {method, params});
+      });
+
+      const stderr = [];
+      ideProcess.stderr.on('data', (data) => {
+        stderr.push(data.toString());
+      });
+
+      this.ide = { process: ideProcess, connection, messages, stderr, emitter };
+    }
+  }
+
+  cleanupIDEConnection(): void {
+    const ide = this.ide;
+    if (ide != null) {
+      this.ide = null;
+      ide.process.stdin.end();
+      ide.process.kill();
+      ide.connection.dispose();
+    }
+  }
+
+  sendIDENotification(methodName: string, args: Array<mixed>): void {
+    if (this.ide != null) {
+      this.ide.connection.sendNotification(methodName, ...args);
+    }
+  }
+
+  async sendIDERequest(methodName: string, args: Array<mixed>): Promise<void> {
+    const ide = this.ide;
+    if (ide != null) {
+      ide.messages.push(
+        await ide.connection.sendRequest(methodName, ...args),
+      );
+    }
+  }
+
+  ideNewMessagesWithTimeout(
+    timeoutMs: number,
+    expected: $ReadOnlyArray<IDEMessage>,
+  ): Promise<void> {
+    const ide = this.ide;
+    const messages = [...expected];
+
+    return new Promise(resolve => {
+      if (ide == null) {
+        throw new Error('No ide process running!');
       }
+      if (expected.length === 0) {
+        resolve();
+        return; // Flow doesn't know resolve doesn't return
+      }
+
+      const onNotification = message => {
+        const next = messages.shift();
+        // While we could end early if the message doesn't match, let's wait for
+        // either the timeout or the same number of messages
+        if (messages.length === 0) {
+          done();
+        }
+      };
+      const done = () => {
+        this.ide &&
+          this.ide.emitter.removeListener('notification', onNotification);
+        resolve();
+      }
+
+      // If we've already received some notifications then process them.
+      ide.messages.forEach(onNotification);
+
+      setTimeout(done, timeoutMs);
+
+      ide.emitter.on('notification', onNotification);
+    });
+  }
+
+  getIDEMessages(): Array<IDEMessage> {
+    return this.ide ? [...this.ide.messages] : [];
+  }
+
+  getIDEStderr(): string {
+    return this.ide ? this.ide.stderr.join("") : "";
+  }
+
+  clearIDEMessages(): void {
+    this.ide && (this.ide.messages.splice(0, this.ide.messages.length));
+  }
+
+  clearIDEStderr(): void {
+    this.ide && (this.ide.stderr.splice(0, this.ide.stderr.length));
+  }
+
+  cleanup(): void {
+    this.cleanupIDEConnection();
+    this.stopFlowServer();
+  }
+
+  assertNoErrors(): void {
+    if (this.testErrors.length > 0) {
+      throw new Error(format(
+        "%d test error%s: %s",
+        this.testErrors.length,
+        this.testErrors.length == 1 ? "" : "s",
+        this.testErrors.join("\n\n"),
+      ));
     }
   }
 
   async waitForServerToDie(timeout: number): Promise<void> {
-    const pid = this.server;
-    if (pid == null) {
-      throw new Error('Cannot wait for a server that never started');
-    }
     let remaining = timeout;
-    while (remaining > 0 && await isRunning(pid)) {
+    while (remaining > 0 && this.server != null) {
+      await sleep(Math.min(remaining, 100));
       remaining -= 100;
-      await sleep(100);
     }
   }
 
+  setAllowFlowServerToDie(allow: boolean): void {
+    this.allowFlowServerToDie = allow;
+  }
+
   async forceRecheck(files: Array<string>): Promise<void> {
-    if (this.server && await isRunning(this.server)) {
+    if (this.server && await isRunning(this.server.pid)) {
       const [err, stdout, stderr] = await execManual(format(
         "%s force-recheck --no-auto-start --temp-dir %s %s",
         this.bin,
@@ -331,8 +519,7 @@ export default class Builder {
   }
 
   cleanup = () => {
-    Builder.builders.forEach(builder => builder.stopFlowServerSync());
-    process.removeListener('exit', this.cleanup);
+    Builder.builders.forEach(builder => builder.cleanup());
   }
 
   baseDirForSuite(suiteName: string): string {
@@ -344,6 +531,7 @@ export default class Builder {
     suiteName: string,
     testNum: number,
     flowConfigFilename: string,
+    lazyMode: 'fs' | 'ide' | null,
   ): Promise<TestBuilder> {
     const testBuilder = new TestBuilder(
       bin,
@@ -352,6 +540,7 @@ export default class Builder {
       suiteName,
       testNum,
       flowConfigFilename,
+      lazyMode,
     );
     Builder.builders.push(testBuilder);
     await testBuilder.createFreshDir();

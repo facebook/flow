@@ -5,7 +5,7 @@ import {format} from 'util';
 
 import * as blessed from 'blessed'
 
-import {exec, readFile, writeFile} from '../async';
+import {readFile, writeFile} from '../utils/async';
 import {
   mainLocOfError,
   prettyPrintError,
@@ -14,9 +14,13 @@ import {
 } from '../flowResult';
 import getPathToLoc from './getPathToLoc';
 import getFlowErrors from './getFlowErrors';
+import getContext, {NORMAL, JSX, TEMPLATE} from './getContext';
+import getAst from './getAst';
 
+import type {PathNode} from './getPathToLoc';
 import type {Args} from './add-commentsCommand';
 import type {FlowLoc, FlowError, FlowMessage} from '../flowResult';
+import type {Context} from './getContext';
 
 const unselectedBox = "[ ]";
 const selectedBox = "[✓]";
@@ -647,102 +651,76 @@ async function addCommentsToSource(
   source: string,
   locs: Array<FlowLoc>,
 ): Promise<number> {
-  locs
-    .sort((l1, l2) => l2.start.line - l1.start.line);
-
   const codeBuffer = await readFile(source);
-  const stdout = await exec(
-    format("%s ast %s", args.bin, source),
-    {maxBuffer: 16 * 1024 * 1024},
-  );
-  const ast = JSON.parse(stdout);
 
-  let code = codeBuffer.toString();
+  const [code, commentCount] = await addCommentsToCode(
+    args.comment,
+    codeBuffer.toString(),
+    locs,
+    args.bin,
+  );
+  await writeFile(source, code);
+  return commentCount;
+}
+
+export async function addCommentsToCode(
+  comment: ?string,
+  code: string,
+  locs: Array<FlowLoc>,
+  flowBinPath: string,
+): Promise<[string, number]> /* [resulting code, number of comments inserted] */ {
+  locs.sort((l1, l2) => l2.start.line - l1.start.line);
+
+  const ast = await getAst(code, flowBinPath);
+
   let commentCount = 0;
   for (const loc of locs) {
     const path = getPathToLoc(loc, ast);
 
     if (path != null) {
-      code = addCommentToCode(args.comment || '', code, loc, path);
+      code = addCommentToCode(comment || '', code, loc, path);
       commentCount++;
     }
   }
-  await writeFile(source, code);
-  return commentCount;
+  return [code, commentCount];
 }
 
-function addCommentToCode(comment: string, code: string, loc: FlowLoc, path): string {
+function addCommentToCode(comment: string, code: string, loc: FlowLoc, path: Array<PathNode>): string {
   /* First of all, we want to know if we can add a comment to the line before
    * the error. So we need to see if we're in a JSX children block or inside a
    * template string when we reach the line with the error */
-  let inside: null | 'jsx' | 'template' = null;
-  let ast = path[0].ast;
-  for (let i = 0; i < path.length; i++) {
-    ast = path[i].ast;
-    if (ast.loc && ast.loc.start.line >= loc.start.line) {
-      // We've reached the line
-      break;
-    }
-
-    if (i < path.length - 1 &&
-        ast.type === 'JSXElement' &&
-        path[i+1].key === 'children') {
-      // We've entered a JSX children block
-      inside = 'jsx';
-      i++;
-    } else if (i < path.length - 1 &&
-        ast.type === 'TemplateLiteral' &&
-        path[i+1].key === 'expressions') {
-      // We've entered a template string
-      inside = 'template';
-      i++;
-    } else if (inside !== 'jsx' || ast.type != 'JSXText') {
-      inside = null;
-    }
-  }
+  const [inside, ast] = getContext(loc, path);
 
   const lines = code.split("\n");
-  if (inside === null) {
+  if (inside === NORMAL) {
     // This is easy, just add the comment to the preceding line
     return [].concat(
       lines.slice(0, loc.start.line - 1),
       formatComment(comment, lines[loc.start.line-1]),
       lines.slice(loc.start.line-1),
     ).join("\n");
-  } else if (inside === 'jsx' && ast.type === 'JSXElement') {
+  } else if (inside === JSX && ast.type === 'JSXElement') {
     /* Ok, so we have something like
      * <jsx>
      *   <foo id={10*'hello'} />
      * <jsx>
      *
-     * We need to wrap the JSXElemnt in curly braces and stick the comment
-     * inside the curly braces. So the above example turns into
+     * We need to put an empty expression container above the element with our
+     * comment.
      *
      * <jsx>
-     *   {
-     *     // Comment
-     *   <foo id={10*'hello'} />}
+     *   {// Comment
+     *   }
+     *   <foo id={10*'hello'} />
      * <jsx>
      */
-    let formattedComment = formatComment(comment, lines[loc.start.line-1]);
-    // Stick a { before the comment
-    formattedComment[0] = formattedComment[0].replace(/^( *)\//, '$1{\n$1/')
-    let lineWithClosingCurly = lines[ast.loc.end.line-1];
-    // Stick a } after the JSX element
-    lineWithClosingCurly = format(
-      "%s}%s",
-      lineWithClosingCurly.substr(0, ast.loc.end.column),
-      lineWithClosingCurly.substr(ast.loc.end.column),
-    );
     return [].concat(
       lines.slice(0, loc.start.line - 1),
-      formattedComment,
-      lines.slice(loc.start.line-1, ast.loc.end.line-1),
-      [lineWithClosingCurly],
-      lines.slice(ast.loc.end.line)
+      formatComment(comment, lines[loc.start.line-1], true),
+      lines.slice(loc.start.line-1),
     ).join("\n");
-  } else if ((inside === 'template') ||
-      inside === 'jsx' && ast.type === 'JSXExpressionContainer') {
+  } else if ((inside === TEMPLATE) ||
+      inside === JSX && ast.type === 'JSXExpressionContainer') {
     /* Ok, so we have something like
      *
      * <jsx>
@@ -773,7 +751,7 @@ function addCommentToCode(comment: string, code: string, loc: FlowLoc, path): st
      *     10 * 'hello'}
      * `;
      */
-    const start_col = inside === 'jsx' ?
+    const start_col = inside === JSX ?
       ast.loc.start.column + 1 :
       ast.loc.start.column;
     const line = lines[loc.start.line-1];
@@ -822,33 +800,39 @@ function splitAtWord(str: string, max: number): [string, string] {
 }
 
 /* Figures out how to pad the comment and split it into multiple lines */
-function formatComment(comment: string, line: string): Array<string> {
+function formatComment(
+  comment: string,
+  line: string,
+  jsx: boolean = false,
+): Array<string> {
   const match = line.match(/^ */);
   let padding = match ? match[0] : '';
   padding.length > 40 && (padding = "    ");
 
-  const singleLineComment = format("%s// %s", padding, comment);
-  if (singleLineComment.length <= 80) {
-    return [singleLineComment];
+  if (jsx === false) {
+    const singleLineComment = format("%s// %s", padding, comment);
+    if (singleLineComment.length <= 80) {
+      return [singleLineComment];
+    }
   }
 
   const commentLines = [];
-  const firstLinePrefix = format("%s/* ", padding);
+  const firstLinePrefix = format(!jsx ? "%s/* " : "%s{/* ", padding);
   let firstLineComment;
   [firstLineComment, comment] = splitAtWord(comment.trim(), 80 - firstLinePrefix.length);
   commentLines.push(firstLinePrefix + firstLineComment.trim());
 
-  const prefix = format("%s * ", padding);
+  const prefix = format(!jsx ? "%s * " : "%s  * ", padding);
   let commentLine;
   while (comment.length > 0) {
     [commentLine, comment] = splitAtWord(comment.trim(), 80 - prefix.length);
     commentLines.push(prefix + commentLine.trim());
   }
-  if (commentLines[commentLines.length-1].length < 77) {
+  if (commentLines[commentLines.length-1].length < 76) {
     const last = commentLines.pop();
-    commentLines.push(format("%s */", last));
+    commentLines.push(format(!jsx ? "%s */" : "%s */}", last));
   } else {
-    commentLines.push(format("%s */", padding));
+    commentLines.push(format(!jsx ? "%s */" : "%s  */}", padding));
   }
   return commentLines;
 }

@@ -1,15 +1,16 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 module TI = Type_inference_js
 module Server = ServerFunctors
+
+open Result
+let try_with f =
+  try f () with exn -> Error (Printexc.to_string exn)
 
 module FlowProgram : Server.SERVER_PROGRAM = struct
   open Utils_js
@@ -33,52 +34,147 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       "hash_table.used_slots", hash_stats.used_slots;
       "hash_table.slots", hash_stats.slots;
     ] in
-    List.fold_left (fun profiling (metric, value) ->
+    List.iter (fun (metric, value) ->
       Profiling_js.sample_memory
         ~metric:("init_done." ^ metric)
         ~value:(float_of_int value)
          profiling
-    ) profiling memory_metrics
+    ) memory_metrics
+
+
+  (* combine error maps into a single error set and a filtered warning map
+   *
+   * This can be a little expensive for large repositories and can take a couple of seconds.
+   * Therefore there are a few things we want to do:
+   *
+   * 1. Memoize the result in env. This means subsequent calls to commands like `flow status` can
+   *    be fast
+   * 2. Eagerly calculate `collate_errors` after init or a recheck, so that the server still has
+   *    the init or recheck lock. If we improve how clients can tell if a server is busy or stuck
+   *    then we can probably relax this.
+   * 3. Throw away the collated errors when lazy mode's typecheck_contents adds more dependents or
+   *    dependencies to the checked set
+   **)
+  let regenerate_collated_errors =
+    let open Errors in
+    let open Error_suppressions in
+    let add_unused_suppression_warnings checked suppressions warnings =
+      (* For each unused suppression, create an warning *)
+      Error_suppressions.unused suppressions
+      |> List.fold_left
+        (fun warnings loc ->
+          let source_file = match Loc.source loc with Some x -> x | None -> File_key.SourceFile "-" in
+          (* In lazy mode, dependencies are modules which we typecheck not because we care about
+           * them, but because something important (a focused file or a focused file's dependent)
+           * needs these dependencies. Therefore, we might not typecheck a dependencies' dependents.
+           *
+           * This means there might be an unused suppression comment warning in a dependency which
+           * only shows up in lazy mode. To avoid this, we'll just avoid raising this kind of
+           * warning in any dependency.*)
+          if not (CheckedSet.dependencies checked |> FilenameSet.mem source_file)
+          then begin
+            let err =
+              let msg = Flow_error.EUnusedSuppression loc in
+              Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file msg in
+            let file_warnings = FilenameMap.get source_file warnings
+              |> Option.value ~default:ErrorSet.empty
+              |> ErrorSet.add err in
+            FilenameMap.add source_file file_warnings warnings
+          end else
+            warnings
+        )
+        warnings
+    in
+    let acc_fun severity_cover filename file_errs
+        (errors, warnings, suppressed_errors, suppressions) =
+      let file_errs, file_warns, file_suppressed_errors, suppressions =
+        filter_suppressed_errors suppressions severity_cover file_errs in
+      let errors = ErrorSet.union file_errs errors in
+      let warnings = FilenameMap.add filename file_warns warnings in
+      let suppressed_errors = List.rev_append file_suppressed_errors suppressed_errors in
+      (errors, warnings, suppressed_errors, suppressions)
+    in
+    fun env ->
+      let {
+        ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set;
+      } = env.ServerEnv.errors in
+      let suppressions = union_suppressions suppressions in
+
+      (* union the errors from all files together, filtering suppressed errors *)
+      let severity_cover = ExactCover.union_all severity_cover_set in
+      let acc_fun = acc_fun severity_cover in
+      let collated_errorset, warnings, collated_suppressed_errors, suppressions =
+        (ErrorSet.empty, FilenameMap.empty, [], suppressions)
+        |> FilenameMap.fold acc_fun local_errors
+        |> FilenameMap.fold acc_fun merge_errors
+      in
+
+      let collated_warning_map =
+        add_unused_suppression_warnings env.ServerEnv.checked_files suppressions warnings in
+      { collated_errorset; collated_warning_map; collated_suppressed_errors }
+
+  let get_collated_errors_separate_warnings env =
+    let open ServerEnv in
+    let collated_errors = match !(env.collated_errors) with
+    | None ->
+      let collated_errors = regenerate_collated_errors env in
+      env.collated_errors := Some collated_errors;
+      collated_errors
+    | Some collated_errors ->
+      collated_errors
+    in
+    let { collated_errorset; collated_warning_map; collated_suppressed_errors } = collated_errors in
+    (collated_errorset, collated_warning_map, collated_suppressed_errors)
+
+  (* combine error maps into a single error set and a single warning set *)
+  let get_collated_errors env =
+    let open Errors in
+    let errors, warning_map, suppressed_errors = get_collated_errors_separate_warnings env in
+    let warnings = FilenameMap.fold (fun _key -> ErrorSet.union) warning_map ErrorSet.empty in
+    (errors, warnings, suppressed_errors)
 
   let init ~focus_targets genv =
     (* write binary path and version to server log *)
     Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
     Hh_logger.info "version=%s" Flow_version.version;
 
-    let profiling = Profiling_js.empty in
+    Profiling_js.with_profiling begin fun profiling ->
+      let workers = genv.ServerEnv.workers in
+      let options = genv.ServerEnv.options in
 
-    let workers = genv.ServerEnv.workers in
-    let options = genv.ServerEnv.options in
+      let parsed, libs, libs_ok, errors =
+        Types_js.init ~profiling ~workers options in
 
-    let profiling, parsed, libs, libs_ok, errors =
-      Types_js.init ~profiling ~workers options in
+      (* if any libs errored, we'll infer but not merge client code *)
+      let should_merge = libs_ok in
 
-    (* if any libs errored, we'll infer but not merge client code *)
-    let should_merge = libs_ok in
+      (* compute initial state *)
+      let checked, errors =
+        if Options.is_lazy_mode options then
+          CheckedSet.empty, errors
+        else
+          let parsed = FilenameSet.elements parsed in
+          Types_js.full_check ~profiling ~workers ~focus_targets ~options ~should_merge parsed errors
+      in
 
-    (* compute initial state *)
-    let profiling, checked, errors =
-      if Options.is_lazy_mode options then
-        profiling, FilenameSet.empty, errors
-      else
-        let parsed = FilenameSet.elements parsed in
-        Types_js.full_check ~profiling ~workers ~focus_targets ~options ~should_merge parsed errors
-    in
+      sample_init_memory profiling;
 
-    let profiling = sample_init_memory profiling in
+      SharedMem_js.init_done();
 
-    SharedMem_js.init_done();
-
-    (* Return an env that initializes invariants required and maintained by
-       recheck, namely that `files` contains files that parsed successfully, and
-       `errors` contains the current set of errors. *)
-    profiling, { ServerEnv.
-      files = parsed;
-      checked_files = checked;
-      libs;
-      errors;
-      connections = Persistent_connection.empty;
-    }
+      (* Return an env that initializes invariants required and maintained by
+         recheck, namely that `files` contains files that parsed successfully, and
+         `errors` contains the current set of errors. *)
+      let env = { ServerEnv.
+        files = parsed;
+        checked_files = checked;
+        libs;
+        errors;
+        collated_errors = ref None;
+        connections = Persistent_connection.empty;
+      } in
+      env.collated_errors := Some (regenerate_collated_errors env);
+      env
+    end
 
 
   let status_log errors =
@@ -86,54 +182,6 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       then Hh_logger.info "Status: OK"
       else Hh_logger.info "Status: Error";
     flush stdout
-
-  (* combine error maps into a single error set and a filtered warning map *)
-  let collate_errors_separate_warnings =
-    let open Errors in
-    let open Error_suppressions in
-    let add_unused_suppression_errors suppressions errors =
-      (* For each unused suppression, create an error *)
-      Error_suppressions.unused suppressions
-      |> List.fold_left
-        (fun errset loc ->
-          let err =
-            let msg = Flow_error.EUnusedSuppression loc in
-            let source_file = match Loc.source loc with Some x -> x | None -> Loc.SourceFile "-" in
-            Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file msg in
-          Errors.ErrorSet.add err errset
-        )
-        errors
-    in
-    let acc_fun lint_settings filename file_errs
-        (errors, warnings, suppressed_errors, suppressions) =
-      let file_errs, file_warns, file_suppressed_errors, suppressions =
-        filter_suppressed_errors suppressions lint_settings file_errs in
-      let errors = ErrorSet.union file_errs errors in
-      let warnings = FilenameMap.add filename file_warns warnings in
-      let suppressed_errors = List.rev_append file_suppressed_errors suppressed_errors in
-      (errors, warnings, suppressed_errors, suppressions)
-    in
-    fun { ServerEnv.local_errors; merge_errors; suppressions; lint_settings; } ->
-      let suppressions = union_suppressions suppressions in
-
-      (* union the errors from all files together, filtering suppressed errors *)
-      let lint_settings = LintSettingsMap.union_settings lint_settings in
-      let acc_fun = acc_fun lint_settings in
-      let errors, warnings, suppressed_errors, suppressions =
-        (ErrorSet.empty, FilenameMap.empty, [], suppressions)
-        |> FilenameMap.fold acc_fun local_errors
-        |> FilenameMap.fold acc_fun merge_errors
-      in
-
-      let errors = add_unused_suppression_errors suppressions errors in
-      errors, warnings, suppressed_errors
-
-  (* combine error maps into a single error set and a single warning set *)
-  let collate_errors errors =
-    let open Errors in
-    let errors, warning_map, suppressed_errors = collate_errors_separate_warnings errors in
-    let warnings = FilenameMap.fold (fun _key -> ErrorSet.union) warning_map ErrorSet.empty in
-    (errors, warnings, suppressed_errors)
 
   let convert_errors ~errors ~warnings =
     if Errors.ErrorSet.is_empty errors && Errors.ErrorSet.is_empty warnings then
@@ -150,7 +198,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       }
     end else begin
       (* collate errors by origin *)
-      let errors, warnings, _ = collate_errors env.ServerEnv.errors in
+      let errors, warnings, _ = get_collated_errors env in
       let warnings = if Options.should_include_warnings genv.options
         then warnings
         else Errors.ErrorSet.empty
@@ -164,7 +212,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     end
 
   let check_once _genv env =
-    collate_errors env.ServerEnv.errors
+    get_collated_errors env
 
   let die_nicely () =
     FlowEventLogger.killed ();
@@ -183,23 +231,16 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     in
     let state = Autocomplete_js.autocomplete_set_hooks () in
     let results =
-      try
-        let path = Loc.SourceFile path in
-        let profiling, cx, parse_result =
-          match Types_js.typecheck_contents ~options ~workers ~env content path with
-          | profiling, Some cx, _, _, parse_result -> profiling, cx, parse_result
-          | _  -> failwith "Couldn't parse file"
-        in
+      let path = File_key.SourceFile path in
+      Types_js.basic_check_contents ~options ~workers ~env content path >>= fun (profiling, cx, info) ->
+      try_with begin fun () ->
         AutocompleteService_js.autocomplete_get_results
           profiling
           command_context
           cx
           state
-          parse_result
-      with exn ->
-        Hh_logger.warn "Couldn't autocomplete: %s" (Printexc.to_string exn);
-        Ok []
-    in
+          info
+      end in
     Autocomplete_js.autocomplete_unset_hooks ();
     results
 
@@ -213,14 +254,13 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
             true
           else
             let (_, docblock) = Parsing_service_js.(
-              get_docblock docblock_max_tokens (Loc.SourceFile file) content)
+              get_docblock docblock_max_tokens (File_key.SourceFile file) content)
             in
             Docblock.is_flow docblock
         in
         if should_check then
-          let file = Loc.SourceFile file in
-          let _, _, errors, warnings, _ = Types_js.typecheck_contents
-            ~options ~workers ~env ~check_syntax:true content file in
+          let file = File_key.SourceFile file in
+          let errors, warnings = Types_js.typecheck_contents ~options ~workers ~env content file in
           convert_errors ~errors ~warnings
         else
           ServerProt.NOT_COVERED
@@ -240,51 +280,38 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       client_context
       (file_input, line, col, verbose, include_raw) =
     let file = File_input.filename_of_file_input file_input in
-    let file = Loc.SourceFile file in
-    let response = (try
-      let content = File_input.content_of_file_input file_input in
-      let options = { options with Options.opt_verbose = verbose } in
-      Ok (Type_info_service.type_at_pos
+    let file = File_key.SourceFile file in
+    File_input.content_of_file_input file_input >>= fun content ->
+    let options = { options with Options.opt_verbose = verbose } in
+    try_with begin fun () ->
+      Type_info_service.type_at_pos
         ~options ~workers ~env ~client_context ~include_raw
         file content line col
-      )
-    with exn ->
-      let err = spf "%s\n%s"
-        (Printexc.to_string exn)
-        (Printexc.get_backtrace ()) in
-      Error err
-    ) in
-    response
+    end
 
   let dump_types ~options ~workers ~env ~include_raw ~strip_root file_input =
     let file = File_input.filename_of_file_input file_input in
-    let file = Loc.SourceFile file in
-    try
-      let content = File_input.content_of_file_input file_input in
-      Ok (Type_info_service.dump_types
+    let file = File_key.SourceFile file in
+    File_input.content_of_file_input file_input >>= fun content ->
+    try_with begin fun () ->
+      Type_info_service.dump_types
         ~options ~workers ~env ~include_raw ~strip_root file content
-      )
-    with exn ->
-      Error (Printexc.to_string exn)
+    end
 
   let coverage ~options ~workers ~env ~force file_input =
     let file = File_input.filename_of_file_input file_input in
-    let file = Loc.SourceFile file in
-    try
-      let content = File_input.content_of_file_input file_input in
-      Ok (Type_info_service.coverage ~options ~workers ~env ~force file content)
-    with exn ->
-      Error (Printexc.to_string exn)
+    let file = File_key.SourceFile file in
+    File_input.content_of_file_input file_input >>= fun content ->
+    try_with begin fun () ->
+      Type_info_service.coverage ~options ~workers ~env ~force file content
+    end
 
   let suggest =
     let suggest_for_file ~options ~workers ~env result_map (file, region) =
-      (try
-         let insertions = Type_info_service.suggest ~options ~workers ~env
-           (Loc.SourceFile file) region (cat file) in
-         SMap.add file (Ok insertions) result_map
-      with exn ->
-        SMap.add file (Error (Printexc.to_string exn)) result_map
-      )
+      SMap.add file (try_with begin fun () ->
+        Type_info_service.suggest ~options ~workers ~env
+          (File_key.SourceFile file) region (cat file)
+      end) result_map
     in fun ~options ~workers ~env files ->
       List.fold_left (suggest_for_file ~options ~workers ~env) SMap.empty files
 
@@ -293,7 +320,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
   let port = Port_service_js.port_files
 
   let find_module ~options (moduleref, filename) =
-    let file = Loc.SourceFile filename in
+    let file = File_key.SourceFile filename in
     let metadata =
       let open Context in
       let metadata = metadata_of_options options in
@@ -308,61 +335,53 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Module_js.get_file ~audit:Expensive.warn module_name
 
   let gen_flow_files ~options env files =
-    let errors, warnings, _ = collate_errors env.ServerEnv.errors in
+    let errors, warnings, _ = get_collated_errors env in
     let warnings = if Options.should_include_warnings options
       then warnings
       else Errors.ErrorSet.empty
     in
     let result = if Errors.ErrorSet.is_empty errors
       then begin
-        let (flow_files, flow_file_cxs, non_flow_files, error) =
-          List.fold_left (fun (flow_files, cxs, non_flow_files, error) file ->
-            if error <> None then (flow_files, cxs, non_flow_files, error) else
+        let (flow_files, non_flow_files, error) =
+          List.fold_left (fun (flow_files, non_flow_files, error) file ->
+            if error <> None then (flow_files, non_flow_files, error) else
             match file with
             | File_input.FileContent _ ->
               let error_msg = "This command only works with file paths." in
               let error =
                 Some (ServerProt.GenFlowFile_UnexpectedError error_msg)
               in
-              (flow_files, cxs, non_flow_files, error)
-            | File_input.FileName file_path ->
-              let src_file = Loc.SourceFile file_path in
-              (* TODO: Use InfoHeap as the definitive way to detect @flow vs
-               * non-@flow
-               *)
-              try
-                let cx =
-                  Context_cache.get_context_unsafe ~options src_file
-                    ~audit:Expensive.warn
-                in
-                (src_file::flow_files, cx::cxs, non_flow_files, error)
-              with Not_found ->
-                (flow_files, cxs, src_file::non_flow_files, error)
-          ) ([], [], [], None) files
+              (flow_files, non_flow_files, error)
+            | File_input.FileName fn ->
+              let file = File_key.SourceFile fn in
+              let checked =
+                let open Module_js in
+                match get_info file ~audit:Expensive.warn with
+                | Some info -> info.checked
+                | None -> false
+              in
+              if checked
+              then file::flow_files, non_flow_files, error
+              else flow_files, file::non_flow_files, error
+          ) ([], [], None) files
         in
         begin match error with
         | Some e -> Error e
         | None ->
           try
-            begin
-              try List.iter (fun flow_file_cx ->
-                let master_cx: Context.t =
-                  Merge_service.merge_strict_context ~options [flow_file_cx] in
-                ignore master_cx
-              ) flow_file_cxs
-              with exn -> failwith (
-                spf "Error merging contexts: %s" (Printexc.to_string exn)
-              )
-            end;
+            let flow_file_cxs = List.map (fun file ->
+              let cx, _ = Merge_service.merge_strict_context ~options [file] in
+              cx
+            ) flow_files in
 
             (* Non-@flow files *)
             let result_contents = non_flow_files |> List.map (fun file ->
-              (Loc.string_of_filename file, ServerProt.GenFlowFile_NonFlowFile)
+              (File_key.to_string file, ServerProt.GenFlowFile_NonFlowFile)
             ) in
 
             (* Codegen @flow files *)
             let result_contents = List.fold_left2 (fun results file cx ->
-              let file_path = Loc.string_of_filename file in
+              let file_path = File_key.to_string file in
               try
                 let code = FlowFileGen.flow_file cx in
                 (file_path, ServerProt.GenFlowFile_FlowFile code)::results
@@ -381,45 +400,57 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     result
 
   let find_refs ~options ~workers ~env (file_input, line, col) =
+    (* We will likely use these when we extend find refs to work globally
+     * rather than just locally, so it's probably simplest to just leave
+     * them here for now *)
+    let _ = options, workers, env in
     let filename = File_input.filename_of_file_input file_input in
-    let file = Loc.SourceFile filename in
+    let file = File_key.SourceFile filename in
     let loc = mk_loc file line col in
-    let state = FindRefs_js.set_hooks loc in
-    let result =
-      try
-        let content = File_input.content_of_file_input file_input in
-        let cx = match Types_js.typecheck_contents ~options ~workers ~env content file with
-          | _, Some cx, _, _, _ -> cx
-          | _  -> failwith "Couldn't parse file"
-        in
-        Ok (FindRefs_js.result cx state)
-      with exn ->
-        Error (Printexc.to_string exn)
+    let scope_info_result =
+      let open Parsing_service_js in
+      File_input.content_of_file_input file_input >>= fun content ->
+      let max_tokens = docblock_max_tokens in
+      let _errors, docblock = get_docblock ~max_tokens file content in
+      let types_mode = TypesAllowed in
+      let use_strict = true in
+      let result = do_parse ~fail:false ~types_mode ~use_strict ~info:docblock content file in
+      match result with
+        | Parse_ok ast -> Ok (Scope_builder.program ast)
+        (* The parse should not fail; we have passes ~fail:false *)
+        | Parse_fail _ -> Error "Parse unexpectedly failed"
+        | Parse_skip _ -> Error "Parse unexpectedly skipped"
     in
-    FindRefs_js.unset_hooks ();
-    result
+    match scope_info_result with
+      | Ok scope_info ->
+          let all_uses = Scope_api.all_uses scope_info in
+          let matching_uses = List.filter (fun use -> Loc.contains use loc) all_uses in
+          begin match matching_uses with
+            | [] -> Ok []
+            | [use] ->
+                let def = Scope_api.def_of_use scope_info use in
+                let unsorted = Scope_api.uses_of_def scope_info ~exclude_def:false def in
+                Ok (List.fast_sort Loc.compare unsorted)
+            | _ -> Error "Multiple identifiers were unexpectedly matched"
+          end
+      | Error e -> Error e
 
   let get_def ~options ~workers ~env command_context (file_input, line, col) =
     let filename = File_input.filename_of_file_input file_input in
-    let file = Loc.SourceFile filename in
+    let file = File_key.SourceFile filename in
     let loc = mk_loc file line col in
     let state = GetDef_js.getdef_set_hooks loc in
-    let result = try
-      let content = File_input.content_of_file_input file_input in
-      let profiling, cx = match Types_js.typecheck_contents ~options ~workers ~env content file with
-        | profiling, Some cx, _, _, _ -> profiling, cx
-        | _  -> failwith "Couldn't parse file"
-      in
-      Ok (GetDef_js.getdef_get_result
-        profiling
-        command_context
-        ~options
-        cx
-        state
-      )
-    with exn ->
-      Error (Printexc.to_string exn)
-    in
+    let result =
+      File_input.content_of_file_input file_input >>= fun content ->
+      Types_js.basic_check_contents ~options ~workers ~env content file >>= fun (profiling, cx, _info) ->
+      try_with begin fun () ->
+        GetDef_js.getdef_get_result
+          profiling
+          command_context
+          ~options
+          cx
+          state
+      end in
     GetDef_js.getdef_unset_hooks ();
     result
 
@@ -427,7 +458,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let file_options = Options.file_options options in
     let path = Path.to_string (Path.make module_name_str) in
     if Files.is_flow_file ~options:file_options path
-    then Modulename.Filename (Loc.SourceFile path)
+    then Modulename.Filename (File_key.SourceFile path)
     else Modulename.String module_name_str
 
   let get_imports ~options module_names =
@@ -491,7 +522,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     end;
 
     let is_incompatible filename_str =
-      let filename = Loc.JsonFile filename_str in
+      let filename = File_key.JsonFile filename_str in
       let filename_set = FilenameSet.singleton filename in
       let ast_opt =
         (*
@@ -539,7 +570,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let is_changed_lib filename =
       let is_lib = SSet.mem filename all_libs || filename = flow_typed_path in
       is_lib &&
-        let file = Loc.LibFile filename in
+        let file = File_key.LibFile filename in
         let old_ast = Parsing_service_js.get_ast file in
         let new_ast =
           let filename_set = FilenameSet.singleton file in
@@ -582,21 +613,31 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     ) updates FilenameSet.empty
 
   (* on notification, execute client commands or recheck files *)
-  let recheck genv env updates =
+  let recheck genv env ?(force_focus=false) ~serve_ready_clients updates =
     if FilenameSet.is_empty updates
     then env
     else begin
+      Persistent_connection.send_start_recheck env.connections;
       let options = genv.ServerEnv.options in
       let root = Options.root options in
       let tmp_dir = Options.temp_dir options in
       let workers = genv.ServerEnv.workers in
-      ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
-      let env = Types_js.recheck ~options ~workers ~updates env in
-      ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
+
+      Pervasives.ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
+      let env = Types_js.recheck ~options ~workers ~updates env ~force_focus ~serve_ready_clients in
+      (* Unfortunately, regenerate_collated_errors is currently a little expensive. As the checked
+       * repo grows, regenerate_collated_errors can easily take a couple of seconds. So we need to
+       * run it before we release the recheck lock *)
+      env.collated_errors := Some (regenerate_collated_errors env);
+      Pervasives.ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
+
+      Persistent_connection.send_end_recheck env.connections;
+      let errors, warnings, _ = get_collated_errors_separate_warnings env in
+      Persistent_connection.update_clients env.connections ~errors ~warnings;
       env
     end
 
-  let respond ~genv ~env ~client { ServerProt.client_logging_context; command; } =
+  let respond ~genv ~env ~serve_ready_clients ~client { ServerProt.client_logging_context; command; } =
     let env = ref env in
     let oc = client.oc in
     let marshal msg =
@@ -612,10 +653,9 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           autocomplete ~options ~workers ~env client_logging_context fn
         in
         marshal results
-    | ServerProt.CHECK_FILE (fn, verbose, graphml, force, include_warnings) ->
+    | ServerProt.CHECK_FILE (fn, verbose, force, include_warnings) ->
         Hh_logger.debug "Request: check %s" (File_input.filename_of_file_input fn);
         let options = { options with Options.
-          opt_output_graphml = graphml;
           opt_verbose = verbose;
           opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
         } in
@@ -633,19 +673,20 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         marshal types
     | ServerProt.FIND_MODULE (moduleref, filename) ->
         Hh_logger.debug "Request: find-module %s %s" moduleref filename;
-        (find_module ~options (moduleref, filename): filename option)
+        (find_module ~options (moduleref, filename): File_key.t option)
           |> marshal
     | ServerProt.FIND_REFS (fn, line, char) ->
         Hh_logger.debug "Request: find-refs %s:%d:%d"
           (File_input.filename_of_file_input fn) line char;
         (find_refs ~options ~workers ~env (fn, line, char): ServerProt.find_refs_response)
           |> marshal
-    | ServerProt.FORCE_RECHECK (files) ->
-        Hh_logger.debug "Request: force-recheck %s" (String.concat " " files);
+    | ServerProt.FORCE_RECHECK (files, force_focus) ->
+        Hh_logger.debug
+          "Request: force-recheck %s (focus = %b)" (String.concat " " files) force_focus;
         Marshal.to_channel oc () [];
         flush oc;
         let updates = process_updates genv !env (SSet.of_list files) in
-        env := recheck genv !env updates
+        env := recheck genv !env ~force_focus ~serve_ready_clients updates
     | ServerProt.GEN_FLOW_FILES (files, include_warnings) ->
         Hh_logger.debug "Request: gen-flow-files %s"
           (files |> List.map File_input.filename_of_file_input |> String.concat " ");
@@ -719,13 +760,13 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     end;
     !env
 
-  let respond_to_persistent_client genv env client msg =
+  let respond_to_persistent_client genv env ~serve_ready_clients client msg =
     let env = ref env in
     let options = genv.ServerEnv.options in
     let workers = genv.ServerEnv.workers in
     match msg with
       | Persistent_connection_prot.Subscribe ->
-          let current_errors, current_warnings, _ = collate_errors_separate_warnings !env.errors in
+          let current_errors, current_warnings, _ = get_collated_errors_separate_warnings !env in
           let new_connections = Persistent_connection.subscribe_client
             !env.connections client ~current_errors ~current_warnings
           in
@@ -738,39 +779,87 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           !env
       | Persistent_connection_prot.DidOpen filenames ->
           Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
-          let current_errors, current_warnings, _ = collate_errors_separate_warnings !env.errors in
-          let new_connections = Persistent_connection.client_did_open
-            !env.connections client ~filenames ~current_errors ~current_warnings in
-          { !env with connections = new_connections }
+
+          begin match Persistent_connection.client_did_open !env.connections client ~filenames with
+          | None -> !env (* No new files were opened, so do nothing *)
+          | Some (connections, client) ->
+            let env = {!env with connections} in
+
+            match Options.lazy_mode options with
+            | Some Options.LAZY_MODE_IDE ->
+              (* LAZY_MODE_IDE is a lazy mode which infers the focused files based on what the IDE
+               * opens. So when an IDE opens a new file, that file is now focused.
+               *
+               * If the newly opened file was previously unchecked or checked as a dependency, then
+               * we will do a new recheck.
+               *
+               * If the newly opened file was already checked, then we'll just send the errors to
+               * the client
+               *)
+              let file_options = Options.file_options options in
+              let focused = Nel.fold_left
+                (fun acc fn ->
+                  FilenameSet.add (Files.filename_from_string ~options:file_options fn) acc)
+                FilenameSet.empty
+                filenames in
+              let checked_files = CheckedSet.add ~focused env.checked_files in
+
+              let new_focused_files = focused
+                |> Fn.flip FilenameSet.diff (CheckedSet.focused env.checked_files)
+                |> Fn.flip FilenameSet.diff (CheckedSet.dependents env.checked_files) in
+
+              let env = { env with checked_files } in
+              if not (FilenameSet.is_empty new_focused_files)
+              then
+                (* Rechecking will send errors to the clients *)
+                recheck genv env ~serve_ready_clients new_focused_files
+              else begin
+                (* This open doesn't trigger a recheck, but we'll still send down the errors *)
+                let errors, warnings, _ = get_collated_errors_separate_warnings env in
+                Persistent_connection.send_errors_if_subscribed client ~errors ~warnings;
+                env
+              end
+            | Some Options.LAZY_MODE_FILESYSTEM
+            | None ->
+              (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
+               * a new file is opened is to send the errors to the client *)
+              let errors, warnings, _ = get_collated_errors_separate_warnings env in
+              Persistent_connection.send_errors_if_subscribed client ~errors ~warnings;
+              env
+            end
+
       | Persistent_connection_prot.DidClose filenames ->
           Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
-          let current_errors, current_warnings, _ = collate_errors_separate_warnings !env.errors in
-          let new_connections = Persistent_connection.client_did_close
-            !env.connections client ~filenames ~current_errors ~current_warnings in
-          { !env with connections = new_connections }
+          begin match Persistent_connection.client_did_close !env.connections client ~filenames with
+          | None -> !env (* No new files were closed, so do nothing *)
+          | Some (connections, client) ->
+            let errors, warnings, _ = get_collated_errors_separate_warnings !env in
+            Persistent_connection.send_errors_if_subscribed client ~errors ~warnings;
+            {!env with connections}
+          end
 
   let should_close = function
     | { ServerProt.command = ServerProt.CONNECT; _ } -> false
     | _ -> true
 
-  let handle_client genv env client =
+  let handle_client genv env ~serve_ready_clients ~waiting_requests client =
     let command : ServerProt.command_with_context = Marshal.from_channel client.ic in
-    let env = respond ~genv ~env ~client command in
-    if should_close command then client.close ();
-    env
+    let continuation env =
+      let env = respond ~genv ~env ~serve_ready_clients ~client command in
+      if should_close command then client.close ();
+      env in
+    match command.ServerProt.command with
+      | ServerProt.STATUS _
+      | ServerProt.FORCE_RECHECK _
+      | ServerProt.CONNECT ->
+        (* these commands must be processed after recheck is done *)
+        waiting_requests := continuation :: !waiting_requests;
+        env
+      | _ -> continuation env
 
-  let handle_persistent_client genv env client =
-    let msg, env =
-      try
-        Some (Persistent_connection.input_value client), env
-      with
-        | End_of_file ->
-            print_endline "Lost connection to client";
-            let new_connections = Persistent_connection.remove_client env.connections client in
-            None, {env with connections = new_connections}
-    in
-    match msg with
-      | Some msg -> respond_to_persistent_client genv env client msg
-      | None -> env
+  let handle_persistent_client genv env ~serve_ready_clients client =
+    match Persistent_connection.input_value client with
+    | None -> env
+    | Some msg -> respond_to_persistent_client genv env ~serve_ready_clients client msg
 
 end

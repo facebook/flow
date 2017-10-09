@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Autocomplete_js
@@ -121,7 +118,7 @@ let rec autocomplete_create_result cx name type_ loc =
         res_name = name;
         res_ty = (print_type cx type_);
         func_details = Some { params; return_ty = return } }
-  | DefT (_, PolyT (_, sub_type)) ->
+  | DefT (_, PolyT (_, sub_type, _)) ->
       let result = autocomplete_create_result cx name sub_type loc in
       (* This is not exactly pretty but we need to replace the type to
          be sure to use the same format for poly types as print_type *)
@@ -246,7 +243,7 @@ let autocomplete_jsx
   cls
   ac_name
   ac_loc
-  parse_result = Flow_js.(
+  docblock = Flow_js.(
     let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
     let component_instance = mk_instance cx reason cls in
     let props_object = mk_tvar_where cx reason (fun tvar ->
@@ -261,21 +258,18 @@ let autocomplete_jsx
       props_object
       ac_name
       ac_loc
-      parse_result
+      docblock
   )
 
 let autocomplete_get_results
-  profiling client_logging_context cx state parse_result =
+  profiling client_logging_context cx state docblock =
   (* FIXME: See #5375467 *)
   Type_normalizer.suggested_type_cache := IMap.empty;
   match !state with
   | Some { ac_type = Acid (env); _; } ->
-      autocomplete_id cx env
+    autocomplete_id cx env
   | Some { ac_name; ac_loc; ac_type = Acmem (this); } ->
-      autocomplete_member
-        profiling client_logging_context cx this ac_name ac_loc
-  parse_result
+    autocomplete_member profiling client_logging_context cx this ac_name ac_loc docblock
   | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
-      autocomplete_jsx
-        profiling client_logging_context cx cls ac_name ac_loc parse_result
+    autocomplete_jsx profiling client_logging_context cx cls ac_name ac_loc docblock
   | None -> Ok []

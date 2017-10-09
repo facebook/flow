@@ -998,7 +998,7 @@ module.exports = {
         'x | y ^ z',
         'x | y & z',
         {
-          content: '1 + type + interface + declare + let + eval + super + ' +
+          content: '1 + type + interface + declare + let + eval + ' +
             'async + await',
           explanation: 'Let is fine as an identifier',
           expected_differences: {
@@ -1938,7 +1938,19 @@ module.exports = {
         'var x = /\n/',
         'var x = "\n',
         'var if = 42',
-        'i #= 42',
+        {
+          content: 'i #= 42',
+          explanation: "# is no longer illegal in Flow, since we support private class fields. " +
+                       "Instead, it is unexpected since we are not parsing a member expression " +
+                       "or class property.",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token ILLEGAL',
+              actual: 'Unexpected token #'
+            },
+          }
+        },
         'i + 2 = 42',
         '+i = 42',
         '1 + (',
@@ -3307,53 +3319,6 @@ module.exports = {
               actual: 28,
             },
           },
-        },
-        {
-          content: '"use strict"; (class A { static constructor() { super() }})',
-          explanation: "Esprima counts the implicit semicolon in its loc, " +
-            "Flow doesn't. Esprima-fb also doesn't include params in " +
-            "FunctionExpression location. It also mishandles `super`",
-          expected_differences: {
-            'root.body.1.expression.body.body.0.value.body.body.0.loc.end.column': {
-              type: 'Wrong number',
-              expected: 56,
-              actual: 55
-            },
-            'root.body.1.expression.body.body.0.value.body.body.0.range.1': {
-              type: 'Wrong number',
-              expected: 56,
-              actual: 55
-            },
-            'root.body.1.expression.body.body.0.value.range.0': {
-              type: 'Wrong number',
-              expected: 46,
-              actual: 43,
-            },
-            'root.body.1.expression.body.body.0.value.loc.start.column': {
-              type: 'Wrong number',
-              expected: 46,
-              actual: 43,
-            },
-            'root.body.1.expression.body.body.0.value.body.body.0.expression.callee.type': {
-              type: 'Wrong string',
-              expected: 'Identifier',
-              actual: 'Super',
-            },
-            'root.body.1.expression.body.body.0.value.body.body.0.expression.callee.name': {
-              type: 'Missing property'
-            },
-            'root.body.1.expression.body.body.0.value.body.body.0.expression.callee.typeAnnotation': {
-              type: 'Missing property'
-            },
-            'root.body.1.expression.body.body.0.value.body.body.0.expression.callee.optional': {
-              type: 'Missing property'
-            },
-            'root.body.1.expression.body.body.0.kind': {
-              type: 'Wrong string',
-              expected: 'constructor',
-              actual: 'method',
-            }
-          }
         },
         {
           content: 'class A { foo() {} bar() {}}',
@@ -4952,7 +4917,6 @@ module.exports = {
           },
         },
         'function async() { }',
-        'async function foo() { return function await() { }; }',
         {
           content: 'async function foo() { return await foo + await bar + 5; }',
           explanation: 'Works in Babel and the spec appears to allow it',
@@ -4964,7 +4928,6 @@ module.exports = {
             },
           },
         },
-        'async function foo() { var await = 4; }',
         'var x = async function bar() { await foo; }',
         'async function foo() { return await; }',
         'var x = async (a, b) => await a;',

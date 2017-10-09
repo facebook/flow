@@ -1,8 +1,30 @@
+Error: test.js:3
+  3: var y: CovArrayVerbose<mixed,*> = b;
+                                       ^ type application of polymorphic type: CovArrayVerbose. Has some incompatible type argument with
+  3: var y: CovArrayVerbose<mixed,*> = b;
+            ^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: CovArrayVerbose
+  Type argument `X` is incompatible:
+      3: var y: CovArrayVerbose<mixed,*> = b;
+                                ^^^^^ mixed. This type is incompatible with
+      2: var b: CovArrayVerbose<number,*> = [];
+                                ^^^^^^ number
+
 Error: test.js:4
   4: y[0] = ""; // error
             ^^ string. This type is incompatible with
   2: var b: CovArrayVerbose<number,*> = [];
                             ^^^^^^ number
+
+Error: test.js:8
+  8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
+                                                  ^^^^^^ type application of polymorphic type: CovArrayVerbose. This type is incompatible with the expected return type of
+  8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
+                ^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: CovArrayVerbose
+  Type argument `X` is incompatible:
+      8:     foo(): CovArrayVerbose<mixed,I> { return this.x; }
+                                    ^^^^^ mixed. This type is incompatible with
+      6: class NVerbose<E,I:E> {
+               ^^^^^^^^ some incompatible instantiation of `E`
 
 Error: test.js:12
  12: nv.x = [0];
@@ -17,4 +39,4 @@ Error: test.js:12
                    ^^^^^^ string
 
 
-Found 3 errors
+Found 5 errors

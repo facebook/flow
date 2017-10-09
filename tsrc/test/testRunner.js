@@ -7,7 +7,7 @@ import {basename, dirname, resolve} from 'path';
 import {spawn} from 'child_process';
 
 import {getTestsDir} from '../constants';
-import {drain, rimraf, symlink} from '../async';
+import {drain, rimraf, symlink} from '../utils/async';
 import Builder from './builder';
 import {findTestsByName, findTestsByRun, loadSuite} from './findTests';
 import RunQueue from './RunQueue';
@@ -311,6 +311,8 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
 }
 
 export default async function(args: Args): Promise<void> {
+  await write(process.stderr, `Using flow binary: ${args.bin}\n`);
+
   if (args.buckCpTestsDir != null) {
     const src = args.buckCpTestsDir;
     const dest = getTestsDir();

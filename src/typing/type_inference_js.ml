@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* infer phase services *)
@@ -192,13 +189,13 @@ let scan_for_lint_suppressions =
   let colon_regex = Str.regexp ":" in
 
   let parse_kind loc_str =
-    match LintSettings.kinds_of_string loc_str.value with
+    match Lints.kinds_of_string loc_str.value with
     | Some kinds -> Ok kinds
     | None -> Error (loc_str.loc, LintSettings.Nonexistent_rule)
   in
 
   let parse_value loc_value =
-    match LintSettings.state_of_string loc_value.value with
+    match Severity.severity_of_string loc_value.value with
       | Some state -> Ok state
       | None -> Error (loc_value.loc, LintSettings.Invalid_setting)
   in
@@ -223,7 +220,7 @@ let scan_for_lint_suppressions =
   in
 
   (* parse arguments of the form lint1:setting1,lint2:setting2... *)
-  let get_kind_settings cx args =
+  let get_settings_list cx args =
     split_delim_locational comma_regex args
     |> List.map (fun rule -> get_kind_setting cx rule |> Option.value ~default:[])
   in
@@ -290,7 +287,7 @@ let scan_for_lint_suppressions =
 
   let process_comment
       cx
-      ((suppression_builder, running_settings, suppression_locs) as acc)
+      ((severity_cover_builder, running_settings, suppression_locs) as acc)
       comment =
     let loc_comment = comment |> convert_comment |> trim_and_stars_locational in
     if starts_with_keyword loc_comment.value then
@@ -299,15 +296,15 @@ let scan_for_lint_suppressions =
       match args with
         (* Case where we're changing certain lint settings *)
         | Some args ->
-          let kind_settings =
-            get_kind_settings cx args
+          let settings_list =
+            get_settings_list cx args
               |> nested_map (fun ({loc; value = kind}, state) -> (kind, (state, loc)))
           in
           let error_encountered = ref false in
           let (new_builder, new_running_settings) =
-            LintSettingsMap.update_settings_and_running running_settings
+            ExactCover.update_settings_and_running running_settings
               (fun err -> error_encountered := true; add_error cx err)
-              covered_range kind_settings suppression_builder in
+              covered_range settings_list severity_cover_builder in
           (* Only report overwritten arguments if there are no no-op arguments,
            * to avoid error duplication *)
           let () = if not !error_encountered then
@@ -322,7 +319,7 @@ let scan_for_lint_suppressions =
               (function
                 | (_,(_,loc))::_ -> Some loc
                 | [] -> None)
-              kind_settings
+              settings_list
             in
             List.iter (function
               | Some arg_loc ->
@@ -340,9 +337,9 @@ let scan_for_lint_suppressions =
             if not !error_encountered then
               List.fold_left (
                 fun suppression_locs -> function
-                  | (_, (LintSettings.Off, loc))::_ -> Loc.LocSet.add loc suppression_locs
+                  | (_, (Severity.Off, loc))::_ -> Loc.LocSet.add loc suppression_locs
                   | _ -> suppression_locs
-                ) suppression_locs kind_settings
+                ) suppression_locs settings_list
             else suppression_locs
           in
           if contains_r line_regex keyword.value 0
@@ -356,12 +353,12 @@ let scan_for_lint_suppressions =
   in
 
   fun cx base_settings comments ->
-    let suppression_builder = LintSettingsMap.new_builder (Context.file cx) base_settings in
-    let suppression_builder, _, suppression_locs = List.fold_left
-      (process_comment cx) (suppression_builder, base_settings, Loc.LocSet.empty) comments
+    let severity_cover_builder = ExactCover.new_builder (Context.file cx) base_settings in
+    let severity_cover_builder, _, suppression_locs = List.fold_left
+      (process_comment cx) (severity_cover_builder, base_settings, Loc.LocSet.empty) comments
     in
-    let suppression_map = LintSettingsMap.bake suppression_builder in
-    Context.set_lint_settings cx suppression_map;
+    let severity_cover = ExactCover.bake severity_cover_builder in
+    Context.set_severity_cover cx severity_cover;
     Context.set_unused_lint_suppressions cx suppression_locs
 
 let scan_for_suppressions cx base_settings comments =
@@ -374,19 +371,18 @@ let scan_for_suppressions cx base_settings comments =
   ()
 
 (* build module graph *)
-(* Lint suppressions are handled iff lint_settings is Some. *)
-let infer_ast ~metadata ~filename ~lint_settings ast ~require_loc_map =
+(* Lint suppressions are handled iff lint_severities is Some. *)
+let infer_ast ~lint_severities ~file_sig cx filename ast =
   Flow_js.Cache.clear();
 
   let _, statements, comments = ast in
 
-  let module_ref = Files.module_ref filename in
-  let cx = Flow_js.fresh_context metadata filename module_ref in
+  let module_ref = Context.module_ref cx in
 
   let dep_mapper = new Dep_mapper.mapper in
   let _ = dep_mapper#program ast in
-  let _ = Context.set_dep_map cx dep_mapper#depMap in
-  let _ = Context.set_renamings cx dep_mapper#renamings in
+  let _ = Context.set_dep_map cx dep_mapper#dep_map in
+  let _ = Context.set_use_def_map cx dep_mapper#use_def_map in
 
   let checked = Context.is_checked cx in
 
@@ -425,9 +421,11 @@ let infer_ast ~metadata ~filename ~lint_settings ast ~require_loc_map =
   let file_loc = Loc.({ none with source = Some filename }) in
   let reason = Reason.mk_reason (Reason.RCustom "exports") file_loc in
 
+  let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
+
   let initial_module_t = ImpExp.module_t_of_cx cx in
   if checked then (
-    SMap.iter (Import_export.add_module_tvar cx) require_loc_map;
+    SMap.iter (Import_export.add_require_tvar cx) require_loc_map;
 
     let init_exports = Flow.mk_object cx reason in
     ImpExp.set_module_exports cx file_loc init_exports;
@@ -436,7 +434,7 @@ let infer_ast ~metadata ~filename ~lint_settings ast ~require_loc_map =
     Flow_js.flow_t cx (init_exports, local_exports_var);
     infer_core cx statements;
 
-    scan_for_suppressions cx lint_settings comments;
+    scan_for_suppressions cx lint_severities comments;
 
     let module_t = Context.(
       match Context.module_kind cx with
@@ -463,7 +461,7 @@ let infer_ast ~metadata ~filename ~lint_settings ast ~require_loc_map =
   (* insist that whatever type flows into exports is fully annotated *)
   force_annotations cx require_loc_map;
 
-  cx
+  ()
 
 
 (* infer a parsed library file.
@@ -471,21 +469,26 @@ let infer_ast ~metadata ~filename ~lint_settings ast ~require_loc_map =
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
  *)
-let infer_lib_file ~metadata ~exclude_syms ~lint_settings file ast =
+let infer_lib_file ~metadata ~exclude_syms ~lint_severities file ast =
   let _, statements, comments = ast in
   Flow_js.Cache.clear();
 
   let cx = Flow_js.fresh_context metadata file Files.lib_module_ref in
-  (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
-     confident that we don't support them in any sensible way. *)
-  let require_loc = Require.program ~default_jsx:false ~ast in
-  SMap.iter (Import_export.add_module_tvar cx) require_loc;
+
+  let () =
+    (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
+       confident that we don't support them in any sensible way. *)
+    let open File_sig in
+    let file_sig = program ~ast in
+    let require_loc_map = require_loc_map file_sig.module_sig in
+    SMap.iter (Import_export.add_require_tvar cx) require_loc_map
+  in
 
   let module_scope = Scope.fresh () in
   Env.init_env ~exclude_syms cx module_scope;
 
   infer_core cx statements;
-  scan_for_suppressions cx lint_settings comments;
+  scan_for_suppressions cx lint_severities comments;
 
   module_scope |> Scope.(iter_entries Entry.(fun name entry ->
     Flow_js.set_builtin cx name (actual_type entry)

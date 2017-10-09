@@ -15,7 +15,7 @@ import {
   rimraf,
   unlink,
   writeFile,
-} from './../async';
+} from '../utils/async';
 import runRecord from '../record/recordRunner';
 import {getTestsDir, defaultFlowConfigName} from '../constants';
 

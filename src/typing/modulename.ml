@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* Signature for module names. Such names are assumed to be "resolved", and have
@@ -24,11 +21,11 @@
 *)
 type t =
 | String of string
-| Filename of Loc.filename
+| Filename of File_key.t
 
 let to_string = function
   | String m -> m
-  | Filename f -> Loc.string_of_filename f
+  | Filename f -> File_key.to_string f
 
 let compare = Pervasives.compare
 

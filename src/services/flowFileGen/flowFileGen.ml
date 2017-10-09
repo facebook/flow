@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 
@@ -29,7 +26,7 @@ let rec mark_declared_classes name t env = Codegen.(Type.(
   match resolve_type t env with
   | ThisClassT (_, DefT (_, InstanceT (_, _, _, {class_id; _;}))) ->
     set_class_name class_id name env
-  | DefT (_, PolyT (_, t)) ->
+  | DefT (_, PolyT (_, t, _)) ->
     mark_declared_classes name t env
   | _ ->
     env
@@ -47,19 +44,16 @@ let gen_imports env =
     let open Ast in
     let open Statement in
     let open ImportDeclaration in
-    let {importKind; source; specifiers;} = stmt in
-    let (named, default, ns) =
-      List.fold_left (fun (named, default, ns) spec ->
-        match spec with
-        | ImportNamedSpecifier s ->
-          (s::named, default, ns)
-        | ImportDefaultSpecifier (_, name) ->
-          (named, Some name, ns)
-        | ImportNamespaceSpecifier (_, (_, name)) ->
-          (named, default, Some name)
-      ) ([], None, None) specifiers
+    let {importKind; source; specifiers; default;} = stmt in
+    let default = Option.map ~f:(fun (_, name) -> name) default in
+    let named, ns = match specifiers with
+      | Some (ImportNamespaceSpecifier (_, (_, name))) ->
+        ([], Some name)
+      | Some (ImportNamedSpecifiers xs) ->
+        (xs, None)
+      | None ->
+        ([], None)
     in
-    let named = List.rev named in
     let source =
       match source with
       | (_, {Literal.value = Literal.String s; _;}) -> s
@@ -125,42 +119,6 @@ let gen_imports env =
   (imported_ts, SMap.fold mark_declared_classes imported_ts env)
 
 let gen_class_body =
-  let rec gen_method ~static method_name p env = Codegen.(Type.(
-    let t = match p with
-    | Field (t, Positive) -> t
-    | _ -> failwith "Internal Error: Unexpected method type, expected a field"
-    in
-    match resolve_type t env with
-    | AnnotT t ->
-      let p = Field (t, Positive) in
-      gen_method ~static method_name p env
-    | DefT (_, FunT (_static, _super, ft)) ->
-      let {params_tlist; params_names; rest_param; return_t; _;} = ft in
-      let is_empty_constructor =
-        method_name = "constructor"
-        && (not static)
-        && List.length params_tlist = 0
-        && match resolve_type return_t env with DefT (_, VoidT) -> true | _ -> false
-      in
-      if is_empty_constructor then env else (
-        add_str "  " env
-          |> gen_if static (add_str "static ")
-          |> add_str method_name
-          |> gen_tparams_list
-          |> add_str "("
-          |> gen_func_params params_names params_tlist rest_param
-          |> add_str "): "
-          |> gen_type return_t
-          |> add_str ";\n"
-      )
-    | DefT (_, PolyT (tparams, t)) ->
-      let p = Field (t, Positive) in
-      add_tparams tparams env |> gen_method ~static method_name p
-    | t -> failwith (
-      spf "Internal Error: Unexpected method type: %s" (string_of_ctor t)
-    )
-  )) in
-
   let gen_field ~static field_name p env = Codegen.(Type.(
     (**
      * All classes have an implicit `static name: string` field on them.
@@ -175,7 +133,23 @@ let gen_class_body =
       | _ -> false
     ) in
 
-    if is_static_name_field then env else (
+    let is_empty_constructor = not static && field_name = "constructor" && (
+      match p with
+      | Method t ->
+        (match resolve_type t env with
+        | DefT (_, FunT (_, _, { params_tlist; return_t; _ })) ->
+          List.length params_tlist = 0 && (
+            match resolve_type return_t env with
+            | DefT (_, VoidT) -> true
+            | _ -> false
+          )
+        | _ -> false)
+      | _ -> false
+    ) in
+
+    if is_static_name_field || is_empty_constructor
+    then env
+    else (
       add_str "  " env
         |> gen_if static (add_str "static ")
         |> gen_prop field_name p
@@ -184,10 +158,10 @@ let gen_class_body =
   )) in
 
   fun static fields methods env -> Codegen.(
-    let (static_fields, static_methods) = Type.(
+    let static_fields = Type.(
       match static with
-      | DefT (_, InstanceT (_, _, _, {fields_tmap; methods_tmap; _;})) ->
-        (find_props fields_tmap env, find_props methods_tmap env)
+      | DefT (_, ObjT {props_tmap; _}) ->
+        find_props props_tmap env
       | t -> failwith (
         spf
           "Internal Error: Unexpected class static type: %s"
@@ -195,22 +169,20 @@ let gen_class_body =
       )
     ) in
 
-    let fields_count = SMap.cardinal fields in
     let static_fields_count = SMap.cardinal static_fields in
+    let fields_count = SMap.cardinal fields in
     let methods_count = SMap.cardinal methods in
-    let static_methods_count = SMap.cardinal static_methods in
     let total_members_count =
-      fields_count + static_fields_count + methods_count + static_methods_count
+      static_fields_count + fields_count + methods_count
     in
 
     let env = add_str " {" env in
     if total_members_count = 0 then add_str "}" env else (
       add_str "\n" env
         |> SMap.fold (gen_field ~static:true) static_fields
-        |> SMap.fold (gen_method ~static:true) static_methods
         |> add_str "\n"
         |> SMap.fold (gen_field ~static:false) fields
-        |> SMap.fold (gen_method ~static:false) methods
+        |> SMap.fold (gen_field ~static:false) methods
         |> add_str "}"
   )
 )
@@ -259,7 +231,9 @@ class unexported_class_visitor = object(self)
           | DefT (_, ClassT t) when (
               match resolve_type t env with | ObjProtoT _ -> true | _ -> false
             ) -> env
-          | ThisTypeAppT (_, extends, _, ts) ->
+          | ThisTypeAppT (_, extends, _, None) ->
+            add_str " extends " env |> gen_type extends
+          | ThisTypeAppT (_, extends, _, Some ts) ->
             add_str " extends " env
               |> gen_type extends
               |> add_str "<"
@@ -316,7 +290,7 @@ let gen_local_classes =
       match Codegen.resolve_type t env with
       | ThisClassT (_, DefT (_, InstanceT (_, _, _, {class_id; _;}))) ->
         ISet.add class_id set
-      | DefT (_, PolyT (_, t)) -> fold_imported_classid _name t set
+      | DefT (_, PolyT (_, t, _)) -> fold_imported_classid _name t set
       | _ -> set
     ) in
     let imported_classids =
@@ -347,7 +321,7 @@ let gen_named_exports =
           |> gen_type return_t
           |> add_str ";"
 
-      | DefT (_, PolyT (tparams, t)) ->
+      | DefT (_, PolyT (tparams, t, _)) ->
         add_tparams tparams env |> fold_named_export name t
 
       | ThisClassT (_, DefT (_, InstanceT (static, super, implements, {
@@ -414,7 +388,7 @@ let gen_exports named_exports cjs_export env =
     let type_exports = SMap.filter Type.(fun _name t ->
       let t = match t with OpenT _ -> Codegen.resolve_type t env | _ -> t in
       match t with
-      | DefT (_, TypeT _) | DefT (_, PolyT (_, DefT (_, TypeT _))) -> true
+      | DefT (_, TypeT _) | DefT (_, PolyT (_, DefT (_, TypeT _), _)) -> true
       | _ -> false
     ) named_exports in
     gen_named_exports type_exports env

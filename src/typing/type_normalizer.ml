@@ -1,10 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Reason
@@ -22,7 +20,7 @@ let fake_fun params_names param_ts rest_param ret_t =
   DefT (reason, FunT (
     Flow_js.dummy_static reason,
     Flow_js.dummy_prototype,
-    Flow_js.mk_functiontype param_ts ~rest_param ~def_reason ?params_names ret_t
+    Flow_js.mk_functiontype reason param_ts ~rest_param ~def_reason ?params_names ret_t
   ))
 
 let fake_instance name =
@@ -71,6 +69,10 @@ let rec normalize_type_impl cx ids t = match t with
   | DefT (_, SingletonBoolT b) ->
     DefT (locationless_reason (RCustom "boolean singleton"), SingletonBoolT b)
 
+  (* Fake the signature of $CharSet<"abc"> *)
+  | DefT (_, CharSetT _) ->
+      Locationless.StrT.t (* TODO *)
+
   | DefT (_, FunT (_, _, ft)) ->
       let tins = List.map (normalize_type_impl cx ids) ft.params_tlist in
       let rest_param = Option.map
@@ -84,7 +86,7 @@ let rec normalize_type_impl cx ids t = match t with
       DefT (reason, FunT (
         Flow_js.dummy_static reason,
         Flow_js.dummy_prototype,
-        Flow_js.mk_functiontype
+        Flow_js.mk_functiontype reason
           tins ~rest_param ~def_reason ?params_names ?is_predicate tout
       ))
 
@@ -116,8 +118,9 @@ let rec normalize_type_impl cx ids t = match t with
       let params_names = Some ["thisArg"] in
       fake_fun params_names tins rest_param any
 
-  | ChoiceKitT (_, _) ->
-      Locationless.AnyT.t
+  | ChoiceKitT (_, _)
+  | TypeDestructorTriggerT _
+    -> Locationless.AnyT.t
 
   (* Fake the signature of $Facebookism$Merge: *)
   (* (...objects: Array<Object>): Object *)
@@ -251,7 +254,9 @@ let rec normalize_type_impl cx ids t = match t with
        <T>(fn: SFC<T>, config: T, children?: any) => React$Element<T>
      3. $JSXIntrinsics
        (no reasonable signature for this) *)
-  | CustomFunT (_, ReactCreateElement) ->
+  | CustomFunT (_, ReactCreateElement)
+  | CustomFunT (_, ReactCloneElement)
+  | CustomFunT (_, ReactElementFactory _) ->
       let config_name = "Config" in
       let config_tp =
         let reason = locationless_reason (RCustom config_name) in
@@ -266,12 +271,14 @@ let rec normalize_type_impl cx ids t = match t with
       let config = BoundT config_tp in
       let any = DefT (locationless_reason RAny, AnyT) in
       let react_element =
+        let id = Flow_js.mk_nominal cx in
         let instance = fake_instance "React$Element" in
-        typeapp (poly_type [config_tp] (class_type instance)) [config]
+        typeapp (poly_type id [config_tp] (class_type instance)) [config]
       in
       let component_class =
+        let id = Flow_js.mk_nominal cx in
         let instance = fake_instance "ReactClass" in
-        typeapp (poly_type [config_tp] (class_type instance)) [config]
+        typeapp (poly_type id [config_tp] (class_type instance)) [config]
       in
       let stateless_functional_component =
         let params_names = Some ["config"; "context"] in
@@ -279,14 +286,16 @@ let rec normalize_type_impl cx ids t = match t with
         fake_fun params_names param_ts None react_element
       in
       let t1 =
+        let id = Flow_js.mk_nominal cx in
         let params_names = Some ["name"; "config"; "children"] in
         let param_ts = [component_class; config; any] in
-        poly_type [config_tp] (fake_fun params_names param_ts None react_element)
+        poly_type id [config_tp] (fake_fun params_names param_ts None react_element)
       in
       let t2 =
+        let id = Flow_js.mk_nominal cx in
         let params_names = Some ["fn"; "config"; "children"] in
         let param_ts = [stateless_functional_component; config; any] in
-        poly_type [config_tp] (fake_fun params_names param_ts None react_element)
+        poly_type id [config_tp] (fake_fun params_names param_ts None react_element)
       in
       DefT (locationless_reason RIntersectionType,
         IntersectionT (InterRep.make t1 t2 [])
@@ -354,9 +363,9 @@ let rec normalize_type_impl cx ids t = match t with
       | DefT (_, MaybeT _) -> t
       | _ -> DefT (reason, MaybeT t))
 
-  | DefT (reason, PolyT (xs, t)) ->
+  | DefT (reason, PolyT (xs, t, id)) ->
       let reason = locationless_reason (desc_of_reason reason) in
-      DefT (reason, PolyT (xs, normalize_type_impl cx ids t))
+      DefT (reason, PolyT (xs, normalize_type_impl cx ids t, id))
 
   | DefT (reason, ClassT t) ->
       let reason = locationless_reason (desc_of_reason reason) in
@@ -383,12 +392,12 @@ let rec normalize_type_impl cx ids t = match t with
       let ts = List.map (normalize_type_impl cx ids) ts in
       DefT (reason, TypeAppT (c, ts))
 
-  | ThisTypeAppT (reason, c, this, ts) ->
+  | ThisTypeAppT (reason, c, this, ts_opt) ->
       let reason = locationless_reason (desc_of_reason reason) in
       let c = normalize_type_impl cx ids c in
       let this = normalize_type_impl cx ids this in
-      let ts = List.map (normalize_type_impl cx ids) ts in
-      ThisTypeAppT (reason, c, this, ts)
+      let ts_opt = OptionUtils.ident_map (List.map (normalize_type_impl cx ids)) ts_opt in
+      ThisTypeAppT (reason, c, this, ts_opt)
 
   | DefT (_, IntersectionT rep) ->
       let reason = locationless_reason RIntersection in
@@ -397,7 +406,7 @@ let rec normalize_type_impl cx ids t = match t with
 
   | DefT (_, UnionT rep) ->
       let reason = locationless_reason RUnion in
-      let rep = UnionRep.map (normalize_type_impl cx ids) rep in
+      let rep = UnionRep.ident_map (normalize_type_impl cx ids) rep in
       normalize_union reason rep
 
   | AnyWithUpperBoundT t ->
@@ -406,6 +415,9 @@ let rec normalize_type_impl cx ids t = match t with
   | AnyWithLowerBoundT t ->
       AnyWithLowerBoundT (normalize_type_impl cx ids t)
 
+  | MergedT (r, uses) ->
+      MergedT (r, uses)
+
   | DefT (_, AnyObjT) -> DefT (locationless_reason RAnyObject, AnyObjT)
   | DefT (_, AnyFunT) -> DefT (locationless_reason RAnyFunction, AnyFunT)
 
@@ -413,9 +425,11 @@ let rec normalize_type_impl cx ids t = match t with
       ShapeT (normalize_type_impl cx ids t)
   | DiffT (t1, t2) ->
       DiffT (normalize_type_impl cx ids t1, normalize_type_impl cx ids t2)
+  | MatchingPropT (r, x, t) ->
+      MatchingPropT (r, x, normalize_type_impl cx ids t)
 
-  | AnnotT t ->
-      AnnotT (normalize_type_impl cx ids t)
+  | AnnotT (t, use_desc) ->
+      AnnotT (normalize_type_impl cx ids t, use_desc)
 
   | OpaqueT (r, opaquetype) ->
       OpaqueT (r, { opaquetype with
@@ -426,10 +440,6 @@ let rec normalize_type_impl cx ids t = match t with
 
   | KeysT (_, t) ->
       KeysT (locationless_reason RKeySet, normalize_type_impl cx ids t)
-
-  | AbstractT (reason, t) ->
-      let reason = locationless_reason (desc_of_reason reason) in
-      AbstractT (reason, normalize_type_impl cx ids t)
 
   | EvalT (_, _, id) ->
       let evaluated = Context.evaluated cx in
@@ -457,20 +467,7 @@ let rec normalize_type_impl cx ids t = match t with
       | Some t -> Some (normalize_type_impl cx ids t) in
     ModuleT (reason, { exporttypes with exports_tmap; cjs_export; })
 
-  | TypeMapT (_, TupleMap, t1, t2) ->
-      let t1 = normalize_type_impl cx ids t1 in
-      let t2 = normalize_type_impl cx ids t2 in
-      TypeMapT (locationless_reason RTupleMap, TupleMap, t1, t2)
-
-  | TypeMapT (_, ObjectMap, t1, t2) ->
-      let t1 = normalize_type_impl cx ids t1 in
-      let t2 = normalize_type_impl cx ids t2 in
-      TypeMapT (locationless_reason RObjectMap, ObjectMap, t1, t2)
-
-  | TypeMapT (_, ObjectMapi, t1, t2) ->
-      let t1 = normalize_type_impl cx ids t1 in
-      let t2 = normalize_type_impl cx ids t2 in
-      TypeMapT (locationless_reason RObjectMapi, ObjectMapi, t1, t2)
+  | NullProtoT _ -> NullProtoT (locationless_reason RNull)
 
   | ObjProtoT _ -> ObjProtoT (locationless_reason RDummyPrototype)
 
@@ -480,6 +477,7 @@ let rec normalize_type_impl cx ids t = match t with
 
   | FunProtoT _
   | ExtendsT (_, _, _, _)
+  | CustomFunT (_, Compose _)
   ->
     (** TODO **)
     failwith (spf "Unsupported type in normalize_type_impl: %s" (string_of_ctor t))

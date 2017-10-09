@@ -1,135 +1,146 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
 module Reqs = Merge_js.Reqs
 
-type 'a merge_results = (filename * ('a, exn) result) list
+
+type 'a merge_results = (File_key.t * ('a, exn) result) list
 type 'a merge_job =
   options:Options.t ->
-  'a merge_results * filename list ->
-  filename list ->
-  'a merge_results * filename list
+  'a merge_results * File_key.t list ->
+  File_key.t list ->
+  'a merge_results * File_key.t list
 
-(* To merge the contexts of a component (component_cxs) with their dependencies,
-   we call the functions `merge_component_strict` and `restore` defined
-   in type_inference_js.ml with appropriate arguments prepared below.
-
-   First, we check the requires of component_cxs.
-
-   Next, we traverse these requires, creating:
+(* To merge the contexts of a component with their dependencies, we call the
+   functions `merge_component_strict` and `restore` defined in merge_js.ml
+   with appropriate reqs prepared below.
 
    (a) orig_sig_cxs: the original signature contexts of dependencies outside the
    component.
 
    (b) sig_cxs: the copied signature contexts of such dependencies.
 
-   (c) impls: edges between contexts in component_cxs and sig_cxs that
-   are labeled with the requires they denote (when implementations of such
-   requires are found).
+   (c) impls: edges between files within the component
 
-   (d) res: edges between contexts in component_cxs and resource files, labeled
+   (d) dep_impls: edges from files in the component to cxs of direct
+   dependencies, when implementations are found.
+
+   (e) unchecked: edges from files in the component to files which are known to
+   exist are not checked (no @flow, @noflow, unparsed). Note that these
+   dependencies might be provided by a (typed) libdef, but we don't know yet.
+
+   (f) res: edges between files in the component and resource files, labeled
    with the requires they denote.
 
-   (e) decls: edges between contexts in component_cxs and libraries, classified
+   (g) decls: edges between files in the component and libraries, classified
    by requires (when implementations of such requires are not found).
-
-   The arguments (b), (c), (d) are passed to `merge_component_strict`, and
-   argument (a) is passed to `restore`.
 *)
-let merge_strict_context_with_required ~options component_cxs required =
-  let cx = List.hd component_cxs in
-
-  let cache = List.fold_left (fun acc cx ->
-    FilenameMap.add (Context.file cx) cx acc
-  ) FilenameMap.empty component_cxs in
-
-  let sig_cache = new Context_cache.sig_context_cache in
-
-  let orig_dep_cxs, dep_cxs, reqs =
-    List.fold_left (fun (orig_dep_cxs, dep_cxs, reqs) req ->
-      let r, loc, resolved_r, cx_to = req in
+let reqs_of_component ~options component required =
+  let dep_cxs, reqs =
+    List.fold_left (fun (dep_cxs, reqs) req ->
+      let r, loc, resolved_r, file = req in
       Module_js.(match get_file Expensive.ok resolved_r with
-      | Some (Loc.ResourceFile f) ->
-        orig_dep_cxs, dep_cxs,
-        Reqs.add_res (r, loc, f, cx_to) reqs
-      | Some file ->
-        let info = get_info_unsafe ~audit:Expensive.ok file in
+      | Some (File_key.ResourceFile f) ->
+        dep_cxs, Reqs.add_res (r, loc, f, file) reqs
+      | Some dep ->
+        let info = get_info_unsafe ~audit:Expensive.ok dep in
         if info.checked && info.parsed then
           (* checked implementation exists *)
-          match FilenameMap.get file cache with
-          | Some cx ->
+          let m = Files.module_ref dep in
+          if List.mem dep component then
             (* impl is part of component *)
-            orig_dep_cxs, dep_cxs,
-            Reqs.add_impl (cx, Files.module_ref file, r, cx_to) reqs
-          | None ->
+            dep_cxs, Reqs.add_impl (dep, m, r, file) reqs
+          else
             (* look up impl sig_context *)
-            let impl cx = cx, Files.module_ref file, r, cx_to in
-            let file = Context_cache.find_leader file in
-            match sig_cache#find file with
-            | Some sig_cx ->
-              orig_dep_cxs, dep_cxs,
-              Reqs.add_dep_impl (impl sig_cx) reqs
-            | None ->
-              let orig_sig_cx, sig_cx =
-                sig_cache#read ~audit:Expensive.ok ~options file in
-              orig_sig_cx::orig_dep_cxs, sig_cx::dep_cxs,
-              Reqs.add_dep_impl (impl sig_cx) reqs
+            let leader = Context_cache.find_leader dep in
+            let dep_cx = Context_cache.find_sig ~options leader in
+            dep_cx::dep_cxs, Reqs.add_dep_impl (dep_cx, m, r, file) reqs
         else
           (* unchecked implementation exists *)
-          orig_dep_cxs, dep_cxs,
-          Reqs.add_unchecked (r, loc, cx_to) reqs
+          dep_cxs, Reqs.add_unchecked (r, loc, file) reqs
       | None ->
         (* implementation doesn't exist *)
-        orig_dep_cxs, dep_cxs,
-        Reqs.add_decl (r, loc, resolved_r, cx_to) reqs
+        dep_cxs, Reqs.add_decl (r, loc, resolved_r, file) reqs
       )
-    ) ([], [], Reqs.empty) required
+    ) ([], Reqs.empty) required
   in
 
-  let orig_master_cx, master_cx =
-    sig_cache#read ~audit:Expensive.ok ~options Loc.Builtins in
+  let master_cx = Context_cache.find_sig ~options File_key.Builtins in
 
-  Merge_js.merge_component_strict reqs component_cxs dep_cxs master_cx;
-  Merge_js.restore cx orig_dep_cxs orig_master_cx;
+  master_cx, dep_cxs, reqs
 
-  orig_master_cx
+let merge_strict_context ~options component =
+  let required, file_sigs =
+    List.fold_left (fun (required, file_sigs) file ->
+      let file_sig = Parsing_service_js.get_file_sig_unsafe file in
+      let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
+      let required = SMap.fold (fun r loc ->
+        let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
+          file r in
+        List.cons (r, loc, resolved_r, file)
+      ) require_loc_map required in
+      required, FilenameMap.add file file_sig file_sigs
+    ) ([], FilenameMap.empty) component in
 
-let merge_strict_context ~options component_cxs =
-  let required = List.fold_left (fun required cx ->
-    let file = Context.file cx in
-    let require_loc_map = Parsing_service_js.get_requires_unsafe file in
-    SMap.fold (fun r loc ->
-      let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
-        file r in
-      List.cons (r, loc, resolved_r, cx)
-    ) require_loc_map required
-  ) [] component_cxs in
-  merge_strict_context_with_required ~options component_cxs required
+  let master_cx, dep_cxs, file_reqs =
+    reqs_of_component ~options component required
+  in
+
+  let metadata = Context.metadata_of_options options in
+  let lint_severities = Some (Options.lint_severities options) in
+  let cx = Merge_js.merge_component_strict
+    ~metadata ~lint_severities ~file_sigs
+    ~get_ast_unsafe:Parsing_service_js.get_ast_unsafe
+    ~get_docblock_unsafe:Parsing_service_js.get_docblock_unsafe
+    component file_reqs dep_cxs master_cx
+  in
+
+  cx, master_cx
 
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
-let merge_contents_context ~options cx require_loc_map ~ensure_checked_dependencies =
+let merge_contents_context options file ast info ~ensure_checked_dependencies =
+  let file_sig = Parsing_service_js.calc_file_sig ~ast in
   let resolved_rs, required =
+    let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
     SMap.fold (fun r loc (resolved_rs, required) ->
       let resolved_r = Module_js.imported_module
         ~options
         ~node_modules_containers:!Files.node_modules_containers
-        (Context.file cx) loc r in
+        file loc r in
       Modulename.Set.add resolved_r resolved_rs,
-      (r, loc, resolved_r, cx) :: required
+      (r, loc, resolved_r, file) :: required
     ) require_loc_map (Modulename.Set.empty, [])
   in
+  let file_sigs = FilenameMap.singleton file file_sig in
+
   ensure_checked_dependencies resolved_rs;
-  (merge_strict_context_with_required ~options [cx] required: Context.t)
-  |> ignore
+
+  let component = [file] in
+
+  let master_cx, dep_cxs, file_reqs =
+    begin try reqs_of_component ~options component required with
+      | Key_not_found _  ->
+        failwith "not all dependencies are ready yet, aborting..."
+      | e -> raise e
+    end
+  in
+
+  let metadata = Context.metadata_of_options options in
+  let lint_severities = Some (Options.lint_severities options) in
+  let cx = Merge_js.merge_component_strict
+    ~metadata ~lint_severities ~file_sigs
+    ~get_ast_unsafe:(fun _ -> ast)
+    ~get_docblock_unsafe:(fun _ -> info)
+    component file_reqs dep_cxs master_cx
+  in
+
+  cx
 
 (* Entry point for merging a component *)
 let merge_strict_component ~options (merged_acc, unchanged_acc) component =
@@ -149,33 +160,38 @@ let merge_strict_component ~options (merged_acc, unchanged_acc) component =
   *)
   let info = Module_js.get_info_unsafe ~audit:Expensive.ok file in
   if info.Module_js.checked then (
-    let component_cxs =
-      List.map
-        (Context_cache.get_context_unsafe ~audit:Expensive.ok ~options)
-        component
-    in
+    let cx, master_cx = merge_strict_context ~options component in
 
-    let master_cx = merge_strict_context ~options component_cxs in
-
-    let md5 = Merge_js.ContextOptimizer.sig_context component_cxs in
-    let cx = List.hd component_cxs in
+    let module_refs = List.rev_map Files.module_ref component in
+    let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
 
     Merge_js.clear_master_shared cx master_cx;
 
     let errors = Context.errors cx in
+    let suppressions = Context.error_suppressions cx in
+    let severity_cover = Context.severity_cover cx in
 
     Context.remove_all_errors cx;
+    Context.remove_all_error_suppressions cx;
+    Context.remove_all_lint_severities cx;
+
     Context.clear_intermediates cx;
 
     let diff = Context_cache.add_merge_on_diff ~audit:Expensive.ok
-      component_cxs md5 in
+      cx component md5 in
 
-    (file, Ok errors) :: merged_acc,
+    (file, Ok (errors, suppressions, severity_cover)) :: merged_acc,
     if diff then unchanged_acc else file :: unchanged_acc
   )
   else
-    (file, Ok Errors.ErrorSet.empty) :: merged_acc, unchanged_acc
-
+    let errors = Errors.ErrorSet.empty in
+    let suppressions = Error_suppressions.empty in
+    let severity_cover =
+      ExactCover.file_cover file
+        (Options.lint_severities options)
+    in
+    (file, Ok (errors, suppressions, severity_cover)) :: merged_acc,
+    unchanged_acc
 
 let merge_strict_job ~options ~job (merged, unchanged) elements =
   List.fold_left (fun (merged, unchanged) -> function
@@ -192,14 +208,14 @@ let merge_strict_job ~options ~job (merged, unchanged) elements =
       (* A component may have several files: there's always at least one, and
          multiple files indicate a cycle. *)
       let files = component
-      |> List.map string_of_filename
+      |> List.map File_key.to_string
       |> String.concat "\n\t"
       in
       try Profile_utils.checktime ~options ~limit:1.0
         ~msg:(fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) files t)
         ~log:(fun merge_time ->
           let length = List.length component in
-          let leader = List.hd component |> string_of_filename in
+          let leader = List.hd component |> File_key.to_string in
           Flow_server_profile.merge ~length ~merge_time ~leader)
         ~f:(fun () ->
           (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
@@ -211,7 +227,7 @@ let merge_strict_job ~options ~job (merged, unchanged) elements =
       | SharedMem_js.Hash_table_full
       | SharedMem_js.Dep_table_full as exc -> raise exc
       (* A catch all suppression is probably a bad idea... *)
-      | exc ->
+      | exc when not Build_mode.dev ->
         let file = List.hd component in
         prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
           (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
@@ -236,7 +252,7 @@ let merge_runner ~job ~intermediate_result_callback ~options ~workers
   Profile_utils.logtime ~options
     ~msg:(fun t -> spf "merged (strict) in %f" t)
     ~f:(fun () ->
-      (* returns parallel lists of filenames and errorsets *)
+      (* returns parallel lists of filenames, error sets, and suppression sets *)
       let merged, _ = MultiWorker.call
         workers
         ~job: (merge_strict_job ~options ~job)

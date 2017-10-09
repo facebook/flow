@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -31,6 +28,7 @@ let spec = {
     |> root_flag
     |> json_flags
     |> strip_root_flag
+    |> from_flag
     |> anon "module" (required string)
         ~doc:"Module reference to resolve"
     |> anon "file" (required string)
@@ -38,7 +36,8 @@ let spec = {
   )
 }
 
-let main option_values root json pretty strip_root moduleref filename () =
+let main option_values root json pretty strip_root from moduleref filename () =
+  FlowEventLogger.set_from from;
   let root = guess_root (
     match root with Some root -> Some root | None -> Some filename
   ) in
@@ -46,15 +45,15 @@ let main option_values root json pretty strip_root moduleref filename () =
   let ic, oc = connect option_values root in
 
   send_command oc (ServerProt.FIND_MODULE (moduleref, filename));
-  let response: Loc.filename option = Timeout.input_value ic in
+  let response: File_key.t option = Timeout.input_value ic in
   let result = match response with
-    | Some Loc.LibFile file
-    | Some Loc.SourceFile file
-    | Some Loc.JsonFile file
-    | Some Loc.ResourceFile file ->
+    | Some File_key.LibFile file
+    | Some File_key.SourceFile file
+    | Some File_key.JsonFile file
+    | Some File_key.ResourceFile file ->
         if strip_root then Files.relative_path (Path.to_string root) file
         else file
-    | Some Loc.Builtins -> "(global)"
+    | Some File_key.Builtins -> "(global)"
     | None -> "(unknown)" in
   if json || pretty
   then (

@@ -1,7 +1,3 @@
-Error: traces.js:8
-  8: // $FlowFixMe - Error unused suppression
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
-
 Error: traces.js:15
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ number. This type is incompatible with
@@ -42,7 +38,7 @@ Trace:
               ^^^^^ ~> CallT [function call]
 * path 5:
   9: function bar(): number { return 5; }
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FunT [function]
+     ^^^^^^^^^^^^^^^^^^^^^^ FunT [function]
   9: function bar(): number { return 5; }
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [function]
  12:   return bar();
@@ -53,5 +49,9 @@ Trace:
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ ~> CallT [function call]
 
+Warning: traces.js:8
+  8: // $FlowFixMe - Error unused suppression
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
-Found 2 errors
+
+Found 1 error and 1 warning

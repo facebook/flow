@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -58,6 +55,7 @@ let spec = {
     |> strip_root_flag
     |> ignore_flag
     |> include_flag
+    |> from_flag
     |> anon "src" (required string)
         ~doc:"The path to a file or directory to generate .js.flow files for"
     |> flag "--out-dir" string
@@ -87,7 +85,8 @@ let write_file strip_root root content perm src_file_path dest_file_path =
   Unix.close fd
 
 let main option_values root error_flags strip_root ignore_flag
-  include_flag src out_dir () = (
+  include_flag from src out_dir () = (
+  FlowEventLogger.set_from from;
   let src = expand_path src in
   let root = guess_root (
     match root with
@@ -115,7 +114,7 @@ let main option_values root error_flags strip_root ignore_flag
       let options = LsCommand.make_options ~root ~ignore_flag ~include_flag in
       let _, libs = Files.init options in
       let next_files =
-        LsCommand.get_ls_files ~root ~all:false ~options ~libs (Some src)
+        LsCommand.get_ls_files ~root ~all:false ~options ~libs ~imaginary:false (Some src)
       in
       let files = Files.get_all next_files in
       let num_files = SSet.cardinal files in

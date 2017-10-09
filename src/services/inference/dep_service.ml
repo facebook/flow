@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -112,9 +109,9 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
        addition to others computed by direct_dependents downstream). *)
     let resolution_path_files =
       if resolved_requires.phantom_dependents |> SSet.exists (fun f ->
-        FilenameSet.mem (Loc.SourceFile f) root_fileset ||
-        FilenameSet.mem (Loc.JsonFile f) root_fileset ||
-        FilenameSet.mem (Loc.ResourceFile f) root_fileset
+        FilenameSet.mem (File_key.SourceFile f) root_fileset ||
+        FilenameSet.mem (File_key.JsonFile f) root_fileset ||
+        FilenameSet.mem (File_key.ResourceFile f) root_fileset
       ) then FilenameSet.add f resolution_path_files
       else resolution_path_files in
     modules, module_dependent_map, resolution_path_files
@@ -247,6 +244,9 @@ let calc_dependency_graph workers files =
     FilenameSet.filter (fun f -> FilenameMap.mem f dependency_graph)
   ) dependency_graph
 
+(* `calc_all_dependencies graph files` will return the set of direct and transitive dependencies
+ * of `files`. This set does include `files`.
+ *)
 let calc_all_dependencies =
   let rec loop dependency_graph =
     FilenameSet.fold (fun file acc ->

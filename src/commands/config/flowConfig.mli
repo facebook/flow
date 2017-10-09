@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 type config
@@ -77,4 +74,4 @@ val required_version: config -> string option
 val weak: config -> bool
 
 (* global defaults for lint suppressions *)
-val lint_settings: config -> LintSettings.t
+val lint_severities: config -> Severity.severity LintSettings.t

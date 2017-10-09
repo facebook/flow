@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open ServerEnv
@@ -17,28 +14,24 @@ module Server_files = Server_files_js
 exception State_not_found
 
 module type SERVER_PROGRAM = sig
-  val init : focus_targets:Loc.filename list -> genv -> (Profiling_js.t * env)
+  val init : focus_targets:FilenameSet.t option -> genv -> (Profiling_js.finished * env)
   val check_once : genv -> env ->
     Errors.ErrorSet.t * (* errors *)
     Errors.ErrorSet.t * (* warnings *)
     (Errors.error * Loc.LocSet.t) list (* suppressed errors *)
   (* filter and relativize updated file paths *)
   val process_updates : genv -> env -> SSet.t -> FilenameSet.t
-  val recheck: genv -> env -> FilenameSet.t -> env
+  val recheck: genv -> env ->
+    ?force_focus:bool -> serve_ready_clients:(unit -> unit) -> FilenameSet.t -> env
   val get_watch_paths: Options.t -> Path.t list
   val name: string
-  val handle_client : genv -> env -> client -> env
-  val handle_persistent_client : genv -> env -> Persistent_connection.single_client -> env
-  val collate_errors :
-    errors ->
-    Errors.ErrorSet.t * (* errors *)
-      Errors.ErrorSet.t * (* warnings *)
-      (Errors.error * Loc.LocSet.t) list (* suppressed errors *)
-  val collate_errors_separate_warnings :
-    errors ->
-    Errors.ErrorSet.t * (* errors *)
-      Errors.ErrorSet.t FilenameMap.t * (* warnings *)
-      (Errors.error * Loc.LocSet.t) list (* suppressed errors *)
+  val handle_client : genv -> env ->
+    serve_ready_clients:(unit -> unit) ->
+    waiting_requests:(ServerEnv.env -> ServerEnv.env) list ref ->
+    client -> env
+  val handle_persistent_client : genv -> env ->
+    serve_ready_clients:(unit -> unit) ->
+    Persistent_connection.single_client -> env
 end
 
 (*****************************************************************************)
@@ -47,14 +40,15 @@ end
 module ServerMain (Program : SERVER_PROGRAM) : sig
   val run :
     shared_mem_config:SharedMem_js.config ->
+    log_file:string ->
     Options.t ->
     unit
   val check_once :
     shared_mem_config:SharedMem_js.config ->
     client_include_warnings:bool ->
-    ?focus_targets:Loc.filename list ->
+    ?focus_targets:FilenameSet.t ->
     Options.t ->
-    Profiling_js.t *
+    Profiling_js.finished *
       Errors.ErrorSet.t * (* errors *)
       Errors.ErrorSet.t * (* warnings *)
       (Errors.error * Loc.LocSet.t) list (* suppressed errors *)
@@ -89,7 +83,17 @@ end = struct
         failwith "Internal server error: select returned an unknown fd"
     )
 
-  let handle_connection_ genv env socket =
+  (* Quickly check whether there is an outstanding request (while
+     rechecking). TODO: handle persistent connections. *)
+  let quick_check socket =
+    let ready_socket_l, _, _ = Unix.select [socket] [] [] (0.0) in
+    List.map ready_socket_l (fun ready_socket ->
+      if ready_socket = socket then
+        New_client socket
+      else failwith "Internal server error: select returned an unknown fd"
+    )
+
+  let handle_connection_ genv env ~serve_ready_clients ~waiting_requests socket =
     let cli, _ = Unix.accept socket in
     let ic = Unix.in_channel_of_descr cli in
     let oc = Unix.out_channel_of_descr cli in
@@ -104,7 +108,7 @@ end = struct
         FlowExitStatus.exit FlowExitStatus.Build_id_mismatch
       end else msg_to_channel oc Connection_ok;
       let client = { ic; oc; close } in
-      Program.handle_client genv env client
+      Program.handle_client genv env ~serve_ready_clients ~waiting_requests client
     with
     | Sys_error msg when msg = "Broken pipe" ->
       shutdown_client (ic, oc);
@@ -117,9 +121,9 @@ end = struct
       shutdown_client (ic, oc);
       env
 
-  let handle_connection genv env socket =
+  let handle_connection genv env ~serve_ready_clients ~waiting_requests socket =
     ServerPeriodical.stamp_connection ();
-    try handle_connection_ genv env socket
+    try handle_connection_ genv env ~serve_ready_clients ~waiting_requests socket
     with
     | Unix.Unix_error (e, _, _) ->
         Printf.fprintf stderr "Unix error: %s\n" (Unix.error_message e);
@@ -138,16 +142,12 @@ end = struct
    * right after one rechecking round finishes to be part of the same
    * rebase, and we don't log the recheck_end event until the update list
    * is no longer getting populated. *)
-  let rec recheck_loop ~dfind genv env =
+  let rec recheck_loop ~dfind genv env ~serve_ready_clients =
     let raw_updates = DfindLib.get_changes dfind in
     if SSet.is_empty raw_updates then env else begin
       let updates = Program.process_updates genv env raw_updates in
-      Persistent_connection.send_start_recheck env.connections;
-      let env = Program.recheck genv env updates in
-      Persistent_connection.send_end_recheck env.connections;
-      let errors, warnings, _ = Program.collate_errors_separate_warnings env.errors in
-      Persistent_connection.update_clients env.connections ~errors ~warnings;
-      recheck_loop ~dfind genv env
+      let env = Program.recheck genv env ~serve_ready_clients updates in
+      recheck_loop ~dfind genv env ~serve_ready_clients
     end
 
   let assert_lock genv =
@@ -164,19 +164,73 @@ end = struct
         die()
     end
 
+  (* NOTE: This function never calls serve_ready_clients. Instead, it stores it
+     in a continuation, which is called later. *)
+  let serve_client genv env ~serve_ready_clients ~waiting_requests = function
+    | New_client fd ->
+      env := handle_connection genv !env ~serve_ready_clients ~waiting_requests fd
+    | Existing_client client ->
+      env := Program.handle_persistent_client genv !env ~serve_ready_clients client
+
+  (* Waiting connections must be processed in a loop, since processing a waiting
+     connection can add more waiting connections. *)
+  let rec process_waiting_requests env ~waiting_requests =
+    let continuations = List.rev !waiting_requests in
+    waiting_requests := [];
+    List.iter continuations (fun continuation -> env := continuation !env);
+    if !waiting_requests <> []
+    then process_waiting_requests env ~waiting_requests
+
+  let serve_queue ~genv ~env ~ready_sockets ~serve_ready_clients ~waiting_requests =
+    while not (Queue.is_empty ready_sockets) do
+      let socket = Queue.pop ready_sockets in
+      serve_client genv env ~serve_ready_clients ~waiting_requests socket;
+    done
+
   let serve ~dfind ~genv ~env socket =
     let env = ref env in
+    let waiting_requests = ref [] in
     while true do
       assert_lock genv;
+      (* we want to defer processing certain commands until recheck is done *)
       ServerPeriodical.call_before_sleeping();
-      let ready_sockets = sleep_and_check socket !env.connections in
-      env := recheck_loop ~dfind genv !env;
-      List.iter ready_sockets (function
-        | New_client fd ->
-            env := handle_connection genv !env fd;
-        | Existing_client client ->
-            env := Program.handle_persistent_client genv !env client;
-      );
+      let ready_sockets = Queue.create () in
+      let add_ready_socket socket = Queue.push socket ready_sockets in
+      env := { !env with connections = Persistent_connection.filter_broken !env.connections };
+      sleep_and_check socket !env.connections
+      |> List.iter ~f:add_ready_socket;
+
+      (* serve_ready_clients could in theory keep serving clients as they pop up until there are no
+       * more clients to serve. However, we likely have a recheck waiting, so we don't really want
+       * a while loop in here. So instead we'd like to just serve the clients who are ready when
+       * serve_ready_clients is called.
+       *
+       * Though deduping clients is a little tricky. So we're going to fudge this one more time and
+       * say that "serve_ready_clients" is going to serve all the clients who are ready when
+       * serve_ready_clients is called and maybe a few more who are ready after the existing queue
+       * is processed
+       *)
+      let rec serve_ready_clients () =
+        (* Drain the queue *)
+        serve_queue ~genv ~env ~ready_sockets ~serve_ready_clients ~waiting_requests;
+
+        (* If serve_queue is not empty, quick check will add duplicate sockets to the queue *)
+        assert (Queue.is_empty ready_sockets);
+
+        (* Add any waiting clients *)
+        quick_check socket
+        |> List.iter ~f:add_ready_socket;
+
+        (* Drain the queue again *)
+        serve_queue ~genv ~env ~ready_sockets ~serve_ready_clients ~waiting_requests;
+      in
+      env := recheck_loop ~dfind genv !env ~serve_ready_clients;
+
+      serve_queue ~genv ~env ~ready_sockets ~serve_ready_clients ~waiting_requests;
+
+      (* Done processing ready sockets! Now, process waiting connections that
+         were collected when processing ready sockets. *)
+      process_waiting_requests env ~waiting_requests;
       EventLogger.flush ();
     done
 
@@ -235,7 +289,7 @@ end = struct
     PidLog.init (Server_files.pids_file ~tmp_dir root);
     PidLog.log ~reason:"main" (Unix.getpid());
 
-    let genv, program_init = create_program_init ~shared_mem_config ~focus_targets:[] options in
+    let genv, program_init = create_program_init ~shared_mem_config ~focus_targets:None options in
 
     (* Open up a server on the socket before we go into program_init -- the
        client will try to connect to the socket as soon as we lock the init
@@ -259,9 +313,16 @@ end = struct
 
     serve ~dfind ~genv ~env socket
 
-  let run ~shared_mem_config options = run_internal ~shared_mem_config options
+  let run ~shared_mem_config ~log_file options =
+    let log_fd = Server_daemon.open_log_file log_file in
+    Hh_logger.set_log (Unix.out_channel_of_descr log_fd);
+    Hh_logger.info "Logs will go to %s" log_file;
+    run_internal ~shared_mem_config options
 
-  let check_once ~shared_mem_config ~client_include_warnings ?(focus_targets=[]) options =
+  let run_from_daemonize ?waiting_channel ~shared_mem_config options =
+    run_internal ?waiting_channel ~shared_mem_config options
+
+  let check_once ~shared_mem_config ~client_include_warnings ?focus_targets options =
     PidLog.disable ();
     let genv, program_init = create_program_init ~shared_mem_config ~focus_targets options in
     let profiling, env = program_init () in
@@ -273,7 +334,7 @@ end = struct
     profiling, errors, warnings, suppressed_errors
 
   let daemonize =
-    let entry = Server_daemon.register_entry_point run_internal in
+    let entry = Server_daemon.register_entry_point run_from_daemonize in
     fun ~wait ~log_file ~shared_mem_config ?on_spawn options ->
       Server_daemon.daemonize ~wait ~log_file ~shared_mem_config ?on_spawn ~options entry
 end

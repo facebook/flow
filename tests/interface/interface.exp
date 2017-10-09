@@ -1,3 +1,19 @@
+Error: fun.js:5
+  5: var f0: F = () => 0; // error: number ~> void
+                 ^^^^^^^ function. This type is incompatible with
+  5: var f0: F = () => 0; // error: number ~> void
+             ^ F
+  Callable property is incompatible:
+      5: var f0: F = () => 0; // error: number ~> void
+                     ^^^^^^^ function. This type is incompatible with
+      2:   (): void;
+           ^^^^^^^^ function type
+      This parameter is incompatible:
+          5: var f0: F = () => 0; // error: number ~> void
+                               ^ number. This type is incompatible with
+          2:   (): void;
+                   ^^^^ undefined
+
 Error: indexer.js:9
   9:   [k2: number]: number; // error: not supported (yet)
        ^^^^^^^^^^^^^^^^^^^^ multiple indexers are not supported
@@ -20,17 +36,27 @@ Error: interface.js:10
  10:   (o.name: string); // error, name is static
         ^ I
 
-Error: test.js:2
-  2: interface I_ { x: number }
-                       ^^^^^^ number. This type is incompatible with
+Error: test.js:6
   6: var k: K = { x: "", y: "" }; // error: x should be number
-                     ^^ string
+                ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+  3: interface J extends I, I_ { }
+                            ^^ I_
+  Property `x` is incompatible:
+      2: interface I_ { x: number }
+                           ^^^^^^ number. This type is incompatible with
+      6: var k: K = { x: "", y: "" }; // error: x should be number
+                         ^^ string
 
 Error: test.js:6
   6: var k: K = { x: "", y: "" }; // error: x should be number
-                     ^^ string. This type is incompatible with
-  2: interface I_ { x: number }
-                       ^^^^^^ number
+                ^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+  3: interface J extends I, I_ { }
+                            ^^ I_
+  Property `x` is incompatible:
+      6: var k: K = { x: "", y: "" }; // error: x should be number
+                         ^^ string. This type is incompatible with
+      2: interface I_ { x: number }
+                           ^^^^^^ number
 
 Error: test.js:7
   7: (k.x: string); // error: x is number
@@ -40,31 +66,51 @@ Error: test.js:7
 
 Error: test.js:11
  11: declare class D extends C, Other { } // error: multiple extends
-                             ^ A class cannot extend multiple classes!
+                                ^^^^^ A class cannot extend multiple classes!
 
 Error: test.js:19
  19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-              ^^^^^^ number. This type is incompatible with
- 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-                             ^^ string
+                        ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+ 15: interface A_<X> { x: X }
+     ^^^^^^^^^^^^^^^^^^^^^^^^ A_
+  Property `x` is incompatible:
+     19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                  ^^^^^^ number. This type is incompatible with
+     19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                                 ^^ string
 
 Error: test.js:19
  19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-              ^^^^^^ number. This type is incompatible with
- 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-                                           ^^ string
+                        ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+ 15: interface A_<X> { x: X }
+     ^^^^^^^^^^^^^^^^^^^^^^^^ A_
+  Property `x` is incompatible:
+     19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                                 ^^ string. This type is incompatible with
+     19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                  ^^^^^^ number
 
 Error: test.js:19
  19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-                             ^^ string. This type is incompatible with
- 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-              ^^^^^^ number
+                        ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+ 16: interface B<Z> extends A<string>, A_<Z> { z: Z }
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B
+  Property `z` is incompatible:
+     19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                  ^^^^^^ number. This type is incompatible with
+     19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                                               ^^ string
 
 Error: test.js:19
  19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-                                           ^^ string. This type is incompatible with
- 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
-              ^^^^^^ number
+                        ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+ 16: interface B<Z> extends A<string>, A_<Z> { z: Z }
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B
+  Property `z` is incompatible:
+     19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                                               ^^ string. This type is incompatible with
+     19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                  ^^^^^^ number
 
 Error: test.js:20
  20: (e.x: string); // error: x is number
@@ -110,9 +156,14 @@ Error: test3.js:6
 
 Error: test4.js:2
   2: (function foo(x: number) { }: I); // error, property `foo` not found function
-                                   ^ property `foo` of I. Property not found in
+      ^^^^^^^^^^^^^^^^^^^^^^^ function. This type is incompatible with
   2: (function foo(x: number) { }: I); // error, property `foo` not found function
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
+                                   ^ I
+  Property `foo` is incompatible:
+      2: (function foo(x: number) { }: I); // error, property `foo` not found function
+                                       ^ property `foo` of I. Property not found in
+      2: (function foo(x: number) { }: I); // error, property `foo` not found function
+          ^^^^^^^^^^^^^^^^^^^^^^^ function
 
 Error: test4.js:9
   9: new C().bar((x: string) => { }); // error, number ~/~> string
@@ -123,18 +174,28 @@ Error: test4.js:9
     5:   bar(i: I): void;
          ^^^^^^^^^^^^^^^ function type
   Error:
-    5:   bar(i: I): void;
-                ^ property `foo` of I. Property not found in
     9: new C().bar((x: string) => { }); // error, number ~/~> string
-                   ^^^^^^^^^^^^^^^^^^ function
+                   ^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+    5:   bar(i: I): void;
+                ^ I
+    Property `foo` is incompatible:
+        5:   bar(i: I): void;
+                    ^ property `foo` of I. Property not found in
+        9: new C().bar((x: string) => { }); // error, number ~/~> string
+                       ^^^^^^^^^^^^^^^^^^ function
   Member 2:
     6:   bar(f: (x: number) => void): void;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
   Error:
-    6:   bar(f: (x: number) => void): void;
-                    ^^^^^^ number. This type is incompatible with the expected param type of
     9: new C().bar((x: string) => { }); // error, number ~/~> string
-                       ^^^^^^ string
+                   ^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
+    6:   bar(f: (x: number) => void): void;
+                ^^^^^^^^^^^^^^^^^^^ function type
+    This parameter is incompatible:
+        6:   bar(f: (x: number) => void): void;
+                        ^^^^^^ number. This type is incompatible with
+        9: new C().bar((x: string) => { }); // error, number ~/~> string
+                           ^^^^^^ string
 
 
-Found 21 errors
+Found 22 errors

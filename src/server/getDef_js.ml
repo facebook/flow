@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -71,7 +68,7 @@ let getdef_require (state, user_requested_loc) _cx name require_loc =
    delicate, since in many cases the resulting type lacks location
    information. Edit with caution. *)
 let getdef_get_result profiling client_logging_context ~options cx state =
-  match !state with
+  Ok begin match !state with
   | Some Gdloc loc -> loc
   | Some Gdval v ->
     (* Use `possible_types_of_type` instead of `resolve_type` because we're
@@ -112,9 +109,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
         end
       end
   | Some Gdrequire (name, require_loc) ->
-      let module_t = Flow_js.resolve_type cx (
-        SMap.find_unsafe name (Context.module_map cx)
-      ) in
+      let module_t = Flow_js.resolve_type cx (Context.find_require cx name) in
       (* function just so we don't do the work unless it's actually needed. *)
       let get_imported_file () =
         let filename = Module_js.get_file Expensive.warn (
@@ -151,6 +146,7 @@ let getdef_get_result profiling client_logging_context ~options cx state =
         )
       )
   | None -> Loc.none
+  end
 
 let getdef_set_hooks pos =
   let state = ref None in

@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -31,6 +28,7 @@ let spec = {
     |> server_flags
     |> root_flag
     |> json_flags
+    |> from_flag
     |> flag "--color" no_arg
         ~doc:"Print the file with colors showing which parts have unknown types"
     |> flag "--debug" no_arg
@@ -216,8 +214,9 @@ let handle_response ~json ~pretty ~color ~debug (types : (Loc.t * bool) list) co
   )
 
 let main
-    option_values root json pretty color debug path respect_pragma
+    option_values root json pretty from color debug path respect_pragma
     all filename () =
+  FlowEventLogger.set_from from;
   let file = get_file_from_filename_or_stdin path filename in
   let root = guess_root (
     match root with
@@ -245,7 +244,7 @@ let main
   | Error err ->
       handle_error ~json ~pretty err
   | Ok resp ->
-      let content = File_input.content_of_file_input file in
+      let content = File_input.content_of_file_input_unsafe file in
       handle_response ~json ~pretty ~color ~debug resp content
 
 let command = CommandSpec.command spec main

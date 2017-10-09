@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* This file contains util functions*)
@@ -84,6 +81,13 @@ module FRandom = struct
     Array.get arr index
 end;;
 
+
+(* Generate a sequence of numbers *)
+let sequence i j =
+  let rec helper n acc =
+    if n < i then acc else helper (n - 1) (n :: acc) in
+  helper j [];;
+
 (* Read all lines from the in_channel *)
 let read_all ic : string list =
   let lines = ref [] in
@@ -102,6 +106,7 @@ let read_file filename =
   String.concat "\n" lines
 
 (* convert an AST into a string for printing *)
+    (*
 let string_of_ast endline func =
   fun (ast) ->
     let layout = func (Loc.none, ast) in
@@ -115,6 +120,210 @@ let string_of_expr =
   string_of_ast false Js_layout_generator.expression;;
 let string_of_type =
   string_of_ast false Js_layout_generator.type_;;
+*)
+
+
+(* A hacky version of string_of function for AST nodes.
+   This will be replaced once we have a better solution.
+*)
+let rec string_of_pattern (pattern : Loc.t P.t') =
+  match pattern with
+  | P.Identifier id ->
+    let open P.Identifier in
+    (snd id.name) ^
+    (if id.optional then "?" else "") ^ " " ^
+    (match id.typeAnnotation with
+     | Some (_, (_, t)) -> " : " ^ (string_of_type t)
+     | None -> "")
+  | P.Expression (_, e) -> string_of_expr e
+  | P.Assignment assign ->
+    let open P.Assignment in
+    (string_of_pattern (snd assign.left)) ^
+    " = " ^
+    (string_of_expr (snd assign.right))
+  | _ -> failwith "[string_of_pattern] unsupported pattern"
+
+and string_of_expr (expr : Loc.t E.t') =
+  let string_of_proplist plist =
+    let helper prop = match prop with
+      | E.Object.Property (_, p) ->
+        let open E.Object.Property in
+        (match p.key, p.value with
+         | Identifier (_, name), Init (_, e) -> name ^ " : " ^ (string_of_expr e)
+         | _ -> failwith "Unsupported expression")
+      | _ -> failwith "Unsupported property" in
+    String.concat ", " (List.map helper plist) in
+
+  let string_of_assign_op op =
+    let open E.Assignment in
+    match op with
+    | Assign -> "="
+    | PlusAssign -> "+="
+    | MinusAssign -> "-="
+    | MultAssign -> "*="
+    | ExpAssign -> "^="
+    | DivAssign -> "/="
+    | _ -> failwith "unsupported assign" in
+
+  match expr with
+  | E.Object o ->
+    "{" ^ (string_of_proplist E.Object.(o.properties)) ^ "}"
+  | E.Literal lit -> Ast.Literal.(lit.raw)
+  | E.Assignment assign ->
+    let open E.Assignment in
+    [(string_of_pattern (snd assign.left));
+     (string_of_assign_op assign.operator);
+     (string_of_expr (snd assign.right))]
+    |> String.concat " "
+  | E.Call call ->
+    let open E.Call in
+    let callee_str = string_of_expr (snd call.callee) in
+    let arglist_str =
+      call.arguments
+      |> List.map (fun a -> match a with
+          | E.Expression (_, e) -> e
+          | E.Spread _ -> failwith "[string_of_expr] call does not support spread argument.")
+      |> List.map string_of_expr
+      |> String.concat ", " in
+    callee_str ^ "(" ^ arglist_str ^ ")"
+  | E.Identifier (_, id) -> id
+  | E.Member mem ->
+    let open E.Member in
+    let obj_str = string_of_expr (snd mem._object) in
+    let prop_str = match mem.property with
+      | PropertyIdentifier (_, id) -> id
+      | PropertyExpression (_, e) -> string_of_expr e
+      | PropertyPrivateName (_, (_, id)) -> id in
+    obj_str ^ "." ^ prop_str
+  | E.TypeCast cast ->
+    let open E.TypeCast in
+    (string_of_expr (snd cast.expression)) ^
+    " : " ^
+    (string_of_type (snd (snd cast.typeAnnotation)))
+  | E.Array array ->
+    let open E.Array in
+    "[" ^
+    (List.map (fun elt -> match elt with
+         | Some (E.Expression (_, e)) -> string_of_expr e
+         | Some (E.Spread (_, e)) -> string_of_expr (E.SpreadElement.((snd e.argument)))
+         | None -> "") array.elements
+     |> (String.concat ", ")) ^
+      "]"
+  | _ -> failwith "unknown expr"
+
+and string_of_stmt (stmt : Loc.t S.t') =
+  match stmt with
+  | S.Block b ->
+    S.Block.(b.body)
+    |> List.map snd
+    |> List.map string_of_stmt
+    |> String.concat "\n"
+  | S.Empty -> "\n"
+  | S.FunctionDeclaration func ->
+    let open Ast.Function in
+    let fname = match func.id with
+      | Some (_, n) -> n
+      | None -> "" in
+    let params_str =
+      let (_, { Ast.Function.Params.params; rest = _ }) = func.params in
+      params
+      |> List.map snd
+      |> List.map string_of_pattern
+      |> String.concat ", " in
+    let body_str = match func.body with
+      | BodyBlock (_, s) -> string_of_stmt (S.Block s)
+      | BodyExpression (_, e) -> string_of_expr e in
+    let ret_type_str = match func.returnType with
+      | Some (_, (_, t)) -> ": " ^ string_of_type t
+      | None -> "" in
+    "function " ^ fname ^ "(" ^ params_str ^ ") " ^ ret_type_str ^ " {\n" ^
+    body_str ^
+    "}\n"
+  | S.Return r ->
+    let open S.Return in
+    (match r.argument with
+     | Some (_, e) -> "return " ^ (string_of_expr e) ^ "\n;"
+     | None -> "return;\n")
+  | S.VariableDeclaration decl ->
+    let open S.VariableDeclaration in
+    let string_of_dtor dtor =
+      let open S.VariableDeclaration.Declarator in
+      let init_str = match dtor.init with
+        | Some (_, e) -> "= " ^ (string_of_expr e)
+        | None -> "" in
+      (string_of_pattern (snd dtor.id)) ^ init_str in
+    let kind_str = match decl.kind with
+      | Var -> "var"
+      | Let -> "let"
+      | Const -> "const" in
+    let dlist = List.map snd decl.declarations in
+    let dlist_str = String.concat ", " (List.map string_of_dtor dlist) in
+    kind_str ^ " " ^ dlist_str ^ "\n"
+  | S.Expression e ->
+    let open S.Expression in
+    (string_of_expr (snd e.expression)) ^ ";\n"
+  | _ -> failwith "[string_of_stmt] Unspported stmt"
+
+and string_of_type (t : Loc.t T.t') =
+
+  match t with
+  | T.Any -> "any"
+  | T.Mixed -> "mixed"
+  | T.Empty -> "empty"
+  | T.Void -> "void"
+  | T.Null -> "null"
+  | T.Number -> "number"
+  | T.String -> "string"
+  | T.Boolean -> "boolean"
+  | T.Object ot ->
+    let open T.Object in
+    let string_of_prop prop = match prop with
+      | T.Object.Property (_, p) ->
+        let open T.Object.Property in
+        let key_str = match p.key with
+          | E.Object.Property.Literal (_, lit)  -> Ast.Literal.(lit.raw)
+          | E.Object.Property.Identifier (_, name) -> name
+          | E.Object.Property.PrivateName (_, (_, name)) -> name
+          | E.Object.Property.Computed (_, e) -> string_of_expr e in
+        let t_str = match p.value with
+          | Init (_, init_t) -> string_of_type init_t
+          | Get (_, ft) -> string_of_type (T.Function ft)
+          | Set (_, ft) -> string_of_type (T.Function ft) in
+        let opt = if p.optional then "?" else "" in
+        key_str ^ opt ^ " : " ^ t_str
+      | _ -> failwith "[string_of_prop] unsupported property" in
+    let prop_str_list = ot.properties
+      |> List.map string_of_prop
+      |> String.concat ", " in
+    if ot.exact then "{|" ^ prop_str_list ^ "|}"
+    else "{" ^ prop_str_list ^ "}"
+  | T.Union ((_, t1), (_, t2), trest) ->
+    let t_strlist =
+      [(string_of_type t1); (string_of_type t2)]
+      @ (trest |> (List.map snd) |> (List.map string_of_type)) in
+    String.concat " | " t_strlist
+  | T.StringLiteral st -> T.StringLiteral.(st.raw)
+  | T.NumberLiteral nt -> T.NumberLiteral.(nt.raw)
+  | T.BooleanLiteral bt -> if bt then "true" else "false"
+  | T.Function func ->
+    let open T.Function in
+    let string_of_param param =
+      let open T.Function.Param in
+      let opt_str = if param.optional then "?" else "" in
+      let name_str = match param.name with
+        | Some (_, id) -> id ^ opt_str ^ " : "
+        | None -> "" in
+      name_str ^ (string_of_type (snd param.typeAnnotation)) in
+    let params_str =
+      let (_, { T.Function.Params.params; rest = _ }) = func.params in
+      params
+      |> List.map snd
+      |> List.map string_of_param
+      |> String.concat ", " in
+    let ret_type_str = (string_of_type (snd func.returnType)) in
+    "(" ^ params_str ^ ") => " ^ ret_type_str
+  | _ -> failwith "[string_of_type] unsupported type"
+
 
 (* A generator function for creating functions that makes variables and
  * properties
@@ -135,7 +344,7 @@ let mk_obj_cons = mk_gen "Obj";;
 (* Convert a code and its dependencies into a list
    CAUTION: This function will lose some independencies between
    codes *)
-let list_of_code (code : Code.t) : Ast.Statement.t list =
+let list_of_code (code : Code.t) : Loc.t Ast.Statement.t list =
   let open Code in
   let rec helper acc lst = match lst with
     | [] -> acc
@@ -147,7 +356,7 @@ let list_of_code (code : Code.t) : Ast.Statement.t list =
 (* Convert a list of statements into a code object. Dependencies
    are based on the order of the statements. Thus, it will create
    unnecessary dependnecies. USE THIS WITH CAUTION. *)
-let code_of_stmt_list (slist : Ast.Statement.t list) : Code.t option =
+let code_of_stmt_list (slist : Loc.t Ast.Statement.t list) : Code.t option =
   let open Code in
 
   let rec helper lst = match lst with
@@ -164,7 +373,7 @@ let code_of_stmt_list (slist : Ast.Statement.t list) : Code.t option =
    assignments will appear after empty object init.
 *)
 let rm_prop_write
-    (prop : E.Member.t)
+    (prop : Loc.t E.Member.t)
     (clist : Code.t list) : Code.t list =
   let open S.Expression in
   let open Code in
@@ -188,7 +397,7 @@ let rm_vardecl
   let open S.VariableDeclaration in
 
   (* Check whether this declaration defines the target variable *)
-  let is_target (decl : S.VariableDeclaration.Declarator.t) =
+  let is_target (decl : Loc.t S.VariableDeclaration.Declarator.t) =
     let decl' = (snd decl) in
     match decl'.id with
     | (_, P.Identifier { P.Identifier.name = (_, name); _;})
@@ -243,10 +452,10 @@ module Config = struct
   and t = (string * value) list;;
 
   (* Convert a JSON ast into a config *)
-  let rec to_config (ast : E.Object.t) : t =
+  let rec to_config (ast : Loc.t E.Object.t) : t =
 
     (* get config value from an expression *)
-    let get_value (expr : E.t') : value = match expr with
+    let get_value (expr : Loc.t E.t') : value = match expr with
       | E.Object o -> Obj (to_config o)
       | E.Literal lit -> let open Ast.Literal in
         (match lit.value with
@@ -281,9 +490,9 @@ module Config = struct
     prop_list
 
   (* Convert a config into an expression ast. Mainly used for printing *)
-  let rec ast_of_config (c : t) : E.Object.t =
+  let rec ast_of_config (c : t) : Loc.t E.Object.t =
 
-    let expr_of_value (v : value) : E.t' = let open Ast.Literal in
+    let expr_of_value (v : value) : Loc.t E.t' = let open Ast.Literal in
       match v with
       | Int i -> E.Literal {value = Number (float_of_int i); raw = string_of_int i}
       | Str s -> E.Literal {value = String s; raw = "\"" ^ s ^ "\""}
@@ -356,7 +565,7 @@ module Config = struct
         json_str
         (match filename with
          | None -> None
-         | Some f -> (Some (Loc.JsonFile f))) in
+         | Some f -> (Some (File_key.JsonFile f))) in
     to_config (match (fst expr_ast) with
         | (_, E.Object o) -> o
         | _ -> failwith "Can only be an object")
@@ -366,3 +575,138 @@ module Config = struct
     let content = read_file filename in
     load_json_config_string ~filename content;;
 end
+
+
+let assert_func = "
+// from http://tinyurl.com/y93dykzv
+const util = require('util');
+function assert_type(actual: any, expected: any) {
+    if(typeof(actual) != 'object' || typeof(expected) != 'object') {
+        if(Array.isArray(expected)) {
+            if(expected.indexOf(actual) === -1) {
+                var message = '';
+                var expected_str = expected.toString();
+
+                var actual_str = 'null';
+                if(actual != null) {
+                    actual_str = actual.toString();
+                }
+                message = message.concat('Not contain: ',
+                                         'Actual : ',
+                                         actual_str,
+                                         ' != Expected: ',
+                                         expected_str);
+                console.log(message);
+                throw new Error(message);
+            }
+        } else if(actual != expected) {
+            var expected_str = 'null';
+            if(expected != null) {
+                expected_str = expected.toString();
+            }
+
+            var actual_str = 'null';
+            if(actual != null) {
+                actual_str = actual.toString();
+            }
+            var message = '';
+            message = message.concat('Not equal: ',
+                                     'Actual : ',
+                                     actual_str,
+                                     ' != Expected: ',
+                                     expected_str);
+            console.log(message);
+            throw new Error(message);
+        }
+    } else {
+        for(var prop in expected) {
+            if(expected.hasOwnProperty(prop)) {
+                if(!actual.hasOwnProperty(prop)) {
+                    var message = '';
+                    message = message.concat('Missing property: ', prop.toString());
+                    console.log(message);
+                    throw new Error(message);
+                }
+                assert_type(actual[prop], expected[prop]);
+            }
+        }
+    }
+}
+function check_opt_prop(obj_list : any, actual : any, expected : any) {
+    var len = obj_list.length;
+    for(var i = 0; i < len; ++i) {
+        if(obj_list[i] === undefined) {
+            return;
+        }
+    }
+    if(actual === undefined) {
+        return;
+    }
+    assert_type(actual, expected);
+}
+\n\n
+";;
+
+(* Run a system command with a given code as input *)
+let run_cmd
+    (code : string)
+    (cmd : string)
+    (exit_code_handler : (int -> string -> string option)) : string option =
+  let content = code in
+  let ic, oc = Unix.open_process cmd in
+  let out_str = Printf.sprintf "/* @flow */\n%s\n" (assert_func ^ content) in
+  Printf.fprintf oc "%s" out_str;
+  close_out oc;
+  let lines = read_all ic in
+  close_in ic;
+  let exit_code = match (Unix.close_process (ic, oc)) with
+    | Unix.WEXITED code -> code
+    | _ -> failwith "Command exited abnormally." in
+  exit_code_handler exit_code (String.concat "\n" lines);;
+
+(* Exit code handler for flow type checking *)
+let type_check_exit_handler
+    (exit_code : int)
+    (output : string) : string option =
+  if exit_code = 0 then None
+  else
+    let error_type =
+      exit_code
+      |> FlowExitStatus.error_type
+      |> FlowExitStatus.to_string in
+    let msg = error_type ^ ":\n" ^ output ^ "\n" in
+    Some msg;;
+
+(* type check a piece of code.
+ * Return true if this code doesn't have type error.
+ *
+ * We decided to run Flow using shell command, because it is much
+ * easier than using the APIs. If the performance starts to hurt,
+ * we will change it to using the APIs.
+ *)
+let type_check (code : string) : string option =
+  (* Check if we have .flowconfig file *)
+  let cmd = "flow check-contents" in
+  run_cmd code cmd type_check_exit_handler;;
+
+
+(* Exit handler for running the program *)
+let run_exit_handler
+    (exit_code : int)
+    (output : string) : string option =
+  if exit_code = 0 then None
+  else
+    let msg = "Failed to run program:\n" ^ output ^ "\n" in
+    Some msg;;
+
+(* Run the code and see if it has runtime error *)
+let test_code (code : string) : string option =
+  (* Check if we have flow-remove-types *)
+  (*
+  let exe = "./node_modules/.bin/babel" in
+  run_cmd code (exe ^ " --presets flow | node") run_exit_handler;;
+     *)
+  let exe = "./node_modules/.bin/flow-remove-types" in
+  run_cmd code (exe ^ " -a -p | node") run_exit_handler;;
+
+let is_typecheck engine_name = engine_name = "union"

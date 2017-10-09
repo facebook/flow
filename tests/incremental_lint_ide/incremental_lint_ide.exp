@@ -1,0 +1,11 @@
+No errors!
+Error: b.js:8
+  8:   if (x) {}
+           ^ sketchy-null-string: Sketchy null check on string value. Perhaps you meant to check for null instead of for existence?
+   11: export type Fn = (cb: ?string => void) => void;
+                             ^^^^^^^ Potentially null/undefined value.. See: a.js:11
+   11: export type Fn = (cb: ?string => void) => void;
+                             ^^^^^^^ Potentially "" value.. See: a.js:11
+
+
+Found 1 error

@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 type client = {
@@ -15,8 +12,9 @@ type client = {
 }
 
 let shutdown_client (_ic, oc) =
-  let cli = Unix.descr_of_out_channel oc in
   try
+    (* descr_of_out_channel fails with "Bad file descriptor" for a closed socket *)
+    let cli = Unix.descr_of_out_channel oc in
     Unix.shutdown cli Unix.SHUTDOWN_ALL;
     close_out oc
   with _ -> ()

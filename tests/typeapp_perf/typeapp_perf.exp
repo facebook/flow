@@ -1,1 +1,14 @@
-Found 0 errors
+Error: test3.js:7
+  7: (x.m(): empty); // error: string ~> empty, number ~> empty
+      ^^^^^ number. This type is incompatible with
+  7: (x.m(): empty); // error: string ~> empty, number ~> empty
+             ^^^^^ empty
+
+Error: test3.js:7
+  7: (x.m(): empty); // error: string ~> empty, number ~> empty
+      ^^^^^ string. This type is incompatible with
+  7: (x.m(): empty); // error: string ~> empty, number ~> empty
+             ^^^^^ empty
+
+
+Found 2 errors

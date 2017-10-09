@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 begin library "ROOTPROJECT"
@@ -191,7 +188,7 @@ begin library "flow-flowlib"
     "flow-ppx-gen-flowlib:asm"
   ]
   comp = [
-    "-ppx" "%{flow-ppx-gen-flowlib_FULL_DST_DIR}%/flow-ppx-gen-flowlib.asm lib/"
+    "-ppx" "%{flow-ppx-gen-flowlib_FULL_DST_DIR}%/flow-ppx-gen-flowlib.asm lib/ prelude/"
   ]
 end
 
@@ -212,6 +209,15 @@ begin library "flow-parser"
   ]
   requires = [
     "sedlex"
+    "wtf8"
+  ]
+end
+
+begin library "flow-parser-test-utils"
+  sort = true
+  dirname = "src/parser/test"
+  files = [
+    "file_utils.ml"
   ]
 end
 
@@ -295,6 +301,8 @@ begin library "flow-server"
   sort = true
   files = begin fb-glob "src/server"
     excludes = [
+      "checkedSet.mli"
+      "checkedSet.ml"
       "file_input.ml"
       "serverEnv.ml"
       "serverUtils.ml"
@@ -335,11 +343,14 @@ begin library "flow-server-env"
   dirname = "src/server"
   files = [
     "serverEnv.ml"
+    "checkedSet.mli"
+    "checkedSet.ml"
   ]
   requires = [
     "flow-persistent-connection"
     "flow-common"
     "flow-common-utils"
+    "flow-parser"
     "flow-server-protocol"
     "hh-dfind"
     "hh-procs"
@@ -514,6 +525,7 @@ begin program "flow-parser-hardcoded-test"
   requires = [
     "flow-common-utils"
     "flow-parser"
+    "flow-parser-test-utils"
     "flow-parser-utils"
   ]
   tests = [ "hardcoded_tests" ]

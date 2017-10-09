@@ -65,6 +65,8 @@ eval "$(opam config env)"
 echo "Installed packages:"
 ocamlfind list
 
+unset PREFIX
+
 printf "travis_fold:end:opam_installer\n"
 
 printf "travis_fold:start:yarn_install\nInstalling yarn dependencies\n"

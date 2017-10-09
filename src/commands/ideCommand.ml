@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -33,16 +30,17 @@ let spec = {
     empty
     |> server_flags
     |> root_flag
+    |> from_flag
     |> flag "--protocol" (required (enum protocol_options))
         ~doc:("Indicates the protocol to be used. One of: " ^ protocol_options_string)
-    (* TODO consider using strip_root |> strip_root_flag *)
+    |> strip_root_flag
     (* TODO use this somehow? |> verbose_flags *)
   )
 }
 
 module type ClientProtocol = sig
   val server_request_of_stdin_message: Buffered_line_reader.t -> Prot.request option
-  val handle_server_response: Prot.response -> unit
+  val handle_server_response: strip_root:Path.t option -> Prot.response -> unit
 end
 
 module HumanReadable: ClientProtocol = struct
@@ -75,7 +73,7 @@ module HumanReadable: ClientProtocol = struct
         flush stdout
 
 
-  let handle_server_response = function
+  let handle_server_response ~strip_root:_ = function
     | Prot.Errors {errors; warnings} ->
       let err_count = Errors.ErrorSet.cardinal errors in
       let warn_count = Errors.ErrorSet.cardinal warnings in
@@ -90,11 +88,11 @@ module HumanReadable: ClientProtocol = struct
 end
 
 module VeryUnstable: ClientProtocol = struct
-  let print_errors errors warnings =
+  let print_errors ~strip_root errors warnings =
     (* Because the file-tracking portion of the protocol already handles which warnings
      * we display, we don't want the printer removing them. *)
     let json_errors = Errors.Json_output.full_status_json_of_errors
-      ~strip_root:None ~suppressed_errors:([]) ~errors ~warnings () in
+      ~strip_root ~suppressed_errors:([]) ~errors ~warnings () in
     let json_message = Json_rpc.jsonrpcize_notification "diagnosticsNotification" [json_errors] in
     let json_string = Hh_json.json_to_string json_message in
     Http_lite.write_message stdout json_string;
@@ -110,18 +108,18 @@ module VeryUnstable: ClientProtocol = struct
 
   let print_end_recheck = print_message "endRecheck"
 
-  let print_autocomplete response id =
-    AutocompleteService_js.autocomplete_response_to_json ~strip_root:None response
+  let print_autocomplete ~strip_root response id =
+    AutocompleteService_js.autocomplete_response_to_json ~strip_root response
       |> Json_rpc.jsonrpcize_response id
       |> Hh_json.json_to_string
       |> Http_lite.write_message stdout
 
-  let handle_server_response = function
+  let handle_server_response ~strip_root = function
     | Prot.Errors {errors; warnings} ->
-      print_errors errors warnings
+      print_errors ~strip_root errors warnings
     | Prot.StartRecheck -> print_start_recheck ()
     | Prot.EndRecheck -> print_end_recheck ()
-    | Prot.AutocompleteResult (result, id) -> print_autocomplete result id
+    | Prot.AutocompleteResult (result, id) -> print_autocomplete ~strip_root result id
     (* No need to send the client anything; these acks are to prevent deadlocks
      * involving the buffers between the ide command and the flow server *)
     | Prot.DidOpenAck -> ()
@@ -271,7 +269,7 @@ module ProtocolFunctor (Protocol: ClientProtocol) = struct
     is_server_ready: bool;
   }
 
-  let handle_server_response fd local_env =
+  let handle_server_response ~strip_root fd local_env =
     if not (local_env.is_server_ready) then
       (* The server reads the first message (CONNECT, which establishes this
        * connection as a persistent connection rather than a short-lived one)
@@ -297,15 +295,19 @@ module ProtocolFunctor (Protocol: ClientProtocol) = struct
       let (message : Prot.response) =
         try
           Marshal_tools.from_fd_with_preamble fd
-        with End_of_file ->
-          prerr_endline "Server closed the connection";
-          (* TODO choose a standard exit code for this *)
-          exit 1
+        with
+        | Unix.Unix_error (Unix.ECONNRESET, _, _) ->
+          (* Windows throws ECONNRESET when the connection dies *)
+          let msg = "Server closed the connection via an ECONNRESET" in
+          FlowExitStatus.(exit ~msg No_server_running)
+        | End_of_file ->
+          let msg = "Server closed the connection via an End_of_file" in
+          FlowExitStatus.(exit ~msg No_server_running)
       in
       let pending_requests =
         PendingRequests.add_response local_env.pending_requests message
       in
-      Protocol.handle_server_response message;
+      Protocol.handle_server_response ~strip_root message;
       { local_env with pending_requests }
 
   let send_server_request fd msg =
@@ -342,7 +344,7 @@ module ProtocolFunctor (Protocol: ClientProtocol) = struct
             send_pending_requests fd local_env
           end
 
-  let main_loop ~buffered_stdin ~ic_fd ~oc_fd =
+  let main_loop ~buffered_stdin ~ic_fd ~oc_fd ~strip_root =
     let stdin_fd = Buffered_line_reader.get_fd buffered_stdin in
     let local_env =
       ref {
@@ -356,7 +358,7 @@ module ProtocolFunctor (Protocol: ClientProtocol) = struct
       let readable_fds, _, _ = Unix.select [stdin_fd; ic_fd] [] [] ~-.1.0 in
       List.iter (fun fd ->
         if fd = ic_fd then begin
-          local_env := handle_server_response ic_fd !local_env
+          local_env := handle_server_response ~strip_root ic_fd !local_env
         end else if fd = stdin_fd then begin
           local_env := handle_all_stdin_messages buffered_stdin !local_env
         end else
@@ -368,8 +370,10 @@ end
 module VeryUnstableProtocol = ProtocolFunctor(VeryUnstable)
 module HumanReadableProtocol = ProtocolFunctor(HumanReadable)
 
-let main option_values root protocol () =
+let main option_values root from protocol strip_root () =
+  FlowEventLogger.set_from from;
   let root = CommandUtils.guess_root root in
+  let strip_root = if strip_root then Some root else None in
   let ic, oc = connect option_values root in
   send_command oc ServerProt.CONNECT;
   let buffered_stdin = stdin |> Unix.descr_of_in_channel |> Buffered_line_reader.create in
@@ -380,6 +384,6 @@ let main option_values root protocol () =
     | "human-readable" -> HumanReadableProtocol.main_loop
     | x -> failwith ("Internal error: unknown protocol '" ^ x ^ "'")
   in
-  main_loop ~buffered_stdin ~ic_fd ~oc_fd
+  main_loop ~buffered_stdin ~ic_fd ~oc_fd ~strip_root
 
 let command = CommandSpec.command spec main

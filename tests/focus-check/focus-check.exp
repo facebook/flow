@@ -13,6 +13,12 @@ Error: dir/test2.foo:4
   3: var x: number = 3;
             ^^^^^^ number
 
+Error: other_root/other_root_file.js:3
+  3: var x: string = 123; // Error
+                     ^^^ number. This type is incompatible with
+  3: var x: string = 123; // Error
+            ^^^^^^ string
+
 Error: test.js:3
   3: ("": number);
       ^^ string. This type is incompatible with
@@ -20,7 +26,7 @@ Error: test.js:3
           ^^^^^^ number
 
 
-Found 3 errors
+Found 4 errors
 
 Full focus-check:
 Error: a.js:3
@@ -35,6 +41,12 @@ Error: dir/test2.foo:4
   3: var x: number = 3;
             ^^^^^^ number
 
+Error: other_root/other_root_file.js:3
+  3: var x: string = 123; // Error
+                     ^^^ number. This type is incompatible with
+  3: var x: string = 123; // Error
+            ^^^^^^ string
+
 Error: test.js:3
   3: ("": number);
       ^^ string. This type is incompatible with
@@ -42,7 +54,7 @@ Error: test.js:3
           ^^^^^^ number
 
 
-Found 3 errors
+Found 4 errors
 
 Focused check on a file with local errors but no dependency or reverse dependency:
 Error: test.js:3
@@ -131,5 +143,31 @@ Error: dir/test2.foo:4
 
 
 Found 2 errors
+
+Focused check guessing root by looking at first file:
+Error: other_root/other_root_dependent.js:5
+  5: (foo: string); // Error
+      ^^^ number. This type is incompatible with
+  5: (foo: string); // Error
+           ^^^^^^ string
+
+Error: other_root/other_root_file.js:3
+  3: var x: string = 123; // Error
+                     ^^^ number. This type is incompatible with
+  3: var x: string = 123; // Error
+            ^^^^^^ string
+
+
+Found 2 errors
+
+Focused check with explicit root:
+Error: other_root/other_root_file.js:3
+  3: var x: string = 123; // Error
+                     ^^^ number. This type is incompatible with
+  3: var x: string = 123; // Error
+            ^^^^^^ string
+
+
+Found 1 error
 
 Done!

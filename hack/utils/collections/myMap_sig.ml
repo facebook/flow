@@ -18,6 +18,7 @@ module type S = sig
   val compare: 'a t -> 'a t -> int
   val equal: 'a t -> 'a t -> bool
   val keys: 'a t -> key list
+  val ordered_keys: 'a t -> key list
   val values: 'a t -> 'a list
   val elements: 'a t -> (key * 'a) list
   val map_env: ('c -> 'a -> 'c * 'b) -> 'c -> 'a t -> 'c * 'b t

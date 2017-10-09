@@ -8,7 +8,7 @@ Error: test3.js:4
   4:   this.m();
             ^ property `m`. Property not found in
   4:   this.m();
-       ^^^^ Object
+       ^^^^ global object
 
 Error: test3.js:4
   4:   this.m();

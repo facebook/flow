@@ -42,7 +42,7 @@ module Init = struct
     let ignores = flowconfig_flags.CommandUtils.ignores in
     let includes = flowconfig_flags.CommandUtils.includes in
     let libs = flowconfig_flags.CommandUtils.libs in
-    let lints = flowconfig_flags.CommandUtils.lint_settings in
+    let lints = flowconfig_flags.CommandUtils.raw_lint_severities in
 
     let file = Server_files_js.config_file root in
     if Sys.file_exists file

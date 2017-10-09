@@ -1,14 +1,24 @@
 Error: API.react.js:4
   4: app.setProps({y:42}); // error, y:number but foo expects string in App.react
          ^^^^^^^^ property `setProps`. Property not found in
-  4: app.setProps({y:42}); // error, y:number but foo expects string in App.react
-     ^^^ React$Element
+                                                                   v-
+157: declare type React$Element<+ElementType: React$ElementType> = {|
+158:   +type: ElementType,
+159:   +props: React$ElementProps<ElementType>,
+...:
+162: |};
+     -^ object type. See lib: <BUILTINS>/react.js:157
 
 Error: API.react.js:5
   5: app.setState({z:42}); // error, z:number but foo expects string in App.react
          ^^^^^^^^ property `setState`. Property not found in
-  5: app.setState({z:42}); // error, z:number but foo expects string in App.react
-     ^^^ React$Element
+                                                                   v-
+157: declare type React$Element<+ElementType: React$ElementType> = {|
+158:   +type: ElementType,
+159:   +props: React$ElementProps<ElementType>,
+...:
+162: |};
+     -^ object type. See lib: <BUILTINS>/react.js:157
 
 Error: App.react.js:36
  36:         {foo(z,x)} // error, since z: number
@@ -21,62 +31,85 @@ Error: checkPropTypes.js:7
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
   7: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }); // error: missing arguments
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-177:     location: string,
-                   ^^^^^^ string. See lib: <BUILTINS>/react.js:177
+193:     location: string,
+                   ^^^^^^ string. See lib: <BUILTINS>/react.js:193
 
 Error: checkPropTypes.js:7
   7: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }); // error: missing arguments
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
   7: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }); // error: missing arguments
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-178:     componentName: string,
-                        ^^^^^^ string. See lib: <BUILTINS>/react.js:178
+194:     componentName: string,
+                        ^^^^^^ string. See lib: <BUILTINS>/react.js:194
 
 Error: checkPropTypes.js:8
   8: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value'); // error: missing argument
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
   8: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value'); // error: missing argument
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-178:     componentName: string,
-                        ^^^^^^ string. See lib: <BUILTINS>/react.js:178
+194:     componentName: string,
+                        ^^^^^^ string. See lib: <BUILTINS>/react.js:194
 
 Error: checkPropTypes.js:10
  10: checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  10: checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found
                     ^^^^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
-175:     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
-                                  ^^^^^^^^ object literal. See lib: <BUILTINS>/react.js:175
+191:     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
+                                  ^^^^^^^^ object literal. See lib: <BUILTINS>/react.js:191
 
 Error: checkPropTypes.js:12
  12: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string
-                                                                                               ^^^ number. This type is incompatible with the expected param type of
-179:     getStack: ?(() => ?string)
-                            ^^^^^^ string. See lib: <BUILTINS>/react.js:179
+                                                                                         ^^^^^^^^^ function. This type is incompatible with the expected param type of
+195:     getStack: ?(() => ?string)
+                     ^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/react.js:195
+  This parameter is incompatible:
+     12: checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string
+                                                                                                   ^^^ number. This type is incompatible with
+    195:     getStack: ?(() => ?string)
+                                ^^^^^^ string. See lib: <BUILTINS>/react.js:195
 
 Error: propTypes.js:15
  15: <D />; // errors: properties `name` and `title` not found
      ^^^^^ React element `D`
+ 15: <D />; // errors: properties `name` and `title` not found
+     ^^^^^ props of React element `D`. This type is incompatible with
                   v
   9:   propTypes: {
  10:     name: React.PropTypes.string.isRequired,
  11:     ...C.propTypes,
  12:   }
-       ^ property `name`. Property not found in
- 15: <D />; // errors: properties `name` and `title` not found
-     ^^^^^ props of React element `D`
+       ^ propTypes of React component
+  Property `name` is incompatible:
+                      v
+      9:   propTypes: {
+     10:     name: React.PropTypes.string.isRequired,
+     11:     ...C.propTypes,
+     12:   }
+           ^ property `name`. Property not found in
+     15: <D />; // errors: properties `name` and `title` not found
+         ^^^^^ props of React element `D`
 
 Error: propTypes.js:15
  15: <D />; // errors: properties `name` and `title` not found
      ^^^^^ React element `D`
+ 15: <D />; // errors: properties `name` and `title` not found
+     ^^^^^ props of React element `D`. This type is incompatible with
                   v
   9:   propTypes: {
  10:     name: React.PropTypes.string.isRequired,
  11:     ...C.propTypes,
  12:   }
-       ^ property `title`. Property not found in
- 15: <D />; // errors: properties `name` and `title` not found
-     ^^^^^ props of React element `D`
+       ^ propTypes of React component
+  Property `title` is incompatible:
+                      v
+      9:   propTypes: {
+     10:     name: React.PropTypes.string.isRequired,
+     11:     ...C.propTypes,
+     12:   }
+           ^ property `title`. Property not found in
+     15: <D />; // errors: properties `name` and `title` not found
+         ^^^^^ props of React element `D`
 
 
 Found 10 errors

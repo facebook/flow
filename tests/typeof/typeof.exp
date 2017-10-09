@@ -1,3 +1,15 @@
+Error: maybe.js:9
+  9: ('foo': typeof x); // error: string ~> number
+      ^^^^^ string. This type is incompatible with
+  9: ('foo': typeof x); // error: string ~> number
+             ^^^^^^^^ number
+
+Error: optional.js:9
+  9: (null: typeof x); // error: null ~> $Optional<number> (i.e., void|number)
+      ^^^^ null. This type is incompatible with
+  9: (null: typeof x); // error: null ~> $Optional<number> (i.e., void|number)
+            ^^^^^^^^ number
+
 Error: typeof.js:43
  43: var b: MyClass1 = MyClass1;
                        ^^^^^^^^ class type: MyClass1. This type is incompatible with
@@ -28,5 +40,27 @@ Error: typeof.js:82
  82:  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
                       ^^^ Map
 
+Error: union.js:9
+  9: (null: typeof x); // error: null ~> number|string
+      ^^^^ null. This type is incompatible with
+  9: (null: typeof x); // error: null ~> number|string
+            ^^^^^^^^ union: type parameter `A` of function call | type parameter `B` of function call
+  Member 1:
+    9: (null: typeof x); // error: null ~> number|string
+              ^^^^^^^^ type parameter `A` of function call
+  Error:
+    9: (null: typeof x); // error: null ~> number|string
+        ^^^^ null. This type is incompatible with
+    9: (null: typeof x); // error: null ~> number|string
+              ^^^^^^^^ number
+  Member 2:
+    9: (null: typeof x); // error: null ~> number|string
+              ^^^^^^^^ type parameter `B` of function call
+  Error:
+    9: (null: typeof x); // error: null ~> number|string
+        ^^^^ null. This type is incompatible with
+    9: (null: typeof x); // error: null ~> number|string
+              ^^^^^^^^ string
 
-Found 5 errors
+
+Found 8 errors

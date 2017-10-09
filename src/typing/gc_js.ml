@@ -1,10 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Constraint
@@ -66,8 +64,7 @@ let rec gc cx state = function
 
   (** def types **)
 
-  | AbstractT (_, t) -> gc cx state t
-  | AnnotT t -> gc cx state t
+  | AnnotT (t, _) -> gc cx state t
   | OpaqueT (_, opaquetype) ->
       Option.iter ~f:(gc cx state) opaquetype.underlying_t;
       Option.iter ~f:(gc cx state) opaquetype.super_t
@@ -76,19 +73,25 @@ let rec gc cx state = function
   | DefT (_, AnyT) -> ()
   | AnyWithLowerBoundT (t) -> gc cx state t
   | AnyWithUpperBoundT (t) -> gc cx state t
+  | MergedT (_, uses) -> List.iter (gc_use cx state) uses
   | DefT (_, ArrT arraytype) ->
       gc_arraytype cx state arraytype
   | DefT (_, BoolT _) -> ()
   | BoundT typeparam -> gc_typeparam cx state typeparam
   | ChoiceKitT _ -> ()
+  | TypeDestructorTriggerT (_, s, t) ->
+      gc_destructor cx state s;
+      gc cx state t
   | DefT (_, ClassT t) -> gc cx state t
+  | CustomFunT (_, ReactElementFactory t) -> gc cx state t
   | CustomFunT _ -> ()
-  | DefT (_, NumT _)
-  | DefT (_, StrT _)
-    -> ()
+  | DefT (_, NumT _) -> ()
+  | DefT (_, StrT _) -> ()
+  | DefT (_, CharSetT _) -> ()
   | DiffT (t1, t2) ->
       gc cx state t1;
       gc cx state t2;
+  | MatchingPropT (_, _, t) -> gc cx state t
   | DefT (_, EmptyT) -> ()
   | EvalT (t, defer_use_t, id) ->
       gc cx state t;
@@ -124,19 +127,15 @@ let rec gc cx state = function
   | DefT (_, MaybeT t) -> gc cx state t
   | ModuleT (_, exporttypes) -> gc_exporttypes cx state exporttypes
   | DefT (_, NullT) -> ()
+  | NullProtoT _ -> ()
   | ObjProtoT _ -> ()
-  | DefT (_, ObjT objtype) ->
-      let id = objtype.props_tmap in
-      Context.iter_props cx id (fun _ ->
-        Property.iter_t (gc cx state));
-      Option.iter objtype.dict_t (gc_dicttype cx state);
-      gc cx state objtype.proto_t
+  | DefT (_, ObjT objtype) -> gc_objtype cx state objtype
   | OpenPredT (_, t, p_map, n_map) ->
       gc cx state t;
       gc_pred_map cx state p_map;
       gc_pred_map cx state n_map
   | DefT (_, OptionalT t) -> gc cx state t
-  | DefT (_, PolyT (typeparams, t)) ->
+  | DefT (_, PolyT (typeparams, t, _)) ->
       typeparams |> List.iter (gc_typeparam cx state);
       gc cx state t
   | ShapeT t -> gc cx state t
@@ -147,16 +146,13 @@ let rec gc cx state = function
   | ReposUpperT (_, t) -> gc cx state t
   | TaintT _ -> ()
   | ThisClassT (_, t) -> gc cx state t
-  | ThisTypeAppT (_, t, this, ts) ->
+  | ThisTypeAppT (_, t, this, ts_opt) ->
       gc cx state t;
       gc cx state this;
-      List.iter (gc cx state) ts
+      Option.iter ~f:(List.iter (gc cx state)) ts_opt
   | DefT (_, TypeAppT (t, ts)) ->
       gc cx state t;
       ts |> List.iter (gc cx state)
-  | TypeMapT (_, _, t1, t2) ->
-      gc cx state t1;
-      gc cx state t2
   | DefT (_, TypeT t) -> gc cx state t
   | DefT (_, UnionT rep) -> UnionRep.members rep |> List.iter (gc cx state)
   | DefT (_, VoidT) -> ()
@@ -240,6 +236,7 @@ and gc_use cx state = function
   | GetKeysT (_, t) -> gc cx state t
   | GetValuesT (_, t) -> gc cx state t
   | GetPropT(_, _, t) -> gc cx state t
+  | GetPrivatePropT(_, _, _, _, t) -> gc cx state t
   | GetProtoT (_, t) -> gc cx state t
   | GetStaticsT(_, t) -> gc cx state t
   | GuardT (pred, t1, t2) ->
@@ -249,7 +246,7 @@ and gc_use cx state = function
   | HasOwnPropT _ -> ()
   | IdxUnMaybeifyT (_, t_out) -> gc cx state t_out
   | IdxUnwrap (_, t_out) -> gc cx state t_out
-  | ImplementsT t -> gc cx state t
+  | ImplementsT (_, t) -> gc cx state t
   | ImportDefaultT (_, _, _, t) -> gc cx state t
   | ImportModuleNsT (_, t) -> gc cx state t
   | ImportNamedT (_, _, _, t) -> gc cx state t
@@ -265,44 +262,54 @@ and gc_use cx state = function
         gc cx state t
       | LookupProp (_, p)
       | SuperProp p ->
-        Property.iter_t (gc cx state) p)
+        Property.iter_t (gc cx state) p
+      | MatchProp t ->
+        gc cx state t
+      )
   | MakeExactT (_, k) -> gc_cont cx state k
-  | MapTypeT (_, _, t, k) -> gc cx state t; gc_cont cx state k
+  | MapTypeT (_, tmap, t) -> gc_type_map cx state tmap; gc cx state t
   | MethodT(_, _, _, funcalltype) -> gc_funcalltype cx state funcalltype
   | MixinT (_, t) -> gc cx state t
   | NotT (_, t) -> gc cx state t
-  | ObjAssignToT (_, t1, t2, _, _) -> gc cx state t1; gc cx state t2
-  | ObjAssignFromT (_, t1, t2, _, _) -> gc cx state t1; gc cx state t2
+  | ObjAssignToT (_, t1, t2, _) -> gc cx state t1; gc cx state t2
+  | ObjAssignFromT (_, t1, t2, _) -> gc cx state t1; gc cx state t2
   | ObjFreezeT (_, t) -> gc cx state t
   | ObjRestT (_, _, t) -> gc cx state t
   | ObjSealT (_, t) -> gc cx state t
+  | ObjTestProtoT (_, t) -> gc cx state t
   | ObjTestT (_, t1, t2) -> gc cx state t1; gc cx state t2
   | OrT (_, t1, t2) -> gc cx state t1; gc cx state t2
   | PredicateT (pred, t) -> gc_pred cx state pred; gc cx state t
   | ReactKitT (_, tool) -> gc_react_kit cx state tool
   | RefineT (_, pred, t) -> gc_pred cx state pred; gc cx state t
-  | ReposLowerT (_, u) -> gc_use cx state u
-  | ReposUseT (_, _, t) -> gc cx state t
-  | SentinelPropTestT (t, _, _, t_out) -> gc cx state t; gc cx state t_out
+  | ReposLowerT (_, _, u) -> gc_use cx state u
+  | ReposUseT (_, _, _, t) -> gc cx state t
+  | SentinelPropTestT (_, t, _, _, _, t_out) -> gc cx state t; gc cx state t_out
   | SetElemT(_, i, t) -> gc cx state i; gc cx state t
   | SetPropT(_, _, t) -> gc cx state t
+  | SetPrivatePropT(_, _, _, _, t) -> gc cx state t
   | SetProtoT (_, t) -> gc cx state t
-  | SpecializeT (_, _, _, ts, t) -> List.iter (gc cx state) ts; gc cx state t
-  | ObjSpreadT (_, _, tool, state', t) ->
-      gc_object_spread cx state tool state';
-      gc cx state t
+  | SpecializeT (_, _, _, ts_opt, t) -> Option.iter ~f:(List.iter (gc cx state)) ts_opt; gc cx state t
+  | ObjKitT (_, resolve_tool, tool, t) ->
+    gc_object_kit cx state resolve_tool tool;
+    gc cx state t
   | SubstOnPredT (_, _, t) -> gc cx state t
-  | SuperT (_, instance) -> gc_insttype cx state instance
+  | SuperT (_, DerivedInstance i) -> gc_insttype cx state i
+  | SuperT (_, DerivedStatics o) -> gc_objtype cx state o
   | TestPropT(_, _, t) -> gc cx state t
   | ThisSpecializeT (_, this, t) -> gc cx state this; gc cx state t
   | UnaryMinusT (_, t) -> gc cx state t
   | UnifyT (t1, t2) -> gc cx state t1; gc cx state t2
   | VarianceCheckT (_, ts, _) -> List.iter (gc cx state) ts
-  | TypeAppVarianceCheckT (_, _, targs) ->
+  | TypeAppVarianceCheckT (_, _, _, targs) ->
     List.iter (fun (t1, t2) ->
       gc cx state t1;
       gc cx state t2
     ) targs
+  | ConcretizeTypeAppsT (_, (ts1, _), (t2, ts2, _), _) ->
+    List.iter (gc cx state) ts1;
+    gc cx state t2;
+    List.iter (gc cx state) ts2;
   | CondT (_, alt, tout) ->
       gc cx state alt;
       gc cx state tout
@@ -324,6 +331,12 @@ and gc_use cx state = function
       ) rrt_unresolved;
       gc_spread_resolve cx state rrt_resolve_to
 
+and gc_objtype cx state objtype =
+  let id = objtype.props_tmap in
+  Context.iter_props cx id (fun _ ->
+    Property.iter_t (gc cx state));
+  Option.iter objtype.dict_t (gc_dicttype cx state);
+  gc cx state objtype.proto_t
 
 and gc_insttype cx state instance =
   instance.type_args |> SMap.iter (fun _ -> gc cx state);
@@ -370,10 +383,15 @@ and gc_destructor cx state = function
   | NonMaybeType
   | PropertyType _
   | ValuesType
+  | ReactElementPropsType
+  | ReactElementRefType
     -> ()
   | ElementType t -> gc cx state t
   | Bind t -> gc cx state t
   | SpreadType (_, ts) -> List.iter (gc cx state) ts
+  | RestType (_, t) -> gc cx state t
+  | CallType args -> List.iter (gc cx state) args
+  | TypeMap tmap -> gc_type_map cx state tmap
 
 and gc_pred cx state = function
 
@@ -411,8 +429,8 @@ and gc_pred cx state = function
 and gc_pred_map cx state pred_map =
   Key_map.iter (fun _ p -> gc_pred cx state p) pred_map
 
-and gc_object_spread =
-  let open ObjectSpread in
+and gc_object_kit =
+  let open Object in
   let gc_slice cx state (_, props, dict, _) =
     SMap.iter (fun _ (t, _) -> gc cx state t) props;
     Option.iter dict (gc_dicttype cx state)
@@ -428,27 +446,45 @@ and gc_object_spread =
       List.iter (gc cx state) todo;
       Nel.iter (gc_resolved cx state) acc
   in
-  let gc_tool cx state = function
+  let gc_resolve_tool cx state = function
     | Resolve tool -> gc_resolve cx state tool
     | Super (slice, tool) ->
       gc_slice cx state slice;
       gc_resolve cx state tool
   in
-  fun cx state tool {todo_rev; acc} ->
-    gc_tool cx state tool;
+  let gc_tool cx state = function
+  | Spread (_, spread_state) ->
+    let open Object.Spread in
+    let {todo_rev; acc} = spread_state in
     List.iter (gc cx state) todo_rev;
     List.iter (gc_resolved cx state) acc
+  | Rest (_, rest_state) ->
+    let open Object.Rest in
+    (match rest_state with
+      | One t -> gc cx state t
+      | Done o -> gc_resolved cx state o)
+  in
+  fun cx state resolve_tool tool ->
+    gc_resolve_tool cx state resolve_tool;
+    gc_tool cx state tool
 
 and gc_cont cx state = function
-  | Lower t -> gc cx state t
+  | Lower (_, t) -> gc cx state t
   | Upper u -> gc_use cx state u
+
+and gc_type_map cx state = function
+  | TupleMap t | ObjectMap t | ObjectMapi t -> gc cx state t
 
 and gc_choice_use_tool cx state = function
   | FullyResolveType _ -> ()
   | TryFlow (_, spec) -> gc_spec cx state spec
+  | EvalDestructor (id, d, tout) ->
+    gc_id cx state id;
+    gc_destructor cx state d;
+    gc cx state tout
 
 and gc_spec cx state = function
-  | UnionCases (t, ts) ->
+  | UnionCases (_, t, ts) ->
     gc cx state t;
     List.iter (gc cx state) ts
   | IntersectionCases (ts, u) ->
@@ -490,6 +526,8 @@ and gc_spread_resolve cx state = function
 | ResolveSpreadsToMultiflowCallFull (_, ft)
 | ResolveSpreadsToMultiflowSubtypeFull (_, ft) ->
   gc_funtype cx state ft
+| ResolveSpreadsToCustomFunCall (_, _, tout) ->
+  gc cx state tout
 | ResolveSpreadsToMultiflowPartial (_, ft, _, tout) ->
   gc_funtype cx state ft;
   gc cx state tout
@@ -576,9 +614,13 @@ and gc_react_kit cx state =
     fun t k -> tool t; knot k
   ) in
   function
-  | CreateElement (t, t_out) ->
-      gc cx state t;
+  | CreateElement (_, config, (children, children_spread), t_out) ->
+      gc cx state config;
+      List.iter (gc cx state) children;
+      Option.iter children_spread (gc cx state);
       gc cx state t_out
+  | GetProps t_out -> gc cx state t_out
+  | GetRef t_out -> gc cx state t_out
   | SimplifyPropType (tool, t_out) ->
       gc_simplify_prop_type tool;
       gc cx state t_out

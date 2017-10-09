@@ -10,8 +10,6 @@
 
 open Core
 
-exception NotADirectory of string
-
 external realpath: string -> string option = "hh_realpath"
 external is_nfs: string -> bool = "hh_is_nfs"
 
@@ -86,6 +84,12 @@ let close_out_no_fail fn oc =
 
 let cat = Disk.cat
 
+let cat_or_failed file =
+  try Some (Disk.cat file) with
+  | Sys_error _
+  | Failure _ ->
+    None
+
 let cat_no_fail filename =
   let ic = open_in_bin_no_fail filename in
   let len = in_channel_length ic in
@@ -134,27 +138,7 @@ let rec collect_paths path_predicate path =
   else
     Utils.singleton_if (path_predicate path) path
 
-(** Deletes the file given by "path". If it is a directory, recursively
- * deletes all its contents then removes the directory itself. *)
-let rec rm_dir_tree path =
-  try begin
-    let stats = Unix.lstat path in
-    match stats.Unix.st_kind with
-    | Unix.S_DIR ->
-      let contents = Sys.readdir path in
-      List.iter (Array.to_list contents) ~f:(fun name ->
-        let name = Filename.concat path name in
-        rm_dir_tree name);
-      Unix.rmdir path
-    | Unix.S_LNK | Unix.S_REG | Unix.S_CHR | Unix.S_BLK | Unix.S_FIFO
-    | Unix.S_SOCK ->
-      Unix.unlink path
-  end with
-  (** Path has been deleted out from under us - can ignore it. *)
-  | Sys_error(s) when s = Printf.sprintf "%s: No such file or directory" path ->
-    ()
-  | Unix.Unix_error(Unix.ENOENT, _, _) ->
-    ()
+let rm_dir_tree = Disk.rm_dir_tree
 
 let restart () =
   let cmd = Sys.argv.(0) in
@@ -309,8 +293,7 @@ let read_file file =
   buf
 
 let write_file ~file s =
-  let chan = open_out file in
-  (output_string chan s; close_out chan)
+  Disk.write_file ~file ~contents:s
 
 let append_file ~file s =
   let chan = open_out_gen [Open_wronly; Open_append; Open_creat] 0o666 file in
@@ -330,13 +313,7 @@ let try_touch ~follow_symlinks file =
   with _ ->
     ()
 
-let rec mkdir_p = function
-  | "" -> failwith "Unexpected empty directory, should never happen"
-  | d when not (Sys.file_exists d) ->
-    mkdir_p (Filename.dirname d);
-    Unix.mkdir d 0o770;
-  | d when Sys.is_directory d -> ()
-  | d -> raise (NotADirectory d)
+let mkdir_p = Disk.mkdir_p
 
 (* Emulate "mkdir -p", i.e., no error if already exists. *)
 let mkdir_no_fail dir =
@@ -491,3 +468,16 @@ type processor_info = {
 }
 
 external processor_info: unit -> processor_info = "hh_processor_info"
+
+(* We implement timers using sigalarm which means selects can be interrupted. This is a wrapper
+ * around EINTR which continues the select if it gets interrupted by a signal *)
+let rec select_non_intr read write exn timeout =
+  let start_time = Unix.gettimeofday () in
+  try Unix.select read write exn timeout
+  with Unix.Unix_error (Unix.EINTR, _, _) ->
+    (* Negative timeouts mean no timeout *)
+    let timeout =
+      if timeout < 0.0
+      then timeout
+      else max 0.0 (timeout -. (Unix.gettimeofday () -. start_time)) in
+    select_non_intr read write exn timeout

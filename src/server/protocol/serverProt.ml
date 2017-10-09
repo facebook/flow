@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 let build_revision = match Build_id.build_revision with
@@ -17,7 +14,6 @@ type command =
 | CHECK_FILE of
     File_input.t *
     Verbose.t option *
-    bool * (* graphml *)
     bool * (* force *)
     bool (* include_warnings *)
 | COVERAGE of File_input.t * bool (* force *)
@@ -36,7 +32,7 @@ type command =
 | KILL
 | PORT of string list
 | STATUS of Path.t * bool (* include_warnings *)
-| FORCE_RECHECK of string list
+| FORCE_RECHECK of string list * bool (* focus *)
 | SUGGEST of (string * string list) list
 | CONNECT
 

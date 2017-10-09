@@ -5,7 +5,11 @@ import {format} from 'util';
 import colors from 'colors/safe';
 import {diffLines, diffWords} from 'diff';
 
-import type {AssertionLocation, ErrorAssertionResult, Suggestion} from './assertionTypes';
+import type {
+  AssertionLocation,
+  ErrorAssertionResult,
+  Suggestion,
+} from './assertionTypes';
 
 // Like str.trim(), but only trims blank lines at the beginning and end
 function trim(str: string) {

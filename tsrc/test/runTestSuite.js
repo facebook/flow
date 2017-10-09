@@ -6,7 +6,7 @@ import {format} from 'util';
 import {noErrors} from '../flowResult';
 import {TestStep, TestStepFirstStage} from './TestStep';
 import {newEnv} from './stepEnv';
-import {writeFile} from '../async';
+import {writeFile} from '../utils/async';
 
 import type Builder, {TestBuilder} from './builder';
 import type Suite from './Suite';
@@ -43,9 +43,9 @@ export default async function(
   function printStatus(status: 'RUN' | 'PASS' | 'FAIL' | 'ERROR'): void {
     let statusText = colors.grey.bold("[ ] RUN")+":  ";
     if (status === 'PASS') {
-      statusText = colors.green.bold("[✓] PASS")+": ";
+      statusText = colors.green.bold("[\u2713] PASS")+": "; // checkmark unicode
     } else if (status === 'FAIL') {
-      statusText = colors.red.bold("[✗] FAIL")+": ";
+      statusText = colors.red.bold("[\u2717] FAIL")+": "; // x unicode
     } else if (status === 'ERROR') {
       statusText = colors.bgRed(colors.white.bold("[!] ERROR"))+":";
     }
@@ -85,17 +85,54 @@ export default async function(
     );
     const stepResults = [];
     try {
-      // flowErrors contains the current flow errors. If a step doesn't care
-      // about flow errors, we won't check for the current flow errors and
-      // flowErrors will contain null
-      let flowErrors = noErrors;
+      /* flowErrors contains the current flow errors. If a step doesn't care
+       * about flow errors, we won't check for the current flow errors and
+       * flowErrors will contain null.
+       *
+       * In non-lazy mode, we can just assume we start with 0 errors and avoid
+       * the initial check. In lazy mode, we must do the initial check
+       */
+      let flowErrors = test.lazyMode === null ? noErrors : null;
 
       let testBuilder: TestBuilder = await builder.createFreshTest(
         bin,
         suiteName,
         testNum,
         test.flowConfigFilename,
+        test.lazyMode,
       );
+
+      let firstIdeStartStep = null;
+      let lastIdeAssertionStep = null;
+      for (let i = 0; i < steps.length; i++) {
+        const step = steps[i];
+        if (firstIdeStartStep == null && step.startsIde()) {
+          firstIdeStartStep = i;
+        }
+        if (step.readsIdeMessages()) {
+          lastIdeAssertionStep = i;
+        }
+      }
+
+      if (firstIdeStartStep !== null && lastIdeAssertionStep !== null) {
+        for (let i = firstIdeStartStep; i <= lastIdeAssertionStep; i++) {
+          const step = steps[i];
+          if (!step.readsIdeMessages()) {
+            throw new Error(format(
+              "Testing flow ide is really tricky. To be safe, make sure that " +
+              "every step before the first ideStart and the last " +
+              "ideNewMessagesWithTimeout/ideNoNewMessagesAfterSleep calls " +
+              "either ideNewMessagesWithTimeout or " +
+              "ideNoNewMessagesAfterSleep.\n\n. " +
+              "Test '%s' step %d/%d should call either " +
+              "ideNewMessagesWithTimeout or ideNoNewMessagesAfterSleep.",
+              test.name,
+              i+1,
+              steps.length
+            ));
+          }
+        }
+      }
 
       for (const step of steps) {
         if (!(step instanceof TestStep)) {
@@ -113,7 +150,11 @@ export default async function(
         if (flowErrors == null && step.needsFlowCheck()) {
           flowErrors = await testBuilder.getFlowErrors();
         }
+        testBuilder.clearIDEMessages();
+        testBuilder.clearIDEStderr();
         let { envRead, envWrite } = newEnv(flowErrors || noErrors);
+
+        testBuilder.setAllowFlowServerToDie(step.allowFlowServerToDie());
 
         await step.performActions(testBuilder, envWrite);
 
@@ -128,11 +169,14 @@ export default async function(
           flowErrors = null;
         }
 
-        // expose the pid of the server to the env, so that assertions can check
-        // on the server status
-        envWrite.setServerPid(testBuilder.server);
+        envWrite.setIDEMessages(testBuilder.getIDEMessages());
+        envWrite.setIDEStderr(testBuilder.getIDEStderr());
+
+        envWrite.setServerRunning(testBuilder.server != null);
 
         let result = step.checkAssertions(envRead);
+        testBuilder.assertNoErrors();
+        testBuilder.setAllowFlowServerToDie(false);
         if (result.passed) {
           stepsPassed++;
         } else {
@@ -141,8 +185,7 @@ export default async function(
         stepResults.push(result);
       }
 
-      // No-op if nothing is running
-      await testBuilder.stopFlowServer();
+      await testBuilder.cleanup();
     } catch (e) {
       printStatus('ERROR');
       return {

@@ -1,11 +1,8 @@
 (**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* AST handling and type setup for import/export *)
@@ -64,33 +61,14 @@ let mk_resource_module_t cx loc f =
   mk_commonjs_module_t cx reason reason exports_t
 
 
-let add_module_tvar cx r loc =
+let add_require_tvar cx r loc =
   let tvar = Flow.mk_tvar cx (mk_reason (RCustom r) loc) in
-  Context.add_module cx r tvar
-
-(* given a module name, return associated tvar if already
- * present in module map, or create and add *)
-let module_t_of_ref_safe cx m reason =
-  match Context.declare_module_t cx with
-  (**
-   * TODO: Imports within `declare module`s can only reference other
-   *       `declare module`s (for now). This won't fly forever so at some point
-   *       we'll need to move `declare module` storage into the modulemap just
-   *       like normal modules and merge them as such.
-   *)
-  | Some _ ->
-    Env.get_var_declared_type cx (internal_module_name m) (loc_of_reason reason)
-  | None ->
-    (match SMap.get m (Context.module_map cx) with
-      | Some t -> t
-      | None ->
-        Flow.mk_tvar_where cx reason (fun t -> Context.add_module cx m t)
-    )
+  Context.add_require cx r tvar
 
 (* given a module name, return associated tvar in module map (failing if not
    found); e.g., used to find tvars associated with requires *after* all
    requires already have entries in the module map *)
-let module_t_of_ref_unsafe cx m reason =
+let require_t_of_ref_unsafe cx m reason =
   match Context.declare_module_t cx with
   (**
    * TODO: Imports within `declare module`s can only reference other
@@ -101,15 +79,14 @@ let module_t_of_ref_unsafe cx m reason =
   | Some _ ->
     Env.get_var_declared_type cx (internal_module_name m) (loc_of_reason reason)
   | None ->
-    Context.find_module cx m
+    Context.find_require cx m
 
-let require cx ?(internal=false) module_ref loc =
-  if not internal
-  then Type_inference_hooks_js.dispatch_require_hook cx module_ref loc;
+let require cx module_ref loc =
+  Type_inference_hooks_js.dispatch_require_hook cx module_ref loc;
   let reason = mk_reason (RCommonJSExports module_ref) loc in
   Flow.mk_tvar_where cx reason (fun t ->
     Flow.flow cx (
-      module_t_of_ref_unsafe cx module_ref (mk_reason (RCustom module_ref) loc),
+      require_t_of_ref_unsafe cx module_ref (mk_reason (RCustom module_ref) loc),
       CJSRequireT(reason, t)
     )
   )
@@ -121,24 +98,28 @@ let import ?reason cx module_ref loc =
     | Some r -> r
     | None -> mk_reason (RCustom module_ref) loc
   in
-  module_t_of_ref_unsafe cx module_ref reason
+  require_t_of_ref_unsafe cx module_ref reason
 
 let import_ns cx reason module_ref loc =
   Type_inference_hooks_js.dispatch_import_hook cx module_ref loc;
   Flow.mk_tvar_where cx reason (fun t ->
     Flow.flow cx (
-      module_t_of_ref_unsafe cx module_ref (mk_reason (RCustom module_ref) loc),
+      require_t_of_ref_unsafe cx module_ref (mk_reason (RCustom module_ref) loc),
       ImportModuleNsT(reason, t)
     )
   )
 
 let module_t_of_cx cx =
   match Context.declare_module_t cx with
+  | Some t -> t
   | None ->
     let m = Context.module_ref cx in
-    let loc = Loc.({ none with source = Some (Context.file cx) }) in
-    module_t_of_ref_safe cx m (Reason.mk_reason (RCustom "exports") loc)
-  | Some t -> t
+    match SMap.get m (Context.module_map cx) with
+    | Some t -> t
+    | None ->
+      let loc = Loc.({ none with source = Some (Context.file cx) }) in
+      let reason = (Reason.mk_reason (RCustom "exports") loc) in
+      Flow.mk_tvar_where cx reason (fun t -> Context.add_module cx m t)
 
 let set_module_t cx reason f =
   match Context.declare_module_t cx with

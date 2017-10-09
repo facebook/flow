@@ -405,13 +405,13 @@ and json_to_multiline json =
   loop "" json
 
 
-let rec output_list oc elems output_elem : unit =
+let rec output_list oc ?(sep=",") elems output_elem: unit =
   match elems with
   | [] -> ()
   | [elem] -> output_elem oc elem
   | elem :: other_elems ->
       output_elem oc elem;
-      output_string oc ",";
+      output_string oc sep;
       output_list oc other_elems output_elem
 
 let rec json_to_output oc (json:json): unit =
@@ -437,6 +437,30 @@ and json_assoc_to_output oc (k,v) : unit =
   output_string oc (escape k);
   output_string oc ":";
   json_to_output oc v
+
+let rec json_to_multiline_output oc (json:json): unit =
+  let json_assoc_to_output oc (k,v) : unit =
+    output_string oc (escape k);
+    output_string oc ":";
+    json_to_multiline_output oc v
+  in
+  match json with
+  | JSON_Object l ->
+      output_string oc "{";
+      output_list oc ~sep:",\n" l json_assoc_to_output;
+      output_string oc "}";
+  | JSON_Array l ->
+      output_string oc "[";
+      output_list oc ~sep:",\n" l json_to_multiline_output;
+      output_string oc "]";
+  | JSON_String s ->
+      output_string oc (escape s)
+  | JSON_Number n ->
+      output_string oc n
+  | JSON_Bool b ->
+      output_string oc (if b then "true" else "false")
+  | JSON_Null ->
+      output_string oc "null"
 
 let json_of_string ?(strict=true) s =
   let lb = create_env strict s in

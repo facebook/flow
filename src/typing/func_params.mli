@@ -5,13 +5,13 @@ val empty: t
 
 val mk: Context.t ->
   (Type.t SMap.t) -> (* type params map *)
-  expr:(Context.t -> Ast.Expression.t -> Type.t) ->
-  Ast.Function.t ->
+  expr:(Context.t -> Loc.t Ast.Expression.t -> Type.t) ->
+  Loc.t Ast.Function.t ->
   t
 
 val convert: Context.t ->
   (Type.t SMap.t) -> (* type params map *)
-  Ast.Type.Function.t ->
+  Loc.t Ast.Type.Function.t ->
   t
 
 (* name of each param, in order *)
@@ -30,7 +30,7 @@ val iter: (string * Type.t * Loc.t -> unit) -> t -> unit
 
 (* if there is a default for this binding, run provided function *)
 val with_default: string ->
-  (Ast.Expression.t Default.t -> unit) -> (* handler fn *)
+  (Loc.t Ast.Expression.t Default.t -> unit) -> (* handler fn *)
   t -> unit
 
 val subst: Context.t ->

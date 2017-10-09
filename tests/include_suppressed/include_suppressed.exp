@@ -5,12 +5,12 @@ Error: test.js:3
   3: (123: string); // Normal error
            ^^^^^^ string
 
-Error: test.js:8
+Warning: test.js:8
   8: // $FlowFixMe - unused suppression comment
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
 
-Found 2 errors
+Found 1 error and 1 warning
 
 
 With --include-suppressed
@@ -26,12 +26,12 @@ Error: test.js:6
   6: (123: string); // Suppressed error
            ^^^^^^ string
 
-Error: test.js:8
+Warning: test.js:8
   8: // $FlowFixMe - unused suppression comment
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
 
-Found 3 errors
+Found 2 errors and 1 warning
 
 
 JSON without --include-suppressed
@@ -88,7 +88,7 @@ JSON without --include-suppressed
     },
     {
       "kind":"infer",
-      "level":"error",
+      "level":"warning",
       "suppressions":[],
       "message":[
         {
@@ -178,7 +178,7 @@ JSON with --include-suppressed
     },
     {
       "kind":"infer",
-      "level":"error",
+      "level":"warning",
       "suppressions":[],
       "message":[
         {
