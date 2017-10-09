@@ -104,6 +104,7 @@ module rec TypeTerm : sig
     (* constrains some properties of an object *)
     | ShapeT of t
     | DiffT of t * t
+    | MatchingPropT of reason * string * t
 
     (* collects the keys of an object *)
     | KeysT of reason * t
@@ -496,7 +497,7 @@ module rec TypeTerm : sig
 
     | DebugPrintT of reason
 
-    | SentinelPropTestT of t * bool * sentinel_value * t_out
+    | SentinelPropTestT of reason * t * string * bool * sentinel_value * t_out
 
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
@@ -765,6 +766,7 @@ module rec TypeTerm : sig
   | RWProp of t (* original target *) * t (* in/out type *) * rw
   | LookupProp of use_op * Property.t
   | SuperProp of Property.t
+  | MatchProp of t
 
   and rw = Read | Write
 
@@ -1299,11 +1301,8 @@ and UnionRep : sig
 
   val rev_append: t -> t -> t
 
-  (** map rep r to rep r' along type mapping f *)
-  val map: (TypeTerm.t -> TypeTerm.t) -> t -> t
-
-  (** map rep r to rep r' along type mapping f. drops history. if nothing would
-      be changed, returns the physically-identical rep. *)
+  (** map rep r to rep r' along type mapping f. if nothing would be changed,
+      returns the physically-identical rep. *)
   val ident_map: (TypeTerm.t -> TypeTerm.t) -> t -> t
 
   (** quick membership test: Some true/false or None = needs full check *)
@@ -1387,17 +1386,12 @@ end = struct
     | t0::t1::ts -> make t0 t1 ts
     | _ -> failwith "impossible"
 
-  let map f (t0, t1, ts, _)  = make (f t0) (f t1) (List.map f ts)
-
   let ident_map f ((t0, t1, ts, _) as rep) =
     let t0_ = f t0 in
     let t1_ = f t1 in
-    let changed = t0_ != t0 || t1_ != t1 in
-    let rev_ts, changed = List.fold_left (fun (rev_ts, changed) t ->
-      let t_ = f t in
-      t_::rev_ts, changed || t_ != t
-    ) ([], changed) ts in
-    if changed then make t0_ t1_ (List.rev rev_ts) else rep
+    let ts_ = ListUtils.ident_map f ts in
+    let changed = t0_ != t0 || t1_ != t1 || ts_ != ts in
+    if changed then make t0_ t1_ ts_ else rep
 
   let quick_mem t (t0, t1, ts, enum) =
     let t = canon t in
@@ -1931,6 +1925,7 @@ let rec reason_of_t = function
   | ModuleT (reason, _) -> reason
   | NullProtoT reason -> reason
   | ObjProtoT reason -> reason
+  | MatchingPropT (reason, _, _) -> reason
   | OpaqueT (reason, _) -> reason
   | OpenPredT (reason, _, _, _) -> reason
   | ReposT (reason, _) -> reason
@@ -2012,7 +2007,7 @@ and reason_of_use_t = function
   | ReposLowerT (reason, _, _) -> reason
   | ReposUseT (reason, _, _, _) -> reason
   | ResolveSpreadT (reason, _) -> reason
-  | SentinelPropTestT (_, _, _, result) -> reason_of_t result
+  | SentinelPropTestT (_, _, _, _, _, result) -> reason_of_t result
   | SetElemT (reason,_,_) -> reason
   | SetPropT (reason,_,_) -> reason
   | SetPrivatePropT (reason,_,_,_,_) -> reason
@@ -2076,6 +2071,7 @@ let rec mod_reason_of_t f = function
   | ModuleT (reason, exports) -> ModuleT (f reason, exports)
   | NullProtoT reason -> NullProtoT (f reason)
   | ObjProtoT (reason) -> ObjProtoT (f reason)
+  | MatchingPropT (reason, k, v) -> MatchingPropT (f reason, k, v)
   | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
   | ReposT (reason, t) -> ReposT (f reason, t)
@@ -2171,8 +2167,8 @@ and mod_reason_of_use_t f = function
   | ReposLowerT (reason, use_desc, t) -> ReposLowerT (f reason, use_desc, t)
   | ReposUseT (reason, use_desc, use_op, t) -> ReposUseT (f reason, use_desc, use_op, t)
   | ResolveSpreadT (reason_op, resolve) -> ResolveSpreadT (f reason_op, resolve)
-  | SentinelPropTestT (l, sense, sentinel, result) ->
-      SentinelPropTestT (l, sense, sentinel, mod_reason_of_t f result)
+  | SentinelPropTestT (reason_op, l, key, sense, sentinel, result) ->
+    SentinelPropTestT (reason_op, l, key, sense, sentinel, mod_reason_of_t f result)
   | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
   | SetPropT (reason, n, t) -> SetPropT (f reason, n, t)
   | SetPrivatePropT (reason, n, scopes, static, t) ->
@@ -2292,6 +2288,7 @@ let string_of_ctor = function
   | ModuleT _ -> "ModuleT"
   | NullProtoT _ -> "NullProtoT"
   | ObjProtoT _ -> "ObjProtoT"
+  | MatchingPropT _ -> "MatchingPropT"
   | OpaqueT _ -> "OpaqueT"
   | OpenPredT _ -> "OpenPredT"
   | ReposT _ -> "ReposT"

@@ -245,6 +245,11 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type2", _json_of_t json_cx t2
     ]
 
+  | MatchingPropT (_, x, t) -> [
+      "name", JSON_String x;
+      "type", _json_of_t json_cx t
+    ]
+
   | KeysT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
@@ -740,8 +745,9 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       );
     ]
 
-  | SentinelPropTestT (l, sense, sentinel, result) -> [
+  | SentinelPropTestT (_, l, key, sense, sentinel, result) -> [
       "l", _json_of_t json_cx l;
+      "key", JSON_String key;
       "sense", JSON_Bool sense;
       "sentinel", (match sentinel with
       | SentinelStr s -> JSON_String s
@@ -1356,6 +1362,10 @@ and json_of_lookup_action_impl json_cx action = Hh_json.(
         "kind", JSON_String "SuperProp";
         "prop", json_of_prop json_cx p;
       ]
+    | MatchProp t -> [
+        "kind", JSON_String "MatchProp";
+        "t", _json_of_t json_cx t
+      ]
   )
 )
 
@@ -1706,6 +1716,7 @@ and dump_t_ (depth, tvars) cx t =
   | DefT (_, AnyFunT) -> p t
   | ShapeT arg -> p ~reason:false ~extra:(kid arg) t
   | DiffT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
+  | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
   | KeysT (_, arg) -> p ~extra:(kid arg) t
   | DefT (_, SingletonStrT s) -> p ~extra:(spf "%S" s) t
   | DefT (_, SingletonNumT (_, s)) -> p ~extra:s t
@@ -1772,6 +1783,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | RWProp (_, t, Write) -> spf "Write %s" (kid t)
   | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (prop p)
   | SuperProp p -> spf "Super %s" (prop p)
+  | MatchProp t -> spf "Match %s" (kid t)
   in
 
   let specialize_cache = function
@@ -2031,7 +2043,7 @@ and dump_use_t_ (depth, tvars) cx t =
       | ResolveSpreadsToMultiflowSubtypeFull _
       | ResolveSpreadsToCustomFunCall _
         -> p t)
-  | SentinelPropTestT (l, sense, sentinel, result) -> p ~reason:false
+  | SentinelPropTestT (_, l, _key, sense, sentinel, result) -> p ~reason:false
       ~extra:(spf "%s, %b, %s, %s"
         (kid l)
         sense

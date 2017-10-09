@@ -10,7 +10,7 @@ export interface StepEnvWriteable {
   setIDEMessages(messages: Array<IDEMessage>): void;
   setIDEStderr(stderr: string): void;
   setNewErrors(errors: FlowResult): void;
-  setServerPid(pid: ?number): void;
+  setServerRunning(running: boolean): void;
   triggerFlowCheck(): void;
 }
 
@@ -22,7 +22,7 @@ export interface StepEnvReadable {
   getIDEStderr(): string;
   getOldErrors(): FlowResult;
   getNewErrors(): FlowResult;
-  getServerPid(): ?number;
+  getServerRunning(): boolean;
   shouldRunFlow(): boolean;
 }
 
@@ -33,7 +33,7 @@ export function newEnv(
   let stderr = [];
   let exitCodes = [];
   let newErrors = oldErrors;
-  let serverPid = undefined;
+  let serverRunning = false;
   let shouldRunFlow = false;
   let ideMessages = [];
   let ideStderr = "";
@@ -63,8 +63,8 @@ export function newEnv(
       newErrors = errors;
     },
 
-    setServerPid(pid) {
-      serverPid = pid;
+    setServerRunning(running) {
+      serverRunning = running;
     },
 
     triggerFlowCheck() {
@@ -101,8 +101,8 @@ export function newEnv(
       return newErrors;
     },
 
-    getServerPid() {
-      return serverPid;
+    getServerRunning() {
+      return serverRunning;
     },
 
     shouldRunFlow() {

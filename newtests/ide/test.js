@@ -1236,4 +1236,22 @@ export default suite(({ideStart, ideNotification, ideRequest, addCode, addFile})
         'When we close an already closed file, we dont get the current errors',
       ),
   ]),
+
+  test('Stop the flow ide command without killing the server', [
+    ideStart(),
+    addCode('var x = 123')
+      .ideStop()
+      .sleep(500),
+    addCode('var y: string = 123')
+      .newErrors(
+        `
+          test.js:5
+            5: var y: string = 123
+                               ^^^ number. This type is incompatible with
+            5: var y: string = 123
+                      ^^^^^^ string
+        `,
+      )
+      .because('Stopping the flow ide command used to kill the server accidentally'),
+  ]),
 ]);

@@ -12,6 +12,7 @@ type reason_desc =
   | RStringLit of string
   | RNumberLit of string
   | RBooleanLit of bool
+  | RMatchingProp of string * reason_desc
   | RObject
   | RObjectLit
   | RObjectType

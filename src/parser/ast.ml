@@ -468,8 +468,7 @@ and Statement : sig
       | ImportValue
 
     type 'M specifier =
-      | ImportNamedSpecifier of 'M named_specifier
-      | ImportDefaultSpecifier of 'M Identifier.t
+      | ImportNamedSpecifiers of 'M named_specifier list
       | ImportNamespaceSpecifier of ('M * 'M Identifier.t)
     and 'M named_specifier = {
       kind: importKind option;
@@ -480,7 +479,8 @@ and Statement : sig
     type 'M t = {
       importKind: importKind;
       source: ('M * Literal.t); (* Always a string literal *)
-      specifiers: 'M specifier list;
+      default: 'M Identifier.t option;
+      specifiers: 'M specifier option;
     }
   end
   module Expression : sig

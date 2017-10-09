@@ -285,14 +285,21 @@ end with type t = Impl.t) = struct
         |]
       )
     | loc, ImportDeclaration import -> ImportDeclaration.(
-        let specifiers = import.specifiers |> List.map (function
-          | ImportDefaultSpecifier id ->
-              import_default_specifier id
-          | ImportNamedSpecifier {local; remote; kind;} ->
-              import_named_specifier local remote kind
-          | ImportNamespaceSpecifier id ->
-              import_namespace_specifier id
-        ) in
+        let specifiers = match import.specifiers with
+          | Some (ImportNamedSpecifiers specifiers) ->
+              List.map (fun {local; remote; kind;} ->
+                import_named_specifier local remote kind
+              ) specifiers
+          | Some (ImportNamespaceSpecifier id) ->
+              [import_namespace_specifier id]
+          | None ->
+              []
+        in
+
+        let specifiers = match import.default with
+          | Some default -> (import_default_specifier default)::specifiers
+          | None -> specifiers
+        in
 
         let import_kind = match import.importKind with
         | ImportType -> "type"

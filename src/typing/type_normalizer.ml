@@ -406,7 +406,7 @@ let rec normalize_type_impl cx ids t = match t with
 
   | DefT (_, UnionT rep) ->
       let reason = locationless_reason RUnion in
-      let rep = UnionRep.map (normalize_type_impl cx ids) rep in
+      let rep = UnionRep.ident_map (normalize_type_impl cx ids) rep in
       normalize_union reason rep
 
   | AnyWithUpperBoundT t ->
@@ -425,6 +425,8 @@ let rec normalize_type_impl cx ids t = match t with
       ShapeT (normalize_type_impl cx ids t)
   | DiffT (t1, t2) ->
       DiffT (normalize_type_impl cx ids t1, normalize_type_impl cx ids t2)
+  | MatchingPropT (r, x, t) ->
+      MatchingPropT (r, x, normalize_type_impl cx ids t)
 
   | AnnotT (t, use_desc) ->
       AnnotT (normalize_type_impl cx ids t, use_desc)

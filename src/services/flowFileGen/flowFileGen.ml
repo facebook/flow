@@ -44,19 +44,16 @@ let gen_imports env =
     let open Ast in
     let open Statement in
     let open ImportDeclaration in
-    let {importKind; source; specifiers;} = stmt in
-    let (named, default, ns) =
-      List.fold_left (fun (named, default, ns) spec ->
-        match spec with
-        | ImportNamedSpecifier s ->
-          (s::named, default, ns)
-        | ImportDefaultSpecifier (_, name) ->
-          (named, Some name, ns)
-        | ImportNamespaceSpecifier (_, (_, name)) ->
-          (named, default, Some name)
-      ) ([], None, None) specifiers
+    let {importKind; source; specifiers; default;} = stmt in
+    let default = Option.map ~f:(fun (_, name) -> name) default in
+    let named, ns = match specifiers with
+      | Some (ImportNamespaceSpecifier (_, (_, name))) ->
+        ([], Some name)
+      | Some (ImportNamedSpecifiers xs) ->
+        (xs, None)
+      | None ->
+        ([], None)
     in
-    let named = List.rev named in
     let source =
       match source with
       | (_, {Literal.value = Literal.String s; _;}) -> s

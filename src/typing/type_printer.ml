@@ -325,7 +325,8 @@ let rec type_printer_impl ~size override enclosure cx t =
     | NullProtoT _
     | DiffT (_, _)
     | ExtendsT (_, _, _, _)
-    | MergedT _ ->
+    | MergedT _
+    | MatchingPropT _ ->
         assert_false (spf "Missing printer for %s" (string_of_ctor t))
 
 

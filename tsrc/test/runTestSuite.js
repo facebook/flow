@@ -154,6 +154,8 @@ export default async function(
         testBuilder.clearIDEStderr();
         let { envRead, envWrite } = newEnv(flowErrors || noErrors);
 
+        testBuilder.setAllowFlowServerToDie(step.allowFlowServerToDie());
+
         await step.performActions(testBuilder, envWrite);
 
         let oldErrors = flowErrors;
@@ -170,11 +172,11 @@ export default async function(
         envWrite.setIDEMessages(testBuilder.getIDEMessages());
         envWrite.setIDEStderr(testBuilder.getIDEStderr());
 
-        // expose the pid of the server to the env, so that assertions can check
-        // on the server status
-        envWrite.setServerPid(testBuilder.server);
+        envWrite.setServerRunning(testBuilder.server != null);
 
         let result = step.checkAssertions(envRead);
+        testBuilder.assertNoErrors();
+        testBuilder.setAllowFlowServerToDie(false);
         if (result.passed) {
           stepsPassed++;
         } else {
@@ -183,8 +185,7 @@ export default async function(
         stepResults.push(result);
       }
 
-      // No-op if nothing is running
-      await testBuilder.stopFlowServer();
+      await testBuilder.cleanup();
     } catch (e) {
       printStatus('ERROR');
       return {

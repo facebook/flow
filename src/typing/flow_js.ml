@@ -116,6 +116,9 @@ let mk_objecttype ?(flags=default_flags) dict map proto = {
   proto_t = proto
 }
 
+let matching_sentinel_prop reason key sentinel_value =
+  MatchingPropT (reason, key, DefT (reason, sentinel_value))
+
 (**************************************************************)
 
 (* tvars *)
@@ -1105,6 +1108,9 @@ module ResolvableTypeJob = struct
       let ts = [t1;t2] in
       collect_of_types ?log_unresolved cx reason acc ts
 
+    | MatchingPropT (_, _, t) ->
+      collect_of_type ?log_unresolved cx reason acc t
+
     | IdxWrapper (_, t) ->
       collect_of_type ?log_unresolved cx reason acc t
 
@@ -1643,7 +1649,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        lower bound. *)
 
     | DefT (r, UnionT rep), ReposUseT (reason, use_desc, use_op, l) ->
-      let rep = UnionRep.map (annot use_desc) rep in
+      let rep = UnionRep.ident_map (annot use_desc) rep in
       let r = repos_reason (loc_of_reason reason) r in
       let r =
         if use_desc
@@ -2914,7 +2920,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             reasonless_eq t1 t2)) ->
       ()
 
-    | DefT (r, UnionT rep), SentinelPropTestT (l, sense, sentinel, result) ->
+    | DefT (r, UnionT rep), SentinelPropTestT (_reason, l, _key, sense, sentinel, result) ->
       (* we have the check l.key === sentinel where l.key is a union *)
       if sense then
         let def = match sentinel with
@@ -3083,6 +3089,23 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (r, IntersectionT rep), u ->
       prep_try_intersection cx trace
         (reason_of_use_t u) (parts_to_replace u) [] u r rep
+
+    (************)
+    (* matching *)
+    (************)
+
+    | MatchingPropT (reason, x, t), UseT (_, l) ->
+      (* Things that can have properties are object-like (objects, instances,
+         and their exact versions). Notably, "meta" types like union, annot,
+         typeapp, eval, maybe, optional, and intersection should have boiled
+         away by this point. *)
+      let propref = Named (reason, x) in
+      let strict = NonstrictReturning None in
+      let u = LookupT (reason, strict, [], propref, MatchProp t) in
+      rec_flow cx trace (l, u)
+
+    | MatchingPropT _, _ when is_use u ->
+      () (* TODO: empty? *)
 
     (*************************)
     (* Resolving rest params *)
@@ -4355,14 +4378,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* function types derive objects through explicit instantiation *)
     (****************************************************************)
 
-    | DefT (reason, FunT (_, proto, ({
+    | DefT (_, FunT (_, proto, ({
         this_t = this;
         return_t = ret;
         _ } as ft))),
       ConstructorT (reason_op, args, t) ->
       (* TODO: closure *)
       (** create new object **)
-      let reason_c = replace_reason_const RNewObject reason in
+      let reason_c = replace_reason_const RNewObject reason_op in
       let proto_reason = reason_of_t proto in
       let sealed = UnsealedInFile (Loc.source (loc_of_reason proto_reason)) in
       let flags = { default_flags with sealed } in
@@ -4375,11 +4398,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       multiflow_call cx trace reason_op args ft;
       Ops.pop ();
       (** if ret is object-like, return ret; otherwise return new_obj **)
-      let reason_o = replace_reason_const RConstructorReturn reason in
+      let reason_o = replace_reason_const RConstructorReturn reason_op in
       rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
 
-    | DefT (reason, AnyFunT), ConstructorT (reason_op, args, t) ->
-      let reason_o = replace_reason_const RConstructorReturn reason in
+    | DefT (_, AnyFunT), ConstructorT (reason_op, args, t) ->
+      let reason_o = replace_reason_const RConstructorReturn reason_op in
       call_args_iter
         (fun t -> rec_flow_t cx trace (t, AnyT.why reason_op))
         args;
@@ -5568,46 +5591,59 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       guard cx trace l pred result sink
 
     | DefT (_, StrT lit),
-      SentinelPropTestT (l, sense, SentinelStr sentinel, result) ->
-        begin match lit with
+      SentinelPropTestT (reason, l, key, sense, SentinelStr sentinel, result) ->
+      begin match lit with
         | Literal (_, value) when (value = sentinel) != sense ->
-            () (* provably unreachable, so prune *)
-        | _ ->
+          if not sense
+          then () (* provably unreachable, so prune *)
+          else
+            let l = matching_sentinel_prop reason key (SingletonStrT sentinel) in
             rec_flow_t cx trace (l, result)
-        end
+        | _ ->
+          rec_flow_t cx trace (l, result)
+      end
 
     | DefT (_, NumT lit),
-      SentinelPropTestT (l, sense, SentinelNum (sentinel, _), result) ->
-        begin match lit with
+      SentinelPropTestT (reason, l, key, sense, SentinelNum sentinel_lit, result) ->
+      let sentinel, _ = sentinel_lit in
+      begin match lit with
         | Literal (_, (value, _)) when (value = sentinel) != sense ->
-            () (* provably unreachable, so prune *)
-        | _ ->
+          if not sense
+          then () (* provably unreachable, so prune *)
+          else
+            let l = matching_sentinel_prop reason key (SingletonNumT sentinel_lit) in
             rec_flow_t cx trace (l, result)
-        end
+        | _ ->
+          rec_flow_t cx trace (l, result)
+      end
 
     | DefT (_, BoolT lit),
-      SentinelPropTestT (l, sense, SentinelBool sentinel, result) ->
+      SentinelPropTestT (reason, l, key, sense, SentinelBool sentinel, result) ->
         begin match lit with
         | Some value when (value = sentinel) != sense ->
-            () (* provably unreachable, so prune *)
+          if not sense
+          then () (* provably unreachable, so prune *)
+          else
+            let l = matching_sentinel_prop reason key (SingletonBoolT sentinel) in
+            rec_flow_t cx trace (l, result)
         | _ ->
             rec_flow_t cx trace (l, result)
         end
 
     | DefT (_, NullT),
-      SentinelPropTestT (l, sense, SentinelNull, result) ->
+      SentinelPropTestT (_reason, l, _key, sense, SentinelNull, result) ->
         if not sense
-        then () (* provably unreachable, so prune *)
+        then ()
         else rec_flow_t cx trace (l, result)
 
     | DefT (_, VoidT),
-      SentinelPropTestT (l, sense, SentinelVoid, result) ->
+      SentinelPropTestT (_reason, l, _key, sense, SentinelVoid, result) ->
         if not sense
-        then () (* provably unreachable, so prune *)
+        then ()
         else rec_flow_t cx trace (l, result)
 
     | DefT (_, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)),
-      SentinelPropTestT (l, sense, _, result) ->
+      SentinelPropTestT (_reason, l, _key, sense, _, result) ->
         (* types don't match (would've been matched above) *)
         (* we don't prune other types like objects or instances, even though
            a test like `if (ObjT === StrT)` seems obviously unreachable, but
@@ -5616,7 +5652,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         then () (* provably unreachable, so prune *)
         else rec_flow_t cx trace (l, result)
 
-    | _, SentinelPropTestT (l, _, _, result) ->
+    | _, SentinelPropTestT (_, l, _, _, _, result) ->
         (* property exists, but is not something we can use for refinement *)
         rec_flow_t cx trace (l, result)
 
@@ -6855,7 +6891,7 @@ and eval_destructor cx ~trace reason t d tout = match t with
    Instead, we preserve the union by pushing down the destructor onto the
    branches of the unions. *)
 | DefT (r, UnionT rep) ->
-  rec_flow_t cx trace (DefT (r, UnionT (rep |> UnionRep.map (fun t ->
+  rec_flow_t cx trace (DefT (r, UnionT (rep |> UnionRep.ident_map (fun t ->
     EvalT (t, TypeDestructorT (reason, d), mk_id ())
   ))), tout)
 | DefT (r, MaybeT t) ->
@@ -7006,6 +7042,7 @@ and check_polarity cx ?trace polarity = function
   | AnnotT _
   | ShapeT _
   | DiffT _
+  | MatchingPropT _
   | KeysT _
   | NullProtoT _
   | ObjProtoT _
@@ -8657,7 +8694,15 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
     | Some p ->
       (match Property.read_t p with
       | Some t ->
-        let test = SentinelPropTestT (orig_obj, sense, sentinel, result) in
+        let desc = RMatchingProp (key, match sentinel with
+          | SentinelStr s -> RStringLit s
+          | SentinelNum (_, n) -> RNumberLit n
+          | SentinelBool b -> RBooleanLit b
+          | SentinelNull -> RNull
+          | SentinelVoid -> RVoid
+        ) in
+        let reason = replace_reason_const desc (reason_of_t result) in
+        let test = SentinelPropTestT (reason, orig_obj, key, sense, sentinel, result) in
         rec_flow cx trace (t, test)
       | None ->
         let reason_obj = reason_of_t obj in
@@ -9769,7 +9814,7 @@ and perform_lookup_action cx trace propref p lreason ureason = function
   | SuperProp lp ->
     rec_flow_p cx trace ureason lreason propref (lp, p)
   | RWProp (_, tout, rw) ->
-    match rw, Property.access rw p with
+    begin match rw, Property.access rw p with
     (* TODO: Sam, comment repositioning logic here *)
     | Read, Some t ->
       let loc = loc_of_reason ureason in
@@ -9785,6 +9830,16 @@ and perform_lookup_action cx trace propref p lreason ureason = function
       add_output cx ~trace (FlowError.EPropAccess (
         (lreason, ureason), x, Property.polarity p, rw
       ))
+    end
+  | MatchProp tin ->
+    begin match Property.access Read p with
+      | Some t -> rec_flow_t cx trace (tin, t)
+      | None ->
+        let x = match propref with Named (_, x) -> Some x | Computed _ -> None in
+        add_output cx ~trace (FlowError.EPropAccess (
+          (lreason, ureason), x, Property.polarity p, Read
+        ))
+    end
 
 and perform_elem_action cx trace value = function
   | ReadElem t -> rec_flow_t cx trace (value, t)
@@ -9911,7 +9966,7 @@ and reposition cx ?trace loc ?desc t =
       DefT (r, OptionalT (recurse seen t))
   | DefT (r, UnionT rep) ->
       let r = mod_reason r in
-      let rep = UnionRep.map (recurse seen) rep in
+      let rep = UnionRep.ident_map (recurse seen) rep in
       DefT (r, UnionT rep)
   | OpaqueT (r, opaquetype) ->
       let r = repos_reason loc r in
@@ -11072,6 +11127,7 @@ end = struct
     | DefT (_, ClassT _)
     | CustomFunT (_, _)
     | DiffT (_, _)
+    | MatchingPropT (_, _, _)
     | DefT (_, EmptyT)
     | EvalT (_, _, _)
     | ExistsT _
@@ -11255,6 +11311,9 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | DiffT (t1, t2) ->
     recurse t1;
     recurse t2
+
+  | MatchingPropT (_, _, t) ->
+    recurse t
 
   | KeysT (_, t) ->
     recurse t

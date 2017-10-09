@@ -179,9 +179,16 @@ class lexical_hoister = object(this)
     end;
     cls
 
-  method! import_named_specifier ~ident (local: Loc.t Ast.Identifier.t option) =
-    this#add_binding ident;
-    local
+  method! import_named_specifier
+    (specifier: Loc.t Ast.Statement.ImportDeclaration.named_specifier) =
+    let open Ast.Statement.ImportDeclaration in
+    let binding = match specifier with
+    | { local = Some binding; remote = _; kind = _ }
+    | { local = None; remote = binding; kind = _ } ->
+      binding
+    in
+    this#add_binding binding;
+    specifier
 
   method! import_default_specifier (id: Loc.t Ast.Identifier.t) =
     this#add_binding id;

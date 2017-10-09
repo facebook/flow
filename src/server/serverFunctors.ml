@@ -196,6 +196,7 @@ end = struct
       ServerPeriodical.call_before_sleeping();
       let ready_sockets = Queue.create () in
       let add_ready_socket socket = Queue.push socket ready_sockets in
+      env := { !env with connections = Persistent_connection.filter_broken !env.connections };
       sleep_and_check socket !env.connections
       |> List.iter ~f:add_ready_socket;
 
@@ -319,7 +320,6 @@ end = struct
     run_internal ~shared_mem_config options
 
   let run_from_daemonize ?waiting_channel ~shared_mem_config options =
-    LoggingUtils.set_hh_logger_min_level options;
     run_internal ?waiting_channel ~shared_mem_config options
 
   let check_once ~shared_mem_config ~client_include_warnings ?focus_targets options =

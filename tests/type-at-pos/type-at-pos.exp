@@ -765,7 +765,7 @@ object_special_cases.js:6:32 = {
   "end":34
 }
 mixed.js:18:17 = {
-  "type":"{kind: 'B', metadata: {[key: string]: mixed,}} | {kind: 'A', metadata: {[key: string]: mixed,}}",
+  "type":"{kind: 'A', metadata: {[key: string]: mixed,}} | {kind: 'B', metadata: {[key: string]: mixed,}}",
   "reasons":[
     {
       "desc":"union type",

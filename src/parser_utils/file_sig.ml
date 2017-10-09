@@ -25,6 +25,7 @@ and require = {
   named: SSet.t SMap.t;
   ns: Loc.t Nel.t SMap.t;
   types: SSet.t SMap.t;
+  types_ns: Loc.t Nel.t SMap.t;
   typesof: SSet.t SMap.t;
   typesof_ns: Loc.t Nel.t SMap.t;
 }
@@ -49,10 +50,11 @@ let mk_require
   ?(named = SMap.empty)
   ?(ns = SMap.empty)
   ?(types = SMap.empty)
+  ?(types_ns = SMap.empty)
   ?(typesof = SMap.empty)
   ?(typesof_ns = SMap.empty)
   loc =
-  { loc; cjs_requires; es_imports; named; ns; types; typesof; typesof_ns }
+  { loc; cjs_requires; es_imports; named; ns; types; types_ns; typesof; typesof_ns }
 
 let merge_requires =
   let sset_union _ a b = Some (SSet.union a b) in
@@ -64,6 +66,7 @@ let merge_requires =
     named = SMap.union r1.named r2.named ~combine:sset_union;
     ns = SMap.union r1.ns r2.ns ~combine:nel_append;
     types = SMap.union r1.types r2.types ~combine:sset_union;
+    types_ns = SMap.union r1.types_ns r2.types_ns ~combine:nel_append;
     typesof = SMap.union r1.typesof r2.typesof ~combine:sset_union;
     typesof_ns = SMap.union r1.typesof_ns r2.typesof_ns ~combine:nel_append;
   }
@@ -87,8 +90,8 @@ let add_cjs_require name loc msig =
   let requires = SMap.add name require msig.requires ~combine:merge_requires in
   { msig with requires }
 
-let add_es_import name ?named ?ns ?types ?typesof ?typesof_ns loc msig =
-  let require = mk_require loc ~es_imports:[loc] ?named ?ns ?types ?typesof ?typesof_ns in
+let add_es_import name ?named ?ns ?types ?types_ns ?typesof ?typesof_ns loc msig =
+  let require = mk_require loc ~es_imports:[loc] ?named ?ns ?types ?types_ns ?typesof ?typesof_ns in
   let requires = SMap.add name require msig.requires ~combine:merge_requires in
   { msig with requires }
 
@@ -130,8 +133,8 @@ class requires_calculator ~ast = object(this)
   method private add_cjs_require r loc =
     this#update_module_sig (add_cjs_require r loc)
 
-  method private add_es_import r ?named ?ns ?types ?typesof ?typesof_ns loc =
-    this#update_module_sig (add_es_import r ?named ?ns ?types ?typesof ?typesof_ns loc)
+  method private add_es_import r ?named ?ns ?types ?types_ns ?typesof ?typesof_ns loc =
+    this#update_module_sig (add_es_import r ?named ?ns ?types ?types_ns ?typesof ?typesof_ns loc)
 
   method private add_type_export name loc =
     this#update_module_sig (add_type_export name loc)
@@ -176,7 +179,7 @@ class requires_calculator ~ast = object(this)
 
   method! import_declaration (decl: Loc.t Ast.Statement.ImportDeclaration.t) =
     let open Ast.Statement.ImportDeclaration in
-    let { importKind; source; specifiers } = decl in
+    let { importKind; source; specifiers; default } = decl in
     let loc, name =  match source with
     | loc, { Ast.Literal.value = Ast.Literal.String name; _ } -> loc, name
     | _ -> failwith "import declaration source must be a string literal"
@@ -184,6 +187,7 @@ class requires_calculator ~ast = object(this)
     let named = ref SMap.empty in
     let ns = ref SMap.empty in
     let types = ref SMap.empty in
+    let types_ns = ref SMap.empty in
     let typesof = ref SMap.empty in
     let typesof_ns = ref SMap.empty in
     let ref_of_kind = function
@@ -199,22 +203,25 @@ class requires_calculator ~ast = object(this)
       let locs = Nel.one loc in
       ref := SMap.add local locs !ref ~combine:Nel.rev_append
     in
-    List.iter (function
+    Option.iter ~f:(fun (_, local) ->
+      add_named "default" local (ref_of_kind importKind)
+    ) default;
+    Option.iter ~f:(function
       | ImportNamespaceSpecifier (loc, (_, local)) ->
         add_ns local loc (
           match importKind with
-          | ImportType -> failwith "unsupported syntax: import type *"
+          | ImportType -> types_ns
           | ImportTypeof -> typesof_ns
           | ImportValue -> ns)
-      | ImportDefaultSpecifier (_, local) ->
-        add_named "default" local (ref_of_kind importKind)
-      | ImportNamedSpecifier {local; remote = (_, remote); kind} ->
-        let importKind = match kind with Some k -> k | None -> importKind in
-        let local = match local with Some (_, x) -> x | None -> remote in
-        add_named remote local (ref_of_kind importKind)
+      | ImportNamedSpecifiers named_specifiers ->
+        List.iter (function {local; remote = (_, remote); kind} ->
+          let importKind = match kind with Some k -> k | None -> importKind in
+          let local = match local with Some (_, x) -> x | None -> remote in
+          add_named remote local (ref_of_kind importKind)
+        ) named_specifiers
     ) specifiers;
     this#add_es_import name loc
-      ~named:!named ~ns:!ns ~types:!types ~typesof:!typesof ~typesof_ns:!typesof_ns;
+      ~named:!named ~ns:!ns ~types:!types ~types_ns:!types_ns ~typesof:!typesof ~typesof_ns:!typesof_ns;
     super#import_declaration decl
 
   method! export_default_declaration_decl (decl: Loc.t Ast.Statement.ExportDefaultDeclaration.declaration) =

@@ -21,15 +21,17 @@ let call_opt x = function Some f -> f x | None -> ()
 
 let assert_require
   ?assert_loc ?assert_cjs ?assert_es
-  ?assert_named ?assert_ns ?assert_types
+  ?assert_named ?assert_ns
+  ?assert_types ?assert_types_ns
   ?assert_typesof ?assert_typesof_ns
-  { loc; cjs_requires; es_imports; named; ns; types; typesof; typesof_ns } =
+  { loc; cjs_requires; es_imports; named; ns; types; types_ns; typesof; typesof_ns } =
   call_opt loc assert_loc;
   call_opt cjs_requires assert_cjs;
   call_opt es_imports assert_es;
   call_opt named assert_named;
   call_opt ns assert_ns;
   call_opt types assert_types;
+  call_opt types_ns assert_types_ns;
   call_opt typesof assert_typesof;
   call_opt typesof_ns assert_typesof_ns;
   ()
@@ -181,6 +183,19 @@ let tests = "require" >::: [
       ~assert_types:(fun types ->
         let locals = SMap.find_unsafe "A" types in
         assert_equal ~ctxt true (SSet.mem "B" locals))
+  end;
+
+  "es_import_type_ns" >:: begin fun ctxt ->
+    let source = "import type * as Foo from 'foo'" in
+    let {module_sig = {requires; _}; _} = visit source in
+    assert_equal ~ctxt 1 (SMap.cardinal requires);
+    let require = SMap.find_unsafe "foo" requires in
+    assert_require require
+      ~assert_types_ns:(fun types_ns ->
+        assert_equal ~ctxt 1 (SMap.cardinal types_ns);
+        let loc, rest = SMap.find_unsafe "Foo" types_ns in
+        assert_equal ~ctxt 0 (List.length rest);
+        assert_equal "* as Foo" (substring_loc source loc))
   end;
 
   "es_import_typeof" >:: begin fun ctxt ->

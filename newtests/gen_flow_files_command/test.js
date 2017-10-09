@@ -172,7 +172,12 @@ export default suite(({addFile, addFiles, flowCmd}) => [
 
   test('non-@flow files', [
     addFile('non_flow_file.js'),
-    flowCmd(['gen-flow-files', '--quiet', '--strip-root', 'non_flow_file.js'])
+    flowCmd([
+      'gen-flow-files',
+      '--quiet',
+      '--strip-root',
+      'non_flow_file.js',
+    ])
       .stderr('')
       .stdout(
         `

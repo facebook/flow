@@ -30,7 +30,7 @@ export default suite(({addFile, flowCmd}) => [
   test("json output", [
     addFile("foo.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'foo.js', '10', '5'],
+      ['autocomplete', '--strip-root', '--json', 'foo.js', '10', '5'],
       'foo.js',
     ).stdout(
        `
@@ -157,7 +157,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("bar.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'bar.js', '4', '5'],
+      ['autocomplete', '--strip-root', '--json', 'bar.js', '4', '5'],
       'bar.js',
     ).stdout(
 `{
@@ -169,7 +169,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("qux.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'qux.js', '6', '3'],
+      ['autocomplete', '--strip-root', '--json', 'qux.js', '6', '3'],
       'qux.js',
     ).stdout(
 `{
@@ -191,7 +191,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("str.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'str.js', '3', '9'],
+      ['autocomplete', '--strip-root', '--json', 'str.js', '3', '9'],
       'str.js',
     ).stdout(
        `
@@ -815,7 +815,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("num.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'num.js', '4', '5'],
+      ['autocomplete', '--strip-root', '--json', 'num.js', '4', '5'],
       'num.js',
     ).stdout(
        `
@@ -936,7 +936,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("bool.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'bool.js', '3', '6'],
+      ['autocomplete', '--strip-root', '--json', 'bool.js', '3', '6'],
       'bool.js',
     ).stdout(
        `
@@ -976,7 +976,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("union.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'union.js', '10', '5'],
+      ['autocomplete', '--strip-root', '--json', 'union.js', '10', '5'],
       'union.js',
     ).stdout(
        `
@@ -1093,7 +1093,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("object_builtins.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'object_builtins.js', '4', '5'],
+      ['autocomplete', '--strip-root', '--json', 'object_builtins.js', '4', '5'],
       'object_builtins.js',
     ).stdout(
        `
@@ -1200,7 +1200,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("function_builtins.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'function_builtins.js', '4', '5'],
+      ['autocomplete', '--strip-root', '--json', 'function_builtins.js', '4', '5'],
       'function_builtins.js',
     ).stdout(
        `
@@ -1413,7 +1413,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("fun.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'fun.js', '4', '5'],
+      ['autocomplete', '--strip-root', '--json', 'fun.js', '4', '5'],
       'fun.js',
     ).stdout(
        `
@@ -1626,7 +1626,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("this.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'this.js', '8', '10'],
+      ['autocomplete', '--strip-root', '--json', 'this.js', '8', '10'],
       'this.js',
     ).stdout(
        `
@@ -1676,7 +1676,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("typeparams.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'typeparams.js', '6', '16'],
+      ['autocomplete', '--strip-root', '--json', 'typeparams.js', '6', '16'],
       'typeparams.js',
     ).stdout(
        `
@@ -1797,7 +1797,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("generics.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'generics.js', '6', '5'],
+      ['autocomplete', '--strip-root', '--json', 'generics.js', '6', '5'],
       'generics.js',
     ).stdout(
        `
@@ -1914,7 +1914,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("optional.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'optional.js', '4', '14'],
+      ['autocomplete', '--strip-root', '--json', 'optional.js', '4', '14'],
       'optional.js',
     ).stdout(
        `
@@ -2059,7 +2059,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("jsx1.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'jsx1.js', '8', '4'],
+      ['autocomplete', '--strip-root', '--json', 'jsx1.js', '8', '4'],
       'jsx1.js',
     ).stdout(
        `
@@ -2176,7 +2176,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("jsx2.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'jsx2.js', '8', '11'],
+      ['autocomplete', '--strip-root', '--json', 'jsx2.js', '8', '11'],
       'jsx2.js',
     ).stdout(
        `
@@ -2303,7 +2303,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("customfun.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'customfun.js', '11', '2'],
+      ['autocomplete', '--strip-root', '--json', 'customfun.js', '11', '2'],
       'customfun.js',
     ).stdout(
        `
@@ -2469,7 +2469,7 @@ export default suite(({addFile, flowCmd}) => [
 
     addFile("issue-1368.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'issue-1368.js', '20', '10'],
+      ['autocomplete', '--strip-root', '--json', 'issue-1368.js', '20', '10'],
       'issue-1368.js',
     ).stdout(
 `{
@@ -2513,7 +2513,7 @@ export default suite(({addFile, flowCmd}) => [
 
   addFile("exact.js"),
   flowCmd(
-    ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'exact.js', '7', '5'],
+    ['autocomplete', '--strip-root', '--json', 'exact.js', '7', '5'],
     'exact.js',
   ).stdout(
      `
@@ -2639,7 +2639,7 @@ export default suite(({addFile, flowCmd}) => [
 
    addFile("exact.js"),
    flowCmd(
-     ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'exact.js', '6', '1'],
+     ['autocomplete', '--strip-root', '--json', 'exact.js', '6', '1'],
      'exact.js',
    ).stdout(
       `

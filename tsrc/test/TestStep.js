@@ -67,6 +67,7 @@ export class TestStep {
   _needsFlowCheck: boolean;
   _startsIde: boolean;
   _readsIdeMessages: boolean;
+  _allowServerToDie: boolean;
 
   constructor(step?: TestStep) {
     this._actions = step == null ? [] : step._actions.slice();
@@ -76,6 +77,7 @@ export class TestStep {
     this._reason = step == null ? null : step._reason;
     this._startsIde = step == null ? false : step._startsIde;
     this._readsIdeMessages = step == null ? false : step._readsIdeMessages;
+    this._allowServerToDie = step == null ? false : step._allowServerToDie;
   }
 
   async performActions(
@@ -111,6 +113,10 @@ export class TestStep {
 
   readsIdeMessages(): boolean {
     return this._readsIdeMessages;
+  }
+
+  allowFlowServerToDie(): boolean {
+    return this._allowServerToDie;
   }
 }
 
@@ -238,8 +244,20 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         }
       );
       ret._startsIde = true;
+      ret._needsFlowServer = true;
       return ret;
-    }
+    };
+
+  ideStop: () => TestStepFirstStage =
+    () => {
+      const ret = this._cloneWithAction(
+        async (builder, env) => {
+          await builder.cleanupIDEConnection();
+        }
+      );
+      ret._needsFlowServer = true;
+      return ret;
+    };
 
   ideNotification: (string, ...params: Array<mixed>) => TestStepFirstStage =
     (method, ...params) => {
@@ -298,16 +316,8 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
 
   flowCmd: (args: Array<string>, stdinFile?: string) => TestStepFirstStage =
     (args, stdinFile) => {
-      const ret = this._cloneWithAction(
-        async (builder, env) => {
-          const [code, stdout, stderr] = await builder.flowCmd(args, stdinFile);
-          env.reportExitCode(code);
-          env.reportStdout(stdout);
-          env.reportStderr(stderr);
-          env.triggerFlowCheck();
-        }
-      );
       // Certain flow configs don't need a flow server to exist
+      let needsFlowServer = false;
       switch (args[0]) {
         case 'ast':
         case 'init':
@@ -317,7 +327,28 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         case 'version':
           break;
         default:
-          ret._needsFlowServer = true;
+          needsFlowServer = true;
+      }
+      if (needsFlowServer) {
+        // We never want a flowCmd to automatically start a server
+        args = [
+          args[0],
+          '--no-auto-start',
+          ...args.slice(1),
+        ];
+      }
+      const ret = this._cloneWithAction(
+        async (builder, env) => {
+          const [code, stdout, stderr] = await builder.flowCmd(args, stdinFile);
+          env.reportExitCode(code);
+          env.reportStdout(stdout);
+          env.reportStderr(stderr);
+          env.triggerFlowCheck();
+        }
+      );
+
+      if (needsFlowServer) {
+        ret._needsFlowServer = needsFlowServer;
       }
       return ret;
     };
@@ -330,6 +361,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         }
       );
       ret._needsFlowServer = true;
+      ret._allowServerToDie = true;
       return ret;
     };
 
