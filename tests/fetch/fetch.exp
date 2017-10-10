@@ -293,8 +293,8 @@ Error: request.js:8
 Error: request.js:24
  24: h.text().then((t: Buffer) => t); // incorrect
                    ^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-598:       onFulfill?: (value: R) => Promise<U> | U,
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:598
+612:       onFulfill?: (value: R) => Promise<U> | U,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:612
   This parameter is incompatible:
     998:     text(): Promise<string>;
                              ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:998
@@ -304,8 +304,8 @@ Error: request.js:24
 Error: request.js:26
  26: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
                           ^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-598:       onFulfill?: (value: R) => Promise<U> | U,
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:598
+612:       onFulfill?: (value: R) => Promise<U> | U,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:612
   This parameter is incompatible:
      26: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
                                    ^^^^^^ Buffer. This type is incompatible with
@@ -497,8 +497,8 @@ Error: response.js:30
   923: type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
                                                                                   ^^^^^^^^^^^^^^^^ union: $TypedArray | DataView. See lib: <BUILTINS>/bom.js:923
     Member 1:
-    628: type $ArrayBufferView = $TypedArray | DataView;
-                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:628
+    642: type $ArrayBufferView = $TypedArray | DataView;
+                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:642
     Error:
                                           v
      30: const i: Response = new Response({
@@ -507,11 +507,11 @@ Error: response.js:30
     ...:
      35: }); // incorrect
          ^ object literal. This type is incompatible with
-    628: type $ArrayBufferView = $TypedArray | DataView;
-                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:628
+    642: type $ArrayBufferView = $TypedArray | DataView;
+                                 ^^^^^^^^^^^ $TypedArray. See lib: <BUILTINS>/core.js:642
     Member 2:
-    628: type $ArrayBufferView = $TypedArray | DataView;
-                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:628
+    642: type $ArrayBufferView = $TypedArray | DataView;
+                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:642
     Error:
                                           v
      30: const i: Response = new Response({
@@ -520,14 +520,14 @@ Error: response.js:30
     ...:
      35: }); // incorrect
          ^ object literal. This type is incompatible with
-    628: type $ArrayBufferView = $TypedArray | DataView;
-                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:628
+    642: type $ArrayBufferView = $TypedArray | DataView;
+                                               ^^^^^^^^ DataView. See lib: <BUILTINS>/core.js:642
 
 Error: response.js:42
  42: h.text().then((t: Buffer) => t); // incorrect
                    ^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-598:       onFulfill?: (value: R) => Promise<U> | U,
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:598
+612:       onFulfill?: (value: R) => Promise<U> | U,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:612
   This parameter is incompatible:
     972:     text(): Promise<string>;
                              ^^^^^^ string. This type is incompatible with. See lib: <BUILTINS>/bom.js:972
@@ -537,8 +537,8 @@ Error: response.js:42
 Error: response.js:44
  44: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
                           ^^^^^^^^^^^^^^^^^^ function. This type is incompatible with the expected param type of
-598:       onFulfill?: (value: R) => Promise<U> | U,
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:598
+612:       onFulfill?: (value: R) => Promise<U> | U,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/core.js:612
   This parameter is incompatible:
      44: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
                                    ^^^^^^ Buffer. This type is incompatible with

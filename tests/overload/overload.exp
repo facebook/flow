@@ -19,24 +19,24 @@ Error: overload.js:7
 Error: overload.js:7
   7: var x1: number = "".match(0)[0];
                                ^ number. This type is incompatible with the expected param type of
-301:     match(regexp: string | RegExp): ?Array<string>;
-                       ^^^^^^^^^^^^^^^ union: string | RegExp. See lib: <BUILTINS>/core.js:301
+315:     match(regexp: string | RegExp): ?Array<string>;
+                       ^^^^^^^^^^^^^^^ union: string | RegExp. See lib: <BUILTINS>/core.js:315
   Member 1:
-  301:     match(regexp: string | RegExp): ?Array<string>;
-                         ^^^^^^ string. See lib: <BUILTINS>/core.js:301
+  315:     match(regexp: string | RegExp): ?Array<string>;
+                         ^^^^^^ string. See lib: <BUILTINS>/core.js:315
   Error:
     7: var x1: number = "".match(0)[0];
                                  ^ number. This type is incompatible with
-  301:     match(regexp: string | RegExp): ?Array<string>;
-                         ^^^^^^ string. See lib: <BUILTINS>/core.js:301
+  315:     match(regexp: string | RegExp): ?Array<string>;
+                         ^^^^^^ string. See lib: <BUILTINS>/core.js:315
   Member 2:
-  301:     match(regexp: string | RegExp): ?Array<string>;
-                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:301
+  315:     match(regexp: string | RegExp): ?Array<string>;
+                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:315
   Error:
     7: var x1: number = "".match(0)[0];
                                  ^ number. This type is incompatible with
-  301:     match(regexp: string | RegExp): ?Array<string>;
-                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:301
+  315:     match(regexp: string | RegExp): ?Array<string>;
+                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:315
 
 Error: overload.js:8
   8: var x2: number = "".match(/pattern/)[0];

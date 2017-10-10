@@ -264,8 +264,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             3: const arr: Array<number> = [..."hello"];
                           ^^^^^^^^^^^^^ array type
             Type argument \`T\` is incompatible:
-              288:     @@iterator(): Iterator<string>;
-                                              ^^^^^^ string. This type is incompatible with. See lib: [LIB] core.js:288
+              302:     @@iterator(): Iterator<string>;
+                                              ^^^^^^ string. This type is incompatible with. See lib: [LIB] core.js:302
                 3: const arr: Array<number> = [..."hello"];
                                     ^^^^^^ number
         `,
