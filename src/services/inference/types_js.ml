@@ -879,12 +879,14 @@ let recheck_with_profiling
   (* direct_dependent_files are unchanged files which directly depend on changed modules,
      or are new / changed files that are phantom dependents. dependent_files are
      direct_dependent_files plus their dependents (transitive closure) *)
-  let all_dependent_files, direct_dependent_files = Dep_service.dependent_files
-    workers
-    ~unchanged
-    ~new_or_changed
-    ~changed_modules
-  in
+  let all_dependent_files, direct_dependent_files =
+    with_timer ~options "DependentFiles" profiling (fun () ->
+      Dep_service.dependent_files
+        workers
+        ~unchanged
+        ~new_or_changed
+        ~changed_modules
+    ) in
 
   Hh_logger.info "Re-resolving directly dependent files";
   (** TODO [perf] Consider oldifying **)
