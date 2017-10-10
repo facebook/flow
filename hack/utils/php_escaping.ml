@@ -68,9 +68,11 @@ let parse_int s =
   try
     int_of_string s
   with _ -> raise (Invalid_string "invalid numeric escape")
-let parse_numeric_escape s =
+let parse_numeric_escape ?(trim_to_byte = false) s =
   try
-    Char.chr (parse_int s)
+    let v = parse_int s in
+    let v =  if trim_to_byte then v land 0xFF else v in
+    Char.chr v
   with _ -> raise (Invalid_string "escaped character too large")
 
 let unescape_double s =
@@ -94,7 +96,7 @@ let unescape_double s =
     if c <> '\\' then Buffer.add_char buf c else begin
       let c = next () in
       match c with
-      | '\'' -> Buffer.add_char buf '\''
+      | '\'' -> Buffer.add_string buf "\\\'"
       | 'n'  -> Buffer.add_char buf '\n'
       | 'r'  -> Buffer.add_char buf '\r'
       | 't'  -> Buffer.add_char buf '\t'
@@ -123,7 +125,8 @@ let unescape_double s =
       | c when is_oct c ->
         idx := !idx - 1;
         let oct_count = count_f is_oct ~max:3 0 in
-        let c = parse_numeric_escape ("0o" ^ String.sub s (!idx) oct_count) in
+        let c = parse_numeric_escape
+          ~trim_to_byte:true ("0o" ^ String.sub s (!idx) oct_count) in
         Buffer.add_char buf c;
         idx := !idx + oct_count
       (* unrecognized escapes are just copied over *)
